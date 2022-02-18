@@ -1,0 +1,54 @@
+/*
+Purpose: description.ext
+Called From: N/A
+Scope: Mission
+Execution time: On mission load
+Author: Adam Waldie
+For: Rooster Teeth Gaming Community
+License: Distributable and editable, no attribution required.
+*/
+/*           INFO            */
+
+    dev                 = "Waldie.A"; // Do not edit this line, it just displays who created the missionPack
+    
+    author              = "YOURNAMEHERE"; // Your name goes here for display in the loading screen
+
+    onLoadName          = "Mission Pack v3.6"; // Your mission name goes here for display in the loading screen & in the titlescreen text
+    onLoadMission       = "YOURTEXTHERE"; // Mission subtitle goes here
+    onLoadIntro         = "YOURTEXTHERE";// Mission subtitle goes here
+
+    loadScreen          = "Pictures\loading.jpg"; // Your custom cover image should repalce the loading.jpg image in Pictures
+    overviewPicture     = "Pictures\loading.jpg"; // Your custom cover image should repalce the loading.jpg image in Pictures
+
+/*           RULES            */
+
+    disabledAI               = true; //Remove AI in multiplayer when marked as playable.
+    //disableChannels[]        = {{0,false,true},{1,false,true},{2,true,true},{6,true,true}}; //Disables text channels GLOBAL/SIDE/LOCAL
+
+/*          RESPAWN           */
+    respawn                = BASE; //Respawn method (Fixed position, on friendly etc...)
+    respawnDelay           = 20; // Delay between respawns
+    respawnOnStart         = -1; //DO NOT TOUCH
+    respawnTemplatesWest[] = {"MenuPosition","Counter"};
+
+/*          SYSTEMS           */
+
+    class Header
+    {
+        gameType = Coop;
+        minPlayers = 1;
+        maxPlayers = 31; // Change this to whatever the maximum playercount of your mission is
+     };
+
+/*           OTHER            */
+class CfgDebriefing
+{  
+    //If using triggers to end the mission, you can create a custom end screen using the below
+	class End1
+	{
+        title =	"MISSION COMPLETE";
+        subtitle = "The Civillians Have Been Evacuated";
+        description = "Good Job!";
+        pictureBackground = "Pictures\loading.jpg";
+	};
+};
