@@ -40,6 +40,10 @@ License: Distributable and editable, no attribution required.
         maxPlayers = 31; // Change this to whatever the maximum playercount of your mission is
      };
 
+/*           MissionScriptFunctions            */
+
+#include "MissionScripts\WaldosFunctions.sqf"
+
 /*           OTHER            */
 class CfgDebriefing
 {  

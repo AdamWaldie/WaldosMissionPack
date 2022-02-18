@@ -10,7 +10,7 @@ License: Distributable and editable with proper attribution.
 How to call:
 From init.sqf
 
-_ACRE2ServerInitHandle = execvm "MissionScripts\ACRE2Init.sqf";
+_ACRE2ServerInitHandle = [PARAMETERS] execvm Waldo_fnc_ACRE2Init;
 
 This is done for you in mission packs.
 

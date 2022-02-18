@@ -3,8 +3,8 @@
  * Changes AI skill values
  *
  * Example:
- * "DAY" call "MissionScripts\AISkillAdjustmentSystem.sqf"; - Daytime Mission
- * "NIGHT" call "MissionScripts\AISkillAdjustmentSystem.sqf"; - Nightime Mission
+ * "DAY" call Waldo_fnc_AITweak; - Daytime Mission
+ * "NIGHT" call Waldo_fnc_AITweak; - Nightime Mission
  *
  * Public: No
  */
@@ -12,7 +12,9 @@
 if !(isServer) exitWith {};
 
 // Assign argument to variable
-private _dayOrNightValue = _this select 0;
+params[["_dayOrNightValue","DAY"]];
+
+systemchat "AI Adjustment System Active";
 
 //Get eventhandler for all units pre-placed
 ["CAManBase", "init", {

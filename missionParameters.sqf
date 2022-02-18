@@ -18,11 +18,14 @@ This file is for mission makers to change based on their needs. Most scritps rel
 
 */
 
+//Lighting Setup Engine - Optional
+//"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
+
 // Set ace namespace variables for maximum drag/carryweights
 ACE_maxWeightDrag = 2000;
 ACE_maxWeightCarry = 2000;
 
-//Initilise Radios
+//Initilise ACRE 2 Radios
 //Setup Array and Callsign list [EDIT THIS SECTION FOR YOUR MISSION!]
 private _UnitRadioSetups = [
     //In format ["Callsign",343RadioChannel,152RadioChannel,148RadioChannel,117FRadioChannel]
@@ -36,14 +39,15 @@ private _UnitRadioSetups = [
     ["High Command",5,1,1,3]
 ];
 //Make the call!
-[_UnitRadioSetups] call compile preprocessFileLineNumbers "MissionScripts\ACRE2Init.sqf";
+//[_UnitRadioSetups] call compile preprocessFileLineNumbers "MissionScripts\ACRE2Init.sqf"; -  Depreciated
+[_UnitRadioSetups] call Waldo_fnc_ACRE2Init;
 
 //AI Tweak setup
 // These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
 // Daytime Mission parameter - uncomment this for daytime AI values.
-"DAY" call {"MissionScripts\AISkillAdjustmentSystem.sqf";};
+"DAY" call Waldo_fnc_AITweak;
 // Nightime Mission - uncomment this for nightime AI values.
-//"NIGHT" call {"MissionScripts\AISkillAdjustmentSystem.sqf";};
+//"NIGHT" call Waldo_fnc_AITweak;
 
 /* 
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
@@ -51,4 +55,4 @@ Introduction Text - Cool Introduction stuff like location, date, time and missio
 When left with no parameters, as below, the script autogenerates the location based on the terrain name, and the mission title from the description.ext 
 You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission. 
 */
-[] execvm "MissionScripts\infoText.sqf";
+[] call Waldo_fnc_InfoText;

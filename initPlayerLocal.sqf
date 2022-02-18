@@ -12,7 +12,7 @@
     if (_unit == player) then {
         _unit addAction [
         "Flip Vehicle", 
-        "FlipAction.sqf", 
+        "MissionScripts\flipAction.sqf", 
         [], 
         0, 
         false, 
@@ -29,6 +29,18 @@
     params ["_unit"];
     if (_unit == player) then {
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_loadInventory;
+    };
+    if (_unit == player) then {
+        _unit addAction [
+        "Flip Vehicle", 
+        "MissionScripts\flipAction.sqf", 
+        [], 
+        0, 
+        false, 
+        true, 
+        "", 
+        "_this == (vehicle _target) && {(count nearestObjects [_target, ['landVehicle'], 5]) > 0 && {(vectorUp cursorTarget) select 2 < 0}}"
+    ];
     };
 }] call CBA_fnc_addClassEventHandler;
 

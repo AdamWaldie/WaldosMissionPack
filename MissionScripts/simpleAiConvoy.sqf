@@ -9,17 +9,17 @@ License: unlimited distribution and editing as per Tova's original.
 
 Call it with:
 
-convoyScript = [convoyGroup] spawn SAIC_fnc_SimpleConvoy;
+convoyScript = [convoyGroup] spawn Waldo_fnc_SimpleAiConvoy;
 
 
 Optional parameters are also available :
 
-convoyScript = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn SAIC_fnc_SimpleConvoy;
+convoyScript = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
 
 if there are multiple, simply change the "handle":
 
 
-convoyScript_2 = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn SAIC_fnc_SimpleConvoy;
+convoyScript_2 = [convoyGroup, convoySpeed, convoySeparation, pushThrough] spawn Waldo_fnc_SimpleAiConvoy;
 
 
 With :
@@ -38,26 +38,22 @@ terminate convoyScript;
 convoyGroup enableAttack true;
 
 */
-
-
-SAIC_fnc_SimpleConvoy = { 
-	params ["_convoyGroup",["_convoySpeed",30],["_convoySeparation",15],["_pushThrough", true]];
-	if (_pushThrough) then {
-		_convoyGroup enableAttack !(_pushThrough);
-		{(vehicle _x) setUnloadInCombat [false, false];} forEach (units _convoyGroup);
-	};
-	_convoyGroup setFormation "COLUMN";
-	{
-    	(vehicle _x) limitSpeed _convoySpeed*1.15;
-        (vehicle _x) setConvoySeparation _convoySeparation;
-    } forEach (units _convoyGroup);
-	(vehicle leader _convoyGroup) limitSpeed _convoySpeed;
-	while {sleep 5; !isNull _convoyGroup} do {
-		{
-			if ((speed vehicle _x < 5) && (_pushThrough || (behaviour _x != "COMBAT"))) then {
-				(vehicle _x) doFollow (leader _convoyGroup);
-			};	
-		} forEach (units _convoyGroup)-(crew (vehicle (leader _convoyGroup)))-allPlayers;
-        {(vehicle _x) setConvoySeparation _convoySeparation;} forEach (units _convoyGroup);
-	}; 
+params ["_convoyGroup",["_convoySpeed",30],["_convoySeparation",15],["_pushThrough", true]];
+if (_pushThrough) then {
+	_convoyGroup enableAttack !(_pushThrough);
+	{(vehicle _x) setUnloadInCombat [false, false];} forEach (units _convoyGroup);
 };
+_convoyGroup setFormation "COLUMN";
+{
+	(vehicle _x) limitSpeed _convoySpeed*1.15;
+	(vehicle _x) setConvoySeparation _convoySeparation;
+} forEach (units _convoyGroup);
+(vehicle leader _convoyGroup) limitSpeed _convoySpeed;
+while {sleep 5; !isNull _convoyGroup} do {
+	{
+		if ((speed vehicle _x < 5) && (_pushThrough || (behaviour _x != "COMBAT"))) then {
+			(vehicle _x) doFollow (leader _convoyGroup);
+		};	
+	} forEach (units _convoyGroup)-(crew (vehicle (leader _convoyGroup)))-allPlayers;
+	{(vehicle _x) setConvoySeparation _convoySeparation;} forEach (units _convoyGroup);
+}; 

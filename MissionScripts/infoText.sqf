@@ -7,18 +7,16 @@ Introduction Text - Cool Introduction stuff like location, date, time and missio
 There are two parameters. The Name Of The Mission & The locale of the mission You can change these below
 
 This is the most basic iteration, it automatically grabs the mission title & location based on description.ext for title, and worldName for location.
-[] execvm "MissionScripts\infoText.sqf";
+[] call Waldo_fnc_InfoText;
 
-// These three are examples of a custom name & location, in varying combinations.
-["mission title"] execvm "MissionScripts\infoText.sqf";
+You can also customise the information text directly, by providing additional parameters. The first additional entry will be the title, while the second will be the location. An example use is in the example mission.
+["CUSTOM TITLE", "CUSTOM LOCATION"] call Waldo_fnc_InfoText;
 
-["location"] execvm "MissionScripts\infoText.sqf";
-
-["mission title","location"] execvm "MissionScripts\infoText.sqf";
 */
 
 
 params[["_title","DEFAULT"],["_locale","DEFAULT"]];
+
 waitUntil {!isNull findDisplay 46};
 _missionTitle = getText (missionConfigFile >> "onLoadName");; 
 if (_locale != "DEFAULT") then {

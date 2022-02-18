@@ -1,25 +1,34 @@
 /*
-Built upon the function of section 1.1, this can be used to make an Arsenal only with the items from your precreated loadouts. 
+Purpose: Mission Production Tool to generate a limited ACE arsenal based off of the loadout of all playable units from a given side.
+This is not designed to create a limited ace arsenal, but will output a readymade string to you to paste into inits.
+Called From: Mission Maker debug
+Execution time: NOT DURING MISSIONS
+Author: Waldo
+License: Distributable and editable with proper attribution.
+
+/*================================MANUAL METHODOLOGY=========================
+
+This can be used to make an Arsenal only with the items from your precreated loadouts. 
 This is the best choice if you do not want to make a full arsenal available to have your Loadouts spawnable.
 
  I. Spawn the same amount of units as you have loadouts, give each unit one of them
  II. Start the mission then press ESC once loaded
  III. Clear the debug console then enter the following:
-*/
+
 //Side unit collection
-/*
+
 private _unitsBlufor = units blufor;
 private _unitsOpfor = units opfor;
-private _unitsIndependant = units independent;*/
+private _unitsIndependant = units independent;
 
 //Get all loadouts of all sides
- /*
+
 private _items = allUnits apply {getUnitLoadout _x};
 _items = str _items splitString "[]," joinString ",";
 _items = parseSimpleArray ("[" + _items + "]");
 _items = _items arrayIntersect _items select {_x isEqualType "" && {_x != ""}};
-copyToClipboard str _items;*/
-
+copyToClipboard str _items;
+*/
 //Get all loadouts of blufor (Replace _unitsBlufor with equivilent for other sides)
 private _unitsBlufor = units blufor;
 private _items = _unitsBlufor apply {getUnitLoadout _x};
@@ -27,9 +36,13 @@ _items = str _items splitString "[]," joinString ",";
 _items = parseSimpleArray ("[" + _items + "]");
 _items = _items arrayIntersect _items select {_x isEqualType "" && {_x != ""}};
 copyToClipboard str _items;
-
-
+systemchat "Loadout Array of given side in clipboard";
 /*
+
+//When called by an object ingame
+[_this, _items] call ace_arsenal_fnc_initBox
+
+
 IV. Paste the created array from your clipboard into the space where the items are listed CTRL+V. The array is created with brackets.
 Examples:
 
