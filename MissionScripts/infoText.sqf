@@ -7,10 +7,10 @@ Introduction Text - Cool Introduction stuff like location, date, time and missio
 There are two parameters. The Name Of The Mission & The locale of the mission You can change these below
 
 This is the most basic iteration, it automatically grabs the mission title & location based on description.ext for title, and worldName for location.
-[] call Waldo_fnc_InfoText;
+[] spawn Waldo_fnc_ENDEX;
 
 You can also customise the information text directly, by providing additional parameters. The first additional entry will be the title, while the second will be the location. An example use is in the example mission.
-["CUSTOM TITLE", "CUSTOM LOCATION"] call Waldo_fnc_InfoText;
+["CUSTOM TITLE", "CUSTOM LOCATION"] spawn Waldo_fnc_InfoText;
 
 */
 
