@@ -21,6 +21,9 @@ This file is for mission makers to change based on their needs. Most scritps rel
 //Lighting Setup Engine - Optional
 //"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
 
+//Zeus Enhanced Modules setup (comment out to disable)
+[] call Waldo_fnc_ZenInit;
+
 // Set ace namespace variables for maximum drag/carryweights
 ACE_maxWeightDrag = 2000;
 ACE_maxWeightCarry = 2000;

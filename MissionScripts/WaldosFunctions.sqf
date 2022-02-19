@@ -61,10 +61,27 @@ class CfgFunctions
                 file = "MissionScripts\infoText.sqf";
             };
         };
-        class DebugToolKit{
+        class DebugToolKit {
             class ToolkitAceLimitedArsenal {
                 file = "MissionScripts\ToolkitAceLimitedArsenal.sqf";
             };
         }
+        class ZenModules {
+            class ZenInit {
+                file = "MissionScripts\ZenModules\Zen_initModules.sqf";
+            };
+            class CreateSupplyCrate {
+                file = "MissionScripts\ZenModules\Zen_supplyCrateModule.sqf";
+            };
+            class SupplyCratePopulate {
+                file = "MissionScripts\ZenModules\Zen_Support_CratePopulate.sqf";
+            };
+            class CreateCCPCrate {
+                file = "MissionScripts\ZenModules\Zen_medicalCrateModule.sqf";
+            };
+            class MedicalCratePopulate {
+                file = "MissionScripts\ZenModules\Zen_Medical_CratePopulate.sqf";
+            };
+        };
 	};
 };
