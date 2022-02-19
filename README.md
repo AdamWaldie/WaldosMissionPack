@@ -1,6 +1,6 @@
 # WaldosMissionPack
 A package of mission scripts for new mission makers.
-![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/MissionScripts/loading.jpg?raw=true)
+![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/MissionScripts/loading.jpg)
 
 # missionParameters.sqf
 
