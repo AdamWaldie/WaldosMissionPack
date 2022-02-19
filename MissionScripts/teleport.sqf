@@ -5,7 +5,7 @@ Put the following in the object you use to teleport from.
 
 Ensure variable name has been assigned to both the interactable object, and the destination object.
 
-this addAction ["Teleport -destinationName",Waldo_fnc_Teleport,[DestinationobjectName]];
+this addAction ['Teleport To (ReplaceMe)',Waldo_fnc_Teleport,[DestinationName]];
 
 */
 // Get the destination.
