@@ -11,7 +11,7 @@ systemchat "ENDEX ENDEX ENDEX";
 systemChat "Weapons safe";
 systemChat "Mission Roll In 1 Minute";
 //hint Endex message
-private _title = "<t color='#ffc61a' size='1.2' shadow='1' shadowColor='#000000' align='center'>ENDEX ENDEX ENDEX!</t><br />";
+private _title = "<t color='#ffc61a' size='1.2' shadow='1' shadowColor='#0055aa' align='center'>ENDEX ENDEX ENDEX!</t><br />";
 private _text0 = "<t font='PuristaMedium' size='1.1'>Mission complete</t><br /><br />";
 private _text1 = "Hold your fire!<br />";
 hint parseText(_title + _text0 + _text1);
@@ -27,8 +27,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {
     };
 
 //Heal All Players
-[objNull, player] call ace_medical_fnc_treatmentAdvanced_fullHealLocal;
-
+[player, player] call ace_medical_treatment_fnc_fullHeal;
 
 //Pacify AI
 {

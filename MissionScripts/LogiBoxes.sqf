@@ -11,9 +11,6 @@ params["","","","_parameterArray"];
 _boxType = _parameterArray select 0;
 _object = _parameterArray select 1;
 _customAmmoBox = _parameterArray select 2;
-systemchat str _boxType;
-systemchat str _object;
-systemchat str _customAmmoBox;
 _position = getPos _object;
 _medPos = [(_position select 0) -0.5, (_position select 1) -0.5, 0];
 _ammoPos = [(_position select 0) +0.5, (_position select 1) +0.5, 0];
@@ -76,8 +73,6 @@ if (_boxType == _allowedBoxes select 1) then {
         _ammoCountArray append [_randomInt];
     } forEach _ammoboxitems;
     _boxInventory = [_ammoboxitems,_ammoCountArray];
-    systemchat str _ammoboxitems;
-    systemchat str _ammoCountArray;
     [_box, true, [0, 2, 1], 0, true] call ace_dragging_fnc_setCarryable;
     _quote = selectRandom [
         "One canister, ready to go.",
