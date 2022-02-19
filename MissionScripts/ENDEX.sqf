@@ -30,9 +30,13 @@ if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {
     };
 
 //Heal All Players
+<<<<<<< Updated upstream
 {
     [player, player] call ace_medical_fnc_treatmentAdvanced_fullHealLocal;
 } remoteExecCall ["bis_fnc_call", -2]; 
+=======
+[objNull, player] call ace_medical_fnc_treatmentAdvanced_fullHealLocal;
+>>>>>>> Stashed changes
 
 //Pacify AI
 {

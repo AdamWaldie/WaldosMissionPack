@@ -19,8 +19,8 @@ params[["_title","DEFAULT"],["_locale","DEFAULT"]];
 
 waitUntil {!isNull findDisplay 46};
 _missionTitle = getText (missionConfigFile >> "onLoadName");; 
-if (_locale != "DEFAULT") then {
-	_localeName = _title;
+if (_title != "DEFAULT") then {
+	_missionTitle = _title;
 };
 _localeName = worldName;
 if (_locale != "DEFAULT") then {
