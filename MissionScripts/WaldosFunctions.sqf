@@ -30,6 +30,12 @@ class CfgFunctions
             class SaveLoadout {
                 file = "MissionScripts\saveRespawnLoadout.sqf";
             };
+            class SpawnLogisticsBox {
+                file = "MissionScripts\LogiBoxes.sqf";
+            };
+            class SetupQuarterMaster {
+                file = "MissionScripts\initQuartermaster.sqf";
+            };
 		};
         class convoy 
         {
@@ -39,7 +45,7 @@ class CfgFunctions
         };
         class teleport
         {
-            class SimpleTeleport {
+            class Teleport {
                 file =  "MissionScripts\teleport.sqf";
             };
         };
