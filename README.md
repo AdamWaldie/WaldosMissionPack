@@ -58,6 +58,7 @@ Use Cases can be found in ther respective files.
 # Supported Addons
 - ACE 3
 - ACRE 2 (You can disable this via missionParameters.sqf)
+- ZEN & ZEN Ace Compat
 - TFAR (Inherrent support via 3Eden)
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
