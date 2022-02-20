@@ -177,7 +177,7 @@ waitUntil {[] call acre_api_fnc_isInitialized};
 			systemchat format ["%1 is not equal to %2",_group,_unitName];
 		};*/
 	} forEach _ACRESetups;
-	_InitRespawnHandle = execvm "MissionScripts\saveRespawnLoadout.sqf";
+	[] call Waldo_fnc_SaveLoadout;
 } forEach allPlayers;
 //Announce Completed
 systemchat "ACRE2 CHANNEL PRESETS COMPLETE";
