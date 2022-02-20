@@ -8,8 +8,6 @@
     };
     if (_unit == player) then {
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_saveInventory;
-    };
-    if (_unit == player) then {
         _unit addAction [
         "Flip Vehicle", 
         "MissionScripts\flipAction.sqf", 
@@ -29,8 +27,6 @@
     params ["_unit"];
     if (_unit == player) then {
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_loadInventory;
-    };
-    if (_unit == player) then {
         _unit addAction [
         "Flip Vehicle", 
         "MissionScripts\flipAction.sqf", 
