@@ -40,19 +40,6 @@ to become aquanited with the scripting side of Arma 3.
 - Exemplar Limited Ace Arsenal Code & unit caching/hidden unit code.
 - Functionalised scripts for ease of use
 
-# Function Call listing
-Waldo_fnc_ACRE2Init  (Pre-setup For You)
-Waldo_fnc_AITweak  (Pre-setup For You)
-Waldo_fnc_UnFlipping (Pre-setup For You)
-Waldo_fnc_SaveLoadout (Optional)
-Waldo_fnc_SimpleAiConvoy (Optional)
-Waldo_fnc_SimpleTeleport (Optional)
-Waldo_fnc_ENDEX (Optional)
-Waldo_fnc_InfoText (Optional)
-Waldo_fnc_ToolkitAceLimitedArsenal (Optional)
-
-Use Cases can be found in ther respective files.
-
 # Required Addons
 - CBA_A3
 
