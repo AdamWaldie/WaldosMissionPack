@@ -19,7 +19,7 @@ This file is for mission makers to change based on their needs. Most scritps rel
 //"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
 
 //Zeus Enhanced Modules setup (comment out to disable)
-[] call Waldo_fnc_ZenInit;
+[] call Waldo_fnc_ZenInitModules;
 
 //Set ace namespace variables for maximum drag/carryweights
 ACE_maxWeightDrag = 2000;
@@ -49,12 +49,9 @@ You will need to find the classname of the box you are wanting to use, and place
 
 missionNamespace setVariable ["SupplyBoxClass", "PUTCLASSNAMEHERE", true];
 
-*/
-//Supply Box Classname MissionNameSpace Declaration
-missionNamespace setVariable ["Logi_SupplyBoxClass", "Box_NATO_Equip_F", true];
-//Medical Box Classname MissionNameSpace Declaration
-missionNamespace setVariable ["Logi_MedicalBoxClass", "C_IDAP_supplyCrate_F", true];
+YOU CAN SPECIFY CUSTOM BOXES FOR MEDICAL & AMMO BOXES IN initServer.sqf
 
+*/
 
 
 //AI Tweak setup

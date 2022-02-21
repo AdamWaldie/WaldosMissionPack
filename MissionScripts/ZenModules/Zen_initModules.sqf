@@ -17,7 +17,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 ["Waldos Modules", "Player Supply Crate",
     {
         params ["_modulePos", "_objectPos"];
-        [_modulePos, _objectPos] call Waldo_fnc_CreateSupplyCrate;
+        [_modulePos, _objectPos] call Waldo_fnc_ZenSupplySpawner;
     },
     "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"
 ] call zen_custom_modules_fnc_register;
@@ -32,7 +32,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 ["Waldos Modules", "Field Hospital Crate",
     {
         params ["_modulePos", "_objectPos"];
-        [_modulePos, _objectPos,1] call Waldo_fnc_CreateCCPCrate;
+        [_modulePos, _objectPos,1] call Waldo_fnc_ZenMedicalSpawner;
     },
     "\z\ACE\addons\medical_gui\ui\cross.paa"
 ] call zen_custom_modules_fnc_register;

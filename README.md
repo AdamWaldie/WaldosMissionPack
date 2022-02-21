@@ -1,6 +1,8 @@
 # WaldosMissionPack
 A package of mission scripts for new mission makers.
 
+![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
+
 # missionParameters.sqf
 
 This project was created originally for the mission makers of the Rooster Teeth Gaming Discord, with the intent to provide them with the easiest possible method 

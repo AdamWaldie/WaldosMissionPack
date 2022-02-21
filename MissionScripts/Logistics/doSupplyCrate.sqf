@@ -76,4 +76,4 @@ _crate addItemCargoGlobal ["ACE_personalAidKit", (5)];
 
 [_crate, 1] call ace_cargo_fnc_setSize;
 [_crate, true] call ace_dragging_fnc_setDraggable;
-[_box, true] call ace_dragging_fnc_setCarryable;
+[_crate, true] call ace_dragging_fnc_setCarryable;

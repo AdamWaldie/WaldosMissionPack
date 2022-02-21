@@ -7,43 +7,47 @@ You should not call this directly.
 This expects a call from addaction format, so parameters are in the argument array of an addaction, hence the ignored params marked with "".
 
 Params:
-_Boxtype - Selection of box | Potential Arguments: "Medical","Supply","Wheel","Track"
+_BoxType - Selection of box | Potential Arguments: "Medical","Supply","Wheel","Track"
 _Object - object upon which the spawn position is 
 */
 
 
 params["","","","_parameterArray"];
-private _boxType = _parameterArray select 0;
-private _object = _parameterArray select 1;
-private _customQMBox = _parameterArray select 2;
-private _aceMedicalCrate = _parameterArray select 3;
-
+_parameterArray params["_boxType", "_object", ["_customQMBox",""], ["_aceMedicalCrate",false]];
 
 // Get MMT defined box classes & if undefined attempt to get missionParameters.sqf definition, failing that, assign default
-//Debug!
-private _boxToSpawn = "Box_NATO_Support_F";
 //First check if custom box selected, if untrue get mission space defined box for this class, if non-existant, select debug box type of class, if all of that fails, the world is ending and the debug above is selected
-if (_customQMBox == "") then {
-    _supplyBoxClass = missionNamespace getVariable "Logi_SupplyBoxClass";
-    if (isNil "_supplyBoxClass") then
-    {
-        _boxToSpawn = "Box_NATO_Support_F";
-    };
-    _medicalBoxClass = missionNamespace getVariable "Logi_MedicalBoxClass";
-    if (isNil "_medicalBoxClass") then
-    { 
-        if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
-           _boxToSpawn = "ACE_medicalSupplyCrate_advanced";
-        } else {
-        _boxToSpawn = "C_IDAP_supplyCrate_F";
-        };
-    };
-} else {
+_supplyBoxClass = missionNamespace getVariable "Logi_SupplyBoxClass";
+_medicalBoxClass = missionNamespace getVariable "Logi_MedicalBoxClass";
+_boxToSpawn = "B_CargoNet_01_ammo_F";
+if (_customQMBox != "") then {
     if (_boxType == "Medical") then {
         _boxToSpawn = _customQMBox;
     };
     if (_boxType == "Supply") then {
-        _boxToSpawn = _customQMBox;
+        _boxToSpawn = _customQMBox;       
+    };
+} else {
+    if (isNil "_supplyBoxClass" && isNil "_medicalBoxClass") then
+    {
+        
+        if (_boxType == "Medical") then {
+            if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
+            _boxToSpawn = "ACE_medicalSupplyCrate_advanced";
+            } else {
+                _boxToSpawn = "C_IDAP_supplyCrate_F";
+            };
+        };
+        if (_boxType == "Supply") then {
+            _boxToSpawn = "Box_NATO_Support_F";       
+        };
+    } else {
+        if (_boxType == "Medical") then {
+            _boxToSpawn = Logi_MedicalBoxClass;
+        };
+        if (_boxType == "Supply") then {
+            _boxToSpawn = _supplyBoxClass;       
+        };
     };
 };
 // Get Track & Wheel
@@ -53,7 +57,6 @@ if (_boxType == "Wheel") then {
 if (_boxType == "Track") then {
     _boxToSpawn = "ACE_Track";
 };
-
 
 // Object Position Definition
 _position = getPos _object;

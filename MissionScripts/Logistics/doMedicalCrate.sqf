@@ -36,7 +36,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     if (_isFacility) then {
         _crate setVariable ["ace_medical_isMedicalFacility", true, true];
         // Make addAction Topic
-        _crate addAction ["This Is A Field Hospital", {}, [], 1.5, true, true, "", "true", 5];
+        _crate addAction ["<t color='#770000'>Field Hospital Enabled</t>", {}, [], 1.5, true, true, "", "true", 5];
     };
     //Add ACE Medical supplies   
    //Common Items
@@ -85,4 +85,4 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 // Change ace logistics size of crate
 [_crate, 1] call ace_cargo_fnc_setSize;
 [_crate, true] call ace_dragging_fnc_setDraggable;
-[_box, true] call ace_dragging_fnc_setCarryable;
+[_crate, true] call ace_dragging_fnc_setCarryable;

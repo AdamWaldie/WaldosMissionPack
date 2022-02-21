@@ -3,7 +3,7 @@ params ["_modulePos", "_objectPos"];
 [
     "Waldos Medical Crate", 
     [
-        ["SLIDER:PERCENT", ["Supply size", "Regulate the total amount of supplies in the crate"], [0, 1, 1], false],
+        ["SLIDER:PERCENT", ["Supply size", "Regulate the total amount of supplies in the crate"], [0, 1, 2], false],
         ["CHECKBOX", ["Set as Field Hospital", "Set this crate to act as field hospital"], true, false]
     ], 
     {
@@ -11,19 +11,19 @@ params ["_modulePos", "_objectPos"];
         _arg params ["_size","_fieldHopsital"];
         _pos params ["_modulePos"];
 
-        private _crate = "C_IDAP_supplyCrate_F" createVehicle _modulePos;
+        _crateClass = "C_IDAP_supplyCrate_F";
+        if (isNil Logi_MedicalBoxClass) then {
+            _crateClass = Logi_MedicalBoxClass;
+        };
         
-        [_crate, _fieldHopsital, _size] call Waldo_fnc_MedicalCratePopulate;
+        _medCrate = _crateClass createVehicle _modulePos;
 
-        // Change ace characteristics of crate
-        [_crate, 1] call ace_cargo_fnc_setSize;
-        [_crate, true] call ace_dragging_fnc_setDraggable;
-        [_crate, true] call ace_dragging_fnc_setCarryable;
+        [_medCrate, _fieldHopsital, _size] call Waldo_fnc_MedicalCratePopulate;
 
         // Add object to Zeus
         [{
             _this call ace_zeus_fnc_addObjectToCurator;
-        }, _crate] call CBA_fnc_execNextFrame;
+        }, _medCrate] call CBA_fnc_execNextFrame;
     },
     {},
     [_modulePos]

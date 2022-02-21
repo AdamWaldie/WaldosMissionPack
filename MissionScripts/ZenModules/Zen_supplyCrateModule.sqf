@@ -24,19 +24,21 @@ params ["_modulePos", "_objectPos"];
         _arg params ["_size"];
         _pos params ["_modulePos"];
 
-        private _crate = "B_CargoNet_01_ammo_F" createVehicle _modulePos;
-        
-        [_crate, _size] call Waldo_fnc_SupplyCratePopulate;
 
-        // Change ace characteristics of crate
-        [_crate, 1] call ace_cargo_fnc_setSize;
-        [_crate, true] call ace_dragging_fnc_setDraggable;
-        [_crate, true] call ace_dragging_fnc_setCarryable;
+        _crateClass = "B_CargoNet_01_ammo_F";
+
+        if (isNil Logi_SupplyBoxClass) then {
+            _crateClass = Logi_SupplyBoxClass;
+        };
+
+        _supCrate = _crateClass createVehicle _modulePos;
+
+        [_supCrate, _size] call Waldo_fnc_SupplyCratePopulate;
 
         // Add object to Zeus
         [{
             _this call ace_zeus_fnc_addObjectToCurator;
-        }, _crate] call CBA_fnc_execNextFrame;
+        }, _supCrate] call CBA_fnc_execNextFrame;
     },
     {},
     [_modulePos]
