@@ -4,13 +4,10 @@ Called From: ServerInit.sqf
 Scope: All players within mission.
 Execution time: Mission start (+/- 1 minute)
 Author: Adam Waldie
-For: Rooster Teeth Gaming Community
 License: Distributable and editable with proper attribution.
 
 How to call:
 From init.sqf
-
-_ACRE2ServerInitHandle = [PARAMETERS] execvm Waldo_fnc_ACRE2Init;
 
 This is done for you in mission packs.
 
@@ -107,7 +104,7 @@ As for what its actually doing in each case:
 //Get Arguments for call
 private _ACRESetups = _this select 0;
 /*
-//Inline CBA System
+//Inline CBA System  - One day, I will get this variant to work properly.
 [{
    call acre_api_fnc_isInitialized;
 },{

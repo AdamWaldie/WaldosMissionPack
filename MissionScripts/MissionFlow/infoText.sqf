@@ -18,6 +18,8 @@ You can also customise the information text directly, by providing additional pa
 params[["_title","DEFAULT"],["_locale","DEFAULT"]];
 
 waitUntil {!isNull findDisplay 46};
+//Grab Mission Name & Terrain Name automatically
+//If provided with a string in the correct parameter slot, accepts that inplace of the automatic generation
 _missionTitle = getText (missionConfigFile >> "onLoadName");; 
 if (_title != "DEFAULT") then {
 	_missionTitle = _title;
@@ -29,9 +31,9 @@ if (_locale != "DEFAULT") then {
 _timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString; 
 _time = (_timeConfig select 0) + (_timeConfig select 1) + ' hrs';
 
-_date =  str (date select 2) + '/' + str (date select 1) + '/' + str (date select 0); //Returns ingame Date.
+_date =  str (date select 2) + '/' + str (date select 1) + '/' + str (date select 0);
 _missionTime = str (time/60);
-_localePos = 'Grid ' + mapGridPosition player + ', ' + _localeName; // Combo to give Eg - "Grid 061223, Kavala, Altis".
+_localePos = 'Grid ' + mapGridPosition player + ', ' + _localeName; 
 _groupInfo = rank player + ' ' + name player + ', ' + groupID (group player);
 
 _textColour = switch (side player) do

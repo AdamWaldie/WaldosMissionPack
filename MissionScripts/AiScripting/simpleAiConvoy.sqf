@@ -4,7 +4,6 @@ Called From: sqf file, trigger, init field or whatever you fancy
 Scope: Groups of units referanced
 Execution time: from handle call.
 Author: Tova, modifed by Adam Waldie
-For: Rooster Teeth Gaming Community
 License: unlimited distribution and editing as per Tova's original.
 
 Call it with:

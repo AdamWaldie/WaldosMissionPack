@@ -13,8 +13,14 @@ How to use:
 
 Any object init:
 this addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_SaveLoadout];
+
+
+In scripts
+
+[] call Waldo_fnc_SaveLoadout;
+
+
 */
-//player setVariable["Player_Inventory", getUnitLoadout player];
 [player, [missionNamespace, "Player_Inventory"]] call BIS_fnc_saveInventory;
 hint "Respawn Loadout Updated!";
 sleep 5;

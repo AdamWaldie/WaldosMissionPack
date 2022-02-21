@@ -25,6 +25,7 @@ This file is for mission makers to change based on their needs. Most scritps rel
 ACE_maxWeightDrag = 2000;
 ACE_maxWeightCarry = 2000;
 
+
 //Initilise ACRE 2 Radios
 //Setup Array and Callsign list [EDIT THIS SECTION FOR YOUR MISSION!]
 private _UnitRadioSetups = [
@@ -36,12 +37,9 @@ private _UnitRadioSetups = [
     ["Loki",2,2,3,4],
     ["Mimir",3,2,3,4],
     ["Valkyrie",5,2,3,4],
-    ["High Command",5,2,3,4]
+    ["High Command",6,2,3,4]
 ];
-//Make the call!
-//[_UnitRadioSetups] call compile preprocessFileLineNumbers "MissionScripts\ACRE2Init.sqf"; -  Depreciated in favour of functionalised scripts
 [_UnitRadioSetups] call Waldo_fnc_ACRE2Init;
-
 
 /*
 If you are utilising the Virtual Logistics Quartermaster (initQuartermaster.sqf & LogiBoxes.sqf) You can set custom boxes for both Medical & Supply boxes.
@@ -53,9 +51,9 @@ missionNamespace setVariable ["SupplyBoxClass", "PUTCLASSNAMEHERE", true];
 
 */
 //Supply Box Classname MissionNameSpace Declaration
-missionNamespace setVariable ["SupplyBoxClass", "Box_NATO_Support_F", true];
+missionNamespace setVariable ["Logi_SupplyBoxClass", "Box_NATO_Equip_F", true];
 //Medical Box Classname MissionNameSpace Declaration
-missionNamespace setVariable ["TAG_myPublicVariable", "C_IDAP_supplyCrate_F", true];
+missionNamespace setVariable ["Logi_MedicalBoxClass", "C_IDAP_supplyCrate_F", true];
 
 
 
