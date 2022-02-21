@@ -23,16 +23,16 @@ These are from the exemplar mission
 params["_unit","_spawnObject",["_customBox",""]];
 //Verify if Ace Medical is present, if so, enable ACE_Medical Box setup, else pass a vanialla support box to be filled with FirstAidKits & Medical Packs
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
-    _unit addAction ['Spawn Medical Box', "MissionScripts\Logistics\LogiBoxes.sqf", ["Medical",_spawnObject, _customBox, true]];
+    _unit addAction ['Spawn Medical Box', Waldo_fnc_LogisticsSpawner, ["Medical",_spawnObject, _customBox, true]];
 } else {
-    _unit addAction ['Spawn Medical Box', "MissionScripts\Logistics\LogiBoxes.sqf", ["Medical",_spawnObject, _customBox, false]];
+    _unit addAction ['Spawn Medical Box', Waldo_fnc_LogisticsSpawner, ["Medical",_spawnObject, _customBox, false]];
 };
 
 //Add automated supply box - yay!
-_unit addAction ['Spawn Ammo Box', "MissionScripts\Logistics\LogiBoxes.sqf", ["Supply",_spawnObject, _customBox]];
+_unit addAction ['Spawn Ammo Box', Waldo_fnc_LogisticsSpawner, ["Supply",_spawnObject, _customBox]];
 
 //Verify if Ace is present before adding wheel & track spawn addactions
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
-    _unit addAction ['Spawn Spare Wheel', "MissionScripts\Logistics\LogiBoxes.sqf", ["Wheel", _spawnObject, _customBox]];
-    _unit addAction ['Spawn Spare Track', "MissionScripts\Logistics\LogiBoxes.sqf", ["Track", _spawnObject, _customBox]];
+    _unit addAction ['Spawn Spare Wheel', Waldo_fnc_LogisticsSpawner, ["Wheel", _spawnObject, _customBox]];
+    _unit addAction ['Spawn Spare Track', Waldo_fnc_LogisticsSpawner, ["Track", _spawnObject, _customBox]];
 };
