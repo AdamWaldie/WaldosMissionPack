@@ -16,54 +16,39 @@ class CfgFunctions
 		class missionSetup 
         {
             class ACRE2Init {
-                file = "MissionScripts\ACRE2Init.sqf";
+                file = "MissionScripts\MissionFlow\ACRE2Init.sqf";
             };
             class AITweak {
-                file = "MissionScripts\AISkillAdjustmentSystem.sqf";
-            };
-            class UnFlipping {
-                file = "MissionScripts\flipAction.sqf";
+                file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
             };
         };
-        class Loadout
-		{
-            class SaveLoadout {
-                file = "MissionScripts\saveRespawnLoadout.sqf";
-            };
-            class SpawnLogisticsBox {
-                file = "MissionScripts\LogiBoxes.sqf";
-            };
-            class SetupQuarterMaster {
-                file = "MissionScripts\initQuartermaster.sqf";
-            };
-		};
         class convoy 
         {
             class SimpleAiConvoy {
-                file =  "MissionScripts\simpleAiConvoy.sqf";
+                file =  "MissionScripts\AiScripting\simpleAiConvoy.sqf";
             };
         };
         class teleport
         {
             class Teleport {
-                file =  "MissionScripts\teleport.sqf";
+                file =  "MissionScripts\Logistics\teleport.sqf";
             };
         };
         class MissionEnding 
         {
             class ENDEX {
-                file = "MissionScripts\ENDEX.sqf";
+                file = "MissionScripts\MissionFlow\ENDEX.sqf";
             };
         };
-        class Flourish 
+        class TitleScreeen 
         {
             class InfoText {
-                file = "MissionScripts\infoText.sqf";
+                file = "MissionScripts\MissionFlow\infoText.sqf";
             };
         };
         class DebugToolKit {
             class ToolkitAceLimitedArsenal {
-                file = "MissionScripts\ToolkitAceLimitedArsenal.sqf";
+                file = "MissionScripts\MissionMakerResourceScripts\ToolkitAceLimitedArsenal.sqf";
             };
         }
         class ZenModules {
@@ -73,14 +58,28 @@ class CfgFunctions
             class CreateSupplyCrate {
                 file = "MissionScripts\ZenModules\Zen_supplyCrateModule.sqf";
             };
-            class SupplyCratePopulate {
-                file = "MissionScripts\ZenModules\Zen_Support_CratePopulate.sqf";
-            };
             class CreateCCPCrate {
                 file = "MissionScripts\ZenModules\Zen_medicalCrateModule.sqf";
             };
+        };
+        class Logistics {
             class MedicalCratePopulate {
-                file = "MissionScripts\ZenModules\Zen_Medical_CratePopulate.sqf";
+                file = "MissionScripts\Logistics\doMedicalCrate.sqf";
+            };
+            class SupplyCratePopulate {
+                file = "MissionScripts\Logistics\doSupplyCrate.sqf";
+            };
+            class SaveLoadout {
+                file = "MissionScripts\Logistics\saveRespawnLoadout.sqf";
+            };
+            class SpawnLogisticsBox {
+                file = "MissionScripts\Logistics\LogiBoxes.sqf";
+            };
+            class SetupQuarterMaster {
+                file = "MissionScripts\Logistics\initQuartermaster.sqf";
+            };
+            class UnFlipping {
+                file = "MissionScripts\Logistics\flipAction.sqf";
             };
         };
 	};

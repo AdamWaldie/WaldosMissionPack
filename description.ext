@@ -3,8 +3,6 @@ Purpose: description.ext
 Called From: N/A
 Scope: Mission
 Execution time: On mission load
-Author: Adam Waldie
-For: Rooster Teeth Gaming Community
 License: Distributable and editable, no attribution required.
 */
 /*           INFO            */
@@ -13,7 +11,7 @@ License: Distributable and editable, no attribution required.
     
     author              = "YOURNAMEHERE"; // Your name goes here for display in the loading screen
 
-    onLoadName          = "Mission Pack v3.8"; // Your mission name goes here for display in the loading screen & in the titlescreen text
+    onLoadName          = "Mission Pack v4.0"; // Your mission name goes here for display in the loading screen & in the titlescreen text
     onLoadMission       = "YOURTEXTHERE"; // Mission subtitle goes here
     onLoadIntro         = "YOURTEXTHERE";// Mission subtitle goes here
 
@@ -28,7 +26,7 @@ License: Distributable and editable, no attribution required.
 /*          RESPAWN           */
     respawn                = BASE; //Respawn method (Fixed position, on friendly etc...)
     respawnDelay           = 20; // Delay between respawns
-    respawnOnStart         = -1; //DO NOT TOUCH
+    respawnOnStart         = -1; //DO NOT TOUCH, changing this will break numerous things
     respawnTemplatesWest[] = {"MenuPosition","Counter"};
 
 /*          SYSTEMS           */
@@ -40,14 +38,14 @@ License: Distributable and editable, no attribution required.
         maxPlayers = 31; // Change this to whatever the maximum playercount of your mission is
      };
 
-/*           MissionScriptFunctions            */
+/*           Waldos MissionScript Functions            */
 
 #include "MissionScripts\WaldosFunctions.sqf"
 
 /*           OTHER            */
 class CfgDebriefing
 {  
-    //If using triggers to end the mission, you can create a custom end screen using the below
+    //If using triggers OR the Endex Module/script to end the mission, you can create a custom end screen using the below
 	class End1
 	{
         title =	"MISSION COMPLETE";

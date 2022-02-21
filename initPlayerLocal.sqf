@@ -1,18 +1,17 @@
-//Post-Init Setup of saved Loadout (Measure taken to help prevent Naked People)
+//Post-Init Setup of saved Loadout (Measure taken to help prevent Naked/unarmed People)
+
 ["CAManBase", "InitPost", {
     params ["_unit"];
     if (!local _unit) exitWith {
         if (_unit == player) then {
-            //DO FUCK ALL BECAUSE UNIT IS NON-LOCAL DEBUG ONLY
+            //DO FUCK ALL BECAUSE UNIT IS NON-LOCAL (DEBUG Measure for applying loadouts via script)
         };
     };
     if (_unit == player) then {
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_saveInventory;
-    };
-    if (_unit == player) then {
         _unit addAction [
         "Flip Vehicle", 
-        "MissionScripts\flipAction.sqf", 
+        "MissionScripts\Logistics\flipAction.sqf", 
         [], 
         0, 
         false, 
@@ -29,11 +28,9 @@
     params ["_unit"];
     if (_unit == player) then {
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_loadInventory;
-    };
-    if (_unit == player) then {
         _unit addAction [
         "Flip Vehicle", 
-        "MissionScripts\flipAction.sqf", 
+        "MissionScripts\Logistics\flipAction.sqf", 
         [], 
         0, 
         false, 
@@ -44,34 +41,21 @@
     };
 }] call CBA_fnc_addClassEventHandler;
 
-//UNCOMMENT THE BELOW IF YOU WANT PEOPLE TO RESPAWN WITH WHAT THEY DIED WITH!
-//Save Loadout on Death
+/*
+=====================RESPAWN WITH LOADOUT ON DEATH====================================
+
+UNCOMMENT THE BELOW IF YOU WANT PEOPLE TO RESPAWN WITH WHAT THEY DIED WITH!
+
+
+*/
+
 /*
 ["CAManBase", "Killed", {
     params ["_unit"];
     if (_unit == player) then {
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_saveInventory;
     };
-}] call CBA_fnc_addClassEventHandler;*/
+}] call CBA_fnc_addClassEventHandler;
 
-//=====================DO NOT UN-COMMENT BELOW THESE LINES====================================
 
-//Ensure loadout is applied via local execution (Safety Net) - Not implemented in this build due to no issues so far
-/*
-["CAManBase", "Local", {
-    params ["_unit"];
-    if (_unit == player && {local _unit}) then {
-        [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_loadInventory;
-    };
-}] call CBA_fnc_addClassEventHandler;*/
-
-//Arsenal Eventhandler - DO NOT ENABLE. Next version will have Arsenal interaction saving
-/*
-_id = ["ace_arsenal_displayClosed", {
-
-_LoadoutSaveArsenal = execvm "MissionScripts\saveRespawnLoadout.sqf";
-
-}] call CBA_fnc_addEventHandler;*/
-
-// Loadout Save/Load handling
-
+*/

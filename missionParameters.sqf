@@ -4,13 +4,10 @@ Called From: init.sqf
 Scope: All players within mission. (I am aware of the inefficacy, but this is easier on the missionmakers who do not program)
 Execution time: Mission start (+/- 1 minute)
 Author: Waldo
-For: Rooster Teeth Gaming Community
 License: Distributable and editable with proper attribution.
 
 How to call:
 From init.sqf
-
-_ACRE2InitHandle = execvm "missionParameters.sqf";
 
 This is done for you in mission packs.
 
@@ -24,7 +21,7 @@ This file is for mission makers to change based on their needs. Most scritps rel
 //Zeus Enhanced Modules setup (comment out to disable)
 [] call Waldo_fnc_ZenInit;
 
-// Set ace namespace variables for maximum drag/carryweights
+//Set ace namespace variables for maximum drag/carryweights
 ACE_maxWeightDrag = 2000;
 ACE_maxWeightCarry = 2000;
 
@@ -34,16 +31,33 @@ private _UnitRadioSetups = [
     //In format ["Callsign",343RadioChannel,152RadioChannel,148RadioChannel,117FRadioChannel]
     // The last line should not have a , at the end.
     // Callsigns should be in "", and radio channels should be without "".
-    ["Odin",4,1,1,3],
-    ["Thor",1,1,1,3],
-    ["Loki",2,1,1,3],
-    ["Mimir",3,1,1,3],
-    ["Valkyrie",5,1,1,3],
-    ["High Command",5,1,1,3]
+    ["Odin",4,2,3,4],
+    ["Thor",1,2,3,4],
+    ["Loki",2,2,3,4],
+    ["Mimir",3,2,3,4],
+    ["Valkyrie",5,2,3,4],
+    ["High Command",5,2,3,4]
 ];
 //Make the call!
-//[_UnitRadioSetups] call compile preprocessFileLineNumbers "MissionScripts\ACRE2Init.sqf"; -  Depreciated
+//[_UnitRadioSetups] call compile preprocessFileLineNumbers "MissionScripts\ACRE2Init.sqf"; -  Depreciated in favour of functionalised scripts
 [_UnitRadioSetups] call Waldo_fnc_ACRE2Init;
+
+
+/*
+If you are utilising the Virtual Logistics Quartermaster (initQuartermaster.sqf & LogiBoxes.sqf) You can set custom boxes for both Medical & Supply boxes.
+By default, leaving these unchanged, will provide players with the Default ACE Medical/Vanilla Medical box & Vanilla Supply box. you do not need to change these
+
+You will need to find the classname of the box you are wanting to use, and place it with the quotation marks in where dennoted below;
+
+missionNamespace setVariable ["SupplyBoxClass", "PUTCLASSNAMEHERE", true];
+
+*/
+//Supply Box Classname MissionNameSpace Declaration
+missionNamespace setVariable ["SupplyBoxClass", "Box_NATO_Support_F", true];
+//Medical Box Classname MissionNameSpace Declaration
+missionNamespace setVariable ["TAG_myPublicVariable", "C_IDAP_supplyCrate_F", true];
+
+
 
 //AI Tweak setup
 // These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
