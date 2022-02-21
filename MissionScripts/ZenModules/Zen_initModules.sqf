@@ -29,23 +29,10 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     "\a3\modules_f\data\portraitmodule_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-// Check if increase training on location is true then add option.
-if (ace_medical_treatment_locationsBoostTraining) then {
-    ["Waldos Modules", "Field Hospital Crate",
-        {
-            params ["_modulePos", "_objectPos"];
-            [_modulePos, _objectPos,1] call Waldo_fnc_CreateCCPCrate;
-        },
-        "\z\ACE\addons\medical_gui\ui\cross.paa"
-    ] call zen_custom_modules_fnc_register;
-};
-
-if (!ace_medical_treatment_locationsBoostTraining) then {
-    ["Waldos Modules", "Medical Supply Crate",
-        {
-            params ["_modulePos", "_objectPos"];
-            [_modulePos, _objectPos,1] call Waldo_fnc_CreateCCPCrate;
-        },
-        "\z\ACE\addons\medical_gui\ui\cross.paa"
-    ] call zen_custom_modules_fnc_register;
-};
+["Waldos Modules", "Field Hospital Crate",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos,1] call Waldo_fnc_CreateCCPCrate;
+    },
+    "\z\ACE\addons\medical_gui\ui\cross.paa"
+] call zen_custom_modules_fnc_register;

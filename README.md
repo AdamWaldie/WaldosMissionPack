@@ -1,6 +1,5 @@
 # WaldosMissionPack
 A package of mission scripts for new mission makers.
-![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
 
 # missionParameters.sqf
 
@@ -40,15 +39,15 @@ to become aquanited with the scripting side of Arma 3.
 - Functionalised scripts for ease of use
 
 # Function Call listing
-- Waldo_fnc_ACRE2Init  (Pre-setup For You)
-- Waldo_fnc_AITweak  (Pre-setup For You)
-- Waldo_fnc_UnFlipping (Pre-setup For You)
-- Waldo_fnc_SaveLoadout (Optional)
-- Waldo_fnc_SimpleAiConvoy (Optional)
-- Waldo_fnc_SimpleTeleport (Optional)
-- Waldo_fnc_ENDEX (Optional)
-- Waldo_fnc_InfoText (Optional)
-- Waldo_fnc_ToolkitAceLimitedArsenal (Optional)
+Waldo_fnc_ACRE2Init  (Pre-setup For You)
+Waldo_fnc_AITweak  (Pre-setup For You)
+Waldo_fnc_UnFlipping (Pre-setup For You)
+Waldo_fnc_SaveLoadout (Optional)
+Waldo_fnc_SimpleAiConvoy (Optional)
+Waldo_fnc_SimpleTeleport (Optional)
+Waldo_fnc_ENDEX (Optional)
+Waldo_fnc_InfoText (Optional)
+Waldo_fnc_ToolkitAceLimitedArsenal (Optional)
 
 Use Cases can be found in ther respective files.
 
@@ -58,7 +57,6 @@ Use Cases can be found in ther respective files.
 # Supported Addons
 - ACE 3
 - ACRE 2 (You can disable this via missionParameters.sqf)
-- ZEN & ZEN Ace Compat
 - TFAR (Inherrent support via 3Eden)
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
