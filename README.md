@@ -51,5 +51,6 @@ to become aquanited with the scripting side of Arma 3.
 - ACE 3
 - ACRE 2 (You can disable this via missionParameters.sqf)
 - TFAR (Inherrent support via 3Eden)
+- Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
