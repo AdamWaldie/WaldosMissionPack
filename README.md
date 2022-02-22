@@ -26,6 +26,7 @@ to become aquanited with the scripting side of Arma 3.
 # Other Information
 - All files are provided with description on their utilisation, their parameters and how you can use them.
 - missionParameters.sqf is heavily documented and should be worth a look.
+- initServer.sqf allows for the setting of custom boxes for Medical & resupply crates throughout the pack.
 - initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
 
 # Pack Features
