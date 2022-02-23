@@ -8,11 +8,21 @@ to utilise critical systems of arma 3.
 
 To this end, the majority of QOL & critical scripts can be utilised via the init.sqf, initServer.sqf, initPlayerlocal.sqf & description.ext files.
 
-Unless wanting to use specific features, or learn about creating starter crates, autolimited arsenals or Mobile Headquarters systems, the average mission maker shouldnt need to venture much further past those files.
+Functions are defined in WaldoFunctions.sqf in MissionScripts Folder.
+
+The Function is always: Waldo_fnc_X
+
+Where X is replaced by the class furthest to the right of the screen in the file.
+
+
+Each function specifically referances a file, so that you may locate and read up on how the function works, should you need to call it yourself.
+
+
+Unless you are wanting to use specific features such as: creating starter crates, autolimited arsenals or Mobile Headquarters systems amoung other scripts, you need not venture further than the root mission directory.
 
 For those seeking knowledge or greater control, each file is fully documented on its usage, its parameters and its purpose.
 
-# Required Steps To Utilse Scripts
+# Required Steps To Enable Scripts
 1. Copy the contents of the WMP_VERSION folder into your user directory (This will provide you with an exemplar mission on Altis - utilising RHS.
 2. Copy everything bar the mission.sqm from that folder into your mission
 3. Ensure that the mission.sqm is unbinarized (attributes --> General --> under Misc --> uncheck the "binarize the scenario file" box)
