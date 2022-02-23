@@ -49,7 +49,7 @@ if (_useModernConsturctionAudio == false) then {
 
 [
 	_MHQ,											
-	"Deploy Field Headquarters",										
+	"Deploy Mobile Headquarters",										
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Idle icon shown on screen
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Progress icon shown on screen
 	"!(missionNamespace getVariable 'Waldo_MHQ_Status') && _this distance _target < 5",						// Condition for the action to be shown
@@ -103,7 +103,7 @@ if (_useModernConsturctionAudio == false) then {
 
 [
 	_MHQ,
-	"Pack up Field Headquarters",											
+	"Pack up Mobile Headquarters",											
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Idle icon shown on screen
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Progress icon shown on screen
 	"missionNamespace getVariable 'Waldo_MHQ_Status' && _this distance _target < 5",						// Condition for the action to be shown
