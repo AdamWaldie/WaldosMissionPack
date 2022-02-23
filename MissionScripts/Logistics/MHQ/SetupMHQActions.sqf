@@ -66,7 +66,8 @@ if (_useModernConsturctionAudio == false) then {
 		_arguments params["_MHQ","_layerContents","_MHQAudioPath","_side","_logisticsSystemImplementation"];
 		{[_x, false] remoteExec ["hideObjectGlobal", 0];} forEach _layerContents;
 		_MHQ engineOn false;
-		MHQRespawn = [_side, _MHQ, "Field Headquarters"] call BIS_fnc_addRespawnPosition;
+		_RandomObjectSelection = selectRandom _layerContents;
+		MHQRespawn = [_side, _RandomObjectSelection, "Mobile Headquarters"] call BIS_fnc_addRespawnPosition;
 		missionNamespace setVariable ['Waldo_MHQ_Status', true, true];
 		{
 			_x action ["Eject", vehicle _x];

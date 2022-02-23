@@ -12,7 +12,7 @@ class EditorData
 	};
 	class ItemIDProvider
 	{
-		nextID=7653;
+		nextID=7662;
 	};
 	class MarkerIDProvider
 	{
@@ -20,14 +20,14 @@ class EditorData
 	};
 	class LayerIndexProvider
 	{
-		nextID=840;
+		nextID=842;
 	};
 	class Camera
 	{
-		pos[]={23371.91,8.7401705,19162.857};
-		dir[]={0.32287908,-0.27630088,0.90523487};
-		up[]={0.092827901,0.96106309,0.26025558};
-		aside[]={0.94189721,-2.7471833e-007,-0.33595514};
+		pos[]={23333.416,10.975893,19154.527};
+		dir[]={-0.25892365,-0.60566455,0.75241548};
+		up[]={-0.19708043,0.79572004,0.57270306};
+		aside[]={0.94557804,0,0.32539538};
 	};
 };
 binarizationWanted=0;
@@ -34342,7 +34342,7 @@ class Mission
 	};
 	class Entities
 	{
-		items=67;
+		items=68;
 		class Item0
 		{
 			dataType="Trigger";
@@ -38079,12 +38079,13 @@ class Mission
 			class PositionInfo
 			{
 				position[]={23348.355,5.0615072,19174.641};
-				angles[]={-0,5.1947966,0};
+				angles[]={0,5.194798,0};
 			};
 			side="Empty";
 			flags=4;
 			class Attributes
 			{
+				init="[flatbedMortarTruck,""sandbagTruck""] call Waldo_fnc_MassAttachRelative;";
 				name="flatbedMortarTruck";
 			};
 			id=7491;
@@ -44781,6 +44782,49 @@ class Mission
 				};
 				nAttributes=1;
 			};
+		};
+		class Item67
+		{
+			dataType="Layer";
+			name="SandbagTruck";
+			class Entities
+			{
+				items=2;
+				class Item0
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23349.598,5.1594,19173.02};
+						angles[]={0,0.47149533,-0};
+					};
+					side="Empty";
+					class Attributes
+					{
+					};
+					id=7656;
+					type="Land_BagFence_Long_F";
+					atlOffset=1.5500884;
+				};
+				class Item1
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23350.357,5.1594,19174.537};
+						angles[]={0,0.47149533,0};
+					};
+					side="Empty";
+					class Attributes
+					{
+					};
+					id=7657;
+					type="Land_BagFence_Long_F";
+					atlOffset=1.5500884;
+				};
+			};
+			id=7655;
+			atlOffset=1.5500884;
 		};
 	};
 	class Connections
