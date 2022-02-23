@@ -68,3 +68,20 @@ When left with no parameters, as below, the script autogenerates the location ba
 You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission. 
 */
 [] call Waldo_fnc_InfoText;
+
+
+/*
+
+waldos Init Completion flag
+
+======DO NOT TOUCH!=====
+
+Allows scheduling of the following script packages:
+- Starter crates
+- Ace Limited Arsenals on objects placed in eden editor
+
+Zeus modules & script spawned supply boxes are unaffected
+
+*/
+waitUntil {!isNull player && player == player};
+missionnamespace  setVariable ["WALDO_INIT_COMPLETE", true, true];

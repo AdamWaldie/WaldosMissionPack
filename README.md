@@ -16,18 +16,19 @@ to become aquanited with the scripting side of Arma 3.
 # Required Steps To Utilse Scripts
 1. Copy the contents of the WMP_VERSION folder into your user directory (This will provide you with an exemplar mission on Altis - utilising RHS.
 2. Copy everything bar the mission.sqm from that folder into your mission
-3. Fill out the relevant information in the description.ext
-4. IF YOU ARE USING ACE 3:
+3. Ensure that the mission.sqm is unbinarized (attributes --> General --> under Misc --> uncheck the "binarize the scenario file" box)
+4. Fill out the relevant information in the description.ext
+5. IF YOU ARE USING ACE 3:
    - Disable ACE 3 Respawn in server & mission addon settings.
-5. IF YOU ARE USING ACRE2:
+6. IF YOU ARE USING ACRE2:
    - Player Groups MUST be given a Callsign in Eden & have their Callsign & radio frequiencies assigned in missionParameters.sqf.
-6. Waldo's AI tweaks can be set via the missionParameters.sqf file.
+7. Waldo's AI tweaks can be set via the missionParameters.sqf file.
 
 # Other Information
 - All files are provided with description on their utilisation, their parameters and how you can use them.
 - missionParameters.sqf is heavily documented and should be worth a look.
-- initServer.sqf allows for the setting of custom boxes for Medical & resupply crates throughout the pack.
 - initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
+- initServer.sqf allows the definition of custom logistics crates & the specification of the side of players for startercrates and logistics crate contents.
 
 # Pack Features
 - Custom title roll (Customisable).
@@ -46,6 +47,10 @@ to become aquanited with the scripting side of Arma 3.
 
 # Required Addons
 - CBA_A3
+Tutorial Mission:
+- ACE
+- ACRE
+- LAMBS_DANGER
 
 # Supported Addons
 - ACE 3

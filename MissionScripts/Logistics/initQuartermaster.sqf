@@ -29,7 +29,8 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 };
 
 //Add automated supply box - yay!
-_unit addAction ['Spawn Ammo Box', Waldo_fnc_LogisticsSpawner, ["Supply",_spawnObject, _customBox]];
+_unit addAction ['Spawn Full Resupply Box', Waldo_fnc_LogisticsSpawner, ["Supply",_spawnObject, _customBox]];
+_unit addAction ['Spawn Ammo Box', Waldo_fnc_LogisticsSpawner, ["Ammo",_spawnObject, _customBox]];
 
 //Verify if Ace is present before adding wheel & track spawn addactions
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {

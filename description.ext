@@ -42,6 +42,14 @@ License: Distributable and editable, no attribution required.
 
 #include "MissionScripts\WaldosFunctions.sqf"
 
+// Include Mission.sqm for referance
+class MissionSQM {
+    #include "mission.sqm"
+};
+
+//Optional HardCoded CBASettings - Alternative method included in file
+//#include "cba_settings.sqf"
+
 /*           OTHER            */
 class CfgDebriefing
 {  

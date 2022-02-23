@@ -17,3 +17,22 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 } else {
     missionNamespace setVariable ["Logi_MedicalBoxClass", "C_IDAP_supplyCrate_F",true];
 };
+
+/*
+
+Mission.sqm based supply system
+
+This searches the Mission.sqm for playable characters on the side defined by the parameter. It grabs their compliment of weapons, ammo, clothing and items, gets uniques and returns a unique 2D Array of the results.
+
+These reesults are then globaly synced, for use in the ZEN resupply boxes & to create ACE Arsenals with equipment limited to that pre-existing in the mission.sqm.
+
+Parameters:
+- "West"
+- "East"
+- "Independent"
+- "Civilian"
+
+*/
+
+loadoutArray = ["West"] call Waldo_fnc_MissionSQMLookup; 
+missionNamespace setVariable ["Logi_MissionSQMArray", loadoutArray,true];

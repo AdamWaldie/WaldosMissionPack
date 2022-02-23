@@ -52,6 +52,12 @@ class CfgFunctions
             };
         }
         class Logistics {
+            class MedicalCratePopulate_Legacy {
+                file = "MissionScripts\Logistics\doMedicalCrate_Legacy.sqf";
+            };
+            class SupplyCratePopulate_Legacy {
+                file = "MissionScripts\Logistics\doSupplyCrate_Legacy.sqf";
+            };
             class MedicalCratePopulate {
                 file = "MissionScripts\Logistics\doMedicalCrate.sqf";
             };
@@ -66,6 +72,15 @@ class CfgFunctions
             };
             class LogisticsSpawner {
                 file = "MissionScripts\Logistics\LogiBoxes.sqf";
+            };
+            class MissionSQMLookup {
+                file = "MissionScripts\Logistics\missionFileLookup.sqf";
+            };
+            class DoStarterCrate {
+                file = "MissionScripts\Logistics\doStarterCrate.sqf";
+            };
+            class CreateLimitedArsenal {
+                file = "MissionScripts\Logistics\createLimitedAceArsenal.sqf";
             };
         };
         class Zen {

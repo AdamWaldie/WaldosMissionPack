@@ -24,7 +24,7 @@ if (_customQMBox != "") then {
     if (_boxType == "Medical") then {
         _boxToSpawn = _customQMBox;
     };
-    if (_boxType == "Supply") then {
+    if (_boxType == "Supply" || _boxType == "Ammo") then {
         _boxToSpawn = _customQMBox;       
     };
 } else {
@@ -38,14 +38,14 @@ if (_customQMBox != "") then {
                 _boxToSpawn = "C_IDAP_supplyCrate_F";
             };
         };
-        if (_boxType == "Supply") then {
+        if (_boxType == "Supply" || _boxType == "Ammo") then {
             _boxToSpawn = "Box_NATO_Support_F";       
         };
     } else {
         if (_boxType == "Medical") then {
             _boxToSpawn = Logi_MedicalBoxClass;
         };
-        if (_boxType == "Supply") then {
+        if (_boxType == "Supply" || _boxType == "Ammo") then {
             _boxToSpawn = _supplyBoxClass;       
         };
     };
@@ -114,7 +114,26 @@ if (_boxType == "Medical") then {
 if (_boxType == "Supply") then {
     _box setPos _ammoPos;
     //Call supplybox population script with box and random scalar between 1 & 2
-    [_box, 1] call Waldo_fnc_SupplyCratePopulate;
+    [_box, 1, true] call Waldo_fnc_SupplyCratePopulate;
+    _quote = selectRandom [
+        "One canister, ready to go.",
+        "...48...49...50. Yep, it's all there.",
+        "God, you're going through a lot of these, aren't you?",
+        "Erm.. yeah. We have that in stock. Here.",
+        "One Ammo Crate, check.",
+        "That one's on the house.",
+        "You got your crate licence there mate?",
+        "Come back if you need more, they haven't set up the limits yet!",
+        "Don't spend them all in one place!"
+    ];
+    ["Quartermaster", _quote] spawn BIS_fnc_showSubtitle;
+};
+
+// Ammo Only Box
+if (_boxType == "Ammo") then {
+    _box setPos _ammoPos;
+    //Call supplybox population script with box and random scalar between 1 & 2
+    [_box, 1, false] call Waldo_fnc_SupplyCratePopulate;
     _quote = selectRandom [
         "One canister, ready to go.",
         "...48...49...50. Yep, it's all there.",

@@ -17,11 +17,12 @@ params ["_modulePos", "_objectPos"];
 [
     "Waldos Supply Crate", 
     [
-        ["SLIDER:PERCENT", ["Supply size", "Regulate the total amount of supplies in the crate"], [0, 1, 2], false]
+        ["SLIDER:PERCENT", ["Supply size", "Regulate the total amount of supplies in the crate"], [0, 1, 2], false],
+        ["CHECKBOX", ["Only Ammo And Launchers", "Set this crate to only provide Ammunition and launchers, as opposed to equipment as well"], true, false]
     ], 
     {
         params ["_arg", "_pos"];
-        _arg params ["_size"];
+        _arg params ["_size","_fullService"];
         _pos params ["_modulePos"];
 
 
@@ -33,7 +34,7 @@ params ["_modulePos", "_objectPos"];
 
         _supCrate = _crateClass createVehicle _modulePos;
 
-        [_supCrate, _size] call Waldo_fnc_SupplyCratePopulate;
+        [_supCrate, _size, !_fullService] call Waldo_fnc_SupplyCratePopulate;
 
         // Add object to Zeus
         [{
