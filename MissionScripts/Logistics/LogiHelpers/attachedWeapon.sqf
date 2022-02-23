@@ -19,8 +19,11 @@ params["_turret","_vehicle",["_customName","Turret"]];
 //Attach the thing to the thing!
 0 = [_turret, _vehicle] call BIS_fnc_attachToRelative;
 
+
+if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {
 //Prevent other ACE interaction claims
-[_turret, _turret] call ace_common_fnc_claim; // prevent other ACE Options While connected to the object on start
+  [_turret, _turret] call ace_common_fnc_claim; // prevent other ACE Options While connected to the object on start
+};
 
 //Prevent whacky things from happening by denying special actions from IFA3 & other mods
 inGameUISetEventHandler ["action",  

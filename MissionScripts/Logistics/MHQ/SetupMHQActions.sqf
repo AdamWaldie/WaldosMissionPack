@@ -53,7 +53,7 @@ if (_useModernConsturctionAudio == false) then {
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Idle icon shown on screen
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Progress icon shown on screen
 	"!(missionNamespace getVariable 'Waldo_MHQ_Status') && _this distance _target < 5",						// Condition for the action to be shown
-	"_caller distance _target < 5",						// Condition for the action to progress						
+	"_caller distance _target < 5 && {speed _target < 1}",						// Condition for the action to progress						
 	{},//Codestart													
 	{
 		params ["_target", "_caller", "_actionId", "_arguments"];
@@ -107,7 +107,7 @@ if (_useModernConsturctionAudio == false) then {
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Idle icon shown on screen
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Progress icon shown on screen
 	"missionNamespace getVariable 'Waldo_MHQ_Status' && _this distance _target < 5",						// Condition for the action to be shown
-	"_caller distance _target < 5",						// Condition for the action to progress								
+	"_caller distance _target < 5 && {speed _target < 1}",						// Condition for the action to progress								
 	{
 		params ["_target", "_caller", "_actionId", "_arguments"];
 		_arguments params["_MHQ","_layerContents","_MHQAudioPath","_side","_logisticsSystemImplementation"];

@@ -85,6 +85,9 @@ class CfgFunctions
             class VehicleMountedWeapon {
                 file = "MissionScripts\Logistics\LogiHelpers\attachedWeapon.sqf";
             };
+            class MassAttachRelative {
+                file = "MissionScripts\Logistics\LogiHelpers\massAttachItems.sqf";
+            };
         };
         class MHQ {
             class ServerSetupMHQ {
