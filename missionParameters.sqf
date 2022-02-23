@@ -21,9 +21,9 @@ This file is for mission makers to change based on their needs. Most scritps rel
 //Zeus Enhanced Modules setup (comment out to disable)
 [] call Waldo_fnc_ZenInitModules;
 
-//Set ace namespace variables for maximum drag/carryweights
-ACE_maxWeightDrag = 2000;
-ACE_maxWeightCarry = 2000;
+//Set ace namespace variables for maximum drag/carryweights (Tune these so that you can carry/drag your logistics boxes ingame)
+ACE_maxWeightDrag = 10000;
+ACE_maxWeightCarry = 6000;
 
 
 //Initilise ACRE 2 Radios

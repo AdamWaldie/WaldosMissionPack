@@ -11,7 +11,7 @@ License: Distributable and editable, no attribution required.
     
     author              = "YOURNAMEHERE"; // Your name goes here for display in the loading screen
 
-    onLoadName          = "Mission Pack v4.0"; // Your mission name goes here for display in the loading screen & in the titlescreen text
+    onLoadName          = "Mission Pack v4.1"; // Your mission name goes here for display in the loading screen & in the titlescreen text
     onLoadMission       = "YOURTEXTHERE"; // Mission subtitle goes here
     onLoadIntro         = "YOURTEXTHERE";// Mission subtitle goes here
 
@@ -57,7 +57,7 @@ class CfgDebriefing
 	class End1
 	{
         title =	"MISSION COMPLETE";
-        subtitle = "The Civillians Have Been Evacuated";
+        subtitle = "Objectives Complete";
         description = "Good Job!";
         pictureBackground = "Pictures\loading.jpg";
 	};

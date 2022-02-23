@@ -96,6 +96,9 @@ if (_boxType == "Medical") then {
         //Ace Medical is DISABLED so populate with vanilla gear & NO Field Hospital
         [_box, false, 1] call Waldo_fnc_MedicalCratePopulate;
     };
+    [_box, 1] call ace_cargo_fnc_setSize;
+    [_box, true] call ace_dragging_fnc_setDraggable;
+    [_box, true] call ace_dragging_fnc_setCarryable;
     _quote = selectRandom [
         "Medical Box? Check. Here it is.",
         "Med Supplies, eh? Keep our boys alive out there!",
@@ -115,6 +118,9 @@ if (_boxType == "Supply") then {
     _box setPos _ammoPos;
     //Call supplybox population script with box and random scalar between 1 & 2
     [_box, 1, true] call Waldo_fnc_SupplyCratePopulate;
+    [_box, 1] call ace_cargo_fnc_setSize;
+    [_box, true] call ace_dragging_fnc_setDraggable;
+    [_box, true] call ace_dragging_fnc_setCarryable;
     _quote = selectRandom [
         "One canister, ready to go.",
         "...48...49...50. Yep, it's all there.",
@@ -134,6 +140,9 @@ if (_boxType == "Ammo") then {
     _box setPos _ammoPos;
     //Call supplybox population script with box and random scalar between 1 & 2
     [_box, 1, false] call Waldo_fnc_SupplyCratePopulate;
+    [_box, 1] call ace_cargo_fnc_setSize;
+    [_box, true] call ace_dragging_fnc_setDraggable;
+    [_box, true] call ace_dragging_fnc_setCarryable;
     _quote = selectRandom [
         "One canister, ready to go.",
         "...48...49...50. Yep, it's all there.",

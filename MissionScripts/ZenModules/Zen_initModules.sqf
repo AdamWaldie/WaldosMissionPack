@@ -24,7 +24,8 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 
 ["Waldos Modules", "Call Endex",
     {
-        [] spawn Waldo_fnc_ENDEX;
+        //[] spawn Waldo_fnc_ENDEX;
+        remoteExec ["Waldo_fnc_ENDEX",0,true];
     },
     "\a3\modules_f\data\portraitmodule_ca.paa"
 ] call zen_custom_modules_fnc_register;

@@ -20,6 +20,10 @@ params ["_modulePos", "_objectPos"];
 
         [_medCrate, _fieldHopsital, _size] call Waldo_fnc_MedicalCratePopulate;
 
+        [_medCrate, 1] call ace_cargo_fnc_setSize;
+        [_medCrate, true] call ace_dragging_fnc_setDraggable;
+        [_medCrate, true] call ace_dragging_fnc_setCarryable;
+
         // Add object to Zeus
         [{
             _this call ace_zeus_fnc_addObjectToCurator;

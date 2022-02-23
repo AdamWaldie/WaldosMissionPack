@@ -36,6 +36,10 @@ params ["_modulePos", "_objectPos"];
 
         [_supCrate, _size, !_fullService] call Waldo_fnc_SupplyCratePopulate;
 
+        [_supCrate, 1] call ace_cargo_fnc_setSize;
+        [_supCrate, true] call ace_dragging_fnc_setDraggable;
+        [_supCrate, true] call ace_dragging_fnc_setCarryable;
+        
         // Add object to Zeus
         [{
             _this call ace_zeus_fnc_addObjectToCurator;
