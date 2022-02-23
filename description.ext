@@ -11,7 +11,7 @@ License: Distributable and editable, no attribution required.
     
     author              = "YOURNAMEHERE"; // Your name goes here for display in the loading screen
 
-    onLoadName          = "Mission Pack v4.1"; // Your mission name goes here for display in the loading screen & in the titlescreen text
+    onLoadName          = "Mission Pack v4.2"; // Your mission name goes here for display in the loading screen & in the titlescreen text
     onLoadMission       = "YOURTEXTHERE"; // Mission subtitle goes here
     onLoadIntro         = "YOURTEXTHERE";// Mission subtitle goes here
 
@@ -49,6 +49,25 @@ class MissionSQM {
 
 //Optional HardCoded CBASettings - Alternative method included in file
 //#include "cba_settings.sqf"
+
+//MHQ 
+class CfgSounds {
+	sounds[] ={};
+	class Audio_Deploy_New
+	{
+		name = "Audio_Deploy_New";
+		sound[] = {"MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg", 1, 1};
+		titles[] = { 1, "" };
+	};
+	class Audio_Deploy_Old
+	{
+		name = "Audio_Deploy_Old";
+		sound[] = {"MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg", 1, 1};
+		titles[] = { 1, "" };
+	};
+};
+
+
 
 /*           OTHER            */
 class CfgDebriefing

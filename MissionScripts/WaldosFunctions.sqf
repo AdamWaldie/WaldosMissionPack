@@ -31,7 +31,7 @@ class CfgFunctions
         class teleport
         {
             class Teleport {
-                file =  "MissionScripts\Logistics\teleport.sqf";
+                file =  "MissionScripts\Logistics\LogiHelpers\teleport.sqf";
             };
         };
         class MissionEnding 
@@ -53,34 +53,45 @@ class CfgFunctions
         }
         class Logistics {
             class MedicalCratePopulate_Legacy {
-                file = "MissionScripts\Logistics\doMedicalCrate_Legacy.sqf";
+                file = "MissionScripts\Logistics\Crates\doMedicalCrate_Legacy.sqf";
             };
             class SupplyCratePopulate_Legacy {
-                file = "MissionScripts\Logistics\doSupplyCrate_Legacy.sqf";
+                file = "MissionScripts\Logistics\Crates\doSupplyCrate_Legacy.sqf";
             };
             class MedicalCratePopulate {
-                file = "MissionScripts\Logistics\doMedicalCrate.sqf";
+                file = "MissionScripts\Logistics\Crates\doMedicalCrate.sqf";
             };
             class SupplyCratePopulate {
-                file = "MissionScripts\Logistics\doSupplyCrate.sqf";
+                file = "MissionScripts\Logistics\Crates\doSupplyCrate.sqf";
             };
             class SaveLoadout {
-                file = "MissionScripts\Logistics\saveRespawnLoadout.sqf";
+                file = "MissionScripts\Logistics\LogiHelpers\saveRespawnLoadout.sqf";
             };
             class SetupQuarterMaster {
-                file = "MissionScripts\Logistics\initQuartermaster.sqf";
+                file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
             };
             class LogisticsSpawner {
-                file = "MissionScripts\Logistics\LogiBoxes.sqf";
+                file = "MissionScripts\Logistics\Crates\LogiBoxes.sqf";
             };
             class MissionSQMLookup {
-                file = "MissionScripts\Logistics\missionFileLookup.sqf";
+                file = "MissionScripts\Logistics\LogiHelpers\missionFileLookup.sqf";
             };
             class DoStarterCrate {
-                file = "MissionScripts\Logistics\doStarterCrate.sqf";
+                file = "MissionScripts\Logistics\Crates\doStarterCrate.sqf";
             };
             class CreateLimitedArsenal {
-                file = "MissionScripts\Logistics\createLimitedAceArsenal.sqf";
+                file = "MissionScripts\Logistics\Crates\createLimitedAceArsenal.sqf";
+            };
+            class VehicleMountedWeapon {
+                file = "MissionScripts\Logistics\LogiHelpers\attachedWeapon.sqf";
+            };
+        };
+        class MHQ {
+            class ServerSetupMHQ {
+                file = "MissionScripts\Logistics\MHQ\ServerSetupMHQ.sqf";
+            };
+            class SetupMHQActions {
+                file = "MissionScripts\Logistics\MHQ\SetupMHQActions.sqf";
             };
         };
         class Zen {

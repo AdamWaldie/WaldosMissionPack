@@ -1,6 +1,6 @@
 /*
 Purpose: ACRE2 Initilisation Script (CO-OP)
-Called From: ServerInit.sqf
+Called From: Init.sqf
 Scope: All players within mission.
 Execution time: Mission start (+/- 1 minute)
 Author: Adam Waldie
@@ -14,6 +14,11 @@ This is done for you in mission packs.
 The only change nessicary is the GROUP NAMES and CHANNELS PER RADIO in missionParameters.sqf
 
 */
+
+
+//Check for, and exit if not present: ACRE2
+if !(isClass(configFile >> "CfgPatches" >> "acre_main")) exitWith {};
+
 /* -------------------------------------------------------------------------------
 
 Whole Side Radio Channel Names / wavelength assignment - DISABLED DUE TO ACRE2 INSTABILITY

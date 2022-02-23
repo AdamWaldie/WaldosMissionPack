@@ -11,7 +11,7 @@
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_saveInventory;
         _unit addAction [
         "Flip Vehicle", 
-        "MissionScripts\Logistics\flipAction.sqf", 
+        "MissionScripts\Logistics\LogiHelpers\flipAction.sqf", 
         [], 
         0, 
         false, 
@@ -30,7 +30,7 @@
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_loadInventory;
         _unit addAction [
         "Flip Vehicle", 
-        "MissionScripts\Logistics\flipAction.sqf", 
+        "MissionScripts\Logistics\LogiHelpers\flipAction.sqf", 
         [], 
         0, 
         false, 
