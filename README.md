@@ -47,10 +47,10 @@ to become aquanited with the scripting side of Arma 3.
 
 # Required Addons
 - CBA_A3
-Tutorial Mission:
-- ACE
-- ACRE
-- LAMBS_DANGER
+- Tutorial Mission:
+   - ACE
+   - ACRE
+   - LAMBS_DANGER
 
 # Supported Addons
 - ACE 3
