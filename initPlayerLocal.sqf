@@ -2,11 +2,6 @@
 
 ["CAManBase", "InitPost", {
     params ["_unit"];
-    if (!local _unit) exitWith {
-        if (_unit == player) then {
-            //DO FUCK ALL BECAUSE UNIT IS NON-LOCAL (DEBUG Measure for applying loadouts via script)
-        };
-    };
     if (_unit == player) then {
         [_unit, [missionNamespace, "Player_Inventory"]] call BIS_fnc_saveInventory;
         _unit addAction [
