@@ -62,6 +62,7 @@ For those seeking knowledge or greater control, each file is fully documented on
    - ACE
    - ACRE
    - LAMBS_DANGER
+   - ZEN & Zen Ace compat
 
 # Supported Addons
 - ACE 3
