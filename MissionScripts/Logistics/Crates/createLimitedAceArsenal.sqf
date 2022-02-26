@@ -16,6 +16,8 @@ params["_target",["_preExisting",false]];
 
 //Wait Until Init is completed & players ingame (Postinit hack)
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
+//Double Security with ensuring mission.sqm sweep
+waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 
 _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray";
 

@@ -36,6 +36,8 @@ Parameters:
 
 loadoutArray = ["West"] call Waldo_fnc_MissionSQMLookup; 
 missionNamespace setVariable ["Logi_MissionSQMArray", loadoutArray,true];
+//Set Value To Say That Mission Scan Is Complete
+missionNamespace setVariable ["Logi_MissionScanComplete", true,true];
 
 /* 
 Mobile Headquarters Script

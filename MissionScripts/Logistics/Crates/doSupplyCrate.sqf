@@ -12,7 +12,7 @@ Where the call is as follows:
 
 e.g.
 
-[this, 1, false] call Waldo_fnc_SupplyCratePopulate;
+[this, 1, false] spawn Waldo_fnc_SupplyCratePopulate;
 
 Called via Zen Module as defined in Zen_medicalCrateModule.sqf
 
@@ -25,7 +25,10 @@ clearmagazinecargoGlobal _crate;
 clearitemcargoGlobal _crate;
 clearbackpackcargoGlobal _crate;
 
+//Wait Until Init is completed & players ingame (Postinit hack)
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
+//Double Security with ensuring mission.sqm sweep
+waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 
 private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray";
 _loadoutArray params["_mainWeapons","_mainAmmo","_launchers","_launcherAmmo","_pGear","_pItems","_pBackpack","_weapAttach"];

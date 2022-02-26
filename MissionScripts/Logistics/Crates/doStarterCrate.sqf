@@ -26,6 +26,8 @@ params["_target","_arsenal"];
 
 //Wait Until Init is completed & players ingame (Postinit hack)
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
+//Double Security with ensuring mission.sqm sweep
+waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 
 
 //identifier Addaction 

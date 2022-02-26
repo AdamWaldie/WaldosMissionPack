@@ -149,5 +149,6 @@ Allows scheduling of the following script packages:
 Zeus modules & script spawned supply boxes are unaffected
 
 */
+sleep 10; // Buffer cycles for other inits to be completed - should not be removed
 waitUntil {!isNull player && player == player};
 missionnamespace  setVariable ["WALDO_INIT_COMPLETE", true, true];
