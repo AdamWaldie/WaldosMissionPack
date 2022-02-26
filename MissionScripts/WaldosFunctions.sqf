@@ -45,6 +45,9 @@ class CfgFunctions
             class InfoText {
                 file = "MissionScripts\MissionFlow\infoText.sqf";
             };
+            class TimedHint {
+                file = "MissionScripts\MissionFlow\timeBasedhint.sqf";
+            };
         };
         class DebugToolKit {
             class ToolkitAceLimitedArsenal {

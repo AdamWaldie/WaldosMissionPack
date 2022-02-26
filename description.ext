@@ -28,6 +28,9 @@ License: Distributable and editable, no attribution required.
     respawnDelay           = 20; // Delay between respawns
     respawnOnStart         = -1; //DO NOT TOUCH, changing this will break numerous things
     respawnTemplatesWest[] = {"MenuPosition","Counter"};
+    respawnTemplatesEast[] = {"MenuPosition","Counter"};
+    respawnTemplatesGuer[] = {"MenuPosition","Counter"};
+    respawnTemplatesCiv[] = {"MenuPosition","Counter"};
 
 /*          SYSTEMS           */
 

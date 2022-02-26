@@ -25,6 +25,8 @@ clearmagazinecargoGlobal _crate;
 clearitemcargoGlobal _crate;
 clearbackpackcargoGlobal _crate;
 
+waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
+
 private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray";
 _loadoutArray params["_mainWeapons","_mainAmmo","_launchers","_launcherAmmo","_pGear","_pItems","_pBackpack","_weapAttach"];
 
@@ -71,6 +73,11 @@ if (_fullCompliment == true) then {
         _crate addBackpackCargoGlobal [_x,[2,4] call BIS_fnc_randomInt];
     } forEach _pBackpack;
 };
+
+//Hardcoded backpacks because parachuting means no backpacks to read in (remove this for your mission)
+_crate addBackpackCargoGlobal ["B_Simc_US_M36_Musette_band",[8,20] call BIS_fnc_randomInt];
+_crate addBackpackCargoGlobal ["B_Simc_US_M36_RocketBag",[8,20] call BIS_fnc_randomInt];
+_crate addBackpackCargoGlobal ["B_LIB_US_Radio",[8,20] call BIS_fnc_randomInt];
 
 //If Ace medical enabled, add the most basic of medical supplies to tide people in a pinch
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
