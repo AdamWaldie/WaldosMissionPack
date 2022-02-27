@@ -3,7 +3,7 @@ A package of mission scripts for new mission makers.
 
 ![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
 
-**If you find this mission pack inside a mission, please do not utilise it. Mission Makers like to customise the pack. Instead download the original from github: https://github.com/AdamWaldie/WaldosMissionPack**
+**If you find this mission pack inside a mission, please do not utilise it. Mission Makers like to customise the pack. Instead download the original from github: https://github.com/AdamWaldie/WaldosMissionPack/releases/latest**
 
 This project was created originally for the mission makers of the Rooster Teeth Gaming Discord, with the intent to provide them with the easiest possible method 
 to utilise critical systems of arma 3.
