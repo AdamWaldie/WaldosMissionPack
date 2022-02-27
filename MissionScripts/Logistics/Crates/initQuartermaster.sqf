@@ -25,11 +25,11 @@ params["_unit","_spawnObject",["_customBox",""]];
 //CreateArrayOfAddactionIds incase you want to remove them
 private _addactionArray = [];
 
-private _medicalAddact = 0;
-private _supplyAddact = 0;
-private _ammoAddact = 0;
-private _trackAddact = 0;
-private _wheelAddact = 0;
+private _medicalAddact = [];
+private _supplyAddact = [];
+private _ammoAddact = [];
+private _trackAddact = [];
+private _wheelAddact = [];
 
 //Verify if Ace Medical is present, if so, enable ACE_Medical Box setup, else pass a vanialla support box to be filled with FirstAidKits & Medical Packs
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
