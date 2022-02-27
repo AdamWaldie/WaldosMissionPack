@@ -77,11 +77,6 @@ if (_fullCompliment == true) then {
     } forEach _pBackpack;
 };
 
-//Hardcoded backpacks because parachuting means no backpacks to read in (remove this for your mission)
-_crate addBackpackCargoGlobal ["B_Simc_US_M36_Musette_band",[8,20] call BIS_fnc_randomInt];
-_crate addBackpackCargoGlobal ["B_Simc_US_M36_RocketBag",[8,20] call BIS_fnc_randomInt];
-_crate addBackpackCargoGlobal ["B_LIB_US_Radio",[8,20] call BIS_fnc_randomInt];
-
 //If Ace medical enabled, add the most basic of medical supplies to tide people in a pinch
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["ACE_quikclot", (40)];
