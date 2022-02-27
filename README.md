@@ -47,10 +47,11 @@ For those seeking knowledge or greater control, each file is fully documented on
 - Automatic ACRE2 Radio Setup & Respawn handling (Save channels through respawn).
 - Vehicle unflipping actions.
 - Simple AI Convoy (Updated & enhanced for 2022) script.
+- Modular Mobile Headquarters system, compatable with the packs logistics system.
 - AI realistic skill enhancements (Compatable with all AI mods).
 - Simple Teleportation Support.
 - Simple ENDEX Script.
-- Exemplar Limited Ace Arsenal Code & unit caching/hidden unit code.
+- Exemplar Mission Maker Resources for niche use cases.
 - Functionalised scripts for ease of use.
 - ZEN modules for Logistics spawning.
 - Logistics support script with fully customisable Medical & Ammunition crates. (ACE Compatable).
