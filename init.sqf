@@ -119,7 +119,7 @@ This is done in two parts, with the MHQ layer setup being done in initServer.sqf
 Parameters for Waldo_fnc_SetupMHQActions: (The Function Call Below)
 Parameters:
 _MHQ - Vehicle or Object to use as the Mobile headquarters
-_editorObjectsLayer - Name of the Eden editor layer which houses the additional objects which make up the deployed MHQ. Should be in quoatation marks (e.g. "edenLayerName")
+_helipadSpawnPoint - Name of the invisible helipad you wish to use as the respawn position & logistics spawning position.
 _side - Side you want the respawn positon to work for | Options: west,east,independent,civillian
 _UseModernConsturctionAudio - boolean (true/false) | Options: True = Modern construction Noises, False = Old Wooden Sounding Construction Noises.
 _logisticsSystemImplementation - boolean (true/false) | Options: True = Utilise Logistics System spawner, False = Do Not utilise logistics system spawner.
@@ -134,7 +134,7 @@ From initServer.sqf:
 
 */
 
-[MobileHQVehicle,"MobileHeadQuartersLayer",west,true,true] call Waldo_fnc_SetupMHQActions;
+[MobileHQVehicle,west,true,true] call Waldo_fnc_SetupMHQActions;
 
 /*
 

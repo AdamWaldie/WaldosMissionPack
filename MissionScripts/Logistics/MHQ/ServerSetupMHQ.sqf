@@ -37,7 +37,6 @@ From initServer.sqf:
 
 params["_MHQVariableName","_layerName"];
 
-//Set global variable for use
 missionNamespace setVariable ['Waldo_MHQ_Status', false, true];
 
 //Get contents of layer defined by player
@@ -48,7 +47,11 @@ _layerContents = _layerContents select 0;
 // Attach Relative Position to MHQ vehicle & hide globally
 {
 	call{0 = [_x, _MHQVariableName] call BIS_fnc_attachToRelative;};
-    [_x, true] remoteExec ["hideObjectGlobal", 0];
+    [_x, true] remoteExec ["hideObjectGlobal", 2];
 } forEach _layerContents;
 
+//Set global variable for use
+missionNamespace setVariable ['Waldo_MHQ_Layer', _layerContents, true];
+//Prevent race conditions with flag.
+missionNamespace setVariable ['Waldo_MHQ_ServerInit', true, true];
 diag_log "MHQ ServerSetup Complete";

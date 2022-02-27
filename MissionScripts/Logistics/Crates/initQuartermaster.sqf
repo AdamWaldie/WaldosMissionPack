@@ -2,6 +2,12 @@
 
 This is used to setup the logistics spawning system, via the "Quartermaster". The quartermaster is an object or NPC which acts as the spawner for these supply boxes & equipment.
 
+Params:
+_unit - The quartermaster from which you can select these actions
+_spawnObject - Name of the object (such as a helipad) to use in referance to the position of spawned objects.
+_customBox - classname, in quotations of a replacement box to override global definitions in initserver.sqf
+_mhqFlag - DO NOT UTILISE MANUALLY. This is provided SOLEY by the MHQ script.
+
 The call for this is as below:
 [QuartermasterObject,SpawningObject,"SpawningCustomAmmobox"] call Waldo_fnc_SetupQuarterMaster; this disableAI "MOVE";
 
@@ -20,7 +26,7 @@ Examples:
 These are from the exemplar mission
 */
 
-params["_unit","_spawnObject",["_customBox",""]];
+params["_unit","_spawnObject",["_customBox",""],["_mhqFlag",flase]];
 
 //CreateArrayOfAddactionIds incase you want to remove them
 private _addactionArray = [];
@@ -51,5 +57,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _trackAddact = _unit addAction ['Spawn Spare Track', Waldo_fnc_LogisticsSpawner, ["Track", _spawnObject, _customBox]];
     _addactionArray append [_wheelAddact,_trackAddact];
 };
-//return value
-_addactionArray
+
+if (_mhqFlag == true) then {
+    missionNamespace setVariable ['Waldo_MHQ_QuarterMasterActions', _addactionArray, true];
+};
