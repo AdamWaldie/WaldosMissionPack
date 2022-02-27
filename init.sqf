@@ -134,7 +134,7 @@ From initServer.sqf:
 
 */
 
-[MobileHQVehicle,west,true,true] call Waldo_fnc_SetupMHQActions;
+[MobileHQ,respawnPoint,west,true,true] call Waldo_fnc_SetupMHQActions;
 
 /*
 

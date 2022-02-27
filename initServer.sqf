@@ -76,4 +76,4 @@ From initServer.sqf:
 
 */
 
-[MobileHQVehicle,"MobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
+[MobileHQ,"MobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
