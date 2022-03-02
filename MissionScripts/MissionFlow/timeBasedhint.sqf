@@ -11,6 +11,8 @@ e.g.
 */
 params["_hintContents"];
 
-[_hintContents] remoteExec ["hint",-2];
+//[_hintContents] remoteExec ["hint",-2];
+hint _hintContents;
 sleep 10;
-[""] remoteExec ["hint",-2];
+//[""] remoteExec ["hint",-2];
+hint "";
