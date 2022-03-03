@@ -22,16 +22,16 @@ private _attachments = [];
 
 {
     private _firstItem = configName _x;
-    diag_log _firstItem;
+    //diag_log _firstItem;
     {
         private _secondItem = configName _x;
-        diag_log _secondItem;
+        //diag_log _secondItem;
         private _isPlayer   = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayer");
         private _isPlayable = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayable");
         private _isCorrectSide = getText (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "side");
-        diag_log _isCorrectSide;
-        diag_log _isPlayer;
-        diag_log _isPlayable;
+        //diag_log _isCorrectSide;
+        //diag_log _isPlayer;
+        //diag_log _isPlayable;
         if (_isCorrectSide == _sideChosen) then {
             if (_isPlayer == 1 || _isPlayable == 1) then {
                 //Weapons
@@ -174,14 +174,14 @@ _attachments = parseSimpleArray ("[" + _attachments + "]");
 _attachments = _attachments arrayIntersect _attachments select {_x isEqualType "" && {_x != ""}};
 
 /*
-diag_log _PweapAndSdArm;
-diag_log _PLauncher;
-diag_log _launchMagazines;
-diag_log _NormalMagazines;
-diag_log _playerGear;
-diag_log _inventoryItems;
-diag_log _PBackpacks;
-diag_log _attachments;
+//diag_log _PweapAndSdArm;
+//diag_log _PLauncher;
+//diag_log _launchMagazines;
+//diag_log _NormalMagazines;
+//diag_log _playerGear;
+//diag_log _inventoryItems;
+//diag_log _PBackpacks;
+//diag_log _attachments;
 */
 
 private _masterArray = [_PweapAndSdArm,_NormalMagazines,_PLauncher,_launchMagazines,_playerGear,_inventoryItems,_PBackpacks,_attachments];
