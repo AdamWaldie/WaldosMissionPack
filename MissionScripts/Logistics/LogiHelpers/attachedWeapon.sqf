@@ -17,7 +17,7 @@ In turret init:
 params["_turret","_vehicle",["_customName","Turret"]];
 
 //Attach the thing to the thing!
-0 = [_turret, _vehicle] call BIS_fnc_attachToRelative;
+0 = [_turret, _vehicle, true] call BIS_fnc_attachToRelative;
 
 
 if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {

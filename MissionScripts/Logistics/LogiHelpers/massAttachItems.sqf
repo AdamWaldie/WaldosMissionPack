@@ -22,5 +22,5 @@ _AttachingLayerContents = _AttachingLayerContents select 0;
 
 // Attach Relative Position to MHQ vehicle & hide globally
 {
-	call{0 = [_x, _targetObject] call BIS_fnc_attachToRelative;};
+	call{0 = [_x, _targetObject, true] call BIS_fnc_attachToRelative;};
 } forEach _AttachingLayerContents;
