@@ -53,12 +53,13 @@ _object addAction [
                 _height = _height select 2;
             };
         };
+        titleText ["A few minutes later...", "BLACK OUT", 3];
         //Get offset destination so no on object spawning
         private _finalDest = [(getPos _dest  select 0) + 3,  (getPos _dest select 1) + 3, getPos _dest select 2];
         //CBA functions for height/position tp
         [player, _finalDest] call CBA_fnc_setPos;
         [player, _height] call CBA_fnc_setHeight;
-        titleText ["", "BLACK IN", 3];
+        titleText ["A few minutes later...", "BLACK IN", 5];
 
     }, _dest, 1.5, true, true, "", "true", 10
 ];
