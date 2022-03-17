@@ -50,9 +50,6 @@ class MissionSQM {
     #include "mission.sqm"
 };
 
-//Optional HardCoded CBASettings - Alternative method included in file
-//#include "cba_settings.sqf"
-
 //MHQ 
 class CfgSounds {
 	sounds[] ={};
