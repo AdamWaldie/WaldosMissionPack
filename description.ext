@@ -11,7 +11,7 @@ License: Distributable and editable, no attribution required.
     
     author              = "YOURNAMEHERE"; // Your name goes here for display in the loading screen
 
-    onLoadName          = "Mission Pack v4.4"; // Your mission name goes here for display in the loading screen & in the titlescreen text
+    onLoadName          = "Mission Pack v4.4.5"; // Your mission name goes here for display in the loading screen & in the titlescreen text
     onLoadMission       = "YOURTEXTHERE"; // Mission subtitle goes here
     onLoadIntro         = "YOURTEXTHERE";// Mission subtitle goes here
 
@@ -56,13 +56,13 @@ class CfgSounds {
 	class Audio_Deploy_New
 	{
 		name = "Audio_Deploy_New";
-		sound[] = {"MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg", 2, 1};
+		sound[] = {"MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg", 4, 1};
 		titles[] = { 1, "" };
 	};
 	class Audio_Deploy_Old
 	{
 		name = "Audio_Deploy_Old";
-		sound[] = {"MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg", 2, 1};
+		sound[] = {"MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg", 4, 1};
 		titles[] = { 1, "" };
 	};
 };

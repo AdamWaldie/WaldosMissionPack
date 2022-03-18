@@ -82,7 +82,7 @@ if (_useModernConsturctionAudio == false) then {
 			_x action ["Eject", vehicle _x];
 		} forEach crew _MHQ;
 		[_MHQ, "LOCKED"] remoteExec ["setVehicleLock", 0];
-		[getMissionPath _MHQAudioPath, _MHQ] remoteExec ["playSound3d", 0];
+		playSound3d [getMissionPath _MHQAudioPath, _MHQ, false, getPosASL _MHQ, 4, 1];
 		if (_logisticsSystemImplementation == true) then {
 			[_MHQ,_helipadSpawnPoint,"",true] remoteExec ["Waldo_fnc_SetupQuarterMaster",0,true];
 			diag_log "MHQ Logistics Plugin Enabled";
@@ -130,7 +130,7 @@ if (_useModernConsturctionAudio == false) then {
 		deleteMarker "Mobile HQ";
 		[_MHQ, "UNLOCKED"] remoteExec ["setVehicleLock", 0];
 		missionNamespace setVariable ['Waldo_MHQ_Status', false, true];
-		[getMissionPath _MHQAudioPath, _MHQ] remoteExec ["playSound3d", 0];
+		playSound3d [getMissionPath _MHQAudioPath, _MHQ, false, getPosASL _MHQ, 4, 1];
 		if (_logisticsSystemImplementation == true) then {
 			private _addActArray = missionNamespace getVariable "Waldo_MHQ_QuarterMasterActions";
 			diag_log _addActArray;
