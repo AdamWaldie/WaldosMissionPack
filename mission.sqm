@@ -12,7 +12,7 @@ class EditorData
 	};
 	class ItemIDProvider
 	{
-		nextID=7662;
+		nextID=7720;
 	};
 	class MarkerIDProvider
 	{
@@ -20,22 +20,21 @@ class EditorData
 	};
 	class LayerIndexProvider
 	{
-		nextID=846;
+		nextID=860;
 	};
 	class Camera
 	{
-		pos[]={23356.09,7.4898601,19166.357};
-		dir[]={0.30903509,-0.26640701,0.91297567};
-		up[]={0.085415997,0.96386063,0.25234261};
-		aside[]={0.94720709,0,-0.32062218};
+		pos[]={23349.795,28.401793,19140.613};
+		dir[]={-0.97659332,-0.044704225,-0.2104992};
+		up[]={-0.043724306,0.99899966,-0.0094246306};
+		aside[]={-0.2107114,-5.8549631e-008,0.9775728};
 	};
 };
 binarizationWanted=0;
-sourceName="WMP_4_4_5";
+sourceName="WMP_4_5_0";
 addons[]=
 {
 	"A3_Modules_F_Multiplayer",
-	"Desert",
 	"A3_Modules_F_Curator_Curator",
 	"A3_Structures_F_Mil_Flags",
 	"A3_Characters_F",
@@ -61,7 +60,6 @@ addons[]=
 	"acre_main",
 	"A3_Characters_F_Heads",
 	"ace_goggles",
-	"BaBe_NVG",
 	"ace_nightvision",
 	"A3_Weapons_F_Items",
 	"ace_medical_engine",
@@ -98,13 +96,16 @@ addons[]=
 	"ace_nlaw",
 	"ace_overpressure",
 	"ace_realisticweights",
-	"ace_gforces"
+	"ace_gforces",
+	"RHS_US_A2_AirImport",
+	"A3_Air_F_Exp_VTOL_01",
+	"ace_parachute"
 };
 class AddonsMetaData
 {
 	class List
 	{
-		items=49;
+		items=50;
 		class Item0
 		{
 			className="A3_Modules_F";
@@ -114,332 +115,343 @@ class AddonsMetaData
 		};
 		class Item1
 		{
-			className="Desert";
-			name="Desert";
-		};
-		class Item2
-		{
 			className="A3_Modules_F_Curator";
 			name="Arma 3 Zeus Update - Scripted Modules";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item3
+		class Item2
 		{
 			className="A3_Structures_F_Mil";
 			name="Arma 3 - Military Buildings and Structures";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item4
+		class Item3
 		{
 			className="A3_Characters_F";
 			name="Arma 3 Alpha - Characters and Clothing";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item5
+		class Item4
 		{
 			className="A3_Soft_F";
 			name="Arma 3 Alpha - Unarmored Land Vehicles";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item6
+		class Item5
 		{
 			className="A3_Soft_F_Gamma";
 			name="Arma 3 - Unarmored Land Vehicles";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item7
+		class Item6
 		{
 			className="A3_Soft_F_Exp";
 			name="Arma 3 Apex - Unarmored Land Vehicles";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item8
+		class Item7
 		{
 			className="ace_cargo";
 			name="ACE3 - Cargo";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item9
+		class Item8
 		{
 			className="A3_Air_F_Heli";
 			name="Arma 3 Helicopters - Aircraft";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item10
+		class Item9
 		{
 			className="A3_Static_F";
 			name="Arma 3 Alpha - Turrets";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item11
+		class Item10
 		{
 			className="lambs_wp";
 			name="LAMBS Danger WP";
 			author="LAMBS Danger Dev Team";
 		};
-		class Item12
+		class Item11
 		{
 			className="A3_Weapons_F";
 			name="Arma 3 Alpha - Weapons and Accessories";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item13
+		class Item12
 		{
 			className="ace_scopes";
 			name="ACE3 - Scopes";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item14
+		class Item13
 		{
 			className="ace_laserpointer";
 			name="ACE3 - Laser Pointer";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item15
+		class Item14
 		{
 			className="ace_smallarms";
 			name="ACE3 - Small Arms";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item16
+		class Item15
 		{
 			className="ace_ballistics";
 			name="ACE3 - Ballistics";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item17
+		class Item16
 		{
 			className="A3_Weapons_F_Tank";
 			name="Arma 3 Tank - Weapons and Accessories";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item18
+		class Item17
 		{
 			className="ace_optics";
 			name="ACE3 - Optics";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item19
+		class Item18
 		{
 			className="acre_main";
 			name="ACRE2 - Main";
 			author="ACRE2Team";
 			url="https://github.com/IDI-Systems/acre2";
 		};
-		class Item20
+		class Item19
 		{
 			className="ace_goggles";
 			name="ACE3 - Goggles";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item21
-		{
-			className="BaBe_NVG";
-			name="BaBe_NVG";
-		};
-		class Item22
+		class Item20
 		{
 			className="ace_nightvision";
 			name="ACE3 - Night Vision";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item23
+		class Item21
 		{
 			className="ace_medical_engine";
 			name="ACE3 - Medical Engine";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item24
+		class Item22
 		{
 			className="ace_medical_treatment";
 			name="ACE3 - Medical Treatment";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item25
+		class Item23
 		{
 			className="ace_attach";
 			name="ACE3 - Attach";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item26
+		class Item24
 		{
 			className="ace_chemlights";
 			name="ace_chemlights";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item27
+		class Item25
 		{
 			className="acre_sys_prc343";
 			name="ACRE2 - AN/PRC-343";
 			author="ACRE2Team";
 			url="https://github.com/IDI-Systems/acre2";
 		};
-		class Item28
+		class Item26
 		{
 			className="acre_sys_prc152";
 			name="ACRE2 - AN/PRC-152";
 			author="ACRE2Team";
 			url="https://github.com/IDI-Systems/acre2";
 		};
-		class Item29
+		class Item27
 		{
 			className="acre_sys_prc148";
 			name="ACRE2 - AN/PRC-148";
 			author="ACRE2Team";
 			url="https://github.com/IDI-Systems/acre2";
 		};
-		class Item30
+		class Item28
 		{
 			className="A3_Props_F_Orange";
 			name="Arma 3 Orange - Decorative and Mission Objects";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item31
+		class Item29
 		{
 			className="A3_Structures_F_EPA";
 			name="Arma 3 Survive Episode - Buildings and Structures";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item32
+		class Item30
 		{
 			className="A3_Props_F_Enoch";
 			name="Arma 3 Contact Platform - Decorative and Mission Objects";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item33
+		class Item31
 		{
 			className="A3_Structures_F_Enoch_Military";
 			name="Arma 3 Contact Platform - Military Buildings and Structures";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item34
+		class Item32
 		{
 			className="A3_Structures_F_Orange";
 			name="Arma 3 Orange - Buildings and Structures";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item35
+		class Item33
 		{
 			className="A3_Structures_F";
 			name="Arma 3 - Buildings and Structures";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item36
+		class Item34
 		{
 			className="ace_sitting";
 			name="ACE3 - Sitting";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item37
+		class Item35
 		{
 			className="ace_dragging";
 			name="ACE3 - Dragging";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item38
+		class Item36
 		{
 			className="A3_Soft_F_Beta";
 			name="Arma 3 Beta - Unarmored Land Vehicles";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item39
+		class Item37
 		{
 			className="A3_Characters_F_Mark";
 			name="Arma 3 Marksmen - Characters and Clothing";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item40
+		class Item38
 		{
 			className="acre_sys_prc117f";
 			name="ACRE2 - AN/PRC-117F";
 			author="ACRE2Team";
 			url="https://github.com/IDI-Systems/acre2";
 		};
-		class Item41
+		class Item39
 		{
 			className="rhsusf_c_troops";
 			name="RHSUSF Infantry & Equipment";
 			author="Red Hammer Studios";
 			url="http://www.rhsmods.org/";
 		};
-		class Item42
+		class Item40
 		{
 			className="ace_compat_rhs_usf3";
 			name="ACE3 - RHS USF Compatibility";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item43
+		class Item41
 		{
 			className="ace_hearing";
 			name="ACE3 - Hearing";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item44
+		class Item42
 		{
 			className="A3_Weapons_F_Mark";
 			name="Arma 3 Marksmen - Weapons and Accessories";
 			author="Bohemia Interactive";
 			url="https://www.arma3.com";
 		};
-		class Item45
+		class Item43
 		{
 			className="ace_disposable";
 			name="ACE3 - Disposable";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item46
+		class Item44
 		{
 			className="ace_nlaw";
 			name="ACE3 - NLAW";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item47
+		class Item45
 		{
 			className="ace_overpressure";
 			name="ACE3 - Overpressure";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
-		class Item48
+		class Item46
 		{
 			className="ace_realisticweights";
 			name="ace_realisticweights";
+			author="ACE-Team";
+			url="http://ace3mod.com/";
+		};
+		class Item47
+		{
+			className="RHS_US_A2_AirImport";
+			name="RHSUSF A2 Air Ports";
+			author="Red Hammer Studios";
+			url="http://www.rhsmods.org/";
+		};
+		class Item48
+		{
+			className="A3_Air_F_Exp";
+			name="Arma 3 Apex - Aircraft";
+			author="Bohemia Interactive";
+			url="https://www.arma3.com";
+		};
+		class Item49
+		{
+			className="ace_parachute";
+			name="ACE3 - Parachute";
 			author="ACE-Team";
 			url="http://ace3mod.com/";
 		};
@@ -34342,7 +34354,7 @@ class Mission
 	};
 	class Entities
 	{
-		items=68;
+		items=81;
 		class Item0
 		{
 			dataType="Trigger";
@@ -34353,6 +34365,7 @@ class Mission
 				onActivation="[""CUSTOM TITLE"", ""CUSTOM LOCATION""] spawn Waldo_fnc_InfoText; " \n "";
 				sizeA=84.505997;
 				sizeB=57.737;
+				sizeC=10;
 				activationBy="ANYPLAYER";
 			};
 			id=5527;
@@ -35415,6 +35428,7 @@ class Mission
 				onActivation="[] spawn Waldo_fnc_ENDEX;";
 				sizeA=31.455999;
 				sizeB=25.434999;
+				sizeC=10;
 				activationBy="ANYPLAYER";
 			};
 			id=7046;
@@ -37790,7 +37804,7 @@ class Mission
 			{
 				position[]={23327.98,3.1900001,19179.445};
 			};
-			title="Mobile HQ Example";
+			title="Mobile HQ Example (WIP)";
 			description="MobileHQVehicle - MHQ vehicle" \n """MobileHeadQuartersLayer"" - Eden Editor Layer for additional objects" \n "" \n "This is an Extreme example, it works best with smaller, basic structures." \n "" \n "This also has the logistics system enabled, which requires both the boolean variable set to true, as well as an invisible helipad from the base game being present (""Land_HelipadEmpty_F"")";
 			id=7478;
 		};
@@ -44825,6 +44839,1017 @@ class Mission
 			};
 			id=7655;
 			atlOffset=1.5500884;
+		};
+		class Item68
+		{
+			dataType="Group";
+			side="West";
+			class Entities
+			{
+				items=9;
+				class Item0
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23234.186,3.1914389,19034.789};
+						angles[]={0,3.5128067,0};
+					};
+					side="West";
+					flags=6;
+					class Attributes
+					{
+						name="c130PlaneD";
+					};
+					id=7664;
+					type="rhsusf_airforce_pilot";
+				};
+				class Item1
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23234.186,9.1913557,19034.789};
+						angles[]={0,3.5128067,0};
+					};
+					side="West";
+					class Attributes
+					{
+					};
+					id=7665;
+					type="rhsusf_airforce_pilot";
+					atlOffset=5.9999166;
+				};
+				class Item2
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={21307.08,27.069408,18804.664};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7706;
+					type="Move";
+				};
+				class Item3
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={20227.008,20.629395,16106.74};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7701;
+					type="Move";
+				};
+				class Item4
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={19034.885,33.799473,13181.53};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7702;
+					type="Move";
+				};
+				class Item5
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={19039.871,28.633394,13417.843};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7703;
+					type="Move";
+				};
+				class Item6
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={20145.963,21.138134,16145.784};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7704;
+					type="Move";
+				};
+				class Item7
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={21270.545,28.413115,18821.383};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7705;
+					type="Move";
+				};
+				class Item8
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={21311.742,32.882847,18855.768};
+					type="Cycle";
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7707;
+				};
+			};
+			class Attributes
+			{
+				speedMode="LIMITED";
+			};
+			class CrewLinks
+			{
+				class LinkIDProvider
+				{
+					nextID=2;
+				};
+				class Links
+				{
+					items=2;
+					class Item0
+					{
+						linkID=0;
+						item0=7664;
+						item1=7663;
+						class CustomData
+						{
+							role=1;
+						};
+					};
+					class Item1
+					{
+						linkID=1;
+						item0=7665;
+						item1=7663;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={0};
+						};
+					};
+				};
+			};
+			id=7662;
+			atlOffset=315.82898;
+		};
+		class Item69
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={21323.902,353.66727,18849.186};
+				angles[]={0,3.5128067,0};
+			};
+			side="West";
+			flags=2;
+			class Attributes
+			{
+				init="c130Plane call Waldo_fnc_VehicleJumpSetup;c130Plane flyInHeight 300;c130Plane limitSpeed 300";
+				name="c130Plane";
+				reportOwnPosition=1;
+			};
+			id=7663;
+			type="RHS_C130J";
+			atlOffset=315.82898;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ammoBox";
+					expression="[_this,_value] call bis_fnc_initAmmoBox;";
+					class Value
+					{
+						class data
+						{
+							class type
+							{
+								type[]=
+								{
+									"STRING"
+								};
+							};
+							value="[[[[""rhs_weap_m4_carryhandle"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""rhs_mag_30Rnd_556x45_M855A1_Stanag"",""rhsusf_100Rnd_556x45_soft_pouch"",""rhs_mag_M441_HE"",""rhs_mag_m714_White"",""rhs_mag_m662_red"",""rhs_mag_m67"",""rhs_mag_m18_green"",""rhs_mag_m18_red"",""rhs_mag_an_m8hc""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
+						};
+					};
+				};
+				nAttributes=1;
+			};
+		};
+		class Item70
+		{
+			dataType="Comment";
+			class PositionInfo
+			{
+				position[]={23336.977,3.1900001,19116.158};
+			};
+			title="Move Unto Planes for Paradrop";
+			id=7682;
+		};
+		class Item71
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={23839.387,1210.1454,17191.18};
+			};
+			side="Independent";
+			flags=2;
+			class Attributes
+			{
+				init="blackfishplane2 flyInHeight 1200;[this] call Waldo_fnc_VehicleJumpSetup;";
+				name="blackfishplane2";
+				reportRemoteTargets=1;
+				receiveRemoteTargets=1;
+				reportOwnPosition=1;
+			};
+			id=7696;
+			type="B_T_VTOL_01_infantry_F";
+			atlOffset=1200;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ammoBox";
+					expression="[_this,_value] call bis_fnc_initAmmoBox;";
+					class Value
+					{
+						class data
+						{
+							class type
+							{
+								type[]=
+								{
+									"STRING"
+								};
+							};
+							value="[[[[""FirstAidKit"",""Medikit""],[10,1]],[[],[]],[[""ToolKit""],[1]],[[""B_Parachute""],[36]]],false]";
+						};
+					};
+				};
+				nAttributes=1;
+			};
+		};
+		class Item72
+		{
+			dataType="Group";
+			side="Independent";
+			class Entities
+			{
+				items=11;
+				class Item0
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23600.279,23.607653,17342.773};
+					};
+					side="Independent";
+					flags=2;
+					class Attributes
+					{
+						name="blackfishplane2D";
+					};
+					id=7685;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item1
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23600.279,23.607653,17342.773};
+					};
+					side="Independent";
+					class Attributes
+					{
+					};
+					id=7686;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item2
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23600.279,23.607653,17342.773};
+					};
+					side="Independent";
+					class Attributes
+					{
+					};
+					id=7687;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item3
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23600.279,23.607653,17342.773};
+					};
+					side="Independent";
+					class Attributes
+					{
+					};
+					id=7688;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item4
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23844.967,2.4277024,17212.336};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7689;
+					type="Move";
+				};
+				class Item5
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23837.123,13.801963,19756.52};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7690;
+					type="Move";
+				};
+				class Item6
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23834.648,62.064072,22301.098};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7691;
+					type="Move";
+				};
+				class Item7
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23849.5,65.980537,22197.137};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7692;
+					type="Move";
+				};
+				class Item8
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23870.156,13.415156,19748.982};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7693;
+					type="Move";
+				};
+				class Item9
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23878.578,4.2687354,17215.918};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7694;
+					type="Move";
+				};
+				class Item10
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23854.988,4.9680543,17087.4};
+					type="Cycle";
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7695;
+				};
+			};
+			class Attributes
+			{
+			};
+			class CrewLinks
+			{
+				class LinkIDProvider
+				{
+					nextID=4;
+				};
+				class Links
+				{
+					items=4;
+					class Item0
+					{
+						linkID=0;
+						item0=7685;
+						item1=7696;
+						class CustomData
+						{
+							role=1;
+						};
+					};
+					class Item1
+					{
+						linkID=1;
+						item0=7686;
+						item1=7696;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={1};
+						};
+					};
+					class Item2
+					{
+						linkID=2;
+						item0=7687;
+						item1=7696;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={2};
+						};
+					};
+					class Item3
+					{
+						linkID=3;
+						item0=7688;
+						item1=7696;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={0};
+						};
+					};
+				};
+			};
+			id=7684;
+			atlOffset=1200;
+		};
+		class Item73
+		{
+			dataType="Group";
+			side="Independent";
+			class Entities
+			{
+				items=11;
+				class Item0
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23034.447,23.607653,17382.984};
+					};
+					side="Independent";
+					flags=2;
+					class Attributes
+					{
+						name="blackfishplaneD";
+					};
+					id=7667;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item1
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23034.447,23.607653,17382.984};
+					};
+					side="Independent";
+					class Attributes
+					{
+					};
+					id=7668;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item2
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23034.447,23.607653,17382.984};
+					};
+					side="Independent";
+					class Attributes
+					{
+					};
+					id=7669;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item3
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23034.447,23.607653,17382.984};
+					};
+					side="Independent";
+					class Attributes
+					{
+					};
+					id=7670;
+					type="I_pilot_F";
+					atlOffset=20.416214;
+				};
+				class Item4
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23279.135,3.1900001,17252.547};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7671;
+					type="Move";
+				};
+				class Item5
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23271.291,13.047565,19796.73};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7672;
+					type="Move";
+				};
+				class Item6
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23268.816,39.969246,22341.309};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7673;
+					type="Move";
+				};
+				class Item7
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23283.668,65.507317,22237.348};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7674;
+					type="Move";
+				};
+				class Item8
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23304.324,13.554082,19789.193};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7675;
+					type="Move";
+				};
+				class Item9
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23312.746,3.1900001,17256.129};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7676;
+					type="Move";
+				};
+				class Item10
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={23289.156,7.6079831,17127.611};
+					type="Cycle";
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7677;
+				};
+			};
+			class Attributes
+			{
+				speedMode="LIMITED";
+			};
+			class CrewLinks
+			{
+				class LinkIDProvider
+				{
+					nextID=4;
+				};
+				class Links
+				{
+					items=4;
+					class Item0
+					{
+						linkID=0;
+						item0=7667;
+						item1=7678;
+						class CustomData
+						{
+							role=1;
+						};
+					};
+					class Item1
+					{
+						linkID=1;
+						item0=7668;
+						item1=7678;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={1};
+						};
+					};
+					class Item2
+					{
+						linkID=2;
+						item0=7669;
+						item1=7678;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={2};
+						};
+					};
+					class Item3
+					{
+						linkID=3;
+						item0=7670;
+						item1=7678;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={0};
+						};
+					};
+				};
+			};
+			id=7666;
+			atlOffset=320;
+		};
+		class Item74
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={23273.555,329.87958,17231.391};
+			};
+			side="Independent";
+			flags=2;
+			class Attributes
+			{
+				init="blackfishplane flyInHeight 300;this call Waldo_fnc_VehicleJumpSetup;";
+				name="blackfishplane";
+				reportRemoteTargets=1;
+				receiveRemoteTargets=1;
+				reportOwnPosition=1;
+			};
+			id=7678;
+			type="B_T_VTOL_01_infantry_F";
+			atlOffset=320;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ammoBox";
+					expression="[_this,_value] call bis_fnc_initAmmoBox;";
+					class Value
+					{
+						class data
+						{
+							class type
+							{
+								type[]=
+								{
+									"STRING"
+								};
+							};
+							value="[[[[""FirstAidKit"",""Medikit""],[10,1]],[[],[]],[[""ToolKit""],[1]],[[""B_Parachute""],[36]]],false]";
+						};
+					};
+				};
+				nAttributes=1;
+			};
+		};
+		class Item75
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={23339.758,7.1668048,19115.928};
+			};
+			side="Empty";
+			flags=5;
+			class Attributes
+			{
+				init="[this,c130Plane,""C130 Drop Plane""] call Waldo_fnc_MoveInCargoPlane;";
+				name="jump";
+			};
+			id=7680;
+			type="FlagPole_F";
+		};
+		class Item76
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={23332.025,7.1668048,19116.387};
+			};
+			side="Empty";
+			flags=5;
+			class Attributes
+			{
+				init="[this,blackfishplane,""BlackFish In Flight""] call Waldo_fnc_MoveInCargoPlane;";
+				name="jump_1";
+			};
+			id=7683;
+			type="FlagPole_F";
+		};
+		class Item77
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={23327.359,7.1668048,19116.41};
+			};
+			side="Empty";
+			flags=5;
+			class Attributes
+			{
+				init="[this,blackfishplane2,""BlackFish In Flight HALO""] call Waldo_fnc_MoveInCargoPlane;";
+				name="jump_2";
+			};
+			id=7700;
+			type="FlagPole_F";
+		};
+		class Item78
+		{
+			dataType="Group";
+			side="West";
+			class Entities
+			{
+				items=9;
+				class Item0
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23033.285,4.6332512,21155.598};
+						angles[]={0,3.5128067,0};
+					};
+					side="West";
+					flags=6;
+					class Attributes
+					{
+						name="c130PlaneD_1";
+					};
+					id=7709;
+					type="rhsusf_airforce_pilot";
+					atlOffset=-43.458817;
+				};
+				class Item1
+				{
+					dataType="Object";
+					class PositionInfo
+					{
+						position[]={23033.285,10.633168,21155.598};
+						angles[]={0,3.5128067,0};
+					};
+					side="West";
+					flags=4;
+					class Attributes
+					{
+					};
+					id=7710;
+					type="rhsusf_airforce_pilot";
+					atlOffset=-37.4589;
+				};
+				class Item2
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={21106.18,-73.216835,20925.473};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7711;
+					type="Move";
+				};
+				class Item3
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={20026.107,55.193855,18227.549};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7712;
+					type="Move";
+				};
+				class Item4
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={18833.984,21.447845,15302.339};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7713;
+					type="Move";
+				};
+				class Item5
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={18838.971,56.8606,15538.651};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7714;
+					type="Move";
+				};
+				class Item6
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={19945.063,43.95715,18266.594};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7715;
+					type="Move";
+				};
+				class Item7
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={21069.645,-77.486618,20942.191};
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7716;
+					type="Move";
+				};
+				class Item8
+				{
+					dataType="Waypoint";
+					loiterAltitude=-3.4028235e+038;
+					position[]={21110.842,-77.939629,20976.576};
+					type="Cycle";
+					class Effects
+					{
+					};
+					showWP="NEVER";
+					id=7717;
+				};
+			};
+			class Attributes
+			{
+				speedMode="LIMITED";
+			};
+			class CrewLinks
+			{
+				class LinkIDProvider
+				{
+					nextID=2;
+				};
+				class Links
+				{
+					items=2;
+					class Item0
+					{
+						linkID=0;
+						item0=7709;
+						item1=7718;
+						class CustomData
+						{
+							role=1;
+						};
+					};
+					class Item1
+					{
+						linkID=1;
+						item0=7710;
+						item1=7718;
+						class CustomData
+						{
+							role=2;
+							turretPath[]={0};
+						};
+					};
+				};
+			};
+			id=7708;
+			atlOffset=1200;
+		};
+		class Item79
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={21123.002,1130.9791,20969.994};
+				angles[]={0,3.5128067,0};
+			};
+			side="West";
+			flags=2;
+			class Attributes
+			{
+				init="c130Plane_1 call Waldo_fnc_VehicleJumpSetup;c130Plane_1 flyInHeight 1200;c130Plane limitSpeed 300";
+				name="c130Plane_1";
+				reportOwnPosition=1;
+			};
+			id=7718;
+			type="RHS_C130J";
+			atlOffset=1200;
+			class CustomAttributes
+			{
+				class Attribute0
+				{
+					property="ammoBox";
+					expression="[_this,_value] call bis_fnc_initAmmoBox;";
+					class Value
+					{
+						class data
+						{
+							class type
+							{
+								type[]=
+								{
+									"STRING"
+								};
+							};
+							value="[[[[""rhs_weap_m4_carryhandle"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""rhs_mag_30Rnd_556x45_M855A1_Stanag"",""rhsusf_100Rnd_556x45_soft_pouch"",""rhs_mag_M441_HE"",""rhs_mag_m714_White"",""rhs_mag_m662_red"",""rhs_mag_m67"",""rhs_mag_m18_green"",""rhs_mag_m18_red"",""rhs_mag_an_m8hc""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
+						};
+					};
+				};
+				nAttributes=1;
+			};
+		};
+		class Item80
+		{
+			dataType="Object";
+			class PositionInfo
+			{
+				position[]={23343.848,7.1668048,19114.857};
+			};
+			side="Empty";
+			flags=5;
+			class Attributes
+			{
+				init="[this,c130Plane_1,""C130 HALO Plane""] call Waldo_fnc_MoveInCargoPlane;";
+				name="jump_3";
+			};
+			id=7719;
+			type="FlagPole_F";
 		};
 	};
 	class Connections
