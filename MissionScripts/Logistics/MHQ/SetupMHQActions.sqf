@@ -135,7 +135,7 @@ if (_useModernConsturctionAudio == false) then {
 			private _addActArray = missionNamespace getVariable "Waldo_MHQ_QuarterMasterActions";
 			diag_log _addActArray;
 			{
-				[_MHQ,_x] remoteExec ["removeAction",0,true]
+				[_MHQ,_x] remoteExec ["removeAction",0,true];
 			} forEach _addActArray;
 		};
 	},				// Code executed on completion

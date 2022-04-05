@@ -111,5 +111,34 @@ class CfgFunctions
                 file = "MissionScripts\ZenModules\Zen_supplyCrateModule.sqf";
             };
         };
+        class Paradrop {
+            class AddHaloJump {
+                file = "MissionScripts\Paradrop\addHaloJump.sqf";
+            };
+            class AddStaticJump {
+                file = "MissionScripts\Paradrop\addStaticJump.sqf";
+            };
+            class ParaBackpack {
+                file = "MissionScripts\Paradrop\paraBackpack.sqf";
+            };
+            class HaloJumpFunc {
+                file = "MissionScripts\Paradrop\paradropHaloJump.sqf";
+            };
+            class StaticJumpFunc {
+                file = "MissionScripts\Paradrop\paradropStaticJump.sqf";
+            };
+            class paraEquipmentSim {
+                file = "MissionScripts\Paradrop\paraEquipmentSim.sqf";
+            };
+            class VehicleJumpSetup {
+                file = "MissionScripts\Paradrop\vehicleJumpSetup.sqf";
+            };
+            class MoveInCargoPlane {
+                file = "MissionScripts\Paradrop\moveInCargoPlane.sqf";
+            };
+            class JumpSettingsCheck {
+                file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
+            };
+        };
 	};
 };

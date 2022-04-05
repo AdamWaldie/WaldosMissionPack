@@ -25,7 +25,7 @@ Parameters >>
 Example code - 0 = ["players"] execVM "player_markers.sqf";
 
 */
-//0 = ["players"] execVM "MissionScripts\thirdPartyScripts\player_markers.sqf";
+//0 = ["players"] execVM "MissionScripts\ThirdPartyScripts\player_markers.sqf";
 
 
 /*
@@ -36,7 +36,7 @@ Virtual Headless Client Entity
 
 Reccomended to leave call as is. Information regarding HC can be found in the associated third party script.
 */
-//[true,30,false,true,30,10,true,[]] execVM "MissionScripts\thirdPartyScripts\WerthlesHeadless.sqf";
+//[true,30,false,true,30,10,true,[]] execVM "MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf";
 
 
 //Zeus Enhanced Modules setup (comment out to disable)
@@ -137,6 +137,18 @@ From initServer.sqf:
 [MobileHQ,respawnPoint,west,true,true] call Waldo_fnc_SetupMHQActions;
 
 /*
+PARADROP SCRIPTS
+
+MissionScripts\Paradrop has all the paradrop related functions. Waldos_functions.sqf under Paradrop display the function names.
+
+For basic usage, simply call [this] call Waldo_fnc_VehicleJumpSetup in the init of any transport airfraft with a rear ramp.
+
+You can also tweak MissionScripts\Paradrop\vehicleJumpSetup.sqf and supply custom parachute classes, as well as change the requirements for HALO & Static Line jumps to be availble to perform.
+
+*/
+
+
+/*
 
 waldos Init Completion flag
 
@@ -150,5 +162,10 @@ Zeus modules & script spawned supply boxes are unaffected
 
 */
 sleep 10; // Buffer cycles for other inits to be completed - should not be removed
+//Wait until player is in control of themselves, and then, if INIT flag isnt already set, set it.
 waitUntil {!isNull player && player == player};
-missionnamespace  setVariable ["WALDO_INIT_COMPLETE", true, true];
+private _firstPlayerIn = missionNamespace getVariable "WALDO_INIT_COMPLETE";
+if (isNil "_firstPlayerIn") then
+{
+	missionNamespace setVariable ["WALDO_INIT_COMPLETE", true, true];
+};
