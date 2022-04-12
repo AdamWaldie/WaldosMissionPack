@@ -9,6 +9,16 @@ This is the activation/deactivation script.
 Parameters:
 _buildingObject - Vehicle or Object to use as the Mobile headquarters
 _UseModernConsturctionAudio - boolean (true/false) | Options: True = Modern construction Noises, False = Old Wooden Sounding Construction Noises.
+
+Call:
+
+[_buildingObject,_UseModernConsturctionAudio] call Waldo_fnc_AddConstructionActions;
+
+e.g.
+
+[logiCrate,true] call Waldo_fnc_AddConstructionActions;
+
+
 */
 
 params["_buildingObject",["_useModernConsturctionAudio",false]];

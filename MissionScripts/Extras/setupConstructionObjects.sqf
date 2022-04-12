@@ -9,11 +9,14 @@ Parameters for Waldo_fnc_ServerSetupMHQ:
 _buildingObject - Variable name of the vehicle being used as the interaction point 
 _layerName - the name of the eden editor layer which houses the objects which make up the Mobile Headquarters additional objects. THIS SHOULD NOT INCLUDE THE VEHICLE ITSELF! Quotation Marks required ("").
 
+Call:
+
+[_buildingObject,_layerName] call Waldo_fnc_SetupConstructionObjects;
+
 e.g.
 
-From initServer.sqf:
+[logiCrate,"constructionobjectlayer"] call Waldo_fnc_SetupConstructionObjects;
 
-[LogiCrate,"layerName"] call Waldo_fnc_ServerSetupMHQ;
 
 */
 
