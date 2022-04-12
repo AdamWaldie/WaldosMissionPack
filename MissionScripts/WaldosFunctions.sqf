@@ -98,6 +98,14 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\MHQ\SetupMHQActions.sqf";
             };
         };
+        class FieldConstruction {
+            class SetupConstructionObjects {
+                file = "MissionScripts\Extras\setupConstructionObjects.sqf";
+            };
+            class AddConstructionActions {
+                file = "MissionScripts\Extras\addConstructionActions.sqf";
+            };
+        };
         class Zen {
             class ZenInitModules {
                 file = "MissionScripts\ZenModules\Zen_initModules.sqf";
