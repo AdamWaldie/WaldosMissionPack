@@ -3,7 +3,7 @@ Defence Construction Script
 
 "Build" defences from an object based on layer contents
 
-This is the Server Setup script.
+This is the Server Setup script. Any calls made to setup construction objects must be made from the initServer.sqf
 
 Parameters for Waldo_fnc_ServerSetupMHQ:
 _buildingObject - Variable name of the vehicle being used as the interaction point 

@@ -4,7 +4,7 @@ Defence Construction Script
 
 "Build" defences from an object based on layer contents
 
-This is the activation/deactivation script.
+This is the activation/deactivation script. Any calls to this script must be from the init.sqf
 
 Parameters:
 _buildingObject - Vehicle or Object to use as the Mobile headquarters
