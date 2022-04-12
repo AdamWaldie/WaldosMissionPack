@@ -24,20 +24,11 @@ Mission.sqm based supply system
 
 This searches the Mission.sqm for playable characters on the side defined by the parameter. It grabs their compliment of weapons, ammo, clothing and items, gets uniques and returns a unique 2D Array of the results.
 
-These reesults are then globaly synced, for use in the ZEN resupply boxes & to create ACE Arsenals with equipment limited to that pre-existing in the mission.sqm.
-
-Parameters:
-- "West"
-- "East"
-- "Independent"
-- "Civilian"
+These results are then globaly synced, for use in the ZEN resupply boxes & to create ACE Arsenals with equipment limited to that pre-existing in the mission.sqm
 
 */
 
-loadoutArray = ["West"] call Waldo_fnc_MissionSQMLookup; 
-missionNamespace setVariable ["Logi_MissionSQMArray", loadoutArray,true];
-//Set Value To Say That Mission Scan Is Complete
-missionNamespace setVariable ["Logi_MissionScanComplete", true,true];
+[] call Waldo_fnc_SideBaseLoadoutSetup;
 
 /* 
 Mobile Headquarters Script
@@ -76,4 +67,5 @@ From initServer.sqf:
 
 */
 
-[MobileHQ,"MobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
+//[MobileHQVehicle,"MobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
+//[MobileHQVehicle2,"MobileHeadQuartersLayer2"] call Waldo_fnc_ServerSetupMHQ;

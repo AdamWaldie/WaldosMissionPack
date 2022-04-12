@@ -21,6 +21,9 @@ class CfgFunctions
             class AITweak {
                 file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
             };
+            class SideBaseLoadoutSetup {
+                file = "MissionScripts\Logistics\LogiHelpers\sideBasedLoadoutSetup.sqf";
+            };
         };
         class convoy 
         {
@@ -49,11 +52,6 @@ class CfgFunctions
                 file = "MissionScripts\MissionFlow\timeBasedhint.sqf";
             };
         };
-        class DebugToolKit {
-            class ToolkitAceLimitedArsenal {
-                file = "MissionScripts\MissionMakerResourceScripts\ToolkitAceLimitedArsenal.sqf";
-            };
-        }
         class Logistics {
             class MedicalCratePopulate_Legacy {
                 file = "MissionScripts\Logistics\Crates\doMedicalCrate_Legacy.sqf";

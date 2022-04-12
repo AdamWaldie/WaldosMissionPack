@@ -45,7 +45,7 @@ private _statement = {
             ["altitude low opening (HALO) jumping."],
             [""],
             [format ["Minimum altitude: <t color='#00fe37'>%1 METERS AGL</t>", _hasHaloJump select 1]],
-            ["Door or ramp need to be open."],
+            ["Door or ramp needs to be open."],
             [""],
             [""]
         ] call CBA_fnc_notify;

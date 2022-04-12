@@ -35,13 +35,13 @@ In order to use the logistics system, you must set _logisticsSystemImplementatio
 You must give the helipad a variable name, and use that variable name in the _helipadSpawnPoint parameter. You should also give the MHQ itself a variable name and use it as the _MHQ parameter.
 
 */
-params["_MHQ","_helipadSpawnPoint",["_side",independent],["_useModernConsturctionAudio",false],["_logisticsSystemImplementation",false]];
+params["_MHQ","_helipadSpawnPoint",["_side",west],["_useModernConsturctionAudio",false],["_logisticsSystemImplementation",false]];
 
 //Get contents of layer defined by player
-waitUntil { missionNamespace getVariable ["Waldo_MHQ_ServerInit", false] };
+waitUntil { _MHQ getVariable ["Waldo_MHQ_ServerInit", false] };
 
 //Select only obects from the [[Objects],[marker]] original return
-private _layerContents = missionNamespace getVariable "Waldo_MHQ_Layer";
+private _layerContents = _MHQ getVariable "Waldo_MHQ_Layer";
 //private _layerContents = _layerInfo select 0;
 diag_log str _layerContents;
 
@@ -56,7 +56,7 @@ if (_useModernConsturctionAudio == false) then {
 	"Deploy Mobile Headquarters",										
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Idle icon shown on screen
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Progress icon shown on screen
-	"!(missionNamespace getVariable 'Waldo_MHQ_Status') && _this distance _target < 5",						// Condition for the action to be shown
+	"!(_target getVariable 'Waldo_MHQ_Status') && _this distance _target < 5",						// Condition for the action to be shown
 	"_caller distance _target < 5 && {speed _target < 1}",						// Condition for the action to progress						
 	{},//Codestart													
 	{
@@ -74,17 +74,22 @@ if (_useModernConsturctionAudio == false) then {
 			["Please Supply A Named Helipad In the MHQ layer"] remoteExec ["Hint",0];
 			diag_log "MHQ Helipad Not Designated Or Found";
 		};
-		_respawnMarker = createMarker ["Mobile HQ", _MHQ, 1];
+		//Get unique markern name for respawn selection
+		private _gridPos = mapGridPosition getPos _MHQ;
+		private _markerText = format["Mobile HQ at %1",_gridPos];
+		_respawnMarker = createMarker [_markerText, _MHQ, 1];
+		//Add respawn
 		MHQRespawn = [_side, _helipadSpawnPoint, _respawnMarker] call BIS_fnc_addRespawnPosition;
 		diag_log MHQRespawn;
-		missionNamespace setVariable ['Waldo_MHQ_Status', true, true];
+		//Set complete state on object
+		_MHQ setVariable ['Waldo_MHQ_Status', true, true];
 		{
 			_x action ["Eject", vehicle _x];
 		} forEach crew _MHQ;
 		[_MHQ, "LOCKED"] remoteExec ["setVehicleLock", 0];
 		playSound3d [getMissionPath _MHQAudioPath, _MHQ, false, getPosASL _MHQ, 4, 1];
 		if (_logisticsSystemImplementation == true) then {
-			[_MHQ,_helipadSpawnPoint,"",true] remoteExec ["Waldo_fnc_SetupQuarterMaster",0,true];
+			[_MHQ,_helipadSpawnPoint,_side,"",true] remoteExec ["Waldo_fnc_SetupQuarterMaster",0,true];
 			diag_log "MHQ Logistics Plugin Enabled";
 		} else {
 			diag_log "MHQ Logistics Plugin Disabled";
@@ -108,7 +113,7 @@ if (_useModernConsturctionAudio == false) then {
 	"Pack up Mobile Headquarters",											
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Idle icon shown on screen
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",	// Progress icon shown on screen
-	"missionNamespace getVariable 'Waldo_MHQ_Status' && _this distance _target < 5",						// Condition for the action to be shown
+	"(_target getVariable 'Waldo_MHQ_Status') && _this distance _target < 5",						// Condition for the action to be shown
 	"_caller distance _target < 5 && {speed _target < 1}",						// Condition for the action to progress								
 	{
 		params ["_target", "_caller", "_actionId", "_arguments"];
@@ -129,10 +134,10 @@ if (_useModernConsturctionAudio == false) then {
 		MHQRespawn call BIS_fnc_removeRespawnPosition;
 		deleteMarker "Mobile HQ";
 		[_MHQ, "UNLOCKED"] remoteExec ["setVehicleLock", 0];
-		missionNamespace setVariable ['Waldo_MHQ_Status', false, true];
+		_MHQ setVariable ['Waldo_MHQ_Status', false, true];
 		playSound3d [getMissionPath _MHQAudioPath, _MHQ, false, getPosASL _MHQ, 4, 1];
 		if (_logisticsSystemImplementation == true) then {
-			private _addActArray = missionNamespace getVariable "Waldo_MHQ_QuarterMasterActions";
+			private _addActArray = _MHQ getVariable "Waldo_MHQ_QuarterMasterActions";
 			diag_log _addActArray;
 			{
 				[_MHQ,_x] remoteExec ["removeAction",0,true];

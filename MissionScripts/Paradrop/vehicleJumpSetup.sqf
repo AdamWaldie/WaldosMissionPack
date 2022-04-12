@@ -12,6 +12,7 @@ params ["_vehicle"];
 
 diag_log "Vehicle Setup Reached";
 
+//Basic prevention of sillyness
 if (_vehicle iskindOf "man") exitWith {};
 
 // No Restrictions. Mission Makers please use responsibly!

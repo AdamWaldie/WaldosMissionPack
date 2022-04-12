@@ -14,7 +14,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 
 
 //Add ZEN modules
-["Waldos Modules", "Player Supply Crate",
+["Waldos Mission Modules", "Player Supply Crate",
     {
         params ["_modulePos", "_objectPos"];
         [_modulePos, _objectPos] call Waldo_fnc_ZenSupplySpawner;
@@ -22,7 +22,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["Waldos Modules", "Call Endex",
+["Waldos Mission Modules", "Call Endex",
     {
         //[] spawn Waldo_fnc_ENDEX;
         remoteExec ["Waldo_fnc_ENDEX",0,true];
@@ -30,7 +30,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     "\a3\modules_f\data\portraitmodule_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["Waldos Modules", "Field Hospital Crate",
+["Waldos Mission Modules", "Field Hospital Crate",
     {
         params ["_modulePos", "_objectPos"];
         [_modulePos, _objectPos,1] call Waldo_fnc_ZenMedicalSpawner;

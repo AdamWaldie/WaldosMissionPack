@@ -9,11 +9,13 @@ This expects a call from addaction format, so parameters are in the argument arr
 Params:
 _BoxType - Selection of box | Potential Arguments: "Medical","Supply","Wheel","Track"
 _Object - object upon which the spawn position is 
+_side - the side you want the quartermaster to deploy supplies from. Options: West,East,Independent,Civilian
+_customQMBox - a custom box classnam specific to this quartermaster (General changes should be made in initServer.sqf
 */
 
 
 params["","","","_parameterArray"];
-_parameterArray params["_boxType", "_object", ["_customQMBox",""], ["_aceMedicalCrate",false]];
+_parameterArray params["_boxType", "_object",["_side",west], ["_customQMBox",""], ["_aceMedicalCrate",false]];
 
 // Get MMT defined box classes & if undefined attempt to get missionParameters.sqf definition, failing that, assign default
 //First check if custom box selected, if untrue get mission space defined box for this class, if non-existant, select debug box type of class, if all of that fails, the world is ending and the debug above is selected
@@ -65,7 +67,7 @@ _ammoPos = [(_position select 0) +0.5, (_position select 1) +0.5, 0];
 _otherPosLow = [(_position select 0) +1.5, (_position select 1) +1.5, 0];
 _otherPos = [(_position select 0), (_position select 1), 1];
 
-_radius = 10;
+_radius = 5;
 _exists = {typeof _x == _boxToSpawn} count (nearestObjects [_position, [_boxToSpawn], _radius, false]) > 0;
 
 if (_exists) exitWith {
@@ -118,7 +120,7 @@ if (_boxType == "Medical") then {
 if (_boxType == "Supply") then {
     _box setPos _ammoPos;
     //Call supplybox population script with box and random scalar between 1 & 2
-    [_box, 1, true] call Waldo_fnc_SupplyCratePopulate;
+    [_box, 1, _side, true] call Waldo_fnc_SupplyCratePopulate;
     [_box, 1] call ace_cargo_fnc_setSize;
     [_box, true] call ace_dragging_fnc_setDraggable;
     [_box, true] call ace_dragging_fnc_setCarryable;
@@ -140,7 +142,7 @@ if (_boxType == "Supply") then {
 if (_boxType == "Ammo") then {
     _box setPos _ammoPos;
     //Call supplybox population script with box and random scalar between 1 & 2
-    [_box, 1, false] call Waldo_fnc_SupplyCratePopulate;
+    [_box, 1, _side, false] call Waldo_fnc_SupplyCratePopulate;
     [_box, 1] call ace_cargo_fnc_setSize;
     [_box, true] call ace_dragging_fnc_setDraggable;
     [_box, true] call ace_dragging_fnc_setCarryable;

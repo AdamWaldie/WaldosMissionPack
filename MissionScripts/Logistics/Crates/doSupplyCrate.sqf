@@ -4,21 +4,22 @@ This function populates an supply crate, with basic medical supplied (quickclot 
 Params:
 _crate - object to populate (Passed from module where thee classname of the box is defined)
 _size - scalar value to multiply medical supplycompliment
+_crateSupplyside - (STRING) the side that the crate will populate equipment from. Options: "WEST","EAST","INDEPENDENT","CIVILIAN"
 _fullCompliment - boolean (true/false) variable to dennote whether everything is to be added, or just that related to weapons & ammo
 
 Where the call is as follows:
 
-[_crate, _size, _fullCompliment] call Waldo_fnc_SupplyCratePopulate;
+[_crate, _size, _crateSupplyside, _fullCompliment] call Waldo_fnc_SupplyCratePopulate;
 
 e.g.
 
-[this, 1, false] spawn Waldo_fnc_SupplyCratePopulate;
+[this, 1, "WEST", false] spawn Waldo_fnc_SupplyCratePopulate;
 
 Called via Zen Module as defined in Zen_medicalCrateModule.sqf
 
 */
 
-params ["_crate", ["_scalar",1],["_fullCompliment",false]];
+params ["_crate", ["_scalar",1],["_crateSupplySide",west],["_fullCompliment",false]];
 
 clearweaponcargoGlobal _crate;
 clearmagazinecargoGlobal _crate;
@@ -30,9 +31,33 @@ waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
 //Double Security with ensuring mission.sqm sweep
 waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 
-private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray";
+//_diaglogdata = format["_crateSupplySide: %1",_crateSupplySide];
+//diag_log _diaglogdata;
+
+//default setup
+private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_West";
+//get all loadout data by default
+if (_crateSupplySide == EAST) then {
+    _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_East";
+    //diag_log "EAST ARRAY LOADED";
+};
+if (_crateSupplySide == INDEPENDENT) then {
+    _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_Ind";
+    //diag_log "INDEPENDENT ARRAY LOADED";
+};
+if (_crateSupplySide == CIVILIAN) then {
+    _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_Civ";
+    //diag_log "CIVILIAN ARRAY LOADED";
+};
+
+//diag_log str _loadoutArray;
+
 _loadoutArray params["_mainWeapons","_mainAmmo","_launchers","_launcherAmmo","_pGear","_pItems","_pBackpack","_weapAttach"];
 
+/*
+private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray";
+_loadoutArray params["_mainWeapons","_mainAmmo","_launchers","_launcherAmmo","_pGear","_pItems","_pBackpack","_weapAttach"];
+*/
 private _MedicalItems = ["Medikit","FirstAidKit","ACE_fieldDressing","ACE_packingBandage","ACE_elasticBandage","ACE_tourniquet","ACE_splint","ACE_morphine","ACE_adenosine","ACE_epinephrine","ACE_plasmaIV","ACE_plasmaIV_500","ACE_plasmaIV_250","ACE_salineIV","ACE_salineIV_500","ACE_salineIV_250","ACE_bloodIV","ACE_bloodIV_500","ACE_bloodIV_250","ACE_quikclot","ACE_personalAidKit","ACE_surgicalKit"];
 
 // Remove ACE Medical Items if applicable
@@ -41,39 +66,55 @@ _pItems = _pItems - _MedicalItems;
 //Add All to crate with Varying Quantities
 
 {
-    if (_x call BIS_fnc_isThrowable) then {
-        _crate addMagazineCargoGlobal [_x,(([15,30] call BIS_fnc_randomInt)*_scalar)];
-    } else {
-        _crate addMagazineCargoGlobal [_x,(([30,50] call BIS_fnc_randomInt)*_scalar)];
+    if (!(_x == "EMPTY")) then {
+        if (_x call BIS_fnc_isThrowable) then {
+            _crate addMagazineCargoGlobal [_x,(([15,30] call BIS_fnc_randomInt)*_scalar)];
+        } else {
+            _crate addMagazineCargoGlobal [_x,(([30,50] call BIS_fnc_randomInt)*_scalar)];
+        };
     };
 } forEach _mainAmmo;
 
 {
-    _crate addWeaponCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
+    if (!(_x == "EMPTY")) then {
+        _crate addWeaponCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
+    };
 } forEach _launchers;
 
 {
-    _crate addMagazineCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
+    if (!(_x == "EMPTY")) then {
+        _crate addMagazineCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
+    };
 } forEach _launcherAmmo;
 
 //If the calling method wants everything, not just weapons and Ammo, provide it!
 if (_fullCompliment == true) then {
     {
-        _crate addWeaponCargoGlobal [_x,(([1,3] call BIS_fnc_randomInt)*_scalar)];
+       if (!(_x == "EMPTY")) then {
+            _crate addWeaponCargoGlobal [_x,(([1,3] call BIS_fnc_randomInt)*_scalar)];
+       };
     } forEach _mainWeapons;
     {
-        _crate addItemCargoGlobal [_x,(([2,4] call BIS_fnc_randomInt)*_scalar)];
+        if (!(_x == "EMPTY")) then {
+            _crate addItemCargoGlobal [_x,(([2,4] call BIS_fnc_randomInt)*_scalar)];
+        };
     } forEach _weapAttach;
     {
-        _crate addItemCargoGlobal [_x,(([1,3] call BIS_fnc_randomInt)*_scalar)];
+        if (!(_x == "EMPTY")) then {
+            _crate addItemCargoGlobal [_x,(([1,3] call BIS_fnc_randomInt)*_scalar)];
+        };
     } forEach _pGear; 
 
     {
-        _crate addItemCargoGlobal [_x,(([4,8] call BIS_fnc_randomInt)*_scalar)];
+        if (!(_x == "EMPTY")) then {
+            _crate addItemCargoGlobal [_x,(([4,8] call BIS_fnc_randomInt)*_scalar)];
+        };
     } forEach _pItems;
 
     {
-        _crate addBackpackCargoGlobal [_x,[2,4] call BIS_fnc_randomInt];
+        if (!(_x == "EMPTY")) then {
+            _crate addBackpackCargoGlobal [_x,[2,4] call BIS_fnc_randomInt];
+        };
     } forEach _pBackpack;
 };
 

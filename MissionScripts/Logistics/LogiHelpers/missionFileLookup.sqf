@@ -29,7 +29,7 @@ private _attachments = [];
         private _isPlayer   = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayer");
         private _isPlayable = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayable");
         private _isCorrectSide = getText (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "side");
-        //diag_log _isCorrectSide;
+        //diag_log format["_isCorrectSide: %1",_isCorrectSide];
         //diag_log _isPlayer;
         //diag_log _isPlayable;
         if (_isCorrectSide == _sideChosen) then {
@@ -183,6 +183,32 @@ _attachments = _attachments arrayIntersect _attachments select {_x isEqualType "
 //diag_log _PBackpacks;
 //diag_log _attachments;
 */
+
+//set special variable EMPTY if nothing in that item
+if (count _PweapAndSdArm == 0) then {
+    _PweapAndSdArm = ["EMPTY"];
+};
+if (count _PLauncher == 0) then {
+    _PLauncher= ["EMPTY"];
+};
+if (count _launchMagazines == 0) then {
+    _launchMagazines= ["EMPTY"];
+};
+if (count _NormalMagazines == 0) then {
+    _NormalMagazines= ["EMPTY"];
+};
+if (count _playerGear == 0) then {
+    _playerGear= ["EMPTY"];
+};
+if (count _inventoryItems == 0) then {
+    _inventoryItems= ["EMPTY"];
+};
+if (count _PBackpacks == 0) then {
+    _PBackpacks= ["EMPTY"];
+};
+if (count _attachments == 0) then {
+    _attachments= ["EMPTY"];
+};
 
 private _masterArray = [_PweapAndSdArm,_NormalMagazines,_PLauncher,_launchMagazines,_playerGear,_inventoryItems,_PBackpacks,_attachments];
 _masterArray

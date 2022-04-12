@@ -37,7 +37,7 @@ From initServer.sqf:
 
 params["_MHQVariableName","_layerName"];
 
-missionNamespace setVariable ['Waldo_MHQ_Status', false, true];
+_MHQVariableName setVariable ['Waldo_MHQ_Status', false, true];
 
 //Get contents of layer defined by player
 private _layerContents = getMissionLayerEntities _layerName;
@@ -51,7 +51,7 @@ _layerContents = _layerContents select 0;
 } forEach _layerContents;
 
 //Set global variable for use
-missionNamespace setVariable ['Waldo_MHQ_Layer', _layerContents, true];
+_MHQVariableName setVariable ['Waldo_MHQ_Layer', _layerContents, true];
 //Prevent race conditions with flag.
-missionNamespace setVariable ['Waldo_MHQ_ServerInit', true, true];
+_MHQVariableName setVariable ['Waldo_MHQ_ServerInit', true, true];
 diag_log "MHQ ServerSetup Complete";
