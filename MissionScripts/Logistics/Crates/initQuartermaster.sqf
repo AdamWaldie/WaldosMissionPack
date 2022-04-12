@@ -27,7 +27,7 @@ Examples:
 These are from the exemplar mission
 */
 
-params["_unit","_spawnObject",["_side",west],["_customBox",""],["_mhqFlag",flase]];
+params["_unit","_spawnObject",["_side",west],["_customBox",""],["_mhqFlag",false]];
 
 //CreateArrayOfAddactionIds incase you want to remove them
 private _addactionArray = [];

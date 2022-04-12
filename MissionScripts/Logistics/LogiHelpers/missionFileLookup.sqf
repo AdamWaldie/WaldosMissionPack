@@ -29,7 +29,7 @@ private _attachments = [];
         private _isPlayer   = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayer");
         private _isPlayable = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayable");
         private _isCorrectSide = getText (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "side");
-        //diag_log format["_isCorrectSide: %1",_isCorrectSide];
+        diag_log format["_isCorrectSide: %1",_isCorrectSide];
         //diag_log _isPlayer;
         //diag_log _isPlayable;
         if (_isCorrectSide == _sideChosen) then {

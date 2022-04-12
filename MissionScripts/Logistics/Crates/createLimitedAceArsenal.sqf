@@ -52,7 +52,6 @@ if (_crateSupplySide == CIVILIAN) then {
 _aceArsenalPool = str _aceArsenalPool splitString "[]," joinString ",";
 _aceArsenalPool = parseSimpleArray ("[" + _aceArsenalPool + "]");
 _aceArsenalPool = _aceArsenalPool arrayIntersect _aceArsenalPool select {_x isEqualType "" && {_x != ""}};
-diag_log _aceArsenalPool;
 
 // if pre-existing Ace Arsenal (user specified) add items to it, else add entirely new arsenal
 if (_preExisting == true) then {

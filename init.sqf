@@ -139,9 +139,11 @@ From initServer.sqf:
 [variableNameofMHQ,"layerName",west] call Waldo_fnc_SetupMHQActions;
 
 */
-
-//[MobileHQVehicle,spawnPoint,west,true,true] call Waldo_fnc_SetupMHQActions;
-//[MobileHQVehicle2,spawnPoint2,west,true,true] call Waldo_fnc_SetupMHQActions;
+//West MHQs
+[MobileHQ,respawnPoint,west,true,true] call Waldo_fnc_SetupMHQActions;
+[MobileHQ2,respawnPoint2,west,true,true] call Waldo_fnc_SetupMHQActions;
+//East MHQ Example
+[EastMobileHQ,eastSpawn,east,true,true] call Waldo_fnc_SetupMHQActions;
 
 /*
 PARADROP SCRIPTS

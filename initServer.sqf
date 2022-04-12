@@ -26,6 +26,8 @@ This searches the Mission.sqm for playable characters on the side defined by the
 
 These results are then globaly synced, for use in the ZEN resupply boxes & to create ACE Arsenals with equipment limited to that pre-existing in the mission.sqm
 
+IMPORTANT: YOU MUST EDIT THE LOADOUTS OF PLACED UNITS WITH AN ARSENAL OF SOME DESCRIPTION FOR THIS TO WORK, VANILLA UNIT LOADOUTS WILL NOT SUFFICE!
+
 */
 
 [] call Waldo_fnc_SideBaseLoadoutSetup;
@@ -66,6 +68,8 @@ From initServer.sqf:
 [variableNameofMHQ,"layerName"] call Waldo_fnc_ServerSetupMHQ;
 
 */
-
-//[MobileHQVehicle,"MobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
-//[MobileHQVehicle2,"MobileHeadQuartersLayer2"] call Waldo_fnc_ServerSetupMHQ;
+//West MHQs
+[MobileHQ,"MobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
+[MobileHQ2,"MobileHeadQuartersLayer2"] call Waldo_fnc_ServerSetupMHQ;
+//East MHQ Example
+[EastMobileHQ,"EastMobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
