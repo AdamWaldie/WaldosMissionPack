@@ -36,7 +36,7 @@ _schdenvirohndlr = [_vehicle] spawn {
     3: Maximum speed       <NUMBER> (Optional) (Default; 310)
     4: Chute Vehicle Class <OBJECT> (Optional) (Default; "rhs_d6_Parachute") Requires RHS, respecify alternative if required. (NonSteerable_Parachute_F is vanilla)
     */
-    [_vehicle, 180, 300, 300, "NonSteerable_Parachute_F"] call Waldo_fnc_AddStaticJump;
+    [_vehicle, 180, 350, 310, "rhs_d6_Parachute"] call Waldo_fnc_AddStaticJump;
     // leave this one as is.
     [_vehicle] call Waldo_fnc_JumpSettingsCheck;
 };
