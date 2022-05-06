@@ -34,6 +34,8 @@ For those seeking knowledge or greater control, each file is fully documented on
 6. IF YOU ARE USING ACRE2:
    - Player Groups MUST be given a Callsign in Eden & have their Callsign & radio frequiencies assigned in missionParameters.sqf.
 7. Waldo's AI tweaks can be set via the missionParameters.sqf file.
+8. Remove the UnitInsignias Folder if you arent planning to use them.
+9. Remove/alter differing setup scripts in init.sqf & initServer.sqf as required and labelled.
 
 # Other Information
 - All files are provided with description on their utilisation, their parameters and how you can use them.
