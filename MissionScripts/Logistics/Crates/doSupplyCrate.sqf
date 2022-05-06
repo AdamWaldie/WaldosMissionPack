@@ -13,7 +13,7 @@ Where the call is as follows:
 
 e.g.
 
-[this, 1, "WEST", false] spawn Waldo_fnc_SupplyCratePopulate;
+[this, 1, west, false] spawn Waldo_fnc_SupplyCratePopulate;
 
 Called via Zen Module as defined in Zen_medicalCrateModule.sqf
 
