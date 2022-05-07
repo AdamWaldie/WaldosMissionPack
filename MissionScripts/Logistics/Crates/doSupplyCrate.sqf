@@ -9,7 +9,7 @@ _fullCompliment - boolean (true/false) variable to dennote whether everything is
 
 Where the call is as follows:
 
-[_crate, _size, _crateSupplyside, _fullCompliment] call Waldo_fnc_SupplyCratePopulate;
+[_crate, _size, _crateSupplyside, _fullCompliment] spawn Waldo_fnc_SupplyCratePopulate;
 
 e.g.
 
