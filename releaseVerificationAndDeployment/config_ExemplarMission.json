@@ -1,7 +1,7 @@
 {
     "build" : {
         "scriptName": "WMP Exemplar Mission",
-        "notlist": ["releaseVerificationAndDeployment","WMP_Compositions"]
+        "notlist": ["doc","release","releaseVerificationAndDeployment","WMP_Compositions"]
     },
     "init.sqf" : {
         "add": [

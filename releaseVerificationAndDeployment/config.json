@@ -2,6 +2,6 @@
     "build" : {
         "scriptName": "WMP",
         "version": "DevBuild",
-        "notlist": ["releaseVerificationAndDeployment","UnitInsignias", "WMP_Compositions", "mission.sqm"]
+        "notlist": ["doc","release","releaseVerificationAndDeployment","UnitInsignias", "WMP_Compositions", "mission.sqm"]
     }
 }
