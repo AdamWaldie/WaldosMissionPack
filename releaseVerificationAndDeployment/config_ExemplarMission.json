@@ -1,6 +1,6 @@
 {
     "build" : {
-        "scriptName": "WMP_Exemplar_Mission",
+        "scriptName": "WMP_Exemplar_Mission.Altis",
         "version": "DevBuild",
         "notlist": ["releaseVerificationAndDeployment","WMP_Compositions"]
     },
