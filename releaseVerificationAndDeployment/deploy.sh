@@ -7,14 +7,14 @@ VERSION_TAG=$*
 mkdir release/
 
 sed -i "s/#define VERSION.*/#define VERSION \"${VERSION_TAG}\"/" releaseVerificationAndDeployment/buildVersion.hpp
-sed -i "s/DevBuild/${VERSION_TAG}/" tools/config.json
+sed -i "s/DevBuild/${VERSION_TAG}/" releaseVerificationAndDeployment/config.json
 
-python3 tools/build.py --deploy
+python3 releaseVerificationAndDeployment/build.py --deploy
 
 
 # Special Builds
-python3 tools/build.py --build config_ExemplarMission.json --deploy
-python3 tools/build.py --build config_unitInsignias.json --deploy
+python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json --deploy
+python3 releaseVerificationAndDeployment/build.py --build config_unitInsignias.json --deploy
 
 sed -i "s/DEVBUILD/${VERSION_TAG}/g" Compositions/*/header.sqe
 
