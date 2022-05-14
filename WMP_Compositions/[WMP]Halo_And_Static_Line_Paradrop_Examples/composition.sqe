@@ -1,0 +1,509 @@
+version=54;
+center[]={20742.377,-77.939629,18169.25};
+class items
+{
+	items=6;
+	class Item0
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={2597.3809,85.10643,946.67773};
+		};
+		side="Empty";
+		flags=5;
+		class Attributes
+		{
+			init="[this,c130Plane,""C130 Drop Plane""] call Waldo_fnc_MoveInCargoPlane;";
+			name="jump";
+		};
+		id=7680;
+		type="FlagPole_F";
+	};
+	class Item1
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={2601.4707,85.10643,945.60742};
+		};
+		side="Empty";
+		flags=5;
+		class Attributes
+		{
+			init="[this,c130Plane_1,""C130 HALO Plane""] call Waldo_fnc_MoveInCargoPlane;";
+			name="jump_3";
+		};
+		id=7719;
+		type="FlagPole_F";
+	};
+	class Item2
+	{
+		dataType="Group";
+		side="West";
+		class Entities
+		{
+			items=9;
+			class Item0
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={2491.8086,81.131065,865.53906};
+					angles[]={0,3.5128067,0};
+				};
+				side="West";
+				flags=6;
+				class Attributes
+				{
+					name="c130PlaneD";
+				};
+				id=7664;
+				type="rhsusf_airforce_pilot";
+			};
+			class Item1
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={2491.8086,87.130981,865.53906};
+					angles[]={0,3.5128067,0};
+				};
+				side="West";
+				class Attributes
+				{
+				};
+				id=7665;
+				type="rhsusf_airforce_pilot";
+				atlOffset=5.9999166;
+			};
+			class Item2
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={564.70313,105.00903,635.41406};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7706;
+				type="Move";
+			};
+			class Item3
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-515.36914,98.569023,-2062.5098};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7701;
+				type="Move";
+			};
+			class Item4
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-1707.4922,111.73911,-4987.7197};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7702;
+				type="Move";
+			};
+			class Item5
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-1702.5059,106.57302,-4751.4072};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7703;
+				type="Move";
+			};
+			class Item6
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-596.41406,99.077759,-2023.4658};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7704;
+				type="Move";
+			};
+			class Item7
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={528.16797,106.35275,652.13281};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7705;
+				type="Move";
+			};
+			class Item8
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={569.36523,110.82248,686.51758};
+				type="Cycle";
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7707;
+			};
+		};
+		class Attributes
+		{
+			speedMode="LIMITED";
+		};
+		class CrewLinks
+		{
+			class LinkIDProvider
+			{
+				nextID=2;
+			};
+			class Links
+			{
+				items=2;
+				class Item0
+				{
+					linkID=0;
+					item0=7664;
+					item1=7663;
+					class CustomData
+					{
+						role=1;
+					};
+				};
+				class Item1
+				{
+					linkID=1;
+					item0=7665;
+					item1=7663;
+					class CustomData
+					{
+						role=2;
+						turretPath[]={0};
+					};
+				};
+			};
+		};
+		id=7662;
+		atlOffset=315.82898;
+	};
+	class Item3
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={581.52539,431.6069,679.93555};
+			angles[]={0,3.5128067,0};
+		};
+		side="West";
+		flags=2;
+		class Attributes
+		{
+			init="c130Plane call Waldo_fnc_VehicleJumpSetup;c130Plane flyInHeight 300;c130Plane limitSpeed 300";
+			name="c130Plane";
+			reportOwnPosition=1;
+		};
+		id=7663;
+		type="RHS_C130J";
+		atlOffset=315.82898;
+		class CustomAttributes
+		{
+			class Attribute0
+			{
+				property="ammoBox";
+				expression="[_this,_value] call bis_fnc_initAmmoBox;";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="[[[[""rhs_weap_m4_carryhandle"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""rhs_mag_30Rnd_556x45_M855A1_Stanag"",""rhsusf_100Rnd_556x45_soft_pouch"",""rhs_mag_M441_HE"",""rhs_mag_m714_White"",""rhs_mag_m662_red"",""rhs_mag_m67"",""rhs_mag_m18_green"",""rhs_mag_m18_red"",""rhs_mag_an_m8hc""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
+					};
+				};
+			};
+			nAttributes=1;
+		};
+	};
+	class Item4
+	{
+		dataType="Group";
+		side="West";
+		class Entities
+		{
+			items=9;
+			class Item0
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={2290.9082,82.572876,2986.3477};
+					angles[]={0,3.5128067,0};
+				};
+				side="West";
+				flags=6;
+				class Attributes
+				{
+					name="c130PlaneD_1";
+				};
+				id=7709;
+				type="rhsusf_airforce_pilot";
+				atlOffset=-43.458817;
+			};
+			class Item1
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={2290.9082,88.5728,2986.3477};
+					angles[]={0,3.5128067,0};
+				};
+				side="West";
+				flags=4;
+				class Attributes
+				{
+				};
+				id=7710;
+				type="rhsusf_airforce_pilot";
+				atlOffset=-37.4589;
+			};
+			class Item2
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={363.80273,4.7227936,2756.2227};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7711;
+				type="Move";
+			};
+			class Item3
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-716.26953,133.13348,58.298828};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7712;
+				type="Move";
+			};
+			class Item4
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-1908.3926,99.387474,-2866.9111};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7713;
+				type="Move";
+			};
+			class Item5
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-1903.4063,134.80023,-2630.5986};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7714;
+				type="Move";
+			};
+			class Item6
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={-797.31445,121.89677,97.34375};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7715;
+				type="Move";
+			};
+			class Item7
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={327.26758,0.45301056,2772.9414};
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7716;
+				type="Move";
+			};
+			class Item8
+			{
+				dataType="Waypoint";
+				loiterAltitude=-3.4028235e+038;
+				position[]={368.46484,0,2807.3262};
+				type="Cycle";
+				class Effects
+				{
+				};
+				showWP="NEVER";
+				id=7717;
+			};
+		};
+		class Attributes
+		{
+			speedMode="LIMITED";
+		};
+		class CrewLinks
+		{
+			class LinkIDProvider
+			{
+				nextID=2;
+			};
+			class Links
+			{
+				items=2;
+				class Item0
+				{
+					linkID=0;
+					item0=7709;
+					item1=7718;
+					class CustomData
+					{
+						role=1;
+					};
+				};
+				class Item1
+				{
+					linkID=1;
+					item0=7710;
+					item1=7718;
+					class CustomData
+					{
+						role=2;
+						turretPath[]={0};
+					};
+				};
+			};
+		};
+		id=7708;
+		atlOffset=1200;
+	};
+	class Item5
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={380.625,1208.9187,2800.7441};
+			angles[]={0,3.5128067,0};
+		};
+		side="West";
+		flags=2;
+		class Attributes
+		{
+			init="c130Plane_1 call Waldo_fnc_VehicleJumpSetup;c130Plane_1 flyInHeight 1200;c130Plane limitSpeed 300";
+			name="c130Plane_1";
+			reportOwnPosition=1;
+		};
+		id=7718;
+		type="RHS_C130J";
+		atlOffset=1200;
+		class CustomAttributes
+		{
+			class Attribute0
+			{
+				property="ammoBox";
+				expression="[_this,_value] call bis_fnc_initAmmoBox;";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="[[[[""rhs_weap_m4_carryhandle"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""rhs_mag_30Rnd_556x45_M855A1_Stanag"",""rhsusf_100Rnd_556x45_soft_pouch"",""rhs_mag_M441_HE"",""rhs_mag_m714_White"",""rhs_mag_m662_red"",""rhs_mag_m67"",""rhs_mag_m18_green"",""rhs_mag_m18_red"",""rhs_mag_an_m8hc""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
+					};
+				};
+			};
+			nAttributes=1;
+		};
+	};
+};
+class VehicleInVehicleLinks
+{
+	class LinkIDProvider
+	{
+		nextID=4;
+	};
+	class Links
+	{
+		items=4;
+		class Item0
+		{
+			linkID=0;
+			item0=7664;
+			item1=7663;
+			class CustomData
+			{
+				role=1;
+			};
+		};
+		class Item1
+		{
+			linkID=1;
+			item0=7665;
+			item1=7663;
+			class CustomData
+			{
+				role=2;
+				turretPath[]={0};
+			};
+		};
+		class Item2
+		{
+			linkID=2;
+			item0=7709;
+			item1=7718;
+			class CustomData
+			{
+				role=1;
+			};
+		};
+		class Item3
+		{
+			linkID=3;
+			item0=7710;
+			item1=7718;
+			class CustomData
+			{
+				role=2;
+				turretPath[]={0};
+			};
+		};
+	};
+};

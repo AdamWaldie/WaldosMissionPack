@@ -1,0 +1,9 @@
+version=54;
+name="[WMP] Vehicle_Mounted_Weapon_Example";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions";
+requiredAddons[]=
+{
+	"A3_Soft_F_Gamma_Van_01",
+	"A3_Static_F_HMG_02"
+};

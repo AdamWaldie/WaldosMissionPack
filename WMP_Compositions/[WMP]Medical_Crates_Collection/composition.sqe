@@ -1,0 +1,54 @@
+version=54;
+center[]={23303.113,3.1900001,19052.996};
+class items
+{
+	items=3;
+	class Item0
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={0.14453125,0,-1.3027344};
+			angles[]={0,1.7267414,0};
+		};
+		side="Empty";
+		flags=4;
+		class Attributes
+		{
+			init="[this, true, 1] call Waldo_fnc_MedicalCratePopulate;";
+			name="medicalCrate_Fieldhospital";
+			dynamicSimulation=1;
+		};
+		id=7842;
+		type="ACE_medicalSupplyCrate_advanced";
+	};
+	class Item1
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={0.40039063,0,1.1152344};
+			angles[]={0,1.7267414,0};
+		};
+		side="Empty";
+		flags=4;
+		class Attributes
+		{
+			init="[this, false, 1] call Waldo_fnc_MedicalCratePopulate;";
+			name="medicalCrate_noFieldHospital";
+			dynamicSimulation=1;
+		};
+		id=7843;
+		type="ACE_medicalSupplyCrate_advanced";
+	};
+	class Item2
+	{
+		dataType="Comment";
+		class PositionInfo
+		{
+			position[]={-0.55273438,0,0.18554688};
+		};
+		title="Medical crates, one with and one without field hospital";
+		id=7844;
+	};
+};

@@ -1,0 +1,12 @@
+version=54;
+name="[WMP] Basic Mobile Respawn Vehicle";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions";
+requiredAddons[]=
+{
+	"A3_Modules_F_Multiplayer",
+	"A3_Soft_F_Gamma_Truck_01",
+	"A3_Soft_F_Exp_Truck_01",
+	"ace_realisticnames",
+	"ace_cargo"
+};

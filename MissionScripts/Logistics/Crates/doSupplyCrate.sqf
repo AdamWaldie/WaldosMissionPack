@@ -4,7 +4,7 @@ This function populates an supply crate, with basic medical supplied (quickclot 
 Params:
 _crate - object to populate (Passed from module where thee classname of the box is defined)
 _size - scalar value to multiply medical supplycompliment
-_crateSupplyside - (STRING) the side that the crate will populate equipment from. Options: "WEST","EAST","INDEPENDENT","CIVILIAN"
+_crateSupplyside - (STRING) the side that the crate will populate equipment from. Options: west,east,independent,civilian
 _fullCompliment - boolean (true/false) variable to dennote whether everything is to be added, or just that related to weapons & ammo
 
 Where the call is as follows:

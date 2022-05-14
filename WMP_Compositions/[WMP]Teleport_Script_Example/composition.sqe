@@ -1,0 +1,50 @@
+version=54;
+center[]={23367.529,3.1900001,19197.764};
+class items
+{
+	items=3;
+	class Item0
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={-5.5820313,3.9768047,-0.47460938};
+		};
+		side="Empty";
+		flags=5;
+		class Attributes
+		{
+			init="[this,""Teleport - Red Flag"", redFlag] call Waldo_fnc_Teleport;";
+			name="blueFlag";
+		};
+		id=7002;
+		type="Flag_Blue_F";
+	};
+	class Item1
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={5.9453125,3.9768047,0.37109375};
+		};
+		side="Empty";
+		flags=5;
+		class Attributes
+		{
+			init="[this,""Teleport - Blue Flag"", blueFlag] call Waldo_fnc_Teleport";
+			name="redFlag";
+		};
+		id=7003;
+		type="Flag_Red_F";
+	};
+	class Item2
+	{
+		dataType="Comment";
+		class PositionInfo
+		{
+			position[]={-0.36523438,0,0.10546875};
+		};
+		title="Teleport Script";
+		id=7004;
+	};
+};

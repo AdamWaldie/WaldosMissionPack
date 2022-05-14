@@ -1,0 +1,65 @@
+version=54;
+center[]={23344.406,3.1900003,19178.545};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={-0.78515625,1.8715069,-0.8515625};
+			angles[]={0,3.901247,0};
+		};
+		side="Empty";
+		flags=4;
+		class Attributes
+		{
+			name="flatbedGunTruck";
+		};
+		id=7495;
+		type="C_Van_01_transport_F";
+		atlOffset=2.3841858e-007;
+		class CustomAttributes
+		{
+			class Attribute0
+			{
+				property="ammoBox";
+				expression="[_this,_value] call bis_fnc_initAmmoBox;";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="[[[[""FirstAidKit""],[2]],[[],[]],[[],[]],[[],[]]],false]";
+					};
+				};
+			};
+			nAttributes=1;
+		};
+	};
+	class Item1
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={0.78710938,2.9627469,0.87304688};
+			angles[]={0,0.30623546,0};
+		};
+		side="Empty";
+		class Attributes
+		{
+			init="[mobileTurret,flatbedGunTruck,""Flatbed Turret""] call Waldo_fnc_VehicleMountedWeapon;";
+			name="mobileTurret";
+		};
+		id=7497;
+		type="B_G_HMG_02_high_F";
+		atlOffset=1.2829995;
+	};
+};

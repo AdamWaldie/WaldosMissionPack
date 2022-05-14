@@ -1,0 +1,9 @@
+version=54;
+name="[WMP] Supply Crate Collection";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions";
+requiredAddons[]=
+{
+	"A3_Supplies_F_Exp_Ammoboxes",
+	"ace_dragging"
+};

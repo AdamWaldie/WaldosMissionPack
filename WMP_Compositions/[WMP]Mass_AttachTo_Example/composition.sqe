@@ -1,0 +1,91 @@
+version=54;
+center[]={23349.438,3.1900003,19174.061};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={-1.0820313,1.8715069,0.58007813};
+			angles[]={0,5.194798,0};
+		};
+		side="Empty";
+		flags=4;
+		class Attributes
+		{
+			init="[flatbedMortarTruck,""sandbagTruck""] call Waldo_fnc_MassAttachRelative;";
+			name="flatbedMortarTruck";
+		};
+		id=7491;
+		type="C_Van_01_transport_F";
+		atlOffset=2.3841858e-007;
+		class CustomAttributes
+		{
+			class Attribute0
+			{
+				property="ammoBox";
+				expression="[_this,_value] call bis_fnc_initAmmoBox;";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="[[[[""FirstAidKit""],[2]],[[],[]],[[],[]],[[],[]]],false]";
+					};
+				};
+			};
+			nAttributes=1;
+		};
+	};
+	class Item1
+	{
+		dataType="Layer";
+		name="SandbagTruck";
+		class Entities
+		{
+			items=2;
+			class Item0
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.16015625,1.9693997,-1.0410156};
+					angles[]={0,0.47149533,0};
+				};
+				side="Empty";
+				class Attributes
+				{
+				};
+				id=7656;
+				type="Land_BagFence_Long_F";
+				atlOffset=1.5500884;
+			};
+			class Item1
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.91992188,1.9693997,0.4765625};
+					angles[]={0,0.47149533,0};
+				};
+				side="Empty";
+				class Attributes
+				{
+				};
+				id=7657;
+				type="Land_BagFence_Long_F";
+				atlOffset=1.5500884;
+			};
+		};
+		id=7655;
+		atlOffset=1.5500884;
+	};
+};

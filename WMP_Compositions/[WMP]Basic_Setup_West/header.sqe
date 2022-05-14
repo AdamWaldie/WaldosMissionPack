@@ -1,0 +1,13 @@
+version=54;
+name="[WMP] Basic Setup West";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions";
+requiredAddons[]=
+{
+	"A3_Modules_F_Multiplayer",
+	"A3_Supplies_F_Exp_Ammoboxes",
+	"ace_dragging",
+	"A3_Weapons_F_Ammoboxes",
+	"ace_cargo",
+	"ace_medical_treatment"
+};

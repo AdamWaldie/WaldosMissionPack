@@ -1,0 +1,26 @@
+version=54;
+center[]={23407.268,3.1900001,19132.855};
+class items
+{
+	items=1;
+	class Item0
+	{
+		dataType="Trigger";
+		position[]={0,0,0};
+		angle=0.15676543;
+		class Attributes
+		{
+			name="ResupplyTrigger1";
+			text="Basic Resupply Trigger";
+			onActivation="vehicle player setFuel 1; vehicle player setDamage 0; vehicle player setVehicleAmmo 1;";
+			sizeA=10;
+			sizeB=10;
+			sizeC=10;
+			repeatable=1;
+			activationBy="ANYPLAYER";
+			isRectangle=1;
+		};
+		id=5740;
+		type="EmptyDetectorArea10x10";
+	};
+};

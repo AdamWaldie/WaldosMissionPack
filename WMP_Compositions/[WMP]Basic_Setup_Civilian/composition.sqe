@@ -1,0 +1,194 @@
+version=54;
+center[]={23275.225,3.1900001,19126.035};
+class items
+{
+	items=4;
+	class Item0
+	{
+		dataType="Logic";
+		class PositionInfo
+		{
+			position[]={-2.2539063,0,0.25};
+		};
+		id=7859;
+		type="ModuleRespawnPosition_F";
+		class CustomAttributes
+		{
+			class Attribute0
+			{
+				property="ModuleRespawnPosition_F_Marker";
+				expression="_this setVariable ['Marker',_value,true];";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="1";
+					};
+				};
+			};
+			class Attribute1
+			{
+				property="ModuleRespawnPosition_F_Name";
+				expression="_this setVariable ['Name',_value,true];";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="Pre-Op Zone";
+					};
+				};
+			};
+			class Attribute2
+			{
+				property="ModuleRespawnPosition_F_Side";
+				expression="_this setVariable ['Side',_value,true];";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="3";
+					};
+				};
+			};
+			class Attribute3
+			{
+				property="ModuleRespawnPosition_F_ShowNotification";
+				expression="_this setVariable ['ShowNotification',_value,true];";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="0";
+					};
+				};
+			};
+			class Attribute4
+			{
+				property="ModuleRespawnPosition_F_Type";
+				expression="_this setVariable ['Type',_value,true];";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="0";
+					};
+				};
+			};
+			nAttributes=5;
+		};
+	};
+	class Item1
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={1.1308594,0,2.1484375};
+			angles[]={0,1.7267414,0};
+		};
+		side="Empty";
+		flags=4;
+		class Attributes
+		{
+			init="[this, true, 1] call Waldo_fnc_MedicalCratePopulate;";
+			name="medicalCrate_Fieldhospital_4";
+		};
+		id=7862;
+		type="ACE_medicalSupplyCrate_advanced";
+	};
+	class Item2
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={0.78710938,0.89242268,-0.16796875};
+			angles[]={0,4.8240199,0};
+		};
+		side="Empty";
+		flags=4;
+		class Attributes
+		{
+			init="[this,true,civilian] spawn Waldo_fnc_DoStarterCrate;";
+			name="StarterCrate_civilian_Arsenal_1";
+			dynamicSimulation=1;
+		};
+		id=7865;
+		type="B_supplyCrate_F";
+		class CustomAttributes
+		{
+			class Attribute0
+			{
+				property="ammoBox";
+				expression="[_this,_value] call bis_fnc_initAmmoBox;";
+				class Value
+				{
+					class data
+					{
+						class type
+						{
+							type[]=
+							{
+								"STRING"
+							};
+						};
+						value="[[[[],[]],[[],[]],[[],[]],[[],[]]],false]";
+					};
+				};
+			};
+			nAttributes=1;
+		};
+	};
+	class Item3
+	{
+		dataType="Object";
+		class PositionInfo
+		{
+			position[]={0.328125,0.38152885,-2.234375};
+			angles[]={-0,4.8356614,0};
+		};
+		side="Empty";
+		flags=4;
+		class Attributes
+		{
+			init="[this, 1, civilian, false] spawn Waldo_fnc_SupplyCratePopulate;";
+			name="supplyBox_ammoOnly_civilian_1";
+			dynamicSimulation=1;
+		};
+		id=7868;
+		type="Box_NATO_Equip_F";
+	};
+};
