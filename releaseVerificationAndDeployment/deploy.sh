@@ -16,7 +16,7 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_unitInsignias.json --deploy
 
-sed -i "s/DEVBUILD/${VERSION_TAG}/g" Compositions/*/header.sqe
+sed -i "s/DEVBUILD/${VERSION_TAG}/g" WMP_Compositions/*/header.sqe
 
 # Make a patch release
 set +e # allow fail
@@ -28,7 +28,7 @@ zip release/WMP_PATCH_v${PREV_TAG}_to_v${VERSION_TAG}.zip -@ < changed_file_list
 set -e
 
 # Pack Compositions
-zip release/WMP_Compositions-${VERSION_TAG}.zip -r Compositions
+zip release/WMP_Compositions-${VERSION_TAG}.zip -r WMP_Compositions
 
 
 # Disabled
