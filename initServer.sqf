@@ -68,11 +68,6 @@ From initServer.sqf:
 [variableNameofMHQ,"layerName"] call Waldo_fnc_ServerSetupMHQ;
 
 */
-//West MHQs
-[MobileHQ,"MobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
-[MobileHQ2,"MobileHeadQuartersLayer2"] call Waldo_fnc_ServerSetupMHQ;
-//East MHQ Example
-[EastMobileHQ,"EastMobileHeadQuartersLayer"] call Waldo_fnc_ServerSetupMHQ;
 
 /*
 Defence Construction Script

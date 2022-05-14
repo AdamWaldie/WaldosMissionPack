@@ -1,0 +1,23 @@
+name: Arma
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the source code
+      uses: actions/checkout@master
+    - name: Validate SQF
+      run: python3 releaseVerificationAndDeployment/sqf_validator.py
+    - name: Validate Config
+      run: python3 releaseVerificationAndDeployment/config_style_checker.py
+      
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout the source code
+      uses: actions/checkout@master
+    - name: Lint (sqflint)
+      uses: arma-actions/sqflint@master
+      with:
+        args: --exit e --directory MissionScripts
+      continue-on-error: true # No failure due to many false-positives

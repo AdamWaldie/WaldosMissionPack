@@ -1,0 +1,7 @@
+{
+    "build" : {
+        "scriptName": "WMP",
+        "version": "DevBuild",
+        "notlist": ["releaseVerificationAndDeployment","UnitInsignias", "WMP_Compositions", "mission.sqm"]
+    }
+}

@@ -1,0 +1,7 @@
+{
+    "build" : {
+        "scriptName": "WMP_Unit_Insignias",
+        "version": "DevBuild",
+        "notlist": ["releaseVerificationAndDeployment","Pictures", "WMP_Compositions", "mission.sqm","MissionScripts","description.ext","init.sqf","initPlayerLocal.sqf","initServer.sqf"]
+    }
+}

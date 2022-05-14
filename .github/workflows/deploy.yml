@@ -1,0 +1,49 @@
+name: Deploy
+on:
+  release:
+      types: [ published, prereleased ]
+jobs:
+  build:
+    name: Create And Upload Release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@master
+      - name: Get the version
+        id: get_version
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+
+      - name: Build release
+        run: ./releaseVerificationAndDeployment/deploy.sh ${{ steps.get_version.outputs.VERSION }}
+
+      - name: Upload Release WMP
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: release/WMP-${{ steps.get_version.outputs.VERSION }}.zip application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+       - name: Upload Release WMP Exemplar Mission
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: release/WMP_Exemplar_Mission.Altis-${{ steps.get_version.outputs.VERSION }}.zip application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release WMP Unit Insignias
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: release/WMP_Unit_Insignias.Altis-${{ steps.get_version.outputs.VERSION }}.zip application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release WMP (Patch)
+        continue-on-error: true
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: release/WMP_Patch_v* application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release WMP (Compositions)
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: release/WMP_Compositions-${{ steps.get_version.outputs.VERSION }}.zip application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

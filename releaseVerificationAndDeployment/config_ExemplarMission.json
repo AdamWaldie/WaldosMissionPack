@@ -1,0 +1,21 @@
+{
+    "build" : {
+        "scriptName": "WMP_Exemplar_Mission",
+        "version": "DevBuild",
+        "notlist": ["releaseVerificationAndDeployment","WMP_Compositions"]
+    },
+    "init.sqf" : {
+        "add": [
+            "[MobileHQ,respawnPoint,west,true,true] call Waldo_fnc_SetupMHQActions;",
+            "[MobileHQ2,respawnPoint2,west,true,true] call Waldo_fnc_SetupMHQActions;",
+            "[EastMobileHQ,eastSpawn,east,true,true] call Waldo_fnc_SetupMHQActions;"
+        ]
+    },
+    "initServer.sqf" : {
+        "add": [
+            "[MobileHQ,'MobileHeadQuartersLayer'] call Waldo_fnc_ServerSetupMHQ;",
+            "[MobileHQ2,'MobileHeadQuartersLayer2'] call Waldo_fnc_ServerSetupMHQ;",
+            "[EastMobileHQ,'EastMobileHeadQuartersLayer'] call Waldo_fnc_ServerSetupMHQ;"
+        ]
+    }
+}

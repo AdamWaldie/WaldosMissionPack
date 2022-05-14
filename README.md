@@ -29,13 +29,14 @@ For those seeking knowledge or greater control, each file is fully documented on
 2. Copy everything bar the mission.sqm from that folder into your mission
 3. Ensure that the mission.sqm is unbinarized (attributes --> General --> under Misc --> uncheck the "binarize the scenario file" box)
 4. Fill out the relevant information in the description.ext
-5. IF YOU ARE USING ACE 3:
+5. Comment out / replace the MHQ related calls in the init.sqf and initServer.sqf
+6. IF YOU ARE USING ACE 3:
    - Disable ACE 3 Respawn in server & mission addon settings.
-6. IF YOU ARE USING ACRE2:
+7. IF YOU ARE USING ACRE2:
    - Player Groups MUST be given a Callsign in Eden & have their Callsign & radio frequiencies assigned in missionParameters.sqf.
-7. Waldo's AI tweaks can be set via the missionParameters.sqf file.
-8. Remove the UnitInsignias Folder if you arent planning to use them.
-9. Remove/alter differing setup scripts in init.sqf & initServer.sqf as required and labelled.
+8. Waldo's AI tweaks can be set via the missionParameters.sqf file.
+9. Remove the UnitInsignias Folder if you arent planning to use them.
+10. Remove/alter differing setup scripts in init.sqf & initServer.sqf as required and labelled.
 
 # Other Information
 - All files are provided with description on their utilisation, their parameters and how you can use them.
