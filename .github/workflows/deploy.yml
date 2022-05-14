@@ -14,7 +14,7 @@ jobs:
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
       - name: Change deploysh permissions
-      - run: chmod +x ./releaseVerificationAndDeployment/deploy.sh
+      - run: chmod +x /releaseVerificationAndDeployment/deploy.sh
 
       - name: Build release
         run: ./releaseVerificationAndDeployment/deploy.sh ${{ steps.get_version.outputs.VERSION }}
