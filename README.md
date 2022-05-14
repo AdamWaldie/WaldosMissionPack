@@ -5,36 +5,13 @@ A package of mission scripts for new mission makers.
 
 **If you find this mission pack inside a mission, please do not utilise it. Mission Makers like to customise the pack. Instead download the original from github: https://github.com/AdamWaldie/WaldosMissionPack/releases/latest**
 
-This project was created originally for the mission makers of the Rooster Teeth Gaming Discord, with the intent to provide them with the easiest possible method 
+# Background Information
+- This project was created originally for the mission makers of the Rooster Teeth Gaming Discord, with the intent to provide them with the easiest possible method 
 to utilise critical systems of arma 3.
-
-To this end, the majority of QOL & critical scripts can be utilised via the init.sqf, initServer.sqf, initPlayerlocal.sqf & description.ext files.
-
-Functions are defined in WaldoFunctions.sqf in MissionScripts Folder.
-
-
-Unless you are wanting to use specific features such as: creating starter crates, autolimited arsenals or Mobile Headquarters systems amoung other scripts, you need not venture further than the root mission directory, or using one of the compositions provided.
-
-For those seeking knowledge or greater control, each file is fully documented on its usage, its parameters and its purpose. The pack has a large amount to discover and utilise.
-
-# Required Steps To Enable Scripts
-1. Download the most recent Waldos Mission Pack.
-2. Copy everything from that folder into your mission
-3. Ensure that the mission.sqm is unbinarized (attributes --> General --> under Misc --> uncheck the "binarize the scenario file" box)
-4. Fill out the relevant information in the description.ext
-5. Comment out / replace the MHQ related calls in the init.sqf and initServer.sqf
-6. IF YOU ARE USING ACE 3:
-   - Disable ACE 3 Respawn in server & mission addon settings.
-7. IF YOU ARE USING ACRE2:
-   - Player Groups MUST be given a Callsign in Eden & have their Callsign & radio frequiencies assigned in missionParameters.sqf.
-8. Waldo's AI tweaks can be set via the missionParameters.sqf file.
-9. Remove the UnitInsignias Folder if you arent planning to use them.
-10. Remove/alter differing setup scripts in init.sqf & initServer.sqf as required and labelled.
-11. The compositions may also prove helpful in gaining base functionality more expediently.
-
-# Other Information
-- All files are provided with description on their utilisation, their parameters and how you can use them.
-- initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
+- The majority of QOL & critical scripts can be utilised via the init.sqf, initServer.sqf, initPlayerlocal.sqf & description.ext files.
+- Mission Pack Functions are defined in WaldoFunctions.sqf in MissionScripts Folder.
+- For those seeking the more involved features of this pack, or greater control, each file is fully documented on its usage, its parameters and its purpose. 
+- The pack has a large amount to discover and utilise, so have at it!
 
 # Pack Features
 - Loadout saving and respawn system
@@ -49,13 +26,29 @@ For those seeking knowledge or greater control, each file is fully documented on
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process
 
+
+# QuickStart Guide
+1. Download the latest Waldos Mission Pack (WMP-X.X.X in the releases area of this repository)
+2. Copy everything from that folder into your mission.
+3. Ensure that the mission.sqm is unbinarized  (attributes --> General --> under Misc --> uncheck the "binarize the scenario file" box)
+4. Fill out the relevant information in description.ext as you like, you may also choose to replace the loading.jpg image as well.
+5. Waldos AI Tweak mode can be set in the init.sqf (DAY or NIGHT modes)
+6. Remove the UnitInsignias folder if its present * you dont want to use it.
+7. Edit init.sqf, initServer.sqf & initPlayerLocal.sqf as you like to add/remove different aspects of the pack.
+8. The compositions provided may hasten progress. They include by default examples of using most aspects of the packs functionality.
+
+Optionals:
+1. IF USING ACE 3:
+   - Disable ACE 3 Respawn in server & Mission Addon Settings (Settings --> Addon Settings --> ACE Respawn)
+2. IF USING ACRE2: 
+   - Player groups must be given a callsign (Click on the group --> Callsign) & have that callsign and radio frequiences assigned in init.sqf
+
+# Other Information
+- All files are provided with description on their utilisation, their parameters and how you can use them.
+- initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
+
 # Required Addons
 - CBA_A3
-- Tutorial Mission:
-   - ACE
-   - ACRE
-   - LAMBS_DANGER
-   - ZEN & Zen Ace compat
 
 # Supported Addons
 - ACE 3
@@ -64,3 +57,9 @@ For those seeking knowledge or greater control, each file is fully documented on
 - Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
+
+# Tutorial Mission Addons
+- ACE
+- ACRE
+- LAMBS_DANGER
+- ZEN & Zen Ace compat
