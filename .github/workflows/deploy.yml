@@ -25,12 +25,6 @@ jobs:
           args: release/WMP-${{ steps.get_version.outputs.VERSION }}.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - name: Upload Release WMP Exemplar Mission
-        uses: JasonEtco/upload-to-release@master
-        with:
-          args: release/WMP_Exemplar_Mission.Altis.zip application/zip
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Release WMP Unit Insignias
         uses: JasonEtco/upload-to-release@master
         with:
@@ -48,5 +42,11 @@ jobs:
         uses: JasonEtco/upload-to-release@master
         with:
           args: release/WMP_Compositions-${{ steps.get_version.outputs.VERSION }}.zip application/zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Upload Release WMP Exemplar Mission
+        uses: JasonEtco/upload-to-release@master
+        with:
+          args: release/WMP_Exemplar_Mission.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
