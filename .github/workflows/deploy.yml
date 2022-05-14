@@ -33,20 +33,23 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Release WMP (Compositions)
+        continue-on-error: true
         uses: JasonEtco/upload-to-release@master
         with:
           args: release/WMP_Compositions-${{ steps.get_version.outputs.VERSION }}.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Release WMP Unit Insignias
+        continue-on-error: true
         uses: JasonEtco/upload-to-release@master
         with:
-          args: release/WMP_Unit_Insignias.zip application/zip
+          args: release/WMP_Unit_Insignias-DEVBUILD.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Release WMP Exemplar Mission
+        continue-on-error: true
         uses: JasonEtco/upload-to-release@master
         with:
-          args: release/WMP_Exemplar_Mission.zip application/zip
+          args: release/WMP_Exemplar_Mission-DEVBUILD.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
