@@ -28,7 +28,7 @@ jobs:
       - name: Upload Release WMP Exemplar Mission
         uses: JasonEtco/upload-to-release@master
         with:
-          args: release/WMP_Exemplar_Mission-${{ steps.get_version.outputs.VERSION }}.Altis.zip application/zip
+          args: release/WMP_Exemplar_Mission.Altis-${{ steps.get_version.outputs.VERSION }}.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Release WMP Unit Insignias
