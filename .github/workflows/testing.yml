@@ -1,4 +1,4 @@
-name: Arma
+name: SQFValidation
 on: [push, pull_request]
 jobs:
   validate:
