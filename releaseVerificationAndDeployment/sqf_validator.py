@@ -114,7 +114,7 @@ def check_sqf_syntax(filepath):
                             brackets_list.append('}')
                         elif (c== '\t'):
                             print("ERROR: Tab detected at {0} Line number: {1}".format(filepath,lineNumber))
-                            bad_count_file += 1
+                            #bad_count_file += 1
 
                         if (c not in [' ', '\t', '\n']):
                             onlyWhitespace = False
