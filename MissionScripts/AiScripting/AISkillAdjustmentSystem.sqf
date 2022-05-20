@@ -6,7 +6,7 @@
  * "DAY" call Waldo_fnc_AITweak; - Daytime Mission
  * "NIGHT" call Waldo_fnc_AITweak; - Nightime Mission
  *
- * Public: No
+ * 
  */
 
 if !(isServer) exitWith {};
