@@ -28,20 +28,7 @@ to utilise critical systems of arma 3.
 
 
 # QuickStart Guide
-1. Download the latest Waldos Mission Pack (WMP-X.X.X in the releases area of this repository)
-2. Copy everything from that folder into your mission.
-3. Ensure that the mission.sqm is unbinarized  (attributes --> General --> under Misc --> uncheck the "binarize the scenario file" box)
-4. Fill out the relevant information in description.ext as you like, you may also choose to replace the loading.jpg image as well.
-5. Waldos AI Tweak mode can be set in the init.sqf (DAY or NIGHT modes)
-6. Remove the UnitInsignias folder if its present * you dont want to use it.
-7. Edit init.sqf, initServer.sqf & initPlayerLocal.sqf as you like to add/remove different aspects of the pack.
-8. The compositions provided may hasten progress. They include by default examples of using most aspects of the packs functionality.
-
-Optionals:
-1. IF USING ACE 3:
-   - Disable ACE 3 Respawn in server & Mission Addon Settings (Settings --> Addon Settings --> ACE Respawn)
-2. IF USING ACRE2: 
-   - Player groups must be given a callsign (Click on the group --> Callsign) & have that callsign and radio frequiences assigned in init.sqf
+You can always find the most recent quickstart guide at this URL: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide
 
 # Other Information
 - All files are provided with description on their utilisation, their parameters and how you can use them.
