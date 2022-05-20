@@ -31,8 +31,9 @@ to utilise critical systems of arma 3.
 You can always find the most recent quickstart guide at this URL: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide
 
 # Other Information
-- All files are provided with description on their utilisation, their parameters and how you can use them.
+- All files are provided with description on their utilisation and purpose.
 - initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
+- Its reccomended that you download Visual Studio Code & Its SQF plugins. Itll make any script reading in Arma 3 easier on you! (https://code.visualstudio.com/)
 
 # Required Addons
 - CBA_A3
