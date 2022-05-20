@@ -33,7 +33,10 @@ You can always find the most recent quickstart guide at this URL: https://github
 # Other Information
 - All files are provided with description on their utilisation and purpose.
 - initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
-- Its reccomended that you download Visual Studio Code & Its SQF plugins. Itll make any script reading in Arma 3 easier on you! (https://code.visualstudio.com/)
+- Its reccomended that you download Visual Studio Code & Its SQF plugins. Itll make any script reading in Arma 3 easier on you! 
+    - Visual Studio Code: https://code.visualstudio.com/
+    - SQF Language Extension: https://marketplace.visualstudio.com/items?itemName=vlad333000.sqf
+    - SQF Debugger Extension: https://marketplace.visualstudio.com/items?itemName=billw2011.sqf-debugger
 
 # Required Addons
 - CBA_A3
