@@ -146,5 +146,16 @@ class CfgFunctions
                 file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
             };
         };
+        class VirtualVehicleDepot {
+            class VVDInit {
+                file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDInit.sqf";
+            };
+            class VVDOpen {
+                file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDOpen.sqf";
+            };
+            class VVDVehicleDamage {
+                file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDVehicleDamage.sqf";
+            };
+        };
 	};
 };

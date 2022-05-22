@@ -11,7 +11,7 @@ License: Distributable and editable, no attribution required.
     
     author              = "YOURNAMEHERE"; // Your name goes here for display in the loading screen
 
-    onLoadName          = "Mission Pack v4.5.3"; // Your mission name goes here for display in the loading screen & in the titlescreen text
+    onLoadName          = "Mission Pack v4.5.4"; // Your mission name goes here for display in the loading screen & in the titlescreen text
     onLoadMission       = "YOURTEXTHERE"; // Mission subtitle goes here
     onLoadIntro         = "YOURTEXTHERE";// Mission subtitle goes here
 
@@ -44,6 +44,9 @@ License: Distributable and editable, no attribution required.
 /*           Waldos MissionScript Functions            */
 
 #include "MissionScripts\WaldosFunctions.sqf"
+
+// Virtual Vehicle Depot GUI Definitions
+#include "MissionScripts\Logistics\VirtualVehicleDepot\GarageDisplayDefine.hpp"
 
 // Include Mission.sqm for referance
 class MissionSQM {
