@@ -55,6 +55,8 @@ systemchat "AI Adjustment System Active";
                 case "rhs_faction_vpvo";
                 case "rhs_faction_vv";
                 case "rhs_faction_vvs_c";
+                case "UK3CB_ADA_O";
+                case "UK3CB_ADR_O";
                 case "rhs_faction_vvs": {
                     _unit setSkill ["general",         1.000];
                     _unit setSkill ["commanding",      0.950];
@@ -135,6 +137,8 @@ systemchat "AI Adjustment System Active";
                 case "rhs_faction_vpvo";
                 case "rhs_faction_vv";
                 case "rhs_faction_vvs_c";
+                case "UK3CB_ADA_O";
+                case "UK3CB_ADR_O";
                 case "rhs_faction_vvs": {
                     _unit setSkill ["general",         1.000];
                     _unit setSkill ["commanding",      0.950];
