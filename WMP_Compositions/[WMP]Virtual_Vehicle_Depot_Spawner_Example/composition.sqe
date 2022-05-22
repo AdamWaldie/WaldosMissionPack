@@ -1,0 +1,137 @@
+version=54;
+center[]={23361.262,3.1900001,19052.455};
+class items
+{
+	items=3;
+	class Item0
+	{
+		dataType="Layer";
+		name="badgarage";
+		class Entities
+		{
+			items=3;
+			class Item0
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={-0.546875,0,7.4667969};
+					angles[]={-0,5.0034924,0};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					name="Circle_Helipad";
+				};
+				id=7816;
+				type="Land_JumpTarget_F";
+			};
+			class Item1
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.15039063,0.41155195,-4.5058594};
+					angles[]={-0,3.1415927,0};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					disableSimulation=1;
+				};
+				id=7814;
+				type="Land_CampingTable_F";
+				class CustomAttributes
+				{
+					class Attribute0
+					{
+						property="allowDamage";
+						expression="_this allowdamage _value;";
+						class Value
+						{
+							class data
+							{
+								class type
+								{
+									type[]=
+									{
+										"BOOL"
+									};
+								};
+								value=0;
+							};
+						};
+					};
+					nAttributes=1;
+				};
+			};
+			class Item2
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.041015625,0.97207212,-4.484375};
+					angles[]={-0,3.1415927,0};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					ammo=0.90505904;
+					init="[this, Circle_Helipad, [""All""], [""ALL""], false, false, false, 10, """"] call Waldo_fnc_VVDInit;";
+					disableSimulation=1;
+				};
+				id=7813;
+				type="Land_Laptop_unfolded_F";
+				atlOffset=0.00040245056;
+				class CustomAttributes
+				{
+					class Attribute0
+					{
+						property="allowDamage";
+						expression="_this allowdamage _value;";
+						class Value
+						{
+							class data
+							{
+								class type
+								{
+									type[]=
+									{
+										"BOOL"
+									};
+								};
+								value=0;
+							};
+						};
+					};
+					nAttributes=1;
+				};
+			};
+		};
+		id=7818;
+		atlOffset=0.40799999;
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo
+		{
+			position[]={0.67578125,0,4.6796875};
+		};
+		title="the name of the spawner object will be what appears as the garage name";
+		id=7819;
+	};
+	class Item2
+	{
+		dataType="Comment";
+		class PositionInfo
+		{
+			position[]={-0.32617188,0,-3.1601563};
+		};
+		title="Laptop is the spawner, everything is available to everyone";
+		id=7820;
+	};
+};
