@@ -29,8 +29,3 @@ set -e
 
 # Pack Compositions
 zip release/WMP_Compositions-${VERSION_TAG}.zip -r WMP_Compositions
-
-
-# Disabled
-#chmod +x ./tools/build_settings_config.sh
-#./tools/build_settings_config.sh $VERSION_TAG
