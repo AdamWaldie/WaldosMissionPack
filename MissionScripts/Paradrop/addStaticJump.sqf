@@ -21,7 +21,7 @@ params [
     ["_minAltitude", 180],
     ["_maxAltitude", 350],
     ["_maxSpeed", 310],
-    ["_chuteVehicleClass", "NonSteerable_Parachute_F"]
+    ["_chuteVehicleClass", "rhs_d6_Parachute"]
 ];
 
 /*if (!isNil {_vehicle getVariable "Waldo_Static_Jump"}) exitWith {

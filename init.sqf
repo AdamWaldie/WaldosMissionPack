@@ -84,6 +84,18 @@ YOU CAN SPECIFY CUSTOM BOXES FOR MEDICAL & AMMO BOXES IN initServer.sqf
 // Nightime Mission - uncomment this for nightime AI values.
 //"NIGHT" call Waldo_fnc_AITweak;
 
+
+/*
+Vehicle function eventhandler
+
+This adds vehicle functions to affected vehicles:
+- Get out on specfic side. Only affects RHS gear so far.
+- Auto added medical/logistics status to vehicles.  Only affects RHS gear so far.
+- HALO / Static line [WIP] Only affects RHS gear so far.
+
+*/
+call Waldo_fnc_InitVehicles;
+
 /* 
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
 

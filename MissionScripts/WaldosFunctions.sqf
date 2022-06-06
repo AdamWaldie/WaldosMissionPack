@@ -146,6 +146,23 @@ class CfgFunctions
                 file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
             };
         };
+        class VehicleSetup {
+            class AddVehicleFunctions {
+                file = "MissionScripts\VehicleActionsSetup\AddVehicleFunctions.sqf";
+            };
+            class AddExitActions {
+                file = "MissionScripts\VehicleActionsSetup\AddExitAction.sqf";
+            };
+            class DoExitOnSide {
+                file = "MissionScripts\VehicleActionsSetup\DoExitOnSide.sqf";
+            };
+            class SetCargoAttributes {
+                file = "MissionScripts\VehicleActionsSetup\SetCargoAttributes.sqf";
+            };
+            class InitVehicles {
+                file = "MissionScripts\VehicleActionsSetup\VehicleInit.sqf";
+            };           
+        };
         class VirtualVehicleDepot {
             class VVDInit {
                 file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDInit.sqf";
