@@ -18,6 +18,36 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     missionNamespace setVariable ["Logi_MedicalBoxClass", "C_IDAP_supplyCrate_F",true];
 };
 
+
+/*
+PARADROP SCRIPTS
+
+MissionScripts\Paradrop has all the paradrop related functions. Waldos_functions.sqf under Paradrop display the function names.
+
+For basic usage, most "Plane" class assets, and some Helicopters have static line &/or HALO jump capabilities added automatically. The C130J from RHS and its inherritants also have full use of these systems.
+
+You can also tweak the below variables to supply custom parachute classes, as well as change the requirements for HALO & Static Line jumps to be availble to perform. 
+
+This affects both the automatically added vehicles, and those you manually add via:
+[this] call Waldo_fnc_VehicleJumpSetup;
+
+*/
+//Static Line Variables
+//Static Minimum Altitude
+missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];
+//Static Maximum Altitude
+missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];
+//Static Maximum Speed
+missionNamespace setVariable ["WALDO_STATIC_MAXSPEED", 310, true];
+//Static Line Parachute Class
+missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true];
+
+//HALO Jump Variables
+//HALO Minimum Altitude
+missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];
+//HALO Parachute Class
+missionNamespace setVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute", true];
+
 /*
 
 Mission.sqm based supply system

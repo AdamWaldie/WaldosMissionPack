@@ -11,19 +11,20 @@ parameters:
 _target - the object variable name you want this to apply to
 _arsenal - boolean as tto whether you want an ACE/Vanilla arsenal or not
 _crateSide - the side that the crate will populate equipment from. Options: West,East,Independent,Civilian
+_unrestrictedArsenal - boolean as to whether you want the arsenal to be unrestricted or not.
 
 
 To call
 
-[_target,_arsenal,_crateSide] spawn Waldo_fnc_DoStarterCrate;
+[_target,_arsenal,_crateSide,_unrestrictedArsenal] spawn Waldo_fnc_DoStarterCrate;
 
 e.g.
 
-[this,true,west] spawn Waldo_fnc_DoStarterCrate; //from unit init as example
+[this,true,west,false] spawn Waldo_fnc_DoStarterCrate; //from unit init as example
 
 
 */
-params["_target","_arsenal",["_crateSide",west]];
+params["_target","_arsenal",["_crateSide",west],["_unrestrictedArsenal",false]];
 
 //Wait Until Init is completed & players ingame (Postinit hack)
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
@@ -41,6 +42,12 @@ _target addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_Save
 [_target, 1,_crateSide, true] call Waldo_fnc_SupplyCratePopulate;
 
 if (_arsenal == true) then {
-    //Add Limited Ace Arsenal 
-    [_target,_crateSide,false] call Waldo_fnc_CreateLimitedArsenal;
+    if (_unrestrictedArsenal == false) then {
+        //Vanilla Arsenal & ACE Arsenal
+        ["AmmoboxInit",[this,true]] call BIS_fnc_arsenal;
+        [this, true] call ace_arsenal_fnc_initBox;
+    } else {
+        //Add Limited Ace Arsenal 
+        [_target,_crateSide,false] call Waldo_fnc_CreateLimitedArsenal;
+    };
 };

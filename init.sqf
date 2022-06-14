@@ -154,18 +154,6 @@ From initServer.sqf:
 
 
 /*
-PARADROP SCRIPTS
-
-MissionScripts\Paradrop has all the paradrop related functions. Waldos_functions.sqf under Paradrop display the function names.
-
-For basic usage, simply call [this] call Waldo_fnc_VehicleJumpSetup in the init of any transport airfraft with a rear ramp.
-
-You can also tweak MissionScripts\Paradrop\vehicleJumpSetup.sqf and supply custom parachute classes, as well as change the requirements for HALO & Static Line jumps to be availble to perform.
-
-*/
-
-
-/*
 
 waldos Init Completion flag
 
