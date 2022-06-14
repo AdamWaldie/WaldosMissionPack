@@ -45,7 +45,7 @@ if (_arsenal == true) then {
     if (_unrestrictedArsenal == false) then {
         //Vanilla Arsenal & ACE Arsenal
         ["AmmoboxInit",[this,true]] call BIS_fnc_arsenal;
-        [this, true] call ace_arsenal_fnc_initBox;
+        [_target, true] call ace_arsenal_fnc_initBox;
     } else {
         //Add Limited Ace Arsenal 
         [_target,_crateSide,false] call Waldo_fnc_CreateLimitedArsenal;
