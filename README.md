@@ -43,7 +43,7 @@ You can always find the most recent quickstart guide at this URL: https://github
 
 # Supported Addons
 - ACE 3
-- ACRE 2 (You can disable this via missionParameters.sqf)
+- ACRE 2 (You can disable this via init.sqf)
 - TFAR (Inherrent support via 3Eden)
 - Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
