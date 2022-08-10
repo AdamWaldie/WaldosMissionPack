@@ -34,7 +34,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     {
         ["end1"] remoteExec ["BIS_fnc_endMission",0,true];
     },
-    "\a3\modules_f\data\portraitmodule_ca.paa"
+    "\a3\Missions_F_Orange\Data\Img\Showcase_LawsOfWar\action_end_sim_CA.paa"
 ] call zen_custom_modules_fnc_register;
 
 ["Waldos Mission Modules", "Field Hospital Crate",
