@@ -7,7 +7,7 @@ _hintTimer - length of time in which the text will be displayed on the screen
 
 e.g.
 
- ["Rendevous Respawn Activated"] spawn Waldo_fnc_TimedHint;
+ ["Rendevous Respawn Activated",10] spawn Waldo_fnc_TimedHint;
 
 */
 params["_hintContents",["_hintTimer",10]];
