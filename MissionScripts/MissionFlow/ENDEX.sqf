@@ -28,7 +28,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {
 
 // Delete bullets from fired weapons
 if (isNil "Waldo_PreventWeaponsFireEventHandler") then {
-    Waldo_PreventWeaponsFireEventHandler = player addEventHandler["Fired", {deletevehicle (_this select 6);private _HoldFireMessage = "<t color='#8B0000' size='1.2' shadow='1' shadowColor='#8B0000' align='center'>Hold Fire!</t><br />";_HoldFireMessage = parseText (_HoldFireMessage); [_HoldFireMessage,5] spawn Waldo_fnc_TimedHint;}];
+    Waldo_PreventWeaponsFireEventHandler = player addEventHandler["Fired", {deletevehicle (_this select 6);private _HoldFireMessage = "<t color='#8B0000' size='2' shadow='1' shadowColor='#8B0000' align='center'>Hold Fire!</t><br />";_HoldFireMessage = parseText (_HoldFireMessage); [_HoldFireMessage,5] spawn Waldo_fnc_TimedHint;}];
 };
 
 // Disable guns and damage for vehicles if player is crewing a vehicle
@@ -37,7 +37,7 @@ if (vehicle player != player && {player in [gunner vehicle player,driver vehicle
     (player getVariable "Waldo_PreventVehicleFire") allowDamage false;
 
     if (isNil "Waldo_PreventVehicleFireEventHandler") then {
-        Waldo_PreventVehicleFireEventHandler = (player getVariable "Waldo_PreventVehicleFire") addEventHandler["Fired", {deletevehicle (_this select 6);private _HoldFireMessage = "<t color='#8B0000' size='1.2' shadow='1' shadowColor='#8B0000' align='center'>Hold Fire!</t><br />";_HoldFireMessage = parseText (_HoldFireMessage); [_HoldFireMessage,5] spawn Waldo_fnc_TimedHint;}];
+        Waldo_PreventVehicleFireEventHandler = (player getVariable "Waldo_PreventVehicleFire") addEventHandler["Fired", {deletevehicle (_this select 6);private _HoldFireMessage = "<t color='#8B0000' size='2' shadow='1' shadowColor='#8B0000' align='center'>Hold Fire!</t><br />";_HoldFireMessage = parseText (_HoldFireMessage); [_HoldFireMessage,5] spawn Waldo_fnc_TimedHint;}];
     };
 };
 
