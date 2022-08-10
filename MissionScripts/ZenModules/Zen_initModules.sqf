@@ -30,6 +30,13 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     "\a3\modules_f\data\portraitmodule_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
+["Waldos Mission Modules", "End Mission",
+    {
+        ["end1"] remoteExec ["BIS_fnc_endMission",0,true];
+    },
+    "\a3\modules_f\data\portraitmodule_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["Waldos Mission Modules", "Field Hospital Crate",
     {
         params ["_modulePos", "_objectPos"];
