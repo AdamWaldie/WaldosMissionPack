@@ -32,7 +32,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {
 
 // Delete bullets from fired weapons
 if (isNil "Waldo_PreventWeaponsFireEventHandler") then {
-    Waldo_PreventWeaponsFireEventHandler = player addEventHandler["Fired", {deletevehicle (_this select 6);}];
+    Waldo_PreventWeaponsFireEventHandler = player addEventHandler["Fired", {deletevehicle (_this select 6);["Hold Fire!",5] spawn Waldo_fnc_TimedHint;}];
 };
 
 // Disable guns and damage for vehicles if player is crewing a vehicle
@@ -41,7 +41,7 @@ if (vehicle player != player && {player in [gunner vehicle player,driver vehicle
     (player getVariable "Waldo_PreventVehicleFire") allowDamage false;
 
     if (isNil "Waldo_PreventVehicleFireEventHandler") then {
-        Waldo_PreventVehicleFireEventHandler = (player getVariable "Waldo_PreventVehicleFire") addEventHandler["Fired", {deletevehicle (_this select 6);}];
+        Waldo_PreventVehicleFireEventHandler = (player getVariable "Waldo_PreventVehicleFire") addEventHandler["Fired", {deletevehicle (_this select 6);["Hold Fire!",5] spawn Waldo_fnc_TimedHint;}];
     };
 };
 
