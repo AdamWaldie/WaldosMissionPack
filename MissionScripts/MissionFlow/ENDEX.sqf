@@ -1,9 +1,5 @@
 /*
 
-Arguments:
- _timerOn - boolean value to decern whether there should be a timer to ENDEX, or whether the game should be left in SAFE MODE for debrief ingame.
- _timerLength - integer number to note the time in seconds until the automatic ending of the mission, works only when _timerOn is true.
-
 Call as follows:
 [] spawn Waldo_fnc_ENDEX;
 
@@ -11,7 +7,7 @@ Call as follows:
 //systemChat Endex message
 systemchat "ENDEX ENDEX ENDEX";
 systemChat "Weapons safe";
-systemChat "Mission Roll In 1 Minute";
+systemChat "Mission Roll At Zeus Discretion";
 //hint Endex message
 private _title = "<t color='#106bb5' size='1.2' shadow='1' shadowColor='#106bb5' align='center'>ENDEX ENDEX ENDEX!</t><br />";
 private _text0 = "<t font='PuristaMedium' size='1.1'>Mission complete</t><br /><br />";
@@ -32,7 +28,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {
 
 // Delete bullets from fired weapons
 if (isNil "Waldo_PreventWeaponsFireEventHandler") then {
-    Waldo_PreventWeaponsFireEventHandler = player addEventHandler["Fired", {deletevehicle (_this select 6);["Hold Fire!",5] spawn Waldo_fnc_TimedHint;}];
+    Waldo_PreventWeaponsFireEventHandler = player addEventHandler["Fired", {deletevehicle (_this select 6);private _HoldFireMessage = "<t color='#8B0000' size='1.2' shadow='1' shadowColor='#8B0000' align='center'>Hold Fire!</t><br />";_HoldFireMessage = parseText (_HoldFireMessage); [_HoldFireMessage,5] spawn Waldo_fnc_TimedHint;}];
 };
 
 // Disable guns and damage for vehicles if player is crewing a vehicle
@@ -41,7 +37,7 @@ if (vehicle player != player && {player in [gunner vehicle player,driver vehicle
     (player getVariable "Waldo_PreventVehicleFire") allowDamage false;
 
     if (isNil "Waldo_PreventVehicleFireEventHandler") then {
-        Waldo_PreventVehicleFireEventHandler = (player getVariable "Waldo_PreventVehicleFire") addEventHandler["Fired", {deletevehicle (_this select 6);["Hold Fire!",5] spawn Waldo_fnc_TimedHint;}];
+        Waldo_PreventVehicleFireEventHandler = (player getVariable "Waldo_PreventVehicleFire") addEventHandler["Fired", {deletevehicle (_this select 6);private _HoldFireMessage = "<t color='#8B0000' size='1.2' shadow='1' shadowColor='#8B0000' align='center'>Hold Fire!</t><br />";_HoldFireMessage = parseText (_HoldFireMessage); [_HoldFireMessage,5] spawn Waldo_fnc_TimedHint;}];
     };
 };
 
