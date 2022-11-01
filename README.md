@@ -54,3 +54,6 @@ You can always find the most recent quickstart guide at this URL: https://github
 - ACRE
 - LAMBS_DANGER
 - ZEN & Zen Ace compat
+
+# Picture credit
+- RazzMaTazz
