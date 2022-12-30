@@ -15,12 +15,12 @@ Setting Up in Eden;
 	- In the init of the object, paste the example below, and alter it to suit the needs you have.
 
 Parameters:
-_buildingObject - Vehicle or Object to use as the interactable to build synced objects from
+_target - Vehicle or Object to use as the interactable to build synced objects from
 _UseModernConsturctionAudio - boolean (true/false) | Options: True = Modern construction Noises, False = Old Wooden Sounding Construction Noises.
 
 Call:
 
-[_buildingObject,_UseModernConsturctionAudio] call Waldo_fnc_ConstructionObjects;
+[_target,_UseModernConsturctionAudio] call Waldo_fnc_ConstructionObjects;
 
 e.g.
 
@@ -29,107 +29,107 @@ e.g.
 
 */
 
-params["_buildingObject",["_useModernConsturctionAudio",false]];
+params["_target",["_useModernConsturctionAudio",false]];
 
 //Catch all for any not using ACE to prevent bad things
-	if !(isClass(configFile >> "CfgPatches" >> "ace_main")) exitwith {};
+if !(isClass(configFile >> "CfgPatches" >> "ace_main")) exitwith {};
 
-	//Select Desired Audio For Pack/Unpack
-	private _ConstructionAudioPath = "MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_New.ogg";
-	if (_useModernConsturctionAudio == false) then {
-		_ConstructionAudioPath = "MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg"
-	};
-	
-	// Finds all synced Objects. Hides the model and attaches the object to object.
-	_constructionLogic = nearestObject [_buildingObject, "Logic"]; 
+//Select Desired Audio For Pack/Unpack
+_ConstructionAudioPath = "MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_New.ogg";
+if (_useModernConsturctionAudio == false) then {
+	_ConstructionAudioPath = "MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg"
+};
+
+// Finds all synced Objects. Hides the model and attaches the object to object.
+_constructionLogic = nearestObject [_target, "Logic"]; 
+_constructionParts = synchronizedObjects _constructionLogic;
+
+
+if (isServer || isDedicated) then {
+	_target setVariable ['Waldo_Construction_Status', false, true];
+	[_constructionLogic, _target] call BIS_fnc_attachToRelative;
+	{
+		[_x, _target] call BIS_fnc_attachToRelative;
+		[_x, true] remoteExec ["hideObjectGlobal", 2];
+	} forEach _constructionParts;
+};
+
+Waldo_Construction_Deploy = {
+	params ["_target", "_player","_ConstructionAudioPath"];
+	_constructionLogic = nearestObject [_target, "Logic"]; 
 	_constructionParts = synchronizedObjects _constructionLogic;
-	
+	{[_x, false] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
+	_target setVariable ['Waldo_Construction_Status', true, true];
+	playSound3d [getMissionPath _ConstructionAudioPath, _target, false, getPosASL _target, 4, 1];
+	["Construction Completed", _player] call Waldo_fnc_DynamicText;
+};
 
-	if (isServer || isDedicated) then {
-		_buildingObject setVariable ['Waldo_Construction_Status', false, true];
-		[_constructionLogic, _buildingObject] call BIS_fnc_attachToRelative;
-		{
-			[_x, _buildingObject] call BIS_fnc_attachToRelative;
-			[_x, true] remoteExec ["hideObjectGlobal", 2];
-		} forEach _constructionParts;
-	};
+Waldo_Construction_TearDown = {
+	params ["_target","_player","_ConstructionAudioPath"];
+	_constructionLogic = nearestObject [_target, "Logic"]; 
+	_constructionParts = synchronizedObjects _constructionLogic;
+	{[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
+	_target setVariable ['Waldo_Construction_Status', false, true];	
+	playSound3d [getMissionPath _ConstructionAudioPath, _target, false, getPosASL _target, 4, 1];
+	["Construction Torn Down", _player] call Waldo_fnc_DynamicText;
+};
 
-	waldo_CONSTRUCTION_Deploy = {
-		params ["_buildingobject", "_player","_ConstructionAudioPath"];
-		["Construction Completed", _player] call Waldo_fnc_DynamicText;
-		_constructionLogic = nearestObject [_buildingObject, "Logic"]; 
-		_constructionParts = synchronizedObjects _constructionLogic;
-		{[_x, false] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
-		playSound3d [getMissionPath _ConstructionAudioPath, _buildingobject, false, getPosASL _buildingobject, 4, 1];
-		_buildingobject setVariable ['Waldo_Construction_Status', true, true];
-	};
 
-	waldo_CONSTRUCTION_TearDown = {
-		params ["_buildingobject","_player","_ConstructionAudioPath"];
-		_constructionLogic = nearestObject [_buildingObject, "Logic"]; 
-		_constructionParts = synchronizedObjects _constructionLogic;
-		{[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
-		playSound3d [getMissionPath _ConstructionAudioPath, _buildingobject, false, getPosASL _buildingobject, 4, 1];
-		_buildingobject setVariable ['Waldo_Construction_Status', false, true];	
-		["Construction Torn Down", _player] call Waldo_fnc_DynamicText;
-	};
-	
-	
-	//Action Start for adding RP
-	waldo_Construction_InitBuild = [
-		"waldo_Construction_InitBuild",
-		"Perform Construction Work",
-		"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_unloadVehicle_ca.paa",
-		{
-			// Runs on Action Called
-			
-			[10, [_buildingobject, _player,_ConstructionAudioPath], {
-				_args call waldo_CONSTRUCTION_Deploy;
-			}, {["Construction Not Built", _player] call Waldo_fnc_DynamicText;}, "Constructing..."] call ace_common_fnc_progressBar;
-		},
-		{
-			//[_buildingobject, _player, _actionParams] Condition
-			!(_buildingObject getVariable 'Waldo_Construction_Status') && (_player distance _buildingobject) < 6;
-		},
-		{},
-		[],
-		[],
-		0,
-		[false, false, false, false, false]
-	] call ace_interact_menu_fnc_createAction;
+//Action Start for adding RP
+Waldo_Construction_InitDeploy = [
+	"Waldo_Construction_InitDeploy",
+	"Perform Construction Work",
+	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_unloadVehicle_ca.paa",
+	{
+		// Runs on Action Called
+		[10, [_target, _player,_ConstructionAudioPath], {
+			_args call Waldo_Construction_Deploy;
+		}, {["Construction Not Built", _player] call Waldo_fnc_DynamicText;}, "Constructing..."] call ace_common_fnc_progressBar;
+	},
+	{
+		//[_target, _player, _actionParams] Condition
+		!(_target getVariable 'Waldo_Construction_Status') && (_player distance _target) < 6;
+	},
+	{_ConstructionAudioPath},
+	[],
+	[],
+	0,
+	[false, false, false, false, false]
+] call ace_interact_menu_fnc_createAction;
 
-	// Action for removing RP
-	waldo_Construction_InitTeardown = [
-		"waldo_Construction_InitTeardown",
-		"Tear Down Construction",
-		"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",
-		{
-			// Runs on Action Called
-			
-			[10, [_buildingobject, _player,_ConstructionAudioPath], {
-				_args call waldo_CONSTRUCTION_TearDown;
-			}, {[_duration, "Construction Still Standing", _player] call Waldo_fnc_DynamicText;}, "Tearing Down...."] call ace_common_fnc_progressBar;
-		},
-		{
-			//[_buildingobject, _player, _actionParams] Condition
-			(_buildingObject getVariable 'Waldo_Construction_Status') && (_player distance _buildingobject) < 6;
-		},
-		{},
-		[],
-		[],
-		0,
-		[false, false, false, false, false]
-	] call ace_interact_menu_fnc_createAction;
-	
-	// Add action to Vehicle (ACE 3)
-	[_buildingobject,
-		0, 
-		["ACE_MainActions"], 
-		waldo_Construction_InitBuild
-	] call ace_interact_menu_fnc_addActionToObject;
+// Action for removing RP
+Waldo_Construction_InitTeardown = [
+	"Waldo_Construction_InitTeardown",
+	"Tear Down Construction",
+	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",
+	{
+		// Runs on Action Called
+		[10, [_target, _player,_ConstructionAudioPath], {
+			_args call Waldo_Construction_TearDown;
+		}, {["Construction Still Standing", _player] call Waldo_fnc_DynamicText;}, "Tearing Down...."] call ace_common_fnc_progressBar;
+	},
+	{
+		//[_target, _player, _actionParams] Condition
+		(_target getVariable 'Waldo_Construction_Status') && (_player distance _target) < 6;
+	},
+	{_ConstructionAudioPath},
+	[],
+	[],
+	0,
+	[false, false, false, false, false]
+] call ace_interact_menu_fnc_createAction;
 
-	[_buildingobject,
-		0, 
-		["ACE_MainActions"], 
-		waldo_Construction_InitTeardown
-	] call ace_interact_menu_fnc_addActionToObject;
+Waldo_Construction_Category = [_target, "Waldo_Construction_Category" ,"Construction", "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa", {true}, {true}] call ace_interact_menu_fnc_createAction;
+
+// Add action to Vehicle (ACE 3)
+[_target,
+	0, 
+	["ACE_MainActions"], 
+	Waldo_Construction_InitDeploy
+] call ace_interact_menu_fnc_addActionToObject;
+
+[_target,
+	0, 
+	["ACE_MainActions"], 
+	Waldo_Construction_InitTeardown
+] call ace_interact_menu_fnc_addActionToObject;

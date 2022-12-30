@@ -235,7 +235,6 @@ params ["_target","_playerSide"];
 		[false, false, false, false, false]
 	] call ace_interact_menu_fnc_createAction;
 	
-
 	// Add action to Vehicle
 	[_target,
 		0, 
@@ -248,8 +247,3 @@ params ["_target","_playerSide"];
 		["ACE_MainActions"], 
 		waldo_removeVehicleCamo
 	] call ace_interact_menu_fnc_addActionToObject;
-
-
-//>>> ===================================================================================================================================================
-
-
