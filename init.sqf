@@ -104,55 +104,6 @@ You can optionally define replacements for the title & location, as is demonstra
 */
 [] call Waldo_fnc_InfoText;
 
-
-/* 
-Mobile Headquarters Script
-
-A script which allows for the creation of a command post, acting as a respawn position, and logistics quartermaster if desired.
-
-This allows a number of objects, as defined in a Eden Editor layer, to be attached to a vehicle, and "deployed"/"undeployed" on request when in a desired location.
-
-When setup in initServer.sqf:
-- Objects defined in the named layer are attached relative to their position to the target vehicle.
-- Those same objects are then hidden globally.
-
-When deployed the following occurs:
-- Objects defined in the named layer are set as visible.
-- A respawn position is enabled around the vehicle in quesiton.
-- (Optional) A logistics quartermaster from the logistics module is added to the vehicle.
-- (choice of one) Deployment sounds are played (old style wood & modern day construction noises)
-
-When Un-deployed the following occurs:
-- Objects defined in the named layer are set as invisible.
-- The Mobile HQ Respawn position is disabled.
-- (Optional) The Logistics Quartermaster is removed.
-- (choice of one) Un-Deployment sounds are played (old style wood & modern day construction noises)
-
-This is done in two parts, with the MHQ layer setup being done in initServer.sqf and the actions to activate/deactivate the MHQ happening here.
-
-IMPORTANT NOTE FOR THIS TO WORK:
- - DO NOT DISABLE SIMULATION FOR THE HELIPAD 
- - DO NOT APPLY THE STARTER CRATE SCRIPT TO THE MHQ
-
-Parameters for Waldo_fnc_SetupMHQActions: (The Function Call Below)
-Parameters:
-_MHQ - Vehicle or Object to use as the Mobile headquarters
-_helipadSpawnPoint - Name of the invisible helipad you wish to use as the respawn position & logistics spawning position.
-_side - Side you want the respawn positon to work for | Options: west,east,independent,civillian
-_UseModernConsturctionAudio - boolean (true/false) | Options: True = Modern construction Noises, False = Old Wooden Sounding Construction Noises.
-_logisticsSystemImplementation - boolean (true/false) | Options: True = Utilise Logistics System spawner, False = Do Not utilise logistics system spawner.
-
-In order to use the logistics system, you must set _logisticsSystemImplementation = true in the parameters AND ensure that there is a base game helipad ("Land_HelipadEmpty_F") in the layer which contains the deployable objects.
-
-e.g.
-
-From initServer.sqf:
-
-[variableNameofMHQ,"layerName",west] call Waldo_fnc_SetupMHQActions;
-
-*/
-
-
 /*
 
 waldos Init Completion flag
