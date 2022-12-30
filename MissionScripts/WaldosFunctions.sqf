@@ -98,6 +98,11 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\MHQ\MHQSetup.sqf";
             };
         };
+        class VehicleCamo {
+            class VehicleCamoSetup {
+                file = "MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf";
+            };
+        };
         class FieldConstruction {
             class SetupConstructionObjects {
                 file = "MissionScripts\Extras\setupConstructionObjects.sqf";
