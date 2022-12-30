@@ -9,15 +9,11 @@ Designed for vehicles.
 
 Setting Up in Eden;
 	- Place the vehicle or object that you want to have the respawn deployable from, and provide it a variable name
-	- Place a Game Logic down close to the vehicle. This can be found near the same menu as Modules.
+	- Place a Game Logic down as close as possible to the vehicle. This can be found near the same menu as Modules.
 	- Place any objects you wish to appear when the camo is deployed.
 	- If you are using a vehicle as your primary object and any of your deployable objects should be resting on the floor, then raise them about a foot, to allow for the drop of the vehicle's suspension once the game has initialised.
 	- Select all the objects that will be deployable, right-click and synchronise them to the Game Logic.
-	- In the init of the MHQ/CP, paste the example below, and alter it to suit the needs you have.
-Features;
-	- Allows any Vehicle or Object to be a deployable respawn. Vehicle respawns will be attached to the vehicle during movement while object respawns are static.
-	- Creates a randomised Command Post name and marker on the map.
-	- Changes the respawn side depending on who deployed it.
+	- In the init of the vehicle, paste the example below, and alter it to suit the needs you have.
 
 Parameters:
 _target - Vehicle or Object to use as the Mobile headquarters
@@ -36,10 +32,15 @@ params ["_target","_playerSide"];
 	// Finds all synced Objects. Hides the model and attaches the object to vehicle.
 	_syncLogic = nearestObject [_target, "Logic"]; 
 	_camoParts = synchronizedObjects _syncLogic;
-	[_syncLogic, _target] call BIS_fnc_attachToRelative;
-	{[_x, _target] call BIS_fnc_attachToRelative;} forEach _camoParts;
-	{[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _camoParts;
-	_target setVariable ['waldo_camoDeployed', false, true];
+	
+	if (isServer || isDedicated) then {
+		_target setVariable ['waldo_camoDeployed', false, true];
+		[_syncLogic, _target] call BIS_fnc_attachToRelative;
+		{
+			[_x, _target] call BIS_fnc_attachToRelative;
+			[_x, true] remoteExec ["hideObjectGlobal", 2];
+		} forEach _camoParts;
+	};
 
 	waldo_civillianSideChange = {
 		params ["_commander"];

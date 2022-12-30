@@ -11,7 +11,7 @@ This allows a number of objects, as selected via the syncing of a named gamelogi
 
 Setting Up in Eden;
 	- Place the vehicle or object that you want to have the respawn deployable from, and provide it a variable name. This will be known as the MHQ/CP in this tutorial.
-	- Place a Game Logic down close to the MHQ/CP. This can be found near the same menu as Modules.
+	- Place a Game Logic down as close as possible to the MHQ/CP. This can be found near the same menu as Modules.
 	- Place any objects you wish to appear when the respawn is deployed. Leave some room approx 3m to the left of the primary object to allow space for players to respawn.
 	- If you are using a vehicle as your primary object and any of your deployable objects should be resting on the floor, then raise them about a foot, to allow for the drop of the vehicle's suspension once the game has initialised.
 	- Select all the objects that will be deployable, right-click and synchronise them to the Game Logic.

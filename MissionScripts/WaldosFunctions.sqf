@@ -104,11 +104,8 @@ class CfgFunctions
             };
         };
         class FieldConstruction {
-            class SetupConstructionObjects {
-                file = "MissionScripts\Extras\setupConstructionObjects.sqf";
-            };
-            class AddConstructionActions {
-                file = "MissionScripts\Extras\addConstructionActions.sqf";
+            class ConstructionObjects {
+                file = "MissionScripts\Extras\ConstructionObjects.sqf";
             };
         };
         class Zen {
