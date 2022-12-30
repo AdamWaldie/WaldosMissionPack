@@ -40,7 +40,7 @@ You can always find the most recent quickstart guide at this URL: https://github
 
 # Required Addons
 - CBA_A3
-- ACE 3
+- ACE 3 (Field Headquarters, Construction System, Quartermaster Logistics Spawner)
 
 # Supported Addons
 - ACRE 2 (You can disable this via init.sqf)
