@@ -40,9 +40,9 @@ You can always find the most recent quickstart guide at this URL: https://github
 
 # Required Addons
 - CBA_A3
+- ACE 3
 
 # Supported Addons
-- ACE 3
 - ACRE 2 (You can disable this via init.sqf)
 - TFAR (Inherrent support via 3Eden)
 - Zeus Enhanced & Compat
@@ -55,5 +55,7 @@ You can always find the most recent quickstart guide at this URL: https://github
 - LAMBS_DANGER
 - ZEN & Zen Ace compat
 
-# Picture credit
-- RazzMaTazz
+# Credits
+- Waldo - Lead Developer
+- RazzMaTazz - Original Cover Image
+- Val - Top Contributer

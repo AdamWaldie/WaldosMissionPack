@@ -51,6 +51,9 @@ class CfgFunctions
             class TimedHint {
                 file = "MissionScripts\MissionFlow\timeBasedhint.sqf";
             };
+            class DynamicText {
+                file = "MissionScripts\MissionFlow\dynamicText.sqf";
+            };
         };
         class Logistics {
             class MedicalCratePopulate_Legacy {
@@ -91,11 +94,8 @@ class CfgFunctions
             };
         };
         class MHQ {
-            class ServerSetupMHQ {
-                file = "MissionScripts\Logistics\MHQ\ServerSetupMHQ.sqf";
-            };
-            class SetupMHQActions {
-                file = "MissionScripts\Logistics\MHQ\SetupMHQActions.sqf";
+            class MHQSetup {
+                file = "MissionScripts\Logistics\MHQ\MHQSetup.sqf";
             };
         };
         class FieldConstruction {
