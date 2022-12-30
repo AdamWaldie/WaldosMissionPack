@@ -5,7 +5,7 @@ Authors: Val & Waldo
 
 A script which allows for the creation of "camo" objects to assist in hiding of a vehicle in ambush. The script also accounts for limited dismounted movement around the vehicle, in concealment (civ).
 
-Designed for tanks.
+Designed for vehicles.
 
 Setting Up in Eden;
 	- Place the vehicle or object that you want to have the respawn deployable from, and provide it a variable name
@@ -21,7 +21,7 @@ Features;
 
 Parameters:
 _target - Vehicle or Object to use as the Mobile headquarters
-_playerSide - original side of the player
+_playerSide - original side of the player [west,independent,east]
 
 Example:
 
@@ -59,7 +59,7 @@ params ["_target","_playerSide"];
 		_incogGroupUnits = units _incogGroup;
 		_incogLeader = leader _incogGroup;
 
-		_originGroup = createGroup _playerSide; // CHANGE THIS SIDE TO REFLECT ALLY FACTION
+		_originGroup = createGroup _playerSide; 
 		_incogGroupUnits joinSilent _originGroup;
 		[_originGroup, _incogLeader] remoteExec ["selectLeader", groupOwner _originGroup];
 		_incogGroupUnits
@@ -67,7 +67,7 @@ params ["_target","_playerSide"];
 
 	waldo_deployCamo = {
 		params ["_target", "_player","_playerSide"];
-		["Tank Camouflage Deployed.", _player] call waldo_fnc_DynamicText;
+		["Vehicle Camouflage Deployed.", _player] call waldo_fnc_DynamicText;
 		_syncLogic = nearestObject [_target, "Logic"]; 
 		_camoParts = synchronizedObjects _syncLogic;
 		{[_x, false] remoteExec ["hideObjectGlobal", 2];} forEach _camoParts;
@@ -75,19 +75,19 @@ params ["_target","_playerSide"];
 		_playerGroup = group _player;
 		[_player] call waldo_civillianSideChange;
 
-		// Check crew for distance from Tank
+		// Check crew for distance from Vehicle
 
 		[_target, _player,_playerSide] spawn {
 			params ["_target","_player","_playerSide"];
-			private _distFromTankBOOL = false;
-				while {!_distFromTankBOOL} do {
+			private _distFromVehicleBOOL = false;
+				while {!_distFromVehicleBOOL} do {
 					sleep 10;
 					_playerGroup = Group _player;
 					{
 						if ((_x distance _target) > 40) then {
 							[_x,_playerSide] call waldo_returnSideChange;
-							{["You are too far from your tank.<br/>Reposition or redeploy.", _x] call waldo_fnc_DynamicText;} forEach units group _x;
-							private _distFromTankBOOL = true;
+							{["You are too far from your vehicle.<br/>Reposition or redeploy.", _x] call waldo_fnc_DynamicText;} forEach units group _x;
+							private _distFromVehicleBOOL = true;
 							_ehTypes = ["GetIn", "GetOut", "Hit", "Fired"];
 							_playerGroupIF = units group _player;
 							{_target removeAllEventHandlers _x;} forEach _ehTypes;
@@ -96,13 +96,13 @@ params ["_target","_playerSide"];
 					} forEach units _playerGroup;
 
 					_list = _player nearEntities 300;
-					_eastIndex = _list findIf {side _x == _playerSide}; // CHANGE THIS SIDE TO REFLECT ENEMY FACTION
+					_eastIndex = _list findIf {[side _x, side _player] call BIS_fnc_sideIsEnemy;}; 
 					if (_eastIndex >= 0) then {
 						_nearestEnemy = _list select _eastIndex;
 						//_eastKnows = _nearestEnemy knowsAbout _target;  && _eastKnows > 1.5
 						if (_nearestEnemy distance _target < 150) then {
-							{["The Tank has been spotted.<br/>Reposition or redeploy.", _x] call waldo_fnc_DynamicText;} forEach units group _player;
-							[_player] call waldo_returnSideChange;
+							{["The Vehicle has been spotted.<br/>Reposition or redeploy.", _x] call waldo_fnc_DynamicText;} forEach units group _player;
+							[_player,_playerSide] call waldo_returnSideChange;
 							_ehTypes = ["GetIn", "GetOut", "Hit", "Fired"];
 							{_target removeAllEventHandlers _x;} forEach _ehTypes;
 							{_x removeAllEventHandlers "Hit";} forEach units _playerGroup;
@@ -124,7 +124,7 @@ params ["_target","_playerSide"];
 		// Switch Vehicle to West if crew is shot
 		{_x addEventHandler ["Hit", {
 			params ["_unit", "_source", "_damage", "_instigator"];
-			[_unit] call waldo_returnSideChange;
+			[_unit,_playerSide] call waldo_returnSideChange;
 
 		}];} forEach units group _player;
 
@@ -132,8 +132,8 @@ params ["_target","_playerSide"];
 		_target addEventHandler ["Hit", {
 			params ["_unit", "_source", "_damage", "_instigator"];
 			_crew = crew _unit select 0;
-			[_crew] call waldo_returnSideChange;
-			["Tank Hit - Revealed", crew _unit] call waldo_fnc_DynamicText;
+			[_crew,_playerSide] call waldo_returnSideChange;
+			["Vehicle Hit - Revealed", crew _unit] call waldo_fnc_DynamicText;
 
 			_ehTypes = ["GetIn", "GetOut", "Hit", "Fired"];
 			{_unit removeAllEventHandlers _x;} forEach _ehTypes;
@@ -145,8 +145,8 @@ params ["_target","_playerSide"];
 		_target addEventHandler ["Fired", {
 			params ["_unit", "_weapon", "_muzzle", "_mode", "_ammo", "_magazine", "_projectile", "_gunner"];
 			_crew = crew _unit select 0;
-			[_crew] call waldo_returnSideChange;
-			["Tank Fired - Revealed", crew _unit] call waldo_fnc_DynamicText;
+			[_crew,_playerSide] call waldo_returnSideChange;
+			["Vehicle Fired - Revealed", crew _unit] call waldo_fnc_DynamicText;
 
 			_ehTypes = ["GetIn", "GetOut", "Hit", "Fired"];
 			{_unit removeAllEventHandlers _x;} forEach _ehTypes;
@@ -157,7 +157,7 @@ params ["_target","_playerSide"];
 		_target addEventHandler ["Engine", {
 			params ["_vehicle", "_engineState"];
 			_unit = crew _vehicle select 0;
-			[_unit] call waldo_returnSideChange;
+			[_unit,_playerSide] call waldo_returnSideChange;
 			["Engine On - Revealed", crew _unit] call waldo_fnc_DynamicText;
 			_syncLogic = nearestObject [_vehicle, "Logic"]; 
 			_camoParts = synchronizedObjects _syncLogic;
@@ -174,7 +174,7 @@ params ["_target","_playerSide"];
 	//Action Start
 	waldo_initVehicleCamo = [
 		"waldo_initVehicleCamo",
-		"Deploy Tank Camouflage",
+		"Deploy Vehicle Camouflage",
 		"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_unloadVehicle_ca.paa",
 		{
 			// Runs on Action Called
@@ -182,7 +182,7 @@ params ["_target","_playerSide"];
 			[10, [_target, _player,_playerSide], {
 				_args call waldo_deployCamo;
 				_args select 0 engineOn false;
-			}, {["Camouflage not deployed.", _player] call waldo_fnc_DynamicText;}, "Deploying Tank Camouflage"] call ace_common_fnc_progressBar;
+			}, {["Camouflage not deployed.", _player] call waldo_fnc_DynamicText;}, "Deploying Vehicle Camouflage"] call ace_common_fnc_progressBar;
 			
 		},
 		{
@@ -200,7 +200,7 @@ params ["_target","_playerSide"];
 
 	waldo_removeVehicleCamo = [
 		"waldo_removeVehicleCamo",
-		"Remove Tank Camouflage",
+		"Remove Vehicle Camouflage",
 		"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",
 		{
 			// Runs on Action Called
@@ -209,7 +209,7 @@ params ["_target","_playerSide"];
 				_target = _args select 0;
 				_player = _args select 1;
 				_unit = crew _target select 0;
-				[_unit] call waldo_returnSideChange;
+				[_unit,_playerSide] call waldo_returnSideChange;
 				[_player,_playerSide] call waldo_returnSideChange;
 				_syncLogic = nearestObject [_target, "Logic"]; 
 				_camoParts = synchronizedObjects _syncLogic;
@@ -219,8 +219,8 @@ params ["_target","_playerSide"];
 				_ehTypes = ["GetIn", "GetOut", "Hit", "Fired", "Engine"];
 				{_target removeAllEventHandlers _x;} forEach _ehTypes;
 				{_x removeAllEventHandlers "Hit";} forEach _playerGroup;
-				{["Tank Camouflage Removed", _x] call waldo_fnc_DynamicText;} forEach units group _player;
-			}, {["Camouflage Still Deployed.", _player] call waldo_fnc_DynamicText;}, "Removing Tank Camouflage"] call ace_common_fnc_progressBar;
+				{["Vehicle Camouflage Removed", _x] call waldo_fnc_DynamicText;} forEach units group _player;
+			}, {["Camouflage Still Deployed.", _player] call waldo_fnc_DynamicText;}, "Removing Vehicle Camouflage"] call ace_common_fnc_progressBar;
 			
 		},
 		{
