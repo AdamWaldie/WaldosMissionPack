@@ -22,6 +22,8 @@ In scripts
 
 */
 [player, [missionNamespace, "Player_Inventory"]] call BIS_fnc_saveInventory;
-hint "Respawn Loadout Updated!";
-sleep 5;
-hint "";
+[] spawn {
+	hint "Respawn Loadout Updated!";
+	sleep 5;
+	hint "";
+};

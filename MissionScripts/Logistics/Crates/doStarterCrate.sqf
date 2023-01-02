@@ -52,3 +52,29 @@ if (_arsenal == true) then {
         [_target,_crateSide,false] call Waldo_fnc_CreateLimitedArsenal;
     };
 };
+
+Waldo_StarterCrate_SaveAction = [
+	"Waldo_StarterCrate_SaveAction",
+	"Save Respawn Loadout",
+	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+	{
+		[] call Waldo_fnc_SaveLoadout
+	},
+	{
+		//[_target, _player, _actionParams] Condition
+		(_player distance _target) < 6 && speed _target < 1;
+	},
+	{},
+	[],
+	[],
+	0,
+	[false, false, false, false, false]
+] call ace_interact_menu_fnc_createAction;
+
+
+// Add action to Vehicle
+[_target,
+	0, 
+	["ACE_MainActions"], 
+	Waldo_StarterCrate_SaveAction
+] call ace_interact_menu_fnc_addActionToObject;
