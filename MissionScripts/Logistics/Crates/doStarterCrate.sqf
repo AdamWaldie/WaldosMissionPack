@@ -38,6 +38,7 @@ _target addAction ["<t color='#035afc'>Starter Crate</t>",{}];
 //loadout saving Addaction here
 _target addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_SaveLoadout];
 
+
 //Add full compliment of supplies (MEDICAL NOTWITHSTANDING)
 [_target, 1,_crateSide, true] call Waldo_fnc_SupplyCratePopulate;
 

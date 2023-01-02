@@ -27,7 +27,11 @@ Features;
 
 Parameters:
 _target - Vehicle or Object to use as the Mobile headquarters
+_logistics - boolean as to whether to enable the logistics system on the MHQ
 _constructionAudio - boolean (true/false) | Options: True = Modern construction Noises, False = Old Wooden Sounding Construction Noises.
+if _logistics is utilised:
+_logisticsDirection - determines the bearing around the vehicle the spawner will be. Based on vehicle heading, not compass. E.g 0 = Front, 90 = Right, 180 = Rear, 270 = Left.
+_logisticsDistance - determines how far away from the vehicle the logistics spawner will be.
 
 Example:
 
@@ -37,9 +41,12 @@ Example:
 // Modern construction audio
 [this,true] call Waldo_fnc_MHQSetup;
 
+// Logistics system with spawner 4m to the rear of the vehicle 
+[this,true,true,180,4] call Waldo_fnc_MHQSetup;
+
 */
 
-params ["_target",["_constructionAudio",false]];
+params ["_target",["_constructionAudio",false],["_logistics",false],["_logisticsDirection", 180],["_logisticsDistance", 4]];
 //Catch all for any not using ACE to prevent bad things
 if !(isClass(configFile >> "CfgPatches" >> "ace_main")) exitwith {};
 
@@ -52,9 +59,20 @@ if (_useModernConsturctionAudio == false) then {
 // Finds all synced Objects. Hides the model and attaches the object to vehicle. !! UPDATE - MOVED TO VEHICLE INIT CODE !!
 _syncLogic = nearestObject [_target, "Logic"]; 
 _deployParts = synchronizedObjects _syncLogic;
+[_target, 50, -1] call Waldo_fnc_SetCargoAttributes;
+
+//if logistics trigger was set to true
+if (_logistics) then {
+	[_target,_logisticsDirection,_logisticsDistance] call Waldo_fnc_SetupQuarterMaster;
+};
 
 
 if (isServer || isDedicated) then {
+	//if logistics trigger was set to true
+	if (_logistics) then {
+		//Toggle Flag For Actions
+		_target setVariable ["Waldo_LogisticsQM_CurrentStatus", false, true];
+	};
 	_target setVariable ['Waldo_MHQ_Status', false, true];
 	[_syncLogic, _target] call BIS_fnc_attachToRelative;
 	{
@@ -64,7 +82,7 @@ if (isServer || isDedicated) then {
 };
 
 waldo_CP_Deployment = {
-	params ["_target", "_player"];
+	params ["_target", "_player","_ConstructionAudioPath","_logistics"];
 	["Command Post Deployed.", _player] call Waldo_fnc_DynamicText;
 	_syncLogic = nearestObject [_target, "Logic"]; 
 	_deployParts = synchronizedObjects _syncLogic;
@@ -96,6 +114,9 @@ waldo_CP_Deployment = {
 	_mapMarker setMarkerType "mil_flag";
 	_mapMarker setMarkerText "Command Post " + _FHQNameList;
 	playSound3d [getMissionPath _MHQAudioPath, _target, false, getPosASL _target, 4, 1];
+	if (_logistics) then {
+		_target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true];
+	};
 	[_target, _deployedFieldHQ, _mapMarker, _FHQNameList] spawn {
 		params ["_target", "_deployedFieldHQ","_mapMarker","_FHQNameList"];
 		waitUntil {!(_target getVariable 'Waldo_MHQ_Status')};
@@ -106,13 +127,16 @@ waldo_CP_Deployment = {
 };
 
 waldo_CP_TearDown = {
-	params ["_target","_player"];
+	params ["_target","_player","_ConstructionAudioPath","_logistics"];
 	_syncLogic = nearestObject [_target, "Logic"]; 
 	_deployParts = synchronizedObjects _syncLogic;
 	{[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _deployParts;
 	[_target,"UNLOCKED"] remoteExec ["setVehicleLock", 0];
 	playSound3d [getMissionPath _MHQAudioPath, _target, false, getPosASL _target, 4, 1];
-	_target setVariable ['Waldo_MHQ_Status', false, true];	
+	if (_logistics) then {
+		_target setVariable ["Waldo_LogisticsQM_CurrentStatus", false, true];
+	};
+	_target setVariable ["Waldo_MHQ_Status", false, true];
 	["Command Post Torn Down", _player] call Waldo_fnc_DynamicText;
 };
 
@@ -123,8 +147,10 @@ waldo_CP_InitDeployment_ACE = [
 	"Deploy Command Post",
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_unloadVehicle_ca.paa",
 	{
+		params ["_target", "_player","_args"];
+		_args params ["_ConstructionAudioPath","_logistics"];
 		// Runs on Action Called
-		[10, [_target, _player], {
+		[10, [_target, _player,_ConstructionAudioPath,_logistics], {
 			_args call waldo_CP_Deployment;
 		}, {["Command Post not Deployed.", _player] call Waldo_fnc_DynamicText;}, "Establishing Command Post"] call ace_common_fnc_progressBar;
 	},
@@ -132,8 +158,8 @@ waldo_CP_InitDeployment_ACE = [
 		//[_target, _player, _actionParams] Condition
 		!(_target getVariable 'Waldo_MHQ_Status') && (_player distance _target) < 6 && speed _target < 1;
 	},
-	{_ConstructionAudioPath},
-	[],
+	{},
+	[_ConstructionAudioPath,_logistics],
 	[],
 	0,
 	[false, false, false, false, false]
@@ -145,8 +171,10 @@ waldo_CP_InitTearDown_ACE = [
 	"Tear Down Command Post",
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",
 	{
+		params ["_target", "_player","_args"];
+		_args params ["_ConstructionAudioPath","_logistics"];
 		// Runs on Action Called
-		[10, [_target, _player], {
+		[10, [_target, _player,_ConstructionAudioPath,_logistics], {
 			_args call waldo_CP_TearDown;
 		}, {["Command Post still Deployed", _player] call Waldo_fnc_DynamicText;}, "Tearing Down Command Post"] call ace_common_fnc_progressBar;
 	},
@@ -154,22 +182,30 @@ waldo_CP_InitTearDown_ACE = [
 		//[_target, _player, _actionParams] Condition
 		(_target getVariable 'Waldo_MHQ_Status') && (_player distance _target) < 6 && speed _target < 1;
 	},
-	{_ConstructionAudioPath},
-	[],
+	{},
+	[_ConstructionAudioPath,_logistics],
 	[],
 	0,
 	[false, false, false, false, false]
 ] call ace_interact_menu_fnc_createAction;
 
+Waldo_CP_Category = ["Waldo_CP_Category" ,"Command Post", "\a3\Missions_F_Orange\Data\Img\Showcase_LawsOfWar\action_view_article_CA.paa", {true}, {true}] call ace_interact_menu_fnc_createAction;
+
 // Add action to Vehicle (ACE 3)
 [_target,
 	0, 
 	["ACE_MainActions"], 
+	Waldo_CP_Category
+] call ace_interact_menu_fnc_addActionToObject;
+
+[_target,
+	0, 
+	["ACE_MainActions","Waldo_CP_Category"], 
 	waldo_CP_InitDeployment_ACE
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
 	0, 
-	["ACE_MainActions"], 
+	["ACE_MainActions","Waldo_CP_Category"], 
 	waldo_CP_InitTearDown_ACE
 ] call ace_interact_menu_fnc_addActionToObject;

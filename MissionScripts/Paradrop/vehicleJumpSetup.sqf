@@ -3,7 +3,7 @@ This function apply the Jump Functionality To Aircraft.
 
 C130J from RHS is automatically handled with the below parameters
 
-THIS FEATURE IS PRESENTLY CONFLICTING WITH THE VEHICLE ACTION HANDLER. 
+THIS FEATURE IS PRESENTLY CONFLICTING WITH THE VEHICLE ACTION HANDLER, AND SHOULD ONLY BE CALLED ON VEHICLES NOT COVERED UNDER THAT.
 
 Arguments:
 0: Vehicle <OBJECT>
@@ -14,7 +14,6 @@ Example:
 
 params ["_vehicle"];
 
-diag_log "Vehicle Setup Reached";
 
 //Basic prevention of sillyness
 if (_vehicle iskindOf "man") exitWith {};
@@ -23,7 +22,6 @@ if (_vehicle iskindOf "man") exitWith {};
 // As called from unit init, enviroment is unscheduled, so we force a schedule with spawn, and add actions after units ingame. Not  efficent, but easier to use / more adaptable for the end user.
 _schdenvirohndlr = [_vehicle] spawn {
     params ["_vehicle"];
-    diag_log "Vehicle Setup Reached";
     waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE",false] };
     private _haloAlt = missionNamespace getVariable "WALDO_PARA_HALOALTITUDE";
     //Get HALO Altitude & CHUTe Arguments

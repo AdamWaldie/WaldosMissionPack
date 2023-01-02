@@ -65,5 +65,3 @@ _player forceWalk true;
     false,
     false
 ] call BIS_fnc_holdActionAdd;
-
-diag_log "Paradrop Backpack Action Added";

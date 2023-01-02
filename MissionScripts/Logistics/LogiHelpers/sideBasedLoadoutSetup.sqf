@@ -10,13 +10,10 @@ Call:
 loadoutArray_west = ["West"] call Waldo_fnc_MissionSQMLookup; 
 missionNamespace setVariable ["Logi_MissionSQMArray_West", loadoutArray_west,true];
 loadoutArray_east = ["East"] call Waldo_fnc_MissionSQMLookup; 
-diag_log loadoutArray_east;
 missionNamespace setVariable ["Logi_MissionSQMArray_East", loadoutArray_east,true];
 loadoutArray_ind = ["Independent"] call Waldo_fnc_MissionSQMLookup; 
-diag_log loadoutArray_ind;
 missionNamespace setVariable ["Logi_MissionSQMArray_Ind", loadoutArray_ind,true];
 loadoutArray_civ = ["Civilian"] call Waldo_fnc_MissionSQMLookup; 
-diag_log loadoutArray_civ;
 missionNamespace setVariable ["Logi_MissionSQMArray_Civ", loadoutArray_civ,true];
 
 //Set Value To Say That Mission Scan Is Complete

@@ -31,26 +31,19 @@ waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
 //Double Security with ensuring mission.sqm sweep
 waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 
-//_diaglogdata = format["_crateSupplySide: %1",_crateSupplySide];
-//diag_log _diaglogdata;
-
 //default setup
 private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_West";
 //get all loadout data by default
 if (_crateSupplySide == EAST) then {
     _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_East";
-    //diag_log "EAST ARRAY LOADED";
 };
 if (_crateSupplySide == INDEPENDENT) then {
     _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_Ind";
-    //diag_log "INDEPENDENT ARRAY LOADED";
 };
 if (_crateSupplySide == CIVILIAN) then {
     _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_Civ";
-    //diag_log "CIVILIAN ARRAY LOADED";
 };
 
-//diag_log str _loadoutArray;
 
 _loadoutArray params["_mainWeapons","_mainAmmo","_launchers","_launcherAmmo","_pGear","_pItems","_pBackpack","_weapAttach"];
 

@@ -31,15 +31,12 @@ private _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_Wes
 //get all loadout data by default
 if (_crateSupplySide == EAST) then {
     _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_East";
-    //diag_log "EAST ARRAY LOADED";
 };
 if (_crateSupplySide == INDEPENDENT) then {
     _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_Ind";
-    //diag_log "INDEPENDENT ARRAY LOADED";
 };
 if (_crateSupplySide == CIVILIAN) then {
     _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_Civ";
-    //diag_log "CIVILIAN ARRAY LOADED";
 };
 
 //Remove Empty Portions

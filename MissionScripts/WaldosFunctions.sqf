@@ -105,7 +105,7 @@ class CfgFunctions
         };
         class FieldConstruction {
             class ConstructionObjects {
-                file = "MissionScripts\Extras\ConstructionObjects.sqf";
+                file = "MissionScripts\Logistics\Construction\ConstructionObjects.sqf";
             };
         };
         class Zen {

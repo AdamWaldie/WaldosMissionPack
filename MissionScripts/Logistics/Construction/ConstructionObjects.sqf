@@ -90,8 +90,8 @@ Waldo_Construction_InitDeploy = [
 		//[_target, _player, _actionParams] Condition
 		!(_target getVariable 'Waldo_Construction_Status') && (_player distance _target) < 6;
 	},
-	{_ConstructionAudioPath},
-	[],
+	{},
+	[_ConstructionAudioPath],
 	[],
 	0,
 	[false, false, false, false, false]
@@ -112,24 +112,30 @@ Waldo_Construction_InitTeardown = [
 		//[_target, _player, _actionParams] Condition
 		(_target getVariable 'Waldo_Construction_Status') && (_player distance _target) < 6;
 	},
-	{_ConstructionAudioPath},
-	[],
+	{},
+	[_ConstructionAudioPath],
 	[],
 	0,
 	[false, false, false, false, false]
 ] call ace_interact_menu_fnc_createAction;
 
-Waldo_Construction_Category = [_target, "Waldo_Construction_Category" ,"Construction", "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa", {true}, {true}] call ace_interact_menu_fnc_createAction;
+Waldo_Construction_Category = ["Waldo_Construction_Category" ,"Construction", "\a3\ui_f_oldman\data\IGUI\Cfg\holdactions\repair_ca.paa", {true}, {true}] call ace_interact_menu_fnc_createAction;
 
 // Add action to Vehicle (ACE 3)
 [_target,
 	0, 
 	["ACE_MainActions"], 
+	Waldo_Construction_Category
+] call ace_interact_menu_fnc_addActionToObject;
+
+[_target,
+	0, 
+	["ACE_MainActions","Waldo_Construction_Category"], 
 	Waldo_Construction_InitDeploy
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
 	0, 
-	["ACE_MainActions"], 
+	["ACE_MainActions","Waldo_Construction_Category"], 
 	Waldo_Construction_InitTeardown
 ] call ace_interact_menu_fnc_addActionToObject;

@@ -49,8 +49,4 @@ private _conditionHoldAction = format ["((_target getCargoIndex player) != -1) &
     false
 ] call BIS_fnc_holdActionAdd;
 
-diag_log "Halo Jump Action Added";
-
 _vehicle setVariable ["Waldo_Halo_Jump", [_vehicle, _minAltitude, _chuteBackpackClass]];
-
-diag_log "Halo Jump Variable Added";

@@ -54,7 +54,7 @@ private _statement = {
 
 private _checkLabel = "Check Jump Settings";
 
-_action = ["Waldo_Jump_Settings", _checkLabel, "", _statement, {true}, {}, [_hasStaticJump, _hasHaloJump]] call ace_interact_menu_fnc_createAction;
-[_vehicle, 1, ["ACE_SelfActions"], _action] call ace_interact_menu_fnc_addActionToObject;
+Waldo_PARA_Category = ["Waldo_PARA_Category" ,"Para Interactions", "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff1_ca.paa", {true}, {true}] call ace_interact_menu_fnc_createAction;
 
-diag_log "Jump Settings Check Added";
+_action = ["Waldo_Jump_Settings", _checkLabel, "\a3\ui_f\data\IGUI\Cfg\holdactions\holdAction_takeOff1_ca.paa", _statement, {true}, {}, [_hasStaticJump, _hasHaloJump]] call ace_interact_menu_fnc_createAction;
+[_vehicle, 1, ["ACE_SelfActions","Waldo_PARA_Category"], _action] call ace_interact_menu_fnc_addActionToObject;

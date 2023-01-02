@@ -46,6 +46,7 @@ systemchat "AI Adjustment System Active";
             };
 
             switch (faction _unit) do {
+                //RHS
                 case "rhs_faction_msv";
                 case "rhs_faction_rva";
                 case "rhs_faction_tv";
@@ -55,8 +56,52 @@ systemchat "AI Adjustment System Active";
                 case "rhs_faction_vpvo";
                 case "rhs_faction_vv";
                 case "rhs_faction_vvs_c";
+                //WW2
+                case "LIB_US_101AB"; 
+                case "LIB_US_82AB"; 
+                case "NORTH_FIN"; 
+                case "NORTH_NOR"; 
+                case "EAW_ROC";
+                case "EAW_ROC_Early"; 
+                case "EAW_ROC_Ger";
+                case "EAW_ROC_Southern"; 
+                case "EAW_ROC_West";
+                case "EAW_ROC_Winter"; 
+                case "LIB_UK_AB_w";
+                case "LIB_UK_ARMY_w";
+                case "LIB_US_ARMY_w"; 
+                case "IND_F";
+                case "JMSSA_britain_fact"; 
+                case "CSA38_GB";
+                case "JMSSA_britain_des_fact"; 
+                case "JMSSA_britain_sicily_fact"; 
+                case "JMSSA_britain_BEF_fact"; 
+                case "CSA38_CSA38"; 
+                case "CSA38_CSOB"; 
+                case "LIB_FFI";
+                case "LIB_GUER";
+                case "sab_nl_faction_green"; 
+                case "CSA38_PL"; 
+                case "CSA38_SLOV"; 
+                case "CSA38_spol"; 
+                case "LIB_UK_AB"; 
+                case "LIB_UK_ARMY"; 
+                case "LIB_UK_DR"; 
+                case "LIB_US_ARMY"; 
+                case "LIB_NAC";
+                case "EAW_IRA";
+                case "NORTH_SOV"; 
+                case "LIB_RKKA"; 
+                case "EAW_IJA";
+                case "LIB_WEHRMACHT_w"; 
+                case "CSA38_GERM";
+                case "JMSSA_italy_fact"; 
+                case "SG_STURM"; 
+                case "SG_STURMPANZER"; 
+                case "LIB_WEHRMACHT";
+                //3CB
                 case "UK3CB_ADA_O";
-                case "UK3CB_ADR_O";
+                //OPTRE
                 case "OPTRE_Ins";
                 case "dev_flood";
                 case "MEU_Covenant";
@@ -66,6 +111,7 @@ systemchat "AI Adjustment System Active";
                 case "LM_OPCAN_FRI_WDL";
                 case "LM_OPCAN_URA";
                 case "OPTRE_Ins";
+                //Base (No Edit)
                 case "rhs_faction_vvs": {
                     _unit setSkill ["general",         1.000];
                     _unit setSkill ["commanding",      0.950];
@@ -138,6 +184,7 @@ systemchat "AI Adjustment System Active";
                 };
 
                 switch (faction _unit) do {
+                    //RHS
                     case "rhs_faction_msv";
                     case "rhs_faction_rva";
                     case "rhs_faction_tv";
@@ -147,8 +194,52 @@ systemchat "AI Adjustment System Active";
                     case "rhs_faction_vpvo";
                     case "rhs_faction_vv";
                     case "rhs_faction_vvs_c";
+                    //WW2
+                    case "LIB_US_101AB"; 
+                    case "LIB_US_82AB"; 
+                    case "NORTH_FIN"; 
+                    case "NORTH_NOR"; 
+                    case "EAW_ROC";
+                    case "EAW_ROC_Early"; 
+                    case "EAW_ROC_Ger";
+                    case "EAW_ROC_Southern"; 
+                    case "EAW_ROC_West";
+                    case "EAW_ROC_Winter"; 
+                    case "LIB_UK_AB_w";
+                    case "LIB_UK_ARMY_w";
+                    case "LIB_US_ARMY_w"; 
+                    case "IND_F";
+                    case "JMSSA_britain_fact"; 
+                    case "CSA38_GB";
+                    case "JMSSA_britain_des_fact"; 
+                    case "JMSSA_britain_sicily_fact"; 
+                    case "JMSSA_britain_BEF_fact"; 
+                    case "CSA38_CSA38"; 
+                    case "CSA38_CSOB"; 
+                    case "LIB_FFI";
+                    case "LIB_GUER";
+                    case "sab_nl_faction_green"; 
+                    case "CSA38_PL"; 
+                    case "CSA38_SLOV"; 
+                    case "CSA38_spol"; 
+                    case "LIB_UK_AB"; 
+                    case "LIB_UK_ARMY"; 
+                    case "LIB_UK_DR"; 
+                    case "LIB_US_ARMY"; 
+                    case "LIB_NAC";
+                    case "EAW_IRA";
+                    case "NORTH_SOV"; 
+                    case "LIB_RKKA"; 
+                    case "EAW_IJA";
+                    case "LIB_WEHRMACHT_w"; 
+                    case "CSA38_GERM";
+                    case "JMSSA_italy_fact"; 
+                    case "SG_STURM"; 
+                    case "SG_STURMPANZER"; 
+                    case "LIB_WEHRMACHT";
+                    //3CB
                     case "UK3CB_ADA_O";
-                    case "UK3CB_ADR_O";
+                    //OPTRE
                     case "OPTRE_Ins";
                     case "dev_flood";
                     case "MEU_Covenant";
@@ -158,6 +249,7 @@ systemchat "AI Adjustment System Active";
                     case "LM_OPCAN_FRI_WDL";
                     case "LM_OPCAN_URA";
                     case "OPTRE_Ins";
+                    //Base (No Edit)
                     case "rhs_faction_vvs": {
                         _unit setSkill ["general",         1.000];
                         _unit setSkill ["commanding",      0.950];

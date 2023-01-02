@@ -53,8 +53,4 @@ private _conditionHoldAction = format ["((_target getCargoIndex player) != -1) &
     false
 ] call BIS_fnc_holdActionAdd;
 
-diag_log "Static Jump Action Added";
-
 _vehicle setVariable ["Waldo_Static_Jump",[_vehicle, _minAltitude, _maxAltitude, _maxSpeed, _chuteVehicleClass]];
-
-diag_log "Static Jump Variable Added";
