@@ -179,7 +179,8 @@ waldo_initVehicleCamo = [
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_unloadVehicle_ca.paa",
 	{
 		// Runs on Action Called
-		
+		params ["_target", "_player","_args"];
+		_args params ["_playerSide"];
 		[10, [_target, _player,_playerSide], {
 			_args call waldo_deployCamo;
 			_args select 0 engineOn false;
@@ -205,7 +206,8 @@ waldo_removeVehicleCamo = [
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",
 	{
 		// Runs on Action Called
-		
+		params ["_target", "_player","_args"];
+		_args params ["_playerSide","_camoParts"];
 		[10, [_target, _player,_playerSide], {
 			_target = _args select 0;
 			_player = _args select 1;
@@ -219,7 +221,6 @@ waldo_removeVehicleCamo = [
 			// Resets all EH types.
 			_ehTypes = ["GetIn", "GetOut", "Hit", "Fired", "Engine"];
 			{_target removeAllEventHandlers _x;} forEach _ehTypes;
-			{_x removeAllEventHandlers "Hit";} forEach _playerGroup;
 			{["Vehicle Camouflage Removed", _x] call waldo_fnc_DynamicText;} forEach units group _player;
 		}, {["Camouflage Still Deployed.", _player] call waldo_fnc_DynamicText;}, "Removing Vehicle Camouflage"] call ace_common_fnc_progressBar;
 		

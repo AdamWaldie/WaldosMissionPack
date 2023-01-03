@@ -84,6 +84,7 @@ if (isServer || isDedicated) then {
 waldo_CP_Deployment = {
 	params ["_target", "_player","_ConstructionAudioPath","_logistics"];
 	["Command Post Deployed.", _player] call Waldo_fnc_DynamicText;
+	_target allowDamage false;
 	_syncLogic = nearestObject [_target, "Logic"]; 
 	_deployParts = synchronizedObjects _syncLogic;
 	{[_x, false] remoteExec ["hideObjectGlobal", 2];} forEach _deployParts;
