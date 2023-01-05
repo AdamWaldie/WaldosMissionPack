@@ -16,8 +16,8 @@ Setting Up in Eden;
 	- In the init of the vehicle, paste the example below, and alter it to suit the needs you have.
 
 Parameters:
-_target - Vehicle or Object to use as the Mobile headquarters
-_playerSide - original side of the player [west,independent,east]
+_target - Vehicle or Object to deploy camo from.
+
 
 Example:
 
@@ -25,7 +25,7 @@ Example:
 
 */
 
-params ["_target","_playerSide"];
+params ["_target"];
 //Catch all for any not using ACE to prevent bad things
 if !(isClass(configFile >> "CfgPatches" >> "ace_main")) exitwith {};
 
@@ -172,6 +172,21 @@ waldo_deployCamo = {
 	}];
 };
 
+waldo_ManualRemoveCamo = {
+	params ["_target", "_player","_playerSide"];
+	_unit = crew _target select 0;
+	[_unit,_playerSide] call waldo_returnSideChange;
+	[_player,_playerSide] call waldo_returnSideChange;
+	_syncLogic = nearestObject [_target, "Logic"]; 
+	_camoParts = synchronizedObjects _syncLogic;
+	{[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _camoParts;
+	_target setVariable ['waldo_camoDeployed', false, true];	
+	// Resets all EH types.
+	_ehTypes = ["GetIn", "GetOut", "Hit", "Fired", "Engine"];
+	{_target removeAllEventHandlers _x;} forEach _ehTypes;
+	{["Vehicle Camouflage Removed", _x] call waldo_fnc_DynamicText;} forEach units group _player;
+};
+
 //Action Start
 waldo_initVehicleCamo = [
 	"waldo_initVehicleCamo",
@@ -179,8 +194,9 @@ waldo_initVehicleCamo = [
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_unloadVehicle_ca.paa",
 	{
 		// Runs on Action Called
-		params ["_target", "_player","_args"];
-		_args params ["_playerSide"];
+		params ["_target", "_player"];
+		_playerSide = side _player;
+		_target setVariable ['waldo_camoPlayerOriginalSide', _playerSide, true];
 		[10, [_target, _player,_playerSide], {
 			_args call waldo_deployCamo;
 			_args select 0 engineOn false;
@@ -192,7 +208,7 @@ waldo_initVehicleCamo = [
 		!(_target getVariable 'waldo_camoDeployed') && (_player distance _target) < 7 && speed _target < 2 && isTouchingGround _target && count nearestTerrainObjects [_target, ["Tree","Bush"], 20] > 5;
 	},
 	{},
-	[_playerSide],
+	[],
 	[],
 	0,
 	[false, false, false, false, false]
@@ -206,22 +222,10 @@ waldo_removeVehicleCamo = [
 	"\a3\data_f_destroyer\data\UI\IGUI\Cfg\holdactions\holdAction_loadVehicle_ca.paa",
 	{
 		// Runs on Action Called
-		params ["_target", "_player","_args"];
-		_args params ["_playerSide","_camoParts"];
+		params ["_target", "_player"];
+		_playerSide = _target getVariable "waldo_camoPlayerOriginalSide";
 		[10, [_target, _player,_playerSide], {
-			_target = _args select 0;
-			_player = _args select 1;
-			_unit = crew _target select 0;
-			[_unit,_playerSide] call waldo_returnSideChange;
-			[_player,_playerSide] call waldo_returnSideChange;
-			_syncLogic = nearestObject [_target, "Logic"]; 
-			_camoParts = synchronizedObjects _syncLogic;
-			{[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _camoParts;
-			_target setVariable ['waldo_camoDeployed', false, true];	
-			// Resets all EH types.
-			_ehTypes = ["GetIn", "GetOut", "Hit", "Fired", "Engine"];
-			{_target removeAllEventHandlers _x;} forEach _ehTypes;
-			{["Vehicle Camouflage Removed", _x] call waldo_fnc_DynamicText;} forEach units group _player;
+			_args call waldo_ManualRemoveCamo;
 		}, {["Camouflage Still Deployed.", _player] call waldo_fnc_DynamicText;}, "Removing Vehicle Camouflage"] call ace_common_fnc_progressBar;
 		
 	},
@@ -230,7 +234,7 @@ waldo_removeVehicleCamo = [
 		(_target getVariable 'waldo_camoDeployed') && (_player distance _target) < 7 && speed _target < 2 && isTouchingGround _target;
 	},
 	{},
-	[_playerSide],
+	[],
 	[],
 	0,
 	[false, false, false, false, false]
