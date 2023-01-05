@@ -150,7 +150,6 @@ waldo_CP_InitDeployment_ACE = [
 	{
 		params ["_target", "_player","_args"];
 		_args params ["_ConstructionAudioPath","_logistics"];
-		_target setVariable ["Waldo_MHQ_Semaphore", true,true];
 		// Runs on Action Called
 		[10, [_target, _player,_ConstructionAudioPath,_logistics], {
 			_args call waldo_CP_Deployment;
