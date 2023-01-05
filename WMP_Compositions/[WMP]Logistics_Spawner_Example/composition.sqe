@@ -1,51 +1,47 @@
 version=54;
-center[]={23356.352,3.1899986,19187.865};
+center[]={23304.209,3.1900001,19045.816};
 class items
 {
-	items=3;
+	items=1;
 	class Item0
 	{
-		dataType="Comment";
-		class PositionInfo
+		dataType="Layer";
+		name="[WMP] Logistics Spawner Example";
+		class Entities
 		{
-			position[]={-0.40820313,1.4305115e-006,0.19726563};
+			items=2;
+			class Item0
+			{
+				dataType="Comment";
+				class PositionInfo
+				{
+					position[]={-0.064453125,1.4305115e-006,1.3242188};
+				};
+				title="Logistics spawner setup - west";
+				id=9;
+				atlOffset=1.4305115e-006;
+			};
+			class Item1
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.064453125,0.57536411,-1.3261719};
+					angles[]={0,6.0766778,0};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this,0,4] call Waldo_fnc_SetupQuarterMaster; ";
+					name="QuarterMaster_MissionparametersBoxes";
+					dynamicSimulation=1;
+				};
+				id=11;
+				type="Land_InfoStand_V1_F";
+			};
 		};
-		title="Logistics spawner setup - west";
-		id=7138;
-	};
-	class Item1
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={0.6875,1.4305115e-006,2.2558594};
-		};
-		side="Empty";
-		class Attributes
-		{
-			name="logisticsSpawn";
-		};
-		id=7144;
-		type="Land_HelipadEmpty_F";
-	};
-	class Item2
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={-0.27929688,0.57536411,-2.453125};
-			angles[]={0,5.8550906,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this,logisticsSpawn,west] call Waldo_fnc_SetupQuarterMaster;";
-			name="QuarterMaster_MissionparametersBoxes";
-			dynamicSimulation=1;
-		};
-		id=7869;
-		type="Land_InfoStand_V1_F";
-		atlOffset=-1.4305115e-006;
+		id=12;
+		atlOffset=4.7683716e-007;
 	};
 };

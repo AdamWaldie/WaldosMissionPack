@@ -1,7 +1,7 @@
 version=54;
 name="[WMP] Mass AttachTo Example";
 author="WaldoTheWarfighter";
-category="Waldos Mission Pack Compositions";
+category="EdSubcat_Default";
 requiredAddons[]=
 {
 	"A3_Soft_F_Gamma_Van_01",
