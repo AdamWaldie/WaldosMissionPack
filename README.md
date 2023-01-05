@@ -49,12 +49,6 @@ You can always find the most recent quickstart guide at this URL: https://github
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
 
-# Tutorial Mission Addons
-- ACE
-- ACRE
-- LAMBS_DANGER
-- ZEN & Zen Ace compat
-
 # Credits
 - Waldo - Lead Developer
 - RazzMaTazz - Original Cover Image
