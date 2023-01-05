@@ -21,7 +21,7 @@ _target - Vehicle or Object to deploy camo from.
 
 Example:
 
-[this] call Waldo_fnc_VehicleCamo;
+[this] call Waldo_fnc_VehicleCamoSetup;
 
 */
 
