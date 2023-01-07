@@ -4,7 +4,7 @@ Can be called on mission start via missionParameters.sqf with setup.
 
 Or via the the use of the following command, edited with string for the desired segmentation
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
-There are two parameters. The Name Of The Mission & The locale of the mission You can change these below
+There are two parameters. The Name Of The Mission & The locale of the mission.
 
 This is the most basic iteration, it automatically grabs the mission title & location based on description.ext for title, and worldName for location.
 [] spawn Waldo_fnc_ENDEX;
