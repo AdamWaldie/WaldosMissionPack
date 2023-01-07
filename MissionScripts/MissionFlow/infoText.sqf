@@ -15,17 +15,17 @@ You can also customise the information text directly, by providing additional pa
 */
 
 
-params[["_title","DEFAULT"],["_locale","DEFAULT"]];
+params[["_title",""],["_locale",""]];
 
 waitUntil {!isNull findDisplay 46};
 //Grab Mission Name & Terrain Name automatically
 //If provided with a string in the correct parameter slot, accepts that inplace of the automatic generation
 _missionTitle = getText (missionConfigFile >> "onLoadName");; 
-if (_title != "DEFAULT") then {
+if (_title != "") then {
 	_missionTitle = _title;
 };
 _localeName = worldName;
-if (_locale != "DEFAULT") then {
+if (_locale != "") then {
 	_localeName = _locale;
 };
 _timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString; 
