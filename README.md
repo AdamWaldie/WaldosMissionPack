@@ -16,8 +16,8 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 # Pack Features
 - Loadout saving and respawn system
 - Automatic ACRE2 Radio setup and respawn handling - based on mission makers specification in init.sqf
-- Custom loadout & logistics system which scrapes the kits of all playable characters on a particular side to fulfil base logistical needs - such as starter crates and supply crates, WITHOUT YOU HAVING TO LIFT A FINGER! (Dependant on the loadouts being edited ACE or Vanilla arsenal in the editor, and the disabling of scenario binarization)
-- Vehicle unflippin actions
+- Custom loadout & logistics system which scrapes the kits of all playable characters on a particular side to fulfil base logistical needs - such as starter crates and supply crates. (Dependant on the loadouts being edited ACE or Vanilla arsenal in the editor, and the disabling of scenario binarization)
+- Vehicle unflipping actions
 - Simple AI convoy script expanded and enhanced from Tovas original.
 - Teleportation Script
 - Endex & Safestart Scripts
