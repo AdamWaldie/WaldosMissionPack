@@ -1,5 +1,5 @@
 # WaldosMissionPack
-A package of mission scripts for new mission makers.
+A package of mission scripts for mission makers.
 
 ![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
 
