@@ -7,8 +7,8 @@ A package of mission scripts for new mission makers.
 
 # Background Information
 - This project was created originally for the mission makers of the Rooster Teeth Gaming Discord, with the intent to provide them with the easiest possible method 
-to utilise critical systems of arma 3.
-- The majority of QOL & critical scripts can be utilised via the init.sqf, initServer.sqf, initPlayerlocal.sqf & description.ext files.
+to utilise critical systems of arma 3. Now, it is in continued use by at least forty known units, from all corners of the milsimsphere.
+- The majority of QOL & critical scripts can be utilised via the init.sqf, initServer.sqf, initPlayerlocal.sqf & description.ext files, or directly via unit inits.
 - Mission Pack Functions are defined in WaldoFunctions.sqf in MissionScripts Folder.
 - For those seeking the more involved features of this pack, or greater control, each file is fully documented on its usage, its parameters and its purpose. 
 - The pack has a large amount to discover and utilise, so have at it!
