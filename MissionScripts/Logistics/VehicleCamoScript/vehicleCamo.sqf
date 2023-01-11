@@ -5,6 +5,14 @@ Authors: Val & Waldo
 
 A script which allows for the creation of "camo" objects to assist in hiding of a vehicle in ambush. The script also accounts for limited dismounted movement around the vehicle, in concealment (civ).
 
+If the Player:
+- Is spotted
+- Fires the vehicls weapons
+- Moves more than 40 meters from the vehicle
+- Takes damage (Player or vehicle)
+
+The player is returned to their side (potential game restricted delay of up to 30 seconds) however the camo objects will remain until the vehicle moves, or the camo is removed by the indicated ace action.
+
 Designed for vehicles.
 
 Setting Up in Eden;
