@@ -1,5 +1,5 @@
 # WaldosMissionPack
-A package of mission scripts for mission makers.
+A package of mission scripts for mission makers designed to be highly flexible, automated and as easy as possible for any mission makers to interact with.
 
 ![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
 
@@ -8,10 +8,9 @@ A package of mission scripts for mission makers.
 # Background Information
 - This project was created originally for the mission makers of the Rooster Teeth Gaming Discord, with the intent to provide them with the easiest possible method 
 to utilise critical systems of arma 3. Now, it is in continued use by at least forty known units, from all corners of the milsimsphere.
-- The majority of QOL & critical scripts can be utilised via the init.sqf, initServer.sqf, initPlayerlocal.sqf & description.ext files, or directly via unit inits.
-- Mission Pack Functions are defined in WaldoFunctions.sqf in MissionScripts Folder.
-- For those seeking the more involved features of this pack, or greater control, each file is fully documented on its usage, its parameters and its purpose. 
-- The pack has a large amount to discover and utilise, so have at it!
+- Basic mission setup can be achieved easily through editing the supplied description.ext, and various Init files while the more interesting features can be set up by following the indepth documentation in each file.
+- All features are functionalised, and simply require a function call as directed in the files themselves to work.
+- All functions follow the follwing Syntax "Waldo_fnc_FunctionName", you may find a full list of these in WaldosFunctions.sqf.
 
 # Pack Features
 - Loadout saving and respawn system
