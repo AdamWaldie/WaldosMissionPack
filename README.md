@@ -24,6 +24,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Endex & Safestart Scripts
 - Custom Zeus Enhanced modules for in-game access to the logistics system and ENDEX scripts.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
+- [WIP] Virtual Vehicle Deployment Garage
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process
 
