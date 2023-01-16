@@ -39,6 +39,18 @@ You can always find the most recent quickstart guide at this URL: https://github
     - SQF Language Extension: https://marketplace.visualstudio.com/items?itemName=vlad333000.sqf
     - SQF Debugger Extension: https://marketplace.visualstudio.com/items?itemName=billw2011.sqf-debugger
 
+# Tutorials
+I maintain a wiki on github, which is updated alongside the files to provide mission makers with easy access to knowledge regarding the pack.
+
+The Wikis home can be found here:
+https://github.com/AdamWaldie/WaldosMissionPack/wiki
+
+Feature Tutorials can be found here:
+https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials
+
+Zeus Module Tutorials can be found here:
+https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules
+
 # Required Addons
 - CBA_A3
 - ACE 3 (Field Headquarters, Construction System, Quartermaster Logistics Spawner)
