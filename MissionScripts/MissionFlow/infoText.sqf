@@ -1,16 +1,31 @@
 /*//    INFO TEXT    //// ==========================================================================================
 
-Can be called on mission start via missionParameters.sqf with setup.
+This feature is designed to create a formatted and easily customised title text sequence to run on mission start, displaying the following information:
+1. Mission Title (Pulled from the description.ext or manually specified by the mission maker)
+2. Mission Time/Date (Automatic)
+3. Name of the map the mission is on (Customisable directly by the mission maker)
+4. Grid reference of the player at the time of the title. (Automatic)
+5. Group name, Player Rank and Player Name. (Automatic)
 
-Or via the the use of the following command, edited with string for the desired segmentation
-Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
-There are two parameters. The Name Of The Mission & The locale of the mission.
+By default, an uncustomised version of this will run via the init.sqf.
 
-This is the most basic iteration, it automatically grabs the mission title & location based on description.ext for title, and worldName for location.
+## Setup And Examples
+
+Two parameters can be manually specified by the mission maker - the Name Of The Mission & The locale of the mission.
+
+The below is the most basic form, this will function adequately in most maps.
+
 [] spawn Waldo_fnc_ENDEX;
 
-You can also customise the information text directly, by providing additional parameters. The first additional entry will be the title, while the second will be the location. An example use is in the example mission.
+You can also customise the information text directly by providing additional parameters. 
+The first additional entry will be the title, while the second will be the location. 
+You may leave one or both parameters as an empty string as seen in the Ardennes example.
+
 ["CUSTOM TITLE", "CUSTOM LOCATION"] spawn Waldo_fnc_InfoText;
+
+This may be required when you are using a map which has a weird extension, to use an example - the Ardennes map from Northen Fronts has this extension: SWU_Ardennes_1940.
+
+["","Montherme, Belguim"] call Waldo_fnc_InfoText;
 
 */
 

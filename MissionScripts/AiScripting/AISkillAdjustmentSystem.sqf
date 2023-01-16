@@ -7,6 +7,10 @@
  * "NIGHT" call Waldo_fnc_AITweak; - Nightime Mission
  *
  * 
+ *  This script alters the base AI subskills to improve responsiveness while allowing for a reasonably balanced PvE environment. When used in conjunction with Lambs.danger, this script allows for the AI to trigger more Ai behaviours than the default, which results in a more responsive and dangerous AI, while remaining balanced.
+ *  There are two modes available: DAY and NIGHT.
+ *
+ *   Both can be selected via the init.sqf to change which is active, comment out the undesired setting and uncomment the desired setting.
  */
 
 if !(isServer) exitWith {};

@@ -2,7 +2,7 @@
 This script attaches multiple objects to a vehicle object.
 
 parameters:
-_targetObject - variable name of the vehicle/object you wish to attach the turret to.
+_targetObject - variable name of the vehicle/object you wish to attach the objects to.
 
 
 Setting Up in Eden;

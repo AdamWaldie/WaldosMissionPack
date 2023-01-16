@@ -1,5 +1,5 @@
 /*
-Function with the purpose to create an ace arsenal on the object, limited to the equipment retireved from the mission.sqm (read initServer.sqf & missionFileLookup.sqf for details)
+Function with the purpose to create an ace arsenal on the object, limited to the equipment retireved from the mission.sqm
 
 parameters:
 _target - the object variable name you want this to apply to

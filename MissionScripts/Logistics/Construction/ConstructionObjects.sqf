@@ -2,9 +2,7 @@
 
 Defence Construction Script
 
-"Build" defences from an object based on layer contents
-
-This is the activation/deactivation script.
+This function allows you to fake the construction of defences/objects/scenery from a single object via Ace Interaction
 
 Setting Up in Eden;
 	- Place the object or object that you want to have the respawn deployable from, and provide it a variable name
