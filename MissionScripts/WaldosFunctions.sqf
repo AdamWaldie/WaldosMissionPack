@@ -54,6 +54,9 @@ class CfgFunctions
             class DynamicText {
                 file = "MissionScripts\MissionFlow\dynamicText.sqf";
             };
+            class RespawnText {
+                file = "MissionScripts\MissionFlow\respawnText.sqf";
+            };
         };
         class Logistics {
             class MedicalCratePopulate_Legacy {
