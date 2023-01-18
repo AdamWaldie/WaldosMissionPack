@@ -36,7 +36,7 @@ sleep 1;
 sleep 6;
 
 _text1 = str composeText ["<t align = 'center' shadow = '1' size = '0.7' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];  
-_text2 = "<t align = 'center' shadow = '1' size = '0.6' color='#808080'>%1</t><br/>";  
+_text2 = "<t align = 'center' shadow = '1' size = '0.6' color='#b0a9a9'>%1</t><br/>";  
 _text3 = "<t align = 'center' shadow = '1' size = '0.6'>%1</t><br/>";  
   
 [  
