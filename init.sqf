@@ -100,9 +100,9 @@ call Waldo_fnc_InitVehicles;
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
 
 When left with no parameters, as below, the script autogenerates the location based on the terrain name, and the mission title from the description.ext 
-You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission. 
+You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission.
 */
-[] call Waldo_fnc_InfoText;
+["",""] call Waldo_fnc_InfoText;
 
 /*
 
