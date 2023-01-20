@@ -17,6 +17,7 @@ _script - script to apply directly to the spawned vehicle, bypassing the garage.
 
 Example call:
 
+[this, Circle_Helipad, ["All"], ["ALL"], false, false, false, 10, ""] call Waldo_fnc_VVDInit; // Fully unrestricted, default call.
 
 */
 
