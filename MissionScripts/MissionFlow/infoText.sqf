@@ -1,36 +1,30 @@
 /*//    INFO TEXT    //// ==========================================================================================
 
-This feature is designed to create a formatted and easily customised title text sequence to run on mission start, displaying the following information:
-1. Mission Title (Pulled from the description.ext or manually specified by the mission maker)
-2. Mission Time/Date (Automatic)
-3. Name of the map the mission is on (Customisable directly by the mission maker)
-4. Grid reference of the player at the time of the title. (Automatic)
-5. Group name, Player Rank and Player Name. (Automatic)
+Can be called on mission start via missionParameters.sqf with setup.
 
-By default, an uncustomised version of this will run via the init.sqf.
+Or via the the use of the following command, edited with string for the desired segmentation
+Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
+There are two parameters. The Name Of The Mission & The locale of the mission.
 
-## Setup And Examples
-
-Two parameters can be manually specified by the mission maker - the Name Of The Mission & The locale of the mission.
-
-The below is the most basic form, this will function adequately in most maps.
-
+This is the most basic iteration, it automatically grabs the mission title & location based on description.ext for title, and worldName for location.
 [] spawn Waldo_fnc_ENDEX;
 
-You can also customise the information text directly by providing additional parameters. 
-The first additional entry will be the title, while the second will be the location. 
-You may leave one or both parameters as an empty string as seen in the Ardennes example.
+You can also customise the information text directly, by providing additional parameters. The first additional entry will be the title, while the second will be the location. An example use is in the example mission.
+An animation can also be specified in the third argument by inputting a String. Options are;
 
-["CUSTOM TITLE", "CUSTOM LOCATION"] spawn Waldo_fnc_InfoText;
+	"NONE" 		- No animation
+	"WALK" 		- Slow walk forward
+	"SIT" 		- Stand from sitting on floor
+	"WAKE		- Wake up and stand.
+	"WAKESLOW" 	- Much longer version of "WAKE". Character stands more cautiously.
+	"COFFIN"	- Meme input. Rise from the ground like Nosferatu.
 
-This may be required when you are using a map which has a weird extension, to use an example - the Ardennes map from Northen Fronts has this extension: SWU_Ardennes_1940.
-
-["","Montherme, Belguim"] call Waldo_fnc_InfoText;
+["CUSTOM TITLE", "CUSTOM LOCATION","ANIMATION SELECTION"] spawn Waldo_fnc_InfoText;
 
 */
 
 
-params[["_title",""],["_locale",""]];
+params[["_title",""],["_locale",""],["_anim","NONE"]];
 
 waitUntil {!isNull findDisplay 46};
 //Grab Mission Name & Terrain Name automatically
@@ -43,6 +37,12 @@ _localeName = worldName;
 if (_locale != "") then {
 	_localeName = _locale;
 };
+_animate = "NONE";
+if (_anim != "NONE") then {
+	_animate = _anim;
+};
+
+
 _timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString; 
 _time = (_timeConfig select 0) + (_timeConfig select 1) + ' hrs';
 
@@ -59,8 +59,19 @@ _textColour = switch (side player) do
 	case civilian: {"'#65007e'"};
 	default {"'#ed9d18'"};
 };
+
 waitUntil { sleep 1; (!isNull player && time > 0) };
-sleep 1;
+
+// Throw up a fake loading screen to buffer over actual loading screen.
+
+["fauxLoad", ""] call BIS_fnc_startLoadingScreen;
+uiSleep 9;
+["wakeUpID", false, 5] call BIS_fnc_blackOut;	// Fade screen out to black for intro sequence.
+uiSleep 1;
+"fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
+
+sleep 5;
+
 [
 	[
 		[_time, "<t align = 'center' shadow = '1' size = '1.0'>%1</t><br/>"],
@@ -72,7 +83,7 @@ sleep 6;
 _text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];  
 _text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";  
 _text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";  
-  
+
 [  
     [  
         [_missionTitle, _text1],  
@@ -80,3 +91,56 @@ _text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
         [_groupInfo, _text3, 5]  
     ]  
 ] spawn BIS_fnc_typeText;
+
+sleep 3;
+
+_unit = player;
+// Determine animation to use from given Params
+_usedAnimation = switch (_animate) do {
+	case "NONE": {};
+	
+	case "WALK": {
+		[_unit] spawn {
+			params ["_unit"];
+			[_unit, "Acts_welcomeOnHUB02_PlayerWalk_1"] remoteExec ["switchMove", 0];
+			sleep 8.333;
+			[_unit, "AmovPercMstpSlowWrflDnon"] remoteExec ["switchMove", 0];
+		};
+	};
+
+	case "SIT": {
+		[_unit] spawn {
+			params ["_unit"];
+			[_unit, "AmovPsitMstpSrasWrflDnon_WeaponCheck1"] remoteExec ["switchMove", 0];
+			sleep 8.666;
+			[_unit, "AmovPsitMstpSrasWrflDnon_AmovPercMstpSlowWrflDnon"] remoteExec ["switchMove", 0];
+		};
+	};
+
+	case "WAKE" : {
+		[_unit] spawn {
+			params ["_unit"];
+			[_unit, "Acts_Waking_Up_Player"] remoteExec ["switchMove", 0];
+		};
+	};
+
+	case "WAKESLOW" : {
+		[_unit] spawn {
+			params ["_unit"];
+			[_unit, "Acts_UnconsciousStandUp_part1"] remoteExec ["switchMove", 0];
+		};
+	};
+
+	case "COFFIN" : {
+		[_unit] spawn {
+			params ["_unit"];
+			[_unit, "Acts_Undead_Coffin"] remoteExec ["switchMove", 0];
+			sleep 6.666;
+			[_unit, "AmovPercMstpSlowWrflDnon"] remoteExec ["switchMove", 0];
+		};
+	};
+
+	default {};
+};
+
+["wakeUpID", true, 3] call BIS_fnc_blackIn;
