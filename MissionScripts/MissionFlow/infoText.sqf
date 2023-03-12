@@ -60,7 +60,7 @@ _textColour = switch (side player) do
 	default {"'#ed9d18'"};
 };
 
-waitUntil { sleep 1; (!isNull player && time > 0) };
+waitUntil { uiSleep 1; (!isNull player && time > 0) };
 
 // Throw up a fake loading screen to buffer over actual loading screen.
 
@@ -70,7 +70,7 @@ uiSleep 9;
 uiSleep 1;
 "fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
 
-sleep 5;
+uiSleep 5;
 
 [
 	[
@@ -78,7 +78,7 @@ sleep 5;
 		[_date, "<t align = 'center' shadow = '1' size = '0.7' font='PuristaBold'>%1</t><br/>", 10]
 	]
 ] spawn BIS_fnc_typeText;
-sleep 6;
+uiSleep 6;
 
 _text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];  
 _text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";  
@@ -92,7 +92,7 @@ _text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
     ]  
 ] spawn BIS_fnc_typeText;
 
-sleep 3;
+uiSleep 3;
 
 _unit = player;
 // Determine animation to use from given Params
