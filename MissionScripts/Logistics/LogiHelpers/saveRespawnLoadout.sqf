@@ -7,7 +7,7 @@ Author: Adam Waldie
 For: Rooster Teeth Gaming Community
 License: Distributable and editable, no attribution required.
 
-Called from MissionScripts\ACRE2Init.sqf
+Called from multiple sources
 
 How to use:
 

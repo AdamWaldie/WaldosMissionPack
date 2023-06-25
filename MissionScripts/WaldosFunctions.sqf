@@ -16,7 +16,7 @@ class CfgFunctions
 		class missionSetup 
         {
             class ACRE2Init {
-                file = "MissionScripts\MissionFlow\ACRE2Init.sqf";
+                file = "MissionScripts\MissionInit\ACRE2Init.sqf";
             };
             class AITweak {
                 file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
@@ -40,22 +40,22 @@ class CfgFunctions
         class MissionEnding 
         {
             class ENDEX {
-                file = "MissionScripts\MissionFlow\ENDEX.sqf";
+                file = "MissionScripts\MissionFlowAndUi\ENDEX.sqf";
             };
         };
         class TitleScreeen 
         {
             class InfoText {
-                file = "MissionScripts\MissionFlow\infoText.sqf";
+                file = "MissionScripts\MissionFlowAndUi\infoText.sqf";
             };
             class TimedHint {
-                file = "MissionScripts\MissionFlow\timeBasedhint.sqf";
+                file = "MissionScripts\MissionFlowAndUi\timeBasedhint.sqf";
             };
             class DynamicText {
-                file = "MissionScripts\MissionFlow\dynamicText.sqf";
+                file = "MissionScripts\MissionFlowAndUi\dynamicText.sqf";
             };
             class RespawnText {
-                file = "MissionScripts\MissionFlow\respawnText.sqf";
+                file = "MissionScripts\MissionFlowAndUi\respawnText.sqf";
             };
         };
         class Logistics {
@@ -153,19 +153,19 @@ class CfgFunctions
         };
         class VehicleSetup {
             class AddVehicleFunctions {
-                file = "MissionScripts\VehicleActionsSetup\AddVehicleFunctions.sqf";
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\AddVehicleFunctions.sqf";
             };
             class AddExitActions {
-                file = "MissionScripts\VehicleActionsSetup\AddExitAction.sqf";
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\AddExitAction.sqf";
             };
             class DoExitOnSide {
-                file = "MissionScripts\VehicleActionsSetup\DoExitOnSide.sqf";
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\DoExitOnSide.sqf";
             };
             class SetCargoAttributes {
-                file = "MissionScripts\VehicleActionsSetup\SetCargoAttributes.sqf";
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\SetCargoAttributes.sqf";
             };
             class InitVehicles {
-                file = "MissionScripts\VehicleActionsSetup\VehicleInit.sqf";
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\VehicleInit.sqf";
             };           
         };
         class VirtualVehicleDepot {
