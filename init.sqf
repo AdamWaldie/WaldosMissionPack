@@ -79,7 +79,7 @@ ACRE CEOI in the map screen will note all channel assignments for referance.
 
 private _RadioSetups = [
     ["Viking-1-1",[1,5]],
-	["Viking 5",[2,2]],
+	["Viking 5",[2,7]],
 	["Viking 3.2",[3,2]],
 	["Banshee",[4,1]]
 ];

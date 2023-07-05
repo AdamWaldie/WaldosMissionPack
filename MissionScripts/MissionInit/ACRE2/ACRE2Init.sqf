@@ -87,7 +87,6 @@ _rchannel343 = 256; //default channel as 16*16 as noticable IOF
 } foreach _SRChannelAssignments;
 
 {
-    systemchat format ["_rchannel343 _x: %1",_x];
     if ((toUpper (_x select 0)) == toUpper(_group)) then {
         _rchannel343 = _x select 1;
     };
