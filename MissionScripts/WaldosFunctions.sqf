@@ -13,22 +13,39 @@ class CfgFunctions
 {
 	class Waldo
 	{
-		class missionSetup 
+		class InitilisationAndSetup 
         {
-            class ACRE2Init {
-                file = "MissionScripts\MissionInit\ACRE2Init.sqf";
+            class GetPlayerGroup {
+                file = "MissionScripts\MissionInit\InitHelpers\GetPlayerGroup.sqf";
             };
-            class AITweak {
-                file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
+            class GetPlayerRole {
+                file = "MissionScripts\MissionInit\InitHelpers\GetPlayerRole.sqf";
             };
-            class SideBaseLoadoutSetup {
-                file = "MissionScripts\Logistics\LogiHelpers\sideBasedLoadoutSetup.sqf";
+            class SetTeamColour {
+                file = "MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf";
             };
         };
-        class convoy 
+        class ACRE2Setup {
+            class ACRE2Init {
+                file = "MissionScripts\MissionInit\ACRE2\ACRE2Init.sqf";
+            };
+            class ACRE2Init_Legacy {
+                file = "MissionScripts\MissionInit\ACRE2\ACRE2Init_Legacy.sqf";
+            };
+            class SquadLevelRadios {
+                file = "MissionScripts\MissionInit\ACRE2\ACRE2SquadLevelRadios.sqf";
+            };
+            class GetSRChannelName {
+                file = "MissionScripts\MissionInit\ACRE2\GetSRChannelName.sqf";
+            };
+        };
+        class AI 
         {
             class SimpleAiConvoy {
                 file =  "MissionScripts\AiScripting\simpleAiConvoy.sqf";
+            };
+            class AITweak {
+                file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
             };
         };
         class teleport
@@ -94,6 +111,9 @@ class CfgFunctions
             };
             class MassAttachRelative {
                 file = "MissionScripts\Logistics\LogiHelpers\massAttachItems.sqf";
+            };
+            class SideBaseLoadoutSetup {
+                file = "MissionScripts\Logistics\LogiHelpers\sideBasedLoadoutSetup.sqf";
             };
         };
         class MHQ {

@@ -11,79 +11,82 @@ Enable/disable them as it suits you.
 //Lighting Setup Engine - Optional
 //"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
 
-/* 
-
-Player Makers Script (Best utilised When ACE Markers Are Not An Option)
-
-Parameters >>
-	"players" - Will show players.
-	"ais" - Will show AIs.
-	"allsides" - Will show all sides not only the units on player's side.
-	"all" - Enable all of the above.
-	"stop" - Stop the script.
-
-Example code - 0 = ["players"] execVM "player_markers.sqf";
-
-*/
-//0 = ["players"] execVM "MissionScripts\ThirdPartyScripts\player_markers.sqf";
-
-
-/*
-Werthless Headless Client call
-
-Requires:
-Virtual Headless Client Entity
-
-Reccomended to leave call as is. Information regarding HC can be found in the associated third party script.
-*/
-//[true,30,false,true,30,10,true,[]] execVM "MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf";
+//Third Party Scripts (Look at mentioned file to enable 
+//[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 
 
 //Zeus Enhanced Modules setup (comment out to disable)
 [] call Waldo_fnc_ZenInitModules;
 
+/*===========================================================================================================================*/
+
 //Set ace namespace variables for maximum drag/carryweights (Tune these so that you can carry/drag your logistics boxes ingame)
 ACE_maxWeightDrag = 10000;
 ACE_maxWeightCarry = 6000;
 
-/*
-//Initilise ACRE 2 Radios
-//Setup Array and Callsign list [EDIT THIS SECTION FOR YOUR MISSION!] - IF YOU DO NOT HAVE ACRE 2 ENABLED, The function will exit automatically.
-private _UnitRadioSetups = [
-    //In format ["Callsign",343RadioChannel,152RadioChannel,148RadioChannel,117FRadioChannel]
-    // The last line should not have a , at the end.
-    // Callsigns should be in "", and radio channels should be without "".
-    ["Odin",4,2,3,4],
-    ["Thor",1,2,3,4],
-    ["Loki",2,2,3,4],
-    ["Mimir",3,2,3,4],
-    ["Valkyrie",5,2,3,4],
-    ["High Command",6,2,3,4]
-];
-[_UnitRadioSetups] call Waldo_fnc_ACRE2Init;
-*/
 
+/*===========================================================================================================================*/
 
 /*
-If you are utilising the Virtual Logistics Quartermaster (initQuartermaster.sqf & LogiBoxes.sqf) You can set custom boxes for both Medical & Supply boxes.
-By default, leaving these unchanged, will provide players with the Default ACE Medical/Vanilla Medical box & Vanilla Supply box. you do not need to change these
-
-You will need to find the classname of the box you are wanting to use, and place it with the quotation marks in where dennoted below;
-
-missionNamespace setVariable ["SupplyBoxClass", "PUTCLASSNAMEHERE", true];
-
-YOU CAN SPECIFY CUSTOM BOXES FOR MEDICAL & AMMO BOXES IN initServer.sqf
-
+AI Tweak setup
+These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
+Daytime Mission parameter - uncomment this for daytime AI values.
 */
-
-
-//AI Tweak setup
-// These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
-// Daytime Mission parameter - uncomment this for daytime AI values.
 "DAY" call Waldo_fnc_AITweak;
 // Nightime Mission - uncomment this for nightime AI values.
 //"NIGHT" call Waldo_fnc_AITweak;
 
+
+/*===========================================================================================================================*/
+
+
+/*
+ACRE 2 RADIO SETUP PARAMETERS
+
+This section deals with setting up preset radio channels and marking out the pre-set channels to set player squads to.
+
+Please referance the wiki to set this up properly.
+
+LongRangeRadioChannels_BLUFOR is the list of channel names to be displayed on the radio interface for the WEST or BLUFOR side. Opfor, IND and CIV are self explanatory.
+Edit these to your hearts content, each of them can be up to 99 entries.
+
+Do not remove sides if they are not in use.
+
+*/
+//Starting from the far left of the array the channel will start from 1 - I.e. in the below example PLATOON 1 is Channel 1, PLATOON 3 IS Channel 3
+_LongRangeRadioChannels_BLUFOR = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
+missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_BLUFOR", _LongRangeRadioChannels_BLUFOR];
+_LongRangeRadioChannels_OPFOR = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
+missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_OPFOR", _LongRangeRadioChannels_OPFOR];
+_LongRangeRadioChannels_IND = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
+missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_IND", _LongRangeRadioChannels_IND];
+_LongRangeRadioChannels_CIV = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
+missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_CIV", _LongRangeRadioChannels_CIV];
+
+/*
+Now you can set which squads are assigned to which of the channels you have chosen. Side does not matter here.
+
+The format is as follows ["Squad Name",["ChannelSelection1","ChannelSelection2","ChannelSelection3"] where the Squad name is idential to the group name you picked earlier. 
+ChannelSelection1 though 3 should match one channel in the LongRangeRadioChannel for the side of that squad. You can have up to three choices, 
+however this is limited by the number of AN/PRC-152,AN/PRC-148 and AN/PRC-117F radios on that squad. 
+You should enter channels based on the range required. E.g. Platoon Net followed by Air2Ground or Company Net.
+
+AN/PRC-343 Radios are done automatically based on squad callsign and Numerical designations (if any).
+
+ACRE CEOI in the map screen will note all channel assignments for referance.
+
+*/
+
+private _RadioSetups = [
+    ["Viking-1-1",[1,5]],
+	["Viking 5",[2,2]],
+	["Viking 3.2",[3,2]],
+	["Banshee",[4,1]]
+];
+[_RadioSetups] call Waldo_fnc_ACRE2Init;
+
+
+/*===========================================================================================================================*/
 
 /*
 Vehicle function eventhandler
@@ -95,6 +98,8 @@ This adds vehicle functions to affected vehicles:
 
 */
 call Waldo_fnc_InitVehicles;
+
+/*===========================================================================================================================*/
 
 /* 
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
@@ -109,13 +114,6 @@ You can optionally define replacements for the title & location, as is demonstra
 waldos Init Completion flag
 
 ======DO NOT TOUCH!=====
-
-Allows scheduling of the following script packages:
-- Starter crates
-- Ace Limited Arsenals on objects placed in eden editor
-
-Zeus modules & script spawned supply boxes are unaffected
-
 */
 sleep 10; // Buffer cycles for other inits to be completed - should not be removed
 //Wait until player is in control of themselves, and then, if INIT flag isnt already set, set it.
