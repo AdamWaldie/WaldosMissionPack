@@ -63,6 +63,10 @@ switch (_getTeamName) do {
         [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
         (player) setVariable ["Waldo_PlayerInit_Team", 'YELLOW'];
     };
+    case "SQUAD": {
+        [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
+        (player) setVariable ["Waldo_PlayerInit_Team", 'YELLOW'];
+    };
     default {
         _getTeamName = 'WHITE';
         (player) setVariable ["Waldo_PlayerInit_Team", 'WHITE'];

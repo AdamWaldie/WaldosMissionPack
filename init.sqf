@@ -43,7 +43,7 @@ Daytime Mission parameter - uncomment this for daytime AI values.
 /*
 ACRE 2 RADIO SETUP PARAMETERS
 
-This section deals with setting up preset radio channels and marking out the pre-set channels to set player squads to.
+This section deals with setting up preset radio channels. Channel Naming is currently unavailable as it causes ACRE radios to be inconsistent.
 
 You can set which squads are assigned to which of the channels you have chosen. Side does not matter here.
 
@@ -79,6 +79,16 @@ This adds vehicle functions to affected vehicles:
 
 */
 call Waldo_fnc_InitVehicles;
+
+/*
+
+Sets team colour based on contents of role description.
+Colour selections are RED,BLUE,GREEN,YELLOW.
+Name Selections are ALPHA,BRAVO,CHARLIE,DELTA - which maps to colours as in colour selections.
+Role selections are SQUAD Leader (Yellow), MEDIC (Green).
+
+*/
+call Waldo_fnc_SetTeamColour;
 
 /*===========================================================================================================================*/
 
