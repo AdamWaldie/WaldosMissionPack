@@ -12,7 +12,7 @@ Example:
 [_callsigns] call Waldo_fnc_SquadLevelRadios;
 */
 
-//if (!isServer || !isDedicated) exitwith {};
+if (!isServer) exitwith {}; //remember to uncomment this when you push to live you moron
 
 params["_callsigns"];
 

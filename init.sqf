@@ -45,26 +45,7 @@ ACRE 2 RADIO SETUP PARAMETERS
 
 This section deals with setting up preset radio channels and marking out the pre-set channels to set player squads to.
 
-Please referance the wiki to set this up properly.
-
-LongRangeRadioChannels_BLUFOR is the list of channel names to be displayed on the radio interface for the WEST or BLUFOR side. Opfor, IND and CIV are self explanatory.
-Edit these to your hearts content, each of them can be up to 99 entries.
-
-Do not remove sides if they are not in use.
-
-*/
-//Starting from the far left of the array the channel will start from 1 - I.e. in the below example PLATOON 1 is Channel 1, PLATOON 3 IS Channel 3
-_LongRangeRadioChannels_BLUFOR = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_BLUFOR", _LongRangeRadioChannels_BLUFOR];
-_LongRangeRadioChannels_OPFOR = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_OPFOR", _LongRangeRadioChannels_OPFOR];
-_LongRangeRadioChannels_IND = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_IND", _LongRangeRadioChannels_IND];
-_LongRangeRadioChannels_CIV = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_CIV", _LongRangeRadioChannels_CIV];
-
-/*
-Now you can set which squads are assigned to which of the channels you have chosen. Side does not matter here.
+You can set which squads are assigned to which of the channels you have chosen. Side does not matter here.
 
 The format is as follows ["Squad Name",["ChannelSelection1","ChannelSelection2","ChannelSelection3"] where the Squad name is idential to the group name you picked earlier. 
 ChannelSelection1 though 3 should match one channel in the LongRangeRadioChannel for the side of that squad. You can have up to three choices, 
