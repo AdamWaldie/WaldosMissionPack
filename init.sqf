@@ -87,6 +87,10 @@ Colour selections are RED,BLUE,GREEN,YELLOW.
 Name Selections are ALPHA,BRAVO,CHARLIE,DELTA - which maps to colours as in colour selections.
 Role selections are SQUAD Leader (Yellow), MEDIC (Green).
 
+Currently based on the first word in the role description.
+
+So Squad Leader will trigger assignment as Yellow but Viking Squad Leader will not- will likely refine this later.
+
 */
 call Waldo_fnc_SetTeamColour;
 
