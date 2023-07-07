@@ -72,10 +72,3 @@ switch (_getTeamName) do {
         (player) setVariable ["Waldo_PlayerInit_Team", 'WHITE'];
     };
 };
-
-private _return = _getTeamName;
-
-//Debug Logging
-systemChat [format ["%1 was assigned as team %2.", player, _getTeamName], "SetTeamColor"];
-
-_return;
