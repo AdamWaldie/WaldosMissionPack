@@ -81,7 +81,6 @@ _spokenText = "";
 if (_interpreters find player != -1) then {
 	_intLanIds = [];
 	_interpreterLangs = _interpreterLangs arrayIntersect _interpreterLangs;
-	systemchat format["_interpreterLangs: %1",_interpreterLangs];
 	{
 		_Intlid = [_x,0,1] call BIS_fnc_trimString;
 		_intLanIds pushbackunique _Intlid;
