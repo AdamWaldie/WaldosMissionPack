@@ -172,5 +172,5 @@ _SOC = format ["<br/><font size='16'>Succession Of Command:</font><br/>    1. Pl
 _CEOIText = _CEOIText + _SOC;
 
 //Create Records
-player createDiarySubject ["CEOI","CEOI"];
-player createDiaryRecord ["CEOI", ["CEOI", _CEOIText]];
+player createDiarySubject ["ACRE2","ACRE2"];
+player createDiaryRecord ["ACRE2", ["CEOI", _CEOIText]];

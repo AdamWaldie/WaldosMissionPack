@@ -37,7 +37,7 @@ _spokenText = "";
 {
     private _langs = _x select [1, count _x - 1];
     {
-		_curLangId = [_x,0,2] call BIS_fnc_trimString;
+		_curLangId = [_x,0,1] call BIS_fnc_trimString;
         [_curLangId, _x] call acre_api_fnc_babelAddLanguageType;
     } forEach _langs;
 
@@ -49,29 +49,44 @@ _spokenText = "";
 				_spokenText =  _spokenText + format ["<font color='#47ff47'>%1</font><br/>",_x];
 			};
 		} foreach _langs;
-		_interpreterLangs pushBackUnique _langs;
+		_interpreterLangs append _langs;
 	} else {
 		if (side player == (_x select 0)) then {
-			_langs call acre_api_fnc_babelSetSpokenLanguages;
+			_lanIds = [];
+			{
+				_lid = [_x,0,1] call BIS_fnc_trimString;
+				_lanIds append _lid;
+			} foreach (_x select [1, count _x - 1]);
+			_lanIds = _lanIds arrayIntersect _lanIds;
+			_lanIds call acre_api_fnc_babelSetSpokenLanguages;
 			{
 				if (_interpreterLangs find _x == -1) then {
 					_spokenText =  _spokenText + format ["<font color='#47ff47'>%1</font><br/>",_x];
+				} else {
+					_langs append _x;
 				};
 			} foreach _langs;
-			_interpreterLangs pushBackUnique _langs;
+			_interpreterLangs append _langs;
 		} else {
 			{
 				if (_interpreterLangs find _x == -1) then {
 					_spokenText =  _spokenText + format ["%1<br/>",_x];
 				};
 			} foreach _langs;
-			_interpreterLangs pushBackUnique _langs;
+			_interpreterLangs append _langs;
 		};
 	};
 } forEach _languages;
 
 if (_interpreters find player != -1) then {
-	_interpreterLangs call acre_api_fnc_babelSetSpokenLanguages;
+	_intLanIds = [];
+	_interpreterLangs = _interpreterLangs arrayIntersect _interpreterLangs;
+	systemchat format["_interpreterLangs: %1",_interpreterLangs];
+	{
+		_Intlid = [_x,0,1] call BIS_fnc_trimString;
+		_intLanIds pushbackunique _Intlid;
+	} foreach _interpreterLangs;
+	_intLanIds call acre_api_fnc_babelSetSpokenLanguages;
 	_spokenText = _spokenText + format["%1<br/>","I am an Interpreter, That means can speak all languages.<br/> Press the ACRE cycle language key to cycle through available languages.<br/>"];
 };
 
@@ -79,5 +94,5 @@ _BabelText = _BabelText + _spokenText;
 
 
 //Create Records
-player createDiarySubject ["CEOI","CEOI"];
-player createDiaryRecord ["CEOI", ["BABEL", _BabelText]];
+player createDiarySubject ["ACRE2","ACRE2"];
+player createDiaryRecord ["ACRE2", ["BABEL", _BabelText]];
