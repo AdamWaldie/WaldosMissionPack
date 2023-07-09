@@ -167,7 +167,7 @@ _SACs = format ["<br/><font size='14'>Challenges And Contingencies:</font><br/><
 
 _CEOIText = _CEOIText + _SACs;
 
-_SOC = format ["<br/><font size='14'>Succession Of Command:</font><br/><br/>    1. Platoon Leader<br/>    2. Platoon Sergeant<br/>    3. 1st Squad Leader<br/>    4. 2nd Squad Leader<br/>    5. Highest Surviving Leadership"];
+_SOC = format ["<br/><font size='14'>Succession Of Command:</font><br/>    1. Platoon Leader<br/>    2. Platoon Sergeant<br/>    3. 1st Squad Leader<br/>    4. 2nd Squad Leader<br/>    5. Highest Surviving Leadership"];
 
 _CEOIText = _CEOIText + _SOC;
 
