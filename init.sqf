@@ -132,6 +132,13 @@ call Waldo_fnc_InitVehicles;
 
 /*
 
+Briefing documents
+
+*/
+call Waldo_fnc_AddDocs;
+
+/*
+
 Sets team colour based on contents of role description.
 Colour selections are RED,BLUE,GREEN,YELLOW.
 Name Selections are ALPHA,BRAVO,CHARLIE,DELTA - which maps to colours as in colour selections.

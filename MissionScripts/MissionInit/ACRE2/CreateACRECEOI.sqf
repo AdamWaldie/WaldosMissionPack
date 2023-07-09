@@ -163,11 +163,11 @@ switch (side player) do {
 //Add LR Section
 _CEOIText = _CEOIText + _LRChannelText;
 
-_SACs = format ["<br/><font size='14'>Challenges And Contingencies:</font><br/><br/>Challenges and Responses:<br/>    CHALLENGE - FLASH<br/>    RESPONSE - THUNDER<br/><br/>Night Recognition Signal:<br/>    1.Any Three Crossed or grouped lasers/IRs.<br/>    2. Single Green Flare Above Or On Player Unit.<br/><br/>Lines of Communicaion:<br/>    1. Standard Channels<br/>    2. Continency Channels (+10 to all)<br/>    3. Runners and Prearranged signals<br/>"];
+_SACs = format ["<br/><font size='16'>Challenges And Contingencies:</font><br/><br/>Challenges and Responses:<br/>    CHALLENGE - FLASH<br/>    RESPONSE - THUNDER<br/><br/>Night Recognition Signal:<br/>    1.Any Three Crossed or grouped lasers/IRs.<br/>    2. Single Green Flare Above Or On Player Unit.<br/><br/>Lines of Communicaion:<br/>    1. Standard Channels<br/>    2. Continency Channels (+10 to all)<br/>    3. Runners and Prearranged signals<br/>"];
 
 _CEOIText = _CEOIText + _SACs;
 
-_SOC = format ["<br/><font size='14'>Succession Of Command:</font><br/>    1. Platoon Leader<br/>    2. Platoon Sergeant<br/>    3. 1st Squad Leader<br/>    4. 2nd Squad Leader<br/>    5. Highest Surviving Leadership"];
+_SOC = format ["<br/><font size='16'>Succession Of Command:</font><br/>    1. Platoon Leader<br/>    2. Platoon Sergeant<br/>    3. 1st Squad Leader<br/>    4. 2nd Squad Leader<br/>    5. Highest Surviving Leadership"];
 
 _CEOIText = _CEOIText + _SOC;
 

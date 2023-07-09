@@ -25,6 +25,8 @@ Example:
 
 params ["_languages",["_interpreters",[ ]]];
 
+if !(isClass(configFile >> "CfgPatches" >> "acre_main")) exitWith {systemChat "ACRE2 Mod Not Enabled";};
+
 waitUntil {[] call acre_api_fnc_isInitialized};
 
 private _BabelText = "<font size='16'>Languages Spoken In AO:</font><br/>I can speak any languages that are highlighted in <font color='#47ff47'>green</font><br/><br/>";

@@ -25,6 +25,63 @@ class CfgFunctions
                 file = "MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf";
             };
         };
+        class BriefDocs 
+        {
+            class AddDocs {
+                file = "MissionScripts\MissionInit\BriefingDocuments\AddDocs.sqf";
+            };
+            class SPOTREP {
+                file = "MissionScripts\MissionInit\BriefingDocuments\SPOTREPDoc.sqf";
+            };
+            class SITREP {
+                file = "MissionScripts\MissionInit\BriefingDocuments\SITREPDoc.sqf";
+            };
+            class ACEREP {
+                file = "MissionScripts\MissionInit\BriefingDocuments\LACEACEDoc.sqf";
+            };
+            class CALLFORFIRE {
+                file = "MissionScripts\MissionInit\BriefingDocuments\CALLFORFIREDoc.sqf";
+            };
+            class ROTARYPICKUPREQUEST {
+                file = "MissionScripts\MissionInit\BriefingDocuments\ROTARYPICKUPREQdoc.sqf";
+            };
+            class LZSPECS {
+                file = "MissionScripts\MissionInit\BriefingDocuments\LZSPECSDoc.sqf";
+            };
+            class LZINSERT {
+                file = "MissionScripts\MissionInit\BriefingDocuments\LZINSERTDoc.sqf";
+            };
+            class LZEXTRACT {
+                file = "MissionScripts\MissionInit\BriefingDocuments\LZEXTRACTDoc.sqf";
+            };
+            class JUMPMASTER {
+                file = "MissionScripts\MissionInit\BriefingDocuments\JUMPMASTERDoc.sqf";
+            };
+            class GENINFO {
+                file = "MissionScripts\MissionInit\BriefingDocuments\GeneralInfo.sqf";
+            };
+            class FIVELINEGUNSHIP {
+                file = "MissionScripts\MissionInit\BriefingDocuments\5LINEGUNSHIPDoc.sqf";
+            };
+            class LZBRIEF {
+                file = "MissionScripts\MissionInit\BriefingDocuments\LZBRIEFDOC.sqf";
+            };
+            class CASCHECKIN {
+                file = "MissionScripts\MissionInit\BriefingDocuments\CASCHECKINDOC.sqf";
+            };
+            class NINELINE {
+                file = "MissionScripts\MissionInit\BriefingDocuments\NINELINEDoc.sqf";
+            };
+            class FIRECOMMANDS {
+                file = "MissionScripts\MissionInit\BriefingDocuments\FIRECOMMANDSDoc.sqf";
+            };
+            class FIRETEAMPREPDOC {
+                file = "MissionScripts\MissionInit\BriefingDocuments\FireteamPrepDoc.sqf";
+            };
+            class SQUADPREDOC {
+                file = "MissionScripts\MissionInit\BriefingDocuments\SquadPrepDoc.sqf";
+            };
+        };
         class ACRE2Setup {
             class ACRE2Init {
                 file = "MissionScripts\MissionInit\ACRE2\ACRE2Init.sqf";
