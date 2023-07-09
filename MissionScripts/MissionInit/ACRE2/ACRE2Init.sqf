@@ -75,6 +75,7 @@ private _SquadCallsigns = [];
 
 [_SquadCallsigns] call Waldo_fnc_SquadLevelRadios; // Squad Level Radio Channels located
 
+
 systemchat "ACRE2 PRE-INIT COMPLETE";
 
 waitUntil {[] call acre_api_fnc_isInitialized && missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_flag",false]};
@@ -151,6 +152,9 @@ _LRChannelAssignments = [99,99,99];
     };
 } forEach _RadioAssignments;
 
+// For CEOI
+_LRPlayerSquadChannelAssignments = +_LRChannelAssignments; // requires concat copy to prevent overwriting of array later
+
 if ((_LRChannelAssignments select 1 == 99) && (_LRChannelAssignments select 1 == 99) && (_LRChannelAssignments select 1 == 99)) then {systemchat format ["Group: %1 either has missing channels or parsing has failed, defaulted to C: 99 ",_group];}; // notification of missing/incorrect variables
 
 
@@ -171,6 +175,7 @@ if ((_LRChannelAssignments select 1 == 99) && (_LRChannelAssignments select 1 ==
 
 systemchat "ACRE2 RADIO PRESET COMPLETE";
 
+[_LRPlayerSquadChannelAssignments,_SquadCallsigns] call Waldo_fnc_CreateACRECEOI;
 
 /*
 ACRE 2 RADIO SETUP PARAMETERS

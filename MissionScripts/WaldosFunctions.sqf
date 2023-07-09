@@ -38,6 +38,12 @@ class CfgFunctions
             class GetSRChannelName {
                 file = "MissionScripts\MissionInit\ACRE2\GetSRChannelName.sqf";
             };
+            class CreateACRECEOI {
+                file = "MissionScripts\MissionInit\ACRE2\CreateACRECEOI.sqf";
+            };
+            class BabelActivation {
+                file = "MissionScripts\MissionInit\ACRE2\BabelActivation.sqf";
+            };
         };
         class AI 
         {
