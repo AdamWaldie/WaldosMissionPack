@@ -27,7 +27,7 @@ params ["_languages",["_interpreters",[ ]]];
 
 waitUntil {[] call acre_api_fnc_isInitialized};
 
-private _BabelText = "<font size='16'>Languages Spoken In Area:</font><br/>I can speak any languages that are highlighted in <font color='#47ff47'>green</font><br/><br/>";
+private _BabelText = "<font size='16'>Languages Spoken In AO:</font><br/>I can speak any languages that are highlighted in <font color='#47ff47'>green</font><br/><br/>";
 
 _interpreterLangs = [];
 _spokenText = "";
