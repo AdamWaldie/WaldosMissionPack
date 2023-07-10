@@ -89,6 +89,7 @@ Example:
 ] call Waldo_fnc_BabelActivation;
 
 */
+/*
 [
 	[
 		[west, "English", "French"],
@@ -96,7 +97,7 @@ Example:
 		[civilian, "French"]
 	]
 ] call Waldo_fnc_BabelActivation;
-
+*/
 /*
 ACRE 2 CEOI
 
