@@ -38,7 +38,7 @@ _spokenText = "";
     private _langs = _x select [1, count _x - 1];
     {
 		_curLangId = [_x,0,1] call BIS_fnc_trimString;
-        [_curLangId, _x] call acre_api_fnc_babelAddLanguageType;
+        _tof = [_curLangId, _x] call acre_api_fnc_babelAddLanguageType;
     } forEach _langs;
 
     // Set player's spoken languages if they're on this side
@@ -55,9 +55,8 @@ _spokenText = "";
 			_lanIds = [];
 			{
 				_lid = [_x,0,1] call BIS_fnc_trimString;
-				_lanIds append _lid;
+				_lanIds append [_lid];
 			} foreach (_x select [1, count _x - 1]);
-			_lanIds = _lanIds arrayIntersect _lanIds;
 			_lanIds call acre_api_fnc_babelSetSpokenLanguages;
 			{
 				if (_interpreterLangs find _x == -1) then {
@@ -81,6 +80,7 @@ _spokenText = "";
 if (_interpreters find player != -1) then {
 	_intLanIds = [];
 	_interpreterLangs = _interpreterLangs arrayIntersect _interpreterLangs;
+	systemchat format["_interpreterLangs: %1",_interpreterLangs];
 	{
 		_Intlid = [_x,0,1] call BIS_fnc_trimString;
 		_intLanIds pushbackunique _Intlid;
