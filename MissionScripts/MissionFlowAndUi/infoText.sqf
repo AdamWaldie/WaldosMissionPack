@@ -9,6 +9,11 @@ There are two parameters. The Name Of The Mission & The locale of the mission.
 This is the most basic iteration, it automatically grabs the mission title & location based on description.ext for title, and worldName for location.
 [] spawn Waldo_fnc_ENDEX;
 
+There are date formats that can be used, short format and long format. This is a boolean value and defaults to false (short date) if left blank.
+Short Date Format is "01/11/2010"
+Long Date Format is "1st November 2010"
+The date can be overwritten with a direct string input on line 91 - useful for fictional dates in Star Wars and Warhammer 40k.
+
 You can also customise the information text directly, by providing additional parameters. The first additional entry will be the title, while the second will be the location. An example use is in the example mission.
 An animation can also be specified in the third argument by inputting a String. Options are;
 
@@ -19,12 +24,11 @@ An animation can also be specified in the third argument by inputting a String. 
 	"WAKESLOW" 	- Much longer version of "WAKE". Character stands more cautiously.
 	"COFFIN"	- Meme input. Rise from the ground like Nosferatu.
 
-["CUSTOM TITLE", "CUSTOM LOCATION","ANIMATION SELECTION"] spawn Waldo_fnc_InfoText;
+["CUSTOM TITLE", "CUSTOM LOCATION",LONG OR SHORT DATE,"ANIMATION SELECTION"] spawn Waldo_fnc_InfoText;
 
 */
 
-
-params[["_title",""],["_locale",""],["_anim","NONE"]];
+params[["_title",""],["_locale",""],["_longDate",false],["_anim","NONE"]];
 
 waitUntil {!isNull findDisplay 46};
 //Grab Mission Name & Terrain Name automatically
@@ -42,15 +46,80 @@ if (_anim != "NONE") then {
 	_animate = _anim;
 };
 
+//No runnin' off..
+disableUserInput true;
 
+// ----- DATE SETTING -----
+_date = if (_longDate) then {
+
+
+	_dateOW = [date select 0,date select 1,date select 2,0,0];
+	_yearBefore = ((_dateOW select 0)-1) max 0;
+	_qttLeapYears = floor (_yearBefore/4);
+	_qttNormalYears = _yearBefore-_qttLeapYears;
+	_daysOW = _qttNormalYears+_qttLeapYears*(366/365);
+	_daysOW = _daysOW+dateToNumber _dateOW;
+	_dayOfWeekNo = (round (_daysOW/(1/365))) mod 7;
+
+	_dayOfWeek = switch (_dayOfWeekNo) do{
+		case 0: {"Sunday"};
+		case 1: {"Monday"};
+		case 2: {"Tuesday"};
+		case 3: {"Wednesday"};
+		case 4: {"Thursday"};
+		case 5: {"Friday"};
+		case 6: {"Saturday"};
+		default {""};
+	};
+
+	_dayExt = switch (date select 2) do {
+		case 1: {"st"};
+		case 2: {"nd"};
+		case 3: {"rd"};
+		case 21: {"st"};
+		case 22: {"nd"};
+		case 23: {"rd"};
+		case 31: {"st"};
+		default {"th"};
+	};
+
+	_day = str (date select 2) + _dayExt;
+
+	_month = switch (date select 1) do {
+		case 1: {"January"};
+		case 2: {"February"};
+		case 3: {"March"};
+		case 4: {"April"};
+		case 5: {"May"};
+		case 6: {"June"};
+		case 7: {"July"};
+		case 8: {"August"};
+		case 9: {"September"};
+		case 10: {"October"};
+		case 11: {"November"};
+		case 12: {"December"};
+		default {date select 2};
+	};
+
+	_dayOfWeek + ' ' + _day + ' ' + _month + ' ' + str (date select 0);
+
+} else {
+	str (date select 2) + '/' + str (date select 1) + '/' + str (date select 0);
+};
+
+// Use the below parameter to overwrite the date - useful for fictional dates in Star Wars or Warhammer 40k. Put your date inbetween the 2 quotation marks.
+//_date = "";
+
+// ----- TIME SETTING -----
 _timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString; 
 _time = (_timeConfig select 0) + (_timeConfig select 1) + ' hrs';
 
-_date =  str (date select 2) + '/' + str (date select 1) + '/' + str (date select 0);
+// ----- LOCATION SETTING -----
 _missionTime = str (time/60);
 _localePos = 'Grid ' + mapGridPosition player + ', ' + _localeName; 
 _groupInfo = rank player + ' ' + name player + ', ' + groupID (group player);
 
+// ---- TEXT FORMATTING -----
 _textColour = switch (side player) do
 {
 	case west: {"'#0055aa'"};
@@ -62,6 +131,7 @@ _textColour = switch (side player) do
 
 waitUntil { uiSleep 1; (!isNull player && time > 0) };
 
+// ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
 // Throw up a fake loading screen to buffer over actual loading screen.
 
 ["fauxLoad", ""] call BIS_fnc_startLoadingScreen;
@@ -94,6 +164,7 @@ _text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
 
 uiSleep 3;
 
+// ----- ANIMATION SETTING -----
 _unit = player;
 // Determine animation to use from given Params
 _usedAnimation = switch (_animate) do {
@@ -144,3 +215,4 @@ _usedAnimation = switch (_animate) do {
 };
 
 ["wakeUpID", true, 3] call BIS_fnc_blackIn;
+disableUserInput false;
