@@ -66,3 +66,4 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 - Waldo - Lead Developer
 - RazzMaTazz - Original Cover Image
 - Val - Top Contributer
+- Rowdy - Head Of Idiotproofing
