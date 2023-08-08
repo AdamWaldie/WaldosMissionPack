@@ -66,4 +66,4 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 - Waldo - Lead Developer
 - RazzMaTazz - Original Cover Image
 - Val - Contributor
-- Rowdy - Head Of Idiotproofing
+- Rowdy - CIO (Chief Idiotproofing Officer)
