@@ -67,4 +67,3 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 - RazzMaTazz - Original Cover Image
 - Val - Contributor
 - Rowdy - Head Of Idiotproofing
-- Obie - The Annoying Intern (His period ended last month, why is he still here? - Val)
