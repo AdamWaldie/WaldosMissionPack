@@ -179,6 +179,11 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\LogiHelpers\sideBasedLoadoutSetup.sqf";
             };
         };
+        class Fortify {
+            class AutoFortifySetup {
+                file = "MissionScripts\Logistics\Fortify\AutoFortify.sqf";
+            };
+        };
         class MHQ {
             class MHQSetup {
                 file = "MissionScripts\Logistics\MHQ\MHQSetup.sqf";
@@ -203,6 +208,9 @@ class CfgFunctions
             };
             class ZenSupplySpawner {
                 file = "MissionScripts\ZenModules\Zen_supplyCrateModule.sqf";
+            };
+            class FortifyBudgetModule {
+                file = "MissionScripts\ZenModules\Zen_fortifyBudgetModule.sqf";
             };
         };
         class Paradrop {

@@ -44,3 +44,12 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     },
     "\z\ACE\addons\medical_gui\ui\cross.paa"
 ] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Fortify Budget Manager",
+
+    {
+        params ["_modulePos", "_objectPos"];
+        [] call Waldo_fnc_FortifyBudgetModule;
+    },
+    "\z\ACE\addons\fortify\ui\hammer_ca.paa"
+] call zen_custom_modules_fnc_register;
