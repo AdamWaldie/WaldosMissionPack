@@ -5,7 +5,7 @@ This isnt perfect, but the log scalars help keep the extreemes (mostly) in step 
 How to use:
  - Make sure your player(s) have a fortify tool in their inventory.
  - Place a game logic down and paste into its init the function call as noted below - alter it to fit your requirements
- - syncronise to the game logic any objects, static weapons or vehicles that you wish to be constructable in fortify.
+ - syncronise to the game logic any objecs tor static weapons that you wish to be constructable in fortify. (Vehicles other than static weapons are not supported due to *concerning* beahavour)
  - If you require more than one side to use fortify, repeat the above steps in entirety and ensure the function call has the correct side in each.
  - Run the game.
 
@@ -42,7 +42,7 @@ I have also created a ZEN module which allows you to do this via zeus during the
 */
 if (!isServer) exitwith {}; // server only (per ace requrements)
 
-params ["_targetLogic",["_side",west],["_budget",5000]];
+params ["_targetLogic",["_side",west],["_budget",1000]];
 
 // Init the price mapping list
 private _priceMapping = [];
@@ -52,48 +52,45 @@ private _syncedObjects = synchronizedObjects _targetLogic;
 
 {
 	if (_x isKindOf "All") then {
-        private _mass = getMass _x;
-        
-        // Get boundingBoxReal dimensions
-        private _bb = boundingBoxReal _x;
-        private _p1 = _bb select 0;
-        private _p2 = _bb select 1;
-        
-        private _length = abs((_p2 select 0) - (_p1 select 0));
-        private _width = abs((_p2 select 1) - (_p1 select 1));
-        private _height = abs((_p2 select 2) - (_p1 select 2));
-        
-        private _volume = _length * _width * _height;
+    // Check if the object is not one of the restricted vehicle types
+        if (!(_x isKindOf "Air" || _x isKindOf "Car" || _x isKindOf "Tank" || _x isKindOf "Ship")) then {
+            private _mass = getMass _x;
 
-        // Revised price formula
-        private _price = ceil(20 + (log(_mass + 10) * 10) + (_volume * 0.5));  // Adjusted coefficients for mass and volume
+            // Get boundingBoxReal dimensions
+            private _bb = boundingBoxReal _x;
+            private _p1 = _bb select 0;
+            private _p2 = _bb select 1;
+            
+            private _length = abs((_p2 select 0) - (_p1 select 0));
+            private _width = abs((_p2 select 1) - (_p1 select 1));
+            private _height = abs((_p2 select 2) - (_p1 select 2));
+            
+            private _volume = _length * _width * _height;
 
-        if (_x isKindOf "AllVehicles") then {
-            _price = ceil(log(_price + 200) * 100);
-        };
-		if (_x isKindOf "Air") then {
-            _price = ceil(log(_price + 2500) * 200); 
-        };
-		if (_x isKindOf "Car") then {
-            _price = ceil(log(_price + 500) * 150); 
-        };
-		if (_x isKindOf "Tank") then {
-            _price = ceil(log(_price + 2000) * 200); 
-        };
-		if (_x isKindOf "Ship") then {
-            _price = ceil(log(_price + 500) * 150); 
-        };
+            // Price formula
+            _price = ceil(10 + (log(_mass + 10) * 10) + (_volume * 0.5));
 
-		// Set a minimum price for any object, for example, 20
-        _price = _price max 20;
-		
-		// Round the price to the nearest multiple of 5
-        _price = ceil(_price / 5) * 5;
+            private _objType = typeof _x; 
 
-        // Append to the price mapping list
-        _priceMapping pushBack [typeOf _x, _price];
+            // Check for static weapons - both standard and additional checks
+            if (_x isKindOf "StaticWeapon" || (toLower _objType) find "staticweapon" > -1 || (toLower _objType) find "static_weapon" > -1) then { 
+                _price = _price*1.2;  // You can adjust this if you want to have static weapons slightly more expensive
+            };
+
+            // Set a minimum/max price for any object
+            _price = _price max 20;
+            _price = _price min 1000;
+            
+            // Round the price to the nearest multiple of 5
+            _price = ceil(_price / 5) * 5;
+
+            // Append to the price mapping list
+            _priceMapping pushBack [typeOf _x, _price];
+        } else {
+            systemchat format["%1 is not a static weapon or reasonable deployable object",_x];
+        };
+    deleteVehicle _x;
     };
-	deleteVehicle _x;
 } forEach _syncedObjects;
 
 //systemChat format["prices: %1",_priceMapping];
