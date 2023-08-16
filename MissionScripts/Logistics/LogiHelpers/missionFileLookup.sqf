@@ -194,5 +194,8 @@ if (count _attachments == 0) then {
     _attachments= ["EMPTY"];
 };
 
+// Some mods have launcher ammo as normal magazines for some fucking reason, so to prevent doubling up we do this.
+_NormalMagazines = _NormalMagazines - _launchMagazines;
+
 private _masterArray = [_PweapAndSdArm,_NormalMagazines,_PLauncher,_launchMagazines,_playerGear,_inventoryItems,_PBackpacks,_attachments];
 _masterArray

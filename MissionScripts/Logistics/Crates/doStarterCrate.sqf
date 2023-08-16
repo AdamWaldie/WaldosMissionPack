@@ -40,7 +40,7 @@ _target addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_Save
 
 
 //Add full compliment of supplies (MEDICAL NOTWITHSTANDING)
-[_target, 1,_crateSide, true] call Waldo_fnc_SupplyCratePopulate;
+[_target, 1,_crateSide, false, false] call Waldo_fnc_SupplyCratePopulate;
 
 if (_arsenal == true) then {
     if (_unrestrictedArsenal == true) then {
