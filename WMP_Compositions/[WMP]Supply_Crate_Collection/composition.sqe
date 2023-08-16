@@ -1,168 +1,256 @@
 version=54;
-center[]={23305.275,3.1900001,19072.943};
+center[]={473.01428,121.92294,126.27137};
 class items
 {
-	items=9;
+	items=1;
 	class Item0
 	{
-		dataType="Comment";
-		class PositionInfo
+		dataType="Layer";
+		name="[WMP] Supply Crate Collection";
+		class Entities
 		{
-			position[]={-0.54882813,0,-0.19921875};
+			items=13;
+			class Item0
+			{
+				dataType="Comment";
+				class PositionInfo
+				{
+					position[]={-1.9606018,0.00060272217,-0.05304718};
+				};
+				title="Supply Crate Composition, side setup";
+				id=20;
+				atlOffset=-0.0002822876;
+			};
+			class Item1
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={-3.0465393,0.38153076,-2.2405472};
+					angles[]={6.2824135,4.8356614,6.2824135};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, west, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_FullCompliment_west";
+					dynamicSimulation=1;
+				};
+				id=21;
+				type="Box_NATO_Equip_F";
+			};
+			class Item2
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={-2.7125549,0.38345337,-0.71320343};
+					angles[]={6.2824135,4.8356614,0.0023920804};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, east, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_FullCompliment_east";
+					dynamicSimulation=1;
+				};
+				id=22;
+				type="Box_NATO_Equip_F";
+			};
+			class Item3
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={-2.7906799,0.38394928,1.0387497};
+					angles[]={6.2824135,4.8356614,6.2824135};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, independent, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_FullCompliment_independent";
+					dynamicSimulation=1;
+				};
+				id=23;
+				type="Box_NATO_Equip_F";
+			};
+			class Item4
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={-2.6949768,0.38563538,3.2457809};
+					angles[]={6.2824135,4.8356614,6.2824135};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, civilian, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_FullCompliment_civilian";
+					dynamicSimulation=1;
+				};
+				id=24;
+				type="Box_NATO_Equip_F";
+			};
+			class Item5
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={-0.11099243,0.41324615,-2.5667191};
+					angles[]={0.034266707,4.8356614,0.018338453};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, west, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_ammoOnly_west";
+					dynamicSimulation=1;
+				};
+				id=25;
+				type="Box_NATO_Equip_F";
+			};
+			class Item6
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.22299194,0.39859009,-1.0393753};
+					angles[]={0.018331951,4.8356614,0.0023920804};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, east, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_ammoOnly_east";
+					dynamicSimulation=1;
+				};
+				id=26;
+				type="Box_NATO_Equip_F";
+			};
+			class Item7
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.14486694,0.38459015,0.71257782};
+					angles[]={0.0023920804,4.8356614,6.2824135};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, independent, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_ammoOnly_independent";
+					dynamicSimulation=1;
+				};
+				id=27;
+				type="Box_NATO_Equip_F";
+			};
+			class Item8
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={0.24057007,0.38314819,2.9196091};
+					angles[]={6.2807932,4.8356614,0.0015822123};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, civilian, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_ammoOnly_civilian";
+					dynamicSimulation=1;
+				};
+				id=28;
+				type="Box_NATO_Equip_F";
+			};
+			class Item9
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={3.5688171,0.38845825,2.4325943};
+					angles[]={6.2728357,4.8356614,0};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, civilian, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_launchersOnly_civilian";
+					dynamicSimulation=1;
+				};
+				id=33;
+				type="Box_NATO_Equip_F";
+			};
+			class Item10
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={3.4324036,0.39097595,0.47145081};
+					angles[]={0.010363809,4.8356614,6.2752142};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, independent, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_launchersOnly_independent";
+					dynamicSimulation=1;
+				};
+				id=34;
+				type="Box_NATO_Equip_F";
+			};
+			class Item11
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={3.0270691,0.44528961,-1.2607117};
+					angles[]={0.04461401,4.8356614,6.2385716};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, east, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_launchersOnly_east";
+					dynamicSimulation=1;
+				};
+				id=35;
+				type="Box_NATO_Equip_F";
+			};
+			class Item12
+			{
+				dataType="Object";
+				class PositionInfo
+				{
+					position[]={2.7138977,0.45973969,-2.9236145};
+					angles[]={6.248919,4.8356614,0.034266707};
+				};
+				side="Empty";
+				flags=4;
+				class Attributes
+				{
+					init="[this, 1, west, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					name="supplyBox_launchersOnly_west";
+					dynamicSimulation=1;
+				};
+				id=36;
+				type="Box_NATO_Equip_F";
+			};
 		};
-		title="Supply Crate Composition, side setup";
-		id=7830;
-	};
-	class Item1
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={-1.6347656,0.38152885,-2.3867188};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, west, true] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_FullCompliment_west";
-			dynamicSimulation=1;
-		};
-		id=7831;
-		type="Box_NATO_Equip_F";
-	};
-	class Item2
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={-1.3007813,0.38152885,-0.859375};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, east, true] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_FullCompliment_east";
-			dynamicSimulation=1;
-		};
-		id=7835;
-		type="Box_NATO_Equip_F";
-	};
-	class Item3
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={-1.3789063,0.38152885,0.89257813};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, independent, true] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_FullCompliment_independent";
-			dynamicSimulation=1;
-		};
-		id=7836;
-		type="Box_NATO_Equip_F";
-	};
-	class Item4
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={-1.2832031,0.38152885,3.0996094};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, civilian, true] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_FullCompliment_civilian";
-			dynamicSimulation=1;
-		};
-		id=7837;
-		type="Box_NATO_Equip_F";
-	};
-	class Item5
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={1.3007813,0.38152885,-2.7128906};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, west, false] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_ammoOnly_west";
-			dynamicSimulation=1;
-		};
-		id=7838;
-		type="Box_NATO_Equip_F";
-	};
-	class Item6
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={1.6347656,0.38152885,-1.1855469};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, east, false] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_ammoOnly_east";
-			dynamicSimulation=1;
-		};
-		id=7839;
-		type="Box_NATO_Equip_F";
-	};
-	class Item7
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={1.5566406,0.38152885,0.56640625};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, independent, false] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_ammoOnly_independent";
-			dynamicSimulation=1;
-		};
-		id=7840;
-		type="Box_NATO_Equip_F";
-	};
-	class Item8
-	{
-		dataType="Object";
-		class PositionInfo
-		{
-			position[]={1.6523438,0.38152885,2.7734375};
-			angles[]={-0,4.8356614,0};
-		};
-		side="Empty";
-		flags=4;
-		class Attributes
-		{
-			init="[this, 1, civilian, false] spawn Waldo_fnc_SupplyCratePopulate;";
-			name="supplyBox_ammoOnly_civilian";
-			dynamicSimulation=1;
-		};
-		id=7841;
-		type="Box_NATO_Equip_F";
+		id=29;
+		atlOffset=-0.020530701;
 	};
 };
