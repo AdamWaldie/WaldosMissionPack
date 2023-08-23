@@ -5,6 +5,9 @@ A package of mission scripts for mission makers designed to be highly flexible, 
 
 **If you find this mission pack inside a mission, please do not utilise it. Mission Makers like to customise the pack. Download the Missionpack Folder (WMP_Version_Number_Here.zip) from github: https://github.com/AdamWaldie/WaldosMissionPack/releases/latest**
 
+## Want to Support Development?
+<script type="text/javascript" src="https://cdnjs.buymeacoffee.com/1.0.0/button.prod.min.js" data-name="bmc-button" data-slug="TheWaldo123" data-color="#5F7FFF" data-emoji=""  data-font="Cookie" data-text="Buy me a coffee" data-outline-color="#000000" data-font-color="#ffffff" data-coffee-color="#FFDD00" ></script>
+
 # Background Information
 - This project was created originally for the mission makers of the Rooster Teeth Gaming Discord, with the intent to provide them with the easiest possible method 
 to utilise critical systems of arma 3. Now, it is in continued use by at least forty known units, from all corners of the milsimsphere.
