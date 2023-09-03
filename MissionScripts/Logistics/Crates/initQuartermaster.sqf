@@ -95,7 +95,7 @@ Waldo_QM_InitAmmoBox = [
 
 Waldo_QM_InitFullBox = [
 	"Waldo_QM_InitFullBox",
-	"Retrieve Supply Box",
+	"Retrieve Heavy Supply Box",
 	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
 	{
 		params ["_target","_player","_args"];

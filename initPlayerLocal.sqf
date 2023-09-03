@@ -41,6 +41,8 @@ player addAction [
     if (_unit == player) then {
         [_unit, [missionNamespace, "Waldo_Player_Inventory"]] call BIS_fnc_loadInventory;
         //_unit setUnitLoadout (missionNamespace getVariable "Waldo_Player_Inventory");
+        // Respawn Text
+        [] spawn Waldo_fnc_RespawnText;
         player addAction [
         "Flip Vehicle", 
         "MissionScripts\Logistics\LogiHelpers\flipAction.sqf", 

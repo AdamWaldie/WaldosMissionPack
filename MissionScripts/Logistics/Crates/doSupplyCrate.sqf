@@ -5,21 +5,22 @@ Params:
 _crate - object to populate (Passed from module where thee classname of the box is defined)
 _size - scalar value to multiply medical supplycompliment
 _crateSupplyside - (STRING) the side that the crate will populate equipment from. Options: west,east,independent,civilian
-_fullCompliment - boolean (true/false) variable to dennote whether everything is to be added, or just that related to weapons & ammo
+_weaponsAttachmentsUniforms - boolean (true/false) variable to dennote whether weapons, weapon attachments, equipment and clothing should be added.
+_includeLaunchersAndLauncherAmmo - boolean (true/false) variable to dennote whether launchers and their ammo should be added.
 
 Where the call is as follows:
 
-[_crate, _size, _crateSupplyside, _fullCompliment] spawn Waldo_fnc_SupplyCratePopulate;
+[_crate, _size, _crateSupplyside, _weaponsAttachmentsUniforms, _includeLaunchersAndLauncherAmmo] spawn Waldo_fnc_SupplyCratePopulate;
 
 e.g.
 
-[this, 1, west, false] spawn Waldo_fnc_SupplyCratePopulate;
+[this, 1, west, false, false] spawn Waldo_fnc_SupplyCratePopulate;
 
 Called via Zen Module as defined in Zen_medicalCrateModule.sqf
 
 */
 
-params ["_crate", ["_scalar",1],["_crateSupplySide",west],["_fullCompliment",false]];
+params ["_crate", ["_scalar",1],["_crateSupplySide",west],["_weaponsAttachmentsUniforms",false],["_includeLaunchersAndLauncherAmmo",false]];
 
 clearweaponcargoGlobal _crate;
 clearmagazinecargoGlobal _crate;
@@ -68,20 +69,23 @@ _pItems = _pItems - _MedicalItems;
     };
 } forEach _mainAmmo;
 
-{
-    if (!(_x == "EMPTY")) then {
-        _crate addWeaponCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
-    };
-} forEach _launchers;
+// Add launchers if requested
+if (_includeLaunchersAndLauncherAmmo == true) then {
+    {
+        if (!(_x == "EMPTY")) then {
+            _crate addWeaponCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
+        };
+    } forEach _launchers;
 
-{
-    if (!(_x == "EMPTY")) then {
-        _crate addMagazineCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
-    };
-} forEach _launcherAmmo;
+    {
+        if (!(_x == "EMPTY")) then {
+            _crate addMagazineCargoGlobal [_x,(([8,12] call BIS_fnc_randomInt)*_scalar)];
+        };
+    } forEach _launcherAmmo;
+};
 
 //If the calling method wants everything, not just weapons and Ammo, provide it!
-if (_fullCompliment == true) then {
+if (_weaponsAttachmentsUniforms == true) then {
     {
        if (!(_x == "EMPTY")) then {
             _crate addWeaponCargoGlobal [_x,(([1,3] call BIS_fnc_randomInt)*_scalar)];
@@ -117,6 +121,4 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["ACE_tourniquet", (20)];
 };
 
-[_crate, 1] call ace_cargo_fnc_setSize;
-[_crate, true] call ace_dragging_fnc_setDraggable;
-[_crate, true] call ace_dragging_fnc_setCarryable;
+[_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;

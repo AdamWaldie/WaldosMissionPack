@@ -1,0 +1,21 @@
+version=54;
+name="[WMP] AutoFortify Setup Example";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions";
+requiredAddons[]=
+{
+	"A3_Characters_F",
+	"A3_Weapons_F_Rifles_MX",
+	"A3_Weapons_F_Acc",
+	"A3_Weapons_F",
+	"A3_Weapons_F_Pistols_P07",
+	"A3_Weapons_F_Items",
+	"ace_medical_engine",
+	"ace_medical_treatment",
+	"A3_Characters_F_Mark",
+	"A3_Static_F",
+	"A3_Static_F_Mortar_01",
+	"A3_Modules_F",
+	"A3_Structures_F_Mil_BagBunker",
+	"A3_Structures_F_Mil_Fortification"
+};

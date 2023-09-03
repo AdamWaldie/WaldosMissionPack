@@ -1,5 +1,5 @@
 /*
- * This jump throw a player out of a aircraft and attaches a parashoot.
+ * This jump throws a player out of a aircraft and attaches a parachute.
  *
  * Arguments:
  * 0: Player <PLAYER>

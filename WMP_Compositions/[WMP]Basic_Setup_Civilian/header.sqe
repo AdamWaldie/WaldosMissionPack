@@ -4,10 +4,10 @@ author="WaldoTheWarfighter";
 category="Waldos Mission Pack Compositions";
 requiredAddons[]=
 {
-	"A3_Modules_F_Multiplayer",
-	"ace_medical_treatment",
 	"A3_Weapons_F_Ammoboxes",
 	"ace_cargo",
 	"A3_Supplies_F_Exp_Ammoboxes",
-	"ace_dragging"
+	"ace_dragging",
+	"A3_Modules_F_Multiplayer",
+	"ace_medical_treatment"
 };

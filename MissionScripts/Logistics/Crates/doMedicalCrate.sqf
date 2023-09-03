@@ -83,6 +83,4 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 };
 
 // Change ace logistics size of crate
-[_crate, 1] call ace_cargo_fnc_setSize;
-[_crate, true] call ace_dragging_fnc_setDraggable;
-[_crate, true] call ace_dragging_fnc_setCarryable;
+[_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;

@@ -65,4 +65,12 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 # Credits
 - Waldo - Lead Developer
 - RazzMaTazz - Original Cover Image
-- Val - Top Contributer
+- Val - Contributor
+- Rowdy - CIO (Chief Idiotproofing Officer)
+
+***
+
+<p align="center"><a href="https://www.buymeacoffee.com/thewaldo123" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a></p>
+
+<p align="center">This pack is presently maintained solely by Waldo.</p>
+

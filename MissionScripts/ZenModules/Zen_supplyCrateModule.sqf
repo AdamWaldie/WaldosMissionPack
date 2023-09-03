@@ -18,7 +18,8 @@ params ["_modulePos", "_objectPos"];
     "Waldos Supply Crate", 
     [
         ["SLIDER:PERCENT", ["Supply size", "Regulate the total amount of supplies in the crate"], [0, 1, 2], false],
-        ["CHECKBOX", ["Only Ammo And Launchers", "Set this crate to only provide Ammunition and launchers, as opposed to equipment as well"], true, false],
+        ["CHECKBOX", ["Add Equipment And Weapons", "Set this crate to include weapons, weapon attachments and wearables"], true, false],
+        ["CHECKBOX", ["Add Launchers And Launcher Ammo", "Set this crate to also provide launchers and their ammo"], true, false],
         ["COMBO",["Side To Draw Contents From","Select the side (WEST,EAST,INDEPENDANT,CIVILLIAN) from which to draw equipment from"],
             [
                 [
@@ -39,7 +40,7 @@ params ["_modulePos", "_objectPos"];
     ],
     {
         params ["_arg", "_pos"];
-        _arg params ["_size","_fullService","_suppliesFromside"];
+        _arg params ["_size","_weaponsAttachmentsUniforms","_launchersAndAmmo","_suppliesFromside"];
         _pos params ["_modulePos"];
 
 
@@ -51,11 +52,9 @@ params ["_modulePos", "_objectPos"];
 
         _supCrate = _crateClass createVehicle _modulePos;
 
-        [_supCrate, _size, _suppliesFromside, !_fullService] call Waldo_fnc_SupplyCratePopulate;
-
-        [_supCrate, 1] call ace_cargo_fnc_setSize;
-        [_supCrate, true] call ace_dragging_fnc_setDraggable;
-        [_supCrate, true] call ace_dragging_fnc_setCarryable;
+        [_supCrate, _size, _suppliesFromside, _weaponsAttachmentsUniforms, _launchersAndAmmo] call Waldo_fnc_SupplyCratePopulate;
+        
+        [_supCrate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
         
         // Add object to Zeus
         [{

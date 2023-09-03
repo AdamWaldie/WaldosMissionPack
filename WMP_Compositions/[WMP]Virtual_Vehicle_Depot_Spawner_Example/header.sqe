@@ -7,6 +7,5 @@ requiredAddons[]=
 	"A3_Structures_F_Mil_Helipads",
 	"A3_Structures_F_Civ_Camping",
 	"ace_dragging",
-	"A3_Structures_F_Items_Electronics",
-	"Desert"
+	"A3_Structures_F_Items_Electronics"
 };

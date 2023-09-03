@@ -15,6 +15,23 @@ The only change nessicary is the GROUP NAMES and CHANNELS PER RADIO in missionPa
 
 */
 
+/*
+//Initilise ACRE 2 Radios (PUT IN INIT.SQF)
+//Setup Array and Callsign list [EDIT THIS SECTION FOR YOUR MISSION!] - IF YOU DO NOT HAVE ACRE 2 ENABLED, The function will exit automatically.
+private _UnitRadioSetups = [
+    //In format ["Callsign",343RadioChannel,152RadioChannel,148RadioChannel,117FRadioChannel]
+    // The last line should not have a , at the end.
+    // Callsigns should be in "", and radio channels should be without "".
+    ["Odin",4,2,3,4],
+    ["Thor",1,2,3,4],
+    ["Loki",2,2,3,4],
+    ["Mimir",3,2,3,4],
+    ["Valkyrie",5,2,3,4],
+    ["High Command",6,2,3,4]
+[_UnitRadioSetups] call Waldo_fnc_ACRE2Init;
+*/
+
+
 
 //Check for, and exit if not present: ACRE2
 if !(isClass(configFile >> "CfgPatches" >> "acre_main")) exitWith {};

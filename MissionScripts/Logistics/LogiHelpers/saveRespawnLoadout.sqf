@@ -7,7 +7,7 @@ Author: Adam Waldie
 For: Rooster Teeth Gaming Community
 License: Distributable and editable, no attribution required.
 
-Called from MissionScripts\ACRE2Init.sqf
+Called from multiple sources
 
 How to use:
 
@@ -21,7 +21,7 @@ In scripts
 
 
 */
-[player, [missionNamespace, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
+[player, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory;
 [] spawn {
 	hint "Respawn Loadout Updated!";
 	sleep 5;
