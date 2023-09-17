@@ -15,64 +15,39 @@ call Waldo_fnc_SetTeamColour;
 
 */
 
-private _getTeamName = "";
-if !(roleDescription player == "") then {
-    _getTeamName = roleDescription player;
-} else {
-    _getTeamName = getText (configFile >> "CfgVehicles" >> typeOf player >> "displayName");
-};
-_getTeamName = _getTeamName splitString " ";
-_getTeamName = _getTeamName select 0;
-_getTeamName = toUpper _getTeamName;
+private _roleDesc = "";
 
-//Due to the large scope of potential name conventions for clans, heres a collossal catch all.
-switch (_getTeamName) do {
-    case "ALPHA": {
+if !(roleDescription player == "") then {
+    _roleDesc = roleDescription player;
+} else {
+    _roleDesc = getText (configFile >> "CfgVehicles" >> typeOf player >> "displayName");
+};
+_roleDesc = toUpper _roleDesc;
+
+// Using a switch statement to match the condition and assign the team color - this is first match so order is imperative
+switch (true) do {
+    case ((_roleDesc find "ASSISTANT SQUAD LEADER") > -1 || (_roleDesc find "ASL") > -1): {
         [player, "RED"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'RED'];
     };
-	case "RED": {
+    case ((_roleDesc find "SQUAD LEADER") > -1 || (_roleDesc find "SL") > -1): {
+        [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
+    };
+    case ((_roleDesc find "MEDIC") > -1): {
+        [player, "GREEN"] call ace_interaction_fnc_joinTeam;
+    };
+    case ((_roleDesc find "ALPHA") > -1 || (_roleDesc find "RED") > -1): {
         [player, "RED"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'RED'];
     };
-    case "BRAVO": {
+    case ((_roleDesc find "BRAVO") > -1 || (_roleDesc find "BLUE") > -1): {
         [player, "BLUE"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'BLUE'];
     };
-	case "BLUE": {
-        [player, "BLUE"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'BLUE'];
-    };
-    case "CHARLIE": {
+    case ((_roleDesc find "CHARLIE") > -1 || (_roleDesc find "GREEN") > -1): {
         [player, "GREEN"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'GREEN'];
     };
-	case "GREEN": {
-        [player, "GREEN"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'GREEN'];
-    };
-	case "MEDIC": {
-        [player, "GREEN"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'GREEN'];
-    };
-    case "COMBAT": {
-        [player, "GREEN"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'GREEN'];
-    };
-    case "DELTA": {
+    case ((_roleDesc find "DELTA") > -1 || (_roleDesc find "YELLOW") > -1): {
         [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'YELLOW'];
-    };
-	case "YELLOW": {
-        [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'YELLOW'];
-    };
-    case "SQUAD": {
-        [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
-        (player) setVariable ["Waldo_PlayerInit_Team", 'YELLOW'];
     };
     default {
-        _getTeamName = 'WHITE';
-        (player) setVariable ["Waldo_PlayerInit_Team", 'WHITE'];
+        [player, "WHITE"] call ace_interaction_fnc_joinTeam;
     };
 };
