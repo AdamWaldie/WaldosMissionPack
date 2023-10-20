@@ -55,6 +55,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["ACE_splint", (_Scale * 20)];
     _crate addItemCargoGlobal ["ACE_personalAidKit",(_Scale * 15)];
     _crate addItemCargoGlobal ["ACE_surgicalKit",(_Scale * 10)];
+    _crate addItemCargoGlobal ["ACE_suture",(_Scale * 50)];
 
     //Saline
     _crate addItemCargoGlobal ["ACE_salineIV",(_Scale * 30)];
