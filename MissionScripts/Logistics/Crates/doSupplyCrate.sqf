@@ -119,7 +119,7 @@ if (_weaponsAttachmentsUniforms == true) then {
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["ACE_quikclot", (40)];
     _crate addItemCargoGlobal ["ACE_tourniquet", (20)];
-    _crate addItemCargoGlobal ["ACE_suture",(10)];
+    _crate addItemCargoGlobal ["ACE_suture",(50)];
 };
 
 [_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
