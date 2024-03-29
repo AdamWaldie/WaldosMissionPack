@@ -179,6 +179,14 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\LogiHelpers\sideBasedLoadoutSetup.sqf";
             };
         };
+        class MapStuff {
+            class ReplaceMapLocationName {
+                file = "MissionScripts\Logistics\LogiHelpers\replaceMapLocationName.sqf";
+            };
+            class CreateMapLocationName {
+                file = "MissionScripts\Logistics\LogiHelpers\createNewMapLocation.sqf";
+            };
+        };
         class Fortify {
             class AutoFortifySetup {
                 file = "MissionScripts\Logistics\Fortify\AutoFortify.sqf";
