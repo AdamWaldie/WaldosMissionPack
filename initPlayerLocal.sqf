@@ -57,6 +57,17 @@ player addAction [
 }] call CBA_fnc_addClassEventHandler;
 
 /*
+=====================ACE 3 SAVE LOADOUT ON ARSENAL CLOSE====================================
+This allows you to save whatever loadout the player selected after they close the arsenal
+so that they may respawn with it.  Particularly helpful when you just want the player to 
+select a loadout and then forget about having to use the arsenal after respawning.
+*/
+
+// ["ace_arsenal_displayClosed", {
+//     [player, [missionNamespace, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
+// }] call CBA_fnc_addEventHandler;
+
+/*
 =====================RESPAWN WITH LOADOUT ON DEATH====================================
 
 UNCOMMENT THE BELOW IF YOU WANT PEOPLE TO RESPAWN WITH WHAT THEY DIED WITH!
