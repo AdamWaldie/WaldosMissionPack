@@ -15,39 +15,55 @@ call Waldo_fnc_SetTeamColour;
 
 */
 
-private _roleDesc = "";
-
-if !(roleDescription player == "") then {
-    _roleDesc = roleDescription player;
+// Use role description, and if no description, use class display name
+private _roleDesc = if !(roleDescription player == "") then {
+    roleDescription player
 } else {
-    _roleDesc = getText (configFile >> "CfgVehicles" >> typeOf player >> "displayName");
+    getText (configFile >> "CfgVehicles" >> typeOf player >> "displayName");
 };
 _roleDesc = toUpper _roleDesc;
 
-// Using a switch statement to match the condition and assign the team color - this is first match so order is imperative
-switch (true) do {
-    case ((_roleDesc find "ASSISTANT SQUAD LEADER") > -1 || (_roleDesc find "ASL") > -1): {
-        [player, "RED"] call ace_interaction_fnc_joinTeam;
+private _teamMapping = [
+    ["SQUAD LEADER", "YELLOW"],
+    ["SL", "YELLOW"],
+    ["PLATOON SERGEANT", "YELLOW"],
+    ["PSG", "YELLOW"],
+    ["PLATOON LEADER", "YELLOW"],
+    ["PL", "YELLOW"],
+    ["COMPANY COMMANDER", "YELLOW"],
+    ["CC", "YELLOW"],
+    ["COMMANDING OFFICER", "YELLOW"],
+    ["CO", "YELLOW"],
+    ["LT", "YELLOW"],
+    ["LIEUTENANT", "YELLOW"],
+    ["MAJOR", "YELLOW"],
+    ["CAPTAIN", "YELLOW"],
+    ["COLONEL", "YELLOW"],
+    ["1ST SERGEANT", "YELLOW"],
+    ["1SG", "YELLOW"],
+    ["ASSISTANT SQUAD LEADER", "RED"],
+    ["ASL", "RED"],
+    ["MEDIC", "GREEN"],
+    ["ALPHA", "RED"],
+    ["RED", "RED"],
+    ["BRAVO", "BLUE"],
+    ["BLUE", "BLUE"],
+    ["CHARLIE", "GREEN"],
+    ["GREEN", "GREEN"],
+    ["DELTA", "YELLOW"],
+    ["YELLOW", "YELLOW"]
+];
+
+private _assignedTeam = ""; // Default to blank (no team)
+
+//Search for match
+{
+    if (_roleDesc find (_x select 0) > -1) exitWith {
+        _assignedTeam = _x select 1;
     };
-    case ((_roleDesc find "SQUAD LEADER") > -1 || (_roleDesc find "SL") > -1): {
-        [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
-    };
-    case ((_roleDesc find "MEDIC") > -1): {
-        [player, "GREEN"] call ace_interaction_fnc_joinTeam;
-    };
-    case ((_roleDesc find "ALPHA") > -1 || (_roleDesc find "RED") > -1): {
-        [player, "RED"] call ace_interaction_fnc_joinTeam;
-    };
-    case ((_roleDesc find "BRAVO") > -1 || (_roleDesc find "BLUE") > -1): {
-        [player, "BLUE"] call ace_interaction_fnc_joinTeam;
-    };
-    case ((_roleDesc find "CHARLIE") > -1 || (_roleDesc find "GREEN") > -1): {
-        [player, "GREEN"] call ace_interaction_fnc_joinTeam;
-    };
-    case ((_roleDesc find "DELTA") > -1 || (_roleDesc find "YELLOW") > -1): {
-        [player, "YELLOW"] call ace_interaction_fnc_joinTeam;
-    };
-    default {
-        [player, "WHITE"] call ace_interaction_fnc_joinTeam;
-    };
+} forEach _teamMapping;
+
+// Assign the team only if a match was found
+if (_assignedTeam != "") then {
+    [player, _assignedTeam] call ace_interaction_fnc_joinTeam;
 };
