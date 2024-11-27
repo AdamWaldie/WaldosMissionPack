@@ -4,6 +4,8 @@ This function assigns members of the team automatically to teams before mission 
 
 For best outcome the role description format of [Team] [Role Name]@[Callsign] Should be followed.
 
+E.g. Alpha Rifleman, Blue Rifleman, ASL, SL@Viking-1
+
 Arguments:
 N/A
 
