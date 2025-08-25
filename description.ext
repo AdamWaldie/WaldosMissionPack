@@ -71,20 +71,6 @@ class CfgSounds {
 };
 
 
-/*           Headless Client            */
-class params
-{
-	class headlessClient
-	{
-		title = "Headless Clients";
-		texts[] = {"Enabled","Disabled"};
-		values[] = {1, 0};
-		default = 1;
-		function = "Waldo_fnc_HeadlessClientInit";
-		isGlobal = 1;
-	};
-};
-
 
 /*           OTHER            */
 class CfgDebriefing

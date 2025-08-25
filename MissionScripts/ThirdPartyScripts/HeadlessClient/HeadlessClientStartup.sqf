@@ -2,8 +2,6 @@
 Author: Waldo
 This is a hollow proceedure to call the headless client, and allow a parameter selector for it in the pre-mission slot screen.
 
-Waldo_fnc_HeadlessClientInit
-
 */
 
 if ((_this select 0) == 1) then
