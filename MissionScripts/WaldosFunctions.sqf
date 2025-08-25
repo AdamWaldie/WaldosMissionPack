@@ -24,17 +24,6 @@ class CfgFunctions
             class SetTeamColour {
                 file = "MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf";
             };
-            
-        };
-        class ThiirdPartyScripts 
-        {
-            class HeadlessClientInit {
-                file = "MissionScripts\ThirdPartyScripts\HeadlessClient\HeadlessClientStartup.sqf";
-            };
-            class WerthlesHeadless {
-                file = "MissionScripts\ThirdPartyScripts\HeadlessClient\WerthlesHeadless.sqf";
-            };
-            
         };
         class BriefDocs 
         {

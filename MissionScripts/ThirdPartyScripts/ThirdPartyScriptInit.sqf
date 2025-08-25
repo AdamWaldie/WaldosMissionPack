@@ -41,4 +41,3 @@ Virtual Headless Client Entity
 Reccomended to leave call as is. Information regarding HC can be found in the associated third party script.
 */
 //[true,30,false,true,30,10,true,[]] execVM "MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf";
-//[true,30,false,true,30,10,true,[]] spawn Waldo_fnc_WerthlesHeadless;
