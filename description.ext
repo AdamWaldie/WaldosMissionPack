@@ -77,9 +77,9 @@ class params
 	class headlessClient
 	{
 		title = "Headless Clients";
-		texts[] = {"Disabled","Enabled"};
-		values[] = {0, 1};
-		default = 0;
+		texts[] = {"Enabled","Disabled"};
+		values[] = {1, 0};
+		default = 1;
 		function = "Waldo_fnc_HeadlessClientInit";
 		isGlobal = 1;
 	};
