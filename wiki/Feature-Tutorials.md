@@ -1,19 +1,20 @@
-This page is designed to give you quick access to the knowledge you need to use non-automatic sections of the script pack. 
+This page gives you quick access to documentation for every feature in the pack.
 
-It is not exhaustive but covers most of the features most helpful to mission makers.
-
-The basic Setup is covered in the [Quickstart Guide ](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide).
+The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide).
 
 [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules) are covered separately.
 
-# Features:
+---
+
+## Configuration Reference
+* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference) — description.ext, init.sqf, initServer.sqf field reference
 
 ## Mission Flow & UI
 * [Mission Intro Text](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Intro-Or-Title-Text)
 * [Mission UI Text Overlays](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-UI-Text-Overlays) — Dynamic text, timed hints, respawn text
 * [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
 * [Radio Reports, Checklists, Support Calls And Documentation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
-* [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup)
+* [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup) — Also covers GetPlayerGroup and GetPlayerRole helpers
 
 ## Logistics & Crates
 * [Logistics System, Starter Crates And Quartermaster](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster)
@@ -22,7 +23,7 @@ The basic Setup is covered in the [Quickstart Guide ](https://github.com/AdamWal
 * [Virtual Vehicle Depot](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot)
 
 ## Vehicles & Deployment
-* [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop)
+* [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop) — Auto-detected vehicles, equipment simulation, parachute backpack system
 * [Vehicle Ambush Script And Vehicle Camo](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Ambush-Script-And-Vehicle-Camo)
 * [Teleportation & Move Into Cargo Interactions](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions)
 * [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name)
@@ -43,5 +44,6 @@ The basic Setup is covered in the [Quickstart Guide ](https://github.com/AdamWal
 * [ACRE 2 Automated CEOI](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Automated-CEOI-Document)
 * [ACRE 2 Babel Autoconfig](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration)
 
-## Mission Maker Tools
+## Miscellaneous
+* [Unit Insignias](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Unit-Insignias)
 * [Mission Maker Resource Scripts](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Maker-Resource-Scripts) — Debug tools, arsenal toolkit, damage monitor

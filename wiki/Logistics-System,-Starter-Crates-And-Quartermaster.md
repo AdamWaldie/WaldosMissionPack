@@ -129,10 +129,27 @@ Example which spawns logistics crates behind the interaction point, 4 meters awa
 `[this,180,4] call Waldo_fnc_SetupQuarterMaster; `
 
 
+## What the Quartermaster Spawns
+
+| ACE Interaction | Contents | Notes |
+|---|---|---|
+| **Medical Box** | ACE medical supplies (if ACE Medical loaded), or vanilla medical supplies | Marked as ACE field hospital; draggable/carryable |
+| **Supply Box** | All weapons, ammo, attachments, equipment from mission loadouts (full side complement) | |
+| **Ammo Box** | Ammo only (0.75× scale supply, no weapons or equipment) | |
+| **ACE Wheel** | `ACE_Wheel` — spare vehicle wheel | |
+| **ACE Track** | `ACE_Track` — spare vehicle track | |
+
+The Quartermaster prevents duplicates: if a box of the same type already exists within 5 m of the spawn point, a new one will not be spawned and the QM will say so.
+
 ## Changing the Boxes The Quartermaster Spawns
-You can edit class of crate spawned for both medical and supply boxes in the initServer.sqf:
+You can edit the class of crate spawned for both medical and supply boxes in `initServer.sqf`:
 ![Picture displaying the appropriate place in Initserver.sqf to change the boxes](https://i.imgur.com/0CdEY8U.png)
 
-**Logi_SupplyBoxClass** is the class of box which will spawn when ammo or resupply boxes are spawned.
+**Logi_SupplyBoxClass** is the class of box spawned for supply and ammo requests.
 
-**Logi_MedicalBoxClass** is the class of box which will spawn when a medical box is spawned.
+**Logi_MedicalBoxClass** is the class of box spawned for medical requests.
+
+```sqf
+missionNamespace setVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F", true];
+missionNamespace setVariable ["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced", true];
+```

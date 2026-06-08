@@ -1,6 +1,7 @@
 * [Home](https://github.com/AdamWaldie/WaldosMissionPack/wiki)
 * [Coding Standards](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Coding-Standards)
 * [Quickstart Guide](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide)
+* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)
 * [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
 * [Feature Tutorials](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials)
     * **Mission Flow & UI**
@@ -32,5 +33,6 @@
     * [ACRE 2 Short Range Radio](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
     * [ACRE 2 Automated CEOI](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Automated-CEOI-Document)
     * [ACRE 2 Babel Autoconfig](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration)
-    * **Mission Maker Tools**
+    * **Miscellaneous**
+    * [Unit Insignias](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Unit-Insignias)
     * [Mission Maker Resource Scripts](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Maker-Resource-Scripts)

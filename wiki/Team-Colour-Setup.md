@@ -51,3 +51,29 @@ The keyword table is in `SetTeamColour.sqf`. To add a new keyword, append to the
 ```
 
 Each entry is `["KEYWORD IN CAPITALS", "COLOUR"]`. Valid colour strings are `"RED"`, `"BLUE"`, `"GREEN"`, and `"YELLOW"`.
+
+---
+
+## Related Helper Functions
+
+Two additional functions parse the same role description format. Both are useful when writing custom scripts that need to know the player's callsign or role.
+
+### `Waldo_fnc_GetPlayerGroup`
+
+Returns the group callsign — the part of the role description **after** the `@`. Falls back to the Eden group ID if no `@` is present.
+
+```sqf
+// Returns "VIKING-1" from role description "Alpha Rifleman@Viking-1"
+private _groupCallsign = [player] call Waldo_fnc_GetPlayerGroup;
+```
+
+### `Waldo_fnc_GetPlayerRole`
+
+Returns the role — the part of the role description **before** the `@`. Falls back to the unit class display name if no role description is set.
+
+```sqf
+// Returns "Alpha Rifleman" from role description "Alpha Rifleman@Viking-1"
+private _roleName = call Waldo_fnc_GetPlayerRole;
+```
+
+Both functions return an empty string (or `"Infantry"` for `GetPlayerRole`) in singleplayer.
