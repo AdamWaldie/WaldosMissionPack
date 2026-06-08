@@ -269,6 +269,180 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 
 ---
 
+## Mod API Reference
+
+This section documents how each mod integrates with WMP so scripts can be read and extended without prior Arma 3 mod knowledge.
+
+### CBA_A3 (Community Base Addons) — Required
+
+CBA is the event system backbone. WMP uses it for all unit lifecycle hooks.
+
+**Key functions used:**
+
+| Function | Where used | What it does |
+|---|---|---|
+| `CBA_fnc_addClassEventHandler` | `initPlayerLocal.sqf`, `AISkillAdjustmentSystem.sqf` | Fires a callback whenever any unit of the given class triggers an event (e.g. "Respawn", "Killed", "InitPost"). Used to re-apply loadouts on respawn and initialise AI skills for Zeus-spawned units. |
+| `CBA_fnc_addEventHandler` | `initPlayerLocal.sqf` | Fires on a named game event (e.g. `ace_arsenal_displayClosed`). Used for the optional "save loadout on arsenal close" feature. |
+| `CBA_fnc_execNextFrame` | `ZenModules/` | Defers code by one frame — used so Zeus curator objects exist before being referenced. |
+| `CBA_fnc_notify` | `Paradrop/paraEquipmentSim.sqf`, `Paradrop/checkForJumpSettings.sqf` | Shows a brief on-screen notification. Used to tell jumpers what equipment was lost. |
+| `CBA_fnc_waitUntilAndExecute` | `ACRE2Init_Legacy.sqf` | Waits for a condition, then runs code — used to defer radio assignment until ACRE is initialised. |
+| `CBA_fnc_setPos` / `CBA_fnc_setHeight` | `teleport.sqf` | Position setters compatible with CBA's extension system. |
+| `CBA_fnc_hashCreate` / `CBA_fnc_hashGet` | `GetSRChannelName.sqf` | Key-value store used to map squad callsigns to ACRE2 channel data. |
+
+**Pattern:** `["ClassName", "EventName", { code }] call CBA_fnc_addClassEventHandler`
+
+---
+
+### ACE3 (Advanced Combat Environment) — Required
+
+ACE3 is the most heavily used dependency (~80 call sites across 20+ files). WMP uses it for all player-facing interaction menus, medical system, logistics, and weapon safety.
+
+**Interaction menus** — all deployable actions (MHQ, vehicle camo, construction, quartermaster, paradrop) are ACE scroll-wheel actions:
+```sqf
+private _action = [id, displayName, icon, code, condition, insertCode] 
+    call ace_interact_menu_fnc_createAction;
+[object, isVehicleAction, pathArray, _action] 
+    call ace_interact_menu_fnc_addActionToObject;
+```
+
+**Progress bars** — timed actions (deploying/tearing down MHQ, attaching camo) use:
+```sqf
+[duration, title, condition, completionCode, cancelCode] 
+    call ace_common_fnc_progressBar;
+```
+
+**Arsenal system** — limited arsenals restricted to mission loadouts:
+```sqf
+[box, true] call ace_arsenal_fnc_initBox;          // open full ACE Arsenal on box
+[box, itemsArray] call ace_arsenal_fnc_addVirtualItems;  // restrict to specific items
+```
+
+**Cargo / dragging** — crates are made portable:
+```sqf
+[object, spaceValue] call ace_cargo_fnc_setSpace;
+[object, sizeValue]  call ace_cargo_fnc_setSize;
+[object, true]       call ace_dragging_fnc_setDraggable;
+[object, true]       call ace_dragging_fnc_setCarryable;
+```
+
+**Fortification:**
+```sqf
+[side, objectClassArray, budget] call ace_fortify_fnc_registerObjects;
+[side, delta]                    call ace_fortify_fnc_updateBudget;
+```
+
+**ENDEX (weapon lock + healing):**
+```sqf
+[player, true] call ace_safemode_fnc_lockSafety;
+[player]       call ace_medical_treatment_fnc_fullHeal;
+```
+
+**Drag/carry weight limits** (set in `init.sqf`):
+```sqf
+ACE_maxWeightDrag  = 10000;
+ACE_maxWeightCarry = 6000;
+```
+
+**Mod detection pattern** used throughout the codebase:
+```sqf
+if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then { ... };
+```
+
+**Key ACE variables** set on objects:
+- `ace_medical_isMedicalFacility` — marks a crate as a field hospital
+- `ace_medical_isMedicalVehicle` — marks a vehicle as medical
+- `ACE_isEngineer` / `ace_medical_medicClass` — checked in briefing documents
+
+---
+
+### ACRE2 (Advanced Combat Radio Environment 2) — Optional
+
+ACRE2 provides realistic radio simulation. WMP auto-assigns radios per squad on spawn. The entire system lives in `MissionScripts/MissionInit/ACRE2/`.
+
+**Radio classnames** WMP configures:
+
+| Class | Type | Stereo assignment |
+|---|---|---|
+| `ACRE_PRC343` | Short-range squad radio | LEFT ear |
+| `ACRE_PRC152` | Long-range handheld | RIGHT ear |
+| `ACRE_PRC148` | Long-range handheld (alt) | RIGHT ear |
+| `ACRE_PRC117F` | HF vehicle/backpack radio | CENTER |
+
+**Key API calls:**
+```sqf
+// Configure a preset channel slot (label, frequency, name)
+[radioObj, presetIndex, channelIndex, "label", txFreq, rxFreq, "channelName"] 
+    call acre_api_fnc_setPresetChannelField;
+
+// Apply a built preset to a radio
+[radioObj, presetObj] call acre_api_fnc_copyPreset;
+[radioObj, presetObj] call acre_api_fnc_setPreset;
+
+// Tune radio and set stereo position
+[radioObj, channelNumber] call acre_api_fnc_setRadioChannel;
+[radioObj, "LEFT"]         call acre_api_fnc_setRadioSpatial;  // LEFT / RIGHT / CENTER
+
+// Enumerate player's current radios
+[] call acre_api_fnc_getCurrentRadioList;
+
+// Check radio type
+[radioObj, "ACRE_PRC343"] call acre_api_fnc_isKindOf;
+```
+
+**Babel (multilingual) API:**
+```sqf
+[languageName] call acre_api_fnc_babelAddLanguageType;
+[unit, languagesArray] call acre_api_fnc_babelSetSpokenLanguages;
+```
+
+**Initialisation guard** — ACRE2 functions check `acre_api_fnc_isInitialized` before running; the legacy init uses `CBA_fnc_waitUntilAndExecute` to defer until ACRE is ready.
+
+---
+
+### Zeus Enhanced (ZEN) — Optional
+
+ZEN adds a custom module menu inside the Zeus editor. WMP silently does nothing if ZEN is not loaded (`isClass(configFile >> "CfgPatches" >> "zen_main")` check in `Zen_initModules.sqf`).
+
+Only two ZEN functions are used:
+
+```sqf
+// Register a custom module (appears in Zeus editor module list)
+[category, moduleName, iconPath, tooltipText, code] 
+    call zen_custom_modules_fnc_register;
+
+// Show a parameter dialog for a module (Zeus operator fills in fields)
+[title, parametersArray] call zen_dialog_fnc_create;
+```
+
+The five registered modules are: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager.
+
+---
+
+### LAMBS (LAMBS Danger / LAMBS Suppression) — Optional, Zero Integration Code
+
+LAMBS is recommended as a companion mod for AI quality, but WMP has **no LAMBS function calls**. The AITweak system (`AISkillAdjustmentSystem.sqf`) adjusts vanilla AI subskills, which then benefit further from LAMBS Danger's behaviour overhaul automatically — no script integration is needed.
+
+---
+
+### Vanilla Arma 3 (BIS) Functions WMP Relies On
+
+These are Arma 3 built-in functions WMP depends on most heavily:
+
+| Function | Used for |
+|---|---|
+| `BIS_fnc_saveInventory` / `BIS_fnc_loadInventory` | Loadout save/restore on respawn (backbone of `initPlayerLocal.sqf`) |
+| `BIS_fnc_addRespawnPosition` / `BIS_fnc_removeRespawnPosition` | MHQ dynamic respawn point creation/removal |
+| `BIS_fnc_holdActionAdd` | Paradrop hold-actions on aircraft (jump triggers) |
+| `BIS_fnc_attachToRelative` | Attaching MHQ objects, vehicle camo nets, construction pieces |
+| `BIS_fnc_relPos` | Computing cargo drop/jump exit positions relative to an object |
+| `BIS_fnc_dynamicText` / `BIS_fnc_typeText` | ENDEX and intro screen text overlays |
+| `BIS_fnc_blackOut` / `BIS_fnc_blackIn` / `BIS_fnc_startLoadingScreen` | Intro sequence fade effects |
+| `BIS_fnc_endMission` | Triggering the `CfgDebriefing` end screen |
+| `BIS_fnc_isThrowable` / `BIS_fnc_objectType` | Classifying items when populating supply crates |
+| `BIS_fnc_showNotification` | Pop-up notifications (MHQ state changes, etc.) |
+
+---
+
 ## Key Conventions
 
 - **No tabs** — use spaces. The validator logs tab characters in SQF files (currently does not count as hard error, but keep them out).
