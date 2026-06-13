@@ -67,6 +67,7 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 - RazzMaTazz - Original Cover Image
 - Val - Master of Parachute Recollection for Skyward Affairs
 - Rowdy - CIO (Chief Idiotproofing Officer)
+- Claude - Best documentation Writer in the west
 
 ***
 
