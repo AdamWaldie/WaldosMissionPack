@@ -220,6 +220,12 @@ class CfgFunctions
             class FortifyBudgetModule {
                 file = "MissionScripts\ZenModules\Zen_fortifyBudgetModule.sqf";
             };
+            class ZenLoadoutSaveModule {
+                file = "MissionScripts\ZenModules\Zen_loadoutSaveModule.sqf";
+            };
+            class ZenAddLoadoutSaveAction {
+                file = "MissionScripts\ZenModules\Zen_loadoutSaveSetup.sqf";
+            };
         };
         class Paradrop {
             class AddHaloJump {

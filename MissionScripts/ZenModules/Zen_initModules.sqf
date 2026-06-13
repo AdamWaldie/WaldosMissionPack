@@ -53,3 +53,11 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     },
     "\z\ACE\addons\fortify\ui\hammer_ca.paa"
 ] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Loadout Save Point",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenLoadoutSaveModule;
+    },
+    "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"
+] call zen_custom_modules_fnc_register;
