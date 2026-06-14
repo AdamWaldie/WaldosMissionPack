@@ -11,9 +11,9 @@ Waldo_fnc_AITweak as an Alias for calling the longhand script
 */
 class CfgFunctions
 {
-	class Waldo
-	{
-		class InitilisationAndSetup 
+    class Waldo
+    {
+        class InitilisationAndSetup 
         {
             class GetPlayerGroup {
                 file = "MissionScripts\MissionInit\InitHelpers\GetPlayerGroup.sqf";
@@ -86,9 +86,6 @@ class CfgFunctions
             class ACRE2Init {
                 file = "MissionScripts\MissionInit\ACRE2\ACRE2Init.sqf";
             };
-            class ACRE2Init_Legacy {
-                file = "MissionScripts\MissionInit\ACRE2\ACRE2Init_Legacy.sqf";
-            };
             class SquadLevelRadios {
                 file = "MissionScripts\MissionInit\ACRE2\ACRE2SquadLevelRadios.sqf";
             };
@@ -139,12 +136,6 @@ class CfgFunctions
             };
         };
         class Logistics {
-            class MedicalCratePopulate_Legacy {
-                file = "MissionScripts\Logistics\Crates\doMedicalCrate_Legacy.sqf";
-            };
-            class SupplyCratePopulate_Legacy {
-                file = "MissionScripts\Logistics\Crates\doSupplyCrate_Legacy.sqf";
-            };
             class MedicalCratePopulate {
                 file = "MissionScripts\Logistics\Crates\doMedicalCrate.sqf";
             };
@@ -177,6 +168,9 @@ class CfgFunctions
             };
             class SideBaseLoadoutSetup {
                 file = "MissionScripts\Logistics\LogiHelpers\sideBasedLoadoutSetup.sqf";
+            };
+            class GetSideLoadoutArray {
+                file = "MissionScripts\Logistics\LogiHelpers\getSideLoadoutArray.sqf";
             };
         };
         class MapStuff {
@@ -284,5 +278,5 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDVehicleDamage.sqf";
             };
         };
-	};
+    };
 };

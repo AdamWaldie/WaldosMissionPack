@@ -285,7 +285,6 @@ CBA is the event system backbone. WMP uses it for all unit lifecycle hooks.
 | `CBA_fnc_addEventHandler` | `initPlayerLocal.sqf` | Fires on a named game event (e.g. `ace_arsenal_displayClosed`). Used for the optional "save loadout on arsenal close" feature. |
 | `CBA_fnc_execNextFrame` | `ZenModules/` | Defers code by one frame — used so Zeus curator objects exist before being referenced. |
 | `CBA_fnc_notify` | `Paradrop/paraEquipmentSim.sqf`, `checkForJumpSettings.sqf` | Brief on-screen notification. Used to tell jumpers what equipment was lost on exit. |
-| `CBA_fnc_waitUntilAndExecute` | `ACRE2Init_Legacy.sqf` | Waits for a condition then runs code — defers radio assignment until ACRE is ready. |
 | `CBA_fnc_setPos` / `CBA_fnc_setHeight` | `teleport.sqf` | Position setters used by the teleport system. |
 | `CBA_fnc_hashCreate` / `CBA_fnc_hashGet` | `GetSRChannelName.sqf` | Key-value store mapping squad callsigns to ACRE2 channel data. |
 

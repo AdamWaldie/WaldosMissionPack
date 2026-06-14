@@ -19,25 +19,9 @@ params["_target",["_crateSupplySide",west],["_preExisting",false]];
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
 //Double Security with ensuring mission.sqm sweep
 waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
-/*
-_aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_West";
-*/
 
-//Capitalise so I dont go mad with variations
-//_crateSupplySide = toUpper _crateSupplySide;
-
-//default setup
-private _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_West";
-//get all loadout data by default
-if (_crateSupplySide == EAST) then {
-    _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_East";
-};
-if (_crateSupplySide == INDEPENDENT) then {
-    _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_Ind";
-};
-if (_crateSupplySide == CIVILIAN) then {
-    _aceArsenalPool = missionNamespace getVariable "Logi_MissionSQMArray_Civ";
-};
+//Get the loadout pool for the requested side (defaults to west)
+private _aceArsenalPool = [_crateSupplySide] call Waldo_fnc_GetSideLoadoutArray;
 
 //Remove Empty Portions
 {
