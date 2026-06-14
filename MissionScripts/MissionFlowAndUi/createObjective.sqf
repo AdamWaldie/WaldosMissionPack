@@ -46,6 +46,17 @@ if (!isServer) exitWith {
 // description array is [description, title, waypoint marker text]
 [_owner, _taskId, [_description, _title, _title], _destination, _state, 1, true, _taskType, true] call BIS_fnc_taskCreate;
 
+// Register the task in the AAR objective ledger (broadcast so the ENDEX debrief, which runs
+// client-side, can read it). Ledger entries are [taskId, state].
+private _ledger = +(missionNamespace getVariable ["Waldo_AAR_Tasks", []]);
+private _at = _ledger findIf {(_x select 0) isEqualTo _taskId};
+if (_at < 0) then {
+    _ledger pushBack [_taskId, _state];
+} else {
+    (_ledger select _at) set [1, _state];
+};
+missionNamespace setVariable ["Waldo_AAR_Tasks", _ledger, true];
+
 // Optional persistent map marker at the destination position.
 if (_createMarker && {_destination isEqualType [] && {count _destination >= 2}}) then {
     private _mName = format ["Waldo_obj_%1", _taskId];

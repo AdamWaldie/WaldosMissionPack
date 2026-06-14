@@ -122,6 +122,18 @@ class CfgFunctions
             class AARTrack {
                 file = "MissionScripts\MissionFlowAndUi\aarTrack.sqf";
             };
+            class AARWound {
+                file = "MissionScripts\MissionFlowAndUi\aarWound.sqf";
+            };
+            class SafeStart {
+                file = "MissionScripts\MissionFlowAndUi\safeStart.sqf";
+            };
+            class SafeStartApply {
+                file = "MissionScripts\MissionFlowAndUi\safeStartApply.sqf";
+            };
+            class SafeStartTimer {
+                file = "MissionScripts\MissionFlowAndUi\safeStartTimer.sqf";
+            };
         };
         class Diagnostics
         {
@@ -243,6 +255,9 @@ class CfgFunctions
             };
             class ZenAddLoadoutSaveAction {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveSetup.sqf";
+            };
+            class ZenSafeStartTimer {
+                file = "MissionScripts\ZenModules\Zen_safeStartTimer.sqf";
             };
         };
         class Paradrop {

@@ -30,6 +30,16 @@ if (!isServer) exitWith {
 
 [_taskId, _state, true] call BIS_fnc_taskSetState;
 
+// Keep the AAR objective ledger in sync (broadcast for the client-side ENDEX debrief).
+private _ledger = +(missionNamespace getVariable ["Waldo_AAR_Tasks", []]);
+private _at = _ledger findIf {(_x select 0) isEqualTo _taskId};
+if (_at < 0) then {
+    _ledger pushBack [_taskId, _state];
+} else {
+    (_ledger select _at) set [1, _state];
+};
+missionNamespace setVariable ["Waldo_AAR_Tasks", _ledger, true];
+
 // Remove the helper-created marker once the task is resolved.
 if (toUpper _state in ["SUCCEEDED", "FAILED", "CANCELED"]) then {
     private _mName = format ["Waldo_obj_%1", _taskId];

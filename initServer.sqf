@@ -84,3 +84,24 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 if (missionNamespace getVariable ["Waldo_RunDiagnostics", true]) then {
     [] spawn Waldo_fnc_RunDiagnostics;
 };
+
+/*
+Safestart (optional)
+
+Freezes all players at mission start - weapons safe, no damage dealt or received, confined to a
+safe zone, with an on-screen banner. Lift it (go live) from the Zeus "Waldos Mission Modules" menu
+or from script with [false] call Waldo_fnc_SafeStart. A timed go-live can be started from Zeus or
+with [seconds] call Waldo_fnc_SafeStartTimer.
+
+Confinement defaults to a 75m radius around each player's start position. To use one shared zone,
+place a marker and set Waldo_SafeStart_ZoneMarker to its name. Tune or disable below.
+
+Set Waldo_SafeStart_AutoStart to false to start the mission live (no safestart).
+*/
+missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];
+missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];
+missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];
+missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true];
+if (missionNamespace getVariable ["Waldo_SafeStart_AutoStart", true]) then {
+    [true] call Waldo_fnc_SafeStart;
+};

@@ -69,3 +69,24 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     },
     "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"
 ] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Safestart - Activate",
+    {
+        [true] remoteExec ["Waldo_fnc_SafeStart", 2];
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\interact_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Safestart - Go Live (Lift)",
+    {
+        [false] remoteExec ["Waldo_fnc_SafeStart", 2];
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\attack_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Safestart - Start Go-Live Countdown",
+    {
+        [] call Waldo_fnc_ZenSafeStartTimer;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
+] call zen_custom_modules_fnc_register;

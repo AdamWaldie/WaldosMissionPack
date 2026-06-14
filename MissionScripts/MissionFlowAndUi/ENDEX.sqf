@@ -22,12 +22,53 @@ if !(isNil {missionNamespace getVariable "Waldo_AAR_StartTime"}) then {
     private _secs = floor (_elapsed % 60);
     private _kia = missionNamespace getVariable ["Waldo_AAR_KIA", [0,0,0,0]];
     private _playerKia = missionNamespace getVariable ["Waldo_AAR_PlayerKIA", 0];
+    private _vehKia = missionNamespace getVariable ["Waldo_AAR_VehKIA", [0,0,0,0]];
+    private _wia = missionNamespace getVariable ["Waldo_AAR_WIA", [0,0,0,0]];
+    private _ff = missionNamespace getVariable ["Waldo_AAR_FF", 0];
+    private _frags = missionNamespace getVariable ["Waldo_AAR_Frags", []];
+    private _tasks = missionNamespace getVariable ["Waldo_AAR_Tasks", []];
     _kia params ["_wKia", "_eKia", "_iKia", "_cKia"];
 
     _aar = "<br /><t color='#106bb5' size='1.0' align='center'>- AFTER ACTION REPORT -</t><br />";
     _aar = _aar + format ["<t align='center'>Duration: %1m %2s</t><br />", _mins, _secs];
     _aar = _aar + format ["<t align='center'>KIA - BLUFOR %1 | OPFOR %2 | INDEP %3 | CIV %4</t><br />", _wKia, _eKia, _iKia, _cKia];
     _aar = _aar + format ["<t align='center'>Player losses: %1</t><br />", _playerKia];
+
+    // Vehicles destroyed (only shown if any were lost)
+    if ((_vehKia findIf {_x > 0}) >= 0) then {
+        _vehKia params ["_wVeh", "_eVeh", "_iVeh", "_cVeh"];
+        _aar = _aar + format ["<t align='center'>Vehicles lost - BLUFOR %1 | OPFOR %2 | INDEP %3 | CIV %4</t><br />", _wVeh, _eVeh, _iVeh, _cVeh];
+    };
+
+    // WIA (only shown if any were recorded - requires ACE)
+    if ((_wia findIf {_x > 0}) >= 0) then {
+        _wia params ["_wWia", "_eWia", "_iWia", "_cWia"];
+        _aar = _aar + format ["<t align='center'>WIA - BLUFOR %1 | OPFOR %2 | INDEP %3 | CIV %4</t><br />", _wWia, _eWia, _iWia, _cWia];
+    };
+
+    // Friendly-fire incidents (only shown if any)
+    if (_ff > 0) then {
+        _aar = _aar + format ["<t align='center'>Friendly-fire incidents: %1</t><br />", _ff];
+    };
+
+    // Objective summary (only shown if any tasks were registered via Waldo_fnc_CreateObjective)
+    if (count _tasks > 0) then {
+        private _succeeded = {(toUpper (_x select 1)) == "SUCCEEDED"} count _tasks;
+        private _failed = {(toUpper (_x select 1)) in ["FAILED", "CANCELED"]} count _tasks;
+        private _objLine = format ["<t align='center'>Objectives: %1/%2 complete", _succeeded, count _tasks];
+        if (_failed > 0) then { _objLine = _objLine + format [", %1 failed", _failed]; };
+        _aar = _aar + _objLine + "</t><br />";
+    };
+
+    // Top fraggers leaderboard (only shown if any player kills were recorded)
+    if (count _frags > 0) then {
+        private _sorted = [_frags, [], {_x select 1}, "DESCEND"] call BIS_fnc_sortBy;
+        _aar = _aar + "<t align='center'>Top fraggers:</t><br />";
+        {
+            _x params ["_fragName", "_fragCount"];
+            _aar = _aar + format ["<t align='center'>%1 (%2)</t><br />", _fragName, _fragCount];
+        } forEach (_sorted select [0, 3]);
+    };
 };
 
 hint parseText(_title + _text0 + _text1 + _aar);
