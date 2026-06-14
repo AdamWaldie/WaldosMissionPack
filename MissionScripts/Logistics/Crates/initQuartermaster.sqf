@@ -48,177 +48,177 @@ Waldo_QM_Wheel = {
 };
 
 Waldo_QM_InitMedBox = [
-	"Waldo_QM_InitMedBox",
-	"Retrieve Medical Box",
-	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
-	{
-		params ["_target","_player","_args"];
-		_args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
-		// Runs on Action Called
-		[10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
-			_args call Waldo_QM_Medbox;
-		}, {["Medical Box Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
-	},
-	{
-		//[_target, _player, _actionParams] Condition
-		(_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
-	},
-	{},
-	[_offsetDegrees,_offsetDistance],
-	[],
-	0,
-	[false, false, false, false, false]
+    "Waldo_QM_InitMedBox",
+    "Retrieve Medical Box",
+    "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+    {
+        params ["_target","_player","_args"];
+        _args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
+        // Runs on Action Called
+        [10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
+            _args call Waldo_QM_Medbox;
+        }, {["Medical Box Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
+    },
+    {
+        //[_target, _player, _actionParams] Condition
+        (_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
+    },
+    {},
+    [_offsetDegrees,_offsetDistance],
+    [],
+    0,
+    [false, false, false, false, false]
 ] call ace_interact_menu_fnc_createAction;
 
 Waldo_QM_InitAmmoBox = [
-	"Waldo_QM_InitAmmoBox",
-	"Retrieve Ammo Box",
-	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
-	{
-		params ["_target","_player","_args"];
-		_args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
-		// Runs on Action Called
-		[10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
-			_args call Waldo_QM_Ammobox;
-		}, {["Ammo Box Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
-	},
-	{
-		//[_target, _player, _actionParams] Condition
-		(_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
-	},
-	{},
-	[_offsetDegrees,_offsetDistance],
-	[],
-	0,
-	[false, false, false, false, false]
+    "Waldo_QM_InitAmmoBox",
+    "Retrieve Ammo Box",
+    "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+    {
+        params ["_target","_player","_args"];
+        _args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
+        // Runs on Action Called
+        [10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
+            _args call Waldo_QM_Ammobox;
+        }, {["Ammo Box Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
+    },
+    {
+        //[_target, _player, _actionParams] Condition
+        (_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
+    },
+    {},
+    [_offsetDegrees,_offsetDistance],
+    [],
+    0,
+    [false, false, false, false, false]
 ] call ace_interact_menu_fnc_createAction;
 
 Waldo_QM_InitFullBox = [
-	"Waldo_QM_InitFullBox",
-	"Retrieve Heavy Supply Box",
-	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
-	{
-		params ["_target","_player","_args"];
-		_args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
-		// Runs on Action Called
-		[10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
-			_args call Waldo_QM_Fullbox;
-		}, {["Supply Box Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
-	},
-	{
-		//[_target, _player, _actionParams] Condition
-		(_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
-	},
-	{},
-	[_offsetDegrees,_offsetDistance],
-	[],
-	0,
-	[false, false, false, false, false]
+    "Waldo_QM_InitFullBox",
+    "Retrieve Heavy Supply Box",
+    "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+    {
+        params ["_target","_player","_args"];
+        _args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
+        // Runs on Action Called
+        [10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
+            _args call Waldo_QM_Fullbox;
+        }, {["Supply Box Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
+    },
+    {
+        //[_target, _player, _actionParams] Condition
+        (_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
+    },
+    {},
+    [_offsetDegrees,_offsetDistance],
+    [],
+    0,
+    [false, false, false, false, false]
 ] call ace_interact_menu_fnc_createAction;
 
 Waldo_QM_InitTrack = [
-	"Waldo_QM_InitTrack",
-	"Retrieve Spare Track",
-	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
-	{
-		params ["_target","_player","_args"];
-		_args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
-		// Runs on Action Called
-		[10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
-			_args call Waldo_QM_Track;
-		}, {["Spare Track Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
-	},
-	{
-		//[_target, _player, _actionParams] Condition
-		(_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
-	},
-	{},
-	[_offsetDegrees,_offsetDistance],
-	[],
-	0,
-	[false, false, false, false, false]
+    "Waldo_QM_InitTrack",
+    "Retrieve Spare Track",
+    "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+    {
+        params ["_target","_player","_args"];
+        _args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
+        // Runs on Action Called
+        [10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
+            _args call Waldo_QM_Track;
+        }, {["Spare Track Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
+    },
+    {
+        //[_target, _player, _actionParams] Condition
+        (_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
+    },
+    {},
+    [_offsetDegrees,_offsetDistance],
+    [],
+    0,
+    [false, false, false, false, false]
 ] call ace_interact_menu_fnc_createAction;
 
 Waldo_QM_InitWheel = [
-	"Waldo_QM_InitWheel",
-	"Retrieve Spare Wheel",
-	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
-	{
-		params ["_target","_player","_args"];
-		_args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
-		// Runs on Action Called
-		[10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
-			_args call Waldo_QM_Wheel;
-		}, {["Spare Track Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
-	},
-	{
-		//[_target, _player, _actionParams] Condition
-		(_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
-	},
-	{},
-	[_offsetDegrees,_offsetDistance],
-	[],
-	0,
-	[false, false, false, false, false]
+    "Waldo_QM_InitWheel",
+    "Retrieve Spare Wheel",
+    "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+    {
+        params ["_target","_player","_args"];
+        _args params ["_ConstructionAudioPath","_offsetDegrees","_offsetDistance"];
+        // Runs on Action Called
+        [10, [_target, _player,_ConstructionAudioPath,_offsetDegrees,_offsetDistance], {
+            _args call Waldo_QM_Wheel;
+        }, {["Spare Track Left In Storage.", _player] call Waldo_fnc_DynamicText;}, "Rummaging Through The Stores."] call ace_common_fnc_progressBar;
+    },
+    {
+        //[_target, _player, _actionParams] Condition
+        (_target getVariable 'Waldo_LogisticsQM_CurrentStatus') && (_player distance _target) < 6 && speed _target < 1;
+    },
+    {},
+    [_offsetDegrees,_offsetDistance],
+    [],
+    0,
+    [false, false, false, false, false]
 ] call ace_interact_menu_fnc_createAction;
 
 
 // Add action to Vehicle (ACE 3)
 
 Waldo_QM_Category = [
-	"Waldo_QM_Category" ,
-	"Logistics Quartermaster",
-	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
-	{true},
-	{true}
+    "Waldo_QM_Category" ,
+    "Logistics Quartermaster",
+    "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+    {true},
+    {true}
 ] call ace_interact_menu_fnc_createAction;
 
 Waldo_QM_DeployPlease = [
-	"Waldo_QM_DeployPlease" ,
-	"Deploy To Access",
-	"\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
-	{true},
-	{!(_target getVariable 'Waldo_LogisticsQM_CurrentStatus');}
+    "Waldo_QM_DeployPlease" ,
+    "Deploy To Access",
+    "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+    {true},
+    {!(_target getVariable 'Waldo_LogisticsQM_CurrentStatus');}
 ] call ace_interact_menu_fnc_createAction;
 
 [_target,
-	0, 
-	["ACE_MainActions"], 
-	Waldo_QM_Category
+    0, 
+    ["ACE_MainActions"], 
+    Waldo_QM_Category
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-	0, 
-	["ACE_MainActions","Waldo_QM_Category"], 
-	Waldo_QM_DeployPlease
+    0, 
+    ["ACE_MainActions","Waldo_QM_Category"], 
+    Waldo_QM_DeployPlease
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-	0, 
-	["ACE_MainActions","Waldo_QM_Category"], 
-	Waldo_QM_InitMedBox
+    0, 
+    ["ACE_MainActions","Waldo_QM_Category"], 
+    Waldo_QM_InitMedBox
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-	0, 
-	["ACE_MainActions","Waldo_QM_Category"], 
-	Waldo_QM_InitAmmoBox
+    0, 
+    ["ACE_MainActions","Waldo_QM_Category"], 
+    Waldo_QM_InitAmmoBox
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-	0, 
-	["ACE_MainActions","Waldo_QM_Category"], 
-	Waldo_QM_InitFullBox
+    0, 
+    ["ACE_MainActions","Waldo_QM_Category"], 
+    Waldo_QM_InitFullBox
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-	0, 
-	["ACE_MainActions","Waldo_QM_Category"], 
-	Waldo_QM_InitTrack
+    0, 
+    ["ACE_MainActions","Waldo_QM_Category"], 
+    Waldo_QM_InitTrack
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-	0, 
-	["ACE_MainActions","Waldo_QM_Category"], 
-	Waldo_QM_InitWheel
+    0, 
+    ["ACE_MainActions","Waldo_QM_Category"], 
+    Waldo_QM_InitWheel
 ] call ace_interact_menu_fnc_addActionToObject;

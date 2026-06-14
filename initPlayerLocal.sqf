@@ -43,6 +43,10 @@ player addAction [
         //_unit setUnitLoadout (missionNamespace getVariable "Waldo_Player_Inventory");
         // Respawn Text
         [] spawn Waldo_fnc_RespawnText;
+        // Re-apply safestart if it is still active (respawn resets damage/handlers/position)
+        if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
+            [true] call Waldo_fnc_SafeStartApply;
+        };
         player addAction [
         "Flip Vehicle", 
         "MissionScripts\Logistics\LogiHelpers\flipAction.sqf", 
@@ -55,6 +59,11 @@ player addAction [
     ];
     };
 }] call CBA_fnc_addClassEventHandler;
+
+// Apply safestart to this client if a freeze is already active when they join (JIP).
+if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
+    [true] call Waldo_fnc_SafeStartApply;
+};
 
 /*
 =====================ACE 3 SAVE LOADOUT ON ARSENAL CLOSE====================================

@@ -18,6 +18,24 @@ Enable/disable them as it suits you.
 //Zeus Enhanced Modules setup (comment out to disable)
 [] call Waldo_fnc_ZenInitModules;
 
+/*
+After-Action WIA listener (ACE)
+
+ACE raises "ace_unconscious" locally on the machine owning the unit, so it cannot be caught by the
+server-only EntityKilled handler in Waldo_fnc_AARTrack. This all-machines listener forwards each
+unit's first unconsciousness to the server (Waldo_fnc_AARWound) so the ENDEX debrief can show WIA
+per side. Counts each unit once. Silently absent if ACE medical is not loaded.
+*/
+if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
+    ["ace_unconscious", {
+        params ["_unit", "_state"];
+        if (_state && {local _unit} && {!(_unit getVariable ["Waldo_AAR_Wounded", false])}) then {
+            _unit setVariable ["Waldo_AAR_Wounded", true];
+            [[west, east, independent, civilian] find (side group _unit)] remoteExec ["Waldo_fnc_AARWound", 2];
+        };
+    }] call CBA_fnc_addEventHandler;
+};
+
 /*===========================================================================================================================*/
 
 //Set ace namespace variables for maximum drag/carryweights (Tune these so that you can carry/drag your logistics boxes ingame)

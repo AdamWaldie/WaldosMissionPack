@@ -3,6 +3,11 @@ Author: Waldo (Various Authors credited for the differing GUI and code snippets 
 
 This script initlises a virtual vehicle depot spawner. At present this script is incomplete and is WIP. It is released as is to allow for my co-operators to see how the script progresses.
 
+WARNING: Not recommended for live missions. UAV removal is unreliable (~50%) due to an Arma
+engine limitation around UAV crew/connection lifecycle, not a simple bug, and has no robust fix.
+For a stable vehicle-spawning experience, use ACE Garage instead. Test thoroughly with your
+exact mod set before relying on this in a real mission.
+
 Arguments:
 _depotSpawnerObject - The item to add the spawner addactions onto
 _depotSpawnPoint - Should be a helipad, but a flat object ontop of which the vehicle will be spawned

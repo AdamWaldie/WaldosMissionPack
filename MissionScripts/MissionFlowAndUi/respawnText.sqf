@@ -18,20 +18,20 @@ _RnkAndName = rank player + ' ' + name player;
 
 _textColour = switch (side player) do
 {
-	case west: {"'#0055aa'"};
-	case east: {"'#770000'"};
-	case resistance: {"'#008e00'"};
-	case civilian: {"'#65007e'"};
-	default {"'#ed9d18'"};
+    case west: {"'#0055aa'"};
+    case east: {"'#770000'"};
+    case resistance: {"'#008e00'"};
+    case civilian: {"'#65007e'"};
+    default {"'#ed9d18'"};
 };
 waitUntil { sleep 1; (!isNull player && time > 0) };
 sleep 1;
 [
-	[
-		[_time, "<t align = 'center' shadow = '1' size = '0.7'>%1</t><br/>"],
-		[_date, "<t align = 'center' shadow = '1' size = '0.6' font='PuristaBold'>%1</t><br/>", 10]
-	],
-	-safezoneX + 0.2, ((safeZoneY + safeZoneH / 2) + 0.2)
+    [
+        [_time, "<t align = 'center' shadow = '1' size = '0.7'>%1</t><br/>"],
+        [_date, "<t align = 'center' shadow = '1' size = '0.6' font='PuristaBold'>%1</t><br/>", 10]
+    ],
+    -safezoneX + 0.2, ((safeZoneY + safeZoneH / 2) + 0.2)
 ] spawn BIS_fnc_typeText;
 sleep 6;
 
@@ -42,8 +42,8 @@ _text3 = "<t align = 'center' shadow = '1' size = '0.6'>%1</t><br/>";
 [  
     [  
         [_RnkAndName, _text1],  
-		 [_groupInfo, _text3],
+         [_groupInfo, _text3],
         [_localePos, _text2, 15] 
     ],
-	-safezoneX + 0.2, ((safeZoneY + safeZoneH / 2) + 0.2) 
+    -safezoneX + 0.2, ((safeZoneY + safeZoneH / 2) + 0.2) 
 ] spawn BIS_fnc_typeText;

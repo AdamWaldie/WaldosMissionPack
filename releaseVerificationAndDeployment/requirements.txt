@@ -1,0 +1,13 @@
+# Python dependencies for the WaldosMissionPack dev/CI tooling in this directory.
+#
+# sqf_validator.py and config_style_checker.py use only the Python standard
+# library, so no install is required to run them.
+#
+# sqf_linter.py is an optional local linter that depends on the third-party
+# "sqf" module (LordGolias/sqf), published on PyPI as `sqflint`. Install with:
+#   pip install -r releaseVerificationAndDeployment/requirements.txt
+#
+# Note: CI runs the linter via the arma-actions/sqflint GitHub Action
+# (see .github/workflows/testing.yml), not this file. This requirements file
+# exists so the local linter is reproducible for contributors.
+sqflint

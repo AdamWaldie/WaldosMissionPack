@@ -11,9 +11,9 @@ Waldo_fnc_AITweak as an Alias for calling the longhand script
 */
 class CfgFunctions
 {
-	class Waldo
-	{
-		class InitilisationAndSetup 
+    class Waldo
+    {
+        class InitilisationAndSetup 
         {
             class GetPlayerGroup {
                 file = "MissionScripts\MissionInit\InitHelpers\GetPlayerGroup.sqf";
@@ -86,9 +86,6 @@ class CfgFunctions
             class ACRE2Init {
                 file = "MissionScripts\MissionInit\ACRE2\ACRE2Init.sqf";
             };
-            class ACRE2Init_Legacy {
-                file = "MissionScripts\MissionInit\ACRE2\ACRE2Init_Legacy.sqf";
-            };
             class SquadLevelRadios {
                 file = "MissionScripts\MissionInit\ACRE2\ACRE2SquadLevelRadios.sqf";
             };
@@ -117,10 +114,40 @@ class CfgFunctions
                 file =  "MissionScripts\Logistics\LogiHelpers\teleport.sqf";
             };
         };
-        class MissionEnding 
+        class MissionEnding
         {
             class ENDEX {
                 file = "MissionScripts\MissionFlowAndUi\ENDEX.sqf";
+            };
+            class AARTrack {
+                file = "MissionScripts\MissionFlowAndUi\aarTrack.sqf";
+            };
+            class AARWound {
+                file = "MissionScripts\MissionFlowAndUi\aarWound.sqf";
+            };
+            class SafeStart {
+                file = "MissionScripts\MissionFlowAndUi\safeStart.sqf";
+            };
+            class SafeStartApply {
+                file = "MissionScripts\MissionFlowAndUi\safeStartApply.sqf";
+            };
+            class SafeStartTimer {
+                file = "MissionScripts\MissionFlowAndUi\safeStartTimer.sqf";
+            };
+        };
+        class Diagnostics
+        {
+            class RunDiagnostics {
+                file = "MissionScripts\MissionFlowAndUi\runDiagnostics.sqf";
+            };
+        };
+        class Tasks
+        {
+            class CreateObjective {
+                file = "MissionScripts\MissionFlowAndUi\createObjective.sqf";
+            };
+            class SetObjectiveState {
+                file = "MissionScripts\MissionFlowAndUi\setObjectiveState.sqf";
             };
         };
         class TitleScreeen 
@@ -139,12 +166,6 @@ class CfgFunctions
             };
         };
         class Logistics {
-            class MedicalCratePopulate_Legacy {
-                file = "MissionScripts\Logistics\Crates\doMedicalCrate_Legacy.sqf";
-            };
-            class SupplyCratePopulate_Legacy {
-                file = "MissionScripts\Logistics\Crates\doSupplyCrate_Legacy.sqf";
-            };
             class MedicalCratePopulate {
                 file = "MissionScripts\Logistics\Crates\doMedicalCrate.sqf";
             };
@@ -177,6 +198,12 @@ class CfgFunctions
             };
             class SideBaseLoadoutSetup {
                 file = "MissionScripts\Logistics\LogiHelpers\sideBasedLoadoutSetup.sqf";
+            };
+            class GetSideLoadoutArray {
+                file = "MissionScripts\Logistics\LogiHelpers\getSideLoadoutArray.sqf";
+            };
+            class UniqueLoadoutArray {
+                file = "MissionScripts\Logistics\LogiHelpers\uniqueLoadoutArray.sqf";
             };
         };
         class MapStuff {
@@ -220,11 +247,17 @@ class CfgFunctions
             class FortifyBudgetModule {
                 file = "MissionScripts\ZenModules\Zen_fortifyBudgetModule.sqf";
             };
+            class ZenConvoyModule {
+                file = "MissionScripts\ZenModules\Zen_convoyModule.sqf";
+            };
             class ZenLoadoutSaveModule {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveModule.sqf";
             };
             class ZenAddLoadoutSaveAction {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveSetup.sqf";
+            };
+            class ZenSafeStartTimer {
+                file = "MissionScripts\ZenModules\Zen_safeStartTimer.sqf";
             };
         };
         class Paradrop {
@@ -284,5 +317,5 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDVehicleDamage.sqf";
             };
         };
-	};
+    };
 };

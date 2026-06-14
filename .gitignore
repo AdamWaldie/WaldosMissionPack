@@ -1,0 +1,6 @@
+# Python tooling artifacts
+__pycache__/
+*.pyc
+
+# Build output
+release/

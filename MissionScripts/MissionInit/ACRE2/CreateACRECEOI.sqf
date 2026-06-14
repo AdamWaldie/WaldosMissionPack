@@ -62,70 +62,70 @@ _SRChannelAssignments = missionNamespace getVariable ["Waldo_ACRE2Setup_Callsign
 private _SRChannelText = "<font size='14'>Squad Radio Assignments:</font><br/><br/>";
 
 if (missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_flag",false]) then {
-	switch (side player) do {
-		case west: {
-			{
-				_sideCallsign = _x;
-				{
-					if (_sideCallsign == (_x select 0)) then {
-						_SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
-						if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
-							_SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
-						} else {
-							_SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
-						};
-					};
-				} foreach _SRChannelAssignments;
-			} foreach _westSquads;
-		};
-		case east: {
-			{
-				_sideCallsign = _x;
-				{
-					if (_sideCallsign == (_x select 0)) then {
-						_SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
-						if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
-							_SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
-						} else {
-							_SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
-						};
-					};
-				} foreach _SRChannelAssignments;
-			} foreach _eastSquads;
-		};
-		case independent: {
-			{
-				_sideCallsign = _x;
-				{
-					if (_sideCallsign == (_x select 0)) then {
-						_SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
-						if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
-							_SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
-						} else {
-							_SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
-						};
-					};
-				} foreach _SRChannelAssignments;
-			} foreach _independentSquads;
-		};
-		default {
-			{
-				_sideCallsign = _x;
-				{
-					if (_sideCallsign == (_x select 0)) then {
-						_SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
-						if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
-							_SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
-						} else {
-							_SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
-						};
-					};
-				} foreach _SRChannelAssignments;
-			} foreach _arrayCivSide;
-		};
-	};
+    switch (side player) do {
+        case west: {
+            {
+                _sideCallsign = _x;
+                {
+                    if (_sideCallsign == (_x select 0)) then {
+                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
+                            _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
+                        } else {
+                            _SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
+                        };
+                    };
+                } foreach _SRChannelAssignments;
+            } foreach _westSquads;
+        };
+        case east: {
+            {
+                _sideCallsign = _x;
+                {
+                    if (_sideCallsign == (_x select 0)) then {
+                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
+                            _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
+                        } else {
+                            _SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
+                        };
+                    };
+                } foreach _SRChannelAssignments;
+            } foreach _eastSquads;
+        };
+        case independent: {
+            {
+                _sideCallsign = _x;
+                {
+                    if (_sideCallsign == (_x select 0)) then {
+                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
+                            _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
+                        } else {
+                            _SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
+                        };
+                    };
+                } foreach _SRChannelAssignments;
+            } foreach _independentSquads;
+        };
+        default {
+            {
+                _sideCallsign = _x;
+                {
+                    if (_sideCallsign == (_x select 0)) then {
+                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
+                            _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
+                        } else {
+                            _SRChannelText =  _SRChannelText + format ["%1 - %2<br/>",_SrChannel, _sideCallsign];
+                        };
+                    };
+                } foreach _SRChannelAssignments;
+            } foreach _arrayCivSide;
+        };
+    };
 } else {
-	_SRChannelText = _SRChannelText + format["SR Radio Assignments have failed, or a different radio is being utilised.<br/><br/>"]
+    _SRChannelText = _SRChannelText + format["SR Radio Assignments have failed, or a different radio is being utilised.<br/><br/>"]
 };
 
 //Add SR Text onto CEOI
@@ -137,27 +137,27 @@ _LRChannelText = "<br/><br/><font size='14'>Long Range Radio Assignments:</font>
 _lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_CIV", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
 
 switch (side player) do {
-	case west: {
-		_lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_BLUFOR", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
-	};
-	case east: {
-		_lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_OPFOR", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
-	};
-	case independent: {
-		_lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_IND", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
-	};
-	default {
-		_lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_CIV", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
-	};
+    case west: {
+        _lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_BLUFOR", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
+    };
+    case east: {
+        _lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_OPFOR", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
+    };
+    case independent: {
+        _lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_IND", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
+    };
+    default {
+        _lrChannelNames = missionNamespace getVariable ["Waldo_ACRE2Setup_lrChannelNames_CIV", ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"]];
+    };
 };
 
 {
-	_ChannelNumber = _foreachIndex+1;
-	if ((_LRAssignments find _ChannelNumber) != -1) then {
-		_LRChannelText =  _LRChannelText + format ["<font color='#47ff47'>Channel %1: %2</font><br/>",_ChannelNumber,_x];
-	} else {
-		_LRChannelText =  _LRChannelText + format ["Channel %1: %2<br/>",_ChannelNumber,_x];
-	};
+    _ChannelNumber = _foreachIndex+1;
+    if ((_LRAssignments find _ChannelNumber) != -1) then {
+        _LRChannelText =  _LRChannelText + format ["<font color='#47ff47'>Channel %1: %2</font><br/>",_ChannelNumber,_x];
+    } else {
+        _LRChannelText =  _LRChannelText + format ["Channel %1: %2<br/>",_ChannelNumber,_x];
+    };
 } foreach _lrChannelNames;
 
 //Add LR Section

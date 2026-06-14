@@ -216,7 +216,61 @@ Two optional behaviours are commented out by default — uncomment to enable:
 
 Freezes the mission: broadcasts "ENDEX ENDEX ENDEX", locks all weapons (ACE safety mode), heals all players, deletes fired rounds, sets all AI to CARELESS/BLUE, makes all players invincible. Also accessible via the Zeus Enhanced "Call Endex" module.
 
+The ENDEX hint also shows an **After-Action Report** when AAR tracking is running. Tracking is started automatically from `initServer.sqf` via `[] call Waldo_fnc_AARTrack`, which registers a single `EntityKilled` mission event handler (fires on all machines, so server-side registration captures every kill). If `Waldo_AAR_StartTime` is unset the ENDEX simply omits the AAR block.
+
+The AAR reports: mission **duration**, **KIA** per side, **player losses**, **vehicles lost** per side, **WIA** per side, **friendly-fire** incidents, an **objective summary**, and a **top-fraggers** leaderboard. Each extra line is omitted when its tally is empty. Details:
+- *Vehicle losses / friendly fire / fraggers* come from the same `EntityKilled` handler, which now also reads `_killer`/`_instigator`: a kill where instigator and victim share a side counts as friendly fire; an enemy kill by a human player feeds the leaderboard (`Waldo_AAR_Frags`).
+- *WIA* requires **ACE medical**. An `ace_unconscious` listener registered in `init.sqf` (runs on all machines) forwards each unit's first unconsciousness to the server via `Waldo_fnc_AARWound`, so each wounded unit is counted once.
+- *Objective summary* is populated automatically when objectives are created with `Waldo_fnc_CreateObjective` / resolved with `Waldo_fnc_SetObjectiveState` (they maintain the broadcast `Waldo_AAR_Tasks` ledger).
+
 For a custom end screen, configure `CfgDebriefing` → `End1` in `description.ext`, then trigger with `[[], "End1"] call BIS_fnc_endMission;`.
+
+### Safestart (optional)
+
+Freezes all players at mission start — the reversible mirror of ENDEX. While active: weapons are safe and every shot/grenade/launcher/vehicle-weapon round is deleted, players take and deal **no damage**, players are **confined to a safe zone**, and an on-screen **banner** (with a live go-live countdown when a timer is running) is shown. JIP and respawning players are re-frozen automatically.
+
+Auto-starts from `initServer.sqf` (set the flag to false to start the mission live):
+```sqf
+missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
+missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
+missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
+missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false = no safestart at start
+```
+
+Scripting API (server-authoritative — safe to call from a client, it forwards to the server):
+```sqf
+[true]  call Waldo_fnc_SafeStart;        // activate
+[false] call Waldo_fnc_SafeStart;        // go live (admin overrule; also cancels any countdown)
+[300]   call Waldo_fnc_SafeStartTimer;   // go live automatically in 300s (banner shows the clock)
+```
+
+Zeus ("Waldos Mission Modules"): **Safestart - Activate**, **Safestart - Go Live (Lift)**, and **Safestart - Start Go-Live Countdown** (prompts for minutes). The countdown can be overruled at any time with the Lift module. Implemented in `MissionScripts/MissionFlowAndUi/safeStart.sqf`, `safeStartTimer.sqf`, `safeStartApply.sqf`.
+
+### Mission Diagnostics (optional)
+
+Runs a server-side configuration sanity check at mission start (after the loadout scan) and reports the most common WMP misconfigurations to the RPT log (lines prefixed `[WMP DIAG]`), echoing warnings to admins via `systemChat`. It is read-only — it never changes mission state.
+
+```sqf
+// In initServer.sqf — set to false to silence it for a shipping mission:
+missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
+```
+
+Checks: required mods present (CBA, ACE); per-side loadout scrapes not empty when that side has playable slots (catches vanilla loadouts / binarized `mission.sqm`); supply/medical crate classnames are valid `CfgVehicles` classes; paradrop thresholds sane and parachute classes valid; ACRE2 LR channel arrays populated (only if ACRE2 loaded). Implemented in `MissionScripts/MissionFlowAndUi/runDiagnostics.sqf` (`Waldo_fnc_RunDiagnostics`).
+
+### Tasks / Objectives (scripting helper)
+
+A thin, JIP-safe wrapper over the BIS task framework for mission makers who drive objectives from SQF/triggers (the Eden and Zeus task modules remain the GUI option). Server-authoritative — calling on a client forwards to the server automatically.
+
+```sqf
+// Create an assigned task with a persistent map marker at the destination:
+["secure_lz", west, "Secure the LZ", "Clear and hold the landing zone.", getMarkerPos "lz1"]
+    call Waldo_fnc_CreateObjective;
+
+// Later, resolve it (also removes the helper-created marker):
+["secure_lz", "SUCCEEDED"] call Waldo_fnc_SetObjectiveState;
+```
+
+Params for `Waldo_fnc_CreateObjective`: `[taskId, owner, title, description, destination, state, createMarker, taskType]`. See the script headers in `MissionScripts/MissionFlowAndUi/createObjective.sqf` and `setObjectiveState.sqf`.
 
 ### Virtual Vehicle Depot (VVD) — WIP
 
@@ -227,7 +281,7 @@ For a custom end screen, configure `CfgDebriefing` → `End1` in `description.ex
 // allowedSides: ["ALL"], ["BLUFOR"], ["OPFOR"], ["INDEP"], ["CIV"]
 ```
 
-This feature is explicitly marked WIP. UAV removal is unreliable (~50%). Test thoroughly with your mod set before using in a live mission.
+This feature is explicitly marked **WIP and not recommended for live missions**. UAV removal is unreliable (~50%) due to an Arma engine limitation around UAV crew/connection lifecycle — it is not a simple scripting bug and has no robust fix. For a stable vehicle-spawning experience use **ACE Garage** instead. If you do use VVD, test thoroughly with your exact mod set first.
 
 ### Zeus Enhanced Modules
 
@@ -235,7 +289,7 @@ This feature is explicitly marked WIP. UAV removal is unreliable (~50%). Test th
 [] call Waldo_fnc_ZenInitModules; // already called in init.sqf
 ```
 
-Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager. Silently does nothing if Zeus Enhanced is not loaded.
+Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager, Spawn AI Convoy. Silently does nothing if Zeus Enhanced is not loaded.
 
 ---
 
@@ -285,7 +339,6 @@ CBA is the event system backbone. WMP uses it for all unit lifecycle hooks.
 | `CBA_fnc_addEventHandler` | `initPlayerLocal.sqf` | Fires on a named game event (e.g. `ace_arsenal_displayClosed`). Used for the optional "save loadout on arsenal close" feature. |
 | `CBA_fnc_execNextFrame` | `ZenModules/` | Defers code by one frame — used so Zeus curator objects exist before being referenced. |
 | `CBA_fnc_notify` | `Paradrop/paraEquipmentSim.sqf`, `checkForJumpSettings.sqf` | Brief on-screen notification. Used to tell jumpers what equipment was lost on exit. |
-| `CBA_fnc_waitUntilAndExecute` | `ACRE2Init_Legacy.sqf` | Waits for a condition then runs code — defers radio assignment until ACRE is ready. |
 | `CBA_fnc_setPos` / `CBA_fnc_setHeight` | `teleport.sqf` | Position setters used by the teleport system. |
 | `CBA_fnc_hashCreate` / `CBA_fnc_hashGet` | `GetSRChannelName.sqf` | Key-value store mapping squad callsigns to ACRE2 channel data. |
 
@@ -445,6 +498,11 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Call Endex → `remoteExec ["Waldo_fnc_ENDEX", 0, true]`
 - Custom Mission End → `["end1"] remoteExec ["BIS_fnc_endMission", 0, true]`
 - Fortify Budget Manager → calls `Waldo_fnc_FortifyBudgetModule`
+- Spawn AI Convoy → calls `Waldo_fnc_ZenConvoyModule` (turns the nearest crewed land-vehicle group into a managed convoy via `Waldo_fnc_SimpleAiConvoy`)
+- Loadout Save Point → calls `Waldo_fnc_ZenLoadoutSaveModule`
+- Safestart - Activate → `[true] remoteExec ["Waldo_fnc_SafeStart", 2]`
+- Safestart - Go Live (Lift) → `[false] remoteExec ["Waldo_fnc_SafeStart", 2]`
+- Safestart - Start Go-Live Countdown → calls `Waldo_fnc_ZenSafeStartTimer` (prompts for minutes, then `Waldo_fnc_SafeStartTimer`)
 
 ---
 

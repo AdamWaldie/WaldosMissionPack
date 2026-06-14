@@ -20,11 +20,11 @@ Called from the Init.sqf if in use
 Player Makers Script (Best utilised When ACE Markers Are Not An Option)
 
 Parameters >>
-	"players" - Will show players.
-	"ais" - Will show AIs.
-	"allsides" - Will show all sides not only the units on player's side.
-	"all" - Enable all of the above.
-	"stop" - Stop the script.
+    "players" - Will show players.
+    "ais" - Will show AIs.
+    "allsides" - Will show all sides not only the units on player's side.
+    "all" - Enable all of the above.
+    "stop" - Stop the script.
 
 Example code - 0 = ["players"] execVM "player_markers.sqf";
 

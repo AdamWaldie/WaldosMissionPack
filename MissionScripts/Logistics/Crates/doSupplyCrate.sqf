@@ -32,26 +32,10 @@ waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
 //Double Security with ensuring mission.sqm sweep
 waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 
-//default setup
-private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_West";
-//get all loadout data by default
-if (_crateSupplySide == EAST) then {
-    _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_East";
-};
-if (_crateSupplySide == INDEPENDENT) then {
-    _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_Ind";
-};
-if (_crateSupplySide == CIVILIAN) then {
-    _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray_Civ";
-};
-
+//Get the loadout pool for the requested side (defaults to west)
+private _loadoutArray = [_crateSupplySide] call Waldo_fnc_GetSideLoadoutArray;
 
 _loadoutArray params["_mainWeapons","_mainAmmo","_launchers","_launcherAmmo","_pGear","_pItems","_pBackpack","_weapAttach"];
-
-/*
-private _loadoutArray = missionNamespace getVariable "Logi_MissionSQMArray";
-_loadoutArray params["_mainWeapons","_mainAmmo","_launchers","_launcherAmmo","_pGear","_pItems","_pBackpack","_weapAttach"];
-*/
 private _MedicalItems = ["Medikit","FirstAidKit","ACE_fieldDressing","ACE_packingBandage","ACE_elasticBandage","ACE_tourniquet","ACE_splint","ACE_morphine","ACE_adenosine","ACE_epinephrine","ACE_plasmaIV","ACE_plasmaIV_500","ACE_plasmaIV_250","ACE_salineIV","ACE_salineIV_500","ACE_salineIV_250","ACE_bloodIV","ACE_bloodIV_500","ACE_bloodIV_250","ACE_quikclot","ACE_personalAidKit","ACE_surgicalKit"];
 
 // Remove ACE Medical Items if applicable

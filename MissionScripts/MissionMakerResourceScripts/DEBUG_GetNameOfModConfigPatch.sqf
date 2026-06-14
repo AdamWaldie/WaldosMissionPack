@@ -6,6 +6,6 @@ _cfg_entry = (configFile / "CfgPatches") select _i;
 
 if (isClass _cfg_entry) then
 {
-	diag_log format ["%1", _cfg_entry];
+    diag_log format ["%1", _cfg_entry];
 };
 };
