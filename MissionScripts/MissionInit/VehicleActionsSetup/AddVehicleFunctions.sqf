@@ -91,7 +91,8 @@ if (_vehicle iskindOf "Heli_Transport_02_base_F") then {
     [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
     [_vehicle] call Waldo_fnc_JumpSettingsCheck;
 };
-// WIP for once I allow both systems
+// C130J supports both HALO and static-line jumps; their hold actions have
+// mutually-exclusive altitude conditions so only the valid one shows at a time.
 if (_vehicle iskindOf "RHS_C130J_Base") then {
     /*
     Waldo_fnc_AddHaloJump Arguments:

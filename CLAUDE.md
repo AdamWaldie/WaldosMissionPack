@@ -255,7 +255,7 @@ Params for `Waldo_fnc_CreateObjective`: `[taskId, owner, title, description, des
 // allowedSides: ["ALL"], ["BLUFOR"], ["OPFOR"], ["INDEP"], ["CIV"]
 ```
 
-This feature is explicitly marked WIP. UAV removal is unreliable (~50%). Test thoroughly with your mod set before using in a live mission.
+This feature is explicitly marked **WIP and not recommended for live missions**. UAV removal is unreliable (~50%) due to an Arma engine limitation around UAV crew/connection lifecycle — it is not a simple scripting bug and has no robust fix. For a stable vehicle-spawning experience use **ACE Garage** instead. If you do use VVD, test thoroughly with your exact mod set first.
 
 ### Zeus Enhanced Modules
 
