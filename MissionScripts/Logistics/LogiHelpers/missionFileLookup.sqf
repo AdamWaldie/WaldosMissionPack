@@ -1,201 +1,125 @@
 /*
+ * Author: Waldo
+ * Scrapes mission.sqm for every playable unit on the chosen side and returns a
+ * de-duplicated pool of their equipment, used to populate supply crates and the
+ * limited ACE arsenals. Mission binarization must be disabled for the SQM to be readable.
+ *
+ * Arguments:
+ * 0: Side <STRING> (Optional, default: "West") - "West" / "East" / "Independent" / "Civilian"
+ *
+ * Return Value:
+ * Loadout pool <ARRAY> - 8 sub-arrays, each either classnames or ["EMPTY"]:
+ *   0: Main weapons (primary, handgun, binoculars)
+ *   1: Magazines (launcher ammo removed)
+ *   2: Launchers
+ *   3: Launcher ammo
+ *   4: Worn gear (uniform, vest, headgear)
+ *   5: Items (map/compass/radio/gps/goggles/hmd + uniform/vest/backpack cargo items)
+ *   6: Backpacks
+ *   7: Weapon attachments (optics, muzzle, flashlight, underbarrel)
+ *
+ * Example:
+ * private _westPool = ["West"] call Waldo_fnc_MissionSQMLookup;
+ */
 
-Parameters:
-_sideChosen
+params [["_sideChosen", "West"]];
 
-Details on this call can be found in init.sqf
+// Output category accumulators (indices match the Return Value block above)
+private _PweapAndSdArm   = [];  // 0 primary + handgun + binoculars
+private _NormalMagazines = [];  // 1 magazines (launcher ammo removed at the end)
+private _PLauncher       = [];  // 2 launchers
+private _launchMagazines = [];  // 3 launcher ammo
+private _playerGear      = [];  // 4 uniform / vest / headgear
+private _inventoryItems  = [];  // 5 misc items + container cargo items
+private _PBackpacks       = []; // 6 backpacks
+private _attachments     = [];  // 7 weapon attachments
 
-This searches the mission.sqm for playable units on the side selected, returning an array of their equipment for use in the arsenal and supply boxes scripts.
+// Single-value inventory slots: [ path under <Inventory>, accumulator to push the classname into ].
+// Arrays are references in SQF, so pushing through the captured accumulator fills the real array.
+private _simpleSlots = [
+    [["primaryWeapon", "name"], _PweapAndSdArm],
+    [["handgun", "name"], _PweapAndSdArm],
+    [["binocular", "name"], _PweapAndSdArm],
+    [["secondaryWeapon", "name"], _PLauncher],
+    [["primaryWeapon", "primaryMuzzleMag", "name"], _NormalMagazines],
+    [["handgun", "primaryMuzzleMag", "name"], _NormalMagazines],
+    [["secondaryWeapon", "primaryMuzzleMag", "name"], _launchMagazines],
+    [["uniform", "typeName"], _playerGear],
+    [["vest", "typeName"], _playerGear],
+    [["backpack", "typeName"], _PBackpacks],
+    [["headgear"], _playerGear],
+    [["map"], _inventoryItems],
+    [["compass"], _inventoryItems],
+    [["radio"], _inventoryItems],   // TFAR radio slot (ACRE2 is unaffected by this read)
+    [["gps"], _inventoryItems],
+    [["goggles"], _inventoryItems],
+    [["hmd"], _inventoryItems]
+];
 
-THIS IS A FIRST PASS. When I get a moment, Ill go back through this and optimise it for time and space complexity.
+// Weapons that carry attachments, and the attachment slots read from each.
+// (handgun has no underBarrel in the SQM; that read returns "" and is dropped by the cleanup.)
+private _attachmentWeapons = ["primaryWeapon", "handgun", "secondaryWeapon"];
+private _attachmentSlots   = ["optics", "muzzle", "flashlight", "underBarrel"];
 
-*/
-params[["_sideChosen","West"]];
-private _PweapAndSdArm = [];
-private _PLauncher = [];
-private _launchMagazines = [];
-private _NormalMagazines = [];
-private _playerGear = [];
-private _inventoryItems = [];
-private _PBackpacks = [];
-private _attachments = [];
+// Containers whose MagazineCargo / ItemCargo children are harvested.
+private _cargoContainers = ["uniform", "vest", "backpack"];
 
+// Walk Entities (groups) -> Entities (units) two levels deep.
 {
     private _firstItem = configName _x;
     {
         private _secondItem = configName _x;
-        private _isPlayer   = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayer");
-        private _isPlayable = getNumber (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "isPlayable");
-        private _isCorrectSide = getText (missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "side");
-        if (_isCorrectSide == _sideChosen) then {
-            if (_isPlayer == 1 || _isPlayable == 1) then {
-                //Weapons
-                private _MissionSQMPrimary = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "primaryWeapon" >> "name");
-                _PweapAndSdArm append [_MissionSQMPrimary];
-                private _MissionSQMSidearm = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "handgun" >> "name");
-                _PweapAndSdArm append [_MissionSQMSidearm];
-                private _MissionSQMBinos = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "binocular" >> "name");
-                _PweapAndSdArm append [_MissionSQMBinos];
-                private _MissionSQMLauncher = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "secondaryWeapon" >> "name");
-                _PLauncher append [_MissionSQMLauncher];
-                private _pMagwell = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "primaryWeapon" >> "primaryMuzzleMag" >> "name");
-                _NormalMagazines append [_pMagwell];
-                private _hMagwell = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "handgun" >> "primaryMuzzleMag" >> "name");
-                _NormalMagazines append [_hMagwell];
-                private _lMagwell = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "secondaryWeapon" >> "primaryMuzzleMag" >> "name");          
-                _launchMagazines append [_lMagwell];
+        private _entity = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem;
+        private _attr   = _entity >> "Attributes";
+        private _inv    = _attr >> "Inventory";
 
-                //Attachments
-                //primaryattach
-                private _pOptics = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "primaryWeapon" >> "optics");          
-                _attachments append [_pOptics];
-                private _pMuzzle = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "primaryWeapon" >> "muzzle");          
-                _attachments append [_pMuzzle];
-                private _pFlashlight = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "primaryWeapon" >> "flashlight");          
-                _attachments append [_pFlashlight];
-                private _pUnderBarrel = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "primaryWeapon" >> "underBarrel");          
-                _attachments append [_pUnderBarrel];
-                //sidearmattach
-                private _sOptics = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "handgun" >> "optics");          
-                _attachments append [_sOptics];
-                private _sMuzzle = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "handgun" >> "muzzle");          
-                _attachments append [_sMuzzle];
-                private _sFlashlight = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "handgun" >> "flashlight");          
-                _attachments append [_sFlashlight];
-                //launcherattach
-                private _lOptics = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "secondaryWeapon" >> "optics");          
-                _attachments append [_lOptics];
-                private _lMuzzle = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "secondaryWeapon" >> "muzzle");          
-                _attachments append [_lMuzzle];
-                private _lFlashlight = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "secondaryWeapon" >> "flashlight");          
-                _attachments append [_lFlashlight];
-                private _lUnderBarrel = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "secondaryWeapon" >> "underBarrel");          
-                _attachments append [_lUnderBarrel];
+        private _isPlayer   = getNumber (_attr >> "isPlayer");
+        private _isPlayable = getNumber (_attr >> "isPlayable");
+        private _unitSide   = getText (_entity >> "side");
 
-                //Unform
-                private _uniform = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "uniform" >> "typeName");
-                _playerGear append [_uniform];
-                {
-                    private _thirdItem = configName _x;
-                    private _unformMagazine = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "uniform" >> "MagazineCargo" >> _thirdItem >> "name");
-                    _NormalMagazines append [_unformMagazine];
-                } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "uniform" >> "MagazineCargo"), "isClass _x", true]);
-                {
-                    private _thirdItem = configName _x;
-                    private _unformItem = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "uniform" >> "ItemCargo" >> _thirdItem >> "name");
-                    _inventoryItems append [_unformItem];
-                } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "uniform" >> "ItemCargo"), "isClass _x", true]);
-                
-                //Vest
-                private _vest = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "vest" >> "typeName");
-                _playerGear append [_vest];
-                {
-                    private _thirdItem = configName _x;
-                    private _unformMagazine = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "vest" >> "MagazineCargo" >> _thirdItem >> "name");
-                    _NormalMagazines append [_unformMagazine];
-                } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "vest" >> "MagazineCargo"), "isClass _x", true]);
-                {
-                    private _thirdItem = configName _x;
-                    private _unformItem = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "vest" >> "ItemCargo" >> _thirdItem >> "name");
-                    _inventoryItems append [_unformItem];
-                } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "vest" >> "ItemCargo"), "isClass _x", true]);
+        if (_unitSide == _sideChosen && {_isPlayer == 1 || _isPlayable == 1}) then {
+            // Flat single-value slots
+            {
+                _x params ["_path", "_target"];
+                private _cfg = _inv;
+                { _cfg = _cfg >> _x } forEach _path;
+                _target pushBack (getText _cfg);
+            } forEach _simpleSlots;
 
-                //Backpack
-                private _backpack = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "backpack" >> "typeName");
-                _PBackpacks append [_backpack];
+            // Weapon attachments
+            {
+                private _weaponSlot = _x;
                 {
-                    private _thirdItem = configName _x;
-                    private _unformMagazine = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "backpack" >> "MagazineCargo" >> _thirdItem >> "name");
-                    _NormalMagazines append [_unformMagazine];
-                } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "backpack" >> "MagazineCargo"), "isClass _x", true]);
-                {
-                    private _thirdItem = configName _x;
-                    private _unformItem = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "backpack" >> "ItemCargo" >> _thirdItem >> "name");
-                    _inventoryItems append [_unformItem];
-                } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "backpack" >> "ItemCargo"), "isClass _x", true]);
+                    _attachments pushBack (getText (_inv >> _weaponSlot >> _x));
+                } forEach _attachmentSlots;
+            } forEach _attachmentWeapons;
 
-                private _map = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "map");
-                _inventoryItems append [_map];
-                private _compass = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "compass");
-                _inventoryItems append [_compass];
-                //TFAR Helper For Radio (ACRE Unaffected)
-                private _radio = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "radio");
-                _inventoryItems append [_radio];
-                private _gps = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "gps");
-                _inventoryItems append [_gps];
-                private _goggles = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "goggles");
-                _inventoryItems append [_goggles];
-                private _hmd = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "hmd");
-                _inventoryItems append [_hmd];
-                private _headgear = getText(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem >> "Attributes" >> "Inventory" >> "headgear");
-                _playerGear append [_headgear];
-            };
+            // Magazines and items stored inside the worn containers
+            {
+                private _container = _x;
+                {
+                    _NormalMagazines pushBack (getText (_inv >> _container >> "MagazineCargo" >> (configName _x) >> "name"));
+                } forEach (configProperties [(_inv >> _container >> "MagazineCargo"), "isClass _x", true]);
+                {
+                    _inventoryItems pushBack (getText (_inv >> _container >> "ItemCargo" >> (configName _x) >> "name"));
+                } forEach (configProperties [(_inv >> _container >> "ItemCargo"), "isClass _x", true]);
+            } forEach _cargoContainers;
         };
     } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities"), "isClass _x", true]);
 } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities"), "isClass _x", true]);
 
-//Get Uniques & Cleanup output
+// Assemble in the fixed output order, then flatten + de-duplicate each category.
+private _masterArray = [_PweapAndSdArm, _NormalMagazines, _PLauncher, _launchMagazines, _playerGear, _inventoryItems, _PBackpacks, _attachments];
+{
+    _masterArray set [_forEachIndex, [_x] call Waldo_fnc_UniqueLoadoutArray];
+} forEach _masterArray;
 
-_PweapAndSdArm = str _PweapAndSdArm splitString "[]," joinString ",";
-_PweapAndSdArm = parseSimpleArray ("[" + _PweapAndSdArm + "]");
-_PweapAndSdArm = _PweapAndSdArm arrayIntersect _PweapAndSdArm select {_x isEqualType "" && {_x != ""}};
+// Some mods register launcher ammo as normal magazines; remove the overlap so it is not doubled up.
+_masterArray set [1, (_masterArray select 1) - (_masterArray select 3)];
 
-_PLauncher = str _PLauncher splitString "[]," joinString ",";
-_PLauncher = parseSimpleArray ("[" + _PLauncher + "]");
-_PLauncher = _PLauncher arrayIntersect _PLauncher select {_x isEqualType "" && {_x != ""}};
+// Mark any empty category with the EMPTY sentinel the crate / arsenal scripts expect.
+{
+    if (count _x == 0) then { _masterArray set [_forEachIndex, ["EMPTY"]]; };
+} forEach _masterArray;
 
-_launchMagazines = str _launchMagazines splitString "[]," joinString ",";
-_launchMagazines = parseSimpleArray ("[" + _launchMagazines + "]");
-_launchMagazines = _launchMagazines arrayIntersect _launchMagazines select {_x isEqualType "" && {_x != ""}};
-
-_NormalMagazines = str _NormalMagazines splitString "[]," joinString ",";
-_NormalMagazines = parseSimpleArray ("[" + _NormalMagazines + "]");
-_NormalMagazines = _NormalMagazines arrayIntersect _NormalMagazines select {_x isEqualType "" && {_x != ""}};
-
-_playerGear = str _playerGear splitString "[]," joinString ",";
-_playerGear = parseSimpleArray ("[" + _playerGear + "]");
-_playerGear = _playerGear arrayIntersect _playerGear select {_x isEqualType "" && {_x != ""}};
-
-_inventoryItems = str _inventoryItems splitString "[]," joinString ",";
-_inventoryItems = parseSimpleArray ("[" + _inventoryItems + "]");
-_inventoryItems = _inventoryItems arrayIntersect _inventoryItems select {_x isEqualType "" && {_x != ""}};
-
-_PBackpacks = str _PBackpacks splitString "[]," joinString ",";
-_PBackpacks = parseSimpleArray ("[" + _PBackpacks + "]");
-_PBackpacks = _PBackpacks arrayIntersect _PBackpacks select {_x isEqualType "" && {_x != ""}};
-
-_attachments = str _attachments splitString "[]," joinString ",";
-_attachments = parseSimpleArray ("[" + _attachments + "]");
-_attachments = _attachments arrayIntersect _attachments select {_x isEqualType "" && {_x != ""}};
-
-//set special variable EMPTY if nothing in that item
-if (count _PweapAndSdArm == 0) then {
-    _PweapAndSdArm = ["EMPTY"];
-};
-if (count _PLauncher == 0) then {
-    _PLauncher= ["EMPTY"];
-};
-if (count _launchMagazines == 0) then {
-    _launchMagazines= ["EMPTY"];
-};
-if (count _NormalMagazines == 0) then {
-    _NormalMagazines= ["EMPTY"];
-};
-if (count _playerGear == 0) then {
-    _playerGear= ["EMPTY"];
-};
-if (count _inventoryItems == 0) then {
-    _inventoryItems= ["EMPTY"];
-};
-if (count _PBackpacks == 0) then {
-    _PBackpacks= ["EMPTY"];
-};
-if (count _attachments == 0) then {
-    _attachments= ["EMPTY"];
-};
-
-// Some mods have launcher ammo as normal magazines for some fucking reason, so to prevent doubling up we do this.
-_NormalMagazines = _NormalMagazines - _launchMagazines;
-
-private _masterArray = [_PweapAndSdArm,_NormalMagazines,_PLauncher,_launchMagazines,_playerGear,_inventoryItems,_PBackpacks,_attachments];
 _masterArray

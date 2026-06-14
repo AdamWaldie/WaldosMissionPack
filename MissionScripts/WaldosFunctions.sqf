@@ -190,6 +190,9 @@ class CfgFunctions
             class GetSideLoadoutArray {
                 file = "MissionScripts\Logistics\LogiHelpers\getSideLoadoutArray.sqf";
             };
+            class UniqueLoadoutArray {
+                file = "MissionScripts\Logistics\LogiHelpers\uniqueLoadoutArray.sqf";
+            };
         };
         class MapStuff {
             class ReplaceMapLocationName {

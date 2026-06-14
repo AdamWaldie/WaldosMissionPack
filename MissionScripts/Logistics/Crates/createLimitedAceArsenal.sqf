@@ -30,9 +30,7 @@ private _aceArsenalPool = [_crateSupplySide] call Waldo_fnc_GetSideLoadoutArray;
     };
 } foreach _aceArsenalPool;
 
-_aceArsenalPool = str _aceArsenalPool splitString "[]," joinString ",";
-_aceArsenalPool = parseSimpleArray ("[" + _aceArsenalPool + "]");
-_aceArsenalPool = _aceArsenalPool arrayIntersect _aceArsenalPool select {_x isEqualType "" && {_x != ""}};
+_aceArsenalPool = [_aceArsenalPool] call Waldo_fnc_UniqueLoadoutArray;
 
 // if pre-existing Ace Arsenal (user specified) add items to it, else add entirely new arsenal
 if (_preExisting == true) then {
