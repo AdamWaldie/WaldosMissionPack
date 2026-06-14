@@ -54,10 +54,10 @@ _radioSide = (PRESETS select 0);
 // Set radio Preset per side
 switch (side player) do
 {
-	case west: {_radioSide = (PRESETS select 0);}; // blufor
-	case east: {_radioSide = (PRESETS select 1);}; // opfor
+    case west: {_radioSide = (PRESETS select 0);}; // blufor
+    case east: {_radioSide = (PRESETS select 1);}; // opfor
     case independent: {_radioSide = (PRESETS select 2);}; //indfor
-	default {_radioSide = (PRESETS select 3);}; //civpop
+    default {_radioSide = (PRESETS select 3);}; //civpop
 };
 
 {
@@ -87,9 +87,9 @@ _radioList = [] call acre_api_fnc_getCurrentRadioList;//Get Current list of radi
 /*
 _RadioAssignments = [
     ["Viking-1-1",[1,5]],
-	["Viking 5",[2,2]],
-	["Viking 3.2",[3,2]],
-	["Banshee",[4,1]]
+    ["Viking 5",[2,2]],
+    ["Viking 3.2",[3,2]],
+    ["Banshee",[4,1]]
 ];*/
 
 // GET SR Radio CHannels to assign the AN_PRC343 Radio channel for that callsign

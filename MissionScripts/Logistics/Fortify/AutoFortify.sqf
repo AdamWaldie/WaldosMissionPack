@@ -51,7 +51,7 @@ private _priceMapping = [];
 private _syncedObjects = synchronizedObjects _targetLogic;
 
 {
-	if (_x isKindOf "All") then {
+    if (_x isKindOf "All") then {
     // Check if the object is not one of the restricted vehicle types
         if (!(_x isKindOf "Air" || _x isKindOf "Car" || _x isKindOf "Tank" || _x isKindOf "Ship")) then {
             private _mass = getMass _x;

@@ -1,7 +1,7 @@
 /*
     Script to create a new map location based on a game logic object, with a specified name and location type.
 
-	To use this, place down a logic module with a variable name, then execute this script in init.sqf
+    To use this, place down a logic module with a variable name, then execute this script in init.sqf
     Usage: ["locationLogicObject", "New Location Name", "LocationType"] call Waldo_fnc_ReplaceMapLocationName;
 
     Parameters:
@@ -143,7 +143,7 @@ if (!isNull _logicObject) then {
     // Create a new location at the given position with the specified type
     private _newLocation = createLocation [_position];
     _newLocation setText _newName;
-	_editableLocation setType _locationType;
+    _editableLocation setType _locationType;
     
     // Optionally, adjust the size of the location if needed
     // _newLocation setRectangular [sizeX, sizeY, angle];

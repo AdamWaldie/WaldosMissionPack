@@ -59,9 +59,9 @@ private _blockToStartNumber = createHashMap;
         private _callsignForBlock = _callsignBlockKeyPair getOrDefault [_extractedCallsign,-1];
         if (_callsignForBlock > 16) then {_callsignForBlock = random [1,8,16]}; // If more than 16 distinct callsigns, select random between 1-16.
         if (count _matchesSquadNumber > 0) then {
-			_extractedSquadNumber = (_matchesSquadNumber select 0 select 0 select 0);
+            _extractedSquadNumber = (_matchesSquadNumber select 0 select 0 select 0);
         };
-		//systemChat format ["Callsign: %1, Squad Designation: %2, Run: %3",_extractedCallsign, _extractedSquadNumber, _forEachIndex];
+        //systemChat format ["Callsign: %1, Squad Designation: %2, Run: %3",_extractedCallsign, _extractedSquadNumber, _forEachIndex];
 
         _blockIndex = 16;
         _channelIndex = 16;

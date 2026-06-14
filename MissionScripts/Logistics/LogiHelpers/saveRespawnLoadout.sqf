@@ -23,7 +23,7 @@ In scripts
 */
 [player, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory;
 [] spawn {
-	hint "Respawn Loadout Updated!";
-	sleep 5;
-	hint "";
+    hint "Respawn Loadout Updated!";
+    sleep 5;
+    hint "";
 };

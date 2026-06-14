@@ -37,56 +37,56 @@ _spokenText = "";
 {
     private _langs = _x select [1, count _x - 1];
     {
-		_curLangId = [_x,0,1] call BIS_fnc_trimString;
+        _curLangId = [_x,0,1] call BIS_fnc_trimString;
         _tof = [_curLangId, _x] call acre_api_fnc_babelAddLanguageType;
     } forEach _langs;
 
     // Set player's spoken languages if they're on this side
 
-	if (_interpreters find player != -1) then {
-		{
-			if (_interpreterLangs find _x == -1) then {
-				_spokenText =  _spokenText + format ["<font color='#47ff47'>%1</font><br/>",_x];
-			};
-		} foreach _langs;
-		_interpreterLangs append _langs;
-	} else {
-		if (side player == (_x select 0)) then {
-			_lanIds = [];
-			{
-				_lid = [_x,0,1] call BIS_fnc_trimString;
-				_lanIds append [_lid];
-			} foreach (_x select [1, count _x - 1]);
-			_lanIds call acre_api_fnc_babelSetSpokenLanguages;
-			{
-				if (_interpreterLangs find _x == -1) then {
-					_spokenText =  _spokenText + format ["<font color='#47ff47'>%1</font><br/>",_x];
-				} else {
-					_langs append _x;
-				};
-			} foreach _langs;
-			_interpreterLangs append _langs;
-		} else {
-			{
-				if (_interpreterLangs find _x == -1) then {
-					_spokenText =  _spokenText + format ["%1<br/>",_x];
-				};
-			} foreach _langs;
-			_interpreterLangs append _langs;
-		};
-	};
+    if (_interpreters find player != -1) then {
+        {
+            if (_interpreterLangs find _x == -1) then {
+                _spokenText =  _spokenText + format ["<font color='#47ff47'>%1</font><br/>",_x];
+            };
+        } foreach _langs;
+        _interpreterLangs append _langs;
+    } else {
+        if (side player == (_x select 0)) then {
+            _lanIds = [];
+            {
+                _lid = [_x,0,1] call BIS_fnc_trimString;
+                _lanIds append [_lid];
+            } foreach (_x select [1, count _x - 1]);
+            _lanIds call acre_api_fnc_babelSetSpokenLanguages;
+            {
+                if (_interpreterLangs find _x == -1) then {
+                    _spokenText =  _spokenText + format ["<font color='#47ff47'>%1</font><br/>",_x];
+                } else {
+                    _langs append _x;
+                };
+            } foreach _langs;
+            _interpreterLangs append _langs;
+        } else {
+            {
+                if (_interpreterLangs find _x == -1) then {
+                    _spokenText =  _spokenText + format ["%1<br/>",_x];
+                };
+            } foreach _langs;
+            _interpreterLangs append _langs;
+        };
+    };
 } forEach _languages;
 
 if (_interpreters find player != -1) then {
-	_intLanIds = [];
-	_interpreterLangs = _interpreterLangs arrayIntersect _interpreterLangs;
-	systemchat format["_interpreterLangs: %1",_interpreterLangs];
-	{
-		_Intlid = [_x,0,1] call BIS_fnc_trimString;
-		_intLanIds pushbackunique _Intlid;
-	} foreach _interpreterLangs;
-	_intLanIds call acre_api_fnc_babelSetSpokenLanguages;
-	_spokenText = _spokenText + format["%1<br/>","I am an Interpreter, That means can speak all languages.<br/> Press the ACRE cycle language key to cycle through available languages.<br/>"];
+    _intLanIds = [];
+    _interpreterLangs = _interpreterLangs arrayIntersect _interpreterLangs;
+    systemchat format["_interpreterLangs: %1",_interpreterLangs];
+    {
+        _Intlid = [_x,0,1] call BIS_fnc_trimString;
+        _intLanIds pushbackunique _Intlid;
+    } foreach _interpreterLangs;
+    _intLanIds call acre_api_fnc_babelSetSpokenLanguages;
+    _spokenText = _spokenText + format["%1<br/>","I am an Interpreter, That means can speak all languages.<br/> Press the ACRE cycle language key to cycle through available languages.<br/>"];
 };
 
 _BabelText = _BabelText + _spokenText;
