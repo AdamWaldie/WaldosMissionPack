@@ -114,10 +114,28 @@ class CfgFunctions
                 file =  "MissionScripts\Logistics\LogiHelpers\teleport.sqf";
             };
         };
-        class MissionEnding 
+        class MissionEnding
         {
             class ENDEX {
                 file = "MissionScripts\MissionFlowAndUi\ENDEX.sqf";
+            };
+            class AARTrack {
+                file = "MissionScripts\MissionFlowAndUi\aarTrack.sqf";
+            };
+        };
+        class Diagnostics
+        {
+            class RunDiagnostics {
+                file = "MissionScripts\MissionFlowAndUi\runDiagnostics.sqf";
+            };
+        };
+        class Tasks
+        {
+            class CreateObjective {
+                file = "MissionScripts\MissionFlowAndUi\createObjective.sqf";
+            };
+            class SetObjectiveState {
+                file = "MissionScripts\MissionFlowAndUi\setObjectiveState.sqf";
             };
         };
         class TitleScreeen 
@@ -213,6 +231,9 @@ class CfgFunctions
             };
             class FortifyBudgetModule {
                 file = "MissionScripts\ZenModules\Zen_fortifyBudgetModule.sqf";
+            };
+            class ZenConvoyModule {
+                file = "MissionScripts\ZenModules\Zen_convoyModule.sqf";
             };
             class ZenLoadoutSaveModule {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveModule.sqf";

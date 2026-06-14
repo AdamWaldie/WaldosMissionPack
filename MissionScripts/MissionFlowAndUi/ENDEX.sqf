@@ -11,8 +11,26 @@ systemChat "Mission Roll At Zeus Discretion";
 //hint Endex message
 private _title = "<t color='#106bb5' size='1.2' shadow='1' shadowColor='#106bb5' align='center'>ENDEX ENDEX ENDEX!</t><br />";
 private _text0 = "<t font='PuristaMedium' size='1.1'>Mission complete</t><br /><br />";
-private _text1 = "Hold your fire!<br />Debrief To Follow!";
-hint parseText(_title + _text0 + _text1);
+private _text1 = "Hold your fire!<br />Debrief To Follow!<br />";
+
+// After-action report block (populated by Waldo_fnc_AARTrack; gracefully empty if unused)
+private _aar = "";
+if !(isNil {missionNamespace getVariable "Waldo_AAR_StartTime"}) then {
+    private _start = missionNamespace getVariable ["Waldo_AAR_StartTime", time];
+    private _elapsed = (time - _start) max 0;
+    private _mins = floor (_elapsed / 60);
+    private _secs = floor (_elapsed % 60);
+    private _kia = missionNamespace getVariable ["Waldo_AAR_KIA", [0,0,0,0]];
+    private _playerKia = missionNamespace getVariable ["Waldo_AAR_PlayerKIA", 0];
+    _kia params ["_wKia", "_eKia", "_iKia", "_cKia"];
+
+    _aar = "<br /><t color='#106bb5' size='1.0' align='center'>- AFTER ACTION REPORT -</t><br />";
+    _aar = _aar + format ["<t align='center'>Duration: %1m %2s</t><br />", _mins, _secs];
+    _aar = _aar + format ["<t align='center'>KIA - BLUFOR %1 | OPFOR %2 | INDEP %3 | CIV %4</t><br />", _wKia, _eKia, _iKia, _cKia];
+    _aar = _aar + format ["<t align='center'>Player losses: %1</t><br />", _playerKia];
+};
+
+hint parseText(_title + _text0 + _text1 + _aar);
 
 // If ACE loaded, put weapons on safe
 if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {

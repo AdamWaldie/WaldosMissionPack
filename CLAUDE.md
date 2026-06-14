@@ -216,7 +216,35 @@ Two optional behaviours are commented out by default — uncomment to enable:
 
 Freezes the mission: broadcasts "ENDEX ENDEX ENDEX", locks all weapons (ACE safety mode), heals all players, deletes fired rounds, sets all AI to CARELESS/BLUE, makes all players invincible. Also accessible via the Zeus Enhanced "Call Endex" module.
 
+The ENDEX hint also shows an **After-Action Report** (mission duration, KIA per side, player losses) when AAR tracking is running. Tracking is started automatically from `initServer.sqf` via `[] call Waldo_fnc_AARTrack`, which registers a single `EntityKilled` mission event handler (fires on all machines, so server-side registration captures every kill). If `Waldo_AAR_StartTime` is unset the ENDEX simply omits the AAR block.
+
 For a custom end screen, configure `CfgDebriefing` → `End1` in `description.ext`, then trigger with `[[], "End1"] call BIS_fnc_endMission;`.
+
+### Mission Diagnostics (optional)
+
+Runs a server-side configuration sanity check at mission start (after the loadout scan) and reports the most common WMP misconfigurations to the RPT log (lines prefixed `[WMP DIAG]`), echoing warnings to admins via `systemChat`. It is read-only — it never changes mission state.
+
+```sqf
+// In initServer.sqf — set to false to silence it for a shipping mission:
+missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
+```
+
+Checks: required mods present (CBA, ACE); per-side loadout scrapes not empty when that side has playable slots (catches vanilla loadouts / binarized `mission.sqm`); supply/medical crate classnames are valid `CfgVehicles` classes; paradrop thresholds sane and parachute classes valid; ACRE2 LR channel arrays populated (only if ACRE2 loaded). Implemented in `MissionScripts/MissionFlowAndUi/runDiagnostics.sqf` (`Waldo_fnc_RunDiagnostics`).
+
+### Tasks / Objectives (scripting helper)
+
+A thin, JIP-safe wrapper over the BIS task framework for mission makers who drive objectives from SQF/triggers (the Eden and Zeus task modules remain the GUI option). Server-authoritative — calling on a client forwards to the server automatically.
+
+```sqf
+// Create an assigned task with a persistent map marker at the destination:
+["secure_lz", west, "Secure the LZ", "Clear and hold the landing zone.", getMarkerPos "lz1"]
+    call Waldo_fnc_CreateObjective;
+
+// Later, resolve it (also removes the helper-created marker):
+["secure_lz", "SUCCEEDED"] call Waldo_fnc_SetObjectiveState;
+```
+
+Params for `Waldo_fnc_CreateObjective`: `[taskId, owner, title, description, destination, state, createMarker, taskType]`. See the script headers in `MissionScripts/MissionFlowAndUi/createObjective.sqf` and `setObjectiveState.sqf`.
 
 ### Virtual Vehicle Depot (VVD) — WIP
 
@@ -235,7 +263,7 @@ This feature is explicitly marked WIP. UAV removal is unreliable (~50%). Test th
 [] call Waldo_fnc_ZenInitModules; // already called in init.sqf
 ```
 
-Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager. Silently does nothing if Zeus Enhanced is not loaded.
+Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager, Spawn AI Convoy. Silently does nothing if Zeus Enhanced is not loaded.
 
 ---
 
@@ -444,6 +472,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Call Endex → `remoteExec ["Waldo_fnc_ENDEX", 0, true]`
 - Custom Mission End → `["end1"] remoteExec ["BIS_fnc_endMission", 0, true]`
 - Fortify Budget Manager → calls `Waldo_fnc_FortifyBudgetModule`
+- Spawn AI Convoy → calls `Waldo_fnc_ZenConvoyModule` (turns the nearest crewed land-vehicle group into a managed convoy via `Waldo_fnc_SimpleAiConvoy`)
 
 ---
 

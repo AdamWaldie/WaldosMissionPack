@@ -61,3 +61,26 @@ IMPORTANT: YOU MUST EDIT THE LOADOUTS OF PLACED UNITS WITH AN ARSENAL OF SOME DE
 */
 
 [] call Waldo_fnc_SideBaseLoadoutSetup;
+
+/*
+After-Action tracking
+
+Starts lightweight, event-driven tallying of mission duration and infantry KIA per side so the
+ENDEX debrief can show a summary. Adds negligible overhead (a single EntityKilled handler).
+*/
+[] call Waldo_fnc_AARTrack;
+
+/*
+Mission Diagnostics (optional)
+
+Runs a server-side configuration sanity check after the loadout scan: warns about missing
+required mods, empty per-side loadout scrapes (vanilla loadouts / binarized mission.sqm),
+invalid crate or parachute classnames and bad paradrop thresholds. Output goes to the RPT
+log (prefixed [WMP DIAG]) and warnings are echoed to admins via systemChat.
+
+Set the flag below to false to disable it for a shipping mission.
+*/
+missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
+if (missionNamespace getVariable ["Waldo_RunDiagnostics", true]) then {
+    [] spawn Waldo_fnc_RunDiagnostics;
+};

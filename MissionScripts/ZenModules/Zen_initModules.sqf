@@ -54,6 +54,14 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     "\z\ACE\addons\fortify\ui\hammer_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
+["Waldos Mission Modules", "Spawn AI Convoy",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos] call Waldo_fnc_ZenConvoyModule;
+    },
+    "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["Waldos Mission Modules", "Loadout Save Point",
     {
         params ["_modulePos", "_objectPos"];
