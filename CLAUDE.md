@@ -322,6 +322,25 @@ Waldo_Economy_Enable = true;
 Or simply drop the **`[WMP] Waldos Economy Systems`** composition (in `WMP_Compositions/`) into
 the editor — its object boots the suite from its own init field, independent of the flag.
 
+**Editor / script-time setup (no Zeus needed).** `Waldo_fnc_EcoInit` calls
+`Waldo_fnc_EcoCore_applyMakerConfig`, which reads optional maker variables once on the server
+authority (broadcast, so JIP/rejoining players inherit them) and applies them via the existing
+import/preset functions. Set these in `initServer.sqf` (a documented block is provided there):
+
+```sqf
+// A bundled preset:
+missionNamespace setVariable ["Waldo_Economy_Preset", "MEDIUM", true];   // LOW | MEDIUM | HIGH
+missionNamespace setVariable ["Waldo_Economy_PresetSides", [["WEST","NATO"],["EAST","CSAT"],["GUER","AAF"]], true];
+// or a full configuration exported from the Zeus "Export" tool (wins over a preset):
+missionNamespace setVariable ["Waldo_Economy_ConfigString", "...", true];
+// optional perf toggle:
+missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];
+```
+
+For drag-and-go, the preset-specific compositions **`[WMP] Waldos Economy Systems - Low/Medium/High
+Preset`** set `Waldo_Economy_Preset` in their object init and boot the suite. Place only one
+Economy Systems object per mission.
+
 **Architecture:** the suite is 449 functions registered under `class Waldo` in
 `WaldosFunctions.sqf` across six sub-namespaces, callable as
 `Waldo_fnc_EcoCore_*` (shared infra: Zeus menu/dialogs/parsing/commitment),

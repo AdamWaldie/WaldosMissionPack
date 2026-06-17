@@ -105,3 +105,36 @@ missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true];
 if (missionNamespace getVariable ["Waldo_SafeStart_AutoStart", true]) then {
     [true] call Waldo_fnc_SafeStart;
 };
+
+/*
+Waldos Economy Systems - editor / script-time setup (optional)
+
+Lets you configure the economy suite (Resource / Research / Build / Buy) from the editor with
+no need to open Zeus. These settings are applied once, server-side, at mission start and are
+broadcast to all players (JIP / rejoining players inherit them automatically). You can still
+fine-tune everything live in the Zeus "Waldos Economy Systems" menu afterwards.
+
+FIRST enable the suite in init.sqf (set Waldo_Economy_Enable = true;), OR drop one of the
+"[WMP] Waldos Economy Systems" compositions. THEN, to pre-load a configuration, set any of the
+variables below (leave them as-is to configure purely in Zeus).
+
+Option A - load a bundled preset (quickest):
+    Waldo_Economy_Preset      - "LOW", "MEDIUM" or "HIGH" (increasing complexity). LOW is a single
+                                resource + research; HIGH is a full Factorio-style economy.
+    Waldo_Economy_PresetSides - which faction catalogue each side buys from. Default below covers
+                                WEST/EAST/INDEP. Catalogue keys: "NATO","CSAT","AAF","SYNDIKAT".
+
+Option B - load a full configuration string you exported earlier from the Zeus "Export" tool
+           (this wins over a preset if both are set):
+    Waldo_Economy_ConfigString - paste the exported text here.
+
+Independent of A/B:
+    Waldo_Economy_CommitmentMode - true freezes config-catalog refreshes to cut server load
+                                   (recommended ON once you have finished configuring).
+
+Examples (uncomment and edit to use):
+*/
+// missionNamespace setVariable ["Waldo_Economy_Preset", "MEDIUM", true];
+// missionNamespace setVariable ["Waldo_Economy_PresetSides", [["WEST","NATO"],["EAST","CSAT"],["GUER","AAF"]], true];
+// missionNamespace setVariable ["Waldo_Economy_ConfigString", "", true];
+// missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];

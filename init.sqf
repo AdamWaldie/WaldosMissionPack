@@ -30,6 +30,10 @@ Set the flag below to true to start the economy suite (runs on all machines; it 
 between the server authority loops and the client Zeus menu). It is OFF by default so missions
 that do not use it pay no cost. You can also enable it without editing this file by dropping the
 "[WMP] Waldos Economy Systems" composition (its object boots the suite from its own init).
+
+To pre-configure the economy from the editor (a bundled LOW/MEDIUM/HIGH preset, a full exported
+config string, or commitment mode) without opening Zeus, see the "Waldos Economy Systems"
+setup block in initServer.sqf.
 */
 Waldo_Economy_Enable = false;
 if (Waldo_Economy_Enable) then {

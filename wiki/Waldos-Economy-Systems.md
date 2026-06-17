@@ -37,6 +37,38 @@ Waldo_Economy_Enable = true;
 
 This runs on every machine and self-branches between the server authority loops and the client Zeus menu.
 
+## Setting It Up From The Editor (no Zeus needed)
+
+You can bake a whole economy into the mission file so it is ready the moment players join — no operator has to open Zeus. This is configured in `initServer.sqf` (a ready-made, commented block is provided there). Everything is applied once on the server and broadcast, so **JIP and rejoining players get the configured economy automatically**.
+
+**Quickest — drag a preset composition.** Place one of:
+
+* `[WMP] Waldos Economy Systems - Low Preset`
+* `[WMP] Waldos Economy Systems - Medium Preset`
+* `[WMP] Waldos Economy Systems - High Preset`
+
+Each boots the suite and loads that preset (default sides: WEST→NATO, EAST→CSAT, INDEP→AAF). _Low_ is a single resource and research; _High_ is a full Factorio-style economy. Place only one Economy Systems object per mission.
+
+**Or set it in `initServer.sqf`:**
+
+```sqf
+// A bundled preset:
+missionNamespace setVariable ["Waldo_Economy_Preset", "MEDIUM", true];   // LOW | MEDIUM | HIGH
+// optionally choose each side's faction catalogue (NATO / CSAT / AAF / SYNDIKAT):
+missionNamespace setVariable ["Waldo_Economy_PresetSides", [["WEST","NATO"],["EAST","CSAT"],["GUER","AAF"]], true];
+
+// ...or paste a full configuration you exported earlier from the Zeus "Export" tool
+// (this takes precedence over a preset):
+missionNamespace setVariable ["Waldo_Economy_ConfigString", "PASTE_EXPORT_STRING_HERE", true];
+
+// optional: freeze config refreshes to cut server load once you have finished configuring:
+missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];
+```
+
+**Tip — build it in Zeus, then bake it in:** configure everything live in Zeus, use the **Export** tool to copy the configuration string, then paste it into `Waldo_Economy_ConfigString` so the exact setup loads automatically every time the mission runs.
+
+> Ground Command is assigned live in Zeus (its permission keys are tied to a player's current connection, so it is not pre-set from the editor).
+
 ## Using It In Zeus
 
 Once enabled, open Zeus. A new root entry — **Waldos Economy Systems** — appears in the Zeus tree. From there you can:

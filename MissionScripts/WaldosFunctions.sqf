@@ -322,6 +322,9 @@ class CfgFunctions
             class EcoInit {
                 file = "MissionScripts\EconomySystems\economyInit.sqf";
             };
+            class EcoCore_applyMakerConfig {
+                file = "MissionScripts\EconomySystems\Core\applyMakerConfig.sqf";
+            };
             class EcoCore_canRunAuthority {
                 file = "MissionScripts\EconomySystems\Core\canRunAuthority.sqf";
             };
