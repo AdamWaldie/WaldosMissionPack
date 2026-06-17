@@ -291,6 +291,47 @@ This feature is explicitly marked **WIP and not recommended for live missions**.
 
 Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager, Spawn AI Convoy. Silently does nothing if Zeus Enhanced is not loaded.
 
+### Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
+
+A self-contained, **pub-Zeus** RTS-style economy suite adapted into WMP (originally the
+"Grand Resource System" composition, fully rebranded). It injects its **own menu — "Waldos
+Economy Systems" — into the Zeus tree** (it does *not* use the ZEN module menu), so it works for
+any curator including player-controlled Zeus, with no editor work required. The four systems:
+
+- **Resource** — define arbitrary resources (name/colour/icon/storage cap), spawn collectable
+  resource crates, and create capturable zones that passively generate resources (with deposit
+  caps). Per-side storage limits apply.
+- **Research** — a Research Center where a side spends resources on custom research with costs,
+  prerequisites and mutual exclusivity.
+- **Build** — a build catalog (classname/cost/requirements/upkeep/production/storage/speed
+  boosts), construction jobs, upgrades, build limits, plus a RADAR feature.
+- **Buy** — purchase vehicles with configurable drop points and requirements.
+
+Plus **Ground Command** (designate trusted players who may spend resources / order research /
+manage builds), **Commitment mode** (freezes config-catalog refreshes to cut server load),
+**Export/Import** config strings (save/share a full configuration as text), and **Purge**.
+
+Enabling it (OFF by default — missions that don't use it pay no cost):
+
+```sqf
+// init.sqf - runs on all machines, self-branches server authority vs. client menu:
+Waldo_Economy_Enable = true;
+// if true, init.sqf does: [] spawn Waldo_fnc_EcoInit;
+```
+
+Or simply drop the **`[WMP] Waldos Economy Systems`** composition (in `WMP_Compositions/`) into
+the editor — its object boots the suite from its own init field, independent of the flag.
+
+**Architecture:** the suite is 449 functions registered under `class Waldo` in
+`WaldosFunctions.sqf` across six sub-namespaces, callable as
+`Waldo_fnc_EcoCore_*` (shared infra: Zeus menu/dialogs/parsing/commitment),
+`Waldo_fnc_EcoResource_*`, `Waldo_fnc_EcoResearch_*`, `Waldo_fnc_EcoBuild_*`,
+`Waldo_fnc_EcoBuy_*`, and `Waldo_fnc_EcoCommand_*`. The bootstrap is `Waldo_fnc_EcoInit`
+(`MissionScripts/EconomySystems/economyInit.sqf`). Global state uses the `WaldoEco<System>_`
+variable prefix. World objects are tagged by class — resource crate `Land_PlasticCase_01_medium_F`,
+research center `Land_Research_HQ_F`, purchase terminal `Land_Laptop_unfolded_F`, plus
+construction vehicles. Source-maintenance tool: `releaseVerificationAndDeployment/extract_economy_system.py`.
+
 ---
 
 ## description.ext — Mission Maker Checklist
@@ -299,7 +340,7 @@ The fields mission makers should always edit before using the pack:
 
 ```
 author          = "YOURNAMEHERE";
-onLoadName      = "Mission Pack v4.7.2";   // mission title
+onLoadName      = "Mission Pack v4.8.0";   // mission title
 onLoadMission   = "YOURTEXTHERE";
 maxPlayers      = 31;                       // set to your playercount
 respawnDelay    = 20;                       // seconds
@@ -319,6 +360,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
+- `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
 - `ThirdPartyScripts/` — Headless client and player marker integrations (disabled by default via commented-out line in `init.sqf`)
 
 ---

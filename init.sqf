@@ -19,6 +19,24 @@ Enable/disable them as it suits you.
 [] call Waldo_fnc_ZenInitModules;
 
 /*
+Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
+
+A pub-Zeus economy suite: define resources, capturable income zones and collectable crates,
+run research at a Research Center, construct and upgrade buildings, and let players buy vehicles.
+A trusted "Ground Command" controls spending. Everything is driven live from the Zeus menu
+"Waldos Economy Systems" - no editor work required beyond enabling it.
+
+Set the flag below to true to start the economy suite (runs on all machines; it self-branches
+between the server authority loops and the client Zeus menu). It is OFF by default so missions
+that do not use it pay no cost. You can also enable it without editing this file by dropping the
+"[WMP] Waldos Economy Systems" composition (its object boots the suite from its own init).
+*/
+Waldo_Economy_Enable = false;
+if (Waldo_Economy_Enable) then {
+    [] spawn Waldo_fnc_EcoInit;
+};
+
+/*
 After-Action WIA listener (ACE)
 
 ACE raises "ace_unconscious" locally on the machine owning the unit, so it cannot be caught by the

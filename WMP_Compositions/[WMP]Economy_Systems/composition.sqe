@@ -1,0 +1,31 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo
+		{
+			position[]={0,0,0};
+		};
+		class Attributes
+		{
+			init="[] spawn Waldo_fnc_EcoInit;";
+		};
+		id=1;
+		type="Land_HelipadEmpty_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo
+		{
+			position[]={0,0,2};
+		};
+		title="Waldos Economy Systems - leave this object placed. It boots the Resource/Research/Build/Buy + Ground Command suite. Open Zeus and use the 'Waldos Economy Systems' menu. See the WMP wiki for setup and the import/export config strings.";
+		id=2;
+	};
+};

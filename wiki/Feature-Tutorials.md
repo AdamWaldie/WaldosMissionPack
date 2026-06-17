@@ -28,6 +28,9 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [Teleportation & Move Into Cargo Interactions](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions)
 * [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name)
 
+## Economy, Research & Base Building
+* [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) — Resource / Research / Build / Buy + Ground Command, run live from Zeus
+
 ## Construction & Fortification
 * [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
 * [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup)
