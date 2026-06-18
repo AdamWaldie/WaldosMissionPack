@@ -9,6 +9,9 @@ mkdir release/
 sed -i "s/#define VERSION.*/#define VERSION \"${VERSION_TAG}\"/" releaseVerificationAndDeployment/buildVersion.hpp
 sed -i "s/DevBuild/${VERSION_TAG}/" releaseVerificationAndDeployment/config.json
 
+# Regenerate the cover image so the packed loading.jpg matches the release tag
+python3 releaseVerificationAndDeployment/generateLoadingScreen.py "${VERSION_TAG}"
+
 python3 releaseVerificationAndDeployment/build.py --deploy
 
 

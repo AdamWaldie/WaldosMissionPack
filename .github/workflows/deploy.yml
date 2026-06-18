@@ -13,6 +13,13 @@ jobs:
         id: get_version
         run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
 
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Pillow (cover image generator)
+        run: pip install Pillow
+
       - name: Prepare Deploy
         run: chmod +x ./releaseVerificationAndDeployment/deploy.sh
 

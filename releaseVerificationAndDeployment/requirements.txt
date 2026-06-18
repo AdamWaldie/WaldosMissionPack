@@ -11,3 +11,8 @@
 # (see .github/workflows/testing.yml), not this file. This requirements file
 # exists so the local linter is reproducible for contributors.
 sqflint
+
+# Pillow is required by generateLoadingScreen.py, which renders the cover image
+# (Pictures/loading.jpg). It is installed by the update-cover.yml and deploy.yml
+# workflows and by deploy.sh; install it locally to regenerate the cover by hand.
+Pillow
