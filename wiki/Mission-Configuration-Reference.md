@@ -10,7 +10,7 @@ Located in the mission root. Sets mission metadata, respawn rules, and includes 
 
 ```sqf
 author      = "YOURNAMEHERE";       // Your name, shown on the loading screen
-onLoadName  = "Mission Pack v4.7.2"; // Mission title — also used by Waldo_fnc_InfoText
+onLoadName  = "Mission Pack v4.8.0"; // Mission title — also used by Waldo_fnc_InfoText
 onLoadMission = "YOURTEXTHERE";     // Mission subtitle
 onLoadIntro   = "YOURTEXTHERE";     // Additional intro subtitle
 loadScreen    = "Pictures\loading.jpg"; // Replace with your own image

@@ -27,6 +27,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - [WIP] Virtual Vehicle Deployment Garage
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process
+- Auto-generated cover/loading screen - the title and version are rendered programmatically from description.ext and kept in sync on every push and release.
 
 
 # QuickStart Guide

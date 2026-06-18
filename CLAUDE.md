@@ -62,6 +62,24 @@ python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission
 
 Build config: `releaseVerificationAndDeployment/config.json` — controls excluded paths (`notlist`) and the output name/version. Output zips land in `release/`. The deploy workflow triggers on GitHub release publish and uploads 5 artifacts: main WMP pack, patch, Compositions, Unit Insignias, and Exemplar Mission.
 
+### Cover / Loading Screen Generation
+
+The cover image `Pictures/loading.jpg` (the in-game `loadScreen`/`overviewPicture` and the README banner) is **generated** — the title and version number are rendered programmatically so the version never goes stale. The version is read from `description.ext`'s `onLoadName` (e.g. `"Mission Pack v4.8.0"`).
+
+```bash
+# Regenerate locally (requires Pillow): version parsed from description.ext
+pip install -r releaseVerificationAndDeployment/requirements.txt
+python3 releaseVerificationAndDeployment/generateLoadingScreen.py
+# or render an explicit version:
+python3 releaseVerificationAndDeployment/generateLoadingScreen.py 4.8.0
+```
+
+`generateLoadingScreen.py` draws onto a text-free base image with the bundled Stardos Stencil font. The generator, base image, font and its OFL license live under `releaseVerificationAndDeployment/loadingAssets/` — which is inside the `releaseVerificationAndDeployment` folder already in every build's `notlist`, so **these dev assets never ship**; only the generated `Pictures/loading.jpg` does (Pictures is included in the main and Exemplar builds, excluded in the Unit Insignias build). Layout constants (font sizes, blue colour, x/y anchors) are at the top of the script.
+
+Two workflows keep it in sync: `.github/workflows/update-cover.yml` regenerates and commits `Pictures/loading.jpg` back to `main` whenever `description.ext` changes; `deploy.sh` regenerates it (from the release tag) before packing so each released zip matches the tag.
+
+**Release ordering guard:** before packing anything, `deploy.sh` fails fast unless the version in `description.ext`'s `onLoadName` matches the release tag (a prerelease suffix like `-rc1` is ignored — only the `X.Y.Z` core is compared). This enforces that the version was bumped on `main` first — which is what triggers `update-cover.yml` to refresh the README/committed cover — so the **visible** cover is already current everywhere before a release is built. The check uses `generateLoadingScreen.py --print-version` (the same parser that renders the cover). Practical workflow: bump `onLoadName` on `main`, let `update-cover.yml` commit the new `Pictures/loading.jpg`, then publish the release; if the tag and `onLoadName` disagree, the release aborts with a message telling you which to fix.
+
 ---
 
 ## Architecture

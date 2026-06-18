@@ -1,0 +1,37 @@
+name: Update Cover Image
+# Regenerates Pictures/loading.jpg whenever the version in description.ext changes
+# and commits the result back to main. The version text is rendered by
+# releaseVerificationAndDeployment/generateLoadingScreen.py.
+on:
+  push:
+    branches: [ main ]
+    paths: [ 'description.ext' ]
+
+permissions:
+  contents: write
+
+jobs:
+  update-cover:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Pillow
+        run: pip install Pillow
+      - name: Regenerate cover image from description.ext
+        run: python3 releaseVerificationAndDeployment/generateLoadingScreen.py
+      - name: Commit if the cover image changed
+        run: |
+          if git diff --quiet -- Pictures/loading.jpg; then
+            echo "Cover image unchanged; nothing to commit."
+          else
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add Pictures/loading.jpg
+            git commit -m "ci: regenerate cover image for new version [skip ci]"
+            git push origin HEAD:main
+          fi
