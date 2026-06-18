@@ -1,3 +1,21 @@
+/*
+ * Author: Waldo
+ * Registers all WMP briefing and reference entries in the player's map diary - radio
+ * reports (SPOTREP/SITREP/ACEREP), checklists (LZ specs/insert/extract/brief, jumpmaster,
+ * rotary pickup) and support-call formats (CFF, CAS check-in, 9-line, gunship, fire commands)
+ * - by creating the diary subjects and calling each individual document function. Called from
+ * init.sqf via Waldo_fnc_AddDocs; runs client-side on the player.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_AddDocs;
+ */
+
 player createDiarySubject ["Radio Reports","Radio Reports"];
 call Waldo_fnc_ACEREP;
 call Waldo_fnc_SPOTREP;

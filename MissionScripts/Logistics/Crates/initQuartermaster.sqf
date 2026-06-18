@@ -1,21 +1,20 @@
-/*//    INFO TEXT    //// ==========================================================================================
-
-This is used to setup the logistics spawning system, via the "Quartermaster". The quartermaster is an object or NPC which acts as the spawner for these supply boxes & equipment.
-
-Params:
-_target - The quartermaster from which you can select these actions
-_offsetDegrees - determines the bearing around the vehicle the spawner will be. Based on vehicle heading, not compass. E.g 0 = Front, 90 = Right, 180 = Rear, 270 = Left.
-_offsetDistance - determines how far away from the vehicle the logistics spawner will be.
-
-Exemplar:
-
-[this] call Waldo_fnc_SetupQuarterMaster; 
-
-//With custom direction,distance of spawner from object
-[this,180,4] call Waldo_fnc_SetupQuarterMaster; 
-
-*/
-
+/*
+ * Author: Waldo
+ * Sets up the logistics "Quartermaster" - adds the ACE crate-spawning actions to an object or NPC so
+ * players can request supply/medical/repair crates that spawn beside it. Registered as
+ * Waldo_fnc_SetupQuarterMaster.
+ *
+ * Arguments:
+ * 0: _target <OBJECT> - the quartermaster object/NPC to attach the actions to
+ * 1: _offsetDegrees <NUMBER> - bearing around the vehicle for spawns (0 front, 90 right, 180 rear, 270 left)
+ * 2: _offsetDistance <NUMBER> - distance from the vehicle to spawn crates
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * [this, 180, 4] call Waldo_fnc_SetupQuarterMaster;
+ */
 
 params["_target",["_offsetDegrees",90],["_offsetDistance",2]];
 //Catch all for any not using ACE to prevent bad things

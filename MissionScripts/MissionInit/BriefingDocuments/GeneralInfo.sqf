@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the general mission information entry to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_GENINFO;
+ */
+
 private _playerRole = call Waldo_fnc_GetPlayerRole;
 private _group = groupId (group player);
 private _playerGroup = "";

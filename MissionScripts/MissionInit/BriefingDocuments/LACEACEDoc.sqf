@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the ACEREP / LACE casualty and resupply report reference to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_ACEREP;
+ */
+
 player createDiaryRecord["Radio Reports",
     ["LACE/ACE REPORT",
         "

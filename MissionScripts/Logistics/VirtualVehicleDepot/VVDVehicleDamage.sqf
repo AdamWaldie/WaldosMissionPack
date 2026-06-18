@@ -1,3 +1,21 @@
+/*
+ * Author: Waldo
+ * Virtual Vehicle Depot helper - applies configured hitpoint damage to a spawned depot vehicle after
+ * an optional random delay window. Part of the WIP Virtual Vehicle Depot. Registered as
+ * Waldo_fnc_VVDVehicleDamage.
+ *
+ * Arguments:
+ * 0: _veh <OBJECT> - the vehicle to damage
+ * 1: _hitpointsDamage <ARRAY> - [hitpoint, damage] pairs to apply
+ * 2: _damageDelays <ARRAY> - [minDelay, maxDelay] seconds before applying
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * [_veh, [["HitEngine", 0.5]], [0, 5]] call Waldo_fnc_VVDVehicleDamage;
+ */
+
 params["_veh", "_hitpointsDamage", "_damageDelays"];
 
 _damageDelayMin = _damageDelays select 0;

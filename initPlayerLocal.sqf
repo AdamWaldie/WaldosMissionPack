@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * initPlayerLocal.sqf - runs per-player on each join and respawn. Saves the starting loadout, adds
+ * the "Flip Vehicle" action, and re-applies the saved loadout and action on respawn via a CBA event
+ * handler. Two optional behaviours (save-on-arsenal-close, respawn-with-what-you-died-with) are
+ * included commented out below.
+ *
+ * Arguments:
+ * None (engine entry point; runs locally for each player)
+ *
+ * Return Value:
+ * Nothing
+ */
+
 //Post-Init Setup of saved Loadout (Measure taken to help prevent Naked/unarmed People)
 
 

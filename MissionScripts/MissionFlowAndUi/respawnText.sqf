@@ -1,13 +1,18 @@
-/*//    INFO TEXT    //// ==========================================================================================
+/*
+ * Author: Waldo
+ * Respawn text overlay - shows a formatted on-respawn sequence: rank/group/name, time and date, and
+ * grid reference. Registered as Waldo_fnc_RespawnText.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * [] spawn Waldo_fnc_RespawnText;
+ */
 
-This feature is designed to create a formatted and easily customised text sequence to run on respawn, displaying the following information:
-1. Rank, Group Name, Player Name
-2. Time, Date
-3. Grid Referance
-
-[] spawn Waldo_fnc_RespawnText;
-
-*/
 _timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString; // Returns ingame time
 _time = (_timeConfig select 0) + (_timeConfig select 1) + ' hrs';
 _date =  str (date select 2) + '/' + str (date select 1) + '/' + str (date select 0); //Returns ingame Date. (Would ususally be in "_date")

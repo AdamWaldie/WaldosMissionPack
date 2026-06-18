@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the jumpmaster (paradrop) checklist to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_JUMPMASTER;
+ */
+
 player createDiaryRecord["Checklists",
     ["JUMPMASTER CHECKLISTS",
         "

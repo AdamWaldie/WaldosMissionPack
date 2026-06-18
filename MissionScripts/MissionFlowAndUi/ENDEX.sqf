@@ -1,9 +1,20 @@
 /*
+ * Author: Waldo
+ * ENDEX (exercise end) - freezes the mission: broadcasts "ENDEX ENDEX ENDEX", puts weapons on ACE
+ * safety, heals all players, deletes fired rounds, sets all AI to CARELESS/BLUE, makes players
+ * invincible, and shows the debrief hint (including the After-Action Report when AAR tracking ran).
+ * Also available via the Zeus "Waldos Mission Modules - Call Endex" module.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * [] spawn Waldo_fnc_ENDEX;
+ */
 
-Call as follows:
-[] spawn Waldo_fnc_ENDEX;
-
-*/
 //systemChat Endex message
 systemchat "ENDEX ENDEX ENDEX";
 systemChat "Weapons safe";

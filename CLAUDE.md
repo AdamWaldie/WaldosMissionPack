@@ -601,6 +601,16 @@ Every `.sqf` file in `MissionScripts/` opens with a documentation block:
 ```
 Read this header before editing any script — it documents all valid arguments.
 
+### Documentation standard (in-file, feature, wiki)
+
+WMP holds a single documentation standard, codified in the wiki **Coding-Standards** page. Apply it to all new or changed work:
+
+- **In-file:** every `.sqf` opens with the header block above (description / Arguments with types+defaults / Return Value / Example). If a file starts with `#include` lines, the header goes *after* them (the validator rejects `#include` after a block comment). Preserve third-party attribution; never claim authorship of third-party scripts.
+- **Feature documentation:** when adding/changing a user-facing feature, document it in **all four** places with identical terminology — in-file headers, a `CLAUDE.md` *Feature Configuration Guide* section (+ a *MissionScripts Directory Layout* line if it adds a folder), a `README.md` *Pack Features* bullet, and a wiki page.
+- **Wiki page:** lead with an *Associated Files* line, then overview → setup → usage/options (tables) → examples → see-also. Large features get a hub page plus one sub-page per sub-system (see the Waldos Economy Systems pages). Write for mission makers, not scripters.
+
+When adding a feature, run the checklist in the wiki Coding-Standards page (headers, registration, CLAUDE.md, README, wiki, validators).
+
 ### Argument parsing
 
 All functions use `params` at the top to unpack `_this`:
