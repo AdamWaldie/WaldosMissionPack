@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the fire-commands reference to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_FIRECOMMANDS;
+ */
+
 player createDiaryRecord["Preperation",
     ["Fire Commands",
         "

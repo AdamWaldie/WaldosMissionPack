@@ -1,19 +1,23 @@
-/*/
-This is called directly from the addactions applied to the quartermaster (see initQuartermaster.sqf).
-It provides a means to automatically get & spawn ammo crates with correct Ammo, medical and ACE tracks/tyres.
-
-You should not call this directly.
-
-This expects a call from addaction format, so parameters are in the argument array of an addaction, hence the ignored params marked with "".
-
-Params:
-_target - The quartermaster from which you can select these actions
-_player - the player that ace interacts with the spawner
-_boxType - the type of box requested to be spawned
-_offsetDegrees -  determines the bearing around the vehicle the spawner will be. Based on vehicle heading, not compass. E.g 0 = Front, 90 = Right, 180 = Rear, 270 = Left.
-_offsetDistance - determines how far away from the vehicle the logistics spawner will be.e
-*/
-
+/*
+ * Author: Waldo
+ * Logistics quartermaster spawner - spawns the requested ammo / medical / repair crate (with the
+ * correct ACE ammo, medical items and tracks/tyres) beside the quartermaster vehicle. Called from
+ * the ACE actions added by initQuartermaster.sqf; not intended to be called directly. Registered as
+ * Waldo_fnc_LogisticsSpawner and invoked with addAction-style arguments.
+ *
+ * Arguments:
+ * 0: _target <OBJECT> - the quartermaster the actions are attached to
+ * 1: _player <OBJECT> - the player who triggered the action
+ * 2: _boxType <STRING> - the requested crate type
+ * 3: _offsetDegrees <NUMBER> - bearing around the vehicle for the spawn (0 front, 90 right, 180 rear, 270 left)
+ * 4: _offsetDistance <NUMBER> - distance from the vehicle to spawn the crate
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * // added automatically by Waldo_fnc_SetupQuarterMaster
+ */
 
 params["_target","_player","_boxType",["_offsetDegrees",90],["_offsetDistance",2]];
 

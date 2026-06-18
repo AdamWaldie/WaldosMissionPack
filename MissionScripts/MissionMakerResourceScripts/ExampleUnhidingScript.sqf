@@ -1,3 +1,17 @@
+/*
+ * Mission-maker example - reveals and enables simulation for the units/vehicles of a named group
+ * (the inverse of hiding them at mission start). Mission-specific example; safe to delete.
+ *
+ * Arguments:
+ * None (edit the group references inside to match your mission)
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * [] execVM "MissionScripts\MissionMakerResourceScripts\ExampleUnhidingScript.sqf";
+ */
+
 //Wave1 - specific to this mission file so you can safely ignore and delete this
 
 //This just iterates through each unit in the group name e.g. Attack1HunterVehicleAlphaCrew and enables their simulaton and model for the vehicle & units.

@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the Landing Zone (LZ) specifications checklist to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_LZSPECS;
+ */
+
 player createDiaryRecord["Checklists",
     ["LZ/PZ SPECIFICATIONS",
         "

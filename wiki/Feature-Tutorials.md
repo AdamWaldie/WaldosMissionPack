@@ -28,6 +28,15 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [Teleportation & Move Into Cargo Interactions](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions)
 * [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name)
 
+## Economy, Research & Base Building
+* [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) — overview & hub for the economy suite
+* [— Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration) — enable it, presets, config strings, the economyConfig.sqf authoring file, editor helpers
+* [— Resource System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System) — resources, crates, capturable income zones, storage
+* [— Research System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System) — Research Center, costs, prerequisites, exclusivity
+* [— Build System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) — construction, upgrades, production, upkeep, RADAR
+* [— Buy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System) — purchase vehicles, drop points, requirements
+* [— Ground Command & Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools) — permissions, Commitment mode, Export/Import, Purge
+
 ## Construction & Fortification
 * [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
 * [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup)

@@ -1,3 +1,19 @@
+/*
+ * Author: Waldo
+ * Zeus "Waldos Medical Crate" module - spawns a medical supply crate (optionally a field hospital)
+ * via a ZEN dialog. Registered as Waldo_fnc_ZenMedicalSpawner.
+ *
+ * Arguments:
+ * 0: _modulePos <POSITION> - where to spawn the crate
+ * 1: _objectPos <OBJECT> - the Zeus module object
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * [getPos _logic, _logic] call Waldo_fnc_ZenMedicalSpawner;
+ */
+
 params ["_modulePos", "_objectPos"];
 
 [

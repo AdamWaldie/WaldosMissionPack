@@ -291,6 +291,97 @@ This feature is explicitly marked **WIP and not recommended for live missions**.
 
 Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager, Spawn AI Convoy. Silently does nothing if Zeus Enhanced is not loaded.
 
+### Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
+
+A self-contained, **pub-Zeus** RTS-style economy suite. It injects its **own menu — "Waldos
+Economy Systems" — into the Zeus tree** (it does *not* use the ZEN module menu), so it works for
+any curator including player-controlled Zeus, with no editor work required. The four systems:
+
+- **Resource** — define arbitrary resources (name/colour/icon/storage cap), spawn collectable
+  resource crates, and create capturable zones that passively generate resources (with deposit
+  caps). Per-side storage limits apply.
+- **Research** — a Research Center where a side spends resources on custom research with costs,
+  prerequisites and mutual exclusivity.
+- **Build** — a build catalog (classname/cost/requirements/upkeep/production/storage/speed
+  boosts), construction jobs, upgrades, build limits, plus a RADAR feature.
+- **Buy** — purchase vehicles with configurable drop points and requirements.
+
+Plus **Ground Command** (designate trusted players who may spend resources / order research /
+manage builds), **Commitment mode** (freezes config-catalog refreshes to cut server load),
+**Export/Import** config strings (save/share a full configuration as text), and **Purge**.
+
+Enabling it (OFF by default — missions that don't use it pay no cost):
+
+```sqf
+// init.sqf - runs on all machines, self-branches server authority vs. client menu:
+Waldo_Economy_Enable = true;
+// if true, init.sqf does: [] spawn Waldo_fnc_EcoInit;
+```
+
+Or simply drop the **`[WMP] Waldos Economy Systems`** composition (in `WMP_Compositions/`) into
+the editor — its object boots the suite from its own init field, independent of the flag.
+
+**Editor / script-time setup (no Zeus needed).** `Waldo_fnc_EcoInit` calls
+`Waldo_fnc_EcoCore_applyMakerConfig`, which reads optional maker variables once on the server
+authority (broadcast, so JIP/rejoining players inherit them) and applies them via the existing
+import/preset functions. Set these in `initServer.sqf` (a documented block is provided there):
+
+```sqf
+// A bundled preset:
+missionNamespace setVariable ["Waldo_Economy_Preset", "MEDIUM", true];   // LOW | MEDIUM | HIGH
+missionNamespace setVariable ["Waldo_Economy_PresetSides", [["WEST","NATO"],["EAST","CSAT"],["GUER","AAF"]], true];
+// or a full configuration exported from the Zeus "Export" tool (wins over a preset):
+missionNamespace setVariable ["Waldo_Economy_ConfigString", "...", true];
+// optional perf toggle:
+missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];
+```
+
+For drag-and-go, the preset-specific compositions **`[WMP] Waldos Economy Systems - Low/Medium/High
+Preset`** set `Waldo_Economy_Preset` in their object init and boot the suite. Place only one
+Economy Systems object per mission.
+
+**Full hand-authored economy (`economyConfig.sqf`).** For complete control, makers edit
+`economyConfig.sqf` in the mission root — the dedicated authoring file (registered as
+`Waldo_fnc_EcoMakerSetup`, run once on the authority by `applyMakerConfig` after presets). It
+defines catalogs and places world objects via the server-authoritative helpers, e.g.
+`addResourceType`, `setResearchCatalog`, `setBuildCatalog`, `setPurchaseCatalog`,
+`createResourceZone`, `spawnResourceCrate`, `spawnResearchCenter`, `createDropPoint`. It ships a
+gated worked example (`_useExample`). Editor-placed vanilla objects can be designated from their
+init field (no mod required — true Eden modules need an addon, which WMP is not):
+`[this] call Waldo_fnc_EcoResearch_registerCenter` (on a `Land_Research_HQ_F`),
+`Waldo_fnc_EcoBuy_registerTerminal` (`Land_Laptop_unfolded_F`), and
+`Waldo_fnc_EcoBuild_registerConstructionVehicle` (any vehicle).
+
+**Architecture:** the suite is 449 functions registered under `class Waldo` in
+`WaldosFunctions.sqf` across six sub-namespaces, callable as
+`Waldo_fnc_EcoCore_*` (shared infra: Zeus menu/dialogs/parsing/commitment),
+`Waldo_fnc_EcoResource_*`, `Waldo_fnc_EcoResearch_*`, `Waldo_fnc_EcoBuild_*`,
+`Waldo_fnc_EcoBuy_*`, and `Waldo_fnc_EcoCommand_*`. The bootstrap is `Waldo_fnc_EcoInit`
+(`MissionScripts/EconomySystems/economyInit.sqf`). Global state uses the `WaldoEco<System>_`
+variable prefix. World objects are tagged by class — resource crate `Land_PlasticCase_01_medium_F`,
+research center `Land_Research_HQ_F`, purchase terminal `Land_Laptop_unfolded_F`, plus
+construction vehicles.
+
+**Multiplayer / authority model.** All shared state (catalogs, side resources, zones, jobs) and all
+global world-object/marker creation are gated by `Waldo_fnc_EcoCore_canRunAuthority` /
+`canRunBackgroundAuthority`, which return **`isServer`** — so the server is the single authority and
+the background loops (income, production, research progress, request processing) run exactly once for
+the mission. Client-only work (Zeus menu injection, ACE action setup, dialogs, request *publishing*)
+is gated by `hasInterface`. This makes the suite correct on **dedicated** servers, not just
+SP/listen-host. When editing economy code: mutate shared state only under `canRunAuthority` and
+broadcast it (`setVariable [..., true]`); never gate client-local work on `canRunAuthority`.
+
+**Operational notes for makers:**
+- `Waldo_fnc_EcoCore_isActive` returns whether the suite is running (gate dependent scripts on it).
+- Failed player actions (insufficient resources / unmet requirements / no drop point) now report via
+  `systemChat` to the actor (`Waldo_fnc_EcoCore_notifyActor`) instead of failing silently.
+- **Commitment mode** is a performance toggle: ON freezes the live config-catalog refresh polling in
+  the Zeus menus to cut server load — turn it on once a mission's economy is configured. It does not
+  affect gameplay, only editing of catalogs.
+- **Purge** is intended to remove the suite for the rest of the mission (it sets a broadcast purged
+  flag that also stops JIP players re-initialising); it is not a "reset" — restart the mission to run
+  the economy again after a purge.
+
 ---
 
 ## description.ext — Mission Maker Checklist
@@ -299,7 +390,7 @@ The fields mission makers should always edit before using the pack:
 
 ```
 author          = "YOURNAMEHERE";
-onLoadName      = "Mission Pack v4.7.2";   // mission title
+onLoadName      = "Mission Pack v4.8.0";   // mission title
 onLoadMission   = "YOURTEXTHERE";
 maxPlayers      = 31;                       // set to your playercount
 respawnDelay    = 20;                       // seconds
@@ -319,6 +410,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
+- `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
 - `ThirdPartyScripts/` — Headless client and player marker integrations (disabled by default via commented-out line in `init.sqf`)
 
 ---
@@ -528,6 +620,16 @@ Every `.sqf` file in `MissionScripts/` opens with a documentation block:
  */
 ```
 Read this header before editing any script — it documents all valid arguments.
+
+### Documentation standard (in-file, feature, wiki)
+
+WMP holds a single documentation standard, codified in the wiki **Coding-Standards** page. Apply it to all new or changed work:
+
+- **In-file:** every `.sqf` opens with the header block above (description / Arguments with types+defaults / Return Value / Example). If a file starts with `#include` lines, the header goes *after* them (the validator rejects `#include` after a block comment). Preserve third-party attribution; never claim authorship of third-party scripts.
+- **Feature documentation:** when adding/changing a user-facing feature, document it in **all four** places with identical terminology — in-file headers, a `CLAUDE.md` *Feature Configuration Guide* section (+ a *MissionScripts Directory Layout* line if it adds a folder), a `README.md` *Pack Features* bullet, and a wiki page.
+- **Wiki page:** lead with an *Associated Files* line, then overview → setup → usage/options (tables) → examples → see-also. Large features get a hub page plus one sub-page per sub-system (see the Waldos Economy Systems pages). Write for mission makers, not scripters.
+
+When adding a feature, run the checklist in the wiki Coding-Standards page (headers, registration, CLAUDE.md, README, wiki, validators).
 
 ### Argument parsing
 

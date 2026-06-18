@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the SPOTREP (spot report) radio-report format reference to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_SPOTREP;
+ */
+
 player createDiaryRecord["Radio Reports",
     ["SPOTREP",
         "

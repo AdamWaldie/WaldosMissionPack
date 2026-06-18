@@ -1,0 +1,31 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo
+		{
+			position[]={0,0,0};
+		};
+		class Attributes
+		{
+			init="Waldo_Economy_Preset = ""MEDIUM""; [] spawn Waldo_fnc_EcoInit;";
+		};
+		id=1;
+		type="Land_HelipadEmpty_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo
+		{
+			position[]={0,0,2};
+		};
+		title="Waldos Economy Systems - MEDIUM preset. Boots the suite and loads the MEDIUM preset (WEST=NATO, EAST=CSAT, INDEP=AAF by default). Manage it live in the Zeus 'Waldos Economy Systems' menu. Place only one Economy Systems object per mission.";
+		id=2;
+	};
+};

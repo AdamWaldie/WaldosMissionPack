@@ -3,6 +3,25 @@
 
 #include "VVDIDC.inc"
 
+/*
+ * Author: Waldo
+ * Virtual Vehicle Depot - opens the vehicle-selection GUI and spawns the chosen vehicle. Part of the
+ * WIP Virtual Vehicle Depot; invoked by the depot spawner action created in VVDInit.sqf. Registered
+ * as Waldo_fnc_VVDOpen.
+ *
+ * Arguments:
+ * 0: _depotSpawnPoint <OBJECT> - the depot spawner the player interacted with
+ * 1: _types <ARRAY> - allowed vehicle type filter
+ * 2: _limitToSideVehicles <BOOL> - restrict to the player's side (optional, default: false)
+ * 3: _removeUAVs <BOOL> - attempt to remove UAV crew/connection on spawn (optional, default: false)
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * // invoked by the depot action created in VVDInit.sqf
+ */
+
 disableSerialization;
 params["_depotSpawnPoint", "_types", ["_limitToSideVehicles",false], ["_removeUAVs",false]];
 

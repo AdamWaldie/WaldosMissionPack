@@ -22,6 +22,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Teleportation Script
 - Endex & Safestart Scripts
 - Custom Zeus Enhanced modules for in-game access to the logistics system and ENDEX scripts.
+- Waldos Economy Systems - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus menu.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
 - Extensively documented files to learn how it works, and make use of this pack!

@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the fireteam preparation checklist to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_FIRETEAMPREPDOC;
+ */
+
 player createDiaryRecord["Preperation",
     ["Fireteam Preperation",
         "

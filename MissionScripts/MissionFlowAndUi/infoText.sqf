@@ -1,32 +1,21 @@
-/*//    INFO TEXT    //// ==========================================================================================
-
-Can be called on mission start via missionParameters.sqf with setup.
-
-Or via the the use of the following command, edited with string for the desired segmentation
-Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
-There are two parameters. The Name Of The Mission & The locale of the mission.
-
-This is the most basic iteration, it automatically grabs the mission title & location based on description.ext for title, and worldName for location.
-[] spawn Waldo_fnc_ENDEX;
-
-There are date formats that can be used, short format and long format. This is a boolean value and defaults to false (short date) if left blank.
-Short Date Format is "01/11/2010"
-Long Date Format is "1st November 2010"
-The date can be overwritten with a direct string input on line 91 - useful for fictional dates in Star Wars and Warhammer 40k.
-
-You can also customise the information text directly, by providing additional parameters. The first additional entry will be the title, while the second will be the location. An example use is in the example mission.
-An animation can also be specified in the third argument by inputting a String. Options are;
-
-    "NONE" 		- No animation
-    "WALK" 		- Slow walk forward
-    "SIT" 		- Stand from sitting on floor
-    "WAKE		- Wake up and stand.
-    "WAKESLOW" 	- Much longer version of "WAKE". Character stands more cautiously.
-    "COFFIN"	- Meme input. Rise from the ground like Nosferatu.
-
-["CUSTOM TITLE", "CUSTOM LOCATION",LONG OR SHORT DATE,"ANIMATION SELECTION"] spawn Waldo_fnc_InfoText;
-
-*/
+/*
+ * Author: Waldo
+ * Introduction / title text overlay - shows a styled intro (mission name, location, date, time).
+ * With no overrides it auto-derives the title from description.ext and the location from worldName.
+ * Registered as Waldo_fnc_InfoText.
+ *
+ * Arguments:
+ * 0: _title <STRING> - mission title override (optional, default: "" = from description.ext)
+ * 1: _locale <STRING> - location override (optional, default: "" = from worldName)
+ * 2: _longDate <BOOL> - long date format ("1st November 2010") vs short ("01/11/2010") (optional, default: false)
+ * 3: _anim <STRING> - text animation style (optional, default: "NONE")
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * ["", ""] spawn Waldo_fnc_InfoText;
+ */
 
 params[["_title",""],["_locale",""],["_longDate",false],["_anim","NONE"]];
 

@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the LZ extraction brief checklist to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_LZEXTRACT;
+ */
+
 player createDiaryRecord["Checklists",
     ["HELO EXTRACTION CHECKLISTS",
         "

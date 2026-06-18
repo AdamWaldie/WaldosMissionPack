@@ -1,3 +1,17 @@
+/*
+ * Author: Waldo
+ * Adds the rotary-wing pickup request checklist to the player's map diary.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * call Waldo_fnc_ROTARYPICKUPREQUEST;
+ */
+
 player createDiaryRecord["Radio Reports",
     ["ROTARY PICKUP REQUEST",
         "
