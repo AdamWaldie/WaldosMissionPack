@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getMarkerClassForIconPath
+ * Author: Waldo
+ * Get marker class for icon path.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getMarkerClassForIconPath via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _icon <STRING> - icon (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_icon] call Waldo_fnc_EcoResource_getMarkerClassForIconPath;
  */
 
     params [["_icon", ""]];

@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - applyResourceRowsToSide
+ * Author: Waldo
+ * Apply resource rows to side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_applyResourceRowsToSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _rows <ARRAY> - rows (optional, default: [])
+ * 2: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_sideKey, _rows, _callerName] call Waldo_fnc_EcoResource_applyResourceRowsToSide;
  */
 
     params ["_sideKey", ["_rows", []], ["_callerName", "Zeus"]];

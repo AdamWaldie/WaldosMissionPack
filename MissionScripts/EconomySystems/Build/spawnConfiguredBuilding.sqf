@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - spawnConfiguredBuilding
+ * Author: Waldo
+ * Spawn configured building.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_spawnConfiguredBuilding via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _pos <ANY> - pos
+ * 1: _buildName <ANY> - build name
+ * 2: _sideKey <STRING> - side key (optional, default: "NONE")
+ * 3: _dir <SCALAR> - dir (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _buildName, _sideKey, _dir] call Waldo_fnc_EcoBuild_spawnConfiguredBuilding;
  */
 
         params ["_pos", "_buildName", ["_sideKey", "NONE"], ["_dir", 0]];

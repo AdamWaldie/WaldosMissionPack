@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - setResearchCompletedForSide
+ * Author: Waldo
+ * Set research completed for side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_setResearchCompletedForSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _researchName <ANY> - research name
+ * 2: _completed <BOOL> - completed (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_sideKey, _researchName, _completed] call Waldo_fnc_EcoResearch_setResearchCompletedForSide;
  */
 
         params ["_sideKey", "_researchName", ["_completed", true]];

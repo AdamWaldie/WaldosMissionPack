@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - importUnifiedBuildingsAdditive
+ * Author: Waldo
+ * Import unified buildings additive.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_importUnifiedBuildingsAdditive via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _payload <ARRAY> - payload (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_payload] call Waldo_fnc_EcoCore_importUnifiedBuildingsAdditive;
  */
 
     params [["_payload", []]];

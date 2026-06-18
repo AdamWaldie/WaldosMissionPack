@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - normalizePurchaseType
+ * Author: Waldo
+ * Normalize purchase type.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_normalizePurchaseType via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _value <STRING> - value (optional, default: "Ground")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_value] call Waldo_fnc_EcoBuy_normalizePurchaseType;
  */
 
         params [["_value", "Ground"]];

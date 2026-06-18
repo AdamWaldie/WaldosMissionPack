@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - cycleMarkerIconSelector
+ * Author: Waldo
+ * Cycle marker icon selector.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_cycleMarkerIconSelector via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _delta <SCALAR> - delta (optional, default: 0)
+ * 2: _indexVarName <STRING> - index var name (optional, default: "")
+ * 3: _valueCtrlVarName <STRING> - value ctrl var name (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _delta, _indexVarName, _valueCtrlVarName] call Waldo_fnc_EcoCore_cycleMarkerIconSelector;
  */
 
     params [

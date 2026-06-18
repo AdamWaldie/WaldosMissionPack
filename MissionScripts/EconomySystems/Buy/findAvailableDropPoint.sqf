@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - findAvailableDropPoint
+ * Author: Waldo
+ * Find available drop point.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_findAvailableDropPoint via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _typeName <STRING> - type name (optional, default: "Ground")
+ * 1: _origin <ARRAY> - origin (optional, default: [0, 0, 0])
+ * 2: _className <STRING> - class name (optional, default: "")
+ * 3: _sideKey <STRING> - side key (optional, default: "ANY")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_typeName, _origin, _className, _sideKey] call Waldo_fnc_EcoBuy_findAvailableDropPoint;
  */
 
         params [["_typeName", "Ground"], ["_origin", [0, 0, 0]], ["_className", ""], ["_sideKey", "ANY"]];

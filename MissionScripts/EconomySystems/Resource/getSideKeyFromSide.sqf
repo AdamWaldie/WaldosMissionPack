@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getSideKeyFromSide
+ * Author: Waldo
+ * Get side key from side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getSideKeyFromSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _side <ANY> - side
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_side] call Waldo_fnc_EcoResource_getSideKeyFromSide;
  */
 
     params ["_side"];

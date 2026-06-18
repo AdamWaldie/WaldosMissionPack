@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - spawnConstructionVehicle
+ * Author: Waldo
+ * Spawn construction vehicle.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_spawnConstructionVehicle via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _pos <ANY> - pos
+ * 1: _className <STRING> - class name (optional, default: "B_Truck_01_box_F")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _className] call Waldo_fnc_EcoBuild_spawnConstructionVehicle;
  */
 
         params ["_pos", ["_className", "B_Truck_01_box_F"]];

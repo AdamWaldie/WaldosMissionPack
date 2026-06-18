@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - validateBuildImportPayload
+ * Author: Waldo
+ * Validate build import payload.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_validateBuildImportPayload via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _payload <ANY> - payload
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_payload] call Waldo_fnc_EcoBuild_validateBuildImportPayload;
  */
 
         params ["_payload"];

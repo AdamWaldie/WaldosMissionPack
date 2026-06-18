@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCommand system - pruneGroundCommandUIDs
+ * Author: Waldo
+ * Prune ground command UI ds.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCommand_pruneGroundCommandUIDs via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Ground Command system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoCommand_pruneGroundCommandUIDs;
  */
 
     if !([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority) exitWith {};

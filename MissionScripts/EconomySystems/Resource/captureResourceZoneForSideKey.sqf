@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - captureResourceZoneForSideKey
+ * Author: Waldo
+ * Capture resource zone for side key.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_captureResourceZoneForSideKey via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _zoneId <STRING> - zone id (optional, default: "")
+ * 1: _sideKey <STRING> - side key (optional, default: "NONE")
+ * 2: _capturePos <ARRAY> - capture pos (optional, default: [])
+ * 3: _actorName <STRING> - actor name (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_zoneId, _sideKey, _capturePos, _actorName] call Waldo_fnc_EcoResource_captureResourceZoneForSideKey;
  */
 
     params [

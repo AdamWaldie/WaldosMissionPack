@@ -1,12 +1,21 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - startPlacedConstruction
+ * Author: Waldo
+ * Start placed construction.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_startPlacedConstruction via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
+ * 1: _dir <SCALAR> - dir (optional, default: 0)
+ * 2: _caller <OBJECT> - caller (optional, default: objNull)
+ * 3: _buildName <STRING> - build name (optional, default: "")
+ * 4: _source <OBJECT> - source (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _dir, _caller, _buildName, _source] call Waldo_fnc_EcoBuild_startPlacedConstruction;
  */
 
         params [

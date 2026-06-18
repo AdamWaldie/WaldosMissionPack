@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - importPurchaseConfiguration
+ * Author: Waldo
+ * Import purchase configuration.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_importPurchaseConfiguration via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _payload <ARRAY> - payload (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_payload] call Waldo_fnc_EcoBuy_importPurchaseConfiguration;
  */
 
         params [["_payload", []]];

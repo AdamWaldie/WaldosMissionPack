@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - getActiveResearchRemainingSeconds
+ * Author: Waldo
+ * Get active research remaining seconds.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_getActiveResearchRemainingSeconds via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _sideKey <STRING> - side key (optional, default: "NONE")
+ * 1: _activeRow <ARRAY> - active row (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey, _activeRow] call Waldo_fnc_EcoResearch_getActiveResearchRemainingSeconds;
  */
 
         params [["_sideKey", "NONE"], ["_activeRow", []]];

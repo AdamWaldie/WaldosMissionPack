@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - spawnResearchCenter
+ * Author: Waldo
+ * Spawn research center.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_spawnResearchCenter via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos] call Waldo_fnc_EcoResearch_spawnResearchCenter;
  */
 
         params [["_pos", [0, 0, 0]]];

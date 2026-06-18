@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - cycleSpawnBuildingSide
+ * Author: Waldo
+ * Cycle spawn building side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_cycleSpawnBuildingSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp
+ * 1: _delta <SCALAR> - delta (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _delta] call Waldo_fnc_EcoBuild_cycleSpawnBuildingSide;
  */
 
         params ["_disp", ["_delta", 0]];

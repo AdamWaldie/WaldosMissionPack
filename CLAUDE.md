@@ -293,8 +293,7 @@ Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate,
 
 ### Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
 
-A self-contained, **pub-Zeus** RTS-style economy suite adapted into WMP (originally the
-"Grand Resource System" composition, fully rebranded). It injects its **own menu — "Waldos
+A self-contained, **pub-Zeus** RTS-style economy suite. It injects its **own menu — "Waldos
 Economy Systems" — into the Zeus tree** (it does *not* use the ZEN module menu), so it works for
 any curator including player-controlled Zeus, with no editor work required. The four systems:
 
@@ -361,7 +360,7 @@ init field (no mod required — true Eden modules need an addon, which WMP is no
 (`MissionScripts/EconomySystems/economyInit.sqf`). Global state uses the `WaldoEco<System>_`
 variable prefix. World objects are tagged by class — resource crate `Land_PlasticCase_01_medium_F`,
 research center `Land_Research_HQ_F`, purchase terminal `Land_Laptop_unfolded_F`, plus
-construction vehicles. Source-maintenance tool: `releaseVerificationAndDeployment/extract_economy_system.py`.
+construction vehicles.
 
 ---
 

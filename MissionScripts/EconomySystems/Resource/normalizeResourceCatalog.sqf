@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - normalizeResourceCatalog
+ * Author: Waldo
+ * Normalize resource catalog.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_normalizeResourceCatalog via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _catalog <ANY> - catalog
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_catalog] call Waldo_fnc_EcoResource_normalizeResourceCatalog;
  */
 
     params ["_catalog"];

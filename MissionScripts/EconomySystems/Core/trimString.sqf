@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - trimString
+ * Author: Waldo
+ * Trim string.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_trimString via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _value <STRING> - value (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_value] call Waldo_fnc_EcoCore_trimString;
  */
 
     params [["_value", ""]];

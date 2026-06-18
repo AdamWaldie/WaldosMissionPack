@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - executePurchase
+ * Author: Waldo
+ * Execute purchase.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_executePurchase via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _sideKey <STRING> - side key (optional, default: "NONE")
+ * 1: _purchaseName <STRING> - purchase name (optional, default: "")
+ * 2: _origin <ARRAY> - origin (optional, default: [0, 0, 0])
+ * 3: _caller <OBJECT> - caller (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_sideKey, _purchaseName, _origin, _caller] call Waldo_fnc_EcoBuy_executePurchase;
  */
 
         params [["_sideKey", "NONE"], ["_purchaseName", ""], ["_origin", [0, 0, 0]], ["_caller", objNull]];

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - captureResourceZone
+ * Author: Waldo
+ * Capture resource zone.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_captureResourceZone via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _zoneId <ANY> - zone id
+ * 1: _caller <ANY> - caller
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_zoneId, _caller] call Waldo_fnc_EcoResource_captureResourceZone;
  */
 
     params ["_zoneId", "_caller"];

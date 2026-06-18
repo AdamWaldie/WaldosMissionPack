@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - processCrateCollectRequest
+ * Author: Waldo
+ * Process crate collect request.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_processCrateCollectRequest via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _crate <OBJECT> - crate (optional, default: objNull)
+ * 1: _request <ARRAY> - request (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_crate, _request] call Waldo_fnc_EcoResource_processCrateCollectRequest;
  */
 
     params [["_crate", objNull], ["_request", []]];

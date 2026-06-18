@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - beginConfiguredBuildingPlacement
+ * Author: Waldo
+ * Begin configured building placement.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_beginConfiguredBuildingPlacement via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _display <ANY> - display
+ * 1: _pos <ANY> - pos
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_display, _pos] call Waldo_fnc_EcoBuild_beginConfiguredBuildingPlacement;
  */
 
         if (!hasInterface) exitWith {};

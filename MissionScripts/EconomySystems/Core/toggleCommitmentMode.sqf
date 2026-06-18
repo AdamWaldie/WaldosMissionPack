@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - toggleCommitmentMode
+ * Author: Waldo
+ * Toggle commitment mode.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_toggleCommitmentMode via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoCore_toggleCommitmentMode;
  */
 
     [!([] call Waldo_fnc_EcoCore_isCommitmentModeEnabled)] call Waldo_fnc_EcoCore_setCommitmentModeEnabled

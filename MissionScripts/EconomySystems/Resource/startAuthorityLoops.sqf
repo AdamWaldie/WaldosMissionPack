@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - startAuthorityLoops
+ * Author: Waldo
+ * Start authority loops.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_startAuthorityLoops via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoResource_startAuthorityLoops;
  */
 
     if (!isNil "WaldoEcoResource_AuthorityLoopsStarted") exitWith {};

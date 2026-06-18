@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - getSpawnBuildingSideChoices
+ * Author: Waldo
+ * Get spawn building side choices.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_getSpawnBuildingSideChoices via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoBuild_getSpawnBuildingSideChoices;
  */
 
         ["NONE", "WEST", "EAST", "GUER"]

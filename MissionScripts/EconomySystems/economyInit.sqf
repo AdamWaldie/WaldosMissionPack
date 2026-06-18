@@ -1,5 +1,5 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
+ * Author: Waldo (Waldos Economy Systems)
  * Bootstrap for Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command).
  *
  * Runs on all machines; self-branches on isServer / hasInterface for the server

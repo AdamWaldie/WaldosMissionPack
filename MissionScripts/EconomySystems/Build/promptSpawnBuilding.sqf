@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - promptSpawnBuilding
+ * Author: Waldo
+ * Prompt spawn building.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_promptSpawnBuilding via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_pos] call Waldo_fnc_EcoBuild_promptSpawnBuilding;
  */
 
         params [["_pos", [0, 0, 0]]];

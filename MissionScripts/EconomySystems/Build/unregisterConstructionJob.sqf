@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - unregisterConstructionJob
+ * Author: Waldo
+ * Unregister construction job.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_unregisterConstructionJob via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _jobId <STRING> - job id (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_jobId] call Waldo_fnc_EcoBuild_unregisterConstructionJob;
  */
 
         params [["_jobId", ""]];

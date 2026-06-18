@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - importUnifiedResourcesAdditive
+ * Author: Waldo
+ * Import unified resources additive.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_importUnifiedResourcesAdditive via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _payload <ARRAY> - payload (optional, default: [])
+ * 1: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_payload, _callerName] call Waldo_fnc_EcoCore_importUnifiedResourcesAdditive;
  */
 
     params [

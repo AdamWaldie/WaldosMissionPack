@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - buildResearchExportPayload
+ * Author: Waldo
+ * Build research export payload.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_buildResearchExportPayload via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _includeResearched <BOOL> - include researched (optional, default: false)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_includeResearched] call Waldo_fnc_EcoResearch_buildResearchExportPayload;
  */
 
         params [["_includeResearched", false]];

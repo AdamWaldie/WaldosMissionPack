@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - clusterDetectorContacts
+ * Author: Waldo
+ * Cluster detector contacts.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_clusterDetectorContacts via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _contacts <ARRAY> - contacts (optional, default: [])
+ * 1: _radius <SCALAR> - radius (optional, default: 200)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_contacts, _radius] call Waldo_fnc_EcoBuild_clusterDetectorContacts;
  */
 
         params [["_contacts", []], ["_radius", 200]];

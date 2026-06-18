@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - getTestingNoticeActionArgs
+ * Author: Waldo
+ * Get testing notice action args.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_getTestingNoticeActionArgs via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _ctrl <ANY> - ctrl
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_ctrl] call Waldo_fnc_EcoCore_getTestingNoticeActionArgs;
  */
 
     [

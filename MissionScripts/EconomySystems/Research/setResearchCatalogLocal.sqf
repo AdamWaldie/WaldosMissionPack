@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - setResearchCatalogLocal
+ * Author: Waldo
+ * Set research catalog local.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_setResearchCatalogLocal via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalogLocal;
  */
 
         params [["_catalog", []]];

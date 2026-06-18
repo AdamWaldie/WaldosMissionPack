@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - applyPresetSelections
+ * Author: Waldo
+ * Apply preset selections.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_applyPresetSelections via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _complexityKey <STRING> - complexity key (optional, default: "")
+ * 1: _sideSelections <ARRAY> - side selections (optional, default: [])
+ * 2: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_complexityKey, _sideSelections, _callerName] call Waldo_fnc_EcoCore_applyPresetSelections;
  */
 
     params [

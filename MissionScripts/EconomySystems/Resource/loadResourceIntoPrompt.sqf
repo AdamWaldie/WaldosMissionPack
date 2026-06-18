@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - loadResourceIntoPrompt
+ * Author: Waldo
+ * Load resource into prompt.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_loadResourceIntoPrompt via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp
+ * 1: _index <SCALAR> - index (optional, default: -1)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _index] call Waldo_fnc_EcoResource_loadResourceIntoPrompt;
  */
 
     params ["_disp", ["_index", -1]];

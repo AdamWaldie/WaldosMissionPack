@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - processBuildingManageRequest
+ * Author: Waldo
+ * Process building manage request.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_processBuildingManageRequest via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _building <OBJECT> - building (optional, default: objNull)
+ * 1: _request <ARRAY> - request (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_building, _request] call Waldo_fnc_EcoBuild_processBuildingManageRequest;
  */
 
         params [["_building", objNull], ["_request", []]];

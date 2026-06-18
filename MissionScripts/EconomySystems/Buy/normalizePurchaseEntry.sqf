@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - normalizePurchaseEntry
+ * Author: Waldo
+ * Normalize purchase entry.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_normalizePurchaseEntry via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_entry] call Waldo_fnc_EcoBuy_normalizePurchaseEntry;
  */
 
         params [["_entry", []]];

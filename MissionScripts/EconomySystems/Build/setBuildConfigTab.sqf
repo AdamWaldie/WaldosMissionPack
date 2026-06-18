@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - setBuildConfigTab
+ * Author: Waldo
+ * Set build config tab.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_setBuildConfigTab via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _tab <STRING> - tab (optional, default: "definitions")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _tab] call Waldo_fnc_EcoBuild_setBuildConfigTab;
  */
 
         params [["_disp", displayNull], ["_tab", "definitions"]];

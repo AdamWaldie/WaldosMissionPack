@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - getPlayerPurchaseStatus
+ * Author: Waldo
+ * Get player purchase status.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_getPlayerPurchaseStatus via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _sideKey <STRING> - side key (optional, default: "NONE")
+ * 1: _entry <ARRAY> - entry (optional, default: [])
+ * 2: _origin <ARRAY> - origin (optional, default: [0, 0, 0])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey, _entry, _origin] call Waldo_fnc_EcoBuy_getPlayerPurchaseStatus;
  */
 
         params [["_sideKey", "NONE"], ["_entry", []], ["_origin", [0, 0, 0]]];

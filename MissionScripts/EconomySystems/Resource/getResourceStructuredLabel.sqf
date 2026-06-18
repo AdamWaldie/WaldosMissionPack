@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getResourceStructuredLabel
+ * Author: Waldo
+ * Get resource structured label.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getResourceStructuredLabel via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _resourceType <ANY> - resource type
+ * 1: _includeIcon <BOOL> - include icon (optional, default: false)
+ * 2: _amount <SCALAR> - amount (optional, default: -1)
+ * 3: _capacity <SCALAR> - capacity (optional, default: -2)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_resourceType, _includeIcon, _amount, _capacity] call Waldo_fnc_EcoResource_getResourceStructuredLabel;
  */
 
     params ["_resourceType", ["_includeIcon", false], ["_amount", -1], ["_capacity", -2]];

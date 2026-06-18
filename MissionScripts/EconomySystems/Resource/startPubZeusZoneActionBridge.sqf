@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - startPubZeusZoneActionBridge
+ * Author: Waldo
+ * Start pub zeus zone action bridge.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_startPubZeusZoneActionBridge via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _target <ANY> - target
+ * 1: _caller <ANY> - caller
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_target, _caller] call Waldo_fnc_EcoResource_startPubZeusZoneActionBridge;
  */
 
     if (missionNamespace getVariable ["WaldoEcoResource_PubZeusZoneActionBridgeStarted", false]) exitWith {};

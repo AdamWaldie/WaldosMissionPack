@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - getBuildSpawnClass
+ * Author: Waldo
+ * Get build spawn class.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_getBuildSpawnClass via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_entry] call Waldo_fnc_EcoBuild_getBuildSpawnClass;
  */
 
         params [["_entry", []]];

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - getPresetPurchaseSideName
+ * Author: Waldo
+ * Get preset purchase side name.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_getPresetPurchaseSideName via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _sideKey <STRING> - side key (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey] call Waldo_fnc_EcoCore_getPresetPurchaseSideName;
  */
 
     params [["_sideKey", ""]];

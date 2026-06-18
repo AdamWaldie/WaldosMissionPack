@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - promptUnifiedPurgeSystem
+ * Author: Waldo
+ * Prompt unified purge system.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_promptUnifiedPurgeSystem via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _ctrl <ANY> - ctrl
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_ctrl] call Waldo_fnc_EcoCore_promptUnifiedPurgeSystem;
  */
 
     if (!hasInterface) exitWith {};
@@ -247,7 +252,7 @@
         private _purgeModule = (!isNull _moduleCheck) && {cbChecked _moduleCheck};
 
         if (_purgeModule) then {
-            [] call Waldo_fnc_EcoCore_purgeGrandResourceSystemModule;
+            [] call Waldo_fnc_EcoCore_purgeEconomySystems;
         } else {
             [
                 [

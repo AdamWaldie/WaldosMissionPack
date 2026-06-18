@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - getPlayerVisibleBuildCatalog
+ * Author: Waldo
+ * Get player visible build catalog.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_getPlayerVisibleBuildCatalog via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _sideKey <STRING> - side key (optional, default: "NONE")
+ * 1: _categoryFilter <STRING> - category filter (optional, default: "ALL")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey, _categoryFilter] call Waldo_fnc_EcoBuild_getPlayerVisibleBuildCatalog;
  */
 
         params [["_sideKey", "NONE"], ["_categoryFilter", "ALL"]];

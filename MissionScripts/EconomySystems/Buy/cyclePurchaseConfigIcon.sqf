@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - cyclePurchaseConfigIcon
+ * Author: Waldo
+ * Cycle purchase config icon.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_cyclePurchaseConfigIcon via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _delta <SCALAR> - delta (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _delta] call Waldo_fnc_EcoBuy_cyclePurchaseConfigIcon;
  */
 
         params [["_disp", displayNull], ["_delta", 0]];

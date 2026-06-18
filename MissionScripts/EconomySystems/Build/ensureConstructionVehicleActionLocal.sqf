@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - ensureConstructionVehicleActionLocal
+ * Author: Waldo
+ * Ensure construction vehicle action local.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _vehicle <OBJECT> - vehicle (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_vehicle] call Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal;
  */
 
         params [["_vehicle", objNull]];

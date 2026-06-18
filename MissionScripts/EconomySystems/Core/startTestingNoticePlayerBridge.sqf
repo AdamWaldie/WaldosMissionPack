@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - startTestingNoticePlayerBridge
+ * Author: Waldo
+ * Start testing notice player bridge.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_startTestingNoticePlayerBridge via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoCore_startTestingNoticePlayerBridge;
  */
 
     if (missionNamespace getVariable ["WaldoEcoCore_TestingNoticePlayerBridgeStarted", false]) exitWith {};

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - beginResourceZonePlacement
+ * Author: Waldo
+ * Begin resource zone placement.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_beginResourceZonePlacement via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _display <ANY> - display
+ * 1: _pos <ANY> - pos
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_display, _pos] call Waldo_fnc_EcoResource_beginResourceZonePlacement;
  */
 
     if (!hasInterface) exitWith {};

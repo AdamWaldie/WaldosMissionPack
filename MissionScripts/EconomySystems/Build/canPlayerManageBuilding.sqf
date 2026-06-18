@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - canPlayerManageBuilding
+ * Author: Waldo
+ * Can player manage building.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_canPlayerManageBuilding via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _building <OBJECT> - building (optional, default: objNull)
+ * 1: _unit <OBJECT> - unit (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_building, _unit] call Waldo_fnc_EcoBuild_canPlayerManageBuilding;
  */
 
         params [["_building", objNull], ["_unit", objNull]];

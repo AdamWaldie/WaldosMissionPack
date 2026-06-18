@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCommand system - promoteGroundCommand
+ * Author: Waldo
+ * Promote ground command.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCommand_promoteGroundCommand via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Ground Command system).
+ *
+ * Arguments:
+ * 0: _uid <STRING> - uid (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_uid] call Waldo_fnc_EcoCommand_promoteGroundCommand;
  */
 
     params [["_uid", ""]];

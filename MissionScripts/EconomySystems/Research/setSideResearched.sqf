@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - setSideResearched
+ * Author: Waldo
+ * Set side researched.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_setSideResearched via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _rows <ARRAY> - rows (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_sideKey, _rows] call Waldo_fnc_EcoResearch_setSideResearched;
  */
 
         params ["_sideKey", ["_rows", []]];

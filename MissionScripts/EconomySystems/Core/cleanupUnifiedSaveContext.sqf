@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - cleanupUnifiedSaveContext
+ * Author: Waldo
+ * Cleanup unified save context.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_cleanupUnifiedSaveContext via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp] call Waldo_fnc_EcoCore_cleanupUnifiedSaveContext;
  */
 
     params [["_disp", displayNull]];

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - processStartResearchRequest
+ * Author: Waldo
+ * Process start research request.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_processStartResearchRequest via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _holder <OBJECT> - holder (optional, default: objNull)
+ * 1: _request <ARRAY> - request (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_holder, _request] call Waldo_fnc_EcoResearch_processStartResearchRequest;
  */
 
         params [["_holder", objNull], ["_request", []]];

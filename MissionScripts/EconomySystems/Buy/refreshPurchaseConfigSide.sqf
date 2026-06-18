@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - refreshPurchaseConfigSide
+ * Author: Waldo
+ * Refresh purchase config side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_refreshPurchaseConfigSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp] call Waldo_fnc_EcoBuy_refreshPurchaseConfigSide;
  */
 
         params [["_disp", displayNull]];

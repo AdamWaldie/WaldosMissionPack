@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - getValidBuildCatalog
+ * Author: Waldo
+ * Get valid build catalog.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_getValidBuildCatalog via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoBuild_getValidBuildCatalog;
  */
 
         private _catalog = call Waldo_fnc_EcoBuild_getBuildCatalog;

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - getPresetComboSelection
+ * Author: Waldo
+ * Get preset combo selection.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_getPresetComboSelection via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _combo <ANY> - combo (optional, default: controlNull)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_combo] call Waldo_fnc_EcoCore_getPresetComboSelection;
  */
 
     params [["_combo", controlNull]];

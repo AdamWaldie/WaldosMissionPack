@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getCrateResourceRows
+ * Author: Waldo
+ * Get crate resource rows.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getCrateResourceRows via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _crate <OBJECT> - crate (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_crate] call Waldo_fnc_EcoResource_getCrateResourceRows;
  */
 
     params [["_crate", objNull]];

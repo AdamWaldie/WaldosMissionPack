@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - setSideResourceAmount
+ * Author: Waldo
+ * Set side resource amount.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_setSideResourceAmount via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _resourceType <ANY> - resource type
+ * 2: _value <SCALAR> - value (optional, default: 0)
+ * 3: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_sideKey, _resourceType, _value, _callerName] call Waldo_fnc_EcoResource_setSideResourceAmount;
  */
 
     params ["_sideKey", "_resourceType", ["_value", 0], ["_callerName", "Zeus"]];

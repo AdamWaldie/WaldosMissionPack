@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - clearPubZeusObjectAction
+ * Author: Waldo
+ * Clear pub zeus object action.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_clearPubZeusObjectAction via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _object <OBJECT> - object (optional, default: objNull)
+ * 1: _flagVar <STRING> - flag var (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_object, _flagVar] call Waldo_fnc_EcoCore_clearPubZeusObjectAction;
  */
 
     params [

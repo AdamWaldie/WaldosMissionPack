@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - colorHexToRGBA
+ * Author: Waldo
+ * Color hex to RGBA.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_colorHexToRGBA via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _hex <STRING> - hex (optional, default: "#FFFFFF")
+ * 1: _alpha <SCALAR> - alpha (optional, default: 1)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_hex, _alpha] call Waldo_fnc_EcoResource_colorHexToRGBA;
  */
 
     params [["_hex", "#FFFFFF"], ["_alpha", 1]];

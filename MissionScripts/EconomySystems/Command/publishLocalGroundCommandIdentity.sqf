@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCommand system - publishLocalGroundCommandIdentity
+ * Author: Waldo
+ * Publish local ground command identity.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Ground Command system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity;
  */
 
     if (!hasInterface) exitWith {};

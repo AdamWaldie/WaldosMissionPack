@@ -1,12 +1,22 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - createResourceZone
+ * Author: Waldo
+ * Create resource zone.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_createResourceZone via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _pos <ANY> - pos
+ * 1: _name <ANY> - name
+ * 2: _radius <ANY> - radius
+ * 3: _resourceRows <ANY> - resource rows
+ * 4: _ownerSideKey <ANY> - owner side key
+ * 5: _interval <ANY> - interval
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _name, _radius, _resourceRows, _ownerSideKey, _interval] call Waldo_fnc_EcoResource_createResourceZone;
  */
 
     params ["_pos", "_name", "_radius", "_resourceRows", "_ownerSideKey", "_interval"];

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - processBuildingProduction
+ * Author: Waldo
+ * Process building production.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_processBuildingProduction via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoBuild_processBuildingProduction;
  */
 
         if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};

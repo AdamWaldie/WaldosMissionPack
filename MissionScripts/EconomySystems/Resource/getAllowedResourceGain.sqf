@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getAllowedResourceGain
+ * Author: Waldo
+ * Get allowed resource gain.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getAllowedResourceGain via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _resourceType <ANY> - resource type
+ * 2: _requestedAmount <SCALAR> - requested amount (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey, _resourceType, _requestedAmount] call Waldo_fnc_EcoResource_getAllowedResourceGain;
  */
 
     params ["_sideKey", "_resourceType", ["_requestedAmount", 0]];

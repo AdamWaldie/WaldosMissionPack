@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - toggleResourceMarkerVisibility
+ * Author: Waldo
+ * Toggle resource marker visibility.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_toggleResourceMarkerVisibility via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_callerName] call Waldo_fnc_EcoResource_toggleResourceMarkerVisibility;
  */
 
     params [["_callerName", "Zeus"]];

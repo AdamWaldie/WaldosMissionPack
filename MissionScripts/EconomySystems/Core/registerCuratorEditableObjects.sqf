@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - registerCuratorEditableObjects
+ * Author: Waldo
+ * Register curator editable objects.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_registerCuratorEditableObjects via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _objects <ARRAY> - objects (optional, default: [])
+ * 1: _addCrew <BOOL> - add crew (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_objects, _addCrew] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;
  */
 
     params [["_objects", []], ["_addCrew", true]];

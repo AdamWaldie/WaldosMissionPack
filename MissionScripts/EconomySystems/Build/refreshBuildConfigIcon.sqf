@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - refreshBuildConfigIcon
+ * Author: Waldo
+ * Refresh build config icon.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_refreshBuildConfigIcon via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp] call Waldo_fnc_EcoBuild_refreshBuildConfigIcon;
  */
 
         params ["_disp"];

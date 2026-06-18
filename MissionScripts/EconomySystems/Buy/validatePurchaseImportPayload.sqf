@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - validatePurchaseImportPayload
+ * Author: Waldo
+ * Validate purchase import payload.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_validatePurchaseImportPayload via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _payload <ARRAY> - payload (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_payload] call Waldo_fnc_EcoBuy_validatePurchaseImportPayload;
  */
 
         params [["_payload", []]];

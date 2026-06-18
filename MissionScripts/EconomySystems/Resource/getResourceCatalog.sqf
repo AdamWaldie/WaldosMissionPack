@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getResourceCatalog
+ * Author: Waldo
+ * Get resource catalog.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getResourceCatalog via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoResource_getResourceCatalog;
  */
 
     private _catalog = +(missionNamespace getVariable ["WaldoEcoResource_ResourceCatalog", []]);

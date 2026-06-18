@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - executeUnifiedPurge
+ * Author: Waldo
+ * Execute unified purge.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_executeUnifiedPurge via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _configSpec <ARRAY> - config spec (optional, default: [])
+ * 1: _valueSpec <ARRAY> - value spec (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_configSpec, _valueSpec] call Waldo_fnc_EcoCore_executeUnifiedPurge;
  */
 
     params [

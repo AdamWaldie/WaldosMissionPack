@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - canAffordPurchaseForSide
+ * Author: Waldo
+ * Can afford purchase for side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_canAffordPurchaseForSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _entry <ARRAY> - entry (optional, default: [])
+ * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_entry, _sideKey] call Waldo_fnc_EcoBuy_canAffordPurchaseForSide;
  */
 
         params [["_entry", []], ["_sideKey", "NONE"]];

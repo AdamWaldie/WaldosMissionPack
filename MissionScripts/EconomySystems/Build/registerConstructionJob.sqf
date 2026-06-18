@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - registerConstructionJob
+ * Author: Waldo
+ * Register construction job.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_registerConstructionJob via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _jobId <STRING> - job id (optional, default: "")
+ * 1: _buildName <STRING> - build name (optional, default: "")
+ * 2: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_jobId, _buildName, _sideKey] call Waldo_fnc_EcoBuild_registerConstructionJob;
  */
 
         params [

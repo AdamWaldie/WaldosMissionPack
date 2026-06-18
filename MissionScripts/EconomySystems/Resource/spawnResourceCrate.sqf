@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - spawnResourceCrate
+ * Author: Waldo
+ * Spawn resource crate.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_spawnResourceCrate via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _pos <ANY> - pos
+ * 1: _resourceRows <ARRAY> - resource rows (optional, default: [])
+ * 2: _legacyValue <SCALAR> - legacy value (optional, default: 1)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _resourceRows, _legacyValue] call Waldo_fnc_EcoResource_spawnResourceCrate;
  */
 
     params ["_pos", ["_resourceRows", []], ["_legacyValue", 1]];

@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - refreshMarkerIconSelector
+ * Author: Waldo
+ * Refresh marker icon selector.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_refreshMarkerIconSelector via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _indexVarName <STRING> - index var name (optional, default: "")
+ * 2: _valueCtrlVarName <STRING> - value ctrl var name (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _indexVarName, _valueCtrlVarName] call Waldo_fnc_EcoCore_refreshMarkerIconSelector;
  */
 
     params [

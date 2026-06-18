@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - ensureResearchCenterActionsLocal
+ * Author: Waldo
+ * Ensure research center actions local.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _researchCenter <OBJECT> - research center (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_researchCenter] call Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal;
  */
 
         params [["_researchCenter", objNull]];

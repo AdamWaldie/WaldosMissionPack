@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getNearestMarkerColor
+ * Author: Waldo
+ * Get nearest marker color.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getNearestMarkerColor via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _hex <STRING> - hex (optional, default: "#FFFFFF")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_hex] call Waldo_fnc_EcoResource_getNearestMarkerColor;
  */
 
     params [["_hex", "#FFFFFF"]];

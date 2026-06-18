@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - buildUnifiedSaveExportPayload
+ * Author: Waldo
+ * Build unified save export payload.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_buildUnifiedSaveExportPayload via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _includeResources <BOOL> - include resources (optional, default: true)
+ * 1: _includeResearch <BOOL> - include research (optional, default: true)
+ * 2: _includeBuildings <BOOL> - include buildings (optional, default: true)
+ * 3: _includeBuy <BOOL> - include buy (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_includeResources, _includeResearch, _includeBuildings, _includeBuy] call Waldo_fnc_EcoCore_buildUnifiedSaveExportPayload;
  */
 
     params [

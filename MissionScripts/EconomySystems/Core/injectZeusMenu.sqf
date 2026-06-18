@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - injectZeusMenu
+ * Author: Waldo
+ * Inject zeus menu.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_injectZeusMenu via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _tree <ANY> - tree (optional, default: controlNull)
+ * 1: _spec <ARRAY> - spec (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_tree, _spec] call Waldo_fnc_EcoCore_injectZeusMenu;
  */
 
     params [

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - setTestingNoticeEnabled
+ * Author: Waldo
+ * Set testing notice enabled.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_setTestingNoticeEnabled via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _enabled <BOOL> - enabled (optional, default: false)
+ * 1: _notify <BOOL> - notify (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_enabled, _notify] call Waldo_fnc_EcoCore_setTestingNoticeEnabled;
  */
 
     params [["_enabled", false], ["_notify", true]];

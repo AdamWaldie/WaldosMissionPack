@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - processZoneCaptureRequest
+ * Author: Waldo
+ * Process zone capture request.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_processZoneCaptureRequest via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _unit <OBJECT> - unit (optional, default: objNull)
+ * 1: _request <ARRAY> - request (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_unit, _request] call Waldo_fnc_EcoResource_processZoneCaptureRequest;
  */
 
     params [["_unit", objNull], ["_request", []]];

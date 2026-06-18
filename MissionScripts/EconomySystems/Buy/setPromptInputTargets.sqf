@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - setPromptInputTargets
+ * Author: Waldo
+ * Set prompt input targets.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_setPromptInputTargets via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _targets <ARRAY> - targets (optional, default: [])
+ * 2: _focusCtrl <ANY> - focus ctrl (optional, default: controlNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _targets, _focusCtrl] call Waldo_fnc_EcoBuy_setPromptInputTargets;
  */
 
         params [["_disp", displayNull], ["_targets", []], ["_focusCtrl", controlNull]];

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - canUnitCaptureCurrentZone
+ * Author: Waldo
+ * Can unit capture current zone.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_canUnitCaptureCurrentZone via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _unit <OBJECT> - unit (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_unit] call Waldo_fnc_EcoResource_canUnitCaptureCurrentZone;
  */
 
     params [["_unit", objNull]];

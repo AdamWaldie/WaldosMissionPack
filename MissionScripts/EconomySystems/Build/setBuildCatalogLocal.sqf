@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - setBuildCatalogLocal
+ * Author: Waldo
+ * Set build catalog local.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_setBuildCatalogLocal via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_catalog] call Waldo_fnc_EcoBuild_setBuildCatalogLocal;
  */
 
         params [["_catalog", []]];

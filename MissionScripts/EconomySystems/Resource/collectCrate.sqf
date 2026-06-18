@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - collectCrate
+ * Author: Waldo
+ * Collect crate.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_collectCrate via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _crate <ANY> - crate
+ * 1: _caller <ANY> - caller
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_crate, _caller] call Waldo_fnc_EcoResource_collectCrate;
  */
 
     params ["_crate", "_caller"];

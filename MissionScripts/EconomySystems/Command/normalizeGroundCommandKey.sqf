@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCommand system - normalizeGroundCommandKey
+ * Author: Waldo
+ * Normalize ground command key.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCommand_normalizeGroundCommandKey via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Ground Command system).
+ *
+ * Arguments:
+ * 0: _key <STRING> - key (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_key] call Waldo_fnc_EcoCommand_normalizeGroundCommandKey;
  */
 
     params [["_key", ""]];

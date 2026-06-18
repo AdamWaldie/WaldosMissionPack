@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - setPresetGenericComplexity
+ * Author: Waldo
+ * Set preset generic complexity.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_setPresetGenericComplexity via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _complexityKey <STRING> - complexity key (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_complexityKey] call Waldo_fnc_EcoCore_setPresetGenericComplexity;
  */
 
     params [["_complexityKey", ""]];

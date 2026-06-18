@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - promptPurchaseConfig
+ * Author: Waldo
+ * Prompt purchase config.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_promptPurchaseConfig via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _ctrl <ANY> - ctrl
+ * 1: _index <ANY> - index
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_ctrl, _index] call Waldo_fnc_EcoBuy_promptPurchaseConfig;
  */
 
         if (!hasInterface) exitWith {};

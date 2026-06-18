@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - buildBuildExportPayload
+ * Author: Waldo
+ * Build build export payload.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_buildBuildExportPayload via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _includeBuilt <BOOL> - include built (optional, default: false)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_includeBuilt] call Waldo_fnc_EcoBuild_buildBuildExportPayload;
  */
 
         params [["_includeBuilt", false]];

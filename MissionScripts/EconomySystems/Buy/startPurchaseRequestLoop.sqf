@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - startPurchaseRequestLoop
+ * Author: Waldo
+ * Start purchase request loop.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_startPurchaseRequestLoop via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoBuy_startPurchaseRequestLoop;
  */
 
         if (!([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority)) exitWith {};

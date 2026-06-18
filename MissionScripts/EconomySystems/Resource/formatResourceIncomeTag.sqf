@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - formatResourceIncomeTag
+ * Author: Waldo
+ * Format resource income tag.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_formatResourceIncomeTag via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _ratePerMinute <SCALAR> - rate per minute (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_ratePerMinute] call Waldo_fnc_EcoResource_formatResourceIncomeTag;
  */
 
     params [["_ratePerMinute", 0]];

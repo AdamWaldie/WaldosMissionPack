@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - mergeNamedEntryCatalogs
+ * Author: Waldo
+ * Merge named entry catalogs.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_mergeNamedEntryCatalogs via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _existing <ARRAY> - existing (optional, default: [])
+ * 1: _incoming <ARRAY> - incoming (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_existing, _incoming] call Waldo_fnc_EcoCore_mergeNamedEntryCatalogs;
  */
 
     params [

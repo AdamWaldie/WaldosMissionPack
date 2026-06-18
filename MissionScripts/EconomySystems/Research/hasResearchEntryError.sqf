@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - hasResearchEntryError
+ * Author: Waldo
+ * Has research entry error.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_hasResearchEntryError via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _entry <ARRAY> - entry (optional, default: [])
+ * 1: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_entry, _catalog] call Waldo_fnc_EcoResearch_hasResearchEntryError;
  */
 
         params [["_entry", []], ["_catalog", []]];

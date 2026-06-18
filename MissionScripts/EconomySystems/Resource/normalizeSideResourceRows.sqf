@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - normalizeSideResourceRows
+ * Author: Waldo
+ * Normalize side resource rows.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_normalizeSideResourceRows via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _rows <ANY> - rows
+ * 1: _types <ANY> - types
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_rows, _types] call Waldo_fnc_EcoResource_normalizeSideResourceRows;
  */
 
     params ["_rows", "_types"];

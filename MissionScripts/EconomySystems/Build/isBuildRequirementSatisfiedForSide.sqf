@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - isBuildRequirementSatisfiedForSide
+ * Author: Waldo
+ * Is build requirement satisfied for side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_isBuildRequirementSatisfiedForSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _buildName <STRING> - build name (optional, default: "")
+ * 1: _sideKey <STRING> - side key (optional, default: "NONE")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_buildName, _sideKey] call Waldo_fnc_EcoBuild_isBuildRequirementSatisfiedForSide;
  */
 
         params [["_buildName", ""], ["_sideKey", "NONE"]];

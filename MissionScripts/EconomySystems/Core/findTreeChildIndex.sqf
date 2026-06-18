@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - findTreeChildIndex
+ * Author: Waldo
+ * Find tree child index.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_findTreeChildIndex via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _tree <ANY> - tree (optional, default: controlNull)
+ * 1: _rootIndex <SCALAR> - root index (optional, default: -1)
+ * 2: _matchTexts <ARRAY> - match texts (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_tree, _rootIndex, _matchTexts] call Waldo_fnc_EcoCore_findTreeChildIndex;
  */
 
     params [["_tree", controlNull], ["_rootIndex", -1], ["_matchTexts", []]];

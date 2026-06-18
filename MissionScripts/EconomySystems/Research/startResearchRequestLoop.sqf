@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - startResearchRequestLoop
+ * Author: Waldo
+ * Start research request loop.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_startResearchRequestLoop via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoResearch_startResearchRequestLoop;
  */
 
         if (missionNamespace getVariable ["WaldoEcoResearch_StartResearchRequestLoopStarted", false]) exitWith {};

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getSideResourceStorageCapacity
+ * Author: Waldo
+ * Get side resource storage capacity.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getSideResourceStorageCapacity via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _resourceType <ANY> - resource type
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey, _resourceType] call Waldo_fnc_EcoResource_getSideResourceStorageCapacity;
  */
 
     params ["_sideKey", "_resourceType"];

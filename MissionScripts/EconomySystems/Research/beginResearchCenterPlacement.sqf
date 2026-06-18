@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - beginResearchCenterPlacement
+ * Author: Waldo
+ * Begin research center placement.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_beginResearchCenterPlacement via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _display <ANY> - display
+ * 1: _pos <ANY> - pos
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_display, _pos] call Waldo_fnc_EcoResearch_beginResearchCenterPlacement;
  */
 
         if (!hasInterface) exitWith {};

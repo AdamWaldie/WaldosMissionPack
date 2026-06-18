@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCommand system - isGroundCommandUID
+ * Author: Waldo
+ * Is ground command UID.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCommand_isGroundCommandUID via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Ground Command system).
+ *
+ * Arguments:
+ * 0: _uid <STRING> - uid (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_uid] call Waldo_fnc_EcoCommand_isGroundCommandUID;
  */
 
     params [["_uid", ""]];

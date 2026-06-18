@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - hasPurchaseEntryError
+ * Author: Waldo
+ * Has purchase entry error.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_hasPurchaseEntryError via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _entry <ARRAY> - entry (optional, default: [])
+ * 1: _catalog <ARRAY> - catalog (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_entry, _catalog] call Waldo_fnc_EcoBuy_hasPurchaseEntryError;
  */
 
         params [["_entry", []], ["_catalog", []]];

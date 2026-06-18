@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - removeResourceType
+ * Author: Waldo
+ * Remove resource type.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_removeResourceType via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _resourceType <ANY> - resource type
+ * 1: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_resourceType, _callerName] call Waldo_fnc_EcoResource_removeResourceType;
  */
 
     params ["_resourceType", ["_callerName", "Zeus"]];

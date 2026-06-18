@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - promptResourceConfig
+ * Author: Waldo
+ * Prompt resource config.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_promptResourceConfig via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _ctrl <ANY> - ctrl
+ * 1: _index <ANY> - index
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_ctrl, _index] call Waldo_fnc_EcoResource_promptResourceConfig;
  */
 
     if (!hasInterface) exitWith {};

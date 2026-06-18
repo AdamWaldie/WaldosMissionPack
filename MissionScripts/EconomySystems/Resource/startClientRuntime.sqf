@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - startClientRuntime
+ * Author: Waldo
+ * Start client runtime.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_startClientRuntime via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _ctrl <ANY> - ctrl
+ * 1: _path <ANY> - path
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_ctrl, _path] call Waldo_fnc_EcoResource_startClientRuntime;
  */
 
     if (!hasInterface) exitWith {};

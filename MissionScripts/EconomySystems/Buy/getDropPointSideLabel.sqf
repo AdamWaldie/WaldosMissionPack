@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - getDropPointSideLabel
+ * Author: Waldo
+ * Get drop point side label.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_getDropPointSideLabel via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _sideKey <STRING> - side key (optional, default: "ANY")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey] call Waldo_fnc_EcoBuy_getDropPointSideLabel;
  */
 
         params [["_sideKey", "ANY"]];

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - deleteDropPoint
+ * Author: Waldo
+ * Delete drop point.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_deleteDropPoint via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _dropPointId <STRING> - drop point id (optional, default: "")
+ * 1: _deleteAnchor <BOOL> - delete anchor (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_dropPointId, _deleteAnchor] call Waldo_fnc_EcoBuy_deleteDropPoint;
  */
 
         params [["_dropPointId", ""], ["_deleteAnchor", true]];

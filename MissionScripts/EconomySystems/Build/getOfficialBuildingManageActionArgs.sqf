@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - getOfficialBuildingManageActionArgs
+ * Author: Waldo
+ * Get official building manage action args.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_getOfficialBuildingManageActionArgs via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _operation <STRING> - operation (optional, default: "DISABLE")
+ * 1: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_operation, _entry] call Waldo_fnc_EcoBuild_getOfficialBuildingManageActionArgs;
  */
 
         params [

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - normalizeResourceBaseStorage
+ * Author: Waldo
+ * Normalize resource base storage.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_normalizeResourceBaseStorage via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _value <SCALAR> - value (optional, default: -1)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_value] call Waldo_fnc_EcoResource_normalizeResourceBaseStorage;
  */
 
     params [["_value", -1]];

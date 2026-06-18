@@ -1,12 +1,21 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - setPromptInputTargets
+ * Author: Waldo
+ * Set prompt input targets.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_setPromptInputTargets via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _targets <ARRAY> - targets (optional, default: [])
+ * 2: _focusCtrl <ANY> - focus ctrl (optional, default: controlNull)
+ * 3: _targetsVarName <STRING> - targets var name (optional, default: "")
+ * 4: _passthroughKeys <ARRAY> - passthrough keys (optional, default: [14, 28, 156, 211])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _targets, _focusCtrl, _targetsVarName, _passthroughKeys] call Waldo_fnc_EcoCore_setPromptInputTargets;
  */
 
     params [

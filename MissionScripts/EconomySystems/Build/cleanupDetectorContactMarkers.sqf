@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - cleanupDetectorContactMarkers
+ * Author: Waldo
+ * Cleanup detector contact markers.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_cleanupDetectorContactMarkers via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _building <OBJECT> - building (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_building] call Waldo_fnc_EcoBuild_cleanupDetectorContactMarkers;
  */
 
         params [["_building", objNull]];

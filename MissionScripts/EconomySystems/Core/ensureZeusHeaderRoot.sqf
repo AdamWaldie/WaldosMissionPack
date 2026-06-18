@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - ensureZeusHeaderRoot
+ * Author: Waldo
+ * Ensure zeus header root.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_ensureZeusHeaderRoot via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _tree <ANY> - tree (optional, default: controlNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_tree] call Waldo_fnc_EcoCore_ensureZeusHeaderRoot;
  */
 
     params [["_tree", controlNull]];

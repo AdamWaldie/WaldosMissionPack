@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - removeTreeSelectionHandlerByVar
+ * Author: Waldo
+ * Remove tree selection handler by var.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_removeTreeSelectionHandlerByVar via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _tree <ANY> - tree (optional, default: controlNull)
+ * 1: _handlerVarName <STRING> - handler var name (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_tree, _handlerVarName] call Waldo_fnc_EcoCore_removeTreeSelectionHandlerByVar;
  */
 
     params [

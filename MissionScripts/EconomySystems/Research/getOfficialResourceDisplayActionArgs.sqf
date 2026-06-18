@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - getOfficialResourceDisplayActionArgs
+ * Author: Waldo
+ * Get official resource display action args.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_getOfficialResourceDisplayActionArgs via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _target <ANY> - target
+ * 1: _caller <ANY> - caller
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_target, _caller] call Waldo_fnc_EcoResearch_getOfficialResourceDisplayActionArgs;
  */
 
         [

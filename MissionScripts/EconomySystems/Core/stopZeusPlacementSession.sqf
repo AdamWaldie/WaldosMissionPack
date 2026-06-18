@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - stopZeusPlacementSession
+ * Author: Waldo
+ * Stop zeus placement session.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_stopZeusPlacementSession via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _pendingVarName <STRING> - pending var name (optional, default: "")
+ * 2: _mouseVarName <STRING> - mouse var name (optional, default: "")
+ * 3: _keyVarName <STRING> - key var name (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _pendingVarName, _mouseVarName, _keyVarName] call Waldo_fnc_EcoCore_stopZeusPlacementSession;
  */
 
     params [

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - cycleResourceConfigIcon
+ * Author: Waldo
+ * Cycle resource config icon.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_cycleResourceConfigIcon via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp
+ * 1: _delta <SCALAR> - delta (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _delta] call Waldo_fnc_EcoResource_cycleResourceConfigIcon;
  */
 
     params ["_disp", ["_delta", 0]];

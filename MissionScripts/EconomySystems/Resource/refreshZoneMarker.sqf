@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - refreshZoneMarker
+ * Author: Waldo
+ * Refresh zone marker.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_refreshZoneMarker via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _zoneId <ANY> - zone id
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_zoneId] call Waldo_fnc_EcoResource_refreshZoneMarker;
  */
 
     params ["_zoneId"];

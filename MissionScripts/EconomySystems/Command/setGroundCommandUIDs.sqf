@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCommand system - setGroundCommandUIDs
+ * Author: Waldo
+ * Set ground command UI ds.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCommand_setGroundCommandUIDs via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Ground Command system).
+ *
+ * Arguments:
+ * 0: _uids <ARRAY> - uids (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_uids] call Waldo_fnc_EcoCommand_setGroundCommandUIDs;
  */
 
     params [["_uids", []]];

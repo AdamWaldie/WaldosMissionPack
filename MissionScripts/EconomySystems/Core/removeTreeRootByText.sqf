@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - removeTreeRootByText
+ * Author: Waldo
+ * Remove tree root by text.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_removeTreeRootByText via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _tree <ANY> - tree (optional, default: controlNull)
+ * 1: _rootText <STRING> - root text (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_tree, _rootText] call Waldo_fnc_EcoCore_removeTreeRootByText;
  */
 
     params [

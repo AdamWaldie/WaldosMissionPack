@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - getPresetLibraryEntry
+ * Author: Waldo
+ * Get preset library entry.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_getPresetLibraryEntry via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _complexityKey <STRING> - complexity key (optional, default: "")
+ * 1: _catalogKey <STRING> - catalog key (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_complexityKey, _catalogKey] call Waldo_fnc_EcoCore_getPresetLibraryEntry;
  */
 
     params [

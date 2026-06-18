@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - getResourceMarkerVisibilityAlpha
+ * Author: Waldo
+ * Get resource marker visibility alpha.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_getResourceMarkerVisibilityAlpha via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoResource_getResourceMarkerVisibilityAlpha;
  */
 
     [0, 1] select (missionNamespace getVariable ["WaldoEcoResource_ResourceMarkersVisible", true])

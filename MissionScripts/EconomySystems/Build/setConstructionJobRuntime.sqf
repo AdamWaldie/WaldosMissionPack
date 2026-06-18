@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - setConstructionJobRuntime
+ * Author: Waldo
+ * Set construction job runtime.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_setConstructionJobRuntime via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _rows <ARRAY> - rows (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_rows] call Waldo_fnc_EcoBuild_setConstructionJobRuntime;
  */
 
         params [["_rows", []]];

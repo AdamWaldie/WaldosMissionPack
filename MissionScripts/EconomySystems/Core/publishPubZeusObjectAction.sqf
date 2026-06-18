@@ -1,12 +1,21 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - publishPubZeusObjectAction
+ * Author: Waldo
+ * Publish pub zeus object action.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_publishPubZeusObjectAction via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _object <OBJECT> - object (optional, default: objNull)
+ * 1: _flagVar <STRING> - flag var (optional, default: "")
+ * 2: _actionArgs <ARRAY> - action args (optional, default: [])
+ * 3: _target <SCALAR> - target (optional, default: 0)
+ * 4: _useJip <BOOL> - use jip (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_object, _flagVar, _actionArgs, _target, _useJip] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
  */
 
     params [

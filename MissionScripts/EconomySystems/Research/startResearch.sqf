@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - startResearch
+ * Author: Waldo
+ * Start research.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_startResearch via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _researchName <ANY> - research name
+ * 2: _caller <OBJECT> - caller (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_sideKey, _researchName, _caller] call Waldo_fnc_EcoResearch_startResearch;
  */
 
         params ["_sideKey", "_researchName", ["_caller", objNull]];

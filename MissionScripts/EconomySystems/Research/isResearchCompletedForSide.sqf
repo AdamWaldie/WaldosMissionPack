@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - isResearchCompletedForSide
+ * Author: Waldo
+ * Is research completed for side.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_isResearchCompletedForSide via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _sideKey <ANY> - side key
+ * 1: _researchName <ANY> - research name
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_sideKey, _researchName] call Waldo_fnc_EcoResearch_isResearchCompletedForSide;
  */
 
         params ["_sideKey", "_researchName"];

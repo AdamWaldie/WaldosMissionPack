@@ -619,8 +619,8 @@ class CfgFunctions
             class EcoCore_executeUnifiedPurge {
                 file = "MissionScripts\EconomySystems\Core\executeUnifiedPurge.sqf";
             };
-            class EcoCore_purgeGrandResourceSystemModule {
-                file = "MissionScripts\EconomySystems\Core\purgeGrandResourceSystemModule.sqf";
+            class EcoCore_purgeEconomySystems {
+                file = "MissionScripts\EconomySystems\Core\purgeEconomySystems.sqf";
             };
             class EcoCore_promptUnifiedSaveSystem {
                 file = "MissionScripts\EconomySystems\Core\promptUnifiedSaveSystem.sqf";

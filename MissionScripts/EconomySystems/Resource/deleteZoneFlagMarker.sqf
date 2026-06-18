@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - deleteZoneFlagMarker
+ * Author: Waldo
+ * Delete zone flag marker.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_deleteZoneFlagMarker via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _zoneId <ANY> - zone id
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_zoneId] call Waldo_fnc_EcoResource_deleteZoneFlagMarker;
  */
 
     params ["_zoneId"];

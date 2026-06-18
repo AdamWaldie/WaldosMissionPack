@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - beginLaptopPlacement
+ * Author: Waldo
+ * Begin laptop placement.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_beginLaptopPlacement via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _display <ANY> - display
+ * 1: _payload <ANY> - payload
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_display, _payload] call Waldo_fnc_EcoBuy_beginLaptopPlacement;
  */
 
         if (!hasInterface) exitWith {};

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - refreshSaveTestingNoticeMenuState
+ * Author: Waldo
+ * Refresh save testing notice menu state.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_refreshSaveTestingNoticeMenuState via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _tree <ANY> - tree (optional, default: controlNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_tree] call Waldo_fnc_EcoCore_refreshSaveTestingNoticeMenuState;
  */
 
     params [["_tree", controlNull]];

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - getEstimatedDurationSeconds
+ * Author: Waldo
+ * Get estimated duration seconds.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_getEstimatedDurationSeconds via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _baseTime <SCALAR> - base time (optional, default: 60)
+ * 1: _bonusPercent <SCALAR> - bonus percent (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_baseTime, _bonusPercent] call Waldo_fnc_EcoBuild_getEstimatedDurationSeconds;
  */
 
         params [["_baseTime", 60], ["_bonusPercent", 0]];

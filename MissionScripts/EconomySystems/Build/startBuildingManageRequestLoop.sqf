@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - startBuildingManageRequestLoop
+ * Author: Waldo
+ * Start building manage request loop.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_startBuildingManageRequestLoop via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoBuild_startBuildingManageRequestLoop;
  */
 
         if (!([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority)) exitWith {};

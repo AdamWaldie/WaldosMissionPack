@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - applyResourceMarkerVisibilityGlobal
+ * Author: Waldo
+ * Apply resource marker visibility global.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_applyResourceMarkerVisibilityGlobal via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoResource_applyResourceMarkerVisibilityGlobal;
  */
 
     if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};

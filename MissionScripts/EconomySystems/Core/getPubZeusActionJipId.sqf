@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - getPubZeusActionJipId
+ * Author: Waldo
+ * Get pub zeus action jip id.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_getPubZeusActionJipId via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _object <OBJECT> - object (optional, default: objNull)
+ * 1: _flagVar <STRING> - flag var (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_object, _flagVar] call Waldo_fnc_EcoCore_getPubZeusActionJipId;
  */
 
     params [

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - ensurePurchaseTerminalActionLocal
+ * Author: Waldo
+ * Ensure purchase terminal action local.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _purchaseTerminal <OBJECT> - purchase terminal (optional, default: objNull)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_purchaseTerminal] call Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal;
  */
 
         params [["_purchaseTerminal", objNull]];

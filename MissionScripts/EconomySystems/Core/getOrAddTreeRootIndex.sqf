@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - getOrAddTreeRootIndex
+ * Author: Waldo
+ * Get or add tree root index.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_getOrAddTreeRootIndex via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _tree <ANY> - tree (optional, default: controlNull)
+ * 1: _rootText <STRING> - root text (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_tree, _rootText] call Waldo_fnc_EcoCore_getOrAddTreeRootIndex;
  */
 
     params [["_tree", controlNull], ["_rootText", ""]];

@@ -2,8 +2,6 @@ _Associated Files: MissionScripts\EconomySystems\ (449 `Waldo_fnc_Eco*` function
 
 Waldos Economy Systems is a **pub-Zeus, RTS-style economy suite** built into the pack. It lets you run a resource economy, a tech tree, base construction, and a vehicle store entirely from inside Zeus — no scripting needed by the operator, and no Eden work needed beyond turning it on. It works for any curator, including a player-controlled Zeus.
 
-It was adapted into WMP from the community "Grand Resource System" scripted composition and fully rebranded.
-
 ## The Four Systems
 
 * **Resource** — Define your own resources (give each a name, colour, map icon and a per-side storage cap). Spawn collectable resource crates, and place **capturable zones** that passively generate resources for whoever owns them. Zones can have a finite deposit so they run dry.
@@ -123,5 +121,3 @@ All functionality is registered under `class Waldo` in `WaldosFunctions.sqf` acr
 | `Waldo_fnc_EcoCommand_*` | Ground Command authority |
 
 The bootstrap is `Waldo_fnc_EcoInit`. Global state uses the `WaldoEco<System>_` variable prefix.
-
-> **Note:** This suite was Alpha-stage upstream. This first WMP release focuses on rebranding and native integration; ease-of-use and stability refinements are planned for follow-up passes.

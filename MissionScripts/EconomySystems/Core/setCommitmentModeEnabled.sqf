@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - setCommitmentModeEnabled
+ * Author: Waldo
+ * Set commitment mode enabled.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_setCommitmentModeEnabled via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _enabled <BOOL> - enabled (optional, default: false)
+ * 1: _notify <BOOL> - notify (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_enabled, _notify] call Waldo_fnc_EcoCore_setCommitmentModeEnabled;
  */
 
     params [["_enabled", false], ["_notify", true]];

@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - populatePresetCombo
+ * Author: Waldo
+ * Populate preset combo.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_populatePresetCombo via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _combo <ANY> - combo (optional, default: controlNull)
+ * 1: _choices <ARRAY> - choices (optional, default: [])
+ * 2: _selectedKey <STRING> - selected key (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_combo, _choices, _selectedKey] call Waldo_fnc_EcoCore_populatePresetCombo;
  */
 
     params [

@@ -1,12 +1,21 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - addResourceType
+ * Author: Waldo
+ * Add resource type.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_addResourceType via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _resourceType <ANY> - resource type
+ * 1: _color <STRING> - color (optional, default: "#FFFFFF")
+ * 2: _icon <STRING> - icon (optional, default: "")
+ * 3: _baseStorage <SCALAR> - base storage (optional, default: -1)
+ * 4: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_resourceType, _color, _icon, _baseStorage, _callerName] call Waldo_fnc_EcoResource_addResourceType;
  */
 
     params ["_resourceType", ["_color", "#FFFFFF"], ["_icon", ""], ["_baseStorage", -1], ["_callerName", "Zeus"]];

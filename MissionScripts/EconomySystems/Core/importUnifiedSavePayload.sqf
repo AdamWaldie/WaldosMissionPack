@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - importUnifiedSavePayload
+ * Author: Waldo
+ * Import unified save payload.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_importUnifiedSavePayload via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _payload <ARRAY> - payload (optional, default: [])
+ * 1: _callerName <STRING> - caller name (optional, default: "Zeus")
+ * 2: _additive <BOOL> - additive (optional, default: false)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_payload, _callerName, _additive] call Waldo_fnc_EcoCore_importUnifiedSavePayload;
  */
 
     params [

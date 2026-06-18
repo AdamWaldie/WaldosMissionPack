@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - ensureLocalObjectAction
+ * Author: Waldo
+ * Ensure local object action.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_ensureLocalObjectAction via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _object <OBJECT> - object (optional, default: objNull)
+ * 1: _flagVar <STRING> - flag var (optional, default: "")
+ * 2: _actionArgs <ARRAY> - action args (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_object, _flagVar, _actionArgs] call Waldo_fnc_EcoCore_ensureLocalObjectAction;
  */
 
     params [

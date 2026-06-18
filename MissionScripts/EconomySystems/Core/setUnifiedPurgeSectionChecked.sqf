@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - setUnifiedPurgeSectionChecked
+ * Author: Waldo
+ * Set unified purge section checked.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_setUnifiedPurgeSectionChecked via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _controls <ARRAY> - controls (optional, default: [])
+ * 1: _checked <BOOL> - checked (optional, default: true)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_controls, _checked] call Waldo_fnc_EcoCore_setUnifiedPurgeSectionChecked;
  */
 
     params [["_controls", []], ["_checked", true]];

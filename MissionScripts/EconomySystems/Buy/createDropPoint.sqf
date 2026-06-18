@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - createDropPoint
+ * Author: Waldo
+ * Create drop point.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_createDropPoint via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
+ * 1: _typeName <STRING> - type name (optional, default: "Ground")
+ * 2: _dir <SCALAR> - dir (optional, default: 0)
+ * 3: _sideKey <STRING> - side key (optional, default: "ANY")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _typeName, _dir, _sideKey] call Waldo_fnc_EcoBuy_createDropPoint;
  */
 
         params [["_pos", [0, 0, 0]], ["_typeName", "Ground"], ["_dir", 0], ["_sideKey", "ANY"]];

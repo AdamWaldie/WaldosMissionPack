@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - deleteResourceZone
+ * Author: Waldo
+ * Delete resource zone.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_deleteResourceZone via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _zoneId <ANY> - zone id
+ * 1: _deleteAnchor <BOOL> - delete anchor (optional, default: true)
+ * 2: _reason <STRING> - reason (optional, default: "removed")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_zoneId, _deleteAnchor, _reason] call Waldo_fnc_EcoResource_deleteResourceZone;
  */
 
     params ["_zoneId", ["_deleteAnchor", true], ["_reason", "removed"]];

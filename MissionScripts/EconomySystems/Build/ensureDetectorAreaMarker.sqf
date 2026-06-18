@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - ensureDetectorAreaMarker
+ * Author: Waldo
+ * Ensure detector area marker.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_ensureDetectorAreaMarker via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _building <OBJECT> - building (optional, default: objNull)
+ * 1: _range <SCALAR> - range (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_building, _range] call Waldo_fnc_EcoBuild_ensureDetectorAreaMarker;
  */
 
         params [["_building", objNull], ["_range", 0]];

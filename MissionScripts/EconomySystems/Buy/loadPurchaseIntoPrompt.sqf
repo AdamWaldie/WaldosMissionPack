@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - loadPurchaseIntoPrompt
+ * Author: Waldo
+ * Load purchase into prompt.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_loadPurchaseIntoPrompt via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _disp <ANY> - disp (optional, default: displayNull)
+ * 1: _index <SCALAR> - index (optional, default: -1)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_disp, _index] call Waldo_fnc_EcoBuy_loadPurchaseIntoPrompt;
  */
 
         params [["_disp", displayNull], ["_index", -1]];

@@ -1,12 +1,17 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResearch system - normalizeResearchExclusives
+ * Author: Waldo
+ * Normalize research exclusives.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResearch_normalizeResearchExclusives via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Research system).
+ *
+ * Arguments:
+ * 0: _rows <ARRAY> - rows (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_rows] call Waldo_fnc_EcoResearch_normalizeResearchExclusives;
  */
 
         params [["_rows", []]];

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - getInjectedMenuChildIndex
+ * Author: Waldo
+ * Get injected menu child index.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_getInjectedMenuChildIndex via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * 0: _childId <STRING> - child id (optional, default: "")
+ * 1: _childIndexes <ARRAY> - child indexes (optional, default: [])
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_childId, _childIndexes] call Waldo_fnc_EcoCore_getInjectedMenuChildIndex;
  */
 
     params [

@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - spawnPurchaseLaptop
+ * Author: Waldo
+ * Spawn purchase laptop.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_spawnPurchaseLaptop via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
+ * 1: _dir <SCALAR> - dir (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _dir] call Waldo_fnc_EcoBuy_spawnPurchaseLaptop;
  */
 
         params [

@@ -1,12 +1,20 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - spawnConstructionSite
+ * Author: Waldo
+ * Spawn construction site.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_spawnConstructionSite via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
+ * 1: _dir <SCALAR> - dir (optional, default: 0)
+ * 2: _sideKey <STRING> - side key (optional, default: "NONE")
+ * 3: _buildName <STRING> - build name (optional, default: "Build Site")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_pos, _dir, _sideKey, _buildName] call Waldo_fnc_EcoBuild_spawnConstructionSite;
  */
 
         params [

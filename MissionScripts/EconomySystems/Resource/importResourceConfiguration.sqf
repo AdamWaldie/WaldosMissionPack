@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoResource system - importResourceConfiguration
+ * Author: Waldo
+ * Import resource configuration.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoResource_importResourceConfiguration via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Resource system).
+ *
+ * Arguments:
+ * 0: _payload <ANY> - payload
+ * 1: _callerName <STRING> - caller name (optional, default: "Zeus")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_payload, _callerName] call Waldo_fnc_EcoResource_importResourceConfiguration;
  */
 
     params ["_payload", ["_callerName", "Zeus"]];

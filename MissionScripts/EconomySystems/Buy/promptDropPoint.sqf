@@ -1,12 +1,18 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuy system - promptDropPoint
+ * Author: Waldo
+ * Prompt drop point.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuy_promptDropPoint via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Buy system).
+ *
+ * Arguments:
+ * 0: _pos <ARRAY> - pos (optional, default: [0, 0, 0])
+ * 1: _dir <SCALAR> - dir (optional, default: 0)
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [_pos, _dir] call Waldo_fnc_EcoBuy_promptDropPoint;
  */
 
         params [["_pos", [0, 0, 0]], ["_dir", 0]];

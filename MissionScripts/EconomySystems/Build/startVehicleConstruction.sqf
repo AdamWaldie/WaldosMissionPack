@@ -1,12 +1,19 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoBuild system - startVehicleConstruction
+ * Author: Waldo
+ * Start vehicle construction.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoBuild_startVehicleConstruction via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (Build system).
+ *
+ * Arguments:
+ * 0: _vehicle <OBJECT> - vehicle (optional, default: objNull)
+ * 1: _caller <OBJECT> - caller (optional, default: objNull)
+ * 2: _buildName <STRING> - build name (optional, default: "")
  *
  * Return Value:
- * Per original implementation.
+ * Nothing
+ *
+ * Example:
+ * [_vehicle, _caller, _buildName] call Waldo_fnc_EcoBuild_startVehicleConstruction;
  */
 
         params [

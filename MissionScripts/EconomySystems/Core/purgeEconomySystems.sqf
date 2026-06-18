@@ -1,17 +1,22 @@
 /*
- * Author: Waldo (adapted for WaldosMissionPack - Waldos Economy Systems)
- * EcoCore system - purgeGrandResourceSystemModule
+ * Author: Waldo
+ * Purge economy systems.
  *
- * Part of the Waldos Economy Systems suite (Resource / Research / Build / Buy
- * + Ground Command). Registered as Waldo_fnc_EcoCore_purgeGrandResourceSystemModule via WaldosFunctions.sqf.
+ * Part of the Waldos Economy Systems suite (shared core system).
+ *
+ * Arguments:
+ * None
  *
  * Return Value:
- * Per original implementation.
+ * Any - see function body
+ *
+ * Example:
+ * [] call Waldo_fnc_EcoCore_purgeEconomySystems;
  */
 
     if !(canSuspend) exitWith {
         [] spawn {
-            [] call Waldo_fnc_EcoCore_purgeGrandResourceSystemModule;
+            [] call Waldo_fnc_EcoCore_purgeEconomySystems;
         };
         true
     };
