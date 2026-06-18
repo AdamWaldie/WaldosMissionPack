@@ -67,6 +67,36 @@ missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];
 
 **Tip — build it in Zeus, then bake it in:** configure everything live in Zeus, use the **Export** tool to copy the configuration string, then paste it into `Waldo_Economy_ConfigString` so the exact setup loads automatically every time the mission runs.
 
+### Hand-author your whole economy (`economyConfig.sqf`)
+
+For full control, edit **`economyConfig.sqf`** in the mission root — the dedicated authoring file. It runs once on the server at start (after any preset/config string) and is broadcast, so it is JIP-safe. It ships with a complete worked example you can switch on (`_useExample = true;`) and copy.
+
+Define catalogs and place objects with the server-side helpers:
+
+```sqf
+// Resources: [name, "#hexColour", "iconPath", storageCap]  (-1 = unlimited)
+["Supplies", "#D4C15A", call Waldo_fnc_EcoResource_getDefaultResourceIcon, -1] call Waldo_fnc_EcoResource_addResourceType;
+
+// Research / Buildings / Purchases: pass an array of entries
+[[ ["Logistics I", "Basic supply handling.", [["Supplies", 10]], [], 60] ]] call Waldo_fnc_EcoResearch_setResearchCatalog;
+[[ ["Generator", "Produces fuel.", [["Supplies", 15]], [], 90, "", "", false, "Land_PowerGenerator_F", "Fuel", 2, 20] ]] call Waldo_fnc_EcoBuild_setBuildCatalog;
+[[ ["Transport Truck", "A cargo truck.", [["Supplies", 10]], ["Vehicle Depot"], "B_Truck_01_transport_F", "Ground", "EVERYONE"] ]] call Waldo_fnc_EcoBuy_setPurchaseCatalog;
+
+// Place world objects (e.g. at a marker):
+[getMarkerPos "eco_zone_1", "Supply Field", 30, [["Supplies", 2, 500]], "NONE", 30] call Waldo_fnc_EcoResource_createResourceZone;
+[getMarkerPos "eco_research_1"] call Waldo_fnc_EcoResearch_spawnResearchCenter;
+```
+
+### Designate editor-placed objects (no mod needed)
+
+Arma can only add true Eden "Systems" modules from a **loaded addon**, and WMP is a mission framework, not a mod — so instead you place a normal object in Eden and turn it into an economy object from its **init field**:
+
+| Place this object | Put this in its init field |
+|---|---|
+| `Land_Research_HQ_F` | `[this] call Waldo_fnc_EcoResearch_registerCenter;` |
+| `Land_Laptop_unfolded_F` | `[this] call Waldo_fnc_EcoBuy_registerTerminal;` |
+| any vehicle | `[this] call Waldo_fnc_EcoBuild_registerConstructionVehicle;` |
+
 > Ground Command is assigned live in Zeus (its permission keys are tied to a player's current connection, so it is not pre-set from the editor).
 
 ## Using It In Zeus

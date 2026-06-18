@@ -128,7 +128,15 @@ Option B - load a full configuration string you exported earlier from the Zeus "
            (this wins over a preset if both are set):
     Waldo_Economy_ConfigString - paste the exported text here.
 
-Independent of A/B:
+Option C - hand-author the whole economy (define your own resources / research / buildings /
+           purchases and pre-place zones, crates, research centers, terminals and drop points
+           at map markers): edit economyConfig.sqf in the mission root. You can also designate
+           vanilla objects placed in Eden via their init field, e.g.
+               [this] call Waldo_fnc_EcoResearch_registerCenter;     // on a Land_Research_HQ_F
+               [this] call Waldo_fnc_EcoBuy_registerTerminal;        // on a Land_Laptop_unfolded_F
+               [this] call Waldo_fnc_EcoBuild_registerConstructionVehicle; // on any vehicle
+
+Independent of A/B/C:
     Waldo_Economy_CommitmentMode - true freezes config-catalog refreshes to cut server load
                                    (recommended ON once you have finished configuring).
 

@@ -325,6 +325,9 @@ class CfgFunctions
             class EcoCore_applyMakerConfig {
                 file = "MissionScripts\EconomySystems\Core\applyMakerConfig.sqf";
             };
+            class EcoMakerSetup {
+                file = "economyConfig.sqf";
+            };
             class EcoCore_canRunAuthority {
                 file = "MissionScripts\EconomySystems\Core\canRunAuthority.sqf";
             };
@@ -997,6 +1000,9 @@ class CfgFunctions
         };
         class EcoResearch
         {
+            class EcoResearch_registerCenter {
+                file = "MissionScripts\EconomySystems\Research\registerCenter.sqf";
+            };
             class EcoResearch_getResearchCatalog {
                 file = "MissionScripts\EconomySystems\Research\getResearchCatalog.sqf";
             };
@@ -1135,6 +1141,9 @@ class CfgFunctions
         };
         class EcoBuild
         {
+            class EcoBuild_registerConstructionVehicle {
+                file = "MissionScripts\EconomySystems\Build\registerConstructionVehicle.sqf";
+            };
             class EcoBuild_getBuildCatalog {
                 file = "MissionScripts\EconomySystems\Build\getBuildCatalog.sqf";
             };
@@ -1456,6 +1465,9 @@ class CfgFunctions
         };
         class EcoBuy
         {
+            class EcoBuy_registerTerminal {
+                file = "MissionScripts\EconomySystems\Buy\registerTerminal.sqf";
+            };
             class EcoBuy_startAuthorityLoops {
                 file = "MissionScripts\EconomySystems\Buy\startAuthorityLoops.sqf";
             };

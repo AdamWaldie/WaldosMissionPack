@@ -341,6 +341,18 @@ For drag-and-go, the preset-specific compositions **`[WMP] Waldos Economy System
 Preset`** set `Waldo_Economy_Preset` in their object init and boot the suite. Place only one
 Economy Systems object per mission.
 
+**Full hand-authored economy (`economyConfig.sqf`).** For complete control, makers edit
+`economyConfig.sqf` in the mission root — the dedicated authoring file (registered as
+`Waldo_fnc_EcoMakerSetup`, run once on the authority by `applyMakerConfig` after presets). It
+defines catalogs and places world objects via the server-authoritative helpers, e.g.
+`addResourceType`, `setResearchCatalog`, `setBuildCatalog`, `setPurchaseCatalog`,
+`createResourceZone`, `spawnResourceCrate`, `spawnResearchCenter`, `createDropPoint`. It ships a
+gated worked example (`_useExample`). Editor-placed vanilla objects can be designated from their
+init field (no mod required — true Eden modules need an addon, which WMP is not):
+`[this] call Waldo_fnc_EcoResearch_registerCenter` (on a `Land_Research_HQ_F`),
+`Waldo_fnc_EcoBuy_registerTerminal` (`Land_Laptop_unfolded_F`), and
+`Waldo_fnc_EcoBuild_registerConstructionVehicle` (any vehicle).
+
 **Architecture:** the suite is 449 functions registered under `class Waldo` in
 `WaldosFunctions.sqf` across six sub-namespaces, callable as
 `Waldo_fnc_EcoCore_*` (shared infra: Zeus menu/dialogs/parsing/commitment),
