@@ -38,9 +38,15 @@
         if ((count _entry) <= 0) exitWith {};
         if ([_entry, call Waldo_fnc_EcoBuild_getBuildCatalog] call Waldo_fnc_EcoBuild_hasBuildEntryError) exitWith {};
         if !([_entry, _sideKey] call Waldo_fnc_EcoBuild_isBuildAvailableForSide) exitWith {};
-        if !([_entry, _sideKey] call Waldo_fnc_EcoBuild_areBuildRequirementsMetForSide) exitWith {};
-        if ([_entry, _sideKey] call Waldo_fnc_EcoBuild_isBuildLimitReachedForSide) exitWith {};
-        if !([_entry, _sideKey] call Waldo_fnc_EcoBuild_canAffordBuildForSide) exitWith {};
+        if !([_entry, _sideKey] call Waldo_fnc_EcoBuild_areBuildRequirementsMetForSide) exitWith {
+            [_caller, format ["%1: requirements not met.", _buildName]] call Waldo_fnc_EcoCore_notifyActor;
+        };
+        if ([_entry, _sideKey] call Waldo_fnc_EcoBuild_isBuildLimitReachedForSide) exitWith {
+            [_caller, format ["%1: build limit reached.", _buildName]] call Waldo_fnc_EcoCore_notifyActor;
+        };
+        if !([_entry, _sideKey] call Waldo_fnc_EcoBuild_canAffordBuildForSide) exitWith {
+            [_caller, format ["%1: not enough resources.", _buildName]] call Waldo_fnc_EcoCore_notifyActor;
+        };
 
         {
             [_sideKey, _x param [0, ""], -(_x param [1, 0]), _buildName] call Waldo_fnc_EcoResource_addSideResourceAmount;

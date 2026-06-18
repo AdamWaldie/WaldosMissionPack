@@ -14,6 +14,7 @@
  * [] call Waldo_fnc_EcoResource_startZoneCaptureRequestLoop;
  */
 
+    if (!([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority)) exitWith {};
     if (missionNamespace getVariable ["WaldoEcoResource_ZoneCaptureRequestLoopStarted", false]) exitWith {};
     missionNamespace setVariable ["WaldoEcoResource_ZoneCaptureRequestLoopStarted", true];
 

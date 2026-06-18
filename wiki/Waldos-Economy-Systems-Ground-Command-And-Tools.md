@@ -34,7 +34,11 @@ Three bundled presets give you a ready-made economy at increasing complexity —
 
 ## Purge
 
-**Purge** cleanly removes the entire economy suite from the running mission — deletes its world objects and markers and stops its loops — if you decide you no longer want it.
+**Purge** cleanly removes the entire economy suite from the running mission — deletes its world objects and markers and stops its loops — if you decide you no longer want it. Purge is **permanent for that mission**: it also prevents joining (JIP) players from re-initialising the suite, so it is a teardown, not a reset. Restart the mission to run the economy again afterwards.
+
+## Status check (for scripters)
+
+`call Waldo_fnc_EcoCore_isActive` returns whether the suite is currently running, so you can gate dependent scripts, e.g. `waitUntil { call Waldo_fnc_EcoCore_isActive };`. Note also that failed player actions (not enough resources, unmet requirements, no drop point in range) now report the reason to the player via system chat instead of doing nothing.
 
 ## See also
 

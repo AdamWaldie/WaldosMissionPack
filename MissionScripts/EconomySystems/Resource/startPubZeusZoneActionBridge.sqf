@@ -15,6 +15,7 @@
  * [_target, _caller] call Waldo_fnc_EcoResource_startPubZeusZoneActionBridge;
  */
 
+    if (!([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority)) exitWith {};
     if (missionNamespace getVariable ["WaldoEcoResource_PubZeusZoneActionBridgeStarted", false]) exitWith {};
     missionNamespace setVariable ["WaldoEcoResource_PubZeusZoneActionBridgeStarted", true];
 

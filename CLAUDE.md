@@ -362,6 +362,26 @@ variable prefix. World objects are tagged by class — resource crate `Land_Plas
 research center `Land_Research_HQ_F`, purchase terminal `Land_Laptop_unfolded_F`, plus
 construction vehicles.
 
+**Multiplayer / authority model.** All shared state (catalogs, side resources, zones, jobs) and all
+global world-object/marker creation are gated by `Waldo_fnc_EcoCore_canRunAuthority` /
+`canRunBackgroundAuthority`, which return **`isServer`** — so the server is the single authority and
+the background loops (income, production, research progress, request processing) run exactly once for
+the mission. Client-only work (Zeus menu injection, ACE action setup, dialogs, request *publishing*)
+is gated by `hasInterface`. This makes the suite correct on **dedicated** servers, not just
+SP/listen-host. When editing economy code: mutate shared state only under `canRunAuthority` and
+broadcast it (`setVariable [..., true]`); never gate client-local work on `canRunAuthority`.
+
+**Operational notes for makers:**
+- `Waldo_fnc_EcoCore_isActive` returns whether the suite is running (gate dependent scripts on it).
+- Failed player actions (insufficient resources / unmet requirements / no drop point) now report via
+  `systemChat` to the actor (`Waldo_fnc_EcoCore_notifyActor`) instead of failing silently.
+- **Commitment mode** is a performance toggle: ON freezes the live config-catalog refresh polling in
+  the Zeus menus to cut server load — turn it on once a mission's economy is configured. It does not
+  affect gameplay, only editing of catalogs.
+- **Purge** is intended to remove the suite for the rest of the mission (it sets a broadcast purged
+  flag that also stops JIP players re-initialising); it is not a "reset" — restart the mission to run
+  the economy again after a purge.
+
 ---
 
 ## description.ext — Mission Maker Checklist

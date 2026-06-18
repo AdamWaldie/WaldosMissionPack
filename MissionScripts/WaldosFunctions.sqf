@@ -325,6 +325,12 @@ class CfgFunctions
             class EcoCore_applyMakerConfig {
                 file = "MissionScripts\EconomySystems\Core\applyMakerConfig.sqf";
             };
+            class EcoCore_isActive {
+                file = "MissionScripts\EconomySystems\Core\isActive.sqf";
+            };
+            class EcoCore_notifyActor {
+                file = "MissionScripts\EconomySystems\Core\notifyActor.sqf";
+            };
             class EcoMakerSetup {
                 file = "economyConfig.sqf";
             };

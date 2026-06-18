@@ -183,7 +183,7 @@ _fnc_installPromptInputGuard = Waldo_fnc_EcoCore_installPromptInputGuard;
                     _wasOpen = false;
                 };
 
-                uiSleep 0.25;
+                uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
             };
         };
     };
@@ -326,7 +326,7 @@ if (!(missionNamespace getVariable ["WaldoEcoBuild_SystemInitialized", false])) 
                     _wasOpen = false;
                 };
 
-                uiSleep 0.25;
+                uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
             };
         };
     };
@@ -439,7 +439,7 @@ if (!(missionNamespace getVariable ["WaldoEcoBuy_SystemInitialized", false])) th
                     _wasOpen = false;
                 };
 
-                uiSleep 0.25;
+                uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
             };
         };
     };
@@ -578,7 +578,7 @@ if (hasInterface && {isNil "WaldoEcoCore_SaveZeusHookStarted"}) then {
                 _wasOpen = false;
             };
 
-            uiSleep 0.25;
+            uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
         };
     };
 };
@@ -632,7 +632,7 @@ if (hasInterface && {isNil "WaldoEcoCore_LocalWorldActionLoopStarted"}) then {
                 });
             };
 
-            uiSleep 1;
+            uiSleep 2; // perf: re-scan world objects every 2s
         };
 
         WaldoEcoCore_LocalWorldActionLoopStarted = nil;

@@ -14,6 +14,7 @@
  * [] call Waldo_fnc_EcoResource_startCrateCollectRequestLoop;
  */
 
+    if (!([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority)) exitWith {};
     if (missionNamespace getVariable ["WaldoEcoResource_CollectRequestLoopStarted", false]) exitWith {};
     missionNamespace setVariable ["WaldoEcoResource_CollectRequestLoopStarted", true];
 

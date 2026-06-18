@@ -29,14 +29,20 @@
         if ((count _entry) <= 0) exitWith {};
         if ([_entry, call Waldo_fnc_EcoBuy_getPurchaseCatalog] call Waldo_fnc_EcoBuy_hasPurchaseEntryError) exitWith {};
         if !([_entry, _sideKey] call Waldo_fnc_EcoBuy_canSideUsePurchase) exitWith {};
-        if !([_entry, _sideKey] call Waldo_fnc_EcoBuy_arePurchaseRequirementsMetForSide) exitWith {};
-        if !([_entry, _sideKey] call Waldo_fnc_EcoBuy_canAffordPurchaseForSide) exitWith {};
+        if !([_entry, _sideKey] call Waldo_fnc_EcoBuy_arePurchaseRequirementsMetForSide) exitWith {
+            [_caller, format ["%1: requirements not met.", _purchaseName]] call Waldo_fnc_EcoCore_notifyActor;
+        };
+        if !([_entry, _sideKey] call Waldo_fnc_EcoBuy_canAffordPurchaseForSide) exitWith {
+            [_caller, format ["%1: not enough resources.", _purchaseName]] call Waldo_fnc_EcoCore_notifyActor;
+        };
 
         private _className = _entry param [4, ""];
         if (_className isEqualTo "" || {!(isClass (configFile >> "CfgVehicles" >> _className))}) exitWith {};
 
         private _dropRow = [(_entry param [5, "Ground"]), _origin, _className, _sideKey] call Waldo_fnc_EcoBuy_findAvailableDropPoint;
-        if ((count _dropRow) <= 0) exitWith {};
+        if ((count _dropRow) <= 0) exitWith {
+            [_caller, format ["%1: no available drop point in range.", _purchaseName]] call Waldo_fnc_EcoCore_notifyActor;
+        };
 
         {
             [_sideKey, _x param [0, ""], -(_x param [1, 0]), _purchaseName] call Waldo_fnc_EcoResource_addSideResourceAmount;
@@ -49,4 +55,6 @@
         _spawned setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
 
         [[_spawned], true] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;
+
+        [_caller, format ["%1 purchased - delivered to the drop point.", _purchaseName]] call Waldo_fnc_EcoCore_notifyActor;
 

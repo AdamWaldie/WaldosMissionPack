@@ -1,6 +1,10 @@
 /*
  * Author: Waldo
- * Can run background authority.
+ * Returns true on the machine that should run the background authority loops (income generation,
+ * production/upkeep, research progress, request processing). This is the server only, so those
+ * loops run exactly once for the mission - never once per connected client (the bug that broke the
+ * suite on dedicated multiplayer). Kept distinct from canRunAuthority for readability at the call
+ * sites that start long-running loops.
  *
  * Part of the Waldos Economy Systems suite (shared core system).
  *
@@ -8,10 +12,10 @@
  * None
  *
  * Return Value:
- * Any - see function body
+ * BOOL - true only on the server
  *
  * Example:
- * [] call Waldo_fnc_EcoCore_canRunBackgroundAuthority;
+ * if !([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority) exitWith {};
  */
 
-    isServer || hasInterface
+    isServer

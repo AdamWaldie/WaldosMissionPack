@@ -58,7 +58,7 @@
 
             _seenKeys pushBack _key;
             _contacts pushBack [_entity, _pos, _enemySide, [_entity, _enemySide] call Waldo_fnc_EcoBuild_getDetectorMarkerType];
-        } forEach allUnits;
+        } forEach (_origin nearEntities [["Man"], _range]); // ranged query instead of scanning allUnits
 
         private _clusters = [_contacts, 200] call Waldo_fnc_EcoBuild_clusterDetectorContacts;
         private _markerNames = [];

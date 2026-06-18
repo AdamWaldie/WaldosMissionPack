@@ -14,6 +14,7 @@
  * [] call Waldo_fnc_EcoResearch_startResearchRequestLoop;
  */
 
+        if (!([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority)) exitWith {};
         if (missionNamespace getVariable ["WaldoEcoResearch_StartResearchRequestLoopStarted", false]) exitWith {};
         missionNamespace setVariable ["WaldoEcoResearch_StartResearchRequestLoopStarted", true];
 
