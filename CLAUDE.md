@@ -78,6 +78,8 @@ python3 releaseVerificationAndDeployment/generateLoadingScreen.py 4.8.0
 
 Two workflows keep it in sync: `.github/workflows/update-cover.yml` regenerates and commits `Pictures/loading.jpg` back to `main` whenever `description.ext` changes; `deploy.sh` regenerates it (from the release tag) before packing so each released zip matches the tag.
 
+**Release ordering guard:** before packing anything, `deploy.sh` fails fast unless the version in `description.ext`'s `onLoadName` matches the release tag (a prerelease suffix like `-rc1` is ignored — only the `X.Y.Z` core is compared). This enforces that the version was bumped on `main` first — which is what triggers `update-cover.yml` to refresh the README/committed cover — so the **visible** cover is already current everywhere before a release is built. The check uses `generateLoadingScreen.py --print-version` (the same parser that renders the cover). Practical workflow: bump `onLoadName` on `main`, let `update-cover.yml` commit the new `Pictures/loading.jpg`, then publish the release; if the tag and `onLoadName` disagree, the release aborts with a message telling you which to fix.
+
 ---
 
 ## Architecture

@@ -4,6 +4,20 @@ set -e
 
 VERSION_TAG=$*
 
+# Guard (Waldos Mission Pack release ordering):
+# The visible cover (Pictures/loading.jpg, rendered from description.ext's onLoadName) must
+# already match this release tag before we pack. If it doesn't, the version was not bumped on
+# main first, so update-cover.yml has not refreshed the README/committed cover for this tag.
+DESC_VERSION=$(python3 releaseVerificationAndDeployment/generateLoadingScreen.py --print-version)
+TAG_VERSION=${VERSION_TAG#v}      # strip an optional leading "v"
+TAG_CORE=${TAG_VERSION%%-*}       # drop a prerelease suffix (e.g. 4.8.0-rc1 -> 4.8.0)
+if [ "$DESC_VERSION" != "$TAG_CORE" ]; then
+  echo "ERROR: description.ext version (v${DESC_VERSION}) does not match release tag (${VERSION_TAG})." >&2
+  echo "Bump onLoadName in description.ext to v${TAG_CORE} and let update-cover.yml refresh" >&2
+  echo "Pictures/loading.jpg on main before publishing this release." >&2
+  exit 1
+fi
+
 mkdir release/
 
 sed -i "s/#define VERSION.*/#define VERSION \"${VERSION_TAG}\"/" releaseVerificationAndDeployment/buildVersion.hpp

@@ -11,11 +11,12 @@ keeps the cover image in sync with the version automatically (see the
 update-cover.yml workflow and deploy.sh).
 
 Arguments:
-  version   - str  - Version to render (optional; default: parsed from description.ext)
-  --base    - path - Text-free background image (optional, default: loadingAssets/loading_base.jpg)
-  --out     - path - Output image (optional, default: Pictures/loading.jpg)
-  --desc    - path - description.ext to parse when no version arg is given (optional)
-  --font    - path - Stencil font (optional, default: loadingAssets/StardosStencil-Bold.ttf)
+  version         - str  - Version to render (optional; default: parsed from description.ext)
+  --base          - path - Text-free background image (optional, default: loadingAssets/loading_base.jpg)
+  --out           - path - Output image (optional, default: Pictures/loading.jpg)
+  --desc          - path - description.ext to parse when no version arg is given (optional)
+  --font          - path - Stencil font (optional, default: loadingAssets/StardosStencil-Bold.ttf)
+  --print-version - flag - Print the resolved version and exit without drawing (no image assets needed)
 
 Return Value:
   Writes the JPEG to --out. Exits non-zero on any unresolved input.
@@ -23,6 +24,7 @@ Return Value:
 Example:
   python3 releaseVerificationAndDeployment/generateLoadingScreen.py
   python3 releaseVerificationAndDeployment/generateLoadingScreen.py 4.8.0
+  python3 releaseVerificationAndDeployment/generateLoadingScreen.py --print-version
 """
 
 import argparse
@@ -77,9 +79,16 @@ def main():
     parser.add_argument("--out", default=DEFAULT_OUT)
     parser.add_argument("--desc", default=DEFAULT_DESC)
     parser.add_argument("--font", default=DEFAULT_FONT)
+    parser.add_argument("--print-version", action="store_true",
+                        help="Print the resolved version and exit without drawing")
     args = parser.parse_args()
 
     version = args.version.lstrip("vV") if args.version else parse_version_from_desc(args.desc)
+
+    # Report-only mode (used by deploy.sh's release-ordering guard); needs no image assets.
+    if args.print_version:
+        print(version)
+        return
 
     for path, label in ((args.base, "base image"), (args.font, "font")):
         if not os.path.isfile(path):
