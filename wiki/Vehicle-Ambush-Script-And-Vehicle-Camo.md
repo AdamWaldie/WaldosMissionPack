@@ -1,31 +1,51 @@
-_Associated Files: MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf_
+_Associated Files: `MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf`, `Waldo_fnc_VehicleCamoSetup` (script by Val & Waldo)_
 
-A script which allows for the creation of "camo" objects to assist in hiding a vehicle in ambush. The script also accounts for limited dismounted movement around the vehicle in concealment (civ).
+# Vehicle Ambush / Vehicle Camo
 
-If the Player:
-* Is spotted
-* Fires the vehicles weapons
-* Moves more than 40 meters from the vehicle
-* Takes damage (Player or vehicle)
+Lets a crew **conceal a vehicle for an ambush** by deploying a set of "camo" objects (foliage, netting, scenery) over it on demand, via an ACE action. While concealed, the crew may dismount and move a short distance around the vehicle disguised as civilians — until something blows the ambush.
 
-The player is returned to their side (potential game-restricted delay of up to 30 seconds) however the camo objects will remain until the vehicle moves, or the camo is removed by the indicated ace action.
+## How the concealment breaks
 
-Designed for vehicles.
+The player is automatically returned to their own side (with a potential engine-imposed delay of up to ~30 seconds) if they:
 
-### Setting Up in Eden;
-* Place the vehicle or object that you want to have the respawn deployable from, and provide it a variable name
-* Place a Game Logic down as close as possible to the vehicle. This can be found near the same menu as Modules.
-* Place any objects you wish to appear when the camo is deployed.
-* If you are using a vehicle as your primary object and any of your deployable objects should be resting on the floor, then raise them about a foot, to allow for the drop of the vehicle's suspension once the game has initialised.
-* Select all the objects that will be deployable, right-click and synchronise them to the Game Logic.
-* In the init of the vehicle, paste the example below, and alter it to suit the needs you have.
+* Are **spotted** by the enemy
+* **Fire the vehicle's weapons**
+* Move **more than 40 m** from the vehicle
+* Take **damage** (player or vehicle)
 
-### Parameters:
-* _target - Vehicle or Object to deploy camo from.
+The camo objects themselves **remain in place** until the vehicle moves, or the crew removes them with the provided ACE action — so breaking concealment doesn't instantly un-hide the vehicle.
 
-Example:
+## Requirements
 
-`[this] call Waldo_fnc_VehicleCamoSetup;`
+* **ACE3** — the deploy/remove actions use the ACE interaction menu. The function silently exits if ACE is not loaded.
+* Designed for **vehicles**.
 
-Below is an example of a setup camo system in the eden editor. The Nazi Tank is the interaction object:
+## Parameters
+
+| # | Parameter | Type | Purpose |
+|---|---|---|---|
+| 0 | Target | Object | The vehicle (or object) the camo is deployed from. |
+
+## Setup in Eden
+
+1. Place the **vehicle** and give it a variable name.
+2. Place a **Game Logic** as close as possible to it (near the Modules menu).
+3. Place every object you want to appear when the camo is deployed.
+4. If a camo object should rest on the ground, raise it ~1 ft to allow for the vehicle's suspension settling once the mission loads.
+5. Select all the camo objects, right-click → **Synchronise** them to the Game Logic.
+6. In the vehicle's **init field**, call the function:
+
+```sqf
+[this] call Waldo_fnc_VehicleCamoSetup;
+```
+
+The synced objects start hidden and are revealed (and attached) when the crew deploys the camo via the ACE action.
+
+Below is an example of a camo system set up in the Eden editor — the tank is the interaction object:
 ![Camo script example in the editor](https://i.imgur.com/dlyoKsk.png)
+
+## See also
+
+* [Simple Mass Attach Items](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items) — attach static objects to a vehicle permanently
+* [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
+* [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak) — tune how easily AI spot your ambush
