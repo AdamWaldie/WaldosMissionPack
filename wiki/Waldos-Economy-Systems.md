@@ -22,13 +22,18 @@ This is the hub page. Each system has its own tutorial:
 | Build | Construct and upgrade buildings that produce resources, store them, boost speeds, or reveal enemies. |
 | Buy | Purchase vehicles at a terminal; they appear at a configured drop point. |
 
-## Quick start
+## Quick start — pick your effort level
 
-1. Enable the suite — set `Waldo_Economy_Enable = true;` in `init.sqf`, **or** place a `[WMP] Waldos Economy Systems` composition (a preset variant gives you a working economy instantly).
-2. Open Zeus — a new **Waldos Economy Systems** root appears in the Zeus tree.
-3. Configure live, or pre-author everything in `economyConfig.sqf` so it loads automatically.
+You never have to touch a script to use this suite. Pick the path that suits you:
 
-See **[Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)** for the full walkthrough.
+* **Easiest (≈30 seconds, no scripting, no Eden setup).** In the Eden Editor, open the **Compositions** list (category _Waldos Mission Pack Compositions_) and drag in
+  **`[WMP] Waldos Economy Systems - Low / Medium / High Preset`**. That single object boots the suite **and** loads a ready-made, balanced economy for NATO/CSAT/AAF. Play the mission — it just works. (Start with **Low** if you're new to it.)
+* **Live in Zeus (one flag).** Set `Waldo_Economy_Enable = true;` in `init.sqf` (or drop the plain `[WMP] Waldos Economy Systems` composition). Open Zeus — a new **Waldos Economy Systems** root appears in the tree, and you build the whole economy live with menus and dialogs. No editor objects required.
+* **Bake in your own (full control).** Configure it live in Zeus, hit **Export** to copy a config string, and paste it into `Waldo_Economy_ConfigString` in `initServer.sqf` — or hand-author everything in `economyConfig.sqf`. It then loads automatically every time the mission runs, for every player including JIP.
+
+> **Tip:** place only **one** Economy Systems object (composition or flag) per mission.
+
+See **[Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)** for the full walkthrough of all three paths.
 
 ## Architecture (for scripters)
 

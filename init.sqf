@@ -34,6 +34,8 @@ that do not use it pay no cost. You can also enable it without editing this file
 To pre-configure the economy from the editor (a bundled LOW/MEDIUM/HIGH preset, a full exported
 config string, or commitment mode) without opening Zeus, see the "Waldos Economy Systems"
 setup block in initServer.sqf.
+
+Full guide (easiest path first): https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems
 */
 Waldo_Economy_Enable = false;
 if (Waldo_Economy_Enable) then {
