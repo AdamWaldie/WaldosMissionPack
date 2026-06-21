@@ -103,6 +103,33 @@ missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true]; /
 
 For non-RHS missions, replace `"rhs_d6_Parachute"` with `"NonSteerable_Parachute_F"` (vanilla).
 
+### Safestart
+
+Freezes all players at mission start until you go live. Auto-starts by default.
+
+```sqf
+missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
+missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
+missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
+missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false = start the mission live
+```
+
+See [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart) for the go-live API and Zeus modules.
+
+### Mission Diagnostics
+
+Runs a read-only server-side configuration sanity check at mission start and reports common WMP misconfigurations to the RPT log (prefixed `[WMP DIAG]`).
+
+```sqf
+missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];  // false = silence it for a shipping mission
+```
+
+See [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics).
+
+### After-Action Report Tracking
+
+`initServer.sqf` calls `[] call Waldo_fnc_AARTrack;` to start lightweight event-driven tracking (duration, KIA, vehicle losses, friendly fire, fraggers) so the ENDEX popup can show an After-Action Report. Remove the line to disable the report. See [ENDEX & After-Action Report](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen).
+
 ---
 
 ## init.sqf

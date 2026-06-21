@@ -12,7 +12,9 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 ## Mission Flow & UI
 * [Mission Intro Text](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Intro-Or-Title-Text)
 * [Mission UI Text Overlays](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-UI-Text-Overlays) — Dynamic text, timed hints, respawn text
-* [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
+* [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) — Also covers the After-Action Report shown in the ENDEX popup
+* [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart) — Freeze players at mission start; lift to go live (timer + Zeus modules)
+* [Tasks / Objectives](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Tasks-And-Objectives) — Script-driven, JIP-safe task helpers with auto map markers
 * [Radio Reports, Checklists, Support Calls And Documentation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
 * [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup) — Also covers GetPlayerGroup and GetPlayerRole helpers
 
@@ -54,5 +56,6 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [ACRE 2 Babel Autoconfig](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration)
 
 ## Miscellaneous
+* [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics) — Server-side config sanity check; warns about the common WMP misconfigurations
 * [Unit Insignias](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Unit-Insignias)
 * [Mission Maker Resource Scripts](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Maker-Resource-Scripts) — Debug tools, arsenal toolkit, damage monitor
