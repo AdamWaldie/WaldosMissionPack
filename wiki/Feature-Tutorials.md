@@ -48,6 +48,7 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak)
 * [AI Convoy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/AI-Convoy-System)
 * [Map Location Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Map-Location-Tools)
+* [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Third-Party-Scripts-Headless-Client-And-Player-Markers) — bundled third-party scripts (Werthles HC, aeroson markers), disabled by default
 
 ## ACRE 2 Radio
 * [ACRE 2 Long Range Radio Presetting](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting)

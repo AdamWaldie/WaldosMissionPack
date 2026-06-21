@@ -143,6 +143,8 @@ Runs on **all clients and the server** during the loading screen transition. Ena
 // [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 ```
 
+See [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Third-Party-Scripts-Headless-Client-And-Player-Markers) for the options inside that file.
+
 ### Zeus Enhanced Modules
 
 ```sqf

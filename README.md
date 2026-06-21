@@ -27,6 +27,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Waldos Economy Systems - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus menu.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
+- Bundled (optional, off by default) third-party scripts - Werthles' Headless Client kit and aeroson's dynamic player markers - wired through a single clean entry point.
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process
 - Auto-generated cover/loading screen - the title and version are rendered programmatically from description.ext and kept in sync on every push and release.
