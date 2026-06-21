@@ -20,11 +20,14 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Vehicle unflipping actions
 - Simple AI convoy script expanded and enhanced from Tovas original.
 - Teleportation Script
-- Endex & Safestart Scripts
-- Custom Zeus Enhanced modules for in-game access to the logistics system and ENDEX scripts.
+- Endex & Safestart Scripts - including an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers) in the ENDEX popup.
+- Script-driven Tasks/Objectives helpers - JIP-safe BIS task wrappers with automatic map markers that also feed the After-Action Report.
+- Mission Diagnostics - a read-only server-side config sanity check that warns about the most common WMP misconfigurations at mission start.
+- Custom Zeus Enhanced modules for in-game access to the logistics system, ENDEX & Safestart scripts.
 - Waldos Economy Systems - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus menu.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
+- Bundled (optional, off by default) third-party scripts - Werthles' Headless Client kit and aeroson's dynamic player markers - wired through a single clean entry point.
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process
 - Auto-generated cover/loading screen - the title and version are rendered programmatically from description.ext and kept in sync on every push and release.

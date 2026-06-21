@@ -1,37 +1,64 @@
-_Associated Files:_
-* _MissionScripts\Paradrop\moveInCargoPlane.sqf_
-* _MissionScripts\Logistics\LogiHelpers\teleport.sqf_
+_Associated Files: `MissionScripts\Logistics\LogiHelpers\teleport.sqf` (`Waldo_fnc_Teleport`), `MissionScripts\Paradrop\moveInCargoPlane.sqf` (`Waldo_fnc_MoveInCargoPlane`)_
 
-Both of these scripts perform teleportation and can be applied to any object. They have been grouped here for convenience.
+# Teleportation & Move-Into-Cargo Interactions
 
-## Teleport Object
-This teleports a target to a given marker or any other kind of object.
+Two small "get me there" helpers, grouped here for convenience. Both add a scroll-wheel **addAction** to an object:
 
-Parameters:
-* 0: Object <OBJECT>
-* 1: Label text <STRING>
-* 2: Destination <MARKER/OBJECT/LOCATION/GROUP/TASK>
+* **Teleport** — move whoever uses the action to a marker, object, location, group or task.
+* **Move-Into-Cargo** — board an aircraft that is already airborne, so jumpers don't have to wait through a long taxi/climb.
 
+---
 
-Examples:
-* `[this,"Teleport - Airfield", Airstrip] call Waldo_fnc_Teleport`  <- Arma 3 Map Location (Predefined)
-* `[this,"Teleport - Base", MyBase] call Waldo_fnc_Teleport ` <- Object
-* `[this,"Teleport - Bart", "FOB_Bart"] call Waldo_fnc_Teleport` <- Arma 3 Map Location (Predefined)
-* `[this,"Teleport - Base", "respawn_west"] call Waldo_fnc_Teleport` <- Marker variable name
+## Teleport Object — `Waldo_fnc_Teleport`
 
-Please note that this script requires the destination to have a variable name to reference.
+Adds a green **"Teleport"** (or custom-labelled) action to an object that moves the user to a destination. The destination can be almost anything with a position; for markers, locations and tasks the Z height is treated as ground level (0).
 
-## Move-In Cargo Object
+### Parameters
 
-This function adds a "move-in-cargo" teleporter to an object, which allows a player to use an addaction to board an aircraft already in the air. Helpful in shortening drop times.
+| # | Parameter | Type | Default | Purpose |
+|---|---|---|---|---|
+| 0 | Object | Object | — | The object the action is added to (often `this`). |
+| 1 | Label | String | `"Teleport"` | Text shown in the scroll-wheel action. |
+| 2 | Destination | Marker / Object / Location / Group / Task | the object itself | Where the user is teleported to. |
 
-Arguments:
-* 0: Teleporter Object
-* 1: Aircraft variable Name To Teleport Into
-* 2: Custom String Name For the Plane (Optional)
+The destination must have a **variable name** (or be a named marker/location) so it can be referenced.
 
-Example:
-* `[this, aircraft] call Waldo_fnc_MoveInCargoPlane;`
-* `[this, aircraft, "ARGUS 1-4"] call Waldo_fnc_MoveInCargoPlane;`
+### Examples
 
-Please note that this script requires the destination to have a variable name to reference.
+```sqf
+[this, "Teleport - Airfield", Airstrip]      call Waldo_fnc_Teleport;  // Arma map Location object
+[this, "Teleport - Base", MyBase]            call Waldo_fnc_Teleport;  // a placed object
+[this, "Teleport - Bart", "FOB_Bart"]        call Waldo_fnc_Teleport;  // predefined map location name
+[this, "Teleport - Base", "respawn_west"]    call Waldo_fnc_Teleport;  // marker variable name
+```
+
+---
+
+## Move-Into-Cargo Object — `Waldo_fnc_MoveInCargoPlane`
+
+Adds a **"Board Into _X_"** action to an object that moves the user straight into the cargo of a named aircraft — even one already in the air. Useful for cutting paradrop wait times: spawn/fly the aircraft, and let jumpers board it from the ground via this teleporter.
+
+### Parameters
+
+| # | Parameter | Type | Default | Purpose |
+|---|---|---|---|---|
+| 0 | Teleporter | Object | — | The object the action is added to (often `this`). |
+| 1 | Aircraft | Object | — | Variable name of the aircraft to board. |
+| 2 | Custom name | String | `"Plane"` | Text shown in the **"Board Into _X_"** action. |
+
+The aircraft must have a **variable name** to be referenced.
+
+### Examples
+
+```sqf
+[this, aircraft] call Waldo_fnc_MoveInCargoPlane;               // "Board Into Plane"
+[this, aircraft, "ARGUS 1-4"] call Waldo_fnc_MoveInCargoPlane;  // "Board Into ARGUS 1-4"
+```
+
+---
+
+## See also
+
+* [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop) — the HALO / static-line jump system you'd board the aircraft for
+* [Map Location Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Map-Location-Tools) — create named map locations to teleport to
+* [Mobile Command Post](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System)

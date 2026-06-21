@@ -1,30 +1,49 @@
-_Associated Files: MissionScripts\Logistics\Construction\ConstructionObjects.sqf_
+_Associated Files: `MissionScripts\Logistics\Construction\ConstructionObjects.sqf`, `Waldo_fnc_ConstructionObjects`_
 
-This function allows you to fake the construction of defences/objects/scenery from a single object via Ace Interaction.
+# Construction Objects
 
-Objects must be pre-placed in the editor around the item you wish to build from, but the interactable object does not need to be stationary.
+Fakes the **construction of defences, objects or scenery** from a single interaction object via an ACE timed action. Pre-place the objects you want "built" (hidden at mission start); when a player runs the build action on the interaction object, those objects appear with a construction sound and progress bar. It's a lightweight way to let players raise a sandbag wall, a checkpoint, an FOB, or any prop set on demand — without the full Eden/ACE base-building flow.
 
-Construction objects can be transported in ACE cargo and retain its abilities.
+The interaction object can be **carried in ACE cargo** and keeps its build ability after being moved, so you can haul a "build kit" crate to where you need it.
 
-### Setting Up in Eden;
-* Place the object or object that you want to have the respawn deployable from, and provide it a variable name
-* Place a Game Logic down as close as possible to the object. This can be found near the same menu as Modules.
-* Place any objects you wish to appear when the object is interacted with..
-* If you are using an object as your primary object and any of your deployable objects should be resting on the floor, then raise them about a foot, to allow for the drop of the object's suspension once the game has initialised.
-* Select all the objects that will be deployable, right-click and synchronise them to the Game Logic.
-* In the object's init, paste the example below, and alter it to suit your needs.
+## Requirements
 
-### Parameters:
-* _target - Vehicle or Object to use as the interactable to build synced objects from
-* _UseModernConsturctionAudio - boolean (true/false) | Options: True = Modern construction Noises, False = Old Wooden Sounding Construction Noises.
+* **ACE3** — the action uses the ACE interaction menu and progress bar. The function silently exits if ACE is not loaded.
 
-Call:
+## Parameters
 
-`[_target,_UseModernConsturctionAudio] call Waldo_fnc_ConstructionObjects;`
+| # | Parameter | Type | Default | Purpose |
+|---|---|---|---|---|
+| 0 | Target | Object | — | The object players interact with to build the synced objects. |
+| 1 | Modern audio | Bool | `false` | `true` = modern construction sounds; `false` = older "wooden" construction sounds. |
 
-e.g.
+## Setup in Eden
 
-`[this,true] call Waldo_fnc_ConstructionObjects; - use modern audio`
+1. Place the **interaction object** (e.g. an ammo box) and give it a variable name.
+2. Place a **Game Logic** as close as possible to it (near the Modules menu).
+3. Place every object you want to appear when built, positioned where it should end up.
+4. If a built object should rest on the ground, raise it ~1 ft to allow for any suspension/physics settling once the mission loads.
+5. Select all the buildable objects, right-click → **Synchronise** them to the Game Logic.
+6. In the interaction object's **init field**, call the function:
 
-Below is an example of the construction script correctly setup. The ammo box is the object the player interacts with:
+```sqf
+[this, true] call Waldo_fnc_ConstructionObjects;   // modern construction audio
+```
+
+The synced objects start hidden and are revealed (with sound + progress bar) when a player completes the build action.
+
+## Examples
+
+```sqf
+[this] call Waldo_fnc_ConstructionObjects;        // old wooden-sounding construction audio
+[this, true] call Waldo_fnc_ConstructionObjects;  // modern construction audio
+```
+
+Below is an example of the construction script correctly set up. The ammo box is the object the player interacts with:
 ![Picture of the construction script in the editor](https://i.imgur.com/gYf9HQq.png)
+
+## See also
+
+* [Mobile Command Post](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System) — deploy/tear-down command post using the same synced-Logic pattern
+* [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup) — full ACE Fortify base-building
+* [Simple Mass Attach Items](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items)

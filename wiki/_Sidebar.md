@@ -7,7 +7,9 @@
     * **Mission Flow & UI**
     * [Mission Intro Text](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Intro-Or-Title-Text)
     * [Mission UI Text Overlays](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-UI-Text-Overlays)
-    * [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
+    * [ENDEX & After-Action Report](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
+    * [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart)
+    * [Tasks / Objectives](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Tasks-And-Objectives)
     * [Radio Reports & Checklists](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
     * [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup)
     * **Logistics & Crates**
@@ -36,12 +38,14 @@
     * [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak)
     * [AI Convoy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/AI-Convoy-System)
     * [Map Location Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Map-Location-Tools)
+    * [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Third-Party-Scripts-Headless-Client-And-Player-Markers)
     * **ACRE 2 Radio**
     * [ACRE 2 Long Range Radio](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting)
     * [ACRE 2 Short Range Radio](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
     * [ACRE 2 Automated CEOI](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Automated-CEOI-Document)
     * [ACRE 2 Babel Autoconfig](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration)
     * **Miscellaneous**
+    * [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics)
     * [Cover / Loading Screen Generation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Cover-Loading-Screen-Generation)
     * [Unit Insignias](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Unit-Insignias)
     * [Mission Maker Resource Scripts](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Maker-Resource-Scripts)
