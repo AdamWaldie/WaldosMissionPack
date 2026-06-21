@@ -26,6 +26,7 @@ I maintain this wiki regularly and keep it updated with tutorials on the vast ma
 - Teleportation Script
 - Endex & Safestart Scripts
 - Custom Zeus Enhanced modules for in-game access to the logistics system and ENDEX scripts.
+- [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus menu. Drop a preset composition and you have a working RTS-style economy in seconds.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
 - Extensively documented files to learn how it works, and make use of this pack!

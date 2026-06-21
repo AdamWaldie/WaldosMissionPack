@@ -4,15 +4,15 @@ This page covers every way to enable and configure [Waldos Economy Systems](http
 
 ## 1. Enable the suite
 
-It is **off by default**, so missions that don't use it pay no performance cost. Turn it on either way:
+It is **off by default**, so missions that don't use it pay no performance cost. Turn it on whichever way is easiest for you:
 
-* **In `init.sqf`:**
+* **Easiest — drop a composition** (Eden compositions list, category _Waldos Mission Pack Compositions_). No scripting, no init fields:
+  * `[WMP] Waldos Economy Systems - Low / Medium / High Preset` — boots the suite **and** loads a ready-made economy. This is the fastest way to a playable economy; start with **Low** if you're new to it.
+  * `[WMP] Waldos Economy Systems` — boots the suite only, so you configure it yourself (live in Zeus or via the files below).
+* **Or set one flag in `init.sqf`:**
   ```sqf
   Waldo_Economy_Enable = true;   // init.sqf then runs: [] spawn Waldo_fnc_EcoInit;
   ```
-* **Or drop a composition** (Eden compositions list, category _Waldos Mission Pack Compositions_):
-  * `[WMP] Waldos Economy Systems` — boots the suite, configure it yourself.
-  * `[WMP] Waldos Economy Systems - Low / Medium / High Preset` — boots **and** loads a ready-made economy.
 
 Place only one Economy Systems object per mission.
 
