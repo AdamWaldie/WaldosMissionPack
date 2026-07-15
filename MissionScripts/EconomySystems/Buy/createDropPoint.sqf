@@ -19,7 +19,10 @@
 
         params [["_pos", [0, 0, 0]], ["_typeName", "Ground"], ["_dir", 0], ["_sideKey", "ANY"]];
 
-        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};
+        // Authority-only creation; forward to the server when called on a client (dedicated-safe).
+        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {
+            _this remoteExec ["Waldo_fnc_EcoBuy_createDropPoint", 2];
+        };
 
         private _dropPointId = format ["buy_drop_%1_%2", floor serverTime, floor (random 100000)];
         private _safeType = [_typeName] call Waldo_fnc_EcoBuy_normalizeDropPointType;

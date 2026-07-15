@@ -21,7 +21,10 @@
 
     params ["_pos", "_name", "_radius", "_resourceRows", "_ownerSideKey", "_interval"];
 
-    if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};
+    // Authority-only creation; forward to the server when called on a client (dedicated-safe).
+    if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {
+        _this remoteExec ["Waldo_fnc_EcoResource_createResourceZone", 2];
+    };
 
     private _zoneId = format ["zone_%1_%2", floor serverTime, floor (random 100000)];
     private _safeName = [_name] call Waldo_fnc_EcoResource_normalizeResourceName;

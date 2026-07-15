@@ -102,17 +102,7 @@ _fnc_installPromptInputGuard = Waldo_fnc_EcoCore_installPromptInputGuard;
     if (hasInterface && {isNil "WaldoEcoResearch_ZeusHookStarted"}) then {
         WaldoEcoResearch_ZeusHookStarted = true;
 
-        [] spawn {
-            private _wasOpen = false;
-
-            while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-                private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
-                private _isOpen = !isNull _disp;
-
-                if (_isOpen && !_wasOpen) then {
-                    _wasOpen = true;
-
-                    [] spawn {
+        [{
                         uiSleep 0.4;
 
                         private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
@@ -176,16 +166,7 @@ _fnc_installPromptInputGuard = Waldo_fnc_EcoCore_installPromptInputGuard;
 
                             _tree setVariable ["WaldoEcoResearch_SelectEH", _eh];
                         };
-                    };
-                };
-
-                if (!_isOpen && _wasOpen) then {
-                    _wasOpen = false;
-                };
-
-                uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
-            };
-        };
+        }] call Waldo_fnc_EcoCore_registerZeusMenuInjector;
     };
 };
 
@@ -237,17 +218,7 @@ if (!(missionNamespace getVariable ["WaldoEcoBuild_SystemInitialized", false])) 
     if (hasInterface && {isNil "WaldoEcoBuild_ZeusHookStarted"}) then {
         WaldoEcoBuild_ZeusHookStarted = true;
 
-        [] spawn {
-            private _wasOpen = false;
-
-            while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-                private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
-                private _isOpen = !isNull _disp;
-
-                if (_isOpen && !_wasOpen) then {
-                    _wasOpen = true;
-
-                    [] spawn {
+        [{
                         uiSleep 0.3;
 
                         private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
@@ -319,16 +290,7 @@ if (!(missionNamespace getVariable ["WaldoEcoBuild_SystemInitialized", false])) 
 
                             _tree setVariable ["WaldoEcoBuild_SelectEH", _eh];
                         };
-                    };
-                };
-
-                if (!_isOpen && _wasOpen) then {
-                    _wasOpen = false;
-                };
-
-                uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
-            };
-        };
+        }] call Waldo_fnc_EcoCore_registerZeusMenuInjector;
     };
 };
 
@@ -350,19 +312,10 @@ if (!(missionNamespace getVariable ["WaldoEcoBuy_SystemInitialized", false])) th
     if (hasInterface && {isNil "WaldoEcoBuy_ZeusHookStarted"}) then {
         WaldoEcoBuy_ZeusHookStarted = true;
 
-        [] spawn {
-            private _wasOpen = false;
+        [{
+                        call Waldo_fnc_EcoBuy_startAuthorityLoops;
+                        [] call Waldo_fnc_EcoBuy_startPurchaseRequestLoop;
 
-            while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-                private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
-                private _isOpen = !isNull _disp;
-
-                if (_isOpen && !_wasOpen) then {
-                    _wasOpen = true;
-                    call Waldo_fnc_EcoBuy_startAuthorityLoops;
-                    [] call Waldo_fnc_EcoBuy_startPurchaseRequestLoop;
-
-                    [] spawn {
                         uiSleep 0.2;
 
                         private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
@@ -432,16 +385,7 @@ if (!(missionNamespace getVariable ["WaldoEcoBuy_SystemInitialized", false])) th
 
                             _tree setVariable ["WaldoEcoBuy_SelectEH", _eh];
                         };
-                    };
-                };
-
-                if (!_isOpen && _wasOpen) then {
-                    _wasOpen = false;
-                };
-
-                uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
-            };
-        };
+        }] call Waldo_fnc_EcoCore_registerZeusMenuInjector;
     };
 };
 
@@ -468,20 +412,14 @@ missionNamespace setVariable ["WaldoEcoCore_PresetLibrary", [
 // Waldo_fnc_EcoCore_applyMakerConfig and the config block in initServer.sqf.
 [] call Waldo_fnc_EcoCore_applyMakerConfig;
 
+// Register the Economy Systems Zeus menu as ZEN custom modules (self-guarded: client +
+// Zeus Enhanced present + once). Replaces the legacy curator-tree injection.
+[] call Waldo_fnc_EcoCore_registerZenModules;
+
 if (hasInterface && {isNil "WaldoEcoCore_SaveZeusHookStarted"}) then {
     WaldoEcoCore_SaveZeusHookStarted = true;
 
-    [] spawn {
-        private _wasOpen = false;
-
-        while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-            private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
-            private _isOpen = !isNull _disp;
-
-            if (_isOpen && !_wasOpen) then {
-                _wasOpen = true;
-
-                [] spawn {
+    [{
                     uiSleep 0.6;
 
                     private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
@@ -571,16 +509,7 @@ if (hasInterface && {isNil "WaldoEcoCore_SaveZeusHookStarted"}) then {
 
                         _tree setVariable ["WaldoEcoCore_SaveSelectEH", _eh];
                     };
-                };
-            };
-
-            if (!_isOpen && _wasOpen) then {
-                _wasOpen = false;
-            };
-
-            uiSleep 0.5; // poll back-off (perf): detect Zeus open within 0.5s
-        };
-    };
+    }] call Waldo_fnc_EcoCore_registerZeusMenuInjector;
 };
 
 private _purchaseTerminal = objNull;

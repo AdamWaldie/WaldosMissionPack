@@ -316,6 +316,9 @@ class CfgFunctions
             class VVDVehicleDamage {
                 file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDVehicleDamage.sqf";
             };
+            class VVDPurgeVehicle {
+                file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDPurgeVehicle.sqf";
+            };
         };
         class EcoCore
         {
@@ -324,6 +327,21 @@ class CfgFunctions
             };
             class EcoCore_applyMakerConfig {
                 file = "MissionScripts\EconomySystems\Core\applyMakerConfig.sqf";
+            };
+            class EcoCore_registerZenModules {
+                file = "MissionScripts\EconomySystems\Core\registerZenModules.sqf";
+            };
+            class EcoCore_zenModuleGuard {
+                file = "MissionScripts\EconomySystems\Core\zenModuleGuard.sqf";
+            };
+            class EcoCore_zenPlacementPos {
+                file = "MissionScripts\EconomySystems\Core\zenPlacementPos.sqf";
+            };
+            class EcoCore_registerZeusMenuInjector {
+                file = "MissionScripts\EconomySystems\Core\registerZeusMenuInjector.sqf";
+            };
+            class EcoCore_startZeusMenuHook {
+                file = "MissionScripts\EconomySystems\Core\startZeusMenuHook.sqf";
             };
             class EcoCore_isActive {
                 file = "MissionScripts\EconomySystems\Core\isActive.sqf";

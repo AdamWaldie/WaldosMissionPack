@@ -20,7 +20,11 @@
             ["_dir", 0]
         ];
 
-        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {objNull};
+        // Authority-only creation; forward to the server when called on a client (dedicated-safe).
+        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {
+            _this remoteExec ["Waldo_fnc_EcoBuy_spawnPurchaseLaptop", 2];
+            objNull
+        };
 
         private _purchaseTerminal = createVehicle ["Land_Laptop_unfolded_F", _pos, [], 0, "CAN_COLLIDE"];
         _purchaseTerminal setPosATL _pos;

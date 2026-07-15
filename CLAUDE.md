@@ -299,7 +299,7 @@ Params for `Waldo_fnc_CreateObjective`: `[taskId, owner, title, description, des
 // allowedSides: ["ALL"], ["BLUFOR"], ["OPFOR"], ["INDEP"], ["CIV"]
 ```
 
-This feature is explicitly marked **WIP and not recommended for live missions**. UAV removal is unreliable (~50%) due to an Arma engine limitation around UAV crew/connection lifecycle — it is not a simple scripting bug and has no robust fix. For a stable vehicle-spawning experience use **ACE Garage** instead. If you do use VVD, test thoroughly with your exact mod set first.
+This feature is explicitly marked **WIP and not recommended for live missions**. Vehicle removal routes deletion to the vehicle's owning machine via `Waldo_fnc_VVDPurgeVehicle` — depot vehicles and their (UAV) crew are created with `createVehicle`/`createVehicleCrew` on whichever client pressed spawn, so a client-side `deleteVehicle`/`deleteVehicleCrew` issued from another machine silently no-ops on the remote object; owner-routing fixes that dominant cause of orphaned UAV crew. A UAV with a player actively connected via a terminal remains an engine edge case with no guaranteed teardown. For a fully stable vehicle-spawning experience use **ACE Garage** instead. If you do use VVD, test thoroughly with your exact mod set first.
 
 ### Zeus Enhanced Modules
 
@@ -311,9 +311,12 @@ Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate,
 
 ### Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
 
-A self-contained, **pub-Zeus** RTS-style economy suite. It injects its **own menu — "Waldos
-Economy Systems" — into the Zeus tree** (it does *not* use the ZEN module menu), so it works for
-any curator including player-controlled Zeus, with no editor work required. The four systems:
+A self-contained, **pub-Zeus** RTS-style economy suite. It exposes every action as a **Zeus
+Enhanced custom module** under the **"Waldos Economy Systems"** category (registered by
+`Waldo_fnc_EcoCore_registerZenModules`), so it works for any curator including player-controlled
+Zeus, with no editor work required. **Zeus Enhanced is required for the Zeus authoring menu** —
+without ZEN the suite still runs server-side (income, research, production, request handling) but
+exposes no in-Zeus menu. The four systems:
 
 - **Resource** — define arbitrary resources (name/colour/icon/storage cap), spawn collectable
   resource crates, and create capturable zones that passively generate resources (with deposit
@@ -384,10 +387,14 @@ construction vehicles.
 global world-object/marker creation are gated by `Waldo_fnc_EcoCore_canRunAuthority` /
 `canRunBackgroundAuthority`, which return **`isServer`** — so the server is the single authority and
 the background loops (income, production, research progress, request processing) run exactly once for
-the mission. Client-only work (Zeus menu injection, ACE action setup, dialogs, request *publishing*)
-is gated by `hasInterface`. This makes the suite correct on **dedicated** servers, not just
-SP/listen-host. When editing economy code: mutate shared state only under `canRunAuthority` and
-broadcast it (`setVariable [..., true]`); never gate client-local work on `canRunAuthority`.
+the mission. Client-only work (ZEN module registration, ACE action setup, dialogs, request
+*publishing*) is gated by `hasInterface`. Because ZEN custom-module code runs on the **curator's
+client**, the seven object-creation functions (research center, resource crate, resource zone,
+building, construction vehicle, purchase laptop, drop point) **forward themselves to the server via
+`remoteExec [..., 2]`** when called off the authority, so placement works on a **dedicated** server,
+not just SP/listen-host. When editing economy code: mutate shared state only under `canRunAuthority`
+and broadcast it (`setVariable [..., true]`); never gate client-local work on `canRunAuthority`; and
+route any new world-object creation through the authority the same way.
 
 **Operational notes for makers:**
 - `Waldo_fnc_EcoCore_isActive` returns whether the suite is running (gate dependent scripts on it).

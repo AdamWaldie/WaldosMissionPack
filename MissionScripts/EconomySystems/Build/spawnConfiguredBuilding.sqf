@@ -19,7 +19,10 @@
 
         params ["_pos", "_buildName", ["_sideKey", "NONE"], ["_dir", 0]];
 
-        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};
+        // Authority-only creation; forward to the server when called on a client (dedicated-safe).
+        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {
+            _this remoteExec ["Waldo_fnc_EcoBuild_spawnConfiguredBuilding", 2];
+        };
 
         private _catalog = call Waldo_fnc_EcoBuild_getBuildCatalog;
         private _index = _catalog findIf {
