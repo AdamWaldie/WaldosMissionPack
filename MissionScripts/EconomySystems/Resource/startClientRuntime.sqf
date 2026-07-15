@@ -20,18 +20,9 @@
 
     WaldoEcoResource_ZeusHookStarted = true;
 
-    [] spawn {
-        private _wasOpen = false;
+    [{
+                    call Waldo_fnc_EcoResource_startAuthorityLoops;
 
-        while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-            private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
-            private _isOpen = !isNull _disp;
-
-            if (_isOpen && !_wasOpen) then {
-                _wasOpen = true;
-                call Waldo_fnc_EcoResource_startAuthorityLoops;
-
-                [] spawn {
                     uiSleep 0.5;
 
                     private _disp = call Waldo_fnc_EcoCore_getZeusDisplay;
@@ -133,16 +124,7 @@
 
                         _tree setVariable ["WaldoEcoResource_SelectEH", _eh];
                     };
-                };
-            };
-
-            if (!_isOpen && _wasOpen) then {
-                _wasOpen = false;
-            };
-
-            uiSleep 0.25;
-        };
-    };
+    }] call Waldo_fnc_EcoCore_registerZeusMenuInjector;
 
     [] spawn {
         private _lastVisible = missionNamespace getVariable ["WaldoEcoResource_ResourceMarkersVisible", true];

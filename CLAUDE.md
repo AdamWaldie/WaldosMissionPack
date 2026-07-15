@@ -299,7 +299,7 @@ Params for `Waldo_fnc_CreateObjective`: `[taskId, owner, title, description, des
 // allowedSides: ["ALL"], ["BLUFOR"], ["OPFOR"], ["INDEP"], ["CIV"]
 ```
 
-This feature is explicitly marked **WIP and not recommended for live missions**. UAV removal is unreliable (~50%) due to an Arma engine limitation around UAV crew/connection lifecycle — it is not a simple scripting bug and has no robust fix. For a stable vehicle-spawning experience use **ACE Garage** instead. If you do use VVD, test thoroughly with your exact mod set first.
+This feature is explicitly marked **WIP and not recommended for live missions**. Vehicle removal routes deletion to the vehicle's owning machine via `Waldo_fnc_VVDPurgeVehicle` — depot vehicles and their (UAV) crew are created with `createVehicle`/`createVehicleCrew` on whichever client pressed spawn, so a client-side `deleteVehicle`/`deleteVehicleCrew` issued from another machine silently no-ops on the remote object; owner-routing fixes that dominant cause of orphaned UAV crew. A UAV with a player actively connected via a terminal remains an engine edge case with no guaranteed teardown. For a fully stable vehicle-spawning experience use **ACE Garage** instead. If you do use VVD, test thoroughly with your exact mod set first.
 
 ### Zeus Enhanced Modules
 

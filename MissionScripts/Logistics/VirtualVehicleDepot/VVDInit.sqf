@@ -3,10 +3,12 @@ Author: Waldo (Various Authors credited for the differing GUI and code snippets 
 
 This script initlises a virtual vehicle depot spawner. At present this script is incomplete and is WIP. It is released as is to allow for my co-operators to see how the script progresses.
 
-WARNING: Not recommended for live missions. UAV removal is unreliable (~50%) due to an Arma
-engine limitation around UAV crew/connection lifecycle, not a simple bug, and has no robust fix.
-For a stable vehicle-spawning experience, use ACE Garage instead. Test thoroughly with your
-exact mod set before relying on this in a real mission.
+WARNING: Not recommended for live missions. Vehicle removal now routes deletion to the
+owning machine (Waldo_fnc_VVDPurgeVehicle), which fixes the main cause of UAV crew being
+left behind - a client-side deleteVehicle/deleteVehicleCrew silently no-ops on a vehicle
+owned by another machine. A UAV with a player actively connected via a terminal remains an
+engine edge case with no guaranteed teardown. For a fully stable vehicle-spawning experience,
+use ACE Garage instead. Test thoroughly with your exact mod set before relying on this.
 
 Arguments:
 _depotSpawnerObject - The item to add the spawner addactions onto
@@ -120,8 +122,9 @@ _depotSpawnerObject addAction[format["<t color='#00ffff'>Delete Vehicles %1</t>"
       _defaultVeh = "DFV" in (_vehVarName splitString "_");
       if (!(_x isKindOf "Man") && !_defaultVeh) then
       {
-        {_nowvehicle deleteVehicleCrew _x} forEach crew _nowvehicle;
-        deleteVehicle _x;
+        // Route crew + hull deletion to the vehicle's owner so UAV AI created on a
+        // remote client is torn down where it is local (see Waldo_fnc_VVDPurgeVehicle).
+        [_nowvehicle] call Waldo_fnc_VVDPurgeVehicle;
       };
     } forEach _vehicles;
 
