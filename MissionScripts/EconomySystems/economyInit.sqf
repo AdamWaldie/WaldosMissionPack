@@ -412,6 +412,10 @@ missionNamespace setVariable ["WaldoEcoCore_PresetLibrary", [
 // Waldo_fnc_EcoCore_applyMakerConfig and the config block in initServer.sqf.
 [] call Waldo_fnc_EcoCore_applyMakerConfig;
 
+// Register the Economy Systems Zeus menu as ZEN custom modules (self-guarded: client +
+// Zeus Enhanced present + once). Replaces the legacy curator-tree injection.
+[] call Waldo_fnc_EcoCore_registerZenModules;
+
 if (hasInterface && {isNil "WaldoEcoCore_SaveZeusHookStarted"}) then {
     WaldoEcoCore_SaveZeusHookStarted = true;
 

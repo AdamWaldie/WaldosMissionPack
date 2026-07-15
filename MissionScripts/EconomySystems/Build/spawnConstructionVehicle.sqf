@@ -17,7 +17,10 @@
 
         params ["_pos", ["_className", "B_Truck_01_box_F"]];
 
-        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};
+        // Authority-only creation; forward to the server when called on a client (dedicated-safe).
+        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {
+            _this remoteExec ["Waldo_fnc_EcoBuild_spawnConstructionVehicle", 2];
+        };
 
         private _vehicle = createVehicle [_className, _pos, [], 0, "NONE"];
         _vehicle setVehiclePosition [_pos, [], 0, "NONE"];

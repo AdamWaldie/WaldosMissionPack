@@ -328,6 +328,9 @@ class CfgFunctions
             class EcoCore_applyMakerConfig {
                 file = "MissionScripts\EconomySystems\Core\applyMakerConfig.sqf";
             };
+            class EcoCore_registerZenModules {
+                file = "MissionScripts\EconomySystems\Core\registerZenModules.sqf";
+            };
             class EcoCore_registerZeusMenuInjector {
                 file = "MissionScripts\EconomySystems\Core\registerZeusMenuInjector.sqf";
             };

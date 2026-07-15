@@ -16,7 +16,12 @@
 
         params [["_pos", [0, 0, 0]]];
 
-        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {objNull};
+        // Authority-only creation. Called from client-side ZEN module / dialog code too,
+        // so forward to the server when not the authority instead of no-opping (dedicated-safe).
+        if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {
+            _this remoteExec ["Waldo_fnc_EcoResearch_spawnResearchCenter", 2];
+            objNull
+        };
 
         private _researchCenter = createVehicle ["Land_Research_HQ_F", _pos, [], 0, "CAN_COLLIDE"];
         _researchCenter setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];

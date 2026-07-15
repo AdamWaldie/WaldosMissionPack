@@ -18,7 +18,10 @@
 
     params ["_pos", ["_resourceRows", []], ["_legacyValue", 1]];
 
-    if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};
+    // Authority-only creation; forward to the server when called on a client (dedicated-safe).
+    if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {
+        _this remoteExec ["Waldo_fnc_EcoResource_spawnResourceCrate", 2];
+    };
 
     private _safeRows = if (_resourceRows isEqualType []) then {
         [_resourceRows] call Waldo_fnc_EcoResource_normalizeResourceRows
