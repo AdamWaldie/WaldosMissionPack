@@ -337,12 +337,6 @@ class CfgFunctions
             class EcoCore_zenPlacementPos {
                 file = "MissionScripts\EconomySystems\Core\zenPlacementPos.sqf";
             };
-            class EcoCore_registerZeusMenuInjector {
-                file = "MissionScripts\EconomySystems\Core\registerZeusMenuInjector.sqf";
-            };
-            class EcoCore_startZeusMenuHook {
-                file = "MissionScripts\EconomySystems\Core\startZeusMenuHook.sqf";
-            };
             class EcoCore_isActive {
                 file = "MissionScripts\EconomySystems\Core\isActive.sqf";
             };
@@ -369,12 +363,6 @@ class CfgFunctions
             };
             class EcoCore_isTestingNoticeEnabled {
                 file = "MissionScripts\EconomySystems\Core\isTestingNoticeEnabled.sqf";
-            };
-            class EcoCore_refreshSaveCommitmentMenuState {
-                file = "MissionScripts\EconomySystems\Core\refreshSaveCommitmentMenuState.sqf";
-            };
-            class EcoCore_refreshSaveTestingNoticeMenuState {
-                file = "MissionScripts\EconomySystems\Core\refreshSaveTestingNoticeMenuState.sqf";
             };
             class EcoCore_setCommitmentModeEnabled {
                 file = "MissionScripts\EconomySystems\Core\setCommitmentModeEnabled.sqf";
@@ -445,41 +433,14 @@ class CfgFunctions
             class EcoCore_createZeusPromptDisplay {
                 file = "MissionScripts\EconomySystems\Core\createZeusPromptDisplay.sqf";
             };
-            class EcoCore_getZeusTreeControl {
-                file = "MissionScripts\EconomySystems\Core\getZeusTreeControl.sqf";
-            };
             class EcoCore_findTreeRootIndex {
                 file = "MissionScripts\EconomySystems\Core\findTreeRootIndex.sqf";
-            };
-            class EcoCore_getOrAddTreeRootIndex {
-                file = "MissionScripts\EconomySystems\Core\getOrAddTreeRootIndex.sqf";
-            };
-            class EcoCore_removeTreeRootByText {
-                file = "MissionScripts\EconomySystems\Core\removeTreeRootByText.sqf";
-            };
-            class EcoCore_removeTreeSelectionHandlerByVar {
-                file = "MissionScripts\EconomySystems\Core\removeTreeSelectionHandlerByVar.sqf";
             };
             class EcoCore_findTreeChildIndex {
                 file = "MissionScripts\EconomySystems\Core\findTreeChildIndex.sqf";
             };
-            class EcoCore_getOrAddTreeChildIndex {
-                file = "MissionScripts\EconomySystems\Core\getOrAddTreeChildIndex.sqf";
-            };
-            class EcoCore_injectZeusMenu {
-                file = "MissionScripts\EconomySystems\Core\injectZeusMenu.sqf";
-            };
-            class EcoCore_getInjectedMenuChildIndex {
-                file = "MissionScripts\EconomySystems\Core\getInjectedMenuChildIndex.sqf";
-            };
             class EcoCore_stopZeusPlacementSession {
                 file = "MissionScripts\EconomySystems\Core\stopZeusPlacementSession.sqf";
-            };
-            class EcoCore_beginZeusPlacementSession {
-                file = "MissionScripts\EconomySystems\Core\beginZeusPlacementSession.sqf";
-            };
-            class EcoCore_ensureZeusHeaderRoot {
-                file = "MissionScripts\EconomySystems\Core\ensureZeusHeaderRoot.sqf";
             };
             class EcoCore_findMarkerIconIndex {
                 file = "MissionScripts\EconomySystems\Core\findMarkerIconIndex.sqf";
@@ -630,9 +591,6 @@ class CfgFunctions
             };
             class EcoCore_removeUnifiedPlayerActionsLocal {
                 file = "MissionScripts\EconomySystems\Core\removeUnifiedPlayerActionsLocal.sqf";
-            };
-            class EcoCore_removeUnifiedZeusMenusFromDisplay {
-                file = "MissionScripts\EconomySystems\Core\removeUnifiedZeusMenusFromDisplay.sqf";
             };
             class EcoCore_cleanupUnifiedClientLocal {
                 file = "MissionScripts\EconomySystems\Core\cleanupUnifiedClientLocal.sqf";
@@ -955,9 +913,6 @@ class CfgFunctions
             class EcoResource_stopResourceCratePlacement {
                 file = "MissionScripts\EconomySystems\Resource\stopResourceCratePlacement.sqf";
             };
-            class EcoResource_getResourceCratePlacementPos {
-                file = "MissionScripts\EconomySystems\Resource\getResourceCratePlacementPos.sqf";
-            };
             class EcoResource_populateResourceConfigList {
                 file = "MissionScripts\EconomySystems\Resource\populateResourceConfigList.sqf";
             };
@@ -1011,12 +966,6 @@ class CfgFunctions
             };
             class EcoResource_promptResourceZone {
                 file = "MissionScripts\EconomySystems\Resource\promptResourceZone.sqf";
-            };
-            class EcoResource_beginResourceZonePlacement {
-                file = "MissionScripts\EconomySystems\Resource\beginResourceZonePlacement.sqf";
-            };
-            class EcoResource_beginResourceCratePlacement {
-                file = "MissionScripts\EconomySystems\Resource\beginResourceCratePlacement.sqf";
             };
             class EcoResource_startClientRuntime {
                 file = "MissionScripts\EconomySystems\Resource\startClientRuntime.sqf";
@@ -1123,9 +1072,6 @@ class CfgFunctions
             class EcoResearch_stopResearchCenterPlacement {
                 file = "MissionScripts\EconomySystems\Research\stopResearchCenterPlacement.sqf";
             };
-            class EcoResearch_getPlacementPos {
-                file = "MissionScripts\EconomySystems\Research\getPlacementPos.sqf";
-            };
             class EcoResearch_spawnResearchCenter {
                 file = "MissionScripts\EconomySystems\Research\spawnResearchCenter.sqf";
             };
@@ -1140,9 +1086,6 @@ class CfgFunctions
             };
             class EcoResearch_ensureResearchCenterActionsLocal {
                 file = "MissionScripts\EconomySystems\Research\ensureResearchCenterActionsLocal.sqf";
-            };
-            class EcoResearch_beginResearchCenterPlacement {
-                file = "MissionScripts\EconomySystems\Research\beginResearchCenterPlacement.sqf";
             };
             class EcoResearch_refreshResearchConfigIcon {
                 file = "MissionScripts\EconomySystems\Research\refreshResearchConfigIcon.sqf";
@@ -1471,20 +1414,11 @@ class CfgFunctions
             class EcoBuild_stopConstructionPlacement {
                 file = "MissionScripts\EconomySystems\Build\stopConstructionPlacement.sqf";
             };
-            class EcoBuild_getPlacementPos {
-                file = "MissionScripts\EconomySystems\Build\getPlacementPos.sqf";
-            };
             class EcoBuild_spawnConstructionVehicle {
                 file = "MissionScripts\EconomySystems\Build\spawnConstructionVehicle.sqf";
             };
             class EcoBuild_ensureConstructionVehicleActionLocal {
                 file = "MissionScripts\EconomySystems\Build\ensureConstructionVehicleActionLocal.sqf";
-            };
-            class EcoBuild_beginConstructionVehiclePlacement {
-                file = "MissionScripts\EconomySystems\Build\beginConstructionVehiclePlacement.sqf";
-            };
-            class EcoBuild_beginConfiguredBuildingPlacement {
-                file = "MissionScripts\EconomySystems\Build\beginConfiguredBuildingPlacement.sqf";
             };
         };
         class EcoBuy
@@ -1651,17 +1585,8 @@ class CfgFunctions
             class EcoBuy_stopDropPointPlacement {
                 file = "MissionScripts\EconomySystems\Buy\stopDropPointPlacement.sqf";
             };
-            class EcoBuy_getPlacementPos {
-                file = "MissionScripts\EconomySystems\Buy\getPlacementPos.sqf";
-            };
             class EcoBuy_promptDropPoint {
                 file = "MissionScripts\EconomySystems\Buy\promptDropPoint.sqf";
-            };
-            class EcoBuy_beginDropPointPlacement {
-                file = "MissionScripts\EconomySystems\Buy\beginDropPointPlacement.sqf";
-            };
-            class EcoBuy_beginLaptopPlacement {
-                file = "MissionScripts\EconomySystems\Buy\beginLaptopPlacement.sqf";
             };
             class EcoBuy_executePurchase {
                 file = "MissionScripts\EconomySystems\Buy\executePurchase.sqf";

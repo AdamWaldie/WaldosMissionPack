@@ -18,7 +18,6 @@
     params [["_enabled", false], ["_notify", true]];
 
     missionNamespace setVariable ["WaldoEcoCore_CommitmentModeEnabled", _enabled, true];
-    [] call Waldo_fnc_EcoCore_refreshSaveCommitmentMenuState;
 
     if (_notify && {hasInterface}) then {
         hintSilent format [

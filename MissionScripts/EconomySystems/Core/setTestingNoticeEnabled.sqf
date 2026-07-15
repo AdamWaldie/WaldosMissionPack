@@ -23,7 +23,6 @@
         private _oldToken = missionNamespace getVariable ["WaldoEcoCore_TestingNoticeToken", 0];
         missionNamespace setVariable ["WaldoEcoCore_TestingNoticeToken", _oldToken + 1, true];
     };
-    [] call Waldo_fnc_EcoCore_refreshSaveTestingNoticeMenuState;
 
     if (_notify && {hasInterface}) then {
         hintSilent format [

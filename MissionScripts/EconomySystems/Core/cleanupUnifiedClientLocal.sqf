@@ -17,7 +17,6 @@
     if (!hasInterface) exitWith {};
 
     [] call Waldo_fnc_EcoCore_removeUnifiedPlayerActionsLocal;
-    [] call Waldo_fnc_EcoCore_removeUnifiedZeusMenusFromDisplay;
 
     if (!isNil "Waldo_fnc_EcoBuild_cleanupConstructionPlacementLocal") then {
         [] call Waldo_fnc_EcoBuild_cleanupConstructionPlacementLocal;
