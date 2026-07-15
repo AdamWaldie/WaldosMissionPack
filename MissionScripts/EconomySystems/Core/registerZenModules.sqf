@@ -36,18 +36,18 @@
     private _icon = "\a3\modules_f\data\portraitmodule_ca.paa";
 
     // ---- Resource ----
-    [_cat, "Resource - Configure",
+    [_cat, "Resource - Configure Resources",
         { [] call Waldo_fnc_EcoResource_promptResourceConfig; },
     _icon] call zen_custom_modules_fnc_register;
 
-    [_cat, "Resource - Create Crate",
+    [_cat, "Resource - Create Resource Crate",
         {
             params ["_modulePos"];
             [ASLToAGL _modulePos] call Waldo_fnc_EcoResource_promptResourceCrateValue;
         },
     _icon] call zen_custom_modules_fnc_register;
 
-    [_cat, "Resource - Create Zone",
+    [_cat, "Resource - Create Resource Zone",
         {
             params ["_modulePos"];
             [ASLToAGL _modulePos] call Waldo_fnc_EcoResource_promptResourceZone;
@@ -58,16 +58,16 @@
         { [] call Waldo_fnc_EcoResource_promptResourceSettings; },
     _icon] call zen_custom_modules_fnc_register;
 
-    [_cat, "Resource - Toggle Visibility",
+    [_cat, "Resource - Toggle Resource Visibility",
         { [name player] call Waldo_fnc_EcoResource_toggleResourceMarkerVisibility; },
     _icon] call zen_custom_modules_fnc_register;
 
     // ---- Research ----
-    [_cat, "Research - Configure",
+    [_cat, "Research - Configure Research",
         { [] call Waldo_fnc_EcoResearch_promptResearchConfig; },
     _icon] call zen_custom_modules_fnc_register;
 
-    [_cat, "Research - Create Center",
+    [_cat, "Research - Create Research Center",
         {
             params ["_modulePos"];
             [ASLToAGL _modulePos] call Waldo_fnc_EcoResearch_spawnResearchCenter;
@@ -86,7 +86,7 @@
         },
     _icon] call zen_custom_modules_fnc_register;
 
-    [_cat, "Construction - Spawn Vehicle",
+    [_cat, "Construction - Spawn Construction Vehicle",
         {
             params ["_modulePos"];
             [ASLToAGL _modulePos, "B_Truck_01_box_F"] call Waldo_fnc_EcoBuild_spawnConstructionVehicle;
