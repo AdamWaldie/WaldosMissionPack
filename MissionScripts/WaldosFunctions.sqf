@@ -331,6 +331,12 @@ class CfgFunctions
             class EcoCore_registerZenModules {
                 file = "MissionScripts\EconomySystems\Core\registerZenModules.sqf";
             };
+            class EcoCore_zenModuleGuard {
+                file = "MissionScripts\EconomySystems\Core\zenModuleGuard.sqf";
+            };
+            class EcoCore_zenPlacementPos {
+                file = "MissionScripts\EconomySystems\Core\zenPlacementPos.sqf";
+            };
             class EcoCore_registerZeusMenuInjector {
                 file = "MissionScripts\EconomySystems\Core\registerZeusMenuInjector.sqf";
             };
