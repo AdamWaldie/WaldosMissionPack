@@ -208,6 +208,15 @@ Position in the array = channel number. These names appear in the in-game CEOI d
 
 Remove the `/*` and `*/` to enable. See [ACRE2 Babel Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration).
 
+### Radio Jamming (ACRE2 / TFAR)
+
+```sqf
+Waldo_Jamming_Enable = true;                                        // false = feature off entirely
+missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];  // on-screen "RADIO JAMMED" prompt
+```
+
+On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) for the full API.
+
 ### Introduction Text
 
 ```sqf

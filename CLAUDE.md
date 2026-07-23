@@ -192,6 +192,39 @@ For custom aircraft that don't auto-detect, add in the object's init field in Ed
 [this] call Waldo_fnc_VehicleJumpSetup;
 ```
 
+### Radio Jamming — ACRE2 / TFAR (`init.sqf`)
+
+Localised, area-denial radio jamming for **both** ACRE2 and TFAR. A *jammer* is any world object with a radius; radios inside its field lose comms, with a linear falloff at the edge. Enabled by default (`Waldo_Jamming_Enable = true` in `init.sqf`) but has **zero effect until a jammer is placed** — the radio engines pass ACRE2/TFAR through unchanged when the registry is empty.
+
+**Server-authoritative registry, client-local engines.** The jammer registry (`Waldo_Jamming_Registry`) is owned and broadcast by the server via the create/toggle/remove functions (which forward to the server when called on a client, exactly like `Waldo_fnc_SafeStart`). Each client installs the radio engines from `init.sqf` (JIP-safe): the ACRE2 custom signal function and/or the TFAR throttle loop, plus an on-screen "radio jammed" watcher.
+
+Placing jammers (any of these):
+```sqf
+// From an object's init field in Eden:
+[this] call Waldo_fnc_Jammer;                         // 300 m, jams everyone, all bands
+[this, 500, "EAST"] call Waldo_fnc_Jammer;            // 500 m, jams OPFOR only
+// From a trigger / script (full params):
+[myTower, 800, "ALL", [[30, 88]], 50, 1, true, true] call Waldo_fnc_Jammer;
+// params: [object, radius, affectedSides, bands, falloff, strength, active, createMarker]
+```
+`affectedSides`: `"ALL"`, a side, or an array — accepts sides or strings (`"WEST"/"BLUFOR"`, `"EAST"/"OPFOR"`, `"IND"/"INDFOR"`, `"CIV"/"CIVILIAN"`). `bands`: `"ALL"` or an array of `[minMHz, maxMHz]` ranges (**ACRE2 only** — TFAR jamming is always broadband). `Waldo_fnc_Jammer` returns a numeric jammer id.
+
+Managing jammers later (server-authoritative; `ref` = the jammer object or its id):
+```sqf
+[myTower, false] call Waldo_fnc_JammerToggle;   // switch off (omit the bool to flip)
+[myTower, true]  call Waldo_fnc_JammerRemove;   // remove + delete the object
+```
+
+Global flags (`init.sqf`):
+```sqf
+Waldo_Jamming_Enable = true;                                          // false = feature off entirely
+missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];    // on-screen "radio jammed" prompt
+```
+
+**ACRE2 requirement:** the ACRE2 signal model must be **LOS Multipath** (the default) or **Arcade** — ACRE2 does not call the custom signal hook under *LOS Simple*. The jamming model is receiver-oriented and symmetric: a link is degraded when **either** endpoint (the receiving or transmitting radio) sits inside an active field affecting the local player's side and matching the band. Implemented in `MissionScripts/MissionInit/Jamming/` (`Waldo_fnc_JammingInit`, `Waldo_fnc_Jammer`, `Waldo_fnc_JammerToggle`, `Waldo_fnc_JammerRemove`, `Waldo_fnc_JammingFactor`, `Waldo_fnc_JammingAcreSignal`, `Waldo_fnc_JammingTfarLoop`).
+
+Zeus ("Waldos Mission Modules"): **Radio Jammer - Place** (dialog: radius / falloff / strength / affected side / marker), **Radio Jammer - Toggle Nearest**, **Radio Jammer - Remove Nearest**.
+
 ### MHQ / Mobile Command Post (Eden Editor)
 
 1. Place a vehicle (or static object) with a variable name, e.g. `MHQ_1`
@@ -430,6 +463,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 ## MissionScripts Directory Layout
 
 - `MissionInit/` — ACRE2 radio setup, vehicle action setup, team colour helpers, briefing document templates
+- `MissionInit/Jamming/` — Localised radio jamming for ACRE2 & TFAR (registry, create/toggle/remove, per-mod engines, shared factor helper)
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
 - `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
@@ -567,6 +601,16 @@ if !(isClass(configFile >> "CfgPatches" >> "acre_main")) exitWith { systemChat "
 waitUntil { [] call acre_api_fnc_isInitialized };
 ```
 
+**Jamming (custom signal processing):** ACRE2 has no jammer API. The only hook is a single custom signal function — WMP's radio jamming (`Waldo_fnc_JammingAcreSignal`) owns it:
+```sqf
+// Override / reset ACRE2's signal calculation (only ONE custom func can exist at a time):
+[_myFunc] call acre_api_fnc_setCustomSignalFunc;     // _myFunc gets [freqMHz, powerMw, rxRadioId, txRadioId], returns [percent(0-1), dBm]
+[{}]      call acre_api_fnc_setCustomSignalFunc;     // reset to default
+_base = [_freq, _power, _rxId, _txId] call acre_sys_signal_fnc_getSignalCore;  // ACRE2's own baseline result
+_pos  = [_radioId] call acre_sys_radio_fnc_getRadioPos;                        // ASL position of a radio
+```
+The custom hook is called **only** under the *LOS Multipath* (default) or *Arcade* signal models.
+
 **Babel (multilingual) API** (`BabelActivation.sqf`):
 ```sqf
 [languageName]          call acre_api_fnc_babelAddLanguageType;
@@ -590,6 +634,16 @@ waitUntil { [] call acre_api_fnc_isInitialized };
 TFAR has **inherent Eden Editor support** — it assigns radios via the 3Den unit properties panel, not through scripts. WMP has zero TFAR function calls.
 
 The one point of integration: `missionFileLookup.sqf` reads the `radio` inventory slot from `mission.sqm` when scraping unit loadouts. This slot captures TFAR radio classnames placed via Eden, so they flow into supply crates automatically alongside all other items — no extra scripting needed.
+
+**Jamming:** TFAR has no signal hook, but it exposes client-side unit variables that WMP's jamming loop (`Waldo_fnc_JammingTfarLoop`) drives while a player is inside a jammer field (detected via `task_force_radio` or `tfar_core` in `CfgPatches`):
+
+| Variable | Type | Effect |
+|---|---|---|
+| `tf_receivingDistanceMultiplicator` | unit var (client) | Scales receive range; WMP sets it toward `0` to kill reception. |
+| `tf_sendingDistanceMultiplicator` | unit var (client) | Scales transmit range; WMP sets it toward `0` to kill outbound comms. |
+| `tf_unable_to_use_radio` | unit var (client) | `true` fully disables the radio (set at near-total jamming). |
+
+The loop only restores these to their defaults (`1.0` / `false`) when the player leaves the field, so it never clobbers other scripts while un-jammed. TFAR jamming is broadband (no per-band filter).
 
 ---
 
@@ -620,6 +674,9 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Safestart - Activate → `[true] remoteExec ["Waldo_fnc_SafeStart", 2]`
 - Safestart - Go Live (Lift) → `[false] remoteExec ["Waldo_fnc_SafeStart", 2]`
 - Safestart - Start Go-Live Countdown → calls `Waldo_fnc_ZenSafeStartTimer` (prompts for minutes, then `Waldo_fnc_SafeStartTimer`)
+- Radio Jammer - Place → calls `Waldo_fnc_ZenJammerPlace` (dialog: radius / falloff / strength / affected side / marker; spawns an emitter and registers it via `Waldo_fnc_Jammer`)
+- Radio Jammer - Toggle Nearest → calls `Waldo_fnc_ZenJammerToggle` (flips the nearest jammer on/off)
+- Radio Jammer - Remove Nearest → calls `Waldo_fnc_ZenJammerRemove` (removes + deletes the nearest jammer)
 
 ---
 

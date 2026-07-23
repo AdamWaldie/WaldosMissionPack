@@ -15,6 +15,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 # Pack Features
 - Loadout saving and respawn system
 - Automatic ACRE2 Radio setup and respawn handling - based on mission makers specification in init.sqf
+- Localised Radio Jamming for ACRE2 & TFAR - drop a jammer object (or place one live from Zeus) to deny comms in an area, with per-side and (ACRE2) per-band control, falloff and an on-screen "radio jammed" prompt.
 - Custom loadout & logistics system which scrapes the kits of all playable characters to fulfil base logistical needs - such as starter crates and supply crates. (Disable scenario Binarization, and edit loadouts via ACE Arsenal to ensure 100% satisfaction)
 - Vehicle Ambush/Camo scripts.
 - Vehicle unflipping actions

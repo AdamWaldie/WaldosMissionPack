@@ -141,6 +141,30 @@ class CfgFunctions
                 file = "MissionScripts\MissionFlowAndUi\runDiagnostics.sqf";
             };
         };
+        class Jamming
+        {
+            class JammingInit {
+                file = "MissionScripts\MissionInit\Jamming\jammingInit.sqf";
+            };
+            class Jammer {
+                file = "MissionScripts\MissionInit\Jamming\jammerCreate.sqf";
+            };
+            class JammerToggle {
+                file = "MissionScripts\MissionInit\Jamming\jammerToggle.sqf";
+            };
+            class JammerRemove {
+                file = "MissionScripts\MissionInit\Jamming\jammerRemove.sqf";
+            };
+            class JammingFactor {
+                file = "MissionScripts\MissionInit\Jamming\jammingFactor.sqf";
+            };
+            class JammingAcreSignal {
+                file = "MissionScripts\MissionInit\Jamming\jammingAcreSignal.sqf";
+            };
+            class JammingTfarLoop {
+                file = "MissionScripts\MissionInit\Jamming\jammingTfarLoop.sqf";
+            };
+        };
         class Tasks
         {
             class CreateObjective {
@@ -258,6 +282,15 @@ class CfgFunctions
             };
             class ZenSafeStartTimer {
                 file = "MissionScripts\ZenModules\Zen_safeStartTimer.sqf";
+            };
+            class ZenJammerPlace {
+                file = "MissionScripts\ZenModules\Zen_jammerPlaceModule.sqf";
+            };
+            class ZenJammerToggle {
+                file = "MissionScripts\ZenModules\Zen_jammerToggleModule.sqf";
+            };
+            class ZenJammerRemove {
+                file = "MissionScripts\ZenModules\Zen_jammerRemoveModule.sqf";
             };
         };
         class Paradrop {
