@@ -28,6 +28,7 @@ if (_jobVar == "") exitWith {};
 private _job = missionNamespace getVariable [_jobVar, []];
 if (_job isEqualTo []) exitWith {};
 missionNamespace setVariable [_jobVar, nil];
+missionNamespace setVariable ["Waldo_IMG_ActiveProfile", nil];
 
 _job params ["_actor", "_challengeId", "_onSuccess", "_onFailure", "_context"];
 

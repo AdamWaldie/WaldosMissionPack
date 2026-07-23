@@ -2,7 +2,7 @@
  * Author: Waldo
  * Circuit-wiring mini game (a built-in interaction challenge). Two columns of terminals are
  * shown; the right column is scrambled. Click a left terminal then its matching-colour terminal
- * on the right to splice that wire. Connect every wire to complete the circuit and win; too many
+ * on the right to splice that labelled wire and draw its visible path. Connect every wire to complete the circuit and win; too many
  * wrong splices, the clock running out, or Escape fails. Ideal for repair panels, junction
  * boxes, fuse boards and comms splicing.
  *
@@ -37,7 +37,7 @@ _config params [
     ["_pairs", 4],
     ["_maxMistakes", 3],
     ["_timeLimit", 0],
-    ["_title", "CIRCUIT"]
+    ["_title", "BREAKER CABINET"]
 ];
 
 _pairs = round _pairs;
@@ -47,6 +47,9 @@ _maxMistakes = round _maxMistakes;
 if (_maxMistakes < 0) then { _maxMistakes = 0; };
 
 if (!isNull (missionNamespace getVariable ["Waldo_MG_CR_ActiveDisplay", displayNull])) exitWith {
+    [false] call _resolve;
+};
+if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
     [false] call _resolve;
 };
 
@@ -65,6 +68,7 @@ private _allColours = [
     ["WHITE",  [0.88, 0.88, 0.90, 1]],
     ["PURPLE", [0.62, 0.36, 0.78, 1]]
 ];
+private _symbols = ["A", "B", "C", "D", "E", "F"];
 
 // Left column = first _pairs colours in order; right column = the same set shuffled.
 private _left = [];
@@ -83,6 +87,8 @@ private _display = _parent createDisplay "RscDisplayEmpty";
 if (isNull _display) exitWith { [false] call _resolve; };
 
 missionNamespace setVariable ["Waldo_MG_CR_ActiveDisplay", _display];
+missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
+[_display, "Select a labelled left terminal, then its matching right terminal", _title, "Connect every left terminal to the right terminal with the same label and colour.", "Labels make every pairing unambiguous. Select a new left terminal to change your choice."] call Waldo_fnc_MiniGameChallengeUILegacy;
 
 private _leftDone = []; { _leftDone pushBack false; } forEach _left;
 private _rightDone = []; { _rightDone pushBack false; } forEach _right;
@@ -100,17 +106,18 @@ _display setVariable ["Waldo_MG_CR_Resolve", _resolve];
 _display setVariable ["Waldo_MG_CR_Done", false];
 
 _display setVariable ["Waldo_MG_CR_Finish", {
-    params ["_disp", "_ok"];
+    params ["_disp", "_ok", ["_resultKey", ""]];
     if (isNull _disp) exitWith {};
     if (_disp getVariable ["Waldo_MG_CR_Done", false]) exitWith {};
     _disp setVariable ["Waldo_MG_CR_Done", true];
+    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
     private _fnResolve = _disp getVariable ["Waldo_MG_CR_Resolve", {}];
     missionNamespace setVariable ["Waldo_MG_CR_ActiveDisplay", displayNull];
     [{
         params ["_disp", "_res", "_ok"];
         if (!isNull _disp) then { _disp closeDisplay 1; };
         [_ok] call _res;
-    }, [_disp, _fnResolve, _ok], if (_ok) then {0} else {0.5}] call CBA_fnc_waitAndExecute;
+    }, [_disp, _fnResolve, _ok], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.5}}] call CBA_fnc_waitAndExecute;
 }];
 
 // Layout.
@@ -157,7 +164,7 @@ for "_i" from 0 to (_pairs - 1) do {
 
     private _lb = _display ctrlCreate ["RscButton", -1];
     _lb ctrlSetPosition [_leftX, _rowY, _colW, _rowH];
-    _lb ctrlSetText ((_left select _i) select 0);
+    _lb ctrlSetText format ["[%1] %2", _symbols select _i, (_left select _i) select 0];
     _lb ctrlSetBackgroundColor ((_left select _i) select 1);
     _lb ctrlSetTextColor [0.05, 0.05, 0.06, 1];
     _lb setVariable ["Waldo_MG_CR_Side", "L"];
@@ -168,7 +175,8 @@ for "_i" from 0 to (_pairs - 1) do {
 
     private _rb = _display ctrlCreate ["RscButton", -1];
     _rb ctrlSetPosition [_rightX, _rowY, _colW, _rowH];
-    _rb ctrlSetText ((_right select _i) select 0);
+    private _rightSymbol = _symbols select (_left find (_right select _i));
+    _rb ctrlSetText format ["[%1] %2", _rightSymbol, (_right select _i) select 0];
     _rb ctrlSetBackgroundColor ((_right select _i) select 1);
     _rb ctrlSetTextColor [0.05, 0.05, 0.06, 1];
     _rb setVariable ["Waldo_MG_CR_Side", "R"];
@@ -214,6 +222,19 @@ Waldo_MG_CR_onClick = {
 
     if (((_left select _activeLeft) select 0) == ((_right select _idx) select 0)) then {
         // Correct splice.
+        private _leftPos = ctrlPosition (_leftBtns select _activeLeft);
+        private _rightPos = ctrlPosition (_rightBtns select _idx);
+        private _startX = (_leftPos select 0) + (_leftPos select 2);
+        private _startY = (_leftPos select 1) + (_leftPos select 3) / 2;
+        private _endX = _rightPos select 0;
+        private _endY = (_rightPos select 1) + (_rightPos select 3) / 2;
+        private _dx = _endX - _startX;
+        private _dy = _endY - _startY;
+        private _wireLine = _disp ctrlCreate ["RscText", -1];
+        _wireLine ctrlSetPosition [_startX, _startY, sqrt (_dx * _dx + _dy * _dy), 0.006 * safezoneH];
+        _wireLine ctrlSetBackgroundColor ((_left select _activeLeft) select 1);
+        _wireLine ctrlSetAngle [-(_dy atan2 _dx), 0, 0.5];
+        _wireLine ctrlCommit 0;
         _leftDone set [_activeLeft, true];
         _rightDone set [_idx, true];
         _disp setVariable ["Waldo_MG_CR_LeftDone", _leftDone];
@@ -252,7 +273,7 @@ _display displayAddEventHandler ["KeyDown", {
     params ["_disp", "_key"];
     if (_key == 1) then {
         private _fin = _disp getVariable ["Waldo_MG_CR_Finish", {}];
-        [_disp, false] call _fin;
+        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
         true
     } else {
         false
@@ -261,15 +282,18 @@ _display displayAddEventHandler ["KeyDown", {
 
 // Optional countdown.
 if (_timeLimit > 0) then {
-    private _deadline = time + _timeLimit;
-    [_display, _deadline] spawn {
-        params ["_disp", "_deadline"];
+    [_display, _timeLimit] spawn {
+        params ["_disp", "_timeLimit"];
+        waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
+        if (isNull _disp) exitWith {};
+        private _deadline = time + _timeLimit;
         while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_CR_Done", false])} } do {
             if ((_deadline - time) <= 0) exitWith {
                 private _fin = _disp getVariable ["Waldo_MG_CR_Finish", {}];
-                [_disp, false] call _fin;
+                [_disp, false, "timeoutText"] call _fin;
             };
             sleep 0.2;
         };
     };
 };
+[_display] call Waldo_fnc_MiniGameEquipmentBriefing;

@@ -50,10 +50,11 @@ private _opt = {
     _r
 };
 
-private _title = ["title", "Attempt"] call _opt;
+private _title = ["title", "Inspect Equipment"] call _opt;
 private _icon = ["icon", ""] call _opt;
 private _condition = ["condition", {true}] call _opt;
 private _distance = ["distance", 4] call _opt;
+private _presentation = ["presentation", []] call _opt;
 
 // Hold the challenge definition + authoritative callbacks on the object (local to each
 // machine, including the server that will run the callbacks).
@@ -63,6 +64,7 @@ _object setVariable ["Waldo_MG_Int_OnSuccess", _onSuccess];
 _object setVariable ["Waldo_MG_Int_OnFailure", _onFailure];
 _object setVariable ["Waldo_MG_Int_Options", _options];
 _object setVariable ["Waldo_MG_Int_Condition", _condition];
+_object setVariable ["Waldo_IMG_Presentation", _presentation];
 if (isNil { _object getVariable "Waldo_MG_Int_Active" }) then {
     _object setVariable ["Waldo_MG_Int_Active", true, true];
 };
@@ -93,7 +95,7 @@ if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
         true,
         true,
         "",
-        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {_this distance _target < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
+        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {_target call (_target getVariable ['Waldo_MG_Int_Condition', {true}])} && {_this distance _target < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
         _distance
     ];
     _object setVariable ["Waldo_MG_Int_Distance", _distance];

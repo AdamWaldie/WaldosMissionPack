@@ -428,10 +428,36 @@ Tables are detected by class (`Land_CampingTable_F`, `Land_CampingTable_small_F`
 `Land_CampingTable_small_white_F`, `Land_TablePlastic_01_F`). Tuning constants (`Waldo_MG_CFG_*`,
 including `Waldo_MG_CFG_TABLE_CLASSES`) live at the top of `MissionScripts/MiniGames/engine/config.sqf`.
 
-**2. Interaction challenges (single-player, generic hook).** Short skill/puzzle games that resolve to
-pass/fail and can gate **any** object interaction. Five ship: `wirecut`, `minesweeper`, `keypad`,
-`lockpick`, `circuit`. They **register themselves on first use**, so they work even with
-`Waldo_MiniGames_Enable = false`.
+**2. Field equipment procedures (single-player, generic hook).** Nine pass/fail procedures gate any
+object interaction: `wirecut`, `minesweeper`, `keypad`, `lockpick`, `circuit`, `repair`, `radiotune`,
+`pressure`, and `sequence`. Each presents distinct diegetic equipment rather than a shared minigame
+window. The common core owns responsive safe-zone layout, integrated operating cards, timers,
+accessibility preferences, abort confirmation, cleanup, and exactly-once resolution. Procedures
+register on first use and work with `Waldo_MiniGames_Enable = false`.
+
+Mission makers should normally use the one-line preset wrapper from an object's Eden init field:
+
+```sqf
+[this, "repair"] call Waldo_fnc_MiniGameInteractionSetup;
+```
+
+`Waldo_fnc_MiniGameInteractionSetup` supplies the action, equipment profile, icon and default config,
+allows retries after failure, consumes the action after success, and broadcasts
+`Waldo_MG_InteractionComplete` / `Waldo_MG_InteractionFailed`. Legacy option arrays remain valid.
+New hashmap profiles support `preset`, `actionTitle`, `manufacturer`, `model`, `title`, `objective`,
+activation/result wording, and operational options. Layout positions and semantic colours stay
+template-owned so mission customization cannot produce clipped or colour-only states.
+
+Mission-maker presentation hashmaps may set curated `preset` and `skin` values plus `actionTitle`,
+`manufacturer`, `model`, `title`, `briefing`, `objective`, `activation`, `controls`, `hint`,
+`statusText`, result/abort wording, `soundProfile`, and an optional vanilla or mission texture.
+Accepted skins are `default`, `olive`, `charcoal`, `sand`, `naval`, and `hazard`; sound is
+`equipment` or `silent`. Do not expose raw control positions or semantic colours: equipment templates
+own layout and accessible state signalling. Operational difficulty stays in the challenge `config`.
+Four original generated 1024px JPEG material sheets live in `InteractionsMinigames/Themes/Textures`.
+Profiles apply them below all semantic controls at a clamped `textureOpacity` of `0..0.32` (default
+`0.18`). An explicit empty `texture` disables the overlay. Never put operational labels or state into
+a bitmap: those must remain accessible Arma controls.
 
 - `Waldo_fnc_BombDefuseSetup` — ready-made wrapper: adds a "Defuse Bomb" interaction (wire-cut
   challenge) with detonate-on-failure. `[this] call Waldo_fnc_BombDefuseSetup;` in an object's init
@@ -442,15 +468,21 @@ pass/fail and can gate **any** object interaction. Five ship: `wirecut`, `minesw
   drive authoritative outcomes; the challenge plays on the actor's client and reports back.
 - `Waldo_fnc_MiniGameChallenge` — run a challenge standalone (no object) with local callbacks.
 - `Waldo_fnc_MiniGameRegisterChallenge` — add a custom challenge (opener contract `[_config, _resolve]`).
+- `Waldo_fnc_MiniGameInteractionTableSetup` — opt-in separate Field Equipment picker on a table;
+  procedures remain local and do not enter party voting, readiness, seating, or active-game state.
+- `Waldo_fnc_MiniGameAccessibility` — local high-contrast, colourblind, large-text, outlines,
+  reduced-motion, and audio-caption preferences. These never change mission difficulty or timers.
+- `Waldo_fnc_MiniGameEquipmentGallery` — developer visual-review picker for all nine procedures.
 
 **Architecture.** The table engine is ported from the community composition "Party Games Scripted" by
 |LorÐ|™[Habilidade]Ðeus Ex, rebranded to the internal `Waldo_MG_` namespace (340 runtime functions
 across `engine/config.sqf`, `engine/core.sqf` and `engine/games/*.sqf`, all `#include`-d and installed
 by `Waldo_fnc_MiniGamesInit`). Only the public entry points are `CfgFunctions` entries under
 `class MiniGames`; the engine's `Waldo_MG_fnc_*` functions are defined at runtime by the installer, not
-registered individually. The interaction-challenge framework is original WMP (`Interactions/`). When
-editing: keep engine internals under `Waldo_MG_`/`Waldo_MG_fnc_`; the interaction hook's server
-callbacks must stay server-side; challenge openers must call `_resolve` exactly once.
+registered individually. The field-equipment framework is original WMP and lives separately under
+`MissionScripts/InteractionsMinigames/` (`Core`, `Equipment`, `Challenges`, `Integration`, `Themes`).
+When editing: keep table internals under `Waldo_MG_`/`Waldo_MG_fnc_`; keep authoritative interaction
+callbacks server-side; preserve public `Waldo_fnc_MiniGame*` names; openers must resolve exactly once.
 
 ---
 
@@ -481,7 +513,8 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
 - `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
-- `MiniGames/` — Waldos Mini Games. `miniGamesInit.sqf` (`Waldo_fnc_MiniGamesInit`) installs the seated table-games engine, which lives in `engine/` (`config.sqf`, `core.sqf`, `games/*.sqf` — 340 runtime `Waldo_MG_fnc_*` functions ported from "Party Games Scripted"). `Interactions/` holds the original WMP single-player interaction-challenge framework (generic hook `Waldo_fnc_MiniGameInteraction`, `Waldo_fnc_BombDefuseSetup`, and the `wirecut`/`minesweeper`/`keypad`/`lockpick`/`circuit` challenges)
+- `MiniGames/` — seated party-game installer and multiplayer engine only.
+- `InteractionsMinigames/` — field-equipment procedures, equipment themes, accessibility core, object/table integration, and all nine challenge implementations.
 - `ThirdPartyScripts/` — Headless client and player marker integrations (disabled by default via commented-out line in `init.sqf`)
 
 ---

@@ -1,7 +1,7 @@
 /*
  * Author: Waldo
  * Lockpick mini game (a built-in interaction challenge), a timing/skill test. A marker sweeps
- * back and forth across a track; press SET PIN (or Space) while it sits in the highlighted
+ * back and forth beneath an illustrated lock cylinder; press SET PIN (or Space) while it sits in the highlighted
  * sweet spot to set that pin. Set every pin to win; a miss, the clock running out, or Escape
  * fails. Each pin re-randomises the sweet spot and the sweep speeds up. Ideal for padlocks,
  * doors, containers and vehicles.
@@ -39,7 +39,7 @@ _config params [
     ["_period", 1.4],
     ["_zoneWidth", 0.16],
     ["_timeLimit", 0],
-    ["_title", "LOCKPICK"]
+    ["_title", "LOCK CYLINDER"]
 ];
 
 _pins = round _pins;
@@ -50,6 +50,9 @@ if (_zoneWidth < 0.05) then { _zoneWidth = 0.05; };
 if (_zoneWidth > 0.4) then { _zoneWidth = 0.4; };
 
 if (!isNull (missionNamespace getVariable ["Waldo_MG_LP_ActiveDisplay", displayNull])) exitWith {
+    [false] call _resolve;
+};
+if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
     [false] call _resolve;
 };
 
@@ -68,6 +71,8 @@ private _display = _parent createDisplay "RscDisplayEmpty";
 if (isNull _display) exitWith { [false] call _resolve; };
 
 missionNamespace setVariable ["Waldo_MG_LP_ActiveDisplay", _display];
+missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
+[_display, "Mouse or Space: apply tension and set the current pin", _title, format ["Set all %1 lock pins while the moving pick is inside the labelled SET WINDOW.", _pins], "The set window moves and the pick accelerates after every successful pin."] call Waldo_fnc_MiniGameChallengeUILegacy;
 
 _display setVariable ["Waldo_MG_LP_Resolve", _resolve];
 _display setVariable ["Waldo_MG_LP_Done", false];
@@ -78,17 +83,18 @@ _display setVariable ["Waldo_MG_LP_ZoneWidth", _zoneWidth];
 _display setVariable ["Waldo_MG_LP_T0", time];
 
 _display setVariable ["Waldo_MG_LP_Finish", {
-    params ["_disp", "_ok"];
+    params ["_disp", "_ok", ["_resultKey", ""]];
     if (isNull _disp) exitWith {};
     if (_disp getVariable ["Waldo_MG_LP_Done", false]) exitWith {};
     _disp setVariable ["Waldo_MG_LP_Done", true];
+    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
     private _fnResolve = _disp getVariable ["Waldo_MG_LP_Resolve", {}];
     missionNamespace setVariable ["Waldo_MG_LP_ActiveDisplay", displayNull];
     [{
         params ["_disp", "_res", "_ok"];
         if (!isNull _disp) then { _disp closeDisplay 1; };
         [_ok] call _res;
-    }, [_disp, _fnResolve, _ok], if (_ok) then {0} else {0.5}] call CBA_fnc_waitAndExecute;
+    }, [_disp, _fnResolve, _ok], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.5}}] call CBA_fnc_waitAndExecute;
 }];
 
 // Current marker fraction 0..1 from a triangle (ping-pong) wave.
@@ -102,7 +108,7 @@ _display setVariable ["Waldo_MG_LP_Fraction", {
 
 // Layout.
 private _w = 0.42 * safezoneW;
-private _h = 0.26 * safezoneH;
+private _h = 0.39 * safezoneH;
 private _x = safezoneX + (safezoneW - _w) / 2;
 private _y = safezoneY + (safezoneH - _h) / 2;
 
@@ -130,10 +136,24 @@ _status ctrlSetText format ["Set the pins: %1 remaining", _pins];
 _status ctrlCommit 0;
 _display setVariable ["Waldo_MG_LP_StatusCtrl", _status];
 
+// Lock-cylinder cross-section: each pin changes from raised steel to green when set.
+private _pinCtrls = [];
+private _pinW = (_w - 0.06 * safezoneW) / _pins;
+for "_i" from 0 to (_pins - 1) do {
+    private _pin = _display ctrlCreate ["RscText", -1];
+    _pin ctrlSetPosition [_x + 0.03 * safezoneW + _i * _pinW, _y + 0.105 * safezoneH, _pinW - 0.008 * safezoneW, 0.075 * safezoneH];
+    _pin ctrlSetText format ["PIN %1  [UNSET]", _i + 1];
+    _pin ctrlSetBackgroundColor [0.24, 0.28, 0.34, 1];
+    _pin ctrlSetTextColor [0.88, 0.90, 0.94, 1];
+    _pin ctrlCommit 0;
+    _pinCtrls pushBack _pin;
+};
+_display setVariable ["Waldo_MG_LP_PinCtrls", _pinCtrls];
+
 // Track geometry.
 private _trackX = _x + 0.02 * safezoneW;
 private _trackW = _w - 0.04 * safezoneW;
-private _trackY = _y + 0.11 * safezoneH;
+private _trackY = _y + 0.215 * safezoneH;
 private _trackH = 0.05 * safezoneH;
 _display setVariable ["Waldo_MG_LP_TrackX", _trackX];
 _display setVariable ["Waldo_MG_LP_TrackW", _trackW];
@@ -145,6 +165,9 @@ _track ctrlCommit 0;
 
 private _zone = _display ctrlCreate ["RscText", -1];
 _zone ctrlSetBackgroundColor _cZone;
+_zone ctrlSetText "SET WINDOW";
+_zone ctrlSetTextColor [0.02, 0.08, 0.03, 1];
+_zone ctrlSetFontHeight (0.012 * safezoneH);
 _zone ctrlCommit 0;
 _display setVariable ["Waldo_MG_LP_ZoneCtrl", _zone];
 _display setVariable ["Waldo_MG_LP_TrackY", _trackY];
@@ -183,6 +206,14 @@ _display setVariable ["Waldo_MG_LP_Try", {
     if (_f >= _zs && {_f <= (_zs + _zw)}) then {
         private _left = (_disp getVariable ["Waldo_MG_LP_PinsLeft", 1]) - 1;
         _disp setVariable ["Waldo_MG_LP_PinsLeft", _left];
+        private _total = _disp getVariable ["Waldo_MG_LP_PinsTotal", 1];
+        private _pinCtrls = _disp getVariable ["Waldo_MG_LP_PinCtrls", []];
+        private _setIndex = _total - _left - 1;
+        if (_setIndex >= 0 && {_setIndex < count _pinCtrls}) then {
+            (_pinCtrls select _setIndex) ctrlSetText format ["PIN %1  [SET]", _setIndex + 1];
+            (_pinCtrls select _setIndex) ctrlSetBackgroundColor [0.10, 0.34, 0.16, 1];
+            (_pinCtrls select _setIndex) ctrlSetTextColor [0.55, 1, 0.65, 1];
+        };
         if (_left <= 0) exitWith {
             private _fin = _disp getVariable ["Waldo_MG_LP_Finish", {}];
             [_disp, true] call _fin;
@@ -204,8 +235,8 @@ _display setVariable ["Waldo_MG_LP_Try", {
 
 // SET PIN button.
 private _setBtn = _display ctrlCreate ["RscButton", -1];
-_setBtn ctrlSetPosition [_trackX, _y + 0.185 * safezoneH, _trackW, 0.05 * safezoneH];
-_setBtn ctrlSetText "SET PIN  (Space)";
+_setBtn ctrlSetPosition [_trackX, _y + 0.30 * safezoneH, _trackW, 0.055 * safezoneH];
+_setBtn ctrlSetText "APPLY TENSION / SET PIN  (Space)";
 _setBtn ctrlSetBackgroundColor _cAccent;
 _setBtn ctrlSetTextColor [0.03, 0.04, 0.06, 1];
 _setBtn ctrlAddEventHandler ["ButtonClick", {
@@ -219,9 +250,10 @@ _setBtn ctrlCommit 0;
 // Keys: Space attempts, Escape aborts.
 _display displayAddEventHandler ["KeyDown", {
     params ["_disp", "_key"];
+    if !(_disp getVariable ["Waldo_IMG_Started", false]) exitWith {_key != 1};
     if (_key == 1) exitWith {
         private _fin = _disp getVariable ["Waldo_MG_LP_Finish", {}];
-        [_disp, false] call _fin;
+        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
         true
     };
     if (_key == 57) exitWith {
@@ -232,14 +264,16 @@ _display displayAddEventHandler ["KeyDown", {
 }];
 
 // Animation + optional countdown loop.
-private _deadline = if (_timeLimit > 0) then { time + _timeLimit } else { -1 };
-[_display, _deadline] spawn {
-    params ["_disp", "_deadline"];
+[_display, _timeLimit] spawn {
+    params ["_disp", "_timeLimit"];
+    waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
+    if (isNull _disp) exitWith {};
+    private _deadline = if (_timeLimit > 0) then { time + _timeLimit } else { -1 };
     private _mHalf = 0.004 * safezoneW;
     while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_LP_Done", false])} } do {
         if (_deadline > 0 && {(_deadline - time) <= 0}) exitWith {
             private _fin = _disp getVariable ["Waldo_MG_LP_Finish", {}];
-            [_disp, false] call _fin;
+            [_disp, false, "timeoutText"] call _fin;
         };
         private _f = [_disp] call (_disp getVariable "Waldo_MG_LP_Fraction");
         private _tx = _disp getVariable ["Waldo_MG_LP_TrackX", 0];
@@ -254,3 +288,4 @@ private _deadline = if (_timeLimit > 0) then { time + _timeLimit } else { -1 };
         sleep 0.02;
     };
 };
+[_display] call Waldo_fnc_MiniGameEquipmentBriefing;

@@ -1657,43 +1657,95 @@ class CfgFunctions
             class MiniGamesInit {
                 file = "MissionScripts\MiniGames\miniGamesInit.sqf";
             };
-            // Interaction challenge framework (single-player challenges that gate an outcome).
+        };
+        class InteractionMiniGames
+        {
+            // Diegetic field-equipment procedures. Public Waldo_fnc_MiniGame* names remain
+            // unchanged so existing mission integrations continue to work.
             class MiniGameRegisterChallenge {
-                file = "MissionScripts\MiniGames\Interactions\registerChallenge.sqf";
+                file = "MissionScripts\InteractionsMinigames\Core\registerChallenge.sqf";
             };
             class MiniGameChallenge {
-                file = "MissionScripts\MiniGames\Interactions\miniGameChallenge.sqf";
+                file = "MissionScripts\InteractionsMinigames\Core\miniGameChallenge.sqf";
             };
             class MiniGameChallengeResolve {
-                file = "MissionScripts\MiniGames\Interactions\miniGameChallengeResolve.sqf";
+                file = "MissionScripts\InteractionsMinigames\Core\miniGameChallengeResolve.sqf";
+            };
+            class MiniGameChallengeUI {
+                file = "MissionScripts\InteractionsMinigames\Core\challengeUi.sqf";
+            };
+            class MiniGameChallengeUILegacy {
+                file = "MissionScripts\InteractionsMinigames\Core\challengeUiLegacy.sqf";
+            };
+            class MiniGameChallengeHelp {
+                file = "MissionScripts\InteractionsMinigames\Core\challengeHelp.sqf";
+            };
+            class MiniGameAccessibility {
+                file = "MissionScripts\InteractionsMinigames\Core\accessibility.sqf";
+            };
+            class MiniGameApplyAccessibility {
+                file = "MissionScripts\InteractionsMinigames\Core\applyAccessibility.sqf";
+            };
+            class MiniGameEquipmentProfile {
+                file = "MissionScripts\InteractionsMinigames\Themes\equipmentProfile.sqf";
+            };
+            class MiniGameEquipmentDecorate {
+                file = "MissionScripts\InteractionsMinigames\Equipment\equipmentDecorate.sqf";
+            };
+            class MiniGameEquipmentBriefing {
+                file = "MissionScripts\InteractionsMinigames\Equipment\equipmentBriefing.sqf";
             };
             class MiniGameInteraction {
-                file = "MissionScripts\MiniGames\Interactions\miniGameInteraction.sqf";
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteraction.sqf";
             };
             class MiniGameInteractionActivate {
-                file = "MissionScripts\MiniGames\Interactions\miniGameInteractionActivate.sqf";
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionActivate.sqf";
             };
             class MiniGameInteractionResolveServer {
-                file = "MissionScripts\MiniGames\Interactions\miniGameInteractionResolveServer.sqf";
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionResolveServer.sqf";
+            };
+            class MiniGameInteractionSetup {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionSetup.sqf";
+            };
+            class MiniGameInteractionTableSetup {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionTableSetup.sqf";
+            };
+            class MiniGameEquipmentPicker {
+                file = "MissionScripts\InteractionsMinigames\Integration\equipmentPicker.sqf";
+            };
+            class MiniGameEquipmentGallery {
+                file = "MissionScripts\InteractionsMinigames\Integration\equipmentGallery.sqf";
             };
             class BombDefuseSetup {
-                file = "MissionScripts\MiniGames\Interactions\bombDefuseSetup.sqf";
+                file = "MissionScripts\InteractionsMinigames\Integration\bombDefuseSetup.sqf";
             };
             // Built-in interaction challenges.
             class MiniGameWireCut {
-                file = "MissionScripts\MiniGames\Interactions\challengeWireCut.sqf";
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeWireCut.sqf";
             };
             class MiniGameMinesweeper {
-                file = "MissionScripts\MiniGames\Interactions\challengeMinesweeper.sqf";
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeMinesweeper.sqf";
             };
             class MiniGameKeypad {
-                file = "MissionScripts\MiniGames\Interactions\challengeKeypad.sqf";
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeKeypad.sqf";
             };
             class MiniGameLockpick {
-                file = "MissionScripts\MiniGames\Interactions\challengeLockpick.sqf";
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeLockpick.sqf";
             };
             class MiniGameCircuit {
-                file = "MissionScripts\MiniGames\Interactions\challengeCircuit.sqf";
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeCircuit.sqf";
+            };
+            class MiniGameRepair {
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeRepair.sqf";
+            };
+            class MiniGameRadioTune {
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeRadioTune.sqf";
+            };
+            class MiniGamePressure {
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengePressure.sqf";
+            };
+            class MiniGameSequence {
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeSequence.sqf";
             };
         };
     };

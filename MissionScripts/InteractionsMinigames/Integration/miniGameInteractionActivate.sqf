@@ -22,14 +22,17 @@ if !(_object getVariable ["Waldo_MG_Int_Active", true]) exitWith {};
 
 private _challengeId = _object getVariable ["Waldo_MG_Int_ChallengeId", "wirecut"];
 private _config = _object getVariable ["Waldo_MG_Int_Config", []];
+private _presentation = _object getVariable ["Waldo_IMG_Presentation", []];
 
 private _onSuccess = {
     params ["_actor", "_cid", "_ctx"];
+    if (_cid == "") then {};
     [_ctx select 0, _actor, true] remoteExec ["Waldo_fnc_MiniGameInteractionResolveServer", 2];
 };
 private _onFailure = {
     params ["_actor", "_cid", "_ctx"];
+    if (_cid == "") then {};
     [_ctx select 0, _actor, false] remoteExec ["Waldo_fnc_MiniGameInteractionResolveServer", 2];
 };
 
-[_challengeId, _config, _onSuccess, _onFailure, player, [_object]] call Waldo_fnc_MiniGameChallenge;
+[_challengeId, _config, _onSuccess, _onFailure, player, [_object], _presentation] call Waldo_fnc_MiniGameChallenge;

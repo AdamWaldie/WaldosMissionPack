@@ -1,7 +1,7 @@
 /*
  * Author: Waldo
  * Wire-cut defusal mini game (the default built-in interaction challenge).
- * Opens a self-contained dialog on the calling player: a set of coloured wires and a
+ * Opens a self-contained dialog on the calling player: a set of numbered, patterned and coloured wires and a
  * printed instruction identifying exactly one correct wire to cut. Cutting the correct
  * wire succeeds; cutting a wrong wire, letting the timer expire, or pressing Escape fails.
  * The whole challenge runs locally on the actor and reports a single boolean back through
@@ -37,7 +37,7 @@ if (!hasInterface) exitWith { [false] call _resolve; };
 _config params [
     ["_wireCount", 5],
     ["_timeLimit", 20],
-    ["_title", "DEFUSAL"]
+    ["_title", "EOD CONTROLLER"]
 ];
 
 _wireCount = round _wireCount;
@@ -46,6 +46,9 @@ if (_wireCount > 6) then { _wireCount = 6; };
 
 // Do not stack a second defusal dialog on top of an open one.
 if (!isNull (missionNamespace getVariable ["Waldo_MG_WC_ActiveDisplay", displayNull])) exitWith {
+    [false] call _resolve;
+};
+if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
     [false] call _resolve;
 };
 
@@ -97,6 +100,8 @@ private _display = _parent createDisplay "RscDisplayEmpty";
 if (isNull _display) exitWith { [false] call _resolve; };
 
 missionNamespace setVariable ["Waldo_MG_WC_ActiveDisplay", _display];
+missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
+[_display, "Mouse: choose one numbered and patterned wire", _title, _instruction, "Check both the number and pattern before cutting. The wrong wire fails immediately."] call Waldo_fnc_MiniGameChallengeUILegacy;
 
 _display setVariable ["Waldo_MG_WC_Correct", _correct];
 _display setVariable ["Waldo_MG_WC_Resolve", _resolve];
@@ -104,14 +109,18 @@ _display setVariable ["Waldo_MG_WC_Done", false];
 
 // Single-shot finisher: closes the dialog and delivers the result once.
 _display setVariable ["Waldo_MG_WC_Finish", {
-    params ["_disp", "_ok"];
+    params ["_disp", "_ok", ["_resultKey", ""]];
     if (isNull _disp) exitWith {};
     if (_disp getVariable ["Waldo_MG_WC_Done", false]) exitWith {};
     _disp setVariable ["Waldo_MG_WC_Done", true];
+    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
     private _fnResolve = _disp getVariable ["Waldo_MG_WC_Resolve", {}];
     missionNamespace setVariable ["Waldo_MG_WC_ActiveDisplay", displayNull];
-    closeDisplay 1;
-    [_ok] call _fnResolve;
+    [{
+        params ["_disp", "_res", "_ok"];
+        if (!isNull _disp) then {_disp closeDisplay 1;};
+        [_ok] call _res;
+    }, [_disp, _fnResolve, _ok], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.5}] call CBA_fnc_waitAndExecute;
 }];
 
 // Layout (safezone-relative).
@@ -164,18 +173,24 @@ private _gap = 0.012 * safezoneH;
     private _row = _listTop + _forEachIndex * (_rowH + _gap);
     private _btn = _display ctrlCreate ["RscButton", -1];
     _btn ctrlSetPosition [_colX, _row, _w, _rowH];
-    _btn ctrlSetText format ["  WIRE %1  -  %2", _forEachIndex + 1, (_x select 0)];
+    private _patterns = ["///", "XXX", "===", "+++", "...", "###"];
+    _btn ctrlSetText format ["  WIRE %1  [%2]  %3", _forEachIndex + 1, _patterns select _forEachIndex, (_x select 0)];
+    _btn ctrlSetTooltip format ["Cut wire %1 - %2 - pattern %3", _forEachIndex + 1, (_x select 0), _patterns select _forEachIndex];
     _btn ctrlSetBackgroundColor (_x select 1);
     _btn ctrlSetTextColor [0.05, 0.05, 0.05, 1];
     _btn setVariable ["Waldo_MG_WC_Index", _forEachIndex];
     _btn ctrlAddEventHandler ["ButtonClick", {
         params ["_ctrl"];
         private _disp = ctrlParent _ctrl;
-        if (isNull _disp || {_disp getVariable ["Waldo_MG_WC_Done", false]}) exitWith {};
+        if (isNull _disp || {_disp getVariable ["Waldo_MG_WC_Done", false]} || {_disp getVariable ["Waldo_MG_WC_InputLocked", false]}) exitWith {};
         private _idx = _ctrl getVariable ["Waldo_MG_WC_Index", -1];
         private _cor = _disp getVariable ["Waldo_MG_WC_Correct", -2];
         private _fin = _disp getVariable ["Waldo_MG_WC_Finish", {}];
-        [_disp, _idx == _cor] call _fin;
+        private _ok = _idx == _cor;
+        _disp setVariable ["Waldo_MG_WC_InputLocked", true];
+        _ctrl ctrlSetText if (_ok) then {"WIRE CUT - CIRCUIT SAFE"} else {"WRONG WIRE - CIRCUIT TRIPPED"};
+        _ctrl ctrlSetBackgroundColor if (_ok) then {[0.10, 0.44, 0.18, 1]} else {[0.80, 0.18, 0.16, 1]};
+        [{ params ["_disp", "_ok", "_fin"]; [_disp, _ok] call _fin; }, [_disp, _ok, _fin], 0.45] call CBA_fnc_waitAndExecute;
     }];
     _btn ctrlCommit 0;
 } forEach _wires;
@@ -185,7 +200,7 @@ _display displayAddEventHandler ["KeyDown", {
     params ["_disp", "_key"];
     if (_key == 1) then {
         private _fin = _disp getVariable ["Waldo_MG_WC_Finish", {}];
-        [_disp, false] call _fin;
+        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
         true
     } else {
         false
@@ -194,15 +209,19 @@ _display displayAddEventHandler ["KeyDown", {
 
 // Countdown loop (skipped when _timeLimit <= 0).
 if (_timeLimit > 0) then {
-    private _deadline = time + _timeLimit;
-    [_display, _deadline, _timeLimit] spawn {
-        params ["_disp", "_deadline", "_timeLimit"];
+    [_display, _timeLimit] spawn {
+        params ["_disp", "_timeLimit"];
+        waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
+        if (isNull _disp) exitWith {};
+        private _deadline = time + _timeLimit;
         while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_WC_Done", false])} } do {
             private _remain = _deadline - time;
             private _timerCtrl = _disp getVariable ["Waldo_MG_WC_TimerCtrl", controlNull];
             if (_remain <= 0) exitWith {
-                private _fin = _disp getVariable ["Waldo_MG_WC_Finish", {}];
-                [_disp, false] call _fin;
+                if !(_disp getVariable ["Waldo_MG_WC_InputLocked", false]) then {
+                    private _fin = _disp getVariable ["Waldo_MG_WC_Finish", {}];
+                    [_disp, false, "timeoutText"] call _fin;
+                };
             };
             if (!isNull _timerCtrl) then {
                 _timerCtrl ctrlSetText format ["TIME REMAINING: %1s", (_remain max 0) toFixed 1];
@@ -216,3 +235,4 @@ if (_timeLimit > 0) then {
 } else {
     _timer ctrlSetText "NO TIME LIMIT";
 };
+[_display] call Waldo_fnc_MiniGameEquipmentBriefing;

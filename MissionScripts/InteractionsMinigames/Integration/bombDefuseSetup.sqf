@@ -65,6 +65,7 @@ private _onSuccess = {
 
 private _onFailure = {
     params ["_obj", "_actor"];
+    [format ["%1 failed the defusal procedure.", name _actor]] remoteExec ["systemChat", 0];
     if (_obj getVariable ["Waldo_MG_Bomb_Detonate", true]) then {
         private _mag = _obj getVariable ["Waldo_MG_Bomb_Explosive", "IEDLandBig_Remote_Ammo"];
         private _pos = getPosATL _obj;

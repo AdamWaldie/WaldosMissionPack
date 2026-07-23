@@ -1,7 +1,7 @@
 /*
  * Author: Waldo
  * Keypad code-crack mini game (a built-in interaction challenge), a Mastermind-style deduction
- * puzzle. A hidden numeric code is generated; the player enters guesses and, after each, is told
+ * puzzle. A hidden numeric code is generated; the player uses the keypad or keyboard to enter guesses and, after each, is told
  * how many digits are correct (right digit, right slot) and how many are misplaced (right digit,
  * wrong slot). Crack the code within the guess limit to win; run out of guesses, the clock, or
  * press Escape to fail. Ideal for safes, keypads, locked doors and arming panels.
@@ -37,7 +37,7 @@ _config params [
     ["_digits", 4],
     ["_maxGuesses", 6],
     ["_timeLimit", 0],
-    ["_title", "KEYPAD"]
+    ["_title", "ACCESS TERMINAL"]
 ];
 
 _digits = round _digits;
@@ -47,6 +47,9 @@ _maxGuesses = round _maxGuesses;
 if (_maxGuesses < 1) then { _maxGuesses = 1; };
 
 if (!isNull (missionNamespace getVariable ["Waldo_MG_KP_ActiveDisplay", displayNull])) exitWith {
+    [false] call _resolve;
+};
+if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
     [false] call _resolve;
 };
 
@@ -68,6 +71,8 @@ private _display = _parent createDisplay "RscDisplayEmpty";
 if (isNull _display) exitWith { [false] call _resolve; };
 
 missionNamespace setVariable ["Waldo_MG_KP_ActiveDisplay", _display];
+missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
+[_display, "Mouse or number keys / Backspace / Enter", _title, format ["Crack the hidden %1-digit code before guesses run out.", _digits], "Exact means the correct digit and slot; misplaced means the digit belongs in another slot."] call Waldo_fnc_MiniGameChallengeUILegacy;
 
 _display setVariable ["Waldo_MG_KP_Code", _code];
 _display setVariable ["Waldo_MG_KP_Digits", _digits];
@@ -77,17 +82,18 @@ _display setVariable ["Waldo_MG_KP_Resolve", _resolve];
 _display setVariable ["Waldo_MG_KP_Done", false];
 
 _display setVariable ["Waldo_MG_KP_Finish", {
-    params ["_disp", "_ok"];
+    params ["_disp", "_ok", ["_resultKey", ""]];
     if (isNull _disp) exitWith {};
     if (_disp getVariable ["Waldo_MG_KP_Done", false]) exitWith {};
     _disp setVariable ["Waldo_MG_KP_Done", true];
+    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
     private _fnResolve = _disp getVariable ["Waldo_MG_KP_Resolve", {}];
     missionNamespace setVariable ["Waldo_MG_KP_ActiveDisplay", displayNull];
     [{
         params ["_disp", "_res", "_ok"];
         if (!isNull _disp) then { _disp closeDisplay 1; };
         [_ok] call _res;
-    }, [_disp, _fnResolve, _ok], if (_ok) then {0} else {0.6}] call CBA_fnc_waitAndExecute;
+    }, [_disp, _fnResolve, _ok], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.6}}] call CBA_fnc_waitAndExecute;
 }];
 
 // Layout.
@@ -155,6 +161,7 @@ _display setVariable ["Waldo_MG_KP_Refresh", {
 
 // Number pad + controls (0-9, Clear, Enter).
 private _keyLabels = ["1","2","3","4","5","6","7","8","9","CLR","0","ENT"];
+private _keyButtons = [];
 private _padTop = _y + 0.375 * safezoneH;
 private _padW = (_w - 2 * 0.01 * safezoneW) / 3;
 private _padH = 0.05 * safezoneH;
@@ -195,7 +202,9 @@ private _colX = _x;
         [_disp] call (_disp getVariable "Waldo_MG_KP_Refresh");
     }];
     _btn ctrlCommit 0;
+    _keyButtons pushBack _btn;
 } forEach _keyLabels;
+_display setVariable ["Waldo_MG_KP_KeyButtons", _keyButtons];
 
 // Evaluate a full entry.
 _display setVariable ["Waldo_MG_KP_Submit", {
@@ -229,6 +238,11 @@ _display setVariable ["Waldo_MG_KP_Submit", {
     { _guessStr = _guessStr + str _x; } forEach _guess;
 
     if (_correct == _digits) exitWith {
+        private _entryCtrl = _disp getVariable ["Waldo_MG_KP_EntryCtrl", controlNull];
+        if (!isNull _entryCtrl) then {
+            _entryCtrl ctrlSetText "ACCESS GRANTED";
+            _entryCtrl ctrlSetTextColor [0.55, 1, 0.65, 1];
+        };
         private _fin = _disp getVariable ["Waldo_MG_KP_Finish", {}];
         [_disp, true] call _fin;
     };
@@ -257,26 +271,47 @@ _display setVariable ["Waldo_MG_KP_Submit", {
 // Escape aborts (failure).
 _display displayAddEventHandler ["KeyDown", {
     params ["_disp", "_key"];
+    if !(_disp getVariable ["Waldo_IMG_Started", false]) exitWith {_key != 1};
     if (_key == 1) then {
         private _fin = _disp getVariable ["Waldo_MG_KP_Finish", {}];
-        [_disp, false] call _fin;
+        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
         true
     } else {
+        private _digitKeys = [[11, "0"], [2, "1"], [3, "2"], [4, "3"], [5, "4"], [6, "5"], [7, "6"], [8, "7"], [9, "8"], [10, "9"]];
+        private _label = "";
+        { if ((_x select 0) == _key) exitWith { _label = _x select 1; }; } forEach _digitKeys;
+        if (_key in [28, 156]) then { _label = "ENT"; };
+        if (_key == 14) exitWith {
+            private _entry = _disp getVariable ["Waldo_MG_KP_Entry", []];
+            if (count _entry > 0) then { _entry deleteAt ((count _entry) - 1); };
+            _disp setVariable ["Waldo_MG_KP_Entry", _entry];
+            [_disp] call (_disp getVariable ["Waldo_MG_KP_Refresh", {}]);
+            true
+        };
+        if (_label != "") exitWith {
+            {
+                if ((_x getVariable ["Waldo_MG_KP_Label", ""]) == _label) exitWith { ctrlActivate _x; };
+            } forEach (_disp getVariable ["Waldo_MG_KP_KeyButtons", []]);
+            true
+        };
         false
     };
 }];
 
 // Optional countdown.
 if (_timeLimit > 0) then {
-    private _deadline = time + _timeLimit;
-    [_display, _deadline] spawn {
-        params ["_disp", "_deadline"];
+    [_display, _timeLimit] spawn {
+        params ["_disp", "_timeLimit"];
+        waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
+        if (isNull _disp) exitWith {};
+        private _deadline = time + _timeLimit;
         while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_KP_Done", false])} } do {
             if ((_deadline - time) <= 0) exitWith {
                 private _fin = _disp getVariable ["Waldo_MG_KP_Finish", {}];
-                [_disp, false] call _fin;
+                [_disp, false, "timeoutText"] call _fin;
             };
             sleep 0.2;
         };
     };
 };
+[_display] call Waldo_fnc_MiniGameEquipmentBriefing;
