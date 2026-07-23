@@ -43,6 +43,21 @@ if (Waldo_Economy_Enable) then {
 };
 
 /*
+ACE Corpse Traps
+
+Lets players consume a carried throwable to rig any corpse through ACE interaction. The exact
+magazine is preserved, so vanilla and modded frag, smoke, flashbang, incendiary and utility
+throwables use their own projectile behaviour when somebody opens the body's inventory.
+
+This is deliberately OFF by default because it changes a familiar inventory interaction into a
+lethal risk. Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps
+*/
+Waldo_CorpseTraps_Enable = false;
+if (Waldo_CorpseTraps_Enable) then {
+    [] call Waldo_fnc_CorpseTrapInit;
+};
+
+/*
 After-Action WIA listener (ACE)
 
 ACE raises "ace_unconscious" locally on the machine owning the unit, so it cannot be caught by the

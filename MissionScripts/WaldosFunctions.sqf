@@ -1730,5 +1730,29 @@ class CfgFunctions
                 file = "MissionScripts\EconomySystems\Command\cleanupGroundCommandPrompt.sqf";
             };
         };
+        class CorpseTraps
+        {
+            class CorpseTrapInit {
+                file = "MissionScripts\CorpseTraps\corpseTrapInit.sqf";
+            };
+            class CorpseTrapGetThrowables {
+                file = "MissionScripts\CorpseTraps\corpseTrapGetThrowables.sqf";
+            };
+            class CorpseTrapPlant {
+                file = "MissionScripts\CorpseTraps\corpseTrapPlant.sqf";
+            };
+            class CorpseTrapArmServer {
+                file = "MissionScripts\CorpseTraps\corpseTrapArmServer.sqf";
+            };
+            class CorpseTrapRefund {
+                file = "MissionScripts\CorpseTraps\corpseTrapRefund.sqf";
+            };
+            class CorpseTrapInstallInventoryHandler {
+                file = "MissionScripts\CorpseTraps\corpseTrapInstallInventoryHandler.sqf";
+            };
+            class CorpseTrapTriggerServer {
+                file = "MissionScripts\CorpseTraps\corpseTrapTriggerServer.sqf";
+            };
+        };
     };
 };

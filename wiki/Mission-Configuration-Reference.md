@@ -151,6 +151,18 @@ See [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissi
 [] call Waldo_fnc_ZenInitModules;  // remove this line to disable Zeus modules
 ```
 
+### ACE Corpse Traps (disabled by default)
+
+```sqf
+Waldo_CorpseTraps_Enable = false;
+if (Waldo_CorpseTraps_Enable) then {
+    [] call Waldo_fnc_CorpseTrapInit;
+};
+```
+
+Set the flag to `true` to let players consume carried throwables and conceal them on corpses. The
+trap activates when somebody opens the corpse's inventory. See [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps).
+
 ### ACE Drag/Carry Weight Limits
 
 ```sqf
