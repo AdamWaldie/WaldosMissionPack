@@ -1701,8 +1701,26 @@ class CfgFunctions
             class MiniGameInteractionActivate {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionActivate.sqf";
             };
+            class MiniGameInteractionAcquireServer {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionAcquireServer.sqf";
+            };
+            class MiniGameInteractionStartClient {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionStartClient.sqf";
+            };
             class MiniGameInteractionResolveServer {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionResolveServer.sqf";
+            };
+            class MiniGameInteractionGetState {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionGetState.sqf";
+            };
+            class MiniGameInteractionStateIs {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionStateIs.sqf";
+            };
+            class MiniGameInteractionGetResult {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionGetResult.sqf";
+            };
+            class MiniGameInteractionReset {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionReset.sqf";
             };
             class MiniGameInteractionSetup {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionSetup.sqf";

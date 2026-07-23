@@ -5,7 +5,7 @@
  *
  * Arguments:
  * _config  - Array - [padCount(3..6), rounds(1..8), playbackSpeed, timeLimit, title]
- * _resolve - Code  - called exactly once with [_success]
+ * _resolve - Code  - called once with boolean success and typed outcome metadata
  *
  * Return Value:
  * Nothing

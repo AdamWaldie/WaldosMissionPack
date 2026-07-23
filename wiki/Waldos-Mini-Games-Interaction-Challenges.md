@@ -21,13 +21,122 @@ Available procedure ids are `wirecut`, `minesweeper`, `keypad`, `lockpick`, `cir
 `radiotune`, `pressure`, and `sequence`.
 
 The helper supplies a suitable action, equipment identity, icon, and balanced configuration. Failure
-allows another attempt by default; success consumes the interaction. It broadcasts:
+allows another attempt by default; success consumes the interaction. ACE is used when available;
+the vanilla action fallback reads exactly the same state. It broadcasts:
 
 | Variable | Meaning |
 |---|---|
+| `Waldo_MG_InteractionState` | `IDLE`, `RUNNING`, `SUCCESS`, or `FAILURE`. |
+| `Waldo_MG_InteractionResult` | Stable result array described below. |
 | `Waldo_MG_InteractionComplete` | `true` after the latest successful attempt. |
 | `Waldo_MG_InteractionFailed` | `true` after the latest failed attempt; reset on success. |
 | `Waldo_MG_<id>Complete` | Procedure-specific completion flag, such as `Waldo_MG_repairComplete`. |
+
+## Authoritative lifecycle and mission state
+
+The server grants one exclusive attempt before the procedure opens. It validates that the equipment
+is active, unconsumed, not already running, and within its configured interaction distance. The
+accepted actor receives an owner-bound attempt ID; stale, duplicate, wrong-actor, and post-reset
+results are ignored. The default exclusive-lock timeout is 600 seconds and can be changed with
+`["lockTimeout", seconds]` or the equivalent hashmap entry.
+
+The lifecycle is `IDLE -> RUNNING -> SUCCESS` or `IDLE -> RUNNING -> FAILURE`. A terminal state
+remains available to triggers, ACE conditions, and JIP clients until the next accepted attempt enters
+`RUNNING` or the server resets the equipment. Detailed outcome codes are `SUCCESS`, `FAILURE`,
+`TIMEOUT`, `ABORTED`, and `ABANDONED`; the last covers death, disconnect, unexpected display loss,
+and lock expiry.
+
+`Waldo_MG_InteractionResult` always has this shape:
+
+```sqf
+[state, outcomeCode, reason, challengeId, actor, attemptId, startedAt, finishedAt]
+```
+
+Use the side-effect-free helpers in ACE conditions, triggers, or ordinary mission code:
+
+```sqf
+private _state = [_equipment] call Waldo_fnc_MiniGameInteractionGetState;
+private _succeeded = [_equipment, "SUCCESS"] call Waldo_fnc_MiniGameInteractionStateIs;
+private _result = [_equipment] call Waldo_fnc_MiniGameInteractionGetResult;
+private _reason = _result get "reason";
+```
+
+The result hashmap contains `state`, `outcomeCode`, `reason`, `challengeId`, `actor`, `attemptId`,
+`startedAt`, `finishedAt`, and `raw`.
+
+### ACE-first follow-up actions
+
+ACE follow-up conditions can expose unlock, open, repair, or diagnostic actions only after the
+required result:
+
+```sqf
+private _successCondition = {
+    params ["_target"];
+    [_target, "SUCCESS"] call Waldo_fnc_MiniGameInteractionStateIs
+};
+
+private _failureCondition = {
+    params ["_target"];
+    [_target, "FAILURE"] call Waldo_fnc_MiniGameInteractionStateIs
+};
+```
+
+To make another object's action depend on this equipment, store the equipment on that action target
+or in a mission variable and pass the referenced equipment to `MiniGameInteractionStateIs`. Hide a
+conflicting ACE action during operation by requiring that its state is not `RUNNING`.
+
+Equivalent vanilla `addAction` condition strings are:
+
+```sqf
+"[_target, 'SUCCESS'] call Waldo_fnc_MiniGameInteractionStateIs"
+"!([_target, 'RUNNING'] call Waldo_fnc_MiniGameInteractionStateIs)"
+```
+
+### Callbacks and immediate CBA events
+
+Callbacks still run on the server. Their first three arguments have not changed; new code can read
+the authoritative array from argument four:
+
+```sqf
+private _onSuccess = {
+    params ["_object", "_actor", "_success", "_result"];
+    // State and result variables are already broadcast here.
+};
+```
+
+For event-driven integrations, register once on every machine that needs the notification:
+
+```sqf
+[
+    "Waldo_MG_InteractionStateChanged",
+    {
+        params ["_object", "_state", "_result"];
+    }
+] call CBA_fnc_addEventHandler;
+```
+
+The server writes state/result and compatibility variables first, emits the global event second, and
+runs the authoritative result callback third. Events fire for `RUNNING`, terminal state, and reset.
+Past events are not replayed; JIP code reads the broadcast variables instead.
+
+### Retry, consumption, abandonment, and reset
+
+Preset interactions retry failure by default (`retryOnFailure = true`) and become inactive after
+success unless `repeatable = true`. Generic `oneShot = true` interactions are consumed by their first
+terminal result. Confirmed Escape remains failure and, for bomb setups, still follows the configured
+detonation callback. Death, disconnect, unexpected display closure, or lock timeout resolves as
+`FAILURE`/`ABANDONED` and follows the same retry and callback rules.
+
+Reset on the server with:
+
+```sqf
+[_equipment, true, false] call Waldo_fnc_MiniGameInteractionReset;
+```
+
+Arguments are `[object, reenableAction, forceRunningReset]`. A normal reset returns `false` rather
+than interrupting a running procedure. A forced reset invalidates its attempt ID, returns the object
+to `IDLE`, clears completion/custom flags, and optionally re-enables the action. Any late client
+completion is then rejected.
 
 ## Immersive equipment profiles
 
@@ -59,7 +168,7 @@ overrides cannot break the interface.
 Presentation keys are `preset`, `actionTitle`, `manufacturer`, `model`, `title`, `skin`, `objective`,
 `briefing`, `activation`, `controls`, `hint`, `statusText`, `successText`, `failureText`, `timeoutText`,
 `abortText`, `icon`, `texturePreset`, `texture`, and `soundProfile`. Operational keys remain `config`, `successVariable`, `failureVariable`,
-`retryOnFailure`, `repeatable`, `distance`, `condition`, `onSuccess`, and `onFailure`.
+`retryOnFailure`, `repeatable`, `distance`, `lockTimeout`, `condition`, `onSuccess`, and `onFailure`.
 
 `skin` accepts `default`, `olive`, `charcoal`, `sand`, `naval`, or `hazard`. `soundProfile` accepts
 `equipment` or `silent`. Unknown values safely fall back to `default` and `equipment`. Textures are
@@ -330,8 +439,9 @@ Existing party tables are unchanged unless this function is called.
 [object, id, config, onSuccess, onFailure, options] call Waldo_fnc_MiniGameInteraction;
 ```
 
-Callbacks run on the server and receive `[object, actor, success]`. The options array additionally
-accepts `["presentation", profilePairs]`.
+Callbacks run on the server and receive `[object, actor, success, result]`; callbacks that only read
+the original first three arguments remain compatible. The options array additionally accepts
+`["presentation", profilePairs]` and `["lockTimeout", seconds]`.
 
 Run a procedure without an object with:
 

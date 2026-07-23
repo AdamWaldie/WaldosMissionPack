@@ -124,7 +124,7 @@ _display setVariable ["Waldo_IMG_RequestAbort", {
         hintSilent format ["WARNING: press Escape again within 3 seconds. %1", _profile getOrDefault ["abortText", "Aborting counts as a failed procedure."]];
         [_disp] spawn {params ["_d"]; uiSleep 3; if (!isNull _d) then {_d setVariable ["Waldo_IMG_AbortPending", false];};};
     };
-    [_disp, false] call _finish;
+    [_disp, false, "abortText"] call _finish;
 }];
 
 [_display, _name, _objective, _inputHint, _hint] call Waldo_fnc_MiniGameChallengeHelp;

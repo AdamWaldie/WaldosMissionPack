@@ -2,10 +2,10 @@
  * Author: Waldo
  * Generic hook that gates an interaction on an object behind a mini game challenge. Adds an
  * ACE self-interaction (or a vanilla addAction fallback when ACE is absent) that, when used,
- * runs the chosen challenge for that player; passing it fires _onSuccess and failing it fires
- * _onFailure. The callbacks run on the SERVER so they can drive authoritative outcomes
+ * requests an exclusive server-owned attempt. Passing it fires _onSuccess and failing it fires
+ * _onFailure. The callbacks run on the SERVER after broadcast lifecycle state is updated
  * (detonate, unlock a door, complete a task, spawn something, etc.), each receiving
- * [_object, _actor, _success].
+ * [_object, _actor, _success, _result]. Existing three-argument callbacks remain valid.
  *
  * Call this from the object's Eden "Initialization" field so it runs on every machine (each
  * client adds the action locally and the server keeps the callbacks) - the same pattern as
@@ -24,6 +24,7 @@
  *                  "condition" Code   - extra show condition, gets _object as _this (default {true})
  *                  "oneShot"   Bool   - consume the action after one attempt (default true)
  *                  "distance"  Number - addAction fallback radius in metres (default 4)
+ *                  "lockTimeout" Number - abandoned lock timeout in seconds (default 600)
  *
  * Return Value:
  * Nothing
@@ -65,8 +66,17 @@ _object setVariable ["Waldo_MG_Int_OnFailure", _onFailure];
 _object setVariable ["Waldo_MG_Int_Options", _options];
 _object setVariable ["Waldo_MG_Int_Condition", _condition];
 _object setVariable ["Waldo_IMG_Presentation", _presentation];
+_object setVariable ["Waldo_MG_Int_Distance", _distance];
 if (isNil { _object getVariable "Waldo_MG_Int_Active" }) then {
     _object setVariable ["Waldo_MG_Int_Active", true, true];
+};
+if (isServer && {isNil {_object getVariable "Waldo_MG_InteractionState"}}) then {
+    private _initialResult = ["IDLE", "", "", _challengeId, objNull, "", -1, -1];
+    _object setVariable ["Waldo_MG_InteractionState", "IDLE", true];
+    _object setVariable ["Waldo_MG_InteractionResult", _initialResult, true];
+    _object setVariable ["Waldo_MG_InteractionComplete", false, true];
+    _object setVariable ["Waldo_MG_InteractionFailed", false, true];
+    _object setVariable [format ["Waldo_MG_%1Complete", _challengeId], false, true];
 };
 
 // No local UI on a headless client / dedicated server - it only keeps the callbacks.
@@ -81,6 +91,7 @@ if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
         {
             params ["_target"];
             if !(_target getVariable ["Waldo_MG_Int_Active", true]) exitWith { false };
+            if ((_target getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING") exitWith { false };
             private _c = _target getVariable ["Waldo_MG_Int_Condition", {true}];
             _target call _c
         }
@@ -95,9 +106,8 @@ if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
         true,
         true,
         "",
-        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {_target call (_target getVariable ['Waldo_MG_Int_Condition', {true}])} && {_this distance _target < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
+        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {(_target getVariable ['Waldo_MG_InteractionState', 'IDLE']) != 'RUNNING'} && {_target call (_target getVariable ['Waldo_MG_Int_Condition', {true}])} && {_this distance _target < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
         _distance
     ];
-    _object setVariable ["Waldo_MG_Int_Distance", _distance];
     _object setVariable ["Waldo_MG_Int_ActionId", _id];
 };

@@ -16,7 +16,7 @@
  *              0: _wireCount - Number - number of wires (clamped 3..6, default 5)
  *              1: _timeLimit - Number - seconds on the clock (0 = no clock, default 20)
  *              2: _title     - String - dialog heading (default "DEFUSAL")
- * _resolve - Code  - called exactly once with [_success] (Boolean) when the challenge ends
+ * _resolve - Code  - called once with boolean success and typed outcome metadata
  *
  * Return Value:
  * Nothing (result delivered asynchronously through _resolve)
@@ -115,12 +115,14 @@ _display setVariable ["Waldo_MG_WC_Finish", {
     _disp setVariable ["Waldo_MG_WC_Done", true];
     [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
     private _fnResolve = _disp getVariable ["Waldo_MG_WC_Resolve", {}];
+    private _outcomeCode = if (_ok) then {"SUCCESS"} else {if (_resultKey == "timeoutText") then {"TIMEOUT"} else {if (_resultKey == "abortText") then {"ABORTED"} else {"FAILURE"};};};
+    private _reason = if (_resultKey == "") then {""} else {(_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault [_resultKey, _resultKey]};
     missionNamespace setVariable ["Waldo_MG_WC_ActiveDisplay", displayNull];
     [{
-        params ["_disp", "_res", "_ok"];
+        params ["_disp", "_res", "_ok", "_outcomeCode", "_reason"];
         if (!isNull _disp) then {_disp closeDisplay 1;};
-        [_ok] call _res;
-    }, [_disp, _fnResolve, _ok], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.5}] call CBA_fnc_waitAndExecute;
+        [_ok, [_outcomeCode, _reason]] call _res;
+    }, [_disp, _fnResolve, _ok, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.5}] call CBA_fnc_waitAndExecute;
 }];
 
 // Layout (safezone-relative).

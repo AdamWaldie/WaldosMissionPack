@@ -1,38 +1,19 @@
 /*
  * Author: Waldo
- * Actor-side runner for a gated interaction created with Waldo_fnc_MiniGameInteraction. Reads
- * the challenge stored on the object, plays it for the local player, and reports the result to
- * the server (Waldo_fnc_MiniGameInteractionResolveServer) which runs the authoritative
- * success/failure callback. Bound as the action's statement - not usually called directly.
+ * Requests exclusive ownership of an interaction procedure from the server. The server checks
+ * availability, range and ownership before any client display is opened.
  *
  * Arguments:
- * _object - Object - the interacted object (the ACE/addAction target)
+ * _object - Object - the ACE/addAction target
  *
  * Return Value:
  * Nothing
- *
- * Example:
- * _bomb call Waldo_fnc_MiniGameInteractionActivate;
  */
 
 params [["_object", objNull, [objNull]]];
 
-if (isNull _object) exitWith {};
+if (!hasInterface || {isNull _object}) exitWith {};
 if !(_object getVariable ["Waldo_MG_Int_Active", true]) exitWith {};
+if ((_object getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING") exitWith {};
 
-private _challengeId = _object getVariable ["Waldo_MG_Int_ChallengeId", "wirecut"];
-private _config = _object getVariable ["Waldo_MG_Int_Config", []];
-private _presentation = _object getVariable ["Waldo_IMG_Presentation", []];
-
-private _onSuccess = {
-    params ["_actor", "_cid", "_ctx"];
-    if (_cid == "") then {};
-    [_ctx select 0, _actor, true] remoteExec ["Waldo_fnc_MiniGameInteractionResolveServer", 2];
-};
-private _onFailure = {
-    params ["_actor", "_cid", "_ctx"];
-    if (_cid == "") then {};
-    [_ctx select 0, _actor, false] remoteExec ["Waldo_fnc_MiniGameInteractionResolveServer", 2];
-};
-
-[_challengeId, _config, _onSuccess, _onFailure, player, [_object], _presentation] call Waldo_fnc_MiniGameChallenge;
+[_object, player] remoteExecCall ["Waldo_fnc_MiniGameInteractionAcquireServer", 2];

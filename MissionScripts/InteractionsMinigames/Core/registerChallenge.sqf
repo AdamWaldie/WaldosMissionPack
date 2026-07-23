@@ -6,7 +6,8 @@
  * re-registering the same id overwrites the previous entry.
  *
  * A challenge opener is CODE following the contract [_config, _resolve]: it presents the
- * challenge to the local player and calls [_success] on _resolve exactly once when finished.
+ * challenge to the local player and calls either [_success] or
+ * [_success, [_outcomeCode, _reason]] on _resolve exactly once when finished.
  *
  * Arguments:
  * _id          - String - unique challenge id (e.g. "wirecut")

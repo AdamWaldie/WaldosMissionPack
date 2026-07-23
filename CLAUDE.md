@@ -444,7 +444,10 @@ Mission makers should normally use the one-line preset wrapper from an object's 
 
 `Waldo_fnc_MiniGameInteractionSetup` supplies the action, equipment profile, icon and default config,
 allows retries after failure, consumes the action after success, and broadcasts
-`Waldo_MG_InteractionComplete` / `Waldo_MG_InteractionFailed`. Legacy option arrays remain valid.
+`Waldo_MG_InteractionState`, `Waldo_MG_InteractionResult`, and the legacy
+`Waldo_MG_InteractionComplete` / `Waldo_MG_InteractionFailed` booleans. Attempts are acquired by the
+server and exclusively locked; ACE is the preferred action path, with vanilla `addAction` using the
+same state. Legacy option arrays remain valid.
 New hashmap profiles support `preset`, `actionTitle`, `manufacturer`, `model`, `title`, `objective`,
 activation/result wording, and operational options. Layout positions and semantic colours stay
 template-owned so mission customization cannot produce clipped or colour-only states.
@@ -467,8 +470,15 @@ accessible Arma controls.
   field, or pass an options array (`wireCount`, `timeLimit`, `detonateOnFailure`, `explosive`, …).
 - `Waldo_fnc_MiniGameInteraction` — the generic hook: `[object, challengeId, config, onSuccess,
   onFailure, options]`. Call from the object's **init field** (runs on all machines). The
-  success/failure callbacks run on the **server** (each gets `[object, actor, success]`) so they can
-  drive authoritative outcomes; the challenge plays on the actor's client and reports back.
+  success/failure callbacks run on the **server** (each gets `[object, actor, success, result]`) so
+  they can drive authoritative outcomes; existing three-argument callbacks remain compatible. The
+  challenge plays only on the accepted actor's client and reports its owner-bound attempt ID back.
+- `Waldo_fnc_MiniGameInteractionGetState`, `Waldo_fnc_MiniGameInteractionStateIs`, and
+  `Waldo_fnc_MiniGameInteractionGetResult` are unscheduled, side-effect-free readers suitable for
+  ACE conditions. `Waldo_fnc_MiniGameInteractionReset` is server-only; normal reset refuses
+  `RUNNING`, while forced reset invalidates the current attempt.
+- `Waldo_MG_InteractionStateChanged` is the global CBA event with payload
+  `[object, state, result]`. Broadcast variables are written before the event and callback.
 - `Waldo_fnc_MiniGameChallenge` — run a challenge standalone (no object) with local callbacks.
 - `Waldo_fnc_MiniGameRegisterChallenge` — add a custom challenge (opener contract `[_config, _resolve]`).
 - `Waldo_fnc_MiniGameInteractionTableSetup` — opt-in separate Field Equipment picker on a table;

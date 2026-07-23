@@ -9,7 +9,7 @@
  * _title         - String - heading shown in the challenge header
  * _objective     - String - concise player instruction
  * _timeLimit     - Number - seconds before failure; 0 disables the clock
- * _resolve       - Code   - challenge callback invoked once with [_success]
+ * _resolve       - Code   - callback invoked once with [_success, [_outcomeCode, _reason]]
  * _contentHeight - Number - content height as safezoneH fraction (default 0.48)
  * _inputHint     - String - controls shown in the footer (default "Use the mouse to interact")
  * _hint          - String - strategy shown in HOW TO PLAY (default: watch the status line)
@@ -228,12 +228,18 @@ _display setVariable ["Waldo_MG_UI_Finish", {
         ctrlSetFocus _resultCtrl;
     };
     private _fnResolve = _disp getVariable ["Waldo_MG_UI_Resolve", {}];
+    private _outcomeCode = if (_success) then {"SUCCESS"} else {
+        private _upperReason = toUpper _reason;
+        if (_upperReason find "ABORT" >= 0) then {"ABORTED"} else {
+            if (_upperReason find "EXPIRED" >= 0 || {_upperReason find "TIMEOUT" >= 0}) then {"TIMEOUT"} else {"FAILURE"};
+        };
+    };
     [{
-        params ["_disp", "_resolve", "_success"];
+        params ["_disp", "_resolve", "_success", "_outcomeCode", "_reason"];
         missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
         if (!isNull _disp) then { _disp closeDisplay 1; };
-        [_success] call _resolve;
-    }, [_disp, _fnResolve, _success], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.65}] call CBA_fnc_waitAndExecute;
+        [_success, [_outcomeCode, _reason]] call _resolve;
+    }, [_disp, _fnResolve, _success, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.65}] call CBA_fnc_waitAndExecute;
 }];
 
 _display displayAddEventHandler ["KeyDown", {

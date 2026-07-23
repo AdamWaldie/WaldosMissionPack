@@ -5,9 +5,9 @@
  * interaction hook (Waldo_fnc_MiniGameInteraction) - call it directly to run a challenge for
  * any reason (a task step, a Zeus prompt, a trigger) without attaching it to an object.
  *
- * The built-in challenges are registered automatically on first
- * use; add your own with Waldo_fnc_MiniGameRegisterChallenge. Callbacks receive
- * [_actor, _challengeId, _context].
+ * The built-in challenges are registered automatically on first use; add your own with
+ * Waldo_fnc_MiniGameRegisterChallenge. Callbacks retain their original first three arguments
+ * [_actor, _challengeId, _context] and receive optional typed outcome metadata as argument 4.
  *
  * Arguments:
  * _challengeId - String - registered challenge id (default "wirecut")
@@ -79,8 +79,12 @@ private _jobVar = format ["Waldo_MG_Job_%1", _jobId];
 missionNamespace setVariable [_jobVar, [_actor, _challengeId, _onSuccess, _onFailure, _context]];
 missionNamespace setVariable ["Waldo_IMG_ActiveProfile", [_challengeId, _presentation] call Waldo_fnc_MiniGameEquipmentProfile];
 
-// The opener calls [_success] on this; the token is baked in so no closure is needed.
-private _resolve = compile format ["[_this select 0, '%1'] call Waldo_fnc_MiniGameChallengeResolve;", _jobVar];
+// Openers may call either [_success] or [_success, [_outcomeCode, _reason]]. The job token is
+// baked in so no closure is needed and legacy challenge openers remain compatible.
+private _resolve = compile format [
+    "[_this select 0, if (count _this > 1) then {_this select 1} else {[]}, '%1'] call Waldo_fnc_MiniGameChallengeResolve;",
+    _jobVar
+];
 
 [_config, _resolve] call _opener;
 true

@@ -2,7 +2,7 @@
  * Author: Waldo
  * Mission-maker-friendly preset wrapper for Waldo_fnc_MiniGameInteraction. One Eden init line
  * attaches any built-in challenge with a suitable action title, icon and balanced default config.
- * Success/failure state is exposed through broadcast object variables and optional callbacks.
+ * State/result and legacy success/failure booleans are broadcast before optional callbacks run.
  *
  * Arguments:
  * _object      - Object - object receiving the interaction
@@ -16,6 +16,7 @@
  *                  "retryOnFailure"  Bool   - keep action after failure (default true)
  *                  "repeatable"      Bool   - keep action after success (default false)
  *                  "distance"        Number - vanilla addAction distance (default 4)
+ *                  "lockTimeout"     Number - exclusive lock expiry in seconds (default 600)
  *                  "condition"       Code   - additional interaction condition (default {true})
  *                  "icon"            String - ACE action icon override
  *                  "preset"          String - curated equipment identity
@@ -108,6 +109,7 @@ private _failureVariable = ["failureVariable", "Waldo_MG_InteractionFailed"] cal
 private _retryOnFailure = ["retryOnFailure", true] call _opt;
 private _repeatable = ["repeatable", false] call _opt;
 private _distance = ["distance", 4] call _opt;
+private _lockTimeout = ["lockTimeout", 600] call _opt;
 private _condition = ["condition", {true}] call _opt;
 private _onSuccess = ["onSuccess", {}] call _opt;
 private _onFailure = ["onFailure", {}] call _opt;
@@ -121,34 +123,12 @@ _object setVariable ["Waldo_MG_Preset_OnSuccess", _onSuccess];
 _object setVariable ["Waldo_MG_Preset_OnFailure", _onFailure];
 
 private _success = {
-    params ["_obj", "_actor", "_result"];
-    if (!(_obj getVariable ["Waldo_MG_Preset_Repeatable", false]) && {_obj getVariable ["Waldo_MG_InteractionComplete", false]}) exitWith {};
-    private _variable = _obj getVariable ["Waldo_MG_Preset_SuccessVariable", "Waldo_MG_InteractionComplete"];
-    if (_variable != "") then { _obj setVariable [_variable, true, true]; };
-    private _failureVariable = _obj getVariable ["Waldo_MG_Preset_FailureVariable", "Waldo_MG_InteractionFailed"];
-    if (_failureVariable != "") then { _obj setVariable [_failureVariable, false, true]; };
-    _obj setVariable ["Waldo_MG_InteractionComplete", true, true];
-    _obj setVariable ["Waldo_MG_InteractionFailed", false, true];
-    _obj setVariable [format ["Waldo_MG_%1Complete", _obj getVariable ["Waldo_MG_Preset_ChallengeId", "challenge"]], true, true];
-    if !(_obj getVariable ["Waldo_MG_Preset_Repeatable", false]) then {
-        _obj setVariable ["Waldo_MG_Int_Active", false, true];
-    };
-    [_obj, _actor, _result] call (_obj getVariable ["Waldo_MG_Preset_OnSuccess", {}]);
+    params ["_obj", "_actor", "_success", ["_interactionResult", []]];
+    [_obj, _actor, _success, _interactionResult] call (_obj getVariable ["Waldo_MG_Preset_OnSuccess", {}]);
 };
 private _failure = {
-    params ["_obj", "_actor", "_result"];
-    if (!(_obj getVariable ["Waldo_MG_Preset_Repeatable", false]) && {_obj getVariable ["Waldo_MG_InteractionComplete", false]}) exitWith {};
-    private _variable = _obj getVariable ["Waldo_MG_Preset_FailureVariable", "Waldo_MG_InteractionFailed"];
-    if (_variable != "") then { _obj setVariable [_variable, true, true]; };
-    private _successVariable = _obj getVariable ["Waldo_MG_Preset_SuccessVariable", "Waldo_MG_InteractionComplete"];
-    if (_successVariable != "") then { _obj setVariable [_successVariable, false, true]; };
-    _obj setVariable ["Waldo_MG_InteractionComplete", false, true];
-    _obj setVariable ["Waldo_MG_InteractionFailed", true, true];
-    _obj setVariable [format ["Waldo_MG_%1Complete", _obj getVariable ["Waldo_MG_Preset_ChallengeId", "challenge"]], false, true];
-    if !(_obj getVariable ["Waldo_MG_Preset_RetryOnFailure", true]) then {
-        _obj setVariable ["Waldo_MG_Int_Active", false, true];
-    };
-    [_obj, _actor, _result] call (_obj getVariable ["Waldo_MG_Preset_OnFailure", {}]);
+    params ["_obj", "_actor", "_success", ["_interactionResult", []]];
+    [_obj, _actor, _success, _interactionResult] call (_obj getVariable ["Waldo_MG_Preset_OnFailure", {}]);
 };
 
 [
@@ -163,6 +143,7 @@ private _failure = {
         ["condition", _condition],
         ["oneShot", false],
         ["distance", _distance],
+        ["lockTimeout", _lockTimeout],
         ["presentation", _presentationPairs]
     ]
 ] call Waldo_fnc_MiniGameInteraction;

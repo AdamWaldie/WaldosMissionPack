@@ -5,7 +5,7 @@
  *
  * Arguments:
  * _config  - Array - [boltCount(3..6), turnsRequired(1..4), maxMistakes, timeLimit, title]
- * _resolve - Code  - called exactly once with [_success]
+ * _resolve - Code  - called once with boolean success and typed outcome metadata
  *
  * Return Value:
  * Nothing

@@ -15,7 +15,7 @@
  *              1: _mineCount - Number - mines on the grid (default 5)
  *              2: _timeLimit - Number - seconds on the clock, 0 = none (default 0)
  *              3: _title     - String - dialog heading (default "MINESWEEPER")
- * _resolve - Code  - called exactly once with [_success] (Boolean) when the challenge ends
+ * _resolve - Code  - called once with boolean success and typed outcome metadata
  *
  * Return Value:
  * Nothing (result delivered asynchronously through _resolve)
@@ -158,12 +158,14 @@ _display setVariable ["Waldo_MG_MS_Finish", {
         } forEach _mines;
     };
     private _fnResolve = _disp getVariable ["Waldo_MG_MS_Resolve", {}];
+    private _outcomeCode = if (_ok) then {"SUCCESS"} else {if (_resultKey == "timeoutText") then {"TIMEOUT"} else {if (_resultKey == "abortText") then {"ABORTED"} else {"FAILURE"};};};
+    private _reason = if (_resultKey == "") then {""} else {(_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault [_resultKey, _resultKey]};
     missionNamespace setVariable ["Waldo_MG_MS_ActiveDisplay", displayNull];
     [{
-        params ["_disp", "_res", "_ok"];
+        params ["_disp", "_res", "_ok", "_outcomeCode", "_reason"];
         if (!isNull _disp) then { _disp closeDisplay 1; };
-        [_ok] call _res;
-    }, [_disp, _fnResolve, _ok], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.6}}] call CBA_fnc_waitAndExecute;
+        [_ok, [_outcomeCode, _reason]] call _res;
+    }, [_disp, _fnResolve, _ok, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.6}}] call CBA_fnc_waitAndExecute;
 }];
 
 // Flood-reveal routine (stored so the button handler can call it).
