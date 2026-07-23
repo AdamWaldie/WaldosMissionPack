@@ -1649,5 +1649,52 @@ class CfgFunctions
                 file = "MissionScripts\EconomySystems\Command\cleanupGroundCommandPrompt.sqf";
             };
         };
+        class MiniGames
+        {
+            // Table games engine (multiplayer, seated party games). The engine defines its
+            // internal Waldo_MG_fnc_* runtime functions itself; only this installer is a
+            // CfgFunctions entry.
+            class MiniGamesInit {
+                file = "MissionScripts\MiniGames\miniGamesInit.sqf";
+            };
+            // Interaction challenge framework (single-player challenges that gate an outcome).
+            class MiniGameRegisterChallenge {
+                file = "MissionScripts\MiniGames\Interactions\registerChallenge.sqf";
+            };
+            class MiniGameChallenge {
+                file = "MissionScripts\MiniGames\Interactions\miniGameChallenge.sqf";
+            };
+            class MiniGameChallengeResolve {
+                file = "MissionScripts\MiniGames\Interactions\miniGameChallengeResolve.sqf";
+            };
+            class MiniGameInteraction {
+                file = "MissionScripts\MiniGames\Interactions\miniGameInteraction.sqf";
+            };
+            class MiniGameInteractionActivate {
+                file = "MissionScripts\MiniGames\Interactions\miniGameInteractionActivate.sqf";
+            };
+            class MiniGameInteractionResolveServer {
+                file = "MissionScripts\MiniGames\Interactions\miniGameInteractionResolveServer.sqf";
+            };
+            class BombDefuseSetup {
+                file = "MissionScripts\MiniGames\Interactions\bombDefuseSetup.sqf";
+            };
+            // Built-in interaction challenges.
+            class MiniGameWireCut {
+                file = "MissionScripts\MiniGames\Interactions\challengeWireCut.sqf";
+            };
+            class MiniGameMinesweeper {
+                file = "MissionScripts\MiniGames\Interactions\challengeMinesweeper.sqf";
+            };
+            class MiniGameKeypad {
+                file = "MissionScripts\MiniGames\Interactions\challengeKeypad.sqf";
+            };
+            class MiniGameLockpick {
+                file = "MissionScripts\MiniGames\Interactions\challengeLockpick.sqf";
+            };
+            class MiniGameCircuit {
+                file = "MissionScripts\MiniGames\Interactions\challengeCircuit.sqf";
+            };
+        };
     };
 };

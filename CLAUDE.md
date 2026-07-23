@@ -407,6 +407,51 @@ route any new world-object creation through the authority the same way.
   flag that also stops JIP players re-initialising); it is not a "reset" — restart the mission to run
   the economy again after a purge.
 
+### Waldos Mini Games (table games + interaction challenges)
+
+Two complementary systems under one feature. Full guide:
+https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games
+
+**1. Table games (multiplayer).** A seated party-games engine — nine games (Battleship, Who's Who:
+Vehicles, Shotgun Roulette, Blackjack, Poker, Chess, Checkers, Rock Paper Scissors, UNO). Players
+walk up to a supported table object, take a seat (up to four), vote for a game and play. Server is
+the authority; each client runs a UI/discovery loop; JIP-safe. Enable in `init.sqf`:
+
+```sqf
+Waldo_MiniGames_Enable = true;             // installs the table engine
+if (Waldo_MiniGames_Enable) then {
+    [] call Waldo_fnc_MiniGamesInit;
+};
+```
+
+Tables are detected by class (`Land_CampingTable_F`, `Land_CampingTable_small_F`,
+`Land_CampingTable_small_white_F`, `Land_TablePlastic_01_F`). Tuning constants (`Waldo_MG_CFG_*`,
+including `Waldo_MG_CFG_TABLE_CLASSES`) live at the top of `MissionScripts/MiniGames/engine/config.sqf`.
+
+**2. Interaction challenges (single-player, generic hook).** Short skill/puzzle games that resolve to
+pass/fail and can gate **any** object interaction. Five ship: `wirecut`, `minesweeper`, `keypad`,
+`lockpick`, `circuit`. They **register themselves on first use**, so they work even with
+`Waldo_MiniGames_Enable = false`.
+
+- `Waldo_fnc_BombDefuseSetup` — ready-made wrapper: adds a "Defuse Bomb" interaction (wire-cut
+  challenge) with detonate-on-failure. `[this] call Waldo_fnc_BombDefuseSetup;` in an object's init
+  field, or pass an options array (`wireCount`, `timeLimit`, `detonateOnFailure`, `explosive`, …).
+- `Waldo_fnc_MiniGameInteraction` — the generic hook: `[object, challengeId, config, onSuccess,
+  onFailure, options]`. Call from the object's **init field** (runs on all machines). The
+  success/failure callbacks run on the **server** (each gets `[object, actor, success]`) so they can
+  drive authoritative outcomes; the challenge plays on the actor's client and reports back.
+- `Waldo_fnc_MiniGameChallenge` — run a challenge standalone (no object) with local callbacks.
+- `Waldo_fnc_MiniGameRegisterChallenge` — add a custom challenge (opener contract `[_config, _resolve]`).
+
+**Architecture.** The table engine is ported from the community composition "Party Games Scripted" by
+|LorÐ|™[Habilidade]Ðeus Ex, rebranded to the internal `Waldo_MG_` namespace (340 runtime functions
+across `engine/config.sqf`, `engine/core.sqf` and `engine/games/*.sqf`, all `#include`-d and installed
+by `Waldo_fnc_MiniGamesInit`). Only the public entry points are `CfgFunctions` entries under
+`class MiniGames`; the engine's `Waldo_MG_fnc_*` functions are defined at runtime by the installer, not
+registered individually. The interaction-challenge framework is original WMP (`Interactions/`). When
+editing: keep engine internals under `Waldo_MG_`/`Waldo_MG_fnc_`; the interaction hook's server
+callbacks must stay server-side; challenge openers must call `_resolve` exactly once.
+
 ---
 
 ## description.ext — Mission Maker Checklist
@@ -436,6 +481,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
 - `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
+- `MiniGames/` — Waldos Mini Games. `miniGamesInit.sqf` (`Waldo_fnc_MiniGamesInit`) installs the seated table-games engine, which lives in `engine/` (`config.sqf`, `core.sqf`, `games/*.sqf` — 340 runtime `Waldo_MG_fnc_*` functions ported from "Party Games Scripted"). `Interactions/` holds the original WMP single-player interaction-challenge framework (generic hook `Waldo_fnc_MiniGameInteraction`, `Waldo_fnc_BombDefuseSetup`, and the `wirecut`/`minesweeper`/`keypad`/`lockpick`/`circuit` challenges)
 - `ThirdPartyScripts/` — Headless client and player marker integrations (disabled by default via commented-out line in `init.sqf`)
 
 ---

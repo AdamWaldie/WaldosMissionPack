@@ -39,6 +39,11 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [— Buy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System) — purchase vehicles, drop points, requirements
 * [— Ground Command & Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools) — permissions, Commitment mode, Export/Import, Purge
 
+## Mini Games & Interaction Challenges
+* [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) — overview & hub: multiplayer table games and single-player interaction challenges
+* [— Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games) — seated multiplayer party games (Battleship, Blackjack, Poker, Chess, UNO and more)
+* [— Interaction Challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) — solo challenges that gate any interaction; bomb defusal, hacking, lockpicking (wire-cut, minesweeper, keypad, lockpick, circuit)
+
 ## Construction & Fortification
 * [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
 * [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup)

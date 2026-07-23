@@ -25,6 +25,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Mission Diagnostics - a read-only server-side config sanity check that warns about the most common WMP misconfigurations at mission start.
 - Custom Zeus Enhanced modules for in-game access to the logistics system, ENDEX & Safestart scripts.
 - Waldos Economy Systems - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus Enhanced module menu (ZEN required for the in-Zeus menu).
+- Waldos Mini Games - seated multiplayer party games (Battleship, Who's Who, Shotgun Roulette, Blackjack, Poker, Chess, Checkers, RPS, UNO) plus a generic interaction-challenge hook: single-player mini games (wire-cut, minesweeper, keypad, lockpick, circuit wiring) that gate any object interaction, with a ready-made bomb defusal wrapper. (Table engine ported from "Party Games Scripted" by |LorÐ|™[Habilidade]Ðeus Ex.)
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
 - Bundled (optional, off by default) third-party scripts - Werthles' Headless Client kit and aeroson's dynamic player markers - wired through a single clean entry point.
