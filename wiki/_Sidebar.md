@@ -44,6 +44,8 @@
     * [ACRE 2 Short Range Radio](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
     * [ACRE 2 Automated CEOI](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Automated-CEOI-Document)
     * [ACRE 2 Babel Autoconfig](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration)
+    * [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming)
+    * [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers)
     * **Miscellaneous**
     * [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics)
     * [Cover / Loading Screen Generation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Cover-Loading-Screen-Generation)

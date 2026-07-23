@@ -90,3 +90,43 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
     },
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Radio Jammer - Place",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenJammerPlace;
+    },
+    "\a3\ui_f\data\map\markers\nato\b_naval_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Radio Jammer - Toggle Nearest",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenJammerToggle;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\interact_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Radio Jammer - Remove Nearest",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenJammerRemove;
+    },
+    "\a3\ui_f\data\map\markers\military\destroy_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "EMP Detonation",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenEMP;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\backpack_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Plant Signal Tracker",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenTracker;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\track_ca.paa"
+] call zen_custom_modules_fnc_register;

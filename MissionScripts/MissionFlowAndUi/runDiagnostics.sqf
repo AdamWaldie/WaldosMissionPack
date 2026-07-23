@@ -130,6 +130,20 @@ if (isClass (configFile >> "CfgPatches" >> "acre_main")) then {
     ];
 };
 
+// 6. Radio jamming --------------------------------------------------------
+// Only meaningful when the jamming feature is enabled (init.sqf sets the flag).
+if (missionNamespace getVariable ["Waldo_Jamming_Enable", false]) then {
+    private _acre = isClass (configFile >> "CfgPatches" >> "acre_main");
+    private _tfar = isClass (configFile >> "CfgPatches" >> "task_force_radio")
+        || isClass (configFile >> "CfgPatches" >> "tfar_core");
+    if (!_acre && {!_tfar}) then {
+        ["WARN", "Radio jamming is enabled but neither ACRE2 nor TFAR is loaded - jamming will do nothing."] call _log;
+        _warnings = _warnings + 1;
+    } else {
+        ["INFO", format ["Radio jamming enabled (ACRE2: %1, TFAR: %2). ACRE2 needs the LOS Multipath or Arcade signal model.", _acre, _tfar]] call _log;
+    };
+};
+
 // Summary -----------------------------------------------------------------
 if (_warnings == 0) then {
     ["INFO", "Diagnostics complete - no configuration issues detected."] call _log;
