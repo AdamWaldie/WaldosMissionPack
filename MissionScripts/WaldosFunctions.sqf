@@ -176,6 +176,36 @@ class CfgFunctions
             class JammingHud {
                 file = "MissionScripts\MissionInit\Jamming\jammingHud.sqf";
             };
+            class JammingUavServer {
+                file = "MissionScripts\MissionInit\Jamming\jammingUavServer.sqf";
+            };
+            class JammingUavClient {
+                file = "MissionScripts\MissionInit\Jamming\jammingUavClient.sqf";
+            };
+        };
+        class ElectronicWarfare
+        {
+            class EMP {
+                file = "MissionScripts\MissionInit\ElectronicWarfare\emp.sqf";
+            };
+            class EMPApply {
+                file = "MissionScripts\MissionInit\ElectronicWarfare\empApply.sqf";
+            };
+            class EMPImmune {
+                file = "MissionScripts\MissionInit\ElectronicWarfare\empImmune.sqf";
+            };
+            class Tracker {
+                file = "MissionScripts\MissionInit\ElectronicWarfare\tracker.sqf";
+            };
+            class TrackerRemove {
+                file = "MissionScripts\MissionInit\ElectronicWarfare\trackerRemove.sqf";
+            };
+            class TrackerRender {
+                file = "MissionScripts\MissionInit\ElectronicWarfare\trackerRender.sqf";
+            };
+            class TrackerAttach {
+                file = "MissionScripts\MissionInit\ElectronicWarfare\trackerAttach.sqf";
+            };
         };
         class Tasks
         {
@@ -303,6 +333,12 @@ class CfgFunctions
             };
             class ZenJammerRemove {
                 file = "MissionScripts\ZenModules\Zen_jammerRemoveModule.sqf";
+            };
+            class ZenEMP {
+                file = "MissionScripts\ZenModules\Zen_empModule.sqf";
+            };
+            class ZenTracker {
+                file = "MissionScripts\ZenModules\Zen_trackerModule.sqf";
             };
         };
         class Paradrop {

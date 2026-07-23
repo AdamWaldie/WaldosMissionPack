@@ -62,4 +62,11 @@ Three modules drive the [Radio Jamming](https://github.com/AdamWaldie/WaldosMiss
 * **Radio Jammer - Toggle Nearest** — flips the nearest jammer on or off (no dialog).
 * **Radio Jammer - Remove Nearest** — removes the nearest jammer and deletes its emitter.
 
-See the [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) page for the full scripting API and the ACRE2 signal-model requirement.
+The Place dialog also offers a directional **cone**, **pulsing**, and an **also jam UAVs / drones** option (counter-UAS). See the [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) page for the full scripting API and the ACRE2 signal-model requirement.
+
+# EMP & Signal Tracker Modules
+
+Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers) page):
+
+* **EMP Detonation** — a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
+* **Plant Signal Tracker** — tags the nearest unit or vehicle so a chosen side follows it live on the map (hidden from the tracked side).

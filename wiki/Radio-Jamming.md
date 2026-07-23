@@ -60,8 +60,23 @@ Want more control? The full form is:
 | 7 | createMarker | Bool | `false` | Place a red "Radio Jammer" map marker on it. |
 | 8 | sector | Array | `[]` | `[]` = omnidirectional, or `[bearing, arc]` for a directional cone facing `bearing` degrees, `arc` degrees wide. |
 | 9 | duty | Array | `[]` | `[]` = constant, or `[onSec, offSec]` to pulse the jammer on and off. |
+| 10 | jamUAV | Bool | `false` | Also jam UAVs/drones in the field (see below). |
 
 `Waldo_fnc_Jammer` returns a numeric **jammer id** you can keep to toggle or remove it later. Calling it again on the same object updates that jammer in place (it never stacks).
+
+## UAV / drone jamming (counter-UAS)
+
+Set the **jamUAV** flag (param 10, or the "Also Jam UAVs / Drones" checkbox in the Zeus module) and the field becomes counter-drone as well as anti-radio:
+
+* **Autonomous drones** inside the field have their AI frozen — they stop flying/driving and hunting, and can be slipped past.
+* **Player-controlled drones** get a **degrading video feed** as the operator flies into the field, and at near-total jamming the **datalink is cut** and the terminal disconnects.
+
+```sqf
+// A 400 m counter-UAS bubble that jams radios AND drones for everyone:
+[this, 400, "ALL", "ALL", 50, 1, true, true, [], [], true] call Waldo_fnc_Jammer;
+```
+
+Just like the radio HUD, UAV jamming is **loud on purpose** — the operator sees a persistent blinking **"UAV LINK JAMMED — not a game bug"** banner and a clear "datalink lost" message, so a frozen or disconnected drone is never written off as one of Arma's UAV glitches. Because it is just a flag on a jammer, the same Toggle/Disable ACE actions, Zeus toggle/remove modules and RDF scan apply to it.
 
 ## The jamming model (global toggles in `init.sqf`)
 
@@ -110,7 +125,7 @@ Three modules live under **Modules → Waldos Mission Modules** (Zeus Enhanced r
 
 | Module | Action |
 |---|---|
-| **Radio Jammer - Place** | Opens a dialog — radius, falloff, strength, affected side, **cone arc + bearing** (arc 360 = omni), **pulsing** and map marker — then spawns an emitter and switches the jammer on. |
+| **Radio Jammer - Place** | Opens a dialog — radius, falloff, strength, affected side, **cone arc + bearing** (arc 360 = omni), **pulsing**, **also jam UAVs** and map marker — then spawns an emitter and switches the jammer on. |
 | **Radio Jammer - Toggle Nearest** | Flips the nearest jammer on/off. |
 | **Radio Jammer - Remove Nearest** | Removes the nearest jammer and deletes its object. |
 

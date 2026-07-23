@@ -204,10 +204,12 @@ Placing jammers (any of these):
 [this] call Waldo_fnc_Jammer;                         // 300 m, jams everyone, all bands
 [this, 500, "EAST"] call Waldo_fnc_Jammer;            // 500 m, jams OPFOR only
 // From a trigger / script (full params):
-[myTower, 800, "ALL", [[30, 88]], 50, 1, true, true, [90, 60], [4, 2]] call Waldo_fnc_Jammer;
-// params: [object, radius, affectedSides, bands, falloff, strength, active, createMarker, sector, duty]
+[myTower, 800, "ALL", [[30, 88]], 50, 1, true, true, [90, 60], [4, 2], true] call Waldo_fnc_Jammer;
+// params: [object, radius, affectedSides, bands, falloff, strength, active, createMarker, sector, duty, jamUAV]
 ```
-`affectedSides`: `"ALL"`, a side, or an array — accepts sides or strings (`"WEST"/"BLUFOR"`, `"EAST"/"OPFOR"`, `"IND"/"INDFOR"`, `"CIV"/"CIVILIAN"`). `bands`: `"ALL"` or an array of `[minMHz, maxMHz]` ranges (**ACRE2 only** — TFAR jamming is always broadband). `sector`: `[]` for omni or `[bearing, arc]` for a directional cone. `duty`: `[]` for constant or `[onSec, offSec]` to pulse. `Waldo_fnc_Jammer` returns a numeric jammer id.
+`affectedSides`: `"ALL"`, a side, or an array — accepts sides or strings (`"WEST"/"BLUFOR"`, `"EAST"/"OPFOR"`, `"IND"/"INDFOR"`, `"CIV"/"CIVILIAN"`). `bands`: `"ALL"` or an array of `[minMHz, maxMHz]` ranges (**ACRE2 only** — TFAR jamming is always broadband). `sector`: `[]` for omni or `[bearing, arc]` for a directional cone. `duty`: `[]` for constant or `[onSec, offSec]` to pulse. `jamUAV`: also jam drones in the field. `Waldo_fnc_Jammer` returns a numeric jammer id.
+
+**UAV / UGV jamming** (`jamUAV = true`): drones inside the field are jammed too — the server freezes autonomous drones' AI (`Waldo_fnc_JammingUavServer`), and a controlling player's client (`Waldo_fnc_JammingUavClient`) degrades the video feed as the link weakens and severs the terminal link at near-total jamming. It carries the **same loud feedback** as radio jamming: a persistent "UAV LINK JAMMED — not a game bug" HUD banner (IDC 5311) and a clear "datalink lost" message, so a jammed drone is never mistaken for an Arma UAV bug.
 
 **Jamming model** (global toggles in `init.sqf`, read by `Waldo_fnc_JammingFactor`):
 
@@ -237,9 +239,30 @@ Waldo_Jamming_Enable = true;                                          // false =
 missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];    // on-screen "radio jammed" prompt
 ```
 
-**ACRE2 requirement:** the ACRE2 signal model must be **LOS Multipath** (the default) or **Arcade** — ACRE2 does not call the custom signal hook under *LOS Simple*. The jamming model is receiver-oriented and symmetric: a link is degraded when **either** endpoint (the receiving or transmitting radio) sits inside an active field affecting the local player's side and matching the band. Implemented in `MissionScripts/MissionInit/Jamming/` (`Waldo_fnc_JammingInit`, `Waldo_fnc_Jammer`, `Waldo_fnc_JammerToggle`, `Waldo_fnc_JammerRemove`, `Waldo_fnc_JammingFactor`, `Waldo_fnc_JammingAcreSignal`, `Waldo_fnc_JammingTfarLoop`, `Waldo_fnc_JammerInteraction`, `Waldo_fnc_JammerScan`, `Waldo_fnc_JammerMapDraw`, `Waldo_fnc_JammingHud`).
+**ACRE2 requirement:** the ACRE2 signal model must be **LOS Multipath** (the default) or **Arcade** — ACRE2 does not call the custom signal hook under *LOS Simple*. The jamming model is receiver-oriented and symmetric: a link is degraded when **either** endpoint (the receiving or transmitting radio) sits inside an active field affecting the local player's side and matching the band. Implemented in `MissionScripts/MissionInit/Jamming/` (`Waldo_fnc_JammingInit`, `Waldo_fnc_Jammer`, `Waldo_fnc_JammerToggle`, `Waldo_fnc_JammerRemove`, `Waldo_fnc_JammingFactor`, `Waldo_fnc_JammingAcreSignal`, `Waldo_fnc_JammingTfarLoop`, `Waldo_fnc_JammingUavServer`, `Waldo_fnc_JammingUavClient`, `Waldo_fnc_JammerInteraction`, `Waldo_fnc_JammerScan`, `Waldo_fnc_JammerMapDraw`, `Waldo_fnc_JammingHud`).
 
-Zeus ("Waldos Mission Modules"): **Radio Jammer - Place** (dialog: radius / falloff / strength / affected side / cone arc + bearing / pulsing / marker), **Radio Jammer - Toggle Nearest**, **Radio Jammer - Remove Nearest**.
+Zeus ("Waldos Mission Modules"): **Radio Jammer - Place** (dialog: radius / falloff / strength / affected side / cone arc + bearing / pulsing / jam UAVs / marker), **Radio Jammer - Toggle Nearest**, **Radio Jammer - Remove Nearest**.
+
+### EMP Burst (`Waldo_fnc_EMP`)
+
+A one-shot electromagnetic pulse — an area electronics kill, the offensive counterpart to the (persistent) jammer. Server-authoritative; because it fires once and reverts on a timer it runs **no polling loops**, so it is free to leave available.
+
+```sqf
+[getPosATL myObject, 200, 30] call Waldo_fnc_EMP;   // [position, radius(m), duration(s)]
+[commandVehicle] call Waldo_fnc_EMPImmune;          // exempt a unit/vehicle (occupants inherit)
+```
+Effects in radius (non-immune): infantry lose NVGs and (TFAR) radio use for the duration; vehicles have their engine cut (fuel drained, restored after); every affected **player** gets a white-out flash and an explicit "EMP DETONATION — electronics down" message. Applied per-entity on its owning machine via `Waldo_fnc_EMPApply`. Zeus: **EMP Detonation** (dialog: radius / duration). Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
+
+### Signal Trackers — C-Track (`Waldo_fnc_Tracker`)
+
+Plant a tracker on a unit or vehicle and a chosen side follows it live on the map — electronic recon. Server-authoritative registry (`Waldo_Tracker_Registry`, JIP-safe) with a light server prune loop that drops trackers whose target dies; markers are drawn **locally** on each tracking client (`Waldo_fnc_TrackerRender`) so they stay hidden from the tracked side.
+
+```sqf
+[enemyTruck, west, "Convoy Lead"] call Waldo_fnc_Tracker;   // [target, trackingSide, label]
+[cursorTarget] call Waldo_fnc_TrackerAttach;                // plant on what you're looking at (your side)
+[enemyTruck] call Waldo_fnc_TrackerRemove;                  // remove
+```
+Players get an ACE **Plant Signal Tracker** action on units and vehicles; Zeus gets a **Plant Signal Tracker** module (attaches to the nearest unit, tracked by a chosen side). Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
 
 ### MHQ / Mobile Command Post (Eden Editor)
 
@@ -479,7 +502,8 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 ## MissionScripts Directory Layout
 
 - `MissionInit/` — ACRE2 radio setup, vehicle action setup, team colour helpers, briefing document templates
-- `MissionInit/Jamming/` — Localised radio jamming for ACRE2 & TFAR (registry, create/toggle/remove, per-mod engines, shared factor helper)
+- `MissionInit/Jamming/` — Localised radio jamming for ACRE2 & TFAR (registry, create/toggle/remove, per-mod engines, UAV jamming, shared factor helper, EW toolkit + feedback HUD)
+- `MissionInit/ElectronicWarfare/` — EMP burst (`Waldo_fnc_EMP`) and signal trackers / C-Track (`Waldo_fnc_Tracker`)
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
 - `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
@@ -690,9 +714,11 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Safestart - Activate → `[true] remoteExec ["Waldo_fnc_SafeStart", 2]`
 - Safestart - Go Live (Lift) → `[false] remoteExec ["Waldo_fnc_SafeStart", 2]`
 - Safestart - Start Go-Live Countdown → calls `Waldo_fnc_ZenSafeStartTimer` (prompts for minutes, then `Waldo_fnc_SafeStartTimer`)
-- Radio Jammer - Place → calls `Waldo_fnc_ZenJammerPlace` (dialog: radius / falloff / strength / affected side / marker; spawns an emitter and registers it via `Waldo_fnc_Jammer`)
+- Radio Jammer - Place → calls `Waldo_fnc_ZenJammerPlace` (dialog: radius / falloff / strength / affected side / cone / pulsing / jam UAVs / marker; spawns an emitter and registers it via `Waldo_fnc_Jammer`)
 - Radio Jammer - Toggle Nearest → calls `Waldo_fnc_ZenJammerToggle` (flips the nearest jammer on/off)
 - Radio Jammer - Remove Nearest → calls `Waldo_fnc_ZenJammerRemove` (removes + deletes the nearest jammer)
+- EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
+- Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 
 ---
 

@@ -222,7 +222,9 @@ missionNamespace setVariable ["Waldo_Jamming_GmOverlay", true, true];  // curato
 missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF scan detection range (m)
 ```
 
-On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) for the full API.
+On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) for the full API.
+
+The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers).
 
 ### Introduction Text
 

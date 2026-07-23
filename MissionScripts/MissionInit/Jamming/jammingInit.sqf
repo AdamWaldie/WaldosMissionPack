@@ -17,19 +17,32 @@
  * [] call Waldo_fnc_JammingInit;   // called from init.sqf when Waldo_Jamming_Enable is true
  */
 
+// Server authority for UAV/UGV jamming (freezes autonomous drones in a UAV-jamming field).
+if (isServer) then {
+    [] call Waldo_fnc_JammingUavServer;
+};
+
 if !(hasInterface) exitWith {};
 
 // Install the radio engines (each self-guards on its mod being present).
 [] call Waldo_fnc_JammingAcreSignal;
 [] call Waldo_fnc_JammingTfarLoop;
 
+// Local UAV datalink jamming (disconnects a controlled drone + feed degrade + HUD).
+[] call Waldo_fnc_JammingUavClient;
+
 // Game-master 3D overlay (curators only).
 [] call Waldo_fnc_JammerMapDraw;
 
-// Handheld RDF detector as an ACE self-interaction.
+// Signal tracker map rendering (side-restricted local markers).
+[] call Waldo_fnc_TrackerRender;
+
+// ACE interactions: handheld RDF detector + "plant tracker" on units and vehicles.
 if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
     if !(missionNamespace getVariable ["Waldo_Jamming_ScanActionAdded", false]) then {
         missionNamespace setVariable ["Waldo_Jamming_ScanActionAdded", true];
+
+        // Handheld RDF detector as an ACE self-interaction.
         private _scan = [
             "Waldo_Jammer_Scan",
             "Scan for Radio Jammers",
@@ -38,6 +51,23 @@ if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
             { (count (missionNamespace getVariable ["Waldo_Jamming_Registry", []])) > 0 }
         ] call ace_interact_menu_fnc_createAction;
         [player, 1, ["ACE_SelfActions"], _scan] call ace_interact_menu_fnc_addActionToObject;
+
+        // "Plant Signal Tracker" on any unit or vehicle you can reach.
+        private _plant = [
+            "Waldo_Tracker_Plant",
+            "Plant Signal Tracker",
+            "\a3\ui_f\data\igui\cfg\simpletasks\types\track_ca.paa",
+            {
+                params ["_target", "_player"];
+                [_target] call Waldo_fnc_TrackerAttach;
+            },
+            {
+                params ["_target", "_player"];
+                !isNull _target && {_target != _player} && {alive _target}
+            }
+        ] call ace_interact_menu_fnc_createAction;
+        ["CAManBase", 0, ["ACE_MainActions"], _plant] call ace_interact_menu_fnc_addActionToClass;
+        ["AllVehicles", 0, ["ACE_MainActions"], _plant] call ace_interact_menu_fnc_addActionToClass;
     };
 };
 

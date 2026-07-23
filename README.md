@@ -15,7 +15,8 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 # Pack Features
 - Loadout saving and respawn system
 - Automatic ACRE2 Radio setup and respawn handling - based on mission makers specification in init.sqf
-- Localised Radio Jamming for ACRE2 & TFAR - drop a jammer object (or place one live from Zeus) to deny comms in an area. Terrain line-of-sight, radio-power burn-through, directional cones, pulsing, per-side and (ACRE2) per-band control; destructible jammers for "blow the tower" objectives, ACE toggle/disable actions and a handheld RDF scanner for EW teams, plus a deliberately loud on-screen jamming HUD so it's never mistaken for a game bug.
+- Localised Radio Jamming for ACRE2 & TFAR - drop a jammer object (or place one live from Zeus) to deny comms in an area. Terrain line-of-sight, radio-power burn-through, directional cones, pulsing, per-side and (ACRE2) per-band control; optional UAV/drone jamming (freeze autonomous drones, cut controlling players' datalinks); destructible jammers for "blow the tower" objectives, ACE toggle/disable actions and a handheld RDF scanner for EW teams, plus a deliberately loud on-screen jamming HUD so it's never mistaken for a game bug.
+- Electronic Warfare toolkit - a one-shot EMP burst (kills NVGs, vehicle engines and TFAR radios in a radius, with an immunity tag) and C-Track style signal trackers (tag a unit/vehicle and a chosen side follows it live on the map). Both scriptable and available as Zeus modules.
 - Custom loadout & logistics system which scrapes the kits of all playable characters to fulfil base logistical needs - such as starter crates and supply crates. (Disable scenario Binarization, and edit loadouts via ACE Arsenal to ensure 100% satisfaction)
 - Vehicle Ambush/Camo scripts.
 - Vehicle unflipping actions

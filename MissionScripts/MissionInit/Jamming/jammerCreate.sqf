@@ -24,6 +24,8 @@
  *      "bearing" degrees with a total width of "arc" degrees (optional, default: [])
  * 9: Duty <ARRAY> - [] for a constant jammer, or [onSeconds, offSeconds] to pulse it on and off
  *      (optional, default: [])
+ * 10: Jam UAVs <BOOL> - also jam drones/UGVs in the field (freeze autonomous ones, cut controlling
+ *      players' datalinks) as well as radios (optional, default: false)
  *
  * Return Value:
  * Number <NUMBER> - the jammer id (server side); -1 when forwarded from a client
@@ -47,7 +49,8 @@ params [
     ["_active", true, [false]],
     ["_marker", false, [false]],
     ["_sector", [], [[]]],
-    ["_duty", [], [[]]]
+    ["_duty", [], [[]]],
+    ["_jamUAV", false, [false]]
 ];
 
 if (isNull _object) exitWith {
@@ -130,7 +133,7 @@ if (_marker) then {
     };
 };
 
-private _entry = [_id, _object, _radius, _falloff, _sidesN, _bandsN, _strength, _active, _markerName, _sectorN, _dutyN];
+private _entry = [_id, _object, _radius, _falloff, _sidesN, _bandsN, _strength, _active, _markerName, _sectorN, _dutyN, _jamUAV];
 
 // Replace an existing entry for this id, else append.
 private _registry = missionNamespace getVariable ["Waldo_Jamming_Registry", []];

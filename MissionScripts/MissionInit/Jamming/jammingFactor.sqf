@@ -23,15 +23,18 @@
  * 1: Side <SIDE> - the side of the receiver being tested (for the affected-sides filter)
  * 2: Frequency <NUMBER> - MHz to test against jammer bands, or -1 to ignore bands (optional, default: -1)
  * 3: Radio power <NUMBER> - transmit power in mW for burn-through, or -1 to skip it (optional, default: -1)
+ * 4: UAV mode <BOOL> - true = only count jammers flagged to jam UAVs, and ignore band/burn-through
+ *                      (drones are not radios) (optional, default: false)
  *
  * Return Value:
  * Number <NUMBER> - strongest jamming factor at this point, 0..1
  *
  * Example:
  * private _jam = [getPosASL player, side player, 45, 5000] call Waldo_fnc_JammingFactor;
+ * private _uavJam = [getPosASL _drone, side _drone, -1, -1, true] call Waldo_fnc_JammingFactor;
  */
 
-params ["_pos", "_side", ["_freq", -1], ["_power", -1]];
+params ["_pos", "_side", ["_freq", -1], ["_power", -1], ["_uavMode", false]];
 
 private _registry = missionNamespace getVariable ["Waldo_Jamming_Registry", []];
 if (_registry isEqualTo []) exitWith { 0 };
@@ -47,9 +50,12 @@ private _now = serverTime;
 private _max = 0;
 
 {
-    _x params ["_id", "_obj", "_radius", "_falloff", "_sides", "_bands", "_strength", "_active", "_mk", ["_sector", []], ["_duty", []]];
+    _x params ["_id", "_obj", "_radius", "_falloff", "_sides", "_bands", "_strength", "_active", "_mk", ["_sector", []], ["_duty", []], ["_jamUAV", false]];
 
     private _skip = !(_active) || {isNull _obj};
+
+    // UAV mode only counts jammers explicitly set to jam drones; radio mode counts all jammers.
+    if (!_skip && {_uavMode} && {!_jamUAV}) then { _skip = true; };
 
     // Duty cycle: only jam during the "on" slice of the on/off period.
     if (!_skip && {_duty isEqualType []} && {count _duty == 2}) then {
