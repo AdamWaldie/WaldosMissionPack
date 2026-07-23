@@ -22,6 +22,7 @@
     * [Vehicle Ambush & Camo](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Ambush-Script-And-Vehicle-Camo)
     * [Teleportation & Move Into Cargo](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions)
     * [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name)
+    * [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps)
     * **Economy, Research & Base Building**
     * [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems)
     * [— Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)

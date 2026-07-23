@@ -39,6 +39,9 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [— Buy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System) — purchase vehicles, drop points, requirements
 * [— Ground Command & Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools) — permissions, Commitment mode, Export/Import, Purge
 
+## ACE Corpse Traps
+* [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps) - conceal a carried throwable on a corpse and trigger it when the inventory is opened
+
 ## Construction & Fortification
 * [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
 * [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup)
