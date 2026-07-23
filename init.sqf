@@ -183,10 +183,27 @@ apply. Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Ja
 
 The feature installs its radio engines only while enabled; with no jammers placed it has no effect.
 Set Waldo_Jamming_Enable to false to disable it entirely; Waldo_Jamming_Notify controls the on-screen
-"radio jammed" prompt players see when they enter a field.
+jamming meter players see when they enter a field.
+
+Model options (tune the realism/gameplay to taste):
+- Waldo_Jamming_LOS            true  = terrain/hills block the jamming field (line of sight)
+- Waldo_Jamming_BurnThrough    true  = higher-power radios (e.g. PRC-117F) resist jamming, shrinking
+                                       the effective field; Waldo_Jamming_BurnThroughRef is the mW
+                                       reference power (a radio at this power is fully affected)
+- Waldo_Jamming_Curve          "LINEAR" or "INVSQ" edge falloff
+- Waldo_Jamming_Destructible   true  = destroying a jammer's object removes it (EW objectives)
+- Waldo_Jamming_GmOverlay      true  = curators see a floating marker over each jammer
+- Waldo_Jamming_ScanRange      detection range (m) of the handheld RDF "Scan for Radio Jammers" action
 */
 Waldo_Jamming_Enable = true;
 missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];
+missionNamespace setVariable ["Waldo_Jamming_LOS", true, true];
+missionNamespace setVariable ["Waldo_Jamming_BurnThrough", true, true];
+missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
+missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];
+missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];
+missionNamespace setVariable ["Waldo_Jamming_GmOverlay", true, true];
+missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];
 if (Waldo_Jamming_Enable) then {
     missionNamespace setVariable ["Waldo_Jamming_Enable", true, true];
     [] call Waldo_fnc_JammingInit;

@@ -204,10 +204,26 @@ Placing jammers (any of these):
 [this] call Waldo_fnc_Jammer;                         // 300 m, jams everyone, all bands
 [this, 500, "EAST"] call Waldo_fnc_Jammer;            // 500 m, jams OPFOR only
 // From a trigger / script (full params):
-[myTower, 800, "ALL", [[30, 88]], 50, 1, true, true] call Waldo_fnc_Jammer;
-// params: [object, radius, affectedSides, bands, falloff, strength, active, createMarker]
+[myTower, 800, "ALL", [[30, 88]], 50, 1, true, true, [90, 60], [4, 2]] call Waldo_fnc_Jammer;
+// params: [object, radius, affectedSides, bands, falloff, strength, active, createMarker, sector, duty]
 ```
-`affectedSides`: `"ALL"`, a side, or an array — accepts sides or strings (`"WEST"/"BLUFOR"`, `"EAST"/"OPFOR"`, `"IND"/"INDFOR"`, `"CIV"/"CIVILIAN"`). `bands`: `"ALL"` or an array of `[minMHz, maxMHz]` ranges (**ACRE2 only** — TFAR jamming is always broadband). `Waldo_fnc_Jammer` returns a numeric jammer id.
+`affectedSides`: `"ALL"`, a side, or an array — accepts sides or strings (`"WEST"/"BLUFOR"`, `"EAST"/"OPFOR"`, `"IND"/"INDFOR"`, `"CIV"/"CIVILIAN"`). `bands`: `"ALL"` or an array of `[minMHz, maxMHz]` ranges (**ACRE2 only** — TFAR jamming is always broadband). `sector`: `[]` for omni or `[bearing, arc]` for a directional cone. `duty`: `[]` for constant or `[onSec, offSec]` to pulse. `Waldo_fnc_Jammer` returns a numeric jammer id.
+
+**Jamming model** (global toggles in `init.sqf`, read by `Waldo_fnc_JammingFactor`):
+
+| Flag | Default | Effect |
+|---|---|---|
+| `Waldo_Jamming_LOS` | `true` | Terrain/hills between jammer and radio block the field (`terrainIntersectASL`). |
+| `Waldo_Jamming_BurnThrough` | `true` | Higher-power radios resist jamming — the effective radius shrinks by `(power/ref)^0.35`. |
+| `Waldo_Jamming_BurnThroughRef` | `500` | Reference radio power (mW); a radio at this power is fully affected. |
+| `Waldo_Jamming_Curve` | `"LINEAR"` | Edge falloff shape: `"LINEAR"` or `"INVSQ"`. |
+| `Waldo_Jamming_Destructible` | `true` | Destroying a jammer's object auto-deregisters it (EW objectives for free). |
+| `Waldo_Jamming_GmOverlay` | `true` | Curators see a Draw3D marker/facing-line over each jammer. |
+| `Waldo_Jamming_ScanRange` | `3000` | Detection range (m) of the handheld RDF ACE self-action. |
+
+**EW toolkit (players):** every jammer object gets ACE actions **Toggle Radio Jammer** (anyone) and **Disable Radio Jammer** (engineers — destroys it); every player gets an ACE self-action **Scan for Radio Jammers** (`Waldo_fnc_JammerScan`) that reports bearing / coarse range / strength to the nearest active emitter for RDF hunting.
+
+**Feedback:** while jammed the player sees a persistent, blinking HUD banner on the main display (IDC 5310, `Waldo_fnc_JammingHud`) that other hints can't overwrite, a strength %, and an explicit "not a game bug" line, backed by an entry banner and a periodic chat reminder — deliberately unmistakable, because Arma radio bugs otherwise look identical to jamming.
 
 Managing jammers later (server-authoritative; `ref` = the jammer object or its id):
 ```sqf
@@ -221,9 +237,9 @@ Waldo_Jamming_Enable = true;                                          // false =
 missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];    // on-screen "radio jammed" prompt
 ```
 
-**ACRE2 requirement:** the ACRE2 signal model must be **LOS Multipath** (the default) or **Arcade** — ACRE2 does not call the custom signal hook under *LOS Simple*. The jamming model is receiver-oriented and symmetric: a link is degraded when **either** endpoint (the receiving or transmitting radio) sits inside an active field affecting the local player's side and matching the band. Implemented in `MissionScripts/MissionInit/Jamming/` (`Waldo_fnc_JammingInit`, `Waldo_fnc_Jammer`, `Waldo_fnc_JammerToggle`, `Waldo_fnc_JammerRemove`, `Waldo_fnc_JammingFactor`, `Waldo_fnc_JammingAcreSignal`, `Waldo_fnc_JammingTfarLoop`).
+**ACRE2 requirement:** the ACRE2 signal model must be **LOS Multipath** (the default) or **Arcade** — ACRE2 does not call the custom signal hook under *LOS Simple*. The jamming model is receiver-oriented and symmetric: a link is degraded when **either** endpoint (the receiving or transmitting radio) sits inside an active field affecting the local player's side and matching the band. Implemented in `MissionScripts/MissionInit/Jamming/` (`Waldo_fnc_JammingInit`, `Waldo_fnc_Jammer`, `Waldo_fnc_JammerToggle`, `Waldo_fnc_JammerRemove`, `Waldo_fnc_JammingFactor`, `Waldo_fnc_JammingAcreSignal`, `Waldo_fnc_JammingTfarLoop`, `Waldo_fnc_JammerInteraction`, `Waldo_fnc_JammerScan`, `Waldo_fnc_JammerMapDraw`, `Waldo_fnc_JammingHud`).
 
-Zeus ("Waldos Mission Modules"): **Radio Jammer - Place** (dialog: radius / falloff / strength / affected side / marker), **Radio Jammer - Toggle Nearest**, **Radio Jammer - Remove Nearest**.
+Zeus ("Waldos Mission Modules"): **Radio Jammer - Place** (dialog: radius / falloff / strength / affected side / cone arc + bearing / pulsing / marker), **Radio Jammer - Toggle Nearest**, **Radio Jammer - Remove Nearest**.
 
 ### MHQ / Mobile Command Post (Eden Editor)
 

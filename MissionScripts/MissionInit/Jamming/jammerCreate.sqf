@@ -20,6 +20,10 @@
  * 5: Strength <NUMBER> - jamming strength at full effect, 0..1 (optional, default: 1)
  * 6: Active <BOOL> - start switched on (optional, default: true)
  * 7: Create marker <BOOL> - place a map marker on the jammer (optional, default: false)
+ * 8: Sector <ARRAY> - [] for omnidirectional, or [bearing, arc] for a directional cone facing
+ *      "bearing" degrees with a total width of "arc" degrees (optional, default: [])
+ * 9: Duty <ARRAY> - [] for a constant jammer, or [onSeconds, offSeconds] to pulse it on and off
+ *      (optional, default: [])
  *
  * Return Value:
  * Number <NUMBER> - the jammer id (server side); -1 when forwarded from a client
@@ -29,6 +33,8 @@
  * [this] call Waldo_fnc_Jammer;
  * // A 500 m jammer that only jams OPFOR, on the 30-88 MHz band, with a map marker:
  * [this, 500, "EAST", [[30, 88]], 50, 1, true, true] call Waldo_fnc_Jammer;
+ * // An 800 m cone facing 090 deg, 60 deg wide, pulsing 4s on / 2s off:
+ * [this, 800, "ALL", "ALL", 50, 1, true, true, [90, 60], [4, 2]] call Waldo_fnc_Jammer;
  */
 
 params [
@@ -39,7 +45,9 @@ params [
     ["_falloff", 50, [0]],
     ["_strength", 1, [0]],
     ["_active", true, [false]],
-    ["_marker", false, [false]]
+    ["_marker", false, [false]],
+    ["_sector", [], [[]]],
+    ["_duty", [], [[]]]
 ];
 
 if (isNull _object) exitWith {
@@ -84,6 +92,22 @@ if !(_bands isEqualType "" && {toUpper _bands == "ALL"}) then {
     if (_raw isEqualType [] && {count _raw > 0}) then { _bandsN = _raw; } else { _bandsN = "ALL"; };
 };
 
+// Normalise the directional sector: [] omni, or a valid [bearing, arc].
+private _sectorN = [];
+if (_sector isEqualType [] && {count _sector == 2}) then {
+    private _b = (_sector select 0) % 360;
+    private _a = (_sector select 1) max 0;
+    if (_a > 0 && {_a < 360}) then { _sectorN = [_b, _a]; };
+};
+
+// Normalise the duty cycle: [] constant, or a valid [on, off] with a positive period.
+private _dutyN = [];
+if (_duty isEqualType [] && {count _duty == 2}) then {
+    private _onT = (_duty select 0) max 0;
+    private _offT = (_duty select 1) max 0;
+    if ((_onT + _offT) > 0 && {_offT > 0}) then { _dutyN = [_onT, _offT]; };
+};
+
 // Clamp strength into a sane range.
 _strength = (_strength max 0) min 1;
 
@@ -106,11 +130,12 @@ if (_marker) then {
     };
 };
 
-private _entry = [_id, _object, _radius, _falloff, _sidesN, _bandsN, _strength, _active, _markerName];
+private _entry = [_id, _object, _radius, _falloff, _sidesN, _bandsN, _strength, _active, _markerName, _sectorN, _dutyN];
 
 // Replace an existing entry for this id, else append.
 private _registry = missionNamespace getVariable ["Waldo_Jamming_Registry", []];
 private _idx = _registry findIf { (_x select 0) == _id };
+private _isNew = _idx < 0;
 if (_idx >= 0) then {
     // Preserve any marker created previously if this call did not make one.
     if (_markerName == "") then { _entry set [8, (_registry select _idx) select 8]; };
@@ -120,6 +145,19 @@ if (_idx >= 0) then {
 };
 missionNamespace setVariable ["Waldo_Jamming_Registry", _registry, true];
 
-diag_log format ["[WMP JAM] Jammer %1 registered: radius=%2 falloff=%3 sides=%4 active=%5", _id, _radius, _falloff, _sidesN, _active];
+// Destructible jammers: auto-deregister when the emitter is destroyed (EW objectives for free).
+if (_isNew && {missionNamespace getVariable ["Waldo_Jamming_Destructible", true]}) then {
+    _object addEventHandler ["Killed", {
+        params ["_deadObj"];
+        [_deadObj] call Waldo_fnc_JammerRemove;
+    }];
+};
+
+// Install the player ACE interaction (toggle / detonate) on every machine for this emitter.
+if (_isNew) then {
+    [_object] remoteExec ["Waldo_fnc_JammerInteraction", 0, true];
+};
+
+diag_log format ["[WMP JAM] Jammer %1 registered: radius=%2 falloff=%3 sides=%4 sector=%5 duty=%6 active=%7", _id, _radius, _falloff, _sidesN, _sectorN, _dutyN, _active];
 
 _id

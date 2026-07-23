@@ -58,7 +58,7 @@ Below is an example of the custom mission end screen:
 
 Three modules drive the [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) system live in-game (works with ACRE2 and TFAR):
 
-* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams and whether to drop a **map marker**, then spawns an emitter at the module position and switches it on. The emitter is added to the curator so it can be dragged or deleted like any Zeus object.
+* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing** (arc 360 = omnidirectional), whether it **pulses**, and whether to drop a **map marker**, then spawns an emitter at the module position and switches it on. The emitter is added to the curator so it can be dragged or deleted like any Zeus object.
 * **Radio Jammer - Toggle Nearest** — flips the nearest jammer on or off (no dialog).
 * **Radio Jammer - Remove Nearest** — removes the nearest jammer and deletes its emitter.
 

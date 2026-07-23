@@ -60,11 +60,11 @@ missionNamespace setVariable ["Waldo_Jamming_AcreInstalled", true];
 
         private _f1 = 0;
         if (_rxPos isEqualType [] && {count _rxPos >= 3}) then {
-            _f1 = [_rxPos, _sidePlayer, _freq] call Waldo_fnc_JammingFactor;
+            _f1 = [_rxPos, _sidePlayer, _freq, _power] call Waldo_fnc_JammingFactor;
         };
         private _f2 = 0;
         if (_txPos isEqualType [] && {count _txPos >= 3}) then {
-            _f2 = [_txPos, _sidePlayer, _freq] call Waldo_fnc_JammingFactor;
+            _f2 = [_txPos, _sidePlayer, _freq, _power] call Waldo_fnc_JammingFactor;
         };
 
         private _jam = _f1 max _f2;

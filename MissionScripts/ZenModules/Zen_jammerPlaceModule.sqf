@@ -33,15 +33,23 @@ params ["_modulePos", "_objectPos"];
                 0
             ],
         false],
+        ["SLIDER", ["Cone Arc (deg)", "360 = omnidirectional; less = a directional cone facing the bearing below."], [10, 360, 360, 0], false],
+        ["SLIDER", ["Cone Bearing (deg)", "Compass bearing the cone faces (ignored when arc is 360)."], [0, 359, 0, 0], false],
+        ["CHECKBOX", ["Pulsing (4s on / 2s off)", "Jam intermittently instead of constantly."], false, false],
         ["CHECKBOX", ["Show Map Marker", "Place a map marker on the jammer (visible to curators)."], false, false]
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_marker"];
+        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_arc", "_bearing", "_pulse", "_marker"];
         _pos params ["_modulePos"];
 
+        private _sector = [];
+        if (_arc < 360) then { _sector = [_bearing, _arc]; };
+        private _duty = [];
+        if (_pulse) then { _duty = [4, 2]; };
+
         private _obj = "Land_PowerGenerator_F" createVehicle _modulePos;
-        [_obj, _radius, _sideStr, "ALL", _falloff, (_strengthPct / 100), true, _marker] call Waldo_fnc_Jammer;
+        [_obj, _radius, _sideStr, "ALL", _falloff, (_strengthPct / 100), true, _marker, _sector, _duty] call Waldo_fnc_Jammer;
 
         // Add the emitter to the curator so it can be managed in Zeus.
         [{

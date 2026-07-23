@@ -164,6 +164,18 @@ class CfgFunctions
             class JammingTfarLoop {
                 file = "MissionScripts\MissionInit\Jamming\jammingTfarLoop.sqf";
             };
+            class JammerInteraction {
+                file = "MissionScripts\MissionInit\Jamming\jammerInteraction.sqf";
+            };
+            class JammerScan {
+                file = "MissionScripts\MissionInit\Jamming\jammerScan.sqf";
+            };
+            class JammerMapDraw {
+                file = "MissionScripts\MissionInit\Jamming\jammerMapDraw.sqf";
+            };
+            class JammingHud {
+                file = "MissionScripts\MissionInit\Jamming\jammingHud.sqf";
+            };
         };
         class Tasks
         {
