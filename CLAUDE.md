@@ -412,8 +412,9 @@ route any new world-object creation through the authority the same way.
 Two complementary systems under one feature. Full guide:
 https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games
 
-**1. Table games (multiplayer).** A seated party-games engine — nine games (Battleship, Who's Who:
-Vehicles, Shotgun Roulette, Blackjack, Poker, Chess, Checkers, Rock Paper Scissors, UNO). Players
+**1. Table games (multiplayer).** A seated party-games engine — twelve games (Battleship, Who's Who:
+Vehicles, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers,
+Connect Four, Rock Paper Scissors, UNO). Players
 walk up to a supported table object, take a seat (up to four), vote for a game and play. Server is
 the authority; each client runs a UI/discovery loop; JIP-safe. Enable in `init.sqf`:
 
@@ -477,8 +478,9 @@ accessible Arma controls.
 - `Waldo_fnc_MiniGameEquipmentGallery` — developer visual-review picker for all nine procedures.
 
 **Architecture.** The table engine is ported from the community composition "Party Games Scripted" by
-|LorÐ|™[Habilidade]Ðeus Ex, rebranded to the internal `Waldo_MG_` namespace (340 runtime functions
-across `engine/config.sqf`, `engine/core.sqf` and `engine/games/*.sqf`, all `#include`-d and installed
+|LorÐ|™[Habilidade]Ðeus Ex, rebranded to the internal `Waldo_MG_` namespace. Twelve isolated games
+and the shared server/client engine live across `engine/config.sqf`, `engine/core.sqf` and
+`engine/games/*.sqf`; all are `#include`-d and installed
 by `Waldo_fnc_MiniGamesInit`). Only the public entry points are `CfgFunctions` entries under
 `class MiniGames`; the engine's `Waldo_MG_fnc_*` functions are defined at runtime by the installer, not
 registered individually. The field-equipment framework is original WMP and lives separately under

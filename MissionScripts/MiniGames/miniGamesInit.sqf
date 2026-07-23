@@ -36,7 +36,7 @@ if (!isNull _wmgCompositionHost) then {
     };
 };
 
-Waldo_MG_Version = "1.5.0";
+Waldo_MG_Version = "1.6.0";
 
 private _wmgRuntimeKey = missionNamespace getVariable ["Waldo_MG_RuntimeKeyLocal", []];
 private _wmgRuntimeVersion = _wmgRuntimeKey param [0, ""];
@@ -55,6 +55,9 @@ missionNamespace setVariable ["Waldo_MG_RuntimeKeyLocal", [Waldo_MG_Version, _wm
     #include "engine\games\checkers.sqf"
     #include "engine\games\chess.sqf"
     #include "engine\games\poker.sqf"
+    #include "engine\games\drawpoker.sqf"
+    #include "engine\games\liarsdice.sqf"
+    #include "engine\games\connectfour.sqf"
     #include "engine\games\rps.sqf"
     #include "engine\games\shotgun.sqf"
     #include "engine\games\uno.sqf"

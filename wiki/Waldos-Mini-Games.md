@@ -4,7 +4,7 @@ _Associated Files: `init.sqf`, `MissionScripts\MiniGames\miniGamesInit.sqf`, `Mi
 
 Waldos Mini Games is two complementary systems under one feature:
 
-1. **[Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games)** — a seated, **multiplayer** party-games engine. Place a table object in Eden and players get scroll-menu actions to sit down, vote for a game and play. Nine games ship with the pack: Battleship, Who's Who: Vehicles, Shotgun Roulette, Blackjack, Poker (no-limit Hold'em), Chess, Checkers, Rock Paper Scissors and UNO. These are for downtime, staging areas, barracks, FOBs and "waiting for the op to start" moments.
+1. **[Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games)** — a seated, **multiplayer** party-games engine. Place a table object in Eden and players get scroll-menu actions to sit down, vote for a game and play. Twelve games ship with the pack: Battleship, Who's Who: Vehicles, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, Rock Paper Scissors and UNO. These are for downtime, staging areas, barracks, FOBs and "waiting for the op to start" moments.
 
 2. **[Field Equipment Procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges)** — accessible **single-player** procedures that gate any object interaction. Each looks and behaves like distinct field equipment: EOD controller, diagnostic tablet, access terminal, lock cylinder, breaker cabinet, maintenance hatch, communications unit, hydraulic manifold, or secure console.
 
@@ -14,7 +14,7 @@ The fast path for mission makers is one Eden init line: `[this, "repair"] call W
 
 ## Associated pages
 
-* **[Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games)** — placing tables, the nine games, seats, voting, spectating, tuning.
+* **[Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games)** — placing tables, the twelve games, seats, voting, spectating, tuning.
 * **[Field Equipment Procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges)** — equipment profiles, object/table setup, bomb defusal, accessibility, and every built-in procedure.
 
 ## Enabling it

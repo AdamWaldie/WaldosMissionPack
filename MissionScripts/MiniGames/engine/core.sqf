@@ -268,11 +268,14 @@ Waldo_MG_fnc_getTableActiveGameId = {
     if (_activeGame == "" && {_table getVariable ["Waldo_MG_BlackjackActive", false]}) then {_activeGame = "blackjack";};
     if (_activeGame == "" && {_table getVariable ["Waldo_MG_ChessActive", false]}) then {_activeGame = "chess";};
     if (_activeGame == "" && {_table getVariable ["Waldo_MG_PokerActive", false]}) then {_activeGame = "poker";};
+    if (_activeGame == "" && {_table getVariable ["Waldo_MG_DrawPokerActive", false]}) then {_activeGame = "drawpoker";};
+    if (_activeGame == "" && {_table getVariable ["Waldo_MG_LiarsDiceActive", false]}) then {_activeGame = "liarsdice";};
+    if (_activeGame == "" && {_table getVariable ["Waldo_MG_ConnectFourActive", false]}) then {_activeGame = "connectfour";};
     if (_activeGame == "" && {_table getVariable ["Waldo_MG_UNOActive", false]}) then {_activeGame = "uno";};
     if (_activeGame == "") then {
         private _phase = _table getVariable ["Waldo_MG_TablePhase", "LOBBY"];
         private _selected = _table getVariable ["Waldo_MG_TableSelectedGame", ""];
-        if (_phase in ["PLAYING", "FINISHED"] && {_selected in ["battleship", "whoswho", "shotgun", "checkers", "rps", "blackjack", "chess", "poker", "uno"]}) then {
+        if (_phase in ["PLAYING", "FINISHED"] && {_selected in ["battleship", "whoswho", "shotgun", "checkers", "rps", "blackjack", "chess", "poker", "drawpoker", "liarsdice", "connectfour", "uno"]}) then {
             _activeGame = _selected;
         };
     };
@@ -393,6 +396,21 @@ Waldo_MG_fnc_refreshTableConsensusServer = {
             _phase = "PLAYING";
         };
     };
+    if (_table getVariable ["Waldo_MG_DrawPokerActive", false]) then {
+        _selectedGame = "drawpoker";
+        _phase = _table getVariable ["Waldo_MG_TablePhase", "PLAYING"];
+        if (!(_phase in ["PLAYING", "FINISHED"])) then {_phase = "PLAYING";};
+    };
+    if (_table getVariable ["Waldo_MG_LiarsDiceActive", false]) then {
+        _selectedGame = "liarsdice";
+        _phase = _table getVariable ["Waldo_MG_TablePhase", "PLAYING"];
+        if (!(_phase in ["PLAYING", "FINISHED"])) then {_phase = "PLAYING";};
+    };
+    if (_table getVariable ["Waldo_MG_ConnectFourActive", false]) then {
+        _selectedGame = "connectfour";
+        _phase = _table getVariable ["Waldo_MG_TablePhase", "PLAYING"];
+        if (!(_phase in ["PLAYING", "FINISHED"])) then {_phase = "PLAYING";};
+    };
     if (_table getVariable ["Waldo_MG_UNOActive", false]) then {
         _selectedGame = "uno";
         _phase = _table getVariable ["Waldo_MG_TablePhase", "PLAYING"];
@@ -449,6 +467,9 @@ Waldo_MG_fnc_markTableServer = {
         [_table] call Waldo_MG_fnc_blackjackClearServer;
         [_table] call Waldo_MG_fnc_chessClearServer;
         [_table] call Waldo_MG_fnc_pokerClearServer;
+        [_table] call Waldo_MG_fnc_drawPokerClearServer;
+        [_table] call Waldo_MG_fnc_liarsDiceClearServer;
+        [_table] call Waldo_MG_fnc_connectFourClearServer;
         [_table] call Waldo_MG_fnc_unoClearServer;
         [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
     };
@@ -467,6 +488,9 @@ Waldo_MG_fnc_clearUnitSeatVariablesServer = {
     _unit setVariable ["Waldo_MG_UNOPrivateHand", [], owner _unit];
     _unit setVariable ["Waldo_MG_ShotgunPrivatePeek", [], owner _unit];
     _unit setVariable ["Waldo_MG_WhosWhoPrivateTarget", [], owner _unit];
+    _unit setVariable ["Waldo_MG_PokerPrivateHand", [], owner _unit];
+    _unit setVariable ["Waldo_MG_DrawPokerPrivateHand", [], owner _unit];
+    _unit setVariable ["Waldo_MG_LiarsDicePrivateDice", [], owner _unit];
     _unit setVariable ["Waldo_MG_SeatedTable", objNull, true];
     _unit setVariable ["Waldo_MG_SeatIndex", -1, true];
     _unit setVariable ["Waldo_MG_SeatToken", "", true];
@@ -486,6 +510,9 @@ Waldo_MG_fnc_releaseUnitSeatServer = {
         [_table, _unit, _seatIndex] call Waldo_MG_fnc_blackjackHandleDepartureServer;
         [_table, _unit, _seatIndex] call Waldo_MG_fnc_chessFinishForfeitServer;
         [_table, _unit, _seatIndex] call Waldo_MG_fnc_pokerHandleDepartureServer;
+        [_table, _unit, _seatIndex] call Waldo_MG_fnc_drawPokerFinishForfeitServer;
+        [_table, _unit, _seatIndex] call Waldo_MG_fnc_liarsDiceFinishForfeitServer;
+        [_table, _unit, _seatIndex] call Waldo_MG_fnc_connectFourFinishForfeitServer;
         [_table, _unit, _seatIndex] call Waldo_MG_fnc_unoHandleDepartureServer;
         private _seats = [(_table getVariable ["Waldo_MG_TableSeats", []])] call Waldo_MG_fnc_normalizeSeats;
         if (_seatIndex < 0 || {_seatIndex >= Waldo_MG_CFG_SEAT_COUNT} || {(_seats param [_seatIndex, objNull]) != _unit}) then {
@@ -536,6 +563,9 @@ Waldo_MG_fnc_initializePlayerServer = {
         "Waldo_MG_ChessMoveRequest",
         "Waldo_MG_ChessActionRequest",
         "Waldo_MG_PokerActionRequest",
+        "Waldo_MG_DrawPokerActionRequest",
+        "Waldo_MG_LiarsDiceActionRequest",
+        "Waldo_MG_ConnectFourActionRequest",
         "Waldo_MG_UNOActionRequest",
         "Waldo_MG_RequestResult"
     ];
@@ -557,6 +587,10 @@ Waldo_MG_fnc_reconcileOneTableServer = {
     [_table] call Waldo_MG_fnc_blackjackProgressServer;
     [_table] call Waldo_MG_fnc_chessReconcilePlayersServer;
     [_table] call Waldo_MG_fnc_pokerReconcilePlayersServer;
+    [_table] call Waldo_MG_fnc_drawPokerReconcilePlayersServer;
+    [_table] call Waldo_MG_fnc_liarsDiceReconcilePlayersServer;
+    [_table] call Waldo_MG_fnc_liarsDiceProgressServer;
+    [_table] call Waldo_MG_fnc_connectFourReconcilePlayersServer;
     [_table] call Waldo_MG_fnc_unoReconcilePlayersServer;
     private _originalSeats = _table getVariable ["Waldo_MG_TableSeats", []];
     private _originalVotes = _table getVariable ["Waldo_MG_TableVotes", []];
@@ -973,6 +1007,21 @@ Waldo_MG_fnc_processReadyRequestServer = {
         };
         };
     };
+    if (_selectedGame == "drawpoker" && {(_table getVariable ["Waldo_MG_TablePhase", "LOBBY"]) == "READY"}) then {
+        _message = if ([_table] call Waldo_MG_fnc_drawPokerStartServer) then {
+            format ["Five-Card Draw has begun with %1 chips and a %2-chip ante.", Waldo_MG_CFG_DRAWPOKER_STARTING_CHIPS, Waldo_MG_CFG_DRAWPOKER_ANTE]
+        } else {"Five-Card Draw could not start because its roster changed."};
+    };
+    if (_selectedGame == "liarsdice" && {(_table getVariable ["Waldo_MG_TablePhase", "LOBBY"]) == "READY"}) then {
+        _message = if ([_table] call Waldo_MG_fnc_liarsDiceStartServer) then {
+            format ["Liar's Dice has begun with %1 private dice each.", Waldo_MG_CFG_LIARSDICE_STARTING_DICE]
+        } else {"Liar's Dice could not start because its roster changed."};
+    };
+    if (_selectedGame == "connectfour" && {(_table getVariable ["Waldo_MG_TablePhase", "LOBBY"]) == "READY"}) then {
+        _message = if ([_table] call Waldo_MG_fnc_connectFourStartServer) then {
+            "Connect Four has begun. Blue O opens the first board."
+        } else {"Connect Four could not start because its two-player roster changed."};
+    };
     [_unit, _token, _message] call Waldo_MG_fnc_resultServer;
 };
 
@@ -1119,6 +1168,15 @@ Waldo_MG_fnc_processPlayerRequestsServer = {
     if ((count _pokerAction) > 0) then {
         [_unit, _pokerAction] call Waldo_MG_fnc_processPokerActionRequestServer;
     };
+    private _drawPokerAction = _unit getVariable ["Waldo_MG_DrawPokerActionRequest", []];
+    if ((typeName _drawPokerAction) != "ARRAY") then {_unit setVariable ["Waldo_MG_DrawPokerActionRequest", [], true]; _drawPokerAction = [];} else {_drawPokerAction = +_drawPokerAction;};
+    if ((count _drawPokerAction) > 0) then {[_unit, _drawPokerAction] call Waldo_MG_fnc_processDrawPokerActionRequestServer;};
+    private _liarsDiceAction = _unit getVariable ["Waldo_MG_LiarsDiceActionRequest", []];
+    if ((typeName _liarsDiceAction) != "ARRAY") then {_unit setVariable ["Waldo_MG_LiarsDiceActionRequest", [], true]; _liarsDiceAction = [];} else {_liarsDiceAction = +_liarsDiceAction;};
+    if ((count _liarsDiceAction) > 0) then {[_unit, _liarsDiceAction] call Waldo_MG_fnc_processLiarsDiceActionRequestServer;};
+    private _connectFourAction = _unit getVariable ["Waldo_MG_ConnectFourActionRequest", []];
+    if ((typeName _connectFourAction) != "ARRAY") then {_unit setVariable ["Waldo_MG_ConnectFourActionRequest", [], true]; _connectFourAction = [];} else {_connectFourAction = +_connectFourAction;};
+    if ((count _connectFourAction) > 0) then {[_unit, _connectFourAction] call Waldo_MG_fnc_processConnectFourActionRequestServer;};
     private _unoAction = _unit getVariable ["Waldo_MG_UNOActionRequest", []];
     if ((typeName _unoAction) != "ARRAY") then {
         _unit setVariable ["Waldo_MG_UNOActionRequest", [], true];
@@ -1422,7 +1480,7 @@ Waldo_MG_fnc_ensurePlayerActionsLocal = {
             "Reopen Mini Games",
             {
                 params ["_target", "_caller"];
-                if (_caller != player) exitWith {};
+                if (isNull _target || {_caller != player}) exitWith {};
                 private _table = player getVariable ["Waldo_MG_SeatedTable", objNull];
                 [_table] call Waldo_MG_fnc_openCurrentTableScreenLocal;
             },
@@ -1438,7 +1496,7 @@ Waldo_MG_fnc_ensurePlayerActionsLocal = {
             "Leave Party Table",
             {
                 params ["_target", "_caller"];
-                if (_caller != player) exitWith {};
+                if (isNull _target || {_caller != player}) exitWith {};
                 call Waldo_MG_fnc_submitLeaveRequestLocal;
             },
             nil,
@@ -1489,6 +1547,9 @@ Waldo_MG_fnc_exitSpectatorLocal = {
         uiNamespace getVariable ["Waldo_MG_BlackjackDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_ChessDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_PokerDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_DrawPokerDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_LiarsDiceDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_ConnectFourDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_UNODisplay", displayNull]
     ];
     if (!_silent && {!isNull _table}) then {
@@ -1535,6 +1596,9 @@ Waldo_MG_fnc_openSpectatorLocal = {
     if (_activeGame == "poker") exitWith {
         [_table, true] call Waldo_MG_fnc_openPokerLocal;
     };
+    if (_activeGame == "drawpoker") exitWith {[_table, true] call Waldo_MG_fnc_openDrawPokerLocal;};
+    if (_activeGame == "liarsdice") exitWith {[_table, true] call Waldo_MG_fnc_openLiarsDiceLocal;};
+    if (_activeGame == "connectfour") exitWith {[_table, true] call Waldo_MG_fnc_openConnectFourLocal;};
     if (_activeGame == "uno") exitWith {
         [_table, true] call Waldo_MG_fnc_openUNOLocal;
     };
@@ -1595,6 +1659,18 @@ Waldo_MG_fnc_maintainSpectatorStateLocal = {
         _display = uiNamespace getVariable ["Waldo_MG_PokerDisplay", displayNull];
         if (!isNull _display) then {_displayTable = _display getVariable ["Waldo_MG_PokerTable", objNull];};
     };
+    if (_activeGame == "drawpoker") then {
+        _display = uiNamespace getVariable ["Waldo_MG_DrawPokerDisplay", displayNull];
+        if (!isNull _display) then {_displayTable = _display getVariable ["Waldo_MG_DrawPokerTable", objNull];};
+    };
+    if (_activeGame == "liarsdice") then {
+        _display = uiNamespace getVariable ["Waldo_MG_LiarsDiceDisplay", displayNull];
+        if (!isNull _display) then {_displayTable = _display getVariable ["Waldo_MG_LiarsDiceTable", objNull];};
+    };
+    if (_activeGame == "connectfour") then {
+        _display = uiNamespace getVariable ["Waldo_MG_ConnectFourDisplay", displayNull];
+        if (!isNull _display) then {_displayTable = _display getVariable ["Waldo_MG_ConnectFourTable", objNull];};
+    };
     if (_activeGame == "uno") then {
         _display = uiNamespace getVariable ["Waldo_MG_UNODisplay", displayNull];
         if (!isNull _display) then {_displayTable = _display getVariable ["Waldo_MG_UNOTable", objNull];};
@@ -1613,7 +1689,7 @@ Waldo_MG_fnc_installEscapeGuardLocal = {
         "KeyDown",
         {
             params ["_displayOrControl", "_key"];
-            _key == 1
+            !isNull _displayOrControl && {_key == 1}
         }
     ];
     _display setVariable ["Waldo_MG_EscapeGuardInstalled", true];
@@ -1640,6 +1716,9 @@ Waldo_MG_fnc_maintainSeatedScreenLocal = {
         uiNamespace getVariable ["Waldo_MG_BlackjackDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_ChessDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_PokerDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_DrawPokerDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_LiarsDiceDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_ConnectFourDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_UNODisplay", displayNull]
     ];
     if (_screenOpen) exitWith {};
@@ -1719,75 +1798,92 @@ Waldo_MG_fnc_closeLobbyIfInvalidLocal = {
     private _battleshipDisplay = uiNamespace getVariable ["Waldo_MG_BattleshipDisplay", displayNull];
     if (!isNull _battleshipDisplay) then {
         private _displayTable = _battleshipDisplay getVariable ["Waldo_MG_BattleshipTable", objNull];
-        private _spectatorValid = (_battleshipDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_battleshipDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _battleshipDisplay closeDisplay 1;
         };
     };
     private _whosWhoDisplay = uiNamespace getVariable ["Waldo_MG_WhosWhoDisplay", displayNull];
     if (!isNull _whosWhoDisplay) then {
         private _displayTable = _whosWhoDisplay getVariable ["Waldo_MG_WhosWhoTable", objNull];
-        private _spectatorValid = (_whosWhoDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_whosWhoDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _whosWhoDisplay closeDisplay 1;
         };
     };
     private _shotgunDisplay = uiNamespace getVariable ["Waldo_MG_ShotgunDisplay", displayNull];
     if (!isNull _shotgunDisplay) then {
         private _displayTable = _shotgunDisplay getVariable ["Waldo_MG_ShotgunTable", objNull];
-        private _spectatorValid = (_shotgunDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_shotgunDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _shotgunDisplay closeDisplay 1;
         };
     };
     private _checkersDisplay = uiNamespace getVariable ["Waldo_MG_CheckersDisplay", displayNull];
     if (!isNull _checkersDisplay) then {
         private _displayTable = _checkersDisplay getVariable ["Waldo_MG_CheckersTable", objNull];
-        private _spectatorValid = (_checkersDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_checkersDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _checkersDisplay closeDisplay 1;
         };
     };
     private _rpsDisplay = uiNamespace getVariable ["Waldo_MG_RPSDisplay", displayNull];
     if (!isNull _rpsDisplay) then {
         private _displayTable = _rpsDisplay getVariable ["Waldo_MG_RPSTable", objNull];
-        private _spectatorValid = (_rpsDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_rpsDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _rpsDisplay closeDisplay 1;
         };
     };
     private _blackjackDisplay = uiNamespace getVariable ["Waldo_MG_BlackjackDisplay", displayNull];
     if (!isNull _blackjackDisplay) then {
         private _displayTable = _blackjackDisplay getVariable ["Waldo_MG_BlackjackTable", objNull];
-        private _spectatorValid = (_blackjackDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_blackjackDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _blackjackDisplay closeDisplay 1;
         };
     };
     private _chessDisplay = uiNamespace getVariable ["Waldo_MG_ChessDisplay", displayNull];
     if (!isNull _chessDisplay) then {
         private _displayTable = _chessDisplay getVariable ["Waldo_MG_ChessTable", objNull];
-        private _spectatorValid = (_chessDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_chessDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _chessDisplay closeDisplay 1;
         };
     };
     private _pokerDisplay = uiNamespace getVariable ["Waldo_MG_PokerDisplay", displayNull];
     if (!isNull _pokerDisplay) then {
         private _displayTable = _pokerDisplay getVariable ["Waldo_MG_PokerTable", objNull];
-        private _spectatorValid = (_pokerDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_pokerDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _pokerDisplay closeDisplay 1;
         };
     };
     private _unoDisplay = uiNamespace getVariable ["Waldo_MG_UNODisplay", displayNull];
     if (!isNull _unoDisplay) then {
         private _displayTable = _unoDisplay getVariable ["Waldo_MG_UNOTable", objNull];
-        private _spectatorValid = (_unoDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable};
-        if (isNull _displayTable || {_displayTable != _currentTable && {!_spectatorValid}}) then {
+        if (isNull _displayTable || {_displayTable != _currentTable && {!((_unoDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {
             _unoDisplay closeDisplay 1;
         };
     };
+    {
+        _x params ["_displayKey", "_tableKey"];
+        private _gameDisplay = uiNamespace getVariable [_displayKey, displayNull];
+        if (!isNull _gameDisplay) then {
+            private _displayTable = _gameDisplay getVariable [_tableKey, objNull];
+            if (isNull _displayTable || {_displayTable != _currentTable && {!((_gameDisplay getVariable ["Waldo_MG_SpectatorMode", false]) && {_displayTable == _spectatedTable})}}) then {_gameDisplay closeDisplay 1;};
+        };
+    } forEach [
+        ["Waldo_MG_DrawPokerDisplay", "Waldo_MG_DrawPokerTable"],
+        ["Waldo_MG_LiarsDiceDisplay", "Waldo_MG_LiarsDiceTable"],
+        ["Waldo_MG_ConnectFourDisplay", "Waldo_MG_ConnectFourTable"]
+    ];
+};
+
+Waldo_MG_fnc_closeTableGameDisplaysLocal = {
+    if (!hasInterface) exitWith {};
+    {
+        private _display = uiNamespace getVariable [_x, displayNull];
+        if (!isNull _display) then {_display closeDisplay 1;};
+    } forEach [
+        "Waldo_MG_LobbyDisplay", "Waldo_MG_BattleshipDisplay", "Waldo_MG_WhosWhoDisplay",
+        "Waldo_MG_ShotgunDisplay", "Waldo_MG_CheckersDisplay", "Waldo_MG_RPSDisplay",
+        "Waldo_MG_BlackjackDisplay", "Waldo_MG_ChessDisplay", "Waldo_MG_PokerDisplay",
+        "Waldo_MG_DrawPokerDisplay", "Waldo_MG_LiarsDiceDisplay", "Waldo_MG_ConnectFourDisplay",
+        "Waldo_MG_UNODisplay"
+    ];
 };
 
 Waldo_MG_fnc_maintainSeatStateLocal = {
@@ -2447,6 +2543,9 @@ Waldo_MG_fnc_openCurrentTableScreenLocal = {
     if (_activeGame == "poker") exitWith {
         [_table] call Waldo_MG_fnc_openPokerLocal;
     };
+    if (_activeGame == "drawpoker") exitWith {[_table] call Waldo_MG_fnc_openDrawPokerLocal;};
+    if (_activeGame == "liarsdice") exitWith {[_table] call Waldo_MG_fnc_openLiarsDiceLocal;};
+    if (_activeGame == "connectfour") exitWith {[_table] call Waldo_MG_fnc_openConnectFourLocal;};
     if (_activeGame == "uno") exitWith {
         [_table] call Waldo_MG_fnc_openUNOLocal;
     };
@@ -2460,72 +2559,75 @@ Waldo_MG_fnc_maintainGameTransitionLocal = {
     private _activeGame = [_table] call Waldo_MG_fnc_getTableActiveGameId;
     if (_activeGame == "battleship") then {
         private _gameId = _table getVariable ["Waldo_MG_BattleshipGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedBattleshipLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedBattleshipLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedBattleshipLocal", _gameId];
             [_table] call Waldo_MG_fnc_openBattleshipLocal;
         };
     };
     if (_activeGame == "whoswho") then {
         private _gameId = _table getVariable ["Waldo_MG_WhosWhoGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedWhosWhoLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedWhosWhoLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedWhosWhoLocal", _gameId];
             [_table] call Waldo_MG_fnc_openWhosWhoLocal;
         };
     };
     if (_activeGame == "shotgun") then {
         private _gameId = _table getVariable ["Waldo_MG_ShotgunGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedShotgunLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedShotgunLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedShotgunLocal", _gameId];
             [_table] call Waldo_MG_fnc_openShotgunLocal;
         };
     };
     if (_activeGame == "checkers") then {
         private _gameId = _table getVariable ["Waldo_MG_CheckersGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedCheckersLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedCheckersLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedCheckersLocal", _gameId];
             [_table] call Waldo_MG_fnc_openCheckersLocal;
         };
     };
     if (_activeGame == "rps") then {
         private _gameId = _table getVariable ["Waldo_MG_RPSGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedRPSLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedRPSLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedRPSLocal", _gameId];
             [_table] call Waldo_MG_fnc_openRPSLocal;
         };
     };
     if (_activeGame == "blackjack") then {
         private _gameId = _table getVariable ["Waldo_MG_BlackjackGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedBlackjackLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedBlackjackLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedBlackjackLocal", _gameId];
             [_table] call Waldo_MG_fnc_openBlackjackLocal;
         };
     };
     if (_activeGame == "chess") then {
         private _gameId = _table getVariable ["Waldo_MG_ChessGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedChessLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedChessLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedChessLocal", _gameId];
             [_table] call Waldo_MG_fnc_openChessLocal;
         };
     };
     if (_activeGame == "poker") then {
         private _gameId = _table getVariable ["Waldo_MG_PokerGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedPokerLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedPokerLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedPokerLocal", _gameId];
             [_table] call Waldo_MG_fnc_openPokerLocal;
         };
     };
+    if (_activeGame == "drawpoker") then {
+        private _gameId = _table getVariable ["Waldo_MG_DrawPokerGameId", ""];
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedDrawPokerLocal", ""])}) then {missionNamespace setVariable ["Waldo_MG_LastAutoOpenedDrawPokerLocal", _gameId]; [_table] call Waldo_MG_fnc_openDrawPokerLocal;};
+    };
+    if (_activeGame == "liarsdice") then {
+        private _gameId = _table getVariable ["Waldo_MG_LiarsDiceGameId", ""];
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedLiarsDiceLocal", ""])}) then {missionNamespace setVariable ["Waldo_MG_LastAutoOpenedLiarsDiceLocal", _gameId]; [_table] call Waldo_MG_fnc_openLiarsDiceLocal;};
+    };
+    if (_activeGame == "connectfour") then {
+        private _gameId = _table getVariable ["Waldo_MG_ConnectFourGameId", ""];
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedConnectFourLocal", ""])}) then {missionNamespace setVariable ["Waldo_MG_LastAutoOpenedConnectFourLocal", _gameId]; [_table] call Waldo_MG_fnc_openConnectFourLocal;};
+    };
     if (_activeGame == "uno") then {
         private _gameId = _table getVariable ["Waldo_MG_UNOGameId", ""];
-        private _lastAutoOpened = missionNamespace getVariable ["Waldo_MG_LastAutoOpenedUNOLocal", ""];
-        if (_gameId != "" && {_gameId != _lastAutoOpened}) then {
+        if (_gameId != "" && {_gameId != (missionNamespace getVariable ["Waldo_MG_LastAutoOpenedUNOLocal", ""])}) then {
             missionNamespace setVariable ["Waldo_MG_LastAutoOpenedUNOLocal", _gameId];
             [_table] call Waldo_MG_fnc_openUNOLocal;
         };

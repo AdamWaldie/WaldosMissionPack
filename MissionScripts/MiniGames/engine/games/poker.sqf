@@ -1532,6 +1532,7 @@ Waldo_MG_fnc_refreshPokerLocal = {
     private _turn = _state param [5, -1];
     private _chips = _state param [6, []];
     private _bets = _state param [7, []];
+    private _totalContributions = _state param [8, []];
     private _statuses = _state param [9, []];
     private _actions = _state param [10, []];
     private _community = _state param [11, []];
@@ -1553,7 +1554,14 @@ Waldo_MG_fnc_refreshPokerLocal = {
     private _potLabel = _display getVariable ["Waldo_MG_PokerPotLabel", controlNull];
     private _streetLabel = _display getVariable ["Waldo_MG_PokerStreetLabel", controlNull];
     private _statusLabel = _display getVariable ["Waldo_MG_PokerStatusLabel", controlNull];
-    if (!isNull _potLabel) then {_potLabel ctrlSetText format ["POT  %1", _pot]; _potLabel ctrlCommit 0;};
+    if (!isNull _potLabel) then {
+        private _potBreakdown = [_totalContributions, _statuses] call Waldo_MG_fnc_pokerBuildSidePots;
+        private _potParts = [];
+        { _potParts pushBack format ["%1 %2", if (_forEachIndex == 0) then {"MAIN"} else {format ["SIDE %1", _forEachIndex]}, _x param [0, 0]]; } forEach _potBreakdown;
+        _potLabel ctrlSetText (if ((count _potParts) > 0) then {_potParts joinString "  |  "} else {format ["POT  %1", _pot]});
+        _potLabel ctrlSetTooltip format ["Total pot: %1 chips. Main and side pots reflect committed contributions.", _pot];
+        _potLabel ctrlCommit 0;
+    };
     if (!isNull _streetLabel) then {
         _streetLabel ctrlSetText format ["HAND %1  /  %2  /  TABLE BET %3", _handNumber, _phase, _currentBet];
         _streetLabel ctrlCommit 0;
@@ -1732,22 +1740,26 @@ Waldo_MG_fnc_refreshPokerLocal = {
     _display setVariable ["Waldo_MG_PokerRaiseTarget", _raiseTarget];
     _display setVariable ["Waldo_MG_PokerRaiseMinimum", _minimumRaise];
     _display setVariable ["Waldo_MG_PokerRaiseMaximum", _maximumRaise];
-    if (!isNull _foldButton) then {_foldButton ctrlShow (_betting && {!_spectating}); _foldButton ctrlEnable (!_spectating && {_yourTurn});};
+    private _waitReason = if (_spectating) then {"Spectators are read-only."} else {if (!_betting) then {"Betting is closed."} else {if (!_yourTurn) then {"Wait for the acting player."} else {"Available."}}};
+    if (!isNull _foldButton) then {_foldButton ctrlShow (_betting && {!_spectating}); _foldButton ctrlEnable (!_spectating && {_yourTurn}); _foldButton ctrlSetTooltip _waitReason;};
     if (!isNull _callButton) then {
         _callButton ctrlShow (_betting && {!_spectating});
         _callButton ctrlEnable (!_spectating && {_yourTurn});
         _callButton ctrlSetText (if (_toCall <= 0) then {"Check"} else {format ["Call %1", _yourStack min _toCall]});
+        _callButton ctrlSetTooltip _waitReason;
     };
     if (!isNull _allInButton) then {
         private _allInLegal = _yourTurn && {_yourStack > 0} && {(_maximumRaise <= _currentBet) || {_canRaise}};
         _allInButton ctrlShow (_betting && {!_spectating});
         _allInButton ctrlEnable (!_spectating && {_allInLegal});
         _allInButton ctrlSetText format ["All In %1", _yourStack];
+        _allInButton ctrlSetTooltip (if (_allInLegal) then {"Commit your entire remaining stack."} else {_waitReason});
     };
     if (!isNull _raiseButton) then {
         _raiseButton ctrlShow (_betting && {!_spectating});
         _raiseButton ctrlEnable (!_spectating && {_canFullRaise});
         _raiseButton ctrlSetText format ["Raise %1", _raiseTarget];
+        _raiseButton ctrlSetTooltip (if (_canFullRaise) then {format ["Raise the street total to %1.", _raiseTarget]} else {if (!_canRaise) then {"A short all-in did not reopen raising."} else {_waitReason}});
     };
     if (!isNull _raiseLabel) then {
         _raiseLabel ctrlShow (_betting && {!_spectating});
@@ -1840,11 +1852,15 @@ Waldo_MG_fnc_openPokerLocal = {
         uiNamespace getVariable ["Waldo_MG_BlackjackDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_ChessDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_PokerDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_DrawPokerDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_LiarsDiceDisplay", displayNull],
+        uiNamespace getVariable ["Waldo_MG_ConnectFourDisplay", displayNull],
         uiNamespace getVariable ["Waldo_MG_UNODisplay", displayNull]
     ];
     private _display = _parent createDisplay "RscDisplayEmpty";
     if (isNull _display) exitWith {};
     uiNamespace setVariable ["Waldo_MG_PokerDisplay", _display];
+    _display setVariable ["Waldo_MG_TableGameDisplay", true];
     _display setVariable ["Waldo_MG_PokerTable", _table];
     _display setVariable ["Waldo_MG_SpectatorMode", _spectating];
     _display setVariable ["Waldo_MG_PokerRaiseTarget", Waldo_MG_CFG_POKER_BIG_BLIND * 2];

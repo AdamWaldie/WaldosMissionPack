@@ -70,7 +70,7 @@ Waldo_MG_Games = [
     ],
     [
         "poker",
-        "Poker",
+        "Texas Hold'em",
         [
             "Read the table and manage the pot.",
             "Conceal good hands; bluff responsibly."
@@ -80,6 +80,34 @@ Waldo_MG_Games = [
         [
             "Playable no-limit Hold'em with blinds, side pots and all-ins.",
             "Start with 100 chips; survive the table to win."
+        ]
+    ],
+    [
+        "drawpoker",
+        "Five-Card Draw",
+        [
+            "Ante, bet, exchange up to three cards, then bet again.",
+            "Stand pat or improve your private hand before showdown."
+        ],
+        2,
+        4,
+        [
+            "Server-authoritative no-limit betting, all-ins and side pots.",
+            "Start with 100 chips; private cards are never sent to spectators."
+        ]
+    ],
+    [
+        "liarsdice",
+        "Liar's Dice",
+        [
+            "Raise the table bid or challenge the previous player.",
+            "Ones are wild; the last player with dice wins."
+        ],
+        2,
+        4,
+        [
+            "Five private dice each; bids use faces two through six.",
+            "Dice show both pips and numerals during the public reveal."
         ]
     ],
     [
@@ -108,6 +136,20 @@ Waldo_MG_Games = [
         [
             "Playable: compulsory captures and chained jumps.",
             "Blue moves first; reach the far rank to earn a king."
+        ]
+    ],
+    [
+        "connectfour",
+        "Connect Four",
+        [
+            "Drop discs into the seven-column grid.",
+            "Connect four horizontally, vertically or diagonally."
+        ],
+        2,
+        2,
+        [
+            "Playable with mouse or number keys 1-7.",
+            "Blue O and Amber X play first to two board wins."
         ]
     ],
     [
@@ -169,6 +211,17 @@ Waldo_MG_CFG_CLIENT_TICK = 0.5;
 Waldo_MG_CFG_DISCOVERY_TICK = 10;
 Waldo_MG_CFG_MAINTENANCE_TICK = 10;
 Waldo_MG_CFG_CHECKERS_UI_TICK = 0.15;
+Waldo_MG_CFG_CONNECTFOUR_UI_TICK = 0.10;
+Waldo_MG_CFG_CONNECTFOUR_COLUMNS = 7;
+Waldo_MG_CFG_CONNECTFOUR_ROWS = 6;
+Waldo_MG_CFG_CONNECTFOUR_WINS_REQUIRED = 2;
+Waldo_MG_CFG_DRAWPOKER_UI_TICK = 0.15;
+Waldo_MG_CFG_DRAWPOKER_STARTING_CHIPS = 100;
+Waldo_MG_CFG_DRAWPOKER_ANTE = 1;
+Waldo_MG_CFG_DRAWPOKER_MAX_DISCARDS = 3;
+Waldo_MG_CFG_LIARSDICE_UI_TICK = 0.15;
+Waldo_MG_CFG_LIARSDICE_STARTING_DICE = 5;
+Waldo_MG_CFG_LIARSDICE_REVEAL_SECONDS = 2.5;
 Waldo_MG_CFG_RPS_UI_TICK = 0.10;
 Waldo_MG_CFG_RPS_COUNTDOWN_SECONDS = 3;
 Waldo_MG_CFG_RPS_REVEAL_SECONDS = 3.5;
