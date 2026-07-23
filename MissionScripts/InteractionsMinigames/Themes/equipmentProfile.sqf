@@ -29,23 +29,12 @@ private _profile = createHashMapFromArray [
     ["briefing", "FIELD OPERATING PROCEDURE"],
     ["controls", ""], ["hint", ""],
     ["statusText", "[ACTIVE] FOLLOW THE OPERATING PROCEDURE"],
-    ["skin", "default"], ["soundProfile", "equipment"], ["textureOpacity", 0.18],
+    ["skin", "default"], ["soundProfile", "equipment"],
+    ["texture", ""], ["texturePreset", "none"], ["textureOpacity", 0.14],
     ["actionTitle", format ["Inspect %1", toLower (_row select 4)]],
     ["icon", "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"]
 ];
 _profile set ["customTitle", false];
-private _defaultTextures = createHashMapFromArray [
-    ["wirecut", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_olive.jpg"],
-    ["minesweeper", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_charcoal.jpg"],
-    ["keypad", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_charcoal.jpg"],
-    ["lockpick", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_sand.jpg"],
-    ["circuit", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_charcoal.jpg"],
-    ["repair", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_sand.jpg"],
-    ["radiotune", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_naval.jpg"],
-    ["pressure", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_olive.jpg"],
-    ["sequence", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_naval.jpg"]
-];
-_profile set ["texture", _defaultTextures getOrDefault [_row select 0, ""]];
 
 private _pairs = [];
 if (typeName _overrides == "HASHMAP") then {
@@ -53,7 +42,7 @@ if (typeName _overrides == "HASHMAP") then {
 } else {
     _pairs = _overrides;
 };
-private _allowed = ["preset", "manufacturer", "model", "title", "objective", "activation", "briefing", "controls", "hint", "statusText", "successText", "failureText", "timeoutText", "abortText", "actionTitle", "icon", "texture", "soundProfile", "skin", "textureOpacity"];
+private _allowed = ["preset", "manufacturer", "model", "title", "objective", "activation", "briefing", "controls", "hint", "statusText", "successText", "failureText", "timeoutText", "abortText", "actionTitle", "icon", "texture", "texturePreset", "soundProfile", "skin", "textureOpacity"];
 private _stringKeys = _allowed - ["textureOpacity"];
 private _textureCustomized = ({(_x select 0) == "texture" && {typeName (_x select 1) == "STRING"}} count _pairs) > 0;
 
@@ -116,10 +105,19 @@ if (_skin != "default") then {
     private _skinColours = _skins get _skin;
     _profile set ["casing", _skinColours select 0];
     _profile set ["accent", _skinColours select 1];
-    if (!_textureCustomized) then {
-        private _skinTexture = if (_skin == "hazard") then {"charcoal"} else {_skin};
-        _profile set ["texture", format ["MissionScripts\InteractionsMinigames\Themes\Textures\equipment_%1.jpg", _skinTexture]];
-    };
+};
+// Bitmap materials are strictly opt-in. Procedural controls are always the primary presentation.
+private _texturePresets = createHashMapFromArray [
+    ["olive", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_olive.jpg"],
+    ["charcoal", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_charcoal.jpg"],
+    ["naval", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_naval.jpg"],
+    ["sand", "MissionScripts\InteractionsMinigames\Themes\Textures\equipment_sand.jpg"]
+];
+private _texturePreset = toLower (_profile getOrDefault ["texturePreset", "none"]);
+if (_texturePreset != "none" && {isNil {_texturePresets get _texturePreset}}) then {_texturePreset = "none";};
+_profile set ["texturePreset", _texturePreset];
+if (!_textureCustomized && {_texturePreset != "none"}) then {
+    _profile set ["texture", _texturePresets get _texturePreset];
 };
 private _soundProfile = toLower (_profile getOrDefault ["soundProfile", "equipment"]);
 if !(_soundProfile in ["equipment", "silent"]) then {_soundProfile = "equipment";};

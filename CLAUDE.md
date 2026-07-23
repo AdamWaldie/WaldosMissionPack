@@ -454,10 +454,12 @@ Mission-maker presentation hashmaps may set curated `preset` and `skin` values p
 Accepted skins are `default`, `olive`, `charcoal`, `sand`, `naval`, and `hazard`; sound is
 `equipment` or `silent`. Do not expose raw control positions or semantic colours: equipment templates
 own layout and accessible state signalling. Operational difficulty stays in the challenge `config`.
-Four original generated 1024px JPEG material sheets live in `InteractionsMinigames/Themes/Textures`.
-Profiles apply them below all semantic controls at a clamped `textureOpacity` of `0..0.32` (default
-`0.18`). An explicit empty `texture` disables the overlay. Never put operational labels or state into
-a bitmap: those must remain accessible Arma controls.
+Four original generated 1024px JPEG material sheets live in `InteractionsMinigames/Themes/Textures`,
+but bitmap materials are disabled by default. Procedural Arma shapes, seams, fasteners, instruments,
+labels and states form the complete primary interface. Mission makers may opt in with
+`texturePreset` (`olive`, `charcoal`, `naval`, or `sand`) or an explicit `texture`; opacity is clamped
+to `0..0.32` (default `0.14`). Never put operational labels or state into a bitmap: those must remain
+accessible Arma controls.
 
 - `Waldo_fnc_BombDefuseSetup` — ready-made wrapper: adds a "Defuse Bomb" interaction (wire-cut
   challenge) with detonate-on-failure. `[this] call Waldo_fnc_BombDefuseSetup;` in an object's init

@@ -58,13 +58,14 @@ overrides cannot break the interface.
 
 Presentation keys are `preset`, `actionTitle`, `manufacturer`, `model`, `title`, `skin`, `objective`,
 `briefing`, `activation`, `controls`, `hint`, `statusText`, `successText`, `failureText`, `timeoutText`,
-`abortText`, `icon`, `texture`, and `soundProfile`. Operational keys remain `config`, `successVariable`, `failureVariable`,
+`abortText`, `icon`, `texturePreset`, `texture`, and `soundProfile`. Operational keys remain `config`, `successVariable`, `failureVariable`,
 `retryOnFailure`, `repeatable`, `distance`, `condition`, `onSuccess`, and `onFailure`.
 
 `skin` accepts `default`, `olive`, `charcoal`, `sand`, `naval`, or `hazard`. `soundProfile` accepts
-`equipment` or `silent`. Unknown values safely fall back to `default` and `equipment`. A texture may
-be a mission-relative or vanilla Arma path and is drawn as a faint equipment overlay; it never
-replaces labels or semantic state symbols. Mission makers cannot provide raw control positions or
+`equipment` or `silent`. Unknown values safely fall back to `default` and `equipment`. Textures are
+disabled by default: the complete interface is drawn from Arma controls, procedural shapes, seams,
+fasteners, instruments and labels. An optional material image is drawn beneath that interface and
+never replaces semantic state symbols. Mission makers cannot provide raw control positions or
 semantic colours, so presentation changes cannot remove protected contrast or break the layout.
 
 ### Presentation option reference
@@ -85,20 +86,21 @@ semantic colours, so presentation changes cannot remove protected contrast or br
 | `successText` / `failureText` | String | Final explicit result wording. |
 | `timeoutText` / `abortText` | String | Operating-window and confirmed-abort wording. |
 | `skin` | String | Curated casing palette: `default`, `olive`, `charcoal`, `sand`, `naval`, or `hazard`. |
-| `texture` | String | Vanilla or mission texture path. Set to `""` to disable the material overlay. |
-| `textureOpacity` | Number | Decorative overlay opacity, clamped to `0..0.32`; default `0.18`. |
+| `texturePreset` | String | Optional included material: `none`, `olive`, `charcoal`, `naval`, or `sand`; default `none`. |
+| `texture` | String | Optional vanilla or mission texture path. An explicit path takes precedence over `texturePreset`. |
+| `textureOpacity` | Number | Decorative overlay opacity, clamped to `0..0.32`; default `0.14`. |
 | `soundProfile` | String | `equipment` for built-in UI cues or `silent`. |
 
 All string values are type-checked. Invalid types are ignored, unknown skins use the equipment
-default, unknown sound profiles use `equipment`, and texture opacity is clamped. Generated textures
-remain decorative: interactive controls, captions, patterns, labels, and state symbols are separate
-Arma controls drawn above them.
+default, unknown sound profiles use `equipment`, unknown texture presets use `none`, and texture
+opacity is clamped. Generated textures remain decorative: interactive controls, captions, patterns,
+labels, seams, fasteners and state symbols are separate Arma controls drawn above them.
 
 ### Included original material textures
 
 WMP includes four original generated material sheets, converted to power-of-two 1024px JPEGs for
-compact mission distribution. They contain no operational text or gameplay state and are applied at
-low opacity according to equipment family.
+compact mission distribution. They contain no operational text or gameplay state and are not loaded
+unless the mission maker explicitly opts in.
 
 | Olive equipment casing | Charcoal breaker steel |
 |---|---|
@@ -106,10 +108,22 @@ low opacity according to equipment family.
 | Naval communications aluminium | Sand maintenance hatch |
 | ![Naval communications aluminium](../raw/master/MissionScripts/InteractionsMinigames/Themes/Textures/equipment_naval.jpg) | ![Sand maintenance hatch](../raw/master/MissionScripts/InteractionsMinigames/Themes/Textures/equipment_sand.jpg) |
 
-Default assignments are olive for EOD and pressure equipment, charcoal for diagnostic/access/power
-equipment, naval for communications and authorization consoles, and sand for maintenance and lock
-hardware. Selecting a non-default skin selects its matching texture unless `texture` was explicitly
-provided. The `hazard` skin uses charcoal steel beneath procedural warning accents.
+Opt in to an included material independently of the equipment skin:
+
+```sqf
+[
+    this,
+    "radiotune",
+    createHashMapFromArray [
+        ["skin", "naval"],
+        ["texturePreset", "naval"],
+        ["textureOpacity", 0.12]
+    ]
+] call Waldo_fnc_MiniGameInteractionSetup;
+```
+
+Leaving `texturePreset` as `none` and `texture` as `""` uses only the procedural interface. Skins
+change safe casing and accent colours but never enable a bitmap automatically.
 
 All wording fields are optional. Keep `controls` short enough for the footer and use `hint` for the
 longer help-card explanation. Gameplay remains controlled by `config`; changing a title or skin does
@@ -339,7 +353,7 @@ nine equipment classes. Use it in the editor debug console:
 
 Review briefing, active, warning, success, failure, timeout, help, and abort states at the mission's
 supported resolutions and UI scales. Repeat with local accessibility settings enabled. Static SQF
-validation cannot prove in-engine font metrics or texture availability, so mission release testing
+validation cannot prove in-engine font metrics or optional texture availability, so mission release testing
 should still include 4:3, 16:10, 16:9, ultrawide, reduced resolution, and common Arma UI scales.
 
 ## Subsystem structure

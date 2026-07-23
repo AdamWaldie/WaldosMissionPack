@@ -27,7 +27,8 @@
  *                  "hint"            String - contextual help text override
  *                  "statusText"      String - initial active-state message
  *                  "soundProfile"    String - equipment/silent
- *                  "texture"         String - mission/vanilla texture path; empty disables it
+ *                  "texturePreset"   String - none/olive/charcoal/naval/sand (default none)
+ *                  "texture"         String - opt-in mission/vanilla texture path
  *                  "textureOpacity"  Number - decorative overlay opacity, clamped 0..0.32
  *                  "onSuccess"       Code   - server callback after variables are set
  *                  "onFailure"       Code   - server callback after variables are set
@@ -81,7 +82,7 @@ private _opt = {
     _result
 };
 private _presentationPairs = [];
-private _presentationKeys = ["preset", "manufacturer", "model", "objective", "activation", "briefing", "controls", "hint", "statusText", "successText", "failureText", "timeoutText", "abortText", "texture", "textureOpacity", "soundProfile", "skin"];
+private _presentationKeys = ["preset", "manufacturer", "model", "objective", "activation", "briefing", "controls", "hint", "statusText", "successText", "failureText", "timeoutText", "abortText", "texture", "texturePreset", "textureOpacity", "soundProfile", "skin"];
 {
     if ((_x select 0) in _presentationKeys) then {_presentationPairs pushBack _x;};
 } forEach _optionPairs;

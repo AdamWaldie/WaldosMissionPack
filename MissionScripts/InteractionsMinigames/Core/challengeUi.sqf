@@ -157,15 +157,16 @@ private _content = _display ctrlCreate ["RscText", -1];
 _content ctrlSetPosition [_contentX, _contentY, _contentW, _contentH];
 _content ctrlSetBackgroundColor [0.035, 0.04, 0.038, 0.97];
 _content ctrlCommit 0;
-[_display, [_contentX, _contentY, _contentW, _contentH]] call Waldo_fnc_MiniGameEquipmentDecorate;
 private _texturePath = _profile getOrDefault ["texture", ""];
 if (_texturePath != "") then {
     private _texture = _display ctrlCreate ["RscPicture", -1];
     _texture ctrlSetPosition [_contentX, _contentY, _contentW, _contentH];
     _texture ctrlSetText _texturePath;
-    _texture ctrlSetTextColor [1, 1, 1, _profile getOrDefault ["textureOpacity", 0.18]];
+    _texture ctrlSetTextColor [1, 1, 1, _profile getOrDefault ["textureOpacity", 0.14]];
     _texture ctrlCommit 0;
 };
+// Procedural seams, fasteners and instruments stay above any optional material image.
+[_display, [_contentX, _contentY, _contentW, _contentH]] call Waldo_fnc_MiniGameEquipmentDecorate;
 
 private _status = _display ctrlCreate ["RscText", -1];
 _status ctrlSetPosition [_contentX + 0.01 * safezoneW, _contentY + 0.008 * safezoneH, _contentW - 0.02 * safezoneW, 0.036 * safezoneH];

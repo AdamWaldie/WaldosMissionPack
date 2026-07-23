@@ -85,7 +85,7 @@ if (_texturePath != "") then {
     private _texture = _display ctrlCreate ["RscPicture", -1];
     _texture ctrlSetPosition [safezoneX + 0.12 * safezoneW, safezoneY + 0.055 * safezoneH, 0.76 * safezoneW, 0.87 * safezoneH];
     _texture ctrlSetText _texturePath;
-    _texture ctrlSetTextColor [1, 1, 1, _profile getOrDefault ["textureOpacity", 0.18]];
+    _texture ctrlSetTextColor [1, 1, 1, _profile getOrDefault ["textureOpacity", 0.14]];
     _texture ctrlCommit 0;
 };
 
