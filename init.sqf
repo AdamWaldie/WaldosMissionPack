@@ -188,6 +188,56 @@ missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_CIV", _LongRangeRadio
 /*===========================================================================================================================*/
 
 /*
+Localised Radio Jamming (ACRE2 / TFAR)
+
+Area-denial radio jamming for both ACRE2 and TFAR. A "jammer" is any object with a radius: radios
+inside its field (ACRE2) or players standing in it (TFAR) lose comms, with a linear falloff at the
+edge. You can jam everyone or only chosen sides, and (ACRE2 only) restrict it to frequency bands.
+
+Set up jammers however suits you:
+- From an object's init field in Eden:      [this] call Waldo_fnc_Jammer;                  // 300 m, jams all
+                                            [this, 500, "EAST"] call Waldo_fnc_Jammer;      // 500 m, OPFOR only
+- From a trigger / script:                  [myTower, 800, "ALL", [[30,88]]] call Waldo_fnc_Jammer;
+- Live from Zeus ("Waldos Mission Modules"): Radio Jammer - Place / Toggle Nearest / Remove Nearest.
+
+Toggle or remove later with [ref, active] call Waldo_fnc_JammerToggle; and [ref] call Waldo_fnc_JammerRemove;
+(ref = the jammer object or the id returned by Waldo_fnc_Jammer).
+
+ACRE2 note: your ACRE2 signal model must be "LOS Multipath" (the default) or "Arcade" for jamming to
+apply. Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming
+
+The feature installs its radio engines only while enabled; with no jammers placed it has no effect.
+Set Waldo_Jamming_Enable to false to disable it entirely; Waldo_Jamming_Notify controls the on-screen
+jamming meter players see when they enter a field.
+
+Model options (tune the realism/gameplay to taste):
+- Waldo_Jamming_LOS            true  = terrain/hills block the jamming field (line of sight)
+- Waldo_Jamming_BurnThrough    true  = higher-power radios (e.g. PRC-117F) resist jamming, shrinking
+                                       the effective field; Waldo_Jamming_BurnThroughRef is the mW
+                                       reference power (a radio at this power is fully affected)
+- Waldo_Jamming_Curve          "LINEAR" or "INVSQ" edge falloff
+- Waldo_Jamming_Destructible   true  = destroying a jammer's object removes it (EW objectives)
+- Waldo_Jamming_GmOverlay      true  = curators see a floating marker over each jammer
+- Waldo_Jamming_ScanRange      detection range (m) of the handheld RDF "Scan for Radio Jammers" action
+*/
+Waldo_Jamming_Enable = true;
+missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];
+missionNamespace setVariable ["Waldo_Jamming_LOS", true, true];
+missionNamespace setVariable ["Waldo_Jamming_BurnThrough", true, true];
+missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
+missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];
+missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];
+missionNamespace setVariable ["Waldo_Jamming_GmOverlay", true, true];
+missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];
+if (Waldo_Jamming_Enable) then {
+    missionNamespace setVariable ["Waldo_Jamming_Enable", true, true];
+    [] call Waldo_fnc_JammingInit;
+};
+
+
+/*===========================================================================================================================*/
+
+/*
 Vehicle function eventhandler
 
 This adds vehicle functions to affected vehicles:

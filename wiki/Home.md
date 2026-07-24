@@ -19,6 +19,8 @@ I maintain this wiki regularly and keep it updated with tutorials on the vast ma
 # Pack Features
 - Loadout saving and respawn system
 - Automatic ACRE2 Radio setup and respawn handling - based on mission makers specification in init.sqf
+- [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) - localised area-denial jamming with terrain LOS, burn-through, directional cones, UAV/drone jamming, destructible emitters and a loud "not a bug" HUD.
+- [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers) - a one-shot EMP burst and C-Track style map trackers.
 - Custom loadout & logistics system which scrapes the kits of all playable characters to fulfil base logistical needs - such as starter crates and supply crates. (Disable scenario Binarization, and edit loadouts via ACE Arsenal to ensure 100% satisfaction)
 - Vehicle Ambush/Camo scripts.
 - Vehicle unflipping actions

@@ -219,6 +219,24 @@ Position in the array = channel number. These names appear in the in-game CEOI d
 
 Remove the `/*` and `*/` to enable. See [ACRE2 Babel Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration).
 
+### Radio Jamming (ACRE2 / TFAR)
+
+```sqf
+Waldo_Jamming_Enable = true;                                           // false = feature off entirely
+missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];     // on-screen jamming HUD + chat feedback
+missionNamespace setVariable ["Waldo_Jamming_LOS", true, true];        // terrain blocks the field
+missionNamespace setVariable ["Waldo_Jamming_BurnThrough", true, true];// stronger radios resist jamming
+missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
+missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];  // or "INVSQ"
+missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];// destroy the object = remove jammer
+missionNamespace setVariable ["Waldo_Jamming_GmOverlay", true, true];  // curators see jammers in-world
+missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF scan detection range (m)
+```
+
+On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) for the full API.
+
+The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers).
+
 ### Introduction Text
 
 ```sqf
