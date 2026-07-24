@@ -19,6 +19,11 @@ generated server configuration for a public or production server.
 Client windows remain visible because hidden Arma clients do not reliably
 complete the interface-bearing mission lifecycle. Use `-LeaveClientsOpen` for
 a manual inspection session after the structured cases finish.
+The `party` suite installs local QA action-menu entries for deterministic,
+code-accurate previews of Five-Card Draw, Liar's Dice and Connect Four. These
+previews call the release display functions directly with representative state;
+authoritative multiplayer mechanics still require the dedicated multi-client
+cases in the manifest.
 Bulk screenshots and RPT files are local evidence and are not release assets.
 See [PROCESS.md](PROCESS.md) for the full release workflow, evidence rules,
 defect/retest policy and sign-off requirements. The scripted

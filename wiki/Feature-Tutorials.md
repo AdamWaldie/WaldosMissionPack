@@ -44,6 +44,9 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [— Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games) — seated multiplayer party games (Battleship, Blackjack, Poker, Chess, UNO and more)
 * [— Interaction Challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) — solo challenges that gate any interaction; bomb defusal, hacking, lockpicking (wire-cut, minesweeper, keypad, lockpick, circuit)
 
+## ACE Corpse Traps
+* [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps) - conceal a carried throwable on a corpse and trigger it when the inventory is opened
+
 ## Construction & Fortification
 * [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
 * [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup)

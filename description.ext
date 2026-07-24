@@ -55,7 +55,7 @@ class MissionSQM {
 
 //MHQ 
 class CfgSounds {
-	sounds[] ={};
+	sounds[] = {Audio_Deploy_New, Audio_Deploy_Old, Waldo_CorpseTrap_Plant, Waldo_CorpseTrap_Spoon};
 	class Audio_Deploy_New
 	{
 		name = "Audio_Deploy_New";
@@ -66,6 +66,18 @@ class CfgSounds {
 	{
 		name = "Audio_Deploy_Old";
 		sound[] = {"MissionScripts\Logistics\MHQ\Audio\Audio_Deploy_Old.ogg", 4, 1};
+		titles[] = { 1, "" };
+	};
+	class Waldo_CorpseTrap_Plant
+	{
+		name = "Waldo_CorpseTrap_Plant";
+		sound[] = {"MissionScripts\CorpseTraps\Audio\plant.wav", 2, 1, 18};
+		titles[] = { 1, "" };
+	};
+	class Waldo_CorpseTrap_Spoon
+	{
+		name = "Waldo_CorpseTrap_Spoon";
+		sound[] = {"MissionScripts\CorpseTraps\Audio\spoon.wav", 1.5, 1};
 		titles[] = { 1, "" };
 	};
 };

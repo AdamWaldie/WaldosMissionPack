@@ -43,21 +43,18 @@ if (Waldo_Economy_Enable) then {
 };
 
 /*
-Waldos Mini Games (table party games + interaction challenges)
+Waldos Mini Games (table party games + interaction procedures)
 
 Two complementary systems under one feature:
 
-  1. Table games - a seated, multiplayer party-games engine (Battleship, Who's Who, Shotgun
-     Roulette, Blackjack, Poker, Chess, Checkers, Rock Paper Scissors, UNO). Place any supported
-     table object (a camping table by default) in Eden and players get scroll-menu actions to
-     sit, vote for a game and play. Runs on all machines (server authority + client UI) and is
-     JIP-safe. The line below installs the engine; it is a no-op on repeat calls.
+  1. Table games - a seated, multiplayer party-games engine with twelve games including Texas
+     Hold'em, Five-Card Draw, Liar's Dice and Connect Four. Place any supported table object (a
+     camping table by default) in Eden and players get actions to sit, vote and play. Runs on all
+     machines (server authority + client UI) and is JIP-safe. This installer is repeat-safe.
 
-  2. Interaction challenges - single-player mini games (wire-cut defusal, minesweeper, keypad
-     code-crack, lockpick, circuit wiring) that resolve to pass/fail and can gate any object
-     interaction (see Waldo_fnc_MiniGameInteraction / Waldo_fnc_BombDefuseSetup). These register
-     themselves on first use, so bomb defusal and friends work even with the flag below set to
-     false - you only need the flag for the seated table games.
+  2. Interaction procedures - ten single-player field-equipment procedures that resolve to an
+     authoritative outcome and can gate any object interaction (see Waldo_fnc_MiniGameInteraction
+     / Waldo_fnc_BombDefuseSetup). They register on first use and are independent of this flag.
 
 Set the flag to false if your mission uses no table games (the interaction challenges are
 unaffected). Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games
@@ -65,6 +62,21 @@ unaffected). Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Wa
 Waldo_MiniGames_Enable = true;
 if (Waldo_MiniGames_Enable) then {
     [] call Waldo_fnc_MiniGamesInit;
+};
+
+/*
+ACE Corpse Traps
+
+Lets players consume a carried throwable to rig any corpse through ACE interaction. The exact
+magazine is preserved, so vanilla and modded frag, smoke, flashbang, incendiary and utility
+throwables use their own projectile behaviour when somebody opens the body's inventory.
+
+This is deliberately OFF by default because it changes a familiar inventory interaction into a
+lethal risk. Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps
+*/
+Waldo_CorpseTraps_Enable = false;
+if (Waldo_CorpseTraps_Enable) then {
+    [] call Waldo_fnc_CorpseTrapInit;
 };
 
 /*

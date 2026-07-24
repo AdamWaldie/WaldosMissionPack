@@ -162,6 +162,18 @@ if (Waldo_MiniGames_Enable) then {
 
 Installs the seated multiplayer party-games engine. The single-player [interaction challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) (bomb defusal, hacking, lockpicking, etc.) register themselves on first use and are **not** affected by this flag. See [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games).
 
+### ACE Corpse Traps (disabled by default)
+
+```sqf
+Waldo_CorpseTraps_Enable = false;
+if (Waldo_CorpseTraps_Enable) then {
+    [] call Waldo_fnc_CorpseTrapInit;
+};
+```
+
+Set the flag to `true` to let players consume carried throwables and conceal them on corpses. The
+trap activates when somebody opens the corpse's inventory. See [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps).
+
 ### ACE Drag/Carry Weight Limits
 
 ```sqf
