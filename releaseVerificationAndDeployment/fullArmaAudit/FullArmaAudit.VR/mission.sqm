@@ -1,0 +1,36 @@
+version=12;
+class Mission
+{
+    addOns[]={"A3_Characters_F_BLUFOR","A3_Map_VR"};
+    addOnsAuto[]={"A3_Characters_F_BLUFOR","A3_Map_VR"};
+    randomSeed=210032;
+    class Intel
+    {
+        briefingName="WMP Full Arma Audit";
+        overviewText="Runtime audit of features introduced from PR 21 through PR 32.";
+        year=2035;
+        month=7;
+        day=24;
+        hour=12;
+        minute=0;
+        startWeather=0;
+        forecastWeather=0;
+    };
+    class Groups
+    {
+        items=1;
+        class Item0
+        {
+            side="WEST";
+            class Vehicles
+            {
+                items=5;
+                class Item0 {position[]={0,0,0}; id=0; side="WEST"; vehicle="B_Soldier_F"; player="PLAYER COMMANDER"; leader=1; skill=0.6;};
+                class Item1 {position[]={2,0,0}; id=1; side="WEST"; vehicle="B_Soldier_F"; player="PLAY CDG"; skill=0.6;};
+                class Item2 {position[]={4,0,0}; id=2; side="WEST"; vehicle="B_Soldier_F"; player="PLAY CDG"; skill=0.6;};
+                class Item3 {position[]={6,0,0}; id=3; side="WEST"; vehicle="B_Soldier_F"; player="PLAY CDG"; skill=0.6;};
+                class Item4 {position[]={8,0,0}; id=4; side="WEST"; vehicle="B_Soldier_F"; player="PLAY CDG"; skill=0.6;};
+            };
+        };
+    };
+};

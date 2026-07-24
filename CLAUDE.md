@@ -842,6 +842,16 @@ interaction-equipment UI work, use the disposable VR mission documented in
   the visible viewport, because UI scale and aspect ratio can extend the safe
   zone beyond those coordinates.
 
+For branch-wide release and deployment verification, use the checked-in mission
+and process in `releaseVerificationAndDeployment/fullArmaAudit/`. The canonical
+launcher is `launch_full_arma_dedicated_audit.ps1`; it stages
+`FullArmaAudit.VR` under Arma's real `MPMissions` directory and starts a
+dedicated server plus visible clients through the normal CfgFunctions/init/JIP
+lifecycle. Always retain `-noBattlEye`, use isolated timestamped profiles, and
+do not treat the fast scripted launcher as release evidence. Follow
+`fullArmaAudit/PROCESS.md` for the required mod order, RPT checks, external UI
+captures, focused retests and final sign-off record.
+
 ### Script file header
 
 Every `.sqf` file in `MissionScripts/` opens with a documentation block:

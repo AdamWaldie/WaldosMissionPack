@@ -39,6 +39,14 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 # QuickStart Guide
 You can always find the most recent quickstart guide at this URL: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide
 
+# Release Validation
+Maintainers can stage the checked-in full-pack VR audit mission through a real
+Arma dedicated server and visible clients. The reusable launchers, PR #21-#32
+feature manifest, evidence parser and release/deployment procedure are under
+`releaseVerificationAndDeployment/fullArmaAudit/`. The process always disables
+BattlEye, isolates test profiles and requires RPT plus visual review; the fast
+scripted smoke is not a substitute for the staged mission.
+
 # Other Information
 - All files are provided with description on their utilisation and purpose.
 - initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.

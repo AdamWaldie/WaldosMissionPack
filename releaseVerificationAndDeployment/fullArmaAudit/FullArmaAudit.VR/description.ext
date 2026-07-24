@@ -1,0 +1,34 @@
+author = "Waldos Mission Pack";
+onLoadName = "WMP PR21-32 Full Arma Audit";
+onLoadMission = "Automated and guided runtime verification";
+loadScreen = "Pictures\loading.jpg";
+overviewPicture = "Pictures\loading.jpg";
+disabledAI = false;
+joinUnassigned = 0;
+respawn = 3;
+respawnDelay = 1;
+
+class Header
+{
+    gameType = Coop;
+    minPlayers = 1;
+    maxPlayers = 5;
+};
+
+#include "MissionScripts\WaldosFunctions.sqf"
+
+class CfgDebriefing
+{
+    class END1
+    {
+        title = "FULL AUDIT PASSED";
+        subtitle = "All selected runtime assertions passed";
+        description = "Review WMP FULL AUDIT records in the RPT and generated report.";
+    };
+    class LOSER
+    {
+        title = "FULL AUDIT FAILED";
+        subtitle = "One or more runtime assertions failed";
+        description = "Review WMP FULL AUDIT records in the RPT and generated report.";
+    };
+};
