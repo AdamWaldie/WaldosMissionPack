@@ -1674,8 +1674,35 @@ class CfgFunctions
             class MiniGameChallengeUI {
                 file = "MissionScripts\InteractionsMinigames\Core\challengeUi.sqf";
             };
-            class MiniGameChallengeUILegacy {
-                file = "MissionScripts\InteractionsMinigames\Core\challengeUiLegacy.sqf";
+            class MiniGameEquipmentRect {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentRect.sqf";
+            };
+            class MiniGameEquipmentCreateControl {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentCreateControl.sqf";
+            };
+            class MiniGameEquipmentSetPosition {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentSetPosition.sqf";
+            };
+            class MiniGameEquipmentPolyline {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentPolyline.sqf";
+            };
+            class MiniGameEquipmentFitText {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentFitText.sqf";
+            };
+            class MiniGameEquipmentBindDrag {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentBindDrag.sqf";
+            };
+            class MiniGameEquipmentAddDisplayHandler {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentAddDisplayHandler.sqf";
+            };
+            class MiniGameEquipmentCleanup {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentCleanup.sqf";
+            };
+            class MiniGameEquipmentValidateDisplay {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentValidateDisplay.sqf";
+            };
+            class MiniGameEquipmentPreviewState {
+                file = "MissionScripts\InteractionsMinigames\Core\equipmentPreviewState.sqf";
             };
             class MiniGameChallengeHelp {
                 file = "MissionScripts\InteractionsMinigames\Core\challengeHelp.sqf";
@@ -1688,6 +1715,9 @@ class CfgFunctions
             };
             class MiniGameEquipmentProfile {
                 file = "MissionScripts\InteractionsMinigames\Themes\equipmentProfile.sqf";
+            };
+            class MiniGameEquipmentDifficultyConfig {
+                file = "MissionScripts\InteractionsMinigames\Themes\equipmentDifficultyConfig.sqf";
             };
             class MiniGameEquipmentDecorate {
                 file = "MissionScripts\InteractionsMinigames\Equipment\equipmentDecorate.sqf";
@@ -1764,6 +1794,9 @@ class CfgFunctions
             };
             class MiniGameSequence {
                 file = "MissionScripts\InteractionsMinigames\Challenges\challengeSequence.sqf";
+            };
+            class MiniGameCommandInput {
+                file = "MissionScripts\InteractionsMinigames\Challenges\challengeCommandInput.sqf";
             };
         };
     };

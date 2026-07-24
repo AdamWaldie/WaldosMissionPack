@@ -15,21 +15,15 @@ _display setVariable ["Waldo_IMG_ColourBad", _bad];
 _display setVariable ["Waldo_IMG_ReducedMotion", _access getOrDefault ["reducedMotion", false]];
 _display setVariable ["Waldo_IMG_AudioCaptions", _access getOrDefault ["audioCaptions", true]];
 
-if (_access getOrDefault ["largeText", false]) then {
-    {
-        private _height = ctrlFontHeight _x;
-        if (_height > 0 && {_height < (0.045 * safezoneH)}) then {
-            _x ctrlSetFontHeight ((_height * 1.10) min (0.045 * safezoneH));
-            _x ctrlCommit 0;
-        };
-    } forEach allControls _display;
-};
+// Large text is handled by alternate shell/card geometry before controls are created.
+// Post-hoc font multiplication is intentionally avoided because it causes clipping.
+_display setVariable ["Waldo_IMG_HighContrast", _access getOrDefault ["highContrast", false]];
 
 if (_access getOrDefault ["strongOutlines", true]) then {
-    private _bounds = _display getVariable ["Waldo_IMG_Bounds", [safezoneX + 0.1 * safezoneW, safezoneY + 0.05 * safezoneH, 0.8 * safezoneW, 0.9 * safezoneH]];
+    private _bounds = _display getVariable ["Waldo_IMG_Bounds", [safeZoneX, safeZoneY, safeZoneW, safeZoneH]];
     _bounds params ["_x", "_y", "_w", "_h"];
-    private _thicknessW = 0.003 * safezoneW;
-    private _thicknessH = 0.004 * safezoneH;
+    private _thicknessW = (_w / 40) * 0.14;
+    private _thicknessH = (_h / 25) * 0.14;
     {
         private _edge = _display ctrlCreate ["RscText", -1];
         _edge ctrlSetPosition _x;

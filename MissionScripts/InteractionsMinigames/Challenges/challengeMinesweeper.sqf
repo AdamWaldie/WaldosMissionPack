@@ -1,364 +1,214 @@
 /*
- * Author: Waldo
- * Minesweeper defusal/hacking mini game (a built-in interaction challenge). Opens a grid on
- * the calling player: reveal every safe cell to win; strike a mine, run out the clock or press
- * Escape to fail. The first reveal is safe, right-click flags suspected mines, numbers show how
- * many mines touch a cell, and empty cells flood-reveal their neighbours. The whole challenge runs locally on the actor
- * and reports one boolean through the provided resolve callback, so it can gate any outcome.
- *
- * This is a challenge opener following the [_config, _resolve] contract; it is dispatched by
- * Waldo_fnc_MiniGameChallenge and registered by Waldo_fnc_MiniGameRegisterChallenge.
- *
- * Arguments:
- * _config  - Array - challenge config, all optional:
- *              0: _size      - Number - grid width/height, clamped 4..8 (default 5)
- *              1: _mineCount - Number - mines on the grid (default 5)
- *              2: _timeLimit - Number - seconds on the clock, 0 = none (default 0)
- *              3: _title     - String - dialog heading (default "MINESWEEPER")
- * _resolve - Code  - called once with boolean success and typed outcome metadata
- *
- * Return Value:
- * Nothing (result delivered asynchronously through _resolve)
- *
- * Example:
- * [[5, 5, 0, "HACKING"], { params ["_ok"]; systemChat str _ok; }] call Waldo_fnc_MiniGameMinesweeper;
+ * Portable ordnance diagnostic-tablet matrix procedure.
+ * Config: [size(4..8), mineCount, timeLimit, title]
  */
-
 disableSerialization;
+params [["_config", []], ["_resolve", {}]];
+_config params [["_size", 5], ["_mineCount", 5], ["_timeLimit", 0], ["_title", "TRIGGER ANALYSER"]];
+_size = ((round _size) max 4) min 8;
+private _cellCount = _size * _size;
+_mineCount = ((round _mineCount) max 1) min (_cellCount - 9 max 1);
 
-params [
-    ["_config", []],
-    ["_resolve", {}]
-];
-
-if (!hasInterface) exitWith { [false] call _resolve; };
-
-_config params [
-    ["_size", 5],
-    ["_mineCount", 5],
-    ["_timeLimit", 0],
-    ["_title", "TRIGGER ANALYSER"]
-];
-
-_size = round _size;
-if (_size < 4) then { _size = 4; };
-if (_size > 8) then { _size = 8; };
-
-private _cells = _size * _size;
-_mineCount = round _mineCount;
-if (_mineCount < 1) then { _mineCount = 1; };
-if (_mineCount > (_cells - 1)) then { _mineCount = _cells - 1; };
-
-if (!isNull (missionNamespace getVariable ["Waldo_MG_MS_ActiveDisplay", displayNull])) exitWith {
-    [false] call _resolve;
-};
-if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
-    [false] call _resolve;
-};
-
-// WMP brand palette (kept inline so the challenge runs without the table engine).
-private _cPanel = [0.04, 0.05, 0.07, 0.94];
-private _cHeader = [0.10, 0.13, 0.20, 1];
-private _cAccent = [0.243, 0.463, 0.827, 1];
-private _cAccentLt = [0.55, 0.72, 0.98, 1];
-private _cText = [0.88, 0.90, 0.94, 1];
-private _cCell = [0.16, 0.20, 0.28, 1];
-
-// Lay the mines and count adjacency.
-private _mines = [];
-for "_i" from 0 to (_cells - 1) do { _mines pushBack false; };
-private _placed = 0;
-while { _placed < _mineCount } do {
-    private _r = floor (random _cells);
-    if !(_mines select _r) then {
-        _mines set [_r, true];
-        _placed = _placed + 1;
-    };
-};
-
-private _adj = [];
-for "_i" from 0 to (_cells - 1) do {
-    private _row = floor (_i / _size);
-    private _col = _i mod _size;
-    private _count = 0;
-    for "_dr" from -1 to 1 do {
-        for "_dc" from -1 to 1 do {
-            private _nr = _row + _dr;
-            private _nc = _col + _dc;
-            if (_nr >= 0 && {_nr < _size} && {_nc >= 0} && {_nc < _size}) then {
-                private _ni = _nr * _size + _nc;
-                if (_mines select _ni) then { _count = _count + 1; };
-            };
-        };
-    };
-    _adj pushBack _count;
-};
-
-private _revealed = [];
-for "_i" from 0 to (_cells - 1) do { _revealed pushBack false; };
-
-private _parent = findDisplay 46;
-if (isNull _parent) exitWith { [false] call _resolve; };
-private _display = _parent createDisplay "RscDisplayEmpty";
-if (isNull _display) exitWith { [false] call _resolve; };
-
-missionNamespace setVariable ["Waldo_MG_MS_ActiveDisplay", _display];
-missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
-[_display, "Left click: reveal    Right click: flag", _title, "Reveal every safe cell without opening a mine.", "The first reveal is always safe. Empty cells open nearby safe areas automatically."] call Waldo_fnc_MiniGameChallengeUILegacy;
+private _display = [
+    _title,
+    "Probe every safe circuit node. Mark suspected triggers before opening adjacent nodes.",
+    _timeLimit,
+    _resolve,
+    0.50,
+    "Left click: probe node; Right click: place/remove PROBE marker",
+    "The first probe and its immediate neighbours are protected. Numerals report adjacent triggers."
+] call Waldo_fnc_MiniGameChallengeUI;
+if (isNull _display) exitWith {};
 
 _display setVariable ["Waldo_MG_MS_Size", _size];
-_display setVariable ["Waldo_MG_MS_Mines", _mines];
-_display setVariable ["Waldo_MG_MS_Adj", _adj];
-_display setVariable ["Waldo_MG_MS_Revealed", _revealed];
-_display setVariable ["Waldo_MG_MS_Resolve", _resolve];
-_display setVariable ["Waldo_MG_MS_Done", false];
-_display setVariable ["Waldo_MG_MS_FirstMove", true];
-private _flagged = [];
-for "_i" from 0 to (_cells - 1) do { _flagged pushBack false; };
-_display setVariable ["Waldo_MG_MS_Flagged", _flagged];
-_display setVariable ["Waldo_MG_MS_RebuildAdj", {
-    params ["_disp"];
-    private _size = _disp getVariable ["Waldo_MG_MS_Size", 5];
-    private _mines = _disp getVariable ["Waldo_MG_MS_Mines", []];
-    private _adj = [];
-    for "_i" from 0 to ((count _mines) - 1) do {
-        private _row = floor (_i / _size);
-        private _col = _i mod _size;
-        private _count = 0;
-        for "_dr" from -1 to 1 do {
-            for "_dc" from -1 to 1 do {
-                private _nr = _row + _dr;
-                private _nc = _col + _dc;
-                if (_nr >= 0 && {_nr < _size} && {_nc >= 0} && {_nc < _size}) then {
-                    if (_mines select (_nr * _size + _nc)) then { _count = _count + 1; };
-                };
-            };
-        };
-        _adj pushBack _count;
-    };
-    _disp setVariable ["Waldo_MG_MS_Adj", _adj];
-}];
+_display setVariable ["Waldo_MG_MS_MineCount", _mineCount];
+_display setVariable ["Waldo_MG_MS_Mines", []];
+_display setVariable ["Waldo_MG_MS_Revealed", []];
+_display setVariable ["Waldo_MG_MS_Flags", []];
+_display setVariable ["Waldo_MG_MS_Generated", false];
+_display setVariable ["Waldo_MG_MS_Revealing", false];
 
-// Single-shot finisher.
-_display setVariable ["Waldo_MG_MS_Finish", {
-    params ["_disp", "_ok", ["_resultKey", ""]];
-    if (isNull _disp) exitWith {};
-    if (_disp getVariable ["Waldo_MG_MS_Done", false]) exitWith {};
-    _disp setVariable ["Waldo_MG_MS_Done", true];
-    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
-    // On a loss, reveal the mines so the player sees the board.
-    if (!_ok) then {
-        private _mines = _disp getVariable ["Waldo_MG_MS_Mines", []];
-        private _btns = _disp getVariable ["Waldo_MG_MS_Buttons", []];
-        {
-            if (_x && {_forEachIndex < (count _btns)}) then {
-                (_btns select _forEachIndex) ctrlSetText "X";
-                (_btns select _forEachIndex) ctrlSetBackgroundColor [0.80, 0.22, 0.20, 1];
-            };
-        } forEach _mines;
-    };
-    private _fnResolve = _disp getVariable ["Waldo_MG_MS_Resolve", {}];
-    private _outcomeCode = if (_ok) then {"SUCCESS"} else {if (_resultKey == "timeoutText") then {"TIMEOUT"} else {if (_resultKey == "abortText") then {"ABORTED"} else {"FAILURE"};};};
-    private _reason = if (_resultKey == "") then {""} else {(_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault [_resultKey, _resultKey]};
-    missionNamespace setVariable ["Waldo_MG_MS_ActiveDisplay", displayNull];
-    [{
-        params ["_disp", "_res", "_ok", "_outcomeCode", "_reason"];
-        if (!isNull _disp) then { _disp closeDisplay 1; };
-        [_ok, [_outcomeCode, _reason]] call _res;
-    }, [_disp, _fnResolve, _ok, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.6}}] call CBA_fnc_waitAndExecute;
-}];
+private _tablet = [_display, "RscText", [1.5, 3, 37, 20.5], "portable ordnance diagnostic tablet"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_tablet ctrlSetBackgroundColor [0.10, 0.12, 0.115, 1];
+private _screen = [_display, "RscText", [2.5, 4, 26.5, 18.3], "explosive circuit matrix screen"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_screen ctrlSetBackgroundColor [0.012, 0.027, 0.025, 1];
+private _screenTitle = [_display, "RscText", [3.2, 4.35, 25.1, 1.3], "fault map screen label"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_screenTitle ctrlSetText "MX-12 // EXPLOSIVE CIRCUIT MATRIX";
+_screenTitle ctrlSetTextColor [0.54, 0.92, 0.68, 1];
+private _sidePanel = [_display, "RscText", [30, 4, 7.5, 18.3], "diagnostic counters panel"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_sidePanel ctrlSetBackgroundColor [0.045, 0.055, 0.052, 1];
+private _counter = [_display, "RscStructuredText", [30.7, 5, 6.1, 7.2], "mine flag and scan counters"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_counter ctrlSetStructuredText parseText "<t size='0.90'><t color='#F2BE55'>TRIGGERS</t> --<br/><t color='#F2BE55'>MARKERS</t> 0<br/><t color='#F2BE55'>SAFE NODES</t> 0</t>";
+_display setVariable ["Waldo_MG_MS_Counter", _counter];
+private _legend = [_display, "RscStructuredText", [30.6, 12.5, 6.3, 8], "diagnostic matrix legend"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_legend ctrlSetStructuredText parseText "<t size='0.75'><t color='#DDD8C8'>MATRIX KEY</t><br/>[?] UNTESTED<br/>[P] PROBE MARKER<br/>[1-8] ADJACENT<br/>[ ] CLEAR<br/>[*] TRIGGER<br/><t color='#F2BE55'>RMB: MARK</t></t>";
 
-// Flood-reveal routine (stored so the button handler can call it).
-_display setVariable ["Waldo_MG_MS_Reveal", {
-    params ["_disp", "_start"];
-    private _size = _disp getVariable ["Waldo_MG_MS_Size", 5];
-    private _mines = _disp getVariable ["Waldo_MG_MS_Mines", []];
-    private _adj = _disp getVariable ["Waldo_MG_MS_Adj", []];
-    private _rev = _disp getVariable ["Waldo_MG_MS_Revealed", []];
-    private _btns = _disp getVariable ["Waldo_MG_MS_Buttons", []];
-    private _numColours = [
-        [0.55, 0.72, 0.98, 1], [0.35, 0.75, 0.45, 1], [0.85, 0.55, 0.30, 1],
-        [0.86, 0.72, 0.20, 1], [0.80, 0.40, 0.75, 1], [0.60, 0.85, 0.90, 1],
-        [0.88, 0.90, 0.94, 1], [0.88, 0.90, 0.94, 1]
-    ];
-    private _stack = [_start];
-    while { count _stack > 0 } do {
-        private _i = _stack deleteAt 0;
-        if !(_rev select _i) then {
-            _rev set [_i, true];
-            private _n = _adj select _i;
-            private _b = _btns select _i;
-            _b ctrlSetBackgroundColor [0.09, 0.10, 0.12, 1];
-            if (_n > 0) then {
-                _b ctrlSetText str _n;
-                _b ctrlSetTextColor (_numColours select ((_n - 1) min 7));
-            } else {
-                _b ctrlSetText "";
-                private _row = floor (_i / _size);
-                private _col = _i mod _size;
-                for "_dr" from -1 to 1 do {
-                    for "_dc" from -1 to 1 do {
-                        private _nr = _row + _dr;
-                        private _nc = _col + _dc;
-                        if (_nr >= 0 && {_nr < _size} && {_nc >= 0} && {_nc < _size}) then {
-                            private _ni = _nr * _size + _nc;
-                            if (!(_rev select _ni) && {!(_mines select _ni)}) then {
-                                _stack pushBack _ni;
-                            };
-                        };
-                    };
-                };
-            };
-        };
-    };
-    _disp setVariable ["Waldo_MG_MS_Revealed", _rev];
-
-    // Win when every safe cell is revealed.
-    private _safe = 0;
-    { if (!_x) then { _safe = _safe + 1; }; } forEach _mines;
-    private _revCount = 0;
-    { if (_x) then { _revCount = _revCount + 1; }; } forEach _rev;
-    if (_revCount >= _safe) then {
-        private _fin = _disp getVariable ["Waldo_MG_MS_Finish", {}];
-        [_disp, true] call _fin;
-    };
-}];
-
-// Layout.
-private _w = 0.42 * safezoneW;
-private _headerH = 0.13 * safezoneH;
-private _gridSpan = 0.42 * safezoneH;
-private _h = _headerH + _gridSpan + 0.03 * safezoneH;
-private _x = safezoneX + (safezoneW - _w) / 2;
-private _y = safezoneY + (safezoneH - _h) / 2;
-
-private _panel = _display ctrlCreate ["RscText", -1];
-_panel ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, _h + 0.02 * safezoneH];
-_panel ctrlSetBackgroundColor _cPanel;
-_panel ctrlCommit 0;
-
-private _accentBar = _display ctrlCreate ["RscText", -1];
-_accentBar ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, 0.006 * safezoneH];
-_accentBar ctrlSetBackgroundColor _cAccent;
-_accentBar ctrlCommit 0;
-
-private _heading = _display ctrlCreate ["RscText", -1];
-_heading ctrlSetPosition [_x, _y, _w, 0.05 * safezoneH];
-_heading ctrlSetText _title;
-_heading ctrlSetTextColor _cAccentLt;
-_heading ctrlSetBackgroundColor _cHeader;
-_heading ctrlCommit 0;
-
-private _timer = _display ctrlCreate ["RscText", -1];
-_timer ctrlSetPosition [_x, _y + 0.055 * safezoneH, _w, 0.04 * safezoneH];
-_timer ctrlSetTextColor _cText;
-_timer ctrlSetText format ["Reveal every safe cell.  Mines: %1", _mineCount];
-_timer ctrlCommit 0;
-_display setVariable ["Waldo_MG_MS_TimerCtrl", _timer];
-
-// Grid.
-private _gridTop = _y + _headerH;
-private _cellGap = 0.004 * safezoneW;
-private _cellW = (_w - (_size - 1) * _cellGap) / _size;
-private _cellH = (_gridSpan - (_size - 1) * _cellGap) / _size;
-private _colX = _x;
+private _boardX = 3.4;
+private _boardY = 5.8;
+private _boardW = 24.3;
+private _boardH = 15.7;
+private _cellW = _boardW / _size;
+private _cellH = _boardH / _size;
 private _buttons = [];
-for "_i" from 0 to (_cells - 1) do {
-    private _row = floor (_i / _size);
-    private _col = _i mod _size;
-    private _cx = _colX + _col * (_cellW + _cellGap);
-    private _cy = _gridTop + _row * (_cellH + _cellGap);
-    private _btn = _display ctrlCreate ["RscButton", -1];
-    _btn ctrlSetPosition [_cx, _cy, _cellW, _cellH];
-    _btn ctrlSetText "";
-    _btn ctrlSetBackgroundColor _cCell;
-    _btn ctrlSetTextColor _cText;
-    _btn setVariable ["Waldo_MG_MS_Index", _i];
-    _btn ctrlAddEventHandler ["ButtonClick", {
-        params ["_ctrl"];
-        private _disp = ctrlParent _ctrl;
-        if (isNull _disp || {_disp getVariable ["Waldo_MG_MS_Done", false]}) exitWith {};
-        private _idx = _ctrl getVariable ["Waldo_MG_MS_Index", -1];
-        private _mines = _disp getVariable ["Waldo_MG_MS_Mines", []];
-        private _rev = _disp getVariable ["Waldo_MG_MS_Revealed", []];
-        private _flagged = _disp getVariable ["Waldo_MG_MS_Flagged", []];
-        if (_rev select _idx) exitWith {};
-        if (_flagged select _idx) exitWith {};
-        if (_disp getVariable ["Waldo_MG_MS_FirstMove", true]) then {
-            _disp setVariable ["Waldo_MG_MS_FirstMove", false];
-            if (_mines select _idx) then {
-                private _swap = -1;
-                for "_candidate" from 0 to ((count _mines) - 1) do {
-                    if (_swap < 0 && {!(_mines select _candidate)} && {_candidate != _idx}) then { _swap = _candidate; };
-                };
-                if (_swap >= 0) then {
-                    _mines set [_idx, false];
-                    _mines set [_swap, true];
-                    _disp setVariable ["Waldo_MG_MS_Mines", _mines];
-                    [_disp] call (_disp getVariable ["Waldo_MG_MS_RebuildAdj", {}]);
-                };
-            };
-        };
-        if (_mines select _idx) exitWith {
-            _ctrl ctrlSetText "X";
-            _ctrl ctrlSetBackgroundColor [0.80, 0.22, 0.20, 1];
-            private _fin = _disp getVariable ["Waldo_MG_MS_Finish", {}];
-            [_disp, false] call _fin;
-        };
-        private _reveal = _disp getVariable ["Waldo_MG_MS_Reveal", {}];
-        [_disp, _idx] call _reveal;
-    }];
-    _btn ctrlAddEventHandler ["MouseButtonDown", {
-        params ["_ctrl", "_button"];
-        if (_button != 1) exitWith {};
-        private _disp = ctrlParent _ctrl;
-        private _idx = _ctrl getVariable ["Waldo_MG_MS_Index", -1];
-        private _revealed = _disp getVariable ["Waldo_MG_MS_Revealed", []];
-        if (_idx < 0 || {_revealed select _idx}) exitWith {};
-        private _flagged = _disp getVariable ["Waldo_MG_MS_Flagged", []];
-        _flagged set [_idx, !(_flagged select _idx)];
-        _disp setVariable ["Waldo_MG_MS_Flagged", _flagged];
-        _ctrl ctrlSetText if (_flagged select _idx) then {"FLAG"} else {""};
-        _ctrl ctrlSetTextColor if (_flagged select _idx) then {[0.95, 0.72, 0.22, 1]} else {[0.88, 0.90, 0.94, 1]};
-        private _timer = _disp getVariable ["Waldo_MG_MS_TimerCtrl", controlNull];
-        if (!isNull _timer) then { _timer ctrlSetText format ["Reveal safe cells. Mines: %1  Flags: %2", {_x} count (_disp getVariable ["Waldo_MG_MS_Mines", []]), {_x} count _flagged]; };
-    }];
-    _btn ctrlCommit 0;
-    _buttons pushBack _btn;
+for "_row" from 0 to (_size - 1) do {
+    for "_column" from 0 to (_size - 1) do {
+        private _index = (_row * _size) + _column;
+        private _button = [_display, "RscButton", [
+            _boardX + (_column * _cellW),
+            _boardY + (_row * _cellH),
+            _cellW - 0.12,
+            _cellH - 0.12
+        ], format ["diagnostic node row %1 column %2", _row + 1, _column + 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+        _button ctrlSetText "[?]";
+        _button ctrlSetBackgroundColor [0.11, 0.17, 0.16, 1];
+        _button ctrlSetTextColor [0.84, 0.88, 0.82, 1];
+        _button ctrlSetTooltip format ["Circuit node %1-%2. LMB probe, RMB mark.", _row + 1, _column + 1];
+        _button setVariable ["Waldo_MG_MS_Index", _index];
+        _button ctrlAddEventHandler ["MouseButtonDown", {
+            params ["_control", "_button"];
+            private _display = ctrlParent _control;
+            if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false] || {_display getVariable ["Waldo_MG_MS_Revealing", false]}}) exitWith {true};
+            private _index = _control getVariable ["Waldo_MG_MS_Index", -1];
+            if (_button == 0) exitWith {[_display, _index] call (_display getVariable ["Waldo_MG_MS_Reveal", {}]); true};
+            if (_button == 1) exitWith {[_display, _index] call (_display getVariable ["Waldo_MG_MS_ToggleFlag", {}]); true};
+            false
+        }];
+        _buttons pushBack _button;
+    };
 };
 _display setVariable ["Waldo_MG_MS_Buttons", _buttons];
 
-// Escape aborts (counts as a failure).
-_display displayAddEventHandler ["KeyDown", {
-    params ["_disp", "_key"];
-    if (_key == 1) then {
-        private _fin = _disp getVariable ["Waldo_MG_MS_Finish", {}];
-        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
-        true
-    } else {
-        false
+_display setVariable ["Waldo_MG_MS_Generate", {
+    params ["_display", "_firstIndex"];
+    private _size = _display getVariable ["Waldo_MG_MS_Size", 5];
+    private _mineCount = _display getVariable ["Waldo_MG_MS_MineCount", 5];
+    private _firstRow = floor (_firstIndex / _size);
+    private _firstColumn = _firstIndex mod _size;
+    private _allowed = [];
+    for "_index" from 0 to ((_size * _size) - 1) do {
+        private _row = floor (_index / _size);
+        private _column = _index mod _size;
+        if (abs (_row - _firstRow) > 1 || {abs (_column - _firstColumn) > 1}) then {_allowed pushBack _index;};
     };
+    if (count _allowed < _mineCount) then {
+        _allowed = [];
+        for "_index" from 0 to ((_size * _size) - 1) do {if (_index != _firstIndex) then {_allowed pushBack _index;};};
+    };
+    _allowed = _allowed call BIS_fnc_arrayShuffle;
+    _display setVariable ["Waldo_MG_MS_Mines", _allowed select [0, _mineCount]];
+    _display setVariable ["Waldo_MG_MS_Generated", true];
 }];
-
-// Optional countdown.
-if (_timeLimit > 0) then {
-    [_display, _timeLimit] spawn {
-        params ["_disp", "_timeLimit"];
-        waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
-        if (isNull _disp) exitWith {};
-        private _deadline = time + _timeLimit;
-        while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_MS_Done", false])} } do {
-            private _remain = _deadline - time;
-            private _timerCtrl = _disp getVariable ["Waldo_MG_MS_TimerCtrl", controlNull];
-            if (_remain <= 0) exitWith {
-                private _fin = _disp getVariable ["Waldo_MG_MS_Finish", {}];
-                [_disp, false, "timeoutText"] call _fin;
+_display setVariable ["Waldo_MG_MS_Adjacent", {
+    params ["_display", "_index"];
+    private _size = _display getVariable ["Waldo_MG_MS_Size", 5];
+    private _row = floor (_index / _size);
+    private _column = _index mod _size;
+    private _neighbours = [];
+    for "_rowOffset" from -1 to 1 do {
+        for "_columnOffset" from -1 to 1 do {
+            private _nextRow = _row + _rowOffset;
+            private _nextColumn = _column + _columnOffset;
+            if (!(_rowOffset == 0 && {_columnOffset == 0}) && {_nextRow >= 0 && {_nextRow < _size && {_nextColumn >= 0 && {_nextColumn < _size}}}}) then {
+                _neighbours pushBack ((_nextRow * _size) + _nextColumn);
             };
-            if (!isNull _timerCtrl) then {
-                _timerCtrl ctrlSetText format ["TIME REMAINING: %1s", (_remain max 0) toFixed 1];
-            };
-            sleep 0.1;
         };
     };
-};
+    _neighbours
+}];
+_display setVariable ["Waldo_MG_MS_Refresh", {
+    params ["_display", ["_loss", false]];
+    private _buttons = _display getVariable ["Waldo_MG_MS_Buttons", []];
+    private _mines = _display getVariable ["Waldo_MG_MS_Mines", []];
+    private _revealed = _display getVariable ["Waldo_MG_MS_Revealed", []];
+    private _flags = _display getVariable ["Waldo_MG_MS_Flags", []];
+    {
+        private _index = _forEachIndex;
+        if (_index in _revealed) then {
+            private _adjacent = {_x in _mines} count ([_display, _index] call (_display getVariable ["Waldo_MG_MS_Adjacent", {}]));
+            _x ctrlSetText (if (_adjacent == 0) then {"[ ]"} else {format ["[%1]", _adjacent]});
+            _x ctrlSetBackgroundColor [0.06, 0.11, 0.10, 1];
+            _x ctrlSetTextColor [0.58, 0.90, 0.72, 1];
+            _x ctrlEnable false;
+        } else {
+            if (_loss && {_index in _mines}) then {
+                _x ctrlSetText "[*] TRIGGER";
+                _x ctrlSetBackgroundColor [0.42, 0.06, 0.12, 1];
+                _x ctrlSetTextColor [1, 0.74, 0.80, 1];
+                _x ctrlEnable false;
+            } else {
+                if (_index in _flags) then {
+                    _x ctrlSetText "[P]";
+                    _x ctrlSetBackgroundColor [0.34, 0.28, 0.08, 1];
+                    _x ctrlSetTextColor [1, 0.88, 0.42, 1];
+                } else {
+                    _x ctrlSetText "[?]";
+                    _x ctrlSetBackgroundColor [0.11, 0.17, 0.16, 1];
+                    _x ctrlSetTextColor [0.84, 0.88, 0.82, 1];
+                };
+            };
+        };
+    } forEach _buttons;
+    private _counter = _display getVariable ["Waldo_MG_MS_Counter", controlNull];
+    if (!isNull _counter) then {
+        _counter ctrlSetStructuredText parseText format [
+            "<t size='0.90'><t color='#F2BE55'>TRIGGERS</t> %1<br/><t color='#F2BE55'>MARKERS</t> %2<br/><t color='#F2BE55'>SAFE NODES</t> %3/%4</t>",
+            count _mines, count _flags, count _revealed, (count _buttons) - count _mines
+        ];
+    };
+}];
+_display setVariable ["Waldo_MG_MS_ToggleFlag", {
+    params ["_display", "_index"];
+    if (_index in (_display getVariable ["Waldo_MG_MS_Revealed", []])) exitWith {};
+    private _flags = _display getVariable ["Waldo_MG_MS_Flags", []];
+    if (_index in _flags) then {_flags deleteAt (_flags find _index);} else {
+        if (count _flags < (_display getVariable ["Waldo_MG_MS_MineCount", 1])) then {_flags pushBack _index;};
+    };
+    _display setVariable ["Waldo_MG_MS_Flags", _flags];
+    [_display] call (_display getVariable ["Waldo_MG_MS_Refresh", {}]);
+}];
+_display setVariable ["Waldo_MG_MS_Reveal", {
+    params ["_display", "_index"];
+    if (_index in (_display getVariable ["Waldo_MG_MS_Flags", []]) || {_index in (_display getVariable ["Waldo_MG_MS_Revealed", []])}) exitWith {};
+    if !(_display getVariable ["Waldo_MG_MS_Generated", false]) then {[_display, _index] call (_display getVariable ["Waldo_MG_MS_Generate", {}]);};
+    private _mines = _display getVariable ["Waldo_MG_MS_Mines", []];
+    if (_index in _mines) exitWith {
+        [_display, true] call (_display getVariable ["Waldo_MG_MS_Refresh", {}]);
+        [_display, false, "[X] LIVE TRIGGER NODE PROBED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
+    };
+    _display setVariable ["Waldo_MG_MS_Revealing", true];
+    private _worker = [_display, _index] spawn {
+        params ["_display", "_start"];
+        private _queue = [_start];
+        private _revealed = _display getVariable ["Waldo_MG_MS_Revealed", []];
+        private _mines = _display getVariable ["Waldo_MG_MS_Mines", []];
+        private _flags = _display getVariable ["Waldo_MG_MS_Flags", []];
+        while {count _queue > 0 && {!isNull _display}} do {
+            private _current = _queue deleteAt 0;
+            if (!(_current in _revealed) && {!(_current in _flags) && {!(_current in _mines)}}) then {
+                _revealed pushBack _current;
+                _display setVariable ["Waldo_MG_MS_Revealed", _revealed];
+                [_display] call (_display getVariable ["Waldo_MG_MS_Refresh", {}]);
+                private _adjacent = [_display, _current] call (_display getVariable ["Waldo_MG_MS_Adjacent", {}]);
+                if ({_x in _mines} count _adjacent == 0) then {
+                    {_queue pushBackUnique _x;} forEach _adjacent;
+                };
+                if !(_display getVariable ["Waldo_IMG_ReducedMotion", false]) then {uiSleep 0.025;};
+            };
+        };
+        if (!isNull _display) then {
+            _display setVariable ["Waldo_MG_MS_Revealing", false];
+            private _safeTotal = count (_display getVariable ["Waldo_MG_MS_Buttons", []]) - count _mines;
+            if (count (_display getVariable ["Waldo_MG_MS_Revealed", []]) >= _safeTotal) then {
+                [_display, true, "[OK] EXPLOSIVE CIRCUIT MATRIX CLEARED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
+            } else {
+                private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+                if (!isNull _status) then {_status ctrlSetText format ["[SCAN] %1 SAFE NODES REMAIN", _safeTotal - count (_display getVariable ["Waldo_MG_MS_Revealed", []])];};
+            };
+        };
+    };
+    private _workers = _display getVariable ["Waldo_MG_UI_Workers", []];
+    _workers pushBack _worker;
+    _display setVariable ["Waldo_MG_UI_Workers", _workers];
+}];
+[_display] call (_display getVariable ["Waldo_MG_MS_Refresh", {}]);
 [_display] call Waldo_fnc_MiniGameEquipmentBriefing;

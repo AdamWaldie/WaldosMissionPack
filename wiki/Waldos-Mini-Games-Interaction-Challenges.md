@@ -18,7 +18,7 @@ Place this in an object's Eden **Initialization** field:
 ```
 
 Available procedure ids are `wirecut`, `minesweeper`, `keypad`, `lockpick`, `circuit`, `repair`,
-`radiotune`, `pressure`, and `sequence`.
+`radiotune`, `pressure`, `sequence`, and `commandinput`.
 
 The helper supplies a suitable action, equipment identity, icon, and balanced configuration. Failure
 allows another attempt by default; success consumes the interaction. ACE is used when available;
@@ -167,7 +167,7 @@ overrides cannot break the interface.
 
 Presentation keys are `preset`, `actionTitle`, `manufacturer`, `model`, `title`, `skin`, `objective`,
 `briefing`, `activation`, `controls`, `hint`, `statusText`, `successText`, `failureText`, `timeoutText`,
-`abortText`, `icon`, `texturePreset`, `texture`, and `soundProfile`. Operational keys remain `config`, `successVariable`, `failureVariable`,
+`abortText`, `icon`, `texturePreset`, `texture`, and `soundProfile`. Operational keys remain `difficulty`, `config`, `successVariable`, `failureVariable`,
 `retryOnFailure`, `repeatable`, `distance`, `lockTimeout`, `condition`, `onSuccess`, and `onFailure`.
 
 `skin` accepts `default`, `olive`, `charcoal`, `sand`, `naval`, or `hazard`. `soundProfile` accepts
@@ -176,6 +176,34 @@ disabled by default: the complete interface is drawn from Arma controls, procedu
 fasteners, instruments and labels. An optional material image is drawn beneath that interface and
 never replaces semantic state symbols. Mission makers cannot provide raw control positions or
 semantic colours, so presentation changes cannot remove protected contrast or break the layout.
+
+### Curated difficulty profiles
+
+Set `difficulty` to `easy`, `standard`, `hard`, or `expert`. These profiles adjust meaningful workload
+such as component count, tolerance, hold duration, mistake allowance, or memory length. They do not
+make labels smaller or remove accessibility cues. An explicit `config` always takes precedence and
+the object publishes `Waldo_MG_Preset_Difficulty` as the selected name or `custom`.
+
+```sqf
+[
+    this,
+    "sequence",
+    createHashMapFromArray [["difficulty", "easy"]]
+] call Waldo_fnc_MiniGameInteractionSetup;
+```
+
+| Procedure | Easy | Standard | Hard | Expert |
+|---|---|---|---|---|
+| `wirecut` | 4 looms / 1-point order / 35 s | 5 / 2-point / 30 s | 6 / 3-point / 30 s | 6 / 4-point / 25 s |
+| `minesweeper` | 4x4 / 3 triggers | 5x5 / 5 | 7x7 / 10 / 90 s | 8x8 / 15 / 75 s |
+| `keypad` | 3 digits / 9 attempts | 4 / 8 | 5 / 8 / 90 s | 6 / 9 / 75 s |
+| `lockpick` | 2 pins / broad bind windows | 3 / normal windows | 5 / narrow / 60 s | 6 / very narrow / 45 s |
+| `circuit` | 3 pairs / 5 mistakes | 4 / 3 | 5 / 2 / 60 s | 6 / 1 / 45 s |
+| `repair` | 3 bolts / 1 turn / 5 mistakes | 4 / 2 / 3 | 5 / 3 / 2 | 6 / 4 / 1 |
+| `radiotune` | 2 broad carriers | 3 normal carriers | 4 narrow carriers | 5 precision carriers |
+| `pressure` | 2 lines / broad bands | 3 / normal bands | 4 / narrow bands | 4 / precision bands |
+| `sequence` | 3 pads / 3 stages / 1.05 s | 4 / 4 / 0.85 s | 5 / 5 / 0.85 s | 6 / 6 / 0.85 s |
+| `commandinput` | 3 commands / 2 packets / 4 faults | 4 / 3 / 3 | 5 / 4 / 2 | 6 / 5 / 1 |
 
 ### Presentation option reference
 
@@ -235,8 +263,8 @@ Leaving `texturePreset` as `none` and `texture` as `""` uses only the procedural
 change safe casing and accent colours but never enable a bitmap automatically.
 
 All wording fields are optional. Keep `controls` short enough for the footer and use `hint` for the
-longer help-card explanation. Gameplay remains controlled by `config`; changing a title or skin does
-not change difficulty, timing, callbacks, or success rules.
+longer help-card explanation. Gameplay remains controlled by `difficulty` or an overriding `config`;
+changing a title or skin does not change timing, callbacks, or success rules.
 
 Legacy option arrays remain compatible; in a legacy array, `title` continues to mean the world action
 text. Use a hashmap for the new equipment faceplate fields.
@@ -254,6 +282,7 @@ text. Use a hashmap for the new equipment faceplate fields.
 | `radiotune` | NATO receiver | `antennaController`, `distressBeacon` |
 | `pressure` | Hydraulic manifold | `fuelRegulator`, `coolantControl` |
 | `sequence` | Secure control console | `authorizationConsole` |
+| `commandinput` | Tactical command uplink | `supportTerminal` |
 
 ## Procedures and controls
 
@@ -263,22 +292,29 @@ contextual activation button is pressed. A compact control reminder remains visi
 
 | Id | Equipment and operation | Config | Controls |
 |---|---|---|---|
-| `wirecut` | EOD controller: isolate the identified lead | `[wireCount(3-6,5), timeLimit(20), title]` | Click a numbered, patterned wire |
+| `wirecut` | EOD controller: isolate the identified lead | `[wireCount(3-6,5), timeLimit(20), title, verificationLevel(1-4,derived)]` | Cross-check the requested bay/connector/pattern/continuity/bus; select loom; operate cutter |
 | `minesweeper` | Trigger analyser: survey an explosive matrix | `[size(4-8,5), mineCount(5), timeLimit(0), title]` | Left reveal; right flag |
 | `keypad` | Access terminal: recover its authorization code | `[digits(3-6,4), maxGuesses(6), timeLimit(0), title]` | Mouse or numbers; Backspace; Enter |
-| `lockpick` | Cutaway cylinder: set pins at the shear line | `[pins(1-6,3), period(1.4), zoneWidth(0.16), timeLimit(0), title]` | Mouse or Space applies tension |
+| `lockpick` | Cutaway cylinder: set pins at the shear line | `[pins(1-6,3), period(2.8), zoneWidth(0.16), timeLimit(0), title]` | Tension -/+ or Left/Right; Set Pin or Space |
 | `circuit` | Breaker cabinet: route terminals to matching buses | `[pairs(3-6,4), maxMistakes(3), timeLimit(0), title]` | Select labelled left and right terminals |
-| `repair` | Maintenance hatch: torque every fastener | `[boltCount(3-6,4), turns(1-4,2), maxMistakes(3), timeLimit(30), title]` | Select bolt; circle wrench clockwise |
-| `radiotune` | Communications unit: acquire and hold carriers | `[channels(1-5,3), tolerance(0.02-0.15,0.05), holdTime(1), timeLimit(30), title]` | Wheel, buttons, or Left/Right |
-| `pressure` | Manifold: stabilize all coupled lines | `[valves(2-4,3), difficulty(1-3,1), settleTime(2), timeLimit(45), title]` | Open/close labelled valves |
-| `sequence` | Secure console: repeat authorization signals | `[pads(3-6,4), rounds(1-8,4), speed(0.25-1.5,0.6), timeLimit(0), title]` | Mouse or number keys 1-6 |
+| `repair` | Maintenance hatch: calibrate and apply a torque wrench | `[boltCount(3-6,4), precision(1-4,2), maxMistakes(3), timeLimit(30), title]` | Select bolt; match target Nm with buttons/wheel/arrows; apply torque |
+| `radiotune` | Communications unit: acquire and hold carriers | `[channels(1-5,3), tolerance(0.02-0.15,0.05), holdTime(1), timeLimit(30), title]` | Drag or wheel dial; buttons; Left/Right |
+| `pressure` | Manifold: stabilize all coupled lines | `[valves(2-4,3), difficulty(1-3,1), settleTime(2), timeLimit(45), title]` | Select valve with mouse or 1-4; wheel/buttons/Left/Right |
+| `sequence` | Secure console: repeat authorization signals | `[pads(3-6,4), rounds(1-8,4), speed(0.25-1.5,0.85), timeLimit(0), title]` | Mouse or number keys 1-6; `R` replays once per stage |
+| `commandinput` | Tactical uplink: enter displayed directional packets | `[baseLength(3-8,4), rounds(1-6,3), maxMistakes(1-6,3), timeLimit(45), title]` | Arrow keys or labelled direction controls |
 
 ### Bomb defusal (`wirecut`)
 
-The EOD controller identifies one numbered and patterned lead. Cutting the correct lead succeeds;
-the wrong lead or expired timer fails immediately. The player must match both number and pattern, so
-wire colour is supplementary. Presets can reinterpret the controller as a vehicle or naval charge
-unit without changing the established `[wireCount, timeLimit, title]` contract.
+The EOD controller presents physical bay, connector, insulation, continuity and routed-bus readings.
+Difficulty increases the number of independent readings in the isolation order from one to four;
+it does not add artificial confirmation presses. Inspecting a row selects it without committing the
+outcome. A continuity probe must acquire the selected loom's hidden live/open/pulse reading before
+the cutter interlock releases. Harder orders therefore require testing candidate looms and
+correlating acquired continuity with connector, insulation and routed-bus labels. The guarded cutter
+reports the selected and tested bay before cutting.
+Cutting the correct lead succeeds; the wrong lead or expired timer fails immediately. Wire colour is
+supplementary. Existing `[wireCount, timeLimit, title]` configurations remain valid; the optional
+fourth `verificationLevel` argument gives mission makers explicit control over 1-4 point orders.
 
 ### Ordnance diagnostics (`minesweeper`)
 
@@ -289,15 +325,21 @@ title]` order.
 
 ### Industrial access terminal (`keypad`)
 
-Players enter a hidden authorization code with mouse or keyboard input. Backspace and Enter work,
-invalid actions are disabled, and each attempt reports labelled `EXACT` and `MISPLACED` counts in a
-readable history. The procedure locks out when guesses or time expire.
+Players correlate three visible sources: the authorized digit bank, a recovered prefix record, and a
+backup tail stored in reverse order. Reading Source B right-to-left and appending it to Source A always
+reconstructs the generated code, so the procedure is never an unbounded combination guess. Digits
+outside the bank and already-used digits are disabled. Attempt audit still identifies exact slots and
+misplaced digits as a recovery aid. The procedure locks out when attempts or time expire.
 
 ### Cutaway lock cylinder (`lockpick`)
 
-The view exposes pins, pick, shear line, set window, tension state, and cylinder progress. Mouse or
-Space applies tension when the moving pick is inside the labelled window. Each successful pin
-increases the mechanism speed while explicit `SET`/`UNSET` labels preserve monochrome readability.
+The view exposes pins, pick, shear line, set window, tension tool, binding state, and cylinder
+progress. First adjust tension until the readout reports `[BIND]`; it always also says `LOW` or `HIGH`
+when adjustment is needed. Then operate Set Pin (or Space) while the moving pick is inside the
+labelled `[SET]` window. Each successful pin changes the required tension, while marker speed remains
+predictable throughout the cylinder. Difficulty profiles deliberately select slower-to-faster sweep
+periods of 3.2, 2.8, 2.3, and 1.9 seconds; pin count, window width, and time limit provide the other
+difficulty pressure. Explicit state labels preserve monochrome readability.
 
 ### Breaker and relay cabinet (`circuit`)
 
@@ -307,30 +349,50 @@ The maximum-mistake and timer settings are mission controlled.
 
 ### Maintenance hatch (`repair`)
 
-Select a loose bolt and hold the left mouse button over the wrench. Move clockwise around the tool
-centre to build torque. Display-level pointer capture prevents stale drag state when the cursor leaves
-the original tool control. Reversing, slipping, or continuing past a seated bolt records a mistake;
-the bolt label reports its exact percentage and `TORQUED` state.
+Each bolt carries an engraved target in newton metres. Select a bolt, calibrate the wrench with its
+`-5`, `-1`, `+1`, and `+5` controls, mouse wheel, or arrow keys, then operate **APPLY TORQUE**. The
+yellow wrench marker and green target marker move on the same scale, while the numeric readout says
+`LOW`, `HIGH`, or `[OK] MATCH`. Applying outside the configured tolerance records a mistake. The
+legacy second positional argument now selects calibration precision from 1-4, preserving the config
+shape while replacing the former circular-drag mechanic.
 
 ### Communications tuning (`radiotune`)
 
-Tune with the mouse wheel, buttons, or Left/Right keys until the needle is inside the labelled target
-band, then hold the signal for the configured time. Each acquired carrier advances the channel
-selector. The numeric frequency, target band, needle, lock wording, and audio caption provide
-redundant feedback.
+Rotate the tuning dial with pointer-captured dragging, use its mouse wheel, use the TUNE buttons, or
+press Left/Right until the needle is inside the labelled target band. Hold the signal for the
+configured time. Each acquired carrier advances the channel selector. The numeric frequency, target
+band, needle, lock wording, and explicit signal-status text provide redundant feedback.
 
 ### Pressure manifold (`pressure`)
 
 Each valve changes its own gauge and couples into neighbouring lines. Bring all gauges inside their
 labelled safe bands and hold the system for the settle period. Every gauge reports `LOW`, `SAFE`, or
 `HIGH` alongside its needle position; difficulty narrows the permitted band without changing input
-behavior.
+behavior. Click or press 1-4 to select a line, then use its wheel/buttons or Left/Right to operate the
+valve.
 
 ### Secure control sequence (`sequence`)
 
-Observe progressively longer control-lamp sequences and reproduce them by mouse or number keys.
+Observe progressively longer control-lamp sequences and reproduce them by mouse or number keys. A
+three-count **EYES ON CONTROL PANEL** warning precedes every playback. During observation the input
+buttons are disabled and each signal is drawn on a separate non-interactive cue layer, so pointer
+hover cannot obscure or imitate the recorded pattern. The
+console explicitly separates **OBSERVE** and **YOUR INPUT** phases, captions every signal with its
+number and symbol, records entered signals, and permits one deliberate replay per stage with `R` or
+the labelled replay control. Reduced-motion mode keeps the same readable cue duration while removing
+abrupt animation; it never accelerates playback.
 Pads carry numbers, shapes, and names in addition to illumination. Playback, player-input, accepted,
 and rejected stages are explicitly labelled. A zero time limit keeps the procedure round-driven.
+
+### Tactical command uplink (`commandinput`)
+
+Read the command packet from left to right and enter each highlighted direction with the keyboard
+arrow keys or the large labelled direction controls. Packet cells use large ASCII arrow symbols;
+the active-command readout and every input control pair that symbol with its direction word, so the
+prompt never depends on colour. Correct commands are marked `[OK]`; an incorrect
+direction records a fault and resets only the current packet. Later rounds add commands, while the
+difficulty profile controls packet length, rounds, fault allowance, and operating time. The original
+tactical-terminal presentation uses no third-party branding or assets.
 
 Colour is never the only signal: wires have numbers and patterns, terminals have symbols, sequence
 pads have names and shapes, gauges show LOW/HIGH/SAFE labels, and results include explicit symbols
@@ -361,7 +423,7 @@ Call `[] call Waldo_fnc_MiniGameAccessibility` to read the current preferences.
 | `largeText` | Enlarges equipment, briefing, result, and dynamically opened help text within safe limits. |
 | `strongOutlines` | Adds a clear perimeter to the protected equipment inspection area. |
 | `reducedMotion` | Shortens completion transitions without changing timing or difficulty. |
-| `audioCaptions` | Adds visible start, confirmation, and fault-tone captions. |
+| `audioCaptions` | Retained for profile compatibility. Equipment states already use meaningful text and symbols; literal sound/debug captions are not drawn. |
 
 Preferences are stored in the local player profile and therefore do not require mission-maker or
 server configuration. Colour is never the only carrier of meaning, even when `colourblind` is false.
@@ -422,12 +484,15 @@ Entries can supply configuration and presentation:
     ["radiotune", [3, 0.05, 1, 30], [["preset", "antennaController"]]]
 ], createHashMapFromArray [
     ["actionTitle", "Inspect Training Equipment"],
+    ["difficulty", "hard"],
     ["distance", 5]
 ]] call Waldo_fnc_MiniGameInteractionTableSetup;
 ```
 
-The picker options hashmap accepts `actionTitle`, `icon`, and `distance`. Each entry retains its own
-challenge configuration and presentation profile.
+The picker options hashmap accepts `actionTitle`, `icon`, `distance`, and the same curated
+`difficulty`. ID-only entries and entries with an empty config use that profile. Each explicit entry
+config remains `custom` and takes precedence. The picker visibly identifies the effective difficulty;
+each entry retains its own presentation profile.
 
 Existing party tables are unchanged unless this function is called.
 
@@ -450,12 +515,12 @@ Run a procedure without an object with:
 ```
 
 Its optional seventh argument is an equipment presentation array or hashmap. For visual review,
-`[] call Waldo_fnc_MiniGameEquipmentGallery` opens all nine procedures with stable showcase configs.
+`[] call Waldo_fnc_MiniGameEquipmentGallery` opens all ten procedures with stable showcase configs.
 
 ### Developer gallery and visual review
 
 The gallery is intentionally separate from gameplay and provides deterministic sample data for all
-nine equipment classes. Use it in the editor debug console:
+ten equipment classes. Use it in the editor debug console:
 
 ```sqf
 [] call Waldo_fnc_MiniGameEquipmentGallery;
@@ -466,13 +531,40 @@ supported resolutions and UI scales. Repeat with local accessibility settings en
 validation cannot prove in-engine font metrics or optional texture availability, so mission release testing
 should still include 4:3, 16:10, 16:9, ultrawide, reduced resolution, and common Arma UI scales.
 
+### Disposable Arma QA mission
+
+Repository contributors and coding agents can assemble the current scripts into an isolated VR mission:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_interaction_ui_qa.ps1 -Mode Interactive
+```
+
+`Active` opens the deterministic Wire Cut sample after its procedure card. `Automated` opens all ten
+procedures and validates both briefing and genuine active states. A successful automated RPT ends with
+`WMP INTERACTION UI QA COMPLETE: 0 finding(s) []` and contains no SQF runtime errors.
+
+Use `-Difficulty easy|standard|hard|expert` with `Active` for a focused profile.
+Use `-Mode Automated -AllDifficulties` for the complete 40-case matrix. Each RPT
+case is labelled `procedure/difficulty`, and the harness must operate the real
+selection, adjustment, drag, timing, and submission functions rather than
+injecting solved values.
+
+This generated local mission always launches with BattlEye disabled. It uses file patching and must not
+be treated as a multiplayer or anti-cheat test. Arma's scripted screenshot command excludes GUI controls,
+so use `capture_interaction_ui.ps1` for a DPI-aware capture of the real game window.
+
+All equipment geometry scales from the complete Arma safe zone. `safeZoneX/Y/W/H` may extend outside
+`0..1` depending on aspect ratio and UI scale; treating `0..1` as the visible screen makes interfaces and
+hit targets physically too small. The shared shell currently targets 96% of safe-zone width and at most
+90% of safe-zone height while preserving its 40×25 equipment grid.
+
 ## Subsystem structure
 
 | Folder | Responsibility |
 |---|---|
 | `InteractionsMinigames/Core` | Registry, launch lifecycle, safe-zone shells, help, accessibility, and exactly-once results. |
 | `InteractionsMinigames/Equipment` | Equipment decoration and integrated pre-operation briefing. |
-| `InteractionsMinigames/Challenges` | Isolated state and mechanics for the nine procedures. |
+| `InteractionsMinigames/Challenges` | Isolated state and mechanics for the ten procedures. |
 | `InteractionsMinigames/Integration` | Object setup, ACE/vanilla actions, server results, gallery, bomb wrapper, and table picker. |
 | `InteractionsMinigames/Themes` | Validated profiles, curated palettes, presets, and packaged material textures. |
 

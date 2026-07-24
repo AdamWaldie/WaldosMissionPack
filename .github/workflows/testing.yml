@@ -10,6 +10,11 @@ jobs:
       run: python3 releaseVerificationAndDeployment/sqf_validator.py
     - name: Validate Config
       run: python3 releaseVerificationAndDeployment/config_style_checker.py
+    - name: Validate interaction equipment UI
+      run: python3 releaseVerificationAndDeployment/interaction_ui_checker.py
+    - name: Test interaction equipment UI checker
+      working-directory: releaseVerificationAndDeployment
+      run: python3 -m unittest -v test_interaction_ui_checker.py
       
   lint:
     runs-on: ubuntu-latest

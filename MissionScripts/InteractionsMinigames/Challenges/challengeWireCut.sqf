@@ -1,240 +1,209 @@
 /*
- * Author: Waldo
- * Wire-cut defusal mini game (the default built-in interaction challenge).
- * Opens a self-contained dialog on the calling player: a set of numbered, patterned and coloured wires and a
- * printed instruction identifying exactly one correct wire to cut. Cutting the correct
- * wire succeeds; cutting a wrong wire, letting the timer expire, or pressing Escape fails.
- * The whole challenge runs locally on the actor and reports a single boolean back through
- * the provided resolve callback, so it is safe to drive any authoritative outcome from it.
- *
- * This is a challenge opener: it is dispatched by Waldo_fnc_MiniGameChallenge and follows
- * the opener contract [_config, _resolve]. Register more challenge types the same way with
- * Waldo_fnc_MiniGameRegisterChallenge.
- *
- * Arguments:
- * _config  - Array - challenge config, all optional:
- *              0: _wireCount - Number - number of wires (clamped 3..6, default 5)
- *              1: _timeLimit - Number - seconds on the clock (0 = no clock, default 20)
- *              2: _title     - String - dialog heading (default "DEFUSAL")
- * _resolve - Code  - called once with boolean success and typed outcome metadata
- *
- * Return Value:
- * Nothing (result delivered asynchronously through _resolve)
- *
- * Example:
- * [[5, 20, "DEFUSAL"], { params ["_ok"]; systemChat str _ok; }] call Waldo_fnc_MiniGameWireCut;
+ * Rugged EOD controller wire-isolation procedure.
+ * Config: [wireCount(3..6), timeLimit, title, verificationLevel(1..4, derived)]
  */
-
 disableSerialization;
+params [["_config", []], ["_resolve", {}]];
+_config params [["_wireCount", 5], ["_timeLimit", 20], ["_title", "EOD CONTROLLER"], ["_verificationLevel", -1]];
+_wireCount = ((round _wireCount) max 3) min 6;
+if (_verificationLevel < 1) then {_verificationLevel = switch (_wireCount) do {case 3: {1}; case 4: {2}; case 5: {3}; default {4};};};
+_verificationLevel = ((round _verificationLevel) max 1) min 4;
 
-params [
-    ["_config", []],
-    ["_resolve", {}]
+private _display = [
+    _title,
+    "Cross-check the isolation order against the loom labels, insulation, continuity and routed bus, then sever it.",
+    _timeLimit,
+    _resolve,
+    0.48,
+    "Select loom; TEST CONTINUITY acquires its live reading; verify order; arm cutter",
+    "Higher-density controllers require several independent readings. The cutter remains mechanically safe until the selected loom has been probed."
+] call Waldo_fnc_MiniGameChallengeUI;
+if (isNull _display) exitWith {};
+
+private _identities = [
+    ["J1", "SOLID", "LIVE", "BUS A", [0.28, 0.58, 0.86, 1]],
+    ["J1", "DASH", "OPEN", "BUS B", [0.88, 0.36, 0.30, 1]],
+    ["J2", "SOLID", "PULSE", "BUS B", [0.30, 0.68, 0.38, 1]],
+    ["J2", "DASH", "LIVE", "BUS C", [0.88, 0.68, 0.22, 1]],
+    ["J3", "DOT", "OPEN", "BUS A", [0.62, 0.40, 0.76, 1]],
+    ["J3", "DOT", "PULSE", "BUS C", [0.26, 0.70, 0.72, 1]]
 ];
-
-if (!hasInterface) exitWith { [false] call _resolve; };
-
-_config params [
-    ["_wireCount", 5],
-    ["_timeLimit", 20],
-    ["_title", "EOD CONTROLLER"]
-];
-
-_wireCount = round _wireCount;
-if (_wireCount < 3) then { _wireCount = 3; };
-if (_wireCount > 6) then { _wireCount = 6; };
-
-// Do not stack a second defusal dialog on top of an open one.
-if (!isNull (missionNamespace getVariable ["Waldo_MG_WC_ActiveDisplay", displayNull])) exitWith {
-    [false] call _resolve;
+private _correct = floor random _wireCount;
+private _correctIdentity = _identities select _correct;
+private _orderText = switch (_verificationLevel) do {
+    case 1: {format ["ISOLATE BAY %1", _correct + 1]};
+    case 2: {format ["MATCH %1 CONNECTOR // %2 INSULATION", _correctIdentity select 0, _correctIdentity select 1]};
+    case 3: {format ["MATCH %1 INSULATION // %2 CONTINUITY // %3", _correctIdentity select 1, _correctIdentity select 2, _correctIdentity select 3]};
+    default {format ["MATCH %1 // %2 // %3 // %4", _correctIdentity select 0, _correctIdentity select 1, _correctIdentity select 2, _correctIdentity select 3]};
 };
-if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
-    [false] call _resolve;
-};
-
-// Colour palette: [name, [r,g,b,a]].
-private _palette = [
-    ["RED",    [0.78, 0.16, 0.16, 1]],
-    ["BLUE",   [0.20, 0.42, 0.85, 1]],
-    ["YELLOW", [0.86, 0.78, 0.18, 1]],
-    ["GREEN",  [0.22, 0.62, 0.28, 1]],
-    ["WHITE",  [0.90, 0.90, 0.92, 1]],
-    ["BLACK",  [0.12, 0.12, 0.13, 1]]
-];
-
-// Build the wire list.
-private _wires = [];
-for "_i" from 0 to (_wireCount - 1) do {
-    _wires pushBack (selectRandom _palette);
-};
-
-// Pick the correct wire and craft an unambiguous instruction for it.
-private _correct = floor (random _wireCount);
-private _correctName = (_wires select _correct) select 0;
-
-private _sameColour = [];
-{
-    if ((_x select 0) == _correctName) then { _sameColour pushBack _forEachIndex; };
-} forEach _wires;
-
-private _ordinalWords = ["first", "second", "third", "fourth", "fifth", "sixth"];
-private _instruction = "";
-
-// Randomly present the clue as a colour rule or a positional rule, both always solvable.
-if (random 1 < 0.5) then {
-    // Colour-based clue.
-    if ((count _sameColour) <= 1) then {
-        _instruction = format ["Cut the only %1 wire.", _correctName];
-    } else {
-        private _rank = _sameColour find _correct;
-        _instruction = format ["Cut the %1 %2 wire (counting from the top).", _ordinalWords select _rank, _correctName];
-    };
-} else {
-    // Positional clue.
-    _instruction = format ["Cut wire number %1 (counting from the top).", _correct + 1];
-};
-
-private _parent = findDisplay 46;
-if (isNull _parent) exitWith { [false] call _resolve; };
-private _display = _parent createDisplay "RscDisplayEmpty";
-if (isNull _display) exitWith { [false] call _resolve; };
-
-missionNamespace setVariable ["Waldo_MG_WC_ActiveDisplay", _display];
-missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
-[_display, "Mouse: choose one numbered and patterned wire", _title, _instruction, "Check both the number and pattern before cutting. The wrong wire fails immediately."] call Waldo_fnc_MiniGameChallengeUILegacy;
-
+private _verificationCount = _verificationLevel;
 _display setVariable ["Waldo_MG_WC_Correct", _correct];
-_display setVariable ["Waldo_MG_WC_Resolve", _resolve];
-_display setVariable ["Waldo_MG_WC_Done", false];
+_display setVariable ["Waldo_MG_WC_Selected", -1];
+_display setVariable ["Waldo_MG_WC_Probed", -1];
 
-// Single-shot finisher: closes the dialog and delivers the result once.
-_display setVariable ["Waldo_MG_WC_Finish", {
-    params ["_disp", "_ok", ["_resultKey", ""]];
-    if (isNull _disp) exitWith {};
-    if (_disp getVariable ["Waldo_MG_WC_Done", false]) exitWith {};
-    _disp setVariable ["Waldo_MG_WC_Done", true];
-    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
-    private _fnResolve = _disp getVariable ["Waldo_MG_WC_Resolve", {}];
-    private _outcomeCode = if (_ok) then {"SUCCESS"} else {if (_resultKey == "timeoutText") then {"TIMEOUT"} else {if (_resultKey == "abortText") then {"ABORTED"} else {"FAILURE"};};};
-    private _reason = if (_resultKey == "") then {""} else {(_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault [_resultKey, _resultKey]};
-    missionNamespace setVariable ["Waldo_MG_WC_ActiveDisplay", displayNull];
-    [{
-        params ["_disp", "_res", "_ok", "_outcomeCode", "_reason"];
-        if (!isNull _disp) then {_disp closeDisplay 1;};
-        [_ok, [_outcomeCode, _reason]] call _res;
-    }, [_disp, _fnResolve, _ok, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.5}] call CBA_fnc_waitAndExecute;
-}];
+private _case = [_display, "RscText", [1.5, 3, 37, 20], "reinforced EOD controller casing"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_case ctrlSetBackgroundColor [0.13, 0.14, 0.12, 1];
+private _instructionFrame = [_display, "RscText", [2.6, 4, 35, 4.4], "EOD isolation instruction card"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_instructionFrame ctrlSetBackgroundColor [0.76, 0.72, 0.57, 1];
+private _instruction = [_display, "RscStructuredText", [3.4, 4.35, 19.5, 3.8], "required wire instruction"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_instruction ctrlSetStructuredText parseText format [
+    "<t color='#202018' size='0.90'>EOD-7 ISOLATION ORDER // %2-POINT VERIFICATION</t><br/><t color='#8A1E24' size='1.08'>%1</t><br/><t color='#202018' size='0.86'>READ LABELS; DO NOT RELY ON COLOUR</t>",
+    _orderText,
+    _verificationCount
+];
+private _probeButton = [_display, "RscButton", [23.6, 4.55, 6.2, 1.45], "EOD continuity probe control"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_probeButton ctrlSetText "PROBE SAFE - SELECT";
+_probeButton ctrlSetBackgroundColor [0.08, 0.16, 0.16, 1];
+_probeButton ctrlSetTextColor [0.48, 0.86, 0.84, 1];
+_probeButton ctrlSetTooltip "Select a loom before testing continuity";
+_probeButton ctrlEnable false;
+_display setVariable ["Waldo_MG_WC_ProbeButton", _probeButton];
+private _diagnostic = [_display, "RscText", [23.6, 6.25, 6.2, 1.35], "EOD continuity probe diagnostic"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_diagnostic ctrlSetText "CONTINUITY // --";
+_diagnostic ctrlSetBackgroundColor [0.015, 0.045, 0.04, 1];
+_diagnostic ctrlSetTextColor [0.48, 0.86, 0.84, 1];
+_display setVariable ["Waldo_MG_WC_Diagnostic", _diagnostic];
+private _cutButton = [_display, "RscButton", [30.3, 4.75, 6.2, 2.8], "guarded EOD cutter control"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_cutButton ctrlSetText "CUTTER SAFE - SELECT LOOM";
+_cutButton ctrlSetBackgroundColor [0.18, 0.16, 0.08, 1];
+_cutButton ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+_cutButton ctrlSetTooltip "Disabled: inspect and select a wire loom first";
+_cutButton ctrlEnable false;
+_display setVariable ["Waldo_MG_WC_CutButton", _cutButton];
 
-// Layout (safezone-relative).
-private _w = 0.42 * safezoneW;
-private _h = 0.5 * safezoneH;
-private _x = safezoneX + (safezoneW - _w) / 2;
-private _y = safezoneY + (safezoneH - _h) / 2;
-
-// WMP brand palette.
-private _cPanel = [0.04, 0.05, 0.07, 0.94];
-private _cHeader = [0.10, 0.13, 0.20, 1];
-private _cAccent = [0.243, 0.463, 0.827, 1];
-private _cAccentLt = [0.55, 0.72, 0.98, 1];
-
-private _panel = _display ctrlCreate ["RscText", -1];
-_panel ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, _h + 0.02 * safezoneH];
-_panel ctrlSetBackgroundColor _cPanel;
-_panel ctrlCommit 0;
-
-private _accentBar = _display ctrlCreate ["RscText", -1];
-_accentBar ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, 0.006 * safezoneH];
-_accentBar ctrlSetBackgroundColor _cAccent;
-_accentBar ctrlCommit 0;
-
-private _heading = _display ctrlCreate ["RscText", -1];
-_heading ctrlSetPosition [_x, _y, _w, 0.06 * safezoneH];
-_heading ctrlSetText _title;
-_heading ctrlSetTextColor _cAccentLt;
-_heading ctrlSetBackgroundColor _cHeader;
-_heading ctrlCommit 0;
-
-private _timer = _display ctrlCreate ["RscText", -1];
-_timer ctrlSetPosition [_x, _y + 0.065 * safezoneH, _w, 0.05 * safezoneH];
-_timer ctrlSetTextColor [0.90, 0.90, 0.92, 1];
-_timer ctrlSetText "";
-_timer ctrlCommit 0;
-_display setVariable ["Waldo_MG_WC_TimerCtrl", _timer];
-
-private _clue = _display ctrlCreate ["RscStructuredText", -1];
-_clue ctrlSetPosition [_x, _y + 0.12 * safezoneH, _w, 0.09 * safezoneH];
-_clue ctrlSetStructuredText parseText format ["<t align='center' size='1.05'>%1</t>", _instruction];
-_clue ctrlCommit 0;
-
-// Wire buttons. (_x is reused by forEach as the wire element, so capture the column x first.)
-private _colX = _x;
-private _listTop = _y + 0.225 * safezoneH;
-private _rowH = 0.045 * safezoneH;
-private _gap = 0.012 * safezoneH;
-{
-    private _row = _listTop + _forEachIndex * (_rowH + _gap);
-    private _btn = _display ctrlCreate ["RscButton", -1];
-    _btn ctrlSetPosition [_colX, _row, _w, _rowH];
-    private _patterns = ["///", "XXX", "===", "+++", "...", "###"];
-    _btn ctrlSetText format ["  WIRE %1  [%2]  %3", _forEachIndex + 1, _patterns select _forEachIndex, (_x select 0)];
-    _btn ctrlSetTooltip format ["Cut wire %1 - %2 - pattern %3", _forEachIndex + 1, (_x select 0), _patterns select _forEachIndex];
-    _btn ctrlSetBackgroundColor (_x select 1);
-    _btn ctrlSetTextColor [0.05, 0.05, 0.05, 1];
-    _btn setVariable ["Waldo_MG_WC_Index", _forEachIndex];
-    _btn ctrlAddEventHandler ["ButtonClick", {
-        params ["_ctrl"];
-        private _disp = ctrlParent _ctrl;
-        if (isNull _disp || {_disp getVariable ["Waldo_MG_WC_Done", false]} || {_disp getVariable ["Waldo_MG_WC_InputLocked", false]}) exitWith {};
-        private _idx = _ctrl getVariable ["Waldo_MG_WC_Index", -1];
-        private _cor = _disp getVariable ["Waldo_MG_WC_Correct", -2];
-        private _fin = _disp getVariable ["Waldo_MG_WC_Finish", {}];
-        private _ok = _idx == _cor;
-        _disp setVariable ["Waldo_MG_WC_InputLocked", true];
-        _ctrl ctrlSetText if (_ok) then {"WIRE CUT - CIRCUIT SAFE"} else {"WRONG WIRE - CIRCUIT TRIPPED"};
-        _ctrl ctrlSetBackgroundColor if (_ok) then {[0.10, 0.44, 0.18, 1]} else {[0.80, 0.18, 0.16, 1]};
-        [{ params ["_disp", "_ok", "_fin"]; [_disp, _ok] call _fin; }, [_disp, _ok, _fin], 0.45] call CBA_fnc_waitAndExecute;
+private _loomBay = [_display, "RscText", [3, 9, 34, 11.8], "numbered wire loom bay"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_loomBay ctrlSetBackgroundColor [0.035, 0.042, 0.038, 1];
+private _rowHeight = 10.2 / _wireCount;
+private _wireSegments = [];
+private _buttons = [];
+for "_index" from 0 to (_wireCount - 1) do {
+    private _identity = _identities select _index;
+    private _rowY = 9.8 + (_index * _rowHeight);
+    private _leftConnector = [_display, "RscText", [3.8, _rowY, 4.2, _rowHeight - 0.35], format ["left connector %1", _identity select 0]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _leftConnector ctrlSetText format ["%1 <%2>", _identity select 0, _identity select 1];
+    _leftConnector ctrlSetBackgroundColor [0.16, 0.17, 0.15, 1];
+    _leftConnector ctrlSetTextColor [0.94, 0.91, 0.80, 1];
+    private _rightConnector = [_display, "RscText", [32, _rowY, 4.2, _rowHeight - 0.35], format ["continuity and bus for bay %1", _index + 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _rightConnector ctrlSetText format ["%1 | B%2", _identity select 3, _index + 1];
+    _rightConnector ctrlSetBackgroundColor [0.16, 0.17, 0.15, 1];
+    _rightConnector ctrlSetTextColor [0.94, 0.91, 0.80, 1];
+    private _points = [[8, _rowY + ((_rowHeight - 0.35) / 2)], [32, _rowY + ((_rowHeight - 0.35) / 2)]];
+    private _segments = [_display, _points, _identity select 4, 0.26, format ["wire %1 %2 insulation", _identity select 0, _identity select 1]] call Waldo_fnc_MiniGameEquipmentPolyline;
+    // Redundant insulation patterns are rendered as bright markers along the loom.
+    private _patternSegments = [];
+    private _patternIndex = ["SOLID", "DASH", "DOT"] find (_identity select 1);
+    private _patternStep = switch (_patternIndex) do {case 0: {2.2}; case 1: {1.5}; default {1.0};};
+    private _markerX = 9;
+    while {_markerX < 31.5} do {
+        private _markerWidth = if (_patternIndex == 0) then {0.28} else {if (_patternIndex == 1) then {0.5} else {0.22}};
+        private _marker = [_display, "RscText", [_markerX, _rowY + ((_rowHeight - 0.35) / 2) - 0.23, _markerWidth, 0.46], format ["wire %1 printed %2 marker", _identity select 0, _identity select 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+        _marker ctrlSetBackgroundColor [0.92, 0.92, 0.82, 0.92];
+        _patternSegments pushBack _marker;
+        _markerX = _markerX + _patternStep;
+    };
+    _wireSegments pushBack [_segments, _patternSegments];
+    // Keep the wire and its printed pattern unobscured. The compact guarded
+    // selector is still a generous target, while the connector and pattern
+    // remain visible beside it.
+    private _button = [_display, "RscButton", [26.8, _rowY - 0.15, 5.2, _rowHeight - 0.05], format ["cut wire %1 %2", _identity select 0, _identity select 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _button ctrlSetText format ["SELECT %1", _index + 1];
+    _button ctrlSetBackgroundColor [0.10, 0.11, 0.10, 0.96];
+    _button ctrlSetTextColor [0.95, 0.95, 0.90, 1];
+    _button ctrlSetTooltip format ["Bay %1: %2 connector, %3 insulation, %4 continuity, %5", _index + 1, _identity select 0, _identity select 1, _identity select 2, _identity select 3];
+    _button setVariable ["Waldo_MG_WC_Index", _index];
+    _button ctrlAddEventHandler ["MouseEnter", {(_this select 0) ctrlSetBackgroundColor [0.75, 0.62, 0.20, 0.18];}];
+    _button ctrlAddEventHandler ["MouseExit", {(_this select 0) ctrlSetBackgroundColor [0, 0, 0, 0.01];}];
+    _button ctrlAddEventHandler ["ButtonClick", {
+        params ["_control"];
+        private _display = ctrlParent _control;
+        private _index = _control getVariable ["Waldo_MG_WC_Index", -1];
+        [_display, _index] call (_display getVariable ["Waldo_MG_WC_Select", {}]);
     }];
-    _btn ctrlCommit 0;
-} forEach _wires;
-
-// Escape aborts the attempt (counts as a failure).
-_display displayAddEventHandler ["KeyDown", {
-    params ["_disp", "_key"];
-    if (_key == 1) then {
-        private _fin = _disp getVariable ["Waldo_MG_WC_Finish", {}];
-        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
-        true
+    _buttons pushBack _button;
+};
+_display setVariable ["Waldo_MG_WC_WireSegments", _wireSegments];
+_display setVariable ["Waldo_MG_WC_Buttons", _buttons];
+_display setVariable ["Waldo_MG_WC_Identities", _identities];
+_display setVariable ["Waldo_MG_WC_Select", {
+    params ["_display", "_index"];
+    if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+    private _identities = _display getVariable ["Waldo_MG_WC_Identities", []];
+    if (_index < 0 || {_index >= count _identities}) exitWith {};
+    _display setVariable ["Waldo_MG_WC_Selected", _index];
+    _display setVariable ["Waldo_MG_WC_Probed", -1];
+    {
+        _x ctrlSetBackgroundColor (if (_forEachIndex == _index) then {[0.46, 0.36, 0.08, 0.96]} else {[0.10, 0.11, 0.10, 0.96]});
+        _x ctrlSetText format ["%1 %2", if (_forEachIndex == _index) then {"[ON]"} else {"SELECT"}, _forEachIndex + 1];
+    } forEach (_display getVariable ["Waldo_MG_WC_Buttons", []]);
+    private _identity = _identities select _index;
+    private _probe = _display getVariable ["Waldo_MG_WC_ProbeButton", controlNull];
+    if (!isNull _probe) then {
+        _probe ctrlEnable true;
+        _probe ctrlSetText format ["TEST CONTINUITY // B%1", _index + 1];
+        _probe ctrlSetTooltip format ["Attach continuity probe to selected bay %1", _index + 1];
+    };
+    private _diagnostic = _display getVariable ["Waldo_MG_WC_Diagnostic", controlNull];
+    if (!isNull _diagnostic) then {_diagnostic ctrlSetText format ["BAY %1 // NOT TESTED", _index + 1];};
+    private _cutter = _display getVariable ["Waldo_MG_WC_CutButton", controlNull];
+    if (!isNull _cutter) then {
+        _cutter ctrlEnable false;
+        _cutter ctrlSetText "CUTTER SAFE // PROBE FIRST";
+        _cutter ctrlSetTooltip "Disabled: acquire continuity from the selected loom first";
+    };
+    private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+    if (!isNull _status) then {_status ctrlSetText format ["[STEP 2/3] BAY %1 SELECTED // ATTACH CONTINUITY PROBE", _index + 1];};
+}];
+_display setVariable ["Waldo_MG_WC_ProbeSelected", {
+    params ["_display"];
+    if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+    private _index = _display getVariable ["Waldo_MG_WC_Selected", -1];
+    if (_index < 0) exitWith {};
+    private _identity = (_display getVariable ["Waldo_MG_WC_Identities", []]) select _index;
+    _display setVariable ["Waldo_MG_WC_Probed", _index];
+    private _diagnostic = _display getVariable ["Waldo_MG_WC_Diagnostic", controlNull];
+    if (!isNull _diagnostic) then {
+        _diagnostic ctrlSetText format ["B%1 // [%2] // %3", _index + 1, _identity select 2, _identity select 3];
+        _diagnostic ctrlSetBackgroundColor (if ((_identity select 2) == "LIVE") then {[0.28, 0.10, 0.08, 1]} else {[0.04, 0.16, 0.14, 1]});
+    };
+    private _cutter = _display getVariable ["Waldo_MG_WC_CutButton", controlNull];
+    if (!isNull _cutter) then {
+        _cutter ctrlEnable true;
+        _cutter ctrlSetText format ["ARM CUTTER // BAY %1", _index + 1];
+        _cutter ctrlSetTooltip format ["Cut tested bay %1: %2, %3, %4, %5", _index + 1, _identity select 0, _identity select 1, _identity select 2, _identity select 3];
+    };
+    private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+    if (!isNull _status) then {_status ctrlSetText format ["[PROBE] BAY %1 // %2 CONTINUITY // %3 // COMPARE WITH ISOLATION ORDER", _index + 1, _identity select 2, _identity select 3];};
+}];
+_display setVariable ["Waldo_MG_WC_CutSelected", {
+    params ["_display"];
+    if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+    private _index = _display getVariable ["Waldo_MG_WC_Selected", -1];
+    if (_index < 0 || {_display getVariable ["Waldo_MG_WC_Probed", -2] != _index}) exitWith {};
+    private _segments = (_display getVariable ["Waldo_MG_WC_WireSegments", []]) param [_index, [[], []]];
+    private _allSegments = (_segments select 0) + (_segments select 1);
+    private _middle = (count _allSegments) / 2;
+    {
+        if (abs (_forEachIndex - _middle) < 4) then {_x ctrlSetFade 1; _x ctrlCommit 0.18;};
+    } forEach _allSegments;
+    private _button = (_display getVariable ["Waldo_MG_WC_Buttons", []]) select _index;
+    _button ctrlSetText format ["[X] CUT %1", _index + 1];
+    _button ctrlEnable false;
+    private _cutter = [_display, "RscText", [17, 8.9 + (_index * (10.2 / count (_display getVariable ["Waldo_MG_WC_WireSegments", []]))), 6, 1.5], "animated EOD cutting tool"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _cutter ctrlSetText "< CUTTER CLOSED >";
+    _cutter ctrlSetBackgroundColor [0.26, 0.28, 0.25, 0.98];
+    _cutter ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+    if (_index == (_display getVariable ["Waldo_MG_WC_Correct", -2])) then {
+        [_display, true, "[OK] COMMAND LOOM ISOLATED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
     } else {
-        false
+        [_display, false, "[X] INCORRECT LOOM SEVERED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
     };
 }];
-
-// Countdown loop (skipped when _timeLimit <= 0).
-if (_timeLimit > 0) then {
-    [_display, _timeLimit] spawn {
-        params ["_disp", "_timeLimit"];
-        waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
-        if (isNull _disp) exitWith {};
-        private _deadline = time + _timeLimit;
-        while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_WC_Done", false])} } do {
-            private _remain = _deadline - time;
-            private _timerCtrl = _disp getVariable ["Waldo_MG_WC_TimerCtrl", controlNull];
-            if (_remain <= 0) exitWith {
-                if !(_disp getVariable ["Waldo_MG_WC_InputLocked", false]) then {
-                    private _fin = _disp getVariable ["Waldo_MG_WC_Finish", {}];
-                    [_disp, false, "timeoutText"] call _fin;
-                };
-            };
-            if (!isNull _timerCtrl) then {
-                _timerCtrl ctrlSetText format ["TIME REMAINING: %1s", (_remain max 0) toFixed 1];
-                if (_remain <= (_timeLimit * 0.3)) then {
-                    _timerCtrl ctrlSetTextColor [0.85, 0.20, 0.20, 1];
-                };
-            };
-            sleep 0.08;
-        };
-    };
-} else {
-    _timer ctrlSetText "NO TIME LIMIT";
-};
+_cutButton ctrlAddEventHandler ["ButtonClick", {
+    private _display = ctrlParent (_this select 0);
+    [_display] call (_display getVariable ["Waldo_MG_WC_CutSelected", {}]);
+}];
+_probeButton ctrlAddEventHandler ["ButtonClick", {
+    private _display = ctrlParent (_this select 0);
+    [_display] call (_display getVariable ["Waldo_MG_WC_ProbeSelected", {}]);
+}];
 [_display] call Waldo_fnc_MiniGameEquipmentBriefing;

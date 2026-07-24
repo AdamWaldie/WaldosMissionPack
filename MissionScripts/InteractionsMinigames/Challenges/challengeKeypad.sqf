@@ -1,319 +1,200 @@
 /*
- * Author: Waldo
- * Keypad code-crack mini game (a built-in interaction challenge), a Mastermind-style deduction
- * puzzle. A hidden numeric code is generated; the player uses the keypad or keyboard to enter guesses and, after each, is told
- * how many digits are correct (right digit, right slot) and how many are misplaced (right digit,
- * wrong slot). Crack the code within the guess limit to win; run out of guesses, the clock, or
- * press Escape to fail. Ideal for safes, keypads, locked doors and arming panels.
- *
- * Challenge opener following the [_config, _resolve] contract; dispatched by
- * Waldo_fnc_MiniGameChallenge.
- *
- * Arguments:
- * _config  - Array - challenge config, all optional:
- *              0: _digits     - Number - code length, clamped 3..6 (default 4)
- *              1: _maxGuesses - Number - attempts allowed (default 6)
- *              2: _timeLimit  - Number - seconds on the clock, 0 = none (default 0)
- *              3: _title      - String - dialog heading (default "KEYPAD")
- * _resolve - Code  - called once with boolean success and typed outcome metadata
- *
- * Return Value:
- * Nothing (result delivered asynchronously through _resolve)
- *
- * Example:
- * [[4, 6, 0, "SAFE"], { params ["_ok"]; systemChat str _ok; }] call Waldo_fnc_MiniGameKeypad;
+ * Industrial access-terminal code deduction procedure.
+ * Config: [digits(3..6), maxGuesses, timeLimit, title]
  */
-
 disableSerialization;
+params [["_config", []], ["_resolve", {}]];
+_config params [["_digits", 4], ["_maxGuesses", 6], ["_timeLimit", 0], ["_title", "ACCESS TERMINAL"]];
+_digits = ((round _digits) max 3) min 6;
+_maxGuesses = (round _maxGuesses) max 1;
 
-params [
-    ["_config", []],
-    ["_resolve", {}]
-];
+private _display = [
+    _title,
+    "Reconstruct the access code by correlating the authorized digit bank and two recovered security records.",
+    _timeLimit,
+    _resolve,
+    0.50,
+    "Mouse or number keys; Backspace removes; Enter submits",
+    "SOURCE A gives the prefix. SOURCE B contains the remaining tail in reverse storage order: read it right-to-left. Attempt audit remains available."
+] call Waldo_fnc_MiniGameChallengeUI;
+if (isNull _display) exitWith {};
 
-if (!hasInterface) exitWith { [false] call _resolve; };
-
-_config params [
-    ["_digits", 4],
-    ["_maxGuesses", 6],
-    ["_timeLimit", 0],
-    ["_title", "ACCESS TERMINAL"]
-];
-
-_digits = round _digits;
-if (_digits < 3) then { _digits = 3; };
-if (_digits > 6) then { _digits = 6; };
-_maxGuesses = round _maxGuesses;
-if (_maxGuesses < 1) then { _maxGuesses = 1; };
-
-if (!isNull (missionNamespace getVariable ["Waldo_MG_KP_ActiveDisplay", displayNull])) exitWith {
-    [false] call _resolve;
-};
-if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
-    [false] call _resolve;
-};
-
-// Brand palette.
-private _cPanel = [0.04, 0.05, 0.07, 0.94];
-private _cHeader = [0.10, 0.13, 0.20, 1];
-private _cAccent = [0.243, 0.463, 0.827, 1];
-private _cAccentLt = [0.55, 0.72, 0.98, 1];
-private _cText = [0.88, 0.90, 0.94, 1];
-private _cKey = [0.16, 0.20, 0.28, 1];
-
-// Hidden code (digits 0-9, repeats allowed).
+private _pool = [0,1,2,3,4,5,6,7,8,9];
 private _code = [];
-for "_i" from 0 to (_digits - 1) do { _code pushBack (floor (random 10)); };
-
-private _parent = findDisplay 46;
-if (isNull _parent) exitWith { [false] call _resolve; };
-private _display = _parent createDisplay "RscDisplayEmpty";
-if (isNull _display) exitWith { [false] call _resolve; };
-
-missionNamespace setVariable ["Waldo_MG_KP_ActiveDisplay", _display];
-missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
-[_display, "Mouse or number keys / Backspace / Enter", _title, format ["Crack the hidden %1-digit code before guesses run out.", _digits], "Exact means the correct digit and slot; misplaced means the digit belongs in another slot."] call Waldo_fnc_MiniGameChallengeUILegacy;
-
+for "_index" from 1 to _digits do {
+    private _pick = floor random count _pool;
+    _code pushBack (_pool deleteAt _pick);
+};
+private _digitBank = +_code;
+_digitBank sort true;
+private _split = ceil (_digits / 2);
+private _prefix = _code select [0, _split];
+private _reverseTail = _code select [_split];
+reverse _reverseTail;
 _display setVariable ["Waldo_MG_KP_Code", _code];
+_display setVariable ["Waldo_MG_KP_DigitBank", _digitBank];
+_display setVariable ["Waldo_MG_KP_Input", []];
+_display setVariable ["Waldo_MG_KP_Guesses", 0];
 _display setVariable ["Waldo_MG_KP_Digits", _digits];
-_display setVariable ["Waldo_MG_KP_Entry", []];
-_display setVariable ["Waldo_MG_KP_Remaining", _maxGuesses];
-_display setVariable ["Waldo_MG_KP_Resolve", _resolve];
-_display setVariable ["Waldo_MG_KP_Done", false];
+_display setVariable ["Waldo_MG_KP_MaxGuesses", _maxGuesses];
 
-_display setVariable ["Waldo_MG_KP_Finish", {
-    params ["_disp", "_ok", ["_resultKey", ""]];
-    if (isNull _disp) exitWith {};
-    if (_disp getVariable ["Waldo_MG_KP_Done", false]) exitWith {};
-    _disp setVariable ["Waldo_MG_KP_Done", true];
-    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
-    private _fnResolve = _disp getVariable ["Waldo_MG_KP_Resolve", {}];
-    private _outcomeCode = if (_ok) then {"SUCCESS"} else {if (_resultKey == "timeoutText") then {"TIMEOUT"} else {if (_resultKey == "abortText") then {"ABORTED"} else {"FAILURE"};};};
-    private _reason = if (_resultKey == "") then {""} else {(_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault [_resultKey, _resultKey]};
-    missionNamespace setVariable ["Waldo_MG_KP_ActiveDisplay", displayNull];
-    [{
-        params ["_disp", "_res", "_ok", "_outcomeCode", "_reason"];
-        if (!isNull _disp) then { _disp closeDisplay 1; };
-        [_ok, [_outcomeCode, _reason]] call _res;
-    }, [_disp, _fnResolve, _ok, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.6}}] call CBA_fnc_waitAndExecute;
-}];
+private _terminal = [_display, "RscText", [1.5, 3, 37, 20], "industrial access terminal casing"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_terminal ctrlSetBackgroundColor [0.12, 0.13, 0.12, 1];
+private _screenFrame = [_display, "RscText", [3, 4.2, 22.5, 17.2], "security terminal display bezel"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_screenFrame ctrlSetBackgroundColor [0.035, 0.045, 0.04, 1];
+private _screen = [_display, "RscText", [3.8, 5, 20.9, 15.6], "security terminal display"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_screen ctrlSetBackgroundColor [0.005, 0.02, 0.014, 1];
+private _lockState = [_display, "RscText", [4.5, 5.7, 19.5, 1.4], "terminal lock state"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_lockState ctrlSetText "[LOCKED] SECURITY SEAL ACTIVE";
+_lockState ctrlSetTextColor [1, 0.64, 0.72, 1];
+_lockState ctrlSetBackgroundColor [0.16, 0.025, 0.045, 1];
+_display setVariable ["Waldo_MG_KP_LockState", _lockState];
+private _bank = [_display, "RscText", [5, 7.2, 18.5, 1.15], "authorized digit bank"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_bank ctrlSetText format ["AUTHORIZED DIGITS // %1 // USE EACH ONCE", _digitBank joinString "  "];
+_bank ctrlSetTextColor [0.94, 0.78, 0.30, 1];
+_bank ctrlSetBackgroundColor [0.05, 0.045, 0.015, 1];
+private _readout = [_display, "RscText", [5, 8.45, 18.5, 2.35], "current access code entry"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_readout ctrlSetText "";
+_readout ctrlSetTextColor [0.58, 1, 0.70, 1];
+_readout ctrlSetBackgroundColor [0.008, 0.03, 0.018, 1];
+_readout ctrlSetFontHeight 0.038;
+_display setVariable ["Waldo_MG_KP_Readout", _readout];
+private _feedbackHeader = [_display, "RscText", [5, 11, 18.5, 1.15], "guess feedback headings"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_feedbackHeader ctrlSetText "RECOVERED SECURITY EVIDENCE";
+_feedbackHeader ctrlSetTextColor [0.94, 0.78, 0.30, 1];
+private _evidence = [_display, "RscStructuredText", [5, 12.2, 18.5, 2.55], "two guaranteed access code evidence sources"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_evidence ctrlSetStructuredText parseText format ["<t color='#9FDDB0'>SOURCE A // PREFIX SLOTS 1-%1:</t> <t color='#FFFFFF'>%2</t><br/><t color='#9FDDB0'>SOURCE B // REVERSED TAIL:</t> <t color='#FFFFFF'>%3</t> <t color='#F2BE55'>(READ RIGHT-TO-LEFT)</t>", _split, _prefix joinString "  ", _reverseTail joinString "  "];
+_evidence ctrlSetBackgroundColor [0.012, 0.035, 0.02, 1];
+private _feedbackDetail = [_display, "RscText", [5, 14.95, 18.5, 1.45], "latest access audit clue"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_feedbackDetail ctrlSetText "EXACT SLOTS: --  //  MISPLACED DIGITS: --";
+_feedbackDetail ctrlSetTextColor [0.72, 0.90, 0.76, 1];
+_feedbackDetail ctrlSetBackgroundColor [0.012, 0.035, 0.02, 1];
+_display setVariable ["Waldo_MG_KP_FeedbackDetail", _feedbackDetail];
+private _history = [_display, "RscListbox", [5, 16.55, 18.5, 2.4], "access attempt history"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_display setVariable ["Waldo_MG_KP_History", _history];
+private _legend = [_display, "RscText", [5, 19.1, 18.5, 1.3], "attempt count"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_legend ctrlSetText format ["ATTEMPTS 0 / %1", _maxGuesses];
+_legend ctrlSetTextColor [0.74, 0.78, 0.72, 1];
+_display setVariable ["Waldo_MG_KP_Attempts", _legend];
 
-// Layout.
-private _w = 0.34 * safezoneW;
-private _h = 0.6 * safezoneH;
-private _x = safezoneX + (safezoneW - _w) / 2;
-private _y = safezoneY + (safezoneH - _h) / 2;
-
-private _panel = _display ctrlCreate ["RscText", -1];
-_panel ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, _h + 0.02 * safezoneH];
-_panel ctrlSetBackgroundColor _cPanel;
-_panel ctrlCommit 0;
-
-private _accentBar = _display ctrlCreate ["RscText", -1];
-_accentBar ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, 0.006 * safezoneH];
-_accentBar ctrlSetBackgroundColor _cAccent;
-_accentBar ctrlCommit 0;
-
-private _heading = _display ctrlCreate ["RscText", -1];
-_heading ctrlSetPosition [_x, _y, _w, 0.05 * safezoneH];
-_heading ctrlSetText _title;
-_heading ctrlSetTextColor _cAccentLt;
-_heading ctrlSetBackgroundColor _cHeader;
-_heading ctrlCommit 0;
-
-private _entry = _display ctrlCreate ["RscText", -1];
-_entry ctrlSetPosition [_x, _y + 0.06 * safezoneH, _w, 0.06 * safezoneH];
-_entry ctrlSetBackgroundColor [0.02, 0.03, 0.04, 1];
-_entry ctrlSetTextColor _cAccentLt;
-_entry ctrlCommit 0;
-_display setVariable ["Waldo_MG_KP_EntryCtrl", _entry];
-
-private _status = _display ctrlCreate ["RscText", -1];
-_status ctrlSetPosition [_x, _y + 0.125 * safezoneH, _w, 0.04 * safezoneH];
-_status ctrlSetTextColor _cText;
-_status ctrlSetText format ["Crack the %1-digit code.  Guesses: %2", _digits, _maxGuesses];
-_status ctrlCommit 0;
-_display setVariable ["Waldo_MG_KP_StatusCtrl", _status];
-
-private _history = _display ctrlCreate ["RscStructuredText", -1];
-_history ctrlSetPosition [_x, _y + 0.17 * safezoneH, _w, 0.19 * safezoneH];
-_history ctrlSetBackgroundColor [0.02, 0.03, 0.04, 0.6];
-_history ctrlSetStructuredText parseText "";
-_history ctrlCommit 0;
-_display setVariable ["Waldo_MG_KP_HistoryCtrl", _history];
-_display setVariable ["Waldo_MG_KP_HistoryText", ""];
-
-// Redraw the current entry line.
-_display setVariable ["Waldo_MG_KP_Refresh", {
-    params ["_disp"];
-    private _entryCtrl = _disp getVariable ["Waldo_MG_KP_EntryCtrl", controlNull];
-    private _digits = _disp getVariable ["Waldo_MG_KP_Digits", 4];
-    private _e = _disp getVariable ["Waldo_MG_KP_Entry", []];
-    private _txt = "";
-    for "_i" from 0 to (_digits - 1) do {
-        if (_i < (count _e)) then {
-            _txt = _txt + format ["[ %1 ]", _e select _i];
-        } else {
-            _txt = _txt + "[ _ ]";
-        };
-    };
-    if (!isNull _entryCtrl) then { _entryCtrl ctrlSetText _txt; };
-}];
-[_display] call (_display getVariable "Waldo_MG_KP_Refresh");
-
-// Number pad + controls (0-9, Clear, Enter).
-private _keyLabels = ["1","2","3","4","5","6","7","8","9","CLR","0","ENT"];
-private _keyButtons = [];
-private _padTop = _y + 0.375 * safezoneH;
-private _padW = (_w - 2 * 0.01 * safezoneW) / 3;
-private _padH = 0.05 * safezoneH;
-private _padGapX = 0.01 * safezoneW;
-private _padGapY = 0.012 * safezoneH;
-private _colX = _x;
-{
-    private _row = floor (_forEachIndex / 3);
-    private _col = _forEachIndex mod 3;
-    private _bx = _colX + _col * (_padW + _padGapX);
-    private _by = _padTop + _row * (_padH + _padGapY);
-    private _btn = _display ctrlCreate ["RscButton", -1];
-    _btn ctrlSetPosition [_bx, _by, _padW, _padH];
-    _btn ctrlSetText _x;
-    _btn ctrlSetBackgroundColor _cKey;
-    _btn ctrlSetTextColor _cText;
-    _btn setVariable ["Waldo_MG_KP_Label", _x];
-    _btn ctrlAddEventHandler ["ButtonClick", {
-        params ["_ctrl"];
-        private _disp = ctrlParent _ctrl;
-        if (isNull _disp || {_disp getVariable ["Waldo_MG_KP_Done", false]}) exitWith {};
-        private _label = _ctrl getVariable ["Waldo_MG_KP_Label", ""];
-        private _digits = _disp getVariable ["Waldo_MG_KP_Digits", 4];
-        private _e = _disp getVariable ["Waldo_MG_KP_Entry", []];
-        switch (_label) do {
-            case "CLR": { _e = []; };
-            case "ENT": {
-                if ((count _e) == _digits) then {
-                    [_disp] call (_disp getVariable "Waldo_MG_KP_Submit");
-                    _e = _disp getVariable ["Waldo_MG_KP_Entry", []];
-                };
-            };
-            default {
-                if ((count _e) < _digits) then { _e pushBack (parseNumber _label); };
-            };
-        };
-        _disp setVariable ["Waldo_MG_KP_Entry", _e];
-        [_disp] call (_disp getVariable "Waldo_MG_KP_Refresh");
+private _keypadBay = [_display, "RscText", [27, 4.2, 10.5, 17.2], "sealed physical keypad"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_keypadBay ctrlSetBackgroundColor [0.045, 0.05, 0.047, 1];
+private _seal = [_display, "RscText", [27.8, 4.8, 8.9, 1.2], "security seal label"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_seal ctrlSetText "IX-4 // TAMPER SEALED";
+_seal ctrlSetTextColor [0.72, 0.74, 0.66, 1];
+private _keys = [];
+private _keyValues = [1,2,3,4,5,6,7,8,9,-2,0,-1];
+for "_keyIndex" from 0 to 11 do {
+    private _column = _keyIndex mod 3;
+    private _row = floor (_keyIndex / 3);
+    private _value = _keyValues select _keyIndex;
+    private _label = if (_value == -2) then {"BACK"} else {if (_value == -1) then {"ENTER"} else {str _value}};
+    private _semantic = if (_value == -2) then {"backspace remove digit"} else {if (_value == -1) then {"submit access code"} else {format ["keypad digit %1", _value]}};
+    private _key = [_display, "RscButton", [28 + (_column * 2.9), 6.5 + (_row * 3.25), 2.55, 2.75], _semantic] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _key ctrlSetText _label;
+    _key ctrlSetBackgroundColor (if (_value < 0) then {[0.22, 0.18, 0.10, 1]} else {[0.13, 0.15, 0.14, 1]});
+    _key ctrlSetTooltip _semantic;
+    _key setVariable ["Waldo_MG_KP_Value", _value];
+    _key ctrlAddEventHandler ["ButtonClick", {
+        params ["_control"];
+        private _display = ctrlParent _control;
+        [_display, _control getVariable ["Waldo_MG_KP_Value", -99]] call (_display getVariable ["Waldo_MG_KP_Action", {}]);
     }];
-    _btn ctrlCommit 0;
-    _keyButtons pushBack _btn;
-} forEach _keyLabels;
-_display setVariable ["Waldo_MG_KP_KeyButtons", _keyButtons];
+    _keys pushBack _key;
+    if (_value == -2) then {_display setVariable ["Waldo_MG_KP_Backspace", _key];};
+    if (_value == -1) then {_display setVariable ["Waldo_MG_KP_Enter", _key];};
+};
+_display setVariable ["Waldo_MG_KP_Keys", _keys];
 
-// Evaluate a full entry.
-_display setVariable ["Waldo_MG_KP_Submit", {
-    params ["_disp"];
-    private _code = _disp getVariable ["Waldo_MG_KP_Code", []];
-    private _guess = _disp getVariable ["Waldo_MG_KP_Entry", []];
-    private _digits = _disp getVariable ["Waldo_MG_KP_Digits", 4];
-    if ((count _guess) != _digits) exitWith {};
-
-    private _correct = 0;
-    private _codeLeft = [];
-    private _guessLeft = [];
-    for "_i" from 0 to (_digits - 1) do {
-        if ((_guess select _i) == (_code select _i)) then {
-            _correct = _correct + 1;
-        } else {
-            _codeLeft pushBack (_code select _i);
-            _guessLeft pushBack (_guess select _i);
+_display setVariable ["Waldo_MG_KP_Refresh", {
+    params ["_display"];
+    private _input = _display getVariable ["Waldo_MG_KP_Input", []];
+    private _digits = _display getVariable ["Waldo_MG_KP_Digits", 4];
+    private _characters = [];
+    for "_index" from 0 to (_digits - 1) do {_characters pushBack (if (_index < count _input) then {str (_input select _index)} else {"_"});};
+    private _readout = _display getVariable ["Waldo_MG_KP_Readout", controlNull];
+    if (!isNull _readout) then {_readout ctrlSetText format ["CODE  %1", _characters joinString "  "];};
+    private _back = _display getVariable ["Waldo_MG_KP_Backspace", controlNull];
+    if (!isNull _back) then {_back ctrlEnable (count _input > 0); _back ctrlSetTooltip (if (count _input > 0) then {"Remove the last digit"} else {"Disabled: no digit to remove"});};
+    private _enter = _display getVariable ["Waldo_MG_KP_Enter", controlNull];
+    if (!isNull _enter) then {_enter ctrlEnable (count _input == _digits); _enter ctrlSetTooltip (if (count _input == _digits) then {"Submit the entered code"} else {format ["Disabled: enter %1 more digit(s)", _digits - count _input]});};
+    private _bank = _display getVariable ["Waldo_MG_KP_DigitBank", []];
+    {
+        private _value = _x getVariable ["Waldo_MG_KP_Value", -99];
+        if (_value >= 0) then {
+            private _available = _value in _bank && {!(_value in _input)};
+            _x ctrlEnable _available;
+            _x ctrlSetTooltip (if (!(_value in _bank)) then {"Disabled: digit is not in the authorized bank"} else {if (_value in _input) then {"Disabled: each authorized digit is used once"} else {format ["Enter authorized digit %1", _value]}});
+        };
+    } forEach (_display getVariable ["Waldo_MG_KP_Keys", []]);
+}];
+_display setVariable ["Waldo_MG_KP_Action", {
+    params ["_display", "_value"];
+    if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+    private _input = _display getVariable ["Waldo_MG_KP_Input", []];
+    private _digits = _display getVariable ["Waldo_MG_KP_Digits", 4];
+    if (_value >= 0) exitWith {
+        private _bank = _display getVariable ["Waldo_MG_KP_DigitBank", []];
+        if (count _input < _digits && {_value in _bank} && {!(_value in _input)}) then {_input pushBack _value; _display setVariable ["Waldo_MG_KP_Input", _input]; [_display] call (_display getVariable ["Waldo_MG_KP_Refresh", {}]);};
+    };
+    if (_value == -2) exitWith {
+        if (count _input > 0) then {_input deleteAt ((count _input) - 1); _display setVariable ["Waldo_MG_KP_Input", _input]; [_display] call (_display getVariable ["Waldo_MG_KP_Refresh", {}]);};
+    };
+    if (_value != -1 || {count _input != _digits}) exitWith {};
+    private _code = _display getVariable ["Waldo_MG_KP_Code", []];
+    private _exact = 0;
+    private _exactSlots = [];
+    private _codeRemainder = [];
+    private _guessRemainder = [];
+    for "_index" from 0 to (_digits - 1) do {
+        if ((_input select _index) == (_code select _index)) then {_exact = _exact + 1; _exactSlots pushBack (_index + 1);} else {
+            _codeRemainder pushBack (_code select _index);
+            _guessRemainder pushBack (_input select _index);
         };
     };
     private _misplaced = 0;
+    private _misplacedDigits = [];
     {
-        private _idx = _codeLeft find _x;
-        if (_idx >= 0) then {
-            _misplaced = _misplaced + 1;
-            _codeLeft set [_idx, -1];
-        };
-    } forEach _guessLeft;
-
-    private _guessStr = "";
-    { _guessStr = _guessStr + str _x; } forEach _guess;
-
-    if (_correct == _digits) exitWith {
-        private _entryCtrl = _disp getVariable ["Waldo_MG_KP_EntryCtrl", controlNull];
-        if (!isNull _entryCtrl) then {
-            _entryCtrl ctrlSetText "ACCESS GRANTED";
-            _entryCtrl ctrlSetTextColor [0.55, 1, 0.65, 1];
-        };
-        private _fin = _disp getVariable ["Waldo_MG_KP_Finish", {}];
-        [_disp, true] call _fin;
+        private _found = _codeRemainder find _x;
+        if (_found >= 0) then {_misplaced = _misplaced + 1; _misplacedDigits pushBack _x; _codeRemainder deleteAt _found;};
+    } forEach _guessRemainder;
+    private _guesses = (_display getVariable ["Waldo_MG_KP_Guesses", 0]) + 1;
+    _display setVariable ["Waldo_MG_KP_Guesses", _guesses];
+    private _history = _display getVariable ["Waldo_MG_KP_History", controlNull];
+    if (!isNull _history) then {
+        private _row = _history lbAdd format ["%1  //  SLOTS %2  //  MOVED %3", _input joinString "", if (_exactSlots isEqualTo []) then {"--"} else {_exactSlots joinString ","}, if (_misplacedDigits isEqualTo []) then {"--"} else {_misplacedDigits joinString ","}];
+        _history lbSetTooltip [_row, format ["Attempt %1: exact slots %2; misplaced digits %3", _guesses, _exactSlots, _misplacedDigits]];
+        _history lbSetCurSel _row;
     };
-
-    private _remaining = (_disp getVariable ["Waldo_MG_KP_Remaining", 1]) - 1;
-    _disp setVariable ["Waldo_MG_KP_Remaining", _remaining];
-    _disp setVariable ["Waldo_MG_KP_Entry", []];
-
-    private _line = format ["<t color='#8CB8FA'>%1</t>   correct <t color='#59C46F'>%2</t>  misplaced <t color='#DBB833'>%3</t><br/>", _guessStr, _correct, _misplaced];
-    private _hist = (_disp getVariable ["Waldo_MG_KP_HistoryText", "" ]) + _line;
-    _disp setVariable ["Waldo_MG_KP_HistoryText", _hist];
-    private _histCtrl = _disp getVariable ["Waldo_MG_KP_HistoryCtrl", controlNull];
-    if (!isNull _histCtrl) then { _histCtrl ctrlSetStructuredText parseText _hist; };
-
-    private _statusCtrl = _disp getVariable ["Waldo_MG_KP_StatusCtrl", controlNull];
-    if (!isNull _statusCtrl) then {
-        _statusCtrl ctrlSetText format ["Guesses remaining: %1", _remaining];
+    private _detail = _display getVariable ["Waldo_MG_KP_FeedbackDetail", controlNull];
+    if (!isNull _detail) then {
+        _detail ctrlSetText format ["EXACT SLOTS: %1  //  MISPLACED DIGITS: %2", if (_exactSlots isEqualTo []) then {"--"} else {_exactSlots joinString ", "}, if (_misplacedDigits isEqualTo []) then {"--"} else {_misplacedDigits joinString ", "}];
     };
-
-    if (_remaining <= 0) then {
-        private _fin = _disp getVariable ["Waldo_MG_KP_Finish", {}];
-        [_disp, false] call _fin;
+    private _attempts = _display getVariable ["Waldo_MG_KP_Attempts", controlNull];
+    if (!isNull _attempts) then {_attempts ctrlSetText format ["ATTEMPTS %1 / %2", _guesses, _display getVariable ["Waldo_MG_KP_MaxGuesses", 1]];};
+    if (_exact == _digits) exitWith {
+        private _lock = _display getVariable ["Waldo_MG_KP_LockState", controlNull];
+        if (!isNull _lock) then {_lock ctrlSetText "[OPEN] ACCESS GRANTED"; _lock ctrlSetBackgroundColor [0.08, 0.30, 0.15, 1];};
+        [_display, true, "[OK] ACCESS CODE ACCEPTED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
     };
+    if (_guesses >= (_display getVariable ["Waldo_MG_KP_MaxGuesses", 1])) exitWith {
+        [_display, false, format ["[X] SECURITY LOCKOUT // CODE %1", _code joinString ""]] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
+    };
+    _display setVariable ["Waldo_MG_KP_Input", []];
+    private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+    if (!isNull _status) then {_status ctrlSetText format ["[AUDIT] EXACT %1 // MISPLACED %2", _exact, _misplaced];};
+    [_display] call (_display getVariable ["Waldo_MG_KP_Refresh", {}]);
 }];
 
-// Escape aborts (failure).
-_display displayAddEventHandler ["KeyDown", {
-    params ["_disp", "_key"];
-    if (_key == 1) then {
-        private _fin = _disp getVariable ["Waldo_MG_KP_Finish", {}];
-        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
-        true
-    } else {
-        if !(_disp getVariable ["Waldo_IMG_Started", false]) exitWith {true};
-        private _digitKeys = [[11, "0"], [2, "1"], [3, "2"], [4, "3"], [5, "4"], [6, "5"], [7, "6"], [8, "7"], [9, "8"], [10, "9"]];
-        private _label = "";
-        { if ((_x select 0) == _key) exitWith { _label = _x select 1; }; } forEach _digitKeys;
-        if (_key in [28, 156]) then { _label = "ENT"; };
-        if (_key == 14) exitWith {
-            private _entry = _disp getVariable ["Waldo_MG_KP_Entry", []];
-            if (count _entry > 0) then { _entry deleteAt ((count _entry) - 1); };
-            _disp setVariable ["Waldo_MG_KP_Entry", _entry];
-            [_disp] call (_disp getVariable ["Waldo_MG_KP_Refresh", {}]);
-            true
-        };
-        if (_label != "") exitWith {
-            {
-                if ((_x getVariable ["Waldo_MG_KP_Label", ""]) == _label) exitWith { ctrlActivate _x; };
-            } forEach (_disp getVariable ["Waldo_MG_KP_KeyButtons", []]);
-            true
-        };
-        false
+[_display, "KeyDown", {
+    params ["_display", "_key"];
+    private _value = switch (_key) do {
+        case 2: {1}; case 3: {2}; case 4: {3}; case 5: {4}; case 6: {5};
+        case 7: {6}; case 8: {7}; case 9: {8}; case 10: {9}; case 11: {0};
+        case 14: {-2}; case 28: {-1}; default {-99};
     };
-}];
-
-// Optional countdown.
-if (_timeLimit > 0) then {
-    [_display, _timeLimit] spawn {
-        params ["_disp", "_timeLimit"];
-        waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
-        if (isNull _disp) exitWith {};
-        private _deadline = time + _timeLimit;
-        while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_KP_Done", false])} } do {
-            if ((_deadline - time) <= 0) exitWith {
-                private _fin = _disp getVariable ["Waldo_MG_KP_Finish", {}];
-                [_disp, false, "timeoutText"] call _fin;
-            };
-            sleep 0.2;
-        };
-    };
-};
+    if (_value != -99) exitWith {[_display, _value] call (_display getVariable ["Waldo_MG_KP_Action", {}]); true};
+    false
+}] call Waldo_fnc_MiniGameEquipmentAddDisplayHandler;
+[_display] call (_display getVariable ["Waldo_MG_KP_Refresh", {}]);
 [_display] call Waldo_fnc_MiniGameEquipmentBriefing;

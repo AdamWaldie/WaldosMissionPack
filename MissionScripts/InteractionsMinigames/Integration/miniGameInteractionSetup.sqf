@@ -6,11 +6,13 @@
  *
  * Arguments:
  * _object      - Object - object receiving the interaction
- * _challengeId - String - wirecut/minesweeper/keypad/lockpick/circuit/repair/radiotune/pressure/sequence
+ * _challengeId - String - wirecut/minesweeper/keypad/lockpick/circuit/repair/radiotune/pressure/sequence/commandinput
  * _options     - Array/HashMap - optional named settings. Legacy arrays retain "title" as
  *                  the action label; hashmaps use "actionTitle" and reserve "title" for
  *                  the equipment faceplate.
  *                  "config"          Array  - complete challenge config override
+ *                  "difficulty"      String - easy/standard/hard/expert (default standard);
+ *                                             ignored when config is supplied
  *                  "successVariable" String - broadcast object variable set true on success
  *                  "failureVariable" String - broadcast object variable set true on failure
  *                  "retryOnFailure"  Bool   - keep action after failure (default true)
@@ -51,15 +53,16 @@ params [
 if (isNull _object) exitWith { false };
 
 private _presets = [
-    ["wirecut", "Inspect EOD Controller", [5, 20, "EOD CONTROLLER"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
+    ["wirecut", "Inspect EOD Controller", [5, 30, "EOD CONTROLLER", 2], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
     ["minesweeper", "Inspect Trigger Analyser", [5, 5, 0, "TRIGGER ANALYSER"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
     ["keypad", "Inspect Access Terminal", [4, 6, 0, "ACCESS TERMINAL"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
-    ["lockpick", "Inspect Lock Cylinder", [3, 1.4, 0.16, 0, "LOCK CYLINDER"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
+    ["lockpick", "Inspect Lock Cylinder", [3, 2.8, 0.16, 0, "LOCK CYLINDER"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
     ["circuit", "Inspect Breaker Cabinet", [4, 3, 0, "BREAKER CABINET"], "\a3\ui_f_oldman\data\IGUI\Cfg\holdactions\repair_ca.paa"],
     ["repair", "Open Maintenance Hatch", [4, 2, 3, 30, "MAINTENANCE HATCH"], "\a3\ui_f_oldman\data\IGUI\Cfg\holdactions\repair_ca.paa"],
     ["radiotune", "Inspect Communications Unit", [3, 0.05, 1, 30, "COMMUNICATIONS UNIT"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
     ["pressure", "Inspect Hydraulic Manifold", [3, 1, 2, 45, "HYDRAULIC MANIFOLD"], "\a3\ui_f_oldman\data\IGUI\Cfg\holdactions\repair_ca.paa"],
-    ["sequence", "Inspect Control Console", [4, 4, 0.6, 0, "CONTROL CONSOLE"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"]
+    ["sequence", "Inspect Control Console", [4, 4, 0.85, 0, "CONTROL CONSOLE"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"],
+    ["commandinput", "Access Tactical Uplink", [4, 3, 3, 45, "TACTICAL UPLINK"], "\a3\ui_f\data\igui\cfg\actions\take_ca.paa"]
 ];
 private _preset = [];
 {
@@ -102,7 +105,19 @@ private _title = if (typeName _options == "HASHMAP") then {
 } else {
     ["title", _preset select 1] call _opt
 };
-private _config = ["config", +(_preset select 2)] call _opt;
+private _difficultyValue = ["difficulty", "standard"] call _opt;
+private _difficulty = if (typeName _difficultyValue == "STRING") then {toLower _difficultyValue} else {"standard"};
+if !(_difficulty in ["easy", "standard", "hard", "expert"]) then {
+    systemChat format ["Field Equipment: unknown difficulty '%1'; using standard.", _difficulty];
+    _difficulty = "standard";
+};
+private _difficultyConfig = [_challengeId, _difficulty] call Waldo_fnc_MiniGameEquipmentDifficultyConfig;
+if (_difficultyConfig isEqualTo []) then {_difficultyConfig = +(_preset select 2);};
+private _hasConfigOverride = false;
+{
+    if ((_x param [0, ""]) == "config") exitWith {_hasConfigOverride = true;};
+} forEach _optionPairs;
+private _config = if (_hasConfigOverride) then {["config", _difficultyConfig] call _opt} else {_difficultyConfig};
 private _icon = ["icon", _preset select 3] call _opt;
 private _successVariable = ["successVariable", "Waldo_MG_InteractionComplete"] call _opt;
 private _failureVariable = ["failureVariable", "Waldo_MG_InteractionFailed"] call _opt;
@@ -119,6 +134,7 @@ _object setVariable ["Waldo_MG_Preset_FailureVariable", _failureVariable, true];
 _object setVariable ["Waldo_MG_Preset_RetryOnFailure", _retryOnFailure, true];
 _object setVariable ["Waldo_MG_Preset_Repeatable", _repeatable, true];
 _object setVariable ["Waldo_MG_Preset_ChallengeId", _challengeId, true];
+_object setVariable ["Waldo_MG_Preset_Difficulty", (if (_hasConfigOverride) then {"custom"} else {_difficulty}), true];
 _object setVariable ["Waldo_MG_Preset_OnSuccess", _onSuccess];
 _object setVariable ["Waldo_MG_Preset_OnFailure", _onFailure];
 

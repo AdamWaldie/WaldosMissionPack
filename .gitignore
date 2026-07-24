@@ -4,3 +4,4 @@ __pycache__/
 
 # Build output
 release/
+.qa/

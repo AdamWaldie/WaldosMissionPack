@@ -22,6 +22,7 @@ missionNamespace setVariable [_resolvedVar, false];
 
 private _onSuccess = {
     params ["_actor", "_cid", "_ctx", ["_detail", ["SUCCESS", ""]]];
+    if (_cid == "") exitWith {};
     _ctx params ["_object", "_attemptId", "_resolvedVar"];
     missionNamespace setVariable [_resolvedVar, true];
     [_object, _actor, true, _attemptId, _detail param [0, "SUCCESS"], _detail param [1, ""]]
@@ -29,6 +30,7 @@ private _onSuccess = {
 };
 private _onFailure = {
     params ["_actor", "_cid", "_ctx", ["_detail", ["FAILURE", ""]]];
+    if (_cid == "") exitWith {};
     _ctx params ["_object", "_attemptId", "_resolvedVar"];
     missionNamespace setVariable [_resolvedVar, true];
     [_object, _actor, false, _attemptId, _detail param [0, "FAILURE"], _detail param [1, ""]]
@@ -37,7 +39,7 @@ private _onFailure = {
 
 private _opened = [_challengeId, _config, _onSuccess, _onFailure, _actor, [_object, _attemptId, _resolvedVar], _presentation]
     call Waldo_fnc_MiniGameChallenge;
-private _attemptDisplay = missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
+private _attemptDisplay = uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
 if (!_opened) then {
     if !(missionNamespace getVariable [_resolvedVar, false]) then {
         missionNamespace setVariable [_resolvedVar, true];
@@ -59,13 +61,13 @@ if (!_opened) then {
             private _stateResult = _object getVariable ["Waldo_MG_InteractionResult", []];
             if ((_object getVariable ["Waldo_MG_InteractionState", "IDLE"]) != "RUNNING" || {(_stateResult param [5, ""]) != _attemptId}) exitWith {
                 missionNamespace setVariable [_resolvedVar, true];
-                if (!isNull _attemptDisplay && {(missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull]) isEqualTo _attemptDisplay}) then {
+                if (!isNull _attemptDisplay && {(uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull]) isEqualTo _attemptDisplay}) then {
                     _attemptDisplay closeDisplay 1;
                 };
                 _watching = false;
             };
         };
-        if (isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
+        if (isNull (uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
             uiSleep 0.15;
             if !(missionNamespace getVariable [_resolvedVar, false]) then {
                 missionNamespace setVariable [_resolvedVar, true];

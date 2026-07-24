@@ -37,7 +37,7 @@ params [
 
 if (!hasInterface) exitWith { false };
 if (isNull _actor) then { _actor = player; };
-if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
+if (!isNull (uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
     systemChat "Field Equipment: finish the active procedure first.";
     false
 };
@@ -53,6 +53,7 @@ if !(missionNamespace getVariable ["Waldo_MG_ChallengesRegistered", false]) then
     ["radiotune", Waldo_fnc_MiniGameRadioTune, "Tactical Communications Unit"] call Waldo_fnc_MiniGameRegisterChallenge;
     ["pressure", Waldo_fnc_MiniGamePressure, "Hydraulic Control Manifold"] call Waldo_fnc_MiniGameRegisterChallenge;
     ["sequence", Waldo_fnc_MiniGameSequence, "Secure Control Console"] call Waldo_fnc_MiniGameRegisterChallenge;
+    ["commandinput", Waldo_fnc_MiniGameCommandInput, "Tactical Command Uplink"] call Waldo_fnc_MiniGameRegisterChallenge;
     missionNamespace setVariable ["Waldo_MG_ChallengesRegistered", true];
 };
 

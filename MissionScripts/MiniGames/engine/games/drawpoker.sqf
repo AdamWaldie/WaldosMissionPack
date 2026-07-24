@@ -56,7 +56,12 @@ Waldo_MG_fnc_drawPokerResolveHandServer = {
 Waldo_MG_fnc_drawPokerBeginBettingServer = {
     params [["_table",objNull],["_phase","BET1"],["_start",-1]]; if (!isServer || {isNull _table}) exitWith {};
     private _statuses=+(_table getVariable ["Waldo_MG_DrawPokerStatuses",[]]); private _chips=_table getVariable ["Waldo_MG_DrawPokerChips",[]];
-    for "_i" from 0 to ((count _statuses)-1) do {if ((_statuses param [_i,""])!="FOLDED" && {(_statuses param [_i,""])!="LEFT" && {(_statuses param [_i,""])!="SITOUT"}) then {_statuses set [_i,if ((_chips param [_i,0])<=0) then {"ALLIN"}else{"ACTIVE"}];};};};
+    for "_i" from 0 to ((count _statuses) - 1) do {
+        private _status = _statuses param [_i, ""];
+        if !(_status in ["FOLDED", "LEFT", "SITOUT"]) then {
+            _statuses set [_i, if ((_chips param [_i, 0]) <= 0) then {"ALLIN"} else {"ACTIVE"}];
+        };
+    };
     _table setVariable ["Waldo_MG_DrawPokerStatuses",_statuses,true]; _table setVariable ["Waldo_MG_DrawPokerRoundContrib",_chips apply {0},true]; _table setVariable ["Waldo_MG_DrawPokerCurrentBet",0,true]; _table setVariable ["Waldo_MG_DrawPokerMinRaise",1,true]; _table setVariable ["Waldo_MG_DrawPokerActed",_chips apply {false},true]; _table setVariable ["Waldo_MG_DrawPokerPhase",_phase,true];
     private _turn=[_start,_statuses] call Waldo_MG_fnc_drawPokerNextRole; _table setVariable ["Waldo_MG_DrawPokerTurn",_turn,true];
     if (_turn < 0) exitWith {

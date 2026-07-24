@@ -13,7 +13,8 @@ private _profiles = [
     ["repair", "maintenanceHatch", "FIELD MAINTENANCE DIVISION", "SERVICE HATCH M4", "OPEN MAINTENANCE HATCH", "Torque every fastener to specification without stripping the assembly.", "BEGIN SERVICE", [0.82, 0.56, 0.18, 1], [0.18, 0.18, 0.16, 1]],
     ["radiotune", "natoReceiver", "NATO SIGNAL CORPS", "AN/PRC CALIBRATION UNIT", "TACTICAL COMMUNICATIONS UNIT", "Acquire and hold each assigned carrier frequency until channel lock.", "OPEN CHANNEL", [0.34, 0.72, 0.48, 1], [0.12, 0.16, 0.13, 1]],
     ["pressure", "hydraulicManifold", "MOBILE SYSTEMS ENGINEERING", "HPM-3 MANIFOLD", "HYDRAULIC CONTROL MANIFOLD", "Balance all coupled lines inside their marked operating bands.", "PRESSURISE", [0.86, 0.58, 0.18, 1], [0.15, 0.17, 0.18, 1]],
-    ["sequence", "secureConsole", "DEFENCE CONTROL SYSTEMS", "SCU-6 AUTH CONSOLE", "SECURE CONTROL CONSOLE", "Observe and reproduce each authorization signal in exact order.", "BEGIN TEST", [0.56, 0.66, 0.78, 1], [0.14, 0.15, 0.17, 1]]
+    ["sequence", "secureConsole", "DEFENCE CONTROL SYSTEMS", "SCU-6 AUTH CONSOLE", "SECURE CONTROL CONSOLE", "Observe and reproduce each authorization signal in exact order.", "BEGIN TEST", [0.56, 0.66, 0.78, 1], [0.14, 0.15, 0.17, 1]],
+    ["commandinput", "tacticalUplink", "JOINT SUPPORT NETWORK", "TCU-4 COMMAND UPLINK", "TACTICAL COMMAND UPLINK", "Enter each displayed directional command packet to authorize the support channel.", "OPEN UPLINK", [0.88, 0.64, 0.18, 1], [0.12, 0.15, 0.14, 1]]
 ];
 
 private _row = _profiles select 0;
@@ -65,7 +66,8 @@ private _variants = [
     ["distressBeacon", "COMBAT RECOVERY SYSTEMS", "SAR BEACON CALIBRATOR", "DISTRESS BEACON RECEIVER", "Acquire each beacon component and hold a stable rescue fix.", "BEGIN SEARCH"],
     ["fuelRegulator", "AVIATION FUEL SYSTEMS", "FPM-4 REGULATOR", "FUEL PRESSURE REGULATOR", "Balance all coupled fuel lines inside their operating bands.", "CHARGE LINES"],
     ["coolantControl", "FIELD POWER SERVICES", "THERMAL LOOP MANIFOLD", "COOLANT CONTROL ASSEMBLY", "Stabilize every coolant loop inside its marked safe band.", "START PUMPS"],
-    ["authorizationConsole", "DEFENCE CONTROL SYSTEMS", "AUTH STATION SCU-6", "SECURE AUTHORIZATION CONSOLE", "Verify the illuminated authorization signals in exact order.", "BEGIN AUTHORIZATION"]
+    ["authorizationConsole", "DEFENCE CONTROL SYSTEMS", "AUTH STATION SCU-6", "SECURE AUTHORIZATION CONSOLE", "Verify the illuminated authorization signals in exact order.", "BEGIN AUTHORIZATION"],
+    ["supportTerminal", "JOINT FIRES NETWORK", "JTAC UPLINK TCU-4", "TACTICAL SUPPORT TERMINAL", "Enter the authenticated directional command packets to open the support channel.", "REQUEST LINK"]
 ];
 {
     if ((_x select 0) == _requestedPreset) exitWith {

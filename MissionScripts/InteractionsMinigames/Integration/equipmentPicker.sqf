@@ -4,7 +4,7 @@ params [
     ["_table", objNull, [objNull]],
     ["_entriesOverride", [], [[]]]
 ];
-if (!hasInterface || {!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])}) exitWith {false};
+if (!hasInterface || {!isNull (uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])}) exitWith {false};
 private _entries = if ((count _entriesOverride) > 0) then {_entriesOverride} else {
     if (isNull _table) then {[]} else {_table getVariable ["Waldo_IMG_TableProcedures", []]}
 };
@@ -59,10 +59,11 @@ _display setVariable ["Waldo_IMG_PickerRefresh", {
     if (isNull _list || {isNull _details} || {(lbCurSel _list) < 0}) exitWith {};
     private _entry = (_disp getVariable ["Waldo_IMG_PickerEntries", []]) select (lbCurSel _list);
     private _profile = [_entry select 0, _entry select 2] call Waldo_fnc_MiniGameEquipmentProfile;
+    private _difficulty = toUpper (_entry param [3, "custom"]);
     _details ctrlSetStructuredText parseText format [
-        "<t size='1.15' color='#F2BE55'>%1</t><br/><t size='0.72' color='#9C9D8F'>%2<br/>%3</t><br/><br/><t color='#EEE9D8'>%4</t><br/><br/><t color='#C9C6B8'>Local solo procedure<br/>Result does not change party-game votes or readiness.</t>",
+        "<t size='1.15' color='#F2BE55'>%1</t><br/><t size='0.72' color='#9C9D8F'>%2<br/>%3</t><br/><br/><t color='#EEE9D8'>%4</t><br/><br/><t color='#D9B85C'>DIFFICULTY: %5</t><br/><t color='#C9C6B8'>Local solo procedure<br/>Result does not change party-game votes or readiness.</t>",
         _profile getOrDefault ["title", "EQUIPMENT"], _profile getOrDefault ["manufacturer", ""],
-        _profile getOrDefault ["model", ""], _profile getOrDefault ["objective", ""]
+        _profile getOrDefault ["model", ""], _profile getOrDefault ["objective", ""], _difficulty
     ];
     _details ctrlCommit 0;
 }];

@@ -429,9 +429,9 @@ Tables are detected by class (`Land_CampingTable_F`, `Land_CampingTable_small_F`
 `Land_CampingTable_small_white_F`, `Land_TablePlastic_01_F`). Tuning constants (`Waldo_MG_CFG_*`,
 including `Waldo_MG_CFG_TABLE_CLASSES`) live at the top of `MissionScripts/MiniGames/engine/config.sqf`.
 
-**2. Field equipment procedures (single-player, generic hook).** Nine pass/fail procedures gate any
+**2. Field equipment procedures (single-player, generic hook).** Ten pass/fail procedures gate any
 object interaction: `wirecut`, `minesweeper`, `keypad`, `lockpick`, `circuit`, `repair`, `radiotune`,
-`pressure`, and `sequence`. Each presents distinct diegetic equipment rather than a shared minigame
+`pressure`, `sequence`, and `commandinput`. Each presents distinct diegetic equipment rather than a shared minigame
 window. The common core owns responsive safe-zone layout, integrated operating cards, timers,
 accessibility preferences, abort confirmation, cleanup, and exactly-once resolution. Procedures
 register on first use and work with `Waldo_MiniGames_Enable = false`.
@@ -449,15 +449,19 @@ allows retries after failure, consumes the action after success, and broadcasts
 server and exclusively locked; ACE is the preferred action path, with vanilla `addAction` using the
 same state. Legacy option arrays remain valid.
 New hashmap profiles support `preset`, `actionTitle`, `manufacturer`, `model`, `title`, `objective`,
-activation/result wording, and operational options. Layout positions and semantic colours stay
-template-owned so mission customization cannot produce clipped or colour-only states.
+activation/result wording, and operational options. `difficulty` accepts `easy`, `standard`, `hard`,
+or `expert`; a supplied positional `config` overrides it. Difficulty profiles may change workload,
+tolerance and time, but must never reduce legibility or remove accessible state cues. Layout positions
+and semantic colours stay template-owned so mission customization cannot produce clipped or
+colour-only states.
 
 Mission-maker presentation hashmaps may set curated `preset` and `skin` values plus `actionTitle`,
 `manufacturer`, `model`, `title`, `briefing`, `objective`, `activation`, `controls`, `hint`,
 `statusText`, result/abort wording, `soundProfile`, and an optional vanilla or mission texture.
 Accepted skins are `default`, `olive`, `charcoal`, `sand`, `naval`, and `hazard`; sound is
 `equipment` or `silent`. Do not expose raw control positions or semantic colours: equipment templates
-own layout and accessible state signalling. Operational difficulty stays in the challenge `config`.
+own layout and accessible state signalling. Operational difficulty uses the curated `difficulty`
+profile or a mission-authored positional `config`.
 Four original generated 1024px JPEG material sheets live in `InteractionsMinigames/Themes/Textures`,
 but bitmap materials are disabled by default. Procedural Arma shapes, seams, fasteners, instruments,
 labels and states form the complete primary interface. Mission makers may opt in with
@@ -485,7 +489,7 @@ accessible Arma controls.
   procedures remain local and do not enter party voting, readiness, seating, or active-game state.
 - `Waldo_fnc_MiniGameAccessibility` — local high-contrast, colourblind, large-text, outlines,
   reduced-motion, and audio-caption preferences. These never change mission difficulty or timers.
-- `Waldo_fnc_MiniGameEquipmentGallery` — developer visual-review picker for all nine procedures.
+- `Waldo_fnc_MiniGameEquipmentGallery` — developer visual-review picker for all ten procedures.
 
 **Architecture.** The table engine is ported from the community composition "Party Games Scripted" by
 |LorÐ|™[Habilidade]Ðeus Ex, rebranded to the internal `Waldo_MG_` namespace. Twelve isolated games
@@ -528,7 +532,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
 - `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
 - `MiniGames/` — seated party-game installer and multiplayer engine only.
-- `InteractionsMinigames/` — field-equipment procedures, equipment themes, accessibility core, object/table integration, and all nine challenge implementations.
+- `InteractionsMinigames/` — field-equipment procedures, equipment themes, accessibility core, object/table integration, and all ten challenge implementations.
 - `ThirdPartyScripts/` — Headless client and player marker integrations (disabled by default via commented-out line in `init.sqf`)
 
 ---
@@ -717,6 +721,27 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 ---
 
 ## Codebase Conventions
+
+### In-engine Arma UI validation
+
+SQF/config validation is necessary but does not validate rendered controls. For
+interaction-equipment UI work, use the disposable VR mission documented in
+`releaseVerificationAndDeployment/interactionEquipmentQA/README.md`.
+
+- Launch `launch_interaction_ui_qa.ps1` in `Interactive` mode for manual visual
+  and input review, `Active -Challenge <id> -Difficulty <level>` for a focused
+  procedure, or `Automated` for all ten briefing/active/mechanics checks.
+- Use `Automated -AllDifficulties` for the complete 40-case easy, standard,
+  hard, and expert matrix. Automation must operate real input/state functions,
+  not assign solved values or invoke the common finish callback.
+- Every QA launch must use `-noBattlEye`; the launcher supplies it by default.
+- Read the newest Arma RPT and require zero SQF errors and zero runtime layout
+  findings.
+- Use `capture_interaction_ui.ps1` for GUI-inclusive, DPI-aware window captures;
+  Arma's scripted screenshot does not capture the GUI.
+- Scale layouts from the complete Arma safe zone. Never assume `0..1` represents
+  the visible viewport, because UI scale and aspect ratio can extend the safe
+  zone beyond those coordinates.
 
 ### Script file header
 

@@ -1,293 +1,232 @@
 /*
- * Author: Waldo
- * Lockpick mini game (a built-in interaction challenge), a timing/skill test. A marker sweeps
- * back and forth beneath an illustrated lock cylinder; press SET PIN (or Space) while it sits in the highlighted
- * sweet spot to set that pin. Set every pin to win; a miss, the clock running out, or Escape
- * fails. Each pin re-randomises the sweet spot and the sweep speeds up. Ideal for padlocks,
- * doors, containers and vehicles.
- *
- * Challenge opener following the [_config, _resolve] contract; dispatched by
- * Waldo_fnc_MiniGameChallenge.
- *
- * Arguments:
- * _config  - Array - challenge config, all optional:
- *              0: _pins      - Number - pins to set, clamped 1..6 (default 3)
- *              1: _period    - Number - seconds for one full sweep, lower = harder (default 1.4)
- *              2: _zoneWidth - Number - sweet-spot width as a track fraction 0.05..0.4 (default 0.16)
- *              3: _timeLimit - Number - seconds on the clock, 0 = none (default 0)
- *              4: _title     - String - dialog heading (default "LOCKPICK")
- * _resolve - Code  - called once with boolean success and typed outcome metadata
- *
- * Return Value:
- * Nothing (result delivered asynchronously through _resolve)
- *
- * Example:
- * [[3, 1.4, 0.16, 0, "PADLOCK"], { params ["_ok"]; systemChat str _ok; }] call Waldo_fnc_MiniGameLockpick;
+ * Cutaway lock-cylinder binding procedure.
+ * Config: [pins(1..6), sweepPeriod, sweetSpotWidth(0.05..0.4), timeLimit, title]
  */
-
 disableSerialization;
+params [["_config", []], ["_resolve", {}]];
+_config params [["_pins", 3], ["_period", 2.8], ["_zoneWidth", 0.16], ["_timeLimit", 0], ["_title", "LOCK CYLINDER"]];
+_pins = ((round _pins) max 1) min 6;
+_period = _period max 0.8;
+_zoneWidth = (_zoneWidth max 0.05) min 0.4;
 
-params [
-    ["_config", []],
-    ["_resolve", {}]
-];
+private _display = [
+    _title,
+    "Apply enough wrench pressure to bind the active pin, then set it as the pick reaches the marked band.",
+    _timeLimit,
+    _resolve,
+    0.49,
+    "LESS/MORE adjusts binding pressure; SET PIN or Space confirms; Left/Right also adjusts",
+    "Step 1: reach [BIND]. Step 2: press SET PIN while the yellow pick-height marker is inside the [SET] band."
+] call Waldo_fnc_MiniGameChallengeUI;
+if (isNull _display) exitWith {};
 
-if (!hasInterface) exitWith { [false] call _resolve; };
-
-_config params [
-    ["_pins", 3],
-    ["_period", 1.4],
-    ["_zoneWidth", 0.16],
-    ["_timeLimit", 0],
-    ["_title", "LOCK CYLINDER"]
-];
-
-_pins = round _pins;
-if (_pins < 1) then { _pins = 1; };
-if (_pins > 6) then { _pins = 6; };
-if (_period < 0.4) then { _period = 0.4; };
-if (_zoneWidth < 0.05) then { _zoneWidth = 0.05; };
-if (_zoneWidth > 0.4) then { _zoneWidth = 0.4; };
-
-if (!isNull (missionNamespace getVariable ["Waldo_MG_LP_ActiveDisplay", displayNull])) exitWith {
-    [false] call _resolve;
-};
-if (!isNull (missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) exitWith {
-    [false] call _resolve;
-};
-
-// Brand palette.
-private _cPanel = [0.04, 0.05, 0.07, 0.94];
-private _cHeader = [0.10, 0.13, 0.20, 1];
-private _cAccent = [0.243, 0.463, 0.827, 1];
-private _cAccentLt = [0.55, 0.72, 0.98, 1];
-private _cText = [0.88, 0.90, 0.94, 1];
-private _cTrack = [0.02, 0.03, 0.04, 1];
-private _cZone = [0.22, 0.62, 0.30, 1];
-
-private _parent = findDisplay 46;
-if (isNull _parent) exitWith { [false] call _resolve; };
-private _display = _parent createDisplay "RscDisplayEmpty";
-if (isNull _display) exitWith { [false] call _resolve; };
-
-missionNamespace setVariable ["Waldo_MG_LP_ActiveDisplay", _display];
-missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
-[_display, "Mouse or Space: apply tension and set the current pin", _title, format ["Set all %1 lock pins while the moving pick is inside the labelled SET WINDOW.", _pins], "The set window moves and the pick accelerates after every successful pin."] call Waldo_fnc_MiniGameChallengeUILegacy;
-
-_display setVariable ["Waldo_MG_LP_Resolve", _resolve];
-_display setVariable ["Waldo_MG_LP_Done", false];
-_display setVariable ["Waldo_MG_LP_PinsLeft", _pins];
-_display setVariable ["Waldo_MG_LP_PinsTotal", _pins];
+_display setVariable ["Waldo_MG_LP_Pins", _pins];
+_display setVariable ["Waldo_MG_LP_CurrentPin", 0];
 _display setVariable ["Waldo_MG_LP_Period", _period];
 _display setVariable ["Waldo_MG_LP_ZoneWidth", _zoneWidth];
-_display setVariable ["Waldo_MG_LP_T0", time];
+_display setVariable ["Waldo_MG_LP_ZoneStart", 0.15 + random (0.7 - _zoneWidth)];
+_display setVariable ["Waldo_MG_LP_Sweep", 0];
+_display setVariable ["Waldo_MG_LP_Tension", 0.5];
+_display setVariable ["Waldo_MG_LP_TensionTarget", 0.25 + random 0.5];
+_display setVariable ["Waldo_MG_LP_TensionTolerance", 0.10];
 
-_display setVariable ["Waldo_MG_LP_Finish", {
-    params ["_disp", "_ok", ["_resultKey", ""]];
-    if (isNull _disp) exitWith {};
-    if (_disp getVariable ["Waldo_MG_LP_Done", false]) exitWith {};
-    _disp setVariable ["Waldo_MG_LP_Done", true];
-    [_disp, _ok, _resultKey] call (_disp getVariable ["Waldo_IMG_ShowResult", {}]);
-    private _fnResolve = _disp getVariable ["Waldo_MG_LP_Resolve", {}];
-    private _outcomeCode = if (_ok) then {"SUCCESS"} else {if (_resultKey == "timeoutText") then {"TIMEOUT"} else {if (_resultKey == "abortText") then {"ABORTED"} else {"FAILURE"};};};
-    private _reason = if (_resultKey == "") then {""} else {(_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault [_resultKey, _resultKey]};
-    missionNamespace setVariable ["Waldo_MG_LP_ActiveDisplay", displayNull];
-    [{
-        params ["_disp", "_res", "_ok", "_outcomeCode", "_reason"];
-        if (!isNull _disp) then { _disp closeDisplay 1; };
-        [_ok, [_outcomeCode, _reason]] call _res;
-    }, [_disp, _fnResolve, _ok, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {if (_ok) then {0.45} else {0.5}}] call CBA_fnc_waitAndExecute;
-}];
+private _bench = [_display, "RscText", [1.5, 3, 37, 20], "locksmith inspection bench"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_bench ctrlSetBackgroundColor [0.095, 0.10, 0.09, 1];
+private _procedure = [_display, "RscText", [2.3, 3.45, 35.4, 1.15], "lockpick operating steps"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_procedure ctrlSetText "1 ADJUST PRESSURE UNTIL [BIND]  >  2 WAIT FOR MARKER IN [SET]  >  3 SET ACTIVE PIN";
+_procedure ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+_procedure ctrlSetBackgroundColor [0.025, 0.035, 0.03, 1];
+_procedure ctrlSetFontHeight 0.026;
+private _cylinderOuter = [_display, "RscText", [3, 5, 28, 13], "cutaway lock cylinder housing"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_cylinderOuter ctrlSetBackgroundColor [0.25, 0.27, 0.25, 1];
+private _cylinderInner = [_display, "RscText", [4, 6, 26, 11], "lock cylinder plug cutaway"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_cylinderInner ctrlSetBackgroundColor [0.075, 0.08, 0.075, 1];
+private _shearLine = [_display, "RscText", [4.5, 10.25, 25, 0.35], "lock cylinder shear line"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_shearLine ctrlSetBackgroundColor [0.94, 0.72, 0.25, 1];
+private _shearLabel = [_display, "RscText", [24.5, 8.8, 5, 1.3], "shear line label"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_shearLabel ctrlSetText "SHEAR LINE";
+_shearLabel ctrlSetTextColor [0.96, 0.78, 0.30, 1];
 
-// Current marker fraction 0..1 from a triangle (ping-pong) wave.
-_display setVariable ["Waldo_MG_LP_Fraction", {
-    params ["_disp"];
-    private _t0 = _disp getVariable ["Waldo_MG_LP_T0", time];
-    private _p = _disp getVariable ["Waldo_MG_LP_Period", 1.4];
-    private _phase = ((time - _t0) / _p) mod 1;
-    if (_phase < 0.5) then { 2 * _phase } else { 2 * (1 - _phase) }
-}];
-
-// Layout.
-private _w = 0.42 * safezoneW;
-private _h = 0.39 * safezoneH;
-private _x = safezoneX + (safezoneW - _w) / 2;
-private _y = safezoneY + (safezoneH - _h) / 2;
-
-private _panel = _display ctrlCreate ["RscText", -1];
-_panel ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, _h + 0.02 * safezoneH];
-_panel ctrlSetBackgroundColor _cPanel;
-_panel ctrlCommit 0;
-
-private _accentBar = _display ctrlCreate ["RscText", -1];
-_accentBar ctrlSetPosition [_x - 0.01 * safezoneW, _y - 0.01 * safezoneH, _w + 0.02 * safezoneW, 0.006 * safezoneH];
-_accentBar ctrlSetBackgroundColor _cAccent;
-_accentBar ctrlCommit 0;
-
-private _heading = _display ctrlCreate ["RscText", -1];
-_heading ctrlSetPosition [_x, _y, _w, 0.05 * safezoneH];
-_heading ctrlSetText _title;
-_heading ctrlSetTextColor _cAccentLt;
-_heading ctrlSetBackgroundColor _cHeader;
-_heading ctrlCommit 0;
-
-private _status = _display ctrlCreate ["RscText", -1];
-_status ctrlSetPosition [_x, _y + 0.055 * safezoneH, _w, 0.035 * safezoneH];
-_status ctrlSetTextColor _cText;
-_status ctrlSetText format ["Set the pins: %1 remaining", _pins];
-_status ctrlCommit 0;
-_display setVariable ["Waldo_MG_LP_StatusCtrl", _status];
-
-// Lock-cylinder cross-section: each pin changes from raised steel to green when set.
-private _pinCtrls = [];
-private _pinW = (_w - 0.06 * safezoneW) / _pins;
-for "_i" from 0 to (_pins - 1) do {
-    private _pin = _display ctrlCreate ["RscText", -1];
-    _pin ctrlSetPosition [_x + 0.03 * safezoneW + _i * _pinW, _y + 0.105 * safezoneH, _pinW - 0.008 * safezoneW, 0.075 * safezoneH];
-    _pin ctrlSetText format ["PIN %1  [UNSET]", _i + 1];
-    _pin ctrlSetBackgroundColor [0.24, 0.28, 0.34, 1];
-    _pin ctrlSetTextColor [0.88, 0.90, 0.94, 1];
-    _pin ctrlCommit 0;
-    _pinCtrls pushBack _pin;
+private _pinSpacing = 19 / _pins;
+private _driverPins = [];
+private _keyPins = [];
+private _pinLabels = [];
+for "_index" from 0 to (_pins - 1) do {
+    private _pinX = 6 + (_index * _pinSpacing);
+    private _chamber = [_display, "RscText", [_pinX - 0.5, 6.4, 2.1, 9.5], format ["pin %1 chamber", _index + 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _chamber ctrlSetBackgroundColor [0.035, 0.04, 0.035, 1];
+    private _spring = [_display, "RscText", [_pinX, 6.75, 1.1, 1.2], format ["pin %1 spring", _index + 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _spring ctrlSetText "||||";
+    _spring ctrlSetTextColor [0.68, 0.70, 0.64, 1];
+    private _driver = [_display, "RscText", [_pinX, 8, 1.1, 2.1], format ["pin %1 driver pin", _index + 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _driver ctrlSetBackgroundColor [0.52, 0.54, 0.49, 1];
+    _driverPins pushBack _driver;
+    private _keyPin = [_display, "RscText", [_pinX, 10.7, 1.1, 3.8], format ["pin %1 key pin", _index + 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _keyPin ctrlSetBackgroundColor [0.70, 0.58, 0.28, 1];
+    _keyPins pushBack _keyPin;
+    // Pin state belongs above its chamber. Keeping it away from the pick shaft
+    // and tension-wrench caption prevents the three labels reading as one line.
+    private _label = [_display, "RscText", [_pinX - 0.95, 5.15, 3, 0.9], format ["pin %1 progress label", _index + 1]] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _label ctrlSetText format ["P%1 [OPEN]", _index + 1];
+    _label ctrlSetTextColor [0.88, 0.87, 0.78, 1];
+    _pinLabels pushBack _label;
 };
-_display setVariable ["Waldo_MG_LP_PinCtrls", _pinCtrls];
+_display setVariable ["Waldo_MG_LP_DriverPins", _driverPins];
+_display setVariable ["Waldo_MG_LP_KeyPins", _keyPins];
+_display setVariable ["Waldo_MG_LP_PinLabels", _pinLabels];
 
-// Track geometry.
-private _trackX = _x + 0.02 * safezoneW;
-private _trackW = _w - 0.04 * safezoneW;
-private _trackY = _y + 0.215 * safezoneH;
-private _trackH = 0.05 * safezoneH;
-_display setVariable ["Waldo_MG_LP_TrackX", _trackX];
-_display setVariable ["Waldo_MG_LP_TrackW", _trackW];
+private _pickShaft = [_display, "RscText", [5.5, 15.2, 20, 0.35], "lock pick shaft"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_pickShaft ctrlSetBackgroundColor [0.72, 0.78, 0.76, 1];
+private _pickTip = [_display, "RscText", [6, 13.9, 0.45, 1.5], "moving lock pick tip"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_pickTip ctrlSetBackgroundColor [0.82, 0.86, 0.84, 1];
+_display setVariable ["Waldo_MG_LP_PickTip", _pickTip];
+private _tension = [_display, "RscText", [4.5, 16, 8, 0.5], "tension wrench"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_tension ctrlSetBackgroundColor [0.48, 0.52, 0.50, 1];
+_display setVariable ["Waldo_MG_LP_TensionTool", _tension];
+private _tensionLabel = [_display, "RscText", [13, 15.7, 9, 1.15], "tension wrench label"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_tensionLabel ctrlSetText "PRESSURE BINDS PIN >";
+_tensionLabel ctrlSetTextColor [0.72, 0.76, 0.70, 1];
 
-private _track = _display ctrlCreate ["RscText", -1];
-_track ctrlSetPosition [_trackX, _trackY, _trackW, _trackH];
-_track ctrlSetBackgroundColor _cTrack;
-_track ctrlCommit 0;
+private _meterFrame = [_display, "RscText", [3, 19, 28, 3], "binding feedback meter"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_meterFrame ctrlSetBackgroundColor [0.025, 0.035, 0.03, 1];
+private _meterCaption = [_display, "RscText", [3.5, 18.05, 27, 0.9], "pick height timing instruction"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_meterCaption ctrlSetText "PICK HEIGHT // PRESS SET WHEN YELLOW MARKER ENTERS THE [SET] BAND";
+_meterCaption ctrlSetTextColor [0.82, 0.86, 0.78, 1];
+_meterCaption ctrlSetFontHeight 0.024;
+private _meterTrack = [_display, "RscText", [4, 20.05, 26, 0.8], "binding meter track"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_meterTrack ctrlSetBackgroundColor [0.18, 0.20, 0.18, 1];
+private _zone = [_display, "RscText", [4, 19.75, 3, 1.4], "binding alignment zone"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_zone ctrlSetBackgroundColor [0.22, 0.56, 0.34, 0.82];
+_zone ctrlSetText "";
+_display setVariable ["Waldo_MG_LP_ZoneControl", _zone];
+private _marker = [_display, "RscText", [4, 19.55, 0.45, 1.8], "binding feedback marker"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_marker ctrlSetBackgroundColor [0.96, 0.78, 0.30, 1];
+_display setVariable ["Waldo_MG_LP_Marker", _marker];
+private _tensionReadout = [_display, "RscText", [31.8, 4.2, 6, 2.1], "lock tension readout"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_tensionReadout ctrlSetText "PRESSURE 50% [CHECK]";
+_tensionReadout ctrlSetBackgroundColor [0.025, 0.035, 0.03, 1];
+_tensionReadout ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+_display setVariable ["Waldo_MG_LP_TensionReadout", _tensionReadout];
+private _tensionMinus = [_display, "RscButton", [32.0, 6.8, 2.6, 2.2], "reduce lock tension"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_tensionMinus ctrlSetText "LESS";
+_tensionMinus setVariable ["Waldo_MG_LP_TensionDelta", -0.05];
+private _tensionPlus = [_display, "RscButton", [35.0, 6.8, 2.6, 2.2], "increase lock tension"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_tensionPlus ctrlSetText "MORE";
+_tensionPlus setVariable ["Waldo_MG_LP_TensionDelta", 0.05];
+private _setButton = [_display, "RscButton", [32.2, 10, 5.3, 6], "set active lock pin"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_setButton ctrlSetText "SET PIN IN [SET]";
+_setButton ctrlSetBackgroundColor [0.18, 0.20, 0.18, 1];
+_setButton ctrlSetTooltip "Requires [BIND] tension and the moving marker inside [SET]. Space also works.";
 
-private _zone = _display ctrlCreate ["RscText", -1];
-_zone ctrlSetBackgroundColor _cZone;
-_zone ctrlSetText "SET WINDOW";
-_zone ctrlSetTextColor [0.02, 0.08, 0.03, 1];
-_zone ctrlSetFontHeight (0.012 * safezoneH);
-_zone ctrlCommit 0;
-_display setVariable ["Waldo_MG_LP_ZoneCtrl", _zone];
-_display setVariable ["Waldo_MG_LP_TrackY", _trackY];
-_display setVariable ["Waldo_MG_LP_TrackH", _trackH];
-
-private _marker = _display ctrlCreate ["RscText", -1];
-_marker ctrlSetBackgroundColor _cAccentLt;
-_marker ctrlCommit 0;
-_display setVariable ["Waldo_MG_LP_MarkerCtrl", _marker];
-
-// Places a fresh random sweet spot.
-_display setVariable ["Waldo_MG_LP_NewZone", {
-    params ["_disp"];
-    private _zw = _disp getVariable ["Waldo_MG_LP_ZoneWidth", 0.16];
-    private _start = random (1 - _zw);
-    _disp setVariable ["Waldo_MG_LP_ZoneStart", _start];
-    private _tx = _disp getVariable ["Waldo_MG_LP_TrackX", 0];
-    private _tw = _disp getVariable ["Waldo_MG_LP_TrackW", 0];
-    private _ty = _disp getVariable ["Waldo_MG_LP_TrackY", 0];
-    private _th = _disp getVariable ["Waldo_MG_LP_TrackH", 0];
-    private _zc = _disp getVariable ["Waldo_MG_LP_ZoneCtrl", controlNull];
-    if (!isNull _zc) then {
-        _zc ctrlSetPosition [_tx + _start * _tw, _ty, _zw * _tw, _th];
-        _zc ctrlCommit 0;
+_display setVariable ["Waldo_MG_LP_UpdateTension", {
+    params ["_display"];
+    private _value = _display getVariable ["Waldo_MG_LP_Tension", 0.5];
+    private _target = _display getVariable ["Waldo_MG_LP_TensionTarget", 0.5];
+    private _tolerance = _display getVariable ["Waldo_MG_LP_TensionTolerance", 0.1];
+    private _state = if (abs (_value - _target) <= _tolerance) then {"[BIND]"} else {if (_value < _target) then {"[LOW]"} else {"[HIGH]"}};
+    private _readout = _display getVariable ["Waldo_MG_LP_TensionReadout", controlNull];
+    if (!isNull _readout) then {
+        _readout ctrlSetText format ["PRESSURE %1%% %2", round (_value * 100), _state];
+        _readout ctrlSetTextColor (if (_state == "[BIND]") then {[0.55, 1, 0.65, 1]} else {[0.96, 0.78, 0.30, 1]});
     };
+    private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+    if (!isNull _status && {_display getVariable ["Waldo_IMG_Started", false]}) then {
+        _status ctrlSetText (if (_state == "[BIND]") then {"[STEP 2/3] PIN IS BINDING // WAIT FOR YELLOW MARKER INSIDE [SET]"} else {if (_value < _target) then {"[STEP 1/3] PRESSURE TOO LOW // SELECT MORE"} else {"[STEP 1/3] PRESSURE TOO HIGH // SELECT LESS"}});
+    };
+    [_display, _display getVariable ["Waldo_MG_LP_TensionTool", controlNull], [4.5, 16, 4 + (8 * _value), 0.5], 0.08] call Waldo_fnc_MiniGameEquipmentSetPosition;
 }];
-[_display] call (_display getVariable "Waldo_MG_LP_NewZone");
-
-// Attempt to set the current pin.
-_display setVariable ["Waldo_MG_LP_Try", {
-    params ["_disp"];
-    if (_disp getVariable ["Waldo_MG_LP_Done", false]) exitWith {};
-    private _f = [_disp] call (_disp getVariable "Waldo_MG_LP_Fraction");
-    private _zs = _disp getVariable ["Waldo_MG_LP_ZoneStart", 0];
-    private _zw = _disp getVariable ["Waldo_MG_LP_ZoneWidth", 0.16];
-    if (_f >= _zs && {_f <= (_zs + _zw)}) then {
-        private _left = (_disp getVariable ["Waldo_MG_LP_PinsLeft", 1]) - 1;
-        _disp setVariable ["Waldo_MG_LP_PinsLeft", _left];
-        private _total = _disp getVariable ["Waldo_MG_LP_PinsTotal", 1];
-        private _pinCtrls = _disp getVariable ["Waldo_MG_LP_PinCtrls", []];
-        private _setIndex = _total - _left - 1;
-        if (_setIndex >= 0 && {_setIndex < count _pinCtrls}) then {
-            (_pinCtrls select _setIndex) ctrlSetText format ["PIN %1  [SET]", _setIndex + 1];
-            (_pinCtrls select _setIndex) ctrlSetBackgroundColor [0.10, 0.34, 0.16, 1];
-            (_pinCtrls select _setIndex) ctrlSetTextColor [0.55, 1, 0.65, 1];
-        };
-        if (_left <= 0) exitWith {
-            private _fin = _disp getVariable ["Waldo_MG_LP_Finish", {}];
-            [_disp, true] call _fin;
-        };
-        // Next pin: tighten the timing a little and move the sweet spot.
-        private _p = _disp getVariable ["Waldo_MG_LP_Period", 1.4];
-        _disp setVariable ["Waldo_MG_LP_Period", (_p * 0.85) max 0.4];
-        _disp setVariable ["Waldo_MG_LP_T0", time];
-        [_disp] call (_disp getVariable "Waldo_MG_LP_NewZone");
-        private _statusCtrl = _disp getVariable ["Waldo_MG_LP_StatusCtrl", controlNull];
-        if (!isNull _statusCtrl) then {
-            _statusCtrl ctrlSetText format ["Set the pins: %1 remaining", _left];
-        };
-    } else {
-        private _fin = _disp getVariable ["Waldo_MG_LP_Finish", {}];
-        [_disp, false] call _fin;
-    };
+_display setVariable ["Waldo_MG_LP_AdjustTension", {
+    params ["_display", "_delta"];
+    if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+    _display setVariable ["Waldo_MG_LP_Tension", (((_display getVariable ["Waldo_MG_LP_Tension", 0.5]) + _delta) max 0) min 1];
+    [_display] call (_display getVariable ["Waldo_MG_LP_UpdateTension", {}]);
 }];
+{
+    _x ctrlAddEventHandler ["ButtonClick", {
+        params ["_control"];
+        private _display = ctrlParent _control;
+        [_display, _control getVariable ["Waldo_MG_LP_TensionDelta", 0]] call (_display getVariable ["Waldo_MG_LP_AdjustTension", {}]);
+    }];
+} forEach [_tensionMinus, _tensionPlus];
+[_display] call (_display getVariable ["Waldo_MG_LP_UpdateTension", {}]);
 
-// SET PIN button.
-private _setBtn = _display ctrlCreate ["RscButton", -1];
-_setBtn ctrlSetPosition [_trackX, _y + 0.30 * safezoneH, _trackW, 0.055 * safezoneH];
-_setBtn ctrlSetText "APPLY TENSION / SET PIN  (Space)";
-_setBtn ctrlSetBackgroundColor _cAccent;
-_setBtn ctrlSetTextColor [0.03, 0.04, 0.06, 1];
-_setBtn ctrlAddEventHandler ["ButtonClick", {
-    params ["_ctrl"];
-    private _disp = ctrlParent _ctrl;
-    if (isNull _disp) exitWith {};
-    [_disp] call (_disp getVariable "Waldo_MG_LP_Try");
+_display setVariable ["Waldo_MG_LP_UpdateZone", {
+    params ["_display"];
+    private _start = _display getVariable ["Waldo_MG_LP_ZoneStart", 0.3];
+    private _width = _display getVariable ["Waldo_MG_LP_ZoneWidth", 0.16];
+    [_display, _display getVariable ["Waldo_MG_LP_ZoneControl", controlNull], [4 + (26 * _start), 19.75, 26 * _width, 1.4], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
 }];
-_setBtn ctrlCommit 0;
+[_display] call (_display getVariable ["Waldo_MG_LP_UpdateZone", {}]);
 
-// Keys: Space attempts, Escape aborts.
-_display displayAddEventHandler ["KeyDown", {
-    params ["_disp", "_key"];
-    if (_key == 1) exitWith {
-        private _fin = _disp getVariable ["Waldo_MG_LP_Finish", {}];
-        [_disp, _fin] call (_disp getVariable ["Waldo_IMG_RequestAbort", {}]);
-        true
+_display setVariable ["Waldo_MG_LP_SetPin", {
+    params ["_display"];
+    if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+    private _sweep = _display getVariable ["Waldo_MG_LP_Sweep", 0];
+    private _zoneStart = _display getVariable ["Waldo_MG_LP_ZoneStart", 0];
+    private _zoneWidth = _display getVariable ["Waldo_MG_LP_ZoneWidth", 0.16];
+    private _tension = _display getVariable ["Waldo_MG_LP_Tension", 0.5];
+    private _tensionTarget = _display getVariable ["Waldo_MG_LP_TensionTarget", 0.5];
+    private _tensionTolerance = _display getVariable ["Waldo_MG_LP_TensionTolerance", 0.1];
+    if (abs (_tension - _tensionTarget) > _tensionTolerance) exitWith {
+        private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+        if (!isNull _status) then {_status ctrlSetText (if (_tension < _tensionTarget) then {"[STEP 1/3] PRESSURE TOO LOW // SELECT MORE UNTIL [BIND]"} else {"[STEP 1/3] PRESSURE TOO HIGH // SELECT LESS UNTIL [BIND]"});};
     };
-    if !(_disp getVariable ["Waldo_IMG_Started", false]) exitWith {true};
-    if (_key == 57) exitWith {
-        [_disp] call (_disp getVariable "Waldo_MG_LP_Try");
-        true
+    if (_sweep < _zoneStart || {_sweep > (_zoneStart + _zoneWidth)}) exitWith {
+        [_display, false, "[X] PICK SLIPPED // PIN NOT AT SHEAR LINE"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
     };
+    private _index = _display getVariable ["Waldo_MG_LP_CurrentPin", 0];
+    private _drivers = _display getVariable ["Waldo_MG_LP_DriverPins", []];
+    private _keys = _display getVariable ["Waldo_MG_LP_KeyPins", []];
+    private _labels = _display getVariable ["Waldo_MG_LP_PinLabels", []];
+    [_display, _drivers select _index, [6 + (_index * (19 / (_display getVariable ["Waldo_MG_LP_Pins", 1]))), 7.95, 1.1, 2.1], 0.15] call Waldo_fnc_MiniGameEquipmentSetPosition;
+    [_display, _keys select _index, [6 + (_index * (19 / (_display getVariable ["Waldo_MG_LP_Pins", 1]))), 10.55, 1.1, 3.8], 0.15] call Waldo_fnc_MiniGameEquipmentSetPosition;
+    private _label = _labels select _index;
+    _label ctrlSetText format ["P%1 [SET]", _index + 1];
+    _label ctrlSetTextColor [0.55, 1, 0.65, 1];
+    _index = _index + 1;
+    _display setVariable ["Waldo_MG_LP_CurrentPin", _index];
+    if (_index >= (_display getVariable ["Waldo_MG_LP_Pins", 1])) exitWith {
+        [_display, true, "[OK] CYLINDER SHEAR LINE CLEARED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
+    };
+    private _width = _display getVariable ["Waldo_MG_LP_ZoneWidth", 0.16];
+    _display setVariable ["Waldo_MG_LP_ZoneStart", 0.10 + random (0.80 - _width)];
+    _display setVariable ["Waldo_MG_LP_Tension", 0.5];
+    _display setVariable ["Waldo_MG_LP_TensionTarget", 0.25 + random 0.5];
+    [_display] call (_display getVariable ["Waldo_MG_LP_UpdateZone", {}]);
+    [_display] call (_display getVariable ["Waldo_MG_LP_UpdateTension", {}]);
+    private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+    if (!isNull _status) then {_status ctrlSetText format ["[SET] PIN %1/%2 // BINDING PIN %3", _index, _display getVariable ["Waldo_MG_LP_Pins", 1], _index + 1];};
+}];
+_setButton ctrlAddEventHandler ["ButtonClick", {private _display = ctrlParent (_this select 0); [_display] call (_display getVariable ["Waldo_MG_LP_SetPin", {}]);}];
+[_display, "KeyDown", {
+    params ["_display", "_key"];
+    if (_key == 57) exitWith {[_display] call (_display getVariable ["Waldo_MG_LP_SetPin", {}]); true};
+    if (_key == 203) exitWith {[_display, -0.05] call (_display getVariable ["Waldo_MG_LP_AdjustTension", {}]); true};
+    if (_key == 205) exitWith {[_display, 0.05] call (_display getVariable ["Waldo_MG_LP_AdjustTension", {}]); true};
     false
-}];
+}] call Waldo_fnc_MiniGameEquipmentAddDisplayHandler;
 
-// Animation + optional countdown loop.
-[_display, _timeLimit] spawn {
-    params ["_disp", "_timeLimit"];
-    waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
-    if (isNull _disp) exitWith {};
-    private _deadline = if (_timeLimit > 0) then { time + _timeLimit } else { -1 };
-    private _mHalf = 0.004 * safezoneW;
-    while { !isNull _disp && {!(_disp getVariable ["Waldo_MG_LP_Done", false])} } do {
-        if (_deadline > 0 && {(_deadline - time) <= 0}) exitWith {
-            private _fin = _disp getVariable ["Waldo_MG_LP_Finish", {}];
-            [_disp, false, "timeoutText"] call _fin;
+private _animationWorker = [_display] spawn {
+    params ["_display"];
+    waitUntil {isNull _display || {_display getVariable ["Waldo_IMG_Started", false]}};
+    if (!isNull _display) then {[_display] call (_display getVariable ["Waldo_MG_LP_UpdateTension", {}]);};
+    private _started = diag_tickTime;
+    while {!isNull _display && {!(_display getVariable ["Waldo_MG_UI_Done", false])}} do {
+        private _period = _display getVariable ["Waldo_MG_LP_Period", 2.8];
+        private _phase = ((diag_tickTime - _started) mod _period) / _period;
+        private _sweep = if (_phase <= 0.5) then {_phase * 2} else {(1 - _phase) * 2};
+        _display setVariable ["Waldo_MG_LP_Sweep", _sweep];
+        [_display, _display getVariable ["Waldo_MG_LP_Marker", controlNull], [3.78 + (26 * _sweep), 19.55, 0.45, 1.8], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
+        private _index = _display getVariable ["Waldo_MG_LP_CurrentPin", 0];
+        private _keyPins = _display getVariable ["Waldo_MG_LP_KeyPins", []];
+        if (_index < count _keyPins) then {
+            [_display, _keyPins select _index, [6 + (_index * (19 / (_display getVariable ["Waldo_MG_LP_Pins", 1]))), 12.4 - (1.85 * _sweep), 1.1, 3.8], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
+            [_display, _display getVariable ["Waldo_MG_LP_PickTip", controlNull], [6 + (_index * (19 / (_display getVariable ["Waldo_MG_LP_Pins", 1]))) + 0.3, 13.9 - (1.85 * _sweep), 0.45, 1.5], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
         };
-        private _f = [_disp] call (_disp getVariable "Waldo_MG_LP_Fraction");
-        private _tx = _disp getVariable ["Waldo_MG_LP_TrackX", 0];
-        private _tw = _disp getVariable ["Waldo_MG_LP_TrackW", 0];
-        private _ty = _disp getVariable ["Waldo_MG_LP_TrackY", 0];
-        private _th = _disp getVariable ["Waldo_MG_LP_TrackH", 0];
-        private _mk = _disp getVariable ["Waldo_MG_LP_MarkerCtrl", controlNull];
-        if (!isNull _mk) then {
-            _mk ctrlSetPosition [_tx + _f * _tw - _mHalf, _ty, 2 * _mHalf, _th];
-            _mk ctrlCommit 0;
-        };
-        sleep 0.02;
+        uiSleep 0.016;
     };
 };
+private _workers = _display getVariable ["Waldo_MG_UI_Workers", []];
+_workers pushBack _animationWorker;
+_display setVariable ["Waldo_MG_UI_Workers", _workers];
 [_display] call Waldo_fnc_MiniGameEquipmentBriefing;

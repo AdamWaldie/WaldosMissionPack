@@ -1,292 +1,313 @@
 /*
  * Author: Waldo
- * Creates the shared, responsive presentation shell used by interaction mini games. The shell
- * owns the global single-dialog guard, objective/status/timer chrome, explicit abort warning,
- * and exactly-once animated pass/fail resolution. Challenge scripts create only their controls
- * inside the content rectangle stored on the returned display.
+ * Arma-native field-equipment display shared by every interaction procedure.
  *
- * Arguments:
- * _title         - String - heading shown in the challenge header
- * _objective     - String - concise player instruction
- * _timeLimit     - Number - seconds before failure; 0 disables the clock
- * _resolve       - Code   - callback invoked once with [_success, [_outcomeCode, _reason]]
- * _contentHeight - Number - content height as safezoneH fraction (default 0.48)
- * _inputHint     - String - controls shown in the footer (default "Use the mouse to interact")
- * _hint          - String - strategy shown in HOW TO PLAY (default: watch the status line)
- *
- * Return Value:
- * Display - shared challenge display, or displayNull when another challenge is active
- *
- * Example:
- * ["REPAIR", "Tighten every bolt.", 30, _resolve, 0.48, "Drag the wrench clockwise"]
- *     call Waldo_fnc_MiniGameChallengeUI;
+ * The visible work area is a clipped 40 x 25 local grid. Challenge implementations
+ * create controls through MiniGameEquipmentCreateControl and never perform safe-zone
+ * arithmetic themselves. The shell owns input capture, timing, cleanup, abort and
+ * exactly-once resolution.
  */
-
 disableSerialization;
-
 params [
-    ["_title", "CHALLENGE", [""]],
-    ["_objective", "Complete the interaction.", [""]],
+    ["_title", "FIELD EQUIPMENT", [""]],
+    ["_objective", "Complete the operating procedure.", [""]],
     ["_timeLimit", 0, [0]],
     ["_resolve", {}, [{}]],
     ["_contentHeight", 0.48, [0]],
-    ["_inputHint", "Use the mouse to interact", [""]],
-    ["_hint", "Watch the status line after every input.", [""]]
+    ["_inputHint", "Mouse: operate equipment", [""]],
+    ["_hint", "Follow the instrument labels and status display.", [""]]
 ];
 
-private _fallbackId = if ((toUpper _title) find "REPAIR" >= 0 || {(toUpper _title) find "MAINTENANCE" >= 0}) then {"repair"} else {
-    if ((toUpper _title) find "RADIO" >= 0 || {(toUpper _title) find "SIGNAL" >= 0 || {(toUpper _title) find "COMMUNICATION" >= 0}}) then {"radiotune"} else {
-        if ((toUpper _title) find "PRESSURE" >= 0 || {(toUpper _title) find "MANIFOLD" >= 0}) then {"pressure"} else {
-            if ((toUpper _title) find "SEQUENCE" >= 0 || {(toUpper _title) find "CONSOLE" >= 0}) then {"sequence"} else {"wirecut"};
+if (!hasInterface) exitWith {
+    [false, ["FAILURE", "NO INTERFACE"]] call _resolve;
+    displayNull
+};
+private _active = uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
+if (!isNull _active) exitWith {
+    [false, ["FAILURE", "ANOTHER PROCEDURE IS ACTIVE"]] call _resolve;
+    displayNull
+};
+private _parent = findDisplay 46;
+if (isNull _parent) exitWith {
+    [false, ["FAILURE", "MAIN DISPLAY UNAVAILABLE"]] call _resolve;
+    displayNull
+};
+
+private _upperTitle = toUpper _title;
+private _fallbackId = if (_upperTitle find "REPAIR" >= 0 || {_upperTitle find "MAINTENANCE" >= 0}) then {"repair"} else {
+    if (_upperTitle find "RADIO" >= 0 || {_upperTitle find "SIGNAL" >= 0 || {_upperTitle find "COMMUNICATION" >= 0}}) then {"radiotune"} else {
+        if (_upperTitle find "PRESSURE" >= 0 || {_upperTitle find "MANIFOLD" >= 0}) then {"pressure"} else {
+            if (_upperTitle find "UPLINK" >= 0 || {_upperTitle find "COMMAND" >= 0}) then {"commandinput"} else {
+            if (_upperTitle find "SEQUENCE" >= 0 || {_upperTitle find "CONSOLE" >= 0}) then {"sequence"} else {
+                if (_upperTitle find "MINE" >= 0 || {_upperTitle find "TRIGGER" >= 0}) then {"minesweeper"} else {
+                    if (_upperTitle find "KEY" >= 0 || {_upperTitle find "ACCESS" >= 0}) then {"keypad"} else {
+                        if (_upperTitle find "LOCK" >= 0 || {_upperTitle find "CYLINDER" >= 0}) then {"lockpick"} else {
+                            if (_upperTitle find "CIRCUIT" >= 0 || {_upperTitle find "BREAKER" >= 0}) then {"circuit"} else {"wirecut"};
+                        };
+                    };
+                };
+            };
+            };
         };
     };
 };
 private _profile = missionNamespace getVariable ["Waldo_IMG_ActiveProfile", [_fallbackId, []] call Waldo_fnc_MiniGameEquipmentProfile];
 private _access = _profile getOrDefault ["accessibility", [] call Waldo_fnc_MiniGameAccessibility];
-private _accentColour = _profile getOrDefault ["accent", [0.82, 0.58, 0.18, 1]];
-private _casingColour = _profile getOrDefault ["casing", [0.16, 0.17, 0.15, 1]];
-private _textScale = if (_access getOrDefault ["largeText", false]) then {1.14} else {1};
-if (_profile getOrDefault ["customTitle", false]) then {
-    _title = _profile getOrDefault ["title", _title];
-} else {
-    _profile set ["title", _title];
-};
+if (_profile getOrDefault ["customTitle", false]) then {_title = _profile getOrDefault ["title", _title];} else {_profile set ["title", _title];};
 _objective = _profile getOrDefault ["objective", _objective];
 private _profileControls = _profile getOrDefault ["controls", ""];
 if (_profileControls != "") then {_inputHint = _profileControls;};
 private _profileHint = _profile getOrDefault ["hint", ""];
 if (_profileHint != "") then {_hint = _profileHint;};
 
-if (!hasInterface) exitWith {
-    [false] call _resolve;
-    displayNull
-};
-
-private _active = missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
-if (!isNull _active) exitWith {
-    [false] call _resolve;
-    displayNull
-};
-
-private _parent = findDisplay 46;
-if (isNull _parent) exitWith {
-    [false] call _resolve;
-    displayNull
-};
-
 private _display = _parent createDisplay "RscDisplayEmpty";
 if (isNull _display) exitWith {
-    [false] call _resolve;
+    [false, ["FAILURE", "DISPLAY CREATION FAILED"]] call _resolve;
     displayNull
 };
+_display setVariable ["Waldo_MG_UI_RequestedContentHeight", _contentHeight];
+uiNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
 
-missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
-_display displayAddEventHandler ["Unload", {
-    params ["_disp"];
-    if ((missionNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull]) isEqualTo _disp) then {
-        missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
-    };
-}];
-
-private _panelW = (0.64 * safezoneW) min (0.92 * safezoneH);
-private _headerH = 0.075 * safezoneH;
-private _objectiveH = 0.065 * safezoneH;
-private _footerH = 0.055 * safezoneH;
-private _panelH = _headerH + _objectiveH + (_contentHeight * safezoneH) + _footerH;
-private _panelX = safezoneX + (safezoneW - _panelW) / 2;
-private _panelY = safezoneY + (safezoneH - _panelH) / 2;
-private _contentX = _panelX + 0.018 * safezoneW;
-private _contentY = _panelY + _headerH + _objectiveH;
-private _contentW = _panelW - 0.036 * safezoneW;
-private _contentH = _contentHeight * safezoneH;
+// A 40 x 25 grid is 1.6:1. Arma's visible screen is the full safeZone, which
+// commonly extends beyond 0..1. Restricting the canvas to 0..1 made the
+// equipment occupy less than half of a 16:9 screen at some UI scales.
+private _gridAspect = 40 / 25;
+private _maximumWidth = safeZoneW * 0.96;
+private _maximumHeight = safeZoneH * 0.90;
+private _gridWidthAbsolute = _maximumWidth min (_maximumHeight * _gridAspect);
+private _gridHeightAbsolute = _gridWidthAbsolute / _gridAspect;
+private _safeCentreX = safeZoneX + (safeZoneW / 2);
+private _safeCentreY = safeZoneY + (safeZoneH / 2);
+private _canvasX = (safeZoneX max (_safeCentreX - (_gridWidthAbsolute / 2))) min (safeZoneX + safeZoneW - _gridWidthAbsolute);
+private _canvasY = (safeZoneY max (_safeCentreY - (_gridHeightAbsolute / 2))) min (safeZoneY + safeZoneH - _gridHeightAbsolute);
+private _cellW = _gridWidthAbsolute / 40;
+private _cellH = _gridHeightAbsolute / 25;
+private _contentX = _canvasX + _cellW;
+private _contentY = _canvasY + (5.6 * _cellH);
+private _contentW = 38 * _cellW;
+private _contentH = 16.4 * _cellH;
+private _textScale = if (_access getOrDefault ["largeText", false]) then {1.08} else {1};
+private _accent = _profile getOrDefault ["accent", [0.82, 0.58, 0.18, 1]];
+private _casing = _profile getOrDefault ["casing", [0.16, 0.17, 0.15, 1]];
 
 _display setVariable ["Waldo_MG_UI_Resolve", _resolve];
 _display setVariable ["Waldo_MG_UI_Done", false];
 _display setVariable ["Waldo_MG_UI_Content", [_contentX, _contentY, _contentW, _contentH]];
+_display setVariable ["Waldo_MG_UI_GridCell", [_contentW / 40, _contentH / 25]];
+_display setVariable ["Waldo_MG_UI_EquipmentControls", []];
+_display setVariable ["Waldo_MG_UI_DisplayHandlers", []];
+_display setVariable ["Waldo_MG_UI_Workers", []];
+_display setVariable ["Waldo_MG_UI_DragControl", controlNull];
 _display setVariable ["Waldo_IMG_Profile", _profile];
 _display setVariable ["Waldo_IMG_AbortPending", false];
 _display setVariable ["Waldo_IMG_Started", false];
-_display setVariable ["Waldo_IMG_Bounds", [_panelX, _panelY, _panelW, _panelH]];
+_display setVariable ["Waldo_IMG_Bounds", [_canvasX, _canvasY, _gridWidthAbsolute, _gridHeightAbsolute]];
 
 private _shade = _display ctrlCreate ["RscText", -1];
-_shade ctrlSetPosition [safezoneX, safezoneY, safezoneW, safezoneH];
-_shade ctrlSetBackgroundColor [0, 0, 0, 0.62];
+_shade ctrlSetPosition [safeZoneX, safeZoneY, safeZoneW, safeZoneH];
+_shade ctrlSetBackgroundColor [0, 0, 0, 0.72];
 _shade ctrlCommit 0;
-
 private _shadow = _display ctrlCreate ["RscText", -1];
-_shadow ctrlSetPosition [_panelX - 0.008 * safezoneW, _panelY - 0.008 * safezoneH, _panelW + 0.016 * safezoneW, _panelH + 0.016 * safezoneH];
-_shadow ctrlSetBackgroundColor [0, 0, 0, 0.78];
+_shadow ctrlSetPosition [_canvasX - (0.35 * _cellW), _canvasY - (0.35 * _cellH), _gridWidthAbsolute + (0.7 * _cellW), _gridHeightAbsolute + (0.7 * _cellH)];
+_shadow ctrlSetBackgroundColor [0, 0, 0, 0.82];
 _shadow ctrlCommit 0;
-
-private _panel = _display ctrlCreate ["RscText", -1];
-_panel ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
-_panel ctrlSetBackgroundColor _casingColour;
-_panel ctrlCommit 0;
-
+private _case = _display ctrlCreate ["RscText", -1];
+_case ctrlSetPosition [_canvasX, _canvasY, _gridWidthAbsolute, _gridHeightAbsolute];
+_case ctrlSetBackgroundColor _casing;
+_case ctrlCommit 0;
 private _header = _display ctrlCreate ["RscText", -1];
-_header ctrlSetPosition [_panelX, _panelY, _panelW, _headerH];
-_header ctrlSetBackgroundColor [0.075, 0.08, 0.075, 0.99];
+_header ctrlSetPosition [_canvasX + _cellW, _canvasY + _cellH, 38 * _cellW, 2.4 * _cellH];
+_header ctrlSetBackgroundColor [0.045, 0.05, 0.045, 0.99];
 _header ctrlCommit 0;
-
-private _accent = _display ctrlCreate ["RscText", -1];
-_accent ctrlSetPosition [_panelX, _panelY + _headerH - 0.005 * safezoneH, _panelW, 0.005 * safezoneH];
-_accent ctrlSetBackgroundColor _accentColour;
-_accent ctrlCommit 0;
-
+private _accentBar = _display ctrlCreate ["RscText", -1];
+_accentBar ctrlSetPosition [_canvasX + _cellW, _canvasY + (3.3 * _cellH), 38 * _cellW, 0.18 * _cellH];
+_accentBar ctrlSetBackgroundColor _accent;
+_accentBar ctrlCommit 0;
 private _heading = _display ctrlCreate ["RscText", -1];
-_heading ctrlSetPosition [_panelX + 0.02 * safezoneW, _panelY + 0.008 * safezoneH, _panelW * 0.68, _headerH - 0.014 * safezoneH];
+_heading ctrlSetPosition [_canvasX + (1.7 * _cellW), _canvasY + (1.15 * _cellH), 23 * _cellW, 1.1 * _cellH];
 _heading ctrlSetText _title;
-_heading ctrlSetTextColor [0.94, 0.92, 0.82, 1];
-_heading ctrlSetFontHeight (0.034 * safezoneH * _textScale);
+_heading ctrlSetTextColor [0.95, 0.93, 0.84, 1];
+_heading ctrlSetFontHeight (1.05 * _cellH * _textScale);
 _heading ctrlCommit 0;
-
+private _maker = _display ctrlCreate ["RscText", -1];
+_maker ctrlSetPosition [_canvasX + (1.75 * _cellW), _canvasY + (2.25 * _cellH), 24 * _cellW, 0.65 * _cellH];
+_maker ctrlSetText format ["%1  //  %2", _profile getOrDefault ["manufacturer", "FIELD SYSTEMS"], _profile getOrDefault ["model", "UNIT"]];
+_maker ctrlSetTextColor [0.62, 0.64, 0.57, 1];
+_maker ctrlSetFontHeight ((0.72 * _cellH * _textScale) max 0.016);
+_maker ctrlCommit 0;
 private _timer = _display ctrlCreate ["RscText", -1];
-_timer ctrlSetPosition [_panelX + _panelW - 0.19 * safezoneW, _panelY + 0.012 * safezoneH, 0.17 * safezoneW, 0.04 * safezoneH];
-_timer ctrlSetText if (_timeLimit > 0) then {format ["TIME  %1", ceil _timeLimit]} else {"NO TIME LIMIT"};
-_timer ctrlSetTextColor [0.94, 0.78, 0.30, 1];
-_timer ctrlSetFontHeight (0.024 * safezoneH);
+_timer ctrlSetPosition [_canvasX + (29 * _cellW), _canvasY + (1.3 * _cellH), 8 * _cellW, 1.2 * _cellH];
+_timer ctrlSetText (if (_timeLimit > 0) then {format ["TIME  %1", ceil _timeLimit]} else {"NO TIME LIMIT"});
+_timer ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+_timer ctrlSetFontHeight (0.82 * _cellH);
 _timer ctrlCommit 0;
 _display setVariable ["Waldo_MG_UI_TimerCtrl", _timer];
+private _objectiveControl = _display ctrlCreate ["RscStructuredText", -1];
+_objectiveControl ctrlSetPosition [_canvasX + (1.5 * _cellW), _canvasY + (3.72 * _cellH), 37 * _cellW, 1.45 * _cellH];
+_objectiveControl ctrlSetStructuredText parseText format ["<t align='center' size='%2' color='#E8E5D8'>%1</t>", _objective, 1.35 * _textScale];
+_objectiveControl ctrlCommit 0;
 
-private _objectiveCtrl = _display ctrlCreate ["RscStructuredText", -1];
-_objectiveCtrl ctrlSetPosition [_panelX + 0.02 * safezoneW, _panelY + _headerH + 0.008 * safezoneH, _panelW - 0.04 * safezoneW, _objectiveH - 0.012 * safezoneH];
-_objectiveCtrl ctrlSetStructuredText parseText format ["<t align='center' size='%2' color='#E8E5D8'>%1</t>", _objective, 1.05 * _textScale];
-_objectiveCtrl ctrlCommit 0;
-
-private _content = _display ctrlCreate ["RscText", -1];
-_content ctrlSetPosition [_contentX, _contentY, _contentW, _contentH];
-_content ctrlSetBackgroundColor [0.035, 0.04, 0.038, 0.97];
-_content ctrlCommit 0;
+private _contentGroup = _display ctrlCreate ["RscControlsGroupNoScrollbars", -1];
+_contentGroup ctrlSetPosition [_contentX, _contentY, _contentW, _contentH];
+_contentGroup ctrlCommit 0;
+_display setVariable ["Waldo_MG_UI_ContentGroup", _contentGroup];
+private _contentBack = [_display, "RscText", [0, 0, 40, 25], "equipment work area"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_contentBack ctrlSetBackgroundColor [0.025, 0.03, 0.027, 0.99];
 private _texturePath = _profile getOrDefault ["texture", ""];
 if (_texturePath != "") then {
-    private _texture = _display ctrlCreate ["RscPicture", -1];
-    _texture ctrlSetPosition [_contentX, _contentY, _contentW, _contentH];
+    private _texture = [_display, "RscPicture", [0, 0, 40, 25], "optional casing texture"] call Waldo_fnc_MiniGameEquipmentCreateControl;
     _texture ctrlSetText _texturePath;
     _texture ctrlSetTextColor [1, 1, 1, _profile getOrDefault ["textureOpacity", 0.14]];
-    _texture ctrlCommit 0;
 };
-// Procedural seams, fasteners and instruments stay above any optional material image.
-[_display, [_contentX, _contentY, _contentW, _contentH]] call Waldo_fnc_MiniGameEquipmentDecorate;
-
-private _status = _display ctrlCreate ["RscText", -1];
-_status ctrlSetPosition [_contentX + 0.01 * safezoneW, _contentY + 0.008 * safezoneH, _contentW - 0.02 * safezoneW, 0.036 * safezoneH];
+private _status = [_display, "RscText", [1, 0.65, 38, 1.45], "procedure status"] call Waldo_fnc_MiniGameEquipmentCreateControl;
 _status ctrlSetText format ["[STANDBY]  %1", _profile getOrDefault ["model", "FIELD UNIT"]];
-_status ctrlSetTextColor [0.94, 0.78, 0.30, 1];
-_status ctrlSetFontHeight (0.022 * safezoneH);
-_status ctrlCommit 0;
+_status ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+_status ctrlSetFontHeight (0.72 * (_contentH / 25) * _textScale);
+_status ctrlSetBackgroundColor [0.04, 0.05, 0.045, 0.96];
 _display setVariable ["Waldo_MG_UI_StatusCtrl", _status];
 
 private _footer = _display ctrlCreate ["RscStructuredText", -1];
-_footer ctrlSetPosition [_panelX + 0.02 * safezoneW, _contentY + _contentH + 0.007 * safezoneH, _panelW - 0.04 * safezoneW, _footerH - 0.01 * safezoneH];
-_footer ctrlSetStructuredText parseText format [
-    "<t align='left' color='#DDD8C8'>%1</t><t align='right' color='#F2BE55'>ESC: REQUEST ABORT  [FAILURE]</t>",
-    _inputHint
-];
+_footer ctrlSetPosition [_canvasX + _cellW, _canvasY + (22.35 * _cellH), 38 * _cellW, 1.55 * _cellH];
+_footer ctrlSetBackgroundColor [0.045, 0.05, 0.045, 0.99];
+_footer ctrlSetStructuredText parseText format ["<t size='1.15'><t align='left' color='#DDD8C8'>%1</t><t align='right' color='#F2BE55'>ESC TWICE: ABORT [FAILURE]</t></t>", _inputHint];
 _footer ctrlCommit 0;
-
-private _result = _display ctrlCreate ["RscText", -1];
-_result ctrlSetPosition [_contentX, _contentY + (_contentH - 0.09 * safezoneH) / 2, _contentW, 0.09 * safezoneH];
-_result ctrlSetBackgroundColor [0, 0, 0, 0];
+private _result = [_display, "RscText", [4, 10, 32, 5], "terminal result"] call Waldo_fnc_MiniGameEquipmentCreateControl;
 _result ctrlSetText "";
-_result ctrlSetFontHeight (0.042 * safezoneH);
+_result ctrlSetFontHeight (1.2 * (_contentH / 25));
 _result ctrlShow false;
-_result ctrlCommit 0;
 _display setVariable ["Waldo_MG_UI_ResultCtrl", _result];
 
-private _maker = _display ctrlCreate ["RscText", -1];
-_maker ctrlSetPosition [_panelX + 0.02 * safezoneW, _panelY + _headerH - 0.027 * safezoneH, _panelW * 0.66, 0.018 * safezoneH];
-_maker ctrlSetText format ["%1  //  %2", _profile getOrDefault ["manufacturer", "FIELD SYSTEMS"], _profile getOrDefault ["model", "UNIT"]];
-_maker ctrlSetTextColor [0.62, 0.63, 0.56, 1];
-_maker ctrlSetFontHeight (0.014 * safezoneH * _textScale);
-_maker ctrlCommit 0;
+// Shared display-level pointer capture. Mouse movement remains active after leaving the source control.
+private _moveId = _display displayAddEventHandler ["MouseMoving", {
+    params ["_display"];
+    private _control = _display getVariable ["Waldo_MG_UI_DragControl", controlNull];
+    if (isNull _control) exitWith {false};
+    getMousePosition params ["_mouseX", "_mouseY"];
+    private _bounds = _display getVariable ["Waldo_MG_UI_Content", [0, 0, 1, 1]];
+    private _local = [
+        40 * ((_mouseX - (_bounds select 0)) / ((_bounds select 2) max 0.0001)),
+        25 * ((_mouseY - (_bounds select 1)) / ((_bounds select 3) max 0.0001))
+    ];
+    [_display, _control, _local, "MOVE"] call (_control getVariable ["Waldo_MG_UI_DragCallback", {}]);
+    true
+}];
+private _upId = _display displayAddEventHandler ["MouseButtonUp", {
+    params ["_display", "_button"];
+    if (_button != 0) exitWith {false};
+    private _control = _display getVariable ["Waldo_MG_UI_DragControl", controlNull];
+    if (isNull _control) exitWith {false};
+    getMousePosition params ["_mouseX", "_mouseY"];
+    private _bounds = _display getVariable ["Waldo_MG_UI_Content", [0, 0, 1, 1]];
+    private _local = [40 * ((_mouseX - (_bounds select 0)) / ((_bounds select 2) max 0.0001)), 25 * ((_mouseY - (_bounds select 1)) / ((_bounds select 3) max 0.0001))];
+    [_display, _control, _local, "END"] call (_control getVariable ["Waldo_MG_UI_DragCallback", {}]);
+    _display setVariable ["Waldo_MG_UI_DragControl", controlNull];
+    true
+}];
+private _keyId = _display displayAddEventHandler ["KeyDown", {
+    params ["_display", "_key"];
+    if (_key != 1) exitWith {false};
+    if !(_display getVariable ["Waldo_IMG_AbortPending", false]) then {
+        _display setVariable ["Waldo_IMG_AbortPending", true];
+        private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+        if (!isNull _status) then {
+            private _profile = _display getVariable ["Waldo_IMG_Profile", createHashMap];
+            _status ctrlSetText format ["[!] PRESS ESC AGAIN: %1", _profile getOrDefault ["abortText", "ABORTING COUNTS AS FAILURE"]];
+        };
+        private _worker = [_display] spawn {
+            params ["_display"];
+            uiSleep 3;
+            if (!isNull _display) then {_display setVariable ["Waldo_IMG_AbortPending", false];};
+        };
+        private _workers = _display getVariable ["Waldo_MG_UI_Workers", []];
+        _workers pushBack _worker;
+        _display setVariable ["Waldo_MG_UI_Workers", _workers];
+    } else {
+        [_display, false, "[X] PROCEDURE ABORTED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
+    };
+    true
+}];
+_display setVariable ["Waldo_MG_UI_DisplayHandlers", [["MouseMoving", _moveId], ["MouseButtonUp", _upId], ["KeyDown", _keyId]]];
 
 _display setVariable ["Waldo_MG_UI_Finish", {
-    params ["_disp", "_success", ["_reason", ""]];
-    if (isNull _disp || {_disp getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
-    _disp setVariable ["Waldo_MG_UI_Done", true];
-    private _cueProfile = _disp getVariable ["Waldo_IMG_Profile", createHashMap];
-    if ((_cueProfile getOrDefault ["soundProfile", "equipment"]) != "silent") then {
+    params ["_display", "_success", ["_reason", ""]];
+    if (isNull _display || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+    _display setVariable ["Waldo_MG_UI_Done", true];
+    [_display, "END"] call Waldo_fnc_MiniGameEquipmentCleanup;
+    private _profile = _display getVariable ["Waldo_IMG_Profile", createHashMap];
+    if ((_profile getOrDefault ["soundProfile", "equipment"]) != "silent") then {
         playSound (if (_success) then {"FD_Finish_F"} else {"FD_CP_Not_Clear_F"});
     };
-    private _resultCtrl = _disp getVariable ["Waldo_MG_UI_ResultCtrl", controlNull];
-    private _statusCtrl = _disp getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
-    if (!isNull _statusCtrl) then {
-        _statusCtrl ctrlSetText if (_reason == "") then {
-            if (_success) then {format ["[OK]  %1", (_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault ["successText", "PROCEDURE COMPLETE"]]} else {format ["[X]  %1", (_disp getVariable ["Waldo_IMG_Profile", createHashMap]) getOrDefault ["failureText", "PROCEDURE FAILED"]]}
-        } else {
-            _reason
-        };
-        _statusCtrl ctrlSetTextColor if (_success) then {_disp getVariable ["Waldo_IMG_ColourOK", [0.35, 0.80, 0.45, 1]]} else {_disp getVariable ["Waldo_IMG_ColourBad", [0.90, 0.32, 0.28, 1]]};
+    private _status = _display getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
+    private _result = _display getVariable ["Waldo_MG_UI_ResultCtrl", controlNull];
+    if (!isNull _result) then {ctrlDelete _result;};
+    _result = [_display, "RscText", [4, 10, 32, 5], "terminal result"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+    _display setVariable ["Waldo_MG_UI_ResultCtrl", _result];
+    private _resultText = if (_success) then {_profile getOrDefault ["successText", "PROCEDURE COMPLETE"]} else {_profile getOrDefault ["failureText", "PROCEDURE FAILED"]};
+    if (!isNull _status) then {
+        _status ctrlSetText format ["%1 %2", if (_success) then {"[OK]"} else {"[X]"}, if (_reason == "") then {_resultText} else {_reason}];
+        _status ctrlSetTextColor (if (_success) then {_display getVariable ["Waldo_IMG_ColourOK", [0.35, 0.80, 0.45, 1]]} else {_display getVariable ["Waldo_IMG_ColourBad", [0.90, 0.32, 0.28, 1]]});
     };
-    if (!isNull _resultCtrl) then {
-        private _resultText = if (_success) then {_cueProfile getOrDefault ["successText", "PROCEDURE COMPLETE"]} else {_cueProfile getOrDefault ["failureText", "PROCEDURE FAILED"]};
-        private _caption = if (_disp getVariable ["Waldo_IMG_AudioCaptions", true] && {(_cueProfile getOrDefault ["soundProfile", "equipment"]) != "silent"}) then {if (_success) then {"  [AUDIO: CONFIRMATION TONE]"} else {"  [AUDIO: FAULT TONE]"}} else {""};
-        _resultCtrl ctrlSetText format ["%1  %2%3", if (_success) then {"[OK]"} else {"[X]"}, _resultText, _caption];
-        _resultCtrl ctrlSetTextColor if (_success) then {_disp getVariable ["Waldo_IMG_ColourOK", [0.55, 1, 0.65, 1]]} else {_disp getVariable ["Waldo_IMG_ColourBad", [1, 0.45, 0.40, 1]]};
-        _resultCtrl ctrlSetBackgroundColor if (_success) then {[0.05, 0.20, 0.09, 0.96]} else {[0.24, 0.04, 0.04, 0.96]};
-        _resultCtrl ctrlShow true;
-        ctrlSetFocus _resultCtrl;
+    if (!isNull _result) then {
+        _result ctrlSetText format ["%1  %2", if (_success) then {"[OK]"} else {"[X]"}, _resultText];
+        _result ctrlSetTextColor (if (_success) then {[0.70, 1, 0.76, 1]} else {[1, 0.68, 0.78, 1]});
+        _result ctrlSetBackgroundColor (if (_success) then {[0.04, 0.19, 0.08, 0.98]} else {[0.22, 0.03, 0.08, 0.98]});
+        _result ctrlShow true;
+        ctrlSetFocus _result;
     };
-    private _fnResolve = _disp getVariable ["Waldo_MG_UI_Resolve", {}];
-    private _outcomeCode = if (_success) then {"SUCCESS"} else {
-        private _upperReason = toUpper _reason;
-        if (_upperReason find "ABORT" >= 0) then {"ABORTED"} else {
-            if (_upperReason find "EXPIRED" >= 0 || {_upperReason find "TIMEOUT" >= 0}) then {"TIMEOUT"} else {"FAILURE"};
-        };
+    private _outcome = if (_success) then {"SUCCESS"} else {
+        private _upper = toUpper _reason;
+        if (_upper find "ABORT" >= 0) then {"ABORTED"} else {if (_upper find "TIME" >= 0 || {_upper find "EXPIRED" >= 0}) then {"TIMEOUT"} else {"FAILURE"}};
     };
-    [{
-        params ["_disp", "_resolve", "_success", "_outcomeCode", "_reason"];
-        missionNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
-        if (!isNull _disp) then { _disp closeDisplay 1; };
-        [_success, [_outcomeCode, _reason]] call _resolve;
-    }, [_disp, _fnResolve, _success, _outcomeCode, _reason], if (_disp getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.65}] call CBA_fnc_waitAndExecute;
+    private _resolve = _display getVariable ["Waldo_MG_UI_Resolve", {}];
+    private _delay = if (_display getVariable ["Waldo_IMG_ReducedMotion", false]) then {0.12} else {0.65};
+    [_display, _resolve, _success, _outcome, _reason, _delay] spawn {
+        params ["_display", "_resolve", "_success", "_outcome", "_reason", "_delay"];
+        uiSleep _delay;
+        uiNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
+        if (!isNull _display) then {_display closeDisplay 1;};
+        [_success, [_outcome, _reason]] call _resolve;
+    };
 }];
 
-_display displayAddEventHandler ["KeyDown", {
-    params ["_disp", "_key"];
-    if (_key == 1) exitWith {
-        if !(_disp getVariable ["Waldo_IMG_AbortPending", false]) then {
-            _disp setVariable ["Waldo_IMG_AbortPending", true];
-            private _status = _disp getVariable ["Waldo_MG_UI_StatusCtrl", controlNull];
-            if (!isNull _status) then {
-                private _profile = _disp getVariable ["Waldo_IMG_Profile", createHashMap];
-                _status ctrlSetText format ["[!] PRESS ESC AGAIN: %1", _profile getOrDefault ["abortText", "ABORTING COUNTS AS A FAILED PROCEDURE"]];
-            };
-            [_disp] spawn {params ["_d"]; uiSleep 3; if (!isNull _d) then {_d setVariable ["Waldo_IMG_AbortPending", false];};};
-        } else {
-            private _finish = _disp getVariable ["Waldo_MG_UI_Finish", {}];
-            [_disp, false, "[X] PROCEDURE ABORTED"] call _finish;
-        };
-        true
+private _unloadId = _display displayAddEventHandler ["Unload", {
+    params ["_display"];
+    if !(_display getVariable ["Waldo_MG_UI_Done", false]) then {
+        _display setVariable ["Waldo_MG_UI_Done", true];
+        [_display, "CANCEL"] call Waldo_fnc_MiniGameEquipmentCleanup;
+        private _resolve = _display getVariable ["Waldo_MG_UI_Resolve", {}];
+        [false, ["ABANDONED", "DISPLAY LOST"]] call _resolve;
     };
-    false
+    if ((uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull]) isEqualTo _display) then {
+        uiNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
+    };
 }];
+private _handlers = _display getVariable ["Waldo_MG_UI_DisplayHandlers", []];
+_handlers pushBack ["Unload", _unloadId];
+_display setVariable ["Waldo_MG_UI_DisplayHandlers", _handlers];
 
 if (_timeLimit > 0) then {
-    [_display, _timeLimit] spawn {
-        params ["_disp", "_limit"];
-        waitUntil {isNull _disp || {_disp getVariable ["Waldo_IMG_Started", false]}};
-        if (isNull _disp) exitWith {};
+    private _timerWorker = [_display, _timeLimit] spawn {
+        params ["_display", "_limit"];
+        waitUntil {isNull _display || {_display getVariable ["Waldo_IMG_Started", false]}};
+        if (isNull _display) exitWith {};
         private _deadline = time + _limit;
-        while {!isNull _disp && {!(_disp getVariable ["Waldo_MG_UI_Done", false])}} do {
+        while {!isNull _display && {!(_display getVariable ["Waldo_MG_UI_Done", false])}} do {
             private _remaining = (_deadline - time) max 0;
-            private _timerCtrl = _disp getVariable ["Waldo_MG_UI_TimerCtrl", controlNull];
-            if (!isNull _timerCtrl) then {
-                _timerCtrl ctrlSetText format ["TIME  %1", ceil _remaining];
-                if (_remaining <= (_limit * 0.25)) then {
-                    _timerCtrl ctrlSetTextColor [1, 0.38, 0.32, 1];
-                };
+            private _control = _display getVariable ["Waldo_MG_UI_TimerCtrl", controlNull];
+            if (!isNull _control) then {
+                _control ctrlSetText format ["TIME  %1", ceil _remaining];
+                if (_remaining <= (_limit * 0.25)) then {_control ctrlSetTextColor [1, 0.45, 0.60, 1];};
             };
             if (_remaining <= 0) exitWith {
-                private _finish = _disp getVariable ["Waldo_MG_UI_Finish", {}];
-                private _profile = _disp getVariable ["Waldo_IMG_Profile", createHashMap];
-                [_disp, false, format ["[!] %1", _profile getOrDefault ["timeoutText", "OPERATING WINDOW EXPIRED"]]] call _finish;
+                [_display, false, "[!] OPERATING WINDOW EXPIRED"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
             };
-            sleep 0.08;
+            uiSleep 0.08;
         };
     };
+    private _workers = _display getVariable ["Waldo_MG_UI_Workers", []];
+    _workers pushBack _timerWorker;
+    _display setVariable ["Waldo_MG_UI_Workers", _workers];
 };
 
 [_display, _title, _objective, _inputHint, _hint] call Waldo_fnc_MiniGameChallengeHelp;
-
 _display
