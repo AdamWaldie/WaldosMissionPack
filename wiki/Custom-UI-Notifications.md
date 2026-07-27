@@ -1,6 +1,25 @@
 # Custom WMP UI Notifications
 
-`Waldo_fnc_ShowUiNotification` exposes the padded, safe-zone-aware visual language used by SafeStart, Electronic Warfare and Economy feedback.
+WMP includes a reusable notification-card system for mission updates, warnings and persistent equipment status. It is the same safe-zone-aware presentation used by Electronic Warfare, Economy feedback and ENDEX/AAR.
+
+The system is local to each player's interface. Mission code decides who receives a notification by choosing the remote-execution target.
+
+## What players see
+
+Every state uses colour, a written label and a symbol. Information remains understandable when colour cannot be distinguished.
+
+![Information, success, warning and error notification states](images/ui-notifications/semantic-states.png)
+
+| State | Symbol | Intended use |
+|---|---|---|
+| `INFO` | `[i]` | Neutral updates and instructions |
+| `SUCCESS` | `[OK]` | Confirmed completion or restored service |
+| `WARNING` | `[!]` | A condition requiring attention |
+| `ERROR` | `[X]` | Failure, loss or an unavailable service |
+
+Cards measure their text, retain internal padding and stay inside Arma's current safe zone. Available placements are `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT` and `BOTTOM_RIGHT`.
+
+## Basic mission-maker use
 
 ```sqf
 [
@@ -14,24 +33,73 @@
 ] call Waldo_fnc_ShowUiNotification;
 ```
 
-Arguments are `[title, message, state, duration, placement, channel, source, policy, priority, allowLocalOverride]`.
+The arguments are:
 
-| Argument | Values |
+```sqf
+[title, message, state, duration, placement, channel, source, policy, priority, allowLocalOverride]
+```
+
+| Argument | Type | Meaning |
+|---|---|---|
+| `title` | String | Main notification heading |
+| `message` | String or structured text | Explanation shown below the heading |
+| `state` | String | `INFO`, `SUCCESS`, `WARNING` or `ERROR` |
+| `duration` | Number | Lifetime in seconds; `0` remains until replaced or dismissed |
+| `placement` | String | Requested screen region |
+| `channel` | String | Ownership and sequencing key, such as `LOGISTICS` or `ELECTRONIC_WARFARE` |
+| `source` | String | Small system or mission label above the title |
+| `policy` | String | `AUTO`, `FIFO` or `REPLACE` |
+| `priority` | Number | Mission metadata retained with the active card |
+| `allowLocalOverride` | Boolean | Whether an authorized player placement may be used |
+
+The function returns a unique token for a displayed card, `"QUEUED"` when the request enters a queue, or an empty string when no interface is available. If the gameplay display is still opening, WMP waits for it for up to 20 seconds.
+
+## Channels, stacking and replacement
+
+A channel identifies one stream of related notifications. Different channels can share a screen region without drawing over one another. WMP measures and stacks up to three active cards in that region; further transient requests wait in the queue.
+
+![Three independent channels stacked at bottom right](images/ui-notifications/channel-stacking.png)
+
+Use a stable channel name for every update from one system:
+
+```sqf
+[
+    "RADIO INTERFERENCE",
+    "Signal quality is degraded.",
+    "ERROR",
+    0,
+    "BOTTOM_RIGHT",
+    "ELECTRONIC_WARFARE",
+    "ELECTRONIC WARFARE",
+    "REPLACE"
+] call Waldo_fnc_ShowUiNotification;
+```
+
+Calling `REPLACE` again on `ELECTRONIC_WARFARE` removes only that channel's old card. Other systems remain visible. This is the correct policy for live status, countdowns and equipment readings.
+
+`AUTO` selects `REPLACE` for persistent cards (`duration = 0`) and `FIFO` for timed cards. Specify a policy when the intended behavior should be obvious in mission code.
+
+## FIFO message delivery
+
+`FIFO` displays requests from the same channel in the order they arrive. A second request waits while the first is active.
+
+| First request active | Queue advances to second request |
 |---|---|
-| `state` | `INFO`, `SUCCESS`, `WARNING`, `ERROR`. Every state includes a text symbol as well as colour. |
-| `duration` | Seconds. Use `0` for a persistent card. |
-| `placement` | `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_RIGHT`. |
-| `channel` | Ownership key. It separates persistent system state and transient message queues. |
-| `source` | Small equipment, system or mission label above the title. |
-| `policy` | `AUTO`, `FIFO`, or `REPLACE`. `AUTO` queues timed notices and replaces persistent notices. |
-| `priority` | Reserved numeric mission priority. Use `REPLACE` for a notice that must immediately supersede its channel. |
-| `allowLocalOverride` | Uses a permitted local player placement override when `true`. The mission must explicitly allow that channel first. |
+| ![First FIFO notification](images/ui-notifications/fifo-first.png) | ![Second FIFO notification](images/ui-notifications/fifo-second.png) |
 
-Cards from different channels can coexist. The renderer stacks up to three cards in a placement with measured spacing and queues overflow. Timed cards in the same channel are shown FIFO. Duplicate queued messages are coalesced. Persistent status cards use replacement semantics so an updated status never leaves an obsolete copy behind.
+Identical queued requests are coalesced. This prevents a repeating event from filling the queue with copies of the same message.
+
+To dismiss a channel and discard its queued requests:
+
+```sqf
+["LOGISTICS"] call Waldo_fnc_DismissUiNotification;
+```
+
+The return value is `true` when an active or queued request was removed. Dismissal is local and does not affect the same channel on another client.
 
 ## Mission-authored placement
 
-The placement passed to `Waldo_fnc_ShowUiNotification` is the default for that call. A mission can establish a reusable channel default during initialization:
+The placement in a notification call is its fallback. A mission can reserve a position for a channel during initialization:
 
 ```sqf
 // [channel, placement, allowLocalPlayerOverride, publish]
@@ -39,16 +107,30 @@ The placement passed to `Waldo_fnc_ShowUiNotification` is the default for that c
     call Waldo_fnc_SetUiPanelPlacement;
 ```
 
-This lets a mission maker reserve screen regions without editing WMP internals. When the third argument is `true`, a player may opt into a local position:
+Call this on the server with `publish = true` when every client, including JIP players, should receive the setting. A local mission may configure it from `initPlayerLocal.sqf` instead.
+
+If the mission explicitly permits local choice, a player can store a preferred position:
 
 ```sqf
 ["ELECTRONIC_WARFARE", "BOTTOM_LEFT", true]
     call Waldo_fnc_SetLocalUiPanelPlacement;
 ```
 
-The local helper refuses changes unless the mission has allowed them. Local choices are stored in the player's profile. Pass `allowLocalOverride = true` in the notification call to use the permitted choice; otherwise the mission position remains authoritative.
+The local helper refuses unauthorized channels. Accepted choices are stored in `profileNamespace`. The notification itself must also set `allowLocalOverride = true`; otherwise the mission-authored position remains authoritative.
 
-The function is local by design. To show a card to every current client:
+Resolution order is:
+
+1. Placement requested by the notification.
+2. Published mission default for that channel.
+3. Permitted local player override.
+
+Mission placement therefore remains the default and the mission maker controls whether a player can change it.
+
+## Locality and multiplayer targeting
+
+`Waldo_fnc_ShowUiNotification` creates controls only on a client with an interface. A dedicated server safely returns without drawing anything.
+
+Show a card to every current client:
 
 ```sqf
 [
@@ -62,14 +144,43 @@ The function is local by design. To show a card to every current client:
 ] remoteExecCall ["Waldo_fnc_ShowUiNotification", -2];
 ```
 
-Target a client owner instead of `-2` when only one player should see it. Dedicated servers safely return without creating controls.
+Show it to one player by targeting that unit's owner:
 
-## Emergency cleanup
+```sqf
+private _targetOwner = owner _player;
+[
+    "ACCESS GRANTED",
+    "The bunker door controls are now available.",
+    "SUCCESS",
+    8,
+    "TOP_RIGHT",
+    "ACCESS",
+    "SECURITY SYSTEM"
+] remoteExecCall ["Waldo_fnc_ShowUiNotification", _targetOwner];
+```
+
+The notification system does not broadcast gameplay state. Publish authoritative state separately, then notify the clients who need to see it.
+
+## Cleanup and recovery
+
+Remove all local WMP-owned panels and transient displays:
 
 ```sqf
 [] call Waldo_fnc_ClearUiPanels;
 ```
 
-Cleanup is local and repeat-safe. It removes WMP-owned notification cards, HUD controls, party displays and interaction-equipment displays without touching Arma, ACE, ACRE2, TFAR or mission-maker controls. Closing an active procedure display may abandon that attempt, so this is a recovery action rather than normal navigation.
+Cleanup is repeat-safe and does not delete Arma, ACE, ACRE2, TFAR or mission-authored controls. Closing an active field-equipment procedure may abandon that attempt, so full cleanup is an emergency recovery action rather than normal navigation.
 
-Every player also receives **WMP Interface > Clear Stuck WMP UI** under ACE self-interaction. If ACE interaction is unavailable, a low-priority vanilla action is installed instead. It is reinstalled on respawn and requires no server scheduler or public state.
+Players receive **WMP Interface > Clear Stuck WMP UI** under ACE self-interaction. When ACE interaction is unavailable, WMP installs a low-priority vanilla action instead. The action is restored after respawn and requires no public scheduler.
+
+## Tested presentation
+
+The screenshots on this page were captured from the real Arma 3 client at 2560x1440 using CBA, ACE, Zeus Enhanced and ACRE2 with BattlEye disabled. The reusable QA cases verify:
+
+- all four semantic states;
+- independent channel stacking;
+- the first and second stage of FIFO delivery;
+- local cleanup between cases;
+- readable text, internal padding and safe-zone placement.
+
+The capture cases live in `releaseVerificationAndDeployment/documentationCaptureQA` and are excluded from normal release packages.

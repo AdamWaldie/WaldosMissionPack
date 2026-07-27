@@ -108,4 +108,40 @@ if (_case == "endex") then {
     _ready = missionNamespace getVariable ["Waldo_ENDEX_Active", false];
 };
 
+if ((_case find "notifications-") == 0) then {
+    [] call Waldo_fnc_ClearUiPanels;
+    switch (_case) do {
+        case "notifications-semantic-states": {
+            ["INFORMATION", "A neutral operational update with an [i] symbol.", "INFO", 0, "TOP", "DOC_INFO", "WMP NOTIFICATIONS", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+            ["SYSTEM READY", "The requested operation completed successfully.", "SUCCESS", 0, "TOP_RIGHT", "DOC_SUCCESS", "WMP NOTIFICATIONS", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+            ["ACTION REQUIRED", "Review the highlighted condition before continuing.", "WARNING", 0, "BOTTOM_LEFT", "DOC_WARNING", "WMP NOTIFICATIONS", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+            ["CONNECTION LOST", "The service did not respond; use the documented fallback.", "ERROR", 0, "BOTTOM_RIGHT", "DOC_ERROR", "WMP NOTIFICATIONS", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+            uiSleep 0.4;
+            _ready = (count (uiNamespace getVariable ["Waldo_UiPanelRegistry", []])) isEqualTo 4;
+        };
+        case "notifications-channel-stacking": {
+            ["RADIO INTERFERENCE", "Signal quality is degraded.", "ERROR", 0, "BOTTOM_RIGHT", "DOC_EW", "ELECTRONIC WARFARE", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+            ["SUPPLY DELIVERED", "Forward logistics crate is ready.", "SUCCESS", 0, "BOTTOM_RIGHT", "DOC_LOGISTICS", "WMP OPERATIONS", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+            ["OBJECTIVE UPDATED", "Secure the relay station.", "INFO", 0, "BOTTOM_RIGHT", "DOC_OBJECTIVE", "JOINT OPERATIONS", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+            uiSleep 0.4;
+            _ready = (count (uiNamespace getVariable ["Waldo_UiPanelRegistry", []])) isEqualTo 3;
+        };
+        case "notifications-fifo-first": {
+            ["FIRST MESSAGE", "This card is displayed before the next request in its channel.", "INFO", 0, "TOP_RIGHT", "DOC_FIFO", "WMP MESSAGE QUEUE", "FIFO"] call Waldo_fnc_ShowUiNotification;
+            ["SECOND MESSAGE", "This card waits until the first request is dismissed.", "WARNING", 0, "TOP_RIGHT", "DOC_FIFO", "WMP MESSAGE QUEUE", "FIFO"] call Waldo_fnc_ShowUiNotification;
+            uiSleep 0.4;
+            private _queue = uiNamespace getVariable ["Waldo_UiPanelQueue", []];
+            _ready = (count _queue) isEqualTo 1;
+        };
+        case "notifications-fifo-second": {
+            ["FIRST MESSAGE", "The first request expires before the queue advances.", "INFO", 1, "TOP_RIGHT", "DOC_FIFO", "WMP MESSAGE QUEUE", "FIFO"] call Waldo_fnc_ShowUiNotification;
+            ["SECOND MESSAGE", "FIFO delivery advances only after the active card leaves.", "WARNING", 0, "TOP_RIGHT", "DOC_FIFO", "WMP MESSAGE QUEUE", "FIFO"] call Waldo_fnc_ShowUiNotification;
+            uiSleep 1.4;
+            private _registry = uiNamespace getVariable ["Waldo_UiPanelRegistry", []];
+            private _second = _registry findIf {(_x param [0, ""]) isEqualTo "DOC_FIFO"};
+            _ready = _second >= 0 && {(count (uiNamespace getVariable ["Waldo_UiPanelQueue", []])) isEqualTo 0};
+        };
+    };
+};
+
 diag_log format ["WMP DOC CAPTURE READY: case=%1 ready=%2", _case, _ready];

@@ -24,6 +24,8 @@ Use this process when a feature's appearance or input behavior must be proven in
 6. Review every image at its original resolution. Contact sheets are useful for coverage, but not for judging small text or clipping.
 7. Re-capture only the affected states after a focused correction. Do not repeat the full batch when unchanged captures already pass review.
 
+The standard batch also includes four notification-system cases: semantic states, same-placement channel stacking, the first FIFO card, and the advanced FIFO card. These cases use persistent deterministic content and clear the local registry and queue before the next feature state.
+
 ## Acceptance checks
 
 For every captured state, confirm:

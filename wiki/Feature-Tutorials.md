@@ -16,6 +16,7 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart) — Freeze players at mission start; lift to go live (timer + Zeus modules)
 * [Tasks / Objectives](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Tasks-And-Objectives) — Script-driven, JIP-safe task helpers with auto map markers
 * [Custom 3D World Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers) — JIP-safe icon-and-text markers over objects or positions
+* [Custom WMP UI Notifications](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications) — accessible states, safe-zone placement, channels, stacking, FIFO delivery and cleanup
 * [Radio Reports, Checklists, Support Calls And Documentation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
 * [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup) — Also covers GetPlayerGroup and GetPlayerRole helpers
 

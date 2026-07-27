@@ -30,6 +30,10 @@ private _cases = missionNamespace getVariable ["Waldo_DocCapture_Cases", []];
         private _cleared = (_registry findIf {(_x param [0, ""]) isEqualTo "ENDEX"}) < 0;
         diag_log format ["WMP DOC CAPTURE RESET: case=endex panelCleared=%1", _cleared];
     };
+    if ((_x find "notifications-") == 0) then {
+        [] call Waldo_fnc_ClearUiPanels;
+        uiNamespace setVariable ["Waldo_UiPanelQueue", []];
+    };
     uiSleep 0.5;
 } forEach _cases;
 diag_log format ["WMP DOC CAPTURE BATCH COMPLETE: cases=%1", _cases];

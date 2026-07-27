@@ -11,7 +11,8 @@ param(
         "interaction-pressure-briefing", "interaction-pressure-active",
         "interaction-sequence-briefing", "interaction-sequence-active",
         "interaction-commandinput-briefing", "interaction-commandinput-active",
-        "safestart-countdown", "endex"
+        "safestart-countdown", "endex",
+        "notifications-semantic-states", "notifications-channel-stacking", "notifications-fifo-first", "notifications-fifo-second"
     ),
     [string]$OutputDirectory = ".\.qa\documentation-gallery",
     [int]$ResolutionWidth = 2560,
