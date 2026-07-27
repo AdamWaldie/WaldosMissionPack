@@ -1,8 +1,12 @@
+# Economy Research System
+
+> **Use this page when:** you need research centres, technology catalogues, costs, prerequisites, or exclusions.
+
 _Associated Files: MissionScripts\EconomySystems\Research\ (`Waldo_fnc_EcoResearch_*`)_
 
 ![Research catalog authoring](images/economy/economy-research.png)
 
-The Research System adds a **tech tree** to [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems). A side spends [resources](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System) at a Research Center to unlock research, which in turn gates what they can [build](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) and [buy](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System).
+The Research System adds a **tech tree** to [Waldos Economy Systems](Waldos-Economy-Systems). A side spends [resources](Waldos-Economy-Systems-Resource-System) at a Research Center to unlock research, which in turn gates what they can [build](Waldos-Economy-Systems-Build-System) and [buy](Waldos-Economy-Systems-Buy-System).
 
 ## The Research Center
 
@@ -35,7 +39,7 @@ In Zeus: **Research → Configure Research**. From script (entry shape — trail
 
 ## How it plays
 
-1. A player (or [Ground Command](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools)) selects a research at the Research Center.
+1. A player (or [Ground Command](Waldos-Economy-Systems-Ground-Command-And-Tools)) selects a research at the Research Center.
 2. If the side can afford it and the prerequisites are met, the cost is deducted and the research enters progress.
 3. After the time elapses it completes for that side, unlocking anything that required it.
 
@@ -43,5 +47,9 @@ Build-system structures can grant **research-speed boosts**, shortening research
 
 ## See also
 
-* [Build System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) — buildings that require research and boost research speed.
-* [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)
+* [Build System](Waldos-Economy-Systems-Build-System) — buildings that require research and boost research speed.
+* [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

@@ -1,3 +1,7 @@
+# ACRE2 AN/PRC-343 Automatic Setup
+
+> **Use this page when:** you want squad-level ACRE2 radios assigned and configured automatically from mission roles.
+
 Associated Files: MissionScripts\MissionInit\ACRE2\SquadLevelRadios.sqf
 
 This function sets up AN/PRC-343 Radio channels based on the group of the player based on callsign breakdown. 
@@ -7,7 +11,7 @@ This handles the group-to-channel mapping and ensures that all clients share the
 It sets up Block And Channel allocation based upon the callsigns list provided. This is by default via ACRE2Init.sqf as below:
 ![](https://i.imgur.com/3CHplvL.png)
 
-# Logic Used
+## Logic Used
 
 The logic behind this setup is as follows:
 1. If a callsign has two numbers separated by either a hyphen or a full stop then the block number is designated as the first number, and the channel is the second. 
@@ -17,3 +21,6 @@ The logic behind this setup is as follows:
     * If a callsign does not have a number, its channel is assigned based on the lowest number available in that block.
 3. If any of this fails, it assigns each squad a unique channel working backwards from 256. If a double up is detected due to a conflict in logic, the channel is set to the highest available.
 
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

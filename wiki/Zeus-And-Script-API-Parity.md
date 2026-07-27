@@ -1,5 +1,7 @@
 # Zeus and Script API Parity
 
+> **Use this page when:** you need to translate a Zeus-authored setup into mission script or compare supported options.
+
 WMP's Zeus Enhanced modules are authoring surfaces over the same mission functions available to scripted missions. A module being visible in Zeus is not, by itself, proof that its operation is valid. The repository therefore tracks three separate facts:
 
 1. The module is registered with Zeus Enhanced.
@@ -53,3 +55,7 @@ python releaseVerificationAndDeployment/zeus_script_parity_checker.py
 ```
 
 A passing result establishes static registration and API parity only. Use the full audit mission for actual Zeus placement, prompts, server mutation, JIP and cleanup checks.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

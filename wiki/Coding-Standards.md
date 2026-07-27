@@ -1,13 +1,17 @@
+# Coding and Documentation Standards
+
+> **Use this page when:** you are changing WMP scripts, functions, documentation, or validation tooling.
+
 The following will note the standards that I attempt to uphold in the making of this pack. As I am but one man, however, and with this being a side project, the pack may not always be to this standard. Refactor and "standard" passes are committed every three months or so to bring severe cases in line with this standard where possible.
 
-# Text Editor
+## Text Editor
 You are free to select your own text editor for the creation or editing of your scripts, but I would advise selecting Visual Studio Code & Its SQF plugins. It'll make any script reading in Arma 3 easier on you! 
 - Visual Studio Code: https://code.visualstudio.com/
 - SQF Language Extension: https://marketplace.visualstudio.com/items?itemName=vlad333000.sqf
 - SQF Debugger Extension: https://marketplace.visualstudio.com/items?itemName=billw2011.sqf-debugger
 
 
-# Documentation
+## Documentation
 Document the usage and generalised workings of a script to the best extent possible using comments and a script header. Clarity of the purpose of the script, where and how it can or is used should be the highest priority for maintenance and end-user purposes.
 
 ## Script Header Requirements
@@ -92,7 +96,7 @@ Large features get a **hub page** plus one sub-page per sub-system (see *Waldos 
 - [ ] Wiki page(s) following the Wiki Page Standard, linked from `Feature-Tutorials.md`
 - [ ] Both validators pass (`sqf_validator.py`, `config_style_checker.py`)
 
-# Code Conventions
+## Code Conventions
 ## ACE Coding Guidelines
 Please adhere to the [ACE CODING GUIDELINES](https://github.com/acemod/ACE3/blob/master/docs/wiki/development/coding-guidelines.md) where possible
 
@@ -100,3 +104,7 @@ Please adhere to the [ACE CODING GUIDELINES](https://github.com/acemod/ACE3/blob
 * Constants are types in full capitals: CONSTANT
 * Variables are to be in lower camel case: variablesAreFun , _variablesAreFun 
 * Functions are to be in upper camel case: Waldo_fnc_UpperCamelCaseFunction
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

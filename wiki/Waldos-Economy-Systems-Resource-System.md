@@ -1,8 +1,12 @@
+# Economy Resource System
+
+> **Use this page when:** you need resource types, crates, capturable zones, collection, or storage limits.
+
 _Associated Files: MissionScripts\EconomySystems\Resource\ (`Waldo_fnc_EcoResource_*`)_
 
 ![Resource controls](images/economy/economy-resources.png)
 
-The Resource System is the backbone of [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems). It lets you define arbitrary resources and have players gather them from crates and capturable zones, subject to per-side storage limits. Resources are then spent by the [Research](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System), [Build](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) and [Buy](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System) systems.
+The Resource System is the backbone of [Waldos Economy Systems](Waldos-Economy-Systems). It lets you define arbitrary resources and have players gather them from crates and capturable zones, subject to per-side storage limits. Resources are then spent by the [Research](Waldos-Economy-Systems-Research-System), [Build](Waldos-Economy-Systems-Build-System) and [Buy](Waldos-Economy-Systems-Buy-System) systems.
 
 ## Defining resources
 
@@ -42,8 +46,12 @@ Zones get a map marker showing owner and contents; ownership and remaining depos
 
 ## Storage limits
 
-Every resource can have a per-side storage cap. Income that would exceed the cap is discarded, so storage buildings (see the [Build System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System)) become meaningful — they raise a side's cap for a resource.
+Every resource can have a per-side storage cap. Income that would exceed the cap is discarded, so storage buildings (see the [Build System](Waldos-Economy-Systems-Build-System)) become meaningful — they raise a side's cap for a resource.
 
 ## See also
 
-* [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration) — defining all of this from the editor.
+* [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration) — defining all of this from the editor.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

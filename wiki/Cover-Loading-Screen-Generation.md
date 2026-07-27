@@ -1,3 +1,7 @@
+# Cover and Loading-Screen Generation
+
+> **Use this page when:** you need to regenerate, customize, or troubleshoot the versioned mission artwork.
+
 **Associated Files:** `releaseVerificationAndDeployment/generateLoadingScreen.py`, `releaseVerificationAndDeployment/loadingAssets/` (base image + font + licence), `.github/workflows/update-cover.yml`, `.github/workflows/deploy.yml`, `releaseVerificationAndDeployment/deploy.sh`, `Pictures/loading.jpg`
 
 ## Overview
@@ -50,5 +54,9 @@ To use your own background, replace `loadingAssets/loading_base.jpg` with a 1920
 
 ## See also
 
-- [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference) — `onLoadName` and other `description.ext` fields.
-- [Coding Standards](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Coding-Standards) — documentation standard followed here.
+- [Mission Configuration Reference](Mission-Configuration-Reference) — `onLoadName` and other `description.ext` fields.
+- [Coding Standards](Coding-Standards) — documentation standard followed here.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

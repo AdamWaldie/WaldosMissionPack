@@ -1,6 +1,10 @@
+# Third-Party Scripts: Headless Client and Player Markers
+
+> **Use this page when:** you need to enable or configure the attributed optional third-party integrations.
+
 _Associated Files: `MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf`, `WerthlesHeadless.sqf` (Werthles' Headless Kit), `player_markers.sqf` (aeroson)_
 
-# Third-Party Scripts: Headless Client & Player Markers
+## Third-Party Scripts: Headless Client & Player Markers
 
 WMP bundles two well-known community scripts for mission makers who want them, kept separate from the pack's own systems and **disabled by default**. They are loaded through a single tidy entry point so the main `init.sqf` stays clean.
 
@@ -78,6 +82,10 @@ Detailed documentation lives in the header of `WerthlesHeadless.sqf` itself. For
 
 ## See also
 
-* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference) — where the loader line lives in `init.sqf`
-* [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak) — AI skill tuning that works alongside headless offloading
-* [AI Convoy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/AI-Convoy-System)
+* [Mission Configuration Reference](Mission-Configuration-Reference) — where the loader line lives in `init.sqf`
+* [Waldos AI Tweak](Waldos-AI-Tweak) — AI skill tuning that works alongside headless offloading
+* [AI Convoy System](AI-Convoy-System)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

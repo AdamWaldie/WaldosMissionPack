@@ -1,5 +1,7 @@
 # Industrial Access Terminal
 
+> **Use this page when:** you are configuring or operating the evidence-driven keypad procedure.
+
 The `keypad` procedure represents an access terminal or safe controller whose authorization code must be recovered from on-screen records.
 
 | Operating card | Active terminal |
@@ -25,3 +27,7 @@ Difficulty increases code length and can introduce a time limit while retaining 
 Valid configuration: `[digits(3-6,4), maxGuesses(6), timeLimit(0), title("ACCESS TERMINAL")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

@@ -69,7 +69,14 @@ class FullAuditTests(unittest.TestCase):
         workflow = (ROOT / ".github" / "workflows" / "wiki-sync.yml").read_text(encoding="utf-8")
         self.assertIn("rsync -a --delete", workflow)
         self.assertIn("check_wiki_assets.py", workflow)
+        self.assertIn("wiki_style_checker.py", workflow)
         self.assertNotIn("cp wiki/*.md", workflow)
+
+    def test_wiki_structure_is_validated_in_ci(self):
+        workflow = (ROOT / ".github" / "workflows" / "testing.yml").read_text(encoding="utf-8")
+        self.assertIn("wiki_style_checker.py", workflow)
+        checker = ROOT / "releaseVerificationAndDeployment" / "wiki_style_checker.py"
+        self.assertTrue(checker.is_file())
 
     def test_patch_filter_uses_standard_release_allowlist(self):
         allowed = {"MissionScripts", "Pictures", "description.ext"}

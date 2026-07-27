@@ -1,3 +1,7 @@
+# AI Convoy System
+
+> **Use this page when:** you need to create, tune, monitor, or stop a scripted AI vehicle convoy.
+
 _Associated Files: MissionScripts\AiScripting\simpleAiConvoy.sqf_
 
 A convoy script for AI vehicle groups, expanded and enhanced from Tova's original. It keeps vehicles in column formation, enforces convoy spacing, and forces stalled vehicles to follow the convoy leader. Optionally prevents AI from dismounting on contact, keeping the convoy moving through enemy fire.
@@ -57,3 +61,7 @@ Terminate each handle independently at their respective final waypoints.
 - `pushThrough` disables `enableAttack` on the group and prevents unloading in combat; always restore this via the termination block above
 - Works with any mix of vehicle types in the group
 - The script handles one group per call — for multiple convoys, call it once per group
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

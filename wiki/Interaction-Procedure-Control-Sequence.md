@@ -1,5 +1,7 @@
 # Secure Control Sequence
 
+> **Use this page when:** you are configuring or operating the observe-and-repeat control sequence.
+
 The `sequence` procedure represents a guarded control console that plays progressively longer authorization signals.
 
 | Operating card | Active console |
@@ -26,3 +28,7 @@ Difficulty adds pads and stages. Standard through expert retain a readable 0.85-
 Valid configuration: `[padCount(3-6,4), rounds(1-8,4), playbackSpeed(0.25-1.5,0.85), timeLimit(0), title("CONTROL CONSOLE")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

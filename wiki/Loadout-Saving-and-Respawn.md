@@ -1,6 +1,10 @@
+# Loadout Saving and Respawn
+
+> **Use this page when:** you need starting, death, arsenal, or manual loadout persistence across respawn.
+
 _Associated Files: initPlayerLocal.sqf_
 
-# General Setup
+## General Setup
 
 Loadout saving is automatically active as soon as the pack is merged into your mission folder — no additional configuration is needed for the basic feature.
 
@@ -10,7 +14,7 @@ By default, upon dying, players respawn with the loadout they had at the start o
 
 ---
 
-# Respawn Options
+## Respawn Options
 
 ## Default: Respawn With Starting Loadout
 
@@ -45,9 +49,9 @@ Both options can be enabled simultaneously — the death-loadout save will overw
 
 ---
 
-# Manual Loadout Saving
+## Manual Loadout Saving
 
-Players can also save their loadout manually. The simplest method is via any **Starter Crate** — these already include a save action by default. See [Logistics System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster) for starter crate setup.
+Players can also save their loadout manually. The simplest method is via any **Starter Crate** — these already include a save action by default. See [Logistics System](Logistics-System,-Starter-Crates-And-Quartermaster) for starter crate setup.
 
 For custom implementations:
 
@@ -65,10 +69,14 @@ this addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_SaveLoa
 
 ---
 
-# Potential Conflicts
+## Potential Conflicts
 
 **ACE Respawn** conflicts with this feature. Disable it in server and mission addon settings:
 
 `Settings → Addon Settings → ACE Respawn → disable`
 
 If ACE Respawn is active, loadout restoration on respawn will not function correctly.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

@@ -1,3 +1,7 @@
+# Mission Intro and Title Text
+
+> **Use this page when:** you need a configurable animated title sequence at mission start.
+
 _Associated Files: MissionScripts\MissionFlowAndUi\infoText.sqf_
 
 Displays an animated title sequence when a player loads into the mission. It fades the screen to black, types out the current in-game time and date, then reveals the mission title, location, player's grid reference, rank, name, and group — colour-coded by side.
@@ -77,4 +81,8 @@ _date = "Day 14 of the Third Month, 994.M41";
 
 ## Related Functions
 
-For runtime text overlays during the mission (not just mission start), see [Mission UI Text Overlays](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-UI-Text-Overlays).
+For runtime text overlays during the mission (not just mission start), see [Mission UI Text Overlays](Mission-UI-Text-Overlays).
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

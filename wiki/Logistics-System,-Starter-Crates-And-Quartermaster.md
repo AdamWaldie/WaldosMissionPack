@@ -1,3 +1,7 @@
+# Logistics, Starter Crates, and Quartermaster
+
+> **Use this page when:** you need mission-derived supply crates, limited arsenals, or quartermaster logistics.
+
 _Associated Files: MissionScripts\Logistics\Crates_
 
 The logistics system in WaldosMissionPack is more automated than most of the comparable script packs.
@@ -8,7 +12,7 @@ The initial call for this scrape can be found in the initServer.sqf file picture
 ![Loadout scrape call in initServer.sqf](https://i.imgur.com/zgkHsqA.png)
 
 
-# The Three Rules
+## The Three Rules
 The following three rules must be adhered to for the logistics system to function:
 1. The Mission Must **NOT** be binaried.
 2. Player load-outs must be customised via an arsenal and cannot be default unit kits.
@@ -16,7 +20,7 @@ The following three rules must be adhered to for the logistics system to functio
 
 Failure to follow these rules will lead to unexpected results.
 
-# Logistics Features
+## Logistics Features
 * Automated Supply, Medical and Starter Crates based on Player Loadouts.
 * Logistics Quartermaster to spawn Supplies, Medical Supplies, ACE Tracks, and ACE Wheels.
 * Limited ACE Arsenal based on Player Loadouts.
@@ -24,7 +28,7 @@ Failure to follow these rules will lead to unexpected results.
 
 
 
-# Logistics Crates
+## Logistics Crates
 
 ## Starter Crates
 
@@ -92,7 +96,7 @@ e.g.
 `[this, true, 1] call Waldo_fnc_MedicalCratePopulate;`
 
 
-# Limited Arsenal
+## Limited Arsenal
 Function to create an ace limited arsenal on the object, limited to the equipment retrieved from the mission.sqm
 
 Simply paste and edit the example below into an object's init to turn it into a limited arsenal.
@@ -110,7 +114,7 @@ e.g.
 
 
 
-# Logistics Quartermaster
+## Logistics Quartermaster
 This is used to set up the logistics spawning system via the "Quartermaster". The Quartermaster is an object or NPC which acts as the spawner for supply boxes & equipment.
 
 Simply paste and edit the example below into an object's init to turn it into a quartermaster.
@@ -153,3 +157,7 @@ You can edit the class of crate spawned for both medical and supply boxes in `in
 missionNamespace setVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F", true];
 missionNamespace setVariable ["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced", true];
 ```
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

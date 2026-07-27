@@ -24,6 +24,9 @@ jobs:
       - name: Validate wiki assets
         run: python3 releaseVerificationAndDeployment/check_wiki_assets.py
 
+      - name: Validate wiki structure and navigation
+        run: python3 releaseVerificationAndDeployment/wiki_style_checker.py
+
       - name: Synchronize complete wiki tree
         run: |
           rsync -a --delete --exclude='.git/' wiki/ wiki-repo/

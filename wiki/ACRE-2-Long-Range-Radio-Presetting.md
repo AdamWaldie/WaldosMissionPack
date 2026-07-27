@@ -1,3 +1,7 @@
+# ACRE2 Long-Range Radio Presetting
+
+> **Use this page when:** you need mission-defined long-range radio channels and presets for ACRE2.
+
 _Associated Files: MissionScripts\MissionInit\ACRE2Init.sqf_
 
 This script allows for the automatic pre-setting of radio channels for ACRE 2 Radios based on the group name.
@@ -44,3 +48,7 @@ Below is an example of the code, and the associated ingame setup to make this sy
 
 
 Channel Naming is not supported. This is due to the fundamental method required to make that function work not being possible with the approach of this pack. For channel naming to work, radios must be added via a loadout script. This is not how we approach loadouts in the pack, and as such, channel naming instead breaks the radios - therefore, I do not support it.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

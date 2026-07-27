@@ -1,5 +1,7 @@
 # Tactical Communications Unit
 
+> **Use this page when:** you are configuring or operating the radio-carrier tuning procedure.
+
 The `radiotune` procedure represents a NATO-style radio, antenna controller, or distress-beacon receiver.
 
 | Operating card | Active radio |
@@ -25,3 +27,7 @@ Difficulty adds channels, narrows the tolerance, and increases the required stab
 Valid configuration: `[channels(1-5,3), tolerance(0.02-0.15,0.05), holdTime(1), timeLimit(30), title("COMMUNICATIONS UNIT")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

@@ -1,3 +1,7 @@
+# Waldos Economy Systems
+
+> **Use this page when:** you are choosing, enabling, or troubleshooting the Resource, Research, Build, Buy, and Command systems.
+
 _Associated Files: MissionScripts\EconomySystems\ (the `Waldo_fnc_Eco*` functions), `Waldo_fnc_EcoInit`, `economyConfig.sqf`_
 
 ![Economy resource authoring](images/economy/economy-resources.png)
@@ -10,12 +14,12 @@ This is the hub page. Each system has its own tutorial:
 
 ## Feature pages
 
-* **[Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)** — enable it, presets, config strings, the `economyConfig.sqf` authoring file, editor designation helpers, and compositions.
-* **[Resource System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System)** — define resources, crates, capturable income zones, storage limits.
-* **[Research System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System)** — a Research Center, custom research, costs, prerequisites, exclusivity.
-* **[Build System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System)** — buildings, construction, upgrades, production, upkeep, RADAR.
-* **[Buy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System)** — purchase vehicles, drop points, requirements.
-* **[Ground Command & Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools)** — trusted-player permissions, Commitment mode, Export/Import, Purge.
+* **[Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)** — enable it, presets, config strings, the `economyConfig.sqf` authoring file, editor designation helpers, and compositions.
+* **[Resource System](Waldos-Economy-Systems-Resource-System)** — define resources, crates, capturable income zones, storage limits.
+* **[Research System](Waldos-Economy-Systems-Research-System)** — a Research Center, custom research, costs, prerequisites, exclusivity.
+* **[Build System](Waldos-Economy-Systems-Build-System)** — buildings, construction, upgrades, production, upkeep, RADAR.
+* **[Buy System](Waldos-Economy-Systems-Buy-System)** — purchase vehicles, drop points, requirements.
+* **[Ground Command & Tools](Waldos-Economy-Systems-Ground-Command-And-Tools)** — trusted-player permissions, Commitment mode, Export/Import, Purge.
 
 ## What it is at a glance
 
@@ -37,7 +41,7 @@ You never have to touch a script to use this suite. Pick the path that suits you
 
 > **Tip:** place only **one** Economy Systems object (composition or flag) per mission.
 
-See **[Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)** for the full walkthrough of all three paths.
+See **[Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)** for the full walkthrough of all three paths.
 
 ## For mission makers
 
@@ -65,3 +69,7 @@ All functionality is registered under `class Waldo` in `WaldosFunctions.sqf` acr
 | `Waldo_fnc_EcoCommand_*` | Ground Command authority |
 
 The bootstrap is `Waldo_fnc_EcoInit`. Global state uses the `WaldoEco<System>_` variable prefix. World objects are recognised by class: resource crate `Land_PlasticCase_01_medium_F`, Research Center `Land_Research_HQ_F`, purchase terminal `Land_Laptop_unfolded_F`, plus tagged construction vehicles.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

@@ -1,10 +1,13 @@
+# Safestart
+
+> **Use this page when:** you need to protect mission preparation, run a countdown, go live, or diagnose stuck protection.
+
 _Associated Files: `initServer.sqf`, `MissionScripts\MissionFlowAndUi\safeStart.sqf`, `safeStartTimer.sqf`, `safeStartApply.sqf`, `Waldo_fnc_SafeStart`, `Waldo_fnc_SafeStartTimer`_
 
-# Safestart
 
 ![SafeStart countdown](images/mission-flow/safestart-countdown.png)
 
-Safestart freezes every player at the start of a mission so people can load in, sort kit and get organised before anyone can shoot. It is the reversible mirror of the [ENDEX](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) script — turn it on to hold the mission, lift it to go live.
+Safestart freezes every player at the start of a mission so people can load in, sort kit and get organised before anyone can shoot. It is the reversible mirror of the [ENDEX](ENDEX-Script-&-Custom-End-Screen) script — turn it on to hold the mission, lift it to go live.
 
 While Safestart is active:
 * All weapons are placed on safe (ACE), and **every** shot, thrown grenade, launcher round, underbarrel round and crewed vehicle weapon round is deleted — firing just shows a red **"Hold Fire!"** prompt.
@@ -73,7 +76,7 @@ Three modules are registered under **"Waldos Mission Modules"** in the Zeus menu
 | **Safestart - Go Live (Lift)** | Lifts the freeze and cancels any countdown. |
 | **Safestart - Start Go-Live Countdown** | Prompts for a number of seconds, then starts the auto go-live timer. Player HUDs display the remaining time as `MM:SS`. |
 
-[Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules) are covered separately.
+[Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) are covered separately.
 
 ## Examples
 
@@ -90,6 +93,10 @@ missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true];
 
 ## See also
 
-* [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) — the matching mission-end freeze
-* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference) — all `initServer.sqf` fields
-* [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
+* [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) — the matching mission-end freeze
+* [Mission Configuration Reference](Mission-Configuration-Reference) — all `initServer.sqf` fields
+* [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

@@ -1,3 +1,7 @@
+# Virtual Vehicle Depot
+
+> **Use this page when:** you need to configure or operate WMP's virtual garage and deployment point.
+
 _Associated Files: MissionScripts\Logistics\VirtualVehicleDepot_
 
 > **This feature is Work In Progress.** It is functional for general use but has known limitations documented below. Test thoroughly with your mod set before using in a live mission.
@@ -114,3 +118,7 @@ The delay is randomised within a configured min/max range. If `min == max`, the 
 | Side vehicle limiting (`limitToSideVehicles`) | Works ~50% of the time — recommend leaving `false` |
 | UI appearance | Functional but not polished — this is explicitly WIP |
 | Pylon/weapon config | Only works for vehicles whose mod exposes pylon config to the garage system |
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

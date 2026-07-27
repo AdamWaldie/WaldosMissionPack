@@ -1,10 +1,14 @@
+# Economy Setup and Configuration
+
+> **Use this page when:** you are enabling the Economy, selecting a preset, or exporting a Zeus-authored setup to script.
+
 _Associated Files: `init.sqf`, `initServer.sqf`, `economyConfig.sqf`, `Waldo_fnc_EcoInit`, `Waldo_fnc_EcoCore_applyMakerConfig`_
 
 | Catalog authoring | Mission setup builder |
 |---|---|
 | ![Resource catalog authoring](images/economy/economy-resource-config.png) | ![Economy mission setup builder](images/economy/economy-builder.png) |
 
-This page covers every way to enable and configure [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) — from a one-line toggle to a fully hand-authored economy baked into the mission file. Everything here is applied once on the server and broadcast, so **JIP and rejoining players inherit the configured economy automatically**.
+This page covers every way to enable and configure [Waldos Economy Systems](Waldos-Economy-Systems) — from a one-line toggle to a fully hand-authored economy baked into the mission file. Everything here is applied once on the server and broadcast, so **JIP and rejoining players inherit the configured economy automatically**.
 
 > **Zeus Enhanced is required for the in-Zeus menu.** Every operator action is a **ZEN custom module** in the Zeus module list under the single category **"Waldos Economy Systems"**. Modules are named `System - Action`, so the tutorial paths on the other pages map directly: e.g. "**Waldos Economy Systems → Resource → Configure Resources**" is the module **`Resource - Configure Resources`**, and "**Research → Create Research Center**" is **`Research - Create Research Center`**. Placement modules (create crate/zone/research center, spawn building/vehicle/laptop, set drop point) spawn at the point where you drop the module on the map. Without ZEN the economy still runs on the server, but there is no in-Zeus menu.
 
@@ -83,3 +87,7 @@ Arma can only add true Eden "Systems" modules from a **loaded addon**, and WMP i
 ## Order of application
 
 `Waldo_fnc_EcoInit` → `Waldo_fnc_EcoCore_applyMakerConfig` runs, in order: a config string (if set) **or** a preset, then commitment mode, then `economyConfig.sqf`. So you can build on a preset or define everything from scratch. It only runs on the server authority, exactly once.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

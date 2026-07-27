@@ -1,52 +1,97 @@
-## **Step 1: Download Required Files**
-- Download the [latest Waldos Mission Pack](https://github.com/AdamWaldie/WaldosMissionPack/releases/latest) (labelled as WMP-VersionNumber.zip) & the accompanying compositions.
+# Quickstart Guide
 
-## **Step 2: Setup Your Development Environment**
-- It is recommended that you download Visual Studio Code and its SQF plugins, as they will make script reading in Arma 3 easier.
-  - [Visual Studio Code](https://code.visualstudio.com/)
-  - [SQF Language Extension](https://marketplace.visualstudio.com/items?itemName=vlad333000.sqf)
-  - [SQF Debugger Extension](https://marketplace.visualstudio.com/items?itemName=billw2011.sqf-debugger)
+> **Use this page when:** you are installing WMP into a mission for the first time.
 
-## **Step 3: Prepare Your Mission Folder**
-- Copy everything from the downloaded folder into your mission.
-- Ensure that the `mission.sqm` is unbinarized:
-  - Navigate to Attributes -> General -> under Misc and uncheck the "Binarize the scenario file" box.
+This guide gets the pack loading with its required dependencies before you enable individual features.
 
-## **Step 4: Customize Your Mission**
-- Fill out the relevant information in `description.ext` as desired. Optionally, replace the `loading.jpg` image in the Pictures folder.
+## 1. Download the release
 
-## **Step 5: Configure AI Behavior**
-- Set Waldo's AI Tweak mode in the `init.sqf` (DAY or NIGHT modes) as labelled in the `init.sqf` file.
+Download the latest `WMP-<version>.zip` from the [WMP releases page](https://github.com/AdamWaldie/WaldosMissionPack/releases/latest). Download the separate compositions archive if you want the prepared Eden compositions.
 
-## **Step 6: Edit Initialization Files**
-- Edit `init.sqf`, `initServer.sqf`, & `initPlayerLocal.sqf` as you like to enable/disable different aspects of the pack.
+## 2. Load the required add-ons
 
-## **Explore The Mission Framework For Things You Might Want To Use (Optional)**
-- The pack is "packed" full of scripts and helpers for you to utilise. Every script is heavily documented and provides example calls for you to quickly and easily understand and use.
+WMP requires:
 
-***
+- CBA_A3
+- ACE 3
 
-### **If Using ACE 3:**
-- Disable ACE 3 Respawn in server & Mission Addon Settings (Settings -> Addon Settings -> ACE Respawn).
-- See [Loadout Saving and Respawn](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Loadout-Saving-and-Respawn) for more details.
+Load optional integrations such as ACRE2, TFAR, Zeus Enhanced, or LAMBS only when your mission uses them.
 
-***
+## 3. Copy WMP into the mission folder
 
-### **If Using ACRE2:**
-- Player groups must be assigned a callsign (Click on the group -> Callsign) & have that callsign and radio frequencies assigned in `init.sqf`.
-- See [ACRE 2 Radio Presetting And Saving](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting) for more details.
+Copy the contents of the WMP archive into the mission root—the folder containing `mission.sqm`. Keep the supplied folder structure intact.
 
-# Additional Resources
+At minimum, confirm these paths exist:
 
-## **Full Pack Features:**
-- This quickstart guide sets up the bare minimum. For a comprehensive look at using the pack’s features, reference [Feature Tutorials](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials).
+```text
+description.ext
+init.sqf
+initServer.sqf
+initPlayerLocal.sqf
+MissionScripts\WaldosFunctions.sqf
+```
 
-## **Compositions:**
-- Several compositions are supplied via a separate download on the release page. These expedite your mission building process, including setting up the pack's arsenal, supply crate, and logistics systems.
+## 4. Keep `mission.sqm` unbinarized
 
-### **Composition Installation:**
-1. Download `WMP_Compositions-versionNumber.zip` (E.g `WMP_Compositions-v4.6.1.zip`) from the [latest release](https://github.com/AdamWaldie/WaldosMissionPack/releases/latest) and open it.
-2. Navigate to your Arma 3 Profile folder in your documents.
-3. Open your `Compositions` folder.
-4. Drag and drop the contents from the downloaded compositions folder into your `Compositions` folder.
-5. If you have an older version of the compositions, it is wise to delete them first and then copy across the new compositions.
+In Eden, open **Attributes → General → Miscellaneous** and disable **Binarize the Scenario File**. WMP's mission-loadout tools need to read the mission file.
+
+Save the mission once after changing this setting and verify that `mission.sqm` remains plain text.
+
+## 5. Configure the mission entry files
+
+Use the [Mission Configuration Reference](Mission-Configuration-Reference) while editing:
+
+- `description.ext` for mission identity, respawn, includes, and end screens;
+- `init.sqf` for client/server-wide feature toggles and optional integrations;
+- `initServer.sqf` for authoritative mission setup;
+- `initPlayerLocal.sqf` for local player behavior.
+
+Change one feature area at a time. Leave optional systems disabled until their required objects and configuration are present.
+
+## 6. Prepare playable loadouts
+
+Edit playable-character loadouts in Eden or ACE Arsenal before the final save. WMP can derive logistics contents and respawn loadouts from those playable units.
+
+If ACE is loaded, disable ACE Respawn in the mission/server ACE settings when using WMP's loadout restoration. See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn).
+
+## 7. Configure optional radio support
+
+For ACRE2, give groups clear callsigns in Eden and configure the matching radio plan in `init.sqf`. Start with [ACRE2 Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting).
+
+TFAR-compatible features are documented on their individual pages, including [Radio Jamming](Radio-Jamming).
+
+## 8. Test in hosted multiplayer
+
+Use Eden's multiplayer preview or host the mission locally. A single-player editor preview cannot reproduce every locality, JIP, Zeus, or interaction path.
+
+Before wider testing, verify:
+
+- the mission reaches the player slot screen and starts;
+- no WMP script errors appear;
+- CBA and ACE are loaded;
+- configured ACE and vanilla actions appear as documented;
+- SafeStart, ENDEX, and other mission-flow systems are in the intended state;
+- [Mission Diagnostics](Mission-Diagnostics) reports expected loaded, active, disabled, and unavailable features.
+
+## Install the compositions
+
+The compositions archive is separate from the mission pack.
+
+1. Close Eden before replacing compositions.
+2. Open the Arma 3 profile folder under Documents.
+3. Open its `Compositions` folder.
+4. Remove obsolete WMP composition versions when appropriate.
+5. Copy the downloaded composition folders into `Compositions`.
+
+Compositions accelerate setup but do not replace the scripts in the mission folder.
+
+## Where to go next
+
+- [Feature Index](Feature-Tutorials) — choose a capability.
+- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) — build or test features through Zeus.
+- [Zeus and Script API Parity](Zeus-And-Script-API-Parity) — export or reproduce Zeus-authored setup in mission script.
+- [Mission Diagnostics](Mission-Diagnostics) — investigate missing or inactive features.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

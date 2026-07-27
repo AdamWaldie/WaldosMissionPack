@@ -1,5 +1,7 @@
 # Maintenance Hatch
 
+> **Use this page when:** you are configuring or operating the calibrated torque repair procedure.
+
 The `repair` procedure represents a service hatch containing fasteners that must be tightened to their engraved torque specifications.
 
 | Operating card | Active hatch |
@@ -25,3 +27,7 @@ Difficulty adds bolts, increases calibration precision, and reduces mistake allo
 Valid configuration: `[boltCount(3-6,4), precision(1-4,2), maxMistakes(3), timeLimit(30), title("MAINTENANCE HATCH")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

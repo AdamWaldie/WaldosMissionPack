@@ -1,5 +1,7 @@
 # Hydraulic Control Manifold
 
+> **Use this page when:** you are configuring or operating the coupled pressure-balancing procedure.
+
 The `pressure` procedure represents a hydraulic, pneumatic, fuel-pressure, or coolant-control manifold with coupled lines.
 
 | Operating card | Active manifold |
@@ -27,3 +29,7 @@ Difficulty increases valve count and coupling pressure while narrowing safe band
 Valid configuration: `[valveCount(2-4,3), difficulty(1-3,1), settleTime(2), timeLimit(45), title("HYDRAULIC MANIFOLD")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

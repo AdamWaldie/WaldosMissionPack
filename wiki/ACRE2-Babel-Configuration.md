@@ -1,3 +1,7 @@
+# ACRE2 Babel Configuration
+
+> **Use this page when:** you need automatic language groups and interpreter assignments for ACRE2 Babel.
+
 _Associated Files: MissionScripts\MissionInit\ACRE2\BabelActivation.sqf_
 
 Description: 
@@ -49,3 +53,7 @@ If the player is an interpreter based on the above example, they will see this:
 
 If the player is not an interpreter, and BLUFOR, based on the above example, they will see this:
 ![](https://i.imgur.com/RpLDJJN.png)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

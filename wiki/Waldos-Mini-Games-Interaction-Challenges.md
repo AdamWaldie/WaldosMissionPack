@@ -1,6 +1,9 @@
+# Field Equipment Interaction Procedures
+
+> **Use this page when:** you need the shared setup, state, accessibility, customization, or controls for WMP interaction procedures.
+
 _Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`, `Waldo_fnc_MiniGameInteraction`, `Waldo_fnc_MiniGameInteractionTableSetup`, `Waldo_fnc_BombDefuseSetup`, `Waldo_fnc_MiniGameChallenge`_
 
-# Field Equipment Interaction Procedures
 
 ![Field equipment procedures](images/interaction-procedures/interaction-circuit-active.png)
 
@@ -25,6 +28,8 @@ Available procedure ids are `wirecut`, `minesweeper`, `keypad`, `lockpick`, `cir
 ## Equipment guides
 
 Each guide explains what the operator sees, how the procedure flows, its controls, difficulty profiles, configuration order, and mission integration.
+
+For live explosives, use [Bomb Defusal](Bomb-Defusal). It applies the explosive consequence to any procedure below rather than replacing that procedure with a separate interface.
 
 | Procedure | Equipment guide |
 |---|---|
@@ -595,29 +600,16 @@ not used by field procedures.
 
 ## Bomb defusal
 
-```sqf
-[this] call Waldo_fnc_BombDefuseSetup;
-```
+Bomb defusal uses the same interface, accessibility, state, and authority contract as the selected interaction procedure. The wrapper adds the explosive consequence and defaults to `wirecut` for compatibility; `challengeId` may select any built-in procedure.
 
-The bomb wrapper now enters the same high-level equipment setup as every other procedure. `wirecut`
-remains its compatible default, while `challengeId` can select any built-in procedure—for example,
-`circuit` for a detonation bus, `keypad` for an access-controlled charge, or `sequence` for a command
-authorization device. It supports the shared difficulty profiles, presentation customization,
-accessibility, ACE and vanilla actions, authoritative lifecycle, and callback contract; it only adds
-the optional server-side detonation consequence. Existing array options remain compatible, and the
-shared `successVariable` option takes precedence over the legacy `defusedVariable` fallback.
-
-```sqf
-[this, createHashMapFromArray [
-    ["difficulty", "expert"],
-    ["actionTitle", "Defuse Naval Charge"],
-    ["equipmentTitle", "CHARGE CONTROL UNIT"],
-    ["preset", "navalCharge"],
-    ["detonateOnFailure", true]
-]] call Waldo_fnc_BombDefuseSetup;
-```
+See [Bomb Defusal](Bomb-Defusal) for setup, procedure choices, explosive behavior, shared and legacy variables, ACE and vanilla use, and mission examples.
 
 ## See also
 
-* [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games)
-* [Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games)
+* [Waldos Mini Games](Waldos-Mini-Games)
+* [Table Games](Waldos-Mini-Games-Table-Games)
+* [Bomb Defusal](Bomb-Defusal)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

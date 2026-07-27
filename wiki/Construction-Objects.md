@@ -1,6 +1,9 @@
+# Construction Objects
+
+> **Use this page when:** you need synchronized construction objects, parameters, and Eden setup examples.
+
 _Associated Files: `MissionScripts\Logistics\Construction\ConstructionObjects.sqf`, `Waldo_fnc_ConstructionObjects`_
 
-# Construction Objects
 
 Fakes the **construction of defences, objects or scenery** from a single interaction object via an ACE timed action. Pre-place the objects you want "built" (hidden at mission start); when a player runs the build action on the interaction object, those objects appear with a construction sound and progress bar. It's a lightweight way to let players raise a sandbag wall, a checkpoint, an FOB, or any prop set on demand — without the full Eden/ACE base-building flow.
 
@@ -44,6 +47,10 @@ Below is an example of the construction script correctly set up. The ammo box is
 
 ## See also
 
-* [Mobile Command Post](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System) — deploy/tear-down command post using the same synced-Logic pattern
-* [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup) — full ACE Fortify base-building
-* [Simple Mass Attach Items](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items)
+* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) — deploy/tear-down command post using the same synced-Logic pattern
+* [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup) — full ACE Fortify base-building
+* [Simple Mass Attach Items](Simple-Mass-Attach-Items)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

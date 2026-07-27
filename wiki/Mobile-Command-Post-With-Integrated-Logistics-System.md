@@ -1,3 +1,7 @@
+# Mobile Command Post
+
+> **Use this page when:** you need to configure, deploy, tear down, or troubleshoot an MHQ with logistics.
+
 _Associated Files: MissionScripts\Logistics\MHQ\MHQSetup.sqf_
 
 A script which allows for the creation of a command post, acting as a respawn position, you may choose to combine this with the logistics quartermaster script if so desired.
@@ -21,7 +25,7 @@ This allows a number of objects, as selected via the syncing of a named gamelogi
 * Allows any Vehicle or Object to be a deployable respawn. Vehicle will be attached to the vehicle during movement while object respawns are static.
 * Creates a randomised Command Post name and marker on the map.
 * Changes the respawn side depending on who deployed it.
-* Allows for the optional deployment of logistics supplies if enabled and the [logistics System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster) is active.
+* Allows for the optional deployment of logistics supplies if enabled and the [logistics System](Logistics-System,-Starter-Crates-And-Quartermaster) is active.
 
 Parameters:
 * _target - Vehicle or Object to use as the Mobile headquarters
@@ -53,3 +57,7 @@ Below is an example of a properly setup MHQ, the Halftrack is the interaction ob
 **Logi_SupplyBoxClass** is the class of box which will spawn when ammo or resupply boxes are spawned.
 
 **Logi_MedicalBoxClass** is the class of box which will spawn when a medical box is spawned.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

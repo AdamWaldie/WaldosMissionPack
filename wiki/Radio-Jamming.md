@@ -1,6 +1,10 @@
+# Radio Jamming
+
+> **Use this page when:** you need ACRE2 or TFAR interference fields, player feedback, UAV effects, or Zeus controls.
+
 _Associated Files: `init.sqf`, `MissionScripts\MissionInit\Jamming\jammingInit.sqf`, `jammerCreate.sqf`, `jammerToggle.sqf`, `jammerRemove.sqf`, `jammingFactor.sqf`, `jammingAcreSignal.sqf`, `jammingTfarLoop.sqf`, `jammerInteraction.sqf`, `jammerScan.sqf`, `jammerMapDraw.sqf`, `jammingHud.sqf`, `MissionScripts\ZenModules\Zen_jammerPlaceModule.sqf`, `Zen_jammerToggleModule.sqf`, `Zen_jammerRemoveModule.sqf`, `Waldo_fnc_Jammer`, `Waldo_fnc_JammerToggle`, `Waldo_fnc_JammerRemove`_
 
-# Radio Jamming (ACRE2 / TFAR)
+## Radio Jamming (ACRE2 / TFAR)
 
 Localised radio jamming lets you deny communications in an area. A **jammer** is any object configured with a radius. Radios inside its field lose signal, then recover through a soft edge as they leave. The system supports **both ACRE2 and TFAR**.
 
@@ -147,7 +151,11 @@ The server owns and broadcasts the jammer list, so late-joining players receive 
 
 ## See also
 
-* [ACRE 2 Long Range Radio](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting): radio channel setup
-* [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics): warns if jamming is enabled with no radio mod loaded
-* [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
-* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)
+* [ACRE 2 Long Range Radio](ACRE-2-Long-Range-Radio-Presetting): radio channel setup
+* [Mission Diagnostics](Mission-Diagnostics): warns if jamming is enabled with no radio mod loaded
+* [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+* [Mission Configuration Reference](Mission-Configuration-Reference)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
