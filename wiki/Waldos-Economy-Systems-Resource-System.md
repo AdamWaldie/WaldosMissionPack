@@ -1,5 +1,7 @@
 _Associated Files: MissionScripts\EconomySystems\Resource\ (`Waldo_fnc_EcoResource_*`)_
 
+![Resource controls](images/economy/economy-resources.png)
+
 The Resource System is the backbone of [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems). It lets you define arbitrary resources and have players gather them from crates and capturable zones, subject to per-side storage limits. Resources are then spent by the [Research](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System), [Build](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) and [Buy](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System) systems.
 
 ## Defining resources
@@ -16,7 +18,7 @@ In Zeus: open **Waldos Economy Systems → Resource → Configure Resources**. F
 
 ## Resource crates
 
-A resource crate is a collectable cache (`Land_PlasticCase_01_medium_F`). A player walks up and collects it via the ACE interaction menu; the contained resources are added to that player's side (up to its storage cap). Spawn one in Zeus (**Resource → Spawn Resource Crate**, then click to place) or from script:
+A resource crate is a collectable cache (`Land_PlasticCase_01_medium_F`). A player walks up and collects it through ACE or the matching vanilla action; the contained resources are added to that player's side (up to its storage cap). A fully collected crate is deleted immediately. If storage limits prevent taking everything, the crate remains and clearly contains only the uncollected remainder. Spawn one in Zeus (**Resource → Spawn Resource Crate**, then click to place) or from script:
 
 ```sqf
 // [position, [[resource, amount], ...]]

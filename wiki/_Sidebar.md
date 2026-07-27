@@ -3,6 +3,19 @@
 * [Quickstart Guide](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide)
 * [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)
 * [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
+* [Zeus and Script API Parity](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Zeus-And-Script-API-Parity)
+* **Field Equipment Procedures**
+    * [Interaction Procedures Hub](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges)
+    * [EOD Controller](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-EOD-Controller)
+    * [Ordnance Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Ordnance-Diagnostics)
+    * [Access Terminal](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Access-Terminal)
+    * [Lock Cylinder](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Lock-Cylinder)
+    * [Breaker Cabinet](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Breaker-Cabinet)
+    * [Maintenance Hatch](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Maintenance-Hatch)
+    * [Communications Unit](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Communications-Unit)
+    * [Hydraulic Manifold](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Hydraulic-Manifold)
+    * [Control Sequence](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Control-Sequence)
+    * [Command Uplink](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Command-Uplink)
 * [Feature Tutorials](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials)
     * **Mission Flow & UI**
     * [Mission Intro Text](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Intro-Or-Title-Text)
@@ -10,6 +23,8 @@
     * [ENDEX & After-Action Report](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
     * [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart)
     * [Tasks / Objectives](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Tasks-And-Objectives)
+    * [Custom 3D World Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers)
+    * [Custom WMP UI Notifications](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications)
     * [Radio Reports & Checklists](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
     * [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup)
     * **Logistics & Crates**

@@ -151,6 +151,17 @@ See [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissi
 [] call Waldo_fnc_ZenInitModules;  // remove this line to disable Zeus modules
 ```
 
+### Mini Games (table games)
+
+```sqf
+Waldo_MiniGames_Enable = true;     // false = don't install the seated table-games engine
+if (Waldo_MiniGames_Enable) then {
+    [] call Waldo_fnc_MiniGamesInit;
+};
+```
+
+Installs the seated multiplayer party-games engine. The single-player [interaction challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) (bomb defusal, hacking, lockpicking, etc.) register themselves on first use and are **not** affected by this flag. See [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games).
+
 ### ACE Corpse Traps (disabled by default)
 
 ```sqf
@@ -230,7 +241,7 @@ missionNamespace setVariable ["Waldo_Jamming_BurnThrough", true, true];// strong
 missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
 missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];  // or "INVSQ"
 missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];// destroy the object = remove jammer
-missionNamespace setVariable ["Waldo_Jamming_GmOverlay", true, true];  // curators see jammers in-world
+missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true]; // opt in to curator jammer markers
 missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF scan detection range (m)
 ```
 

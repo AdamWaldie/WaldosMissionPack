@@ -44,7 +44,7 @@ Every script file (`.sqf`) should open with this block. Functions that operate o
 
 ```
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * One-line description of what the script does, and where/how it is used.
  *
  * Arguments:

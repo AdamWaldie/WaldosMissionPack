@@ -1,0 +1,50 @@
+version=12;
+class Mission
+{
+    addOns[]=
+    {
+        "A3_Characters_F_BLUFOR",
+        "A3_Map_VR"
+    };
+    addOnsAuto[]=
+    {
+        "A3_Characters_F_BLUFOR",
+        "A3_Map_VR"
+    };
+    randomSeed=24072026;
+    class Intel
+    {
+        briefingName="WMP Interaction Equipment QA";
+        overviewText="Runtime validation of all interaction-equipment displays.";
+        year=2035;
+        month=6;
+        day=24;
+        hour=12;
+        minute=0;
+        startWeather=0;
+        forecastWeather=0;
+    };
+    class Groups
+    {
+        items=1;
+        class Item0
+        {
+            side="WEST";
+            class Vehicles
+            {
+                items=1;
+                class Item0
+                {
+                    position[]={0,0,0};
+                    azimut=0;
+                    id=0;
+                    side="WEST";
+                    vehicle="B_Soldier_F";
+                    player="PLAYER COMMANDER";
+                    leader=1;
+                    skill=0.60000002;
+                };
+            };
+        };
+    };
+};

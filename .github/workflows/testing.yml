@@ -10,6 +10,20 @@ jobs:
       run: python3 releaseVerificationAndDeployment/sqf_validator.py
     - name: Validate Config
       run: python3 releaseVerificationAndDeployment/config_style_checker.py
+    - name: Validate interaction equipment UI
+      run: python3 releaseVerificationAndDeployment/interaction_ui_checker.py
+    - name: Validate all first-party drawn UI
+      run: python3 releaseVerificationAndDeployment/drawn_ui_checker.py
+    - name: Validate Zeus and script API parity
+      run: python3 releaseVerificationAndDeployment/zeus_script_parity_checker.py
+    - name: Test interaction equipment UI checker
+      working-directory: releaseVerificationAndDeployment
+      run: python3 -m unittest -v test_interaction_ui_checker.py
+    - name: Test full-pack audit and release guardrails
+      working-directory: releaseVerificationAndDeployment
+      run: python3 -m unittest -v test_full_arma_audit.py
+    - name: Check whitespace
+      run: git diff --check HEAD
       
   lint:
     runs-on: ubuntu-latest

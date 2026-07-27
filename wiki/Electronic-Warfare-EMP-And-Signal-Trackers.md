@@ -1,6 +1,6 @@
 _Associated Files: `MissionScripts\MissionInit\ElectronicWarfare\emp.sqf`, `empApply.sqf`, `empImmune.sqf`, `tracker.sqf`, `trackerRemove.sqf`, `trackerRender.sqf`, `trackerAttach.sqf`, `MissionScripts\ZenModules\Zen_empModule.sqf`, `Zen_trackerModule.sqf`, `Waldo_fnc_EMP`, `Waldo_fnc_EMPImmune`, `Waldo_fnc_Tracker`, `Waldo_fnc_TrackerAttach`_
 
-# Electronic Warfare — EMP & Signal Trackers
+# Electronic Warfare: EMP and Signal Trackers
 
 Two self-contained electronic-warfare tools that sit alongside [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming): a one-shot **EMP burst** and C-Track style **signal trackers**. Both are scriptable and available as Zeus modules, and neither runs any background loop until you actually use it.
 
@@ -8,15 +8,15 @@ Two self-contained electronic-warfare tools that sit alongside [Radio Jamming](h
 
 # EMP Burst
 
-An electromagnetic pulse fries electronics in a radius for a while — the offensive, one-shot counterpart to a jammer (which is a persistent field). It fires once and reverts on a timer, so it costs nothing to leave available.
+An electromagnetic pulse disables electronics inside a radius for a set duration. It is the one-shot counterpart to a persistent jammer and runs no background loop while unused.
 
 ## What it hits
 
 Inside the radius, anything **not** made immune:
 
-* **Infantry** lose their night-vision goggles (fried — removed from inventory) and, under TFAR, can't use their radio for the duration.
-* **Vehicles** have their engine cut (fuel drained and restored afterwards — aircraft will drop!).
-* **Players** in range get a **white-out flash** and a clear *"EMP DETONATION — electronics down"* message, so it reads as a deliberate EW event rather than a bug.
+* **Infantry** lose their night-vision goggles. The goggles are removed from inventory. Under TFAR, radio use is blocked for the duration.
+* **Vehicles** lose engine power until their fuel state is restored. Aircraft can lose lift.
+* **Players** in range get a **white-out flash**. The additional disruption notice is off by default; set `Waldo_EMP_NotifyAffectedPlayers = true` to enable it.
 
 ## Scripting
 
@@ -39,13 +39,15 @@ Occupants of an immune vehicle are protected automatically. The flag is broadcas
 
 ## Zeus
 
-**Modules → Waldos Mission Modules → EMP Detonation** — a dialog for **radius** and **duration**, detonated at the module's position.
+**Modules > Waldos Mission Modules > EW: Detonate EMP at Cursor** opens a dialog for **radius** and **duration**, then detonates at the module position.
+
+The module writes its parameters to the RPT for diagnostics and does not announce them in chat.
 
 ---
 
 # Signal Trackers (C-Track)
 
-Plant a tracker on a unit or vehicle and a chosen side follows it **live on the map** — electronic reconnaissance without keeping eyes on the target. The marker is drawn only on the tracking side's clients, so it stays hidden from the side being tracked.
+Plant a tracker on a unit or vehicle to show its live position to a chosen side. Only clients on that side draw the marker, so the target does not receive it.
 
 ## Planting one
 
@@ -71,15 +73,15 @@ A tracker also drops itself automatically when its target is killed or deleted.
 
 ## Zeus
 
-**Modules → Waldos Mission Modules → Plant Signal Tracker** — a dialog to pick which side sees it; it tags the nearest unit or vehicle to the module.
+**Modules > Waldos Mission Modules > Tracker: Attach to Selected Object** opens a dialog for the tracking side, marker label and initial active state, then tags the nearest unit or vehicle to the module through `Waldo_fnc_Tracker`.
 
 ## Notes
 
 * Markers update every couple of seconds and follow the target's position and facing.
-* Only planted trackers cost anything — there is no per-frame work and no cost when none are placed.
+* The tracker renderer starts only when a tracker exists. An empty registry has no per-frame work.
 
 ## See also
 
-* [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) — the persistent-field side of the EW suite, including UAV jamming
+* [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming): persistent radio and UAV interference fields
 * [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
 * [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)

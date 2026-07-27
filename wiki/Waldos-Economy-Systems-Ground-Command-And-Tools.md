@@ -20,13 +20,20 @@ missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];
 
 ## Export / Import
 
-The **Export** tool serialises your *entire* configuration — resources, research, buildings, purchases — into a single text string. **Import** loads it back. Use this to:
+Use the normal Economy Zeus modules as visual builders, then open **Configuration: Build Mission Setup**. Its combined screen has one primary authoring action and two compatibility actions:
+
+* **BUILD + COPY** asks each selected system to translate its current module-authored setup into paste-ready `economyConfig.sqf` calls, then copies the complete block to the clipboard. The result uses the same public functions documented for hand-authored missions and includes their pre-filled settings and placements.
+* **Config Copy** exports the original portable catalogue string containing resources, research, buildings and purchases.
+* **Import** loads a portable configuration string. **Additive Import** merges it instead of replacing existing catalogues.
+
+Use these modes to:
 
 * save a configuration you built live in Zeus,
 * share a configuration between missions, or
-* bake it into a mission via `Waldo_Economy_ConfigString` (see [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)).
+* bake only the catalogues into a mission via `Waldo_Economy_ConfigString`, or
+* bake the complete authored layout into `economyConfig.sqf` (see [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)).
 
-The recommended workflow is **build it in Zeus once, Export, then paste the string into `initServer.sqf`** so it loads automatically every time.
+The recommended workflow is **configure and place everything with the Zeus modules in a clean authoring session, press BUILD + COPY, then paste the generated setup calls into `economyConfig.sqf`**. On later mission runs those calls recreate the authored setup without requiring Zeus. Use CONFIG COPY instead when positions and placed fixtures should remain mission-specific.
 
 ## Presets
 
@@ -38,7 +45,7 @@ Three bundled presets give you a ready-made economy at increasing complexity —
 
 ## Status check (for scripters)
 
-`call Waldo_fnc_EcoCore_isActive` returns whether the suite is currently running, so you can gate dependent scripts, e.g. `waitUntil { call Waldo_fnc_EcoCore_isActive };`. Note also that failed player actions (not enough resources, unmet requirements, no drop point in range) now report the reason to the player via system chat instead of doing nothing.
+`call Waldo_fnc_EcoCore_isActive` returns whether the suite is currently running, so you can gate dependent scripts, e.g. `waitUntil { call Waldo_fnc_EcoCore_isActive };`. Failed player actions (not enough resources, unmet requirements, no drop point in range) use a branded timed notice instead of silently failing or burying the reason in game chat.
 
 ## See also
 

@@ -6,6 +6,7 @@ import re
 import ntpath
 import sys
 import argparse
+from pathlib import Path
 
 def check_config_style(filepath):
     bad_count_file = 0
@@ -95,9 +96,10 @@ def check_config_style(filepath):
                                 print("ERROR: Possible missing curly brace '}}' detected at {0} Line number: {1}".format(filepath,lineNumber))
                                 bad_count_file += 1
                             brackets_list.append('}')
-                        elif (c== '\t'):
-                            print("ERROR: Tab detected at {0} Line number: {1}".format(filepath,lineNumber))
-                            #bad_count_file += 1
+                        elif (c == '\t'):
+                            # Existing Arma config files commonly use tab indentation. It has no
+                            # parser or runtime meaning, so it is not a style failure.
+                            pass
 
             else: # Look for the end of our comment block
                 if (c == '*'):
@@ -131,16 +133,15 @@ def main():
     parser.add_argument('-m','--module', help='only search specified module addon folder', required=False, default="")
     args = parser.parse_args()
 
-    # Allow running from root directory as well as from inside the tools directory
-    rootDir = "../cScripts"
-    if (os.path.exists("cScripts")):
-        rootDir = "cScripts"
+    repository_root = Path(__file__).resolve().parents[1]
+    scan_root = repository_root / args.module if args.module else repository_root
+    ignored_directories = {".git", ".qa", "__pycache__"}
 
-    for root, dirnames, filenames in os.walk(rootDir + '/' + args.module):
-      for filename in fnmatch.filter(filenames, '*.cpp'):
-        sqf_list.append(os.path.join(root, filename))
-      for filename in fnmatch.filter(filenames, '*.hpp'):
-        sqf_list.append(os.path.join(root, filename))
+    for root, dirnames, filenames in os.walk(scan_root):
+      dirnames[:] = [name for name in dirnames if name not in ignored_directories]
+      for filename in filenames:
+        if Path(filename).suffix.lower() in {".cpp", ".hpp", ".ext", ".sqm"}:
+          sqf_list.append(os.path.join(root, filename))
 
     for filename in sqf_list:
         bad_count = bad_count + check_config_style(filename)

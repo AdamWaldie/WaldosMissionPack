@@ -1,0 +1,12 @@
+private _root = missionNamespace getVariable ["Waldo_QA_Root", ""];
+if (_root == "") exitWith {diag_log "WMP FULL AUDIT FAIL: bootstrap root missing";};
+call compile preprocessFileLineNumbers (_root + "generatedFunctions.sqf");
+call compile preprocessFileLineNumbers (_root + "auditCommon.sqf");
+missionNamespace setVariable ["Waldo_QA_LocalResults", []];
+missionNamespace setVariable ["Waldo_QA_Suite", missionNamespace getVariable ["Waldo_QA_BootSuite", "all"]];
+["BOOT", missionNamespace getVariable ["Waldo_QA_Suite", "all"], productVersion] call Waldo_QA_fnc_emit;
+private _group = createGroup west;
+private _unit = _group createUnit ["B_Soldier_F", [0,0,0], [], 0, "NONE"];
+selectPlayer _unit;
+[] execVM (_root + "runServerAudit.sqf");
+[] execVM (_root + "runClientAudit.sqf");

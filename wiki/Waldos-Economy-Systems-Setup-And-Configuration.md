@@ -1,5 +1,9 @@
 _Associated Files: `init.sqf`, `initServer.sqf`, `economyConfig.sqf`, `Waldo_fnc_EcoInit`, `Waldo_fnc_EcoCore_applyMakerConfig`_
 
+| Catalog authoring | Mission setup builder |
+|---|---|
+| ![Resource catalog authoring](images/economy/economy-resource-config.png) | ![Economy mission setup builder](images/economy/economy-builder.png) |
+
 This page covers every way to enable and configure [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) — from a one-line toggle to a fully hand-authored economy baked into the mission file. Everything here is applied once on the server and broadcast, so **JIP and rejoining players inherit the configured economy automatically**.
 
 > **Zeus Enhanced is required for the in-Zeus menu.** Every operator action is a **ZEN custom module** in the Zeus module list under the single category **"Waldos Economy Systems"**. Modules are named `System - Action`, so the tutorial paths on the other pages map directly: e.g. "**Waldos Economy Systems → Resource → Configure Resources**" is the module **`Resource - Configure Resources`**, and "**Research → Create Research Center**" is **`Research - Create Research Center`**. Placement modules (create crate/zone/research center, spawn building/vehicle/laptop, set drop point) spawn at the point where you drop the module on the map. Without ZEN the economy still runs on the server, but there is no in-Zeus menu.
@@ -56,7 +60,15 @@ Define catalogs and place world objects with the server-side helpers:
 [getMarkerPos "eco_research_1"] call Waldo_fnc_EcoResearch_spawnResearchCenter;
 ```
 
-**Tip — build it in Zeus, then bake it in:** configure everything live in Zeus, use the **Export** tool to copy the configuration string, then paste it into `Waldo_Economy_ConfigString`. The exact setup then loads automatically every time the mission runs.
+**Build it in Zeus, then bake it into the mission:** use the normal Resource, Research, Construction and Purchasing Zeus modules to configure and place the system visually. Then open **Configuration: Build Mission Setup**, select the systems to include, and press **BUILD + COPY**. The generated, pre-filled public setup calls are copied to the clipboard immediately. Paste them into the mission root `economyConfig.sqf`; no array editing or manual argument reconstruction is required.
+
+The generated recipe preserves the authoring result: resource definitions, initial side balances and marker visibility; research, construction and purchasing catalogues; and the current resource zones, uncollected resource crates, research centres, construction sources, completed economy buildings, delivery points and purchase terminals. Calls are emitted in dependency order so the catalogues exist before their placed equipment is created.
+
+Export from a clean authoring session before normal play begins. The exporter records the current world positions, directions, classes and economy tags; it is not intended to turn an in-progress campaign save into mission source. Keep `Waldo_Economy_Enable = true` in `init.sqf`.
+
+Use **Config Copy** only when you need the older portable catalogue string for `Waldo_Economy_ConfigString` in `initServer.sqf` or for **Import**. Older exported configuration strings remain compatible.
+
+The builder explains the copy-and-paste workflow inside the display. It owns mouse and keyboard focus while open and does not dismiss unrelated WMP notifications.
 
 ## 4. Designate editor-placed objects (no mod needed)
 

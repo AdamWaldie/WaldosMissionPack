@@ -1,0 +1,3 @@
+1.Search for "User texture" in 3den.
+2. Open Attributes of the user texture & scroll to bottom
+3. type in the path to the file you want - e.g. UnitInsignias\1-1.paa

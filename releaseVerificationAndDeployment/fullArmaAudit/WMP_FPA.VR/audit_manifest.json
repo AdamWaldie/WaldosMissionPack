@@ -1,0 +1,120 @@
+{
+  "schema": 1,
+  "range": {"from_pr": 21, "through_pr": 32},
+  "suites": [
+    {
+      "id": "core",
+      "prs": [21, 22, 23, 24, 26, 27, 28],
+      "cases": [
+        "core/functions/registered",
+        "client/startup/full-pack-init",
+        "core/loadout/unique-array",
+        "core/loadout/side-array",
+        "core/loadout/save-point",
+        "core/objective/create-update",
+        "core/aar/register-ledger",
+        "core/safestart/activate-lift",
+        "core/safestart/countdown-auto-lift",
+        "core/zen/all-module-families",
+        "core/zen/icons-present",
+        "core/diagnostics/clean",
+        "core/loading/version-artwork",
+        "core/convoy/api",
+        "core/paradrop/settings",
+        "core/vvd/api",
+        "core/logistics/vvd-lock-token"
+      ]
+    },
+    {
+      "id": "economy",
+      "prs": [25, 27, 29, 30],
+      "cases": [
+        "economy/disabled/dormant",
+        "economy/preset/low",
+        "economy/preset/medium",
+        "economy/preset/high",
+        "economy/resource/lifecycle",
+        "economy/integration/local-ace-actions",
+        "economy/integration/action-adapter-executes",
+        "economy/resource/full-crate-consumed",
+        "economy/research/prerequisites",
+        "economy/build/lifecycle",
+        "economy/buy/lifecycle",
+        "economy/ground-command/permissions",
+        "economy/config/export-import",
+        "economy/commitment/toggle",
+        "economy/zen/registration",
+        "economy/zen/server-forwarding",
+        "economy/purge/guard",
+        "economy/jip/public-state",
+        "economy/vvd/owner-purge"
+      ]
+    },
+    {
+      "id": "ew",
+      "prs": [31],
+      "cases": [
+        "ew/registry/create-update-toggle-remove",
+        "ew/factor/range-falloff",
+        "ew/factor/sides-bands-cone",
+        "ew/factor/duty-cycle",
+        "ew/factor/los-burnthrough-curves",
+        "ew/acre/pass-through-and-attenuation",
+        "ew/tfar/pass-through-and-attenuation",
+        "ew/hud/enter-update-clear",
+        "ew/jammer/ace-actions-destruction",
+        "ew/scanner/bearing-range",
+        "ew/uav/degrade-sever-restore",
+        "ew/emp/apply-immune-restore",
+        "ew/tracker/privacy-move-remove",
+        "ew/zen/modules",
+        "ew/jip/registry"
+      ]
+    },
+    {
+      "id": "party",
+      "prs": [32],
+      "cases": [
+        "party/catalogue/twelve-games",
+        "party/integration/ace-exclusive-actions",
+        "party/integration/preserves-foreign-actions",
+        "party/authority/leave-active-new-games",
+        "party/lobby/join-vote-ready-leave",
+        "party/network/stale-duplicate-malformed",
+        "party/privacy/hidden-state",
+        "party/jip/spectator-reconnect",
+        "party/departure/table-delete",
+        "party/battleship/rules",
+        "party/whoswho/rules",
+        "party/shotgun/rules",
+        "party/blackjack/rules",
+        "party/holdem/rules-sidepots",
+        "party/drawpoker/rules-sidepots",
+        "party/liarsdice/rules-wildones",
+        "party/chess/rules",
+        "party/checkers/rules",
+        "party/connectfour/rules-bestofthree",
+        "party/rps/rules",
+        "party/uno/rules"
+      ]
+    },
+    {
+      "id": "interactions",
+      "prs": [32],
+      "cases": [
+        "interactions/catalogue/ten-procedures",
+        "interactions/difficulty/forty-mechanics",
+        "interactions/outcomes/success-failure-timeout-abort",
+        "interactions/input/mouse-keyboard-wheel-drag",
+        "interactions/accessibility/presentation-modes",
+        "interactions/textures/default-and-four-presets",
+        "interactions/integration/ace-exclusive-with-vanilla-fallback",
+        "interactions/integration/ace-action-condition",
+        "interactions/authority/server-condition-rejection",
+        "interactions/state/exclusive-authoritative",
+        "interactions/state/retry-reset-abandon-jip",
+        "interactions/ui/layout-resolution-matrix"
+      ]
+    }
+  ]
+}

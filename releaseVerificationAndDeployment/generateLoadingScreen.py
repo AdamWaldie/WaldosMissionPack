@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Author: Waldo
+Author: WaldoTheWarfighter
 Generates the WaldosMissionPack cover/loading screen (Pictures/loading.jpg) by
 rendering the "WALDO'S MISSION PACK" title and the current version number onto a
 text-free base image with the bundled Stardos Stencil font.

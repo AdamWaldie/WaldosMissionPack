@@ -9,6 +9,7 @@ import tempfile
 import json
 import glob
 import fileinput
+import zipfile
 
 """
 This build script was written by Andras Brostrom - andreas.brostrom.ce@gmail.com
@@ -48,6 +49,41 @@ parser.add_argument("--color",
 parser.add_argument('-v', '--version', action='version', version='Author: Andreas Broström <andreas.brostrom.ce@gmail.com>\nScript version: {}'.format(__version__))
 
 args = parser.parse_args()
+
+FORBIDDEN_RELEASE_PARTS = {
+    '.git', '.github', '.qa', '.codex', '.agents', '__pycache__',
+    'release', 'releaseVerificationAndDeployment', 'wiki',
+}
+FORBIDDEN_RELEASE_SUFFIXES = {'.pyc', '.pyo', '.rpt', '.log'}
+
+
+def validate_release_tree(root):
+    """Fail closed if development, QA, generated, or runtime-log files entered a build."""
+    findings = []
+    for path in glob.glob(os.path.join(root, '**'), recursive=True):
+        relative = os.path.relpath(path, root)
+        if relative == '.':
+            continue
+        parts = set(relative.replace('\\', '/').split('/'))
+        suffix = os.path.splitext(relative)[1].lower()
+        if parts.intersection(FORBIDDEN_RELEASE_PARTS) or suffix in FORBIDDEN_RELEASE_SUFFIXES:
+            findings.append(relative)
+    if findings:
+        printC('ERROR:', color='\033[31m', end=' ')
+        print('forbidden release content was staged: {}'.format(', '.join(sorted(findings))))
+        raise RuntimeError('release content validation failed')
+
+
+def validate_archive(path):
+    with zipfile.ZipFile(path) as archive:
+        findings = []
+        for name in archive.namelist():
+            parts = set(name.strip('/').split('/'))
+            suffix = os.path.splitext(name)[1].lower()
+            if parts.intersection(FORBIDDEN_RELEASE_PARTS) or suffix in FORBIDDEN_RELEASE_SUFFIXES:
+                findings.append(name)
+        if findings:
+            raise RuntimeError('forbidden archive content: {}'.format(', '.join(sorted(findings))))
 
 
 def printC(string='', color='\033[0m', sep=' ', end='\n'):
@@ -213,7 +249,9 @@ def make_archive(name='', version='', hash=''):
     name = '{}-{}'.format(name, version)
 
     archive_type = 'zip'
-    shutil.make_archive(os.path.join(releaseFolder, name), archive_type, tmpFolder)
+    archive_path = shutil.make_archive(os.path.join(releaseFolder, name), archive_type, tmpFolder)
+    validate_archive(archive_path)
+    print('Verified release archive contents: {}'.format(archive_path))
 
 
 def main():
@@ -230,7 +268,8 @@ def main():
         config           = json.load(main_config)
         config_name      = config['build']['scriptName']
         config_version   = config['build']['version']
-        config_notlist   = config['build']['notlist']
+        config_include   = config['build'].get('include')
+        config_notlist   = config['build'].get('notlist', [])
     
     if args.build:
         with open(os.path.join(scriptRoot, args.build)) as build_config:
@@ -239,6 +278,8 @@ def main():
                 config_name      = config['build']['scriptName']
             if config['build'].get('version'):
                 config_version   = config['build']['version']
+            if config['build'].get('include'):
+                config_include   = config['build']['include']
             if config['build'].get('notlist'):
                 config_notlist   = config['build']['notlist']
 
@@ -252,10 +293,16 @@ def main():
     # Collect directoies and files
     file_collection = []
     dir_collection  = []
-    for obj in glob.glob(os.path.join(ProjectRoot, '*')):
+    candidates = ([os.path.join(ProjectRoot, item) for item in config_include]
+                  if config_include else glob.glob(os.path.join(ProjectRoot, '*')))
+    for obj in candidates:
         objName = os.path.basename(obj)
         if objName in config_notlist:
             continue
+        if not os.path.exists(obj):
+            printC('ERROR:', color='\033[31m', end=' ')
+            print("required release path '{}' does not exist".format(objName))
+            sys.exit(1)
         if os.path.isdir(obj):
             dir_collection.append(obj)
         if os.path.isfile(obj):
@@ -281,6 +328,8 @@ def main():
         manipulate_build(config)
 
     write_header_file([config_name, config_version, git_branch_name, git_commit_lhash])
+
+    validate_release_tree(tmpFolder)
 
 
     check_or_create_folder(releaseFolder)
