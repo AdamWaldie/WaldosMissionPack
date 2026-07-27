@@ -1,5 +1,7 @@
 # Tactical Command Uplink
 
+> **Use this page when:** you are configuring or operating the directional command-entry procedure.
+
 The `commandinput` procedure is a directional command-entry console inspired by field support and terminal authorization interfaces.
 
 | Operating card | Active uplink |
@@ -27,3 +29,7 @@ Difficulty increases packet length and round count while reducing the fault allo
 Valid configuration: `[baseLength(3-8,4), rounds(1-6,3), maxMistakes(1-6,3), timeLimit(45), title("TACTICAL UPLINK")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

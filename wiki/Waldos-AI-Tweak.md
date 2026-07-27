@@ -1,3 +1,7 @@
+# Waldo's AI Tuning
+
+> **Use this page when:** you need to choose and configure WMP's day or night AI behavior adjustments.
+
 _Associated Files: MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf_
 
 This script adjusts AI sub-skill values to create a more responsive and balanced PvE experience. When used alongside LAMBS Danger, it unlocks additional AI behaviours that make enemies more dynamic while remaining manageable.
@@ -81,3 +85,7 @@ Units spawned by Zeus during the mission automatically receive the same skill pr
 ## LAMBS Danger Integration
 
 When LAMBS Danger is loaded, AI will trigger a broader range of tactical behaviours (flanking, suppression, bounding overwatch). WMP's elevated `general` and `commanding` values are tuned specifically to complement LAMBS — the combination produces more tactically varied AI without making them unfairly lethal.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

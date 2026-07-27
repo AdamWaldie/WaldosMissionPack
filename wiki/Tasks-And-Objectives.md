@@ -1,12 +1,16 @@
+# Tasks and Objectives
+
+> **Use this page when:** you need server-authoritative, JIP-safe objective creation and resolution.
+
 _Associated Files: `MissionScripts\MissionFlowAndUi\createObjective.sqf`, `setObjectiveState.sqf`, `Waldo_fnc_CreateObjective`, `Waldo_fnc_SetObjectiveState`_
 
-# Tasks / Objectives
+## Tasks / Objectives
 
 A thin, JIP-safe wrapper over Arma's BIS task framework for mission makers who like to drive objectives from **SQF or triggers** rather than the Eden / Zeus task modules (those remain the GUI option). It creates assigned tasks, optionally drops a persistent map marker at the destination, and tidies the marker away when the task resolves.
 
 Both helpers are **server-authoritative** — calling them on a client forwards to the server automatically, so joining players always see the correct task state.
 
-As a bonus, every objective created or resolved through these helpers is recorded in the **After-Action Report** objective ledger, so the [ENDEX](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) debrief can show an objective summary with no extra work.
+As a bonus, every objective created or resolved through these helpers is recorded in the **After-Action Report** objective ledger, so the [ENDEX](ENDEX-Script-&-Custom-End-Screen) debrief can show an objective summary with no extra work.
 
 ## Creating an objective
 
@@ -61,5 +65,9 @@ When the state becomes `SUCCEEDED`, `FAILED` or `CANCELED`, the helper-created m
 
 ## See also
 
-* [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) — the After-Action Report reads the objective ledger these helpers maintain
-* [Mission UI Text Overlays](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-UI-Text-Overlays) — on-screen text to accompany objectives
+* [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) — the After-Action Report reads the objective ledger these helpers maintain
+* [Mission UI Text Overlays](Mission-UI-Text-Overlays) — on-screen text to accompany objectives
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

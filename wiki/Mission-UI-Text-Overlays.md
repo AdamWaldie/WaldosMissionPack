@@ -1,3 +1,7 @@
+# Mission UI Text Overlays
+
+> **Use this page when:** you need dynamic text, timed notifications, or respawn text outside a full dialog.
+
 _Associated Files:_
 - _MissionScripts\MissionFlowAndUi\dynamicText.sqf_
 - _MissionScripts\MissionFlowAndUi\timeBasedhint.sqf_
@@ -90,3 +94,7 @@ If you need to trigger the respawn text outside of the respawn flow:
 - Waits until the player object exists and the mission clock is running before displaying, avoiding errors on initial load
 - Grid position reflects where the player actually spawned
 - The animated display uses `BIS_fnc_typeText` for the typewriter effect
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

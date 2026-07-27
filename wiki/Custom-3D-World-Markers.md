@@ -1,6 +1,9 @@
+# Custom 3D World Markers
+
+> **Use this page when:** you need JIP-safe world-space labels or icons attached to objects or positions.
+
 _Associated Files: `MissionScripts\MissionFlowAndUi\create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf`, `Waldo_fnc_Create3DMarker`, `Waldo_fnc_Remove3DMarker`_
 
-# Custom 3D World Markers
 
 WMP can place custom icon-and-text markers directly over objects or world
 positions. Markers are server-owned, broadcast to every client and immediately
@@ -54,3 +57,7 @@ the server automatically.
 Use stable, mission-specific IDs. Always pair colour with meaningful text and
 an appropriate icon so the marker remains understandable for colourblind
 players.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

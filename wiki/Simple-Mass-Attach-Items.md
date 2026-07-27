@@ -1,6 +1,9 @@
+# Simple Mass Attach Items
+
+> **Use this page when:** you need to attach multiple synchronized objects to a parent object in Eden.
+
 _Associated Files: `MissionScripts\Logistics\LogiHelpers\massAttachItems.sqf`, `Waldo_fnc_MassAttachRelative`_
 
-# Simple Mass Attach Items
 
 Attaches a whole group of editor-placed objects to one "parent" object in a single call, keeping each item's **relative position** to the parent. Use it to bolt scenery, cargo, decoration or props onto a vehicle (or any object) so they travel with it — sandbags on a truck, jerry cans on a quad, crates lashed to a boat, and so on.
 
@@ -30,10 +33,14 @@ The script finds the nearest Logic to the parent, reads everything synced to it,
 ## Notes
 
 * Attachment uses `BIS_fnc_attachToRelative`, so objects keep the exact offset/rotation you placed them at.
-* For a single **mannable** weapon with get-in actions, use [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name) instead — this function is for static/decorative attachments.
+* For a single **mannable** weapon with get-in actions, use [Weapon Mounting With Custom Name](Weapon-Mounting-With-Custom-Name) instead — this function is for static/decorative attachments.
 
 ## See also
 
-* [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name)
-* [Mobile Command Post](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System) — also uses the synced-Logic pattern for deployable objects
-* [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
+* [Weapon Mounting With Custom Name](Weapon-Mounting-With-Custom-Name)
+* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) — also uses the synced-Logic pattern for deployable objects
+* [Construction Objects](Construction-Objects)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

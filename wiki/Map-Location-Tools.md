@@ -1,3 +1,7 @@
+# Map Location Tools
+
+> **Use this page when:** you need to create a map location or replace an existing location name.
+
 _Associated Files:_
 - _MissionScripts\Logistics\LogiHelpers\createNewMapLocation.sqf_
 - _MissionScripts\Logistics\LogiHelpers\replaceMapLocationName.sqf_
@@ -81,3 +85,7 @@ Only types defined in `CfgLocationTypes` will display correctly. Commonly used t
 | `n_hq` | Independent HQ marker icon |
 
 > The full list of available location types is documented inside both `.sqf` files as a commented reference block.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

@@ -1,4 +1,8 @@
-# AutoFortifySetup Function
+# Automatic ACE Fortify Setup
+
+> **Use this page when:** you want synchronized editor objects converted into an ACE Fortify budget and build catalogue.
+
+## AutoFortifySetup Function
 
 ## Description
 
@@ -48,4 +52,8 @@ ACE Fortify Budget Function can be used to update the given sides budget.
 
 ## Zeus Budget Module
 
-I have also created a ZEN module which allows you to do this via Zeus during the mission if desired. You can find out how it works on the [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules) page.
+I have also created a ZEN module which allows you to do this via Zeus during the mission if desired. You can find out how it works on the [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) page.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

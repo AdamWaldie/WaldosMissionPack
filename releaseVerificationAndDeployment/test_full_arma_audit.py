@@ -65,6 +65,19 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("WMP_Compositions", included)
         self.assertNotIn("UnitInsignias", included)
 
+    def test_wiki_sync_publishes_assets_not_only_markdown(self):
+        workflow = (ROOT / ".github" / "workflows" / "wiki-sync.yml").read_text(encoding="utf-8")
+        self.assertIn("rsync -a --delete", workflow)
+        self.assertIn("check_wiki_assets.py", workflow)
+        self.assertIn("wiki_style_checker.py", workflow)
+        self.assertNotIn("cp wiki/*.md", workflow)
+
+    def test_wiki_structure_is_validated_in_ci(self):
+        workflow = (ROOT / ".github" / "workflows" / "testing.yml").read_text(encoding="utf-8")
+        self.assertIn("wiki_style_checker.py", workflow)
+        checker = ROOT / "releaseVerificationAndDeployment" / "wiki_style_checker.py"
+        self.assertTrue(checker.is_file())
+
     def test_patch_filter_uses_standard_release_allowlist(self):
         allowed = {"MissionScripts", "Pictures", "description.ext"}
         self.assertTrue(RELEASE_FILTER.releasable("MissionScripts/Test.sqf", allowed))
@@ -393,6 +406,13 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("MiniGameInteractionNotifyClient", resolver)
         self.assertIn('isNil "CBA_fnc_globalEvent"', resolver)
         self.assertIn("_boom setDamage 1", bomb)
+        self.assertIn("Waldo_fnc_MiniGameInteractionSetup", bomb)
+        self.assertIn('["difficulty", ["difficulty", "standard"] call _opt]', bomb)
+        self.assertIn('private _successVariable = ["successVariable", _legacyDefusedVariable] call _opt', bomb)
+        self.assertIn('private _challengeId = toLower (["challengeId"', bomb)
+        self.assertIn('[_object, _challengeId, _setup] call Waldo_fnc_MiniGameInteractionSetup', bomb)
+        self.assertNotIn('[_object, "wirecut", _setup] call Waldo_fnc_MiniGameInteractionSetup', bomb)
+        self.assertIn('["oneShot", _oneShot]', setup)
         self.assertIn("Waldo_fnc_EcoCore_canRunAuthority", resource)
         self.assertIn("WaldoEcoResource_CollectRequest", resource)
         self.assertIn("Deploy + Consume", build)

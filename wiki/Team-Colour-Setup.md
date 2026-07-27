@@ -1,3 +1,7 @@
+# Team Colour Setup
+
+> **Use this page when:** you want fireteam colours assigned from role descriptions or need the group and role helpers.
+
 _Associated Files: MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf_
 
 Automatically assigns players to ACE3 team colours at mission start based on their role description set in the Eden Editor. No per-unit configuration is required — the function reads each player's **Role Description** field and matches it to a colour.
@@ -77,3 +81,7 @@ private _roleName = call Waldo_fnc_GetPlayerRole;
 ```
 
 Both functions return an empty string (or `"Infantry"` for `GetPlayerRole`) in singleplayer.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

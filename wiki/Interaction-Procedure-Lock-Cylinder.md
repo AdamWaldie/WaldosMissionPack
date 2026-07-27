@@ -1,5 +1,7 @@
 # Cutaway Lock Cylinder
 
+> **Use this page when:** you are configuring or operating the tension-and-pin lock procedure.
+
 The `lockpick` procedure exposes the pin stacks, shear line, pick, tension state, and cylinder progress of a mechanical lock.
 
 | Operating card | Active cylinder |
@@ -26,3 +28,7 @@ Difficulty increases pin count, narrows the set window, shortens the time limit,
 Valid configuration: `[pins(1-6,3), sweepPeriod(2.8), sweetSpotWidth(0.16), timeLimit(0), title("LOCK CYLINDER")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

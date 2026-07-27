@@ -1,3 +1,7 @@
+# Vehicle Actions and Paradrop
+
+> **Use this page when:** you need vehicle interactions, static-line or HALO jumps, and their equipment simulation settings.
+
 _Associated Files:_
 - _MissionScripts\VehicleActionsSetup_
 - _MissionScripts\Paradrop_
@@ -190,3 +194,7 @@ Manually configure the ACE cargo space, cargo size, drag and carry settings for 
 [myCrate, -1, 2, true, false] call Waldo_fnc_SetCargoAttributes; // size 2, draggable only
 [myCrate, nil, nil, true, false] call Waldo_fnc_SetCargoAttributes; // only set drag/carry
 ```
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

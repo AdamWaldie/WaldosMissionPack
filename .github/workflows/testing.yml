@@ -16,6 +16,10 @@ jobs:
       run: python3 releaseVerificationAndDeployment/drawn_ui_checker.py
     - name: Validate Zeus and script API parity
       run: python3 releaseVerificationAndDeployment/zeus_script_parity_checker.py
+    - name: Validate wiki image references
+      run: python3 releaseVerificationAndDeployment/check_wiki_assets.py
+    - name: Validate wiki structure and navigation
+      run: python3 releaseVerificationAndDeployment/wiki_style_checker.py
     - name: Test interaction equipment UI checker
       working-directory: releaseVerificationAndDeployment
       run: python3 -m unittest -v test_interaction_ui_checker.py

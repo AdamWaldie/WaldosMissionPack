@@ -1,3 +1,7 @@
+# Unit Insignias
+
+> **Use this page when:** you need to apply, add, or integrate custom unit insignias with WMP.
+
 _Associated Files: UnitInsignias\_
 
 WMP includes a set of pre-made unit insignia textures (`.paa` files) in the `UnitInsignias/` folder. These can be applied to player characters in Eden using Arma 3's built-in **User Texture** object.
@@ -34,4 +38,8 @@ Recommended resolution: 512×512 or 256×256. The texture is applied as an insig
 
 ## VVD Insignia Integration
 
-The [Virtual Vehicle Depot](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot) garage interface also supports applying unit insignias to spawned vehicles where the vehicle model supports it.
+The [Virtual Vehicle Depot](Virtual-Vehicle-Depot) garage interface also supports applying unit insignias to spawned vehicles where the vehicle model supports it.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

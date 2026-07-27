@@ -1,3 +1,7 @@
+# Mission-Maker Resource Scripts
+
+> **Use this page when:** you need the smaller arsenal, damage-monitor, unhiding, or config-inspection helpers.
+
 _Associated Files: MissionScripts\MissionMakerResourceScripts\_
 
 These scripts are **development and debugging tools** for the mission maker's use during production. They are not part of the runtime mission framework and should not be called in live missions.
@@ -26,7 +30,7 @@ Generates a ready-to-paste ACE Arsenal items array from the loadouts of all play
 [this, ["item1","item2","itemN"]] call ace_arsenal_fnc_addVirtualItems;
 ```
 
-> This method is best for highly curated loadout pools. For mission packs with standard player loadouts, use the automatic [Logistics System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster) instead.
+> This method is best for highly curated loadout pools. For mission packs with standard player loadouts, use the automatic [Logistics System](Logistics-System,-Starter-Crates-And-Quartermaster) instead.
 
 ---
 
@@ -96,3 +100,7 @@ If you are writing a guard for a mod whose patch name you do not know, run this 
 1. Load a session with the mod active.
 2. Open the debug console, paste the script, and click **Local Execute**.
 3. Open your Arma 3 log file (typically `%LOCALAPPDATA%\Arma 3\` or the game directory) and search for the mod name.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

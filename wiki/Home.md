@@ -1,57 +1,81 @@
-![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
-<p align="center">Welcome to the Waldos Mission Pack Wiki!</p>
+# Waldos Mission Pack Wiki
 
-# About The Pack
-This project was initially envisioned as an easy-to-access, flexible alternative for new mission makers. Requiring little knowledge of the Arma 3 engine, mission makers can use this pack and its associated features to enrich their missions without expending the level of effort required to see what's behind the proverbial curtain.
+> **Use this page when:** you are choosing where to begin or looking for the main WMP feature areas.
 
-Created initially for the mission makers of the Rooster Teeth Discord Arma group, this pack is in continued use by at least forty known units from all corners of the milsimsphere due to its unrestricted versatility and its relative ease of use. In its spread, it is hoped that this pack will act as a bridge to guide people through the basics of mission-making and support experienced mission-makers to a higher degree.
+![Waldos Mission Pack](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
 
-The pack has two aims:
-1. To provide an easy-to-use and supportive pack of functions and compositions to help newer, or less programmatically inclined, members of the mission maker community
-2. To provide extensive documentation to assist in understanding the pack and, if so desired, the wider Arma programming world. A specific choice was made to tailor the pack so that it is as easy as possible to read and reverse engineer at the expense of some efficiency. This shouldn't be impactful in any meaningful way.
+Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers who want reliable logistics, mission flow, radio, Zeus, economy, interaction, and quality-of-life systems without rebuilding them for every operation. CBA and ACE are required; supported integrations include ACRE2, TFAR, Zeus Enhanced, and LAMBS.
 
-# Quickstart Guide and Tutorials
-I maintain this wiki regularly and keep it updated with tutorials on the vast majority of features in the pack and provide a quickstart guide:
-* [Quickstart Guide ](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide)
-* [Feature Tutorials](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials)
-* [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
-* [Zeus and Script API Parity](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Zeus-And-Script-API-Parity) - which Zeus tools call public APIs directly, which use authoring adapters, and what still requires in-engine acceptance.
+## Start here
 
-# Pack Features
-- Loadout saving and respawn system
-- Automatic ACRE2 Radio setup and respawn handling - based on mission makers specification in init.sqf
-- [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) - localised area-denial jamming with terrain LOS, burn-through, directional cones, UAV/drone jamming, destructible emitters and a loud "not a bug" HUD.
-- [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers) - a one-shot EMP burst and C-Track style map trackers.
-- Custom loadout & logistics system which scrapes the kits of all playable characters to fulfil base logistical needs - such as starter crates and supply crates. (Disable scenario Binarization, and edit loadouts via ACE Arsenal to ensure 100% satisfaction)
-- Vehicle Ambush/Camo scripts.
-- Vehicle unflipping actions
-- Simple AI convoy script expanded and enhanced from Tovas original.
-- Teleportation Script
-- Endex & Safestart Scripts
-- Custom Zeus Enhanced modules for in-game access to the logistics system and ENDEX scripts.
-- [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus menu. Drop a preset composition and you have a working RTS-style economy in seconds.
-- [Custom 3D World Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers) - JIP-safe icon-and-text markers anchored to any object or world position.
-- [Custom WMP UI Notifications](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications) - safe-zone-aware mission cards with accessible states, channel ownership, stacking, FIFO delivery and local recovery.
-- [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) - twelve seated multiplayer party games plus ten [field-equipment interaction procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges), including EOD, access, repair, radio, hydraulic, and command systems.
-- HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
-- [WIP] Virtual Vehicle Deployment Garage
-- Extensively documented files to learn how it works, and make use of this pack!
-- Mission Pack Compositions to hasten the learning and mission building process
-- [Radio Reports, Checklists, Support Calls And Documentation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
+| What you want to do | Open this page |
+|---|---|
+| Install WMP in a mission | [Quickstart Guide](Quickstart-Guide) |
+| Find a feature | [Feature Index](Feature-Tutorials) |
+| Configure mission entry files | [Mission Configuration Reference](Mission-Configuration-Reference) |
+| Place or configure Zeus modules | [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) |
+| Translate Zeus setup into script | [Zeus and Script API Parity](Zeus-And-Script-API-Parity) |
+| Diagnose a setup or runtime problem | [Mission Diagnostics](Mission-Diagnostics) |
 
-# Required Addons
-- CBA_A3
-- ACE 3
+## Main feature areas
 
-# Supported Addons
-- ACRE 2
-- TFAR (Inherrent support via 3Eden)
-- Zeus Enhanced & Compat
-- LAMBS Series of mods
-- All unit mods compatible
+### Mission flow and player UI
 
-***
+- [Safestart](Safestart) — preparation protection, countdown, go-live, and reset behavior.
+- [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) — combat protection, AAR, and mission-end presentation.
+- [Custom UI Notifications](Custom-UI-Notifications) — safe-zone-aware semantic notification cards.
+- [Tasks and Objectives](Tasks-And-Objectives) — server-authoritative, JIP-safe mission objectives.
+- [Custom 3D World Markers](Custom-3D-World-Markers) — JIP-safe labels and icons over objects or positions.
 
-<p align="center"><a href="https://www.buymeacoffee.com/thewaldo123" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a></p>
+### Logistics and deployment
 
-<p align="center">This pack is presently maintained solely by Waldo.</p>
+- [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
+- [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
+- [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
+- [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
+
+### Economy and base building
+
+- [Economy Systems](Waldos-Economy-Systems) — Resource, Research, Build, Buy, and Ground Command.
+- [Economy Setup and Configuration](Waldos-Economy-Systems-Setup-And-Configuration) — presets, scripted setup, and Zeus-to-script export.
+- [Automatic ACE Fortify Setup](Automatic-ACE-Fortify-Setup)
+- [Construction Objects](Construction-Objects)
+
+### Electronic warfare and radio
+
+- [Radio Jamming](Radio-Jamming) — ACRE2/TFAR interference, UAV effects, and Zeus controls.
+- [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers)
+- [ACRE2 Radio Setup](ACRE-2-Long-Range-Radio-Presetting)
+- [ACRE2 Babel](ACRE2-Babel-Configuration)
+
+### Games and field equipment
+
+- [Waldos Mini Games](Waldos-Mini-Games) — the table-game and field-equipment hub.
+- [Table Games](Waldos-Mini-Games-Table-Games) — twelve seated multiplayer games.
+- [Interaction Procedures](Waldos-Mini-Games-Interaction-Challenges) — ten accessible equipment procedures.
+- [Bomb Defusal](Bomb-Defusal) — pair any procedure with an authoritative explosive consequence.
+
+### AI and mission-maker tools
+
+- [Waldo's AI Tuning](Waldos-AI-Tweak)
+- [AI Convoy System](AI-Convoy-System)
+- [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts)
+- [Coding and Documentation Standards](Coding-Standards)
+
+## Requirements
+
+| Type | Add-ons |
+|---|---|
+| Required | CBA_A3, ACE 3 |
+| Supported | ACRE2, TFAR, Zeus Enhanced and compatibility add-ons, LAMBS series |
+
+Features that depend on an optional add-on remain dormant when that integration is not loaded unless their page states otherwise.
+
+## Project aim
+
+WMP is intended to be approachable enough for a new mission maker and transparent enough for an experienced author to inspect, adapt, and extend. Public setup calls, configuration, locality, diagnostics, and known limitations are documented so a mission does not depend on unexplained editor state.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

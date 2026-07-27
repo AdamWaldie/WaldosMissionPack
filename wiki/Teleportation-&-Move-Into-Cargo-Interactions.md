@@ -1,6 +1,10 @@
+# Teleportation and Move-Into-Cargo Interactions
+
+> **Use this page when:** you need discoverable ACE or vanilla actions that move players or load them into vehicles.
+
 _Associated Files: `MissionScripts\Logistics\LogiHelpers\teleport.sqf` (`Waldo_fnc_Teleport`), `MissionScripts\Paradrop\moveInCargoPlane.sqf` (`Waldo_fnc_MoveInCargoPlane`)_
 
-# Teleportation & Move-Into-Cargo Interactions
+## Teleportation & Move-Into-Cargo Interactions
 
 Two small "get me there" helpers, grouped here for convenience. Both add a scroll-wheel **addAction** to an object:
 
@@ -59,6 +63,10 @@ The aircraft must have a **variable name** to be referenced.
 
 ## See also
 
-* [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop) — the HALO / static-line jump system you'd board the aircraft for
-* [Map Location Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Map-Location-Tools) — create named map locations to teleport to
-* [Mobile Command Post](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System)
+* [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop) — the HALO / static-line jump system you'd board the aircraft for
+* [Map Location Tools](Map-Location-Tools) — create named map locations to teleport to
+* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

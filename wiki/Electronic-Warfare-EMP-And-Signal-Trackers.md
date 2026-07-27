@@ -1,12 +1,15 @@
-_Associated Files: `MissionScripts\MissionInit\ElectronicWarfare\emp.sqf`, `empApply.sqf`, `empImmune.sqf`, `tracker.sqf`, `trackerRemove.sqf`, `trackerRender.sqf`, `trackerAttach.sqf`, `MissionScripts\ZenModules\Zen_empModule.sqf`, `Zen_trackerModule.sqf`, `Waldo_fnc_EMP`, `Waldo_fnc_EMPImmune`, `Waldo_fnc_Tracker`, `Waldo_fnc_TrackerAttach`_
-
 # Electronic Warfare: EMP and Signal Trackers
 
-Two self-contained electronic-warfare tools that sit alongside [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming): a one-shot **EMP burst** and C-Track style **signal trackers**. Both are scriptable and available as Zeus modules, and neither runs any background loop until you actually use it.
+> **Use this page when:** you need one-shot EMP effects or side-private signal trackers through scripts or Zeus.
+
+_Associated Files: `MissionScripts\MissionInit\ElectronicWarfare\emp.sqf`, `empApply.sqf`, `empImmune.sqf`, `tracker.sqf`, `trackerRemove.sqf`, `trackerRender.sqf`, `trackerAttach.sqf`, `MissionScripts\ZenModules\Zen_empModule.sqf`, `Zen_trackerModule.sqf`, `Waldo_fnc_EMP`, `Waldo_fnc_EMPImmune`, `Waldo_fnc_Tracker`, `Waldo_fnc_TrackerAttach`_
+
+
+Two self-contained electronic-warfare tools that sit alongside [Radio Jamming](Radio-Jamming): a one-shot **EMP burst** and C-Track style **signal trackers**. Both are scriptable and available as Zeus modules, and neither runs any background loop until you actually use it.
 
 ---
 
-# EMP Burst
+## EMP Burst
 
 An electromagnetic pulse disables electronics inside a radius for a set duration. It is the one-shot counterpart to a persistent jammer and runs no background loop while unused.
 
@@ -45,7 +48,7 @@ The module writes its parameters to the RPT for diagnostics and does not announc
 
 ---
 
-# Signal Trackers (C-Track)
+## Signal Trackers (C-Track)
 
 Plant a tracker on a unit or vehicle to show its live position to a chosen side. Only clients on that side draw the marker, so the target does not receive it.
 
@@ -82,6 +85,10 @@ A tracker also drops itself automatically when its target is killed or deleted.
 
 ## See also
 
-* [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming): persistent radio and UAV interference fields
-* [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
-* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)
+* [Radio Jamming (ACRE2 / TFAR)](Radio-Jamming): persistent radio and UAV interference fields
+* [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+* [Mission Configuration Reference](Mission-Configuration-Reference)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

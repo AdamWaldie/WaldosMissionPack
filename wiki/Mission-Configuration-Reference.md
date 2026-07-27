@@ -1,3 +1,7 @@
+# Mission Configuration Reference
+
+> **Use this page when:** you need the authoritative fields and variables used by WMP mission entry files.
+
 This page documents all the configuration fields and variables that mission makers are expected to customise before shipping a mission built on WMP. It covers `description.ext`, `init.sqf`, and `initServer.sqf`.
 
 ---
@@ -58,7 +62,7 @@ class CfgDebriefing {
 
 Trigger with: `["end1"] remoteExec ["BIS_fnc_endMission", 0, true];`
 
-See [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) for full details.
+See [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) for full details.
 
 ### Includes (do not remove)
 
@@ -114,7 +118,7 @@ missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marke
 missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false = start the mission live
 ```
 
-See [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart) for the go-live API and Zeus modules.
+See [Safestart](Safestart) for the go-live API and Zeus modules.
 
 ### Mission Diagnostics
 
@@ -124,11 +128,11 @@ Runs a read-only server-side configuration sanity check at mission start and rep
 missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];  // false = silence it for a shipping mission
 ```
 
-See [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics).
+See [Mission Diagnostics](Mission-Diagnostics).
 
 ### After-Action Report Tracking
 
-`initServer.sqf` calls `[] call Waldo_fnc_AARTrack;` to start lightweight event-driven tracking (duration, KIA, vehicle losses, friendly fire, fraggers) so the ENDEX popup can show an After-Action Report. Remove the line to disable the report. See [ENDEX & After-Action Report](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen).
+`initServer.sqf` calls `[] call Waldo_fnc_AARTrack;` to start lightweight event-driven tracking (duration, KIA, vehicle losses, friendly fire, fraggers) so the ENDEX popup can show an After-Action Report. Remove the line to disable the report. See [ENDEX & After-Action Report](ENDEX-Script-&-Custom-End-Screen).
 
 ---
 
@@ -143,7 +147,7 @@ Runs on **all clients and the server** during the loading screen transition. Ena
 // [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 ```
 
-See [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Third-Party-Scripts-Headless-Client-And-Player-Markers) for the options inside that file.
+See [Headless Client & Player Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers) for the options inside that file.
 
 ### Zeus Enhanced Modules
 
@@ -160,7 +164,7 @@ if (Waldo_MiniGames_Enable) then {
 };
 ```
 
-Installs the seated multiplayer party-games engine. The single-player [interaction challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) (bomb defusal, hacking, lockpicking, etc.) register themselves on first use and are **not** affected by this flag. See [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games).
+Installs the seated multiplayer party-games engine. The single-player [interaction challenges](Waldos-Mini-Games-Interaction-Challenges) (bomb defusal, hacking, lockpicking, etc.) register themselves on first use and are **not** affected by this flag. See [Waldos Mini Games](Waldos-Mini-Games).
 
 ### ACE Corpse Traps (disabled by default)
 
@@ -172,7 +176,7 @@ if (Waldo_CorpseTraps_Enable) then {
 ```
 
 Set the flag to `true` to let players consume carried throwables and conceal them on corpses. The
-trap activates when somebody opens the corpse's inventory. See [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps).
+trap activates when somebody opens the corpse's inventory. See [ACE Corpse Traps](ACE-Corpse-Traps).
 
 ### ACE Drag/Carry Weight Limits
 
@@ -190,7 +194,7 @@ Tune these so players can drag and carry logistics crates in-game.
 // "NIGHT" call Waldo_fnc_AITweak; // uncomment for nighttime missions
 ```
 
-Only one should be active at a time. See [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak) for full detail.
+Only one should be active at a time. See [Waldos AI Tweak](Waldos-AI-Tweak) for full detail.
 
 ### ACRE2 Radio Setup
 
@@ -229,7 +233,7 @@ Position in the array = channel number. These names appear in the in-game CEOI d
 */
 ```
 
-Remove the `/*` and `*/` to enable. See [ACRE2 Babel Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration).
+Remove the `/*` and `*/` to enable. See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration).
 
 ### Radio Jamming (ACRE2 / TFAR)
 
@@ -245,9 +249,9 @@ missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true]; // opt in
 missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF scan detection range (m)
 ```
 
-On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) for the full API.
+On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](Radio-Jamming) for the full API.
 
-The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers).
+The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers).
 
 ### Introduction Text
 
@@ -298,4 +302,8 @@ Uncomment to automatically save the player's respawn loadout whenever they close
 }] call CBA_fnc_addEventHandler;
 ```
 
-See [Loadout Saving and Respawn](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Loadout-Saving-and-Respawn) for full details.
+See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) for full details.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

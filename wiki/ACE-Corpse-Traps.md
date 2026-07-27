@@ -1,5 +1,7 @@
 # ACE Corpse Traps
 
+> **Use this page when:** you want players to conceal throwable traps on bodies and need setup, multiplayer, or limitation guidance.
+
 Corpse traps let players conceal one of their carried throwables on a dead body. The next player
 to open that body's inventory releases the stored projectile at the corpse.
 
@@ -51,3 +53,7 @@ items are not shown.
   trap.
 - Deleted or cleaned-up corpses also delete their traps.
 - The system intentionally does not restrict corpses by faction or distinguish AI from players.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

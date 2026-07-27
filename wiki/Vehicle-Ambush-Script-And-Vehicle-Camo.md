@@ -1,6 +1,10 @@
+# Vehicle Ambush and Camo
+
+> **Use this page when:** you need a concealed vehicle that reveals itself when its ambush conditions are met.
+
 _Associated Files: `MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf`, `Waldo_fnc_VehicleCamoSetup` (script by Val & Waldo)_
 
-# Vehicle Ambush / Vehicle Camo
+## Vehicle Ambush / Vehicle Camo
 
 Lets a crew **conceal a vehicle for an ambush** by deploying a set of "camo" objects (foliage, netting, scenery) over it on demand, via an ACE action. While concealed, the crew may dismount and move a short distance around the vehicle disguised as civilians — until something blows the ambush.
 
@@ -46,6 +50,10 @@ Below is an example of a camo system set up in the Eden editor — the tank is t
 
 ## See also
 
-* [Simple Mass Attach Items](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items) — attach static objects to a vehicle permanently
-* [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
-* [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak) — tune how easily AI spot your ambush
+* [Simple Mass Attach Items](Simple-Mass-Attach-Items) — attach static objects to a vehicle permanently
+* [Construction Objects](Construction-Objects)
+* [Waldos AI Tweak](Waldos-AI-Tweak) — tune how easily AI spot your ambush
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

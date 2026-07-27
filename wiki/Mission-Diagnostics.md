@@ -1,6 +1,9 @@
+# Mission Diagnostics
+
+> **Use this page when:** you need structured server/client checks, feature state, or RPT evidence for a WMP setup.
+
 _Associated Files: `initServer.sqf`, `MissionScripts\MissionFlowAndUi\runDiagnostics.sqf`, `runDiagnosticsClient.sqf`, `diagnosticsReceiveClient.sqf`, `Waldo_fnc_RunDiagnostics`_
 
-# Mission Diagnostics
 
 Mission Diagnostics is a read-only health check for WaldosMissionPack. The server starts each run, checks authoritative configuration and runtime state, requests a local report from every connected player, then publishes one structured result for audit tools and JIP clients.
 
@@ -126,6 +129,10 @@ A client report is:
 
 ## See also
 
-- [Logistics System, Starter Crates And Quartermaster](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster)
-- [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)
-- [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop)
+- [Logistics System, Starter Crates And Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
+- [Mission Configuration Reference](Mission-Configuration-Reference)
+- [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

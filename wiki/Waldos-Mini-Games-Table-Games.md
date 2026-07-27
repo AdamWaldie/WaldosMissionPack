@@ -1,10 +1,14 @@
+# Waldos Mini Games: Table Games
+
+> **Use this page when:** you need to configure or play the twelve seated multiplayer table games.
+
 _Associated Files: `init.sqf`, `MissionScripts\MiniGames\miniGamesInit.sqf`, `MissionScripts\MiniGames\engine\config.sqf`, `MissionScripts\MiniGames\engine\core.sqf`, `MissionScripts\MiniGames\engine\games\`, `Waldo_fnc_MiniGamesInit`_
 
-# Waldos Mini Games — Table Games
+## Waldos Mini Games — Table Games
 
 Table games are the **multiplayer**, sit-down party games. Drop a supported table in the editor, and players standing near it get actions to take a seat, vote for a game and play together. Everything runs with the server as the authority and each player's screen as a thin client, and it is **JIP-safe** — players who join late get the system installed and can walk up and sit down.
 
-This is the [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) sub-page for the seated games. For solo challenges that gate an interaction, see [Interaction Challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges).
+This is the [Waldos Mini Games](Waldos-Mini-Games) sub-page for the seated games. For solo challenges that gate an interaction, see [Interaction Challenges](Waldos-Mini-Games-Interaction-Challenges).
 
 ## Setup
 
@@ -129,5 +133,9 @@ This engine is ported from the community composition **"Party Games Scripted"** 
 
 ## See also
 
-* [Waldos Mini Games (hub)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games)
-* [Interaction Challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges)
+* [Waldos Mini Games (hub)](Waldos-Mini-Games)
+* [Interaction Challenges](Waldos-Mini-Games-Interaction-Challenges)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

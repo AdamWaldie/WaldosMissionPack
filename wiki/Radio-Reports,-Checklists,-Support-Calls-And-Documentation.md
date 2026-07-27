@@ -1,3 +1,7 @@
+# Radio Reports, Checklists, and Support Calls
+
+> **Use this page when:** you want WMP's optional briefing references or need to add your own documents.
+
 _Associated Files: MissionScripts\MissionInit\BriefingDocuments\_
 
 As of WMP v4.7.0 the pack provides an extensive set of in-game documentation, quick-reference templates, and checklists accessible from the player's map screen briefing tab. All documents are automatically populated by `Waldo_fnc_AddDocs`, which is called from `init.sqf`.
@@ -76,3 +80,7 @@ player createDiaryRecord ["Diary", ["My Document Title", "Content goes here.<br/
 ```
 
 Documents support HTML-style tags for formatting: `<br/>` for line breaks, `<b>` for bold, `<u>` for underline, and image references via `<img image='path\to\image.paa'/>`.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

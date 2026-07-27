@@ -1,8 +1,12 @@
+# Economy Build System
+
+> **Use this page when:** you need construction vehicles, build catalogues, placement, upgrades, limits, or RADAR.
+
 _Associated Files: MissionScripts\EconomySystems\Build\ (`Waldo_fnc_EcoBuild_*`)_
 
 ![Construction catalog](images/economy/economy-build.png)
 
-The Build System is the most intricate part of [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems). It lets players construct and upgrade buildings that shape the economy — producing [resources](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System), raising storage, speeding up [research](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System)/construction, or revealing the enemy.
+The Build System is the most intricate part of [Waldos Economy Systems](Waldos-Economy-Systems). It lets players construct and upgrade buildings that shape the economy — producing [resources](Waldos-Economy-Systems-Resource-System), raising storage, speeding up [research](Waldos-Economy-Systems-Research-System)/construction, or revealing the enemy.
 
 ## Construction vehicles
 
@@ -16,7 +20,7 @@ Players build using a **construction vehicle**. From it they pick a building fro
 > construction vehicle into the construction site; it is not returned after the
 > job. The action is labelled **Deploy + Consume**, the placement view repeats
 > the warning, and a timed completion notice names the vehicle that was
-> converted. This is intentional economy balance, not a deletion bug.
+> converted. Reusable construction bases are not consumed and do not show this warning.
 
 The same build controls are available through ACE and a vanilla interaction.
 All player Economy dialogs are constrained to the protected screen area and use
@@ -52,5 +56,9 @@ A building flagged as a RADAR periodically reveals enemy units on the map for it
 
 ## See also
 
-* [Resource System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System) — production and storage feed the Build System.
-* [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)
+* [Resource System](Waldos-Economy-Systems-Resource-System) — production and storage feed the Build System.
+* [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

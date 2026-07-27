@@ -1,69 +1,77 @@
-* [Home](https://github.com/AdamWaldie/WaldosMissionPack/wiki)
-* [Coding Standards](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Coding-Standards)
-* [Quickstart Guide](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide)
-* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)
-* [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
-* [Zeus and Script API Parity](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Zeus-And-Script-API-Parity)
-* **Field Equipment Procedures**
-    * [Interaction Procedures Hub](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges)
-    * [EOD Controller](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-EOD-Controller)
-    * [Ordnance Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Ordnance-Diagnostics)
-    * [Access Terminal](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Access-Terminal)
-    * [Lock Cylinder](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Lock-Cylinder)
-    * [Breaker Cabinet](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Breaker-Cabinet)
-    * [Maintenance Hatch](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Maintenance-Hatch)
-    * [Communications Unit](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Communications-Unit)
-    * [Hydraulic Manifold](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Hydraulic-Manifold)
-    * [Control Sequence](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Control-Sequence)
-    * [Command Uplink](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Interaction-Procedure-Command-Uplink)
-* [Feature Tutorials](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials)
-    * **Mission Flow & UI**
-    * [Mission Intro Text](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Intro-Or-Title-Text)
-    * [Mission UI Text Overlays](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-UI-Text-Overlays)
-    * [ENDEX & After-Action Report](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
-    * [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart)
-    * [Tasks / Objectives](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Tasks-And-Objectives)
-    * [Custom 3D World Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers)
-    * [Custom WMP UI Notifications](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications)
-    * [Radio Reports & Checklists](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
-    * [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup)
-    * **Logistics & Crates**
-    * [Logistics System, Starter Crates & Quartermaster](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster)
-    * [Loadout Saving and Respawn](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Loadout-Saving-and-Respawn)
-    * [Mobile Command Post](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System)
-    * [Virtual Vehicle Depot](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot)
-    * **Vehicles & Deployment**
-    * [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop)
-    * [Vehicle Ambush & Camo](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Ambush-Script-And-Vehicle-Camo)
-    * [Teleportation & Move Into Cargo](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions)
-    * [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name)
-    * [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps)
-    * **Economy, Research & Base Building**
-    * [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems)
-    * [— Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)
-    * [— Resource System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System)
-    * [— Research System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System)
-    * [— Build System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System)
-    * [— Buy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System)
-    * [— Ground Command & Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools)
-    * **Construction & Fortification**
-    * [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
-    * [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup)
-    * [Simple Mass Attach Items](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items)
-    * **AI & Map**
-    * [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak)
-    * [AI Convoy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/AI-Convoy-System)
-    * [Map Location Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Map-Location-Tools)
-    * [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Third-Party-Scripts-Headless-Client-And-Player-Markers)
-    * **ACRE 2 Radio**
-    * [ACRE 2 Long Range Radio](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting)
-    * [ACRE 2 Short Range Radio](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
-    * [ACRE 2 Automated CEOI](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Automated-CEOI-Document)
-    * [ACRE 2 Babel Autoconfig](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration)
-    * [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming)
-    * [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers)
-    * **Miscellaneous**
-    * [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics)
-    * [Cover / Loading Screen Generation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Cover-Loading-Screen-Generation)
-    * [Unit Insignias](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Unit-Insignias)
-    * [Mission Maker Resource Scripts](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Maker-Resource-Scripts)
+**Start**
+
+* [Home](Home)
+* [Quickstart](Quickstart-Guide)
+* [Feature Index](Feature-Tutorials)
+* [Mission Configuration](Mission-Configuration-Reference)
+* [Mission Diagnostics](Mission-Diagnostics)
+* [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+* [Zeus and Script API Parity](Zeus-And-Script-API-Parity)
+
+**Mission Flow and UI**
+
+* [Safestart](Safestart)
+* [ENDEX and AAR](ENDEX-Script-&-Custom-End-Screen)
+* [Custom UI Notifications](Custom-UI-Notifications)
+* [Mission Intro](Mission-Intro-Or-Title-Text)
+* [Mission UI Text](Mission-UI-Text-Overlays)
+* [Tasks and Objectives](Tasks-And-Objectives)
+* [Custom 3D Markers](Custom-3D-World-Markers)
+
+**Field Equipment**
+
+* [Interaction Procedures](Waldos-Mini-Games-Interaction-Challenges)
+* [Bomb Defusal](Bomb-Defusal)
+* [EOD Controller](Interaction-Procedure-EOD-Controller)
+* [Ordnance Diagnostics](Interaction-Procedure-Ordnance-Diagnostics)
+* [Access Terminal](Interaction-Procedure-Access-Terminal)
+* [Lock Cylinder](Interaction-Procedure-Lock-Cylinder)
+* [Breaker Cabinet](Interaction-Procedure-Breaker-Cabinet)
+* [Maintenance Hatch](Interaction-Procedure-Maintenance-Hatch)
+* [Communications Unit](Interaction-Procedure-Communications-Unit)
+* [Hydraulic Manifold](Interaction-Procedure-Hydraulic-Manifold)
+* [Control Sequence](Interaction-Procedure-Control-Sequence)
+* [Command Uplink](Interaction-Procedure-Command-Uplink)
+
+**Table Games**
+
+* [Mini-Games Overview](Waldos-Mini-Games)
+* [Table Games](Waldos-Mini-Games-Table-Games)
+
+**Economy and Construction**
+
+* [Economy Overview](Waldos-Economy-Systems)
+* [Setup and Configuration](Waldos-Economy-Systems-Setup-And-Configuration)
+* [Resource System](Waldos-Economy-Systems-Resource-System)
+* [Research System](Waldos-Economy-Systems-Research-System)
+* [Build System](Waldos-Economy-Systems-Build-System)
+* [Buy System](Waldos-Economy-Systems-Buy-System)
+* [Ground Command and Tools](Waldos-Economy-Systems-Ground-Command-And-Tools)
+* [ACE Fortify Setup](Automatic-ACE-Fortify-Setup)
+* [Construction Objects](Construction-Objects)
+
+**Logistics and Vehicles**
+
+* [Logistics and Crates](Logistics-System,-Starter-Crates-And-Quartermaster)
+* [Loadout Saving](Loadout-Saving-and-Respawn)
+* [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
+* [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
+* [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
+* [Teleport and Cargo Actions](Teleportation-&-Move-Into-Cargo-Interactions)
+
+**Electronic Warfare and Radio**
+
+* [Radio Jamming](Radio-Jamming)
+* [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers)
+* [ACRE2 Long-Range Radios](ACRE-2-Long-Range-Radio-Presetting)
+* [ACRE2 Squad Radios](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
+* [ACRE2 CEOI](ACRE2-Automated-CEOI-Document)
+* [ACRE2 Babel](ACRE2-Babel-Configuration)
+
+**AI and Mission Tools**
+
+* [Waldo's AI Tuning](Waldos-AI-Tweak)
+* [AI Convoy System](AI-Convoy-System)
+* [Map Location Tools](Map-Location-Tools)
+* [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
+* [Coding Standards](Coding-Standards)

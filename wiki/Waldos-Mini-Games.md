@@ -1,12 +1,15 @@
+# Waldos Mini Games
+
+> **Use this page when:** you are choosing between seated party games and field-equipment interaction procedures.
+
 _Associated Files: `init.sqf`, `MissionScripts\MiniGames\miniGamesInit.sqf`, `MissionScripts\MiniGames\engine\`, `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGamesInit`_
 
-# Waldos Mini Games
 
 Waldos Mini Games is two complementary systems under one feature:
 
-1. **[Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games)** — a seated, **multiplayer** party-games engine. Place a table object in Eden and players get scroll-menu actions to sit down, vote for a game and play. Twelve games ship with the pack: Battleship, Who's Who: Vehicles, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, Rock Paper Scissors and UNO. These are for downtime, staging areas, barracks, FOBs and "waiting for the op to start" moments.
+1. **[Table Games](Waldos-Mini-Games-Table-Games)** — a seated, **multiplayer** party-games engine. Place a table object in Eden and players get scroll-menu actions to sit down, vote for a game and play. Twelve games ship with the pack: Battleship, Who's Who: Vehicles, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, Rock Paper Scissors and UNO. These are for downtime, staging areas, barracks, FOBs and "waiting for the op to start" moments.
 
-2. **[Field Equipment Procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges)** — accessible **single-player** procedures that gate any object interaction. Each looks and behaves like distinct field equipment: EOD controller, diagnostic tablet, access terminal, lock cylinder, breaker cabinet, maintenance hatch, communications unit, hydraulic manifold, or secure console.
+2. **[Field Equipment Procedures](Waldos-Mini-Games-Interaction-Challenges)** — accessible **single-player** procedures that gate any object interaction. Each looks and behaves like distinct field equipment: EOD controller, diagnostic tablet, access terminal, lock cylinder, breaker cabinet, maintenance hatch, communications unit, hydraulic manifold, or secure console.
 
 The fast path for mission makers is one Eden init line: `[this, "repair"] call Waldo_fnc_MiniGameInteractionSetup;`. Every procedure includes an integrated operating card, non-colour status cues, and a persistent **Field Procedure** reference.
 
@@ -14,8 +17,9 @@ The fast path for mission makers is one Eden init line: `[this, "repair"] call W
 
 ## Associated pages
 
-* **[Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games)** — placing tables, the twelve games, seats, voting, spectating, tuning.
-* **[Field Equipment Procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges)** — equipment profiles, object/table setup, bomb defusal, accessibility, and every built-in procedure.
+* **[Table Games](Waldos-Mini-Games-Table-Games)** — placing tables, the twelve games, seats, voting, spectating, tuning.
+* **[Field Equipment Procedures](Waldos-Mini-Games-Interaction-Challenges)** — equipment profiles, object/table setup, accessibility, and every built-in procedure.
+* **[Bomb Defusal](Bomb-Defusal)** — apply any interaction procedure to a live or training explosive with an authoritative result and optional failure detonation.
 
 ## Enabling it
 
@@ -43,5 +47,9 @@ The seated table-games engine is ported from the community composition **"Party 
 
 ## See also
 
-* [Feature Tutorials](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials)
-* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference)
+* [Feature Tutorials](Feature-Tutorials)
+* [Mission Configuration Reference](Mission-Configuration-Reference)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

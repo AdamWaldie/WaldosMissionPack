@@ -1,10 +1,14 @@
+# Economy Buy System
+
+> **Use this page when:** you need purchase terminals, delivery points, prices, requirements, or vehicle categories.
+
 _Associated Files: MissionScripts\EconomySystems\Buy\ (`Waldo_fnc_EcoBuy_*`)_
 
 | Purchase catalog | Delivery-point setup |
 |---|---|
 | ![Purchase catalog](images/economy/economy-purchases.png) | ![Drop point setup](images/economy/economy-drop-point.png) |
 
-The Buy System lets players **purchase vehicles** with their side's [resources](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System), once any [research](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System) or [building](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) requirements are met. Purchases are made at a terminal and the vehicle appears at a configured drop point.
+The Buy System lets players **purchase vehicles** with their side's [resources](Waldos-Economy-Systems-Resource-System), once any [research](Waldos-Economy-Systems-Research-System) or [building](Waldos-Economy-Systems-Build-System) requirements are met. Purchases are made at a terminal and the vehicle appears at a configured drop point.
 
 ## Purchase terminals
 
@@ -45,4 +49,8 @@ In Zeus: **Buy → Configure Purchases**. From script:
 
 ## See also
 
-* [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)
+* [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

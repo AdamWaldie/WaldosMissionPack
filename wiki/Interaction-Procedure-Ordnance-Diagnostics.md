@@ -1,5 +1,7 @@
 # Ordnance Diagnostic Tablet
 
+> **Use this page when:** you are configuring or operating the explosive-circuit matrix procedure.
+
 The `minesweeper` procedure presents a portable explosive-circuit matrix. Use it for trigger diagnosis, minefield control units, fault maps, or damaged electronics.
 
 | Operating card | Active tablet |
@@ -26,3 +28,7 @@ Larger matrices and more triggers increase the deduction workload. Hard and expe
 Valid configuration: `[size(4-8,5), mineCount(5), timeLimit(0), title("TRIGGER ANALYSER")]`.
 
 [Shared state and mission integration](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

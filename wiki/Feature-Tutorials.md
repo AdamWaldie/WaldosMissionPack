@@ -1,74 +1,92 @@
-This page gives you quick access to documentation for every feature in the pack.
+# Feature Index
 
-The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide).
+> **Use this page when:** you know the capability you need and want the correct setup or reference page.
 
-[Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules) are covered separately.
+Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
 
+## Mission flow and UI
+
+| Feature | Use it for |
+|---|---|
+| [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) | Animated operation titles during load-in |
+| [Mission UI Text Overlays](Mission-UI-Text-Overlays) | Dynamic text, timed notices, and respawn text |
+| [Custom UI Notifications](Custom-UI-Notifications) | Accessible mission cards, placement, stacking, and FIFO delivery |
+| [Safestart](Safestart) | Preparation protection and timed go-live |
+| [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) | End-of-operation protection, AAR, and mission end |
+| [Tasks and Objectives](Tasks-And-Objectives) | JIP-safe objective creation and resolution |
+| [Custom 3D World Markers](Custom-3D-World-Markers) | World-space labels and icons |
+| [Radio Reports and Checklists](Radio-Reports,-Checklists,-Support-Calls-And-Documentation) | Optional briefing reference documents |
+| [Team Colour Setup](Team-Colour-Setup) | Role-driven fireteam colour assignment |
+
+## Logistics and deployment
+
+| Feature | Use it for |
+|---|---|
+| [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster) | Mission-derived supplies and limited arsenals |
+| [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal, and manual loadout persistence |
+| [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) | Deployable MHQ and logistics |
+| [Virtual Vehicle Depot](Virtual-Vehicle-Depot) | Virtual garage and vehicle deployment |
+| [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop) | Vehicle interactions, static line, and HALO |
+| [Teleportation and Move Into Cargo](Teleportation-&-Move-Into-Cargo-Interactions) | Discoverable player movement actions |
+| [Vehicle Ambush and Camo](Vehicle-Ambush-Script-And-Vehicle-Camo) | Concealed vehicle ambush behavior |
+| [Weapon Mounting](Weapon-Mounting-With-Custom-Name) | Named mounted-weapon interactions |
+
+## Economy and construction
+
+| Feature | Use it for |
+|---|---|
+| [Economy Systems](Waldos-Economy-Systems) | Suite overview and subsystem selection |
+| [Setup and Configuration](Waldos-Economy-Systems-Setup-And-Configuration) | Presets, custom setup, and Zeus-to-script export |
+| [Resource System](Waldos-Economy-Systems-Resource-System) | Resources, crates, zones, collection, and storage |
+| [Research System](Waldos-Economy-Systems-Research-System) | Technology costs, prerequisites, and exclusions |
+| [Build System](Waldos-Economy-Systems-Build-System) | Construction, production, upkeep, upgrades, and RADAR |
+| [Buy System](Waldos-Economy-Systems-Buy-System) | Purchase terminals and delivery points |
+| [Ground Command and Tools](Waldos-Economy-Systems-Ground-Command-And-Tools) | Command permissions, export, presets, and purge |
+| [Automatic ACE Fortify Setup](Automatic-ACE-Fortify-Setup) | Editor-authored ACE Fortify catalogues |
+| [Construction Objects](Construction-Objects) | Synchronized construction definitions |
+| [Simple Mass Attach Items](Simple-Mass-Attach-Items) | Attaching synchronized objects to a parent |
+
+## Table games and interaction procedures
+
+| Feature | Use it for |
+|---|---|
+| [Waldos Mini Games](Waldos-Mini-Games) | Feature overview |
+| [Table Games](Waldos-Mini-Games-Table-Games) | Twelve seated multiplayer games |
+| [Interaction Procedures](Waldos-Mini-Games-Interaction-Challenges) | Shared equipment setup, state, controls, and accessibility |
+| [Bomb Defusal](Bomb-Defusal) | Apply any built-in procedure to an explosive consequence |
+
+## Electronic warfare and ACRE2
+
+| Feature | Use it for |
+|---|---|
+| [Radio Jamming](Radio-Jamming) | ACRE2/TFAR radio and UAV interference |
+| [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) | One-shot EMP and side-private tracking |
+| [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting) | Mission-defined ACRE2 channels |
+| [AN/PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup) | Squad-level radio assignment |
+| [Automated CEOI](ACRE2-Automated-CEOI-Document) | Player-readable radio plan |
+| [Babel Configuration](ACRE2-Babel-Configuration) | Languages and interpreters |
+
+## AI, map, and optional tools
+
+| Feature | Use it for |
+|---|---|
+| [Waldo's AI Tuning](Waldos-AI-Tweak) | Day/night AI behavior profiles |
+| [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
+| [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
+| [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional headless-client and player-marker integrations |
+| [ACE Corpse Traps](ACE-Corpse-Traps) | Concealed throwable traps on bodies |
+| [Unit Insignias](Unit-Insignias) | Applying and adding insignias |
+| [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts) | Smaller arsenal, damage, visibility, and config helpers |
+| [Cover and Loading Screen Generation](Cover-Loading-Screen-Generation) | Versioned mission artwork |
+
+## Authoring and troubleshooting
+
+- [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+- [Zeus and Script API Parity](Zeus-And-Script-API-Parity)
+- [Mission Diagnostics](Mission-Diagnostics)
+- [Mission Configuration Reference](Mission-Configuration-Reference)
+- [Coding and Documentation Standards](Coding-Standards)
+
+<!-- WMP-WIKI-NAV -->
 ---
-
-## Configuration Reference
-* [Mission Configuration Reference](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Configuration-Reference) — description.ext, init.sqf, initServer.sqf field reference
-
-## Mission Flow & UI
-* [Mission Intro Text](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Intro-Or-Title-Text)
-* [Mission UI Text Overlays](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-UI-Text-Overlays) — Dynamic text, timed hints, respawn text
-* [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) — Also covers the After-Action Report shown in the ENDEX popup
-* [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart) — Freeze players at mission start; lift to go live (timer + Zeus modules)
-* [Tasks / Objectives](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Tasks-And-Objectives) — Script-driven, JIP-safe task helpers with auto map markers
-* [Custom 3D World Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers) — JIP-safe icon-and-text markers over objects or positions
-* [Custom WMP UI Notifications](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications) — accessible states, safe-zone placement, channels, stacking, FIFO delivery and cleanup
-* [Radio Reports, Checklists, Support Calls And Documentation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
-* [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup) — Also covers GetPlayerGroup and GetPlayerRole helpers
-
-## Logistics & Crates
-* [Logistics System, Starter Crates And Quartermaster](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster)
-* [Loadout Saving and Respawn](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Loadout-Saving-and-Respawn)
-* [Mobile Command Post With Integrated Logistics System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System)
-* [Virtual Vehicle Depot](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot)
-
-## Vehicles & Deployment
-* [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop) — Auto-detected vehicles, equipment simulation, parachute backpack system
-* [Vehicle Ambush Script And Vehicle Camo](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Ambush-Script-And-Vehicle-Camo)
-* [Teleportation & Move Into Cargo Interactions](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions)
-* [Weapon Mounting With Custom Name](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Weapon-Mounting-With-Custom-Name)
-
-## Economy, Research & Base Building
-* [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) — overview & hub for the economy suite
-* [— Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration) — enable it, presets, config strings, the economyConfig.sqf authoring file, editor helpers
-* [— Resource System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System) — resources, crates, capturable income zones, storage
-* [— Research System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System) — Research Center, costs, prerequisites, exclusivity
-* [— Build System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) — construction, upgrades, production, upkeep, RADAR
-* [— Buy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System) — purchase vehicles, drop points, requirements
-* [— Ground Command & Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools) — permissions, Commitment mode, Export/Import, Purge
-
-## Party Games & Field Equipment
-* [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) — feature hub
-* [Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games) — twelve seated multiplayer games
-* [Field Equipment Interaction Procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) — ten server-authoritative equipment procedures with ACE and vanilla interactions
-
-## ACE Corpse Traps
-* [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps) - conceal a carried throwable on a corpse and trigger it when the inventory is opened
-
-## Construction & Fortification
-* [Construction Objects](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects)
-* [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup)
-* [Simple Mass Attach Items](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items)
-
-## AI & Map
-* [Waldos AI Tweak](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-AI-Tweak)
-* [AI Convoy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/AI-Convoy-System)
-* [Map Location Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Map-Location-Tools)
-* [Headless Client & Player Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Third-Party-Scripts-Headless-Client-And-Player-Markers) — bundled third-party scripts (Werthles HC, aeroson markers), disabled by default
-
-## ACRE 2 Radio
-* [ACRE 2 Long Range Radio Presetting](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting)
-* [ACRE 2 Short Range Radio Presetting](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
-* [ACRE 2 Automated CEOI](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Automated-CEOI-Document)
-* [ACRE 2 Babel Autoconfig](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Babel-Configuration)
-* [Radio Jamming (ACRE2 / TFAR)](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming)
-* [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers)
-
-## Miscellaneous
-* [Mission Diagnostics](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics) — Server-side config sanity check; warns about the common WMP misconfigurations
-* [Unit Insignias](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Unit-Insignias)
-* [Mission Maker Resource Scripts](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Maker-Resource-Scripts) — Debug tools, arsenal toolkit, damage monitor
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

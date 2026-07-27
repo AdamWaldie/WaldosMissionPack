@@ -1,37 +1,41 @@
-# Zeus Modules Features
+# Waldos Mission Pack Zeus Modules
 
-The packs Zeus Modules require the mission maker to be utilising Zeus Enhanced.
+> **Use this page when:** you need to find, configure, or understand WMP's Zeus Enhanced modules.
 
-These modules allow users to:
-* Spawn a Logistics System Supply & Medical Crate to Zeus specification
-* Set the mission to [ENDEX](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
-* End the mission utilising the [Custom End](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen)
+## Requirements and location
 
-All Zeus modules provided by this pack can be found in Modules --> Waldos Mission Modules
+WMP's Zeus modules require Zeus Enhanced. Find them under **Modules → Waldos Mission Modules**.
+
+Use them to:
+
+- spawn Logistics System supply and medical crates;
+- configure mission systems through guided interfaces;
+- apply [ENDEX](ENDEX-Script-&-Custom-End-Screen) protection;
+- finish the mission with a configured WMP end screen.
 
 ![Image of the Zeus Modules and where they can be located](https://i.imgur.com/kdR1q9Z.png)
 
-# Supply & Medical Crate Spawner
+## Supply & Medical Crate Spawner
 
-Zeus-spawned crates use the same class names as the standard [Logistics System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster), so changing the crates will carry over into zeus.
+Zeus-spawned crates use the same class names and generated contents as the standard [Logistics System](Logistics-System,-Starter-Crates-And-Quartermaster). Changes to the mission's logistics configuration therefore carry over to Zeus-created crates.
 
-## Supply Crate Interace
+## Supply crate interface
 ![Zeus Interface of supply crate spawner](https://i.imgur.com/iuiulsL.jpg)
 
-The supply crate interface allows the Zeus to select the size of resupply available in the crate, which side to draw players gear from, and whether to include equipment, weapons, attachments and items, launchers and launcer ammo, or just ammo.
+The interface lets Zeus select the resupply size, the side whose playable loadouts supply the contents, and whether to include equipment, weapons, attachments, items, launchers and launcher ammunition, or ammunition only.
 
-## Medical Supply Crate Interface
+## Medical supply crate interface
 ![Zeus Interface of Medical Crate Spawner](https://i.imgur.com/7aZPysV.png)
 
-The medical crate interface allows the Zeus to select the size of medical resupply available in the crate and whether to make the crate an ACE field hospital for improved medical proficiency for medical personnel in the surrounding area.
+The medical-crate interface selects the resupply size and whether the crate becomes an ACE field hospital for nearby medical personnel.
 
-# Fortify Budget Module
+## Fortify Budget Module
 
-This module requires the [Automatic Fortify Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup), or ACE Fortify being active. It allows for the alteration of the fortify budget in zeus, without the need for manual scripting.
+This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup), or ACE Fortify being active. It allows for the alteration of the fortify budget in zeus, without the need for manual scripting.
 
 ![Fortify Budget Module GUI](https://i.imgur.com/GYunnuf.jpg)
 
-# ENDEX Module
+## ENDEX Module
 
 The ENDEX module performs the following actions:
 * Places all player weapons on Safe and prevents Players and player vehicles from firing.
@@ -45,28 +49,32 @@ It does NOT end the mission.
 An example of it in use can be seen below:
 ![Zeus Endex execution example](https://i.imgur.com/PBpewY8.png)
 
-# Mission End
+## Mission End
 
 Similar to the vanilla mission end script, this mission will end the scenario.
 
-However, this variation allows the zeus to end the mission utilising a custom end screen and debriefing message which can be customised in the description.ext. Check out the [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) tutorial for more information.
+However, this variation allows the zeus to end the mission utilising a custom end screen and debriefing message which can be customised in the description.ext. Check out the [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) tutorial for more information.
 
 Below is an example of the custom mission end screen:
 ![Mission End Screen Example](https://i.imgur.com/xmK9I1e.png)
 
-# Radio Jammer Modules
+## Radio Jammer Modules
 
-Three modules drive the [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) system live in-game (works with ACRE2 and TFAR):
+Three modules drive the [Radio Jamming](Radio-Jamming) system live in-game (works with ACRE2 and TFAR):
 
 * **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing** (arc 360 = omnidirectional), whether it **pulses**, and whether to drop a **map marker**, then spawns an emitter at the module position and switches it on. The emitter is added to the curator so it can be dragged or deleted like any Zeus object.
 * **Radio Jammer - Toggle Nearest** — flips the nearest jammer on or off (no dialog).
 * **Radio Jammer - Remove Nearest** — removes the nearest jammer and deletes its emitter.
 
-The Place dialog also offers a directional **cone**, **pulsing**, and an **also jam UAVs / drones** option (counter-UAS). See the [Radio Jamming](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming) page for the full scripting API and the ACRE2 signal-model requirement.
+The Place dialog also offers a directional **cone**, **pulsing**, and an **also jam UAVs / drones** option (counter-UAS). See the [Radio Jamming](Radio-Jamming) page for the full scripting API and the ACRE2 signal-model requirement.
 
-# EMP & Signal Tracker Modules
+## EMP & Signal Tracker Modules
 
-Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Trackers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers) page):
+Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) page):
 
 * **EMP Detonation** — a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
 * **Plant Signal Tracker** — tags the nearest unit or vehicle so a chosen side follows it live on the map (hidden from the tracked side).
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

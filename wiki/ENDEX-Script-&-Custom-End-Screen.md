@@ -1,6 +1,9 @@
+# ENDEX and After-Action Report
+
+> **Use this page when:** you need to end combat, show the AAR, reset protection, or configure the mission end screen.
+
 _Associated files: `MissionScripts\MissionFlowAndUi\ENDEX.sqf`, `ENDEXReset.sqf`, `aarTrack.sqf`, `aarWound.sqf`, `Waldo_fnc_ENDEX`, `Waldo_fnc_ENDEXReset`, `Waldo_fnc_AARTrack`_
 
-# ENDEX and After-Action Report
 
 ENDEX places the mission into a controlled debrief state. The After-Action Report is part of the same transition, so an operator does not need to coordinate separate end-of-mission systems.
 
@@ -91,3 +94,7 @@ Configure the ending title, subtitle, description, and image in `description.ext
 - [Custom WMP UI Notifications](Custom-UI-Notifications)
 - [Mission Diagnostics](Mission-Diagnostics)
 - [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

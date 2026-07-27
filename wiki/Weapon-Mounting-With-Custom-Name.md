@@ -1,6 +1,10 @@
+# Weapon Mounting with a Custom Name
+
+> **Use this page when:** you need to mount a weapon on an object and expose it through a named interaction.
+
 _Associated Files: `MissionScripts\Logistics\LogiHelpers\attachedWeapon.sqf`, `Waldo_fnc_VehicleMountedWeapon`_
 
-# Weapon Mounting With Custom Name
+## Weapon Mounting With Custom Name
 
 Attaches a separate weapon/turret object to a vehicle and wires up "Get In" / "Return" actions so a player can hop between the carrier and the mounted weapon without it counting as a normal turret seat. Handy for a static gun bolted to a truck bed, a mortar on a trailer, or any field-expedient mounted weapon.
 
@@ -43,5 +47,9 @@ Players see **"Get In DShK"** on both the gun and the truck, and **"Return To Ma
 
 ## See also
 
-* [Simple Mass Attach Items](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items) — attach decorative/cargo objects to a vehicle
-* [Vehicle Actions & Paradrop](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop)
+* [Simple Mass Attach Items](Simple-Mass-Attach-Items) — attach decorative/cargo objects to a vehicle
+* [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

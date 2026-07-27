@@ -1,6 +1,10 @@
+# Economy Ground Command and Tools
+
+> **Use this page when:** you need Ground Command, commitment mode, setup export, presets, purge, or status tools.
+
 _Associated Files: MissionScripts\EconomySystems\Command\ (`Waldo_fnc_EcoCommand_*`), MissionScripts\EconomySystems\Core\ (`Waldo_fnc_EcoCore_*`)_
 
-Alongside the four economy systems, [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) ships several management tools, all reached from the **Waldos Economy Systems** menu in Zeus.
+Alongside the four economy systems, [Waldos Economy Systems](Waldos-Economy-Systems) ships several management tools, all reached from the **Waldos Economy Systems** menu in Zeus.
 
 ## Ground Command
 
@@ -31,7 +35,7 @@ Use these modes to:
 * save a configuration you built live in Zeus,
 * share a configuration between missions, or
 * bake only the catalogues into a mission via `Waldo_Economy_ConfigString`, or
-* bake the complete authored layout into `economyConfig.sqf` (see [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)).
+* bake the complete authored layout into `economyConfig.sqf` (see [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)).
 
 The recommended workflow is **configure and place everything with the Zeus modules in a clean authoring session, press BUILD + COPY, then paste the generated setup calls into `economyConfig.sqf`**. On later mission runs those calls recreate the authored setup without requiring Zeus. Use CONFIG COPY instead when positions and placed fixtures should remain mission-specific.
 
@@ -49,5 +53,9 @@ Three bundled presets give you a ready-made economy at increasing complexity —
 
 ## See also
 
-* [Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)
-* [Waldos Economy Systems hub](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems)
+* [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)
+* [Waldos Economy Systems hub](Waldos-Economy-Systems)
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
