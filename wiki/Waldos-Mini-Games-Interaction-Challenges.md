@@ -2,6 +2,8 @@ _Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameI
 
 # Field Equipment Interaction Procedures
 
+![Field equipment procedures](images/interaction-procedures/interaction-circuit-active.png)
+
 Field equipment procedures are single-player interactions that resolve to pass or fail. They use the
 same callback contract as the earlier interaction challenges, but the player-facing presentation is
 diegetic: players inspect an EOD controller, maintenance hatch, radio, manifold, access terminal, or
@@ -19,6 +21,23 @@ Place this in an object's Eden **Initialization** field:
 
 Available procedure ids are `wirecut`, `minesweeper`, `keypad`, `lockpick`, `circuit`, `repair`,
 `radiotune`, `pressure`, `sequence`, and `commandinput`.
+
+## Equipment guides
+
+Each guide explains what the operator sees, how the procedure flows, its controls, difficulty profiles, configuration order, and mission integration.
+
+| Procedure | Equipment guide |
+|---|---|
+| `wirecut` | [EOD Controller](Interaction-Procedure-EOD-Controller) |
+| `minesweeper` | [Ordnance Diagnostic Tablet](Interaction-Procedure-Ordnance-Diagnostics) |
+| `keypad` | [Industrial Access Terminal](Interaction-Procedure-Access-Terminal) |
+| `lockpick` | [Cutaway Lock Cylinder](Interaction-Procedure-Lock-Cylinder) |
+| `circuit` | [Breaker and Relay Cabinet](Interaction-Procedure-Breaker-Cabinet) |
+| `repair` | [Maintenance Hatch](Interaction-Procedure-Maintenance-Hatch) |
+| `radiotune` | [Tactical Communications Unit](Interaction-Procedure-Communications-Unit) |
+| `pressure` | [Hydraulic Control Manifold](Interaction-Procedure-Hydraulic-Manifold) |
+| `sequence` | [Secure Control Sequence](Interaction-Procedure-Control-Sequence) |
+| `commandinput` | [Tactical Command Uplink](Interaction-Procedure-Command-Uplink) |
 
 The helper supplies a suitable action, equipment identity, icon, and balanced configuration. Failure
 allows another attempt by default; success consumes the interaction. ACE is used when available;
@@ -464,8 +483,10 @@ broadcast completion variables are updated.
 procedure removes access for every client. The shared active-equipment guard prevents two different
 procedures from stacking on one player, and exactly-once resolution prevents duplicate callbacks.
 
-ACE interaction is used when ACE Interact Menu is available. Otherwise the same setup creates a
-vanilla `addAction`, using the configured distance and condition.
+Every field-equipment setup exposes both the nested ACE interaction and a vanilla
+`addAction` discoverability entry. Without ACE, only the vanilla entry is created.
+Both routes use the configured distance and condition, then enter the same exclusive
+server acquisition handshake; neither route can mutate procedure state locally.
 
 ## Optional party-table picker
 

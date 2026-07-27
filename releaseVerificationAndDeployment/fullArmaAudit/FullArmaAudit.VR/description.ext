@@ -1,6 +1,6 @@
-author = "Waldos Mission Pack";
-onLoadName = "WMP PR21-32 Full Arma Audit";
-onLoadMission = "Automated and guided runtime verification";
+author = "WaldoTheWarfighter";
+onLoadName = "WMP PR REVIEW AUDIT";
+onLoadMission = "Current pull-request runtime verification";
 loadScreen = "Pictures\loading.jpg";
 overviewPicture = "Pictures\loading.jpg";
 disabledAI = false;
@@ -21,14 +21,14 @@ class CfgDebriefing
 {
     class END1
     {
-        title = "FULL AUDIT PASSED";
-        subtitle = "All selected runtime assertions passed";
-        description = "Review WMP FULL AUDIT records in the RPT and generated report.";
+        title = "PR AUDIT PASSED";
+        subtitle = "Selected runtime assertions passed";
+        description = "Review WMP PR AUDIT records in the RPT.";
     };
     class LOSER
     {
-        title = "FULL AUDIT FAILED";
+        title = "PR AUDIT FAILED";
         subtitle = "One or more runtime assertions failed";
-        description = "Review WMP FULL AUDIT records in the RPT and generated report.";
+        description = "Review WMP PR AUDIT records in the RPT.";
     };
 };

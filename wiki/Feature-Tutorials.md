@@ -15,6 +15,7 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [ENDEX Script & Custom End Screen](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) — Also covers the After-Action Report shown in the ENDEX popup
 * [Safestart](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Safestart) — Freeze players at mission start; lift to go live (timer + Zeus modules)
 * [Tasks / Objectives](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Tasks-And-Objectives) — Script-driven, JIP-safe task helpers with auto map markers
+* [Custom 3D World Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers) — JIP-safe icon-and-text markers over objects or positions
 * [Radio Reports, Checklists, Support Calls And Documentation](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Reports,-Checklists,-Support-Calls-And-Documentation)
 * [Team Colour Setup](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Team-Colour-Setup) — Also covers GetPlayerGroup and GetPlayerRole helpers
 
@@ -39,10 +40,10 @@ The basic setup is covered in the [Quickstart Guide](https://github.com/AdamWald
 * [— Buy System](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System) — purchase vehicles, drop points, requirements
 * [— Ground Command & Tools](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Ground-Command-And-Tools) — permissions, Commitment mode, Export/Import, Purge
 
-## Mini Games & Interaction Challenges
-* [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) — overview & hub: multiplayer table games and single-player interaction challenges
-* [— Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games) — seated multiplayer party games (Battleship, Blackjack, Poker, Chess, UNO and more)
-* [— Interaction Challenges](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) — solo challenges that gate any interaction; bomb defusal, hacking, lockpicking (wire-cut, minesweeper, keypad, lockpick, circuit)
+## Party Games & Field Equipment
+* [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) — feature hub
+* [Table Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Table-Games) — twelve seated multiplayer games
+* [Field Equipment Interaction Procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges) — ten server-authoritative equipment procedures with ACE and vanilla interactions
 
 ## ACE Corpse Traps
 * [ACE Corpse Traps](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps) - conceal a carried throwable on a corpse and trigger it when the inventory is opened

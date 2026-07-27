@@ -26,7 +26,7 @@ This is the [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/
    | `Land_CampingTable_small_white_F` | Small white camping table |
    | `Land_TablePlastic_01_F` | Plastic table |
 
-3. That's it. Walk a player up to the table and use the scroll-menu / ACE interaction to **Take a Seat**.
+3. That's it. Walk a player up to the table and use either the scroll-menu or the nested ACE **Party Table** interaction to **Sit at Table**. Both routes submit the same server-validated request.
 
 Up to **four** players can sit at a table. Once seated, players **vote** for a game from the lobby; when enough seated players are ready, the chosen game starts.
 

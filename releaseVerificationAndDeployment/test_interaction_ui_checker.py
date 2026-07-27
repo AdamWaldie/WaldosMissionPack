@@ -19,15 +19,29 @@ class AuditFixtureTests(unittest.TestCase):
         challenges = temp / "MissionScripts" / "InteractionsMinigames" / "Challenges"
         core = temp / "MissionScripts" / "InteractionsMinigames" / "Core"
         themes = temp / "MissionScripts" / "InteractionsMinigames" / "Themes"
+        equipment = temp / "MissionScripts" / "InteractionsMinigames" / "Equipment"
+        integration = temp / "MissionScripts" / "InteractionsMinigames" / "Integration"
         challenges.mkdir(parents=True)
         core.mkdir(parents=True)
         themes.mkdir(parents=True)
+        equipment.mkdir(parents=True)
+        integration.mkdir(parents=True)
         for name in EXPECTED:
             (challenges / name).write_text(challenge_body, encoding="utf-8")
         (temp / "MissionScripts" / "WaldosFunctions.sqf").write_text(
-            "class MiniGameChallengeUI {};",
+            "class MiniGameChallengeUI {}; class MiniGameEquipmentFitStructuredText {};",
             encoding="utf-8",
         )
+        for relative in (
+            core / "challengeHelp.sqf",
+            equipment / "equipmentBriefing.sqf",
+            integration / "equipmentPicker.sqf",
+            integration / "miniGameInteractionNotifyClient.sqf",
+        ):
+            relative.write_text(
+                'private _x = "RscStructuredText"; call Waldo_fnc_MiniGameEquipmentFitStructuredText;',
+                encoding="utf-8",
+            )
         difficulty_cases = " ".join(
             f'case "{name}" {{}};'
             for name in (
@@ -76,6 +90,15 @@ class AuditFixtureTests(unittest.TestCase):
         findings = audit(root)
         self.assertTrue(any("conditional command operand" in item for item in findings))
 
+    def test_invalid_runtime_style_command_is_rejected(self):
+        root = self.make_tree(
+            'call Waldo_fnc_MiniGameChallengeUI; '
+            'call Waldo_fnc_MiniGameEquipmentCreateControl; '
+            '_control ctrlSetStyle 1;'
+        )
+        findings = audit(root)
+        self.assertTrue(any("ctrlSetStyle" in item for item in findings))
+
     def test_literal_newline_escape_in_challenge_text_is_rejected(self):
         root = self.make_tree(
             'call Waldo_fnc_MiniGameChallengeUI; '
@@ -99,6 +122,25 @@ class AuditFixtureTests(unittest.TestCase):
         ).unlink()
         findings = audit(root)
         self.assertTrue(any("difficulty helper is missing" in item for item in findings))
+
+    def test_unfitted_structured_text_is_rejected(self):
+        root = self.make_tree(
+            'call Waldo_fnc_MiniGameChallengeUI; '
+            'call Waldo_fnc_MiniGameEquipmentCreateControl; '
+            'private _type = "RscStructuredText";'
+        )
+        findings = audit(root)
+        self.assertTrue(any("structured text has no bounded fitting path" in item for item in findings))
+
+    def test_equipment_safezone_dimension_mixing_is_rejected(self):
+        root = self.make_tree(
+            'call Waldo_fnc_MiniGameChallengeUI; '
+            'call Waldo_fnc_MiniGameEquipmentCreateControl;'
+        )
+        decorator = root / "MissionScripts" / "InteractionsMinigames" / "Equipment" / "decorator.sqf"
+        decorator.write_text("private _width = 0.2 * safeZoneW;", encoding="utf-8")
+        findings = audit(root)
+        self.assertTrue(any("mixes raw safe-zone dimensions" in item for item in findings))
 
 
 if __name__ == "__main__":

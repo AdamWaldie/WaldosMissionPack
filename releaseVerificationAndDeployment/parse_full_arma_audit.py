@@ -36,7 +36,7 @@ def main() -> int:
     failures = [r for r in records if r["kind"] == "FAIL"]
     args.json_path.parent.mkdir(parents=True, exist_ok=True)
     args.json_path.write_text(json.dumps({"records": records, "failures": failures}, indent=2), encoding="utf-8")
-    lines = ["# WMP Full Arma Audit Results", "", f"- Records: {len(records)}", f"- Failures: {len(failures)}", ""]
+    lines = ["# WMP FULL PACK AUDIT Results", "", f"- Records: {len(records)}", f"- Failures: {len(failures)}", ""]
     lines += ["## Failures", ""] + ([f"- `{r['payload']}`" for r in failures] or ["None."])
     args.markdown.write_text("\n".join(lines) + "\n", encoding="utf-8")
     print(f"records={len(records)} failures={len(failures)}")

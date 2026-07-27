@@ -15,6 +15,7 @@ I maintain this wiki regularly and keep it updated with tutorials on the vast ma
 * [Quickstart Guide ](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide)
 * [Feature Tutorials](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Feature-Tutorials)
 * [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules)
+* [Zeus and Script API Parity](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Zeus-And-Script-API-Parity) - which Zeus tools call public APIs directly, which use authoring adapters, and what still requires in-engine acceptance.
 
 # Pack Features
 - Loadout saving and respawn system
@@ -29,7 +30,8 @@ I maintain this wiki regularly and keep it updated with tutorials on the vast ma
 - Endex & Safestart Scripts
 - Custom Zeus Enhanced modules for in-game access to the logistics system and ENDEX scripts.
 - [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems) - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus menu. Drop a preset composition and you have a working RTS-style economy in seconds.
-- [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) - seated multiplayer party games (Battleship, Blackjack, Poker, Chess, UNO and more) plus single-player interaction challenges (wire-cut, minesweeper, keypad, lockpick, circuit) that gate any interaction - bomb defusal, hacking, lockpicking and beyond.
+- [Custom 3D World Markers](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers) - JIP-safe icon-and-text markers anchored to any object or world position.
+- [Waldos Mini Games](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games) - twelve seated multiplayer party games plus ten [field-equipment interaction procedures](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges), including EOD, access, repair, radio, hydraulic, and command systems.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
 - Extensively documented files to learn how it works, and make use of this pack!

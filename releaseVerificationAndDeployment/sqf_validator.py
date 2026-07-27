@@ -7,6 +7,59 @@ import ntpath
 import sys
 import argparse
 
+INVALID_RUNTIME_COMMANDS = {
+    # UI style is configured by the Rsc control class. Arma has no runtime
+    # ctrlSetStyle SQF command; this previously passed delimiter checks and
+    # failed only when the shared interaction display compiled in-game.
+    "ctrlSetStyle": "not an Arma SQF runtime command; configure the control class instead",
+}
+
+
+def strip_comments_and_strings(content):
+    """Blank comments/strings while preserving line numbers for token checks."""
+    result = []
+    index = 0
+    state = "code"
+    quote = ""
+    while index < len(content):
+        char = content[index]
+        nxt = content[index + 1] if index + 1 < len(content) else ""
+        if state == "code":
+            if char in ('"', "'"):
+                state = "string"
+                quote = char
+                result.append(" ")
+            elif char == "/" and nxt == "/":
+                state = "line_comment"
+                result.extend((" ", " "))
+                index += 1
+            elif char == "/" and nxt == "*":
+                state = "block_comment"
+                result.extend((" ", " "))
+                index += 1
+            else:
+                result.append(char)
+        elif state == "string":
+            result.append("\n" if char == "\n" else " ")
+            if char == quote:
+                if nxt == quote:
+                    result.append(" ")
+                    index += 1
+                else:
+                    state = "code"
+        elif state == "line_comment":
+            result.append("\n" if char == "\n" else " ")
+            if char == "\n":
+                state = "code"
+        else:
+            result.append("\n" if char == "\n" else " ")
+            if char == "*" and nxt == "/":
+                result.append(" ")
+                index += 1
+                state = "code"
+        index += 1
+    return "".join(result)
+
 def validKeyWordAfterCode(content, index):
     keyWords = ["for", "do", "count", "each", "forEach", "else", "and", "not", "isEqualTo", "in", "call", "spawn", "execVM", "catch", "param", "select", "apply", "findIf", "remoteExec"];
     for word in keyWords:
@@ -145,10 +198,17 @@ def check_sqf_syntax(filepath):
         if brackets_list.count('{') != brackets_list.count('}'):
             print("ERROR: A possible missing curly brace {{ or }} in file {0} {{ = {1} }} = {2}".format(filepath,brackets_list.count('{'),brackets_list.count('}')))
             bad_count_file += 1
-        pattern = re.compile('\s*(/\*[\s\S]+?\*/)\s*#include')
+        pattern = re.compile(r'\s*(/\*[\s\S]+?\*/)\s*#include')
         if pattern.match(content):
             print("ERROR: A found #include after block comment in file {0}".format(filepath))
             bad_count_file += 1
+
+        executable = strip_comments_and_strings(content)
+        for command, explanation in INVALID_RUNTIME_COMMANDS.items():
+            for match in re.finditer(rf"(?i)\b{re.escape(command)}\b", executable):
+                command_line = executable.count("\n", 0, match.start()) + 1
+                print("ERROR: Invalid runtime command {0} at {1} Line number: {2} ({3})".format(command, filepath, command_line, explanation))
+                bad_count_file += 1
 
 
 

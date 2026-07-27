@@ -1,12 +1,16 @@
 param(
     [ValidateSet("all", "core", "economy", "ew", "party", "interactions")]
     [string]$Suite = "all",
-    [ValidateSet("none", "core", "acre", "tfar")]
-    [string]$ModProfile = "core",
+    [ValidateSet("core", "acre", "tfar")]
+    [string]$ModProfile = "acre",
     [ValidateRange(1, 5)]
     [int]$Clients = 1,
     [int]$Port = 24132,
     [int]$TimeoutSeconds = 240,
+    [ValidateRange(1280, 3840)]
+    [int]$ResolutionWidth = 2560,
+    [ValidateRange(720, 2160)]
+    [int]$ResolutionHeight = 1440,
     [string]$PythonExecutable = "",
     [switch]$LeaveClientsOpen
 )
@@ -17,6 +21,15 @@ $armaRoot = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\bohemia interactive\ar
 $serverExe = Join-Path $armaRoot "arma3server_x64.exe"
 $clientExe = Join-Path $armaRoot "arma3_x64.exe"
 $missionRoot = Join-Path $armaRoot "MPMissions\WMP_Full_Arma_Audit.VR"
+if ((Get-Process arma3_x64 -ErrorAction SilentlyContinue) -or (Get-Process arma3server_x64 -ErrorAction SilentlyContinue)) {
+    throw "Close all Arma audit clients and servers before staging. While they are open, only monitor RPT files and record findings."
+}
+foreach ($legacyName in ("WMP_Full_Arma_Audit.VR", "WMP_FULL_PACK_AUDIT.VR")) {
+    $legacyRoot = Join-Path $armaRoot ("MPMissions\" + $legacyName)
+    if (Test-Path -LiteralPath $legacyRoot) {
+        Remove-Item -LiteralPath $legacyRoot -Recurse -Force
+    }
+}
 if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
     $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
     if ($null -ne $pythonCommand) {
@@ -30,14 +43,16 @@ if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
 if ([string]::IsNullOrWhiteSpace($PythonExecutable) -or -not (Test-Path -LiteralPath $PythonExecutable)) {
     throw "Python was not found. Install Python, add it to PATH, or pass -PythonExecutable."
 }
-& $PythonExecutable (Join-Path $PSScriptRoot "build_full_arma_audit.py") --destination $missionRoot --suite $Suite
+if ($Suite -in @("all", "ew") -and $ModProfile -eq "core") {
+    throw "Suite '$Suite' requires -ModProfile acre or tfar so radio integration is actually tested."
+}
+& $PythonExecutable (Join-Path $PSScriptRoot "build_full_arma_audit.py") --destination $missionRoot --suite $Suite --mod-profile $ModProfile --mode automated
 if ($LASTEXITCODE -ne 0) { throw "Full audit mission assembly failed." }
 
 $modNames = switch ($ModProfile) {
-    "core" { @("@CBA_A3", "@ace", "@Zeus Enhanced", "@ACRE2") }
+    "core" { @("@CBA_A3", "@ace", "@Zeus Enhanced") }
     "acre" { @("@CBA_A3", "@ace", "@Zeus Enhanced", "@ACRE2") }
     "tfar" { @("@CBA_A3", "@ace", "@Zeus Enhanced", "@Task Force Arrowhead Radio (BETA!!!)") }
-    default { @() }
 }
 $mods = @()
 foreach ($name in $modNames) {
@@ -72,7 +87,7 @@ class Missions
 "@ | Set-Content -LiteralPath $serverConfig -Encoding ASCII
 
 $serverArgs = @(
-    "-noBattlEye", "-noSound", "-noPause", "-autoInit", "-filePatching",
+    "-noBattlEye", "-noSound", "-noPause", "-autoInit",
     "-port=$Port", "-config=$serverConfig", "-profiles=$serverProfile", "-name=WMPAuditServer"
 )
 if ($null -ne $modArgument) { $serverArgs += $modArgument }
@@ -88,6 +103,10 @@ try {
         $serverRpt = Get-ChildItem -LiteralPath $serverProfile -Filter "*.rpt" -Recurse -ErrorAction SilentlyContinue |
             Sort-Object LastWriteTime -Descending | Select-Object -First 1
         if ($null -ne $serverRpt) {
+            $missionLoadError = Select-String -LiteralPath $serverRpt.FullName -Pattern "You cannot play/edit this mission|Mission .* was deleted|Missing addons detected" | Select-Object -Last 1
+            if ($null -ne $missionLoadError -and $missionLoadError.Line -notmatch "a3_characters_f\s*$") {
+                throw ("Arma rejected the audit mission before startup: " + $missionLoadError.Line)
+            }
             $serverReady = [bool](Select-String -LiteralPath $serverRpt.FullName -Pattern "Game started|Mission world: VR|WMP FULL AUDIT BOOT:" -Quiet)
             if ($serverReady) { break }
         }
@@ -99,7 +118,7 @@ try {
         New-Item -ItemType Directory -Path $clientProfile -Force | Out-Null
         $clientArgs = @(
             "-noBattlEye", "-noSplash", "-skipIntro", "-world=empty", "-showScriptErrors",
-            "-filePatching", "-window", "-noPause", "-connect=localhost", "-port=$Port",
+            "-window", "-x=$ResolutionWidth", "-y=$ResolutionHeight", "-noPause", "-connect=localhost", "-port=$Port",
             "-password=wmpqa", "-profiles=$clientProfile", "-name=WMPAudit$index"
         )
         if ($null -ne $modArgument) { $clientArgs += $modArgument }

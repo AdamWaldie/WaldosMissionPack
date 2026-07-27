@@ -60,7 +60,21 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json
 ```
 
-Build config: `releaseVerificationAndDeployment/config.json` — controls excluded paths (`notlist`) and the output name/version. Output zips land in `release/`. The deploy workflow triggers on GitHub release publish and uploads 5 artifacts: main WMP pack, patch, Compositions, Unit Insignias, and Exemplar Mission.
+Build config: `releaseVerificationAndDeployment/config.json` defines an explicit `include` allowlist and the output name/version. New repository folders do not ship unless deliberately added. The builder rejects QA/tooling folders and runtime logs before and after archive creation; patch releases use the same allowlist. Output zips land in `release/`. The deploy workflow uploads the main WMP pack, patch, Compositions, and Unit Insignias. The dormant Exemplar build remains available manually but is not currently produced by `deploy.sh`.
+
+### Full development audit mission
+
+Use the proven PR-review VR mission for feature and release testing. Its builder stages the exact
+release allowlist, preserves the loadable legacy `mission.sqm`, and runs the real pack entry points:
+
+```bash
+python3 releaseVerificationAndDeployment/build_pr_review_audit.py --destination .qa/staged/WMP_PR_Review_Audit.VR --suite all --mode manual
+```
+
+Launch with `launch_pr_review_audit.ps1`. CBA, ACE, ZEN and ACRE2 are required; BattlEye remains
+disabled and the window is 2560×1440. Manual mode never starts state-mutating audit cases. The
+generated full-range mission is experimental and is not a substitute for this gate. Read
+`releaseVerificationAndDeployment/fullArmaAudit/PROCESS.md` before running or changing it.
 
 ### Cover / Loading Screen Generation
 
@@ -209,7 +223,7 @@ Placing jammers (any of these):
 ```
 `affectedSides`: `"ALL"`, a side, or an array — accepts sides or strings (`"WEST"/"BLUFOR"`, `"EAST"/"OPFOR"`, `"IND"/"INDFOR"`, `"CIV"/"CIVILIAN"`). `bands`: `"ALL"` or an array of `[minMHz, maxMHz]` ranges (**ACRE2 only** — TFAR jamming is always broadband). `sector`: `[]` for omni or `[bearing, arc]` for a directional cone. `duty`: `[]` for constant or `[onSec, offSec]` to pulse. `jamUAV`: also jam drones in the field. `Waldo_fnc_Jammer` returns a numeric jammer id.
 
-**UAV / UGV jamming** (`jamUAV = true`): drones inside the field are jammed too — the server freezes autonomous drones' AI (`Waldo_fnc_JammingUavServer`), and a controlling player's client (`Waldo_fnc_JammingUavClient`) degrades the video feed as the link weakens and severs the terminal link at near-total jamming. It carries the **same loud feedback** as radio jamming: a persistent "UAV LINK JAMMED — not a game bug" HUD banner (IDC 5311) and a clear "datalink lost" message, so a jammed drone is never mistaken for an Arma UAV bug.
+**UAV / UGV jamming** (`jamUAV = true`): drones inside the field are jammed too. The server freezes autonomous drone AI (`Waldo_fnc_JammingUavServer`). A controlling player's client (`Waldo_fnc_JammingUavClient`) degrades the video feed as the link weakens and severs the terminal link at near-total jamming. A persistent `UAV LINK DEGRADED` panel (IDC 5311) shows signal-loss guidance, followed by a separate datalink-loss notice when the terminal disconnects.
 
 **Jamming model** (global toggles in `init.sqf`, read by `Waldo_fnc_JammingFactor`):
 
@@ -220,12 +234,12 @@ Placing jammers (any of these):
 | `Waldo_Jamming_BurnThroughRef` | `500` | Reference radio power (mW); a radio at this power is fully affected. |
 | `Waldo_Jamming_Curve` | `"LINEAR"` | Edge falloff shape: `"LINEAR"` or `"INVSQ"`. |
 | `Waldo_Jamming_Destructible` | `true` | Destroying a jammer's object auto-deregisters it (EW objectives for free). |
-| `Waldo_Jamming_GmOverlay` | `true` | Curators see a Draw3D marker/facing-line over each jammer. |
+| `Waldo_Jamming_GmOverlay` | `false` | Optional curator-only Draw3D marker/facing-line over each jammer. |
 | `Waldo_Jamming_ScanRange` | `3000` | Detection range (m) of the handheld RDF ACE self-action. |
 
 **EW toolkit (players):** every jammer object gets ACE actions **Toggle Radio Jammer** (anyone) and **Disable Radio Jammer** (engineers — destroys it); every player gets an ACE self-action **Scan for Radio Jammers** (`Waldo_fnc_JammerScan`) that reports bearing / coarse range / strength to the nearest active emitter for RDF hunting.
 
-**Feedback:** while jammed the player sees a persistent, blinking HUD banner on the main display (IDC 5310, `Waldo_fnc_JammingHud`) that other hints can't overwrite, a strength %, and an explicit "not a game bug" line, backed by an entry banner and a periodic chat reminder — deliberately unmistakable, because Arma radio bugs otherwise look identical to jamming.
+**Feedback:** while jammed, the player sees a persistent `ELECTRONIC WARFARE` panel on the main display (IDC 5310, `Waldo_fnc_JammingHud`). It names the condition as `RADIO INTERFERENCE`, shows signal loss as a percentage and bar, and displays `LINK QUALITY DEGRADED`. Entry, restoration, scan, and UAV-link changes use timed notices rather than game-chat logging.
 
 Managing jammers later (server-authoritative; `ref` = the jammer object or its id):
 ```sqf
@@ -241,7 +255,7 @@ missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];    // on-scre
 
 **ACRE2 requirement:** the ACRE2 signal model must be **LOS Multipath** (the default) or **Arcade** — ACRE2 does not call the custom signal hook under *LOS Simple*. The jamming model is receiver-oriented and symmetric: a link is degraded when **either** endpoint (the receiving or transmitting radio) sits inside an active field affecting the local player's side and matching the band. Implemented in `MissionScripts/MissionInit/Jamming/` (`Waldo_fnc_JammingInit`, `Waldo_fnc_Jammer`, `Waldo_fnc_JammerToggle`, `Waldo_fnc_JammerRemove`, `Waldo_fnc_JammingFactor`, `Waldo_fnc_JammingAcreSignal`, `Waldo_fnc_JammingTfarLoop`, `Waldo_fnc_JammingUavServer`, `Waldo_fnc_JammingUavClient`, `Waldo_fnc_JammerInteraction`, `Waldo_fnc_JammerScan`, `Waldo_fnc_JammerMapDraw`, `Waldo_fnc_JammingHud`).
 
-Zeus ("Waldos Mission Modules"): **Radio Jammer - Place** (dialog: radius / falloff / strength / affected side / cone arc + bearing / pulsing / jam UAVs / marker), **Radio Jammer - Toggle Nearest**, **Radio Jammer - Remove Nearest**.
+Zeus ("Waldos Mission Modules"): **Jammer: Place New Emitter** (dialog: radius / falloff / strength / affected side / frequency bands / initial state / cone arc + bearing / pulse timings / jam UAVs / map marker / per-emitter curator 3D marker / emitter class), **Jammer: Toggle Nearest Emitter**, **Jammer: Delete Nearest Emitter**. The script API's argument 11 is the per-emitter curator overlay; `Waldo_Jamming_GmOverlay` remains the global show-all override.
 
 ### EMP Burst (`Waldo_fnc_EMP`)
 
@@ -251,7 +265,7 @@ A one-shot electromagnetic pulse — an area electronics kill, the offensive cou
 [getPosATL myObject, 200, 30] call Waldo_fnc_EMP;   // [position, radius(m), duration(s)]
 [commandVehicle] call Waldo_fnc_EMPImmune;          // exempt a unit/vehicle (occupants inherit)
 ```
-Effects in radius (non-immune): infantry lose NVGs and (TFAR) radio use for the duration; vehicles have their engine cut (fuel drained, restored after); every affected **player** gets a white-out flash and an explicit "EMP DETONATION — electronics down" message. Applied per-entity on its owning machine via `Waldo_fnc_EMPApply`. Zeus: **EMP Detonation** (dialog: radius / duration). Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
+Effects in radius (non-immune): infantry lose NVGs and (TFAR) radio use for the duration; vehicles have their engine cut (fuel drained, restored after); every affected **player** gets a white-out flash. Set `Waldo_EMP_NotifyAffectedPlayers = true` to add an explicit local disruption notice; it defaults off. Applied per-entity on its owning machine via `Waldo_fnc_EMPApply`. Zeus: **EMP Detonation** (dialog: radius / duration). Module parameters are written to RPT, not chat. Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
 
 ### Signal Trackers — C-Track (`Waldo_fnc_Tracker`)
 
@@ -308,12 +322,29 @@ Freezes the mission: broadcasts "ENDEX ENDEX ENDEX", locks all weapons (ACE safe
 
 The ENDEX hint also shows an **After-Action Report** when AAR tracking is running. Tracking is started automatically from `initServer.sqf` via `[] call Waldo_fnc_AARTrack`, which registers a single `EntityKilled` mission event handler (fires on all machines, so server-side registration captures every kill). If `Waldo_AAR_StartTime` is unset the ENDEX simply omits the AAR block.
 
+ENDEX and the AAR are one player-facing flow, not separate actions. Set
+`Waldo_ENDEX_ReportDuration` to control how long the combined mission-end report
+remains visible (default 45 seconds).
+
 The AAR reports: mission **duration**, **KIA** per side, **player losses**, **vehicles lost** per side, **WIA** per side, **friendly-fire** incidents, an **objective summary**, and a **top-fraggers** leaderboard. Each extra line is omitted when its tally is empty. Details:
 - *Vehicle losses / friendly fire / fraggers* come from the same `EntityKilled` handler, which now also reads `_killer`/`_instigator`: a kill where instigator and victim share a side counts as friendly fire; an enemy kill by a human player feeds the leaderboard (`Waldo_AAR_Frags`).
 - *WIA* requires **ACE medical**. An `ace_unconscious` listener registered in `init.sqf` (runs on all machines) forwards each unit's first unconsciousness to the server via `Waldo_fnc_AARWound`, so each wounded unit is counted once.
 - *Objective summary* is populated automatically when objectives are created with `Waldo_fnc_CreateObjective` / resolved with `Waldo_fnc_SetObjectiveState` (they maintain the broadcast `Waldo_AAR_Tasks` ledger).
 
 For a custom end screen, configure `CfgDebriefing` → `End1` in `description.ext`, then trigger with `[[], "End1"] call BIS_fnc_endMission;`.
+
+### WMP UI notifications and recovery
+
+Mission makers can use the pack's padded, safe-zone-aware notification card directly:
+
+```sqf
+["OBJECTIVE UPDATED", "Secure the relay station.", "INFO", 10, "TOP", "OBJECTIVE", "JOINT OPERATIONS"]
+    call Waldo_fnc_ShowUiNotification;
+```
+
+Arguments are `[title, message, state, duration, placement, channel, source]`. States are `INFO`, `SUCCESS`, `WARNING`, or `ERROR`; duration `0` is persistent. A screen placement has one owner, so newer cards replace rather than overlap. The API is client-local and safe on dedicated servers. `[] call Waldo_fnc_ClearUiPanels` performs repeat-safe local recovery of WMP-owned overlays and displays only.
+
+Players receive **WMP Interface > Clear Stuck WMP UI** as an ACE self-interaction. Vanilla `addAction` is installed only when ACE interaction is unavailable. Setup runs on JIP and respawn and has no authority scheduler or public state.
 
 ### Safestart (optional)
 
@@ -334,18 +365,24 @@ Scripting API (server-authoritative — safe to call from a client, it forwards 
 [300]   call Waldo_fnc_SafeStartTimer;   // go live automatically in 300s (banner shows the clock)
 ```
 
-Zeus ("Waldos Mission Modules"): **Safestart - Activate**, **Safestart - Go Live (Lift)**, and **Safestart - Start Go-Live Countdown** (prompts for minutes). The countdown can be overruled at any time with the Lift module. Implemented in `MissionScripts/MissionFlowAndUi/safeStart.sqf`, `safeStartTimer.sqf`, `safeStartApply.sqf`.
+SafeStart and ENDEX keep separate authoritative state and handler ownership. A SafeStart lift never removes an active ENDEX freeze. For controlled rehearsals or QA, `[] call Waldo_fnc_ENDEXReset` removes ENDEX-owned handlers without lifting an active SafeStart.
+
+Zeus ("Waldos Mission Modules"): **Safestart - Activate**, **Safestart - Go Live (Lift)**, and **Safestart - Start Go-Live Countdown** (configured in seconds; displayed to players as `MM:SS`). The countdown can be overruled at any time with the Lift module. Implemented in `MissionScripts/MissionFlowAndUi/safeStart.sqf`, `safeStartTimer.sqf`, `safeStartApply.sqf`.
+
+The active banner always states whether a timer is running. Manual and timed
+go-live notices explain which protections were removed and remain visible for
+`Waldo_SafeStart_GoLiveHintDuration` seconds (default 12).
 
 ### Mission Diagnostics (optional)
 
-Runs a server-side configuration sanity check at mission start (after the loadout scan) and reports the most common WMP misconfigurations to the RPT log (lines prefixed `[WMP DIAG]`), echoing warnings to admins via `systemChat`. It is read-only — it never changes mission state.
+Runs a read-only server and client health check at mission start after the loadout scan. Every RPT entry uses the same searchable frame: `[WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]`. A hosted server also shows warnings through `systemChat`.
 
 ```sqf
-// In initServer.sqf — set to false to silence it for a shipping mission:
+// In initServer.sqf. Set false to silence startup diagnostics in a released mission.
 missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 ```
 
-Checks: required mods present (CBA, ACE); per-side loadout scrapes not empty when that side has playable slots (catches vanilla loadouts / binarized `mission.sqm`); supply/medical crate classnames are valid `CfgVehicles` classes; paradrop thresholds sane and parachute classes valid; ACRE2 LR channel arrays populated (only if ACRE2 loaded). Implemented in `MissionScripts/MissionFlowAndUi/runDiagnostics.sqf` (`Waldo_fnc_RunDiagnostics`).
+Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Zeus registration, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
 
 ### Tasks / Objectives (scripting helper)
 
@@ -375,6 +412,8 @@ This feature is explicitly marked **WIP and not recommended for live missions**.
 
 ### Zeus Enhanced Modules
 
+All 15 core and 19 Economy modules are listed in `releaseVerificationAndDeployment/zeus_script_parity.json`. `zeus_script_parity_checker.py` verifies their registrations, handlers, declared public APIs and required parity controls. A static pass establishes wiring, not in-engine usability; runtime Zeus placement, locality and dialog acceptance must still be recorded through the full Arma audit mission. See `wiki/Zeus-And-Script-API-Parity.md`.
+
 ```sqf
 [] call Waldo_fnc_ZenInitModules; // already called in init.sqf
 ```
@@ -401,7 +440,12 @@ exposes no in-Zeus menu. The four systems:
 
 Plus **Ground Command** (designate trusted players who may spend resources / order research /
 manage builds), **Commitment mode** (freezes config-catalog refreshes to cut server load),
-**Export/Import** config strings (save/share a full configuration as text), and **Purge**.
+**Economy Setup Builder** asks the Resource, Research, Construction and Purchasing domain builders
+to translate their Zeus-authored settings and placements into readable calls to the same public
+functions used by hand-authored `economyConfig.sqf`. Portable
+catalogue strings remain available through Config Copy and Import. Build Setup is for clean
+authoring sessions, not mid-campaign state persistence. **Purge** remains the
+runtime teardown tool.
 
 Enabling it (OFF by default — missions that don't use it pay no cost):
 
@@ -453,7 +497,22 @@ init field (no mod required — true Eden modules need an addon, which WMP is no
 (`MissionScripts/EconomySystems/economyInit.sqf`). Global state uses the `WaldoEco<System>_`
 variable prefix. World objects are tagged by class — resource crate `Land_PlasticCase_01_medium_F`,
 research center `Land_Research_HQ_F`, purchase terminal `Land_Laptop_unfolded_F`, plus
-construction vehicles.
+construction vehicles. Economy authoring forms always open in a transparent modal
+child display, including over Zeus, so the visible curator context remains available
+without allowing its map or shortcuts to steal form input.
+
+Player-facing Economy actions are installed through ACE when available and
+through a linked vanilla `addAction` at the same time. The same dual-surface
+policy applies to loadout-save points and field procedures, where the vanilla
+entry is also a useful discoverability cue. Party tables use the same linked
+ACE plus vanilla policy. Complex operational trees such as MHQ, Quartermaster
+and VVD remain ACE-first and use vanilla only when ACE is unavailable. Both
+routes must call the same guarded function.
+Dynamic Economy
+dialogs are fitted to a protected safe-zone rectangle and use the WMP operations
+console treatment. Construction intentionally converts and consumes its source
+vehicle; the confirmation UI warns before the action and a timed notice names
+the vehicle consumed afterward.
 
 **Multiplayer / authority model.** All shared state (catalogs, side resources, zones, jobs) and all
 global world-object/marker creation are gated by `Waldo_fnc_EcoCore_canRunAuthority` /
@@ -602,6 +661,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
 - `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
+- `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
 - `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
@@ -810,7 +870,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Loadout Save Point → calls `Waldo_fnc_ZenLoadoutSaveModule`
 - Safestart - Activate → `[true] remoteExec ["Waldo_fnc_SafeStart", 2]`
 - Safestart - Go Live (Lift) → `[false] remoteExec ["Waldo_fnc_SafeStart", 2]`
-- Safestart - Start Go-Live Countdown → calls `Waldo_fnc_ZenSafeStartTimer` (prompts for minutes, then `Waldo_fnc_SafeStartTimer`)
+- Safestart - Start Go-Live Countdown → calls `Waldo_fnc_ZenSafeStartTimer` (prompts for seconds, then `Waldo_fnc_SafeStartTimer`; HUD uses `MM:SS`)
 - Radio Jammer - Place → calls `Waldo_fnc_ZenJammerPlace` (dialog: radius / falloff / strength / affected side / cone / pulsing / jam UAVs / marker; spawns an emitter and registers it via `Waldo_fnc_Jammer`)
 - Radio Jammer - Toggle Nearest → calls `Waldo_fnc_ZenJammerToggle` (flips the nearest jammer on/off)
 - Radio Jammer - Remove Nearest → calls `Waldo_fnc_ZenJammerRemove` (removes + deletes the nearest jammer)
@@ -844,11 +904,11 @@ interaction-equipment UI work, use the disposable VR mission documented in
 
 For branch-wide release and deployment verification, use the checked-in mission
 and process in `releaseVerificationAndDeployment/fullArmaAudit/`. The canonical
-launcher is `launch_full_arma_dedicated_audit.ps1`; it stages
-`FullArmaAudit.VR` under Arma's real `MPMissions` directory and starts a
-dedicated server plus visible clients through the normal CfgFunctions/init/JIP
-lifecycle. Always retain `-noBattlEye`, use isolated timestamped profiles, and
-do not treat the fast scripted launcher as release evidence. Follow
+launcher is `launch_pr_review_audit.ps1`; it stages the exact release allowlist
+around the proven `FullArmaAudit.VR` scenario and starts a hosted multiplayer
+session through the normal CfgFunctions/init/JIP lifecycle. Always retain
+`-noBattlEye`, CBA, ACE, ZEN and ACRE2, use 2560x1440, and leave mutating
+automation disabled for manual feature review. Follow
 `fullArmaAudit/PROCESS.md` for the required mod order, RPT checks, external UI
 captures, focused retests and final sign-off record.
 
@@ -857,7 +917,7 @@ captures, focused retests and final sign-off record.
 Every `.sqf` file in `MissionScripts/` opens with a documentation block:
 ```sqf
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * One-line description of what this script does.
  *
  * Arguments:

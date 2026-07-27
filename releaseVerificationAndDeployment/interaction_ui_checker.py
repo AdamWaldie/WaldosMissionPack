@@ -88,6 +88,14 @@ def audit(root: Path = ROOT) -> list[str]:
             errors.append(f"{relative}: challenge does not use the shared equipment shell")
         if "minigameequipmentcreatecontrol" not in lowered:
             errors.append(f"{relative}: challenge does not use equipment-grid controls")
+        if (
+            "rscstructuredtext" in lowered
+            and "minigameequipmentfitstructuredtext" not in lowered
+            and "ctrltextheight" not in lowered
+        ):
+            errors.append(
+                f"{relative}: structured text has no bounded fitting path"
+            )
         if r"\n" in source:
             errors.append(
                 f"{relative}: literal \\n escape found; Arma controls render it as text"
@@ -104,6 +112,10 @@ def audit(root: Path = ROOT) -> list[str]:
         relative = path.relative_to(root)
         if "MiniGameChallengeUILegacy" in source:
             errors.append(f"{relative}: references removed legacy shell")
+        if re.search(r"(?i)\bctrlSetStyle\b", source):
+            errors.append(
+                f"{relative}: ctrlSetStyle is not an Arma SQF runtime command; use a configured control class"
+            )
         if "displayAddEventHandler" in source and path.name not in {
             "challengeUi.sqf",
             "equipmentAddDisplayHandler.sqf",
@@ -121,11 +133,42 @@ def audit(root: Path = ROOT) -> list[str]:
                 f"{relative}:{line}: parenthesize conditional command operand"
             )
 
+    equipment = interactions / "Equipment"
+    for path in sorted(equipment.glob("*.sqf")):
+        source = strip_comments(path.read_text(encoding="utf-8"))
+        relative = path.relative_to(root)
+        if re.search(r"(?i)(safezone[wh]\s*[*/+-]|[*/+-]\s*safezone[wh])", source):
+            errors.append(
+                f"{relative}: equipment component mixes raw safe-zone dimensions with equipment coordinates"
+            )
+
+    for relative_path in (
+        "Core/challengeHelp.sqf",
+        "Equipment/equipmentBriefing.sqf",
+        "Integration/equipmentPicker.sqf",
+        "Integration/miniGameInteractionNotifyClient.sqf",
+    ):
+        path = interactions / relative_path
+        if not path.exists():
+            errors.append(f"InteractionsMinigames/{relative_path}: shared UI file is missing")
+            continue
+        source = strip_comments(path.read_text(encoding="utf-8")).lower()
+        if (
+            "rscstructuredtext" in source
+            and "minigameequipmentfitstructuredtext" not in source
+            and "ctrltextheight" not in source
+        ):
+            errors.append(
+                f"InteractionsMinigames/{relative_path}: shared structured text bypasses fitting"
+            )
+
     functions = (root / "MissionScripts" / "WaldosFunctions.sqf").read_text(
         encoding="utf-8"
     )
     if "MiniGameChallengeUILegacy" in strip_comments(functions):
         errors.append("WaldosFunctions.sqf still registers the legacy shell")
+    if "MiniGameEquipmentFitStructuredText" not in functions:
+        errors.append("WaldosFunctions.sqf does not register structured-text fitting")
     difficulty_helper = interactions / "Themes" / "equipmentDifficultyConfig.sqf"
     if not difficulty_helper.exists():
         errors.append("Canonical equipment difficulty helper is missing")

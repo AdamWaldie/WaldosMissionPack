@@ -1,5 +1,7 @@
 _Associated Files: MissionScripts\EconomySystems\ (the `Waldo_fnc_Eco*` functions), `Waldo_fnc_EcoInit`, `economyConfig.sqf`_
 
+![Economy resource authoring](images/economy/economy-resources.png)
+
 Waldos Economy Systems is a **pub-Zeus, RTS-style economy suite** built into the pack. It lets you run a resource economy, a tech tree, base construction, and a vehicle store entirely from inside Zeus — no scripting needed by the operator, and no Eden work needed beyond turning it on. It works for any curator, including a player-controlled Zeus.
 
 > **Requires Zeus Enhanced (ZEN).** Every action is a ZEN custom module under the **"Waldos Economy Systems"** category in the Zeus module list. Without ZEN loaded the economy still runs on the server (income, research, production, player requests), but there is no in-Zeus authoring menu. ZEN is already a common dependency for the pack's other Zeus modules.
@@ -36,6 +38,18 @@ You never have to touch a script to use this suite. Pick the path that suits you
 > **Tip:** place only **one** Economy Systems object (composition or flag) per mission.
 
 See **[Setup & Configuration](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration)** for the full walkthrough of all three paths.
+
+## For mission makers
+
+Use a preset composition for the quickest setup, configure the system live through its ZEN modules, or call the public setup functions from `economyConfig.sqf`. The **Build Mission Setup** tool converts the current Zeus-authored catalogs and placed economy objects into ordered, pre-filled setup calls that can be pasted into the mission.
+
+## Diagnostics
+
+```sqf
+private _report = [] call Waldo_fnc_EcoCore_getDiagnostics;
+```
+
+The report covers enablement, server initialization, all four catalogs, invalid building or purchase class names, runtime registries, and the active authoring display's layout findings. It is also consumed by `[] call Waldo_fnc_RunDiagnostics`.
 
 ## Architecture (for scripters)
 

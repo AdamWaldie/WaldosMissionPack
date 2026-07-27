@@ -4,6 +4,7 @@ param(
 )
 
 $ErrorActionPreference = "Stop"
+if (-not ("WmpWindowCapture" -as [type])) {
 Add-Type @"
 using System;
 using System.Runtime.InteropServices;
@@ -24,13 +25,14 @@ public static class WmpWindowCapture {
     public static extern bool SetProcessDpiAwarenessContext(IntPtr dpiContext);
 }
 "@
+}
 # PrintWindow renders Arma in physical pixels. Make this capture process
 # per-monitor-DPI-aware before asking Windows for the target bounds, otherwise a
 # 150%/200% desktop scale allocates a smaller bitmap and crops the right/bottom.
 [WmpWindowCapture]::SetProcessDpiAwarenessContext([IntPtr](-4)) | Out-Null
 Add-Type -AssemblyName System.Drawing
 
-$process = Get-Process arma3_x64 -ErrorAction Stop | Sort-Object StartTime -Descending | Select-Object -First 1
+$process = Get-Process arma3_x64 -ErrorAction Stop | Sort-Object Id -Descending | Select-Object -First 1
 if ($process.MainWindowHandle -eq 0) {
     throw "Arma 3 has no visible main window."
 }

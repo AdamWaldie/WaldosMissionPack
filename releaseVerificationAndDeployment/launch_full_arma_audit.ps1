@@ -1,8 +1,8 @@
 param(
     [ValidateSet("all", "core", "economy", "ew", "party", "interactions")]
     [string]$Suite = "all",
-    [ValidateSet("none", "core", "acre", "tfar")]
-    [string]$ModProfile = "none",
+    [ValidateSet("core", "acre", "tfar")]
+    [string]$ModProfile = "core",
     [int]$TimeoutSeconds = 180,
     [string]$PythonExecutable = ""
 )
@@ -12,6 +12,12 @@ $repoRoot = Split-Path -Parent $PSScriptRoot
 $armaRoot = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\bohemia interactive\arma 3").main
 $armaExe = Join-Path $armaRoot "arma3_x64.exe"
 $missionRoot = Join-Path $armaRoot "Missions\WMP_Full_Arma_Audit.VR"
+foreach ($legacyName in ("WMP_Full_Arma_Audit.VR", "WMP_FULL_PACK_AUDIT.VR")) {
+    $legacyRoot = Join-Path $armaRoot ("Missions\" + $legacyName)
+    if (Test-Path -LiteralPath $legacyRoot) {
+        Remove-Item -LiteralPath $legacyRoot -Recurse -Force
+    }
+}
 if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
     $pythonCommand = Get-Command python -ErrorAction SilentlyContinue
     if ($null -ne $pythonCommand) {
@@ -25,14 +31,13 @@ if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
 if ([string]::IsNullOrWhiteSpace($PythonExecutable) -or -not (Test-Path -LiteralPath $PythonExecutable)) {
     throw "Python was not found. Install Python, add it to PATH, or pass -PythonExecutable."
 }
-& $PythonExecutable (Join-Path $PSScriptRoot "build_full_arma_audit.py") --destination $missionRoot --suite $Suite
+& $PythonExecutable (Join-Path $PSScriptRoot "build_full_arma_audit.py") --destination $missionRoot --suite $Suite --mode automated
 if ($LASTEXITCODE -ne 0) { throw "Full audit mission assembly failed." }
 
 $modNames = switch ($ModProfile) {
-    "core" { @("@CBA_A3", "@ace", "@Zeus Enhanced", "@ACRE2") }
+    "core" { @("@CBA_A3", "@ace", "@Zeus Enhanced") }
     "acre" { @("@CBA_A3", "@ace", "@Zeus Enhanced", "@ACRE2") }
     "tfar" { @("@CBA_A3", "@ace", "@Zeus Enhanced", "@Task Force Arrowhead Radio (BETA!!!)") }
-    default { @() }
 }
 $mods = @()
 foreach ($name in $modNames) {
@@ -45,7 +50,7 @@ $qaRoot = "\Missions\WMP_Full_Arma_Audit.VR\"
 $bootstrap = $qaRoot + "scriptedBootstrap.sqf"
 $scriptedCode = 'Waldo_QA_Root="' + $qaRoot + '";[] execVM "' + $bootstrap + '";'
 $codes = ($scriptedCode.ToCharArray() | ForEach-Object { [int]$_ }) -join ","
-$arguments = @("-noBattlEye", "-noSplash", "-skipIntro", "-world=empty", "-showScriptErrors", "-filePatching", "-window", "-noPause")
+$arguments = @("-noBattlEye", "-noSplash", "-skipIntro", "-world=empty", "-showScriptErrors", "-window", "-noPause")
 if ($mods.Count -gt 0) { $arguments += '-mod="' + ($mods -join ';') + '"' }
 $arguments += "-init=playScriptedMission[toString[86,82],compile(toString[$codes]),configNull,true]"
 $started = Get-Date
@@ -71,6 +76,6 @@ $output = Join-Path $repoRoot ".qa\full-arma-audit"
 New-Item -ItemType Directory -Path $output -Force | Out-Null
 $json = Join-Path $output "$Suite-$ModProfile.json"
 $markdown = Join-Path $output "$Suite-$ModProfile.md"
-& $python.Source (Join-Path $PSScriptRoot "parse_full_arma_audit.py") $rpt.FullName --json $json --markdown $markdown
+& $PythonExecutable (Join-Path $PSScriptRoot "parse_full_arma_audit.py") $rpt.FullName --json $json --markdown $markdown
 if ($LASTEXITCODE -ne 0) { throw "Arma full audit reported failures. See $markdown" }
 Write-Output $markdown

@@ -1,5 +1,7 @@
 _Associated Files: MissionScripts\EconomySystems\Research\ (`Waldo_fnc_EcoResearch_*`)_
 
+![Research catalog authoring](images/economy/economy-research.png)
+
 The Research System adds a **tech tree** to [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems). A side spends [resources](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System) at a Research Center to unlock research, which in turn gates what they can [build](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Build-System) and [buy](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Buy-System).
 
 ## The Research Center

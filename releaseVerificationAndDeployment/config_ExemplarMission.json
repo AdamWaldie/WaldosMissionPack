@@ -1,7 +1,19 @@
 {
     "build" : {
         "scriptName": "WMP Exemplar Mission",
-        "notlist": ["doc","release","releaseVerificationAndDeployment","WMP_Compositions"]
+        "include": [
+            "MissionScripts",
+            "Pictures",
+            "UnitInsignias",
+            "description.ext",
+            "economyConfig.sqf",
+            "init.sqf",
+            "initPlayerLocal.sqf",
+            "initServer.sqf",
+            "mission.sqm",
+            "LICENSE",
+            "README.md"
+        ]
     },
     "init.sqf" : {
         "add": [

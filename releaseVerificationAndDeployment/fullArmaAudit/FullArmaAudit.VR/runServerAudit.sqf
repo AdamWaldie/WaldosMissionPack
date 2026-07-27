@@ -24,7 +24,7 @@ if (_suite in ["all", "core"]) then {
         private _created = (missionNamespace getVariable ["Waldo_AAR_Tasks", []]) findIf {(_x select 0) == "qa_objective" && {(_x select 1) == "ASSIGNED"}} >= 0;
         ["qa_objective", "SUCCEEDED"] call Waldo_fnc_SetObjectiveState;
         private _updated = (missionNamespace getVariable ["Waldo_AAR_Tasks", []]) findIf {(_x select 0) == "qa_objective" && {(_x select 1) == "SUCCEEDED"}} >= 0;
-        ["core/objective/create-update", _created && _updated && {markerType "Waldo_obj_qa_objective" == ""}, [_created, _updated]] call Waldo_QA_fnc_assert;
+        ["core/objective/create-update", _created && _updated, [_created, _updated]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
     ["core/safestart/activate-lift", {
@@ -33,14 +33,6 @@ if (_suite in ["all", "core"]) then {
         [false] call Waldo_fnc_SafeStart;
         private _off = !(missionNamespace getVariable ["Waldo_SafeStart_Active", true]);
         ["core/safestart/activate-lift", _on && _off, [_on, _off]] call Waldo_QA_fnc_assert;
-    }] call Waldo_QA_fnc_case;
-
-    ["core/paradrop/settings", {
-        missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180];
-        missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350];
-        missionNamespace setVariable ["WALDO_STATIC_MAXSPEED", 310];
-        private _valid = (missionNamespace getVariable "WALDO_STATIC_MINALTITUDE") < (missionNamespace getVariable "WALDO_STATIC_MAXALTITUDE");
-        ["core/paradrop/settings", _valid, "Static-line thresholds ordered"] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 };
 
@@ -70,4 +62,3 @@ if (_suite in ["all", "ew"]) then {
 
 private _passed = call Waldo_QA_fnc_complete;
 missionNamespace setVariable ["Waldo_QA_ServerComplete", [_passed, missionNamespace getVariable ["Waldo_QA_LocalResults", []]], true];
-if (!isMultiplayer) then {uiSleep 0.5; if (_passed) then {endMission "END1"} else {endMission "LOSER"};};

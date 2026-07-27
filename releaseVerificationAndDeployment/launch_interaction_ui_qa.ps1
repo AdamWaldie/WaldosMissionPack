@@ -8,7 +8,9 @@ param(
     [switch]$AllDifficulties,
     [switch]$CaptureScreenshot,
     [string]$ScreenshotPath = ".\.qa\interaction-ui.png",
-    [switch]$CloseAfterCapture
+    [switch]$CloseAfterCapture,
+    [int]$ResolutionWidth = 2560,
+    [int]$ResolutionHeight = 1440
 )
 
 $ErrorActionPreference = "Stop"
@@ -24,7 +26,13 @@ $missionContainer = "Missions"
 $missionRoot = Join-Path $armaRoot "$missionContainer\WMP_Interaction_UI_QA.VR"
 $python = Get-Command python -ErrorAction SilentlyContinue
 if ($null -eq $python) {
-    throw "Python is required to assemble the disposable QA mission."
+    $bundledPython = "C:\Users\AdamW\.cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+    if (-not (Test-Path -LiteralPath $bundledPython)) {
+        throw "Python is required to assemble the disposable QA mission."
+    }
+    $pythonPath = $bundledPython
+} else {
+    $pythonPath = $python.Source
 }
 $autoTestConfig = Join-Path $repoRoot ".qa\WMP_Interaction_UI_QA.cfg"
 $buildArguments = @(
@@ -38,7 +46,7 @@ $buildArguments = @(
 if ($AllDifficulties) {
     $buildArguments += "--all-difficulties"
 }
-& $python.Source $buildArguments
+& $pythonPath $buildArguments
 if ($LASTEXITCODE -ne 0) {
     throw "QA mission assembly failed."
 }
@@ -51,6 +59,10 @@ $arguments = @(
     "-showScriptErrors",
     "-filePatching",
     "-window",
+    "-x=$ResolutionWidth",
+    "-y=$ResolutionHeight",
+    "-windowWidth=$ResolutionWidth",
+    "-windowHeight=$ResolutionHeight",
     "-noPause"
 )
 # Encode the scripted mission body so Windows cannot strip SQF string quotes.

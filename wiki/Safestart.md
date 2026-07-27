@@ -2,6 +2,8 @@ _Associated Files: `initServer.sqf`, `MissionScripts\MissionFlowAndUi\safeStart.
 
 # Safestart
 
+![SafeStart countdown](images/mission-flow/safestart-countdown.png)
+
 Safestart freezes every player at the start of a mission so people can load in, sort kit and get organised before anyone can shoot. It is the reversible mirror of the [ENDEX](https://github.com/AdamWaldie/WaldosMissionPack/wiki/ENDEX-Script-&-Custom-End-Screen) script — turn it on to hold the mission, lift it to go live.
 
 While Safestart is active:
@@ -30,6 +32,7 @@ missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false
 | `Waldo_SafeStart_Confine` | `true` | `false` = freeze weapons/damage but let players move freely. |
 | `Waldo_SafeStart_Radius` | `75` | Confinement radius in metres around each player's start position. |
 | `Waldo_SafeStart_ZoneMarker` | `""` | Set to a marker name to confine everyone to **one shared zone** (the marker's position and size) instead of a per-player radius. |
+| `Waldo_SafeStart_GoLiveHintDuration` | `12` | Seconds the manual/timed go-live explanation remains visible. |
 
 ## Going live & the scripting API
 
@@ -43,6 +46,23 @@ The API is **server-authoritative** — it is safe to call from a client, it for
 
 `Waldo_fnc_SafeStartTimer` makes sure Safestart is active, then publishes the go-live time so every player's banner shows a live countdown, and lifts the freeze automatically when it expires. Calling it again restarts/extends the timer. An admin can overrule a running countdown at any time with `[false] call Waldo_fnc_SafeStart`.
 
+SafeStart and ENDEX own separate fire handlers, damage state and ACE safety changes. If ENDEX is active when the countdown finishes, the SafeStart restriction is removed but ENDEX remains in force; the transition panel says so explicitly. Use `[] call Waldo_fnc_ENDEXReset` only when the exercise should resume.
+
+The active banner explicitly says when no countdown exists, so a manual hold is
+not mistaken for a stuck timer. When Safestart is lifted, the longer go-live
+notice explains that weapon, damage and confinement protections have ended and
+whether the change was manual or timer-driven.
+
+Only one SafeStart panel exists at a time. Starting or changing a countdown updates the existing panel rather than opening another one. The panel waits for the mission title sequence to finish, uses safe-zone padding, and displays configured seconds as `MM:SS` for players.
+
+## Diagnostics
+
+```sqf
+private _report = [] call Waldo_fnc_SafeStartGetDiagnostics;
+```
+
+The report identifies whether the code is loaded, whether SafeStart is active, its published go-live time, the local protection loop, and the current HUD state. The same checks appear in `[] call Waldo_fnc_RunDiagnostics` under mission flow.
+
 ## Zeus usage
 
 Three modules are registered under **"Waldos Mission Modules"** in the Zeus menu:
@@ -51,7 +71,7 @@ Three modules are registered under **"Waldos Mission Modules"** in the Zeus menu
 |---|---|
 | **Safestart - Activate** | Freezes the mission (`[true] call Waldo_fnc_SafeStart`). |
 | **Safestart - Go Live (Lift)** | Lifts the freeze and cancels any countdown. |
-| **Safestart - Start Go-Live Countdown** | Prompts for a number of minutes, then starts the auto go-live timer. |
+| **Safestart - Start Go-Live Countdown** | Prompts for a number of seconds, then starts the auto go-live timer. Player HUDs display the remaining time as `MM:SS`. |
 
 [Waldos Mission Pack Zeus Modules](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules) are covered separately.
 

@@ -6,7 +6,7 @@ private _suite = missionNamespace getVariable ["Waldo_QA_Suite", "all"];
 if (_suite in ["all", "core"]) then {
     ["core/loading/version-artwork", {
         private _version = missionNamespace getVariable ["Waldo_QA_ExpectedVersion", ""];
-        private _screen = (missionNamespace getVariable ["Waldo_QA_Root", ""]) + "Pictures\loading.jpg";
+        private _screen = "Pictures\loading.jpg";
         ["core/loading/version-artwork", _version != "" && {fileExists _screen}, [_version, _screen]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 };

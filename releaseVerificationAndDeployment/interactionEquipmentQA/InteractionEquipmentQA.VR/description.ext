@@ -1,4 +1,4 @@
-author = "Waldos Mission Pack";
+author = "WaldoTheWarfighter";
 onLoadName = "WMP Interaction Equipment QA";
 onLoadMission = "Arma-native interaction procedure validation";
 respawn = 3;

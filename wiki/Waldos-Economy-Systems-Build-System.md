@@ -1,5 +1,7 @@
 _Associated Files: MissionScripts\EconomySystems\Build\ (`Waldo_fnc_EcoBuild_*`)_
 
+![Construction catalog](images/economy/economy-build.png)
+
 The Build System is the most intricate part of [Waldos Economy Systems](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems). It lets players construct and upgrade buildings that shape the economy — producing [resources](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Resource-System), raising storage, speeding up [research](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Research-System)/construction, or revealing the enemy.
 
 ## Construction vehicles
@@ -9,6 +11,16 @@ Players build using a **construction vehicle**. From it they pick a building fro
 ```sqf
 [this] call Waldo_fnc_EcoBuild_registerConstructionVehicle;
 ```
+
+> **The source vehicle is consumed.** Confirming placement converts the
+> construction vehicle into the construction site; it is not returned after the
+> job. The action is labelled **Deploy + Consume**, the placement view repeats
+> the warning, and a timed completion notice names the vehicle that was
+> converted. This is intentional economy balance, not a deletion bug.
+
+The same build controls are available through ACE and a vanilla interaction.
+All player Economy dialogs are constrained to the protected screen area and use
+the WMP operations-console visual treatment.
 
 ## Defining buildings
 

@@ -34,7 +34,7 @@ if (Waldo_MiniGames_Enable) then {
 ## Requirements
 
 * **CBA_A3** — required (the whole pack depends on it).
-* **ACE 3** — used for the interaction menu on tables and on gated objects. Without ACE, gated interactions fall back to a vanilla scroll-wheel action; the table games use a vanilla action to sit.
+* **ACE 3** — used for nested interaction menus on tables and field equipment. These discoverable surfaces also retain matching vanilla scroll-wheel actions; both routes call the same authoritative request handlers.
 * No `description.ext` edits and no addon are needed — every screen is built at runtime from vanilla controls.
 
 ## Attribution

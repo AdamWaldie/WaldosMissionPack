@@ -2,6 +2,16 @@
     "build" : {
         "scriptName": "WMP",
         "version": "DevBuild",
-        "notlist": ["doc","release","releaseVerificationAndDeployment","UnitInsignias", "WMP_Compositions", "mission.sqm"]
+        "include": [
+            "MissionScripts",
+            "Pictures",
+            "description.ext",
+            "economyConfig.sqf",
+            "init.sqf",
+            "initPlayerLocal.sqf",
+            "initServer.sqf",
+            "LICENSE",
+            "README.md"
+        ]
     }
 }
