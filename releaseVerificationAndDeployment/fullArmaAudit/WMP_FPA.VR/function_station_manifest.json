@@ -316,7 +316,7 @@
     },
     {
       "name": "Waldo_fnc_FIRECOMMANDS",
-      "file": "MissionScripts/MissionInit/BriefingDocuments/FIRECOMMANDSDoc.sqf",
+      "file": "MissionScripts/MissionInit/BriefingDocuments/FireCommandsDoc.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

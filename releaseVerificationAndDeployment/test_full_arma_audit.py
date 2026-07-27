@@ -199,6 +199,16 @@ class FullAuditTests(unittest.TestCase):
         )
         self.assertEqual(set(), {entry["station"] for entry in manifest["runtimeFunctions"]} - station_ids)
 
+    def test_registered_function_paths_use_exact_on_disk_case(self):
+        registrations = AUDIT_BUILDER.FUNCTION.findall(
+            (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        )
+        for name, relative in registrations:
+            self.assertTrue(
+                AUDIT_BUILDER.GENERATOR.has_exact_path_case(ROOT, relative),
+                f"Waldo_fnc_{name}: {relative}",
+            )
+
     def test_manual_audit_never_starts_destructive_cases(self):
         mission = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
         for script_name in ("auditInitServer.sqf", "auditInitPlayerLocal.sqf"):

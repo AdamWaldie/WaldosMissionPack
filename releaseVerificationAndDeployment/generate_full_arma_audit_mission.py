@@ -350,6 +350,16 @@ def station_for(path: str) -> str:
     return next((station for token, station in rules if token in normalized), "control")
 
 
+def has_exact_path_case(root: Path, relative: str) -> bool:
+    """Return true only when every path component uses its on-disk spelling."""
+    current = root
+    for part in Path(relative.replace("\\", "/")).parts:
+        if not current.is_dir() or part not in {entry.name for entry in current.iterdir()}:
+            return False
+        current /= part
+    return current.is_file()
+
+
 def function_manifest() -> dict:
     text = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
     functions = []
@@ -360,8 +370,10 @@ def function_manifest() -> dict:
             raise ValueError(f"Duplicate function registration: {public_name}")
         seen.add(public_name)
         normalized = relative.replace("\\", "/")
-        if not (ROOT / normalized).is_file():
-            raise FileNotFoundError(f"Registered function has no source file: {relative}")
+        if not has_exact_path_case(ROOT, normalized):
+            raise FileNotFoundError(
+                f"Registered function has no exact-case source file: {relative}"
+            )
         station = station_for(normalized)
         functions.append({
             "name": public_name,

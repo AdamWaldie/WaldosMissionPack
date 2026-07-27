@@ -73,7 +73,7 @@ class CfgFunctions
                 file = "MissionScripts\MissionInit\BriefingDocuments\NINELINEDoc.sqf";
             };
             class FIRECOMMANDS {
-                file = "MissionScripts\MissionInit\BriefingDocuments\FIRECOMMANDSDoc.sqf";
+                file = "MissionScripts\MissionInit\BriefingDocuments\FireCommandsDoc.sqf";
             };
             class FIRETEAMPREPDOC {
                 file = "MissionScripts\MissionInit\BriefingDocuments\FireteamPrepDoc.sqf";
