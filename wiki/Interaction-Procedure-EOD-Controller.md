@@ -25,6 +25,23 @@ Difficulty increases the number of independent readings that must agree, from on
 ]] call Waldo_fnc_MiniGameInteractionSetup;
 ```
 
-Valid configuration: `[wireCount(3-6,5), timeLimit(20), title("EOD CONTROLLER"), verificationLevel(1-4,derived)]`. Existing three-value configurations remain valid. For a live explosive, use the bomb-defusal setup/callback so a failed or aborted result triggers the mission's configured consequence.
+Valid configuration: `[wireCount(3-6,5), timeLimit(20), title("EOD CONTROLLER"), verificationLevel(1-4,derived)]`. Existing three-value configurations remain valid.
+
+## Live explosive setup
+
+`Waldo_fnc_BombDefuseSetup` is the same `wirecut` field-equipment procedure, not a reduced second implementation. It uses the shared operating card, UI, difficulty profiles, presentation presets, ACE and vanilla actions, authoritative state, callbacks, and accessibility settings. The wrapper only adds the live explosive consequence.
+
+```sqf
+[this, createHashMapFromArray [
+    ["difficulty", "hard"],
+    ["actionTitle", "Defuse Vehicle Charge"],
+    ["equipmentTitle", "EOD CONTROL UNIT"],
+    ["preset", "vehicleCharge"],
+    ["detonateOnFailure", true],
+    ["oneShot", true]
+]] call Waldo_fnc_BombDefuseSetup;
+```
+
+Legacy array options such as `[["wireCount", 6], ["timeLimit", 15]]` remain supported. Explicit `wireCount`, `timeLimit`, `verificationLevel`, or `config` values override the curated difficulty mechanics.
 
 [Shared state, callbacks, ACE conditions and reset](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)

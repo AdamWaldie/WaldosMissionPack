@@ -599,8 +599,20 @@ not used by field procedures.
 [this] call Waldo_fnc_BombDefuseSetup;
 ```
 
-The existing bomb wrapper remains compatible. The EOD controller succeeds by cutting the correct
-lead; a wrong lead, timeout, or confirmed abort follows the configured failure/detonation callback.
+The bomb wrapper now enters the same high-level `wirecut` equipment setup as every other procedure.
+It supports the shared easy/standard/hard/expert profiles, presentation customization, accessibility,
+ACE and vanilla actions, authoritative lifecycle, and callback contract; it only adds the optional
+server-side detonation consequence. Existing array options remain compatible.
+
+```sqf
+[this, createHashMapFromArray [
+    ["difficulty", "expert"],
+    ["actionTitle", "Defuse Naval Charge"],
+    ["equipmentTitle", "CHARGE CONTROL UNIT"],
+    ["preset", "navalCharge"],
+    ["detonateOnFailure", true]
+]] call Waldo_fnc_BombDefuseSetup;
+```
 
 ## See also
 

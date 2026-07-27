@@ -17,6 +17,7 @@
  *                  "failureVariable" String - broadcast object variable set true on failure
  *                  "retryOnFailure"  Bool   - keep action after failure (default true)
  *                  "repeatable"      Bool   - keep action after success (default false)
+ *                  "oneShot"         Bool   - consume after the first terminal result (default false)
  *                  "distance"        Number - vanilla addAction distance (default 4)
  *                  "lockTimeout"     Number - exclusive lock expiry in seconds (default 600)
  *                  "condition"       Code   - additional interaction condition (default {true})
@@ -123,6 +124,7 @@ private _successVariable = ["successVariable", "Waldo_MG_InteractionComplete"] c
 private _failureVariable = ["failureVariable", "Waldo_MG_InteractionFailed"] call _opt;
 private _retryOnFailure = ["retryOnFailure", true] call _opt;
 private _repeatable = ["repeatable", false] call _opt;
+private _oneShot = ["oneShot", false] call _opt;
 private _distance = ["distance", 4] call _opt;
 private _lockTimeout = ["lockTimeout", 600] call _opt;
 private _condition = ["condition", {true}] call _opt;
@@ -161,7 +163,7 @@ private _failure = {
         ["title", _title],
         ["icon", _icon],
         ["condition", _condition],
-        ["oneShot", false],
+        ["oneShot", _oneShot],
         ["distance", _distance],
         ["lockTimeout", _lockTimeout],
         ["presentation", _presentationPairs]

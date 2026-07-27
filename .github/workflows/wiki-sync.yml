@@ -21,9 +21,12 @@ jobs:
         run: |
           git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.wiki.git wiki-repo
 
-      - name: Copy files from wiki/ into wiki repo
+      - name: Validate wiki assets
+        run: python3 releaseVerificationAndDeployment/check_wiki_assets.py
+
+      - name: Synchronize complete wiki tree
         run: |
-          cp wiki/*.md wiki-repo/
+          rsync -a --delete --exclude='.git/' wiki/ wiki-repo/
 
       - name: Commit and push if changed
         run: |
