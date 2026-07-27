@@ -10,6 +10,7 @@
  * Arguments:
  * _object  - Object - the device
  * _options - Array/HashMap - named settings accepted by MiniGameInteractionSetup, plus:
+ *              "challengeId"       String - any built-in interaction procedure (default "wirecut")
  *              "title"             String - action text (default "Defuse Bomb")
  *              "actionTitle"       String - action text; preferred hashmap key
  *              "equipmentTitle"    String - controller faceplate (default "EOD CONTROLLER")
@@ -22,6 +23,7 @@
  *              "explosive"         String - ammo/magazine class spawned to detonate
  *                                            (default "IEDLandBig_Remote_Ammo")
  *              "defusedVariable"   String - object var set true on success (default "Waldo_MG_BombDefused")
+ *              "successVariable"   String - shared API success variable; overrides defusedVariable
  *              "oneShot"           Bool   - single attempt (default true)
  *
  * Return Value:
@@ -58,13 +60,15 @@ private _has = {
 
 private _title = ["title", "Defuse Bomb"] call _opt;
 private _actionTitle = ["actionTitle", _title] call _opt;
-private _equipmentTitle = ["equipmentTitle", "EOD CONTROLLER"] call _opt;
+private _challengeId = toLower (["challengeId", ["procedure", "wirecut"] call _opt] call _opt);
+private _equipmentTitle = ["equipmentTitle", if (_challengeId == "wirecut") then {"EOD CONTROLLER"} else {""}] call _opt;
 private _wireCount = ["wireCount", 5] call _opt;
 private _timeLimit = ["timeLimit", 20] call _opt;
 private _verificationLevel = ["verificationLevel", -1] call _opt;
 private _detonate = ["detonateOnFailure", true] call _opt;
 private _explosive = ["explosive", "IEDLandBig_Remote_Ammo"] call _opt;
-private _defusedVar = ["defusedVariable", "Waldo_MG_BombDefused"] call _opt;
+private _legacyDefusedVariable = ["defusedVariable", "Waldo_MG_BombDefused"] call _opt;
+private _successVariable = ["successVariable", _legacyDefusedVariable] call _opt;
 private _oneShot = ["oneShot", true] call _opt;
 private _customSuccess = ["onSuccess", {}] call _opt;
 private _customFailure = ["onFailure", {}] call _opt;
@@ -73,14 +77,14 @@ private _customFailure = ["onFailure", {}] call _opt;
 // read them without capturing this scope.
 _object setVariable ["Waldo_MG_Bomb_Detonate", _detonate, true];
 _object setVariable ["Waldo_MG_Bomb_Explosive", _explosive, true];
-_object setVariable ["Waldo_MG_Bomb_DefusedVar", _defusedVar, true];
+_object setVariable ["Waldo_MG_Bomb_DefusedVar", _successVariable, true];
 _object setVariable ["Waldo_MG_Bomb_OnSuccess", _customSuccess];
 _object setVariable ["Waldo_MG_Bomb_OnFailure", _customFailure];
 
 private _onSuccess = {
     params ["_obj", "_actor", "_success", ["_result", []]];
     private _var = _obj getVariable ["Waldo_MG_Bomb_DefusedVar", "Waldo_MG_BombDefused"];
-    _obj setVariable [_var, true, true];
+    if (_var != "") then {_obj setVariable [_var, true, true];};
     _obj setVariable ["Waldo_MG_BombDefused", true, true];
     [format ["%1 defused the device.", name _actor]] remoteExec ["systemChat", 0];
     [_obj, _actor, _success, _result] call (_obj getVariable ["Waldo_MG_Bomb_OnSuccess", {}]);
@@ -106,8 +110,7 @@ private _onFailure = {
 
 private _setup = createHashMapFromArray [
     ["actionTitle", _actionTitle],
-    ["title", _equipmentTitle],
-    ["successVariable", _defusedVar],
+    ["successVariable", _successVariable],
     ["oneShot", _oneShot],
     ["retryOnFailure", ["retryOnFailure", !_oneShot] call _opt],
     ["repeatable", ["repeatable", false] call _opt],
@@ -118,6 +121,7 @@ private _setup = createHashMapFromArray [
     ["onSuccess", _onSuccess],
     ["onFailure", _onFailure]
 ];
+if (_equipmentTitle != "") then {_setup set ["title", _equipmentTitle];};
 
 // Explicit legacy mechanics retain their exact configuration. If the mission maker supplies only
 // a difficulty, use the same curated EOD difficulty profile as the generic equipment setup.
@@ -125,7 +129,7 @@ private _explicitMechanics = (["wireCount"] call _has) || {(["timeLimit"] call _
 if (["config"] call _has) then {
     _setup set ["config", ["config", []] call _opt];
 } else {
-    if (_explicitMechanics || {!(["difficulty"] call _has)}) then {
+    if (_challengeId == "wirecut" && {_explicitMechanics || {!(["difficulty"] call _has)}}) then {
         _setup set ["config", [_wireCount, _timeLimit, _equipmentTitle, _verificationLevel]];
     } else {
         _setup set ["difficulty", ["difficulty", "standard"] call _opt];
@@ -141,4 +145,4 @@ if (["config"] call _has) then {
     "texturePreset", "textureOpacity", "soundProfile", "skin", "failureVariable"
 ];
 
-[_object, "wirecut", _setup] call Waldo_fnc_MiniGameInteractionSetup;
+[_object, _challengeId, _setup] call Waldo_fnc_MiniGameInteractionSetup;

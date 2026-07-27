@@ -29,7 +29,7 @@ Valid configuration: `[wireCount(3-6,5), timeLimit(20), title("EOD CONTROLLER"),
 
 ## Live explosive setup
 
-`Waldo_fnc_BombDefuseSetup` is the same `wirecut` field-equipment procedure, not a reduced second implementation. It uses the shared operating card, UI, difficulty profiles, presentation presets, ACE and vanilla actions, authoritative state, callbacks, and accessibility settings. The wrapper only adds the live explosive consequence.
+`Waldo_fnc_BombDefuseSetup` is a consequence wrapper around the shared field-equipment system, not a reduced second implementation. It defaults to `wirecut`, but `challengeId` may select any built-in procedure when another operation better represents how the device is secured. Every choice uses the shared operating card, UI, difficulty profiles, presentation presets, ACE and vanilla actions, authoritative state, callbacks, and accessibility settings. The wrapper only adds the live explosive consequence.
 
 ```sqf
 [this, createHashMapFromArray [
@@ -43,5 +43,19 @@ Valid configuration: `[wireCount(3-6,5), timeLimit(20), title("EOD CONTROLLER"),
 ```
 
 Legacy array options such as `[["wireCount", 6], ["timeLimit", 15]]` remain supported. Explicit `wireCount`, `timeLimit`, `verificationLevel`, or `config` values override the curated difficulty mechanics.
+
+For example, a generator-fed charge can require breaker routing instead of wire isolation:
+
+```sqf
+[this, createHashMapFromArray [
+    ["challengeId", "circuit"],
+    ["difficulty", "hard"],
+    ["actionTitle", "Bypass Detonation Bus"],
+    ["successVariable", "chargeDisarmed"],
+    ["preset", "generatorBreaker"]
+]] call Waldo_fnc_BombDefuseSetup;
+```
+
+`successVariable` is the preferred shared option. The older `defusedVariable` name remains a fallback for existing missions.
 
 [Shared state, callbacks, ACE conditions and reset](Waldos-Mini-Games-Interaction-Challenges#authoritative-lifecycle-and-mission-state)

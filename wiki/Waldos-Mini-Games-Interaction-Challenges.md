@@ -599,10 +599,13 @@ not used by field procedures.
 [this] call Waldo_fnc_BombDefuseSetup;
 ```
 
-The bomb wrapper now enters the same high-level `wirecut` equipment setup as every other procedure.
-It supports the shared easy/standard/hard/expert profiles, presentation customization, accessibility,
-ACE and vanilla actions, authoritative lifecycle, and callback contract; it only adds the optional
-server-side detonation consequence. Existing array options remain compatible.
+The bomb wrapper now enters the same high-level equipment setup as every other procedure. `wirecut`
+remains its compatible default, while `challengeId` can select any built-in procedure—for example,
+`circuit` for a detonation bus, `keypad` for an access-controlled charge, or `sequence` for a command
+authorization device. It supports the shared difficulty profiles, presentation customization,
+accessibility, ACE and vanilla actions, authoritative lifecycle, and callback contract; it only adds
+the optional server-side detonation consequence. Existing array options remain compatible, and the
+shared `successVariable` option takes precedence over the legacy `defusedVariable` fallback.
 
 ```sqf
 [this, createHashMapFromArray [
