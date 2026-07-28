@@ -514,6 +514,7 @@ class CfgFunctions
             class FeatureRuntimeApply {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeApply.sqf";};
             class FeatureRuntimeZen {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeZen.sqf";};
             class FeatureRuntimeRequestState {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeRequestState.sqf";};
+            class FeatureRuntimeSendStateRequest {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeSendStateRequest.sqf";};
             class FeatureRuntimeReceiveState {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeReceiveState.sqf";};
         };
         class TreatmentFeedback
@@ -625,6 +626,7 @@ class CfgFunctions
         {
             class DynamicAAResolveAssetPool {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveAssetPool.sqf";};
             class DynamicAASetGroupState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetGroupState.sqf";};
+            class DynamicAASetVehicleAmmo {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetVehicleAmmo.sqf";};
             class DynamicAAPublishState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAPublishState.sqf";};
             class DynamicAACreate {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAACreate.sqf";};
             class DynamicAADetectorLoop {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAADetectorLoop.sqf";};

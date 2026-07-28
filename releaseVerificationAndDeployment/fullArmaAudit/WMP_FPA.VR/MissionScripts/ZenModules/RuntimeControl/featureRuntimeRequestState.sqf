@@ -19,7 +19,7 @@ if !(isServer) exitWith {
             && {_attempts < 15}
         } do {
             _attempts = _attempts + 1;
-            [] remoteExecCall ["Waldo_fnc_FeatureRuntimeRequestState", 2];
+            [] call Waldo_fnc_FeatureRuntimeSendStateRequest;
             private _retryAt = diag_tickTime + 2;
             waitUntil {
                 sleep 0.1;

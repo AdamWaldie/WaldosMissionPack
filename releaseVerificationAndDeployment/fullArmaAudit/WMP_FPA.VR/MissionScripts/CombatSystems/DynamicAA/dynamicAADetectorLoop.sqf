@@ -83,7 +83,7 @@ while {true} do {
         if (_engaged && {_config getOrDefault ["rearmOnActivation", false]}) then {
             private _ammoFraction = ((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1;
             {
-                [_x, _ammoFraction] remoteExecCall ["setVehicleAmmo", owner _x];
+                [_x, _ammoFraction] call Waldo_fnc_DynamicAASetVehicleAmmo;
             } forEach ((_state getOrDefault ["objects", []]) select {_x isKindOf "AllVehicles"});
         };
         _state set ["engaged", _engaged];

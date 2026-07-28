@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 742,
+  "registeredFunctionCount": 744,
   "runtimeFunctionCount": 385,
-  "functionCount": 1127,
+  "functionCount": 1129,
   "stations": [
     {
       "id": "control",
@@ -1113,6 +1113,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_FeatureRuntimeSendStateRequest",
+      "file": "MissionScripts/ZenModules/RuntimeControl/featureRuntimeSendStateRequest.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_FeatureRuntimeReceiveState",
       "file": "MissionScripts/ZenModules/RuntimeControl/featureRuntimeReceiveState.sqf",
       "station": "zen",
@@ -1559,6 +1565,12 @@
     {
       "name": "Waldo_fnc_DynamicAASetGroupState",
       "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAASetGroupState.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAASetVehicleAmmo",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAASetVehicleAmmo.sqf",
       "station": "control",
       "activation": "manual"
     },
