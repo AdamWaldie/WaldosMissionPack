@@ -26,6 +26,18 @@ This is the complete top-level index of mission systems currently supplied by Wa
 
 Runtime configuration is server-authoritative. Current settings are published for connected and JIP players, while keyed JIP initialisers install or remove the required local behavior. AI and breaching remain all-machine systems because their engine locality can move between server, player clients and headless clients.
 
+## Supporting integration changes
+
+| Area | Current behavior | User impact |
+|---|---|---|
+| Runtime state and JIP | The server publishes ordered feature-setting bundles; players and headless clients request the current snapshot before installing locality-sensitive behavior | Mid-mission ZEN changes remain authoritative for current players and later joins |
+| WMP notification UI | Treatment feedback, gunship, breaching, Dynamic AA, tree felling, field resupply, vehicle recovery, rally, persistence, emergency dismount and manual respawn-loadout saving use owned notification channels | Feature feedback no longer competes for Arma's shared hint display |
+| Loadout scraping | `Waldo_fnc_MissionSQMLookup` recursively walks every Eden `Entities` collection and includes both `isPlayer` and `isPlayable` objects | Playable characters inside organiser folders and arbitrarily nested folders contribute to arsenals, starter crates and supply crates |
+| Legacy mission scraping | If no readable modern Eden inventories match, the scraper falls back to live `playableUnits` loadouts by side | Older unbinarized mission structures continue to populate logistics without conversion |
+| Economy request handling | Authority requests share one scheduler and runtime objects use explicit registries | Correctness and cleanup improve without changing economy balance |
+| UI and lifecycle cleanup | SafeStart, ENDEX, mini-games and optional systems remove only controls, protections and handlers they own | Repeated activation, reset, death and debriefing do not leave stale feature state |
+| Verification | The checked-in full-pack audit mission mirrors release scripts and CI checks SQF, configuration, drawn UI, ZEN parity, wiki assets, performance guardrails and regression contracts | New systems and their documentation remain part of the release gate |
+
 ## Mission flow and player experience
 
 - [Mission Intro Text](Mission-Intro-Or-Title-Text)

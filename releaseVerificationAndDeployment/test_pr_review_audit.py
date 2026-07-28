@@ -118,6 +118,16 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("getUnitLoadout _x", source)
         self.assertIn("forEach playableUnits", source)
 
+    def test_pack_scrapes_playable_units_inside_nested_eden_folders(self):
+        source = (
+            ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "missionFileLookup.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('getText (_entity >> "dataType") == "Object"', source)
+        self.assertIn("_isPlayer == 1 || _isPlayable == 1", source)
+        self.assertIn('private _children = _entity >> "Entities"', source)
+        self.assertIn("[_x] call _visitEntity", source)
+        self.assertIn('missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities"', source)
+
     def test_range_does_not_duplicate_pack_initializers(self):
         server = (
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf"

@@ -138,6 +138,20 @@ class FullAuditTests(unittest.TestCase):
         changed = [relative for relative in source_files if (source / relative).read_bytes() != (packaged / relative).read_bytes()]
         self.assertEqual([], changed)
 
+    def test_loadout_scraper_recurses_into_nested_eden_folders(self):
+        source = (
+            ROOT
+            / "MissionScripts"
+            / "Logistics"
+            / "LogiHelpers"
+            / "missionFileLookup.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('getText (_entity >> "dataType") == "Object"', source)
+        self.assertIn("_isPlayer == 1 || _isPlayable == 1", source)
+        self.assertIn('private _children = _entity >> "Entities"', source)
+        self.assertIn("[_x] call _visitEntity", source)
+        self.assertIn('missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities"', source)
+
     def test_generated_mission_runs_current_pack_before_audit_hooks(self):
         with tempfile.TemporaryDirectory() as directory:
             destination = Path(directory) / "WMP_FPA.VR"
@@ -1043,6 +1057,18 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotRegex(source, r"\bhint(?:Silent|C)?\s")
         self.assertIn("Waldo_fnc_ShowUiNotification", source)
         self.assertIn("Waldo_fnc_FeatureNotifyLocal", source)
+
+    def test_respawn_loadout_feedback_uses_pack_ui_without_hint_output(self):
+        source = (
+            ROOT
+            / "MissionScripts"
+            / "Logistics"
+            / "LogiHelpers"
+            / "saveRespawnLoadout.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertNotRegex(source, r"\bhint(?:Silent|C)?\s")
+        self.assertIn("Waldo_fnc_ShowUiNotification", source)
+        self.assertIn('"RESPAWN_LOADOUT"', source)
 
     def test_parser_extracts_failure(self):
         with tempfile.TemporaryDirectory() as directory:

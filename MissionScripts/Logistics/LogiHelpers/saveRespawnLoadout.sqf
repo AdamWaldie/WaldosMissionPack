@@ -22,8 +22,13 @@ In scripts
 
 */
 [player, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory;
-[] spawn {
-    hint "Respawn Loadout Updated!";
-    sleep 5;
-    hint "";
-};
+[
+    "RESPAWN LOADOUT SAVED",
+    "Your current equipment will be restored when you respawn.",
+    "SUCCESS",
+    5,
+    "TOP_RIGHT",
+    "RESPAWN_LOADOUT",
+    "PLAYER LOADOUT",
+    "REPLACE"
+] call Waldo_fnc_ShowUiNotification;

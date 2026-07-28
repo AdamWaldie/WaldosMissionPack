@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need safe-zone-aware player notifications with semantic states, placement, stacking, or FIFO delivery.
 
-WMP includes a reusable notification-card system for mission updates, warnings and persistent equipment status. It is the same safe-zone-aware presentation used by Electronic Warfare, Economy feedback and ENDEX/AAR.
+WMP includes a reusable notification-card system for mission updates, warnings and persistent equipment status. It is the same safe-zone-aware presentation used by Economy feedback, ENDEX/AAR, patient treatment feedback, persistence, field resupply, vehicle recovery, squad rallies, Dynamic AA, airborne gunships and manual respawn-loadout saving.
 
 The system is local to each player's interface. Mission code decides who receives a notification by choosing the remote-execution target.
 

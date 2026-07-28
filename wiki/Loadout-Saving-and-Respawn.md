@@ -67,6 +67,8 @@ this addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_SaveLoa
 [] call Waldo_fnc_SaveLoadout;
 ```
 
+A successful manual save displays a five-second **RESPAWN LOADOUT SAVED** WMP notification on the local player's dedicated `RESPAWN_LOADOUT` channel. Repeated saves replace that confirmation instead of queueing or clearing another feature's message.
+
 ---
 
 ## Potential Conflicts
