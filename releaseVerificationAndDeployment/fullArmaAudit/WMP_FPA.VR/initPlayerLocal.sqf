@@ -89,8 +89,12 @@ if (hasInterface) then {
     [] spawn {
         waitUntil {
             missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]
-            && {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]}
+            && {
+                missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+                || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+            }
         };
+        if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
         if (missionNamespace getVariable ["Waldo_TreatmentFeedback_Enable", false]) then {
             [] call Waldo_fnc_TreatmentFeedbackInit;
         };

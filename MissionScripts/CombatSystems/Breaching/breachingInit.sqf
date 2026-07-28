@@ -13,7 +13,13 @@
  */
 
 if (!isServer && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {
-    [] spawn {waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]}; [] call Waldo_fnc_BreachingInit};
+    [] spawn {
+        waitUntil {
+            missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+            || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+        };
+        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {[] call Waldo_fnc_BreachingInit};
+    };
     true
 };
 if !(missionNamespace getVariable ["Waldo_Breaching_Enable", false]) exitWith {false};

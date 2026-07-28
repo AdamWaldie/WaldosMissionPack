@@ -14,7 +14,13 @@
  */
 
 if (!isServer && {hasInterface} && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {
-    [] spawn {waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]}; [] call Waldo_fnc_PersistenceInit};
+    [] spawn {
+        waitUntil {
+            missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+            || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+        };
+        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {[] call Waldo_fnc_PersistenceInit};
+    };
     true
 };
 if !(missionNamespace getVariable ["Waldo_Persistence_Enable", false]) exitWith {false};

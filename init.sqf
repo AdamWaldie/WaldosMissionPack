@@ -121,12 +121,18 @@ if (isNil "Waldo_Breaching_ExplosiveStrengths") then {
 missionNamespace setVariable ["Waldo_SharedFeatureConfigReady", true];
 if (isServer) then {
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", true];
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
 } else {
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", false];
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
     [] call Waldo_fnc_FeatureRuntimeRequestState;
 };
 [] spawn {
-    waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]};
+    waitUntil {
+        missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+        || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+    };
+    if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
     if (missionNamespace getVariable ["Waldo_Breaching_Enable", false]) then {
         [] call Waldo_fnc_BreachingInit;
     };
@@ -244,7 +250,11 @@ if (isNil "Waldo_AI_IncludedFactions") then {Waldo_AI_IncludedFactions = []};
 if (isNil "Waldo_AI_ExcludedFactions") then {Waldo_AI_ExcludedFactions = []};
 if (isNil "Waldo_AI_ExcludedClasses") then {Waldo_AI_ExcludedClasses = []};
 [] spawn {
-    waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]};
+    waitUntil {
+        missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+        || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+    };
+    if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
     if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
         [
             missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"],

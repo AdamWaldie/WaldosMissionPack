@@ -21,8 +21,13 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!isServer && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {
     [_mode, _profile] spawn {
         params ["_mode", "_profile"];
-        waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]};
-        [_mode, _profile] call Waldo_fnc_AIRebalanceInit;
+        waitUntil {
+            missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+            || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+        };
+        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {
+            [_mode, _profile] call Waldo_fnc_AIRebalanceInit;
+        };
     };
     true
 };
@@ -66,6 +71,12 @@ if !(_profile in (keys _profiles)) exitWith {
 missionNamespace setVariable ["Waldo_AI_Mode", _mode, isServer];
 missionNamespace setVariable ["Waldo_AI_Profile", _profile, isServer];
 missionNamespace setVariable ["Waldo_AI_RebalanceActive", true, isServer];
+if (isServer) then {
+    missionNamespace setVariable ["Waldo_AIRebalance_Enable", true, true];
+    if (remoteExecutedOwner == 0) then {
+        [_mode, _profile] remoteExecCall ["Waldo_fnc_AIRebalanceInit", -2, "Waldo_AIRebalance_RuntimeInit"];
+    };
+};
 
 if !(missionNamespace getVariable ["Waldo_AI_HandlerInstalled", false]) then {
     missionNamespace setVariable ["Waldo_AI_HandlerInstalled", true];

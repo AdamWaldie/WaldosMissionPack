@@ -18,6 +18,8 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
     };
 } forEach _snapshot;
 if (_complete) then {
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
+    missionNamespace setVariable ["Waldo_FeatureRuntimeRequestInFlight", false];
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", true];
 };
 true

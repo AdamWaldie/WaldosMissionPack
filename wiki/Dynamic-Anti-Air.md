@@ -6,6 +6,8 @@ _Associated Files: `MissionScripts/CombatSystems/DynamicAA/`; `MissionScripts/Ze
 
 Dynamic Anti-Air creates any number of named, server-authoritative air-defence zones. Each system has a central radar: while it is alive, hostile aircraft at or above the configured altitude floor activate the otherwise dormant defences. Destroying the radar takes that system offline.
 
+Detection remains server-owned, while AI state, target revelation and ammunition changes are dispatched to each defence group's or vehicle's current owner. Systems therefore continue to activate correctly after AI is transferred to a headless client.
+
 Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above terrain over land and height above sea level over water.
 
 ## Zeus setup

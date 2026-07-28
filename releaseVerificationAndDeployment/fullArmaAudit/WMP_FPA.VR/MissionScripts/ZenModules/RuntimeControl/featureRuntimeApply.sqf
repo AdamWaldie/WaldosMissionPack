@@ -172,18 +172,15 @@ switch (toUpperANSI _action) do {
     };
     case "HAZARD_REMOVE": {
         _settings params ["_key"];
-        [_key] remoteExecCall ["Waldo_fnc_HazardUnregisterZone", 0];
+        // Reconcile the authoritative registry synchronously before deriving the enabled state.
+        [_key] call Waldo_fnc_HazardUnregisterZone;
+        [_key] remoteExecCall ["Waldo_fnc_HazardUnregisterZone", -2];
         [] remoteExecCall ["", format ["Waldo_Hazard_Zone_%1", _key]];
-        [] spawn {
-            // The unregister call is queued on every machine. Reconcile from the server copy once
-            // it has run, then clear the evaluator's JIP state if the final zone was removed.
-            sleep 0.1;
-            if ((missionNamespace getVariable ["Waldo_Hazard_Zones", []]) isEqualTo []) then {
-                missionNamespace setVariable ["Waldo_Hazard_Enable", false, true];
-                [[ ["Waldo_Hazard_Enable", false] ], false] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];
-                [] remoteExecCall ["Waldo_fnc_HazardStop", -2];
-                [] remoteExecCall ["", "Waldo_Hazard_RuntimeInit"];
-            };
+        if ((missionNamespace getVariable ["Waldo_Hazard_Zones", []]) isEqualTo []) then {
+            missionNamespace setVariable ["Waldo_Hazard_Enable", false, true];
+            [[ ["Waldo_Hazard_Enable", false] ], false] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];
+            [] remoteExecCall ["Waldo_fnc_HazardStop", -2];
+            [] remoteExecCall ["", "Waldo_Hazard_RuntimeInit"];
         };
     };
     case "BREACH_SET": {

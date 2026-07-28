@@ -7,7 +7,13 @@
 
 if !(hasInterface) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", isServer]) exitWith {
-    [] spawn {waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]}; [] call Waldo_fnc_GunshipSetupLocal};
+    [] spawn {
+        waitUntil {
+            missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+            || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+        };
+        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {[] call Waldo_fnc_GunshipSetupLocal};
+    };
     true
 };
 if (isNil {missionNamespace getVariable "Waldo_Gunship_MarkerPFH"}) then {

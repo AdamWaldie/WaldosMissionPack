@@ -14,6 +14,13 @@
 
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};
 missionNamespace setVariable ["Waldo_AI_RebalanceActive", false, isServer];
+if (isServer) then {
+    missionNamespace setVariable ["Waldo_AIRebalance_Enable", false, true];
+    [] remoteExecCall ["", "Waldo_AIRebalance_RuntimeInit"];
+    if (remoteExecutedOwner == 0) then {
+        [] remoteExecCall ["Waldo_fnc_AIRebalanceStop", -2];
+    };
+};
 if (missionNamespace getVariable ["Waldo_AI_RestoreOnStop", true]) then {
     {
         if (local _x && {!isPlayer _x}) then {

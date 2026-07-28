@@ -54,7 +54,7 @@ missionNamespace setVariable ["Waldo_AI_Profiles", _profiles];
 
 `Waldo_AI_ApplyMode` accepts `BOTH`, `EXISTING` or `NEW`. `Waldo_AI_IncludedSides`, `Waldo_AI_IncludedFactions`, `Waldo_AI_ExcludedFactions` and `Waldo_AI_ExcludedClasses` provide coarse filters; set `Waldo_AI_Exclude = true` on an individual unit for a precise opt-out. `Waldo_AI_SkillVariance` adds bounded per-unit variation after all overrides.
 
-The feature records the original named skills before its first application. With `Waldo_AI_RestoreOnStop` enabled, `Waldo_fnc_AIRebalanceStop` restores those values. A locality handler reapplies the selected profile when ownership moves between server and headless clients.
+The feature records the original named skills before its first application. With `Waldo_AI_RestoreOnStop` enabled, `Waldo_fnc_AIRebalanceStop` restores those values. A server-side stop is authoritative for current machines and JIP players; AI remains stopped until `Waldo_fnc_AIRebalanceInit` or the ZEN control explicitly enables it again. A locality handler reapplies the selected profile when ownership moves between server and headless clients.
 
 ## See also
 

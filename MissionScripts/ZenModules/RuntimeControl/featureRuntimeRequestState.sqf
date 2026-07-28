@@ -9,20 +9,57 @@
  */
 
 if !(isServer) exitWith {
-    [] remoteExecCall ["Waldo_fnc_FeatureRuntimeRequestState", 2];
+    if (missionNamespace getVariable ["Waldo_FeatureRuntimeRequestInFlight", false]) exitWith {true};
+    missionNamespace setVariable ["Waldo_FeatureRuntimeRequestInFlight", true];
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
+    [] spawn {
+        private _attempts = 0;
+        while {
+            !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])
+            && {_attempts < 15}
+        } do {
+            _attempts = _attempts + 1;
+            [] remoteExecCall ["Waldo_fnc_FeatureRuntimeRequestState", 2];
+            private _retryAt = diag_tickTime + 2;
+            waitUntil {
+                sleep 0.1;
+                missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+                || {diag_tickTime >= _retryAt}
+            };
+        };
+        missionNamespace setVariable ["Waldo_FeatureRuntimeRequestInFlight", false];
+        if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {
+            private _finalResponseDeadline = diag_tickTime + 5;
+            waitUntil {
+                sleep 0.1;
+                missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+                || {diag_tickTime >= _finalResponseDeadline}
+            };
+        };
+        if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {
+            missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", true];
+            diag_log format ["[WMP RUNTIME] Authoritative feature snapshot failed after %1 request attempts; optional runtime features remain inactive on this machine.", _attempts];
+        };
+    };
     true
 };
 
 private _targetOwner = remoteExecutedOwner;
 if (_targetOwner <= 2) exitWith {false};
+if !(missionNamespace getVariable ["Waldo_FeatureRuntimeStateReady", false]) exitWith {false};
 
-[_targetOwner] spawn {
-    params ["_targetOwner"];
-    waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeStateReady", false]};
+private _requesterIndex = allPlayers findIf {owner _x == _targetOwner};
+private _requester = if (_requesterIndex >= 0) then {allPlayers select _requesterIndex} else {objNull};
+if (isNull _requester) then {
+    private _headlessClients = entities "HeadlessClient_F";
+    private _headlessIndex = _headlessClients findIf {owner _x == _targetOwner};
+    if (_headlessIndex >= 0) then {_requester = _headlessClients select _headlessIndex};
+};
+if (isNull _requester || {owner _requester != _targetOwner}) exitWith {false};
 
-    // Keep this list to values that Arma can reliably serialise. Mission callbacks and other Code
-    // values remain mission-file configuration and are not transported in the runtime snapshot.
-    private _names = [
+// Keep this list to values that Arma can reliably serialise. Mission callbacks and other Code
+// values remain mission-file configuration and are not transported in the runtime snapshot.
+private _names = [
         "Waldo_Persistence_Enable", "Waldo_Persistence_Active",
         "Waldo_Persistence_PlayerSaveInterval", "Waldo_Persistence_ObjectSaveInterval",
         "Waldo_Persistence_SaveLoadout", "Waldo_Persistence_SaveMedical",
@@ -48,13 +85,14 @@ if (_targetOwner <= 2) exitWith {false};
         "Waldo_Hazard_Enable", "Waldo_Breaching_Enable", "Waldo_FieldResupply_Enable",
         "Waldo_Gunship_Enable", "Waldo_Gunship_PublicSystems",
         "Waldo_DynamicAA_PublicSystems"
-    ];
-    private _snapshot = [];
-    {
-        private _value = missionNamespace getVariable [_x, nil];
-        if !(isNil "_value") then {_snapshot pushBack [_x, _value]};
-    } forEach _names;
+];
+private _snapshot = [];
+{
+    private _value = missionNamespace getVariable [_x, nil];
+    if !(isNil "_value") then {_snapshot pushBack [_x, _value]};
+} forEach _names;
 
-    [_snapshot, true] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", _targetOwner];
-};
+// Revalidate immediately before dispatch so a disconnected requester's owner id cannot be reused.
+if (isNull _requester || {owner _requester != _targetOwner}) exitWith {false};
+[_snapshot, true] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", _targetOwner];
 true

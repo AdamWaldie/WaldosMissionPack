@@ -15,9 +15,18 @@
 
 params [
     ["_group", grpNull, [grpNull]],
-    ["_active", false, [false]]
+    ["_active", false, [false]],
+    ["_targets", [], [[]]]
 ];
-if (isNull _group || {!local _group}) exitWith {false};
+if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
+if (isNull _group) exitWith {false};
+if !(local _group) exitWith {
+    if !(isServer) exitWith {false};
+    private _groupOwner = groupOwner _group;
+    if (_groupOwner <= 0 || {_groupOwner == clientOwner}) exitWith {false};
+    [_group, _active, _targets] remoteExecCall ["Waldo_fnc_DynamicAASetGroupState", _groupOwner];
+    true
+};
 
 {
     if (_active) then {
@@ -37,4 +46,7 @@ if (isNull _group || {!local _group}) exitWith {false};
 _group enableAttack _active;
 _group setCombatMode (["BLUE", "RED"] select _active);
 _group setBehaviourStrong (["SAFE", "COMBAT"] select _active);
+if (_active) then {
+    {_group reveal [_x, 4]} forEach (_targets select {!isNull _x});
+};
 true
