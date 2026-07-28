@@ -52,11 +52,18 @@ class PrReviewAuditTests(unittest.TestCase):
             manifest = json.loads((destination / "audit_build_manifest.json").read_text(encoding="utf-8"))
             self.assertTrue(manifest["physicalRange"])
             self.assertTrue(manifest["physicalRangePreStaged"])
+            self.assertTrue(manifest["nestedPlayableLoadoutFixture"])
             self.assertGreaterEqual(manifest["staticFixtureCount"], 90)
             mission_sqm = (destination / "mission.sqm").read_text(encoding="utf-8")
             self.assertIn("class Vehicles", mission_sqm)
             self.assertIn('text="qa_control_console"', mission_sqm)
             self.assertIn('text="qa_interaction_wirecut_easy"', mission_sqm)
+            self.assertIn('dataType="Layer";', mission_sqm)
+            self.assertIn('name="WMP Audit Loadouts";', mission_sqm)
+            self.assertIn('name="Nested Playable Roles";', mission_sqm)
+            self.assertEqual(5, mission_sqm.count("class Inventory"))
+            self.assertEqual(1, mission_sqm.count("isPlayer=1;"))
+            self.assertEqual(4, mission_sqm.count("isPlayable=1;"))
             self.assertEqual(
                 mission_sqm.count('init="this allowDamage false; this enableSimulation false;";'),
                 manifest["staticFixtureCount"],
@@ -84,9 +91,10 @@ class PrReviewAuditTests(unittest.TestCase):
 
     def test_builder_rejects_reappending_audit_fixtures(self):
         source = (BUILDER.TEMPLATE / "mission.sqm").read_bytes()
-        once = BUILDER.legacy_mission_with_fixtures(source, BUILDER.audit_fixtures())
+        loadouts = BUILDER.nested_loadout_fixture()
+        once = BUILDER.legacy_mission_with_fixtures(source, BUILDER.audit_fixtures(), loadouts)
         with self.assertRaisesRegex(ValueError, "already contains audit fixtures"):
-            BUILDER.legacy_mission_with_fixtures(once, BUILDER.audit_fixtures())
+            BUILDER.legacy_mission_with_fixtures(once, BUILDER.audit_fixtures(), loadouts)
 
     def test_manual_mode_does_not_run_mutating_automation(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -138,6 +146,35 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn("[] call Waldo_fnc_MiniGamesInit", server)
         self.assertNotIn("spawn Waldo_fnc_EcoInit", client)
         self.assertIn("Waldo_QA_fnc_addAuditActionLocal", client)
+
+    def test_extended_feature_range_has_physical_workflows(self):
+        root = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+        server = (root / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        client = (root / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        for token in (
+            "Waldo_fnc_PersistenceDependencyAvailable",
+            "Waldo_fnc_HazardRegisterZone",
+            "Waldo_fnc_BreachingServerHandle",
+            "Waldo_fnc_FieldResupplyRegisterHub",
+            "Waldo_fnc_TacticalDisplayRegister",
+            "Waldo_fnc_DynamicAACreate",
+            "Waldo_fnc_GunshipRegister",
+            "Waldo_fnc_RecoveryRegisterVehicle",
+            "Waldo_fnc_CreateLimitedArsenal",
+        ):
+            self.assertIn(token, server)
+        for label in (
+            "RESET QA PATIENT WOUND",
+            "OVERTURN VEHICLE",
+            "TOGGLE FRIENDLY PID",
+            "SIMULATE CONFIGURED DEMO CHARGE",
+            "ASSIGN ME 2 FIELD CRATES",
+            "CREATE QA DYNAMIC AA SYSTEM",
+            "SPAWN QA GUNSHIP",
+            "RESET RECOVERY LANE",
+            "REPORT NESTED PLAYABLE LOADOUT POOL",
+        ):
+            self.assertIn(label, client)
 
 
 if __name__ == "__main__":

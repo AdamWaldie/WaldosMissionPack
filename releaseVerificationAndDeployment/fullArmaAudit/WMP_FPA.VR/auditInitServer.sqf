@@ -14,6 +14,8 @@ if (
 
 private _range = [] execVM "featureRangeServer.sqf";
 waitUntil {scriptDone _range};
+private _extendedRange = [] execVM "extendedFeatureStationsServer.sqf";
+waitUntil {scriptDone _extendedRange};
 if (missionNamespace getVariable ["Waldo_QA_RunAutomation", false]) then {
     [] call Waldo_fnc_RunDiagnostics;
     private _diagnosticDeadline = diag_tickTime + 45;

@@ -36,6 +36,8 @@ RANGE_FILES = (
     "auditInitPlayerLocal.sqf",
     "featureRangeServer.sqf",
     "featureRangeClient.sqf",
+    "extendedFeatureStationsServer.sqf",
+    "extendedFeatureStationsClient.sqf",
     "functionStations.sqf",
     "partyFixtureServer.sqf",
 )
@@ -49,7 +51,47 @@ def audit_fixtures() -> list[dict]:
     return list(namespace["FIXTURES"])
 
 
-def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict]) -> bytes:
+def nested_loadout_fixture() -> str:
+    """Return a nested Eden Entities tree consumed only by MissionSQM scraping.
+
+    The launched audit retains the proven version-12 playable shell, but the
+    release description includes mission.sqm as configuration. This additional
+    tree makes the real scraper traverse two organiser folders before it reaches
+    the five playable inventories, without changing which units the engine spawns.
+    """
+    namespace = runpy.run_path(
+        str(ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py")
+    )
+    loadouts = namespace["LOADOUTS"]
+    unit_block = namespace["unit_block"]
+    units = "\n".join(unit_block(index, loadout) for index, loadout in enumerate(loadouts))
+    return f'''    class Entities
+    {{
+        items=1;
+        class Item0
+        {{
+            dataType="Layer";
+            name="WMP Audit Loadouts";
+            class Entities
+            {{
+                items=1;
+                class Item0
+                {{
+                    dataType="Layer";
+                    name="Nested Playable Roles";
+                    class Entities
+                    {{
+                        items={len(loadouts)};
+{units}
+                    }};
+                }};
+            }};
+        }};
+    }};
+'''
+
+
+def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict], loadout_fixture: str) -> bytes:
     """Add static feature objects to the known-good version-12 mission.
 
     The runtime range still configures these objects through public WMP APIs,
@@ -102,7 +144,7 @@ def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict]) -> bytes:
     closing = text.rfind("\n};")
     if closing < 0:
         raise ValueError("Legacy mission is missing its Mission closing brace")
-    return (text[:closing] + block + text[closing:]).encode("utf-8")
+    return (text[:closing] + block + loadout_fixture + text[closing:]).encode("utf-8")
 
 
 def release_entries() -> tuple[str, ...]:
@@ -157,7 +199,9 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
         name: (RANGE_TEMPLATE / name).read_text(encoding="utf-8") for name in RANGE_FILES
     }
     fixtures = audit_fixtures()
-    mission_sqm = legacy_mission_with_fixtures((TEMPLATE / "mission.sqm").read_bytes(), fixtures)
+    mission_sqm = legacy_mission_with_fixtures(
+        (TEMPLATE / "mission.sqm").read_bytes(), fixtures, nested_loadout_fixture()
+    )
     if not mission_sqm.lstrip().startswith(b"version=12;"):
         raise ValueError("PR review mission must retain its known-good legacy mission.sqm")
 
@@ -201,6 +245,7 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
         "fullPackStartup": True,
         "physicalRange": True,
         "physicalRangePreStaged": True,
+        "nestedPlayableLoadoutFixture": True,
         "staticFixtureCount": len(fixtures),
         "rangeScripts": list(RANGE_FILES),
     }

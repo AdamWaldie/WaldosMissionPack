@@ -107,11 +107,22 @@ class FullAuditTests(unittest.TestCase):
             "qa_mhq",
             "qa_mhq_antenna",
             "qa_ew_jammer",
+            "qa_hazard_emitter",
+            "qa_breach_wall",
+            "qa_recovery_vehicle",
+            "qa_loadout_arsenal",
         ):
             self.assertIn(fixture, sqm)
         self.assertNotIn("qa_station_", sqm)
         self.assertIn('type="ModuleCurator_F"', sqm)
         self.assertIn('name="qa_curator"', sqm)
+        for station_id in (
+            "persistence", "treatment-feedback", "hazards", "tree-felling",
+            "emergency-dismount", "accessibility", "breaching", "object-transforms",
+            "ai-rebalance", "field-resupply", "tactical-display", "dynamic-aa",
+            "gunship", "vehicle-recovery", "rally", "nested-loadouts",
+        ):
+            self.assertIn(f'qa_sign_{station_id.replace("-", "_")}', sqm)
         self.assertTrue((mission / "MissionScripts" / "WaldosFunctions.sqf").is_file())
         self.assertTrue((mission / "Pictures" / "loading.jpg").is_file())
         self.assertTrue((mission / "economyConfig.sqf").is_file())

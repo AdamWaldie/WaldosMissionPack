@@ -6,7 +6,9 @@ waitUntil {
 };
 
 [] call Waldo_fnc_Init3DMarkers;
-[] execVM "featureRangeClient.sqf";
+private _range = [] execVM "featureRangeClient.sqf";
+waitUntil {scriptDone _range};
+[] execVM "extendedFeatureStationsClient.sqf";
 if (missionNamespace getVariable ["Waldo_QA_RunAutomation", false]) then {
     private _diagnosticDeadline = diag_tickTime + 45;
     waitUntil {

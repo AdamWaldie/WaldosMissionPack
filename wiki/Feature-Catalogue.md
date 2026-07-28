@@ -36,7 +36,7 @@ Runtime configuration is server-authoritative. Current settings are published fo
 | Legacy mission scraping | If no readable modern Eden inventories match, the scraper falls back to live `playableUnits` loadouts by side | Older unbinarized mission structures continue to populate logistics without conversion |
 | Economy request handling | Authority requests share one scheduler and runtime objects use explicit registries | Correctness and cleanup improve without changing economy balance |
 | UI and lifecycle cleanup | SafeStart, ENDEX, mini-games and optional systems remove only controls, protections and handlers they own | Repeated activation, reset, death and debriefing do not leave stale feature state |
-| Verification | The checked-in full-pack audit mission mirrors release scripts and CI checks SQF, configuration, drawn UI, ZEN parity, wiki assets, performance guardrails and regression contracts | New systems and their documentation remain part of the release gate |
+| Verification | The checked-in full-pack audit mirrors release scripts and includes sixteen repeatable physical stations for the recently integrated systems, including nested-folder playable loadout scraping; CI also checks SQF, configuration, drawn UI, ZEN parity, wiki assets, performance guardrails and regression contracts | New systems can be exercised in one hosted or dedicated test session and remain part of the release gate |
 
 ## Mission flow and player experience
 

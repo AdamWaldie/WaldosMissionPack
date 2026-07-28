@@ -4,8 +4,8 @@ param(
     [ValidateSet("Manual", "Automated")]
     [string]$Mode = "Manual",
     [int]$Port = 24132,
-    [int]$ResolutionWidth = 2560,
-    [int]$ResolutionHeight = 1440,
+    [int]$ResolutionWidth = 1920,
+    [int]$ResolutionHeight = 1080,
     [string]$PythonExecutable = ""
 )
 
