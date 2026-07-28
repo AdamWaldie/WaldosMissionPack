@@ -990,6 +990,60 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('"UNCONFIGURED"', helper)
         self.assertNotIn("registered procedure(s); expected at least 10", server)
 
+    def test_vehicle_recovery_is_server_owned_jip_safe_and_configurable(self):
+        root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"
+        register_vehicle = (root / "recoveryRegisterVehicle.sqf").read_text(encoding="utf-8")
+        register_workshop = (root / "recoveryRegisterWorkshop.sqf").read_text(encoding="utf-8")
+        request = (root / "recoveryRequestServer.sqf").read_text(encoding="utf-8")
+        restore = (root / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
+        monitor = (root / "recoveryMonitorServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExecCall ["Waldo_fnc_RecoverySetupVehicleLocal", 0, _vehicle]', register_vehicle)
+        self.assertIn("getAssignedCuratorLogic", register_vehicle + register_workshop)
+        self.assertIn("remoteExecutedOwner != owner _actor", request)
+        self.assertIn('getVariable ["Waldo_Recovery_Side"', request)
+        self.assertIn("getObjectTextures", request)
+        self.assertIn("getPylonMagazines", request)
+        self.assertIn("getWeaponCargo", request)
+        self.assertIn("Waldo_fnc_RecoveryRegisterVehicle", restore)
+        self.assertIn("Waldo_fnc_RecoveryRegisterCarrier", restore)
+        self.assertIn("Waldo_Recovery_ScanInterval", monitor)
+        self.assertNotRegex(monitor, r"setVariable\s*\[[^\]]+,\s*true,\s*true\s*\]")
+
+    def test_rally_points_are_group_owned_and_do_not_leak_global_markers(self):
+        root = ROOT / "MissionScripts" / "Respawn" / "RallyPoint"
+        request = (root / "rallyPointRequestServer.sqf").read_text(encoding="utf-8")
+        marker = (root / "rallyPointMarkerLocal.sqf").read_text(encoding="utf-8")
+        setup = (root / "rallyPointSetupLocal.sqf").read_text(encoding="utf-8")
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
+        for token in ("Waldo_Rally_Active", "Waldo_Rally_CooldownUntil", "Waldo_Rally_ExpiresAt"):
+            self.assertIn(token, request)
+        self.assertIn("remoteExecutedOwner != owner _actor", request)
+        self.assertIn("BIS_fnc_addRespawnPosition", request)
+        self.assertIn('remoteExecCall ["Waldo_fnc_RallyPointMarkerLocal", 0, _rally]', request)
+        self.assertNotIn("createMarker [", request)
+        self.assertIn("createMarkerLocal", marker)
+        self.assertIn("group player != _group", marker)
+        self.assertIn("BIS_fnc_holdActionAdd", setup)
+        self.assertIn('remoteExecCall ["Waldo_fnc_RallyPointInit", -2, "Waldo_Rally_RuntimeInit"]', runtime)
+        self.assertIn('remoteExecCall ["", "Waldo_Rally_RuntimeInit"]', runtime)
+        self.assertIn('"Waldo_Rally_DeploymentTime"', snapshot)
+
+    def test_pr_feature_feedback_uses_pack_ui_without_hint_output(self):
+        feature_paths = [
+            ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship",
+            ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA",
+            ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling",
+            ROOT / "MissionScripts" / "Logistics" / "FieldResupply",
+            ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery",
+            ROOT / "MissionScripts" / "MedicalSystems" / "TreatmentFeedback",
+            ROOT / "MissionScripts" / "Respawn" / "RallyPoint",
+        ]
+        source = "\n".join(path.read_text(encoding="utf-8") for root in feature_paths for path in root.glob("*.sqf"))
+        self.assertNotRegex(source, r"\bhint(?:Silent|C)?\s")
+        self.assertIn("Waldo_fnc_ShowUiNotification", source)
+        self.assertIn("Waldo_fnc_FeatureNotifyLocal", source)
+
     def test_parser_extracts_failure(self):
         with tempfile.TemporaryDirectory() as directory:
             rpt = Path(directory) / "test.rpt"

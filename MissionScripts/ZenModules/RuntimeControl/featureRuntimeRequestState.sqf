@@ -84,7 +84,12 @@ private _names = [
         "Waldo_AIRebalance_Enable", "Waldo_AIRebalance_Mode", "Waldo_AIRebalance_Profile",
         "Waldo_Hazard_Enable", "Waldo_Breaching_Enable", "Waldo_FieldResupply_Enable",
         "Waldo_Gunship_Enable", "Waldo_Gunship_PublicSystems",
-        "Waldo_DynamicAA_PublicSystems"
+        "Waldo_DynamicAA_PublicSystems",
+        "Waldo_Rally_Enable", "Waldo_Rally_ObjectClass", "Waldo_Rally_Duration", "Waldo_Rally_DeploymentTime",
+        "Waldo_Rally_Cooldown", "Waldo_Rally_EnemyExclusionRadius",
+        "Waldo_Rally_MinimumGroupMembers", "Waldo_Rally_PlacementDistance",
+        "Waldo_Rally_MaximumSlope", "Waldo_Rally_AllowRegroup",
+        "Waldo_Recovery_ScanInterval"
 ];
 private _snapshot = [];
 {

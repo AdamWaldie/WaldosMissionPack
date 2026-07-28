@@ -97,6 +97,36 @@ switch (toUpperANSI _action) do {
         _settings params ["_unit", "_crates", "_maximum"];
         [_unit, _crates, _maximum] call Waldo_fnc_FieldResupplyAssignCarrier;
     };
+    case "RECOVERY_WORKSHOP": {
+        _settings params ["_object", "_key", "_radius", "_side"];
+        [_object, _key, _radius, _side] call Waldo_fnc_RecoveryRegisterWorkshop;
+    };
+    case "RECOVERY_VEHICLE": {
+        _settings params ["_object", "_key", "_damage", "_destroyed", "_engineer", "_package", "_cargo", "_fuel"];
+        [_object, _key, _damage, _destroyed, _engineer, _package, _cargo, _fuel] call Waldo_fnc_RecoveryRegisterVehicle;
+    };
+    case "RECOVERY_CARRIER": {
+        _settings params ["_object", "_range"];
+        [_object, _range] call Waldo_fnc_RecoveryRegisterCarrier;
+    };
+    case "RALLY_CONFIG": {
+        _settings params ["_enable", "_objectClass", "_duration", "_deploymentTime", "_cooldown", "_enemyRadius", "_minimumMembers", "_placement", "_slope", "_regroup"];
+        if !(isClass (configFile >> "CfgVehicles" >> _objectClass)) exitWith {false};
+        [
+            ["Waldo_Rally_Enable", _enable], ["Waldo_Rally_ObjectClass", _objectClass],
+            ["Waldo_Rally_Duration", _duration max 15], ["Waldo_Rally_DeploymentTime", _deploymentTime max 1], ["Waldo_Rally_Cooldown", _cooldown max 0],
+            ["Waldo_Rally_EnemyExclusionRadius", _enemyRadius max 0], ["Waldo_Rally_MinimumGroupMembers", round (_minimumMembers max 1)],
+            ["Waldo_Rally_PlacementDistance", (_placement max 1) min 10], ["Waldo_Rally_MaximumSlope", (_slope max 0) min 45],
+            ["Waldo_Rally_AllowRegroup", _regroup]
+        ] call _publishAll;
+        [] remoteExecCall ["Waldo_fnc_RallyPointStop", -2];
+        if (_enable) then {
+            [] remoteExecCall ["Waldo_fnc_RallyPointInit", -2, "Waldo_Rally_RuntimeInit"];
+        } else {
+            [] call Waldo_fnc_RallyPointRemoveAllServer;
+            [] remoteExecCall ["", "Waldo_Rally_RuntimeInit"];
+        };
+    };
     case "TACTICAL_DISPLAY": {
         _settings params ["_object", "_side", "_radius", "_knownEnemies"];
         [_object, _side, _radius, _knownEnemies] call Waldo_fnc_TacticalDisplayRegister;

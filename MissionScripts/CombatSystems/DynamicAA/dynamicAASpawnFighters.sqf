@@ -61,6 +61,6 @@ _state set ["lastFighterScramble", diag_tickTime];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 if (_config getOrDefault ["announce", true]) then {
-    [format ["[WMP] AA system %1 scrambled %2 fighter(s).", _id, _count]] remoteExecCall ["systemChat", 0];
+    ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _count], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", 0];
 };
 _count

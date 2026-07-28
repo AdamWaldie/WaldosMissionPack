@@ -65,4 +65,8 @@ private _breached = 0;
     };
 } forEach keys _profiles;
 
+if (_breached > 0 && {!isNull _unit} && {isPlayer _unit}) then {
+    ["EXPLOSIVE BREACH", format ["%1 configured section(s) breached.", _breached], "SUCCESS", "EXPLOSIVE_BREACH"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _unit];
+};
+
 _breached

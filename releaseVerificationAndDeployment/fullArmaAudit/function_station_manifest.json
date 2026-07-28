@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 744,
+  "registeredFunctionCount": 764,
   "runtimeFunctionCount": 385,
-  "functionCount": 1129,
+  "functionCount": 1149,
   "stations": [
     {
       "id": "control",
@@ -489,6 +489,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_FeatureNotifyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/featureNotifyLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_SetUiPanelPlacement",
       "file": "MissionScripts/MissionFlowAndUi/setUiPanelPlacement.sqf",
       "station": "mission-flow",
@@ -867,6 +873,66 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RecoveryNotifyLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryNotifyLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRegisterWorkshop",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRegisterWorkshop.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRegisterVehicle",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRegisterVehicle.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRegisterCarrier",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRegisterCarrier.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoverySetupVehicleLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySetupVehicleLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoverySetupCarrierLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySetupCarrierLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoverySetCargoLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySetCargoLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRequestServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRequestServer.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRestoreServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRestoreServer.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryMonitorServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryMonitorServer.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_VehicleCamoSetup",
       "file": "MissionScripts/Logistics/VehicleCamoScript/vehicleCamo.sqf",
       "station": "loadouts",
@@ -1182,6 +1248,60 @@
       "name": "Waldo_fnc_FieldResupplyServerHandle",
       "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyServerHandle.sqf",
       "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointNotifyLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointNotifyLocal.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointInit",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointInit.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointStop",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointStop.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointSetupLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointSetupLocal.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointRequestServer",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointRequestServer.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointRemoveServer",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointRemoveServer.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointRemoveAllServer",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointRemoveAllServer.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointMoveLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointMoveLocal.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointMarkerLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointMarkerLocal.sqf",
+      "station": "control",
       "activation": "manual"
     },
     {

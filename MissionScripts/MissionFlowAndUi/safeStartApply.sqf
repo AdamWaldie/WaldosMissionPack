@@ -95,7 +95,6 @@ if (_enable) then {
 
                     private _obj = vehicle player;
                     if (alive player && {_obj distance2D _centre > _radius}) then {
-                        systemChat "SAFESTART: Return to the safe zone.";
                         private _dir = _centre getDir _obj;
                         private _back = _centre getPos [_radius * 0.8, _dir];
                         _obj setPosATL [_back select 0, _back select 1, (getPosATL _obj) select 2];

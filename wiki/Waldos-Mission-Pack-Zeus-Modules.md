@@ -13,6 +13,8 @@ These modules allow users to:
 * Configure persistence, treatment feedback, hazardous environments, tree felling, emergency dismount, accessibility PID, explosive breaching and AI rebalance while the mission is running
 * Register field-resupply hubs/carriers and tactical-display terminals
 * Register, assign and operate airborne gunship support
+* Register vehicle-recovery workshops, recoverable vehicles and recovery carriers
+* Configure temporary squad rally respawns during play
 
 WMP's Zeus modules require Zeus Enhanced. Find them under **Modules → Waldos Mission Modules**.
 
@@ -146,6 +148,14 @@ These modules are repeat-safe and send configuration through a server-authoritat
 ## Airborne Gunship Support
 
 **Gunship - Register or Spawn** registers the nearest aircraft or creates a validated aircraft class at the module position. **Gunship - Assign Controller** assigns the nearest player to a named system. **Gunship - Set Orbit** sends the selected aircraft to the module position. **Gunship - Operational Control** returns it to its combat orbit, sends it through its service cycle, releases its operator or removes the system. See the [Airborne Gunship Support guide](Airborne-Gunship-Support).
+
+## Vehicle Recovery
+
+**Vehicle Recovery - Register Workshop** assigns a key and delivery radius to the nearest object. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+
+## Squad Rally Points
+
+**Respawn - Squad Rally Control** enables or disables squad-leader rally actions and adjusts object class, duration, cooldown, enemy exclusion, group size, placement, slope and the optional direct-regroup ability. Disabling it also removes active rallies. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 <!-- WMP-WIKI-NAV -->
 ---

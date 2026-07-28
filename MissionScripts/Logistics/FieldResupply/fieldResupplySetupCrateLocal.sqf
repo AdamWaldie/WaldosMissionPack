@@ -12,7 +12,7 @@ if (isNull _crate || {_crate getVariable ["Waldo_FieldResupply_LocalSetup", fals
 _crate setVariable ["Waldo_FieldResupply_LocalSetup", true];
 _crate addAction ["Inspect Field Resupply", {
     params ["_target"];
-    systemChat format ["[WMP] Field resupply charges remaining: %1.", _target getVariable ["Waldo_FieldResupply_Charges", 0]];
+    ["FIELD RESUPPLY", format ["Charges remaining: %1.", _target getVariable ["Waldo_FieldResupply_Charges", 0]], "INFO", "FIELD_RESUPPLY"] call Waldo_fnc_FeatureNotifyLocal;
 }, [], 1.5, true, true, "", "_this distance _target <= 4", 4];
 _crate addAction ["Take Compatible Ammunition", {
     params ["_target", "_caller"];

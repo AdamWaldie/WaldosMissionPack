@@ -64,3 +64,4 @@ if (["RecoverUnconscious", false] call _setting) then {
 private _damageOnExit = ["DamageOnExit", 0] call _setting;
 if (_damageOnExit > 0) then {_unit setDamage ((damage _unit + _damageOnExit) min 1)};
 _unit setVariable ["Waldo_EmergencyDismount_ActiveProfile", nil];
+["EMERGENCY DISMOUNT", if (_destroyed) then {"Extracted from a destroyed vehicle."} else {"Extracted from an overturned vehicle."}, "WARNING", "EMERGENCY_DISMOUNT"] call Waldo_fnc_FeatureNotifyLocal;

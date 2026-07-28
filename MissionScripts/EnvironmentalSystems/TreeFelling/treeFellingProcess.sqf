@@ -26,7 +26,7 @@ if (_patterns findIf {_weaponLower find toLowerANSI _x >= 0} < 0) exitWith {fals
 
 private _protectedAreas = missionNamespace getVariable ["Waldo_TreeFelling_ProtectedAreas", []];
 if (!isNull _target && {_protectedAreas findIf {_target inArea _x} >= 0}) exitWith {
-    ["Tree felling is prohibited in this area."] remoteExecCall ["systemChat", owner _unit];
+    ["TREE FELLING", "Tree felling is prohibited in this area.", "WARNING", "TREE_FELLING"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _unit];
     false
 };
 
@@ -54,7 +54,7 @@ private _hits = (_target getVariable ["Waldo_TreeFelling_Hits", 0]) + 1;
 _target setVariable ["Waldo_TreeFelling_Hits", _hits, true];
 
 private _progress = round ((_hits / (_required max 1)) * 100) min 100;
-[format ["Tree felling: %1%%", _progress]] remoteExecCall ["systemChat", owner _unit];
+["TREE FELLING", format ["Cutting progress: %1%%", _progress], "INFO", "TREE_FELLING", 3] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _unit];
 if (_hits < _required) exitWith {true};
 
 private _position = getPosATL _target;

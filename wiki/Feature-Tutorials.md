@@ -24,6 +24,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 |---|---|
 | [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster) | Mission-derived supplies and limited arsenals |
 | [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal, and manual loadout persistence |
+| [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies) | Recoverable vehicle logistics and temporary group respawns |
 | [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) | Deployable MHQ and logistics |
 | [Virtual Vehicle Depot](Virtual-Vehicle-Depot) | Virtual garage and vehicle deployment |
 | [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop) | Vehicle interactions, static line, and HALO |

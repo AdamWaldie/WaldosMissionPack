@@ -329,6 +329,8 @@ Uncomment to automatically save the player's respawn loadout whenever they close
 
 See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) for full details.
 
+Temporary squad-owned respawn points are configured with the shared `Waldo_Rally_*` settings in `init.sqf`; vehicle-recovery scans use `Waldo_Recovery_ScanInterval`. Object registration and runtime options are documented in [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

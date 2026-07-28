@@ -19,5 +19,5 @@ private _state = if (count _this > 0) then {_this select 0} else {
 };
 if !(_state isEqualType true) exitWith {false};
 missionNamespace setVariable ["Waldo_AccessibilityPID_Visible", _state];
-systemChat format ["[WMP] Friendly identification aid %1.", ["disabled", "enabled"] select _state];
+["ACCESSIBILITY", format ["Friendly identification aid %1.", ["disabled", "enabled"] select _state], "INFO", "ACCESSIBILITY_PID"] call Waldo_fnc_FeatureNotifyLocal;
 _state

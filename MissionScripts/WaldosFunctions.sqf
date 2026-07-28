@@ -170,6 +170,9 @@ class CfgFunctions
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
               };
+              class FeatureNotifyLocal {
+                  file = "MissionScripts\MissionFlowAndUi\featureNotifyLocal.sqf";
+              };
               class SetUiPanelPlacement {
                   file = "MissionScripts\MissionFlowAndUi\setUiPanelPlacement.sqf";
               };
@@ -383,6 +386,18 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\MHQ\MHQPlayAudioLocal.sqf";
             };
         };
+        class VehicleRecovery {
+            class RecoveryNotifyLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoveryNotifyLocal.sqf";};
+            class RecoveryRegisterWorkshop {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterWorkshop.sqf";};
+            class RecoveryRegisterVehicle {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterVehicle.sqf";};
+            class RecoveryRegisterCarrier {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterCarrier.sqf";};
+            class RecoverySetupVehicleLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupVehicleLocal.sqf";};
+            class RecoverySetupCarrierLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupCarrierLocal.sqf";};
+            class RecoverySetCargoLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetCargoLocal.sqf";};
+            class RecoveryRequestServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRequestServer.sqf";};
+            class RecoveryRestoreServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRestoreServer.sqf";};
+            class RecoveryMonitorServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryMonitorServer.sqf";};
+        };
         class VehicleCamo {
             class VehicleCamoSetup {
                 file = "MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf";
@@ -532,6 +547,18 @@ class CfgFunctions
             class FieldResupplyRegisterHub {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyRegisterHub.sqf";};
             class FieldResupplyAssignCarrier {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyAssignCarrier.sqf";};
             class FieldResupplyServerHandle {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyServerHandle.sqf";};
+        };
+        class RallyPoint
+        {
+            class RallyPointNotifyLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointNotifyLocal.sqf";};
+            class RallyPointInit {file = "MissionScripts\Respawn\RallyPoint\rallyPointInit.sqf";};
+            class RallyPointStop {file = "MissionScripts\Respawn\RallyPoint\rallyPointStop.sqf";};
+            class RallyPointSetupLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointSetupLocal.sqf";};
+            class RallyPointRequestServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRequestServer.sqf";};
+            class RallyPointRemoveServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRemoveServer.sqf";};
+            class RallyPointRemoveAllServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRemoveAllServer.sqf";};
+            class RallyPointMoveLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointMoveLocal.sqf";};
+            class RallyPointMarkerLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointMarkerLocal.sqf";};
         };
         class TacticalDisplay
         {

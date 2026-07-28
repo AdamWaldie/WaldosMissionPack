@@ -185,6 +185,12 @@ private _deployedMhqs = {_x getVariable ["Waldo_MHQ_Status", false]} count _mhqO
 ["logistics", "mhq-runtime", if (_mhqObjects isEqualTo []) then {"UNCONFIGURED"} else {if (_deployedMhqs > 0) then {"ACTIVE"} else {"LOADED"}}, format ["configured=%1 deployed=%2", count _mhqObjects, _deployedMhqs], false] call _status;
 private _vvdPads = _missionObjects select {_x getVariable ["Waldo_VVD_ServerConfigured", false]};
 ["logistics", "vvd-runtime", if (_vvdPads isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["configuredSpawnPads=%1", count _vvdPads], false] call _status;
+private _recoveryWorkshops = _missionObjects select {_x getVariable ["Waldo_Recovery_Workshop", false]};
+private _recoveryVehicles = _missionObjects select {_x getVariable ["Waldo_Recovery_Registered", false]};
+private _recoveryPackages = (missionNamespace getVariable ["Waldo_Recovery_Packages", []]) select {!isNull _x};
+private _recoveryConfigured = !(_recoveryWorkshops isEqualTo []) || {!(_recoveryVehicles isEqualTo [])};
+private _recoveryBroken = !(_recoveryPackages isEqualTo []) && {_recoveryWorkshops isEqualTo []};
+["logistics", "vehicle-recovery", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryBroken) then {"ERROR"} else {if (_recoveryPackages isEqualTo []) then {"LOADED"} else {"ACTIVE"}}}, format ["workshops=%1 vehicles=%2 packages=%3 monitor=%4", count _recoveryWorkshops, count _recoveryVehicles, count _recoveryPackages, missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]], _recoveryBroken] call _status;
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 ["integration", "ACE and Zeus integration"] call _section;
@@ -212,6 +218,12 @@ private _resupplyEnabled = missionNamespace getVariable ["Waldo_FieldResupply_En
 private _resupplyClass = missionNamespace getVariable ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"];
 private _resupplyValid = isClass (configFile >> "CfgVehicles" >> _resupplyClass);
 ["optional-feature", "field-resupply", if (!_resupplyEnabled) then {"DISABLED"} else {if (_resupplyValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 crateClass=%2", _resupplyEnabled, _resupplyClass], _resupplyEnabled && {!_resupplyValid}] call _status;
+
+private _rallyEnabled = missionNamespace getVariable ["Waldo_Rally_Enable", false];
+private _rallyClass = missionNamespace getVariable ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"];
+private _rallyClassValid = isClass (configFile >> "CfgVehicles" >> _rallyClass);
+private _activeRallies = {_x getVariable ["Waldo_Rally_Active", false]} count allGroups;
+["optional-feature", "squad-rally-points", if (!_rallyEnabled) then {"DISABLED"} else {if (!_rallyClassValid) then {"ERROR"} else {if (_activeRallies > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["enabled=%1 objectClass=%2 activeGroups=%3", _rallyEnabled, _rallyClass, _activeRallies], _rallyEnabled && {!_rallyClassValid}] call _status;
 
 private _gunshipEnabled = missionNamespace getVariable ["Waldo_Gunship_Enable", false];
 private _gunshipAltitude = missionNamespace getVariable ["Waldo_Gunship_DefaultAltitude", 700];

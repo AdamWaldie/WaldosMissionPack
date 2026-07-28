@@ -7,4 +7,9 @@
 
 params ["_id", "_detected"];
 if !(isServer) exitWith {};
-[format ["[WMP] AA system %1: hostile aircraft %2.", _id, ["clear", "detected"] select _detected]] remoteExecCall ["systemChat", 0];
+[
+    "AIR DEFENCE",
+    format ["System %1: hostile aircraft %2.", _id, ["clear", "detected"] select _detected],
+    ["SUCCESS", "WARNING"] select _detected,
+    "DYNAMIC_AA"
+] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", 0];

@@ -218,6 +218,79 @@ switch (toUpperANSI _feature) do {
             }, {}, _target
         ] call zen_dialog_fnc_create;
     };
+    case "RECOVERY_WORKSHOP": {
+        private _target = (nearestObjects [_modulePos, [], 25, true]) param [0, objNull];
+        if (isNull _target) exitWith {systemChat "[WMP] No workshop object found within 25 metres."};
+        [
+            "Register Vehicle Recovery Workshop",
+            [
+                ["EDIT", ["Workshop key", "Recoverable vehicles with the same key are restored here."], ["MAIN"]],
+                ["SLIDER", ["Delivery radius", "Grounded packages inside this radius are restored."], [5, 200, 50, 0]],
+                ["COMBO", ["Serviced side", "All permits any side to use the workshop."], [[sideUnknown, west, east, independent], ["All", "BLUFOR", "OPFOR", "Independent"], 0]],
+                ["CHECKBOX", ["Copy setup script", "Copy an equivalent mission setup call."], false]
+            ],
+            {
+                params ["_values", "_target"];
+                _values params ["_key", "_radius", "_side", "_copy"];
+                ["RECOVERY_WORKSHOP", [_target, _key, _radius, _side]] call Waldo_fnc_FeatureRuntimeApply;
+                if (_copy) then {
+                    private _name = vehicleVarName _target;
+                    if (_name == "") then {systemChat "[WMP] Give the workshop an Eden variable name before exporting."} else {
+                        copyToClipboard format ["[%1, %2, %3, %4] call Waldo_fnc_RecoveryRegisterWorkshop;", _name, str _key, _radius, str _side];
+                        systemChat "[WMP] Recovery workshop setup copied.";
+                    };
+                };
+            }, {}, _target
+        ] call zen_dialog_fnc_create;
+    };
+    case "RECOVERY_VEHICLE": {
+        private _target = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) param [0, objNull];
+        if (isNull _target) exitWith {systemChat "[WMP] No vehicle found within 25 metres."};
+        [
+            "Register Recoverable Vehicle",
+            [
+                ["EDIT", ["Workshop key", "Destination workshop key."], ["MAIN"]],
+                ["SLIDER", ["Minimum damage", "Living vehicle damage required before packaging."], [0, 1, 0.55, 2]],
+                ["CHECKBOX", ["Allow destroyed", "Permit destroyed vehicles to be packaged."], true],
+                ["CHECKBOX", ["Require engineer", "Restrict packaging to engineer-trait units."], false],
+                ["EDIT", ["Package class", "Cargo object used while transporting the vehicle."], ["B_Slingload_01_Cargo_F"]],
+                ["CHECKBOX", ["Preserve inventory", "Restore weapon, magazine, item and backpack cargo."], true],
+                ["SLIDER", ["Restored fuel", "Fuel fraction after workshop restoration."], [0, 1, 1, 2]]
+            ],
+            {
+                params ["_values", "_target"];
+                _values params ["_key", "_damage", "_destroyed", "_engineer", "_package", "_cargo", "_fuel"];
+                ["RECOVERY_VEHICLE", [_target, _key, _damage, _destroyed, _engineer, _package, _cargo, _fuel]] call Waldo_fnc_FeatureRuntimeApply;
+            }, {}, _target
+        ] call zen_dialog_fnc_create;
+    };
+    case "RECOVERY_CARRIER": {
+        private _target = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) param [0, objNull];
+        if (isNull _target) exitWith {systemChat "[WMP] No carrier vehicle found within 25 metres."};
+        [
+            "Register Recovery Carrier",
+            [["SLIDER", ["Loading range", "Maximum package loading distance."], [3, 25, 10, 1]]],
+            {params ["_values", "_target"]; ["RECOVERY_CARRIER", [_target, _values select 0]] call Waldo_fnc_FeatureRuntimeApply;}, {}, _target
+        ] call zen_dialog_fnc_create;
+    };
+    case "RALLY": {
+        [
+            "Squad Rally Point Control",
+            [
+                ["CHECKBOX", ["Enable", "Install squad-leader rally controls for all players."], missionNamespace getVariable ["Waldo_Rally_Enable", false]],
+                ["EDIT", ["Rally object class", "Object created at the rally position."], [missionNamespace getVariable ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"]]],
+                ["SLIDER", ["Active duration", "Seconds before an active rally expires."], [15, 1800, missionNamespace getVariable ["Waldo_Rally_Duration", 180], 0]],
+                ["SLIDER", ["Deployment time", "Seconds the leader must remain in place."], [1, 60, missionNamespace getVariable ["Waldo_Rally_DeploymentTime", 15], 0]],
+                ["SLIDER", ["Deployment cooldown", "Group cooldown measured from deployment."], [0, 3600, missionNamespace getVariable ["Waldo_Rally_Cooldown", 300], 0]],
+                ["SLIDER", ["Enemy exclusion", "Hostile-unit exclusion radius in metres."], [0, 500, missionNamespace getVariable ["Waldo_Rally_EnemyExclusionRadius", 100], 0]],
+                ["SLIDER", ["Minimum group members", "Living members required to deploy."], [1, 12, missionNamespace getVariable ["Waldo_Rally_MinimumGroupMembers", 2], 0]],
+                ["SLIDER", ["Placement distance", "Distance ahead of the leader."], [1, 10, missionNamespace getVariable ["Waldo_Rally_PlacementDistance", 2], 1]],
+                ["SLIDER", ["Maximum slope", "Maximum permitted ground angle in degrees."], [0, 45, missionNamespace getVariable ["Waldo_Rally_MaximumSlope", 20], 0]],
+                ["CHECKBOX", ["Allow direct regroup", "Allow living members to move directly to the rally. Disabled by default."], missionNamespace getVariable ["Waldo_Rally_AllowRegroup", false]]
+            ],
+            {params ["_values"]; ["RALLY_CONFIG", _values] call Waldo_fnc_FeatureRuntimeApply;}
+        ] call zen_dialog_fnc_create;
+    };
     case "TACTICAL_DISPLAY": {
         private _target = (nearestObjects [_modulePos, [], 25, true]) param [0, objNull];
         if (isNull _target) exitWith {systemChat "[WMP] No tactical-display object found within 25 metres."};

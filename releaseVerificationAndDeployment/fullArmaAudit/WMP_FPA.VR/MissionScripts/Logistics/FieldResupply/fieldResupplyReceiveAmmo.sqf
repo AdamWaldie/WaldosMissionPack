@@ -15,5 +15,5 @@ private _added = 0;
         if (player canAdd _x) then {player addMagazine _x; _added = _added + 1};
     };
 } forEach _classes;
-systemChat format ["[WMP] Received %1 compatible magazine(s).", _added];
+["FIELD RESUPPLY", format ["Received %1 compatible magazine(s).", _added], "SUCCESS", "FIELD_RESUPPLY"] call Waldo_fnc_FeatureNotifyLocal;
 _added

@@ -26,7 +26,7 @@ if (!isNull _target && {_unit distance _target > (missionNamespace getVariable [
 private _patterns = missionNamespace getVariable ["Waldo_TreeFelling_WeaponPatterns", ["axe", "hatchet"]];
 private _weaponLower = toLowerANSI _weapon;
 if (_patterns findIf {_weaponLower find toLowerANSI _x >= 0} < 0) exitWith {
-    systemChat "[WMP] An axe or configured cutting tool is required.";
+    ["TREE FELLING", "An axe or configured cutting tool is required.", "WARNING", "TREE_FELLING"] call Waldo_fnc_FeatureNotifyLocal;
     false
 };
 

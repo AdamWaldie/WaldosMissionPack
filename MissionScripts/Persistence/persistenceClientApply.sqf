@@ -58,5 +58,5 @@ if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {cou
     };
 };
 
-systemChat "[WMP] Persistent player state loaded.";
+["PERSISTENCE", "Persistent player state loaded.", "SUCCESS", "PERSISTENCE"] call Waldo_fnc_FeatureNotifyLocal;
 true

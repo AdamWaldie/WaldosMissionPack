@@ -71,6 +71,10 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["Treatment Feedback - Control", "TREATMENT", "\A3\ui_f\data\igui\cfg\simpletasks\types\heal_ca.paa"],
     ["Field Resupply - Register Hub", "FIELD_RESUPPLY_HUB", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
     ["Field Resupply - Assign Carrier", "FIELD_RESUPPLY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
+    ["Vehicle Recovery - Register Workshop", "RECOVERY_WORKSHOP", "\A3\ui_f\data\igui\cfg\actions\repair_ca.paa"],
+    ["Vehicle Recovery - Register Vehicle", "RECOVERY_VEHICLE", "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"],
+    ["Vehicle Recovery - Register Carrier", "RECOVERY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"],
+    ["Respawn - Squad Rally Control", "RALLY", "\A3\ui_f\data\map\markers\military\start_CA.paa"],
     ["Tactical Display - Register", "TACTICAL_DISPLAY", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["Gunship - Register or Spawn", "GUNSHIP_REGISTER", "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"],
     ["Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
@@ -207,5 +211,5 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 15];
-diag_log format ["[WMP ZEN] Registered 15 Waldos Mission Modules on clientOwner=%1", clientOwner];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 40];
+diag_log format ["[WMP ZEN] Registered 40 Waldos Mission Modules on clientOwner=%1", clientOwner];

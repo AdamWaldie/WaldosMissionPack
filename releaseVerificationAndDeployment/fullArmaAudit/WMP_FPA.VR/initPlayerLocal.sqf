@@ -38,9 +38,6 @@ if (hasInterface) then {
     if (isNil "Waldo_TreatmentFeedback_StartTitle") then {Waldo_TreatmentFeedback_StartTitle = "TREATMENT STARTED"};
     if (isNil "Waldo_TreatmentFeedback_SuccessTitle") then {Waldo_TreatmentFeedback_SuccessTitle = "TREATMENT COMPLETE"};
     if (isNil "Waldo_TreatmentFeedback_FailureTitle") then {Waldo_TreatmentFeedback_FailureTitle = "TREATMENT FAILED"};
-    if (isNil "Waldo_TreatmentFeedback_StartColour") then {Waldo_TreatmentFeedback_StartColour = [0.95, 0.75, 0.20, 1]};
-    if (isNil "Waldo_TreatmentFeedback_SuccessColour") then {Waldo_TreatmentFeedback_SuccessColour = [0.20, 0.85, 0.35, 1]};
-    if (isNil "Waldo_TreatmentFeedback_FailureColour") then {Waldo_TreatmentFeedback_FailureColour = [0.95, 0.25, 0.20, 1]};
     if (isNil "Waldo_TreatmentFeedback_TreatmentNames") then {Waldo_TreatmentFeedback_TreatmentNames = createHashMap};
     if (isNil "Waldo_TreatmentFeedback_BodyPartNames") then {
         Waldo_TreatmentFeedback_BodyPartNames = createHashMapFromArray [
@@ -115,6 +112,9 @@ if (hasInterface) then {
         };
         if (missionNamespace getVariable ["Waldo_TreeFelling_Enable", false]) then {
             [] call Waldo_fnc_TreeFellingInit;
+        };
+        if (missionNamespace getVariable ["Waldo_Rally_Enable", false]) then {
+            [] call Waldo_fnc_RallyPointInit;
         };
     };
 };

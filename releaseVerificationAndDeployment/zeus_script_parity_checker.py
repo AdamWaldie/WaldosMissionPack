@@ -33,7 +33,7 @@ def audit(root: Path = ROOT) -> list[str]:
     functions_source = (root / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
     all_source = "\n".join(path.read_text(encoding="utf-8") for path in (root / "MissionScripts").rglob("*.sqf"))
     findings: list[str] = []
-    expected = {"core": 15, "economy": 19}
+    expected = {"core": 40, "economy": 19}
     for category, count in expected.items():
         actual = sum(record.get("category") == category for record in records)
         if actual != count:
@@ -93,7 +93,7 @@ def main() -> int:
     findings = audit()
     print("Validating Zeus/script feature parity")
     print("------")
-    print("Checked 34 registered Zeus modules")
+    print(f"Checked {sum(1 for _ in json.loads((ROOT / 'releaseVerificationAndDeployment' / MANIFEST.name).read_text(encoding='utf-8')))} registered Zeus modules")
     for finding in findings:
         print(f"ERROR: {finding}")
     print(f"Errors detected: {len(findings)}")

@@ -33,7 +33,7 @@ if !(_authorized) exitWith {false};
 
 if !(missionNamespace getVariable ["Waldo_Persistence_Active", false]) exitWith {
     if (_requestOwner > 0) then {
-        ["[WMP] Persistence is not active; nothing was saved."] remoteExecCall ["systemChat", _requestOwner];
+        ["PERSISTENCE", "Persistence is not active; nothing was saved.", "WARNING", "PERSISTENCE"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
     };
     false
 };
@@ -55,6 +55,6 @@ if (_savePlayers) then {
 
 diag_log format ["[WMP PERSISTENCE] Manual save requested for %1 player(s); %2 registered object(s) saved.", _playerCount, _objectCount];
 if (_requestOwner > 0) then {
-    [format ["[WMP] Save requested for %1 player(s); %2 object(s) saved.", _playerCount, _objectCount]] remoteExecCall ["systemChat", _requestOwner];
+    ["PERSISTENCE", format ["Save requested for %1 player(s); %2 object(s) saved.", _playerCount, _objectCount], "SUCCESS", "PERSISTENCE"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
 };
 true

@@ -54,6 +54,21 @@ if (isNil "Waldo_FieldResupply_AllowedMagazines") then {Waldo_FieldResupply_Allo
 if (isNil "Waldo_FieldResupply_BlockedMagazines") then {Waldo_FieldResupply_BlockedMagazines = []};
 if (isNil "Waldo_FieldResupply_RetainOnRespawn") then {Waldo_FieldResupply_RetainOnRespawn = true};
 
+// Squad rally points are disabled by default and may also be configured live through ZEN.
+if (isNil "Waldo_Rally_Enable") then {Waldo_Rally_Enable = false};
+if (isNil "Waldo_Rally_ObjectClass") then {Waldo_Rally_ObjectClass = "Land_SatelliteAntenna_01_F"};
+if (isNil "Waldo_Rally_Duration") then {Waldo_Rally_Duration = 180};
+if (isNil "Waldo_Rally_DeploymentTime") then {Waldo_Rally_DeploymentTime = 15};
+if (isNil "Waldo_Rally_Cooldown") then {Waldo_Rally_Cooldown = 300};
+if (isNil "Waldo_Rally_EnemyExclusionRadius") then {Waldo_Rally_EnemyExclusionRadius = 100};
+if (isNil "Waldo_Rally_MinimumGroupMembers") then {Waldo_Rally_MinimumGroupMembers = 2};
+if (isNil "Waldo_Rally_PlacementDistance") then {Waldo_Rally_PlacementDistance = 2};
+if (isNil "Waldo_Rally_MaximumSlope") then {Waldo_Rally_MaximumSlope = 20};
+if (isNil "Waldo_Rally_AllowRegroup") then {Waldo_Rally_AllowRegroup = false};
+
+// Vehicle recovery is activated by registering workshops and vehicles. The scan is server-only.
+if (isNil "Waldo_Recovery_ScanInterval") then {Waldo_Recovery_ScanInterval = 3};
+
 if (isNil "Waldo_Gunship_Enable") then {Waldo_Gunship_Enable = false};
 if (isNil "Waldo_Gunship_DefaultAltitude") then {Waldo_Gunship_DefaultAltitude = 700};
 if (isNil "Waldo_Gunship_MaximumAltitude") then {Waldo_Gunship_MaximumAltitude = 5000};

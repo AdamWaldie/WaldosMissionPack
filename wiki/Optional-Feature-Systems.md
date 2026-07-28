@@ -30,9 +30,9 @@ The five booleans control cargo, damage, fuel, ammunition/pylons and position. K
 
 ## Patient treatment feedback
 
-Set `Waldo_TreatmentFeedback_Enable = true` to display ACE treatment start, completion and interruption events through the pack's CBA notification presentation. ACE emits these events locally to the treating unit, so the feature securely forwards patient feedback to the patient's owning machine. Self-treatment remains local.
+Set `Waldo_TreatmentFeedback_Enable = true` to display ACE treatment start, completion and interruption events through the pack notification UI. ACE emits these events locally to the treating unit, so the feature securely forwards patient feedback to the patient's owning machine. Self-treatment remains local.
 
-Start, success and failure notifications can be enabled independently. Patient notification is enabled by default; optional medic feedback, medic names and body-region labels can be selected separately. Titles, colours, body-region names and treatment-class display-name overrides are configured through the player-local `Waldo_TreatmentFeedback_*` values in `initPlayerLocal.sqf`.
+Start, success and failure notifications can be enabled independently. Patient notification is enabled by default; optional medic feedback, medic names and body-region labels can be selected separately. Titles, body-region names and treatment-class display-name overrides are configured through the player-local `Waldo_TreatmentFeedback_*` values in `initPlayerLocal.sqf`; colours follow the standard WMP semantic states.
 
 **Treatment Feedback - Control** applies the simple global switches during play. Call `Waldo_fnc_TreatmentFeedbackStop` to remove the event handlers. The ACE event identifier `ace_treatmentSucceded` is intentionally retained exactly as defined.
 
@@ -113,6 +113,7 @@ The third argument optionally converts the result to a simple object. Limits def
 
 ## See also
 
+- [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies)
 - [Airborne Gunship Support](Airborne-Gunship-Support)
 - [Optional Feature Extensions](Optional-Feature-Extensions)
 - [Dynamic Anti-Air](Dynamic-Anti-Air)

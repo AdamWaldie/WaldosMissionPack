@@ -21,6 +21,8 @@ This is the complete top-level index of mission systems currently supplied by Wa
 | [Tactical Display](Optional-Feature-Extensions#tactical-display) | Object-authenticated local tactical map with friendly and known-enemy filtering | Player display settings in `initPlayerLocal.sqf`; scripted or ZEN registration |
 | [Dynamic Anti-Air](Dynamic-Anti-Air) | Named radar-controlled AA zones, altitude rules, dormant defences and fighter scrambling | Server side/faction pools in `initServer.sqf`; scripted creation or guided ZEN placement |
 | [Airborne Gunship Support](Airborne-Gunship-Support) | Named gunship lifecycles, controller assignment, turret control, orbits and service cycles | Shared defaults in `init.sqf`; server registration or focused ZEN operations |
+| [Vehicle Recovery](Vehicle-Recovery-And-Squad-Rallies#vehicle-recovery) | Damage-gated packaging, recovery carriers and keyed workshops that restore vehicle configuration | Scripted object registration or three focused ZEN registration modules |
+| [Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies#squad-rally-points) | Temporary group-owned respawn positions with hostile, terrain, membership, expiry and cooldown rules | Shared settings in `init.sqf`; squad-leader actions or runtime ZEN control |
 
 Runtime configuration is server-authoritative. Current settings are published for connected and JIP players, while keyed JIP initialisers install or remove the required local behavior. AI and breaching remain all-machine systems because their engine locality can move between server, player clients and headless clients.
 
