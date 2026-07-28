@@ -2,7 +2,7 @@
 
 > **Use this page when:** you know the capability you need and want the correct setup or reference page.
 
-Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
+Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Complete Feature Catalogue](Feature-Catalogue) for the fastest full inventory, or the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
 
 ## Mission flow and UI
 
@@ -78,6 +78,16 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Unit Insignias](Unit-Insignias) | Applying and adding insignias |
 | [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts) | Smaller arsenal, damage, visibility, and config helpers |
 | [Cover and Loading Screen Generation](Cover-Loading-Screen-Generation) | Versioned mission artwork |
+
+## Optional and advanced systems
+
+| Feature | Use it for |
+|---|---|
+| [Optional Feature Systems](Optional-Feature-Systems) | Persistence, treatment feedback, hazards, tree felling, emergency dismount, accessibility PID, breaching, and object transforms |
+| [Optional Feature Extensions](Optional-Feature-Extensions) | Field resupply, tactical displays, advanced controls, and engine boundaries |
+| [Dynamic Anti-Air](Dynamic-Anti-Air) | Scripted or Zeus-authored radar-controlled air-defence zones |
+| [Airborne Gunship Support](Airborne-Gunship-Support) | Controller-operated gunships, orbits, service cycles, and asset pools |
+| [Performance and Optimisation Audit](Performance-And-Optimisation-Audit) | Static regression guardrails and runtime verification guidance |
 
 ## Authoring and troubleshooting
 

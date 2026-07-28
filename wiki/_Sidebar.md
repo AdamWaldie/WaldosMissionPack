@@ -75,3 +75,12 @@
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
 * [Coding Standards](Coding-Standards)
+
+**Optional and Advanced Systems**
+
+* [Complete Feature Catalogue](Feature-Catalogue)
+* [Optional Feature Systems](Optional-Feature-Systems)
+* [Optional Feature Extensions](Optional-Feature-Extensions)
+* [Dynamic Anti-Air](Dynamic-Anti-Air)
+* [Airborne Gunship Support](Airborne-Gunship-Support)
+* [Performance and Optimisation](Performance-And-Optimisation-Audit)

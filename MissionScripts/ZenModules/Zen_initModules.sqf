@@ -9,9 +9,11 @@
  * Nothing
 */
 
+// Registration creates local curator UI entries; servers and headless clients have no consumer.
+if !(hasInterface) exitWith {};
+
 //Check for, and exit if not present: Zeus Enhanced
 if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
-if (!hasInterface) exitWith {};
 if (missionNamespace getVariable ["Waldo_ZenModulesRegistered", false]) exitWith {
     diag_log format ["[WMP ZEN] Core module registration already complete on clientOwner=%1", clientOwner];
 };
@@ -27,6 +29,61 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     },
     "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"
 ] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Dynamic AA - Create",
+    {
+        params ["_modulePos"];
+        [_modulePos] call Waldo_fnc_DynamicAAZen;
+    },
+    "\A3\ui_f\data\map\vehicleicons\iconStaticAA_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Dynamic AA - Remove Nearest",
+    {
+        params ["_modulePos"];
+        [_modulePos] call Waldo_fnc_DynamicAARemoveZen;
+    },
+    "\A3\ui_f\data\map\markers\nato\o_antiair.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Scale Object",
+    {
+        params ["_modulePos"];
+        [_modulePos] call Waldo_fnc_ObjectScaleZen;
+    },
+    "\A3\ui_f\data\igui\cfg\actions\reammo_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+{
+    _x params ["_name", "_feature", "_icon"];
+    private _handler = compile format [
+        "params ['_modulePos']; ['%1', _modulePos] call Waldo_fnc_FeatureRuntimeZen;",
+        _feature
+    ];
+    ["Waldos Mission Modules", _name,
+        _handler,
+        _icon
+    ] call zen_custom_modules_fnc_register;
+} forEach [
+    ["Persistence - Control", "PERSISTENCE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
+    ["Persistence - Register Object", "PERSISTENCE_OBJECT", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
+    ["Persistence - Save Now", "PERSISTENCE_SAVE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
+    ["Treatment Feedback - Control", "TREATMENT", "\A3\ui_f\data\igui\cfg\simpletasks\types\heal_ca.paa"],
+    ["Field Resupply - Register Hub", "FIELD_RESUPPLY_HUB", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
+    ["Field Resupply - Assign Carrier", "FIELD_RESUPPLY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
+    ["Tactical Display - Register", "TACTICAL_DISPLAY", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
+    ["Gunship - Register or Spawn", "GUNSHIP_REGISTER", "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"],
+    ["Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
+    ["Gunship - Set Orbit", "GUNSHIP_ORBIT", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
+    ["Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
+    ["Hazard - Create", "HAZARD_CREATE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
+    ["Hazard - Remove Nearest", "HAZARD_REMOVE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
+    ["Tree Felling - Control", "TREE", "\A3\ui_f\data\igui\cfg\actions\repair_ca.paa"],
+    ["Emergency Dismount - Control", "EMERGENCY", "\A3\ui_f\data\igui\cfg\actions\getout_ca.paa"],
+    ["Accessibility PID - Control", "ACCESSIBILITY", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
+    ["Breaching - Configure Class", "BREACH", "\A3\ui_f\data\igui\cfg\actions\settimer_ca.paa"],
+    ["AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
+];
 
 ["Waldos Mission Modules", "Mission Flow: End Mission + Show AAR",
     {

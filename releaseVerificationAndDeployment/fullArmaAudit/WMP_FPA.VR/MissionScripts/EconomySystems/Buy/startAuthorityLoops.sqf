@@ -25,14 +25,6 @@
             while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
                 uiSleep 5;
                 call Waldo_fnc_EcoBuy_syncDropPoints;
-
-                if (!isNil "Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal") then {
-                    {
-                        [_x] call Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal;
-                    } forEach ((allMissionObjects "Land_Laptop_unfolded_F") select {
-                        _x getVariable ["WaldoEcoBuy_IsPurchaseTerminal", false]
-                    });
-                };
             };
         };
 

@@ -41,6 +41,22 @@ if (!(missionNamespace getVariable ["WaldoEcoResource_SystemInitialized", false]
     if (isNil {missionNamespace getVariable "WaldoEcoCommand_GroundCommandUIDs"}) then {
         missionNamespace setVariable ["WaldoEcoCommand_GroundCommandUIDs", []];
     };
+    if (isServer) then {
+        {
+            if (isNil {missionNamespace getVariable _x}) then {
+                missionNamespace setVariable [_x, [], true];
+            };
+        } forEach [
+            "WaldoEcoCore_Runtime_CRATES",
+            "WaldoEcoCore_Runtime_RESEARCH_CENTERS",
+            "WaldoEcoCore_Runtime_CONSTRUCTION_VEHICLES",
+            "WaldoEcoCore_Runtime_PURCHASE_TERMINALS",
+            "WaldoEcoCore_Runtime_BUILDINGS"
+        ];
+        if (isNil {missionNamespace getVariable "WaldoEcoCore_RuntimeRegistryRevision"}) then {
+            missionNamespace setVariable ["WaldoEcoCore_RuntimeRegistryRevision", 0, true];
+        };
+    };
 };
 
 WaldoEcoCore_ZeusHeaderRootText = "Waldos Economy Systems";
@@ -209,40 +225,27 @@ if (hasInterface && {isNil "WaldoEcoCore_LocalWorldActionLoopStarted"}) then {
     WaldoEcoCore_LocalWorldActionLoopStarted = true;
 
     [] spawn {
+        private _lastRevision = -1;
+        private _nextRepair = 0;
         while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-            if (!isNil "Waldo_fnc_EcoResource_ensureCrateActionLocal") then {
-                {
-                    [_x] call Waldo_fnc_EcoResource_ensureCrateActionLocal;
-                } forEach ((allMissionObjects "Land_PlasticCase_01_medium_F") select {
-                    _x getVariable ["WaldoEcoResource_IsResourceCrate", false]
-                });
+            private _revision = missionNamespace getVariable ["WaldoEcoCore_RuntimeRegistryRevision", 0];
+            if (_revision != _lastRevision || {diag_tickTime >= _nextRepair}) then {
+                _lastRevision = _revision;
+                _nextRepair = diag_tickTime + 10;
+                if (!isNil "Waldo_fnc_EcoResource_ensureCrateActionLocal") then {
+                    {[_x] call Waldo_fnc_EcoResource_ensureCrateActionLocal;} forEach (["CRATES"] call Waldo_fnc_EcoCore_getRuntimeObjects);
+                };
+                if (!isNil "Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal") then {
+                    {[_x] call Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal;} forEach (["RESEARCH_CENTERS"] call Waldo_fnc_EcoCore_getRuntimeObjects);
+                };
+                if (!isNil "Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal") then {
+                    {[_x] call Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal;} forEach (["CONSTRUCTION_VEHICLES"] call Waldo_fnc_EcoCore_getRuntimeObjects);
+                };
+                if (!isNil "Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal") then {
+                    {[_x] call Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal;} forEach (["PURCHASE_TERMINALS"] call Waldo_fnc_EcoCore_getRuntimeObjects);
+                };
             };
-
-            if (!isNil "Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal") then {
-                {
-                    [_x] call Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal;
-                } forEach ((allMissionObjects "Land_Research_HQ_F") select {
-                    _x getVariable ["WaldoEcoResearch_IsResearchCenter", false]
-                });
-            };
-
-            if (!isNil "Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal") then {
-                {
-                    [_x] call Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal;
-                } forEach (vehicles select {
-                    _x getVariable ["WaldoEcoBuild_IsConstructionVehicle", false]
-                });
-            };
-
-            if (!isNil "Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal") then {
-                {
-                    [_x] call Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal;
-                } forEach ((allMissionObjects "Land_Laptop_unfolded_F") select {
-                    _x getVariable ["WaldoEcoBuy_IsPurchaseTerminal", false]
-                });
-            };
-
-            uiSleep 2; // perf: re-scan world objects every 2s
+            uiSleep 0.5;
         };
 
         WaldoEcoCore_LocalWorldActionLoopStarted = nil;

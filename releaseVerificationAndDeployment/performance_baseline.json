@@ -1,0 +1,46 @@
+{
+  "schema": 1,
+  "description": "Accepted high-severity static findings. Every entry requires a review reason.",
+  "accepted": [
+    {
+      "key": "recurring_world_scan|MissionScripts/EconomySystems/Core/startRequestScheduler.sqf|<file>|recurring_allplayers_scan",
+      "max_count": 1,
+      "reason": "One consolidated authority pass must inspect connected players for the existing request-variable contract; object requests use registries and this replaces two separate player scans."
+    },
+    {
+      "key": "recurring_broadcast|MissionScripts/EconomySystems/Resource/startPubZeusZoneActionBridge.sqf|<file>|broadcast_setvariable_in_recurring_loop",
+      "max_count": 6,
+      "reason": "Legacy state cleanup is once per player and zone identifiers are change-gated; remaining matches include user-triggered action closures lexically nested in the guarded bridge."
+    },
+    {
+      "key": "recurring_remote_exec|MissionScripts/InteractionsMinigames/Integration/miniGameInteractionAcquireServer.sqf|<file>|remoteexec_in_recurring_loop",
+      "max_count": 3,
+      "reason": "The one-second exclusive-lock watchdog emits exactly one terminal abandonment result on disconnect, death, or expiry, then exits."
+    },
+    {
+      "key": "recurring_remote_exec|MissionScripts/InteractionsMinigames/Integration/miniGameInteractionStartClient.sqf|<file>|remoteexec_in_recurring_loop",
+      "max_count": 1,
+      "reason": "The local display-loss watchdog emits exactly one abandonment result after its resolved flag check, then exits and clears its token state."
+    },
+    {
+      "key": "recurring_broadcast|MissionScripts/MissionInit/ElectronicWarfare/tracker.sqf|<file>|broadcast_setvariable_in_recurring_loop",
+      "max_count": 1,
+      "reason": "The five-second server prune loop broadcasts the tracker registry only when one or more tracked targets have become invalid, so idle passes do not publish state."
+    },
+    {
+      "key": "recurring_broadcast|MissionScripts/MissionInit/Jamming/jammingUavServer.sqf|<file>|broadcast_setvariable_in_recurring_loop",
+      "max_count": 2,
+      "reason": "The server broadcasts UAV jamming state only on entry and exit transitions; the two-second scan does not republish unchanged drone state."
+    },
+    {
+      "key": "recurring_world_scan|MissionScripts/ThirdPartyScripts/player_markers.sqf|<file>|recurring_allplayers_scan",
+      "max_count": 2,
+      "reason": "Attributed third-party player-marker code is disabled by default and intentionally left unmodified; review separately before enabling."
+    },
+    {
+      "key": "recurring_world_scan|MissionScripts/ThirdPartyScripts/player_markers.sqf|<file>|recurring_allunits_scan",
+      "max_count": 1,
+      "reason": "Attributed third-party player-marker code is disabled by default and intentionally left unmodified; review separately before enabling."
+    }
+  ]
+}

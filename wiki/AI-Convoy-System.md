@@ -4,7 +4,7 @@
 
 _Associated Files: MissionScripts\AiScripting\simpleAiConvoy.sqf_
 
-A convoy script for AI vehicle groups, expanded and enhanced from Tova's original. It keeps vehicles in column formation, enforces convoy spacing, and forces stalled vehicles to follow the convoy leader. Optionally prevents AI from dismounting on contact, keeping the convoy moving through enemy fire.
+A convoy controller for AI vehicle groups. It keeps vehicles in column formation, enforces convoy spacing, and forces stalled vehicles to follow the convoy leader. Optionally prevents AI from dismounting on contact, keeping the convoy moving through enemy fire.
 
 ## Features
 

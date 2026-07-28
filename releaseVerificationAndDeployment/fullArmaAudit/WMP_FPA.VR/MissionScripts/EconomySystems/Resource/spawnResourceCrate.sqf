@@ -44,6 +44,7 @@
     _crate setVariable ["WaldoEcoResource_ResourceRows", _safeRows, true];
     _crate setVariable ["WaldoEcoResource_ResourceType", _primaryType, true];
     _crate setVariable ["WaldoEcoResource_ResourceValue", _primaryAmount, true];
+    [_crate, "CRATES"] call Waldo_fnc_EcoCore_registerRuntimeObject;
     [_crate] call Waldo_fnc_EcoResource_trackCrateMarker;
 
     if (hasInterface) then {

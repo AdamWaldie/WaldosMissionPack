@@ -436,12 +436,28 @@ def write_function_station_sqf(manifest: dict) -> None:
     (MISSION / "functionStations.sqf").write_text(text, encoding="utf-8", newline="\n")
 
 
+def _sync_tree_in_place(source: Path, target: Path) -> None:
+    """Mirror a source tree when a synced filesystem refuses to remove its root."""
+    target.mkdir(parents=True, exist_ok=True)
+    source_entries = {path.relative_to(source) for path in source.rglob("*")}
+    for path in sorted(target.rglob("*"), key=lambda item: len(item.parts), reverse=True):
+        if path.relative_to(target) in source_entries:
+            continue
+        if path.is_dir():
+            path.rmdir()
+        else:
+            path.unlink()
+    shutil.copytree(source, target, dirs_exist_ok=True)
+
+
 def refresh_release_sources() -> None:
-    for directory in ("MissionScripts", "Pictures", "UnitInsignias", "WMPPackSource"):
+    for directory in ("MissionScripts", "Pictures", "UnitInsignias"):
+        source = ROOT / directory
         target = MISSION / directory
         # OneDrive can remove a hydrated file after rmtree enumerates it but before
         # unlink runs. Treat that one race as progress, retry the remaining tree,
         # and still fail if the directory cannot actually be cleared.
+        removal_blocked = False
         for _attempt in range(3):
             if not target.exists():
                 break
@@ -449,15 +465,17 @@ def refresh_release_sources() -> None:
                 shutil.rmtree(target)
             except FileNotFoundError:
                 continue
+            except PermissionError:
+                removal_blocked = True
+                break
         if target.exists():
+            if removal_blocked and source.is_dir():
+                _sync_tree_in_place(source, target)
+                continue
             raise OSError(f"Could not clear stale audit source directory: {target}")
-    shutil.copytree(ROOT / "MissionScripts", MISSION / "MissionScripts")
-    shutil.copytree(ROOT / "Pictures", MISSION / "Pictures")
-    shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
-    for source_name in ("UnitInsignias",):
-        source = ROOT / source_name
         if source.is_dir():
-            shutil.copytree(source, MISSION / source_name, dirs_exist_ok=True)
+            shutil.copytree(source, target)
+    shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
     for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):

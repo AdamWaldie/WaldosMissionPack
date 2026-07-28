@@ -1234,7 +1234,9 @@ Waldo_MG_fnc_startAuthorityLoop = {
         while {true} do {
             private _authorityPlayers = +allPlayers;
             {
-                [_x] call Waldo_MG_fnc_initializePlayerServer;
+                if (!(_x getVariable ["Waldo_MG_ServerInitialized", false])) then {
+                    [_x] call Waldo_MG_fnc_initializePlayerServer;
+                };
             } forEach _authorityPlayers;
             call Waldo_MG_fnc_reconcileRegisteredTablesServer;
             [_authorityPlayers] call Waldo_MG_fnc_processPriorityUNORequestsServer;

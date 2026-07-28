@@ -3,6 +3,10 @@
  * LOADED, ACTIVE, DISABLED, UNCONFIGURED, UNAVAILABLE or ERROR. The structured
  * report is broadcast in Waldo_Diagnostics_LastReport for audit tools/JIP.
  * Existing callers still receive the number of warnings.
+ *
+ * Arguments: None
+ * Return Value: Number <NUMBER> - count of warnings raised
+ * Example: [] spawn Waldo_fnc_RunDiagnostics;
  */
 if (!isServer) exitWith {0};
 if (!canSuspend) exitWith {_this spawn Waldo_fnc_RunDiagnostics; 0};
@@ -187,6 +191,46 @@ private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 private _zenApi = !(isNil "zen_custom_modules_fnc_register");
 ["integration", "zen-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if (_zenApi) then {"LOADED"} else {"ERROR"}}, format ["ZEN loaded=%1 registration API=%2", _zenLoaded, _zenApi], _zenLoaded && {!_zenApi}] call _status;
 ["integration", "ace-actions", if (isClass (configFile >> "CfgPatches" >> "ace_main")) then {"LOADED"} else {"ERROR"}, "Dependency state only; object action installation is checked by the client audit", !(isClass (configFile >> "CfgPatches" >> "ace_main"))] call _status;
+
+["optional-features", "Optional feature configuration"] call _section;
+private _persistenceEnabled = missionNamespace getVariable ["Waldo_Persistence_Enable", false];
+private _persistencePatches = missionNamespace getVariable ["Waldo_Persistence_PatchNames", ["inidbi2", "inidbi2_main", "inidbi2_core", "inidbi"]];
+private _persistenceRuntime = !(isNil "OO_INIDBI") || {_persistencePatches findIf {isClass (configFile >> "CfgPatches" >> _x)} >= 0};
+["optional-feature", "persistence-runtime", if (!_persistenceEnabled) then {"DISABLED"} else {if (_persistenceRuntime) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 runtimeDetected=%2", _persistenceEnabled, _persistenceRuntime], _persistenceEnabled && {!_persistenceRuntime}] call _status;
+
+private _breachingEnabled = missionNamespace getVariable ["Waldo_Breaching_Enable", false];
+private _breachingDependency = isClass (configFile >> "CfgPatches" >> "ace_explosives");
+private _breachingProfileCount = count (keys (missionNamespace getVariable ["Waldo_Breaching_Profiles", createHashMap]));
+private _breachingValid = _breachingDependency && {_breachingProfileCount > 0};
+["optional-feature", "explosive-breaching", if (!_breachingEnabled) then {"DISABLED"} else {if (_breachingValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceExplosives=%2 profiles=%3", _breachingEnabled, _breachingDependency, _breachingProfileCount], _breachingEnabled && {!_breachingValid}] call _status;
+
+private _treatmentEnabled = missionNamespace getVariable ["Waldo_TreatmentFeedback_Enable", false];
+private _treatmentDependency = isClass (configFile >> "CfgPatches" >> "ace_medical");
+["optional-feature", "treatment-feedback", if (!_treatmentEnabled) then {"DISABLED"} else {if (_treatmentDependency) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceMedical=%2", _treatmentEnabled, _treatmentDependency], _treatmentEnabled && {!_treatmentDependency}] call _status;
+
+private _resupplyEnabled = missionNamespace getVariable ["Waldo_FieldResupply_Enable", false];
+private _resupplyClass = missionNamespace getVariable ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"];
+private _resupplyValid = isClass (configFile >> "CfgVehicles" >> _resupplyClass);
+["optional-feature", "field-resupply", if (!_resupplyEnabled) then {"DISABLED"} else {if (_resupplyValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 crateClass=%2", _resupplyEnabled, _resupplyClass], _resupplyEnabled && {!_resupplyValid}] call _status;
+
+private _gunshipEnabled = missionNamespace getVariable ["Waldo_Gunship_Enable", false];
+private _gunshipAltitude = missionNamespace getVariable ["Waldo_Gunship_DefaultAltitude", 700];
+private _gunshipRadius = missionNamespace getVariable ["Waldo_Gunship_DefaultRadius", 1500];
+private _gunshipBoundsValid = _gunshipAltitude >= 100 && {_gunshipAltitude <= (missionNamespace getVariable ["Waldo_Gunship_MaximumAltitude", 5000])} && {_gunshipRadius >= 200} && {_gunshipRadius <= (missionNamespace getVariable ["Waldo_Gunship_MaximumRadius", 10000])};
+private _invalidGunshipClasses = [];
+private _gunshipPools = missionNamespace getVariable ["Waldo_Gunship_SideAircraftPools", createHashMap];
+{{if !(isClass (configFile >> "CfgVehicles" >> _x) && {_x isKindOf "Air"}) then {_invalidGunshipClasses pushBackUnique _x;};} forEach (_gunshipPools get _x);} forEach keys _gunshipPools;
+private _gunshipValid = _gunshipBoundsValid && {_invalidGunshipClasses isEqualTo []};
+["optional-feature", "airborne-gunship", if (!_gunshipEnabled) then {"DISABLED"} else {if (_gunshipValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 altitude=%2 radius=%3 invalidClasses=%4", _gunshipEnabled, _gunshipAltitude, _gunshipRadius, _invalidGunshipClasses], _gunshipEnabled && {!_gunshipValid}] call _status;
+
+{
+    private _aaPool = [createHashMap, _x] call Waldo_fnc_DynamicAAResolveAssetPool;
+    private _emptyCategories = ["radarClasses", "staticSitePools", "mobileClasses", "fighterClasses"] select {count (_aaPool getOrDefault [_x, []]) == 0};
+    ["optional-feature", format ["dynamic-aa-%1", _x], if (_emptyCategories isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["source=%1 emptyCategories=%2", _aaPool getOrDefault ["source", str _x], _emptyCategories], !(_emptyCategories isEqualTo [])] call _status;
+} forEach [west, east, independent];
+
+private _invalidTreeClasses = (missionNamespace getVariable ["Waldo_TreeFelling_FallenClasses", []]) select {!(isClass (configFile >> "CfgVehicles" >> _x))};
+["optional-feature", "tree-felling-replacements", if (_invalidTreeClasses isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["invalidClasses=%1", _invalidTreeClasses], !(_invalidTreeClasses isEqualTo [])] call _status;
 
 // Ask every interface client for local UI, mod and action state. The server retains authority over
 // the final report and accepts a response only from its claimed network owner.

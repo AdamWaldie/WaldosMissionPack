@@ -1,14 +1,10 @@
-# Third-Party Scripts: Headless Client and Player Markers
+# Optional Headless Client & Player Markers
 
-> **Use this page when:** you need to enable or configure the attributed optional third-party integrations.
+> **Use this page when:** you need to enable or configure the optional headless-client or player-marker integrations.
 
-_Associated Files: `MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf`, `WerthlesHeadless.sqf` (Werthles' Headless Kit), `player_markers.sqf` (aeroson)_
+_Associated Files: `MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf`, `WerthlesHeadless.sqf`, `player_markers.sqf`_
 
-## Third-Party Scripts: Headless Client & Player Markers
-
-WMP bundles two well-known community scripts for mission makers who want them, kept separate from the pack's own systems and **disabled by default**. They are loaded through a single tidy entry point so the main `init.sqf` stays clean.
-
-> **Attribution:** these are third-party scripts included unmodified in spirit — the **Headless Kit is by Werthles** (v2.3) and **player markers are by aeroson** (v2.7.1, "Dynamic Player Markers"). WMP only provides the wiring to call them. Please credit the original authors.
+WMP includes optional headless-client distribution and player-marker scripts, kept separate from the pack's normal systems and **disabled by default**. They are loaded through a single entry point so the main `init.sqf` stays clean.
 
 ## Enabling them
 
@@ -23,7 +19,7 @@ They are off by default. In `init.sqf`, uncomment the loader line:
 
 ---
 
-## Player Markers (aeroson)
+## Player Markers
 
 Draws dynamic map markers for players (and optionally AI), showing driver/pilot, vehicle name and passenger count, with click-to-expand passenger lists. **Best used when ACE map markers are not an option** for your group.
 
@@ -47,7 +43,7 @@ You can combine options, e.g. `["players", "ais"] execVM "...player_markers.sqf"
 
 ---
 
-## Headless Client (Werthles' Headless Kit)
+## Headless Client
 
 Offloads AI groups onto one or more **Headless Client** instances to ease server load, splitting AI groups evenly across the available HCs. Runs in **multiplayer only**.
 

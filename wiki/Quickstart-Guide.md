@@ -31,6 +31,8 @@ initPlayerLocal.sqf
 MissionScripts\WaldosFunctions.sqf
 ```
 
+This guide covers the required baseline. Use the [Complete Feature Catalogue](Feature-Catalogue) for the full inventory and [Feature Index](Feature-Tutorials) for detailed setup.
+
 ## 4. Keep `mission.sqm` unbinarized
 
 In Eden, open **Attributes → General → Miscellaneous** and disable **Binarize the Scenario File**. WMP's mission-loadout tools need to read the mission file.
@@ -42,15 +44,17 @@ Save the mission once after changing this setting and verify that `mission.sqm` 
 Use the [Mission Configuration Reference](Mission-Configuration-Reference) while editing:
 
 - `description.ext` for mission identity, respawn, includes, and end screens;
-- `init.sqf` for client/server-wide feature toggles and optional integrations;
-- `initServer.sqf` for authoritative mission setup;
-- `initPlayerLocal.sqf` for local player behavior.
+- `init.sqf` only for shared defaults or systems that genuinely execute on every machine;
+- `initServer.sqf` for authoritative state, persistence I/O, asset pools, and world mutation;
+- `initPlayerLocal.sqf` for player UI, actions, accessibility, and other presentation-only behavior.
+
+Keep the runtime-state request/receive handshake intact. Mid-mission ZEN setting changes are server-owned and rebroadcast so current players, headless clients, and JIP players converge on the same state.
 
 Change one feature area at a time. Leave optional systems disabled until their required objects and configuration are present.
 
 ## 6. Prepare playable loadouts
 
-Edit playable-character loadouts in Eden or ACE Arsenal before the final save. WMP can derive logistics contents and respawn loadouts from those playable units.
+Edit playable-character loadouts in Eden or ACE Arsenal before the final save. WMP recursively derives logistics contents and respawn loadouts from those playable units, including units inside Eden organiser folders and nested folders.
 
 If ACE is loaded, disable ACE Respawn in the mission/server ACE settings when using WMP's loadout restoration. See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn).
 

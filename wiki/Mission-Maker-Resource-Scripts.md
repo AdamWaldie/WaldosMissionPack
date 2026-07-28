@@ -47,8 +47,6 @@ Displays a live hint showing the damage percentage of every hit-point on a targe
 3. Open the debug console, paste the script, and click **Local Execute**.
 4. A continuously updating hint appears until the vehicle is destroyed.
 
-> Original script by "Real". Included with attribution.
-
 ---
 
 ## Example Unhiding Script

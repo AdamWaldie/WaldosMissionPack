@@ -2,89 +2,65 @@
 
 > **Use this page when:** you need to choose and configure WMP's day or night AI behavior adjustments.
 
-_Associated Files: MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf_
+_Associated Files: `MissionScripts/AiScripting/AISkillAdjustmentSystem.sqf`; `aiRebalanceInit.sqf`; `aiApplyProfile.sqf`; `aiRebalanceStop.sqf`_
 
-This script adjusts AI sub-skill values to create a more responsive and balanced PvE experience. When used alongside LAMBS Danger, it unlocks additional AI behaviours that make enemies more dynamic while remaining manageable.
+## Overview
 
-The system applies to **both pre-placed units and Zeus-spawned units** — Zeus curators are automatically patched at initialisation time to ensure consistent difficulty across the full mission.
+The AI rebalance applies named, bounded skill profiles to editor, scripted and Zeus-spawned AI. It runs where each AI unit is local, so dedicated servers and headless clients remain consistent. Players are never modified.
 
-## Modes
-
-Two modes are available: `DAY` and `NIGHT`. Select which is active by commenting/uncommenting the appropriate line in `init.sqf`:
+The compatibility configuration in `init.sqf` keeps the historical behavior:
 
 ```sqf
-"DAY" call Waldo_fnc_AITweak;   // use for daytime missions
-// "NIGHT" call Waldo_fnc_AITweak; // use for nighttime missions
+Waldo_AIRebalance_Enable = true;
+Waldo_AIRebalance_Profile = "LEGACY";
+["DAY", Waldo_AIRebalance_Profile] call Waldo_fnc_AITweak;
 ```
 
-Below is the DAY mode function, uncommented, which places the AI into daytime mode.
-!["DAY" call Waldo_fnc_AITweak;](https://i.imgur.com/N1YXEBx.png)
+## Built-in profiles
 
----
-
-## DAY Mode
-
-Applies a uniform, moderately challenging skill profile to all AI regardless of faction or role.
-
-| Sub-skill | Value | Effect |
-|---|---|---|
-| `aimingspeed` | 0.42 | Moderate target acquisition speed |
-| `aimingaccuracy` | 0.83 | Good accuracy at range |
-| `aimingshake` | 0.36 | Controlled weapon shake |
-| `spottime` | 0.80 | Slightly slower than vanilla at spotting |
-| `spotdistance` | 1.00 | Full spotting range |
-| `commanding` | 1.00 | Full command responsiveness |
-| `general` | 1.00 | Full general skill |
-
----
-
-## NIGHT Mode
-
-Night mode applies faction-aware and role-aware skill values, and responds to actual in-game lighting conditions.
-
-### Lighting-Based Spotting
-
-| Condition | Has NVG (`hmd` equipped) | No NVG |
-|---|---|---|
-| Dark (lighting ≤ 5) | `spottime` / `spotdistance` = **0.015** — nearly blind | `spottime` / `spotdistance` = **0.52** — heavily degraded |
-| Lit area (lighting > 5) | `spottime` / `spotdistance` = **1.00** — full | `spottime` / `spotdistance` = **1.00** — full |
-
-This means NVG-equipped AI are extremely effective in their environment, while AI without NVGs are severely limited in dark conditions — closely matching realistic night-combat dynamics.
-
-### Faction Awareness
-
-Some factions receive an elevated skill profile to reflect elite status:
-
-| Sub-skill | Elite factions | Default factions |
-|---|---|---|
-| `general` | 1.00 | 0.90 |
-| `commanding` | 0.95 | 0.75 |
-| `courage` | 1.00 | 0.75 |
-| `aimingspeed` | 0.72 | 0.62 |
-| `aimingaccuracy` | 0.92 | 0.83 |
-| `aimingshake` | 0.26 | 0.36 |
-| `reloadSpeed` | 1.00 | 0.75 |
-
-Elite factions include RHS Russian forces (MSV, VDV, VMF, VVS), Iron Front / Liberation WW2 factions, 3CB British, OPTRE Covenant, and others. See the source file for the full list.
-
-### Role Adjustments (Night Mode Only)
-
-On top of faction values, specific roles receive further tuning at night:
-
-| Role | Adjusted Sub-skills |
+| Profile | Intended use |
 |---|---|
-| Machine Gunner | `aimingspeed` 0.82, `aimingaccuracy` 0.82, `aimingshake` 0.35, `reloadSpeed` 0.80 |
-| Sniper | `aimingspeed` 0.60, `aimingaccuracy` 0.95, `aimingshake` 0.10, `reloadSpeed` 0.80 |
+| `LEGACY` | Existing mission compatibility; very capable and highly accurate |
+| `PUBLIC` | Lower lethality and slower target acquisition for open public sessions |
+| `STANDARD` | Balanced cooperative default for new missions |
+| `VETERAN` | Faster and more accurate opposition without maximum skills |
 
----
+Change only the profile name to select a baseline. The wrapper `Waldo_fnc_AITweak` remains supported, while new code can call `Waldo_fnc_AIRebalanceInit` directly.
 
-## Zeus-Spawned Units
+Zeus can use **AI Rebalance - Control** to switch the mode or built-in profile and immediately reapply it across server, clients and headless clients. Custom scripted profiles remain available through the API.
 
-Units spawned by Zeus during the mission automatically receive the same skill profile as pre-placed units. No additional configuration is needed.
+## Day and night modes
 
-## LAMBS Danger Integration
+`DAY` uses the selected base profile. `NIGHT` also responds to current illumination: AI with night vision retain useful spotting, while AI without it receive a stronger spotting reduction. Thresholds remain mission-configurable through `Waldo_AI_DarknessThreshold`, `Waldo_AI_NightSpotWithNVG` and `Waldo_AI_NightSpotWithoutNVG`.
 
 When LAMBS Danger is loaded, AI will trigger a broader range of tactical behaviours (flanking, suppression, bounding overwatch). WMP's elevated `general` and `commanding` values are tuned specifically to complement LAMBS — the combination produces more tactically varied AI without making them unfairly lethal.
+
+## Mission overrides
+
+Add or replace named profiles before initialisation:
+
+```sqf
+private _profiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
+_profiles set ["CUSTOM", createHashMapFromArray [
+    ["aimingSpeed", 0.40], ["aimingAccuracy", 0.35], ["aimingShake", 0.50],
+    ["spotTime", 0.60], ["spotDistance", 0.70], ["commanding", 0.75],
+    ["general", 0.65], ["courage", 0.75], ["reloadSpeed", 0.70]
+]];
+missionNamespace setVariable ["Waldo_AI_Profiles", _profiles];
+["DAY", "CUSTOM"] call Waldo_fnc_AIRebalanceInit;
+```
+
+`Waldo_AI_FactionOverrides` maps faction classnames to partial skill maps. `Waldo_AI_RoleOverrides` does the same for upper-case `textSingular` role names. Each override layers on top of the selected profile and all values are clamped to `0`–`1`.
+
+`Waldo_AI_ApplyMode` accepts `BOTH`, `EXISTING` or `NEW`. `Waldo_AI_IncludedSides`, `Waldo_AI_IncludedFactions`, `Waldo_AI_ExcludedFactions` and `Waldo_AI_ExcludedClasses` provide coarse filters; set `Waldo_AI_Exclude = true` on an individual unit for a precise opt-out. `Waldo_AI_SkillVariance` adds bounded per-unit variation after all overrides.
+
+The feature records the original named skills before its first application. With `Waldo_AI_RestoreOnStop` enabled, `Waldo_fnc_AIRebalanceStop` restores those values. A locality handler reapplies the selected profile when ownership moves between server and headless clients.
+
+## See also
+
+- [Optional Feature Systems](Optional-Feature-Systems)
+- [Optional Feature Extensions](Optional-Feature-Extensions)
+- [AI Convoy System](AI-Convoy-System)
 
 <!-- WMP-WIKI-NAV -->
 ---

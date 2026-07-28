@@ -22,6 +22,7 @@ if (isNull _object) exitWith {};
 
 if ([] call Waldo_fnc_EcoCore_canRunAuthority) then {
     _object setVariable ["WaldoEcoBuy_IsPurchaseTerminal", true, true];
+    [_object, "PURCHASE_TERMINALS"] call Waldo_fnc_EcoCore_registerRuntimeObject;
     [_object, true] call Waldo_fnc_EcoResource_registerCuratorEditableObject;
 };
 

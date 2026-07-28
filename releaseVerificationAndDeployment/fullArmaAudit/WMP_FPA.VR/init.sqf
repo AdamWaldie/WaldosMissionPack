@@ -19,8 +19,122 @@ Enable/disable them as it suits you.
 //[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 
 
-//Zeus Enhanced Modules setup (comment out to disable)
-[] call Waldo_fnc_ZenInitModules;
+/*
+Optional feature systems
+
+Shared configuration lives here only when both authority and clients consume it. Player-only
+configuration and activation live in initPlayerLocal.sqf; server-only configuration and activation
+live in initServer.sqf. Guarded local defaults preserve server-published mid-mission changes for JIP.
+*/
+if (isNil "Waldo_Persistence_Enable") then {Waldo_Persistence_Enable = false};
+if (isNil "Waldo_Persistence_PlayerSaveInterval") then {Waldo_Persistence_PlayerSaveInterval = 60};
+if (isNil "Waldo_Persistence_ObjectSaveInterval") then {Waldo_Persistence_ObjectSaveInterval = 60};
+if (isNil "Waldo_Persistence_SaveLoadout") then {Waldo_Persistence_SaveLoadout = true};
+if (isNil "Waldo_Persistence_SaveMedical") then {Waldo_Persistence_SaveMedical = true};
+if (isNil "Waldo_Persistence_SaveFoodWater") then {Waldo_Persistence_SaveFoodWater = false};
+if (isNil "Waldo_Persistence_SavePosition") then {Waldo_Persistence_SavePosition = false};
+if (isNil "Waldo_Persistence_SaveRadios") then {Waldo_Persistence_SaveRadios = false};
+if (isNil "Waldo_Persistence_DatabaseName") then {Waldo_Persistence_DatabaseName = "WaldosMissionPack"};
+if (isNil "Waldo_Persistence_DefaultCustomVariables") then {
+    Waldo_Persistence_DefaultCustomVariables = [
+        "Waldo_ObjectScale", "Waldo_ObjectScaleOriginal",
+        "Waldo_Breaching_Processed", "Waldo_Breaching_AccumulatedStrength",
+        "Waldo_FieldResupply_Hub", "Waldo_FieldResupply_Stock",
+        "Waldo_FieldResupply_Deployed", "Waldo_FieldResupply_Charges"
+    ];
+};
+
+if (isNil "Waldo_FieldResupply_Enable") then {Waldo_FieldResupply_Enable = false};
+if (isNil "Waldo_FieldResupply_CrateClass") then {Waldo_FieldResupply_CrateClass = "Box_NATO_Ammo_F"};
+if (isNil "Waldo_FieldResupply_DefaultCarrierCapacity") then {Waldo_FieldResupply_DefaultCarrierCapacity = 2};
+if (isNil "Waldo_FieldResupply_ChargesPerCrate") then {Waldo_FieldResupply_ChargesPerCrate = 5};
+if (isNil "Waldo_FieldResupply_MagazinesPerType") then {Waldo_FieldResupply_MagazinesPerType = 1};
+if (isNil "Waldo_FieldResupply_MinimumMagazineRounds") then {Waldo_FieldResupply_MinimumMagazineRounds = 2};
+if (isNil "Waldo_FieldResupply_AllowedMagazines") then {Waldo_FieldResupply_AllowedMagazines = []};
+if (isNil "Waldo_FieldResupply_BlockedMagazines") then {Waldo_FieldResupply_BlockedMagazines = []};
+if (isNil "Waldo_FieldResupply_RetainOnRespawn") then {Waldo_FieldResupply_RetainOnRespawn = true};
+
+if (isNil "Waldo_Gunship_Enable") then {Waldo_Gunship_Enable = false};
+if (isNil "Waldo_Gunship_DefaultAltitude") then {Waldo_Gunship_DefaultAltitude = 700};
+if (isNil "Waldo_Gunship_MaximumAltitude") then {Waldo_Gunship_MaximumAltitude = 5000};
+if (isNil "Waldo_Gunship_DefaultRadius") then {Waldo_Gunship_DefaultRadius = 1500};
+if (isNil "Waldo_Gunship_MaximumRadius") then {Waldo_Gunship_MaximumRadius = 10000};
+if (isNil "Waldo_Gunship_DefaultServiceDuration") then {Waldo_Gunship_DefaultServiceDuration = 900};
+if (isNil "Waldo_Gunship_MonitorInterval") then {Waldo_Gunship_MonitorInterval = 2};
+if (isNil "Waldo_Gunship_MinimumFuel") then {Waldo_Gunship_MinimumFuel = 0.25};
+if (isNil "Waldo_Gunship_MaximumDamage") then {Waldo_Gunship_MaximumDamage = 0.65};
+if (isNil "Waldo_Gunship_ServiceFuelFraction") then {Waldo_Gunship_ServiceFuelFraction = 1};
+if (isNil "Waldo_Gunship_ServiceAmmoFraction") then {Waldo_Gunship_ServiceAmmoFraction = 1};
+if (isNil "Waldo_Gunship_ServiceDamage") then {Waldo_Gunship_ServiceDamage = 0};
+if (isNil "Waldo_Gunship_MaximumServiceCycles") then {Waldo_Gunship_MaximumServiceCycles = -1};
+if (isNil "Waldo_Gunship_ReturnWhenOutOfAmmo") then {Waldo_Gunship_ReturnWhenOutOfAmmo = true};
+if (isNil "Waldo_Gunship_SideAircraftPools") then {
+    Waldo_Gunship_SideAircraftPools = createHashMapFromArray [
+        ["WEST", ["B_T_VTOL_01_armed_F"]], ["EAST", []], ["INDEPENDENT", []], ["CIVILIAN", []]
+    ];
+};
+if (isNil "Waldo_Gunship_FactionAircraftPools") then {Waldo_Gunship_FactionAircraftPools = createHashMap};
+
+if (isNil "Waldo_Hazard_Enable") then {Waldo_Hazard_Enable = false};
+if (isNil "Waldo_Hazard_Interval") then {Waldo_Hazard_Interval = 1};
+if (isNil "Waldo_Hazard_ShowStatus") then {Waldo_Hazard_ShowStatus = true};
+if (isNil "Waldo_Hazard_Presets") then {
+    Waldo_Hazard_Presets = createHashMapFromArray [
+        ["MILD", createHashMapFromArray [
+            ["type", "HAZARD"], ["label", "Hazardous Area"], ["rate", 0.5], ["decay", 0.25],
+            ["damageThresholds", [[30, 0.005], [60, 0.01]]]
+        ]],
+        ["SEVERE", createHashMapFromArray [
+            ["type", "HAZARD"], ["label", "Severe Hazard"], ["rate", 2], ["decay", 0.1],
+            ["damageThresholds", [[15, 0.01], [35, 0.03], [60, 0.06]]]
+        ]],
+        ["VACUUM", createHashMapFromArray [
+            ["type", "NO_OXYGEN"], ["label", "Unpressurised Area"], ["rate", 8], ["decay", 2],
+            ["protectInVehicles", true], ["vehicleFactor", 0], ["damageThresholds", [[20, 0.02], [45, 0.08]]]
+        ]]
+    ];
+};
+
+if (isNil "Waldo_TreeFelling_Enable") then {Waldo_TreeFelling_Enable = false};
+if (isNil "Waldo_TreeFelling_Range") then {Waldo_TreeFelling_Range = 3};
+if (isNil "Waldo_TreeFelling_BaseHits") then {Waldo_TreeFelling_BaseHits = 3};
+if (isNil "Waldo_TreeFelling_HeightFactor") then {Waldo_TreeFelling_HeightFactor = 0.25};
+if (isNil "Waldo_TreeFelling_HitCooldown") then {Waldo_TreeFelling_HitCooldown = 0.7};
+if (isNil "Waldo_TreeFelling_WeaponPatterns") then {Waldo_TreeFelling_WeaponPatterns = ["axe", "hatchet"]};
+if (isNil "Waldo_TreeFelling_FallenClasses") then {Waldo_TreeFelling_FallenClasses = ["Land_TreeTrunk_01_F", "Land_TreeTrunk_01_wood_F"]};
+if (isNil "Waldo_TreeFelling_FallenClassesSmall") then {Waldo_TreeFelling_FallenClassesSmall = []};
+if (isNil "Waldo_TreeFelling_FallenClassesMedium") then {Waldo_TreeFelling_FallenClassesMedium = []};
+if (isNil "Waldo_TreeFelling_FallenClassesLarge") then {Waldo_TreeFelling_FallenClassesLarge = []};
+if (isNil "Waldo_TreeFelling_SizeThresholds") then {Waldo_TreeFelling_SizeThresholds = [7, 15]};
+if (isNil "Waldo_TreeFelling_FallenRandomDirection") then {Waldo_TreeFelling_FallenRandomDirection = true};
+if (isNil "Waldo_TreeFelling_DirectionMode") then {Waldo_TreeFelling_DirectionMode = "RANDOM"}; // RANDOM | ORIGINAL | STRIKE
+if (isNil "Waldo_TreeFelling_ClearBushes") then {Waldo_TreeFelling_ClearBushes = false};
+if (isNil "Waldo_TreeFelling_BushRadius") then {Waldo_TreeFelling_BushRadius = 4};
+if (isNil "Waldo_TreeFelling_ToolEfficiency") then {Waldo_TreeFelling_ToolEfficiency = createHashMap};
+if (isNil "Waldo_TreeFelling_ProtectedAreas") then {Waldo_TreeFelling_ProtectedAreas = []};
+if (isNil "Waldo_TreeFelling_Yields") then {Waldo_TreeFelling_Yields = []};
+if (isNil "Waldo_TreeFelling_RegrowSeconds") then {Waldo_TreeFelling_RegrowSeconds = -1};
+
+if (isNil "Waldo_Breaching_Enable") then {Waldo_Breaching_Enable = false};
+if (isNil "Waldo_Breaching_Profiles") then {Waldo_Breaching_Profiles = createHashMap};
+if (isNil "Waldo_Breaching_ExplosiveStrengths") then {
+    Waldo_Breaching_ExplosiveStrengths = createHashMapFromArray [
+        ["DemoCharge_Remote_Ammo", 1], ["SatchelCharge_Remote_Ammo", 3]
+    ];
+};
+missionNamespace setVariable ["Waldo_SharedFeatureConfigReady", true];
+if (isServer) then {
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", true];
+} else {
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", false];
+    [] call Waldo_fnc_FeatureRuntimeRequestState;
+};
+[] spawn {
+    waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]};
+    if (missionNamespace getVariable ["Waldo_Breaching_Enable", false]) then {
+        [] call Waldo_fnc_BreachingInit;
+    };
+};
 
 /*
 Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
@@ -112,12 +226,36 @@ ACE_maxWeightCarry = 6000;
 
 /*===========================================================================================================================*/
 
+// Note that its due to Ace Hearing fucking with CBA & Vanilla audio commands (https://github.com/acemod/ACE3/issues/4029)
+ace_hearing_disableVolumeUpdate = true;
+
+
+/*===========================================================================================================================*/
+
 /*
 AI Tweak setup
 These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
 Daytime Mission parameter - uncomment this for daytime AI values.
 */
-"DAY" call Waldo_fnc_AITweak;
+if (isNil "Waldo_AIRebalance_Enable") then {Waldo_AIRebalance_Enable = true};
+if (isNil "Waldo_AIRebalance_Mode") then {Waldo_AIRebalance_Mode = missionNamespace getVariable ["Waldo_AI_Mode", "DAY"]};
+if (isNil "Waldo_AIRebalance_Profile") then {Waldo_AIRebalance_Profile = "LEGACY"};
+if (isNil "Waldo_AI_ApplyMode") then {Waldo_AI_ApplyMode = "BOTH"}; // BOTH | EXISTING | NEW
+if (isNil "Waldo_AI_RestoreOnStop") then {Waldo_AI_RestoreOnStop = true};
+if (isNil "Waldo_AI_SkillVariance") then {Waldo_AI_SkillVariance = 0};
+if (isNil "Waldo_AI_IncludedSides") then {Waldo_AI_IncludedSides = []};
+if (isNil "Waldo_AI_IncludedFactions") then {Waldo_AI_IncludedFactions = []};
+if (isNil "Waldo_AI_ExcludedFactions") then {Waldo_AI_ExcludedFactions = []};
+if (isNil "Waldo_AI_ExcludedClasses") then {Waldo_AI_ExcludedClasses = []};
+[] spawn {
+    waitUntil {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]};
+    if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
+        [
+            missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"],
+            missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LEGACY"]
+        ] call Waldo_fnc_AITweak;
+    };
+};
 // Nightime Mission - uncomment this for nightime AI values.
 //"NIGHT" call Waldo_fnc_AITweak;
 

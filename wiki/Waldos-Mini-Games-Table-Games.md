@@ -127,10 +127,6 @@ Engine tuning constants live at the top of `MissionScripts\MiniGames\engine\conf
 * The **server** is the single authority for all shared state (seats, votes, game state) and runs the background loops once for the mission; each **client** runs its own UI/discovery loop.
 * No `description.ext` changes are required — every screen is built at runtime from vanilla controls.
 
-## Attribution
-
-This engine is ported from the community composition **"Party Games Scripted"** by **|LorÐ|™[Habilidade]Ðeus Ex**, rebranded into the pack's `Waldo_MG_` namespace with the original game logic preserved.
-
 ## See also
 
 * [Waldos Mini Games (hub)](Waldos-Mini-Games)

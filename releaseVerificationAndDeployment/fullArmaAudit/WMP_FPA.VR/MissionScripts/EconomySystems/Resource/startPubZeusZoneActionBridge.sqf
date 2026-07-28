@@ -24,17 +24,20 @@
             {
                 private _unit = _x;
                 if (isNull _unit) then {continue;};
-                {
-                    [_unit, _x] call Waldo_fnc_EcoCore_clearPubZeusObjectAction;
-                } forEach [
-                    "WaldoEcoResource_PubZeusZoneCaptureActionAddedLocal",
-                    "WaldoEcoResource_PubZeusZoneInfoActionAddedLocal",
-                    "WaldoEcoResource_PubZeusZoneCaptureActionAddedLocalV2",
-                    "WaldoEcoResource_PubZeusZoneInfoActionAddedLocalV2"
-                ];
-                _unit setVariable ["WaldoEcoResource_PubZeusCanCaptureZone", false, true];
-                _unit setVariable ["WaldoEcoResource_PubZeusInResourceZone", false, true];
-                _unit setVariable ["WaldoEcoResource_PubZeusCurrentZoneId", "", true];
+                if (!(_unit getVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", false])) then {
+                    {
+                        [_unit, _x] call Waldo_fnc_EcoCore_clearPubZeusObjectAction;
+                    } forEach [
+                        "WaldoEcoResource_PubZeusZoneCaptureActionAddedLocal",
+                        "WaldoEcoResource_PubZeusZoneInfoActionAddedLocal",
+                        "WaldoEcoResource_PubZeusZoneCaptureActionAddedLocalV2",
+                        "WaldoEcoResource_PubZeusZoneInfoActionAddedLocalV2"
+                    ];
+                    _unit setVariable ["WaldoEcoResource_PubZeusCanCaptureZone", false, true];
+                    _unit setVariable ["WaldoEcoResource_PubZeusInResourceZone", false, true];
+                    _unit setVariable ["WaldoEcoResource_PubZeusCurrentZoneId", "", true];
+                    _unit setVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", true, false];
+                };
             } forEach allPlayers;
 
                 {
@@ -64,7 +67,9 @@
                     };
                     if (isNull _anchor) then {continue;};
 
-                    _anchor setVariable ["WaldoEcoResource_ZoneId", _zoneId, true];
+                    if ((_anchor getVariable ["WaldoEcoResource_ZoneId", ""]) != _zoneId) then {
+                        _anchor setVariable ["WaldoEcoResource_ZoneId", _zoneId, true];
+                    };
                     private _actionRadius = 10 max ((_zone param [3, 0]) + 8);
 
                     [

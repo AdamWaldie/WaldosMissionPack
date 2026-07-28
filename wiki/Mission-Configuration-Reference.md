@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need the authoritative fields and variables used by WMP mission entry files.
 
-This page documents all the configuration fields and variables that mission makers are expected to customise before shipping a mission built on WMP. It covers `description.ext`, `init.sqf`, and `initServer.sqf`.
+This page documents all the configuration fields and variables that mission makers are expected to customise before shipping a mission built on WMP. It covers `description.ext`, `init.sqf`, `initPlayerLocal.sqf`, and `initServer.sqf`.
 
 ---
 
@@ -76,7 +76,13 @@ class MissionSQM { #include "mission.sqm" };              // Required for logist
 
 ## initServer.sqf
 
-Runs **on the server only**. Configure logistics crate classnames and paradrop thresholds here.
+Runs **on the server only**. Configure server-authoritative limits, asset pools, persistence authority, logistics crate classnames and paradrop thresholds here.
+
+### Server-Owned Optional Feature Settings
+
+`initServer.sqf` owns object-scaling limits, Dynamic AA side/faction asset pools and the database branch of persistence. These values are not duplicated on clients because all related world mutations are validated by the server.
+
+Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
 ### Logistics Crate Classnames
 
@@ -138,7 +144,13 @@ See [Mission Diagnostics](Mission-Diagnostics).
 
 ## init.sqf
 
-Runs on **all clients and the server** during the loading screen transition. Enable, disable and configure the majority of WMP features here.
+Runs on **all clients, headless clients and the server** during the loading-screen transition. Keep only shared configuration and systems whose engine locality can genuinely occur on any machine here.
+
+### Shared Optional Feature Settings
+
+The guarded `Waldo_*` defaults cover persistence policy, field resupply, airborne-gunship defaults, hazardous-environment presets, tree felling, explosive breaching and AI rebalance. The `isNil` guards are intentional: they prevent a joining machine from replacing settings that the server changed during the mission.
+
+Do not move presentation-only settings back here. Player UI/actions belong in `initPlayerLocal.sqf`; server-only limits and pools belong in `initServer.sqf`. See the [Complete Feature Catalogue](Feature-Catalogue).
 
 ### Third-Party Scripts (disabled by default)
 
@@ -148,12 +160,6 @@ Runs on **all clients and the server** during the loading screen transition. Ena
 ```
 
 See [Headless Client & Player Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers) for the options inside that file.
-
-### Zeus Enhanced Modules
-
-```sqf
-[] call Waldo_fnc_ZenInitModules;  // remove this line to disable Zeus modules
-```
 
 ### Mini Games (table games)
 
@@ -187,14 +193,15 @@ ACE_maxWeightCarry = 6000;   // max weight in grams a player can carry
 
 Tune these so players can drag and carry logistics crates in-game.
 
-### AI Mode
+### AI Rebalance
 
 ```sqf
-"DAY" call Waldo_fnc_AITweak;   // uncomment for daytime missions
-// "NIGHT" call Waldo_fnc_AITweak; // uncomment for nighttime missions
+Waldo_AIRebalance_Enable = true;
+Waldo_AIRebalance_Mode = "DAY";       // DAY | NIGHT
+Waldo_AIRebalance_Profile = "LEGACY"; // LEGACY | PUBLIC | STANDARD | VETERAN
 ```
 
-Only one should be active at a time. See [Waldos AI Tweak](Waldos-AI-Tweak) for full detail.
+Only one profile should be active at a time. AI rebalance initialises wherever AI can be local, including headless clients, and reapplies after locality migration. See [Waldos AI Rebalance](Waldos-AI-Tweak) for filters, variance, and restoration.
 
 ### ACRE2 Radio Setup
 
@@ -277,7 +284,25 @@ call Waldo_fnc_SetTeamColour;  // remove to disable automatic ACE team colour as
 
 ## initPlayerLocal.sqf
 
-Runs **per player on each join and respawn**. Two optional respawn behaviours are commented out by default.
+Runs **once locally when each player joins**. Respawn behavior is handled by the event handlers installed here.
+
+### Player-Local Optional Feature Settings
+
+Treatment-feedback presentation, tactical-display access, emergency-dismount behavior and accessibility PID eligibility/presentation are configured here. ZEN custom modules are also registered here because only interface clients consume them.
+
+Player-local feature activation waits for an ordered server runtime snapshot. This ensures a mid-mission ZEN change is applied before a joining player installs actions, displays or event handlers.
+
+```sqf
+// Enabled only for the listed player IDs by default; [] allows every player.
+Waldo_AccessibilityPID_Enable = true;
+Waldo_AccessibilityPID_AllowedUIDs = ["76561198094931408"];
+```
+
+See [Optional Feature Systems](Optional-Feature-Systems) for the complete setting groups.
+
+### Zeus Enhanced Modules
+
+`Waldo_fnc_ZenInitModules` is called automatically on interface clients. The function is repeat-safe and exits when Zeus Enhanced is unavailable.
 
 ### Respawn With Death Loadout
 

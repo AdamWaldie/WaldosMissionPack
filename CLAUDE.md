@@ -167,14 +167,25 @@ missionNamespace setVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F", true];
 missionNamespace setVariable ["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced", true];
 ```
 
-### AI Skill Adjustment (`init.sqf`)
+### AI Rebalance (`init.sqf`)
 
 ```sqf
-"DAY" call Waldo_fnc_AITweak;    // daytime missions
-// "NIGHT" call Waldo_fnc_AITweak; // nighttime missions (comment/uncomment to switch)
+Waldo_AIRebalance_Enable = true;
+Waldo_AIRebalance_Profile = "LEGACY"; // LEGACY | PUBLIC | STANDARD | VETERAN
+["DAY", Waldo_AIRebalance_Profile] call Waldo_fnc_AITweak;
 ```
 
-Night mode applies faction-aware and role-aware tuning: units without NVGs get severely reduced spotting; NVG-equipped units get enhanced night effectiveness; snipers and machine gunners get role-specific accuracy boosts. Works with Zeus-spawned units via CBA class event handlers.
+The compatibility profile preserves established missions. New missions can select a lower-lethality or balanced profile and layer mission-defined faction and role hash-map overrides. NIGHT mode reduces unaided spotting more strongly than NVG-assisted spotting. Locality-aware CBA handlers cover editor, scripted and Zeus-spawned AI, including headless clients.
+
+### Optional Feature Systems (`init.sqf`, `initPlayerLocal.sqf`, `initServer.sqf`)
+
+Shared configuration belongs in `init.sqf`, player presentation/actions in `initPlayerLocal.sqf`, and server-only limits, asset pools and authority startup in `initServer.sqf`; configuration never belongs inside implementation scripts. Guard defaults with `isNil` so a JIP machine does not overwrite state published after a mid-mission ZEN change. Persistence requires a detected INIDBI2 runtime and keeps database access on the server. Object scaling is callable and server-validated without a background initializer. Dynamic AA resolves assets through its own server-side side/faction pools; do not replace these independent contracts with a shared profile framework. AI rebalance and breaching are all-machine initialisers because AI ownership and detonation-event locality can move across server, client and headless-client machines.
+
+The same systems can be configured during play under **Waldos Mission Modules**. ZEN requests pass through `Waldo_fnc_FeatureRuntimeApply`, which accepts assigned curators only, publishes configuration, sends an ordered live-setting payload before locality-appropriate initializers, and retains JIP initialization where required. Joining clients and headless clients request an ordered server snapshot before activating locality-sensitive features; do not replace that handshake with assumptions about public-variable delivery order. Hazard and breaching dialogs can export equivalent setup calls for permanent mission configuration.
+
+Dynamic AA is configured through `Waldo_fnc_DynamicAACreate` or the **Dynamic AA - Create** ZEN module. Every system requires a unique ID and owns its radar, response groups, markers and detector handle so it can be replaced or cleaned independently.
+
+Airborne Gunship Support uses the same named-instance principle but a separate feature-specific state machine. `Waldo_fnc_GunshipRegister` accepts existing or pooled/spawned aircraft, explicit turret profiles and service policy. Aircraft lifecycle and permissions remain server-owned; map selection, local markers, notifications and approved remote-control handoff run on clients. Do not assume turret paths are portable between aircraft mods.
 
 ### ACRE2 Radio Setup (`init.sqf`)
 
@@ -384,6 +395,17 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Zeus registration, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
 
+### Performance regression audit
+
+`releaseVerificationAndDeployment/performance_audit.py` is a comment/string-aware static guard for recurring SQF work. CI rejects new or expanded high-severity world scans, recurring broadcasts/remote execution and unbounded schedulers unless `performance_baseline.json` contains a path/function-specific reviewed reason. Run the scanner and its unit tests before changing persistent loops:
+
+```text
+python3 releaseVerificationAndDeployment/performance_audit.py
+python3 -m unittest discover -s releaseVerificationAndDeployment -p "test_performance_audit.py" -v
+```
+
+Do not regenerate the baseline to bypass review. State static reductions as scan/dispatch/redraw opportunities, never as FPS or bandwidth gains without an Arma runtime capture. First-party fixes must preserve locality, JIP and public mission-maker contracts; optional bundled scripts are reported separately.
+
 ### Tasks / Objectives (scripting helper)
 
 A thin, JIP-safe wrapper over the BIS task framework for mission makers who drive objectives from SQF/triggers (the Eden and Zeus task modules remain the GUI option). Server-authoritative — calling on a client forwards to the server automatically.
@@ -415,7 +437,7 @@ This feature is explicitly marked **WIP and not recommended for live missions**.
 All 15 core and 19 Economy modules are listed in `releaseVerificationAndDeployment/zeus_script_parity.json`. `zeus_script_parity_checker.py` verifies their registrations, handlers, declared public APIs and required parity controls. A static pass establishes wiring, not in-engine usability; runtime Zeus placement, locality and dialog acceptance must still be recorded through the full Arma audit mission. See `wiki/Zeus-And-Script-API-Parity.md`.
 
 ```sqf
-[] call Waldo_fnc_ZenInitModules; // already called in init.sqf
+[] call Waldo_fnc_ZenInitModules; // already called for interface clients in initPlayerLocal.sqf
 ```
 
 Registers "Waldos Mission Modules" in the Zeus module menu: Player Supply Crate, Field Hospital Crate, Call Endex, Custom Mission End, Fortify Budget Manager, Spawn AI Convoy. Silently does nothing if Zeus Enhanced is not loaded.
@@ -664,6 +686,11 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
+- `CombatSystems/` — airborne gunship support, explosive breaching and Dynamic AA
+- `EnvironmentalSystems/` — hazardous environments and tree felling
+- `MedicalSystems/` — patient treatment feedback
+- `Persistence/` — optional INIDBI2-backed persistence
+- Cross-cutting optional features live with their owning domain: accessibility and tactical display under `MissionFlowAndUi/`, emergency dismount under `MissionInit/VehicleActionsSetup/`, field resupply under `Logistics/`, object transforms under `MissionMakerResourceScripts/`, and runtime controls under `ZenModules/`
 - `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
 - `MiniGames/` — seated party-game installer and multiplayer engine only.
 - `InteractionsMinigames/` — field-equipment procedures, equipment themes, accessibility core, object/table integration, and all ten challenge implementations.

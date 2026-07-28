@@ -4,6 +4,16 @@
 
 ## Requirements and location
 
+These modules allow users to:
+* Spawn a Logistics System Supply & Medical Crate to Zeus specification
+* Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)
+* End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
+* Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
+* Scale the nearest object through a validated server request
+* Configure persistence, treatment feedback, hazardous environments, tree felling, emergency dismount, accessibility PID, explosive breaching and AI rebalance while the mission is running
+* Register field-resupply hubs/carriers and tactical-display terminals
+* Register, assign and operate airborne gunship support
+
 WMP's Zeus modules require Zeus Enhanced. Find them under **Modules → Waldos Mission Modules**.
 
 Use them to:
@@ -74,6 +84,68 @@ Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Tracke
 
 * **EMP Detonation** — a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
 * **Plant Signal Tracker** — tags the nearest unit or vehicle so a chosen side follows it live on the map (hidden from the tracked side).
+
+## Dynamic Anti-Air Modules
+
+**Dynamic AA - Create** opens the system settings and then guides Zeus through radar, static-site and mobile-system placement on the map. **Dynamic AA - Remove Nearest** selects the active system nearest to the placed module and can either delete its assets or leave them disabled. See the [Dynamic Anti-Air guide](Dynamic-Anti-Air) for every option.
+
+## Scale Object Module
+
+Place **Scale Object** within 25 metres of the intended target, choose the multiplier, and optionally convert it to a simple object. The server enforces the mission's configured minimum and maximum scale.
+
+## Optional Feature Runtime Modules
+
+These modules are repeat-safe and send configuration through a server-authoritative curator request. Live setting bundles are applied on clients before their matching initializer runs. Joining players and headless clients request an ordered server snapshot before locality-sensitive features activate, while keyed JIP entries replay or clear the required initializer. Where a module offers **Copy setup script**, the copied call can be moved into mission setup for repeatable pre-planned use.
+
+## Persistence
+
+**Persistence - Control** enables or disables persistence and configures player/object save intervals and the supported data categories. Enabling still requires a compatible INIDBI2 server runtime; placing the module does not silently bypass the dependency gate.
+
+**Persistence - Register Object** selects the nearest object within 25 metres and registers its cargo, damage, fuel, ammunition/pylons and/or transform under a stable key.
+
+**Persistence - Save Now** can immediately request saves from connected players, registered objects, or both without disabling the system.
+
+## Treatment Feedback
+
+**Treatment Feedback - Control** enables or disables patient/medic notifications for ACE treatment start, completion and interruption events and controls the displayed context.
+
+## Hazardous Environments
+
+**Hazard - Create** creates a named circular hazard at the module position. Zeus can set its semantic type, player-facing label, range, exposure/recovery rates, damage threshold, protection rules and protective equipment. It can also copy a setup call for later mission authoring.
+
+**Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
+
+## Tree Felling and Brush Clearing
+
+**Tree Felling - Control** enables or disables the mechanic and adjusts interaction distance, swing requirements, cooldown and optional nearby brush clearing. Mission makers can additionally configure small, medium and large fallen-object classes in `init.sqf`.
+
+## Emergency Dismount
+
+**Emergency Dismount - Control** changes overturn and destroyed-vehicle triggers, velocity preservation, temporary protection, clear-position search, clearance checks, exit method and optional consciousness recovery.
+
+## Accessibility PID
+
+**Accessibility PID - Control** configures the opt-in friendly-identification aid, including icon and name ranges, line-of-sight checks, AI inclusion and the player's local visibility toggle.
+
+## Explosive Breaching
+
+**Breaching - Configure Class** targets the nearest object within 25 metres and adds, updates or removes the profile for its object class. Zeus can configure charge range, allowed explosive classes and what happens to the original object, then copy an equivalent setup call. More complex replacement debris remains available through the scripted profile, including relative position, full orientation, coordinate mode and scale.
+
+## AI Rebalance
+
+**AI Rebalance - Control** enables or disables the supported AI profile at runtime and selects day/night mode plus the Legacy, Public, Standard or Veteran balance profile. Legacy remains the compatibility default.
+
+## Field Resupply
+
+**Field Resupply - Register Hub** turns the nearest object into a side-restricted refill hub with finite or unlimited stock. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. All refill, deploy, take and salvage operations are validated by the server.
+
+## Tactical Display
+
+**Tactical Display - Register** turns the nearest object into a range-limited terminal. Players with proximity and line of sight can open its tactical map; it shows friendlies and only enemies already known to their group.
+
+## Airborne Gunship Support
+
+**Gunship - Register or Spawn** registers the nearest aircraft or creates a validated aircraft class at the module position. **Gunship - Assign Controller** assigns the nearest player to a named system. **Gunship - Set Orbit** sends the selected aircraft to the module position. **Gunship - Operational Control** returns it to its combat orbit, sends it through its service cycle, releases its operator or removes the system. See the [Airborne Gunship Support guide](Airborne-Gunship-Support).
 
 <!-- WMP-WIKI-NAV -->
 ---

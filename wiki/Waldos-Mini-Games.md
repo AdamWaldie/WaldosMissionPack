@@ -41,10 +41,6 @@ if (Waldo_MiniGames_Enable) then {
 * **ACE 3** — used for nested interaction menus on tables and field equipment. These discoverable surfaces also retain matching vanilla scroll-wheel actions; both routes call the same authoritative request handlers.
 * No `description.ext` edits and no addon are needed — every screen is built at runtime from vanilla controls.
 
-## Attribution
-
-The seated table-games engine is ported from the community composition **"Party Games Scripted"** by **|LorÐ|™[Habilidade]Ðeus Ex**, rebranded into the pack's `Waldo_MG_` namespace with the game logic preserved. The field-equipment interaction framework is original to WMP.
-
 ## See also
 
 * [Feature Tutorials](Feature-Tutorials)

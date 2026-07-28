@@ -1,8 +1,9 @@
 /*
- * Author: WaldoTheWarfighter
- * Scrapes mission.sqm for every playable unit on the chosen side and returns a
- * de-duplicated pool of their equipment, used to populate supply crates and the
- * limited ACE arsenals. Mission binarization must be disabled for the SQM to be readable.
+ * Author: Waldo
+ * Scrapes mission.sqm recursively for every playable unit on the chosen side and
+ * returns a de-duplicated pool of their equipment, used to populate supply crates
+ * and limited ACE arsenals. Units inside Eden folders and nested folders are included.
+ * Mission binarization must be disabled for the SQM to be readable.
  *
  * Arguments:
  * 0: Side <STRING> (Optional, default: "West") - "West" / "East" / "Independent" / "Civilian"
@@ -65,18 +66,17 @@ private _attachmentSlots   = ["optics", "muzzle", "flashlight", "underBarrel"];
 private _cargoContainers = ["uniform", "vest", "backpack"];
 private _matchedConfigUnits = 0;
 
-// Walk Entities (groups) -> Entities (units) two levels deep.
-{
-    private _firstItem = configName _x;
-    {
-        private _secondItem = configName _x;
-        private _entity = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem;
-        private _attr   = _entity >> "Attributes";
-        private _inv    = _attr >> "Inventory";
+// Eden folders are stored as Layer entities and may contain groups, loose objects, or more layers.
+// Walk every nested Entities collection instead of assuming the old Group -> Unit two-level shape.
+private _visitEntity = {
+    params ["_entity"];
 
-        private _isPlayer   = getNumber (_attr >> "isPlayer");
+    if (getText (_entity >> "dataType") == "Object") then {
+        private _attr = _entity >> "Attributes";
+        private _inv = _attr >> "Inventory";
+        private _isPlayer = getNumber (_attr >> "isPlayer");
         private _isPlayable = getNumber (_attr >> "isPlayable");
-        private _unitSide   = getText (_entity >> "side");
+        private _unitSide = getText (_entity >> "side");
 
         if (_unitSide == _sideChosen && {_isPlayer == 1 || _isPlayable == 1}) then {
             _matchedConfigUnits = _matchedConfigUnits + 1;
@@ -84,7 +84,7 @@ private _matchedConfigUnits = 0;
             {
                 _x params ["_path", "_target"];
                 private _cfg = _inv;
-                { _cfg = _cfg >> _x } forEach _path;
+                {_cfg = _cfg >> _x} forEach _path;
                 _target pushBack (getText _cfg);
             } forEach _simpleSlots;
 
@@ -107,8 +107,18 @@ private _matchedConfigUnits = 0;
                 } forEach (configProperties [(_inv >> _container >> "ItemCargo"), "isClass _x", true]);
             } forEach _cargoContainers;
         };
-    } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities"), "isClass _x", true]);
-} forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities"), "isClass _x", true]);
+    };
+
+    private _children = _entity >> "Entities";
+    {
+        [_x] call _visitEntity;
+    } forEach (configProperties [_children, "isClass _x", true]);
+};
+
+private _rootEntities = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities";
+{
+    [_x] call _visitEntity;
+} forEach (configProperties [_rootEntities, "isClass _x", true]);
 
 // Legacy unbinarized missions use Groups/Vehicles instead of Eden's Entities/Inventory tree.
 // Preserve the exact modern-SQM path above, but fall back to the live playable loadouts when
