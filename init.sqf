@@ -108,6 +108,12 @@ ACE_maxWeightCarry = 6000;
 
 /*===========================================================================================================================*/
 
+// Note that its due to Ace Hearing fucking with CBA & Vanilla audio commands (https://github.com/acemod/ACE3/issues/4029)
+ace_hearing_disableVolumeUpdate = true;
+
+
+/*===========================================================================================================================*/
+
 /*
 AI Tweak setup
 These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
