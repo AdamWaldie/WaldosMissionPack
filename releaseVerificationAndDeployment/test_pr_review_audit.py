@@ -298,6 +298,21 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('[_target, _scale, false]', source)
         self.assertNotIn("Convert to simple object", source)
 
+    def test_diagnostics_accept_nested_loadouts_and_real_interaction_ids(self):
+        diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnostics.sqf").read_text(encoding="utf-8")
+        interactions = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteractionGetDiagnostics.sqf").read_text(encoding="utf-8")
+        self.assertIn("_configuredLoadoutSides", diagnostics)
+        self.assertIn("mission-scraped item(s)", diagnostics)
+        self.assertIn('["commandinput", "Waldo_fnc_MiniGameCommandInput"]', interactions)
+        self.assertNotIn('["command", "Waldo_fnc_MiniGameCommandInput"]', interactions)
+
+    def test_tree_felling_default_replacement_exists_in_base_game(self):
+        root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        process = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingProcess.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Land_WoodenLog_F"]', root_init)
+        self.assertIn('["Land_WoodenLog_F"]', process)
+        self.assertNotIn("Land_TreeTrunk_01_F", root_init)
+
 
     def test_corrected_feature_workflows_have_runtime_controls_and_bounds(self):
         scripts = ROOT / "MissionScripts"

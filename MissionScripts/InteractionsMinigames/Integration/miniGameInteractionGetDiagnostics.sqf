@@ -14,7 +14,7 @@ private _procedures = [
     ["radiotune", "Waldo_fnc_MiniGameRadioTune"],
     ["pressure", "Waldo_fnc_MiniGamePressure"],
     ["sequence", "Waldo_fnc_MiniGameSequence"],
-    ["command", "Waldo_fnc_MiniGameCommandInput"]
+    ["commandinput", "Waldo_fnc_MiniGameCommandInput"]
 ];
 private _registry = missionNamespace getVariable ["Waldo_MG_ChallengeRegistry", []];
 private _checks = [];

@@ -64,7 +64,7 @@ hideObjectGlobal _target;
 
 private _classes = missionNamespace getVariable [
     "Waldo_TreeFelling_FallenClasses",
-    ["Land_TreeTrunk_01_F", "Land_TreeTrunk_01_wood_F"]
+    ["Land_WoodenLog_F"]
 ];
 private _thresholds = missionNamespace getVariable ["Waldo_TreeFelling_SizeThresholds", [7, 15]];
 private _tierClasses = if (_height < (_thresholds param [0, 7])) then {

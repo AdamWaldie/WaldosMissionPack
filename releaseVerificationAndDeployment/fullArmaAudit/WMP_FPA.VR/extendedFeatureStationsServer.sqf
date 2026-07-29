@@ -114,7 +114,7 @@ Waldo_QA_fnc_resetTreeServer = {
     private _tree = missionNamespace getVariable ["Waldo_QA_Tree", objNull];
     if (isNull _tree) exitWith {false};
     {
-        if (_x != _tree && {typeOf _x in ["Land_TreeTrunk_01_F", "Land_TreeTrunk_01_wood_F"]}) then {deleteVehicle _x};
+        if (_x != _tree && {typeOf _x in ["Land_WoodenLog_F"]}) then {deleteVehicle _x};
     } forEach nearestObjects [_tree, [], 10, true];
     _tree hideObjectGlobal false;
     _tree setDamage 0;

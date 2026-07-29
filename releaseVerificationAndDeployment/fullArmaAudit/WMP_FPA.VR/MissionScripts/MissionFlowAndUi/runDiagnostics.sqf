@@ -105,19 +105,21 @@ private _flattenReal = {
     {if (_x isEqualType []) then {_flat append _x} else {_flat pushBack _x};} forEach _array;
     _flat select {_x isEqualType "" && {_x != "" && {_x != "EMPTY"}}}
 };
+private _configuredLoadoutSides = 0;
 {
     _x params ["_side", "_suffix", "_label"];
     private _slotCount = {side group _x == _side} count playableUnits;
     private _items = [missionNamespace getVariable [format ["Logi_MissionSQMArray_%1", _suffix], []]] call _flattenReal;
     private _count = count _items;
-    if (_slotCount == 0) then {
-        ["logistics", format ["%1-loadout", _label], "UNCONFIGURED", "No playable slots use this side", false] call _status;
+    if (_slotCount == 0 && {_count == 0}) then {
+        ["logistics", format ["%1-loadout", _label], "UNCONFIGURED", "No live or mission-config playable slots use this side", false] call _status;
     } else {
-        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 playable slot(s), %2 unique scraped item(s)", _slotCount, _count], _count == 0] call _status;
+        if (_count > 0) then {_configuredLoadoutSides = _configuredLoadoutSides + 1};
+        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 live playable slot(s), %2 unique mission-scraped item(s)", _slotCount, _count], _count == 0] call _status;
     };
 } forEach [[west, "West", "BLUFOR"], [east, "East", "OPFOR"], [independent, "Ind", "INDEP"], [civilian, "Civ", "CIV"]];
-if ((count playableUnits) == 0) then {
-    ["logistics", "playable-slots", "ERROR", "No playable units; logistics crates cannot derive mission equipment", true] call _status;
+if ((count playableUnits) == 0 && {_configuredLoadoutSides == 0}) then {
+    ["logistics", "playable-slots", "ERROR", "No live or mission-config playable units; logistics crates cannot derive mission equipment", true] call _status;
 };
 
 // Configured classes. Blank values are unconfigured; bad non-blank values are errors.
