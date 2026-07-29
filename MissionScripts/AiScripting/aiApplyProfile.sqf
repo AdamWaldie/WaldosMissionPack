@@ -22,8 +22,8 @@ private _includedSides = missionNamespace getVariable ["Waldo_AI_IncludedSides",
 private _includedFactions = missionNamespace getVariable ["Waldo_AI_IncludedFactions", []];
 private _excludedFactions = missionNamespace getVariable ["Waldo_AI_ExcludedFactions", []];
 private _excludedClasses = missionNamespace getVariable ["Waldo_AI_ExcludedClasses", []];
-if (count _includedSides > 0 && {side group _unit notIn _includedSides}) exitWith {false};
-if (count _includedFactions > 0 && {faction _unit notIn _includedFactions}) exitWith {false};
+if (count _includedSides > 0 && {!(side group _unit in _includedSides)}) exitWith {false};
+if (count _includedFactions > 0 && {!(faction _unit in _includedFactions)}) exitWith {false};
 if (faction _unit in _excludedFactions || {typeOf _unit in _excludedClasses}) exitWith {false};
 
 private _skillNames = ["aimingSpeed", "aimingAccuracy", "aimingShake", "spotTime", "spotDistance", "commanding", "general", "courage", "reloadSpeed"];

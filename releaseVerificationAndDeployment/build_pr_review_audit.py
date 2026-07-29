@@ -5,9 +5,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import re
 import runpy
 import shutil
+import stat
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -41,6 +43,18 @@ RANGE_FILES = (
     "functionStations.sqf",
     "partyFixtureServer.sqf",
 )
+
+
+def remove_staged_mission(path: Path) -> None:
+    """Remove a prior Windows stage even when copied source folders are read-only."""
+    if not path.exists():
+        return
+
+    def clear_read_only(function, target, _error):
+        os.chmod(target, stat.S_IWRITE)
+        function(target)
+
+    shutil.rmtree(path, onexc=clear_read_only)
 
 
 def audit_fixtures() -> list[dict]:
@@ -205,8 +219,7 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
     if not mission_sqm.lstrip().startswith(b"version=12;"):
         raise ValueError("PR review mission must retain its known-good legacy mission.sqm")
 
-    if destination.exists():
-        shutil.rmtree(destination)
+    remove_staged_mission(destination)
     destination.mkdir(parents=True)
     copy_release(destination)
 

@@ -54,7 +54,7 @@ switch (toUpperANSI _operation) do {
         private _minimumRounds = missionNamespace getVariable ["Waldo_FieldResupply_MinimumMagazineRounds", 2];
         private _classes = (magazines _unit) arrayIntersect (magazines _unit);
         _classes = _classes select {
-            _x notIn _blocked && {(count _allowed == 0 || {_x in _allowed})} && {getNumber (configFile >> "CfgMagazines" >> _x >> "count") >= _minimumRounds}
+            !(_x in _blocked) && {(count _allowed == 0 || {_x in _allowed})} && {getNumber (configFile >> "CfgMagazines" >> _x >> "count") >= _minimumRounds}
         };
         if (count _classes == 0) exitWith {["No compatible carried magazine types were found.", "WARNING"] call _notify; false};
         _crate setVariable ["Waldo_FieldResupply_Charges", _charges - 1, true];

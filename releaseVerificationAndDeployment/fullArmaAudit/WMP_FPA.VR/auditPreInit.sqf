@@ -31,5 +31,4 @@ missionNamespace setVariable ["Waldo_Rally_AllowRegroup", true];
 missionNamespace setVariable ["Waldo_EmergencyDismount_Enable", true];
 missionNamespace setVariable ["Waldo_EmergencyDismount_MinimumOverturnSeconds", 0.75];
 missionNamespace setVariable ["Waldo_AccessibilityPID_Enable", true];
-missionNamespace setVariable ["Waldo_AccessibilityPID_AllowedUIDs", []];
 missionNamespace setVariable ["Waldo_AccessibilityPID_IncludeAI", true];

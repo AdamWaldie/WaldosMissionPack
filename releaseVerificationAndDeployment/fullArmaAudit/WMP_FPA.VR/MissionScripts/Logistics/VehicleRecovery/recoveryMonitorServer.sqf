@@ -15,6 +15,6 @@ while {missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]} do
             if (_index >= 0) then {[_package, _workshops select _index] call Waldo_fnc_RecoveryRestoreServer};
         };
     } forEach _packages;
-    sleep (missionNamespace getVariable ["Waldo_Recovery_ScanInterval", 3] max 1);
+    sleep ((missionNamespace getVariable ["Waldo_Recovery_ScanInterval", 3]) max 1);
 };
 true

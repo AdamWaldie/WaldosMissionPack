@@ -16,23 +16,54 @@ Waldo_QA_fnc_notifyActorServer = {
     };
 };
 
-// Persistence: demonstrate the dependency gate without weakening the default-off contract.
+// Persistence: the audit opts in explicitly and exercises the full object lifecycle.
 private _persistenceObject = ["qa_persistence_object"] call _get;
 Waldo_QA_fnc_persistenceProbeServer = {
     params ["_actor"];
     private _available = [] call Waldo_fnc_PersistenceDependencyAvailable;
     private _message = if (_available) then {
-        "Compatible INIDBI2 runtime detected. Use the Persistence ZEN controls to enable, register this crate and save."
+        "Compatible INIDBI2 runtime detected. This station can enable, register, save, mutate and reload its crate."
     } else {
         "No compatible INIDBI2 server runtime detected. Persistence remains safely disabled."
     };
     [_actor, "PERSISTENCE DEPENDENCY", _message, ["WARNING", "SUCCESS"] select _available] call Waldo_QA_fnc_notifyActorServer;
 };
-Waldo_QA_fnc_persistenceSaveServer = {
-    [] spawn {
-        uiSleep 0;
-        [true, true] call Waldo_fnc_PersistenceSaveNow;
+Waldo_QA_fnc_persistenceEnableServer = {
+    params ["_actor"];
+    missionNamespace setVariable ["Waldo_Persistence_Enable", true, true];
+    private _started = [] call Waldo_fnc_PersistenceInit;
+    private _object = missionNamespace getVariable ["Waldo_QA_PersistenceObject", objNull];
+    private _registered = false;
+    if (_started && {missionNamespace getVariable ["Waldo_Persistence_Active", false]} && {!isNull _object}) then {
+        _object allowDamage true;
+        _registered = [_object, "qa_station_crate", [true, true, false, false, true, []]] call Waldo_fnc_PersistenceRegisterObject;
     };
+    private _ok = _started && {_registered};
+    [_actor, "PERSISTENCE SETUP", ["Dependency unavailable; persistence stayed disabled.", "Persistence is active and the QA crate is registered."] select _ok, ["WARNING", "SUCCESS"] select _ok] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_persistenceSaveServer = {
+    params ["_actor"];
+    [_actor] spawn {
+        params ["_actor"];
+        uiSleep 0;
+        private _ok = [false, true] call Waldo_fnc_PersistenceSaveNow;
+        [_actor, "PERSISTENCE SAVE", ["Save was rejected; enable and register the crate first.", "Registered QA crate state saved."] select _ok, ["WARNING", "SUCCESS"] select _ok] call Waldo_QA_fnc_notifyActorServer;
+    };
+};
+Waldo_QA_fnc_persistenceMutateServer = {
+    params ["_actor"];
+    private _object = missionNamespace getVariable ["Waldo_QA_PersistenceObject", objNull];
+    if (isNull _object) exitWith {};
+    clearItemCargoGlobal _object;
+    _object setDamage 0.65;
+    _object setPosATL [158, 87, 0];
+    [_actor, "PERSISTENCE MUTATION", "QA crate cargo, damage and position changed. Reload should restore the saved state.", "INFO"] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_persistenceReloadServer = {
+    params ["_actor"];
+    private _object = missionNamespace getVariable ["Waldo_QA_PersistenceObject", objNull];
+    private _ok = !isNull _object && {[_object, "qa_station_crate", [true, true, false, false, true, []]] call Waldo_fnc_PersistenceLoadObject};
+    [_actor, "PERSISTENCE RELOAD", ["No compatible saved QA crate state was restored.", "Saved QA crate state restored."] select _ok, ["WARNING", "SUCCESS"] select _ok] call Waldo_QA_fnc_notifyActorServer;
 };
 missionNamespace setVariable ["Waldo_QA_PersistenceObject", _persistenceObject, true];
 
@@ -45,6 +76,9 @@ _patient disableAI "AUTOCOMBAT";
 _patient setUnitPos "UP";
 [_patient] call Waldo_QA_fnc_trackFeatureObjectServer;
 missionNamespace setVariable ["Waldo_QA_TreatmentPatient", _patient, true];
+private _medicalSupplies = ["qa_treatment_supplies", "B_supplyCrate_F", [182, 87, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
+clearItemCargoGlobal _medicalSupplies;
+{_medicalSupplies addItemCargoGlobal [_x, 20]} forEach ["ACE_fieldDressing", "ACE_packingBandage", "ACE_elasticBandage", "ACE_tourniquet", "ACE_morphine", "ACE_epinephrine"];
 Waldo_QA_fnc_injurePatientServer = {
     params ["_actor"];
     private _patient = missionNamespace getVariable ["Waldo_QA_TreatmentPatient", objNull];
@@ -65,7 +99,8 @@ private _hazardEmitter = ["qa_hazard_emitter"] call _get;
 private _hazardProfile = createHashMapFromArray [
     ["type", "VACUUM"], ["label", "QA OXYGEN DEFICIENCY"], ["rate", 0.35],
     ["decay", 0.5], ["maximumExposure", 5], ["emitterRadius", 8],
-    ["intensityMode", "LINEAR"], ["damageThresholds", []]
+    ["intensityMode", "LINEAR"], ["damageThresholds", []],
+    ["protectiveItemsAnySlot", ["H_HelmetB"]], ["equipmentFactor", 0]
 ];
 ["qa_hazard", _hazardEmitter, _hazardProfile] call Waldo_fnc_HazardRegisterZone;
 ["qa_hazard", _hazardEmitter, _hazardProfile] remoteExecCall ["Waldo_fnc_HazardRegisterZone", -2, "Waldo_QA_HazardZone"];
@@ -120,8 +155,9 @@ private _hostileGroup = createGroup east;
 private _hostile = _hostileGroup createUnit ["O_Soldier_F", [150, 15, 0], [], 0, "NONE"];
 _hostile disableAI "PATH";
 _hostile setName "QA Known Hostile";
-west reveal [_hostile, 4];
+{(group _x) reveal [_hostile, 4]} forEach allPlayers;
 [_hostile] call Waldo_QA_fnc_trackFeatureObjectServer;
+missionNamespace setVariable ["Waldo_QA_TacticalHostile", _hostile, true];
 private _profileGroup = createGroup west;
 private _profileUnits = [];
 {
@@ -185,6 +221,26 @@ Waldo_QA_fnc_resetScaleFixturesServer = {
         { [missionNamespace getVariable [_x, objNull]] call Waldo_fnc_ObjectScaleReset } forEach ["qa_scale_small", "qa_scale_source", "qa_scale_target"];
     };
 };
+Waldo_QA_fnc_copyScaleFixtureServer = {
+    private _source = missionNamespace getVariable ["qa_scale_source", objNull];
+    private _target = missionNamespace getVariable ["qa_scale_target", objNull];
+    [_source, _target] call Waldo_fnc_ObjectScaleCopy;
+};
+Waldo_QA_fnc_multiplyScaleFixtureServer = {
+    [missionNamespace getVariable ["qa_scale_target", objNull], 1.5] call Waldo_fnc_ObjectScaleMultiply;
+};
+Waldo_QA_fnc_transformFixtureServer = {
+    private _target = missionNamespace getVariable ["qa_scale_target", objNull];
+    [_target, [207, 49, 1], [15, 10, 45], "ATL", 1.25] call Waldo_fnc_ObjectTransformSet;
+};
+Waldo_QA_fnc_reportScaleFixturesServer = {
+    params ["_actor"];
+    private _rows = ["qa_scale_small", "qa_scale_source", "qa_scale_target"] apply {
+        private _object = missionNamespace getVariable [_x, objNull];
+        format ["%1 scale=%2 pos=%3", _x, _object getVariable ["Waldo_ObjectScale", 1], getPosATL _object]
+    };
+    [_actor, "OBJECT TRANSFORM STATE", _rows joinString " | ", "INFO"] call Waldo_QA_fnc_notifyActorServer;
+};
 
 Waldo_QA_fnc_setAIProfileServer = {
     params ["_profile"];
@@ -199,6 +255,12 @@ Waldo_QA_fnc_stopAIRebalanceServer = {
         uiSleep 0;
         [] call Waldo_fnc_AIRebalanceStop;
     };
+};
+Waldo_QA_fnc_reportAIProfileServer = {
+    params ["_actor"];
+    private _units = missionNamespace getVariable ["Waldo_QA_ProfileUnits", []];
+    private _rows = _units apply {format ["%1 acc=%2 spot=%3 general=%4", name _x, (_x skill "aimingAccuracy") toFixed 2, (_x skill "spotDistance") toFixed 2, (_x skill "general") toFixed 2]};
+    [_actor, "AI PROFILE STATE", _rows joinString " | ", "INFO"] call Waldo_QA_fnc_notifyActorServer;
 };
 
 // Field resupply and tactical display use their production registration paths.
@@ -215,6 +277,12 @@ Waldo_QA_fnc_assignResupplyCarrierServer = {
 };
 private _tacticalConsole = ["qa_sign_tactical_display"] call _get;
 [_tacticalConsole, west, 500, true] call Waldo_fnc_TacticalDisplayRegister;
+Waldo_QA_fnc_revealTacticalHostileServer = {
+    params ["_actor"];
+    private _hostile = missionNamespace getVariable ["Waldo_QA_TacticalHostile", objNull];
+    if (!isNull _hostile && {!isNull _actor}) then {(group _actor) reveal [_hostile, 4]};
+    [_actor, "TACTICAL CONTACT", "The QA hostile is now known to your group and should appear on the tactical display.", "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
+};
 
 // Dynamic AA is created only on request so no live weapons exist during ordinary range use.
 Waldo_QA_fnc_createDynamicAAServer = {
@@ -231,6 +299,24 @@ Waldo_QA_fnc_createDynamicAAServer = {
     };
 };
 Waldo_QA_fnc_destroyDynamicAAServer = {[] spawn {uiSleep 0; ["QA_AA", true] call Waldo_fnc_DynamicAADestroy}};
+Waldo_QA_fnc_spawnDynamicAATargetServer = {
+    params ["_actor"];
+    private _old = missionNamespace getVariable ["Waldo_QA_AATarget", objNull];
+    if (!isNull _old) then {deleteVehicle _old};
+    private _target = createVehicle ["B_UAV_02_dynamicLoadout_F", [175, -20, 140], [], 0, "FLY"];
+    _target setPosATL [175, -20, 140];
+    _target setDir 180;
+    _target flyInHeight 140;
+    _target allowDamage false;
+    createVehicleCrew _target;
+    missionNamespace setVariable ["Waldo_QA_AATarget", _target, true];
+    [_actor, "DYNAMIC AA TARGET", "A protected WEST UAV is above the configured altitude inside the detection zone.", "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_removeDynamicAATargetServer = {
+    private _target = missionNamespace getVariable ["Waldo_QA_AATarget", objNull];
+    if (!isNull _target) then {{deleteVehicle _x} forEach crew _target; deleteVehicle _target};
+    missionNamespace setVariable ["Waldo_QA_AATarget", objNull, true];
+};
 
 // Gunship spawn, assignment and teardown remain explicit because they create a live aircraft.
 Waldo_QA_fnc_createGunshipServer = {
@@ -262,7 +348,7 @@ Waldo_QA_fnc_resetRecoveryLocalServer = {
     } forEach (missionNamespace getVariable ["Waldo_Recovery_Packages", []]);
     missionNamespace setVariable ["Waldo_Recovery_Packages", []];
     private _vehicle = ["qa_recovery_vehicle", "B_MRAP_01_F", [217, 7, 0], 90, false] call Waldo_QA_fnc_getFeatureObjectServer;
-    private _carrier = ["qa_recovery_carrier", "B_Truck_01_transport_F", [233, 7, 0], 270, true] call Waldo_QA_fnc_getFeatureObjectServer;
+    private _carrier = ["qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", [239, 7, 0], 270, true] call Waldo_QA_fnc_getFeatureObjectServer;
     private _workshop = ["qa_recovery_workshop", "Land_RepairDepot_01_green_F", [225, 14, 0], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
     _vehicle setDamage 0.8;
     [_workshop, "QA", 20, west] call Waldo_fnc_RecoveryRegisterWorkshop;
@@ -290,6 +376,12 @@ Waldo_QA_fnc_resetRalliesServer = {
         uiSleep 0;
         [] call Waldo_fnc_RallyPointRemoveAllServer;
     };
+};
+Waldo_QA_fnc_prepareRallyTesterServer = {
+    params ["_actor"];
+    if (isNull _actor) exitWith {};
+    (group _actor) selectLeader _actor;
+    [_actor, "SQUAD RALLY QA", "You are now group leader. Use the production self-action to deploy, regroup and pack the rally.", "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
 };
 
 missionNamespace setVariable ["Waldo_QA_ExtendedFeatureStationsReady", true, true];

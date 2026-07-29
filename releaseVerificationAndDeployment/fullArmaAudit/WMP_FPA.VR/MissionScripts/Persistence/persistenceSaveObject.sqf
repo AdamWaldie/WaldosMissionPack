@@ -31,7 +31,7 @@ private _damage = if (_saveDamage) then {getAllHitPointsDamage _object} else {[]
 private _fuel = if (_saveFuel && {_object isKindOf "AllVehicles"}) then {fuel _object} else {-1};
 private _ammo = if (_saveAmmo && {_object isKindOf "AllVehicles"}) then {magazinesAllTurrets _object} else {[]};
 private _pylons = if (_saveAmmo && {_object isKindOf "AllVehicles"}) then {getAllPylonsInfo _object} else {[]};
-private _position = if (_savePosition) then {[getPosATL _object, vectorDirAndUp _object]} else {[]};
+private _position = if (_savePosition) then {[getPosATL _object, [vectorDir _object, vectorUp _object]]} else {[]};
 private _custom = [];
 {
     private _value = _object getVariable [_x, nil];

@@ -27,7 +27,7 @@ if !(missionNamespace getVariable ["Waldo_AccessibilityPID_Enable", false]) exit
 if (missionNamespace getVariable ["Waldo_AccessibilityPID_ClientStarted", false]) exitWith {true};
 
 private _allowed = missionNamespace getVariable ["Waldo_AccessibilityPID_AllowedUIDs", []];
-if (count _allowed > 0 && {getPlayerUID player notIn _allowed}) exitWith {false};
+if (count _allowed > 0 && {!(getPlayerUID player in _allowed)}) exitWith {false};
 
 missionNamespace setVariable ["Waldo_AccessibilityPID_ClientStarted", true];
 missionNamespace setVariable [

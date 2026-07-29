@@ -1,7 +1,9 @@
 import importlib.util
 import json
 import math
+import os
 import re
+import stat
 import tempfile
 import unittest
 from pathlib import Path
@@ -96,6 +98,15 @@ class PrReviewAuditTests(unittest.TestCase):
         with self.assertRaisesRegex(ValueError, "already contains audit fixtures"):
             BUILDER.legacy_mission_with_fixtures(once, BUILDER.audit_fixtures(), loadouts)
 
+    def test_builder_can_restage_over_read_only_windows_directories(self):
+        with tempfile.TemporaryDirectory() as temp:
+            destination = Path(temp) / "WMP_PR_Review_Audit.VR"
+            locked = destination / "MissionScripts" / "ReadOnlyFixture"
+            locked.mkdir(parents=True)
+            os.chmod(locked, stat.S_IREAD)
+            BUILDER.build(destination, "all", "manual")
+            self.assertTrue((destination / "audit_build_manifest.json").is_file())
+
     def test_manual_mode_does_not_run_mutating_automation(self):
         with tempfile.TemporaryDirectory() as temp:
             destination = Path(temp) / "WMP_PR_Review_Audit.VR"
@@ -153,6 +164,8 @@ class PrReviewAuditTests(unittest.TestCase):
         client = (root / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
         for token in (
             "Waldo_fnc_PersistenceDependencyAvailable",
+            "Waldo_fnc_PersistenceRegisterObject",
+            "Waldo_fnc_PersistenceLoadObject",
             "Waldo_fnc_HazardRegisterZone",
             "Waldo_fnc_BreachingServerHandle",
             "Waldo_fnc_FieldResupplyRegisterHub",
@@ -161,20 +174,54 @@ class PrReviewAuditTests(unittest.TestCase):
             "Waldo_fnc_GunshipRegister",
             "Waldo_fnc_RecoveryRegisterVehicle",
             "Waldo_fnc_CreateLimitedArsenal",
+            "B_T_VTOL_01_vehicle_F",
+            "B_UAV_02_dynamicLoadout_F",
+            "(group _actor) reveal",
         ):
             self.assertIn(token, server)
         for label in (
+            "ENABLE + REGISTER QA CRATE",
+            "MUTATE QA CRATE",
+            "RELOAD SAVED QA CRATE",
             "RESET QA PATIENT WOUND",
             "OVERTURN VEHICLE",
-            "TOGGLE FRIENDLY PID",
+            "ENABLE PID FOR THIS TESTER",
+            "VERIFY UID GATE DENIES",
             "SIMULATE CONFIGURED DEMO CHARGE",
             "ASSIGN ME 2 FIELD CRATES",
             "CREATE QA DYNAMIC AA SYSTEM",
+            "SPAWN ABOVE-ALTITUDE WEST UAV",
             "SPAWN QA GUNSHIP",
             "RESET RECOVERY LANE",
             "REPORT NESTED PLAYABLE LOADOUT POOL",
         ):
             self.assertIn(label, client)
+
+    def test_new_feature_sources_avoid_known_invalid_sqf_forms(self):
+        paths = (
+            ROOT / "MissionScripts" / "AiScripting" / "aiApplyProfile.sqf",
+            ROOT / "MissionScripts" / "Logistics" / "FieldResupply" / "fieldResupplyServerHandle.sqf",
+            ROOT / "MissionScripts" / "Respawn" / "RallyPoint" / "rallyPointInit.sqf",
+            ROOT / "MissionScripts" / "Persistence" / "persistenceSaveObject.sqf",
+            ROOT / "MissionScripts" / "Persistence" / "persistenceLoadObject.sqf",
+            ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf",
+            ROOT / "MissionScripts" / "MissionInit" / "VehicleActionsSetup" / "EmergencyDismount" / "emergencyDismountInit.sqf",
+            ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryMonitorServer.sqf",
+        )
+        source = "\n".join(path.read_text(encoding="utf-8") for path in paths)
+        for invalid in (" notIn ", "vectorDirAndUp _object", "missionNamespace addMissionEventHandler"):
+            self.assertNotIn(invalid, source)
+        self.assertIn('(missionNamespace getVariable ["Waldo_EmergencyDismount_Interval", 0.5]) max 0.1', source)
+        self.assertIn('(missionNamespace getVariable ["Waldo_Recovery_ScanInterval", 3]) max 1', source)
+
+    def test_accessibility_audit_uses_current_tester_without_changing_pack_default(self):
+        pack = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        preinit = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditPreInitPlayerLocal.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('["76561198094931408"]', pack)
+        self.assertIn("getPlayerUID player", preinit)
+        self.assertIn('Waldo_AccessibilityPID_AllowedUIDs", if (_auditUid == "")', preinit)
 
 
 if __name__ == "__main__":

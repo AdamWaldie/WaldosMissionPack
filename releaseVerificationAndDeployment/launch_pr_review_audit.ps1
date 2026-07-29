@@ -3,7 +3,6 @@ param(
     [string]$Suite = "all",
     [ValidateSet("Manual", "Automated")]
     [string]$Mode = "Manual",
-    [int]$Port = 24132,
     [int]$ResolutionWidth = 1920,
     [int]$ResolutionHeight = 1080,
     [string]$PythonExecutable = ""
@@ -13,11 +12,12 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $armaRoot = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\bohemia interactive\arma 3").main
 $armaExe = Join-Path $armaRoot "arma3_x64.exe"
-$missionRoot = Join-Path $armaRoot "MPMissions\WMP_PR_Review_Audit.VR"
-$profileRoot = Join-Path $repoRoot ".qa\pr-review-audit\hosted-profile"
+$missionRoot = Join-Path $armaRoot "Missions\WMP_PR_Review_Audit.VR"
+$runRoot = Join-Path $repoRoot ".qa\pr-review-audit"
+$profileRoot = Join-Path $runRoot "direct-profile"
 
 if (Get-Process arma3_x64 -ErrorAction SilentlyContinue) {
-    throw "Close Arma before staging the PR review audit."
+    throw "Close Arma before staging and launching the PR review audit."
 }
 if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
     $PythonExecutable = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
@@ -33,12 +33,24 @@ $mods = foreach ($name in $modNames) {
     if (-not (Test-Path -LiteralPath $path)) { throw "Required audit mod is not installed: $name" }
     $path
 }
+$workshopRoot = Join-Path $armaRoot "!Workshop"
+$persistenceMod = Get-ChildItem -LiteralPath $workshopRoot -Directory -ErrorAction SilentlyContinue |
+    Where-Object { $_.Name -like "@INIDBI2*" } |
+    Select-Object -First 1
+if ($null -ne $persistenceMod) {
+    $mods += $persistenceMod.FullName
+    Write-Output "Including optional persistence runtime: $($persistenceMod.Name)"
+} else {
+    Write-Warning "No INIDBI2 runtime found. The persistence station will verify the disabled dependency-gate path only."
+}
 $modArgument = '-mod="' + ($mods -join ';') + '"'
 New-Item -ItemType Directory -Path $profileRoot -Force | Out-Null
 $arguments = @(
-    "-noBattlEye", "-showScriptErrors", "-window",
-    "-x=$ResolutionWidth", "-y=$ResolutionHeight", "-port=$Port",
-    "-profiles=$profileRoot", "-name=WMPAuditHost", "-host", $modArgument
+    "-noBattlEye", "-showScriptErrors", "-window", "-skipIntro", "-world=empty",
+    "-x=$ResolutionWidth", "-y=$ResolutionHeight",
+    "-profiles=$profileRoot", "-name=WMPAuditDirect",
+    "-init=playMission['','WMP_PR_Review_Audit.VR',true]", $modArgument
 )
-Start-Process -FilePath $armaExe -ArgumentList $arguments
-Write-Output "Staged the full WMP development pack and launched WMP PR REVIEW AUDIT in $Mode mode. Select Virtual Reality, WMP PR REVIEW AUDIT, Play, a slot, then OK."
+Start-Process -FilePath $armaExe -ArgumentList $arguments -WorkingDirectory $armaRoot
+Write-Output "Launched WMP PR REVIEW AUDIT directly in $Mode mode without opening Eden."
+Write-Warning "This launch is local (isServer + hasInterface). Use the dedicated audit separately for client/server and JIP validation."

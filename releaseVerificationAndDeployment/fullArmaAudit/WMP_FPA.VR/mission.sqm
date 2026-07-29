@@ -850,12 +850,12 @@ class Mission
         class Item45
         {
             dataType="Object";
-            class PositionInfo {position[]={233,5.32,7}; angles[]={0,4.7124,0};};
+            class PositionInfo {position[]={239,5.32,7}; angles[]={0,4.7124,0};};
             side="Empty";
             flags=5;
             class Attributes {name="qa_recovery_carrier"; init="this allowDamage false; this enableSimulationGlobal false;";};
             id=145;
-            type="B_Truck_01_transport_F";
+            type="B_T_VTOL_01_vehicle_F";
         };
         class Item46
         {

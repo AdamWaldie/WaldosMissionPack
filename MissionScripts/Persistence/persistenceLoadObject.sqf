@@ -27,7 +27,7 @@ private _state = ["read", ["WMP", "ObjectState", []]] call _db;
 if (count _state < 8) exitWith {false};
 
 _state params ["_version", "_className", "_cargo", "_damage", "_fuel", "_ammo", "_pylons", "_position", ["_custom", []]];
-if (_version notIn [1, 2] || {_className != typeOf _object}) exitWith {
+if (!(_version in [1, 2]) || {_className != typeOf _object}) exitWith {
     diag_log format ["[WMP PERSISTENCE] Object '%1' state ignored because its class changed from %2 to %3.", _key, _className, typeOf _object];
     false
 };

@@ -62,7 +62,7 @@ private _handle = [] spawn {
                 [player, _vehicle, _destroyed] spawn Waldo_fnc_EmergencyDismountExecute;
             };
         };
-        sleep (missionNamespace getVariable ["Waldo_EmergencyDismount_Interval", 0.5] max 0.1);
+        sleep ((missionNamespace getVariable ["Waldo_EmergencyDismount_Interval", 0.5]) max 0.1);
     };
 };
 missionNamespace setVariable ["Waldo_EmergencyDismount_ClientLoop", _handle];

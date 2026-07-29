@@ -19,11 +19,28 @@ private _persistence = "qa_sign_persistence" call _get;
     params ["_target", "_actor"];
     [_actor] remoteExecCall ["Waldo_QA_fnc_persistenceProbeServer", 2];
 }] call _add;
+[_persistence, "Waldo_QA_PersistenceEnable", "ENABLE + REGISTER QA CRATE", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_persistenceEnableServer", 2];
+}] call _add;
 [_persistence, "Waldo_QA_PersistenceSave", "PERSISTENCE: SAVE NOW", {
-    [] remoteExecCall ["Waldo_QA_fnc_persistenceSaveServer", 2];
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_persistenceSaveServer", 2];
+}] call _add;
+[_persistence, "Waldo_QA_PersistenceMutate", "MUTATE QA CRATE", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_persistenceMutateServer", 2];
+}] call _add;
+[_persistence, "Waldo_QA_PersistenceReload", "RELOAD SAVED QA CRATE", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_persistenceReloadServer", 2];
 }] call _add;
 
 private _treatment = "qa_sign_treatment_feedback" call _get;
+[_treatment, "Waldo_QA_TreatmentSupplies", "TAKE QA MEDICAL SUPPLIES", {
+    {for "_i" from 1 to 4 do {player addItem _x}} forEach ["ACE_fieldDressing", "ACE_packingBandage", "ACE_tourniquet"];
+    ["PATIENT TREATMENT QA", "Medical supplies added. Reset the patient, then treat the wound through ACE.", "SUCCESS", "TREATMENT_QA"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
 [_treatment, "Waldo_QA_InjurePatient", "RESET QA PATIENT WOUND", {
     params ["_target", "_actor"];
     [_actor] remoteExecCall ["Waldo_QA_fnc_injurePatientServer", 2];
@@ -33,6 +50,14 @@ private _hazard = "qa_hazard_emitter" call _get;
 [_hazard, "Waldo_QA_EnterHazard", "ENTER EXPOSURE LANE", {
     params ["_target", "_actor"];
     _actor setPosATL ((getPosATL _target) vectorAdd [0, -2, 0]);
+}] call _add;
+[_hazard, "Waldo_QA_HazardProtect", "EQUIP QA PROTECTIVE HELMET", {
+    player addHeadgear "H_HelmetB";
+    ["HAZARD QA", "QA protection equipped. Exposure multiplier should be zero in this lane.", "SUCCESS", "HAZARD_QA"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_hazard, "Waldo_QA_HazardUnprotect", "REMOVE QA PROTECTION", {
+    removeHeadgear player;
+    ["HAZARD QA", "QA protection removed. Exposure should now increase inside the lane.", "INFO", "HAZARD_QA"] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 [_hazard, "Waldo_QA_ClearExposure", "CLEAR MY QA EXPOSURE", {
     private _exposure = missionNamespace getVariable ["Waldo_Hazard_LocalExposure", createHashMap];
@@ -59,12 +84,23 @@ private _dismount = "qa_dismount_vehicle" call _get;
 }] call _add;
 
 private _access = "qa_sign_accessibility" call _get;
-[_access, "Waldo_QA_TogglePID", "TOGGLE FRIENDLY PID", {
-    [] call Waldo_fnc_AccessibilityPIDToggle;
-}] call _add;
-[_access, "Waldo_QA_ResetPID", "RESTART FRIENDLY PID", {
+[_access, "Waldo_QA_EnablePID", "ENABLE PID FOR THIS TESTER", {
+    private _uid = getPlayerUID player;
+    missionNamespace setVariable ["Waldo_AccessibilityPID_Enable", true];
+    missionNamespace setVariable ["Waldo_AccessibilityPID_AllowedUIDs", if (_uid == "") then {[]} else {[_uid]}];
+    missionNamespace setVariable ["Waldo_AccessibilityPID_IncludeAI", true];
     [] call Waldo_fnc_AccessibilityPIDStop;
-    [] call Waldo_fnc_AccessibilityPIDInit;
+    private _ok = [] call Waldo_fnc_AccessibilityPIDInit;
+    ["ACCESSIBILITY PID", ["PID did not start for this tester.", "PID started for this tester; friendly AI markers should be visible."] select _ok, ["ERROR", "SUCCESS"] select _ok, "PID_QA"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_access, "Waldo_QA_DenyPID", "VERIFY UID GATE DENIES", {
+    [] call Waldo_fnc_AccessibilityPIDStop;
+    missionNamespace setVariable ["Waldo_AccessibilityPID_AllowedUIDs", ["WMP_QA_NON_MATCHING_UID"]];
+    private _started = [] call Waldo_fnc_AccessibilityPIDInit;
+    ["ACCESSIBILITY UID GATE", ["Expected denial confirmed. PID remained stopped.", "UID gate failed: PID started for an ineligible tester."] select _started, ["SUCCESS", "ERROR"] select _started, "PID_QA"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_access, "Waldo_QA_TogglePID", "TOGGLE FRIENDLY PID VISIBILITY", {
+    [] call Waldo_fnc_AccessibilityPIDToggle;
 }] call _add;
 
 private _breach = "qa_sign_breaching" call _get;
@@ -90,6 +126,19 @@ private _scale = "qa_sign_object_transforms" call _get;
 [_scale, "Waldo_QA_ResetScale", "RESET ALL SCALE PROPS", {
     [] remoteExecCall ["Waldo_QA_fnc_resetScaleFixturesServer", 2];
 }] call _add;
+[_scale, "Waldo_QA_CopyScale", "COPY CENTRE SCALE TO RIGHT", {
+    [] remoteExecCall ["Waldo_QA_fnc_copyScaleFixtureServer", 2];
+}] call _add;
+[_scale, "Waldo_QA_MultiplyScale", "MULTIPLY RIGHT SCALE BY 1.5", {
+    [] remoteExecCall ["Waldo_QA_fnc_multiplyScaleFixtureServer", 2];
+}] call _add;
+[_scale, "Waldo_QA_Transform", "TRANSFORM RIGHT PROP", {
+    [] remoteExecCall ["Waldo_QA_fnc_transformFixtureServer", 2];
+}] call _add;
+[_scale, "Waldo_QA_ReportTransforms", "REPORT TRANSFORM STATE", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_reportScaleFixturesServer", 2];
+}] call _add;
 
 private _ai = "qa_sign_ai_rebalance" call _get;
 {
@@ -102,6 +151,10 @@ private _ai = "qa_sign_ai_rebalance" call _get;
 [_ai, "Waldo_QA_AI_Stop", "RESTORE ORIGINAL AI SKILLS", {
     [] remoteExecCall ["Waldo_QA_fnc_stopAIRebalanceServer", 2];
 }] call _add;
+[_ai, "Waldo_QA_AI_Report", "REPORT LIVE AI SKILLS", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_reportAIProfileServer", 2];
+}] call _add;
 
 private _resupply = "qa_resupply_hub" call _get;
 [_resupply, "Waldo_QA_AssignResupply", "ASSIGN ME 2 FIELD CRATES", {
@@ -109,9 +162,22 @@ private _resupply = "qa_resupply_hub" call _get;
     [_actor] remoteExecCall ["Waldo_QA_fnc_assignResupplyCarrierServer", 2];
 }] call _add;
 
+private _tactical = "qa_sign_tactical_display" call _get;
+[_tactical, "Waldo_QA_RevealTactical", "REVEAL QA HOSTILE TO MY GROUP", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_revealTacticalHostileServer", 2];
+}] call _add;
+
 private _aa = "qa_sign_dynamic_aa" call _get;
 [_aa, "Waldo_QA_CreateAA", "CREATE QA DYNAMIC AA SYSTEM", {
     [] remoteExecCall ["Waldo_QA_fnc_createDynamicAAServer", 2];
+}] call _add;
+[_aa, "Waldo_QA_SpawnAATarget", "SPAWN ABOVE-ALTITUDE WEST UAV", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_spawnDynamicAATargetServer", 2];
+}] call _add;
+[_aa, "Waldo_QA_RemoveAATarget", "REMOVE QA UAV", {
+    [] remoteExecCall ["Waldo_QA_fnc_removeDynamicAATargetServer", 2];
 }] call _add;
 [_aa, "Waldo_QA_DestroyAA", "DESTROY QA DYNAMIC AA SYSTEM", {
     [] remoteExecCall ["Waldo_QA_fnc_destroyDynamicAAServer", 2];
@@ -138,6 +204,10 @@ private _workshop = "qa_recovery_workshop" call _get;
 }] call _add;
 
 private _rally = "qa_sign_rally" call _get;
+[_rally, "Waldo_QA_PrepareRally", "MAKE ME QA SQUAD LEADER", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_prepareRallyTesterServer", 2];
+}] call _add;
 [_rally, "Waldo_QA_ResetRally", "REMOVE ALL QA RALLY POINTS", {
     [] remoteExecCall ["Waldo_QA_fnc_resetRalliesServer", 2];
 }] call _add;
