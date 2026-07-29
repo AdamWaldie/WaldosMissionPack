@@ -82,16 +82,33 @@ private _eventId = addMissionEventHandler ["Draw3D", {
 missionNamespace setVariable ["Waldo_AccessibilityPID_EventId", _eventId];
 
 if (missionNamespace getVariable ["Waldo_AccessibilityPID_AllowToggle", true]) then {
-    private _actionId = player addAction [
-        "Toggle Friendly Identification Aid",
-        {[] call Waldo_fnc_AccessibilityPIDToggle},
-        [],
-        -10,
-        false,
-        true,
-        "",
-        "true"
-    ];
-    player setVariable ["Waldo_AccessibilityPID_ActionId", _actionId];
+    private _aceReady = !(isNil "ace_interact_menu_fnc_createAction")
+        && {!(isNil "ace_interact_menu_fnc_addActionToObject")};
+    if (_aceReady) then {
+        private _action = [
+            "Waldo_AccessibilityPID_Toggle",
+            "Toggle Friendly Identification",
+            "\a3\ui_f\data\igui\cfg\actions\getincommander_ca.paa",
+            {[] call Waldo_fnc_AccessibilityPIDToggle},
+            {missionNamespace getVariable ["Waldo_AccessibilityPID_ClientStarted", false]}
+        ] call ace_interact_menu_fnc_createAction;
+        private _path = [player, 1, ["ACE_SelfActions"], _action] call ace_interact_menu_fnc_addActionToObject;
+        missionNamespace setVariable ["Waldo_AccessibilityPID_ActionUnit", player];
+        missionNamespace setVariable ["Waldo_AccessibilityPID_ActionPath", _path];
+    };
+};
+
+if !(missionNamespace getVariable ["Waldo_AccessibilityPID_RespawnHandlerInstalled", false]) then {
+    missionNamespace setVariable ["Waldo_AccessibilityPID_RespawnHandlerInstalled", true];
+    private _respawnId = addMissionEventHandler ["EntityRespawned", {
+        params ["_newEntity"];
+        if (local _newEntity && {_newEntity isEqualTo player}) then {
+            [] call Waldo_fnc_AccessibilityPIDStop;
+            if (missionNamespace getVariable ["Waldo_AccessibilityPID_Enable", false]) then {
+                [] call Waldo_fnc_AccessibilityPIDInit;
+            };
+        };
+    }];
+    missionNamespace setVariable ["Waldo_AccessibilityPID_RespawnHandlerId", _respawnId];
 };
 true

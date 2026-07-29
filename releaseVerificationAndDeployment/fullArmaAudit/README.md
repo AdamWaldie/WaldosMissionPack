@@ -64,6 +64,8 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
   .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1
 ```
 
+Add `-ExcludePersistenceMod` to exercise the missing-server-extension dependency gate even when INIDBI2 is installed locally.
+
 The launcher always uses a hosted multiplayer session, 1920×1080, `-noBattlEye`, and the required
 CBA, ACE, ZEN and ACRE2 mods. Select **Virtual Reality > WMP PR REVIEW AUDIT > Play**, choose a
 slot, then press **OK**.

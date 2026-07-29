@@ -247,6 +247,57 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("getPlayerUID player", preinit)
         self.assertIn('Waldo_AccessibilityPID_AllowedUIDs", if (_auditUid == "")', preinit)
 
+    def test_selected_features_are_not_registered_as_zen_modules(self):
+        source = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        for removed in (
+            "Treatment Feedback - Control",
+            "Tree Felling - Control",
+            "Accessibility PID - Control",
+            "Breaching - Configure Class",
+        ):
+            self.assertNotIn(removed, source)
+        self.assertIn('Waldo_ZenModuleCount", 36', source)
+
+    def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        apply = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        self.assertIn('[_target, _side, parseNumber _stockText, _modulePos]', zen)
+        self.assertIn('if (isNull _hub && {count _modulePos >= 2})', apply)
+        self.assertIn('createVehicle [_crateClass, _modulePos, [], 0, "NONE"]', apply)
+        self.assertIn('addCuratorEditableObjects [[_hub], true]', apply)
+
+    def test_runtime_setting_bundle_is_not_unpacked_as_one_pair(self):
+        source = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        self.assertIn("private _updates = _this;", source)
+        self.assertNotIn('private _publishAll = {\n    params ["_updates"]', source)
+
+    def test_accessibility_toggle_is_an_ace_self_interaction(self):
+        source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf").read_text(encoding="utf-8")
+        self.assertIn('[player, 1, ["ACE_SelfActions"], _action]', source)
+        self.assertIn("ace_interact_menu_fnc_createAction", source)
+        self.assertNotIn("player addAction", source)
+
+    def test_persistence_gate_executes_a_native_version_probe(self):
+        source = (ROOT / "MissionScripts" / "Persistence" / "persistenceDependencyAvailable.sqf").read_text(encoding="utf-8")
+        self.assertIn('private _version = "getVersion" call _probeDb', source)
+        self.assertIn('_versionText find "inidbi" >= 0', source)
+        self.assertIn('_dllVersion != ""', source)
+        launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
+        self.assertIn("[switch]$ExcludePersistenceMod", launcher)
+        self.assertIn("if ($ExcludePersistenceMod)", launcher)
+
+    def test_notification_stack_reflows_surviving_cards(self):
+        source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "reflowUiPanels.sqf").read_text(encoding="utf-8")
+        audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
+        self.assertIn("ctrlCommit _duration", source)
+        for duration in ('"INFO", 4, "TOP_RIGHT", "QA_STACK_1"', '"SUCCESS", 8, "TOP_RIGHT", "QA_STACK_2"', '"WARNING", 12, "TOP_RIGHT", "QA_STACK_3"'):
+            self.assertIn(duration, audit)
+
+    def test_scale_zen_does_not_replace_curator_selected_objects(self):
+        source = (ROOT / "MissionScripts" / "MissionMakerResourceScripts" / "ObjectTransforms" / "objectScaleZen.sqf").read_text(encoding="utf-8")
+        self.assertIn('[_target, _scale, false]', source)
+        self.assertNotIn("Convert to simple object", source)
+
 
     def test_corrected_feature_workflows_have_runtime_controls_and_bounds(self):
         scripts = ROOT / "MissionScripts"

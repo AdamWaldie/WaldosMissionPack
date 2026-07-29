@@ -32,7 +32,7 @@ private _publish = {
     missionNamespace setVariable [_name, _value, true];
 };
 private _publishAll = {
-    params ["_updates"];
+    private _updates = _this;
     {_x call _publish} forEach _updates;
     // One ordered payload is applied before any following remote initializer from this server.
     [_updates, false] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];
@@ -90,7 +90,18 @@ switch (toUpperANSI _action) do {
         };
     };
     case "FIELD_RESUPPLY_HUB": {
-        _settings params ["_hub", "_side", "_stock"];
+        _settings params ["_hub", "_side", "_stock", ["_modulePos", [], [[]]]];
+        if (isNull _hub && {count _modulePos >= 2}) then {
+            private _crateClass = missionNamespace getVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F"];
+            if !(isClass (configFile >> "CfgVehicles" >> _crateClass)) then {_crateClass = "B_supplyCrate_F"};
+            _hub = createVehicle [_crateClass, _modulePos, [], 0, "NONE"];
+            clearWeaponCargoGlobal _hub;
+            clearMagazineCargoGlobal _hub;
+            clearItemCargoGlobal _hub;
+            clearBackpackCargoGlobal _hub;
+            {_x addCuratorEditableObjects [[_hub], true]} forEach allCurators;
+        };
+        if (isNull _hub) exitWith {false};
         [_hub, _side, _stock] call Waldo_fnc_FieldResupplyRegisterHub;
     };
     case "FIELD_RESUPPLY_CARRIER": {

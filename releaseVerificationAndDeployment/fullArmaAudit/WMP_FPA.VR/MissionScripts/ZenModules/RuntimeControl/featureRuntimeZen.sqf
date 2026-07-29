@@ -5,6 +5,7 @@
  * Arguments:
  * 0: feature <STRING>
  * 1: modulePosition <ARRAY>
+ * 2: object under the module <OBJECT>
  *
  * Return Value:
  * Nothing
@@ -12,7 +13,8 @@
 
 params [
     ["_feature", "", [""]],
-    ["_modulePos", [], [[]]]
+    ["_modulePos", [], [[]]],
+    ["_objectPos", objNull, [objNull]]
 ];
 if !(hasInterface) exitWith {};
 
@@ -186,8 +188,8 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "FIELD_RESUPPLY_HUB": {
-        private _target = (nearestObjects [_modulePos, [], 25, true]) param [0, objNull];
-        if (isNull _target) exitWith {systemChat "[WMP] No supply-hub object found within 25 metres."};
+        private _target = _objectPos;
+        if (isNull _target) then {_target = (nearestObjects [_modulePos, [], 5, true]) param [0, objNull]};
         [
             "Register Field Resupply Hub",
             [
@@ -195,10 +197,11 @@ switch (toUpperANSI _feature) do {
                 ["EDIT", ["Refill stock", "-1 is unlimited; otherwise one stock is consumed per issued portable crate."], ["-1"]]
             ],
             {
-                params ["_values", "_target"];
+                params ["_values", "_arguments"];
+                _arguments params ["_target", "_modulePos"];
                 _values params ["_side", "_stockText"];
-                ["FIELD_RESUPPLY_HUB", [_target, _side, parseNumber _stockText]] call Waldo_fnc_FeatureRuntimeApply;
-            }, {}, _target
+                ["FIELD_RESUPPLY_HUB", [_target, _side, parseNumber _stockText, _modulePos]] call Waldo_fnc_FeatureRuntimeApply;
+            }, {}, [_target, _modulePos]
         ] call zen_dialog_fnc_create;
     };
     case "FIELD_RESUPPLY_CARRIER": {

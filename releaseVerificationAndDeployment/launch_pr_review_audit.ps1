@@ -5,6 +5,7 @@ param(
     [string]$Mode = "Manual",
     [int]$ResolutionWidth = 1920,
     [int]$ResolutionHeight = 1080,
+    [switch]$ExcludePersistenceMod,
     [string]$PythonExecutable = ""
 )
 
@@ -37,7 +38,9 @@ $workshopRoot = Join-Path $armaRoot "!Workshop"
 $persistenceMod = Get-ChildItem -LiteralPath $workshopRoot -Directory -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -like "@INIDBI2*" } |
     Select-Object -First 1
-if ($null -ne $persistenceMod) {
+if ($ExcludePersistenceMod) {
+    Write-Warning "INIDBI2 intentionally excluded. The persistence station must report the unavailable dependency-gate path."
+} elseif ($null -ne $persistenceMod) {
     $mods += $persistenceMod.FullName
     Write-Output "Including optional persistence runtime: $($persistenceMod.Name)"
 } else {

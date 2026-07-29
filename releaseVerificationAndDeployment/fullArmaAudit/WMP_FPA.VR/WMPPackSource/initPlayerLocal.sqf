@@ -27,6 +27,7 @@ if (hasInterface) then {
     if (isNil "Waldo_UiNotification_MaximumQueued") then {Waldo_UiNotification_MaximumQueued = 12};
     if (isNil "Waldo_UiNotification_QueueLifetime") then {Waldo_UiNotification_QueueLifetime = 15};
     if (isNil "Waldo_UiNotification_MaximumPerPlacement") then {Waldo_UiNotification_MaximumPerPlacement = 3};
+    if (isNil "Waldo_UiNotification_ReflowDuration") then {Waldo_UiNotification_ReflowDuration = 0.18};
     if (isNil "Waldo_UiNotification_AllowPlacementOverflow") then {Waldo_UiNotification_AllowPlacementOverflow = true};
     if (isNil "Waldo_UiNotification_OverflowPlacements") then {
         Waldo_UiNotification_OverflowPlacements = ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"];

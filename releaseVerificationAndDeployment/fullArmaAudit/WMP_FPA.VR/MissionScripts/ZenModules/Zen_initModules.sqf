@@ -48,8 +48,8 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
 
 ["Waldos Mission Modules", "Scale Object",
     {
-        params ["_modulePos"];
-        [_modulePos] call Waldo_fnc_ObjectScaleZen;
+        params ["_modulePos", ["_objectPos", objNull]];
+        [_modulePos, _objectPos] call Waldo_fnc_ObjectScaleZen;
     },
     "\A3\ui_f\data\igui\cfg\actions\reammo_ca.paa"
 ] call zen_custom_modules_fnc_register;
@@ -57,7 +57,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
 {
     _x params ["_name", "_feature", "_icon"];
     private _handler = compile format [
-        "params ['_modulePos']; ['%1', _modulePos] call Waldo_fnc_FeatureRuntimeZen;",
+        "params ['_modulePos', ['_objectPos', objNull]]; ['%1', _modulePos, _objectPos] call Waldo_fnc_FeatureRuntimeZen;",
         _feature
     ];
     ["Waldos Mission Modules", _name,
@@ -68,7 +68,6 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["Persistence - Control", "PERSISTENCE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
     ["Persistence - Register Object", "PERSISTENCE_OBJECT", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
     ["Persistence - Save Now", "PERSISTENCE_SAVE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
-    ["Treatment Feedback - Control", "TREATMENT", "\A3\ui_f\data\igui\cfg\simpletasks\types\heal_ca.paa"],
     ["Field Resupply - Register Hub", "FIELD_RESUPPLY_HUB", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
     ["Field Resupply - Assign Carrier", "FIELD_RESUPPLY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
     ["Vehicle Recovery - Register Workshop", "RECOVERY_WORKSHOP", "\A3\ui_f\data\igui\cfg\actions\repair_ca.paa"],
@@ -82,10 +81,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
     ["Hazard - Create", "HAZARD_CREATE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
     ["Hazard - Remove Nearest", "HAZARD_REMOVE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
-    ["Tree Felling - Control", "TREE", "\A3\ui_f\data\igui\cfg\actions\repair_ca.paa"],
     ["Emergency Dismount - Control", "EMERGENCY", "\A3\ui_f\data\igui\cfg\actions\getout_ca.paa"],
-    ["Accessibility PID - Control", "ACCESSIBILITY", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
-    ["Breaching - Configure Class", "BREACH", "\A3\ui_f\data\igui\cfg\actions\settimer_ca.paa"],
     ["AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
 ];
 
@@ -211,5 +207,5 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 40];
-diag_log format ["[WMP ZEN] Registered 40 Waldos Mission Modules on clientOwner=%1", clientOwner];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 36];
+diag_log format ["[WMP ZEN] Registered 36 Waldos Mission Modules on clientOwner=%1", clientOwner];

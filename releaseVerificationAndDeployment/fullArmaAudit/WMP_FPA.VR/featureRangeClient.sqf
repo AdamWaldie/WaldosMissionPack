@@ -261,9 +261,9 @@ if (!isNull _coreConsole) then {
         ["UI SYSTEM READY", "Safe-zone card, semantic symbol, replacement channel and measured text padding are active.", "SUCCESS", 12, "TOP", "QA_UI", "WMP FULL PACK AUDIT"] call Waldo_fnc_ShowUiNotification;
     }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_UiQueue", "SHOW UI OVERFLOW / COALESCE TEST", {
-        ["TOP-RIGHT ONE", "Independent channel one.", "INFO", 8, "TOP_RIGHT", "QA_STACK_1", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
-        ["TOP-RIGHT TWO", "Independent channel two.", "SUCCESS", 8, "TOP_RIGHT", "QA_STACK_2", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
-        ["TOP-RIGHT THREE", "Independent channel three.", "WARNING", 8, "TOP_RIGHT", "QA_STACK_3", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["TOP-RIGHT ONE", "Independent channel one; fades first so the remaining cards visibly move up.", "INFO", 4, "TOP_RIGHT", "QA_STACK_1", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["TOP-RIGHT TWO", "Independent channel two; moves into the first slot after channel one fades.", "SUCCESS", 8, "TOP_RIGHT", "QA_STACK_2", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["TOP-RIGHT THREE", "Independent channel three; moves upward until the stack is gone.", "WARNING", 12, "TOP_RIGHT", "QA_STACK_3", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
         ["OVERFLOW REGION", "This fourth channel should use the next configured screen region.", "INFO", 8, "TOP_RIGHT", "QA_STACK_4", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
         for "_index" from 1 to 25 do {
             ["SPAM COALESCING", format ["Pending update %1 of 25. Only the newest pending update should survive.", _index], "INFO", 4, "TOP_RIGHT", "QA_SPAM", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;

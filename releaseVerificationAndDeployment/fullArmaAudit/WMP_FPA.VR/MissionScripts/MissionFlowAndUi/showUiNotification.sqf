@@ -185,7 +185,7 @@ private _token = format ["%1_%2", diag_tickTime, random 1e9];
 private _controls = [_frame, _accent, _content];
 _registry pushBack [_channel, _controls, _token, _placement, _panelW, _panelH, _padX, _padY, _accentH, _contentH, _priority, diag_tickTime];
 uiNamespace setVariable ["Waldo_UiPanelRegistry", _registry];
-[] call Waldo_fnc_ReflowUiPanels;
+[0] call Waldo_fnc_ReflowUiPanels;
 
 if (_duration > 0) then {
     [_channel, _token, _duration] spawn {

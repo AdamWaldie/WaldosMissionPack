@@ -1,5 +1,7 @@
 /* Repositions all active generic cards into bounded, non-overlapping stacks. */
 if (!hasInterface) exitWith {false};
+params [["_duration", missionNamespace getVariable ["Waldo_UiNotification_ReflowDuration", 0.18], [0]]];
+_duration = (_duration max 0) min 1;
 private _registry = uiNamespace getVariable ["Waldo_UiPanelRegistry", []];
 private _gap = safeZoneH * 0.008;
 {
@@ -34,7 +36,7 @@ private _gap = safeZoneH * 0.008;
         _frame ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
         _accent ctrlSetPosition [_panelX, _panelY, _panelW, _accentH];
         _content ctrlSetPosition [_panelX + _padX, _panelY + _padY + _accentH, _panelW - (2 * _padX), _contentH - _accentH];
-        {_x ctrlCommit 0;} forEach _controls;
+        {_x ctrlCommit _duration;} forEach _controls;
     } forEach _entries;
 } forEach ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_RIGHT"];
 true

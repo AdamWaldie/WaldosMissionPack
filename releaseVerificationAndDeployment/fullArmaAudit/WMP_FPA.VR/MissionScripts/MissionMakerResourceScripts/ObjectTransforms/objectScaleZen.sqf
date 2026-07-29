@@ -4,6 +4,7 @@
  *
  * Arguments:
  * 0: modulePosition <ARRAY>
+ * 1: object under the module <OBJECT>
  *
  * Return Value:
  * Nothing
@@ -12,23 +13,22 @@
  * [_modulePos] call Waldo_fnc_ObjectScaleZen;
  */
 
-params [["_modulePos", [], [[]]]];
+params [["_modulePos", [], [[]]], ["_objectPos", objNull, [objNull]]];
 if !(hasInterface) exitWith {};
 
-private _objects = nearestObjects [_modulePos, [], 25, true];
-private _target = _objects param [0, objNull];
-if (isNull _target) exitWith {systemChat "[WMP] Object Scaling: no object found within 25 metres."};
+private _target = _objectPos;
+if (isNull _target) then {_target = (nearestObjects [_modulePos, [], 5, true]) param [0, objNull]};
+if (isNull _target) exitWith {systemChat "[WMP] Object Scaling: place the module on an object."};
 
 [
     "Scale Object",
     [
-        ["SLIDER", ["Scale", "Scale multiplier; server limits still apply."], [0.1, 10, 1, 2], false],
-        ["CHECKBOX", ["Convert to simple object", "Improves performance but removes simulation and interactions."], false]
+        ["SLIDER", ["Scale", "Scale multiplier; server limits still apply."], [0.1, 10, 1, 2], false]
     ],
     {
         params ["_args", "_target"];
-        _args params ["_scale", "_asSimple"];
-        [_target, _scale, _asSimple] remoteExecCall ["Waldo_fnc_ObjectScale", 2];
+        _args params ["_scale"];
+        [_target, _scale, false] remoteExecCall ["Waldo_fnc_ObjectScale", 2];
     },
     {},
     _target

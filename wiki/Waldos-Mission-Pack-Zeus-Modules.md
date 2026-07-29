@@ -10,7 +10,7 @@ These modules allow users to:
 * End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
 * Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
 * Scale the nearest object through a validated server request
-* Configure persistence, treatment feedback, hazardous environments, tree felling, emergency dismount, accessibility PID, explosive breaching and AI rebalance while the mission is running
+* Configure persistence, hazardous environments, emergency dismount and AI rebalance while the mission is running
 * Register field-resupply hubs/carriers and tactical-display terminals
 * Register, assign and operate airborne gunship support
 * Register vehicle-recovery workshops, recoverable vehicles and recovery carriers
@@ -93,7 +93,7 @@ Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Tracke
 
 ## Scale Object Module
 
-Place **Scale Object** within 25 metres of the intended target, choose the multiplier, and optionally convert it to a simple object. The server enforces the mission's configured minimum and maximum scale.
+Place **Scale Object** directly on the intended target and choose the multiplier. The server enforces the mission's configured minimum and maximum scale. Live curator use deliberately does not replace the selected object with a simple object; mission makers can still request that conversion through the scripted API during pre-planned setup.
 
 ## Optional Feature Runtime Modules
 
@@ -107,31 +107,15 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 **Persistence - Save Now** can immediately request saves from connected players, registered objects, or both without disabling the system.
 
-## Treatment Feedback
-
-**Treatment Feedback - Control** enables or disables patient/medic notifications for ACE treatment start, completion and interruption events and controls the displayed context.
-
 ## Hazardous Environments
 
 **Hazard - Create** creates a named circular hazard at the module position. Zeus can set its semantic type, player-facing label, range, exposure/recovery rates, damage threshold, protection rules and protective equipment. It can also copy a setup call for later mission authoring.
 
 **Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
 
-## Tree Felling and Brush Clearing
-
-**Tree Felling - Control** enables or disables the mechanic and adjusts interaction distance, swing requirements, cooldown and optional nearby brush clearing. Mission makers can additionally configure small, medium and large fallen-object classes in `init.sqf`.
-
 ## Emergency Dismount
 
 **Emergency Dismount - Control** changes overturn and destroyed-vehicle triggers, velocity preservation, temporary protection, clear-position search, clearance checks, exit method and optional consciousness recovery.
-
-## Accessibility PID
-
-**Accessibility PID - Control** configures the opt-in friendly-identification aid, including icon and name ranges, line-of-sight checks, AI inclusion and the player's local visibility toggle.
-
-## Explosive Breaching
-
-**Breaching - Configure Class** targets the nearest object within 25 metres and adds, updates or removes the profile for its object class. Zeus can configure charge range, allowed explosive classes and what happens to the original object, then copy an equivalent setup call. More complex replacement debris remains available through the scripted profile, including relative position, full orientation, coordinate mode and scale.
 
 ## AI Rebalance
 
@@ -139,7 +123,7 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Field Resupply
 
-**Field Resupply - Register Hub** turns the nearest object into a side-restricted refill hub with finite or unlimited stock. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. All refill, deploy, take and salvage operations are validated by the server.
+**Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. All creation, refill, deploy, take and salvage operations are validated by the server.
 
 ## Tactical Display
 

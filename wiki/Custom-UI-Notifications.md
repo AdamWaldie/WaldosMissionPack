@@ -58,7 +58,7 @@ The function returns a unique token for a displayed card, `"QUEUED"` when the re
 
 ## Channels, stacking and replacement
 
-A channel identifies one stream of related notifications. Different channels can share a screen region without drawing over one another. WMP measures and stacks up to three active cards in that region. When that region is full, independent channels can use the configured overflow regions at the same time before any request waits in the queue.
+A channel identifies one stream of related notifications. Different channels can share a screen region without drawing over one another. WMP measures and stacks up to three active cards in that region. As an earlier card expires, every surviving card smoothly closes the gap until the stack is gone. When that region is full, independent channels can use the configured overflow regions at the same time before any request waits in the queue.
 
 ![Three independent channels stacked at bottom right](images/ui-notifications/channel-stacking.png)
 
@@ -95,6 +95,7 @@ The queue is capped at 12 channels by default. Pending cards expire after 15 sec
 Waldo_UiNotification_MaximumQueued = 12;
 Waldo_UiNotification_QueueLifetime = 15;
 Waldo_UiNotification_MaximumPerPlacement = 3;
+Waldo_UiNotification_ReflowDuration = 0.18;
 Waldo_UiNotification_AllowPlacementOverflow = true;
 Waldo_UiNotification_OverflowPlacements = ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"];
 ```

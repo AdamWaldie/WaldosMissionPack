@@ -10,7 +10,7 @@ The server owns mutable mission state, registries, persistence I/O and world cha
 
 ## Runtime Zeus controls
 
-When Zeus Enhanced is loaded, **Waldos Mission Modules** includes focused runtime controls for persistence, treatment feedback, persistent-object registration, hazardous-zone creation/removal, tree felling, emergency dismount, accessibility PID, breaching profiles, airborne gunships and AI rebalance. These modules validate the assigned curator on the server and remove the need to pre-plan the feature in Eden. Hazard and breaching dialogs can also copy equivalent setup calls to the curator's clipboard for permanent configuration later.
+When Zeus Enhanced is loaded, **Waldos Mission Modules** includes focused runtime controls for persistence, persistent-object registration, hazardous-zone creation/removal, emergency dismount, airborne gunships and AI rebalance. These modules validate the assigned curator on the server and remove the need to pre-plan those features in Eden. Hazard dialogs can also copy equivalent setup calls to the curator's clipboard for permanent configuration later. Treatment feedback, tree felling, accessibility PID and breaching remain script-configured and intentionally have no ZEN modules.
 
 ## Persistence
 
@@ -34,7 +34,7 @@ Set `Waldo_TreatmentFeedback_Enable = true` to display ACE treatment start, comp
 
 Start, success and failure notifications can be enabled independently. Patient notification is enabled by default; optional medic feedback, medic names and body-region labels can be selected separately. Titles, body-region names and treatment-class display-name overrides are configured through the player-local `Waldo_TreatmentFeedback_*` values in `initPlayerLocal.sqf`; colours follow the standard WMP semantic states.
 
-**Treatment Feedback - Control** applies the simple global switches during play. Call `Waldo_fnc_TreatmentFeedbackStop` to remove the event handlers. The ACE event identifier `ace_treatmentSucceded` is intentionally retained exactly as defined.
+Call `Waldo_fnc_TreatmentFeedbackInit` or `Waldo_fnc_TreatmentFeedbackStop` on interface clients after changing the player-local settings. This feature intentionally has no ZEN module. The ACE event identifier `ace_treatmentSucceded` is intentionally retained exactly as defined.
 
 ## Hazardous environments
 
@@ -64,7 +64,7 @@ Profiles can represent contamination, toxic gas, extreme temperature, vacuum or 
 
 Set `Waldo_TreeFelling_Enable = true`. Players receive a contextual **Fell Tree / Clear Brush** action when an allowed axe/hatchet pattern is equipped. Repeated validated swings fell trees on the server; optional brush clearing removes nearby bushes. Fallen assets can be configured globally or as small, medium and large height tiers. The system also chains an existing melee swing callback when present.
 
-Tune range, weapon-name patterns, hit scaling, cooldown, brush radius, size thresholds, fall direction and replacement classes with `Waldo_TreeFelling_*`, or use **Tree Felling - Control** during play. Stop locally with `Waldo_fnc_TreeFellingStop`.
+Tune range, weapon-name patterns, hit scaling, cooldown, brush radius, size thresholds, fall direction and replacement classes with `Waldo_TreeFelling_*`. Start and stop it with `Waldo_fnc_TreeFellingInit` and `Waldo_fnc_TreeFellingStop`; it intentionally has no ZEN module.
 
 ## Emergency dismount
 
@@ -78,7 +78,7 @@ The aid is enabled by default for its original intended recipient (`765611980949
 
 The aid is presentation-only and does not alter side relations or reveal enemies. Players can toggle it when `Waldo_AccessibilityPID_AllowToggle` is enabled. Use `Waldo_fnc_AccessibilityPIDToggle` from another UI if desired, and `Waldo_fnc_AccessibilityPIDStop` for cleanup.
 
-**Accessibility PID - Control** can enable or disable the aid and change icon/name ranges, line-of-sight policy, AI inclusion and player toggling during play. `Waldo_AccessibilityPID_AllowedUIDs` remains available for pre-planned per-player eligibility.
+Eligible players can show or hide the aid through **Toggle Friendly Identification** in ACE self-interactions. Configure eligibility, icon/name ranges, line-of-sight policy and AI inclusion player-locally; this feature intentionally has no ZEN module. `Waldo_AccessibilityPID_AllowedUIDs` remains available for pre-planned per-player eligibility.
 
 ## Explosive wall breaching
 
@@ -99,7 +99,7 @@ Waldo_Breaching_Profiles set ["Land_City2_8m_F", createHashMapFromArray [
 
 The server validates the detonation, applies each target once, and can spawn replacements relative to the original wall. Profiles also support `deleteOriginal` and an `onBreach` callback. Stop with `Waldo_fnc_BreachingStop`.
 
-Replacement specifications support model-relative offsets, yaw or full `[pitch, bank, yaw]` rotation, collision placement mode, `ATL`/`ASL`/`ASLW` positioning and scale. **Breaching - Configure Class** can add, update, remove and export a simple profile from an object selected during play; complex debris layouts remain scripted.
+Replacement specifications support model-relative offsets, yaw or full `[pitch, bank, yaw]` rotation, collision placement mode, `ATL`/`ASL`/`ASLW` positioning and scale. Profiles and complex debris layouts are configured through the scripted API; breaching intentionally has no ZEN module.
 
 ## Object scaling
 

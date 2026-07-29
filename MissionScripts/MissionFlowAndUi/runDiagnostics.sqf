@@ -201,7 +201,7 @@ private _zenApi = !(isNil "zen_custom_modules_fnc_register");
 ["optional-features", "Optional feature configuration"] call _section;
 private _persistenceEnabled = missionNamespace getVariable ["Waldo_Persistence_Enable", false];
 private _persistencePatches = missionNamespace getVariable ["Waldo_Persistence_PatchNames", ["inidbi2", "inidbi2_main", "inidbi2_core", "inidbi"]];
-private _persistenceRuntime = !(isNil "OO_INIDBI") || {_persistencePatches findIf {isClass (configFile >> "CfgPatches" >> _x)} >= 0};
+private _persistenceRuntime = [] call Waldo_fnc_PersistenceDependencyAvailable;
 ["optional-feature", "persistence-runtime", if (!_persistenceEnabled) then {"DISABLED"} else {if (_persistenceRuntime) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 runtimeDetected=%2", _persistenceEnabled, _persistenceRuntime], _persistenceEnabled && {!_persistenceRuntime}] call _status;
 
 private _breachingEnabled = missionNamespace getVariable ["Waldo_Breaching_Enable", false];
