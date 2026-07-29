@@ -25,9 +25,14 @@ Waldo_QA_fnc_trackFeatureObjectServer = {
 
 Waldo_QA_fnc_spawnFeatureObjectServer = {
     params ["_class", "_position", ["_direction", 0], ["_simulation", true]];
-    private _object = createVehicle [_class, _position, [], 0, "CAN_COLLIDE"];
+    private _object = createVehicle [_class, _position, [], 0, "NONE"];
+    // A physics fixture must be frozen before any correction. Enabling it at an
+    // editor/default position for even one frame can collide or destroy vehicles.
+    _object enableSimulationGlobal false;
+    _object setVelocity [0, 0, 0];
     _object setPosATL _position;
     _object setDir _direction;
+    if ((_position select 2) <= 1) then {_object setVectorUp (surfaceNormal _position)};
     _object allowDamage false;
     _object enableSimulationGlobal _simulation;
     [_object] call Waldo_QA_fnc_trackFeatureObjectServer
@@ -41,8 +46,11 @@ Waldo_QA_fnc_getFeatureObjectServer = {
         missionNamespace setVariable [_variableName, _object, true];
     } else {
         [_object] call Waldo_QA_fnc_trackFeatureObjectServer;
+        _object enableSimulationGlobal false;
+        _object setVelocity [0, 0, 0];
         _object setPosATL _position;
         _object setDir _direction;
+        if ((_position select 2) <= 1) then {_object setVectorUp (surfaceNormal _position)};
         _object allowDamage false;
         _object enableSimulationGlobal _simulation;
     };

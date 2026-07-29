@@ -25,6 +25,15 @@ if (_wasCarrier) then {[_vehicle, _carrierRange] call Waldo_fnc_RecoveryRegister
 private _packages = (missionNamespace getVariable ["Waldo_Recovery_Packages", []]) select {!isNull _x && {_x != _package}};
 missionNamespace setVariable ["Waldo_Recovery_Packages", _packages];
 private _workshopSide = _workshop getVariable ["Waldo_Recovery_Side", sideUnknown];
-private _recipients = if (_workshopSide == sideUnknown) then {0} else {_workshopSide};
-["A recovered vehicle is ready at the workshop.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _recipients];
+private _notificationRadius = (_workshop getVariable [
+    "Waldo_Recovery_NotificationRadius",
+    missionNamespace getVariable ["Waldo_Recovery_NotificationRadius", 100]
+]) max 0;
+private _recipients = allPlayers select {
+    _x distance2D _workshop <= _notificationRadius
+    && {_workshopSide == sideUnknown || {_workshopSide getFriend side group _x >= 0.6}}
+};
+if !(_recipients isEqualTo []) then {
+    ["A recovered vehicle is ready at the workshop.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _recipients];
+};
 _vehicle

@@ -38,7 +38,7 @@ private _oldVanillaActions = player getVariable ["Waldo_Gunship_VanillaActions",
 player setVariable ["Waldo_Gunship_VanillaActions", []];
 private _oldAceActions = player getVariable ["Waldo_Gunship_AceActions", []];
 if !(isNil "ace_interact_menu_fnc_removeActionFromObject") then {
-    {[_x select 0, 1, _x select 1] call ace_interact_menu_fnc_removeActionFromObject} forEach _oldAceActions;
+    {[_x select 0, _x select 1, _x select 2] call ace_interact_menu_fnc_removeActionFromObject} forEach _oldAceActions;
 };
 player setVariable ["Waldo_Gunship_AceActions", []];
 
@@ -107,4 +107,5 @@ player setVariable ["Waldo_Gunship_AceActions", []];
         };
     };
 } forEach _systems;
+diag_log format ["[WMP GUNSHIP] Local controls reconciled systems=%1 aceActions=%2 vanillaActions=%3 controller=%4", count _systems, count (player getVariable ["Waldo_Gunship_AceActions", []]), count (player getVariable ["Waldo_Gunship_VanillaActions", []]), name player];
 true

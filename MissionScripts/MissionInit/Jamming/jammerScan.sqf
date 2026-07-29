@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Handheld radio direction finding (RDF). Sweeps the jammer registry for active emitters within
- * detection range and reports the nearest one to the operator: a compass bearing to the signal
- * source, a coarse range estimate and a signal-strength read. Lets an EW team triangulate and
+ * detection range and reports the nearest one to the operator: a broad compass sector and a
+ * deliberately vague distance band. Lets an EW team triangulate and
  * hunt a jammer by taking bearings from different spots. Purely a read-out - it changes nothing.
  * Exposed as an ACE self-interaction ("Scan for Radio Jammers") wired up in Waldo_fnc_JammingInit.
  *
@@ -19,7 +19,7 @@
 if !(hasInterface) exitWith {};
 
 private _registry = missionNamespace getVariable ["Waldo_Jamming_Registry", []];
-private _range = missionNamespace getVariable ["Waldo_Jamming_ScanRange", 3000];
+private _range = (missionNamespace getVariable ["Waldo_Jamming_ScanRange", 3000]) max 0;
 
 private _bestObj = objNull;
 private _bestDist = 1e11;
@@ -38,25 +38,21 @@ if (isNull _bestObj) exitWith {
     ["RDF SCAN", "No jamming sources detected in range.", 4, "SUCCESS"] call Waldo_fnc_JammingNotice;
 };
 
-private _bearing = round (player getDir _bestObj);
-private _dist = _bestDist;
+private _trueBearing = player getDir _bestObj;
+private _sectorWidth = ((missionNamespace getVariable ["Waldo_Jamming_ScanBearingArc", 30]) max 5) min 180;
+private _sectorCentre = (_sectorWidth * floor ((_trueBearing + (_sectorWidth / 2)) / _sectorWidth)) % 360;
+private _bearingLow = round ((_sectorCentre - (_sectorWidth / 2) + 360) % 360);
+private _bearingHigh = round ((_sectorCentre + (_sectorWidth / 2)) % 360);
 
-// Coarse range bucket so the read-out is a direction-finder, not a GPS fix.
-private _rangeTxt = "far (>2 km)";
-if (_dist <= 250) then { _rangeTxt = "very close (<250 m)"; }
-else {
-    if (_dist <= 750) then { _rangeTxt = "close (<750 m)"; }
-    else {
-        if (_dist <= 2000) then { _rangeTxt = "medium (<2 km)"; };
-    };
+// Express distance only relative to receiver range. No numerical bracket is exposed,
+// and signal strength is omitted because aggregate interference may come from a different emitter.
+private _fractions = missionNamespace getVariable ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55]];
+private _nearFraction = ((_fractions param [0, 0.2]) max 0.05) min 0.8;
+private _farFraction = ((_fractions param [1, 0.55]) max _nearFraction) min 0.95;
+private _distanceText = if (_bestDist <= (_range * _nearFraction)) then {
+    "NEARBY"
+} else {
+    if (_bestDist <= (_range * _farFraction)) then {"DISTANT"} else {"VERY DISTANT"}
 };
 
-// Strength: how hard it is hitting the operator right now.
-private _factor = [getPosASL player, side player, -1] call Waldo_fnc_JammingFactor;
-private _strTxt = "weak";
-if (_factor >= 0.66) then { _strTxt = "STRONG"; }
-else {
-    if (_factor >= 0.2) then { _strTxt = "moderate"; };
-};
-
-["RDF SCAN", format ["Bearing %1 deg | Range: %2 | Signal: %3", _bearing, _rangeTxt, _strTxt], 6, "INFO"] call Waldo_fnc_JammingNotice;
+["RDF SCAN", format ["Bearing between %1 and %2 deg | Distance: %3", _bearingLow, _bearingHigh, _distanceText], 6, "INFO"] call Waldo_fnc_JammingNotice;

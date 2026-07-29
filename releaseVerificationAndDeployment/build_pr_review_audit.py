@@ -129,7 +129,10 @@ def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict], loadout_fi
         rows.append(
             "        class Item{index}\n"
             "        {{\n"
-            "            position[]={{{x},{y},{z}}};\n"
+            # Legacy mission.sqm stores world position as X, elevation, Y.
+            # Writing X, Y, Z put the intended northing into altitude and collapsed
+            # the whole range onto the same east-west line.
+            "            position[]={{{x},{z},{y}}};\n"
             "            azimut={direction};\n"
             "            id={object_id};\n"
             '            side="EMPTY";\n'

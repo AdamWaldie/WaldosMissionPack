@@ -97,6 +97,8 @@ These let you tune how realistic/gamey the jamming feels. All are on by default.
 | `Waldo_Jamming_Destructible` | `true` | Destroying the emitter automatically removes its jammer entry and restores affected links. |
 | `Waldo_Jamming_GmOverlay` | `false` | Opt-in curator-only floating marker (and facing line for cones) over every jammer. Ordinary players never see it. |
 | `Waldo_Jamming_ScanRange` | `3000` | Detection range (m) of the handheld RDF scan action. |
+| `Waldo_Jamming_ScanBearingArc` | `30` | Width in degrees of the quantised bearing sector reported to the operator. |
+| `Waldo_Jamming_ScanDistanceFractions` | `[0.2, 0.55]` | Fractions of scan range separating the deliberately vague `NEARBY`, `DISTANT` and `VERY DISTANT` reports. |
 
 ## EW toolkit (for players, no Zeus needed)
 
@@ -106,7 +108,7 @@ Every jammer and every player gets ACE actions so an EW team can play the cat-an
 |---|---|---|---|
 | **Toggle Radio Jammer** | on the jammer object | anyone | Switches that jammer on/off. |
 | **Disable Radio Jammer** | on the jammer object | engineers | Destroys the emitter (which, with destructible jammers on, removes it). |
-| **Scan for Radio Jammers** | self-interaction (ACE) | anyone | Reports the **bearing**, coarse **range** and **signal strength** to the nearest active jammer. Take bearings from two spots to triangulate the source. |
+| **Scan for Radio Jammers** | self-interaction (ACE) | anyone | Reports a broad **bearing sector** and deliberately vague **distance band** for the nearest active jammer inside `Waldo_Jamming_ScanRange`. It does not expose an exact bearing, numerical distance or aggregate signal-strength value. Take sectors from separated positions to narrow the search. |
 
 ## Turning jammers on/off and removing them from script
 

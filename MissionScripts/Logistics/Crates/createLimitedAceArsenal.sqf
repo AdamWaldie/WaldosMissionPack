@@ -23,12 +23,10 @@ waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 //Get the loadout pool for the requested side (defaults to west)
 private _aceArsenalPool = [_crateSupplySide] call Waldo_fnc_GetSideLoadoutArray;
 
-//Remove Empty Portions
-{
-    if ((_aceArsenalPool select _x) select 0 == "EMPTY") then {
-        _aceArsenalPool deleteAt _x;
-    };
-} foreach _aceArsenalPool;
+// Remove empty category sentinels before flattening the remaining equipment pool.
+// Iterating the category values as though they were numeric indices made this path
+// dependent on invalid `select` operands and could leave the box uninitialised.
+_aceArsenalPool = _aceArsenalPool select {!(_x isEqualTo ["EMPTY"])};
 
 _aceArsenalPool = [_aceArsenalPool] call Waldo_fnc_UniqueLoadoutArray;
 

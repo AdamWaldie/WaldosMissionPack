@@ -227,16 +227,18 @@ switch (toUpperANSI _feature) do {
                 ["EDIT", ["Workshop key", "Recoverable vehicles with the same key are restored here."], ["MAIN"]],
                 ["SLIDER", ["Delivery radius", "Grounded packages inside this radius are restored."], [5, 200, 50, 0]],
                 ["COMBO", ["Serviced side", "All permits any side to use the workshop."], [[sideUnknown, west, east, independent], ["All", "BLUFOR", "OPFOR", "Independent"], 0]],
+                ["SLIDER", ["Completion notice radius", "Only friendly players inside this distance are told that the restored vehicle is ready."], [0, 500, missionNamespace getVariable ["Waldo_Recovery_NotificationRadius", 100], 0]],
+                ["CHECKBOX", ["Create map markers", "Create a global delivery-area marker and labelled exact-position marker."], missionNamespace getVariable ["Waldo_Recovery_CreateWorkshopMarkers", true]],
                 ["CHECKBOX", ["Copy setup script", "Copy an equivalent mission setup call."], false]
             ],
             {
                 params ["_values", "_target"];
-                _values params ["_key", "_radius", "_side", "_copy"];
-                ["RECOVERY_WORKSHOP", [_target, _key, _radius, _side]] call Waldo_fnc_FeatureRuntimeApply;
+                _values params ["_key", "_radius", "_side", "_notificationRadius", "_createMarkers", "_copy"];
+                ["RECOVERY_WORKSHOP", [_target, _key, _radius, _side, _notificationRadius, _createMarkers]] call Waldo_fnc_FeatureRuntimeApply;
                 if (_copy) then {
                     private _name = vehicleVarName _target;
                     if (_name == "") then {systemChat "[WMP] Give the workshop an Eden variable name before exporting."} else {
-                        copyToClipboard format ["[%1, %2, %3, %4] call Waldo_fnc_RecoveryRegisterWorkshop;", _name, str _key, _radius, str _side];
+                        copyToClipboard format ["[%1, %2, %3, %4, %5, %6] call Waldo_fnc_RecoveryRegisterWorkshop;", _name, str _key, _radius, str _side, _notificationRadius, _createMarkers];
                         systemChat "[WMP] Recovery workshop setup copied.";
                     };
                 };

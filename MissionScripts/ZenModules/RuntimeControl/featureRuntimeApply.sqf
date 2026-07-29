@@ -98,8 +98,8 @@ switch (toUpperANSI _action) do {
         [_unit, _crates, _maximum] call Waldo_fnc_FieldResupplyAssignCarrier;
     };
     case "RECOVERY_WORKSHOP": {
-        _settings params ["_object", "_key", "_radius", "_side"];
-        [_object, _key, _radius, _side] call Waldo_fnc_RecoveryRegisterWorkshop;
+        _settings params ["_object", "_key", "_radius", "_side", ["_notificationRadius", -1, [0]], ["_createMarkers", missionNamespace getVariable ["Waldo_Recovery_CreateWorkshopMarkers", true], [true]]];
+        [_object, _key, _radius, _side, _notificationRadius, _createMarkers] call Waldo_fnc_RecoveryRegisterWorkshop;
     };
     case "RECOVERY_VEHICLE": {
         _settings params ["_object", "_key", "_damage", "_destroyed", "_engineer", "_package", "_cargo", "_fuel"];

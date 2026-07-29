@@ -254,6 +254,8 @@ missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];  // or "IN
 missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];// destroy the object = remove jammer
 missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true]; // opt in to curator jammer markers
 missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF scan detection range (m)
+missionNamespace setVariable ["Waldo_Jamming_ScanBearingArc", 30, true]; // quantised bearing-sector width (deg)
+missionNamespace setVariable ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55], true]; // vague range-band thresholds
 ```
 
 On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](Radio-Jamming) for the full API.
@@ -329,7 +331,7 @@ Uncomment to automatically save the player's respawn loadout whenever they close
 
 See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) for full details.
 
-Temporary squad-owned respawn points are configured with the shared `Waldo_Rally_*` settings in `init.sqf`; vehicle-recovery scans use `Waldo_Recovery_ScanInterval`. Object registration and runtime options are documented in [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+Temporary squad-owned respawn points are configured with the shared `Waldo_Rally_*` settings in `init.sqf`; vehicle-recovery scans use `Waldo_Recovery_ScanInterval`, workshop-completion notification distance uses `Waldo_Recovery_NotificationRadius` (default 100 metres), and `Waldo_Recovery_CreateWorkshopMarkers` controls the default global delivery-area and exact-position workshop markers. Object registration and runtime options are documented in [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 <!-- WMP-WIKI-NAV -->
 ---

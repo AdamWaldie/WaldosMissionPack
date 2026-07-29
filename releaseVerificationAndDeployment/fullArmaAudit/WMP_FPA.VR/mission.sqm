@@ -850,7 +850,7 @@ class Mission
         class Item45
         {
             dataType="Object";
-            class PositionInfo {position[]={239,5.32,7}; angles[]={0,4.7124,0};};
+            class PositionInfo {position[]={225,5.32,-28}; angles[]={0,0,0};};
             side="Empty";
             flags=5;
             class Attributes {name="qa_recovery_carrier"; init="this allowDamage false; this enableSimulationGlobal false;";};

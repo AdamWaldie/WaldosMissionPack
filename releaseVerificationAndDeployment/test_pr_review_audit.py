@@ -63,6 +63,8 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn('dataType="Layer";', mission_sqm)
             self.assertIn('name="WMP Audit Loadouts";', mission_sqm)
             self.assertIn('name="Nested Playable Roles";', mission_sqm)
+            # Legacy v12 mission positions are X, elevation, Y rather than Eden's X, Y, Z.
+            self.assertIn("position[]={0,0,2};", mission_sqm)
             self.assertEqual(5, mission_sqm.count("class Inventory"))
             self.assertEqual(1, mission_sqm.count("isPlayer=1;"))
             self.assertEqual(4, mission_sqm.count("isPlayable=1;"))
@@ -90,6 +92,24 @@ class PrReviewAuditTests(unittest.TestCase):
                 if distance < 6:
                     unsafe.append((left["name"], right["name"], round(distance, 2)))
         self.assertEqual(unsafe, [])
+
+    def test_live_physics_fixtures_are_frozen_before_placement_and_spaced(self):
+        server = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf"
+        ).read_text(encoding="utf-8")
+        create_at = server.index('createVehicle [_class, _position, [], 0, "NONE"]')
+        freeze_at = server.index("_object enableSimulationGlobal false;", create_at)
+        place_at = server.index("_object setPosATL _position;", freeze_at)
+        activate_at = server.index("_object enableSimulationGlobal _simulation;", place_at)
+        self.assertLess(create_at, freeze_at)
+        self.assertLess(freeze_at, place_at)
+        self.assertLess(place_at, activate_at)
+        self.assertNotIn('createVehicle [_class, _position, [], 0, "CAN_COLLIDE"]', server)
+
+        fixtures = {fixture["name"]: fixture for fixture in BUILDER.audit_fixtures()}
+        carrier = fixtures["qa_recovery_carrier"]
+        for name in ("qa_recovery_workshop", "qa_recovery_vehicle", "qa_sign_vehicle_recovery"):
+            self.assertGreaterEqual(math.dist(carrier["pos"][:2], fixtures[name]["pos"][:2]), 25, name)
 
     def test_builder_rejects_reappending_audit_fixtures(self):
         source = (BUILDER.TEMPLATE / "mission.sqm").read_bytes()
@@ -121,6 +141,10 @@ class PrReviewAuditTests(unittest.TestCase):
                 'missionNamespace getVariable ["Waldo_QA_RunAutomation", false]',
                 (destination / "auditInitPlayerLocal.sqf").read_text(encoding="utf-8"),
             )
+
+    def test_direct_launcher_keeps_unfocused_qa_simulation_running(self):
+        launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
+        self.assertIn('"-noPause"', launcher)
 
     def test_audit_artifacts_are_not_part_of_release_contract(self):
         entries = set(BUILDER.release_entries())
@@ -222,6 +246,61 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('["76561198094931408"]', pack)
         self.assertIn("getPlayerUID player", preinit)
         self.assertIn('Waldo_AccessibilityPID_AllowedUIDs", if (_auditUid == "")', preinit)
+
+
+    def test_corrected_feature_workflows_have_runtime_controls_and_bounds(self):
+        scripts = ROOT / "MissionScripts"
+        audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+
+        arsenal = (scripts / "Logistics" / "Crates" / "createLimitedAceArsenal.sqf").read_text(encoding="utf-8")
+        self.assertIn('_aceArsenalPool select {!(_x isEqualTo ["EMPTY"])}', arsenal)
+        self.assertNotIn("deleteAt _x", arsenal)
+
+        jammer = (scripts / "MissionInit" / "Jamming" / "jammerScan.sqf").read_text(encoding="utf-8")
+        self.assertIn("_d <= _range", jammer)
+        self.assertIn("Bearing between %1 and %2 deg", jammer)
+        for vague_band in ("NEARBY", "DISTANT", "VERY DISTANT"):
+            self.assertIn(vague_band, jammer)
+        self.assertNotIn("Signal strength", jammer)
+
+        rally = (scripts / "Respawn" / "RallyPoint" / "rallyPointSetupLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("ACE_SelfActions", rally)
+        self.assertIn("ace_common_fnc_progressBar", rally)
+        self.assertIn("BIS_fnc_holdActionAdd", rally)
+
+        gunship = (scripts / "CombatSystems" / "AirborneGunship" / "gunshipSetupLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("_x select 2", gunship)
+        self.assertIn("Waldo_Gunship_AceActions", gunship)
+
+        recovery = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterWorkshop.sqf").read_text(encoding="utf-8")
+        restore = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('setMarkerShape "ELLIPSE"', recovery)
+        self.assertIn('setMarkerType "mil_dot"', recovery)
+        self.assertIn("Waldo_Recovery_CreateWorkshopMarkers", recovery)
+        self.assertIn("allPlayers select", restore)
+        self.assertIn("_x distance2D _workshop <= _notificationRadius", restore)
+        recovery_zen = (scripts / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        self.assertIn("Completion notice radius", recovery_zen)
+        self.assertIn("Create map markers", recovery_zen)
+        self.assertIn("_notificationRadius, _createMarkers", recovery_zen)
+
+        server = (audit / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        client = (audit / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        controls = (audit / "featureRangeClient.sqf").read_text(encoding="utf-8")
+        expected_primaries = (
+            "arifle_MX_GL_Hamr_pointer_F", "arifle_MXC_Black_F", "arifle_MX_Black_F",
+            "arifle_MX_SW_Black_F", "srifle_DMR_03_F",
+        )
+        for primary in expected_primaries:
+            self.assertIn(primary, server)
+        self.assertIn("WMP NESTED LOADOUT PRIMARY AUDIT", server)
+        self.assertIn("qa_sign_emergency_dismount", client)
+        self.assertIn("REFRESH MY GUNSHIP CONTROLS", client)
+        self.assertIn("_scale, true] call Waldo_fnc_ObjectScale", server)
+        self.assertIn('missionNamespace setVariable [_name, _scaled, true]', server)
+        self.assertIn("Waldo_QA_ControlConsole", controls)
+        self.assertIn("Waldo_QA_CoreConsole", controls)
+        self.assertIn("_forceVanilla", controls)
 
 
 if __name__ == "__main__":

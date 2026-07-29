@@ -46,7 +46,7 @@ if ($null -ne $persistenceMod) {
 $modArgument = '-mod="' + ($mods -join ';') + '"'
 New-Item -ItemType Directory -Path $profileRoot -Force | Out-Null
 $arguments = @(
-    "-noBattlEye", "-showScriptErrors", "-window", "-skipIntro", "-world=empty",
+    "-noBattlEye", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
     "-x=$ResolutionWidth", "-y=$ResolutionHeight",
     "-profiles=$profileRoot", "-name=WMPAuditDirect",
     "-init=playMission['','WMP_PR_Review_Audit.VR',true]", $modArgument

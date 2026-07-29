@@ -17,7 +17,7 @@ Vehicle recovery is opt-in per object. Register one or more workshops, recoverab
 
 Workshops accept a key, delivery radius and serviced side (`sideUnknown` permits all sides). `RecoveryRegisterVehicle` accepts the workshop key, living-vehicle damage threshold, whether destroyed vehicles are accepted, whether an engineer is required, package class, inventory-preservation policy and restored fuel fraction. The system also restores textures and pylon magazines. A registered recovery carrier remains a carrier after it is recovered.
 
-The server uses one configurable scan loop (`Waldo_Recovery_ScanInterval`, default 3 seconds) for all packages. Registration is repeat-safe. Actions are object-keyed for JIP and disappear with the deleted original/package object.
+The server uses one configurable scan loop (`Waldo_Recovery_ScanInterval`, default 3 seconds) for all packages. Registration is repeat-safe. Actions are object-keyed for JIP and disappear with the deleted original/package object. Packaging, loading and unloading feedback is sent only to the operator performing that action. A completed workshop restoration notifies only friendly players within `Waldo_Recovery_NotificationRadius` (default 100 metres); an individual workshop can override that radius through the optional fifth registration argument. Registered workshops create two global engine markers by default: a shaded circle showing the delivery radius and a labelled point showing the workshop's exact position. Their colour follows the serviced side. Set `Waldo_Recovery_CreateWorkshopMarkers` to `false`, or pass `false` as the optional sixth registration argument, to suppress both markers.
 
 ZEN provides three modules:
 

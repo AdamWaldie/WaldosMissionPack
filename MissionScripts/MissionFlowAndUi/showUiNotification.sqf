@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Draws a reusable, accessible WMP notification card on the local client.
- * Transient cards queue FIFO per channel and stack safely across channels.
+ * Transient cards stack across channels and may spill into other screen regions.
+ * Pending state is bounded, expires, and coalesces by channel to prevent notification after-play.
  * Persistent cards replace the current owner of their channel.
  * Duration 0 keeps the card visible until it is replaced or cleared.
  *
@@ -41,17 +42,39 @@ params [
 
 private _display = findDisplay 46;
 if (isNull _display) exitWith {
-    _this spawn {
-        private _deadline = diag_tickTime + 20;
-        waitUntil {uiSleep 0.1; !isNull (findDisplay 46) || {diag_tickTime >= _deadline}};
-        if (!isNull (findDisplay 46)) then {_this call Waldo_fnc_ShowUiNotification;};
+    private _ttl = ((missionNamespace getVariable ["Waldo_UiNotification_QueueLifetime", 15]) max 2) min 120;
+    private _startupPriority = _priority max (switch (toUpper _state) do {case "ERROR": {3}; case "WARNING": {2}; case "SUCCESS": {1}; default {0}});
+    private _pending = +(uiNamespace getVariable ["Waldo_UiNotification_DisplayWaitQueue", []]);
+    _pending = _pending select {(_x param [1, 0]) > diag_tickTime};
+    private _startupChannel = toUpper _channel;
+    private _sameChannel = _pending findIf {toUpper (((_x param [0, []]) param [5, "MISSION"])) isEqualTo _startupChannel};
+    private _entry = [+_this, diag_tickTime + _ttl, _startupPriority];
+    if (_sameChannel >= 0) then {
+        if (_startupPriority >= ((_pending select _sameChannel) param [2, 0])) then {_pending set [_sameChannel, _entry]};
+    } else {
+        private _maximumQueued = ((missionNamespace getVariable ["Waldo_UiNotification_MaximumQueued", 12]) max 1) min 50;
+        if (count _pending < _maximumQueued) then {_pending pushBack _entry};
     };
-    ""
+    uiNamespace setVariable ["Waldo_UiNotification_DisplayWaitQueue", _pending];
+    if !(uiNamespace getVariable ["Waldo_UiNotification_DisplayWaitRunning", false]) then {
+        uiNamespace setVariable ["Waldo_UiNotification_DisplayWaitRunning", true];
+        [] spawn {
+            private _deadline = diag_tickTime + 20;
+            waitUntil {uiSleep 0.1; !isNull (findDisplay 46) || {diag_tickTime >= _deadline}};
+            private _requests = +(uiNamespace getVariable ["Waldo_UiNotification_DisplayWaitQueue", []]);
+            uiNamespace setVariable ["Waldo_UiNotification_DisplayWaitQueue", []];
+            uiNamespace setVariable ["Waldo_UiNotification_DisplayWaitRunning", false];
+            if (!isNull (findDisplay 46)) then {
+                {if ((_x param [1, 0]) > diag_tickTime) then {(_x select 0) call Waldo_fnc_ShowUiNotification}} forEach _requests;
+            };
+        };
+    };
+    "QUEUED"
 };
 
 _state = toUpper _state;
 _channel = toUpper _channel;
-_placement = [_channel, _placement, _allowLocalOverride] call Waldo_fnc_ResolveUiPanelPlacement;
+_placement = if (_fromQueue) then {toUpper _placement} else {[_channel, _placement, _allowLocalOverride] call Waldo_fnc_ResolveUiPanelPlacement};
 _policy = toUpper _policy;
 if (_policy isEqualTo "AUTO") then {_policy = if (_duration <= 0) then {"REPLACE"} else {"FIFO"};};
 if !(_policy in ["FIFO", "REPLACE"]) then {_policy = "FIFO";};
@@ -65,14 +88,48 @@ _semantic params ["_colour", "_symbol"];
 
 private _registry = uiNamespace getVariable ["Waldo_UiPanelRegistry", []];
 private _existingIndex = _registry findIf {(_x param [0, ""]) isEqualTo _channel};
-if (_policy isEqualTo "FIFO" && {!_fromQueue} && {_existingIndex >= 0 || {({(_x param [3, ""]) isEqualTo _placement} count _registry) >= 3}}) exitWith {
-    private _request = [_title, _message, _state, _duration, _placement, _channel, _source, _policy, _priority, _allowLocalOverride, false];
-    private _queue = +(uiNamespace getVariable ["Waldo_UiPanelQueue", []]);
-    private _identity = format ["%1|%2|%3|%4", _channel, _title, _message, _state];
-    private _duplicate = _queue findIf {
-        format ["%1|%2|%3|%4", toUpper (_x param [5, "MISSION"]), _x param [0, ""], _x param [1, ""], toUpper (_x param [2, "INFO"])] isEqualTo _identity
+private _maximumPerPlacement = ((missionNamespace getVariable ["Waldo_UiNotification_MaximumPerPlacement", 3]) max 1) min 6;
+private _placementCandidates = [_placement];
+if (missionNamespace getVariable ["Waldo_UiNotification_AllowPlacementOverflow", true]) then {
+    {
+        private _candidate = toUpper _x;
+        if (_candidate in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_RIGHT"]) then {
+            _placementCandidates pushBackUnique _candidate;
+        };
+    } forEach (missionNamespace getVariable ["Waldo_UiNotification_OverflowPlacements", ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"]]);
+};
+if (_existingIndex < 0) then {
+    private _freePlacement = _placementCandidates findIf {
+        private _candidate = _x;
+        ({(_x param [3, ""]) isEqualTo _candidate} count _registry) < _maximumPerPlacement
     };
-    if (_duplicate < 0) then {_queue pushBack _request;};
+    if (_freePlacement >= 0) then {_placement = _placementCandidates select _freePlacement};
+};
+private _allPlacementsFull = _placementCandidates findIf {
+    private _candidate = _x;
+    ({(_x param [3, ""]) isEqualTo _candidate} count _registry) < _maximumPerPlacement
+} < 0;
+if (_policy isEqualTo "FIFO" && {!_fromQueue} && {_existingIndex >= 0 || {_allPlacementsFull}}) exitWith {
+    private _ttl = ((missionNamespace getVariable ["Waldo_UiNotification_QueueLifetime", 15]) max 2) min 120;
+    private _queuePriority = _priority max (switch (_state) do {case "ERROR": {3}; case "WARNING": {2}; case "SUCCESS": {1}; default {0}});
+    private _request = [_title, _message, _state, _duration, _placement, _channel, _source, _policy, _queuePriority, _allowLocalOverride, false, diag_tickTime, diag_tickTime + _ttl];
+    private _queue = +(uiNamespace getVariable ["Waldo_UiPanelQueue", []]);
+    _queue = _queue select {(_x param [12, 1e11]) > diag_tickTime};
+    private _sameChannel = _queue findIf {toUpper (_x param [5, "MISSION"]) isEqualTo _channel};
+    if (_sameChannel >= 0) then {
+        if (_queuePriority >= ((_queue select _sameChannel) param [8, 0])) then {_queue set [_sameChannel, _request]};
+    } else {
+        private _maximumQueued = ((missionNamespace getVariable ["Waldo_UiNotification_MaximumQueued", 12]) max 1) min 50;
+        if (count _queue < _maximumQueued) then {
+            _queue pushBack _request;
+        } else {
+            private _lowestIndex = 0;
+            for "_index" from 1 to ((count _queue) - 1) do {
+                if (((_queue select _index) param [8, 0]) < ((_queue select _lowestIndex) param [8, 0])) then {_lowestIndex = _index};
+            };
+            if (_queuePriority >= ((_queue select _lowestIndex) param [8, 0])) then {_queue set [_lowestIndex, _request]};
+        };
+    };
     uiNamespace setVariable ["Waldo_UiPanelQueue", _queue];
     "QUEUED"
 };

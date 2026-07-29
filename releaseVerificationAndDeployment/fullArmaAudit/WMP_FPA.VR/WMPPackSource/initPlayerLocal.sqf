@@ -23,6 +23,15 @@ if (hasInterface) then {
     // ZEN module registration is presentation-local; dedicated servers and headless clients do not need it.
     [] call Waldo_fnc_ZenInitModules;
 
+    // Local notification back-pressure and screen-region overflow.
+    if (isNil "Waldo_UiNotification_MaximumQueued") then {Waldo_UiNotification_MaximumQueued = 12};
+    if (isNil "Waldo_UiNotification_QueueLifetime") then {Waldo_UiNotification_QueueLifetime = 15};
+    if (isNil "Waldo_UiNotification_MaximumPerPlacement") then {Waldo_UiNotification_MaximumPerPlacement = 3};
+    if (isNil "Waldo_UiNotification_AllowPlacementOverflow") then {Waldo_UiNotification_AllowPlacementOverflow = true};
+    if (isNil "Waldo_UiNotification_OverflowPlacements") then {
+        Waldo_UiNotification_OverflowPlacements = ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"];
+    };
+
     if (isNil "Waldo_TreatmentFeedback_Enable") then {Waldo_TreatmentFeedback_Enable = false};
     if (isNil "Waldo_TreatmentFeedback_ShowStart") then {Waldo_TreatmentFeedback_ShowStart = true};
     if (isNil "Waldo_TreatmentFeedback_ShowSuccess") then {Waldo_TreatmentFeedback_ShowSuccess = true};

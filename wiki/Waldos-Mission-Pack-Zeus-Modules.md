@@ -151,7 +151,7 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Vehicle Recovery
 
-**Vehicle Recovery - Register Workshop** assigns a key and delivery radius to the nearest object. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 ## Squad Rally Points
 

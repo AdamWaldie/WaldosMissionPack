@@ -68,6 +68,8 @@ if (isNil "Waldo_Rally_AllowRegroup") then {Waldo_Rally_AllowRegroup = false};
 
 // Vehicle recovery is activated by registering workshops and vehicles. The scan is server-only.
 if (isNil "Waldo_Recovery_ScanInterval") then {Waldo_Recovery_ScanInterval = 3};
+if (isNil "Waldo_Recovery_NotificationRadius") then {Waldo_Recovery_NotificationRadius = 100};
+if (isNil "Waldo_Recovery_CreateWorkshopMarkers") then {Waldo_Recovery_CreateWorkshopMarkers = true};
 
 if (isNil "Waldo_Gunship_Enable") then {Waldo_Gunship_Enable = false};
 if (isNil "Waldo_Gunship_DefaultAltitude") then {Waldo_Gunship_DefaultAltitude = 700};
@@ -400,6 +402,8 @@ Model options (tune the realism/gameplay to taste):
 - Waldo_Jamming_Destructible   true  = destroying a jammer's object removes it (EW objectives)
 - Waldo_Jamming_GmOverlay      false = optional curator-only jammer marker and facing line
 - Waldo_Jamming_ScanRange      detection range (m) of the handheld RDF "Scan for Radio Jammers" action
+- Waldo_Jamming_ScanBearingArc width (deg) of the reported bearing sector
+- Waldo_Jamming_ScanDistanceFractions relative thresholds for vague distance bands
 */
 Waldo_Jamming_Enable = true;
 missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];
@@ -410,6 +414,8 @@ missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];
 missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];
 missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true];
 missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];
+missionNamespace setVariable ["Waldo_Jamming_ScanBearingArc", 30, true];
+missionNamespace setVariable ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55], true];
 if (Waldo_Jamming_Enable) then {
     missionNamespace setVariable ["Waldo_Jamming_Enable", true, true];
     [] call Waldo_fnc_JammingInit;

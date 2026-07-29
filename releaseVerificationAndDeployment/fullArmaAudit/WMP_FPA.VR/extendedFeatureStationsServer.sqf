@@ -127,17 +127,33 @@ private _dismountVehicle = ["qa_dismount_vehicle"] call _get;
 _dismountVehicle enableSimulationGlobal false;
 missionNamespace setVariable ["Waldo_QA_DismountVehicle", _dismountVehicle, true];
 Waldo_QA_fnc_resetDismountServer = {
+    params [["_actor", objNull, [objNull]]];
     private _vehicle = missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull];
-    if (isNull _vehicle) exitWith {false};
-    _vehicle setPosATL [250, 88, 0];
-    _vehicle setVectorDirAndUp [[0, 1, 0], [0, 0, 1]];
+    private _recreated = isNull _vehicle;
+    if (_recreated) then {
+        _vehicle = ["qa_dismount_vehicle", "B_MRAP_01_F", [250, 88, 0.25], 90, false] call Waldo_QA_fnc_getFeatureObjectServer;
+        missionNamespace setVariable ["Waldo_QA_DismountVehicle", _vehicle, true];
+    };
+    _vehicle enableSimulationGlobal false;
+    _vehicle setVelocity [0, 0, 0];
+    _vehicle setVectorDirAndUp [[1, 0, 0], [0, 0, 1]];
+    _vehicle setPosATL [250, 88, 0.25];
     _vehicle setDamage 0;
+    if (!isNull _actor) then {
+        [_actor, "EMERGENCY DISMOUNT QA", ["Vehicle reset upright on its pad.", "Vehicle was recreated and reset upright on its pad."] select _recreated, "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
+    };
     true
 };
 Waldo_QA_fnc_overturnDismountServer = {
+    params [["_actor", objNull, [objNull]]];
     private _vehicle = missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull];
     if (isNull _vehicle) exitWith {false};
-    _vehicle setVectorDirAndUp [[0, 1, 0], [0, 0, -1]];
+    _vehicle setVelocity [0, 0, 0];
+    _vehicle setVectorDirAndUp [[1, 0, 0], [0, 0, -1]];
+    _vehicle setPosATL [250, 88, 0.25];
+    if (!isNull _actor) then {
+        [_actor, "EMERGENCY DISMOUNT QA", "Vehicle overturned in place. Board it first to exercise the automatic extraction path.", "INFO"] call Waldo_QA_fnc_notifyActorServer;
+    };
     true
 };
 
@@ -212,7 +228,8 @@ Waldo_QA_fnc_scaleFixtureServer = {
     [_name, _scale] spawn {
         params ["_name", "_scale"];
         uiSleep 0;
-        [missionNamespace getVariable [_name, objNull], _scale, false] call Waldo_fnc_ObjectScale;
+        private _scaled = [missionNamespace getVariable [_name, objNull], _scale, true] call Waldo_fnc_ObjectScale;
+        if (!isNull _scaled) then {missionNamespace setVariable [_name, _scaled, true]};
     };
 };
 Waldo_QA_fnc_resetScaleFixturesServer = {
@@ -320,7 +337,9 @@ Waldo_QA_fnc_removeDynamicAATargetServer = {
 
 // Gunship spawn, assignment and teardown remain explicit because they create a live aircraft.
 Waldo_QA_fnc_createGunshipServer = {
-    [] spawn {
+    params [["_actor", objNull, [objNull]]];
+    [_actor] spawn {
+        params ["_actor"];
         uiSleep 0;
         private _config = createHashMapFromArray [
             ["id", "QA_GUNSHIP"], ["callsign", "QA SPECTRE"], ["side", west],
@@ -328,7 +347,10 @@ Waldo_QA_fnc_createGunshipServer = {
             ["orbit", [200, -350, 0]], ["altitude", 300], ["radius", 400],
             ["serviceDuration", 30], ["maximumRangeFromHome", 1200]
         ];
-        [_config] call Waldo_fnc_GunshipRegister;
+        private _created = [_config] call Waldo_fnc_GunshipRegister;
+        if (!isNull _actor) then {
+            [_actor, "AIRBORNE GUNSHIP QA", ["Gunship creation failed. Check the runtime log and aircraft pool.", "QA SPECTRE spawned. Assign it to yourself, then use the Gunship ACE self-interaction."] select _created, ["ERROR", "SUCCESS"] select _created] call Waldo_QA_fnc_notifyActorServer;
+        };
     };
 };
 Waldo_QA_fnc_assignGunshipServer = {
@@ -336,7 +358,9 @@ Waldo_QA_fnc_assignGunshipServer = {
     [_actor] spawn {
         params ["_actor"];
         uiSleep 0;
-        ["QA_GUNSHIP", "ASSIGN", [_actor], _actor] call Waldo_fnc_GunshipServerHandle;
+        private _assigned = ["QA_GUNSHIP", "ASSIGN", [_actor], _actor] call Waldo_fnc_GunshipServerHandle;
+        if (_assigned) then {[] remoteExecCall ["Waldo_fnc_GunshipSetupLocal", owner _actor]};
+        [_actor, "AIRBORNE GUNSHIP QA", ["Assignment failed. Spawn QA SPECTRE first.", "Assigned. Open ACE Self Interactions > Gunship: QA SPECTRE for orbit and turret controls."] select _assigned, ["ERROR", "SUCCESS"] select _assigned] call Waldo_QA_fnc_notifyActorServer;
     };
 };
 Waldo_QA_fnc_destroyGunshipServer = {[] spawn {uiSleep 0; ["QA_GUNSHIP", true] call Waldo_fnc_GunshipDestroy}};
@@ -348,7 +372,7 @@ Waldo_QA_fnc_resetRecoveryLocalServer = {
     } forEach (missionNamespace getVariable ["Waldo_Recovery_Packages", []]);
     missionNamespace setVariable ["Waldo_Recovery_Packages", []];
     private _vehicle = ["qa_recovery_vehicle", "B_MRAP_01_F", [217, 7, 0], 90, false] call Waldo_QA_fnc_getFeatureObjectServer;
-    private _carrier = ["qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", [239, 7, 0], 270, true] call Waldo_QA_fnc_getFeatureObjectServer;
+    private _carrier = ["qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", [225, -28, 0], 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
     private _workshop = ["qa_recovery_workshop", "Land_RepairDepot_01_green_F", [225, 14, 0], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
     _vehicle setDamage 0.8;
     [_workshop, "QA", 20, west] call Waldo_fnc_RecoveryRegisterWorkshop;
@@ -362,13 +386,24 @@ call Waldo_QA_fnc_resetRecoveryServer;
 
 // The physical crate uses the real nested-folder-derived pool.
 private _loadoutArsenal = ["qa_loadout_arsenal"] call _get;
+clearWeaponCargoGlobal _loadoutArsenal;
+clearMagazineCargoGlobal _loadoutArsenal;
+clearItemCargoGlobal _loadoutArsenal;
+clearBackpackCargoGlobal _loadoutArsenal;
 [_loadoutArsenal, west, false] spawn Waldo_fnc_CreateLimitedArsenal;
 missionNamespace setVariable ["Waldo_QA_LoadoutArsenal", _loadoutArsenal, true];
+private _expectedPrimaryWeapons = ["arifle_MX_GL_Hamr_pointer_F", "arifle_MXC_Black_F", "arifle_MX_Black_F", "arifle_MX_SW_Black_F", "srifle_DMR_03_F"];
+private _loadoutPool = ["West"] call Waldo_fnc_MissionSQMLookup;
+private _scrapedWeaponCategory = _loadoutPool param [0, []];
+private _missingPrimaryWeapons = _expectedPrimaryWeapons - _scrapedWeaponCategory;
+diag_log format ["WMP NESTED LOADOUT PRIMARY AUDIT: expected=%1 missing=%2 scrapedWeaponCategory=%3", _expectedPrimaryWeapons, _missingPrimaryWeapons, _scrapedWeaponCategory];
 Waldo_QA_fnc_reportLoadoutPoolServer = {
     params ["_actor"];
     private _pool = ["West"] call Waldo_fnc_MissionSQMLookup;
     private _counts = _pool apply {if (_x isEqualTo ["EMPTY"]) then {0} else {count _x}};
-    private _message = format ["Nested playable-role pool categories: weapons %1, magazines %2, launchers %3, launcher ammo %4, gear %5, items %6, backpacks %7, attachments %8.", _counts select 0, _counts select 1, _counts select 2, _counts select 3, _counts select 4, _counts select 5, _counts select 6, _counts select 7];
+    private _expected = ["arifle_MX_GL_Hamr_pointer_F", "arifle_MXC_Black_F", "arifle_MX_Black_F", "arifle_MX_SW_Black_F", "srifle_DMR_03_F"];
+    private _missing = _expected - (_pool param [0, []]);
+    private _message = format ["Primary fixtures: %1. Missing from scraped weapon category: %2. Category counts: weapons %3, magazines %4, launchers %5, launcher ammo %6, gear %7, items %8, backpacks %9, attachments %10.", _expected joinString ", ", if (_missing isEqualTo []) then {"NONE"} else {_missing joinString ", "}, _counts select 0, _counts select 1, _counts select 2, _counts select 3, _counts select 4, _counts select 5, _counts select 6, _counts select 7];
     [_actor, "NESTED LOADOUT SCRAPE", _message, "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
 };
 Waldo_QA_fnc_resetRalliesServer = {

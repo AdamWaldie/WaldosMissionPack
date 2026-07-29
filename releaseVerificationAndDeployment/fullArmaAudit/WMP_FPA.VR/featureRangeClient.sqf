@@ -145,10 +145,16 @@ if (!isNull _dropFlag && {!isNull _dropAircraft}) then {
 
 // Audit controls follow the same ACE-first contract as production interactions.
 Waldo_QA_fnc_addAuditActionLocal = {
-    params ["_target", "_id", "_title", "_statement", ["_arguments", []]];
+    params ["_target", "_id", "_title", "_statement", ["_arguments", []], ["_forceVanilla", false]];
+    _forceVanilla = _forceVanilla || {
+        _target in [
+            missionNamespace getVariable ["Waldo_QA_ControlConsole", objNull],
+            missionNamespace getVariable ["Waldo_QA_CoreConsole", objNull]
+        ]
+    };
     private _aceAvailable = isClass (configFile >> "CfgPatches" >> "ace_interact_menu")
         && {!(isNil "ace_interact_menu_fnc_createAction")};
-    if (_aceAvailable) exitWith {
+    if (_aceAvailable && {!_forceVanilla}) exitWith {
         private _action = [
             _id,
             _title,
@@ -163,9 +169,10 @@ Waldo_QA_fnc_addAuditActionLocal = {
             [_statement, _arguments]
         ] call ace_interact_menu_fnc_createAction;
         [_target, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject;
+        diag_log format ["WMP QA CONTROL INSTALLED: id=%1 mode=ACE target=%2", _id, netId _target];
         true
     };
-    _target addAction [
+    private _actionId = _target addAction [
         _title,
         {
             params ["_target", "_actor", "_actionId", "_params"];
@@ -180,7 +187,8 @@ Waldo_QA_fnc_addAuditActionLocal = {
         "true",
         4
     ];
-    true
+    diag_log format ["WMP QA CONTROL INSTALLED: id=%1 mode=ADD_ACTION target=%2 action=%3", _id, netId _target, _actionId];
+    _actionId >= 0
 };
 
 // Central control console: navigation is local; state changes are sent to server authority.
@@ -191,13 +199,13 @@ if (!isNull _console) then {
         [_console, format ["Waldo_QA_GoTo_%1", _id], format ["GO TO: %1", _title], {
             params ["_target", "_actor", "_position"];
             _actor setPosATL (_position vectorAdd [0, -3, 0]);
-        }, _position] call Waldo_QA_fnc_addAuditActionLocal;
+        }, _position, true] call Waldo_QA_fnc_addAuditActionLocal;
     } forEach (missionNamespace getVariable ["Waldo_QA_FeatureStations", []]);
-    [_console, "Waldo_QA_ResetParty", "RESET PARTY TABLES", {[] remoteExecCall ["Waldo_QA_fnc_resetPartyTablesServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_ResetInteractions", "RESET ALL INTERACTIONS", {[] remoteExecCall ["Waldo_QA_fnc_resetInteractionsServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_RearmEOD", "REARM LIVE EOD CHARGE", {[] remoteExecCall ["Waldo_QA_fnc_rearmBombServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_ResetEconomy", "RESET ECONOMY FIXTURES + RESOURCES", {[] remoteExecCall ["Waldo_QA_fnc_resetEconomyFixturesServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_TriggerEMP", "TRIGGER EW EMP TEST", {[] remoteExecCall ["Waldo_QA_fnc_triggerEMPServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_ResetParty", "RESET PARTY TABLES", {[] remoteExecCall ["Waldo_QA_fnc_resetPartyTablesServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_ResetInteractions", "RESET ALL INTERACTIONS", {[] remoteExecCall ["Waldo_QA_fnc_resetInteractionsServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_RearmEOD", "REARM LIVE EOD CHARGE", {[] remoteExecCall ["Waldo_QA_fnc_rearmBombServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_ResetEconomy", "RESET ECONOMY FIXTURES + RESOURCES", {[] remoteExecCall ["Waldo_QA_fnc_resetEconomyFixturesServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_TriggerEMP", "TRIGGER EW EMP TEST", {[] remoteExecCall ["Waldo_QA_fnc_triggerEMPServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
 };
 
 private _coreConsole = missionNamespace getVariable ["Waldo_QA_CoreConsole", objNull];
@@ -252,10 +260,14 @@ if (!isNull _coreConsole) then {
     [_coreConsole, "Waldo_QA_UiNotice", "SHOW CUSTOM WMP UI NOTICE", {
         ["UI SYSTEM READY", "Safe-zone card, semantic symbol, replacement channel and measured text padding are active.", "SUCCESS", 12, "TOP", "QA_UI", "WMP FULL PACK AUDIT"] call Waldo_fnc_ShowUiNotification;
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_UiQueue", "SHOW UI FIFO / STACK TEST", {
-        ["FIRST MESSAGE", "This card must display before the second message in this channel.", "INFO", 5, "TOP_RIGHT", "QA_QUEUE", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
-        ["SECOND MESSAGE", "This card must wait, then replace the first after its five-second duration.", "WARNING", 5, "TOP_RIGHT", "QA_QUEUE", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
-        ["PARALLEL STATUS", "A different channel should stack without covering the queue card.", "SUCCESS", 8, "TOP_RIGHT", "QA_STACK", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+    [_coreConsole, "Waldo_QA_UiQueue", "SHOW UI OVERFLOW / COALESCE TEST", {
+        ["TOP-RIGHT ONE", "Independent channel one.", "INFO", 8, "TOP_RIGHT", "QA_STACK_1", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["TOP-RIGHT TWO", "Independent channel two.", "SUCCESS", 8, "TOP_RIGHT", "QA_STACK_2", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["TOP-RIGHT THREE", "Independent channel three.", "WARNING", 8, "TOP_RIGHT", "QA_STACK_3", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["OVERFLOW REGION", "This fourth channel should use the next configured screen region.", "INFO", 8, "TOP_RIGHT", "QA_STACK_4", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        for "_index" from 1 to 25 do {
+            ["SPAM COALESCING", format ["Pending update %1 of 25. Only the newest pending update should survive.", _index], "INFO", 4, "TOP_RIGHT", "QA_SPAM", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        };
     }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_UiPlacement", "MOVE QA UI CHANNEL BOTTOM LEFT", {
         ["QA_UI", "BOTTOM_LEFT", false, false] call Waldo_fnc_SetUiPanelPlacement;

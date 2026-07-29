@@ -119,7 +119,9 @@ FIXTURES = [
     fixture("qa_resupply_hub", "B_supplyCrate_F", 250, 47),
     fixture("qa_recovery_workshop", "Land_RepairDepot_01_green_F", 225, 14),
     fixture("qa_recovery_vehicle", "B_MRAP_01_F", 217, 7, direction=90),
-    fixture("qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", 239, 7, direction=270),
+    # The V-44 has a broad physics envelope. Keep it clear of the workshop,
+    # damaged vehicle, station sign and adjacent feature stations at activation.
+    fixture("qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", 225, -28),
     fixture("qa_loadout_arsenal", "B_supplyCrate_F", 275, 7),
 ]
 

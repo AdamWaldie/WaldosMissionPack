@@ -46,10 +46,11 @@ private _treatment = "qa_sign_treatment_feedback" call _get;
     [_actor] remoteExecCall ["Waldo_QA_fnc_injurePatientServer", 2];
 }] call _add;
 
-private _hazard = "qa_hazard_emitter" call _get;
+private _hazard = "qa_sign_hazards" call _get;
 [_hazard, "Waldo_QA_EnterHazard", "ENTER EXPOSURE LANE", {
     params ["_target", "_actor"];
-    _actor setPosATL ((getPosATL _target) vectorAdd [0, -2, 0]);
+    private _emitter = missionNamespace getVariable ["qa_hazard_emitter", objNull];
+    if (!isNull _emitter) then {_actor setPosATL ((getPosATL _emitter) vectorAdd [0, -2, 0])};
 }] call _add;
 [_hazard, "Waldo_QA_HazardProtect", "EQUIP QA PROTECTIVE HELMET", {
     player addHeadgear "H_HelmetB";
@@ -66,21 +67,24 @@ private _hazard = "qa_hazard_emitter" call _get;
     ["HAZARD QA", "Local QA exposure was cleared.", "SUCCESS", "HAZARD_QA"] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 
-private _tree = "qa_tree" call _get;
+private _tree = "qa_sign_tree_felling" call _get;
 [_tree, "Waldo_QA_ResetTree", "RESET QA TREE", {
     [] remoteExecCall ["Waldo_QA_fnc_resetTreeServer", 2];
 }] call _add;
 
-private _dismount = "qa_dismount_vehicle" call _get;
+private _dismount = "qa_sign_emergency_dismount" call _get;
 [_dismount, "Waldo_QA_EnterDismount", "BOARD DISMOUNT TEST VEHICLE", {
     params ["_target", "_actor"];
-    _actor moveInDriver _target;
+    private _vehicle = missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull];
+    if (!isNull _vehicle) then {_actor moveInDriver _vehicle};
 }] call _add;
 [_dismount, "Waldo_QA_OverturnDismount", "OVERTURN VEHICLE", {
-    [] remoteExecCall ["Waldo_QA_fnc_overturnDismountServer", 2];
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_overturnDismountServer", 2];
 }] call _add;
 [_dismount, "Waldo_QA_ResetDismount", "RESET VEHICLE UPRIGHT", {
-    [] remoteExecCall ["Waldo_QA_fnc_resetDismountServer", 2];
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_resetDismountServer", 2];
 }] call _add;
 
 private _access = "qa_sign_accessibility" call _get;
@@ -156,7 +160,7 @@ private _ai = "qa_sign_ai_rebalance" call _get;
     [_actor] remoteExecCall ["Waldo_QA_fnc_reportAIProfileServer", 2];
 }] call _add;
 
-private _resupply = "qa_resupply_hub" call _get;
+private _resupply = "qa_sign_field_resupply" call _get;
 [_resupply, "Waldo_QA_AssignResupply", "ASSIGN ME 2 FIELD CRATES", {
     params ["_target", "_actor"];
     [_actor] remoteExecCall ["Waldo_QA_fnc_assignResupplyCarrierServer", 2];
@@ -185,11 +189,15 @@ private _aa = "qa_sign_dynamic_aa" call _get;
 
 private _gunship = "qa_sign_gunship" call _get;
 [_gunship, "Waldo_QA_CreateGunship", "SPAWN QA GUNSHIP", {
-    [] remoteExecCall ["Waldo_QA_fnc_createGunshipServer", 2];
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_createGunshipServer", 2];
 }] call _add;
 [_gunship, "Waldo_QA_AssignGunship", "ASSIGN QA GUNSHIP TO ME", {
     params ["_target", "_actor"];
     [_actor] remoteExecCall ["Waldo_QA_fnc_assignGunshipServer", 2];
+}] call _add;
+[_gunship, "Waldo_QA_RefreshGunship", "REFRESH MY GUNSHIP CONTROLS", {
+    [] call Waldo_fnc_GunshipSetupLocal;
 }] call _add;
 [_gunship, "Waldo_QA_ServiceGunship", "SEND QA GUNSHIP TO SERVICE", {
     ["QA_GUNSHIP", "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2];
@@ -198,7 +206,7 @@ private _gunship = "qa_sign_gunship" call _get;
     [] remoteExecCall ["Waldo_QA_fnc_destroyGunshipServer", 2];
 }] call _add;
 
-private _workshop = "qa_recovery_workshop" call _get;
+private _workshop = "qa_sign_vehicle_recovery" call _get;
 [_workshop, "Waldo_QA_ResetRecovery", "RESET RECOVERY LANE", {
     [] remoteExecCall ["Waldo_QA_fnc_resetRecoveryServer", 2];
 }] call _add;

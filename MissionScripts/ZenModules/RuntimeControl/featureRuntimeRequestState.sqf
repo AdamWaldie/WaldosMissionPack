@@ -89,7 +89,7 @@ private _names = [
         "Waldo_Rally_Cooldown", "Waldo_Rally_EnemyExclusionRadius",
         "Waldo_Rally_MinimumGroupMembers", "Waldo_Rally_PlacementDistance",
         "Waldo_Rally_MaximumSlope", "Waldo_Rally_AllowRegroup",
-        "Waldo_Recovery_ScanInterval"
+        "Waldo_Recovery_ScanInterval", "Waldo_Recovery_NotificationRadius", "Waldo_Recovery_CreateWorkshopMarkers"
 ];
 private _snapshot = [];
 {
