@@ -29,6 +29,8 @@
  *                  "lockTimeout" Number - abandoned lock timeout in seconds (default 600)
  *                  "directAceAction" Bool - attach directly beneath ACE Main Actions instead of
  *                                             the Field Equipment category (default false)
+ *                  "installAction" Bool - install the framework action; false stores the
+ *                                           procedure for a feature-owned action (default true)
  *
  * Return Value:
  * Nothing
@@ -62,6 +64,7 @@ private _actorCondition = ["actorCondition", {true}] call _opt;
 private _distance = ["distance", 4] call _opt;
 private _presentation = ["presentation", []] call _opt;
 private _directAceAction = ["directAceAction", false] call _opt;
+private _installAction = ["installAction", true] call _opt;
 
 // Hold the challenge definition + authoritative callbacks on the object (local to each
 // machine, including the server that will run the callbacks).
@@ -94,7 +97,7 @@ _object setVariable ["Waldo_MG_Int_ACEAvailable", _aceAvailable];
 
 // Reconcile title/layout changes instead of leaving stale or empty category nodes after a
 // runtime reconfiguration. Only this feature's recorded action paths are removed.
-private _layoutSignature = [_challengeId, _title, _directAceAction];
+private _layoutSignature = [_challengeId, _title, _directAceAction, _installAction];
 private _oldLayoutSignature = _object getVariable ["Waldo_MG_Int_LocalLayoutSignature", []];
 if !(_oldLayoutSignature isEqualTo _layoutSignature) then {
     if (_aceAvailable && {!(isNil "ace_interact_menu_fnc_removeActionFromObject")}) then {
@@ -118,7 +121,7 @@ if !(_oldLayoutSignature isEqualTo _layoutSignature) then {
 };
 _object setVariable ["Waldo_MG_Int_LocalLayoutSignature", _layoutSignature];
 
-if (_aceAvailable && {!(_object getVariable ["Waldo_MG_Int_ACEActionInstalled", false])}) then {
+if (_installAction && {_aceAvailable} && {!(_object getVariable ["Waldo_MG_Int_ACEActionInstalled", false])}) then {
     if (!_directAceAction && {!(_object getVariable ["Waldo_MG_Int_ACECategoryInstalled", false])}) then {
         private _category = [
             "Waldo_MG_FieldEquipment",
@@ -167,7 +170,7 @@ if (_aceAvailable && {!(_object getVariable ["Waldo_MG_Int_ACEActionInstalled", 
 // Field equipment remains visible through the vanilla action menu even when
 // ACE is loaded. This is an intentional discoverability surface; both routes
 // enter the same server acquisition handshake and cannot bypass authority.
-if !(_object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false]) then {
+if (_installAction && {!(_object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false])}) then {
     private _id = _object addAction [
         _title,
         { (_this select 0) call Waldo_fnc_MiniGameInteractionActivate; },
@@ -183,8 +186,8 @@ if !(_object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false]) then {
     _object setVariable ["Waldo_MG_Int_VanillaActionInstalled", _id >= 0];
 };
 
-_object setVariable ["Waldo_MG_Int_InteractionMode", if (_aceAvailable) then {"ACE+VANILLA"} else {"VANILLA"}];
+_object setVariable ["Waldo_MG_Int_InteractionMode", if (!_installAction) then {"FEATURE_ACTION"} else {if (_aceAvailable) then {"ACE+VANILLA"} else {"VANILLA"}}];
 
 private _conditionReady = _object call _condition;
 private _actorReady = [_object, player] call _actorCondition;
-diag_log format ["[WMP INTERACTION] local action setup object=%1 challenge=%2 title=%3 direct=%4 ACE=%5 path=%6 vanilla=%7 active=%8 state=%9 range=%10 featureReady=%11 actorReady=%12 clientOwner=%13 objectLocal=%14 objectOwner=%15", netId _object, _challengeId, _title, _directAceAction, _object getVariable ["Waldo_MG_Int_ACEActionInstalled", false], _object getVariable ["Waldo_MG_Int_ACEActionPath", []], _object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false], _object getVariable ["Waldo_MG_Int_Active", true], _object getVariable ["Waldo_MG_InteractionState", "IDLE"], _distance, _conditionReady, _actorReady, clientOwner, local _object, owner _object];
+diag_log format ["[WMP INTERACTION] local setup object=%1 challenge=%2 title=%3 installAction=%4 direct=%5 ACE=%6 path=%7 vanilla=%8 active=%9 state=%10 range=%11 featureReady=%12 actorReady=%13 clientOwner=%14 objectLocal=%15 objectOwner=%16", netId _object, _challengeId, _title, _installAction, _directAceAction, _object getVariable ["Waldo_MG_Int_ACEActionInstalled", false], _object getVariable ["Waldo_MG_Int_ACEActionPath", []], _object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false], _object getVariable ["Waldo_MG_Int_Active", true], _object getVariable ["Waldo_MG_InteractionState", "IDLE"], _distance, _conditionReady, _actorReady, clientOwner, local _object, owner _object];

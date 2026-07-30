@@ -25,9 +25,17 @@ if !(hasInterface) exitWith {false};
 if (isNull _object || {_object getVariable ["Waldo_TacticalDisplay_LocalAction", -1] >= 0}) exitWith {false};
 private _action = _object addAction [
     "Access Tactical Display",
-    {params ["_target"]; [_target] call Waldo_fnc_TacticalDisplayOpenLocal},
+    {
+        params ["_target"];
+        if (_target getVariable ["Waldo_TacticalDisplay_InteractionEnabled", false]
+            && {!(_target getVariable ["Waldo_TacticalDisplay_Unlocked", false])}) then {
+            _target call Waldo_fnc_MiniGameInteractionActivate;
+        } else {
+            [_target] call Waldo_fnc_TacticalDisplayOpenLocal;
+        };
+    },
     [], 1.5, true, true, "",
-    "_target getVariable ['Waldo_TacticalDisplay_Registered', false] && {_target getVariable ['Waldo_TacticalDisplay_Unlocked', true]} && {_this distance _target <= (missionNamespace getVariable ['Waldo_TacticalDisplay_AccessDistance', 4])} && {[player, 'VIEW', _target] checkVisibility [eyePos player, aimPos _target] > 0.2}",
+    "_target getVariable ['Waldo_TacticalDisplay_Registered', false] && {_this distance _target <= (missionNamespace getVariable ['Waldo_TacticalDisplay_AccessDistance', 4])} && {[player, 'VIEW', _target] checkVisibility [eyePos player, aimPos _target] > 0.2}",
     5
 ];
 _object setVariable ["Waldo_TacticalDisplay_LocalAction", _action];

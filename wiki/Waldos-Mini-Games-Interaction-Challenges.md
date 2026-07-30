@@ -48,11 +48,13 @@ The helper supplies a suitable action, equipment identity, icon, and balanced co
 allows another attempt by default; success consumes the interaction. ACE is used when available;
 the vanilla action fallback reads exactly the same state. It broadcasts:
 
-Feature integrations can set `directAceAction` to place a feature-named action directly under ACE
-Main Actions. This is used when the procedure is an implementation detail of one operation:
-operators see **Disable Jammer**, **Disable AA System**, **Access Tactical Display**, or **Package
-Vehicle for Recovery**, and selecting it starts the configured challenge. The generic **Field
-Equipment** category remains the default for standalone equipment procedures.
+Feature integrations set `installAction` to `false` so the framework stores only the procedure,
+authority conditions, and callbacks. The feature keeps its original action and visibility rules;
+its optional procedure flag changes only what happens after that action is selected. With the flag
+off, the original operation runs immediately. With it on, **Disable Jammer**, **Disable AA System**,
+**Access Tactical Display**, or **Package for Recovery** launches the configured challenge and the
+original operation runs only after success. The generic **Field Equipment** category remains the
+default for standalone equipment procedures.
 
 | Variable | Meaning |
 |---|---|

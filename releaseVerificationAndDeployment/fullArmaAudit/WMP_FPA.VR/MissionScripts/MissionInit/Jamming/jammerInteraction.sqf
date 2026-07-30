@@ -1,10 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Installs the field interactions for a registered radio jammer. Operator toggling and hostile
- * field disablement are deliberately separate: when a disable challenge is enabled, the direct
- * toggle is suppressed so it cannot bypass the procedure. The challenge uses the shared field-
- * equipment interaction framework, whose result is resolved on the server; ACE and vanilla
- * presentation remain local and repeat-safe for JIP clients.
+ * field disablement are deliberately separate. The feature-owned Disable Jammer action is always
+ * retained; the optional procedure flag only changes that action from immediate disablement to
+ * launching the shared challenge. The result is resolved on the server and the action remains
+ * local and repeat-safe for JIP clients.
  *
  * Arguments:
  * 0: jammer emitter <OBJECT>
@@ -60,7 +60,7 @@ if (_challengeEnabled && {!isNil "Waldo_fnc_MiniGameInteractionSetup"}) then {
         _challengeId,
         createHashMapFromArray [
             ["actionTitle", "Disable Jammer"],
-            ["directAceAction", true],
+            ["installAction", false],
             ["difficulty", _difficulty],
             ["retryOnFailure", true],
             ["repeatable", false],
@@ -99,9 +99,9 @@ if !(isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) exitWith {};
 if (_object getVariable ["Waldo_Jamming_AceAdded", false]) exitWith {};
 _object setVariable ["Waldo_Jamming_AceAdded", true];
 
-// A direct toggle is an operator convenience. It is intentionally unavailable when the hostile
-// disable challenge is active, otherwise the challenge could be bypassed with a single click.
-if (_allowPlayerToggle && {!_challengeEnabled}) then {
+// The operator toggle remains a separately configured convenience; the disable action below is
+// the single feature surface whose execution can be gated by the optional procedure.
+if (_allowPlayerToggle) then {
     private _toggle = [
         "Waldo_Jammer_Toggle",
         "Toggle Radio Jammer",
@@ -118,25 +118,29 @@ if (_allowPlayerToggle && {!_challengeEnabled}) then {
     [_object, 0, ["ACE_MainActions"], _toggle] call ace_interact_menu_fnc_addActionToObject;
 };
 
-// Compatibility path for missions that do not opt into the shared interaction challenge.
-if (!_challengeEnabled) then {
-    private _disable = [
-        "Waldo_Jammer_Disable",
-        "Disable Radio Jammer",
-        "\a3\ui_f\data\igui\cfg\simpletasks\types\danger_ca.paa",
-        {
-            params ["_target", "_player"];
+private _disable = [
+    "Waldo_Jammer_Disable",
+    "Disable Jammer",
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\danger_ca.paa",
+    {
+        params ["_target", "_player"];
+        if (_target getVariable ["Waldo_Jamming_DisableChallenge", false]) then {
+            _target call Waldo_fnc_MiniGameInteractionActivate;
+        } else {
             [_target, _player, "DESTROY"] remoteExecCall ["Waldo_fnc_JammerDisableServer", 2];
-        },
-        {
-            params ["_target", "_player"];
-            if !(_target getVariable ["Waldo_Jamming_DisableEngineerOnly", true]) exitWith {
-                (_target getVariable ["Waldo_Jamming_Id", -1]) >= 0
-            };
-            private _isEngineer = true;
-            if !(isNil "ace_common_fnc_isEngineer") then {_isEngineer = [_player] call ace_common_fnc_isEngineer;};
-            _isEngineer && {(_target getVariable ["Waldo_Jamming_Id", -1]) >= 0}
-        }
-    ] call ace_interact_menu_fnc_createAction;
-    [_object, 0, ["ACE_MainActions"], _disable] call ace_interact_menu_fnc_addActionToObject;
-};
+        };
+    },
+    {
+        params ["_target", "_player"];
+        if !(_target getVariable ["Waldo_Jamming_DisableEngineerOnly", true]) exitWith {
+            (_target getVariable ["Waldo_Jamming_Id", -1]) >= 0
+            && {!(_target getVariable ["Waldo_Jamming_FieldDisabled", false])}
+        };
+        private _isEngineer = true;
+        if !(isNil "ace_common_fnc_isEngineer") then {_isEngineer = [_player] call ace_common_fnc_isEngineer;};
+        _isEngineer
+        && {(_target getVariable ["Waldo_Jamming_Id", -1]) >= 0}
+        && {!(_target getVariable ["Waldo_Jamming_FieldDisabled", false])}
+    }
+] call ace_interact_menu_fnc_createAction;
+[_object, 0, ["ACE_MainActions"], _disable] call ace_interact_menu_fnc_addActionToObject;

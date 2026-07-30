@@ -1,9 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Registers a vehicle for server-authoritative recovery and optionally replaces the immediate
- * package action with a shared preparation procedure. Configuration and interaction settings are
- * broadcast before object-keyed JIP setup, so current and joining clients receive a consistent
- * action while the server retains the completion callback.
+ * Registers a vehicle for server-authoritative recovery and optionally hooks a shared preparation
+ * procedure into the existing package action. Configuration and interaction settings are broadcast
+ * before object-keyed JIP setup, so current and joining clients receive a consistent action while
+ * the server retains the completion callback.
  *
  * Arguments:
  * 0: vehicle <OBJECT>

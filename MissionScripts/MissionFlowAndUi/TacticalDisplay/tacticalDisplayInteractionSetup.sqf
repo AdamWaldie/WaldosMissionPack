@@ -27,7 +27,7 @@ _settings params ["_challengeId", "_difficulty"];
     _challengeId,
     createHashMapFromArray [
         ["actionTitle", "Access Tactical Display"],
-        ["directAceAction", true],
+        ["installAction", false],
         ["difficulty", _difficulty],
         ["retryOnFailure", true],
         ["repeatable", false],

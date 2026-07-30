@@ -27,7 +27,7 @@ _settings params ["_challengeId", "_difficulty"];
     _challengeId,
     createHashMapFromArray [
         ["actionTitle", "Package Vehicle for Recovery"],
-        ["directAceAction", true],
+        ["installAction", false],
         ["difficulty", _difficulty],
         ["retryOnFailure", true],
         ["repeatable", false],
