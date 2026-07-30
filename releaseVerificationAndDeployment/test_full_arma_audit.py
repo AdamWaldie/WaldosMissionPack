@@ -824,6 +824,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_MG_InteractionState', disable)
         self.assertIn('Waldo_MG_InteractionResult', disable)
         self.assertIn('Waldo_MG_Int_ActorCondition', generic)
+        self.assertNotIn('ace_common_fnc_canInteractWith', generic)
+        self.assertIn('_distance\n    ] call ace_interact_menu_fnc_createAction', generic)
         self.assertIn('Waldo_MG_Int_ActorCondition', acquire)
         for label in ("Require Field Disable Procedure", "Disable Procedure", "Procedure Difficulty"):
             self.assertIn(label, zen)

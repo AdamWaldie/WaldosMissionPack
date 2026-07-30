@@ -145,14 +145,17 @@ if (_aceAvailable && {!(_object getVariable ["Waldo_MG_Int_ACEActionInstalled", 
             params ["_target", "_actor"];
             if (isNull _actor || {!alive _actor} || {(lifeState _actor) == "INCAPACITATED"}) exitWith {false};
             if ((_actor distance _target) > (_target getVariable ["Waldo_MG_Int_Distance", 4])) exitWith {false};
-            if (!(isNil "ace_common_fnc_canInteractWith") && {!([_actor, _target, []] call ace_common_fnc_canInteractWith)}) exitWith {false};
             if !(_target getVariable ["Waldo_MG_Int_Active", true]) exitWith { false };
             if ((_target getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING") exitWith { false };
             private _c = _target getVariable ["Waldo_MG_Int_Condition", {true}];
             if !(_target call _c) exitWith {false};
             private _actorCondition = _target getVariable ["Waldo_MG_Int_ActorCondition", {true}];
             [_target, _actor] call _actorCondition
-        }
+        },
+        {},
+        [],
+        {[0, 0, 0]},
+        _distance
     ] call ace_interact_menu_fnc_createAction;
     private _parentPath = if (_directAceAction) then {["ACE_MainActions"]} else {["ACE_MainActions", "Waldo_MG_FieldEquipment"]};
     private _actionPath = [_object, 0, _parentPath, _action] call ace_interact_menu_fnc_addActionToObject;
@@ -182,4 +185,6 @@ if !(_object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false]) then {
 
 _object setVariable ["Waldo_MG_Int_InteractionMode", if (_aceAvailable) then {"ACE+VANILLA"} else {"VANILLA"}];
 
-diag_log format ["[WMP INTERACTION] local action setup object=%1 challenge=%2 ACE=%3 vanilla=%4 clientOwner=%5 objectLocal=%6 objectOwner=%7", netId _object, _challengeId, _object getVariable ["Waldo_MG_Int_ACEActionInstalled", false], _object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false], clientOwner, local _object, owner _object];
+private _conditionReady = _object call _condition;
+private _actorReady = [_object, player] call _actorCondition;
+diag_log format ["[WMP INTERACTION] local action setup object=%1 challenge=%2 title=%3 direct=%4 ACE=%5 path=%6 vanilla=%7 active=%8 state=%9 range=%10 featureReady=%11 actorReady=%12 clientOwner=%13 objectLocal=%14 objectOwner=%15", netId _object, _challengeId, _title, _directAceAction, _object getVariable ["Waldo_MG_Int_ACEActionInstalled", false], _object getVariable ["Waldo_MG_Int_ACEActionPath", []], _object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false], _object getVariable ["Waldo_MG_Int_Active", true], _object getVariable ["Waldo_MG_InteractionState", "IDLE"], _distance, _conditionReady, _actorReady, clientOwner, local _object, owner _object];
