@@ -26,7 +26,8 @@ _settings params ["_challengeId", "_difficulty"];
     _object,
     _challengeId,
     createHashMapFromArray [
-        ["actionTitle", "Authenticate Tactical Display"],
+        ["actionTitle", "Access Tactical Display"],
+        ["directAceAction", true],
         ["difficulty", _difficulty],
         ["retryOnFailure", true],
         ["repeatable", false],

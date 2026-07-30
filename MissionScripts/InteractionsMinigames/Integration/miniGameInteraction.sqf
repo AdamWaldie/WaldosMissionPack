@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
  * Generic hook that gates an interaction on an object behind a mini game challenge. Adds an
- * nested ACE interaction and a linked vanilla addAction that, when used,
+ * ACE interaction and a linked vanilla addAction that, when used,
  * requests an exclusive server-owned attempt. Passing it fires _onSuccess and failing it fires
  * _onFailure. The callbacks run on the SERVER after broadcast lifecycle state is updated
  * (detonate, unlock a door, complete a task, spawn something, etc.), each receiving
@@ -27,6 +27,8 @@
  *                  "oneShot"   Bool   - consume the action after one attempt (default true)
  *                  "distance"  Number - addAction fallback radius in metres (default 4)
  *                  "lockTimeout" Number - abandoned lock timeout in seconds (default 600)
+ *                  "directAceAction" Bool - attach directly beneath ACE Main Actions instead of
+ *                                             the Field Equipment category (default false)
  *
  * Return Value:
  * Nothing
@@ -59,6 +61,7 @@ private _condition = ["condition", {true}] call _opt;
 private _actorCondition = ["actorCondition", {true}] call _opt;
 private _distance = ["distance", 4] call _opt;
 private _presentation = ["presentation", []] call _opt;
+private _directAceAction = ["directAceAction", false] call _opt;
 
 // Hold the challenge definition + authoritative callbacks on the object (local to each
 // machine, including the server that will run the callbacks).
@@ -88,8 +91,35 @@ if (!hasInterface) exitWith {};
 
 private _aceAvailable = isClass (configFile >> "CfgPatches" >> "ace_interact_menu") && {!(isNil "ace_interact_menu_fnc_createAction")} && {!(isNil "ace_interact_menu_fnc_addActionToObject")};
 _object setVariable ["Waldo_MG_Int_ACEAvailable", _aceAvailable];
+
+// Reconcile title/layout changes instead of leaving stale or empty category nodes after a
+// runtime reconfiguration. Only this feature's recorded action paths are removed.
+private _layoutSignature = [_challengeId, _title, _directAceAction];
+private _oldLayoutSignature = _object getVariable ["Waldo_MG_Int_LocalLayoutSignature", []];
+if !(_oldLayoutSignature isEqualTo _layoutSignature) then {
+    if (_aceAvailable && {!(isNil "ace_interact_menu_fnc_removeActionFromObject")}) then {
+        private _oldActionPath = _object getVariable ["Waldo_MG_Int_ACEActionPath", []];
+        if (count _oldActionPath > 0) then {
+            [_object, 0, _oldActionPath] call ace_interact_menu_fnc_removeActionFromObject;
+        };
+        private _oldCategoryPath = _object getVariable ["Waldo_MG_Int_ACECategoryPath", []];
+        if (count _oldCategoryPath > 0) then {
+            [_object, 0, _oldCategoryPath] call ace_interact_menu_fnc_removeActionFromObject;
+        };
+    };
+    private _oldVanillaId = _object getVariable ["Waldo_MG_Int_ActionId", -1];
+    if (_oldVanillaId >= 0) then {_object removeAction _oldVanillaId;};
+    _object setVariable ["Waldo_MG_Int_ACEActionInstalled", false];
+    _object setVariable ["Waldo_MG_Int_ACECategoryInstalled", false];
+    _object setVariable ["Waldo_MG_Int_ACEActionPath", []];
+    _object setVariable ["Waldo_MG_Int_ACECategoryPath", []];
+    _object setVariable ["Waldo_MG_Int_VanillaActionInstalled", false];
+    _object setVariable ["Waldo_MG_Int_ActionId", -1];
+};
+_object setVariable ["Waldo_MG_Int_LocalLayoutSignature", _layoutSignature];
+
 if (_aceAvailable && {!(_object getVariable ["Waldo_MG_Int_ACEActionInstalled", false])}) then {
-    if !(_object getVariable ["Waldo_MG_Int_ACECategoryInstalled", false]) then {
+    if (!_directAceAction && {!(_object getVariable ["Waldo_MG_Int_ACECategoryInstalled", false])}) then {
         private _category = [
             "Waldo_MG_FieldEquipment",
             "Field Equipment",
@@ -124,7 +154,8 @@ if (_aceAvailable && {!(_object getVariable ["Waldo_MG_Int_ACEActionInstalled", 
             [_target, _actor] call _actorCondition
         }
     ] call ace_interact_menu_fnc_createAction;
-    private _actionPath = [_object, 0, ["ACE_MainActions", "Waldo_MG_FieldEquipment"], _action] call ace_interact_menu_fnc_addActionToObject;
+    private _parentPath = if (_directAceAction) then {["ACE_MainActions"]} else {["ACE_MainActions", "Waldo_MG_FieldEquipment"]};
+    private _actionPath = [_object, 0, _parentPath, _action] call ace_interact_menu_fnc_addActionToObject;
     _object setVariable ["Waldo_MG_Int_ACEActionInstalled", true];
     _object setVariable ["Waldo_MG_Int_ACEActionPath", _actionPath];
     _object setVariable ["Waldo_MG_Int_ACEAction", _action];

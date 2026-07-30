@@ -26,7 +26,8 @@ _settings params ["_challengeId", "_difficulty"];
     _vehicle,
     _challengeId,
     createHashMapFromArray [
-        ["actionTitle", "Prepare Vehicle for Recovery"],
+        ["actionTitle", "Package Vehicle for Recovery"],
+        ["directAceAction", true],
         ["difficulty", _difficulty],
         ["retryOnFailure", true],
         ["repeatable", false],

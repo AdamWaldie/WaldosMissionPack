@@ -28,7 +28,8 @@ _radar setVariable ["Waldo_DynamicAA_SystemId", _systemId];
     _radar,
     _challengeId,
     createHashMapFromArray [
-        ["actionTitle", "Bypass and Disable AA Radar"],
+        ["actionTitle", "Disable AA System"],
+        ["directAceAction", true],
         ["difficulty", _difficulty],
         ["retryOnFailure", true],
         ["repeatable", false],

@@ -48,6 +48,12 @@ The helper supplies a suitable action, equipment identity, icon, and balanced co
 allows another attempt by default; success consumes the interaction. ACE is used when available;
 the vanilla action fallback reads exactly the same state. It broadcasts:
 
+Feature integrations can set `directAceAction` to place a feature-named action directly under ACE
+Main Actions. This is used when the procedure is an implementation detail of one operation:
+operators see **Disable Jammer**, **Disable AA System**, **Access Tactical Display**, or **Package
+Vehicle for Recovery**, and selecting it starts the configured challenge. The generic **Field
+Equipment** category remains the default for standalone equipment procedures.
+
 | Variable | Meaning |
 |---|---|
 | `Waldo_MG_InteractionState` | `IDLE`, `RUNNING`, `SUCCESS`, or `FAILURE`. |

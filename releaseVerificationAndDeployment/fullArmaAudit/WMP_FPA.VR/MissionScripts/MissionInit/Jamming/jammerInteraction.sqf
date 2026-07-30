@@ -59,7 +59,8 @@ if (_challengeEnabled && {!isNil "Waldo_fnc_MiniGameInteractionSetup"}) then {
         _object,
         _challengeId,
         createHashMapFromArray [
-            ["actionTitle", "Bypass and Disable Radio Jammer"],
+            ["actionTitle", "Disable Jammer"],
+            ["directAceAction", true],
             ["difficulty", _difficulty],
             ["retryOnFailure", true],
             ["repeatable", false],
