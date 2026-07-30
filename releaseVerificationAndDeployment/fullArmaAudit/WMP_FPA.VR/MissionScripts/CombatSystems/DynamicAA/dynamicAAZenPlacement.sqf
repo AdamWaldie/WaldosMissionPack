@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Collects radar and response positions on the map, then submits one Dynamic AA configuration.
  *
  * Arguments:
@@ -20,12 +20,15 @@
  * 14: createMarkers <BOOLEAN>
  * 15: cleanupOnRadarLoss <BOOLEAN>
  * 16: announce <BOOLEAN>
+ * 17: shutdownInteraction <BOOLEAN> - attach an optional radar shutdown procedure
+ * 18: shutdownChallenge <STRING> - semantic procedure id
+ * 19: shutdownDifficulty <STRING> - shared difficulty profile
  *
  * Return Value:
  * Nothing
  */
 
-params ["_centre", "_id", "_radius", "_altitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_side", "_faction", "_altitudeMode", "_staticCount", "_mobileCount", "_fighterCount", "_markers", "_cleanup", "_announce"];
+params ["_centre", "_id", "_radius", "_altitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_side", "_faction", "_altitudeMode", "_staticCount", "_mobileCount", "_fighterCount", "_markers", "_cleanup", "_announce", ["_shutdownInteraction", false], ["_shutdownChallenge", "circuit"], ["_shutdownDifficulty", "standard"]];
 if !(hasInterface) exitWith {};
 
 private _selectPosition = {
@@ -69,6 +72,7 @@ private _config = createHashMapFromArray [
     ["engagementRadius", _engagementRadius], ["detectionDwell", _dwell], ["clearDelay", _clearDelay], ["altitudeMode", _altitudeMode],
     ["staticPositions", _staticPositions], ["mobilePositions", _mobilePositions],
     ["fighterCount", _fighterCount], ["createMarkers", _markers],
-    ["cleanupOnRadarLoss", _cleanup], ["announce", _announce]
+    ["cleanupOnRadarLoss", _cleanup], ["announce", _announce],
+    ["shutdownInteraction", _shutdownInteraction], ["shutdownChallenge", _shutdownChallenge], ["shutdownDifficulty", _shutdownDifficulty]
 ];
 [_config] remoteExecCall ["Waldo_fnc_DynamicAACreate", 2];

@@ -129,6 +129,42 @@ This is added automatically alongside jump actions. No setup required.
 
 ---
 
+## Dynamic Drop-Zone Operations
+
+ZEN provides **Paradrop - Create Drop Zone** and **Paradrop - Remove Operation** modules. The create
+dialog deliberately separates operational side from physical airframe: side controls crew and
+generated jumpers, while the airframe may come from any faction.
+
+The aircraft flies a CARELESS/BLUE route at a forced terrain-relative height and capped speed. It
+crosses standby, green, red and departure gates in order. Defaults create up to 20 AI jumpers,
+limited by actual cargo capacity, at one jumper every two seconds. Players are only sequenced when
+the curator explicitly enables automatic player dropping.
+
+Optional global map symbology includes the overall rectangular drop zone, small standby/green/red
+line rectangles and a named point marker. Arma itself makes these global markers available to JIP
+clients. The removal module cleans the markers and can delete the operation aircraft.
+
+Mission makers can extend the friendly-name dropdowns before startup:
+
+```sqf
+Waldo_Paradrop_AircraftClasses pushBackUnique "My_Transport_Aircraft";
+Waldo_Paradrop_ChuteClasses pushBackUnique "My_Static_Line_Chute";
+```
+
+The equivalent server-side API is:
+
+```sqf
+private _drop = createHashMapFromArray [
+    ["id", "DZ_ALPHA"], ["name", "DZ ALPHA"], ["centre", getMarkerPos "dz_alpha"],
+    ["side", west], ["aircraftClass", "B_T_VTOL_01_infantry_F"],
+    ["direction", 90], ["altitude", 250], ["maximumSpeed", 220],
+    ["jumperCount", 20], ["jumpInterval", 2], ["createMarkers", true]
+];
+[_drop] call Waldo_fnc_ParadropCreateDropZone;
+```
+
+Use `Waldo_fnc_ParadropRemoveDropZone` with the stable operation ID for scripted cleanup.
+
 ## Configuring Jump Parameters
 
 Jump thresholds are set in `initServer.sqf` and apply to **all** aircraft — both auto-detected and manually set up:

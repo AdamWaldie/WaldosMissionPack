@@ -1,6 +1,10 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Calculates protection for one unit against a configurable hazard profile.
+ *
+ * Vehicle, interior and equipment protection are combined into one exposure multiplier. This is a
+ * pure locality-safe calculation currently called once per active zone by Waldo_fnc_HazardTick and
+ * available to custom profile callbacks or mission scripts.
  *
  * Arguments:
  * 0: unit <OBJECT>

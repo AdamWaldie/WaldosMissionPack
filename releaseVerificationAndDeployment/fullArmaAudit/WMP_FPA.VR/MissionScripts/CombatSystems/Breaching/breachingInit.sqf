@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Installs a repeat-safe ACE detonation bridge for configurable server-side breaching profiles.
  *
  * Arguments:

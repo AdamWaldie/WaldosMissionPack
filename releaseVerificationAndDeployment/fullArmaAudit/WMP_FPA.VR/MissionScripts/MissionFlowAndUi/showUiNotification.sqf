@@ -11,7 +11,7 @@
  * 1: Message <STRING or TEXT>
  * 2: State <STRING> INFO | SUCCESS | WARNING | ERROR (default INFO)
  * 3: Duration <NUMBER> seconds, 0 = persistent (default 8)
- * 4: Placement <STRING> TOP | TOP_RIGHT | CENTER | BOTTOM_LEFT | BOTTOM_RIGHT
+ * 4: Placement <STRING> TOP | TOP_RIGHT | CENTER | BOTTOM_LEFT | BOTTOM_CENTER | BOTTOM_RIGHT
  * 5: Channel <STRING> replacement/ownership key (default MISSION)
  * 6: Source label <STRING> (default WALDOS MISSION PACK)
  * 7: Policy <STRING> AUTO | FIFO | REPLACE (default AUTO)
@@ -88,15 +88,16 @@ _semantic params ["_colour", "_symbol"];
 
 private _registry = uiNamespace getVariable ["Waldo_UiPanelRegistry", []];
 private _existingIndex = _registry findIf {(_x param [0, ""]) isEqualTo _channel};
+private _uiSuppressed = uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false];
 private _maximumPerPlacement = ((missionNamespace getVariable ["Waldo_UiNotification_MaximumPerPlacement", 3]) max 1) min 6;
 private _placementCandidates = [_placement];
 if (missionNamespace getVariable ["Waldo_UiNotification_AllowPlacementOverflow", true]) then {
     {
         private _candidate = toUpper _x;
-        if (_candidate in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_RIGHT"]) then {
+        if (_candidate in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]) then {
             _placementCandidates pushBackUnique _candidate;
         };
-    } forEach (missionNamespace getVariable ["Waldo_UiNotification_OverflowPlacements", ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"]]);
+    } forEach (missionNamespace getVariable ["Waldo_UiNotification_OverflowPlacements", ["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"]]);
 };
 if (_existingIndex < 0) then {
     private _freePlacement = _placementCandidates findIf {
@@ -109,7 +110,13 @@ private _allPlacementsFull = _placementCandidates findIf {
     private _candidate = _x;
     ({(_x param [3, ""]) isEqualTo _candidate} count _registry) < _maximumPerPlacement
 } < 0;
-if (_policy isEqualTo "FIFO" && {!_fromQueue} && {_existingIndex >= 0 || {_allPlacementsFull}}) exitWith {
+if (
+    !_fromQueue
+    && {
+        _uiSuppressed
+        || {_policy isEqualTo "FIFO" && {_existingIndex >= 0 || {_allPlacementsFull}}}
+    }
+) exitWith {
     private _ttl = ((missionNamespace getVariable ["Waldo_UiNotification_QueueLifetime", 15]) max 2) min 120;
     private _queuePriority = _priority max (switch (_state) do {case "ERROR": {3}; case "WARNING": {2}; case "SUCCESS": {1}; default {0}});
     private _request = [_title, _message, _state, _duration, _placement, _channel, _source, _policy, _queuePriority, _allowLocalOverride, false, diag_tickTime, diag_tickTime + _ttl];
@@ -168,6 +175,7 @@ private _panelW = switch (_placement) do {
     case "BOTTOM_RIGHT": {_visibleW * 0.235};
     case "TOP_RIGHT": {_visibleW * 0.28};
     case "BOTTOM_LEFT": {_visibleW * 0.34};
+    case "BOTTOM_CENTER": {_visibleW * 0.30};
     case "CENTER": {_visibleW * 0.44};
     default {_visibleW * 0.48};
 };
@@ -179,7 +187,7 @@ _content ctrlCommit 0;
 private _contentH = (((ctrlTextHeight _content) + (_visibleH * 0.006)) max (_visibleH * 0.07)) min _maximumContentH;
 private _panelH = _contentH + (2 * _padY);
 private _accentH = (_visibleH * 0.004) max 0.002;
-{_x ctrlShow true;} forEach [_frame, _accent, _content];
+{_x ctrlShow !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);} forEach [_frame, _accent, _content];
 
 private _token = format ["%1_%2", diag_tickTime, random 1e9];
 private _controls = [_frame, _accent, _content];

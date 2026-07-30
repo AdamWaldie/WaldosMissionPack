@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies loiter routing where the aircraft and pilot group are local.
  * Arguments: aircraft, position, altitude, radius, direction, behaviour, combat mode
  * Return Value: Boolean

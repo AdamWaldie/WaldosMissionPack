@@ -12,28 +12,35 @@ The compatibility configuration in `init.sqf` keeps the historical behavior:
 
 ```sqf
 Waldo_AIRebalance_Enable = true;
-Waldo_AIRebalance_Profile = "LEGACY";
+Waldo_AIRebalance_Profile = "LINE";
 ["DAY", Waldo_AIRebalance_Profile] call Waldo_fnc_AITweak;
 ```
 
 ## Built-in profiles
 
-| Profile | Intended use |
-|---|---|
-| `LEGACY` | Existing mission compatibility; very capable and highly accurate |
-| `PUBLIC` | Lower lethality and slower target acquisition for open public sessions |
-| `STANDARD` | Balanced cooperative default for new missions |
-| `VETERAN` | Faster and more accurate opposition without maximum skills |
+| Internal key | ZEN name | Intended use |
+|---|---|---|
+| `LEGACY` | Existing Mission Balance | Compatibility with the established pre-profile behaviour |
+| `MILITIA` | WMP Militia | Irregular opposition with slow acquisition and forgiving lethality |
+| `LINE` | WMP Line | Trained regular opposition with restrained shooting precision |
+| `VETERAN` | WMP Veteran | Fast, capable opposition without maximum or superhuman precision inputs |
+| `ELITE` | WMP Elite | Highly capable opposition with strong sensing, decisions and weapon handling |
 
 Change only the profile name to select a baseline. The wrapper `Waldo_fnc_AITweak` remains supported, while new code can call `Waldo_fnc_AIRebalanceInit` directly.
 
-Zeus can use **AI Rebalance - Control** to switch the mode or built-in profile and immediately reapply it across server, clients and headless clients. Custom scripted profiles remain available through the API.
+Zeus can use **AI Rebalance - Control** to switch the mode or built-in profile and immediately reapply it across server, clients and headless clients. Custom scripted profiles remain available through the API. Every tuned tier is prefixed with `WMP` in ZEN so it is not mistaken for the server's Arma difficulty preset. The older `PUBLIC` and `STANDARD` script keys remain supported aliases for `MILITIA` and `LINE` values.
 
-## Day and night modes
+## What the values control
 
-`DAY` uses the selected base profile. `NIGHT` also responds to current illumination: AI with night vision retain useful spotting, while AI without it receive a stronger spotting reduction. Thresholds remain mission-configurable through `Waldo_AI_DarknessThreshold`, `Waldo_AI_NightSpotWithNVG` and `Waldo_AI_NightSpotWithoutNVG`.
+WMP sets the nine supported Arma 3 sub-skills. `aimingAccuracy` controls leading, range/drop estimation, dispersion and recoil compensation; `aimingShake` controls steadiness; `aimingSpeed` controls rotation and stabilisation. `spotDistance` affects spotting ability and information accuracy, while `spotTime` affects reaction time. `commanding` controls group target sharing, `general` influences decision making, `courage` affects morale and `reloadSpeed` controls weapon switching/reloading. Arma 3 disables the old `endurance` sub-skill, so WMP does not expose it.
 
-When LAMBS Danger is loaded, AI will trigger a broader range of tactical behaviours (flanking, suppression, bounding overwatch). WMP's elevated `general` and `commanding` values are tuned specifically to complement LAMBS — the combination produces more tactically varied AI without making them unfairly lethal.
+These are requested inputs, not guaranteed final values. The engine interpolates them through `CfgAISkill`, and the active server AI difficulty coefficients affect `skillFinal`. Test missions should inspect `skillFinal`, not assume that an input of `0.50` produces a final value of `0.50`. See Bohemia's official [AI Skill](https://community.bohemia.net/wiki/Arma_3:_AI_Skill), [setSkill](https://community.bohemia.net/wiki/setSkill), [skillFinal](https://community.bohemia.net/wiki/skillFinal) and [AI Config Reference](https://community.bohemia.net/wiki/Arma_3:_AI_Config_Reference) documentation.
+
+## Day and low-light modes
+
+`DAY` uses the selected base profile. `NIGHT` waits until illumination is below `Waldo_AI_DarknessThreshold`, then reduces the modern WMP profiles' combat, sensing, target-sharing and decision inputs. AI with an assigned NVG/HMD receive the gentler `Waldo_AI_NightNVGMultipliers`; unaided AI use `Waldo_AI_NightUnaidedMultipliers`. Equipping the unit is therefore the explicit way to offset low-light degradation. The compatibility profile retains its established absolute spotting controls through `Waldo_AI_NightSpotWithNVG` and `Waldo_AI_NightSpotWithoutNVG`.
+
+AI behaviour mods can still change tactical decisions independently of these skill inputs. WMP does not assume or require one.
 
 ## Mission overrides
 
@@ -47,8 +54,11 @@ _profiles set ["CUSTOM", createHashMapFromArray [
     ["general", 0.65], ["courage", 0.75], ["reloadSpeed", 0.70]
 ]];
 missionNamespace setVariable ["Waldo_AI_Profiles", _profiles];
+Waldo_AI_ProfileDisplayNames set ["CUSTOM", "WMP Recon Opposition"];
 ["DAY", "CUSTOM"] call Waldo_fnc_AIRebalanceInit;
 ```
+
+Custom profile keys appear in the ZEN selector automatically. Add a friendly label to `Waldo_AI_ProfileDisplayNames`; otherwise ZEN shows the key itself. Define the same custom profile on every machine during mission setup because AI can become local to the server, a client or a headless client.
 
 `Waldo_AI_FactionOverrides` maps faction classnames to partial skill maps. `Waldo_AI_RoleOverrides` does the same for upper-case `textSingular` role names. Each override layers on top of the selected profile and all values are clamped to `0`–`1`.
 

@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Registers or spawns a named, server-authoritative airborne gunship.
  * Arguments: 0: config <HASHMAP>
  * Return Value: Boolean

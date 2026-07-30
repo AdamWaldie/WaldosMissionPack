@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies one ordered server runtime-setting snapshot on a joining client or headless client.
  *
  * Arguments:

@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
-"""Build the disposable PR21-32 Arma audit mission from the current worktree."""
+"""Build the ongoing full-pack PR audit mission from the current worktree."""
 
 from __future__ import annotations
 
 import argparse
 import importlib.util
 import json
+import os
 import re
 import shutil
+import stat
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -25,12 +27,24 @@ assert GENERATOR_SPEC and GENERATOR_SPEC.loader
 GENERATOR_SPEC.loader.exec_module(GENERATOR)
 
 
+def remove_staged_mission(path: Path) -> None:
+    """Remove a previous Windows stage even when copied folders are read-only."""
+    if not path.exists():
+        return
+
+    def clear_read_only(function, target, _error):
+        os.chmod(target, stat.S_IWRITE)
+        function(target)
+
+    shutil.rmtree(path, onexc=clear_read_only)
+
+
 def audit_description(source: str) -> str:
     """Keep the release config intact while giving the staged mission an honest identity."""
     replacements = {
         r'onLoadName\s*=\s*"[^"]*"': 'onLoadName = "WMP FULL PACK AUDIT"',
-        r'onLoadMission\s*=\s*"[^"]*"': 'onLoadMission = "PR #21-#32 development testbed"',
-        r'onLoadIntro\s*=\s*"[^"]*"': 'onLoadIntro = "PR #21-#32 development testbed"',
+        r'onLoadMission\s*=\s*"[^"]*"': 'onLoadMission = "Ongoing full-pack pull request audit"',
+        r'onLoadIntro\s*=\s*"[^"]*"': 'onLoadIntro = "Ongoing full-pack pull request audit"',
     }
     result = source
     for pattern, replacement in replacements.items():
@@ -50,7 +64,7 @@ def build(destination: Path, suite: str, mod_profile: str = "core", mode: str = 
     # sufficient for a human or coding agent and prevents a stale template from staging.
     GENERATOR.main()
     if destination.exists():
-        shutil.rmtree(destination)
+        remove_staged_mission(destination)
     shutil.copytree(TEMPLATE, destination)
     shutil.copytree(ROOT / "MissionScripts", destination / "MissionScripts", dirs_exist_ok=True)
     shutil.copytree(ROOT / "Pictures", destination / "Pictures", dirs_exist_ok=True)

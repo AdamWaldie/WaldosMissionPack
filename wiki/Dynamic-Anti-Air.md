@@ -13,14 +13,18 @@ Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above t
 ## Zeus setup
 
 1. Place **Waldos Mission Modules → Dynamic AA - Create** at the centre of the detection zone.
-2. Choose the system ID, faction, radius, altitude floor and response counts.
-3. Select the central radar position on the map.
-4. Select each requested static-site and mobile-system position.
-5. Fly a hostile aircraft through the zone to verify activation.
+2. Choose the owning side. The asset-profile dropdown immediately refreshes to show only compatible integrated air-defence profiles for that side.
+3. Configure detection, altitude and response counts. WMP generates the internal system ID automatically.
+   Optionally enable **Require Radar Shutdown Procedure**, then choose the procedure and difficulty.
+4. Select the central radar position on the map.
+5. Select each requested static-site and mobile-system position.
+6. Fly a hostile aircraft through the zone to verify activation.
 
 Each static site selects one configured site template. Mobile launchers and scrambled fighters are independently selected from the resolved side or faction pool, allowing repeated systems to use different valid assets. Fighters spawn outside the zone and engage the detected aircraft. Use **Dynamic AA - Remove Nearest** to remove or disable the nearest named system.
 
-The optional **Asset faction/pool key** selects a mission-defined entry from `Waldo_DynamicAA_FactionAssetPools`. Leaving it blank uses the selected side's `WEST`, `EAST` or `INDEPENDENT` pool.
+The ZEN profile selector is populated from `Waldo_DynamicAA_FactionAssetPools` after filtering its configured asset classes by the chosen side. The default choice uses that side's `WEST`, `EAST` or `INDEPENDENT` pool. Raw pool keys remain a scripted configuration detail and are not required in the live curator workflow.
+
+The generated system ID is an internal registry key used for replacement, cleanup and state publication; it is not an Arma object ID. Scripted setup still supplies an explicit stable ID, while the creation module hides this implementation detail.
 
 ## Scripted setup
 
@@ -39,7 +43,10 @@ private _aa = createHashMapFromArray [
     ["fighterCount", 2],
     ["createMarkers", true],
     ["cleanupOnRadarLoss", false],
-    ["announce", true]
+    ["announce", true],
+    ["shutdownInteraction", true],
+    ["shutdownChallenge", "circuit"],
+    ["shutdownDifficulty", "standard"]
 ];
 [_aa] call Waldo_fnc_DynamicAACreate;
 ```
@@ -67,12 +74,15 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `detectionDwell` | `0` | Continuous detection time before activation |
 | `clearDelay` | `0` | Clear time before defences stand down |
 | `requiredOperationalRadars` | `1` | Number of surviving radars required to remain online |
+| `maximumOperationalRadarDamage` | `0.8` | Radar damage at or above this fraction takes the whole system offline |
+| `radarOperationalCondition` | `{}` | Optional server callback receiving `[radar, state, config]`; return false to model power, repairs or objective-specific disable states |
 | `radarClasses` | side/faction pool | Candidate central-radar classes; one is selected per system |
 | `staticSitePools` | side/faction pool | Candidate site templates; one template is selected independently for each static position |
 | `mobileClasses` | side/faction pool | Candidate mobile-AA classes; one is selected per position |
 | `fighterClasses` | side/faction pool | Candidate fighter classes; one is selected per scrambled aircraft |
 | `radarClass`, `staticClasses`, `mobileClass`, `fighterClass` | unset | Backwards-compatible singular/template overrides |
 | `assetPool` | unset | Per-system Dynamic AA pool overrides |
+| `staticSiteSpacing` | `30` | Metres between a static-site anchor and each spawned component; clamped to `10`–`200` to prevent radar/SAM/AAA collision starts |
 | `staticPositions` | `[]` | One centre position per static triplet |
 | `mobilePositions` | `[]` | Mobile AA spawn positions |
 | `fighterCount` | `0` | Fighters per scramble wave |
@@ -86,6 +96,14 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `onStateChanged` | `{}` | Optional server callback for detected/engaged transitions |
 | `cleanupOnRadarLoss` | `false` | Delete assets instead of leaving them disabled |
 | `announce` | `true` | Publish detection state changes in chat |
+| `shutdownInteraction` | `false` | Attach an optional player procedure to the central radar. Existing systems retain ordinary destroy-to-disable behaviour by default. |
+| `shutdownChallenge` | `"circuit"` | Semantic procedure used for radar shutdown; Zeus offers circuit, wire isolation, command authentication and signal alignment. |
+| `shutdownDifficulty` | `"standard"` | Shared `easy`, `standard`, `hard` or `expert` difficulty profile. |
+
+When the optional procedure succeeds, the server disables the named system through
+`Waldo_fnc_DynamicAADestroy` without deleting its assets. Detection stops, defence groups stand down,
+markers show the disabled state, and JIP clients receive the terminal interaction state. Destroying the
+radar remains a separate physical route and follows `cleanupOnRadarLoss`.
 
 Classnames are validated before anything spawns. Spawned objects, groups, markers and detector handles are retained in the server registry for deterministic cleanup.
 

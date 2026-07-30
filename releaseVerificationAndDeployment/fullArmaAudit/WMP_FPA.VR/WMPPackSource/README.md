@@ -55,11 +55,11 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 You can always find the most recent quickstart guide at this URL: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide
 
 # Release Validation
-The canonical feature test is the hosted **WMP PR REVIEW AUDIT** VR mission. Its builder stages
+The canonical feature test is the hosted **WMP FULL PACK PR AUDIT** VR mission. Its builder stages
 the exact release allowlist and runs the pack's real `description.ext`, `init.sqf`,
 `initServer.sqf` and `initPlayerLocal.sqf` around a proven, unbinarized five-slot scenario. Launch
 it with `releaseVerificationAndDeployment/launch_pr_review_audit.ps1`. It requires CBA, ACE, ZEN
-and ACRE2, disables BattlEye, uses 1920×1080, and keeps mutating automation off by default. The
+and ACRE2, disables BattlEye, defaults to 2560×1440, and keeps mutating automation off by default. The
 workflow and evidence rules are documented under `releaseVerificationAndDeployment/fullArmaAudit/`.
 
 # Other Information

@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Installs an opt-in, configurable friendly identification overlay for eligible players.
  *
  * Arguments:

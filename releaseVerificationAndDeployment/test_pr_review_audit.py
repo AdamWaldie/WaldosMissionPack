@@ -42,7 +42,10 @@ class PrReviewAuditTests(unittest.TestCase):
                         (destination / entry / relative).read_bytes(),
                     )
             self.assertTrue((destination / "mission.sqm").read_text(encoding="utf-8").startswith("version=12;"))
-            self.assertIn('onLoadName = "WMP PR REVIEW AUDIT"', (destination / "description.ext").read_text(encoding="utf-8"))
+            description = (destination / "description.ext").read_text(encoding="utf-8")
+            self.assertIn('onLoadName = "WMP FULL PACK PR AUDIT"', description)
+            self.assertIn("respawn = 3", description)
+            self.assertIn("respawnDelay = 1", description)
             self.assertIn('call compile preprocessFileLineNumbers "auditPreInit.sqf";', (destination / "init.sqf").read_text(encoding="utf-8"))
             self.assertIn('[] execVM "auditInit.sqf";', (destination / "init.sqf").read_text(encoding="utf-8"))
             self.assertIn('call compile preprocessFileLineNumbers "auditPreInitServer.sqf";', (destination / "initServer.sqf").read_text(encoding="utf-8"))
@@ -63,6 +66,8 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn('dataType="Layer";', mission_sqm)
             self.assertIn('name="WMP Audit Loadouts";', mission_sqm)
             self.assertIn('name="Nested Playable Roles";', mission_sqm)
+            self.assertIn('name="respawn_west";', mission_sqm)
+            self.assertIn('text="Audit Base Respawn";', mission_sqm)
             # Legacy v12 mission positions are X, elevation, Y rather than Eden's X, Y, Z.
             self.assertIn("position[]={0,0,2};", mission_sqm)
             self.assertEqual(5, mission_sqm.count("class Inventory"))
@@ -153,13 +158,20 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn(".qa", entries)
         self.assertNotIn("mission.sqm", entries)
 
-    def test_pack_supports_legacy_mission_loadout_scraping(self):
+    def test_pack_loadout_scraping_does_not_depend_on_live_playable_units(self):
         source = (
             ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "missionFileLookup.sqf"
         ).read_text(encoding="utf-8")
-        self.assertIn("_matchedConfigUnits == 0", source)
-        self.assertIn("getUnitLoadout _x", source)
-        self.assertIn("forEach playableUnits", source)
+        self.assertNotIn("playableUnits", source)
+        self.assertNotIn("getUnitLoadout", source)
+
+    def test_starter_crate_keeps_blue_identifier_and_jip_local_actions(self):
+        setup = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "starterCrateSetupLocal.sqf").read_text(encoding="utf-8")
+        starter = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "doStarterCrate.sqf").read_text(encoding="utf-8")
+        self.assertIn("<t color='#035afc'>Starter Crate</t>", setup)
+        self.assertIn("Waldo_StarterCrateIdentifierInstalled", setup)
+        self.assertIn("Waldo_fnc_ZenAddLoadoutSaveAction", setup)
+        self.assertIn('remoteExecCall ["Waldo_fnc_StarterCrateSetupLocal", -2', starter)
 
     def test_pack_scrapes_playable_units_inside_nested_eden_folders(self):
         source = (
@@ -170,6 +182,21 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('private _children = _entity >> "Entities"', source)
         self.assertIn("[_x] call _visitEntity", source)
         self.assertIn('missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities"', source)
+
+    def test_engine_spawned_playable_slots_have_the_authored_test_loadouts(self):
+        source = (BUILDER.TEMPLATE / "mission.sqm").read_bytes()
+        mission = BUILDER.legacy_playable_units_with_loadouts(source).decode("utf-8")
+        for classname in (
+            "arifle_MX_GL_Hamr_pointer_F",
+            "arifle_MXC_Black_F",
+            "arifle_MX_Black_F",
+            "arifle_MX_SW_Black_F",
+            "srifle_DMR_03_F",
+        ):
+            self.assertIn(f'this addWeapon ""{classname}""', mission)
+        self.assertIn('vehicle="B_medic_F"', mission)
+        self.assertIn('vehicle="B_soldier_AT_F"', mission)
+        self.assertIn('""NVGoggles"";"; skill=0.6;', mission)
 
     def test_range_does_not_duplicate_pack_initializers(self):
         server = (
@@ -190,7 +217,8 @@ class PrReviewAuditTests(unittest.TestCase):
             "Waldo_fnc_PersistenceDependencyAvailable",
             "Waldo_fnc_PersistenceRegisterObject",
             "Waldo_fnc_PersistenceLoadObject",
-            "Waldo_fnc_HazardRegisterZone",
+            "Waldo_fnc_FeatureRuntimeApply",
+            '"HAZARD_SET"',
             "Waldo_fnc_BreachingServerHandle",
             "Waldo_fnc_FieldResupplyRegisterHub",
             "Waldo_fnc_TacticalDisplayRegister",
@@ -203,6 +231,8 @@ class PrReviewAuditTests(unittest.TestCase):
             "(group _actor) reveal",
         ):
             self.assertIn(token, server)
+        self.assertIn('["qa_tactical_console"] call _get', server)
+        self.assertIn("dedicated white map board", client)
         for label in (
             "ENABLE + REGISTER QA CRATE",
             "MUTATE QA CRATE",
@@ -256,12 +286,13 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 36', source)
+        self.assertIn('Waldo_ZenModuleCount", 38', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
         apply = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
-        self.assertIn('[_target, _side, parseNumber _stockText, _modulePos]', zen)
+        self.assertIn('_stock = if (round _stockChoice == 0) then {-1} else {round _stockChoice}', zen)
+        self.assertIn('["FIELD_RESUPPLY_HUB", [_target, _side, _stock, _modulePos]]', zen)
         self.assertIn('if (isNull _hub && {count _modulePos >= 2})', apply)
         self.assertIn('createVehicle [_crateClass, _modulePos, [], 0, "NONE"]', apply)
         self.assertIn('addCuratorEditableObjects [[_hub], true]', apply)
@@ -289,14 +320,153 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_notification_stack_reflows_surviving_cards(self):
         source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "reflowUiPanels.sqf").read_text(encoding="utf-8")
         audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
+        extended = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
         self.assertIn("ctrlCommit _duration", source)
         for duration in ('"INFO", 4, "TOP_RIGHT", "QA_STACK_1"', '"SUCCESS", 8, "TOP_RIGHT", "QA_STACK_2"', '"WARNING", 12, "TOP_RIGHT", "QA_STACK_3"'):
             self.assertIn(duration, audit)
+        self.assertIn("RUN LIVE NOTIFICATION STREAMS", extended)
+        self.assertIn("SHOW ALL UI POSITIONS", audit)
+        for placement in ("TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"):
+            self.assertIn(f'["{placement}",', audit)
+        self.assertIn("Waldo_fnc_TreatmentFeedbackShowLocal", extended)
+        for channel in ("FIELD_RESUPPLY", "DYNAMIC_AA", "TREE_FELLING", "ACCESSIBILITY_PID"):
+            self.assertIn(f'"{channel}"', extended)
+        self.assertIn("Waldo_fnc_RallyPointNotifyLocal", extended)
+        self.assertIn("Waldo_fnc_RecoveryNotifyLocal", extended)
+        self.assertIn('format ["QA_%1", toUpperANSI _title]', server)
+        self.assertNotIn('"QA_FEATURE_STATION", 8', server)
 
-    def test_scale_zen_does_not_replace_curator_selected_objects(self):
+        player_init = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        for channel in ("TREATMENT_FEEDBACK", "DYNAMIC_AA", "FIELD_RESUPPLY", "RALLY_POINT"):
+            self.assertIn(f'["{channel}",', player_init)
+
+    def test_rally_audit_has_a_real_selectable_respawn_path(self):
+        client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        self.assertIn("TEST RALLY RESPAWN SELECTION", client)
+        self.assertIn('getVariable ["Waldo_Rally_Active", false]', client)
+        self.assertIn("player setDamage 1", client)
+        launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
+        self.assertIn('"MPMissions\\WMP_PR_Review_Audit.VR"', launcher)
+        self.assertIn('template = "WMP_PR_Review_Audit.VR"', launcher)
+        self.assertIn('"-autoInit"', launcher)
+        self.assertIn('"-connect=localhost"', launcher)
+        self.assertIn("arma3server_x64.exe", launcher)
+        self.assertNotIn("playMission['','WMP_PR_Review_Audit.VR'", launcher)
+
+    def test_audit_zeus_follows_the_replacement_player_unit(self):
+        server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('addMissionEventHandler ["EntityRespawned"', server)
+        self.assertIn("Waldo_QA_CuratorAssignedUnit", server)
+        self.assertIn("[_unit] call Waldo_QA_fnc_assignCuratorServer", server)
+
+    def test_respawn_overlay_is_location_only(self):
+        source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "respawnText.sqf").read_text(encoding="utf-8")
+        for token in ("_time", "_date", "_localePos"):
+            self.assertIn(token, source)
+        for unwanted in ("_RnkAndName", "_groupInfo", "rank player", "name player"):
+            self.assertNotIn(unwanted, source)
+
+    def test_dynamic_aa_target_is_crewed_airborne_and_retained_in_the_zone(self):
+        source = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        for token in ('["mobileClass", "O_APC_Tracked_02_AA_F"]', '["mobilePositions", [[175, -110, 0]]]', "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
+            self.assertIn(token, source)
+
+    def test_field_resupply_has_physical_cargo_and_ace_controls(self):
+        root = ROOT / "MissionScripts" / "Logistics" / "FieldResupply"
+        server = (root / "fieldResupplyServerHandle.sqf").read_text(encoding="utf-8")
+        carrier = (root / "fieldResupplyInit.sqf").read_text(encoding="utf-8")
+        crate = (root / "fieldResupplySetupCrateLocal.sqf").read_text(encoding="utf-8")
+        hub = (root / "fieldResupplySetupHubLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("addMagazineCargoGlobal", server)
+        self.assertIn("getMagazineCargo _crate", server)
+        self.assertIn("clearMagazineCargoGlobal _crate", server)
+        self.assertIn("magazinesAmmoFull _sourceUnit", server)
+        self.assertIn("Waldo_FieldResupply_UseCapacityBasedAmounts", server)
+        self.assertIn("Waldo_FieldResupply_InitialCharges", server)
+        self.assertIn("ACE_SelfActions", carrier)
+        self.assertIn("Waldo_FieldResupply_InspectCarrier", carrier)
+        self.assertIn("Waldo_FieldResupply_Deploy", carrier)
+        self.assertIn('backpack _caller != ""', carrier)
+        self.assertIn("vehicle _caller isEqualTo _caller", carrier)
+        for source in (carrier, crate, hub):
+            self.assertIn("ace_interact_menu_fnc_createAction", source)
+            self.assertIn("ace_interact_menu_fnc_addActionToObject", source)
+            self.assertIn("addAction", source)
+
+    def test_gunship_service_action_uses_a_known_task_icon(self):
+        source = (ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipSetupLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn(r"\A3\ui_f\data\igui\cfg\simpletasks\types\repair_ca.paa", source)
+        self.assertNotIn("holdAction_refuel_ca.paa", source)
+        self.assertNotIn("holdactions\\refuel_ca.paa", source)
+
+    def test_treatment_feedback_cannot_recursively_forward_on_listen_server(self):
+        source = (ROOT / "MissionScripts" / "MedicalSystems" / "TreatmentFeedback" / "treatmentFeedbackNotify.sqf").read_text(encoding="utf-8")
+        local_show = (ROOT / "MissionScripts" / "MedicalSystems" / "TreatmentFeedback" / "treatmentFeedbackShowLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("remoteExecutedOwner > 0", source)
+        self.assertIn("!local _medic", source)
+        self.assertIn("isPlayer _patient", source)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_TreatmentFeedbackNotify"', source)
+        self.assertEqual(1, source.count('remoteExecCall ["Waldo_fnc_TreatmentFeedbackShowLocal"'))
+        self.assertNotIn("remoteExec", local_show)
+        self.assertIn('"BOTTOM_CENTER"', local_show)
+        self.assertIn('"REPLACE"', local_show)
+        self.assertIn("Waldo_TreatmentFeedback_Duration", local_show)
+        audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        self.assertIn("PREVIEW GIVER + RECEIVER FEEDBACK", audit)
+        self.assertIn("ENABLE ACTUAL GIVER FEEDBACK", audit)
+        self.assertIn("INJURE ME FOR RECEIVER / SELF TEST", audit)
+
+    def test_hazard_audit_uses_live_runtime_start_and_exposes_state(self):
+        audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+        server = (audit / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        client = (audit / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        self.assertIn('["HAZARD_SET", ["qa_hazard", _hazardEmitter, _hazardProfile]] call Waldo_fnc_FeatureRuntimeApply', server)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_HazardRegisterZone", -2, "Waldo_QA_HazardZone"]', server)
+        self.assertIn("SHOW HAZARD RUNTIME STATUS", client)
+        self.assertIn("Waldo_Hazard_ClientStarted", client)
+        self.assertIn("[] call Waldo_fnc_HazardInit", client)
+        self.assertIn('["intensityMode", "CONSTANT"]', server)
+        self.assertIn('["damageThresholds", [[4, 0.1], [10, 0.2], [18, 0.35]]]', server)
+        self.assertIn('["fatalExposure", 24]', server)
+        self.assertIn('player addHeadgear "H_PilotHelmetFighter_B"', client)
+        tick = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardTick.sqf").read_text(encoding="utf-8")
+        self.assertIn("Waldo_Hazard_LocalDamageStages", tick)
+        self.assertIn("notifyDamageStages", tick)
+
+    def test_dismount_fixture_has_live_simulation_and_vehicle_bound_controls(self):
+        audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+        server = (audit / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        client = (audit / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        upright = (ROOT / "MissionScripts" / "MissionInit" / "VehicleActionsSetup" / "vehicleUpright.sqf").read_text(encoding="utf-8")
+        setup = (ROOT / "MissionScripts" / "MissionInit" / "VehicleActionsSetup" / "setupVehicleUprightLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("_dismountVehicle enableSimulationGlobal true", server)
+        self.assertIn('private _dismount = missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull]', client)
+        self.assertNotIn('private _dismount = "qa_sign_emergency_dismount" call _get', client)
+        self.assertNotIn('player addAction [\n    "Flip Vehicle"', init_player)
+        self.assertIn("boundingBoxReal", upright)
+        self.assertIn("surfaceNormal", upright)
+        self.assertIn("_vehicle addAction", setup)
+        self.assertIn('remoteExecCall ["Waldo_fnc_VehicleUpright", 2]', setup)
+
+    def test_tactical_display_fixture_is_a_map_board(self):
+        generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
+        client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        setup = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplaySetupLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('fixture("qa_tactical_console", "Land_MapBoard_F"', generator)
+        self.assertIn("dedicated white map board", client)
+        self.assertIn("[player, 'VIEW', _target] checkVisibility", setup)
+        self.assertNotIn("[player, 'VIEW'] checkVisibility", setup)
+
+    def test_scale_zen_exposes_explicit_decorative_conversion(self):
         source = (ROOT / "MissionScripts" / "MissionMakerResourceScripts" / "ObjectTransforms" / "objectScaleZen.sqf").read_text(encoding="utf-8")
-        self.assertIn('[_target, _scale, false]', source)
-        self.assertNotIn("Convert to simple object", source)
+        implementation = (ROOT / "MissionScripts" / "MissionMakerResourceScripts" / "ObjectTransforms" / "objectScale.sqf").read_text(encoding="utf-8")
+        self.assertIn('"Convert decorative object"', source)
+        self.assertIn('[_target, _scale, _asSimple] remoteExecCall ["Waldo_fnc_ObjectScale", 2]', source)
+        self.assertIn("BIS_fnc_replaceWithSimpleObject", implementation)
+        self.assertIn("getObjectScale _scaledObject", implementation)
+        self.assertIn("addCuratorEditableObjects", implementation)
 
     def test_diagnostics_accept_nested_loadouts_and_real_interaction_ids(self):
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnostics.sqf").read_text(encoding="utf-8")
@@ -323,7 +493,11 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn("deleteAt _x", arsenal)
 
         jammer = (scripts / "MissionInit" / "Jamming" / "jammerScan.sqf").read_text(encoding="utf-8")
-        self.assertIn("_d <= _range", jammer)
+        self.assertIn("_d > _coverage", jammer)
+        self.assertIn("(_radius max 0) + (_falloff max 0)", jammer)
+        self.assertIn("_receiverSide in _sides", jammer)
+        self.assertIn("terrainIntersectASL", jammer)
+        self.assertIn("(_now % _period) >= _onTime", jammer)
         self.assertIn("Bearing between %1 and %2 deg", jammer)
         for vague_band in ("NEARBY", "DISTANT", "VERY DISTANT"):
             self.assertIn(vague_band, jammer)
@@ -337,6 +511,46 @@ class PrReviewAuditTests(unittest.TestCase):
         gunship = (scripts / "CombatSystems" / "AirborneGunship" / "gunshipSetupLocal.sqf").read_text(encoding="utf-8")
         self.assertIn("_x select 2", gunship)
         self.assertIn("Waldo_Gunship_AceActions", gunship)
+        self.assertIn("simpletasks\\types\\repair_ca.paa", gunship)
+        self.assertIn("serviceCompleteAt", gunship)
+        self.assertIn("Tasking and weapon control are locked", gunship)
+        self.assertNotIn("\\holdactions\\refuel_ca.paa", gunship)
+        self.assertIn("[(_args select 0)] call Waldo_fnc_GunshipSelectOrbitLocal", gunship)
+        self.assertIn("_newAceActions append _paths", gunship)
+
+        tactical = (scripts / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplaySetupLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("[player, 'VIEW', _target] checkVisibility [eyePos player, aimPos _target]", tactical)
+
+    def test_dynamic_paradrop_is_authoritative_configurable_and_side_independent(self):
+        scripts = ROOT / "MissionScripts"
+        audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+        root = ROOT / "MissionScripts" / "Paradrop"
+        create = (root / "paradropCreateDropZone.sqf").read_text(encoding="utf-8")
+        remove = (root / "paradropRemoveDropZone.sqf").read_text(encoding="utf-8")
+        zen = (root / "paradropDropZoneZen.sqf").read_text(encoding="utf-8")
+        registration = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        self.assertIn("getAssignedCuratorLogic", create + remove)
+        self.assertIn('setBehaviourStrong "CARELESS"', create)
+        self.assertIn('setCombatMode "BLUE"', create)
+        self.assertIn("flyInHeight [_altitude, true]", create)
+        self.assertIn("limitSpeed _maximumSpeed", create)
+        self.assertIn('[0, 60, 20, 0]', zen)
+        self.assertIn('[0.5, 10, 2, 1]', zen)
+        self.assertIn("Operational side", zen)
+        self.assertIn("does not filter the airframe", zen)
+        for token in ("STANDBY", "GREEN", "RED", 'setMarkerShape "RECTANGLE"'):
+            self.assertIn(token, create)
+        self.assertIn("Waldo_Paradrop_PublicDropZones", create + remove)
+        self.assertIn("Paradrop - Create Drop Zone", registration)
+        self.assertIn("Paradrop - Remove Operation", registration)
+
+        dynamic_aa = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf").read_text(encoding="utf-8")
+        dynamic_aa_detector = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAADetectorLoop.sqf").read_text(encoding="utf-8")
+        self.assertIn('getOrDefault ["staticSiteSpacing", 30]', dynamic_aa)
+        self.assertIn("getPos [_staticSiteSpacing", dynamic_aa)
+        self.assertIn('getOrDefault ["maximumOperationalRadarDamage", 0.8]', dynamic_aa_detector)
+        self.assertIn("damage _radar >= _maximumRadarDamage", dynamic_aa_detector)
+        self.assertIn("radarOperationalCondition", dynamic_aa_detector)
 
         recovery = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterWorkshop.sqf").read_text(encoding="utf-8")
         restore = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
@@ -360,7 +574,8 @@ class PrReviewAuditTests(unittest.TestCase):
         for primary in expected_primaries:
             self.assertIn(primary, server)
         self.assertIn("WMP NESTED LOADOUT PRIMARY AUDIT", server)
-        self.assertIn("qa_sign_emergency_dismount", client)
+        self.assertIn('missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull]', client)
+        self.assertNotIn('private _dismount = "qa_sign_emergency_dismount" call _get', client)
         self.assertIn("REFRESH MY GUNSHIP CONTROLS", client)
         self.assertIn("_scale, true] call Waldo_fnc_ObjectScale", server)
         self.assertIn('missionNamespace setVariable [_name, _scaled, true]', server)

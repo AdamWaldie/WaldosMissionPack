@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Saves one registered object's selected state fields to INIDBI2.
  *
  * Arguments:

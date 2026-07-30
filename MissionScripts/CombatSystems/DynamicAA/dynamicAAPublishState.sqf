@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Publishes network-safe Dynamic AA summaries for markers, ZEN removal, diagnostics, and JIP clients.
  *
  * Arguments:

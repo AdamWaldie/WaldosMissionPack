@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Sends one client or headless-client runtime-state request to the server.
  * Arguments: None
  * Return Value: Boolean

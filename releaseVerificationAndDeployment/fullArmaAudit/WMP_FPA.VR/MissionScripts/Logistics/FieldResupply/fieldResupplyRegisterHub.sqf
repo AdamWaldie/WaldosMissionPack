@@ -1,9 +1,24 @@
 /*
- * Author: Waldo
- * Registers a supply hub with optional finite refill stock.
+ * Author: WaldoTheWarfighter
+ * Registers an object as a server-authoritative Field Resupply refill hub.
  *
- * Arguments: 0: hub <OBJECT>; 1: side <SIDE>; 2: stock <NUMBER>, -1 unlimited
- * Return Value: Boolean
+ * Hub identity, serviced side and remaining portable-crate stock are public state. The server keeps
+ * a registry for diagnostics and publishes object-keyed local action setup so every current client
+ * and JIP client receives exactly one ACE interaction or vanilla fallback. Registration also enables
+ * the feature and replays that state to clients. Remote setup requests require an assigned curator.
+ *
+ * Arguments:
+ * 0: hub <OBJECT> - world object used as the refill point.
+ * 1: serviced side <SIDE> - sideUnknown permits every side (default sideUnknown).
+ * 2: stock <NUMBER> - portable crates the hub may issue; -1 is unlimited (default -1).
+ *
+ * Return Value:
+ * Boolean - true when forwarded or registered; otherwise false.
+ *
+ * Example:
+ * if (isServer) then {[this, west, -1] call Waldo_fnc_FieldResupplyRegisterHub;};
+ *
+ * Current callers: Field Resupply ZEN hub module, audit hub setup and mission-maker object setup.
  */
 
 params [["_hub", objNull, [objNull]], ["_side", sideUnknown, [sideUnknown]], ["_stock", -1, [0]]];

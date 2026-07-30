@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Installs repeat-safe vanilla and optional IMS hooks for configurable tree felling and brush clearing.
  *
  * Arguments:

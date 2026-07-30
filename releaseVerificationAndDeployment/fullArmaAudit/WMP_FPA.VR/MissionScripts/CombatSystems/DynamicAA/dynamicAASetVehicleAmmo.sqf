@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies a Dynamic AA ammunition fraction where the vehicle is currently local.
  * Arguments: 0: vehicle <OBJECT>; 1: ammunition fraction <NUMBER>
  * Return Value: Boolean

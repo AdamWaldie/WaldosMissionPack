@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Validates an explosion and applies matching breach profiles exactly once on the server.
  *
  * Arguments:

@@ -1,21 +1,28 @@
 /*
- * Author: Waldo
- * Configures AI skill profiles once per machine and reapplies the selected profile to local AI.
+ * Author: WaldoTheWarfighter
+ * Configures AI skill profiles once per machine and applies the selected profile to local AI.
+ *
+ * Existing local AI are processed immediately. A CBA CAManBase init handler catches newly created
+ * units, including Zeus placements, and a per-unit Local event handler reapplies the active profile
+ * after server/headless-client ownership changes. Players are never modified. WMP Line is the
+ * default baseline; its established values are intentionally retained rather than made harder.
  *
  * Arguments:
  * 0: mode <STRING> - DAY or NIGHT
- * 1: profile <STRING> - built-in or mission-defined profile key
+ * 1: profile <STRING> - built-in or mission-defined profile key (default LINE)
  *
  * Return Value:
  * Boolean - true when the selected profile exists
  *
  * Example:
- * ["NIGHT", "PUBLIC"] call Waldo_fnc_AIRebalanceInit;
+ * ["NIGHT", "LINE"] call Waldo_fnc_AIRebalanceInit;
+ *
+ * Current callers: AITweak startup wrapper, AI ZEN runtime control and JIP runtime replay.
  */
 
 params [
     ["_mode", "DAY", [""]],
-    ["_profile", "LEGACY", [""]]
+    ["_profile", "LINE", [""]]
 ];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!isServer && {!(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false])}) exitWith {
@@ -39,19 +46,34 @@ private _defaultProfiles = createHashMapFromArray [
             ["general", 1.00], ["courage", 0.90], ["reloadSpeed", 0.90]
         ]],
         ["PUBLIC", createHashMapFromArray [
-            ["aimingSpeed", 0.32], ["aimingAccuracy", 0.33], ["aimingShake", 0.56],
-            ["spotTime", 0.50], ["spotDistance", 0.60], ["commanding", 0.80],
-            ["general", 0.40], ["courage", 0.65], ["reloadSpeed", 0.65]
+            ["aimingSpeed", 0.35], ["aimingAccuracy", 0.20], ["aimingShake", 0.38],
+            ["spotTime", 0.45], ["spotDistance", 0.55], ["commanding", 0.65],
+            ["general", 0.60], ["courage", 0.65], ["reloadSpeed", 0.65]
+        ]],
+        ["MILITIA", createHashMapFromArray [
+            ["aimingSpeed", 0.35], ["aimingAccuracy", 0.20], ["aimingShake", 0.38],
+            ["spotTime", 0.45], ["spotDistance", 0.55], ["commanding", 0.65],
+            ["general", 0.60], ["courage", 0.65], ["reloadSpeed", 0.65]
         ]],
         ["STANDARD", createHashMapFromArray [
-            ["aimingSpeed", 0.45], ["aimingAccuracy", 0.40], ["aimingShake", 0.48],
-            ["spotTime", 0.65], ["spotDistance", 0.70], ["commanding", 0.75],
-            ["general", 0.70], ["courage", 0.75], ["reloadSpeed", 0.75]
+            ["aimingSpeed", 0.48], ["aimingAccuracy", 0.30], ["aimingShake", 0.52],
+            ["spotTime", 0.62], ["spotDistance", 0.70], ["commanding", 0.75],
+            ["general", 0.72], ["courage", 0.78], ["reloadSpeed", 0.78]
+        ]],
+        ["LINE", createHashMapFromArray [
+            ["aimingSpeed", 0.48], ["aimingAccuracy", 0.30], ["aimingShake", 0.52],
+            ["spotTime", 0.62], ["spotDistance", 0.70], ["commanding", 0.75],
+            ["general", 0.72], ["courage", 0.78], ["reloadSpeed", 0.78]
         ]],
         ["VETERAN", createHashMapFromArray [
-            ["aimingSpeed", 0.62], ["aimingAccuracy", 0.58], ["aimingShake", 0.32],
-            ["spotTime", 0.85], ["spotDistance", 0.90], ["commanding", 0.90],
-            ["general", 0.90], ["courage", 0.90], ["reloadSpeed", 0.90]
+            ["aimingSpeed", 0.62], ["aimingAccuracy", 0.42], ["aimingShake", 0.65],
+            ["spotTime", 0.78], ["spotDistance", 0.84], ["commanding", 0.88],
+            ["general", 0.88], ["courage", 0.90], ["reloadSpeed", 0.88]
+        ]],
+        ["ELITE", createHashMapFromArray [
+            ["aimingSpeed", 0.72], ["aimingAccuracy", 0.52], ["aimingShake", 0.76],
+            ["spotTime", 0.88], ["spotDistance", 0.92], ["commanding", 0.95],
+            ["general", 0.95], ["courage", 0.96], ["reloadSpeed", 0.94]
         ]]
     ];
 private _storedProfiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];

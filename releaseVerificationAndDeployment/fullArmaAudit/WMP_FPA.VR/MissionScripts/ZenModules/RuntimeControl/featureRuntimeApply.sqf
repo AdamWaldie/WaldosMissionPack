@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Validates curator requests and applies runtime feature configuration from ZEN.
  *
  * Arguments:
@@ -113,8 +113,8 @@ switch (toUpperANSI _action) do {
         [_object, _key, _radius, _side, _notificationRadius, _createMarkers] call Waldo_fnc_RecoveryRegisterWorkshop;
     };
     case "RECOVERY_VEHICLE": {
-        _settings params ["_object", "_key", "_damage", "_destroyed", "_engineer", "_package", "_cargo", "_fuel"];
-        [_object, _key, _damage, _destroyed, _engineer, _package, _cargo, _fuel] call Waldo_fnc_RecoveryRegisterVehicle;
+        _settings params ["_object", "_key", "_damage", "_destroyed", "_engineer", "_package", "_cargo", "_fuel", ["_interaction", []]];
+        [_object, _key, _damage, _destroyed, _engineer, _package, _cargo, _fuel, _interaction] call Waldo_fnc_RecoveryRegisterVehicle;
     };
     case "RECOVERY_CARRIER": {
         _settings params ["_object", "_range"];
@@ -139,8 +139,8 @@ switch (toUpperANSI _action) do {
         };
     };
     case "TACTICAL_DISPLAY": {
-        _settings params ["_object", "_side", "_radius", "_knownEnemies"];
-        [_object, _side, _radius, _knownEnemies] call Waldo_fnc_TacticalDisplayRegister;
+        _settings params ["_object", "_side", "_radius", "_knownEnemies", ["_interaction", []]];
+        [_object, _side, _radius, _knownEnemies, _interaction] call Waldo_fnc_TacticalDisplayRegister;
     };
     case "TREE_CONFIG": {
         _settings params ["_enable", "_range", "_baseHits", "_heightFactor", "_cooldown", "_clearBushes", "_bushRadius"];

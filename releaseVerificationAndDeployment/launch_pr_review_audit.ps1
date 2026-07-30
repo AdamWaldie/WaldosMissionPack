@@ -3,8 +3,9 @@ param(
     [string]$Suite = "all",
     [ValidateSet("Manual", "Automated")]
     [string]$Mode = "Manual",
-    [int]$ResolutionWidth = 1920,
-    [int]$ResolutionHeight = 1080,
+    [int]$Port = 24132,
+    [int]$ResolutionWidth = 2560,
+    [int]$ResolutionHeight = 1440,
     [switch]$ExcludePersistenceMod,
     [string]$PythonExecutable = ""
 )
@@ -13,12 +14,15 @@ $ErrorActionPreference = "Stop"
 $repoRoot = Split-Path -Parent $PSScriptRoot
 $armaRoot = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\bohemia interactive\arma 3").main
 $armaExe = Join-Path $armaRoot "arma3_x64.exe"
-$missionRoot = Join-Path $armaRoot "Missions\WMP_PR_Review_Audit.VR"
+$serverExe = Join-Path $armaRoot "arma3server_x64.exe"
+$missionRoot = Join-Path $armaRoot "MPMissions\WMP_PR_Review_Audit.VR"
 $runRoot = Join-Path $repoRoot ".qa\pr-review-audit"
-$profileRoot = Join-Path $runRoot "direct-profile"
+$serverProfile = Join-Path $runRoot "server-profile"
+$clientProfile = Join-Path $runRoot "client-profile"
+$serverConfig = Join-Path $runRoot "server.cfg"
 
-if (Get-Process arma3_x64 -ErrorAction SilentlyContinue) {
-    throw "Close Arma before staging and launching the PR review audit."
+if ((Get-Process arma3_x64 -ErrorAction SilentlyContinue) -or (Get-Process arma3server_x64 -ErrorAction SilentlyContinue)) {
+    throw "Close Arma clients and servers before staging and launching the full-pack PR audit."
 }
 if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
     $PythonExecutable = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
@@ -26,7 +30,7 @@ if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
 if (-not (Test-Path -LiteralPath $PythonExecutable)) { throw "Python was not found." }
 
 & $PythonExecutable (Join-Path $PSScriptRoot "build_pr_review_audit.py") --destination $missionRoot --suite $Suite --mode $Mode.ToLowerInvariant()
-if ($LASTEXITCODE -ne 0) { throw "PR review audit staging failed." }
+if ($LASTEXITCODE -ne 0) { throw "Full-pack PR audit staging failed." }
 
 $modNames = @("@CBA_A3", "@ace", "@Zeus Enhanced", "@ACRE2")
 $mods = foreach ($name in $modNames) {
@@ -47,13 +51,56 @@ if ($ExcludePersistenceMod) {
     Write-Warning "No INIDBI2 runtime found. The persistence station will verify the disabled dependency-gate path only."
 }
 $modArgument = '-mod="' + ($mods -join ';') + '"'
-New-Item -ItemType Directory -Path $profileRoot -Force | Out-Null
-$arguments = @(
-    "-noBattlEye", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
-    "-x=$ResolutionWidth", "-y=$ResolutionHeight",
-    "-profiles=$profileRoot", "-name=WMPAuditDirect",
-    "-init=playMission['','WMP_PR_Review_Audit.VR',true]", $modArgument
+New-Item -ItemType Directory -Path $serverProfile -Force | Out-Null
+New-Item -ItemType Directory -Path $clientProfile -Force | Out-Null
+@"
+hostname = "WMP Full Pack PR Audit";
+maxPlayers = 5;
+persistent = 1;
+BattlEye = 0;
+verifySignatures = 0;
+allowedFilePatching = 0;
+class Missions
+{
+    class FullPackPrAudit
+    {
+        template = "WMP_PR_Review_Audit.VR";
+        difficulty = "Regular";
+    };
+};
+"@ | Set-Content -LiteralPath $serverConfig -Encoding ASCII
+
+$serverArguments = @(
+    "-noBattlEye", "-noSound", "-noPause", "-autoInit", "-port=$Port",
+    "-config=$serverConfig", "-profiles=$serverProfile", "-name=WMPAuditServer", $modArgument
 )
-Start-Process -FilePath $armaExe -ArgumentList $arguments -WorkingDirectory $armaRoot
-Write-Output "Launched WMP PR REVIEW AUDIT directly in $Mode mode without opening Eden."
-Write-Warning "This launch is local (isServer + hasInterface). Use the dedicated audit separately for client/server and JIP validation."
+$server = Start-Process -FilePath $serverExe -ArgumentList $serverArguments -WorkingDirectory $armaRoot -PassThru -WindowStyle Hidden
+$serverReady = $false
+$serverDeadline = (Get-Date).AddSeconds(90)
+while ((Get-Date) -lt $serverDeadline -and -not $server.HasExited) {
+    Start-Sleep -Milliseconds 500
+    $serverRpt = Get-ChildItem -LiteralPath $serverProfile -Filter "*.rpt" -Recurse -ErrorAction SilentlyContinue |
+        Sort-Object LastWriteTime -Descending | Select-Object -First 1
+    if ($null -ne $serverRpt) {
+        $loadError = Select-String -LiteralPath $serverRpt.FullName -Pattern "You cannot play/edit this mission|Mission .* was deleted|Missing addons detected" | Select-Object -Last 1
+        if ($null -ne $loadError -and $loadError.Line -notmatch "a3_characters_f\s*$") {
+            Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
+            throw ("Arma rejected the staged audit mission: " + $loadError.Line)
+        }
+        $serverReady = [bool](Select-String -LiteralPath $serverRpt.FullName -Pattern "Mission world: VR|Game started|WMP PR REVIEW AUDIT" -Quiet)
+    }
+}
+if (-not $serverReady) {
+    Stop-Process -Id $server.Id -Force -ErrorAction SilentlyContinue
+    throw "The dedicated audit authority did not load WMP_PR_Review_Audit.VR."
+}
+
+$clientArguments = @(
+    "-noBattlEye", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
+    "-connect=localhost", "-port=$Port", "-x=$ResolutionWidth", "-y=$ResolutionHeight",
+    "-profiles=$clientProfile", "-name=WMPAuditClient", $modArgument
+)
+$client = Start-Process -FilePath $armaExe -ArgumentList $clientArguments -WorkingDirectory $armaRoot -PassThru
+Write-Output "Loaded WMP_PR_Review_Audit.VR on dedicated authority PID $($server.Id)."
+Write-Output "Connected 2560x1440 audit client PID $($client.Id) in $Mode mode; Eden is not used."
+Write-Output "Choose a playable slot and press OK if the role-assignment screen is shown."

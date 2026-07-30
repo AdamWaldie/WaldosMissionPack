@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Replaces an aircraft's route with a validated loiter waypoint.
  * Arguments: 0: id <STRING>; 1: position <ARRAY>; 2: status after issue <STRING>
  * Return Value: Boolean

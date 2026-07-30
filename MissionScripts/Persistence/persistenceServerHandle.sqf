@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Validates player persistence requests and performs all INIDBI2 player reads/writes on the server.
  *
  * Arguments:

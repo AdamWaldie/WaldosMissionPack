@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Requests immediate player saves and saves all registered objects without stopping persistence.
  *
  * Arguments:

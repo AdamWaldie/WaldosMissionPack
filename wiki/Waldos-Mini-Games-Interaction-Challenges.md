@@ -532,7 +532,40 @@ Existing party tables are unchanged unless this function is called.
 
 Callbacks run on the server and receive `[object, actor, success, result]`; callbacks that only read
 the original first three arguments remain compatible. The options array additionally accepts
-`["presentation", profilePairs]` and `["lockTimeout", seconds]`.
+`["presentation", profilePairs]`, `["lockTimeout", seconds]`, and
+`["actorCondition", code]`. The actor condition receives `[object, actor]` and is checked both
+where the action is displayed and again by the server before an exclusive attempt starts. This is
+the preferred bridge for feature-specific qualifications such as engineer, EOD, role, item or side.
+
+Feature modules can use the same API without duplicating a dialog or trusting a client callback.
+Radio jammers are the first built-in integration: an emitter may require a circuit, radio-tuning,
+command or wire-isolation procedure before the server disables it. Suitable future opt-in bridges
+include AA/radar shutdown, vehicle recovery diagnostics, field-resupply repair, locked tactical
+displays and gunship servicing. These should remain feature-specific options rather than blanket
+requirements because their authority, cancellation and repeatability rules differ.
+
+### Feature-integration suitability
+
+Every built-in bridge follows an inheritance contract. The feature action owns a **semantic default
+procedure** that matches what the player is doing (for example jammer disable uses circuit bypass;
+vehicle-recovery preparation uses repair). The integration remains optional and disabled for existing
+scripted missions. Enabling it uses that semantic default automatically; mission-level configuration,
+a specific object, or a Zeus-created instance can override the procedure, difficulty, eligibility,
+result, retry behaviour or presentation independently. Omitted settings inherit the feature/action
+default. Integrations must not force a procedure onto every use of the underlying feature.
+
+| Candidate | Fit | Useful procedure | Integration boundary |
+|---|---|---|---|
+| Dynamic AA central radar | Strong | Circuit, wire isolation or command authentication | One successful server callback disables the named AA system. Radar destruction and curator reactivation must reset or consume the procedure consistently. |
+| Hazard/life-support control panel | Strong | Circuit, pressure or command authentication | Activate, stabilise or purge a specific hazardous zone through its authoritative zone API. This creates useful repair/sabotage RP without putting a procedure on exposure itself. |
+| Vehicle recovery preparation | Strong, opt-in | Repair or hydraulics | Gate the first package/rigging transition, not loading, unloading and every workshop operation. Revalidate vehicle, carrier and exclusion area after success. |
+| Locked tactical display or intelligence terminal | Strong, opt-in | Keypad, lockpick or command authentication | Unlock the display globally or for a configured audience. Do not make routine map viewing repeat the procedure. |
+| Signal tracker discovery/removal | Strong, opt-in | Radio tune followed by circuit isolation | Run only after the tracker has been discovered; successful server callback removes the exact registered tracker. |
+| Field-resupply commissioning/repair | Conditional | Repair or circuit | Good for restoring a damaged hub or first commissioning a carrier. Poor for every refill, ammunition take or salvage operation. |
+| Gunship service authorisation | Conditional | Command authentication or maintenance | Best on a physical service console and before the service state begins. Poor on the current remote self-action because the shared framework is object-and-distance based. |
+| Paradrop control terminal | Conditional | Command authentication | Can authorise a planned drop or unlock route controls, but should not interrupt jumpmaster timing once the aircraft is on the run-in. |
+| MHQ initial repair/activation | Conditional | Repair, pressure or circuit | Useful once for a damaged command post; repetitive deploy/retract operations should stay immediate. |
+| Breaching, emergency dismount, rally actions, tree felling, ordinary resupply, accessibility and persistence save | Poor | None | These are already physical/time-critical mechanics, frequent utility actions, accessibility controls, or trusted administrative operations. A procedure would add friction or create a safety failure rather than useful gameplay. |
 
 Run a procedure without an object with:
 

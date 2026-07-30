@@ -14,7 +14,7 @@ Dynamic objects are not recreated automatically. Register stable editor objects 
 
 ## Hazardous environments and contact emitters
 
-Hazards support circles, rotated rectangles/ellipses, markers, triggers and moving object emitters. Profiles can set altitude floors/ceilings, constant or edge-falloff intensity, maximum exposure, enter/exit callbacks and decontamination of selected exposure channels. `Waldo_Hazard_Presets` provides feature-specific presets, and `Waldo_fnc_HazardRegisterPresetZone` applies a preset with overrides. Use `Waldo_fnc_HazardRegisterEmitter` for a moving vehicle, wreck, carried device or contaminated object.
+Hazards support circles, rotated rectangles/ellipses, markers, triggers and moving object emitters. Profiles can set altitude floors/ceilings, constant or edge-falloff intensity, maximum exposure, optional WMP entry/exit cards, enter/exit callbacks and decontamination of selected exposure channels. `Waldo_Hazard_Presets` provides feature-specific presets, and `Waldo_fnc_HazardRegisterPresetZone` applies a preset with overrides. Use `Waldo_fnc_HazardRegisterEmitter` for a moving vehicle, wreck, carried device or contaminated object.
 
 Arbitrary three-dimensional mesh volumes are not reliable in SQF; compose supported shapes or use an editor trigger. Consumable oxygen, filter durability and similar resources belong in callbacks because their inventory semantics are mission-specific.
 
@@ -46,13 +46,36 @@ The system does not automatically alter difficulty in response to server perform
 
 ## Field resupply
 
-This finite-resource ammunition feature lets a hub refill carrier crate allowances, carriers deploy charge-limited crates, players take validated magazine types, and crates be salvaged. Server checks enforce ownership, distance, side access, stock and capacity. Focused Zeus modules register a nearby hub or assign a nearby carrier during play.
+This finite-resource ammunition feature lets a hub refill carrier crate allowances, carriers deploy charge-limited crates, players take validated magazine types, and crates be salvaged. An assigned carrier wearing a backpack receives **Check Resupply Crates** and **Deploy Field Resupply** as ACE self-interactions, with scroll-wheel fallbacks only when ACE Interact is unavailable. Deployment is restricted to being on foot. A deployed crate is populated from the carrier's compatible loaded/carried magazine classes, so its inventory visibly represents the ammunition it can issue; each validated take removes the same magazines from physical cargo. Server checks enforce ownership, distance, side access, stock and capacity. Focused Zeus modules register a nearby hub or assign a nearby carrier during play.
 
-Magazine allow/block lists, minimum remaining rounds, crate class, charge count, carry capacity and respawn retention are configurable. It does not guess vehicle-ammunition compatibility or manufacture mod ammunition outside the configured rules.
+Magazine allow/block lists, minimum magazine capacity, crate class, charge count, carry capacity and respawn retention are configurable. Capacity-based issue amounts default to 4 magazines for capacities up to 4 rounds, 3 up to 10, 8 up to 40, 3 up to 70 and 2 above 70; missions may replace those five amounts or select a fixed amount. Unused crates can be recovered by a carrier, while removing a partly consumed crate recovers no portable crate. It does not guess vehicle-ammunition compatibility or manufacture mod ammunition outside the configured rules.
+
+Scripted setup is server-owned:
+
+```sqf
+if (isServer) then {
+    [supplyHub, west, -1] call Waldo_fnc_FieldResupplyRegisterHub;
+    [mule, 3, 3] call Waldo_fnc_FieldResupplyAssignCarrier;
+};
+```
 
 ## Tactical display
 
-A registered world object provides a proximity- and line-of-sight-gated tactical map. It draws friendly units and only enemies already known to the player's group, within the configured radius. It closes when the terminal is destroyed or the player leaves range.
+A registered world object provides a proximity- and line-of-sight-gated tactical map. It draws friendly units and only enemies already known to the player's group, within the configured radius. It closes when the display object is destroyed or the player leaves range. Use a map board or whiteboard-style object when the world fixture itself must visibly read as a tactical display; the full-pack audit uses a white map board rather than an infostand or data terminal.
+
+Registration can optionally require a shared authentication procedure before the ordinary display
+action becomes available. The semantic default is `commandinput / standard`; script and Zeus setup
+can instead select keypad or physical lock bypass and another standard difficulty profile:
+
+```sqf
+private _interaction = createHashMapFromArray [
+    ["enabled", true], ["challengeId", "commandinput"], ["difficulty", "standard"]
+];
+[mapBoard, west, 2000, true, _interaction] call Waldo_fnc_TacticalDisplayRegister;
+```
+
+Unlock state is server-authored and broadcast for JIP. When the option is disabled, access remains
+immediate and behaves exactly as before.
 
 Arma does not reliably project a fully interactive map control onto arbitrary object materials. The supported implementation uses the world object as the authenticated terminal and opens a normal client map display.
 

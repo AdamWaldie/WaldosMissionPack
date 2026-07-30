@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Removes the local tree-felling action and restores any previous IMS swing callback.
  *
  * Arguments:

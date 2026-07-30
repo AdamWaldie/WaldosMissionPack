@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Toggles the local friendly identification overlay without changing mission configuration.
  *
  * Arguments:

@@ -19,7 +19,7 @@ Every state uses colour, a written label and a symbol. Information remains under
 | `WARNING` | `[!]` | A condition requiring attention |
 | `ERROR` | `[X]` | Failure, loss or an unavailable service |
 
-Cards measure their text, retain internal padding and stay inside Arma's current safe zone. Available placements are `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT` and `BOTTOM_RIGHT`.
+Cards measure their text, retain internal padding and stay inside Arma's current safe zone. Available placements are `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER` and `BOTTOM_RIGHT`.
 
 ## Basic mission-maker use
 
@@ -97,10 +97,12 @@ Waldo_UiNotification_QueueLifetime = 15;
 Waldo_UiNotification_MaximumPerPlacement = 3;
 Waldo_UiNotification_ReflowDuration = 0.18;
 Waldo_UiNotification_AllowPlacementOverflow = true;
-Waldo_UiNotification_OverflowPlacements = ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"];
+Waldo_UiNotification_OverflowPlacements = ["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"];
 ```
 
-`CENTER` is deliberately not in the default overflow order because unsolicited cards there can obstruct aiming and interaction. A mission can add it when appropriate.
+The default mission uses separate live streams for the integrated features: immediate player safety at `TOP_RIGHT`, brief treatment progress in its dedicated padded `BOTTOM_CENTER` region, combat/action plus squad-rally/gunship updates at `BOTTOM_RIGHT`, and logistics and persistence at `BOTTOM_LEFT`. The `TOP` position is deliberately excluded because WMP mission-flow banners reserve the top-centre region. Each stream stacks independently, surviving cards close gaps when an earlier card fades, and a full general stream spills first into the right-side `BOTTOM_RIGHT` stack. Override `Waldo_UI_PanelPlacements` in `initPlayerLocal.sqf` to regroup or reposition these channels.
+
+`BOTTOM_CENTER` is deliberately not in the default overflow order. It is a first-class, stackable position, but the default reserves it for explicitly assigned short-lived channels such as treatment feedback. `CENTER` remains the final general overflow fallback and should be removed from `Waldo_UiNotification_OverflowPlacements` in missions where even late overflow could obstruct aiming or interaction.
 
 To dismiss a channel and discard its queued requests:
 

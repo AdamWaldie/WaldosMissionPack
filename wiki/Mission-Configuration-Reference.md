@@ -80,9 +80,11 @@ Runs **on the server only**. Configure server-authoritative limits, asset pools,
 
 ### Server-Owned Optional Feature Settings
 
-`initServer.sqf` owns object-scaling limits, Dynamic AA side/faction asset pools and the database branch of persistence. These values are not duplicated on clients because all related world mutations are validated by the server.
+`initServer.sqf` owns object-scaling limits, Dynamic AA side/faction asset pools and the database branch of persistence. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
+
+Shared hazard presentation defaults live in `init.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
 
 ### Logistics Crate Classnames
 
@@ -198,7 +200,7 @@ Tune these so players can drag and carry logistics crates in-game.
 ```sqf
 Waldo_AIRebalance_Enable = true;
 Waldo_AIRebalance_Mode = "DAY";       // DAY | NIGHT
-Waldo_AIRebalance_Profile = "LEGACY"; // LEGACY | PUBLIC | STANDARD | VETERAN
+Waldo_AIRebalance_Profile = "LINE";   // LINE default | MILITIA | VETERAN | ELITE | LEGACY compatibility
 ```
 
 Only one profile should be active at a time. AI rebalance initialises wherever AI can be local, including headless clients, and reapplies after locality migration. See [Waldos AI Rebalance](Waldos-AI-Tweak) for filters, variance, and restoration.
@@ -253,12 +255,18 @@ missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
 missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];  // or "INVSQ"
 missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];// destroy the object = remove jammer
 missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true]; // opt in to curator jammer markers
-missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF scan detection range (m)
+missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF hard cap; source must also actively affect the operator
 missionNamespace setVariable ["Waldo_Jamming_ScanBearingArc", 30, true]; // quantised bearing-sector width (deg)
 missionNamespace setVariable ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55], true]; // vague range-band thresholds
+missionNamespace setVariable ["Waldo_Jamming_AllowPlayerToggle", true, true]; // legacy direct toggle on non-challenge jammers
+missionNamespace setVariable ["Waldo_Jamming_DisableChallenge", false, true]; // opt in globally; Zeus-created jammers default on
+missionNamespace setVariable ["Waldo_Jamming_DisableChallengeId", "circuit", true];
+missionNamespace setVariable ["Waldo_Jamming_DisableDifficulty", "standard", true];
+missionNamespace setVariable ["Waldo_Jamming_DisableEngineerOnly", true, true];
+missionNamespace setVariable ["Waldo_Jamming_DisableResult", "DISABLE", true]; // or DESTROY
 ```
 
-On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](Radio-Jamming) for the full API.
+On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. The optional disable challenge connects the jammer to the shared field-procedure framework while keeping completion and radio state server-authoritative. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](Radio-Jamming) for the full API.
 
 The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers).
 

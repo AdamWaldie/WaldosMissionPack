@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Requests an ordered snapshot of network-safe runtime feature settings from the server.
  * Public variables remain useful for live updates; this handshake prevents a JIP machine from
  * activating against local defaults before the server's latest settings have arrived.

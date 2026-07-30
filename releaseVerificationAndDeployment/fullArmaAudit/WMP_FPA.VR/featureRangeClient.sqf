@@ -1,4 +1,4 @@
-/* Local interactions and labels for the walkable PR21-PR32 feature range. */
+/* Local interactions and labels for the ongoing full-pack PR feature range. */
 if (!hasInterface) exitWith {};
 waitUntil {uiSleep 0.1; !isNull player && {missionNamespace getVariable ["Waldo_QA_FeatureRangeReady", false]}};
 if (missionNamespace getVariable ["Waldo_QA_FeatureRangeClientReady", false]) exitWith {};
@@ -269,6 +269,21 @@ if (!isNull _coreConsole) then {
             ["SPAM COALESCING", format ["Pending update %1 of 25. Only the newest pending update should survive.", _index], "INFO", 4, "TOP_RIGHT", "QA_SPAM", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
         };
     }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_coreConsole, "Waldo_QA_UiPositions", "SHOW ALL UI POSITIONS", {
+        [] call Waldo_fnc_ClearUiPanels;
+        {
+            _x params ["_placement", "_title", "_channel"];
+            [_title, format ["First-class %1 placement with safe-zone sizing and stack reflow.", _placement], "INFO", 12, _placement, _channel, "WMP UI POSITION QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+        } forEach [
+            ["TOP", "TOP", "QA_POSITION_TOP"],
+            ["TOP_RIGHT", "TOP RIGHT", "QA_POSITION_TOP_RIGHT"],
+            ["CENTER", "CENTER", "QA_POSITION_CENTER"],
+            ["BOTTOM_LEFT", "BOTTOM LEFT", "QA_POSITION_BOTTOM_LEFT"],
+            ["BOTTOM_CENTER", "BOTTOM CENTER", "QA_POSITION_BOTTOM_CENTER"],
+            ["BOTTOM_RIGHT", "BOTTOM RIGHT", "QA_POSITION_BOTTOM_RIGHT"]
+        ];
+        ["BOTTOM CENTER STACK", "A second independent card verifies upward compaction within the padded bottom-centre region.", "SUCCESS", 8, "BOTTOM_CENTER", "QA_POSITION_BOTTOM_CENTER_2", "WMP UI POSITION QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+    }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_UiPlacement", "MOVE QA UI CHANNEL BOTTOM LEFT", {
         ["QA_UI", "BOTTOM_LEFT", false, false] call Waldo_fnc_SetUiPanelPlacement;
         ["PLACEMENT UPDATED", "Future QA_UI cards use the mission-authored bottom-left position.", "INFO", 8, "BOTTOM_LEFT", "QA_UI", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
@@ -290,4 +305,4 @@ missionNamespace setVariable ["Waldo_QA_Draw3DHandler", _drawHandler];
 
 player setPosATL [0, -2, 0];
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientReady", true];
-systemChat "WMP PR21-PR32 feature range ready. Use the AUDIT CONTROL laptop for navigation and resets.";
+systemChat "WMP full-pack PR feature range ready. Use the AUDIT CONTROL laptop for navigation and resets.";

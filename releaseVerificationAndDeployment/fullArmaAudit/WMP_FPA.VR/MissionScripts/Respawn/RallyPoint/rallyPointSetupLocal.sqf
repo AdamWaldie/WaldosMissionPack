@@ -1,4 +1,20 @@
-/* Installs repeat-safe squad-leader self actions on the current local player. */
+/*
+ * Author: WaldoTheWarfighter
+ * Installs repeat-safe squad-leader rally self actions on one local player unit.
+ *
+ * ACE self-interactions are preferred; vanilla hold/add actions are the fallback. Statements send
+ * authenticated requests to the server, which owns deployment and respawn state. This is called by
+ * RallyPointInit for the initial player and again after respawn/JIP reconciliation.
+ *
+ * Arguments:
+ * 0: unit <OBJECT> (default player) - locally owned player receiving the actions
+ *
+ * Return Value:
+ * Boolean - true when actions are installed, false when the unit/locality is unsuitable
+ *
+ * Example:
+ * [player] call Waldo_fnc_RallyPointSetupLocal;
+ */
 params [["_unit", player, [objNull]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!hasInterface || {isNull _unit} || {!local _unit} || {_unit getVariable ["Waldo_Rally_ActionsInstalled", false]}) exitWith {false};

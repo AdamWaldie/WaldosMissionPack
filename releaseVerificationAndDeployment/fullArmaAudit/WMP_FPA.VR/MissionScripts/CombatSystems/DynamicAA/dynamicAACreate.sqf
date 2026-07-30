@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Creates or replaces a named, server-authoritative Dynamic AA system from an extensible hash-map configuration.
  *
  * Arguments:
@@ -49,6 +49,7 @@ private _maximumAltitude = ((_config getOrDefault ["maximumAltitude", missionNam
 private _engagementRadius = ((_config getOrDefault ["engagementRadius", _radius]) max 100) min _radius;
 private _detectionDwell = (_config getOrDefault ["detectionDwell", 0]) max 0;
 private _clearDelay = (_config getOrDefault ["clearDelay", 5]) max 0;
+private _staticSiteSpacing = ((_config getOrDefault ["staticSiteSpacing", 30]) max 10) min 200;
 private _fighterCount = round (((_config getOrDefault ["fighterCount", 0]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumFighters", 12]));
 private _detectionInterval = (_config getOrDefault ["detectionInterval", missionNamespace getVariable ["Waldo_DynamicAA_DefaultDetectionInterval", 1]]) max 0.25;
 private _radarPosition = _config getOrDefault ["radarPosition", _centre];
@@ -83,6 +84,7 @@ _config set ["maximumAltitude", _maximumAltitude];
 _config set ["engagementRadius", _engagementRadius];
 _config set ["detectionDwell", _detectionDwell];
 _config set ["clearDelay", _clearDelay];
+_config set ["staticSiteSpacing", _staticSiteSpacing];
 _config set ["fighterCount", _fighterCount];
 _config set ["detectionInterval", _detectionInterval];
 _config set ["radarPosition", _radarPosition];
@@ -109,7 +111,7 @@ private _defenceGroups = [];
     private _staticClasses = selectRandom _staticSitePools;
     private _staticClassCount = (count _staticClasses) max 1;
     private _positions = _staticClasses apply {
-        _base getPos [7, _direction + 180 + ((_forEachIndex * 360) / _staticClassCount)]
+        _base getPos [_staticSiteSpacing, _direction + 180 + ((_forEachIndex * 360) / _staticClassCount)]
     };
     {
         private _vehicle = createVehicle [_x, _positions select _forEachIndex, [], 0, "NONE"];
@@ -174,6 +176,12 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
+if (_config getOrDefault ["shutdownInteraction", false]) then {
+    private _interactionSettings = [_id, _config getOrDefault ["shutdownChallenge", "circuit"], _config getOrDefault ["shutdownDifficulty", "standard"]];
+    _radar setVariable ["Waldo_DynamicAA_SystemId", _id, true];
+    _radar setVariable ["Waldo_DynamicAA_InteractionAvailable", true, true];
+    [_radar, _interactionSettings] remoteExecCall ["Waldo_fnc_DynamicAAInteractionSetup", 0, _radar];
+};
 private _handle = [_id] spawn Waldo_fnc_DynamicAADetectorLoop;
 _state set ["handle", _handle];
 _registry set [_id, _state];

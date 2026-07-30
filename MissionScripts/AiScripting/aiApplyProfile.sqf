@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies the active base, night-sensor, faction, and role skill layers to one local AI unit.
  *
  * Arguments:
@@ -10,6 +10,8 @@
  *
  * Example:
  * [_unit] call Waldo_fnc_AIApplyProfile;
+ *
+ * Current callers: AIRebalanceInit for existing/new AI and each unit's Local ownership handler.
  */
 
 params [["_unit", objNull, [objNull]]];
@@ -48,7 +50,7 @@ private _applySkills = {
 };
 
 private _profiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
-private _profileKey = missionNamespace getVariable ["Waldo_AI_Profile", "LEGACY"];
+private _profileKey = missionNamespace getVariable ["Waldo_AI_Profile", "LINE"];
 private _mode = missionNamespace getVariable ["Waldo_AI_Mode", "DAY"];
 [_unit, _profiles getOrDefault [_profileKey, createHashMap]] call _applySkills;
 
@@ -101,13 +103,34 @@ private _roleOverrides = missionNamespace getVariable ["Waldo_AI_RoleOverrides",
 [_unit, _roleOverrides getOrDefault [_role, createHashMap]] call _applySkills;
 
 if (_mode == "NIGHT" && {(getLighting select 1) <= (missionNamespace getVariable ["Waldo_AI_DarknessThreshold", 5])}) then {
-    private _spot = if (hmd _unit != "") then {
-        missionNamespace getVariable ["Waldo_AI_NightSpotWithNVG", 0.55]
+    if (_profileKey == "LEGACY") then {
+        private _spot = if (hmd _unit != "") then {
+            missionNamespace getVariable ["Waldo_AI_NightSpotWithNVG", 0.55]
+        } else {
+            missionNamespace getVariable ["Waldo_AI_NightSpotWithoutNVG", 0.12]
+        };
+        _unit setSkill ["spotTime", _spot];
+        _unit setSkill ["spotDistance", _spot];
     } else {
-        missionNamespace getVariable ["Waldo_AI_NightSpotWithoutNVG", 0.12]
+        // Night profiles degrade the AI itself. Assigned NVG/HMD equipment offsets, but does not
+        // completely remove, the low-light penalty. Mission makers can replace either map.
+        private _multipliers = if (hmd _unit != "") then {
+            missionNamespace getVariable ["Waldo_AI_NightNVGMultipliers", createHashMapFromArray [
+                ["aimingSpeed", 0.90], ["aimingAccuracy", 0.85], ["aimingShake", 0.90],
+                ["spotTime", 0.78], ["spotDistance", 0.75], ["commanding", 0.90],
+                ["general", 0.95], ["courage", 1.00], ["reloadSpeed", 0.95]
+            ]]
+        } else {
+            missionNamespace getVariable ["Waldo_AI_NightUnaidedMultipliers", createHashMapFromArray [
+                ["aimingSpeed", 0.75], ["aimingAccuracy", 0.65], ["aimingShake", 0.75],
+                ["spotTime", 0.35], ["spotDistance", 0.25], ["commanding", 0.65],
+                ["general", 0.80], ["courage", 1.00], ["reloadSpeed", 0.90]
+            ]]
+        };
+        {
+            _unit setSkill [_x, ((_unit skill _x) * (_multipliers getOrDefault [_x, 1])) max 0 min 1];
+        } forEach keys _multipliers;
     };
-    _unit setSkill ["spotTime", _spot];
-    _unit setSkill ["spotDistance", _spot];
 };
 private _variance = ((missionNamespace getVariable ["Waldo_AI_SkillVariance", 0]) max 0) min 0.25;
 if (_variance > 0) then {

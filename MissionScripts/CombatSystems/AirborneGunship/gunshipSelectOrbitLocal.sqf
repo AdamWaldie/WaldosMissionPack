@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Opens a private one-click map designation for an assigned gunship controller.
  * Arguments: 0: id <STRING>
  * Return Value: Boolean

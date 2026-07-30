@@ -21,6 +21,7 @@
  *                  "distance"        Number - vanilla addAction distance (default 4)
  *                  "lockTimeout"     Number - exclusive lock expiry in seconds (default 600)
  *                  "condition"       Code   - additional interaction condition (default {true})
+ *                  "actorCondition"  Code   - actor-aware condition receiving [_object, _actor]
  *                  "icon"            String - ACE action icon override
  *                  "preset"          String - curated equipment identity
  *                  "skin"            String - olive/charcoal/sand/naval/hazard
@@ -128,6 +129,7 @@ private _oneShot = ["oneShot", false] call _opt;
 private _distance = ["distance", 4] call _opt;
 private _lockTimeout = ["lockTimeout", 600] call _opt;
 private _condition = ["condition", {true}] call _opt;
+private _actorCondition = ["actorCondition", {true}] call _opt;
 private _onSuccess = ["onSuccess", {}] call _opt;
 private _onFailure = ["onFailure", {}] call _opt;
 
@@ -163,6 +165,7 @@ private _failure = {
         ["title", _title],
         ["icon", _icon],
         ["condition", _condition],
+        ["actorCondition", _actorCondition],
         ["oneShot", _oneShot],
         ["distance", _distance],
         ["lockTimeout", _lockTimeout],

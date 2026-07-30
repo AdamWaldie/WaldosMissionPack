@@ -32,15 +32,17 @@ The five booleans control cargo, damage, fuel, ammunition/pylons and position. K
 
 Set `Waldo_TreatmentFeedback_Enable = true` to display ACE treatment start, completion and interruption events through the pack notification UI. ACE emits these events locally to the treating unit, so the feature securely forwards patient feedback to the patient's owning machine. Self-treatment remains local.
 
-Start, success and failure notifications can be enabled independently. Patient notification is enabled by default; optional medic feedback, medic names and body-region labels can be selected separately. Titles, body-region names and treatment-class display-name overrides are configured through the player-local `Waldo_TreatmentFeedback_*` values in `initPlayerLocal.sqf`; colours follow the standard WMP semantic states.
+Start, success and failure notifications can be enabled independently. Patient notification is enabled by default; optional medic feedback, medic names and body-region labels can be selected separately. Treatment cards replace one another in a dedicated padded bottom-centre region, so they do not consume the general notification stacks; `Waldo_TreatmentFeedback_Duration` controls their short post-event lifetime and defaults to three seconds. Titles, body-region names and treatment-class display-name overrides are configured through the player-local `Waldo_TreatmentFeedback_*` values in `initPlayerLocal.sqf`; colours follow the standard WMP semantic states.
 
 Call `Waldo_fnc_TreatmentFeedbackInit` or `Waldo_fnc_TreatmentFeedbackStop` on interface clients after changing the player-local settings. This feature intentionally has no ZEN module. The ACE event identifier `ace_treatmentSucceded` is intentionally retained exactly as defined.
 
 ## Hazardous environments
 
-Set `Waldo_Hazard_Enable = true`, then register any number of zones. A zone accepts a trigger, marker name, or `[position, radius]`, plus an extensible profile hash map.
+Set `Waldo_Hazard_Enable = true`, then register any number of zones. A zone accepts a trigger, marker name, moving object emitter, `[position, radius]`, or `[position, axisA, axisB, angle, rectangle]`, plus an extensible profile hash map. Pre-planned zones should be registered consistently on clients (for example from shared mission initialisation); the ZEN/runtime path performs authoritative live registration, ordered activation and JIP replay automatically.
 
-**Hazard - Create** builds a circular zone at the module position with configurable exposure, recovery, damage, vehicle/interior protection and protective equipment. **Hazard - Remove Nearest** removes the nearest registered zone. Scripted profiles remain available for multiple damage tiers and custom callbacks.
+**Hazard - Create** builds a circular zone at the module position. After choosing a mission preset, the curator can give it a custom RP-facing name and entry/exit wording, choose linear or constant intensity, and configure range, exposure/recovery, exposure cap, damage, fatal threshold, vehicle/interior protection and entry/exit notifications. A zero damage value and zero fatal threshold produce a non-injuring roleplay zone; non-zero values create real ACE wounds (or vanilla damage without ACE). **Hazard - Remove Nearest** removes the nearest registered zone. Scripted profiles remain available for multiple damage tiers, custom protective-equipment rules and callbacks.
+
+`Waldo_Hazard_NotifyTransitions` enables player-local WMP notification cards on zone entry and exit and defaults to `true`; `Waldo_Hazard_NotificationDuration` defaults to six seconds. Each profile can override `notifyTransitions`, `notificationDuration`, `enterMessage`, `exitMessage`, `enterState` and `exitState`. Notifications use a per-zone channel, so a boundary transition replaces its own stale card without suppressing simultaneous warnings from other zones.
 
 ```sqf
 private _profile = createHashMapFromArray [
@@ -58,7 +60,7 @@ private _profile = createHashMapFromArray [
 ["hangar_vacuum", "vacuum_zone", _profile] call Waldo_fnc_HazardRegisterZone;
 ```
 
-Profiles can represent contamination, toxic gas, extreme temperature, vacuum or custom hazards. Protection can come from equipment, vehicles or interiors; `onTick` provides a custom callback. Unregister with `Waldo_fnc_HazardUnregisterZone`, or stop all local evaluation with `Waldo_fnc_HazardStop`.
+Profiles can represent contamination, toxic gas, extreme temperature, vacuum or custom hazards. `damageThresholds` are ordered `[exposure, damage-per-evaluator-tick]` tiers; `fatalExposure` forces death at the configured exposure, or `-1` disables it. Crossing a new damaging tier produces one WMP warning by default; override `notifyDamageStages`, `damageMessage` or `damageStageMessages` for the scenario. Protection can come from equipment, vehicles or interiors; `onTick` provides a custom callback. For a moving source, use `[_key, _object, _radius, _profile] call Waldo_fnc_HazardRegisterEmitter`. Unregister with `Waldo_fnc_HazardUnregisterZone`, or stop all local evaluation with `Waldo_fnc_HazardStop`.
 
 ## Tree felling
 
@@ -70,7 +72,9 @@ Tune range, weapon-name patterns, hit scaling, cooldown, brush radius, size thre
 
 Set `Waldo_EmergencyDismount_Enable = true`. The local occupant monitor can extract a player from an overturned or destroyed land vehicle or boat, choose a clear nearby position, optionally preserve velocity and provide a short configurable damage-protection window.
 
-Use the `Waldo_EmergencyDismount_*` settings or **Emergency Dismount - Control** to select overturn/destruction triggers, normal exit versus eject, clear-exit geometry checks, momentum preservation, safe-position radius, bounded damage protection and unconscious recovery. Stop with `Waldo_fnc_EmergencyDismountStop`.
+Use the `Waldo_EmergencyDismount_*` settings to select overturn/destruction triggers, normal exit versus eject, clear-exit geometry checks, momentum preservation, safe-position radius, bounded damage protection and unconscious recovery. Start and stop it with `Waldo_fnc_EmergencyDismountInit` and `Waldo_fnc_EmergencyDismountStop`; it intentionally has no ZEN module.
+
+Land vehicles also receive a local **Set Vehicle Upright** action on the vehicle itself when tipped and nearly stationary. The server validates proximity, forwards the operation to the vehicle's owning machine and places it above the terrain using its real model bounds and the local surface normal. Vehicle simulation must remain enabled for both the emergency extraction and upright mechanics.
 
 ## Friendly identification accessibility aid
 
@@ -106,10 +110,10 @@ Replacement specifications support model-relative offsets, yaw or full `[pitch, 
 Scale one object on the server:
 
 ```sqf
-[statue, 1.75, false] call Waldo_fnc_ObjectScale;
+private _scaledStatue = [statue, 1.75, true] call Waldo_fnc_ObjectScale;
 ```
 
-The third argument optionally converts the result to a simple object. Limits default to `0.1`–`10` and are server-owned in `initServer.sqf`. Remote requests are curator-only unless explicitly relaxed. For batches, tag objects with `Waldo_ObjectScale` and call `Waldo_fnc_ObjectScaleTagged`. Zeus can place **Scale Object** near a target and choose the value in a dialog.
+Arma officially supports runtime scaling for Simple Objects and attached objects. Merely disabling simulation on an ordinary object does not make scaling supported. The third argument explicitly converts an empty grounded decorative target to a Simple Object; conversion removes simulation, damage, inventory, crew, object-bound `addAction` entries and the original object reference, so always retain the returned object. Direction/orientation commands reset scale and must run first. Limits default to `0.1`–`10` and are server-owned in `initServer.sqf`. Remote requests are curator-only unless explicitly relaxed. For batches, tag objects with `Waldo_ObjectScale` and call `Waldo_fnc_ObjectScaleTagged`. Zeus can place **Scale Object** on a target, choose the scale and explicitly permit decorative conversion.
 
 ## See also
 

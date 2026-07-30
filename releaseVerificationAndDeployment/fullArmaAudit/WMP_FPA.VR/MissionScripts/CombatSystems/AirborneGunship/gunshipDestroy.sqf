@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Removes one registered gunship and optionally deletes a system-spawned aircraft.
  * Arguments: 0: id <STRING>; 1: delete spawned aircraft <BOOLEAN>
  * Return Value: Boolean

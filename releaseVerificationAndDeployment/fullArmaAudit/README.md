@@ -1,4 +1,4 @@
-# WMP PR review audit mission
+# WMP ongoing full-pack PR audit mission
 
 `FullArmaAudit.VR` is the canonical base mission for feature testing. It deliberately keeps the
 small, unbinarized `version=12` VR scenario that Arma has proven able to host reliably: five
@@ -35,20 +35,23 @@ The east test range adds sixteen repeatable stations for the newer full systems:
 
 - Persistence dependency gate, object registration and manual save
 - ACE patient treatment feedback
-- Hazardous-environment exposure and decay
+- Hazardous-environment exposure and decay from a live object emitter, including runtime/JIP activation status
 - Tree felling and regrowth
-- Emergency dismount from an overturned vehicle
+- Emergency dismount from a simulation-enabled overturned vehicle, with all test and upright controls on the vehicle
+- Tactical display on a dedicated white map board, locked behind an easy command-authentication procedure
 - Accessibility PID against friendly AI
 - Explosive wall breaching and reset
 - Object scaling and transform helpers
 - AI rebalance profiles and restoration
 - Field resupply hub, carrier, deployment and salvage
 - Tactical display with friendly and known-hostile contacts
-- Dynamic AA creation and teardown
+- Dynamic AA creation and teardown, including an optional circuit procedure on the central radar
 - Airborne gunship spawn, assignment, service and removal
-- Vehicle recovery packaging, transport and workshop restoration
+- Vehicle recovery preparation procedure, packaging, transport and workshop restoration
 - Squad rally deployment, regroup, expiry and removal
 - Nested-folder playable loadout scrape and limited arsenal
+- Radio-jammer field disablement through a real shared circuit procedure, with the audit fixture's
+  engineer restriction disabled so any selected test slot can exercise it
 
 Every station has an information stand and ACE-first, vanilla-fallback test controls. Audit Control offers
 teleports to each station. Dynamic AA and the gunship are created only when requested. Persistence
@@ -66,9 +69,9 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
 
 Add `-ExcludePersistenceMod` to exercise the missing-server-extension dependency gate even when INIDBI2 is installed locally.
 
-The launcher always uses a hosted multiplayer session, 1920×1080, `-noBattlEye`, and the required
-CBA, ACE, ZEN and ACRE2 mods. Select **Virtual Reality > WMP PR REVIEW AUDIT > Play**, choose a
-slot, then press **OK**.
+The launcher defaults to a local dedicated authority plus a connected 2560x1440 client, with
+`-noBattlEye` and the required CBA, ACE, ZEN and ACRE2 mods. It starts the audit mission directly;
+Eden is never involved. Choose a slot and press **OK** if the role-assignment screen is shown.
 
 Manual mode is the default. It loads the whole pack but does not run state-mutating automated
 cases. A server-owned Zeus curator is assigned to the first connected player so the WMP and

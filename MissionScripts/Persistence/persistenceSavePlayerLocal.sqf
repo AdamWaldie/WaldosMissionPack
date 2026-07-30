@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Captures and submits the local player's configured persistence state immediately.
  *
  * Arguments:

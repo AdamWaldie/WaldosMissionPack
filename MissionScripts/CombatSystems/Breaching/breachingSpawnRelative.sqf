@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Spawns one breach replacement relative to the original object's full transform.
  *
  * Arguments:

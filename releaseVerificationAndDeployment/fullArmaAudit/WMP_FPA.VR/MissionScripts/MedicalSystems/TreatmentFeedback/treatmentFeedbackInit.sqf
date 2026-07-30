@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Installs repeat-safe ACE treatment event handlers for patient and medic notifications.
  *
  * Arguments:

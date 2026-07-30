@@ -1,6 +1,13 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Evaluates all registered hazard zones for the local player and applies profile effects.
+ *
+ * This function runs only on each player's client from Waldo_fnc_HazardInit. Exposure and zone
+ * transition state are local to that player; registered zone definitions are shared/JIP-replayed.
+ * Optional entry/exit cards use the WMP notification UI once per transition and are controlled by
+ * Waldo_Hazard_NotifyTransitions or a profile's notifyTransitions override. Profile onEnter,
+ * onExit and onTick callbacks continue to run locally. Currently called by the HazardInit loop and
+ * directly by the full-pack function station.
  *
  * Arguments:
  * 0: interval <NUMBER> - seconds represented by this tick
@@ -18,6 +25,7 @@ if !(hasInterface && {alive player}) exitWith {};
 
 private _exposures = missionNamespace getVariable ["Waldo_Hazard_LocalExposure", createHashMap];
 private _previousInside = missionNamespace getVariable ["Waldo_Hazard_LocalInside", createHashMap];
+private _previousStages = missionNamespace getVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
 private _activeText = [];
 
 {
@@ -84,6 +92,19 @@ private _activeText = [];
     if (_inside != _wasInside) then {
         private _transition = _profile getOrDefault [if (_inside) then {"onEnter"} else {"onExit"}, {}];
         if (_transition isEqualType {}) then {[player, _key, _profile] call _transition};
+        if (_profile getOrDefault ["notifyTransitions", missionNamespace getVariable ["Waldo_Hazard_NotifyTransitions", true]]) then {
+            private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "Hazardous Area"]];
+            private _messageKey = ["exitMessage", "enterMessage"] select _inside;
+            private _defaultMessage = ["You have left the hazardous zone.", "You have entered a hazardous zone."] select _inside;
+            private _state = [["exitState", "INFO"], ["enterState", "WARNING"]] select _inside;
+            [
+                _label,
+                _profile getOrDefault [_messageKey, _defaultMessage],
+                _profile getOrDefault _state,
+                format ["HAZARD_%1", _key],
+                _profile getOrDefault ["notificationDuration", missionNamespace getVariable ["Waldo_Hazard_NotificationDuration", 6]]
+            ] call Waldo_fnc_FeatureNotifyLocal;
+        };
         _previousInside set [_key, _inside];
     };
 
@@ -93,17 +114,36 @@ private _activeText = [];
     };
 
     private _damage = 0;
+    private _damageStage = -1;
     {
         _x params ["_threshold", "_tickDamage"];
-        if (_exposure >= _threshold) then {_damage = _tickDamage};
+        if (_exposure >= _threshold) then {
+            _damage = _tickDamage;
+            _damageStage = _forEachIndex;
+        };
     } forEach (_profile getOrDefault ["damageThresholds", []]);
+
+    private _previousStage = _previousStages getOrDefault [_key, -1];
+    if (_damageStage > _previousStage && {_profile getOrDefault ["notifyDamageStages", true]}) then {
+        private _stageMessages = _profile getOrDefault ["damageStageMessages", []];
+        private _stageMessage = _stageMessages param [_damageStage, _profile getOrDefault ["damageMessage", "Exposure is now causing physical harm."]];
+        [
+            _profile getOrDefault ["label", "Hazardous Area"],
+            _stageMessage,
+            "ERROR",
+            format ["HAZARD_DAMAGE_%1", _key],
+            _profile getOrDefault ["notificationDuration", missionNamespace getVariable ["Waldo_Hazard_NotificationDuration", 6]]
+        ] call Waldo_fnc_FeatureNotifyLocal;
+    };
+    _previousStages set [_key, _damageStage];
 
     if (_damage > 0) then {
         if (isClass (configFile >> "CfgPatches" >> "ace_medical")) then {
             private _bodyPart = selectRandom ["Head", "Body", "LeftArm", "RightArm", "LeftLeg", "RightLeg"];
-            [player, _damage, _bodyPart, _profile getOrDefault ["damageType", "burn"]] call ace_medical_fnc_addDamageToUnit;
+            // "stab" is a documented ACE projectile type and produces a treatable medical wound.
+            [player, _damage, _bodyPart, _profile getOrDefault ["damageType", "stab"]] call ace_medical_fnc_addDamageToUnit;
         } else {
-            player setDamage ((damage player) + _damage min 1);
+            player setDamage (((damage player) + _damage) min 1);
         };
     };
     private _fatalAt = _profile getOrDefault ["fatalExposure", -1];
@@ -117,6 +157,7 @@ private _activeText = [];
 
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
+missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
 if (missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true] && {count _activeText > 0}) then {
     private _text = parseText format ["<t align='right' size='0.75'>%1</t>", _activeText joinString "<br/>" ];
     [_text, safeZoneX + safeZoneW - 0.42, safeZoneY + 0.22, 1.1, 0, 0, 791] spawn BIS_fnc_dynamicText;

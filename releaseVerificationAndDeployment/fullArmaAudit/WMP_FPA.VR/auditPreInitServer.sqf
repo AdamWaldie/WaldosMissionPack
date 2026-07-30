@@ -12,4 +12,8 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", false, true];
 missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true];
 missionNamespace setVariable ["Waldo_Economy_Enable", true, true];
 missionNamespace setVariable ["Waldo_Economy_Preset", "MEDIUM", true];
-missionNamespace setVariable ["Waldo_Economy_PresetSides", [["WEST", "NATO"]], true];
+missionNamespace setVariable [
+    "Waldo_Economy_PresetSides",
+    [["WEST", "NATO"], ["EAST", "CSAT"], ["GUER", "AAF"]],
+    true
+];

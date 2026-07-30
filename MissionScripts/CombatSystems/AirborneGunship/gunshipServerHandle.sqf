@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Validates controller and curator requests for a registered airborne gunship.
  * Arguments: 0: id <STRING>; 1: operation <STRING>; 2: arguments <ARRAY>; 3: requester <OBJECT>
  * Return Value: Boolean

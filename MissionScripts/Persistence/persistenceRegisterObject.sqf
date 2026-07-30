@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Registers an editor-placed or scripted object for repeat-safe server persistence.
  *
  * Arguments:

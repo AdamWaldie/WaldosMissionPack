@@ -14,6 +14,20 @@ private _add = {
     if (!isNull _object) then {[_object, _id, _title, _statement, _arguments] call Waldo_QA_fnc_addAuditActionLocal};
 };
 
+// Server-authorised QA orientation endpoint. Vehicle transforms must execute
+// where the occupied vehicle is local or the engine silently ignores them.
+Waldo_QA_fnc_setDismountOrientationLocal = {
+    params [["_vehicle", objNull, [objNull]], ["_mode", "OVERTURN", [""]]];
+    if (remoteExecutedOwner != 2 || {isNull _vehicle} || {!local _vehicle}) exitWith {false};
+    _vehicle setVelocity [0, 0, 0];
+    if (toUpperANSI _mode isEqualTo "OVERTURN") then {
+        private _position = getPosATL _vehicle;
+        _vehicle setVectorDirAndUp [[1, 0, 0], [0, 0, -1]];
+        _vehicle setPosATL [_position select 0, _position select 1, 1.8];
+    };
+    true
+};
+
 private _persistence = "qa_sign_persistence" call _get;
 [_persistence, "Waldo_QA_PersistenceProbe", "CHECK INIDBI2 DEPENDENCY", {
     params ["_target", "_actor"];
@@ -45,15 +59,41 @@ private _treatment = "qa_sign_treatment_feedback" call _get;
     params ["_target", "_actor"];
     [_actor] remoteExecCall ["Waldo_QA_fnc_injurePatientServer", 2];
 }] call _add;
+[_treatment, "Waldo_QA_TreatmentRolePreview", "PREVIEW GIVER + RECEIVER FEEDBACK", {
+    ["RECEIVER FEEDBACK", "Patient view: treatment, medic identity and body region are delivered to the receiver's owning client.", "SUCCESS", 8, "BOTTOM_CENTER", "TREATMENT_QA_RECEIVER", "MEDICAL // RECEIVER", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+    ["GIVER FEEDBACK", "Medic view: optional confirmation is rendered independently on the giver's owning client.", "INFO", 8, "BOTTOM_CENTER", "TREATMENT_QA_GIVER", "MEDICAL // GIVER", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+}] call _add;
+[_treatment, "Waldo_QA_EnableTreatmentGiver", "ENABLE ACTUAL GIVER FEEDBACK", {
+    missionNamespace setVariable ["Waldo_TreatmentFeedback_NotifyMedic", true];
+    ["TREATMENT QA", "Actual ACE treatment events performed by this client will now show giver feedback. Production remains patient-only by default.", "SUCCESS", "TREATMENT_QA"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_treatment, "Waldo_QA_InjureSelf", "INJURE ME FOR RECEIVER / SELF TEST", {
+    if (isClass (configFile >> "CfgPatches" >> "ace_medical")) then {
+        [player] call ace_medical_treatment_fnc_fullHealLocal;
+        [player, 0.35, "LeftArm", "bullet"] call ace_medical_fnc_addDamageToUnit;
+        ["TREATMENT QA", "Treat your own left arm through ACE. Receiver and giver roles must de-duplicate to one bottom-centre card.", "WARNING", "TREATMENT_QA"] call Waldo_fnc_FeatureNotifyLocal;
+    };
+}] call _add;
 
 private _hazard = "qa_sign_hazards" call _get;
 [_hazard, "Waldo_QA_EnterHazard", "ENTER EXPOSURE LANE", {
     params ["_target", "_actor"];
+    [] call Waldo_fnc_HazardInit;
     private _emitter = missionNamespace getVariable ["qa_hazard_emitter", objNull];
-    if (!isNull _emitter) then {_actor setPosATL ((getPosATL _emitter) vectorAdd [0, -2, 0])};
+    if (!isNull _emitter) then {
+        _actor setPosATL ((getPosATL _emitter) vectorAdd [0, -2, 0]);
+        ["HAZARD QA", "Entered the object-emitter radius. Unprotected exposure must rise on the next evaluator tick.", "WARNING", "HAZARD_QA"] call Waldo_fnc_FeatureNotifyLocal;
+    };
+}] call _add;
+[_hazard, "Waldo_QA_HazardStatus", "SHOW HAZARD RUNTIME STATUS", {
+    private _zones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
+    private _exposure = (missionNamespace getVariable ["Waldo_Hazard_LocalExposure", createHashMap]) getOrDefault ["qa_hazard", 0];
+    private _inside = (missionNamespace getVariable ["Waldo_Hazard_LocalInside", createHashMap]) getOrDefault ["qa_hazard", false];
+    private _started = missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false];
+    ["HAZARD QA STATUS", format ["Evaluator: %1<br/>Registered zones: %2<br/>Inside QA emitter: %3<br/>Exposure: %4", _started, count _zones, _inside, _exposure toFixed 2], if (_started && {count _zones > 0}) then {"SUCCESS"} else {"ERROR"}, "HAZARD_QA"] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 [_hazard, "Waldo_QA_HazardProtect", "EQUIP QA PROTECTIVE HELMET", {
-    player addHeadgear "H_HelmetB";
+    player addHeadgear "H_PilotHelmetFighter_B";
     ["HAZARD QA", "QA protection equipped. Exposure multiplier should be zero in this lane.", "SUCCESS", "HAZARD_QA"] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 [_hazard, "Waldo_QA_HazardUnprotect", "REMOVE QA PROTECTION", {
@@ -72,7 +112,7 @@ private _tree = "qa_sign_tree_felling" call _get;
     [] remoteExecCall ["Waldo_QA_fnc_resetTreeServer", 2];
 }] call _add;
 
-private _dismount = "qa_sign_emergency_dismount" call _get;
+private _dismount = missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull];
 [_dismount, "Waldo_QA_EnterDismount", "BOARD DISMOUNT TEST VEHICLE", {
     params ["_target", "_actor"];
     private _vehicle = missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull];
@@ -151,7 +191,10 @@ private _ai = "qa_sign_ai_rebalance" call _get;
         params ["_target", "_actor", "_profile"];
         [_profile] remoteExecCall ["Waldo_QA_fnc_setAIProfileServer", 2];
     }, _profile] call _add;
-} forEach [["PUBLIC", "PUBLIC"], ["STANDARD", "STANDARD"], ["VETERAN", "VETERAN"]];
+} forEach [["MILITIA", "WMP MILITIA"], ["LINE", "WMP LINE"], ["VETERAN", "WMP VETERAN"], ["ELITE", "WMP ELITE"]];
+[_ai, "Waldo_QA_AI_LineNight", "APPLY WMP LINE LOW-LIGHT PROFILE", {
+    ["LINE", "NIGHT"] remoteExecCall ["Waldo_QA_fnc_setAIProfileServer", 2];
+}] call _add;
 [_ai, "Waldo_QA_AI_Stop", "RESTORE ORIGINAL AI SKILLS", {
     [] remoteExecCall ["Waldo_QA_fnc_stopAIRebalanceServer", 2];
 }] call _add;
@@ -167,6 +210,12 @@ private _resupply = "qa_sign_field_resupply" call _get;
 }] call _add;
 
 private _tactical = "qa_sign_tactical_display" call _get;
+[_tactical, "Waldo_QA_ExplainTactical", "WHAT IS THE TACTICAL DISPLAY?", {
+    ["TACTICAL DISPLAY", "Complete Authenticate Tactical Display on the dedicated white map board, then use Access Tactical Display. The live map shows nearby friendlies and only hostile units your group already knows about. Reveal the QA hostile to verify contact filtering.", "INFO", "TACTICAL_DISPLAY_QA"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_tactical, "Waldo_QA_ResetTactical", "RESET DISPLAY AUTHENTICATION", {
+    [] remoteExecCall ["Waldo_QA_fnc_resetTacticalDisplayServer", 2];
+}] call _add;
 [_tactical, "Waldo_QA_RevealTactical", "REVEAL QA HOSTILE TO MY GROUP", {
     params ["_target", "_actor"];
     [_actor] remoteExecCall ["Waldo_QA_fnc_revealTacticalHostileServer", 2];
@@ -174,7 +223,7 @@ private _tactical = "qa_sign_tactical_display" call _get;
 
 private _aa = "qa_sign_dynamic_aa" call _get;
 [_aa, "Waldo_QA_CreateAA", "CREATE QA DYNAMIC AA SYSTEM", {
-    [] remoteExecCall ["Waldo_QA_fnc_createDynamicAAServer", 2];
+    [player] remoteExecCall ["Waldo_QA_fnc_createDynamicAAServer", 2];
 }] call _add;
 [_aa, "Waldo_QA_SpawnAATarget", "SPAWN ABOVE-ALTITUDE WEST UAV", {
     params ["_target", "_actor"];
@@ -200,10 +249,27 @@ private _gunship = "qa_sign_gunship" call _get;
     [] call Waldo_fnc_GunshipSetupLocal;
 }] call _add;
 [_gunship, "Waldo_QA_ServiceGunship", "SEND QA GUNSHIP TO SERVICE", {
-    ["QA_GUNSHIP", "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2];
+    [player] remoteExecCall ["Waldo_QA_fnc_serviceGunshipServer", 2];
+}] call _add;
+[_gunship, "Waldo_QA_ReportGunship", "REPORT QA GUNSHIP STATE", {
+    [player] remoteExecCall ["Waldo_QA_fnc_reportGunshipServer", 2];
 }] call _add;
 [_gunship, "Waldo_QA_DestroyGunship", "REMOVE QA GUNSHIP", {
     [] remoteExecCall ["Waldo_QA_fnc_destroyGunshipServer", 2];
+}] call _add;
+
+private _dynamicParadrop = "qa_sign_dynamic_paradrop" call _get;
+[_dynamicParadrop, "Waldo_QA_CreateParadrop", "CREATE QA DYNAMIC PARADROP", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_createParadropServer", 2];
+}] call _add;
+[_dynamicParadrop, "Waldo_QA_ReportParadrop", "REPORT QA PARADROP STATE", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_reportParadropServer", 2];
+}] call _add;
+[_dynamicParadrop, "Waldo_QA_RemoveParadrop", "REMOVE QA DYNAMIC PARADROP", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_removeParadropServer", 2];
 }] call _add;
 
 private _workshop = "qa_sign_vehicle_recovery" call _get;
@@ -219,8 +285,32 @@ private _rally = "qa_sign_rally" call _get;
 [_rally, "Waldo_QA_ResetRally", "REMOVE ALL QA RALLY POINTS", {
     [] remoteExecCall ["Waldo_QA_fnc_resetRalliesServer", 2];
 }] call _add;
+[_rally, "Waldo_QA_TestRallyRespawn", "TEST RALLY RESPAWN SELECTION", {
+    if !((group player) getVariable ["Waldo_Rally_Active", false]) exitWith {
+        ["SQUAD RALLY QA", "Deploy a squad rally first. This test will then kill the tester and open the real respawn-position menu.", "WARNING", "RALLY_QA", 8] call Waldo_fnc_FeatureNotifyLocal;
+    };
+    ["SQUAD RALLY QA", "Tester will be killed in two seconds. Select either Audit Base Respawn or the deployed squad rally in the respawn menu.", "WARNING", "RALLY_QA", 2] call Waldo_fnc_FeatureNotifyLocal;
+    [] spawn {uiSleep 2; player setDamage 1;};
+}] call _add;
 [_rally, "Waldo_QA_RallyHelp", "SHOW RALLY TEST INSTRUCTIONS", {
-    ["SQUAD RALLY QA", "The commander slot is squad leader. Use the self-action to deploy, regroup, pack, then repeat after the five-second cooldown.", "INFO", "RALLY_QA", 10] call Waldo_fnc_FeatureNotifyLocal;
+    ["SQUAD RALLY QA", "Become squad leader, deploy through the self-action, then run TEST RALLY RESPAWN SELECTION. The menu must offer both Audit Base Respawn and the squad rally.", "INFO", "RALLY_QA", 10] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+
+// Realistic concurrent feature traffic verifies independent channels, stack
+// compaction and right-side overflow without using the reserved TOP banner.
+Waldo_QA_fnc_runNotificationStreamsLocal = {
+    [] call Waldo_fnc_ClearUiPanels;
+    ["Squad-rally stream opened at bottom-right.", "SUCCESS"] call Waldo_fnc_RallyPointNotifyLocal;
+    ["TREATMENT UPDATE", "Medical feedback is isolated in the padded bottom-centre region.", "SUCCESS"] call Waldo_fnc_TreatmentFeedbackShowLocal;
+    ["Recovery stream opened; independent logistics cards share and compact within their region.", "SUCCESS"] call Waldo_fnc_RecoveryNotifyLocal;
+    ["Field resupply stream opened; it should stack with vehicle recovery at bottom-left.", "INFO", "FIELD_RESUPPLY", 12] call Waldo_fnc_FeatureNotifyLocal;
+    ["AIR DEFENCE", "Combat-warning stream opened at bottom-right.", "WARNING", "DYNAMIC_AA", 8] call Waldo_fnc_FeatureNotifyLocal;
+    ["TREE FELLING", "A second combat/action channel stacks beneath air defence.", "INFO", "TREE_FELLING", 12] call Waldo_fnc_FeatureNotifyLocal;
+    ["Accessibility stream opened at top-right.", "INFO", "ACCESSIBILITY_PID", 8] call Waldo_fnc_FeatureNotifyLocal;
+};
+private _missionFlow = "qa_sign_mission_flow" call _get;
+[_missionFlow, "Waldo_QA_NotificationStreams", "RUN LIVE NOTIFICATION STREAMS", {
+    [] call Waldo_QA_fnc_runNotificationStreamsLocal;
 }] call _add;
 
 private _loadouts = "qa_sign_nested_loadouts" call _get;

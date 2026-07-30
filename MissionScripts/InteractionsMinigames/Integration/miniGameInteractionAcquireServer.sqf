@@ -34,6 +34,8 @@ private _distance = _object getVariable ["Waldo_MG_Int_Distance", 4];
 if ((_actor distance _object) > _distance) exitWith {[format ["MOVE WITHIN %1 METRES OF THE EQUIPMENT", _distance]] call _reject};
 private _condition = _object getVariable ["Waldo_MG_Int_Condition", {true}];
 if !(_object call _condition) exitWith {["EQUIPMENT CONDITIONS ARE NOT MET"] call _reject};
+private _actorCondition = _object getVariable ["Waldo_MG_Int_ActorCondition", {true}];
+if !([_object, _actor] call _actorCondition) exitWith {["YOU ARE NOT AUTHORISED OR EQUIPPED FOR THIS PROCEDURE"] call _reject};
 
 private _challengeId = _object getVariable ["Waldo_MG_Int_ChallengeId", "wirecut"];
 private _counter = missionNamespace getVariable ["Waldo_MG_Int_AttemptCounter", 0];

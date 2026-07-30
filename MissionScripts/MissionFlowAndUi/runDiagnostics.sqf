@@ -106,20 +106,35 @@ private _flattenReal = {
     _flat select {_x isEqualType "" && {_x != "" && {_x != "EMPTY"}}}
 };
 private _configuredLoadoutSides = 0;
+private _countConfiguredSlots = {
+    params ["_entity", "_sideName"];
+    private _count = 0;
+    if (getText (_entity >> "dataType") == "Object") then {
+        private _attributes = _entity >> "Attributes";
+        if (getText (_entity >> "side") == _sideName && {(getNumber (_attributes >> "isPlayer")) == 1 || {(getNumber (_attributes >> "isPlayable")) == 1}}) then {
+            _count = 1;
+        };
+    };
+    private _children = _entity >> "Entities";
+    {_count = _count + ([_x, _sideName] call _countConfiguredSlots)} forEach (configProperties [_children, "isClass _x", true]);
+    _count
+};
+private _loadoutRoot = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities";
 {
-    _x params ["_side", "_suffix", "_label"];
-    private _slotCount = {side group _x == _side} count playableUnits;
+    _x params ["_sideName", "_suffix", "_label"];
+    private _slotCount = 0;
+    {_slotCount = _slotCount + ([_x, _sideName] call _countConfiguredSlots)} forEach (configProperties [_loadoutRoot, "isClass _x", true]);
     private _items = [missionNamespace getVariable [format ["Logi_MissionSQMArray_%1", _suffix], []]] call _flattenReal;
     private _count = count _items;
     if (_slotCount == 0 && {_count == 0}) then {
-        ["logistics", format ["%1-loadout", _label], "UNCONFIGURED", "No live or mission-config playable slots use this side", false] call _status;
+        ["logistics", format ["%1-loadout", _label], "UNCONFIGURED", "No authored mission-config playable slots use this side", false] call _status;
     } else {
         if (_count > 0) then {_configuredLoadoutSides = _configuredLoadoutSides + 1};
-        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 live playable slot(s), %2 unique mission-scraped item(s)", _slotCount, _count], _count == 0] call _status;
+        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 authored playable slot(s), %2 unique mission-scraped item(s)", _slotCount, _count], _count == 0] call _status;
     };
-} forEach [[west, "West", "BLUFOR"], [east, "East", "OPFOR"], [independent, "Ind", "INDEP"], [civilian, "Civ", "CIV"]];
-if ((count playableUnits) == 0 && {_configuredLoadoutSides == 0}) then {
-    ["logistics", "playable-slots", "ERROR", "No live or mission-config playable units; logistics crates cannot derive mission equipment", true] call _status;
+} forEach [["West", "West", "BLUFOR"], ["East", "East", "OPFOR"], ["Independent", "Ind", "INDEP"], ["Civilian", "Civ", "CIV"]];
+if (_configuredLoadoutSides == 0) then {
+    ["logistics", "playable-slots", "ERROR", "No authored playable inventories were found in mission configuration; logistics crates cannot derive mission equipment", true] call _status;
 };
 
 // Configured classes. Blank values are unconfigured; bad non-blank values are errors.

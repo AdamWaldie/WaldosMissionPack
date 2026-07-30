@@ -8,7 +8,7 @@ This audit protects WaldosMissionPack from accidental scheduler, world-scan, UI-
 
 ## What changed
 
-| Area | PR #32 baseline | Audited implementation | Static effect |
+| Area | Pre-audit baseline | Audited implementation | Static effect |
 |---|---:|---:|---|
 | Scanner findings | 82 | 69 | 13 recurring-pattern findings removed |
 | High-severity findings | 12 | 6 | 6 removed; all remaining findings have reviewed reasons |

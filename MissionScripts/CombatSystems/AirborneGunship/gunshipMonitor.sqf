@@ -1,8 +1,19 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Advances one gunship state machine and enforces fuel, damage, ammunition and service policy.
- * Arguments: 0: id <STRING>
- * Return Value: Nothing
+ *
+ * One scheduled server loop is spawned per registered gunship by Waldo_fnc_GunshipRegister. It
+ * restores controllers by UID after respawn, drives transit/RTB/service state, uses synchronized
+ * serverTime for service progress and initiates automatic service when configured limits are met.
+ *
+ * Arguments:
+ * 0: system ID <STRING>
+ *
+ * Return Value:
+ * Nothing
+ *
+ * Example:
+ * ["SPECTRE_1"] spawn Waldo_fnc_GunshipMonitor;
  */
 
 params ["_id"];
@@ -53,13 +64,14 @@ while {true} do {
         _status = "ON_STATION";
     };
     if (_status == "RTB" && {count _home >= 2} && {_aircraft distance2D _home <= _arrivalTolerance}) then {
-        _state set ["serviceCompleteAt", diag_tickTime + ((_config getOrDefault ["serviceDuration", missionNamespace getVariable ["Waldo_Gunship_DefaultServiceDuration", 900]]) max 0)];
+        private _serviceDuration = ((_config getOrDefault ["serviceDuration", missionNamespace getVariable ["Waldo_Gunship_DefaultServiceDuration", 900]]) max 0);
+        _state set ["serviceCompleteAt", serverTime + _serviceDuration];
         _registry set [_id, _state];
         missionNamespace setVariable ["Waldo_Gunship_Registry", _registry];
-        [_id, "SERVICING", format ["%1 has reached its service orbit.", _config getOrDefault ["callsign", _id]]] call Waldo_fnc_GunshipSetState;
+        [_id, "SERVICING", format ["%1 is servicing for %2 seconds. Weapon control and tasking are unavailable.", _config getOrDefault ["callsign", _id], round _serviceDuration]] call Waldo_fnc_GunshipSetState;
         _status = "SERVICING";
     };
-    if (_status == "SERVICING" && {diag_tickTime >= (_state getOrDefault ["serviceCompleteAt", 1e10])}) then {
+    if (_status == "SERVICING" && {serverTime >= (_state getOrDefault ["serviceCompleteAt", 1e10])}) then {
         private _maximumCycles = _config getOrDefault ["maximumServiceCycles", -1];
         private _cycles = _state getOrDefault ["serviceCycles", 0];
         if (_maximumCycles >= 0 && {_cycles >= _maximumCycles}) then {

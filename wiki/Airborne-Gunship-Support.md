@@ -6,6 +6,16 @@ _Associated Files: `MissionScripts/CombatSystems/AirborneGunship/`; `init.sqf`_
 
 Airborne Gunship Support manages any number of named, crewed aircraft through a server-owned lifecycle. It can register an existing aircraft or spawn a configured class, assign a player controller, move between combat and service orbits, provide validated remote turret control, and return automatically when fuel, damage or ammunition limits are reached.
 
+Operational side and physical airframe are independent. Side controls crew allegiance, controller
+access, marker friendliness and targeting; the airframe dropdown can use any compatible configured
+aircraft regardless of its original faction.
+
+Service is a deliberate availability cycle rather than an instant refill. A request releases weapon
+control, sends the aircraft to its home/service orbit, locks tasking during transit and service,
+waits the configured duration, applies the configured fuel, ammunition and repair fractions, then
+returns to the previous combat orbit. During RTB/service the assigned controller sees only a status
+interaction, including approximate remaining service time.
+
 The feature is disabled by default. Calling `Waldo_fnc_GunshipRegister` or using the registration Zeus module explicitly enables it.
 
 ## Scripted setup
@@ -67,12 +77,12 @@ The final destroy argument deletes the aircraft only when the feature originally
 
 ## Focused Zeus modules
 
-- **Gunship - Register or Spawn** registers the nearest aircraft or spawns a supplied class.
+- **Gunship - Register or Spawn** offers allegiance and aircraft in one dialog; changing allegiance immediately refreshes friendly-name choices from compatible, turret-equipped side/faction aircraft pools. It generates the internal system key; Zeus never has to type a config classname or registry ID.
 - **Gunship - Assign Controller** assigns the nearest player to a named system.
 - **Gunship - Set Orbit** moves a named system to the module position.
 - **Gunship - Operational Control** returns it on station, sends it for service, releases remote control or removes it.
 
-These are operational controls, not a general live-feature manager.
+Assignment, orbit and operational dialogs show callsigns and current state while retaining internal IDs only as hidden values. These are operational controls, not a general live-feature manager.
 
 ## Extension callbacks
 

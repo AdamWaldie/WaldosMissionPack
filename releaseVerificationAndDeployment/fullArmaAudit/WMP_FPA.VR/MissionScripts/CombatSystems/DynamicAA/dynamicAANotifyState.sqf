@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Announces one Dynamic AA detection transition outside the recurring detector body.
  * Arguments: 0: id <STRING>; 1: detected <BOOLEAN>
  * Return Value: Nothing

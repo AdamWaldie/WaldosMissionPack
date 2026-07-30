@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Zeus module handler: prompts the curator for a jammer's radius, falloff, strength, the side it
- * jams and whether to mark it, then spawns an emitter object at the module position and registers
+ * jams, whether it has an operator toggle, and whether hostile field disablement requires a
+ * shared interaction procedure. It then spawns an emitter object at the module position and registers
  * it as a localised radio jammer (Waldo_fnc_Jammer). Works for ACRE2 and TFAR. The object is
  * created on the curator's machine and added to the curator so it can be moved or deleted in Zeus;
  * the jammer registry write is forwarded to the server by Waldo_fnc_Jammer.
@@ -20,6 +21,13 @@ if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 
 params ["_modulePos", "_objectPos"];
 
+private _emitterClasses = ["Land_PowerGenerator_F", "Land_PortableGenerator_01_F", "Land_DataTerminal_01_F", "Land_TTowerSmall_1_F"];
+_emitterClasses = _emitterClasses select {isClass (configFile >> "CfgVehicles" >> _x)};
+private _emitterLabels = _emitterClasses apply {
+    private _name = getText (configFile >> "CfgVehicles" >> _x >> "displayName");
+    if (_name == "") then {_x} else {_name}
+};
+
 [
     "Waldos Radio Jammer",
     [
@@ -33,7 +41,11 @@ params ["_modulePos", "_objectPos"];
                 0
             ],
         false],
-        ["EDIT", ["Frequency Bands", "ALL, or semicolon-separated MHz ranges such as 30-88;225-400. ACRE2 only; TFAR remains broadband."], "ALL"],
+        ["COMBO", ["ACRE frequency coverage", "TFAR is always broadband. Choose a common ACRE operating range."], [
+            ["ALL", "30-88", "225-400", "30-88;225-400"],
+            ["All frequencies", "VHF combat net (30-88 MHz)", "UHF air net (225-400 MHz)", "VHF and UHF combat/air nets"],
+            0
+        ]],
         ["CHECKBOX", ["Start Active", "Enable the emitter immediately after placement."], true, false],
         ["SLIDER", ["Cone Arc (deg)", "360 = omnidirectional; less = a directional cone facing the bearing below."], [10, 360, 360, 0], false],
         ["SLIDER", ["Cone Bearing (deg)", "Compass bearing the cone faces (ignored when arc is 360)."], [0, 359, 0, 0], false],
@@ -43,11 +55,22 @@ params ["_modulePos", "_objectPos"];
         ["CHECKBOX", ["Also Jam UAVs / Drones", "Freeze autonomous drones and cut controlling players' datalinks in the field."], false, false],
         ["CHECKBOX", ["Show Map Marker", "Place a persistent map marker on the jammer."], false, false],
         ["CHECKBOX", ["Show Curator 3D Marker", "Show a floating curator-only marker for this emitter. Ordinary players never see it."], false, false],
-        ["EDIT", ["Emitter Class", "CfgVehicles classname spawned as the physical emitter."], "Land_PowerGenerator_F"]
+        ["COMBO", ["Emitter object", "Physical object created at the module position."], [_emitterClasses, _emitterLabels, 0]],
+        ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant field disablement with a shared interaction challenge. This also suppresses the direct player toggle so the procedure cannot be bypassed."], true, false],
+        ["COMBO", ["Disable Procedure", "Procedure players complete to shut down the jammer."], [
+            ["circuit", "radiotune", "commandinput", "wirecut"],
+            ["Circuit bypass", "Signal alignment", "Command authentication", "Control-wire isolation"],
+            0
+        ]],
+        ["COMBO", ["Procedure Difficulty", "Shared interaction difficulty profile."], [
+            ["easy", "standard", "hard", "expert"],
+            ["Easy", "Standard", "Hard", "Expert"],
+            1
+        ]]
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_className"];
+        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_className", "_disableChallenge", "_challengeId", "_difficulty"];
         _pos params ["_modulePos"];
 
         private _sector = [];
@@ -83,7 +106,7 @@ params ["_modulePos", "_objectPos"];
 
         [
             _modulePos,
-            [_radius, _sideStr, _bands, _falloff, (_strengthPct / 100), _active, _marker, _sector, _duty, _jamUAV, _show3D, _className],
+            [_radius, _sideStr, _bands, _falloff, (_strengthPct / 100), _active, _marker, _sector, _duty, _jamUAV, _show3D, _className, _disableChallenge, _challengeId, _difficulty],
             player
         ] remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
     },

@@ -261,6 +261,18 @@ private _exerciseProcedure = {
                 };
             };
         };
+        // A successful procedure deliberately leaves its result face visible briefly.
+        // Wait for the real cleanup path before opening the next case so the production
+        // single-display guard is tested rather than bypassed.
+        private _cleanupDeadline = time + 10;
+        waitUntil {
+            uiSleep 0.02;
+            isNull (uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])
+            || {time > _cleanupDeadline}
+        };
+        if !(isNull (uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])) then {
+            _allFindings pushBack [_caseId, "CLEANUP", "DISPLAY_CLOSE_TIMEOUT"];
+        };
         uiSleep 0.1;
     } forEach _entries;
     diag_log format ["WMP INTERACTION UI QA COMPLETE: %1 finding(s) %2", count _allFindings, _allFindings];

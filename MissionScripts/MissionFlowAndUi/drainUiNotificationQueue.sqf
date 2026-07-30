@@ -1,5 +1,6 @@
 /* Starts queued cards in FIFO order whenever their channel and screen slot are free. */
 if (!hasInterface) exitWith {false};
+if (uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]) exitWith {false};
 private _queue = +(uiNamespace getVariable ["Waldo_UiPanelQueue", []]);
 _queue = _queue select {(_x param [12, 1e11]) > diag_tickTime};
 private _maximumPerPlacement = ((missionNamespace getVariable ["Waldo_UiNotification_MaximumPerPlacement", 3]) max 1) min 6;
@@ -17,10 +18,10 @@ while {_started && {_guard < 12}} do {
         if (missionNamespace getVariable ["Waldo_UiNotification_AllowPlacementOverflow", true]) then {
             {
                 private _candidate = toUpper _x;
-                if (_candidate in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_RIGHT"]) then {
+                if (_candidate in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]) then {
                     _candidates pushBackUnique _candidate;
                 };
-            } forEach (missionNamespace getVariable ["Waldo_UiNotification_OverflowPlacements", ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"]]);
+            } forEach (missionNamespace getVariable ["Waldo_UiNotification_OverflowPlacements", ["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"]]);
         };
         private _free = _candidates findIf {
             private _candidate = _x;

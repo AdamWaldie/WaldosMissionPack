@@ -1,6 +1,11 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies editor-provided scale variables to all matching mission objects exactly once per call.
+ *
+ * The server scans authored mission objects and delegates each change to Waldo_fnc_ObjectScale.
+ * Conversion is opt-in because Simple Objects lose simulation and interactions. This is currently
+ * called directly by mission makers after object creation or from server startup code; it is also
+ * inventoried by the full-pack function station.
  *
  * Arguments:
  * 0: variableName <STRING> - object variable containing the numeric scale (default: Waldo_ObjectScale)
@@ -10,7 +15,7 @@
  * Number - scaled object count
  *
  * Example:
- * ["Waldo_ObjectScale", false] call Waldo_fnc_ObjectScaleTagged;
+ * ["Waldo_ObjectScale", true] call Waldo_fnc_ObjectScaleTagged;
  */
 
 params [

@@ -197,6 +197,12 @@ class CfgFunctions
               class SetupUiCleanupAction {
                   file = "MissionScripts\MissionFlowAndUi\setupUiCleanupAction.sqf";
               };
+              class SetUiPanelsSuppressed {
+                  file = "MissionScripts\MissionFlowAndUi\setUiPanelsSuppressed.sqf";
+              };
+              class SetupUiAcePriority {
+                  file = "MissionScripts\MissionFlowAndUi\setupUiAcePriority.sqf";
+              };
             class Create3DMarker {
                 file = "MissionScripts\MissionFlowAndUi\create3DMarker.sqf";
             };
@@ -250,6 +256,9 @@ class CfgFunctions
             };
             class JammerInteraction {
                 file = "MissionScripts\MissionInit\Jamming\jammerInteraction.sqf";
+            };
+            class JammerDisableServer {
+                file = "MissionScripts\MissionInit\Jamming\jammerDisableServer.sqf";
             };
             class JammerScan {
                 file = "MissionScripts\MissionInit\Jamming\jammerScan.sqf";
@@ -340,6 +349,9 @@ class CfgFunctions
             class DoStarterCrate {
                 file = "MissionScripts\Logistics\Crates\doStarterCrate.sqf";
             };
+            class StarterCrateSetupLocal {
+                file = "MissionScripts\Logistics\Crates\starterCrateSetupLocal.sqf";
+            };
             class CreateLimitedArsenal {
                 file = "MissionScripts\Logistics\Crates\createLimitedAceArsenal.sqf";
             };
@@ -392,6 +404,7 @@ class CfgFunctions
             class RecoveryRegisterVehicle {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterVehicle.sqf";};
             class RecoveryRegisterCarrier {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterCarrier.sqf";};
             class RecoverySetupVehicleLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupVehicleLocal.sqf";};
+            class RecoveryInteractionSetup {file = "MissionScripts\Logistics\VehicleRecovery\recoveryInteractionSetup.sqf";};
             class RecoverySetupCarrierLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupCarrierLocal.sqf";};
             class RecoverySetCargoLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetCargoLocal.sqf";};
             class RecoveryRequestServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRequestServer.sqf";};
@@ -483,8 +496,23 @@ class CfgFunctions
             class JumpSettingsCheck {
                 file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
             };
+            class ParadropCreateDropZone {
+                file = "MissionScripts\Paradrop\paradropCreateDropZone.sqf";
+            };
+            class ParadropRemoveDropZone {
+                file = "MissionScripts\Paradrop\paradropRemoveDropZone.sqf";
+            };
+            class ParadropDropZoneZen {
+                file = "MissionScripts\Paradrop\paradropDropZoneZen.sqf";
+            };
         };
         class VehicleSetup {
+            class SetupVehicleUprightLocal {
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\setupVehicleUprightLocal.sqf";
+            };
+            class VehicleUpright {
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\vehicleUpright.sqf";
+            };
             class AddVehicleFunctions {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\AddVehicleFunctions.sqf";
             };
@@ -536,6 +564,7 @@ class CfgFunctions
         {
             class TreatmentFeedbackInit {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackInit.sqf";};
             class TreatmentFeedbackNotify {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackNotify.sqf";};
+            class TreatmentFeedbackShowLocal {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackShowLocal.sqf";};
             class TreatmentFeedbackStop {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackStop.sqf";};
         };
         class FieldResupply
@@ -557,6 +586,7 @@ class CfgFunctions
             class RallyPointRequestServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRequestServer.sqf";};
             class RallyPointRemoveServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRemoveServer.sqf";};
             class RallyPointRemoveAllServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRemoveAllServer.sqf";};
+            class RallyPointResolveSafePosition {file = "MissionScripts\Respawn\RallyPoint\rallyPointResolveSafePosition.sqf";};
             class RallyPointMoveLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointMoveLocal.sqf";};
             class RallyPointMarkerLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointMarkerLocal.sqf";};
         };
@@ -564,6 +594,7 @@ class CfgFunctions
         {
             class TacticalDisplayRegister {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplayRegister.sqf";};
             class TacticalDisplaySetupLocal {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplaySetupLocal.sqf";};
+            class TacticalDisplayInteractionSetup {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplayInteractionSetup.sqf";};
             class TacticalDisplayOpenLocal {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplayOpenLocal.sqf";};
         };
         class AirborneGunship
@@ -662,6 +693,7 @@ class CfgFunctions
             class DynamicAADestroy {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAADestroy.sqf";};
             class DynamicAAZen {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAZen.sqf";};
             class DynamicAAZenPlacement {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAZenPlacement.sqf";};
+            class DynamicAAInteractionSetup {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAInteractionSetup.sqf";};
             class DynamicAARemoveZen {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAARemoveZen.sqf";};
         };
         class EcoCore

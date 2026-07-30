@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies one validated server-side gunship state transition.
  * Arguments: 0: id <STRING>; 1: status <STRING>; 2: message <STRING>
  * Return Value: Boolean

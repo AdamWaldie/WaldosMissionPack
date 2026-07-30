@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Captures the local player's enabled persistence fields into a network-safe array.
  *
  * Arguments:

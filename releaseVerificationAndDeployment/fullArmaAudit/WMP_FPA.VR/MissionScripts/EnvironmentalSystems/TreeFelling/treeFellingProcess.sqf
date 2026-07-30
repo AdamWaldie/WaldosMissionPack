@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Server-authoritatively accumulates tree hits and creates a reusable fallen-tree object.
  *
  * Arguments:

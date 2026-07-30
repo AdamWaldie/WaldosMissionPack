@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Displays one configured ACE treatment event through the pack notification UI.
  *
  * Arguments:
@@ -26,15 +26,9 @@ _eventArguments params [
     ["_treatment", "", [""]]
 ];
 if (isNull _patient) exitWith {false};
-if (remoteExecutedOwner > 0 && {isNull _medic || {owner _medic != remoteExecutedOwner}}) exitWith {false};
-
-private _notifyPatient = missionNamespace getVariable ["Waldo_TreatmentFeedback_NotifyPatient", true];
-private _notifyMedic = missionNamespace getVariable ["Waldo_TreatmentFeedback_NotifyMedic", false];
-if (_notifyPatient && {local _medic} && {!(hasInterface && {player isEqualTo _patient})}) then {
-    [_state, _eventArguments] remoteExecCall ["Waldo_fnc_TreatmentFeedbackNotify", owner _patient];
-};
-if !(hasInterface) exitWith {false};
-if !((_notifyPatient && {player isEqualTo _patient}) || {_notifyMedic && {player isEqualTo _medic}}) exitWith {false};
+// ACE treatment events may be raised on more than one machine. Only the
+// machine that owns the treating unit formats and dispatches feedback.
+if (remoteExecutedOwner > 0 || {isNull _medic} || {!local _medic}) exitWith {false};
 
 private _enabled = switch (toUpperANSI _state) do {
     case "START": {missionNamespace getVariable ["Waldo_TreatmentFeedback_ShowStart", true]};
@@ -69,5 +63,21 @@ if (missionNamespace getVariable ["Waldo_TreatmentFeedback_ShowBodyPart", true] 
     _lines pushBack format ["Location: %1", _bodyPartNames getOrDefault [toLowerANSI _bodyPart, _bodyPart]];
 };
 private _semanticState = switch (toUpperANSI _state) do {case "SUCCESS": {"SUCCESS"}; case "FAILURE": {"ERROR"}; default {"INFO"}};
-[_title, _lines joinString "<br/>", _semanticState, 8, "TOP_RIGHT", "TREATMENT_FEEDBACK", "MEDICAL"] call Waldo_fnc_ShowUiNotification;
-true
+private _message = _lines joinString "<br/>";
+private _notifyPatient = missionNamespace getVariable ["Waldo_TreatmentFeedback_NotifyPatient", true];
+private _notifyMedic = missionNamespace getVariable ["Waldo_TreatmentFeedback_NotifyMedic", false];
+private _shownLocally = false;
+
+if (_notifyPatient && {isPlayer _patient}) then {
+    if (hasInterface && {player isEqualTo _patient}) then {
+        [_title, _message, _semanticState] call Waldo_fnc_TreatmentFeedbackShowLocal;
+        _shownLocally = true;
+    } else {
+        [_title, _message, _semanticState] remoteExecCall ["Waldo_fnc_TreatmentFeedbackShowLocal", owner _patient];
+    };
+};
+if (_notifyMedic && {hasInterface} && {player isEqualTo _medic} && {!(_shownLocally && {_medic isEqualTo _patient})}) then {
+    [_title, _message, _semanticState] call Waldo_fnc_TreatmentFeedbackShowLocal;
+    _shownLocally = true;
+};
+_shownLocally || {_notifyPatient && {isPlayer _patient}}

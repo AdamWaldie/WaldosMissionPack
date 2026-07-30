@@ -22,6 +22,8 @@
  *                  "title"     String - action text (default "Attempt")
  *                  "icon"      String - ACE action icon path (default "")
  *                  "condition" Code   - extra show condition, gets _object as _this (default {true})
+ *                  "actorCondition" Code - actor-aware condition, receives [_object, _actor]
+ *                                            on clients and the server (default {true})
  *                  "oneShot"   Bool   - consume the action after one attempt (default true)
  *                  "distance"  Number - addAction fallback radius in metres (default 4)
  *                  "lockTimeout" Number - abandoned lock timeout in seconds (default 600)
@@ -54,6 +56,7 @@ private _opt = {
 private _title = ["title", "Inspect Equipment"] call _opt;
 private _icon = ["icon", ""] call _opt;
 private _condition = ["condition", {true}] call _opt;
+private _actorCondition = ["actorCondition", {true}] call _opt;
 private _distance = ["distance", 4] call _opt;
 private _presentation = ["presentation", []] call _opt;
 
@@ -65,6 +68,7 @@ _object setVariable ["Waldo_MG_Int_OnSuccess", _onSuccess];
 _object setVariable ["Waldo_MG_Int_OnFailure", _onFailure];
 _object setVariable ["Waldo_MG_Int_Options", _options];
 _object setVariable ["Waldo_MG_Int_Condition", _condition];
+_object setVariable ["Waldo_MG_Int_ActorCondition", _actorCondition];
 _object setVariable ["Waldo_IMG_Presentation", _presentation];
 _object setVariable ["Waldo_MG_Int_Distance", _distance];
 if (isServer && {isNil { _object getVariable "Waldo_MG_Int_Active" }}) then {
@@ -115,7 +119,9 @@ if (_aceAvailable && {!(_object getVariable ["Waldo_MG_Int_ACEActionInstalled", 
             if !(_target getVariable ["Waldo_MG_Int_Active", true]) exitWith { false };
             if ((_target getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING") exitWith { false };
             private _c = _target getVariable ["Waldo_MG_Int_Condition", {true}];
-            _target call _c
+            if !(_target call _c) exitWith {false};
+            private _actorCondition = _target getVariable ["Waldo_MG_Int_ActorCondition", {true}];
+            [_target, _actor] call _actorCondition
         }
     ] call ace_interact_menu_fnc_createAction;
     private _actionPath = [_object, 0, ["ACE_MainActions", "Waldo_MG_FieldEquipment"], _action] call ace_interact_menu_fnc_addActionToObject;
@@ -136,7 +142,7 @@ if !(_object getVariable ["Waldo_MG_Int_VanillaActionInstalled", false]) then {
         true,
         true,
         "",
-        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {(_target getVariable ['Waldo_MG_InteractionState', 'IDLE']) != 'RUNNING'} && {_target call (_target getVariable ['Waldo_MG_Int_Condition', {true}])} && {_this distance _target < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
+        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {(_target getVariable ['Waldo_MG_InteractionState', 'IDLE']) != 'RUNNING'} && {_target call (_target getVariable ['Waldo_MG_Int_Condition', {true}])} && {[_target, _this] call (_target getVariable ['Waldo_MG_Int_ActorCondition', {true}])} && {_this distance _target < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
         _distance
     ];
     _object setVariable ["Waldo_MG_Int_ActionId", _id];

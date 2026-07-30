@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Removes the Dynamic AA system nearest to a placed ZEN module.
  *
  * Arguments:
@@ -20,7 +20,7 @@ private _nearest = _systems select 0;
 _nearest params ["_id"];
 [
     "Remove Dynamic AA System",
-    [["CHECKBOX", [format ["Delete %1 assets", _id], "Otherwise assets remain disabled."], true]],
+    [["CHECKBOX", ["Delete the nearest system's assets", "Clear this to leave its spawned assets in place but disabled."], true]],
     {
         params ["_values", "_id"];
         [_id, _values select 0] remoteExecCall ["Waldo_fnc_DynamicAADestroy", 2];

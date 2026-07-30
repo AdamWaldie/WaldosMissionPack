@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Resolves one Dynamic AA asset pool from side defaults, an optional faction key and per-system overrides.
  *
  * Arguments:

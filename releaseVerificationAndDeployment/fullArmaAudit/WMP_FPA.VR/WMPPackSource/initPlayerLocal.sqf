@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * initPlayerLocal.sqf - runs per-player on each join and respawn. Saves the starting loadout, adds
- * the "Flip Vehicle" action, and re-applies the saved loadout and action on respawn via a CBA event
+ * initPlayerLocal.sqf - runs per-player on each join. Saves the starting loadout and re-applies it
+ * on respawn via a CBA event. Vehicle recovery actions are bound to vehicles by VehicleInit.
  * handler. Two optional behaviours (save-on-arsenal-close, respawn-with-what-you-died-with) are
  * included commented out below.
  *
@@ -30,7 +30,26 @@ if (hasInterface) then {
     if (isNil "Waldo_UiNotification_ReflowDuration") then {Waldo_UiNotification_ReflowDuration = 0.18};
     if (isNil "Waldo_UiNotification_AllowPlacementOverflow") then {Waldo_UiNotification_AllowPlacementOverflow = true};
     if (isNil "Waldo_UiNotification_OverflowPlacements") then {
-        Waldo_UiNotification_OverflowPlacements = ["TOP_RIGHT", "BOTTOM_RIGHT", "TOP", "BOTTOM_LEFT"];
+        Waldo_UiNotification_OverflowPlacements = ["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"];
+    };
+    // Actual feature families use independent screen streams. Mission makers can
+    // replace this array before initPlayerLocal runs, and permitted players can
+    // override individual channels through Waldo_fnc_SetLocalUiPanelPlacement.
+    if (isNil "Waldo_UI_PanelPlacements") then {
+        Waldo_UI_PanelPlacements = [
+            ["TREATMENT_FEEDBACK", "BOTTOM_CENTER", true],
+            ["ACCESSIBILITY_PID", "TOP_RIGHT", true],
+            ["EMERGENCY_DISMOUNT", "TOP_RIGHT", true],
+            ["DYNAMIC_AA", "BOTTOM_RIGHT", true],
+            ["EXPLOSIVE_BREACH", "BOTTOM_RIGHT", true],
+            ["TREE_FELLING", "BOTTOM_RIGHT", true],
+            ["FIELD_RESUPPLY", "BOTTOM_LEFT", true],
+            ["VEHICLE_RECOVERY", "BOTTOM_LEFT", true],
+            ["PERSISTENCE", "BOTTOM_LEFT", true],
+            ["RESPAWN_LOADOUT", "BOTTOM_LEFT", true],
+            ["RALLY_POINT", "BOTTOM_RIGHT", true],
+            ["AIRBORNE_GUNSHIP", "BOTTOM_RIGHT", true]
+        ];
     };
 
     if (isNil "Waldo_TreatmentFeedback_Enable") then {Waldo_TreatmentFeedback_Enable = false};
@@ -44,6 +63,7 @@ if (hasInterface) then {
     if (isNil "Waldo_TreatmentFeedback_StartTitle") then {Waldo_TreatmentFeedback_StartTitle = "TREATMENT STARTED"};
     if (isNil "Waldo_TreatmentFeedback_SuccessTitle") then {Waldo_TreatmentFeedback_SuccessTitle = "TREATMENT COMPLETE"};
     if (isNil "Waldo_TreatmentFeedback_FailureTitle") then {Waldo_TreatmentFeedback_FailureTitle = "TREATMENT FAILED"};
+    if (isNil "Waldo_TreatmentFeedback_Duration") then {Waldo_TreatmentFeedback_Duration = 3};
     if (isNil "Waldo_TreatmentFeedback_TreatmentNames") then {Waldo_TreatmentFeedback_TreatmentNames = createHashMap};
     if (isNil "Waldo_TreatmentFeedback_BodyPartNames") then {
         Waldo_TreatmentFeedback_BodyPartNames = createHashMapFromArray [
@@ -89,6 +109,23 @@ if (hasInterface) then {
     if (isNil "Waldo_AccessibilityPID_ShowNames") then {Waldo_AccessibilityPID_ShowNames = true};
     if (isNil "Waldo_AccessibilityPID_ShowVehicleCrew") then {Waldo_AccessibilityPID_ShowVehicleCrew = false};
 
+    // Server-authored electronic-warfare settings are replicated before JIP init. Initial
+    // lobby clients may still race server startup, so wait asynchronously for the sentinel.
+    [] spawn {
+        private _deadline = diag_tickTime + 30;
+        waitUntil {
+            uiSleep 0.1;
+            missionNamespace getVariable ["Waldo_Jamming_ConfigReady", false]
+            || {diag_tickTime >= _deadline}
+        };
+        if (
+            missionNamespace getVariable ["Waldo_Jamming_ConfigReady", false]
+            && {missionNamespace getVariable ["Waldo_Jamming_Enable", false]}
+        ) then {
+            [] call Waldo_fnc_JammingInit;
+        };
+    };
+
     [] spawn {
         waitUntil {
             missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]
@@ -98,6 +135,11 @@ if (hasInterface) then {
             }
         };
         if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+        if (missionNamespace getVariable ["Waldo_Economy_Enable", false]) then {
+            // Client presentation starts only after the server's authoritative preset/catalogues
+            // have been published. On a hosted server EcoInit is repeat-safe and this is a no-op.
+            [] call Waldo_fnc_EcoInit;
+        };
         if (missionNamespace getVariable ["Waldo_TreatmentFeedback_Enable", false]) then {
             [] call Waldo_fnc_TreatmentFeedbackInit;
         };
@@ -131,37 +173,6 @@ if (hasInterface) then {
 // Save Inventory on mission start
 [player, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory;
 
-player addAction [
-    "Flip Vehicle", 
-    "MissionScripts\Logistics\LogiHelpers\flipAction.sqf", 
-    [], 
-    0, 
-    false, 
-    true, 
-    "", 
-    "_this == (vehicle _target) && {(count nearestObjects [_target, ['landVehicle'], 5]) > 0 && {(vectorUp cursorTarget) select 2 < 0}}"
-];
-
-/* //This doesnt seem to work after the 2022 December patch.
-["CAManBase", "InitPost", {
-    params ["_unit"];
-    if (_unit == player) then {
-        [_unit, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory; // Apparently just doesnt work anymore
-        //missionNamespace setVariable ["Waldo_Player_Inventory",getUnitLoadout _unit,false]
-        _unit addAction [
-        "Flip Vehicle", 
-        "MissionScripts\Logistics\LogiHelpers\flipAction.sqf", 
-        [], 
-        0, 
-        false, 
-        true, 
-        "", 
-        "_this == (vehicle _target) && {(count nearestObjects [_target, ['landVehicle'], 5]) > 0 && {(vectorUp cursorTarget) select 2 < 0}}"
-    ];
-    };
-}] call CBA_fnc_addClassEventHandler;*/
-
-
 //Respawn Reapplication Of Loadout Segment
 ["CAManBase", "Respawn", {
     params ["_unit"];
@@ -175,16 +186,6 @@ player addAction [
             [true] call Waldo_fnc_SafeStartApply;
         };
         [] call Waldo_fnc_SetupUiCleanupAction;
-        player addAction [
-        "Flip Vehicle", 
-        "MissionScripts\Logistics\LogiHelpers\flipAction.sqf", 
-        [], 
-        0, 
-        false, 
-        true, 
-        "", 
-        "_this == (vehicle _target) && {(count nearestObjects [_target, ['landVehicle'], 5]) > 0 && {(vectorUp cursorTarget) select 2 < 0}}"
-    ];
     };
 }] call CBA_fnc_addClassEventHandler;
 
@@ -199,6 +200,9 @@ if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
 // Local emergency cleanup for WMP-owned UI. ACE self-interaction is preferred;
 // vanilla addAction is used only when ACE interaction is unavailable.
 [] call Waldo_fnc_SetupUiCleanupAction;
+// ACE interaction owns the local interaction view while open. WMP notification
+// cards are hidden/queued locally and restored when ACE closes.
+[] call Waldo_fnc_SetupUiAcePriority;
 
 // WMP overlays must never survive into Arma's death or debriefing displays.
 // The cleanup function only hides controls owned by this pack.

@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Starts optional, repeat-safe player and world-object persistence.
  * The server owns database access; clients only capture/apply their local player state.
  *

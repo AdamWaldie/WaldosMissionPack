@@ -40,9 +40,46 @@ if (isNil "Waldo_DynamicAA_SideAssetPools") then {
     ];
 };
 if (isNil "Waldo_DynamicAA_FactionAssetPools") then {Waldo_DynamicAA_FactionAssetPools = createHashMap};
+missionNamespace setVariable ["Waldo_DynamicAA_SideAssetPools", Waldo_DynamicAA_SideAssetPools, true];
+missionNamespace setVariable ["Waldo_DynamicAA_FactionAssetPools", Waldo_DynamicAA_FactionAssetPools, true];
+
+// Electronic-warfare configuration is server-authored once. The final readiness flag
+// lets initial clients and JIP clients install their local radio/UI hooks only after the
+// complete state is available; later server/Zeus changes must broadcast the changed value.
+{
+    _x params ["_name", "_default"];
+    missionNamespace setVariable [_name, missionNamespace getVariable [_name, _default], true];
+} forEach [
+    ["Waldo_Jamming_Enable", true],
+    ["Waldo_Jamming_Notify", true],
+    ["Waldo_Jamming_LOS", true],
+    ["Waldo_Jamming_BurnThrough", true],
+    ["Waldo_Jamming_BurnThroughRef", 500],
+    ["Waldo_Jamming_Curve", "LINEAR"],
+    ["Waldo_Jamming_Destructible", true],
+    ["Waldo_Jamming_GmOverlay", false],
+    ["Waldo_Jamming_ScanRange", 3000],
+    ["Waldo_Jamming_ScanBearingArc", 30],
+    ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55]],
+    ["Waldo_Jamming_AllowPlayerToggle", true],
+    ["Waldo_Jamming_DisableChallenge", false],
+    ["Waldo_Jamming_DisableChallengeId", "circuit"],
+    ["Waldo_Jamming_DisableDifficulty", "standard"],
+    ["Waldo_Jamming_DisableEngineerOnly", true],
+    ["Waldo_Jamming_DisableResult", "DISABLE"]
+];
+missionNamespace setVariable ["Waldo_Jamming_ConfigReady", true, true];
+if (missionNamespace getVariable ["Waldo_Jamming_Enable", true]) then {
+    [] call Waldo_fnc_JammingInit;
+};
 
 [] spawn {
     waitUntil {missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]};
+    if (missionNamespace getVariable ["Waldo_Economy_Enable", false]) then {
+        // initServer.sqf has now finished assigning mission-maker presets/configuration.
+        // Economy applies that authoritative setup before runtime readiness is published.
+        [] call Waldo_fnc_EcoInit;
+    };
     if (missionNamespace getVariable ["Waldo_Persistence_Enable", false]) then {
         [] call Waldo_fnc_PersistenceInit;
     };

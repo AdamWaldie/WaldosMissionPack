@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Removes the local ACE treatment feedback handlers.
  *
  * Arguments:

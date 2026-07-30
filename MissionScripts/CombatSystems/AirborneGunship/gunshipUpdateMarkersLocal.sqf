@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Updates all local gunship marker positions from local object state.
  * Arguments: None
  * Return Value: Nothing

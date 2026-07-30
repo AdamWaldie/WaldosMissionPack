@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Releases local gunship remote control and restores the player's camera.
  * Arguments: 0: id <STRING>
  * Return Value: Boolean

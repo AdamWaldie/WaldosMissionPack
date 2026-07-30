@@ -3,9 +3,10 @@
  * Client bootstrap for the localised radio jamming system. Installs whichever radio engine is
  * present (the ACRE2 custom signal function and/or the TFAR throttle loop), starts a graduated
  * on-screen jamming meter, registers the handheld RDF "Scan for Radio Jammers" ACE self-action,
- * and starts the game-master Draw3D overlay. Runs on every client including JIP (called from
- * init.sqf) and does nothing on a dedicated server, since the engines are client-local and the
- * jammer registry is owned/broadcast by the server. Idempotent - safe to call more than once.
+ * and starts the game-master Draw3D overlay. Runs on every client including JIP and also starts
+ * the dedicated server's UAV authority loop; the jammer registry is owned/broadcast by the server.
+ * The authority call comes from initServer.sqf
+ * and each interface call comes from initPlayerLocal.sqf after server config readiness. Idempotent.
  *
  * Arguments:
  * None
@@ -14,7 +15,7 @@
  * Nothing
  *
  * Example:
- * [] call Waldo_fnc_JammingInit;   // called from init.sqf when Waldo_Jamming_Enable is true
+ * [] call Waldo_fnc_JammingInit;   // called on the appropriate server/client entry point
  */
 
 // Server authority for UAV/UGV jamming (freezes autonomous drones in a UAV-jamming field).

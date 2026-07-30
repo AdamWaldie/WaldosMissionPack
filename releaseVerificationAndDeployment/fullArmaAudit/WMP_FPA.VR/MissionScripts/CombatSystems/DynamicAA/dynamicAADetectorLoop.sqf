@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Runs one named Dynamic AA detector and activates defences only for hostile aircraft above its floor.
  *
  * Arguments:
@@ -23,7 +23,18 @@ while {true} do {
     private _config = _state get "config";
     private _radars = _state getOrDefault ["radars", [_state getOrDefault ["radar", objNull]]];
     private _requiredRadars = ((_config getOrDefault ["requiredOperationalRadars", 1]) max 1) min (count _radars max 1);
-    if ({!isNull _x && {alive _x}} count _radars < _requiredRadars) exitWith {
+    private _maximumRadarDamage = ((_config getOrDefault ["maximumOperationalRadarDamage", 0.8]) max 0) min 1;
+    private _radarCondition = _config getOrDefault ["radarOperationalCondition", {true}];
+    private _operationalRadars = _radars select {
+        private _radar = _x;
+        if (isNull _radar || {!alive _radar} || {damage _radar >= _maximumRadarDamage}) exitWith {false};
+        private _customOperational = [_radar, _state, _config] call _radarCondition;
+        !isNull _radar
+        && {_customOperational isEqualType true}
+        && {_customOperational}
+    };
+    if (count _operationalRadars < _requiredRadars) exitWith {
+        diag_log format ["[WMP DYNAMIC AA] '%1' offline: operational radars %2/%3.", _id, count _operationalRadars, _requiredRadars];
         [_id, _config getOrDefault ["cleanupOnRadarLoss", false]] spawn Waldo_fnc_DynamicAADestroy;
     };
 
@@ -89,6 +100,10 @@ while {true} do {
         _state set ["engaged", _engaged];
     };
     if (_detected != _wasDetected || {_engaged != _wasEngaged}) then {
+        diag_log format [
+            "[WMP DYNAMIC AA] '%1' transition: detected=%2 engaged=%3 eligible=%4 engagementEligible=%5.",
+            _id, _detected, _engaged, count _aircraft, count _engagementAircraft
+        ];
         _state set ["detected", _detected];
         _registry set [_id, _state];
         missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];

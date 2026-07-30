@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Shows an airborne-gunship status message through the pack notification presentation.
  * Arguments: 0: message <STRING>
  * Return Value: Boolean

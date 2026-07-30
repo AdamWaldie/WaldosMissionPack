@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Performs one local emergency exit while preserving momentum and bounded damage protection.
  *
  * Arguments:

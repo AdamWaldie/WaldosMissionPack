@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Disables future breach processing. ACE detonation handlers cannot be removed, so the bridge becomes a no-op.
  *
  * Arguments:

@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Loads and validates the optional INIDBI2 runtime used by WMP persistence.
  * The probe runs only on the server and supports alternate init paths and patch names.
  *

@@ -1,9 +1,23 @@
 /*
- * Author: Waldo
- * Installs the repeat-safe local carrier deployment action.
+ * Author: WaldoTheWarfighter
+ * Installs the repeat-safe local Field Resupply carrier controls on the current player.
  *
- * Arguments: None
- * Return Value: Boolean
+ * ACE clients receive separate self-interactions for inspecting and deploying carried crates.
+ * Clients without ACE Interact receive equivalent scroll-wheel actions. Conditions mirror the
+ * authoritative server rules: the player must be an assigned carrier, wear a backpack and be on
+ * foot; deployment additionally requires at least one carried crate. The function is safe to call
+ * again after assignment, runtime activation, JIP or respawn and never publishes authoritative
+ * carrier state from the client.
+ *
+ * Arguments: None.
+ *
+ * Return Value:
+ * Boolean - true when controls already exist or were installed; false when unavailable/disabled.
+ *
+ * Example:
+ * [] call Waldo_fnc_FieldResupplyInit;
+ *
+ * Current callers: initPlayerLocal.sqf, FieldResupplyAssignCarrier and the local respawn handler.
  */
 
 if !(hasInterface) exitWith {false};
@@ -13,30 +27,94 @@ if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", isSer
             missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
             || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
         };
-        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {[] call Waldo_fnc_FieldResupplyInit};
+        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {
+            [] call Waldo_fnc_FieldResupplyInit;
+        };
     };
     true
 };
 if !(missionNamespace getVariable ["Waldo_FieldResupply_Enable", false]) exitWith {false};
 if (player getVariable ["Waldo_FieldResupply_ActionInstalled", false]) exitWith {true};
-private _action = player addAction [
-    "Deploy Field Resupply",
-    {[player, "DEPLOY", []] remoteExecCall ["Waldo_fnc_FieldResupplyServerHandle", 2]},
-    [], 1.5, false, true, "",
-    "vehicle player == player && {player getVariable ['Waldo_FieldResupply_Crates', 0] > 0}", 3
-];
-player setVariable ["Waldo_FieldResupply_Action", _action];
+
+private _inspect = {
+    params ["_target", "_caller"];
+    [
+        "FIELD RESUPPLY",
+        format [
+            "Carrying %1 of %2 field resupply crate(s).",
+            _caller getVariable ["Waldo_FieldResupply_Crates", 0],
+            _caller getVariable ["Waldo_FieldResupply_MaxCrates", 0]
+        ],
+        "INFO",
+        "FIELD_RESUPPLY_CARRIER"
+    ] call Waldo_fnc_FeatureNotifyLocal;
+};
+private _deploy = {
+    params ["_target", "_caller"];
+    [_caller, "DEPLOY", []] remoteExecCall ["Waldo_fnc_FieldResupplyServerHandle", 2];
+};
+private _isCarrier = {
+    params ["_target", "_caller"];
+    _target isEqualTo _caller
+    && {_caller getVariable ["Waldo_FieldResupply_MaxCrates", 0] > 0}
+    && {backpack _caller != ""}
+    && {vehicle _caller isEqualTo _caller}
+};
+private _canDeploy = {
+    params ["_target", "_caller"];
+    _target isEqualTo _caller
+    && {_caller getVariable ["Waldo_FieldResupply_MaxCrates", 0] > 0}
+    && {_caller getVariable ["Waldo_FieldResupply_Crates", 0] > 0}
+    && {backpack _caller != ""}
+    && {vehicle _caller isEqualTo _caller}
+};
+
+if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
+    private _inspectAction = [
+        "Waldo_FieldResupply_InspectCarrier",
+        "Check Resupply Crates",
+        "\a3\ui_f\data\igui\cfg\holdactions\holdaction_search_ca.paa",
+        _inspect,
+        _isCarrier
+    ] call ace_interact_menu_fnc_createAction;
+    private _deployAction = [
+        "Waldo_FieldResupply_Deploy",
+        "Deploy Field Resupply",
+        "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa",
+        _deploy,
+        _canDeploy
+    ] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions"], _inspectAction] call ace_interact_menu_fnc_addActionToObject;
+    [player, 1, ["ACE_SelfActions"], _deployAction] call ace_interact_menu_fnc_addActionToObject;
+    player setVariable ["Waldo_FieldResupply_ACEActionPaths", [
+        ["ACE_SelfActions", "Waldo_FieldResupply_InspectCarrier"],
+        ["ACE_SelfActions", "Waldo_FieldResupply_Deploy"]
+    ]];
+    player setVariable ["Waldo_FieldResupply_ActionIds", []];
+} else {
+    private _inspectId = player addAction [
+        "Check Resupply Crates", _inspect, [], 1.5, false, true, "",
+        "_this isEqualTo _target && {_this getVariable ['Waldo_FieldResupply_MaxCrates', 0] > 0} && {backpack _this != ''} && {vehicle _this isEqualTo _this}", 3
+    ];
+    private _deployId = player addAction [
+        "Deploy Field Resupply", _deploy, [], 1.5, false, true, "",
+        "_this isEqualTo _target && {_this getVariable ['Waldo_FieldResupply_MaxCrates', 0] > 0} && {_this getVariable ['Waldo_FieldResupply_Crates', 0] > 0} && {backpack _this != ''} && {vehicle _this isEqualTo _this}", 3
+    ];
+    player setVariable ["Waldo_FieldResupply_ActionIds", [_inspectId, _deployId]];
+    player setVariable ["Waldo_FieldResupply_ACEActionPaths", []];
+};
 player setVariable ["Waldo_FieldResupply_ActionInstalled", true];
+
 if !(missionNamespace getVariable ["Waldo_FieldResupply_RespawnHandler", false]) then {
     missionNamespace setVariable ["Waldo_FieldResupply_RespawnHandler", true];
     addMissionEventHandler ["EntityRespawned", {
-        params ["_newEntity", "_oldEntity"];
+        params ["_newEntity"];
         if (_newEntity isEqualTo player) then {
-            if (missionNamespace getVariable ["Waldo_FieldResupply_RetainOnRespawn", true]) then {
-                _newEntity setVariable ["Waldo_FieldResupply_MaxCrates", _oldEntity getVariable ["Waldo_FieldResupply_MaxCrates", 0], true];
-                _newEntity setVariable ["Waldo_FieldResupply_Crates", _oldEntity getVariable ["Waldo_FieldResupply_Crates", 0], true];
+            [_newEntity] spawn {
+                params ["_unit"];
+                waitUntil {!isNull player && {player isEqualTo _unit}};
+                [] call Waldo_fnc_FieldResupplyInit;
             };
-            [] call Waldo_fnc_FieldResupplyInit;
         };
     }];
 };

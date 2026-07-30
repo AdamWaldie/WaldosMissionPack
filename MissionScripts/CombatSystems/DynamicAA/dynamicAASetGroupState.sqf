@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Enables or suppresses one server-local air-defence group without deleting it.
  *
  * Arguments:

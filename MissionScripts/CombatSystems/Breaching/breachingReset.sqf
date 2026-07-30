@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Restores one non-deleted breached object and optionally removes its replacement debris.
  *
  * Arguments:

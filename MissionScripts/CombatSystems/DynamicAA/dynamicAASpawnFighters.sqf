@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Scrambles the configured fighter response for one Dynamic AA system once per activation.
  *
  * Arguments:

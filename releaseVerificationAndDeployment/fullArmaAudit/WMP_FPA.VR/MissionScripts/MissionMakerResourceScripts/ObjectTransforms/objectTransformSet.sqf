@@ -1,13 +1,28 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies a server-validated position, pitch/bank/yaw orientation and optional uniform scale.
  *
- * Arguments: 0: object <OBJECT>; 1: position <ARRAY>; 2: [pitch,bank,yaw] <ARRAY>; 3: ATL|ASL|ASLW <STRING>; 4: scale <NUMBER>, -1 unchanged
- * Return Value: Object
+ * Position and direction are applied before scaling because Arma direction commands reset scale.
+ * Scaling an ordinary free-standing object requires explicit Simple Object conversion. Currently
+ * called by Waldo_fnc_ObjectTransformSpawn and the full-pack transform audit station.
+ *
+ * Arguments:
+ * 0: object <OBJECT>
+ * 1: position <ARRAY>
+ * 2: [pitch, bank, yaw] <ARRAY>
+ * 3: position mode ATL|ASL|ASLW <STRING> (default: ATL)
+ * 4: scale <NUMBER> - negative leaves scale unchanged (default: -1)
+ * 5: convertToSimpleObject <BOOLEAN> - grounded decorative objects only (default: false)
+ *
+ * Return Value:
+ * Object - transformed object (possibly a replacement), or objNull
+ *
+ * Example:
+ * private _result = [prop, [100, 100, 0], [0, 0, 45], "ATL", 1.5, true] call Waldo_fnc_ObjectTransformSet;
  */
 
-params [["_object", objNull, [objNull]], ["_position", [], [[]]], ["_angles", [0, 0, 0], [[]]], ["_mode", "ATL", [""]], ["_scale", -1, [0]]];
-if !(isServer) exitWith {[_object, _position, _angles, _mode, _scale] remoteExecCall ["Waldo_fnc_ObjectTransformSet", 2]; _object};
+params [["_object", objNull, [objNull]], ["_position", [], [[]]], ["_angles", [0, 0, 0], [[]]], ["_mode", "ATL", [""]], ["_scale", -1, [0]], ["_asSimple", false, [false]]];
+if !(isServer) exitWith {[_object, _position, _angles, _mode, _scale, _asSimple] remoteExecCall ["Waldo_fnc_ObjectTransformSet", 2]; _object};
 if (isNull _object || {count _position < 2}) exitWith {objNull};
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};
@@ -27,5 +42,5 @@ private _up = [
     cos _bank * cos _pitch
 ];
 _object setVectorDirAndUp [_direction, _up];
-if (_scale > 0) then {[_object, _scale, false] call Waldo_fnc_ObjectScale};
+if (_scale > 0) exitWith {[_object, _scale, _asSimple] call Waldo_fnc_ObjectScale};
 _object

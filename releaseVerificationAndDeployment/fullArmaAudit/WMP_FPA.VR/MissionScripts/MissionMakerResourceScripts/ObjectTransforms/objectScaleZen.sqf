@@ -1,6 +1,11 @@
 /*
- * Author: Waldo
- * ZEN handler that scales the nearest object to the placed module with validation on the server.
+ * Author: WaldoTheWarfighter
+ * Opens the ZEN dialog for server-authoritative scaling of the object under the module.
+ *
+ * Runtime scaling requires a Simple Object or attached object. The dialog therefore offers explicit
+ * conversion for grounded decorative props and enables it by default; conversion removes simulation,
+ * damage, inventory, crew and object-bound actions. The module is registered as "Scale Object" by
+ * MissionScripts/ZenModules/Zen_initModules.sqf and calls Waldo_fnc_ObjectScale on the server.
  *
  * Arguments:
  * 0: modulePosition <ARRAY>
@@ -23,12 +28,19 @@ if (isNull _target) exitWith {systemChat "[WMP] Object Scaling: place the module
 [
     "Scale Object",
     [
-        ["SLIDER", ["Scale", "Scale multiplier; server limits still apply."], [0.1, 10, 1, 2], false]
+        ["SLIDER", ["Scale", "Uniform render multiplier; mission server limits still apply."], [0.1, 10, getObjectScale _target, 2], true],
+        ["CHECKBOX", ["Convert decorative object", "Required for ordinary free-standing objects. Replaces the target with a non-simulated Simple Object; do not use on functional objects."], !isSimpleObject _target && {isNull (attachedTo _target)}]
     ],
     {
         params ["_args", "_target"];
-        _args params ["_scale"];
-        [_target, _scale, false] remoteExecCall ["Waldo_fnc_ObjectScale", 2];
+        _args params ["_scale", "_asSimple"];
+        if (!_asSimple && {!isSimpleObject _target && {isNull (attachedTo _target)}}) exitWith {
+            systemChat "[WMP] Scaling requires a Simple Object, an attached object, or decorative-object conversion.";
+        };
+        if (_asSimple && {count (crew _target) > 0 || {(getPosATL _target select 2) > 0.5}}) exitWith {
+            systemChat "[WMP] Only empty decorative objects placed on the ground can be converted for scaling.";
+        };
+        [_target, _scale, _asSimple] remoteExecCall ["Waldo_fnc_ObjectScale", 2];
     },
     {},
     _target

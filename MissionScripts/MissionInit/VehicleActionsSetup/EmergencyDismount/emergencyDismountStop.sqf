@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Stops the local emergency-dismount monitor.
  *
  * Arguments:

@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Restores one registered object's selected state fields from INIDBI2.
  *
  * Arguments:

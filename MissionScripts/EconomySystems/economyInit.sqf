@@ -2,12 +2,23 @@
  * Author: WaldoTheWarfighter (Waldos Economy Systems)
  * Bootstrap for Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command).
  *
- * Runs on all machines; self-branches on isServer / hasInterface for the server
- * authority loops vs. the client Zeus-menu injection and local action loops.
- * Opt-in: gated by Waldo_Economy_Enable in init.sqf. Safe to call once per machine.
+ * Runs once per relevant machine and self-branches on isServer / hasInterface for the server
+ * authority loops versus the client Zeus-menu and local action loops. Server activation occurs
+ * from initServer.sqf after mission-maker preset/config values have been assigned. Player clients
+ * activate from initPlayerLocal.sqf after the authoritative runtime snapshot is available.
+ * Opt-in: gated by Waldo_Economy_Enable. Repeat-safe per machine.
+ *
+ * Arguments:
+ * None.
+ *
+ * Return Value:
+ * Nothing.
  *
  * Example:
- * [] spawn Waldo_fnc_EcoInit;
+ * [] call Waldo_fnc_EcoInit;
+ *
+ * Current callers:
+ * initServer.sqf, initPlayerLocal.sqf and explicit Economy composition/runtime activation paths.
  */
 
 missionNamespace setVariable ["WaldoEcoCore_ModulePurgedForJIP", false, true];

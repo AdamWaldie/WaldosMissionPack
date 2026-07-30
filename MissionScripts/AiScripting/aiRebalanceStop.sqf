@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Stops future automatic AI profile application and optionally restores captured skills.
  *
  * Arguments:
@@ -10,6 +10,8 @@
  *
  * Example:
  * [] call Waldo_fnc_AIRebalanceStop;
+ *
+ * Current callers: AI ZEN runtime control and the audit AI reset station.
  */
 
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {};

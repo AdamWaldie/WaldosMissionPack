@@ -25,11 +25,36 @@ if (_operation == "PACK") exitWith {
         ["An engineer is required to package this vehicle.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _cargo = if (_preserveCargo) then {[getWeaponCargo _target, getMagazineCargo _target, getItemCargo _target, getBackpackCargo _target]} else {[]};
-    private _state = [typeOf _target, getObjectTextures _target, getPylonMagazines _target, _cargo, _config, _target getVariable ["Waldo_Recovery_Carrier", false], _target getVariable ["Waldo_Recovery_CarrierRange", 10]];
+    private _customVariableNames = +(missionNamespace getVariable ["Waldo_Recovery_DefaultCustomVariables", []]);
+    {_customVariableNames pushBackUnique _x} forEach (_target getVariable ["Waldo_Recovery_CustomVariables", []]);
+    private _customVariables = _customVariableNames apply {[_x, _target getVariable _x]};
+    private _bounds = boundingBoxReal _target;
+    private _minimum = _bounds param [0, [-1, -1, -1]];
+    private _maximum = _bounds param [1, [1, 1, 1]];
+    private _footprint = (((_maximum select 0) - (_minimum select 0)) max ((_maximum select 1) - (_minimum select 1))) / 2;
+    private _state = [
+        typeOf _target, getObjectTextures _target, getPylonMagazines _target, _cargo, _config,
+        _target getVariable ["Waldo_Recovery_Carrier", false], _target getVariable ["Waldo_Recovery_CarrierRange", 10],
+        _target, alive _target, vehicleVarName _target, [vectorDir _target, vectorUp _target],
+        simulationEnabled _target, isDamageAllowed _target,
+        _target getVariable ["Waldo_Recovery_OnRestored", {}], _customVariables, _footprint
+    ];
     private _position = getPosATL _target;
     private _direction = getDir _target;
-    deleteVehicle _target;
+    _target enableSimulationGlobal false;
+    _target allowDamage false;
+    _target hideObjectGlobal true;
+    _target setPosASL [0, 0, -1000];
     private _package = createVehicle [_packageClass, _position, [], 0, "CAN_COLLIDE"];
+    if (isNull _package) exitWith {
+        _target setPosATL _position;
+        _target setDir _direction;
+        _target hideObjectGlobal false;
+        _target allowDamage (_state select 12);
+        _target enableSimulationGlobal (_state select 11);
+        ["The recovery package could not be created; the vehicle was left in place.", "ERROR"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor];
+        false
+    };
     _package setDir _direction;
     _package setVariable ["Waldo_Recovery_Package", true, true];
     _package setVariable ["Waldo_Recovery_State", _state];

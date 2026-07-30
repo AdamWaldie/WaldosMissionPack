@@ -9,6 +9,7 @@ These modules allow users to:
 * Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)
 * End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
 * Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
+* Create and remove routed [Dynamic Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations) operations
 * Scale the nearest object through a validated server request
 * Configure persistence, hazardous environments, emergency dismount and AI rebalance while the mission is running
 * Register field-resupply hubs/carriers and tactical-display terminals
@@ -89,7 +90,7 @@ Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Tracke
 
 ## Dynamic Anti-Air Modules
 
-**Dynamic AA - Create** opens the system settings and then guides Zeus through radar, static-site and mobile-system placement on the map. **Dynamic AA - Remove Nearest** selects the active system nearest to the placed module and can either delete its assets or leave them disabled. See the [Dynamic Anti-Air guide](Dynamic-Anti-Air) for every option.
+**Dynamic AA - Create** keeps operational side and physical asset profile independent in one dialog. Operational side controls allegiance and targeting; the profile may intentionally draw radar, static, mobile or fighter classes configured under another faction. Internal registry IDs and raw pool keys remain behind friendly display names. **Dynamic AA - Remove Nearest** selects the active system nearest to the placed module and can either delete its assets or leave them disabled. See the [Dynamic Anti-Air guide](Dynamic-Anti-Air) for every option.
 
 ## Scale Object Module
 
@@ -103,39 +104,39 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 **Persistence - Control** enables or disables persistence and configures player/object save intervals and the supported data categories. Enabling still requires a compatible INIDBI2 server runtime; placing the module does not silently bypass the dependency gate.
 
-**Persistence - Register Object** selects the nearest object within 25 metres and registers its cargo, damage, fuel, ammunition/pylons and/or transform under a stable key.
+**Persistence - Register Object** selects the nearest object within 25 metres and registers its cargo, damage, fuel, ammunition/pylons and/or transform under an automatically generated stable runtime key.
 
 **Persistence - Save Now** can immediately request saves from connected players, registered objects, or both without disabling the system.
 
 ## Hazardous Environments
 
-**Hazard - Create** creates a named circular hazard at the module position. Zeus can set its semantic type, player-facing label, range, exposure/recovery rates, damage threshold, protection rules and protective equipment. It can also copy a setup call for later mission authoring.
+**Hazard - Create** first selects a mission-configured hazard preset, then exposes plain-language RP name/messages, intensity, range, exposure, recovery, damage, fatal threshold and protection controls. The preset supplies semantic type and any configured protective equipment. It can also copy a setup call for later mission authoring.
 
 **Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
 
-## Emergency Dismount
-
-**Emergency Dismount - Control** changes overturn and destroyed-vehicle triggers, velocity preservation, temporary protection, clear-position search, clearance checks, exit method and optional consciousness recovery.
-
 ## AI Rebalance
 
-**AI Rebalance - Control** enables or disables the supported AI profile at runtime and selects day/night mode plus the Legacy, Public, Standard or Veteran balance profile. Legacy remains the compatibility default.
+**AI Rebalance - Control** enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier.
 
 ## Field Resupply
 
-**Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. All creation, refill, deploy, take and salvage operations are validated by the server.
+**Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. With ACE loaded, the assigned player receives carrier controls under ACE Self Actions; a backpack is required and deployment is available only on foot. All creation, refill, deploy, take and salvage operations are validated by the server.
 
 ## Tactical Display
 
-**Tactical Display - Register** turns the nearest object into a range-limited terminal. Players with proximity and line of sight can open its tactical map; it shows friendlies and only enemies already known to their group.
+**Tactical Display - Register** turns the nearest object into a range-limited terminal. Players with proximity and line of sight can open its tactical map; it shows friendlies and only enemies already known to their group. An optional simplified authentication section exposes enable, procedure and difficulty; command authentication is preselected as the semantic default.
 
 ## Airborne Gunship Support
 
-**Gunship - Register or Spawn** registers the nearest aircraft or creates a validated aircraft class at the module position. **Gunship - Assign Controller** assigns the nearest player to a named system. **Gunship - Set Orbit** sends the selected aircraft to the module position. **Gunship - Operational Control** returns it to its combat orbit, sends it through its service cycle, releases its operator or removes the system. See the [Airborne Gunship Support guide](Airborne-Gunship-Support).
+**Gunship - Register or Spawn** selects operational side independently from any configured compatible airframe, or registers the nearest existing aircraft. **Gunship - Assign Controller** assigns the nearest player to a named system. **Gunship - Set Orbit** sends the selected aircraft to the module position. **Gunship - Operational Control** returns it to its combat orbit, sends it through its timed service cycle, releases its operator or removes the system. During RTB/service the assigned player receives status/progress only; tasking and weapon controls return when service completes. See the [Airborne Gunship Support guide](Airborne-Gunship-Support).
+
+## Dynamic Paradrop
+
+**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named route, forced altitude, maximum speed, approach/drop/exit lengths, generated troop count, timed jump interval, chute, optional player drop, map symbology and post-run cleanup. **Paradrop - Remove Operation** selects a named live operation and removes its aircraft and markers without deleting troops that have already jumped. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
 
 ## Vehicle Recovery
 
-**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 ## Squad Rally Points
 

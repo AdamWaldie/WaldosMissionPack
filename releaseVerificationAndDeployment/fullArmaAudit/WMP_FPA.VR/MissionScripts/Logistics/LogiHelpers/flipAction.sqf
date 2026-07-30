@@ -1,6 +1,6 @@
 /*
- * Adds the "Flip Vehicle" behaviour - resets the nearest land vehicle upright, just off the ground.
- * Bound to the player "Flip Vehicle" addAction in initPlayerLocal.sqf.
+ * Compatibility wrapper for the former player-bound "Flip Vehicle" action.
+ * New missions use the object-bound Set Vehicle Upright action.
  * (Original author unknown; retained as-is.)
  *
  * Arguments (addAction):
@@ -17,10 +17,11 @@
 ////     FLIPACTION.SQF    ////====================================================================
 // Not my script originally, but cannot remember the original author. Works as intended, just resets vehilces position to the right way up, just off the ground. I advise not editing.
 
-private ["_caller","_veh"];
-_caller = _this select 1;
-_veh = nearestObjects [_caller, ["landVehicle"], 5] select 0;
-_veh setVectorUp [0,0,1];
-_veh setPosATL [(getPosATL _veh) select 0, (getPosATL _veh) select 1, 0];
+private _caller = _this param [1, player];
+private _vehicle = _this param [0, objNull];
+if (isNull _vehicle || {!(_vehicle isKindOf "LandVehicle")}) then {
+    _vehicle = (nearestObjects [_caller, ["LandVehicle"], 5]) param [0, objNull];
+};
+if (!isNull _vehicle) then {[_vehicle, _caller] remoteExecCall ["Waldo_fnc_VehicleUpright", 2]};
 
 //=================================================================================================

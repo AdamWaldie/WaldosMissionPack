@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 764,
+  "registeredFunctionCount": 778,
   "runtimeFunctionCount": 385,
-  "functionCount": 1149,
+  "functionCount": 1163,
   "stations": [
     {
       "id": "control",
@@ -363,6 +363,16 @@
         0
       ],
       "description": "Playable inventories inside nested Eden folders feeding crate and arsenal pools."
+    },
+    {
+      "id": "dynamic-paradrop",
+      "title": "DYNAMIC PARADROP",
+      "position": [
+        300,
+        40,
+        0
+      ],
+      "description": "Server-owned DZ route, timed jumpers, operational markers and teardown."
     }
   ],
   "functions": [
@@ -703,6 +713,18 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_SetUiPanelsSuppressed",
+      "file": "MissionScripts/MissionFlowAndUi/setUiPanelsSuppressed.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SetupUiAcePriority",
+      "file": "MissionScripts/MissionFlowAndUi/setupUiAcePriority.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_Create3DMarker",
       "file": "MissionScripts/MissionFlowAndUi/create3DMarker.sqf",
       "station": "mission-flow",
@@ -795,6 +817,12 @@
     {
       "name": "Waldo_fnc_JammerInteraction",
       "file": "MissionScripts/MissionInit/Jamming/jammerInteraction.sqf",
+      "station": "electronic-warfare",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_JammerDisableServer",
+      "file": "MissionScripts/MissionInit/Jamming/jammerDisableServer.sqf",
       "station": "electronic-warfare",
       "activation": "manual"
     },
@@ -955,6 +983,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_StarterCrateSetupLocal",
+      "file": "MissionScripts/Logistics/Crates/starterCrateSetupLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_CreateLimitedArsenal",
       "file": "MissionScripts/Logistics/Crates/createLimitedAceArsenal.sqf",
       "station": "loadouts",
@@ -1059,6 +1093,12 @@
     {
       "name": "Waldo_fnc_RecoverySetupVehicleLocal",
       "file": "MissionScripts/Logistics/VehicleRecovery/recoverySetupVehicleLocal.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryInteractionSetup",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryInteractionSetup.sqf",
       "station": "vehicle-recovery",
       "activation": "manual"
     },
@@ -1249,6 +1289,36 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ParadropCreateDropZone",
+      "file": "MissionScripts/Paradrop/paradropCreateDropZone.sqf",
+      "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropRemoveDropZone",
+      "file": "MissionScripts/Paradrop/paradropRemoveDropZone.sqf",
+      "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropDropZoneZen",
+      "file": "MissionScripts/Paradrop/paradropDropZoneZen.sqf",
+      "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SetupVehicleUprightLocal",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/setupVehicleUprightLocal.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleUpright",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/vehicleUpright.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_AddVehicleFunctions",
       "file": "MissionScripts/MissionInit/VehicleActionsSetup/AddVehicleFunctions.sqf",
       "station": "mission-init",
@@ -1363,6 +1433,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_TreatmentFeedbackShowLocal",
+      "file": "MissionScripts/MedicalSystems/TreatmentFeedback/treatmentFeedbackShowLocal.sqf",
+      "station": "treatment-feedback",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_TreatmentFeedbackStop",
       "file": "MissionScripts/MedicalSystems/TreatmentFeedback/treatmentFeedbackStop.sqf",
       "station": "treatment-feedback",
@@ -1453,6 +1529,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RallyPointResolveSafePosition",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointResolveSafePosition.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_RallyPointMoveLocal",
       "file": "MissionScripts/Respawn/RallyPoint/rallyPointMoveLocal.sqf",
       "station": "rally",
@@ -1473,6 +1555,12 @@
     {
       "name": "Waldo_fnc_TacticalDisplaySetupLocal",
       "file": "MissionScripts/MissionFlowAndUi/TacticalDisplay/tacticalDisplaySetupLocal.sqf",
+      "station": "tactical-display",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TacticalDisplayInteractionSetup",
+      "file": "MissionScripts/MissionFlowAndUi/TacticalDisplay/tacticalDisplayInteractionSetup.sqf",
       "station": "tactical-display",
       "activation": "manual"
     },
@@ -1899,6 +1987,12 @@
     {
       "name": "Waldo_fnc_DynamicAAZenPlacement",
       "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAZenPlacement.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAInteractionSetup",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAInteractionSetup.sqf",
       "station": "dynamic-aa",
       "activation": "manual"
     },

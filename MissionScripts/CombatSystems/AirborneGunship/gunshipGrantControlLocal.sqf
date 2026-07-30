@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Completes a server-approved local remote-control handoff to one turret crew member.
  * Arguments: 0: id <STRING>; 1: aircraft <OBJECT>; 2: turret path <ARRAY>
  * Return Value: Boolean

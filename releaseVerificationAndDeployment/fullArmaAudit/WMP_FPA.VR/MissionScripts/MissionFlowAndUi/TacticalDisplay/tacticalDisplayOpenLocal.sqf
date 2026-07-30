@@ -1,14 +1,37 @@
 /*
- * Author: Waldo
- * Opens a proximity-bound live tactical map for one registered console.
+ * Author: WaldoTheWarfighter
+ * Opens the client-only live map belonging to one registered Tactical Display object.
  *
- * Arguments: 0: object <OBJECT>
- * Return Value: Display
+ * The map centres on the world object, draws living friendly units within its configured radius and
+ * draws hostile units only when enabled and already known to the player's group above the configured
+ * `knowsAbout` threshold. It provides no omniscient enemy feed and does not render onto the board's
+ * texture. The display closes when the board is destroyed, the player leaves the configured maximum
+ * distance, the parent UI disappears or the user selects Close.
+ *
+ * Arguments:
+ * 0: display object <OBJECT> - registered access point being used.
+ *
+ * Return Value:
+ * Display - created local tactical-map display, or displayNull when opening is unavailable.
+ *
+ * Example:
+ * [mapBoard] call Waldo_fnc_TacticalDisplayOpenLocal;
+ *
+ * Current caller: the local action installed by TacticalDisplaySetupLocal.
  */
 
 params [["_object", objNull, [objNull]]];
 if !(hasInterface && {!isNull _object} && {_object getVariable ["Waldo_TacticalDisplay_Registered", false]}) exitWith {displayNull};
-private _display = (findDisplay 46) createDisplay "RscDisplayEmpty";
+private _parent = findDisplay 46;
+if (isNull _parent) exitWith {
+    ["TACTICAL DISPLAY", "The gameplay display is not ready.", "WARNING", "TACTICAL_DISPLAY"] call Waldo_fnc_FeatureNotifyLocal;
+    displayNull
+};
+private _display = _parent createDisplay "RscDisplayEmpty";
+if (isNull _display) exitWith {
+    ["TACTICAL DISPLAY", "The tactical map could not be opened.", "ERROR", "TACTICAL_DISPLAY"] call Waldo_fnc_FeatureNotifyLocal;
+    displayNull
+};
 private _background = _display ctrlCreate ["RscText", -1];
 _background ctrlSetPosition [safeZoneX + 0.08 * safeZoneW, safeZoneY + 0.08 * safeZoneH, 0.84 * safeZoneW, 0.84 * safeZoneH];
 _background ctrlSetBackgroundColor [0.015, 0.025, 0.02, 0.96];

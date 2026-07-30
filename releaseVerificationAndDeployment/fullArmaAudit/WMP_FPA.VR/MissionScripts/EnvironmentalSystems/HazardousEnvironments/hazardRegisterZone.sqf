@@ -1,7 +1,11 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Registers or replaces a named hazardous-environment zone.
  * Profiles are hash maps so mission makers can extend them without changing the API.
+ *
+ * The server/runtime path broadcasts definitions and replays them to JIP clients; pre-planned calls
+ * may also run consistently on each client. Unauthorized client remote execution is rejected. This
+ * is currently called by preset/emitter adapters, ZEN runtime creation and mission scripts.
  *
  * Arguments:
  * 0: key <STRING> - stable unique zone name

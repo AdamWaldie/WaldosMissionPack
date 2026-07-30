@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Removes the local friendly identification overlay and toggle action.
  *
  * Arguments:

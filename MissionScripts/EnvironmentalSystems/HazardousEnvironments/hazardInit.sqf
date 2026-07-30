@@ -1,6 +1,11 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Starts the repeat-safe local hazardous-environment evaluator.
+ *
+ * The evaluator waits for the authoritative runtime snapshot before starting, then owns only the
+ * local player's exposure, transition notifications and effects. It is called from
+ * initPlayerLocal.sqf when enabled, from live ZEN activation for existing clients, and through JIP
+ * replay. Repeated calls do not create duplicate loops.
  *
  * Arguments:
  * None
@@ -28,6 +33,8 @@ if (missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false]) exitWith
 
 missionNamespace setVariable ["Waldo_Hazard_ClientStarted", true];
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", createHashMap];
+missionNamespace setVariable ["Waldo_Hazard_LocalInside", createHashMap];
+missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
 private _interval = (missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25;
 private _handle = [_interval] spawn {
     params ["_interval"];

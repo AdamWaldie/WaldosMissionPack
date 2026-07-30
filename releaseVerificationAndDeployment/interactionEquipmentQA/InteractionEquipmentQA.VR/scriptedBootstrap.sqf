@@ -13,6 +13,7 @@ private _functions = [
     ["Waldo_fnc_MiniGameEquipmentSetPosition", "MissionScripts\InteractionsMinigames\Core\equipmentSetPosition.sqf"],
     ["Waldo_fnc_MiniGameEquipmentPolyline", "MissionScripts\InteractionsMinigames\Core\equipmentPolyline.sqf"],
     ["Waldo_fnc_MiniGameEquipmentFitText", "MissionScripts\InteractionsMinigames\Core\equipmentFitText.sqf"],
+    ["Waldo_fnc_MiniGameEquipmentFitStructuredText", "MissionScripts\InteractionsMinigames\Core\equipmentFitStructuredText.sqf"],
     ["Waldo_fnc_MiniGameEquipmentBindDrag", "MissionScripts\InteractionsMinigames\Core\equipmentBindDrag.sqf"],
     ["Waldo_fnc_MiniGameEquipmentAddDisplayHandler", "MissionScripts\InteractionsMinigames\Core\equipmentAddDisplayHandler.sqf"],
     ["Waldo_fnc_MiniGameEquipmentCleanup", "MissionScripts\InteractionsMinigames\Core\equipmentCleanup.sqf"],

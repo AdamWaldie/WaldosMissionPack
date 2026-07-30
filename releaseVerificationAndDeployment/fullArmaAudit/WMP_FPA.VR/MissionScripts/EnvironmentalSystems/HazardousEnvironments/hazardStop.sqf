@@ -1,6 +1,9 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Stops local hazard evaluation and clears its status display.
+ *
+ * This affects only the executing client and leaves authoritative zone definitions untouched. It is
+ * currently called by live runtime deactivation, mission cleanup and the full-pack function station.
  *
  * Arguments:
  * None
@@ -14,6 +17,8 @@
 
 if !(hasInterface) exitWith {};
 missionNamespace setVariable ["Waldo_Hazard_ClientStarted", false];
+missionNamespace setVariable ["Waldo_Hazard_LocalInside", createHashMap];
+missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
 private _handle = missionNamespace getVariable ["Waldo_Hazard_ClientLoop", scriptNull];
 if !(scriptDone _handle) then {terminate _handle};
 ["", safeZoneX, safeZoneY, 0, 0, 0, 791] spawn BIS_fnc_dynamicText;

@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Stops every airborne-gunship system and optionally deletes system-spawned aircraft.
  * Arguments: 0: delete spawned aircraft <BOOLEAN>
  * Return Value: Number removed

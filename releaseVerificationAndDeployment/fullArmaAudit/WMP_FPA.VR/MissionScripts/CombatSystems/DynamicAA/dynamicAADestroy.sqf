@@ -1,10 +1,12 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Disables and optionally removes one named Dynamic AA system without affecting other instances.
  *
  * Arguments:
  * 0: id <STRING>
  * 1: deleteAssets <BOOLEAN> - delete spawned assets and markers (default: true)
+ * 2: completed interaction radar <OBJECT> - internal authority proof supplied only by the shared
+ *      radar procedure callback (default objNull)
  *
  * Return Value:
  * Boolean - true when the system existed
@@ -15,14 +17,19 @@
 
 params [
     ["_id", "", [""]],
-    ["_deleteAssets", true, [false]]
+    ["_deleteAssets", true, [false]],
+    ["_interactionRadar", objNull, [objNull]]
 ];
 if !(isServer) exitWith {
-    [_id, _deleteAssets] remoteExecCall ["Waldo_fnc_DynamicAADestroy", 2];
+    [_id, _deleteAssets, objNull] remoteExecCall ["Waldo_fnc_DynamicAADestroy", 2];
     true
 };
+private _interactionAuthorised = !_deleteAssets
+    && {!isNull _interactionRadar}
+    && {(_interactionRadar getVariable ["Waldo_DynamicAA_SystemId", ""]) == _id}
+    && {(_interactionRadar getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "SUCCESS"};
 private _remoteAuthorized = true;
-if (remoteExecutedOwner > 0) then {
+if (remoteExecutedOwner > 0 && {!_interactionAuthorised}) then {
     private _callerIndex = allPlayers findIf {owner _x == remoteExecutedOwner};
     private _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
     _remoteAuthorized = !isNull _caller && {!isNull (getAssignedCuratorLogic _caller)};
@@ -32,6 +39,9 @@ private _registry = missionNamespace getVariable ["Waldo_DynamicAA_Registry", cr
 if !(_id in (keys _registry)) exitWith {false};
 private _state = _registry get _id;
 _state set ["active", false];
+{
+    if (!isNull _x) then {_x setVariable ["Waldo_DynamicAA_InteractionAvailable", false, true]};
+} forEach (_state getOrDefault ["radars", [_state getOrDefault ["radar", objNull]]]);
 {
     if (!isNull _x) then {[_x, false] call Waldo_fnc_DynamicAASetGroupState};
 } forEach (_state getOrDefault ["defenceGroups", []]);

@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Validates a local axe swing and forwards the requested tree hit to the server.
  *
  * Arguments:

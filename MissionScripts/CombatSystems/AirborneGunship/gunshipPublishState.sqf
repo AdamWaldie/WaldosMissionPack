@@ -1,8 +1,19 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Publishes network-safe airborne-gunship summaries and refreshes local actions/markers.
- * Arguments: None
- * Return Value: Array
+ *
+ * The server strips private hash-map state into a public array, broadcasts it for current/JIP
+ * clients, then asks interface machines to reconcile markers and controller actions. It is called
+ * after registration and every state/controller/orbit/service transition.
+ *
+ * Arguments:
+ * None
+ *
+ * Return Value:
+ * Array - published gunship summaries
+ *
+ * Example:
+ * private _summaries = [] call Waldo_fnc_GunshipPublishState;
  */
 
 if !(isServer) exitWith {[]};
@@ -21,7 +32,9 @@ private _summaries = [];
         _config getOrDefault ["side", sideUnknown],
         _config getOrDefault ["callsign", _x],
         _config getOrDefault ["turretProfiles", []],
-        _config getOrDefault ["showMarkers", true]
+        _config getOrDefault ["showMarkers", true],
+        _state getOrDefault ["serviceCompleteAt", -1],
+        _config getOrDefault ["serviceDuration", 0]
     ];
 } forEach keys _registry;
 missionNamespace setVariable ["Waldo_Gunship_PublicSystems", _summaries, true];

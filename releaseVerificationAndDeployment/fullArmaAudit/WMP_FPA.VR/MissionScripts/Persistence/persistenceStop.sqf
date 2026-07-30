@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Stops WMP persistence loops without deleting any database records.
  *
  * Arguments:

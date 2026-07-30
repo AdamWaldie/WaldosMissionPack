@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Stage the canonical PR review mission from the actual WMP release file set."""
+"""Stage the canonical ongoing full-pack PR audit from the WMP release file set."""
 
 from __future__ import annotations
 
@@ -19,9 +19,9 @@ RANGE_TEMPLATE = AUDIT_ROOT / "WMP_FPA.VR"
 CONFIG = ROOT / "releaseVerificationAndDeployment" / "config.json"
 VERSION = re.compile(r'onLoadName\s*=\s*"[^"]*?v([0-9]+\.[0-9]+\.[0-9]+)"')
 IDENTITY = {
-    "onLoadName": "WMP PR REVIEW AUDIT",
-    "onLoadMission": "Current development build feature testbed",
-    "onLoadIntro": "Current development build feature testbed",
+    "onLoadName": "WMP FULL PACK PR AUDIT",
+    "onLoadMission": "Ongoing full-pack pull request audit",
+    "onLoadIntro": "Ongoing full-pack pull request audit",
 }
 AUDIT_FILES = (
     "auditCommon.sqf",
@@ -105,6 +105,76 @@ def nested_loadout_fixture() -> str:
 '''
 
 
+def legacy_playable_units_with_loadouts(source: bytes) -> bytes:
+    """Give the five engine-spawned legacy slots the same authored QA loadouts.
+
+    The nested Eden tree remains the scraper fixture. These init loadouts make the
+    people a tester actually controls visibly match that fixture instead of inheriting
+    the default B_Soldier_F MX inventory.
+    """
+    namespace = runpy.run_path(
+        str(ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py")
+    )
+    loadouts = namespace["LOADOUTS"]
+    text = source.decode("utf-8")
+    for index, loadout in enumerate(loadouts):
+        commands = [
+            "removeAllWeapons this",
+            "removeAllItems this",
+            "removeAllAssignedItems this",
+            "removeUniform this",
+            "removeVest this",
+            "removeBackpack this",
+            "removeHeadgear this",
+            f'this forceAddUniform "{loadout["uniform"]}"',
+            f'this addVest "{loadout["vest"]}"',
+            f'this addBackpack "{loadout["backpack"]}"',
+            f'this addHeadgear "{loadout["headgear"]}"',
+            f'this addWeapon "{loadout["primary"]}"',
+            f'this addPrimaryWeaponItem "{loadout["primary_mag"]}"',
+        ]
+        for attachment in ("optics", "muzzle", "flashlight"):
+            if loadout.get(attachment):
+                commands.append(f'this addPrimaryWeaponItem "{loadout[attachment]}"')
+        if loadout.get("secondary"):
+            commands.extend(
+                [
+                    f'this addWeapon "{loadout["secondary"]}"',
+                    f'this addSecondaryWeaponItem "{loadout["secondary_mag"]}"',
+                ]
+            )
+        commands.extend(
+            [
+                f'this addWeapon "{loadout["handgun"]}"',
+                f'this addHandgunItem "{loadout["handgun_mag"]}"',
+                f'this addWeapon "{loadout["binocular"]}"',
+                f'this addMagazines ["{loadout["primary_mag"]}",2]',
+                f'this addMagazine "{loadout["handgun_mag"]}"',
+                'this addMagazine "SmokeShell"',
+            ]
+        )
+        commands.extend(f'this addItem "{item}"' for item in loadout["items"])
+        commands.extend(
+            f'this linkItem "{item}"'
+            for item in ("ItemMap", "ItemCompass", "ItemWatch", "ItemRadio", "ItemGPS", "NVGoggles")
+        )
+        init = "; ".join(commands).replace('"', '""') + ";"
+        player = "PLAYER COMMANDER" if index == 0 else "PLAY CDG"
+        leader = " leader=1;" if index == 0 else ""
+        old = (
+            f'class Item{index} {{position[]={{{index * 2},0,0}}; id={index}; side="WEST"; '
+            f'vehicle="B_Soldier_F"; player="{player}";{leader} skill=0.6;}};'
+        )
+        new = (
+            f'class Item{index} {{position[]={{{index * 2},0,0}}; id={index}; side="WEST"; '
+            f'vehicle="{loadout["type"]}"; player="{player}";{leader} init="{init}"; skill=0.6;}};'
+        )
+        if old not in text:
+            raise ValueError(f"Legacy playable slot {index} was not found in the known-good shell")
+        text = text.replace(old, new, 1)
+    return text.encode("utf-8")
+
+
 def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict], loadout_fixture: str) -> bytes:
     """Add static feature objects to the known-good version-12 mission.
 
@@ -115,6 +185,7 @@ def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict], loadout_fi
     text = source.decode("utf-8")
     if 'text="qa_' in text:
         raise ValueError("Legacy mission already contains audit fixtures; refusing to append duplicates")
+    text = legacy_playable_units_with_loadouts(source).decode("utf-8")
     names = [fixture["name"] for fixture in fixtures]
     if len(names) != len(set(names)):
         raise ValueError("Audit fixture catalogue contains duplicate variable names")
@@ -158,10 +229,24 @@ def legacy_mission_with_fixtures(source: bytes, fixtures: list[dict], loadout_fi
         + "\n".join(rows)
         + "\n    };\n"
     )
+    marker_block = '''
+    class Markers
+    {
+        items=1;
+        class Item0
+        {
+            position[]={250,0,-12};
+            name="respawn_west";
+            text="Audit Base Respawn";
+            type="mil_start";
+            colorName="ColorWEST";
+        };
+    };
+'''
     closing = text.rfind("\n};")
     if closing < 0:
         raise ValueError("Legacy mission is missing its Mission closing brace")
-    return (text[:closing] + block + loadout_fixture + text[closing:]).encode("utf-8")
+    return (text[:closing] + block + marker_block + loadout_fixture + text[closing:]).encode("utf-8")
 
 
 def release_entries() -> tuple[str, ...]:
@@ -193,15 +278,25 @@ def audit_description(source: str) -> str:
     result, count = re.subn(r"maxPlayers\s*=\s*\d+", "maxPlayers = 5", result, count=1)
     if count != 1:
         raise ValueError("Release description is missing Header.maxPlayers")
+    # The audit must exercise MenuPosition and group-owned rally respawns rather
+    # than inheriting a symbolic/default release setting that can leave respawn
+    # unavailable if this multiplayer audit is accidentally launched through
+    # the single-player-only playMission command.
+    result, count = re.subn(r"respawn\s*=\s*[^;]+", "respawn = 3", result, count=1)
+    if count != 1:
+        raise ValueError("Release description is missing respawn mode")
+    result, count = re.subn(r"respawnDelay\s*=\s*[^;]+", "respawnDelay = 1", result, count=1)
+    if count != 1:
+        raise ValueError("Release description is missing respawn delay")
     return result
 
 
 def wrap_entry_point(path: Path, pre_hook: str, post_hook: str) -> None:
     source = path.read_text(encoding="utf-8")
     path.write_text(
-        f'// PR review audit pre-configuration.\ncall compile preprocessFileLineNumbers "{pre_hook}";\n\n'
+        f'// Full-pack PR audit pre-configuration.\ncall compile preprocessFileLineNumbers "{pre_hook}";\n\n'
         + source.rstrip()
-        + f'\n\n// PR review audit continuation.\n[] execVM "{post_hook}";\n',
+        + f'\n\n// Full-pack PR audit continuation.\n[] execVM "{post_hook}";\n',
         encoding="utf-8",
     )
 
@@ -220,7 +315,7 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
         (TEMPLATE / "mission.sqm").read_bytes(), fixtures, nested_loadout_fixture()
     )
     if not mission_sqm.lstrip().startswith(b"version=12;"):
-        raise ValueError("PR review mission must retain its known-good legacy mission.sqm")
+        raise ValueError("Full-pack PR audit must retain its known-good legacy mission.sqm")
 
     remove_staged_mission(destination)
     destination.mkdir(parents=True)

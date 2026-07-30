@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies a server-supplied persistence state to the local player after validation.
  *
  * Arguments:

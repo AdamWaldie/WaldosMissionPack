@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Starts a repeat-safe local monitor for destroyed or overturned vehicle emergency exits.
  *
  * Arguments:

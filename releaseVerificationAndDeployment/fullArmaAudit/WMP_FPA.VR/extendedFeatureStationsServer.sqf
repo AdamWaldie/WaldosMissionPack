@@ -1,4 +1,4 @@
-/* Physical, repeatable stations for the optional systems added after PR32. */
+/* Physical, repeatable stations for recently integrated optional systems. */
 if (!isServer) exitWith {};
 waitUntil {uiSleep 0.1; missionNamespace getVariable ["Waldo_QA_FeatureRangeReady", false]};
 
@@ -10,9 +10,10 @@ private _get = {
 };
 
 Waldo_QA_fnc_notifyActorServer = {
-    params ["_actor", "_title", "_message", ["_state", "INFO"]];
+    params ["_actor", "_title", "_message", ["_state", "INFO"], ["_channel", ""]];
     if (!isNull _actor) then {
-        [_title, _message, _state, "QA_FEATURE_STATION", 8] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor];
+        if (_channel isEqualTo "") then {_channel = format ["QA_%1", toUpperANSI _title]};
+        [_title, _message, _state, _channel, 8] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor];
     };
 };
 
@@ -94,17 +95,20 @@ Waldo_QA_fnc_injurePatientServer = {
     true
 };
 
-// Benign exposure lane: it exercises exposure/decay/status without injuring testers.
+// Live exposure lane: protection makes it safe, while an unprotected player receives measurable
+// ACE/vanilla damage quickly enough to validate that this is a real gameplay hazard.
 private _hazardEmitter = ["qa_hazard_emitter"] call _get;
 private _hazardProfile = createHashMapFromArray [
-    ["type", "VACUUM"], ["label", "QA OXYGEN DEFICIENCY"], ["rate", 0.35],
-    ["decay", 0.5], ["maximumExposure", 5], ["emitterRadius", 8],
-    ["intensityMode", "LINEAR"], ["damageThresholds", []],
-    ["protectiveItemsAnySlot", ["H_HelmetB"]], ["equipmentFactor", 0]
+      ["type", "VACUUM"], ["label", "QA OXYGEN DEFICIENCY"], ["rate", 4],
+      ["decay", 0.5], ["maximumExposure", 40], ["emitterRadius", 8],
+      ["intensityMode", "CONSTANT"], ["damageThresholds", [[4, 0.1], [10, 0.2], [18, 0.35]]],
+      ["damageStageMessages", ["Breathing is impaired; leave the area or equip protection.", "Severe oxygen deprivation is causing injury.", "Critical exposure: death is imminent."]],
+      ["fatalExposure", 24], ["damageType", "stab"],
+      ["protectiveItemsAnySlot", ["H_PilotHelmetFighter_B"]], ["equipmentFactor", 0]
 ];
-["qa_hazard", _hazardEmitter, _hazardProfile] call Waldo_fnc_HazardRegisterZone;
-["qa_hazard", _hazardEmitter, _hazardProfile] remoteExecCall ["Waldo_fnc_HazardRegisterZone", -2, "Waldo_QA_HazardZone"];
-missionNamespace setVariable ["Waldo_Hazard_Enable", true, true];
+// Exercise the real mid-mission authority path: ordered enable state, current
+// and JIP zone registration, followed by the local evaluator start.
+["HAZARD_SET", ["qa_hazard", _hazardEmitter, _hazardProfile]] call Waldo_fnc_FeatureRuntimeApply;
 
 private _tree = ["qa_tree"] call _get;
 _tree allowDamage true;
@@ -122,9 +126,10 @@ Waldo_QA_fnc_resetTreeServer = {
     true
 };
 
-// Emergency dismount vehicle begins upright and inert; the station control overturns it on demand.
+// Emergency dismount needs live vehicle physics. Test controls are installed
+// on this vehicle locally rather than on the station sign.
 private _dismountVehicle = ["qa_dismount_vehicle"] call _get;
-_dismountVehicle enableSimulationGlobal false;
+_dismountVehicle enableSimulationGlobal true;
 missionNamespace setVariable ["Waldo_QA_DismountVehicle", _dismountVehicle, true];
 Waldo_QA_fnc_resetDismountServer = {
     params [["_actor", objNull, [objNull]]];
@@ -134,10 +139,11 @@ Waldo_QA_fnc_resetDismountServer = {
         _vehicle = ["qa_dismount_vehicle", "B_MRAP_01_F", [250, 88, 0.25], 90, false] call Waldo_QA_fnc_getFeatureObjectServer;
         missionNamespace setVariable ["Waldo_QA_DismountVehicle", _vehicle, true];
     };
-    _vehicle enableSimulationGlobal false;
+    if (count crew _vehicle == 0 && {owner _vehicle != 2}) then {_vehicle setOwner 2};
+    _vehicle enableSimulationGlobal true;
     _vehicle setVelocity [0, 0, 0];
-    _vehicle setVectorDirAndUp [[1, 0, 0], [0, 0, 1]];
-    _vehicle setPosATL [250, 88, 0.25];
+    _vehicle setPosATL [250, 88, 2];
+    [_vehicle, _actor] call Waldo_fnc_VehicleUpright;
     _vehicle setDamage 0;
     if (!isNull _actor) then {
         [_actor, "EMERGENCY DISMOUNT QA", ["Vehicle reset upright on its pad.", "Vehicle was recreated and reset upright on its pad."] select _recreated, "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
@@ -148,9 +154,15 @@ Waldo_QA_fnc_overturnDismountServer = {
     params [["_actor", objNull, [objNull]]];
     private _vehicle = missionNamespace getVariable ["Waldo_QA_DismountVehicle", objNull];
     if (isNull _vehicle) exitWith {false};
-    _vehicle setVelocity [0, 0, 0];
-    _vehicle setVectorDirAndUp [[1, 0, 0], [0, 0, -1]];
-    _vehicle setPosATL [250, 88, 0.25];
+    _vehicle enableSimulationGlobal true;
+    if (local _vehicle) then {
+        private _position = getPosATL _vehicle;
+        _vehicle setVelocity [0, 0, 0];
+        _vehicle setVectorDirAndUp [[1, 0, 0], [0, 0, -1]];
+        _vehicle setPosATL [_position select 0, _position select 1, 1.8];
+    } else {
+        [_vehicle, "OVERTURN"] remoteExecCall ["Waldo_QA_fnc_setDismountOrientationLocal", owner _vehicle];
+    };
     if (!isNull _actor) then {
         [_actor, "EMERGENCY DISMOUNT QA", "Vehicle overturned in place. Board it first to exercise the automatic extraction path.", "INFO"] call Waldo_QA_fnc_notifyActorServer;
     };
@@ -179,7 +191,10 @@ private _profileUnits = [];
 {
     private _unit = _profileGroup createUnit [_x, [221 + (_forEachIndex * 4), 47, 0], [], 0, "NONE"];
     _unit disableAI "PATH";
-    _unit setName format ["QA Profile AI %1", _forEachIndex + 1];
+    private _assignedHmd = hmd _unit;
+    if (_assignedHmd != "") then {_unit unassignItem _assignedHmd; _unit removeItem _assignedHmd};
+    if (_forEachIndex == 1) then {_unit linkItem "NVGoggles"};
+    _unit setName (["QA AI Unaided A", "QA AI with NVG", "QA AI Unaided B"] select _forEachIndex);
     _profileUnits pushBack _unit;
     [_unit] call Waldo_QA_fnc_trackFeatureObjectServer;
 } forEach ["B_Soldier_F", "B_soldier_AR_F", "B_Soldier_M_F"];
@@ -192,8 +207,8 @@ private _breachProfile = createHashMapFromArray [
     ["radius", 7], ["requiredStrength", 1], ["destroyOriginal", false],
     ["hideOriginal", true], ["explosives", ["DemoCharge_Remote_Ammo"]],
     ["replacements", [
-        ["Land_City2_4m_F", [-2, 0, 0], 0, "CAN_COLLIDE"],
-        ["Land_City2_4m_F", [2, 0, 0], 0, "CAN_COLLIDE"]
+        ["Land_City2_4m_F", [-4, 0, 0], 0, "CAN_COLLIDE"],
+        ["Land_City2_4m_F", [4, 0, 0], 0, "CAN_COLLIDE"]
     ]]
 ];
 private _breachProfiles = missionNamespace getVariable ["Waldo_Breaching_Profiles", createHashMap];
@@ -260,11 +275,12 @@ Waldo_QA_fnc_reportScaleFixturesServer = {
 };
 
 Waldo_QA_fnc_setAIProfileServer = {
-    params ["_profile"];
-    [_profile] spawn {
-        params ["_profile"];
+    params ["_profile", ["_mode", "DAY"]];
+    [_profile, _mode] spawn {
+        params ["_profile", "_mode"];
         uiSleep 0;
-        ["AI_CONFIG", [true, "DAY", _profile]] call Waldo_fnc_FeatureRuntimeApply;
+        missionNamespace setVariable ["Waldo_AI_DarknessThreshold", if (_mode == "NIGHT") then {1000000000} else {5}, true];
+        ["AI_CONFIG", [true, _mode, _profile]] call Waldo_fnc_FeatureRuntimeApply;
     };
 };
 Waldo_QA_fnc_stopAIRebalanceServer = {
@@ -276,7 +292,7 @@ Waldo_QA_fnc_stopAIRebalanceServer = {
 Waldo_QA_fnc_reportAIProfileServer = {
     params ["_actor"];
     private _units = missionNamespace getVariable ["Waldo_QA_ProfileUnits", []];
-    private _rows = _units apply {format ["%1 acc=%2 spot=%3 general=%4", name _x, (_x skill "aimingAccuracy") toFixed 2, (_x skill "spotDistance") toFixed 2, (_x skill "general") toFixed 2]};
+    private _rows = _units apply {format ["%1 acc=%2/%3 spot=%4/%5 general=%6/%7", name _x, (_x skill "aimingAccuracy") toFixed 2, (_x skillFinal "aimingAccuracy") toFixed 2, (_x skill "spotDistance") toFixed 2, (_x skillFinal "spotDistance") toFixed 2, (_x skill "general") toFixed 2, (_x skillFinal "general") toFixed 2]};
     [_actor, "AI PROFILE STATE", _rows joinString " | ", "INFO"] call Waldo_QA_fnc_notifyActorServer;
 };
 
@@ -292,8 +308,15 @@ Waldo_QA_fnc_assignResupplyCarrierServer = {
         [_actor, 2, 2] call Waldo_fnc_FieldResupplyAssignCarrier;
     };
 };
-private _tacticalConsole = ["qa_sign_tactical_display"] call _get;
-[_tacticalConsole, west, 500, true] call Waldo_fnc_TacticalDisplayRegister;
+private _tacticalConsole = ["qa_tactical_console"] call _get;
+private _tacticalInteraction = createHashMapFromArray [["enabled", true], ["challengeId", "commandinput"], ["difficulty", "easy"]];
+[_tacticalConsole, west, 500, true, _tacticalInteraction] call Waldo_fnc_TacticalDisplayRegister;
+Waldo_QA_fnc_resetTacticalDisplayServer = {
+    private _console = missionNamespace getVariable ["qa_tactical_console", objNull];
+    if (isNull _console) exitWith {false};
+    private _interaction = createHashMapFromArray [["enabled", true], ["challengeId", "commandinput"], ["difficulty", "easy"]];
+    [_console, west, 500, true, _interaction] call Waldo_fnc_TacticalDisplayRegister;
+};
 Waldo_QA_fnc_revealTacticalHostileServer = {
     params ["_actor"];
     private _hostile = missionNamespace getVariable ["Waldo_QA_TacticalHostile", objNull];
@@ -303,16 +326,27 @@ Waldo_QA_fnc_revealTacticalHostileServer = {
 
 // Dynamic AA is created only on request so no live weapons exist during ordinary range use.
 Waldo_QA_fnc_createDynamicAAServer = {
-    [] spawn {
+    params [["_actor", objNull, [objNull]]];
+    [_actor] spawn {
+        params ["_actor"];
         uiSleep 0;
         private _config = createHashMapFromArray [
-            ["id", "QA_AA"], ["centre", [175, -80, 0]], ["radarPosition", [175, -70, 0]],
-            ["side", east], ["radius", 350], ["engagementRadius", 300],
+            ["id", "QA_AA"], ["centre", [175, -160, 0]], ["radarPosition", [175, -210, 0]],
+            ["side", east], ["radius", 600], ["engagementRadius", 550],
             ["minimumAltitude", 60], ["maximumAltitude", 500], ["detectionDwell", 2],
-            ["clearDelay", 5], ["staticPositions", [[165, -80, 0]]],
-            ["mobilePositions", []], ["fighterCount", 0], ["createMarkers", true]
+            ["clearDelay", 5], ["mobileClass", "O_APC_Tracked_02_AA_F"],
+            ["staticPositions", []], ["mobilePositions", [[175, -110, 0]]],
+            ["fighterCount", 0], ["createMarkers", true],
+            ["shutdownInteraction", true], ["shutdownChallenge", "circuit"], ["shutdownDifficulty", "easy"]
         ];
-        [_config] call Waldo_fnc_DynamicAACreate;
+        private _created = [_config] call Waldo_fnc_DynamicAACreate;
+        private _state = (missionNamespace getVariable ["Waldo_DynamicAA_Registry", createHashMap]) getOrDefault ["QA_AA", createHashMap];
+        private _objects = _state getOrDefault ["objects", []];
+        private _hasRadar = _objects findIf {!isNull _x && {_x isKindOf "Land_Radar_F"}} >= 0;
+        private _hasMobileAA = _objects findIf {!isNull _x && {_x isKindOf "O_APC_Tracked_02_AA_F"} && {count crew _x > 0}} >= 0;
+        private _ready = _created && {_hasRadar} && {_hasMobileAA};
+        diag_log format ["WMP DYNAMIC AA QA SYSTEM: created=%1 radar=%2 crewedMobileAA=%3 objects=%4", _created, _hasRadar, _hasMobileAA, _objects apply {typeOf _x}];
+        [_actor, "DYNAMIC AA QA", ["Creation was incomplete: the separate radar dependency and crewed mobile Tigris response were not both present. Inspect the runtime log.", "Created two separate assets 100 m apart: the southern radar is the shutdown dependency; the northern crewed Tigris is the mobile AA response. Spawn the protected UAV to trigger the Tigris."] select _ready, ["ERROR", "SUCCESS"] select _ready] call Waldo_QA_fnc_notifyActorServer;
     };
 };
 Waldo_QA_fnc_destroyDynamicAAServer = {[] spawn {uiSleep 0; ["QA_AA", true] call Waldo_fnc_DynamicAADestroy}};
@@ -320,14 +354,28 @@ Waldo_QA_fnc_spawnDynamicAATargetServer = {
     params ["_actor"];
     private _old = missionNamespace getVariable ["Waldo_QA_AATarget", objNull];
     if (!isNull _old) then {deleteVehicle _old};
-    private _target = createVehicle ["B_UAV_02_dynamicLoadout_F", [175, -20, 140], [], 0, "FLY"];
-    _target setPosATL [175, -20, 140];
+    private _target = createVehicle ["B_UAV_02_dynamicLoadout_F", [175, -160, 140], [], 0, "FLY"];
+    _target setPosATL [175, -160, 140];
     _target setDir 180;
-    _target flyInHeight 140;
     _target allowDamage false;
-    createVehicleCrew _target;
+    private _targetGroup = west createVehicleCrew _target;
+    _target engineOn true;
+    _target setVelocityModelSpace [0, 55, 0];
+    _target flyInHeight 140;
+    {if (local _x) then {_x action ["EngineOn", _target]}} forEach crew _target;
+    if (!isNull _targetGroup) then {
+        private _loiter = _targetGroup addWaypoint [[175, -160, 140], 0];
+        _loiter setWaypointType "LOITER";
+        _loiter setWaypointLoiterType "CIRCLE_L";
+        _loiter setWaypointLoiterRadius 120;
+        _loiter setWaypointSpeed "LIMITED";
+    };
     missionNamespace setVariable ["Waldo_QA_AATarget", _target, true];
-    [_actor, "DYNAMIC AA TARGET", "A protected WEST UAV is above the configured altitude inside the detection zone.", "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
+    private _crewSides = crew _target apply {side group _x};
+    private _system = (missionNamespace getVariable ["Waldo_DynamicAA_Registry", createHashMap]) getOrDefault ["QA_AA", createHashMap];
+    private _ready = count _system > 0 && {count crew _target > 0} && {west in _crewSides};
+    diag_log format ["WMP DYNAMIC AA QA TARGET: object=%1 kindAir=%2 sim=%3 altitudeATL=%4 distance2D=%5 crew=%6 crewSides=%7 systemReady=%8", typeOf _target, _target isKindOf "Air", simulationEnabled _target, getPosATL _target select 2, _target distance2D [175, -160, 0], count crew _target, _crewSides, count _system > 0];
+    [_actor, "DYNAMIC AA TARGET", if (_ready) then {"A protected, crewed WEST UAV is orbiting inside every detection gate. Detection should announce after the two-second dwell, then the Tigris should engage."} else {"The UAV spawned, but one or more detector prerequisites are missing. Inspect the runtime log."}, ["ERROR", "SUCCESS"] select _ready] call Waldo_QA_fnc_notifyActorServer;
 };
 Waldo_QA_fnc_removeDynamicAATargetServer = {
     private _target = missionNamespace getVariable ["Waldo_QA_AATarget", objNull];
@@ -343,9 +391,9 @@ Waldo_QA_fnc_createGunshipServer = {
         uiSleep 0;
         private _config = createHashMapFromArray [
             ["id", "QA_GUNSHIP"], ["callsign", "QA SPECTRE"], ["side", west],
-            ["home", [200, -550, 300]], ["spawnPosition", [200, -550, 300]],
-            ["orbit", [200, -350, 0]], ["altitude", 300], ["radius", 400],
-            ["serviceDuration", 30], ["maximumRangeFromHome", 1200]
+            ["home", [200, -650, 300]], ["spawnPosition", [200, -650, 300]],
+            ["orbit", [200, -150, 0]], ["altitude", 300], ["radius", 250],
+            ["arrivalTolerance", 100], ["serviceDuration", 15], ["maximumRangeFromHome", 1200]
         ];
         private _created = [_config] call Waldo_fnc_GunshipRegister;
         if (!isNull _actor) then {
@@ -363,6 +411,57 @@ Waldo_QA_fnc_assignGunshipServer = {
         [_actor, "AIRBORNE GUNSHIP QA", ["Assignment failed. Spawn QA SPECTRE first.", "Assigned. Open ACE Self Interactions > Gunship: QA SPECTRE for orbit and turret controls."] select _assigned, ["ERROR", "SUCCESS"] select _assigned] call Waldo_QA_fnc_notifyActorServer;
     };
 };
+Waldo_QA_fnc_serviceGunshipServer = {
+    params [["_actor", objNull, [objNull]]];
+    private _accepted = ["QA_GUNSHIP", "SERVICE", [], _actor] call Waldo_fnc_GunshipServerHandle;
+    [_actor, "AIRBORNE GUNSHIP QA", ["Service request rejected; spawn and assign the gunship first.", "Service accepted. Watch the map: it will RTB, service for 15 seconds, then return to its combat orbit."] select _accepted, ["ERROR", "SUCCESS"] select _accepted] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_reportGunshipServer = {
+    params [["_actor", objNull, [objNull]]];
+    private _registry = missionNamespace getVariable ["Waldo_Gunship_Registry", createHashMap];
+    if !("QA_GUNSHIP" in keys _registry) exitWith {[_actor, "AIRBORNE GUNSHIP QA", "QA SPECTRE is not registered.", "ERROR"] call Waldo_QA_fnc_notifyActorServer};
+    private _state = _registry get "QA_GUNSHIP";
+    private _aircraft = _state getOrDefault ["aircraft", objNull];
+    private _status = _state getOrDefault ["status", "UNKNOWN"];
+    private _cycles = _state getOrDefault ["serviceCycles", 0];
+    private _message = format ["State: %1 | service cycles: %2 | fuel: %3 | damage: %4 | position: %5", _status, _cycles, if (isNull _aircraft) then {"N/A"} else {(fuel _aircraft) toFixed 2}, if (isNull _aircraft) then {"N/A"} else {(damage _aircraft) toFixed 2}, if (isNull _aircraft) then {"N/A"} else {getPosATL _aircraft}];
+    [_actor, "AIRBORNE GUNSHIP QA", _message, "INFO"] call Waldo_QA_fnc_notifyActorServer;
+};
+
+// Dynamic paradrop: short but complete live route using the same authoritative production path.
+Waldo_QA_fnc_createParadropServer = {
+    params [["_actor", objNull, [objNull]]];
+    ["QA_DZ", true, _actor, false] call Waldo_fnc_ParadropRemoveDropZone;
+    private _config = createHashMapFromArray [
+        ["id", "QA_DZ"], ["name", "QA DROP ZONE"], ["centre", [500, 500, 0]],
+        ["direction", 90], ["side", west], ["aircraftClass", "B_Heli_Transport_01_F"],
+        ["altitude", 180], ["maximumSpeed", 160], ["approachDistance", 1500],
+        ["runLength", 1200], ["exitDistance", 1500], ["jumperCount", 6],
+        ["jumpInterval", 1], ["chuteClass", "NonSteerable_Parachute_F"],
+        ["createJumpers", true], ["autoDropPlayers", false], ["createMarkers", true],
+        ["deleteAfterRun", false], ["operationTimeout", 300], ["notifyRequester", false]
+    ];
+    private _created = [_config, _actor] call Waldo_fnc_ParadropCreateDropZone;
+    [_actor, "DYNAMIC PARADROP QA", ["Creation failed; inspect the server RPT.", "Operation created. Follow QA DROP ZONE markers and watch six one-second exits after the green line."] select _created, ["ERROR", "SUCCESS"] select _created] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_reportParadropServer = {
+    params [["_actor", objNull, [objNull]]];
+    private _registry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", createHashMap];
+    private _registered = "QA_DZ" in keys _registry;
+    private _message = if (_registered) then {
+        private _state = _registry get "QA_DZ";
+        private _aircraft = _state getOrDefault ["aircraft", objNull];
+        format ["Registered: true<br/>Aircraft alive: %1<br/>Jumpers still aboard: %2<br/>Markers: %3", !isNull _aircraft && {alive _aircraft}, {vehicle _x == _aircraft} count (_state getOrDefault ["jumpers", []]), count (_state getOrDefault ["markers", []])]
+    } else {
+        "No QA dynamic-paradrop operation is registered."
+    };
+    [_actor, "DYNAMIC PARADROP QA", _message, ["WARNING", "SUCCESS"] select _registered] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_removeParadropServer = {
+    params [["_actor", objNull, [objNull]]];
+    private _removed = ["QA_DZ", true, _actor, false] call Waldo_fnc_ParadropRemoveDropZone;
+    [_actor, "DYNAMIC PARADROP QA", ["No QA operation was registered.", "Aircraft, embarked generated AI and all QA DZ markers removed. Already-deployed troops were preserved."] select _removed, ["WARNING", "SUCCESS"] select _removed] call Waldo_QA_fnc_notifyActorServer;
+};
 Waldo_QA_fnc_destroyGunshipServer = {[] spawn {uiSleep 0; ["QA_GUNSHIP", true] call Waldo_fnc_GunshipDestroy}};
 
 // Vehicle recovery is live and repeatable; reset recreates any fixture consumed by packaging.
@@ -376,7 +475,8 @@ Waldo_QA_fnc_resetRecoveryLocalServer = {
     private _workshop = ["qa_recovery_workshop", "Land_RepairDepot_01_green_F", [225, 14, 0], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
     _vehicle setDamage 0.8;
     [_workshop, "QA", 20, west] call Waldo_fnc_RecoveryRegisterWorkshop;
-    [_vehicle, "QA", 0.55, true, false, "B_Slingload_01_Cargo_F", true, 1] call Waldo_fnc_RecoveryRegisterVehicle;
+    private _recoveryInteraction = createHashMapFromArray [["enabled", true], ["challengeId", "repair"], ["difficulty", "easy"]];
+    [_vehicle, "QA", 0.55, true, false, "B_Slingload_01_Cargo_F", true, 1, _recoveryInteraction] call Waldo_fnc_RecoveryRegisterVehicle;
     [_carrier, 12] call Waldo_fnc_RecoveryRegisterCarrier;
     missionNamespace setVariable ["Waldo_QA_RecoveryObjects", [_vehicle, _carrier, _workshop], true];
     true
@@ -416,7 +516,7 @@ Waldo_QA_fnc_prepareRallyTesterServer = {
     params ["_actor"];
     if (isNull _actor) exitWith {};
     (group _actor) selectLeader _actor;
-    [_actor, "SQUAD RALLY QA", "You are now group leader. Use the production self-action to deploy, regroup and pack the rally.", "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
+    [_actor, "SQUAD RALLY QA", "You are now group leader. Deploy with the production self-action, then use the station's respawn-selection test.", "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
 };
 
 missionNamespace setVariable ["Waldo_QA_ExtendedFeatureStationsReady", true, true];

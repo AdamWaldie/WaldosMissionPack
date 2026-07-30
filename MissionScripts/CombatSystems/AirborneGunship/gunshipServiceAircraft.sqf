@@ -1,5 +1,5 @@
 /*
- * Author: Waldo
+ * Author: WaldoTheWarfighter
  * Applies one completed service cycle on the aircraft's owning machine.
  * Arguments: 0: aircraft <OBJECT>; 1: config <HASHMAP>
  * Return Value: Boolean

@@ -81,9 +81,18 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
     ["Hazard - Create", "HAZARD_CREATE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
     ["Hazard - Remove Nearest", "HAZARD_REMOVE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
-    ["Emergency Dismount - Control", "EMERGENCY", "\A3\ui_f\data\igui\cfg\actions\getout_ca.paa"],
     ["AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
 ];
+
+["Waldos Mission Modules", "Paradrop - Create Drop Zone",
+    {params ["_modulePos"]; ["CREATE", _modulePos] call Waldo_fnc_ParadropDropZoneZen;},
+    "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "Paradrop - Remove Operation",
+    {params ["_modulePos"]; ["REMOVE", _modulePos] call Waldo_fnc_ParadropDropZoneZen;},
+    "\A3\ui_f\data\map\markers\military\end_CA.paa"
+] call zen_custom_modules_fnc_register;
 
 ["Waldos Mission Modules", "Mission Flow: End Mission + Show AAR",
     {
@@ -207,5 +216,5 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 36];
-diag_log format ["[WMP ZEN] Registered 36 Waldos Mission Modules on clientOwner=%1", clientOwner];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 38];
+diag_log format ["[WMP ZEN] Registered 38 Waldos Mission Modules on clientOwner=%1", clientOwner];

@@ -10,6 +10,7 @@ private _gap = safeZoneH * 0.008;
     private _cursor = switch (_placement) do {
         case "BOTTOM_RIGHT": {safeZoneY + safeZoneH - (safeZoneH * 0.187)};
         case "BOTTOM_LEFT": {safeZoneY + safeZoneH - (safeZoneH * 0.05)};
+        case "BOTTOM_CENTER": {safeZoneY + safeZoneH - (safeZoneH * 0.055)};
         default {safeZoneY + (safeZoneH * 0.045)};
     };
     if (_placement isEqualTo "CENTER") then {
@@ -23,10 +24,11 @@ private _gap = safeZoneH * 0.008;
             case "TOP_RIGHT";
             case "BOTTOM_RIGHT": {safeZoneX + safeZoneW - _panelW - (safeZoneW * 0.025)};
             case "BOTTOM_LEFT": {safeZoneX + (safeZoneW * 0.025)};
+            case "BOTTOM_CENTER": {safeZoneX + ((safeZoneW - _panelW) / 2)};
             default {safeZoneX + ((safeZoneW - _panelW) / 2)};
         };
         private _panelY = _cursor;
-        if (_slot in ["BOTTOM_LEFT", "BOTTOM_RIGHT"]) then {
+        if (_slot in ["BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]) then {
             _panelY = _cursor - _panelH;
             _cursor = _panelY - _gap;
         } else {
@@ -38,5 +40,5 @@ private _gap = safeZoneH * 0.008;
         _content ctrlSetPosition [_panelX + _padX, _panelY + _padY + _accentH, _panelW - (2 * _padX), _contentH - _accentH];
         {_x ctrlCommit _duration;} forEach _controls;
     } forEach _entries;
-} forEach ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_RIGHT"];
+} forEach ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"];
 true
