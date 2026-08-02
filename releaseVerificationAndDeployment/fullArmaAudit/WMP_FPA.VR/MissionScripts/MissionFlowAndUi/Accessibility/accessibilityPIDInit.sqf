@@ -42,7 +42,9 @@ private _eventId = addMissionEventHandler ["Draw3D", {
     private _requiresLOS = missionNamespace getVariable ["Waldo_AccessibilityPID_RequireLOS", true];
     private _includeAI = missionNamespace getVariable ["Waldo_AccessibilityPID_IncludeAI", false];
     private _units = if (_includeAI) then {allUnits} else {allPlayers};
-    private _colour = missionNamespace getVariable ["Waldo_AccessibilityPID_Colour", [0.25, 0.85, 1, 0.9]];
+    private _themeColour = +(([] call Waldo_fnc_UiTheme) getOrDefault ["accentActive", [0.25, 0.85, 1, 1]]);
+    _themeColour set [3, 0.9];
+    private _colour = missionNamespace getVariable ["Waldo_AccessibilityPID_Colour", _themeColour];
     private _iconScale = missionNamespace getVariable ["Waldo_AccessibilityPID_IconScale", 0.8];
     private _textScale = missionNamespace getVariable ["Waldo_AccessibilityPID_TextScale", 0.035];
     private _distanceFade = missionNamespace getVariable ["Waldo_AccessibilityPID_DistanceFade", true];
@@ -81,22 +83,9 @@ private _eventId = addMissionEventHandler ["Draw3D", {
 }];
 missionNamespace setVariable ["Waldo_AccessibilityPID_EventId", _eventId];
 
-if (missionNamespace getVariable ["Waldo_AccessibilityPID_AllowToggle", true]) then {
-    private _aceReady = !(isNil "ace_interact_menu_fnc_createAction")
-        && {!(isNil "ace_interact_menu_fnc_addActionToObject")};
-    if (_aceReady) then {
-        private _action = [
-            "Waldo_AccessibilityPID_Toggle",
-            "Toggle Friendly Identification",
-            "\a3\ui_f\data\igui\cfg\actions\getincommander_ca.paa",
-            {[] call Waldo_fnc_AccessibilityPIDToggle},
-            {missionNamespace getVariable ["Waldo_AccessibilityPID_ClientStarted", false]}
-        ] call ace_interact_menu_fnc_createAction;
-        private _path = [player, 1, ["ACE_SelfActions"], _action] call ace_interact_menu_fnc_addActionToObject;
-        missionNamespace setVariable ["Waldo_AccessibilityPID_ActionUnit", player];
-        missionNamespace setVariable ["Waldo_AccessibilityPID_ActionPath", _path];
-    };
-};
+// The shared Accessibility self-interaction owns the PID toggle and colour-vision selector.
+// Its PID child becomes visible dynamically once this eligible client has started.
+[] call Waldo_fnc_AccessibilitySelfInteractionInit;
 
 if !(missionNamespace getVariable ["Waldo_AccessibilityPID_RespawnHandlerInstalled", false]) then {
     missionNamespace setVariable ["Waldo_AccessibilityPID_RespawnHandlerInstalled", true];

@@ -1,11 +1,19 @@
 /*
- * Loads only the interaction-equipment surface required by the disposable QA run.
- * The mission is started with playScriptedMission so testing does not depend on the
- * user's profile, scenario browser, mods, or a saved Eden mission.
+ * Author: WaldoTheWarfighter
+ * Loads the interaction-equipment functions required by the disposable no-BattlEye QA mission.
+ * The scripted-mission bootstrap avoids dependency on the user's profile, scenario browser, mods
+ * or a saved Eden mission and explicitly registers every transitive UI dependency.
+ *
+ * Arguments: None.
+ * Return Value: Nothing.
+ *
+ * Example: [] execVM "scriptedBootstrap.sqf";
+ * Current caller: launch_interaction_ui_qa.ps1 through playScriptedMission.
  */
 private _root = missionNamespace getVariable ["Waldo_MG_QA_Root", ""];
 if (_root == "") exitWith {diag_log "WMP INTERACTION UI QA: bootstrap root missing";};
 private _functions = [
+    ["Waldo_fnc_UiColourVisionProfile", "MissionScripts\MissionFlowAndUi\Accessibility\uiColourVisionProfile.sqf"],
     ["Waldo_fnc_UiTheme", "MissionScripts\MissionFlowAndUi\uiTheme.sqf"],
     ["Waldo_fnc_MiniGameRegisterChallenge", "MissionScripts\InteractionsMinigames\Core\registerChallenge.sqf"],
     ["Waldo_fnc_MiniGameChallengeResolve", "MissionScripts\InteractionsMinigames\Core\miniGameChallengeResolve.sqf"],

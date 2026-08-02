@@ -1,83 +1,93 @@
 /*
  * Author: WaldoTheWarfighter
- * Resolves the active visual-only WMP UI theme. The built-in DEFAULT, WW2, VIETNAM and SCIFI
- * variants share the same control geometry and behavior; only fonts, colours and surface treatment
- * change. Missions may extend the catalogue with Waldo_UI_CustomThemes and adjust the selected
- * theme through Waldo_UI_ThemeOverrides without editing feature UI functions.
+ * Resolves the mission-wide WMP era theme and overlays the current player's colour-vision profile.
+ * DEFAULT, WW2, VIETNAM and SCIFI have distinct typography, materials, rails, control chrome and
+ * copy motifs while retaining identical feature behavior. Missions may extend Waldo_UI_CustomThemes
+ * and Waldo_UI_ThemeOverrides; accessibility semantic overrides are applied last and locally.
  *
  * Arguments:
  * 0: theme id <STRING> (default missionNamespace Waldo_UI_Theme)
+ * 1: colour-vision profile id <STRING> (default local/profile-persistent selection)
  *
- * Return Value: HASHMAP - validated presentation tokens used by WMP UI consumers.
+ * Return Value: HASHMAP - complete presentation tokens for WMP UI consumers.
  *
  * Example:
- * private _theme = ["VIETNAM"] call Waldo_fnc_UiTheme;
- * Current callers: notification, SafeStart, EW, tactical-display, interaction-equipment and
- * Economy UI constructors, plus the live QA theme switch.
+ * private _theme = ["VIETNAM", "RED_GREEN"] call Waldo_fnc_UiTheme;
+ * Current callers: all theme-aware WMP notifications, displays, interaction equipment, SafeStart,
+ * electronic warfare, tactical-display, economy and QA presentation paths.
  */
 
-params [["_requested", missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"], [""]]];
+params [
+    ["_requested", missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"], [""]],
+    ["_visionRequested", missionNamespace getVariable ["Waldo_UI_ColourVisionProfileLocal", profileNamespace getVariable ["Waldo_UI_ColourVisionProfile", "STANDARD"]], [""]]
+];
 private _id = toUpperANSI _requested;
 private _themes = createHashMapFromArray [
     ["DEFAULT", createHashMapFromArray [
         ["id", "DEFAULT"], ["label", "Default / Modern"], ["font", "RobotoCondensed"], ["fontBold", "RobotoCondensedBold"],
-        ["shade", [0, 0, 0, 0.72]], ["panel", [0.012, 0.020, 0.028, 0.94]], ["panelAlt", [0.045, 0.050, 0.045, 0.99]],
-        ["header", [0.025, 0.20, 0.36, 0.99]], ["casing", [0.16, 0.17, 0.15, 1]], ["accent", [0.10, 0.38, 0.66, 1]],
-        ["accentActive", [0.10, 0.48, 0.76, 1]], ["text", [1, 1, 1, 1]], ["muted", [0.62, 0.70, 0.78, 1]],
-        ["success", [0.18, 0.66, 0.45, 1]], ["warning", [0.88, 0.60, 0.12, 1]], ["danger", [0.78, 0.15, 0.20, 1]],
-        ["textHex", "#FFFFFF"], ["mutedHex", "#9FB3C8"], ["accentHex", "#79C7FF"],
+        ["shade", [0, 0, 0, 0.72]], ["panel", [0.008, 0.018, 0.030, 0.95]], ["panelAlt", [0.035, 0.065, 0.095, 0.99]],
+        ["header", [0.018, 0.19, 0.34, 1]], ["button", [0.035, 0.14, 0.23, 1]], ["buttonActive", [0.08, 0.45, 0.75, 1]],
+        ["edit", [0.015, 0.045, 0.070, 1]], ["list", [0.018, 0.035, 0.052, 1]], ["casing", [0.12, 0.15, 0.18, 1]],
+        ["accent", [0.10, 0.46, 0.76, 1]], ["accentActive", [0.18, 0.66, 0.94, 1]], ["trim", [0.42, 0.72, 0.92, 0.85]],
+        ["text", [1, 1, 1, 1]], ["muted", [0.62, 0.72, 0.82, 1]], ["success", [0.18, 0.66, 0.45, 1]],
+        ["warning", [0.88, 0.60, 0.12, 1]], ["danger", [0.78, 0.15, 0.20, 1]], ["railMode", "TOP"],
+        ["sourcePrefix", "WMP // "], ["sourceSuffix", ""], ["titlePrefix", ""], ["titleSuffix", ""], ["motif", "TACTICAL INTERFACE"],
+        ["textHex", "#FFFFFF"], ["mutedHex", "#9FB8D1"], ["accentHex", "#79C7FF"],
         ["successHex", "#6CE5A8"], ["warningHex", "#FFD166"], ["dangerHex", "#FF6161"]
     ]],
     ["WW2", createHashMapFromArray [
         ["id", "WW2"], ["label", "Second World War"], ["font", "EtelkaMonospacePro"], ["fontBold", "EtelkaMonospaceProBold"],
-        ["shade", [0.025, 0.022, 0.014, 0.78]], ["panel", [0.105, 0.098, 0.064, 0.97]], ["panelAlt", [0.16, 0.15, 0.10, 0.99]],
-        ["header", [0.25, 0.23, 0.13, 1]], ["casing", [0.18, 0.19, 0.12, 1]], ["accent", [0.70, 0.53, 0.21, 1]],
-        ["accentActive", [0.86, 0.69, 0.31, 1]], ["text", [0.94, 0.90, 0.72, 1]], ["muted", [0.72, 0.69, 0.54, 1]],
-        ["success", [0.40, 0.62, 0.32, 1]], ["warning", [0.82, 0.62, 0.22, 1]], ["danger", [0.68, 0.22, 0.16, 1]],
-        ["textHex", "#F0E6B8"], ["mutedHex", "#B8B08A"], ["accentHex", "#D5B35A"],
-        ["successHex", "#8FC776"], ["warningHex", "#E8BB54"], ["dangerHex", "#E66C54"]
+        ["shade", [0.055, 0.045, 0.025, 0.82]], ["panel", [0.23, 0.215, 0.145, 0.985]], ["panelAlt", [0.32, 0.295, 0.19, 1]],
+        ["header", [0.27, 0.29, 0.17, 1]], ["button", [0.31, 0.32, 0.19, 1]], ["buttonActive", [0.69, 0.56, 0.27, 1]],
+        ["edit", [0.16, 0.15, 0.095, 1]], ["list", [0.19, 0.18, 0.12, 1]], ["casing", [0.20, 0.22, 0.13, 1]],
+        ["accent", [0.72, 0.56, 0.25, 1]], ["accentActive", [0.91, 0.75, 0.38, 1]], ["trim", [0.13, 0.14, 0.075, 1]],
+        ["text", [0.98, 0.93, 0.72, 1]], ["muted", [0.79, 0.75, 0.57, 1]], ["success", [0.46, 0.68, 0.35, 1]],
+        ["warning", [0.90, 0.70, 0.30, 1]], ["danger", [0.75, 0.28, 0.18, 1]], ["railMode", "BOTTOM"],
+        ["sourcePrefix", "WAR DEPARTMENT // "], ["sourceSuffix", " // FIELD COPY"], ["titlePrefix", "ORDER: "], ["titleSuffix", ""], ["motif", "FIELD SIGNAL"],
+        ["textHex", "#FAEDB8"], ["mutedHex", "#C9BF91"], ["accentHex", "#DAB45E"],
+        ["successHex", "#9AC97C"], ["warningHex", "#E8C06B"], ["dangerHex", "#E17A5E"]
     ]],
     ["VIETNAM", createHashMapFromArray [
-        ["id", "VIETNAM"], ["label", "Vietnam / Cold War"], ["font", "RobotoCondensed"], ["fontBold", "RobotoCondensedBold"],
-        ["shade", [0.008, 0.025, 0.012, 0.76]], ["panel", [0.035, 0.075, 0.040, 0.97]], ["panelAlt", [0.075, 0.105, 0.055, 0.99]],
-        ["header", [0.12, 0.20, 0.09, 1]], ["casing", [0.10, 0.14, 0.075, 1]], ["accent", [0.76, 0.48, 0.14, 1]],
-        ["accentActive", [0.92, 0.62, 0.20, 1]], ["text", [0.91, 0.87, 0.68, 1]], ["muted", [0.64, 0.68, 0.47, 1]],
-        ["success", [0.36, 0.68, 0.32, 1]], ["warning", [0.90, 0.62, 0.18, 1]], ["danger", [0.78, 0.20, 0.15, 1]],
-        ["textHex", "#E8DEAD"], ["mutedHex", "#A4AD78"], ["accentHex", "#E09A36"],
-        ["successHex", "#79D16B"], ["warningHex", "#F0B143"], ["dangerHex", "#EF5D49"]
+        ["id", "VIETNAM"], ["label", "Vietnam / Cold War"], ["font", "EtelkaMonospacePro"], ["fontBold", "EtelkaMonospaceProBold"],
+        ["shade", [0.005, 0.022, 0.008, 0.84]], ["panel", [0.018, 0.075, 0.035, 0.985]], ["panelAlt", [0.055, 0.12, 0.055, 1]],
+        ["header", [0.085, 0.18, 0.075, 1]], ["button", [0.075, 0.16, 0.07, 1]], ["buttonActive", [0.88, 0.54, 0.12, 1]],
+        ["edit", [0.008, 0.045, 0.018, 1]], ["list", [0.012, 0.055, 0.022, 1]], ["casing", [0.07, 0.12, 0.055, 1]],
+        ["accent", [0.92, 0.54, 0.12, 1]], ["accentActive", [1, 0.70, 0.23, 1]], ["trim", [0.34, 0.74, 0.30, 0.9]],
+        ["text", [0.78, 0.94, 0.62, 1]], ["muted", [0.52, 0.72, 0.40, 1]], ["success", [0.38, 0.78, 0.34, 1]],
+        ["warning", [0.96, 0.62, 0.16, 1]], ["danger", [0.90, 0.27, 0.16, 1]], ["railMode", "DOUBLE"],
+        ["sourcePrefix", "FIELD NET // "], ["sourceSuffix", " // RX"], ["titlePrefix", "> "], ["titleSuffix", " _"], ["motif", "AN/PRC FIELD DISPLAY"],
+        ["textHex", "#C7F09E"], ["mutedHex", "#85B866"], ["accentHex", "#F29A2E"],
+        ["successHex", "#77D76A"], ["warningHex", "#F3B24A"], ["dangerHex", "#EF6548"]
     ]],
     ["SCIFI", createHashMapFromArray [
         ["id", "SCIFI"], ["label", "Science Fiction"], ["font", "PuristaMedium"], ["fontBold", "PuristaSemibold"],
-        ["shade", [0.002, 0.008, 0.022, 0.80]], ["panel", [0.006, 0.025, 0.055, 0.96]], ["panelAlt", [0.015, 0.055, 0.085, 0.99]],
-        ["header", [0.025, 0.16, 0.25, 1]], ["casing", [0.018, 0.055, 0.085, 1]], ["accent", [0.08, 0.72, 0.90, 1]],
-        ["accentActive", [0.25, 0.92, 1, 1]], ["text", [0.82, 0.96, 1, 1]], ["muted", [0.42, 0.70, 0.78, 1]],
-        ["success", [0.12, 0.88, 0.62, 1]], ["warning", [0.96, 0.65, 0.12, 1]], ["danger", [0.96, 0.18, 0.48, 1]],
-        ["textHex", "#D1F5FF"], ["mutedHex", "#6BB3C7"], ["accentHex", "#35D9F4"],
+        ["shade", [0.001, 0.004, 0.018, 0.88]], ["panel", [0.004, 0.018, 0.052, 0.975]], ["panelAlt", [0.012, 0.055, 0.092, 1]],
+        ["header", [0.012, 0.12, 0.22, 1]], ["button", [0.015, 0.10, 0.17, 1]], ["buttonActive", [0.08, 0.72, 0.90, 1]],
+        ["edit", [0.003, 0.035, 0.070, 1]], ["list", [0.006, 0.028, 0.060, 1]], ["casing", [0.012, 0.045, 0.082, 1]],
+        ["accent", [0.05, 0.80, 0.96, 1]], ["accentActive", [0.35, 0.96, 1, 1]], ["trim", [0.95, 0.16, 0.68, 0.9]],
+        ["text", [0.82, 0.98, 1, 1]], ["muted", [0.40, 0.72, 0.82, 1]], ["success", [0.10, 0.90, 0.66, 1]],
+        ["warning", [0.98, 0.66, 0.14, 1]], ["danger", [0.98, 0.16, 0.52, 1]], ["railMode", "SIDE"],
+        ["sourcePrefix", "SYS::"], ["sourceSuffix", " // ONLINE"], ["titlePrefix", "[ "], ["titleSuffix", " ]"], ["motif", "TACTICAL NODE"],
+        ["textHex", "#D1FAFF"], ["mutedHex", "#66B8D1"], ["accentHex", "#35DCF6"],
         ["successHex", "#35EDA5"], ["warningHex", "#FFB93A"], ["dangerHex", "#FF3B83"]
     ]]
 ];
-
 private _custom = missionNamespace getVariable ["Waldo_UI_CustomThemes", createHashMap];
 if (typeName _custom == "HASHMAP") then {
-    {
-        private _value = _custom get _x;
-        if (typeName _value == "HASHMAP") then {_themes set [toUpperANSI _x, _value];};
-    } forEach keys _custom;
+    {private _value = _custom get _x; if (typeName _value == "HASHMAP") then {_themes set [toUpperANSI _x, _value];};} forEach keys _custom;
 };
 if (isNil {_themes get _id}) then {_id = "DEFAULT";};
 private _resolved = createHashMap;
 private _base = _themes get _id;
 {_resolved set [_x, _base get _x];} forEach keys _base;
 _resolved set ["id", _id];
-
 private _overrides = missionNamespace getVariable ["Waldo_UI_ThemeOverrides", createHashMap];
 if (typeName _overrides == "HASHMAP") then {
-    {
-        if !(isNil {_resolved get _x}) then {
-            private _current = _resolved get _x;
-            private _candidate = _overrides get _x;
-            if (typeName _candidate == typeName _current) then {_resolved set [_x, _candidate];};
-        };
-    } forEach keys _overrides;
+    {if !(isNil {_resolved get _x}) then {private _candidate = _overrides get _x; if (typeName _candidate == typeName (_resolved get _x)) then {_resolved set [_x, _candidate];};};} forEach keys _overrides;
 };
+private _vision = [_visionRequested] call Waldo_fnc_UiColourVisionProfile;
+private _visionOverrides = _vision getOrDefault ["overrides", createHashMap];
+if (typeName _visionOverrides == "HASHMAP") then {{_resolved set [_x, _visionOverrides get _x];} forEach keys _visionOverrides;};
+_resolved set ["colourVision", _vision getOrDefault ["id", "STANDARD"]];
+_resolved set ["colourVisionLabel", _vision getOrDefault ["label", "Standard colour"]];
 _resolved

@@ -8,12 +8,12 @@
  * Suite: feature subset to stage (default all).
  * Mode: manual stations or automated audit execution (default Manual).
  * Port: dedicated-server port (default 24132).
- * ResolutionWidth/ResolutionHeight: connected client dimensions (default 2560x1440).
+ * ResolutionWidth/ResolutionHeight: connected client dimensions (default 3840x2160).
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
  *
  * Example:
- * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual -ResolutionWidth 1920 -ResolutionHeight 1080
+ * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual
  * Current callers: launch_full_arma_hosted_audit.ps1 and manual QA operators.
  #>
 param(
@@ -22,8 +22,8 @@ param(
     [ValidateSet("Manual", "Automated")]
     [string]$Mode = "Manual",
     [int]$Port = 24132,
-    [int]$ResolutionWidth = 2560,
-    [int]$ResolutionHeight = 1440,
+    [int]$ResolutionWidth = 3840,
+    [int]$ResolutionHeight = 2160,
     [switch]$ExcludePersistenceMod,
     [string]$PythonExecutable = ""
 )
@@ -106,6 +106,7 @@ while ((Get-Date) -lt $serverDeadline -and -not $server.HasExited) {
             throw ("Arma rejected the staged audit mission: " + $loadError.Line)
         }
         $serverReady = [bool](Select-String -LiteralPath $serverRpt.FullName -Pattern "Mission world: VR|Game started|WMP PR REVIEW AUDIT" -Quiet)
+        if ($serverReady) { break }
     }
 }
 if (-not $serverReady) {

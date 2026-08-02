@@ -40,7 +40,7 @@ the server builds the walkable range with production setup functions and publish
 It does not maintain a
 hand-picked approximation of the pack. Routine testing uses `launch_pr_review_audit.ps1`: select
 Virtual Reality, choose WMP FULL PACK PR AUDIT, press Play, pick a slot and press OK. The launch uses
-CBA, ACE, ZEN and ACRE2, disables BattlEye and defaults to 2560×1440.
+CBA, ACE, ZEN and ACRE2, disables BattlEye and defaults to 3840×2160.
 
 The staged mission loads the normal mission lifecycle:
 

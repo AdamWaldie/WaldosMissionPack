@@ -334,6 +334,7 @@ if (isNil "Waldo_ImprovedHelicopterLanding_MaximumGoArounds") then {Waldo_Improv
 if (isNil "Waldo_ImprovedHelicopterLanding_MaximumClimbRate") then {Waldo_ImprovedHelicopterLanding_MaximumClimbRate = 8};
 if (isNil "Waldo_ImprovedHelicopterLanding_MaximumDescentRate") then {Waldo_ImprovedHelicopterLanding_MaximumDescentRate = 10};
 if (isNil "Waldo_ImprovedHelicopterLanding_TouchdownRadius") then {Waldo_ImprovedHelicopterLanding_TouchdownRadius = 2};
+if (isNil "Waldo_ImprovedHelicopterLanding_FinalCommitDistance") then {Waldo_ImprovedHelicopterLanding_FinalCommitDistance = 75};
 if (isNil "Waldo_ImprovedHelicopterLanding_ControlInterval") then {Waldo_ImprovedHelicopterLanding_ControlInterval = 0.05};
 if (isNil "Waldo_AI_ProfileDisplayNames") then {
     Waldo_AI_ProfileDisplayNames = createHashMapFromArray [

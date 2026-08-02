@@ -235,4 +235,5 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
 ] call zen_custom_modules_fnc_register;
 
 missionNamespace setVariable ["Waldo_ZenModuleCount", 38];
+missionNamespace setVariable ["Waldo_ZenModulesReady", true];
 diag_log format ["[WMP ZEN] Registered 38 Waldos Mission Modules on clientOwner=%1", clientOwner];

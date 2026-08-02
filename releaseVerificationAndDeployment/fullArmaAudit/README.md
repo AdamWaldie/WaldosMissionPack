@@ -69,7 +69,7 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
 
 Add `-ExcludePersistenceMod` to exercise the missing-server-extension dependency gate even when INIDBI2 is installed locally.
 
-The launcher defaults to a local dedicated authority plus a connected 2560x1440 client, with
+The launcher defaults to a local dedicated authority plus a connected 3840x2160 client, with
 `-noBattlEye` and the required CBA, ACE, ZEN and ACRE2 mods. It starts the audit mission directly;
 Eden is never involved. Choose a slot and press **OK** if the role-assignment screen is shown.
 

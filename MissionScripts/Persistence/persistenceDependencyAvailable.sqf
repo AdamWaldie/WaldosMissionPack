@@ -11,6 +11,7 @@
  *
  * Example:
  * [] call Waldo_fnc_PersistenceDependencyAvailable;
+ * Current callers: PersistenceInit, persistence ZEN controls, diagnostics and audit dependency tests.
  */
 
 if !(isServer) exitWith {false};
@@ -40,9 +41,10 @@ private _version = "getVersion" call _probeDb;
 ["delete", _probeDb] call OO_INIDBI;
 private _versionText = if (_version isEqualType "") then {toLowerANSI _version} else {""};
 private _dllIndex = _versionText find "dll:";
-private _dllVersion = if (_dllIndex >= 0) then {[(_versionText select [_dllIndex + 4])] call BIS_fnc_trimString} else {""};
+private _dllVersion = if (_dllIndex >= 0) then {_versionText select [_dllIndex + 4]} else {""};
+private _dllHasDigits = (toArray _dllVersion) findIf {_x >= 48 && {_x <= 57}} >= 0;
 _versionText != ""
     && {_versionText find "error" < 0}
     && {_versionText find "not found" < 0}
     && {_versionText find "inidbi" >= 0}
-    && {_dllVersion != ""}
+    && {_dllHasDigits}

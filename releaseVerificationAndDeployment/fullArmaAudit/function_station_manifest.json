@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 795,
+  "registeredFunctionCount": 799,
   "runtimeFunctionCount": 385,
-  "functionCount": 1180,
+  "functionCount": 1184,
   "stations": [
     {
       "id": "control",
@@ -748,6 +748,24 @@
       "name": "Waldo_fnc_UiThemeZen",
       "file": "MissionScripts/MissionFlowAndUi/uiThemeZen.sqf",
       "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiColourVisionProfile",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiColourVisionProfile.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiColourVisionApplyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiColourVisionApplyLocal.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiColourVisionOpenLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiColourVisionOpenLocal.sqf",
+      "station": "accessibility",
       "activation": "manual"
     },
     {
@@ -1936,6 +1954,12 @@
       "name": "Waldo_fnc_EmergencyDismountStop",
       "file": "MissionScripts/MissionInit/VehicleActionsSetup/EmergencyDismount/emergencyDismountStop.sqf",
       "station": "emergency-dismount",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AccessibilitySelfInteractionInit",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/accessibilitySelfInteractionInit.sqf",
+      "station": "accessibility",
       "activation": "manual"
     },
     {

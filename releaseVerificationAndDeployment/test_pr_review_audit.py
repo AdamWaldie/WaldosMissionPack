@@ -154,6 +154,7 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_direct_launcher_keeps_unfocused_qa_simulation_running(self):
         launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
         self.assertIn('"-noPause"', launcher)
+        self.assertIn("if ($serverReady) { break }", launcher)
 
     def test_audit_artifacts_are_not_part_of_release_contract(self):
         entries = set(BUILDER.release_entries())
@@ -307,16 +308,45 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('private _publishAll = {\n    params ["_updates"]', source)
 
     def test_accessibility_toggle_is_an_ace_self_interaction(self):
-        source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf").read_text(encoding="utf-8")
-        self.assertIn('[player, 1, ["ACE_SelfActions"], _action]', source)
-        self.assertIn("ace_interact_menu_fnc_createAction", source)
-        self.assertNotIn("player addAction", source)
+        accessibility = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilitySelfInteractionInit.sqf").read_text(encoding="utf-8")
+        pid = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf").read_text(encoding="utf-8")
+        self.assertIn('"Waldo_Accessibility_Root"', accessibility)
+        self.assertIn('[] call Waldo_fnc_SetupUiCleanupAction;', accessibility)
+        self.assertIn('["ACE_SelfActions", "Waldo_UI_SelfRoot"]', accessibility)
+        self.assertIn(
+            '["ACE_SelfActions", "Waldo_UI_SelfRoot", "Waldo_Accessibility_Root"]',
+            accessibility,
+        )
+        self.assertIn('"Waldo_Accessibility_ColourVision"', accessibility)
+        self.assertIn('"Waldo_AccessibilityPID_Toggle"', accessibility)
+        self.assertIn("Waldo_fnc_UiColourVisionOpenLocal", accessibility)
+        self.assertIn("Accessibility: Colour Vision", accessibility)
+        self.assertNotIn("Accessibility: Toggle Friendly Identification", accessibility)
+        self.assertIn("Waldo_fnc_AccessibilitySelfInteractionInit", pid)
+        self.assertNotIn("ace_interact_menu_fnc_createAction", pid)
+
+    def test_colour_vision_profiles_are_personal_and_theme_aware(self):
+        profile = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiColourVisionProfile.sqf").read_text(encoding="utf-8")
+        apply = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiColourVisionApplyLocal.sqf").read_text(encoding="utf-8")
+        theme = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "uiTheme.sqf").read_text(encoding="utf-8")
+        audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        qa_bootstrap = (ROOT / "releaseVerificationAndDeployment" / "interactionEquipmentQA" / "InteractionEquipmentQA.VR" / "scriptedBootstrap.sqf").read_text(encoding="utf-8")
+        for profile_id in ("STANDARD", "RED_GREEN", "PROTAN", "TRITAN", "HIGH_CONTRAST"):
+            self.assertIn(f'"{profile_id}"', profile)
+        self.assertIn('profileNamespace setVariable ["Waldo_UI_ColourVisionProfile"', apply)
+        self.assertIn("saveProfileNamespace", apply)
+        self.assertNotIn("publicVariable", apply)
+        self.assertNotIn("remoteExec", apply)
+        self.assertIn("Waldo_fnc_UiColourVisionProfile", theme)
+        self.assertIn("OPEN ACCESSIBILITY COLOUR-VISION UI", audit)
+        self.assertLess(qa_bootstrap.index('"Waldo_fnc_UiColourVisionProfile"'), qa_bootstrap.index('"Waldo_fnc_UiTheme"'))
 
     def test_persistence_gate_executes_a_native_version_probe(self):
         source = (ROOT / "MissionScripts" / "Persistence" / "persistenceDependencyAvailable.sqf").read_text(encoding="utf-8")
         self.assertIn('private _version = "getVersion" call _probeDb', source)
         self.assertIn('_versionText find "inidbi" >= 0', source)
-        self.assertIn('_dllVersion != ""', source)
+        self.assertIn("private _dllHasDigits", source)
+        self.assertIn("&& {_dllHasDigits}", source)
         launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
         self.assertIn("[switch]$ExcludePersistenceMod", launcher)
         self.assertIn("if ($ExcludePersistenceMod)", launcher)
@@ -626,6 +656,15 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("setVectorDirAndUp", controller)
         self.assertIn("MaximumClimbRate", controller)
         self.assertIn("MaximumGoArounds", controller)
+        self.assertIn('"FinalCommitDistance", 75', controller)
+        self.assertIn("!_committedToTouchdown && {currentWaypoint _group != _expectedWaypoint}", controller)
+        self.assertIn("_liveScript != _expectedScript", controller)
+        self.assertIn("distance2D _targetPosition > 0.5", controller)
+        self.assertIn("(_targetDeltaX / _targetDeltaMagnitude) * _desiredSpeed", controller)
+        self.assertIn("private _desiredVelocityZ = if (_goAround) then {3}", controller)
+        self.assertIn("_atlAltitude <= 1", controller)
+        self.assertIn("_horizontalVelocity <= 2", controller)
+        self.assertIn('"Waldo_ImprovedHelicopterLanding_LastResult"', controller)
         self.assertIn('disableAI "PATH"', controller)
         self.assertIn('setVariable ["Waldo_ImprovedHelicopterLanding_Active", true, true]', controller)
         self.assertIn('enableAI "PATH"', restore)
@@ -641,14 +680,28 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('("ui-theme-qa", "UI THEME QA"', generator)
         self.assertIn('fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F"', generator)
         self.assertIn('createVehicleCrew _helicopter', server)
-        self.assertIn('private _spawnAltitude = [0, 220] select _highApproach', server)
-        self.assertIn('private _spawnMode = ["NONE", "FLY"] select _highApproach', server)
-        self.assertIn('private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -80, _spawnAltitude]', server)
+        self.assertIn('private _spawnAltitude = [30, 220] select _highApproach', server)
+        self.assertIn('private _spawnMode = "FLY"', server)
+        self.assertIn('private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -30, _spawnAltitude]', server)
         self.assertIn('_helicopter enableSimulationGlobal true', server)
         self.assertIn('{_x enableSimulationGlobal true} forEach crew _helicopter', server)
-        self.assertIn('_departure setWaypointType "MOVE"', server)
-        self.assertIn('_waypoint setWaypointType "LAND"', server)
+        self.assertIn('_group setCurrentWaypoint _waypoint', server)
+        self.assertIn('_waypoint setWaypointType "SCRIPTED"', server)
+        self.assertIn('_waypoint setWaypointScript "A3\\functions_f\\waypoints\\fn_wpLand.sqf"', server)
+        self.assertIn('_waypoint setWaypointSpeed "NORMAL"', server)
         self.assertNotIn("call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", server)
+        server_audit = (audit / "runServerAudit.sqf").read_text(encoding="utf-8")
+        staged_server_audit = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "FullArmaAudit.VR"
+            / "runServerAudit.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('"core/ai-helicopter/land-touchdown"', server_audit)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_LastResult', server_audit)
+        self.assertIn('"core/ai-helicopter/land-touchdown"', staged_server_audit)
+        self.assertIn('fn_wpland.sqf', staged_server_audit)
         self.assertIn("START NORMAL AI LANDING", client)
         self.assertIn("START HIGH APPROACH / GO-AROUND", client)
         for theme in ('["DEFAULT", "DEFAULT"]', '["WW2", "WW2"]', '["VIETNAM", "VIETNAM"]', '["SCIFI", "SCI-FI"]'):

@@ -41,6 +41,27 @@ if (_suite in ["all", "core"]) then {
         ["core/fixtures/vvd-clearance", !isNull _pad && {_nearVehicles isEqualTo []}, [_nearVehicles apply {typeOf _x}]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
+    ["core/ai-helicopter/land-touchdown", {
+        [objNull, false] call Waldo_QA_fnc_startImprovedLandingServer;
+        private _helicopter = missionNamespace getVariable ["Waldo_QA_ImprovedLandingHelicopter", objNull];
+        private _deadline = diag_tickTime + 60;
+        waitUntil {
+            uiSleep 0.1;
+            isNull _helicopter
+            || {((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]) param [0, ""]) in ["LANDED", "ABORTED"]}
+            || {diag_tickTime >= _deadline}
+        };
+        private _result = if (isNull _helicopter) then {[]} else {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]};
+        private _tracker = if (isNull _helicopter) then {[]} else {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_TrackerState", []]};
+        private _landed = (_result param [0, ""]) == "LANDED";
+        private _trackerType = _tracker param [1, ""];
+        private _trackerScript = _tracker param [3, ""];
+        private _landTypeObserved = _trackerType == "SCRIPTED" && {_trackerScript find "fn_wpland.sqf" >= 0};
+        private _exact = !isNull _helicopter && {(_helicopter distance2D [325, 70, 0]) <= 5} && {((getPosATL _helicopter) select 2) <= 1};
+        ["core/ai-helicopter/land-touchdown", _landed && {_landTypeObserved} && {_exact}, [_result, _tracker, if (isNull _helicopter) then {-1} else {_helicopter distance2D [325, 70, 0]}, if (isNull _helicopter) then {-1} else {(getPosATL _helicopter) select 2}]] call Waldo_QA_fnc_assert;
+        call Waldo_QA_fnc_removeImprovedLandingServer;
+    }] call Waldo_QA_fnc_case;
+
     ["core/diagnostics/clean", {
         private _previousDeadline = diag_tickTime + 15;
         waitUntil {
@@ -261,4 +282,3 @@ if (_suite in ["all", "ew"]) then {
 private _passed = call Waldo_QA_fnc_complete;
 missionNamespace setVariable ["Waldo_QA_ServerComplete", [_passed, missionNamespace getVariable ["Waldo_QA_LocalResults", []]], true];
 if (!isMultiplayer) then {uiSleep 0.5; if (_passed) then {endMission "END1"} else {endMission "LOSER"};};
-

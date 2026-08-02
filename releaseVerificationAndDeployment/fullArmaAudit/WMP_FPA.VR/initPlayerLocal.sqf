@@ -190,6 +190,7 @@ if (hasInterface) then {
             [true] call Waldo_fnc_SafeStartApply;
         };
         [] call Waldo_fnc_SetupUiCleanupAction;
+        [] call Waldo_fnc_AccessibilitySelfInteractionInit;
     };
 }] call CBA_fnc_addClassEventHandler;
 
@@ -204,6 +205,9 @@ if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
 // Local emergency cleanup for WMP-owned UI. ACE self-interaction is preferred;
 // vanilla addAction is used only when ACE interaction is unavailable.
 [] call Waldo_fnc_SetupUiCleanupAction;
+// Personal accessibility presentation is installed for every interface client. The colour-vision
+// profile is local/profile-persistent; eligible PID users receive their toggle under the same root.
+[] call Waldo_fnc_AccessibilitySelfInteractionInit;
 // ACE interaction owns the local interaction view while open. WMP notification
 // cards are hidden/queued locally and restored when ACE closes.
 [] call Waldo_fnc_SetupUiAcePriority;

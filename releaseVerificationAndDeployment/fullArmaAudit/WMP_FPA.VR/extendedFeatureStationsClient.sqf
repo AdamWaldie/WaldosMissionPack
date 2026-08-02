@@ -365,6 +365,22 @@ private _themes = "qa_sign_ui_theme_qa" call _get;
 [_themes, "Waldo_QA_UiThemePreview", "PREVIEW CURRENT THEME STACK", {
     [missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"], true] call Waldo_fnc_UiThemeApplyLocal;
 }] call _add;
+[_themes, "Waldo_QA_ColourVisionSelector", "OPEN ACCESSIBILITY COLOUR-VISION UI", {
+    [] call Waldo_fnc_UiColourVisionOpenLocal;
+}] call _add;
+{
+    _x params ["_profile", "_label"];
+    [_themes, format ["Waldo_QA_ColourVision%1", _profile], format ["APPLY %1 COLOUR PROFILE", _label], {
+        params ["_target", "_actor", "_profile"];
+        [_profile, true] call Waldo_fnc_UiColourVisionApplyLocal;
+    }, _profile] call _add;
+} forEach [
+    ["STANDARD", "STANDARD"],
+    ["RED_GREEN", "RED-GREEN AWARE"],
+    ["PROTAN", "PROTAN AWARE"],
+    ["TRITAN", "BLUE-YELLOW AWARE"],
+    ["HIGH_CONTRAST", "HIGH-CONTRAST MONOCHROME"]
+];
 
 // Add the new station destinations to the already-installed central control console.
 private _control = "qa_control_console" call _get;

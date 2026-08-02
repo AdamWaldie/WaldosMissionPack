@@ -38,7 +38,11 @@ while {
                 private _landingType = _type in ["LAND", "UNLOAD", "TR UNLOAD", "GETOUT"];
                 if (_type == "SCRIPTED" && {_script find "land" >= 0}) then {_landingType = true;};
                 private _signature = [_index, _position, _type, _script];
-                if !(_signature isEqualTo _lastSignature) then {_lastSignature = _signature;};
+                if !(_signature isEqualTo _lastSignature) then {
+                    _lastSignature = _signature;
+                    _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_TrackerState", [_index, _type, _position, _script], true];
+                    diag_log format ["[WMP AI LANDING] Tracker owner=%1 helicopter=%2 waypoint=%3 type=%4 position=%5", clientOwner, netId _helicopter, _index, _type, _position];
+                };
                 private _minimumDistance = ([_helicopter, "MinimumActivationDistance", 50] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 50;
                 private _distance = _helicopter distance2D _position;
                 private _triggerDistance = ((abs speed _helicopter) * ([_helicopter, "TriggerSpeedFactor", 4.2] call Waldo_fnc_ImprovedHelicopterLandingSetting))
@@ -50,7 +54,8 @@ while {
                     && {isEngineOn _helicopter}
                     && {isNull (getSlingLoad _helicopter)}
                 ) then {
-                    [_helicopter, _position, _type, _index] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
+                    diag_log format ["[WMP AI LANDING] Controller acquiring helicopter=%1 waypoint=%2 type=%3 distance=%4", netId _helicopter, _index, _type, round _distance];
+                    [_helicopter, _position, _type, _index, _script] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
                     _lastSignature = [];
                 };
             } else {

@@ -308,6 +308,12 @@ Waldo_AccessibilityPID_Enable = true;
 Waldo_AccessibilityPID_AllowedUIDs = ["76561198094931408"];
 ```
 
+Colour-vision presentation is selected personally through **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** and stored in `profileNamespace` as `Waldo_UI_ColourVisionProfile`. Do not publish it from `initServer.sqf` or overwrite it in `init.sqf`; it is intentionally different for each player. Scripted local selection is available when building another accessibility UI:
+
+```sqf
+["RED_GREEN", true] call Waldo_fnc_UiColourVisionApplyLocal;
+```
+
 See [Optional Feature Systems](Optional-Feature-Systems) for the complete setting groups.
 
 ### Global UI Visual Style
@@ -316,7 +322,7 @@ Set `Waldo_UI_Theme` in `init.sqf` to `DEFAULT`, `WW2`, `VIETNAM` or `SCIFI`. Th
 
 ### Improved AI Helicopter Landings
 
-`Waldo_ImprovedHelicopterLanding_Enable` controls the AI-only exact landing system. The remaining `Waldo_ImprovedHelicopterLanding_*` values tune activation range, glideslope, canopy clearance, collective limits, touchdown tolerance and go-around policy. Event-driven class-init and `Local` handlers cover editor, Zeus and migrated helicopters on their current owner. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
+`Waldo_ImprovedHelicopterLanding_Enable` controls the AI-only exact landing system. The remaining `Waldo_ImprovedHelicopterLanding_*` values tune activation range, glideslope, canopy clearance, collective limits, touchdown tolerance, final-approach commitment and go-around policy. `FinalCommitDistance` prevents vanilla LAND-waypoint completion from cancelling a flare already in progress. Event-driven class-init and `Local` handlers cover editor, Zeus and migrated helicopters on their current owner. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
 
 ### Zeus Enhanced Modules
 

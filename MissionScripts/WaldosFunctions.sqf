@@ -181,6 +181,9 @@ class CfgFunctions
               class UiThemeApplyDisplayLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyDisplayLocal.sqf";};
               class UiThemeSetServer {file = "MissionScripts\MissionFlowAndUi\uiThemeSetServer.sqf";};
               class UiThemeZen {file = "MissionScripts\MissionFlowAndUi\uiThemeZen.sqf";};
+              class UiColourVisionProfile {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiColourVisionProfile.sqf";};
+              class UiColourVisionApplyLocal {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiColourVisionApplyLocal.sqf";};
+              class UiColourVisionOpenLocal {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiColourVisionOpenLocal.sqf";};
               class FeatureNotifyLocal {
                   file = "MissionScripts\MissionFlowAndUi\featureNotifyLocal.sqf";
               };
@@ -677,6 +680,7 @@ class CfgFunctions
         };
         class Accessibility
         {
+            class AccessibilitySelfInteractionInit {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilitySelfInteractionInit.sqf";};
             class AccessibilityPIDInit {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDInit.sqf";};
             class AccessibilityPIDToggle {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDToggle.sqf";};
             class AccessibilityPIDStop {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDStop.sqf";};

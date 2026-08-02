@@ -234,6 +234,7 @@ if (!isNull _coreConsole) then {
             ["CBA", "cba_main"],
             ["ACE", "ace_main"],
             ["ZEN", "zen_main"],
+            ["ZEN ADVANCED WAYPOINTS", "zen_ai"],
             ["ACRE2", "acre_main"]
         ];
         private _missing = [];
@@ -245,6 +246,13 @@ if (!isNull _coreConsole) then {
                 _missing pushBack (_x select 0);
             };
         } forEach _checks;
+        private _wmpZenCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
+        private _wmpZenReady = missionNamespace getVariable ["Waldo_ZenModulesReady", false] && {_wmpZenCount == 38};
+        if (_wmpZenReady) then {
+            _loaded pushBack format ["WMP ZEN MODULES (%1)", _wmpZenCount];
+        } else {
+            _missing pushBack format ["WMP ZEN MODULE REGISTRATION (%1/38)", _wmpZenCount];
+        };
         private _message = if (_missing isEqualTo []) then {
             format ["REQUIRED MODS LOADED: %1", _loaded joinString ", "]
         } else {

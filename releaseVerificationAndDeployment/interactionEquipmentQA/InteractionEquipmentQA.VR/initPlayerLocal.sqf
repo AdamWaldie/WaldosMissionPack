@@ -1,7 +1,14 @@
 /*
- * Interactive mode exposes the real equipment gallery and runtime validator.
- * Automated mode creates every display, validates briefing and active states,
- * records findings in the RPT and ends with END1/LOSER.
+ * Author: WaldoTheWarfighter
+ * Runs the disposable interaction-equipment QA client. Interactive and Active modes expose real
+ * gallery/display controls; Automated mode drives every procedure through its production input
+ * functions, validates briefing and active geometry, records outcomes and ends with END1/LOSER.
+ *
+ * Arguments: None.
+ * Return Value: Nothing.
+ *
+ * Example: engine entry point; do not call directly.
+ * Current caller: the generated WMP_Interaction_UI_QA.VR mission.
  */
 waitUntil {!isNull player && {!isNull (findDisplay 46)}};
 private _mode = toUpper (missionNamespace getVariable ["Waldo_MG_QA_Mode", "INTERACTIVE"]);
@@ -214,11 +221,12 @@ private _exerciseProcedure = {
         diag_log format ["WMP INTERACTION UI QA CASE: %1 config=%2", _caseId, _config];
         missionNamespace setVariable ["Waldo_MG_QA_Resolved", false];
         missionNamespace setVariable ["Waldo_MG_QA_Result", false];
+        missionNamespace setVariable ["Waldo_MG_QA_Outcome", []];
         private _opened = [
             _challengeId,
             _config,
-            {missionNamespace setVariable ["Waldo_MG_QA_Result", true]; missionNamespace setVariable ["Waldo_MG_QA_Resolved", true];},
-            {missionNamespace setVariable ["Waldo_MG_QA_Result", false]; missionNamespace setVariable ["Waldo_MG_QA_Resolved", true];}
+            {missionNamespace setVariable ["Waldo_MG_QA_Outcome", _this]; missionNamespace setVariable ["Waldo_MG_QA_Result", true]; missionNamespace setVariable ["Waldo_MG_QA_Resolved", true];},
+            {missionNamespace setVariable ["Waldo_MG_QA_Outcome", _this]; missionNamespace setVariable ["Waldo_MG_QA_Result", false]; missionNamespace setVariable ["Waldo_MG_QA_Resolved", true];}
         ] call Waldo_fnc_MiniGameChallenge;
         if (!_opened) then {
             _allFindings pushBack [_caseId, "ERROR", "OPEN_FAILED"];
@@ -258,6 +266,7 @@ private _exerciseProcedure = {
             } else {
                 if !(missionNamespace getVariable ["Waldo_MG_QA_Result", false]) then {
                     _allFindings pushBack [_caseId, "MECHANICS", "EXPECTED_SUCCESS_GOT_FAILURE"];
+                    diag_log format ["WMP INTERACTION UI QA FAILURE OUTCOME: %1 %2", _caseId, missionNamespace getVariable ["Waldo_MG_QA_Outcome", []]];
                 };
             };
         };

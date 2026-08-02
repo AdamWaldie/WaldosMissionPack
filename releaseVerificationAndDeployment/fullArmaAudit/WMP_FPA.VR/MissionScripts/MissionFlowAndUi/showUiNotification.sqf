@@ -149,25 +149,30 @@ if (_existingIndex >= 0) then {
 
 private _frame = _display ctrlCreate ["RscText", -1];
 private _accent = _display ctrlCreate ["RscText", -1];
+private _trim = _display ctrlCreate ["RscText", -1];
 private _content = _display ctrlCreate ["RscStructuredText", -1];
 _frame ctrlSetBackgroundColor (_theme getOrDefault ["panel", [0.012, 0.020, 0.028, 0.94]]);
 _accent ctrlSetBackgroundColor _accentColour;
+_trim ctrlSetBackgroundColor (_theme getOrDefault ["trim", _theme getOrDefault ["accent", [0.10, 0.38, 0.66, 1]]]);
 _content ctrlSetBackgroundColor [0, 0, 0, 0];
 
 private _messageText = if ((typeName _message) isEqualTo "TEXT") then {str _message} else {_message};
+private _styledSource = (_theme getOrDefault ["sourcePrefix", ""]) + toUpper _source + (_theme getOrDefault ["sourceSuffix", ""]);
+private _styledTitle = (_theme getOrDefault ["titlePrefix", ""]) + _title + (_theme getOrDefault ["titleSuffix", ""]);
 _content ctrlSetStructuredText parseText format [
-    "<t align='left' font='%6' color='%7' size='0.72'>%1</t><br/>" +
+    "<t align='left' font='%6' color='%7' size='0.72'>%1 // %10</t><br/>" +
     "<t align='left' font='%8' color='%2' size='1.12' shadow='1'>%3 %4</t><br/>" +
     "<t align='left' font='%6' color='%9' size='0.88'>%5</t>",
-    toUpper _source,
+    _styledSource,
     _colour,
     _symbol,
-    _title,
+    _styledTitle,
     _messageText,
     _theme getOrDefault ["font", "RobotoCondensed"],
     _theme getOrDefault ["mutedHex", "#9FB3C8"],
     _theme getOrDefault ["fontBold", "RobotoCondensedBold"],
-    _theme getOrDefault ["textHex", "#FFFFFF"]
+    _theme getOrDefault ["textHex", "#FFFFFF"],
+    _theme getOrDefault ["motif", "TACTICAL INTERFACE"]
 ];
 
 private _visibleW = safeZoneW;
@@ -188,11 +193,13 @@ _content ctrlCommit 0;
 private _contentH = (((ctrlTextHeight _content) + (_visibleH * 0.006)) max (_visibleH * 0.07)) min _maximumContentH;
 private _panelH = _contentH + (2 * _padY);
 private _accentH = (_visibleH * 0.004) max 0.002;
-{_x ctrlShow !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);} forEach [_frame, _accent, _content];
+{_x ctrlShow !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);} forEach [_frame, _accent, _trim, _content];
 
 private _token = format ["%1_%2", diag_tickTime, random 1e9];
-private _controls = [_frame, _accent, _content];
-_registry pushBack [_channel, _controls, _token, _placement, _panelW, _panelH, _padX, _padY, _accentH, _contentH, _priority, diag_tickTime];
+private _controls = [_frame, _accent, _trim, _content];
+private _railMode = _theme getOrDefault ["railMode", "TOP"];
+private _trimH = (_visibleH * 0.002) max 0.001;
+_registry pushBack [_channel, _controls, _token, _placement, _panelW, _panelH, _padX, _padY, _accentH, _contentH, _priority, diag_tickTime, _railMode, _trimH];
 uiNamespace setVariable ["Waldo_UiPanelRegistry", _registry];
 [0] call Waldo_fnc_ReflowUiPanels;
 

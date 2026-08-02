@@ -82,7 +82,9 @@ The aid is enabled by default for its original intended recipient (`765611980949
 
 The aid is presentation-only and does not alter side relations or reveal enemies. Players can toggle it when `Waldo_AccessibilityPID_AllowToggle` is enabled. Use `Waldo_fnc_AccessibilityPIDToggle` from another UI if desired, and `Waldo_fnc_AccessibilityPIDStop` for cleanup.
 
-Eligible players can show or hide the aid through **Toggle Friendly Identification** in ACE self-interactions. Configure eligibility, icon/name ranges, line-of-sight policy and AI inclusion player-locally; this feature intentionally has no ZEN module. `Waldo_AccessibilityPID_AllowedUIDs` remains available for pre-planned per-player eligibility.
+Eligible players can show or hide the aid through **ACE Self Interact > WMP Interface > Accessibility > Toggle Friendly Identification**. The same Accessibility category is available to every player beneath **WMP Interface** and opens **Colour Vision Settings**, whose local profile also supplies an appropriate PID marker colour. Configure eligibility, icon/name ranges, line-of-sight policy and AI inclusion player-locally; this feature intentionally has no ZEN module. `Waldo_AccessibilityPID_AllowedUIDs` remains available for pre-planned per-player eligibility.
+
+Colour-vision profiles are personal rather than mission-authoritative. Standard, red-green-aware, protan-aware, blue-yellow-aware and high-contrast monochrome palettes remap semantic/focus colours while retaining words, icons, shapes and patterns. The choice persists in the player's Arma profile and does not alter other players or the mission's era theme.
 
 ## Explosive wall breaching
 

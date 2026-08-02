@@ -3,17 +3,21 @@
  * Guides one local AI helicopter down an exact terrain-following glideslope using bounded velocity
  * and orientation vectors. It flares as horizontal speed falls, limits upward/downward collective,
  * aligns the final attitude to the landing slope, raises the approach over nearby tree canopies and
- * performs a bounded go-around when the aircraft reaches the landing area excessively high.
+ * performs a bounded go-around when the aircraft reaches the landing area excessively high. Once
+ * inside FinalCommitDistance, premature engine completion of the landing waypoint cannot cancel
+ * the flare, while deletion or editing of that waypoint always releases the aircraft immediately.
+ * LastResult is broadcast on the helicopter for locality-safe diagnostics and QA.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
  * 1: landing position <ARRAY>
  * 2: waypoint type <STRING>
  * 3: expected waypoint index <NUMBER>
+ * 4: expected waypoint script <STRING> (default "")
  *
  * Return Value: BOOL - true on touchdown, false after a validated abort.
  *
- * Example: [_helicopter, _position, "TR UNLOAD", _index] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
+ * Example: [_helicopter, _position, "TR UNLOAD", _index, ""] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
  * Current caller: ImprovedHelicopterLandingTrackLocal when a supported landing waypoint enters range.
  */
 
@@ -21,7 +25,8 @@ params [
     ["_helicopter", objNull, [objNull]],
     ["_targetPosition", [], [[]]],
     ["_waypointType", "", [""]],
-    ["_expectedWaypoint", -1, [0]]
+    ["_expectedWaypoint", -1, [0]],
+    ["_expectedScript", "", [""]]
 ];
 if (
     isNull _helicopter
@@ -70,6 +75,11 @@ private _landed = false;
 private _lastPosition = getPosASL _helicopter;
 private _lastTick = diag_tickTime;
 private _targetSurfaceNormal = surfaceNormal _targetPosition;
+private _touchdownRadius = [_helicopter, "TouchdownRadius", 2] call Waldo_fnc_ImprovedHelicopterLandingSetting;
+private _finalCommitDistance = (([_helicopter, "FinalCommitDistance", 75] call Waldo_fnc_ImprovedHelicopterLandingSetting) max (_touchdownRadius + 5)) min 150;
+private _committedToTouchdown = false;
+private _closestDistance = _startDistance;
+_helicopter setVariable ["Waldo_ImprovedHelicopterLanding_LastResult", ["ACTIVE", _targetPosition, diag_tickTime, _startDistance, (getPosATL _helicopter) select 2], true];
 
 while {!_abort && {!_landed}} do {
     private _now = diag_tickTime;
@@ -79,6 +89,21 @@ while {!_abort && {!_landed}} do {
     private _expectedMovement = (vectorMagnitude (velocity _helicopter)) * _delta;
     if (_lastPosition distance _positionASL > (_expectedMovement + 8)) then {_abort = true;};
     _lastPosition = _positionASL;
+    private _distance = _helicopter distance2D _targetPosition;
+    _closestDistance = _closestDistance min _distance;
+    if (_distance <= _finalCommitDistance) then {_committedToTouchdown = true;};
+    private _atlAltitude = (getPosATL _helicopter) select 2;
+    private _liveVelocity = velocity _helicopter;
+    private _horizontalVelocity = sqrt (((_liveVelocity select 0) ^ 2) + ((_liveVelocity select 1) ^ 2));
+    // isTouchingGround is unreliable for some helicopter geometry: a settled Little Bird reports
+    // roughly 0.65 m ATL. Accept only a tight, slow envelope at the exact touchdown point.
+    if (
+        _distance < _touchdownRadius
+        && {_atlAltitude <= 1}
+        && {_horizontalVelocity <= 2}
+        && {abs (_liveVelocity select 2) <= 1.5}
+    ) then {_landed = true;};
+    if (_landed) exitWith {};
 
     if (_now >= _nextValidation) then {
         _nextValidation = _now + 0.25;
@@ -100,15 +125,21 @@ while {!_abort && {!_landed}} do {
             || {!isNull (getSlingLoad _helicopter)}
             || {!canMove _helicopter}
             || {fuel _helicopter <= 0}
-            || {currentWaypoint _group != _expectedWaypoint};
-        if (!_abort && {_expectedWaypoint < count (waypoints _group)}) then {
-            _abort = (waypointPosition [_group, _expectedWaypoint]) distance2D _targetPosition > 25;
+            || {!_committedToTouchdown && {currentWaypoint _group != _expectedWaypoint}}
+            || {_expectedWaypoint < 0}
+            || {_expectedWaypoint >= count (waypoints _group)};
+        if (!_abort) then {
+            private _liveWaypoint = [_group, _expectedWaypoint];
+            private _liveType = toUpperANSI (waypointType _liveWaypoint);
+            private _liveScript = toLowerANSI (waypointScript _liveWaypoint);
+            // A moved waypoint is a new order. Abort this controller and let the tracker decide
+            // whether the revised landing task is far enough away to acquire as a fresh approach.
+            _abort = (waypointPosition _liveWaypoint) distance2D _targetPosition > 0.5
+                || {_liveType != _waypointType}
+                || {_waypointType == "SCRIPTED" && {_liveScript != _expectedScript}};
         };
     };
 
-    private _distance = _helicopter distance2D _targetPosition;
-    private _atlAltitude = (getPosATL _helicopter) select 2;
-    private _touchdownRadius = [_helicopter, "TouchdownRadius", 2] call Waldo_fnc_ImprovedHelicopterLandingSetting;
     if (isTouchingGround _helicopter && {_distance > (_touchdownRadius + 5)}) then {_abort = true;};
     if (_abort) exitWith {};
     private _relativeTargetAltitude = (_positionASL select 2) - _targetTerrainASL;
@@ -129,6 +160,17 @@ while {!_abort && {!_landed}} do {
         _startTerrainASL = getTerrainHeightASL _positionASL;
         _startTime = _now;
         _treeHoverHeight = 0;
+        _closestDistance = _distance;
+    };
+    if (
+        !_goAround
+        && {_goArounds < ([_helicopter, "MaximumGoArounds", 1] call Waldo_fnc_ImprovedHelicopterLandingSetting)}
+        && {_closestDistance < 80}
+        && {_distance > (_closestDistance + 20)}
+    ) then {
+        _goAround = true;
+        _goArounds = _goArounds + 1;
+        _goAroundHeading = getDir _helicopter;
     };
 
     if (_now >= _nextObstacleScan && {_distance < 120}) then {
@@ -167,16 +209,18 @@ while {!_abort && {!_landed}} do {
         private _factor = sqrt ((_distance / _startDistance) min 1);
         (_entrySpeed * _factor) max (2 min _distance)
     };
-    private _travelYaw = if (_goAround) then {_goAroundHeading} else {_yaw};
-    private _desiredVelocityX = sin _travelYaw * _desiredSpeed;
-    private _desiredVelocityY = cos _travelYaw * _desiredSpeed;
+    private _targetDeltaX = (_targetPosition select 0) - (_positionASL select 0);
+    private _targetDeltaY = (_targetPosition select 1) - (_positionASL select 1);
+    private _targetDeltaMagnitude = (sqrt ((_targetDeltaX * _targetDeltaX) + (_targetDeltaY * _targetDeltaY))) max 0.01;
+    private _desiredVelocityX = if (_goAround) then {sin _goAroundHeading * _desiredSpeed} else {(_targetDeltaX / _targetDeltaMagnitude) * _desiredSpeed};
+    private _desiredVelocityY = if (_goAround) then {cos _goAroundHeading * _desiredSpeed} else {(_targetDeltaY / _targetDeltaMagnitude) * _desiredSpeed};
     private _desiredRelativeAltitude = if (_distance > _descentDistance) then {_transitAltitude} else {0.25 + ((_transitAltitude - 0.25) * (_distance / _descentDistance))};
     _desiredRelativeAltitude = _desiredRelativeAltitude + _forwardAvoidance;
     if (!_goAround && {_distance >= 5}) then {_desiredRelativeAltitude = _desiredRelativeAltitude max _treeHoverHeight;};
     private _progress = 1 - ((_distance / _startDistance) min 1 max 0);
     private _expectedTerrainASL = _startTerrainASL + ((_targetTerrainASL - _startTerrainASL) * _progress);
     private _altitudeError = (_expectedTerrainASL + _desiredRelativeAltitude) - (_positionASL select 2);
-    private _desiredVelocityZ = if (_goAround) then {-3} else {
+    private _desiredVelocityZ = if (_goAround) then {3} else {
         (_altitudeError * 0.45)
             min ([_helicopter, "MaximumClimbRate", 8] call Waldo_fnc_ImprovedHelicopterLandingSetting)
             max (-([_helicopter, "MaximumDescentRate", 10] call Waldo_fnc_ImprovedHelicopterLandingSetting))
@@ -191,7 +235,7 @@ while {!_abort && {!_landed}} do {
     _desiredPitch = _desiredPitch - (abs _bank * 0.22);
     _pitch = _pitch + ((_desiredPitch - _pitch) * 0.045);
 
-    private _xyBlend = if (!_goAround && {_distance < 15}) then {0.03 + (0.07 * (1 - (_distance / 15)))} else {0.025};
+    private _xyBlend = if (!_goAround && {_distance < 20}) then {0.10 + (0.10 * (1 - (_distance / 20)))} else {0.06};
     _currentVelocity set [0, (_currentVelocity select 0) + ((_desiredVelocityX - (_currentVelocity select 0)) * _xyBlend)];
     _currentVelocity set [1, (_currentVelocity select 1) + ((_desiredVelocityY - (_currentVelocity select 1)) * _xyBlend)];
     private _zBlend = if (_desiredVelocityZ > (_currentVelocity select 2)) then {0.16} else {0.10};
@@ -225,6 +269,11 @@ while {!_abort && {!_landed}} do {
     uiSleep (([_helicopter, "ControlInterval", 0.05] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 0.02 min 0.2);
 };
 
+_helicopter setVariable [
+    "Waldo_ImprovedHelicopterLanding_LastResult",
+    [["ABORTED", "LANDED"] select _landed, _targetPosition, diag_tickTime, _helicopter distance2D _targetPosition, (getPosATL _helicopter) select 2],
+    true
+];
 [_helicopter, _landed, _waypointType] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
 if (_landed && {local _helicopter}) then {
     private _mass = getMass _helicopter;
