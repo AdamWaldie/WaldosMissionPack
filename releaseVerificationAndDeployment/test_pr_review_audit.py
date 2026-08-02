@@ -360,9 +360,13 @@ class PrReviewAuditTests(unittest.TestCase):
 
     def test_audit_zeus_follows_the_replacement_player_unit(self):
         server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
+        client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         self.assertIn('addMissionEventHandler ["EntityRespawned"', server)
         self.assertIn("Waldo_QA_CuratorAssignedUnit", server)
         self.assertIn("[_unit] call Waldo_QA_fnc_assignCuratorServer", server)
+        self.assertIn("owner _x > 2", server)
+        self.assertIn('getAssignedCuratorUnit _curator', server)
+        self.assertIn('[player] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2]', client)
 
     def test_respawn_overlay_is_location_only(self):
         source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "respawnText.sqf").read_text(encoding="utf-8")
@@ -637,9 +641,12 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('("ui-theme-qa", "UI THEME QA"', generator)
         self.assertIn('fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F"', generator)
         self.assertIn('createVehicleCrew _helicopter', server)
+        self.assertIn('private _spawnAltitude = [0, 220] select _highApproach', server)
+        self.assertIn('private _spawnMode = ["NONE", "FLY"] select _highApproach', server)
         self.assertIn('private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -80, _spawnAltitude]', server)
         self.assertIn('_helicopter enableSimulationGlobal true', server)
         self.assertIn('{_x enableSimulationGlobal true} forEach crew _helicopter', server)
+        self.assertIn('_departure setWaypointType "MOVE"', server)
         self.assertIn('_waypoint setWaypointType "LAND"', server)
         self.assertNotIn("call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", server)
         self.assertIn("START NORMAL AI LANDING", client)

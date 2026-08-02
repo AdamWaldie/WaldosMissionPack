@@ -1,6 +1,15 @@
 /*
- * Walkable ongoing full-pack PR feature range. Objects are real multiplayer objects and
- * are configured through the same public functions mission makers use.
+ * Author: WaldoTheWarfighter
+ * Builds the server-authoritative walkable full-pack feature range. Objects are real multiplayer
+ * fixtures configured through the same public functions mission makers use. Curator assignment
+ * follows the actual remote player owner, transfers after respawn and never selects server-owned
+ * playable AI as the initial Zeus operator.
+ *
+ * Arguments: none (executed from auditInitServer.sqf).
+ * Return Value: nothing.
+ *
+ * Example: [] execVM "featureRangeServer.sqf";
+ * Current callers: the generated full-pack audit mission on dedicated or hosted authority.
  */
 if (!isServer) exitWith {};
 waitUntil {
@@ -518,6 +527,14 @@ Waldo_QA_fnc_assignCuratorServer = {
     if (remoteExecutedOwner > 2 && {remoteExecutedOwner != owner _unit}) exitWith {false};
     private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
     if (isNull _curator) exitWith {false};
+    private _assigned = getAssignedCuratorUnit _curator;
+    if (
+        !isNull _assigned
+        && {_assigned in allPlayers}
+        && {isPlayer _assigned}
+        && {owner _assigned > 2}
+        && {!(_assigned isEqualTo _unit)}
+    ) exitWith {false};
     unassignCurator _curator;
     _unit assignCurator _curator;
     _curator synchronizeObjectsAdd [_unit];
@@ -546,15 +563,14 @@ if (isNull _curator) then {
     _curator addCuratorEditableObjects [missionNamespace getVariable ["Waldo_QA_FeatureObjects", []], true];
     missionNamespace setVariable ["Waldo_QA_Curator", _curator, true];
     [] spawn {
-        waitUntil {uiSleep 0.2; (count allPlayers) > 0};
+        waitUntil {
+            uiSleep 0.2;
+            (allPlayers findIf {isPlayer _x && {owner _x > 2}}) >= 0
+        };
         private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
         if (!isNull _curator) then {
-            private _unit = allPlayers select 0;
-            unassignCurator _curator;
-            _unit assignCurator _curator;
-            _curator synchronizeObjectsAdd [_unit];
-            missionNamespace setVariable ["Waldo_QA_CuratorAssignedUnit", _unit, true];
-            diag_log format ["WMP FULL AUDIT ZEUS: assigned %1 (%2) to %3", name _unit, owner _unit, _curator];
+            private _unit = allPlayers select (allPlayers findIf {isPlayer _x && {owner _x > 2}});
+            [_unit] call Waldo_QA_fnc_assignCuratorServer;
         };
     };
 };

@@ -558,30 +558,46 @@ Waldo_QA_fnc_startImprovedLandingServer = {
     params [["_actor", objNull, [objNull]], ["_highApproach", false, [true]]];
     call Waldo_QA_fnc_removeImprovedLandingServer;
     private _landingPosition = [325, 70, 0];
-    private _spawnAltitude = [75, 300] select _highApproach;
+    private _spawnAltitude = [0, 220] select _highApproach;
+    private _spawnMode = ["NONE", "FLY"] select _highApproach;
     // The aircraft begins exactly 150 metres south of the marked helipad. This keeps the
     // fixture above the production controller's 50 m acquisition floor without making the
     // approach unnecessarily long for a manual audit.
-    private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -80, _spawnAltitude], [], 0, "FLY"];
+    private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -80, _spawnAltitude], [], 0, _spawnMode];
     _helicopter setPosATL [325, -80, _spawnAltitude];
     _helicopter setDir 0;
-    _helicopter setVelocityModelSpace [0, 32, 0];
     _helicopter enableSimulationGlobal true;
     createVehicleCrew _helicopter;
     {_x enableSimulationGlobal true} forEach crew _helicopter;
-    _helicopter engineOn true;
+    if (_highApproach) then {
+        _helicopter setVelocityModelSpace [0, 32, 0];
+    } else {
+        _helicopter setVelocity [0, 0, 0];
+        _helicopter flyInHeight 45;
+    };
     private _pilot = currentPilot _helicopter;
     private _group = if (isNull _pilot) then {grpNull} else {group _pilot};
     if (!isNull _group) then {
         _group setBehaviourStrong "CARELESS";
         _group setCombatMode "BLUE";
         _group setSpeedMode "LIMITED";
+        // Vanilla landing waypoints can complete while an aircraft is still taking off. A short
+        // MOVE leg gets the normal ground-start test airborne before the production LAND order
+        // becomes current; it remains 120 m from the pad, safely above the 50 m acquisition floor.
+        if (!_highApproach) then {
+            private _departure = _group addWaypoint [[325, -50, 0], 0];
+            _departure setWaypointType "MOVE";
+            _departure setWaypointBehaviour "CARELESS";
+            _departure setWaypointCombatMode "BLUE";
+            _departure setWaypointSpeed "LIMITED";
+        };
         private _waypoint = _group addWaypoint [_landingPosition, 0];
         _waypoint setWaypointType "LAND";
         _waypoint setWaypointBehaviour "CARELESS";
         _waypoint setWaypointCombatMode "BLUE";
         _waypoint setWaypointSpeed "LIMITED";
     };
+    _helicopter engineOn true;
     missionNamespace setVariable ["Waldo_QA_ImprovedLandingHelicopter", _helicopter, true];
     missionNamespace setVariable ["Waldo_QA_ImprovedLandingGroup", _group, true];
     [_actor, "AI HELICOPTER LANDING", format ["AI-only %1 approach started. The production handler must acquire it without the QA station calling the controller.", ["normal", "excessively high go-around"] select _highApproach], "SUCCESS", "AI_LANDING_QA"] call Waldo_QA_fnc_notifyActorServer;

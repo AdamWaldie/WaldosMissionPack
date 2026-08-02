@@ -1,6 +1,21 @@
-/* Local interactions and labels for the ongoing full-pack PR feature range. */
+/*
+ * Author: WaldoTheWarfighter
+ * Installs local controls, labels and player-facing fixtures for the ongoing full-pack audit.
+ * The client explicitly requests its dedicated curator assignment after server readiness so a
+ * playable slot transferred from server AI to a human does not retain the server-owned assignment.
+ * Repeat guards prevent duplicate actions during JIP or local script restarts.
+ *
+ * Arguments: none (executed from auditInitPlayerLocal.sqf).
+ * Return Value: nothing.
+ *
+ * Example: [] execVM "featureRangeClient.sqf";
+ * Current callers: the generated full-pack audit mission on every player client and JIP.
+ */
 if (!hasInterface) exitWith {};
 waitUntil {uiSleep 0.1; !isNull player && {missionNamespace getVariable ["Waldo_QA_FeatureRangeReady", false]}};
+// The slot may have existed as server-local playable AI when the range became ready. Requesting
+// from the owning interface after transfer is the authoritative point at which Zeus can be bound.
+[player] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
 if (missionNamespace getVariable ["Waldo_QA_FeatureRangeClientReady", false]) exitWith {};
 if (missionNamespace getVariable ["Waldo_QA_FeatureRangeClientStarting", false]) exitWith {};
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientStarting", true];
