@@ -522,7 +522,10 @@ if (isNull _curator) then {
     missionNamespace setVariable ["qa_curator", _curator, true];
 };
 Waldo_QA_fnc_assignCuratorServer = {
-    params [["_unit", objNull, [objNull]]];
+    params [
+        ["_unit", objNull, [objNull]],
+        ["_openInterface", false, [false]]
+    ];
     if (!isServer || {isNull _unit} || {!(_unit in allPlayers)}) exitWith {false};
     if (remoteExecutedOwner > 2 && {remoteExecutedOwner != owner _unit}) exitWith {false};
     private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
@@ -535,11 +538,38 @@ Waldo_QA_fnc_assignCuratorServer = {
         && {owner _assigned > 2}
         && {!(_assigned isEqualTo _unit)}
     ) exitWith {false};
-    unassignCurator _curator;
-    _unit assignCurator _curator;
-    _curator synchronizeObjectsAdd [_unit];
-    missionNamespace setVariable ["Waldo_QA_CuratorAssignedUnit", _unit, true];
-    diag_log format ["WMP FULL AUDIT ZEUS: assigned %1 (%2) on request", name _unit, owner _unit];
+    private _requestId = (missionNamespace getVariable ["Waldo_QA_CuratorRequestId", 0]) + 1;
+    missionNamespace setVariable ["Waldo_QA_CuratorRequestId", _requestId];
+    [_unit, _curator, _requestId, _openInterface] spawn {
+        params ["_unit", "_curator", "_requestId", "_openInterface"];
+        if !(getAssignedCuratorUnit _curator isEqualTo _unit) then {
+            unassignCurator _curator;
+            private _clearDeadline = diag_tickTime + 5;
+            waitUntil {
+                uiSleep 0.05;
+                isNull (getAssignedCuratorUnit _curator)
+                || {diag_tickTime >= _clearDeadline}
+                || {_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]}
+            };
+            if (_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]) exitWith {};
+            _unit assignCurator _curator;
+        };
+        private _assignDeadline = diag_tickTime + 10;
+        waitUntil {
+            uiSleep 0.05;
+            getAssignedCuratorUnit _curator isEqualTo _unit
+            || {diag_tickTime >= _assignDeadline}
+            || {_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]}
+        };
+        if (_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]) exitWith {};
+        if !(getAssignedCuratorUnit _curator isEqualTo _unit) exitWith {
+            diag_log format ["WMP FULL AUDIT ZEUS SERVER FAIL: assignment not confirmed for %1 (%2)", name _unit, owner _unit];
+            [objNull, false] remoteExecCall ["Waldo_QA_fnc_curatorAssignmentConfirmedClient", owner _unit];
+        };
+        missionNamespace setVariable ["Waldo_QA_CuratorAssignedUnit", _unit, true];
+        diag_log format ["WMP FULL AUDIT ZEUS SERVER READY: assigned %1 (%2) curator=%3", name _unit, owner _unit, netId _curator];
+        [_curator, _openInterface] remoteExecCall ["Waldo_QA_fnc_curatorAssignmentConfirmedClient", owner _unit];
+    };
     true
 };
 addMissionEventHandler ["EntityRespawned", {
@@ -559,7 +589,6 @@ if (isNull _curator) then {
     diag_log "WMP FULL AUDIT FAIL: Zeus curator could not be created";
 } else {
     _curator setVariable ["showNotification", false];
-    _curator setVariable ["Owner", "qa_player_1", true];
     _curator addCuratorEditableObjects [missionNamespace getVariable ["Waldo_QA_FeatureObjects", []], true];
     missionNamespace setVariable ["Waldo_QA_Curator", _curator, true];
     [] spawn {

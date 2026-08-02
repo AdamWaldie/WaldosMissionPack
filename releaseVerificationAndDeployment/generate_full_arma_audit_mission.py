@@ -334,17 +334,11 @@ def build_sqm() -> str:
             {
                 class Attribute0
                 {
-                    property="ModuleCurator_F_Owner";
-                    expression="_this setVariable ['Owner',_value,true];";
-                    class Value {class data {class type {type[]={"STRING"};}; value="qa_player_1";};};
-                };
-                class Attribute1
-                {
                     property="ModuleCurator_F_Addons";
                     expression="_this setVariable ['Addons',_value,true];";
                     class Value {class data {class type {type[]={"SCALAR"};}; value=3;};};
                 };
-                nAttributes=2;
+                nAttributes=1;
             };
         };""")
     for offset, item in enumerate(FIXTURES, start=2):

@@ -12,10 +12,32 @@
  * Current callers: the generated full-pack audit mission on every player client and JIP.
  */
 if (!hasInterface) exitWith {};
+Waldo_QA_fnc_curatorAssignmentConfirmedClient = {
+    params [
+        ["_curator", objNull, [objNull]],
+        ["_openInterface", false, [false]]
+    ];
+    if (!hasInterface) exitWith {};
+    [_curator, _openInterface] spawn {
+        params ["_curator", "_openInterface"];
+        private _deadline = diag_tickTime + 10;
+        waitUntil {
+            uiSleep 0.1;
+            isNull player
+            || {(!isNull _curator && {getAssignedCuratorLogic player isEqualTo _curator})}
+            || {diag_tickTime >= _deadline}
+        };
+        if (isNull player || {isNull _curator} || {!(getAssignedCuratorLogic player isEqualTo _curator)}) exitWith {
+            diag_log format ["WMP FULL AUDIT ZEUS CLIENT FAIL: no curator received by %1 (%2)", profileName, clientOwner];
+        };
+        diag_log format ["WMP FULL AUDIT ZEUS CLIENT READY: %1 (%2) curator=%3", profileName, clientOwner, netId _curator];
+        if (_openInterface) then {openCuratorInterface};
+    };
+};
 waitUntil {uiSleep 0.1; !isNull player && {missionNamespace getVariable ["Waldo_QA_FeatureRangeReady", false]}};
 // The slot may have existed as server-local playable AI when the range became ready. Requesting
 // from the owning interface after transfer is the authoritative point at which Zeus can be bound.
-[player] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
+[player, false] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
 if (missionNamespace getVariable ["Waldo_QA_FeatureRangeClientReady", false]) exitWith {};
 if (missionNamespace getVariable ["Waldo_QA_FeatureRangeClientStarting", false]) exitWith {};
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientStarting", true];
@@ -225,9 +247,9 @@ if (!isNull _console) then {
 
 private _coreConsole = missionNamespace getVariable ["Waldo_QA_CoreConsole", objNull];
 if (!isNull _coreConsole) then {
-    [_coreConsole, "Waldo_QA_AssignZeus", "ASSIGN ZEUS TO ME", {
+    [_coreConsole, "Waldo_QA_AssignZeus", "ASSIGN / OPEN ZEUS", {
         params ["_target", "_actor"];
-        [_actor] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
+        [_actor, true] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
     }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_ModStatus", "SHOW REQUIRED MOD STATUS", {
         private _checks = [

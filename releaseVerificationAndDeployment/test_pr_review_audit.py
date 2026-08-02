@@ -396,7 +396,17 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("[_unit] call Waldo_QA_fnc_assignCuratorServer", server)
         self.assertIn("owner _x > 2", server)
         self.assertIn('getAssignedCuratorUnit _curator', server)
-        self.assertIn('[player] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2]', client)
+        self.assertIn('[player, false] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2]', client)
+        self.assertIn("Waldo_QA_CuratorRequestId", server)
+        self.assertIn("WMP FULL AUDIT ZEUS SERVER READY", server)
+        self.assertIn("Waldo_QA_fnc_curatorAssignmentConfirmedClient", client)
+        self.assertIn("getAssignedCuratorLogic player isEqualTo _curator", client)
+        self.assertIn("ASSIGN / OPEN ZEUS", client)
+        self.assertIn("openCuratorInterface", client)
+
+        generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
+        self.assertNotIn('property="ModuleCurator_F_Owner"', generator)
+        self.assertIn('property="ModuleCurator_F_Addons"', generator)
 
     def test_respawn_overlay_is_location_only(self):
         source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "respawnText.sqf").read_text(encoding="utf-8")
