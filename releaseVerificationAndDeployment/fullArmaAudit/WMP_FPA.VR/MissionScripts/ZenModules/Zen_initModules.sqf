@@ -7,6 +7,9 @@
  *
  * Return Value:
  * Nothing
+ *
+ * Example: [] call Waldo_fnc_ZenInitModules;
+ * Current caller: initPlayerLocal.sqf after local player and ZEN readiness.
 */
 
 // Registration creates local curator UI entries; servers and headless clients have no consumer.
@@ -89,9 +92,24 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
+["Waldos Mission Modules", "Paradrop - Embark Players",
+    {params ["_modulePos"]; ["EMBARK", _modulePos] call Waldo_fnc_ParadropDropZoneZen;},
+    "\A3\ui_f\data\igui\cfg\actions\getincargo_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["Waldos Mission Modules", "Paradrop - Remove Operation",
     {params ["_modulePos"]; ["REMOVE", _modulePos] call Waldo_fnc_ParadropDropZoneZen;},
     "\A3\ui_f\data\map\markers\military\end_CA.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "UI QA - Set Visual Theme",
+    {[] call Waldo_fnc_UiThemeZen;},
+    "\A3\ui_f\data\igui\cfg\simpletasks\types\whiteboard_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["Waldos Mission Modules", "AI - Helicopter Landing Control",
+    {[] call Waldo_fnc_ImprovedHelicopterLandingZen;},
+    "\A3\ui_f\data\map\vehicleicons\iconHelicopter_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
 ["Waldos Mission Modules", "Mission Flow: End Mission + Show AAR",

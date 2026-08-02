@@ -1,14 +1,13 @@
-/* Function Assignment file - called from description.ext
-Creates Arma function based on the files provided. Allowing for a traditional Alias function call.
-in this case all of waldos missionscripts can now be called via the following:
-Waldos_fnc_LowestClass
-
-e.g. 
-
-Waldo_fnc_ACRE2Init as an Alias for calling the longhand script
-Waldo_fnc_AITweak as an Alias for calling the longhand script
-
-*/
+/*
+ * Author: WaldoTheWarfighter
+ * Declares the WMP CfgFunctions catalogue and maps public Waldo_fnc_* names to their source files.
+ *
+ * Arguments: None; this is a configuration include rather than a runtime function.
+ * Return Value: CfgFunctions declarations consumed by Arma during mission configuration loading.
+ *
+ * Example: #include "MissionScripts\WaldosFunctions.sqf"
+ * Current caller: description.ext includes this file before mission scripts execute.
+ */
 class CfgFunctions
 {
     class Waldo
@@ -116,6 +115,13 @@ class CfgFunctions
             class AIRebalanceStop {
                 file = "MissionScripts\AiScripting\aiRebalanceStop.sqf";
             };
+            class ImprovedHelicopterLandingInit {file = "MissionScripts\AiScripting\improvedHelicopterLandingInit.sqf";};
+            class ImprovedHelicopterLandingTrackLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingTrackLocal.sqf";};
+            class ImprovedHelicopterLandingExecuteLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingExecuteLocal.sqf";};
+            class ImprovedHelicopterLandingRestoreLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingRestoreLocal.sqf";};
+            class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
+            class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
+            class ImprovedHelicopterLandingZen {file = "MissionScripts\AiScripting\improvedHelicopterLandingZen.sqf";};
         };
         class teleport
         {
@@ -170,6 +176,11 @@ class CfgFunctions
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
               };
+              class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
+              class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
+              class UiThemeApplyDisplayLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyDisplayLocal.sqf";};
+              class UiThemeSetServer {file = "MissionScripts\MissionFlowAndUi\uiThemeSetServer.sqf";};
+              class UiThemeZen {file = "MissionScripts\MissionFlowAndUi\uiThemeZen.sqf";};
               class FeatureNotifyLocal {
                   file = "MissionScripts\MissionFlowAndUi\featureNotifyLocal.sqf";
               };
@@ -408,6 +419,7 @@ class CfgFunctions
             class RecoverySetupCarrierLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupCarrierLocal.sqf";};
             class RecoverySetCargoLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetCargoLocal.sqf";};
             class RecoveryRequestServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRequestServer.sqf";};
+            class RecoveryResolveRestorePosition {file = "MissionScripts\Logistics\VehicleRecovery\recoveryResolveRestorePosition.sqf";};
             class RecoveryRestoreServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRestoreServer.sqf";};
             class RecoveryMonitorServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryMonitorServer.sqf";};
         };
@@ -498,6 +510,15 @@ class CfgFunctions
             };
             class ParadropCreateDropZone {
                 file = "MissionScripts\Paradrop\paradropCreateDropZone.sqf";
+            };
+            class ParadropConfigureAircraftLocal {
+                file = "MissionScripts\Paradrop\paradropConfigureAircraftLocal.sqf";
+            };
+            class ParadropEmbark {
+                file = "MissionScripts\Paradrop\paradropEmbark.sqf";
+            };
+            class ParadropEmbarkLocal {
+                file = "MissionScripts\Paradrop\paradropEmbarkLocal.sqf";
             };
             class ParadropRemoveDropZone {
                 file = "MissionScripts\Paradrop\paradropRemoveDropZone.sqf";
@@ -2151,6 +2172,9 @@ class CfgFunctions
             };
             class MiniGameInteractionActivate {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionActivate.sqf";
+            };
+            class MiniGameInteractionRange {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionRange.sqf";
             };
             class MiniGameInteractionNotifyClient {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionNotifyClient.sqf";

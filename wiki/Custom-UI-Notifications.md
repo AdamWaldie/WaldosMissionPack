@@ -6,6 +6,8 @@ WMP includes a reusable notification-card system for mission updates, warnings a
 
 The system is local to each player's interface. Mission code decides who receives a notification by choosing the remote-execution target.
 
+Notification geometry and behavior are identical under every global visual style. See [UI Visual Themes](UI-Visual-Themes) to select `DEFAULT`, `WW2`, `VIETNAM` or `SCIFI`, provide a mission-specific palette, or switch styles through the live QA ZEN module.
+
 ## What players see
 
 Every state uses colour, a written label and a symbol. Information remains understandable when colour cannot be distinguished.

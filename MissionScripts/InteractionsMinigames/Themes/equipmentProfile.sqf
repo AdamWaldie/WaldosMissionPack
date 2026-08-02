@@ -1,4 +1,19 @@
-/* Returns a validated, accessible equipment presentation profile for a challenge id. */
+/*
+ * Author: WaldoTheWarfighter
+ * Returns a validated, accessible equipment presentation profile for a challenge id. Challenge
+ * identity supplies labels and procedure content; the global WMP UI theme supplies era styling.
+ * Curated skins remain valid content overrides before the global shell style and accessibility
+ * contrast pass are applied.
+ *
+ * Arguments:
+ * 0: challenge id <STRING>
+ * 1: presentation overrides <ARRAY or HASHMAP> (default [])
+ *
+ * Return Value: HASHMAP - complete equipment and visual profile.
+ *
+ * Example: ["repair", [["preset", "fieldGenerator"]]] call Waldo_fnc_MiniGameEquipmentProfile;
+ * Current callers: interaction challenge launcher, picker, briefing and QA mission.
+ */
 params [
     ["_challengeId", "wirecut", [""]],
     ["_overrides", [], [[], createHashMap]]
@@ -126,6 +141,10 @@ if !(_soundProfile in ["equipment", "silent"]) then {_soundProfile = "equipment"
 _profile set ["soundProfile", _soundProfile];
 
 // Accent and semantic colours are template-owned: arbitrary overrides cannot break contrast.
+private _uiTheme = [] call Waldo_fnc_UiTheme;
+_profile set ["uiTheme", _uiTheme];
+_profile set ["casing", _uiTheme getOrDefault ["casing", _profile getOrDefault ["casing", [0.16, 0.17, 0.14, 1]]]];
+_profile set ["accent", _uiTheme getOrDefault ["accent", _profile getOrDefault ["accent", [0.76, 0.55, 0.16, 1]]]];
 private _access = [] call Waldo_fnc_MiniGameAccessibility;
 if (_access getOrDefault ["highContrast", false]) then {
     _profile set ["casing", [0.035, 0.04, 0.04, 1]];

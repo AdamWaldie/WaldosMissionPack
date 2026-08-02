@@ -37,6 +37,8 @@
  *
  * Example:
  * [this, "minesweeper", [3], { (_this#0) setVariable ["hacked", true, true]; }, {}] call Waldo_fnc_MiniGameInteraction;
+ *
+ * Current callers: MiniGameInteractionSetup and direct Eden feature integrations.
  */
 
 params [
@@ -147,7 +149,7 @@ if (_installAction && {_aceAvailable} && {!(_object getVariable ["Waldo_MG_Int_A
         {
             params ["_target", "_actor"];
             if (isNull _actor || {!alive _actor} || {(lifeState _actor) == "INCAPACITATED"}) exitWith {false};
-            if ((_actor distance _target) > (_target getVariable ["Waldo_MG_Int_Distance", 4])) exitWith {false};
+            if (([_target, _actor] call Waldo_fnc_MiniGameInteractionRange) > (_target getVariable ["Waldo_MG_Int_Distance", 4])) exitWith {false};
             if !(_target getVariable ["Waldo_MG_Int_Active", true]) exitWith { false };
             if ((_target getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING") exitWith { false };
             private _c = _target getVariable ["Waldo_MG_Int_Condition", {true}];
@@ -179,7 +181,7 @@ if (_installAction && {!(_object getVariable ["Waldo_MG_Int_VanillaActionInstall
         true,
         true,
         "",
-        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {(_target getVariable ['Waldo_MG_InteractionState', 'IDLE']) != 'RUNNING'} && {_target call (_target getVariable ['Waldo_MG_Int_Condition', {true}])} && {[_target, _this] call (_target getVariable ['Waldo_MG_Int_ActorCondition', {true}])} && {_this distance _target < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
+        "(_target getVariable ['Waldo_MG_Int_Active', true]) && {(_target getVariable ['Waldo_MG_InteractionState', 'IDLE']) != 'RUNNING'} && {_target call (_target getVariable ['Waldo_MG_Int_Condition', {true}])} && {[_target, _this] call (_target getVariable ['Waldo_MG_Int_ActorCondition', {true}])} && {[_target, _this] call Waldo_fnc_MiniGameInteractionRange < (_target getVariable ['Waldo_MG_Int_Distance', 4])}",
         _distance
     ];
     _object setVariable ["Waldo_MG_Int_ActionId", _id];

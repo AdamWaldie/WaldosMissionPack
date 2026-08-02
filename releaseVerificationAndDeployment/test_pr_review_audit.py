@@ -110,6 +110,10 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertLess(freeze_at, place_at)
         self.assertLess(place_at, activate_at)
         self.assertNotIn('createVehicle [_class, _position, [], 0, "CAN_COLLIDE"]', server)
+        self.assertIn(
+            '["qa_ew_jammer", "Land_TTowerSmall_1_F", [0, -102, 0], 0, true]',
+            server,
+        )
 
         fixtures = {fixture["name"]: fixture for fixture in BUILDER.audit_fixtures()}
         carrier = fixtures["qa_recovery_carrier"]
@@ -528,20 +532,34 @@ class PrReviewAuditTests(unittest.TestCase):
         create = (root / "paradropCreateDropZone.sqf").read_text(encoding="utf-8")
         remove = (root / "paradropRemoveDropZone.sqf").read_text(encoding="utf-8")
         zen = (root / "paradropDropZoneZen.sqf").read_text(encoding="utf-8")
+        embark = (root / "paradropEmbark.sqf").read_text(encoding="utf-8")
+        configure = (root / "paradropConfigureAircraftLocal.sqf").read_text(encoding="utf-8")
         registration = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
         self.assertIn("getAssignedCuratorLogic", create + remove)
         self.assertIn('setBehaviourStrong "CARELESS"', create)
         self.assertIn('setCombatMode "BLUE"', create)
         self.assertIn("flyInHeight [_altitude, true]", create)
         self.assertIn("limitSpeed _maximumSpeed", create)
-        self.assertIn('[0, 60, 20, 0]', zen)
+        self.assertIn("forceSpeed (_maximumSpeed / 3.6)", create)
+        self.assertIn("addWaypoint [AGLToASL _position, -1]", create)
+        self.assertIn('[0, 60, 0, 0]', zen)
         self.assertIn('[0.5, 10, 2, 1]', zen)
         self.assertIn("Operational side", zen)
         self.assertIn("does not filter the airframe", zen)
+        self.assertIn("Optional generated AI jumpers", zen)
+        self.assertIn("Loop and repeat", zen)
+        self.assertIn("Static-line parachute", zen)
+        self.assertIn("HALO parachute backpack", zen)
+        self.assertIn('remoteExec ["Waldo_fnc_ParadropConfigureAircraftLocal", 0, _aircraft]', create)
+        self.assertIn('call Waldo_fnc_AddStaticJump', configure)
+        self.assertIn('call Waldo_fnc_AddHaloJump', configure)
         for token in ("STANDBY", "GREEN", "RED", 'setMarkerShape "RECTANGLE"'):
             self.assertIn(token, create)
         self.assertIn("Waldo_Paradrop_PublicDropZones", create + remove)
+        self.assertIn("Waldo_Paradrop_BoardingOperation", embark)
+        self.assertIn('remoteExecCall ["Waldo_fnc_ParadropEmbarkLocal", owner _x]', embark)
         self.assertIn("Paradrop - Create Drop Zone", registration)
+        self.assertIn("Paradrop - Embark Players", registration)
         self.assertIn("Paradrop - Remove Operation", registration)
 
         dynamic_aa = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf").read_text(encoding="utf-8")
@@ -582,6 +600,85 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("Waldo_QA_ControlConsole", controls)
         self.assertIn("Waldo_QA_CoreConsole", controls)
         self.assertIn("_forceVanilla", controls)
+
+    def test_improved_helicopter_landing_is_ai_only_event_driven_and_locality_safe(self):
+        root = ROOT / "MissionScripts" / "AiScripting"
+        init = (root / "improvedHelicopterLandingInit.sqf").read_text(encoding="utf-8")
+        tracker = (root / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
+        controller = (root / "improvedHelicopterLandingExecuteLocal.sqf").read_text(encoding="utf-8")
+        restore = (root / "improvedHelicopterLandingRestoreLocal.sqf").read_text(encoding="utf-8")
+        zen = (root / "improvedHelicopterLandingZen.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Helicopter", "init"', init)
+        self.assertIn('addEventHandler ["Local"', init)
+        self.assertIn('getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]', init)
+        self.assertNotIn("allMissionObjects", init + tracker)
+        self.assertNotIn("ImprovedHelicopterLandingMonitor", init + tracker)
+        self.assertIn("!isPlayer _pilot", tracker)
+        self.assertIn("isNull (remoteControlled _pilot)", tracker)
+        self.assertIn('["LAND", "UNLOAD", "TR UNLOAD", "GETOUT"]', tracker)
+        self.assertIn("max 50", tracker + controller)
+        self.assertIn("nearestTerrainObjects", controller)
+        self.assertIn("surfaceNormal", controller)
+        self.assertIn("setVectorDirAndUp", controller)
+        self.assertIn("MaximumClimbRate", controller)
+        self.assertIn("MaximumGoArounds", controller)
+        self.assertIn('disableAI "PATH"', controller)
+        self.assertIn('setVariable ["Waldo_ImprovedHelicopterLanding_Active", true, true]', controller)
+        self.assertIn('enableAI "PATH"', restore)
+        self.assertIn('setVariable ["Waldo_ImprovedHelicopterLanding_Active", false, true]', restore)
+        self.assertIn("Applies only to AI-piloted helicopters", zen)
+
+    def test_full_pack_audit_exercises_real_ai_landing_and_live_ui_themes(self):
+        audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+        generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
+        server = (audit / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        client = (audit / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        self.assertIn('("ai-helicopter-landing", "AI HELICOPTER LANDING"', generator)
+        self.assertIn('("ui-theme-qa", "UI THEME QA"', generator)
+        self.assertIn('fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F"', generator)
+        self.assertIn('createVehicleCrew _helicopter', server)
+        self.assertIn('private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -80, _spawnAltitude]', server)
+        self.assertIn('_helicopter enableSimulationGlobal true', server)
+        self.assertIn('{_x enableSimulationGlobal true} forEach crew _helicopter', server)
+        self.assertIn('_waypoint setWaypointType "LAND"', server)
+        self.assertNotIn("call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", server)
+        self.assertIn("START NORMAL AI LANDING", client)
+        self.assertIn("START HIGH APPROACH / GO-AROUND", client)
+        for theme in ('["DEFAULT", "DEFAULT"]', '["WW2", "WW2"]', '["VIETNAM", "VIETNAM"]', '["SCIFI", "SCI-FI"]'):
+            self.assertIn(theme, client)
+
+    def test_recovery_restore_requires_a_complete_clear_footprint(self):
+        root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"
+        resolver = (root / "recoveryResolveRestorePosition.sqf").read_text(encoding="utf-8")
+        restore = (root / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
+        self.assertIn("boundingBoxReal _workshop", resolver)
+        self.assertIn("_workshopRadius + _vehicleRadius + _clearance", resolver)
+        self.assertIn("findEmptyPosition", resolver)
+        self.assertIn("nearestObjects", resolver)
+        self.assertIn("nearestTerrainObjects", resolver)
+        self.assertIn("surfaceIsWater", resolver)
+        self.assertIn("call Waldo_fnc_RecoveryResolveRestorePosition", restore)
+        self.assertIn("no clear position", restore)
+
+    def test_ui_themes_are_visual_only_global_jip_state_with_qa_control(self):
+        root = ROOT / "MissionScripts" / "MissionFlowAndUi"
+        resolver = (root / "uiTheme.sqf").read_text(encoding="utf-8")
+        setter = (root / "uiThemeSetServer.sqf").read_text(encoding="utf-8")
+        apply_local = (root / "uiThemeApplyLocal.sqf").read_text(encoding="utf-8")
+        root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
+        receive = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeReceiveState.sqf").read_text(encoding="utf-8")
+        for theme in ("DEFAULT", "WW2", "VIETNAM", "SCIFI"):
+            self.assertIn(f'["{theme}"', resolver)
+        self.assertIn('missionNamespace setVariable ["Waldo_UI_Theme", _themeId, true]', setter)
+        self.assertIn("getAssignedCuratorLogic", setter)
+        self.assertIn('remoteExecCall ["Waldo_fnc_UiThemeApplyLocal", 0]', setter)
+        self.assertIn("Waldo_UI_CustomThemes", resolver + root_init)
+        self.assertIn("Waldo_UI_ThemeOverrides", resolver + root_init)
+        self.assertIn("Waldo_UI_Theme", root_init)
+        self.assertIn("Waldo_fnc_ShowUiNotification", apply_local)
+        self.assertIn('"Waldo_UI_Theme"', snapshot)
+        self.assertIn("call Waldo_fnc_UiThemeApplyLocal", receive)
 
 
 if __name__ == "__main__":

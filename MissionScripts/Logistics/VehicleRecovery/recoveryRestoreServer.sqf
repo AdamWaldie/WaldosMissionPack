@@ -36,22 +36,12 @@ private _onRestored = _state param [13, {}, [{}, ""]];
 private _customVariables = _state param [14, [], [[]]];
 private _footprint = (_state param [15, 3, [0]]) max (missionNamespace getVariable ["Waldo_Recovery_PlacementClearance", 3]);
 
-private _origin = getPosATL _workshop;
-private _position = _origin findEmptyPosition [_footprint, (_workshop getVariable ["Waldo_Recovery_Radius", 50]) max 10, _class];
+private _position = [_workshop, _class, _footprint, [_package, _retained]] call Waldo_fnc_RecoveryResolveRestorePosition;
 if (_position isEqualTo []) exitWith {
     _package setVariable ["Waldo_Recovery_Transition", false];
     diag_log format ["[WMP RECOVERY] Restore delayed: no clear position package=%1 workshop=%2 class=%3", netId _package, netId _workshop, _class];
     objNull
 };
-private _blockingObjects = (nearestObjects [_position, [], _footprint, true]) select {
-    _x != _package && {_x != _retained} && {!isNull _x}
-};
-if !(_blockingObjects isEqualTo []) exitWith {
-    _package setVariable ["Waldo_Recovery_Transition", false];
-    diag_log format ["[WMP RECOVERY] Restore delayed: footprint blocked package=%1 position=%2 blockers=%3", netId _package, _position, _blockingObjects apply {typeOf _x}];
-    objNull
-};
-
 private _vehicle = objNull;
 if (_wasAlive && {!isNull _retained}) then {
     _vehicle = _retained;

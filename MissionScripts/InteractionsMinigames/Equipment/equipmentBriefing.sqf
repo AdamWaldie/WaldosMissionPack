@@ -1,4 +1,13 @@
-/* Creates an integrated, grid-aligned pre-operation maintenance card. */
+/*
+ * Author: WaldoTheWarfighter
+ * Creates the integrated, grid-aligned pre-operation briefing card for field procedures.
+ *
+ * Arguments: 0: active procedure display <DISPLAY>.
+ * Return Value: Nothing; creates modal briefing controls owned by the display.
+ *
+ * Example: [_display] call Waldo_fnc_MiniGameEquipmentBriefing;
+ * Current caller: the interaction equipment profile before a procedure becomes operable.
+ */
 disableSerialization;
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display) exitWith {};
@@ -8,6 +17,7 @@ _bounds params ["_canvasX", "_canvasY", "_canvasW", "_canvasH"];
 private _cellW = _canvasW / 40;
 private _cellH = _canvasH / 25;
 private _access = _profile getOrDefault ["accessibility", createHashMap];
+private _theme = _profile getOrDefault ["uiTheme", [] call Waldo_fnc_UiTheme];
 private _largeText = _access getOrDefault ["largeText", false];
 private _briefingControls = _profile getOrDefault ["controls", ""];
 if (_briefingControls == "") then {_briefingControls = _display getVariable ["Waldo_MG_Help_Controls", "Use the displayed controls."];};
@@ -20,7 +30,7 @@ private _equipmentFaceControls = (_display getVariable ["Waldo_MG_UI_EquipmentCo
 _display setVariable ["Waldo_IMG_BriefingHiddenControls", _equipmentFaceControls];
 private _shade = _display ctrlCreate ["RscText", -1];
 _shade ctrlSetPosition [_canvasX, _canvasY, _canvasW, _canvasH];
-_shade ctrlSetBackgroundColor [0, 0, 0, 0.86];
+_shade ctrlSetBackgroundColor (_theme getOrDefault ["shade", [0, 0, 0, 0.86]]);
 _shade ctrlCommit 0;
 _controls pushBack _shade;
 private _cardRect = if (_largeText) then {[3.25, 1.2, 33.5, 22.6]} else {[4.5, 1.5, 31, 22]};
@@ -31,7 +41,7 @@ private _cardW = _cardGW * _cellW;
 private _cardH = _cardGH * _cellH;
 private _card = _display ctrlCreate ["RscText", -1];
 _card ctrlSetPosition [_cardX, _cardY, _cardW, _cardH];
-_card ctrlSetBackgroundColor [0.14, 0.13, 0.105, 0.998];
+_card ctrlSetBackgroundColor (_theme getOrDefault ["panelAlt", [0.14, 0.13, 0.105, 0.998]]);
 _card ctrlCommit 0;
 _controls pushBack _card;
 private _stripe = _display ctrlCreate ["RscText", -1];
@@ -82,21 +92,22 @@ private _addWrapped = {
     _briefingText pushBack _control;
     _control
 };
-[1.0, 1.75, _profile getOrDefault ["briefing", "FIELD OPERATING PROCEDURE"], 1.65, "#F2B847", "briefing heading"] call _addLabel;
-[2.9, 1.25, format ["%1 // %2", _profile getOrDefault ["manufacturer", "FIELD SYSTEMS"], _profile getOrDefault ["model", "UNIT"]], 1.08, "#AEB09E", "manufacturer and model"] call _addLabel;
-[4.35, 1.55, _profile getOrDefault ["title", _display getVariable ["Waldo_MG_Help_Name", "EQUIPMENT"]], 1.38, "#F0EBDD", "equipment operation title"] call _addLabel;
-[6.15, 1.25, "OPERATION", 1.22, "#EBB242", "operation section label"] call _addLabel;
-[7.55, 3.35, _profile getOrDefault ["objective", _display getVariable ["Waldo_MG_Help_Objective", "Complete the procedure."]], if (_largeText) then {1.34} else {1.18}, "#EEE9D8", "operation objective"] call _addWrapped;
-[11.15, 1.25, "CONTROLS", 1.22, "#EBB242", "controls section label"] call _addLabel;
-[12.55, 3.05, _briefingControls, if (_largeText) then {1.34} else {1.18}, "#EEE9D8", "operating controls"] call _addWrapped;
-[15.95, 1.75, format ["[!] %1", _profile getOrDefault ["abortText", "ABORTING COUNTS AS A FAILED PROCEDURE"]], 1.08, "#F2B847", "abort consequence"] call _addLabel;
+[1.0, 1.75, _profile getOrDefault ["briefing", "FIELD OPERATING PROCEDURE"], 1.65, _theme getOrDefault ["accentHex", "#F2B847"], "briefing heading"] call _addLabel;
+[2.9, 1.25, format ["%1 // %2", _profile getOrDefault ["manufacturer", "FIELD SYSTEMS"], _profile getOrDefault ["model", "UNIT"]], 1.08, _theme getOrDefault ["mutedHex", "#AEB09E"], "manufacturer and model"] call _addLabel;
+[4.35, 1.55, _profile getOrDefault ["title", _display getVariable ["Waldo_MG_Help_Name", "EQUIPMENT"]], 1.38, _theme getOrDefault ["textHex", "#F0EBDD"], "equipment operation title"] call _addLabel;
+[6.15, 1.25, "OPERATION", 1.22, _theme getOrDefault ["accentHex", "#EBB242"], "operation section label"] call _addLabel;
+[7.55, 3.35, _profile getOrDefault ["objective", _display getVariable ["Waldo_MG_Help_Objective", "Complete the procedure."]], if (_largeText) then {1.34} else {1.18}, _theme getOrDefault ["textHex", "#EEE9D8"], "operation objective"] call _addWrapped;
+[11.15, 1.25, "CONTROLS", 1.22, _theme getOrDefault ["accentHex", "#EBB242"], "controls section label"] call _addLabel;
+[12.55, 3.05, _briefingControls, if (_largeText) then {1.34} else {1.18}, _theme getOrDefault ["textHex", "#EEE9D8"], "operating controls"] call _addWrapped;
+[15.95, 1.75, format ["[!] %1", _profile getOrDefault ["abortText", "ABORTING COUNTS AS A FAILED PROCEDURE"]], 1.08, _theme getOrDefault ["warningHex", "#F2B847"], "abort consequence"] call _addLabel;
 private _begin = _display ctrlCreate ["RscButton", -1];
 _begin ctrlSetPosition [_cardX + _cardW - (11.5 * _cellW), _cardY + _cardH - (3 * _cellH), 10 * _cellW, 1.65 * _cellH];
 _begin ctrlSetText (_profile getOrDefault ["activation", "BEGIN PROCEDURE"]);
 _begin ctrlSetFontHeight ((0.72 * _cellH) max 0.016);
-_begin ctrlSetTextColor [0.96, 0.96, 0.92, 1];
-_begin ctrlSetBackgroundColor [0.04, 0.20, 0.34, 1];
-_begin ctrlSetActiveColor [0.10, 0.48, 0.76, 1];
+_begin ctrlSetTextColor (_theme getOrDefault ["text", [0.96, 0.96, 0.92, 1]]);
+_begin ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.04, 0.20, 0.34, 1]]);
+_begin ctrlSetActiveColor (_theme getOrDefault ["accentActive", [0.10, 0.48, 0.76, 1]]);
+_begin ctrlSetFont (_theme getOrDefault ["fontBold", "RobotoCondensedBold"]);
 _begin ctrlSetTooltip "Start the procedure and its configured timer";
 _begin ctrlCommit 0;
 [_begin, 0.72 * _cellH, 0.40 * _cellH] call Waldo_fnc_MiniGameEquipmentFitText;

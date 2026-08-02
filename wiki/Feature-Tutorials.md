@@ -11,6 +11,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) | Animated operation titles during load-in |
 | [Mission UI Text Overlays](Mission-UI-Text-Overlays) | Dynamic text, timed notices, and respawn text |
 | [Custom UI Notifications](Custom-UI-Notifications) | Accessible mission cards, placement, stacking, and FIFO delivery |
+| [UI Visual Themes](UI-Visual-Themes) | Global visual-only Default, WW2, Vietnam, and science-fiction interface styles |
 | [Safestart](Safestart) | Preparation protection and timed go-live |
 | [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) | End-of-operation protection, AAR, and mission end |
 | [Tasks and Objectives](Tasks-And-Objectives) | JIP-safe objective creation and resolution |
@@ -72,6 +73,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | Feature | Use it for |
 |---|---|
 | [Waldo's AI Tuning](Waldos-AI-Tweak) | Day/night AI behavior profiles |
+| [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | AI-only exact landing, slope, canopy, flare, and go-around handling |
 | [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
 | [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
 | [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional headless-client and player-marker integrations |

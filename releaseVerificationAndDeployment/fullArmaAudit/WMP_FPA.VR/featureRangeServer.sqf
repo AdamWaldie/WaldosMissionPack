@@ -464,7 +464,9 @@ missionNamespace setVariable ["Waldo_QA_CoreConsole", _coreConsole, true];
 // Electronic Warfare: live jammer, tracker target, immune vehicle and manual EMP control.
 missionNamespace setVariable ["Waldo_Jamming_Enable", true, true];
 [] call Waldo_fnc_JammingInit;
-private _jammer = ["qa_ew_jammer", "Land_TTowerSmall_1_F", [0, -102, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
+// Keep this manual-test fixture simulated so Zeus can reposition and terrain-snap it. The public
+// jammer API itself remains neutral: mission makers may still register simulated or static objects.
+private _jammer = ["qa_ew_jammer", "Land_TTowerSmall_1_F", [0, -102, 0], 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
 _jammer allowDamage true;
 private _jammerInteraction = createHashMapFromArray [
     ["disableChallenge", true],

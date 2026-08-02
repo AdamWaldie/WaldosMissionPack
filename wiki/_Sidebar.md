@@ -13,6 +13,7 @@
 * [Safestart](Safestart)
 * [ENDEX and AAR](ENDEX-Script-&-Custom-End-Screen)
 * [Custom UI Notifications](Custom-UI-Notifications)
+* [UI Visual Themes](UI-Visual-Themes)
 * [Mission Intro](Mission-Intro-Or-Title-Text)
 * [Mission UI Text](Mission-UI-Text-Overlays)
 * [Tasks and Objectives](Tasks-And-Objectives)
@@ -72,6 +73,7 @@
 **AI and Mission Tools**
 
 * [Waldo's AI Tuning](Waldos-AI-Tweak)
+* [Improved Helicopter Landings](Improved-AI-Helicopter-Landings)
 * [AI Convoy System](AI-Convoy-System)
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)

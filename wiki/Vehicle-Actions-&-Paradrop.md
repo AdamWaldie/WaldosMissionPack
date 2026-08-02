@@ -131,14 +131,37 @@ This is added automatically alongside jump actions. No setup required.
 
 ## Dynamic Drop-Zone Operations
 
-ZEN provides **Paradrop - Create Drop Zone** and **Paradrop - Remove Operation** modules. The create
-dialog deliberately separates operational side from physical airframe: side controls crew and
-generated jumpers, while the airframe may come from any faction.
+ZEN provides **Paradrop - Create Drop Zone**, **Paradrop - Embark Players** and **Paradrop - Remove
+Operation** modules. The create dialog deliberately separates operational side from physical
+airframe: side controls the single AI pilot and any explicitly requested AI jumpers, while the
+airframe may come from any faction.
 
 The aircraft flies a CARELESS/BLUE route at a forced terrain-relative height and capped speed. It
-crosses standby, green, red and departure gates in order. Defaults create up to 20 AI jumpers,
-limited by actual cargo capacity, at one jumper every two seconds. Players are only sequenced when
-the curator explicitly enables automatic player dropping.
+uses exact run-in waypoints through standby, green, centre, red and departure gates. The default
+aircraft contains one AI pilot and **zero AI cargo**, leaving its cargo seats for players. Optional
+AI jumpers and forced player sequencing remain available, with a configurable interval and static
+line or HALO method.
+
+Post-pass behavior is explicit: **Loop and repeat** flies a wide left- or right-hand circuit through
+a point behind the original spawn before beginning the next aligned run; **Single pass - retain**
+loiters beyond the exit; **Single pass - despawn** cleans the aircraft and operation. Speed input is
+in km/h and is converted to the engine's metres-per-second `forceSpeed` unit.
+
+The create dialog independently enables and configures static-line and HALO player actions. Static
+line selects a parachute vehicle plus minimum/maximum altitude and maximum speed. HALO selects a
+steerable parachute backpack and minimum altitude. The optional door requirement can be disabled
+for airframes whose ramp animations are not among the supported names. Both action sets are
+installed for current clients and JIP clients.
+
+**Paradrop - Embark Players** selects a named live operation and can:
+
+- move the curator's selected player units or selected groups directly into free cargo seats;
+- create a terrain-snapped boarding point with a blue **Board Paradrop Aircraft** addAction; or
+- do both.
+
+Only players are transferred, pilot/turret seats are never claimed, and full or stale aircraft are
+reported through WMP notifications. The ongoing audit station also exposes **BOARD ME INTO QA
+PARADROP** and **CREATE QA BOARDING POINT** controls.
 
 Optional global map symbology includes the overall rectangular drop zone, small standby/green/red
 line rectangles and a named point marker. Arma itself makes these global markers available to JIP
@@ -148,7 +171,9 @@ Mission makers can extend the friendly-name dropdowns before startup:
 
 ```sqf
 Waldo_Paradrop_AircraftClasses pushBackUnique "My_Transport_Aircraft";
-Waldo_Paradrop_ChuteClasses pushBackUnique "My_Static_Line_Chute";
+Waldo_Paradrop_StaticChuteClasses pushBackUnique "My_Static_Line_Chute";
+Waldo_Paradrop_HaloBackpackClasses pushBackUnique "My_Steerable_Parachute_Backpack";
+Waldo_Paradrop_BoardingPointClasses pushBackUnique "My_Boarding_Point_Object";
 ```
 
 The equivalent server-side API is:
@@ -158,12 +183,18 @@ private _drop = createHashMapFromArray [
     ["id", "DZ_ALPHA"], ["name", "DZ ALPHA"], ["centre", getMarkerPos "dz_alpha"],
     ["side", west], ["aircraftClass", "B_T_VTOL_01_infantry_F"],
     ["direction", 90], ["altitude", 250], ["maximumSpeed", 220],
-    ["jumperCount", 20], ["jumpInterval", 2], ["createMarkers", true]
+    ["lifecycle", "LOOP"], ["circuitDirection", "LEFT"],
+    ["staticJumpEnabled", true], ["staticMinimumAltitude", 180],
+    ["staticMaximumAltitude", 350], ["staticMaximumSpeed", 310],
+    ["staticChuteClass", "NonSteerable_Parachute_F"],
+    ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
+    ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true]
 ];
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```
 
-Use `Waldo_fnc_ParadropRemoveDropZone` with the stable operation ID for scripted cleanup.
+Use `Waldo_fnc_ParadropEmbark` to transfer players or create a boarding point, and
+`Waldo_fnc_ParadropRemoveDropZone` with the stable operation ID for scripted cleanup.
 
 ## Configuring Jump Parameters
 

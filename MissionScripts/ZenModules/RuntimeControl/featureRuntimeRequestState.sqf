@@ -6,6 +6,9 @@
  *
  * Arguments: None
  * Return Value: Boolean - true when requested/queued
+ *
+ * Example: [] call Waldo_fnc_FeatureRuntimeRequestState;
+ * Current callers: init.sqf startup handshake on clients and headless clients.
  */
 
 if !(isServer) exitWith {
@@ -60,6 +63,7 @@ if (isNull _requester || {owner _requester != _targetOwner}) exitWith {false};
 // Keep this list to values that Arma can reliably serialise. Mission callbacks and other Code
 // values remain mission-file configuration and are not transported in the runtime snapshot.
 private _names = [
+        "Waldo_UI_Theme",
         "Waldo_Persistence_Enable", "Waldo_Persistence_Active",
         "Waldo_Persistence_PlayerSaveInterval", "Waldo_Persistence_ObjectSaveInterval",
         "Waldo_Persistence_SaveLoadout", "Waldo_Persistence_SaveMedical",
@@ -82,6 +86,15 @@ private _names = [
         "Waldo_AccessibilityPID_IncludeAI", "Waldo_AccessibilityPID_AllowToggle",
         "Waldo_AccessibilityPID_DefaultVisible",
         "Waldo_AIRebalance_Enable", "Waldo_AIRebalance_Mode", "Waldo_AIRebalance_Profile",
+        "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance",
+        "Waldo_ImprovedHelicopterLanding_TriggerDistance", "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor",
+        "Waldo_ImprovedHelicopterLanding_TransitAltitude", "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio",
+        "Waldo_ImprovedHelicopterLanding_TreeScanRadius", "Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer",
+        "Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight", "Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance",
+        "Waldo_ImprovedHelicopterLanding_GoAroundHeight", "Waldo_ImprovedHelicopterLanding_GoAroundExitDistance",
+        "Waldo_ImprovedHelicopterLanding_GoAroundSpeed", "Waldo_ImprovedHelicopterLanding_MaximumGoArounds",
+        "Waldo_ImprovedHelicopterLanding_MaximumClimbRate", "Waldo_ImprovedHelicopterLanding_MaximumDescentRate",
+        "Waldo_ImprovedHelicopterLanding_TouchdownRadius", "Waldo_ImprovedHelicopterLanding_ControlInterval",
         "Waldo_Hazard_Enable", "Waldo_Breaching_Enable", "Waldo_FieldResupply_Enable",
         "Waldo_Gunship_Enable", "Waldo_Gunship_PublicSystems",
         "Waldo_DynamicAA_PublicSystems",

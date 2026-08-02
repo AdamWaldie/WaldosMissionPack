@@ -143,4 +143,6 @@ private _disable = [
         && {!(_target getVariable ["Waldo_Jamming_FieldDisabled", false])}
     }
 ] call ace_interact_menu_fnc_createAction;
-[_object, 0, ["ACE_MainActions"], _disable] call ace_interact_menu_fnc_addActionToObject;
+private _disablePath = [_object, 0, ["ACE_MainActions"], _disable] call ace_interact_menu_fnc_addActionToObject;
+_object setVariable ["Waldo_Jamming_DisableACEPath", _disablePath];
+diag_log format ["[WMP JAM] feature action installed object=%1 action=Waldo_Jammer_Disable path=%2 challenge=%3", netId _object, _disablePath, _challengeEnabled];

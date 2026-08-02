@@ -1,4 +1,15 @@
-/* Physical, repeatable stations for recently integrated optional systems. */
+/*
+ * Author: WaldoTheWarfighter
+ * Builds the server-authoritative fixtures and control endpoints for the full-pack audit mission's
+ * extended feature stations. State-changing actions are repeatable and are invoked by local station
+ * controls through explicit server remote execution.
+ *
+ * Arguments: None.
+ * Return Value: Nothing; publishes Waldo_QA_ExtendedFeatureStationsReady when setup completes.
+ *
+ * Example: [] execVM "extendedFeatureStationsServer.sqf";
+ * Current caller: the audit mission's initServer.sqf.
+ */
 if (!isServer) exitWith {};
 waitUntil {uiSleep 0.1; missionNamespace getVariable ["Waldo_QA_FeatureRangeReady", false]};
 
@@ -428,7 +439,7 @@ Waldo_QA_fnc_reportGunshipServer = {
     [_actor, "AIRBORNE GUNSHIP QA", _message, "INFO"] call Waldo_QA_fnc_notifyActorServer;
 };
 
-// Dynamic paradrop: short but complete live route using the same authoritative production path.
+// Dynamic paradrop: player-focused looping route using the same authoritative production path.
 Waldo_QA_fnc_createParadropServer = {
     params [["_actor", objNull, [objNull]]];
     ["QA_DZ", true, _actor, false] call Waldo_fnc_ParadropRemoveDropZone;
@@ -436,13 +447,23 @@ Waldo_QA_fnc_createParadropServer = {
         ["id", "QA_DZ"], ["name", "QA DROP ZONE"], ["centre", [500, 500, 0]],
         ["direction", 90], ["side", west], ["aircraftClass", "B_Heli_Transport_01_F"],
         ["altitude", 180], ["maximumSpeed", 160], ["approachDistance", 1500],
-        ["runLength", 1200], ["exitDistance", 1500], ["jumperCount", 6],
-        ["jumpInterval", 1], ["chuteClass", "NonSteerable_Parachute_F"],
-        ["createJumpers", true], ["autoDropPlayers", false], ["createMarkers", true],
-        ["deleteAfterRun", false], ["operationTimeout", 300], ["notifyRequester", false]
+        ["runLength", 1200], ["exitDistance", 1500], ["jumperCount", 0],
+        ["jumpInterval", 2], ["staticJumpEnabled", true], ["staticMinimumAltitude", 120],
+        ["staticMaximumAltitude", 350], ["staticMaximumSpeed", 250],
+        ["staticChuteClass", "NonSteerable_Parachute_F"], ["haloJumpEnabled", false],
+        ["requireOpenDoor", false], ["automaticJumpMode", "STATIC"],
+        ["createJumpers", false], ["autoDropPlayers", false], ["createMarkers", true],
+        ["lifecycle", "LOOP"], ["circuitDirection", "LEFT"], ["operationTimeout", 900], ["notifyRequester", false]
     ];
     private _created = [_config, _actor] call Waldo_fnc_ParadropCreateDropZone;
-    [_actor, "DYNAMIC PARADROP QA", ["Creation failed; inspect the server RPT.", "Operation created. Follow QA DROP ZONE markers and watch six one-second exits after the green line."] select _created, ["ERROR", "SUCCESS"] select _created] call Waldo_QA_fnc_notifyActorServer;
+    [_actor, "DYNAMIC PARADROP QA", ["Creation failed; inspect the server RPT.", "Empty player transport created with one pilot and a repeating aligned circuit. Board through the station or spawn its boarding point."] select _created, ["ERROR", "SUCCESS"] select _created] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_embarkParadropServer = {
+    params [["_actor", objNull, [objNull]], ["_createPoint", false, [false]]];
+    private _mode = if (_createPoint) then {"POLE"} else {"SELECTION"};
+    private _units = if (_createPoint || {isNull _actor}) then {[]} else {[_actor]};
+    ["QA_DZ", _mode, _units, [300, 28, 0], "Land_InfoStand_V1_F", "Board QA Drop Aircraft", _actor]
+        call Waldo_fnc_ParadropEmbark;
 };
 Waldo_QA_fnc_reportParadropServer = {
     params [["_actor", objNull, [objNull]]];
@@ -451,7 +472,7 @@ Waldo_QA_fnc_reportParadropServer = {
     private _message = if (_registered) then {
         private _state = _registry get "QA_DZ";
         private _aircraft = _state getOrDefault ["aircraft", objNull];
-        format ["Registered: true<br/>Aircraft alive: %1<br/>Jumpers still aboard: %2<br/>Markers: %3", !isNull _aircraft && {alive _aircraft}, {vehicle _x == _aircraft} count (_state getOrDefault ["jumpers", []]), count (_state getOrDefault ["markers", []])]
+        format ["Registered: true<br/>Aircraft alive: %1<br/>Players aboard: %2<br/>Optional AI aboard: %3<br/>Lifecycle: %4<br/>Boarding points: %5<br/>Markers: %6", !isNull _aircraft && {alive _aircraft}, {isPlayer _x && {vehicle _x == _aircraft}} count allPlayers, {vehicle _x == _aircraft} count (_state getOrDefault ["jumpers", []]), _state getOrDefault ["lifecycle", "UNKNOWN"], count (_state getOrDefault ["boardingPoints", []]), count (_state getOrDefault ["markers", []])]
     } else {
         "No QA dynamic-paradrop operation is registered."
     };
@@ -519,5 +540,67 @@ Waldo_QA_fnc_prepareRallyTesterServer = {
     [_actor, "SQUAD RALLY QA", "You are now group leader. Deploy with the production self-action, then use the station's respawn-selection test.", "SUCCESS"] call Waldo_QA_fnc_notifyActorServer;
 };
 
+// Improved landing QA creates only an AI-piloted helicopter. The production class-init and
+// ownership handlers must discover it; the station never invokes the landing controller directly.
+Waldo_QA_fnc_removeImprovedLandingServer = {
+    private _helicopter = missionNamespace getVariable ["Waldo_QA_ImprovedLandingHelicopter", objNull];
+    private _group = missionNamespace getVariable ["Waldo_QA_ImprovedLandingGroup", grpNull];
+    if (!isNull _helicopter) then {
+        {deleteVehicle _x} forEach crew _helicopter;
+        deleteVehicle _helicopter;
+    };
+    if (!isNull _group) then {deleteGroup _group};
+    missionNamespace setVariable ["Waldo_QA_ImprovedLandingHelicopter", objNull, true];
+    missionNamespace setVariable ["Waldo_QA_ImprovedLandingGroup", grpNull, true];
+    true
+};
+Waldo_QA_fnc_startImprovedLandingServer = {
+    params [["_actor", objNull, [objNull]], ["_highApproach", false, [true]]];
+    call Waldo_QA_fnc_removeImprovedLandingServer;
+    private _landingPosition = [325, 70, 0];
+    private _spawnAltitude = [75, 300] select _highApproach;
+    // The aircraft begins exactly 150 metres south of the marked helipad. This keeps the
+    // fixture above the production controller's 50 m acquisition floor without making the
+    // approach unnecessarily long for a manual audit.
+    private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -80, _spawnAltitude], [], 0, "FLY"];
+    _helicopter setPosATL [325, -80, _spawnAltitude];
+    _helicopter setDir 0;
+    _helicopter setVelocityModelSpace [0, 32, 0];
+    _helicopter enableSimulationGlobal true;
+    createVehicleCrew _helicopter;
+    {_x enableSimulationGlobal true} forEach crew _helicopter;
+    _helicopter engineOn true;
+    private _pilot = currentPilot _helicopter;
+    private _group = if (isNull _pilot) then {grpNull} else {group _pilot};
+    if (!isNull _group) then {
+        _group setBehaviourStrong "CARELESS";
+        _group setCombatMode "BLUE";
+        _group setSpeedMode "LIMITED";
+        private _waypoint = _group addWaypoint [_landingPosition, 0];
+        _waypoint setWaypointType "LAND";
+        _waypoint setWaypointBehaviour "CARELESS";
+        _waypoint setWaypointCombatMode "BLUE";
+        _waypoint setWaypointSpeed "LIMITED";
+    };
+    missionNamespace setVariable ["Waldo_QA_ImprovedLandingHelicopter", _helicopter, true];
+    missionNamespace setVariable ["Waldo_QA_ImprovedLandingGroup", _group, true];
+    [_actor, "AI HELICOPTER LANDING", format ["AI-only %1 approach started. The production handler must acquire it without the QA station calling the controller.", ["normal", "excessively high go-around"] select _highApproach], "SUCCESS", "AI_LANDING_QA"] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_reportImprovedLandingServer = {
+    params [["_actor", objNull, [objNull]]];
+    private _helicopter = missionNamespace getVariable ["Waldo_QA_ImprovedLandingHelicopter", objNull];
+    if (isNull _helicopter) exitWith {
+        [_actor, "AI HELICOPTER LANDING", "No QA helicopter exists.", "WARNING", "AI_LANDING_QA"] call Waldo_QA_fnc_notifyActorServer;
+    };
+    private _pilot = currentPilot _helicopter;
+    private _message = format ["AI pilot: %1 | owner: %2 | active controller: %3 | distance to pad: %4 m | altitude ATL: %5 m | touching ground: %6", !isNull _pilot && {!isPlayer _pilot} && {isNull (remoteControlled _pilot)}, owner _helicopter, _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false], round (_helicopter distance2D [325, 70, 0]), round ((getPosATL _helicopter) select 2), isTouchingGround _helicopter];
+    [_actor, "AI HELICOPTER LANDING", _message, "INFO", "AI_LANDING_QA"] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_setUiThemeServer = {
+    params [["_actor", objNull, [objNull]], ["_theme", "DEFAULT", [""]]];
+    private _ok = [_theme, false] call Waldo_fnc_UiThemeSetServer;
+    [_actor, "UI THEME QA", format ["%1 theme %2 globally. Open notifications, interaction challenges and service panels to compare the same controls with the new visual treatment.", _theme, ["was rejected", "is active"] select _ok], ["ERROR", "SUCCESS"] select _ok, "UI_THEME_QA"] call Waldo_QA_fnc_notifyActorServer;
+};
+
 missionNamespace setVariable ["Waldo_QA_ExtendedFeatureStationsReady", true, true];
-diag_log "WMP EXTENDED FEATURE STATIONS READY: 16 station workflows configured.";
+diag_log "WMP EXTENDED FEATURE STATIONS READY: 18 station workflows configured.";

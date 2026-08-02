@@ -1,41 +1,44 @@
 /*
-This function throw a player out from a airplane and replaces their current backpack with a parachute.
-
-Arguments:
-0: Player <player>
-1: Vehicle <OBJECT>
-2: Chute Vehicle <OBJECT> (Optional) [Default; "NonSteerable_Parachute_F"]
-
-Example:
-["unit","plane"] call Waldo_fnc_HaloJumpFunc;
-["unit","plane"], "NonSteerable_Parachute_F"] call Waldo_fnc_HaloJumpFunc;
-
-*/
+ * Author: WaldoTheWarfighter
+ * Safely exits a local unit from an aircraft for a HALO jump, preserves their original backpack
+ * and contents through Waldo_fnc_ParaBackpack, equips the selected steerable parachute backpack,
+ * applies the configured equipment simulation, and restores damage after the exit transition.
+ * Must run where the jumping unit is local and in a scheduled environment.
+ *
+ * Arguments:
+ * 0: jumping unit <OBJECT>
+ * 1: aircraft <OBJECT>
+ * 2: parachute backpack class <STRING> (default "B_Parachute")
+ *
+ * Return Value:
+ * Boolean - true when the jump sequence was started.
+ *
+ * Called by:
+ * Waldo_fnc_AddHaloJump and dynamic paradrop automatic player sequencing.
+ *
+ * Example:
+ * [player, aircraft, "B_Parachute"] spawn Waldo_fnc_HaloJumpFunc;
+ */
 
 params [
-    ["_player", objNull],
-    ["_vehicle", objNull],
-    ["_chuteBackpackClass", "B_Parachute"]
+    ["_unit", objNull, [objNull]],
+    ["_vehicle", objNull, [objNull]],
+    ["_chuteBackpackClass", "B_Parachute", [""]]
 ];
 
-_player allowDamage false;
+if (isNull _unit || {isNull _vehicle} || {!local _unit} || {vehicle _unit != _vehicle}) exitWith {false};
+if !(isClass (configFile >> "CfgVehicles" >> _chuteBackpackClass)) exitWith {false};
 
-private _dir = getDir _vehicle - 50;
-moveOut _player;
-private _pos = ([_vehicle, 14, ((getDir _vehicle) + 180 + 8)] call BIS_fnc_relPos);
-_pos = [_pos select 0, _pos select 1, ((getPosATL _vehicle) select 2)];
-_player setPosATL _pos;
-_player setDir _dir - 140;
-
+_unit allowDamage false;
+private _direction = getDir _vehicle;
+private _exitPosition = [_vehicle, 14, _direction + 188] call BIS_fnc_relPos;
+_exitPosition set [2, (getPosATL _vehicle) select 2];
+moveOut _unit;
+_unit setPosATL _exitPosition;
+_unit setDir (_direction + 170);
 sleep 1.5;
-
-[_player] call Waldo_fnc_paraEquipmentSim;
-
+[_unit] call Waldo_fnc_paraEquipmentSim;
+[_unit, _chuteBackpackClass] call Waldo_fnc_ParaBackpack;
 sleep 0.5;
-
-//Add pseudo-backpack to re-grab gear at when touching grass
-[_player] call Waldo_fnc_ParaBackpack;
-
-sleep 0.5;
-
-_player allowDamage true;
+_unit allowDamage true;
+true

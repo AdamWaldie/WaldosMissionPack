@@ -37,13 +37,15 @@ is unchanged.
 
 The server uses one configurable scan loop (`Waldo_Recovery_ScanInterval`, default 3 seconds) for all packages. Registration is repeat-safe. Actions are object-keyed for JIP and disappear with the deleted original/package object. Packaging, loading and unloading feedback is sent only to the operator performing that action. A completed workshop restoration notifies only friendly players within `Waldo_Recovery_NotificationRadius` (default 100 metres); an individual workshop can override that radius through the optional fifth registration argument. Registered workshops create two global engine markers by default: a shaded circle showing the delivery radius and a labelled point showing the workshop's exact position. Their colour follows the serviced side. Set `Waldo_Recovery_CreateWorkshopMarkers` to `false`, or pass `false` as the optional sixth registration argument, to suppress both markers.
 
+Restoration samples bounded rings outside the workshop's real model bounds plus the recovered vehicle footprint and `Waldo_Recovery_PlacementClearance`. Candidates are terrain-snapped and rejected when ordinary or terrain objects occupy the full clearance area. If no safe point exists, the package remains for a later retry; the system never falls back to the workshop origin or creates a vehicle inside another object.
+
 ZEN provides three modules:
 
 - **Vehicle Recovery - Register Workshop** configures a nearby object's key and radius and can export its setup call.
 - **Vehicle Recovery - Register Vehicle** configures the nearest vehicle's recovery policy and an optional simplified preparation procedure: enable, procedure and difficulty.
 - **Vehicle Recovery - Register Carrier** enables package loading and unloading on the nearest vehicle.
 
-Recovery deliberately creates a repaired replacement rather than preserving live simulation damage. Crew, attached objects and arbitrary mission-script variables are not copied. Use persistence separately for long-term mission saves.
+Living vehicles are retained hidden while packaged and restored as the same object, preserving object identity, event handlers, actions, applied scripts and external references. A destroyed vehicle cannot be resurrected reliably, so that path creates a replacement, restores its Eden variable name, copies the configured custom-variable allowlist and invokes `Waldo_Recovery_OnRestored` for mission-specific rebinding. Crew and attached objects are not recreated. Use persistence separately for long-term mission saves.
 
 ## Squad rally points
 

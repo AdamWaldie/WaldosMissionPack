@@ -811,6 +811,7 @@ class FullAuditTests(unittest.TestCase):
         disable = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerDisableServer.sqf").read_text(encoding="utf-8")
         generic = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteraction.sqf").read_text(encoding="utf-8")
         acquire = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteractionAcquireServer.sqf").read_text(encoding="utf-8")
+        range_check = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteractionRange.sqf").read_text(encoding="utf-8")
         zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf").read_text(encoding="utf-8")
         fixture = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
         self.assertIn('remoteExec ["Waldo_fnc_JammerInteraction", 0, _object]', create)
@@ -829,6 +830,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('ace_common_fnc_canInteractWith', generic)
         self.assertIn('_distance\n    ] call ace_interact_menu_fnc_createAction', generic)
         self.assertIn('Waldo_MG_Int_ActorCondition', acquire)
+        self.assertIn('call Waldo_fnc_MiniGameInteractionRange', generic)
+        self.assertIn('call Waldo_fnc_MiniGameInteractionRange', acquire)
+        self.assertIn('worldToModel', range_check)
+        self.assertIn('boundingBoxReal', range_check)
+        self.assertIn('modelToWorld', range_check)
         for label in ("Require Field Disable Procedure", "Disable Procedure", "Procedure Difficulty"):
             self.assertIn(label, zen)
         for advanced_label in ("Engineers Only", "Successful Disable Result", "Allow Direct Player Toggle"):
@@ -907,7 +913,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Container remains because storage is full", collect)
         self.assertIn("deleteVehicle _crate", collect)
         self.assertIn("economy/resource/full-crate-consumed", server_audit)
-        self.assertIn('[["Money", 100], ["Parts", 5]]', fixture)
+        self.assertIn("call Waldo_fnc_EcoResource_getResourceTypes", fixture)
+        self.assertIn("private _rows = [[_primaryType, 100]]", fixture)
+        self.assertIn("_rows pushBack [_secondaryType, 5]", fixture)
 
     def test_safestart_countdown_has_runtime_completion_gate(self):
         timer = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "safeStartTimer.sqf").read_text(encoding="utf-8")

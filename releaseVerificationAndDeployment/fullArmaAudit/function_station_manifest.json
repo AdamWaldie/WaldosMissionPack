@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 778,
+  "registeredFunctionCount": 795,
   "runtimeFunctionCount": 385,
-  "functionCount": 1163,
+  "functionCount": 1180,
   "stations": [
     {
       "id": "control",
@@ -373,6 +373,26 @@
         0
       ],
       "description": "Server-owned DZ route, timed jumpers, operational markers and teardown."
+    },
+    {
+      "id": "ai-helicopter-landing",
+      "title": "AI HELICOPTER LANDING",
+      "position": [
+        325,
+        40,
+        0
+      ],
+      "description": "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."
+    },
+    {
+      "id": "ui-theme-qa",
+      "title": "UI THEME QA",
+      "position": [
+        325,
+        0,
+        0
+      ],
+      "description": "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."
     }
   ],
   "functions": [
@@ -563,6 +583,48 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingInit",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingInit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingTrackLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingTrackLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingExecuteLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingExecuteLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingRestoreLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingRestoreLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingSetting",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingSetting.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingConfigureServer",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingConfigureServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingZen",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingZen.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_Teleport",
       "file": "MissionScripts/Logistics/LogiHelpers/teleport.sqf",
       "station": "loadouts",
@@ -655,6 +717,36 @@
     {
       "name": "Waldo_fnc_ShowUiNotification",
       "file": "MissionScripts/MissionFlowAndUi/showUiNotification.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiTheme",
+      "file": "MissionScripts/MissionFlowAndUi/uiTheme.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeApplyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeApplyLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeApplyDisplayLocal",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeApplyDisplayLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeSetServer",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeSetServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeZen",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeZen.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -1121,6 +1213,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RecoveryResolveRestorePosition",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryResolveRestorePosition.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_RecoveryRestoreServer",
       "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRestoreServer.sqf",
       "station": "vehicle-recovery",
@@ -1292,6 +1390,24 @@
       "name": "Waldo_fnc_ParadropCreateDropZone",
       "file": "MissionScripts/Paradrop/paradropCreateDropZone.sqf",
       "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropConfigureAircraftLocal",
+      "file": "MissionScripts/Paradrop/paradropConfigureAircraftLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropEmbark",
+      "file": "MissionScripts/Paradrop/paradropEmbark.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropEmbarkLocal",
+      "file": "MissionScripts/Paradrop/paradropEmbarkLocal.sqf",
+      "station": "paradrop",
       "activation": "manual"
     },
     {
@@ -4855,6 +4971,12 @@
     {
       "name": "Waldo_fnc_MiniGameInteractionActivate",
       "file": "MissionScripts/InteractionsMinigames/Integration/miniGameInteractionActivate.sqf",
+      "station": "interaction-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGameInteractionRange",
+      "file": "MissionScripts/InteractionsMinigames/Integration/miniGameInteractionRange.sqf",
       "station": "interaction-core",
       "activation": "manual"
     },

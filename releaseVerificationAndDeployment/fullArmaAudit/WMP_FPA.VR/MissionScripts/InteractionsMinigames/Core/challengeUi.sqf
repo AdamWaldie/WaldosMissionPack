@@ -6,6 +6,12 @@
  * create controls through MiniGameEquipmentCreateControl and never perform safe-zone
  * arithmetic themselves. The shell owns input capture, timing, cleanup, abort and
  * exactly-once resolution.
+ *
+ * Arguments: title, objective, time limit, resolution callback, content height, input hint and help hint.
+ * Return Value: DISPLAY - the created procedure display, or displayNull when unavailable.
+ *
+ * Example: ["FIELD EQUIPMENT", "Complete the procedure", 60, _resolve] call Waldo_fnc_MiniGameChallengeUi;
+ * Current callers: all ten interaction-equipment procedure openers.
  */
 disableSerialization;
 params [
@@ -65,6 +71,7 @@ if (isNull _display) exitWith {
     [false, ["FAILURE", "DISPLAY CREATION FAILED"]] call _resolve;
     displayNull
 };
+_display setVariable ["Waldo_UI_ThemedDisplay", true];
 _display setVariable ["Waldo_MG_UI_RequestedContentHeight", _contentHeight];
 uiNamespace setVariable ["Waldo_MG_ActiveChallengeDisplay", _display];
 
@@ -91,6 +98,7 @@ private _contentH = 15.95 * _cellH;
 private _textScale = if (_access getOrDefault ["largeText", false]) then {1.08} else {1};
 private _accent = _profile getOrDefault ["accent", [0.82, 0.58, 0.18, 1]];
 private _casing = _profile getOrDefault ["casing", [0.16, 0.17, 0.15, 1]];
+private _theme = _profile getOrDefault ["uiTheme", [] call Waldo_fnc_UiTheme];
 
 _display setVariable ["Waldo_MG_UI_Resolve", _resolve];
 _display setVariable ["Waldo_MG_UI_Done", false];
@@ -107,7 +115,7 @@ _display setVariable ["Waldo_IMG_Bounds", [_canvasX, _canvasY, _gridWidthAbsolut
 
 private _shade = _display ctrlCreate ["RscText", -1];
 _shade ctrlSetPosition [_viewportX, _viewportY, _viewportW, _viewportH];
-_shade ctrlSetBackgroundColor [0, 0, 0, 0.72];
+_shade ctrlSetBackgroundColor (_theme getOrDefault ["shade", [0, 0, 0, 0.72]]);
 _shade ctrlCommit 0;
 private _shadow = _display ctrlCreate ["RscText", -1];
 _shadow ctrlSetPosition [_canvasX - (0.35 * _cellW), _canvasY - (0.35 * _cellH), _gridWidthAbsolute + (0.7 * _cellW), _gridHeightAbsolute + (0.7 * _cellH)];
@@ -119,7 +127,7 @@ _case ctrlSetBackgroundColor _casing;
 _case ctrlCommit 0;
 private _header = _display ctrlCreate ["RscText", -1];
 _header ctrlSetPosition [_canvasX + (1.5 * _cellW), _canvasY + _cellH, 37 * _cellW, 2.4 * _cellH];
-_header ctrlSetBackgroundColor [0.045, 0.05, 0.045, 0.99];
+_header ctrlSetBackgroundColor (_theme getOrDefault ["panelAlt", [0.045, 0.05, 0.045, 0.99]]);
 _header ctrlCommit 0;
 private _accentBar = _display ctrlCreate ["RscText", -1];
 _accentBar ctrlSetPosition [_canvasX + (1.5 * _cellW), _canvasY + (3.3 * _cellH), 37 * _cellW, 0.18 * _cellH];
@@ -128,28 +136,31 @@ _accentBar ctrlCommit 0;
 private _heading = _display ctrlCreate ["RscText", -1];
 _heading ctrlSetPosition [_canvasX + (1.7 * _cellW), _canvasY + (1.15 * _cellH), 23 * _cellW, 1.1 * _cellH];
 _heading ctrlSetText _title;
-_heading ctrlSetTextColor [0.95, 0.93, 0.84, 1];
+_heading ctrlSetTextColor (_theme getOrDefault ["text", [0.95, 0.93, 0.84, 1]]);
+_heading ctrlSetFont (_theme getOrDefault ["fontBold", "RobotoCondensedBold"]);
 _heading ctrlSetFontHeight (1.05 * _cellH * _textScale);
 _heading ctrlCommit 0;
 [_heading, 1.05 * _cellH * _textScale, 0.42 * _cellH] call Waldo_fnc_MiniGameEquipmentFitText;
 private _maker = _display ctrlCreate ["RscText", -1];
 _maker ctrlSetPosition [_canvasX + (1.75 * _cellW), _canvasY + (2.25 * _cellH), 24 * _cellW, 0.65 * _cellH];
 _maker ctrlSetText format ["%1  //  %2", _profile getOrDefault ["manufacturer", "FIELD SYSTEMS"], _profile getOrDefault ["model", "UNIT"]];
-_maker ctrlSetTextColor [0.62, 0.64, 0.57, 1];
+_maker ctrlSetTextColor (_theme getOrDefault ["muted", [0.62, 0.64, 0.57, 1]]);
+_maker ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
 _maker ctrlSetFontHeight ((0.72 * _cellH * _textScale) max 0.016);
 _maker ctrlCommit 0;
 [_maker, (0.72 * _cellH * _textScale) max 0.016, 0.38 * _cellH] call Waldo_fnc_MiniGameEquipmentFitText;
 private _timer = _display ctrlCreate ["RscText", -1];
 _timer ctrlSetPosition [_canvasX + (29 * _cellW), _canvasY + (1.3 * _cellH), 8 * _cellW, 1.2 * _cellH];
 _timer ctrlSetText (if (_timeLimit > 0) then {format ["TIME  %1", ceil _timeLimit]} else {"NO TIME LIMIT"});
-_timer ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+_timer ctrlSetTextColor (_theme getOrDefault ["warning", [0.96, 0.78, 0.30, 1]]);
+_timer ctrlSetFont (_theme getOrDefault ["fontBold", "RobotoCondensedBold"]);
 _timer ctrlSetFontHeight (0.82 * _cellH);
 _timer ctrlCommit 0;
 [_timer, 0.82 * _cellH, 0.42 * _cellH] call Waldo_fnc_MiniGameEquipmentFitText;
 _display setVariable ["Waldo_MG_UI_TimerCtrl", _timer];
 private _objectiveControl = _display ctrlCreate ["RscStructuredText", -1];
 _objectiveControl ctrlSetPosition [_canvasX + (2 * _cellW), _canvasY + (3.68 * _cellH), 36 * _cellW, 1.75 * _cellH];
-private _objectiveTemplate = "<t align='center' size='%1' color='#E8E5D8'>" + _objective + "</t>";
+private _objectiveTemplate = format ["<t align='center' font='%1' size='%%1' color='%2'>", _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#E8E5D8"]] + _objective + "</t>";
 [_objectiveControl, _objectiveTemplate, 1.12 * _textScale, 0.62] call Waldo_fnc_MiniGameEquipmentFitStructuredText;
 
 private _contentGroup = _display ctrlCreate ["RscControlsGroupNoScrollbars", -1];
@@ -157,7 +168,7 @@ _contentGroup ctrlSetPosition [_contentX, _contentY, _contentW, _contentH];
 _contentGroup ctrlCommit 0;
 _display setVariable ["Waldo_MG_UI_ContentGroup", _contentGroup];
 private _contentBack = [_display, "RscText", [0, 0, 40, 25], "equipment work area"] call Waldo_fnc_MiniGameEquipmentCreateControl;
-_contentBack ctrlSetBackgroundColor [0.025, 0.03, 0.027, 0.99];
+_contentBack ctrlSetBackgroundColor (_theme getOrDefault ["panel", [0.025, 0.03, 0.027, 0.99]]);
 private _texturePath = _profile getOrDefault ["texture", ""];
 if (_texturePath != "") then {
     private _texture = [_display, "RscPicture", [0, 0, 40, 25], "optional casing texture"] call Waldo_fnc_MiniGameEquipmentCreateControl;
@@ -166,20 +177,22 @@ if (_texturePath != "") then {
 };
 private _status = [_display, "RscText", [1, 0.55, 38, 1.75], "procedure status"] call Waldo_fnc_MiniGameEquipmentCreateControl;
 _status ctrlSetText format ["[STANDBY]  %1", _profile getOrDefault ["model", "FIELD UNIT"]];
-_status ctrlSetTextColor [0.96, 0.78, 0.30, 1];
+_status ctrlSetTextColor (_theme getOrDefault ["warning", [0.96, 0.78, 0.30, 1]]);
+_status ctrlSetFont (_theme getOrDefault ["fontBold", "RobotoCondensedBold"]);
 _status ctrlSetFontHeight (((0.92 * (_contentH / 25) * _textScale) max 0.022) min 0.034);
-_status ctrlSetBackgroundColor [0.04, 0.05, 0.045, 0.96];
+_status ctrlSetBackgroundColor (_theme getOrDefault ["panelAlt", [0.04, 0.05, 0.045, 0.96]]);
 [_status, ((0.92 * (_contentH / 25) * _textScale) max 0.022) min 0.034, 0.014] call Waldo_fnc_MiniGameEquipmentFitText;
 _display setVariable ["Waldo_MG_UI_StatusCtrl", _status];
 
 private _footer = _display ctrlCreate ["RscText", -1];
 _footer ctrlSetPosition [_canvasX + (1.5 * _cellW), _canvasY + (22.05 * _cellH), 37 * _cellW, 1.75 * _cellH];
-_footer ctrlSetBackgroundColor [0.045, 0.05, 0.045, 0.99];
+_footer ctrlSetBackgroundColor (_theme getOrDefault ["panelAlt", [0.045, 0.05, 0.045, 0.99]]);
 _footer ctrlCommit 0;
 private _footerHint = _display ctrlCreate ["RscText", -1];
 _footerHint ctrlSetPosition [_canvasX + (1.85 * _cellW), _canvasY + (22.25 * _cellH), 24.8 * _cellW, 1.35 * _cellH];
 _footerHint ctrlSetText _inputHint;
-_footerHint ctrlSetTextColor [0.87, 0.85, 0.78, 1];
+_footerHint ctrlSetTextColor (_theme getOrDefault ["text", [0.87, 0.85, 0.78, 1]]);
+_footerHint ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
 _footerHint ctrlSetFontHeight ((0.72 * _cellH * _textScale) max 0.017);
 _footerHint ctrlCommit 0;
 [_footerHint, (0.72 * _cellH * _textScale) max 0.017, 0.013] call Waldo_fnc_MiniGameEquipmentFitText;
@@ -187,7 +200,7 @@ private _footerAbort = _display ctrlCreate ["RscStructuredText", -1];
 _footerAbort ctrlSetPosition [_canvasX + (27.0 * _cellW), _canvasY + (22.25 * _cellH), 11.1 * _cellW, 1.35 * _cellH];
 [
     _footerAbort,
-    "<t align='right' color='#F2BD54' size='%1'>ESC TWICE: ABORT [FAILURE]</t>",
+    format ["<t align='right' font='%1' color='%2' size='%%1'>ESC TWICE: ABORT [FAILURE]</t>", _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["warningHex", "#F2BD54"]],
     0.82 * _textScale,
     0.62
 ] call Waldo_fnc_MiniGameEquipmentFitStructuredText;

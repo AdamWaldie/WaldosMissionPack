@@ -310,6 +310,14 @@ Waldo_AccessibilityPID_AllowedUIDs = ["76561198094931408"];
 
 See [Optional Feature Systems](Optional-Feature-Systems) for the complete setting groups.
 
+### Global UI Visual Style
+
+Set `Waldo_UI_Theme` in `init.sqf` to `DEFAULT`, `WW2`, `VIETNAM` or `SCIFI`. The setting changes presentation only and is consumed locally by WMP displays. Curator QA can change it live through **UI QA - Set Visual Theme**; the server publishes the durable selection for JIP. See [UI Visual Themes](UI-Visual-Themes).
+
+### Improved AI Helicopter Landings
+
+`Waldo_ImprovedHelicopterLanding_Enable` controls the AI-only exact landing system. The remaining `Waldo_ImprovedHelicopterLanding_*` values tune activation range, glideslope, canopy clearance, collective limits, touchdown tolerance and go-around policy. Event-driven class-init and `Local` handlers cover editor, Zeus and migrated helicopters on their current owner. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
+
 ### Zeus Enhanced Modules
 
 `Waldo_fnc_ZenInitModules` is called automatically on interface clients. The function is repeat-safe and exits when Zeus Enhanced is unavailable.
@@ -339,7 +347,7 @@ Uncomment to automatically save the player's respawn loadout whenever they close
 
 See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) for full details.
 
-Temporary squad-owned respawn points are configured with the shared `Waldo_Rally_*` settings in `init.sqf`; vehicle-recovery scans use `Waldo_Recovery_ScanInterval`, workshop-completion notification distance uses `Waldo_Recovery_NotificationRadius` (default 100 metres), and `Waldo_Recovery_CreateWorkshopMarkers` controls the default global delivery-area and exact-position workshop markers. Object registration and runtime options are documented in [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+Temporary squad-owned respawn points are configured with the shared `Waldo_Rally_*` settings in `init.sqf`; vehicle-recovery scans use `Waldo_Recovery_ScanInterval`, workshop-completion notification distance uses `Waldo_Recovery_NotificationRadius` (default 100 metres), `Waldo_Recovery_PlacementClearance` pads the combined workshop/vehicle footprints, and `Waldo_Recovery_CreateWorkshopMarkers` controls the default global delivery-area and exact-position workshop markers. Object registration and runtime options are documented in [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 <!-- WMP-WIKI-NAV -->
 ---

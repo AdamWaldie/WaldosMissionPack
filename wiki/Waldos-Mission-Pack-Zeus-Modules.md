@@ -132,11 +132,19 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Dynamic Paradrop
 
-**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named route, forced altitude, maximum speed, approach/drop/exit lengths, generated troop count, timed jump interval, chute, optional player drop, map symbology and post-run cleanup. **Paradrop - Remove Operation** selects a named live operation and removes its aircraft and markers without deleting troops that have already jumped. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
+**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. **Paradrop - Embark Players** transfers selected player/group units into free cargo seats, creates a reusable blue-action boarding point, or does both. **Paradrop - Remove Operation** selects a named live operation and removes its aircraft, boarding points and markers without deleting troops that have already jumped. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
 
 ## Vehicle Recovery
 
 **Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+
+## AI Helicopter Landing
+
+**AI - Helicopter Landing Control** globally enables or disables the AI-only landing controller and exposes bounded activation, glideslope, canopy-clearance, go-around and vertical-rate settings. It applies to editor, Zeus and headless-client helicopters through their current locality owner. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
+
+## UI Theme QA
+
+**UI QA - Set Visual Theme** selects Default/Modern, Second World War, Vietnam/Cold War or Science Fiction styling. It changes presentation globally and can show the requesting curator a three-card semantic/stacking preview. See [UI Visual Themes](UI-Visual-Themes).
 
 ## Squad Rally Points
 

@@ -73,6 +73,8 @@ STATIONS = [
     ("rally", "SQUAD RALLY", (250, 0), "Leader deployment, group respawn, regroup, expiry and removal."),
     ("nested-loadouts", "NESTED LOADOUT SCRAPE", (275, 0), "Playable inventories inside nested Eden folders feeding crate and arsenal pools."),
     ("dynamic-paradrop", "DYNAMIC PARADROP", (300, 40), "Server-owned DZ route, timed jumpers, operational markers and teardown."),
+    ("ai-helicopter-landing", "AI HELICOPTER LANDING", (325, 40), "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."),
+    ("ui-theme-qa", "UI THEME QA", (325, 0), "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."),
 ]
 
 
@@ -125,6 +127,7 @@ FIXTURES = [
     # damaged vehicle, station sign and adjacent feature stations at activation.
     fixture("qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", 225, -28),
     fixture("qa_loadout_arsenal", "B_supplyCrate_F", 275, 7),
+    fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F", 325, 70),
 ]
 
 CHALLENGES = [

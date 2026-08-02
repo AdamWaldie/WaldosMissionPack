@@ -159,6 +159,7 @@ missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
 if (missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true] && {count _activeText > 0}) then {
-    private _text = parseText format ["<t align='right' size='0.75'>%1</t>", _activeText joinString "<br/>" ];
+    private _theme = [] call Waldo_fnc_UiTheme;
+    private _text = parseText format ["<t font='%1' color='%2' align='right' size='0.75'>%3</t>", _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"], _activeText joinString "<br/>" ];
     [_text, safeZoneX + safeZoneW - 0.42, safeZoneY + 0.22, 1.1, 0, 0, 791] spawn BIS_fnc_dynamicText;
 };

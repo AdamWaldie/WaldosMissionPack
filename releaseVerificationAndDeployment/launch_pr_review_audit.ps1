@@ -1,3 +1,21 @@
+<#
+ * Author: WaldoTheWarfighter
+ * Stages the canonical full-pack audit mission, starts its dedicated authority and connects a
+ * windowed Arma client without opening Eden. The checked launch always disables BattlEye and
+ * keeps server/client profiles inside the repository QA workspace for report inspection.
+ *
+ * Parameters:
+ * Suite: feature subset to stage (default all).
+ * Mode: manual stations or automated audit execution (default Manual).
+ * Port: dedicated-server port (default 24132).
+ * ResolutionWidth/ResolutionHeight: connected client dimensions (default 2560x1440).
+ * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
+ * PythonExecutable: optional explicit interpreter used to assemble the mission.
+ *
+ * Example:
+ * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual -ResolutionWidth 1920 -ResolutionHeight 1080
+ * Current callers: launch_full_arma_hosted_audit.ps1 and manual QA operators.
+ #>
 param(
     [ValidateSet("all", "core", "economy", "ew", "party", "interactions")]
     [string]$Suite = "all",
@@ -102,5 +120,5 @@ $clientArguments = @(
 )
 $client = Start-Process -FilePath $armaExe -ArgumentList $clientArguments -WorkingDirectory $armaRoot -PassThru
 Write-Output "Loaded WMP_PR_Review_Audit.VR on dedicated authority PID $($server.Id)."
-Write-Output "Connected 2560x1440 audit client PID $($client.Id) in $Mode mode; Eden is not used."
+Write-Output "Connected ${ResolutionWidth}x${ResolutionHeight} audit client PID $($client.Id) in $Mode mode; Eden is not used."
 Write-Output "Choose a playable slot and press OK if the role-assignment screen is shown."

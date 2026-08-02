@@ -19,6 +19,8 @@
  * Example:
  * [0.8] call Waldo_fnc_JammingHud;                                   // radio banner
  * [0.5, "UAV LINK DEGRADED", 5311, "DATALINK QUALITY REDUCED"] call Waldo_fnc_JammingHud;
+ *
+ * Current callers: JammingInit radio and UAV state watchers.
  */
 
 if !(hasInterface) exitWith {};
@@ -27,6 +29,7 @@ params [["_factor", 0], ["_label", "RADIO INTERFERENCE"], ["_idc", 5310], ["_sub
 
 private _display = findDisplay 46;
 if (isNull _display) exitWith {};
+private _theme = [] call Waldo_fnc_UiTheme;
 
 private _legacyNotice = _display displayCtrl 5312;
 if !(isNull _legacyNotice) then {_legacyNotice ctrlShow false;};
@@ -48,9 +51,9 @@ private _frame = _display displayCtrl 5309;
 private _ctrl = _display displayCtrl 5310;
 if (isNull _frame) then {
     _frame = _display ctrlCreate ["RscText", 5309];
-    _frame ctrlSetBackgroundColor [0.015, 0.025, 0.035, 0.92];
     _frame ctrlCommit 0;
 };
+_frame ctrlSetBackgroundColor (_theme getOrDefault ["panel", [0.015, 0.025, 0.035, 0.92]]);
 if (isNull _ctrl) then {
     _ctrl = _display ctrlCreate ["RscStructuredText", 5310];
     _ctrl ctrlSetBackgroundColor [0, 0, 0, 0];
@@ -80,14 +83,16 @@ for "_i" from 1 to 10 do {
 
 // A restrained pulse communicates changing signal state without flashing the whole panel.
 private _blink = (floor (diag_tickTime * 2)) % 2 == 0;
-private _col = ["#c8102e", "#ff6161"] select _blink;
+private _col = [[_theme getOrDefault ["dangerHex", "#c8102e"], "#ff6161"] select _blink, _theme getOrDefault ["dangerHex", "#ff6161"]] select ((_theme getOrDefault ["id", "DEFAULT"]) != "DEFAULT");
 
 _ctrl ctrlSetStructuredText parseText format [
-    "<t align='left' color='#9FB3C8' size='0.72'>  ELECTRONIC WARFARE</t><br/>" +
-    "<t align='left' color='%1' size='1.12' shadow='1'>  %2</t><br/>" +
-    "<t align='left' color='#FFFFFF' size='0.88'>  LOSS %3%4   %5</t><br/>" +
-    "<t align='left' color='#D9E2EC' size='0.72'>  %6</t>",
-    _col, _combinedLabel, _pct, "%", _bar, _combinedSub
+    "<t align='left' font='%7' color='%8' size='0.72'>  ELECTRONIC WARFARE</t><br/>" +
+    "<t align='left' font='%9' color='%1' size='1.12' shadow='1'>  %2</t><br/>" +
+    "<t align='left' font='%7' color='%10' size='0.88'>  LOSS %3%4   %5</t><br/>" +
+    "<t align='left' font='%7' color='%8' size='0.72'>  %6</t>",
+    _col, _combinedLabel, _pct, "%", _bar, _combinedSub,
+    _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["mutedHex", "#9FB3C8"],
+    _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["textHex", "#FFFFFF"]
 ];
 private _visibleX = safeZoneX;
 private _visibleY = safeZoneY;

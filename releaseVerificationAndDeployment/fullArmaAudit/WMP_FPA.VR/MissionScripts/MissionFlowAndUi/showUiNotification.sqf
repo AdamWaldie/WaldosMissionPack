@@ -23,6 +23,7 @@
  * Example:
  * ["SUPPLY DELIVERED", "The forward crate is ready.", "SUCCESS", 8, "TOP", "LOGISTICS"]
  *     call Waldo_fnc_ShowUiNotification;
+ * Current callers: all WMP feature notification adapters and direct mission-maker scripts.
  */
 if (!hasInterface) exitWith {""};
 
@@ -78,13 +79,14 @@ _placement = if (_fromQueue) then {toUpper _placement} else {[_channel, _placeme
 _policy = toUpper _policy;
 if (_policy isEqualTo "AUTO") then {_policy = if (_duration <= 0) then {"REPLACE"} else {"FIFO"};};
 if !(_policy in ["FIFO", "REPLACE"]) then {_policy = "FIFO";};
+private _theme = [] call Waldo_fnc_UiTheme;
 private _semantic = switch (_state) do {
-    case "SUCCESS": {["#6CE5A8", "[OK]"]};
-    case "WARNING": {["#FFD166", "[!]"]};
-    case "ERROR": {["#FF6161", "[X]"]};
-    default {["#79C7FF", "[i]"]};
+    case "SUCCESS": {[_theme getOrDefault ["successHex", "#6CE5A8"], "[OK]", _theme getOrDefault ["success", [0.18, 0.66, 0.45, 1]]]};
+    case "WARNING": {[_theme getOrDefault ["warningHex", "#FFD166"], "[!]", _theme getOrDefault ["warning", [0.88, 0.60, 0.12, 1]]]};
+    case "ERROR": {[_theme getOrDefault ["dangerHex", "#FF6161"], "[X]", _theme getOrDefault ["danger", [0.78, 0.15, 0.20, 1]]]};
+    default {[_theme getOrDefault ["accentHex", "#79C7FF"], "[i]", _theme getOrDefault ["accent", [0.10, 0.38, 0.66, 1]]]};
 };
-_semantic params ["_colour", "_symbol"];
+_semantic params ["_colour", "_symbol", "_accentColour"];
 
 private _registry = uiNamespace getVariable ["Waldo_UiPanelRegistry", []];
 private _existingIndex = _registry findIf {(_x param [0, ""]) isEqualTo _channel};
@@ -148,25 +150,24 @@ if (_existingIndex >= 0) then {
 private _frame = _display ctrlCreate ["RscText", -1];
 private _accent = _display ctrlCreate ["RscText", -1];
 private _content = _display ctrlCreate ["RscStructuredText", -1];
-_frame ctrlSetBackgroundColor [0.012, 0.020, 0.028, 0.94];
-_accent ctrlSetBackgroundColor (switch (_state) do {
-    case "SUCCESS": {[0.18, 0.66, 0.45, 1]};
-    case "WARNING": {[0.88, 0.60, 0.12, 1]};
-    case "ERROR": {[0.78, 0.15, 0.20, 1]};
-    default {[0.10, 0.38, 0.66, 1]};
-});
+_frame ctrlSetBackgroundColor (_theme getOrDefault ["panel", [0.012, 0.020, 0.028, 0.94]]);
+_accent ctrlSetBackgroundColor _accentColour;
 _content ctrlSetBackgroundColor [0, 0, 0, 0];
 
 private _messageText = if ((typeName _message) isEqualTo "TEXT") then {str _message} else {_message};
 _content ctrlSetStructuredText parseText format [
-    "<t align='left' color='#9FB3C8' size='0.72'>%1</t><br/>" +
-    "<t align='left' color='%2' size='1.12' shadow='1'>%3 %4</t><br/>" +
-    "<t align='left' color='#FFFFFF' size='0.88'>%5</t>",
+    "<t align='left' font='%6' color='%7' size='0.72'>%1</t><br/>" +
+    "<t align='left' font='%8' color='%2' size='1.12' shadow='1'>%3 %4</t><br/>" +
+    "<t align='left' font='%6' color='%9' size='0.88'>%5</t>",
     toUpper _source,
     _colour,
     _symbol,
     _title,
-    _messageText
+    _messageText,
+    _theme getOrDefault ["font", "RobotoCondensed"],
+    _theme getOrDefault ["mutedHex", "#9FB3C8"],
+    _theme getOrDefault ["fontBold", "RobotoCondensedBold"],
+    _theme getOrDefault ["textHex", "#FFFFFF"]
 ];
 
 private _visibleW = safeZoneW;

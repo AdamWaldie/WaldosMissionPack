@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Removes one server-owned paradrop operation, its aircraft/embarked generated AI and global markers.
+ * Removes one server-owned paradrop operation, boarding points, aircraft/embarked generated AI
+ * and global markers.
  * Generated troops that have already jumped are deliberately left in the mission; removing an
  * operation is not a remote-delete mechanism for deployed infantry. Aircraft deletion is safely
  * suppressed while players remain aboard. Empty owned groups are cleaned.
@@ -25,6 +26,7 @@ private _registry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", cr
 if !(_id in keys _registry) exitWith {false};
 private _state = _registry get _id;
 {deleteMarker _x} forEach (_state getOrDefault ["markers", []]);
+{if (!isNull _x) then {deleteVehicle _x}} forEach (_state getOrDefault ["boardingPoints", []]);
 private _aircraft = _state getOrDefault ["aircraft", objNull];
 if (_deleteAircraft && {!isNull _aircraft} && {(crew _aircraft) findIf {isPlayer _x} >= 0}) then {
     _deleteAircraft = false;

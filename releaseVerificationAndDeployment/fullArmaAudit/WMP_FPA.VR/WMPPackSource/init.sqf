@@ -1,11 +1,13 @@
 /*
-
-This file is called in multiplayer, as the loading screen is transitioning into the game. It runs on all connected clients, and the server.
-
-Below is the setup for the majority of QOL scripts in this pack.
-
-Enable/disable them as it suits you.
-
+ * Author: WaldoTheWarfighter
+ * Defines shared WMP mission configuration and starts systems whose state or behavior is consumed
+ * on every machine. Guarded defaults preserve authoritative live changes for JIP clients.
+ *
+ * Arguments: None.
+ * Return Value: Nothing; initializes shared mission state and schedules feature startup.
+ *
+ * Example: Arma executes init.sqf automatically during mission initialization.
+ * Current caller: the Arma mission initialization sequence on server, clients and headless clients.
 */
 
 //Lighting Setup Engine - Optional
@@ -22,6 +24,12 @@ Shared configuration lives here only when both authority and clients consume it.
 configuration and activation live in initPlayerLocal.sqf; server-only configuration and activation
 live in initServer.sqf. Guarded local defaults preserve server-published mid-mission changes for JIP.
 */
+// Visual-only global UI style: DEFAULT | WW2 | VIETNAM | SCIFI.
+// Set this before the guarded default to choose the mission's presentation without changing behavior.
+if (isNil "Waldo_UI_Theme") then {Waldo_UI_Theme = "DEFAULT"};
+if (isNil "Waldo_UI_CustomThemes") then {Waldo_UI_CustomThemes = createHashMap};
+if (isNil "Waldo_UI_ThemeOverrides") then {Waldo_UI_ThemeOverrides = createHashMap};
+
 if (isNil "Waldo_Persistence_Enable") then {Waldo_Persistence_Enable = false};
 if (isNil "Waldo_Persistence_PlayerSaveInterval") then {Waldo_Persistence_PlayerSaveInterval = 60};
 if (isNil "Waldo_Persistence_ObjectSaveInterval") then {Waldo_Persistence_ObjectSaveInterval = 60};
@@ -168,8 +176,18 @@ if (isNil "Waldo_Paradrop_AircraftClasses") then {
         "I_Heli_Transport_02_F"
     ];
 };
+if (isNil "Waldo_Paradrop_StaticChuteClasses") then {
+    Waldo_Paradrop_StaticChuteClasses = ["NonSteerable_Parachute_F"];
+};
+if (isNil "Waldo_Paradrop_HaloBackpackClasses") then {
+    Waldo_Paradrop_HaloBackpackClasses = ["B_Parachute", "O_Parachute", "I_Parachute"];
+};
+// Compatibility alias for missions that extended the original combined list.
 if (isNil "Waldo_Paradrop_ChuteClasses") then {
-    Waldo_Paradrop_ChuteClasses = ["NonSteerable_Parachute_F", "B_Parachute"];
+    Waldo_Paradrop_ChuteClasses = +Waldo_Paradrop_StaticChuteClasses;
+};
+if (isNil "Waldo_Paradrop_BoardingPointClasses") then {
+    Waldo_Paradrop_BoardingPointClasses = ["Land_InfoStand_V1_F", "Land_FlagPole_F"];
 };
 [] spawn {
     waitUntil {
@@ -293,6 +311,26 @@ if (isNil "Waldo_AI_IncludedSides") then {Waldo_AI_IncludedSides = []};
 if (isNil "Waldo_AI_IncludedFactions") then {Waldo_AI_IncludedFactions = []};
 if (isNil "Waldo_AI_ExcludedFactions") then {Waldo_AI_ExcludedFactions = []};
 if (isNil "Waldo_AI_ExcludedClasses") then {Waldo_AI_ExcludedClasses = []};
+// Event-driven AI helicopter landing assistance. Per-aircraft HashMap overrides may be stored in
+// Waldo_ImprovedHelicopterLanding_Profile; set Waldo_ImprovedHelicopterLanding_Exclude to opt out.
+if (isNil "Waldo_ImprovedHelicopterLanding_Enable") then {Waldo_ImprovedHelicopterLanding_Enable = true};
+if (isNil "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance") then {Waldo_ImprovedHelicopterLanding_MinimumActivationDistance = 50};
+if (isNil "Waldo_ImprovedHelicopterLanding_TriggerDistance") then {Waldo_ImprovedHelicopterLanding_TriggerDistance = 500};
+if (isNil "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor") then {Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor = 4.2};
+if (isNil "Waldo_ImprovedHelicopterLanding_TransitAltitude") then {Waldo_ImprovedHelicopterLanding_TransitAltitude = 30};
+if (isNil "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio") then {Waldo_ImprovedHelicopterLanding_GlideSlopeRatio = 4};
+if (isNil "Waldo_ImprovedHelicopterLanding_TreeScanRadius") then {Waldo_ImprovedHelicopterLanding_TreeScanRadius = 25};
+if (isNil "Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer") then {Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer = 5};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight") then {Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight = 40};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance") then {Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance = 200};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundHeight") then {Waldo_ImprovedHelicopterLanding_GoAroundHeight = 150};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundExitDistance") then {Waldo_ImprovedHelicopterLanding_GoAroundExitDistance = 250};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundSpeed") then {Waldo_ImprovedHelicopterLanding_GoAroundSpeed = 70};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumGoArounds") then {Waldo_ImprovedHelicopterLanding_MaximumGoArounds = 1};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumClimbRate") then {Waldo_ImprovedHelicopterLanding_MaximumClimbRate = 8};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumDescentRate") then {Waldo_ImprovedHelicopterLanding_MaximumDescentRate = 10};
+if (isNil "Waldo_ImprovedHelicopterLanding_TouchdownRadius") then {Waldo_ImprovedHelicopterLanding_TouchdownRadius = 2};
+if (isNil "Waldo_ImprovedHelicopterLanding_ControlInterval") then {Waldo_ImprovedHelicopterLanding_ControlInterval = 0.05};
 if (isNil "Waldo_AI_ProfileDisplayNames") then {
     Waldo_AI_ProfileDisplayNames = createHashMapFromArray [
         ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
@@ -311,6 +349,7 @@ if (isNil "Waldo_AI_ProfileDisplayNames") then {
             missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
         ] call Waldo_fnc_AITweak;
     };
+    [] call Waldo_fnc_ImprovedHelicopterLandingInit;
 };
 // Nightime Mission - uncomment this for nightime AI values.
 //"NIGHT" call Waldo_fnc_AITweak;
