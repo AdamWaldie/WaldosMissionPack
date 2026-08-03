@@ -1234,7 +1234,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('["EDIT", ["Aircraft class"', runtime)
         self.assertNotIn('["EDIT", ["System ID"', runtime + dynamic_aa)
         self.assertNotIn('["EDIT", ["Asset faction/pool key"', dynamic_aa)
-        self.assertIn('["COMBO", ["Emitter object"', jammer)
+        self.assertIn('["COMBO", ["Emitter source"', jammer)
+        self.assertIn('["COMBO", ["Spawned emitter object"', jammer)
         self.assertIn('["COMBO", ["ACRE frequency coverage"', jammer)
 
     def test_ai_profiles_have_wmp_names_and_nvg_aware_low_light_tuning(self):

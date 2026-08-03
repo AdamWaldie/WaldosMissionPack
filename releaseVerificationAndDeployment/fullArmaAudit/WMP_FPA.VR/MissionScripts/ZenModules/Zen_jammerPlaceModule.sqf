@@ -5,7 +5,9 @@
  * shared interaction procedure. It then spawns an emitter object at the module position and registers
  * it as a localised radio jammer (Waldo_fnc_Jammer). Works for ACRE2 and TFAR. The object is
  * created server-side, explicitly simulation-enabled, and transferred to the requesting curator
- * so it can be moved or deleted smoothly; the jammer registry follows the live object transform.
+ * so it can be moved or deleted smoothly; alternatively, an existing object directly under the
+ * module becomes the emitter without changing its simulation state. The jammer registry follows
+ * the live object transform in either case.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
@@ -31,10 +33,14 @@ if (_emitterClasses isEqualTo []) exitWith {
 };
 private _emitterLabels = _emitterClasses apply {
     private _name = getText (configFile >> "CfgVehicles" >> _x >> "displayName");
-    if (_name == "") then {_x} else {_name}
+    if (_name == "") then {_x} else {format ["%1 (%2)", _name, _x]}
 };
-private _emitterIndices = [];
-for "_index" from 0 to ((count _emitterClasses) - 1) do {_emitterIndices pushBack _index};
+private _sourceValues = ["SPAWN"];
+private _sourceLabels = ["Spawn the selected emitter object"];
+if (!isNull _objectPos) then {
+    _sourceValues insert [0, ["EXISTING"]];
+    _sourceLabels insert [0, [format ["Use object under module: %1 (%2)", getText (configFile >> "CfgVehicles" >> (typeOf _objectPos) >> "displayName"), typeOf _objectPos]]];
+};
 
 [
     "Waldos Radio Jammer",
@@ -63,7 +69,8 @@ for "_index" from 0 to ((count _emitterClasses) - 1) do {_emitterIndices pushBac
         ["CHECKBOX", ["Also Jam UAVs / Drones", "Freeze autonomous drones and cut controlling players' datalinks in the field."], false, false],
         ["CHECKBOX", ["Show Map Marker", "Place a persistent map marker on the jammer."], false, false],
         ["CHECKBOX", ["Show Curator 3D Marker", "Show a floating curator-only marker for this emitter. Ordinary players never see it."], false, false],
-        ["COMBO", ["Emitter object", "Physical object created at the module position. The selected row is resolved to its exact classname before the server request."], [_emitterIndices, _emitterLabels, 0]],
+        ["COMBO", ["Emitter source", "Use the object directly under the module, when available, or spawn a new emitter."], [_sourceValues, _sourceLabels, 0]],
+        ["COMBO", ["Spawned emitter object", "Exact physical class created when Emitter source is Spawn."], [_emitterClasses, _emitterLabels, 0]],
         ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant field disablement with a shared interaction challenge. This also suppresses the direct player toggle so the procedure cannot be bypassed."], true, false],
         ["COMBO", ["Disable Procedure", "Procedure players complete to shut down the jammer."], [
             ["circuit", "radiotune", "commandinput", "wirecut"],
@@ -80,10 +87,12 @@ for "_index" from 0 to ((count _emitterClasses) - 1) do {_emitterIndices pushBac
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_className", "_disableChallenge", "_challengeId", "_difficulty", "_engineerOnly", "_resultMode"];
-        _pos params ["_modulePos", "_emitterClasses"];
-        private _emitterIndex = round _className;
-        _className = _emitterClasses param [_emitterIndex, ""];
+        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_source", "_className", "_disableChallenge", "_challengeId", "_difficulty", "_engineerOnly", "_resultMode"];
+        _pos params ["_modulePos", "_objectPos"];
+        private _existingObject = if (_source isEqualTo "EXISTING") then {_objectPos} else {objNull};
+        if (_source isEqualTo "EXISTING" && {isNull _existingObject}) exitWith {
+            ["JAMMER NOT PLACED", "The object under the module is no longer available.", 8, "FAILURE"] call Waldo_fnc_JammingNotice;
+        };
 
         private _sector = [];
         if (_arc < 360) then { _sector = [_bearing, _arc]; };
@@ -112,16 +121,19 @@ for "_index" from 0 to ((count _emitterClasses) - 1) do {_emitterIndices pushBac
         if (_bandInvalid) exitWith {
             ["JAMMER NOT PLACED", "Frequency bands must be ALL or ranges such as 30-88;225-400.", 8, "FAILURE"] call Waldo_fnc_JammingNotice;
         };
-        if !(isClass (configFile >> "CfgVehicles" >> _className)) exitWith {
+        if (_source isEqualTo "SPAWN" && {!(isClass (configFile >> "CfgVehicles" >> _className))}) exitWith {
             ["JAMMER NOT PLACED", format ["Emitter class does not exist: %1", _className], 8, "FAILURE"] call Waldo_fnc_JammingNotice;
         };
+
+        diag_log format ["[WMP ZEN] jammer dialog confirmed source=%1 requestedClass=%2 existing=%3", _source, _className, if (isNull _existingObject) then {"<none>"} else {format ["%1/%2", netId _existingObject, typeOf _existingObject]}];
 
         [
             _modulePos,
             [_radius, _sideStr, _bands, _falloff, (_strengthPct / 100), _active, _marker, _sector, _duty, _jamUAV, _show3D, _className, _disableChallenge, _challengeId, _difficulty, _engineerOnly, _resultMode, false],
-            player
+            player,
+            _existingObject
         ] remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
     },
     {},
-    [_modulePos, _emitterClasses]
+    [_modulePos, _objectPos]
 ] call zen_dialog_fnc_create;

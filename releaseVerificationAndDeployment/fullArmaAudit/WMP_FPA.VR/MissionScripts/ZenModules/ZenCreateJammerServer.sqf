@@ -9,6 +9,7 @@
  * 0: placement position <ARRAY>
  * 1: settings <ARRAY> - radio settings followed by optional field-disable settings
  * 2: requesting curator <OBJECT>
+ * 3: existing emitter <OBJECT> (default objNull; when supplied, no object is spawned or repositioned)
  *
  * Return Value:
  * Object - created emitter, or objNull when validation fails
@@ -24,11 +25,12 @@
 params [
     ["_position", [], [[]]],
     ["_settings", [], [[]]],
-    ["_actor", objNull, [objNull]]
+    ["_actor", objNull, [objNull]],
+    ["_existingObject", objNull, [objNull]]
 ];
 
 if (!isServer) exitWith {
-    [_position, _settings, player] remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
+    [_position, _settings, player, _existingObject] remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
     objNull
 };
 
@@ -78,12 +80,26 @@ if ((count _settings) >= 18) then {
         };
     };
 };
-if !(isClass (configFile >> "CfgVehicles" >> _className)) then {_className = "Land_PowerGenerator_F";};
-
-private _object = createVehicle [_className, _position, [], 0, "CAN_COLLIDE"];
-private _groundPosition = [_position select 0, _position select 1, 0];
-_object setPosATL _groundPosition;
-_object setVectorUp (surfaceNormal _groundPosition);
+private _object = _existingObject;
+private _created = isNull _object;
+if (_created) then {
+    if !(isClass (configFile >> "CfgVehicles" >> _className)) exitWith {
+        diag_log format ["[WMP ZEN] rejected jammer class=%1 owner=%2", _className, _requestOwner];
+        objNull
+    };
+    _object = createVehicle [_className, _position, [], 0, "CAN_COLLIDE"];
+    private _groundPosition = [_position select 0, _position select 1, 0];
+    _object setPosATL _groundPosition;
+    _object setVectorUp (surfaceNormal _groundPosition);
+    [_object, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
+} else {
+    if ((_object distance2D _position) > 25) exitWith {
+        diag_log format ["[WMP ZEN] rejected remote existing jammer object=%1 distance=%2 owner=%3", netId _object, _object distance2D _position, _requestOwner];
+        _object = objNull;
+    };
+    {_x addCuratorEditableObjects [[_object], false]} forEach allCurators;
+};
+if (isNull _object) exitWith {objNull};
 private _interactionOptions = createHashMapFromArray [
     ["disableChallenge", _disableChallenge],
     ["challengeId", _challengeId],
@@ -92,7 +108,6 @@ private _interactionOptions = createHashMapFromArray [
     ["resultMode", _resultMode],
     ["allowPlayerToggle", _allowPlayerToggle]
 ];
-[_object, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
 [_object, _radius, _side, _bands, _falloff, _strength, _active, _marker, _sector, _duty, _jamUAV, _show3D, _interactionOptions]
     call Waldo_fnc_Jammer;
 [_object, [_allowPlayerToggle, _disableChallenge, _challengeId, _difficulty, _engineerOnly, _resultMode]] spawn {
@@ -102,7 +117,7 @@ private _interactionOptions = createHashMapFromArray [
         [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _object];
     };
 };
-diag_log format ["[WMP ZEN] jammer created object=%1 class=%2 actor=%3 owner=%4 challenge=%5 engineerOnly=%6 result=%7", netId _object, typeOf _object, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner, _disableChallenge, _engineerOnly, _resultMode];
+diag_log format ["[WMP ZEN] jammer configured object=%1 class=%2 source=%3 requestedClass=%4 actor=%5 owner=%6 simulation=%7 challenge=%8 engineerOnly=%9 result=%10", netId _object, typeOf _object, ["EXISTING", "SPAWN"] select _created, _className, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner, simulationEnabled _object, _disableChallenge, _engineerOnly, _resultMode];
 if (!isNull _actor) then {
     ["JAMMER PLACED", format ["%1 m field affecting %2.", _radius, _side], 6, "SUCCESS"] remoteExecCall ["Waldo_fnc_JammingNotice", owner _actor];
 };
