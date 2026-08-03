@@ -11,6 +11,7 @@
  * 0: key <STRING> - stable unique zone name
  * 1: area <OBJECT|STRING|ARRAY> - trigger, marker, moving emitter, [position, radius], or [position, a, b, angle, rectangle]
  * 2: profile <HASHMAP> - hazard settings and optional onTick callback
+ * 3: authorised runtime request <BOOLEAN> - internal server-wrapper proof (default false)
  *
  * Return Value:
  * Boolean - true when the zone was accepted
@@ -22,9 +23,14 @@
 params [
     ["_key", "", [""]],
     ["_area", objNull, [objNull, "", []]],
-    ["_profile", createHashMap, [createHashMap]]
+    ["_profile", createHashMap, [createHashMap]],
+    ["_authorisedRuntime", false, [false]]
 ];
-if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
+if !(isServer) exitWith {
+    diag_log format ["[WMP HAZARD] Zone '%1' rejected locally: shared zones must be registered by initServer.sqf or the ZEN module.", _key];
+    false
+};
+if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2} && {!_authorisedRuntime}) exitWith {false};
 if (_key == "") exitWith {false};
 if (_area isEqualType objNull && {isNull _area}) exitWith {false};
 if (_area isEqualType "" && {_area == ""}) exitWith {false};
@@ -38,5 +44,8 @@ if (_index >= 0) then {
 } else {
     _zones pushBack _entry;
 };
-missionNamespace setVariable ["Waldo_Hazard_Zones", _zones, isServer];
+missionNamespace setVariable ["Waldo_Hazard_Zones", _zones];
+missionNamespace setVariable ["Waldo_Hazard_Enable", true, true];
+[] call Waldo_fnc_HazardPublishState;
+diag_log format ["[WMP HAZARD] Registered zone '%1'; authoritative zone count=%2.", _key, count _zones];
 true

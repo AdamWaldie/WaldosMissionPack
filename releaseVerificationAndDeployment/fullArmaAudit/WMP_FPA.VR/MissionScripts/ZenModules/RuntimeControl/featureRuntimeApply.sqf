@@ -232,22 +232,14 @@ switch (toUpperANSI _action) do {
         _settings params ["_key", "_area", "_profile"];
         private _safeKey = [_key, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
         if (_safeKey == "" || {_safeKey != _key}) exitWith {false};
-        [["Waldo_Hazard_Enable", true]] call _publishAll;
-        [_key, _area, _profile] remoteExecCall ["Waldo_fnc_HazardRegisterZone", 0, format ["Waldo_Hazard_Zone_%1", _key]];
-        [] remoteExecCall ["Waldo_fnc_HazardInit", -2, "Waldo_Hazard_RuntimeInit"];
+        private _registered = [_key, _area, _profile, true] call Waldo_fnc_HazardRegisterZone;
+        ["HAZARDOUS ENVIRONMENT", ["Zone registration was rejected by the server.", format ["Zone %1 is active and synchronised for connected and JIP players.", _key]] select _registered, ["ERROR", "SUCCESS"] select _registered, "HAZARD_RUNTIME"] call _reply;
     };
     case "HAZARD_REMOVE": {
         _settings params ["_key"];
         // Reconcile the authoritative registry synchronously before deriving the enabled state.
-        [_key] call Waldo_fnc_HazardUnregisterZone;
-        [_key] remoteExecCall ["Waldo_fnc_HazardUnregisterZone", -2];
-        [] remoteExecCall ["", format ["Waldo_Hazard_Zone_%1", _key]];
-        if ((missionNamespace getVariable ["Waldo_Hazard_Zones", []]) isEqualTo []) then {
-            missionNamespace setVariable ["Waldo_Hazard_Enable", false, true];
-            [[ ["Waldo_Hazard_Enable", false] ], false] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];
-            [] remoteExecCall ["Waldo_fnc_HazardStop", -2];
-            [] remoteExecCall ["", "Waldo_Hazard_RuntimeInit"];
-        };
+        private _removed = [_key, true] call Waldo_fnc_HazardUnregisterZone;
+        ["HAZARDOUS ENVIRONMENT", ["The selected zone no longer existed on the server.", format ["Zone %1 was removed and the updated registry was synchronised.", _key]] select _removed, ["WARNING", "SUCCESS"] select _removed, "HAZARD_RUNTIME"] call _reply;
     };
     case "BREACH_SET": {
         _settings params ["_className", "_profile"];

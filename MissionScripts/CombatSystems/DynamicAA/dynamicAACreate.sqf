@@ -13,8 +13,9 @@
  *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY>;
  *      staticSiteSpacing <METRES>; radarDirection <DEGREES>.
  *    Response: fighterCount <NUMBER>; initialAmmoFraction <0..1>; createMarkers <BOOL>.
- *    Pool selection: faction <STRING> or radar/static/mobile/fighter class overrides. Omitted values
- *      resolve through MissionConfig airOperationsConfig side/faction pools.
+ *    Pool selection: faction <STRING> is a content profile independent of side. Exact overrides are
+ *      radarClass, staticClass/staticClasses, mobileClass and fighterClass. Omitted values resolve
+ *      through MissionConfig airOperationsConfig side/faction pools.
  *    Optional shutdown interaction: shutdownInteraction <BOOL>, shutdownChallenge <STRING> and
  *      shutdownDifficulty <easy|standard|hard|expert>.
  *
@@ -39,22 +40,31 @@ if !(isServer) exitWith {
 };
 
 private _remoteAuthorized = true;
+private _requestOwner = remoteExecutedOwner;
 if (remoteExecutedOwner > 0) then {
     private _callerIndex = allPlayers findIf {owner _x == remoteExecutedOwner};
     private _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
     _remoteAuthorized = !isNull _caller && {!isNull (getAssignedCuratorLogic _caller)};
 };
 if !(_remoteAuthorized) exitWith {false};
+private _reply = {
+    params ["_message", "_state"];
+    if (_requestOwner > 2) then {
+        ["DYNAMIC AA", _message, _state, "DYNAMIC_AA_CREATE", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+    };
+};
 
 private _id = _config getOrDefault ["id", ""];
 private _centre = _config getOrDefault ["centre", []];
 if (_id == "" || {count _centre < 2}) exitWith {
     diag_log "[WMP DYNAMIC AA] Creation rejected: id and centre are required.";
+    ["Creation rejected: a valid system ID and detection centre are required.", "ERROR"] call _reply;
     false
 };
 private _safeId = [_id, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
 if (_safeId != _id) exitWith {
     diag_log format ["[WMP DYNAMIC AA] Creation rejected: id '%1' contains unsupported characters.", _id];
+    ["Creation rejected: the generated system ID contains unsupported characters.", "ERROR"] call _reply;
     false
 };
 
@@ -77,7 +87,11 @@ private _radarPositions = _config getOrDefault ["radarPositions", [_radarPositio
 if (count _radarPositions == 0) then {_radarPositions = [_radarPosition]};
 private _pool = [_config, _side] call Waldo_fnc_DynamicAAResolveAssetPool;
 private _radarClasses = if ("radarClass" in (keys _config)) then {[_config get "radarClass"]} else {_config getOrDefault ["radarClasses", _pool get "radarClasses"]};
-private _staticSitePools = if ("staticClasses" in (keys _config)) then {[+(_config get "staticClasses")]} else {_config getOrDefault ["staticSitePools", _pool get "staticSitePools"]};
+private _staticSitePools = if ("staticClass" in (keys _config)) then {
+    [[_config get "staticClass"]]
+} else {
+    if ("staticClasses" in (keys _config)) then {[+(_config get "staticClasses")]} else {_config getOrDefault ["staticSitePools", _pool get "staticSitePools"]}
+};
 private _mobileClasses = if ("mobileClass" in (keys _config)) then {[_config get "mobileClass"]} else {_config getOrDefault ["mobileClasses", _pool get "mobileClasses"]};
 private _fighterClasses = if ("fighterClass" in (keys _config)) then {[_config get "fighterClass"]} else {_config getOrDefault ["fighterClasses", _pool get "fighterClasses"]};
 private _classes = +_radarClasses;
@@ -92,6 +106,7 @@ private _missingPool = count _radarClasses == 0
 if (_invalidClass >= 0 || {_missingPool}) exitWith {
     private _reason = if (_invalidClass >= 0) then {format ["invalid classname %1", _classes select _invalidClass]} else {"a required asset pool is empty"};
     diag_log format ["[WMP DYNAMIC AA] '%1' rejected: %2.", _id, _reason];
+    [format ["Creation rejected: %1.", _reason], "ERROR"] call _reply;
     false
 };
 
@@ -115,15 +130,29 @@ _config set ["mobileClasses", _mobileClasses];
 _config set ["fighterClasses", _fighterClasses];
 _config set ["resolvedAssetPool", _pool getOrDefault ["source", "SIDE"]];
 
+private _objects = [];
+private _groups = [];
+private _defenceGroups = [];
 private _radars = _radarPositions apply {
     private _radar = createVehicle [selectRandom _radarClasses, _x, [], 0, "NONE"];
     _radar setDir (_config getOrDefault ["radarDirection", random 360]);
+    if (_radar isKindOf "AllVehicles") then {
+        createVehicleCrew _radar;
+        if (count crew _radar > 0) then {
+            private _oldGroups = [];
+            {_oldGroups pushBackUnique (group _x)} forEach crew _radar;
+            private _group = createGroup _side;
+            (crew _radar) joinSilent _group;
+            {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+            _group setCombatMode "RED";
+            _groups pushBackUnique _group;
+        };
+        _radar setVehicleRadar 1;
+    };
+    _objects pushBack _radar;
     _radar
 };
 private _radar = _radars select 0;
-private _objects = +_radars;
-private _groups = [];
-private _defenceGroups = [];
 
 {
     private _base = _x;
@@ -131,7 +160,9 @@ private _defenceGroups = [];
     private _staticClasses = selectRandom _staticSitePools;
     private _staticClassCount = (count _staticClasses) max 1;
     private _positions = _staticClasses apply {
-        _base getPos [_staticSiteSpacing, _direction + 180 + ((_forEachIndex * 360) / _staticClassCount)]
+        if (_staticClassCount == 1) then {_base} else {
+            _base getPos [_staticSiteSpacing, _direction + 180 + ((_forEachIndex * 360) / _staticClassCount)]
+        }
     };
     {
         private _vehicle = createVehicle [_x, _positions select _forEachIndex, [], 0, "NONE"];
@@ -208,4 +239,5 @@ _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 [] call Waldo_fnc_DynamicAAPublishState;
 diag_log format ["[WMP DYNAMIC AA] '%1' active: radius %2m, altitude floor %3m, asset pool %4.", _id, _radius, _minimumAltitude, _config get "resolvedAssetPool"];
+[format ["System %1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _id, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
 true

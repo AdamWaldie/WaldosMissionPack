@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 838,
+  "registeredFunctionCount": 840,
   "runtimeFunctionCount": 385,
-  "functionCount": 1223,
+  "functionCount": 1225,
   "stations": [
     {
       "id": "control",
@@ -2081,6 +2081,18 @@
     {
       "name": "Waldo_fnc_HazardUnregisterZone",
       "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardUnregisterZone.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardPublishState",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardPublishState.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardReceiveSnapshot",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardReceiveSnapshot.sqf",
       "station": "hazards",
       "activation": "manual"
     },

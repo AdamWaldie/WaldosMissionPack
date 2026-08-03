@@ -59,9 +59,14 @@ while {true} do {
         && {_altitude <= _maximumAltitude}
         && {{alive _x && {_aaSide getFriend (side group _x) < 0.6}} count crew _candidate > 0}
     };
-    private _detectionFilter = _config getOrDefault ["detectionFilter", {}];
+    // The default must return a Boolean because select expects a Boolean predicate. An empty code
+    // block returns nil and caused otherwise valid dedicated-server systems to detect nothing.
+    private _detectionFilter = _config getOrDefault ["detectionFilter", {true}];
     if (_detectionFilter isEqualType {}) then {
-        _aircraft = _aircraft select {[_x, _state, _config] call _detectionFilter};
+        _aircraft = _aircraft select {
+            private _accepted = [_x, _state, _config] call _detectionFilter;
+            _accepted isEqualType true && {_accepted}
+        };
     };
     private _rawDetected = count _aircraft > 0;
     private _wasDetected = _state getOrDefault ["detected", false];

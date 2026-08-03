@@ -231,8 +231,11 @@ private _tactical = "qa_sign_tactical_display" call _get;
 }] call _add;
 
 private _aa = "qa_sign_dynamic_aa" call _get;
-[_aa, "Waldo_QA_CreateAA", "CREATE QA DYNAMIC AA SYSTEM", {
-    [player] remoteExecCall ["Waldo_QA_fnc_createDynamicAAServer", 2];
+[_aa, "Waldo_QA_CreateAABuilding", "CREATE AA - BUILDING RADAR", {
+    [player, "Land_Radar_F"] remoteExecCall ["Waldo_QA_fnc_createDynamicAAServer", 2];
+}] call _add;
+[_aa, "Waldo_QA_CreateAAUnit", "CREATE AA - CREWED RADAR UNIT", {
+    [player, "B_Radar_System_01_F"] remoteExecCall ["Waldo_QA_fnc_createDynamicAAServer", 2];
 }] call _add;
 [_aa, "Waldo_QA_SpawnAATarget", "SPAWN ABOVE-ALTITUDE WEST UAV", {
     params ["_target", "_actor"];

@@ -13,16 +13,16 @@ Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above t
 ## Zeus setup
 
 1. Place **WMP Combat Systems → Dynamic AA - Create** at the centre of the detection zone.
-2. Choose the owning side. The asset-profile dropdown immediately refreshes to show only compatible integrated air-defence profiles for that side.
-3. Configure detection, altitude and response counts. WMP generates the internal system ID automatically.
+2. Choose the operational side. This controls crew allegiance and hostile detection only.
+3. Choose a faction/content profile independently, or choose **Exact equipment** and select the radar, static AA, mobile AA and fighter classes directly. The selected assets may come from a different faction than the operational side.
+4. Configure detection, altitude and exact response counts. A count of zero disables that response. WMP generates the internal system ID automatically.
    Optionally enable **Require Radar Shutdown Procedure**, then choose the procedure and difficulty.
-4. Select the central radar position on the map.
-5. Select each requested static-site and mobile-system position.
-6. Fly a hostile aircraft through the zone to verify activation.
+5. Select every requested radar, static-AA and mobile-AA position on the map.
+6. Fly a crewed hostile aircraft through the zone at an eligible altitude to verify activation.
 
 Each static site selects one configured site template. Mobile launchers and scrambled fighters are independently selected from the resolved side or faction pool, allowing repeated systems to use different valid assets. Fighters spawn outside the zone and engage the detected aircraft. Use **Dynamic AA - Remove Nearest** to remove or disable the nearest named system.
 
-The ZEN profile selector is populated from `Waldo_DynamicAA_FactionAssetPools` after filtering its configured asset classes by the chosen side. The default choice uses that side's `WEST`, `EAST` or `INDEPENDENT` pool. Raw pool keys remain a scripted configuration detail and are not required in the live curator workflow.
+The ZEN profile selector is populated from `Waldo_DynamicAA_FactionAssetPools`. Profiles are content catalogues, not allegiance restrictions. The default choice uses the operational side's `WEST`, `EAST` or `INDEPENDENT` fallback pool. Exact selectors combine valid classes from every configured side and faction pool and show both display name and classname.
 
 The generated system ID is an internal registry key used for replacement, cleanup and state publication; it is not an Arma object ID. Scripted setup still supplies an explicit stable ID, while the creation module hides this implementation detail.
 
@@ -65,7 +65,7 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `centre` | required | Detection centre |
 | `radarPosition` / `radarPositions` | centre | One radar position, or an array of positions for redundant radars |
 | `side` | `east` | `west`, `east`, or `independent` |
-| `faction` | `""` | Optional key in `Waldo_DynamicAA_FactionAssetPools`; blank uses the side pool |
+| `faction` | `""` | Optional content-profile key in `Waldo_DynamicAA_FactionAssetPools`; independent of `side` |
 | `radius` | `2000` | Detection radius in metres |
 | `minimumAltitude` | `50` | Detection altitude floor |
 | `maximumAltitude` | unlimited | Optional detection altitude ceiling |
@@ -76,11 +76,12 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `requiredOperationalRadars` | `1` | Number of surviving radars required to remain online |
 | `maximumOperationalRadarDamage` | `0.8` | Radar damage at or above this fraction takes the whole system offline |
 | `radarOperationalCondition` | `{}` | Optional server callback receiving `[radar, state, config]`; return false to model power, repairs or objective-specific disable states |
-| `radarClasses` | side/faction pool | Candidate central-radar classes; one is selected per system |
+| `radarClasses` | side/faction pool | Candidate central-radar classes; one is selected per radar position |
 | `staticSitePools` | side/faction pool | Candidate site templates; one template is selected independently for each static position |
 | `mobileClasses` | side/faction pool | Candidate mobile-AA classes; one is selected per position |
 | `fighterClasses` | side/faction pool | Candidate fighter classes; one is selected per scrambled aircraft |
-| `radarClass`, `staticClasses`, `mobileClass`, `fighterClass` | unset | Backwards-compatible singular/template overrides |
+| `radarClass`, `staticClass`, `mobileClass`, `fighterClass` | unset | Exact per-system class overrides; `staticClass` creates one selected weapon at each static position |
+| `staticClasses` | unset | Exact integrated-site template override when one static position should create several components |
 | `assetPool` | unset | Per-system Dynamic AA pool overrides |
 | `staticSiteSpacing` | `30` | Metres between a static-site anchor and each spawned component; clamped to `10`–`200` to prevent radar/SAM/AAA collision starts |
 | `staticPositions` | `[]` | One centre position per static triplet |
@@ -92,7 +93,7 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `initialAmmoFraction` | `1` | Starting ammunition fraction for spawned defence systems |
 | `rearmOnActivation` | `false` | Restore configured ammunition when a dormant system activates |
 | `detectionInterval` | `1` | Detector interval, minimum `0.25` seconds |
-| `detectionFilter` | `{}` | Optional server callback returning whether a candidate aircraft is detectable |
+| `detectionFilter` | `{true}` | Optional server callback returning a Boolean for whether a candidate aircraft is detectable |
 | `onStateChanged` | `{}` | Optional server callback for detected/engaged transitions |
 | `cleanupOnRadarLoss` | `false` | Delete assets instead of leaving them disabled |
 | `announce` | `true` | Publish detection state changes in chat |
@@ -111,7 +112,7 @@ The dwell and clear-delay settings provide hysteresis, preventing an aircraft sk
 
 ## Side and faction asset pools
 
-Side pools are configured server-side in `MissionConfig\airOperationsConfig.sqf` through `Waldo_DynamicAA_SideAssetPools`. A faction pool overrides only the keys it defines, falling back to its selected side for the rest:
+Side and faction pools are shared pure data in `MissionConfig\airOperationsConfig.sqf`: the curator client reads them to build selectors, and the server independently validates them before spawning. A faction pool overrides only the keys it defines, falling back to the chosen operational side for missing categories:
 
 ```sqf
 Waldo_DynamicAA_FactionAssetPools set ["my_opfor_faction", createHashMapFromArray [
@@ -125,7 +126,7 @@ Waldo_DynamicAA_FactionAssetPools set ["my_opfor_faction", createHashMapFromArra
 ]];
 ```
 
-Unavailable pool entries are discarded during resolution, with the selected side's vanilla assets used if an entire category becomes empty. Explicit legacy overrides remain strict and reject invalid classnames.
+Unavailable pool entries are discarded during resolution, with the selected side's vanilla assets used if an entire profile category becomes empty. Exact overrides remain strict and reject invalid classnames. `Land_Radar_F` and similar buildings remain uncrewed; radar vehicles and static radar weapons receive AI crew belonging to the operational side.
 
 ## See also
 

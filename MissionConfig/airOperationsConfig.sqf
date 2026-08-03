@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Defines airborne gunship, dynamic paradrop and Dynamic AA defaults. Shared airframe/chute pools
- * remain independent of operational side; server-only AA pools and jump limits are JIP-published.
+ * remain independent of operational side; shared AA pools feed curator selectors and server
+ * validation, while server-only safety limits and jump envelopes remain authoritative.
  *
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
  * ALIASES entries are [scope, target name, source name] and copy only when target is undefined.
@@ -77,16 +78,10 @@ createHashMapFromArray [
         ["Waldo_Paradrop_BoardingPointClasses", [ // movable CfgVehicles objects offered by the boarding-point module.
             "FlagPole_F", "Land_InfoStand_V1_F", "Land_InfoStand_V2_F", "Land_MapBoard_F",
             "Land_Laptop_unfolded_F", "Land_CampingTable_small_F", "Land_PortableLight_single_F"
-        ]]
-    ]],
-    ["server", [
-        // ADVANCED safety bounds for server-created Dynamic AA systems.
-        ["Waldo_DynamicAA_DefaultDetectionInterval", 1, false], // SECONDS: server detection cadence.
-        ["Waldo_DynamicAA_MaximumRadius", 50000, false], // METRES: accepted detection/engagement radius ceiling.
-        ["Waldo_DynamicAA_MaximumAltitude", 10000, false], // METRES: accepted altitude ceiling.
-        ["Waldo_DynamicAA_MaximumFighters", 12, false], // COUNT: maximum fighters one system may scramble.
-        // MISSION MAKER: JIP-published candidate assets; class availability is validated at runtime.
-        ["Waldo_DynamicAA_SideAssetPools", createHashMapFromArray [ // SIDE ID -> AA asset HashMap described above.
+        ]],
+        // MISSION MAKER: read on both the curator client (friendly selectors) and server (validated spawning).
+        // The pool key is only a content profile; it never changes the operational side selected in ZEN.
+        ["Waldo_DynamicAA_SideAssetPools", createHashMapFromArray [ // SIDE ID -> fallback AA content HashMap.
             ["WEST", createHashMapFromArray [
                 ["radarClasses", ["B_Radar_System_01_F", "Land_Radar_F"]],
                 ["staticSitePools", [["B_Radar_System_01_F", "B_SAM_System_01_F", "B_AAA_System_01_F"]]],
@@ -105,8 +100,34 @@ createHashMapFromArray [
                 ["mobileClasses", ["I_LT_01_AA_F"]],
                 ["fighterClasses", ["I_Plane_Fighter_03_dynamicLoadout_F"]]
             ]]
-        ], true],
-        ["Waldo_DynamicAA_FactionAssetPools", createHashMap, true], // optional faction key -> AA asset HashMap schema above.
+        ]],
+        ["Waldo_DynamicAA_FactionAssetPools", createHashMapFromArray [ // optional content profiles, independent of operational side.
+            ["BLU_F", createHashMapFromArray [
+                ["radarClasses", ["B_Radar_System_01_F", "Land_Radar_F"]],
+                ["staticSitePools", [["B_Radar_System_01_F", "B_SAM_System_01_F", "B_AAA_System_01_F"]]],
+                ["mobileClasses", ["B_APC_Tracked_01_AA_F"]],
+                ["fighterClasses", ["B_Plane_Fighter_01_F", "B_Plane_Fighter_01_Stealth_F"]]
+            ]],
+            ["OPF_F", createHashMapFromArray [
+                ["radarClasses", ["O_Radar_System_02_F", "Land_Radar_F"]],
+                ["staticSitePools", [["O_Radar_System_02_F", "O_SAM_System_04_F", "B_AAA_System_01_F"]]],
+                ["mobileClasses", ["O_APC_Tracked_02_AA_F", "O_T_APC_Tracked_02_AA_ghex_F"]],
+                ["fighterClasses", ["O_Plane_Fighter_02_F", "O_Plane_Fighter_02_Stealth_F"]]
+            ]],
+            ["IND_F", createHashMapFromArray [
+                ["radarClasses", ["I_E_Radar_System_01_F", "Land_Radar_F"]],
+                ["staticSitePools", [["I_E_Radar_System_01_F", "I_E_SAM_System_03_F", "B_AAA_System_01_F"]]],
+                ["mobileClasses", ["I_LT_01_AA_F"]],
+                ["fighterClasses", ["I_Plane_Fighter_03_dynamicLoadout_F"]]
+            ]]
+        ]]
+    ]],
+    ["server", [
+        // ADVANCED safety bounds for server-created Dynamic AA systems.
+        ["Waldo_DynamicAA_DefaultDetectionInterval", 1, false], // SECONDS: server detection cadence.
+        ["Waldo_DynamicAA_MaximumRadius", 50000, false], // METRES: accepted detection/engagement radius ceiling.
+        ["Waldo_DynamicAA_MaximumAltitude", 10000, false], // METRES: accepted altitude ceiling.
+        ["Waldo_DynamicAA_MaximumFighters", 12, false], // COUNT: maximum fighters one system may scramble.
         // MISSION MAKER: valid jump envelopes and default parachute classes.
         ["WALDO_STATIC_MINALTITUDE", 180, true], // METRES: lowest accepted static-line drop altitude.
         ["WALDO_STATIC_MAXALTITUDE", 350, true], // METRES: highest accepted static-line drop altitude.
