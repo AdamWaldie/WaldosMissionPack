@@ -464,7 +464,7 @@ Plus **Ground Command** (designate trusted players who may spend resources / ord
 manage builds), **Commitment mode** (freezes config-catalog refreshes to cut server load),
 **Economy Setup Builder** asks the Resource, Research, Construction and Purchasing domain builders
 to translate their Zeus-authored settings and placements into readable calls to the same public
-functions used by hand-authored `economyConfig.sqf`. Portable
+functions used by hand-authored `MissionConfig\economyConfig.sqf`. Portable
 catalogue strings remain available through Config Copy and Import. Build Setup is for clean
 authoring sessions, not mid-campaign state persistence. **Purge** remains the
 runtime teardown tool.
@@ -499,8 +499,8 @@ For drag-and-go, the preset-specific compositions **`[WMP] Waldos Economy System
 Preset`** set `Waldo_Economy_Preset` in their object init and boot the suite. Place only one
 Economy Systems object per mission.
 
-**Full hand-authored economy (`economyConfig.sqf`).** For complete control, makers edit
-`economyConfig.sqf` in the mission root — the dedicated authoring file (registered as
+**Full hand-authored economy (`MissionConfig\economyConfig.sqf`).** For complete control, makers edit
+`MissionConfig\economyConfig.sqf` — the dedicated authoring file (registered as
 `Waldo_fnc_EcoMakerSetup`, run once on the authority by `applyMakerConfig` after presets). It
 defines catalogs and places world objects via the server-authoritative helpers, e.g.
 `addResourceType`, `setResearchCatalog`, `setBuildCatalog`, `setPurchaseCatalog`,

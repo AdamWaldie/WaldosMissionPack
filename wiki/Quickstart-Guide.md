@@ -44,13 +44,19 @@ Save the mission once after changing this setting and verify that `mission.sqm` 
 Use the [Mission Configuration Reference](Mission-Configuration-Reference) while editing:
 
 - `description.ext` for mission identity, respawn, includes, and end screens;
-- `init.sqf` only for shared defaults or systems that genuinely execute on every machine;
-- `initServer.sqf` for authoritative state, persistence I/O, asset pools, and world mutation;
-- `initPlayerLocal.sqf` for player UI, actions, accessibility, and other presentation-only behavior.
+- `MissionConfig\featureConfigManifest.sqf` to register semantic pure-data feature files;
+- the named files under `MissionConfig` for shared, authoritative server, and player-local settings;
+- `MissionConfig\acreConfig.sqf` for ACRE communications and Babel;
+- the three init files for activation and lifecycle only—do not move their authority, waits or JIP handling.
 
 Keep the runtime-state request/receive handshake intact. Mid-mission ZEN setting changes are server-owned and rebroadcast so current players, headless clients, and JIP players converge on the same state.
 
 Change one feature area at a time. Leave optional systems disabled until their required objects and configuration are present.
+
+Use [Feature Setup and Activation](Feature-Setup-and-Activation) before adding feature calls. It
+identifies whether a config switch is sufficient, whether an object/zone must be registered, and
+whether a custom setup belongs in `initServer.sqf`, a supported object init, a server trigger, or
+ZEN. Do not copy every public function into the init files.
 
 ## 6. Prepare playable loadouts
 
@@ -60,7 +66,9 @@ If ACE is loaded, disable ACE Respawn in the mission/server ACE settings when us
 
 ## 7. Configure optional radio support
 
-For ACRE2, give groups clear callsigns in Eden and configure the matching radio plan in `init.sqf`. Start with [ACRE2 Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting).
+For ACRE2, give groups clear callsigns in Eden and configure the matching radio plan in
+`MissionConfig\acreConfig.sqf`. WMP loads it automatically; do not add ACRE setup to `init.sqf`.
+Start with [ACRE2 Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting).
 
 TFAR-compatible features are documented on their individual pages, including [Radio Jamming](Radio-Jamming).
 

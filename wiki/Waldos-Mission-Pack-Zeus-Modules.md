@@ -4,6 +4,13 @@
 
 ## Requirements and location
 
+All WMP ZEN dialogs run on the curator's machine, but shared changes are validated and executed on
+the server. A successful dedicated-server use produces a completion notification for the curator;
+silence is not considered success. Long-lived missions use punctuation-safe runtime IDs, so
+gunship, Dynamic AA/AO, hazard and paradrop creation do not begin failing after the server has been
+up for many hours. Economy placement/configuration, Fortify, EMP and tracker requests use the same
+curator-authenticated server rule as the larger runtime systems.
+
 These modules allow users to:
 * Spawn a Logistics System Supply & Medical Crate to Zeus specification
 * Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)

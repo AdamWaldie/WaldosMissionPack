@@ -142,7 +142,8 @@
 
             private _pos = _disp getVariable ["WaldoEcoBuy_DropTargetPos", [0, 0, 0]];
             private _dir = _disp getVariable ["WaldoEcoBuy_DropTargetDir", 0];
-            [_pos, _choices select _index, _dir, _sideChoices select _sideIndex] call Waldo_fnc_EcoBuy_createDropPoint;
+            ["CREATE_DROP_POINT", [_pos, _choices select _index, _dir, _sideChoices select _sideIndex], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
             [_disp] call Waldo_fnc_EcoBuy_cleanupDropPointPrompt;
         }];
 

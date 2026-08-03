@@ -21,7 +21,7 @@ if !(isClass(configFile >> "CfgPatches" >> "acre_main")) exitWith {systemChat "A
 // player, inventory, UI, or ACRE client API work.
 private _SquadCallsigns = _RadioAssignments apply {_x select 0};
 if (isServer) then {
-    [_SquadCallsigns] call Waldo_fnc_SquadLevelRadios;
+    [_SquadCallsigns] call Waldo_fnc_ACRE2SquadLevelRadios_Legacy;
 };
 if (!hasInterface) exitWith {
     diag_log "[WMP ACRE] Server callsign/channel assignments published; client radio setup skipped.";
@@ -192,7 +192,7 @@ if ((_LRChannelAssignments select 1 == 99) && (_LRChannelAssignments select 1 ==
 
 systemchat "ACRE2 RADIO PRESET COMPLETE";
 
-[_LRPlayerSquadChannelAssignments,_SquadCallsigns] call Waldo_fnc_CreateACRECEOI;
+[_LRPlayerSquadChannelAssignments,_SquadCallsigns] call Waldo_fnc_CreateACRECEOI_Legacy;
 
 /*
 ACRE 2 RADIO SETUP PARAMETERS

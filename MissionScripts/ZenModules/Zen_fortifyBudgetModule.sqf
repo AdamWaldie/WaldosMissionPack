@@ -44,9 +44,8 @@
             _budget = ceil(-_budget);
         };
 
-        // Update the ACE fortify budget for the selected side
-        [_sideToAlter, _budget, true] call ace_fortify_fnc_updateBudget;
-        diag_log format ["[WMP ZEN] Fortify budget adjusted side=%1 delta=%2 curator=%3", _sideToAlter, _budget, name player];
+        // The shared budget belongs to the server. The dedicated curator client only submits it.
+        [_sideToAlter, _budget, player] remoteExecCall ["Waldo_fnc_ZenFortifyBudgetServer", 2];
     }
 ] call zen_dialog_fnc_create;
 

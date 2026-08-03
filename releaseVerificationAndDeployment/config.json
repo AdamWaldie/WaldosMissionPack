@@ -4,9 +4,9 @@
         "version": "DevBuild",
         "include": [
             "MissionScripts",
+            "MissionConfig",
             "Pictures",
             "description.ext",
-            "economyConfig.sqf",
             "init.sqf",
             "initPlayerLocal.sqf",
             "initServer.sqf",

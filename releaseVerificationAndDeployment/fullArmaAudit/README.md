@@ -13,7 +13,7 @@ The repository mission folder is a template, not a release copy. Before every ru
 - `MissionScripts`
 - `Pictures`
 - `description.ext`
-- `economyConfig.sqf`
+- `MissionConfig` (including `acreConfig.sqf` and `economyConfig.sqf`)
 - `init.sqf`
 - `initPlayerLocal.sqf`
 - `initServer.sqf`
@@ -57,6 +57,23 @@ The east test range adds twenty repeatable stations for the newer full systems:
 The existing Electronic Warfare station also covers radio-jammer field disablement through a real
 shared circuit procedure, with the audit fixture's engineer restriction disabled so any selected
 test slot can exercise it.
+
+The five playable BLUFOR slots also form a paired ACRE2 radio test squad. No radio profile is
+tested by only one player:
+
+| Playable role | Starting ACRE2 radios | Shared with |
+| --- | --- | --- |
+| Commander | 2x PRC-343, 2x PRC-152, PRC-148 | Medic; PRC-343 also shared with Marksman |
+| Medic | 2x PRC-343, 2x PRC-152, PRC-148 | Commander; PRC-343 also shared with Marksman |
+| Anti-Tank | PRC-117F, BF-888S, SEM52SL, PRC-77, SEM70 | Engineer; PRC-117F also shared with Marksman |
+| Engineer EOD | PRC-117F, BF-888S, SEM52SL, PRC-77, SEM70 | Anti-Tank; PRC-117F also shared with Marksman |
+| Marksman | PRC-343, PRC-117F | Commander/Medic and Anti-Tank/Engineer respectively |
+
+The ACRE2 Communications station exposes the authoritative plan, the expected pair matrix,
+duplicate-radio verification, the additional numbered-channel profiles, both frequency-driven
+profiles, Babel/CEOI reapplication, persistence round trips and filtered respawn-loadout saving.
+The audit deliberately assigns non-default channels so an unchanged channel 1 is an obvious test
+failure.
 
 Every station has an information stand and ACE-first, vanilla-fallback test controls. Audit Control offers
 teleports to each station. Dynamic AA and the gunship are created only when requested. Persistence

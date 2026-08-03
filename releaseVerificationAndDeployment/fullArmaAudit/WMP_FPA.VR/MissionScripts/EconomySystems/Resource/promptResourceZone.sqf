@@ -169,7 +169,8 @@
         private _interval = floor (parseNumber (ctrlText _intervalCtrl));
         if ((count _rows) <= 0) exitWith {};
 
-        [_pos, _name, _radius, _rows, _owners select _ownerIndex, _interval] call Waldo_fnc_EcoResource_createResourceZone;
+        ["CREATE_RESOURCE_ZONE", [_pos, _name, _radius, _rows, _owners select _ownerIndex, _interval], player]
+            remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         [_disp] call Waldo_fnc_EcoResource_cleanupResourceZonePrompt;
     }];
 

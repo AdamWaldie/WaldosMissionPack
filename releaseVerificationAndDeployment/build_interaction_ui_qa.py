@@ -40,7 +40,7 @@ def build(
         remove_generated_tree(destination)
     shutil.copytree(TEMPLATE, destination)
     shutil.copytree(ROOT / "MissionScripts", destination / "MissionScripts")
-    shutil.copy2(ROOT / "economyConfig.sqf", destination / "economyConfig.sqf")
+    shutil.copytree(ROOT / "MissionConfig", destination / "MissionConfig", dirs_exist_ok=True)
     (destination / "init.sqf").write_text(
         f'Waldo_MG_QA_Mode = "{mode.upper()}";\n'
         f'Waldo_MG_QA_Challenge = "{challenge.lower()}";\n'

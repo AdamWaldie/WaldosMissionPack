@@ -2,7 +2,7 @@
 
 > **Use this page when:** you are choosing, enabling, or troubleshooting the Resource, Research, Build, Buy, and Command systems.
 
-_Associated Files: MissionScripts\EconomySystems\ (the `Waldo_fnc_Eco*` functions), `Waldo_fnc_EcoInit`, `economyConfig.sqf`_
+_Associated Files: MissionScripts\EconomySystems\ (the `Waldo_fnc_Eco*` functions), `Waldo_fnc_EcoInit`, `MissionConfig\economyConfig.sqf`_
 
 ![Economy resource authoring](images/economy/economy-resources.png)
 
@@ -14,7 +14,7 @@ This is the hub page. Each system has its own tutorial:
 
 ## Feature pages
 
-* **[Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)** — enable it, presets, config strings, the `economyConfig.sqf` authoring file, editor designation helpers, and compositions.
+* **[Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)** — enable it, presets, config strings, the `MissionConfig\economyConfig.sqf` authoring file, editor designation helpers, and compositions.
 * **[Resource System](Waldos-Economy-Systems-Resource-System)** — define resources, crates, capturable income zones, storage limits.
 * **[Research System](Waldos-Economy-Systems-Research-System)** — a Research Center, custom research, costs, prerequisites, exclusivity.
 * **[Build System](Waldos-Economy-Systems-Build-System)** — buildings, construction, upgrades, production, upkeep, RADAR.
@@ -37,7 +37,7 @@ You never have to touch a script to use this suite. Pick the path that suits you
 * **Easiest (≈30 seconds, no scripting, no Eden setup).** In the Eden Editor, open the **Compositions** list (category _Waldos Mission Pack Compositions_) and drag in
   **`[WMP] Waldos Economy Systems - Low / Medium / High Preset`**. That single object boots the suite **and** loads a ready-made, balanced economy for NATO/CSAT/AAF. Play the mission — it just works. (Start with **Low** if you're new to it.)
 * **Live in Zeus (one flag).** Set `Waldo_Economy_Enable = true;` in `init.sqf` (or drop the plain `[WMP] Waldos Economy Systems` composition). Open Zeus — a new **Waldos Economy Systems** root appears in the tree, and you build the whole economy live with menus and dialogs. No editor objects required.
-* **Bake in your own (full control).** Configure it live in Zeus, hit **Export** to copy a config string, and paste it into `Waldo_Economy_ConfigString` in `initServer.sqf` — or hand-author everything in `economyConfig.sqf`. It then loads automatically every time the mission runs, for every player including JIP.
+* **Bake in your own (full control).** Configure it live in Zeus, hit **Export** to copy a config string, and paste it into `Waldo_Economy_ConfigString` in `initServer.sqf` — or hand-author everything in `MissionConfig\economyConfig.sqf`. It then loads automatically every time the mission runs, for every player including JIP.
 
 > **Tip:** place only **one** Economy Systems object (composition or flag) per mission.
 
@@ -45,7 +45,7 @@ See **[Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)** 
 
 ## For mission makers
 
-Use a preset composition for the quickest setup, configure the system live through its ZEN modules, or call the public setup functions from `economyConfig.sqf`. The **Build Mission Setup** tool converts the current Zeus-authored catalogs and placed economy objects into ordered, pre-filled setup calls that can be pasted into the mission.
+Use a preset composition for the quickest setup, configure the system live through its ZEN modules, or call the public setup functions from `MissionConfig\economyConfig.sqf`. The **Build Mission Setup** tool converts the current Zeus-authored catalogs and placed economy objects into ordered, pre-filled setup calls that can be pasted into the mission.
 
 ## Diagnostics
 

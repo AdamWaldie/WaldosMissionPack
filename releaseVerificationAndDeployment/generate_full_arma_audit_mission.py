@@ -13,6 +13,7 @@ import json
 import math
 import re
 import shutil
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,6 +38,7 @@ def fixture(name: str, classname: str, x: float, y: float, z: float = 0, directi
 
 STATIONS = [
     ("control", "AUDIT CONTROL", (-7, 2), "Navigation, resets, diagnostics and audit modes."),
+    ("acre", "ACRE2 COMMUNICATIONS", (18, 27), "Preconfigured radios, named nets, listening ears, Babel, respawn and persistence."),
     ("mission-init", "MISSION INITIALISATION", (18, 42), "Briefing, radios, vehicles and player setup."),
     ("mission-flow", "MISSION FLOW", (0, 39), "SafeStart, ENDEX/AAR, tasks, diagnostics and 3D markers."),
     ("ai", "AI / CONVOY", (28, 44), "AI tuning, convoy and mission-maker helpers."),
@@ -107,6 +109,8 @@ FIXTURES = [
     fixture("qa_supply_crate", "B_supplyCrate_F", -14, 48),
     fixture("qa_medical_crate", "ACE_medicalSupplyCrate_advanced", -26, 48),
     fixture("qa_core_console", "Land_Laptop_unfolded_F", 10, 45, direction=180),
+    fixture("qa_acre_table", "Land_CampingTable_small_F", 18, 34, direction=180),
+    fixture("qa_acre_console", "Land_Laptop_unfolded_F", 18, 34, 0.82, 180),
     fixture("qa_convoy_1", "B_MRAP_01_F", 28, 54),
     fixture("qa_convoy_2", "B_MRAP_01_F", 28, 70),
     fixture("qa_ew_jammer", "Land_TTowerSmall_1_F", 0, -102),
@@ -164,6 +168,12 @@ for index, (station_id, _title, (x, y), _description) in enumerate(STATIONS):
 
 
 LOADOUTS = [
+    # ACRE audit distribution:
+    # - Commander + Medic pair every duplicated PRC-343/152 occurrence and the PRC-148.
+    # - Anti-Tank + Engineer pair the PRC-117F, BF-888S, SEM52SL, PRC-77 and SEM70.
+    # - Marksman bridges both pairs with a PRC-343 and PRC-117F.
+    # Every supported carried-radio profile therefore has at least two users, and every playable
+    # member has a real same-class communications partner without relying on a provisioning action.
     {
         "name": "qa_player_1", "role": "Audit Commander", "type": "B_Soldier_SL_F",
         "primary": "arifle_MX_GL_Hamr_pointer_F", "primary_mag": "30Rnd_65x39_caseless_mag",
@@ -172,6 +182,8 @@ LOADOUTS = [
         "backpack": "B_AssaultPack_mcamo", "headgear": "H_HelmetB_desert",
         "optics": "optic_Hamr", "muzzle": "muzzle_snds_H", "flashlight": "acc_pointer_IR",
         "items": ["ACE_MapTools", "ACE_microDAGR", "ACE_CableTie"],
+        "backpack_items": ["ACRE_PRC343", "ACRE_PRC343", "ACRE_PRC152", "ACRE_PRC152", "ACRE_PRC148"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_2", "role": "Audit Medic", "type": "B_medic_F",
@@ -181,6 +193,8 @@ LOADOUTS = [
         "backpack": "B_Kitbag_rgr", "headgear": "H_HelmetB_light",
         "optics": "optic_Holosight_blk_F", "muzzle": "", "flashlight": "acc_flashlight",
         "items": ["ACE_fieldDressing", "ACE_tourniquet", "ACE_epinephrine", "ACE_morphine"],
+        "backpack_items": ["ACRE_PRC343", "ACRE_PRC343", "ACRE_PRC152", "ACRE_PRC152", "ACRE_PRC148"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_3", "role": "Audit Anti-Tank", "type": "B_soldier_AT_F",
@@ -191,6 +205,8 @@ LOADOUTS = [
         "backpack": "B_Carryall_mcamo", "headgear": "H_HelmetB",
         "optics": "optic_Arco_blk_F", "muzzle": "", "flashlight": "acc_pointer_IR",
         "items": ["ACE_RangeCard", "ACE_SpareBarrel"],
+        "backpack_items": ["ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_4", "role": "Audit Engineer EOD", "type": "B_engineer_F",
@@ -200,6 +216,8 @@ LOADOUTS = [
         "backpack": "B_Kitbag_mcamo", "headgear": "H_HelmetB_Enh_tna_F",
         "optics": "optic_ERCO_blk_F", "muzzle": "", "flashlight": "acc_flashlight",
         "items": ["ToolKit", "MineDetector", "ACE_Clacker", "ACE_DefusalKit", "ACE_EntrenchingTool"],
+        "backpack_items": ["ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_5", "role": "Audit Marksman", "type": "B_soldier_M_F",
@@ -209,6 +227,8 @@ LOADOUTS = [
         "backpack": "B_AssaultPack_blk", "headgear": "H_Booniehat_mcamo",
         "optics": "optic_AMS", "muzzle": "muzzle_snds_B", "flashlight": "acc_pointer_IR",
         "items": ["ACE_Kestrel4500", "ACE_ATragMX", "ACE_DAGR"],
+        "backpack_items": ["ACRE_PRC343", "ACRE_PRC117F"],
+        "vanilla_radio": False,
     },
 ]
 
@@ -250,6 +270,17 @@ def unit_block(index: int, loadout: dict) -> str:
     if loadout.get("secondary"):
         secondary = "\n" + weapon_block("secondaryWeapon", loadout["secondary"], loadout["secondary_mag"], loadout)
     magazines = [loadout["primary_mag"], loadout["primary_mag"], loadout["handgun_mag"], "SmokeShell"]
+    backpack_items = loadout.get("backpack_items", [])
+    if backpack_items:
+        backpack = f"""                        class backpack
+                        {{
+                            typeName="{loadout['backpack']}";
+                            isBackpack=1;
+{cargo_block('ItemCargo', backpack_items)}
+                        }};"""
+    else:
+        backpack = f'''                        class backpack {{typeName="{loadout['backpack']}"; isBackpack=1;}};'''
+    radio = '                        radio="ItemRadio";\n' if loadout.get("vanilla_radio", True) else ""
     inventory = f"""                    class Inventory
                     {{
 {weapon_block('primaryWeapon', loadout['primary'], loadout['primary_mag'], loadout)}
@@ -263,12 +294,11 @@ def unit_block(index: int, loadout: dict) -> str:
 {cargo_block('ItemCargo', loadout['items'])}
                         }};
                         class vest {{typeName="{loadout['vest']}"; isBackpack=0;}};
-                        class backpack {{typeName="{loadout['backpack']}"; isBackpack=1;}};
+{backpack}
                         map="ItemMap";
                         compass="ItemCompass";
                         watch="ItemWatch";
-                        radio="ItemRadio";
-                        gps="ItemGPS";
+{radio}                        gps="ItemGPS";
                         hmd="NVGoggles";
                         headgear="{loadout['headgear']}";
                     }};"""
@@ -509,11 +539,24 @@ def _sync_tree_in_place(source: Path, target: Path) -> None:
                     raise
         else:
             path.unlink()
-    shutil.copytree(source, target, dirs_exist_ok=True)
+    # OneDrive/Defender can briefly memory-map an SQF between enumeration and overwrite, producing
+    # WinError 1224. Retry the idempotent mirror rather than making a transient desktop lock fail CI.
+    last_error: shutil.Error | None = None
+    for attempt in range(6):
+        try:
+            shutil.copytree(source, target, dirs_exist_ok=True)
+            return
+        except shutil.Error as error:
+            last_error = error
+            if not all("WinError 1224" in str(detail) for detail in error.args[0]):
+                raise
+            time.sleep(0.15 * (attempt + 1))
+    if last_error is not None:
+        raise last_error
 
 
 def refresh_release_sources() -> None:
-    for directory in ("MissionScripts", "Pictures", "UnitInsignias"):
+    for directory in ("MissionScripts", "MissionConfig", "Pictures", "UnitInsignias"):
         source = ROOT / directory
         target = MISSION / directory
         # OneDrive can remove a hydrated file after rmtree enumerates it but before
@@ -537,13 +580,23 @@ def refresh_release_sources() -> None:
             raise OSError(f"Could not clear stale audit source directory: {target}")
         if source.is_dir():
             shutil.copytree(source, target)
-    shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
+    shutil.copy2(ROOT / "MissionConfig" / "acreConfig.sqf", MISSION / "MissionConfig" / "releaseAcreConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
-    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
+    _sync_tree_in_place(ROOT / "MissionConfig", pack_source / "MissionConfig")
+    for stale in (
+        MISSION / "acreConfig.sqf",
+        MISSION / "releaseAcreConfig.sqf",
+        MISSION / "economyConfig.sqf",
+        pack_source / "acreConfig.sqf",
+        pack_source / "economyConfig.sqf",
+    ):
+        stale.unlink(missing_ok=True)
+    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "LICENSE", "README.md"):
         source = ROOT / name
         if source.is_file():
             shutil.copy2(source, pack_source / name)
+    shutil.copy2(MISSION / "auditAcreConfig.sqf", MISSION / "MissionConfig" / "acreConfig.sqf")
 
 
 def write_active_pack(destination: Path) -> None:

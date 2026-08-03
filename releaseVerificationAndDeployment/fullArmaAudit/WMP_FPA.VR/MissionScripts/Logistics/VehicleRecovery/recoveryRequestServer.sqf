@@ -25,7 +25,12 @@ params [["_actor", objNull, [objNull]], ["_operation", "", [""]], ["_target", ob
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_RecoveryRequestServer", 2]; false};
 if (isNull _actor || {isNull _target} || {!alive _actor}) exitWith {false};
 if (isRemoteExecuted && {remoteExecutedOwner != owner _actor}) exitWith {false};
-if (_actor distance _target > 7 || {vehicle _actor != _actor} || {abs speed _target >= 1}) exitWith {
+private _interactionRange = if (_target getVariable ["Waldo_Recovery_Carrier", false]) then {
+    (_target getVariable ["Waldo_Recovery_CarrierRange", 10]) max 3
+} else {
+    7
+};
+if (_actor distance _target > _interactionRange || {vehicle _actor != _actor} || {abs speed _target >= 1}) exitWith {
     ["Remain on foot beside a stationary vehicle.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
 };
 _operation = toUpperANSI _operation;

@@ -86,6 +86,7 @@ class PrReviewAuditTests(unittest.TestCase):
             frozenset(("qa_control_table", "qa_control_console")),
             frozenset(("qa_economy_table", "qa_economy_terminal")),
             frozenset(("qa_vvd_table", "qa_vvd_laptop")),
+            frozenset(("qa_acre_table", "qa_acre_console")),
         }
         unsafe = []
         for index, left in enumerate(fixtures):
@@ -201,7 +202,10 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn(f'this addWeapon ""{classname}""', mission)
         self.assertIn('vehicle="B_medic_F"', mission)
         self.assertIn('vehicle="B_soldier_AT_F"', mission)
-        self.assertIn('""NVGoggles"";"; skill=0.6;', mission)
+        self.assertEqual(5, mission.count('this linkItem ""NVGoggles""'))
+        commander = mission.split('class Item0 {', 1)[1].split('class Item1 {', 1)[0]
+        self.assertNotIn('this linkItem ""ItemRadio""', commander)
+        self.assertIn('(group this) setGroupIdGlobal [""VIKING-1-1""]', commander)
 
     def test_range_does_not_duplicate_pack_initializers(self):
         server = (
@@ -274,7 +278,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('(missionNamespace getVariable ["Waldo_Recovery_ScanInterval", 3]) max 1', source)
 
     def test_accessibility_audit_uses_current_tester_without_changing_pack_default(self):
-        pack = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        pack = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         preinit = (
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditPreInitPlayerLocal.sqf"
         ).read_text(encoding="utf-8")
@@ -425,7 +429,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('format ["QA_%1", toUpperANSI _title]', server)
         self.assertNotIn('"QA_FEATURE_STATION", 8', server)
 
-        player_init = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        player_init = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         for channel in ("TREATMENT_FEEDBACK", "DYNAMIC_AA", "FIELD_RESUPPLY", "RALLY_POINT"):
             self.assertIn(f'["{channel}",', player_init)
 
@@ -593,7 +597,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('["command", "Waldo_fnc_MiniGameCommandInput"]', interactions)
 
     def test_tree_felling_default_replacement_exists_in_base_game(self):
-        root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        root_init = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
         process = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingProcess.sqf").read_text(encoding="utf-8")
         self.assertIn('["Land_WoodenLog_F"]', root_init)
         self.assertIn('["Land_WoodenLog_F"]', process)
@@ -833,6 +837,7 @@ class PrReviewAuditTests(unittest.TestCase):
         restyle_notifications = (root / "restyleUiNotificationsLocal.sqf").read_text(encoding="utf-8")
         notification = (root / "showUiNotification.sqf").read_text(encoding="utf-8")
         root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        shared_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
         receive = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeReceiveState.sqf").read_text(encoding="utf-8")
         for theme in ("DEFAULT", "WW2", "VIETNAM", "SCIFI"):
@@ -840,9 +845,9 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('missionNamespace setVariable ["Waldo_UI_Theme", _themeId, true]', setter)
         self.assertIn("getAssignedCuratorLogic", setter)
         self.assertIn('remoteExecCall ["Waldo_fnc_UiThemeApplyLocal", 0]', setter)
-        self.assertIn("Waldo_UI_CustomThemes", resolver + root_init)
-        self.assertIn("Waldo_UI_ThemeOverrides", resolver + root_init)
-        self.assertIn("Waldo_UI_Theme", root_init)
+        self.assertIn("Waldo_UI_CustomThemes", resolver + shared_config)
+        self.assertIn("Waldo_UI_ThemeOverrides", resolver + shared_config)
+        self.assertIn("Waldo_UI_Theme", shared_config)
         self.assertIn("Waldo_fnc_ShowUiNotification", apply_local)
         self.assertIn("Waldo_fnc_RestyleUiNotificationsLocal", apply_local)
         self.assertIn('setVariable ["Waldo_IMG_Profile"', apply_local)
@@ -983,7 +988,7 @@ class PrReviewAuditTests(unittest.TestCase):
         tracker_zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_trackerModule.sqf").read_text(encoding="utf-8")
         self.assertIn('if (isNull _objectPos) exitWith', tracker_zen)
         self.assertIn('Place this module directly on the object or unit to track.', tracker_zen)
-        self.assertIn('[_target, _sideStr, _label, _active] call Waldo_fnc_Tracker', tracker_zen)
+        self.assertIn('[_target, _sideStr, _label, _active, player] remoteExecCall ["Waldo_fnc_ZenTrackerServer", 2]', tracker_zen)
         self.assertNotIn('nearestObjects', tracker_zen)
 
 

@@ -1,53 +1,106 @@
-# ACRE2 Long-Range Radio Presetting
+# ACRE2 Communications Configuration
 
-> **Use this page when:** you need mission-defined long-range radio channels and presets for ACRE2.
+> **Use this page when:** you need deterministic carried-radio assignments, independent duplicate radios, named displays, CEOI or optional Babel support.
 
-_Associated Files: MissionScripts\MissionInit\ACRE2Init.sqf_
+Associated files: `MissionConfig\acreConfig.sqf` and `MissionScripts\MissionInit\ACRE2\acre2*.sqf`.
 
-This script allows for the automatic pre-setting of radio channels for ACRE 2 Radios based on the group name.
+All mission authoring lives in `MissionConfig\acreConfig.sqf`. WMP validates it before play, the
+server sends the complete side/group setup to joining players, and each player's own computer
+configures only the radios that player carries after ACRE is ready. Do not add ACRE waits or radio
+setup calls to multiplayer `init.sqf`.
 
-This script Must only be called from the init.sqf.
+## Settings to edit
 
-Your group must be named in the editor, you should use the CBA lobby screen naming functionality as well, and finally, ingame group names must match the name given in the parameters.
+- `enabled`: master switch for the replacement lifecycle.
+- `prc343PresetPolicy`: `FULL_RANGE` keeps 16 blocks but gives no side isolation; `SIDE_ISOLATED` uses ACRE's combat-side presets and five blocks.
+- `namedDisplays`: labels supported PRC-148/152/117F channels without changing frequencies.
+- `sides`: official side preset, nets and editor-group rows.
+- `radioOverrides`: exceptional per-player assignment changes.
+- `babel`: language definitions and assignments; shipped examples remain disabled.
 
-The following radios are supported:
-* AN/PRC 343 (Setup Automatically and without manual setup in the parameters)
-* AN/PRC 152
-* AN/PC 148
-* AN/PRC 117F
+Leave `strict` and `additionalRadioProfiles` alone unless extending or diagnosing the framework. WMP deliberately leaves PTT, speaker mode and other unsaved controls under player control. It does not poll, periodically reapply, or retune radios on group changes.
 
-AN/PRC-343 Radios are automatically set up depending on the Squads callsign. See Squad Level Radios for more information, although you do not have to do anything to get that, or the CEOI to work.
+## What is a net?
 
-LR and SR radios are placed into an automated CEOI after use, see ACRE Automated CEOI for more details. Babel support and Language Documentation is also available - See ACRE Babel Activation for more details.
+A **net** is simply a named radio conversation, such as Platoon, Company or Air-to-Ground. The net
+tells WMP which channel each supported radio must use to join that conversation.
 
-## Setup And Examples
+A net is `[key, label, tunings]`. Each tuning is `[base radio class, target]`:
 
-1. In the init.sqf find the ACRE 2 setup section. It should look similar to the below:
+```sqf
+[
+    "PLT1",      // 0: short internal name used elsewhere in this config.
+    "PLATOON 1", // 1: name players see on supported radio displays and in the CEOI.
+    [             // 2: channel used by each radio type.
+        ["ACRE_PRC148", 2], // PRC-148 uses channel 2 for PLATOON 1.
+        ["ACRE_PRC152", 2], // PRC-152 uses channel 2 for PLATOON 1.
+        ["ACRE_PRC117F", 2] // PRC-117F uses channel 2 for PLATOON 1.
+    ]
+]
+```
 
-![Image of the ACRE2Init function call in the init.sqf](https://i.imgur.com/17lESXb.jpg)
+The result is straightforward: a player assigned to `PLT1` who carries any listed radio starts on
+that radio's channel 2. A radio not listed in this net cannot use this net and is left for the next
+compatible net or left unchanged.
 
-2. Uncomment the function call if it has been commented out (Remove the /* and */). Use VS code as described in the quickstart to make it easier for you.
+A shared net key is meaningful only when its tunings are interoperable. The official PRC-148/152/117F presets use matching frequencies at matching channel numbers. BF-888S and SEM52SL occupy different bands and therefore use separate local nets. PRC-77 and SEM70 can share an explicit common frequency. There is no global net count or smallest-radio capacity limit.
 
-3. The mission maker must then specify up to three Long Rang Radio channels:
+Built-in limits are PRC-148 32 channels, PRC-152/117F 100, BF-888S 16 and SEM52SL 12 ordinary channels. PRC-77 tunes 30–75.95 MHz in 50 kHz steps; SEM70 tunes 30–79.975 MHz in 25 kHz steps. Unknown radios and vehicle racks are preserved.
 
-`["Callsign",[channel_num_1,channel_num_2,channel_num_3]]`
+## Groups, duplicate radios and ears
 
-Where the "Callsign" matches the group name you entered in the group's Callsign attribute.
+A group is `[editor group ID, ordered fallback nets, PRC-343 assignment, explicit templates]`:
 
-![Example of the Callsign in a group init](https://i.imgur.com/wbOvpxC.jpg)
+```sqf
+[
+    "VIKING-1-1",      // 0: exact groupId set for this squad in Eden Editor.
+    ["PLT1", "AIRGND"], // 1: preferred nets, checked from left to right.
+    [],                 // 2: empty means automatically assign the first PRC-343 from the groupId.
+    [                   // 3: optional exact assignments for individual carried radios.
+        ["ACRE_PRC343", 1, [5, 16], "LEFT"], // first PRC-343 -> block 5/channel 16 -> left ear.
+        ["ACRE_PRC343", 2, [6, 3], "RIGHT"], // second PRC-343 -> block 6/channel 3 -> right ear.
+        ["ACRE_PRC152", 1, "PLT1", "RIGHT"], // first PRC-152 -> PLT1 -> right ear.
+        ["ACRE_PRC152", 2, "AIRGND", "LEFT"] // second PRC-152 -> AIRGND -> left ear.
+    ]
+]
+```
 
-And where channel_num_1,channel_num_2 and channel_num_3 indicate up to three channels you want that groups Long Range Radio holders to be tuned into. Channels will be set from left to right, starting at channel_num_1 and ending at channel_num_3. Channels will also be set on the shortest range radio first - so the 152 and 148 first, followed by the 117F. Channels will only be assigned if the player has enough LR radios to set the number of channels.
+The occurrence is one-based within that base class. Templates apply only when the occurrence exists, so one squad row can cover different role loadouts without reporting missing radios. An empty explicit list assigns each supported carried radio to the first compatible group net; repeated radios take successive compatible nets. Unmatched and captured radios remain untouched.
 
-Please note that all parameters must be given regardless of whether that group has or has not got any of those radios and that each line bar the last should have a comma at the end.
+`LEFT`, `RIGHT` and `BOTH`/`CENTER` are independent per occurrence. An empty PRC-343 field requests deterministic callsign allocation. Two valid numeric callsign components are interpreted as block/channel; otherwise WMP hashes the callsign and probes collisions deterministically. Explicit slots always win and invalid explicit values are rejected rather than clamped.
 
-Below is an example of the code, and the associated ingame setup to make this system work.
+## Side-scoped player overrides
 
-![Example of a ACRE2 setup call from init.sqf](https://i.imgur.com/17lESXb.jpg)
+Overrides are `[side, selector, mode, assignments]`. `MERGE` replaces matching `[class, occurrence]` identities and retains other group rows. `REPLACE` starts with an empty list.
 
-![Example of Thor and Odin groups, named correctly in callsign](https://i.imgur.com/wbOvpxC.jpg)
+```sqf
+["WEST", ["ROLE", "JTAC"], "MERGE", [
+    ["ACRE_PRC152", 1, "AIRGND", "RIGHT"]
+]]
+```
 
+Selectors are `UID`, Eden `VARIABLE`, or `ROLE` text before an optional `@` suffix. Side scoping prevents a WEST override from accidentally validating against an EAST net.
 
-Channel Naming is not supported. This is due to the fundamental method required to make that function work not being possible with the approach of this pack. For channel naming to work, radios must be added via a loadout script. This is not how we approach loadouts in the pack, and as such, channel naming instead breaks the radios - therefore, I do not support it.
+## Named displays and upstream safeguards
+
+WMP changes only `label` on PRC-148, `description` on PRC-152 and `name` on PRC-117F. It uses existing ACRE presets, never calls `copyPreset`, never writes TX/RX frequency fields for naming, and verifies the label plus unchanged frequencies after each write. The same deterministic label registration runs on server, hosted clients and JIP clients before normal radio application.
+
+ACRE has [open issue history around copied or locally divergent presets](https://github.com/IDI-Systems/acre2/issues/1056). These safeguards avoid the known high-risk paths, but physical display verification remains part of multiplayer acceptance because a static test cannot prove ACRE/TeamSpeak runtime state.
+
+## Join, respawn and persistence
+
+On initial join, WMP waits for ACRE and applies the mission's starting setup once. That starting
+setup is then saved as the player's first respawn condition. It is not continually enforced.
+
+Saved loadouts always pass through `acre_api_fnc_filterUnitLoadout`. Never save or restore an `_ID_n` radio classname: [duplicate unique IDs are a documented cause of respawn failures](https://github.com/IDI-Systems/acre2/issues/1163). Radio state is stored separately by base class and same-type occurrence. When a player uses Save Loadout, their current supported channels, ears, volume, audio source and selected radio become their new respawn condition. INIDBI2 radio persistence carries the same saved state across sessions. The mission plan is used only for initial setup or when no usable saved snapshot exists.
+
+ACRE's `setupRadios` frequency path is asynchronous and exposes no public frequency read-back. WMP validates the request and records it as pending/unverified; the audit requires checking the physical PRC-77/SEM70 interface. It refuses frequency setup when same-type rack/external radios make ACRE's occurrence order ambiguous.
+
+## Diagnostics and testing
+
+The CEOI is generated from the compiled plan and lists every net's radio-specific tuning, the current group's PRC-343 assignment, applied occurrences/ears, failures and preserved radios. Frequency entries are explicitly request-based rather than falsely described as read-back verified.
+
+The full audit mission distributes every supported carried radio among playable squad members, with at least one same-class partner. Its ACRE station tests duplicate radios, independent ears, named non-channel-1 assignments, PRC-77/SEM70 requests, filtered loadout respawn, Babel and preserved extra radios. Legacy functions remain manual emergency fallbacks only.
 
 <!-- WMP-WIKI-NAV -->
 ---

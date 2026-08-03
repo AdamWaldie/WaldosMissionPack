@@ -70,7 +70,8 @@ if !(isNil { missionNamespace getVariable "Waldo_Economy_CommitmentMode" }) then
     diag_log format ["[WMP ECO] Commitment mode set to %1 by mission config.", _commit];
 };
 
-// 4) Hand-authored economy file (economyConfig.sqf -> Waldo_fnc_EcoMakerSetup). Runs last so it
+// 4) Hand-authored economy file (MissionConfig\economyConfig.sqf -> Waldo_fnc_EcoMakerSetup).
+// Runs last so it
 // can build on a preset/config string or define an economy from scratch, and place world objects.
 if !(isNil "Waldo_fnc_EcoMakerSetup") then {
     call Waldo_fnc_EcoMakerSetup;

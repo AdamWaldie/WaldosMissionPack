@@ -27,46 +27,21 @@ while {missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]} do
         private _virtualCarrier = _package getVariable ["Waldo_Recovery_VirtualCarrier", objNull];
         private _isVirtualLoaded = _package getVariable ["Waldo_Recovery_IsVirtualLoaded", false];
         if (_isVirtualLoaded) then {
-        if (!isNull _virtualCarrier) then {
-            _package setVariable ["Waldo_Recovery_VirtualLastPosition", getPosATL _virtualCarrier];
-            if (!alive _virtualCarrier && {!(_package getVariable ["Waldo_Recovery_Transition", false])}) then {
-                private _position = [_virtualCarrier, _package, [_virtualCarrier, _package]] call Waldo_fnc_RecoveryResolveUnloadPosition;
-                if !(_position isEqualTo []) then {
-                    private _manifest = (_virtualCarrier getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x && {_x != _package}};
-                    _virtualCarrier setVariable ["Waldo_Recovery_VirtualPackages", _manifest, true];
-                    _package setVariable ["Waldo_Recovery_VirtualCarrier", objNull, true];
-                    _package setVariable ["Waldo_Recovery_IsVirtualLoaded", false, true];
-                    _package setPosATL _position;
-                    _package setVectorUp surfaceNormal _position;
-                    _package hideObjectGlobal false;
-                    _package allowDamage true;
-                    _package enableSimulationGlobal true;
-                };
+            if (!isNull _virtualCarrier) then {
+                _package setVariable ["Waldo_Recovery_VirtualLastPosition", getPosATL _virtualCarrier];
+                if (!alive _virtualCarrier) then {[_package, _virtualCarrier] call Waldo_fnc_RecoverySpillVirtualPackageServer};
+            } else {
+                [_package, objNull] call Waldo_fnc_RecoverySpillVirtualPackageServer;
             };
         } else {
-            private _lastPosition = _package getVariable ["Waldo_Recovery_VirtualLastPosition", []];
-            if !(_lastPosition isEqualTo []) then {
-                private _position = _lastPosition findEmptyPosition [0, missionNamespace getVariable ["Waldo_Recovery_VirtualUnloadSearchRange", 20], typeOf _package];
-                if !(_position isEqualTo []) then {
-                    _position set [2, 0];
-                    _package setVariable ["Waldo_Recovery_IsVirtualLoaded", false, true];
-                    _package setPosATL _position;
-                    _package setVectorUp surfaceNormal _position;
-                    _package hideObjectGlobal false;
-                    _package allowDamage true;
-                    _package enableSimulationGlobal true;
+            if (!(_package getVariable ["Waldo_Recovery_Transition", false]) && {isNull isVehicleCargo _package} && {(getPosATL _package select 2) < 1.5} && {abs speed _package < 1}) then {
+                private _key = _package getVariable ["Waldo_Recovery_WorkshopKey", "MAIN"];
+                private _index = _workshops findIf {
+                    (_x getVariable ["Waldo_Recovery_WorkshopKey", ""]) == _key
+                    && {_package distance2D _x <= (_x getVariable ["Waldo_Recovery_Radius", 50])}
                 };
+                if (_index >= 0) then {[_package, _workshops select _index] call Waldo_fnc_RecoveryRestoreServer};
             };
-        };
-        } else {
-        if (!(_package getVariable ["Waldo_Recovery_Transition", false]) && {isNull isVehicleCargo _package} && {(getPosATL _package select 2) < 1.5} && {abs speed _package < 1}) then {
-            private _key = _package getVariable ["Waldo_Recovery_WorkshopKey", "MAIN"];
-            private _index = _workshops findIf {
-                (_x getVariable ["Waldo_Recovery_WorkshopKey", ""]) == _key
-                && {_package distance2D _x <= (_x getVariable ["Waldo_Recovery_Radius", 50])}
-            };
-            if (_index >= 0) then {[_package, _workshops select _index] call Waldo_fnc_RecoveryRestoreServer};
-        };
         };
     } forEach _packages;
     sleep ((missionNamespace getVariable ["Waldo_Recovery_ScanInterval", 3]) max 1);

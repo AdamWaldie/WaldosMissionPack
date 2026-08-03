@@ -126,7 +126,8 @@
             private _entry = _catalog select _selected;
             private _pos = _disp getVariable ["WaldoEcoBuild_SpawnTargetPos", [0, 0, 0]];
 
-            [_pos, _entry param [0, ""], _sideChoices select _sideIndex] call Waldo_fnc_EcoBuild_spawnConfiguredBuilding;
+            ["SPAWN_CONFIGURED_BUILDING", [_pos, _entry param [0, ""], _sideChoices select _sideIndex], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
             [_disp] call Waldo_fnc_EcoBuild_cleanupSpawnBuildingPrompt;
         }];
 

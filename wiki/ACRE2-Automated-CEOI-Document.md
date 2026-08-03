@@ -1,43 +1,16 @@
-# ACRE2 Automated CEOI Document
+# ACRE2 Automated CEOI
 
-> **Use this page when:** you want WMP to generate a player-readable CEOI from the mission's radio configuration.
+> **Use this page when:** players need an authoritative in-game reference for their configured radio nets.
 
-_Associated Files: MissionScripts\MissionInit\ACRE2\CreateACRECEOI.sqf_
+The CEOI is the player's in-game radio reference. WMP combines the mission's starting side/group
+setup with what the player's computer actually applied. It lists the side, callsign, PRC-343
+block/channel and named long-range nets, and reports any setup problem instead of silently guessing.
 
-This function takes available ACRE Radio information and documents it in a CEOI for the player to reference.
-Covered:
-- All LR channels and their denotation
-- Highlighting of LR channels if the player's squad is noted as supposed to be on that net.
-- AN/PRC-343 Block & Channel for the squad that the player is in.
+Only the player's side is shown. The current group's short-range assignment and radio-specific net tunings are highlighted. Carried-radio lines identify base class, same-type occurrence, resolved request, ear, applicable failures and the count of preserved/unmanaged radios. Missing optional templates are not failures. Frequency-radio requests are marked as asynchronous/unverified because ACRE exposes no public frequency read-back.
 
-Arguments:
-_LRAssignments - from init.sqd via ACRE2Init.sqf - contains player squad LR channels from init.sqf ONLY.
-_SquadCallsigns - from ACRE2Init.sqf - contains a list of callsigns only
+The record is rebuilt after join, group change and player-object replacement, replacing the previous record instead of duplicating it. Group changes update this reference only and never retune radios.
 
-
-Example:
-
-Should only really be called from ACRE2Init.sqf and not manually.
-
-
-## Setup
-
-The below example CEOI will use the same setup as seen in the ACRE2 Long Range Radio & Short Range Radio Presetting documentation. See those for details.
-
-Here is that for your reference: Each number is a Long Range Radio assignment for one of the following - 152,148,117F.
-![Generated CEOI radio overview](https://i.imgur.com/3CHplvL.png)
-
-Short range radio channels are automatically allocated based on the callsign defined in the section above.
-
-Long Range channel names have to be provided manually per side. These are defined here:
-![Generated CEOI channel table](https://i.imgur.com/Mlnrkav.png)
-
-Channel names are broken down per side, and side is automatically chosen based on the players own side.
-
-The final CEOI looks like this:
-![Completed in-game CEOI document](https://i.imgur.com/kyYkNQo.jpg)
-
-With the radio channels the player is preset on coloured in green.
+Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`; `Waldo_fnc_ACRE2Init` handles generation. The full audit mission includes a core-console action to force a rebuild while checking physical radios.
 
 <!-- WMP-WIKI-NAV -->
 ---

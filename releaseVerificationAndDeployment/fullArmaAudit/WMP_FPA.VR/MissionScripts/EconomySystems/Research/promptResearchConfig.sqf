@@ -226,7 +226,7 @@
             _catalog = [_catalog] call Waldo_fnc_EcoResearch_normalizeResearchCatalog;
 
             [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalogLocal;
-            [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalog;
+            ["SET_RESEARCH", [_catalog], player] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
 
             private _newIndex = _catalog findIf {(toLower (_x param [0, ""])) isEqualTo (toLower (_entry param [0, ""]))};
             _disp setVariable ["WaldoEcoResearch_ConfigSelectedIndex", _newIndex];
@@ -247,7 +247,7 @@
             _catalog = [_catalog] call Waldo_fnc_EcoResearch_normalizeResearchCatalog;
 
             [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalogLocal;
-            [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalog;
+            ["SET_RESEARCH", [_catalog], player] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
 
             if (_index >= count _catalog) then {
                 _index = (count _catalog) - 1;
@@ -283,7 +283,7 @@
             _catalog = [_catalog] call Waldo_fnc_EcoResearch_normalizeResearchCatalog;
 
             [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalogLocal;
-            [_catalog] call Waldo_fnc_EcoResearch_setResearchCatalog;
+            ["SET_RESEARCH", [_catalog], player] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
 
             private _newIndex = _catalog findIf {(toLower (_x param [0, ""])) isEqualTo (toLower (_entry param [0, ""]))};
             _disp setVariable ["WaldoEcoResearch_ConfigSelectedIndex", _newIndex];

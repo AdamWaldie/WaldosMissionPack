@@ -191,7 +191,8 @@
                 _value = 0;
             };
 
-            [_sideKey, _resourceType, _value, name player] call Waldo_fnc_EcoResource_setSideResourceAmount;
+            ["SET_RESOURCE", [_sideKey, _resourceType, _value, name player], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
             [_disp] call Waldo_fnc_EcoResource_refreshResourceSettings;
         }
     ];

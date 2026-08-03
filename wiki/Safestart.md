@@ -20,7 +20,7 @@ The freeze runs on its own variables, so it never clashes with ENDEX.
 
 ## Auto-start (the default)
 
-Safestart starts automatically from `initServer.sqf`. A documented block there exposes the options:
+Safestart starts automatically from `initServer.sqf`. Its server-owned defaults are exposed in `MissionConfig\missionSystemsConfig.sqf`:
 
 ```sqf
 missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off

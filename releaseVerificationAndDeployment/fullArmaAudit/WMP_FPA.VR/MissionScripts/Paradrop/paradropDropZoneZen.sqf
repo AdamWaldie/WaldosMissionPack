@@ -177,7 +177,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ];
         private _idBase = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
         if (_idBase == "") then {_idBase = "DZ"};
-        private _id = format ["%1_%2_%3", _idBase, clientOwner, round (serverTime * 10)];
+        private _id = [_idBase] call Waldo_fnc_CreateRuntimeId;
         private _config = createHashMapFromArray [
             ["id", _id], ["name", _name], ["centre", _modulePosition], ["side", _side], ["aircraftClass", _class],
             ["direction", _direction], ["altitude", _altitude], ["maximumSpeed", _speed], ["approachDistance", _approach],

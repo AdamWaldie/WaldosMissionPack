@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 816,
+  "registeredFunctionCount": 838,
   "runtimeFunctionCount": 385,
-  "functionCount": 1201,
+  "functionCount": 1223,
   "stations": [
     {
       "id": "control",
@@ -13,6 +13,16 @@
         0
       ],
       "description": "Navigation, resets, diagnostics and audit modes."
+    },
+    {
+      "id": "acre",
+      "title": "ACRE2 COMMUNICATIONS",
+      "position": [
+        18,
+        27,
+        0
+      ],
+      "description": "Preconfigured radios, named nets, listening ears, Babel, respawn and persistence."
     },
     {
       "id": "mission-init",
@@ -407,6 +417,18 @@
   ],
   "functions": [
     {
+      "name": "Waldo_fnc_LoadFeatureConfigs",
+      "file": "MissionScripts/MissionInit/Configuration/loadFeatureConfigs.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CreateRuntimeId",
+      "file": "MissionScripts/MissionInit/Configuration/createRuntimeId.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_GetPlayerGroup",
       "file": "MissionScripts/MissionInit/InitHelpers/GetPlayerGroup.sqf",
       "station": "mission-init",
@@ -533,32 +555,122 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ACRE2PreInit",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2PreInit.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ACRE2Init",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2InitNew.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2Init_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/ACRE2Init.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_SquadLevelRadios",
+      "name": "Waldo_fnc_ACRE2SquadLevelRadios_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/ACRE2SquadLevelRadios.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_GetSRChannelName",
+      "name": "Waldo_fnc_GetSRChannelName_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/GetSRChannelName.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_CreateACRECEOI",
+      "name": "Waldo_fnc_CreateACRECEOI_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/CreateACRECEOI.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_BabelActivation",
+      "name": "Waldo_fnc_BabelActivation_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/BabelActivation.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ValidateConfig",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ValidateConfig.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2GetRadioProfiles",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2GetRadioProfiles.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2GetOrderedRadios",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2GetOrderedRadios.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyPresetNames",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyPresetNames.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2CompilePlan",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2CompilePlan.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyPlayerPlan",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyPlayerPlan.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2BuildCEOI",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2BuildCEOI.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyBabel",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyBabel.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BabelActivation",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyBabel.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2FilterLoadout",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2FilterLoadout.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2CaptureRadioState",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2CaptureRadioState.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyRadioState",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyRadioState.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2SchedulePlayerRefresh",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2SchedulePlayerRefresh.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
@@ -1283,6 +1395,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RecoverySpillVirtualPackageServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySpillVirtualPackageServer.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_VehicleCamoSetup",
       "file": "MissionScripts/Logistics/VehicleCamoScript/vehicleCamo.sqf",
       "station": "loadouts",
@@ -1321,6 +1439,12 @@
     {
       "name": "Waldo_fnc_FortifyBudgetModule",
       "file": "MissionScripts/ZenModules/Zen_fortifyBudgetModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenFortifyBudgetServer",
+      "file": "MissionScripts/ZenModules/zenFortifyBudgetServer.sqf",
       "station": "zen",
       "activation": "manual"
     },
@@ -1385,8 +1509,20 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ZenEMPServer",
+      "file": "MissionScripts/ZenModules/zenEMPServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ZenTracker",
       "file": "MissionScripts/ZenModules/Zen_trackerModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenTrackerServer",
+      "file": "MissionScripts/ZenModules/zenTrackerServer.sqf",
       "station": "zen",
       "activation": "manual"
     },
@@ -2273,6 +2409,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_EcoCore_zenServerRequest",
+      "file": "MissionScripts/EconomySystems/Core/zenServerRequest.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_EcoCore_logZenModule",
       "file": "MissionScripts/EconomySystems/Core/logZenModule.sqf",
       "station": "economy-core",
@@ -2316,7 +2458,7 @@
     },
     {
       "name": "Waldo_fnc_EcoMakerSetup",
-      "file": "economyConfig.sqf",
+      "file": "MissionConfig/economyConfig.sqf",
       "station": "control",
       "activation": "manual"
     },

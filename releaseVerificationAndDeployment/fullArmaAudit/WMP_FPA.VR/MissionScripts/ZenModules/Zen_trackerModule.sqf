@@ -46,8 +46,7 @@ if (isNull _objectPos) exitWith {
             ["TRACKER NOT PLANTED", "The selected object or unit is no longer available.", 8, "FAILURE"] call Waldo_fnc_JammingNotice;
         };
 
-        [_target, _sideStr, _label, _active] call Waldo_fnc_Tracker;
-        ["TRACKER PLANTED", format ["Tracking access: %1. Label: %2.", _sideStr, if (_label isEqualTo "") then {"AUTO"} else {_label}], 6, "SUCCESS"] call Waldo_fnc_JammingNotice;
+        [_target, _sideStr, _label, _active, player] remoteExecCall ["Waldo_fnc_ZenTrackerServer", 2];
     },
     {},
     [_objectPos]

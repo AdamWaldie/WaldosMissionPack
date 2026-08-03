@@ -204,7 +204,7 @@ Use `Waldo_fnc_ParadropEmbark` to transfer players or create a boarding point, a
 
 ## Configuring Jump Parameters
 
-Jump thresholds are set in `initServer.sqf` and apply to **all** aircraft — both auto-detected and manually set up:
+Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to **all** aircraft — both auto-detected and manually set up:
 
 ```sqf
 // Static Line
@@ -227,7 +227,7 @@ For a non-RHS static chute (if you don't have RHS), use `"NonSteerable_Parachute
 For any vehicle not auto-detected, paste one of the following into its **init field** in Eden:
 
 ```sqf
-// Apply both HALO and static line (reads thresholds from initServer.sqf automatically)
+// Apply both HALO and static line (reads server feature defaults automatically)
 [this] call Waldo_fnc_VehicleJumpSetup;
 
 // Apply only HALO
@@ -240,7 +240,7 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 [this] call Waldo_fnc_AddExitActions;
 ```
 
-`Waldo_fnc_VehicleJumpSetup` is a convenience wrapper that applies both jump types using whichever parameters are set in `initServer.sqf`.
+`Waldo_fnc_VehicleJumpSetup` is a convenience wrapper that applies both jump types using whichever parameters are set in `MissionConfig\airOperationsConfig.sqf`.
 
 ---
 

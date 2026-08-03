@@ -14,6 +14,12 @@ class CfgFunctions
     {
         class InitilisationAndSetup 
         {
+            class LoadFeatureConfigs {
+                file = "MissionScripts\MissionInit\Configuration\loadFeatureConfigs.sqf";
+            };
+            class CreateRuntimeId {
+                file = "MissionScripts\MissionInit\Configuration\createRuntimeId.sqf";
+            };
             class GetPlayerGroup {
                 file = "MissionScripts\MissionInit\InitHelpers\GetPlayerGroup.sqf";
             };
@@ -82,21 +88,41 @@ class CfgFunctions
             };
         };
         class ACRE2Setup {
+            class ACRE2PreInit {
+                file = "MissionScripts\MissionInit\ACRE2\acre2PreInit.sqf";
+                preInit = 1;
+            };
             class ACRE2Init {
+                file = "MissionScripts\MissionInit\ACRE2\acre2InitNew.sqf";
+            };
+            class ACRE2Init_Legacy {
                 file = "MissionScripts\MissionInit\ACRE2\ACRE2Init.sqf";
             };
-            class SquadLevelRadios {
+            class ACRE2SquadLevelRadios_Legacy {
                 file = "MissionScripts\MissionInit\ACRE2\ACRE2SquadLevelRadios.sqf";
             };
-            class GetSRChannelName {
+            class GetSRChannelName_Legacy {
                 file = "MissionScripts\MissionInit\ACRE2\GetSRChannelName.sqf";
             };
-            class CreateACRECEOI {
+            class CreateACRECEOI_Legacy {
                 file = "MissionScripts\MissionInit\ACRE2\CreateACRECEOI.sqf";
             };
-            class BabelActivation {
+            class BabelActivation_Legacy {
                 file = "MissionScripts\MissionInit\ACRE2\BabelActivation.sqf";
             };
+            class ACRE2ValidateConfig {file = "MissionScripts\MissionInit\ACRE2\acre2ValidateConfig.sqf";};
+            class ACRE2GetRadioProfiles {file = "MissionScripts\MissionInit\ACRE2\acre2GetRadioProfiles.sqf";};
+            class ACRE2GetOrderedRadios {file = "MissionScripts\MissionInit\ACRE2\acre2GetOrderedRadios.sqf";};
+            class ACRE2ApplyPresetNames {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPresetNames.sqf";};
+            class ACRE2CompilePlan {file = "MissionScripts\MissionInit\ACRE2\acre2CompilePlan.sqf";};
+            class ACRE2ApplyPlayerPlan {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPlayerPlan.sqf";};
+            class ACRE2BuildCEOI {file = "MissionScripts\MissionInit\ACRE2\acre2BuildCEOI.sqf";};
+            class ACRE2ApplyBabel {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyBabel.sqf";};
+            class BabelActivation {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyBabel.sqf";};
+            class ACRE2FilterLoadout {file = "MissionScripts\MissionInit\ACRE2\acre2FilterLoadout.sqf";};
+            class ACRE2CaptureRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2CaptureRadioState.sqf";};
+            class ACRE2ApplyRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyRadioState.sqf";};
+            class ACRE2SchedulePlayerRefresh {file = "MissionScripts\MissionInit\ACRE2\acre2SchedulePlayerRefresh.sqf";};
         };
         class AI 
         {
@@ -433,6 +459,7 @@ class CfgFunctions
             class RecoveryResolveRestorePosition {file = "MissionScripts\Logistics\VehicleRecovery\recoveryResolveRestorePosition.sqf";};
             class RecoveryRestoreServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRestoreServer.sqf";};
             class RecoveryMonitorServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryMonitorServer.sqf";};
+            class RecoverySpillVirtualPackageServer {file = "MissionScripts\Logistics\VehicleRecovery\recoverySpillVirtualPackageServer.sqf";};
         };
         class VehicleCamo {
             class VehicleCamoSetup {
@@ -459,6 +486,9 @@ class CfgFunctions
             };
             class FortifyBudgetModule {
                 file = "MissionScripts\ZenModules\Zen_fortifyBudgetModule.sqf";
+            };
+            class ZenFortifyBudgetServer {
+                file = "MissionScripts\ZenModules\zenFortifyBudgetServer.sqf";
             };
             class ZenConvoyModule {
                 file = "MissionScripts\ZenModules\Zen_convoyModule.sqf";
@@ -490,8 +520,14 @@ class CfgFunctions
             class ZenEMP {
                 file = "MissionScripts\ZenModules\Zen_empModule.sqf";
             };
+            class ZenEMPServer {
+                file = "MissionScripts\ZenModules\zenEMPServer.sqf";
+            };
             class ZenTracker {
                 file = "MissionScripts\ZenModules\Zen_trackerModule.sqf";
+            };
+            class ZenTrackerServer {
+                file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
             };
         };
         class Paradrop {
@@ -760,6 +796,9 @@ class CfgFunctions
             class EcoCore_registerZenModules {
                 file = "MissionScripts\EconomySystems\Core\registerZenModules.sqf";
             };
+            class EcoCore_zenServerRequest {
+                file = "MissionScripts\EconomySystems\Core\zenServerRequest.sqf";
+            };
             class EcoCore_logZenModule {
                 file = "MissionScripts\EconomySystems\Core\logZenModule.sqf";
             };
@@ -782,7 +821,7 @@ class CfgFunctions
                 file = "MissionScripts\EconomySystems\Core\notifyActorLocal.sqf";
             };
             class EcoMakerSetup {
-                file = "economyConfig.sqf";
+                file = "MissionConfig\economyConfig.sqf";
             };
             class EcoCore_canRunAuthority {
                 file = "MissionScripts\EconomySystems\Core\canRunAuthority.sqf";

@@ -2,7 +2,7 @@
 
 > **Use this page when:** you know the capability you need and want the correct setup or reference page.
 
-Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Complete Feature Catalogue](Feature-Catalogue) for the fastest full inventory, or the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
+Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Complete Feature Catalogue](Feature-Catalogue) for the fastest full inventory, [Feature Setup and Activation](Feature-Setup-and-Activation) to turn a feature into a working mission setup, or the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
 
 ## Mission flow and UI
 

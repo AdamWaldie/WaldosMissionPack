@@ -26,7 +26,7 @@ missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];
 
 Use the normal Economy Zeus modules as visual builders, then open **Configuration: Build Mission Setup**. Its combined screen has one primary authoring action and two compatibility actions:
 
-* **BUILD + COPY** asks each selected system to translate its current module-authored setup into paste-ready `economyConfig.sqf` calls, then copies the complete block to the clipboard. The result uses the same public functions documented for hand-authored missions and includes their pre-filled settings and placements.
+* **BUILD + COPY** asks each selected system to translate its current module-authored setup into paste-ready `MissionConfig\economyConfig.sqf` calls, then copies the complete block to the clipboard. The result uses the same public functions documented for hand-authored missions and includes their pre-filled settings and placements.
 * **Config Copy** exports the original portable catalogue string containing resources, research, buildings and purchases.
 * **Import** loads a portable configuration string. **Additive Import** merges it instead of replacing existing catalogues.
 
@@ -35,9 +35,9 @@ Use these modes to:
 * save a configuration you built live in Zeus,
 * share a configuration between missions, or
 * bake only the catalogues into a mission via `Waldo_Economy_ConfigString`, or
-* bake the complete authored layout into `economyConfig.sqf` (see [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)).
+* bake the complete authored layout into `MissionConfig\economyConfig.sqf` (see [Setup & Configuration](Waldos-Economy-Systems-Setup-And-Configuration)).
 
-The recommended workflow is **configure and place everything with the Zeus modules in a clean authoring session, press BUILD + COPY, then paste the generated setup calls into `economyConfig.sqf`**. On later mission runs those calls recreate the authored setup without requiring Zeus. Use CONFIG COPY instead when positions and placed fixtures should remain mission-specific.
+The recommended workflow is **configure and place everything with the Zeus modules in a clean authoring session, press BUILD + COPY, then paste the generated setup calls into `MissionConfig\economyConfig.sqf`**. On later mission runs those calls recreate the authored setup without requiring Zeus. Use CONFIG COPY instead when positions and placed fixtures should remain mission-specific.
 
 ## Presets
 

@@ -5,6 +5,8 @@
  * This interface-only dispatcher is called by the registrations in Zen_initModules.sqf. Dialogs
  * collect friendly values while authoritative functions validate and apply world/state changes on
  * the server. It does not own persistent state and is safe to open repeatedly.
+ * Locality and authority: ZEN invokes this on the curator interface client. Dialog submissions call
+ * feature APIs that validate and route authoritative mutations to the server.
  *
  * Arguments:
  * 0: feature <STRING> - registered runtime operation identifier
@@ -16,6 +18,12 @@
  *
  * Example:
  * ["HAZARD_CREATE", _modulePos, objNull] call Waldo_fnc_FeatureRuntimeZen;
+ *
+ * Result:
+ * Opens the matching friendly runtime dialog at the curator's selected position.
+ *
+ * Current callers:
+ * ZEN registrations in MissionScripts\ZenModules\Zen_initModules.sqf.
  */
 
 params [
@@ -61,7 +69,7 @@ switch (toUpperANSI _feature) do {
         private _sideLabels = ["BLUFOR", "OPFOR", "Independent"];
         private _initialAssets = [_aircraft] call _resolveAssets;
         if (count (_initialAssets select 0) == 0) exitWith {systemChat "[WMP] No compatible turret-equipped gunships are configured and no suitable aircraft is nearby."};
-        private _id = format ["gunship_%1_%2", clientOwner, round (serverTime * 10)];
+        private _id = ["gunship"] call Waldo_fnc_CreateRuntimeId;
         private _created = [
                     "Register or Spawn Airborne Gunship",
                     [
@@ -288,7 +296,16 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "RECOVERY_WORKSHOP": {
-        private _target = (nearestObjects [_modulePos, [], 25, true]) param [0, objNull];
+        // Prefer the object ZEN resolved underneath the module. An unfiltered nearestObjects query
+        // can otherwise select a player, curator helper or vehicle standing beside the intended
+        // workshop on a dedicated server.
+        private _target = if (!isNull _objectPos && {!(_objectPos isKindOf "CAManBase")} && {!(_objectPos isKindOf "Logic")}) then {
+            _objectPos
+        } else {
+            ((nearestObjects [_modulePos, [], 25, true]) select {
+                !isNull _x && {!(_x isKindOf "CAManBase")} && {!(_x isKindOf "Logic")}
+            }) param [0, objNull]
+        };
         if (isNull _target) exitWith {systemChat "[WMP] No workshop object found within 25 metres."};
         [
             "Register Vehicle Recovery Workshop",
@@ -473,7 +490,7 @@ switch (toUpperANSI _feature) do {
             "AI Rebalance Control",
             [
                 ["CHECKBOX", ["Enable", "Apply the selected profile to local AI on every machine."], missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]],
-                ["COMBO", ["Lighting conditions", "Low light reduces AI combat and sensing skills; assigned NVG/HMD equipment offsets the penalty."], [["DAY", "NIGHT"], ["Daylight", "Low light (NVG-aware)"], (["DAY", "NIGHT"] find (missionNamespace getVariable ["Waldo_AI_Mode", "DAY"])) max 0]],
+                ["COMBO", ["Lighting conditions", "Low light reduces AI combat and sensing skills; assigned NVG/HMD equipment offsets the penalty."], [["DAY", "NIGHT"], ["Daylight", "Low light (NVG-aware)"], (["DAY", "NIGHT"] find (missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"])) max 0]],
                 ["COMBO", ["WMP opposition profile", "These are WMP encounter presets, not Arma difficulty levels. Mission-defined profiles are included by display name."], [_profileValues, _profileLabels, (_profileValues find _activeProfile) max 0]]
             ],
             {
@@ -543,7 +560,7 @@ switch (toUpperANSI _feature) do {
                         _profile set ["indoorFactor", _factor];
                         _profile set ["equipmentFactor", _factor];
                         _profile set ["notifyTransitions", _notifyTransitions];
-                        private _key = format ["hazard_%1_%2", clientOwner, round (serverTime * 10)];
+                        private _key = ["hazard"] call Waldo_fnc_CreateRuntimeId;
                         ["HAZARD_SET", [_key, [_modulePos, _radius], _profile]] call Waldo_fnc_FeatureRuntimeApply;
                         if (_copy) then {
                             copyToClipboard format ["[%1, [%2, %3], %4] call Waldo_fnc_HazardRegisterZone;", str _key, str _modulePos, _radius, _profile];

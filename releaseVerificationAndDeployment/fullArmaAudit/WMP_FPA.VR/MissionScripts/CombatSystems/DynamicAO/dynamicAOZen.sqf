@@ -31,7 +31,7 @@ private _civilianFactions = [[civilian]] call Waldo_fnc_DynamicAOGetFactions;
 private _civilianValues = [""];
 private _civilianLabels = ["None - do not populate civilians"];
 {_civilianValues pushBack (_x select 1); _civilianLabels pushBack (_x select 2)} forEach _civilianFactions;
-private _defaultName = format ["AO_%1_%2", clientOwner, round (serverTime * 10)];
+private _defaultName = ["AO"] call Waldo_fnc_CreateRuntimeId;
 
 [
     "Create Dynamic Area of Operations",
@@ -74,7 +74,7 @@ private _defaultName = format ["AO_%1_%2", clientOwner, round (serverTime * 10)]
         ];
         private _row = _factions select ((_factions findIf {(_x select 1) == _faction}) max 0);
         private _id = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
-        if (_id == "") then {_id = format ["AO_%1_%2", clientOwner, round (serverTime * 10)]};
+        if (_id == "") then {_id = ["AO"] call Waldo_fnc_CreateRuntimeId};
         private _config = createHashMapFromArray [
             ["id", _id], ["center", _modulePosition], ["side", _row select 0], ["faction", _faction],
             ["radius", _radius], ["patrolGroups", round _patrols],

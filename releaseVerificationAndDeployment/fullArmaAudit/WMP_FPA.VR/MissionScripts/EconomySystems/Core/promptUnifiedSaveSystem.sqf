@@ -36,7 +36,7 @@
 
     private _guide = _disp ctrlCreate ["RscStructuredText", -1];
     _guide ctrlSetPosition [0.25, 0.142, 0.48, 0.065];
-    _guide ctrlSetStructuredText parseText "<t color='#79C7FF' size='0.78'>ZEUS TO SCRIPT</t><br/><t color='#D9E6F2' size='0.72'>1. Place and configure systems.  2. Select sections below.  3. BUILD + COPY.  4. Paste the generated calls into economyConfig.sqf.</t>";
+    _guide ctrlSetStructuredText parseText "<t color='#79C7FF' size='0.78'>ZEUS TO SCRIPT</t><br/><t color='#D9E6F2' size='0.72'>1. Place and configure systems.  2. Select sections below.  3. BUILD + COPY.  4. Paste the generated calls into MissionConfig\economyConfig.sqf.</t>";
     _guide ctrlSetTextColor [0.72, 0.86, 0.96, 1];
     _guide ctrlSetTooltip "The generated SQF contains the public setup calls and their current arguments, including placed fixtures.";
     _guide ctrlCommit 0;
@@ -162,7 +162,7 @@
         copyToClipboard _payload;
         private _guide = _disp getVariable ["WaldoEcoCore_SaveGuide", controlNull];
         if (!isNull _guide) then {
-            _guide ctrlSetStructuredText parseText "<t color='#6CE5A8' size='0.80'>COPIED</t><br/><t color='#FFFFFF' size='0.72'>Paste the generated calls into the mission-root economyConfig.sqf, then save the mission.</t>";
+            _guide ctrlSetStructuredText parseText "<t color='#6CE5A8' size='0.80'>COPIED</t><br/><t color='#FFFFFF' size='0.72'>Paste the generated calls into MissionConfig\economyConfig.sqf, then save the mission.</t>";
             _guide ctrlSetTextColor [0.42, 0.90, 0.66, 1];
             _guide ctrlCommit 0;
         };

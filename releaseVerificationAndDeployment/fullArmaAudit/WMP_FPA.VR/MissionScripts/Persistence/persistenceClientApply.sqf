@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies a server-supplied persistence state to the local player after validation.
+ * Locality and authority: the server remote-executes this on the owning player client. It rejects
+ * requests from any non-server remote owner and mutates only the local player.
  *
  * Arguments:
  * 0: state <ARRAY> - versioned player-state payload
@@ -10,6 +12,12 @@
  *
  * Example:
  * [_state] remoteExecCall ["Waldo_fnc_PersistenceClientApply", owner _player];
+ *
+ * Result:
+ * The owning client restores configured player state and prepares its ordinary respawn snapshot.
+ *
+ * Current callers:
+ * Waldo_fnc_PersistenceServerHandleLoadPlayer on the server.
  */
 
 params [["_state", [], [[]]]];
@@ -23,8 +31,13 @@ if (_version != 1) exitWith {
     false
 };
 
+missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
 if (missionNamespace getVariable ["Waldo_Persistence_SaveLoadout", true] && {count _loadout > 0}) then {
-    player setUnitLoadout _loadout;
+    private _filteredLoadout = [_loadout] call Waldo_fnc_ACRE2FilterLoadout;
+    player setUnitLoadout _filteredLoadout;
+    missionNamespace setVariable ["Waldo_Player_Inventory", _filteredLoadout];
+    missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1];
+    missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
 };
 if (missionNamespace getVariable ["Waldo_Persistence_SaveMedical", true] && {count _medical > 0} && {isClass (configFile >> "CfgPatches" >> "ace_medical")}) then {
     [player, _medical] call ace_medical_fnc_deserializeState;
@@ -38,24 +51,24 @@ if (missionNamespace getVariable ["Waldo_Persistence_SavePosition", false] && {c
     player setDir (_position select 1);
 };
 
-if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {count _radios > 0} && {isClass (configFile >> "CfgPatches" >> "acre_main")}) then {
-    [_radios] spawn {
-        params ["_savedRadios"];
-        sleep 2;
-        private _typeCounts = createHashMap;
-        {
-            private _radioId = _x;
-            private _baseType = [_radioId] call acre_api_fnc_getBaseRadio;
-            private _index = _typeCounts getOrDefault [_baseType, 0];
-            _typeCounts set [_baseType, _index + 1];
-            private _savedIndex = _savedRadios findIf {(_x select 0) == _baseType && {(_x select 1) == _index}};
-            if (_savedIndex >= 0) then {
-                private _saved = _savedRadios select _savedIndex;
-                [_radioId, _saved select 2] call acre_api_fnc_setRadioChannel;
-                [_radioId, _saved select 3] call acre_api_fnc_setRadioSpatial;
-            };
-        } forEach ([player] call acre_api_fnc_getCurrentRadioList);
+private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
+if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {count _radios > 0}) then {
+    missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
+    [_radios, _generation] spawn {
+        params ["_savedRadios", "_loadoutGeneration"];
+        if !([_savedRadios, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState) then {
+            diag_log "[WMP PERSISTENCE] Saved ACRE radio state could not be restored; applying the current mission plan.";
+            missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
+            ["PERSISTENCE_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+        } else {
+            missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios];
+            missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
+            ["PERSISTENCE_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+        };
     };
+} else {
+    missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
+    ["PERSISTENCE_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
 };
 
 ["PERSISTENCE", "Persistent player state loaded.", "SUCCESS", "PERSISTENCE"] call Waldo_fnc_FeatureNotifyLocal;
