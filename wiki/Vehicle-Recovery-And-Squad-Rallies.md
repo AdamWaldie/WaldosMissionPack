@@ -12,10 +12,14 @@ Vehicle recovery is opt-in per object. Register one or more workshops, recoverab
 [repairDepot, "FOB_ALPHA", 50, west] call Waldo_fnc_RecoveryRegisterWorkshop;
 [damagedTank, "FOB_ALPHA", 0.55, true, true, "B_Slingload_01_Cargo_F", true, 1]
     call Waldo_fnc_RecoveryRegisterVehicle;
-[recoveryTruck, 10] call Waldo_fnc_RecoveryRegisterCarrier;
+[recoveryTruck, 10, "AUTO", 2] call Waldo_fnc_RecoveryRegisterCarrier;
 ```
 
-Workshops accept a key, delivery radius and serviced side (`sideUnknown` permits all sides). `RecoveryRegisterVehicle` accepts the workshop key, living-vehicle damage threshold, whether destroyed vehicles are accepted, whether an engineer is required, package class, inventory-preservation policy and restored fuel fraction. The system also restores textures and pylon magazines. A registered recovery carrier remains a carrier after it is recovered.
+Workshops accept a key, delivery radius and serviced side (`sideUnknown` permits all sides). `RecoveryRegisterVehicle` accepts the workshop key, living-vehicle damage threshold, whether destroyed vehicles are accepted, whether an engineer is required, package class, inventory-preservation policy and restored fuel fraction. The system also restores textures and pylon magazines. `RecoveryRegisterCarrier` accepts loading range, cargo mode and package capacity. A registered recovery carrier remains a carrier with the same mode and capacity after it is recovered.
+
+Carrier mode is `"AUTO"`, `"VIRTUAL"` or `"PHYSICAL"`. Automatic mode uses Arma's visible vehicle-in-vehicle cargo only when `vehicleCargoEnabled` and `canVehicleCargo` confirm that the selected package fits; otherwise it uses the virtual manifest. Virtual mode therefore works with ordinary trucks, MRAPs, boats and other registered vehicles that have no engine-configured cargo bay. Physical mode is intentionally strict and refuses packages that do not fit. Package discovery uses the authoritative server registry and measures loading range between the real bounding footprints of carrier and package, so a large container parked directly beside a smaller vehicle is not rejected because their model origins are farther apart. While virtually carried, the real server-owned package is hidden and simulation-disabled rather than deleted, preserving its recovery state. Unloading at the matching workshop queues restoration directly; unloading elsewhere searches for a complete clear package footprint beside the carrier. Carrier destruction spills virtual packages only when a clear position is available, and an obstructed package remains protected for a later retry.
+
+The recovery object is independently configurable per recoverable vehicle through argument 5 of `Waldo_fnc_RecoveryRegisterVehicle`. For Zeus, extend `Waldo_Recovery_PackageClasses` with valid `CfgVehicles` classes before runtime configuration; the module converts that pool into a display-name dropdown. The default pool is `B_Slingload_01_Cargo_F` and `Land_Pallet_MilBoxes_F`. The server validates the selected class and falls back to the first valid configured entry.
 
 Recovery preparation can optionally use the shared interaction procedures. The feature's semantic
 default is `repair / standard`; script options can override it without changing the recovery API:
@@ -43,7 +47,7 @@ ZEN provides three modules:
 
 - **Vehicle Recovery - Register Workshop** configures a nearby object's key and radius and can export its setup call.
 - **Vehicle Recovery - Register Vehicle** configures the nearest vehicle's recovery policy and an optional simplified preparation procedure: enable, procedure and difficulty.
-- **Vehicle Recovery - Register Carrier** enables package loading and unloading on the nearest vehicle.
+- **Vehicle Recovery - Register Carrier** enables package loading and unloading on the nearest vehicle and exposes Automatic, Virtual Manifest or Physical Cargo Bay handling plus a 1–10 package capacity.
 
 Living vehicles are retained hidden while packaged and restored as the same object, preserving object identity, event handlers, actions, applied scripts and external references. A destroyed vehicle cannot be resurrected reliably, so that path creates a replacement, restores its Eden variable name, copies the configured custom-variable allowlist and invokes `Waldo_Recovery_OnRestored` for mission-specific rebinding. Crew and attached objects are not recreated. Use persistence separately for long-term mission saves.
 

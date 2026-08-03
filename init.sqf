@@ -80,6 +80,9 @@ if (isNil "Waldo_Recovery_NotificationRadius") then {Waldo_Recovery_Notification
 if (isNil "Waldo_Recovery_CreateWorkshopMarkers") then {Waldo_Recovery_CreateWorkshopMarkers = true};
 if (isNil "Waldo_Recovery_PlacementClearance") then {Waldo_Recovery_PlacementClearance = 3};
 if (isNil "Waldo_Recovery_DefaultCustomVariables") then {Waldo_Recovery_DefaultCustomVariables = []};
+if (isNil "Waldo_Recovery_PackageClasses") then {
+    Waldo_Recovery_PackageClasses = ["B_Slingload_01_Cargo_F", "Land_Pallet_MilBoxes_F"];
+};
 
 if (isNil "Waldo_Gunship_Enable") then {Waldo_Gunship_Enable = false};
 if (isNil "Waldo_Gunship_DefaultAltitude") then {Waldo_Gunship_DefaultAltitude = 700};

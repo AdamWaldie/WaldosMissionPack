@@ -429,6 +429,7 @@ class CfgFunctions
             class RecoverySetupCarrierLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupCarrierLocal.sqf";};
             class RecoverySetCargoLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetCargoLocal.sqf";};
             class RecoveryRequestServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRequestServer.sqf";};
+            class RecoveryResolveUnloadPosition {file = "MissionScripts\Logistics\VehicleRecovery\recoveryResolveUnloadPosition.sqf";};
             class RecoveryResolveRestorePosition {file = "MissionScripts\Logistics\VehicleRecovery\recoveryResolveRestorePosition.sqf";};
             class RecoveryRestoreServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRestoreServer.sqf";};
             class RecoveryMonitorServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryMonitorServer.sqf";};

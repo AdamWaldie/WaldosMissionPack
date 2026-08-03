@@ -547,13 +547,13 @@ Waldo_QA_fnc_resetRecoveryLocalServer = {
     } forEach (missionNamespace getVariable ["Waldo_Recovery_Packages", []]);
     missionNamespace setVariable ["Waldo_Recovery_Packages", []];
     private _vehicle = ["qa_recovery_vehicle", "B_MRAP_01_F", [217, 7, 0], 90, false] call Waldo_QA_fnc_getFeatureObjectServer;
-    private _carrier = ["qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", [225, -28, 0], 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
+    private _carrier = ["qa_recovery_carrier", "B_MRAP_01_F", [225, -28, 0], 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
     private _workshop = ["qa_recovery_workshop", "Land_RepairDepot_01_green_F", [225, 14, 0], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
     _vehicle setDamage 0.8;
     [_workshop, "QA", 20, west] call Waldo_fnc_RecoveryRegisterWorkshop;
     private _recoveryInteraction = createHashMapFromArray [["enabled", true], ["challengeId", "repair"], ["difficulty", "easy"]];
     [_vehicle, "QA", 0.55, true, false, "B_Slingload_01_Cargo_F", true, 1, _recoveryInteraction] call Waldo_fnc_RecoveryRegisterVehicle;
-    [_carrier, 12] call Waldo_fnc_RecoveryRegisterCarrier;
+    [_carrier, 12, "VIRTUAL", 2] call Waldo_fnc_RecoveryRegisterCarrier;
     missionNamespace setVariable ["Waldo_QA_RecoveryObjects", [_vehicle, _carrier, _workshop], true];
     true
 };
