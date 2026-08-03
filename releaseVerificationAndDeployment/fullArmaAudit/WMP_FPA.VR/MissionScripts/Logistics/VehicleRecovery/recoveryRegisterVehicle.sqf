@@ -35,7 +35,7 @@ params [
     ["_preserveCargo", true, [true]], ["_restoredFuel", 1, [0]],
     ["_interactionOptions", [], [[], createHashMap]]
 ];
-if (isNull _vehicle || {!(_vehicle isKindOf "AllVehicles")}) exitWith {false};
+if (isNull _vehicle || {!(_vehicle isKindOf "AllVehicles")} || {_vehicle isKindOf "CAManBase"}) exitWith {false};
 if (!isServer) exitWith {
     private _forward = _interactionOptions;
     if (typeName _forward == "HASHMAP") then {private _pairs = []; {_pairs pushBack [_x, _forward get _x]} forEach keys _forward; _forward = _pairs};

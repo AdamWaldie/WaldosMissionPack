@@ -859,7 +859,7 @@ class Mission
             flags=5;
             class Attributes {name="qa_recovery_carrier"; init="this allowDamage false; this enableSimulationGlobal false;";};
             id=146;
-            type="B_T_VTOL_01_vehicle_F";
+            type="B_MRAP_01_F";
         };
         class Item47
         {

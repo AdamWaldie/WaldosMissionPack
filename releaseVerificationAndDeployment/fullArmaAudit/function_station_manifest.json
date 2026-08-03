@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 815,
+  "registeredFunctionCount": 816,
   "runtimeFunctionCount": 385,
-  "functionCount": 1200,
+  "functionCount": 1201,
   "stations": [
     {
       "id": "control",
@@ -1255,6 +1255,12 @@
     {
       "name": "Waldo_fnc_RecoveryRequestServer",
       "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRequestServer.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryResolveUnloadPosition",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryResolveUnloadPosition.sqf",
       "station": "vehicle-recovery",
       "activation": "manual"
     },

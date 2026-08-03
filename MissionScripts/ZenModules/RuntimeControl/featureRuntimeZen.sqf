@@ -315,7 +315,8 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "RECOVERY_VEHICLE": {
-        private _target = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) param [0, objNull];
+        private _nearVehicles = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) select {!(_x isKindOf "CAManBase")};
+        private _target = if (!isNull _objectPos && {_objectPos isKindOf "AllVehicles"} && {!(_objectPos isKindOf "CAManBase")}) then {_objectPos} else {_nearVehicles param [0, objNull]};
         if (isNull _target) exitWith {systemChat "[WMP] No vehicle found within 25 metres."};
         private _workshops = (allMissionObjects "All") select {_x getVariable ["Waldo_Recovery_Workshop", false]};
         if (count _workshops == 0) exitWith {systemChat "[WMP] Create a vehicle recovery workshop before assigning recoverable vehicles."};
@@ -351,12 +352,21 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "RECOVERY_CARRIER": {
-        private _target = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) param [0, objNull];
+        private _nearVehicles = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) select {!(_x isKindOf "CAManBase")};
+        private _target = if (!isNull _objectPos && {_objectPos isKindOf "AllVehicles"} && {!(_objectPos isKindOf "CAManBase")}) then {_objectPos} else {_nearVehicles param [0, objNull]};
         if (isNull _target) exitWith {systemChat "[WMP] No carrier vehicle found within 25 metres."};
         [
             "Register Recovery Carrier",
-            [["SLIDER", ["Loading range", "Maximum package loading distance."], [3, 25, 10, 1]]],
-            {params ["_values", "_target"]; ["RECOVERY_CARRIER", [_target, _values select 0]] call Waldo_fnc_FeatureRuntimeApply;}, {}, _target
+            [
+                ["SLIDER", ["Loading range", "Maximum package loading distance."], [3, 25, 10, 1]],
+                ["COMBO", ["Cargo handling", "Automatic uses a real cargo bay when the package fits, otherwise virtualizes it. Virtual works with any vehicle. Physical requires an engine-configured vehicle cargo bay."], [["AUTO", "VIRTUAL", "PHYSICAL"], ["Automatic", "Virtual manifest", "Physical cargo bay"], 0]],
+                ["SLIDER", ["Package capacity", "Combined number of physical and virtual recovery packages carried at once."], [1, 10, 1, 0]]
+            ],
+            {
+                params ["_values", "_target"];
+                _values params ["_range", "_mode", "_capacity"];
+                ["RECOVERY_CARRIER", [_target, _range, _mode, round _capacity]] call Waldo_fnc_FeatureRuntimeApply;
+            }, {}, _target
         ] call zen_dialog_fnc_create;
     };
     case "RALLY": {

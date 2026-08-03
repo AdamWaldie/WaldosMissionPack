@@ -128,8 +128,8 @@ switch (toUpperANSI _action) do {
         [_object, _key, _damage, _destroyed, _engineer, _package, _cargo, _fuel, _interaction] call Waldo_fnc_RecoveryRegisterVehicle;
     };
     case "RECOVERY_CARRIER": {
-        _settings params ["_object", "_range"];
-        [_object, _range] call Waldo_fnc_RecoveryRegisterCarrier;
+        _settings params ["_object", "_range", ["_mode", "AUTO"], ["_capacity", 1]];
+        [_object, _range, _mode, _capacity] call Waldo_fnc_RecoveryRegisterCarrier;
     };
     case "RALLY_CONFIG": {
         _settings params ["_enable", "_objectClass", "_duration", "_deploymentTime", "_cooldown", "_enemyRadius", "_minimumMembers", "_placement", "_slope", "_regroup"];

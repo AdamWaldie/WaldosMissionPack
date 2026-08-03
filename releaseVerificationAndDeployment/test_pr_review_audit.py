@@ -231,7 +231,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Waldo_fnc_GunshipRegister",
             "Waldo_fnc_RecoveryRegisterVehicle",
             "Waldo_fnc_CreateLimitedArsenal",
-            "B_T_VTOL_01_vehicle_F",
+            '[_carrier, 12, "VIRTUAL", 2]',
             "B_UAV_02_dynamicLoadout_F",
             "(group _actor) reveal",
         ):
@@ -343,6 +343,17 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('setVariable ["Waldo_InfoText_Complete", true]', info_text)
         self.assertIn('case "FIELD_RESUPPLY_GRANT"', zen)
         self.assertIn('case "FIELD_RESUPPLY_GRANT"', apply)
+
+    def test_recovery_carrier_zen_exposes_engine_independent_virtual_cargo(self):
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        apply = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('[["AUTO", "VIRTUAL", "PHYSICAL"]', zen)
+        self.assertIn('["Package capacity"', zen)
+        self.assertIn('["_mode", "AUTO"]', apply)
+        self.assertIn('["_capacity", 1]', apply)
+        self.assertIn('"B_MRAP_01_F"', audit)
+        self.assertIn('[_carrier, 12, "VIRTUAL", 2]', audit)
 
     def test_runtime_setting_bundle_is_not_unpacked_as_one_pair(self):
         source = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
