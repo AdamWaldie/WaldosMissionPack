@@ -4,6 +4,23 @@ Every file in this directory is mission-maker configuration. The feature files r
 they do not start systems, wait for state, register handlers, mutate world objects, or transfer
 authority.
 
+## Customisation levels
+
+Every setting is documented with one of these labels inside its config file and in the wiki:
+
+- **MISSION MAKER** — intended to be reviewed for each mission. These select enabled features,
+  factions/classes, player-facing behaviour, scenario rules, names and content pools.
+- **ADVANCED TUNING** — a supported setting, but the shipped value should normally remain unchanged.
+  Change it only for a specific design requirement and test the affected feature in hosted and
+  dedicated multiplayer. Timers, safety bounds, scan intervals, UI layout internals and control-loop
+  values usually belong here.
+- **COMPATIBILITY** — retained for integration or an older call path. Do not edit it as ordinary
+  mission configuration unless its comment explicitly tells you to do so.
+
+Units, valid string options, array/HashMap shapes and special values such as `-1` are stated beside
+the setting. A Boolean is not self-explanatory: its comment describes what `true` actually changes.
+Do not change a setting merely because it is exposed.
+
 ## Files
 
 - `acreConfig.sqf` — ACRE2 nets, presets, radio profiles, group allocation and Babel.

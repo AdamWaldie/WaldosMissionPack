@@ -12,6 +12,42 @@ The exact shipped defaults are visible beside each variable in the config files.
 define purpose, units and constrained values. Empty arrays/maps mean unrestricted or no overrides
 unless the feature guide states otherwise.
 
+## Which settings should I change?
+
+The existence of a setting is not a recommendation to alter it. Config comments use three labels:
+
+| Label | Meaning |
+|---|---|
+| **MISSION MAKER** | Review for each mission. These select feature enablement, sides/factions/classes, names, content pools, scenario rules and player-facing behavior. |
+| **ADVANCED TUNING** | Supported but normally retain the shipped value. Change only for a specific requirement and retest hosted and dedicated behavior. This includes scheduler intervals, safety bounds, UI geometry and AI control loops. |
+| **COMPATIBILITY** | Parser or older-call support. Do not use as ordinary mission configuration. |
+
+Recommended review by file:
+
+| File | Mission-maker choices | Normally leave alone |
+|---|---|---|
+| `acreConfig.sqf` | Enablement, named displays, nets, callsigns/group assignments and Babel languages | Schema version, strict validation, group-change retuning and shipped radio profiles |
+| `persistenceConfig.sqf` | Enablement, saved data categories and database/campaign name | Save cadence and custom-variable serialization list |
+| `interfaceConfig.sqf` | Theme, treatment recipients/content, emergency-dismount policy and PID eligibility/content | Queue/reflow limits, tactical knowledge threshold, placement geometry and Draw3D scale/offset internals |
+| `aiConfig.sqf` | AI profile/mode, application population and inclusion/exclusion filters | Skill variance and helicopter landing controller values |
+| `airOperationsConfig.sqf` | Feature enablement, aircraft/chute/boarding pools, AA assets and jump envelopes | Monitor cadence, service thresholds and server maximum bounds |
+| `logisticsConfig.sqf` | Resupply content/balance, recovery packages/markers, scale range and crate classes | Scan cadence, safe-placement geometry, client scaling authority and dependency fallback |
+| `environmentConfig.sqf` | Hazard profiles, tree tools/replacements/protected areas and breaching content | Tick rates, damage cadence, tree geometry/cooldowns and regrowth scheduler values |
+| `electronicWarfareConfig.sqf` | EW rules, player feedback/toggles and disable challenge | Signal curve/reference, RDF fuzz bands and diagnostics overlay |
+| `missionSystemsConfig.sqf` | Rally rules, optional-system enablement, diagnostics and safestart contract | Safe-position geometry and global ACE weight/hearing overrides |
+
+## Common option formats
+
+- Sides: `WEST`, `EAST`, `GUER`/`INDEPENDENT`, and `CIV`/`CIVILIAN` as documented by the specific system.
+- AI profiles: `MILITIA`, `LINE`, `VETERAN`, `ELITE`; mode `DAY` or `NIGHT`; apply mode `BOTH`, `EXISTING` or `NEW`.
+- UI themes: `DEFAULT`, `WW2`, `VIETNAM`, `SCIFI`.
+- Notification placements: `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER`, `BOTTOM_RIGHT`. `TOP` is reserved for mission-flow banners.
+- ACRE PRC-343 assignment: `[block, channel]`, both integers from 1 through 16; `[]` requests deterministic allocation.
+- ACRE profile modes: `BLOCK_CHANNEL`, `CHANNEL`, `FREQUENCY`; CEOI placement `LEFT`, `CENTER`, `RIGHT`.
+- Jammer disable result: `DISABLE` for the repairable/reactivatable disabled state or `DEACTIVATE` for an ordinary off state.
+- Interaction difficulty: `easy`, `standard`, `hard`, `expert`.
+- Distances/altitudes are metres and durations are seconds unless a row states otherwise. Damage, fuel and ammunition fractions are `0` through `1`.
+
 ## `acreConfig.sqf`
 
 | Key | Purpose |

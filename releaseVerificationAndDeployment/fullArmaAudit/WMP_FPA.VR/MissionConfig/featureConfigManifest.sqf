@@ -8,6 +8,11 @@
  *
  * Example: private _files = call compile preprocessFileLineNumbers "MissionConfig\featureConfigManifest.sqf";
  * Current caller: Waldo_fnc_LoadFeatureConfigs for SHARED, SERVER and PLAYER_LOCAL scopes.
+ *
+ * COMPATIBILITY / INFRASTRUCTURE:
+ * This is not ordinary mission configuration. Do not remove or reorder shipped entries. Add one
+ * path only when introducing a new documented pure-data feature config; load order is deterministic
+ * and later files must not be used to override earlier guarded values.
  */
 [
     "MissionConfig\persistenceConfig.sqf",
