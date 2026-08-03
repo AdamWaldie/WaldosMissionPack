@@ -3,11 +3,12 @@
  * Validates a curator request, creates a jammer emitter on the server, and registers its complete
  * radio and interaction configuration. Creation and registry mutation stay server-authoritative;
  * Waldo_fnc_Jammer broadcasts the interaction payload for current clients and JIP. The current
- * simplified 15-field payload and older 9-, 12- and advanced 18-field payloads remain supported.
+ * named key/value payload is preferred; older positional 9-, 12-, 15- and 18-field payloads remain
+ * supported without block-local params shadowing their parsed values.
  *
  * Arguments:
  * 0: placement position <ARRAY>
- * 1: settings <ARRAY> - radio settings followed by optional field-disable settings
+ * 1: settings <ARRAY> - named key/value pairs, or a legacy positional settings array
  * 2: requesting curator <OBJECT>
  * 3: existing emitter <OBJECT> (default objNull; when supplied, no object is spawned or repositioned)
  *
@@ -17,8 +18,8 @@
  * Current caller: Waldo_fnc_ZenJammerPlace through a server-targeted remote execution.
  *
  * Example:
- * [[100,100,0], [300,"WEST","ALL",50,1,true,false,[],[],false,false,
- * "Land_PowerGenerator_F",true,"circuit","standard",true,"DISABLE",false], player]
+ * [[100,100,0], [["radius",300],["side","WEST"],["bands","ALL"],
+ * ["className","Land_DataTerminal_01_F"]], player]
  *     remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
  */
 
@@ -43,7 +44,7 @@ if (isRemoteExecuted && {
     diag_log format ["[WMP ZEN] rejected jammer-create request owner=%1 actor=%2", _requestOwner, _actor];
     objNull
 };
-if ((count _position) < 2 || {(count _settings) < 9}) exitWith {objNull};
+if ((count _position) < 2 || {_settings isEqualTo []}) exitWith {objNull};
 
 private _radius = 300;
 private _side = "ALL";
@@ -64,19 +65,94 @@ private _engineerOnly = missionNamespace getVariable ["Waldo_Jamming_DisableEngi
 private _resultMode = missionNamespace getVariable ["Waldo_Jamming_DisableResult", "DISABLE"];
 private _allowPlayerToggle = missionNamespace getVariable ["Waldo_Jamming_AllowPlayerToggle", true];
 
-if ((count _settings) >= 18) then {
-    _settings params ["_radius", "_side", "_bands", "_falloff", "_strength", "_active", "_marker", "_sector", "_duty", "_jamUAV", "_show3D", "_className", "_disableChallenge", "_challengeId", "_difficulty", "_engineerOnly", "_resultMode", "_allowPlayerToggle"];
+private _namedSettings = (_settings param [0, []]) isEqualType []
+    && {(count (_settings param [0, []])) >= 2}
+    && {((_settings param [0, []]) param [0, 0]) isEqualType ""};
+if (_namedSettings) then {
+    private _settingsMap = createHashMapFromArray _settings;
+    _radius = _settingsMap getOrDefault ["radius", _radius];
+    _side = _settingsMap getOrDefault ["side", _side];
+    _bands = _settingsMap getOrDefault ["bands", _bands];
+    _falloff = _settingsMap getOrDefault ["falloff", _falloff];
+    _strength = _settingsMap getOrDefault ["strength", _strength];
+    _active = _settingsMap getOrDefault ["active", _active];
+    _marker = _settingsMap getOrDefault ["marker", _marker];
+    _sector = _settingsMap getOrDefault ["sector", _sector];
+    _duty = _settingsMap getOrDefault ["duty", _duty];
+    _jamUAV = _settingsMap getOrDefault ["jamUAV", _jamUAV];
+    _show3D = _settingsMap getOrDefault ["show3D", _show3D];
+    _className = _settingsMap getOrDefault ["className", _className];
+    _disableChallenge = _settingsMap getOrDefault ["disableChallenge", _disableChallenge];
+    _challengeId = _settingsMap getOrDefault ["challengeId", _challengeId];
+    _difficulty = _settingsMap getOrDefault ["difficulty", _difficulty];
+    _engineerOnly = _settingsMap getOrDefault ["engineerOnly", _engineerOnly];
+    _resultMode = _settingsMap getOrDefault ["resultMode", _resultMode];
+    _allowPlayerToggle = _settingsMap getOrDefault ["allowPlayerToggle", _allowPlayerToggle];
 } else {
-    if ((count _settings) >= 15) then {
-        _settings params ["_radius", "_side", "_bands", "_falloff", "_strength", "_active", "_marker", "_sector", "_duty", "_jamUAV", "_show3D", "_className", "_disableChallenge", "_challengeId", "_difficulty"];
-        _engineerOnly = true;
-        _resultMode = "DISABLE";
-        _allowPlayerToggle = !_disableChallenge;
+    if ((count _settings) >= 18) then {
+        _radius = _settings param [0, _radius];
+        _side = _settings param [1, _side];
+        _bands = _settings param [2, _bands];
+        _falloff = _settings param [3, _falloff];
+        _strength = _settings param [4, _strength];
+        _active = _settings param [5, _active];
+        _marker = _settings param [6, _marker];
+        _sector = _settings param [7, _sector];
+        _duty = _settings param [8, _duty];
+        _jamUAV = _settings param [9, _jamUAV];
+        _show3D = _settings param [10, _show3D];
+        _className = _settings param [11, _className];
+        _disableChallenge = _settings param [12, _disableChallenge];
+        _challengeId = _settings param [13, _challengeId];
+        _difficulty = _settings param [14, _difficulty];
+        _engineerOnly = _settings param [15, _engineerOnly];
+        _resultMode = _settings param [16, _resultMode];
+        _allowPlayerToggle = _settings param [17, _allowPlayerToggle];
     } else {
-        if ((count _settings) >= 12) then {
-            _settings params ["_radius", "_side", "_bands", "_falloff", "_strength", "_active", "_marker", "_sector", "_duty", "_jamUAV", "_show3D", "_className"];
+        if ((count _settings) >= 15) then {
+            _radius = _settings param [0, _radius];
+            _side = _settings param [1, _side];
+            _bands = _settings param [2, _bands];
+            _falloff = _settings param [3, _falloff];
+            _strength = _settings param [4, _strength];
+            _active = _settings param [5, _active];
+            _marker = _settings param [6, _marker];
+            _sector = _settings param [7, _sector];
+            _duty = _settings param [8, _duty];
+            _jamUAV = _settings param [9, _jamUAV];
+            _show3D = _settings param [10, _show3D];
+            _className = _settings param [11, _className];
+            _disableChallenge = _settings param [12, _disableChallenge];
+            _challengeId = _settings param [13, _challengeId];
+            _difficulty = _settings param [14, _difficulty];
+            _engineerOnly = true;
+            _resultMode = "DISABLE";
+            _allowPlayerToggle = !_disableChallenge;
         } else {
-            _settings params ["_radius", "_side", "_falloff", "_strength", "_marker", "_sector", "_duty", "_jamUAV", "_className"];
+            if ((count _settings) >= 12) then {
+                _radius = _settings param [0, _radius];
+                _side = _settings param [1, _side];
+                _bands = _settings param [2, _bands];
+                _falloff = _settings param [3, _falloff];
+                _strength = _settings param [4, _strength];
+                _active = _settings param [5, _active];
+                _marker = _settings param [6, _marker];
+                _sector = _settings param [7, _sector];
+                _duty = _settings param [8, _duty];
+                _jamUAV = _settings param [9, _jamUAV];
+                _show3D = _settings param [10, _show3D];
+                _className = _settings param [11, _className];
+            } else {
+                _radius = _settings param [0, _radius];
+                _side = _settings param [1, _side];
+                _falloff = _settings param [2, _falloff];
+                _strength = _settings param [3, _strength];
+                _marker = _settings param [4, _marker];
+                _sector = _settings param [5, _sector];
+                _duty = _settings param [6, _duty];
+                _jamUAV = _settings param [7, _jamUAV];
+                _className = _settings param [8, _className];
+            };
         };
     };
 };

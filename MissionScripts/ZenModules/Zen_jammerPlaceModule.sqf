@@ -129,7 +129,15 @@ if (!isNull _objectPos) then {
 
         [
             _modulePos,
-            [_radius, _sideStr, _bands, _falloff, (_strengthPct / 100), _active, _marker, _sector, _duty, _jamUAV, _show3D, _className, _disableChallenge, _challengeId, _difficulty, _engineerOnly, _resultMode, false],
+            [
+                ["radius", _radius], ["side", _sideStr], ["bands", _bands],
+                ["falloff", _falloff], ["strength", (_strengthPct / 100)], ["active", _active],
+                ["marker", _marker], ["sector", _sector], ["duty", _duty],
+                ["jamUAV", _jamUAV], ["show3D", _show3D], ["className", _className],
+                ["disableChallenge", _disableChallenge], ["challengeId", _challengeId],
+                ["difficulty", _difficulty], ["engineerOnly", _engineerOnly],
+                ["resultMode", _resultMode], ["allowPlayerToggle", false]
+            ],
             player,
             _existingObject
         ] remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];

@@ -87,7 +87,7 @@ The Place dialog also offers a directional **cone**, **pulsing**, and an **also 
 Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) page):
 
 * **EMP Detonation** — a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
-* **Plant Signal Tracker** — tags the nearest unit or vehicle so a chosen side follows it live on the map (hidden from the tracked side).
+* **Plant Signal Tracker** — must be placed directly on an object or unit, then tags that exact target so a chosen side follows it live on the map. Empty-ground placement is rejected; it never guesses from nearby entities.
 
 ## Dynamic Anti-Air Modules
 

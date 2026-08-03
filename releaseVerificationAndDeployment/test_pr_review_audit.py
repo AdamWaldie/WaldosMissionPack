@@ -877,6 +877,13 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('_requestOwner, false, false', jammer_server)
         self.assertIn('private _object = _existingObject', jammer_server)
         self.assertIn('simulationEnabled _object', jammer_server)
+        self.assertIn('["className", _className]', jammer_zen)
+        self.assertIn('createHashMapFromArray _settings', jammer_server)
+        self.assertIn('_className = _settingsMap getOrDefault ["className", _className]', jammer_server)
+        self.assertNotIn('_settings params ["_radius"', jammer_server)
+        for setting_name in ("radius", "side", "bands", "falloff", "strength", "active", "marker", "sector", "duty", "jamUAV", "show3D", "className", "disableChallenge", "challengeId", "difficulty", "engineerOnly", "resultMode", "allowPlayerToggle"):
+            self.assertIn(f'["{setting_name}",', jammer_zen)
+            self.assertIn(f'["{setting_name}", _', jammer_server)
         self.assertIn('sleep 0.35', jammer_server)
         owner_helper = (ROOT / "MissionScripts" / "ZenModules" / "zenAssignObjectOwnerServer.sqf").read_text(encoding="utf-8")
         self.assertIn('_object enableSimulationGlobal (!_freezeSimulation)', owner_helper)
@@ -885,6 +892,12 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('Waldo_Jamming_DisableACEInstalled', jammer_interaction)
         self.assertIn('Waldo_Jamming_DisableResult', jammer_interaction)
         self.assertNotIn('enableSimulationGlobal false', jammer_server)
+
+        tracker_zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_trackerModule.sqf").read_text(encoding="utf-8")
+        self.assertIn('if (isNull _objectPos) exitWith', tracker_zen)
+        self.assertIn('Place this module directly on the object or unit to track.', tracker_zen)
+        self.assertIn('[_target, _sideStr, _label, _active] call Waldo_fnc_Tracker', tracker_zen)
+        self.assertNotIn('nearestObjects', tracker_zen)
 
 
 if __name__ == "__main__":
