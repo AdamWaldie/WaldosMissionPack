@@ -17,13 +17,29 @@ params [["_duration", missionNamespace getVariable ["Waldo_UiNotification_Reflow
 _duration = (_duration max 0) min 1;
 private _registry = uiNamespace getVariable ["Waldo_UiPanelRegistry", []];
 private _gap = safeZoneH * 0.008;
+private _display = findDisplay 46;
+private _safeStartBottom = safeZoneY + (safeZoneH * 0.045);
+private _jammingTop = safeZoneY + safeZoneH - (safeZoneH * 0.187);
+if (!isNull _display) then {
+    private _safeStartFrame = _display displayCtrl 5299;
+    if (!isNull _safeStartFrame && {ctrlShown _safeStartFrame}) then {
+        private _position = ctrlPosition _safeStartFrame;
+        _safeStartBottom = (_position select 1) + (_position select 3) + _gap;
+    };
+    private _jammingFrame = _display displayCtrl 5309;
+    if (!isNull _jammingFrame && {ctrlShown _jammingFrame}) then {
+        _jammingTop = (ctrlPosition _jammingFrame select 1) - _gap;
+    };
+};
 {
     private _placement = _x;
     private _entries = _registry select {(_x param [3, "TOP"]) isEqualTo _placement};
     private _cursor = switch (_placement) do {
-        case "BOTTOM_RIGHT": {safeZoneY + safeZoneH - (safeZoneH * 0.187)};
+        case "BOTTOM_RIGHT": {_jammingTop};
         case "BOTTOM_LEFT": {safeZoneY + safeZoneH - (safeZoneH * 0.05)};
         case "BOTTOM_CENTER": {safeZoneY + safeZoneH - (safeZoneH * 0.055)};
+        case "TOP";
+        case "TOP_RIGHT": {_safeStartBottom};
         default {safeZoneY + (safeZoneH * 0.045)};
     };
     if (_placement isEqualTo "CENTER") then {

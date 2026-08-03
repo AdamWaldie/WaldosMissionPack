@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Handheld radio direction finding (RDF). Sweeps the jammer registry for active emitters within
  * detection range and reports the nearest one to the operator: a broad compass sector and a
- * deliberately vague distance band. Lets an EW team triangulate and
+ * deliberately vague but physically sensible distance band. Absolute configurable thresholds
+ * prevent a player standing beside a very large jammer field being described as distant. Lets an EW team triangulate and
  * hunt a jammer by taking bearings from different spots. Purely a read-out - it changes nothing.
  * Exposed as an ACE self-interaction ("Scan for Radio Jammers") wired up in Waldo_fnc_JammingInit.
  *
@@ -23,7 +24,6 @@ private _range = (missionNamespace getVariable ["Waldo_Jamming_ScanRange", 3000]
 
 private _bestObj = objNull;
 private _bestDist = 1e11;
-private _bestCoverage = 0;
 private _receiverSide = side (group player);
 private _receiverPos = getPosASL player;
 private _useLos = missionNamespace getVariable ["Waldo_Jamming_LOS", true];
@@ -56,7 +56,6 @@ private _now = serverTime;
         if (_inActiveField && {_d < _bestDist}) then {
             _bestDist = _d;
             _bestObj = _obj;
-            _bestCoverage = _coverage;
         };
     };
 } forEach _registry;
@@ -71,15 +70,19 @@ private _sectorCentre = (_sectorWidth * floor ((_trueBearing + (_sectorWidth / 2
 private _bearingLow = round ((_sectorCentre - (_sectorWidth / 2) + 360) % 360);
 private _bearingHigh = round ((_sectorCentre + (_sectorWidth / 2)) % 360);
 
-// Express distance relative to this jammer's actual active footprint, not the much larger
-// receiver scan cap. No numerical bracket or signal strength is exposed.
-private _fractions = missionNamespace getVariable ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55]];
-private _nearFraction = ((_fractions param [0, 0.2]) max 0.05) min 0.8;
-private _farFraction = ((_fractions param [1, 0.55]) max _nearFraction) min 0.95;
-private _distanceText = if (_bestDist <= (_bestCoverage * _nearFraction)) then {
-    "NEARBY"
+// Use absolute, mission-maker configurable thresholds. Relative-to-footprint bands made a source
+// twenty metres away read as DISTANT whenever its active field was very large. The exact range is
+// still hidden, so repeated bearings and movement remain necessary for localization.
+private _bands = missionNamespace getVariable ["Waldo_Jamming_ScanDistanceBands", [35, 150, 600]];
+private _veryClose = ((_bands param [0, 35]) max 10) min 100;
+private _nearby = ((_bands param [1, 150]) max _veryClose) min 500;
+private _distant = ((_bands param [2, 600]) max _nearby) min _range;
+private _distanceText = if (_bestDist <= _veryClose) then {
+    "VERY CLOSE"
 } else {
-    if (_bestDist <= (_bestCoverage * _farFraction)) then {"DISTANT"} else {"VERY DISTANT"}
+    if (_bestDist <= _nearby) then {"NEARBY"} else {
+        if (_bestDist <= _distant) then {"DISTANT"} else {"VERY DISTANT"}
+    }
 };
 
 ["RDF SCAN", format ["Bearing between %1 and %2 deg | Distance: %3", _bearingLow, _bearingHigh, _distanceText], 6, "INFO"] call Waldo_fnc_JammingNotice;

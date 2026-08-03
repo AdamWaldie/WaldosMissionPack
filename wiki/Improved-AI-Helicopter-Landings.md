@@ -6,6 +6,8 @@ The improved landing system applies only to AI-piloted helicopters. It recognise
 
 During final approach, the owning machine applies a bounded terrain-following velocity and orientation solution. Horizontal speed reduces into a flare, upward and downward rates are capped, and the aircraft blends toward the landing surface normal near touchdown. Touchdown requires the aircraft to be inside the configured radius, at no more than 1 metre ATL and moving at no more than 2 m/s horizontally or 1.5 m/s vertically; this accommodates helicopter model contact offsets without accepting a fly-by. Nearby tree canopies raise the approach/hover height. If the helicopter reaches the final area far too high or genuinely overshoots after entering the final 80 metres, it opens distance and turns back for at most the configured number of go-arounds.
 
+After touchdown, the owning machine keeps AI movement and pilot FSM control constrained and applies a light ground anchor. This prevents vanilla completion of a final LAND waypoint from making the helicopter immediately take off again. A configurable touchdown settling time delays only genuine onward movement. Moving, deleting, retyping or replacing the landing waypoint releases the anchor immediately; so do locality migration, player/Zeus pilot takeover, system disablement and loss of a usable AI pilot. If the landing waypoint completes with no onward order, the helicopter remains grounded.
+
 ## Locality and lifecycle
 
 The feature uses the same event-driven ownership model as WMP AI skill tuning:
@@ -49,7 +51,7 @@ this setVariable ["Waldo_ImprovedHelicopterLanding_Profile", createHashMapFromAr
 ]];
 ```
 
-**AI - Helicopter Landing Control** exposes the common live settings as bounded, plain-language ZEN controls. Curator changes are server-validated, sent to connected locality owners in one ordered payload and included in the normal JIP snapshot.
+The feature intentionally has no ZEN module. Configure guarded mission defaults in `init.sqf`, use a per-aircraft `Waldo_ImprovedHelicopterLanding_Profile` override, or call `Waldo_fnc_ImprovedHelicopterLandingConfigureServer` from an authorised mission script when a live global change is genuinely required.
 
 ## Engine boundaries
 

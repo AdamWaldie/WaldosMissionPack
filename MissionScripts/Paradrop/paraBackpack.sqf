@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Saves a local jumper's backpack class and contents, equips a selected steerable parachute
- * backpack, and installs a repeat-safe landing action that restores their pack and walking state.
+ * Saves the exact backpack portion of a local jumper's engine loadout, equips a selected steerable
+ * parachute backpack, and installs both a manual action and automatic landing watcher. Repeated
+ * calls before restoration never overwrite the original saved backpack.
  *
  * Arguments:
  * 0: jumping unit <OBJECT>
@@ -24,13 +25,11 @@ params [
 
 if (isNull _player || {!local _player} || {!(isClass (configFile >> "CfgVehicles" >> _chuteBackpackClass))}) exitWith {false};
 
-private _backpack = backpack _player call BIS_fnc_basicBackpack;
-
-private _cargo = backpackItems _player;
-
-private _backpackAndContent = [_backpack, _cargo];
-
-_player setVariable ["Waldo_Paradrop_dropPackContent", _backpackAndContent];
+private _saved = _player getVariable ["Waldo_Paradrop_SavedBackpackLoadout", []];
+if (count _saved < 2) then {
+    private _loadout = getUnitLoadout _player;
+    _player setVariable ["Waldo_Paradrop_SavedBackpackLoadout", [true, _loadout param [5, []]]];
+};
 
 removeBackpack _player;
 _player addBackpack _chuteBackpackClass;
@@ -44,29 +43,13 @@ private _actionId = [
     "Ditch Chute And Put On Backpack",
     "\a3\ui_f\data\igui\cfg\holdactions\holdAction_loaddevice_ca.paa",
     "\a3\ui_f\data\igui\cfg\holdactions\holdAction_loaddevice_ca.paa",
-    format["((count (_this getVariable ['%1', []])) > 1) && ((getPosATL _this)#2 < 2)","Waldo_Paradrop_dropPackContent"],
-    format["((count (_caller getVariable ['%1', []])) > 1) && ((getPosATL _caller)#2 < 5)","Waldo_Paradrop_dropPackContent"],
+    "((count (_this getVariable ['Waldo_Paradrop_SavedBackpackLoadout', []])) > 1) && (((getPosATL _this) # 2 < 2) || {isTouchingGround _this})",
+    "((count (_caller getVariable ['Waldo_Paradrop_SavedBackpackLoadout', []])) > 1) && (((getPosATL _caller) # 2 < 5) || {isTouchingGround _caller})",
     {},
     {},
     {
         params ["_target", "_caller", "_actionId", "_arguments"];
-        private _backpackAndContent = _caller getVariable ["Waldo_Paradrop_dropPackContent", []];
-        _backpackAndContent params [
-            ["_backpack", ""],
-            ["_cargo", []]
-        ];
-
-        removeBackpack _caller;
-        if (_backpack != "") then {_caller addBackpack _backpack};
-
-        {
-            _caller addItemToBackpack _x;
-        } forEach _cargo;
-
-        _caller setVariable ["Waldo_Paradrop_dropPackContent", nil];
-        _caller setVariable ["Waldo_Paradrop_RestoreBackpackAction", -1];
-
-        _caller forceWalk false;
+        [_caller] call Waldo_fnc_ParadropRestoreBackpackLocal;
     },
     {},
     [],
@@ -76,4 +59,34 @@ private _actionId = [
     false
 ] call BIS_fnc_holdActionAdd;
 _player setVariable ["Waldo_Paradrop_RestoreBackpackAction", _actionId];
+
+private _watchToken = (_player getVariable ["Waldo_Paradrop_BackpackWatchToken", 0]) + 1;
+_player setVariable ["Waldo_Paradrop_BackpackWatchToken", _watchToken];
+[_player, _watchToken] spawn {
+    params ["_unit", "_watchToken"];
+    waitUntil {
+        uiSleep 0.25;
+        isNull _unit
+        || {!local _unit}
+        || {(_unit getVariable ["Waldo_Paradrop_BackpackWatchToken", -1]) != _watchToken}
+        || {count (_unit getVariable ["Waldo_Paradrop_SavedBackpackLoadout", []]) < 2}
+        || {!alive _unit}
+        || {
+            vehicle _unit isEqualTo _unit
+            && {
+                isTouchingGround _unit
+                || {((getPosATL _unit) select 2) <= 1.5}
+                || {surfaceIsWater (getPosASL _unit) && {((getPosASLW _unit) select 2) <= 1.5}}
+            }
+        }
+    };
+    if (
+        !isNull _unit
+        && {local _unit}
+        && {(_unit getVariable ["Waldo_Paradrop_BackpackWatchToken", -1]) == _watchToken}
+        && {count (_unit getVariable ["Waldo_Paradrop_SavedBackpackLoadout", []]) >= 2}
+    ) then {
+        [_unit] call Waldo_fnc_ParadropRestoreBackpackLocal;
+    };
+};
 true

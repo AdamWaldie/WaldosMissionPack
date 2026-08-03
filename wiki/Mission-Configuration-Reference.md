@@ -257,7 +257,7 @@ missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];// destr
 missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true]; // opt in to curator jammer markers
 missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF hard cap; source must also actively affect the operator
 missionNamespace setVariable ["Waldo_Jamming_ScanBearingArc", 30, true]; // quantised bearing-sector width (deg)
-missionNamespace setVariable ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55], true]; // vague range-band thresholds
+missionNamespace setVariable ["Waldo_Jamming_ScanDistanceBands", [35, 150, 600], true]; // metre thresholds: very close / nearby / distant
 missionNamespace setVariable ["Waldo_Jamming_AllowPlayerToggle", true, true]; // legacy direct toggle on non-challenge jammers
 missionNamespace setVariable ["Waldo_Jamming_DisableChallenge", false, true]; // opt in globally; Zeus-created jammers default on
 missionNamespace setVariable ["Waldo_Jamming_DisableChallengeId", "circuit", true];

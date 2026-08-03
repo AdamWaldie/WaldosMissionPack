@@ -186,8 +186,9 @@ if ((_LRChannelAssignments select 1 == 99) && (_LRChannelAssignments select 1 ==
     };
 } foreach _radioList;
 
-//Save channels with loadout
-[] call Waldo_fnc_SaveLoadout;
+// Save the radio-adjusted loadout silently. This is automatic startup work, not a player request,
+// so it must not enqueue confirmation into the fake loading/title presentation.
+[false] call Waldo_fnc_SaveLoadout;
 
 systemchat "ACRE2 RADIO PRESET COMPLETE";
 

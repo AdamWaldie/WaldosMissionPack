@@ -199,7 +199,7 @@ private _token = format ["%1_%2", diag_tickTime, random 1e9];
 private _controls = [_frame, _accent, _trim, _content];
 private _railMode = _theme getOrDefault ["railMode", "TOP"];
 private _trimH = (_visibleH * 0.002) max 0.001;
-_registry pushBack [_channel, _controls, _token, _placement, _panelW, _panelH, _padX, _padY, _accentH, _contentH, _priority, diag_tickTime, _railMode, _trimH];
+_registry pushBack [_channel, _controls, _token, _placement, _panelW, _panelH, _padX, _padY, _accentH, _contentH, _priority, diag_tickTime, _railMode, _trimH, [_title, _messageText, _state, _source]];
 uiNamespace setVariable ["Waldo_UiPanelRegistry", _registry];
 [0] call Waldo_fnc_ReflowUiPanels;
 

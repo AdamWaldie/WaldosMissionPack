@@ -80,9 +80,9 @@ Supported door/ramp animations: `ramp_bottom`, `door_2_1/2`, `jumpdoor_1/2`, `ba
 ### HALO Jump
 1. Player triggers the hold action → ejected from the aircraft
 2. **Equipment simulation** runs first
-3. **Parachute backpack system** activates — player's backpack is replaced with a parachute (`WALDO_PARA_HALOCHUTE`), original backpack contents are saved
-4. Player freefalls; a hold action "Ditch Chute And Put On Backpack" appears once on the ground (altitude < 2 m)
-5. Activating the hold action (5-second hold) restores the original backpack and contents, removes the forced-walk restriction
+3. **Parachute backpack system** activates — the player's exact backpack loadout is saved and the backpack is replaced with a parachute (`WALDO_PARA_HALOCHUTE`)
+4. Player freefalls; a hold action "Ditch Chute And Put On Backpack" appears near the ground
+5. Landing automatically restores the original backpack, including exact magazine ammunition, weapons, nested containers and item counts. The hold action remains as a manual fallback. Repeated jump setup cannot overwrite an unrestored original backpack.
 
 ---
 
@@ -151,13 +151,19 @@ The create dialog independently enables and configures static-line and HALO play
 line selects a parachute vehicle plus minimum/maximum altitude and maximum speed. HALO selects a
 steerable parachute backpack and minimum altitude. The optional door requirement can be disabled
 for airframes whose ramp animations are not among the supported names. Both action sets are
-installed for current clients and JIP clients.
+installed for current clients and JIP clients. The authoritative creation API normalizes enabled
+jump envelopes against the requested route: the route altitude remains inside each enabled
+altitude window, static-line maximum speed stays at least 40 km/h above capped route speed, and an
+unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
+enabled alternative or turns itself off instead of silently selecting a disabled jump method.
 
-**Paradrop - Embark Players** selects a named live operation and can:
+**Paradrop - Embark Players** uses the player directly underneath the placed module first, then the
+curator selection:
 
-- move the curator's selected player units or selected groups directly into free cargo seats;
-- create a terrain-snapped boarding point with a blue **Board Paradrop Aircraft** addAction; or
-- do both.
+- with a player selected, choose that player or all active players in that player's group and move them directly into free cargo seats;
+- with no player target, choose a physical boarding object and label, then create it at the module with a blue **Board Paradrop Aircraft** addAction.
+
+The default object is a flagpole carrying a blue flag. The standard selector also offers info stands, a map board, laptop, camping table and portable light. Created points have simulation disabled, remain editable/movable in Zeus and retain their boarding action after repositioning. Extend `Waldo_Paradrop_BoardingPointClasses` in `init.sqf` for mission-specific objects.
 
 Only players are transferred, pilot/turret seats are never claimed, and full or stale aircraft are
 reported through WMP notifications. The ongoing audit station also exposes **BOARD ME INTO QA

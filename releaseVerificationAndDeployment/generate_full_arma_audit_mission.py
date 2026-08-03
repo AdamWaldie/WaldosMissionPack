@@ -75,6 +75,7 @@ STATIONS = [
     ("dynamic-paradrop", "DYNAMIC PARADROP", (300, 40), "Server-owned DZ route, timed jumpers, operational markers and teardown."),
     ("ai-helicopter-landing", "AI HELICOPTER LANDING", (325, 40), "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."),
     ("ui-theme-qa", "UI THEME QA", (325, 0), "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."),
+    ("dynamic-ao", "DYNAMIC AO", (350, 0), "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."),
 ]
 
 

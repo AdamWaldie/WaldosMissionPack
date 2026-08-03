@@ -191,7 +191,15 @@ if (isNil "Waldo_Paradrop_ChuteClasses") then {
     Waldo_Paradrop_ChuteClasses = +Waldo_Paradrop_StaticChuteClasses;
 };
 if (isNil "Waldo_Paradrop_BoardingPointClasses") then {
-    Waldo_Paradrop_BoardingPointClasses = ["Land_InfoStand_V1_F", "Land_FlagPole_F"];
+    Waldo_Paradrop_BoardingPointClasses = [
+        "FlagPole_F",
+        "Land_InfoStand_V1_F",
+        "Land_InfoStand_V2_F",
+        "Land_MapBoard_F",
+        "Land_Laptop_unfolded_F",
+        "Land_CampingTable_small_F",
+        "Land_PortableLight_single_F"
+    ];
 };
 [] spawn {
     waitUntil {
@@ -336,6 +344,7 @@ if (isNil "Waldo_ImprovedHelicopterLanding_MaximumDescentRate") then {Waldo_Impr
 if (isNil "Waldo_ImprovedHelicopterLanding_TouchdownRadius") then {Waldo_ImprovedHelicopterLanding_TouchdownRadius = 2};
 if (isNil "Waldo_ImprovedHelicopterLanding_FinalCommitDistance") then {Waldo_ImprovedHelicopterLanding_FinalCommitDistance = 75};
 if (isNil "Waldo_ImprovedHelicopterLanding_ControlInterval") then {Waldo_ImprovedHelicopterLanding_ControlInterval = 0.05};
+if (isNil "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds") then {Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds = 8};
 if (isNil "Waldo_AI_ProfileDisplayNames") then {
     Waldo_AI_ProfileDisplayNames = createHashMapFromArray [
         ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
@@ -479,7 +488,7 @@ Model options (tune the realism/gameplay to taste):
 - Waldo_Jamming_GmOverlay      false = optional curator-only jammer marker and facing line
 - Waldo_Jamming_ScanRange      hard detection cap (m); RDF reports only sources whose active field currently reaches the operator
 - Waldo_Jamming_ScanBearingArc width (deg) of the reported bearing sector
-- Waldo_Jamming_ScanDistanceFractions relative thresholds for vague distance bands
+- Waldo_Jamming_ScanDistanceBands absolute metre thresholds for VERY CLOSE / NEARBY / DISTANT; beyond the third is VERY DISTANT
 - Waldo_Jamming_DisableChallenge false = legacy instant engineer disable; true = shared field procedure
 - Waldo_Jamming_DisableChallengeId "circuit" and Waldo_Jamming_DisableDifficulty "standard"
 - Waldo_Jamming_DisableEngineerOnly true = server and client both require ACE engineer capability

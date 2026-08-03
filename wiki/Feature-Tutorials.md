@@ -89,6 +89,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Optional Feature Systems](Optional-Feature-Systems) | Persistence, treatment feedback, hazards, tree felling, emergency dismount, accessibility PID, breaching, and object transforms |
 | [Optional Feature Extensions](Optional-Feature-Extensions) | Field resupply, tactical displays, advanced controls, and engine boundaries |
 | [Dynamic Anti-Air](Dynamic-Anti-Air) | Scripted or Zeus-authored radar-controlled air-defence zones |
+| [Dynamic AO Generation](Dynamic-AO-Generation) | Runtime faction-driven patrols, garrisons, vehicles, air, civilians, mines and roadblocks |
 | [Airborne Gunship Support](Airborne-Gunship-Support) | Controller-operated gunships, orbits, service cycles, and asset pools |
 | [Performance and Optimisation Audit](Performance-And-Optimisation-Audit) | Static regression guardrails and runtime verification guidance |
 

@@ -31,27 +31,32 @@ and crates, a fully fitted MHQ, an isolated VVD lane, paradrop, all Economy area
 tables, forty interaction fixtures, a live EOD charge, Zeus, and registered-function stations.
 These are real multiplayer objects, not registration-only assertions.
 
-The east test range adds sixteen repeatable stations for the newer full systems:
+The east test range adds twenty repeatable stations for the newer full systems:
 
 - Persistence dependency gate, object registration and manual save
 - ACE patient treatment feedback
 - Hazardous-environment exposure and decay from a live object emitter, including runtime/JIP activation status
 - Tree felling and regrowth
 - Emergency dismount from a simulation-enabled overturned vehicle, with all test and upright controls on the vehicle
-- Tactical display on a dedicated white map board, locked behind an easy command-authentication procedure
 - Accessibility PID against friendly AI
 - Explosive wall breaching and reset
 - Object scaling and transform helpers
 - AI rebalance profiles and restoration
 - Field resupply hub, carrier, deployment and salvage
-- Tactical display with friendly and known-hostile contacts
+- Tactical display on a dedicated white map board, locked behind an easy command-authentication procedure and populated with friendly/known-hostile contacts
 - Dynamic AA creation and teardown, including an optional circuit procedure on the central radar
 - Airborne gunship spawn, assignment, service and removal
 - Vehicle recovery preparation procedure, packaging, transport and workshop restoration
 - Squad rally deployment, regroup, expiry and removal
 - Nested-folder playable loadout scrape and limited arsenal
-- Radio-jammer field disablement through a real shared circuit procedure, with the audit fixture's
-  engineer restriction disabled so any selected test slot can exercise it
+- Dynamic paradrop routing, player embark/boarding points, jump envelopes and cleanup
+- Improved AI helicopter landing trigger, waypoint lifecycle and touchdown anchoring
+- Default, WW2, Vietnam and science-fiction UI theme/colour-vision switching
+- Dynamic AO creation, public state, minefield anchors and complete cleanup
+
+The existing Electronic Warfare station also covers radio-jammer field disablement through a real
+shared circuit procedure, with the audit fixture's engineer restriction disabled so any selected
+test slot can exercise it.
 
 Every station has an information stand and ACE-first, vanilla-fallback test controls. Audit Control offers
 teleports to each station. Dynamic AA and the gunship are created only when requested. Persistence

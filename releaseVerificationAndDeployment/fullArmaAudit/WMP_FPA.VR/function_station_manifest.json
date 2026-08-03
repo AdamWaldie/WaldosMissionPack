@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 799,
+  "registeredFunctionCount": 810,
   "runtimeFunctionCount": 385,
-  "functionCount": 1184,
+  "functionCount": 1195,
   "stations": [
     {
       "id": "control",
@@ -393,6 +393,16 @@
         0
       ],
       "description": "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."
+    },
+    {
+      "id": "dynamic-ao",
+      "title": "DYNAMIC AO",
+      "position": [
+        350,
+        0,
+        0
+      ],
+      "description": "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."
     }
   ],
   "functions": [
@@ -601,6 +611,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingAnchorLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingAnchorLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ImprovedHelicopterLandingRestoreLocal",
       "file": "MissionScripts/AiScripting/improvedHelicopterLandingRestoreLocal.sqf",
       "station": "ai",
@@ -615,12 +631,6 @@
     {
       "name": "Waldo_fnc_ImprovedHelicopterLandingConfigureServer",
       "file": "MissionScripts/AiScripting/improvedHelicopterLandingConfigureServer.sqf",
-      "station": "ai",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ImprovedHelicopterLandingZen",
-      "file": "MissionScripts/AiScripting/improvedHelicopterLandingZen.sqf",
       "station": "ai",
       "activation": "manual"
     },
@@ -729,6 +739,12 @@
     {
       "name": "Waldo_fnc_UiThemeApplyLocal",
       "file": "MissionScripts/MissionFlowAndUi/uiThemeApplyLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RestyleUiNotificationsLocal",
+      "file": "MissionScripts/MissionFlowAndUi/restyleUiNotificationsLocal.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -1365,6 +1381,12 @@
     {
       "name": "Waldo_fnc_ParaBackpack",
       "file": "MissionScripts/Paradrop/paraBackpack.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropRestoreBackpackLocal",
+      "file": "MissionScripts/Paradrop/paradropRestoreBackpackLocal.sqf",
       "station": "paradrop",
       "activation": "manual"
     },
@@ -2140,6 +2162,60 @@
       "name": "Waldo_fnc_DynamicAARemoveZen",
       "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAARemoveZen.sqf",
       "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOGetFactions",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOGetFactions.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOResolvePools",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOResolvePools.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOAddPatrolWaypoints",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOAddPatrolWaypoints.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOPublishState",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOPublishState.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOCreate",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOCreate.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAODestroyMinefield",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAODestroyMinefield.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAODestroy",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAODestroy.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOZen",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOZen.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAORemoveZen",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAORemoveZen.sqf",
+      "station": "control",
       "activation": "manual"
     },
     {

@@ -291,7 +291,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 38', source)
+        self.assertIn('Waldo_ZenModuleCount", 42', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
@@ -551,7 +551,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("terrainIntersectASL", jammer)
         self.assertIn("(_now % _period) >= _onTime", jammer)
         self.assertIn("Bearing between %1 and %2 deg", jammer)
-        for vague_band in ("NEARBY", "DISTANT", "VERY DISTANT"):
+        for vague_band in ("VERY CLOSE", "NEARBY", "DISTANT", "VERY DISTANT"):
             self.assertIn(vague_band, jammer)
         self.assertNotIn("Signal strength", jammer)
 
@@ -582,6 +582,8 @@ class PrReviewAuditTests(unittest.TestCase):
         zen = (root / "paradropDropZoneZen.sqf").read_text(encoding="utf-8")
         embark = (root / "paradropEmbark.sqf").read_text(encoding="utf-8")
         configure = (root / "paradropConfigureAircraftLocal.sqf").read_text(encoding="utf-8")
+        backpack = (root / "paraBackpack.sqf").read_text(encoding="utf-8")
+        restore_backpack = (root / "paradropRestoreBackpackLocal.sqf").read_text(encoding="utf-8")
         registration = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
         self.assertIn("getAssignedCuratorLogic", create + remove)
         self.assertIn('setBehaviourStrong "CARELESS"', create)
@@ -598,6 +600,12 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("Loop and repeat", zen)
         self.assertIn("Static-line parachute", zen)
         self.assertIn("HALO parachute backpack", zen)
+        self.assertIn("Who to embark", zen)
+        self.assertIn('[["PLAYER", "GROUP"]', zen)
+        self.assertIn('[_id, "SELECTION", _units', zen)
+        self.assertIn('[_id, "POLE", []', zen)
+        self.assertNotIn('"Boarding method"', zen)
+        self.assertIn('"FlagPole_F"', zen)
         self.assertIn('remoteExec ["Waldo_fnc_ParadropConfigureAircraftLocal", 0, _aircraft]', create)
         self.assertIn('call Waldo_fnc_AddStaticJump', configure)
         self.assertIn('call Waldo_fnc_AddHaloJump', configure)
@@ -609,6 +617,17 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("Paradrop - Create Drop Zone", registration)
         self.assertIn("Paradrop - Embark Players", registration)
         self.assertIn("Paradrop - Remove Operation", registration)
+        self.assertIn('isKindOf "FlagCarrierCore"', embark)
+        self.assertIn("Flag_blue_CO.paa", embark)
+        self.assertIn('getVariable ["Waldo_Paradrop_SavedBackpackLoadout", []]', backpack)
+        self.assertIn('getUnitLoadout _player', backpack)
+        self.assertNotIn("backpackItems _player", backpack)
+        self.assertIn("isTouchingGround _unit", backpack)
+        self.assertIn("surfaceIsWater", backpack)
+        self.assertIn("call Waldo_fnc_ParadropRestoreBackpackLocal", backpack)
+        self.assertIn("getUnitLoadout _unit", restore_backpack)
+        self.assertIn("_loadout set [5", restore_backpack)
+        self.assertIn("setUnitLoadout _loadout", restore_backpack)
 
         dynamic_aa = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf").read_text(encoding="utf-8")
         dynamic_aa_detector = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAADetectorLoop.sqf").read_text(encoding="utf-8")
@@ -654,8 +673,8 @@ class PrReviewAuditTests(unittest.TestCase):
         init = (root / "improvedHelicopterLandingInit.sqf").read_text(encoding="utf-8")
         tracker = (root / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
         controller = (root / "improvedHelicopterLandingExecuteLocal.sqf").read_text(encoding="utf-8")
+        anchor = (root / "improvedHelicopterLandingAnchorLocal.sqf").read_text(encoding="utf-8")
         restore = (root / "improvedHelicopterLandingRestoreLocal.sqf").read_text(encoding="utf-8")
-        zen = (root / "improvedHelicopterLandingZen.sqf").read_text(encoding="utf-8")
         self.assertIn('["Helicopter", "init"', init)
         self.assertIn('addEventHandler ["Local"', init)
         self.assertIn('getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]', init)
@@ -681,9 +700,17 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('"Waldo_ImprovedHelicopterLanding_LastResult"', controller)
         self.assertIn('disableAI "PATH"', controller)
         self.assertIn('setVariable ["Waldo_ImprovedHelicopterLanding_Active", true, true]', controller)
+        self.assertIn("spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal", controller)
+        self.assertIn('disableAI "MOVE"', anchor)
+        self.assertIn('flyInHeight 0', anchor)
+        self.assertIn('"LANDING_WAYPOINT_DELETED"', anchor)
+        self.assertIn('"LANDING_WAYPOINT_EDITED"', anchor)
+        self.assertIn('"ONWARD_WAYPOINT"', anchor)
+        self.assertIn('"TouchdownHoldSeconds", 8', anchor)
         self.assertIn('enableAI "PATH"', restore)
         self.assertIn('setVariable ["Waldo_ImprovedHelicopterLanding_Active", false, true]', restore)
-        self.assertIn("Applies only to AI-piloted helicopters", zen)
+        zen_modules = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        self.assertNotIn("AI - Helicopter Landing Control", zen_modules)
 
     def test_full_pack_audit_exercises_real_ai_landing_and_live_ui_themes(self):
         audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
@@ -739,6 +766,8 @@ class PrReviewAuditTests(unittest.TestCase):
         resolver = (root / "uiTheme.sqf").read_text(encoding="utf-8")
         setter = (root / "uiThemeSetServer.sqf").read_text(encoding="utf-8")
         apply_local = (root / "uiThemeApplyLocal.sqf").read_text(encoding="utf-8")
+        restyle_notifications = (root / "restyleUiNotificationsLocal.sqf").read_text(encoding="utf-8")
+        notification = (root / "showUiNotification.sqf").read_text(encoding="utf-8")
         root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
         snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
         receive = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeReceiveState.sqf").read_text(encoding="utf-8")
@@ -751,8 +780,84 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("Waldo_UI_ThemeOverrides", resolver + root_init)
         self.assertIn("Waldo_UI_Theme", root_init)
         self.assertIn("Waldo_fnc_ShowUiNotification", apply_local)
+        self.assertIn("Waldo_fnc_RestyleUiNotificationsLocal", apply_local)
+        self.assertIn('setVariable ["Waldo_IMG_Profile"', apply_local)
+        self.assertIn('setVariable ["Waldo_IMG_PickerTheme"', apply_local)
+        self.assertIn('setVariable ["WaldoEcoCore_PromptTheme"', apply_local)
+        self.assertIn("ctrlSetStructuredText", restyle_notifications)
+        self.assertIn("ctrlTextHeight", restyle_notifications)
+        self.assertIn("[_title, _messageText, _state, _source]", notification)
         self.assertIn('"Waldo_UI_Theme"', snapshot)
         self.assertIn("call Waldo_fnc_UiThemeApplyLocal", receive)
+
+
+    def test_dynamic_ao_runtime_generator_and_recent_regressions_are_wired(self):
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        ao_dir = ROOT / "MissionScripts" / "CombatSystems" / "DynamicAO"
+        create = (ao_dir / "dynamicAOCreate.sqf").read_text(encoding="utf-8")
+        zen = (ao_dir / "dynamicAOZen.sqf").read_text(encoding="utf-8")
+        all_ao = "\n".join(path.read_text(encoding="utf-8") for path in ao_dir.glob("*.sqf"))
+        modules = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        for function in (
+            "DynamicAOGetFactions", "DynamicAOResolvePools", "DynamicAOCreate",
+            "DynamicAODestroyMinefield", "DynamicAODestroy", "DynamicAOZen", "DynamicAORemoveZen",
+        ):
+            self.assertIn(f"class {function}", functions)
+        for token in (
+            'configClasses (configFile >> "CfgFactionClasses")', 'configClasses (configFile >> "CfgVehicles")',
+            'Waldo_DynamicAO_Registry', 'Waldo_DynamicAO_PublicSystems', 'Waldo_AI_Exclude',
+            'createMine', 'nearRoads', 'buildingPos -1', 'addCuratorEditableObjects',
+        ):
+            self.assertIn(token, all_ao)
+        for control in (
+            "Enemy faction and side", "Vehicle ratio - cars", "Air ratio - helicopters",
+            "Civilian faction", "Outer-ring minefields", "Manned roadblocks",
+        ):
+            self.assertIn(control, zen)
+        for category in (
+            "WMP Mission Flow", "WMP Logistics", "WMP Combat Systems", "WMP Air Operations",
+            "WMP Mission Tools", "WMP Interface & QA",
+        ):
+            self.assertIn(category, modules)
+        self.assertNotIn("Generate in editor", create + zen)
+
+        paradrop = (ROOT / "MissionScripts" / "Paradrop" / "paradropCreateDropZone.sqf").read_text(encoding="utf-8")
+        embark = (ROOT / "MissionScripts" / "Paradrop" / "paradropEmbarkLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('_maximumSpeed + 40', paradrop)
+        self.assertIn('_altitude + 75', paradrop)
+        self.assertIn('if (!canSuspend) exitWith', embark)
+        jammer = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerScan.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_Jamming_ScanDistanceBands', jammer)
+        self.assertIn('"VERY CLOSE"', jammer)
+
+    def test_concurrent_hud_regions_reflow_and_yield_to_ace(self):
+        ui_root = ROOT / "MissionScripts" / "MissionFlowAndUi"
+        reflow = (ui_root / "reflowUiPanels.sqf").read_text(encoding="utf-8")
+        suppress = (ui_root / "setUiPanelsSuppressed.sqf").read_text(encoding="utf-8")
+        priority = (ui_root / "setupUiAcePriority.sqf").read_text(encoding="utf-8")
+        rally = (ROOT / "MissionScripts" / "Respawn" / "RallyPoint" / "rallyPointNotifyLocal.sqf").read_text(encoding="utf-8")
+        jammer = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammingHud.sqf").read_text(encoding="utf-8")
+        hazard = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardTick.sqf").read_text(encoding="utf-8")
+        legacy = (ui_root / "dynamicText.sqf").read_text(encoding="utf-8")
+
+        self.assertIn('displayCtrl 5299', reflow)
+        self.assertIn('displayCtrl 5309', reflow)
+        self.assertIn('case "BOTTOM_RIGHT": {_jammingTop}', reflow)
+        self.assertIn('case "TOP_RIGHT": {_safeStartBottom}', reflow)
+        self.assertIn('"TOP_RIGHT", "RALLY_POINT"', rally)
+        self.assertIn('Waldo_fnc_ReflowUiPanels', jammer)
+        for idc in ("5299", "5300", "5309", "5310"):
+            self.assertIn(idc, suppress)
+        self.assertIn('ace_interactMenuOpened', priority)
+        self.assertIn('ace_interactMenuClosed', priority)
+        self.assertIn('"HAZARD_STATUS"', hazard)
+        self.assertNotIn('BIS_fnc_dynamicText', hazard + legacy)
+
+        save_loadout = (ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "saveRespawnLoadout.sqf").read_text(encoding="utf-8")
+        acre = (ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "ACRE2Init.sqf").read_text(encoding="utf-8")
+        self.assertIn('params [["_showNotification", true', save_loadout)
+        self.assertIn('if (_showNotification)', save_loadout)
+        self.assertIn('[false] call Waldo_fnc_SaveLoadout', acre)
 
 
 if __name__ == "__main__":

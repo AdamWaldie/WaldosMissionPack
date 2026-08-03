@@ -6,7 +6,9 @@
  * independent. The server owns registry, groups, waypoints, jump timing and cleanup. Global Arma
  * markers provide normal JIP visibility without a custom replay layer. The aircraft carries only
  * one AI pilot by default, receives the selected static-line/HALO actions on every client and can
- * fly a wide re-alignment circuit, remain after one pass or despawn. Repeat use is isolated by ID.
+ * fly a wide re-alignment circuit, remain after one pass or despawn. Jump envelopes are normalized
+ * against the selected route altitude and speed so customization cannot silently make every jump
+ * action unavailable. Repeat use is isolated by ID.
  *
  * Arguments:
  * 0: configuration <HASHMAP> - id, name, centre, direction, side, aircraftClass, altitude,
@@ -53,6 +55,32 @@ private _side = _config getOrDefault ["side", west];
 if !(_side in [west, east, independent]) then {_side = west};
 private _altitude = ((_config getOrDefault ["altitude", 250]) max 100) min 2000;
 private _maximumSpeed = ((_config getOrDefault ["maximumSpeed", 220]) max 80) min 500;
+private _staticEnabled = _config getOrDefault ["staticJumpEnabled", true];
+private _haloEnabled = _config getOrDefault ["haloJumpEnabled", false];
+private _staticMinimum = ((_config getOrDefault ["staticMinimumAltitude", 180]) max 0) min ((_altitude - 25) max 0);
+private _staticMaximum = ((_config getOrDefault ["staticMaximumAltitude", 350]) max (_altitude + 75)) min 2500;
+private _staticMaximumSpeed = ((_config getOrDefault ["staticMaximumSpeed", 310]) max (_maximumSpeed + 40)) min 700;
+private _haloMinimum = ((_config getOrDefault ["haloMinimumAltitude", 1000]) max 0) min _altitude;
+private _automaticMode = toUpperANSI (_config getOrDefault ["automaticJumpMode", "STATIC"]);
+if (_config getOrDefault ["autoDropPlayers", false]) then {
+    if (_automaticMode == "STATIC" && {!_staticEnabled}) then {_automaticMode = if (_haloEnabled) then {"HALO"} else {"NONE"}};
+    if (_automaticMode == "HALO" && {!_haloEnabled}) then {_automaticMode = if (_staticEnabled) then {"STATIC"} else {"NONE"}};
+    if (_automaticMode == "NONE") then {_config set ["autoDropPlayers", false]};
+};
+private _requireDoor = _config getOrDefault ["requireOpenDoor", false];
+if (_requireDoor) then {
+    private _animationSources = configFile >> "CfgVehicles" >> _class >> "AnimationSources";
+    private _recognizedDoorSources = ["ramp_bottom", "door_2_1", "door_2_2", "jumpdoor_1", "jumpdoor_2", "back_ramp_switch", "back_ramp_half_switch", "RearDoors", "Door_1_source", "ramp_anim"];
+    if (_recognizedDoorSources findIf {isClass (_animationSources >> _x)} < 0) then {_requireDoor = false};
+};
+_config set ["staticJumpEnabled", _staticEnabled];
+_config set ["staticMinimumAltitude", _staticMinimum];
+_config set ["staticMaximumAltitude", _staticMaximum];
+_config set ["staticMaximumSpeed", _staticMaximumSpeed];
+_config set ["haloJumpEnabled", _haloEnabled];
+_config set ["haloMinimumAltitude", _haloMinimum];
+_config set ["automaticJumpMode", _automaticMode];
+_config set ["requireOpenDoor", _requireDoor];
 private _approach = ((_config getOrDefault ["approachDistance", 2500]) max 800) min 10000;
 private _runLength = ((_config getOrDefault ["runLength", 2500]) max 300) min 6000;
 private _exitDistance = ((_config getOrDefault ["exitDistance", 2500]) max 800) min 10000;
@@ -234,5 +262,5 @@ missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
     };
 };
 diag_log format ["[WMP PARADROP] Created id=%1 name=%2 side=%3 airframe=%4 pilot=%5 optionalJumpers=%6 lifecycle=%7 markers=%8", _id, _name, _side, _class, _pilot, count _jumpers, _lifecycle, count _markers];
-[format ["%1 created for players with one AI pilot, %2 optional AI jumper(s), and %3 lifecycle. Use Paradrop - Embark Players to board.", _name, count _jumpers, toLowerANSI _lifecycle], "SUCCESS"] call _notifyRequester;
+[format ["%1 created for players. Route %2m AGL / %3 km/h; static envelope %4-%5m / <=%6 km/h; HALO floor %7m. Use Paradrop - Embark Players to board.", _name, round _altitude, round _maximumSpeed, round _staticMinimum, round _staticMaximum, round _staticMaximumSpeed, round _haloMinimum], "SUCCESS"] call _notifyRequester;
 true

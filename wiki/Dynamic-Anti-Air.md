@@ -12,7 +12,7 @@ Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above t
 
 ## Zeus setup
 
-1. Place **Waldos Mission Modules → Dynamic AA - Create** at the centre of the detection zone.
+1. Place **WMP Combat Systems → Dynamic AA - Create** at the centre of the detection zone.
 2. Choose the owning side. The asset-profile dropdown immediately refreshes to show only compatible integrated air-defence profiles for that side.
 3. Configure detection, altitude and response counts. WMP generates the internal system ID automatically.
    Optionally enable **Require Radar Shutdown Procedure**, then choose the procedure and difficulty.

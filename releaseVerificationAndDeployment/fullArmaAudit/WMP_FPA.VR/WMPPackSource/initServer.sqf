@@ -56,7 +56,7 @@ missionNamespace setVariable ["Waldo_DynamicAA_FactionAssetPools", Waldo_Dynamic
     ["Waldo_Jamming_GmOverlay", false],
     ["Waldo_Jamming_ScanRange", 3000],
     ["Waldo_Jamming_ScanBearingArc", 30],
-    ["Waldo_Jamming_ScanDistanceFractions", [0.2, 0.55]],
+    ["Waldo_Jamming_ScanDistanceBands", [35, 150, 600]],
     ["Waldo_Jamming_AllowPlayerToggle", true],
     ["Waldo_Jamming_DisableChallenge", false],
     ["Waldo_Jamming_DisableChallengeId", "circuit"],

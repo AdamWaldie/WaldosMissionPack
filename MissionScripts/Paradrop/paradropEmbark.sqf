@@ -1,9 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Server-authoritative ZEN boarding service for a registered dynamic paradrop operation. It can
- * move selected players/groups directly into cargo, create a terrain-snapped boarding point with
- * a repeat-safe blue addAction, or do both. Requests are curator-authenticated; only active player
- * units are transferred and available cargo capacity is checked again on each owning client.
+ * Server-authoritative boarding service for a registered dynamic paradrop operation. It can move
+ * selected players directly into cargo or create a terrain-snapped boarding object with a
+ * repeat-safe blue addAction. Flag carriers receive the standard blue flag texture. Boarding
+ * objects have simulation disabled and are explicitly added to every curator so they remain safe
+ * to reposition in Zeus. Requests are curator-authenticated; only active player units are
+ * transferred and available cargo capacity is checked again on each owning client.
  *
  * Arguments:
  * 0: operation ID <STRING>
@@ -30,7 +32,7 @@ params [
     ["_mode", "SELECTION", [""]],
     ["_selectedUnits", [], [[]]],
     ["_position", [], [[]]],
-    ["_pointClass", "Land_InfoStand_V1_F", [""]],
+    ["_pointClass", "FlagPole_F", [""]],
     ["_label", "Board Paradrop Aircraft", [""]],
     ["_requester", objNull, [objNull]]
 ];
@@ -85,6 +87,8 @@ if (_mode in ["POLE", "BOTH"]) then {
         _point setPosATL _pointPosition;
         _point setVectorUp (surfaceNormal _pointPosition);
         _point allowDamage false;
+        _point enableSimulationGlobal false;
+        if (_point isKindOf "FlagCarrierCore") then {_point setFlagTexture "\A3\Data_F\Flags\Flag_blue_CO.paa";};
         _point setVariable ["Waldo_Paradrop_BoardingOperation", _id, true];
         [_point, _aircraft, _label] remoteExec ["Waldo_fnc_MoveInCargoPlane", 0, _point];
         private _points = +(_state getOrDefault ["boardingPoints", []]);
@@ -92,7 +96,14 @@ if (_mode in ["POLE", "BOTH"]) then {
         _state set ["boardingPoints", _points];
         _registry set [_id, _state];
         missionNamespace setVariable ["Waldo_Paradrop_DropZones", _registry];
-        { _x addCuratorEditableObjects [[_point], false] } forEach allCurators;
+        {_x addCuratorEditableObjects [[_point], false]} forEach allCurators;
+        [_point] spawn {
+            params ["_point"];
+            sleep 0.25;
+            if (!isNull _point) then {
+                {_x addCuratorEditableObjects [[_point], false]} forEach allCurators;
+            };
+        };
         _didWork = true;
         [format ["Boarding point created for %1.", _name], "SUCCESS"] call _notify;
     };

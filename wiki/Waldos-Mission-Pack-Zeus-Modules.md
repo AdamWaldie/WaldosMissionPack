@@ -9,6 +9,7 @@ These modules allow users to:
 * Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)
 * End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
 * Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
+* Generate and clean up complete randomized [Dynamic AOs](Dynamic-AO-Generation)
 * Create and remove routed [Dynamic Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations) operations
 * Scale the nearest object through a validated server request
 * Configure persistence, hazardous environments, emergency dismount and AI rebalance while the mission is running
@@ -17,7 +18,7 @@ These modules allow users to:
 * Register vehicle-recovery workshops, recoverable vehicles and recovery carriers
 * Configure temporary squad rally respawns during play
 
-WMP's Zeus modules require Zeus Enhanced. Find them under **Modules → Waldos Mission Modules**.
+WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped under **WMP Mission Flow**, **WMP Logistics**, **WMP Combat Systems**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules remain under **Waldos Economy Systems**.
 
 Use them to:
 
@@ -92,6 +93,10 @@ Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Tracke
 
 **Dynamic AA - Create** keeps operational side and physical asset profile independent in one dialog. Operational side controls allegiance and targeting; the profile may intentionally draw radar, static, mobile or fighter classes configured under another faction. Internal registry IDs and raw pool keys remain behind friendly display names. **Dynamic AA - Remove Nearest** selects the active system nearest to the placed module and can either delete its assets or leave them disabled. See the [Dynamic Anti-Air guide](Dynamic-Anti-Air) for every option.
 
+## Dynamic AO Modules
+
+Under **WMP Combat Systems**, **Dynamic AO - Create** uses one live friendly-name faction/side selector and exposes independent patrol, garrison, static, weighted vehicle/air, civilian, minefield, roadblock, pathing and marker controls. No raw faction classname, asset classname or internal registry id is required. **Dynamic AO - Remove** lists active AOs and preselects the nearest one. Deleting the hidden AO centre anchor invokes the same complete cleanup; minefield anchors remove only their own field. See [Dynamic AO Generation](Dynamic-AO-Generation).
+
 ## Scale Object Module
 
 Place **Scale Object** directly on the intended target and choose the multiplier. The server enforces the mission's configured minimum and maximum scale. Live curator use deliberately does not replace the selected object with a simple object; mission makers can still request that conversion through the scripted API during pre-planned setup.
@@ -118,6 +123,10 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 **AI Rebalance - Control** enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier.
 
+## Emergency Dismount
+
+Under **WMP Mission Tools**, **Emergency Dismount - Control** enables or removes the player-local extraction system for current players and JIP. It exposes overturned/destroyed triggers, velocity preservation, temporary protection and duration, clear-position search radius/refusal, eject transition and unconscious-occupant policy. Vehicle upright actions remain on the affected vehicle; the module controls extraction policy rather than mutating a vehicle directly.
+
 ## Field Resupply
 
 **Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. With ACE loaded, the assigned player receives carrier controls under ACE Self Actions; a backpack is required and deployment is available only on foot. All creation, refill, deploy, take and salvage operations are validated by the server.
@@ -132,15 +141,13 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Dynamic Paradrop
 
-**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. **Paradrop - Embark Players** transfers selected player/group units into free cargo seats, creates a reusable blue-action boarding point, or does both. **Paradrop - Remove Operation** selects a named live operation and removes its aircraft, boarding points and markers without deleting troops that have already jumped. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
+**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. The server normalizes each enabled jump altitude/speed envelope around the route, so custom values cannot suppress every action. **Paradrop - Embark Players** detects a player directly under the module or in the curator selection and offers that player/group; with no player target it creates a reusable, curator-movable blue-action boarding object. **Paradrop - Remove Operation** selects a named live operation and removes its aircraft, boarding points and markers without deleting troops that have already jumped. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
 
 ## Vehicle Recovery
 
 **Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 ## AI Helicopter Landing
-
-**AI - Helicopter Landing Control** globally enables or disables the AI-only landing controller and exposes bounded activation, glideslope, canopy-clearance, go-around and vertical-rate settings. It applies to editor, Zeus and headless-client helicopters through their current locality owner. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
 
 ## UI Theme QA
 

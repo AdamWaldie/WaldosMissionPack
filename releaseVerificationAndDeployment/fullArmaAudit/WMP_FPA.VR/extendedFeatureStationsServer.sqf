@@ -394,6 +394,41 @@ Waldo_QA_fnc_removeDynamicAATargetServer = {
     missionNamespace setVariable ["Waldo_QA_AATarget", objNull, true];
 };
 
+// Dynamic AO is created in an isolated southern test area only on request. VR has no buildings or
+// roads, deliberately proving that garrison and roadblock requests cap cleanly instead of failing.
+Waldo_QA_fnc_createDynamicAOServer = {
+    params [["_actor", objNull, [objNull]]];
+    ["QA_DYNAMIC_AO"] call Waldo_fnc_DynamicAODestroy;
+    private _config = createHashMapFromArray [
+        ["id", "QA_DYNAMIC_AO"], ["center", [350, -300, 0]], ["side", east], ["faction", "OPF_F"],
+        ["radius", 250], ["skill", 0.35], ["patrolGroups", 2], ["garrisonGroups", 2],
+        ["staticTurrets", 1], ["vehiclePatrols", 1], ["vehicleMix", [50, 35, 15]],
+        ["airPatrols", 0], ["civilianFaction", "CIV_F"], ["civilianPatrols", 2],
+        ["civilianGarrisons", 2], ["civilianCars", 1], ["minefields", 1],
+        ["showMineMarkers", true], ["roadblocks", 1], ["showMarker", true]
+    ];
+    private _created = [_config] call Waldo_fnc_DynamicAOCreate;
+    private _state = (missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap]) getOrDefault ["QA_DYNAMIC_AO", createHashMap];
+    private _objects = _state getOrDefault ["objects", []];
+    private _groups = _state getOrDefault ["groups", []];
+    private _ready = _created && {count _objects > 1} && {count _groups >= 2};
+    diag_log format ["WMP DYNAMIC AO QA: created=%1 objects=%2 groups=%3 minefields=%4", _created, count _objects, count _groups, count (_state getOrDefault ["minefields", []])];
+    [_actor, "DYNAMIC AO QA", if (_ready) then {"Generated the isolated OPFOR AO south of this station. Inspect patrols, static/vehicle selection, civilian population, minefield anchor and global markers in Zeus."} else {"AO generation was incomplete. Inspect the current runtime log."}, ["ERROR", "SUCCESS"] select _ready] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_reportDynamicAOServer = {
+    params [["_actor", objNull, [objNull]]];
+    private _state = (missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap]) getOrDefault ["QA_DYNAMIC_AO", createHashMap];
+    private _exists = count _state > 0;
+    private _objects = _state getOrDefault ["objects", []];
+    private _groups = _state getOrDefault ["groups", []];
+    [_actor, "DYNAMIC AO STATE", if (_exists) then {format ["Registered with %1 tracked objects, %2 groups and %3 minefield(s). Delete its centre anchor in Zeus or use this station's cleanup action.", count _objects, count _groups, count (_state getOrDefault ["minefields", []])]} else {"QA Dynamic AO is not active."}, ["WARNING", "SUCCESS"] select _exists] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_destroyDynamicAOServer = {
+    params [["_actor", objNull, [objNull]]];
+    private _removed = ["QA_DYNAMIC_AO"] call Waldo_fnc_DynamicAODestroy;
+    [_actor, "DYNAMIC AO QA", ["No QA Dynamic AO was active.", "The complete QA Dynamic AO was removed."] select _removed, ["WARNING", "SUCCESS"] select _removed] call Waldo_QA_fnc_notifyActorServer;
+};
+
 // Gunship spawn, assignment and teardown remain explicit because they create a live aircraft.
 Waldo_QA_fnc_createGunshipServer = {
     params [["_actor", objNull, [objNull]]];

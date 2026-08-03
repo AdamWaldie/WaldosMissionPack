@@ -246,6 +246,20 @@ private _aa = "qa_sign_dynamic_aa" call _get;
     [] remoteExecCall ["Waldo_QA_fnc_destroyDynamicAAServer", 2];
 }] call _add;
 
+private _dynamicAO = "qa_sign_dynamic_ao" call _get;
+[_dynamicAO, "Waldo_QA_CreateDynamicAO", "CREATE QA DYNAMIC AO", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_createDynamicAOServer", 2];
+}] call _add;
+[_dynamicAO, "Waldo_QA_ReportDynamicAO", "REPORT QA DYNAMIC AO STATE", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_reportDynamicAOServer", 2];
+}] call _add;
+[_dynamicAO, "Waldo_QA_DestroyDynamicAO", "REMOVE QA DYNAMIC AO", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_destroyDynamicAOServer", 2];
+}] call _add;
+
 private _gunship = "qa_sign_gunship" call _get;
 [_gunship, "Waldo_QA_CreateGunship", "SPAWN QA GUNSHIP", {
     params ["_target", "_actor"];

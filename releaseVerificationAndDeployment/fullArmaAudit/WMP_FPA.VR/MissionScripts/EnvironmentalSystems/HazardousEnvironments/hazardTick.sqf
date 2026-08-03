@@ -158,8 +158,14 @@ private _activeText = [];
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
-if (missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true] && {count _activeText > 0}) then {
-    private _theme = [] call Waldo_fnc_UiTheme;
-    private _text = parseText format ["<t font='%1' color='%2' align='right' size='0.75'>%3</t>", _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"], _activeText joinString "<br/>" ];
-    [_text, safeZoneX + safeZoneW - 0.42, safeZoneY + 0.22, 1.1, 0, 0, 791] spawn BIS_fnc_dynamicText;
+private _status = if (missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]) then {_activeText joinString "<br/>"} else {""};
+private _previousStatus = uiNamespace getVariable ["Waldo_Hazard_StatusText", ""];
+if (_status != _previousStatus) then {
+    uiNamespace setVariable ["Waldo_Hazard_StatusText", _status];
+    if (_status isEqualTo "") then {
+        ["HAZARD_STATUS"] call Waldo_fnc_DismissUiNotification;
+    } else {
+        ["HAZARD EXPOSURE", _status, "WARNING", 0, "TOP_RIGHT", "HAZARD_STATUS", "ENVIRONMENT", "REPLACE", 2]
+            call Waldo_fnc_ShowUiNotification;
+    };
 };

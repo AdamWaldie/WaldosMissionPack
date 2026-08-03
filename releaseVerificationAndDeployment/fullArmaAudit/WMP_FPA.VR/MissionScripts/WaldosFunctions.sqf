@@ -118,10 +118,10 @@ class CfgFunctions
             class ImprovedHelicopterLandingInit {file = "MissionScripts\AiScripting\improvedHelicopterLandingInit.sqf";};
             class ImprovedHelicopterLandingTrackLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingTrackLocal.sqf";};
             class ImprovedHelicopterLandingExecuteLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingExecuteLocal.sqf";};
+            class ImprovedHelicopterLandingAnchorLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingAnchorLocal.sqf";};
             class ImprovedHelicopterLandingRestoreLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingRestoreLocal.sqf";};
             class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
             class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
-            class ImprovedHelicopterLandingZen {file = "MissionScripts\AiScripting\improvedHelicopterLandingZen.sqf";};
         };
         class teleport
         {
@@ -178,6 +178,7 @@ class CfgFunctions
               };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
+              class RestyleUiNotificationsLocal {file = "MissionScripts\MissionFlowAndUi\restyleUiNotificationsLocal.sqf";};
               class UiThemeApplyDisplayLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyDisplayLocal.sqf";};
               class UiThemeSetServer {file = "MissionScripts\MissionFlowAndUi\uiThemeSetServer.sqf";};
               class UiThemeZen {file = "MissionScripts\MissionFlowAndUi\uiThemeZen.sqf";};
@@ -493,6 +494,9 @@ class CfgFunctions
             class ParaBackpack {
                 file = "MissionScripts\Paradrop\paraBackpack.sqf";
             };
+            class ParadropRestoreBackpackLocal {
+                file = "MissionScripts\Paradrop\paradropRestoreBackpackLocal.sqf";
+            };
             class HaloJumpFunc {
                 file = "MissionScripts\Paradrop\paradropHaloJump.sqf";
             };
@@ -720,6 +724,18 @@ class CfgFunctions
             class DynamicAAZenPlacement {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAZenPlacement.sqf";};
             class DynamicAAInteractionSetup {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAInteractionSetup.sqf";};
             class DynamicAARemoveZen {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAARemoveZen.sqf";};
+        };
+        class DynamicAO
+        {
+            class DynamicAOGetFactions {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOGetFactions.sqf";};
+            class DynamicAOResolvePools {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOResolvePools.sqf";};
+            class DynamicAOAddPatrolWaypoints {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOAddPatrolWaypoints.sqf";};
+            class DynamicAOPublishState {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOPublishState.sqf";};
+            class DynamicAOCreate {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOCreate.sqf";};
+            class DynamicAODestroyMinefield {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAODestroyMinefield.sqf";};
+            class DynamicAODestroy {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAODestroy.sqf";};
+            class DynamicAOZen {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOZen.sqf";};
+            class DynamicAORemoveZen {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAORemoveZen.sqf";};
         };
         class EcoCore
         {

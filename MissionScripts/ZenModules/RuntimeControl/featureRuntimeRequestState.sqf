@@ -86,7 +86,7 @@ private _names = [
         "Waldo_AccessibilityPID_IncludeAI", "Waldo_AccessibilityPID_AllowToggle",
         "Waldo_AccessibilityPID_DefaultVisible",
         "Waldo_AIRebalance_Enable", "Waldo_AIRebalance_Mode", "Waldo_AIRebalance_Profile",
-        "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance",
+        "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds",
         "Waldo_ImprovedHelicopterLanding_TriggerDistance", "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor",
         "Waldo_ImprovedHelicopterLanding_TransitAltitude", "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio",
         "Waldo_ImprovedHelicopterLanding_TreeScanRadius", "Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer",

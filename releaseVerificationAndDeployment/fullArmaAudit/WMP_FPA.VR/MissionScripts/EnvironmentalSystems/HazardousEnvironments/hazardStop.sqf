@@ -21,4 +21,5 @@ missionNamespace setVariable ["Waldo_Hazard_LocalInside", createHashMap];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
 private _handle = missionNamespace getVariable ["Waldo_Hazard_ClientLoop", scriptNull];
 if !(scriptDone _handle) then {terminate _handle};
-["", safeZoneX, safeZoneY, 0, 0, 0, 791] spawn BIS_fnc_dynamicText;
+uiNamespace setVariable ["Waldo_Hazard_StatusText", ""];
+["HAZARD_STATUS"] call Waldo_fnc_DismissUiNotification;

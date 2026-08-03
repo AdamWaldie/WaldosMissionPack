@@ -59,6 +59,20 @@ if (_suite in ["all", "core"]) then {
         private _landTypeObserved = _trackerType == "SCRIPTED" && {_trackerScript find "fn_wpland.sqf" >= 0};
         private _exact = !isNull _helicopter && {(_helicopter distance2D [325, 70, 0]) <= 5} && {((getPosATL _helicopter) select 2) <= 1};
         ["core/ai-helicopter/land-touchdown", _landed && {_landTypeObserved} && {_exact}, [_result, _tracker, if (isNull _helicopter) then {-1} else {_helicopter distance2D [325, 70, 0]}, if (isNull _helicopter) then {-1} else {(getPosATL _helicopter) select 2}]] call Waldo_QA_fnc_assert;
+        private _anchorDeadline = diag_tickTime + 3;
+        waitUntil {
+            uiSleep 0.1;
+            isNull _helicopter
+            || {((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]) param [0, ""]) == "ANCHORED"}
+            || {diag_tickTime >= _anchorDeadline}
+        };
+        uiSleep 10;
+        private _anchorResult = if (isNull _helicopter) then {[]} else {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]};
+        private _held = !isNull _helicopter
+            && {(_anchorResult param [0, ""]) == "ANCHORED"}
+            && {(_helicopter distance2D [325, 70, 0]) <= 5}
+            && {((getPosATL _helicopter) select 2) <= 1.5};
+        ["core/ai-helicopter/ground-anchor", _held, [_anchorResult, if (isNull _helicopter) then {-1} else {_helicopter distance2D [325, 70, 0]}, if (isNull _helicopter) then {-1} else {(getPosATL _helicopter) select 2}]] call Waldo_QA_fnc_assert;
         call Waldo_QA_fnc_removeImprovedLandingServer;
     }] call Waldo_QA_fnc_case;
 

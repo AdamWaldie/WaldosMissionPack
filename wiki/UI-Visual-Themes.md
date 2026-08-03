@@ -39,9 +39,15 @@ The shared resolver applies the personal profile after mission theme overrides. 
 
 ## Live QA switch
 
-**UI QA - Set Visual Theme** provides a named dropdown for all four styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Static displays already open should be closed and reopened for a complete review. Service-driven panels update on their next refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
+**UI QA - Set Visual Theme** provides a named dropdown for all four styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
 
 Live selections are included in WMP's ordered runtime snapshot as well as the public mission value, so a joining player resolves the server's current style before optional feature interfaces activate.
+
+## Concurrent HUD ownership
+
+WMP treats screen regions as shared space rather than letting each feature draw at a fixed unrelated coordinate. SafeStart reserves the top-centre banner; top and top-right notification stacks begin below it. Electronic warfare reserves the lower-right area above the radio overlay; any notification overflow into lower-right begins above the live jammer card. Hazard exposure is a persistent notification channel, so it participates in the same three-card stacking and overflow rules as rally, recovery and other feature feedback. Older logistics centre text is routed through the same service as a replaceable compatibility channel.
+
+Opening ACE interaction temporarily hides notification cards and the persistent SafeStart/electronic-warfare cards. Their state is retained, still-valid queued messages remain bounded, and the complete layout is reflowed when ACE interaction closes. This makes ACE the deliberate input and draw-priority owner rather than allowing a Rally notification or jammer status to cover its radial menu.
 
 The module is a visual QA and mission-authoring tool. Ordinary missions normally set one style in `init.sqf`.
 

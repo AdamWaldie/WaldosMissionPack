@@ -63,10 +63,15 @@ if (isNull _ctrl) then {
 // Entry/restoration messages temporarily own the same EW panel. The watcher keeps sampling the
 // signal, but must not replace or hide the current transition before it can be read.
 if ((uiNamespace getVariable ["Waldo_JammingNoticeToken", ""]) != "") exitWith {};
-if (_channels isEqualTo []) exitWith {_ctrl ctrlShow false; _frame ctrlShow false;};
+if (_channels isEqualTo []) exitWith {
+    _ctrl ctrlShow false;
+    _frame ctrlShow false;
+    [] call Waldo_fnc_ReflowUiPanels;
+};
 
-_ctrl ctrlShow true;
-_frame ctrlShow true;
+private _show = !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);
+_ctrl ctrlShow _show;
+_frame ctrlShow _show;
 
 private _combinedFactor = 0;
 {_combinedFactor = _combinedFactor max (_x param [1, 0]);} forEach _channels;
@@ -116,3 +121,4 @@ _frame ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
 _ctrl ctrlSetPosition [_panelX + _padX, _panelY + _padY, _panelW - (2 * _padX), _contentH];
 _frame ctrlCommit 0;
 _ctrl ctrlCommit 0;
+[] call Waldo_fnc_ReflowUiPanels;

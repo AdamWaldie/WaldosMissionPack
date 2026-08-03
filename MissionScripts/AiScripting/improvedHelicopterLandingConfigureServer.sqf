@@ -6,12 +6,13 @@
  *
  * Arguments:
  * 0: settings <ARRAY> - enabled, minimum distance, transit altitude, glideslope ratio, tree radius,
- *    tree buffer, go-around height, maximum climb, maximum descent, maximum go-arounds.
+ *    tree buffer, go-around height, maximum climb, maximum descent, maximum go-arounds and
+ *    touchdown settling delay.
  *
  * Return Value: BOOL - true when accepted.
  *
- * Example: [[true, 50, 30, 4, 25, 5, 150, 8, 10, 1]] call Waldo_fnc_ImprovedHelicopterLandingConfigureServer;
- * Current caller: ImprovedHelicopterLandingZen.
+ * Example: [[true, 50, 30, 4, 25, 5, 150, 8, 10, 1, 8]] call Waldo_fnc_ImprovedHelicopterLandingConfigureServer;
+ * Current callers: mission scripts that intentionally change the live global landing profile.
  */
 
 params [["_settings", [], [[]]]];
@@ -21,8 +22,8 @@ if (remoteExecutedOwner > 0) then {
     private _caller = if (_index >= 0) then {allPlayers select _index} else {objNull};
     if (isNull _caller || {isNull getAssignedCuratorLogic _caller}) exitWith {false};
 };
-if (count _settings < 10) exitWith {false};
-_settings params ["_enabled", "_minimumDistance", "_transitAltitude", "_glideRatio", "_treeRadius", "_treeBuffer", "_goAroundHeight", "_maxClimb", "_maxDescent", "_maxGoArounds"];
+if (count _settings < 11) exitWith {false};
+_settings params ["_enabled", "_minimumDistance", "_transitAltitude", "_glideRatio", "_treeRadius", "_treeBuffer", "_goAroundHeight", "_maxClimb", "_maxDescent", "_maxGoArounds", "_touchdownHold"];
 private _updates = [
     ["Waldo_ImprovedHelicopterLanding_Enable", _enabled],
     ["Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", (_minimumDistance max 50) min 500],
@@ -33,7 +34,8 @@ private _updates = [
     ["Waldo_ImprovedHelicopterLanding_GoAroundHeight", (_goAroundHeight max 50) min 500],
     ["Waldo_ImprovedHelicopterLanding_MaximumClimbRate", (_maxClimb max 1) min 20],
     ["Waldo_ImprovedHelicopterLanding_MaximumDescentRate", (_maxDescent max 1) min 25],
-    ["Waldo_ImprovedHelicopterLanding_MaximumGoArounds", round ((_maxGoArounds max 0) min 3)]
+    ["Waldo_ImprovedHelicopterLanding_MaximumGoArounds", round ((_maxGoArounds max 0) min 3)],
+    ["Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds", (_touchdownHold max 0) min 60]
 ];
 {_x params ["_name", "_value"]; missionNamespace setVariable [_name, _value, true];} forEach _updates;
 [_updates, false] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];

@@ -57,7 +57,6 @@ _close ctrlAddEventHandler ["ButtonClick", {params ["_control"]; (ctrlParent _co
 _close ctrlCommit 0;
 
 _map setVariable ["Waldo_TacticalDisplay_Object", _object];
-_map setVariable ["Waldo_TacticalDisplay_Font", _theme getOrDefault ["font", "RobotoCondensed"]];
 _map ctrlAddEventHandler ["Draw", {
     params ["_map"];
     private _console = _map getVariable ["Waldo_TacticalDisplay_Object", objNull];
@@ -66,15 +65,21 @@ _map ctrlAddEventHandler ["Draw", {
     if (_displaySide == sideUnknown) then {_displaySide = side (group player)};
     private _radius = _console getVariable ["Waldo_TacticalDisplay_Radius", 2000];
     private _centre = getPosWorld _console;
+    private _liveTheme = uiNamespace getVariable ["Waldo_UI_ResolvedTheme", createHashMap];
+    if (count (keys _liveTheme) == 0) then {_liveTheme = [] call Waldo_fnc_UiTheme;};
+    private _friendlyColour = _liveTheme getOrDefault ["success", [0.25, 0.85, 1, 1]];
+    private _enemyColour = +(_liveTheme getOrDefault ["danger", [1, 0.25, 0.2, 0.9]]);
+    _enemyColour set [3, 0.9];
+    private _mapFont = _liveTheme getOrDefault ["font", "RobotoCondensed"];
     {
         private _unit = _x;
         if (alive _unit && {_unit distance2D _centre <= _radius}) then {
             private _relationship = _displaySide getFriend (side group _unit);
             if (_relationship >= 0.6) then {
-                _map drawIcon ["\a3\ui_f\data\map\vehicleicons\iconMan_ca.paa", [0.25, 0.85, 1, 1], getPosWorld _unit, 20, 20, getDir _unit, name _unit, 1, 0.035, _map getVariable ["Waldo_TacticalDisplay_Font", "RobotoCondensed"], "right"];
+                _map drawIcon ["\a3\ui_f\data\map\vehicleicons\iconMan_ca.paa", _friendlyColour, getPosWorld _unit, 20, 20, getDir _unit, name _unit, 1, 0.035, _mapFont, "right"];
             } else {
                 if (_console getVariable ["Waldo_TacticalDisplay_ShowKnownEnemies", true] && {((group player) knowsAbout _unit) >= (missionNamespace getVariable ["Waldo_TacticalDisplay_MinimumKnowledge", 1.5])}) then {
-                    _map drawIcon ["\a3\ui_f\data\map\vehicleicons\iconMan_ca.paa", [1, 0.25, 0.2, 0.9], getPosWorld _unit, 18, 18, getDir _unit, "KNOWN CONTACT", 1, 0.032, _map getVariable ["Waldo_TacticalDisplay_Font", "RobotoCondensed"], "right"];
+                    _map drawIcon ["\a3\ui_f\data\map\vehicleicons\iconMan_ca.paa", _enemyColour, getPosWorld _unit, 18, 18, getDir _unit, "KNOWN CONTACT", 1, 0.032, _mapFont, "right"];
                 };
             };
         };

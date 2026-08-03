@@ -274,16 +274,9 @@ _helicopter setVariable [
     [["ABORTED", "LANDED"] select _landed, _targetPosition, diag_tickTime, _helicopter distance2D _targetPosition, (getPosATL _helicopter) select 2],
     true
 ];
-[_helicopter, _landed, _waypointType] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
 if (_landed && {local _helicopter}) then {
-    private _mass = getMass _helicopter;
-    [_helicopter, _mass] spawn {
-        params ["_helicopter", "_mass"];
-        private _deadline = diag_tickTime + 1.5;
-        while {diag_tickTime < _deadline && {alive _helicopter} && {local _helicopter} && {isTouchingGround _helicopter}} do {
-            _helicopter addForce [(vectorUp _helicopter) vectorMultiply (-0.5 * _mass), getCenterOfMass _helicopter];
-            uiSleep 0.05;
-        };
-    };
+    [_helicopter, _group, _targetPosition, _waypointType, _expectedWaypoint, _expectedScript, count (waypoints _group)] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
+} else {
+    [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
 };
 _landed

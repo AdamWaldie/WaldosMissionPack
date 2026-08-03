@@ -10,7 +10,7 @@ The server owns mutable mission state, registries, persistence I/O and world cha
 
 ## Runtime Zeus controls
 
-When Zeus Enhanced is loaded, **Waldos Mission Modules** includes focused runtime controls for persistence, persistent-object registration, hazardous-zone creation/removal, emergency dismount, airborne gunships and AI rebalance. These modules validate the assigned curator on the server and remove the need to pre-plan those features in Eden. Hazard dialogs can also copy equivalent setup calls to the curator's clipboard for permanent configuration later. Treatment feedback, tree felling, accessibility PID and breaching remain script-configured and intentionally have no ZEN modules.
+When Zeus Enhanced is loaded, the categorized WMP palette includes focused runtime controls for persistence, persistent-object registration, hazardous-zone creation/removal, emergency dismount, airborne gunships and AI rebalance. These modules validate the assigned curator on the server and remove the need to pre-plan those features in Eden. Hazard dialogs can also copy equivalent setup calls to the curator's clipboard for permanent configuration later. Treatment feedback, tree felling, accessibility PID and breaching remain script-configured and intentionally have no ZEN modules.
 
 ## Persistence
 

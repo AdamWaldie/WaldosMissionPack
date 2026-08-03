@@ -85,5 +85,6 @@
 * [Optional Feature Systems](Optional-Feature-Systems)
 * [Optional Feature Extensions](Optional-Feature-Extensions)
 * [Dynamic Anti-Air](Dynamic-Anti-Air)
+* [Dynamic AO Generation](Dynamic-AO-Generation)
 * [Airborne Gunship Support](Airborne-Gunship-Support)
 * [Performance and Optimisation](Performance-And-Optimisation-Audit)

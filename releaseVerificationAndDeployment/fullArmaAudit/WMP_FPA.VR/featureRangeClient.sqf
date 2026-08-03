@@ -269,11 +269,11 @@ if (!isNull _coreConsole) then {
             };
         } forEach _checks;
         private _wmpZenCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
-        private _wmpZenReady = missionNamespace getVariable ["Waldo_ZenModulesReady", false] && {_wmpZenCount == 38};
+        private _wmpZenReady = missionNamespace getVariable ["Waldo_ZenModulesReady", false] && {_wmpZenCount == 42};
         if (_wmpZenReady) then {
             _loaded pushBack format ["WMP ZEN MODULES (%1)", _wmpZenCount];
         } else {
-            _missing pushBack format ["WMP ZEN MODULE REGISTRATION (%1/38)", _wmpZenCount];
+            _missing pushBack format ["WMP ZEN MODULE REGISTRATION (%1/42)", _wmpZenCount];
         };
         private _message = if (_missing isEqualTo []) then {
             format ["REQUIRED MODS LOADED: %1", _loaded joinString ", "]

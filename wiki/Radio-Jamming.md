@@ -111,7 +111,7 @@ These let you tune how realistic/gamey the jamming feels. All are on by default.
 | `Waldo_Jamming_GmOverlay` | `false` | Opt-in curator-only floating marker (and facing line for cones) over every jammer. Ordinary players never see it. |
 | `Waldo_Jamming_ScanRange` | `3000` | Hard cap (m) on the handheld RDF scan; a source is reported only while the operator is also inside its currently active field. |
 | `Waldo_Jamming_ScanBearingArc` | `30` | Width in degrees of the quantised bearing sector reported to the operator. |
-| `Waldo_Jamming_ScanDistanceFractions` | `[0.2, 0.55]` | Fractions of the detected jammer's active footprint separating the deliberately vague `NEARBY`, `DISTANT` and `VERY DISTANT` reports. |
+| `Waldo_Jamming_ScanDistanceBands` | `[35, 150, 600]` | Absolute metre thresholds separating deliberately vague `VERY CLOSE`, `NEARBY`, `DISTANT` and `VERY DISTANT` reports. Absolute bands prevent a nearby source being described as distant merely because it has a large configured footprint. |
 | `Waldo_Jamming_AllowPlayerToggle` | `true` | Preserve the legacy direct operator toggle when no disable challenge is active. A challenge always suppresses it to prevent bypass. |
 | `Waldo_Jamming_DisableChallenge` | `false` | Require a shared field-equipment procedure before player disablement. Existing missions remain unchanged until opted in; the Zeus placement module opts in by default. |
 | `Waldo_Jamming_DisableChallengeId` | `"circuit"` | Shared procedure used by challenge-enabled emitters. Any registered interaction challenge id is accepted. |
@@ -149,7 +149,7 @@ A destructible jammer can drive an EW objective without a separate trigger:
 
 ## Zeus usage
 
-Three modules live under **Modules > Waldos Mission Modules** (Zeus Enhanced required):
+Three modules live under **Modules > WMP Combat Systems** (Zeus Enhanced required):
 
 | Module | Action |
 |---|---|
