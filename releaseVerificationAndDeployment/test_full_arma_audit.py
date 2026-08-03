@@ -147,6 +147,19 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('getOrDefault ["enabled", false]', player_init)
         self.assertIn("require both the WMP ACRE", testing)
 
+    def test_audit_additional_acre_override_closes_the_set_array(self):
+        client = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "featureRangeClient.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '["ACRE_SEM52SL", 1, 12, "LEFT"]\n            ]]]];',
+            client,
+        )
+
     def test_runtime_ids_and_dedicated_zen_bridges_are_safe(self):
         runtime_id_path = (
             ROOT / "MissionScripts" / "MissionInit" / "Configuration" / "createRuntimeId.sqf"
