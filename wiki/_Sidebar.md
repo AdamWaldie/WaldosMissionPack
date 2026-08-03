@@ -4,6 +4,7 @@
 * [Quickstart](Quickstart-Guide)
 * [Feature Index](Feature-Tutorials)
 * [Mission Configuration](Mission-Configuration-Reference)
+* [Feature Configuration Files](Feature-Configuration-Files)
 * [Mission Diagnostics](Mission-Diagnostics)
 * [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 * [Zeus and Script API Parity](Zeus-And-Script-API-Parity)

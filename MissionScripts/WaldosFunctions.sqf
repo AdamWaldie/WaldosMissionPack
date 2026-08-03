@@ -14,6 +14,9 @@ class CfgFunctions
     {
         class InitilisationAndSetup 
         {
+            class LoadFeatureConfigs {
+                file = "MissionScripts\MissionInit\Configuration\loadFeatureConfigs.sqf";
+            };
             class GetPlayerGroup {
                 file = "MissionScripts\MissionInit\InitHelpers\GetPlayerGroup.sqf";
             };

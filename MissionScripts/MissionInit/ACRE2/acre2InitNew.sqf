@@ -13,7 +13,7 @@ if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {
     missionNamespace setVariable ['Waldo_ACRE2_Available', false];
     false
 };
-private _config = missionNamespace getVariable ['Waldo_ACRE2_Config', call compile preprocessFileLineNumbers 'acreConfig.sqf'];
+private _config = missionNamespace getVariable ['Waldo_ACRE2_Config', call compile preprocessFileLineNumbers 'MissionConfig\acreConfig.sqf'];
 private _validation = [_config] call Waldo_fnc_ACRE2ValidateConfig;
 if !(_validation select 0) exitWith {{diag_log format ['[WMP ACRE] CONFIG ERROR: %1', _x]} forEach (_validation select 1); false};
 missionNamespace setVariable ['Waldo_ACRE2_Available', true];

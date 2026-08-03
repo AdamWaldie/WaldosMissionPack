@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Loads and validates acreConfig.sqf before mission radios become unique, registers Babel
+ * Loads and validates MissionConfig\acreConfig.sqf before mission radios become unique, registers Babel
  * languages in deterministic order and applies label-only changes to existing side presets.
  *
  * Arguments: None.
@@ -9,7 +9,7 @@
  * Example: Automatically called by CfgFunctions preInit.
  * Current caller: CfgFunctions preInit registration in WaldosFunctions.sqf.
  */
-private _config = call compile preprocessFileLineNumbers 'acreConfig.sqf';
+private _config = call compile preprocessFileLineNumbers 'MissionConfig\acreConfig.sqf';
 private _validation = [_config] call Waldo_fnc_ACRE2ValidateConfig;
 missionNamespace setVariable ['Waldo_ACRE2_Config', _config];
 missionNamespace setVariable ['Waldo_ACRE2_ConfigValid', _validation select 0];

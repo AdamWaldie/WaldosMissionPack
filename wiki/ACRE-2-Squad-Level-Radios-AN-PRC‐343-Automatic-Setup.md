@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need repeatable PRC-343 block/channel allocation by side and group.
 
-PRC-343 assignments are compiled on the server from `acreConfig.sqf` and broadcast in the versioned ACRE plan. The key is side plus normalised group ID, so identical callsigns on opposing sides cannot overwrite one another.
+PRC-343 assignments are compiled on the server from `MissionConfig\acreConfig.sqf` and broadcast in the versioned ACRE plan. The key is side plus normalised group ID, so identical callsigns on opposing sides cannot overwrite one another.
 
 An explicit assignment uses `[block, channel]` and reserves its slot before automatic allocation:
 

@@ -538,16 +538,17 @@ def refresh_release_sources() -> None:
         if source.is_dir():
             shutil.copytree(source, target)
     shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
-    shutil.copy2(ROOT / "acreConfig.sqf", MISSION / "acreConfig.sqf")
-    shutil.copy2(ROOT / "acreConfig.sqf", MISSION / "releaseAcreConfig.sqf")
+    shutil.copy2(ROOT / "MissionConfig" / "acreConfig.sqf", MISSION / "MissionConfig" / "releaseAcreConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
-    shutil.copytree(ROOT / "MissionConfig", pack_source / "MissionConfig", dirs_exist_ok=True)
-    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "acreConfig.sqf", "LICENSE", "README.md"):
+    _sync_tree_in_place(ROOT / "MissionConfig", pack_source / "MissionConfig")
+    for stale in (MISSION / "acreConfig.sqf", MISSION / "releaseAcreConfig.sqf", pack_source / "acreConfig.sqf"):
+        stale.unlink(missing_ok=True)
+    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
         source = ROOT / name
         if source.is_file():
             shutil.copy2(source, pack_source / name)
-    shutil.copy2(MISSION / "auditAcreConfig.sqf", MISSION / "acreConfig.sqf")
+    shutil.copy2(MISSION / "auditAcreConfig.sqf", MISSION / "MissionConfig" / "acreConfig.sqf")
 
 
 def write_active_pack(destination: Path) -> None:

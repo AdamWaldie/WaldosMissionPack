@@ -4,12 +4,12 @@
  * deterministic Babel languages and partial multilingual player-variable overrides for live QA.
  *
  * Arguments: None.
- * Return Value: HASHMAP - audit-specific ACRE configuration consumed as mission acreConfig.sqf.
+ * Return Value: HASHMAP - audit-specific ACRE configuration consumed as MissionConfig\acreConfig.sqf.
  *
- * Example: Copied to acreConfig.sqf by the full-audit generator and builder.
+ * Example: Copied to MissionConfig\acreConfig.sqf by the full-audit generator and builder.
  * Current callers: build_full_arma_audit.py and generate_full_arma_audit_mission.py.
  */
-private _config = call compile preprocessFileLineNumbers 'releaseAcreConfig.sqf';
+private _config = call compile preprocessFileLineNumbers 'MissionConfig\releaseAcreConfig.sqf';
 private _babel = _config get 'babel';
 _babel set ['enabled', true];
 _babel set ['languages', [['en', 'English'], ['fr', 'French'], ['ru', 'Russian']]];

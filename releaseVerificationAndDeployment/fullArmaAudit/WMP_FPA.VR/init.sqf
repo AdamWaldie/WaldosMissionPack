@@ -21,8 +21,8 @@ call compile preprocessFileLineNumbers "auditPreInit.sqf";
 //[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 
 
-// Shared feature defaults are synchronous and repeat-safe. Runtime authority remains below.
-call compile preprocessFileLineNumbers "MissionConfig\SharedFeatureDefaults.sqf";
+// Pure-data shared feature configs are synchronous and repeat-safe. Runtime authority remains below.
+["SHARED"] call Waldo_fnc_LoadFeatureConfigs;
 missionNamespace setVariable ["Waldo_SharedFeatureConfigReady", true];
 if (isServer) then {
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", true];
@@ -149,7 +149,7 @@ Daytime Mission parameter - uncomment this for daytime AI values.
 
 
 /*
-ACRE2 communications and Babel are authored in acreConfig.sqf. CfgFunctions pre-init registers
+ACRE2 communications and Babel are authored in MissionConfig\acreConfig.sqf. CfgFunctions pre-init registers
 deterministic preset labels and Babel definitions; initServer.sqf publishes the authoritative plan;
 initPlayerLocal.sqf applies carried-radio state, CEOI and local language knowledge. Multiplayer
 init.sqf deliberately owns no ACRE defaults, waits or mutable authority.

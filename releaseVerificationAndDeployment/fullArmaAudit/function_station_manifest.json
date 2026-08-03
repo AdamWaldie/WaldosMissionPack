@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 829,
+  "registeredFunctionCount": 830,
   "runtimeFunctionCount": 385,
-  "functionCount": 1214,
+  "functionCount": 1215,
   "stations": [
     {
       "id": "control",
@@ -406,6 +406,12 @@
     }
   ],
   "functions": [
+    {
+      "name": "Waldo_fnc_LoadFeatureConfigs",
+      "file": "MissionScripts/MissionInit/Configuration/loadFeatureConfigs.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
     {
       "name": "Waldo_fnc_GetPlayerGroup",
       "file": "MissionScripts/MissionInit/InitHelpers/GetPlayerGroup.sqf",

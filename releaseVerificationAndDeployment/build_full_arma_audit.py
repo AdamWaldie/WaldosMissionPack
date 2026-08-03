@@ -67,17 +67,18 @@ def build(destination: Path, suite: str, mod_profile: str = "core", mode: str = 
         remove_staged_mission(destination)
     shutil.copytree(TEMPLATE, destination)
     shutil.copytree(ROOT / "MissionScripts", destination / "MissionScripts", dirs_exist_ok=True)
+    shutil.copytree(ROOT / "MissionConfig", destination / "MissionConfig", dirs_exist_ok=True)
     shutil.copytree(ROOT / "Pictures", destination / "Pictures", dirs_exist_ok=True)
     shutil.copy2(ROOT / "economyConfig.sqf", destination / "economyConfig.sqf")
-    shutil.copy2(ROOT / "acreConfig.sqf", destination / "acreConfig.sqf")
-    shutil.copy2(ROOT / "acreConfig.sqf", destination / "releaseAcreConfig.sqf")
+    shutil.copy2(ROOT / "MissionConfig" / "acreConfig.sqf", destination / "MissionConfig" / "releaseAcreConfig.sqf")
     pack_source = destination / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
-    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "acreConfig.sqf", "LICENSE", "README.md"):
+    shutil.copytree(ROOT / "MissionConfig", pack_source / "MissionConfig", dirs_exist_ok=True)
+    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
         source = ROOT / name
         if source.is_file():
             shutil.copy2(source, pack_source / name)
-    shutil.copy2(TEMPLATE / "auditAcreConfig.sqf", destination / "acreConfig.sqf")
+    shutil.copy2(TEMPLATE / "auditAcreConfig.sqf", destination / "MissionConfig" / "acreConfig.sqf")
 
     # Use the real description.ext and actual mission.sqm. The generated playable-unit
     # inventories are intentionally consumed by MissionSQM instead of a synthetic include.

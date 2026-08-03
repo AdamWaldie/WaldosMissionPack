@@ -6,7 +6,7 @@ here gives one authoritative value and prevents clients or headless clients from
 own copies. Persistence starts its database branch here; player capture/apply starts locally.
 */
 [] call Waldo_fnc_ACRE2Init;
-call compile preprocessFileLineNumbers "MissionConfig\ServerFeatureDefaults.sqf";
+["SERVER"] call Waldo_fnc_LoadFeatureConfigs;
 if (missionNamespace getVariable ["Waldo_Jamming_Enable", true]) then {
     [] call Waldo_fnc_JammingInit;
 };

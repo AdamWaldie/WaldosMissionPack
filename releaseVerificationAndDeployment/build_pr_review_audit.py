@@ -321,7 +321,8 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
     remove_staged_mission(destination)
     destination.mkdir(parents=True)
     copy_release(destination)
-    shutil.copy2(destination / "acreConfig.sqf", destination / "releaseAcreConfig.sqf")
+    acre_config = destination / "MissionConfig" / "acreConfig.sqf"
+    shutil.copy2(acre_config, destination / "MissionConfig" / "releaseAcreConfig.sqf")
 
     (destination / "mission.sqm").write_bytes(mission_sqm)
     description_path = destination / "description.ext"
@@ -332,7 +333,7 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
         (destination / name).write_text(content, encoding="utf-8")
     for name, content in range_content.items():
         (destination / name).write_text(content, encoding="utf-8")
-    (destination / "acreConfig.sqf").write_text(
+    acre_config.write_text(
         range_content["auditAcreConfig.sqf"], encoding="utf-8"
     )
 

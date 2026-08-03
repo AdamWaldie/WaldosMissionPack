@@ -2,14 +2,13 @@
 
 > **Use this page when:** you need the authoritative fields and variables used by WMP mission entry files.
 
-This page documents all configuration fields and variables mission makers are expected to customise before shipping a WMP mission. Feature defaults now live in the clearly separated `MissionConfig` directory; the three Arma init files retain lifecycle, authority, activation and JIP handling only.
+This page documents mission entry points and feature configuration lifecycle. Feature defaults live in semantic pure-data files under `MissionConfig`; the three Arma init files retain lifecycle, authority, activation and JIP handling only. See [Feature Configuration Files](Feature-Configuration-Files) for every setting.
 
 ## Feature configuration directory
 
-- `MissionConfig\SharedFeatureDefaults.sqf` contains guarded defaults needed on every machine.
-- `MissionConfig\ServerFeatureDefaults.sqf` contains server-owned limits, pools and JIP-safe published defaults.
-- `MissionConfig\PlayerLocalFeatureDefaults.sqf` contains interface-only presentation and interaction defaults.
-- Root `acreConfig.sqf` remains separate because ACRE consumes it during CfgFunctions pre-init, before Arma event scripts.
+- `MissionConfig\featureConfigManifest.sqf` lists the semantic configuration files.
+- Each feature file separates guarded `shared`, authoritative `server`, and interface-only `playerLocal` settings where required.
+- `MissionConfig\acreConfig.sqf` remains dedicated because ACRE consumes it during CfgFunctions pre-init, before Arma event scripts.
 
 Do not move activation calls, waits, event handlers or public-state ownership into configuration files. Set a variable before its guarded default when generating a mission, or edit the corresponding locality file. Live ZEN changes remain authoritative and are not overwritten when a player joins.
 
@@ -85,15 +84,15 @@ class MissionSQM { #include "mission.sqm" };              // Required for logist
 
 ## initServer.sqf
 
-Runs **on the server only**. Its server defaults are loaded synchronously from `MissionConfig\ServerFeatureDefaults.sqf`; activation and authority remain in `initServer.sqf`.
+Runs **on the server only**. Its server defaults are loaded synchronously from the semantic files under `MissionConfig`; activation and authority remain in `initServer.sqf`.
 
 ### Server-Owned Optional Feature Settings
 
-`MissionConfig\ServerFeatureDefaults.sqf` defines object-scaling limits and Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
+`MissionConfig\logisticsConfig.sqf` defines object-scaling limits and `MissionConfig\airOperationsConfig.sqf` defines Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
-Shared hazard presentation defaults live in `MissionConfig\SharedFeatureDefaults.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
+Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
 
 ### Logistics Crate Classnames
 
@@ -216,7 +215,7 @@ Only one profile should be active at a time. AI rebalance initialises wherever A
 
 ### ACRE2 Radio Setup
 
-Edit the pure-data root `acreConfig.sqf`. Each side defines an existing ACRE side preset, logical net keys and group assignments. The pack automatically loads it during pre-init, server init and player-local init; no call belongs in multiplayer `init.sqf`.
+Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing ACRE side preset, logical net keys and group assignments. The pack automatically loads it during pre-init, server init and player-local init; no call belongs in multiplayer `init.sqf`.
 
 `retuneOnGroupChange` defaults to `false`, named displays default to enabled, and `strict` defaults to `true`. `radioPriority` determines which supported carried radio consumes each ordered group net. `radioProfiles` may extend known third-party carried radios; unknown radios and vehicle racks are not guessed or modified.
 

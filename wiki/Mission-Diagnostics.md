@@ -75,7 +75,7 @@ Diagnostics are enabled by default:
 missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 ```
 
-Set `Waldo_RunDiagnostics` to `false` in `MissionConfig\ServerFeatureDefaults.sqf` if you do not want the startup report in a released mission.
+Set `Waldo_RunDiagnostics` to `false` in `MissionConfig\missionSystemsConfig.sqf` if you do not want the startup report in a released mission.
 
 Run the check again from server code with:
 

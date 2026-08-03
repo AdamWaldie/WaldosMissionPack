@@ -127,16 +127,17 @@ class FullAuditTests(unittest.TestCase):
         self.assertTrue((mission / "MissionScripts" / "WaldosFunctions.sqf").is_file())
         self.assertTrue((mission / "Pictures" / "loading.jpg").is_file())
         self.assertTrue((mission / "economyConfig.sqf").is_file())
-        self.assertTrue((mission / "acreConfig.sqf").is_file())
-        self.assertTrue((mission / "releaseAcreConfig.sqf").is_file())
+        self.assertTrue((mission / "MissionConfig" / "acreConfig.sqf").is_file())
+        self.assertTrue((mission / "MissionConfig" / "releaseAcreConfig.sqf").is_file())
         self.assertTrue((mission / "auditBootstrap.sqf").is_file())
         self.assertTrue(sqm.lstrip().startswith("version="))
         self.assertFalse(any(mission.glob("*.pbo")))
         self.assertNotIn("Land_Radio_F", sqm)
         self.assertIn('type="Land_PortableServer_01_sand_F"', sqm)
         self.assertEqual(sqm.count('side="Empty"'), sqm.count("this enableSimulationGlobal false;"))
-        for release_root in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "acreConfig.sqf", "LICENSE", "README.md"):
+        for release_root in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
             self.assertTrue((mission / "WMPPackSource" / release_root).is_file())
+        self.assertTrue((mission / "WMPPackSource" / "MissionConfig" / "acreConfig.sqf").is_file())
         init_player = (mission / "initPlayerLocal.sqf").read_text(encoding="utf-8")
         client_audit = (mission / "runClientAudit.sqf").read_text(encoding="utf-8")
         self.assertIn('auditPreInitPlayerLocal.sqf', init_player)
@@ -288,26 +289,25 @@ class FullAuditTests(unittest.TestCase):
         init = (ROOT / "init.sqf").read_text(encoding="utf-8")
         init_server = (ROOT / "initServer.sqf").read_text(encoding="utf-8")
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
-        shared_config = (ROOT / "MissionConfig" / "SharedFeatureDefaults.sqf").read_text(encoding="utf-8")
-        server_config = (ROOT / "MissionConfig" / "ServerFeatureDefaults.sqf").read_text(encoding="utf-8")
+        shared_config = (ROOT / "MissionConfig" / "missionSystemsConfig.sqf").read_text(encoding="utf-8")
+        server_config = (ROOT / "MissionConfig" / "electronicWarfareConfig.sqf").read_text(encoding="utf-8")
 
         self.assertNotIn('missionNamespace setVariable ["Waldo_Jamming_Notify", true, true]', init)
         self.assertNotIn('missionNamespace setVariable ["Waldo_Jamming_Enable", true, true]', init)
-        self.assertIn('if (isNil "Waldo_MiniGames_Enable") then', shared_config)
-        self.assertIn('if (isNil "Waldo_CorpseTraps_Enable") then', shared_config)
-        self.assertIn('MissionConfig\\SharedFeatureDefaults.sqf', init)
+        self.assertIn('["Waldo_MiniGames_Enable", true]', shared_config)
+        self.assertIn('["Waldo_CorpseTraps_Enable", false]', shared_config)
+        self.assertIn('["SHARED"] call Waldo_fnc_LoadFeatureConfigs;', init)
         self.assertIn('missionNamespace setVariable ["WALDO_INIT_COMPLETE", true];', init)
         self.assertNotIn('missionNamespace setVariable ["WALDO_INIT_COMPLETE", true, true]', init)
 
-        self.assertIn('["Waldo_Jamming_Enable", true]', server_config)
-        self.assertIn('missionNamespace setVariable ["Waldo_Jamming_ConfigReady", true, true]', server_config)
-        self.assertIn('MissionConfig\\ServerFeatureDefaults.sqf', init_server)
+        self.assertIn('["Waldo_Jamming_Enable", true, true]', server_config)
+        self.assertIn('["SERVER"] call Waldo_fnc_LoadFeatureConfigs;', init_server)
         self.assertIn('[] call Waldo_fnc_JammingInit;', init_server)
 
         self.assertIn('missionNamespace getVariable ["Waldo_Jamming_ConfigReady", false]', init_player)
         self.assertIn('missionNamespace getVariable ["Waldo_Jamming_Enable", false]', init_player)
         self.assertIn('[] call Waldo_fnc_JammingInit;', init_player)
-        self.assertIn('MissionConfig\\PlayerLocalFeatureDefaults.sqf', init_player)
+        self.assertIn('["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;', init_player)
 
     def test_generated_mission_maps_every_registered_function_to_one_station(self):
         manifest_path = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "function_station_manifest.json"
@@ -356,7 +356,7 @@ class FullAuditTests(unittest.TestCase):
         generated_server = (mission / "initServer.sqf").read_text(encoding="utf-8")
         self.assertLess(
             generated_server.index('auditPreInitServer.sqf'),
-            generated_server.index('MissionConfig\\ServerFeatureDefaults.sqf'),
+            generated_server.index('["SERVER"] call Waldo_fnc_LoadFeatureConfigs;'),
         )
         pre_server = (mission / "auditPreInitServer.sqf").read_text(encoding="utf-8")
         self.assertIn('"B_Parachute"', pre_server)
@@ -955,7 +955,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertEqual(19, economy_zen.count("call Waldo_fnc_EcoCore_logZenModule"))
         self.assertIn("WaldoEcoCore_ZenModuleCount", economy_zen)
         self.assertIn('auditPreInit.sqf', audit_init)
-        self.assertIn('MissionConfig\\SharedFeatureDefaults.sqf', audit_init)
+        self.assertIn('["SHARED"] call Waldo_fnc_LoadFeatureConfigs;', audit_init)
         self.assertIn('auditInit.sqf', audit_init)
 
     def test_interaction_surface_policy_matches_feature_complexity(self):
@@ -1130,7 +1130,7 @@ class FullAuditTests(unittest.TestCase):
         clear = (flow / "clearUiPanels.sqf").read_text(encoding="utf-8")
         setup = (flow / "setupUiCleanupAction.sqf").read_text(encoding="utf-8")
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
-        player_config = (ROOT / "MissionConfig" / "PlayerLocalFeatureDefaults.sqf").read_text(encoding="utf-8")
+        player_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         economy = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "notifyActorLocal.sqf").read_text(encoding="utf-8")
         for function_name in ("ShowUiNotification", "ClearUiPanels", "SetupUiCleanupAction", "SetUiPanelsSuppressed", "SetupUiAcePriority", "SetUiPanelPlacement", "SetLocalUiPanelPlacement", "ReflowUiPanels", "DrainUiNotificationQueue"):
@@ -1324,7 +1324,7 @@ class FullAuditTests(unittest.TestCase):
         profile_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")
         apply_profile = (ROOT / "MissionScripts" / "AiScripting" / "aiApplyProfile.sqf").read_text(encoding="utf-8")
         runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
-        mission_config = (ROOT / "MissionConfig" / "SharedFeatureDefaults.sqf").read_text(encoding="utf-8")
+        mission_config = (ROOT / "MissionConfig" / "aiConfig.sqf").read_text(encoding="utf-8")
         for key in ("MILITIA", "LINE", "VETERAN", "ELITE"):
             self.assertIn(f'["{key}", createHashMapFromArray', profile_init)
         for label in ("WMP Militia", "WMP Line", "WMP Veteran", "WMP Elite"):
@@ -1347,6 +1347,37 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("Waldo_fnc_EcoBuy_setPurchaseCatalog", feature_range)
         self.assertIn("Waldo_fnc_EcoResource_getResourceTypes", feature_range)
         self.assertIn("_qaZoneResource", feature_range)
+
+    def test_feature_configuration_is_pure_data_documented_and_locality_scoped(self):
+        config_root = ROOT / "MissionConfig"
+        expected = {
+            "aiConfig.sqf", "airOperationsConfig.sqf", "electronicWarfareConfig.sqf",
+            "environmentConfig.sqf", "interfaceConfig.sqf", "logisticsConfig.sqf",
+            "missionSystemsConfig.sqf", "persistenceConfig.sqf",
+        }
+        manifest = (config_root / "featureConfigManifest.sqf").read_text(encoding="utf-8")
+        loader = (
+            ROOT / "MissionScripts" / "MissionInit" / "Configuration" / "loadFeatureConfigs.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(set(), expected - {path.name for path in config_root.glob("*Config.sqf")})
+        for filename in expected:
+            self.assertIn(f"MissionConfig\\{filename}", manifest)
+            text = (config_root / filename).read_text(encoding="utf-8")
+            self.assertIn("Author: WaldoTheWarfighter", text)
+            self.assertIn("Arguments:", text)
+            self.assertIn("Return Value:", text)
+            self.assertIn("Current caller", text)
+            self.assertIn("createHashMapFromArray", text)
+            for forbidden in (" spawn ", "execVM", "remoteExec", "addEventHandler", "waitUntil"):
+                self.assertNotIn(forbidden, text, filename)
+        self.assertFalse((ROOT / "acreConfig.sqf").exists())
+        self.assertTrue((config_root / "acreConfig.sqf").is_file())
+        self.assertIn("if (_scope == 'SERVER' && {_publish})", loader)
+        self.assertIn("if (isNil _name)", loader)
+        self.assertIn("setVariable ['Waldo_Jamming_ConfigReady', _valid, true]", loader)
+        self.assertIn('["SHARED"] call Waldo_fnc_LoadFeatureConfigs;', (ROOT / "init.sqf").read_text(encoding="utf-8"))
+        self.assertIn('["SERVER"] call Waldo_fnc_LoadFeatureConfigs;', (ROOT / "initServer.sqf").read_text(encoding="utf-8"))
+        self.assertIn('["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;', (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8"))
 
     def test_parser_extracts_failure(self):
         with tempfile.TemporaryDirectory() as directory:

@@ -10,7 +10,7 @@
  * HashMap - validated by Waldo_fnc_ACRE2ValidateConfig before it is used.
  *
  * Example:
- * private _config = call compile preprocessFileLineNumbers "acreConfig.sqf";
+ * private _config = call compile preprocessFileLineNumbers "MissionConfig\acreConfig.sqf";
  *
  * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init.
  */

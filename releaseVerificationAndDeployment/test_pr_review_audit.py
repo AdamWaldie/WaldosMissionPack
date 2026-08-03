@@ -274,7 +274,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('(missionNamespace getVariable ["Waldo_Recovery_ScanInterval", 3]) max 1', source)
 
     def test_accessibility_audit_uses_current_tester_without_changing_pack_default(self):
-        pack = (ROOT / "MissionConfig" / "PlayerLocalFeatureDefaults.sqf").read_text(encoding="utf-8")
+        pack = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         preinit = (
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditPreInitPlayerLocal.sqf"
         ).read_text(encoding="utf-8")
@@ -425,7 +425,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('format ["QA_%1", toUpperANSI _title]', server)
         self.assertNotIn('"QA_FEATURE_STATION", 8', server)
 
-        player_init = (ROOT / "MissionConfig" / "PlayerLocalFeatureDefaults.sqf").read_text(encoding="utf-8")
+        player_init = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         for channel in ("TREATMENT_FEEDBACK", "DYNAMIC_AA", "FIELD_RESUPPLY", "RALLY_POINT"):
             self.assertIn(f'["{channel}",', player_init)
 
@@ -593,7 +593,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('["command", "Waldo_fnc_MiniGameCommandInput"]', interactions)
 
     def test_tree_felling_default_replacement_exists_in_base_game(self):
-        root_init = (ROOT / "MissionConfig" / "SharedFeatureDefaults.sqf").read_text(encoding="utf-8")
+        root_init = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
         process = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingProcess.sqf").read_text(encoding="utf-8")
         self.assertIn('["Land_WoodenLog_F"]', root_init)
         self.assertIn('["Land_WoodenLog_F"]', process)
@@ -833,7 +833,7 @@ class PrReviewAuditTests(unittest.TestCase):
         restyle_notifications = (root / "restyleUiNotificationsLocal.sqf").read_text(encoding="utf-8")
         notification = (root / "showUiNotification.sqf").read_text(encoding="utf-8")
         root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
-        shared_config = (ROOT / "MissionConfig" / "SharedFeatureDefaults.sqf").read_text(encoding="utf-8")
+        shared_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
         receive = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeReceiveState.sqf").read_text(encoding="utf-8")
         for theme in ("DEFAULT", "WW2", "VIETNAM", "SCIFI"):

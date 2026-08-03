@@ -62,7 +62,7 @@ $arguments = @(
     "-port=$Port", "-config=$serverConfig", "-profiles=$profileRoot", "-name=WMPMissionLoadPreflight",
     $modArgument
 )
-$server = Start-Process -FilePath $serverExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+$server = Start-Process -FilePath $serverExe -ArgumentList $arguments -WorkingDirectory $armaRoot -PassThru -WindowStyle Hidden
 try {
     $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
     $rpt = $null

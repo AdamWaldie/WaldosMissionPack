@@ -2,9 +2,9 @@
 
 > **Use this page when:** you need deterministic squad radio assignments, named carried-radio displays, CEOI or side-isolated ACRE2 presets.
 
-Associated files: `acreConfig.sqf` and `MissionScripts\MissionInit\ACRE2\acre2*.sqf`.
+Associated files: `MissionConfig\acreConfig.sqf` and `MissionScripts\MissionInit\ACRE2\acre2*.sqf`.
 
-All active ACRE2 authoring now lives in the root `acreConfig.sqf`. Do not add ACRE waits or mutable defaults to `init.sqf`. Pre-init registers the ACRE side-preset labels on every machine, `initServer.sqf` publishes one versioned side/group plan for JIP, and `initPlayerLocal.sqf` applies the local player's carried radios.
+All active ACRE2 authoring now lives in `MissionConfig\acreConfig.sqf`. Do not add ACRE waits or mutable defaults to `init.sqf`. Pre-init registers the ACRE side-preset labels on every machine, `initServer.sqf` publishes one versioned side/group plan for JIP, and `initPlayerLocal.sqf` applies the local player's carried radios.
 
 ## Nets and groups
 

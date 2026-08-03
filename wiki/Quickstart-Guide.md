@@ -44,9 +44,9 @@ Save the mission once after changing this setting and verify that `mission.sqm` 
 Use the [Mission Configuration Reference](Mission-Configuration-Reference) while editing:
 
 - `description.ext` for mission identity, respawn, includes, and end screens;
-- `MissionConfig\SharedFeatureDefaults.sqf` for guarded cross-locality feature defaults;
-- `MissionConfig\ServerFeatureDefaults.sqf` for authoritative defaults and published asset pools;
-- `MissionConfig\PlayerLocalFeatureDefaults.sqf` for player UI, actions and accessibility defaults;
+- `MissionConfig\featureConfigManifest.sqf` to register semantic pure-data feature files;
+- the named files under `MissionConfig` for shared, authoritative server, and player-local settings;
+- `MissionConfig\acreConfig.sqf` for ACRE communications and Babel;
 - the three init files for activation and lifecycle only—do not move their authority, waits or JIP handling.
 
 Keep the runtime-state request/receive handshake intact. Mid-mission ZEN setting changes are server-owned and rebroadcast so current players, headless clients, and JIP players converge on the same state.

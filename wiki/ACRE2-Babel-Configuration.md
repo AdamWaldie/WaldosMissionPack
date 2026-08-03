@@ -2,7 +2,7 @@
 
 > **Use this page when:** different sides or individual characters need one or more understood languages.
 
-Babel is configured in the `babel` map inside root `acreConfig.sqf`. Language `[ID, display name]` pairs are registered once in the same declared order on every ACRE machine, including JIP clients. Do not add or reorder language definitions during play.
+Babel is configured in the `babel` map inside `MissionConfig\acreConfig.sqf`. Language `[ID, display name]` pairs are registered once in the same declared order on every ACRE machine, including JIP clients. Do not add or reorder language definitions during play.
 
 ```sqf
 ["babel", createHashMapFromArray [

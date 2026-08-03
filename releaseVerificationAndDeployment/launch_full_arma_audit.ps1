@@ -54,7 +54,7 @@ $arguments = @("-noBattlEye", "-noSplash", "-skipIntro", "-world=empty", "-showS
 if ($mods.Count -gt 0) { $arguments += '-mod="' + ($mods -join ';') + '"' }
 $arguments += "-init=playScriptedMission[toString[86,82],compile(toString[$codes]),configNull,true]"
 $started = Get-Date
-$process = Start-Process -FilePath $armaExe -ArgumentList $arguments -PassThru -WindowStyle Hidden
+$process = Start-Process -FilePath $armaExe -ArgumentList $arguments -WorkingDirectory $armaRoot -PassThru -WindowStyle Hidden
 
 $deadline = (Get-Date).AddSeconds($TimeoutSeconds)
 $rpt = $null

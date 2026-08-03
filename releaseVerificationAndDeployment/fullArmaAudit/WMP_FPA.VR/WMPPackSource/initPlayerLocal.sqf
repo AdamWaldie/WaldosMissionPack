@@ -29,8 +29,8 @@ if (hasInterface) then {
     // ZEN module registration is presentation-local; dedicated servers and headless clients do not need it.
     [] call Waldo_fnc_ZenInitModules;
 
-    // Configuration is local and synchronous; activation and JIP waits remain below.
-    call compile preprocessFileLineNumbers "MissionConfig\PlayerLocalFeatureDefaults.sqf";
+    // Pure-data configuration is local and synchronous; activation and JIP waits remain below.
+    ["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;
 
     // Server-authored electronic-warfare settings are replicated before JIP init. Initial
     // lobby clients may still race server startup, so wait asynchronously for the sentinel.

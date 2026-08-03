@@ -92,7 +92,7 @@ $serverArgs = @(
 )
 if ($null -ne $modArgument) { $serverArgs += $modArgument }
 $started = Get-Date
-$server = Start-Process -FilePath $serverExe -ArgumentList $serverArgs -PassThru -WindowStyle Hidden
+$server = Start-Process -FilePath $serverExe -ArgumentList $serverArgs -WorkingDirectory $armaRoot -PassThru -WindowStyle Hidden
 $processes = @($server)
 
 try {
@@ -122,7 +122,7 @@ try {
             "-password=wmpqa", "-profiles=$clientProfile", "-name=WMPAudit$index"
         )
         if ($null -ne $modArgument) { $clientArgs += $modArgument }
-        $client = Start-Process -FilePath $clientExe -ArgumentList $clientArgs -PassThru
+        $client = Start-Process -FilePath $clientExe -ArgumentList $clientArgs -WorkingDirectory $armaRoot -PassThru
         $processes += $client
         Start-Sleep -Seconds 2
     }
