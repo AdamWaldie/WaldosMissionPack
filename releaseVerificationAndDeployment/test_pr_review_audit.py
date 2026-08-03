@@ -832,9 +832,14 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('["skill",', create + zen)
         self.assertNotIn('AI skill', zen)
         route = (ao_dir / "dynamicAOAddPatrolWaypoints.sqf").read_text(encoding="utf-8")
-        for token in ('deleteWaypoint', 'enableAI "PATH"', 'enableAI "MOVE"', 'setCurrentWaypoint'):
+        for token in (
+            'deleteWaypoint', 'enableAI "PATH"', 'enableAI "MOVE"', 'setCurrentWaypoint',
+            'setBehaviour _behaviour', 'setSpeedMode _speed', 'setWaypointFormation _formation',
+        ):
             self.assertIn(token, route)
         self.assertIn('_group addVehicle _vehicle', create)
+        self.assertIn('"SAFE", "LIMITED", ["COLUMN", "STAG COLUMN", "WEDGE"]', create)
+        self.assertIn('"AWARE", "NORMAL"', create)
         for control in (
             "Enemy faction and side", "Vehicle ratio - cars", "Air ratio - helicopters",
             "Civilian faction", "Outer-ring minefields", "Manned roadblocks",

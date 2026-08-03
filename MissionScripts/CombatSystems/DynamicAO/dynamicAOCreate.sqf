@@ -150,7 +150,8 @@ for "_patrolIndex" from 1 to _patrolCount do {
     for "_unitIndex" from 1 to (4 + floor random 5) do {
         [_group, selectRandom _infantry, _position] call _spawnUnit;
     };
-    [_group, _center, _radius, _simple, "AWARE"] call Waldo_fnc_DynamicAOAddPatrolWaypoints;
+    [_group, _center, _radius, _simple, "SAFE", "LIMITED", ["COLUMN", "STAG COLUMN", "WEDGE"]]
+        call Waldo_fnc_DynamicAOAddPatrolWaypoints;
 };
 
 private _usableGarrisons = _garrisonCount min count _buildings;
@@ -185,7 +186,8 @@ for "_vehicleIndex" from 1 to _vehicleCount do {
         _vehicle setDir random 360;
         _objects pushBack _vehicle;
         private _group = [_vehicle] call _crewVehicle;
-        [_group, _center, _radius, _simple, "AWARE"] call Waldo_fnc_DynamicAOAddPatrolWaypoints;
+        [_group, _center, _radius, _simple, "SAFE", "LIMITED", ["COLUMN"]]
+            call Waldo_fnc_DynamicAOAddPatrolWaypoints;
     };
 };
 
@@ -205,7 +207,8 @@ for "_airIndex" from 1 to _airCount do {
         _aircraft engineOn true;
         _objects pushBack _aircraft;
         private _group = [_aircraft] call _crewVehicle;
-        [_group, _center, _patrolRange, _simple, "AWARE"] call Waldo_fnc_DynamicAOAddPatrolWaypoints;
+        [_group, _center, _patrolRange, _simple, "AWARE", "NORMAL"]
+            call Waldo_fnc_DynamicAOAddPatrolWaypoints;
     };
 };
 
@@ -216,7 +219,8 @@ for "_civilianIndex" from 1 to _civPatrolCount do {
         private _group = createGroup civilian;
         [_group] call _trackGroup;
         [_group, selectRandom _civilianInfantry, _position] call _spawnUnit;
-        [_group, _center, _radius, _simple, "SAFE"] call Waldo_fnc_DynamicAOAddPatrolWaypoints;
+        [_group, _center, _radius, _simple, "SAFE", "LIMITED", ["COLUMN"]]
+            call Waldo_fnc_DynamicAOAddPatrolWaypoints;
     };
 };
 private _civGarrisons = _civGarrisonCount min count _buildings;
