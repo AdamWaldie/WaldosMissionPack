@@ -16,7 +16,7 @@
  * Number - crates actually granted on the server; forwarded client requests return -1.
  *
  * Example:
- * if (isServer) then {[player, 2, false] call Waldo_fnc_FieldResupplyGrantCrates;};
+ * if (isServer) then {[fieldResupplyCarrier, 2, false] call Waldo_fnc_FieldResupplyGrantCrates;};
  *
  * Current callers: Field Resupply Grant Crates ZEN module and mission-maker scripts.
  */
