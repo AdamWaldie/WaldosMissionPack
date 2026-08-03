@@ -3,6 +3,8 @@
  * Debounces join, respawn, player-object and group events into one bounded, readiness-aware local
  * ACRE refresh. A newer request cancels an older waiter. Persistence may hold the refresh while it
  * restores a filtered loadout and newly generated unique radio IDs.
+ * Locality and authority: call on the player's interface client. It coalesces only that client's
+ * lifecycle events and consumes the complete server-published plan when requested.
  *
  * Arguments:
  * 0: reason <STRING> (default MANUAL)
@@ -11,6 +13,7 @@
  * Return Value: BOOL - true when a refresh was scheduled on an interface client.
  *
  * Example: ["RESPAWN", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+ * Result: one bounded local refresh applies Babel/CEOI and, when permitted, the radio baseline.
  * Current callers: ACRE initialisation, respawn, player-unit and group lifecycle handlers.
  */
 params [["_reason", "MANUAL", [""]], ["_applyPlan", true, [true]]];
@@ -32,7 +35,7 @@ uiNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (uiNamespace getVariabl
                 && {[] call acre_api_fnc_isInitialized}
                 && {count _plan >= 4}
                 && {(_plan select 0) == 3}
-                && {!(missionNamespace getVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", false])}
+                && {!(missionNamespace getVariable ["Waldo_ACRE2_RadioRestoreInProgress", false])}
             }
     };
     if ((uiNamespace getVariable ["Waldo_ACRE2_RefreshToken", -1]) != _token) exitWith {};
@@ -48,6 +51,8 @@ uiNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (uiNamespace getVariabl
     if (_applyPlan) then {[true, _reason] call Waldo_fnc_ACRE2ApplyPlayerPlan};
     [] call Waldo_fnc_ACRE2ApplyBabel;
     [] call Waldo_fnc_ACRE2BuildCEOI;
-    if (_reason == "INITIAL") then {[false] call Waldo_fnc_SaveLoadout};
+    if (_reason in ["INITIAL", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]) then {
+        [false] call Waldo_fnc_SaveLoadout;
+    };
 };
 true

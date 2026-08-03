@@ -93,10 +93,11 @@ if (hasInterface) then {
 //Post-Init Setup of saved Loadout (Measure taken to help prevent Naked/unarmed People)
 
 
-// Save a base-class inventory on mission start. ACRE startup refreshes it after radio assignment.
+// Save a base-class inventory on mission start. ACRE startup replaces this with the fully assigned
+// inventory plus player-level radio snapshot after its one-time baseline configuration.
 [false] call Waldo_fnc_SaveLoadout;
 
-//Respawn Reapplication Of Loadout Segment
+// Respawn restores the last explicitly saved inventory and supported personal ACRE settings.
 ["CAManBase", "Respawn", {
     params ["_unit"];
     if (_unit == player) then {
@@ -104,8 +105,24 @@ if (hasInterface) then {
         if (count _savedLoadout > 0) then {_unit setUnitLoadout _savedLoadout};
         private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
         missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
-        missionNamespace setVariable ["Waldo_ACRE2_PersistenceRadioGeneration", -1];
-        ["RESPAWN", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+        missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
+        private _savedRadios = missionNamespace getVariable ["Waldo_Player_RadioState", []];
+        if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
+            missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
+            [_savedRadios, _generation] spawn {
+                params ["_radioState", "_loadoutGeneration"];
+                private _restored = [_radioState, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState;
+                missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
+                if (_restored) then {
+                    ["RESPAWN_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+                } else {
+                    diag_log "[WMP ACRE] Saved respawn radio state could not be restored; applying the current mission plan.";
+                    ["RESPAWN_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+                };
+            };
+        } else {
+            ["RESPAWN_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+        };
         // Respawn Text
         [] spawn Waldo_fnc_RespawnText;
         // Re-apply safestart if it is still active (respawn resets damage/handlers/position)

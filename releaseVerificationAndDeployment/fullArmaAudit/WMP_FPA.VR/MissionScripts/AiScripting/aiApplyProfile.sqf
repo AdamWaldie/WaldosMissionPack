@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies the active base, night-sensor, faction, and role skill layers to one local AI unit.
+ * Locality and authority: call where the AI unit is local; the unit Local handler reapplies after
+ * ownership migration. This function does not publish mission settings.
  *
  * Arguments:
  * 0: unit <OBJECT>
@@ -10,6 +12,7 @@
  *
  * Example:
  * [_unit] call Waldo_fnc_AIApplyProfile;
+ * Result: the eligible local AI receives the currently selected WMP skill layers.
  *
  * Current callers: AIRebalanceInit for existing/new AI and each unit's Local ownership handler.
  */
@@ -24,7 +27,11 @@ private _includedSides = missionNamespace getVariable ["Waldo_AI_IncludedSides",
 private _includedFactions = missionNamespace getVariable ["Waldo_AI_IncludedFactions", []];
 private _excludedFactions = missionNamespace getVariable ["Waldo_AI_ExcludedFactions", []];
 private _excludedClasses = missionNamespace getVariable ["Waldo_AI_ExcludedClasses", []];
-if (count _includedSides > 0 && {!(side group _unit in _includedSides)}) exitWith {false};
+private _unitSideKey = switch (side group _unit) do {
+    case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"};
+};
+private _includedSideKeys = (_includedSides select {_x isEqualType ""}) apply {toUpperANSI _x};
+if (count _includedSides > 0 && {!(_unitSideKey in _includedSideKeys)}) exitWith {false};
 if (count _includedFactions > 0 && {!(faction _unit in _includedFactions)}) exitWith {false};
 if (faction _unit in _excludedFactions || {typeOf _unit in _excludedClasses}) exitWith {false};
 
@@ -50,8 +57,8 @@ private _applySkills = {
 };
 
 private _profiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
-private _profileKey = missionNamespace getVariable ["Waldo_AI_Profile", "LINE"];
-private _mode = missionNamespace getVariable ["Waldo_AI_Mode", "DAY"];
+private _profileKey = missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"];
+private _mode = missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"];
 [_unit, _profiles getOrDefault [_profileKey, createHashMap]] call _applySkills;
 
 private _roleText = toUpperANSI (getText (configFile >> "CfgVehicles" >> typeOf _unit >> "textSingular"));

@@ -9,6 +9,7 @@
  * Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.
  *
  * Example: extend Waldo_Paradrop_AircraftClasses with compatible mod aircraft before activation.
+ * Result: later scripted or ZEN paradrop creation may offer those validated aircraft classes.
  * Current callers: init.sqf (SHARED) and initServer.sqf (SERVER) through the loader.
  *
  * ACTIVATION MODEL: CALL-DRIVEN / ZEN-CREATED.
@@ -31,49 +32,61 @@
  * system from invalid or excessive runtime requests. Altitudes/radii are metres, intervals and
  * service duration are seconds, fuel/ammo/damage values are fractions 0-1, and -1 service cycles
  * means unlimited. Static-line speed is kilometres/hour as reported by Arma's speed command.
+ *
+ * HOW TO READ THE DATA BELOW:
+ * `shared` rows are `[variable, default]` on every machine. `server` rows are
+ * `[variable, default, publish]`; publish true synchronises the server value to clients/JIP, while
+ * false keeps an authority/safety bound server-only. Pool HashMaps use visible side or faction keys,
+ * then arrays of actual CfgVehicles/CfgWeapons classnames. Editing a pool changes selector content;
+ * it creates nothing until the documented creation call or ZEN module runs.
+ * SideAircraftPools maps a SIDE name to candidate gunship classes. FactionAircraftPools maps a
+ * CfgFactionClasses key to a narrower candidate list; vehicle selection is deliberately independent
+ * of the operational side. Dynamic-AA side/faction entries are HashMaps containing `radarClasses`,
+ * `staticSitePools` (each nested array is one complete radar/weapon site), `mobileClasses`, and
+ * `fighterClasses`. Empty arrays disable that response type without disabling the whole system.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Airborne Gunship", "Dynamic Paradrop", "Dynamic Anti-Air"]],
     ["shared", [
         // MISSION MAKER: gunship availability, service rules and independent aircraft content pools.
-        ["Waldo_Gunship_Enable", false],
-        ["Waldo_Gunship_DefaultAltitude", 700],
-        ["Waldo_Gunship_MaximumAltitude", 5000],
-        ["Waldo_Gunship_DefaultRadius", 1500],
-        ["Waldo_Gunship_MaximumRadius", 10000],
-        ["Waldo_Gunship_DefaultServiceDuration", 900],
+        ["Waldo_Gunship_Enable", false],             // BOOL: permits registration/use; creates no aircraft itself.
+        ["Waldo_Gunship_DefaultAltitude", 700],      // METRES ASL/ATL as selected by the gunship controller.
+        ["Waldo_Gunship_MaximumAltitude", 5000],     // METRES: validation ceiling for scripted/ZEN requests.
+        ["Waldo_Gunship_DefaultRadius", 1500],       // METRES: default orbit radius around the target area.
+        ["Waldo_Gunship_MaximumRadius", 10000],      // METRES: largest accepted orbit radius.
+        ["Waldo_Gunship_DefaultServiceDuration", 900], // SECONDS: available service time per sortie.
         ["Waldo_Gunship_MonitorInterval", 2],         // ADVANCED: seconds between state checks.
-        ["Waldo_Gunship_MinimumFuel", 0.25],
-        ["Waldo_Gunship_MaximumDamage", 0.65],
-        ["Waldo_Gunship_ServiceFuelFraction", 1],
-        ["Waldo_Gunship_ServiceAmmoFraction", 1],
-        ["Waldo_Gunship_ServiceDamage", 0],
+        ["Waldo_Gunship_MinimumFuel", 0.25],         // FRACTION 0-1: RTB/service threshold.
+        ["Waldo_Gunship_MaximumDamage", 0.65],       // FRACTION 0-1: RTB/service threshold.
+        ["Waldo_Gunship_ServiceFuelFraction", 1],    // FRACTION 0-1: fuel after service.
+        ["Waldo_Gunship_ServiceAmmoFraction", 1],    // FRACTION 0-1: ammunition after service.
+        ["Waldo_Gunship_ServiceDamage", 0],          // FRACTION 0-1: remaining damage after service.
         ["Waldo_Gunship_MaximumServiceCycles", -1],  // -1 unlimited; otherwise zero or a positive count.
-        ["Waldo_Gunship_ReturnWhenOutOfAmmo", true],
-        ["Waldo_Gunship_SideAircraftPools", createHashMapFromArray [
+        ["Waldo_Gunship_ReturnWhenOutOfAmmo", true], // BOOL: RTB automatically when usable weapons are empty.
+        ["Waldo_Gunship_SideAircraftPools", createHashMapFromArray [ // SIDE ID -> candidate CfgVehicles classes.
             ["WEST", ["B_T_VTOL_01_armed_F"]], ["EAST", []], ["INDEPENDENT", []], ["CIVILIAN", []]
         ]],
-        ["Waldo_Gunship_FactionAircraftPools", createHashMap],
+        ["Waldo_Gunship_FactionAircraftPools", createHashMap], // optional faction key -> aircraft classname ARRAY.
         // MISSION MAKER: classnames shown by paradrop and boarding selectors.
-        ["Waldo_Paradrop_AircraftClasses", [
+        ["Waldo_Paradrop_AircraftClasses", [ // transport-capable CfgVehicles classes offered to scripts/ZEN.
             "B_T_VTOL_01_infantry_F", "O_T_VTOL_02_infantry_dynamicLoadout_F",
             "B_Heli_Transport_03_unarmed_F", "O_Heli_Transport_04_covered_F", "I_Heli_Transport_02_F"
         ]],
-        ["Waldo_Paradrop_StaticChuteClasses", ["NonSteerable_Parachute_F"]],
-        ["Waldo_Paradrop_HaloBackpackClasses", ["B_Parachute", "O_Parachute", "I_Parachute"]],
-        ["Waldo_Paradrop_BoardingPointClasses", [
+        ["Waldo_Paradrop_StaticChuteClasses", ["NonSteerable_Parachute_F"]], // ARRAY: vehicle chute classes for scripted static line.
+        ["Waldo_Paradrop_HaloBackpackClasses", ["B_Parachute", "O_Parachute", "I_Parachute"]], // ARRAY: steerable chute backpack classes.
+        ["Waldo_Paradrop_BoardingPointClasses", [ // movable CfgVehicles objects offered by the boarding-point module.
             "FlagPole_F", "Land_InfoStand_V1_F", "Land_InfoStand_V2_F", "Land_MapBoard_F",
             "Land_Laptop_unfolded_F", "Land_CampingTable_small_F", "Land_PortableLight_single_F"
         ]]
     ]],
     ["server", [
         // ADVANCED safety bounds for server-created Dynamic AA systems.
-        ["Waldo_DynamicAA_DefaultDetectionInterval", 1, false],
-        ["Waldo_DynamicAA_MaximumRadius", 50000, false],
-        ["Waldo_DynamicAA_MaximumAltitude", 10000, false],
-        ["Waldo_DynamicAA_MaximumFighters", 12, false],
+        ["Waldo_DynamicAA_DefaultDetectionInterval", 1, false], // SECONDS: server detection cadence.
+        ["Waldo_DynamicAA_MaximumRadius", 50000, false], // METRES: accepted detection/engagement radius ceiling.
+        ["Waldo_DynamicAA_MaximumAltitude", 10000, false], // METRES: accepted altitude ceiling.
+        ["Waldo_DynamicAA_MaximumFighters", 12, false], // COUNT: maximum fighters one system may scramble.
         // MISSION MAKER: JIP-published candidate assets; class availability is validated at runtime.
-        ["Waldo_DynamicAA_SideAssetPools", createHashMapFromArray [
+        ["Waldo_DynamicAA_SideAssetPools", createHashMapFromArray [ // SIDE ID -> AA asset HashMap described above.
             ["WEST", createHashMapFromArray [
                 ["radarClasses", ["B_Radar_System_01_F", "Land_Radar_F"]],
                 ["staticSitePools", [["B_Radar_System_01_F", "B_SAM_System_01_F", "B_AAA_System_01_F"]]],
@@ -93,14 +106,14 @@ createHashMapFromArray [
                 ["fighterClasses", ["I_Plane_Fighter_03_dynamicLoadout_F"]]
             ]]
         ], true],
-        ["Waldo_DynamicAA_FactionAssetPools", createHashMap, true],
+        ["Waldo_DynamicAA_FactionAssetPools", createHashMap, true], // optional faction key -> AA asset HashMap schema above.
         // MISSION MAKER: valid jump envelopes and default parachute classes.
-        ["WALDO_STATIC_MINALTITUDE", 180, true],
-        ["WALDO_STATIC_MAXALTITUDE", 350, true],
-        ["WALDO_STATIC_MAXSPEED", 310, true],
-        ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true],
-        ["WALDO_PARA_HALOALTITUDE", 1000, true],
-        ["WALDO_PARA_HALOCHUTE", "B_Parachute", true]
+        ["WALDO_STATIC_MINALTITUDE", 180, true], // METRES: lowest accepted static-line drop altitude.
+        ["WALDO_STATIC_MAXALTITUDE", 350, true], // METRES: highest accepted static-line drop altitude.
+        ["WALDO_STATIC_MAXSPEED", 310, true], // KM/H: maximum aircraft speed for static-line release.
+        ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true], // CLASSNAME: default static-line chute; runtime fallback applies if absent.
+        ["WALDO_PARA_HALOALTITUDE", 1000, true], // METRES: default freefall/HALO drop altitude.
+        ["WALDO_PARA_HALOCHUTE", "B_Parachute", true] // CLASSNAME: default steerable parachute backpack.
     ]],
     // COMPATIBILITY: old combined chute pool follows the new static-line pool when undefined.
     ["aliases", [["SHARED", "Waldo_Paradrop_ChuteClasses", "Waldo_Paradrop_StaticChuteClasses"]]]

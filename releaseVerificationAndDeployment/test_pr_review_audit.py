@@ -988,7 +988,7 @@ class PrReviewAuditTests(unittest.TestCase):
         tracker_zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_trackerModule.sqf").read_text(encoding="utf-8")
         self.assertIn('if (isNull _objectPos) exitWith', tracker_zen)
         self.assertIn('Place this module directly on the object or unit to track.', tracker_zen)
-        self.assertIn('[_target, _sideStr, _label, _active] call Waldo_fnc_Tracker', tracker_zen)
+        self.assertIn('[_target, _sideStr, _label, _active, player] remoteExecCall ["Waldo_fnc_ZenTrackerServer", 2]', tracker_zen)
         self.assertNotIn('nearestObjects', tracker_zen)
 
 

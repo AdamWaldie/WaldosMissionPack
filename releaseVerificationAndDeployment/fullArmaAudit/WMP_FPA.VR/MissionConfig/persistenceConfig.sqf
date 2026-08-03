@@ -8,6 +8,7 @@
  * Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.
  *
  * Example: edit SaveRadios to true to persist supported carried-radio state separately from loadouts.
+ * Result: supported per-player radio state may cross sessions when the INIDBI2 gate is ready.
  * Current caller: Waldo_fnc_LoadFeatureConfigs from init.sqf using the SHARED scope.
  *
  * ACTIVATION MODEL: AUTOMATIC WHEN ENABLED, SUBJECT TO THE SERVER DEPENDENCY GATE.
@@ -29,22 +30,41 @@
  * ADVANCED TUNING - save intervals are seconds and should normally remain 60. Lower values increase
  * database traffic. DefaultCustomVariables is an allowlist of object variables that survive package
  * or persistence restoration; add only serialisable, intentionally persistent state.
+ *
+ * HOW TO READ THE DATA BELOW:
+ * Every `shared` row is `[variable name, guarded default]`. The loader installs it only when no
+ * earlier mission value exists. Enable requests persistence but the server INIDBI2 dependency gate
+ * decides availability; clients cannot make the database ready by changing this variable locally.
+ *
+ * LOADOUTS AND PLAYER-LEVEL ACRE STATE:
+ * The normal mission `Waldo_fnc_SaveLoadout` always treats inventory plus supported ACRE settings as
+ * one local respawn snapshot. Transient `_ID_n` items become base classes in the inventory, while
+ * channel/frequency, ear, volume, supported audio mode and selected radio are saved separately and
+ * restored after fresh IDs exist. `Waldo_Persistence_SaveLoadout` controls whether that filtered
+ * inventory crosses sessions through INIDBI2. SaveRadios controls whether the corresponding radio
+ * state also crosses sessions. When true, WMP captures each supported carried radio by
+ * `[base radio class, same-type occurrence]`, plus channel/frequency, spatial ear, volume, supported
+ * audio mode and selected radio. After the filtered loadout creates fresh unique IDs, that player's
+ * saved state is restored onto the matching new instances and becomes the local respawn snapshot.
+ * This is per-player state, not data embedded in an inventory classname. If SaveRadios is false,
+ * persistence restores the authored ACRE baseline, but subsequent local loadout saves still retain
+ * the player's chosen settings for ordinary respawns.
  */
 createHashMapFromArray [
     ["featureFamilies", ["INIDBI2 Persistence"]],
     ["shared", [
         // MISSION MAKER: campaign persistence policy.
         ["Waldo_Persistence_Enable", false],              // Requires a working server INIDBI2 extension.
-        ["Waldo_Persistence_SaveLoadout", true],          // Restore filtered inventory/loadout.
+        ["Waldo_Persistence_SaveLoadout", true],          // Filter unique ACRE IDs, then restore ordinary inventory.
         ["Waldo_Persistence_SaveMedical", true],          // Restore supported ACE medical state.
         ["Waldo_Persistence_SaveFoodWater", false],       // Restore supported survival state.
         ["Waldo_Persistence_SavePosition", false],        // Restore position; may bypass mission progression.
-        ["Waldo_Persistence_SaveRadios", false],          // Restore supported ACRE radio state separately.
+        ["Waldo_Persistence_SaveRadios", false],          // Per-player radio state; see ordering/identity above.
         ["Waldo_Persistence_DatabaseName", "WaldosMissionPack"], // Stable campaign/database key.
         // ADVANCED TUNING: database cadence and serialised object state.
         ["Waldo_Persistence_PlayerSaveInterval", 60],     // Seconds; lower means more writes.
         ["Waldo_Persistence_ObjectSaveInterval", 60],     // Seconds; lower means more writes.
-        ["Waldo_Persistence_DefaultCustomVariables", [
+        ["Waldo_Persistence_DefaultCustomVariables", [ // ARRAY of serialisable object-variable name strings.
             "Waldo_ObjectScale", "Waldo_ObjectScaleOriginal",
             "Waldo_Breaching_Processed", "Waldo_Breaching_AccumulatedStrength",
             "Waldo_FieldResupply_Hub", "Waldo_FieldResupply_Stock",

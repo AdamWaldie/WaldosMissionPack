@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Applies configured understood and speaking Babel languages to the local player. UID/variable
+ * Applies configured understood and speaking Babel languages to the local player. UID/variable-name
  * overrides support partial multilingual characters. Knowledge persists across side changes unless
  * changeOnSideChange is enabled, and is reapplied after local player-object replacement.
  *
@@ -26,8 +26,11 @@ if (_defaultIndex >= 0) then {
 {
     _x params ['_selector', '_overrideLanguages', '_overrideInitial'];
     private _matches = false;
-    if (toUpper (_selector select 0) == 'UID') then {_matches = getPlayerUID player == (_selector select 1)};
-    if (toUpper (_selector select 0) == 'VARIABLE') then {_matches = vehicleVarName player == (_selector select 1)};
+    private _selectorType = toUpper (_selector select 0);
+    if (_selectorType == 'UID') then {_matches = getPlayerUID player == (_selector select 1)};
+    if (_selectorType in ['VARIABLE', 'VARIABLENAME']) then {
+        _matches = vehicleVarName player == (_selector select 1)
+    };
     if (_matches) exitWith {_languages = +_overrideLanguages; _initial = _overrideInitial};
 } forEach (_babel getOrDefault ['unitOverrides', []]);
 private _lastSide = uiNamespace getVariable ['Waldo_ACRE2_BabelSide', ''];

@@ -248,4 +248,4 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
 
 missionNamespace setVariable ["Waldo_ZenModuleCount", 42];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
-diag_log format ["[WMP ZEN] Registered 41 categorized WMP modules on clientOwner=%1", clientOwner];
+diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 42], clientOwner];

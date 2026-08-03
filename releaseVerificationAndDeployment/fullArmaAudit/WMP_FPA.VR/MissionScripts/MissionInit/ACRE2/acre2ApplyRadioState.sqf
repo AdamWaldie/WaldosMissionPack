@@ -1,9 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Restores persisted carried-radio state after ACRE replaces base classes with new unique IDs. It
+ * Restores saved carried-radio state after ACRE replaces base classes with new unique IDs. It
  * restores channel or WMP-known frequency, ear, volume, supported audio source and selected radio while leaving
  * alternate PTT and speaker mode untouched. The wait is bounded and successful restoration suppresses
- * baseline mission-plan retuning for the same loadout generation.
+ * baseline mission-plan retuning for the same loadout generation. The same function serves ordinary
+ * respawn snapshots and optional INIDBI2 persistence snapshots.
+ * Locality and authority: spawn on the player's interface client after its filtered loadout is
+ * restored. The bounded wait and all radio mutations are local to that player.
  *
  * Arguments:
  * 0: saved radio state <ARRAY>
@@ -13,7 +16,8 @@
  * request was accepted. ACRE provides no public frequency read-back, so frequency remains unverified.
  *
  * Example: [_radios, _generation] spawn Waldo_fnc_ACRE2ApplyRadioState;
- * Current caller: Waldo_fnc_PersistenceClientApply.
+ * Result: matching fresh radio IDs recover the saved state without changing PTT configuration.
+ * Current callers: local respawn restoration and Waldo_fnc_PersistenceClientApply.
  */
 params [["_savedState", [], [[]]], ["_generation", 0, [0]]];
 if (!hasInterface || {count _savedState < 3} || {(_savedState select 0) != 2} || {!(isClass (configFile >> "CfgPatches" >> "acre_main"))}) exitWith {false};
@@ -77,5 +81,5 @@ if (count _frequencySettings > 0) then {
     if (!_safeFrequencyOrder || {isNil "acre_api_fnc_setupRadios"} || {!(_frequencySettings call acre_api_fnc_setupRadios)}) then {_success = false};
 };
 if (_selectedId != "" && {!([_selectedId] call acre_api_fnc_setCurrentRadio)}) then {_success = false};
-if (_success) then {missionNamespace setVariable ["Waldo_ACRE2_PersistenceRadioGeneration", _generation]};
+if (_success) then {missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", _generation]};
 _success

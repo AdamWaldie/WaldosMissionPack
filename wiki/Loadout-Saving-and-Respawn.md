@@ -8,15 +8,28 @@ Basic respawn loadout saving is automatic. `Waldo_fnc_SaveLoadout` stores the pl
 
 When ACRE2 is loaded, every saved respawn and persistence loadout passes through `acre_api_fnc_filterUnitLoadout`. Unique classes such as `ACRE_PRC152_ID_7` are converted to base classes before storage. Without ACRE2, the original loadout is returned unchanged.
 
-After restoration WMP waits with a deadline for ACRE to create fresh unique IDs, then applies the player's current side/group mission plan. This is the normal respawn behaviour; it does not preserve arbitrary captured-radio tuning. Newly picked-up radios are not retuned merely because the player changes group.
+`Waldo_fnc_SaveLoadout` also captures supported player-level radio state separately. After respawn,
+WMP waits with a deadline for ACRE to create fresh unique IDs, then restores the channel/frequency,
+ear, volume, supported audio source and selected radio from the player's last loadout save. The
+current side/group mission plan remains the initial setup and safe fallback when the saved snapshot
+is missing or cannot match the new inventory. Newly picked-up radios are not retuned merely because
+the player changes group.
 
 Persistence can optionally store radio state separately by base class plus deterministic same-type occurrence. It preserves channel or WMP-known manual frequency, ear, volume, audio source and the selected radio. Alternate PTT and speaker mode are never changed. A manually tuned frequency that was not applied by WMP cannot be read through ACRE's public API, so it cannot be reconstructed; configured WMP frequency assignments can.
+
+This separation is necessary because the inventory is only the container for a radio item. ACRE's
+live channel and spatial settings belong to that player's temporary unique radio instance. They are
+therefore player-level state, not additional fields inside `getUnitLoadout`. `SaveLoadout` and
+`Waldo_Persistence_SaveLoadout` and `Waldo_Persistence_SaveRadios` are independent cross-session
+switches. Ordinary `Waldo_fnc_SaveLoadout` still preserves both inventory and supported radio state
+for mission respawns regardless of whether INIDBI2 radio persistence is enabled.
 
 Restore order is:
 
 1. filtered base-class unit loadout;
 2. bounded wait for fresh unique radio IDs;
-3. persisted radio state when enabled, otherwise the current mission plan.
+3. the last local respawn radio snapshot, or persisted radio state when loading INIDBI2 data;
+4. the current mission plan only when no usable snapshot exists.
 
 Persisted state therefore wins over baseline retuning without ever storing `_ID_n` classnames. If state restoration fails or the expected occurrence is missing, WMP logs the problem and falls back to the current mission plan.
 

@@ -1,7 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Validates schema-three mission-facing ACRE settings without mutating radios or presets. Validation
+ * Validates the current mission-facing ACRE settings without mutating radios or presets. Validation
  * is per side and per radio capability: unrelated radio types never impose a shared net limit.
+ * Locality and authority: pure-data validation; safe on any machine. It changes no radio, preset,
+ * missionNamespace value or network state.
  *
  * Arguments:
  * 0: configuration <HASHMAP>
@@ -9,6 +11,7 @@
  * Return Value: ARRAY - [valid <BOOL>, errors <ARRAY>, warnings <ARRAY>].
  *
  * Example: private _result = [_config] call Waldo_fnc_ACRE2ValidateConfig;
+ * Result: `_result` reports structural validity, blocking errors and non-blocking warnings.
  * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init.
  */
 params [["_config", createHashMap, [createHashMap]]];
@@ -16,7 +19,6 @@ private _errors = [];
 private _warnings = [];
 private _strict = _config getOrDefault ["strict", true];
 private _policy = toUpper (_config getOrDefault ["prc343PresetPolicy", "FULL_RANGE"]);
-if ((_config getOrDefault ["version", -1]) != 3) then {_errors pushBack "Unsupported configuration version; expected 3."};
 if !(_policy in ["FULL_RANGE", "SIDE_ISOLATED"]) then {_errors pushBack "prc343PresetPolicy must be FULL_RANGE or SIDE_ISOLATED."};
 {
     _x params ["_key", "_default"];
@@ -173,7 +175,9 @@ private _languageIds = [];
 {
     if (count _x != 3 || {count (_x select 0) != 2}) then {_errors pushBack format ["Malformed Babel unit override %1.", _x]} else {
         private _selectorType = toUpper ((_x select 0) select 0);
-        if !(_selectorType in ["UID", "VARIABLE"]) then {_errors pushBack format ["Invalid Babel selector %1.", _selectorType]};
+        if !(_selectorType in ["UID", "VARIABLE", "VARIABLENAME"]) then {
+            _errors pushBack format ["Invalid Babel selector %1; use UID, VARIABLENAME or VARIABLE.", _selectorType]
+        };
         {if !(_x in _languageIds) then {_errors pushBack format ["Babel override references unknown language %1.", _x]}} forEach (_x select 1);
         if !((_x select 2) in (_x select 1)) then {_errors pushBack "Babel override speaking language must be understood."};
     };

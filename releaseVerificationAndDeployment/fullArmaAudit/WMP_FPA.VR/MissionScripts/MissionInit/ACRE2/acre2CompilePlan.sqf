@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Compiles validated schema-three ACRE settings into one network-safe side/group plan. Explicit
+ * Compiles validated ACRE settings into one network-safe side/group plan. Explicit
  * PRC-343 slots are reserved first; automatic slots are allocated in sorted callsign order using a
  * stable callsign hash and deterministic collision probing, never configuration order or clamping.
+ * Locality and authority: call on the server. The returned pure-data plan is published as one
+ * authoritative value by Waldo_fnc_ACRE2Init for existing clients and JIP.
  *
  * Arguments:
  * 0: configuration <HASHMAP>
@@ -11,6 +13,7 @@
  * Return Value: ARRAY - [schema, revision, side plans, diagnostics].
  *
  * Example: private _plan = [_config, 1] call Waldo_fnc_ACRE2CompilePlan;
+ * Result: `_plan` contains deterministic side/group assignments plus compile diagnostics.
  * Current caller: server branch of Waldo_fnc_ACRE2Init.
  */
 params [["_config", createHashMap, [createHashMap]], ["_revision", 1, [0]]];
@@ -43,6 +46,7 @@ private _hashText = {
         private _explicit343 = _assignments select {toUpper (_x select 0) == "ACRE_PRC343" && {(_x select 2) isEqualType []}};
         if (count _explicit343 > 0) then {
             {private _target = _x select 2; _used pushBackUnique (((_target select 0) - 1) * 16 + (_target select 1))} forEach _explicit343;
+            _allocations set [toUpper _groupId, +((_explicit343 select 0) select 2)];
         } else {
             if !(_fallback343 isEqualTo []) then {
                 _used pushBackUnique (((_fallback343 select 0) - 1) * 16 + (_fallback343 select 1));

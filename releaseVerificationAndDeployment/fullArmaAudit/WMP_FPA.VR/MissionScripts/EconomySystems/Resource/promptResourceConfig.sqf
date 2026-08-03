@@ -181,7 +181,8 @@
             private _entry = [_disp] call Waldo_fnc_EcoResource_collectResourceConfigFormData;
             if ((count _entry) <= 0) exitWith {};
 
-            [_entry param [0, ""], _entry param [1, "#FFFFFF"], _entry param [2, ""], _entry param [3, -1], name player] call Waldo_fnc_EcoResource_addResourceType;
+            ["ADD_RESOURCE", [_entry param [0, ""], _entry param [1, "#FFFFFF"], _entry param [2, ""], _entry param [3, -1], name player], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
 
             private _catalog = call Waldo_fnc_EcoResource_getResourceCatalog;
             private _newIndex = _catalog findIf {((toLower (_x param [0, ""])) isEqualTo (toLower (_entry param [0, ""])))};

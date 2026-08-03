@@ -7,6 +7,7 @@
  * Return Value: ARRAY of STRING mission-relative configuration paths.
  *
  * Example: private _files = call compile preprocessFileLineNumbers "MissionConfig\featureConfigManifest.sqf";
+ * Result: returns the ordered config paths that each lifecycle scope asks the loader to consume.
  * Current caller: Waldo_fnc_LoadFeatureConfigs for SHARED, SERVER and PLAYER_LOCAL scopes.
  *
  * ACTIVATION MODEL: INFRASTRUCTURE ONLY. This file enables no gameplay feature and contains no
@@ -16,6 +17,10 @@
  * LEAVE ALONE UNLESS EXTENDING/TESTING: the complete ordered file list.
  * CUSTOM CALLS: none. Add/reorder an entry only when introducing a new semantic config file and its
  * loader, documentation and regression coverage. ACRE remains separate because pre-init consumes it.
+ *
+ * HOW TO READ THE DATA BELOW: each string is a mission-relative pure-data config path. Order is
+ * deterministic but settings in different files must not depend on it. Do not add acreConfig.sqf:
+ * ACRE pre-init must read it before this ordinary SHARED/SERVER/PLAYER_LOCAL loader lifecycle.
  */
 [
     "MissionConfig\persistenceConfig.sqf",

@@ -26,7 +26,11 @@ private _text = "<font size='16'>Communications Electronics Operating Instructio
 _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
 {
     private _assignment = _x select 2;
-    private _line = format ['%1 - Block %2, Channel %3', _x select 0, _assignment select 0, _assignment select 1];
+    private _line = if (_assignment isEqualType [] && {count _assignment >= 2}) then {
+        format ['%1 - Block %2, Channel %3', _x select 0, _assignment select 0, _assignment select 1]
+    } else {
+        format ["%1 - <font color='#ffb347'>no PRC-343 assignment</font>", _x select 0]
+    };
     if ((_x select 0) == _groupKey) then {_line = format ["<font color='#47ff47'>%1</font>", _line]};
     _text = _text + _line + '<br/>';
 } forEach _groups;

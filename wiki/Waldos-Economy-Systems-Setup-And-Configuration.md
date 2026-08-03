@@ -2,7 +2,7 @@
 
 > **Use this page when:** you are enabling the Economy, selecting a preset, or exporting a Zeus-authored setup to script.
 
-_Associated Files: `init.sqf`, `initServer.sqf`, `economyConfig.sqf`, `Waldo_fnc_EcoInit`, `Waldo_fnc_EcoCore_applyMakerConfig`_
+_Associated Files: `init.sqf`, `initServer.sqf`, `MissionConfig\economyConfig.sqf`, `Waldo_fnc_EcoInit`, `Waldo_fnc_EcoCore_applyMakerConfig`_
 
 | Catalog authoring | Mission setup builder |
 |---|---|
@@ -44,9 +44,9 @@ missionNamespace setVariable ["Waldo_Economy_CommitmentMode", true, true];
 
 Preset complexities: **LOW** (a single resource + research) → **HIGH** (a full Factorio-style economy). Faction catalogue keys for `Waldo_Economy_PresetSides`: `NATO`, `CSAT`, `AAF`, `SYNDIKAT`, `GENERIC`.
 
-## 3. Full hand-authoring (`economyConfig.sqf`)
+## 3. Full hand-authoring (`MissionConfig\economyConfig.sqf`)
 
-For complete control, edit **`economyConfig.sqf`** in the mission root — the dedicated authoring file (registered as `Waldo_fnc_EcoMakerSetup`, run once on the server after any preset/config string). It ships with a complete worked example you can switch on (`_useExample = true;`) and copy.
+For complete control, edit **`MissionConfig\economyConfig.sqf`** — the dedicated authoring file (registered as `Waldo_fnc_EcoMakerSetup`, run once on the server after any preset/config string). It ships with a complete worked example you can switch on (`_useExample = true;`) and copy.
 
 Define catalogs and place world objects with the server-side helpers:
 
@@ -64,7 +64,7 @@ Define catalogs and place world objects with the server-side helpers:
 [getMarkerPos "eco_research_1"] call Waldo_fnc_EcoResearch_spawnResearchCenter;
 ```
 
-**Build it in Zeus, then bake it into the mission:** use the normal Resource, Research, Construction and Purchasing Zeus modules to configure and place the system visually. Then open **Configuration: Build Mission Setup**, select the systems to include, and press **BUILD + COPY**. The generated, pre-filled public setup calls are copied to the clipboard immediately. Paste them into the mission root `economyConfig.sqf`; no array editing or manual argument reconstruction is required.
+**Build it in Zeus, then bake it into the mission:** use the normal Resource, Research, Construction and Purchasing Zeus modules to configure and place the system visually. Then open **Configuration: Build Mission Setup**, select the systems to include, and press **BUILD + COPY**. The generated, pre-filled public setup calls are copied to the clipboard immediately. Paste them into `MissionConfig\economyConfig.sqf`; no array editing or manual argument reconstruction is required.
 
 The generated recipe preserves the authoring result: resource definitions, initial side balances and marker visibility; research, construction and purchasing catalogues; and the current resource zones, uncollected resource crates, research centres, construction sources, completed economy buildings, delivery points and purchase terminals. Calls are emitted in dependency order so the catalogues exist before their placed equipment is created.
 
@@ -86,7 +86,7 @@ Arma can only add true Eden "Systems" modules from a **loaded addon**, and WMP i
 
 ## Order of application
 
-`Waldo_fnc_EcoInit` → `Waldo_fnc_EcoCore_applyMakerConfig` runs, in order: a config string (if set) **or** a preset, then commitment mode, then `economyConfig.sqf`. So you can build on a preset or define everything from scratch. It only runs on the server authority, exactly once.
+`Waldo_fnc_EcoInit` → `Waldo_fnc_EcoCore_applyMakerConfig` runs, in order: a config string (if set) **or** a preset, then commitment mode, then `MissionConfig\economyConfig.sqf`. So you can build on a preset or define everything from scratch. It only runs on the server authority, exactly once.
 
 <!-- WMP-WIKI-NAV -->
 ---

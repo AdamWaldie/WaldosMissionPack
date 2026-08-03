@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Builds paste-ready economyConfig.sqf setup from the current Zeus-authored economy.
+ * Builds paste-ready MissionConfig\economyConfig.sqf setup from the current Zeus-authored economy.
  *
  * This is a one-shot authoring operation. It deliberately inspects the current tagged world
  * fixtures so a mission maker can configure and place an economy in Zeus, export it, and then
@@ -14,7 +14,7 @@
  * 4: include placed world fixtures
  *
  * Return Value:
- * STRING - SQF intended for the mission root economyConfig.sqf file.
+ * STRING - SQF intended for MissionConfig\economyConfig.sqf.
  */
 params [
     ["_includeResources", true, [false]],
@@ -27,7 +27,7 @@ params [
 private _newLine = toString [13, 10];
 private _lines = [
     "/* WMP ECONOMY SETUP BUILT IN ZEUS",
-    " * Paste this block into the mission root economyConfig.sqf.",
+    " * Paste this block into MissionConfig\economyConfig.sqf.",
     " * Set Waldo_Economy_Enable = true in init.sqf before using it.",
     " * Export from a clean authoring session before normal play begins.",
     " */",

@@ -5,6 +5,8 @@
  * unsupported and captured radios are preserved. Frequency requests use ACRE's asynchronous public
  * setupRadios API and are recorded as accepted but unverified because no public frequency read API
  * exists. PTT, volume, speaker mode and current-radio selection are never changed.
+ * Locality and authority: call on the player's interface client after ACRE unique radios exist and
+ * the complete server plan has arrived. It changes only that client's carried radios.
  *
  * Arguments:
  * 0: force <BOOL> (default false)
@@ -14,6 +16,7 @@
  * Return Value: BOOL - true when all applicable assignments were applied or accepted.
  *
  * Example: [true, "RESPAWN"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+ * Result: applicable carried-radio occurrences receive the authored baseline once for this loadout.
  * Current callers: Waldo_fnc_ACRE2SchedulePlayerRefresh and persistence fallback.
  */
 params [["_force", false, [true]], ["_reason", "MANUAL", [""]], ["_retryAllowed", true, [true]]];
@@ -35,7 +38,7 @@ if (_groupIndex < 0) exitWith {
     false
 };
 private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
-if ((missionNamespace getVariable ["Waldo_ACRE2_PersistenceRadioGeneration", -1]) == _generation) exitWith {true};
+if ((missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1]) == _generation) exitWith {true};
 private _groupPlan = _groups select _groupIndex;
 _groupPlan params ["_unusedGroup", "_netKeys", "_shortAssignment", "_explicitAssignments"];
 private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;

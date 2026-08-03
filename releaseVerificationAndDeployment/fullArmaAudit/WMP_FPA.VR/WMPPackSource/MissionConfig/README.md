@@ -4,9 +4,58 @@ This directory is the mission maker's settings layer. The files return data only
 spawn assets, register world objects, add event handlers, or transfer authority. WMP's existing
 init lifecycle reads that data at the correct stage.
 
+## If you are new to Arma mission scripting
+
+You do not need to understand SQF programming to change the normal settings. Most lines look like:
+
+```sqf
+["Waldo_Rally_Duration", 180], // Rally remains active for 180 seconds.
+```
+
+- The quoted name on the left tells WMP which setting this is. **Do not rename it.**
+- The value on the right is what you may change: `180` in this example.
+- Text values keep quotation marks: `"DAY"`, not `DAY`.
+- `true` means on/yes; `false` means off/no.
+- `[]` is an empty list. Its nearby comment says whether that means none, unrestricted or automatic.
+- Lines beginning with `//`, and text between `/*` and `*/`, are explanations and are not executed.
+- Keep the surrounding brackets, quotation marks and commas unless the example explicitly tells you
+  to copy a complete block.
+- Start with settings marked `MISSION MAKER`. Leave `ADVANCED` settings unchanged until you have a
+  specific tested reason to alter them.
+
+Longer entries are written vertically and number their fields as `0`, `1`, `2`, and so on. Read the
+comments beside those fields from top to bottom. The comments describe what players will experience,
+not only the underlying data type.
+
+Every editable setting follows this documentation pattern in its own config file. The explanation
+is part of the setting: do not delete it when copying or changing the active value.
+
+```sqf
+// SETTING: Waldo_AIRebalance_Mode (MISSION MAKER)
+// WHAT IT CHANGES: which lighting-condition skill variant AI use.
+// VALUES: "DAY" or "NIGHT"; STRING; shipped default "DAY".
+// EXAMPLE/RESULT: "NIGHT" applies low-light values; equipped NVG/HMD may add the configured offset.
+["Waldo_AIRebalance_Mode", "DAY"],
+```
+
+The value on the final line is the active mission value. The example may deliberately show a
+different value to demonstrate a common alternative; copy only the final setting line unless the
+comment tells you to copy a complete block.
+
+The same two-layer standard applies to callable scripts. A plain-English introduction comes first,
+but it never replaces the technical contract. Script headers retain the exact numbered calling
+arguments, types, defaults, return value, locality/authority, copyable example, expected result and
+current callers. See [Coding and Documentation Standards](../wiki/Coding-Standards.md) for the
+canonical templates.
+
 The most important rule is: **a setting and a feature instance are not the same thing**. Setting an
 `Enable` value can start an automatic handler, permit a registered-object system, or merely make a
 later script call available. Read the `ACTIVATION MODEL` block at the top of the relevant file.
+
+Every config is intended to be understandable without opening an implementation script. Its header
+defines the row shapes, valid IDs, units, activation and caller. Inline comments beside each setting
+identify whether it is a normal mission choice or advanced tuning. Positional arrays and nested
+HashMaps have a local field-by-field legend plus a worked example where ambiguity is likely.
 
 ## Start here for each feature
 
@@ -53,6 +102,7 @@ later script call available. Read the `ACTIVATION MODEL` block at the top of the
 | Logistics crate classes | `logisticsConfig.sqf` | Consumed defaults | Existing spawners use them; they spawn nothing alone |
 | Rally / minigames / corpse traps | `missionSystemsConfig.sqf` | Automatic | Enable and configure the feature |
 | Economy | `missionSystemsConfig.sqf` | Automatic runtime + content setup | Enable, then configure the dedicated economy preset/catalogue |
+| Economy authored catalogues/layout | `economyConfig.sqf` | Server call-driven | Enable economy, then edit the worked public setup calls in this file |
 | Diagnostics / safestart | `missionSystemsConfig.sqf` | Automatic | Review the shipped server policy |
 | Persistence | `persistenceConfig.sqf` | Automatic + dependency gate | Enable; install INIDBI2 server-side; register world objects separately |
 
@@ -105,3 +155,20 @@ Ordinary files return a HashMap containing:
 Existing variables win. Server-published values remain available to JIP clients. Configuration
 files must remain pure data: activation calls, waits, handlers, world mutation and remote execution
 belong in lifecycle or feature scripts.
+
+## Loadout saving and ACRE radio state
+
+An inventory contains ACRE radio items, but a live radio's channel and ear are player-local state on
+its temporary unique `_ID_n` instance. They are not safely represented by the inventory classname.
+WMP therefore keeps two explicit paths:
+
+- **Normal Save Respawn Loadout:** filters every unique radio back to its base class and stores the
+  player's supported radio settings separately. Respawn creates fresh unique radios, then restores
+  the channels/frequencies, ears, volume, audio source and selected radio from the last save. The
+  current `acreConfig.sqf` plan is the initial setup and missing/failed-snapshot fallback.
+- **INIDBI2 persistence with `Waldo_Persistence_SaveRadios = true`:** stores supported radio state
+  separately per player using base class plus same-type occurrence, then restores it after fresh
+  unique radios exist. The restored persistent state becomes the local respawn snapshot too.
+
+Neither path repeatedly retunes radios during ordinary play, and neither changes player PTT defaults.
+The detailed schemas and examples live directly in `acreConfig.sqf` and `persistenceConfig.sqf`.

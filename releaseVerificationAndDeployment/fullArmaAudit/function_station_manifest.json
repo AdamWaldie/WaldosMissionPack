@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 833,
+  "registeredFunctionCount": 838,
   "runtimeFunctionCount": 385,
-  "functionCount": 1218,
+  "functionCount": 1223,
   "stations": [
     {
       "id": "control",
@@ -419,6 +419,12 @@
     {
       "name": "Waldo_fnc_LoadFeatureConfigs",
       "file": "MissionScripts/MissionInit/Configuration/loadFeatureConfigs.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CreateRuntimeId",
+      "file": "MissionScripts/MissionInit/Configuration/createRuntimeId.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
@@ -1437,6 +1443,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ZenFortifyBudgetServer",
+      "file": "MissionScripts/ZenModules/zenFortifyBudgetServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ZenConvoyModule",
       "file": "MissionScripts/ZenModules/Zen_convoyModule.sqf",
       "station": "zen",
@@ -1497,8 +1509,20 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ZenEMPServer",
+      "file": "MissionScripts/ZenModules/zenEMPServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ZenTracker",
       "file": "MissionScripts/ZenModules/Zen_trackerModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenTrackerServer",
+      "file": "MissionScripts/ZenModules/zenTrackerServer.sqf",
       "station": "zen",
       "activation": "manual"
     },
@@ -2385,6 +2409,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_EcoCore_zenServerRequest",
+      "file": "MissionScripts/EconomySystems/Core/zenServerRequest.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_EcoCore_logZenModule",
       "file": "MissionScripts/EconomySystems/Core/logZenModule.sqf",
       "station": "economy-core",
@@ -2428,7 +2458,7 @@
     },
     {
       "name": "Waldo_fnc_EcoMakerSetup",
-      "file": "economyConfig.sqf",
+      "file": "MissionConfig/economyConfig.sqf",
       "station": "control",
       "activation": "manual"
     },

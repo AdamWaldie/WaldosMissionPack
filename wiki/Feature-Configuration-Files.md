@@ -13,6 +13,31 @@ This page is the variable reference. If you are asking **whether the setting sta
 [Feature Setup and Activation](Feature-Setup-and-Activation). A config file never spawns or
 registers world content by itself.
 
+## Reading a setting when you do not know SQF
+
+For a line such as `["Waldo_AIRebalance_Mode", "DAY"]`, keep the quoted setting name on the left and
+change only the value on the right. Text stays inside quotation marks. `true` means enabled,
+`false` means disabled, and `[]` is an empty list whose exact meaning is stated by the nearby
+comment. Keep brackets and commas intact. Comments beginning with `//` are guidance, not code.
+
+Complex settings are expanded vertically in the config file. Their fields are numbered from `0`
+and explained beside the exact value being edited. Start with the supplied example, duplicate the
+whole block where instructed, and change one clearly labelled field at a time.
+
+The in-code baseline is deliberately repetitive: `SETTING`, `WHAT IT CHANGES`, `VALUES`, then a
+copyable `EXAMPLE/RESULT`. This is preferable to expecting a new mission maker to decode a compact
+schema reference.
+
+Each `SETTING` also identifies its customisation level. `VALUES` includes the data type, units,
+allowed range or IDs and shipped default. `EXAMPLE/RESULT` explains an alternative value in terms of
+what the mission maker or players will observe. For positional arrays, each zero-based field is
+explained beside the row. The compact wiki tables are navigation aids; they do not replace these
+setting-level explanations in the file.
+
+Callable scripts use the same beginner-first, detail-preserving rule. Their in-file headers retain
+all numbered arguments and nested shapes, plus return value, locality/authority, current callers,
+copyable call and expected result. See [Coding and Documentation Standards](Coding-Standards).
+
 ## Before changing a value
 
 Read the header of that config file in this order:
@@ -25,6 +50,11 @@ Read the header of that config file in this order:
 The exact shipped defaults are visible beside each variable in the config files. The tables below
 define purpose, units and constrained values. Empty arrays/maps mean unrestricted or no overrides
 unless the feature guide states otherwise.
+
+Every config also contains a `HOW TO READ THE DATA BELOW` section. That is the local contract for
+row order, server publication, positional arrays and nested HashMaps. Inline comments state the
+type, units and practical consequence beside the actual default, so this wiki is a navigation and
+reference layer rather than required to decode the source file.
 
 ## Which settings should I change?
 
@@ -40,7 +70,7 @@ Recommended review by file:
 
 | File | Mission-maker choices | Normally leave alone |
 |---|---|---|
-| `acreConfig.sqf` | Enablement, named displays, nets, per-occurrence group/player/role assignments, ear placement and Babel languages | Schema version, strict validation, group-change retuning, priority and shipped capability profiles |
+| `acreConfig.sqf` | Enablement, named displays, nets, per-occurrence group/player/role assignments, ear placement and Babel languages | Strict validation and shipped capability profiles |
 | `persistenceConfig.sqf` | Enablement, saved data categories and database/campaign name | Save cadence and custom-variable serialization list |
 | `interfaceConfig.sqf` | Theme, treatment recipients/content, emergency-dismount policy and PID eligibility/content | Queue/reflow limits, tactical knowledge threshold, placement geometry and Draw3D scale/offset internals |
 | `aiConfig.sqf` | AI profile/mode, application population and inclusion/exclusion filters | Skill variance and helicopter landing controller values |
@@ -49,6 +79,7 @@ Recommended review by file:
 | `environmentConfig.sqf` | Hazard profiles, tree tools/replacements/protected areas and breaching content | Tick rates, damage cadence, tree geometry/cooldowns and regrowth scheduler values |
 | `electronicWarfareConfig.sqf` | EW rules, player feedback/toggles and disable challenge | Signal curve/reference, RDF fuzz bands and diagnostics overlay |
 | `missionSystemsConfig.sqf` | Rally rules, optional-system enablement, diagnostics and safestart contract | Safe-position geometry and global ACE weight/hearing overrides |
+| `economyConfig.sqf` | Hand-authored economy catalogues and pre-planned economy world setup | Authority guard and setup-call ordering |
 
 ## Common option formats
 
@@ -67,7 +98,6 @@ Recommended review by file:
 
 | Key | Purpose |
 |---|---|
-| `version` | Configuration schema revision required by validation. |
 | `enabled` | Enables the replacement ACRE lifecycle. |
 | `strict` | Promotes explicit PRC-343 collisions from reported warnings to configuration errors. Structural errors are always rejected. |
 | `prc343PresetPolicy` | `FULL_RANGE` keeps all sixteen blocks on every side; `SIDE_ISOLATED` trades combat-side capacity for cross-side PRC-343 frequency separation. It does not change the presets used by other radios. |
@@ -81,6 +111,12 @@ Recommended review by file:
 The file includes working channel-radio, local-radio and common-frequency examples. A net declares
 only the radio types that can use it, so BF-888S or SEM52SL capacity never limits PRC-152/117F nets.
 Explicit group rows apply only when the player actually carries that radio occurrence.
+
+Radio channel/ear state is not embedded in a player's inventory classname. Normal Save Respawn
+Loadout filters transient `_ID_n` classes to base radio classes and stores supported player-level
+state separately by base class plus same-type occurrence. It restores that snapshot after fresh
+ACRE IDs exist. `Waldo_Persistence_SaveRadios = true` persists the same state across sessions.
+Neither path polls or continually retunes radios during play, and PTT defaults remain player-owned.
 
 See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 [PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup), and
@@ -203,7 +239,7 @@ See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 |---|---|
 | `Waldo_AIRebalance_Enable` | Enables WMP skill handling for eligible AI. |
 | `Waldo_AIRebalance_Profile` | Default named profile: `MILITIA`, `LINE`, `VETERAN` or `ELITE`. |
-| `Waldo_AIRebalance_Mode` | `DAY` or `NIGHT` skill variant; may fall back from the older `Waldo_AI_Mode`. |
+| `Waldo_AIRebalance_Mode` | Lighting-condition skill variant: `DAY` or `NIGHT`. |
 | `Waldo_AI_ApplyMode` | Which existing/new AI populations receive the profile. |
 | `Waldo_AI_RestoreOnStop` | Restores recorded skills when the handler stops. |
 | `Waldo_AI_SkillVariance` | Random variation applied around the selected profile. |

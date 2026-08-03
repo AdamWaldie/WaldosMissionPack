@@ -3,10 +3,10 @@
         "scriptName": "WMP Exemplar Mission",
         "include": [
             "MissionScripts",
+            "MissionConfig",
             "Pictures",
             "UnitInsignias",
             "description.ext",
-            "economyConfig.sqf",
             "init.sqf",
             "initPlayerLocal.sqf",
             "initServer.sqf",

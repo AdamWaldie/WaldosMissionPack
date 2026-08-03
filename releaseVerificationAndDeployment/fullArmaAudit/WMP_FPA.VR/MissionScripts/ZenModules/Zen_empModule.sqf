@@ -28,7 +28,7 @@ params ["_modulePos", "_objectPos"];
         params ["_args", "_pos"];
         _args params ["_radius", "_duration"];
         _pos params ["_modulePos"];
-        [_modulePos, _radius, _duration] call Waldo_fnc_EMP;
+        [_modulePos, _radius, _duration, player] remoteExecCall ["Waldo_fnc_ZenEMPServer", 2];
         diag_log format ["[WMP EW] EMP module requested radius=%1 duration=%2 position=%3", _radius, _duration, _modulePos];
     },
     {},

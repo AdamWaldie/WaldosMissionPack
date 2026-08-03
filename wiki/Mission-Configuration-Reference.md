@@ -9,6 +9,8 @@ This page documents mission entry points and feature configuration lifecycle. Fe
 - `MissionConfig\featureConfigManifest.sqf` lists the semantic configuration files.
 - Each feature file separates guarded `shared`, authoritative `server`, and interface-only `playerLocal` settings where required.
 - `MissionConfig\acreConfig.sqf` remains dedicated because ACRE consumes it during CfgFunctions pre-init, before Arma event scripts.
+- Each file's `HOW TO READ THE DATA BELOW` section defines its exact row and nested-data schemas;
+  inline comments state types, units, valid IDs and whether a value is normal or advanced tuning.
 
 Do not move activation calls, waits, event handlers or public-state ownership into configuration
 files. Edit the appropriate MissionConfig file for mission-start policy. A build/generator may set a
@@ -289,10 +291,15 @@ Each net contains per-radio tunings and drives both assignment and CEOI output. 
 ```sqf
 ["languages", [["common", "Common"], ["en", "English"], ["ru", "Russian"], ["fr", "French"], ["ar", "Arabic"]]],
 ["sideDefaults", [["WEST", ["common", "en"], "en"], ["EAST", ["common", "ru"], "ru"]]],
-["unitOverrides", [[["UID", "7656119..."], ["common", "en", "ru"], "ru"]]]
+["unitOverrides", [
+    [["UID", "7656119..."], ["common", "en", "ru"], "ru"],
+    [["VARIABLENAME", "interpreter_1"], ["common", "en", "ru"], "ru"]
+]]
 ```
 
-Set the `babel` map's `enabled` value to `true`. IDs are registered in declared order on every machine. See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration).
+Set the `babel` map's `enabled` value to `true`. IDs are registered in declared order on every
+machine. `UID` follows a Steam account; `VARIABLENAME` matches the current playable unit's Eden
+Variable Name. Override rows are first-match-wins. See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration).
 
 ### Radio Jamming (ACRE2 / TFAR)
 

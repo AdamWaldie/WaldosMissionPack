@@ -36,14 +36,23 @@
 
 params [["_config", createHashMap, [createHashMap]]];
 if !(isServer) exitWith {[_config] remoteExecCall ["Waldo_fnc_GunshipRegister", 2]; true};
+private _requestOwner = remoteExecutedOwner;
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};
     private _caller = if (_index >= 0) then {allPlayers select _index} else {objNull};
     if (isNull _caller || {isNull getAssignedCuratorLogic _caller}) exitWith {false};
 };
+private _notifyRequester = {
+    params ["_message", ["_state", "INFO"]];
+    diag_log format ["[WMP GUNSHIP] owner=%1 state=%2 detail=%3", _requestOwner, _state, _message];
+    if (_requestOwner > 2) then {
+        ["AIRBORNE GUNSHIP", _message, _state, "GUNSHIP_ZEN", 8]
+            remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+    };
+};
 private _id = _config getOrDefault ["id", ""];
 private _safeId = [_id, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
-if (_id == "" || {_safeId != _id}) exitWith {diag_log "[WMP GUNSHIP] Registration rejected: a safe unique id is required."; false};
+if (_id == "" || {_safeId != _id}) exitWith {["Registration rejected: a safe unique id is required.", "ERROR"] call _notifyRequester; false};
 private _registry = missionNamespace getVariable ["Waldo_Gunship_Registry", createHashMap];
 if (_id in keys _registry) then {[_id, false] call Waldo_fnc_GunshipDestroy};
 
@@ -75,6 +84,7 @@ if (isNull _aircraft) then {
 if (!isNull _aircraft && {isNull driver _aircraft} && {_config getOrDefault ["createCrew", true]}) then {createVehicleCrew _aircraft};
 if (isNull _aircraft || {!(_aircraft isKindOf "Air")} || {isNull driver _aircraft}) exitWith {
     if (_spawned && {!isNull _aircraft}) then {deleteVehicleCrew _aircraft; deleteVehicle _aircraft};
+    ["Registration failed: the selected aircraft could not be created with an AI pilot.", "ERROR"] call _notifyRequester;
     false
 };
 private _side = _config getOrDefault ["side", side group driver _aircraft];
@@ -136,4 +146,9 @@ _state set ["handle", _handle];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_Gunship_Registry", _registry];
 [] call Waldo_fnc_GunshipPublishState;
-[_id, _orbit, "TRANSIT"] call Waldo_fnc_GunshipSetOrbit
+private _started = [_id, _orbit, "TRANSIT"] call Waldo_fnc_GunshipSetOrbit;
+[
+    if (_started) then {format ["%1 registered and flying to its orbit.", _config getOrDefault ["callsign", _id]]} else {"Registration created an aircraft but its initial orbit could not be assigned."},
+    if (_started) then {"SUCCESS"} else {"ERROR"}
+] call _notifyRequester;
+_started

@@ -5,12 +5,15 @@
  * selected radio are preserved; alternate PTT and speaker mode remain untouched player settings.
  * A captured manual-frequency radio can be restored only when its frequency was last applied by WMP,
  * because ACRE exposes no public frequency read API.
+ * Locality and authority: call on the player's interface client; ACRE radio state is client-owned
+ * and this function only returns a serialisable snapshot.
  *
  * Arguments: None.
  * Return Value: ARRAY - [schema, radio entries, selected-radio descriptor].
  *
  * Example: private _state = [] call Waldo_fnc_ACRE2CaptureRadioState;
- * Current caller: Waldo_fnc_PersistenceClientCapture.
+ * Result: `_state` contains supported radio occurrences and selected-radio identity without IDs.
+ * Current callers: Waldo_fnc_SaveLoadout and Waldo_fnc_PersistenceClientCapture.
  */
 if (!hasInterface || {!(isClass (configFile >> "CfgPatches" >> "acre_main"))}) exitWith {[]};
 private _radios = [] call Waldo_fnc_ACRE2GetOrderedRadios;

@@ -38,7 +38,7 @@ private _resolveProfiles = {
 };
 
 private _initialProfiles = call _resolveProfiles;
-private _defaultId = format ["AA_%1_%2", clientOwner, round (serverTime * 10)];
+private _defaultId = ["AA"] call Waldo_fnc_CreateRuntimeId;
 private _created = [
     "Create Dynamic AA System",
     [

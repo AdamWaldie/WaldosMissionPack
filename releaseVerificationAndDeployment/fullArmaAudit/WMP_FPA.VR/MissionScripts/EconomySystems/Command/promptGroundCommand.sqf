@@ -84,7 +84,7 @@
         private _uid = _list lbData _index;
         if (_uid isEqualTo "") exitWith {};
 
-        [_uid] call Waldo_fnc_EcoCommand_promoteGroundCommand;
+        ["PROMOTE_COMMAND", [_uid], player] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         [_disp] spawn {
             uiSleep 0.2;
             [_this select 0] call Waldo_fnc_EcoCommand_refreshGroundCommandPrompt;
@@ -103,7 +103,7 @@
         private _uid = _list lbData _index;
         if (_uid isEqualTo "") exitWith {};
 
-        [_uid] call Waldo_fnc_EcoCommand_removeGroundCommand;
+        ["REMOVE_COMMAND", [_uid], player] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         [_disp] spawn {
             uiSleep 0.2;
             [_this select 0] call Waldo_fnc_EcoCommand_refreshGroundCommandPrompt;

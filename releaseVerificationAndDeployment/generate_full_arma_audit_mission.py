@@ -13,6 +13,7 @@ import json
 import math
 import re
 import shutil
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -538,7 +539,20 @@ def _sync_tree_in_place(source: Path, target: Path) -> None:
                     raise
         else:
             path.unlink()
-    shutil.copytree(source, target, dirs_exist_ok=True)
+    # OneDrive/Defender can briefly memory-map an SQF between enumeration and overwrite, producing
+    # WinError 1224. Retry the idempotent mirror rather than making a transient desktop lock fail CI.
+    last_error: shutil.Error | None = None
+    for attempt in range(6):
+        try:
+            shutil.copytree(source, target, dirs_exist_ok=True)
+            return
+        except shutil.Error as error:
+            last_error = error
+            if not all("WinError 1224" in str(detail) for detail in error.args[0]):
+                raise
+            time.sleep(0.15 * (attempt + 1))
+    if last_error is not None:
+        raise last_error
 
 
 def refresh_release_sources() -> None:
@@ -566,14 +580,19 @@ def refresh_release_sources() -> None:
             raise OSError(f"Could not clear stale audit source directory: {target}")
         if source.is_dir():
             shutil.copytree(source, target)
-    shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
     shutil.copy2(ROOT / "MissionConfig" / "acreConfig.sqf", MISSION / "MissionConfig" / "releaseAcreConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
     _sync_tree_in_place(ROOT / "MissionConfig", pack_source / "MissionConfig")
-    for stale in (MISSION / "acreConfig.sqf", MISSION / "releaseAcreConfig.sqf", pack_source / "acreConfig.sqf"):
+    for stale in (
+        MISSION / "acreConfig.sqf",
+        MISSION / "releaseAcreConfig.sqf",
+        MISSION / "economyConfig.sqf",
+        pack_source / "acreConfig.sqf",
+        pack_source / "economyConfig.sqf",
+    ):
         stale.unlink(missing_ok=True)
-    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
+    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "LICENSE", "README.md"):
         source = ROOT / name
         if source.is_file():
             shutil.copy2(source, pack_source / name)

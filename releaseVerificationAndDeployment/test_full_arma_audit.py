@@ -79,6 +79,111 @@ class FullAuditTests(unittest.TestCase):
         checker = ROOT / "releaseVerificationAndDeployment" / "wiki_style_checker.py"
         self.assertTrue(checker.is_file())
 
+    def test_documentation_contract_is_validated_in_ci(self):
+        workflow = (ROOT / ".github" / "workflows" / "testing.yml").read_text(encoding="utf-8")
+        self.assertIn("documentation_contract_checker.py", workflow)
+        checker = ROOT / "releaseVerificationAndDeployment" / "documentation_contract_checker.py"
+        self.assertTrue(checker.is_file())
+        standard = (ROOT / "wiki" / "Coding-Standards.md").read_text(encoding="utf-8")
+        for heading in (
+            "Locality and authority:",
+            "Arguments:",
+            "Return Value:",
+            "Example:",
+            "Result:",
+            "Current callers:",
+        ):
+            self.assertIn(heading, standard)
+
+    def test_babel_accepts_documented_variable_name_selector(self):
+        apply_babel = (
+            ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2ApplyBabel.sqf"
+        ).read_text(encoding="utf-8")
+        validation = (
+            ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2ValidateConfig.sqf"
+        ).read_text(encoding="utf-8")
+        config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
+        babel_wiki = (ROOT / "wiki" / "ACRE2-Babel-Configuration.md").read_text(encoding="utf-8")
+        self.assertIn("['VARIABLE', 'VARIABLENAME']", apply_babel)
+        self.assertIn('["UID", "VARIABLE", "VARIABLENAME"]', validation)
+        self.assertIn('[["VARIABLENAME", "interpreter_1"]', config)
+        self.assertIn("vehicleVarName", babel_wiki)
+
+    def test_acre_respawn_server_test_mission_contract(self):
+        mission = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "serverTestMissions"
+            / "WMP_ACRE2_Respawn_Test.VR"
+        )
+        sqm = (mission / "mission.sqm").read_text(encoding="utf-8")
+        config = (mission / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
+        server_init = (mission / "initServer.sqf").read_text(encoding="utf-8")
+        player_init = (mission / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        testing = (mission / "TESTING.md").read_text(encoding="utf-8")
+        description = (mission / "description.ext").read_text(encoding="utf-8")
+        self.assertIn("class Groups", sqm)
+        self.assertIn("items=2;", sqm)
+        self.assertEqual(4, sqm.count("this addItemToBackpack 'ACRE_PRC343'"))
+        self.assertEqual(4, sqm.count("this addItemToBackpack 'ACRE_PRC152'"))
+        self.assertEqual(4, sqm.count("this addItemToBackpack 'ACRE_PRC77'"))
+        self.assertEqual(1, sqm.count('player="PLAYER COMMANDER"'))
+        self.assertEqual(3, sqm.count('player="PLAY CDG"'))
+        for expected in (
+            '["ACRE_PRC152", 1, 4, "RIGHT"]',
+            '["ACRE_PRC77", 1, 45.500, "CENTER"]',
+            '["ACRE_PRC152", 1, 8, "LEFT"]',
+            '["ACRE_PRC77", 1, 51.000, "CENTER"]',
+            '[5, 3]',
+            '[6, 7]',
+        ):
+            self.assertIn(expected, config)
+        self.assertIn('createMarker ["respawn_west"', server_init)
+        self.assertIn("Waldo_fnc_ZenAddLoadoutSaveAction", server_init)
+        self.assertIn("maxPlayers = 4;", description)
+        self.assertNotIn('#include "mission.sqm"', description)
+        self.assertIn('missionNamespace getVariable ["Waldo_ACRE2_Enabled", false]', player_init)
+        self.assertIn("Refresh ACRE2 CEOI", player_init)
+        self.assertIn('getOrDefault ["enabled", false]', player_init)
+        self.assertIn("require both the WMP ACRE", testing)
+
+    def test_runtime_ids_and_dedicated_zen_bridges_are_safe(self):
+        runtime_id_path = (
+            ROOT / "MissionScripts" / "MissionInit" / "Configuration" / "createRuntimeId.sqf"
+        )
+        runtime_id = runtime_id_path.read_text(encoding="utf-8")
+        self.assertIn("systemTimeUTC", runtime_id)
+        self.assertNotIn("serverTime", self.sqf_without_comments(runtime_id_path))
+        for relative in (
+            "CombatSystems/DynamicAA/dynamicAAZen.sqf",
+            "CombatSystems/DynamicAO/dynamicAOZen.sqf",
+            "Paradrop/paradropDropZoneZen.sqf",
+            "ZenModules/RuntimeControl/featureRuntimeZen.sqf",
+        ):
+            source = (ROOT / "MissionScripts" / relative).read_text(encoding="utf-8")
+            self.assertIn("Waldo_fnc_CreateRuntimeId", source, relative)
+        bridges = {
+            "ZenModules/zenFortifyBudgetServer.sqf": "getAssignedCuratorLogic",
+            "ZenModules/zenEMPServer.sqf": "getAssignedCuratorLogic",
+            "ZenModules/zenTrackerServer.sqf": "getAssignedCuratorLogic",
+            "EconomySystems/Core/zenServerRequest.sqf": "getAssignedCuratorLogic",
+        }
+        for relative, token in bridges.items():
+            source = (ROOT / "MissionScripts" / relative).read_text(encoding="utf-8")
+            self.assertIn("isServer", source, relative)
+            self.assertIn(token, source, relative)
+
+    def test_acre_ceoi_handles_explicit_and_missing_343_assignments(self):
+        compile_plan = (
+            ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2CompilePlan.sqf"
+        ).read_text(encoding="utf-8")
+        ceoi = (
+            ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2BuildCEOI.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("_allocations set [toUpper _groupId", compile_plan)
+        self.assertIn("count _assignment >= 2", ceoi)
+        self.assertIn("no PRC-343 assignment", ceoi)
+
     def test_patch_filter_uses_standard_release_allowlist(self):
         allowed = {"MissionScripts", "Pictures", "description.ext"}
         self.assertTrue(RELEASE_FILTER.releasable("MissionScripts/Test.sqf", allowed))
@@ -139,7 +244,7 @@ class FullAuditTests(unittest.TestCase):
             self.assertIn(f'qa_sign_{station_id.replace("-", "_")}', sqm)
         self.assertTrue((mission / "MissionScripts" / "WaldosFunctions.sqf").is_file())
         self.assertTrue((mission / "Pictures" / "loading.jpg").is_file())
-        self.assertTrue((mission / "economyConfig.sqf").is_file())
+        self.assertTrue((mission / "MissionConfig" / "economyConfig.sqf").is_file())
         self.assertTrue((mission / "MissionConfig" / "acreConfig.sqf").is_file())
         self.assertTrue((mission / "MissionConfig" / "releaseAcreConfig.sqf").is_file())
         self.assertTrue((mission / "auditBootstrap.sqf").is_file())
@@ -148,7 +253,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("Land_Radio_F", sqm)
         self.assertIn('type="Land_PortableServer_01_sand_F"', sqm)
         self.assertEqual(sqm.count('side="Empty"'), sqm.count("this enableSimulationGlobal false;"))
-        for release_root in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
+        for release_root in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "LICENSE", "README.md"):
             self.assertTrue((mission / "WMPPackSource" / release_root).is_file())
         self.assertTrue((mission / "WMPPackSource" / "MissionConfig" / "acreConfig.sqf").is_file())
         init_player = (mission / "initPlayerLocal.sqf").read_text(encoding="utf-8")
@@ -258,6 +363,9 @@ class FullAuditTests(unittest.TestCase):
         ordered_radios = (root / "acre2GetOrderedRadios.sqf").read_text(encoding="utf-8")
         capture_radio = (root / "acre2CaptureRadioState.sqf").read_text(encoding="utf-8")
         restore_radio = (root / "acre2ApplyRadioState.sqf").read_text(encoding="utf-8")
+        save_respawn = (ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "saveRespawnLoadout.sqf").read_text(encoding="utf-8")
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        persistence_apply = (ROOT / "MissionScripts" / "Persistence" / "persistenceClientApply.sqf").read_text(encoding="utf-8")
         profiles = (root / "acre2GetRadioProfiles.sqf").read_text(encoding="utf-8")
         refresh = (root / "acre2SchedulePlayerRefresh.sqf").read_text(encoding="utf-8")
         acre_config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
@@ -287,15 +395,21 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("isNil '_speakingReadBack'", babel)
         self.assertIn("babelGetSpeakingLanguageId", babel)
         self.assertIn("_initial in _languages", babel)
-        self.assertIn('["version", 3]', acre_config)
+        self.assertNotIn('["version",', acre_config)
         self.assertIn('["prc343PresetPolicy", "FULL_RANGE"]', acre_config)
         self.assertNotIn('"radioPriority"', acre_config)
         self.assertNotIn('"radioProfiles"', acre_config)
         self.assertIn('["additionalRadioProfiles", []]', acre_config)
+        self.assertIn("0: short internal key used by group assignments below", acre_config)
+        self.assertIn("0: exact Eden groupId", acre_config)
+        self.assertIn("empty = automatically choose this group's PRC-343 block/channel", acre_config)
+        self.assertIn("every language is [short internal ID, name shown to players]", acre_config)
         self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 32, []]', profiles)
         self.assertIn('["ACRE_PRC343", "BLOCK_CHANNEL", ["LEFT", "RIGHT", "CENTER"]', profiles)
         self.assertIn('["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 12, []]', profiles)
-        self.assertIn('["LEGACY", "LEGACY", [["ACRE_PRC77", 34.000], ["ACRE_SEM70", 34.000]]]', acre_config)
+        self.assertGreaterEqual(acre_config.count('"LEGACY"'), 2)
+        self.assertIn('["ACRE_PRC77", 34.000]', acre_config)
+        self.assertIn('["ACRE_SEM70", 34.000]', acre_config)
         self.assertIn('if (_ear == "BOTH") then {"CENTER"}', apply_plan)
         self.assertIn('acre_api_fnc_setupRadios', apply_plan)
         self.assertIn('Waldo_fnc_ACRE2GetOrderedRadios', apply_plan)
@@ -311,7 +425,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["GROUP_CHANGE", false]', acre_init)
         self.assertIn("followPlayerUnit", acre_init)
         self.assertIn('getOrDefault ["enabled", true]', acre_init)
-        self.assertIn('Waldo_ACRE2_PersistenceRestoreInProgress', refresh)
+        self.assertIn('Waldo_ACRE2_RadioRestoreInProgress', refresh)
         self.assertIn('Waldo_ACRE2_RefreshToken', refresh)
         self.assertIn('Waldo_ACRE2_RefreshApplyPlan', refresh)
         self.assertIn('["UNIT_REPLACEMENT", false]', acre_init)
@@ -381,6 +495,15 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('!(_x in _ordered)', ordered_radios)
         self.assertIn('isNil "_audioSource"', capture_radio)
         self.assertIn("_speakingReadBack isEqualType 0", babel)
+        self.assertIn('Waldo_fnc_ACRE2CaptureRadioState', save_respawn)
+        self.assertIn('Waldo_Player_RadioState', save_respawn)
+        self.assertIn('Waldo_Player_RadioState', init_player)
+        self.assertIn('Waldo_fnc_ACRE2ApplyRadioState', init_player)
+        self.assertIn('["RESPAWN_RESTORED", false]', init_player)
+        self.assertNotIn('["RESPAWN", true]', init_player)
+        self.assertIn('missionNamespace setVariable ["Waldo_Player_Inventory", _filteredLoadout]', persistence_apply)
+        self.assertIn('missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios]', persistence_apply)
+        self.assertIn('Waldo_ACRE2_RestoredRadioGeneration', restore_radio)
 
     def test_logistics_compatibility_notifications_do_not_use_centre_screen(self):
         dynamic_text = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "dynamicText.sqf").read_text(encoding="utf-8")
@@ -755,12 +878,12 @@ class FullAuditTests(unittest.TestCase):
         ):
             self.assertIn(builder_name, exporter)
             self.assertIn(f"class {builder_name}", functions)
-        self.assertIn("economyConfig.sqf", exporter)
+        self.assertIn("MissionConfig\\economyConfig.sqf", exporter)
         self.assertNotIn("EcoCore_importUnifiedSavePayload", exporter)
         self.assertNotIn("WaldoEcoCore_SAVE_V1", exporter)
         self.assertIn('ctrlSetText "BUILD + COPY"', prompt)
         self.assertIn("copyToClipboard", prompt)
-        self.assertIn("Paste the generated calls into economyConfig.sqf", prompt)
+        self.assertIn("Paste the generated calls into MissionConfig\\economyConfig.sqf", prompt)
         self.assertIn('ctrlSetText "CONFIG COPY"', prompt)
         self.assertNotIn("WaldoEcoCore_SaveMissionSetupCheck", prompt)
         self.assertIn("EcoCore_buildMissionSetupScript", prompt)
@@ -1446,6 +1569,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_AI_NightUnaidedMultipliers", apply_profile)
         self.assertIn('if (hmd _unit != "")', apply_profile)
         self.assertIn("(_unit skill _x) *", apply_profile)
+        self.assertIn('["Waldo_AIRebalance_Mode", "DAY"]', mission_config)
+        self.assertIn('["Waldo_AI_ApplyMode", "BOTH"]', mission_config)
+        self.assertNotIn("Waldo_AI_Mode", mission_config + profile_init + apply_profile + runtime)
+        self.assertNotIn('["Waldo_AI_Profile",', profile_init + apply_profile)
 
     def test_tactical_display_and_audit_economy_use_real_supported_paths(self):
         tactical = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplaySetupLocal.sqf").read_text(encoding="utf-8")
@@ -1486,6 +1613,7 @@ class FullAuditTests(unittest.TestCase):
             self.assertIn("EDIT FOR A NORMAL MISSION:", text)
             self.assertIn("LEAVE ALONE UNLESS EXTENDING/TESTING:", text)
             self.assertIn("CUSTOM CALLS:", text)
+            self.assertIn("HOW TO READ THE DATA BELOW:", text)
             self.assertIn("createHashMapFromArray", text)
             for forbidden in (" spawn ", "execVM", "remoteExec", "addEventHandler", "waitUntil"):
                 self.assertNotIn(forbidden, text, filename)
@@ -1493,14 +1621,20 @@ class FullAuditTests(unittest.TestCase):
         self.assertTrue((config_root / "acreConfig.sqf").is_file())
         acre_config = (config_root / "acreConfig.sqf").read_text(encoding="utf-8")
         self.assertIn("CUSTOMISATION GUIDE", acre_config)
-        self.assertIn("COMPATIBILITY", acre_config)
         self.assertIn("ACTIVATION MODEL: AUTOMATIC WHEN ENABLED", acre_config)
         self.assertIn("EDIT FOR A NORMAL MISSION:", acre_config)
         self.assertIn("LEAVE ALONE UNLESS EXTENDING/TESTING:", acre_config)
         self.assertIn("CUSTOM CALLS:", acre_config)
+        self.assertIn("HOW TO READ THE DATA BELOW:", acre_config)
+        self.assertIn("PLAYER LOADOUT AND RESPAWN RULES:", acre_config)
+        self.assertIn("PTT keybind defaults are never changed", acre_config)
+        persistence_config = (config_root / "persistenceConfig.sqf").read_text(encoding="utf-8")
+        self.assertIn("LOADOUTS AND PLAYER-LEVEL ACRE STATE:", persistence_config)
+        self.assertIn("[base radio class, same-type occurrence]", persistence_config)
         manifest_text = (config_root / "featureConfigManifest.sqf").read_text(encoding="utf-8")
         self.assertIn("ACTIVATION MODEL: INFRASTRUCTURE ONLY", manifest_text)
         self.assertIn("EDIT FOR A NORMAL MISSION: nothing", manifest_text)
+        self.assertIn("HOW TO READ THE DATA BELOW:", manifest_text)
         self.assertIn("if (_scope == 'SERVER' && {_publish})", loader)
         self.assertIn("if (isNil _name)", loader)
         self.assertIn("setVariable ['Waldo_Jamming_ConfigReady', _valid, true]", loader)
@@ -1513,6 +1647,8 @@ class FullAuditTests(unittest.TestCase):
         for required in (
             "Activation models", "Feature activation table", "Where custom calls belong",
             "initServer.sqf", "initPlayerLocal.sqf", "init.sqf",
+            "Loadout saving and ACRE radio state",
+            "If you are new to Arma mission scripting",
         ):
             self.assertIn(required, config_readme)
         for required in (

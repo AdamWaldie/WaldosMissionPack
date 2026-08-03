@@ -97,7 +97,7 @@ is replayed to JIP by the feature.
 **Normally edit:** enabled, PRC-343 policy, named displays, side nets, group mappings, explicit
 same-type radio assignments, player/role overrides and Babel.
 
-**Normally leave:** schema version, strict validation and advanced third-party
+**Normally leave:** strict validation and advanced third-party
 profile extensions. Built-in capability profiles are code-owned. No init call is needed.
 
 Explicit entries support multiple same-type radios and independent ears:

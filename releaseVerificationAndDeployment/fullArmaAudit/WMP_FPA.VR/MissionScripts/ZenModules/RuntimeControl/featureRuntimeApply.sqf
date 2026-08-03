@@ -34,6 +34,14 @@ if (remoteExecutedOwner > 0) then {
 if !(_authorized) exitWith {false};
 private _requestOwner = if (remoteExecutedOwner > 0) then {remoteExecutedOwner} else {2};
 
+private _reply = {
+    params ["_title", "_message", "_state", "_key"];
+    diag_log format ["[WMP ZEN SERVER] action=%1 owner=%2 result=%3 detail=%4", _action, _requestOwner, _state, _message];
+    if (_requestOwner > 2) then {
+        [_title, _message, _state, _key, 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+    };
+};
+
 private _publish = {
     params ["_name", "_value"];
     missionNamespace setVariable [_name, _value, true];
@@ -121,15 +129,21 @@ switch (toUpperANSI _action) do {
     };
     case "RECOVERY_WORKSHOP": {
         _settings params ["_object", "_key", "_radius", "_side", ["_notificationRadius", -1, [0]], ["_createMarkers", missionNamespace getVariable ["Waldo_Recovery_CreateWorkshopMarkers", true], [true]]];
-        [_object, _key, _radius, _side, _notificationRadius, _createMarkers] call Waldo_fnc_RecoveryRegisterWorkshop;
+        private _ok = [_object, _key, _radius, _side, _notificationRadius, _createMarkers] call Waldo_fnc_RecoveryRegisterWorkshop;
+        ["VEHICLE RECOVERY", if (_ok) then {format ["Workshop %1 registered.", toUpperANSI _key]} else {"Workshop registration was rejected. Check the selected object and server RPT."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "RECOVERY_ZEN"] call _reply;
+        _ok
     };
     case "RECOVERY_VEHICLE": {
         _settings params ["_object", "_key", "_damage", "_destroyed", "_engineer", "_package", "_cargo", "_fuel", ["_interaction", []]];
-        [_object, _key, _damage, _destroyed, _engineer, _package, _cargo, _fuel, _interaction] call Waldo_fnc_RecoveryRegisterVehicle;
+        private _ok = [_object, _key, _damage, _destroyed, _engineer, _package, _cargo, _fuel, _interaction] call Waldo_fnc_RecoveryRegisterVehicle;
+        ["VEHICLE RECOVERY", if (_ok) then {"Vehicle registered for recovery."} else {"Vehicle registration was rejected. Check the target and workshop key."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "RECOVERY_ZEN"] call _reply;
+        _ok
     };
     case "RECOVERY_CARRIER": {
         _settings params ["_object", "_range", ["_mode", "AUTO"], ["_capacity", 1]];
-        [_object, _range, _mode, _capacity] call Waldo_fnc_RecoveryRegisterCarrier;
+        private _ok = [_object, _range, _mode, _capacity] call Waldo_fnc_RecoveryRegisterCarrier;
+        ["VEHICLE RECOVERY", if (_ok) then {format ["Recovery carrier registered in %1 mode.", toUpperANSI _mode]} else {"Carrier registration was rejected. Check the selected vehicle."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "RECOVERY_ZEN"] call _reply;
+        _ok
     };
     case "RALLY_CONFIG": {
         _settings params ["_enable", "_objectClass", "_duration", "_deploymentTime", "_cooldown", "_enemyRadius", "_minimumMembers", "_placement", "_slope", "_regroup"];

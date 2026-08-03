@@ -136,12 +136,10 @@
             _statusCtrl ctrlCommit 0;
         };
 
-        private _result = [_complexityKey, _selections, name player] call Waldo_fnc_EcoCore_applyPresetSelections;
-        private _successCount = _result param [0, 0];
-        private _message = _result param [1, ""];
-        if (_message isEqualTo "") then {
-            _message = "No preset work was performed.";
-        };
+        ["APPLY_PRESET", [_complexityKey, _selections, name player], player]
+            remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
+        private _successCount = 1;
+        private _message = "Preset request sent to the server. The result will appear as a WMP notification.";
 
         _statusCtrl ctrlSetText _message;
         _statusCtrl ctrlCommit 0;

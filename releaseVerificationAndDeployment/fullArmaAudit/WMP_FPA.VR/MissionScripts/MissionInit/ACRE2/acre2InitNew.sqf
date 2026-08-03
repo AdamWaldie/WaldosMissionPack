@@ -1,13 +1,17 @@
 /*
  * Author: WaldoTheWarfighter
- * Orchestrates schema-three ACRE lifecycle ownership. The server publishes one complete plan value
- * for JIP. Interface clients debounce initial join, player-object replacement and group changes into
- * the readiness-aware refresh helper; authoritative defaults never live in multiplayer init.sqf.
+ * Orchestrates ACRE lifecycle ownership. The server publishes one complete plan value
+ * for JIP. The plan seeds each player's initial radio state once. Later player saves own their
+ * respawn state; player-object replacement and group changes refresh Babel/CEOI without retuning.
+ * Authoritative defaults never live in multiplayer init.sqf.
+ * Locality and authority: called by server and player-local lifecycle files. The server compiles
+ * and publishes the plan; each interface client applies only its own initial radios/Babel/CEOI.
  *
  * Arguments: None.
  * Return Value: BOOL - true when this machine accepted or started its applicable lifecycle stage.
  *
  * Example: [] call Waldo_fnc_ACRE2Init;
+ * Result: the applicable server or player-local ACRE lifecycle stage starts once, when available.
  * Current callers: initServer.sqf and initPlayerLocal.sqf.
  */
 if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {missionNamespace setVariable ["Waldo_ACRE2_Available", false]; false};

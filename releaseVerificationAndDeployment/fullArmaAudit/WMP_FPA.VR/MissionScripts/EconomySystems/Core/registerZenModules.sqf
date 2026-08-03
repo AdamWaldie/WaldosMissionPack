@@ -76,7 +76,7 @@
         {
             ["Resource - Toggle Resource Visibility", _this] call Waldo_fnc_EcoCore_logZenModule;
             if !(call Waldo_fnc_EcoCore_zenModuleGuard) exitWith {};
-            [name player] call Waldo_fnc_EcoResource_toggleResourceMarkerVisibility;
+            ["TOGGLE_MARKERS", [name player], player] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         },
     _icon] call zen_custom_modules_fnc_register;
 
@@ -95,7 +95,8 @@
             ["Research - Create Research Center", _this] call Waldo_fnc_EcoCore_logZenModule;
             params ["_modulePos"];
             if !(call Waldo_fnc_EcoCore_zenModuleGuard) exitWith {};
-            [[_modulePos] call Waldo_fnc_EcoCore_zenPlacementPos] call Waldo_fnc_EcoResearch_spawnResearchCenter;
+            ["SPAWN_RESEARCH_CENTER", [[_modulePos] call Waldo_fnc_EcoCore_zenPlacementPos], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         },
     _icon] call zen_custom_modules_fnc_register;
 
@@ -123,7 +124,8 @@
             ["Construction - Spawn Construction Vehicle", _this] call Waldo_fnc_EcoCore_logZenModule;
             params ["_modulePos"];
             if !(call Waldo_fnc_EcoCore_zenModuleGuard) exitWith {};
-            [[_modulePos] call Waldo_fnc_EcoCore_zenPlacementPos, "B_Truck_01_box_F"] call Waldo_fnc_EcoBuild_spawnConstructionVehicle;
+            ["SPAWN_CONSTRUCTION_VEHICLE", [[_modulePos] call Waldo_fnc_EcoCore_zenPlacementPos, "B_Truck_01_box_F"], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         },
     _icon] call zen_custom_modules_fnc_register;
 
@@ -151,7 +153,8 @@
             ["Buy - Spawn Laptop", _this] call Waldo_fnc_EcoCore_logZenModule;
             params ["_modulePos"];
             if !(call Waldo_fnc_EcoCore_zenModuleGuard) exitWith {};
-            [[_modulePos] call Waldo_fnc_EcoCore_zenPlacementPos, getDir curatorCamera] call Waldo_fnc_EcoBuy_spawnPurchaseLaptop;
+            ["SPAWN_PURCHASE_LAPTOP", [[_modulePos] call Waldo_fnc_EcoCore_zenPlacementPos, getDir curatorCamera], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         },
     _icon] call zen_custom_modules_fnc_register;
 
@@ -171,7 +174,8 @@
         {
             ["Toggle Commitment Mode", _this] call Waldo_fnc_EcoCore_logZenModule;
             if !(call Waldo_fnc_EcoCore_zenModuleGuard) exitWith {};
-            [] call Waldo_fnc_EcoCore_toggleCommitmentMode;
+            ["SET_COMMITMENT", [!([] call Waldo_fnc_EcoCore_isCommitmentModeEnabled), true, player], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         },
     _icon] call zen_custom_modules_fnc_register;
 
@@ -179,7 +183,8 @@
         {
             ["Toggle Testing Notice", _this] call Waldo_fnc_EcoCore_logZenModule;
             if !(call Waldo_fnc_EcoCore_zenModuleGuard) exitWith {};
-            [] call Waldo_fnc_EcoCore_toggleTestingNotice;
+            ["SET_TEST_NOTICE", [!([] call Waldo_fnc_EcoCore_isTestingNoticeEnabled), true, player], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         },
     _icon] call zen_custom_modules_fnc_register;
 

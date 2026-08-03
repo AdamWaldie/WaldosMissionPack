@@ -2,21 +2,33 @@
 
 > **Use this page when:** you need repeatable PRC-343 block/channel allocation by side and group.
 
-PRC-343 assignments are compiled on the server from `MissionConfig\acreConfig.sqf` and broadcast in the versioned ACRE plan. The key is side plus normalised group ID, so identical callsigns on opposing sides cannot overwrite one another.
+PRC-343 assignments come from `MissionConfig\acreConfig.sqf`. The server sends the completed setup
+to players, while each player's own computer configures the radio they carry. Side and group ID are
+both used, so identical callsigns on opposing sides do not overwrite one another.
 
 The group's simple fallback uses `[block, channel]` and reserves its slot before automatic allocation:
 
 ```sqf
-["VIKING-1-1", ["PLT1"], [1, 1], []]
+[
+    "VIKING-1-1", // 0: exact Eden groupId for the squad.
+    ["PLT1"],      // 1: preferred named nets for other supported radios.
+    [1, 1],        // 2: first PRC-343 starts on block 1, channel 1.
+    []             // 3: no additional per-radio assignments.
+]
 ```
+
+Replace `[1, 1]` with `[]` if WMP should choose the PRC-343 block/channel automatically from the
+groupId.
 
 To manage more than one PRC-343 independently, use same-type occurrence assignments:
 
 ```sqf
-["VIKING-1-1", ["PLT1"], [1, 1], [
-    ["ACRE_PRC343", 1, [1, 1], "LEFT"],
-    ["ACRE_PRC343", 2, [1, 2], "RIGHT"]
-]]
+[
+    "VIKING-1-1", ["PLT1"], [], [
+        ["ACRE_PRC343", 1, [1, 1], "LEFT"],  // first PRC-343 -> B1/C1 -> left ear.
+        ["ACRE_PRC343", 2, [1, 2], "RIGHT"]  // second PRC-343 -> B1/C2 -> right ear.
+    ]
+]
 ```
 
 Only listed occurrences are changed. A third or captured PRC-343 remains untouched. Ear accepts `LEFT`, `RIGHT`, `BOTH` or `CENTER`; `BOTH` becomes ACRE `CENTER`.

@@ -81,7 +81,8 @@ _disp setVariable ["WaldoEcoResource_ValuePromptCancel", _cancel];
             private _rows = [ctrlText _resourcesCtrl] call Waldo_fnc_EcoResource_parseResourceRowsText;
             if ((count _rows) <= 0) exitWith {};
 
-            [_pos, _rows] call Waldo_fnc_EcoResource_spawnResourceCrate;
+            ["SPAWN_RESOURCE_CRATE", [_pos, _rows], player]
+                remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
             [_disp] call Waldo_fnc_EcoResource_cleanupResourceCratePrompt;
         }
     ];

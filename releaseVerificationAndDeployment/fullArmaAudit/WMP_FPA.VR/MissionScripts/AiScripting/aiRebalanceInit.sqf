@@ -6,6 +6,8 @@
  * units, including Zeus placements, and a per-unit Local event handler reapplies the active profile
  * after server/headless-client ownership changes. Players are never modified. WMP Line is the
  * default baseline; its established values are intentionally retained rather than made harder.
+ * Locality and authority: run on every AI-owning machine. Server/JIP runtime state selects the
+ * profile; each server or headless-client owner applies skills only to its local AI.
  *
  * Arguments:
  * 0: mode <STRING> - DAY or NIGHT
@@ -16,6 +18,7 @@
  *
  * Example:
  * ["NIGHT", "LINE"] call Waldo_fnc_AIRebalanceInit;
+ * Result: eligible existing and newly local AI use WMP Line's low-light skill values.
  *
  * Current callers: AITweak startup wrapper, AI ZEN runtime control and JIP runtime replay.
  */
@@ -90,8 +93,8 @@ if !(_profile in (keys _profiles)) exitWith {
     false
 };
 
-missionNamespace setVariable ["Waldo_AI_Mode", _mode, isServer];
-missionNamespace setVariable ["Waldo_AI_Profile", _profile, isServer];
+missionNamespace setVariable ["Waldo_AIRebalance_Mode", _mode, isServer];
+missionNamespace setVariable ["Waldo_AIRebalance_Profile", _profile, isServer];
 missionNamespace setVariable ["Waldo_AI_RebalanceActive", true, isServer];
 if (isServer) then {
     missionNamespace setVariable ["Waldo_AIRebalance_Enable", true, true];

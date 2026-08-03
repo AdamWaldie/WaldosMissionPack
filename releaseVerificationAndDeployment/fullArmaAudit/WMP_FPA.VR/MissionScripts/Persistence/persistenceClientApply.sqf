@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies a server-supplied persistence state to the local player after validation.
+ * Locality and authority: the server remote-executes this on the owning player client. It rejects
+ * requests from any non-server remote owner and mutates only the local player.
  *
  * Arguments:
  * 0: state <ARRAY> - versioned player-state payload
@@ -10,6 +12,12 @@
  *
  * Example:
  * [_state] remoteExecCall ["Waldo_fnc_PersistenceClientApply", owner _player];
+ *
+ * Result:
+ * The owning client restores configured player state and prepares its ordinary respawn snapshot.
+ *
+ * Current callers:
+ * Waldo_fnc_PersistenceServerHandleLoadPlayer on the server.
  */
 
 params [["_state", [], [[]]]];
@@ -23,11 +31,13 @@ if (_version != 1) exitWith {
     false
 };
 
-missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", true];
+missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
 if (missionNamespace getVariable ["Waldo_Persistence_SaveLoadout", true] && {count _loadout > 0}) then {
-    player setUnitLoadout ([_loadout] call Waldo_fnc_ACRE2FilterLoadout);
+    private _filteredLoadout = [_loadout] call Waldo_fnc_ACRE2FilterLoadout;
+    player setUnitLoadout _filteredLoadout;
+    missionNamespace setVariable ["Waldo_Player_Inventory", _filteredLoadout];
     missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1];
-    missionNamespace setVariable ["Waldo_ACRE2_PersistenceRadioGeneration", -1];
+    missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
 };
 if (missionNamespace getVariable ["Waldo_Persistence_SaveMedical", true] && {count _medical > 0} && {isClass (configFile >> "CfgPatches" >> "ace_medical")}) then {
     [player, _medical] call ace_medical_fnc_deserializeState;
@@ -43,19 +53,21 @@ if (missionNamespace getVariable ["Waldo_Persistence_SavePosition", false] && {c
 
 private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
 if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {count _radios > 0}) then {
+    missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
     [_radios, _generation] spawn {
         params ["_savedRadios", "_loadoutGeneration"];
         if !([_savedRadios, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState) then {
             diag_log "[WMP PERSISTENCE] Saved ACRE radio state could not be restored; applying the current mission plan.";
-            missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", false];
+            missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
             ["PERSISTENCE_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         } else {
-            missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", false];
+            missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios];
+            missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
             ["PERSISTENCE_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         };
     };
 } else {
-    missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", false];
+    missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
     ["PERSISTENCE_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
 };
 

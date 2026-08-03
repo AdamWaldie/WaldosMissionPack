@@ -140,7 +140,7 @@ Option B - load a full configuration string you exported earlier from the Zeus "
 
 Option C - hand-author the whole economy (define your own resources / research / buildings /
            purchases and pre-place zones, crates, research centers, terminals and drop points
-           at map markers): edit economyConfig.sqf in the mission root. You can also designate
+           at map markers): edit MissionConfig\economyConfig.sqf. You can also designate
            vanilla objects placed in Eden via their init field, e.g.
                [this] call Waldo_fnc_EcoResearch_registerCenter;     // on a Land_Research_HQ_F
                [this] call Waldo_fnc_EcoBuy_registerTerminal;        // on a Land_Laptop_unfolded_F

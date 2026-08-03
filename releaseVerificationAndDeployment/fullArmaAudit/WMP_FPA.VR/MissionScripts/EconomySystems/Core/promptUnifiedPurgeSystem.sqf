@@ -253,22 +253,26 @@
         private _purgeModule = (!isNull _moduleCheck) && {cbChecked _moduleCheck};
 
         if (_purgeModule) then {
-            [] call Waldo_fnc_EcoCore_purgeEconomySystems;
+            ["PURGE_ALL", [], player] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         } else {
             [
+                "PURGE",
                 [
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigResourcesCheck", controlNull]),
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigBuildingsCheck", controlNull]),
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigResearchCheck", controlNull]),
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigBuyCheck", controlNull])
+                    [
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigResourcesCheck", controlNull]),
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigBuildingsCheck", controlNull]),
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigResearchCheck", controlNull]),
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeConfigBuyCheck", controlNull])
+                    ],
+                    [
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesBuildingsCheck", controlNull]),
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesResourcesCheck", controlNull]),
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesContainersCheck", controlNull]),
+                        cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesGroundCommandCheck", controlNull])
+                    ]
                 ],
-                [
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesBuildingsCheck", controlNull]),
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesResourcesCheck", controlNull]),
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesContainersCheck", controlNull]),
-                    cbChecked (_disp getVariable ["WaldoEcoCore_PurgeValuesGroundCommandCheck", controlNull])
-                ]
-            ] call Waldo_fnc_EcoCore_executeUnifiedPurge;
+                player
+            ] remoteExecCall ["Waldo_fnc_EcoCore_zenServerRequest", 2];
         };
 
         if (!isNull _disp) then {

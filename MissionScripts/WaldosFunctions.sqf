@@ -17,6 +17,9 @@ class CfgFunctions
             class LoadFeatureConfigs {
                 file = "MissionScripts\MissionInit\Configuration\loadFeatureConfigs.sqf";
             };
+            class CreateRuntimeId {
+                file = "MissionScripts\MissionInit\Configuration\createRuntimeId.sqf";
+            };
             class GetPlayerGroup {
                 file = "MissionScripts\MissionInit\InitHelpers\GetPlayerGroup.sqf";
             };
@@ -484,6 +487,9 @@ class CfgFunctions
             class FortifyBudgetModule {
                 file = "MissionScripts\ZenModules\Zen_fortifyBudgetModule.sqf";
             };
+            class ZenFortifyBudgetServer {
+                file = "MissionScripts\ZenModules\zenFortifyBudgetServer.sqf";
+            };
             class ZenConvoyModule {
                 file = "MissionScripts\ZenModules\Zen_convoyModule.sqf";
             };
@@ -514,8 +520,14 @@ class CfgFunctions
             class ZenEMP {
                 file = "MissionScripts\ZenModules\Zen_empModule.sqf";
             };
+            class ZenEMPServer {
+                file = "MissionScripts\ZenModules\zenEMPServer.sqf";
+            };
             class ZenTracker {
                 file = "MissionScripts\ZenModules\Zen_trackerModule.sqf";
+            };
+            class ZenTrackerServer {
+                file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
             };
         };
         class Paradrop {
@@ -784,6 +796,9 @@ class CfgFunctions
             class EcoCore_registerZenModules {
                 file = "MissionScripts\EconomySystems\Core\registerZenModules.sqf";
             };
+            class EcoCore_zenServerRequest {
+                file = "MissionScripts\EconomySystems\Core\zenServerRequest.sqf";
+            };
             class EcoCore_logZenModule {
                 file = "MissionScripts\EconomySystems\Core\logZenModule.sqf";
             };
@@ -806,7 +821,7 @@ class CfgFunctions
                 file = "MissionScripts\EconomySystems\Core\notifyActorLocal.sqf";
             };
             class EcoMakerSetup {
-                file = "economyConfig.sqf";
+                file = "MissionConfig\economyConfig.sqf";
             };
             class EcoCore_canRunAuthority {
                 file = "MissionScripts\EconomySystems\Core\canRunAuthority.sqf";
