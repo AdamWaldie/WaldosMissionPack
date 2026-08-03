@@ -704,7 +704,16 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("getPos [_staticSiteSpacing", dynamic_aa)
         self.assertIn('getOrDefault ["maximumOperationalRadarDamage", 0.8]', dynamic_aa_detector)
         self.assertIn("damage _radar >= _maximumRadarDamage", dynamic_aa_detector)
+        self.assertIn("!simulationEnabled _radar", dynamic_aa_detector)
         self.assertIn("radarOperationalCondition", dynamic_aa_detector)
+        dynamic_aa_state = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAASetGroupState.sqf").read_text(encoding="utf-8")
+        dynamic_aa_destroy = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAADestroy.sqf").read_text(encoding="utf-8")
+        self.assertIn('_x disableAI "AUTOTARGET"', dynamic_aa_state)
+        self.assertNotIn('_x enableAI "AUTOTARGET"', dynamic_aa_state)
+        self.assertIn('_eligibleTargets', dynamic_aa_state)
+        self.assertIn('[_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo', dynamic_aa_destroy)
+        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', dynamic_aa)
+        self.assertIn('getOrDefault ["showAltitudeLimits", true]', dynamic_aa)
 
         recovery = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterWorkshop.sqf").read_text(encoding="utf-8")
         restore = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
@@ -884,10 +893,23 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('AI skill', zen)
         route = (ao_dir / "dynamicAOAddPatrolWaypoints.sqf").read_text(encoding="utf-8")
         for token in (
-            'deleteWaypoint', 'enableAI "PATH"', 'enableAI "MOVE"', 'setCurrentWaypoint',
-            'setBehaviour _behaviour', 'setSpeedMode _speed', 'setWaypointFormation _formation',
+            'enableAI "PATH"', 'enableAI "MOVE"', 'setBehaviour _behaviour',
+            'setSpeedMode _speed', 'setWaypointFormation _formation',
         ):
             self.assertIn(token, route)
+        self.assertNotIn('deleteWaypoint', route)
+        self.assertNotIn('setCurrentWaypoint', route)
+        self.assertNotIn('doMove', route)
+        placement = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZenPlacement.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('openMap', placement)
+        self.assertNotIn('onMapSingleClick', placement)
+        self.assertIn('server is placing its assets', placement)
+        self.assertIn('_objects pushBack _unit', create)
+        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', create)
+        self.assertIn('_position, 12] call _spawnUnit', create)
+        self.assertIn('_point setMarkerText _displayName', create)
+        self.assertIn('["displayName", _displayName]', zen)
+        self.assertIn('Off by default for Zeus-created AOs."], false]', zen)
         self.assertIn('_group addVehicle _vehicle', create)
         self.assertIn('"SAFE", "LIMITED", ["COLUMN", "STAG COLUMN", "WEDGE"]', create)
         self.assertIn('"AWARE", "NORMAL"', create)

@@ -3,9 +3,10 @@
  * Replaces a group's current route with a bounded cyclic patrol around a centre.
  *
  * Simple pathing creates two movement points and a cycle; standard pathing creates four varied
- * points. The group's synthetic creation waypoints are removed, pathing is re-enabled and the
- * first generated waypoint is made current explicitly. Behaviour, speed and an optional formation
- * pool are applied immediately and to every waypoint. Aircraft receive their requested flight
+ * points. Arma's synthetic creation waypoint is deliberately left intact so the engine can advance
+ * naturally into the generated route; forcing a separate direct movement order can supersede or stall that
+ * route on a dedicated server. Behaviour, speed and an optional formation pool are applied
+ * immediately and to every waypoint. Aircraft receive their requested flight
  * radius while ground groups stay inside the AO.
  * Current caller: DynamicAOCreate for infantry, vehicles, civilians and air patrols.
  *
@@ -35,12 +36,9 @@ if (!local _group) exitWith {
     _group
 };
 
-// createGroup/createUnit leave completed synthetic waypoints behind. Appending a patrol does not
-// reliably advance every newly created group onto it, so replace the route and activate it here.
-private _existingWaypoints = waypoints _group;
-for "_index" from ((count _existingWaypoints) - 1) to 0 step -1 do {
-    deleteWaypoint (_existingWaypoints select _index);
-};
+// Waypoint zero is Arma's synthetic group waypoint. Keep it and let the engine complete it before
+// entering waypoint one. The previous explicit current-waypoint plus direct-move handoff left groups with
+// an apparently active route but no movement on dedicated servers.
 {
     _x enableAI "PATH";
     _x enableAI "MOVE";
@@ -53,7 +51,6 @@ if (_formation != "") then {_group setFormation _formation};
 
 private _count = if (_simple) then {2} else {4};
 private _offset = random 360;
-private _firstWaypoint = [];
 for "_index" from 0 to (_count - 1) do {
     private _distance = _radius * (if (_simple) then {0.7} else {0.45 + random 0.45});
     private _position = _centre getPos [_distance, _offset + (_index * (360 / _count))];
@@ -63,11 +60,9 @@ for "_index" from 0 to (_count - 1) do {
     _waypoint setWaypointSpeed _speed;
     if (_formation != "") then {_waypoint setWaypointFormation _formation};
     _waypoint setWaypointCompletionRadius ((_radius * 0.08) max 15);
-    if (_index == 0) then {_firstWaypoint = _waypoint};
 };
 private _cycle = _group addWaypoint [_centre, 0];
 _cycle setWaypointType "CYCLE";
-if (count _firstWaypoint > 0) then {_group setCurrentWaypoint _firstWaypoint};
 diag_log format [
     "[WMP DYNAMIC AO] Route armed group=%1 local=%2 waypoints=%3 current=%4 units=%5 behaviour=%6 speed=%7 formation=%8.",
     _group, local _group, count waypoints _group, currentWaypoint _group, count units _group,

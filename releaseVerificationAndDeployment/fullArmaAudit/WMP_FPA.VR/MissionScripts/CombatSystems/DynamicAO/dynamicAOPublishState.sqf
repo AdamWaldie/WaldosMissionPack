@@ -3,7 +3,7 @@
  * Publishes a compact, JIP-safe list of active Dynamic AO systems.
  *
  * Object and group registries stay server-local; clients receive only identifiers, centres,
- * radii, sides, factions and anchors needed by ZEN cleanup and diagnostics. Called after every
+ * radii, sides, factions, anchors and display names needed by ZEN cleanup and diagnostics. Called after every
  * create, whole-AO cleanup and minefield cleanup operation.
  *
  * Arguments: None
@@ -24,7 +24,7 @@ private _summaries = [];
     private _config = _state get "config";
     _summaries pushBack [
         _x, _config get "center", _config get "radius", _config get "side",
-        _config get "faction", _state getOrDefault ["anchor", objNull]
+        _config get "faction", _state getOrDefault ["anchor", objNull], _config getOrDefault ["displayName", _x]
     ];
 } forEach keys _registry;
 missionNamespace setVariable ["Waldo_DynamicAO_PublicSystems", _summaries, true];

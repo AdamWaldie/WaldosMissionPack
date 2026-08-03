@@ -10,9 +10,12 @@
  *    Required: id <STRING> safe unique key; centre <ARRAY> detection centre.
  *    Detection: side <SIDE>, radius, minimumAltitude, maximumAltitude, engagementRadius <METRES>,
  *      detectionDwell, clearDelay and detectionInterval <SECONDS>.
- *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY>;
- *      staticSiteSpacing <METRES>; radarDirection <DEGREES>.
+ *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY> for
+ *      authored layouts. Otherwise radarCount/staticCount/mobileCount produce a terrain-safe,
+ *      server-generated layout around centre. staticSiteSpacing <METRES>; radarDirection <DEGREES>.
  *    Response: fighterCount <NUMBER>; initialAmmoFraction <0..1>; createMarkers <BOOL>.
+ *      showAltitudeLimits <BOOL> controls whether marker text includes both floor and ceiling
+ *      and defaults true; it does not enable markers by itself.
  *    Pool selection: faction <STRING> is a content profile independent of side. Exact ZEN selection
  *      uses radarAssignments/staticAssignments/mobileAssignments/fighterAssignments, with one class
  *      per requested slot. Script callers may still use the singular class overrides. Omitted values
@@ -83,11 +86,61 @@ private _clearDelay = (_config getOrDefault ["clearDelay", 5]) max 0;
 private _staticSiteSpacing = ((_config getOrDefault ["staticSiteSpacing", 30]) max 10) min 200;
 private _fighterCount = round (((_config getOrDefault ["fighterCount", 0]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumFighters", 12]));
 private _detectionInterval = (_config getOrDefault ["detectionInterval", missionNamespace getVariable ["Waldo_DynamicAA_DefaultDetectionInterval", 1]]) max 0.25;
-private _radarPosition = _config getOrDefault ["radarPosition", _centre];
-private _radarPositions = _config getOrDefault ["radarPositions", [_radarPosition]];
-if (count _radarPositions == 0) then {_radarPositions = [_radarPosition]};
-private _staticPositions = _config getOrDefault ["staticPositions", []];
-private _mobilePositions = _config getOrDefault ["mobilePositions", []];
+private _reservedLayoutPositions = [];
+private _safeLayoutPosition = {
+    params ["_candidate", "_size"];
+    private _safe = +_candidate;
+    private _accepted = false;
+    for "_attempt" from 0 to 23 do {
+        private _searchCentre = if (_attempt == 0) then {_candidate} else {
+            _candidate getPos [15 + (_attempt * 7), (_attempt * 137.5) mod 360]
+        };
+        private _found = [_searchCentre, 0, 55, _size, 0, 0.35, 0, [], [_searchCentre, _searchCentre]] call BIS_fnc_findSafePos;
+        _found = [_found select 0, _found select 1, 0];
+        private _overlap = _reservedLayoutPositions findIf {
+            _x params ["_position", "_reservedSize"];
+            _found distance2D _position < (_size + _reservedSize + 6)
+        };
+        if (_overlap < 0) exitWith {_safe = _found; _accepted = true};
+    };
+    if !(_accepted) then {
+        _safe = _candidate getPos [75 + (count _reservedLayoutPositions * 25), (count _reservedLayoutPositions * 137.5) mod 360];
+        _safe set [2, 0];
+    };
+    _reservedLayoutPositions pushBack [_safe, _size];
+    _safe
+};
+private _makeLayoutRing = {
+    params ["_count", "_distance", "_size", ["_includeCentre", false]];
+    private _positions = [];
+    private _centreOffset = if (_includeCentre) then {1} else {0};
+    for "_index" from 0 to (_count - 1) do {
+        private _candidate = if (_includeCentre && {_index == 0}) then {
+            +_centre
+        } else {
+            private _ringIndex = _index - _centreOffset;
+            private _ringCount = _count - _centreOffset;
+            _centre getPos [_distance, (_ringIndex * (360 / (_ringCount max 1))) + 22.5]
+        };
+        _positions pushBack ([_candidate, _size] call _safeLayoutPosition);
+    };
+    _positions
+};
+private _radarPositions = if ("radarPositions" in keys _config) then {
+    +(_config get "radarPositions")
+} else {
+    if ("radarPosition" in keys _config) then {[_config get "radarPosition"]} else {
+        [round ((_config getOrDefault ["radarCount", 1]) max 1 min 4), 90, 18, true] call _makeLayoutRing
+    }
+};
+if (count _radarPositions == 0) then {_radarPositions = [[_centre, 18] call _safeLayoutPosition]};
+private _layoutRadius = ((_radius * 0.35) max 120) min 700;
+private _staticPositions = if ("staticPositions" in keys _config) then {+(_config get "staticPositions")} else {
+    [round ((_config getOrDefault ["staticCount", 0]) max 0 min 8), _layoutRadius, 16, false] call _makeLayoutRing
+};
+private _mobilePositions = if ("mobilePositions" in keys _config) then {+(_config get "mobilePositions")} else {
+    [round ((_config getOrDefault ["mobileCount", 0]) max 0 min 8), _layoutRadius * 0.72, 12, false] call _makeLayoutRing
+};
 private _radarAssignments = _config getOrDefault ["radarAssignments", []];
 private _staticAssignments = _config getOrDefault ["staticAssignments", []];
 private _mobileAssignments = _config getOrDefault ["mobileAssignments", []];
@@ -146,7 +199,7 @@ _config set ["clearDelay", _clearDelay];
 _config set ["staticSiteSpacing", _staticSiteSpacing];
 _config set ["fighterCount", _fighterCount];
 _config set ["detectionInterval", _detectionInterval];
-_config set ["radarPosition", _radarPosition];
+_config set ["radarPosition", _radarPositions select 0];
 _config set ["radarPositions", _radarPositions];
 _config set ["radarClasses", _radarClasses];
 _config set ["staticSitePools", _staticSitePools];
@@ -244,7 +297,12 @@ if (_config getOrDefault ["createMarkers", true]) then {
     _iconMarker setMarkerShape "ICON";
     _iconMarker setMarkerType "o_antiair";
     _iconMarker setMarkerColor _colour;
-    _iconMarker setMarkerText format ["%1 AA - %2m / floor %3m", _id, round _radius, round _minimumAltitude];
+    private _markerText = if (_config getOrDefault ["showAltitudeLimits", true]) then {
+        format ["%1 AA - range %2m / floor %3m / ceiling %4m", _id, round _radius, round _minimumAltitude, round _maximumAltitude]
+    } else {
+        format ["%1 AA - range %2m", _id, round _radius]
+    };
+    _iconMarker setMarkerText _markerText;
     _markers = [_areaMarker, _iconMarker];
 };
 
@@ -256,6 +314,9 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
+private _editableObjects = +_objects;
+{{_editableObjects pushBackUnique _x} forEach units _x} forEach _groups;
+{_x addCuratorEditableObjects [_editableObjects, true]} forEach allCurators;
 if (_config getOrDefault ["shutdownInteraction", false]) then {
     private _interactionSettings = [_id, _config getOrDefault ["shutdownChallenge", "circuit"], _config getOrDefault ["shutdownDifficulty", "standard"]];
     _radar setVariable ["Waldo_DynamicAA_SystemId", _id, true];

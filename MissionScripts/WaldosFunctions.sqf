@@ -2282,6 +2282,9 @@ class CfgFunctions
             class MiniGameInteractionTableSetup {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionTableSetup.sqf";
             };
+            class MiniGameInteractionOptions {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionOptions.sqf";
+            };
             class MiniGameEquipmentPicker {
                 file = "MissionScripts\InteractionsMinigames\Integration\equipmentPicker.sqf";
             };

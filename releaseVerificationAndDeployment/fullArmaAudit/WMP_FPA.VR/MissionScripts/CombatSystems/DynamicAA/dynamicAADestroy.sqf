@@ -45,6 +45,11 @@ _state set ["active", false];
 {
     if (!isNull _x) then {[_x, false] call Waldo_fnc_DynamicAASetGroupState};
 } forEach (_state getOrDefault ["defenceGroups", []]);
+{
+    if (!isNull _x && {_x isKindOf "AllVehicles"}) then {
+        [_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo;
+    };
+} forEach (_state getOrDefault ["objects", []]);
 private _handle = _state getOrDefault ["handle", scriptNull];
 if !(scriptDone _handle) then {terminate _handle};
 

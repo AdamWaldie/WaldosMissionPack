@@ -27,7 +27,7 @@ while {true} do {
     private _radarCondition = _config getOrDefault ["radarOperationalCondition", {true}];
     private _operationalRadars = _radars select {
         private _radar = _x;
-        if (isNull _radar || {!alive _radar} || {damage _radar >= _maximumRadarDamage}) exitWith {false};
+        if (isNull _radar || {!alive _radar} || {!simulationEnabled _radar} || {damage _radar >= _maximumRadarDamage}) exitWith {false};
         private _customOperational = [_radar, _state, _config] call _radarCondition;
         !isNull _radar
         && {_customOperational isEqualType true}
@@ -35,7 +35,7 @@ while {true} do {
     };
     if (count _operationalRadars < _requiredRadars) exitWith {
         diag_log format ["[WMP DYNAMIC AA] '%1' offline: operational radars %2/%3.", _id, count _operationalRadars, _requiredRadars];
-        [_id, _config getOrDefault ["cleanupOnRadarLoss", false]] spawn Waldo_fnc_DynamicAADestroy;
+        [_id, _config getOrDefault ["cleanupOnRadarLoss", false]] call Waldo_fnc_DynamicAADestroy;
     };
 
     private _centre = _config get "centre";
@@ -91,6 +91,12 @@ while {true} do {
     private _engaged = _detected && {count _engagementAircraft > 0};
     private _wasEngaged = _state getOrDefault ["engaged", false];
 
+    // Re-issue only the currently eligible detector targets on every pass. This both follows a
+    // changing aircraft set and prevents a remembered below-floor or ground target from surviving.
+    if (_engaged) then {
+        {[_x, true, _engagementAircraft] call Waldo_fnc_DynamicAASetGroupState} forEach (_state getOrDefault ["defenceGroups", []]);
+    };
+
     if (_engaged != _wasEngaged) then {
         {
             private _defenceGroup = _x;
@@ -129,8 +135,8 @@ while {true} do {
     private _maximumWaves = _config getOrDefault ["fighterMaximumWaves", 1];
     private _wavesAvailable = _maximumWaves < 0 || {_waves < (_maximumWaves max 1)};
     private _cooldownMet = diag_tickTime - (_state getOrDefault ["lastFighterScramble", -1e10]) >= (_config getOrDefault ["fighterCooldown", 600]);
-    if (_detected && {_rawDetected} && {(_config getOrDefault ["fighterCount", 0]) > 0} && {_wavesAvailable} && {_cooldownMet}) then {
-        [_id, _aircraft] call Waldo_fnc_DynamicAASpawnFighters;
+    if (_engaged && {(_config getOrDefault ["fighterCount", 0]) > 0} && {_wavesAvailable} && {_cooldownMet}) then {
+        [_id, _engagementAircraft] call Waldo_fnc_DynamicAASpawnFighters;
     };
     sleep ((_config getOrDefault ["detectionInterval", 1]) max 0.25);
 };

@@ -352,6 +352,7 @@ switch (toUpperANSI _feature) do {
             private _name = getText (configFile >> "CfgVehicles" >> _x >> "displayName");
             if (_name == "") then {_x} else {_name}
         };
+        private _preparationOptions = ["repair"] call Waldo_fnc_MiniGameInteractionOptions;
         [
             "Register Recoverable Vehicle",
             [
@@ -363,7 +364,7 @@ switch (toUpperANSI _feature) do {
                 ["CHECKBOX", ["Preserve inventory", "Restore weapon, magazine, item and backpack cargo."], true],
                 ["SLIDER", ["Restored fuel", "Fuel fraction after workshop restoration."], [0, 1, 1, 2]],
                 ["CHECKBOX", ["Require Recovery Preparation", "Replace immediate packaging with a shared preparation procedure."], false],
-                ["COMBO", ["Preparation Procedure", "Repair is the semantic default; choose another only when it better fits the vehicle or scenario."], [["repair", "pressure", "circuit"], ["Mechanical repair", "Hydraulic stabilisation", "Electrical isolation"], 0]],
+                ["COMBO", ["Preparation Procedure", "Repair is the semantic default; every shared interaction procedure is available."], _preparationOptions],
                 ["COMBO", ["Procedure Difficulty", "Shared interaction difficulty profile."], [["easy", "standard", "hard", "expert"], ["Easy", "Standard", "Hard", "Expert"], 1]]
             ],
             {
@@ -421,6 +422,7 @@ switch (toUpperANSI _feature) do {
     case "TACTICAL_DISPLAY": {
         private _target = (nearestObjects [_modulePos, [], 25, true]) param [0, objNull];
         if (isNull _target) exitWith {systemChat "[WMP] No tactical-display object found within 25 metres."};
+        private _authenticationOptions = ["commandinput"] call Waldo_fnc_MiniGameInteractionOptions;
         [
             "Register Tactical Display",
             [
@@ -428,7 +430,7 @@ switch (toUpperANSI _feature) do {
                 ["SLIDER", ["Map radius", "Friendly and known-contact display radius."], [100, 20000, 2000, 0]],
                 ["CHECKBOX", ["Known enemies", "Show contacts known to the accessing player's group."], true],
                 ["CHECKBOX", ["Require Display Authentication", "Keep the display locked until a player completes the selected procedure."], false],
-                ["COMBO", ["Authentication Procedure", "Command authentication is the semantic default."], [["commandinput", "keypad", "lockpick"], ["Command authentication", "Access-code keypad", "Physical lock bypass"], 0]],
+                ["COMBO", ["Authentication Procedure", "Command authentication is the semantic default; every shared interaction procedure is available."], _authenticationOptions],
                 ["COMBO", ["Procedure Difficulty", "Shared interaction difficulty profile."], [["easy", "standard", "hard", "expert"], ["Easy", "Standard", "Hard", "Expert"], 1]]
             ],
             {
