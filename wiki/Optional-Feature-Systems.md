@@ -86,8 +86,9 @@ The aid is presentation-only and does not alter side relations or reveal enemies
 |---|---|---|
 | `Waldo_AccessibilityPID_Font` | `"PuristaBold"` | Arma font used for overhead tags. |
 | `Waldo_AccessibilityPID_TextScale` | `0.035` | Near-range base text size. |
-| `Waldo_AccessibilityPID_TextDistanceGrowth` | `0.0008` | Text-size increase per metre, preventing the tag shrinking away with range. |
-| `Waldo_AccessibilityPID_TextMaximumScale` | `0.07` | Hard cap on distance scaling. |
+| `Waldo_AccessibilityPID_TextDistanceGrowth` | `0.00025` | Gentle text-size increase per metre, preventing shrinkage without dominating the view. |
+| `Waldo_AccessibilityPID_TextMaximumScale` | `0.05` | Hard cap on distance scaling. |
+| `Waldo_AccessibilityPID_TextVerticalOffset` | `-0.32` | World-space vertical separation that places the name clearly below the chevron. |
 | `Waldo_AccessibilityPID_OutlineScale` | `1.12` | Size of the dark outline pass relative to the foreground. |
 | `Waldo_AccessibilityPID_OutlineColour` | `[0.03, 0.03, 0.03, 1]` | Outline colour; its alpha follows PID distance fade. |
 

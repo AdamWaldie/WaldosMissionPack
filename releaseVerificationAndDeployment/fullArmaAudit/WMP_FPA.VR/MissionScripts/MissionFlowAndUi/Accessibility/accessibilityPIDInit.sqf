@@ -2,8 +2,9 @@
  * Author: WaldoTheWarfighter
  * Installs an opt-in, configurable friendly identification overlay for eligible players. The
  * established icon-at-range and name-at-close-range behaviour is retained. Only the nearby name's
- * typography is enhanced with a bold two-pass label, tight dark outline and distance-compensated
- * sizing. All drawing remains local, theme/colour-vision aware and repeat-safe.
+ * typography is enhanced with a bold two-pass label, tight dark outline, bounded distance-
+ * compensated sizing and a separate below-icon anchor. All drawing remains local,
+ * theme/colour-vision aware and repeat-safe.
  *
  * Arguments:
  * None
@@ -60,8 +61,9 @@ private _eventId = addMissionEventHandler ["Draw3D", {
     private _showNames = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowNames", true];
     private _showVehicleCrew = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowVehicleCrew", false];
     private _font = missionNamespace getVariable ["Waldo_AccessibilityPID_Font", "PuristaBold"];
-    private _textGrowth = missionNamespace getVariable ["Waldo_AccessibilityPID_TextDistanceGrowth", 0.0008];
-    private _textMaximum = missionNamespace getVariable ["Waldo_AccessibilityPID_TextMaximumScale", 0.07];
+    private _textGrowth = missionNamespace getVariable ["Waldo_AccessibilityPID_TextDistanceGrowth", 0.00025];
+    private _textMaximum = missionNamespace getVariable ["Waldo_AccessibilityPID_TextMaximumScale", 0.05];
+    private _textVerticalOffset = missionNamespace getVariable ["Waldo_AccessibilityPID_TextVerticalOffset", -0.32];
     private _outlineScale = missionNamespace getVariable ["Waldo_AccessibilityPID_OutlineScale", 1.12];
     private _outlineColour = +(missionNamespace getVariable ["Waldo_AccessibilityPID_OutlineColour", [0.03, 0.03, 0.03, 1]]);
     private _icon = missionNamespace getVariable [
@@ -96,11 +98,13 @@ private _eventId = addMissionEventHandler ["Draw3D", {
                 };
                 if (_showNames && {_distance <= _nameRange}) then {
                     private _text = name _unit;
+                    private _textPosition = +_position;
+                    _textPosition set [2, (_textPosition select 2) + _textVerticalOffset];
                     private _drawTextScale = (_textScale + (_distance * (_textGrowth max 0))) min (_textMaximum max _textScale);
                     private _drawOutline = +_outlineColour;
                     _drawOutline set [3, (_drawOutline param [3, 1]) * (_drawColour param [3, 1])];
-                    drawIcon3D [_textAnchorIcon, _drawOutline, _position, 0, 0, 0, _text, 0, _drawTextScale * (_outlineScale max 1), _font, "center"];
-                    drawIcon3D [_textAnchorIcon, _drawColour, _position, 0, 0, 0, _text, 0, _drawTextScale, _font, "center"];
+                    drawIcon3D [_textAnchorIcon, _drawOutline, _textPosition, 0, 0, 0, _text, 0, _drawTextScale * (_outlineScale max 1), _font, "center"];
+                    drawIcon3D [_textAnchorIcon, _drawColour, _textPosition, 0, 0, 0, _text, 0, _drawTextScale, _font, "center"];
                 };
             };
         };
