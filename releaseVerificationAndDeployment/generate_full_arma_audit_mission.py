@@ -167,6 +167,12 @@ for index, (station_id, _title, (x, y), _description) in enumerate(STATIONS):
 
 
 LOADOUTS = [
+    # ACRE audit distribution:
+    # - Commander + Medic pair every duplicated PRC-343/152 occurrence and the PRC-148.
+    # - Anti-Tank + Engineer pair the PRC-117F, BF-888S, SEM52SL, PRC-77 and SEM70.
+    # - Marksman bridges both pairs with a PRC-343 and PRC-117F.
+    # Every supported carried-radio profile therefore has at least two users, and every playable
+    # member has a real same-class communications partner without relying on a provisioning action.
     {
         "name": "qa_player_1", "role": "Audit Commander", "type": "B_Soldier_SL_F",
         "primary": "arifle_MX_GL_Hamr_pointer_F", "primary_mag": "30Rnd_65x39_caseless_mag",
@@ -186,6 +192,8 @@ LOADOUTS = [
         "backpack": "B_Kitbag_rgr", "headgear": "H_HelmetB_light",
         "optics": "optic_Holosight_blk_F", "muzzle": "", "flashlight": "acc_flashlight",
         "items": ["ACE_fieldDressing", "ACE_tourniquet", "ACE_epinephrine", "ACE_morphine"],
+        "backpack_items": ["ACRE_PRC343", "ACRE_PRC343", "ACRE_PRC152", "ACRE_PRC152", "ACRE_PRC148"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_3", "role": "Audit Anti-Tank", "type": "B_soldier_AT_F",
@@ -196,6 +204,8 @@ LOADOUTS = [
         "backpack": "B_Carryall_mcamo", "headgear": "H_HelmetB",
         "optics": "optic_Arco_blk_F", "muzzle": "", "flashlight": "acc_pointer_IR",
         "items": ["ACE_RangeCard", "ACE_SpareBarrel"],
+        "backpack_items": ["ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_4", "role": "Audit Engineer EOD", "type": "B_engineer_F",
@@ -205,6 +215,8 @@ LOADOUTS = [
         "backpack": "B_Kitbag_mcamo", "headgear": "H_HelmetB_Enh_tna_F",
         "optics": "optic_ERCO_blk_F", "muzzle": "", "flashlight": "acc_flashlight",
         "items": ["ToolKit", "MineDetector", "ACE_Clacker", "ACE_DefusalKit", "ACE_EntrenchingTool"],
+        "backpack_items": ["ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_5", "role": "Audit Marksman", "type": "B_soldier_M_F",
@@ -214,6 +226,8 @@ LOADOUTS = [
         "backpack": "B_AssaultPack_blk", "headgear": "H_Booniehat_mcamo",
         "optics": "optic_AMS", "muzzle": "muzzle_snds_B", "flashlight": "acc_pointer_IR",
         "items": ["ACE_Kestrel4500", "ACE_ATragMX", "ACE_DAGR"],
+        "backpack_items": ["ACRE_PRC343", "ACRE_PRC117F"],
+        "vanilla_radio": False,
     },
 ]
 

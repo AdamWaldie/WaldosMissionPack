@@ -169,11 +169,28 @@ class Mission
                             };
                         };
                         class vest {typeName="V_PlateCarrier1_rgr"; isBackpack=0;};
-                        class backpack {typeName="B_Kitbag_rgr"; isBackpack=1;};
+                        class backpack
+                        {
+                            typeName="B_Kitbag_rgr";
+                            isBackpack=1;
+                            class ItemCargo
+                            {
+                                items=5;
+                                class Item0 {name="ACRE_PRC343"; count=1;
+                                };
+                                class Item1 {name="ACRE_PRC343"; count=1;
+                                };
+                                class Item2 {name="ACRE_PRC152"; count=1;
+                                };
+                                class Item3 {name="ACRE_PRC152"; count=1;
+                                };
+                                class Item4 {name="ACRE_PRC148"; count=1;
+                                };
+                            };
+                        };
                         map="ItemMap";
                         compass="ItemCompass";
                         watch="ItemWatch";
-                        radio="ItemRadio";
                         gps="ItemGPS";
                         hmd="NVGoggles";
                         headgear="H_HelmetB_light";
@@ -244,11 +261,28 @@ class Mission
                             };
                         };
                         class vest {typeName="V_PlateCarrier2_rgr"; isBackpack=0;};
-                        class backpack {typeName="B_Carryall_mcamo"; isBackpack=1;};
+                        class backpack
+                        {
+                            typeName="B_Carryall_mcamo";
+                            isBackpack=1;
+                            class ItemCargo
+                            {
+                                items=5;
+                                class Item0 {name="ACRE_PRC117F"; count=1;
+                                };
+                                class Item1 {name="ACRE_BF888S"; count=1;
+                                };
+                                class Item2 {name="ACRE_SEM52SL"; count=1;
+                                };
+                                class Item3 {name="ACRE_PRC77"; count=1;
+                                };
+                                class Item4 {name="ACRE_SEM70"; count=1;
+                                };
+                            };
+                        };
                         map="ItemMap";
                         compass="ItemCompass";
                         watch="ItemWatch";
-                        radio="ItemRadio";
                         gps="ItemGPS";
                         hmd="NVGoggles";
                         headgear="H_HelmetB";
@@ -320,11 +354,28 @@ class Mission
                             };
                         };
                         class vest {typeName="V_Chestrig_rgr"; isBackpack=0;};
-                        class backpack {typeName="B_Kitbag_mcamo"; isBackpack=1;};
+                        class backpack
+                        {
+                            typeName="B_Kitbag_mcamo";
+                            isBackpack=1;
+                            class ItemCargo
+                            {
+                                items=5;
+                                class Item0 {name="ACRE_PRC117F"; count=1;
+                                };
+                                class Item1 {name="ACRE_BF888S"; count=1;
+                                };
+                                class Item2 {name="ACRE_SEM52SL"; count=1;
+                                };
+                                class Item3 {name="ACRE_PRC77"; count=1;
+                                };
+                                class Item4 {name="ACRE_SEM70"; count=1;
+                                };
+                            };
+                        };
                         map="ItemMap";
                         compass="ItemCompass";
                         watch="ItemWatch";
-                        radio="ItemRadio";
                         gps="ItemGPS";
                         hmd="NVGoggles";
                         headgear="H_HelmetB_Enh_tna_F";
@@ -393,11 +444,22 @@ class Mission
                             };
                         };
                         class vest {typeName="V_PlateCarrier1_blk"; isBackpack=0;};
-                        class backpack {typeName="B_AssaultPack_blk"; isBackpack=1;};
+                        class backpack
+                        {
+                            typeName="B_AssaultPack_blk";
+                            isBackpack=1;
+                            class ItemCargo
+                            {
+                                items=2;
+                                class Item0 {name="ACRE_PRC343"; count=1;
+                                };
+                                class Item1 {name="ACRE_PRC117F"; count=1;
+                                };
+                            };
+                        };
                         map="ItemMap";
                         compass="ItemCompass";
                         watch="ItemWatch";
-                        radio="ItemRadio";
                         gps="ItemGPS";
                         hmd="NVGoggles";
                         headgear="H_Booniehat_mcamo";

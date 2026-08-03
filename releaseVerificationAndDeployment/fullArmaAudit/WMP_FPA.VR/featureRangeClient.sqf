@@ -297,6 +297,15 @@ if (!isNull _coreConsole) then {
         [_message, "OK", 10] call Waldo_fnc_MiniGameInteractionNotifyClient;
         diag_log format ["[WMP QA ACRE] %1 plan=%2", _message, _plan];
     }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_acreConsole, "Waldo_QA_ACRESquadMatrix", "ACRE2: SHOW SQUAD RADIO PAIRS", {
+        private _matrix = [
+            "Commander + Medic: 2x PRC-343, 2x PRC-152, 1x PRC-148",
+            "Anti-Tank + Engineer: PRC-117F, BF-888S, SEM52SL, PRC-77, SEM70",
+            "Marksman: PRC-343 + PRC-117F (bridges both pairs)"
+        ];
+        [format ["%1 | %2 | %3", _matrix select 0, _matrix select 1, _matrix select 2], "INFO", 18] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        diag_log format ["[WMP QA ACRE SQUAD MATRIX] player=%1 role=%2 distribution=%3", name player, roleDescription player, _matrix];
+    }] call Waldo_QA_fnc_addAuditActionLocal;
     [_acreConsole, "Waldo_QA_ACREApply", "ACRE2: REAPPLY PLAN + BABEL + CEOI", {
         private _radioResult = [true, "QA"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
         private _babelResult = [] call Waldo_fnc_ACRE2ApplyBabel;

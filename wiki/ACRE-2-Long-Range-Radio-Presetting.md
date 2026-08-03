@@ -83,7 +83,17 @@ Named labels belong to a preset channel, not a physical radio. Different physica
 
 The CEOI contains both the authoritative plan and the most recent verified local application: radio class/occurrence, resolved setting, ear, missing assignments and preserved radios. API failures are logged and manual/QA applications can show a WMP warning card.
 
-The full audit console can provision two PRC-343s and two PRC-152s, verify independent channels/ears, inspect the ordered unique-radio list and perform a persisted-state round trip. The previous implementation remains available only through explicit `_Legacy` functions.
+`MissionConfig\acreConfig.sqf` contains a commented, copyable assignment library for every shipped
+profile: duplicate PRC-343 block/channel rows, PRC-148/152/117F/BF-888S/SEM52SL net rows,
+PRC-77/SEM70 net and direct-frequency rows, a complete group row, and UID/variable/role overrides.
+
+The full audit mission gives every playable squad member at least one same-class radio partner.
+Commander and Medic share duplicate PRC-343/152 sets plus PRC-148s; Anti-Tank and Engineer share
+PRC-117F, BF-888S, SEM52SL, PRC-77 and SEM70; Marksman bridges those pairs with a PRC-343 and
+PRC-117F. The assigned channels are deliberately not channel 1. The ACRE2 station can display this
+pair matrix, verify independent channels/ears, inspect the ordered unique-radio list and perform a
+persisted-state round trip. The previous implementation remains available only through explicit
+`_Legacy` functions.
 
 <!-- WMP-WIKI-NAV -->
 ---

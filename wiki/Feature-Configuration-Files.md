@@ -80,6 +80,10 @@ Recommended review by file:
 | `sides` | Side preset, logical nets, fallback group mappings and explicit same-type occurrence assignments. |
 | `babel` | Language definitions, side defaults, speaking language, overrides and unit-follow behavior. |
 
+The top of `acreConfig.sqf` includes copy-ready examples for every supported profile and all three
+player override selectors. The examples are comments and do nothing until copied into `sides` or
+`radioOverrides`; this keeps the shipped defaults readable without silently creating extra nets.
+
 See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 [PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup), and
 [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting).

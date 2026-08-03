@@ -1,3 +1,4 @@
+import ast
 import importlib.util
 import json
 import re
@@ -96,6 +97,18 @@ class FullAuditTests(unittest.TestCase):
         self.assertEqual(5, sqm.count("class Inventory"))
         self.assertEqual(1, sqm.count("isPlayer=1;"))
         self.assertEqual(4, sqm.count("isPlayable=1;"))
+        expected_acre_inventory = {
+            "ACRE_PRC343": 5,
+            "ACRE_PRC152": 4,
+            "ACRE_PRC148": 2,
+            "ACRE_PRC117F": 3,
+            "ACRE_BF888S": 2,
+            "ACRE_SEM52SL": 2,
+            "ACRE_PRC77": 2,
+            "ACRE_SEM70": 2,
+        }
+        for radio, count in expected_acre_inventory.items():
+            self.assertEqual(count, sqm.count(f'name="{radio}"'), radio)
         self.assertIn("position[]={-105,5.32,48}", sqm)
         self.assertIn("position[]={0,6.14,2}", sqm)
         for fixture in (
@@ -274,6 +287,18 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["prc343PresetPolicy", "FULL_RANGE"]', acre_config)
         self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 32, []]', acre_config)
         self.assertIn('["ACRE_PRC343", "BLOCK_CHANNEL", ["LEFT", "RIGHT", "BOTH"]', acre_config)
+        self.assertIn("RADIO ASSIGNMENT EXAMPLE LIBRARY", acre_config)
+        for example in (
+            '// ["ACRE_PRC343", 1, [5, 16], "LEFT"]',
+            '// ["ACRE_PRC148", 1, "PLT1", "RIGHT"]',
+            '// ["ACRE_PRC152", 1, "AIRGND", "LEFT"]',
+            '// ["ACRE_PRC117F", 1, "AIR", "BOTH"]',
+            '// ["ACRE_BF888S", 1, "COY", "RIGHT"]',
+            '// ["ACRE_SEM52SL", 1, "CONVOY", "LEFT"]',
+            '// ["ACRE_PRC77", 1, "PLT1", "RIGHT"]',
+            '// ["ACRE_SEM70", 1, "PLT1", "LEFT"]',
+        ):
+            self.assertIn(example, acre_config)
         self.assertIn('if (_upper == "BOTH") then {"CENTER"}', apply_plan)
         self.assertIn('acre_api_fnc_setupRadios', apply_plan)
         self.assertIn('Waldo_fnc_ACRE2GetOrderedRadios', apply_plan)
@@ -290,6 +315,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("getOrDefault ['enabled', true]", acre_init)
         audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         self.assertIn("ACRE2: SHOW PLAN / RADIO STATUS", audit_client)
+        self.assertIn("ACRE2: SHOW SQUAD RADIO PAIRS", audit_client)
         self.assertIn("ACRE2: REAPPLY PLAN + BABEL + CEOI", audit_client)
         self.assertIn("ACRE2: PROVISION CARRIED TEST RADIOS", audit_client)
         self.assertIn("ACRE2: VERIFY DUPLICATE RADIO ASSIGNMENTS", audit_client)
@@ -305,6 +331,25 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('missionNamespace setVariable ["Waldo_QA_ACREConsole", _acreConsole, true]', audit_server)
         generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
         self.assertIn('"backpack_items": ["ACRE_PRC343", "ACRE_PRC343", "ACRE_PRC152", "ACRE_PRC152", "ACRE_PRC148"]', generator)
+        generator_tree = ast.parse(generator)
+        loadouts = ast.literal_eval(next(
+            node.value for node in generator_tree.body
+            if isinstance(node, ast.Assign)
+            and any(isinstance(target, ast.Name) and target.id == "LOADOUTS" for target in node.targets)
+        ))
+        supported_radios = {
+            "ACRE_PRC343", "ACRE_PRC148", "ACRE_PRC152", "ACRE_PRC117F",
+            "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70",
+        }
+        radio_counts = {
+            radio: sum(loadout.get("backpack_items", []).count(radio) for loadout in loadouts)
+            for radio in supported_radios
+        }
+        self.assertTrue(all(count >= 2 for count in radio_counts.values()), radio_counts)
+        for loadout in loadouts:
+            member_radios = set(loadout.get("backpack_items", [])) & supported_radios
+            self.assertTrue(member_radios, loadout["name"])
+            self.assertTrue(any(radio_counts[radio] >= 2 for radio in member_radios), loadout["name"])
         builder = (ROOT / "releaseVerificationAndDeployment" / "build_pr_review_audit.py").read_text(encoding="utf-8")
         self.assertIn('(group this) setGroupIdGlobal', builder)
         self.assertIn('text="{loadout["name"]}"', builder)
@@ -317,6 +362,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("['ACRE_PRC152', 1, 'CAS2', 'RIGHT']", audit_acre)
         self.assertIn("['ACRE_PRC152', 2, 'CONVOY', 'LEFT']", audit_acre)
         self.assertIn("['ACRE_PRC148', 1, 'CFF1', 'BOTH']", audit_acre)
+        self.assertIn("['ACRE_PRC117F', 1, 'AIR', 'BOTH']", audit_acre)
+        self.assertIn("['ACRE_BF888S', 1, 'COY', 'RIGHT']", audit_acre)
+        self.assertIn("['ACRE_SEM52SL', 1, 'CONVOY', 'LEFT']", audit_acre)
+        self.assertIn("['ACRE_PRC77', 1, 'COY', 'RIGHT']", audit_acre)
+        self.assertIn("['ACRE_SEM70', 1, 'COY', 'LEFT']", audit_acre)
         self.assertIn("[['VARIABLE', 'qa_player_2'], ['en', 'ru'], 'ru']", audit_acre)
         self.assertNotIn("['ACRE_PRC343', 1, [1, 1]", audit_acre)
         self.assertNotIn("['ACRE_PRC152', 1, 'PLT1'", audit_acre)

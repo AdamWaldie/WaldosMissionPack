@@ -27,6 +27,42 @@
  * radioProfiles. These describe parser and radio capabilities rather than an ordinary radio plan.
  * CUSTOM CALLS: none for normal setup. The active lifecycle owns join, JIP, respawn and Babel.
  *
+ * RADIO ASSIGNMENT EXAMPLE LIBRARY (copy rows into a group's explicit-assignment array):
+ *
+ * Same-type occurrence is 1-based. These two PRC-343s deliberately use separate blocks, channels
+ * and ears. Every unit expected to communicate on either assignment needs a matching radio/net.
+ * // ["ACRE_PRC343", 1, [5, 16], "LEFT"]
+ * // ["ACRE_PRC343", 2, [6, 3], "RIGHT"]
+ *
+ * Numbered-channel radios target a logical net key. The net's position in the side net list becomes
+ * the channel number, so keep required keys inside that radio profile's maximum channel count.
+ * // ["ACRE_PRC148", 1, "PLT1", "RIGHT"]    // Channels 1-32.
+ * // ["ACRE_PRC152", 1, "AIRGND", "LEFT"]   // Channels 1-100.
+ * // ["ACRE_PRC117F", 1, "AIR", "BOTH"]     // Channels 1-100; BOTH maps to ACRE CENTER.
+ * // ["ACRE_BF888S", 1, "COY", "RIGHT"]     // Channels 1-16.
+ * // ["ACRE_SEM52SL", 1, "CONVOY", "LEFT"]  // Channels 1-13.
+ *
+ * Frequency radios use the matching radio override stored on the chosen net. The shipped WEST
+ * PLT1 row, for example, defines PRC-77 31.00 MHz and SEM70 34.000 MHz. A validated direct
+ * frequency target is also accepted when a group genuinely needs a frequency outside its net.
+ * // ["ACRE_PRC77", 1, "PLT1", "RIGHT"]
+ * // ["ACRE_SEM70", 1, "PLT1", "LEFT"]
+ * // ["ACRE_PRC77", 2, 31.50, "BOTH"]        // Direct MHz example.
+ * // ["ACRE_SEM70", 2, 34.250, "BOTH"]       // Direct MHz example.
+ *
+ * A complete group row combines fallback nets, fallback PRC-343 assignment and explicit radios:
+ * // ["VIKING-1-1", ["PLT1", "AIRGND"], [5, 16], [
+ * //     ["ACRE_PRC343", 1, [5, 16], "LEFT"],
+ * //     ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
+ * //     ["ACRE_PRC117F", 1, "AIRGND", "BOTH"]
+ * // ]]
+ *
+ * Overrides replace that group's explicit list for the first matching player. Selectors are UID,
+ * VARIABLE (Eden variable name) or ROLE (roleDescription before the @ suffix).
+ * // [["ROLE", "JTAC"], [["ACRE_PRC152", 1, "AIRGND", "RIGHT"]]]
+ * // [["VARIABLE", "platoonMedic"], [["ACRE_PRC343", 1, [5, 16], "LEFT"]]]
+ * // [["UID", "76561198000000000"], [["ACRE_PRC148", 1, "COY", "BOTH"]]]
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enabled, prc343PresetPolicy, namedDisplays, sides, nets, groups, radioOverrides and Babel content are
  * intended mission choices. Group entries are [group ID, fallback net keys, fallback 343 [block,

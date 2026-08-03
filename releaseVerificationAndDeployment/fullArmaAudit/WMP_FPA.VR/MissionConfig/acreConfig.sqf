@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Derives the full-audit ACRE configuration from the release root configuration. Managed test
- * radios use distinctive non-channel-1 assignments and named operational nets. The shared net list
+ * radios use distinctive non-channel-1 assignments and named operational nets. Every supported
+ * carried-radio profile has a paired squad inventory in the generated mission. The shared net list
  * deliberately remains within the smallest shipped numbered-radio profile (SEM52SL: 13 channels).
  * It also enables three deterministic Babel languages and partial multilingual overrides.
  *
@@ -24,7 +25,12 @@ if (_westIndex >= 0) then {
             ['ACRE_PRC343', 2, [12, 6], 'RIGHT'],
             ['ACRE_PRC152', 1, 'CAS2', 'RIGHT'],
             ['ACRE_PRC152', 2, 'CONVOY', 'LEFT'],
-            ['ACRE_PRC148', 1, 'CFF1', 'BOTH']
+            ['ACRE_PRC148', 1, 'CFF1', 'BOTH'],
+            ['ACRE_PRC117F', 1, 'AIR', 'BOTH'],
+            ['ACRE_BF888S', 1, 'COY', 'RIGHT'],
+            ['ACRE_SEM52SL', 1, 'CONVOY', 'LEFT'],
+            ['ACRE_PRC77', 1, 'COY', 'RIGHT'],
+            ['ACRE_SEM70', 1, 'COY', 'LEFT']
         ]];
     };
 };
