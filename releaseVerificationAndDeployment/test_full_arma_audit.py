@@ -127,6 +127,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertTrue((mission / "MissionScripts" / "WaldosFunctions.sqf").is_file())
         self.assertTrue((mission / "Pictures" / "loading.jpg").is_file())
         self.assertTrue((mission / "economyConfig.sqf").is_file())
+        self.assertTrue((mission / "acreConfig.sqf").is_file())
+        self.assertTrue((mission / "releaseAcreConfig.sqf").is_file())
         self.assertTrue((mission / "auditBootstrap.sqf").is_file())
         self.assertTrue(sqm.lstrip().startswith("version="))
         self.assertFalse(any(mission.glob("*.pbo")))

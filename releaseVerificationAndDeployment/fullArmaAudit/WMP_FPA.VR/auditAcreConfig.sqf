@@ -9,7 +9,7 @@
  * Example: Copied to acreConfig.sqf by the full-audit generator and builder.
  * Current callers: build_full_arma_audit.py and generate_full_arma_audit_mission.py.
  */
-private _config = call compile preprocessFileLineNumbers 'WMPPackSource\acreConfig.sqf';
+private _config = call compile preprocessFileLineNumbers 'releaseAcreConfig.sqf';
 private _babel = _config get 'babel';
 _babel set ['enabled', true];
 _babel set ['languages', [['en', 'English'], ['fr', 'French'], ['ru', 'Russian']]];

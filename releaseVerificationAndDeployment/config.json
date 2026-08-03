@@ -6,6 +6,7 @@
             "MissionScripts",
             "Pictures",
             "description.ext",
+            "acreConfig.sqf",
             "economyConfig.sqf",
             "init.sqf",
             "initPlayerLocal.sqf",

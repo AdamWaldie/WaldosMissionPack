@@ -539,6 +539,7 @@ def refresh_release_sources() -> None:
             shutil.copytree(source, target)
     shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
     shutil.copy2(ROOT / "acreConfig.sqf", MISSION / "acreConfig.sqf")
+    shutil.copy2(ROOT / "acreConfig.sqf", MISSION / "releaseAcreConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
     for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "acreConfig.sqf", "LICENSE", "README.md"):

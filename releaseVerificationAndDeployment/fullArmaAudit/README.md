@@ -13,6 +13,7 @@ The repository mission folder is a template, not a release copy. Before every ru
 - `MissionScripts`
 - `Pictures`
 - `description.ext`
+- `acreConfig.sqf`
 - `economyConfig.sqf`
 - `init.sqf`
 - `initPlayerLocal.sqf`

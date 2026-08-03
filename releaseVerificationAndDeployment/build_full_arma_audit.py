@@ -70,6 +70,7 @@ def build(destination: Path, suite: str, mod_profile: str = "core", mode: str = 
     shutil.copytree(ROOT / "Pictures", destination / "Pictures", dirs_exist_ok=True)
     shutil.copy2(ROOT / "economyConfig.sqf", destination / "economyConfig.sqf")
     shutil.copy2(ROOT / "acreConfig.sqf", destination / "acreConfig.sqf")
+    shutil.copy2(ROOT / "acreConfig.sqf", destination / "releaseAcreConfig.sqf")
     pack_source = destination / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
     for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "acreConfig.sqf", "LICENSE", "README.md"):
