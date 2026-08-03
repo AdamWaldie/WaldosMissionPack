@@ -349,6 +349,7 @@ class PrReviewAuditTests(unittest.TestCase):
         apply = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
         audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
         self.assertIn('[["AUTO", "VIRTUAL", "PHYSICAL"]', zen)
+        self.assertIn('missionNamespace getVariable ["Waldo_Recovery_PackageClasses"', zen)
         self.assertIn('["Package capacity"', zen)
         self.assertIn('["_mode", "AUTO"]', apply)
         self.assertIn('["_capacity", 1]', apply)

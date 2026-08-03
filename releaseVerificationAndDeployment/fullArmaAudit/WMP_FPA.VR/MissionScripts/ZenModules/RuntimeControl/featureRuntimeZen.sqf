@@ -324,7 +324,13 @@ switch (toUpperANSI _feature) do {
         private _workshopLabels = _workshops apply {
             format ["%1 (%2 m away)", _x getVariable ["Waldo_Recovery_WorkshopKey", "MAIN"], round (_x distance2D _target)]
         };
-        private _packageClasses = ["B_Slingload_01_Cargo_F", "Land_Pallet_MilBoxes_F"];
+        private _packageClasses = +(missionNamespace getVariable ["Waldo_Recovery_PackageClasses", ["B_Slingload_01_Cargo_F", "Land_Pallet_MilBoxes_F"]]);
+        _packageClasses = _packageClasses select {
+            _x isEqualType ""
+            && {isClass (configFile >> "CfgVehicles" >> _x)}
+            && {!(_x isKindOf "CAManBase")}
+        };
+        if (_packageClasses isEqualTo []) then {_packageClasses = ["B_Slingload_01_Cargo_F"]};
         private _packageLabels = _packageClasses apply {
             private _name = getText (configFile >> "CfgVehicles" >> _x >> "displayName");
             if (_name == "") then {_x} else {_name}
@@ -336,7 +342,7 @@ switch (toUpperANSI _feature) do {
                 ["SLIDER", ["Minimum damage", "Living vehicle damage required before packaging."], [0, 1, 0.55, 2]],
                 ["CHECKBOX", ["Allow destroyed", "Permit destroyed vehicles to be packaged."], true],
                 ["CHECKBOX", ["Require engineer", "Restrict packaging to engineer-trait units."], false],
-                ["COMBO", ["Recovery package", "Physical cargo object used while transporting the recovered vehicle."], [_packageClasses, _packageLabels, 0]],
+                ["COMBO", ["Recovery package", "Visible package class for this vehicle. Mission makers can extend Waldo_Recovery_PackageClasses."], [_packageClasses, _packageLabels, 0]],
                 ["CHECKBOX", ["Preserve inventory", "Restore weapon, magazine, item and backpack cargo."], true],
                 ["SLIDER", ["Restored fuel", "Fuel fraction after workshop restoration."], [0, 1, 1, 2]],
                 ["CHECKBOX", ["Require Recovery Preparation", "Replace immediate packaging with a shared preparation procedure."], false],

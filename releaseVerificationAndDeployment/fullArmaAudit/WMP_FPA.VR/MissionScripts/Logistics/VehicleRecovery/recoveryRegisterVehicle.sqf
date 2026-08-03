@@ -11,7 +11,7 @@
  * 2: minimum damage <NUMBER> (default 0.55)
  * 3: allow destroyed <BOOL> (default true)
  * 4: require engineer <BOOL> (default false)
- * 5: package class <STRING> (default "B_Slingload_01_Cargo_F")
+ * 5: package class <STRING> (default first valid `Waldo_Recovery_PackageClasses` entry)
  * 6: preserve cargo <BOOL> (default true)
  * 7: restored fuel <NUMBER> (default 1)
  * 8: interaction options <ARRAY or HASHMAP> - optional `enabled`, `challengeId`, `difficulty`;
@@ -31,7 +31,7 @@
 params [
     ["_vehicle", objNull, [objNull]], ["_workshopKey", "MAIN", [""]],
     ["_minimumDamage", 0.55, [0]], ["_allowDestroyed", true, [true]],
-    ["_requireEngineer", false, [true]], ["_packageClass", "B_Slingload_01_Cargo_F", [""]],
+    ["_requireEngineer", false, [true]], ["_packageClass", (missionNamespace getVariable ["Waldo_Recovery_PackageClasses", ["B_Slingload_01_Cargo_F"]]) param [0, "B_Slingload_01_Cargo_F"], [""]],
     ["_preserveCargo", true, [true]], ["_restoredFuel", 1, [0]],
     ["_interactionOptions", [], [[], createHashMap]]
 ];
@@ -50,7 +50,12 @@ if (remoteExecutedOwner > 0) then {
     _authorized = !isNull _caller && {!isNull getAssignedCuratorLogic _caller};
 };
 if (!_authorized) exitWith {false};
-if !(isClass (configFile >> "CfgVehicles" >> _packageClass)) then {_packageClass = "B_Slingload_01_Cargo_F"};
+if !(isClass (configFile >> "CfgVehicles" >> _packageClass)) then {
+    private _configuredPackages = (missionNamespace getVariable ["Waldo_Recovery_PackageClasses", ["B_Slingload_01_Cargo_F"]]) select {
+        _x isEqualType "" && {isClass (configFile >> "CfgVehicles" >> _x)}
+    };
+    _packageClass = _configuredPackages param [0, "B_Slingload_01_Cargo_F"];
+};
 private _config = [toUpperANSI _workshopKey, (_minimumDamage max 0) min 1, _allowDestroyed, _requireEngineer, _packageClass, _preserveCargo, (_restoredFuel max 0) min 1];
 private _pairs = [];
 if (typeName _interactionOptions == "HASHMAP") then {{_pairs pushBack [_x, _interactionOptions get _x]} forEach keys _interactionOptions} else {_pairs = _interactionOptions};

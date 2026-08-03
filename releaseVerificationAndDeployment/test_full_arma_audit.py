@@ -1174,6 +1174,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_Recovery_CarrierCapacity", (round _capacity) max 1, true', register_carrier)
         self.assertIn("vehicleCargoEnabled _target", request)
         self.assertIn("canVehicleCargo _package", request)
+        self.assertIn('missionNamespace getVariable ["Waldo_Recovery_Packages", []]', request)
+        self.assertIn("private _edgeDistance", request)
+        self.assertNotIn('nearestObjects [_target, ["AllVehicles"], _range', request)
         self.assertIn('Waldo_Recovery_VirtualPackages", _manifest, true', request)
         self.assertIn("Waldo_fnc_RecoveryResolveUnloadPosition", request)
         self.assertIn('Waldo_Recovery_IsVirtualLoaded", true, true', request)
@@ -1181,6 +1184,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("nearestTerrainObjects", unload_position)
         self.assertIn("Waldo_Recovery_IsVirtualLoaded", monitor)
         self.assertIn("Waldo_Recovery_ScanInterval", monitor)
+        self.assertIn("Waldo_Recovery_PackageClasses", register_vehicle)
         self.assertNotRegex(monitor, r"setVariable\s*\[[^\]]+,\s*true,\s*true\s*\]")
 
     def test_rally_points_are_group_owned_and_do_not_leak_global_markers(self):

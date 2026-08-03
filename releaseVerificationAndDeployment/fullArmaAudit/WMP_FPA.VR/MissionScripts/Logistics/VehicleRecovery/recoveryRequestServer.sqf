@@ -103,13 +103,33 @@ if (_operation == "LOAD") exitWith {
         ["This recovery carrier is at package capacity.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _range = _target getVariable ["Waldo_Recovery_CarrierRange", 10];
-    private _near = (nearestObjects [_target, ["AllVehicles"], _range, true]) select {
-        _x getVariable ["Waldo_Recovery_Package", false]
+    private _radiusFor = {
+        params ["_object"];
+        private _bounds = boundingBoxReal _object;
+        private _minimum = _bounds param [0, [-1, -1, -1]];
+        private _maximum = _bounds param [1, [1, 1, 1]];
+        sqrt (
+            (((abs (_minimum select 0)) max (abs (_maximum select 0))) ^ 2)
+            + (((abs (_minimum select 1)) max (abs (_maximum select 1))) ^ 2)
+        )
+    };
+    private _carrierRadius = [_target] call _radiusFor;
+    private _candidates = (missionNamespace getVariable ["Waldo_Recovery_Packages", []]) select {
+        !isNull _x
+        && {_x getVariable ["Waldo_Recovery_Package", false]}
         && {isNull isVehicleCargo _x}
+        && {!(_x getVariable ["Waldo_Recovery_IsVirtualLoaded", false])}
         && {!(_x getVariable ["Waldo_Recovery_Transition", false])}
     };
-    if (_near isEqualTo []) exitWith {["No recovery package is within loading range.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false};
-    private _package = _near select 0;
+    private _near = _candidates apply {
+        private _edgeDistance = ((_target distance2D _x) - _carrierRadius - ([_x] call _radiusFor)) max 0;
+        [_edgeDistance, _x]
+    };
+    _near sort true;
+    if (_near isEqualTo [] || {(_near select 0 select 0) > _range}) exitWith {
+        ["No recovery package is within loading range.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
+    };
+    private _package = _near select 0 select 1;
     private _mode = _target getVariable ["Waldo_Recovery_CarrierMode", "AUTO"];
     private _canPhysical = vehicleCargoEnabled _target && {(_target canVehicleCargo _package) param [0, false]};
     if (_mode == "PHYSICAL" && {!_canPhysical}) exitWith {
