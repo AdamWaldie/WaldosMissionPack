@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Builds the local CEOI directly from the authoritative communications plan, filtering it to the
- * player's side and highlighting the current group's short- and long-range assignments.
+ * Builds the local CEOI from the authoritative communications plan and the most recent verified
+ * local application. It highlights the current group's short/long assignments, identifies which
+ * physical carried-radio occurrence received each setting and reports preserved or missing radios.
  *
  * Arguments: None.
  * Return Value: BOOL - true when the CEOI diary record was replaced.
@@ -16,7 +17,8 @@ private _sideKey = switch (side player) do {case west: {'WEST'}; case east: {'EA
 private _sideIndex = (_plan select 2) findIf {(_x select 0) == _sideKey};
 if (_sideIndex < 0) exitWith {false};
 private _sidePlan = (_plan select 2) select _sideIndex;
-_sidePlan params ['_unusedSide', '_preset', '_nets', '_groups'];
+private _nets = _sidePlan select 2;
+private _groups = _sidePlan select 3;
 private _groupKey = toUpper groupId group player;
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
 private _myNets = if (_groupIndex >= 0) then {(_groups select _groupIndex) select 1} else {[]};
@@ -34,6 +36,23 @@ _text = _text + "<br/><font size='14'>Long Range Nets</font><br/>";
     if ((_x select 0) in _myNets) then {_line = format ["<font color='#47ff47'>%1</font>", _line]};
     _text = _text + _line + '<br/>';
 } forEach _nets;
+private _last = uiNamespace getVariable ['Waldo_ACRE2_LastApplication', []];
+_text = _text + "<br/><font size='14'>Carried Radio Verification</font><br/>";
+if (count _last >= 7 && {(_last select 2) == _sideKey} && {(_last select 3) == _groupKey}) then {
+    {
+        _x params ['_radioId', '_base', '_occurrence', '_setting', '_spatial', '_netLabel'];
+        private _ear = if (_spatial == 'CENTER') then {'BOTH'} else {_spatial};
+        _text = _text + format ['%1 #%2 - %3 - %4 ear (%5)<br/>', _base, _occurrence, _netLabel, _ear, _setting];
+    } forEach (_last select 4);
+    {
+        _text = _text + format ["<font color='#ffb347'>UNAPPLIED: %1</font><br/>", _x];
+    } forEach (_last select 5);
+    if (count (_last select 6) > 0) then {
+        _text = _text + format ['Preserved/unmanaged carried radios: %1<br/>', count (_last select 6)];
+    };
+} else {
+    _text = _text + 'No verified local radio application is available yet.<br/>';
+};
 private _old = uiNamespace getVariable ['Waldo_ACRE2_CEOIRecord', -1];
 if (_old isEqualType 0 && {_old >= 0}) then {player removeDiaryRecord ['ACRE2', _old]};
 if !(uiNamespace getVariable ['Waldo_ACRE2_DiarySubject', false]) then {

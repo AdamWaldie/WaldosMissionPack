@@ -18,7 +18,9 @@ Babel is configured in the `babel` map inside `MissionConfig\acreConfig.sqf`. La
 ]]
 ```
 
-An override can grant a partial language set; interpreters no longer have to understand every language. The initial speaking language must be in the understood list or the first valid language is selected. Babel knowledge is reapplied after player-object replacement and ordinary respawn. By default a side change preserves learned languages; set `changeOnSideChange` to `true` only when side membership should redefine knowledge.
+An override can grant a partial language set; interpreters no longer have to understand every language. The initial speaking language must be in the understood list. Validation rejects unknown language IDs, duplicate IDs, malformed overrides and a speaking language that is not understood.
+
+When `followPlayerUnit` is true, Babel knowledge and the radio plan are reapplied after a local player-object replacement. When false, no unit-change handler is installed. By default a side change preserves learned languages; set `changeOnSideChange` to `true` only when side membership should redefine knowledge.
 
 The Babel diary record is replaced rather than duplicated. The active wrapper is `Waldo_fnc_BabelActivation`; the previous argument-based implementation remains available only as `Waldo_fnc_BabelActivation_Legacy`.
 

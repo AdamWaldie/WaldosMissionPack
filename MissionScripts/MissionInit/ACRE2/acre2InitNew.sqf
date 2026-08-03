@@ -15,7 +15,12 @@ if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {
 };
 private _config = missionNamespace getVariable ['Waldo_ACRE2_Config', call compile preprocessFileLineNumbers 'MissionConfig\acreConfig.sqf'];
 private _validation = [_config] call Waldo_fnc_ACRE2ValidateConfig;
+{diag_log format ['[WMP ACRE] CONFIG WARNING: %1', _x]} forEach (_validation param [2, []]);
 if !(_validation select 0) exitWith {{diag_log format ['[WMP ACRE] CONFIG ERROR: %1', _x]} forEach (_validation select 1); false};
+if !(_config getOrDefault ['enabled', true]) exitWith {
+    missionNamespace setVariable ['Waldo_ACRE2_Available', false];
+    true
+};
 missionNamespace setVariable ['Waldo_ACRE2_Available', true];
 if (isServer && {isNil {missionNamespace getVariable 'Waldo_ACRE2_Plan'}}) then {
     private _revision = (missionNamespace getVariable ['Waldo_ACRE2_PlanRevision', 0]) + 1;
@@ -41,15 +46,33 @@ if (hasInterface && {isNil {uiNamespace getVariable 'Waldo_ACRE2_ClientInitStart
         [] call Waldo_fnc_ACRE2ApplyBabel;
         [] call Waldo_fnc_ACRE2BuildCEOI;
         [false] call Waldo_fnc_SaveLoadout;
-        if (isNil {uiNamespace getVariable 'Waldo_ACRE2_UnitHandler'}) then {
+        private _babel = _config getOrDefault ['babel', createHashMap];
+        if (_babel getOrDefault ['followPlayerUnit', true] && {isNil {uiNamespace getVariable 'Waldo_ACRE2_UnitHandler'}}) then {
             private _handler = ['unit', {
                 params ['_newUnit'];
                 if (_newUnit isEqualTo player) then {
-                    [] call Waldo_fnc_ACRE2ApplyBabel;
+                    [] spawn {
+                        uiSleep 0.2;
+                        [true, 'UNIT_REPLACEMENT'] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+                        [] call Waldo_fnc_ACRE2ApplyBabel;
+                        [] call Waldo_fnc_ACRE2BuildCEOI;
+                    };
+                };
+            }, false] call CBA_fnc_addPlayerEventHandler;
+            uiNamespace setVariable ['Waldo_ACRE2_UnitHandler', _handler];
+        };
+        if (isNil {uiNamespace getVariable 'Waldo_ACRE2_GroupHandler'}) then {
+            private _groupHandler = ['group', {
+                [] spawn {
+                    uiSleep 0.1;
+                    private _config = missionNamespace getVariable ['Waldo_ACRE2_Config', createHashMap];
+                    if (_config getOrDefault ['retuneOnGroupChange', false]) then {
+                        [true, 'GROUP_CHANGE'] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+                    };
                     [] call Waldo_fnc_ACRE2BuildCEOI;
                 };
-            }, true] call CBA_fnc_addPlayerEventHandler;
-            uiNamespace setVariable ['Waldo_ACRE2_UnitHandler', _handler];
+            }] call CBA_fnc_addPlayerEventHandler;
+            uiNamespace setVariable ['Waldo_ACRE2_GroupHandler', _groupHandler];
         };
     };
 };

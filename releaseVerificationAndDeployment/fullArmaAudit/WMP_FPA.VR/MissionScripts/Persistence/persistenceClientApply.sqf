@@ -42,7 +42,13 @@ if (missionNamespace getVariable ["Waldo_Persistence_SavePosition", false] && {c
 
 private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
 if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {count _radios > 0}) then {
-    [_radios, _generation] spawn Waldo_fnc_ACRE2ApplyRadioState;
+    [_radios, _generation] spawn {
+        params ["_savedRadios", "_loadoutGeneration"];
+        if !([_savedRadios, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState) then {
+            diag_log "[WMP PERSISTENCE] Saved ACRE radio state could not be restored; applying the current mission plan.";
+            [true, "PERSISTENCE_RESTORE_FALLBACK"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+        };
+    };
 } else {
     [true, "PERSISTENCE_BASELINE"] spawn Waldo_fnc_ACRE2ApplyPlayerPlan;
 };

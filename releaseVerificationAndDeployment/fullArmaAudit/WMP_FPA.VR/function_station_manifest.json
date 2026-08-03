@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 830,
+  "registeredFunctionCount": 831,
   "runtimeFunctionCount": 385,
-  "functionCount": 1215,
+  "functionCount": 1216,
   "stations": [
     {
       "id": "control",
@@ -583,6 +583,12 @@
     {
       "name": "Waldo_fnc_ACRE2ValidateConfig",
       "file": "MissionScripts/MissionInit/ACRE2/acre2ValidateConfig.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2GetOrderedRadios",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2GetOrderedRadios.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Compiles the validated ACRE configuration into a versioned, network-safe side/group plan.
- * Explicit PRC-343 assignments are reserved first; remaining assignments are deterministic.
+ * Explicit PRC-343 assignments are reserved first; remaining fallback assignments are deterministic.
+ * Per-radio assignments are normalised but retain their same-type occurrence identity.
  *
  * Arguments:
  * 0: configuration <HASHMAP>
@@ -17,17 +18,30 @@ private _sidePlans = [];
 private _diagnostics = [];
 {
     _x params ['_sideKey', '_preset', '_sourceNets', '_sourceGroups'];
+    _sideKey = switch (toUpper _sideKey) do {case 'BLUFOR'; case 'WEST': {'WEST'}; case 'OPFOR'; case 'EAST': {'EAST'}; case 'INDEPENDENT'; case 'INDEP'; case 'GUER': {'GUER'}; default {'CIV'}};
     private _nets = [];
-    {_nets pushBack [toUpper (_x select 0), _x select 1, _forEachIndex + 1, _x select 2]} forEach _sourceNets;
+    {
+        private _overrides = (_x select 2) apply {[toUpper (_x select 0), _x select 1]};
+        _nets pushBack [toUpper (_x select 0), _x select 1, _forEachIndex + 1, _overrides];
+    } forEach _sourceNets;
     private _used = [];
     {
         private _explicit = _x select 2;
-        if !(_explicit isEqualTo []) then {_used pushBack (((_explicit select 0) - 1) * 16 + (_explicit select 1))};
+        private _radioAssignments = _x select 3;
+        private _explicitShort = _radioAssignments select {toUpper (_x select 0) == 'ACRE_PRC343' && {(_x select 2) isEqualType []}};
+        if (count _explicitShort > 0) then {
+            {
+                private _target = _x select 2;
+                _used pushBackUnique (((_target select 0) - 1) * 16 + (_target select 1));
+            } forEach _explicitShort;
+        } else {
+            if !(_explicit isEqualTo []) then {_used pushBack (((_explicit select 0) - 1) * 16 + (_explicit select 1))};
+        };
     } forEach _sourceGroups;
     private _prefixBlocks = createHashMap;
     private _groups = [];
     {
-        _x params ['_groupId', '_netKeys', '_explicit'];
+        _x params ['_groupId', '_netKeys', '_explicit', '_sourceAssignments'];
         private _assignment = +_explicit;
         if (_assignment isEqualTo []) then {
             private _upperId = toUpper _groupId;
@@ -54,8 +68,13 @@ private _diagnostics = [];
                 _assignment = [floor ((_flat - 1) / 16) + 1, ((_flat - 1) mod 16) + 1];
             };
         };
-        _groups pushBack [toUpper _groupId, _netKeys apply {toUpper _x}, _assignment];
+        private _radioAssignments = _sourceAssignments apply {
+            private _spatial = toUpper (_x select 3);
+            if (_spatial == 'BOTH') then {_spatial = 'CENTER'};
+            [toUpper (_x select 0), _x select 1, _x select 2, _spatial]
+        };
+        _groups pushBack [toUpper _groupId, _netKeys apply {toUpper _x}, _assignment, _radioAssignments];
     } forEach _sourceGroups;
     _sidePlans pushBack [toUpper _sideKey, _preset, _nets, _groups];
 } forEach (_config getOrDefault ['sides', []]);
-[1, _revision, _sidePlans, _diagnostics]
+[2, _revision, _sidePlans, _diagnostics]

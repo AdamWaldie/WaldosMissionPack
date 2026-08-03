@@ -26,7 +26,7 @@ Recommended review by file:
 
 | File | Mission-maker choices | Normally leave alone |
 |---|---|---|
-| `acreConfig.sqf` | Enablement, named displays, nets, callsigns/group assignments and Babel languages | Schema version, strict validation, group-change retuning and shipped radio profiles |
+| `acreConfig.sqf` | Enablement, named displays, nets, per-occurrence group/player/role assignments, ear placement and Babel languages | Schema version, strict validation, group-change retuning, priority and shipped capability profiles |
 | `persistenceConfig.sqf` | Enablement, saved data categories and database/campaign name | Save cadence and custom-variable serialization list |
 | `interfaceConfig.sqf` | Theme, treatment recipients/content, emergency-dismount policy and PID eligibility/content | Queue/reflow limits, tactical knowledge threshold, placement geometry and Draw3D scale/offset internals |
 | `aiConfig.sqf` | AI profile/mode, application population and inclusion/exclusion filters | Skill variance and helicopter landing controller values |
@@ -43,7 +43,8 @@ Recommended review by file:
 - UI themes: `DEFAULT`, `WW2`, `VIETNAM`, `SCIFI`.
 - Notification placements: `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER`, `BOTTOM_RIGHT`. `TOP` is reserved for mission-flow banners.
 - ACRE PRC-343 assignment: `[block, channel]`, both integers from 1 through 16; `[]` requests deterministic allocation.
-- ACRE profile modes: `BLOCK_CHANNEL`, `CHANNEL`, `FREQUENCY`; CEOI placement `LEFT`, `CENTER`, `RIGHT`.
+- ACRE explicit radio: `[base class, same-type occurrence, target, ear]`; ears are `LEFT`, `RIGHT`, `BOTH` or `CENTER`.
+- ACRE profile modes: `BLOCK_CHANNEL`, `CHANNEL`, `FREQUENCY`. WMP deliberately leaves alternate PTT defaults alone.
 - Jammer disable result: `DISABLE` for the repairable/reactivatable disabled state or `DEACTIVATE` for an ordinary off state.
 - Interaction difficulty: `easy`, `standard`, `hard`, `expert`.
 - Distances/altitudes are metres and durations are seconds unless a row states otherwise. Damage, fuel and ammunition fractions are `0` through `1`.
@@ -54,12 +55,14 @@ Recommended review by file:
 |---|---|
 | `version` | Configuration schema revision required by validation. |
 | `enabled` | Enables the replacement ACRE lifecycle. |
-| `strict` | Rejects invalid explicit assignments/collisions instead of silently relocating them. |
-| `retuneOnGroupChange` | Allows automatic group-change retuning; disabled to preserve captured radios. |
+| `strict` | Promotes explicit PRC-343 collisions from reported warnings to configuration errors. Structural errors are always rejected. |
+| `retuneOnGroupChange` | Allows event-driven group-change retuning; disabled to preserve captured radios. The CEOI still refreshes. |
 | `namedDisplays` | Enables supported physical radio channel labels. |
+| `notifyAssignmentProblems` | Shows a local WMP warning for failed manual/QA assignment without intruding on initial loading or normal respawn. |
 | `radioPriority` | Ordered base-radio classes used when assigning logical long-range nets. |
-| `radioProfiles` | Per-radio mode and CEOI placement: block/channel, numbered channel or explicit frequency. |
-| `sides` | Side preset, logical nets and group-to-net/PRC-343 mappings. |
+| `radioProfiles` | Per-radio capability mode, fallback ear sequence and maximum valid numbered channel. |
+| `radioOverrides` | Optional first-match UID, editor-variable or role replacement assignment lists. |
+| `sides` | Side preset, logical nets, fallback group mappings and explicit same-type occurrence assignments. |
 | `babel` | Language definitions, side defaults, speaking language, overrides and unit-follow behavior. |
 
 See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),

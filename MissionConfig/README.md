@@ -23,7 +23,7 @@ Do not change a setting merely because it is exposed.
 
 ## Files
 
-- `acreConfig.sqf` — ACRE2 nets, presets, radio profiles, group allocation and Babel.
+- `acreConfig.sqf` — ACRE2 nets, presets, same-type radio occurrences/ears, group/player/role allocation and Babel. It never controls alternate PTT defaults.
 - `aiConfig.sqf` — AI rebalance and improved AI helicopter landings.
 - `airOperationsConfig.sqf` — airborne gunship, paradrop and Dynamic AA.
 - `electronicWarfareConfig.sqf` — jammer/EW behavior and RDF feedback.

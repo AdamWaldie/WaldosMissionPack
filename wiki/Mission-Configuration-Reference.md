@@ -217,7 +217,9 @@ Only one profile should be active at a time. AI rebalance initialises wherever A
 
 Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing ACRE side preset, logical net keys and group assignments. The pack automatically loads it during pre-init, server init and player-local init; no call belongs in multiplayer `init.sqf`.
 
-`retuneOnGroupChange` defaults to `false`, named displays default to enabled, and `strict` defaults to `true`. `radioPriority` determines which supported carried radio consumes each ordered group net. `radioProfiles` may extend known third-party carried radios; unknown radios and vehicle racks are not guessed or modified.
+`enabled` now gates the complete replacement lifecycle. `retuneOnGroupChange` defaults to `false`; the CBA group event still refreshes the CEOI but does not rewrite radios. Named displays default to enabled and `strict` defaults to `true`. `radioProfiles` describe capability mode, fallback ear sequence and valid channel ceiling. Unknown radios and vehicle racks are not guessed or modified.
+
+An explicit assignment is `[base class, same-type occurrence, target, ear]`. This allows two identical radios to use independent nets and `LEFT`, `RIGHT` or `BOTH` ears. Only listed occurrences are managed; extra/captured radios remain untouched. `radioOverrides` can replace the group list for a UID, editor variable or role. Alternate PTT defaults are always left to the player.
 
 ### ACRE2 Long-Range Channel Names (CEOI)
 
@@ -226,11 +228,16 @@ Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing
     ["PLT1", "PLATOON 1", []],
     ["AIRGND", "AIR-GND", []]
 ], [
-    ["VIKING-1-1", ["PLT1", "AIRGND"], [1, 1]]
+    ["VIKING-1-1", ["PLT1", "AIRGND"], [1, 1], [
+        ["ACRE_PRC343", 1, [1, 1], "LEFT"],
+        ["ACRE_PRC343", 2, [1, 2], "RIGHT"],
+        ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
+        ["ACRE_PRC152", 2, "AIRGND", "LEFT"]
+    ]]
 ]]
 ```
 
-Group net keys drive both radio channels and the CEOI. The optional final `[block, channel]` is a strict PRC-343 override.
+Group net keys drive both radio channels and the CEOI. The fallback `[block, channel]` is used by simple allocation when no explicit list is supplied. Frequency radios use net-specific overrides or direct frequency settings through ACRE's public setup API.
 
 ### ACRE2 Babel (optional — disabled by default)
 
