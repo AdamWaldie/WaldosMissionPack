@@ -951,7 +951,7 @@ class PrReviewAuditTests(unittest.TestCase):
         jammer_server = (ROOT / "MissionScripts" / "ZenModules" / "ZenCreateJammerServer.sqf").read_text(encoding="utf-8")
         jammer_interaction = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerInteraction.sqf").read_text(encoding="utf-8")
         self.assertIn('["EXISTING"]', jammer_zen)
-        self.assertIn('[_emitterClasses, _emitterLabels, 0]', jammer_zen)
+        self.assertIn('[_emitterClasses, _emitterLabels, 0, 4]', jammer_zen)
         self.assertIn('private _existingObject = if (_source isEqualTo "EXISTING")', jammer_zen)
         self.assertIn('player,\n            _existingObject', jammer_zen)
         self.assertIn('ZenAssignObjectOwnerServer', jammer_server)

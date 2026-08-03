@@ -173,6 +173,15 @@ class FullAuditTests(unittest.TestCase):
             self.assertIn("isServer", source, relative)
             self.assertIn(token, source, relative)
 
+    def test_dense_jammer_dialog_uses_non_overlapping_inline_selectors(self):
+        jammer = (
+            ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn('["COMBO"', jammer)
+        self.assertGreaterEqual(jammer.count('["TOOLBOX:WIDE"'), 6)
+        self.assertIn('["LIST", ["Spawned emitter object"', jammer)
+        self.assertIn('_sourceValues param [_sourceIndex, "SPAWN"]', jammer)
+
     def test_acre_ceoi_handles_explicit_and_missing_343_assignments(self):
         compile_plan = (
             ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2CompilePlan.sqf"
@@ -1551,9 +1560,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('["EDIT", ["Aircraft class"', runtime)
         self.assertNotIn('["EDIT", ["System ID"', runtime + dynamic_aa)
         self.assertNotIn('["EDIT", ["Asset faction/pool key"', dynamic_aa)
-        self.assertIn('["COMBO", ["Emitter source"', jammer)
-        self.assertIn('["COMBO", ["Spawned emitter object"', jammer)
-        self.assertIn('["COMBO", ["ACRE frequency coverage"', jammer)
+        self.assertIn('["TOOLBOX:WIDE", ["Emitter source"', jammer)
+        self.assertIn('["LIST", ["Spawned emitter object"', jammer)
+        self.assertIn('["TOOLBOX:WIDE", ["ACRE frequency coverage"', jammer)
 
     def test_ai_profiles_have_wmp_names_and_nvg_aware_low_light_tuning(self):
         profile_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")

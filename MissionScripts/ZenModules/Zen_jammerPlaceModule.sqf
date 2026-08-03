@@ -36,10 +36,13 @@ private _emitterLabels = _emitterClasses apply {
     if (_name == "") then {_x} else {format ["%1 (%2)", _name, _x]}
 };
 private _sourceValues = ["SPAWN"];
-private _sourceLabels = ["Spawn the selected emitter object"];
+private _sourceLabels = [["Spawn object", "Create the selected emitter at the module position."]];
 if (!isNull _objectPos) then {
     _sourceValues insert [0, ["EXISTING"]];
-    _sourceLabels insert [0, [format ["Use object under module: %1 (%2)", getText (configFile >> "CfgVehicles" >> (typeOf _objectPos) >> "displayName"), typeOf _objectPos]]];
+    _sourceLabels insert [0, [[
+        "Use object under module",
+        format ["Use %1 (%2) without replacing it.", getText (configFile >> "CfgVehicles" >> (typeOf _objectPos) >> "displayName"), typeOf _objectPos]
+    ]]];
 };
 
 [
@@ -48,18 +51,13 @@ if (!isNull _objectPos) then {
         ["SLIDER", ["Radius (m)", "Full-strength jamming radius in metres."], [50, 2000, 300, 0], false],
         ["SLIDER", ["Falloff (m)", "Extra metres of linear falloff beyond the radius."], [0, 1000, 50, 0], false],
         ["SLIDER", ["Strength (%)", "Jamming strength at full effect (100% = total blackout)."], [0, 100, 100, 0], false],
-        ["COMBO", ["Affected Side", "Which side's radios are jammed."],
-            [
-                ["ALL", "WEST", "EAST", "IND", "CIV"],
-                ["All Sides", "BLUFOR", "OPFOR", "INDFOR", "CIVILIAN"],
-                0
-            ],
-        false],
-        ["COMBO", ["ACRE frequency coverage", "TFAR is always broadband. Choose a common ACRE operating range."], [
-            ["ALL", "30-88", "225-400", "30-88;225-400"],
-            ["All frequencies", "VHF combat net (30-88 MHz)", "UHF air net (225-400 MHz)", "VHF and UHF combat/air nets"],
-            0
-        ]],
+        ["TOOLBOX:WIDE", ["Affected Side", "Which side's radios are jammed."], [0, 1, 5, ["All", "BLUFOR", "OPFOR", "INDFOR", "Civilian"]]],
+        ["TOOLBOX:WIDE", ["ACRE frequency coverage", "TFAR is always broadband. Choose a common ACRE operating range."], [0, 2, 2, [
+            ["All frequencies", "Jam every supported ACRE frequency."],
+            ["VHF combat", "Jam 30-88 MHz."],
+            ["UHF air", "Jam 225-400 MHz."],
+            ["VHF + UHF", "Jam both 30-88 MHz and 225-400 MHz."]
+        ]]],
         ["CHECKBOX", ["Start Active", "Enable the emitter immediately after placement."], true, false],
         ["SLIDER", ["Cone Arc (deg)", "360 = omnidirectional; less = a directional cone facing the bearing below."], [10, 360, 360, 0], false],
         ["SLIDER", ["Cone Bearing (deg)", "Compass bearing the cone faces (ignored when arc is 360)."], [0, 359, 0, 0], false],
@@ -69,27 +67,25 @@ if (!isNull _objectPos) then {
         ["CHECKBOX", ["Also Jam UAVs / Drones", "Freeze autonomous drones and cut controlling players' datalinks in the field."], false, false],
         ["CHECKBOX", ["Show Map Marker", "Place a persistent map marker on the jammer."], false, false],
         ["CHECKBOX", ["Show Curator 3D Marker", "Show a floating curator-only marker for this emitter. Ordinary players never see it."], false, false],
-        ["COMBO", ["Emitter source", "Use the object directly under the module, when available, or spawn a new emitter."], [_sourceValues, _sourceLabels, 0]],
-        ["COMBO", ["Spawned emitter object", "Exact physical class created when Emitter source is Spawn."], [_emitterClasses, _emitterLabels, 0]],
+        ["TOOLBOX:WIDE", ["Emitter source", "Use the object directly under the module, when available, or spawn a new emitter."], [0, 1, count _sourceLabels, _sourceLabels]],
+        ["LIST", ["Spawned emitter object", "Exact physical class created when Emitter source is Spawn."], [_emitterClasses, _emitterLabels, 0, 4]],
         ["CHECKBOX", ["Allow Reactivation", "Add Activate Jammer while the field is off. Turning it off still requires Disable Jammer, so this cannot bypass the procedure below."], true, false],
         ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant hostile field disablement with a shared interaction challenge."], true, false],
-        ["COMBO", ["Disable Procedure", "Procedure players complete to shut down the jammer."], [
-            ["circuit", "radiotune", "commandinput", "wirecut"],
-            ["Circuit bypass", "Signal alignment", "Command authentication", "Control-wire isolation"],
-            0
-        ]],
-        ["COMBO", ["Procedure Difficulty", "Shared interaction difficulty profile."], [
-            ["easy", "standard", "hard", "expert"],
-            ["Easy", "Standard", "Hard", "Expert"],
-            1
-        ]],
+        ["TOOLBOX:WIDE", ["Disable Procedure", "Procedure players complete to shut down the jammer."], [0, 2, 2, ["Circuit bypass", "Signal alignment", "Command authentication", "Control-wire isolation"]]],
+        ["TOOLBOX:WIDE", ["Procedure Difficulty", "Shared interaction difficulty profile."], [1, 1, 4, ["Easy", "Standard", "Hard", "Expert"]]],
         ["CHECKBOX", ["Engineer only", "Hide the field-disable action from non-engineers. Disabled by default so public Zeus players can use the objective."], false],
-        ["COMBO", ["Successful disable result", "Disable keeps the prop and turns the field off; destroy removes it."], [["DISABLE", "DESTROY"], ["Disable field", "Destroy emitter"], 0]]
+        ["TOOLBOX:WIDE", ["Successful disable result", "Disable keeps the prop and turns the field off; destroy removes it."], [0, 1, 2, ["Disable field", "Destroy emitter"]]]
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_source", "_className", "_allowPlayerToggle", "_disableChallenge", "_challengeId", "_difficulty", "_engineerOnly", "_resultMode"];
-        _pos params ["_modulePos", "_objectPos"];
+        _args params ["_radius", "_falloff", "_strengthPct", "_sideIndex", "_bandIndex", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_sourceIndex", "_className", "_allowPlayerToggle", "_disableChallenge", "_challengeIndex", "_difficultyIndex", "_engineerOnly", "_resultIndex"];
+        _pos params ["_modulePos", "_objectPos", "_sourceValues"];
+        private _sideStr = ["ALL", "WEST", "EAST", "IND", "CIV"] param [_sideIndex, "ALL"];
+        private _bandsText = ["ALL", "30-88", "225-400", "30-88;225-400"] param [_bandIndex, "ALL"];
+        private _source = _sourceValues param [_sourceIndex, "SPAWN"];
+        private _challengeId = ["circuit", "radiotune", "commandinput", "wirecut"] param [_challengeIndex, "circuit"];
+        private _difficulty = ["easy", "standard", "hard", "expert"] param [_difficultyIndex, "standard"];
+        private _resultMode = ["DISABLE", "DESTROY"] param [_resultIndex, "DISABLE"];
         private _existingObject = if (_source isEqualTo "EXISTING") then {_objectPos} else {objNull};
         if (_source isEqualTo "EXISTING" && {isNull _existingObject}) exitWith {
             ["JAMMER NOT PLACED", "The object under the module is no longer available.", 8, "FAILURE"] call Waldo_fnc_JammingNotice;
@@ -144,5 +140,5 @@ if (!isNull _objectPos) then {
         ] remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
     },
     {},
-    [_modulePos, _objectPos]
+    [_modulePos, _objectPos, _sourceValues]
 ] call zen_dialog_fnc_create;

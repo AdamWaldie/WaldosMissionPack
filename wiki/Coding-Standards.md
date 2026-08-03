@@ -106,6 +106,22 @@ Config file headers retain their own callable contract: `Arguments`, `Return Val
 `Result`, and `Current callers`. They also state the activation model and whether custom calls belong
 in `initServer.sqf`, `initPlayerLocal.sqf`, an editor object init, a server trigger/script, or ZEN.
 
+## ZEN Dialog Layout Standard
+
+ZEN creates dynamic-dialog rows from top to bottom. Its expanding `COMBO` control does not manage
+the z-order of controls created in later rows, so a drop-down in a long form can appear underneath
+those rows at some resolutions and interface scales.
+
+- Use `TOOLBOX:WIDE` for short fixed choices. Give every choice plain-language text and a tooltip
+  where the consequence is not obvious.
+- Use an inline `LIST` for dynamic or longer selections such as classnames, factions and active
+  systems. Keep the value array separate from the display labels.
+- Reserve `COMBO` for short dialogs where its expanded list cannot cross another interactive row.
+- Keep one coherent dialog when possible. Scrolling a ZEN `RscDisplayScrollbars` form is preferable
+  to hiding related settings in unexplained staged dialogs.
+- Verify the actual dialog at the supported 3840x2160 launch default and at the documented aspect
+  ratio/interface-size matrix. Static ZEN parity proves wiring, not visual stacking.
+
 ## Feature Documentation Standard
 A "feature" is a user-facing capability (a system, a Zeus module, a script a mission maker calls). When you add or change one, document it in **all** of these places so it stays discoverable:
 1. **In-file headers** - on every script that makes up the feature (above).
