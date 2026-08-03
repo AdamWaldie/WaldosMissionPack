@@ -1455,7 +1455,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;', (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8"))
 
         config_readme = (config_root / "README.md").read_text(encoding="utf-8")
-        activation_guide = (ROOT / "Wiki" / "Feature-Setup-and-Activation.md").read_text(encoding="utf-8")
+        activation_guide = (ROOT / "wiki" / "Feature-Setup-and-Activation.md").read_text(encoding="utf-8")
         for required in (
             "Activation models", "Feature activation table", "Where custom calls belong",
             "initServer.sqf", "initPlayerLocal.sqf", "init.sqf",
