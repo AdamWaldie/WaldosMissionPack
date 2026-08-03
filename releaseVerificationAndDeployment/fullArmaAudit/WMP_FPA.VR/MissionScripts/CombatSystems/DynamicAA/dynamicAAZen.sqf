@@ -62,6 +62,7 @@ private _shutdownOptions = ["circuit"] call Waldo_fnc_MiniGameInteractionOptions
 [
     "Dynamic AA: Detection and Behaviour",
     [
+        ["EDIT", ["System and marker name", "Human-readable name shown on map markers and in Zeus removal. It does not control the internal runtime ID."], ["Dynamic AA"]],
         ["TOOLBOX:WIDE", ["Operational side", "Controls crew allegiance and hostile detection, not physical equipment."], [1, 1, 3, ["BLUFOR", "OPFOR", "Independent"]]],
         ["TOOLBOX:WIDE", ["Equipment selection", "Choose one reusable faction profile or manually select mixed equipment."], [0, 1, 2, ["Faction profile", "Exact mixed equipment"]]],
         ["SLIDER", ["Detection radius (m)", "Horizontal detection range."], [100, 10000, 2000, 0]],
@@ -82,8 +83,12 @@ private _shutdownOptions = ["circuit"] call Waldo_fnc_MiniGameInteractionOptions
     {
         params ["_values", "_arguments"];
         _arguments params ["_modulePos", "_defaultId", "_catalogue"];
-        _values params ["_sideIndex", "_modeIndex", "_radius", "_minimumAltitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_altitudeIndex", "_markers", "_showMarkerDetails", "_cleanup", "_announce", "_shutdown", "_challengeId", "_difficultyIndex"];
+        _values params ["_displayNameRaw", "_sideIndex", "_modeIndex", "_radius", "_minimumAltitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_altitudeIndex", "_markers", "_showMarkerDetails", "_cleanup", "_announce", "_shutdown", "_challengeId", "_difficultyIndex"];
+        private _displayName = [_displayNameRaw, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-()[]"] call BIS_fnc_filterString;
+        if (_displayName == "") then {_displayName = "Dynamic AA"};
+        _displayName = _displayName select [0, 64];
         private _settings = createHashMapFromArray [
+            ["displayName", _displayName],
             ["side", [west, east, independent] param [_sideIndex, east]],
             ["assetSelectionMode", ["PROFILE", "EXACT"] param [_modeIndex, "PROFILE"]],
             ["radius", _radius], ["minimumAltitude", _minimumAltitude], ["maximumAltitude", _maximumAltitude],

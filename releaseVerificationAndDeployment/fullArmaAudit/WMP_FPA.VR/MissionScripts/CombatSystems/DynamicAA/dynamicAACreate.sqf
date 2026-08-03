@@ -8,6 +8,7 @@
  * Arguments:
  * 0: config <HASHMAP> with:
  *    Required: id <STRING> safe unique key; centre <ARRAY> detection centre.
+ *    Naming: displayName <STRING> is the human-readable marker/removal name (default: id).
  *    Detection: side <SIDE>, radius, minimumAltitude, maximumAltitude, engagementRadius <METRES>,
  *      detectionDwell, clearDelay and detectionInterval <SECONDS>.
  *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY> for
@@ -121,6 +122,9 @@ if (_assignmentMismatch) exitWith {
     ["Creation rejected: exact equipment selections do not match the requested asset counts.", "ERROR"] call _reply;
     false
 };
+private _displayName = [_config getOrDefault ["displayName", _id], "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-()[]"] call BIS_fnc_filterString;
+if (_displayName == "") then {_displayName = _id};
+_displayName = _displayName select [0, 64];
 private _classes = +_radarClasses;
 if (_mobileSlotCount > 0) then {_classes append _mobileClasses};
 if (_fighterCount > 0) then {_classes append _fighterClasses};
@@ -228,6 +232,7 @@ if (_layoutFailed) exitWith {
 };
 
 _config set ["id", _id];
+_config set ["displayName", _displayName];
 _config set ["centre", _centre];
 _config set ["side", _side];
 _config set ["radius", _radius];
@@ -338,9 +343,9 @@ if (_config getOrDefault ["createMarkers", true]) then {
     _iconMarker setMarkerType "o_antiair";
     _iconMarker setMarkerColor _colour;
     private _markerText = if (_config getOrDefault ["showMarkerDetails", true]) then {
-        format ["%1 AA - range %2m / floor %3m / ceiling %4m", _id, round _radius, round _minimumAltitude, round _maximumAltitude]
+        format ["%1 - range %2m / floor %3m / ceiling %4m", _displayName, round _radius, round _minimumAltitude, round _maximumAltitude]
     } else {
-        format ["%1 AA", _id]
+        _displayName
     };
     _iconMarker setMarkerText _markerText;
     _markers = [_areaMarker, _iconMarker];
@@ -368,6 +373,6 @@ _state set ["handle", _handle];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 [] call Waldo_fnc_DynamicAAPublishState;
-diag_log format ["[WMP DYNAMIC AA] '%1' active: radius %2m, altitude floor %3m, asset pool %4.", _id, _radius, _minimumAltitude, _config get "resolvedAssetPool"];
-[format ["System %1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _id, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
+diag_log format ["[WMP DYNAMIC AA] '%1' (%2) active: radius %3m, altitude floor %4m, asset pool %5.", _displayName, _id, _radius, _minimumAltitude, _config get "resolvedAssetPool"];
+[format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
 true

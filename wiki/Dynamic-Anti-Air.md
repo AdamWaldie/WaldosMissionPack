@@ -13,14 +13,15 @@ Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above t
 ## Zeus setup
 
 1. Place **WMP Combat Systems → Dynamic AA - Create** at the centre of the detection zone.
-2. Choose the operational side. This controls crew allegiance and hostile detection only.
-3. Choose **Faction profile** for a reusable pool, or **Exact mixed equipment** for direct class selection. Physical equipment may come from any configured faction and does not change its operational side.
-4. Configure detection, altitude and behaviour in the first dialog. **Map markers** controls whether markers exist. The separate, default-on **Show range and altitude limits** option controls whether their label shows detection range, floor and ceiling. Turning it off leaves only the system name. WMP generates the internal system ID automatically.
-5. The equipment page uses the original readable class lists. Profile mode shows only the content profile and response counts. Exact mode shows radar, static-AA, mobile-AA and fighter class lists with a quantity beside each.
-6. To mix more than one class in a category, enable **Add another mixed equipment set**. The same equipment page opens again; set unused categories to zero and add the additional class quantities. Finish with the option cleared.
-7. Optionally enable the player radar-shutdown objective and select its procedure and difficulty in the common settings.
-8. Confirm the equipment page. The dedicated server automatically places the requested radar, static-AA and mobile-AA assets in a spaced, terrain-safe layout around the module position. No additional map clicks are required.
-9. Fly a crewed hostile aircraft through the zone at an eligible altitude to verify activation.
+2. Enter a human-readable **System and marker name**, such as `Northern Air Defence`. This is independent from the generated internal cleanup ID.
+3. Choose the operational side. This controls crew allegiance and hostile detection only.
+4. Choose **Faction profile** for a reusable pool, or **Exact mixed equipment** for direct class selection. Physical equipment may come from any configured faction and does not change its operational side.
+5. Configure detection, altitude and behaviour in the first dialog. **Map markers** controls whether markers exist. The separate, default-on **Show range and altitude limits** option controls whether their label shows detection range, floor and ceiling. Turning it off leaves only the custom system name. WMP generates the internal system ID automatically.
+6. The equipment page uses the original readable class lists. Profile mode shows only the content profile and response counts. Exact mode shows radar, static-AA, mobile-AA and fighter class lists with a quantity beside each.
+7. To mix more than one class in a category, enable **Add another mixed equipment set**. The same equipment page opens again; set unused categories to zero and add the additional class quantities. Finish with the option cleared.
+8. Optionally enable the player radar-shutdown objective and select its procedure and difficulty in the common settings.
+9. Confirm the equipment page. The dedicated server automatically places the requested radar, static-AA and mobile-AA assets in a spaced, terrain-safe layout around the module position. No additional map clicks are required.
+10. Fly a crewed hostile aircraft through the zone at an eligible altitude to verify activation.
 
 Each static site selects one configured site template. Mobile launchers and scrambled fighters are independently selected from the resolved side or faction pool, allowing repeated systems to use different valid assets. Fighters spawn outside the zone and engage the detected aircraft. Use **Dynamic AA - Remove Nearest** to remove or disable the nearest named system.
 
@@ -33,6 +34,7 @@ The generated system ID is an internal registry key used for replacement, cleanu
 ```sqf
 private _aa = createHashMapFromArray [
     ["id", "north_sector"],
+    ["displayName", "Northern Air Defence"],
     ["centre", getMarkerPos "aa_zone_north"],
     ["radarPosition", getMarkerPos "aa_radar_north"],
     ["side", east],
@@ -65,6 +67,7 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | Key | Default | Purpose |
 |---|---:|---|
 | `id` | required | Unique stable system ID |
+| `displayName` | system ID | Human-readable marker and Zeus-removal name. It may contain spaces and common punctuation without changing the internal ID. |
 | `centre` | required | Detection centre |
 | `radarPosition` / `radarPositions` | generated | Optional authored radar position(s). When omitted, `radarCount` creates a server-generated layout around the centre. |
 | `radarCount` | `1` | Number of server-placed radar objects when authored radar positions are omitted |
