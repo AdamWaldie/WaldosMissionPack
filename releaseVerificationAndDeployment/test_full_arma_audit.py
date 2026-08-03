@@ -1174,7 +1174,7 @@ class FullAuditTests(unittest.TestCase):
         recovery = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryRegisterVehicle.sqf").read_text(encoding="utf-8")
         recovery_interaction = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryInteractionSetup.sqf").read_text(encoding="utf-8")
         recovery_restore = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
-        for label in ("Require Radar Shutdown Procedure", "Shutdown Procedure", "Procedure Difficulty"):
+        for label in ("Player radar shutdown objective", "Procedure", "Difficulty"):
             self.assertIn(label, aa_zen)
         for label in ("Require Recovery Preparation", "Preparation Procedure", "Require Display Authentication", "Authentication Procedure"):
             self.assertIn(label, runtime_zen)
@@ -1569,11 +1569,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('configProperties [configFile >> "CfgVehicles"', runtime)
         self.assertIn("operational side", runtime.lower())
         self.assertIn("does not restrict the physical", runtime)
-        self.assertIn("does not choose the physical equipment", dynamic_aa)
+        self.assertIn("not the equipment faction", dynamic_aa)
         self.assertIn('"Faction/content profile"', dynamic_aa)
-        self.assertIn('"Exact equipment"', dynamic_aa)
-        for selector in ('"Exact radar"', '"Exact static AA"', '"Exact mobile AA"', '"Exact fighter"'):
-            self.assertIn(selector, dynamic_aa)
+        self.assertIn('"Exact mixed assets"', dynamic_aa)
+        for stage in ('"Dynamic AA: System and Detection"', '"Dynamic AA: Exact Asset Placement"', '"Dynamic AA: Profile and Behaviour"', '"Dynamic AA: Shutdown Objective"'):
+            self.assertIn(stage, dynamic_aa)
+        self.assertIn("uiSleep 0", dynamic_aa)
         self.assertNotIn('["EDIT", ["Aircraft class"', runtime)
         self.assertNotIn('["EDIT", ["System ID"', runtime + dynamic_aa)
         self.assertNotIn('["EDIT", ["Asset faction/pool key"', dynamic_aa)
@@ -1592,9 +1593,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('_accepted isEqualType true', detector)
         self.assertIn('createVehicleCrew _radar', create)
         self.assertIn('_radar setVehicleRadar 1', create)
-        self.assertIn('["assetSelectionMode", _assetMode]', placement)
-        self.assertIn('_config set ["radarClass", _radarClass]', placement)
-        self.assertIn('_config set ["staticClass", _staticClass]', placement)
+        self.assertIn('getOrDefault ["assetSelectionMode", "PROFILE"]', placement)
+        for assignment in ("radarAssignments", "staticAssignments", "mobileAssignments", "fighterAssignments"):
+            self.assertIn(f'_config set ["{assignment}"', placement)
+            self.assertIn(assignment, create)
+        self.assertIn('"Use for remaining"', placement)
+        self.assertIn("different classes", placement)
         self.assertIn('Waldo_DynamicAA_FactionAssetPools', shared)
         self.assertNotIn('Waldo_DynamicAA_FactionAssetPools', server)
 

@@ -13,9 +13,10 @@
  *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY>;
  *      staticSiteSpacing <METRES>; radarDirection <DEGREES>.
  *    Response: fighterCount <NUMBER>; initialAmmoFraction <0..1>; createMarkers <BOOL>.
- *    Pool selection: faction <STRING> is a content profile independent of side. Exact overrides are
- *      radarClass, staticClass/staticClasses, mobileClass and fighterClass. Omitted values resolve
- *      through MissionConfig airOperationsConfig side/faction pools.
+ *    Pool selection: faction <STRING> is a content profile independent of side. Exact ZEN selection
+ *      uses radarAssignments/staticAssignments/mobileAssignments/fighterAssignments, with one class
+ *      per requested slot. Script callers may still use the singular class overrides. Omitted values
+ *      resolve through MissionConfig airOperationsConfig side/faction pools.
  *    Optional shutdown interaction: shutdownInteraction <BOOL>, shutdownChallenge <STRING> and
  *      shutdownDifficulty <easy|standard|hard|expert>.
  *
@@ -85,23 +86,46 @@ private _detectionInterval = (_config getOrDefault ["detectionInterval", mission
 private _radarPosition = _config getOrDefault ["radarPosition", _centre];
 private _radarPositions = _config getOrDefault ["radarPositions", [_radarPosition]];
 if (count _radarPositions == 0) then {_radarPositions = [_radarPosition]};
+private _staticPositions = _config getOrDefault ["staticPositions", []];
+private _mobilePositions = _config getOrDefault ["mobilePositions", []];
+private _radarAssignments = _config getOrDefault ["radarAssignments", []];
+private _staticAssignments = _config getOrDefault ["staticAssignments", []];
+private _mobileAssignments = _config getOrDefault ["mobileAssignments", []];
+private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
+private _assignmentMismatch = (count _radarAssignments > 0 && {count _radarAssignments != count _radarPositions})
+    || {count _staticAssignments > 0 && {count _staticAssignments != count _staticPositions}}
+    || {count _mobileAssignments > 0 && {count _mobileAssignments != count _mobilePositions}}
+    || {count _fighterAssignments > 0 && {count _fighterAssignments != _fighterCount}};
+if (_assignmentMismatch) exitWith {
+    diag_log format ["[WMP DYNAMIC AA] '%1' rejected: exact assignment counts do not match requested slots.", _id];
+    ["Creation rejected: exact equipment selections do not match the requested asset counts.", "ERROR"] call _reply;
+    false
+};
 private _pool = [_config, _side] call Waldo_fnc_DynamicAAResolveAssetPool;
-private _radarClasses = if ("radarClass" in (keys _config)) then {[_config get "radarClass"]} else {_config getOrDefault ["radarClasses", _pool get "radarClasses"]};
+private _radarClasses = if (count _radarAssignments > 0) then {+_radarAssignments} else {
+    if ("radarClass" in (keys _config)) then {[_config get "radarClass"]} else {_config getOrDefault ["radarClasses", _pool get "radarClasses"]}
+};
 private _staticSitePools = if ("staticClass" in (keys _config)) then {
     [[_config get "staticClass"]]
 } else {
-    if ("staticClasses" in (keys _config)) then {[+(_config get "staticClasses")]} else {_config getOrDefault ["staticSitePools", _pool get "staticSitePools"]}
+    if (count _staticAssignments > 0) then {_staticAssignments apply {[_x]}} else {
+        if ("staticClasses" in (keys _config)) then {[+(_config get "staticClasses")]} else {_config getOrDefault ["staticSitePools", _pool get "staticSitePools"]}
+    }
 };
-private _mobileClasses = if ("mobileClass" in (keys _config)) then {[_config get "mobileClass"]} else {_config getOrDefault ["mobileClasses", _pool get "mobileClasses"]};
-private _fighterClasses = if ("fighterClass" in (keys _config)) then {[_config get "fighterClass"]} else {_config getOrDefault ["fighterClasses", _pool get "fighterClasses"]};
+private _mobileClasses = if (count _mobileAssignments > 0) then {+_mobileAssignments} else {
+    if ("mobileClass" in (keys _config)) then {[_config get "mobileClass"]} else {_config getOrDefault ["mobileClasses", _pool get "mobileClasses"]}
+};
+private _fighterClasses = if (count _fighterAssignments > 0) then {+_fighterAssignments} else {
+    if ("fighterClass" in (keys _config)) then {[_config get "fighterClass"]} else {_config getOrDefault ["fighterClasses", _pool get "fighterClasses"]}
+};
 private _classes = +_radarClasses;
-if (count (_config getOrDefault ["mobilePositions", []]) > 0) then {_classes append _mobileClasses};
+if (count _mobilePositions > 0) then {_classes append _mobileClasses};
 if (_fighterCount > 0) then {_classes append _fighterClasses};
-if (count (_config getOrDefault ["staticPositions", []]) > 0) then {{_classes append _x} forEach _staticSitePools};
+if (count _staticPositions > 0) then {{_classes append _x} forEach _staticSitePools};
 private _invalidClass = _classes findIf {!isClass (configFile >> "CfgVehicles" >> _x)};
 private _missingPool = count _radarClasses == 0
-    || {count (_config getOrDefault ["staticPositions", []]) > 0 && {count _staticSitePools == 0}}
-    || {count (_config getOrDefault ["mobilePositions", []]) > 0 && {count _mobileClasses == 0}}
+    || {count _staticPositions > 0 && {count _staticSitePools == 0}}
+    || {count _mobilePositions > 0 && {count _mobileClasses == 0}}
     || {_fighterCount > 0 && {count _fighterClasses == 0}};
 if (_invalidClass >= 0 || {_missingPool}) exitWith {
     private _reason = if (_invalidClass >= 0) then {format ["invalid classname %1", _classes select _invalidClass]} else {"a required asset pool is empty"};
@@ -128,13 +152,18 @@ _config set ["radarClasses", _radarClasses];
 _config set ["staticSitePools", _staticSitePools];
 _config set ["mobileClasses", _mobileClasses];
 _config set ["fighterClasses", _fighterClasses];
+_config set ["radarAssignments", _radarAssignments];
+_config set ["staticAssignments", _staticAssignments];
+_config set ["mobileAssignments", _mobileAssignments];
+_config set ["fighterAssignments", _fighterAssignments];
 _config set ["resolvedAssetPool", _pool getOrDefault ["source", "SIDE"]];
 
 private _objects = [];
 private _groups = [];
 private _defenceGroups = [];
 private _radars = _radarPositions apply {
-    private _radar = createVehicle [selectRandom _radarClasses, _x, [], 0, "NONE"];
+    private _radarClass = if (count _radarAssignments > 0) then {_radarAssignments select _forEachIndex} else {selectRandom _radarClasses};
+    private _radar = createVehicle [_radarClass, _x, [], 0, "NONE"];
     _radar setDir (_config getOrDefault ["radarDirection", random 360]);
     if (_radar isKindOf "AllVehicles") then {
         createVehicleCrew _radar;
@@ -157,7 +186,7 @@ private _radar = _radars select 0;
 {
     private _base = _x;
     private _direction = _base getDir _centre;
-    private _staticClasses = selectRandom _staticSitePools;
+    private _staticClasses = if (count _staticAssignments > 0) then {[_staticAssignments select _forEachIndex]} else {selectRandom _staticSitePools};
     private _staticClassCount = (count _staticClasses) max 1;
     private _positions = _staticClasses apply {
         if (_staticClassCount == 1) then {_base} else {
@@ -179,10 +208,10 @@ private _radar = _radars select 0;
         _groups pushBackUnique _group;
         _defenceGroups pushBackUnique _group;
     } forEach _staticClasses;
-} forEach (_config getOrDefault ["staticPositions", []]);
+} forEach _staticPositions;
 
 {
-    private _mobileClass = selectRandom _mobileClasses;
+    private _mobileClass = if (count _mobileAssignments > 0) then {_mobileAssignments select _forEachIndex} else {selectRandom _mobileClasses};
     private _vehicle = createVehicle [_mobileClass, _x, [], 0, "NONE"];
     _vehicle setVehicleAmmo (((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1);
     _vehicle setDir (_x getDir _centre);
@@ -196,7 +225,7 @@ private _radar = _radars select 0;
     _objects pushBack _vehicle;
     _groups pushBackUnique _group;
     _defenceGroups pushBackUnique _group;
-} forEach (_config getOrDefault ["mobilePositions", []]);
+} forEach _mobilePositions;
 
 private _markerPrefix = format ["Waldo_DynamicAA_%1", _id];
 private _markers = [];

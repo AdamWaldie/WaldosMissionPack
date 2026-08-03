@@ -480,7 +480,7 @@ class PrReviewAuditTests(unittest.TestCase):
 
     def test_dynamic_aa_target_is_crewed_airborne_and_retained_in_the_zone(self):
         source = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
-        for token in ('["radarClass", _radarClass]', '["staticClass", "B_AAA_System_01_F"]', '["mobileClass", "O_APC_Tracked_02_AA_F"]', '["staticPositions", [[125, -110, 0]]]', '["mobilePositions", [[225, -110, 0]]]', "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
+        for token in ('["radarAssignments", [_radarClass]]', '["staticAssignments", ["B_AAA_System_01_F"]]', '["mobileAssignments", ["O_APC_Tracked_02_AA_F"]]', '["staticPositions", [[125, -110, 0]]]', '["mobilePositions", [[225, -110, 0]]]', "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
             self.assertIn(token, source)
 
     def test_field_resupply_has_logical_cargo_grouped_ace_controls_and_blue_information(self):

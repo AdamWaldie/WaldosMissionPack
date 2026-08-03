@@ -14,11 +14,12 @@ Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above t
 
 1. Place **WMP Combat Systems → Dynamic AA - Create** at the centre of the detection zone.
 2. Choose the operational side. This controls crew allegiance and hostile detection only.
-3. Choose a faction/content profile independently, or choose **Exact equipment** and select the radar, static AA, mobile AA and fighter classes directly. The selected assets may come from a different faction than the operational side.
-4. Configure detection, altitude and exact response counts. A count of zero disables that response. WMP generates the internal system ID automatically.
-   Optionally enable **Require Radar Shutdown Procedure**, then choose the procedure and difficulty.
-5. Select every requested radar, static-AA and mobile-AA position on the map.
-6. Fly a crewed hostile aircraft through the zone at an eligible altitude to verify activation.
+3. Choose **Faction profile** for a reusable pool, or **Exact mixed assets** to choose each requested asset independently. Physical equipment may come from any configured faction and does not change its operational side.
+4. Configure the response counts, detection range and altitude envelope in the short first dialog. A count of zero disables that response. WMP generates the internal system ID automatically.
+5. The second dialog shows only settings relevant to the chosen workflow. Profile mode shows the content profile. Exact mode asks for one class per requested slot, allowing mixed radars, static weapons, vehicles and fighters in one system. Select **Use for remaining** when the remaining slots should repeat the current class.
+6. Optionally enable the player radar-shutdown objective. Its procedure and difficulty appear in a separate dialog only when enabled.
+7. Select every requested radar, static-AA and mobile-AA position on the map. Fighters do not need map positions.
+8. Fly a crewed hostile aircraft through the zone at an eligible altitude to verify activation.
 
 Each static site selects one configured site template. Mobile launchers and scrambled fighters are independently selected from the resolved side or faction pool, allowing repeated systems to use different valid assets. Fighters spawn outside the zone and engage the detected aircraft. Use **Dynamic AA - Remove Nearest** to remove or disable the nearest named system.
 
@@ -80,7 +81,8 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `staticSitePools` | side/faction pool | Candidate site templates; one template is selected independently for each static position |
 | `mobileClasses` | side/faction pool | Candidate mobile-AA classes; one is selected per position |
 | `fighterClasses` | side/faction pool | Candidate fighter classes; one is selected per scrambled aircraft |
-| `radarClass`, `staticClass`, `mobileClass`, `fighterClass` | unset | Exact per-system class overrides; `staticClass` creates one selected weapon at each static position |
+| `radarAssignments`, `staticAssignments`, `mobileAssignments`, `fighterAssignments` | unset | Exact per-slot arrays used by ZEN. Lengths must match radar positions, static positions, mobile positions and fighter count. Entries may repeat or mix freely. |
+| `radarClass`, `staticClass`, `mobileClass`, `fighterClass` | unset | Convenient scripted whole-system overrides; `staticClass` creates one selected weapon at each static position |
 | `staticClasses` | unset | Exact integrated-site template override when one static position should create several components |
 | `assetPool` | unset | Per-system Dynamic AA pool overrides |
 | `staticSiteSpacing` | `30` | Metres between a static-site anchor and each spawned component; clamped to `10`–`200` to prevent radar/SAM/AAA collision starts |

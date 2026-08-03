@@ -98,7 +98,7 @@ Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Tracke
 
 ## Dynamic Anti-Air Modules
 
-**Dynamic AA - Create** keeps operational side and physical asset profile independent in one dialog. Operational side controls allegiance and targeting; the profile may intentionally draw radar, static, mobile or fighter classes configured under another faction. Internal registry IDs and raw pool keys remain behind friendly display names. **Dynamic AA - Remove Nearest** selects the active system nearest to the placed module and can either delete its assets or leave them disabled. See the [Dynamic Anti-Air guide](Dynamic-Anti-Air) for every option.
+**Dynamic AA - Create** uses short staged dialogs so profile and exact-selection fields are never shown together. Operational side controls allegiance and targeting, while physical equipment remains independent. Exact mode chooses each requested slot separately and therefore supports mixed radar, static, mobile and fighter classes; **Use for remaining** repeats a choice when desired. Internal registry IDs and raw pool keys remain behind friendly display names. **Dynamic AA - Remove Nearest** selects the active system nearest to the placed module and can either delete its assets or leave them disabled. See the [Dynamic Anti-Air guide](Dynamic-Anti-Air) for every option.
 
 ## Dynamic AO Modules
 

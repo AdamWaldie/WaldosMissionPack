@@ -346,7 +346,7 @@ Waldo_QA_fnc_createDynamicAAServer = {
             ["side", east], ["radius", 600], ["engagementRadius", 550],
             ["minimumAltitude", 60], ["maximumAltitude", 500], ["detectionDwell", 2],
             ["clearDelay", 5], ["faction", "BLU_F"], ["assetSelectionMode", "EXACT"],
-            ["radarClass", _radarClass], ["staticClass", "B_AAA_System_01_F"], ["mobileClass", "O_APC_Tracked_02_AA_F"],
+            ["radarAssignments", [_radarClass]], ["staticAssignments", ["B_AAA_System_01_F"]], ["mobileAssignments", ["O_APC_Tracked_02_AA_F"]],
             ["staticPositions", [[125, -110, 0]]], ["mobilePositions", [[225, -110, 0]]],
             ["fighterCount", 0], ["createMarkers", true],
             ["shutdownInteraction", true], ["shutdownChallenge", "circuit"], ["shutdownDifficulty", "easy"]

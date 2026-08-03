@@ -24,9 +24,14 @@ private _centre = _config get "centre";
 private _radius = _config get "radius";
 private _side = _config get "side";
 private _fighterClasses = _config getOrDefault ["fighterClasses", [_config getOrDefault ["fighterClass", "O_Plane_Fighter_02_F"]]];
+private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
 
 for "_i" from 1 to _count do {
-    private _fighterClass = selectRandom _fighterClasses;
+    private _fighterClass = if (count _fighterAssignments == _count) then {
+        _fighterAssignments select (_i - 1)
+    } else {
+        selectRandom _fighterClasses
+    };
     private _spawn2D = _centre getPos [_radius * (_config getOrDefault ["fighterSpawnRangeMultiplier", 2]), random 360];
     private _height = (_config getOrDefault ["fighterSpawnAltitude", 1000]) + ((_i - 1) * 40);
     private _spawnPosition = [_spawn2D select 0, _spawn2D select 1, _height];

@@ -1,21 +1,17 @@
 /*
  * Author: WaldoTheWarfighter
- * Opens the user-facing ZEN configuration dialog for a repeatable Dynamic AA system.
+ * Opens a short staged ZEN workflow for a repeatable Dynamic AA system.
  *
- * Operational side controls allegiance and hostile detection only. Asset profile selects physical
- * content independently, while Exact asset selection lets Zeus choose one radar, static AA, mobile
- * AA and fighter class from every configured profile. Counts of zero disable that response type.
- * All selectors use display names plus classnames so modded assets remain understandable.
+ * Stage one contains only operational and detection settings. Stage two shows either one faction
+ * profile selector or exact-selection guidance, never both. Shutdown procedure details are shown
+ * in a third small dialog only when that interaction is enabled. Exact mode subsequently asks for
+ * one class per requested asset slot, allowing mixed radars, weapons, vehicles and fighters.
  *
  * Arguments:
  * 0: modulePosition <ARRAY> - detection centre selected by module placement
  *
- * Return Value:
- * Nothing
- *
- * Example:
- * [_modulePos] call Waldo_fnc_DynamicAAZen;
- *
+ * Return Value: Nothing.
+ * Example: [_modulePos] call Waldo_fnc_DynamicAAZen;
  * Current caller: Dynamic AA - Create in Zen_initModules.sqf.
  */
 
@@ -24,87 +20,134 @@ if !(hasInterface) exitWith {};
 
 private _sidePools = missionNamespace getVariable ["Waldo_DynamicAA_SideAssetPools", createHashMap];
 private _factionPools = missionNamespace getVariable ["Waldo_DynamicAA_FactionAssetPools", createHashMap];
-
-private _profileValues = [""];
-private _profileLabels = ["Operational-side default content"];
+private _catalogue = createHashMapFromArray [
+    ["profileValues", [""]], ["profileLabels", ["Operational-side default content"]],
+    ["radarClasses", []], ["staticClasses", []], ["mobileClasses", []], ["fighterClasses", []]
+];
 {
     private _key = _x;
-    private _factionName = getText (configFile >> "CfgFactionClasses" >> _key >> "displayName");
-    if (_factionName == "") then {_factionName = _key};
-    _profileValues pushBack _key;
-    _profileLabels pushBack format ["%1  [%2]", _factionName, _key];
+    private _name = getText (configFile >> "CfgFactionClasses" >> _key >> "displayName");
+    if (_name == "") then {_name = _key};
+    (_catalogue get "profileValues") pushBack _key;
+    (_catalogue get "profileLabels") pushBack format ["%1  [%2]", _name, _key];
 } forEach ((keys _factionPools) call BIS_fnc_sortAlphabetically);
 
-private _radarClasses = [];
-private _staticClasses = [];
-private _mobileClasses = [];
-private _fighterClasses = [];
 private _collectPool = {
     params ["_pool"];
-    {_radarClasses pushBackUnique _x} forEach (_pool getOrDefault ["radarClasses", []]);
-    {{_staticClasses pushBackUnique _x} forEach _x} forEach (_pool getOrDefault ["staticSitePools", []]);
-    {_mobileClasses pushBackUnique _x} forEach (_pool getOrDefault ["mobileClasses", []]);
-    {_fighterClasses pushBackUnique _x} forEach (_pool getOrDefault ["fighterClasses", []]);
+    {(_catalogue get "radarClasses") pushBackUnique _x} forEach (_pool getOrDefault ["radarClasses", []]);
+    {{(_catalogue get "staticClasses") pushBackUnique _x} forEach _x} forEach (_pool getOrDefault ["staticSitePools", []]);
+    {(_catalogue get "mobileClasses") pushBackUnique _x} forEach (_pool getOrDefault ["mobileClasses", []]);
+    {(_catalogue get "fighterClasses") pushBackUnique _x} forEach (_pool getOrDefault ["fighterClasses", []]);
 };
 {[_sidePools get _x] call _collectPool} forEach keys _sidePools;
 {[_factionPools get _x] call _collectPool} forEach keys _factionPools;
-
-private _makeLabels = {
-    params ["_classes"];
-    _classes apply {
+{
+    _x params ["_classKey", "_labelKey"];
+    private _classes = _catalogue get _classKey;
+    private _labels = _classes apply {
         private _name = getText (configFile >> "CfgVehicles" >> _x >> "displayName");
         if (_name == "") then {_name = _x};
         format ["%1  [%2]", _name, _x]
-    }
-};
-private _radarLabels = [_radarClasses] call _makeLabels;
-private _staticLabels = [_staticClasses] call _makeLabels;
-private _mobileLabels = [_mobileClasses] call _makeLabels;
-private _fighterLabels = [_fighterClasses] call _makeLabels;
-if (_radarClasses isEqualTo []) exitWith {
+    };
+    _catalogue set [_labelKey, _labels];
+} forEach [
+    ["radarClasses", "radarLabels"],
+    ["staticClasses", "staticLabels"],
+    ["mobileClasses", "mobileLabels"],
+    ["fighterClasses", "fighterLabels"]
+];
+if ((_catalogue get "radarClasses") isEqualTo []) exitWith {
     ["DYNAMIC AA", "No valid radar classes are configured.", "ERROR", "DYNAMIC_AA_CONFIG"] call Waldo_fnc_FeatureNotifyLocal;
 };
 
 private _defaultId = ["AA"] call Waldo_fnc_CreateRuntimeId;
 [
-    "Create Dynamic AA System",
+    "Dynamic AA: System and Detection",
     [
-        ["TOOLBOX:WIDE", ["Operational side", "Crew allegiance and which aircraft are hostile. This does not choose the physical equipment."], [1, 1, 3, ["BLUFOR", "OPFOR", "Independent"]]],
-        ["TOOLBOX:WIDE", ["Asset selection", "Profile chooses a configured faction/content pool. Exact lets you choose every equipment type below."], [0, 1, 2, ["Faction/content profile", "Exact equipment"]]],
-        ["LIST", ["Faction/content profile", "Independent of operational side. Used only in profile mode; blank uses that side's default content."], [_profileValues, _profileLabels, 0, 4]],
-        ["LIST", ["Exact radar", "Used only in exact mode. Buildings need no crew; radar vehicles and static weapons receive crew of the operational side."], [_radarClasses, _radarLabels, 0, 4]],
-        ["LIST", ["Exact static AA", "Used only in exact mode. One selected weapon is created at every static position."], [_staticClasses, _staticLabels, 0, 4]],
-        ["LIST", ["Exact mobile AA", "Used only in exact mode. One selected vehicle is created at every mobile position."], [_mobileClasses, _mobileLabels, 0, 4]],
-        ["LIST", ["Exact fighter", "Used only in exact mode. The selected aircraft is used for every scrambled fighter."], [_fighterClasses, _fighterLabels, 0, 4]],
-        ["SLIDER", ["Radar units", "Number of independent radar objects to place. The system remains online while the required radar count survives."], [1, 4, 1, 0]],
-        ["SLIDER", ["Static AA units/sites", "Exact mode creates this many individual selected weapons. Profile mode creates this many configured integrated sites."], [0, 8, 1, 0]],
-        ["SLIDER", ["Mobile AA units", "Number of mobile AA vehicles to place. Zero disables this response."], [0, 8, 1, 0]],
-        ["SLIDER", ["Scramble fighters", "Number of fighters in a response wave. Zero disables fighter response."], [0, 4, 0, 0]],
-        ["SLIDER", ["Detection radius", "Horizontal detection radius in metres."], [100, 10000, 2000, 0]],
-        ["SLIDER", ["Minimum altitude", "Aircraft at or above this height can be detected."], [0, 1500, 50, 0]],
-        ["SLIDER", ["Maximum altitude", "Aircraft above this height are ignored."], [50, 10000, 10000, 0]],
-        ["SLIDER", ["Engagement radius", "Static/mobile defences activate only inside this range."], [100, 10000, 2000, 0]],
-        ["SLIDER", ["Detection dwell", "Continuous detection seconds required before alert."], [0, 30, 0, 1]],
-        ["SLIDER", ["Clear delay", "Seconds before a clear detection state is published."], [0, 60, 5, 1]],
-        ["TOOLBOX:WIDE", ["Altitude mode", "AUTO uses ATL over land and ASL over water."], [0, 1, 3, ["Automatic", "ATL", "ASL"]]],
-        ["CHECKBOX", ["Map markers", "Show the system area and status to all players."], true],
-        ["CHECKBOX", ["Delete after radar loss", "Delete spawned assets when insufficient radars remain operational."], false],
-        ["CHECKBOX", ["Announce state", "Report detection and clear transitions through WMP notifications."], true],
-        ["CHECKBOX", ["Require Radar Shutdown Procedure", "Allow players to disable the system by completing a procedure on its primary radar."], false],
-        ["TOOLBOX:WIDE", ["Shutdown Procedure", "Choose the interaction challenge used on the primary radar."], [0, 2, 2, ["Circuit bypass", "Control-wire isolation", "Command authentication", "Signal alignment"]]],
-        ["TOOLBOX:WIDE", ["Procedure Difficulty", "Shared interaction difficulty profile."], [1, 1, 4, ["Easy", "Standard", "Hard", "Expert"]]]
+        ["TOOLBOX:WIDE", ["Operational side", "Controls crew allegiance and hostile detection, not the equipment faction."], [1, 1, 3, ["BLUFOR", "OPFOR", "Independent"]]],
+        ["TOOLBOX:WIDE", ["Equipment workflow", "Profile selects a reusable content pool. Exact chooses every requested asset independently."], [0, 1, 2, ["Faction profile", "Exact mixed assets"]]],
+        ["SLIDER", ["Radar objects", "Number of radar buildings or units to place."], [1, 4, 1, 0]],
+        ["SLIDER", ["Static AA positions", "Profile mode creates integrated sites; exact mode chooses one asset at each position."], [0, 8, 1, 0]],
+        ["SLIDER", ["Mobile AA positions", "Number of mobile AA vehicles. Zero disables this response."], [0, 8, 1, 0]],
+        ["SLIDER", ["Fighters per wave", "Number of individually selected or profile-pooled fighters. Zero disables scrambling."], [0, 4, 0, 0]],
+        ["SLIDER", ["Detection radius (m)", "Horizontal range in metres."], [100, 10000, 2000, 0]],
+        ["SLIDER", ["Minimum altitude (m)", "Aircraft below this height are ignored."], [0, 1500, 50, 0]],
+        ["SLIDER", ["Maximum altitude (m)", "Aircraft above this height are ignored."], [50, 10000, 10000, 0]],
+        ["SLIDER", ["Engagement radius (m)", "Defences activate only while an eligible aircraft is inside this range."], [100, 10000, 2000, 0]],
+        ["SLIDER", ["Detection dwell (s)", "Continuous detection time required before activation."], [0, 30, 0, 1]],
+        ["SLIDER", ["Clear delay (s)", "Time without a target before the system stands down."], [0, 60, 5, 1]],
+        ["TOOLBOX:WIDE", ["Altitude reference", "Automatic uses ATL over land and ASL over water."], [0, 1, 3, ["Automatic", "ATL", "ASL"]]]
     ],
     {
         params ["_values", "_arguments"];
-        _arguments params ["_modulePos", "_defaultId"];
-        _values params ["_sideIndex", "_assetModeIndex", "_faction", "_radarClass", "_staticClass", "_mobileClass", "_fighterClass", "_radarCount", "_staticCount", "_mobileCount", "_fighterCount", "_radius", "_altitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_altitudeModeIndex", "_markers", "_cleanup", "_announce", "_shutdownInteraction", "_shutdownChallengeIndex", "_shutdownDifficultyIndex"];
-        private _side = [west, east, independent] param [_sideIndex, east];
-        private _assetMode = ["PROFILE", "EXACT"] param [_assetModeIndex, "PROFILE"];
-        private _altitudeMode = ["AUTO", "ATL", "ASL"] param [_altitudeModeIndex, "AUTO"];
-        private _shutdownChallenge = ["circuit", "wirecut", "commandinput", "radiotune"] param [_shutdownChallengeIndex, "circuit"];
-        private _shutdownDifficulty = ["easy", "standard", "hard", "expert"] param [_shutdownDifficultyIndex, "standard"];
-        [_modulePos, _defaultId, _radius, _altitude, _maximumAltitude, _engagementRadius, _dwell, _clearDelay, _side, _faction, _assetMode, _radarClass, _staticClass, _mobileClass, _fighterClass, _altitudeMode, round _radarCount, round _staticCount, round _mobileCount, round _fighterCount, _markers, _cleanup, _announce, _shutdownInteraction, _shutdownChallenge, _shutdownDifficulty] spawn Waldo_fnc_DynamicAAZenPlacement;
+        _arguments params ["_modulePos", "_defaultId", "_catalogue"];
+        _values params ["_sideIndex", "_modeIndex", "_radarCount", "_staticCount", "_mobileCount", "_fighterCount", "_radius", "_minimumAltitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_altitudeIndex"];
+        private _settings = createHashMapFromArray [
+            ["side", [west, east, independent] param [_sideIndex, east]],
+            ["assetSelectionMode", ["PROFILE", "EXACT"] param [_modeIndex, "PROFILE"]],
+            ["radarCount", round _radarCount], ["staticCount", round _staticCount],
+            ["mobileCount", round _mobileCount], ["fighterCount", round _fighterCount],
+            ["radius", _radius], ["minimumAltitude", _minimumAltitude], ["maximumAltitude", _maximumAltitude],
+            ["engagementRadius", _engagementRadius], ["detectionDwell", _dwell], ["clearDelay", _clearDelay],
+            ["altitudeMode", ["AUTO", "ATL", "ASL"] param [_altitudeIndex, "AUTO"]]
+        ];
+        [_modulePos, _defaultId, _settings, _catalogue] spawn {
+            params ["_modulePos", "_defaultId", "_settings", "_catalogue"];
+            uiSleep 0;
+            private _profileMode = (_settings get "assetSelectionMode") == "PROFILE";
+            private _content = [];
+            if (_profileMode) then {
+                _content pushBack ["LIST", ["Faction/content profile", "Physical equipment profile; independent of operational side."], [_catalogue get "profileValues", _catalogue get "profileLabels", 0, 3]];
+            };
+            _content append [
+                ["CHECKBOX", ["Map markers", "Show the system area and status."], true],
+                ["CHECKBOX", ["Delete assets after radar loss", "Otherwise leave the disabled installation in place."], false],
+                ["CHECKBOX", ["Announce detection state", "Use WMP notifications for detected and clear transitions."], true],
+                ["CHECKBOX", ["Player radar shutdown objective", "Adds a procedure to the primary radar. Details are requested next only when enabled."], false]
+            ];
+            [
+                ["Dynamic AA: Exact Asset Placement", "Dynamic AA: Profile and Behaviour"] select _profileMode,
+                _content,
+                {
+                    params ["_values", "_arguments"];
+                    _arguments params ["_modulePos", "_defaultId", "_settings", "_catalogue", "_profileMode"];
+                    if (_profileMode) then {_settings set ["faction", _values deleteAt 0]};
+                    _values params ["_markers", "_cleanup", "_announce", "_shutdown"];
+                    _settings set ["createMarkers", _markers];
+                    _settings set ["cleanupOnRadarLoss", _cleanup];
+                    _settings set ["announce", _announce];
+                    _settings set ["shutdownInteraction", _shutdown];
+                    if (_shutdown) then {
+                        [_modulePos, _defaultId, _settings, _catalogue] spawn {
+                            params ["_modulePos", "_defaultId", "_settings", "_catalogue"];
+                            uiSleep 0;
+                            [
+                                "Dynamic AA: Shutdown Objective",
+                                [
+                                    ["TOOLBOX:WIDE", ["Procedure", "Challenge players complete on the primary radar."], [0, 2, 2, ["Circuit bypass", "Control-wire isolation", "Command authentication", "Signal alignment"]]],
+                                    ["TOOLBOX:WIDE", ["Difficulty", "Shared interaction difficulty profile."], [1, 1, 4, ["Easy", "Standard", "Hard", "Expert"]]]
+                                ],
+                                {
+                                    params ["_values", "_arguments"];
+                                    _arguments params ["_modulePos", "_defaultId", "_settings", "_catalogue"];
+                                    _values params ["_challengeIndex", "_difficultyIndex"];
+                                    _settings set ["shutdownChallenge", ["circuit", "wirecut", "commandinput", "radiotune"] param [_challengeIndex, "circuit"]];
+                                    _settings set ["shutdownDifficulty", ["easy", "standard", "hard", "expert"] param [_difficultyIndex, "standard"]];
+                                    [_modulePos, _defaultId, _settings, _catalogue] spawn Waldo_fnc_DynamicAAZenPlacement;
+                                },
+                                {},
+                                [_modulePos, _defaultId, _settings, _catalogue]
+                            ] call zen_dialog_fnc_create;
+                        };
+                    } else {
+                        [_modulePos, _defaultId, _settings, _catalogue] spawn Waldo_fnc_DynamicAAZenPlacement;
+                    };
+                },
+                {},
+                [_modulePos, _defaultId, _settings, _catalogue, _profileMode]
+            ] call zen_dialog_fnc_create;
+        };
     },
     {},
-    [_modulePos, _defaultId]
+    [_modulePos, _defaultId, _catalogue]
 ] call zen_dialog_fnc_create;
