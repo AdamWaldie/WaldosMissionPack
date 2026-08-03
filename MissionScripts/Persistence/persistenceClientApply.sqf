@@ -24,7 +24,9 @@ if (_version != 1) exitWith {
 };
 
 if (missionNamespace getVariable ["Waldo_Persistence_SaveLoadout", true] && {count _loadout > 0}) then {
-    player setUnitLoadout _loadout;
+    player setUnitLoadout ([_loadout] call Waldo_fnc_ACRE2FilterLoadout);
+    missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1];
+    missionNamespace setVariable ["Waldo_ACRE2_PersistenceRadioGeneration", -1];
 };
 if (missionNamespace getVariable ["Waldo_Persistence_SaveMedical", true] && {count _medical > 0} && {isClass (configFile >> "CfgPatches" >> "ace_medical")}) then {
     [player, _medical] call ace_medical_fnc_deserializeState;
@@ -38,24 +40,11 @@ if (missionNamespace getVariable ["Waldo_Persistence_SavePosition", false] && {c
     player setDir (_position select 1);
 };
 
-if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {count _radios > 0} && {isClass (configFile >> "CfgPatches" >> "acre_main")}) then {
-    [_radios] spawn {
-        params ["_savedRadios"];
-        sleep 2;
-        private _typeCounts = createHashMap;
-        {
-            private _radioId = _x;
-            private _baseType = [_radioId] call acre_api_fnc_getBaseRadio;
-            private _index = _typeCounts getOrDefault [_baseType, 0];
-            _typeCounts set [_baseType, _index + 1];
-            private _savedIndex = _savedRadios findIf {(_x select 0) == _baseType && {(_x select 1) == _index}};
-            if (_savedIndex >= 0) then {
-                private _saved = _savedRadios select _savedIndex;
-                [_radioId, _saved select 2] call acre_api_fnc_setRadioChannel;
-                [_radioId, _saved select 3] call acre_api_fnc_setRadioSpatial;
-            };
-        } forEach ([player] call acre_api_fnc_getCurrentRadioList);
-    };
+private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
+if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {count _radios > 0}) then {
+    [_radios, _generation] spawn Waldo_fnc_ACRE2ApplyRadioState;
+} else {
+    [true, "PERSISTENCE_BASELINE"] spawn Waldo_fnc_ACRE2ApplyPlayerPlan;
 };
 
 ["PERSISTENCE", "Persistent player state loaded.", "SUCCESS", "PERSISTENCE"] call Waldo_fnc_FeatureNotifyLocal;

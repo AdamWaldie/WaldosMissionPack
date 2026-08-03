@@ -283,6 +283,42 @@ if (!isNull _coreConsole) then {
         [_message, if (_missing isEqualTo []) then {"OK"} else {"ERROR"}, 8] call Waldo_fnc_MiniGameInteractionNotifyClient;
         diag_log format ["[WMP QA] %1", _message];
     }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_coreConsole, "Waldo_QA_ACREStatus", "ACRE2: SHOW PLAN / RADIO STATUS", {
+        if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {
+            ["ACRE2 is not loaded on this client.", "ERROR", 8] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        };
+        private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
+        private _radios = [player] call acre_api_fnc_getCurrentRadioList;
+        private _message = format ["Plan revision %1 | group %2 | radios %3", if (count _plan > 1) then {_plan select 1} else {-1}, groupId group player, _radios];
+        [_message, "OK", 10] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        diag_log format ["[WMP QA ACRE] %1 plan=%2", _message, _plan];
+    }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_coreConsole, "Waldo_QA_ACREApply", "ACRE2: REAPPLY PLAN + BABEL + CEOI", {
+        private _radioResult = [true, "QA"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+        private _babelResult = [] call Waldo_fnc_ACRE2ApplyBabel;
+        private _ceoiResult = [] call Waldo_fnc_ACRE2BuildCEOI;
+        [format ["Radio %1 | Babel %2 | CEOI %3", _radioResult, _babelResult, _ceoiResult], if (_radioResult && {_ceoiResult}) then {"OK"} else {"ERROR"}, 10] call Waldo_fnc_MiniGameInteractionNotifyClient;
+    }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_coreConsole, "Waldo_QA_ACREProvision", "ACRE2: PROVISION CARRIED TEST RADIOS", {
+        if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {
+            ["ACRE2 is not loaded on this client.", "ERROR", 8] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        };
+        {
+            private _radioClass = _x;
+            if (({[_x, _radioClass] call acre_api_fnc_isKindOf} count ([player] call acre_api_fnc_getCurrentRadioList)) == 0) then {player addItem _radioClass};
+        } forEach ["ACRE_PRC343", "ACRE_PRC152", "ACRE_PRC148", "ACRE_PRC117F"];
+        [] spawn {
+            uiSleep 2;
+            [true, "QA_PROVISION"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+            [] call Waldo_fnc_ACRE2BuildCEOI;
+            ["Test radios provisioned. Inspect each physical display and channel, then use the status action.", "OK", 12] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        };
+    }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_coreConsole, "Waldo_QA_ACRESave", "ACRE2: SAVE FILTERED RESPAWN LOADOUT", {
+        [true] call Waldo_fnc_SaveLoadout;
+        private _saved = missionNamespace getVariable ["Waldo_Player_Inventory", []];
+        diag_log format ["[WMP QA ACRE] Filtered respawn loadout=%1", _saved];
+    }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_SafeStartOn", "ENABLE SAFESTART", {[true] remoteExecCall ["Waldo_QA_fnc_setSafeStartServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_SafeStartOff", "DISABLE SAFESTART", {[false] remoteExecCall ["Waldo_QA_fnc_setSafeStartServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_SafeStart30", "SAFESTART TIMER: 30 SECONDS", {[30] remoteExecCall ["Waldo_QA_fnc_startSafeStartTimerServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;

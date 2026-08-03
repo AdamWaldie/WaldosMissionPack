@@ -20,7 +20,7 @@ private _saveNeeds = missionNamespace getVariable ["Waldo_Persistence_SaveFoodWa
 private _savePosition = missionNamespace getVariable ["Waldo_Persistence_SavePosition", false];
 private _saveRadios = missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false];
 
-private _loadout = if (_saveLoadout) then {getUnitLoadout player} else {[]};
+private _loadout = if (_saveLoadout) then {[getUnitLoadout player] call Waldo_fnc_ACRE2FilterLoadout} else {[]};
 private _medical = [];
 if (_saveMedical && {isClass (configFile >> "CfgPatches" >> "ace_medical")}) then {
     _medical = [player] call ace_medical_fnc_serializeState;
@@ -34,21 +34,6 @@ private _needs = if (_saveNeeds) then {
 } else {[]};
 
 private _position = if (_savePosition) then {[getPosATL player, getDir player]} else {[]};
-private _radios = [];
-if (_saveRadios && {isClass (configFile >> "CfgPatches" >> "acre_main")}) then {
-    private _typeCounts = createHashMap;
-    {
-        private _radioId = _x;
-        private _baseType = [_radioId] call acre_api_fnc_getBaseRadio;
-        private _index = _typeCounts getOrDefault [_baseType, 0];
-        _typeCounts set [_baseType, _index + 1];
-        _radios pushBack [
-            _baseType,
-            _index,
-            [_radioId] call acre_api_fnc_getRadioChannel,
-            [_radioId] call acre_api_fnc_getRadioSpatial
-        ];
-    } forEach ([player] call acre_api_fnc_getCurrentRadioList);
-};
+private _radios = if (_saveRadios) then {[] call Waldo_fnc_ACRE2CaptureRadioState} else {[]};
 
 [1, _loadout, _medical, _needs, _position, _radios]

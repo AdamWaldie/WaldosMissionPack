@@ -20,6 +20,7 @@ newer values published by the server before a JIP player reaches initPlayerLocal
 or cross-locality features wait for init.sqf to finish its shared configuration before starting.
 */
 if (hasInterface) then {
+    [] call Waldo_fnc_ACRE2Init;
     // InfoText marks completion after the fake loading/title presentation. Features may queue
     // non-critical notices against this state instead of drawing over the introduction.
     missionNamespace setVariable ["Waldo_InfoText_Active", false];
@@ -182,15 +183,30 @@ if (hasInterface) then {
 //Post-Init Setup of saved Loadout (Measure taken to help prevent Naked/unarmed People)
 
 
-// Save Inventory on mission start
-[player, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory;
+// Save a base-class inventory on mission start. ACRE startup refreshes it after radio assignment.
+[false] call Waldo_fnc_SaveLoadout;
 
 //Respawn Reapplication Of Loadout Segment
 ["CAManBase", "Respawn", {
     params ["_unit"];
     if (_unit == player) then {
-        [_unit, [missionNamespace, "Waldo_Player_Inventory"]] call BIS_fnc_loadInventory;
-        //_unit setUnitLoadout (missionNamespace getVariable "Waldo_Player_Inventory");
+        private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
+        if (count _savedLoadout > 0) then {_unit setUnitLoadout _savedLoadout};
+        private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
+        missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
+        missionNamespace setVariable ["Waldo_ACRE2_PersistenceRadioGeneration", -1];
+        [] spawn {
+            private _deadline = diag_tickTime + 10;
+            waitUntil {
+                uiSleep 0.1;
+                !(isClass (configFile >> "CfgPatches" >> "acre_main"))
+                    || {[] call acre_api_fnc_isInitialized}
+                    || {diag_tickTime >= _deadline}
+            };
+            [true, "RESPAWN"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+            [] call Waldo_fnc_ACRE2ApplyBabel;
+            [] call Waldo_fnc_ACRE2BuildCEOI;
+        };
         // Respawn Text
         [] spawn Waldo_fnc_RespawnText;
         // Re-apply safestart if it is still active (respawn resets damage/handlers/position)
@@ -236,7 +252,7 @@ select a loadout and then forget about having to use the arsenal after respawnin
 */
 
 // ["ace_arsenal_displayClosed", {
-//     [player, [missionNamespace, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
+//     [false] call Waldo_fnc_SaveLoadout;
 // }] call CBA_fnc_addEventHandler;
 
 /*
@@ -251,7 +267,7 @@ UNCOMMENT THE BELOW IF YOU WANT PEOPLE TO RESPAWN WITH WHAT THEY DIED WITH!
 ["CAManBase", "Killed", {
     params ["_unit"];
     if (_unit == player) then {
-        [_unit, [player, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
+        [false] call Waldo_fnc_SaveLoadout;
     };
 }] call CBA_fnc_addClassEventHandler;
 

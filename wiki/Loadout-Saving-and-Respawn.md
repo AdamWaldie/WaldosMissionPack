@@ -1,83 +1,34 @@
 # Loadout Saving and Respawn
 
-> **Use this page when:** you need starting, death, arsenal, or manual loadout persistence across respawn.
+> **Use this page when:** you need starting, manual or persistent player equipment across respawn, including ACRE2 radios.
 
-_Associated Files: initPlayerLocal.sqf_
+Basic respawn loadout saving is automatic. `Waldo_fnc_SaveLoadout` stores the player's current equipment and the local respawn handler restores it. `respawnOnStart = -1` remains required.
 
-## General Setup
+## ACRE2-safe storage
 
-Loadout saving is automatically active as soon as the pack is merged into your mission folder — no additional configuration is needed for the basic feature.
+When ACRE2 is loaded, every saved respawn and persistence loadout passes through `acre_api_fnc_filterUnitLoadout`. Unique classes such as `ACRE_PRC152_ID_7` are converted to base classes before storage. Without ACRE2, the original loadout is returned unchanged.
 
-By default, upon dying, players respawn with the loadout they had at the start of the mission (or whatever they last saved manually via a starter crate). ACRE2 radio channels are re-assigned automatically on respawn as part of this system.
+After restoration WMP waits with a deadline for ACRE to create fresh unique IDs, then applies the player's current side/group mission plan. This is the normal respawn behaviour; it does not preserve arbitrary captured-radio tuning. Newly picked-up radios are not retuned merely because the player changes group.
 
-> **Important:** `respawnOnStart = -1` in `description.ext` is required for this system to work correctly. Do not change this value.
+Persistence can optionally store channel and spatial state separately by base radio class plus same-type ordinal. Restore order is:
 
----
+1. filtered base-class unit loadout;
+2. bounded wait for fresh unique radio IDs;
+3. persisted radio state when enabled, otherwise the current mission plan.
 
-## Respawn Options
+Persisted state therefore wins over baseline retuning without ever storing `_ID_n` classnames.
 
-## Default: Respawn With Starting Loadout
+## Manual saving
 
-No setup required. Players automatically respawn with the loadout saved at mission start.
-
-## Option: Respawn With Death Loadout
-
-To have players respawn with whatever they were carrying when they died (rather than their starting kit), uncomment the noted section in `initPlayerLocal.sqf`:
-
-![IPL](https://i.imgur.com/L1JxR3C.png)
-
-```sqf
-["CAManBase", "Killed", {
-    params ["_unit"];
-    if (_unit == player) then {
-        [_unit, [player, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
-    };
-}] call CBA_fnc_addClassEventHandler;
-```
-
-## Option: Save Loadout on ACE Arsenal Close
-
-To automatically save the player's respawn loadout whenever they close the ACE Arsenal (so players respawn with their chosen kit), uncomment the section immediately above the death loadout code in `initPlayerLocal.sqf`:
-
-```sqf
-["ace_arsenal_displayClosed", {
-    [player, [missionNamespace, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
-}] call CBA_fnc_addEventHandler;
-```
-
-Both options can be enabled simultaneously — the death-loadout save will overwrite the arsenal save on each death.
-
----
-
-## Manual Loadout Saving
-
-Players can also save their loadout manually. The simplest method is via any **Starter Crate** — these already include a save action by default. See [Logistics System](Logistics-System,-Starter-Crates-And-Quartermaster) for starter crate setup.
-
-For custom implementations:
-
-**ACE interaction on an object:**
-
-```sqf
-this addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_SaveLoadout];
-```
-
-**Direct function call (from a trigger or script):**
+Starter crates and loadout-save points call:
 
 ```sqf
 [] call Waldo_fnc_SaveLoadout;
 ```
 
-A successful manual save displays a five-second **RESPAWN LOADOUT SAVED** WMP notification on the local player's dedicated `RESPAWN_LOADOUT` channel. Repeated saves replace that confirmation instead of queueing or clearing another feature's message.
+Pass `[false]` for automatic startup work that must not display a notification over the loading presentation. Explicit player saves use the WMP notification UI and replace their prior message instead of growing the queue.
 
----
-
-## Potential Conflicts
-
-**ACE Respawn** conflicts with this feature. Disable it in server and mission addon settings:
-
-`Settings → Addon Settings → ACE Respawn → disable`
-
-If ACE Respawn is active, loadout restoration on respawn will not function correctly.
+ACE Respawn can conflict with this mission-owned restore path and should remain disabled in ACE addon settings.
 
 <!-- WMP-WIKI-NAV -->
 ---

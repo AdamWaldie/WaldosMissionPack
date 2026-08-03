@@ -538,12 +538,14 @@ def refresh_release_sources() -> None:
         if source.is_dir():
             shutil.copytree(source, target)
     shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
+    shutil.copy2(ROOT / "acreConfig.sqf", MISSION / "acreConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
-    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
+    for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "acreConfig.sqf", "LICENSE", "README.md"):
         source = ROOT / name
         if source.is_file():
             shutil.copy2(source, pack_source / name)
+    shutil.copy2(MISSION / "auditAcreConfig.sqf", MISSION / "acreConfig.sqf")
 
 
 def write_active_pack(destination: Path) -> None:

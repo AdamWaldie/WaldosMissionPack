@@ -13,7 +13,8 @@
  * Current callers: starter/loadout-save interactions and ACRE2 radio assignment finalisation.
  */
 params [["_showNotification", true, [true]]];
-[player, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory;
+private _loadout = [getUnitLoadout player] call Waldo_fnc_ACRE2FilterLoadout;
+missionNamespace setVariable ["Waldo_Player_Inventory", _loadout];
 if (_showNotification) then {
     [
         "RESPAWN LOADOUT SAVED",

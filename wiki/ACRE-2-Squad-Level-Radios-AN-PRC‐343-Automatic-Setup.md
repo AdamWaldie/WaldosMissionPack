@@ -1,25 +1,18 @@
-# ACRE2 AN/PRC-343 Automatic Setup
+# ACRE2 PRC-343 Assignment
 
-> **Use this page when:** you want squad-level ACRE2 radios assigned and configured automatically from mission roles.
+> **Use this page when:** you need repeatable PRC-343 block/channel allocation by side and group.
 
-Associated Files: MissionScripts\MissionInit\ACRE2\SquadLevelRadios.sqf
+PRC-343 assignments are compiled on the server from `acreConfig.sqf` and broadcast in the versioned ACRE plan. The key is side plus normalised group ID, so identical callsigns on opposing sides cannot overwrite one another.
 
-This function sets up AN/PRC-343 Radio channels based on the group of the player based on callsign breakdown. 
+An explicit assignment uses `[block, channel]` and reserves its slot before automatic allocation:
 
-This handles the group-to-channel mapping and ensures that all clients share these channels.
+```sqf
+["VIKING-1-1", ["PLT1"], [1, 1]]
+```
 
-It sets up Block And Channel allocation based upon the callsigns list provided. This is by default via ACRE2Init.sqf as below:
-![](https://i.imgur.com/3CHplvL.png)
+Both values must be between 1 and 16. Invalid or colliding explicit assignments are rejected; WMP never silently relocates them. For groups without an override, two numeric callsign components become block/channel, a single numeric component becomes the channel within the callsign prefix's deterministic block, and a callsign without numbers receives the first free channel in that block.
 
-## Logic Used
-
-The logic behind this setup is as follows:
-1. If a callsign has two numbers separated by either a hyphen or a full stop then the block number is designated as the first number, and the channel is the second. 
-2. If a callsign has either no number, or a single number a block is selected based on the index of the callsign in the list of callsigns provided. 
-    * In the case of the above example SUNRAY is Block 1, Foxhound is Block 2 and so on.
-    * If a callsign then has a number, its channel is set to that number in the block.
-    * If a callsign does not have a number, its channel is assigned based on the lowest number available in that block.
-3. If any of this fails, it assigns each squad a unique channel working backwards from 256. If a double up is detected due to a conflict in logic, the channel is set to the highest available.
+Acceptance boundaries include B1C16, B2C1, B12C1 and B16C16. The client converts the pair to ACRE's flat 1–256 channel only at the point it applies a unique PRC-343 radio ID. The CEOI continues to show the clearer block/channel form.
 
 <!-- WMP-WIKI-NAV -->
 ---

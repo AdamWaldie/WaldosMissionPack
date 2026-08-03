@@ -207,42 +207,32 @@ Only one profile should be active at a time. AI rebalance initialises wherever A
 
 ### ACRE2 Radio Setup
 
-```sqf
-private _RadioSetups = [
-    ["Viking-1-1", [1, 5]],   // [group callsign, [LR channel numbers]]
-    ["Viking 5",   [2, 7]],
-    ["Banshee",    [4, 1]]
-];
-[_RadioSetups] call Waldo_fnc_ACRE2Init;
-```
+Edit the pure-data root `acreConfig.sqf`. Each side defines an existing ACRE side preset, logical net keys and group assignments. The pack automatically loads it during pre-init, server init and player-local init; no call belongs in multiplayer `init.sqf`.
 
-Channel numbers refer to the index (1-based) in the `_LongRangeRadioChannels_*` arrays below.
+`retuneOnGroupChange` defaults to `false`, named displays default to enabled, and `strict` defaults to `true`. `radioPriority` determines which supported carried radio consumes each ordered group net. `radioProfiles` may extend known third-party carried radios; unknown radios and vehicle racks are not guessed or modified.
 
 ### ACRE2 Long-Range Channel Names (CEOI)
 
 ```sqf
-_LongRangeRadioChannels_BLUFOR = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_BLUFOR", _LongRangeRadioChannels_BLUFOR];
-// repeat for OPFOR, IND, CIV
+["WEST", "default3", [
+    ["PLT1", "PLATOON 1", []],
+    ["AIRGND", "AIR-GND", []]
+], [
+    ["VIKING-1-1", ["PLT1", "AIRGND"], [1, 1]]
+]]
 ```
 
-Position in the array = channel number. These names appear in the in-game CEOI document.
+Group net keys drive both radio channels and the CEOI. The optional final `[block, channel]` is a strict PRC-343 override.
 
 ### ACRE2 Babel (optional — disabled by default)
 
 ```sqf
-/*
-[
-    [
-        [west, "English", "French"],
-        [east, "Russian"],
-        [civilian, "French"]
-    ]
-] call Waldo_fnc_BabelActivation;
-*/
+["languages", [["en", "English"], ["fr", "French"]]],
+["sideDefaults", [["WEST", ["en", "fr"], "en"]]],
+["unitOverrides", [[["UID", "7656119..."], ["en", "fr"], "fr"]]]
 ```
 
-Remove the `/*` and `*/` to enable. See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration).
+Set the `babel` map's `enabled` value to `true`. IDs are registered in declared order on every machine. See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration).
 
 ### Radio Jamming (ACRE2 / TFAR)
 

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 816,
+  "registeredFunctionCount": 829,
   "runtimeFunctionCount": 385,
-  "functionCount": 1201,
+  "functionCount": 1214,
   "stations": [
     {
       "id": "control",
@@ -533,32 +533,104 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ACRE2PreInit",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2PreInit.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ACRE2Init",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2InitNew.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2Init_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/ACRE2Init.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_SquadLevelRadios",
+      "name": "Waldo_fnc_ACRE2SquadLevelRadios_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/ACRE2SquadLevelRadios.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_GetSRChannelName",
+      "name": "Waldo_fnc_GetSRChannelName_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/GetSRChannelName.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_CreateACRECEOI",
+      "name": "Waldo_fnc_CreateACRECEOI_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/CreateACRECEOI.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_BabelActivation",
+      "name": "Waldo_fnc_BabelActivation_Legacy",
       "file": "MissionScripts/MissionInit/ACRE2/BabelActivation.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ValidateConfig",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ValidateConfig.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyPresetNames",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyPresetNames.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2CompilePlan",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2CompilePlan.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyPlayerPlan",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyPlayerPlan.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2BuildCEOI",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2BuildCEOI.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyBabel",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyBabel.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BabelActivation",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyBabel.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2FilterLoadout",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2FilterLoadout.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2CaptureRadioState",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2CaptureRadioState.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyRadioState",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyRadioState.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
@@ -1279,6 +1351,12 @@
     {
       "name": "Waldo_fnc_RecoveryMonitorServer",
       "file": "MissionScripts/Logistics/VehicleRecovery/recoveryMonitorServer.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoverySpillVirtualPackageServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySpillVirtualPackageServer.sqf",
       "station": "vehicle-recovery",
       "activation": "manual"
     },

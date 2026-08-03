@@ -5,6 +5,8 @@ These limits and asset pools are consumed only by server-validated world mutatio
 here gives one authoritative value and prevents clients or headless clients from installing their
 own copies. Persistence starts its database branch here; player capture/apply starts locally.
 */
+[] call Waldo_fnc_ACRE2Init;
+
 if (isNil "Waldo_ObjectScaling_Minimum") then {Waldo_ObjectScaling_Minimum = 0.1};
 if (isNil "Waldo_ObjectScaling_Maximum") then {Waldo_ObjectScaling_Maximum = 10};
 if (isNil "Waldo_ObjectScaling_AllowClientRequests") then {Waldo_ObjectScaling_AllowClientRequests = false};

@@ -68,7 +68,7 @@ if (missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_f
                 _sideCallsign = _x;
                 {
                     if (_sideCallsign == (_x select 0)) then {
-                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        _SrChannel = [(_x select 1)] call Waldo_fnc_GetSRChannelName_Legacy;
                         if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
                             _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
                         } else {
@@ -83,7 +83,7 @@ if (missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_f
                 _sideCallsign = _x;
                 {
                     if (_sideCallsign == (_x select 0)) then {
-                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        _SrChannel = [(_x select 1)] call Waldo_fnc_GetSRChannelName_Legacy;
                         if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
                             _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
                         } else {
@@ -98,7 +98,7 @@ if (missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_f
                 _sideCallsign = _x;
                 {
                     if (_sideCallsign == (_x select 0)) then {
-                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        _SrChannel = [(_x select 1)] call Waldo_fnc_GetSRChannelName_Legacy;
                         if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
                             _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
                         } else {
@@ -113,7 +113,7 @@ if (missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_f
                 _sideCallsign = _x;
                 {
                     if (_sideCallsign == (_x select 0)) then {
-                        _SrChannel = [(_x select 1)] call  Waldo_fnc_GetSRChannelName;
+                        _SrChannel = [(_x select 1)] call Waldo_fnc_GetSRChannelName_Legacy;
                         if (toUpper (_playerGroup) == toUpper (_sideCallsign)) then {
                             _SRChannelText =  _SRChannelText + format ["<font color='#47ff47'>%1 - %2</font><br/>",_SrChannel, _sideCallsign];
                         } else {

@@ -372,84 +372,11 @@ if (isNil "Waldo_AI_ProfileDisplayNames") then {
 
 
 /*
-ACRE 2 RADIO SETUP PARAMETERS
-
-This section deals with setting up preset radio channels. Channel Naming is currently unavailable as it causes ACRE radios to be inconsistent.
-
-You can set which squads are assigned to which of the channels you have chosen. Side does not matter here.
-
-The format is as follows ["Squad Name",["ChannelSelection1","ChannelSelection2","ChannelSelection3"] where the Squad name is idential to the group name you picked earlier. 
-ChannelSelection1 though 3 should match one channel in the LongRangeRadioChannel for the side of that squad. You can have up to three choices, 
-however this is limited by the number of AN/PRC-152,AN/PRC-148 and AN/PRC-117F radios on that squad. 
-You should enter channels based on the range required. E.g. Platoon Net followed by Air2Ground or Company Net.
-
-AN/PRC-343 Radios are done automatically based on squad callsign and Numerical designations (if any).
-
-ACRE CEOI in the map screen will note all channel assignments for referance.
-
+ACRE2 communications and Babel are authored in acreConfig.sqf. CfgFunctions pre-init registers
+deterministic preset labels and Babel definitions; initServer.sqf publishes the authoritative plan;
+initPlayerLocal.sqf applies carried-radio state, CEOI and local language knowledge. Multiplayer
+init.sqf deliberately owns no ACRE defaults, waits or mutable authority.
 */
-
-private _RadioSetups = [
-    ["Viking-1-1",[1,5]],
-	["Viking 5",[2,7]],
-	["Viking 3.2",[3,2]],
-	["Banshee",[4,1]]
-];
-// ACRE setup deliberately enters on every machine: the server publishes the shared
-// callsign/channel allocation, while interface clients configure their own radios and CEOI.
-// Waldo_fnc_ACRE2Init exits on a dedicated server before touching player or ACRE client state.
-[_RadioSetups] spawn Waldo_fnc_ACRE2Init;
-
-
-/*
-ACRE 2 Babel Setup
-
-The script activates the Babel system in Arma 3 with Advanced Combat Radio Environment 2 (ACRE2). It sets up the languages spoken by different sides and defines the languages spoken by interpreters. 
-It adds all the necessary languages to the ACRE2 Babel system, assigns them to the respective units based on the side they belong to, and creates a diary record with a list of languages spoken in the area.
-
-Arguments:
-_languages - An array of sub-arrays. Each sub-array contains a side (West, East, Independent, Civilian) and the languages they speak as strings. 
-_interpreters - An array of units that are interpreters. These units can speak all languages.
-
-Example:
-[
-    [
-        [West, "English","French"],
-        [East, "Chinese"],
-        [independent, "Altian"],
-        [civilian, "Altian"]
-    ],
-    [unit, unit2]
-] call Waldo_fnc_BabelActivation;
-
-*/
-/*
-[
-	[
-		[west, "English", "French"],
-		[east, "Russian"],
-		[civilian, "French"]
-	]
-] call Waldo_fnc_BabelActivation;
-*/
-/*
-ACRE 2 CEOI
-
-The Below list are named channels for you to assign names to. These names will appear in the CEOI, and assigned appropriately to a channel number from 1 to 99.
-The position of each channel in the list determines which channel number it will be assigned in the CEOI. E.g. The second Entry ("PLATOON 2" in the example given) will be channel 2 in the CEOI.
-
-This is broken down per Side as displayed.
-
-*/
-
-_LongRangeRadioChannels_BLUFOR = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_BLUFOR", _LongRangeRadioChannels_BLUFOR];
-_LongRangeRadioChannels_OPFOR = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_OPFOR", _LongRangeRadioChannels_OPFOR];
-_LongRangeRadioChannels_IND = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_IND", _LongRangeRadioChannels_IND];
-_LongRangeRadioChannels_CIV = ["PLATOON 1","PLATOON 2","PLATOON 3","COMPANY","AIR 2 GROUND","AIR 2 AIR","CAS 1","CAS 2","CFF 1","CFF 2","CONVOY 1"];
-missionNamespace setVariable ["Waldo_ACRE2Setup_LRChannels_CIV", _LongRangeRadioChannels_CIV];
 
 
 /*===========================================================================================================================*/

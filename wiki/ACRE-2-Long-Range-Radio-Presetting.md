@@ -1,53 +1,45 @@
-# ACRE2 Long-Range Radio Presetting
+# ACRE2 Communications Configuration
 
-> **Use this page when:** you need mission-defined long-range radio channels and presets for ACRE2.
+> **Use this page when:** you need deterministic squad radio assignments, named carried-radio displays, CEOI or side-isolated ACRE2 presets.
 
-_Associated Files: MissionScripts\MissionInit\ACRE2Init.sqf_
+Associated files: `acreConfig.sqf` and `MissionScripts\MissionInit\ACRE2\acre2*.sqf`.
 
-This script allows for the automatic pre-setting of radio channels for ACRE 2 Radios based on the group name.
+All active ACRE2 authoring now lives in the root `acreConfig.sqf`. Do not add ACRE waits or mutable defaults to `init.sqf`. Pre-init registers the ACRE side-preset labels on every machine, `initServer.sqf` publishes one versioned side/group plan for JIP, and `initPlayerLocal.sqf` applies the local player's carried radios.
 
-This script Must only be called from the init.sqf.
+## Nets and groups
 
-Your group must be named in the editor, you should use the CBA lobby screen naming functionality as well, and finally, ingame group names must match the name given in the parameters.
+Each side entry contains a stable side key, its existing ACRE preset, logical nets, and groups:
 
-The following radios are supported:
-* AN/PRC 343 (Setup Automatically and without manual setup in the parameters)
-* AN/PRC 152
-* AN/PC 148
-* AN/PRC 117F
+```sqf
+["WEST", "default3", [
+    ["PLT1", "PLATOON 1", []],
+    ["AIRGND", "AIR-GND", []]
+], [
+    ["VIKING-1-1", ["PLT1", "AIRGND"], [1, 1]]
+]]
+```
 
-AN/PRC-343 Radios are automatically set up depending on the Squads callsign. See Squad Level Radios for more information, although you do not have to do anything to get that, or the CEOI to work.
+Groups reference net keys, not channel numbers. Reordering a displayed name does not silently change a group's intent. The final group field is an optional explicit PRC-343 `[block, channel]`; both values must be 1–16. Strict validation rejects invalid values, duplicate side/group/net keys, unknown net references, and explicit collisions.
 
-LR and SR radios are placed into an automated CEOI after use, see ACRE Automated CEOI for more details. Babel support and Language Documentation is also available - See ACRE Babel Activation for more details.
+## Named displays and presets
 
-## Setup And Examples
+WMP modifies only each radio's official display-name text field on existing side presets: `label` for PRC-148, `description` for PRC-152 and `name` for PRC-117F. It never copies a preset, rewrites TX/RX frequencies, or changes a preset after unique radio IDs exist. Names are upper-case, restricted to safe display characters, and capped at 12 characters. The write is read back and the frequency fields are compared before and after.
 
-1. In the init.sqf find the ACRE 2 setup section. It should look similar to the below:
+Physical named displays are enabled for PRC-148, PRC-152 and PRC-117F. Other supported radios retain their normal channel or frequency display; their net names remain visible in the CEOI. If registration fails, WMP reports diagnostics and leaves radio frequencies unchanged.
 
-![Image of the ACRE2Init function call in the init.sqf](https://i.imgur.com/17lESXb.jpg)
+## Carried radio profiles
 
-2. Uncomment the function call if it has been commented out (Remove the /* and */). Use VS code as described in the quickstart to make it easier for you.
+- PRC-343: block/channel assignment.
+- PRC-148, PRC-152, PRC-117F, BF-888S and SEM52SL: numbered-channel assignment.
+- PRC-77 and SEM70: recognised as manual-frequency radios and left unchanged unless a mission supplies a safe explicit integration.
+- Unknown and third-party radios: untouched unless a mission adds a profile.
+- Vehicle racks: deliberately outside this lifecycle because mounted ownership and initialisation differ from carried radios.
 
-3. The mission maker must then specify up to three Long Rang Radio channels:
+Radio priority is configured independently. Unsupported radios never consume a logical net assignment. Automatic application occurs on join, JIP and normal respawn; arbitrary group-change retuning is disabled by default so captured and newly picked-up radios are not unexpectedly rewritten.
 
-`["Callsign",[channel_num_1,channel_num_2,channel_num_3]]`
+## Diagnostics and fallback
 
-Where the "Callsign" matches the group name you entered in the group's Callsign attribute.
-
-![Example of the Callsign in a group init](https://i.imgur.com/wbOvpxC.jpg)
-
-And where channel_num_1,channel_num_2 and channel_num_3 indicate up to three channels you want that groups Long Range Radio holders to be tuned into. Channels will be set from left to right, starting at channel_num_1 and ending at channel_num_3. Channels will also be set on the shortest range radio first - so the 152 and 148 first, followed by the 117F. Channels will only be assigned if the player has enough LR radios to set the number of channels.
-
-Please note that all parameters must be given regardless of whether that group has or has not got any of those radios and that each line bar the last should have a comma at the end.
-
-Below is an example of the code, and the associated ingame setup to make this system work.
-
-![Example of a ACRE2 setup call from init.sqf](https://i.imgur.com/17lESXb.jpg)
-
-![Example of Thor and Odin groups, named correctly in callsign](https://i.imgur.com/wbOvpxC.jpg)
-
-
-Channel Naming is not supported. This is due to the fundamental method required to make that function work not being possible with the approach of this pack. For channel naming to work, radios must be added via a loadout script. This is not how we approach loadouts in the pack, and as such, channel naming instead breaks the radios - therefore, I do not support it.
+The audit mission's core console can show the compiled plan and actual unique radio list, force a plan/Babel/CEOI reapply, and save a filtered respawn loadout. The previous implementation is frozen as `Waldo_fnc_ACRE2Init_Legacy` and related `_Legacy` helpers. Nothing calls it automatically.
 
 <!-- WMP-WIKI-NAV -->
 ---
