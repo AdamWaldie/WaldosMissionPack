@@ -172,15 +172,36 @@ private _managedIds = [];
         };
         if (_assignmentReady) then {
             if (_mode == "BLOCK_CHANNEL") then {
-                private _flat = ((_setting select 0) - 1) * 16 + (_setting select 1);
-                if !([_radioId, _flat] call acre_api_fnc_setRadioChannel) then {_success = false};
-                if (([_radioId] call acre_api_fnc_getRadioChannel) != _flat) then {_success = false};
+                private _maxBlock = if (toUpper (_config getOrDefault ["prc343PresetPolicy", "FULL_RANGE"]) == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
+                if !(_setting isEqualType [] && {count _setting == 2} && {(_setting select 0) >= 1} && {(_setting select 0) <= _maxBlock} && {(_setting select 1) >= 1} && {(_setting select 1) <= 16}) then {
+                    _problems pushBack format ["%1#%2 PRC-343 assignment %3 exceeds preset %4 capacity (block 1-%5, channel 1-16).", _base, _occurrence, _setting, _preset, _maxBlock];
+                    _success = false;
+                    _assignmentReady = false;
+                } else {
+                    private _flat = ((_setting select 0) - 1) * 16 + (_setting select 1);
+                    if !([_radioId, _flat] call acre_api_fnc_setRadioChannel) then {
+                        _success = false;
+                        _problems pushBack format ["%1#%2 rejected PRC-343 channel write %3.", _base, _occurrence, _setting];
+                    };
+                    private _readBack = [_radioId] call acre_api_fnc_getRadioChannel;
+                    if (_readBack != _flat) then {
+                        _success = false;
+                        _problems pushBack format ["%1#%2 expected PRC-343 %3 (flat %4), read back flat %5.", _base, _occurrence, _setting, _flat, _readBack];
+                    };
+                };
             };
-            if (_mode == "CHANNEL") then {
-                if !([_radioId, _setting] call acre_api_fnc_setRadioChannel) then {_success = false};
-                if (([_radioId] call acre_api_fnc_getRadioChannel) != _setting) then {_success = false};
+            if (_assignmentReady && {_mode == "CHANNEL"}) then {
+                if !([_radioId, _setting] call acre_api_fnc_setRadioChannel) then {
+                    _success = false;
+                    _problems pushBack format ["%1#%2 rejected channel write %3.", _base, _occurrence, _setting];
+                };
+                private _readBack = [_radioId] call acre_api_fnc_getRadioChannel;
+                if (_readBack != _setting) then {
+                    _success = false;
+                    _problems pushBack format ["%1#%2 expected channel %3, read back %4.", _base, _occurrence, _setting, _readBack];
+                };
             };
-            if (_mode == "FREQUENCY") then {
+            if (_assignmentReady && {_mode == "FREQUENCY"}) then {
                 if (_setting isEqualType 0) then {
                     private _range = _profile select 4;
                     private _divisor = _range select 3;
@@ -189,10 +210,19 @@ private _managedIds = [];
                 };
                 _frequencySettings pushBack [_base, _setting];
             };
-            if !([_radioId, _spatial] call acre_api_fnc_setRadioSpatial) then {_success = false};
-            if (([_radioId] call acre_api_fnc_getRadioSpatial) != _spatial) then {_success = false};
-            _managedIds pushBack _radioId;
-            _applied pushBack [_radioId, _base, _occurrence, _setting, _spatial, _netLabel];
+            if (_assignmentReady) then {
+                if !([_radioId, _spatial] call acre_api_fnc_setRadioSpatial) then {
+                    _success = false;
+                    _problems pushBack format ["%1#%2 rejected listening-ear write %3.", _base, _occurrence, _spatial];
+                };
+                private _spatialReadBack = [_radioId] call acre_api_fnc_getRadioSpatial;
+                if (_spatialReadBack != _spatial) then {
+                    _success = false;
+                    _problems pushBack format ["%1#%2 expected listening ear %3, read back %4.", _base, _occurrence, _spatial, _spatialReadBack];
+                };
+                _managedIds pushBack _radioId;
+                _applied pushBack [_radioId, _base, _occurrence, _setting, _spatial, _netLabel];
+            };
         };
     };
 } forEach _resolved;

@@ -6,7 +6,7 @@ Associated files: `MissionConfig\acreConfig.sqf` and `MissionScripts\MissionInit
 
 All active authoring lives in `MissionConfig\acreConfig.sqf`. Pre-init validates configuration, registers Babel and changes only supported preset label fields. `initServer.sqf` publishes one versioned side/group plan for JIP. `initPlayerLocal.sqf` waits with a deadline and configures only the local player's carried radios. Do not add ACRE waits or mutable radio defaults to multiplayer `init.sqf`.
 
-Set root `enabled` to `false` to disable the replacement lifecycle completely. `strict = true` rejects explicit PRC-343 collisions; with strict mode off those collisions are retained but reported as warnings. `retuneOnGroupChange` is deliberately false by default. A CBA group-change event rebuilds the CEOI, but radios are retuned only when that switch is enabled.
+Set root `enabled` to `false` to disable the replacement lifecycle completely. `strict = true` rejects explicit PRC-343 collisions; with strict mode off those collisions are retained but reported as warnings. `prc343PresetPolicy = "FULL_RANGE"` preserves all sixteen PRC-343 blocks for every side without changing the side presets used by the other radios. `SIDE_ISOLATED` opts into ACRE's five-block combat-side PRC-343 presets when cross-side frequency separation is worth the reduced capacity. `retuneOnGroupChange` is deliberately false by default. A CBA group-change event rebuilds the CEOI, but radios are retuned only when that switch is enabled.
 
 ## Nets, groups and explicit radios
 
@@ -34,7 +34,7 @@ A group is `[normalised group ID, fallback net keys, fallback PRC-343 assignment
 
 - Occurrence is one-based: `1` is the first radio of that base class, `2` the second.
 - A numbered-channel target may be a logical net key or direct channel.
-- A PRC-343 target is `[block, channel]`, both 1–16.
+- A PRC-343 target is `[block, channel]`. Channel and block are both 1–16 under the default `FULL_RANGE` policy. `SIDE_ISOLATED` reduces WEST/EAST/GUER to blocks 1–5. Validation follows the policy and rejects values ACRE would otherwise silently clamp.
 - A manual-frequency target may be a logical net with a class-specific override or a direct MHz value/`[MHz, kHz]` pair.
 - Ear is `LEFT`, `RIGHT`, `BOTH` or `CENTER`. `BOTH` is converted to ACRE's API value `CENTER`.
 
@@ -61,12 +61,17 @@ WMP does not set or restore alternate PTT assignments. It also does not force vo
 A profile is `[base class, mode, default ear sequence, maximum channel, frequency range]`. The ear sequence is used by simple fallback allocation; explicit assignments can override it per occurrence. Numbered-channel profiles use an empty frequency range. Manual-frequency profiles use `[minimum MHz, maximum MHz, step kHz, ACRE pair divisor]`, allowing validation to reject values the physical radio cannot tune. The divisor accounts for ACRE's model-specific pair encoding: PRC-77 uses 100 while SEM70 uses 1000. Mission makers may supply a clear decimal MHz value; WMP converts it to the correct pair.
 
 - PRC-343: `BLOCK_CHANNEL`.
-- PRC-148, PRC-152, PRC-117F, BF-888S and SEM52SL: `CHANNEL`.
+- PRC-148: `CHANNEL`, 32 preset channels.
+- PRC-152 and PRC-117F: `CHANNEL`, 100 preset channels each.
+- BF-888S: `CHANNEL`, 16 preset channels.
+- SEM52SL: `CHANNEL`, 13 preset channels.
 - PRC-77 and SEM70: `FREQUENCY`, applied through ACRE's public `acre_api_fnc_setupRadios` when available.
 - Unknown or third-party carried radios: untouched until a tested profile is registered.
 - Vehicle racks and externally shared radios: intentionally filtered out even though ACRE's broad current-radio API can expose them. Rack ownership and initialization are server/vehicle scoped.
 
-Frequency assignments for repeated same-type radios must be contiguous from occurrence one because ACRE's public setup API addresses repeated radios in order. That API sees racks and external radios too; WMP refuses a frequency write when an accessible same-type non-carried radio would make occurrence ambiguous. If the installed ACRE version lacks the API, WMP likewise leaves those radios unchanged and reports the failure rather than attempting unsafe preset writes.
+Frequency assignments for repeated same-type radios must be contiguous from occurrence one because ACRE's public setup API addresses repeated radios in order. PRC-77 values tune from 30 to 75.95 MHz in 50 kHz steps; SEM70 values tune from 30 to 79.975 MHz in 25 kHz steps. Each logical net may carry separate PRC-77 and SEM70 overrides while still sharing one net key with numbered radios. The shipped WEST example includes both override types.
+
+ACRE's frequency setup API is asynchronous and has no public frequency getter. WMP can validate the requested value, occurrence order and accepted setup call, but cannot immediately prove the final dial frequency through the public API. It records only frequencies it requested for persistence and the audit requires a physical-radio check. The API also sees racks and external radios; WMP refuses a frequency write when an accessible same-type non-carried radio would make occurrence ambiguous. If the installed ACRE version lacks the API, WMP leaves those radios unchanged and reports the failure rather than attempting private data writes.
 
 ## Named displays
 

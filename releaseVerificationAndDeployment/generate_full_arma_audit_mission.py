@@ -37,6 +37,7 @@ def fixture(name: str, classname: str, x: float, y: float, z: float = 0, directi
 
 STATIONS = [
     ("control", "AUDIT CONTROL", (-7, 2), "Navigation, resets, diagnostics and audit modes."),
+    ("acre", "ACRE2 COMMUNICATIONS", (18, 27), "Preconfigured radios, named nets, listening ears, Babel, respawn and persistence."),
     ("mission-init", "MISSION INITIALISATION", (18, 42), "Briefing, radios, vehicles and player setup."),
     ("mission-flow", "MISSION FLOW", (0, 39), "SafeStart, ENDEX/AAR, tasks, diagnostics and 3D markers."),
     ("ai", "AI / CONVOY", (28, 44), "AI tuning, convoy and mission-maker helpers."),
@@ -107,6 +108,8 @@ FIXTURES = [
     fixture("qa_supply_crate", "B_supplyCrate_F", -14, 48),
     fixture("qa_medical_crate", "ACE_medicalSupplyCrate_advanced", -26, 48),
     fixture("qa_core_console", "Land_Laptop_unfolded_F", 10, 45, direction=180),
+    fixture("qa_acre_table", "Land_CampingTable_small_F", 18, 34, direction=180),
+    fixture("qa_acre_console", "Land_Laptop_unfolded_F", 18, 34, 0.82, 180),
     fixture("qa_convoy_1", "B_MRAP_01_F", 28, 54),
     fixture("qa_convoy_2", "B_MRAP_01_F", 28, 70),
     fixture("qa_ew_jammer", "Land_TTowerSmall_1_F", 0, -102),
@@ -172,6 +175,8 @@ LOADOUTS = [
         "backpack": "B_AssaultPack_mcamo", "headgear": "H_HelmetB_desert",
         "optics": "optic_Hamr", "muzzle": "muzzle_snds_H", "flashlight": "acc_pointer_IR",
         "items": ["ACE_MapTools", "ACE_microDAGR", "ACE_CableTie"],
+        "backpack_items": ["ACRE_PRC343", "ACRE_PRC343", "ACRE_PRC152", "ACRE_PRC152", "ACRE_PRC148"],
+        "vanilla_radio": False,
     },
     {
         "name": "qa_player_2", "role": "Audit Medic", "type": "B_medic_F",
@@ -250,6 +255,17 @@ def unit_block(index: int, loadout: dict) -> str:
     if loadout.get("secondary"):
         secondary = "\n" + weapon_block("secondaryWeapon", loadout["secondary"], loadout["secondary_mag"], loadout)
     magazines = [loadout["primary_mag"], loadout["primary_mag"], loadout["handgun_mag"], "SmokeShell"]
+    backpack_items = loadout.get("backpack_items", [])
+    if backpack_items:
+        backpack = f"""                        class backpack
+                        {{
+                            typeName="{loadout['backpack']}";
+                            isBackpack=1;
+{cargo_block('ItemCargo', backpack_items)}
+                        }};"""
+    else:
+        backpack = f'''                        class backpack {{typeName="{loadout['backpack']}"; isBackpack=1;}};'''
+    radio = '                        radio="ItemRadio";\n' if loadout.get("vanilla_radio", True) else ""
     inventory = f"""                    class Inventory
                     {{
 {weapon_block('primaryWeapon', loadout['primary'], loadout['primary_mag'], loadout)}
@@ -263,12 +279,11 @@ def unit_block(index: int, loadout: dict) -> str:
 {cargo_block('ItemCargo', loadout['items'])}
                         }};
                         class vest {{typeName="{loadout['vest']}"; isBackpack=0;}};
-                        class backpack {{typeName="{loadout['backpack']}"; isBackpack=1;}};
+{backpack}
                         map="ItemMap";
                         compass="ItemCompass";
                         watch="ItemWatch";
-                        radio="ItemRadio";
-                        gps="ItemGPS";
+{radio}                        gps="ItemGPS";
                         hmd="NVGoggles";
                         headgear="{loadout['headgear']}";
                     }};"""

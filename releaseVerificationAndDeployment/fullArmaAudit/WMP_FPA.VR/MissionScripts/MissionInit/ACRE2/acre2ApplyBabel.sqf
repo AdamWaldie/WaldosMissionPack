@@ -48,7 +48,13 @@ private _speakingAccepted = if (isNil '_speaking') then {true} else {
     if (_speaking isEqualType false) then {_speaking} else {true}
 };
 private _speakingReadBack = [] call acre_api_fnc_babelGetSpeakingLanguageId;
-private _speakingMatches = if (isNil '_speakingReadBack') then {true} else {_speakingReadBack isEqualTo _initial};
+private _speakingMatches = if (isNil '_speakingReadBack') then {true} else {
+    if (_speakingReadBack isEqualType 0) then {
+        _speakingReadBack == (_knownIds find _initial)
+    } else {
+        _speakingReadBack isEqualTo _initial
+    }
+};
 if (!_spokenAccepted || {!_speakingAccepted} || {!_speakingMatches}) exitWith {
     diag_log format ['[WMP ACRE] Babel API rejected the local language application (expected speaking language %1).', _initial];
     false

@@ -25,6 +25,8 @@ private _diagnostics = [];
         _nets pushBack [toUpper (_x select 0), _x select 1, _forEachIndex + 1, _overrides];
     } forEach _sourceNets;
     private _used = [];
+    private _max343Block = if (toUpper (_config getOrDefault ['prc343PresetPolicy', 'FULL_RANGE']) == 'FULL_RANGE' || {_preset == 'default'}) then {16} else {5};
+    private _max343Flat = _max343Block * 16;
     {
         private _explicit = _x select 2;
         private _radioAssignments = _x select 3;
@@ -56,12 +58,12 @@ private _diagnostics = [];
             };
             private _channel = if (count _numbers > 0) then {_numbers select (count _numbers - 1)} else {1};
             if (count _numbers > 1) then {_block = _numbers select (count _numbers - 2)};
-            _block = (_block max 1) min 16;
+            _block = (_block max 1) min _max343Block;
             _channel = (_channel max 1) min 16;
             private _flat = (_block - 1) * 16 + _channel;
-            while {_flat in _used && {_flat <= 256}} do {_flat = _flat + 1};
-            if (_flat > 256) then {
-                _assignment = [16, 16];
+            while {_flat in _used && {_flat <= _max343Flat}} do {_flat = _flat + 1};
+            if (_flat > _max343Flat) then {
+                _assignment = [_max343Block, 16];
                 _diagnostics pushBack format ['%1/%2 has no free PRC-343 assignment.', _sideKey, _groupId];
             } else {
                 _used pushBack _flat;

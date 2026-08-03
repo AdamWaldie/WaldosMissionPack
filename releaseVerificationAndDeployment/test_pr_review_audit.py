@@ -86,6 +86,7 @@ class PrReviewAuditTests(unittest.TestCase):
             frozenset(("qa_control_table", "qa_control_console")),
             frozenset(("qa_economy_table", "qa_economy_terminal")),
             frozenset(("qa_vvd_table", "qa_vvd_laptop")),
+            frozenset(("qa_acre_table", "qa_acre_console")),
         }
         unsafe = []
         for index, left in enumerate(fixtures):
@@ -201,7 +202,10 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn(f'this addWeapon ""{classname}""', mission)
         self.assertIn('vehicle="B_medic_F"', mission)
         self.assertIn('vehicle="B_soldier_AT_F"', mission)
-        self.assertIn('""NVGoggles"";"; skill=0.6;', mission)
+        self.assertEqual(5, mission.count('this linkItem ""NVGoggles""'))
+        commander = mission.split('class Item0 {', 1)[1].split('class Item1 {', 1)[0]
+        self.assertNotIn('this linkItem ""ItemRadio""', commander)
+        self.assertIn('(group this) setGroupIdGlobal [""VIKING-1-1""]', commander)
 
     def test_range_does_not_duplicate_pack_initializers(self):
         server = (

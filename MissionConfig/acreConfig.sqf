@@ -15,7 +15,7 @@
  * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init.
  *
  * CUSTOMISATION GUIDE:
- * MISSION MAKER - enabled, namedDisplays, sides, nets, groups, radioOverrides and Babel content are
+ * MISSION MAKER - enabled, prc343PresetPolicy, namedDisplays, sides, nets, groups, radioOverrides and Babel content are
  * intended mission choices. Group entries are [group ID, fallback net keys, fallback 343 [block,
  * channel], explicit assignments]. An assignment is [base radio class, same-type occurrence
  * (1-based), target, ear]. Target is a net key, a 343 [block, channel], or a
@@ -37,19 +37,24 @@
  * MHz (PRC-77 100, SEM70 1000). Modes are BLOCK_CHANNEL, CHANNEL or FREQUENCY.
  *
  * COMPATIBILITY - version is the parser schema and must remain 2 until the implementation changes.
- * Existing ACRE side presets remain WEST default3, EAST default2, GUER default4 and CIV default.
+ * prc343PresetPolicy is FULL_RANGE by default: every side retains all sixteen PRC-343 blocks while
+ * the other radios continue to use the existing ACRE side presets. SIDE_ISOLATED applies those side
+ * presets to the PRC-343 as well, reducing WEST/EAST/GUER to five blocks in exchange for frequency
+ * separation. Existing non-343 side presets remain WEST default3, EAST default2, GUER default4 and
+ * CIV default.
  */
 createHashMapFromArray [
     ["version", 2],
     ["enabled", true],                    // MISSION MAKER: false disables all replacement ACRE setup.
     ["strict", true],                     // ADVANCED: reject explicit PRC-343 assignment collisions.
+    ["prc343PresetPolicy", "FULL_RANGE"], // MISSION MAKER: FULL_RANGE (16 blocks) or SIDE_ISOLATED (5 combat-side blocks).
     ["retuneOnGroupChange", false],       // ADVANCED: true reapplies the current group's plan after a group change.
     ["namedDisplays", true],              // MISSION MAKER: label supported physical radio preset channels.
     ["notifyAssignmentProblems", true],   // MISSION MAKER: show a local WMP card when configured assignments cannot apply.
     ["radioPriority", ["ACRE_PRC152", "ACRE_PRC148", "ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70"]],
     ["radioProfiles", [
         ["ACRE_PRC343", "BLOCK_CHANNEL", ["LEFT", "RIGHT", "BOTH"], 256, []],
-        ["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 100, []],
+        ["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 32, []],
         ["ACRE_PRC152", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 100, []],
         ["ACRE_PRC117F", "CHANNEL", ["BOTH", "RIGHT", "LEFT"], 100, []],
         ["ACRE_BF888S", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 16, []],
@@ -62,12 +67,17 @@ createHashMapFromArray [
     ]],
     ["sides", [                          // MISSION MAKER: side preset, logical nets and group allocations.
         ["WEST", "default3", [
-            ["PLT1", "PLATOON 1", []], ["PLT2", "PLATOON 2", []],
-            ["PLT3", "PLATOON 3", []], ["COY", "COMPANY", []],
-            ["AIRGND", "AIR-GND", []], ["AIR", "AIR-AIR", []],
-            ["CAS1", "CAS 1", []], ["CAS2", "CAS 2", []],
-            ["CFF1", "CFF 1", []], ["CFF2", "CFF 2", []],
-            ["CONVOY", "CONVOY 1", []]
+            ["PLT1", "PLATOON 1", [["ACRE_PRC77", 31.00], ["ACRE_SEM70", 34.000]]],
+            ["PLT2", "PLATOON 2", [["ACRE_PRC77", 31.05], ["ACRE_SEM70", 34.025]]],
+            ["PLT3", "PLATOON 3", [["ACRE_PRC77", 31.10], ["ACRE_SEM70", 34.050]]],
+            ["COY", "COMPANY", [["ACRE_PRC77", 31.15], ["ACRE_SEM70", 34.075]]],
+            ["AIRGND", "AIR-GND", [["ACRE_PRC77", 31.20], ["ACRE_SEM70", 34.100]]],
+            ["AIR", "AIR-AIR", [["ACRE_PRC77", 31.25], ["ACRE_SEM70", 34.125]]],
+            ["CAS1", "CAS 1", [["ACRE_PRC77", 31.30], ["ACRE_SEM70", 34.150]]],
+            ["CAS2", "CAS 2", [["ACRE_PRC77", 31.35], ["ACRE_SEM70", 34.175]]],
+            ["CFF1", "CFF 1", [["ACRE_PRC77", 31.40], ["ACRE_SEM70", 34.200]]],
+            ["CFF2", "CFF 2", [["ACRE_PRC77", 31.45], ["ACRE_SEM70", 34.225]]],
+            ["CONVOY", "CONVOY 1", [["ACRE_PRC77", 31.50], ["ACRE_SEM70", 34.250]]]
         ], [
             ["VIKING-1-1", ["PLT1", "AIRGND"], [1, 1], []],
             ["VIKING 5", ["COY", "AIRGND"], [1, 5], []],

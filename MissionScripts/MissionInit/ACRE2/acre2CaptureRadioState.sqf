@@ -23,8 +23,8 @@ private _lastApplied = if (count _lastApplication >= 5) then {_lastApplication s
 {
     private _radioId = _x;
     private _base = [_radioId] call acre_api_fnc_getBaseRadio;
-    private _ordinal = _counts getOrDefault [_base, 0];
-    _counts set [_base, _ordinal + 1];
+    private _ordinal = (_counts getOrDefault [_base, 0]) + 1;
+    _counts set [_base, _ordinal];
     private _mode = "CHANNEL";
     private _setting = [_radioId] call acre_api_fnc_getRadioChannel;
     private _appliedIndex = _lastApplied findIf {(_x select 0) == _radioId};
@@ -37,11 +37,15 @@ private _lastApplied = if (count _lastApplication >= 5) then {_lastApplication s
             _setting = _applied select 3;
         };
     };
+    private _audioSource = [_radioId] call acre_api_fnc_getRadioAudioSource;
+    if (isNil "_audioSource" || {!(_audioSource isEqualType "")}) then {_audioSource = ""};
+    private _volume = [_radioId] call acre_api_fnc_getRadioVolume;
+    if (isNil "_volume" || {!(_volume isEqualType 0)}) then {_volume = -1};
     _state pushBack [
         _base, _ordinal, _mode, _setting,
         [_radioId] call acre_api_fnc_getRadioSpatial,
-        [_radioId] call acre_api_fnc_getRadioVolume,
-        [_radioId] call acre_api_fnc_getRadioAudioSource
+        _volume,
+        _audioSource
     ];
     if (_radioId == _selectedId) then {_selected = [_base, _ordinal]};
 } forEach _radios;

@@ -33,8 +33,8 @@ private _selectedId = "";
 {
     private _radioId = _x;
     private _base = [_radioId] call acre_api_fnc_getBaseRadio;
-    private _ordinal = _counts getOrDefault [_base, 0];
-    _counts set [_base, _ordinal + 1];
+    private _ordinal = (_counts getOrDefault [_base, 0]) + 1;
+    _counts set [_base, _ordinal];
     private _savedIndex = _savedRadios findIf {(_x select 0) == _base && {(_x select 1) == _ordinal}};
     if (_savedIndex >= 0) then {
         private _saved = _savedRadios select _savedIndex;
@@ -60,7 +60,7 @@ private _selectedId = "";
     private _base = _x select 0;
     private _ordinal = _x select 1;
     private _matchingCount = {_base == ([_x] call acre_api_fnc_getBaseRadio)} count _radios;
-    if (_matchingCount <= _ordinal) then {_success = false};
+    if (_matchingCount < _ordinal) then {_success = false};
 } forEach _savedRadios;
 if (count _frequencySettings > 0) then {
     private _broadRadios = [] call acre_api_fnc_getCurrentRadioList;

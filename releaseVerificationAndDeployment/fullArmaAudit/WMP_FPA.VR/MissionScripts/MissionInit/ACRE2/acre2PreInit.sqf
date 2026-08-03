@@ -24,7 +24,24 @@ if !(_config getOrDefault ['enabled', true]) exitWith {
 };
 missionNamespace setVariable ['Waldo_ACRE2_Enabled', true];
 if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {true};
-[false, true] call acre_api_fnc_setupMission;
+
+// Select presets explicitly instead of setupMission so PRC-343 capacity and side isolation are
+// independent choices. This follows ACRE's own bounded player-ready callback and runs before unique
+// carried radios consume their base-class preset.
+[{
+    !isNull acre_player
+}, {
+    params ['_config'];
+    private _sideKey = switch (side acre_player) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'}};
+    private _sideAliases = switch (_sideKey) do {case 'WEST': {['WEST', 'BLUFOR']}; case 'EAST': {['EAST', 'OPFOR']}; case 'GUER': {['GUER', 'INDEP', 'INDEPENDENT']}; default {['CIV', 'CIVILIAN']}};
+    private _sideIndex = (_config getOrDefault ['sides', []]) findIf {toUpper (_x select 0) in _sideAliases};
+    private _sidePreset = if (_sideIndex >= 0) then {((_config get 'sides') select _sideIndex) select 1} else {'default'};
+    private _shortPreset = if (toUpper (_config getOrDefault ['prc343PresetPolicy', 'FULL_RANGE']) == 'FULL_RANGE') then {'default'} else {_sidePreset};
+    {
+        private _base = _x select 0;
+        [_base, if (toUpper _base == 'ACRE_PRC343') then {_shortPreset} else {_sidePreset}] call acre_api_fnc_setPreset;
+    } forEach (_config getOrDefault ['radioProfiles', []]);
+}, [_config]] call CBA_fnc_waitUntilAndExecute;
 private _babel = _config getOrDefault ['babel', createHashMap];
 if (_babel getOrDefault ['enabled', false]) then {
     {

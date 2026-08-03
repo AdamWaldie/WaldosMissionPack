@@ -16,7 +16,9 @@ params [["_config", createHashMap, [createHashMap]]];
 private _errors = [];
 private _warnings = [];
 private _strict = _config getOrDefault ["strict", true];
+private _prc343PresetPolicy = toUpper (_config getOrDefault ["prc343PresetPolicy", "FULL_RANGE"]);
 if ((_config getOrDefault ["version", -1]) != 2) then {_errors pushBack "Unsupported configuration version; expected 2."};
+if !(_prc343PresetPolicy in ["FULL_RANGE", "SIDE_ISOLATED"]) then {_errors pushBack "prc343PresetPolicy must be FULL_RANGE or SIDE_ISOLATED."};
 {
     _x params ["_key", "_default"];
     if !((_config getOrDefault [_key, _default]) isEqualType true) then {_errors pushBack format ["%1 must be true or false.", _key]};
@@ -155,12 +157,13 @@ private _sideData = [];
         {
             if (count _nets > (_x select 3)) then {_errors pushBack format ["%1 defines %2 nets but %3 supports only %4 channels.", _sideKey, count _nets, _x select 0, _x select 3]};
         } forEach _channelProfiles;
-        _sideData pushBack [_sideKey, _netKeys, _groups];
+        private _max343Block = if (_prc343PresetPolicy == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
+        _sideData pushBack [_sideKey, _netKeys, _groups, _max343Block];
     };
 } forEach (_config getOrDefault ["sides", []]);
 
 private _validateAssignments = {
-    params ["_assignments", "_context", "_allowedNets"];
+    params ["_assignments", "_context", "_allowedNets", ["_max343Block", 16]];
     private _identities = [];
     private _frequencyOccurrences = createHashMap;
     {
@@ -187,8 +190,8 @@ private _validateAssignments = {
                 if (_profileIndex >= 0) then {
                     private _profile = _profiles select _profileIndex;
                     private _mode = toUpper (_profile select 1);
-                    if (_mode == "BLOCK_CHANNEL" && {!(_target isEqualType [] && {count _target == 2} && {(_target select 0) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]} && {(_target select 1) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]})}) then {
-                        _errors pushBack format ["%1/%2 PRC-343 target must be [block, channel], both 1-16.", _context, _identity];
+                    if (_mode == "BLOCK_CHANNEL" && {!(_target isEqualType [] && {count _target == 2} && {(_target select 0) >= 1} && {(_target select 0) <= _max343Block} && {(_target select 0) == floor (_target select 0)} && {(_target select 1) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]})}) then {
+                        _errors pushBack format ["%1/%2 PRC-343 target must be [block, channel] with block 1-%3 and channel 1-16 for this preset.", _context, _identity, _max343Block];
                     };
                     if (_mode == "CHANNEL" && {!(_target isEqualType 0 && {_target >= 1} && {_target <= (_profile select 3)} && {_target == floor _target})}) then {
                         _errors pushBack format ["%1/%2 direct channel must be an integer from 1 to %3.", _context, _identity, _profile select 3];
@@ -216,7 +219,7 @@ private _validateAssignments = {
 };
 
 {
-    _x params ["_sideKey", "_netKeys", "_groups"];
+    _x params ["_sideKey", "_netKeys", "_groups", "_max343Block"];
     private _assignments = [];
     private _groupKeys = [];
     {
@@ -231,7 +234,7 @@ private _validateAssignments = {
             {if !((toUpper _x) in _netKeys) then {_errors pushBack format ["%1/%2 references unknown net %3.", _sideKey, _groupKey, _x]}} forEach _netRefs;
             private _explicitShortAssignments = _radioAssignments select {count _x >= 3 && {toUpper (_x select 0) == "ACRE_PRC343"} && {(_x select 2) isEqualType []}};
             if (_explicitShortAssignments isEqualTo [] && {!(_explicit343 isEqualTo [])}) then {
-                if (count _explicit343 != 2 || {!((_explicit343 select 0) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])} || {!((_explicit343 select 1) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])}) then {
+                if (count _explicit343 != 2 || {(_explicit343 select 0) < 1} || {(_explicit343 select 0) > _max343Block} || {!((_explicit343 select 1) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16])}) then {
                     _errors pushBack format ["%1/%2 has invalid fallback PRC-343 assignment %3.", _sideKey, _groupKey, _explicit343];
                 } else {
                     private _flat = ((_explicit343 select 0) - 1) * 16 + (_explicit343 select 1);
@@ -242,10 +245,10 @@ private _validateAssignments = {
                     _assignments pushBack _flat;
                 };
             };
-            [_radioAssignments, format ["%1/%2", _sideKey, _groupKey], _netKeys] call _validateAssignments;
+            [_radioAssignments, format ["%1/%2", _sideKey, _groupKey], _netKeys, _max343Block] call _validateAssignments;
             {
                 private _target = _x select 2;
-                if (count _target == 2 && {(_target select 0) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]} && {(_target select 1) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]}) then {
+                if (count _target == 2 && {(_target select 0) >= 1} && {(_target select 0) <= _max343Block} && {(_target select 1) in [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16]}) then {
                     private _flat = ((_target select 0) - 1) * 16 + (_target select 1);
                     if (_flat in _assignments) then {
                         if (_strict) then {
@@ -269,7 +272,7 @@ private _validateAssignments = {
         private _selectorType = toUpper (_selector select 0);
         if !(_selectorType in ["UID", "VARIABLE", "ROLE"]) then {_errors pushBack format ["Invalid radio override selector %1.", _selectorType]};
         if ((_selector select 1) == "") then {_errors pushBack format ["%1 radio override has an empty selector value.", _selectorType]};
-        [_x select 1, format ["override %1/%2", _selectorType, _selector select 1], _allNetKeys] call _validateAssignments;
+        [_x select 1, format ["override %1/%2", _selectorType, _selector select 1], _allNetKeys, if (_prc343PresetPolicy == "FULL_RANGE") then {16} else {5}] call _validateAssignments;
     };
 } forEach (_config getOrDefault ["radioOverrides", []]);
 

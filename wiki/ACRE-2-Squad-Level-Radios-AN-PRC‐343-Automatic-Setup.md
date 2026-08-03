@@ -23,7 +23,7 @@ Only listed occurrences are changed. A third or captured PRC-343 remains untouch
 
 Both values must be between 1 and 16. Invalid assignments are rejected. With strict validation enabled, collisions are rejected; with strict mode disabled, they are retained and clearly reported. For groups without an override, two numeric callsign components become block/channel, a single numeric component becomes the channel within the callsign prefix's deterministic block, and a callsign without numbers receives the first free channel in that block.
 
-Acceptance boundaries include B1C16, B2C1, B12C1 and B16C16. The client converts the pair to ACRE's flat 1–256 channel only at the point it applies a unique PRC-343 radio ID. The CEOI continues to show the clearer block/channel form.
+The client converts the pair to ACRE's flat channel only when it applies a unique PRC-343 radio ID. The default `prc343PresetPolicy = "FULL_RANGE"` deliberately assigns the PRC-343 `default` preset on every side, exposing B1–B16 while leaving long-range radios on their normal side presets. Set the policy to `SIDE_ISOLATED` only when side-separated PRC-343 frequencies are required; WEST `default3`, EAST `default2`, and Independent `default4` then expose B1–B5. The CEOI continues to show the clearer block/channel form, and WMP rejects out-of-range blocks before ACRE can silently clamp them.
 
 <!-- WMP-WIKI-NAV -->
 ---

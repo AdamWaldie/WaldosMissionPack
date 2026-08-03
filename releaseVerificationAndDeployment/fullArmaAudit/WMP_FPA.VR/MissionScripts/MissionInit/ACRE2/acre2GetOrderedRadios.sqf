@@ -21,4 +21,8 @@ private _inventory = [];
 } forEach [uniformContainer player, vestContainer player, backpackContainer player];
 _inventory append assignedItems player;
 _inventory = _inventory apply {toLower _x};
-([] call acre_api_fnc_getCurrentRadioList) select {toLower _x in _inventory}
+private _ordered = [];
+{
+    if (toLower _x in _inventory && {!(_x in _ordered)}) then {_ordered pushBack _x};
+} forEach ([] call acre_api_fnc_getCurrentRadioList);
+_ordered

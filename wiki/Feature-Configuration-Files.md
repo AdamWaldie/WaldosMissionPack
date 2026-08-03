@@ -42,7 +42,7 @@ Recommended review by file:
 - AI profiles: `MILITIA`, `LINE`, `VETERAN`, `ELITE`; mode `DAY` or `NIGHT`; apply mode `BOTH`, `EXISTING` or `NEW`.
 - UI themes: `DEFAULT`, `WW2`, `VIETNAM`, `SCIFI`.
 - Notification placements: `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER`, `BOTTOM_RIGHT`. `TOP` is reserved for mission-flow banners.
-- ACRE PRC-343 assignment: `[block, channel]`, both integers from 1 through 16; `[]` requests deterministic allocation.
+- ACRE PRC-343 assignment: `[block, channel]`; both are 1–16 under the default `FULL_RANGE` policy. `SIDE_ISOLATED` reduces WEST/EAST/GUER blocks to 1–5. `[]` requests deterministic allocation.
 - ACRE explicit radio: `[base class, same-type occurrence, target, ear]`; ears are `LEFT`, `RIGHT`, `BOTH` or `CENTER`.
 - ACRE profile modes: `BLOCK_CHANNEL`, `CHANNEL`, `FREQUENCY`. WMP deliberately leaves alternate PTT defaults alone.
 - Jammer disable result: `DISABLE` for the repairable/reactivatable disabled state or `DEACTIVATE` for an ordinary off state.
@@ -56,11 +56,12 @@ Recommended review by file:
 | `version` | Configuration schema revision required by validation. |
 | `enabled` | Enables the replacement ACRE lifecycle. |
 | `strict` | Promotes explicit PRC-343 collisions from reported warnings to configuration errors. Structural errors are always rejected. |
+| `prc343PresetPolicy` | `FULL_RANGE` keeps all sixteen blocks on every side; `SIDE_ISOLATED` trades combat-side capacity for cross-side PRC-343 frequency separation. It does not change the presets used by other radios. |
 | `retuneOnGroupChange` | Allows event-driven group-change retuning; disabled to preserve captured radios. The CEOI still refreshes. |
 | `namedDisplays` | Enables supported physical radio channel labels. |
 | `notifyAssignmentProblems` | Shows a local WMP warning for failed manual/QA assignment without intruding on initial loading or normal respawn. |
 | `radioPriority` | Ordered base-radio classes used when assigning logical long-range nets. |
-| `radioProfiles` | Per-radio capability mode, fallback ear sequence and maximum valid numbered channel. |
+| `radioProfiles` | Per-radio capability mode, fallback ear sequence and maximum valid numbered channel or tuning range. Shipped limits are PRC-148 32, PRC-152/117F 100, BF-888S 16, SEM52SL 13, PRC-77 30–75.95 MHz/50 kHz and SEM70 30–79.975 MHz/25 kHz. |
 | `radioOverrides` | Optional first-match UID, editor-variable or role replacement assignment lists. |
 | `sides` | Side preset, logical nets, fallback group mappings and explicit same-type occurrence assignments. |
 | `babel` | Language definitions, side defaults, speaking language, overrides and unit-follow behavior. |

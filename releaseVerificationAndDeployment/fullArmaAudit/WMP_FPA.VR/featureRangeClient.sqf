@@ -186,7 +186,8 @@ Waldo_QA_fnc_addAuditActionLocal = {
     _forceVanilla = _forceVanilla || {
         _target in [
             missionNamespace getVariable ["Waldo_QA_ControlConsole", objNull],
-            missionNamespace getVariable ["Waldo_QA_CoreConsole", objNull]
+            missionNamespace getVariable ["Waldo_QA_CoreConsole", objNull],
+            missionNamespace getVariable ["Waldo_QA_ACREConsole", objNull]
         ]
     };
     private _aceAvailable = isClass (configFile >> "CfgPatches" >> "ace_interact_menu")
@@ -283,7 +284,9 @@ if (!isNull _coreConsole) then {
         [_message, if (_missing isEqualTo []) then {"OK"} else {"ERROR"}, 8] call Waldo_fnc_MiniGameInteractionNotifyClient;
         diag_log format ["[WMP QA] %1", _message];
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACREStatus", "ACRE2: SHOW PLAN / RADIO STATUS", {
+    private _acreConsole = missionNamespace getVariable ["Waldo_QA_ACREConsole", objNull];
+    if (isNull _acreConsole) then {_acreConsole = _coreConsole};
+    [_acreConsole, "Waldo_QA_ACREStatus", "ACRE2: SHOW PLAN / RADIO STATUS", {
         if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {
             ["ACRE2 is not loaded on this client.", "ERROR", 8] call Waldo_fnc_MiniGameInteractionNotifyClient;
         };
@@ -294,13 +297,13 @@ if (!isNull _coreConsole) then {
         [_message, "OK", 10] call Waldo_fnc_MiniGameInteractionNotifyClient;
         diag_log format ["[WMP QA ACRE] %1 plan=%2", _message, _plan];
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACREApply", "ACRE2: REAPPLY PLAN + BABEL + CEOI", {
+    [_acreConsole, "Waldo_QA_ACREApply", "ACRE2: REAPPLY PLAN + BABEL + CEOI", {
         private _radioResult = [true, "QA"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
         private _babelResult = [] call Waldo_fnc_ACRE2ApplyBabel;
         private _ceoiResult = [] call Waldo_fnc_ACRE2BuildCEOI;
         [format ["Radio %1 | Babel %2 | CEOI %3", _radioResult, _babelResult, _ceoiResult], if (_radioResult && {_ceoiResult}) then {"OK"} else {"ERROR"}, 10] call Waldo_fnc_MiniGameInteractionNotifyClient;
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACREProvision", "ACRE2: PROVISION CARRIED TEST RADIOS", {
+    [_acreConsole, "Waldo_QA_ACREProvision", "ACRE2: PROVISION CARRIED TEST RADIOS", {
         if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {
             ["ACRE2 is not loaded on this client.", "ERROR", 8] call Waldo_fnc_MiniGameInteractionNotifyClient;
         };
@@ -318,13 +321,14 @@ if (!isNull _coreConsole) then {
             ["Two PRC-343s and two PRC-152s were requested. Inspect both ears and channels, then run duplicate verification.", "OK", 12] call Waldo_fnc_MiniGameInteractionNotifyClient;
         };
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACREDuplicates", "ACRE2: VERIFY DUPLICATE RADIO ASSIGNMENTS", {
+    [_acreConsole, "Waldo_QA_ACREDuplicates", "ACRE2: VERIFY DUPLICATE RADIO ASSIGNMENTS", {
         private _ordered = [] call Waldo_fnc_ACRE2GetOrderedRadios;
         private _checks = [
-            ["ACRE_PRC343", 1, 1, "LEFT"],
-            ["ACRE_PRC343", 2, 2, "RIGHT"],
-            ["ACRE_PRC152", 1, 1, "RIGHT"],
-            ["ACRE_PRC152", 2, 5, "LEFT"]
+            ["ACRE_PRC343", 1, 109, "LEFT"],
+            ["ACRE_PRC343", 2, 182, "RIGHT"],
+            ["ACRE_PRC152", 1, 8, "RIGHT"],
+            ["ACRE_PRC152", 2, 11, "LEFT"],
+            ["ACRE_PRC148", 1, 9, "CENTER"]
         ];
         private _failures = [];
         {
@@ -340,10 +344,49 @@ if (!isNull _coreConsole) then {
             };
         } forEach _checks;
         private _ok = count _failures == 0;
-        [if (_ok) then {"Duplicate radio channels and ears verified."} else {_failures joinString "; "}, if (_ok) then {"OK"} else {"ERROR"}, 12] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        [if (_ok) then {"Radios verified: 343 B7/C13 LEFT, 343 B12/C6 RIGHT, 152 C8 RIGHT, 152 C11 LEFT and 148 C9 BOTH."} else {_failures joinString "; "}, if (_ok) then {"OK"} else {"ERROR"}, 12] call Waldo_fnc_MiniGameInteractionNotifyClient;
         diag_log format ["[WMP QA ACRE DUPLICATES] success=%1 failures=%2 radios=%3", _ok, _failures, _ordered];
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACRERoundTrip", "ACRE2: EXERCISE PERSISTED RADIO STATE", {
+    [_acreConsole, "Waldo_QA_ACREAdditionalChannels", "ACRE2: TEST 117F / BF-888S / SEM52SL", {
+        if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {
+            ["ACRE2 is not loaded on this client.", "ERROR", 8] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        };
+        {
+            private _base = _x;
+            private _matching = ([] call Waldo_fnc_ACRE2GetOrderedRadios) select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == _base};
+            if (count _matching == 0) then {player addItemToBackpack _base};
+        } forEach ["ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL"];
+        [] spawn {
+            uiSleep 2;
+            private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
+            private _savedOverrides = +(_config getOrDefault ["radioOverrides", []]);
+            _config set ["radioOverrides", [[["VARIABLE", vehicleVarName player], [
+                ["ACRE_PRC117F", 1, 7, "BOTH"],
+                ["ACRE_BF888S", 1, 14, "RIGHT"],
+                ["ACRE_SEM52SL", 1, 12, "LEFT"]
+            ]]]];
+            private _result = [true, "QA_ADDITIONAL_CHANNEL_PROFILES"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+            _config set ["radioOverrides", _savedOverrides];
+            private _ordered = [] call Waldo_fnc_ACRE2GetOrderedRadios;
+            private _failures = [];
+            {
+                _x params ["_base", "_channel", "_ear"];
+                private _matching = _ordered select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == _base};
+                if (count _matching == 0) then {
+                    _failures pushBack format ["missing %1", _base];
+                } else {
+                    private _id = _matching select 0;
+                    if (([_id] call acre_api_fnc_getRadioChannel) != _channel || {([_id] call acre_api_fnc_getRadioSpatial) != _ear}) then {
+                        _failures pushBack format ["%1 expected C%2/%3", _base, _channel, _ear];
+                    };
+                };
+            } forEach [["ACRE_PRC117F", 7, "CENTER"], ["ACRE_BF888S", 14, "RIGHT"], ["ACRE_SEM52SL", 12, "LEFT"]];
+            private _ok = _result && {count _failures == 0};
+            [if (_ok) then {"PRC-117F C7 BOTH, BF-888S C14 RIGHT and SEM52SL C12 LEFT verified."} else {_failures joinString "; "}, if (_ok) then {"OK"} else {"ERROR"}, 12] call Waldo_fnc_MiniGameInteractionNotifyClient;
+            diag_log format ["[WMP QA ACRE ADDITIONAL CHANNELS] success=%1 failures=%2 radios=%3", _ok, _failures, _ordered];
+        };
+    }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_acreConsole, "Waldo_QA_ACRERoundTrip", "ACRE2: EXERCISE PERSISTED RADIO STATE", {
         private _state = [] call Waldo_fnc_ACRE2CaptureRadioState;
         private _ordered = [] call Waldo_fnc_ACRE2GetOrderedRadios;
         {
@@ -360,7 +403,7 @@ if (!isNull _coreConsole) then {
             diag_log format ["[WMP QA ACRE PERSISTENCE] success=%1 state=%2", _restored, _saved];
         };
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACREPreserveExtra", "ACRE2: VERIFY EXTRA RADIO PRESERVATION", {
+    [_acreConsole, "Waldo_QA_ACREPreserveExtra", "ACRE2: VERIFY EXTRA RADIO PRESERVATION", {
         private _matching = ([] call Waldo_fnc_ACRE2GetOrderedRadios) select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == "ACRE_PRC343"};
         if (count _matching < 3) then {player addItem "ACRE_PRC343"};
         [] spawn {
@@ -376,7 +419,7 @@ if (!isNull _coreConsole) then {
             diag_log format ["[WMP QA ACRE EXTRA] success=%1 radio=%2", _preserved, _extra];
         };
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACREFrequency", "ACRE2: TEST PRC-77 FREQUENCY PROFILE", {
+    [_acreConsole, "Waldo_QA_ACREFrequency", "ACRE2: TEST PRC-77 FREQUENCY PROFILE", {
         private _matching = ([] call Waldo_fnc_ACRE2GetOrderedRadios) select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == "ACRE_PRC77"};
         if (count _matching == 0) then {player addItemToBackpack "ACRE_PRC77"};
         [] spawn {
@@ -392,7 +435,7 @@ if (!isNull _coreConsole) then {
             diag_log format ["[WMP QA ACRE FREQUENCY] success=%1 radio=%2", _result, _matching select 0];
         };
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACREFrequencySem70", "ACRE2: TEST SEM70 FREQUENCY PROFILE", {
+    [_acreConsole, "Waldo_QA_ACREFrequencySem70", "ACRE2: TEST SEM70 FREQUENCY PROFILE", {
         private _matching = ([] call Waldo_fnc_ACRE2GetOrderedRadios) select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == "ACRE_SEM70"};
         if (count _matching == 0) then {player addItemToBackpack "ACRE_SEM70"};
         [] spawn {
@@ -408,7 +451,7 @@ if (!isNull _coreConsole) then {
             diag_log format ["[WMP QA ACRE FREQUENCY SEM70] success=%1 radio=%2", _result, _matching select 0];
         };
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_ACRESave", "ACRE2: SAVE FILTERED RESPAWN LOADOUT", {
+    [_acreConsole, "Waldo_QA_ACRESave", "ACRE2: SAVE FILTERED RESPAWN LOADOUT", {
         [true] call Waldo_fnc_SaveLoadout;
         private _saved = missionNamespace getVariable ["Waldo_Player_Inventory", []];
         diag_log format ["[WMP QA ACRE] Filtered respawn loadout=%1", _saved];

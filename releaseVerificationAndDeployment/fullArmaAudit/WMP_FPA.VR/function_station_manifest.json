@@ -15,6 +15,16 @@
       "description": "Navigation, resets, diagnostics and audit modes."
     },
     {
+      "id": "acre",
+      "title": "ACRE2 COMMUNICATIONS",
+      "position": [
+        18,
+        27,
+        0
+      ],
+      "description": "Preconfigured radios, named nets, listening ears, Babel, respawn and persistence."
+    },
+    {
       "id": "mission-init",
       "title": "MISSION INITIALISATION",
       "position": [

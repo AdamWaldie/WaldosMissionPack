@@ -155,10 +155,16 @@ def legacy_playable_units_with_loadouts(source: bytes) -> bytes:
             ]
         )
         commands.extend(f'this addItem "{item}"' for item in loadout["items"])
+        commands.extend(f'this addItemToBackpack "{item}"' for item in loadout.get("backpack_items", []))
+        linked_items = ["ItemMap", "ItemCompass", "ItemWatch", "ItemGPS", "NVGoggles"]
+        if loadout.get("vanilla_radio", True):
+            linked_items.append("ItemRadio")
         commands.extend(
             f'this linkItem "{item}"'
-            for item in ("ItemMap", "ItemCompass", "ItemWatch", "ItemRadio", "ItemGPS", "NVGoggles")
+            for item in linked_items
         )
+        if index == 0:
+            commands.append('(group this) setGroupIdGlobal ["VIKING-1-1"]')
         init = "; ".join(commands).replace('"', '""') + ";"
         player = "PLAYER COMMANDER" if index == 0 else "PLAY CDG"
         leader = " leader=1;" if index == 0 else ""
@@ -168,7 +174,7 @@ def legacy_playable_units_with_loadouts(source: bytes) -> bytes:
         )
         new = (
             f'class Item{index} {{position[]={{{index * 2},0,0}}; id={index}; side="WEST"; '
-            f'vehicle="{loadout["type"]}"; player="{player}";{leader} init="{init}"; skill=0.6;}};'
+            f'vehicle="{loadout["type"]}"; text="{loadout["name"]}"; player="{player}";{leader} init="{init}"; skill=0.6;}};'
         )
         if old not in text:
             raise ValueError(f"Legacy playable slot {index} was not found in the known-good shell")
