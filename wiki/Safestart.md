@@ -68,7 +68,7 @@ The report identifies whether the code is loaded, whether SafeStart is active, i
 
 ## Zeus usage
 
-Three modules are registered under **"Waldos Mission Modules"** in the Zeus menu:
+Three modules are registered under **WMP Mission Flow** in the Zeus menu:
 
 | Module | Action |
 |---|---|

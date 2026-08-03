@@ -1,5 +1,5 @@
 author = "WaldoTheWarfighter";
-onLoadName = "WMP PR REVIEW AUDIT";
+onLoadName = "WMP FULL PACK PR AUDIT";
 onLoadMission = "Current pull-request runtime verification";
 loadScreen = "Pictures\loading.jpg";
 overviewPicture = "Pictures\loading.jpg";

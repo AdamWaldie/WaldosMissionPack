@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 647,
+  "registeredFunctionCount": 815,
   "runtimeFunctionCount": 385,
-  "functionCount": 1032,
+  "functionCount": 1200,
   "stations": [
     {
       "id": "control",
@@ -203,6 +203,206 @@
         0
       ],
       "description": "Present in the pack, excluded from automatic activation."
+    },
+    {
+      "id": "persistence",
+      "title": "PERSISTENCE",
+      "position": [
+        150,
+        80,
+        0
+      ],
+      "description": "Dependency gate, object registration, save-now and unavailable-state feedback."
+    },
+    {
+      "id": "treatment-feedback",
+      "title": "TREATMENT FEEDBACK",
+      "position": [
+        175,
+        80,
+        0
+      ],
+      "description": "Real ACE patient treatment and WMP notification feedback."
+    },
+    {
+      "id": "hazards",
+      "title": "HAZARDOUS ENVIRONMENTS",
+      "position": [
+        200,
+        80,
+        0
+      ],
+      "description": "Repeatable exposure zone, protection and runtime removal."
+    },
+    {
+      "id": "tree-felling",
+      "title": "TREE FELLING",
+      "position": [
+        225,
+        80,
+        0
+      ],
+      "description": "Cutting-tool validation, progress, replacement, yield and regrowth."
+    },
+    {
+      "id": "emergency-dismount",
+      "title": "EMERGENCY DISMOUNT",
+      "position": [
+        250,
+        80,
+        0
+      ],
+      "description": "Overturn detection, protected extraction and repeat reset."
+    },
+    {
+      "id": "accessibility",
+      "title": "ACCESSIBILITY PID",
+      "position": [
+        150,
+        40,
+        0
+      ],
+      "description": "Eligible-player friendly identification, LOS and toggle behavior."
+    },
+    {
+      "id": "breaching",
+      "title": "EXPLOSIVE BREACHING",
+      "position": [
+        175,
+        40,
+        0
+      ],
+      "description": "Configured wall, accumulated strength, replacement and reset."
+    },
+    {
+      "id": "object-transforms",
+      "title": "OBJECT TRANSFORMS",
+      "position": [
+        200,
+        40,
+        0
+      ],
+      "description": "Scale, reset, copy and transform helpers on physical props."
+    },
+    {
+      "id": "ai-rebalance",
+      "title": "AI REBALANCE",
+      "position": [
+        225,
+        40,
+        0
+      ],
+      "description": "Named profiles, live AI skill changes and restoration."
+    },
+    {
+      "id": "field-resupply",
+      "title": "FIELD RESUPPLY",
+      "position": [
+        250,
+        40,
+        0
+      ],
+      "description": "Finite hub stock, carrier crates, deployment, refill and salvage."
+    },
+    {
+      "id": "tactical-display",
+      "title": "TACTICAL DISPLAY",
+      "position": [
+        150,
+        0,
+        0
+      ],
+      "description": "Authenticated local tactical map with friendly and known-enemy filtering."
+    },
+    {
+      "id": "dynamic-aa",
+      "title": "DYNAMIC ANTI-AIR",
+      "position": [
+        175,
+        0,
+        0
+      ],
+      "description": "Named radar system, pooled assets, altitude detection and teardown."
+    },
+    {
+      "id": "gunship",
+      "title": "AIRBORNE GUNSHIP",
+      "position": [
+        200,
+        0,
+        0
+      ],
+      "description": "Registration, assignment, orbit, service and removal lifecycle."
+    },
+    {
+      "id": "vehicle-recovery",
+      "title": "VEHICLE RECOVERY",
+      "position": [
+        225,
+        0,
+        0
+      ],
+      "description": "Damage-gated packaging, carrier handling and keyed workshop restoration."
+    },
+    {
+      "id": "rally",
+      "title": "SQUAD RALLY",
+      "position": [
+        250,
+        0,
+        0
+      ],
+      "description": "Leader deployment, group respawn, regroup, expiry and removal."
+    },
+    {
+      "id": "nested-loadouts",
+      "title": "NESTED LOADOUT SCRAPE",
+      "position": [
+        275,
+        0,
+        0
+      ],
+      "description": "Playable inventories inside nested Eden folders feeding crate and arsenal pools."
+    },
+    {
+      "id": "dynamic-paradrop",
+      "title": "DYNAMIC PARADROP",
+      "position": [
+        300,
+        40,
+        0
+      ],
+      "description": "Server-owned DZ route, timed jumpers, operational markers and teardown."
+    },
+    {
+      "id": "ai-helicopter-landing",
+      "title": "AI HELICOPTER LANDING",
+      "position": [
+        325,
+        40,
+        0
+      ],
+      "description": "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."
+    },
+    {
+      "id": "ui-theme-qa",
+      "title": "UI THEME QA",
+      "position": [
+        325,
+        0,
+        0
+      ],
+      "description": "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."
+    },
+    {
+      "id": "dynamic-ao",
+      "title": "DYNAMIC AO",
+      "position": [
+        350,
+        0,
+        0
+      ],
+      "description": "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."
     }
   ],
   "functions": [
@@ -375,6 +575,66 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_AIRebalanceInit",
+      "file": "MissionScripts/AiScripting/aiRebalanceInit.sqf",
+      "station": "ai-rebalance",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIApplyProfile",
+      "file": "MissionScripts/AiScripting/aiApplyProfile.sqf",
+      "station": "ai-rebalance",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIRebalanceStop",
+      "file": "MissionScripts/AiScripting/aiRebalanceStop.sqf",
+      "station": "ai-rebalance",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingInit",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingInit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingTrackLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingTrackLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingExecuteLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingExecuteLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingAnchorLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingAnchorLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingRestoreLocal",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingRestoreLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingSetting",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingSetting.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ImprovedHelicopterLandingConfigureServer",
+      "file": "MissionScripts/AiScripting/improvedHelicopterLandingConfigureServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_Teleport",
       "file": "MissionScripts/Logistics/LogiHelpers/teleport.sqf",
       "station": "loadouts",
@@ -471,6 +731,66 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_UiTheme",
+      "file": "MissionScripts/MissionFlowAndUi/uiTheme.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeApplyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeApplyLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RestyleUiNotificationsLocal",
+      "file": "MissionScripts/MissionFlowAndUi/restyleUiNotificationsLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeApplyDisplayLocal",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeApplyDisplayLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeSetServer",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeSetServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiThemeZen",
+      "file": "MissionScripts/MissionFlowAndUi/uiThemeZen.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiColourVisionProfile",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiColourVisionProfile.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiColourVisionApplyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiColourVisionApplyLocal.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiColourVisionOpenLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiColourVisionOpenLocal.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FeatureNotifyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/featureNotifyLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_SetUiPanelPlacement",
       "file": "MissionScripts/MissionFlowAndUi/setUiPanelPlacement.sqf",
       "station": "mission-flow",
@@ -495,6 +815,18 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RegisterUiReservationLocal",
+      "file": "MissionScripts/MissionFlowAndUi/registerUiReservationLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UnregisterUiReservationLocal",
+      "file": "MissionScripts/MissionFlowAndUi/unregisterUiReservationLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_DrainUiNotificationQueue",
       "file": "MissionScripts/MissionFlowAndUi/drainUiNotificationQueue.sqf",
       "station": "mission-flow",
@@ -515,6 +847,18 @@
     {
       "name": "Waldo_fnc_SetupUiCleanupAction",
       "file": "MissionScripts/MissionFlowAndUi/setupUiCleanupAction.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SetUiPanelsSuppressed",
+      "file": "MissionScripts/MissionFlowAndUi/setUiPanelsSuppressed.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SetupUiAcePriority",
+      "file": "MissionScripts/MissionFlowAndUi/setupUiAcePriority.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -611,6 +955,12 @@
     {
       "name": "Waldo_fnc_JammerInteraction",
       "file": "MissionScripts/MissionInit/Jamming/jammerInteraction.sqf",
+      "station": "electronic-warfare",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_JammerDisableServer",
+      "file": "MissionScripts/MissionInit/Jamming/jammerDisableServer.sqf",
       "station": "electronic-warfare",
       "activation": "manual"
     },
@@ -761,12 +1111,18 @@
     {
       "name": "Waldo_fnc_MissionSQMLookup",
       "file": "MissionScripts/Logistics/LogiHelpers/missionFileLookup.sqf",
-      "station": "loadouts",
+      "station": "nested-loadouts",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_DoStarterCrate",
       "file": "MissionScripts/Logistics/Crates/doStarterCrate.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_StarterCrateSetupLocal",
+      "file": "MissionScripts/Logistics/Crates/starterCrateSetupLocal.sqf",
       "station": "loadouts",
       "activation": "manual"
     },
@@ -849,6 +1205,78 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RecoveryNotifyLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryNotifyLocal.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRegisterWorkshop",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRegisterWorkshop.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRegisterVehicle",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRegisterVehicle.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRegisterCarrier",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRegisterCarrier.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoverySetupVehicleLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySetupVehicleLocal.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryInteractionSetup",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryInteractionSetup.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoverySetupCarrierLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySetupCarrierLocal.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoverySetCargoLocal",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoverySetCargoLocal.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRequestServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRequestServer.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryResolveRestorePosition",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryResolveRestorePosition.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryRestoreServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryRestoreServer.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RecoveryMonitorServer",
+      "file": "MissionScripts/Logistics/VehicleRecovery/recoveryMonitorServer.sqf",
+      "station": "vehicle-recovery",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_VehicleCamoSetup",
       "file": "MissionScripts/Logistics/VehicleCamoScript/vehicleCamo.sqf",
       "station": "loadouts",
@@ -899,6 +1327,12 @@
     {
       "name": "Waldo_fnc_ZenLoadoutSaveModule",
       "file": "MissionScripts/ZenModules/Zen_loadoutSaveModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenAssignObjectOwnerServer",
+      "file": "MissionScripts/ZenModules/zenAssignObjectOwnerServer.sqf",
       "station": "zen",
       "activation": "manual"
     },
@@ -969,6 +1403,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ParadropRestoreBackpackLocal",
+      "file": "MissionScripts/Paradrop/paradropRestoreBackpackLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_HaloJumpFunc",
       "file": "MissionScripts/Paradrop/paradropHaloJump.sqf",
       "station": "paradrop",
@@ -1002,6 +1442,54 @@
       "name": "Waldo_fnc_JumpSettingsCheck",
       "file": "MissionScripts/Paradrop/checkForJumpSettings.sqf",
       "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropCreateDropZone",
+      "file": "MissionScripts/Paradrop/paradropCreateDropZone.sqf",
+      "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropConfigureAircraftLocal",
+      "file": "MissionScripts/Paradrop/paradropConfigureAircraftLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropEmbark",
+      "file": "MissionScripts/Paradrop/paradropEmbark.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropEmbarkLocal",
+      "file": "MissionScripts/Paradrop/paradropEmbarkLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropRemoveDropZone",
+      "file": "MissionScripts/Paradrop/paradropRemoveDropZone.sqf",
+      "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropDropZoneZen",
+      "file": "MissionScripts/Paradrop/paradropDropZoneZen.sqf",
+      "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SetupVehicleUprightLocal",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/setupVehicleUprightLocal.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleUpright",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/vehicleUpright.sqf",
+      "station": "mission-init",
       "activation": "manual"
     },
     {
@@ -1074,6 +1562,690 @@
       "name": "Waldo_fnc_VVDPurgeVehicle",
       "file": "MissionScripts/Logistics/VirtualVehicleDepot/VVDPurgeVehicle.sqf",
       "station": "vvd",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FeatureRuntimeApply",
+      "file": "MissionScripts/ZenModules/RuntimeControl/featureRuntimeApply.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FeatureRuntimeZen",
+      "file": "MissionScripts/ZenModules/RuntimeControl/featureRuntimeZen.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FeatureRuntimeRequestState",
+      "file": "MissionScripts/ZenModules/RuntimeControl/featureRuntimeRequestState.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FeatureRuntimeSendStateRequest",
+      "file": "MissionScripts/ZenModules/RuntimeControl/featureRuntimeSendStateRequest.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FeatureRuntimeReceiveState",
+      "file": "MissionScripts/ZenModules/RuntimeControl/featureRuntimeReceiveState.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreatmentFeedbackInit",
+      "file": "MissionScripts/MedicalSystems/TreatmentFeedback/treatmentFeedbackInit.sqf",
+      "station": "treatment-feedback",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreatmentFeedbackNotify",
+      "file": "MissionScripts/MedicalSystems/TreatmentFeedback/treatmentFeedbackNotify.sqf",
+      "station": "treatment-feedback",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreatmentFeedbackShowLocal",
+      "file": "MissionScripts/MedicalSystems/TreatmentFeedback/treatmentFeedbackShowLocal.sqf",
+      "station": "treatment-feedback",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreatmentFeedbackStop",
+      "file": "MissionScripts/MedicalSystems/TreatmentFeedback/treatmentFeedbackStop.sqf",
+      "station": "treatment-feedback",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyInit",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyInit.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplySetupHubLocal",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplySetupHubLocal.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplySetupCrateLocal",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplySetupCrateLocal.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyReceiveAmmo",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyReceiveAmmo.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyRegisterHub",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyRegisterHub.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyAssignCarrier",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyAssignCarrier.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyGrantCrates",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyGrantCrates.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyNotifyGrantLocal",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyNotifyGrantLocal.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyServerHandle",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyServerHandle.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointNotifyLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointNotifyLocal.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointInit",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointInit.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointStop",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointStop.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointSetupLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointSetupLocal.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointRequestServer",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointRequestServer.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointRemoveServer",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointRemoveServer.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointRemoveAllServer",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointRemoveAllServer.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointResolveSafePosition",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointResolveSafePosition.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointMoveLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointMoveLocal.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RallyPointMarkerLocal",
+      "file": "MissionScripts/Respawn/RallyPoint/rallyPointMarkerLocal.sqf",
+      "station": "rally",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TacticalDisplayRegister",
+      "file": "MissionScripts/MissionFlowAndUi/TacticalDisplay/tacticalDisplayRegister.sqf",
+      "station": "tactical-display",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TacticalDisplaySetupLocal",
+      "file": "MissionScripts/MissionFlowAndUi/TacticalDisplay/tacticalDisplaySetupLocal.sqf",
+      "station": "tactical-display",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TacticalDisplayInteractionSetup",
+      "file": "MissionScripts/MissionFlowAndUi/TacticalDisplay/tacticalDisplayInteractionSetup.sqf",
+      "station": "tactical-display",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TacticalDisplayOpenLocal",
+      "file": "MissionScripts/MissionFlowAndUi/TacticalDisplay/tacticalDisplayOpenLocal.sqf",
+      "station": "tactical-display",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipRegister",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipRegister.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipPublishState",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipPublishState.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipSetState",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipSetState.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipNotifyLocal",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipNotifyLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipSetOrbit",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipSetOrbit.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipApplyOrbitLocal",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipApplyOrbitLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipMonitor",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipMonitor.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipServiceAircraft",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipServiceAircraft.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipServerHandle",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipServerHandle.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipDestroy",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipDestroy.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipStop",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipStop.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipSelectOrbitLocal",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipSelectOrbitLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipGrantControlLocal",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipGrantControlLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipReleaseControlLocal",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipReleaseControlLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipSetupLocal",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipSetupLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipUpdateMarkersLocal",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipUpdateMarkersLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceDependencyAvailable",
+      "file": "MissionScripts/Persistence/persistenceDependencyAvailable.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceInit",
+      "file": "MissionScripts/Persistence/persistenceInit.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceClientCapture",
+      "file": "MissionScripts/Persistence/persistenceClientCapture.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceClientApply",
+      "file": "MissionScripts/Persistence/persistenceClientApply.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceServerHandle",
+      "file": "MissionScripts/Persistence/persistenceServerHandle.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceRegisterObject",
+      "file": "MissionScripts/Persistence/persistenceRegisterObject.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceSaveObject",
+      "file": "MissionScripts/Persistence/persistenceSaveObject.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceLoadObject",
+      "file": "MissionScripts/Persistence/persistenceLoadObject.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceSavePlayerLocal",
+      "file": "MissionScripts/Persistence/persistenceSavePlayerLocal.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceSaveNow",
+      "file": "MissionScripts/Persistence/persistenceSaveNow.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PersistenceStop",
+      "file": "MissionScripts/Persistence/persistenceStop.sqf",
+      "station": "persistence",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardRegisterZone",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardRegisterZone.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardRegisterPresetZone",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardRegisterPresetZone.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardRegisterEmitter",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardRegisterEmitter.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardUnregisterZone",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardUnregisterZone.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardProtectionFactor",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardProtectionFactor.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardTick",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardTick.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardInit",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardInit.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardStop",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardStop.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreeFellingInit",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingInit.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreeFellingSwing",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingSwing.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreeFellingProcess",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingProcess.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreeFellingStop",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingStop.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EmergencyDismountInit",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/EmergencyDismount/emergencyDismountInit.sqf",
+      "station": "emergency-dismount",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EmergencyDismountExecute",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/EmergencyDismount/emergencyDismountExecute.sqf",
+      "station": "emergency-dismount",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EmergencyDismountStop",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/EmergencyDismount/emergencyDismountStop.sqf",
+      "station": "emergency-dismount",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AccessibilitySelfInteractionInit",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/accessibilitySelfInteractionInit.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AccessibilityPIDInit",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/accessibilityPIDInit.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AccessibilityPIDToggle",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/accessibilityPIDToggle.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AccessibilityPIDStop",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/accessibilityPIDStop.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BreachingInit",
+      "file": "MissionScripts/CombatSystems/Breaching/breachingInit.sqf",
+      "station": "breaching",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BreachingSpawnRelative",
+      "file": "MissionScripts/CombatSystems/Breaching/breachingSpawnRelative.sqf",
+      "station": "breaching",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BreachingServerHandle",
+      "file": "MissionScripts/CombatSystems/Breaching/breachingServerHandle.sqf",
+      "station": "breaching",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BreachingReset",
+      "file": "MissionScripts/CombatSystems/Breaching/breachingReset.sqf",
+      "station": "breaching",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BreachingStop",
+      "file": "MissionScripts/CombatSystems/Breaching/breachingStop.sqf",
+      "station": "breaching",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectScale",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectScale.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectScaleTagged",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectScaleTagged.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectScaleReset",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectScaleReset.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectScaleMultiply",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectScaleMultiply.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectScaleCopy",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectScaleCopy.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectScaleArea",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectScaleArea.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectTransformSet",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectTransformSet.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectTransformSpawn",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectTransformSpawn.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObjectScaleZen",
+      "file": "MissionScripts/MissionMakerResourceScripts/ObjectTransforms/objectScaleZen.sqf",
+      "station": "object-transforms",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAResolveAssetPool",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAResolveAssetPool.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAASetGroupState",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAASetGroupState.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAASetVehicleAmmo",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAASetVehicleAmmo.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAPublishState",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAPublishState.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAACreate",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAACreate.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAADetectorLoop",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAADetectorLoop.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAANotifyState",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAANotifyState.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAASpawnFighters",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAASpawnFighters.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAADestroy",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAADestroy.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAZen",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAZen.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAZenPlacement",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAZenPlacement.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAInteractionSetup",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAInteractionSetup.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAARemoveZen",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAARemoveZen.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOGetFactions",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOGetFactions.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOResolvePools",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOResolvePools.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOAddPatrolWaypoints",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOAddPatrolWaypoints.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOPublishState",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOPublishState.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOCreate",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOCreate.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAODestroyMinefield",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAODestroyMinefield.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAODestroy",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAODestroy.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAOZen",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAOZen.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAORemoveZen",
+      "file": "MissionScripts/CombatSystems/DynamicAO/dynamicAORemoveZen.sqf",
+      "station": "control",
       "activation": "manual"
     },
     {
@@ -1223,6 +2395,36 @@
     {
       "name": "Waldo_fnc_EcoCore_registerCuratorEditableObjects",
       "file": "MissionScripts/EconomySystems/Core/registerCuratorEditableObjects.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_registerRuntimeObject",
+      "file": "MissionScripts/EconomySystems/Core/registerRuntimeObject.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_unregisterRuntimeObject",
+      "file": "MissionScripts/EconomySystems/Core/unregisterRuntimeObject.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_getRuntimeObjects",
+      "file": "MissionScripts/EconomySystems/Core/getRuntimeObjects.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_refreshRuntimeRegistries",
+      "file": "MissionScripts/EconomySystems/Core/refreshRuntimeRegistries.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_startRequestScheduler",
+      "file": "MissionScripts/EconomySystems/Core/startRequestScheduler.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
@@ -3899,6 +5101,12 @@
     {
       "name": "Waldo_fnc_MiniGameInteractionActivate",
       "file": "MissionScripts/InteractionsMinigames/Integration/miniGameInteractionActivate.sqf",
+      "station": "interaction-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGameInteractionRange",
+      "file": "MissionScripts/InteractionsMinigames/Integration/miniGameInteractionRange.sqf",
       "station": "interaction-core",
       "activation": "manual"
     },

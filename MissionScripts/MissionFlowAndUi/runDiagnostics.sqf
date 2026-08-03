@@ -3,6 +3,10 @@
  * LOADED, ACTIVE, DISABLED, UNCONFIGURED, UNAVAILABLE or ERROR. The structured
  * report is broadcast in Waldo_Diagnostics_LastReport for audit tools/JIP.
  * Existing callers still receive the number of warnings.
+ *
+ * Arguments: None
+ * Return Value: Number <NUMBER> - count of warnings raised
+ * Example: [] spawn Waldo_fnc_RunDiagnostics;
  */
 if (!isServer) exitWith {0};
 if (!canSuspend) exitWith {_this spawn Waldo_fnc_RunDiagnostics; 0};
@@ -101,19 +105,36 @@ private _flattenReal = {
     {if (_x isEqualType []) then {_flat append _x} else {_flat pushBack _x};} forEach _array;
     _flat select {_x isEqualType "" && {_x != "" && {_x != "EMPTY"}}}
 };
+private _configuredLoadoutSides = 0;
+private _countConfiguredSlots = {
+    params ["_entity", "_sideName"];
+    private _count = 0;
+    if (getText (_entity >> "dataType") == "Object") then {
+        private _attributes = _entity >> "Attributes";
+        if (getText (_entity >> "side") == _sideName && {(getNumber (_attributes >> "isPlayer")) == 1 || {(getNumber (_attributes >> "isPlayable")) == 1}}) then {
+            _count = 1;
+        };
+    };
+    private _children = _entity >> "Entities";
+    {_count = _count + ([_x, _sideName] call _countConfiguredSlots)} forEach (configProperties [_children, "isClass _x", true]);
+    _count
+};
+private _loadoutRoot = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities";
 {
-    _x params ["_side", "_suffix", "_label"];
-    private _slotCount = {side group _x == _side} count playableUnits;
+    _x params ["_sideName", "_suffix", "_label"];
+    private _slotCount = 0;
+    {_slotCount = _slotCount + ([_x, _sideName] call _countConfiguredSlots)} forEach (configProperties [_loadoutRoot, "isClass _x", true]);
     private _items = [missionNamespace getVariable [format ["Logi_MissionSQMArray_%1", _suffix], []]] call _flattenReal;
     private _count = count _items;
-    if (_slotCount == 0) then {
-        ["logistics", format ["%1-loadout", _label], "UNCONFIGURED", "No playable slots use this side", false] call _status;
+    if (_slotCount == 0 && {_count == 0}) then {
+        ["logistics", format ["%1-loadout", _label], "UNCONFIGURED", "No authored mission-config playable slots use this side", false] call _status;
     } else {
-        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 playable slot(s), %2 unique scraped item(s)", _slotCount, _count], _count == 0] call _status;
+        if (_count > 0) then {_configuredLoadoutSides = _configuredLoadoutSides + 1};
+        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 authored playable slot(s), %2 unique mission-scraped item(s)", _slotCount, _count], _count == 0] call _status;
     };
-} forEach [[west, "West", "BLUFOR"], [east, "East", "OPFOR"], [independent, "Ind", "INDEP"], [civilian, "Civ", "CIV"]];
-if ((count playableUnits) == 0) then {
-    ["logistics", "playable-slots", "ERROR", "No playable units; logistics crates cannot derive mission equipment", true] call _status;
+} forEach [["West", "West", "BLUFOR"], ["East", "East", "OPFOR"], ["Independent", "Ind", "INDEP"], ["Civilian", "Civ", "CIV"]];
+if (_configuredLoadoutSides == 0) then {
+    ["logistics", "playable-slots", "ERROR", "No authored playable inventories were found in mission configuration; logistics crates cannot derive mission equipment", true] call _status;
 };
 
 // Configured classes. Blank values are unconfigured; bad non-blank values are errors.
@@ -181,12 +202,64 @@ private _deployedMhqs = {_x getVariable ["Waldo_MHQ_Status", false]} count _mhqO
 ["logistics", "mhq-runtime", if (_mhqObjects isEqualTo []) then {"UNCONFIGURED"} else {if (_deployedMhqs > 0) then {"ACTIVE"} else {"LOADED"}}, format ["configured=%1 deployed=%2", count _mhqObjects, _deployedMhqs], false] call _status;
 private _vvdPads = _missionObjects select {_x getVariable ["Waldo_VVD_ServerConfigured", false]};
 ["logistics", "vvd-runtime", if (_vvdPads isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["configuredSpawnPads=%1", count _vvdPads], false] call _status;
+private _recoveryWorkshops = _missionObjects select {_x getVariable ["Waldo_Recovery_Workshop", false]};
+private _recoveryVehicles = _missionObjects select {_x getVariable ["Waldo_Recovery_Registered", false]};
+private _recoveryPackages = (missionNamespace getVariable ["Waldo_Recovery_Packages", []]) select {!isNull _x};
+private _recoveryConfigured = !(_recoveryWorkshops isEqualTo []) || {!(_recoveryVehicles isEqualTo [])};
+private _recoveryBroken = !(_recoveryPackages isEqualTo []) && {_recoveryWorkshops isEqualTo []};
+["logistics", "vehicle-recovery", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryBroken) then {"ERROR"} else {if (_recoveryPackages isEqualTo []) then {"LOADED"} else {"ACTIVE"}}}, format ["workshops=%1 vehicles=%2 packages=%3 monitor=%4", count _recoveryWorkshops, count _recoveryVehicles, count _recoveryPackages, missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]], _recoveryBroken] call _status;
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 ["integration", "ACE and Zeus integration"] call _section;
 private _zenApi = !(isNil "zen_custom_modules_fnc_register");
 ["integration", "zen-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if (_zenApi) then {"LOADED"} else {"ERROR"}}, format ["ZEN loaded=%1 registration API=%2", _zenLoaded, _zenApi], _zenLoaded && {!_zenApi}] call _status;
 ["integration", "ace-actions", if (isClass (configFile >> "CfgPatches" >> "ace_main")) then {"LOADED"} else {"ERROR"}, "Dependency state only; object action installation is checked by the client audit", !(isClass (configFile >> "CfgPatches" >> "ace_main"))] call _status;
+
+["optional-features", "Optional feature configuration"] call _section;
+private _persistenceEnabled = missionNamespace getVariable ["Waldo_Persistence_Enable", false];
+private _persistencePatches = missionNamespace getVariable ["Waldo_Persistence_PatchNames", ["inidbi2", "inidbi2_main", "inidbi2_core", "inidbi"]];
+private _persistenceRuntime = [] call Waldo_fnc_PersistenceDependencyAvailable;
+["optional-feature", "persistence-runtime", if (!_persistenceEnabled) then {"DISABLED"} else {if (_persistenceRuntime) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 runtimeDetected=%2", _persistenceEnabled, _persistenceRuntime], _persistenceEnabled && {!_persistenceRuntime}] call _status;
+
+private _breachingEnabled = missionNamespace getVariable ["Waldo_Breaching_Enable", false];
+private _breachingDependency = isClass (configFile >> "CfgPatches" >> "ace_explosives");
+private _breachingProfileCount = count (keys (missionNamespace getVariable ["Waldo_Breaching_Profiles", createHashMap]));
+private _breachingValid = _breachingDependency && {_breachingProfileCount > 0};
+["optional-feature", "explosive-breaching", if (!_breachingEnabled) then {"DISABLED"} else {if (_breachingValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceExplosives=%2 profiles=%3", _breachingEnabled, _breachingDependency, _breachingProfileCount], _breachingEnabled && {!_breachingValid}] call _status;
+
+private _treatmentEnabled = missionNamespace getVariable ["Waldo_TreatmentFeedback_Enable", false];
+private _treatmentDependency = isClass (configFile >> "CfgPatches" >> "ace_medical");
+["optional-feature", "treatment-feedback", if (!_treatmentEnabled) then {"DISABLED"} else {if (_treatmentDependency) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceMedical=%2", _treatmentEnabled, _treatmentDependency], _treatmentEnabled && {!_treatmentDependency}] call _status;
+
+private _resupplyEnabled = missionNamespace getVariable ["Waldo_FieldResupply_Enable", false];
+private _resupplyClass = missionNamespace getVariable ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"];
+private _resupplyValid = isClass (configFile >> "CfgVehicles" >> _resupplyClass);
+["optional-feature", "field-resupply", if (!_resupplyEnabled) then {"DISABLED"} else {if (_resupplyValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 crateClass=%2", _resupplyEnabled, _resupplyClass], _resupplyEnabled && {!_resupplyValid}] call _status;
+
+private _rallyEnabled = missionNamespace getVariable ["Waldo_Rally_Enable", false];
+private _rallyClass = missionNamespace getVariable ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"];
+private _rallyClassValid = isClass (configFile >> "CfgVehicles" >> _rallyClass);
+private _activeRallies = {_x getVariable ["Waldo_Rally_Active", false]} count allGroups;
+["optional-feature", "squad-rally-points", if (!_rallyEnabled) then {"DISABLED"} else {if (!_rallyClassValid) then {"ERROR"} else {if (_activeRallies > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["enabled=%1 objectClass=%2 activeGroups=%3", _rallyEnabled, _rallyClass, _activeRallies], _rallyEnabled && {!_rallyClassValid}] call _status;
+
+private _gunshipEnabled = missionNamespace getVariable ["Waldo_Gunship_Enable", false];
+private _gunshipAltitude = missionNamespace getVariable ["Waldo_Gunship_DefaultAltitude", 700];
+private _gunshipRadius = missionNamespace getVariable ["Waldo_Gunship_DefaultRadius", 1500];
+private _gunshipBoundsValid = _gunshipAltitude >= 100 && {_gunshipAltitude <= (missionNamespace getVariable ["Waldo_Gunship_MaximumAltitude", 5000])} && {_gunshipRadius >= 200} && {_gunshipRadius <= (missionNamespace getVariable ["Waldo_Gunship_MaximumRadius", 10000])};
+private _invalidGunshipClasses = [];
+private _gunshipPools = missionNamespace getVariable ["Waldo_Gunship_SideAircraftPools", createHashMap];
+{{if !(isClass (configFile >> "CfgVehicles" >> _x) && {_x isKindOf "Air"}) then {_invalidGunshipClasses pushBackUnique _x;};} forEach (_gunshipPools get _x);} forEach keys _gunshipPools;
+private _gunshipValid = _gunshipBoundsValid && {_invalidGunshipClasses isEqualTo []};
+["optional-feature", "airborne-gunship", if (!_gunshipEnabled) then {"DISABLED"} else {if (_gunshipValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 altitude=%2 radius=%3 invalidClasses=%4", _gunshipEnabled, _gunshipAltitude, _gunshipRadius, _invalidGunshipClasses], _gunshipEnabled && {!_gunshipValid}] call _status;
+
+{
+    private _aaPool = [createHashMap, _x] call Waldo_fnc_DynamicAAResolveAssetPool;
+    private _emptyCategories = ["radarClasses", "staticSitePools", "mobileClasses", "fighterClasses"] select {count (_aaPool getOrDefault [_x, []]) == 0};
+    ["optional-feature", format ["dynamic-aa-%1", _x], if (_emptyCategories isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["source=%1 emptyCategories=%2", _aaPool getOrDefault ["source", str _x], _emptyCategories], !(_emptyCategories isEqualTo [])] call _status;
+} forEach [west, east, independent];
+
+private _invalidTreeClasses = (missionNamespace getVariable ["Waldo_TreeFelling_FallenClasses", []]) select {!(isClass (configFile >> "CfgVehicles" >> _x))};
+["optional-feature", "tree-felling-replacements", if (_invalidTreeClasses isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["invalidClasses=%1", _invalidTreeClasses], !(_invalidTreeClasses isEqualTo [])] call _status;
 
 // Ask every interface client for local UI, mod and action state. The server retains authority over
 // the final report and accepts a response only from its claimed network owner.

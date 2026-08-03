@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need a concealed vehicle that reveals itself when its ambush conditions are met.
 
-_Associated Files: `MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf`, `Waldo_fnc_VehicleCamoSetup` (script by Val & Waldo)_
+_Associated Files: `MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf`, `Waldo_fnc_VehicleCamoSetup`_
 
 ## Vehicle Ambush / Vehicle Camo
 

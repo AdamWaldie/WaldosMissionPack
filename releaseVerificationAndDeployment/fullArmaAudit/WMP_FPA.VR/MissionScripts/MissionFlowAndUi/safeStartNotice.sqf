@@ -1,8 +1,13 @@
 /*
+ * Author: WaldoTheWarfighter
  * Shows a transient SafeStart transition notice without using Arma's shared
  * hint channel. A token prevents an older timer from hiding a newer notice.
  *
- * Arguments: [structuredText, duration]
+ * Arguments: 0: structured content <STRING>; 1: duration seconds <NUMBER>.
+ * Return Value: BOOL - true when the notice was shown or queued for startup completion.
+ *
+ * Example: ["SafeStart active", 8] call Waldo_fnc_SafeStartNotice;
+ * Current caller: SafeStartApply when protection changes state.
  */
 if (!hasInterface) exitWith {false};
 params [
@@ -32,6 +37,7 @@ if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) exitWith {
 
 private _display = findDisplay 46;
 if (isNull _display) exitWith {false};
+private _theme = [] call Waldo_fnc_UiTheme;
 
 // Persistent status and transitions deliberately share one screen region. A new state replaces
 // the previous state instead of stacking another panel underneath it.
@@ -41,9 +47,9 @@ private _frame = _display displayCtrl 5299;
 private _control = _display displayCtrl 5300;
 if (isNull _frame) then {
     _frame = _display ctrlCreate ["RscText", 5299];
-    _frame ctrlSetBackgroundColor [0.015, 0.11, 0.075, 0.94];
     _frame ctrlCommit 0;
 };
+_frame ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.015, 0.11, 0.075, 0.94]]);
 if (isNull _control) then {
     _control = _display ctrlCreate ["RscStructuredText", 5300];
     _control ctrlSetBackgroundColor [0, 0, 0, 0];
@@ -67,8 +73,7 @@ _frame ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
 _control ctrlSetPosition [_panelX + _padX, _panelY + _padY, _panelW - (2 * _padX), _contentH];
 _frame ctrlCommit 0;
 _control ctrlCommit 0;
-_frame ctrlShow true;
-_control ctrlShow true;
+["SAFESTART_STATUS", [_frame, _control], ["TOP", "TOP_RIGHT"], true] call Waldo_fnc_RegisterUiReservationLocal;
 
 [_frame, _control, _token, _duration max 1] spawn {
     params ["_frame", "_control", "_token", "_duration"];
@@ -78,6 +83,7 @@ _control ctrlShow true;
         if (!isNull _control && {!(missionNamespace getVariable ["Waldo_SafeStart_Active", false])}) then {
             _control ctrlShow false;
             if (!isNull _frame) then {_frame ctrlShow false;};
+            ["SAFESTART_STATUS", [_frame, _control], ["TOP", "TOP_RIGHT"], false] call Waldo_fnc_RegisterUiReservationLocal;
         };
     };
 };

@@ -1,3 +1,14 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Runs the full-pack audit cases that require a local player interface and real interaction context.
+ *
+ * Arguments: None.
+ * Return Value: Nothing; records assertions through Waldo_QA_fnc_assert and publishes client completion.
+ *
+ * Example: [] execVM "runClientAudit.sqf";
+ * Current caller: auditInitPlayerLocal.sqf when automated audit mode is enabled.
+ */
+
 private _suite = missionNamespace getVariable ["Waldo_QA_Suite", "all"];
 waitUntil {uiSleep 0.1; missionNamespace getVariable ["Waldo_QA_FeatureRangeClientReady", false]};
 ["client/mods/required-loaded", {
@@ -220,3 +231,4 @@ if (_suite in ["all", "ew"]) then {
 
 private _passed = call Waldo_QA_fnc_complete;
 player setVariable ["Waldo_QA_ClientComplete", [_passed, missionNamespace getVariable ["Waldo_QA_LocalResults", []]], true];
+

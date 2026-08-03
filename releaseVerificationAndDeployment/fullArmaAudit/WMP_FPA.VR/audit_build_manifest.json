@@ -1,0 +1,37 @@
+{
+  "schema": 1,
+  "suite": "all",
+  "mode": "manual",
+  "packVersion": "4.8.0",
+  "releaseEntries": [
+    "MissionScripts",
+    "Pictures",
+    "description.ext",
+    "economyConfig.sqf",
+    "init.sqf",
+    "initPlayerLocal.sqf",
+    "initServer.sqf",
+    "LICENSE",
+    "README.md"
+  ],
+  "missionFormat": 12,
+  "fullPackStartup": true,
+  "physicalRange": true,
+  "physicalRangePreStaged": true,
+  "nestedPlayableLoadoutFixture": true,
+  "staticFixtureCount": 123,
+  "rangeScripts": [
+    "auditPreInit.sqf",
+    "auditPreInitServer.sqf",
+    "auditPreInitPlayerLocal.sqf",
+    "auditInit.sqf",
+    "auditInitServer.sqf",
+    "auditInitPlayerLocal.sqf",
+    "featureRangeServer.sqf",
+    "featureRangeClient.sqf",
+    "extendedFeatureStationsServer.sqf",
+    "extendedFeatureStationsClient.sqf",
+    "functionStations.sqf",
+    "partyFixtureServer.sqf"
+  ]
+}

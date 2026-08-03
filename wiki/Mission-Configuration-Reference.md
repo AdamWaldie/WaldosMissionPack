@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need the authoritative fields and variables used by WMP mission entry files.
 
-This page documents all the configuration fields and variables that mission makers are expected to customise before shipping a mission built on WMP. It covers `description.ext`, `init.sqf`, and `initServer.sqf`.
+This page documents all the configuration fields and variables that mission makers are expected to customise before shipping a mission built on WMP. It covers `description.ext`, `init.sqf`, `initPlayerLocal.sqf`, and `initServer.sqf`.
 
 ---
 
@@ -76,7 +76,15 @@ class MissionSQM { #include "mission.sqm" };              // Required for logist
 
 ## initServer.sqf
 
-Runs **on the server only**. Configure logistics crate classnames and paradrop thresholds here.
+Runs **on the server only**. Configure server-authoritative limits, asset pools, persistence authority, logistics crate classnames and paradrop thresholds here.
+
+### Server-Owned Optional Feature Settings
+
+`initServer.sqf` owns object-scaling limits, Dynamic AA side/faction asset pools and the database branch of persistence. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
+
+Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
+
+Shared hazard presentation defaults live in `init.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
 
 ### Logistics Crate Classnames
 
@@ -138,7 +146,13 @@ See [Mission Diagnostics](Mission-Diagnostics).
 
 ## init.sqf
 
-Runs on **all clients and the server** during the loading screen transition. Enable, disable and configure the majority of WMP features here.
+Runs on **all clients, headless clients and the server** during the loading-screen transition. Keep only shared configuration and systems whose engine locality can genuinely occur on any machine here.
+
+### Shared Optional Feature Settings
+
+The guarded `Waldo_*` defaults cover persistence policy, field resupply, airborne-gunship defaults, hazardous-environment presets, tree felling, explosive breaching and AI rebalance. The `isNil` guards are intentional: they prevent a joining machine from replacing settings that the server changed during the mission.
+
+Do not move presentation-only settings back here. Player UI/actions belong in `initPlayerLocal.sqf`; server-only limits and pools belong in `initServer.sqf`. See the [Complete Feature Catalogue](Feature-Catalogue).
 
 ### Third-Party Scripts (disabled by default)
 
@@ -148,12 +162,6 @@ Runs on **all clients and the server** during the loading screen transition. Ena
 ```
 
 See [Headless Client & Player Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers) for the options inside that file.
-
-### Zeus Enhanced Modules
-
-```sqf
-[] call Waldo_fnc_ZenInitModules;  // remove this line to disable Zeus modules
-```
 
 ### Mini Games (table games)
 
@@ -187,14 +195,15 @@ ACE_maxWeightCarry = 6000;   // max weight in grams a player can carry
 
 Tune these so players can drag and carry logistics crates in-game.
 
-### AI Mode
+### AI Rebalance
 
 ```sqf
-"DAY" call Waldo_fnc_AITweak;   // uncomment for daytime missions
-// "NIGHT" call Waldo_fnc_AITweak; // uncomment for nighttime missions
+Waldo_AIRebalance_Enable = true;
+Waldo_AIRebalance_Mode = "DAY";       // DAY | NIGHT
+Waldo_AIRebalance_Profile = "LINE";   // LINE default | MILITIA | VETERAN | ELITE | LEGACY compatibility
 ```
 
-Only one should be active at a time. See [Waldos AI Tweak](Waldos-AI-Tweak) for full detail.
+Only one profile should be active at a time. AI rebalance initialises wherever AI can be local, including headless clients, and reapplies after locality migration. See [Waldos AI Rebalance](Waldos-AI-Tweak) for filters, variance, and restoration.
 
 ### ACRE2 Radio Setup
 
@@ -246,10 +255,18 @@ missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
 missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];  // or "INVSQ"
 missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];// destroy the object = remove jammer
 missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true]; // opt in to curator jammer markers
-missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF scan detection range (m)
+missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];  // RDF hard cap; source must also actively affect the operator
+missionNamespace setVariable ["Waldo_Jamming_ScanBearingArc", 30, true]; // quantised bearing-sector width (deg)
+missionNamespace setVariable ["Waldo_Jamming_ScanDistanceBands", [35, 150, 600], true]; // metre thresholds: very close / nearby / distant
+missionNamespace setVariable ["Waldo_Jamming_AllowPlayerToggle", true, true]; // legacy direct toggle on non-challenge jammers
+missionNamespace setVariable ["Waldo_Jamming_DisableChallenge", false, true]; // opt in globally; Zeus-created jammers default on
+missionNamespace setVariable ["Waldo_Jamming_DisableChallengeId", "circuit", true];
+missionNamespace setVariable ["Waldo_Jamming_DisableDifficulty", "standard", true];
+missionNamespace setVariable ["Waldo_Jamming_DisableEngineerOnly", true, true];
+missionNamespace setVariable ["Waldo_Jamming_DisableResult", "DISABLE", true]; // or DESTROY
 ```
 
-On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](Radio-Jamming) for the full API.
+On by default; does nothing until a jammer is placed. Drop a jammer from an object init field with `[this] call Waldo_fnc_Jammer;`, from a script/trigger, or live from the Zeus "Radio Jammer" modules. The optional disable challenge connects the jammer to the shared field-procedure framework while keeping completion and radio state server-authoritative. Supports terrain line-of-sight, radio-power burn-through, directional cones, pulsing, optional UAV/drone jamming, destructible "blow the tower" jammers, ACE player actions and a handheld RDF scanner. ACRE2 needs the LOS Multipath or Arcade signal model. See [Radio Jamming](Radio-Jamming) for the full API.
 
 The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers).
 
@@ -277,7 +294,40 @@ call Waldo_fnc_SetTeamColour;  // remove to disable automatic ACE team colour as
 
 ## initPlayerLocal.sqf
 
-Runs **per player on each join and respawn**. Two optional respawn behaviours are commented out by default.
+Runs **once locally when each player joins**. Respawn behavior is handled by the event handlers installed here.
+
+### Player-Local Optional Feature Settings
+
+Treatment-feedback presentation, tactical-display access, emergency-dismount behavior and accessibility PID eligibility/presentation are configured here. ZEN custom modules are also registered here because only interface clients consume them.
+
+Player-local feature activation waits for an ordered server runtime snapshot. This ensures a mid-mission ZEN change is applied before a joining player installs actions, displays or event handlers.
+
+```sqf
+// Enabled only for the listed player IDs by default; [] allows every player.
+Waldo_AccessibilityPID_Enable = true;
+Waldo_AccessibilityPID_AllowedUIDs = ["76561198094931408"];
+Waldo_AccessibilityPID_Font = "PuristaBold";
+```
+
+Colour-vision presentation is selected personally through **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** and stored in `profileNamespace` as `Waldo_UI_ColourVisionProfile`. Do not publish it from `initServer.sqf` or overwrite it in `init.sqf`; it is intentionally different for each player. Scripted local selection is available when building another accessibility UI:
+
+```sqf
+["RED_GREEN", true] call Waldo_fnc_UiColourVisionApplyLocal;
+```
+
+See [Optional Feature Systems](Optional-Feature-Systems) for the complete setting groups.
+
+### Global UI Visual Style
+
+Set `Waldo_UI_Theme` in `init.sqf` to `DEFAULT`, `WW2`, `VIETNAM` or `SCIFI`. The setting changes presentation only and is consumed locally by WMP displays. Curator QA can change it live through **UI QA - Set Visual Theme**; the server publishes the durable selection for JIP. See [UI Visual Themes](UI-Visual-Themes).
+
+### Improved AI Helicopter Landings
+
+`Waldo_ImprovedHelicopterLanding_Enable` controls the AI-only exact landing system. The remaining `Waldo_ImprovedHelicopterLanding_*` values tune activation range, glideslope, canopy clearance, collective limits, touchdown tolerance, final-approach commitment and go-around policy. `FinalCommitDistance` prevents vanilla LAND-waypoint completion from cancelling a flare already in progress. Event-driven class-init and `Local` handlers cover editor, Zeus and migrated helicopters on their current owner. See [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings).
+
+### Zeus Enhanced Modules
+
+`Waldo_fnc_ZenInitModules` is called automatically on interface clients. The function is repeat-safe and exits when Zeus Enhanced is unavailable.
 
 ### Respawn With Death Loadout
 
@@ -303,6 +353,8 @@ Uncomment to automatically save the player's respawn loadout whenever they close
 ```
 
 See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) for full details.
+
+Temporary squad-owned respawn points are configured with the shared `Waldo_Rally_*` settings in `init.sqf`; vehicle-recovery scans use `Waldo_Recovery_ScanInterval`, workshop-completion notification distance uses `Waldo_Recovery_NotificationRadius` (default 100 metres), `Waldo_Recovery_PlacementClearance` pads the combined workshop/vehicle footprints, and `Waldo_Recovery_CreateWorkshopMarkers` controls the default global delivery-area and exact-position workshop markers. Object registration and runtime options are documented in [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 <!-- WMP-WIKI-NAV -->
 ---

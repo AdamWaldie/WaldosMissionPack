@@ -13,6 +13,12 @@ params [["_vehicle", objNull, [objNull]]];
 if (_vehicle iskindOf "man") exitWith {};
 if (!isNil{_vehicle getVariable "Waldo_Vehicle_Functions_Added"}) exitWith {};
 
+// Recovery controls belong to the physical vehicle, not to every player's
+// action menu. Each interface installs its own local action once.
+if (_vehicle isKindOf "LandVehicle" && {hasInterface}) then {
+    [_vehicle] call Waldo_fnc_SetupVehicleUprightLocal;
+};
+
 // Get Halo HALO & STATIC Variables
 //Get STATIC Altitude & CHUTE Arguments
 private _staticMinAlt = missionNamespace getVariable "WALDO_STATIC_MINALTITUDE";

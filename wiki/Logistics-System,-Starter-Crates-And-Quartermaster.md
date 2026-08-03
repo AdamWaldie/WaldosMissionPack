@@ -6,17 +6,16 @@ _Associated Files: MissionScripts\Logistics\Crates_
 
 The logistics system in WaldosMissionPack is more automated than most of the comparable script packs.
 
-The mission pack scrapes through player loadouts to construct a unique list of gear per side, which can then be used to resupply players in the field via the ZEN modules, or used as part of the Quartermaster, Logistics crates, MHQ or Starter Crates.
+The mission pack recursively scrapes playable player loadouts to construct a unique list of gear per side, which can then be used to resupply players in the field via the ZEN modules, or used as part of the Quartermaster, Logistics crates, MHQ or Starter Crates. Playable units inside Eden organiser folders, including nested folders, are included.
 
 The initial call for this scrape can be found in the initServer.sqf file pictured below:
 ![Loadout scrape call in initServer.sqf](https://i.imgur.com/zgkHsqA.png)
 
 
-## The Three Rules
-The following three rules must be adhered to for the logistics system to function:
+## The Two Rules
+The following two rules must be adhered to for the logistics system to function:
 1. The Mission Must **NOT** be binaried.
 2. Player load-outs must be customised via an arsenal and cannot be default unit kits.
-3. Player units must not be placed in an organiser folder in the editor; they must remain under the BLUFOR, OPFOR, INDEPENDENT and CIVILIAN side folders.
 
 Failure to follow these rules will lead to unexpected results.
 

@@ -13,6 +13,7 @@
 * [Safestart](Safestart)
 * [ENDEX and AAR](ENDEX-Script-&-Custom-End-Screen)
 * [Custom UI Notifications](Custom-UI-Notifications)
+* [UI Visual Themes](UI-Visual-Themes)
 * [Mission Intro](Mission-Intro-Or-Title-Text)
 * [Mission UI Text](Mission-UI-Text-Overlays)
 * [Tasks and Objectives](Tasks-And-Objectives)
@@ -54,6 +55,7 @@
 
 * [Logistics and Crates](Logistics-System,-Starter-Crates-And-Quartermaster)
 * [Loadout Saving](Loadout-Saving-and-Respawn)
+* [Vehicle Recovery and Squad Rallies](Vehicle-Recovery-And-Squad-Rallies)
 * [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 * [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
 * [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
@@ -71,7 +73,18 @@
 **AI and Mission Tools**
 
 * [Waldo's AI Tuning](Waldos-AI-Tweak)
+* [Improved Helicopter Landings](Improved-AI-Helicopter-Landings)
 * [AI Convoy System](AI-Convoy-System)
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
 * [Coding Standards](Coding-Standards)
+
+**Optional and Advanced Systems**
+
+* [Complete Feature Catalogue](Feature-Catalogue)
+* [Optional Feature Systems](Optional-Feature-Systems)
+* [Optional Feature Extensions](Optional-Feature-Extensions)
+* [Dynamic Anti-Air](Dynamic-Anti-Air)
+* [Dynamic AO Generation](Dynamic-AO-Generation)
+* [Airborne Gunship Support](Airborne-Gunship-Support)
+* [Performance and Optimisation](Performance-And-Optimisation-Audit)

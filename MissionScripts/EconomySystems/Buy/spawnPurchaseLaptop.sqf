@@ -32,6 +32,7 @@
         _purchaseTerminal enableSimulationGlobal false;
         _purchaseTerminal allowDamage false;
         _purchaseTerminal setVariable ["WaldoEcoBuy_IsPurchaseTerminal", true, true];
+        [_purchaseTerminal, "PURCHASE_TERMINALS"] call Waldo_fnc_EcoCore_registerRuntimeObject;
 
         clearWeaponCargoGlobal _purchaseTerminal;
         clearMagazineCargoGlobal _purchaseTerminal;

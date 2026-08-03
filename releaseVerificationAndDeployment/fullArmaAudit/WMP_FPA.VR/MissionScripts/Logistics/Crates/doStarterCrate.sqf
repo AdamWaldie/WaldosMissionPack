@@ -32,9 +32,10 @@ waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
 waitUntil { missionNamespace getVariable ["Logi_MissionScanComplete", false] };
 
 
-// Loadout-save objects deliberately keep the visible vanilla action as a discoverability cue.
-// The ACE and vanilla routes call the same guarded save function.
-if (hasInterface) then {[_target] call Waldo_fnc_ZenAddLoadoutSaveAction;};
+// Preserve the original blue identifier and install the functional save interaction on every
+// current interface. The keyed replay gives later joiners the same local actions.
+if (hasInterface) then {[_target] call Waldo_fnc_StarterCrateSetupLocal};
+[_target] remoteExecCall ["Waldo_fnc_StarterCrateSetupLocal", -2, format ["Waldo_StarterCrate_%1", netId _target]];
 
 
 //Add full compliment of supplies (MEDICAL NOTWITHSTANDING)

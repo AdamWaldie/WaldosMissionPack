@@ -1,8 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Scrapes mission.sqm for every playable unit on the chosen side and returns a
- * de-duplicated pool of their equipment, used to populate supply crates and the
- * limited ACE arsenals. Mission binarization must be disabled for the SQM to be readable.
+ * Scrapes mission.sqm recursively for every playable unit on the chosen side and
+ * returns a de-duplicated pool of their equipment, used to populate supply crates
+ * and limited ACE arsenals. Units inside Eden folders and nested folders are included.
+ * Mission binarization must be disabled for the SQM to be readable.
  *
  * Arguments:
  * 0: Side <STRING> (Optional, default: "West") - "West" / "East" / "Independent" / "Civilian"
@@ -63,28 +64,24 @@ private _attachmentSlots   = ["optics", "muzzle", "flashlight", "underBarrel"];
 
 // Containers whose MagazineCargo / ItemCargo children are harvested.
 private _cargoContainers = ["uniform", "vest", "backpack"];
-private _matchedConfigUnits = 0;
+// Eden folders are stored as Layer entities and may contain groups, loose objects, or more layers.
+// Walk every nested Entities collection instead of assuming the old Group -> Unit two-level shape.
+private _visitEntity = {
+    params ["_entity"];
 
-// Walk Entities (groups) -> Entities (units) two levels deep.
-{
-    private _firstItem = configName _x;
-    {
-        private _secondItem = configName _x;
-        private _entity = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities" >> _secondItem;
-        private _attr   = _entity >> "Attributes";
-        private _inv    = _attr >> "Inventory";
-
-        private _isPlayer   = getNumber (_attr >> "isPlayer");
+    if (getText (_entity >> "dataType") == "Object") then {
+        private _attr = _entity >> "Attributes";
+        private _inv = _attr >> "Inventory";
+        private _isPlayer = getNumber (_attr >> "isPlayer");
         private _isPlayable = getNumber (_attr >> "isPlayable");
-        private _unitSide   = getText (_entity >> "side");
+        private _unitSide = getText (_entity >> "side");
 
         if (_unitSide == _sideChosen && {_isPlayer == 1 || _isPlayable == 1}) then {
-            _matchedConfigUnits = _matchedConfigUnits + 1;
             // Flat single-value slots
             {
                 _x params ["_path", "_target"];
                 private _cfg = _inv;
-                { _cfg = _cfg >> _x } forEach _path;
+                {_cfg = _cfg >> _x} forEach _path;
                 _target pushBack (getText _cfg);
             } forEach _simpleSlots;
 
@@ -107,80 +104,18 @@ private _matchedConfigUnits = 0;
                 } forEach (configProperties [(_inv >> _container >> "ItemCargo"), "isClass _x", true]);
             } forEach _cargoContainers;
         };
-    } forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities" >> _firstItem >> "Entities"), "isClass _x", true]);
-} forEach (configProperties [(missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities"), "isClass _x", true]);
+    };
 
-// Legacy unbinarized missions use Groups/Vehicles instead of Eden's Entities/Inventory tree.
-// Preserve the exact modern-SQM path above, but fall back to the live playable loadouts when
-// no matching Eden inventory exists. This also supports older mission templates without asking
-// mission makers to convert them merely to populate WMP supply crates and limited arsenals.
-if (_matchedConfigUnits == 0) then {
-    private _wantedSide = switch (toLower _sideChosen) do {
-        case "east": {east};
-        case "independent";
-        case "guer": {independent};
-        case "civilian": {civilian};
-        default {west};
-    };
-    private _consumeWeapon = {
-        params ["_slot", "_weapons", "_magazines", ["_launcher", false]];
-        if !(_slot isEqualType []) exitWith {
-            if (_slot isEqualType "" && {_slot != ""}) then {_weapons pushBack _slot;};
-        };
-        if (_slot isEqualTo []) exitWith {};
-        private _weapon = _slot param [0, ""];
-        if (_weapon != "") then {_weapons pushBack _weapon;};
-        {
-            private _attachment = _slot param [_x, ""];
-            if (_attachment != "") then {_attachments pushBack _attachment;};
-        } forEach [1, 2, 3, 6];
-        {
-            private _magazine = _slot param [_x, []];
-            if (_magazine isEqualType [] && {count _magazine > 0}) then {
-                private _class = _magazine param [0, ""];
-                if (_class != "") then {_magazines pushBack _class;};
-            };
-        } forEach [4, 5];
-    };
-    private _consumeContainer = {
-        params ["_container", "_gearTarget", ["_backpack", false]];
-        if !(_container isEqualType []) exitWith {};
-        private _class = _container param [0, ""];
-        if (_class != "") then {
-            if (_backpack) then {_PBackpacks pushBack _class;} else {_gearTarget pushBack _class;};
-        };
-        {
-            private _item = _x param [0, ""];
-            if (_item != "") then {
-                if (isClass (configFile >> "CfgMagazines" >> _item)) then {
-                    _NormalMagazines pushBack _item;
-                } else {
-                    _inventoryItems pushBack _item;
-                };
-            };
-        } forEach (_container param [1, []]);
-    };
+    private _children = _entity >> "Entities";
     {
-        if (side group _x isEqualTo _wantedSide) then {
-            (getUnitLoadout _x) params [
-                ["_primary", []], ["_secondary", []], ["_handgunSlot", []],
-                ["_uniformSlot", []], ["_vestSlot", []], ["_backpackSlot", []],
-                ["_headgearSlot", ""], ["_gogglesSlot", ""], ["_binocularSlot", []],
-                ["_assigned", []]
-            ];
-            [_primary, _PweapAndSdArm, _NormalMagazines] call _consumeWeapon;
-            [_secondary, _PLauncher, _launchMagazines, true] call _consumeWeapon;
-            [_handgunSlot, _PweapAndSdArm, _NormalMagazines] call _consumeWeapon;
-            [_binocularSlot, _PweapAndSdArm, _NormalMagazines] call _consumeWeapon;
-            [_uniformSlot, _playerGear] call _consumeContainer;
-            [_vestSlot, _playerGear] call _consumeContainer;
-            [_backpackSlot, _playerGear, true] call _consumeContainer;
-            if (_headgearSlot != "") then {_playerGear pushBack _headgearSlot;};
-            if (_gogglesSlot != "") then {_inventoryItems pushBack _gogglesSlot;};
-            {_inventoryItems pushBack _x;} forEach _assigned;
-        };
-    } forEach playableUnits;
+        [_x] call _visitEntity;
+    } forEach (configProperties [_children, "isClass _x", true]);
 };
+
+private _rootEntities = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities";
+{
+    [_x] call _visitEntity;
+} forEach (configProperties [_rootEntities, "isClass _x", true]);
 
 // Assemble in the fixed output order, then flatten + de-duplicate each category.
 private _masterArray = [_PweapAndSdArm, _NormalMagazines, _PLauncher, _launchMagazines, _playerGear, _inventoryItems, _PBackpacks, _attachments];

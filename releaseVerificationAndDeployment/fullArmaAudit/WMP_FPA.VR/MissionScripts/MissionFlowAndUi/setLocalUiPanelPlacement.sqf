@@ -7,7 +7,7 @@ if (!hasInterface) exitWith {false};
 params [["_channel", "MISSION", [""]], ["_placement", "TOP", [""]], ["_persist", true, [true]]];
 _channel = toUpper _channel;
 _placement = toUpper _placement;
-if !(_placement in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_RIGHT"]) exitWith {false};
+if !(_placement in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]) exitWith {false};
 private _settings = missionNamespace getVariable ["Waldo_UI_PanelPlacements", []];
 private _index = _settings findIf {(_x param [0, ""]) isEqualTo _channel};
 if (_index < 0 || {!((_settings select _index) param [2, false])}) exitWith {false};

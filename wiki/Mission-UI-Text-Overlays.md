@@ -75,11 +75,9 @@ Pushes a hint to the local client's screen for a configurable duration, then cle
 
 ## Respawn Text — `Waldo_fnc_RespawnText`
 
-Displays an animated two-part text sequence each time a player respawns. Runs automatically via `initPlayerLocal.sqf` and requires no manual setup.
+Displays one compact location block each time a player respawns. Runs automatically via `initPlayerLocal.sqf` and requires no manual setup.
 
-**Sequence:**
-1. Current in-game time and date (typewriter animation)
-2. Player rank, name, group ID, and grid position — colour-coded by side (blue = BLUFOR, red = OPFOR, green = INDEP, purple = CIV)
+The block contains only the current in-game time, date, and the player's new grid reference. Mission title, player name, rank, and group are deliberately omitted so respawning does not replay introduction-style text.
 
 ### Manual Call
 

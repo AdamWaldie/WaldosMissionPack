@@ -1,7 +1,14 @@
 /*
+ * Author: WaldoTheWarfighter
  * Fits dynamically drawn Economy controls into a protected safe-zone rectangle and applies
  * the shared WMP operations-console treatment. This post-layout pass prevents legacy prompt
  * coordinates from placing controls off-screen at 4:3, ultrawide or large UI scale.
+ *
+ * Arguments: 0: Economy prompt display <DISPLAY>.
+ * Return Value: BOOL - true when fitting was scheduled, false for an invalid display.
+ *
+ * Example: [_display] call Waldo_fnc_EcoCore_fitPromptDisplay;
+ * Current caller: Economy prompt construction after controls have been created.
  */
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display) exitWith {false};
@@ -22,6 +29,7 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
     };
     if (isNull _display || {(_display getVariable ["WaldoEcoCore_PromptToken", ""]) != _promptToken}) exitWith {};
     private _baseline = _display getVariable ["WaldoEcoCore_PromptBaselineControls", []];
+    private _theme = _display getVariable ["WaldoEcoCore_PromptTheme", [] call Waldo_fnc_UiTheme];
     private _chrome = _display getVariable ["WaldoEcoCore_PromptChromeControls", []];
     private _controls = (allControls _display) select {
         private _p = ctrlPosition _x;
@@ -111,9 +119,10 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
             };
         };
         if ((ctrlType _x) in [1, 16]) then {
-            _x ctrlSetBackgroundColor [0.035, 0.16, 0.28, 0.98];
-            _x ctrlSetActiveColor [0.08, 0.48, 0.78, 1];
-            _x ctrlSetTextColor [1, 1, 1, 1];
+            _x ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.035, 0.16, 0.28, 0.98]]);
+            _x ctrlSetActiveColor (_theme getOrDefault ["accentActive", [0.08, 0.48, 0.78, 1]]);
+            _x ctrlSetTextColor (_theme getOrDefault ["text", [1, 1, 1, 1]]);
+            _x ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
         };
         _x ctrlCommit 0;
     } forEach _controls;

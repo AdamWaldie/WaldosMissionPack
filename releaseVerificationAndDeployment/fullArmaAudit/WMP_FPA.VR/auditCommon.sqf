@@ -1,8 +1,7 @@
-/* Shared structured-record helpers for the disposable full Arma audit mission. */
 Waldo_QA_fnc_emit = {
     params ["_kind", "_caseId", ["_detail", ""]];
     private _payload = str [_kind, _caseId, _detail, diag_tickTime, clientOwner, isServer, hasInterface];
-    diag_log format ["WMP FULL AUDIT %1: %2", _kind, _payload];
+    diag_log format ["WMP PR AUDIT %1: %2", _kind, _payload];
 };
 
 Waldo_QA_fnc_assert = {

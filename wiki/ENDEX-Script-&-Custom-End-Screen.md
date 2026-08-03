@@ -68,7 +68,7 @@ missionNamespace setVariable ["Waldo_ENDEX_ReportDuration", 60, true];
 
 ## Zeus usage
 
-Use **ENDEX / After-Action Report** under **Waldos Mission Modules**. It calls the same public, server-authoritative function as script setup. The reset function is intended for rehearsals and controlled testing rather than normal mission flow.
+Use **Mission Flow: End Mission + Show AAR** under **WMP Mission Flow**. It calls the same public, server-authoritative function as script setup. The reset function is intended for rehearsals and controlled testing rather than normal mission flow.
 
 ## Diagnostics
 

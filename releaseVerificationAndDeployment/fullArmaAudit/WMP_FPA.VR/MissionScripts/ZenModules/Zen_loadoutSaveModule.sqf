@@ -13,6 +13,8 @@
  *
  * Example:
  * [getPos logic, cursorObject] call Waldo_fnc_ZenLoadoutSaveModule;
+ *
+ * Current caller: the ZEN "Respawn: Create Loadout Save Point" module under WMP Logistics.
  */
 
 params ["_modulePos", "_objectPos", ["_actor", objNull]];
@@ -45,7 +47,7 @@ if (!isNull _objectPos) then {
     clearItemCargoGlobal _target;
     clearBackpackCargoGlobal _target;
 
-    { _x addCuratorEditableObjects [[_target], true]; } forEach allCurators;
+    [_target, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
 };
 
 // Execute on all current clients and re-execute for every JIP player.

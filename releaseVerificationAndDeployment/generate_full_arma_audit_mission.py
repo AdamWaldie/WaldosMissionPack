@@ -56,6 +56,26 @@ STATIONS = [
     ("zen", "ZEUS MODULES", (14, 54), "All WMP and Economy ZEN modules."),
     ("third-party", "THIRD-PARTY INTEGRATIONS", (34, 78), "Optional attributed integrations; opt-in only."),
     ("corpse-traps", "CORPSE TRAPS - QUARANTINED", (52, 78), "Present in the pack, excluded from automatic activation."),
+    ("persistence", "PERSISTENCE", (150, 80), "Dependency gate, object registration, save-now and unavailable-state feedback."),
+    ("treatment-feedback", "TREATMENT FEEDBACK", (175, 80), "Real ACE patient treatment and WMP notification feedback."),
+    ("hazards", "HAZARDOUS ENVIRONMENTS", (200, 80), "Repeatable exposure zone, protection and runtime removal."),
+    ("tree-felling", "TREE FELLING", (225, 80), "Cutting-tool validation, progress, replacement, yield and regrowth."),
+    ("emergency-dismount", "EMERGENCY DISMOUNT", (250, 80), "Overturn detection, protected extraction and repeat reset."),
+    ("accessibility", "ACCESSIBILITY PID", (150, 40), "Eligible-player friendly identification, LOS and toggle behavior."),
+    ("breaching", "EXPLOSIVE BREACHING", (175, 40), "Configured wall, accumulated strength, replacement and reset."),
+    ("object-transforms", "OBJECT TRANSFORMS", (200, 40), "Scale, reset, copy and transform helpers on physical props."),
+    ("ai-rebalance", "AI REBALANCE", (225, 40), "Named profiles, live AI skill changes and restoration."),
+    ("field-resupply", "FIELD RESUPPLY", (250, 40), "Finite hub stock, carrier crates, deployment, refill and salvage."),
+    ("tactical-display", "TACTICAL DISPLAY", (150, 0), "Authenticated local tactical map with friendly and known-enemy filtering."),
+    ("dynamic-aa", "DYNAMIC ANTI-AIR", (175, 0), "Named radar system, pooled assets, altitude detection and teardown."),
+    ("gunship", "AIRBORNE GUNSHIP", (200, 0), "Registration, assignment, orbit, service and removal lifecycle."),
+    ("vehicle-recovery", "VEHICLE RECOVERY", (225, 0), "Damage-gated packaging, carrier handling and keyed workshop restoration."),
+    ("rally", "SQUAD RALLY", (250, 0), "Leader deployment, group respawn, regroup, expiry and removal."),
+    ("nested-loadouts", "NESTED LOADOUT SCRAPE", (275, 0), "Playable inventories inside nested Eden folders feeding crate and arsenal pools."),
+    ("dynamic-paradrop", "DYNAMIC PARADROP", (300, 40), "Server-owned DZ route, timed jumpers, operational markers and teardown."),
+    ("ai-helicopter-landing", "AI HELICOPTER LANDING", (325, 40), "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."),
+    ("ui-theme-qa", "UI THEME QA", (325, 0), "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."),
+    ("dynamic-ao", "DYNAMIC AO", (350, 0), "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."),
 ]
 
 
@@ -92,6 +112,23 @@ FIXTURES = [
     fixture("qa_ew_jammer", "Land_TTowerSmall_1_F", 0, -102),
     fixture("qa_ew_tracked", "O_MRAP_02_F", -18, -102, direction=90),
     fixture("qa_ew_immune", "B_MRAP_01_F", 18, -102, direction=270),
+    fixture("qa_persistence_object", "Box_NATO_Equip_F", 150, 87),
+    fixture("qa_hazard_emitter", "Land_Device_assembled_F", 200, 88),
+    fixture("qa_tree", "Land_TreeBin_F", 225, 87),
+    fixture("qa_dismount_vehicle", "B_MRAP_01_F", 250, 88, direction=90),
+    fixture("qa_breach_wall", "Land_City2_8m_F", 175, 47, direction=90),
+    fixture("qa_tactical_console", "Land_MapBoard_F", 150, 7, direction=180),
+    fixture("qa_scale_small", "Land_CampingChair_V2_F", 193, 47),
+    fixture("qa_scale_source", "Land_CampingChair_V2_F", 200, 47),
+    fixture("qa_scale_target", "Land_CampingChair_V2_F", 207, 47),
+    fixture("qa_resupply_hub", "B_supplyCrate_F", 250, 47),
+    fixture("qa_recovery_workshop", "Land_RepairDepot_01_green_F", 225, 14),
+    fixture("qa_recovery_vehicle", "B_MRAP_01_F", 217, 7, direction=90),
+    # The V-44 has a broad physics envelope. Keep it clear of the workshop,
+    # damaged vehicle, station sign and adjacent feature stations at activation.
+    fixture("qa_recovery_carrier", "B_T_VTOL_01_vehicle_F", 225, -28),
+    fixture("qa_loadout_arsenal", "B_supplyCrate_F", 275, 7),
+    fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F", 325, 70),
 ]
 
 CHALLENGES = [
@@ -298,17 +335,11 @@ def build_sqm() -> str:
             {
                 class Attribute0
                 {
-                    property="ModuleCurator_F_Owner";
-                    expression="_this setVariable ['Owner',_value,true];";
-                    class Value {class data {class type {type[]={"STRING"};}; value="qa_player_1";};};
-                };
-                class Attribute1
-                {
                     property="ModuleCurator_F_Addons";
                     expression="_this setVariable ['Addons',_value,true];";
                     class Value {class data {class type {type[]={"SCALAR"};}; value=3;};};
                 };
-                nAttributes=2;
+                nAttributes=1;
             };
         };""")
     for offset, item in enumerate(FIXTURES, start=2):
@@ -335,6 +366,24 @@ class Mission
 def station_for(path: str) -> str:
     normalized = path.replace("\\", "/").lower()
     rules = [
+        ("persistence/", "persistence"), ("medicalsystems/treatmentfeedback", "treatment-feedback"),
+        ("environmentalsystems/hazardousenvironments", "hazards"),
+        ("environmentalsystems/treefelling", "tree-felling"),
+        ("missioninit/vehicleactionssetup/emergencydismount", "emergency-dismount"),
+        ("missionflowandui/accessibility", "accessibility"),
+        ("combatsystems/breaching", "breaching"),
+        ("missionmakerresourcescripts/objecttransforms", "object-transforms"),
+        ("aiscripting/airebalance", "ai-rebalance"), ("aiscripting/aiapplyprofile", "ai-rebalance"),
+        ("logistics/fieldresupply", "field-resupply"),
+        ("missionflowandui/tacticaldisplay", "tactical-display"),
+        ("combatsystems/dynamicaa", "dynamic-aa"),
+        ("combatsystems/airbornegunship", "gunship"),
+        ("logistics/vehiclerecovery", "vehicle-recovery"),
+        ("respawn/rallypoint", "rally"),
+        ("paradrop/paradropcreatedropzone", "dynamic-paradrop"),
+        ("paradrop/paradropremovedropzone", "dynamic-paradrop"),
+        ("paradrop/paradropdropzonezen", "dynamic-paradrop"),
+        ("logistics/logihelpers/missionfilelookup", "nested-loadouts"),
         ("corpsetrap", "corpse-traps"), ("thirdpartyscripts", "third-party"),
         ("interactionsminigames", "interaction-core"), ("minigames", "party"),
         ("zenmodules", "zen"), ("economysystems/resource", "economy-resource"),
@@ -433,15 +482,44 @@ def write_function_station_sqf(manifest: dict) -> None:
         + ",\n".join(rows)
         + "\n], true];\n"
     )
-    (MISSION / "functionStations.sqf").write_text(text, encoding="utf-8", newline="\n")
+    write_text_if_changed(MISSION / "functionStations.sqf", text)
+
+
+def write_text_if_changed(path: Path, text: str) -> None:
+    """Avoid reopening identical OneDrive-backed generated files."""
+    if path.is_file() and path.read_text(encoding="utf-8") == text:
+        return
+    path.write_text(text, encoding="utf-8", newline="\n")
+
+
+def _sync_tree_in_place(source: Path, target: Path) -> None:
+    """Mirror a source tree when a synced filesystem refuses to remove its root."""
+    target.mkdir(parents=True, exist_ok=True)
+    source_entries = {path.relative_to(source) for path in source.rglob("*")}
+    for path in sorted(target.rglob("*"), key=lambda item: len(item.parts), reverse=True):
+        if path.relative_to(target) in source_entries:
+            continue
+        if path.is_dir():
+            try:
+                path.rmdir()
+            except PermissionError:
+                # OneDrive can retain an ACL-protected, empty historical folder.
+                # Empty directories are not mission inputs and may safely remain.
+                if any(entry.is_file() for entry in path.rglob("*")):
+                    raise
+        else:
+            path.unlink()
+    shutil.copytree(source, target, dirs_exist_ok=True)
 
 
 def refresh_release_sources() -> None:
-    for directory in ("MissionScripts", "Pictures", "UnitInsignias", "WMPPackSource"):
+    for directory in ("MissionScripts", "Pictures", "UnitInsignias"):
+        source = ROOT / directory
         target = MISSION / directory
         # OneDrive can remove a hydrated file after rmtree enumerates it but before
         # unlink runs. Treat that one race as progress, retry the remaining tree,
         # and still fail if the directory cannot actually be cleared.
+        removal_blocked = False
         for _attempt in range(3):
             if not target.exists():
                 break
@@ -449,15 +527,17 @@ def refresh_release_sources() -> None:
                 shutil.rmtree(target)
             except FileNotFoundError:
                 continue
+            except PermissionError:
+                removal_blocked = True
+                break
         if target.exists():
+            if removal_blocked and source.is_dir():
+                _sync_tree_in_place(source, target)
+                continue
             raise OSError(f"Could not clear stale audit source directory: {target}")
-    shutil.copytree(ROOT / "MissionScripts", MISSION / "MissionScripts")
-    shutil.copytree(ROOT / "Pictures", MISSION / "Pictures")
-    shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
-    for source_name in ("UnitInsignias",):
-        source = ROOT / source_name
         if source.is_dir():
-            shutil.copytree(source, MISSION / source_name, dirs_exist_ok=True)
+            shutil.copytree(source, target)
+    shutil.copy2(ROOT / "economyConfig.sqf", MISSION / "economyConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
     for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "LICENSE", "README.md"):
@@ -470,7 +550,7 @@ def write_active_pack(destination: Path) -> None:
     """Write the real pack entry points with only pre/post audit hooks around them."""
     description = (ROOT / "description.ext").read_text(encoding="utf-8")
     description = "\n".join(line.rstrip() for line in description.splitlines()) + "\n"
-    (destination / "description.ext").write_text(description, encoding="utf-8", newline="\n")
+    write_text_if_changed(destination / "description.ext", description)
     for name, pre_hook, post_hook in (
         ("init.sqf", "auditPreInit.sqf", "auditInit.sqf"),
         ("initServer.sqf", "auditPreInitServer.sqf", "auditInitServer.sqf"),
@@ -485,33 +565,31 @@ def write_active_pack(destination: Path) -> None:
             f"{source.rstrip()}\n\n"
             f'call compile preprocessFileLineNumbers "{post_hook}";\n'
         )
-        (destination / name).write_text(wrapper, encoding="utf-8", newline="\n")
+        write_text_if_changed(destination / name, wrapper)
 
 
 def main() -> int:
     MISSION.mkdir(parents=True, exist_ok=True)
     destination = MISSION / "mission.sqm"
-    destination.write_text(build_sqm(), encoding="utf-8", newline="\n")
+    write_text_if_changed(destination, build_sqm())
     stale_loadout = MISSION / "auditLoadoutSQM.hpp"
     if stale_loadout.exists():
         stale_loadout.unlink()
     manifest = function_manifest()
     manifest_text = json.dumps(manifest, indent=2) + "\n"
-    (AUDIT / "function_station_manifest.json").write_text(manifest_text, encoding="utf-8", newline="\n")
-    (MISSION / "function_station_manifest.json").write_text(manifest_text, encoding="utf-8", newline="\n")
+    write_text_if_changed(AUDIT / "function_station_manifest.json", manifest_text)
+    write_text_if_changed(MISSION / "function_station_manifest.json", manifest_text)
     write_function_station_sqf(manifest)
     shutil.copy2(AUDIT / "audit_manifest.json", MISSION / "audit_manifest.json")
     shutil.copy2(AUDIT / "fixture_manifest.json", MISSION / "fixture_manifest.json")
     refresh_release_sources()
     write_active_pack(MISSION)
-    (MISSION / "auditBootstrap.sqf").write_text(
+    write_text_if_changed(MISSION / "auditBootstrap.sqf",
         'Waldo_QA_BootSuite = "all";\n'
         'Waldo_QA_ExpectedVersion = "DEVELOPMENT";\n'
         'Waldo_QA_RequiredPatches = ["cba_main", "ace_main", "zen_main", "acre_main"];\n'
         'Waldo_QA_RunAutomation = false;\n'
         'Waldo_QA_Mode = "MANUAL";\n',
-        encoding="utf-8",
-        newline="\n",
     )
     sqm_bytes = destination.read_bytes()
     if not sqm_bytes.lstrip().startswith(b"version=54;") or b"binarizationWanted=0;" not in sqm_bytes:

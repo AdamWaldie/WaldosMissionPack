@@ -2,13 +2,17 @@
 
 > **Use this page when:** you need safe-zone-aware player notifications with semantic states, placement, stacking, or FIFO delivery.
 
-WMP includes a reusable notification-card system for mission updates, warnings and persistent equipment status. It is the same safe-zone-aware presentation used by Electronic Warfare, Economy feedback and ENDEX/AAR.
+WMP includes a reusable notification-card system for mission updates, warnings and persistent equipment status. It is the same safe-zone-aware presentation used by Economy feedback, ENDEX/AAR, patient treatment feedback, persistence, field resupply, vehicle recovery, squad rallies, Dynamic AA, airborne gunships and manual respawn-loadout saving.
 
 The system is local to each player's interface. Mission code decides who receives a notification by choosing the remote-execution target.
+
+Notification footprints, placement and behavior are identical under every global visual style; typography, materials, copy syntax and decorative rail geometry differ by era. See [UI Visual Themes](UI-Visual-Themes) to select `DEFAULT`, `WW2`, `VIETNAM` or `SCIFI`, provide a mission-specific palette, or switch styles through the live QA ZEN module.
 
 ## What players see
 
 Every state uses colour, a written label and a symbol. Information remains understandable when colour cannot be distinguished.
+
+The active player's colour-vision profile remaps semantic colours after the mission-wide visual theme is resolved. Use **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** to choose Standard, red-green-aware, protan-aware, blue-yellow-aware or high-contrast monochrome presentation. The selection is local and profile-persistent; notification routing, priority, stacking and content are unchanged.
 
 ![Information, success, warning and error notification states](images/ui-notifications/semantic-states.png)
 
@@ -19,7 +23,7 @@ Every state uses colour, a written label and a symbol. Information remains under
 | `WARNING` | `[!]` | A condition requiring attention |
 | `ERROR` | `[X]` | Failure, loss or an unavailable service |
 
-Cards measure their text, retain internal padding and stay inside Arma's current safe zone. Available placements are `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT` and `BOTTOM_RIGHT`.
+Cards measure their text, retain internal padding and stay inside Arma's current safe zone. Available placements are `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER` and `BOTTOM_RIGHT`.
 
 ## Basic mission-maker use
 
@@ -54,11 +58,11 @@ The arguments are:
 | `priority` | Number | Mission metadata retained with the active card |
 | `allowLocalOverride` | Boolean | Whether an authorized player placement may be used |
 
-The function returns a unique token for a displayed card, `"QUEUED"` when the request enters a queue, or an empty string when no interface is available. If the gameplay display is still opening, WMP waits for it for up to 20 seconds.
+The function returns a unique token for a displayed card, `"QUEUED"` when the request enters a bounded queue, or an empty string when no interface is available. If the gameplay display is still opening, WMP keeps one bounded, coalesced waiting set and waits for it for up to 20 seconds rather than starting one waiter per request.
 
 ## Channels, stacking and replacement
 
-A channel identifies one stream of related notifications. Different channels can share a screen region without drawing over one another. WMP measures and stacks up to three active cards in that region; further transient requests wait in the queue.
+A channel identifies one stream of related notifications. Different channels can share a screen region without drawing over one another. WMP measures and stacks up to three active cards in that region. As an earlier card expires, every surviving card smoothly closes the gap until the stack is gone. When that region is full, independent channels can use the configured overflow regions at the same time before any request waits in the queue.
 
 ![Three independent channels stacked at bottom right](images/ui-notifications/channel-stacking.png)
 
@@ -81,15 +85,28 @@ Calling `REPLACE` again on `ELECTRONIC_WARFARE` removes only that channel's old 
 
 `AUTO` selects `REPLACE` for persistent cards (`duration = 0`) and `FIFO` for timed cards. Specify a policy when the intended behavior should be obvious in mission code.
 
-## FIFO message delivery
+## Bounded message delivery
 
-`FIFO` displays requests from the same channel in the order they arrive. A second request waits while the first is active.
+`FIFO` preserves the active card and permits one pending update per channel. Further requests on that channel coalesce into the newest pending state of equal or greater importance. This is intentional back-pressure: a frequently updating system cannot create a long replay after the event has passed.
 
 | First request active | Queue advances to second request |
 |---|---|
 | ![First FIFO notification](images/ui-notifications/fifo-first.png) | ![Second FIFO notification](images/ui-notifications/fifo-second.png) |
 
-Identical queued requests are coalesced. This prevents a repeating event from filling the queue with copies of the same message.
+The queue is capped at 12 channels by default. Pending cards expire after 15 seconds, and warning/error entries take precedence when an overflow decision is required. These player-local defaults can be changed in `initPlayerLocal.sqf`:
+
+```sqf
+Waldo_UiNotification_MaximumQueued = 12;
+Waldo_UiNotification_QueueLifetime = 15;
+Waldo_UiNotification_MaximumPerPlacement = 3;
+Waldo_UiNotification_ReflowDuration = 0.18;
+Waldo_UiNotification_AllowPlacementOverflow = true;
+Waldo_UiNotification_OverflowPlacements = ["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"];
+```
+
+The default mission uses separate live streams for the integrated features: immediate player safety at `TOP_RIGHT`, brief treatment progress in its dedicated padded `BOTTOM_CENTER` region, combat/action plus squad-rally/gunship updates at `BOTTOM_RIGHT`, and logistics and persistence at `BOTTOM_LEFT`. The `TOP` position is deliberately excluded because WMP mission-flow banners reserve the top-centre region. Each stream stacks independently, surviving cards close gaps when an earlier card fades, and a full general stream spills first into the right-side `BOTTOM_RIGHT` stack. Override `Waldo_UI_PanelPlacements` in `initPlayerLocal.sqf` to regroup or reposition these channels.
+
+`BOTTOM_CENTER` is deliberately not in the default overflow order. It is a first-class, stackable position, but the default reserves it for explicitly assigned short-lived channels such as treatment feedback. `CENTER` remains the final general overflow fallback and should be removed from `Waldo_UiNotification_OverflowPlacements` in missions where even late overflow could obstruct aiming or interaction.
 
 To dismiss a channel and discard its queued requests:
 

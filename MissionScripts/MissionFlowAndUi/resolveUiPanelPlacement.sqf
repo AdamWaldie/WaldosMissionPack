@@ -2,7 +2,7 @@
 params [["_channel", "MISSION", [""]], ["_requested", "TOP", [""]], ["_allowLocalOverride", false, [true]]];
 _channel = toUpper _channel;
 private _placement = toUpper _requested;
-private _valid = ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_RIGHT"];
+private _valid = ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"];
 if !(_placement in _valid) then {_placement = "TOP";};
 private _settings = missionNamespace getVariable ["Waldo_UI_PanelPlacements", []];
 private _index = _settings findIf {(_x param [0, ""]) isEqualTo _channel};

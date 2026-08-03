@@ -107,11 +107,23 @@ class FullAuditTests(unittest.TestCase):
             "qa_mhq",
             "qa_mhq_antenna",
             "qa_ew_jammer",
+            "qa_hazard_emitter",
+            "qa_breach_wall",
+            "qa_tactical_console",
+            "qa_recovery_vehicle",
+            "qa_loadout_arsenal",
         ):
             self.assertIn(fixture, sqm)
         self.assertNotIn("qa_station_", sqm)
         self.assertIn('type="ModuleCurator_F"', sqm)
         self.assertIn('name="qa_curator"', sqm)
+        for station_id in (
+            "persistence", "treatment-feedback", "hazards", "tree-felling",
+            "emergency-dismount", "accessibility", "breaching", "object-transforms",
+            "ai-rebalance", "field-resupply", "tactical-display", "dynamic-aa",
+            "gunship", "vehicle-recovery", "rally", "nested-loadouts",
+        ):
+            self.assertIn(f'qa_sign_{station_id.replace("-", "_")}', sqm)
         self.assertTrue((mission / "MissionScripts" / "WaldosFunctions.sqf").is_file())
         self.assertTrue((mission / "Pictures" / "loading.jpg").is_file())
         self.assertTrue((mission / "economyConfig.sqf").is_file())
@@ -137,6 +149,20 @@ class FullAuditTests(unittest.TestCase):
         self.assertEqual(source_files, packaged_files)
         changed = [relative for relative in source_files if (source / relative).read_bytes() != (packaged / relative).read_bytes()]
         self.assertEqual([], changed)
+
+    def test_loadout_scraper_recurses_into_nested_eden_folders(self):
+        source = (
+            ROOT
+            / "MissionScripts"
+            / "Logistics"
+            / "LogiHelpers"
+            / "missionFileLookup.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('getText (_entity >> "dataType") == "Object"', source)
+        self.assertIn("_isPlayer == 1 || _isPlayable == 1", source)
+        self.assertIn('private _children = _entity >> "Entities"', source)
+        self.assertIn("[_x] call _visitEntity", source)
+        self.assertIn('missionConfigFile >> "MissionSQM" >> "Mission" >> "Entities"', source)
 
     def test_generated_mission_runs_current_pack_before_audit_hooks(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -187,8 +213,39 @@ class FullAuditTests(unittest.TestCase):
 
     def test_pack_init_cannot_deadlock_on_dedicated_server(self):
         init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        acre_init = (
+            ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "ACRE2Init.sqf"
+        ).read_text(encoding="utf-8")
         self.assertIn("isDedicated ||", init)
         self.assertNotIn("waitUntil {!isNull player && player == player};", init)
+        self.assertIn("[_RadioSetups] spawn Waldo_fnc_ACRE2Init;", init)
+        self.assertIn("if (isServer) then {", acre_init)
+        self.assertIn("[_SquadCallsigns] call Waldo_fnc_SquadLevelRadios;", acre_init)
+        self.assertIn("if (!hasInterface) exitWith", acre_init)
+        self.assertIn("private _readyDeadline = diag_tickTime + 30;", acre_init)
+        self.assertIn('if (hasInterface) then {["",""] call Waldo_fnc_InfoText};', init)
+        self.assertIn("if (hasInterface) then {call Waldo_fnc_AddDocs};", init)
+        self.assertIn("if (hasInterface) then {call Waldo_fnc_SetTeamColour};", init)
+
+    def test_entry_points_preserve_server_authority_and_jip_state(self):
+        init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        init_server = (ROOT / "initServer.sqf").read_text(encoding="utf-8")
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+
+        self.assertNotIn('missionNamespace setVariable ["Waldo_Jamming_Notify", true, true]', init)
+        self.assertNotIn('missionNamespace setVariable ["Waldo_Jamming_Enable", true, true]', init)
+        self.assertIn('if (isNil "Waldo_MiniGames_Enable") then', init)
+        self.assertIn('if (isNil "Waldo_CorpseTraps_Enable") then', init)
+        self.assertIn('missionNamespace setVariable ["WALDO_INIT_COMPLETE", true];', init)
+        self.assertNotIn('missionNamespace setVariable ["WALDO_INIT_COMPLETE", true, true]', init)
+
+        self.assertIn('["Waldo_Jamming_Enable", true]', init_server)
+        self.assertIn('missionNamespace setVariable ["Waldo_Jamming_ConfigReady", true, true]', init_server)
+        self.assertIn('[] call Waldo_fnc_JammingInit;', init_server)
+
+        self.assertIn('missionNamespace getVariable ["Waldo_Jamming_ConfigReady", false]', init_player)
+        self.assertIn('missionNamespace getVariable ["Waldo_Jamming_Enable", false]', init_player)
+        self.assertIn('[] call Waldo_fnc_JammingInit;', init_player)
 
     def test_generated_mission_maps_every_registered_function_to_one_station(self):
         manifest_path = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "function_station_manifest.json"
@@ -239,8 +296,17 @@ class FullAuditTests(unittest.TestCase):
         pre_server = (mission / "auditPreInitServer.sqf").read_text(encoding="utf-8")
         self.assertIn('"B_Parachute"', pre_server)
         self.assertIn('"Waldo_SafeStart_AutoStart", false', pre_server)
-        cleanup = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "cleanupTransientUi.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Economy_Preset", "MEDIUM", true]', pre_server)
+        for side_catalog in ('["WEST", "NATO"]', '["EAST", "CSAT"]', '["GUER", "AAF"]'):
+            self.assertIn(side_catalog, pre_server)
+        shared_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        server_init = (ROOT / "initServer.sqf").read_text(encoding="utf-8")
         player_init = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        self.assertNotIn("spawn Waldo_fnc_EcoInit", shared_init)
+        self.assertIn("[] call Waldo_fnc_EcoInit", server_init)
+        self.assertIn("[] call Waldo_fnc_EcoInit", player_init)
+        self.assertLess(server_init.index("[] call Waldo_fnc_EcoInit"), server_init.index('Waldo_FeatureRuntimeStateReady", true'))
+        cleanup = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "cleanupTransientUi.sqf").read_text(encoding="utf-8")
         for idc in (5299, 5300, 5309, 5310, 5330, 5331, 5340, 5341):
             self.assertIn(str(idc), cleanup)
         self.assertIn('["Ended"', player_init)
@@ -342,15 +408,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('[string]$ModProfile = "acre"', dedicated)
         for patch in ("cba_main", "ace_main", "zen_main", "acre_main"):
             self.assertIn(patch, bootstrap)
-        self.assertIn("-noBattlEye", hosted)
-        self.assertIn('"MPMissions\\WMP_Full_Arma_Audit.VR"', hosted)
-        self.assertIn('"-host"', hosted)
-        self.assertNotIn('"-world=empty"', hosted)
-        self.assertNotIn('"-noSplash"', hosted)
-        self.assertNotIn('"-skipIntro"', hosted)
-        self.assertIn('"WMP_Full_Arma_Audit.VR", "WMP_FULL_PACK_AUDIT.VR"', hosted)
-        self.assertIn('"Users\\WMPAuditHost\\Saved\\mpmissions\\" + $auditName', hosted)
-        self.assertIn("Close Arma 3 before staging", hosted)
+        self.assertIn('"launch_pr_review_audit.ps1"', hosted)
+        self.assertIn("canonical version-12 full-pack audit mission", hosted)
+        self.assertNotIn('"-host"', hosted)
         self.assertIn("Close all Arma audit clients and servers before staging", dedicated)
         self.assertNotIn("-filePatching", hosted)
         self.assertNotIn("-filePatching", dedicated)
@@ -361,7 +421,7 @@ class FullAuditTests(unittest.TestCase):
             AUDIT_BUILDER.build(destination, "all", "acre")
             description = (destination / "description.ext").read_text(encoding="utf-8")
             self.assertIn('onLoadName = "WMP FULL PACK AUDIT"', description)
-            self.assertIn('onLoadMission = "PR #21-#32 development testbed"', description)
+            self.assertIn('onLoadMission = "Ongoing full-pack pull request audit"', description)
 
     def test_audit_exposes_curator_and_full_mhq_fixture(self):
         feature_range = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
@@ -745,6 +805,81 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("getAssignedCuratorLogic", create_server)
         self.assertIn("createVehicle", create_server)
 
+    def test_jammer_disable_challenge_uses_server_authority_and_actor_gate(self):
+        create = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerCreate.sqf").read_text(encoding="utf-8")
+        interaction = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerInteraction.sqf").read_text(encoding="utf-8")
+        disable = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerDisableServer.sqf").read_text(encoding="utf-8")
+        generic = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteraction.sqf").read_text(encoding="utf-8")
+        acquire = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteractionAcquireServer.sqf").read_text(encoding="utf-8")
+        range_check = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteractionRange.sqf").read_text(encoding="utf-8")
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf").read_text(encoding="utf-8")
+        fixture = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExec ["Waldo_fnc_JammerInteraction", 0, _object]', create)
+        self.assertIn('call Waldo_fnc_MiniGameInteractionSetup', interaction)
+        self.assertIn('"actorCondition"', interaction)
+        self.assertIn('call Waldo_fnc_JammerDisableServer', interaction)
+        self.assertIn('["actionTitle", "Disable Jammer"]', interaction)
+        self.assertIn('["installAction", false]', interaction)
+        self.assertIn('"Waldo_Jammer_Disable"', interaction)
+        self.assertIn('_target call Waldo_fnc_MiniGameInteractionActivate', interaction)
+        self.assertIn('if (!isServer', disable)
+        self.assertIn('remoteExecutedOwner', disable)
+        self.assertIn('Waldo_MG_InteractionState', disable)
+        self.assertIn('Waldo_MG_InteractionResult', disable)
+        self.assertIn('Waldo_MG_Int_ActorCondition', generic)
+        self.assertNotIn('ace_common_fnc_canInteractWith', generic)
+        self.assertIn('_distance\n    ] call ace_interact_menu_fnc_createAction', generic)
+        self.assertIn('Waldo_MG_Int_ActorCondition', acquire)
+        self.assertIn('call Waldo_fnc_MiniGameInteractionRange', generic)
+        self.assertIn('call Waldo_fnc_MiniGameInteractionRange', acquire)
+        self.assertIn('worldToModel', range_check)
+        self.assertIn('boundingBoxReal', range_check)
+        self.assertIn('modelToWorld', range_check)
+        for label in ("Allow Reactivation", "Require Field Disable Procedure", "Disable Procedure", "Procedure Difficulty"):
+            self.assertIn(label, zen)
+        for advanced_label in ("Engineers Only", "Successful Disable Result", "Allow Direct Player Toggle"):
+            self.assertNotIn(advanced_label, zen)
+        self.assertIn('["disableChallenge", true]', fixture)
+        self.assertIn('["engineerOnly", false]', fixture)
+
+    def test_feature_zen_interaction_options_are_simplified_and_authoritative(self):
+        aa_zen = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZen.sqf").read_text(encoding="utf-8")
+        aa_create = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf").read_text(encoding="utf-8")
+        aa_interaction = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAInteractionSetup.sqf").read_text(encoding="utf-8")
+        runtime_zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        tactical = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplayRegister.sqf").read_text(encoding="utf-8")
+        tactical_interaction = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplayInteractionSetup.sqf").read_text(encoding="utf-8")
+        recovery = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryRegisterVehicle.sqf").read_text(encoding="utf-8")
+        recovery_interaction = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryInteractionSetup.sqf").read_text(encoding="utf-8")
+        recovery_restore = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
+        for label in ("Require Radar Shutdown Procedure", "Shutdown Procedure", "Procedure Difficulty"):
+            self.assertIn(label, aa_zen)
+        for label in ("Require Recovery Preparation", "Preparation Procedure", "Require Display Authentication", "Authentication Procedure"):
+            self.assertIn(label, runtime_zen)
+        self.assertIn('remoteExecCall ["Waldo_fnc_DynamicAAInteractionSetup", 0, _radar]', aa_create)
+        self.assertIn('call Waldo_fnc_DynamicAADestroy', aa_interaction)
+        self.assertIn('["actionTitle", "Disable AA System"]', aa_interaction)
+        self.assertIn('["installAction", false]', aa_interaction)
+        self.assertIn('"Waldo_DynamicAA_DisableSystem"', aa_interaction)
+        self.assertIn('Waldo_TacticalDisplay_Unlocked', tactical)
+        self.assertIn('remoteExecCall ["Waldo_fnc_TacticalDisplayInteractionSetup", 0, _object]', tactical)
+        self.assertIn('["actionTitle", "Access Tactical Display"]', tactical_interaction)
+        self.assertIn('["installAction", false]', tactical_interaction)
+        tactical_setup = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplaySetupLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_TacticalDisplay_InteractionEnabled', tactical_setup)
+        self.assertIn('Waldo_fnc_MiniGameInteractionActivate', tactical_setup)
+        self.assertIn('Waldo_Recovery_InteractionEnabled', recovery)
+        self.assertIn('call Waldo_fnc_RecoveryRequestServer', recovery_interaction)
+        self.assertIn('["actionTitle", "Package Vehicle for Recovery"]', recovery_interaction)
+        self.assertIn('["installAction", false]', recovery_interaction)
+        recovery_setup = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoverySetupVehicleLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_Recovery_InteractionEnabled', recovery_setup)
+        self.assertIn('Waldo_fnc_MiniGameInteractionActivate', recovery_setup)
+        self.assertIn('createHashMapFromArray', recovery_restore)
+        self.assertIn('call Waldo_fnc_RecoveryRegisterVehicle', recovery_restore)
+        self.assertNotIn('"onSuccess"', aa_zen)
+        self.assertNotIn('"onSuccess"', runtime_zen)
+
     def test_ace_actions_are_nested_and_linked_vanilla_is_configurable(self):
         economy_actions = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "ensureLocalObjectAction.sqf").read_text(encoding="utf-8")
         economy_zen = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "registerZenModules.sqf").read_text(encoding="utf-8")
@@ -778,7 +913,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Container remains because storage is full", collect)
         self.assertIn("deleteVehicle _crate", collect)
         self.assertIn("economy/resource/full-crate-consumed", server_audit)
-        self.assertIn('[["Money", 100], ["Parts", 5]]', fixture)
+        self.assertIn("call Waldo_fnc_EcoResource_getResourceTypes", fixture)
+        self.assertIn("private _rows = [[_primaryType, 100]]", fixture)
+        self.assertIn("_rows pushBack [_secondaryType, 5]", fixture)
 
     def test_safestart_countdown_has_runtime_completion_gate(self):
         timer = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "safeStartTimer.sqf").read_text(encoding="utf-8")
@@ -930,7 +1067,7 @@ class FullAuditTests(unittest.TestCase):
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         economy = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "notifyActorLocal.sqf").read_text(encoding="utf-8")
-        for function_name in ("ShowUiNotification", "ClearUiPanels", "SetupUiCleanupAction", "SetUiPanelPlacement", "SetLocalUiPanelPlacement", "ReflowUiPanels", "DrainUiNotificationQueue"):
+        for function_name in ("ShowUiNotification", "ClearUiPanels", "SetupUiCleanupAction", "SetUiPanelsSuppressed", "SetupUiAcePriority", "SetUiPanelPlacement", "SetLocalUiPanelPlacement", "ReflowUiPanels", "DrainUiNotificationQueue"):
             self.assertIn(f"class {function_name}", functions)
         for token in ("safeZoneX", "safeZoneY", "safeZoneW", "safeZoneH", "ctrlTextHeight", "_padX", "_padY"):
             self.assertIn(token, show + reflow)
@@ -940,9 +1077,27 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_UiPanelRegistry", cleanup)
         self.assertIn("Waldo_UiPanelQueue", show)
         self.assertIn("Waldo_UiPanelQueue", drain)
+        self.assertIn("Waldo_UiNotification_MaximumQueued", show)
+        self.assertIn("Waldo_UiNotification_QueueLifetime", show)
+        self.assertIn("Waldo_UiNotification_AllowPlacementOverflow", show)
+        self.assertIn("Waldo_UiNotification_OverflowPlacements", drain)
+        self.assertIn("Waldo_UI_PanelsSuppressed", show)
+        self.assertIn("Waldo_UI_PanelsSuppressed", drain)
+        self.assertIn('["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"]', show)
+        self.assertIn('["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"]', drain)
+        self.assertNotIn('["TOP", "BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"]', show)
+        self.assertNotIn('["TOP", "BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"]', drain)
+        self.assertIn("Waldo_UiNotification_DisplayWaitQueue", show)
+        self.assertIn("_sameChannel", show)
+        self.assertIn("_queue select", show)
         self.assertIn('"FIFO"', show)
         self.assertIn('"REPLACE"', show)
         self.assertIn("Waldo_UI_PanelPlacements", placement)
+        self.assertIn("Waldo_UI_PanelPlacements", init_player)
+        self.assertIn('["TREATMENT_FEEDBACK", "BOTTOM_CENTER", true]', init_player)
+        self.assertIn("Waldo_TreatmentFeedback_Duration", init_player)
+        self.assertIn('case "BOTTOM_CENTER"', show + reflow)
+        self.assertIn('["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]', reflow)
         self.assertIn("Waldo_UI_LocalPanelPlacements", local_placement)
         self.assertIn("ctrlDelete", cleanup)
         self.assertIn("hasInterface", clear)
@@ -952,10 +1107,17 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("player addAction", setup)
         self.assertIn("Waldo_UI_CleanupActionInstalled", setup)
         self.assertGreaterEqual(init_player.count("Waldo_fnc_SetupUiCleanupAction"), 2)
+        self.assertIn("Waldo_fnc_SetupUiAcePriority", init_player)
+        ace_priority = (flow / "setupUiAcePriority.sqf").read_text(encoding="utf-8")
+        suppression = (flow / "setUiPanelsSuppressed.sqf").read_text(encoding="utf-8")
+        self.assertIn('"ace_interactMenuOpened"', ace_priority)
+        self.assertIn('"ace_interactMenuClosed"', ace_priority)
+        self.assertIn("ctrlShow !_suppressed", suppression)
         self.assertIn("Waldo_fnc_ShowUiNotification", economy)
         feature_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         self.assertIn("SHOW CUSTOM WMP UI NOTICE", feature_client)
-        self.assertIn("SHOW UI FIFO / STACK TEST", feature_client)
+        self.assertIn("SHOW UI OVERFLOW / COALESCE TEST", feature_client)
+        self.assertIn('for "_index" from 1 to 25', feature_client)
         self.assertIn("MOVE QA UI CHANNEL BOTTOM LEFT", feature_client)
         self.assertIn("CLEAR ALL WMP UI", feature_client)
         ew_sources = [
@@ -989,6 +1151,120 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("locallyRegistered=%3", helper)
         self.assertIn('"UNCONFIGURED"', helper)
         self.assertNotIn("registered procedure(s); expected at least 10", server)
+
+    def test_vehicle_recovery_is_server_owned_jip_safe_and_configurable(self):
+        root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"
+        register_vehicle = (root / "recoveryRegisterVehicle.sqf").read_text(encoding="utf-8")
+        register_workshop = (root / "recoveryRegisterWorkshop.sqf").read_text(encoding="utf-8")
+        request = (root / "recoveryRequestServer.sqf").read_text(encoding="utf-8")
+        restore = (root / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
+        monitor = (root / "recoveryMonitorServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExecCall ["Waldo_fnc_RecoverySetupVehicleLocal", 0, _vehicle]', register_vehicle)
+        self.assertIn("getAssignedCuratorLogic", register_vehicle + register_workshop)
+        self.assertIn("remoteExecutedOwner != owner _actor", request)
+        self.assertIn('getVariable ["Waldo_Recovery_Side"', request)
+        self.assertIn("getObjectTextures", request)
+        self.assertIn("getPylonMagazines", request)
+        self.assertIn("getWeaponCargo", request)
+        self.assertIn("Waldo_fnc_RecoveryRegisterVehicle", restore)
+        self.assertIn("Waldo_fnc_RecoveryRegisterCarrier", restore)
+        self.assertIn("Waldo_Recovery_ScanInterval", monitor)
+        self.assertNotRegex(monitor, r"setVariable\s*\[[^\]]+,\s*true,\s*true\s*\]")
+
+    def test_rally_points_are_group_owned_and_do_not_leak_global_markers(self):
+        root = ROOT / "MissionScripts" / "Respawn" / "RallyPoint"
+        request = (root / "rallyPointRequestServer.sqf").read_text(encoding="utf-8")
+        marker = (root / "rallyPointMarkerLocal.sqf").read_text(encoding="utf-8")
+        setup = (root / "rallyPointSetupLocal.sqf").read_text(encoding="utf-8")
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
+        for token in ("Waldo_Rally_Active", "Waldo_Rally_CooldownUntil", "Waldo_Rally_ExpiresAt"):
+            self.assertIn(token, request)
+        self.assertIn("remoteExecutedOwner != owner _actor", request)
+        self.assertIn("BIS_fnc_addRespawnPosition", request)
+        self.assertIn('remoteExecCall ["Waldo_fnc_RallyPointMarkerLocal", 0, _rally]', request)
+        self.assertNotIn("createMarker [", request)
+        self.assertIn("createMarkerLocal", marker)
+        self.assertIn("group player != _group", marker)
+        self.assertIn("BIS_fnc_holdActionAdd", setup)
+        self.assertIn('remoteExecCall ["Waldo_fnc_RallyPointInit", -2, "Waldo_Rally_RuntimeInit"]', runtime)
+        self.assertIn('remoteExecCall ["", "Waldo_Rally_RuntimeInit"]', runtime)
+        self.assertIn('"Waldo_Rally_DeploymentTime"', snapshot)
+
+    def test_pr_feature_feedback_uses_pack_ui_without_hint_output(self):
+        feature_paths = [
+            ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship",
+            ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA",
+            ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling",
+            ROOT / "MissionScripts" / "Logistics" / "FieldResupply",
+            ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery",
+            ROOT / "MissionScripts" / "MedicalSystems" / "TreatmentFeedback",
+            ROOT / "MissionScripts" / "Respawn" / "RallyPoint",
+        ]
+        source = "\n".join(path.read_text(encoding="utf-8") for root in feature_paths for path in root.glob("*.sqf"))
+        self.assertNotRegex(source, r"\bhint(?:Silent|C)?\s")
+        self.assertIn("Waldo_fnc_ShowUiNotification", source)
+        self.assertIn("Waldo_fnc_FeatureNotifyLocal", source)
+
+    def test_respawn_loadout_feedback_uses_pack_ui_without_hint_output(self):
+        source = (
+            ROOT
+            / "MissionScripts"
+            / "Logistics"
+            / "LogiHelpers"
+            / "saveRespawnLoadout.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertNotRegex(source, r"\bhint(?:Silent|C)?\s")
+        self.assertIn("Waldo_fnc_ShowUiNotification", source)
+        self.assertIn('"RESPAWN_LOADOUT"', source)
+
+    def test_runtime_zen_uses_filtered_selectors_and_hides_internal_ids(self):
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        dynamic_aa = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZen.sqf").read_text(encoding="utf-8")
+        jammer = (ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('ctrlAddEventHandler ["LBSelChanged"', runtime)
+        self.assertNotIn('ctrlAddEventHandler ["LBSelChanged"', dynamic_aa)
+        self.assertNotIn('getVariable ["zen_dialog_params"', runtime + dynamic_aa)
+        self.assertNotIn('controlsGroupCtrl 1003', runtime + dynamic_aa)
+        self.assertIn("Waldo_Gunship_SideAircraftPools", runtime)
+        self.assertIn('configProperties [configFile >> "CfgVehicles"', runtime)
+        self.assertIn("operational side", runtime.lower())
+        self.assertIn("does not restrict the physical", runtime)
+        self.assertIn("does not restrict the physical AA assets", dynamic_aa)
+        self.assertNotIn('["EDIT", ["Aircraft class"', runtime)
+        self.assertNotIn('["EDIT", ["System ID"', runtime + dynamic_aa)
+        self.assertNotIn('["EDIT", ["Asset faction/pool key"', dynamic_aa)
+        self.assertIn('["COMBO", ["Emitter source"', jammer)
+        self.assertIn('["COMBO", ["Spawned emitter object"', jammer)
+        self.assertIn('["COMBO", ["ACRE frequency coverage"', jammer)
+
+    def test_ai_profiles_have_wmp_names_and_nvg_aware_low_light_tuning(self):
+        profile_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")
+        apply_profile = (ROOT / "MissionScripts" / "AiScripting" / "aiApplyProfile.sqf").read_text(encoding="utf-8")
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        mission_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        for key in ("MILITIA", "LINE", "VETERAN", "ELITE"):
+            self.assertIn(f'["{key}", createHashMapFromArray', profile_init)
+        for label in ("WMP Militia", "WMP Line", "WMP Veteran", "WMP Elite"):
+            self.assertIn(label, mission_init + runtime)
+        self.assertIn("Waldo_AI_ProfileDisplayNames", mission_init + runtime)
+        self.assertIn("Waldo_AI_NightNVGMultipliers", apply_profile)
+        self.assertIn("Waldo_AI_NightUnaidedMultipliers", apply_profile)
+        self.assertIn('if (hmd _unit != "")', apply_profile)
+        self.assertIn("(_unit skill _x) *", apply_profile)
+
+    def test_tactical_display_and_audit_economy_use_real_supported_paths(self):
+        tactical = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplaySetupLocal.sqf").read_text(encoding="utf-8")
+        feature_range = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
+        self.assertIn("[player, 'VIEW', _target] checkVisibility", tactical)
+        self.assertNotIn("[player, 'VIEW'] checkVisibility", tactical)
+        self.assertIn("Waldo_QA_fnc_configureEconomyServer", feature_range)
+        self.assertNotIn('["Money", "#7BC86A"', feature_range)
+        self.assertNotIn("Waldo_fnc_EcoResearch_setResearchCatalog", feature_range)
+        self.assertNotIn("Waldo_fnc_EcoBuild_setBuildCatalog", feature_range)
+        self.assertNotIn("Waldo_fnc_EcoBuy_setPurchaseCatalog", feature_range)
+        self.assertIn("Waldo_fnc_EcoResource_getResourceTypes", feature_range)
+        self.assertIn("_qaZoneResource", feature_range)
 
     def test_parser_extracts_failure(self):
         with tempfile.TemporaryDirectory() as directory:

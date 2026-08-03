@@ -1,41 +1,47 @@
 /*
- * This jump throws a player out of a aircraft and attaches a parachute.
+ * Author: WaldoTheWarfighter
+ * Safely exits a local unit from an aircraft and places them into the configured static-line
+ * parachute vehicle while preserving exit velocity. Damage protection is temporary and always
+ * restored. Must run where the unit is local and in a scheduled environment.
  *
  * Arguments:
- * 0: Player <PLAYER>
- * 1: Vehicle <OBJECT>
- * 2: Chute Vehicle <OBJECT> (Optional) [Default; "NonSteerable_Parachute_F"]
+ * 0: jumping unit <OBJECT>
+ * 1: aircraft <OBJECT>
+ * 2: parachute vehicle class <STRING> (default "NonSteerable_Parachute_F")
+ *
+ * Return Value:
+ * Boolean - true when the jump sequence was started.
+ *
+ * Called by:
+ * Waldo_fnc_AddStaticJump and dynamic paradrop automatic sequencing.
  *
  * Example:
- * ["unit","plane"] call Waldo_fnc_StaticJumpFunc;
- * ["unit","plane", "NonSteerable_Parachute_F"] call Waldo_fnc_StaticJumpFunc;
- *
+ * [player, aircraft, "NonSteerable_Parachute_F"] spawn Waldo_fnc_StaticJumpFunc;
  */
 
 params [
-    ["_player", objNull],
-    ["_vehicle", objNull],
-    ["_chuteVehicleClass", "NonSteerable_Parachute_F"]
+    ["_unit", objNull, [objNull]],
+    ["_vehicle", objNull, [objNull]],
+    ["_chuteVehicleClass", "NonSteerable_Parachute_F", [""]]
 ];
 
-_player allowDamage false;
+if (isNull _unit || {isNull _vehicle} || {!local _unit} || {vehicle _unit != _vehicle}) exitWith {false};
+if !(isClass (configFile >> "CfgVehicles" >> _chuteVehicleClass)) exitWith {false};
 
-private _dir = getDir _vehicle - 50;
-moveOut _player;
-private _pos = ([_vehicle, 14, ((getDir _vehicle) + 180 + 8)] call BIS_fnc_relPos);
-_pos = [_pos select 0, _pos select 1, ((getPosATL _vehicle) select 2)];
-_player setPosATL _pos;
-_player setDir _dir - 140;
-
+_unit allowDamage false;
+private _direction = getDir _vehicle;
+private _exitPosition = [_vehicle, 14, _direction + 188] call BIS_fnc_relPos;
+_exitPosition set [2, (getPosATL _vehicle) select 2];
+private _exitVelocity = velocity _vehicle;
+moveOut _unit;
+_unit setPosATL _exitPosition;
+_unit setDir (_direction + 170);
 sleep 1.5;
-private _velocity = velocity _player;
-private _chute = createVehicle [_chuteVehicleClass, (position _player), [], 0, "CAN_COLLIDE"];
-_chute AttachTo [_player, [0,0,0]];
-detach _chute;
-_player moveInDriver _chute;
-_chute setVelocity _velocity;
 
-[_player] call Waldo_fnc_paraEquipmentSim;
-
+private _chute = createVehicle [_chuteVehicleClass, getPosATL _unit, [], 0, "CAN_COLLIDE"];
+_unit moveInDriver _chute;
+_chute setVelocity _exitVelocity;
+[_unit] call Waldo_fnc_paraEquipmentSim;
 sleep 0.5;
-_player allowDamage true;
+_unit allowDamage true;
+true

@@ -28,6 +28,11 @@ jobs:
       run: python3 -m unittest -v test_full_arma_audit.py
     - name: Check whitespace
       run: git diff --check HEAD
+    - name: Check performance regressions
+      run: python3 releaseVerificationAndDeployment/performance_audit.py
+    - name: Test performance audit
+      working-directory: releaseVerificationAndDeployment
+      run: python3 -m unittest -v test_performance_audit.py
       
   lint:
     runs-on: ubuntu-latest

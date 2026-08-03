@@ -1,14 +1,13 @@
-/* Function Assignment file - called from description.ext
-Creates Arma function based on the files provided. Allowing for a traditional Alias function call.
-in this case all of waldos missionscripts can now be called via the following:
-Waldos_fnc_LowestClass
-
-e.g. 
-
-Waldo_fnc_ACRE2Init as an Alias for calling the longhand script
-Waldo_fnc_AITweak as an Alias for calling the longhand script
-
-*/
+/*
+ * Author: WaldoTheWarfighter
+ * Declares the WMP CfgFunctions catalogue and maps public Waldo_fnc_* names to their source files.
+ *
+ * Arguments: None; this is a configuration include rather than a runtime function.
+ * Return Value: CfgFunctions declarations consumed by Arma during mission configuration loading.
+ *
+ * Example: #include "MissionScripts\WaldosFunctions.sqf"
+ * Current caller: description.ext includes this file before mission scripts execute.
+ */
 class CfgFunctions
 {
     class Waldo
@@ -107,6 +106,22 @@ class CfgFunctions
             class AITweak {
                 file = "MissionScripts\AiScripting\AISkillAdjustmentSystem.sqf";
             };
+            class AIRebalanceInit {
+                file = "MissionScripts\AiScripting\aiRebalanceInit.sqf";
+            };
+            class AIApplyProfile {
+                file = "MissionScripts\AiScripting\aiApplyProfile.sqf";
+            };
+            class AIRebalanceStop {
+                file = "MissionScripts\AiScripting\aiRebalanceStop.sqf";
+            };
+            class ImprovedHelicopterLandingInit {file = "MissionScripts\AiScripting\improvedHelicopterLandingInit.sqf";};
+            class ImprovedHelicopterLandingTrackLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingTrackLocal.sqf";};
+            class ImprovedHelicopterLandingExecuteLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingExecuteLocal.sqf";};
+            class ImprovedHelicopterLandingAnchorLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingAnchorLocal.sqf";};
+            class ImprovedHelicopterLandingRestoreLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingRestoreLocal.sqf";};
+            class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
+            class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
         };
         class teleport
         {
@@ -161,6 +176,18 @@ class CfgFunctions
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
               };
+              class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
+              class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
+              class RestyleUiNotificationsLocal {file = "MissionScripts\MissionFlowAndUi\restyleUiNotificationsLocal.sqf";};
+              class UiThemeApplyDisplayLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyDisplayLocal.sqf";};
+              class UiThemeSetServer {file = "MissionScripts\MissionFlowAndUi\uiThemeSetServer.sqf";};
+              class UiThemeZen {file = "MissionScripts\MissionFlowAndUi\uiThemeZen.sqf";};
+              class UiColourVisionProfile {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiColourVisionProfile.sqf";};
+              class UiColourVisionApplyLocal {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiColourVisionApplyLocal.sqf";};
+              class UiColourVisionOpenLocal {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiColourVisionOpenLocal.sqf";};
+              class FeatureNotifyLocal {
+                  file = "MissionScripts\MissionFlowAndUi\featureNotifyLocal.sqf";
+              };
               class SetUiPanelPlacement {
                   file = "MissionScripts\MissionFlowAndUi\setUiPanelPlacement.sqf";
               };
@@ -173,6 +200,12 @@ class CfgFunctions
               class ReflowUiPanels {
                   file = "MissionScripts\MissionFlowAndUi\reflowUiPanels.sqf";
               };
+              class RegisterUiReservationLocal {
+                  file = "MissionScripts\MissionFlowAndUi\registerUiReservationLocal.sqf";
+              };
+              class UnregisterUiReservationLocal {
+                  file = "MissionScripts\MissionFlowAndUi\unregisterUiReservationLocal.sqf";
+              };
               class DrainUiNotificationQueue {
                   file = "MissionScripts\MissionFlowAndUi\drainUiNotificationQueue.sqf";
               };
@@ -184,6 +217,12 @@ class CfgFunctions
               };
               class SetupUiCleanupAction {
                   file = "MissionScripts\MissionFlowAndUi\setupUiCleanupAction.sqf";
+              };
+              class SetUiPanelsSuppressed {
+                  file = "MissionScripts\MissionFlowAndUi\setUiPanelsSuppressed.sqf";
+              };
+              class SetupUiAcePriority {
+                  file = "MissionScripts\MissionFlowAndUi\setupUiAcePriority.sqf";
               };
             class Create3DMarker {
                 file = "MissionScripts\MissionFlowAndUi\create3DMarker.sqf";
@@ -238,6 +277,9 @@ class CfgFunctions
             };
             class JammerInteraction {
                 file = "MissionScripts\MissionInit\Jamming\jammerInteraction.sqf";
+            };
+            class JammerDisableServer {
+                file = "MissionScripts\MissionInit\Jamming\jammerDisableServer.sqf";
             };
             class JammerScan {
                 file = "MissionScripts\MissionInit\Jamming\jammerScan.sqf";
@@ -328,6 +370,9 @@ class CfgFunctions
             class DoStarterCrate {
                 file = "MissionScripts\Logistics\Crates\doStarterCrate.sqf";
             };
+            class StarterCrateSetupLocal {
+                file = "MissionScripts\Logistics\Crates\starterCrateSetupLocal.sqf";
+            };
             class CreateLimitedArsenal {
                 file = "MissionScripts\Logistics\Crates\createLimitedAceArsenal.sqf";
             };
@@ -374,6 +419,20 @@ class CfgFunctions
                 file = "MissionScripts\Logistics\MHQ\MHQPlayAudioLocal.sqf";
             };
         };
+        class VehicleRecovery {
+            class RecoveryNotifyLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoveryNotifyLocal.sqf";};
+            class RecoveryRegisterWorkshop {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterWorkshop.sqf";};
+            class RecoveryRegisterVehicle {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterVehicle.sqf";};
+            class RecoveryRegisterCarrier {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRegisterCarrier.sqf";};
+            class RecoverySetupVehicleLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupVehicleLocal.sqf";};
+            class RecoveryInteractionSetup {file = "MissionScripts\Logistics\VehicleRecovery\recoveryInteractionSetup.sqf";};
+            class RecoverySetupCarrierLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetupCarrierLocal.sqf";};
+            class RecoverySetCargoLocal {file = "MissionScripts\Logistics\VehicleRecovery\recoverySetCargoLocal.sqf";};
+            class RecoveryRequestServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRequestServer.sqf";};
+            class RecoveryResolveRestorePosition {file = "MissionScripts\Logistics\VehicleRecovery\recoveryResolveRestorePosition.sqf";};
+            class RecoveryRestoreServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryRestoreServer.sqf";};
+            class RecoveryMonitorServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryMonitorServer.sqf";};
+        };
         class VehicleCamo {
             class VehicleCamoSetup {
                 file = "MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf";
@@ -405,6 +464,9 @@ class CfgFunctions
             };
             class ZenLoadoutSaveModule {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveModule.sqf";
+            };
+            class ZenAssignObjectOwnerServer {
+                file = "MissionScripts\ZenModules\zenAssignObjectOwnerServer.sqf";
             };
             class ZenAddLoadoutSaveAction {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveSetup.sqf";
@@ -441,6 +503,9 @@ class CfgFunctions
             class ParaBackpack {
                 file = "MissionScripts\Paradrop\paraBackpack.sqf";
             };
+            class ParadropRestoreBackpackLocal {
+                file = "MissionScripts\Paradrop\paradropRestoreBackpackLocal.sqf";
+            };
             class HaloJumpFunc {
                 file = "MissionScripts\Paradrop\paradropHaloJump.sqf";
             };
@@ -459,8 +524,32 @@ class CfgFunctions
             class JumpSettingsCheck {
                 file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
             };
+            class ParadropCreateDropZone {
+                file = "MissionScripts\Paradrop\paradropCreateDropZone.sqf";
+            };
+            class ParadropConfigureAircraftLocal {
+                file = "MissionScripts\Paradrop\paradropConfigureAircraftLocal.sqf";
+            };
+            class ParadropEmbark {
+                file = "MissionScripts\Paradrop\paradropEmbark.sqf";
+            };
+            class ParadropEmbarkLocal {
+                file = "MissionScripts\Paradrop\paradropEmbarkLocal.sqf";
+            };
+            class ParadropRemoveDropZone {
+                file = "MissionScripts\Paradrop\paradropRemoveDropZone.sqf";
+            };
+            class ParadropDropZoneZen {
+                file = "MissionScripts\Paradrop\paradropDropZoneZen.sqf";
+            };
         };
         class VehicleSetup {
+            class SetupVehicleUprightLocal {
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\setupVehicleUprightLocal.sqf";
+            };
+            class VehicleUpright {
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\vehicleUpright.sqf";
+            };
             class AddVehicleFunctions {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\AddVehicleFunctions.sqf";
             };
@@ -499,6 +588,165 @@ class CfgFunctions
             class VVDPurgeVehicle {
                 file = "MissionScripts\Logistics\VirtualVehicleDepot\VVDPurgeVehicle.sqf";
             };
+        };
+        class FeatureRuntimeControl
+        {
+            class FeatureRuntimeApply {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeApply.sqf";};
+            class FeatureRuntimeZen {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeZen.sqf";};
+            class FeatureRuntimeRequestState {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeRequestState.sqf";};
+            class FeatureRuntimeSendStateRequest {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeSendStateRequest.sqf";};
+            class FeatureRuntimeReceiveState {file = "MissionScripts\ZenModules\RuntimeControl\featureRuntimeReceiveState.sqf";};
+        };
+        class TreatmentFeedback
+        {
+            class TreatmentFeedbackInit {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackInit.sqf";};
+            class TreatmentFeedbackNotify {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackNotify.sqf";};
+            class TreatmentFeedbackShowLocal {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackShowLocal.sqf";};
+            class TreatmentFeedbackStop {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackStop.sqf";};
+        };
+        class FieldResupply
+        {
+            class FieldResupplyInit {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyInit.sqf";};
+            class FieldResupplySetupHubLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplySetupHubLocal.sqf";};
+            class FieldResupplySetupCrateLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplySetupCrateLocal.sqf";};
+            class FieldResupplyReceiveAmmo {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyReceiveAmmo.sqf";};
+            class FieldResupplyRegisterHub {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyRegisterHub.sqf";};
+            class FieldResupplyAssignCarrier {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyAssignCarrier.sqf";};
+            class FieldResupplyGrantCrates {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyGrantCrates.sqf";};
+            class FieldResupplyNotifyGrantLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyNotifyGrantLocal.sqf";};
+            class FieldResupplyServerHandle {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyServerHandle.sqf";};
+        };
+        class RallyPoint
+        {
+            class RallyPointNotifyLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointNotifyLocal.sqf";};
+            class RallyPointInit {file = "MissionScripts\Respawn\RallyPoint\rallyPointInit.sqf";};
+            class RallyPointStop {file = "MissionScripts\Respawn\RallyPoint\rallyPointStop.sqf";};
+            class RallyPointSetupLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointSetupLocal.sqf";};
+            class RallyPointRequestServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRequestServer.sqf";};
+            class RallyPointRemoveServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRemoveServer.sqf";};
+            class RallyPointRemoveAllServer {file = "MissionScripts\Respawn\RallyPoint\rallyPointRemoveAllServer.sqf";};
+            class RallyPointResolveSafePosition {file = "MissionScripts\Respawn\RallyPoint\rallyPointResolveSafePosition.sqf";};
+            class RallyPointMoveLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointMoveLocal.sqf";};
+            class RallyPointMarkerLocal {file = "MissionScripts\Respawn\RallyPoint\rallyPointMarkerLocal.sqf";};
+        };
+        class TacticalDisplay
+        {
+            class TacticalDisplayRegister {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplayRegister.sqf";};
+            class TacticalDisplaySetupLocal {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplaySetupLocal.sqf";};
+            class TacticalDisplayInteractionSetup {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplayInteractionSetup.sqf";};
+            class TacticalDisplayOpenLocal {file = "MissionScripts\MissionFlowAndUi\TacticalDisplay\tacticalDisplayOpenLocal.sqf";};
+        };
+        class AirborneGunship
+        {
+            class GunshipRegister {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipRegister.sqf";};
+            class GunshipPublishState {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipPublishState.sqf";};
+            class GunshipSetState {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSetState.sqf";};
+            class GunshipNotifyLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipNotifyLocal.sqf";};
+            class GunshipSetOrbit {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSetOrbit.sqf";};
+            class GunshipApplyOrbitLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipApplyOrbitLocal.sqf";};
+            class GunshipMonitor {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipMonitor.sqf";};
+            class GunshipServiceAircraft {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServiceAircraft.sqf";};
+            class GunshipServerHandle {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServerHandle.sqf";};
+            class GunshipDestroy {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipDestroy.sqf";};
+            class GunshipStop {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipStop.sqf";};
+            class GunshipSelectOrbitLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSelectOrbitLocal.sqf";};
+            class GunshipGrantControlLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipGrantControlLocal.sqf";};
+            class GunshipReleaseControlLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipReleaseControlLocal.sqf";};
+            class GunshipSetupLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSetupLocal.sqf";};
+            class GunshipUpdateMarkersLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipUpdateMarkersLocal.sqf";};
+        };
+        class Persistence
+        {
+            class PersistenceDependencyAvailable {file = "MissionScripts\Persistence\persistenceDependencyAvailable.sqf";};
+            class PersistenceInit {file = "MissionScripts\Persistence\persistenceInit.sqf";};
+            class PersistenceClientCapture {file = "MissionScripts\Persistence\persistenceClientCapture.sqf";};
+            class PersistenceClientApply {file = "MissionScripts\Persistence\persistenceClientApply.sqf";};
+            class PersistenceServerHandle {file = "MissionScripts\Persistence\persistenceServerHandle.sqf";};
+            class PersistenceRegisterObject {file = "MissionScripts\Persistence\persistenceRegisterObject.sqf";};
+            class PersistenceSaveObject {file = "MissionScripts\Persistence\persistenceSaveObject.sqf";};
+            class PersistenceLoadObject {file = "MissionScripts\Persistence\persistenceLoadObject.sqf";};
+            class PersistenceSavePlayerLocal {file = "MissionScripts\Persistence\persistenceSavePlayerLocal.sqf";};
+            class PersistenceSaveNow {file = "MissionScripts\Persistence\persistenceSaveNow.sqf";};
+            class PersistenceStop {file = "MissionScripts\Persistence\persistenceStop.sqf";};
+        };
+        class HazardousEnvironments
+        {
+            class HazardRegisterZone {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardRegisterZone.sqf";};
+            class HazardRegisterPresetZone {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardRegisterPresetZone.sqf";};
+            class HazardRegisterEmitter {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardRegisterEmitter.sqf";};
+            class HazardUnregisterZone {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardUnregisterZone.sqf";};
+            class HazardProtectionFactor {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardProtectionFactor.sqf";};
+            class HazardTick {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardTick.sqf";};
+            class HazardInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInit.sqf";};
+            class HazardStop {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardStop.sqf";};
+        };
+        class TreeFelling
+        {
+            class TreeFellingInit {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingInit.sqf";};
+            class TreeFellingSwing {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingSwing.sqf";};
+            class TreeFellingProcess {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingProcess.sqf";};
+            class TreeFellingStop {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingStop.sqf";};
+        };
+        class EmergencyDismount
+        {
+            class EmergencyDismountInit {file = "MissionScripts\MissionInit\VehicleActionsSetup\EmergencyDismount\emergencyDismountInit.sqf";};
+            class EmergencyDismountExecute {file = "MissionScripts\MissionInit\VehicleActionsSetup\EmergencyDismount\emergencyDismountExecute.sqf";};
+            class EmergencyDismountStop {file = "MissionScripts\MissionInit\VehicleActionsSetup\EmergencyDismount\emergencyDismountStop.sqf";};
+        };
+        class Accessibility
+        {
+            class AccessibilitySelfInteractionInit {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilitySelfInteractionInit.sqf";};
+            class AccessibilityPIDInit {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDInit.sqf";};
+            class AccessibilityPIDToggle {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDToggle.sqf";};
+            class AccessibilityPIDStop {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDStop.sqf";};
+        };
+        class Breaching
+        {
+            class BreachingInit {file = "MissionScripts\CombatSystems\Breaching\breachingInit.sqf";};
+            class BreachingSpawnRelative {file = "MissionScripts\CombatSystems\Breaching\breachingSpawnRelative.sqf";};
+            class BreachingServerHandle {file = "MissionScripts\CombatSystems\Breaching\breachingServerHandle.sqf";};
+            class BreachingReset {file = "MissionScripts\CombatSystems\Breaching\breachingReset.sqf";};
+            class BreachingStop {file = "MissionScripts\CombatSystems\Breaching\breachingStop.sqf";};
+        };
+        class ObjectScaling
+        {
+            class ObjectScale {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScale.sqf";};
+            class ObjectScaleTagged {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleTagged.sqf";};
+            class ObjectScaleReset {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleReset.sqf";};
+            class ObjectScaleMultiply {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleMultiply.sqf";};
+            class ObjectScaleCopy {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleCopy.sqf";};
+            class ObjectScaleArea {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleArea.sqf";};
+            class ObjectTransformSet {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectTransformSet.sqf";};
+            class ObjectTransformSpawn {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectTransformSpawn.sqf";};
+            class ObjectScaleZen {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleZen.sqf";};
+        };
+        class DynamicAA
+        {
+            class DynamicAAResolveAssetPool {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveAssetPool.sqf";};
+            class DynamicAASetGroupState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetGroupState.sqf";};
+            class DynamicAASetVehicleAmmo {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetVehicleAmmo.sqf";};
+            class DynamicAAPublishState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAPublishState.sqf";};
+            class DynamicAACreate {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAACreate.sqf";};
+            class DynamicAADetectorLoop {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAADetectorLoop.sqf";};
+            class DynamicAANotifyState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAANotifyState.sqf";};
+            class DynamicAASpawnFighters {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASpawnFighters.sqf";};
+            class DynamicAADestroy {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAADestroy.sqf";};
+            class DynamicAAZen {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAZen.sqf";};
+            class DynamicAAZenPlacement {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAZenPlacement.sqf";};
+            class DynamicAAInteractionSetup {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAInteractionSetup.sqf";};
+            class DynamicAARemoveZen {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAARemoveZen.sqf";};
+        };
+        class DynamicAO
+        {
+            class DynamicAOGetFactions {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOGetFactions.sqf";};
+            class DynamicAOResolvePools {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOResolvePools.sqf";};
+            class DynamicAOAddPatrolWaypoints {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOAddPatrolWaypoints.sqf";};
+            class DynamicAOPublishState {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOPublishState.sqf";};
+            class DynamicAOCreate {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOCreate.sqf";};
+            class DynamicAODestroyMinefield {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAODestroyMinefield.sqf";};
+            class DynamicAODestroy {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAODestroy.sqf";};
+            class DynamicAOZen {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAOZen.sqf";};
+            class DynamicAORemoveZen {file = "MissionScripts\CombatSystems\DynamicAO\dynamicAORemoveZen.sqf";};
         };
         class EcoCore
         {
@@ -576,6 +824,21 @@ class CfgFunctions
             };
             class EcoCore_registerCuratorEditableObjects {
                 file = "MissionScripts\EconomySystems\Core\registerCuratorEditableObjects.sqf";
+            };
+            class EcoCore_registerRuntimeObject {
+                file = "MissionScripts\EconomySystems\Core\registerRuntimeObject.sqf";
+            };
+            class EcoCore_unregisterRuntimeObject {
+                file = "MissionScripts\EconomySystems\Core\unregisterRuntimeObject.sqf";
+            };
+            class EcoCore_getRuntimeObjects {
+                file = "MissionScripts\EconomySystems\Core\getRuntimeObjects.sqf";
+            };
+            class EcoCore_refreshRuntimeRegistries {
+                file = "MissionScripts\EconomySystems\Core\refreshRuntimeRegistries.sqf";
+            };
+            class EcoCore_startRequestScheduler {
+                file = "MissionScripts\EconomySystems\Core\startRequestScheduler.sqf";
             };
             class EcoCore_ensureLocalObjectAction {
                 file = "MissionScripts\EconomySystems\Core\ensureLocalObjectAction.sqf";
@@ -1940,6 +2203,9 @@ class CfgFunctions
             };
             class MiniGameInteractionActivate {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionActivate.sqf";
+            };
+            class MiniGameInteractionRange {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionRange.sqf";
             };
             class MiniGameInteractionNotifyClient {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionNotifyClient.sqf";

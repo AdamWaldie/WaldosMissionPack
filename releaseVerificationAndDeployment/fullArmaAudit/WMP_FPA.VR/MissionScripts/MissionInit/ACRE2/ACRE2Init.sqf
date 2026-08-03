@@ -16,6 +16,17 @@ params ["_RadioAssignments"];
 
 if !(isClass(configFile >> "CfgPatches" >> "acre_main")) exitWith {systemChat "ACRE2 Mod Not Enabled";};
 
+// Callsign/channel allocation is authoritative shared state. The server computes it once
+// and broadcasts it; clients only consume it. A dedicated server must return before any
+// player, inventory, UI, or ACRE client API work.
+private _SquadCallsigns = _RadioAssignments apply {_x select 0};
+if (isServer) then {
+    [_SquadCallsigns] call Waldo_fnc_SquadLevelRadios;
+};
+if (!hasInterface) exitWith {
+    diag_log "[WMP ACRE] Server callsign/channel assignments published; client radio setup skipped.";
+};
+
 /*
 // Gets a preset and a base frequency to set per side
 if (missionNamespace getVariable ["Waldo_ACRE2Setup_LRChannels_CrossTalk", false]) then {
@@ -65,20 +76,25 @@ switch (side player) do
 } forEach ["ACRE_PRC152", "ACRE_PRC148", "ACRE_PRC117F"];
 
 */
-//Callsigns
-private _SquadCallsigns = [];
-
-{
-    _stringPart =  _x select 0;
-    _SquadCallsigns append [_stringPart];
-} forEach _RadioAssignments;
-
-[_SquadCallsigns] call Waldo_fnc_SquadLevelRadios; // Squad Level Radio Channels located
-
-
 systemchat "ACRE2 PRE-INIT COMPLETE";
 
-waitUntil {[] call acre_api_fnc_isInitialized && missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_flag",false]};
+// Do not let an absent extension/plugin or lost state broadcast deadlock the entire mission
+// initialization chain. Radio setup degrades cleanly after the bounded readiness window.
+private _readyDeadline = diag_tickTime + 30;
+waitUntil {
+    uiSleep 0.1;
+    (
+        [] call acre_api_fnc_isInitialized
+        && {missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_flag", false]}
+    )
+    || {diag_tickTime >= _readyDeadline}
+};
+if (
+    !([] call acre_api_fnc_isInitialized)
+    || {!(missionNamespace getVariable ["Waldo_ACRE2Setup_CallsignChannelAssignments_flag", false])}
+) exitWith {
+    diag_log "[WMP ACRE] Client radio setup timed out waiting for ACRE or server assignments; pack initialization will continue.";
+};
 
 // Get group and players current radiolist
 _group = groupId(group player); // Get Group Name
@@ -170,8 +186,9 @@ if ((_LRChannelAssignments select 1 == 99) && (_LRChannelAssignments select 1 ==
     };
 } foreach _radioList;
 
-//Save channels with loadout
-[] call Waldo_fnc_SaveLoadout;
+// Save the radio-adjusted loadout silently. This is automatic startup work, not a player request,
+// so it must not enqueue confirmation into the fake loading/title presentation.
+[false] call Waldo_fnc_SaveLoadout;
 
 systemchat "ACRE2 RADIO PRESET COMPLETE";
 

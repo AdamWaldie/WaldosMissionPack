@@ -4,7 +4,9 @@
 from __future__ import annotations
 
 import argparse
+import os
 import shutil
+import stat
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -16,6 +18,16 @@ TEMPLATE = (
 )
 
 
+def remove_generated_tree(destination: Path) -> None:
+    """Remove a disposable mission, retrying files Arma marked read-only."""
+
+    def clear_readonly_and_retry(function, path, _error) -> None:
+        os.chmod(path, stat.S_IWRITE)
+        function(path)
+
+    shutil.rmtree(destination, onexc=clear_readonly_and_retry)
+
+
 def build(
     destination: Path,
     mode: str,
@@ -25,7 +37,7 @@ def build(
     autotest_config: Path | None = None,
 ) -> Path:
     if destination.exists():
-        shutil.rmtree(destination)
+        remove_generated_tree(destination)
     shutil.copytree(TEMPLATE, destination)
     shutil.copytree(ROOT / "MissionScripts", destination / "MissionScripts")
     shutil.copy2(ROOT / "economyConfig.sqf", destination / "economyConfig.sqf")

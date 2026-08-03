@@ -4,7 +4,21 @@
 
 ## Requirements and location
 
-WMP's Zeus modules require Zeus Enhanced. Find them under **Modules → Waldos Mission Modules**.
+These modules allow users to:
+* Spawn a Logistics System Supply & Medical Crate to Zeus specification
+* Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)
+* End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
+* Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
+* Generate and clean up complete randomized [Dynamic AOs](Dynamic-AO-Generation)
+* Create and remove routed [Dynamic Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations) operations
+* Scale the nearest object through a validated server request
+* Configure persistence, hazardous environments and AI rebalance while the mission is running
+* Register field-resupply hubs/carriers and tactical-display terminals
+* Register, assign and operate airborne gunship support
+* Register vehicle-recovery workshops, recoverable vehicles and recovery carriers
+* Configure temporary squad rally respawns during play
+
+WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped under **WMP Mission Flow**, **WMP Logistics**, **WMP Combat Systems**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules remain under **Waldos Economy Systems**.
 
 Use them to:
 
@@ -62,7 +76,7 @@ Below is an example of the custom mission end screen:
 
 Three modules drive the [Radio Jamming](Radio-Jamming) system live in-game (works with ACRE2 and TFAR):
 
-* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing** (arc 360 = omnidirectional), whether it **pulses**, and whether to drop a **map marker**, then spawns an emitter at the module position and switches it on. The emitter is added to the curator so it can be dragged or deleted like any Zeus object.
+* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing**, pulsing, markers, emitter source, optional reactivation, optional hostile field-disable procedure, public/engineer access, and whether success disables or destroys it. Players always use **Disable Jammer** to turn an active field off; optional **Activate Jammer** restores an inactive/disabled field and resets its procedure. On empty ground it spawns the exact selected class, simulation-enables it and assigns it to the requesting curator. When placed directly on any existing mission or mod object, it can use that object without altering its simulation state. Its live field and interactions remain attached after movement.
 * **Radio Jammer - Toggle Nearest** — flips the nearest jammer on or off (no dialog).
 * **Radio Jammer - Remove Nearest** — removes the nearest jammer and deletes its emitter.
 
@@ -73,7 +87,75 @@ The Place dialog also offers a directional **cone**, **pulsing**, and an **also 
 Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) page):
 
 * **EMP Detonation** — a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
-* **Plant Signal Tracker** — tags the nearest unit or vehicle so a chosen side follows it live on the map (hidden from the tracked side).
+* **Plant Signal Tracker** — must be placed directly on an object or unit, then tags that exact target so a chosen side follows it live on the map. Empty-ground placement is rejected; it never guesses from nearby entities.
+
+## Dynamic Anti-Air Modules
+
+**Dynamic AA - Create** keeps operational side and physical asset profile independent in one dialog. Operational side controls allegiance and targeting; the profile may intentionally draw radar, static, mobile or fighter classes configured under another faction. Internal registry IDs and raw pool keys remain behind friendly display names. **Dynamic AA - Remove Nearest** selects the active system nearest to the placed module and can either delete its assets or leave them disabled. See the [Dynamic Anti-Air guide](Dynamic-Anti-Air) for every option.
+
+## Dynamic AO Modules
+
+Under **WMP Combat Systems**, **Dynamic AO - Create** uses one live friendly-name faction/side selector and exposes independent patrol, garrison, static, weighted vehicle/air, civilian, minefield, roadblock, pathing and marker controls. No raw faction classname, asset classname or internal registry id is required. **Dynamic AO - Remove** lists active AOs and preselects the nearest one. Deleting the hidden AO centre anchor invokes the same complete cleanup; minefield anchors remove only their own field. See [Dynamic AO Generation](Dynamic-AO-Generation).
+
+## Scale Object Module
+
+Place **Scale Object** directly on the intended target and choose the multiplier. The server enforces the mission's configured minimum and maximum scale. Live curator use deliberately does not replace the selected object with a simple object; mission makers can still request that conversion through the scripted API during pre-planned setup.
+
+## Optional Feature Runtime Modules
+
+These modules are repeat-safe and send configuration through a server-authoritative curator request. Live setting bundles are applied on clients before their matching initializer runs. Joining players and headless clients request an ordered server snapshot before locality-sensitive features activate, while keyed JIP entries replay or clear the required initializer. Where a module offers **Copy setup script**, the copied call can be moved into mission setup for repeatable pre-planned use.
+
+## Persistence
+
+**Persistence - Control** enables or disables persistence and configures player/object save intervals and the supported data categories. Enabling still requires a compatible INIDBI2 server runtime; placing the module does not silently bypass the dependency gate.
+
+**Persistence - Register Object** selects the nearest object within 25 metres and registers its cargo, damage, fuel, ammunition/pylons and/or transform under an automatically generated stable runtime key.
+
+**Persistence - Save Now** can immediately request saves from connected players, registered objects, or both without disabling the system.
+
+## Hazardous Environments
+
+**Hazard - Create** first selects a mission-configured hazard preset, then exposes plain-language RP name/messages, intensity, range, exposure, recovery, damage, fatal threshold and protection controls. The preset supplies semantic type and any configured protective equipment. It can also copy a setup call for later mission authoring.
+
+**Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
+
+## AI Rebalance
+
+**AI Rebalance - Control** enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier.
+
+## Field Resupply
+
+**Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. **Field Resupply - Grant Crates** is placed directly on an assigned infantry carrier, or within 25 metres of one, and grants 1–10 additional crates. Zeus may either respect the existing maximum or explicitly increase capacity enough to fit the complete grant. Only the receiving player is notified, after the fake loading/title presentation has ended. With ACE loaded, the assigned player receives carrier controls under ACE Self Actions; a backpack is required and deployment is available only on foot. All assignment, grants, refill, deploy, take and salvage operations are validated by the server.
+
+## Loadout Save Point
+
+**Respawn: Create Loadout Save Point** is under **WMP Logistics**. Place it on an existing object to add the save-loadout interaction, or place it on empty ground to create the configured station crate first. It is intentionally grouped with supply, starter-loadout and re-equipment tools rather than mission-flow controls.
+
+## Tactical Display
+
+**Tactical Display - Register** turns the nearest object into a range-limited terminal. Players with proximity and line of sight can open its tactical map; it shows friendlies and only enemies already known to their group. An optional simplified authentication section exposes enable, procedure and difficulty; command authentication is preselected as the semantic default.
+
+## Airborne Gunship Support
+
+**Gunship - Register or Spawn** selects operational side independently from any configured compatible airframe, or registers the nearest existing aircraft. **Gunship - Assign Controller** assigns the nearest player to a named system. **Gunship - Set Orbit** sends the selected aircraft to the module position. **Gunship - Operational Control** returns it to its combat orbit, sends it through its timed service cycle, releases its operator or removes the system. During RTB/service the assigned player receives status/progress only; tasking and weapon controls return when service completes. See the [Airborne Gunship Support guide](Airborne-Gunship-Support).
+
+## Dynamic Paradrop
+
+**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. The server normalizes each enabled jump altitude/speed envelope around the route, so custom values cannot suppress every action. **Paradrop - Embark Players** detects a player directly under the module or in the curator selection and offers that player/group; with no player target it creates a reusable, curator-movable blue-action boarding object. **Paradrop - Remove Operation** selects a named live operation and removes its aircraft, boarding points and markers without deleting troops that have already jumped. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
+
+## Vehicle Recovery
+
+**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, transport package, cargo preservation and restored fuel. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** adds validated package loading and unloading to the nearest vehicle. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+
+## AI Helicopter Landing
+
+## UI Theme QA
+
+**UI QA - Set Visual Theme** selects Default/Modern, Second World War, Vietnam/Cold War or Science Fiction styling. It changes presentation globally and can show the requesting curator a three-card semantic/stacking preview. See [UI Visual Themes](UI-Visual-Themes).
+
+## Squad Rally Points
+
+**Respawn - Squad Rally Control** enables or disables squad-leader rally actions and adjusts object class, duration, cooldown, enemy exclusion, group size, placement, slope and the optional direct-regroup ability. Disabling it also removes active rallies. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 <!-- WMP-WIKI-NAV -->
 ---

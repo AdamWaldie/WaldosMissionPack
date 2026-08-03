@@ -1,6 +1,9 @@
 /* Starts queued cards in FIFO order whenever their channel and screen slot are free. */
 if (!hasInterface) exitWith {false};
+if (uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]) exitWith {false};
 private _queue = +(uiNamespace getVariable ["Waldo_UiPanelQueue", []]);
+_queue = _queue select {(_x param [12, 1e11]) > diag_tickTime};
+private _maximumPerPlacement = ((missionNamespace getVariable ["Waldo_UiNotification_MaximumPerPlacement", 3]) max 1) min 6;
 private _started = true;
 private _guard = 0;
 while {_started && {_guard < 12}} do {
@@ -10,9 +13,23 @@ while {_started && {_guard < 12}} do {
     private _index = _queue findIf {
         private _request = _x;
         private _channel = toUpper (_request param [5, "MISSION"]);
-        private _placement = [_channel, _request param [4, "TOP"], _request param [9, false]] call Waldo_fnc_ResolveUiPanelPlacement;
+        private _placement = _request param [4, "TOP"];
+        private _candidates = [_placement];
+        if (missionNamespace getVariable ["Waldo_UiNotification_AllowPlacementOverflow", true]) then {
+            {
+                private _candidate = toUpper _x;
+                if (_candidate in ["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]) then {
+                    _candidates pushBackUnique _candidate;
+                };
+            } forEach (missionNamespace getVariable ["Waldo_UiNotification_OverflowPlacements", ["BOTTOM_RIGHT", "BOTTOM_LEFT", "CENTER"]]);
+        };
+        private _free = _candidates findIf {
+            private _candidate = _x;
+            ({(_x param [3, ""]) isEqualTo _candidate} count _registry) < _maximumPerPlacement
+        };
+        if (_free >= 0) then {_request set [4, _candidates select _free]};
         (_registry findIf {(_x param [0, ""]) isEqualTo _channel}) < 0
-            && {({(_x param [3, ""]) isEqualTo _placement} count _registry) < 3}
+            && {_free >= 0}
     };
     if (_index >= 0) then {
         private _request = _queue deleteAt _index;

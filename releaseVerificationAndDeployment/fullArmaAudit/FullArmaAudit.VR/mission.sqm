@@ -6,8 +6,8 @@ class Mission
     randomSeed=210032;
     class Intel
     {
-        briefingName="WMP PR Review Audit";
-        overviewText="Runtime review of the current WMP pull request.";
+        briefingName="WMP Full Pack PR Audit";
+        overviewText="Ongoing runtime review of the complete WMP pull request.";
         year=2035;
         month=7;
         day=26;

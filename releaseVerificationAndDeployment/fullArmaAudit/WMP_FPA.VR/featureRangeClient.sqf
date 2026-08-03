@@ -1,6 +1,43 @@
-/* Local interactions and labels for the walkable PR21-PR32 feature range. */
+/*
+ * Author: WaldoTheWarfighter
+ * Installs local controls, labels and player-facing fixtures for the ongoing full-pack audit.
+ * The client explicitly requests its dedicated curator assignment after server readiness so a
+ * playable slot transferred from server AI to a human does not retain the server-owned assignment.
+ * Repeat guards prevent duplicate actions during JIP or local script restarts.
+ *
+ * Arguments: none (executed from auditInitPlayerLocal.sqf).
+ * Return Value: nothing.
+ *
+ * Example: [] execVM "featureRangeClient.sqf";
+ * Current callers: the generated full-pack audit mission on every player client and JIP.
+ */
 if (!hasInterface) exitWith {};
+Waldo_QA_fnc_curatorAssignmentConfirmedClient = {
+    params [
+        ["_curator", objNull, [objNull]],
+        ["_openInterface", false, [false]]
+    ];
+    if (!hasInterface) exitWith {};
+    [_curator, _openInterface] spawn {
+        params ["_curator", "_openInterface"];
+        private _deadline = diag_tickTime + 10;
+        waitUntil {
+            uiSleep 0.1;
+            isNull player
+            || {(!isNull _curator && {getAssignedCuratorLogic player isEqualTo _curator})}
+            || {diag_tickTime >= _deadline}
+        };
+        if (isNull player || {isNull _curator} || {!(getAssignedCuratorLogic player isEqualTo _curator)}) exitWith {
+            diag_log format ["WMP FULL AUDIT ZEUS CLIENT FAIL: no curator received by %1 (%2)", profileName, clientOwner];
+        };
+        diag_log format ["WMP FULL AUDIT ZEUS CLIENT READY: %1 (%2) curator=%3", profileName, clientOwner, netId _curator];
+        if (_openInterface) then {openCuratorInterface};
+    };
+};
 waitUntil {uiSleep 0.1; !isNull player && {missionNamespace getVariable ["Waldo_QA_FeatureRangeReady", false]}};
+// The slot may have existed as server-local playable AI when the range became ready. Requesting
+// from the owning interface after transfer is the authoritative point at which Zeus can be bound.
+[player, false] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
 if (missionNamespace getVariable ["Waldo_QA_FeatureRangeClientReady", false]) exitWith {};
 if (missionNamespace getVariable ["Waldo_QA_FeatureRangeClientStarting", false]) exitWith {};
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientStarting", true];
@@ -145,10 +182,16 @@ if (!isNull _dropFlag && {!isNull _dropAircraft}) then {
 
 // Audit controls follow the same ACE-first contract as production interactions.
 Waldo_QA_fnc_addAuditActionLocal = {
-    params ["_target", "_id", "_title", "_statement", ["_arguments", []]];
+    params ["_target", "_id", "_title", "_statement", ["_arguments", []], ["_forceVanilla", false]];
+    _forceVanilla = _forceVanilla || {
+        _target in [
+            missionNamespace getVariable ["Waldo_QA_ControlConsole", objNull],
+            missionNamespace getVariable ["Waldo_QA_CoreConsole", objNull]
+        ]
+    };
     private _aceAvailable = isClass (configFile >> "CfgPatches" >> "ace_interact_menu")
         && {!(isNil "ace_interact_menu_fnc_createAction")};
-    if (_aceAvailable) exitWith {
+    if (_aceAvailable && {!_forceVanilla}) exitWith {
         private _action = [
             _id,
             _title,
@@ -163,9 +206,10 @@ Waldo_QA_fnc_addAuditActionLocal = {
             [_statement, _arguments]
         ] call ace_interact_menu_fnc_createAction;
         [_target, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject;
+        diag_log format ["WMP QA CONTROL INSTALLED: id=%1 mode=ACE target=%2", _id, netId _target];
         true
     };
-    _target addAction [
+    private _actionId = _target addAction [
         _title,
         {
             params ["_target", "_actor", "_actionId", "_params"];
@@ -180,7 +224,8 @@ Waldo_QA_fnc_addAuditActionLocal = {
         "true",
         4
     ];
-    true
+    diag_log format ["WMP QA CONTROL INSTALLED: id=%1 mode=ADD_ACTION target=%2 action=%3", _id, netId _target, _actionId];
+    _actionId >= 0
 };
 
 // Central control console: navigation is local; state changes are sent to server authority.
@@ -191,26 +236,27 @@ if (!isNull _console) then {
         [_console, format ["Waldo_QA_GoTo_%1", _id], format ["GO TO: %1", _title], {
             params ["_target", "_actor", "_position"];
             _actor setPosATL (_position vectorAdd [0, -3, 0]);
-        }, _position] call Waldo_QA_fnc_addAuditActionLocal;
+        }, _position, true] call Waldo_QA_fnc_addAuditActionLocal;
     } forEach (missionNamespace getVariable ["Waldo_QA_FeatureStations", []]);
-    [_console, "Waldo_QA_ResetParty", "RESET PARTY TABLES", {[] remoteExecCall ["Waldo_QA_fnc_resetPartyTablesServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_ResetInteractions", "RESET ALL INTERACTIONS", {[] remoteExecCall ["Waldo_QA_fnc_resetInteractionsServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_RearmEOD", "REARM LIVE EOD CHARGE", {[] remoteExecCall ["Waldo_QA_fnc_rearmBombServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_ResetEconomy", "RESET ECONOMY FIXTURES + RESOURCES", {[] remoteExecCall ["Waldo_QA_fnc_resetEconomyFixturesServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
-    [_console, "Waldo_QA_TriggerEMP", "TRIGGER EW EMP TEST", {[] remoteExecCall ["Waldo_QA_fnc_triggerEMPServer", 2];}] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_ResetParty", "RESET PARTY TABLES", {[] remoteExecCall ["Waldo_QA_fnc_resetPartyTablesServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_ResetInteractions", "RESET ALL INTERACTIONS", {[] remoteExecCall ["Waldo_QA_fnc_resetInteractionsServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_RearmEOD", "REARM LIVE EOD CHARGE", {[] remoteExecCall ["Waldo_QA_fnc_rearmBombServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_ResetEconomy", "RESET ECONOMY FIXTURES + RESOURCES", {[] remoteExecCall ["Waldo_QA_fnc_resetEconomyFixturesServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
+    [_console, "Waldo_QA_TriggerEMP", "TRIGGER EW EMP TEST", {[] remoteExecCall ["Waldo_QA_fnc_triggerEMPServer", 2];}, [], true] call Waldo_QA_fnc_addAuditActionLocal;
 };
 
 private _coreConsole = missionNamespace getVariable ["Waldo_QA_CoreConsole", objNull];
 if (!isNull _coreConsole) then {
-    [_coreConsole, "Waldo_QA_AssignZeus", "ASSIGN ZEUS TO ME", {
+    [_coreConsole, "Waldo_QA_AssignZeus", "ASSIGN / OPEN ZEUS", {
         params ["_target", "_actor"];
-        [_actor] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
+        [_actor, true] remoteExecCall ["Waldo_QA_fnc_assignCuratorServer", 2];
     }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_ModStatus", "SHOW REQUIRED MOD STATUS", {
         private _checks = [
             ["CBA", "cba_main"],
             ["ACE", "ace_main"],
             ["ZEN", "zen_main"],
+            ["ZEN ADVANCED WAYPOINTS", "zen_ai"],
             ["ACRE2", "acre_main"]
         ];
         private _missing = [];
@@ -222,6 +268,13 @@ if (!isNull _coreConsole) then {
                 _missing pushBack (_x select 0);
             };
         } forEach _checks;
+        private _wmpZenCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
+        private _wmpZenReady = missionNamespace getVariable ["Waldo_ZenModulesReady", false] && {_wmpZenCount == 42};
+        if (_wmpZenReady) then {
+            _loaded pushBack format ["WMP ZEN MODULES (%1)", _wmpZenCount];
+        } else {
+            _missing pushBack format ["WMP ZEN MODULE REGISTRATION (%1/42)", _wmpZenCount];
+        };
         private _message = if (_missing isEqualTo []) then {
             format ["REQUIRED MODS LOADED: %1", _loaded joinString ", "]
         } else {
@@ -252,10 +305,29 @@ if (!isNull _coreConsole) then {
     [_coreConsole, "Waldo_QA_UiNotice", "SHOW CUSTOM WMP UI NOTICE", {
         ["UI SYSTEM READY", "Safe-zone card, semantic symbol, replacement channel and measured text padding are active.", "SUCCESS", 12, "TOP", "QA_UI", "WMP FULL PACK AUDIT"] call Waldo_fnc_ShowUiNotification;
     }] call Waldo_QA_fnc_addAuditActionLocal;
-    [_coreConsole, "Waldo_QA_UiQueue", "SHOW UI FIFO / STACK TEST", {
-        ["FIRST MESSAGE", "This card must display before the second message in this channel.", "INFO", 5, "TOP_RIGHT", "QA_QUEUE", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
-        ["SECOND MESSAGE", "This card must wait, then replace the first after its five-second duration.", "WARNING", 5, "TOP_RIGHT", "QA_QUEUE", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
-        ["PARALLEL STATUS", "A different channel should stack without covering the queue card.", "SUCCESS", 8, "TOP_RIGHT", "QA_STACK", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+    [_coreConsole, "Waldo_QA_UiQueue", "SHOW UI OVERFLOW / COALESCE TEST", {
+        ["TOP-RIGHT ONE", "Independent channel one; fades first so the remaining cards visibly move up.", "INFO", 4, "TOP_RIGHT", "QA_STACK_1", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["TOP-RIGHT TWO", "Independent channel two; moves into the first slot after channel one fades.", "SUCCESS", 8, "TOP_RIGHT", "QA_STACK_2", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["TOP-RIGHT THREE", "Independent channel three; moves upward until the stack is gone.", "WARNING", 12, "TOP_RIGHT", "QA_STACK_3", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        ["OVERFLOW REGION", "This fourth channel should use the next configured screen region.", "INFO", 8, "TOP_RIGHT", "QA_STACK_4", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        for "_index" from 1 to 25 do {
+            ["SPAM COALESCING", format ["Pending update %1 of 25. Only the newest pending update should survive.", _index], "INFO", 4, "TOP_RIGHT", "QA_SPAM", "WMP UI QA"] call Waldo_fnc_ShowUiNotification;
+        };
+    }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_coreConsole, "Waldo_QA_UiPositions", "SHOW ALL UI POSITIONS", {
+        [] call Waldo_fnc_ClearUiPanels;
+        {
+            _x params ["_placement", "_title", "_channel"];
+            [_title, format ["First-class %1 placement with safe-zone sizing and stack reflow.", _placement], "INFO", 12, _placement, _channel, "WMP UI POSITION QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
+        } forEach [
+            ["TOP", "TOP", "QA_POSITION_TOP"],
+            ["TOP_RIGHT", "TOP RIGHT", "QA_POSITION_TOP_RIGHT"],
+            ["CENTER", "CENTER", "QA_POSITION_CENTER"],
+            ["BOTTOM_LEFT", "BOTTOM LEFT", "QA_POSITION_BOTTOM_LEFT"],
+            ["BOTTOM_CENTER", "BOTTOM CENTER", "QA_POSITION_BOTTOM_CENTER"],
+            ["BOTTOM_RIGHT", "BOTTOM RIGHT", "QA_POSITION_BOTTOM_RIGHT"]
+        ];
+        ["BOTTOM CENTER STACK", "A second independent card verifies upward compaction within the padded bottom-centre region.", "SUCCESS", 8, "BOTTOM_CENTER", "QA_POSITION_BOTTOM_CENTER_2", "WMP UI POSITION QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
     }] call Waldo_QA_fnc_addAuditActionLocal;
     [_coreConsole, "Waldo_QA_UiPlacement", "MOVE QA UI CHANNEL BOTTOM LEFT", {
         ["QA_UI", "BOTTOM_LEFT", false, false] call Waldo_fnc_SetUiPanelPlacement;
@@ -278,4 +350,4 @@ missionNamespace setVariable ["Waldo_QA_Draw3DHandler", _drawHandler];
 
 player setPosATL [0, -2, 0];
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientReady", true];
-systemChat "WMP PR21-PR32 feature range ready. Use the AUDIT CONTROL laptop for navigation and resets.";
+systemChat "WMP full-pack PR feature range ready. Use the AUDIT CONTROL laptop for navigation and resets.";

@@ -1,29 +1,29 @@
 /*
-Purpose: Save respawn loadout at arsenals.
-Called From: addaction
-Scope: missionnamespace
-Execution time: on addaction use.
-Author: WaldoTheWarfighter
-For: Rooster Teeth Gaming Community
-License: Distributable and editable, no attribution required.
-
-Called from multiple sources
-
-How to use:
-
-Any object init:
-this addAction ["<t color='#00FF00'>Save Respawn Loadout</t>", Waldo_fnc_SaveLoadout];
-
-
-In scripts
-
-[] call Waldo_fnc_SaveLoadout;
-
-
-*/
+ * Author: WaldoTheWarfighter
+ * Saves the local player's current equipment as the mission respawn inventory. Explicit player
+ * actions show themed confirmation; automatic radio/startup callers can suppress presentation so
+ * no notification is queued into the mission loading/title sequence.
+ *
+ * Arguments:
+ * 0: show notification <BOOL> (default true)
+ *
+ * Return Value: BOOL - true after the inventory is saved.
+ *
+ * Example: [false] call Waldo_fnc_SaveLoadout;
+ * Current callers: starter/loadout-save interactions and ACRE2 radio assignment finalisation.
+ */
+params [["_showNotification", true, [true]]];
 [player, [missionNamespace, "Waldo_Player_Inventory"], [], false] call BIS_fnc_saveInventory;
-[] spawn {
-    hint "Respawn Loadout Updated!";
-    sleep 5;
-    hint "";
+if (_showNotification) then {
+    [
+        "RESPAWN LOADOUT SAVED",
+        "Your current equipment will be restored when you respawn.",
+        "SUCCESS",
+        5,
+        "TOP_RIGHT",
+        "RESPAWN_LOADOUT",
+        "PLAYER LOADOUT",
+        "REPLACE"
+    ] call Waldo_fnc_ShowUiNotification;
 };
+true

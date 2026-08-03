@@ -20,7 +20,12 @@
  *                  "oneShot"         Bool   - consume after the first terminal result (default false)
  *                  "distance"        Number - vanilla addAction distance (default 4)
  *                  "lockTimeout"     Number - exclusive lock expiry in seconds (default 600)
+ *                  "directAceAction" Bool   - place the action directly under ACE Main Actions
+ *                                             instead of Field Equipment (default false)
+ *                  "installAction"   Bool   - install the framework's own ACE/vanilla action;
+ *                                             false lets a feature-owned action activate it (default true)
  *                  "condition"       Code   - additional interaction condition (default {true})
+ *                  "actorCondition"  Code   - actor-aware condition receiving [_object, _actor]
  *                  "icon"            String - ACE action icon override
  *                  "preset"          String - curated equipment identity
  *                  "skin"            String - olive/charcoal/sand/naval/hazard
@@ -127,7 +132,10 @@ private _repeatable = ["repeatable", false] call _opt;
 private _oneShot = ["oneShot", false] call _opt;
 private _distance = ["distance", 4] call _opt;
 private _lockTimeout = ["lockTimeout", 600] call _opt;
+private _directAceAction = ["directAceAction", false] call _opt;
+private _installAction = ["installAction", true] call _opt;
 private _condition = ["condition", {true}] call _opt;
+private _actorCondition = ["actorCondition", {true}] call _opt;
 private _onSuccess = ["onSuccess", {}] call _opt;
 private _onFailure = ["onFailure", {}] call _opt;
 
@@ -163,6 +171,9 @@ private _failure = {
         ["title", _title],
         ["icon", _icon],
         ["condition", _condition],
+        ["actorCondition", _actorCondition],
+        ["directAceAction", _directAceAction],
+        ["installAction", _installAction],
         ["oneShot", _oneShot],
         ["distance", _distance],
         ["lockTimeout", _lockTimeout],

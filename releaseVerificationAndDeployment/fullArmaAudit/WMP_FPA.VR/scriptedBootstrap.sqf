@@ -1,5 +1,5 @@
 private _root = missionNamespace getVariable ["Waldo_QA_Root", ""];
-if (_root == "") exitWith {diag_log "WMP FULL AUDIT FAIL: bootstrap root missing";};
+if (_root == "") exitWith {diag_log "WMP PR AUDIT FAIL: bootstrap root missing";};
 call compile preprocessFileLineNumbers (_root + "generatedFunctions.sqf");
 call compile preprocessFileLineNumbers (_root + "auditCommon.sqf");
 missionNamespace setVariable ["Waldo_QA_LocalResults", []];

@@ -2,7 +2,7 @@
 
 > **Use this page when:** you know the capability you need and want the correct setup or reference page.
 
-Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
+Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [Complete Feature Catalogue](Feature-Catalogue) for the fastest full inventory, or the [Mission Configuration Reference](Mission-Configuration-Reference) when you already know which entry file or variable you need.
 
 ## Mission flow and UI
 
@@ -11,6 +11,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) | Animated operation titles during load-in |
 | [Mission UI Text Overlays](Mission-UI-Text-Overlays) | Dynamic text, timed notices, and respawn text |
 | [Custom UI Notifications](Custom-UI-Notifications) | Accessible mission cards, placement, stacking, and FIFO delivery |
+| [UI Visual Themes](UI-Visual-Themes) | Global visual-only Default, WW2, Vietnam, and science-fiction interface styles |
 | [Safestart](Safestart) | Preparation protection and timed go-live |
 | [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) | End-of-operation protection, AAR, and mission end |
 | [Tasks and Objectives](Tasks-And-Objectives) | JIP-safe objective creation and resolution |
@@ -24,6 +25,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 |---|---|
 | [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster) | Mission-derived supplies and limited arsenals |
 | [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal, and manual loadout persistence |
+| [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies) | Recoverable vehicle logistics and temporary group respawns |
 | [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) | Deployable MHQ and logistics |
 | [Virtual Vehicle Depot](Virtual-Vehicle-Depot) | Virtual garage and vehicle deployment |
 | [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop) | Vehicle interactions, static line, and HALO |
@@ -71,6 +73,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | Feature | Use it for |
 |---|---|
 | [Waldo's AI Tuning](Waldos-AI-Tweak) | Day/night AI behavior profiles |
+| [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | AI-only exact landing, slope, canopy, flare, and go-around handling |
 | [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
 | [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
 | [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional headless-client and player-marker integrations |
@@ -78,6 +81,17 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Unit Insignias](Unit-Insignias) | Applying and adding insignias |
 | [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts) | Smaller arsenal, damage, visibility, and config helpers |
 | [Cover and Loading Screen Generation](Cover-Loading-Screen-Generation) | Versioned mission artwork |
+
+## Optional and advanced systems
+
+| Feature | Use it for |
+|---|---|
+| [Optional Feature Systems](Optional-Feature-Systems) | Persistence, treatment feedback, hazards, tree felling, emergency dismount, accessibility PID, breaching, and object transforms |
+| [Optional Feature Extensions](Optional-Feature-Extensions) | Field resupply, tactical displays, advanced controls, and engine boundaries |
+| [Dynamic Anti-Air](Dynamic-Anti-Air) | Scripted or Zeus-authored radar-controlled air-defence zones |
+| [Dynamic AO Generation](Dynamic-AO-Generation) | Runtime faction-driven patrols, garrisons, vehicles, air, civilians, mines and roadblocks |
+| [Airborne Gunship Support](Airborne-Gunship-Support) | Controller-operated gunships, orbits, service cycles, and asset pools |
+| [Performance and Optimisation Audit](Performance-And-Optimisation-Audit) | Static regression guardrails and runtime verification guidance |
 
 ## Authoring and troubleshooting
 

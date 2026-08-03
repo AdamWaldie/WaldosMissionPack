@@ -2,7 +2,58 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from build_interaction_ui_qa import remove_generated_tree
 from interaction_ui_checker import EXPECTED, audit, strip_comments
+
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+class QaBootstrapTests(unittest.TestCase):
+    def test_generated_tree_cleanup_handles_readonly_files(self):
+        root = Path(tempfile.mkdtemp()) / "qa"
+        root.mkdir()
+        generated = root / "generated.sqf"
+        generated.write_text("test", encoding="utf-8")
+        generated.chmod(0o444)
+        remove_generated_tree(root)
+        self.assertFalse(root.exists())
+
+    def test_scripted_bootstrap_loads_structured_text_fitter(self):
+        bootstrap = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "interactionEquipmentQA"
+            / "InteractionEquipmentQA.VR"
+            / "scriptedBootstrap.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '["Waldo_fnc_MiniGameEquipmentFitStructuredText", "MissionScripts\\InteractionsMinigames\\Core\\equipmentFitStructuredText.sqf"]',
+            bootstrap,
+        )
+
+    def test_automated_matrix_waits_for_real_display_cleanup(self):
+        client = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "interactionEquipmentQA"
+            / "InteractionEquipmentQA.VR"
+            / "initPlayerLocal.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('"CLEANUP", "DISPLAY_CLOSE_TIMEOUT"', client)
+        self.assertIn('isNull (uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull])', client)
+        self.assertNotIn('closeDisplay', client)
+
+    def test_radio_target_band_uses_external_colour_independent_legend(self):
+        source = (
+            ROOT
+            / "MissionScripts"
+            / "InteractionsMinigames"
+            / "Challenges"
+            / "challengeRadioTune.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('_targetBand ctrlSetText ""', source)
+        self.assertIn('BAND = TARGET // LINE = CURRENT', source)
 
 
 class CommentStripTests(unittest.TestCase):

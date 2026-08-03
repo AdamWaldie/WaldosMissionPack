@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Creates and populates a ZEN logistics crate on the server.
  * The ZEN dialog remains local to the curator; all world and cargo mutation is
  * performed here so dedicated clients cannot create divergent crate state.
@@ -11,6 +12,12 @@
  *
  * Return Value:
  * Created crate <OBJECT>, or objNull
+ *
+ * Example:
+ * ["SUPPLY", getPosATL player, [0.5, west, true, true], player]
+ *     remoteExecCall ["Waldo_fnc_ZenSpawnCrateServer", 2];
+ *
+ * Current callers: the ZEN supply and medical crate module handlers.
  */
 
 params [
@@ -92,7 +99,7 @@ switch (_kind) do {
 };
 
 if (!isNull _crate) then {
-    { _x addCuratorEditableObjects [[_crate], true]; } forEach allCurators;
+    [_crate, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
     diag_log format ["[WMP ZEN] crate created kind=%1 crate=%2 actor=%3 owner=%4", _kind, netId _crate, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner];
 };
 _crate

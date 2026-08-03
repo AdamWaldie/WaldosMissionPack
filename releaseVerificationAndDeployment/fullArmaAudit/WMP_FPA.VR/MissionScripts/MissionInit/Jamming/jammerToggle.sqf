@@ -42,6 +42,12 @@ if (_active isEqualType "") then { _new = !(_entry select 7); };
 _entry set [7, _new];
 _registry set [_idx, _entry];
 missionNamespace setVariable ["Waldo_Jamming_Registry", _registry, true];
+if (_new && {!isNull (_entry select 1)}) then {
+    (_entry select 1) setVariable ["Waldo_Jamming_FieldDisabled", false, true];
+    if ((_entry select 1) getVariable ["Waldo_Jamming_DisableChallenge", false] && {!isNil "Waldo_fnc_MiniGameInteractionReset"}) then {
+        [(_entry select 1), true, false] call Waldo_fnc_MiniGameInteractionReset;
+    };
+};
 
 diag_log format ["[WMP JAM] Jammer %1 set active=%2", _id, _new];
 

@@ -42,7 +42,7 @@ Occupants of an immune vehicle are protected automatically. The flag is broadcas
 
 ## Zeus
 
-**Modules > Waldos Mission Modules > EW: Detonate EMP at Cursor** opens a dialog for **radius** and **duration**, then detonates at the module position.
+**Modules > WMP Combat Systems > EW: Detonate EMP at Cursor** opens a dialog for **radius** and **duration**, then detonates at the module position.
 
 The module writes its parameters to the RPT for diagnostics and does not announce them in chat.
 
@@ -76,7 +76,7 @@ A tracker also drops itself automatically when its target is killed or deleted.
 
 ## Zeus
 
-**Modules > Waldos Mission Modules > Tracker: Attach to Selected Object** opens a dialog for the tracking side, marker label and initial active state, then tags the nearest unit or vehicle to the module through `Waldo_fnc_Tracker`.
+**Modules > WMP Combat Systems > Tracker: Attach to Selected Object** must be placed directly on the intended object or unit. Empty-ground placement is rejected instead of silently selecting something nearby. A valid placement opens a dialog for the tracking side, marker label and initial active state, then tags that exact target through `Waldo_fnc_Tracker`.
 
 ## Notes
 

@@ -1,14 +1,14 @@
 /*
- * Waldos Mini Games - core engine
- * Table framework, seating, lobby/menu, networking, server authority + client loops, spectating, the result hook (Waldo_MG_fnc_resultServer) and bootstrap.
+ * Author: WaldoTheWarfighter
+ * Implements the WMP table-minigame core: seating, lobby/menu state, server-authoritative rounds,
+ * client presentation loops, spectating, result dispatch and shared display lifecycle hooks.
  *
- * Original engine: "Party Games Scripted" by |LorD|[Habilidade]Deus Ex.
- * Ported into WaldosMissionPack and rebranded to the Waldo_MG_ namespace; game
- * logic is preserved from the original composition. Do not claim original authorship.
+ * Arguments: None. This included fragment declares Waldo_MG_fnc_* runtime functions.
  *
- * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
- * It is not a standalone CfgFunctions entry and is not called directly.
+ * Return Value: Nothing directly; declared functions provide their own documented results.
+ *
+ * Example: #include "engine\core.sqf"
+ * Current caller: MiniGamesInit includes this fragment during minigame bootstrap.
  */
 
 Waldo_MG_fnc_getGame = {
@@ -1234,7 +1234,9 @@ Waldo_MG_fnc_startAuthorityLoop = {
         while {true} do {
             private _authorityPlayers = +allPlayers;
             {
-                [_x] call Waldo_MG_fnc_initializePlayerServer;
+                if (!(_x getVariable ["Waldo_MG_ServerInitialized", false])) then {
+                    [_x] call Waldo_MG_fnc_initializePlayerServer;
+                };
             } forEach _authorityPlayers;
             call Waldo_MG_fnc_reconcileRegisteredTablesServer;
             [_authorityPlayers] call Waldo_MG_fnc_processPriorityUNORequestsServer;
@@ -1993,6 +1995,11 @@ Waldo_MG_fnc_installEscapeGuardLocal = {
     _display setVariable ["Waldo_MG_EscapeGuardInstalled", true];
     _display setVariable ["Waldo_MG_EscapeGuardHandlerId", _handlerId];
     [_display] call Waldo_MG_fnc_fitTableDisplaySafeLocal;
+    [_display] spawn {
+        params ["_display"];
+        uiSleep 0.2;
+        if (!isNull _display) then {[_display, true] call Waldo_fnc_UiThemeApplyDisplayLocal;};
+    };
 };
 
 Waldo_MG_fnc_maintainSeatedScreenLocal = {

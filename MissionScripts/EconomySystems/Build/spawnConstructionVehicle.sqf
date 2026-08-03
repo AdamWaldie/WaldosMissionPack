@@ -30,6 +30,7 @@
         clearBackpackCargoGlobal _vehicle;
         _vehicle lockInventory true;
         _vehicle setVariable ["WaldoEcoBuild_IsConstructionVehicle", true, true];
+        [_vehicle, "CONSTRUCTION_VEHICLES"] call Waldo_fnc_EcoCore_registerRuntimeObject;
 
         [[_vehicle], true] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;
 

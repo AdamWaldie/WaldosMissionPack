@@ -65,12 +65,17 @@ private _track = [_display, "RscText", [4.5, 20.3, 21, 0.7], "frequency tuning t
 _track ctrlSetBackgroundColor [0.18, 0.20, 0.18, 1];
 private _targetBand = [_display, "RscText", [4.5, 20, 2, 1.3], "target carrier band"] call Waldo_fnc_MiniGameEquipmentCreateControl;
 _targetBand ctrlSetBackgroundColor [0.22, 0.55, 0.34, 0.78];
-_targetBand ctrlSetText "TARGET";
-_targetBand ctrlSetTextColor [1, 1, 1, 1];
+// The band becomes deliberately narrow on hard profiles. Keep it graphical and
+// put the colour-independent meaning in a stable-width legend instead of clipping
+// text inside the moving band.
+_targetBand ctrlSetText "";
 _display setVariable ["Waldo_MG_RT_TargetBand", _targetBand];
 private _needle = [_display, "RscText", [4.5, 19.8, 0.35, 1.7], "current frequency needle"] call Waldo_fnc_MiniGameEquipmentCreateControl;
 _needle ctrlSetBackgroundColor [0.95, 0.84, 0.34, 1];
 _display setVariable ["Waldo_MG_RT_Needle", _needle];
+private _indicatorLegend = [_display, "RscText", [4.5, 21.1, 21, 1.2], "frequency indicator legend"] call Waldo_fnc_MiniGameEquipmentCreateControl;
+_indicatorLegend ctrlSetText "BAND = TARGET // LINE = CURRENT";
+_indicatorLegend ctrlSetTextColor [0.78, 0.80, 0.73, 1];
 
 private _dialBay = [_display, "RscText", [28, 4.2, 8.5, 12.5], "receiver tuning dial bay"] call Waldo_fnc_MiniGameEquipmentCreateControl;
 _dialBay ctrlSetBackgroundColor [0.04, 0.05, 0.045, 1];

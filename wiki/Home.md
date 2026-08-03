@@ -56,6 +56,16 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 - [Interaction Procedures](Waldos-Mini-Games-Interaction-Challenges) — ten accessible equipment procedures.
 - [Bomb Defusal](Bomb-Defusal) — pair any procedure with an authoritative explosive consequence.
 
+### Optional and advanced systems
+
+- [Complete Feature Catalogue](Feature-Catalogue) — the full pack inventory and default states.
+- [Optional Feature Systems](Optional-Feature-Systems) — persistence, treatment feedback, hazards, tree felling, emergency dismount, accessibility PID, breaching, and object transforms.
+- [Optional Feature Extensions](Optional-Feature-Extensions) — field resupply, tactical displays, advanced controls, and engine boundaries.
+- [Dynamic Anti-Air](Dynamic-Anti-Air) — reusable radar-controlled air-defence zones for scripts and Zeus.
+- [Dynamic AO Generation](Dynamic-AO-Generation) — server-owned randomized areas of operations created during play.
+- [Airborne Gunship Support](Airborne-Gunship-Support) — controller-operated gunships with configurable orbits and service cycles.
+- [Performance and Optimisation Audit](Performance-And-Optimisation-Audit) — CI guardrails and runtime verification guidance.
+
 ### AI and mission-maker tools
 
 - [Waldo's AI Tuning](Waldos-AI-Tweak)

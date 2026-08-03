@@ -26,6 +26,7 @@
         private _researchCenter = createVehicle ["Land_Research_HQ_F", _pos, [], 0, "CAN_COLLIDE"];
         _researchCenter setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
         _researchCenter setVariable ["WaldoEcoResearch_IsResearchCenter", true, true];
+        [_researchCenter, "RESEARCH_CENTERS"] call Waldo_fnc_EcoCore_registerRuntimeObject;
 
         if (!isNil "Waldo_fnc_EcoResource_registerCuratorEditableObject") then {
             [_researchCenter, true] call Waldo_fnc_EcoResource_registerCuratorEditableObject;

@@ -28,6 +28,12 @@
  *      players' datalinks) as well as radios (optional, default: false)
  * 11: Curator 3D marker <BOOL> - show this emitter in the curator-only Draw3D overlay even when
  *      the global all-jammer overlay is disabled (optional, default: false)
+ * 12: Interaction options <ARRAY or HASHMAP> - optional named settings:
+ *      disableChallenge <BOOL>, challengeId <STRING>, difficulty <STRING>,
+ *      engineerOnly <BOOL>, resultMode <STRING: DISABLE/DESTROY>, allowPlayerToggle <BOOL>.
+ *      The legacy allowPlayerToggle key permits reactivation while inactive; active fields still
+ *      require the Disable Jammer action and cannot bypass its optional challenge.
+ *      Defaults come from the matching Waldo_Jamming_* mission settings.
  *
  * Return Value:
  * Number <NUMBER> - the jammer id (server side); -1 when forwarded from a client
@@ -53,7 +59,8 @@ params [
     ["_sector", [], [[]]],
     ["_duty", [], [[]]],
     ["_jamUAV", false, [false]],
-    ["_gmMarker", false, [false]]
+    ["_gmMarker", false, [false]],
+    ["_interactionOptions", [], [[], createHashMap]]
 ];
 
 if (isNull _object) exitWith {
@@ -63,7 +70,14 @@ if (isNull _object) exitWith {
 
 // Keep all registry writes on the server so JIP behaviour stays correct.
 if (!isServer) exitWith {
-    _this remoteExec ["Waldo_fnc_Jammer", 2];
+    private _interactionForward = _interactionOptions;
+    if (typeName _interactionForward == "HASHMAP") then {
+        private _pairs = [];
+        {_pairs pushBack [_x, _interactionForward get _x];} forEach keys _interactionForward;
+        _interactionForward = _pairs;
+    };
+    [_object, _radius, _sides, _bands, _falloff, _strength, _active, _marker, _sector, _duty, _jamUAV, _gmMarker, _interactionForward]
+        remoteExec ["Waldo_fnc_Jammer", 2];
     -1
 };
 
@@ -138,6 +152,35 @@ if (_marker) then {
 
 private _entry = [_id, _object, _radius, _falloff, _sidesN, _bandsN, _strength, _active, _markerName, _sectorN, _dutyN, _jamUAV, _gmMarker];
 
+private _interactionPairs = [];
+if (typeName _interactionOptions == "HASHMAP") then {
+    {_interactionPairs pushBack [_x, _interactionOptions get _x];} forEach keys _interactionOptions;
+} else {
+    _interactionPairs = _interactionOptions;
+};
+private _interactionOption = {
+    params ["_key", "_default"];
+    private _value = _default;
+    {if ((_x param [0, ""]) == _key) exitWith {_value = _x param [1, _default];};} forEach _interactionPairs;
+    _value
+};
+private _allowPlayerToggle = ["allowPlayerToggle", missionNamespace getVariable ["Waldo_Jamming_AllowPlayerToggle", true]] call _interactionOption;
+private _disableChallenge = ["disableChallenge", missionNamespace getVariable ["Waldo_Jamming_DisableChallenge", false]] call _interactionOption;
+private _challengeId = toLower (["challengeId", missionNamespace getVariable ["Waldo_Jamming_DisableChallengeId", "circuit"]] call _interactionOption);
+if !(_challengeId in ["wirecut", "minesweeper", "keypad", "lockpick", "circuit", "repair", "radiotune", "pressure", "sequence", "commandinput"]) then {_challengeId = "circuit";};
+private _difficulty = toLower (["difficulty", missionNamespace getVariable ["Waldo_Jamming_DisableDifficulty", "standard"]] call _interactionOption);
+if !(_difficulty in ["easy", "standard", "hard", "expert"]) then {_difficulty = "standard";};
+private _engineerOnly = ["engineerOnly", missionNamespace getVariable ["Waldo_Jamming_DisableEngineerOnly", true]] call _interactionOption;
+private _resultMode = toUpper (["resultMode", missionNamespace getVariable ["Waldo_Jamming_DisableResult", "DISABLE"]] call _interactionOption);
+if !(_resultMode in ["DISABLE", "DESTROY"]) then {_resultMode = "DISABLE";};
+private _interactionSettings = [_allowPlayerToggle, _disableChallenge, _challengeId, _difficulty, _engineerOnly, _resultMode];
+_object setVariable ["Waldo_Jamming_AllowPlayerToggle", _allowPlayerToggle, true];
+_object setVariable ["Waldo_Jamming_DisableChallenge", _disableChallenge, true];
+_object setVariable ["Waldo_Jamming_DisableChallengeId", _challengeId, true];
+_object setVariable ["Waldo_Jamming_DisableDifficulty", _difficulty, true];
+_object setVariable ["Waldo_Jamming_DisableEngineerOnly", _engineerOnly, true];
+_object setVariable ["Waldo_Jamming_DisableResult", _resultMode, true];
+
 // Replace an existing entry for this id, else append.
 private _registry = missionNamespace getVariable ["Waldo_Jamming_Registry", []];
 private _idx = _registry findIf { (_x select 0) == _id };
@@ -161,7 +204,7 @@ if (_isNew && {missionNamespace getVariable ["Waldo_Jamming_Destructible", true]
 
 // Install the player ACE interaction (toggle / detonate) on every machine for this emitter.
 if (_isNew) then {
-    [_object] remoteExec ["Waldo_fnc_JammerInteraction", 0, true];
+    [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _object];
 };
 
 diag_log format ["[WMP JAM] Jammer %1 registered: radius=%2 falloff=%3 sides=%4 sector=%5 duty=%6 active=%7", _id, _radius, _falloff, _sidesN, _sectorN, _dutyN, _active];

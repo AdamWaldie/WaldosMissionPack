@@ -1,10 +1,15 @@
 /*
+ * Author: WaldoTheWarfighter
  * Shows an electronic-warfare transition notice in a dedicated control that
  * cannot be overwritten by Safestart, ENDEX or another use of Arma's hint UI.
  * Newer notices own the control and prevent older timers from hiding them.
  *
- * Arguments: [title, message, duration, state]
- * State: WARNING | SUCCESS | INFO
+ * Arguments: 0: title <STRING>; 1: message <STRING>; 2: duration <NUMBER>;
+ * 3: state <STRING> - WARNING, SUCCESS or INFO.
+ * Return Value: BOOL - true when the local notice was drawn.
+ *
+ * Example: ["ELECTRONIC WARFARE", "Signal restored", 8, "SUCCESS"] call Waldo_fnc_JammingNotice;
+ * Current callers: jamming client state transitions and jammer disable feedback.
  */
 if (!hasInterface) exitWith {false};
 params [
@@ -16,6 +21,7 @@ params [
 
 private _display = findDisplay 46;
 if (isNull _display) exitWith {false};
+private _theme = [] call Waldo_fnc_UiTheme;
 private _legacyNotice = _display displayCtrl 5312;
 if !(isNull _legacyNotice) then {_legacyNotice ctrlShow false;};
 
@@ -26,9 +32,9 @@ private _frame = _display displayCtrl 5309;
 private _control = _display displayCtrl _idc;
 if (isNull _frame) then {
     _frame = _display ctrlCreate ['RscText', 5309];
-    _frame ctrlSetBackgroundColor [0.015, 0.025, 0.035, 0.92];
     _frame ctrlCommit 0;
 };
+_frame ctrlSetBackgroundColor (_theme getOrDefault ["panel", [0.015, 0.025, 0.035, 0.92]]);
 if (isNull _control) then {
     _control = _display ctrlCreate ['RscStructuredText', _idc];
     _control ctrlSetBackgroundColor [0, 0, 0, 0];
@@ -36,17 +42,19 @@ if (isNull _control) then {
 };
 
 private _colour = switch (toUpper _state) do {
-    case 'SUCCESS': {'#6CE5A8'};
-    case 'INFO': {'#4FA9E8'};
-    default {'#FF6161'};
+    case 'SUCCESS': {_theme getOrDefault ['successHex', '#6CE5A8']};
+    case 'INFO': {_theme getOrDefault ['accentHex', '#4FA9E8']};
+    default {_theme getOrDefault ['dangerHex', '#FF6161']};
 };
 _control ctrlSetStructuredText parseText format [
-    "<t align='left' color='#9FB3C8' size='0.72'>  ELECTRONIC WARFARE</t><br/>" +
-    "<t align='left' color='%1' size='1.12' shadow='1'>  %2</t><br/>" +
-    "<t align='left' color='#FFFFFF' size='0.82'>  %3</t>",
+    "<t align='left' font='%4' color='%5' size='0.72'>  ELECTRONIC WARFARE</t><br/>" +
+    "<t align='left' font='%6' color='%1' size='1.12' shadow='1'>  %2</t><br/>" +
+    "<t align='left' font='%4' color='%7' size='0.82'>  %3</t>",
     _colour,
     _title,
-    _message
+    _message,
+    _theme getOrDefault ['font', 'RobotoCondensed'], _theme getOrDefault ['mutedHex', '#9FB3C8'],
+    _theme getOrDefault ['fontBold', 'RobotoCondensedBold'], _theme getOrDefault ['textHex', '#FFFFFF']
 ];
 private _visibleX = safeZoneX;
 private _visibleY = safeZoneY;
@@ -68,8 +76,7 @@ _frame ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
 _control ctrlSetPosition [_panelX + _padX, _panelY + _padY, _panelW - (2 * _padX), _contentH];
 _frame ctrlCommit 0;
 _control ctrlCommit 0;
-_frame ctrlShow true;
-_control ctrlShow true;
+["ELECTRONIC_WARFARE_STATUS", [_frame, _control], ["BOTTOM_RIGHT"], true] call Waldo_fnc_RegisterUiReservationLocal;
 
 private _token = format ['%1_%2', diag_tickTime, random 1e9];
 uiNamespace setVariable ['Waldo_JammingNoticeToken', _token];
@@ -85,6 +92,7 @@ uiNamespace setVariable ['Waldo_JammingNoticeToken', _token];
             } else {
                 _control ctrlShow false;
                 if (!isNull _frame) then {_frame ctrlShow false;};
+                ["ELECTRONIC_WARFARE_STATUS", [_frame, _control], ["BOTTOM_RIGHT"], false] call Waldo_fnc_RegisterUiReservationLocal;
             };
         };
     };

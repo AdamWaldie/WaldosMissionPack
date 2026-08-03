@@ -31,15 +31,6 @@ if (!hasInterface) exitWith {};
 
 ["ENDEX"] call Waldo_fnc_DismissUiNotification;
 
-// Dismiss the ENDEX report immediately, but never erase a newer hint owned by
-// another mission feature. Invalidating the token also prevents its delayed
-// cleanup thread from touching the replacement hint later.
-if ((uiNamespace getVariable ["Waldo_TimedHintOwner", ""]) isEqualTo "ENDEX") then {
-    uiNamespace setVariable ["Waldo_TimedHintToken", nil];
-    uiNamespace setVariable ["Waldo_TimedHintOwner", nil];
-    hint "";
-};
-
 if !(isNil "Waldo_PreventWeaponsFireEventHandler") then {
     player removeEventHandler ["Fired", Waldo_PreventWeaponsFireEventHandler];
     Waldo_PreventWeaponsFireEventHandler = nil;

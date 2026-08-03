@@ -1,8 +1,10 @@
-# WMP PR review audit mission
+# WMP ongoing full-pack PR audit mission
 
 `FullArmaAudit.VR` is the canonical base mission for feature testing. It deliberately keeps the
 small, unbinarized `version=12` VR scenario that Arma has proven able to host reliably: five
-playable BLUFOR slots and no generated Eden fixture tree.
+playable BLUFOR slots and no engine-spawned Eden fixture tree. An audit-only nested `Entities`
+configuration is included for the loadout scraper; the engine continues to spawn the proven
+legacy playable group.
 
 The repository mission folder is a template, not a release copy. Before every run,
 `build_pr_review_audit.py` creates a disposable mission containing the exact roots listed in
@@ -29,6 +31,38 @@ and crates, a fully fitted MHQ, an isolated VVD lane, paradrop, all Economy area
 tables, forty interaction fixtures, a live EOD charge, Zeus, and registered-function stations.
 These are real multiplayer objects, not registration-only assertions.
 
+The east test range adds twenty repeatable stations for the newer full systems:
+
+- Persistence dependency gate, object registration and manual save
+- ACE patient treatment feedback
+- Hazardous-environment exposure and decay from a live object emitter, including runtime/JIP activation status
+- Tree felling and regrowth
+- Emergency dismount from a simulation-enabled overturned vehicle, with all test and upright controls on the vehicle
+- Accessibility PID against friendly AI
+- Explosive wall breaching and reset
+- Object scaling and transform helpers
+- AI rebalance profiles and restoration
+- Field resupply hub, carrier, deployment and salvage
+- Tactical display on a dedicated white map board, locked behind an easy command-authentication procedure and populated with friendly/known-hostile contacts
+- Dynamic AA creation and teardown, including an optional circuit procedure on the central radar
+- Airborne gunship spawn, assignment, service and removal
+- Vehicle recovery preparation procedure, packaging, transport and workshop restoration
+- Squad rally deployment, regroup, expiry and removal
+- Nested-folder playable loadout scrape and limited arsenal
+- Dynamic paradrop routing, player embark/boarding points, jump envelopes and cleanup
+- Improved AI helicopter landing trigger, waypoint lifecycle and touchdown anchoring
+- Default, WW2, Vietnam and science-fiction UI theme/colour-vision switching
+- Dynamic AO creation, public state, minefield anchors and complete cleanup
+
+The existing Electronic Warfare station also covers radio-jammer field disablement through a real
+shared circuit procedure, with the audit fixture's engineer restriction disabled so any selected
+test slot can exercise it.
+
+Every station has an information stand and ACE-first, vanilla-fallback test controls. Audit Control offers
+teleports to each station. Dynamic AA and the gunship are created only when requested. Persistence
+remains disabled unless its compatible server extension is detected. Reset actions allow repeated
+testing without restarting the mission.
+
 ## Routine manual test
 
 Close every Arma client and server, then run:
@@ -38,9 +72,21 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File `
   .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1
 ```
 
-The launcher always uses a hosted multiplayer session, 2560×1440, `-noBattlEye`, and the required
-CBA, ACE, ZEN and ACRE2 mods. Select **Virtual Reality > WMP PR REVIEW AUDIT > Play**, choose a
-slot, then press **OK**.
+Add `-ExcludePersistenceMod` to exercise the missing-server-extension dependency gate even when INIDBI2 is installed locally.
+
+The launcher defaults to a local dedicated authority plus a connected 3840x2160 client, with
+`-noBattlEye` and the required CBA, ACE, ZEN and ACRE2 mods. It starts the audit mission directly;
+Eden is never involved. Choose a slot and press **OK** if the role-assignment screen is shown.
+Every invocation creates fresh timestamped server and client profiles under
+`.qa/pr-review-audit/runtime-*`; never reuse a profile from a force-terminated run. The optional
+INIDBI2 extension is server-only. The localhost server is passworded by the launcher and the
+matching client connection supplies that password explicitly.
+
+Do not treat process creation as proof of a successful launch. The fresh client RPT must contain
+`Starting mission` and `Mission world: VR`. Zeus is ready only after the server RPT contains
+`WMP FULL AUDIT ZEUS SERVER READY` and the client RPT contains
+`WMP FULL AUDIT ZEUS CLIENT READY`. Do not replace this path with Eden, `playMission`, Steam join
+URLs, main-menu event handlers or ad-hoc relaunch arguments.
 
 Manual mode is the default. It loads the whole pack but does not run state-mutating automated
 cases. A server-owned Zeus curator is assigned to the first connected player so the WMP and
@@ -71,7 +117,7 @@ python .\releaseVerificationAndDeployment\build_pr_review_audit.py `
 ```
 
 `audit_build_manifest.json` records the release roots, WMP version, mission format, suite and
-mode. Repository tests compare every staged `MissionScripts` and `Pictures` file byte-for-byte
+mode, and confirms that the nested playable-loadout fixture was included. Repository tests compare every staged `MissionScripts` and `Pictures` file byte-for-byte
 with the worktree and fail if the audit stops using the release allowlist.
 
 Product fixes are always made in the repository release sources. The installed Arma `MPMissions`

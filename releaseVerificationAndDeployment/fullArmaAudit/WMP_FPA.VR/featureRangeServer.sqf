@@ -1,6 +1,15 @@
 /*
- * Walkable PR21-PR32 feature range. Objects are real multiplayer objects and
- * are configured through the same public functions mission makers use.
+ * Author: WaldoTheWarfighter
+ * Builds the server-authoritative walkable full-pack feature range. Objects are real multiplayer
+ * fixtures configured through the same public functions mission makers use. Curator assignment
+ * follows the actual remote player owner, transfers after respawn and never selects server-owned
+ * playable AI as the initial Zeus operator.
+ *
+ * Arguments: none (executed from auditInitServer.sqf).
+ * Return Value: nothing.
+ *
+ * Example: [] execVM "featureRangeServer.sqf";
+ * Current callers: the generated full-pack audit mission on dedicated or hosted authority.
  */
 if (!isServer) exitWith {};
 waitUntil {
@@ -25,9 +34,14 @@ Waldo_QA_fnc_trackFeatureObjectServer = {
 
 Waldo_QA_fnc_spawnFeatureObjectServer = {
     params ["_class", "_position", ["_direction", 0], ["_simulation", true]];
-    private _object = createVehicle [_class, _position, [], 0, "CAN_COLLIDE"];
+    private _object = createVehicle [_class, _position, [], 0, "NONE"];
+    // A physics fixture must be frozen before any correction. Enabling it at an
+    // editor/default position for even one frame can collide or destroy vehicles.
+    _object enableSimulationGlobal false;
+    _object setVelocity [0, 0, 0];
     _object setPosATL _position;
     _object setDir _direction;
+    if ((_position select 2) <= 1) then {_object setVectorUp (surfaceNormal _position)};
     _object allowDamage false;
     _object enableSimulationGlobal _simulation;
     [_object] call Waldo_QA_fnc_trackFeatureObjectServer
@@ -41,8 +55,11 @@ Waldo_QA_fnc_getFeatureObjectServer = {
         missionNamespace setVariable [_variableName, _object, true];
     } else {
         [_object] call Waldo_QA_fnc_trackFeatureObjectServer;
+        _object enableSimulationGlobal false;
+        _object setVelocity [0, 0, 0];
         _object setPosATL _position;
         _object setDir _direction;
+        if ((_position select 2) <= 1) then {_object setVectorUp (surfaceNormal _position)};
         _object allowDamage false;
         _object enableSimulationGlobal _simulation;
     };
@@ -135,12 +152,57 @@ Waldo_QA_fnc_refillEconomyServer = {
     ["BLUFOR economy reset: unlimited stores replenished; capped stores emptied for collection tests."] remoteExec ["systemChat", 0];
 };
 
+Waldo_QA_fnc_configureEconomyServer = {
+    if (!isServer) exitWith {false};
+    private _requiredFunctions = [
+        "Waldo_fnc_EcoResource_getResourceTypes",
+        "Waldo_fnc_EcoResearch_getResearchCatalog",
+        "Waldo_fnc_EcoBuild_getBuildCatalog",
+        "Waldo_fnc_EcoBuy_getPurchaseCatalog"
+    ];
+    if (_requiredFunctions findIf {isNil _x} >= 0) exitWith {
+        diag_log "[WMP QA] Economy fixture could not be configured because its public APIs are unavailable.";
+        false
+    };
+
+    private _deadline = diag_tickTime + 30;
+    waitUntil {
+        uiSleep 0.1;
+        missionNamespace getVariable ["WaldoEcoCore_MakerConfigApplied", false] || {diag_tickTime >= _deadline}
+    };
+
+    // Do not replace the bundled preset with a reduced QA-only economy. The full-pack audit must
+    // exercise the same default data mission makers receive, including all selected side catalogues.
+    private _resources = call Waldo_fnc_EcoResource_getResourceTypes;
+    private _research = call Waldo_fnc_EcoResearch_getResearchCatalog;
+    private _builds = call Waldo_fnc_EcoBuild_getBuildCatalog;
+    private _purchases = call Waldo_fnc_EcoBuy_getPurchaseCatalog;
+    if ((count _resources) <= 0 || {(count _research) <= 0} || {(count _builds) <= 0} || {(count _purchases) <= 0}) exitWith {
+        diag_log format ["[WMP QA] Bundled Economy preset was not applied: resources=%1 research=%2 builds=%3 purchases=%4.", count _resources, count _research, count _builds, count _purchases];
+        false
+    };
+
+    missionNamespace setVariable ["Waldo_QA_EconomyConfigured", true, true];
+    diag_log format ["[WMP QA] Economy fixture configured: resources=%1 research=%2 builds=%3 purchases=%4.",
+        count (call Waldo_fnc_EcoResource_getResourceTypes),
+        count (call Waldo_fnc_EcoResearch_getResearchCatalog),
+        count (call Waldo_fnc_EcoBuild_getBuildCatalog),
+        count (call Waldo_fnc_EcoBuy_getPurchaseCatalog)
+    ];
+    true
+};
+
 Waldo_QA_fnc_spawnResourceCrateServer = {
     private _crate = ["qa_economy_crate", "Land_PlasticCase_01_medium_F", [-61, -3, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
+    private _resourceTypes = call Waldo_fnc_EcoResource_getResourceTypes;
+    private _primaryType = _resourceTypes param [0, ""];
+    private _secondaryType = _resourceTypes param [1, _primaryType];
+    private _rows = [[_primaryType, 100]];
+    if (_secondaryType isNotEqualTo _primaryType) then {_rows pushBack [_secondaryType, 5];};
     _crate setVariable ["WaldoEcoResource_IsResourceCrate", true, true];
     _crate setVariable ["WaldoEcoResource_Collected", false, true];
-    _crate setVariable ["WaldoEcoResource_ResourceRows", [["Money", 100], ["Parts", 5]], true];
-    _crate setVariable ["WaldoEcoResource_ResourceType", "Money", true];
+    _crate setVariable ["WaldoEcoResource_ResourceRows", _rows, true];
+    _crate setVariable ["WaldoEcoResource_ResourceType", _primaryType, true];
     _crate setVariable ["WaldoEcoResource_ResourceValue", 100, true];
     [_crate, true] call Waldo_fnc_EcoResource_registerCuratorEditableObject;
     [_crate] call Waldo_fnc_EcoResource_trackCrateMarker;
@@ -226,7 +288,7 @@ Waldo_QA_fnc_resetEndexServer = {
 
 Waldo_QA_fnc_createObjectiveServer = {
     if (!isServer) exitWith {};
-    ["qa_manual_objective", west, "Audit the feature range", "PR21-PR32 AUDIT", [0, 0, 0], "ASSIGNED", true]
+    ["qa_manual_objective", west, "Audit the feature range", "FULL-PACK PR AUDIT", [0, 0, 0], "ASSIGNED", true]
         call Waldo_fnc_CreateObjective;
 };
 
@@ -322,12 +384,16 @@ missionNamespace setVariable ["Waldo_QA_InteractionObjects", _interactionObjects
 call Waldo_QA_fnc_rearmBombServer;
 ["eod", "LIVE EOD", [80, -94, 0], "Wire-cut outcome drives a real server-side explosive consequence."] call Waldo_QA_fnc_registerFeatureStationServer;
 
-// Economy preset and real Resource, Research, Build and Buy fixtures.
-missionNamespace setVariable ["Waldo_Economy_Preset", "MEDIUM", true];
-missionNamespace setVariable ["Waldo_Economy_PresetSides", [["WEST", "NATO"]], true];
-private _economyInit = [] spawn Waldo_fnc_EcoInit;
-waitUntil {uiSleep 0.1; scriptDone _economyInit};
-[[ -55, 2, 0], "QA Supply Zone", 14, [["Money", 5, 5000]], "WEST", 15] call Waldo_fnc_EcoResource_createResourceZone;
+// The audit pre-init selects the real MEDIUM preset before server-authoritative Economy startup.
+// Validate it here, then build physical fixtures against its actual resource vocabulary.
+if !(call Waldo_QA_fnc_configureEconomyServer) then {
+    diag_log "[WMP QA] Economy fixtures skipped because the bundled preset is unavailable.";
+};
+private _qaEconomyResourceTypes = call Waldo_fnc_EcoResource_getResourceTypes;
+private _qaZoneResource = _qaEconomyResourceTypes param [0, ""];
+if (_qaZoneResource isNotEqualTo "") then {
+    [[-55, 2, 0], "QA Supply Zone", 14, [[_qaZoneResource, 5, 5000]], "WEST", 15] call Waldo_fnc_EcoResource_createResourceZone;
+};
 private _resourceCrate = call Waldo_QA_fnc_spawnResourceCrateServer;
 private _research = ["qa_economy_research", "Land_Research_HQ_F", [-63, 12, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
 [_research] call Waldo_fnc_EcoResearch_registerCenter;
@@ -336,7 +402,7 @@ private _terminal = ["qa_economy_terminal", "Land_Laptop_unfolded_F", [-48, -5, 
 [_terminal] call Waldo_fnc_EcoBuy_registerTerminal;
 [[ -43, -5, 0], "Ground", 90, "WEST"] call Waldo_fnc_EcoBuy_createDropPoint;
 call Waldo_QA_fnc_refillEconomyServer;
-["economy", "ECONOMY SYSTEMS", [-55, 2, 0], "Medium preset: resource zone/crate, research, construction, purchase terminal and drop point."] call Waldo_QA_fnc_registerFeatureStationServer;
+["economy", "ECONOMY SYSTEMS", [-55, 2, 0], "Deterministic Money/Parts fixture: collection, research, construction, purchase terminal and drop point."] call Waldo_QA_fnc_registerFeatureStationServer;
 
 // Logistics: MHQ with synced deployment parts, VVD, and airborne paradrop transport.
 private _mhq = ["qa_mhq", "B_Truck_01_covered_F", [-62, 45, 0], 90, false] call Waldo_QA_fnc_getFeatureObjectServer;
@@ -407,9 +473,20 @@ missionNamespace setVariable ["Waldo_QA_CoreConsole", _coreConsole, true];
 // Electronic Warfare: live jammer, tracker target, immune vehicle and manual EMP control.
 missionNamespace setVariable ["Waldo_Jamming_Enable", true, true];
 [] call Waldo_fnc_JammingInit;
-private _jammer = ["qa_ew_jammer", "Land_TTowerSmall_1_F", [0, -102, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
+// Keep this manual-test fixture simulated so Zeus can reposition and terrain-snap it. The public
+// jammer API itself remains neutral: mission makers may still register simulated or static objects.
+private _jammer = ["qa_ew_jammer", "Land_TTowerSmall_1_F", [0, -102, 0], 0, true] call Waldo_QA_fnc_getFeatureObjectServer;
 _jammer allowDamage true;
-[_jammer, 45, "WEST", "ALL", 15, 0.8, true, true, [], [], true] call Waldo_fnc_Jammer;
+private _jammerInteraction = createHashMapFromArray [
+    ["disableChallenge", true],
+    ["challengeId", "circuit"],
+    ["difficulty", "standard"],
+    ["engineerOnly", false],
+    ["resultMode", "DISABLE"],
+    ["allowPlayerToggle", true]
+];
+[_jammer, 45, "WEST", "ALL", 15, 0.8, true, true, [], [], true, false, _jammerInteraction]
+    call Waldo_fnc_Jammer;
 missionNamespace setVariable ["Waldo_QA_Jammer", _jammer, true];
 private _trackedVehicle = ["qa_ew_tracked", "O_MRAP_02_F", [-18, -102, 0], 90, false] call Waldo_QA_fnc_getFeatureObjectServer;
 [_trackedVehicle, west, "QA TRACKED VEHICLE"] call Waldo_fnc_Tracker;
@@ -445,35 +522,84 @@ if (isNull _curator) then {
     missionNamespace setVariable ["qa_curator", _curator, true];
 };
 Waldo_QA_fnc_assignCuratorServer = {
-    params [["_unit", objNull, [objNull]]];
+    params [
+        ["_unit", objNull, [objNull]],
+        ["_openInterface", false, [false]]
+    ];
     if (!isServer || {isNull _unit} || {!(_unit in allPlayers)}) exitWith {false};
     if (remoteExecutedOwner > 2 && {remoteExecutedOwner != owner _unit}) exitWith {false};
     private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
     if (isNull _curator) exitWith {false};
-    unassignCurator _curator;
-    _unit assignCurator _curator;
-    _curator synchronizeObjectsAdd [_unit];
-    missionNamespace setVariable ["Waldo_QA_CuratorAssignedUnit", _unit, true];
-    diag_log format ["WMP FULL AUDIT ZEUS: assigned %1 (%2) on request", name _unit, owner _unit];
+    private _assigned = getAssignedCuratorUnit _curator;
+    if (
+        !isNull _assigned
+        && {_assigned in allPlayers}
+        && {isPlayer _assigned}
+        && {owner _assigned > 2}
+        && {!(_assigned isEqualTo _unit)}
+    ) exitWith {false};
+    private _requestId = (missionNamespace getVariable ["Waldo_QA_CuratorRequestId", 0]) + 1;
+    missionNamespace setVariable ["Waldo_QA_CuratorRequestId", _requestId];
+    [_unit, _curator, _requestId, _openInterface] spawn {
+        params ["_unit", "_curator", "_requestId", "_openInterface"];
+        if !(getAssignedCuratorUnit _curator isEqualTo _unit) then {
+            unassignCurator _curator;
+            private _clearDeadline = diag_tickTime + 5;
+            waitUntil {
+                uiSleep 0.05;
+                isNull (getAssignedCuratorUnit _curator)
+                || {diag_tickTime >= _clearDeadline}
+                || {_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]}
+            };
+            if (_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]) exitWith {};
+            _unit assignCurator _curator;
+        };
+        private _assignDeadline = diag_tickTime + 10;
+        waitUntil {
+            uiSleep 0.05;
+            getAssignedCuratorUnit _curator isEqualTo _unit
+            || {diag_tickTime >= _assignDeadline}
+            || {_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]}
+        };
+        if (_requestId != missionNamespace getVariable ["Waldo_QA_CuratorRequestId", -1]) exitWith {};
+        if !(getAssignedCuratorUnit _curator isEqualTo _unit) exitWith {
+            diag_log format ["WMP FULL AUDIT ZEUS SERVER FAIL: assignment not confirmed for %1 (%2)", name _unit, owner _unit];
+            [objNull, false] remoteExecCall ["Waldo_QA_fnc_curatorAssignmentConfirmedClient", owner _unit];
+        };
+        missionNamespace setVariable ["Waldo_QA_CuratorAssignedUnit", _unit, true];
+        diag_log format ["WMP FULL AUDIT ZEUS SERVER READY: assigned %1 (%2) curator=%3", name _unit, owner _unit, netId _curator];
+        [_curator, _openInterface] remoteExecCall ["Waldo_QA_fnc_curatorAssignmentConfirmedClient", owner _unit];
+    };
     true
 };
+addMissionEventHandler ["EntityRespawned", {
+    params ["_newUnit", "_oldUnit"];
+    if (!isServer || {!isPlayer _newUnit}) exitWith {};
+    if !(_oldUnit isEqualTo (missionNamespace getVariable ["Waldo_QA_CuratorAssignedUnit", objNull])) exitWith {};
+    [_newUnit] spawn {
+        params ["_unit"];
+        waitUntil {uiSleep 0.1; isNull _unit || {_unit in allPlayers}};
+        if (!isNull _unit && {!isNil "Waldo_QA_fnc_assignCuratorServer"}) then {
+            [_unit] call Waldo_QA_fnc_assignCuratorServer;
+            diag_log format ["WMP FULL AUDIT ZEUS: transferred to respawned unit %1 (%2)", name _unit, owner _unit];
+        };
+    };
+}];
 if (isNull _curator) then {
     diag_log "WMP FULL AUDIT FAIL: Zeus curator could not be created";
 } else {
     _curator setVariable ["showNotification", false];
-    _curator setVariable ["Owner", "qa_player_1", true];
     _curator addCuratorEditableObjects [missionNamespace getVariable ["Waldo_QA_FeatureObjects", []], true];
     missionNamespace setVariable ["Waldo_QA_Curator", _curator, true];
     [] spawn {
-        waitUntil {uiSleep 0.2; (count allPlayers) > 0};
+        waitUntil {
+            uiSleep 0.2;
+            (allPlayers findIf {isPlayer _x && {owner _x > 2}}) >= 0
+        };
         private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
         if (!isNull _curator) then {
-            private _unit = allPlayers select 0;
-            unassignCurator _curator;
-            _unit assignCurator _curator;
-            _curator synchronizeObjectsAdd [_unit];
-            missionNamespace setVariable ["Waldo_QA_CuratorAssignedUnit", _unit, true];
-            diag_log format ["WMP FULL AUDIT ZEUS: assigned %1 (%2) to %3", name _unit, owner _unit, _curator];
+            private _unit = allPlayers select (allPlayers findIf {isPlayer _x && {owner _x > 2}});
+            [_unit] call Waldo_QA_fnc_assignCuratorServer;
         };
     };
 };

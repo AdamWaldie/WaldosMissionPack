@@ -66,6 +66,7 @@
         private _rows = call Waldo_fnc_EcoBuild_getSpawnedBuildings;
         _rows pushBackUnique _building;
         [_rows] call Waldo_fnc_EcoBuild_setSpawnedBuildings;
+        [_building, "BUILDINGS"] call Waldo_fnc_EcoCore_registerRuntimeObject;
 
         [_building] call Waldo_fnc_EcoBuild_trackBuildingMarker;
 

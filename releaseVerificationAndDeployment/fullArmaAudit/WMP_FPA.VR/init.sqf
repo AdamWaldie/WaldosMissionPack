@@ -3,13 +3,15 @@ call compile preprocessFileLineNumbers "auditBootstrap.sqf";
 call compile preprocessFileLineNumbers "auditPreInit.sqf";
 
 /*
-
-This file is called in multiplayer, as the loading screen is transitioning into the game. It runs on all connected clients, and the server.
-
-Below is the setup for the majority of QOL scripts in this pack.
-
-Enable/disable them as it suits you.
-
+ * Author: WaldoTheWarfighter
+ * Defines shared WMP mission configuration and starts systems whose state or behavior is consumed
+ * on every machine. Guarded defaults preserve authoritative live changes for JIP clients.
+ *
+ * Arguments: None.
+ * Return Value: Nothing; initializes shared mission state and schedules feature startup.
+ *
+ * Example: Arma executes init.sqf automatically during mission initialization.
+ * Current caller: the Arma mission initialization sequence on server, clients and headless clients.
 */
 
 //Lighting Setup Engine - Optional
@@ -19,8 +21,196 @@ Enable/disable them as it suits you.
 //[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 
 
-//Zeus Enhanced Modules setup (comment out to disable)
-[] call Waldo_fnc_ZenInitModules;
+/*
+Optional feature systems
+
+Shared configuration lives here only when both authority and clients consume it. Player-only
+configuration and activation live in initPlayerLocal.sqf; server-only configuration and activation
+live in initServer.sqf. Guarded local defaults preserve server-published mid-mission changes for JIP.
+*/
+// Visual-only global UI style: DEFAULT | WW2 | VIETNAM | SCIFI.
+// Set this before the guarded default to choose the mission's presentation without changing behavior.
+if (isNil "Waldo_UI_Theme") then {Waldo_UI_Theme = "DEFAULT"};
+if (isNil "Waldo_UI_CustomThemes") then {Waldo_UI_CustomThemes = createHashMap};
+if (isNil "Waldo_UI_ThemeOverrides") then {Waldo_UI_ThemeOverrides = createHashMap};
+
+if (isNil "Waldo_Persistence_Enable") then {Waldo_Persistence_Enable = false};
+if (isNil "Waldo_Persistence_PlayerSaveInterval") then {Waldo_Persistence_PlayerSaveInterval = 60};
+if (isNil "Waldo_Persistence_ObjectSaveInterval") then {Waldo_Persistence_ObjectSaveInterval = 60};
+if (isNil "Waldo_Persistence_SaveLoadout") then {Waldo_Persistence_SaveLoadout = true};
+if (isNil "Waldo_Persistence_SaveMedical") then {Waldo_Persistence_SaveMedical = true};
+if (isNil "Waldo_Persistence_SaveFoodWater") then {Waldo_Persistence_SaveFoodWater = false};
+if (isNil "Waldo_Persistence_SavePosition") then {Waldo_Persistence_SavePosition = false};
+if (isNil "Waldo_Persistence_SaveRadios") then {Waldo_Persistence_SaveRadios = false};
+if (isNil "Waldo_Persistence_DatabaseName") then {Waldo_Persistence_DatabaseName = "WaldosMissionPack"};
+if (isNil "Waldo_Persistence_DefaultCustomVariables") then {
+    Waldo_Persistence_DefaultCustomVariables = [
+        "Waldo_ObjectScale", "Waldo_ObjectScaleOriginal",
+        "Waldo_Breaching_Processed", "Waldo_Breaching_AccumulatedStrength",
+        "Waldo_FieldResupply_Hub", "Waldo_FieldResupply_Stock",
+        "Waldo_FieldResupply_Deployed", "Waldo_FieldResupply_Charges"
+    ];
+};
+
+if (isNil "Waldo_FieldResupply_Enable") then {Waldo_FieldResupply_Enable = false};
+if (isNil "Waldo_FieldResupply_CrateClass") then {Waldo_FieldResupply_CrateClass = "Box_NATO_Ammo_F"};
+if (isNil "Waldo_FieldResupply_DefaultCarrierCapacity") then {Waldo_FieldResupply_DefaultCarrierCapacity = 2};
+if (isNil "Waldo_FieldResupply_ChargesPerCrate") then {Waldo_FieldResupply_ChargesPerCrate = 5};
+if (isNil "Waldo_FieldResupply_MagazinesPerType") then {Waldo_FieldResupply_MagazinesPerType = 1};
+if (isNil "Waldo_FieldResupply_UseCapacityBasedAmounts") then {Waldo_FieldResupply_UseCapacityBasedAmounts = true};
+if (isNil "Waldo_FieldResupply_CapacityAmounts") then {Waldo_FieldResupply_CapacityAmounts = [4, 3, 8, 3, 2]};
+if (isNil "Waldo_FieldResupply_MinimumMagazineRounds") then {Waldo_FieldResupply_MinimumMagazineRounds = 2};
+if (isNil "Waldo_FieldResupply_AllowedMagazines") then {Waldo_FieldResupply_AllowedMagazines = []};
+if (isNil "Waldo_FieldResupply_BlockedMagazines") then {Waldo_FieldResupply_BlockedMagazines = []};
+if (isNil "Waldo_FieldResupply_RetainOnRespawn") then {Waldo_FieldResupply_RetainOnRespawn = true};
+
+// Squad rally points are disabled by default and may also be configured live through ZEN.
+if (isNil "Waldo_Rally_Enable") then {Waldo_Rally_Enable = false};
+if (isNil "Waldo_Rally_ObjectClass") then {Waldo_Rally_ObjectClass = "Land_SatelliteAntenna_01_F"};
+if (isNil "Waldo_Rally_Duration") then {Waldo_Rally_Duration = 180};
+if (isNil "Waldo_Rally_DeploymentTime") then {Waldo_Rally_DeploymentTime = 15};
+if (isNil "Waldo_Rally_Cooldown") then {Waldo_Rally_Cooldown = 300};
+if (isNil "Waldo_Rally_EnemyExclusionRadius") then {Waldo_Rally_EnemyExclusionRadius = 100};
+if (isNil "Waldo_Rally_MinimumGroupMembers") then {Waldo_Rally_MinimumGroupMembers = 2};
+if (isNil "Waldo_Rally_PlacementDistance") then {Waldo_Rally_PlacementDistance = 2};
+if (isNil "Waldo_Rally_MaximumSlope") then {Waldo_Rally_MaximumSlope = 20};
+if (isNil "Waldo_Rally_RespawnClearance") then {Waldo_Rally_RespawnClearance = 2.5};
+if (isNil "Waldo_Rally_RespawnSearchDistance") then {Waldo_Rally_RespawnSearchDistance = 15};
+if (isNil "Waldo_Rally_AllowRegroup") then {Waldo_Rally_AllowRegroup = false};
+
+// Vehicle recovery is activated by registering workshops and vehicles. The scan is server-only.
+if (isNil "Waldo_Recovery_ScanInterval") then {Waldo_Recovery_ScanInterval = 3};
+if (isNil "Waldo_Recovery_NotificationRadius") then {Waldo_Recovery_NotificationRadius = 100};
+if (isNil "Waldo_Recovery_CreateWorkshopMarkers") then {Waldo_Recovery_CreateWorkshopMarkers = true};
+if (isNil "Waldo_Recovery_PlacementClearance") then {Waldo_Recovery_PlacementClearance = 3};
+if (isNil "Waldo_Recovery_DefaultCustomVariables") then {Waldo_Recovery_DefaultCustomVariables = []};
+
+if (isNil "Waldo_Gunship_Enable") then {Waldo_Gunship_Enable = false};
+if (isNil "Waldo_Gunship_DefaultAltitude") then {Waldo_Gunship_DefaultAltitude = 700};
+if (isNil "Waldo_Gunship_MaximumAltitude") then {Waldo_Gunship_MaximumAltitude = 5000};
+if (isNil "Waldo_Gunship_DefaultRadius") then {Waldo_Gunship_DefaultRadius = 1500};
+if (isNil "Waldo_Gunship_MaximumRadius") then {Waldo_Gunship_MaximumRadius = 10000};
+if (isNil "Waldo_Gunship_DefaultServiceDuration") then {Waldo_Gunship_DefaultServiceDuration = 900};
+if (isNil "Waldo_Gunship_MonitorInterval") then {Waldo_Gunship_MonitorInterval = 2};
+if (isNil "Waldo_Gunship_MinimumFuel") then {Waldo_Gunship_MinimumFuel = 0.25};
+if (isNil "Waldo_Gunship_MaximumDamage") then {Waldo_Gunship_MaximumDamage = 0.65};
+if (isNil "Waldo_Gunship_ServiceFuelFraction") then {Waldo_Gunship_ServiceFuelFraction = 1};
+if (isNil "Waldo_Gunship_ServiceAmmoFraction") then {Waldo_Gunship_ServiceAmmoFraction = 1};
+if (isNil "Waldo_Gunship_ServiceDamage") then {Waldo_Gunship_ServiceDamage = 0};
+if (isNil "Waldo_Gunship_MaximumServiceCycles") then {Waldo_Gunship_MaximumServiceCycles = -1};
+if (isNil "Waldo_Gunship_ReturnWhenOutOfAmmo") then {Waldo_Gunship_ReturnWhenOutOfAmmo = true};
+if (isNil "Waldo_Gunship_SideAircraftPools") then {
+    Waldo_Gunship_SideAircraftPools = createHashMapFromArray [
+        ["WEST", ["B_T_VTOL_01_armed_F"]], ["EAST", []], ["INDEPENDENT", []], ["CIVILIAN", []]
+    ];
+};
+if (isNil "Waldo_Gunship_FactionAircraftPools") then {Waldo_Gunship_FactionAircraftPools = createHashMap};
+
+if (isNil "Waldo_Hazard_Enable") then {Waldo_Hazard_Enable = false};
+if (isNil "Waldo_Hazard_Interval") then {Waldo_Hazard_Interval = 1};
+if (isNil "Waldo_Hazard_ShowStatus") then {Waldo_Hazard_ShowStatus = true};
+if (isNil "Waldo_Hazard_NotifyTransitions") then {Waldo_Hazard_NotifyTransitions = true};
+if (isNil "Waldo_Hazard_NotificationDuration") then {Waldo_Hazard_NotificationDuration = 6};
+if (isNil "Waldo_Hazard_Presets") then {
+    Waldo_Hazard_Presets = createHashMapFromArray [
+        ["MILD", createHashMapFromArray [
+            ["type", "HAZARD"], ["label", "Hazardous Area"], ["rate", 0.5], ["decay", 0.25],
+            ["damageType", "stab"], ["damageThresholds", [[20, 0.01], [45, 0.02]]],
+            ["damageStageMessages", ["Continued exposure is causing injury.", "Exposure is becoming severe; evacuate or use protection."]]
+        ]],
+        ["SEVERE", createHashMapFromArray [
+            ["type", "HAZARD"], ["label", "Severe Hazard"], ["rate", 2], ["decay", 0.1],
+            ["damageType", "stab"], ["damageThresholds", [[8, 0.03], [20, 0.08], [35, 0.15]]], ["fatalExposure", 60],
+            ["damageStageMessages", ["Hazard exposure is causing injury.", "Severe exposure: evacuate immediately.", "Critical exposure: death is imminent."]]
+        ]],
+        ["VACUUM", createHashMapFromArray [
+            ["type", "NO_OXYGEN"], ["label", "Unpressurised Area"], ["rate", 8], ["decay", 2],
+            ["protectInVehicles", true], ["vehicleFactor", 0], ["damageType", "stab"],
+            ["damageThresholds", [[8, 0.04], [20, 0.12]]], ["fatalExposure", 35],
+            ["damageStageMessages", ["Oxygen deprivation is causing injury.", "Critical oxygen deprivation: reach pressure immediately."]]
+        ]]
+    ];
+};
+
+if (isNil "Waldo_TreeFelling_Enable") then {Waldo_TreeFelling_Enable = false};
+if (isNil "Waldo_TreeFelling_Range") then {Waldo_TreeFelling_Range = 3};
+if (isNil "Waldo_TreeFelling_BaseHits") then {Waldo_TreeFelling_BaseHits = 3};
+if (isNil "Waldo_TreeFelling_HeightFactor") then {Waldo_TreeFelling_HeightFactor = 0.25};
+if (isNil "Waldo_TreeFelling_HitCooldown") then {Waldo_TreeFelling_HitCooldown = 0.7};
+if (isNil "Waldo_TreeFelling_WeaponPatterns") then {Waldo_TreeFelling_WeaponPatterns = ["axe", "hatchet"]};
+if (isNil "Waldo_TreeFelling_FallenClasses") then {Waldo_TreeFelling_FallenClasses = ["Land_WoodenLog_F"]};
+if (isNil "Waldo_TreeFelling_FallenClassesSmall") then {Waldo_TreeFelling_FallenClassesSmall = []};
+if (isNil "Waldo_TreeFelling_FallenClassesMedium") then {Waldo_TreeFelling_FallenClassesMedium = []};
+if (isNil "Waldo_TreeFelling_FallenClassesLarge") then {Waldo_TreeFelling_FallenClassesLarge = []};
+if (isNil "Waldo_TreeFelling_SizeThresholds") then {Waldo_TreeFelling_SizeThresholds = [7, 15]};
+if (isNil "Waldo_TreeFelling_FallenRandomDirection") then {Waldo_TreeFelling_FallenRandomDirection = true};
+if (isNil "Waldo_TreeFelling_DirectionMode") then {Waldo_TreeFelling_DirectionMode = "RANDOM"}; // RANDOM | ORIGINAL | STRIKE
+if (isNil "Waldo_TreeFelling_ClearBushes") then {Waldo_TreeFelling_ClearBushes = false};
+if (isNil "Waldo_TreeFelling_BushRadius") then {Waldo_TreeFelling_BushRadius = 4};
+if (isNil "Waldo_TreeFelling_ToolEfficiency") then {Waldo_TreeFelling_ToolEfficiency = createHashMap};
+if (isNil "Waldo_TreeFelling_ProtectedAreas") then {Waldo_TreeFelling_ProtectedAreas = []};
+if (isNil "Waldo_TreeFelling_Yields") then {Waldo_TreeFelling_Yields = []};
+if (isNil "Waldo_TreeFelling_RegrowSeconds") then {Waldo_TreeFelling_RegrowSeconds = -1};
+
+if (isNil "Waldo_Breaching_Enable") then {Waldo_Breaching_Enable = false};
+if (isNil "Waldo_Breaching_Profiles") then {Waldo_Breaching_Profiles = createHashMap};
+if (isNil "Waldo_Breaching_ExplosiveStrengths") then {
+    Waldo_Breaching_ExplosiveStrengths = createHashMapFromArray [
+        ["DemoCharge_Remote_Ammo", 1], ["SatchelCharge_Remote_Ammo", 3]
+    ];
+};
+missionNamespace setVariable ["Waldo_SharedFeatureConfigReady", true];
+if (isServer) then {
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", true];
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
+} else {
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", false];
+    missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
+    [] call Waldo_fnc_FeatureRuntimeRequestState;
+};
+
+// Dynamic paradrop operations. Airframe availability is independent from operational side and
+// mission makers may extend these arrays with mod aircraft/chutes before init.sqf runs.
+if (isNil "Waldo_Paradrop_AircraftClasses") then {
+    Waldo_Paradrop_AircraftClasses = [
+        "B_T_VTOL_01_infantry_F",
+        "O_T_VTOL_02_infantry_dynamicLoadout_F",
+        "B_Heli_Transport_03_unarmed_F",
+        "O_Heli_Transport_04_covered_F",
+        "I_Heli_Transport_02_F"
+    ];
+};
+if (isNil "Waldo_Paradrop_StaticChuteClasses") then {
+    Waldo_Paradrop_StaticChuteClasses = ["NonSteerable_Parachute_F"];
+};
+if (isNil "Waldo_Paradrop_HaloBackpackClasses") then {
+    Waldo_Paradrop_HaloBackpackClasses = ["B_Parachute", "O_Parachute", "I_Parachute"];
+};
+// Compatibility alias for missions that extended the original combined list.
+if (isNil "Waldo_Paradrop_ChuteClasses") then {
+    Waldo_Paradrop_ChuteClasses = +Waldo_Paradrop_StaticChuteClasses;
+};
+if (isNil "Waldo_Paradrop_BoardingPointClasses") then {
+    Waldo_Paradrop_BoardingPointClasses = [
+        "FlagPole_F",
+        "Land_InfoStand_V1_F",
+        "Land_InfoStand_V2_F",
+        "Land_MapBoard_F",
+        "Land_Laptop_unfolded_F",
+        "Land_CampingTable_small_F",
+        "Land_PortableLight_single_F"
+    ];
+};
+[] spawn {
+    waitUntil {
+        missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+        || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+    };
+    if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    if (missionNamespace getVariable ["Waldo_Breaching_Enable", false]) then {
+        [] call Waldo_fnc_BreachingInit;
+    };
+};
 
 /*
 Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
@@ -44,9 +234,9 @@ Full guide (easiest path first): https://github.com/AdamWaldie/WaldosMissionPack
 // Respect configuration supplied before the pack entry point runs. This is useful for
 // generated missions and scripted deployments while retaining the normal disabled default.
 Waldo_Economy_Enable = missionNamespace getVariable ["Waldo_Economy_Enable", false];
-if (Waldo_Economy_Enable) then {
-    [] spawn Waldo_fnc_EcoInit;
-};
+// Activation is deliberately deferred to initServer.sqf and initPlayerLocal.sqf.
+// The server must publish its preset/configuration before Economy reads it; starting here can
+// race initServer.sqf and leave an enabled economy with empty catalogues.
 
 /*
 Waldos Mini Games (table party games + interaction procedures)
@@ -65,7 +255,7 @@ Two complementary systems under one feature:
 Set the flag to false if your mission uses no table games (the interaction challenges are
 unaffected). Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games
 */
-Waldo_MiniGames_Enable = true;
+if (isNil "Waldo_MiniGames_Enable") then {Waldo_MiniGames_Enable = true};
 if (Waldo_MiniGames_Enable) then {
     [] call Waldo_fnc_MiniGamesInit;
 };
@@ -80,7 +270,7 @@ throwables use their own projectile behaviour when somebody opens the body's inv
 This is deliberately OFF by default because it changes a familiar inventory interaction into a
 lethal risk. Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACE-Corpse-Traps
 */
-Waldo_CorpseTraps_Enable = false;
+if (isNil "Waldo_CorpseTraps_Enable") then {Waldo_CorpseTraps_Enable = false};
 if (Waldo_CorpseTraps_Enable) then {
     [] call Waldo_fnc_CorpseTrapInit;
 };
@@ -112,12 +302,69 @@ ACE_maxWeightCarry = 6000;
 
 /*===========================================================================================================================*/
 
+// Note that its due to Ace Hearing fucking with CBA & Vanilla audio commands (https://github.com/acemod/ACE3/issues/4029)
+ace_hearing_disableVolumeUpdate = true;
+
+
+/*===========================================================================================================================*/
+
 /*
 AI Tweak setup
 These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
 Daytime Mission parameter - uncomment this for daytime AI values.
 */
-"DAY" call Waldo_fnc_AITweak;
+if (isNil "Waldo_AIRebalance_Enable") then {Waldo_AIRebalance_Enable = true};
+if (isNil "Waldo_AIRebalance_Mode") then {Waldo_AIRebalance_Mode = missionNamespace getVariable ["Waldo_AI_Mode", "DAY"]};
+if (isNil "Waldo_AIRebalance_Profile") then {Waldo_AIRebalance_Profile = "LINE"};
+if (isNil "Waldo_AI_ApplyMode") then {Waldo_AI_ApplyMode = "BOTH"}; // BOTH | EXISTING | NEW
+if (isNil "Waldo_AI_RestoreOnStop") then {Waldo_AI_RestoreOnStop = true};
+if (isNil "Waldo_AI_SkillVariance") then {Waldo_AI_SkillVariance = 0};
+if (isNil "Waldo_AI_IncludedSides") then {Waldo_AI_IncludedSides = []};
+if (isNil "Waldo_AI_IncludedFactions") then {Waldo_AI_IncludedFactions = []};
+if (isNil "Waldo_AI_ExcludedFactions") then {Waldo_AI_ExcludedFactions = []};
+if (isNil "Waldo_AI_ExcludedClasses") then {Waldo_AI_ExcludedClasses = []};
+// Event-driven AI helicopter landing assistance. Per-aircraft HashMap overrides may be stored in
+// Waldo_ImprovedHelicopterLanding_Profile; set Waldo_ImprovedHelicopterLanding_Exclude to opt out.
+if (isNil "Waldo_ImprovedHelicopterLanding_Enable") then {Waldo_ImprovedHelicopterLanding_Enable = true};
+if (isNil "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance") then {Waldo_ImprovedHelicopterLanding_MinimumActivationDistance = 50};
+if (isNil "Waldo_ImprovedHelicopterLanding_TriggerDistance") then {Waldo_ImprovedHelicopterLanding_TriggerDistance = 500};
+if (isNil "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor") then {Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor = 4.2};
+if (isNil "Waldo_ImprovedHelicopterLanding_TransitAltitude") then {Waldo_ImprovedHelicopterLanding_TransitAltitude = 30};
+if (isNil "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio") then {Waldo_ImprovedHelicopterLanding_GlideSlopeRatio = 4};
+if (isNil "Waldo_ImprovedHelicopterLanding_TreeScanRadius") then {Waldo_ImprovedHelicopterLanding_TreeScanRadius = 25};
+if (isNil "Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer") then {Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer = 5};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight") then {Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight = 40};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance") then {Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance = 200};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundHeight") then {Waldo_ImprovedHelicopterLanding_GoAroundHeight = 150};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundExitDistance") then {Waldo_ImprovedHelicopterLanding_GoAroundExitDistance = 250};
+if (isNil "Waldo_ImprovedHelicopterLanding_GoAroundSpeed") then {Waldo_ImprovedHelicopterLanding_GoAroundSpeed = 70};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumGoArounds") then {Waldo_ImprovedHelicopterLanding_MaximumGoArounds = 1};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumClimbRate") then {Waldo_ImprovedHelicopterLanding_MaximumClimbRate = 8};
+if (isNil "Waldo_ImprovedHelicopterLanding_MaximumDescentRate") then {Waldo_ImprovedHelicopterLanding_MaximumDescentRate = 10};
+if (isNil "Waldo_ImprovedHelicopterLanding_TouchdownRadius") then {Waldo_ImprovedHelicopterLanding_TouchdownRadius = 2};
+if (isNil "Waldo_ImprovedHelicopterLanding_FinalCommitDistance") then {Waldo_ImprovedHelicopterLanding_FinalCommitDistance = 75};
+if (isNil "Waldo_ImprovedHelicopterLanding_ControlInterval") then {Waldo_ImprovedHelicopterLanding_ControlInterval = 0.05};
+if (isNil "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds") then {Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds = 8};
+if (isNil "Waldo_AI_ProfileDisplayNames") then {
+    Waldo_AI_ProfileDisplayNames = createHashMapFromArray [
+        ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
+        ["LINE", "WMP Line"], ["VETERAN", "WMP Veteran"], ["ELITE", "WMP Elite"]
+    ];
+};
+[] spawn {
+    waitUntil {
+        missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+        || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+    };
+    if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    if (missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]) then {
+        [
+            missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"],
+            missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"]
+        ] call Waldo_fnc_AITweak;
+    };
+    [] call Waldo_fnc_ImprovedHelicopterLandingInit;
+};
 // Nightime Mission - uncomment this for nightime AI values.
 //"NIGHT" call Waldo_fnc_AITweak;
 
@@ -149,7 +396,10 @@ private _RadioSetups = [
 	["Viking 3.2",[3,2]],
 	["Banshee",[4,1]]
 ];
-[_RadioSetups] call Waldo_fnc_ACRE2Init;
+// ACRE setup deliberately enters on every machine: the server publishes the shared
+// callsign/channel allocation, while interface clients configure their own radios and CEOI.
+// Waldo_fnc_ACRE2Init exits on a dedicated server before touching player or ACRE client state.
+[_RadioSetups] spawn Waldo_fnc_ACRE2Init;
 
 
 /*
@@ -236,21 +486,18 @@ Model options (tune the realism/gameplay to taste):
 - Waldo_Jamming_Curve          "LINEAR" or "INVSQ" edge falloff
 - Waldo_Jamming_Destructible   true  = destroying a jammer's object removes it (EW objectives)
 - Waldo_Jamming_GmOverlay      false = optional curator-only jammer marker and facing line
-- Waldo_Jamming_ScanRange      detection range (m) of the handheld RDF "Scan for Radio Jammers" action
+- Waldo_Jamming_ScanRange      hard detection cap (m); RDF reports only sources whose active field currently reaches the operator
+- Waldo_Jamming_ScanBearingArc width (deg) of the reported bearing sector
+- Waldo_Jamming_ScanDistanceBands absolute metre thresholds for VERY CLOSE / NEARBY / DISTANT; beyond the third is VERY DISTANT
+- Waldo_Jamming_DisableChallenge false = legacy instant engineer disable; true = shared field procedure
+- Waldo_Jamming_DisableChallengeId "circuit" and Waldo_Jamming_DisableDifficulty "standard"
+- Waldo_Jamming_DisableEngineerOnly true = server and client both require ACE engineer capability
+- Waldo_Jamming_DisableResult "DISABLE" preserves the emitter for curator reactivation; "DESTROY" removes it
+- Waldo_Jamming_AllowPlayerToggle true = legacy direct toggle on non-challenge emitters only
 */
-Waldo_Jamming_Enable = true;
-missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];
-missionNamespace setVariable ["Waldo_Jamming_LOS", true, true];
-missionNamespace setVariable ["Waldo_Jamming_BurnThrough", true, true];
-missionNamespace setVariable ["Waldo_Jamming_BurnThroughRef", 500, true];
-missionNamespace setVariable ["Waldo_Jamming_Curve", "LINEAR", true];
-missionNamespace setVariable ["Waldo_Jamming_Destructible", true, true];
-missionNamespace setVariable ["Waldo_Jamming_GmOverlay", false, true];
-missionNamespace setVariable ["Waldo_Jamming_ScanRange", 3000, true];
-if (Waldo_Jamming_Enable) then {
-    missionNamespace setVariable ["Waldo_Jamming_Enable", true, true];
-    [] call Waldo_fnc_JammingInit;
-};
+// Authoritative jamming configuration is established once in initServer.sqf and
+// consumed by each joining player in initPlayerLocal.sqf. Do not broadcast defaults
+// here: init.sqf runs again on JIP clients and would overwrite live server/Zeus state.
 
 
 /*===========================================================================================================================*/
@@ -271,7 +518,7 @@ call Waldo_fnc_InitVehicles;
 Briefing documents
 
 */
-call Waldo_fnc_AddDocs;
+if (hasInterface) then {call Waldo_fnc_AddDocs};
 
 /*
 
@@ -285,7 +532,7 @@ Currently based on the first word in the role description.
 So Squad Leader will trigger assignment as Yellow but Viking Squad Leader will not- will likely refine this later.
 
 */
-call Waldo_fnc_SetTeamColour;
+if (hasInterface) then {call Waldo_fnc_SetTeamColour};
 
 /*===========================================================================================================================*/
 
@@ -295,7 +542,9 @@ Introduction Text - Cool Introduction stuff like location, date, time and missio
 When left with no parameters, as below, the script autogenerates the location based on the terrain name, and the mission title from the description.ext
 You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission.
 */
-["",""] call Waldo_fnc_InfoText;
+// Player presentation requires display 46. Running InfoText on a dedicated server
+// waits forever for a display that cannot exist and blocks WALDO_INIT_COMPLETE.
+if (hasInterface) then {["",""] call Waldo_fnc_InfoText};
 
 /*
 
@@ -307,10 +556,8 @@ sleep 10; // Buffer cycles for other inits to be completed - should not be remov
 // A dedicated server has no local player. Waiting for one here prevented the pack's
 // completion flag and any post-start consumers from ever running on that machine.
 waitUntil {isDedicated || {!isNull player && {player == player}}};
-private _firstPlayerIn = missionNamespace getVariable "WALDO_INIT_COMPLETE";
-if (isNil "_firstPlayerIn") then
-{
-	missionNamespace setVariable ["WALDO_INIT_COMPLETE", true, true];
-};
+// Per-machine readiness: a client must not mark the server (or another JIP client)
+// complete. Every machine reaches this only after its own shared init chain finishes.
+missionNamespace setVariable ["WALDO_INIT_COMPLETE", true];
 
 call compile preprocessFileLineNumbers "auditInit.sqf";

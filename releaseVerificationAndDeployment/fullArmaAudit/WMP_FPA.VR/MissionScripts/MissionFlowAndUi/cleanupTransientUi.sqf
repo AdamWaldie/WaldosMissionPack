@@ -23,6 +23,7 @@ uiNamespace setVariable ["Waldo_MG_NoticeToken", ""];
 } forEach (uiNamespace getVariable ["Waldo_UiPanelRegistry", []]);
 uiNamespace setVariable ["Waldo_UiPanelRegistry", []];
 uiNamespace setVariable ["Waldo_UiPanelQueue", []];
+uiNamespace setVariable ["Waldo_UiNotification_DisplayWaitQueue", []];
 
 private _mainDisplay = findDisplay 46;
 if (!isNull _mainDisplay) then {
