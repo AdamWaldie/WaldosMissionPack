@@ -19,8 +19,8 @@
  * Return Value:
  * Nothing
  *
- * Called by:
- * Waldo_fnc_Jammer broadcasts this function to the server, every current client and JIP clients.
+ * Current callers: Waldo_fnc_Jammer broadcasts this function to the server, every current client
+ * and JIP client; Waldo_fnc_ZenCreateJammerServer retries the exact payload after ownership settles.
  *
  * Example:
  * [myJammer, [false, true, "circuit", "standard", true, "DISABLE"]]
@@ -96,8 +96,8 @@ if (_challengeEnabled && {!isNil "Waldo_fnc_MiniGameInteractionSetup"}) then {
 // Dedicated servers retain the authoritative callbacks above but do not install local actions.
 if (!hasInterface) exitWith {};
 if !(isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) exitWith {};
-if (_object getVariable ["Waldo_Jamming_AceAdded", false]) exitWith {};
-_object setVariable ["Waldo_Jamming_AceAdded", true];
+if (isNil "ace_interact_menu_fnc_createAction" || {isNil "ace_interact_menu_fnc_addActionToObject"}) exitWith {};
+if (_object getVariable ["Waldo_Jamming_DisableACEInstalled", false]) exitWith {};
 
 // The operator toggle remains a separately configured convenience; the disable action below is
 // the single feature surface whose execution can be gated by the optional procedure.
@@ -127,7 +127,8 @@ private _disable = [
         if (_target getVariable ["Waldo_Jamming_DisableChallenge", false]) then {
             _target call Waldo_fnc_MiniGameInteractionActivate;
         } else {
-            [_target, _player, "DESTROY"] remoteExecCall ["Waldo_fnc_JammerDisableServer", 2];
+            [_target, _player, _target getVariable ["Waldo_Jamming_DisableResult", "DISABLE"]]
+                remoteExecCall ["Waldo_fnc_JammerDisableServer", 2];
         };
     },
     {
@@ -143,6 +144,9 @@ private _disable = [
         && {!(_target getVariable ["Waldo_Jamming_FieldDisabled", false])}
     }
 ] call ace_interact_menu_fnc_createAction;
-private _disablePath = [_object, 0, ["ACE_MainActions"], _disable] call ace_interact_menu_fnc_addActionToObject;
+[_object, 0, ["ACE_MainActions"], _disable] call ace_interact_menu_fnc_addActionToObject;
+private _disablePath = ["ACE_MainActions", "Waldo_Jammer_Disable"];
 _object setVariable ["Waldo_Jamming_DisableACEPath", _disablePath];
+_object setVariable ["Waldo_Jamming_DisableACEInstalled", true];
+_object setVariable ["Waldo_Jamming_AceAdded", true];
 diag_log format ["[WMP JAM] feature action installed object=%1 action=Waldo_Jammer_Disable path=%2 challenge=%3", netId _object, _disablePath, _challengeEnabled];

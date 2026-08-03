@@ -66,12 +66,9 @@ if ((uiNamespace getVariable ["Waldo_JammingNoticeToken", ""]) != "") exitWith {
 if (_channels isEqualTo []) exitWith {
     _ctrl ctrlShow false;
     _frame ctrlShow false;
-    [] call Waldo_fnc_ReflowUiPanels;
+    ["ELECTRONIC_WARFARE_STATUS", [_frame, _ctrl], ["BOTTOM_RIGHT"], false] call Waldo_fnc_RegisterUiReservationLocal;
 };
 
-private _show = !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);
-_ctrl ctrlShow _show;
-_frame ctrlShow _show;
 
 private _combinedFactor = 0;
 {_combinedFactor = _combinedFactor max (_x param [1, 0]);} forEach _channels;
@@ -121,4 +118,4 @@ _frame ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
 _ctrl ctrlSetPosition [_panelX + _padX, _panelY + _padY, _panelW - (2 * _padX), _contentH];
 _frame ctrlCommit 0;
 _ctrl ctrlCommit 0;
-[] call Waldo_fnc_ReflowUiPanels;
+["ELECTRONIC_WARFARE_STATUS", [_frame, _ctrl], ["BOTTOM_RIGHT"], true] call Waldo_fnc_RegisterUiReservationLocal;

@@ -12,7 +12,7 @@ These modules allow users to:
 * Generate and clean up complete randomized [Dynamic AOs](Dynamic-AO-Generation)
 * Create and remove routed [Dynamic Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations) operations
 * Scale the nearest object through a validated server request
-* Configure persistence, hazardous environments, emergency dismount and AI rebalance while the mission is running
+* Configure persistence, hazardous environments and AI rebalance while the mission is running
 * Register field-resupply hubs/carriers and tactical-display terminals
 * Register, assign and operate airborne gunship support
 * Register vehicle-recovery workshops, recoverable vehicles and recovery carriers
@@ -76,7 +76,7 @@ Below is an example of the custom mission end screen:
 
 Three modules drive the [Radio Jamming](Radio-Jamming) system live in-game (works with ACRE2 and TFAR):
 
-* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing** (arc 360 = omnidirectional), whether it **pulses**, and whether to drop a **map marker**, then spawns an emitter at the module position and switches it on. The emitter is added to the curator so it can be dragged or deleted like any Zeus object.
+* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing**, pulsing, markers, exact emitter object, optional field-disable procedure, public/engineer access, and whether success disables or destroys it. The emitter is simulation-enabled and assigned to the requesting curator so it can be dragged smoothly; its live field and **Disable Jammer** action remain attached after movement.
 * **Radio Jammer - Toggle Nearest** — flips the nearest jammer on or off (no dialog).
 * **Radio Jammer - Remove Nearest** — removes the nearest jammer and deletes its emitter.
 
@@ -123,13 +123,13 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 **AI Rebalance - Control** enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier.
 
-## Emergency Dismount
-
-Under **WMP Mission Tools**, **Emergency Dismount - Control** enables or removes the player-local extraction system for current players and JIP. It exposes overturned/destroyed triggers, velocity preservation, temporary protection and duration, clear-position search radius/refusal, eject transition and unconscious-occupant policy. Vehicle upright actions remain on the affected vehicle; the module controls extraction policy rather than mutating a vehicle directly.
-
 ## Field Resupply
 
 **Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. With ACE loaded, the assigned player receives carrier controls under ACE Self Actions; a backpack is required and deployment is available only on foot. All creation, refill, deploy, take and salvage operations are validated by the server.
+
+## Loadout Save Point
+
+**Respawn: Create Loadout Save Point** is under **WMP Logistics**. Place it on an existing object to add the save-loadout interaction, or place it on empty ground to create the configured station crate first. It is intentionally grouped with supply, starter-loadout and re-equipment tools rather than mission-flow controls.
 
 ## Tactical Display
 

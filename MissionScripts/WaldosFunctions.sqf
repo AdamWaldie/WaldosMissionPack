@@ -200,6 +200,12 @@ class CfgFunctions
               class ReflowUiPanels {
                   file = "MissionScripts\MissionFlowAndUi\reflowUiPanels.sqf";
               };
+              class RegisterUiReservationLocal {
+                  file = "MissionScripts\MissionFlowAndUi\registerUiReservationLocal.sqf";
+              };
+              class UnregisterUiReservationLocal {
+                  file = "MissionScripts\MissionFlowAndUi\unregisterUiReservationLocal.sqf";
+              };
               class DrainUiNotificationQueue {
                   file = "MissionScripts\MissionFlowAndUi\drainUiNotificationQueue.sqf";
               };
@@ -458,6 +464,9 @@ class CfgFunctions
             };
             class ZenLoadoutSaveModule {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveModule.sqf";
+            };
+            class ZenAssignObjectOwnerServer {
+                file = "MissionScripts\ZenModules\zenAssignObjectOwnerServer.sqf";
             };
             class ZenAddLoadoutSaveAction {
                 file = "MissionScripts\ZenModules\Zen_loadoutSaveSetup.sqf";

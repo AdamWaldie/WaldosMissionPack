@@ -422,27 +422,6 @@ switch (toUpperANSI _feature) do {
             }
         ] call zen_dialog_fnc_create;
     };
-    case "EMERGENCY": {
-        [
-            "Emergency Dismount Control",
-            [
-                ["CHECKBOX", ["Enable", "Install or remove the player-local emergency extraction controls for current players and JIP."], missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false]],
-                ["CHECKBOX", ["Allow overturned extraction", "Permit emergency exit when the occupied vehicle is overturned."], missionNamespace getVariable ["Waldo_EmergencyDismount_OnOverturn", true]],
-                ["CHECKBOX", ["Allow destroyed-vehicle extraction", "Permit emergency exit when the occupied vehicle is destroyed."], missionNamespace getVariable ["Waldo_EmergencyDismount_OnDestroyed", true]],
-                ["CHECKBOX", ["Preserve vehicle velocity", "Carry the vehicle's movement into the exiting unit instead of stopping them abruptly."], missionNamespace getVariable ["Waldo_EmergencyDismount_PreserveVelocity", true]],
-                ["CHECKBOX", ["Temporary exit protection", "Temporarily protect the player from collision/damage during the extraction transition."], missionNamespace getVariable ["Waldo_EmergencyDismount_ProtectDuringExit", true]],
-                ["SLIDER", ["Protection duration", "Seconds before temporary extraction protection is removed."], [0.5, 10, missionNamespace getVariable ["Waldo_EmergencyDismount_ProtectionSeconds", 2], 1]],
-                ["SLIDER", ["Clear-position search radius", "Maximum metres searched for a safe exterior placement."], [0, 30, missionNamespace getVariable ["Waldo_EmergencyDismount_ClearPositionRadius", 8], 1]],
-                ["CHECKBOX", ["Require a clear exit", "Refuse extraction instead of placing the player at a blocked fallback position."], missionNamespace getVariable ["Waldo_EmergencyDismount_RequireClearExit", true]],
-                ["CHECKBOX", ["Use engine eject", "Use Arma's eject transition rather than an ordinary get-out transition."], missionNamespace getVariable ["Waldo_EmergencyDismount_UseEject", true]],
-                ["CHECKBOX", ["Recover unconscious occupants", "Permit configured unconscious players to use the extraction path."], missionNamespace getVariable ["Waldo_EmergencyDismount_RecoverUnconscious", false]]
-            ],
-            {
-                params ["_values"];
-                ["EMERGENCY_CONFIG", _values] call Waldo_fnc_FeatureRuntimeApply;
-            }
-        ] call zen_dialog_fnc_create;
-    };
     case "AI": {
         private _profileValues = ["LEGACY", "MILITIA", "LINE", "VETERAN", "ELITE"];
         private _configuredProfiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];

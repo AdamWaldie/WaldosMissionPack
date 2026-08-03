@@ -43,7 +43,7 @@ if ((uiNamespace getVariable ["Waldo_SafeStart_NoticeToken", ""]) != "") exitWit
 if (!_enabled) exitWith {
     _control ctrlShow false;
     _frame ctrlShow false;
-    [] call Waldo_fnc_ReflowUiPanels;
+    ["SAFESTART_STATUS", [_frame, _control], ["TOP", "TOP_RIGHT"], false] call Waldo_fnc_RegisterUiReservationLocal;
     true
 };
 
@@ -62,8 +62,5 @@ _frame ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
 _control ctrlSetPosition [_panelX + _padX, _panelY + _padY, _panelW - (2 * _padX), _contentH];
 _frame ctrlCommit 0;
 _control ctrlCommit 0;
-private _show = !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);
-_frame ctrlShow _show;
-_control ctrlShow _show;
-[] call Waldo_fnc_ReflowUiPanels;
+["SAFESTART_STATUS", [_frame, _control], ["TOP", "TOP_RIGHT"], true] call Waldo_fnc_RegisterUiReservationLocal;
 true

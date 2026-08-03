@@ -87,7 +87,6 @@ if (_mode in ["POLE", "BOTH"]) then {
         _point setPosATL _pointPosition;
         _point setVectorUp (surfaceNormal _pointPosition);
         _point allowDamage false;
-        _point enableSimulationGlobal false;
         if (_point isKindOf "FlagCarrierCore") then {_point setFlagTexture "\A3\Data_F\Flags\Flag_blue_CO.paa";};
         _point setVariable ["Waldo_Paradrop_BoardingOperation", _id, true];
         [_point, _aircraft, _label] remoteExec ["Waldo_fnc_MoveInCargoPlane", 0, _point];
@@ -96,14 +95,7 @@ if (_mode in ["POLE", "BOTH"]) then {
         _state set ["boardingPoints", _points];
         _registry set [_id, _state];
         missionNamespace setVariable ["Waldo_Paradrop_DropZones", _registry];
-        {_x addCuratorEditableObjects [[_point], false]} forEach allCurators;
-        [_point] spawn {
-            params ["_point"];
-            sleep 0.25;
-            if (!isNull _point) then {
-                {_x addCuratorEditableObjects [[_point], false]} forEach allCurators;
-            };
-        };
+        [_point, owner _requester, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         _didWork = true;
         [format ["Boarding point created for %1.", _name], "SUCCESS"] call _notify;
     };

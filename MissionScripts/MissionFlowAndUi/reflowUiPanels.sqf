@@ -16,32 +16,30 @@ if (!hasInterface) exitWith {false};
 params [["_duration", missionNamespace getVariable ["Waldo_UiNotification_ReflowDuration", 0.18], [0]]];
 _duration = (_duration max 0) min 1;
 private _registry = uiNamespace getVariable ["Waldo_UiPanelRegistry", []];
+private _reservations = uiNamespace getVariable ["Waldo_UI_ReservationRegistry", []];
 private _gap = safeZoneH * 0.008;
-private _display = findDisplay 46;
-private _safeStartBottom = safeZoneY + (safeZoneH * 0.045);
-private _jammingTop = safeZoneY + safeZoneH - (safeZoneH * 0.187);
-if (!isNull _display) then {
-    private _safeStartFrame = _display displayCtrl 5299;
-    if (!isNull _safeStartFrame && {ctrlShown _safeStartFrame}) then {
-        private _position = ctrlPosition _safeStartFrame;
-        _safeStartBottom = (_position select 1) + (_position select 3) + _gap;
-    };
-    private _jammingFrame = _display displayCtrl 5309;
-    if (!isNull _jammingFrame && {ctrlShown _jammingFrame}) then {
-        _jammingTop = (ctrlPosition _jammingFrame select 1) - _gap;
-    };
-};
 {
     private _placement = _x;
     private _entries = _registry select {(_x param [3, "TOP"]) isEqualTo _placement};
     private _cursor = switch (_placement) do {
-        case "BOTTOM_RIGHT": {_jammingTop};
+        case "BOTTOM_RIGHT": {safeZoneY + safeZoneH - (safeZoneH * 0.187)};
         case "BOTTOM_LEFT": {safeZoneY + safeZoneH - (safeZoneH * 0.05)};
         case "BOTTOM_CENTER": {safeZoneY + safeZoneH - (safeZoneH * 0.055)};
-        case "TOP";
-        case "TOP_RIGHT": {_safeStartBottom};
         default {safeZoneY + (safeZoneH * 0.045)};
     };
+    {
+        _x params ["_reservationKey", "_controls", "_placements", ["_active", true]];
+        if (_active && {_placement in _placements}) then {
+            private _visibleControls = _controls select {!isNull _x && {ctrlShown _x}};
+            if !(_visibleControls isEqualTo []) then {
+                if (_placement in ["BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]) then {
+                    {_cursor = _cursor min (((ctrlPosition _x) select 1) - _gap)} forEach _visibleControls;
+                } else {
+                    {_cursor = _cursor max (((ctrlPosition _x) select 1) + ((ctrlPosition _x) select 3) + _gap)} forEach _visibleControls;
+                };
+            };
+        };
+    } forEach _reservations;
     if (_placement isEqualTo "CENTER") then {
         private _total = _gap * (((count _entries) - 1) max 0);
         {_total = _total + (_x param [5, 0]);} forEach _entries;

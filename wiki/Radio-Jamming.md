@@ -126,8 +126,8 @@ Every jammer and every player gets ACE actions so an EW team can play the cat-an
 | Action | Where | Who | What it does |
 |---|---|---|---|
 | **Toggle Radio Jammer** | on a non-challenge jammer object | anyone | Optional operator convenience. It is hidden for challenge-enabled jammers so it cannot bypass the field procedure. |
-| **Bypass and Disable Radio Jammer** | on a challenge-enabled jammer object | engineers by default | Runs the configured shared interaction procedure. The server revalidates actor, distance, engineer status, registry state and completion before disabling or destroying the emitter. |
-| **Disable Radio Jammer** | on a legacy/non-challenge jammer object | engineers | Preserves the original immediate destroy-and-deregister behaviour. |
+| **Disable Jammer** | on a challenge-enabled jammer object | everyone by default for a Zeus-created objective; optionally engineers only | Runs the selected shared interaction procedure. The server revalidates actor, distance, optional engineer status, registry state and completion before disabling or destroying the emitter. |
+| **Disable Jammer** | on a non-challenge jammer object | everyone by default for a Zeus-created objective; optionally engineers only | Immediately applies the configured result: disable the field while retaining the prop, or destroy and deregister the emitter. |
 | **Scan for Radio Jammers** | self-interaction (ACE) | anyone | Reports a broad **bearing sector** and deliberately vague **distance band** for the nearest source currently affecting the operator. The scan respects the affected side, active radius plus falloff, directional sector, pulse phase, terrain occlusion and the `Waldo_Jamming_ScanRange` hard cap. It does not expose an exact bearing, numerical distance or aggregate signal-strength value. |
 
 ## Turning jammers on/off and removing them from script
@@ -157,7 +157,7 @@ Three modules live under **Modules > WMP Combat Systems** (Zeus Enhanced require
 | **Jammer: Toggle Nearest Emitter** | Switches the nearest registered jammer on or off. |
 | **Jammer: Delete Nearest Emitter** | Removes the nearest registered jammer and deletes its emitter object. |
 
-The placed emitter is added to the curator, so you can drag or delete it like any Zeus object. Enable **Show Curator 3D Marker** for only that emitter. `Waldo_Jamming_GmOverlay = true` remains the global mission-maker override that displays every registered jammer.
+The placed emitter is explicitly simulation-enabled, added to every curator, and transferred to the requesting curator for smooth Zeus movement. Its field and interactions remain attached to the live object after it is moved. The emitter selector uses a stable row-to-class mapping, so each displayed object choice creates that exact class. The dialog also selects whether field disablement is public or engineer-only and whether success disables the field or destroys the prop. Enable **Show Curator 3D Marker** for only that emitter. `Waldo_Jamming_GmOverlay = true` remains the global mission-maker override that displays every registered jammer.
 
 ## Global options (`init.sqf`)
 

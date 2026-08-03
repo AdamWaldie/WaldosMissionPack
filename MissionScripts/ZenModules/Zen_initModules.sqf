@@ -77,7 +77,6 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Logistics", "Vehicle Recovery - Register Vehicle", "RECOVERY_VEHICLE", "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Carrier", "RECOVERY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"],
     ["WMP Mission Flow", "Respawn - Squad Rally Control", "RALLY", "\A3\ui_f\data\map\markers\military\start_CA.paa"],
-    ["WMP Mission Tools", "Emergency Dismount - Control", "EMERGENCY", "\A3\ui_f\data\igui\cfg\actions\getout_ca.paa"],
     ["WMP Interface & QA", "Tactical Display - Register", "TACTICAL_DISPLAY", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Register or Spawn", "GUNSHIP_REGISTER", "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"],
     ["WMP Air Operations", "Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
@@ -168,7 +167,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Mission Flow", "Respawn: Create Loadout Save Point",
+["WMP Logistics", "Respawn: Create Loadout Save Point",
     {
         diag_log format ["[WMP ZEN] invoked module=Loadout Save Point curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -246,6 +245,6 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 42];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 41];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
-diag_log format ["[WMP ZEN] Registered 42 categorized WMP modules on clientOwner=%1", clientOwner];
+diag_log format ["[WMP ZEN] Registered 41 categorized WMP modules on clientOwner=%1", clientOwner];

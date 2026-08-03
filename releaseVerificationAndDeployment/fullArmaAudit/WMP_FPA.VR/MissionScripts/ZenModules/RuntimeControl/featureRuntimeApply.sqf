@@ -8,6 +8,12 @@
  *
  * Return Value:
  * Boolean - true when the request was accepted
+ *
+ * Example:
+ * ["FIELD_RESUPPLY_HUB", [objNull, west, -1, getPosATL player]]
+ *     remoteExecCall ["Waldo_fnc_FeatureRuntimeApply", 2];
+ *
+ * Current caller: Waldo_fnc_FeatureRuntimeZen forwards validated ZEN runtime-control dialogs.
  */
 
 params [
@@ -26,6 +32,7 @@ if (remoteExecutedOwner > 0) then {
     _authorized = !isNull _caller && {!isNull (getAssignedCuratorLogic _caller)};
 };
 if !(_authorized) exitWith {false};
+private _requestOwner = if (remoteExecutedOwner > 0) then {remoteExecutedOwner} else {2};
 
 private _publish = {
     params ["_name", "_value"];
@@ -99,7 +106,7 @@ switch (toUpperANSI _action) do {
             clearMagazineCargoGlobal _hub;
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
-            {_x addCuratorEditableObjects [[_hub], true]} forEach allCurators;
+            [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };
         if (isNull _hub) exitWith {false};
         [_hub, _side, _stock] call Waldo_fnc_FieldResupplyRegisterHub;

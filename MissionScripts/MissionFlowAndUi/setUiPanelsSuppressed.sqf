@@ -22,13 +22,10 @@ uiNamespace setVariable ["Waldo_UI_PanelsSuppressed", _suppressed];
     } forEach (_x param [1, []]);
 } forEach (uiNamespace getVariable ["Waldo_UiPanelRegistry", []]);
 
-private _display = findDisplay 46;
-if (!isNull _display) then {
-    {
-        private _control = _display displayCtrl _x;
-        if (!isNull _control) then {_control ctrlShow !_suppressed};
-    } forEach [5299, 5300, 5309, 5310];
-};
+{
+    _x params ["_key", "_controls", "_placements", ["_active", true]];
+    {_x ctrlShow (!_suppressed && {_active})} forEach (_controls select {!isNull _x});
+} forEach (uiNamespace getVariable ["Waldo_UI_ReservationRegistry", []]);
 
 if (!_suppressed) then {
     [0] call Waldo_fnc_ReflowUiPanels;

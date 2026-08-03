@@ -4,17 +4,20 @@
  * jams, whether it has an operator toggle, and whether hostile field disablement requires a
  * shared interaction procedure. It then spawns an emitter object at the module position and registers
  * it as a localised radio jammer (Waldo_fnc_Jammer). Works for ACRE2 and TFAR. The object is
- * created on the curator's machine and added to the curator so it can be moved or deleted in Zeus;
- * the jammer registry write is forwarded to the server by Waldo_fnc_Jammer.
+ * created server-side, explicitly simulation-enabled, and transferred to the requesting curator
+ * so it can be moved or deleted smoothly; the jammer registry follows the live object transform.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module
  * 1: objectPos <OBJECT> - object the module was dropped on (unused)
  *
+ * Return Value:
+ * Nothing - the dialog forwards an authorised creation request to the server.
+ *
  * Example:
  * [_modulePos, _objectPos] call Waldo_fnc_ZenJammerPlace;
  *
- * Public: No
+ * Current caller: the ZEN "Create Radio Jammer" module registered by Waldo_fnc_ZenInitModules.
  */
 
 if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};
@@ -23,10 +26,15 @@ params ["_modulePos", "_objectPos"];
 
 private _emitterClasses = ["Land_PowerGenerator_F", "Land_PortableGenerator_01_F", "Land_DataTerminal_01_F", "Land_TTowerSmall_1_F"];
 _emitterClasses = _emitterClasses select {isClass (configFile >> "CfgVehicles" >> _x)};
+if (_emitterClasses isEqualTo []) exitWith {
+    ["JAMMER NOT PLACED", "No supported jammer emitter objects are available in the current modset.", 8, "FAILURE"] call Waldo_fnc_JammingNotice;
+};
 private _emitterLabels = _emitterClasses apply {
     private _name = getText (configFile >> "CfgVehicles" >> _x >> "displayName");
     if (_name == "") then {_x} else {_name}
 };
+private _emitterIndices = [];
+for "_index" from 0 to ((count _emitterClasses) - 1) do {_emitterIndices pushBack _index};
 
 [
     "Waldos Radio Jammer",
@@ -55,7 +63,7 @@ private _emitterLabels = _emitterClasses apply {
         ["CHECKBOX", ["Also Jam UAVs / Drones", "Freeze autonomous drones and cut controlling players' datalinks in the field."], false, false],
         ["CHECKBOX", ["Show Map Marker", "Place a persistent map marker on the jammer."], false, false],
         ["CHECKBOX", ["Show Curator 3D Marker", "Show a floating curator-only marker for this emitter. Ordinary players never see it."], false, false],
-        ["COMBO", ["Emitter object", "Physical object created at the module position."], [_emitterClasses, _emitterLabels, 0]],
+        ["COMBO", ["Emitter object", "Physical object created at the module position. The selected row is resolved to its exact classname before the server request."], [_emitterIndices, _emitterLabels, 0]],
         ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant field disablement with a shared interaction challenge. This also suppresses the direct player toggle so the procedure cannot be bypassed."], true, false],
         ["COMBO", ["Disable Procedure", "Procedure players complete to shut down the jammer."], [
             ["circuit", "radiotune", "commandinput", "wirecut"],
@@ -66,12 +74,16 @@ private _emitterLabels = _emitterClasses apply {
             ["easy", "standard", "hard", "expert"],
             ["Easy", "Standard", "Hard", "Expert"],
             1
-        ]]
+        ]],
+        ["CHECKBOX", ["Engineer only", "Hide the field-disable action from non-engineers. Disabled by default so public Zeus players can use the objective."], false],
+        ["COMBO", ["Successful disable result", "Disable keeps the prop and turns the field off; destroy removes it."], [["DISABLE", "DESTROY"], ["Disable field", "Destroy emitter"], 0]]
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_className", "_disableChallenge", "_challengeId", "_difficulty"];
-        _pos params ["_modulePos"];
+        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_className", "_disableChallenge", "_challengeId", "_difficulty", "_engineerOnly", "_resultMode"];
+        _pos params ["_modulePos", "_emitterClasses"];
+        private _emitterIndex = round _className;
+        _className = _emitterClasses param [_emitterIndex, ""];
 
         private _sector = [];
         if (_arc < 360) then { _sector = [_bearing, _arc]; };
@@ -106,10 +118,10 @@ private _emitterLabels = _emitterClasses apply {
 
         [
             _modulePos,
-            [_radius, _sideStr, _bands, _falloff, (_strengthPct / 100), _active, _marker, _sector, _duty, _jamUAV, _show3D, _className, _disableChallenge, _challengeId, _difficulty],
+            [_radius, _sideStr, _bands, _falloff, (_strengthPct / 100), _active, _marker, _sector, _duty, _jamUAV, _show3D, _className, _disableChallenge, _challengeId, _difficulty, _engineerOnly, _resultMode, false],
             player
         ] remoteExecCall ["Waldo_fnc_ZenCreateJammerServer", 2];
     },
     {},
-    [_modulePos]
+    [_modulePos, _emitterClasses]
 ] call zen_dialog_fnc_create;

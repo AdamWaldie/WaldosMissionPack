@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 810,
+  "registeredFunctionCount": 813,
   "runtimeFunctionCount": 385,
-  "functionCount": 1195,
+  "functionCount": 1198,
   "stations": [
     {
       "id": "control",
@@ -815,6 +815,18 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RegisterUiReservationLocal",
+      "file": "MissionScripts/MissionFlowAndUi/registerUiReservationLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UnregisterUiReservationLocal",
+      "file": "MissionScripts/MissionFlowAndUi/unregisterUiReservationLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_DrainUiNotificationQueue",
       "file": "MissionScripts/MissionFlowAndUi/drainUiNotificationQueue.sqf",
       "station": "mission-flow",
@@ -1315,6 +1327,12 @@
     {
       "name": "Waldo_fnc_ZenLoadoutSaveModule",
       "file": "MissionScripts/ZenModules/Zen_loadoutSaveModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenAssignObjectOwnerServer",
+      "file": "MissionScripts/ZenModules/zenAssignObjectOwnerServer.sqf",
       "station": "zen",
       "activation": "manual"
     },

@@ -291,7 +291,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 42', source)
+        self.assertIn('Waldo_ZenModuleCount", 41', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
@@ -300,7 +300,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('["FIELD_RESUPPLY_HUB", [_target, _side, _stock, _modulePos]]', zen)
         self.assertIn('if (isNull _hub && {count _modulePos >= 2})', apply)
         self.assertIn('createVehicle [_crateClass, _modulePos, [], 0, "NONE"]', apply)
-        self.assertIn('addCuratorEditableObjects [[_hub], true]', apply)
+        self.assertIn('[_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer', apply)
 
     def test_runtime_setting_bundle_is_not_unpacked_as_one_pair(self):
         source = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
@@ -840,14 +840,17 @@ class PrReviewAuditTests(unittest.TestCase):
         hazard = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardTick.sqf").read_text(encoding="utf-8")
         legacy = (ui_root / "dynamicText.sqf").read_text(encoding="utf-8")
 
-        self.assertIn('displayCtrl 5299', reflow)
-        self.assertIn('displayCtrl 5309', reflow)
-        self.assertIn('case "BOTTOM_RIGHT": {_jammingTop}', reflow)
-        self.assertIn('case "TOP_RIGHT": {_safeStartBottom}', reflow)
+        reservation = (ui_root / "registerUiReservationLocal.sqf").read_text(encoding="utf-8")
+        unregister = (ui_root / "unregisterUiReservationLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_UI_ReservationRegistry', reflow + reservation + unregister)
+        self.assertNotIn('displayCtrl 5299', reflow)
+        self.assertNotIn('displayCtrl 5309', reflow)
+        self.assertIn('_placement in _placements', reflow)
         self.assertIn('"TOP_RIGHT", "RALLY_POINT"', rally)
-        self.assertIn('Waldo_fnc_ReflowUiPanels', jammer)
-        for idc in ("5299", "5300", "5309", "5310"):
-            self.assertIn(idc, suppress)
+        self.assertIn('Waldo_fnc_RegisterUiReservationLocal', jammer)
+        self.assertIn('Waldo_UI_ReservationRegistry', suppress)
+        for feature_name in ("RALLY", "JAMMER", "SAFESTART"):
+            self.assertNotIn(feature_name, reflow)
         self.assertIn('ace_interactMenuOpened', priority)
         self.assertIn('ace_interactMenuClosed', priority)
         self.assertIn('"HAZARD_STATUS"', hazard)
@@ -858,6 +861,26 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('params [["_showNotification", true', save_loadout)
         self.assertIn('if (_showNotification)', save_loadout)
         self.assertIn('[false] call Waldo_fnc_SaveLoadout', acre)
+
+        zen_modules = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        self.assertIn('["WMP Logistics", "Respawn: Create Loadout Save Point"', zen_modules)
+        self.assertNotIn('Emergency Dismount - Control', zen_modules)
+
+        jammer_zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf").read_text(encoding="utf-8")
+        jammer_server = (ROOT / "MissionScripts" / "ZenModules" / "ZenCreateJammerServer.sqf").read_text(encoding="utf-8")
+        jammer_interaction = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerInteraction.sqf").read_text(encoding="utf-8")
+        self.assertIn('_emitterIndices', jammer_zen)
+        self.assertIn('_emitterClasses param [_emitterIndex', jammer_zen)
+        self.assertIn('ZenAssignObjectOwnerServer', jammer_server)
+        self.assertIn('_requestOwner, false, false', jammer_server)
+        self.assertIn('sleep 0.35', jammer_server)
+        owner_helper = (ROOT / "MissionScripts" / "ZenModules" / "zenAssignObjectOwnerServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('_object enableSimulationGlobal (!_freezeSimulation)', owner_helper)
+        self.assertIn('_object setOwner _ownerId', owner_helper)
+        self.assertIn('Waldo_Jamming_DisableACEPath', jammer_interaction)
+        self.assertIn('Waldo_Jamming_DisableACEInstalled', jammer_interaction)
+        self.assertIn('Waldo_Jamming_DisableResult', jammer_interaction)
+        self.assertNotIn('enableSimulationGlobal false', jammer_server)
 
 
 if __name__ == "__main__":

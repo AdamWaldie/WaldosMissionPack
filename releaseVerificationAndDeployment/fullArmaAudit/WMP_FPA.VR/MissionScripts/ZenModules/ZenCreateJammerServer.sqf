@@ -13,8 +13,7 @@
  * Return Value:
  * Object - created emitter, or objNull when validation fails
  *
- * Called by:
- * Waldo_fnc_ZenJammerPlace through a server-targeted remote execution.
+ * Current caller: Waldo_fnc_ZenJammerPlace through a server-targeted remote execution.
  *
  * Example:
  * [[100,100,0], [300,"WEST","ALL",50,1,true,false,[],[],false,false,
@@ -82,6 +81,9 @@ if ((count _settings) >= 18) then {
 if !(isClass (configFile >> "CfgVehicles" >> _className)) then {_className = "Land_PowerGenerator_F";};
 
 private _object = createVehicle [_className, _position, [], 0, "CAN_COLLIDE"];
+private _groundPosition = [_position select 0, _position select 1, 0];
+_object setPosATL _groundPosition;
+_object setVectorUp (surfaceNormal _groundPosition);
 private _interactionOptions = createHashMapFromArray [
     ["disableChallenge", _disableChallenge],
     ["challengeId", _challengeId],
@@ -90,10 +92,17 @@ private _interactionOptions = createHashMapFromArray [
     ["resultMode", _resultMode],
     ["allowPlayerToggle", _allowPlayerToggle]
 ];
+[_object, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
 [_object, _radius, _side, _bands, _falloff, _strength, _active, _marker, _sector, _duty, _jamUAV, _show3D, _interactionOptions]
     call Waldo_fnc_Jammer;
-{_x addCuratorEditableObjects [[_object], true];} forEach allCurators;
-diag_log format ["[WMP ZEN] jammer created object=%1 actor=%2 owner=%3 challenge=%4", netId _object, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner, _disableChallenge];
+[_object, [_allowPlayerToggle, _disableChallenge, _challengeId, _difficulty, _engineerOnly, _resultMode]] spawn {
+    params ["_object", "_interactionSettings"];
+    sleep 0.35;
+    if (!isNull _object) then {
+        [_object, _interactionSettings] remoteExec ["Waldo_fnc_JammerInteraction", 0, _object];
+    };
+};
+diag_log format ["[WMP ZEN] jammer created object=%1 class=%2 actor=%3 owner=%4 challenge=%5 engineerOnly=%6 result=%7", netId _object, typeOf _object, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner, _disableChallenge, _engineerOnly, _resultMode];
 if (!isNull _actor) then {
     ["JAMMER PLACED", format ["%1 m field affecting %2.", _radius, _side], 6, "SUCCESS"] remoteExecCall ["Waldo_fnc_JammingNotice", owner _actor];
 };
