@@ -72,7 +72,7 @@ private _shutdownOptions = ["circuit"] call Waldo_fnc_MiniGameInteractionOptions
         ["SLIDER", ["Clear delay (s)", "Time without a target before stand-down."], [0, 60, 5, 1]],
         ["TOOLBOX:WIDE", ["Altitude reference", "Automatic uses ATL over land and ASL over water."], [0, 1, 3, ["Automatic", "ATL", "ASL"]]],
         ["CHECKBOX", ["Map markers", "Show the system area and state."], true],
-        ["CHECKBOX", ["Show altitude limits", "When map markers are enabled, show the configured floor and ceiling on the marker label."], true],
+        ["CHECKBOX", ["Show range and altitude limits", "When map markers are enabled, show detection range, floor and ceiling on the marker label."], true],
         ["CHECKBOX", ["Delete assets after radar loss", "Otherwise leave the disabled installation in place."], false],
         ["CHECKBOX", ["Announce detection state", "Use WMP notifications for detected and clear transitions."], true],
         ["CHECKBOX", ["Player radar shutdown objective", "Adds the selected procedure to the primary radar."], false],
@@ -82,14 +82,14 @@ private _shutdownOptions = ["circuit"] call Waldo_fnc_MiniGameInteractionOptions
     {
         params ["_values", "_arguments"];
         _arguments params ["_modulePos", "_defaultId", "_catalogue"];
-        _values params ["_sideIndex", "_modeIndex", "_radius", "_minimumAltitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_altitudeIndex", "_markers", "_showAltitudeLimits", "_cleanup", "_announce", "_shutdown", "_challengeId", "_difficultyIndex"];
+        _values params ["_sideIndex", "_modeIndex", "_radius", "_minimumAltitude", "_maximumAltitude", "_engagementRadius", "_dwell", "_clearDelay", "_altitudeIndex", "_markers", "_showMarkerDetails", "_cleanup", "_announce", "_shutdown", "_challengeId", "_difficultyIndex"];
         private _settings = createHashMapFromArray [
             ["side", [west, east, independent] param [_sideIndex, east]],
             ["assetSelectionMode", ["PROFILE", "EXACT"] param [_modeIndex, "PROFILE"]],
             ["radius", _radius], ["minimumAltitude", _minimumAltitude], ["maximumAltitude", _maximumAltitude],
             ["engagementRadius", _engagementRadius], ["detectionDwell", _dwell], ["clearDelay", _clearDelay],
             ["altitudeMode", ["AUTO", "ATL", "ASL"] param [_altitudeIndex, "AUTO"]],
-            ["createMarkers", _markers], ["showAltitudeLimits", _showAltitudeLimits],
+            ["createMarkers", _markers], ["showMarkerDetails", _showMarkerDetails],
             ["cleanupOnRadarLoss", _cleanup], ["announce", _announce],
             ["shutdownInteraction", _shutdown],
             ["shutdownChallenge", _challengeId],

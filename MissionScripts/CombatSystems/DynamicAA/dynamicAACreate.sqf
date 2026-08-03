@@ -14,7 +14,7 @@
  *      authored layouts. Otherwise radarCount/staticCount/mobileCount produce a terrain-safe,
  *      server-generated layout around centre. staticSiteSpacing <METRES>; radarDirection <DEGREES>.
  *    Response: fighterCount <NUMBER>; initialAmmoFraction <0..1>; createMarkers <BOOL>.
- *      showAltitudeLimits <BOOL> controls whether marker text includes both floor and ceiling
+ *      showMarkerDetails <BOOL> controls whether marker text includes range, floor and ceiling
  *      and defaults true; it does not enable markers by itself.
  *    Pool selection: faction <STRING> is a content profile independent of side. Exact ZEN selection
  *      uses radarAssignments/staticAssignments/mobileAssignments/fighterAssignments, with one class
@@ -86,74 +86,10 @@ private _clearDelay = (_config getOrDefault ["clearDelay", 5]) max 0;
 private _staticSiteSpacing = ((_config getOrDefault ["staticSiteSpacing", 30]) max 10) min 200;
 private _fighterCount = round (((_config getOrDefault ["fighterCount", 0]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumFighters", 12]));
 private _detectionInterval = (_config getOrDefault ["detectionInterval", missionNamespace getVariable ["Waldo_DynamicAA_DefaultDetectionInterval", 1]]) max 0.25;
-private _reservedLayoutPositions = [];
-private _safeLayoutPosition = {
-    params ["_candidate", "_size"];
-    private _safe = +_candidate;
-    private _accepted = false;
-    for "_attempt" from 0 to 23 do {
-        private _searchCentre = if (_attempt == 0) then {_candidate} else {
-            _candidate getPos [15 + (_attempt * 7), (_attempt * 137.5) mod 360]
-        };
-        private _found = [_searchCentre, 0, 55, _size, 0, 0.35, 0, [], [_searchCentre, _searchCentre]] call BIS_fnc_findSafePos;
-        _found = [_found select 0, _found select 1, 0];
-        private _overlap = _reservedLayoutPositions findIf {
-            _x params ["_position", "_reservedSize"];
-            _found distance2D _position < (_size + _reservedSize + 6)
-        };
-        if (_overlap < 0) exitWith {_safe = _found; _accepted = true};
-    };
-    if !(_accepted) then {
-        _safe = _candidate getPos [75 + (count _reservedLayoutPositions * 25), (count _reservedLayoutPositions * 137.5) mod 360];
-        _safe set [2, 0];
-    };
-    _reservedLayoutPositions pushBack [_safe, _size];
-    _safe
-};
-private _makeLayoutRing = {
-    params ["_count", "_distance", "_size", ["_includeCentre", false]];
-    private _positions = [];
-    private _centreOffset = if (_includeCentre) then {1} else {0};
-    for "_index" from 0 to (_count - 1) do {
-        private _candidate = if (_includeCentre && {_index == 0}) then {
-            +_centre
-        } else {
-            private _ringIndex = _index - _centreOffset;
-            private _ringCount = _count - _centreOffset;
-            _centre getPos [_distance, (_ringIndex * (360 / (_ringCount max 1))) + 22.5]
-        };
-        _positions pushBack ([_candidate, _size] call _safeLayoutPosition);
-    };
-    _positions
-};
-private _radarPositions = if ("radarPositions" in keys _config) then {
-    +(_config get "radarPositions")
-} else {
-    if ("radarPosition" in keys _config) then {[_config get "radarPosition"]} else {
-        [round ((_config getOrDefault ["radarCount", 1]) max 1 min 4), 90, 18, true] call _makeLayoutRing
-    }
-};
-if (count _radarPositions == 0) then {_radarPositions = [[_centre, 18] call _safeLayoutPosition]};
-private _layoutRadius = ((_radius * 0.35) max 120) min 700;
-private _staticPositions = if ("staticPositions" in keys _config) then {+(_config get "staticPositions")} else {
-    [round ((_config getOrDefault ["staticCount", 0]) max 0 min 8), _layoutRadius, 16, false] call _makeLayoutRing
-};
-private _mobilePositions = if ("mobilePositions" in keys _config) then {+(_config get "mobilePositions")} else {
-    [round ((_config getOrDefault ["mobileCount", 0]) max 0 min 8), _layoutRadius * 0.72, 12, false] call _makeLayoutRing
-};
 private _radarAssignments = _config getOrDefault ["radarAssignments", []];
 private _staticAssignments = _config getOrDefault ["staticAssignments", []];
 private _mobileAssignments = _config getOrDefault ["mobileAssignments", []];
 private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
-private _assignmentMismatch = (count _radarAssignments > 0 && {count _radarAssignments != count _radarPositions})
-    || {count _staticAssignments > 0 && {count _staticAssignments != count _staticPositions}}
-    || {count _mobileAssignments > 0 && {count _mobileAssignments != count _mobilePositions}}
-    || {count _fighterAssignments > 0 && {count _fighterAssignments != _fighterCount}};
-if (_assignmentMismatch) exitWith {
-    diag_log format ["[WMP DYNAMIC AA] '%1' rejected: exact assignment counts do not match requested slots.", _id];
-    ["Creation rejected: exact equipment selections do not match the requested asset counts.", "ERROR"] call _reply;
-    false
-};
 private _pool = [_config, _side] call Waldo_fnc_DynamicAAResolveAssetPool;
 private _radarClasses = if (count _radarAssignments > 0) then {+_radarAssignments} else {
     if ("radarClass" in (keys _config)) then {[_config get "radarClass"]} else {_config getOrDefault ["radarClasses", _pool get "radarClasses"]}
@@ -171,19 +107,123 @@ private _mobileClasses = if (count _mobileAssignments > 0) then {+_mobileAssignm
 private _fighterClasses = if (count _fighterAssignments > 0) then {+_fighterAssignments} else {
     if ("fighterClass" in (keys _config)) then {[_config get "fighterClass"]} else {_config getOrDefault ["fighterClasses", _pool get "fighterClasses"]}
 };
+private _radarSlotCount = if ("radarPositions" in keys _config) then {(count (_config get "radarPositions")) max 1} else {
+    if ("radarPosition" in keys _config) then {1} else {round ((_config getOrDefault ["radarCount", 1]) max 1 min 4)}
+};
+private _staticSlotCount = if ("staticPositions" in keys _config) then {count (_config get "staticPositions")} else {round ((_config getOrDefault ["staticCount", 0]) max 0 min 8)};
+private _mobileSlotCount = if ("mobilePositions" in keys _config) then {count (_config get "mobilePositions")} else {round ((_config getOrDefault ["mobileCount", 0]) max 0 min 8)};
+private _assignmentMismatch = (count _radarAssignments > 0 && {count _radarAssignments != _radarSlotCount})
+    || {count _staticAssignments > 0 && {count _staticAssignments != _staticSlotCount}}
+    || {count _mobileAssignments > 0 && {count _mobileAssignments != _mobileSlotCount}}
+    || {count _fighterAssignments > 0 && {count _fighterAssignments != _fighterCount}};
+if (_assignmentMismatch) exitWith {
+    diag_log format ["[WMP DYNAMIC AA] '%1' rejected: exact assignment counts do not match requested slots.", _id];
+    ["Creation rejected: exact equipment selections do not match the requested asset counts.", "ERROR"] call _reply;
+    false
+};
 private _classes = +_radarClasses;
-if (count _mobilePositions > 0) then {_classes append _mobileClasses};
+if (_mobileSlotCount > 0) then {_classes append _mobileClasses};
 if (_fighterCount > 0) then {_classes append _fighterClasses};
-if (count _staticPositions > 0) then {{_classes append _x} forEach _staticSitePools};
+if (_staticSlotCount > 0) then {{_classes append _x} forEach _staticSitePools};
 private _invalidClass = _classes findIf {!isClass (configFile >> "CfgVehicles" >> _x)};
 private _missingPool = count _radarClasses == 0
-    || {count _staticPositions > 0 && {count _staticSitePools == 0}}
-    || {count _mobilePositions > 0 && {count _mobileClasses == 0}}
+    || {_staticSlotCount > 0 && {count _staticSitePools == 0}}
+    || {_mobileSlotCount > 0 && {count _mobileClasses == 0}}
     || {_fighterCount > 0 && {count _fighterClasses == 0}};
 if (_invalidClass >= 0 || {_missingPool}) exitWith {
     private _reason = if (_invalidClass >= 0) then {format ["invalid classname %1", _classes select _invalidClass]} else {"a required asset pool is empty"};
     diag_log format ["[WMP DYNAMIC AA] '%1' rejected: %2.", _id, _reason];
     [format ["Creation rejected: %1.", _reason], "ERROR"] call _reply;
+    false
+};
+
+// sizeOf is evaluated only after class validation. The resulting radius is deliberately generous:
+// generated ZEN layouts favour a clear, stable installation over a tightly packed composition.
+private _classClearance = {
+    params ["_class", "_minimum"];
+    ((((sizeOf _class) * 0.75) max _minimum) min 100)
+};
+private _largestClearance = {
+    params ["_candidateClasses", "_minimum"];
+    private _largest = _minimum;
+    {_largest = _largest max ([_x, _minimum] call _classClearance)} forEach _candidateClasses;
+    _largest
+};
+private _staticComponentClasses = [];
+{{_staticComponentClasses pushBackUnique _x} forEach _x} forEach _staticSitePools;
+private _radarClearance = [_radarClasses, 24] call _largestClearance;
+private _staticComponentClearance = [_staticComponentClasses, 14] call _largestClearance;
+private _effectiveStaticSpacing = _staticSiteSpacing max (_staticComponentClearance * 1.5);
+private _staticSiteClearance = _effectiveStaticSpacing + _staticComponentClearance + 8;
+private _mobileClearance = [_mobileClasses, 12] call _largestClearance;
+private _reservedLayoutPositions = [];
+private _safeLayoutPosition = {
+    params ["_candidate", "_size"];
+    private _safe = [];
+    for "_attempt" from 0 to 47 do {
+        private _searchCentre = if (_attempt == 0) then {_candidate} else {
+            _candidate getPos [20 + (_attempt * 10), (_attempt * 137.5) mod 360]
+        };
+        private _found = [_searchCentre, 0, 70, _size, 0, 0.35, 0, [], []] call BIS_fnc_findSafePos;
+        if (count _found >= 2) then {
+            _found = [_found select 0, _found select 1, 0];
+            private _overlap = _reservedLayoutPositions findIf {
+                _x params ["_position", "_reservedSize"];
+                _found distance2D _position < (_size + _reservedSize + 10)
+            };
+            if (_overlap < 0) exitWith {_safe = _found};
+        };
+    };
+    if (count _safe >= 2) then {_reservedLayoutPositions pushBack [_safe, _size]};
+    _safe
+};
+private _makeLayoutRing = {
+    params ["_count", "_distance", "_size", ["_includeCentre", false]];
+    private _positions = [];
+    private _centreOffset = if (_includeCentre) then {1} else {0};
+    for "_index" from 0 to (_count - 1) do {
+        private _candidate = if (_includeCentre && {_index == 0}) then {
+            +_centre
+        } else {
+            private _ringIndex = _index - _centreOffset;
+            private _ringCount = _count - _centreOffset;
+            _centre getPos [_distance, (_ringIndex * (360 / (_ringCount max 1))) + 22.5]
+        };
+        private _position = [_candidate, _size] call _safeLayoutPosition;
+        if (count _position >= 2) then {_positions pushBack _position};
+    };
+    _positions
+};
+private _radarAuthoredHasPosition = ("radarPositions" in keys _config && {count (_config get "radarPositions") > 0})
+    || {"radarPosition" in keys _config && {count (_config get "radarPosition") >= 2}};
+private _radarPositions = if ("radarPositions" in keys _config) then {
+    +(_config get "radarPositions")
+} else {
+    if ("radarPosition" in keys _config) then {[_config get "radarPosition"]} else {
+        [_radarSlotCount, 120, _radarClearance, true] call _makeLayoutRing
+    }
+};
+_radarPositions = _radarPositions select {_x isEqualType [] && {count _x >= 2}};
+if (count _radarPositions == 0 && {_radarSlotCount > 0}) then {_radarPositions = [[_centre, _radarClearance] call _safeLayoutPosition] select {count _x >= 2}};
+if (_radarAuthoredHasPosition) then {{_reservedLayoutPositions pushBack [_x, _radarClearance]} forEach _radarPositions};
+private _layoutRadius = ((_radius * 0.35) max 120) min 700;
+private _staticAuthored = "staticPositions" in keys _config;
+private _staticPositions = if (_staticAuthored) then {+(_config get "staticPositions")} else {
+    [_staticSlotCount, _layoutRadius, _staticSiteClearance, false] call _makeLayoutRing
+};
+_staticPositions = _staticPositions select {_x isEqualType [] && {count _x >= 2}};
+if (_staticAuthored) then {{_reservedLayoutPositions pushBack [_x, _staticSiteClearance]} forEach _staticPositions};
+private _mobileAuthored = "mobilePositions" in keys _config;
+private _mobilePositions = if (_mobileAuthored) then {+(_config get "mobilePositions")} else {
+    [_mobileSlotCount, _layoutRadius * 0.72, _mobileClearance, false] call _makeLayoutRing
+};
+_mobilePositions = _mobilePositions select {_x isEqualType [] && {count _x >= 2}};
+private _layoutFailed = count _radarPositions != _radarSlotCount
+    || {count _staticPositions != _staticSlotCount}
+    || {count _mobilePositions != _mobileSlotCount};
+if (_layoutFailed) exitWith {
+    diag_log format ["[WMP DYNAMIC AA] '%1' rejected: no collision-safe generated layout was available.", _id];
+    ["Creation rejected: the server could not find enough clear positions for the requested AA assets. Try a more open location or fewer assets.", "ERROR"] call _reply;
     false
 };
 
@@ -196,7 +236,7 @@ _config set ["maximumAltitude", _maximumAltitude];
 _config set ["engagementRadius", _engagementRadius];
 _config set ["detectionDwell", _detectionDwell];
 _config set ["clearDelay", _clearDelay];
-_config set ["staticSiteSpacing", _staticSiteSpacing];
+_config set ["staticSiteSpacing", _effectiveStaticSpacing];
 _config set ["fighterCount", _fighterCount];
 _config set ["detectionInterval", _detectionInterval];
 _config set ["radarPosition", _radarPositions select 0];
@@ -243,7 +283,7 @@ private _radar = _radars select 0;
     private _staticClassCount = (count _staticClasses) max 1;
     private _positions = _staticClasses apply {
         if (_staticClassCount == 1) then {_base} else {
-            _base getPos [_staticSiteSpacing, _direction + 180 + ((_forEachIndex * 360) / _staticClassCount)]
+            _base getPos [_effectiveStaticSpacing, _direction + 180 + ((_forEachIndex * 360) / _staticClassCount)]
         }
     };
     {
@@ -297,10 +337,10 @@ if (_config getOrDefault ["createMarkers", true]) then {
     _iconMarker setMarkerShape "ICON";
     _iconMarker setMarkerType "o_antiair";
     _iconMarker setMarkerColor _colour;
-    private _markerText = if (_config getOrDefault ["showAltitudeLimits", true]) then {
+    private _markerText = if (_config getOrDefault ["showMarkerDetails", true]) then {
         format ["%1 AA - range %2m / floor %3m / ceiling %4m", _id, round _radius, round _minimumAltitude, round _maximumAltitude]
     } else {
-        format ["%1 AA - range %2m", _id, round _radius]
+        format ["%1 AA", _id]
     };
     _iconMarker setMarkerText _markerText;
     _markers = [_areaMarker, _iconMarker];

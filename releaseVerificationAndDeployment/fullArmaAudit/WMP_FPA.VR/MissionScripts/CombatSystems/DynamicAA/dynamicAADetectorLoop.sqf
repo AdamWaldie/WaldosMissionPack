@@ -27,11 +27,16 @@ while {true} do {
     private _radarCondition = _config getOrDefault ["radarOperationalCondition", {true}];
     private _operationalRadars = _radars select {
         private _radar = _x;
-        if (isNull _radar || {!alive _radar} || {!simulationEnabled _radar} || {damage _radar >= _maximumRadarDamage}) exitWith {false};
-        private _customOperational = [_radar, _state, _config] call _radarCondition;
-        !isNull _radar
-        && {_customOperational isEqualType true}
-        && {_customOperational}
+        private _basicOperational = !isNull _radar
+            && {alive _radar}
+            && {simulationEnabled _radar}
+            && {damage _radar < _maximumRadarDamage};
+        if (_basicOperational) then {
+            private _customOperational = [_radar, _state, _config] call _radarCondition;
+            _customOperational isEqualType true && {_customOperational}
+        } else {
+            false
+        }
     };
     if (count _operationalRadars < _requiredRadars) exitWith {
         diag_log format ["[WMP DYNAMIC AA] '%1' offline: operational radars %2/%3.", _id, count _operationalRadars, _requiredRadars];

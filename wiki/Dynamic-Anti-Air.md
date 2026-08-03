@@ -15,7 +15,7 @@ Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above t
 1. Place **WMP Combat Systems → Dynamic AA - Create** at the centre of the detection zone.
 2. Choose the operational side. This controls crew allegiance and hostile detection only.
 3. Choose **Faction profile** for a reusable pool, or **Exact mixed equipment** for direct class selection. Physical equipment may come from any configured faction and does not change its operational side.
-4. Configure detection, altitude and behaviour in the first dialog. **Map markers** controls whether markers exist. The separate, default-on **Show altitude limits** option controls whether their label shows the floor and ceiling. WMP generates the internal system ID automatically.
+4. Configure detection, altitude and behaviour in the first dialog. **Map markers** controls whether markers exist. The separate, default-on **Show range and altitude limits** option controls whether their label shows detection range, floor and ceiling. Turning it off leaves only the system name. WMP generates the internal system ID automatically.
 5. The equipment page uses the original readable class lists. Profile mode shows only the content profile and response counts. Exact mode shows radar, static-AA, mobile-AA and fighter class lists with a quantity beside each.
 6. To mix more than one class in a category, enable **Add another mixed equipment set**. The same equipment page opens again; set unused categories to zero and add the additional class quantities. Finish with the option cleared.
 7. Optionally enable the player radar-shutdown objective and select its procedure and difficulty in the common settings.
@@ -44,7 +44,7 @@ private _aa = createHashMapFromArray [
     ["mobilePositions", [getMarkerPos "aa_mobile_1"]],
     ["fighterCount", 2],
     ["createMarkers", true],
-    ["showAltitudeLimits", true],
+    ["showMarkerDetails", true],
     ["cleanupOnRadarLoss", false],
     ["announce", true],
     ["shutdownInteraction", true],
@@ -88,7 +88,7 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `radarClass`, `staticClass`, `mobileClass`, `fighterClass` | unset | Convenient scripted whole-system overrides; `staticClass` creates one selected weapon at each static position |
 | `staticClasses` | unset | Exact integrated-site template override when one static position should create several components |
 | `assetPool` | unset | Per-system Dynamic AA pool overrides |
-| `staticSiteSpacing` | `30` | Metres between a static-site anchor and each spawned component; clamped to `10`–`200` to prevent radar/SAM/AAA collision starts |
+| `staticSiteSpacing` | `30` | Requested minimum metres between a static-site anchor and each component. Generated layouts automatically increase it when the selected classes need more physical clearance. |
 | `staticPositions` | generated | Optional authored static-site positions; when omitted, `staticCount` positions are generated on the server |
 | `staticCount` | `0` | Number of automatically placed static sites when authored positions are omitted |
 | `mobilePositions` | generated | Optional authored mobile-AA positions; when omitted, `mobileCount` positions are generated on the server |
@@ -103,7 +103,7 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `detectionFilter` | `{true}` | Optional server callback returning a Boolean for whether a candidate aircraft is detectable |
 | `onStateChanged` | `{}` | Optional server callback for detected/engaged transitions |
 | `createMarkers` | `true` | Create the area and centre markers. This is independent of the label-detail setting below. |
-| `showAltitudeLimits` | `true` | When markers exist, include both the floor and ceiling in the centre-marker label. Turn this off for a shorter label without hiding the markers. |
+| `showMarkerDetails` | `true` | When markers exist, include detection range, floor and ceiling in the centre-marker label. Turn this off to leave only the system name without hiding the markers. |
 | `cleanupOnRadarLoss` | `false` | Delete assets instead of leaving them disabled |
 | `announce` | `true` | Publish detection state changes in chat |
 | `shutdownInteraction` | `false` | Attach an optional player procedure to the central radar. Existing systems retain ordinary destroy-to-disable behaviour by default. |
@@ -117,9 +117,11 @@ radar or disabling its simulation also takes it out of the operational count and
 `cleanupOnRadarLoss`. Radar loss immediately clears assigned targets and ammunition from retained
 defences, so a disabled installation cannot continue firing.
 
-Classnames are validated before anything spawns. Generated layouts reserve clearance around every
-accepted radar, static-site and mobile position so safe-position fallbacks cannot pile multiple assets
-onto the same point. Explicit scripted positions remain under the mission maker's control. Spawned
+Classnames are validated before anything spawns. Generated layouts calculate conservative clearance
+from each selected class with `sizeOf`, reserve the entire integrated static-site footprint rather than
+only its centre, and increase internal component spacing when needed. If enough clear positions cannot
+be found, creation is rejected instead of falling back to overlapping coordinates. This is sequential
+server placement, not a placement race. Explicit scripted positions remain under the mission maker's control. Spawned
 objects, crew, groups, markers and detector handles are retained in the server registry for
 deterministic cleanup and are added to every available curator.
 
