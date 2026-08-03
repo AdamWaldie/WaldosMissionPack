@@ -385,6 +385,10 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('template = "WMP_PR_Review_Audit.VR"', launcher)
         self.assertIn('"-autoInit"', launcher)
         self.assertIn('"-connect=localhost"', launcher)
+        self.assertIn('"-password=wmpqa"', launcher)
+        self.assertIn('".qa\\pr-review-audit\\runtime-$runStamp"', launcher)
+        self.assertIn("$serverMods += $persistenceMod.FullName", launcher)
+        self.assertIn("$clientModArgument", launcher)
         self.assertIn("arma3server_x64.exe", launcher)
         self.assertNotIn("playMission['','WMP_PR_Review_Audit.VR'", launcher)
 

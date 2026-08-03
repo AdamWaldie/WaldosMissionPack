@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Stages the canonical full-pack audit mission, starts its dedicated authority and connects a
  * windowed Arma client without opening Eden. The checked launch always disables BattlEye and
- * keeps server/client profiles inside the repository QA workspace for report inspection.
+ * creates fresh timestamped server/client profiles inside the repository QA workspace. INIDBI2
+ * is loaded only by the server; the client receives only the four required gameplay/UI mods.
  *
  * Parameters:
  * Suite: feature subset to stage (default all).
@@ -11,6 +12,7 @@
  * ResolutionWidth/ResolutionHeight: connected client dimensions (default 3840x2160).
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
+ * Runtime evidence: .qa/pr-review-audit/runtime-<timestamp>/{server,client}.
  *
  * Example:
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual
@@ -34,9 +36,10 @@ $armaRoot = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\bohemia interactive\ar
 $armaExe = Join-Path $armaRoot "arma3_x64.exe"
 $serverExe = Join-Path $armaRoot "arma3server_x64.exe"
 $missionRoot = Join-Path $armaRoot "MPMissions\WMP_PR_Review_Audit.VR"
-$runRoot = Join-Path $repoRoot ".qa\pr-review-audit"
-$serverProfile = Join-Path $runRoot "server-profile"
-$clientProfile = Join-Path $runRoot "client-profile"
+$runStamp = Get-Date -Format "yyyyMMdd-HHmmss"
+$runRoot = Join-Path $repoRoot ".qa\pr-review-audit\runtime-$runStamp"
+$serverProfile = Join-Path $runRoot "server"
+$clientProfile = Join-Path $runRoot "client"
 $serverConfig = Join-Path $runRoot "server.cfg"
 
 if ((Get-Process arma3_x64 -ErrorAction SilentlyContinue) -or (Get-Process arma3server_x64 -ErrorAction SilentlyContinue)) {
@@ -51,11 +54,12 @@ if (-not (Test-Path -LiteralPath $PythonExecutable)) { throw "Python was not fou
 if ($LASTEXITCODE -ne 0) { throw "Full-pack PR audit staging failed." }
 
 $modNames = @("@CBA_A3", "@ace", "@Zeus Enhanced", "@ACRE2")
-$mods = foreach ($name in $modNames) {
+$clientMods = foreach ($name in $modNames) {
     $path = Join-Path (Join-Path $armaRoot "!Workshop") $name
     if (-not (Test-Path -LiteralPath $path)) { throw "Required audit mod is not installed: $name" }
     $path
 }
+$serverMods = @($clientMods)
 $workshopRoot = Join-Path $armaRoot "!Workshop"
 $persistenceMod = Get-ChildItem -LiteralPath $workshopRoot -Directory -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -like "@INIDBI2*" } |
@@ -63,16 +67,19 @@ $persistenceMod = Get-ChildItem -LiteralPath $workshopRoot -Directory -ErrorActi
 if ($ExcludePersistenceMod) {
     Write-Warning "INIDBI2 intentionally excluded. The persistence station must report the unavailable dependency-gate path."
 } elseif ($null -ne $persistenceMod) {
-    $mods += $persistenceMod.FullName
+    $serverMods += $persistenceMod.FullName
     Write-Output "Including optional persistence runtime: $($persistenceMod.Name)"
 } else {
     Write-Warning "No INIDBI2 runtime found. The persistence station will verify the disabled dependency-gate path only."
 }
-$modArgument = '-mod="' + ($mods -join ';') + '"'
+$serverModArgument = '-mod="' + ($serverMods -join ';') + '"'
+$clientModArgument = '-mod="' + ($clientMods -join ';') + '"'
 New-Item -ItemType Directory -Path $serverProfile -Force | Out-Null
 New-Item -ItemType Directory -Path $clientProfile -Force | Out-Null
 @"
 hostname = "WMP Full Pack PR Audit";
+password = "wmpqa";
+passwordAdmin = "wmpqa";
 maxPlayers = 5;
 persistent = 1;
 BattlEye = 0;
@@ -90,7 +97,7 @@ class Missions
 
 $serverArguments = @(
     "-noBattlEye", "-noSound", "-noPause", "-autoInit", "-port=$Port",
-    "-config=$serverConfig", "-profiles=$serverProfile", "-name=WMPAuditServer", $modArgument
+    "-config=$serverConfig", "-profiles=$serverProfile", "-name=WMPAuditServer", $serverModArgument
 )
 $server = Start-Process -FilePath $serverExe -ArgumentList $serverArguments -WorkingDirectory $armaRoot -PassThru -WindowStyle Hidden
 $serverReady = $false
@@ -115,11 +122,11 @@ if (-not $serverReady) {
 }
 
 $clientArguments = @(
-    "-noBattlEye", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
+    "-noBattlEye", "-noSplash", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
     "-connect=localhost", "-port=$Port", "-x=$ResolutionWidth", "-y=$ResolutionHeight",
-    "-profiles=$clientProfile", "-name=WMPAuditClient", $modArgument
+    "-password=wmpqa", "-profiles=$clientProfile", "-name=WMPAuditClient", $clientModArgument
 )
 $client = Start-Process -FilePath $armaExe -ArgumentList $clientArguments -WorkingDirectory $armaRoot -PassThru
 Write-Output "Loaded WMP_PR_Review_Audit.VR on dedicated authority PID $($server.Id)."
-Write-Output "Connected ${ResolutionWidth}x${ResolutionHeight} audit client PID $($client.Id) in $Mode mode; Eden is not used."
-Write-Output "Choose a playable slot and press OK if the role-assignment screen is shown."
+Write-Output "Started ${ResolutionWidth}x${ResolutionHeight} audit client PID $($client.Id) in $Mode mode; Eden is not used."
+Write-Output "Choose a playable slot and press OK when the role-assignment screen appears. Runtime evidence: $runRoot"

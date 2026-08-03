@@ -72,6 +72,16 @@ Add `-ExcludePersistenceMod` to exercise the missing-server-extension dependency
 The launcher defaults to a local dedicated authority plus a connected 3840x2160 client, with
 `-noBattlEye` and the required CBA, ACE, ZEN and ACRE2 mods. It starts the audit mission directly;
 Eden is never involved. Choose a slot and press **OK** if the role-assignment screen is shown.
+Every invocation creates fresh timestamped server and client profiles under
+`.qa/pr-review-audit/runtime-*`; never reuse a profile from a force-terminated run. The optional
+INIDBI2 extension is server-only. The localhost server is passworded by the launcher and the
+matching client connection supplies that password explicitly.
+
+Do not treat process creation as proof of a successful launch. The fresh client RPT must contain
+`Starting mission` and `Mission world: VR`. Zeus is ready only after the server RPT contains
+`WMP FULL AUDIT ZEUS SERVER READY` and the client RPT contains
+`WMP FULL AUDIT ZEUS CLIENT READY`. Do not replace this path with Eden, `playMission`, Steam join
+URLs, main-menu event handlers or ad-hoc relaunch arguments.
 
 Manual mode is the default. It loads the whole pack but does not run state-mutating automated
 cases. A server-owned Zeus curator is assigned to the first connected player so the WMP and
