@@ -19,6 +19,9 @@
 
 params[["_title",""],["_locale",""],["_longDate",false],["_anim","NONE"]];
 
+missionNamespace setVariable ["Waldo_InfoText_Active", true];
+missionNamespace setVariable ["Waldo_InfoText_Complete", false];
+
 waitUntil {!isNull findDisplay 46};
 //Grab Mission Name & Terrain Name automatically
 //If provided with a string in the correct parameter slot, accepts that inplace of the automatic generation
@@ -205,3 +208,5 @@ _usedAnimation = switch (_animate) do {
 
 ["wakeUpID", true, 3] call BIS_fnc_blackIn;
 disableUserInput false;
+missionNamespace setVariable ["Waldo_InfoText_Active", false];
+missionNamespace setVariable ["Waldo_InfoText_Complete", true];

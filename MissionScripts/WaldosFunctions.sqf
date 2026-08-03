@@ -612,6 +612,8 @@ class CfgFunctions
             class FieldResupplyReceiveAmmo {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyReceiveAmmo.sqf";};
             class FieldResupplyRegisterHub {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyRegisterHub.sqf";};
             class FieldResupplyAssignCarrier {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyAssignCarrier.sqf";};
+            class FieldResupplyGrantCrates {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyGrantCrates.sqf";};
+            class FieldResupplyNotifyGrantLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyNotifyGrantLocal.sqf";};
             class FieldResupplyServerHandle {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyServerHandle.sqf";};
         };
         class RallyPoint

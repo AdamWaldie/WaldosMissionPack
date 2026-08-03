@@ -24,6 +24,11 @@ newer values published by the server before a JIP player reaches initPlayerLocal
 or cross-locality features wait for init.sqf to finish its shared configuration before starting.
 */
 if (hasInterface) then {
+    // InfoText marks completion after the fake loading/title presentation. Features may queue
+    // non-critical notices against this state instead of drawing over the introduction.
+    missionNamespace setVariable ["Waldo_InfoText_Active", false];
+    missionNamespace setVariable ["Waldo_InfoText_Complete", false];
+
     // ZEN module registration is presentation-local; dedicated servers and headless clients do not need it.
     [] call Waldo_fnc_ZenInitModules;
 
@@ -115,7 +120,8 @@ if (hasInterface) then {
     if (isNil "Waldo_AccessibilityPID_Font") then {Waldo_AccessibilityPID_Font = "PuristaBold"};
     if (isNil "Waldo_AccessibilityPID_TextDistanceGrowth") then {Waldo_AccessibilityPID_TextDistanceGrowth = 0.00025};
     if (isNil "Waldo_AccessibilityPID_TextMaximumScale") then {Waldo_AccessibilityPID_TextMaximumScale = 0.05};
-    if (isNil "Waldo_AccessibilityPID_TextVerticalOffset") then {Waldo_AccessibilityPID_TextVerticalOffset = -0.32};
+    if (isNil "Waldo_AccessibilityPID_TextHeadOffset") then {Waldo_AccessibilityPID_TextHeadOffset = 0.30};
+    if (isNil "Waldo_AccessibilityPID_IconHeadOffset") then {Waldo_AccessibilityPID_IconHeadOffset = 0.75};
     if (isNil "Waldo_AccessibilityPID_OutlineScale") then {Waldo_AccessibilityPID_OutlineScale = 1.12};
     if (isNil "Waldo_AccessibilityPID_OutlineColour") then {Waldo_AccessibilityPID_OutlineColour = [0.03, 0.03, 0.03, 1]};
 

@@ -2,12 +2,14 @@
  * Author: WaldoTheWarfighter
  * Validates and executes every Field Resupply operation on the server.
  *
- * The handler is the sole writer for hub stock, carrier stock, deployed-crate charges and physical
- * ammunition cargo. Remote callers may act only through the unit they own. Carrier operations
+ * The handler is the sole writer for hub stock, carrier stock, deployed-crate charges and logical
+ * ammunition rows. Deployed crates deliberately keep empty physical inventory so Gear access
+ * cannot bypass charge consumption. Remote callers may act only through the unit they own. Carrier operations
  * require a configured carrier and the same backpack/on-foot conditions shown by local actions.
- * Deployed crates are populated from the carrier's actual magazine types, excluding single-round
- * ordnance by default. Capacity-based issue amounts preserve useful weapon-category quantities and
- * remain configurable. Empty placement, incompatible cargo and salvage edge cases fail safely.
+ * Deployed crates derive logical supply rows from the carrier's actual magazine types, excluding
+ * single-round ordnance by default. Capacity-based issue amounts preserve useful weapon-category
+ * quantities and remain configurable. Empty placement, incompatible supply and salvage edge cases
+ * fail safely.
  *
  * Arguments:
  * 0: unit <OBJECT> - requesting player unit.
@@ -132,7 +134,6 @@ switch (toUpperANSI _operation) do {
         clearMagazineCargoGlobal _crate;
         clearItemCargoGlobal _crate;
         clearBackpackCargoGlobal _crate;
-        {_x params ["_magazine", "_amount"]; _crate addMagazineCargoGlobal [_magazine, _amount * _charges]} forEach _rows;
         _crate setVariable ["Waldo_FieldResupply_Deployed", true, true];
         _crate setVariable ["Waldo_FieldResupply_Charges", _charges, true];
         _crate setVariable ["Waldo_FieldResupply_InitialCharges", _charges, true];
@@ -155,26 +156,11 @@ switch (toUpperANSI _operation) do {
         if (_charges <= 0) exitWith {["This Field Resupply crate is exhausted.", "WARNING"] call _notify; false};
         private _compatibleClasses = ([_unit] call _getMagazineRows) apply {_x select 0};
         private _storedRows = _crate getVariable ["Waldo_FieldResupply_CargoRows", []];
-        private _cargo = getMagazineCargo _crate;
-        _cargo params ["_cargoClasses", "_cargoCounts"];
-        private _grantRows = [];
-        {
-            _x params ["_magazine", "_amount"];
-            private _index = _cargoClasses find _magazine;
-            if (_magazine in _compatibleClasses && {_index >= 0} && {(_cargoCounts select _index) >= _amount}) then {
-                _grantRows pushBack [_magazine, _amount];
-                _cargoCounts set [_index, (_cargoCounts select _index) - _amount];
-            };
-        } forEach _storedRows;
+        private _grantRows = _storedRows select {(_x param [0, "", [""]]) in _compatibleClasses};
         if (count _grantRows == 0) exitWith {
             ["No compatible ammunition remains in this crate.", "WARNING"] call _notify;
             false
         };
-        clearMagazineCargoGlobal _crate;
-        {
-            private _remaining = _cargoCounts select _forEachIndex;
-            if (_remaining > 0) then {_crate addMagazineCargoGlobal [_x, _remaining]};
-        } forEach _cargoClasses;
         _crate setVariable ["Waldo_FieldResupply_Charges", _charges - 1, true];
         [_grantRows] remoteExecCall ["Waldo_fnc_FieldResupplyReceiveAmmo", owner _unit];
         if (_charges - 1 <= 0) then {

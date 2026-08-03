@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Installs the repeat-safe local refill interaction on one registered Field Resupply hub.
  *
- * ACE clients receive an object interaction and non-ACE clients receive a scroll-wheel fallback.
+ * ACE clients receive a Field Resupply category containing the refill interaction; non-ACE
+ * clients receive a scroll-wheel fallback.
  * Both are visible only to assigned carriers wearing a backpack; the server independently validates
  * range, side, stock and carrier capacity. Object-keyed JIP publication calls this function for
  * late joiners without duplicating actions already installed on that client.
@@ -30,9 +31,14 @@ private _condition = {
     && {backpack _caller != ""}
 };
 if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
+    private _category = ["Waldo_FieldResupply_Category", "Field Resupply", "\a3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa", {}, _condition] call ace_interact_menu_fnc_createAction;
     private _action = ["Waldo_FieldResupply_Refill", "Refill Field Resupply Carrier", "\a3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa", _statement, _condition] call ace_interact_menu_fnc_createAction;
-    [_hub, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject;
-    _hub setVariable ["Waldo_FieldResupply_ACEActionPaths", [["ACE_MainActions", "Waldo_FieldResupply_Refill"]]];
+    [_hub, 0, ["ACE_MainActions"], _category] call ace_interact_menu_fnc_addActionToObject;
+    [_hub, 0, ["ACE_MainActions", "Waldo_FieldResupply_Category"], _action] call ace_interact_menu_fnc_addActionToObject;
+    _hub setVariable ["Waldo_FieldResupply_ACEActionPaths", [
+        ["ACE_MainActions", "Waldo_FieldResupply_Category"],
+        ["ACE_MainActions", "Waldo_FieldResupply_Category", "Waldo_FieldResupply_Refill"]
+    ]];
     _hub setVariable ["Waldo_FieldResupply_ActionIds", []];
 } else {
     private _action = _hub addAction ["Refill Field Resupply Carrier", _statement, [], 1.5, true, true, "", "_this distance _target <= 4 && {_this getVariable ['Waldo_FieldResupply_MaxCrates', 0] > 0} && {backpack _this != ''}", 4];

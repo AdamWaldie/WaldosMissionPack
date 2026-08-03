@@ -3,8 +3,8 @@
  * Installs an opt-in, configurable friendly identification overlay for eligible players. The
  * established icon-at-range and name-at-close-range behaviour is retained. Only the nearby name's
  * typography is enhanced with a bold two-pass label, tight dark outline, bounded distance-
- * compensated sizing and a separate below-icon anchor. All drawing remains local,
- * theme/colour-vision aware and repeat-safe.
+ * compensated sizing and separate animated head-relative anchors. All drawing remains local,
+ * theme/colour-vision aware, stance-aware and repeat-safe.
  *
  * Arguments:
  * None
@@ -63,7 +63,8 @@ private _eventId = addMissionEventHandler ["Draw3D", {
     private _font = missionNamespace getVariable ["Waldo_AccessibilityPID_Font", "PuristaBold"];
     private _textGrowth = missionNamespace getVariable ["Waldo_AccessibilityPID_TextDistanceGrowth", 0.00025];
     private _textMaximum = missionNamespace getVariable ["Waldo_AccessibilityPID_TextMaximumScale", 0.05];
-    private _textVerticalOffset = missionNamespace getVariable ["Waldo_AccessibilityPID_TextVerticalOffset", -0.32];
+    private _textHeadOffset = missionNamespace getVariable ["Waldo_AccessibilityPID_TextHeadOffset", 0.30];
+    private _iconHeadOffset = missionNamespace getVariable ["Waldo_AccessibilityPID_IconHeadOffset", 0.75];
     private _outlineScale = missionNamespace getVariable ["Waldo_AccessibilityPID_OutlineScale", 1.12];
     private _outlineColour = +(missionNamespace getVariable ["Waldo_AccessibilityPID_OutlineColour", [0.03, 0.03, 0.03, 1]]);
     private _icon = missionNamespace getVariable [
@@ -87,19 +88,30 @@ private _eventId = addMissionEventHandler ["Draw3D", {
                 _visible = [player, "VIEW"] checkVisibility [eyePos player, eyePos _unit] > 0.25;
             };
             if (_visible) then {
-                private _position = getPosATLVisual _unit;
-                _position set [2, (_position select 2) + 2.1];
+                private _headModelPosition = _unit selectionPosition "head";
+                if (_headModelPosition isEqualTo [0, 0, 0]) then {
+                    _headModelPosition = _unit selectionPosition "head_hit";
+                };
+                private _headPosition = if (_headModelPosition isEqualTo [0, 0, 0]) then {
+                    private _fallback = getPosATLVisual _unit;
+                    _fallback set [2, (_fallback select 2) + 1.7];
+                    _fallback
+                } else {
+                    _unit modelToWorldVisual _headModelPosition
+                };
+                private _iconPosition = +_headPosition;
+                _iconPosition set [2, (_iconPosition select 2) + _iconHeadOffset];
                 private _drawColour = +_colour;
                 if (_distanceFade) then {_drawColour set [3, (_drawColour select 3) * (1 - ((_distance / _iconRange) min 0.85))]};
-                // The icon remains the persistent, colour-independent range cue. Typography is a
+                // The icon remains the persistent shape-based range cue. Typography is a
                 // presentation enhancement for the existing close-range name, not a replacement.
                 if (_showIcons) then {
-                    drawIcon3D [_icon, _drawColour, _position, _iconScale, _iconScale, 0, "", 1, 0, _font, "center"];
+                    drawIcon3D [_icon, _drawColour, _iconPosition, _iconScale, _iconScale, 0, "", 1, 0, _font, "center"];
                 };
                 if (_showNames && {_distance <= _nameRange}) then {
                     private _text = name _unit;
-                    private _textPosition = +_position;
-                    _textPosition set [2, (_textPosition select 2) + _textVerticalOffset];
+                    private _textPosition = +_headPosition;
+                    _textPosition set [2, (_textPosition select 2) + _textHeadOffset];
                     private _drawTextScale = (_textScale + (_distance * (_textGrowth max 0))) min (_textMaximum max _textScale);
                     private _drawOutline = +_outlineColour;
                     _drawOutline set [3, (_drawOutline param [3, 1]) * (_drawColour param [3, 1])];

@@ -173,7 +173,7 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_starter_crate_keeps_blue_identifier_and_jip_local_actions(self):
         setup = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "starterCrateSetupLocal.sqf").read_text(encoding="utf-8")
         starter = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "doStarterCrate.sqf").read_text(encoding="utf-8")
-        self.assertIn("<t color='#035afc'>Starter Crate</t>", setup)
+        self.assertIn("<t color='#79C7FF'>Starter Crate</t>", setup)
         self.assertIn("Waldo_StarterCrateIdentifierInstalled", setup)
         self.assertIn("Waldo_fnc_ZenAddLoadoutSaveAction", setup)
         self.assertIn('remoteExecCall ["Waldo_fnc_StarterCrateSetupLocal", -2', starter)
@@ -286,7 +286,10 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('Waldo_AccessibilityPID_FarLabel', pid)
         self.assertIn('Waldo_AccessibilityPID_TextDistanceGrowth", 0.00025', pid)
         self.assertIn('Waldo_AccessibilityPID_TextMaximumScale", 0.05', pid)
-        self.assertIn('Waldo_AccessibilityPID_TextVerticalOffset", -0.32', pid)
+        self.assertIn('Waldo_AccessibilityPID_TextHeadOffset", 0.30', pid)
+        self.assertIn('Waldo_AccessibilityPID_IconHeadOffset", 0.75', pid)
+        self.assertIn('selectionPosition "head"', pid)
+        self.assertIn('modelToWorldVisual _headModelPosition', pid)
         self.assertIn('"PuristaBold"', pid)
         self.assertIn('configFile >> "CfgMarkers" >> "mil_dot" >> "icon"', pid)
         self.assertIn('if (_showIcons) then', pid)
@@ -295,6 +298,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertEqual(2, pid.count('_textAnchorIcon, _draw'))
         self.assertIn('_drawOutline, _textPosition', pid)
         self.assertIn('_drawColour, _textPosition', pid)
+        self.assertIn('_drawColour, _iconPosition', pid)
         self.assertNotIn('_textAnchorIcon, _drawColour, _position, 0, 0, 0, _text, 2,', pid)
         accessibility_station = (
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf"
@@ -310,7 +314,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 41', source)
+        self.assertIn('Waldo_ZenModuleCount", 42', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
@@ -320,6 +324,25 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('if (isNull _hub && {count _modulePos >= 2})', apply)
         self.assertIn('createVehicle [_crateClass, _modulePos, [], 0, "NONE"]', apply)
         self.assertIn('[_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer', apply)
+
+    def test_field_resupply_grants_are_authoritative_targeted_and_intro_safe(self):
+        root = ROOT / "MissionScripts" / "Logistics" / "FieldResupply"
+        grant = (root / "fieldResupplyGrantCrates.sqf").read_text(encoding="utf-8")
+        notify = (root / "fieldResupplyNotifyGrantLocal.sqf").read_text(encoding="utf-8")
+        info_text = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "infoText.sqf").read_text(encoding="utf-8")
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        apply = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        self.assertIn("if !(isServer) exitWith", grant)
+        self.assertIn("getAssignedCuratorLogic", grant)
+        self.assertIn('setVariable ["Waldo_FieldResupply_Crates", _current, true]', grant)
+        self.assertIn('remoteExecCall ["Waldo_fnc_FieldResupplyNotifyGrantLocal", owner _unit]', grant)
+        self.assertIn('missionNamespace getVariable ["Waldo_InfoText_Complete", false]', notify)
+        self.assertIn('!(missionNamespace getVariable ["Waldo_InfoText_Active", false])', notify)
+        self.assertIn("diag_tickTime - _queuedAt >= 60", notify)
+        self.assertIn('setVariable ["Waldo_InfoText_Active", true]', info_text)
+        self.assertIn('setVariable ["Waldo_InfoText_Complete", true]', info_text)
+        self.assertIn('case "FIELD_RESUPPLY_GRANT"', zen)
+        self.assertIn('case "FIELD_RESUPPLY_GRANT"', apply)
 
     def test_runtime_setting_bundle_is_not_unpacked_as_one_pair(self):
         source = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
@@ -443,14 +466,14 @@ class PrReviewAuditTests(unittest.TestCase):
         for token in ('["mobileClass", "O_APC_Tracked_02_AA_F"]', '["mobilePositions", [[175, -110, 0]]]', "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
             self.assertIn(token, source)
 
-    def test_field_resupply_has_physical_cargo_and_ace_controls(self):
+    def test_field_resupply_has_logical_cargo_grouped_ace_controls_and_blue_information(self):
         root = ROOT / "MissionScripts" / "Logistics" / "FieldResupply"
         server = (root / "fieldResupplyServerHandle.sqf").read_text(encoding="utf-8")
         carrier = (root / "fieldResupplyInit.sqf").read_text(encoding="utf-8")
         crate = (root / "fieldResupplySetupCrateLocal.sqf").read_text(encoding="utf-8")
         hub = (root / "fieldResupplySetupHubLocal.sqf").read_text(encoding="utf-8")
-        self.assertIn("addMagazineCargoGlobal", server)
-        self.assertIn("getMagazineCargo _crate", server)
+        self.assertNotIn("addMagazineCargoGlobal", server)
+        self.assertNotIn("getMagazineCargo _crate", server)
         self.assertIn("clearMagazineCargoGlobal _crate", server)
         self.assertIn("magazinesAmmoFull _sourceUnit", server)
         self.assertIn("Waldo_FieldResupply_UseCapacityBasedAmounts", server)
@@ -458,12 +481,22 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("ACE_SelfActions", carrier)
         self.assertIn("Waldo_FieldResupply_InspectCarrier", carrier)
         self.assertIn("Waldo_FieldResupply_Deploy", carrier)
+        self.assertIn('"Waldo_FieldResupply_Category"', carrier)
+        self.assertIn('["ACE_SelfActions", "Waldo_FieldResupply_Category"]', carrier)
+        self.assertIn('["ACE_MainActions", "Waldo_FieldResupply_Category"]', crate)
+        self.assertIn('["ACE_MainActions", "Waldo_FieldResupply_Category"]', hub)
+        self.assertIn("<t color='#79C7FF'>Check Resupply Crates</t>", carrier)
+        self.assertIn("<t color='#79C7FF'>Field Resupply Crate</t>", crate)
         self.assertIn('backpack _caller != ""', carrier)
         self.assertIn("vehicle _caller isEqualTo _caller", carrier)
         for source in (carrier, crate, hub):
             self.assertIn("ace_interact_menu_fnc_createAction", source)
             self.assertIn("ace_interact_menu_fnc_addActionToObject", source)
             self.assertIn("addAction", source)
+        starter = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "starterCrateSetupLocal.sqf").read_text(encoding="utf-8")
+        gunship = (ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipSetupLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("<t color='#79C7FF'>Starter Crate</t>", starter)
+        self.assertIn("<t color='#79C7FF'>%1: Status (%2)</t>", gunship)
 
     def test_gunship_service_action_uses_a_known_task_icon(self):
         source = (ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipSetupLocal.sqf").read_text(encoding="utf-8")

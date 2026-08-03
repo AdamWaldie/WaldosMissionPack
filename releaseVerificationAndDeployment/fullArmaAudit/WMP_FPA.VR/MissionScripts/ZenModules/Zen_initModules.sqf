@@ -73,6 +73,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Mission Tools", "Persistence - Save Now", "PERSISTENCE_SAVE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
     ["WMP Logistics", "Field Resupply - Register Hub", "FIELD_RESUPPLY_HUB", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
     ["WMP Logistics", "Field Resupply - Assign Carrier", "FIELD_RESUPPLY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
+    ["WMP Logistics", "Field Resupply - Grant Crates", "FIELD_RESUPPLY_GRANT", "\A3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Workshop", "RECOVERY_WORKSHOP", "\A3\ui_f\data\igui\cfg\actions\repair_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Vehicle", "RECOVERY_VEHICLE", "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Carrier", "RECOVERY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"],
@@ -245,6 +246,6 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 41];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 42];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
 diag_log format ["[WMP ZEN] Registered 41 categorized WMP modules on clientOwner=%1", clientOwner];

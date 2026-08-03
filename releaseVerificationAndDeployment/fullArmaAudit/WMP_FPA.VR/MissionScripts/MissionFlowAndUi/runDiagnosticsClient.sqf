@@ -66,7 +66,7 @@ private _jamClientState = if (!_jamEnabled) then {"DISABLED"} else {
 ["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 hud=%4", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
-["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 41) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=41", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
+["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 42) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=42", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
 private _economyActive = missionNamespace getVariable ["WaldoEcoCore_ModuleActive", false];
 ["zeus", "economy-modules", if (!_economyActive) then {"DISABLED"} else {if ((missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=19", missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]]] call _add;
 

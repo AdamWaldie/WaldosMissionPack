@@ -267,6 +267,26 @@ switch (toUpperANSI _feature) do {
             }, {}, _target
         ] call zen_dialog_fnc_create;
     };
+    case "FIELD_RESUPPLY_GRANT": {
+        private _units = nearestObjects [_modulePos, ["CAManBase"], 25, true];
+        private _target = if (!isNull _objectPos && {_objectPos isKindOf "CAManBase"}) then {_objectPos} else {_units param [0, objNull]};
+        if (isNull _target) exitWith {systemChat "[WMP] Place this module on an infantry carrier or within 25 metres of one."};
+        if (_target getVariable ["Waldo_FieldResupply_MaxCrates", 0] <= 0) exitWith {
+            systemChat "[WMP] That unit is not an assigned Field Resupply carrier.";
+        };
+        [
+            "Grant Field Resupply Crates",
+            [
+                ["SLIDER", ["Crates to grant", "Added to this carrier, subject to their maximum capacity."], [1, 10, 1, 0]],
+                ["CHECKBOX", ["Increase capacity if needed", "Raise this carrier's maximum so the complete grant fits."], false]
+            ],
+            {
+                params ["_values", "_target"];
+                _values params ["_amount", "_expandCapacity"];
+                ["FIELD_RESUPPLY_GRANT", [_target, round _amount, _expandCapacity]] call Waldo_fnc_FeatureRuntimeApply;
+            }, {}, _target
+        ] call zen_dialog_fnc_create;
+    };
     case "RECOVERY_WORKSHOP": {
         private _target = (nearestObjects [_modulePos, [], 25, true]) param [0, objNull];
         if (isNull _target) exitWith {systemChat "[WMP] No workshop object found within 25 metres."};

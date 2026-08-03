@@ -88,11 +88,12 @@ The aid is presentation-only and does not alter side relations or reveal enemies
 | `Waldo_AccessibilityPID_TextScale` | `0.035` | Near-range base text size. |
 | `Waldo_AccessibilityPID_TextDistanceGrowth` | `0.00025` | Gentle text-size increase per metre, preventing shrinkage without dominating the view. |
 | `Waldo_AccessibilityPID_TextMaximumScale` | `0.05` | Hard cap on distance scaling. |
-| `Waldo_AccessibilityPID_TextVerticalOffset` | `-0.32` | World-space vertical separation that places the name clearly below the chevron. |
+| `Waldo_AccessibilityPID_TextHeadOffset` | `0.30` | Animated head-relative name height, keeping the label above standing, crouched and prone units. |
+| `Waldo_AccessibilityPID_IconHeadOffset` | `0.75` | Animated head-relative chevron height, leaving a clear gap above the name. |
 | `Waldo_AccessibilityPID_OutlineScale` | `1.12` | Size of the dark outline pass relative to the foreground. |
 | `Waldo_AccessibilityPID_OutlineColour` | `[0.03, 0.03, 0.03, 1]` | Outline colour; its alpha follows PID distance fade. |
 
-The label foreground still comes from the current WMP theme and the player's personal colour-vision profile. The two text passes use no engine shadow, avoiding the offset double-exposure effect produced by combining a manual outline with `drawIcon3D` shadow mode.
+The label foreground still comes from the current WMP theme and the player's personal colour-vision profile. Both anchors follow the model's animated `head` selection through `modelToWorldVisual`, with a safe origin-based fallback for unusual unit models. The two text passes use no engine shadow, avoiding the offset double-exposure effect produced by combining a manual outline with `drawIcon3D` shadow mode.
 
 Eligible players can show or hide the aid through **ACE Self Interact > WMP Interface > Accessibility > Toggle Friendly Identification**. The same Accessibility category is available to every player beneath **WMP Interface** and opens **Colour Vision Settings**, whose local profile also supplies an appropriate PID marker colour. Configure eligibility, icon/name ranges, line-of-sight policy and AI inclusion player-locally; this feature intentionally has no ZEN module. `Waldo_AccessibilityPID_AllowedUIDs` remains available for pre-planned per-player eligibility.
 

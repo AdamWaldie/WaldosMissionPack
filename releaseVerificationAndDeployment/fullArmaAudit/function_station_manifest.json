@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 813,
+  "registeredFunctionCount": 815,
   "runtimeFunctionCount": 385,
-  "functionCount": 1198,
+  "functionCount": 1200,
   "stations": [
     {
       "id": "control",
@@ -1651,6 +1651,18 @@
     {
       "name": "Waldo_fnc_FieldResupplyAssignCarrier",
       "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyAssignCarrier.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyGrantCrates",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyGrantCrates.sqf",
+      "station": "field-resupply",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldResupplyNotifyGrantLocal",
+      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyNotifyGrantLocal.sqf",
       "station": "field-resupply",
       "activation": "manual"
     },

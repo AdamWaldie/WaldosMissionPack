@@ -134,7 +134,7 @@ private _newVanillaActions = [];
             _actions pushBack (player addAction [format ["%1: Return for Service", _callsign], {[_this select 3, "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, _id, 1.5, false, true, "", str _available]);
             _actions pushBack (player addAction [format ["%1: Release Weapon Control", _callsign], {[_this select 3, "RELEASE_CONTROL", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, _id, 1.5, false, true, "", "missionNamespace getVariable ['Waldo_Gunship_ControlledId', ''] != ''"]);
             } else {
-                _actions pushBack (player addAction [format ["%1: Status (%2)", _callsign, _status], {
+                _actions pushBack (player addAction [format ["<t color='#79C7FF'>%1: Status (%2)</t>", _callsign, _status], {
                     private _args = _this select 3;
                     _args params ["_callsign", "_status", "_completeAt"];
                     private _remaining = if (_status == "SERVICING") then {format ["; %1 seconds remaining", ceil ((_completeAt - serverTime) max 0)]} else {""};

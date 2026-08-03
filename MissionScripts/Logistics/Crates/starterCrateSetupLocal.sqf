@@ -11,7 +11,7 @@ if !(hasInterface && {!isNull _target}) exitWith {false};
 
 if !(_target getVariable ["Waldo_StarterCrateIdentifierInstalled", false]) then {
     private _identifier = _target addAction [
-        "<t color='#035afc'>Starter Crate</t>",
+        "<t color='#79C7FF'>Starter Crate</t>",
         {}, nil, 1.5, true, false, "",
         "alive _this && {_this distance _target < 6}", 6
     ];

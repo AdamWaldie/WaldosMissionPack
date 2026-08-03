@@ -125,7 +125,7 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Field Resupply
 
-**Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. With ACE loaded, the assigned player receives carrier controls under ACE Self Actions; a backpack is required and deployment is available only on foot. All creation, refill, deploy, take and salvage operations are validated by the server.
+**Field Resupply - Register Hub** turns the object directly under the module into a side-restricted refill hub with finite or unlimited stock. If no object is under it, the server creates an empty `Logi_SupplyBoxClass` crate at the module position and registers that instead. **Field Resupply - Assign Carrier** gives the nearest infantry unit a current and maximum deployable-crate allowance. **Field Resupply - Grant Crates** is placed directly on an assigned infantry carrier, or within 25 metres of one, and grants 1–10 additional crates. Zeus may either respect the existing maximum or explicitly increase capacity enough to fit the complete grant. Only the receiving player is notified, after the fake loading/title presentation has ended. With ACE loaded, the assigned player receives carrier controls under ACE Self Actions; a backpack is required and deployment is available only on foot. All assignment, grants, refill, deploy, take and salvage operations are validated by the server.
 
 ## Loadout Save Point
 

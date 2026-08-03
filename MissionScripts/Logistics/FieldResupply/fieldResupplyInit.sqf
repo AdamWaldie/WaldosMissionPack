@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Installs the repeat-safe local Field Resupply carrier controls on the current player.
  *
- * ACE clients receive separate self-interactions for inspecting and deploying carried crates.
+ * ACE clients receive a Field Resupply category containing the inspect and deploy controls.
  * Clients without ACE Interact receive equivalent scroll-wheel actions. Conditions mirror the
  * authoritative server rules: the player must be an assigned carrier, wear a backpack and be on
  * foot; deployment additionally requires at least one carried crate. The function is safe to call
@@ -70,6 +70,13 @@ private _canDeploy = {
 };
 
 if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
+    private _category = [
+        "Waldo_FieldResupply_Category",
+        "Field Resupply",
+        "\a3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa",
+        {},
+        _isCarrier
+    ] call ace_interact_menu_fnc_createAction;
     private _inspectAction = [
         "Waldo_FieldResupply_InspectCarrier",
         "Check Resupply Crates",
@@ -84,16 +91,18 @@ if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
         _deploy,
         _canDeploy
     ] call ace_interact_menu_fnc_createAction;
-    [player, 1, ["ACE_SelfActions"], _inspectAction] call ace_interact_menu_fnc_addActionToObject;
-    [player, 1, ["ACE_SelfActions"], _deployAction] call ace_interact_menu_fnc_addActionToObject;
+    [player, 1, ["ACE_SelfActions"], _category] call ace_interact_menu_fnc_addActionToObject;
+    [player, 1, ["ACE_SelfActions", "Waldo_FieldResupply_Category"], _inspectAction] call ace_interact_menu_fnc_addActionToObject;
+    [player, 1, ["ACE_SelfActions", "Waldo_FieldResupply_Category"], _deployAction] call ace_interact_menu_fnc_addActionToObject;
     player setVariable ["Waldo_FieldResupply_ACEActionPaths", [
-        ["ACE_SelfActions", "Waldo_FieldResupply_InspectCarrier"],
-        ["ACE_SelfActions", "Waldo_FieldResupply_Deploy"]
+        ["ACE_SelfActions", "Waldo_FieldResupply_Category"],
+        ["ACE_SelfActions", "Waldo_FieldResupply_Category", "Waldo_FieldResupply_InspectCarrier"],
+        ["ACE_SelfActions", "Waldo_FieldResupply_Category", "Waldo_FieldResupply_Deploy"]
     ]];
     player setVariable ["Waldo_FieldResupply_ActionIds", []];
 } else {
     private _inspectId = player addAction [
-        "Check Resupply Crates", _inspect, [], 1.5, false, true, "",
+        "<t color='#79C7FF'>Check Resupply Crates</t>", _inspect, [], 1.5, false, true, "",
         "_this isEqualTo _target && {_this getVariable ['Waldo_FieldResupply_MaxCrates', 0] > 0} && {backpack _this != ''} && {vehicle _this isEqualTo _this}", 3
     ];
     private _deployId = player addAction [

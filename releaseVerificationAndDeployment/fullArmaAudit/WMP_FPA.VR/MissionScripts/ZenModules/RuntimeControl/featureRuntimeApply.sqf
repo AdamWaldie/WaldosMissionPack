@@ -115,6 +115,10 @@ switch (toUpperANSI _action) do {
         _settings params ["_unit", "_crates", "_maximum"];
         [_unit, _crates, _maximum] call Waldo_fnc_FieldResupplyAssignCarrier;
     };
+    case "FIELD_RESUPPLY_GRANT": {
+        _settings params ["_unit", "_amount", "_expandCapacity"];
+        [_unit, _amount, _expandCapacity] call Waldo_fnc_FieldResupplyGrantCrates;
+    };
     case "RECOVERY_WORKSHOP": {
         _settings params ["_object", "_key", "_radius", "_side", ["_notificationRadius", -1, [0]], ["_createMarkers", missionNamespace getVariable ["Waldo_Recovery_CreateWorkshopMarkers", true], [true]]];
         [_object, _key, _radius, _side, _notificationRadius, _createMarkers] call Waldo_fnc_RecoveryRegisterWorkshop;
