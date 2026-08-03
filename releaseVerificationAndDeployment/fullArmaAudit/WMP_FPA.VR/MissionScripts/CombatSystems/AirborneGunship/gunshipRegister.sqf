@@ -1,8 +1,37 @@
 /*
  * Author: WaldoTheWarfighter
- * Registers or spawns a named, server-authoritative airborne gunship.
- * Arguments: 0: config <HASHMAP>
- * Return Value: Boolean
+ * Registers an existing aircraft or spawns a named, server-authoritative airborne gunship. The
+ * server owns aircraft/crew creation, orbit state, service transitions and the JIP registry.
+ * Non-server calls are forwarded; remote player requests require an assigned curator. Reusing an
+ * id replaces the previous system.
+ *
+ * Arguments:
+ * 0: config <HASHMAP> with:
+ *    Required: id <STRING> - safe unique system key.
+ *    Aircraft: aircraft <OBJECT>, or aircraftClass <STRING>/aircraftClasses <ARRAY> plus
+ *      spawnPosition/home <ARRAY>. Side selection is independent from aircraft class.
+ *    Identity/control: callsign <STRING>, side <SIDE>, faction <STRING>, controller <OBJECT> or
+ *      controllerUID <STRING>, createCrew/forceCrewSide/lockAircraft <BOOL>.
+ *    Flight: home/orbit <ARRAY>, radius/altitude <NUMBER>, direction <STRING CIRCLE_L|CIRCLE_R>,
+ *      spawnDirection <NUMBER>.
+ *    Service: minimumFuel, maximumDamage, serviceFuelFraction, serviceAmmoFraction and
+ *      serviceDamage <NUMBER 0..1>; serviceDuration <SECONDS>; maximumServiceCycles <-1 unlimited>;
+ *      returnWhenOutOfAmmo <BOOL>.
+ *    Optional: turretProfiles <ARRAY> - display-name/turret-path pairs; defaults to discovered
+ *      gunner turrets.
+ *
+ * Return Value:
+ * Boolean - true when forwarded/registered; false when validation, aircraft or crew setup fails.
+ *
+ * Example:
+ * private _gunship = createHashMapFromArray [
+ *     ["id", "SPECTRE"], ["callsign", "SPECTRE"], ["side", west],
+ *     ["aircraftClass", "B_T_VTOL_01_armed_F"],
+ *     ["spawnPosition", [1000, 1000, 700]], ["orbit", [4000, 4000, 0]]
+ * ];
+ * [_gunship] call Waldo_fnc_GunshipRegister;
+ *
+ * Current callers: gunship ZEN registration, audit mission and mission-maker server scripts.
  */
 
 params [["_config", createHashMap, [createHashMap]]];

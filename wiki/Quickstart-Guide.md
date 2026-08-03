@@ -53,6 +53,11 @@ Keep the runtime-state request/receive handshake intact. Mid-mission ZEN setting
 
 Change one feature area at a time. Leave optional systems disabled until their required objects and configuration are present.
 
+Use [Feature Setup and Activation](Feature-Setup-and-Activation) before adding feature calls. It
+identifies whether a config switch is sufficient, whether an object/zone must be registered, and
+whether a custom setup belongs in `initServer.sqf`, a supported object init, a server trigger, or
+ZEN. Do not copy every public function into the init files.
+
 ## 6. Prepare playable loadouts
 
 Edit playable-character loadouts in Eden or ACE Arsenal before the final save. WMP recursively derives logistics contents and respawn loadouts from those playable units, including units inside Eden organiser folders and nested folders.
@@ -61,7 +66,9 @@ If ACE is loaded, disable ACE Respawn in the mission/server ACE settings when us
 
 ## 7. Configure optional radio support
 
-For ACRE2, give groups clear callsigns in Eden and configure the matching radio plan in `init.sqf`. Start with [ACRE2 Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting).
+For ACRE2, give groups clear callsigns in Eden and configure the matching radio plan in
+`MissionConfig\acreConfig.sqf`. WMP loads it automatically; do not add ACRE setup to `init.sqf`.
+Start with [ACRE2 Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting).
 
 TFAR-compatible features are documented on their individual pages, including [Radio Jamming](Radio-Jamming).
 

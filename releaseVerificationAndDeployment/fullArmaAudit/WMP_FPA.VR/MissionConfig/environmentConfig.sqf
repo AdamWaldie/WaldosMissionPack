@@ -9,6 +9,18 @@
  * Example: add a named hazard preset HashMap or map a mod explosive ammo class to its strength.
  * Current caller: Waldo_fnc_LoadFeatureConfigs from init.sqf using the SHARED scope.
  *
+ * ACTIVATION MODEL: MIXED.
+ * Hazard evaluation starts automatically when enabled, but danger exists only after a zone/emitter
+ * is registered by script or ZEN. Tree felling and breaching install their handlers automatically
+ * when enabled; breaching still needs a matching class/profile before an object is breachable.
+ *
+ * EDIT FOR A NORMAL MISSION: enable switches, hazard presets, allowed tools/content pools,
+ * protected areas and breaching profiles/explosive strengths.
+ * LEAVE ALONE UNLESS EXTENDING/TESTING: tick/cooldown/scheduler values and geometry tolerances.
+ * CUSTOM CALLS: register pre-planned hazards from initServer.sqf with
+ * Waldo_fnc_HazardRegisterZone/Emitter; runtime ZEN or
+ * server triggers may add/remove them. Tree felling and breaching have no ZEN setup.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enable switches, named hazard presets, axe/tool class patterns, fallen-object
  * pools, protected areas/yields and breaching profiles/explosive strengths are mission content.

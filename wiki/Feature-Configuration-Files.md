@@ -8,6 +8,20 @@ same manner as `acreConfig.sqf`; lifecycle code applies only the correct `SHARED
 once by `initServer.sqf` and remains available to JIP clients. The loader never promotes a local
 setting into authoritative state.
 
+This page is the variable reference. If you are asking **whether the setting starts the feature**,
+**what else must be placed/registered**, or **which init file receives a custom call**, begin with
+[Feature Setup and Activation](Feature-Setup-and-Activation). A config file never spawns or
+registers world content by itself.
+
+## Before changing a value
+
+Read the header of that config file in this order:
+
+1. **ACTIVATION MODEL** - automatic, enable plus registration, call-driven, or mixed.
+2. **EDIT FOR A NORMAL MISSION** - the values expected to change between operations.
+3. **LEAVE ALONE UNLESS EXTENDING/TESTING** - supported internals that require focused retesting.
+4. **CUSTOM CALLS** - whether a pre-planned object/system needs initServer.sqf or object setup.
+
 The exact shipped defaults are visible beside each variable in the config files. The tables below
 define purpose, units and constrained values. Empty arrays/maps mean unrestricted or no overrides
 unless the feature guide states otherwise.

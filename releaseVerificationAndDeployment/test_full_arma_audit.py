@@ -1428,6 +1428,10 @@ class FullAuditTests(unittest.TestCase):
             self.assertIn("CUSTOMISATION GUIDE", text)
             self.assertIn("MISSION MAKER", text)
             self.assertIn("ADVANCED", text)
+            self.assertIn("ACTIVATION MODEL:", text)
+            self.assertIn("EDIT FOR A NORMAL MISSION:", text)
+            self.assertIn("LEAVE ALONE UNLESS EXTENDING/TESTING:", text)
+            self.assertIn("CUSTOM CALLS:", text)
             self.assertIn("createHashMapFromArray", text)
             for forbidden in (" spawn ", "execVM", "remoteExec", "addEventHandler", "waitUntil"):
                 self.assertNotIn(forbidden, text, filename)
@@ -1436,14 +1440,48 @@ class FullAuditTests(unittest.TestCase):
         acre_config = (config_root / "acreConfig.sqf").read_text(encoding="utf-8")
         self.assertIn("CUSTOMISATION GUIDE", acre_config)
         self.assertIn("COMPATIBILITY", acre_config)
+        self.assertIn("ACTIVATION MODEL: AUTOMATIC WHEN ENABLED", acre_config)
+        self.assertIn("EDIT FOR A NORMAL MISSION:", acre_config)
+        self.assertIn("LEAVE ALONE UNLESS EXTENDING/TESTING:", acre_config)
+        self.assertIn("CUSTOM CALLS:", acre_config)
         manifest_text = (config_root / "featureConfigManifest.sqf").read_text(encoding="utf-8")
-        self.assertIn("COMPATIBILITY / INFRASTRUCTURE", manifest_text)
+        self.assertIn("ACTIVATION MODEL: INFRASTRUCTURE ONLY", manifest_text)
+        self.assertIn("EDIT FOR A NORMAL MISSION: nothing", manifest_text)
         self.assertIn("if (_scope == 'SERVER' && {_publish})", loader)
         self.assertIn("if (isNil _name)", loader)
         self.assertIn("setVariable ['Waldo_Jamming_ConfigReady', _valid, true]", loader)
         self.assertIn('["SHARED"] call Waldo_fnc_LoadFeatureConfigs;', (ROOT / "init.sqf").read_text(encoding="utf-8"))
         self.assertIn('["SERVER"] call Waldo_fnc_LoadFeatureConfigs;', (ROOT / "initServer.sqf").read_text(encoding="utf-8"))
         self.assertIn('["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;', (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8"))
+
+        config_readme = (config_root / "README.md").read_text(encoding="utf-8")
+        activation_guide = (ROOT / "Wiki" / "Feature-Setup-and-Activation.md").read_text(encoding="utf-8")
+        for required in (
+            "Activation models", "Feature activation table", "Where custom calls belong",
+            "initServer.sqf", "initPlayerLocal.sqf", "init.sqf",
+        ):
+            self.assertIn(required, config_readme)
+        for required in (
+            "The four setup patterns", "Where custom calls belong", "Setup matrix",
+            "Config-by-config recipes", "Live changes, authority and JIP",
+            "Waldo_fnc_DynamicAACreate", "Waldo_fnc_HazardRegisterZone",
+            "Waldo_fnc_RecoveryRegisterWorkshop", "Waldo_fnc_PersistenceRegisterObject",
+        ):
+            self.assertIn(required, activation_guide)
+
+        documented_entry_points = (
+            ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryRegisterWorkshop.sqf",
+            ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipRegister.sqf",
+            ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf",
+            ROOT / "MissionScripts" / "Persistence" / "persistenceRegisterObject.sqf",
+        )
+        for path in documented_entry_points:
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("Author: WaldoTheWarfighter", text, path.name)
+            self.assertIn("Arguments:", text, path.name)
+            self.assertIn("Return Value:", text, path.name)
+            self.assertIn("Example:", text, path.name)
+            self.assertIn("Current callers:", text, path.name)
 
     def test_parser_extracts_failure(self):
         with tempfile.TemporaryDirectory() as directory:

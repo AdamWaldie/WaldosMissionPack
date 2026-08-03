@@ -9,6 +9,16 @@
  * Example: tune ScanDistanceBands as absolute metre thresholds for RDF distance wording.
  * Current caller: Waldo_fnc_LoadFeatureConfigs from initServer.sqf using the SERVER scope.
  *
+ * ACTIVATION MODEL: ENABLE PLUS REGISTERED/CREATED OBJECTS.
+ * Waldo_Jamming_Enable starts the shared EW service but creates no jammer. Register an editor object
+ * with `[this] call Waldo_fnc_Jammer;`, create one from a server script/trigger, or use ZEN. EMP and
+ * trackers are on-demand calls and use these systems without needing a separate automatic object.
+ *
+ * EDIT FOR A NORMAL MISSION: master availability, player feedback, toggle/destruction rules and the
+ * optional disable challenge. LEAVE ALONE UNLESS EXTENDING/TESTING: attenuation/RDF maths and GM
+ * diagnostics. CUSTOM CALLS: object init is supported for Waldo_fnc_Jammer and
+ * Waldo_fnc_EMPImmune; use initServer.sqf or a server-owned trigger for pre-planned EMP/tracker work.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enablement, player feedback, LOS/burn-through/destruction rules, player toggle,
  * disable challenge, engineer restriction and success result are intended scenario choices.

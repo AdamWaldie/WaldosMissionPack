@@ -1,15 +1,35 @@
 /*
  * Author: WaldoTheWarfighter
  * Creates or replaces a named, server-authoritative Dynamic AA system from an extensible hash-map configuration.
+ * The config file supplies candidate asset pools and safety bounds; it does not call this function.
+ * Use initServer.sqf for pre-planned systems or ZEN for live creation. Non-server calls route to the
+ * server and remote player requests require an assigned curator. Reusing an id replaces the system.
  *
  * Arguments:
- * 0: config <HASHMAP> - id, centre, radarPosition, side, range/altitude and response settings
+ * 0: config <HASHMAP> with:
+ *    Required: id <STRING> safe unique key; centre <ARRAY> detection centre.
+ *    Detection: side <SIDE>, radius, minimumAltitude, maximumAltitude, engagementRadius <METRES>,
+ *      detectionDwell, clearDelay and detectionInterval <SECONDS>.
+ *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY>;
+ *      staticSiteSpacing <METRES>; radarDirection <DEGREES>.
+ *    Response: fighterCount <NUMBER>; initialAmmoFraction <0..1>; createMarkers <BOOL>.
+ *    Pool selection: faction <STRING> or radar/static/mobile/fighter class overrides. Omitted values
+ *      resolve through MissionConfig airOperationsConfig side/faction pools.
+ *    Optional shutdown interaction: shutdownInteraction <BOOL>, shutdownChallenge <STRING> and
+ *      shutdownDifficulty <easy|standard|hard|expert>.
  *
  * Return Value:
- * Boolean - true when creation was accepted
+ * Boolean - true when creation was accepted; false when id, centre, classes or authority are invalid.
  *
  * Example:
+ * private _config = createHashMapFromArray [
+ *     ["id", "AA_NORTH"], ["centre", getMarkerPos "aa_north"],
+ *     ["radarPosition", getMarkerPos "aa_north_radar"], ["side", east],
+ *     ["radius", 2500], ["minimumAltitude", 80]
+ * ];
  * [_config] call Waldo_fnc_DynamicAACreate;
+ *
+ * Current callers: Dynamic AA ZEN creation, audit mission and mission-maker server scripts.
  */
 
 params [["_config", createHashMap, [createHashMap]]];

@@ -1,4 +1,29 @@
-/* Registers a server-owned recovery workshop. [object, key, radius, serviced side, notification radius, create marker] */
+/*
+ * Author: WaldoTheWarfighter
+ * Registers or updates a server-owned vehicle-recovery workshop. The workshop key links registered
+ * damaged vehicles to this destination. The server publishes object state, maintains the workshop
+ * registry/monitor, and optionally creates a global area marker plus exact-position marker. Calls
+ * from non-server machines are forwarded; remote player requests require an assigned curator.
+ *
+ * Arguments:
+ * 0: workshop <OBJECT> - existing object representing the repair/recovery destination.
+ * 1: key <STRING> - stable link used by recoverable vehicles (default: "MAIN").
+ * 2: radius <NUMBER> - vehicle return/search radius in metres, minimum 5 (default: 50).
+ * 3: serviced side <SIDE> - sideUnknown permits all sides (default: sideUnknown).
+ * 4: notification radius <NUMBER> - audience radius in metres; -1 uses mission config (default: -1).
+ * 5: create markers <BOOL> - create area and exact-position map markers (config default).
+ *
+ * Return Value:
+ * Boolean - true when forwarded or registered; false for invalid/unauthorised requests.
+ *
+ * Example:
+ * if (isServer) then {
+ *     [repairDepot, "FOB_ALPHA", 50, west, 100, true]
+ *         call Waldo_fnc_RecoveryRegisterWorkshop;
+ * };
+ *
+ * Current callers: Vehicle Recovery ZEN workshop module, audit mission and mission-maker setup.
+ */
 params [
     ["_workshop", objNull, [objNull]],
     ["_key", "MAIN", [""]],

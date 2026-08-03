@@ -14,6 +14,19 @@
  *
  * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init.
  *
+ * ACTIVATION MODEL: AUTOMATIC WHEN ENABLED.
+ * Set `enabled` below and configure the side/net/group data in this file. Do not add an ACRE call
+ * to init.sqf, initServer.sqf or initPlayerLocal.sqf: WMP already reads this file at the required
+ * pre-init, server and player-local lifecycle stages. ACRE must be loaded on the relevant machines.
+ *
+ * EDIT FOR A NORMAL MISSION: enabled, prc343PresetPolicy, namedDisplays, radioOverrides, sides and
+ * babel. Within each side, edit the named nets and the group assignment rows that match your real
+ * editor group IDs. Explicit radio rows are optional and are needed only when multiple radios of
+ * the same type require different nets or ears.
+ * LEAVE ALONE UNLESS EXTENDING/TESTING: version, strict, retuneOnGroupChange, radioPriority and
+ * radioProfiles. These describe parser and radio capabilities rather than an ordinary radio plan.
+ * CUSTOM CALLS: none for normal setup. The active lifecycle owns join, JIP, respawn and Babel.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enabled, prc343PresetPolicy, namedDisplays, sides, nets, groups, radioOverrides and Babel content are
  * intended mission choices. Group entries are [group ID, fallback net keys, fallback 343 [block,

@@ -1,17 +1,27 @@
 /*
  * Author: WaldoTheWarfighter
  * Registers an editor-placed or scripted object for repeat-safe server persistence.
+ * This is a server-only mission setup call. When persistence is enabled but its dependency/startup
+ * gate is still pending, registration is queued by key and replayed after activation. The function
+ * does not enable persistence and returns false when called on a client or when the feature is off.
  *
  * Arguments:
  * 0: object <OBJECT> - object to persist
  * 1: key <STRING> - stable database key, unique within the mission
- * 2: options <ARRAY> - save cargo, damage, fuel, ammo/pylons, position, custom variable names
+ * 2: options <ARRAY> - [save cargo, save damage, save fuel, save ammo/pylons, save position,
+ *      custom variable names]. Missing first-five values default true; missing custom variables use
+ *      Waldo_Persistence_DefaultCustomVariables. Keys permit letters, digits, underscore and dash.
  *
  * Return Value:
  * Boolean - true when registered
  *
  * Example:
- * [this, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceRegisterObject;
+ * if (isServer) then {
+ *     [supplyCrate, "base_supply_1", [true, false, false, false, false]]
+ *         call Waldo_fnc_PersistenceRegisterObject;
+ * };
+ *
+ * Current callers: mission-maker server setup, persistence ZEN registration and audit mission.
  */
 
 params [

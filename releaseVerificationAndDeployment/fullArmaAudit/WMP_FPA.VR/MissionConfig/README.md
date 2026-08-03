@@ -1,62 +1,107 @@
 # WMP feature configuration
 
-Every file in this directory is mission-maker configuration. The feature files return pure data;
-they do not start systems, wait for state, register handlers, mutate world objects, or transfer
-authority.
+This directory is the mission maker's settings layer. The files return data only: they do not
+spawn assets, register world objects, add event handlers, or transfer authority. WMP's existing
+init lifecycle reads that data at the correct stage.
+
+The most important rule is: **a setting and a feature instance are not the same thing**. Setting an
+`Enable` value can start an automatic handler, permit a registered-object system, or merely make a
+later script call available. Read the `ACTIVATION MODEL` block at the top of the relevant file.
+
+## Start here for each feature
+
+1. Find the feature in the activation table below.
+2. Open its named config file and review only `EDIT FOR A NORMAL MISSION` first.
+3. Set its enable/availability switch if it has one.
+4. If the table says **register** or **create**, add the documented call in `initServer.sqf`, a
+   supported object init, a server-owned trigger/script, or use ZEN.
+5. Leave `ADVANCED`, `COMPATIBILITY`, timing, geometry, parser and authority values unchanged until
+   a tested mission requirement justifies them.
+
+## Activation models
+
+| Model | What changing the config does | Additional setup |
+|---|---|---|
+| Automatic | Starts the existing WMP lifecycle when enabled | None |
+| Enable + register | Starts support/evaluation but creates no usable world instance | Register the required zone/object/unit |
+| Call-driven | Supplies pools, defaults and safety bounds | Create each system through its public script call or ZEN |
+| Mixed | Different features in the same file use different models | Follow the feature row below |
+
+## Feature activation table
+
+| Feature | Config | Activation | Normal mission setup |
+|---|---|---|---|
+| ACRE2 radio plan and Babel | `acreConfig.sqf` | Automatic | Edit this file only; no init call |
+| AI rebalance | `aiConfig.sqf` | Automatic | Enable and select profile/mode/filters |
+| Improved AI helicopter landing | `aiConfig.sqf` | Automatic | Enable; provide supported landing waypoints |
+| Airborne gunship | `airOperationsConfig.sqf` | Call-driven | Permit it, then call `Waldo_fnc_GunshipRegister` or use ZEN |
+| Dynamic paradrop | `airOperationsConfig.sqf` | Call-driven | Call `Waldo_fnc_ParadropCreateDropZone` or use ZEN |
+| Dynamic AA | `airOperationsConfig.sqf` | Call-driven | Call `Waldo_fnc_DynamicAACreate` or use ZEN |
+| Radio jammer | `electronicWarfareConfig.sqf` | Enable + register | Enable, then register/create jammer objects or use ZEN |
+| EMP / tracker | `electronicWarfareConfig.sqf` | On demand | Use their documented public calls or ZEN |
+| Hazardous environments | `environmentConfig.sqf` | Enable + register | Enable, then register zones/emitters or use ZEN |
+| Tree felling | `environmentConfig.sqf` | Automatic | Enable and configure valid tool/content classes |
+| Explosive breaching | `environmentConfig.sqf` | Automatic + profiles | Enable and provide matching breach profiles/explosives |
+| Theme / notification flow | `interfaceConfig.sqf` | Automatic | Select theme and optional channel routing |
+| Treatment feedback | `interfaceConfig.sqf` | Automatic | Enable and select recipients/content |
+| Emergency dismount | `interfaceConfig.sqf` | Automatic | Enable and select policy |
+| Accessibility PID | `interfaceConfig.sqf` | Automatic | Enable, set UID eligibility and presentation |
+| Tactical display | `interfaceConfig.sqf` | Register | Register a suitable display object or use ZEN |
+| Field resupply | `logisticsConfig.sqf` | Register | Register hubs and assign carriers, or use ZEN |
+| Vehicle recovery | `logisticsConfig.sqf` | Register | Register workshop, vehicles and optional carriers, or use ZEN |
+| Object scaling | `logisticsConfig.sqf` | Call-driven | Call `Waldo_fnc_ObjectScale` or use ZEN |
+| Logistics crate classes | `logisticsConfig.sqf` | Consumed defaults | Existing spawners use them; they spawn nothing alone |
+| Rally / minigames / corpse traps | `missionSystemsConfig.sqf` | Automatic | Enable and configure the feature |
+| Economy | `missionSystemsConfig.sqf` | Automatic runtime + content setup | Enable, then configure the dedicated economy preset/catalogue |
+| Diagnostics / safestart | `missionSystemsConfig.sqf` | Automatic | Review the shipped server policy |
+| Persistence | `persistenceConfig.sqf` | Automatic + dependency gate | Enable; install INIDBI2 server-side; register world objects separately |
+
+## Where custom calls belong
+
+- `initServer.sqf`: preferred for pre-planned world systems, registries, authoritative objects,
+  zones and state. Examples include Dynamic AA, gunships, paradrop zones, recovery workshops,
+  field-resupply hubs, hazardous zones and persistent objects.
+- `initPlayerLocal.sqf`: only for custom work that must exist separately on each human interface.
+  Do not place server-world creation here. WMP's automatic UI and accessibility systems already
+  initialise here and must not be started a second time.
+- `init.sqf`: runs on every machine. Do not use it as a general feature setup file and do not put
+  server authority or mutable public defaults here. WMP uses it only where all-machine/shared
+  lifecycle is intentional.
+- Editor object init: use only when the public function documents object-init use and is repeat-safe
+  or server-routed, such as `[this] call Waldo_fnc_Jammer;`. Otherwise prefer `initServer.sqf`.
+- Trigger/script: use a server-owned trigger or execute on the server for later creation. Public
+  calls that accept curator requests still validate and route authority; that is not permission to
+  run the same setup on every client.
+- ZEN: appropriate for live, curator-driven creation/control where a module exists. A ZEN change is
+  runtime authority and should not be countermanded by a repeating init default.
+
+See `Wiki/Feature-Setup-and-Activation.md` for copy-ready examples and the feature pages for every
+function parameter.
 
 ## Customisation levels
 
-Every setting is documented with one of these labels inside its config file and in the wiki:
+- **MISSION MAKER**: review per mission. Enables features, selects content, names, sides, policies
+  and player-facing behavior.
+- **ADVANCED TUNING**: supported but normally retain the shipped value. Change for a specific tested
+  requirement only. This includes scheduler intervals, safety bounds, UI layout internals and
+  control loops.
+- **COMPATIBILITY / INFRASTRUCTURE**: do not edit for ordinary mission setup. These values preserve
+  schema, dependency or older integration behavior.
 
-- **MISSION MAKER** — intended to be reviewed for each mission. These select enabled features,
-  factions/classes, player-facing behaviour, scenario rules, names and content pools.
-- **ADVANCED TUNING** — a supported setting, but the shipped value should normally remain unchanged.
-  Change it only for a specific design requirement and test the affected feature in hosted and
-  dedicated multiplayer. Timers, safety bounds, scan intervals, UI layout internals and control-loop
-  values usually belong here.
-- **COMPATIBILITY** — retained for integration or an older call path. Do not edit it as ordinary
-  mission configuration unless its comment explicitly tells you to do so.
+## Files and loader schema
 
-Units, valid string options, array/HashMap shapes and special values such as `-1` are stated beside
-the setting. A Boolean is not self-explanatory: its comment describes what `true` actually changes.
-Do not change a setting merely because it is exposed.
+`featureConfigManifest.sqf` is infrastructure. Do not add activation code to it or reorder it unless
+you are adding a new semantic config file and updating validation/documentation.
 
-## Files
+Ordinary files return a HashMap containing:
 
-- `acreConfig.sqf` — ACRE2 nets, presets, same-type radio occurrences/ears, group/player/role allocation and Babel. It never controls alternate PTT defaults.
-- `aiConfig.sqf` — AI rebalance and improved AI helicopter landings.
-- `airOperationsConfig.sqf` — airborne gunship, paradrop and Dynamic AA.
-- `electronicWarfareConfig.sqf` — jammer/EW behavior and RDF feedback.
-- `environmentConfig.sqf` — hazardous environments, tree felling and breaching.
-- `interfaceConfig.sqf` — themes, notification flow, treatment feedback, tactical display,
-  emergency dismount and accessibility.
-- `logisticsConfig.sqf` — field resupply, vehicle recovery, object scaling and logistics crates.
-- `missionSystemsConfig.sqf` — rally points, economy enablement, minigames, corpse traps, ACE
-  logistics limits, diagnostics and safestart.
-- `persistenceConfig.sqf` — INIDBI2 persistence fields.
-- `featureConfigManifest.sqf` — deterministic list consumed by the loader.
+- `featureFamilies`: documentation names only.
+- `shared`: `[variableName, defaultValue]`, guarded and loaded on every machine from `init.sqf`.
+- `server`: `[variableName, defaultValue, publishForJip]`, loaded by `initServer.sqf` only.
+- `playerLocal`: `[variableName, defaultValue]`, loaded only for a human interface client.
+- `aliases`, `fallbacks`, `conditional`: compatibility/dependency forms documented in the loader;
+  mission makers normally leave these alone.
 
-## Feature-config schema
-
-Each feature file returns a HashMap. Supported keys are:
-
-- `featureFamilies`: display/documentation names only.
-- `shared`: `[variableName, defaultValue]` entries applied from `init.sqf` on every machine.
-- `server`: `[variableName, defaultValue, publishForJip]` entries applied only from
-  `initServer.sqf`. A true publication flag broadcasts the retained/default value.
-- `playerLocal`: `[variableName, defaultValue]` entries applied only inside the `hasInterface`
-  branch of `initPlayerLocal.sqf`.
-- `aliases`: `[scope, targetName, sourceName]` entries that copy a configured source only when the
-  target is undefined.
-- `fallbacks`: `[scope, targetName, sourceName, defaultValue]` entries that retain a compatible
-  source variable when present, otherwise use the supplied default.
-- `conditional`: `[scope, variableName, requiredCfgPatch, loadedDefault, absentDefault,
-  publishForJip]` entries for dependency-sensitive defaults.
-
-All ordinary entries are guarded: a value supplied before the loader runs wins. Server/ZEN runtime
-changes continue to win for connected and JIP clients because shared/player-local loading never
-publishes, and only `initServer.sqf` processes server publication entries.
-
-`Waldo_fnc_LoadFeatureConfigs` is lifecycle code and therefore lives under
-`MissionScripts\MissionInit\Configuration`, not in this directory. See the wiki
-**Feature Configuration Files** page for every setting, units, valid values, and ownership.
+Existing variables win. Server-published values remain available to JIP clients. Configuration
+files must remain pure data: activation calls, waits, handlers, world mutation and remote execution
+belong in lifecycle or feature scripts.

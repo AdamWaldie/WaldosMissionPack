@@ -9,6 +9,16 @@
  * Example: set Waldo_SafeStart_AutoStart false to ship live while retaining runtime controls.
  * Current callers: init.sqf (SHARED) and initServer.sqf (SERVER) through the loader.
  *
+ * ACTIVATION MODEL: AUTOMATIC WHEN ENABLED, WITH FEATURE-SPECIFIC CONTENT.
+ * Rally, minigames, corpse traps, diagnostics and safestart start through the existing lifecycle.
+ * Economy enablement starts its runtime, but economy resources/catalogues still come from the
+ * dedicated economy setup/presets. The ACE values here are global policy, not separate features.
+ *
+ * EDIT FOR A NORMAL MISSION: rally rules, optional-system switches, diagnostics and safestart.
+ * LEAVE ALONE UNLESS EXTENDING/TESTING: safe-position search and global ACE handling values.
+ * CUSTOM CALLS: none for normal activation. Use each feature's documented runtime control API/ZEN
+ * module for mid-mission changes; do not repeat its startup function in mission init files.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - rally/economy/minigame/corpse-trap enablement, rally object and gameplay rules,
  * diagnostics and safestart policy should be reviewed per mission. Rally duration/deployment/cooldown
@@ -47,9 +57,9 @@ createHashMapFromArray [
     ["server", [
         // MISSION MAKER: server diagnostics and safestart contract; JIP-published.
         ["Waldo_RunDiagnostics", true, true],
-        ["Waldo_SafeStart_Confine", true, true],
-        ["Waldo_SafeStart_Radius", 75, true],
-        ["Waldo_SafeStart_ZoneMarker", "", true],
+        ["Waldo_SafeStart_Confine", false, true],
+        ["Waldo_SafeStart_Radius", 150, false],
+        ["Waldo_SafeStart_ZoneMarker", "", false],
         ["Waldo_SafeStart_AutoStart", true, true]
     ]]
 ]

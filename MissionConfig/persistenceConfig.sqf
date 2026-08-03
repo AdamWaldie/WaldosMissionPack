@@ -10,6 +10,17 @@
  * Example: edit SaveRadios to true to persist supported carried-radio state separately from loadouts.
  * Current caller: Waldo_fnc_LoadFeatureConfigs from init.sqf using the SHARED scope.
  *
+ * ACTIVATION MODEL: AUTOMATIC WHEN ENABLED, SUBJECT TO THE SERVER DEPENDENCY GATE.
+ * WMP starts server and player persistence itself. A working server-side INIDBI2 extension is still
+ * mandatory; enabled does not mean available, and the feature remains inactive if the gate fails.
+ * Player state needs no custom registration. World objects must be registered with stable keys.
+ *
+ * EDIT FOR A NORMAL MISSION: Enable, Save* policy and DatabaseName.
+ * LEAVE ALONE UNLESS EXTENDING/TESTING: save intervals and DefaultCustomVariables.
+ * CUSTOM CALLS: register pre-placed
+ * persistent objects from initServer.sqf with Waldo_fnc_PersistenceRegisterObject after enabling;
+ * the function queues early server registrations until the database lifecycle becomes active.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - Enable and the Save* switches define the campaign contract and should be reviewed
  * per mission. DatabaseName separates campaigns; changing it starts a different logical save set.

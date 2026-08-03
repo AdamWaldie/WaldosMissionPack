@@ -10,6 +10,17 @@
  * Example: change Waldo_AIRebalance_Profile from LINE to MILITIA, VETERAN or ELITE.
  * Current caller: Waldo_fnc_LoadFeatureConfigs from init.sqf using the SHARED scope.
  *
+ * ACTIVATION MODEL: AUTOMATIC WHEN EACH ENABLE SWITCH IS TRUE.
+ * No custom call is required. AI rebalance follows AI locality on server, headless client or client;
+ * improved landing watches local AI helicopter pilots with LAND/UNLOAD/TRANSPORT UNLOAD/GET OUT
+ * waypoints. Setting an enable switch false prevents that handler from starting.
+ *
+ * EDIT FOR A NORMAL MISSION: both Enable switches, AI profile/mode/apply population and optional
+ * side/faction/class filters. LEAVE ALONE UNLESS EXTENDING/TESTING: skill variance, restore policy,
+ * display-name keys and every helicopter controller distance/rate/timing value.
+ * CUSTOM CALLS: not required. Runtime AI profile changes should use Waldo_fnc_AIRebalanceInit;
+ * Waldo_fnc_AIRebalanceStop restores recorded skills when RestoreOnStop is true.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enable, Profile, Mode and include/exclude filters are intended choices. Profiles
  * are MILITIA, LINE, VETERAN or ELITE; LINE is the WMP default for editor and Zeus AI. Mode is DAY

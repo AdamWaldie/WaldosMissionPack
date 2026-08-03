@@ -10,6 +10,18 @@
  * Example: add compatible recovery package classes to Waldo_Recovery_PackageClasses.
  * Current callers: init.sqf (SHARED) and initServer.sqf (SERVER) through the loader.
  *
+ * ACTIVATION MODEL: REGISTERED OBJECTS / CALL-DRIVEN.
+ * Field resupply requires a registered hub and assigned carriers; vehicle recovery requires a
+ * workshop plus registered recoverable vehicles and optional package carriers. Object scaling is
+ * performed only by its script/ZEN operation. Crate class settings are consumed by existing WMP
+ * spawners and do not create crates on their own.
+ *
+ * EDIT FOR A NORMAL MISSION: resupply content/balance, recovery package/marker policy, scaling
+ * limits and crate classes. LEAVE ALONE UNLESS EXTENDING/TESTING: scans, safe-placement geometry and
+ * client authority. CUSTOM CALLS: use initServer.sqf for Waldo_fnc_FieldResupplyRegisterHub,
+ * Waldo_fnc_FieldResupplyAssignCarrier and RecoveryRegister* pre-planning; editor object-init calls
+ * are repeat-safe/server-routed where their function header explicitly demonstrates `[this,...]`.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - field-resupply enablement/content, carrier capacity, recovery package classes,
  * workshop markers, object-scale bounds and logistics crate classes are intended choices.

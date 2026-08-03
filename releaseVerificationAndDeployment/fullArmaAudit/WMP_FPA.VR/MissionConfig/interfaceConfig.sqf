@@ -11,6 +11,17 @@
  * Example: set Waldo_AccessibilityPID_AllowedUIDs to [] to permit every player to use PID.
  * Current callers: init.sqf (SHARED) and initPlayerLocal.sqf (PLAYER_LOCAL) through the loader.
  *
+ * ACTIVATION MODEL: AUTOMATIC LOCAL UI, EXCEPT TACTICAL DISPLAY REGISTRATION.
+ * Theme/notification policy is consumed automatically. Treatment feedback, emergency dismount and
+ * accessibility install on each interface client when enabled. Tactical display values only tune a
+ * display object; register a suitable whiteboard/map board separately by script or ZEN.
+ *
+ * EDIT FOR A NORMAL MISSION: theme, panel channel routing, treatment recipients/content, dismount
+ * policy and accessibility eligibility/presentation. LEAVE ALONE UNLESS EXTENDING/TESTING: queue
+ * limits, animation geometry, tactical knowledge bounds and Draw3D fine tuning. CUSTOM CALLS: put a
+ * pre-planned Waldo_fnc_TacticalDisplayRegister call in initServer.sqf; do not start local UI systems
+ * manually from init.sqf or duplicate their initPlayerLocal lifecycle.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM or SCIFI), treatment-feedback policy,
  * emergency-dismount policy and accessibility eligibility/presentation are intended choices.

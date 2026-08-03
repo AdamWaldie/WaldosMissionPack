@@ -13,6 +13,7 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 | Install WMP in a mission | [Quickstart Guide](Quickstart-Guide) |
 | Find a feature | [Feature Index](Feature-Tutorials) |
 | Configure mission entry files | [Mission Configuration Reference](Mission-Configuration-Reference) |
+| Set up or activate a feature | [Feature Setup and Activation](Feature-Setup-and-Activation) |
 | Find a feature setting | [Feature Configuration Files](Feature-Configuration-Files) |
 | Place or configure Zeus modules | [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) |
 | Translate Zeus setup into script | [Zeus and Script API Parity](Zeus-And-Script-API-Parity) |

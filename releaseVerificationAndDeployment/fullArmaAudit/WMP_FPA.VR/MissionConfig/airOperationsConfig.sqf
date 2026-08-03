@@ -11,6 +11,17 @@
  * Example: extend Waldo_Paradrop_AircraftClasses with compatible mod aircraft before activation.
  * Current callers: init.sqf (SHARED) and initServer.sqf (SERVER) through the loader.
  *
+ * ACTIVATION MODEL: CALL-DRIVEN / ZEN-CREATED.
+ * This file does not create a gunship, drop zone or AA system. It supplies allowed aircraft,
+ * parachutes, boarding objects, AA asset pools and safety bounds to later creation calls/modules.
+ * Waldo_Gunship_Enable permits gunship registration but still does not instantiate one by itself.
+ *
+ * EDIT FOR A NORMAL MISSION: content pools, feature availability and jump envelopes for the loaded
+ * mod set. LEAVE ALONE UNLESS EXTENDING/TESTING: monitor cadence, service thresholds and server
+ * maximum bounds. CUSTOM CALLS: put pre-planned Waldo_fnc_GunshipRegister,
+ * Waldo_fnc_ParadropCreateDropZone or Waldo_fnc_DynamicAACreate calls in initServer.sqf. Use a
+ * server-owned trigger/script for later creation, or the matching ZEN module during play.
+ *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - feature enablement, gunship aircraft pools, paradrop aircraft/chutes/boarding
  * objects, Dynamic AA side/faction pools and jump-envelope classes are intended mission content.
