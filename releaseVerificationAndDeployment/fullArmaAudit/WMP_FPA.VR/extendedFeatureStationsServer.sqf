@@ -401,7 +401,7 @@ Waldo_QA_fnc_createDynamicAOServer = {
     ["QA_DYNAMIC_AO"] call Waldo_fnc_DynamicAODestroy;
     private _config = createHashMapFromArray [
         ["id", "QA_DYNAMIC_AO"], ["center", [350, -300, 0]], ["side", east], ["faction", "OPF_F"],
-        ["radius", 250], ["skill", 0.35], ["patrolGroups", 2], ["garrisonGroups", 2],
+        ["radius", 250], ["patrolGroups", 2], ["garrisonGroups", 2],
         ["staticTurrets", 1], ["vehiclePatrols", 1], ["vehicleMix", [50, 35, 15]],
         ["airPatrols", 0], ["civilianFaction", "CIV_F"], ["civilianPatrols", 2],
         ["civilianGarrisons", 2], ["civilianCars", 1], ["minefields", 1],
@@ -411,9 +411,29 @@ Waldo_QA_fnc_createDynamicAOServer = {
     private _state = (missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap]) getOrDefault ["QA_DYNAMIC_AO", createHashMap];
     private _objects = _state getOrDefault ["objects", []];
     private _groups = _state getOrDefault ["groups", []];
-    private _ready = _created && {count _objects > 1} && {count _groups >= 2};
-    diag_log format ["WMP DYNAMIC AO QA: created=%1 objects=%2 groups=%3 minefields=%4", _created, count _objects, count _groups, count (_state getOrDefault ["minefields", []])];
-    [_actor, "DYNAMIC AO QA", if (_ready) then {"Generated the isolated OPFOR AO south of this station. Inspect patrols, static/vehicle selection, civilian population, minefield anchor and global markers in Zeus."} else {"AO generation was incomplete. Inspect the current runtime log."}, ["ERROR", "SUCCESS"] select _ready] call Waldo_QA_fnc_notifyActorServer;
+    private _patrolGroups = _groups select {!isNull _x && {count waypoints _x >= 3}};
+    private _routesActive = count _patrolGroups >= 3 && {_patrolGroups findIf {
+        waypointType [_x, currentWaypoint _x] != "MOVE"
+    } < 0};
+    private _ready = _created && {count _objects > 1} && {count _groups >= 2} && {_routesActive};
+    diag_log format ["WMP DYNAMIC AO QA: created=%1 objects=%2 groups=%3 patrolRoutes=%4 activeRoutes=%5 minefields=%6", _created, count _objects, count _groups, count _patrolGroups, _routesActive, count (_state getOrDefault ["minefields", []])];
+    [_actor, "DYNAMIC AO QA", if (_ready) then {"Generated the isolated OPFOR AO south of this station with active infantry, vehicle and civilian patrol routes. Inspect their movement, faction assets, minefield anchor and global markers in Zeus."} else {"AO generation or patrol-route activation was incomplete. Inspect the current runtime log."}, ["ERROR", "SUCCESS"] select _ready] call Waldo_QA_fnc_notifyActorServer;
+    if (_ready) then {
+        private _starts = _patrolGroups apply {getPosATL leader _x};
+        [_actor, _patrolGroups, _starts] spawn {
+            params ["_actor", "_patrolGroups", "_starts"];
+            sleep 15;
+            private _moving = 0;
+            {
+                if (!isNull _x && {alive leader _x} && {(getPosATL leader _x) distance2D (_starts param [_forEachIndex, getPosATL leader _x]) > 2}) then {
+                    _moving = _moving + 1;
+                };
+            } forEach _patrolGroups;
+            private _passed = _moving > 0;
+            diag_log format ["WMP DYNAMIC AO MOVEMENT QA: movingGroups=%1/%2 passed=%3", _moving, count _patrolGroups, _passed];
+            [_actor, "DYNAMIC AO MOVEMENT", format ["%1 of %2 routed patrol groups moved within 15 seconds.", _moving, count _patrolGroups], ["ERROR", "SUCCESS"] select _passed] call Waldo_QA_fnc_notifyActorServer;
+        };
+    };
 };
 Waldo_QA_fnc_reportDynamicAOServer = {
     params [["_actor", objNull, [objNull]]];

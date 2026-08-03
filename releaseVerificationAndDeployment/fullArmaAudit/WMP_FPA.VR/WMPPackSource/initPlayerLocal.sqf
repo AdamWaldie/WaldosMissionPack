@@ -108,8 +108,6 @@ if (hasInterface) then {
     if (isNil "Waldo_AccessibilityPID_ShowIcons") then {Waldo_AccessibilityPID_ShowIcons = true};
     if (isNil "Waldo_AccessibilityPID_ShowNames") then {Waldo_AccessibilityPID_ShowNames = true};
     if (isNil "Waldo_AccessibilityPID_ShowVehicleCrew") then {Waldo_AccessibilityPID_ShowVehicleCrew = false};
-    if (isNil "Waldo_AccessibilityPID_Style") then {Waldo_AccessibilityPID_Style = "TAG"};
-    if (isNil "Waldo_AccessibilityPID_FarLabel") then {Waldo_AccessibilityPID_FarLabel = "F"};
     if (isNil "Waldo_AccessibilityPID_Font") then {Waldo_AccessibilityPID_Font = "PuristaBold"};
     if (isNil "Waldo_AccessibilityPID_TextDistanceGrowth") then {Waldo_AccessibilityPID_TextDistanceGrowth = 0.0008};
     if (isNil "Waldo_AccessibilityPID_TextMaximumScale") then {Waldo_AccessibilityPID_TextMaximumScale = 0.07};

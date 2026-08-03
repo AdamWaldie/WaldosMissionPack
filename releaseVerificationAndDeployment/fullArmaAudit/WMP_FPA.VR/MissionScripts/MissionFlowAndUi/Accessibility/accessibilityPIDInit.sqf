@@ -1,9 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
  * Installs an opt-in, configurable friendly identification overlay for eligible players. The
- * default TAG presentation uses a bold two-pass text label with a tight dark outline, distance-
- * compensated sizing and a short far-range friendly glyph. ICON preserves the former marker and
- * HYBRID combines both. All drawing remains local, theme/colour-vision aware and repeat-safe.
+ * established icon-at-range and name-at-close-range behaviour is retained. Only the nearby name's
+ * typography is enhanced with a bold two-pass label, tight dark outline and distance-compensated
+ * sizing. All drawing remains local, theme/colour-vision aware and repeat-safe.
  *
  * Arguments:
  * None
@@ -59,9 +59,6 @@ private _eventId = addMissionEventHandler ["Draw3D", {
     private _showIcons = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowIcons", true];
     private _showNames = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowNames", true];
     private _showVehicleCrew = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowVehicleCrew", false];
-    private _style = toUpperANSI (missionNamespace getVariable ["Waldo_AccessibilityPID_Style", "TAG"]);
-    if !(_style in ["TAG", "ICON", "HYBRID"]) then {_style = "TAG";};
-    private _farLabel = missionNamespace getVariable ["Waldo_AccessibilityPID_FarLabel", "F"];
     private _font = missionNamespace getVariable ["Waldo_AccessibilityPID_Font", "PuristaBold"];
     private _textGrowth = missionNamespace getVariable ["Waldo_AccessibilityPID_TextDistanceGrowth", 0.0008];
     private _textMaximum = missionNamespace getVariable ["Waldo_AccessibilityPID_TextMaximumScale", 0.07];
@@ -92,18 +89,18 @@ private _eventId = addMissionEventHandler ["Draw3D", {
                 _position set [2, (_position select 2) + 2.1];
                 private _drawColour = +_colour;
                 if (_distanceFade) then {_drawColour set [3, (_drawColour select 3) * (1 - ((_distance / _iconRange) min 0.85))]};
-                if (_showIcons && {_style in ["ICON", "HYBRID"]}) then {
+                // The icon remains the persistent, colour-independent range cue. Typography is a
+                // presentation enhancement for the existing close-range name, not a replacement.
+                if (_showIcons) then {
                     drawIcon3D [_icon, _drawColour, _position, _iconScale, _iconScale, 0, "", 1, 0, _font, "center"];
                 };
-                if (_showNames && {_style in ["TAG", "HYBRID"]}) then {
-                    private _text = if (_distance <= _nameRange) then {name _unit} else {_farLabel};
-                    if (_text != "") then {
-                        private _drawTextScale = (_textScale + (_distance * (_textGrowth max 0))) min (_textMaximum max _textScale);
-                        private _drawOutline = +_outlineColour;
-                        _drawOutline set [3, (_drawOutline param [3, 1]) * (_drawColour param [3, 1])];
-                        drawIcon3D [_textAnchorIcon, _drawOutline, _position, 0, 0, 0, _text, 0, _drawTextScale * (_outlineScale max 1), _font, "center"];
-                        drawIcon3D [_textAnchorIcon, _drawColour, _position, 0, 0, 0, _text, 0, _drawTextScale, _font, "center"];
-                    };
+                if (_showNames && {_distance <= _nameRange}) then {
+                    private _text = name _unit;
+                    private _drawTextScale = (_textScale + (_distance * (_textGrowth max 0))) min (_textMaximum max _textScale);
+                    private _drawOutline = +_outlineColour;
+                    _drawOutline set [3, (_drawOutline param [3, 1]) * (_drawColour param [3, 1])];
+                    drawIcon3D [_textAnchorIcon, _drawOutline, _position, 0, 0, 0, _text, 0, _drawTextScale * (_outlineScale max 1), _font, "center"];
+                    drawIcon3D [_textAnchorIcon, _drawColour, _position, 0, 0, 0, _text, 0, _drawTextScale, _font, "center"];
                 };
             };
         };

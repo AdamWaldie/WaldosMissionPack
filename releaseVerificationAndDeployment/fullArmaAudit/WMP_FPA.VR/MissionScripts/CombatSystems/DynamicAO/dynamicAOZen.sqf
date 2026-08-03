@@ -4,7 +4,8 @@
  *
  * Faction and allegiance are one friendly-name selector, eliminating raw class entry and invalid
  * side/faction combinations without staged dialogs. All bounded runtime options map directly to
- * Waldo_fnc_DynamicAOCreate; vehicle and air percentages are ratios and need not total 100.
+ * Waldo_fnc_DynamicAOCreate; generated units use the active WMP AI profile, while vehicle and air
+ * percentages are ratios and need not total 100.
  * Current caller: Dynamic AO - Create in Zen_initModules.sqf.
  *
  * Arguments:
@@ -38,7 +39,6 @@ private _defaultName = format ["AO_%1_%2", clientOwner, round (serverTime * 10)]
         ["EDIT", ["AO name", "Stable script/cleanup identifier. Unsupported characters are removed."], [_defaultName]],
         ["COMBO", ["Enemy faction and side", "Live faction scan. The side shown in brackets owns every spawned enemy group."], [_factionValues, _factionLabels, 0]],
         ["SLIDER", ["AO radius", "Generation and ground-patrol radius in metres."], [100, 2000, 500, 0]],
-        ["SLIDER", ["AI skill", "Explicit 0-1 skill applied after WMP's general AI profile handler."], [0, 1, 0.5, 2]],
         ["SLIDER", ["Infantry patrol groups", "Each patrol contains four to eight faction infantry."], [0, 12, 3, 0]],
         ["SLIDER", ["Building garrison groups", "Two to four units per usable building; silently capped by available buildings."], [0, 30, 3, 0]],
         ["SLIDER", ["Manned static turrets", "Random faction static weapons, including supported HMG, GMG, AA, AT and mortar assets."], [0, 20, 0, 0]],
@@ -67,7 +67,7 @@ private _defaultName = format ["AO_%1_%2", clientOwner, round (serverTime * 10)]
         params ["_values", "_arguments"];
         _arguments params ["_modulePosition", "_factions"];
         _values params [
-            "_name", "_faction", "_radius", "_skill", "_patrols", "_garrisons", "_statics",
+            "_name", "_faction", "_radius", "_patrols", "_garrisons", "_statics",
             "_vehicles", "_car", "_apc", "_tank", "_air", "_heli", "_jet", "_drone", "_plane",
             "_heliRange", "_planeRange", "_simple", "_civilianFaction", "_civPatrol", "_civGarrison",
             "_civCars", "_mines", "_mineMarkers", "_roadblocks", "_showMarker"
@@ -77,7 +77,7 @@ private _defaultName = format ["AO_%1_%2", clientOwner, round (serverTime * 10)]
         if (_id == "") then {_id = format ["AO_%1_%2", clientOwner, round (serverTime * 10)]};
         private _config = createHashMapFromArray [
             ["id", _id], ["center", _modulePosition], ["side", _row select 0], ["faction", _faction],
-            ["radius", _radius], ["skill", _skill], ["patrolGroups", round _patrols],
+            ["radius", _radius], ["patrolGroups", round _patrols],
             ["garrisonGroups", round _garrisons], ["staticTurrets", round _statics],
             ["vehiclePatrols", round _vehicles], ["vehicleMix", [_car, _apc, _tank]],
             ["airPatrols", round _air], ["airMix", [_heli, _jet, _drone, _plane]],

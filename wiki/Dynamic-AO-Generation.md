@@ -10,7 +10,7 @@ Dynamic AO is a runtime-only, server-authoritative generator. It does not requir
 
 Open **Modules → WMP Combat Systems → Dynamic AO - Create** and place it at the intended centre. The dialog uses a live **enemy faction and side** selector. Entries are friendly names such as `[OPFOR] CSAT`; no config classname or separate side selection is required, so the two values cannot contradict each other.
 
-Vehicle and air percentages are relative weights. They do not need to total 100. Empty categories automatically fall through to a non-empty category belonging to the selected faction. The create module exposes every bounded runtime option listed below.
+Vehicle and air percentages are relative weights. They do not need to total 100. Empty categories automatically fall through to a non-empty category belonging to the selected faction. Generated units use WMP's active AI profile (Line by default), including its faction, role, night-equipment and locality handling; Dynamic AO does not maintain a competing skill slider. The create module exposes every bounded AO option listed below.
 
 Use **Dynamic AO - Remove** to select a live AO by friendly name; the AO nearest the module is preselected. You can also delete the invisible AO centre anchor through Zeus to invoke the same complete cleanup. Each generated minefield has its own curator anchor, allowing that field to be removed without deleting the rest of the AO.
 
@@ -23,7 +23,7 @@ Call the generator on the server. A non-server call is forwarded to the server, 
 ```sqf
 private _config = createHashMapFromArray [
     ["id", "AO_NORTH"], ["center", getMarkerPos "ao_north"],
-    ["side", east], ["faction", "OPF_F"], ["radius", 700], ["skill", 0.45],
+    ["side", east], ["faction", "OPF_F"], ["radius", 700],
     ["patrolGroups", 4], ["garrisonGroups", 6], ["staticTurrets", 2],
     ["vehiclePatrols", 3], ["vehicleMix", [50, 35, 15]],
     ["airPatrols", 1], ["airMix", [50, 20, 20, 10]],
@@ -51,7 +51,6 @@ Cleanup is repeat-safe:
 | `side` | `east` | `west`, `east`, `independent` or `civilian`; must match the faction configuration |
 | `faction` | required | Runtime `CfgFactionClasses` classname containing public assets |
 | `radius` | `500` | 100–2000 m |
-| `skill` | `0.5` | 0–1, applied explicitly after excluding generated AI from the general rebalance handler |
 | `patrolGroups` | `3` | 0–12; four to eight infantry per group |
 | `garrisonGroups` | `3` | 0–30; two to four infantry per building, capped by usable buildings |
 | `staticTurrets` | `0` | 0–20 manned faction static weapons |
@@ -89,13 +88,13 @@ The pool cache is local to each machine's immutable runtime configuration. Creat
 
 Only the server owns the full registry of objects, groups, mines and markers. Clients receive `Waldo_DynamicAO_PublicSystems`, a compact JIP-safe summary used by the remove dialog and diagnostics. Arma global markers handle their own JIP synchronization.
 
-Every generated object is added to current curator editable objects. Whole-AO cleanup removes the registry entry first, then deletes tracked mines, field anchors, objects, units, groups and markers. This order makes deletion-event cleanup repeat-safe. Generated AI are excluded from the global WMP AI rebalance so the AO's explicit `skill` setting remains authoritative.
+Every generated object is added to current curator editable objects. Whole-AO cleanup removes the registry entry first, then deletes tracked mines, field anchors, objects, units, groups and markers. This order makes deletion-event cleanup repeat-safe. Generated AI are passed through `Waldo_fnc_AIApplyProfile` after their final group assignment and remain eligible for the handler's new-unit and locality-change paths. The active WMP profile is therefore authoritative. A legacy scripted config may still contain `skill`; it is accepted for compatibility but ignored.
 
 ## Engine and terrain boundaries
 
 Open terrain legitimately produces fewer garrisons, parked cars and roadblocks because those features require suitable buildings, open positions or roads. The generator caps them rather than fabricating unsuitable locations. `BIS_fnc_findSafePos` reduces overlap risk but cannot guarantee a perfect placement in extremely dense custom terrain; use cleanup and regenerate at a clearer centre if required.
 
-The audit mission includes a dedicated **Dynamic AO** station. Its VR test deliberately requests building and road features on a map with neither, proving the cap/cleanup behavior while still generating patrols, faction assets, civilians, a minefield and markers.
+The audit mission includes a dedicated **Dynamic AO** station. Its VR test deliberately requests building and road features on a map with neither, proving the cap/cleanup behavior while still generating patrols, faction assets, civilians, a minefield and markers. The station requires every generated patrol route to be active and reports how many routed groups physically moved during a 15-second observation window.
 
 ## Related pages
 

@@ -80,12 +80,10 @@ Land vehicles also receive a local **Set Vehicle Upright** action on the vehicle
 
 The aid is enabled by default for its original intended recipient (`76561198094931408`) through `Waldo_AccessibilityPID_AllowedUIDs` in `initPlayerLocal.sqf`. Other players do not install the overlay. Add further UIDs as needed, set the array to `[]` to permit everyone, or set `Waldo_AccessibilityPID_Enable = false` to disable it entirely. Eligible players receive a line-of-sight-aware friendly marker with separate icon and name ranges.
 
-The aid is presentation-only and does not alter side relations or reveal enemies. Its default `TAG` style draws a bold name nearby and a compact **F** glyph beyond name range, using a tight manual outline and distance-compensated text sizing. `ICON` preserves the former icon marker and `HYBRID` combines the two. Players can toggle it when `Waldo_AccessibilityPID_AllowToggle` is enabled. Use `Waldo_fnc_AccessibilityPIDToggle` from another UI if desired, and `Waldo_fnc_AccessibilityPIDStop` for cleanup.
+The aid is presentation-only and does not alter side relations or reveal enemies. Its established accessibility behaviour is preserved: the friendly icon remains visible out to icon range and the full player name is added inside name range. The name borrows only the referenced bold typography treatment, using a tight manual outline and distance-compensated text sizing; it never replaces the persistent icon or introduces an ambiguous far-range letter. Players can toggle the complete aid when `Waldo_AccessibilityPID_AllowToggle` is enabled. Use `Waldo_fnc_AccessibilityPIDToggle` from another UI if desired, and `Waldo_fnc_AccessibilityPIDStop` for cleanup.
 
 | Setting | Default | Purpose |
 |---|---|---|
-| `Waldo_AccessibilityPID_Style` | `"TAG"` | `TAG`, `ICON`, or `HYBRID`. |
-| `Waldo_AccessibilityPID_FarLabel` | `"F"` | Short text shown between name range and icon range; `""` hides it. |
 | `Waldo_AccessibilityPID_Font` | `"PuristaBold"` | Arma font used for overhead tags. |
 | `Waldo_AccessibilityPID_TextScale` | `0.035` | Near-range base text size. |
 | `Waldo_AccessibilityPID_TextDistanceGrowth` | `0.0008` | Text-size increase per metre, preventing the tag shrinking away with range. |

@@ -5,8 +5,10 @@
  * The generator discovers faction assets at runtime, validates all bounds, tracks every spawned
  * entity and marker, and publishes only compact state for JIP clients. Infantry patrols, building
  * garrisons, static weapons, weighted vehicle and air patrols, civilians, parked cars, minefields
- * and manned roadblocks are independently optional. The invisible centre anchor and per-minefield
- * anchors are curator-editable deletion handles. Reusing an id replaces the old AO safely.
+ * and manned roadblocks are independently optional. Generated AI use the active WMP AI profile;
+ * legacy config maps containing a skill key remain accepted but that key is ignored. The invisible
+ * centre anchor and per-minefield anchors are curator-editable deletion handles. Reusing an id
+ * replaces the old AO safely.
  *
  * Arguments:
  * 0: config <HASHMAP> - see Wiki/Dynamic-AO-Generation.md for every supported key
@@ -52,7 +54,6 @@ private _factionValid = ([[west, east, independent, civilian]] call Waldo_fnc_Dy
 if (_factionValid < 0) exitWith {["The selected enemy faction is unavailable on the server or belongs to another side.", "ERROR"] call _notify; false};
 
 private _radius = ((_config getOrDefault ["radius", 500]) max 100) min 2000;
-private _skill = ((_config getOrDefault ["skill", 0.5]) max 0) min 1;
 private _patrolCount = round (((_config getOrDefault ["patrolGroups", 3]) max 0) min 12);
 private _garrisonCount = round (((_config getOrDefault ["garrisonGroups", 3]) max 0) min 30);
 private _staticCount = round (((_config getOrDefault ["staticTurrets", 0]) max 0) min 20);
@@ -76,7 +77,6 @@ _config set ["center", [_center select 0, _center select 1, 0]];
 _config set ["side", _side];
 _config set ["faction", _faction];
 _config set ["radius", _radius];
-_config set ["skill", _skill];
 private _registry = missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap];
 if (_id in keys _registry) then {[_id] call Waldo_fnc_DynamicAODestroy};
 
@@ -102,8 +102,7 @@ private _trackGroup = {
 private _spawnUnit = {
     params ["_group", "_class", "_position"];
     private _unit = _group createUnit [_class, _position, [], 0, "NONE"];
-    _unit setVariable ["Waldo_AI_Exclude", true, true];
-    _unit setSkill _skill;
+    if (!isNil "Waldo_fnc_AIApplyProfile") then {[_unit] call Waldo_fnc_AIApplyProfile};
     _unit
 };
 private _groundPosition = {
@@ -138,10 +137,8 @@ private _crewVehicle = {
     private _group = createGroup _side;
     [_group] call _trackGroup;
     (crew _vehicle) joinSilent _group;
-    {
-        _x setVariable ["Waldo_AI_Exclude", true, true];
-        _x setSkill _skill;
-    } forEach crew _vehicle;
+    _group addVehicle _vehicle;
+    {if (!isNil "Waldo_fnc_AIApplyProfile") then {[_x] call Waldo_fnc_AIApplyProfile}} forEach crew _vehicle;
     {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
     _group
 };

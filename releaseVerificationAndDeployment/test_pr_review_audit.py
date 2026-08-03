@@ -282,19 +282,20 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("getPlayerUID player", preinit)
         self.assertIn('Waldo_AccessibilityPID_AllowedUIDs", if (_auditUid == "")', preinit)
         pid = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf").read_text(encoding="utf-8")
-        self.assertIn('Waldo_AccessibilityPID_Style", "TAG"', pid)
-        self.assertIn('Waldo_AccessibilityPID_FarLabel", "F"', pid)
+        self.assertNotIn('Waldo_AccessibilityPID_Style', pid)
+        self.assertNotIn('Waldo_AccessibilityPID_FarLabel', pid)
         self.assertIn('Waldo_AccessibilityPID_TextDistanceGrowth", 0.0008', pid)
         self.assertIn('Waldo_AccessibilityPID_TextMaximumScale", 0.07', pid)
         self.assertIn('"PuristaBold"', pid)
         self.assertIn('configFile >> "CfgMarkers" >> "mil_dot" >> "icon"', pid)
+        self.assertIn('if (_showIcons) then', pid)
+        self.assertIn('if (_showNames && {_distance <= _nameRange}) then', pid)
         self.assertEqual(2, pid.count('drawIcon3D [_textAnchorIcon'))
         self.assertNotIn('_textAnchorIcon, _drawColour, _position, 0, 0, 0, _text, 2,', pid)
         accessibility_station = (
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf"
         ).read_text(encoding="utf-8")
-        for label in ("PID STYLE: BOLD TAG", "PID STYLE: LEGACY ICON", "PID STYLE: TAG + ICON"):
-            self.assertIn(label, accessibility_station)
+        self.assertNotIn("PID STYLE:", accessibility_station)
 
     def test_selected_features_are_not_registered_as_zen_modules(self):
         source = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
@@ -819,10 +820,17 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn(f"class {function}", functions)
         for token in (
             'configClasses (configFile >> "CfgFactionClasses")', 'configClasses (configFile >> "CfgVehicles")',
-            'Waldo_DynamicAO_Registry', 'Waldo_DynamicAO_PublicSystems', 'Waldo_AI_Exclude',
+            'Waldo_DynamicAO_Registry', 'Waldo_DynamicAO_PublicSystems', 'Waldo_fnc_AIApplyProfile',
             'createMine', 'nearRoads', 'buildingPos -1', 'addCuratorEditableObjects',
         ):
             self.assertIn(token, all_ao)
+        self.assertNotIn('Waldo_AI_Exclude', all_ao)
+        self.assertNotIn('["skill",', create + zen)
+        self.assertNotIn('AI skill', zen)
+        route = (ao_dir / "dynamicAOAddPatrolWaypoints.sqf").read_text(encoding="utf-8")
+        for token in ('deleteWaypoint', 'enableAI "PATH"', 'enableAI "MOVE"', 'setCurrentWaypoint'):
+            self.assertIn(token, route)
+        self.assertIn('_group addVehicle _vehicle', create)
         for control in (
             "Enemy faction and side", "Vehicle ratio - cars", "Air ratio - helicopters",
             "Civilian faction", "Outer-ring minefields", "Manned roadblocks",
