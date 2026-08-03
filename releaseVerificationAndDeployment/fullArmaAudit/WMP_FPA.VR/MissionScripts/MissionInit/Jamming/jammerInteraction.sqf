@@ -1,7 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Installs the field interactions for a registered radio jammer. Operator toggling and hostile
- * field disablement are deliberately separate. The feature-owned Disable Jammer action is always
+ * Installs the field interactions for a registered radio jammer. The feature-owned Disable Jammer
+ * action is the only player path that turns an active emitter off, preventing an operator action
+ * from bypassing the direct or challenged procedure. Optional reactivation appears only while the
+ * registered field is inactive. The Disable Jammer action is always
  * retained; the optional procedure flag only changes that action from immediate disablement to
  * launching the shared challenge. The result is resolved on the server and the action remains
  * local and repeat-safe for JIP clients.
@@ -10,6 +12,7 @@
  * 0: jammer emitter <OBJECT>
  * 1: interaction settings <ARRAY> in the authoritative order
  *      [allowPlayerToggle, disableChallenge, challengeId, difficulty, engineerOnly, resultMode]
+ *      allowPlayerToggle is the legacy API key; it now controls inactive-field reactivation only.
  *      (optional; falls back to the emitter's broadcast settings)
  *
  * Result modes:
@@ -97,25 +100,40 @@ if (_challengeEnabled && {!isNil "Waldo_fnc_MiniGameInteractionSetup"}) then {
 if (!hasInterface) exitWith {};
 if !(isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) exitWith {};
 if (isNil "ace_interact_menu_fnc_createAction" || {isNil "ace_interact_menu_fnc_addActionToObject"}) exitWith {};
-if (_object getVariable ["Waldo_Jamming_DisableACEInstalled", false]) exitWith {};
+private _interactionVersion = 3;
+if ((_object getVariable ["Waldo_Jamming_InteractionVersion", 0]) >= _interactionVersion) exitWith {};
 
-// The operator toggle remains a separately configured convenience; the disable action below is
-// the single feature surface whose execution can be gated by the optional procedure.
+// Remove the former single Toggle action and an older Disable action before installing this
+// version. This keeps a live script refresh repeat-safe as well as normal JIP setup.
+if !(isNil "ace_interact_menu_fnc_removeActionFromObject") then {
+    [_object, 0, ["ACE_MainActions", "Waldo_Jammer_Toggle"]] call ace_interact_menu_fnc_removeActionFromObject;
+    [_object, 0, ["ACE_MainActions", "Waldo_Jammer_Activate"]] call ace_interact_menu_fnc_removeActionFromObject;
+    [_object, 0, ["ACE_MainActions", "Waldo_Jammer_Deactivate"]] call ace_interact_menu_fnc_removeActionFromObject;
+    [_object, 0, ["ACE_MainActions", "Waldo_Jammer_Disable"]] call ace_interact_menu_fnc_removeActionFromObject;
+};
+
+// Reactivation is a separately configured convenience. Turning an active emitter off always goes
+// through the Disable Jammer surface below, whose execution may be gated by the optional procedure.
 if (_allowPlayerToggle) then {
-    private _toggle = [
-        "Waldo_Jammer_Toggle",
-        "Toggle Radio Jammer",
+    private _activate = [
+        "Waldo_Jammer_Activate",
+        "Activate Jammer",
         "\a3\ui_f\data\igui\cfg\simpletasks\types\interact_ca.paa",
         {
             params ["_target"];
-            [_target] call Waldo_fnc_JammerToggle;
+            [_target, true] call Waldo_fnc_JammerToggle;
         },
         {
             params ["_target"];
-            (_target getVariable ["Waldo_Jamming_Id", -1]) >= 0
+            private _id = _target getVariable ["Waldo_Jamming_Id", -1];
+            private _registry = missionNamespace getVariable ["Waldo_Jamming_Registry", []];
+            private _index = _registry findIf {(_x select 0) == _id};
+            _id >= 0
+            && {_index >= 0}
+            && {!((_registry select _index) select 7)}
         }
     ] call ace_interact_menu_fnc_createAction;
-    [_object, 0, ["ACE_MainActions"], _toggle] call ace_interact_menu_fnc_addActionToObject;
+    [_object, 0, ["ACE_MainActions"], _activate] call ace_interact_menu_fnc_addActionToObject;
 };
 
 private _disable = [
@@ -133,14 +151,18 @@ private _disable = [
     },
     {
         params ["_target", "_player"];
+        private _id = _target getVariable ["Waldo_Jamming_Id", -1];
+        private _registry = missionNamespace getVariable ["Waldo_Jamming_Registry", []];
+        private _index = _registry findIf {(_x select 0) == _id};
+        private _active = _index >= 0 && {(_registry select _index) select 7};
         if !(_target getVariable ["Waldo_Jamming_DisableEngineerOnly", true]) exitWith {
-            (_target getVariable ["Waldo_Jamming_Id", -1]) >= 0
-            && {!(_target getVariable ["Waldo_Jamming_FieldDisabled", false])}
+            _id >= 0 && {_active} && {!(_target getVariable ["Waldo_Jamming_FieldDisabled", false])}
         };
         private _isEngineer = true;
         if !(isNil "ace_common_fnc_isEngineer") then {_isEngineer = [_player] call ace_common_fnc_isEngineer;};
         _isEngineer
-        && {(_target getVariable ["Waldo_Jamming_Id", -1]) >= 0}
+        && {_id >= 0}
+        && {_active}
         && {!(_target getVariable ["Waldo_Jamming_FieldDisabled", false])}
     }
 ] call ace_interact_menu_fnc_createAction;
@@ -149,4 +171,5 @@ private _disablePath = ["ACE_MainActions", "Waldo_Jammer_Disable"];
 _object setVariable ["Waldo_Jamming_DisableACEPath", _disablePath];
 _object setVariable ["Waldo_Jamming_DisableACEInstalled", true];
 _object setVariable ["Waldo_Jamming_AceAdded", true];
+_object setVariable ["Waldo_Jamming_InteractionVersion", _interactionVersion];
 diag_log format ["[WMP JAM] feature action installed object=%1 action=Waldo_Jammer_Disable path=%2 challenge=%3", netId _object, _disablePath, _challengeEnabled];

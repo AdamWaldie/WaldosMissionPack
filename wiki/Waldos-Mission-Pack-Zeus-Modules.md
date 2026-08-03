@@ -76,7 +76,7 @@ Below is an example of the custom mission end screen:
 
 Three modules drive the [Radio Jamming](Radio-Jamming) system live in-game (works with ACRE2 and TFAR):
 
-* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing**, pulsing, markers, emitter source, optional field-disable procedure, public/engineer access, and whether success disables or destroys it. On empty ground it spawns the exact selected class, simulation-enables it and assigns it to the requesting curator. When placed directly on any existing mission or mod object, it can use that object without altering its simulation state. Its live field and **Disable Jammer** action remain attached after movement.
+* **Radio Jammer - Place** — opens a dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing**, pulsing, markers, emitter source, optional reactivation, optional hostile field-disable procedure, public/engineer access, and whether success disables or destroys it. Players always use **Disable Jammer** to turn an active field off; optional **Activate Jammer** restores an inactive/disabled field and resets its procedure. On empty ground it spawns the exact selected class, simulation-enables it and assigns it to the requesting curator. When placed directly on any existing mission or mod object, it can use that object without altering its simulation state. Its live field and interactions remain attached after movement.
 * **Radio Jammer - Toggle Nearest** — flips the nearest jammer on or off (no dialog).
 * **Radio Jammer - Remove Nearest** — removes the nearest jammer and deletes its emitter.
 

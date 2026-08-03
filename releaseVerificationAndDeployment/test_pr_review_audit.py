@@ -281,6 +281,20 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('["76561198094931408"]', pack)
         self.assertIn("getPlayerUID player", preinit)
         self.assertIn('Waldo_AccessibilityPID_AllowedUIDs", if (_auditUid == "")', preinit)
+        pid = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_AccessibilityPID_Style", "TAG"', pid)
+        self.assertIn('Waldo_AccessibilityPID_FarLabel", "F"', pid)
+        self.assertIn('Waldo_AccessibilityPID_TextDistanceGrowth", 0.0008', pid)
+        self.assertIn('Waldo_AccessibilityPID_TextMaximumScale", 0.07', pid)
+        self.assertIn('"PuristaBold"', pid)
+        self.assertIn('configFile >> "CfgMarkers" >> "mil_dot" >> "icon"', pid)
+        self.assertEqual(2, pid.count('drawIcon3D [_textAnchorIcon'))
+        self.assertNotIn('_textAnchorIcon, _drawColour, _position, 0, 0, 0, _text, 2,', pid)
+        accessibility_station = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf"
+        ).read_text(encoding="utf-8")
+        for label in ("PID STYLE: BOLD TAG", "PID STYLE: LEGACY ICON", "PID STYLE: TAG + ICON"):
+            self.assertIn(label, accessibility_station)
 
     def test_selected_features_are_not_registered_as_zen_modules(self):
         source = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
@@ -891,6 +905,17 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('Waldo_Jamming_DisableACEPath', jammer_interaction)
         self.assertIn('Waldo_Jamming_DisableACEInstalled', jammer_interaction)
         self.assertIn('Waldo_Jamming_DisableResult', jammer_interaction)
+        self.assertIn('"Waldo_Jammer_Activate"', jammer_interaction)
+        self.assertIn('"Activate Jammer"', jammer_interaction)
+        self.assertIn('[_target, true] call Waldo_fnc_JammerToggle', jammer_interaction)
+        activate_block = jammer_interaction.split('private _activate = [', 1)[1].split('private _disable = [', 1)[0]
+        self.assertNotIn('Waldo_Jamming_FieldDisabled', activate_block)
+        self.assertNotIn('private _deactivate = [', jammer_interaction)
+        self.assertNotIn('"Deactivate Jammer"', jammer_interaction)
+        self.assertNotIn('[_target, false] call Waldo_fnc_JammerToggle', jammer_interaction)
+        self.assertIn('Waldo_Jamming_InteractionVersion', jammer_interaction)
+        self.assertIn('Allow Reactivation', jammer_zen)
+        self.assertIn('["allowPlayerToggle", _allowPlayerToggle]', jammer_zen)
         self.assertNotIn('enableSimulationGlobal false', jammer_server)
 
         tracker_zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_trackerModule.sqf").read_text(encoding="utf-8")

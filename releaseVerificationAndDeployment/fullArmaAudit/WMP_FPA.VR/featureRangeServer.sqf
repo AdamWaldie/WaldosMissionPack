@@ -483,7 +483,7 @@ private _jammerInteraction = createHashMapFromArray [
     ["difficulty", "standard"],
     ["engineerOnly", false],
     ["resultMode", "DISABLE"],
-    ["allowPlayerToggle", false]
+    ["allowPlayerToggle", true]
 ];
 [_jammer, 45, "WEST", "ALL", 15, 0.8, true, true, [], [], true, false, _jammerInteraction]
     call Waldo_fnc_Jammer;

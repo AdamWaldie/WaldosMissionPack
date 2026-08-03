@@ -71,7 +71,8 @@ if (!isNull _objectPos) then {
         ["CHECKBOX", ["Show Curator 3D Marker", "Show a floating curator-only marker for this emitter. Ordinary players never see it."], false, false],
         ["COMBO", ["Emitter source", "Use the object directly under the module, when available, or spawn a new emitter."], [_sourceValues, _sourceLabels, 0]],
         ["COMBO", ["Spawned emitter object", "Exact physical class created when Emitter source is Spawn."], [_emitterClasses, _emitterLabels, 0]],
-        ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant field disablement with a shared interaction challenge. This also suppresses the direct player toggle so the procedure cannot be bypassed."], true, false],
+        ["CHECKBOX", ["Allow Reactivation", "Add Activate Jammer while the field is off. Turning it off still requires Disable Jammer, so this cannot bypass the procedure below."], true, false],
+        ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant hostile field disablement with a shared interaction challenge."], true, false],
         ["COMBO", ["Disable Procedure", "Procedure players complete to shut down the jammer."], [
             ["circuit", "radiotune", "commandinput", "wirecut"],
             ["Circuit bypass", "Signal alignment", "Command authentication", "Control-wire isolation"],
@@ -87,7 +88,7 @@ if (!isNull _objectPos) then {
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_source", "_className", "_disableChallenge", "_challengeId", "_difficulty", "_engineerOnly", "_resultMode"];
+        _args params ["_radius", "_falloff", "_strengthPct", "_sideStr", "_bandsText", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_source", "_className", "_allowPlayerToggle", "_disableChallenge", "_challengeId", "_difficulty", "_engineerOnly", "_resultMode"];
         _pos params ["_modulePos", "_objectPos"];
         private _existingObject = if (_source isEqualTo "EXISTING") then {_objectPos} else {objNull};
         if (_source isEqualTo "EXISTING" && {isNull _existingObject}) exitWith {
@@ -136,7 +137,7 @@ if (!isNull _objectPos) then {
                 ["jamUAV", _jamUAV], ["show3D", _show3D], ["className", _className],
                 ["disableChallenge", _disableChallenge], ["challengeId", _challengeId],
                 ["difficulty", _difficulty], ["engineerOnly", _engineerOnly],
-                ["resultMode", _resultMode], ["allowPlayerToggle", false]
+                ["resultMode", _resultMode], ["allowPlayerToggle", _allowPlayerToggle]
             ],
             player,
             _existingObject

@@ -835,7 +835,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('worldToModel', range_check)
         self.assertIn('boundingBoxReal', range_check)
         self.assertIn('modelToWorld', range_check)
-        for label in ("Require Field Disable Procedure", "Disable Procedure", "Procedure Difficulty"):
+        for label in ("Allow Reactivation", "Require Field Disable Procedure", "Disable Procedure", "Procedure Difficulty"):
             self.assertIn(label, zen)
         for advanced_label in ("Engineers Only", "Successful Disable Result", "Allow Direct Player Toggle"):
             self.assertNotIn(advanced_label, zen)

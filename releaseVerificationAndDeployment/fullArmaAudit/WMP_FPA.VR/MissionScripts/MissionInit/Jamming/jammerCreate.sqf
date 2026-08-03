@@ -31,6 +31,8 @@
  * 12: Interaction options <ARRAY or HASHMAP> - optional named settings:
  *      disableChallenge <BOOL>, challengeId <STRING>, difficulty <STRING>,
  *      engineerOnly <BOOL>, resultMode <STRING: DISABLE/DESTROY>, allowPlayerToggle <BOOL>.
+ *      The legacy allowPlayerToggle key permits reactivation while inactive; active fields still
+ *      require the Disable Jammer action and cannot bypass its optional challenge.
  *      Defaults come from the matching Waldo_Jamming_* mission settings.
  *
  * Return Value:

@@ -57,7 +57,7 @@ private _interaction = createHashMapFromArray [
     ["difficulty", "standard"],
     ["engineerOnly", true],
     ["resultMode", "DISABLE"],
-    ["allowPlayerToggle", false]
+    ["allowPlayerToggle", true]
 ];
 [this, 600, "WEST", "ALL", 50, 1, true, false, [], [], false, false, _interaction]
     call Waldo_fnc_Jammer;
@@ -79,7 +79,7 @@ private _interaction = createHashMapFromArray [
 | 9 | duty | Array | `[]` | `[]` = constant, or `[onSec, offSec]` to pulse the jammer on and off. |
 | 10 | jamUAV | Bool | `false` | Also jam UAVs/drones in the field (see below). |
 | 11 | curator3DMarker | Bool | `false` | Show this emitter in the curator-only 3D overlay. Ordinary players never see it. |
-| 12 | interactionOptions | Array / HashMap | `[]` | Optional field-action settings: `disableChallenge`, `challengeId`, `difficulty`, `engineerOnly`, `resultMode`, and `allowPlayerToggle`. |
+| 12 | interactionOptions | Array / HashMap | `[]` | Optional field-action settings: `disableChallenge`, `challengeId`, `difficulty`, `engineerOnly`, `resultMode`, and legacy-named `allowPlayerToggle` (reactivation only). |
 
 `Waldo_fnc_Jammer` returns a numeric **jammer id** you can keep to toggle or remove it later. Calling it again on the same object updates that jammer in place (it never stacks).
 
@@ -112,7 +112,7 @@ These let you tune how realistic/gamey the jamming feels. All are on by default.
 | `Waldo_Jamming_ScanRange` | `3000` | Hard cap (m) on the handheld RDF scan; a source is reported only while the operator is also inside its currently active field. |
 | `Waldo_Jamming_ScanBearingArc` | `30` | Width in degrees of the quantised bearing sector reported to the operator. |
 | `Waldo_Jamming_ScanDistanceBands` | `[35, 150, 600]` | Absolute metre thresholds separating deliberately vague `VERY CLOSE`, `NEARBY`, `DISTANT` and `VERY DISTANT` reports. Absolute bands prevent a nearby source being described as distant merely because it has a large configured footprint. |
-| `Waldo_Jamming_AllowPlayerToggle` | `true` | Preserve the legacy direct operator toggle when no disable challenge is active. A challenge always suppresses it to prevent bypass. |
+| `Waldo_Jamming_AllowPlayerToggle` | `true` | Legacy setting name retained for compatibility. It now allows **Activate Jammer** while an emitter is inactive. Players must use **Disable Jammer** to turn an active field off, so the direct/challenged procedure cannot be bypassed. Activation also resets the optional procedure for repeat use. |
 | `Waldo_Jamming_DisableChallenge` | `false` | Require a shared field-equipment procedure before player disablement. Existing missions remain unchanged until opted in; the Zeus placement module opts in by default. |
 | `Waldo_Jamming_DisableChallengeId` | `"circuit"` | Shared procedure used by challenge-enabled emitters. Any registered interaction challenge id is accepted. |
 | `Waldo_Jamming_DisableDifficulty` | `"standard"` | `easy`, `standard`, `hard`, or `expert`. |
@@ -125,7 +125,7 @@ Every jammer and every player gets ACE actions so an EW team can play the cat-an
 
 | Action | Where | Who | What it does |
 |---|---|---|---|
-| **Toggle Radio Jammer** | on a non-challenge jammer object | anyone | Optional operator convenience. It is hidden for challenge-enabled jammers so it cannot bypass the field procedure. |
+| **Activate Jammer** | on an inactive, reactivatable jammer object | anyone | Restores an inactive or successfully disabled emitter. Activation clears its field-disabled flag and resets the optional procedure so it can be completed again. A destroyed emitter cannot be restored. |
 | **Disable Jammer** | on a challenge-enabled jammer object | everyone by default for a Zeus-created objective; optionally engineers only | Runs the selected shared interaction procedure. The server revalidates actor, distance, optional engineer status, registry state and completion before disabling or destroying the emitter. |
 | **Disable Jammer** | on a non-challenge jammer object | everyone by default for a Zeus-created objective; optionally engineers only | Immediately applies the configured result: disable the field while retaining the prop, or destroy and deregister the emitter. |
 | **Scan for Radio Jammers** | self-interaction (ACE) | anyone | Reports a broad **bearing sector** and deliberately vague **distance band** for the nearest source currently affecting the operator. The scan respects the affected side, active radius plus falloff, directional sector, pulse phase, terrain occlusion and the `Waldo_Jamming_ScanRange` hard cap. It does not expose an exact bearing, numerical distance or aggregate signal-strength value. |
@@ -133,6 +133,8 @@ Every jammer and every player gets ACE actions so an EW team can play the cat-an
 ## Turning jammers on/off and removing them from script
 
 Both accept the jammer **object** or its **id**. The server owns the result, so calls from triggers, clients, and scripts are forwarded safely.
+
+Activation uses the same server-authoritative call as the Zeus/script control. It clears a prior field-disabled state and resets the optional procedure. Players never receive a separate Deactivate action: use **Disable Jammer** for the intended gameplay path, or the Zeus/script toggle for administration.
 
 ```sqf
 [myTower, false] call Waldo_fnc_JammerToggle;   // switch off (omit the bool to just flip it)

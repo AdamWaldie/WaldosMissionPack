@@ -1,6 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Installs an opt-in, configurable friendly identification overlay for eligible players.
+ * Installs an opt-in, configurable friendly identification overlay for eligible players. The
+ * default TAG presentation uses a bold two-pass text label with a tight dark outline, distance-
+ * compensated sizing and a short far-range friendly glyph. ICON preserves the former marker and
+ * HYBRID combines both. All drawing remains local, theme/colour-vision aware and repeat-safe.
  *
  * Arguments:
  * None
@@ -10,6 +13,9 @@
  *
  * Example:
  * [] call Waldo_fnc_AccessibilityPIDInit;
+ *
+ * Current callers: initPlayerLocal.sqf after the ordered runtime snapshot, the Accessibility QA
+ * station, runtime reconfiguration, and the local EntityRespawned handler below.
  */
 
 if !(hasInterface) exitWith {false};
@@ -53,10 +59,21 @@ private _eventId = addMissionEventHandler ["Draw3D", {
     private _showIcons = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowIcons", true];
     private _showNames = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowNames", true];
     private _showVehicleCrew = missionNamespace getVariable ["Waldo_AccessibilityPID_ShowVehicleCrew", false];
+    private _style = toUpperANSI (missionNamespace getVariable ["Waldo_AccessibilityPID_Style", "TAG"]);
+    if !(_style in ["TAG", "ICON", "HYBRID"]) then {_style = "TAG";};
+    private _farLabel = missionNamespace getVariable ["Waldo_AccessibilityPID_FarLabel", "F"];
+    private _font = missionNamespace getVariable ["Waldo_AccessibilityPID_Font", "PuristaBold"];
+    private _textGrowth = missionNamespace getVariable ["Waldo_AccessibilityPID_TextDistanceGrowth", 0.0008];
+    private _textMaximum = missionNamespace getVariable ["Waldo_AccessibilityPID_TextMaximumScale", 0.07];
+    private _outlineScale = missionNamespace getVariable ["Waldo_AccessibilityPID_OutlineScale", 1.12];
+    private _outlineColour = +(missionNamespace getVariable ["Waldo_AccessibilityPID_OutlineColour", [0.03, 0.03, 0.03, 1]]);
     private _icon = missionNamespace getVariable [
         "Waldo_AccessibilityPID_Icon",
         "\a3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"
     ];
+    // drawIcon3D still evaluates icon metadata for a text-only call. A valid marker with zero
+    // dimensions avoids per-frame missing-size diagnostics without rendering another symbol.
+    private _textAnchorIcon = getText (configFile >> "CfgMarkers" >> "mil_dot" >> "icon");
 
     {
         private _unit = _x;
@@ -73,10 +90,21 @@ private _eventId = addMissionEventHandler ["Draw3D", {
             if (_visible) then {
                 private _position = getPosATLVisual _unit;
                 _position set [2, (_position select 2) + 2.1];
-                private _text = if (_showNames && {_distance <= _nameRange}) then {name _unit} else {""};
                 private _drawColour = +_colour;
                 if (_distanceFade) then {_drawColour set [3, (_drawColour select 3) * (1 - ((_distance / _iconRange) min 0.85))]};
-                drawIcon3D [if (_showIcons) then {_icon} else {""}, _drawColour, _position, _iconScale, _iconScale, 0, _text, 2, _textScale, "RobotoCondensed", "center"];
+                if (_showIcons && {_style in ["ICON", "HYBRID"]}) then {
+                    drawIcon3D [_icon, _drawColour, _position, _iconScale, _iconScale, 0, "", 1, 0, _font, "center"];
+                };
+                if (_showNames && {_style in ["TAG", "HYBRID"]}) then {
+                    private _text = if (_distance <= _nameRange) then {name _unit} else {_farLabel};
+                    if (_text != "") then {
+                        private _drawTextScale = (_textScale + (_distance * (_textGrowth max 0))) min (_textMaximum max _textScale);
+                        private _drawOutline = +_outlineColour;
+                        _drawOutline set [3, (_drawOutline param [3, 1]) * (_drawColour param [3, 1])];
+                        drawIcon3D [_textAnchorIcon, _drawOutline, _position, 0, 0, 0, _text, 0, _drawTextScale * (_outlineScale max 1), _font, "center"];
+                        drawIcon3D [_textAnchorIcon, _drawColour, _position, 0, 0, 0, _text, 0, _drawTextScale, _font, "center"];
+                    };
+                };
             };
         };
     } forEach _units;

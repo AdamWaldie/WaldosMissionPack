@@ -306,6 +306,8 @@ Player-local feature activation waits for an ordered server runtime snapshot. Th
 // Enabled only for the listed player IDs by default; [] allows every player.
 Waldo_AccessibilityPID_Enable = true;
 Waldo_AccessibilityPID_AllowedUIDs = ["76561198094931408"];
+Waldo_AccessibilityPID_Style = "TAG"; // TAG, ICON or HYBRID
+Waldo_AccessibilityPID_FarLabel = "F";
 ```
 
 Colour-vision presentation is selected personally through **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** and stored in `profileNamespace` as `Waldo_UI_ColourVisionProfile`. Do not publish it from `initServer.sqf` or overwrite it in `init.sqf`; it is intentionally different for each player. Scripted local selection is available when building another accessibility UI:

@@ -156,6 +156,21 @@ private _access = "qa_sign_accessibility" call _get;
 [_access, "Waldo_QA_TogglePID", "TOGGLE FRIENDLY PID VISIBILITY", {
     [] call Waldo_fnc_AccessibilityPIDToggle;
 }] call _add;
+{
+    _x params ["_style", "_title"];
+    [_access, format ["Waldo_QA_PIDStyle_%1", _style], _title, {
+        params ["_target", "_actor", "_arguments"];
+        private _style = _arguments select 0;
+        missionNamespace setVariable ["Waldo_AccessibilityPID_Style", _style];
+        [] call Waldo_fnc_AccessibilityPIDStop;
+        private _started = [] call Waldo_fnc_AccessibilityPIDInit;
+        ["ACCESSIBILITY PID", format ["%1 presentation %2.", _style, ["could not start", "active"] select _started], ["ERROR", "SUCCESS"] select _started, "PID_QA"] call Waldo_fnc_FeatureNotifyLocal;
+    }, [_style]] call _add;
+} forEach [
+    ["TAG", "PID STYLE: BOLD TAG"],
+    ["ICON", "PID STYLE: LEGACY ICON"],
+    ["HYBRID", "PID STYLE: TAG + ICON"]
+];
 
 private _breach = "qa_sign_breaching" call _get;
 [_breach, "Waldo_QA_TestBreach", "SIMULATE CONFIGURED DEMO CHARGE", {
