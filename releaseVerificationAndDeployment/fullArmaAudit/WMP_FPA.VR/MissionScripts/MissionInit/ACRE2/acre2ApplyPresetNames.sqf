@@ -18,13 +18,16 @@ private _ok = true;
 {
     _x params ['_sideKey', '_preset', '_nets'];
     {
-        private _channel = _forEachIndex + 1;
         private _label = toUpper (_x select 1);
         private _safe = '';
         {if (_x in (toArray 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_/')) then {_safe = _safe + toString [_x]}} forEach toArray _label;
         if (count _safe > 12) then {_safe = _safe select [0, 12]};
+        private _tunings = _x select 2;
         {
             _x params ['_radioClass', '_displayField'];
+            private _tuningIndex = _tunings findIf {toUpper (_x select 0) == _radioClass};
+            if (_tuningIndex >= 0) then {
+            private _channel = ((_tunings select _tuningIndex) select 1);
             private _tx = [_radioClass, _preset, _channel, 'frequencyTX'] call acre_api_fnc_getPresetChannelField;
             private _rx = [_radioClass, _preset, _channel, 'frequencyRX'] call acre_api_fnc_getPresetChannelField;
             private _written = [_radioClass, _preset, _channel, _displayField, _safe] call acre_api_fnc_setPresetChannelField;
@@ -34,6 +37,7 @@ private _ok = true;
             if (!_written || {_read != _safe} || {!(_tx isEqualTo _txAfter)} || {!(_rx isEqualTo _rxAfter)}) then {
                 _ok = false;
                 diag_log format ['[WMP ACRE] Preset display-name verification failed for %1/%2 channel %3 (%4).', _radioClass, _preset, _channel, _sideKey];
+            };
             };
         } forEach [['ACRE_PRC148', 'label'], ['ACRE_PRC152', 'description'], ['ACRE_PRC117F', 'name']];
     } forEach _nets;

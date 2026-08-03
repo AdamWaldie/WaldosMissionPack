@@ -25,19 +25,21 @@ private _lastApplied = if (count _lastApplication >= 5) then {_lastApplication s
     private _base = [_radioId] call acre_api_fnc_getBaseRadio;
     private _ordinal = (_counts getOrDefault [_base, 0]) + 1;
     _counts set [_base, _ordinal];
-    private _mode = "CHANNEL";
+    private _profiles = [] call Waldo_fnc_ACRE2GetRadioProfiles;
+    private _profileIndex = _profiles findIf {toUpper (_x select 0) == toUpper _base};
+    private _mode = if (_profileIndex >= 0) then {toUpper ((_profiles select _profileIndex) select 1)} else {"CHANNEL"};
     private _setting = [_radioId] call acre_api_fnc_getRadioChannel;
     private _appliedIndex = _lastApplied findIf {(_x select 0) == _radioId};
     if (_appliedIndex >= 0) then {
         private _applied = _lastApplied select _appliedIndex;
-        private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
-        private _profileIndex = (_config getOrDefault ["radioProfiles", []]) findIf {toUpper (_x select 0) == toUpper _base};
         if (_profileIndex >= 0) then {
-            _mode = toUpper (((_config get "radioProfiles") select _profileIndex) select 1);
             _setting = _applied select 3;
         };
     };
-    private _audioSource = [_radioId] call acre_api_fnc_getRadioAudioSource;
+    // ACRE exposes no public frequency read-back. Only persist a frequency when the current WMP
+    // application requested it; otherwise omit that occurrence instead of saving a bogus channel.
+    if (_mode != "FREQUENCY" || {_appliedIndex >= 0}) then {
+    private _audioSource = if (toUpper _base in ["ACRE_PRC148", "ACRE_PRC152", "ACRE_SEM52SL", "ACRE_SEM70"]) then {[_radioId] call acre_api_fnc_getRadioAudioSource} else {""};
     if (isNil "_audioSource" || {!(_audioSource isEqualType "")}) then {_audioSource = ""};
     private _volume = [_radioId] call acre_api_fnc_getRadioVolume;
     if (isNil "_volume" || {!(_volume isEqualType 0)}) then {_volume = -1};
@@ -48,5 +50,6 @@ private _lastApplied = if (count _lastApplication >= 5) then {_lastApplication s
         _audioSource
     ];
     if (_radioId == _selectedId) then {_selected = [_base, _ordinal]};
+    };
 } forEach _radios;
 [2, _state, _selected]

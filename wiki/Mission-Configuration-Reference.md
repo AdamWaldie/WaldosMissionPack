@@ -262,18 +262,18 @@ Only one profile should be active at a time. AI rebalance initialises wherever A
 
 Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing ACRE side preset, logical net keys and group assignments. The pack automatically loads it during pre-init, server init and player-local init; no call belongs in multiplayer `init.sqf`.
 
-`enabled` now gates the complete replacement lifecycle. `prc343PresetPolicy` defaults to `FULL_RANGE`, preserving all sixteen PRC-343 blocks while other radios retain their normal side presets; `SIDE_ISOLATED` reduces combat-side PRC-343 presets to five blocks. `retuneOnGroupChange` defaults to `false`; the CBA group event still refreshes the CEOI but does not rewrite radios. Named displays default to enabled and `strict` defaults to `true`. `radioProfiles` describe capability mode, fallback ear sequence and a valid channel ceiling or tuning range. The PRC-148 has 32 preset channels, PRC-152/117F 100, BF-888S 16 and SEM52SL 13. PRC-77 and SEM70 logical nets use explicit frequency overrides at 50 kHz and 25 kHz spacing respectively. Unknown radios and vehicle racks are not guessed or modified.
+`enabled` gates the complete replacement lifecycle. `prc343PresetPolicy` defaults to `FULL_RANGE`, preserving all sixteen PRC-343 blocks while other radios retain their official side presets; `SIDE_ISOLATED` reduces combat-side PRC-343 presets to five blocks. Group changes refresh the CEOI but never rewrite radios. Built-in radio capabilities live in code. `additionalRadioProfiles` is an advanced escape hatch for a tested third-party carried radio. Unknown radios and vehicle racks are preserved.
 
-An explicit assignment is `[base class, same-type occurrence, target, ear]`. This allows two identical radios to use independent nets and `LEFT`, `RIGHT` or `BOTH` ears. Only listed occurrences are managed; extra/captured radios remain untouched. `radioOverrides` can replace the group list for a UID, editor variable or role. Alternate PTT defaults are always left to the player.
+An explicit assignment is `[base class, same-type occurrence, target, ear]`. This allows two identical radios to use independent nets and `LEFT`, `RIGHT` or `BOTH` ears. Rows are optional templates: missing occurrences are skipped and extra/captured radios remain untouched. `radioOverrides` are side-scoped and can `MERGE` with or `REPLACE` the group list for a UID, editor variable or role. Alternate PTT defaults are always left to the player.
 
 ### ACRE2 Long-Range Channel Names (CEOI)
 
 ```sqf
 ["WEST", "default3", [
-    ["PLT1", "PLATOON 1", []],
-    ["AIRGND", "AIR-GND", []]
+    ["PLT1", "PLATOON 1", [["ACRE_PRC148", 2], ["ACRE_PRC152", 2], ["ACRE_PRC117F", 2]]],
+    ["AIRGND", "AIR-GND", [["ACRE_PRC148", 6], ["ACRE_PRC152", 6], ["ACRE_PRC117F", 6]]]
 ], [
-    ["VIKING-1-1", ["PLT1", "AIRGND"], [1, 1], [
+    ["VIKING-1-1", ["PLT1", "AIRGND"], [], [
         ["ACRE_PRC343", 1, [1, 1], "LEFT"],
         ["ACRE_PRC343", 2, [1, 2], "RIGHT"],
         ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
@@ -282,14 +282,14 @@ An explicit assignment is `[base class, same-type occurrence, target, ear]`. Thi
 ]]
 ```
 
-Group net keys drive both radio channels and the CEOI. The fallback `[block, channel]` is used by simple allocation when no explicit list is supplied. Frequency radios use net-specific overrides or direct frequency settings through ACRE's public setup API.
+Each net contains per-radio tunings and drives both assignment and CEOI output. A blank PRC-343 field requests deterministic callsign allocation; an explicit `[block, channel]` reserves that slot. Each carried radio independently selects a compatible group net, so concurrent radio families do not share an artificial capacity ceiling. Frequency radios use a net tuning or direct frequency through ACRE's asynchronous public setup API.
 
 ### ACRE2 Babel (optional — disabled by default)
 
 ```sqf
-["languages", [["en", "English"], ["fr", "French"]]],
-["sideDefaults", [["WEST", ["en", "fr"], "en"]]],
-["unitOverrides", [[["UID", "7656119..."], ["en", "fr"], "fr"]]]
+["languages", [["common", "Common"], ["en", "English"], ["ru", "Russian"], ["fr", "French"], ["ar", "Arabic"]]],
+["sideDefaults", [["WEST", ["common", "en"], "en"], ["EAST", ["common", "ru"], "ru"]]],
+["unitOverrides", [[["UID", "7656119..."], ["common", "en", "ru"], "ru"]]]
 ```
 
 Set the `babel` map's `enabled` value to `true`. IDs are registered in declared order on every machine. See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration).

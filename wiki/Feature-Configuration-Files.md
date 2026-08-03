@@ -71,18 +71,16 @@ Recommended review by file:
 | `enabled` | Enables the replacement ACRE lifecycle. |
 | `strict` | Promotes explicit PRC-343 collisions from reported warnings to configuration errors. Structural errors are always rejected. |
 | `prc343PresetPolicy` | `FULL_RANGE` keeps all sixteen blocks on every side; `SIDE_ISOLATED` trades combat-side capacity for cross-side PRC-343 frequency separation. It does not change the presets used by other radios. |
-| `retuneOnGroupChange` | Allows event-driven group-change retuning; disabled to preserve captured radios. The CEOI still refreshes. |
 | `namedDisplays` | Enables supported physical radio channel labels. |
 | `notifyAssignmentProblems` | Shows a local WMP warning for failed manual/QA assignment without intruding on initial loading or normal respawn. |
-| `radioPriority` | Ordered base-radio classes used when assigning logical long-range nets. |
-| `radioProfiles` | Per-radio capability mode, fallback ear sequence and maximum valid numbered channel or tuning range. Shipped limits are PRC-148 32, PRC-152/117F 100, BF-888S 16, SEM52SL 13, PRC-77 30–75.95 MHz/50 kHz and SEM70 30–79.975 MHz/25 kHz. |
-| `radioOverrides` | Optional first-match UID, editor-variable or role replacement assignment lists. |
-| `sides` | Side preset, logical nets, fallback group mappings and explicit same-type occurrence assignments. |
+| `additionalRadioProfiles` | Advanced-only extensions for tested third-party carried radios; built-in ACRE capabilities are code-owned. |
+| `radioOverrides` | Side-scoped UID, editor-variable or role `MERGE`/`REPLACE` assignment rules. |
+| `sides` | Side preset, radio-specific net tunings, fallback group mappings and optional same-type occurrence templates. |
 | `babel` | Language definitions, side defaults, speaking language, overrides and unit-follow behavior. |
 
-The top of `acreConfig.sqf` includes copy-ready examples for every supported profile and all three
-player override selectors. The examples are comments and do nothing until copied into `sides` or
-`radioOverrides`; this keeps the shipped defaults readable without silently creating extra nets.
+The file includes working channel-radio, local-radio and common-frequency examples. A net declares
+only the radio types that can use it, so BF-888S or SEM52SL capacity never limits PRC-152/117F nets.
+Explicit group rows apply only when the player actually carries that radio occurrence.
 
 See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 [PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup), and

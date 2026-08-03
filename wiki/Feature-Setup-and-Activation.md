@@ -97,8 +97,8 @@ is replayed to JIP by the feature.
 **Normally edit:** enabled, PRC-343 policy, named displays, side nets, group mappings, explicit
 same-type radio assignments, player/role overrides and Babel.
 
-**Normally leave:** schema version, strict validation, group-change retuning, radio priority and
-shipped capability profiles. No init call is needed.
+**Normally leave:** schema version, strict validation and advanced third-party
+profile extensions. Built-in capability profiles are code-owned. No init call is needed.
 
 Explicit entries support multiple same-type radios and independent ears:
 
@@ -106,8 +106,9 @@ Explicit entries support multiple same-type radios and independent ears:
     ["ACRE_PRC343", 2, [6, 3], "RIGHT"]
     ["ACRE_PRC152", 1, "PLT1", "RIGHT"]
 
-Occurrence is 1-based among radios of the same base type. Extra/captured/unsupported radios remain
-untouched. WMP does not change alternate PTT defaults.
+Occurrence is 1-based among radios of the same base type. Explicit rows are optional templates and
+are skipped when that occurrence is absent. Each radio independently uses a compatible net; extra,
+captured and unsupported radios remain untouched. WMP does not change alternate PTT defaults.
 
 ### aiConfig.sqf
 

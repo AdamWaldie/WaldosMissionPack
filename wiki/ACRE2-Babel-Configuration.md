@@ -7,8 +7,8 @@ Babel is configured in the `babel` map inside `MissionConfig\acreConfig.sqf`. La
 ```sqf
 ["babel", createHashMapFromArray [
     ["enabled", true],
-    ["languages", [["en", "English"], ["ru", "Russian"]]],
-    ["sideDefaults", [["WEST", ["en"], "en"], ["EAST", ["ru"], "ru"]]],
+    ["languages", [["common", "Common"], ["en", "English"], ["ru", "Russian"], ["fr", "French"], ["ar", "Arabic"]]],
+    ["sideDefaults", [["WEST", ["common", "en"], "en"], ["EAST", ["common", "ru"], "ru"]]],
     ["unitOverrides", [
         [["UID", "7656119..."], ["en", "ru"], "en"],
         [["VARIABLE", "interpreter_1"], ["en", "ru"], "ru"]
@@ -18,7 +18,7 @@ Babel is configured in the `babel` map inside `MissionConfig\acreConfig.sqf`. La
 ]]
 ```
 
-An override can grant a partial language set; interpreters no longer have to understand every language. The initial speaking language must be in the understood list. Validation rejects unknown language IDs, duplicate IDs, malformed overrides and a speaking language that is not understood.
+The shipped configuration demonstrates one shared language plus a unique language for each side, but keeps Babel disabled. Set `enabled` to `true` only when the mission wants language simulation. An override can grant a partial language set; interpreters do not have to understand every language. The initial speaking language must be in the understood list.
 
 When `followPlayerUnit` is true, Babel knowledge and the radio plan are reapplied after a local player-object replacement. When false, no unit-change handler is installed. By default a side change preserves learned languages; set `changeOnSideChange` to `true` only when side membership should redefine knowledge.
 

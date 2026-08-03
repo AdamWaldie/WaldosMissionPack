@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 831,
+  "registeredFunctionCount": 833,
   "runtimeFunctionCount": 385,
-  "functionCount": 1216,
+  "functionCount": 1218,
   "stations": [
     {
       "id": "control",
@@ -597,6 +597,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ACRE2GetRadioProfiles",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2GetRadioProfiles.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ACRE2GetOrderedRadios",
       "file": "MissionScripts/MissionInit/ACRE2/acre2GetOrderedRadios.sqf",
       "station": "mission-init",
@@ -653,6 +659,12 @@
     {
       "name": "Waldo_fnc_ACRE2ApplyRadioState",
       "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyRadioState.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2SchedulePlayerRefresh",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2SchedulePlayerRefresh.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

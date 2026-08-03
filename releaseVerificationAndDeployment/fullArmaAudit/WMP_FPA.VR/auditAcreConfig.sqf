@@ -2,9 +2,9 @@
  * Author: WaldoTheWarfighter
  * Derives the full-audit ACRE configuration from the release root configuration. Managed test
  * radios use distinctive non-channel-1 assignments and named operational nets. Every supported
- * carried-radio profile has a paired squad inventory in the generated mission. The shared net list
- * deliberately remains within the smallest shipped numbered-radio profile (SEM52SL: 13 channels).
- * It also enables three deterministic Babel languages and partial multilingual overrides.
+ * carried-radio profile has a paired squad inventory in the generated mission. Radio-specific nets
+ * prove that unrelated radios no longer impose a shared channel capacity. It also enables the
+ * configured deterministic Babel examples and partial multilingual overrides for this QA mission.
  *
  * Arguments: None.
  * Return Value: HASHMAP - audit-specific ACRE configuration consumed as MissionConfig\acreConfig.sqf.
@@ -27,19 +27,19 @@ if (_westIndex >= 0) then {
             ['ACRE_PRC152', 2, 'CONVOY', 'LEFT'],
             ['ACRE_PRC148', 1, 'CFF1', 'BOTH'],
             ['ACRE_PRC117F', 1, 'AIR', 'BOTH'],
-            ['ACRE_BF888S', 1, 'COY', 'RIGHT'],
-            ['ACRE_SEM52SL', 1, 'CONVOY', 'LEFT'],
-            ['ACRE_PRC77', 1, 'COY', 'RIGHT'],
-            ['ACRE_SEM70', 1, 'COY', 'LEFT']
+            ['ACRE_BF888S', 1, 'BF_LOCAL', 'RIGHT'],
+            ['ACRE_SEM52SL', 1, 'SEM_LOCAL', 'LEFT'],
+            ['ACRE_PRC77', 1, 'LEGACY', 'RIGHT'],
+            ['ACRE_SEM70', 1, 'LEGACY', 'LEFT']
         ]];
     };
 };
 private _babel = _config get 'babel';
 _babel set ['enabled', true];
-_babel set ['languages', [['en', 'English'], ['fr', 'French'], ['ru', 'Russian']]];
-_babel set ['sideDefaults', [['WEST', ['en'], 'en'], ['EAST', ['ru'], 'ru'], ['GUER', ['fr'], 'fr'], ['CIV', ['fr'], 'fr']]];
+_babel set ['languages', [['common', 'Common'], ['en', 'English'], ['ru', 'Russian'], ['fr', 'French'], ['ar', 'Arabic']]];
+_babel set ['sideDefaults', [['WEST', ['common', 'en'], 'en'], ['EAST', ['common', 'ru'], 'ru'], ['GUER', ['common', 'fr'], 'fr'], ['CIV', ['common', 'ar'], 'ar']]];
 _babel set ['unitOverrides', [
-    [['VARIABLE', 'qa_player_1'], ['en', 'fr'], 'en'],
-    [['VARIABLE', 'qa_player_2'], ['en', 'ru'], 'ru']
+    [['VARIABLE', 'qa_player_1'], ['common', 'en', 'fr'], 'en'],
+    [['VARIABLE', 'qa_player_2'], ['common', 'en', 'ru'], 'ru']
 ]];
 _config

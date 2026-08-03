@@ -26,10 +26,10 @@ missionNamespace setVariable ['Waldo_ACRE2_Enabled', true];
 if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {true};
 
 // Select presets explicitly instead of setupMission so PRC-343 capacity and side isolation are
-// independent choices. This follows ACRE's own bounded player-ready callback and runs before unique
+// independent choices. This follows ACRE's non-blocking player-ready callback and runs before unique
 // carried radios consume their base-class preset.
 [{
-    !isNull acre_player
+    !isNil "acre_player" && {!isNull acre_player}
 }, {
     params ['_config'];
     private _sideKey = switch (side acre_player) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'}};
@@ -40,7 +40,7 @@ if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {true};
     {
         private _base = _x select 0;
         [_base, if (toUpper _base == 'ACRE_PRC343') then {_shortPreset} else {_sidePreset}] call acre_api_fnc_setPreset;
-    } forEach (_config getOrDefault ['radioProfiles', []]);
+    } forEach ([_config] call Waldo_fnc_ACRE2GetRadioProfiles);
 }, [_config]] call CBA_fnc_waitUntilAndExecute;
 private _babel = _config getOrDefault ['babel', createHashMap];
 if (_babel getOrDefault ['enabled', false]) then {

@@ -108,6 +108,7 @@ class CfgFunctions
                 file = "MissionScripts\MissionInit\ACRE2\BabelActivation.sqf";
             };
             class ACRE2ValidateConfig {file = "MissionScripts\MissionInit\ACRE2\acre2ValidateConfig.sqf";};
+            class ACRE2GetRadioProfiles {file = "MissionScripts\MissionInit\ACRE2\acre2GetRadioProfiles.sqf";};
             class ACRE2GetOrderedRadios {file = "MissionScripts\MissionInit\ACRE2\acre2GetOrderedRadios.sqf";};
             class ACRE2ApplyPresetNames {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPresetNames.sqf";};
             class ACRE2CompilePlan {file = "MissionScripts\MissionInit\ACRE2\acre2CompilePlan.sqf";};
@@ -118,6 +119,7 @@ class CfgFunctions
             class ACRE2FilterLoadout {file = "MissionScripts\MissionInit\ACRE2\acre2FilterLoadout.sqf";};
             class ACRE2CaptureRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2CaptureRadioState.sqf";};
             class ACRE2ApplyRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyRadioState.sqf";};
+            class ACRE2SchedulePlayerRefresh {file = "MissionScripts\MissionInit\ACRE2\acre2SchedulePlayerRefresh.sqf";};
         };
         class AI 
         {

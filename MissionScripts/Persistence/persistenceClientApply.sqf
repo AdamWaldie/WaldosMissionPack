@@ -23,6 +23,7 @@ if (_version != 1) exitWith {
     false
 };
 
+missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", true];
 if (missionNamespace getVariable ["Waldo_Persistence_SaveLoadout", true] && {count _loadout > 0}) then {
     player setUnitLoadout ([_loadout] call Waldo_fnc_ACRE2FilterLoadout);
     missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1];
@@ -46,11 +47,16 @@ if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {cou
         params ["_savedRadios", "_loadoutGeneration"];
         if !([_savedRadios, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState) then {
             diag_log "[WMP PERSISTENCE] Saved ACRE radio state could not be restored; applying the current mission plan.";
-            [true, "PERSISTENCE_RESTORE_FALLBACK"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
+            missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", false];
+            ["PERSISTENCE_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+        } else {
+            missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", false];
+            ["PERSISTENCE_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         };
     };
 } else {
-    [true, "PERSISTENCE_BASELINE"] spawn Waldo_fnc_ACRE2ApplyPlayerPlan;
+    missionNamespace setVariable ["Waldo_ACRE2_PersistenceRestoreInProgress", false];
+    ["PERSISTENCE_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
 };
 
 ["PERSISTENCE", "Persistent player state loaded.", "SUCCESS", "PERSISTENCE"] call Waldo_fnc_FeatureNotifyLocal;

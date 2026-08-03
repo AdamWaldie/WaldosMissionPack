@@ -1,148 +1,110 @@
 /*
  * Author: WaldoTheWarfighter
- * Defines the pure-data ACRE2 communications and Babel configuration consumed during pre-init,
- * server init and player-local init. Mission makers should edit this file instead of lifecycle
- * scripts. The schema separates radio capabilities from group or player assignment policy.
+ * Defines the mission-facing ACRE2 communications and optional Babel settings. WMP loads this file
+ * automatically during pre-init, server init and player-local init; do not duplicate these calls in
+ * init.sqf. The server compiles one authoritative plan and clients apply only local carried radios.
  *
  * Arguments: None.
+ * Return Value: HASHMAP - configuration consumed by Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init.
  *
- * Return Value:
- * HashMap - validated by Waldo_fnc_ACRE2ValidateConfig before it is used.
- *
- * Example:
- * private _config = call compile preprocessFileLineNumbers "MissionConfig\acreConfig.sqf";
- *
- * Current callers: Waldo_fnc_ACRE2PreInit and Waldo_fnc_ACRE2Init.
+ * Example: private _config = call compile preprocessFileLineNumbers "MissionConfig\acreConfig.sqf";
+ * Current callers: automatic WMP ACRE pre-init, initServer.sqf and initPlayerLocal.sqf lifecycle.
  *
  * ACTIVATION MODEL: AUTOMATIC WHEN ENABLED.
- * Set `enabled` below and configure the side/net/group data in this file. Do not add an ACRE call
- * to init.sqf, initServer.sqf or initPlayerLocal.sqf: WMP already reads this file at the required
- * pre-init, server and player-local lifecycle stages. ACRE must be loaded on the relevant machines.
+ * EDIT FOR A NORMAL MISSION: enabled, prc343PresetPolicy, namedDisplays, sides, radioOverrides and Babel.
+ * LEAVE ALONE UNLESS EXTENDING/TESTING: version, strict and additionalRadioProfiles.
+ * CUSTOM CALLS: none for normal setup; the WMP lifecycle owns join, JIP, respawn and replacement.
+ * CUSTOMISATION GUIDE: settings marked as normal mission settings are encouraged mission choices;
+ * advanced extension values describe tested implementation capability and need technical validation.
+ * MISSION MAKER: begin with the shipped net/group examples and replace editor group IDs.
+ * ADVANCED: add third-party radio profiles only after confirming their ACRE API behaviour.
  *
- * EDIT FOR A NORMAL MISSION: enabled, prc343PresetPolicy, namedDisplays, radioOverrides, sides and
- * babel. Within each side, edit the named nets and the group assignment rows that match your real
- * editor group IDs. Explicit radio rows are optional and are needed only when multiple radios of
- * the same type require different nets or ears.
- * LEAVE ALONE UNLESS EXTENDING/TESTING: version, strict, retuneOnGroupChange, radioPriority and
- * radioProfiles. These describe parser and radio capabilities rather than an ordinary radio plan.
- * CUSTOM CALLS: none for normal setup. The active lifecycle owns join, JIP, respawn and Babel.
+ * NORMAL MISSION SETTINGS
+ * - enabled: master switch for WMP's replacement ACRE lifecycle.
+ * - prc343PresetPolicy: FULL_RANGE keeps all 16 blocks; SIDE_ISOLATED uses ACRE side presets and
+ *   gives combat sides five blocks. FULL_RANGE does not provide side frequency isolation.
+ * - namedDisplays: labels PRC-148/152/117F channels without changing their frequencies.
+ * - sides: [side, official ACRE preset, nets, groups]. Keep the shipped official preset per side.
+ * - babel: language content and defaults. It remains inert while babel.enabled is false.
  *
- * RADIO ASSIGNMENT EXAMPLE LIBRARY (copy rows into a group's explicit-assignment array):
+ * NETS
+ * A net is [stable key, display label, radio tunings]. A tuning is [base radio class, target].
+ * CHANNEL radios use a channel number. FREQUENCY radios use MHz or ACRE's [MHz, fractional] pair.
+ * A shared key means actual interoperability only when its radio tunings resolve to compatible
+ * frequencies. Shipped PRC-148/152/117F presets share frequencies at matching channel numbers;
+ * BF-888S and SEM52SL use separate nets. PRC-77 and SEM70 can share an explicit common frequency.
  *
- * Same-type occurrence is 1-based. These two PRC-343s deliberately use separate blocks, channels
- * and ears. Every unit expected to communicate on either assignment needs a matching radio/net.
- * // ["ACRE_PRC343", 1, [5, 16], "LEFT"]
- * // ["ACRE_PRC343", 2, [6, 3], "RIGHT"]
+ * GROUPS AND OPTIONAL RADIO TEMPLATES
+ * A group is [editor group ID, ordered fallback net keys, PRC-343 [block,channel] or [], explicit
+ * assignments]. An assignment is [base class, same-type occurrence, target, ear]. Explicit rows are
+ * optional templates: they apply when that occurrence is carried and are quietly ignored otherwise.
+ * LEFT, RIGHT and BOTH/CENTER are supported independently per radio. PTT, volume and speaker settings
+ * remain player-owned. With no explicit rows, WMP assigns the first carried radio of each supported
+ * type to the first compatible group net; there is no cross-radio priority list or global net cap.
+ * Automatic PRC-343 allocation is deterministic from the callsign when its group field is [].
  *
- * Numbered-channel radios target a logical net key. The net's position in the side net list becomes
- * the channel number, so keep required keys inside that radio profile's maximum channel count.
- * // ["ACRE_PRC148", 1, "PLT1", "RIGHT"]    // Channels 1-32.
- * // ["ACRE_PRC152", 1, "AIRGND", "LEFT"]   // Channels 1-100.
- * // ["ACRE_PRC117F", 1, "AIR", "BOTH"]     // Channels 1-100; BOTH maps to ACRE CENTER.
- * // ["ACRE_BF888S", 1, "COY", "RIGHT"]     // Channels 1-16.
- * // ["ACRE_SEM52SL", 1, "CONVOY", "LEFT"]  // Channels 1-13.
+ * OVERRIDES
+ * radioOverrides entries are [side, [UID|VARIABLE|ROLE, value], MERGE|REPLACE, assignments]. MERGE
+ * replaces matching [class, occurrence] rows and preserves the rest. REPLACE discards group rows.
+ * Side scoping prevents a net from another side being accepted accidentally.
  *
- * Frequency radios use the matching radio override stored on the chosen net. The shipped WEST
- * PLT1 row, for example, defines PRC-77 31.00 MHz and SEM70 34.000 MHz. A validated direct
- * frequency target is also accepted when a group genuinely needs a frequency outside its net.
- * // ["ACRE_PRC77", 1, "PLT1", "RIGHT"]
- * // ["ACRE_SEM70", 1, "PLT1", "LEFT"]
- * // ["ACRE_PRC77", 2, 31.50, "BOTH"]        // Direct MHz example.
- * // ["ACRE_SEM70", 2, 34.250, "BOTH"]       // Direct MHz example.
+ * ADVANCED EXTENSION
+ * additionalRadioProfiles is only for a tested third-party carried radio. Entry format is
+ * [class, BLOCK_CHANNEL|CHANNEL|FREQUENCY, default ears, maximum channel, frequency range]. WMP's
+ * built-in ACRE profiles live in code and should not be copied here. Unknown radios and racks are
+ * preserved. WMP does not retune on group changes or poll radios during play.
  *
- * A complete group row combines fallback nets, fallback PRC-343 assignment and explicit radios:
- * // ["VIKING-1-1", ["PLT1", "AIRGND"], [5, 16], [
- * //     ["ACRE_PRC343", 1, [5, 16], "LEFT"],
- * //     ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
- * //     ["ACRE_PRC117F", 1, "AIRGND", "BOTH"]
- * // ]]
- *
- * Overrides replace that group's explicit list for the first matching player. Selectors are UID,
- * VARIABLE (Eden variable name) or ROLE (roleDescription before the @ suffix).
- * // [["ROLE", "JTAC"], [["ACRE_PRC152", 1, "AIRGND", "RIGHT"]]]
- * // [["VARIABLE", "platoonMedic"], [["ACRE_PRC343", 1, [5, 16], "LEFT"]]]
- * // [["UID", "76561198000000000"], [["ACRE_PRC148", 1, "COY", "BOTH"]]]
- *
- * CUSTOMISATION GUIDE:
- * MISSION MAKER - enabled, prc343PresetPolicy, namedDisplays, sides, nets, groups, radioOverrides and Babel content are
- * intended mission choices. Group entries are [group ID, fallback net keys, fallback 343 [block,
- * channel], explicit assignments]. An assignment is [base radio class, same-type occurrence
- * (1-based), target, ear]. Target is a net key, a 343 [block, channel], or a
- * direct frequency supported by acre_api_fnc_setupRadios. Ear accepts LEFT, RIGHT, BOTH or CENTER;
- * BOTH is the mission-facing alias for ACRE CENTER. WMP deliberately leaves alternate PTT, volume,
- * current-radio, speaker and audio-source preferences under the player's control.
- *
- * radioOverrides optionally replace the matching group's explicit assignments. Each entry is
- * [[selector type, value], assignments]. Supported selectors are UID, VARIABLE and ROLE. ROLE
- * matches roleDescription text before an optional @ suffix. First matching override wins.
- *
- * ADVANCED TUNING - strict should normally remain true. When false, duplicate explicit PRC-343
- * assignments are warnings rather than errors. retuneOnGroupChange should normally remain false so
- * collected radios are preserved. Explicit assignment lists manage only the listed occurrences;
- * additional or captured radios are deliberately untouched. radioPriority and radioProfiles should change only when
- * adding a tested carried-radio profile. A profile is [class, mode, default ear sequence, maximum
- * channel, frequency range]. Frequency range is `[minimum MHz, maximum MHz, step kHz, ACRE pair
- * divisor]`; numbered channel profiles use `[]`. The divisor converts the second API pair value to
- * MHz (PRC-77 100, SEM70 1000). Modes are BLOCK_CHANNEL, CHANNEL or FREQUENCY.
- *
- * COMPATIBILITY - version is the parser schema and must remain 2 until the implementation changes.
- * prc343PresetPolicy is FULL_RANGE by default: every side retains all sixteen PRC-343 blocks while
- * the other radios continue to use the existing ACRE side presets. SIDE_ISOLATED applies those side
- * presets to the PRC-343 as well, reducing WEST/EAST/GUER to five blocks in exchange for frequency
- * separation. Existing non-343 side presets remain WEST default3, EAST default2, GUER default4 and
- * CIV default.
+ * COMPATIBILITY: schema version 3 is intentionally not compatible with the old positional-net or
+ * unscoped override schema. Legacy radio/Babel functions remain manual emergency fallbacks only.
  */
 createHashMapFromArray [
-    ["version", 2],
-    ["enabled", true],                    // MISSION MAKER: false disables all replacement ACRE setup.
-    ["strict", true],                     // ADVANCED: reject explicit PRC-343 assignment collisions.
-    ["prc343PresetPolicy", "FULL_RANGE"], // MISSION MAKER: FULL_RANGE (16 blocks) or SIDE_ISOLATED (5 combat-side blocks).
-    ["retuneOnGroupChange", false],       // ADVANCED: true reapplies the current group's plan after a group change.
-    ["namedDisplays", true],              // MISSION MAKER: label supported physical radio preset channels.
-    ["notifyAssignmentProblems", true],   // MISSION MAKER: show a local WMP card when configured assignments cannot apply.
-    ["radioPriority", ["ACRE_PRC152", "ACRE_PRC148", "ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70"]],
-    ["radioProfiles", [
-        ["ACRE_PRC343", "BLOCK_CHANNEL", ["LEFT", "RIGHT", "BOTH"], 256, []],
-        ["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 32, []],
-        ["ACRE_PRC152", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 100, []],
-        ["ACRE_PRC117F", "CHANNEL", ["BOTH", "RIGHT", "LEFT"], 100, []],
-        ["ACRE_BF888S", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 16, []],
-        ["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "BOTH"], 13, []],
-        ["ACRE_PRC77", "FREQUENCY", ["RIGHT", "LEFT", "BOTH"], 0, [30, 75.95, 50, 100]],
-        ["ACRE_SEM70", "FREQUENCY", ["RIGHT", "LEFT", "BOTH"], 0, [30, 79.975, 25, 1000]]
+    ["version", 3],
+    ["enabled", true],
+    ["strict", true],
+    ["prc343PresetPolicy", "FULL_RANGE"],
+    ["namedDisplays", true],
+    ["notifyAssignmentProblems", true],
+    ["additionalRadioProfiles", []],
+    ["radioOverrides", [
+        // ["WEST", ["ROLE", "JTAC"], "MERGE", [["ACRE_PRC152", 1, "AIRGND", "RIGHT"]]]
     ]],
-    ["radioOverrides", [                 // MISSION MAKER: optional UID, editor-variable or role-specific replacement plans.
-        // [["ROLE", "JTAC"], [["ACRE_PRC152", 1, "AIRGND", "RIGHT"]]]
-    ]],
-    ["sides", [                          // MISSION MAKER: side preset, logical nets and group allocations.
+    ["sides", [
         ["WEST", "default3", [
-            ["PLT1", "PLATOON 1", [["ACRE_PRC77", 31.00], ["ACRE_SEM70", 34.000]]],
-            ["PLT2", "PLATOON 2", [["ACRE_PRC77", 31.05], ["ACRE_SEM70", 34.025]]],
-            ["PLT3", "PLATOON 3", [["ACRE_PRC77", 31.10], ["ACRE_SEM70", 34.050]]],
-            ["COY", "COMPANY", [["ACRE_PRC77", 31.15], ["ACRE_SEM70", 34.075]]],
-            ["AIRGND", "AIR-GND", [["ACRE_PRC77", 31.20], ["ACRE_SEM70", 34.100]]],
-            ["AIR", "AIR-AIR", [["ACRE_PRC77", 31.25], ["ACRE_SEM70", 34.125]]],
-            ["CAS1", "CAS 1", [["ACRE_PRC77", 31.30], ["ACRE_SEM70", 34.150]]],
-            ["CAS2", "CAS 2", [["ACRE_PRC77", 31.35], ["ACRE_SEM70", 34.175]]],
-            ["CFF1", "CFF 1", [["ACRE_PRC77", 31.40], ["ACRE_SEM70", 34.200]]],
-            ["CFF2", "CFF 2", [["ACRE_PRC77", 31.45], ["ACRE_SEM70", 34.225]]],
-            ["CONVOY", "CONVOY 1", [["ACRE_PRC77", 31.50], ["ACRE_SEM70", 34.250]]]
+            ["PLT1", "PLATOON 1", [["ACRE_PRC148", 2], ["ACRE_PRC152", 2], ["ACRE_PRC117F", 2]]],
+            ["PLT2", "PLATOON 2", [["ACRE_PRC148", 3], ["ACRE_PRC152", 3], ["ACRE_PRC117F", 3]]],
+            ["PLT3", "PLATOON 3", [["ACRE_PRC148", 4], ["ACRE_PRC152", 4], ["ACRE_PRC117F", 4]]],
+            ["COY", "COMPANY", [["ACRE_PRC148", 5], ["ACRE_PRC152", 5], ["ACRE_PRC117F", 5]]],
+            ["AIRGND", "AIR-GND", [["ACRE_PRC148", 6], ["ACRE_PRC152", 6], ["ACRE_PRC117F", 6]]],
+            ["AIR", "AIR-AIR", [["ACRE_PRC148", 7], ["ACRE_PRC152", 7], ["ACRE_PRC117F", 7]]],
+            ["CAS1", "CAS 1", [["ACRE_PRC148", 8], ["ACRE_PRC152", 8], ["ACRE_PRC117F", 8]]],
+            ["CAS2", "CAS 2", [["ACRE_PRC148", 9], ["ACRE_PRC152", 9], ["ACRE_PRC117F", 9]]],
+            ["CFF1", "CFF 1", [["ACRE_PRC148", 10], ["ACRE_PRC152", 10], ["ACRE_PRC117F", 10]]],
+            ["CFF2", "CFF 2", [["ACRE_PRC148", 11], ["ACRE_PRC152", 11], ["ACRE_PRC117F", 11]]],
+            ["CONVOY", "CONVOY", [["ACRE_PRC148", 12], ["ACRE_PRC152", 12], ["ACRE_PRC117F", 12]]],
+            ["BF_LOCAL", "LOCAL BF", [["ACRE_BF888S", 4]]],
+            ["SEM_LOCAL", "LOCAL SEM", [["ACRE_SEM52SL", 4]]],
+            ["LEGACY", "LEGACY", [["ACRE_PRC77", 34.000], ["ACRE_SEM70", 34.000]]]
         ], [
-            ["VIKING-1-1", ["PLT1", "AIRGND"], [1, 1], []],
-            ["VIKING 5", ["COY", "AIRGND"], [1, 5], []],
-            ["VIKING 3.2", ["PLT3", "AIRGND"], [3, 2], []],
-            ["BANSHEE", ["AIRGND", "AIR"], [4, 1], []]
+            ["VIKING-1-1", ["PLT1", "AIRGND", "BF_LOCAL", "SEM_LOCAL", "LEGACY"], [], []],
+            ["VIKING 5", ["COY", "AIRGND"], [], []],
+            ["VIKING 3.2", ["PLT3", "AIRGND"], [], []],
+            ["BANSHEE", ["AIRGND", "AIR"], [], []]
         ]],
         ["EAST", "default2", [], []],
         ["GUER", "default4", [], []],
         ["CIV", "default", [], []]
     ]],
     ["babel", createHashMapFromArray [
-        ["enabled", false],                 // MISSION MAKER: enable ACRE Babel language simulation.
-        ["languages", [["en", "English"]]], // MISSION MAKER: ordered [stable ID, display name] pairs.
-        ["sideDefaults", [["WEST", ["en"], "en"], ["EAST", ["en"], "en"], ["GUER", ["en"], "en"], ["CIV", ["en"], "en"]]],
-        ["unitOverrides", []],              // MISSION MAKER: optional UID/unit multilingual overrides.
-        ["changeOnSideChange", false],      // ADVANCED: true replaces learned languages after a side change.
-        ["followPlayerUnit", true]          // ADVANCED: reapply after player-object replacement.
+        ["enabled", false],
+        ["languages", [["common", "Common"], ["en", "English"], ["ru", "Russian"], ["fr", "French"], ["ar", "Arabic"]]],
+        ["sideDefaults", [
+            ["WEST", ["common", "en"], "en"],
+            ["EAST", ["common", "ru"], "ru"],
+            ["GUER", ["common", "fr"], "fr"],
+            ["CIV", ["common", "ar"], "ar"]
+        ]],
+        ["unitOverrides", []],
+        ["changeOnSideChange", false],
+        ["followPlayerUnit", true]
     ]]
 ]

@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
  * Restores persisted carried-radio state after ACRE replaces base classes with new unique IDs. It
- * restores channel or WMP-known frequency, ear, volume, audio source and selected radio while leaving
+ * restores channel or WMP-known frequency, ear, volume, supported audio source and selected radio while leaving
  * alternate PTT and speaker mode untouched. The wait is bounded and successful restoration suppresses
  * baseline mission-plan retuning for the same loadout generation.
  *
@@ -9,7 +9,8 @@
  * 0: saved radio state <ARRAY>
  * 1: loadout generation <NUMBER>
  *
- * Return Value: BOOL - true when every saved same-type occurrence was restored.
+ * Return Value: BOOL - true when every saved occurrence was restored or its asynchronous frequency
+ * request was accepted. ACRE provides no public frequency read-back, so frequency remains unverified.
  *
  * Example: [_radios, _generation] spawn Waldo_fnc_ACRE2ApplyRadioState;
  * Current caller: Waldo_fnc_PersistenceClientApply.
@@ -30,6 +31,7 @@ private _counts = createHashMap;
 private _success = true;
 private _frequencySettings = [];
 private _selectedId = "";
+private _audioSourceClasses = ["ACRE_PRC148", "ACRE_PRC152", "ACRE_SEM52SL", "ACRE_SEM70"];
 {
     private _radioId = _x;
     private _base = [_radioId] call acre_api_fnc_getBaseRadio;
@@ -52,7 +54,7 @@ private _selectedId = "";
         };
         if !([_radioId, _spatial] call acre_api_fnc_setRadioSpatial) then {_success = false};
         if (_volume >= 0 && {!([_radioId, _volume] call acre_api_fnc_setRadioVolume)}) then {_success = false};
-        if (_audioSource != "" && {!([_radioId, _audioSource] call acre_api_fnc_setRadioAudioSource)}) then {_success = false};
+        if (_audioSource != "" && {toUpper _base in _audioSourceClasses} && {!([_radioId, _audioSource] call acre_api_fnc_setRadioAudioSource)}) then {_success = false};
         if (count _savedSelected == 2 && {_base == (_savedSelected select 0)} && {_ordinal == (_savedSelected select 1)}) then {_selectedId = _radioId};
     };
 } forEach _radios;

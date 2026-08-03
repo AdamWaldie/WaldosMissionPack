@@ -369,11 +369,11 @@ if (!isNull _coreConsole) then {
             uiSleep 2;
             private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
             private _savedOverrides = +(_config getOrDefault ["radioOverrides", []]);
-            _config set ["radioOverrides", [[["VARIABLE", vehicleVarName player], [
+            _config set ["radioOverrides", [["WEST", ["VARIABLE", vehicleVarName player], "REPLACE", [
                 ["ACRE_PRC117F", 1, 7, "BOTH"],
                 ["ACRE_BF888S", 1, 14, "RIGHT"],
                 ["ACRE_SEM52SL", 1, 12, "LEFT"]
-            ]]]];
+            ]]];
             private _result = [true, "QA_ADDITIONAL_CHANNEL_PROFILES"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
             _config set ["radioOverrides", _savedOverrides];
             private _ordered = [] call Waldo_fnc_ACRE2GetOrderedRadios;
@@ -437,7 +437,7 @@ if (!isNull _coreConsole) then {
             if (count _matching == 0) exitWith {["The PRC-77 requires free backpack capacity; no radio was added.", "ERROR", 10] call Waldo_fnc_MiniGameInteractionNotifyClient};
             private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
             private _savedOverrides = +(_config getOrDefault ["radioOverrides", []]);
-            _config set ["radioOverrides", [[["VARIABLE", vehicleVarName player], [["ACRE_PRC77", 1, 31.15, "BOTH"]]]]];
+            _config set ["radioOverrides", [["WEST", ["VARIABLE", vehicleVarName player], "REPLACE", [["ACRE_PRC77", 1, 31.15, "BOTH"]]]]];
             private _result = [true, "QA_FREQUENCY"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
             _config set ["radioOverrides", _savedOverrides];
             [format ["PRC-77 31.15 MHz setup accepted: %1. Confirm 31.15 and both-ear audio on the physical interface.", _result], if (_result) then {"OK"} else {"ERROR"}, 14] call Waldo_fnc_MiniGameInteractionNotifyClient;
@@ -453,7 +453,7 @@ if (!isNull _coreConsole) then {
             if (count _matching == 0) exitWith {["The SEM70 requires free backpack capacity; remove the PRC-77 or another manpack first.", "ERROR", 12] call Waldo_fnc_MiniGameInteractionNotifyClient};
             private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
             private _savedOverrides = +(_config getOrDefault ["radioOverrides", []]);
-            _config set ["radioOverrides", [[["VARIABLE", vehicleVarName player], [["ACRE_SEM70", 1, 34.075, "BOTH"]]]]];
+            _config set ["radioOverrides", [["WEST", ["VARIABLE", vehicleVarName player], "REPLACE", [["ACRE_SEM70", 1, 34.075, "BOTH"]]]]];
             private _result = [true, "QA_FREQUENCY_SEM70"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
             _config set ["radioOverrides", _savedOverrides];
             [format ["SEM70 34.075 MHz setup accepted: %1. Confirm 34.075 and both-ear audio on the physical interface.", _result], if (_result) then {"OK"} else {"ERROR"}, 14] call Waldo_fnc_MiniGameInteractionNotifyClient;

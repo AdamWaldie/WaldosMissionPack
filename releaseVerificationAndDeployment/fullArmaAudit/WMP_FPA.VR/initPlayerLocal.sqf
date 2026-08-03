@@ -109,18 +109,7 @@ if (hasInterface) then {
         private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
         missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
         missionNamespace setVariable ["Waldo_ACRE2_PersistenceRadioGeneration", -1];
-        [] spawn {
-            private _deadline = diag_tickTime + 10;
-            waitUntil {
-                uiSleep 0.1;
-                !(isClass (configFile >> "CfgPatches" >> "acre_main"))
-                    || {[] call acre_api_fnc_isInitialized}
-                    || {diag_tickTime >= _deadline}
-            };
-            [true, "RESPAWN"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
-            [] call Waldo_fnc_ACRE2ApplyBabel;
-            [] call Waldo_fnc_ACRE2BuildCEOI;
-        };
+        ["RESPAWN", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         // Respawn Text
         [] spawn Waldo_fnc_RespawnText;
         // Re-apply safestart if it is still active (respawn resets damage/handlers/position)
