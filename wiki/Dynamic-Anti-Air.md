@@ -111,7 +111,7 @@ The dwell and clear-delay settings provide hysteresis, preventing an aircraft sk
 
 ## Side and faction asset pools
 
-Side pools are configured server-side in `initServer.sqf` through `Waldo_DynamicAA_SideAssetPools`. A faction pool overrides only the keys it defines, falling back to its selected side for the rest:
+Side pools are configured server-side in `MissionConfig\ServerFeatureDefaults.sqf` through `Waldo_DynamicAA_SideAssetPools`. A faction pool overrides only the keys it defines, falling back to its selected side for the rest:
 
 ```sqf
 Waldo_DynamicAA_FactionAssetPools set ["my_opfor_faction", createHashMapFromArray [

@@ -255,6 +255,13 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("_groupId", compile_plan)
         self.assertIn("acre_api_fnc_filterUnitLoadout", loadout)
         self.assertLess(preinit.index("babelAddLanguageType"), preinit.index("ACRE2ApplyPresetNames"))
+        self.assertNotIn("if !([_x select 0, _x select 1] call acre_api_fnc_babelAddLanguageType)", preinit)
+        self.assertIn("_registrationResult isEqualType false", preinit)
+        self.assertIn("isNil '_registrationResult'", preinit)
+        self.assertIn("_spoken isEqualType false", babel)
+        self.assertIn("isNil '_spoken'", babel)
+        self.assertIn("isNil '_speakingReadBack'", babel)
+        self.assertIn("babelGetSpeakingLanguageId", babel)
         self.assertIn("_initial in _languages", babel)
         audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         self.assertIn("ACRE2: SHOW PLAN / RADIO STATUS", audit_client)
@@ -281,21 +288,26 @@ class FullAuditTests(unittest.TestCase):
         init = (ROOT / "init.sqf").read_text(encoding="utf-8")
         init_server = (ROOT / "initServer.sqf").read_text(encoding="utf-8")
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        shared_config = (ROOT / "MissionConfig" / "SharedFeatureDefaults.sqf").read_text(encoding="utf-8")
+        server_config = (ROOT / "MissionConfig" / "ServerFeatureDefaults.sqf").read_text(encoding="utf-8")
 
         self.assertNotIn('missionNamespace setVariable ["Waldo_Jamming_Notify", true, true]', init)
         self.assertNotIn('missionNamespace setVariable ["Waldo_Jamming_Enable", true, true]', init)
-        self.assertIn('if (isNil "Waldo_MiniGames_Enable") then', init)
-        self.assertIn('if (isNil "Waldo_CorpseTraps_Enable") then', init)
+        self.assertIn('if (isNil "Waldo_MiniGames_Enable") then', shared_config)
+        self.assertIn('if (isNil "Waldo_CorpseTraps_Enable") then', shared_config)
+        self.assertIn('MissionConfig\\SharedFeatureDefaults.sqf', init)
         self.assertIn('missionNamespace setVariable ["WALDO_INIT_COMPLETE", true];', init)
         self.assertNotIn('missionNamespace setVariable ["WALDO_INIT_COMPLETE", true, true]', init)
 
-        self.assertIn('["Waldo_Jamming_Enable", true]', init_server)
-        self.assertIn('missionNamespace setVariable ["Waldo_Jamming_ConfigReady", true, true]', init_server)
+        self.assertIn('["Waldo_Jamming_Enable", true]', server_config)
+        self.assertIn('missionNamespace setVariable ["Waldo_Jamming_ConfigReady", true, true]', server_config)
+        self.assertIn('MissionConfig\\ServerFeatureDefaults.sqf', init_server)
         self.assertIn('[] call Waldo_fnc_JammingInit;', init_server)
 
         self.assertIn('missionNamespace getVariable ["Waldo_Jamming_ConfigReady", false]', init_player)
         self.assertIn('missionNamespace getVariable ["Waldo_Jamming_Enable", false]', init_player)
         self.assertIn('[] call Waldo_fnc_JammingInit;', init_player)
+        self.assertIn('MissionConfig\\PlayerLocalFeatureDefaults.sqf', init_player)
 
     def test_generated_mission_maps_every_registered_function_to_one_station(self):
         manifest_path = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "function_station_manifest.json"
@@ -342,7 +354,10 @@ class FullAuditTests(unittest.TestCase):
     def test_audit_preconfig_precedes_real_pack_and_transient_ui_is_cleaned(self):
         mission = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
         generated_server = (mission / "initServer.sqf").read_text(encoding="utf-8")
-        self.assertLess(generated_server.index('auditPreInitServer.sqf'), generated_server.index('WALDO_STATIC_STATICCHUTE'))
+        self.assertLess(
+            generated_server.index('auditPreInitServer.sqf'),
+            generated_server.index('MissionConfig\\ServerFeatureDefaults.sqf'),
+        )
         pre_server = (mission / "auditPreInitServer.sqf").read_text(encoding="utf-8")
         self.assertIn('"B_Parachute"', pre_server)
         self.assertIn('"Waldo_SafeStart_AutoStart", false', pre_server)
@@ -940,7 +955,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertEqual(19, economy_zen.count("call Waldo_fnc_EcoCore_logZenModule"))
         self.assertIn("WaldoEcoCore_ZenModuleCount", economy_zen)
         self.assertIn('auditPreInit.sqf', audit_init)
-        self.assertIn('Waldo_Economy_Enable = missionNamespace getVariable', audit_init)
+        self.assertIn('MissionConfig\\SharedFeatureDefaults.sqf', audit_init)
         self.assertIn('auditInit.sqf', audit_init)
 
     def test_interaction_surface_policy_matches_feature_complexity(self):
@@ -1115,6 +1130,7 @@ class FullAuditTests(unittest.TestCase):
         clear = (flow / "clearUiPanels.sqf").read_text(encoding="utf-8")
         setup = (flow / "setupUiCleanupAction.sqf").read_text(encoding="utf-8")
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        player_config = (ROOT / "MissionConfig" / "PlayerLocalFeatureDefaults.sqf").read_text(encoding="utf-8")
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         economy = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "notifyActorLocal.sqf").read_text(encoding="utf-8")
         for function_name in ("ShowUiNotification", "ClearUiPanels", "SetupUiCleanupAction", "SetUiPanelsSuppressed", "SetupUiAcePriority", "SetUiPanelPlacement", "SetLocalUiPanelPlacement", "ReflowUiPanels", "DrainUiNotificationQueue"):
@@ -1143,9 +1159,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('"FIFO"', show)
         self.assertIn('"REPLACE"', show)
         self.assertIn("Waldo_UI_PanelPlacements", placement)
-        self.assertIn("Waldo_UI_PanelPlacements", init_player)
-        self.assertIn('["TREATMENT_FEEDBACK", "BOTTOM_CENTER", true]', init_player)
-        self.assertIn("Waldo_TreatmentFeedback_Duration", init_player)
+        self.assertIn("Waldo_UI_PanelPlacements", player_config)
+        self.assertIn('["TREATMENT_FEEDBACK", "BOTTOM_CENTER", true]', player_config)
+        self.assertIn("Waldo_TreatmentFeedback_Duration", player_config)
         self.assertIn('case "BOTTOM_CENTER"', show + reflow)
         self.assertIn('["TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"]', reflow)
         self.assertIn("Waldo_UI_LocalPanelPlacements", local_placement)
@@ -1308,12 +1324,12 @@ class FullAuditTests(unittest.TestCase):
         profile_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")
         apply_profile = (ROOT / "MissionScripts" / "AiScripting" / "aiApplyProfile.sqf").read_text(encoding="utf-8")
         runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
-        mission_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        mission_config = (ROOT / "MissionConfig" / "SharedFeatureDefaults.sqf").read_text(encoding="utf-8")
         for key in ("MILITIA", "LINE", "VETERAN", "ELITE"):
             self.assertIn(f'["{key}", createHashMapFromArray', profile_init)
         for label in ("WMP Militia", "WMP Line", "WMP Veteran", "WMP Elite"):
-            self.assertIn(label, mission_init + runtime)
-        self.assertIn("Waldo_AI_ProfileDisplayNames", mission_init + runtime)
+            self.assertIn(label, mission_config + runtime)
+        self.assertIn("Waldo_AI_ProfileDisplayNames", mission_config + runtime)
         self.assertIn("Waldo_AI_NightNVGMultipliers", apply_profile)
         self.assertIn("Waldo_AI_NightUnaidedMultipliers", apply_profile)
         self.assertIn('if (hmd _unit != "")', apply_profile)

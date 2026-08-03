@@ -513,7 +513,7 @@ def _sync_tree_in_place(source: Path, target: Path) -> None:
 
 
 def refresh_release_sources() -> None:
-    for directory in ("MissionScripts", "Pictures", "UnitInsignias"):
+    for directory in ("MissionScripts", "MissionConfig", "Pictures", "UnitInsignias"):
         source = ROOT / directory
         target = MISSION / directory
         # OneDrive can remove a hydrated file after rmtree enumerates it but before
@@ -542,6 +542,7 @@ def refresh_release_sources() -> None:
     shutil.copy2(ROOT / "acreConfig.sqf", MISSION / "releaseAcreConfig.sqf")
     pack_source = MISSION / "WMPPackSource"
     pack_source.mkdir(exist_ok=True)
+    shutil.copytree(ROOT / "MissionConfig", pack_source / "MissionConfig", dirs_exist_ok=True)
     for name in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "economyConfig.sqf", "acreConfig.sqf", "LICENSE", "README.md"):
         source = ROOT / name
         if source.is_file():

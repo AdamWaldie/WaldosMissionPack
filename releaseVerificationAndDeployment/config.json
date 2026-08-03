@@ -4,6 +4,7 @@
         "version": "DevBuild",
         "include": [
             "MissionScripts",
+            "MissionConfig",
             "Pictures",
             "description.ext",
             "acreConfig.sqf",

@@ -21,6 +21,15 @@ if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {true};
 [false, true] call acre_api_fnc_setupMission;
 private _babel = _config getOrDefault ['babel', createHashMap];
 if (_babel getOrDefault ['enabled', false]) then {
-    {if !([_x select 0, _x select 1] call acre_api_fnc_babelAddLanguageType) then {diag_log format ['[WMP ACRE] Babel registration failed: %1', _x]}} forEach (_babel getOrDefault ['languages', []]);
+    {
+        _x params ['_languageId', '_languageName'];
+        private _registrationResult = [_languageId, _languageName] call acre_api_fnc_babelAddLanguageType;
+        private _registrationAccepted = if (isNil '_registrationResult') then {true} else {
+            if (_registrationResult isEqualType false) then {_registrationResult} else {true}
+        };
+        if (!_registrationAccepted) then {
+            diag_log format ['[WMP ACRE] Babel registration was explicitly rejected: %1', _x];
+        };
+    } forEach (_babel getOrDefault ['languages', []]);
 };
 [_config] call Waldo_fnc_ACRE2ApplyPresetNames

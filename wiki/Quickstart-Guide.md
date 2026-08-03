@@ -44,9 +44,10 @@ Save the mission once after changing this setting and verify that `mission.sqm` 
 Use the [Mission Configuration Reference](Mission-Configuration-Reference) while editing:
 
 - `description.ext` for mission identity, respawn, includes, and end screens;
-- `init.sqf` only for shared defaults or systems that genuinely execute on every machine;
-- `initServer.sqf` for authoritative state, persistence I/O, asset pools, and world mutation;
-- `initPlayerLocal.sqf` for player UI, actions, accessibility, and other presentation-only behavior.
+- `MissionConfig\SharedFeatureDefaults.sqf` for guarded cross-locality feature defaults;
+- `MissionConfig\ServerFeatureDefaults.sqf` for authoritative defaults and published asset pools;
+- `MissionConfig\PlayerLocalFeatureDefaults.sqf` for player UI, actions and accessibility defaults;
+- the three init files for activation and lifecycle only—do not move their authority, waits or JIP handling.
 
 Keep the runtime-state request/receive handshake intact. Mid-mission ZEN setting changes are server-owned and rebroadcast so current players, headless clients, and JIP players converge on the same state.
 

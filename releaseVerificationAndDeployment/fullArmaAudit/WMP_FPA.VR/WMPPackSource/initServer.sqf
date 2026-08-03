@@ -6,67 +6,7 @@ here gives one authoritative value and prevents clients or headless clients from
 own copies. Persistence starts its database branch here; player capture/apply starts locally.
 */
 [] call Waldo_fnc_ACRE2Init;
-
-if (isNil "Waldo_ObjectScaling_Minimum") then {Waldo_ObjectScaling_Minimum = 0.1};
-if (isNil "Waldo_ObjectScaling_Maximum") then {Waldo_ObjectScaling_Maximum = 10};
-if (isNil "Waldo_ObjectScaling_AllowClientRequests") then {Waldo_ObjectScaling_AllowClientRequests = false};
-
-if (isNil "Waldo_DynamicAA_DefaultDetectionInterval") then {Waldo_DynamicAA_DefaultDetectionInterval = 1};
-if (isNil "Waldo_DynamicAA_MaximumRadius") then {Waldo_DynamicAA_MaximumRadius = 50000};
-if (isNil "Waldo_DynamicAA_MaximumAltitude") then {Waldo_DynamicAA_MaximumAltitude = 10000};
-if (isNil "Waldo_DynamicAA_MaximumFighters") then {Waldo_DynamicAA_MaximumFighters = 12};
-if (isNil "Waldo_DynamicAA_SideAssetPools") then {
-    Waldo_DynamicAA_SideAssetPools = createHashMapFromArray [
-        ["WEST", createHashMapFromArray [
-            ["radarClasses", ["B_Radar_System_01_F", "Land_Radar_F"]],
-            ["staticSitePools", [["B_Radar_System_01_F", "B_SAM_System_01_F", "B_AAA_System_01_F"]]],
-            ["mobileClasses", ["B_APC_Tracked_01_AA_F"]],
-            ["fighterClasses", ["B_Plane_Fighter_01_F", "B_Plane_Fighter_01_Stealth_F"]]
-        ]],
-        ["EAST", createHashMapFromArray [
-            ["radarClasses", ["O_Radar_System_02_F", "Land_Radar_F"]],
-            ["staticSitePools", [["O_Radar_System_02_F", "O_SAM_System_04_F", "B_AAA_System_01_F"]]],
-            ["mobileClasses", ["O_APC_Tracked_02_AA_F", "O_T_APC_Tracked_02_AA_ghex_F"]],
-            ["fighterClasses", ["O_Plane_Fighter_02_F", "O_Plane_Fighter_02_Stealth_F"]]
-        ]],
-        ["INDEPENDENT", createHashMapFromArray [
-            ["radarClasses", ["I_E_Radar_System_01_F", "Land_Radar_F"]],
-            ["staticSitePools", [["I_E_Radar_System_01_F", "I_E_SAM_System_03_F", "B_AAA_System_01_F"]]],
-            ["mobileClasses", ["I_LT_01_AA_F"]],
-            ["fighterClasses", ["I_Plane_Fighter_03_dynamicLoadout_F"]]
-        ]]
-    ];
-};
-if (isNil "Waldo_DynamicAA_FactionAssetPools") then {Waldo_DynamicAA_FactionAssetPools = createHashMap};
-missionNamespace setVariable ["Waldo_DynamicAA_SideAssetPools", Waldo_DynamicAA_SideAssetPools, true];
-missionNamespace setVariable ["Waldo_DynamicAA_FactionAssetPools", Waldo_DynamicAA_FactionAssetPools, true];
-
-// Electronic-warfare configuration is server-authored once. The final readiness flag
-// lets initial clients and JIP clients install their local radio/UI hooks only after the
-// complete state is available; later server/Zeus changes must broadcast the changed value.
-{
-    _x params ["_name", "_default"];
-    missionNamespace setVariable [_name, missionNamespace getVariable [_name, _default], true];
-} forEach [
-    ["Waldo_Jamming_Enable", true],
-    ["Waldo_Jamming_Notify", true],
-    ["Waldo_Jamming_LOS", true],
-    ["Waldo_Jamming_BurnThrough", true],
-    ["Waldo_Jamming_BurnThroughRef", 500],
-    ["Waldo_Jamming_Curve", "LINEAR"],
-    ["Waldo_Jamming_Destructible", true],
-    ["Waldo_Jamming_GmOverlay", false],
-    ["Waldo_Jamming_ScanRange", 3000],
-    ["Waldo_Jamming_ScanBearingArc", 30],
-    ["Waldo_Jamming_ScanDistanceBands", [35, 150, 600]],
-    ["Waldo_Jamming_AllowPlayerToggle", true],
-    ["Waldo_Jamming_DisableChallenge", false],
-    ["Waldo_Jamming_DisableChallengeId", "circuit"],
-    ["Waldo_Jamming_DisableDifficulty", "standard"],
-    ["Waldo_Jamming_DisableEngineerOnly", true],
-    ["Waldo_Jamming_DisableResult", "DISABLE"]
-];
-missionNamespace setVariable ["Waldo_Jamming_ConfigReady", true, true];
+call compile preprocessFileLineNumbers "MissionConfig\ServerFeatureDefaults.sqf";
 if (missionNamespace getVariable ["Waldo_Jamming_Enable", true]) then {
     [] call Waldo_fnc_JammingInit;
 };
@@ -95,17 +35,6 @@ missionNamespace setVariable ["SupplyBoxClass", "PUTCLASSNAMEHERE", true];
 
 */
 
-//Supply Box Classname MissionNameSpace Declaration
-missionNamespace setVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F",true];
-//Logi_SupplyBoxClass = "B_supplyCrate_F";
-//Medical Box Classname MissionNameSpace Declaration
-if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
-    missionNamespace setVariable ["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced",true];
-} else {
-    missionNamespace setVariable ["Logi_MedicalBoxClass", "C_IDAP_supplyCrate_F",true];
-};
-
-
 /*
 PARADROP SCRIPTS
 
@@ -119,26 +48,6 @@ This affects both the automatically added vehicles, and those you manually add v
 [this] call Waldo_fnc_VehicleJumpSetup;
 
 */
-//Static Line Variables
-//Static Minimum Altitude
-missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];
-//Static Maximum Altitude
-missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];
-//Static Maximum Speed
-missionNamespace setVariable ["WALDO_STATIC_MAXSPEED", 310, true];
-//Static Line Parachute Class
-missionNamespace setVariable [
-    "WALDO_STATIC_STATICCHUTE",
-    missionNamespace getVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute"],
-    true
-];
-
-//HALO Jump Variables
-//HALO Minimum Altitude
-missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];
-//HALO Parachute Class
-missionNamespace setVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute", true];
-
 /*
 
 Mission.sqm based supply system
@@ -171,11 +80,6 @@ shows warnings through systemChat.
 
 Set the flag below to false to disable it for a shipping mission.
 */
-missionNamespace setVariable [
-    "Waldo_RunDiagnostics",
-    missionNamespace getVariable ["Waldo_RunDiagnostics", true],
-    true
-];
 if (missionNamespace getVariable ["Waldo_RunDiagnostics", true]) then {
     [] spawn {
         private _deadline = diag_tickTime + 30;
@@ -204,14 +108,6 @@ place a marker and set Waldo_SafeStart_ZoneMarker to its name. Tune or disable b
 
 Set Waldo_SafeStart_AutoStart to false to start the mission live (no safestart).
 */
-missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];
-missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];
-missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];
-missionNamespace setVariable [
-    "Waldo_SafeStart_AutoStart",
-    missionNamespace getVariable ["Waldo_SafeStart_AutoStart", true],
-    true
-];
 if (missionNamespace getVariable ["Waldo_SafeStart_AutoStart", true]) then {
     [true] call Waldo_fnc_SafeStart;
 };

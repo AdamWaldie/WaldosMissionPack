@@ -41,7 +41,18 @@ if (count _languages == 0) exitWith {diag_log '[WMP ACRE] Babel has no valid lan
 if !(_initial in _languages) then {_initial = _languages select 0};
 private _spoken = _languages call acre_api_fnc_babelSetSpokenLanguages;
 private _speaking = [_initial] call acre_api_fnc_babelSetSpeakingLanguage;
-if (!_spoken || {!_speaking}) exitWith {diag_log '[WMP ACRE] Babel API rejected the local language application.'; false};
+private _spokenAccepted = if (isNil '_spoken') then {true} else {
+    if (_spoken isEqualType false) then {_spoken} else {true}
+};
+private _speakingAccepted = if (isNil '_speaking') then {true} else {
+    if (_speaking isEqualType false) then {_speaking} else {true}
+};
+private _speakingReadBack = [] call acre_api_fnc_babelGetSpeakingLanguageId;
+private _speakingMatches = if (isNil '_speakingReadBack') then {true} else {_speakingReadBack isEqualTo _initial};
+if (!_spokenAccepted || {!_speakingAccepted} || {!_speakingMatches}) exitWith {
+    diag_log format ['[WMP ACRE] Babel API rejected the local language application (expected speaking language %1).', _initial];
+    false
+};
 uiNamespace setVariable ['Waldo_ACRE2_BabelSide', _sideKey];
 uiNamespace setVariable ['Waldo_ACRE2_BabelLanguages', +_languages];
 uiNamespace setVariable ['Waldo_ACRE2_BabelSpeaking', _initial];

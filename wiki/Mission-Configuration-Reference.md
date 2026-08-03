@@ -2,7 +2,16 @@
 
 > **Use this page when:** you need the authoritative fields and variables used by WMP mission entry files.
 
-This page documents all the configuration fields and variables that mission makers are expected to customise before shipping a mission built on WMP. It covers `description.ext`, `init.sqf`, `initPlayerLocal.sqf`, and `initServer.sqf`.
+This page documents all configuration fields and variables mission makers are expected to customise before shipping a WMP mission. Feature defaults now live in the clearly separated `MissionConfig` directory; the three Arma init files retain lifecycle, authority, activation and JIP handling only.
+
+## Feature configuration directory
+
+- `MissionConfig\SharedFeatureDefaults.sqf` contains guarded defaults needed on every machine.
+- `MissionConfig\ServerFeatureDefaults.sqf` contains server-owned limits, pools and JIP-safe published defaults.
+- `MissionConfig\PlayerLocalFeatureDefaults.sqf` contains interface-only presentation and interaction defaults.
+- Root `acreConfig.sqf` remains separate because ACRE consumes it during CfgFunctions pre-init, before Arma event scripts.
+
+Do not move activation calls, waits, event handlers or public-state ownership into configuration files. Set a variable before its guarded default when generating a mission, or edit the corresponding locality file. Live ZEN changes remain authoritative and are not overwritten when a player joins.
 
 ---
 
@@ -76,15 +85,15 @@ class MissionSQM { #include "mission.sqm" };              // Required for logist
 
 ## initServer.sqf
 
-Runs **on the server only**. Configure server-authoritative limits, asset pools, persistence authority, logistics crate classnames and paradrop thresholds here.
+Runs **on the server only**. Its server defaults are loaded synchronously from `MissionConfig\ServerFeatureDefaults.sqf`; activation and authority remain in `initServer.sqf`.
 
 ### Server-Owned Optional Feature Settings
 
-`initServer.sqf` owns object-scaling limits, Dynamic AA side/faction asset pools and the database branch of persistence. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
+`MissionConfig\ServerFeatureDefaults.sqf` defines object-scaling limits and Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
-Shared hazard presentation defaults live in `init.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
+Shared hazard presentation defaults live in `MissionConfig\SharedFeatureDefaults.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
 
 ### Logistics Crate Classnames
 
