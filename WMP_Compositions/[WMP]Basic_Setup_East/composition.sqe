@@ -2,7 +2,7 @@ version=54;
 center[]={470.44366,121.92559,131.13251};
 class items
 {
-	items=1;
+	items=2;
 	class Item0
 	{
 		dataType="Layer";
@@ -165,5 +165,12 @@ init="[this, true, east, false] spawn Waldo_fnc_DoStarterCrate;";
 		};
 		id=14;
 		atlOffset=-0.00035095215;
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-5};};
+		title="Basic EAST Setup: respawn position plus starter, supply and ACE medical crates. Keep the crate calls unchanged unless you have read their parameter guide. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
+		id=10014;
 	};
 };

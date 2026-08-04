@@ -114,22 +114,42 @@ e.g.
 
 
 ## Logistics Quartermaster
-This is used to set up the logistics spawning system via the "Quartermaster". The Quartermaster is an object or NPC which acts as the spawner for supply boxes & equipment.
+The Quartermaster is an object or NPC where players request supply boxes and vehicle spare parts.
+Use the **Logistics Spawner Example** composition for a ready-made point, or paste one of the calls
+below into an object's Eden **Init** field. A standalone Quartermaster becomes available
+immediately; its server state and each player's local interaction are installed automatically, so
+do not wrap the call in `isServer`.
 
-Simply paste and edit the example below into an object's init to turn it into a quartermaster.
+Every point also has a WMP-blue **Logistics Quartermaster** informational action. With ACE loaded,
+actual crate retrieval is under **ACE Interact > Logistics Quartermaster**. Without ACE, the
+retrieval choices appear directly in Arma's action menu.
 
-Params:
-* _target - The quartermaster from which you can select these actions
-* _offsetDegrees - determines the bearing around the vehicle the spawner will be. Based on vehicle heading, not compass. E.g 0 = Front, 90 = Right, 180 = Rear, 270 = Left.
-* _offsetDistance - determines how far away from the vehicle the logistics spawner will be.
+### Reading the call
 
-Exemplar:
+`[target, spawn bearing, spawn distance, deployment controlled] call Waldo_fnc_SetupQuarterMaster;`
 
-`[this] call Waldo_fnc_SetupQuarterMaster; `
+| Position | Beginner meaning | Default |
+|---|---|---|
+| `target` | Object players interact with. In its own Init field, use `this`. | Required |
+| `spawn bearing` | Direction relative to the object: `0` front, `90` right, `180` rear, `270` left. | `90` |
+| `spawn distance` | Starting distance from the object in metres. | `2` |
+| `deployment controlled` | Leave `false` for a normal always-available point. WMP's MHQ passes `true` internally because deploying the command post controls access. | `false` |
 
-Example which spawns logistics crates behind the interaction point, 4 meters away.
+The simplest standalone setup is:
 
-`[this,180,4] call Waldo_fnc_SetupQuarterMaster; `
+```sqf
+[this] call Waldo_fnc_SetupQuarterMaster;
+```
+
+This example places requested crates four metres behind the interaction point:
+
+```sqf
+[this, 180, 4] call Waldo_fnc_SetupQuarterMaster;
+```
+
+The fourth argument exists for systems that own deployment state. Normal mission makers should not
+set it to `true`: doing so deliberately hides retrieval actions until another server-owned system
+activates the Quartermaster.
 
 
 ## What the Quartermaster Spawns

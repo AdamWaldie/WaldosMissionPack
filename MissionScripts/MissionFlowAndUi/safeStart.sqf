@@ -5,7 +5,8 @@
  * safe-zone confinement, on-screen banner) to every machine. Disabling is the admin
  * "go live" overrule: it cancels any running go-live countdown and lifts the freeze for
  * everyone immediately. JIP and respawning players re-apply the current state themselves
- * (see initPlayerLocal.sqf).
+ * (see initPlayerLocal.sqf). The pack starts live by default; this function remains available to
+ * Zeus and scripts throughout the mission, and the server's published state is authoritative.
  *
  * Arguments:
  * 0: Enable <BOOL> (Optional, default: true) - true = activate safestart, false = go live
@@ -16,6 +17,7 @@
  * Example:
  * [true] call Waldo_fnc_SafeStart;   // activate
  * [false] call Waldo_fnc_SafeStart;  // go live (admin overrule)
+ * Current callers: initServer.sqf only when AutoStart=true, SafeStart ZEN controls and timers.
  */
 
 params [["_enable", true], ["_reason", "MANUAL"]];

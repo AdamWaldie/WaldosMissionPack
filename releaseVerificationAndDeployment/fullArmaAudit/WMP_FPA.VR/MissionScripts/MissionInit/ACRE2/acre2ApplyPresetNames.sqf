@@ -15,6 +15,7 @@ params [['_config', missionNamespace getVariable ['Waldo_ACRE2_Config', createHa
 if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {true};
 if !(_config getOrDefault ['namedDisplays', true]) exitWith {true};
 private _ok = true;
+private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;
 {
     _x params ['_sideKey', '_preset', '_nets'];
     {
@@ -22,12 +23,13 @@ private _ok = true;
         private _safe = '';
         {if (_x in (toArray 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 -_/')) then {_safe = _safe + toString [_x]}} forEach toArray _label;
         if (count _safe > 12) then {_safe = _safe select [0, 12]};
-        private _tunings = _x select 2;
+        private _family = toUpper (_x select 2);
+        private _channel = _x select 3;
+        if (_family == 'PRC_LR') then {
         {
             _x params ['_radioClass', '_displayField'];
-            private _tuningIndex = _tunings findIf {toUpper (_x select 0) == _radioClass};
-            if (_tuningIndex >= 0) then {
-            private _channel = ((_tunings select _tuningIndex) select 1);
+            private _profileIndex = _profiles findIf {toUpper (_x select 0) == _radioClass};
+            if (_profileIndex >= 0 && {_channel isEqualType 0} && {_channel >= 1} && {_channel <= ((_profiles select _profileIndex) select 3)}) then {
             private _tx = [_radioClass, _preset, _channel, 'frequencyTX'] call acre_api_fnc_getPresetChannelField;
             private _rx = [_radioClass, _preset, _channel, 'frequencyRX'] call acre_api_fnc_getPresetChannelField;
             private _written = [_radioClass, _preset, _channel, _displayField, _safe] call acre_api_fnc_setPresetChannelField;
@@ -40,6 +42,7 @@ private _ok = true;
             };
             };
         } forEach [['ACRE_PRC148', 'label'], ['ACRE_PRC152', 'description'], ['ACRE_PRC117F', 'name']];
+        };
     } forEach _nets;
 } forEach (_config getOrDefault ['sides', []]);
 missionNamespace setVariable ['Waldo_ACRE2_PresetNamesReady', _ok];

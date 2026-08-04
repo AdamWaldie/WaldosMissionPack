@@ -20,13 +20,13 @@
  */
 
 params [["_interval", 1, [0]]];
-if (remoteExecutedOwner > 0) exitWith {};
 if !(hasInterface && {alive player}) exitWith {};
 
 private _exposures = missionNamespace getVariable ["Waldo_Hazard_LocalExposure", createHashMap];
 private _previousInside = missionNamespace getVariable ["Waldo_Hazard_LocalInside", createHashMap];
 private _previousStages = missionNamespace getVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
 private _activeText = [];
+private _zoneDiagnostics = [];
 
 {
     _x params ["_key", "_area", "_profile"];
@@ -75,6 +75,10 @@ private _activeText = [];
     } else {
         0
     };
+    private _distance = if (_area isEqualType objNull) then {player distance2D _area} else {
+        if (_area isEqualType "") then {player distance2D getMarkerPos _area} else {player distance2D (_area select 0)}
+    };
+    _zoneDiagnostics pushBack [_key, _inside, _distance, _intensity, typeName _area];
     private _exposure = _exposures getOrDefault [_key, 0];
     if (_inside) then {
         private _protection = [player, _profile] call Waldo_fnc_HazardProtectionFactor;
@@ -110,7 +114,7 @@ private _activeText = [];
         _previousInside set [_key, _inside];
     };
 
-    if (_inside || {_exposure > 0}) then {
+    if ((_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", false]]) && {_inside || {_exposure > 0}}) then {
         private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "HAZARD"]];
         _activeText pushBack format ["%1: %2", _label, (_exposure toFixed 2)];
     };
@@ -158,10 +162,14 @@ private _activeText = [];
     };
 } forEach +(missionNamespace getVariable ["Waldo_Hazard_Zones", []]);
 
+// Diagnostics must prove that spatial evaluation is actually advancing. Merely having a loop
+// handle and a zone registry previously allowed a permanently inert evaluator to report ACTIVE.
+missionNamespace setVariable ["Waldo_Hazard_LastEvaluation", [diag_tickTime, getPosATL player, _zoneDiagnostics]];
+
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
-private _status = if (missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]) then {_activeText joinString "<br/>"} else {""};
+private _status = _activeText joinString "<br/>";
 private _previousStatus = uiNamespace getVariable ["Waldo_Hazard_StatusText", ""];
 if (_status != _previousStatus) then {
     uiNamespace setVariable ["Waldo_Hazard_StatusText", _status];

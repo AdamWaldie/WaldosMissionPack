@@ -78,6 +78,7 @@ STATIONS = [
     ("ai-helicopter-landing", "AI HELICOPTER LANDING", (325, 40), "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."),
     ("ui-theme-qa", "UI THEME QA", (325, 0), "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."),
     ("dynamic-ao", "DYNAMIC AO", (350, 0), "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."),
+    ("compositions", "EDEN COMPOSITION CATALOGUE", (350, 40), "Every shipped composition classname, addon declaration, init call and wiki-linked editor guide."),
 ]
 
 

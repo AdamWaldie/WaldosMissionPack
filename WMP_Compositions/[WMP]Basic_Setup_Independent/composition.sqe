@@ -2,7 +2,7 @@ version=54;
 center[]={477.57407,121.92574,131.49701};
 class items
 {
-	items=1;
+	items=2;
 	class Item0
 	{
 		dataType="Layer";
@@ -165,5 +165,12 @@ init="[this, true, independent, false] spawn Waldo_fnc_DoStarterCrate;";
 		};
 		id=9;
 		atlOffset=-0.0020675659;
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-5};};
+		title="Basic INDEPENDENT Setup: respawn position plus starter, supply and ACE medical crates. Keep the crate calls unchanged unless you have read their parameter guide. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
+		id=10009;
 	};
 };

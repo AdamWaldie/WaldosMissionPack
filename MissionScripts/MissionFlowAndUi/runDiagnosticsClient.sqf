@@ -58,7 +58,8 @@ private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", create
 private _acreEnabled = _acreLoaded && {_acreConfig getOrDefault ["enabled", false]};
 if (_acreEnabled) then {
     private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
-    private _planValid = count _plan >= 4 && {(_plan select 0) == 3};
+    private _configValidation = missionNamespace getVariable ["Waldo_ACRE2_ConfigValidation", [false, ["ACRE configuration was not validated."], []]];
+    private _planValid = count _plan >= 4 && {(_plan select 0) == 5};
     private _rawGroup = groupId group player;
     private _groupKey = toUpperANSI (((_rawGroup splitString " -_.") joinString ""));
     private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
@@ -78,8 +79,8 @@ if (_acreEnabled) then {
     private _last = missionNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
     private _lastOk = count _last > 0 && {_last select 0};
     private _expectsRadios = !(_inventoryRadios isEqualTo []);
-    private _state = if (!_planValid || {_sideIndex < 0} || {_groupIndex < 0} || {_expectsRadios && {(_radios isEqualTo [] || {!_lastOk})}}) then {"ERROR"} else {if (_expectsRadios) then {"ACTIVE"} else {"UNCONFIGURED"}};
-    private _plainFinding = if (!_planValid) then {"The server did not publish a valid ACRE plan."} else {
+    private _state = if (!(_configValidation select 0) || {!_planValid} || {_sideIndex < 0} || {_groupIndex < 0} || {_expectsRadios && {(_radios isEqualTo [] || {!_lastOk})}}) then {"ERROR"} else {if (_expectsRadios) then {"ACTIVE"} else {"UNCONFIGURED"}};
+    private _plainFinding = if !(_configValidation select 0) then {format ["ACRE configuration errors: %1", _configValidation select 1]} else {if (!_planValid) then {"The server did not publish a valid ACRE plan."} else {
         if (_sideIndex < 0) then {format ["No ACRE side block matches %1.", _sideKey]} else {
             if (_groupIndex < 0) then {format ["Group '%1' is not listed in acreConfig.sqf.", _rawGroup]} else {
                 if (_expectsRadios && {!_acreApiReady}) then {"ACRE has not finished converting the player's carried radios to unique IDs."} else {
@@ -91,7 +92,7 @@ if (_acreEnabled) then {
                 }
             }
         }
-    };
+    }};
     ["radio", "acre-player-presetting", _state, format ["finding=%1 rawGroup='%2' normalized=%3 side=%4 planRevision=%5 sideMatch=%6 groupMatch=%7 inventoryRadios=%8 currentRadios=%9 unique=%10 acreReady=%11 edenRadioSetup=%12 loadoutGeneration=%13 restoredGeneration=%14 lastApplication=%15 readinessFailure=%16", _plainFinding, _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _inventoryRadios, _radios, count _unique, _acreApiReady, _edenRadioSetup, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last, missionNamespace getVariable ["Waldo_ACRE2_LastReadinessFailure", []]]] call _add;
     if !(_edenRadioSetup isEqualTo "") then {
         ["radio", "acre-eden-radio-attribute", "ERROR", format ["This unit has an Eden ACRE Radio Setup attribute (%1). It can overwrite acreConfig.sqf during startup. Clear that unit attribute and let WMP own the initial assignment.", _edenRadioSetup]] call _add;
@@ -134,7 +135,9 @@ private _missingTacticalActions = _tacticalDisplays select {(_x getVariable ["Wa
 private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", false];
 private _hazardZones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
 private _hazardClient = missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false];
-["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient]] call _add;
+private _hazardEvaluation = missionNamespace getVariable ["Waldo_Hazard_LastEvaluation", []];
+private _hazardFresh = count _hazardEvaluation >= 3 && {(diag_tickTime - (_hazardEvaluation select 0)) <= ((missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25) * 3};
+["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 freshEvaluation=%5 lastEvaluation=%6", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardFresh, _hazardEvaluation]] call _add;
 private _mhqObjects = _localObjects select {_x getVariable ["Waldo_MHQ_ServerConfigured", false]};
 if (_mhqObjects isEqualTo []) then {
     ["logistics", "mhq-actions", "UNCONFIGURED", "No configured MHQ is present"] call _add;

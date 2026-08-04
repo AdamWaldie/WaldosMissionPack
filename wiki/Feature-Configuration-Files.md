@@ -354,10 +354,10 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 |---|---|
 | `Waldo_Hazard_Enable` | Master hazardous-environment opt-in. |
 | `Waldo_Hazard_Interval` | Local exposure update interval in seconds. |
-| `Waldo_Hazard_ShowStatus` | Shows the live hazard status element. |
+| `Waldo_Hazard_ShowStatus` | Continuous exposure panel. Defaults on, updates in place and never consumes notification-card lanes. A profile may override it with `showStatus`. |
 | `Waldo_Hazard_NotifyTransitions` | Announces entering/leaving a zone. |
 | `Waldo_Hazard_NotificationDuration` | Transition-card duration in seconds. |
-| `Waldo_Hazard_Presets` | Named profiles. Each profile may set `type`, `label`, `rate`, `decay`, protection/vehicle modifiers, `damageType`, staged `[exposure, damage]` thresholds, stage messages and `fatalExposure`. Networked callbacks use missionNamespace function-name strings. |
+| `Waldo_Hazard_Presets` | Named profiles. In addition to exposure/damage/protection, a profile may use `detectorItems`, `detectorObjects`, `detectorObjectRange`, `awarenessCondition`, `requireAwarenessForStatus` and `requireAwarenessForNotifications`. Awareness changes information only; danger still applies. Networked callbacks use missionNamespace function-name strings. |
 | `Waldo_TreeFelling_Enable` | Master tree-felling opt-in. |
 | `Waldo_TreeFelling_Range` | Maximum axe interaction range. |
 | `Waldo_TreeFelling_BaseHits` | Base strikes required. |
@@ -426,7 +426,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_SafeStart_Confine` | Restricts players to the safestart area. |
 | `Waldo_SafeStart_Radius` | Fallback safestart radius in metres. |
 | `Waldo_SafeStart_ZoneMarker` | Optional marker defining the safestart area. |
-| `Waldo_SafeStart_AutoStart` | Starts safestart automatically during server initialization. |
+| `Waldo_SafeStart_AutoStart` | `false` starts live while retaining Zeus controls; `true` begins the mission under Safestart protection. |
 
 ## Adding or changing settings
 

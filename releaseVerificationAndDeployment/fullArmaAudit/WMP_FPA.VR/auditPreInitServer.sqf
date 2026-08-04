@@ -3,7 +3,12 @@
  * Defaults in the release entry point preserve these explicit mission-maker values.
  */
 if (!isServer) exitWith {};
-if (!isNil "qa_player_1") then {(group qa_player_1) setGroupIdGlobal ["VIKING-1-1"]};
+missionNamespace setVariable [
+    "Waldo_QA_CompositionCatalogue",
+    [] call compile preprocessFileLineNumbers "compositionCatalogueQA.sqf",
+    true
+];
+if (!isNil "qa_player_1") then {(group qa_player_1) setGroupIdGlobal ["VIKING 2-3"]};
 missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "B_Parachute", true];
 // The audit range creates its fixtures after the real pack startup. Automatic
 // diagnostics would therefore report healthy-but-not-yet-configured stations.

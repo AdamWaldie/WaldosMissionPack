@@ -28,7 +28,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Vehicle unflipping actions
 - Configurable AI convoy system with mission-maker and Zeus workflows.
 - Teleportation Script
-- Endex & Safestart Scripts - including an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers) in the ENDEX popup.
+- Endex & Safestart Scripts - Safestart is available but inactive by default and can be enabled by Zeus; ENDEX includes an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers).
 - Script-driven Tasks/Objectives helpers - JIP-safe BIS task wrappers with automatic map markers that also feed the After-Action Report.
 - Mission Diagnostics - a read-only server and client health report with run IDs, machine roles, feature areas, explicit loaded/disabled/unavailable states, and structured RPT output.
 - Performance regression audit - a CI-enforced static review of recurring SQF schedulers, world searches, UI redraws and network publication, with reviewed exceptions and documented in-engine verification limits.

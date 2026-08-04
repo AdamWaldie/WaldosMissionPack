@@ -39,6 +39,7 @@ RANGE_FILES = (
     "featureRangeServer.sqf",
     "featureRangeClient.sqf",
     "auditAcreConfig.sqf",
+    "compositionCatalogueQA.sqf",
     "extendedFeatureStationsServer.sqf",
     "extendedFeatureStationsClient.sqf",
     "functionStations.sqf",
@@ -176,7 +177,7 @@ def legacy_playable_units_with_loadouts(source: bytes) -> bytes:
             for item in linked_items
         )
         if index == 0:
-            commands.append('(group this) setGroupIdGlobal ["VIKING-1-1"]')
+            commands.append('(group this) setGroupIdGlobal ["VIKING 2-3"]')
         init = "; ".join(commands).replace('"', '""') + ";"
         player = "PLAYER COMMANDER" if index == 0 else "PLAY CDG"
         leader = " leader=1;" if index == 0 else ""

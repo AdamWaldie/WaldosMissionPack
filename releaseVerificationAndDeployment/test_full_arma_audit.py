@@ -140,7 +140,9 @@ class FullAuditTests(unittest.TestCase):
             "Waldo_fnc_HazardRegisterEmitter",
         }
         folders = [path for path in root.iterdir() if path.is_dir()]
-        self.assertGreaterEqual(len(folders), 25)
+        self.assertGreaterEqual(len(folders), 34)
+        catalogue_types = set()
+        catalogue_addons = set()
         for folder in folders:
             header_path = folder / "header.sqe"
             composition_path = folder / "composition.sqe"
@@ -149,16 +151,51 @@ class FullAuditTests(unittest.TestCase):
             header = header_path.read_text(encoding="utf-8")
             composition = composition_path.read_text(encoding="utf-8")
             self.assertIn('author="WaldoTheWarfighter";', header, folder.name)
+            self.assertIn('name="[WMP]', header, folder.name)
+            self.assertTrue(folder.name.startswith("[WMP]"), folder.name)
             category = re.search(r'^category="([^"]+)";', header, flags=re.MULTILINE)
             self.assertIsNotNone(category, folder.name)
             self.assertIn(category.group(1), allowed_categories, folder.name)
             self.assertEqual(composition.count("{"), composition.count("}"), folder.name)
-            if 'dataType="Comment"' in composition:
-                self.assertIn(
-                    "https://github.com/AdamWaldie/WaldosMissionPack/wiki/",
-                    composition,
-                    f"{folder.name}: Eden feature comments must link their wiki article",
+            comment_count = composition.count('dataType="Comment"')
+            wiki_link_count = composition.count(
+                "https://github.com/AdamWaldie/WaldosMissionPack/wiki/"
+            )
+            self.assertGreater(comment_count, 0, f"{folder.name}: missing Eden guidance comment")
+            self.assertGreaterEqual(
+                wiki_link_count,
+                comment_count,
+                f"{folder.name}: every Eden feature comment must link its wiki article",
+            )
+            ids = [int(value) for value in re.findall(r"^\s*id=(\d+);", composition, re.MULTILINE)]
+            self.assertEqual(len(ids), len(set(ids)), f"{folder.name}: duplicate Eden entity id")
+            types = re.findall(r'^\s*type="([^"]+)";', composition, re.MULTILINE)
+            catalogue_types.update(value for value in types if value not in {"Move", "Cycle", "Sync"})
+            addon_block = re.search(r"requiredAddons\[\]\s*=\s*\{([^}]*)\}", header)
+            if addon_block:
+                catalogue_addons.update(re.findall(r'"([^"]+)"', addon_block.group(1)))
+            self.assertTrue(all(types), f"{folder.name}: blank entity classname")
+            for forbidden_prefix in ("rhs_", "RHS_", "CUP_", "cup_"):
+                self.assertFalse(
+                    any(value.startswith(forbidden_prefix) for value in types),
+                    f"{folder.name}: release composition must not silently require {forbidden_prefix} content",
                 )
+            init_values = re.findall(r'\binit="((?:""|[^"])*)";', composition)
+            for index, encoded_init in enumerate(init_values):
+                decoded_init = encoded_init.replace('""', '"')
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".sqf", encoding="utf-8", delete=False
+                ) as temporary:
+                    temporary.write(decoded_init)
+                    temporary_path = Path(temporary.name)
+                try:
+                    self.assertEqual(
+                        0,
+                        SQF_VALIDATOR.check_sqf_syntax(temporary_path),
+                        f"{folder.name}: invalid SQF in Eden init field {index + 1}",
+                    )
+                finally:
+                    temporary_path.unlink(missing_ok=True)
             for function_name in set(re.findall(r"Waldo_fnc_[A-Za-z0-9_]+", composition)):
                 short_name = function_name.removeprefix("Waldo_fnc_")
                 self.assertRegex(functions, rf"class\s+{re.escape(short_name)}\b", folder.name)
@@ -172,6 +209,17 @@ class FullAuditTests(unittest.TestCase):
                         all("isServer" not in row for row in init_rows),
                         f"{folder.name}: {function_name} must own locality inside its public API",
                     )
+        qa_source = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "compositionCatalogueQA.sqf"
+        ).read_text(encoding="utf-8")
+        class_block = qa_source.split("private _declaredAddons", 1)[0]
+        addon_block = qa_source.split("private _declaredAddons", 1)[1].split("];", 1)[0]
+        self.assertEqual(catalogue_types, set(re.findall(r'"([A-Za-z0-9_]+)"', class_block)))
+        self.assertEqual(catalogue_addons, set(re.findall(r'"([A-Za-z0-9_]+)"', addon_block)))
         catalogue = (root / "README.md").read_text(encoding="utf-8")
         self.assertIn("Features intentionally without compositions", catalogue)
         self.assertIn("Vehicle Recovery Workshop Example", catalogue)
@@ -180,6 +228,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Bomb Defusal Example", catalogue)
         self.assertIn("Electronic Warfare Examples", catalogue)
         self.assertIn("Custom 3D Marker Example", catalogue)
+        self.assertIn("Loadout Save Point Example", catalogue)
+        self.assertIn("Explosive Wall Breaching Example", catalogue)
+        self.assertIn("Emergency Dismount Vehicle Example", catalogue)
 
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
@@ -299,12 +350,12 @@ class FullAuditTests(unittest.TestCase):
         for expected in (
             '"ALPHA_NET", "ALPHA TEST"',
             '"BRAVO_NET", "BRAVO TEST"',
-            '["ALPHA", ["ALPHA_NET"], [5, 3]',
-            '["BRAVO", ["BRAVO_NET"], [6, 7]',
-            '["ACRE_PRC152", 1, 4, "RIGHT"]',
-            '["ACRE_PRC77", 1, 45.500, "CENTER"]',
-            '["ACRE_PRC152", 1, 8, "LEFT"]',
-            '["ACRE_PRC77", 1, 51.000, "CENTER"]',
+            '["ALPHA", [["ACRE_PRC343", "ALL", [5, 3], "LEFT"]',
+            '["BRAVO", [["ACRE_PRC343", "ALL", [6, 7], "RIGHT"]',
+            '["ACRE_PRC152", "ALL", "ALPHA_NET", "RIGHT"]',
+            '["ACRE_PRC77", "ALL", "ALPHA_77", "BOTH"]',
+            '["ACRE_PRC152", "ALL", "BRAVO_NET", "LEFT"]',
+            '["ACRE_PRC77", "ALL", "BRAVO_77", "BOTH"]',
             '[5, 3]',
             '[6, 7]',
         ):
@@ -414,11 +465,33 @@ class FullAuditTests(unittest.TestCase):
             ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2BuildCEOI.sqf"
         ).read_text(encoding="utf-8")
         self.assertIn("_groupId call _normaliseGroupKey", compile_plan)
+        self.assertIn("_autoSources set [_normalisedGroup, _groupId]", compile_plan)
+        self.assertIn('private _matches = _allocationSource regexFind ["[0-9]+"]', compile_plan)
+        self.assertNotIn('private _matches = _groupKey regexFind ["[0-9]+"]', compile_plan)
         self.assertIn("count _assignment >= 2", ceoi)
         self.assertIn("no PRC-343 assignment", ceoi)
         self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)
         self.assertIn("player removeDiaryRecord", ceoi)
         self.assertNotIn("Carried Radio Verification", ceoi)
+
+    def test_hazard_tick_proves_local_spatial_evaluation(self):
+        tick = (
+            ROOT
+            / "MissionScripts"
+            / "EnvironmentalSystems"
+            / "HazardousEnvironments"
+            / "hazardTick.sqf"
+        ).read_text(encoding="utf-8")
+        client_diagnostics = (
+            ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnosticsClient.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("if (remoteExecutedOwner > 0) exitWith", tick)
+        self.assertIn('missionNamespace setVariable ["Waldo_Hazard_LastEvaluation"', tick)
+        self.assertIn('_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]]', tick)
+        environment = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Hazard_ShowStatus", true]', environment)
+        self.assertIn('missionNamespace getVariable ["Waldo_Hazard_LastEvaluation"', client_diagnostics)
+        self.assertIn("freshEvaluation=%5", client_diagnostics)
 
     def test_patch_filter_uses_standard_release_allowlist(self):
         allowed = {"MissionScripts", "Pictures", "description.ext"}
@@ -665,16 +738,31 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('"radioPriority"', acre_config)
         self.assertNotIn('"radioProfiles"', acre_config)
         self.assertIn('["additionalRadioProfiles", []]', acre_config)
-        self.assertIn("0: short internal key used by group assignments below", acre_config)
-        self.assertIn("case/separators are ignored", acre_config)
-        self.assertIn("empty = automatically choose this group's PRC-343 block/channel", acre_config)
+        self.assertIn("Every named net has exactly one value", acre_config)
+        self.assertIn("matches common separator/capitalisation variants", acre_config)
+        self.assertIn("Use [] for callsign inference", acre_config)
         self.assertIn("every language is [short internal ID, name shown to players]", acre_config)
-        self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 32, []]', profiles)
+        self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 32, [], "PRC_LR"]', profiles)
         self.assertIn('["ACRE_PRC343", "BLOCK_CHANNEL", ["LEFT", "RIGHT", "CENTER"]', profiles)
-        self.assertIn('["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 12, []]', profiles)
-        self.assertGreaterEqual(acre_config.count('"LEGACY"'), 2)
-        self.assertIn('["ACRE_PRC77", 34.000]', acre_config)
-        self.assertIn('["ACRE_SEM70", 34.000]', acre_config)
+        self.assertIn('["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 12, [], "SEM52"]', profiles)
+        self.assertGreaterEqual(acre_config.count('"VHF_COMMON"'), 3)
+        self.assertIn('["VHF_COMMON", "VHF COMMON", "LEGACY_VHF", 51.000]', acre_config)
+        self.assertIn('["ACRE_PRC343", 1, [2, 3], "LEFT"]', acre_config)
+        self.assertIn('["ACRE_PRC343", 2, [2, 4], "RIGHT"]', acre_config)
+        self.assertIn('["VIKING 2-7", [["ACRE_PRC343", 1, [2, 7], "LEFT"]', acre_config)
+        self.assertIn('Validated plans use ALL or numbered rows for a class, never both', apply_plan)
+        self.assertIn('toUpper str (_x select 1) == "ALL"', apply_plan)
+        self.assertIn('toUpper (_net select 2) == toUpper (_profile select 5)', apply_plan)
+        self.assertIn('expected [key, display name, radio family, one value]', validate_config)
+        self.assertIn('channel %3 is outside this radio\'s supported range 1-%4', validate_config)
+        self.assertIn('net family %4 does not match radio family %5', validate_config)
+        self.assertIn('mixes ALL and numbered rows for %3', validate_config)
+        self.assertIn('MERGE radio overrides may use only ALL rows', validate_config)
+        self.assertIn('value %3 is unsupported by every radio in family %4', validate_config)
+        self.assertIn('_familyProfiles findIf {[_value, _x, _netMax343Block] call _profileAcceptsValue}', validate_config)
+        self.assertIn('_channel <= ((_profiles select _profileIndex) select 3)', labels)
+        self.assertIn('[5, _revision, _sidePlans, _diagnostics]', compile_plan)
+        self.assertIn('["_groupId", "_assignments"]', compile_plan)
         self.assertIn('if (_ear == "BOTH") then {"CENTER"}', apply_plan)
         self.assertIn('acre_api_fnc_setupRadios', apply_plan)
         self.assertIn('Waldo_fnc_ACRE2GetOrderedRadios', apply_plan)
@@ -695,7 +783,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_ACRE2_RefreshApplyPlan', refresh)
         self.assertIn('["UNIT_REPLACEMENT", false]', acre_init)
         self.assertNotIn('Missing %1 occurrence', apply_plan)
-        self.assertIn('count _matching >= _occurrence', apply_plan)
+        self.assertIn('(_x select 1) == _occurrence', apply_plan)
+        self.assertIn('toUpper str (_x select 1) == "ALL"', apply_plan)
         audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         self.assertIn("ACRE2: SHOW PLAN / RADIO STATUS", audit_client)
         self.assertIn("ACRE2: SHOW SQUAD RADIO PAIRS", audit_client)
@@ -737,7 +826,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('(group this) setGroupIdGlobal', builder)
         self.assertIn('text="{loadout["name"]}"', builder)
         audit_preinit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditPreInitServer.sqf").read_text(encoding="utf-8")
-        self.assertIn('setGroupIdGlobal ["VIKING-1-1"]', audit_preinit)
+        self.assertIn('setGroupIdGlobal ["VIKING 2-3"]', audit_preinit)
         audit_acre = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditAcreConfig.sqf").read_text(encoding="utf-8")
         self.assertIn("['common', 'Common'], ['en', 'English'], ['ru', 'Russian'], ['fr', 'French'], ['ar', 'Arabic']", audit_acre)
         self.assertIn("['ACRE_PRC343', 1, [7, 13], 'LEFT']", audit_acre)
@@ -869,6 +958,60 @@ class FullAuditTests(unittest.TestCase):
             self.assertIn(str(idc), cleanup)
         self.assertIn('["Ended"', player_init)
         self.assertIn('["EntityKilled"', player_init)
+
+    def test_safestart_defaults_live_but_retains_zeus_activation(self):
+        config = (ROOT / "MissionConfig" / "missionSystemsConfig.sqf").read_text(encoding="utf-8")
+        server_init = (ROOT / "initServer.sqf").read_text(encoding="utf-8")
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_SafeStart_AutoStart", false, true]', config)
+        self.assertIn('getVariable ["Waldo_SafeStart_AutoStart", false]', server_init)
+        self.assertIn('"SafeStart: Enable Protection"', zen)
+        self.assertIn('[true] remoteExec ["Waldo_fnc_SafeStart", 2]', zen)
+
+    def test_standalone_quartermaster_is_active_but_mhq_remains_deployment_controlled(self):
+        setup = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "initQuartermaster.sqf").read_text(encoding="utf-8")
+        mhq = (ROOT / "MissionScripts" / "Logistics" / "MHQ" / "MHQSetupLocal.sqf").read_text(encoding="utf-8")
+        composition = (
+            ROOT / "WMP_Compositions" / "[WMP]Logistics_Spawner_Example" / "composition.sqe"
+        ).read_text(encoding="utf-8")
+        self.assertIn('["_deploymentControlled", false, [false]]', setup)
+        self.assertIn('_target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true]', setup)
+        self.assertIn('remoteExecCall ["Waldo_fnc_SetupQuarterMaster", 2]', setup)
+        self.assertIn("<t color='#79C7FF'>Logistics Quartermaster</t>", setup)
+        self.assertIn('"Waldo_QM_InfoActionId"', setup)
+        self.assertGreaterEqual(
+            mhq.count('[_target, _logisticsDirection, _logisticsDistance, true] call Waldo_fnc_SetupQuarterMaster'),
+            2,
+        )
+        self.assertIn('[this,0,4] call Waldo_fnc_SetupQuarterMaster', composition)
+        audit = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('"Land_InfoStand_V1_F"', audit)
+        self.assertIn('remoteExecCall ["Waldo_fnc_SetupQuarterMaster", 0, _standaloneQuartermaster]', audit)
+
+    def test_hazard_status_is_continuous_detector_aware_and_globally_reserved(self):
+        config = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
+        hazard = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
+        tick = (hazard / "hazardTick.sqf").read_text(encoding="utf-8")
+        hud_path = hazard / "hazardHud.sqf"
+        hud = hud_path.read_text(encoding="utf-8")
+        awareness = (hazard / "hazardAwareness.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Hazard_ShowStatus", true]', config)
+        self.assertIn("call Waldo_fnc_HazardHud", tick)
+        self.assertNotIn('"HAZARD_STATUS"', tick)
+        self.assertNotIn("Waldo_fnc_ShowUiNotification", self.sqf_without_comments(hud_path))
+        self.assertIn('"HAZARDOUS_ENVIRONMENT_STATUS"', hud)
+        self.assertIn('["BOTTOM_LEFT"]', hud)
+        self.assertIn("Waldo_fnc_RegisterUiReservationLocal", hud)
+        for setting in ("detectorItems", "detectorObjects", "detectorObjectRange", "awarenessCondition"):
+            self.assertIn(setting, awareness)
+        self.assertIn("requireAwarenessForNotifications", tick)
+        self.assertIn("requireAwarenessForStatus", tick)
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        self.assertIn("Who can see hazard information", zen)
+        self.assertIn("Use preset detector rules", zen)
+        self.assertIn('requireAwarenessForStatus", false', zen)
 
     def test_economy_prompts_preserve_zeus_and_capture_gameplay_input(self):
         core = ROOT / "MissionScripts" / "EconomySystems" / "Core"
@@ -1537,14 +1680,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("[CURRENT - SQUAD]", source)
         self.assertNotIn("[SQUAD - NOT SELECTED]", source)
         self.assertNotIn("exact carried-radio read-back", source)
-        self.assertIn("count _matchingNets == 1", source)
-        self.assertIn("private _currentIndex = _tunings findIf", source)
-        self.assertIn("private _candidateIndex = (_x select 2) findIf", source)
-        self.assertIn("_currentIndex >= 0", source)
-        self.assertNotIn("} >= 0\n};\nprivate _shortName", source)
+        self.assertIn("private _compatibleClasses = _profiles select", source)
+        self.assertIn("toUpper (_x select 5) == toUpper _family", source)
+        self.assertIn("(_compatibleClasses findIf", source)
         self.assertNotIn("if (_base in ['ACRE_PRC77', 'ACRE_SEM70']) exitWith", source)
         self.assertNotIn("if !(_setting in (_current", source)
-        self.assertIn("'Ch. ' + (_settings select 0)", source)
+        self.assertIn("'Ch. ' + ([_setting] call _displaySetting)", source)
         self.assertNotIn("_myNets", source)
         self.assertNotIn("format ['%1: %2', _x select 0, _x select 1]", source)
 

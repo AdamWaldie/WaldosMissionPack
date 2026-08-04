@@ -212,7 +212,7 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertNotIn(f'this addItemToBackpack ""{unsupported_test_radio}""', mission)
         commander = mission.split('class Item0 {', 1)[1].split('class Item1 {', 1)[0]
         self.assertNotIn('this linkItem ""ItemRadio""', commander)
-        self.assertIn('(group this) setGroupIdGlobal [""VIKING-1-1""]', commander)
+        self.assertIn('(group this) setGroupIdGlobal [""VIKING 2-3""]', commander)
 
     def test_pr_audit_acre_example_uses_release_framework_and_three_playable_radios(self):
         source = (
@@ -573,6 +573,11 @@ class PrReviewAuditTests(unittest.TestCase):
         tick = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardTick.sqf").read_text(encoding="utf-8")
         self.assertIn("Waldo_Hazard_LocalDamageStages", tick)
         self.assertIn("notifyDamageStages", tick)
+        self.assertNotIn('{!((_profile getOrDefault ["detectorItems"', tick)
+        self.assertNotIn('{!((_profile getOrDefault ["detectorObjects"', tick)
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('{!((_profile getOrDefault ["detectorItems"', zen)
+        self.assertNotIn('{!((_profile getOrDefault ["detectorObjects"', zen)
 
     def test_dismount_fixture_has_live_simulation_and_vehicle_bound_controls(self):
         audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
@@ -964,7 +969,9 @@ class PrReviewAuditTests(unittest.TestCase):
         priority = (ui_root / "setupUiAcePriority.sqf").read_text(encoding="utf-8")
         rally = (ROOT / "MissionScripts" / "Respawn" / "RallyPoint" / "rallyPointNotifyLocal.sqf").read_text(encoding="utf-8")
         jammer = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammingHud.sqf").read_text(encoding="utf-8")
-        hazard = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardTick.sqf").read_text(encoding="utf-8")
+        hazard_root = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
+        hazard = (hazard_root / "hazardTick.sqf").read_text(encoding="utf-8")
+        hazard_hud = (hazard_root / "hazardHud.sqf").read_text(encoding="utf-8")
         legacy = (ui_root / "dynamicText.sqf").read_text(encoding="utf-8")
 
         reservation = (ui_root / "registerUiReservationLocal.sqf").read_text(encoding="utf-8")
@@ -980,7 +987,10 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertNotIn(feature_name, reflow)
         self.assertIn('ace_interactMenuOpened', priority)
         self.assertIn('ace_interactMenuClosed', priority)
-        self.assertIn('"HAZARD_STATUS"', hazard)
+        self.assertIn('"HAZARDOUS_ENVIRONMENT_STATUS"', hazard_hud)
+        self.assertIn('["BOTTOM_LEFT"]', hazard_hud)
+        self.assertIn('Waldo_fnc_RegisterUiReservationLocal', hazard_hud)
+        self.assertNotIn('Waldo_fnc_ShowUiNotification', hazard_hud)
         self.assertNotIn('BIS_fnc_dynamicText', hazard + legacy)
 
         save_loadout = (ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "saveRespawnLoadout.sqf").read_text(encoding="utf-8")

@@ -21,7 +21,7 @@ call compile preprocessFileLineNumbers "auditPreInitServer.sqf";
  * 4. Runtime readiness is broadcast last so players and JIP clients see a complete snapshot.
  */
 // CBA's Eden @Callsign attribute can occasionally fail to survive startup. An explicit suffix on
-// the group leader (for example `Squad Leader@VIKING-1-1`) is therefore reconciled first so the
+// the group leader (for example `Squad Leader@VIKING 2-3`) is therefore reconciled first so the
 // authoritative ACRE plan and every client agree on the same groupId. Groups without @ are untouched.
 call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
 [] call Waldo_fnc_ACRE2Init;
@@ -118,17 +118,19 @@ if (missionNamespace getVariable ["Waldo_RunDiagnostics", true]) then {
 /*
 Safestart (optional)
 
-Freezes all players at mission start - weapons safe, no damage dealt or received, confined to a
-safe zone, with an on-screen banner. Lift it (go live) from the Zeus "Waldos Mission Modules" menu
-or from script with [false] call Waldo_fnc_SafeStart. A timed go-live can be started from Zeus or
-with [seconds] call Waldo_fnc_SafeStartTimer.
+When enabled, freezes all players - weapons safe, no damage dealt or received, confined to a safe
+zone, with an on-screen banner. The pack starts live by default. Zeus can enable protection at any
+time with "SafeStart: Enable Protection", lift it with "SafeStart: Go Live Now", or start a timed
+hold using "SafeStart: Start Go-Live Timer". Scripts may use [true/false] call Waldo_fnc_SafeStart
+or [seconds] call Waldo_fnc_SafeStartTimer.
 
 Confinement defaults to a 75m radius around each player's start position. To use one shared zone,
 place a marker and set Waldo_SafeStart_ZoneMarker to its name. Tune or disable below.
 
-Set `Waldo_SafeStart_AutoStart` in `MissionConfig\missionSystemsConfig.sqf` to start live.
+Set `Waldo_SafeStart_AutoStart` to true in `MissionConfig\missionSystemsConfig.sqf` only when this
+specific mission must begin under protection.
 */
-if (missionNamespace getVariable ["Waldo_SafeStart_AutoStart", true]) then {
+if (missionNamespace getVariable ["Waldo_SafeStart_AutoStart", false]) then {
     [true] call Waldo_fnc_SafeStart;
 };
 

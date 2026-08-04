@@ -114,7 +114,7 @@ Runs **on the server only**. Its server defaults are loaded synchronously from t
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
-Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
+Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. `Waldo_Hazard_ShowStatus` defaults on and uses one continuously updated lower-left specialist panel rather than notification lanes. A profile can override `showStatus`. Optional detector items, nearby detector objects or an advanced awareness condition can hide status and notices from players without the required information source while exposure and damage continue normally.
 
 ### Logistics Crate Classnames
 
@@ -157,13 +157,14 @@ For non-RHS missions, replace `"rhs_d6_Parachute"` with `"NonSteerable_Parachute
 Edit the `Waldo_SafeStart_*` SERVER entries in `MissionConfig\missionSystemsConfig.sqf`. The
 snippet below describes resulting runtime state; WMP already starts/publishes it.
 
-Freezes all players at mission start until you go live. Auto-starts by default.
+When active, freezes all players until you go live. It starts inactive by default, while the Zeus
+activate, lift and countdown controls remain available throughout the mission.
 
 ```sqf
 missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
 missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
 missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false = start the mission live
+missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true]; // true = begin under protection
 ```
 
 See [Safestart](Safestart) for the go-live API and Zeus modules.
@@ -266,25 +267,35 @@ Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing
 
 `enabled` gates the complete replacement lifecycle. `prc343PresetPolicy` defaults to `FULL_RANGE`, preserving all sixteen PRC-343 blocks while other radios retain their official side presets; `SIDE_ISOLATED` reduces combat-side PRC-343 presets to five blocks. Group changes refresh the CEOI but never rewrite radios. Built-in radio capabilities live in code. `additionalRadioProfiles` is an advanced escape hatch for a tested third-party carried radio. Unknown radios and vehicle racks are preserved.
 
-An explicit assignment is `[base class, same-type occurrence, target, ear]`. This allows two identical radios to use independent nets and `LEFT`, `RIGHT` or `BOTH` ears. Rows are optional templates: missing occurrences are skipped and extra/captured radios remain untouched. `radioOverrides` are side-scoped and can `MERGE` with or `REPLACE` the group list for a UID, editor variable or role. Alternate PTT defaults are always left to the player.
+A net is `[key, label, radio family, one value]`; it never contains separate per-radio channels. A
+group is `[group ID, assignment rows]`, and every assignment is
+`[base class, "ALL" or same-type occurrence, target, ear]`. Use `ALL` only when every radio of that
+class is identical. If duplicate radios differ, number every intended occurrence; combining `ALL`
+and numbered rows for one class is rejected. This includes PRC-343 block/channel and ear setup.
 
 ### ACRE2 Long-Range Channel Names (CEOI)
 
 ```sqf
 ["WEST", "default3", [
-    ["PLT1", "PLATOON 1", [["ACRE_PRC148", 2], ["ACRE_PRC152", 2], ["ACRE_PRC117F", 2]]],
-    ["AIRGND", "AIR-GND", [["ACRE_PRC148", 6], ["ACRE_PRC152", 6], ["ACRE_PRC117F", 6]]]
+    ["PLT1", "PLATOON 1", "PRC_LR", 2],
+    ["AIRGND", "AIR-GND", "PRC_LR", 6]
 ], [
-    ["VIKING-1-1", ["PLT1", "AIRGND"], [], [
-        ["ACRE_PRC343", 1, [1, 1], "LEFT"],
-        ["ACRE_PRC343", 2, [1, 2], "RIGHT"],
+    ["VIKING-2-3", [
+        ["ACRE_PRC343", 1, [2, 3], "LEFT"],
+        ["ACRE_PRC148", "ALL", "PLT1", "RIGHT"],
         ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
         ["ACRE_PRC152", 2, "AIRGND", "LEFT"]
     ]]
 ]]
 ```
 
-Each net contains per-radio tunings and drives both assignment and CEOI output. A blank PRC-343 field requests deterministic callsign allocation; an explicit `[block, channel]` reserves that slot. Each carried radio independently selects a compatible group net, so concurrent radio families do not share an artificial capacity ceiling. Frequency radios use a net tuning or direct frequency through ACRE's asynchronous public setup API.
+`PRC_LR` covers PRC-148/152/117F because their official side presets interoperate at matching channel
+numbers. BF-888S, SEM52SL and legacy frequency radios use separate families. Validation rejects a
+family mismatch, a channel outside the specifically assigned radio's capacity, or an invalid
+frequency range/step. A net needs at least one capable radio in its declared family, but a less-capable
+radio does not invalidate that net until the mission assigns that radio to it. A blank
+A PRC-343 row whose target is `[]` requests deterministic callsign allocation; explicit
+`[block, channel]` reserves it.
 
 ### ACRE2 Babel (optional — disabled by default)
 

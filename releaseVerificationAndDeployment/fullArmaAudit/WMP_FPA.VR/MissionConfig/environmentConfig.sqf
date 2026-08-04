@@ -38,7 +38,13 @@
  * `label` player text, `rate` exposure gained per second, `decay` exposure lost per second outside,
  * `damageType` ACE/engine damage type, `damageThresholds` ascending `[exposure, damage fraction]`
  * stages, optional `fatalExposure`, optional `protectInVehicles`, optional `vehicleFactor`, and one
- * message per damage stage. A zone may override these keys without changing the reusable preset.
+ * message per damage stage. `showStatus` controls the one continuously updated lower-left exposure
+ * panel for that profile; it never consumes notification-card lanes. Optional `detectorItems`,
+ * `detectorObjects`/`detectorObjectRange`, or advanced `awarenessCondition` settings restrict who
+ * can see hazard information without preventing exposure or damage. When a detector requirement is
+ * present it applies to the status panel and transition/damage notices by default; the two
+ * `requireAwarenessFor*` booleans can override that policy.
+ * A zone may override these keys without changing the reusable preset.
  *
  * Breaching profiles are keyed by target CfgVehicles class. A profile uses `radius` (metres),
  * `explosives` (required strength), `destroyOriginal`, `hideOriginal`, `deleteOriginal`, and
@@ -52,7 +58,7 @@ createHashMapFromArray [
         // MISSION MAKER master switch; ADVANCED cadence/presentation defaults.
         ["Waldo_Hazard_Enable", false],             // BOOL: run local exposure evaluation; creates no zones.
         ["Waldo_Hazard_Interval", 1],               // SECONDS: evaluation cadence; performance-sensitive.
-        ["Waldo_Hazard_ShowStatus", true],          // BOOL: show ongoing exposure/status presentation.
+        ["Waldo_Hazard_ShowStatus", true],          // BOOL: one continuous lower-left exposure panel; not a notification card.
         ["Waldo_Hazard_NotifyTransitions", true],   // BOOL: notify on entering/leaving a hazardous area.
         ["Waldo_Hazard_NotificationDuration", 6],   // SECONDS: transition-notification lifetime.
         // MISSION MAKER: reusable RP/gameplay profiles; zones may override individual keys.
@@ -70,6 +76,12 @@ createHashMapFromArray [
                     [20, 0.01],                   // at exposure 20, apply 1% damage per damage event.
                     [45, 0.02]                    // at exposure 45, apply 2% damage per damage event.
                 ]],
+                // OPTIONAL INFORMATION GATE EXAMPLES (uncomment and replace classnames if wanted):
+                // ["detectorItems", ["ACE_microDAGR"]], // at least one listed carried/worn item.
+                // ["detectorObjects", ["Land_Device_disassembled_F"]], // nearby detector object.
+                // ["detectorObjectRange", 5], // metres from a detector object.
+                // ["requireAwarenessForStatus", true], // hide live panel without detector/condition.
+                // ["requireAwarenessForNotifications", true], // also hide entry/damage notices.
                 ["damageStageMessages", ["Continued exposure is causing injury.", "Exposure is becoming severe; evacuate or use protection."]]
             ]],
             ["SEVERE", createHashMapFromArray [

@@ -398,6 +398,24 @@ private _themes = "qa_sign_ui_theme_qa" call _get;
     ["HIGH_CONTRAST", "HIGH-CONTRAST MONOCHROME"]
 ];
 
+private _compositions = "qa_sign_compositions" call _get;
+[_compositions, "Waldo_QA_CompositionCatalogueCheck", "CHECK COMPOSITION CATALOGUE", {
+    private _result = missionNamespace getVariable ["Waldo_QA_CompositionCatalogue", [[], []]];
+    _result params ["_missingClasses", "_missingAddons"];
+    private _clean = count _missingClasses == 0 && {count _missingAddons == 0};
+    [
+        "EDEN COMPOSITIONS",
+        if (_clean) then {
+            "All shipped classnames and declared addons exist. Static QA also verified every init call and wiki-linked editor comment."
+        } else {
+            format ["Missing classnames: %1 | Missing addons: %2", _missingClasses, _missingAddons]
+        },
+        ["ERROR", "SUCCESS"] select _clean,
+        "COMPOSITION_CATALOGUE_QA",
+        12
+    ] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+
 // Add the new station destinations to the already-installed central control console.
 private _control = "qa_control_console" call _get;
 if (!isNull _control) then {

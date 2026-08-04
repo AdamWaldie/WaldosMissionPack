@@ -2,7 +2,7 @@ version=54;
 center[]={20742.377,-77.939629,18169.25};
 class items
 {
-	items=6;
+	items=7;
 	class Item0
 	{
 		dataType="Object";
@@ -452,6 +452,13 @@ class items
 			};
 			nAttributes=1;
 		};
+	};
+	class Item6
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-12};};
+		title="HALO and Static-Line Examples: two vanilla NATO passenger Blackfish aircraft, crews, boarding flags and repeat routes. Static-line uses 300 m; HALO uses 1200 m. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
+		id=17718;
 	};
 };
 class VehicleInVehicleLinks

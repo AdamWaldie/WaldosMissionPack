@@ -41,8 +41,9 @@ copies of feature logic.
 | Basic Player Controlled Zeus | Player/curator foundation |
 | Starter, Supply and Medical Crate Collections | Side and contents variants with server-owned population |
 | Field Resupply Hub Example | Refill hub; assign infantry carriers by script or Zeus |
+| Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
 | Vehicle Recovery Workshop Example | Spaced workshop, recoverable vehicle and generic AUTO carrier |
-| Logistics Spawner Example | Quartermaster access point |
+| Logistics Spawner Example | Immediately active standalone quartermaster access point |
 | MHQ With Logistics Spawner | Deployable command post with synchronized parts |
 | Virtual Vehicle Depot Spawner Example | Terminal and safely separated spawn point |
 | AutoFortify Setup Example | Synced ACE Fortify catalogue |
@@ -50,6 +51,8 @@ copies of feature logic.
 | Halo and Static Line Paradrop Examples | Boarding and aircraft jump setup |
 | Radio Jammer Example | Server-owned, movable jammer fixture |
 | Hazardous Zone Example | Reliable fixed-area hazard with visible transition feedback and real danger |
+| Explosive Wall Breaching Example | Explicit demolition-charge profile with a visibly testable centre gap |
+| Emergency Dismount Vehicle Example | Simulation-safe upright vehicle that enables overturn/destroyed extraction |
 | Tactical Display Example | Supported map-board access point |
 | Bomb Defusal Example | Standard wire-cutting challenge with an explosive failure consequence |
 | Construction Objects Example | ACE construction supply object with modern construction audio |
@@ -61,9 +64,11 @@ copies of feature logic.
 
 ## Features intentionally without compositions
 
-Dynamic AO and Dynamic AA are server-authoritative generated systems; Zeus or scripted creation is
-clearer and safer than shipping pre-spawned clusters. Improved helicopter landing is an automatic AI
-handler driven by waypoints. Accessibility, treatment feedback and UI themes are player-interface
-features. Persistence depends on server extensions and mission policy. Rally points are player-role
-state. Those features remain documented through MissionConfig, public calls, the full audit mission and focused
-Zeus modules where appropriate.
+Dynamic AO, Dynamic AA, airborne gunships and generated drop zones are server-authoritative generated
+systems; Zeus or an `initServer.sqf` call is clearer and safer than an Eden composition whose init
+would execute on every machine. Improved helicopter landing is an automatic AI handler driven by
+ordinary landing waypoints. Accessibility, treatment feedback and UI themes are player-interface
+features. Persistence depends on a server extension and mission database policy. Rally points are
+player-role state. Tree felling operates on terrain vegetation, which Eden compositions cannot own.
+Those systems remain covered by beginner configuration, public calls, the full audit mission and
+focused Zeus modules where appropriate.

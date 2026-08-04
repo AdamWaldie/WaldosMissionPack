@@ -13,6 +13,7 @@ private _config = call compile preprocessFileLineNumbers 'MissionConfig\acreConf
 private _validation = [_config] call Waldo_fnc_ACRE2ValidateConfig;
 missionNamespace setVariable ['Waldo_ACRE2_Config', _config];
 missionNamespace setVariable ['Waldo_ACRE2_ConfigValid', _validation select 0];
+missionNamespace setVariable ['Waldo_ACRE2_ConfigValidation', _validation];
 {diag_log format ['[WMP ACRE] CONFIG WARNING: %1', _x]} forEach (_validation param [2, []]);
 if !(_validation select 0) exitWith {
     {diag_log format ['[WMP ACRE] CONFIG ERROR: %1', _x]} forEach (_validation select 1);

@@ -38,7 +38,7 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
                 && {!isNil "acre_api_fnc_isInitialized"}
                 && {[] call acre_api_fnc_isInitialized}
                 && {count _plan >= 4}
-                && {(_plan select 0) == 3}
+                && {(_plan select 0) == 5}
                 && {!(missionNamespace getVariable ["Waldo_ACRE2_RadioRestoreInProgress", false])}
             }
     };

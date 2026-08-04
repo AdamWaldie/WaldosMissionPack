@@ -717,6 +717,8 @@ class CfgFunctions
             class HazardPublishState {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardPublishState.sqf";};
             class HazardReceiveSnapshot {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardReceiveSnapshot.sqf";};
             class HazardProtectionFactor {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardProtectionFactor.sqf";};
+            class HazardAwareness {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardAwareness.sqf";};
+            class HazardHud {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardHud.sqf";};
             class HazardTick {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardTick.sqf";};
             class HazardInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInit.sqf";};
             class HazardStop {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardStop.sqf";};

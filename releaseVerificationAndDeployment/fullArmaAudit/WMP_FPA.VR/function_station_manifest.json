@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 843,
+  "registeredFunctionCount": 845,
   "runtimeFunctionCount": 385,
-  "functionCount": 1228,
+  "functionCount": 1230,
   "stations": [
     {
       "id": "control",
@@ -413,6 +413,16 @@
         0
       ],
       "description": "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."
+    },
+    {
+      "id": "compositions",
+      "title": "EDEN COMPOSITION CATALOGUE",
+      "position": [
+        350,
+        40,
+        0
+      ],
+      "description": "Every shipped composition classname, addon declaration, init call and wiki-linked editor guide."
     }
   ],
   "functions": [
@@ -2111,6 +2121,18 @@
     {
       "name": "Waldo_fnc_HazardProtectionFactor",
       "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardProtectionFactor.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardAwareness",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardAwareness.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardHud",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardHud.sqf",
       "station": "hazards",
       "activation": "manual"
     },
