@@ -27,3 +27,4 @@
         _building setVariable ["WaldoEcoBuild_LastDetectionScan", serverTime, false];
         [_building] call Waldo_fnc_EcoBuild_cleanupDetectorVisuals;
         [_building] call Waldo_fnc_EcoBuild_refreshBuildingMarker;
+

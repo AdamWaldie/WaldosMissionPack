@@ -20,3 +20,4 @@
         if (_className isEqualTo "") exitWith {""};
         if !(isClass (configFile >> "CfgVehicles" >> _className)) exitWith {""};
         _className
+

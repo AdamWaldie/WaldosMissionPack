@@ -16,3 +16,4 @@
 
         private _catalog = call Waldo_fnc_EcoBuy_getPurchaseCatalog;
         _catalog select {!([_x, _catalog] call Waldo_fnc_EcoBuy_hasPurchaseEntryError)}
+

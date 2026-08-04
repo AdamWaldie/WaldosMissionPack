@@ -27,3 +27,4 @@
         private _index = _catalog findIf {(toLower (_x param [0, ""])) isEqualTo (toLower _safeName)};
         if (_index < 0) exitWith {[]};
         +(_catalog select _index)
+

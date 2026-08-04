@@ -84,7 +84,7 @@ if (_weaponsAttachmentsUniforms == true) then {
         if (!(_x == "EMPTY")) then {
             _crate addItemCargoGlobal [_x,(([1,3] call BIS_fnc_randomInt)*_scalar)];
         };
-    } forEach _pGear;
+    } forEach _pGear; 
 
     {
         if (!(_x == "EMPTY")) then {

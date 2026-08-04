@@ -18,17 +18,11 @@
  */
 
 if !(hasInterface) exitWith {false};
-if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", isServer]) exitWith {
-    [] spawn {
-        waitUntil {
-            missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
-            || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
-        };
-        if (missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) then {[] call Waldo_fnc_HazardInit};
-    };
-    true
-};
 if !(missionNamespace getVariable ["Waldo_Hazard_Enable", false]) exitWith {false};
+if ((missionNamespace getVariable ["Waldo_Hazard_Zones", []]) isEqualTo []) exitWith {
+    diag_log "[WMP HAZARD] Evaluator start deferred: enabled but no authoritative zones are available.";
+    false
+};
 if (missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false]) exitWith {true};
 
 missionNamespace setVariable ["Waldo_Hazard_ClientStarted", true];
@@ -44,4 +38,5 @@ private _handle = [_interval] spawn {
     };
 };
 missionNamespace setVariable ["Waldo_Hazard_ClientLoop", _handle];
+diag_log format ["[WMP HAZARD] Local evaluator started with %1 zone(s).", count (missionNamespace getVariable ["Waldo_Hazard_Zones", []])];
 true

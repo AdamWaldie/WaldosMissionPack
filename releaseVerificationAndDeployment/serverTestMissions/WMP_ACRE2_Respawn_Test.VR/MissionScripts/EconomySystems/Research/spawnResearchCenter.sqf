@@ -38,3 +38,4 @@
 
         diag_log format ["[WMP ECO] Research center created object=%1 position=%2 authority=%3", netId _researchCenter, getPosATL _researchCenter, clientOwner];
         _researchCenter
+

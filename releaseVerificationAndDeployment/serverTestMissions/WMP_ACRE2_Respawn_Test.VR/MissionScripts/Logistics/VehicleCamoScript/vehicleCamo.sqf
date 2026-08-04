@@ -38,7 +38,7 @@ params ["_target"];
 if !(isClass(configFile >> "CfgPatches" >> "ace_main")) exitwith {};
 
 // Finds all synced Objects. Hides the model and attaches the object to vehicle.
-_syncLogic = nearestObject [_target, "Logic"];
+_syncLogic = nearestObject [_target, "Logic"]; 
 _camoParts = synchronizedObjects _syncLogic;
 
 if (isServer || isDedicated) then {
@@ -68,7 +68,7 @@ waldo_returnSideChange = {
     _incogGroupUnits = units _incogGroup;
     _incogLeader = leader _incogGroup;
 
-    _originGroup = createGroup _playerSide;
+    _originGroup = createGroup _playerSide; 
     _incogGroupUnits joinSilent _originGroup;
     [_originGroup, _incogLeader] remoteExec ["selectLeader", groupOwner _originGroup];
     _incogGroupUnits
@@ -77,7 +77,7 @@ waldo_returnSideChange = {
 waldo_deployCamo = {
     params ["_target", "_player","_playerSide"];
     ["Vehicle Camouflage Deployed.", _player] call waldo_fnc_DynamicText;
-    _syncLogic = nearestObject [_target, "Logic"];
+    _syncLogic = nearestObject [_target, "Logic"]; 
     _camoParts = synchronizedObjects _syncLogic;
     {[_x, false] remoteExec ["hideObjectGlobal", 2];} forEach _camoParts;
     _target setVariable ['waldo_camoDeployed', true, true];
@@ -105,7 +105,7 @@ waldo_deployCamo = {
                 } forEach units _playerGroup;
 
                 _list = _player nearEntities 300;
-                _eastIndex = _list findIf {[side _x, side _player] call BIS_fnc_sideIsEnemy;};
+                _eastIndex = _list findIf {[side _x, side _player] call BIS_fnc_sideIsEnemy;}; 
                 if (_eastIndex >= 0) then {
                     _nearestEnemy = _list select _eastIndex;
                     //_eastKnows = _nearestEnemy knowsAbout _target;  && _eastKnows > 1.5
@@ -168,10 +168,10 @@ waldo_deployCamo = {
         _unit = crew _vehicle select 0;
         [_unit,_playerSide] call waldo_returnSideChange;
         ["Engine On - Revealed", crew _unit] call waldo_fnc_DynamicText;
-        _syncLogic = nearestObject [_vehicle, "Logic"];
+        _syncLogic = nearestObject [_vehicle, "Logic"]; 
         _camoParts = synchronizedObjects _syncLogic;
         {[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _camoParts;
-        _vehicle setVariable ['waldo_camoDeployed', false, true];
+        _vehicle setVariable ['waldo_camoDeployed', false, true]; 
         // Resets all EH types.
         _ehTypes = ["GetIn", "GetOut", "Hit", "Fired", "Engine"];
         {_vehicle removeAllEventHandlers _x;} forEach _ehTypes;
@@ -185,10 +185,10 @@ waldo_ManualRemoveCamo = {
     _unit = crew _target select 0;
     [_unit,_playerSide] call waldo_returnSideChange;
     [_player,_playerSide] call waldo_returnSideChange;
-    _syncLogic = nearestObject [_target, "Logic"];
+    _syncLogic = nearestObject [_target, "Logic"]; 
     _camoParts = synchronizedObjects _syncLogic;
     {[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _camoParts;
-    _target setVariable ['waldo_camoDeployed', false, true];
+    _target setVariable ['waldo_camoDeployed', false, true]; 
     // Resets all EH types.
     _ehTypes = ["GetIn", "GetOut", "Hit", "Fired", "Engine"];
     {_target removeAllEventHandlers _x;} forEach _ehTypes;
@@ -209,7 +209,7 @@ waldo_initVehicleCamo = [
             _args call waldo_deployCamo;
             _args select 0 engineOn false;
         }, {["Camouflage not deployed.", _player] call waldo_fnc_DynamicText;}, "Deploying Vehicle Camouflage"] call ace_common_fnc_progressBar;
-
+        
     },
     {
         //[_target, _player, _actionParams] Condition
@@ -235,7 +235,7 @@ waldo_removeVehicleCamo = [
         [10, [_target, _player,_playerSide], {
             _args call waldo_ManualRemoveCamo;
         }, {["Camouflage Still Deployed.", _player] call waldo_fnc_DynamicText;}, "Removing Vehicle Camouflage"] call ace_common_fnc_progressBar;
-
+        
     },
     {
         //[_target, _player, _actionParams] Condition
@@ -253,19 +253,19 @@ Waldo_Camo_Category = ["Waldo_Camo_Category" ,"Vehicle Camoflague", "\a3\ui_f_ol
 
 // Add action to Vehicle
 [_target,
-    0,
-    ["ACE_MainActions"],
+    0, 
+    ["ACE_MainActions"], 
     Waldo_Camo_Category
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-    0,
-    ["ACE_MainActions","Waldo_Camo_Category"],
+    0, 
+    ["ACE_MainActions","Waldo_Camo_Category"], 
     waldo_initVehicleCamo
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-    0,
-    ["ACE_MainActions","Waldo_Camo_Category"],
+    0, 
+    ["ACE_MainActions","Waldo_Camo_Category"], 
     waldo_removeVehicleCamo
 ] call ace_interact_menu_fnc_addActionToObject;

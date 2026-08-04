@@ -318,8 +318,8 @@ Waldo_MG_fnc_pokerBuildSidePots = {
         _previous = _level;
     } forEach _levels;
     _pots
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_pokerCreateEmptySnapshot = {
     params [
@@ -775,8 +775,8 @@ Waldo_MG_fnc_pokerStartHandServer = {
     private _previousBigBlind = _previous param [4, -1];
     private _dealer = [_previousDealer, _eligible] call Waldo_MG_fnc_pokerGetNextIndex;
     private _smallBlind = if (_survivors == 2) then {_dealer} else {[_dealer, _eligible] call Waldo_MG_fnc_pokerGetNextIndex};
-    private _bigBlind = [_smallBlind, _eligible] call Waldo_MG_fnc_pokerGetNextIndex;
-
+    private _bigBlind = [_smallBlind, _eligible] call Waldo_MG_fnc_pokerGetNextIndex; 
+ 
     if (
         _survivors == 2
         && {_bigBlind == _previousBigBlind}
@@ -986,8 +986,8 @@ Waldo_MG_fnc_pokerResetServer = {
     [_table] call Waldo_MG_fnc_pokerClearServer;
     _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_processPokerActionRequestServer = {
     params [
@@ -2094,4 +2094,6 @@ Waldo_MG_fnc_openPokerLocal = {
             uiSleep Waldo_MG_CFG_POKER_UI_TICK;
         };
     };
-};
+}; 
+ 
+

@@ -527,3 +527,4 @@
         [_disp] call Waldo_fnc_EcoBuild_populateBuildConfigList;
         [_disp, -1] call Waldo_fnc_EcoBuild_loadBuildIntoPrompt;
         [_disp, "definitions"] call Waldo_fnc_EcoBuild_setBuildConfigTab;
+

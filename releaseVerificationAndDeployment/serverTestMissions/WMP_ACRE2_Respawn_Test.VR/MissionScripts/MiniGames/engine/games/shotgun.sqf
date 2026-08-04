@@ -420,8 +420,8 @@ Waldo_MG_fnc_shotgunReconcilePlayersServer = {
             [_table, _unit, _seat] call Waldo_MG_fnc_shotgunHandleDepartureServer;
         };
     };
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_processShotgunActionRequestServer = {
     params [
@@ -1250,4 +1250,6 @@ Waldo_MG_fnc_openShotgunLocal = {
             uiSleep Waldo_MG_CFG_SHOTGUN_UI_TICK;
         };
     };
-};
+}; 
+ 
+

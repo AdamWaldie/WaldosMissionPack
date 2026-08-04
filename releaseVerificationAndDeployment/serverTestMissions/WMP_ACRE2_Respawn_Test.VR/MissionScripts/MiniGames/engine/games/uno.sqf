@@ -188,8 +188,8 @@ Waldo_MG_fnc_unoGetNextActiveRole = {
         _guard = _guard + 1;
     };
     if (_moved == _steps) then {_cursor} else {-1}
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_unoCreateEmptySnapshot = {
     [
@@ -737,8 +737,8 @@ Waldo_MG_fnc_processUNOActionRequestServer = {
     private _turn = _state param [2, -1];
     if (_turn != _role) exitWith {
         [_unit, _token, "It is another player's turn."] call Waldo_MG_fnc_resultServer;
-    };
-
+    }; 
+ 
     if ((_state param [13, -1]) >= 0) then {
         _state set [13, -1];
     };
@@ -1052,8 +1052,8 @@ Waldo_MG_fnc_processUNOActionRequestServer = {
 
 Waldo_MG_fnc_processPriorityUNORequestsServer = {
     params [["_players", []]];
-    if (!isServer) exitWith {};
-
+    if (!isServer) exitWith {}; 
+ 
     {
         private _unit = _x;
         private _request = _unit getVariable ["Waldo_MG_UNOActionRequest", []];
@@ -1247,8 +1247,8 @@ Waldo_MG_fnc_renderUNOCardLocal = {
         _button ctrlSetText _labelText;
         _button ctrlSetTextColor _symbolColour;
         _button ctrlSetFontHeight (if (_kind <= 10) then {0.100} else {0.050});
-        _button ctrlSetTooltip ([_card, _effectiveColour] call Waldo_MG_fnc_unoCardName);
-
+        _button ctrlSetTooltip ([_card, _effectiveColour] call Waldo_MG_fnc_unoCardName); 
+ 
         _button ctrlEnable true;
         _button setVariable ["Waldo_MG_UNOCardId", _card param [0, -1]];
         _button setVariable ["Waldo_MG_UNOCardUsable", _enabled];
@@ -1465,8 +1465,8 @@ Waldo_MG_fnc_refreshUNOLocal = {
     private _handVersions = _state param [16, []];
     private _armed = _state param [17, []];
     private _role = [_table] call Waldo_MG_fnc_getUNOPlayerRoleLocal;
-    if (_role < 0 && {!_spectating}) exitWith {
-
+    if (_role < 0 && {!_spectating}) exitWith { 
+ 
         _display setVariable ["Waldo_MG_UNORefreshing", false];
     };
     private _names = _table getVariable ["Waldo_MG_UNOPlayerNames", []];
@@ -1996,4 +1996,6 @@ Waldo_MG_fnc_openUNOLocal = {
             uiSleep Waldo_MG_CFG_UNO_UI_TICK;
         };
     };
-};
+}; 
+ 
+

@@ -1,5 +1,5 @@
 /*
-This script is designed to dynamically grab all objects syncronised to a game logic, add them to a sides foritfy menu, and price them dynamically based on their volume & mass.
+This script is designed to dynamically grab all objects syncronised to a game logic, add them to a sides foritfy menu, and price them dynamically based on their volume & mass. 
 This isnt perfect, but the log scalars help keep the extreemes (mostly) in step with everything else.
 
 How to use:
@@ -22,7 +22,7 @@ e.g.
 
 ==================================================================
 
-ACE Fortify Budget Function (use this if you want to add or remove budget to a side during your mission:
+ACE Fortify Budget Function (use this if you want to add or remove budget to a side during your mission: 
 
 Updates the given sides budget.
 
@@ -60,27 +60,27 @@ private _syncedObjects = synchronizedObjects _targetLogic;
             private _bb = boundingBoxReal _x;
             private _p1 = _bb select 0;
             private _p2 = _bb select 1;
-
+            
             private _length = abs((_p2 select 0) - (_p1 select 0));
             private _width = abs((_p2 select 1) - (_p1 select 1));
             private _height = abs((_p2 select 2) - (_p1 select 2));
-
+            
             private _volume = _length * _width * _height;
 
             // Price formula
             _price = ceil(10 + (log(_mass + 10) * 10) + (_volume * 0.5));
 
-            private _objType = typeof _x;
+            private _objType = typeof _x; 
 
             // Check for static weapons - both standard and additional checks
-            if (_x isKindOf "StaticWeapon" || (toLower _objType) find "staticweapon" > -1 || (toLower _objType) find "static_weapon" > -1) then {
+            if (_x isKindOf "StaticWeapon" || (toLower _objType) find "staticweapon" > -1 || (toLower _objType) find "static_weapon" > -1) then { 
                 _price = _price*1.2;  // You can adjust this if you want to have static weapons slightly more expensive
             };
 
             // Set a minimum/max price for any object
             _price = _price max 20;
             _price = _price min 1000;
-
+            
             // Round the price to the nearest multiple of 5
             _price = ceil(_price / 5) * 5;
 

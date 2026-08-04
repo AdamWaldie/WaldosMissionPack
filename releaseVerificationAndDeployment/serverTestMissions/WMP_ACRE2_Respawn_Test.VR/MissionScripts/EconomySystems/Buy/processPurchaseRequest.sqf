@@ -65,3 +65,4 @@
         if (_sideKey isNotEqualTo _actualSideKey) exitWith {};
 
         [_sideKey, _purchaseName, _origin, _actor] call Waldo_fnc_EcoBuy_executePurchase;
+

@@ -210,8 +210,8 @@ Waldo_MG_fnc_enforceInvulnerableLocal = {
     if (local _object) then {
         _object allowDamage false;
     };
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_resultServer = {
     params [
@@ -734,8 +734,8 @@ Waldo_MG_fnc_reconcileRegistriesServer = {
     {
         [_x] call Waldo_MG_fnc_registerCuratorEditableServer;
     } forEach _clean;
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_processJoinRequestServer = {
     params [
@@ -1250,7 +1250,7 @@ Waldo_MG_fnc_startAuthorityLoop = {
             sleep Waldo_MG_CFG_AUTHORITY_TICK;
         };
     };
-};
+}; 
 
 Waldo_MG_fnc_notifyLocal = {
     disableSerialization;
@@ -1335,7 +1335,7 @@ Waldo_MG_fnc_notifyLocal = {
     };
     true
 };
-
+ 
 
 Waldo_MG_fnc_submitJoinRequestLocal = {
     params [["_table", objNull]];
@@ -1700,8 +1700,8 @@ Waldo_MG_fnc_ensurePlayerActionsLocal = {
     missionNamespace setVariable ["Waldo_MG_PlayerInteractionModeLocal", if (_aceReady) then {"ACE+VANILLA"} else {"VANILLA"}];
     missionNamespace setVariable ["Waldo_MG_PlayerActionUnitLocal", _trackedUnit];
     missionNamespace setVariable ["Waldo_MG_PlayerActionIdsLocal", _actionIds];
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_isValidGameViewerLocal = {
     params [
@@ -2038,8 +2038,8 @@ Waldo_MG_fnc_maintainSeatedScreenLocal = {
     if ((diag_tickTime - _lastOpen) < 1) exitWith {};
     missionNamespace setVariable ["Waldo_MG_LastSeatedScreenRecoveryLocal", diag_tickTime];
     [_table] call Waldo_MG_fnc_openCurrentTableScreenLocal;
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_releaseSeatPoseLocal = {
     params [
@@ -2260,8 +2260,8 @@ Waldo_MG_fnc_maintainSeatStateLocal = {
     missionNamespace setVariable ["Waldo_MG_SeatTableLocal", _trackedTable];
     missionNamespace setVariable ["Waldo_MG_SeatIndexLocal", _trackedIndex];
     missionNamespace setVariable ["Waldo_MG_SeatTokenLocal", _trackedToken];
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_refreshLobbyLocal = {
     disableSerialization;
@@ -2809,8 +2809,8 @@ Waldo_MG_fnc_openLobbyLocal = {
             uiSleep 0.25;
         };
     };
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_openCurrentTableScreenLocal = {
     params [["_table", objNull]];
@@ -2952,8 +2952,8 @@ Waldo_MG_fnc_startClientLoop = {
             uiSleep Waldo_MG_CFG_CLIENT_TICK;
         };
     };
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_bootstrap = {
     if (isServer) then {
@@ -2974,3 +2974,4 @@ Waldo_MG_fnc_bootstrap = {
     };
     missionNamespace setVariable ["Waldo_MG_SystemInitialized", true];
 };
+

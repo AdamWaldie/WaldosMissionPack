@@ -20,3 +20,4 @@
             _rows = [_rows];
         };
         [_rows] call Waldo_fnc_EcoCore_normalizeNameValueRows
+

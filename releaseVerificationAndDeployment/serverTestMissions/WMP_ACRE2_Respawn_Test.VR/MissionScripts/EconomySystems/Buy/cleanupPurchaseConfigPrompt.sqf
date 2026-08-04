@@ -54,3 +54,4 @@
             "WaldoEcoBuy_ConfigOk"
         ]] call Waldo_fnc_EcoCore_deleteDisplayControlsByVars;
         [_disp] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;
+

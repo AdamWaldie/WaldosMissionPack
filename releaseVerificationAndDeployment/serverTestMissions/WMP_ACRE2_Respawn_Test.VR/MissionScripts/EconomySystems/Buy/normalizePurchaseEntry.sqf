@@ -32,3 +32,4 @@
         private _color = [(_entry param [8, call Waldo_fnc_EcoResource_getDefaultResourceColor])] call Waldo_fnc_EcoResource_normalizeResourceColor;
 
         [_name, _desc, _costs, _requirements, _className, _typeName, _sideName, _icon, _color]
+

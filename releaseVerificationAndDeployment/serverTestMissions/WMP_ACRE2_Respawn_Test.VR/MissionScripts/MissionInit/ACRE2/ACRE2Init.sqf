@@ -155,7 +155,7 @@ if (_rchannel343 == 256) then {systemchat format ["Group: %1  SR channel parsing
     } foreach _channels;
 } foreach _RadioAssignments;
 
-_LRChannelAssignments = [99,99,99];
+_LRChannelAssignments = [99,99,99]; 
 
 //Get Callsigns LRRadioAssignment array section
 {

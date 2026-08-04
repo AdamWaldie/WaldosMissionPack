@@ -39,3 +39,4 @@
         };
         diag_log format ["[WMP ECO] Construction vehicle created object=%1 class=%2 position=%3 authority=%4", netId _vehicle, typeOf _vehicle, getPosATL _vehicle, clientOwner];
         _vehicle
+

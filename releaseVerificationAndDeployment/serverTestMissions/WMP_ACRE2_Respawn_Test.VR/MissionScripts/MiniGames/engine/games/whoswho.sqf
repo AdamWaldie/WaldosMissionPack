@@ -306,8 +306,8 @@ Waldo_MG_fnc_whosWhoReconcilePlayersServer = {
             [_table, _unit, _seat] call Waldo_MG_fnc_whosWhoHandleDepartureServer;
         };
     };
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_processWhosWhoActionRequestServer = {
     params [["_unit", objNull], ["_request", []]];
@@ -638,8 +638,8 @@ Waldo_MG_fnc_refreshWhosWhoLocal = {
             _frame ctrlCommit 0;
         };
         if (!isNull _cross) then {_cross ctrlShow _isEliminated; _cross ctrlCommit 0;};
-        if (!isNull _button) then {
-
+        if (!isNull _button) then { 
+ 
             _button ctrlEnable true;
             _button setVariable ["Waldo_MG_WhosWhoTileUsable", (!_spectating && {_phase == "PLAYING"})];
             _button ctrlCommit 0;
@@ -851,4 +851,6 @@ Waldo_MG_fnc_openWhosWhoLocal = {
             uiSleep Waldo_MG_CFG_WHOSWHO_UI_TICK;
         };
     };
-};
+}; 
+ 
+

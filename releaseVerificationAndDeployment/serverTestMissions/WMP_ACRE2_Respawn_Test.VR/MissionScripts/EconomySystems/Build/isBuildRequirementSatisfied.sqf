@@ -24,3 +24,4 @@
             && {(_x getVariable ["WaldoEcoBuild_BuildDefinitionName", ""]) isEqualTo (_entry param [0, ""])}
             && {_x getVariable ["WaldoEcoBuild_Operational", true]}
         }) >= 0
+

@@ -22,3 +22,4 @@
         if !((_payload param [1, []]) isEqualType []) exitWith {false};
 
         true
+

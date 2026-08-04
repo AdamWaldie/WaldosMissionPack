@@ -648,8 +648,8 @@ Waldo_MG_fnc_blackjackReconcilePlayersServer = {
             [_table, _unit, _seat] call Waldo_MG_fnc_blackjackHandleDepartureServer;
         };
     };
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_processBlackjackActionRequestServer = {
     params [
@@ -1406,4 +1406,6 @@ Waldo_MG_fnc_openBlackjackLocal = {
             uiSleep Waldo_MG_CFG_BLACKJACK_UI_TICK;
         };
     };
-};
+}; 
+ 
+

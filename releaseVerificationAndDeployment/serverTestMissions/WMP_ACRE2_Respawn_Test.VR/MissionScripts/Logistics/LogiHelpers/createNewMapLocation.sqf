@@ -10,7 +10,7 @@
     2: STRING - The type of the new location (e.g., "NameCity", "NameVillage", "NameCityCapital").
 
      Below is a list of common location types you might use in scripting and mission design, as derived from the Arma 3 documentation NOT ALL OF THESE WILL WORK:
-
+    
     Airport (on Tanoa only. Tanoan airports have their own location type. On Altis and Stratis, airports are NameLocal)
     Area
     BorderCrossing
@@ -144,7 +144,7 @@ if (!isNull _logicObject) then {
     private _newLocation = createLocation [_position];
     _newLocation setText _newName;
     _editableLocation setType _locationType;
-
+    
     // Optionally, adjust the size of the location if needed
     // _newLocation setRectangular [sizeX, sizeY, angle];
 

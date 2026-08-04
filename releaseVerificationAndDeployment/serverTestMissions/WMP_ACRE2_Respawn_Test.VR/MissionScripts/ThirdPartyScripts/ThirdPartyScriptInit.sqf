@@ -15,7 +15,7 @@ Called from the Init.sqf if in use
 
 */
 
-/*
+/* 
 
 Player Makers Script (Best utilised When ACE Markers Are Not An Option)
 

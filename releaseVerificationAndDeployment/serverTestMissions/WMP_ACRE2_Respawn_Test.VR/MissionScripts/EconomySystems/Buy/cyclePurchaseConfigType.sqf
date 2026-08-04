@@ -28,3 +28,4 @@
         if (_index < 0) then {_index = _index + _count;};
         _disp setVariable ["WaldoEcoBuy_ConfigTypeIndex", _index];
         [_disp] call Waldo_fnc_EcoBuy_refreshPurchaseConfigType;
+

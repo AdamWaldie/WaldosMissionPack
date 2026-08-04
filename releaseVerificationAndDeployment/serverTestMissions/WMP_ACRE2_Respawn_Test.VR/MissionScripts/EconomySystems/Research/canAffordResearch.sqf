@@ -25,3 +25,4 @@
         } forEach (_entry param [2, []]);
 
         _canAfford
+

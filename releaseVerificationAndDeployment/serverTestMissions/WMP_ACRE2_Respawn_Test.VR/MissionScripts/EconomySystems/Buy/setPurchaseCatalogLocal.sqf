@@ -16,3 +16,4 @@
 
         params [["_catalog", []]];
         missionNamespace setVariable ["WaldoEcoBuy_PurchaseCatalog", [_catalog] call Waldo_fnc_EcoBuy_normalizePurchaseCatalog];
+

@@ -60,3 +60,4 @@
         [_rows] call Waldo_fnc_EcoBuy_setDropPoints;
         diag_log format ["[WMP ECO] Purchase drop point created id=%1 type=%2 side=%3 position=%4 direction=%5 anchor=%6", _dropPointId, _safeType, _safeSide, _pos, _dir, netId _anchor];
         _dropPointId
+

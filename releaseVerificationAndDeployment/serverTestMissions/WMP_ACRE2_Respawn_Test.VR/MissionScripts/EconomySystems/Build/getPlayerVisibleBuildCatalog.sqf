@@ -26,3 +26,4 @@
         _catalog select {
             (toLower (_x param [21, ""])) isEqualTo (toLower _categoryFilter)
         }
+

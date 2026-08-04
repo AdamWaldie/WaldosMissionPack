@@ -15,7 +15,7 @@
 params ["_modulePos", "_objectPos"];
 
 [
-    "Waldos Supply Crate",
+    "Waldos Supply Crate", 
     [
         ["SLIDER:PERCENT", ["Supply size", "Regulate the total amount of supplies in the crate"], [0, 1, 2], false],
         ["CHECKBOX", ["Add Equipment And Weapons", "Set this crate to include weapons, weapon attachments and wearables"], true, false],

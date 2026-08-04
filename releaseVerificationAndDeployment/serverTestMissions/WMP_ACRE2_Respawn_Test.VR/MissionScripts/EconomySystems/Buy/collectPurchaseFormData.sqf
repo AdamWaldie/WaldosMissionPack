@@ -52,3 +52,4 @@
         };
 
         [[_name, _desc, _costs, _reqs, _className, _typeName, _sideName, _iconPath, _color]] call Waldo_fnc_EcoBuy_normalizePurchaseEntry
+

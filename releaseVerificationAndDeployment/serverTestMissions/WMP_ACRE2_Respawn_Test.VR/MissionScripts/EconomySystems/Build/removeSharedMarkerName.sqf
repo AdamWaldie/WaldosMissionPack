@@ -25,3 +25,4 @@
             _markers deleteAt _index;
             missionNamespace setVariable ["WaldoEcoResource_ActiveResourceMarkers", _markers, true];
         };
+

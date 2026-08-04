@@ -16,3 +16,4 @@
 
         params [["_catalog", []]];
         missionNamespace setVariable ["WaldoEcoResearch_ResearchCatalog", [_catalog] call Waldo_fnc_EcoResearch_normalizeResearchCatalog];
+

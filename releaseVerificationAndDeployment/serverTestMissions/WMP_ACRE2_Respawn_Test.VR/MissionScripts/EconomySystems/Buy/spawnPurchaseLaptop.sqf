@@ -56,3 +56,4 @@
 
         diag_log format ["[WMP ECO] Purchase terminal created object=%1 position=%2 direction=%3 authority=%4", netId _purchaseTerminal, getPosATL _purchaseTerminal, getDir _purchaseTerminal, clientOwner];
         _purchaseTerminal
+

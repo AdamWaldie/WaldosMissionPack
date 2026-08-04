@@ -19,3 +19,4 @@
         private _varName = [_sideKey] call Waldo_fnc_EcoResearch_getResearchActiveVar;
         if (_varName isEqualTo "") exitWith {[]};
         +(missionNamespace getVariable [_varName, []])
+

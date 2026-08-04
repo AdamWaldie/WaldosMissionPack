@@ -23,3 +23,4 @@
         if (_varName isEqualTo "") exitWith {};
 
         missionNamespace setVariable [_varName, _row, true];
+

@@ -265,4 +265,5 @@ Waldo_MG_CFG_BATTLESHIP_SHIPS = [
     ["Cruiser", 3],
     ["Submarine", 3],
     ["Destroyer", 2]
-];
+]; 
+ 

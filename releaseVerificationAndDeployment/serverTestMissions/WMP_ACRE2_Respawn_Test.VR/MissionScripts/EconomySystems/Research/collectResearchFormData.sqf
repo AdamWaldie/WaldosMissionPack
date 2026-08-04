@@ -45,3 +45,4 @@
             cbChecked _researchedCtrl,
             [ctrlText _exclusiveCtrl] call Waldo_fnc_EcoResearch_parseResearchExclusivesText
         ]] call Waldo_fnc_EcoResearch_normalizeResearchEntry
+

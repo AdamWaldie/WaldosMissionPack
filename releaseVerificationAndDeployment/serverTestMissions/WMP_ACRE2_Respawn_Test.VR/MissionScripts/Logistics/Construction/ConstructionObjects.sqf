@@ -39,7 +39,7 @@ if (_useModernConsturctionAudio == false) then {
 };
 
 // Finds all synced Objects. Hides the model and attaches the object to object.
-_constructionLogic = nearestObject [_target, "Logic"];
+_constructionLogic = nearestObject [_target, "Logic"]; 
 _constructionParts = synchronizedObjects _constructionLogic;
 
 
@@ -54,7 +54,7 @@ if (isServer || isDedicated) then {
 
 Waldo_Construction_Deploy = {
     params ["_target", "_player","_ConstructionAudioPath"];
-    _constructionLogic = nearestObject [_target, "Logic"];
+    _constructionLogic = nearestObject [_target, "Logic"]; 
     _constructionParts = synchronizedObjects _constructionLogic;
     {[_x, false] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
     _target setVariable ['Waldo_Construction_Status', true, true];
@@ -64,10 +64,10 @@ Waldo_Construction_Deploy = {
 
 Waldo_Construction_TearDown = {
     params ["_target","_player","_ConstructionAudioPath"];
-    _constructionLogic = nearestObject [_target, "Logic"];
+    _constructionLogic = nearestObject [_target, "Logic"]; 
     _constructionParts = synchronizedObjects _constructionLogic;
     {[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
-    _target setVariable ['Waldo_Construction_Status', false, true];
+    _target setVariable ['Waldo_Construction_Status', false, true]; 
     playSound3d [getMissionPath _ConstructionAudioPath, _target, false, getPosASL _target, 4, 1];
     ["Construction Torn Down", _player] call Waldo_fnc_DynamicText;
 };
@@ -121,19 +121,19 @@ Waldo_Construction_Category = ["Waldo_Construction_Category" ,"Construction", "\
 
 // Add action to Vehicle (ACE 3)
 [_target,
-    0,
-    ["ACE_MainActions"],
+    0, 
+    ["ACE_MainActions"], 
     Waldo_Construction_Category
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-    0,
-    ["ACE_MainActions","Waldo_Construction_Category"],
+    0, 
+    ["ACE_MainActions","Waldo_Construction_Category"], 
     Waldo_Construction_InitDeploy
 ] call ace_interact_menu_fnc_addActionToObject;
 
 [_target,
-    0,
-    ["ACE_MainActions","Waldo_Construction_Category"],
+    0, 
+    ["ACE_MainActions","Waldo_Construction_Category"], 
     Waldo_Construction_InitTeardown
 ] call ace_interact_menu_fnc_addActionToObject;

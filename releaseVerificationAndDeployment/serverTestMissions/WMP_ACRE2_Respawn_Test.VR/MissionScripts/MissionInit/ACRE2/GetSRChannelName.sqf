@@ -1,6 +1,6 @@
 /*
 Author: WaldoTheWarfighter
-This function returns the Block/Channel combination based on the integer provided.
+This function returns the Block/Channel combination based on the integer provided. 
 
 This has to be manually indicated as ACRE doesnt do it (Facepalm)
 
