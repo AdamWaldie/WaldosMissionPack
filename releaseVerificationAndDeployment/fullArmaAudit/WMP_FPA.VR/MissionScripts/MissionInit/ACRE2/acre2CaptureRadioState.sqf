@@ -21,7 +21,7 @@ private _counts = createHashMap;
 private _state = [];
 private _selectedId = [] call acre_api_fnc_getCurrentRadio;
 private _selected = [];
-private _lastApplication = uiNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
+private _lastApplication = missionNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
 private _lastApplied = if (count _lastApplication >= 5) then {_lastApplication select 4} else {[]};
 {
     private _radioId = _x;
@@ -33,11 +33,16 @@ private _lastApplied = if (count _lastApplication >= 5) then {_lastApplication s
     private _mode = if (_profileIndex >= 0) then {toUpper ((_profiles select _profileIndex) select 1)} else {"CHANNEL"};
     private _setting = [_radioId] call acre_api_fnc_getRadioChannel;
     private _appliedIndex = _lastApplied findIf {(_x select 0) == _radioId};
-    if (_appliedIndex >= 0) then {
+    // ACRE exposes the PRC-343's current position as one absolute 1-256 channel. Convert that
+    // public value back to WMP's beginner-facing [block, channel] form so player changes to either
+    // knob are actually captured instead of reusing the original mission assignment.
+    if (_mode == "BLOCK_CHANNEL" && {_setting >= 1}) then {
+        private _zeroBased = _setting - 1;
+        _setting = [(floor (_zeroBased / 16)) + 1, (_zeroBased mod 16) + 1];
+    };
+    if (_mode == "FREQUENCY" && {_appliedIndex >= 0}) then {
         private _applied = _lastApplied select _appliedIndex;
-        if (_profileIndex >= 0) then {
-            _setting = _applied select 3;
-        };
+        _setting = _applied select 3;
     };
     // ACRE exposes no public frequency read-back. Only persist a frequency when the current WMP
     // application requested it; otherwise omit that occurrence instead of saving a bogus channel.

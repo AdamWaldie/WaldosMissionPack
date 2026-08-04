@@ -41,7 +41,7 @@ createHashMapFromArray [
     ["featureFamilies", ["Electronic Warfare", "Radio Jamming"]],
     ["server", [
         // MISSION MAKER: EW availability and gameplay rules.
-        ["Waldo_Jamming_Enable", true, true],       // BOOL: starts EW services; does not create a jammer.
+        ["Waldo_Jamming_Enable", false, true],      // ACRE test isolation: no signal-function override.
         ["Waldo_Jamming_Notify", true, true],       // BOOL: show affected players WMP interference feedback.
         ["Waldo_Jamming_LOS", true, true],          // BOOL: terrain/objects reduce a jammer's effective signal.
         ["Waldo_Jamming_BurnThrough", true, true],  // BOOL: very close radios may overcome interference.

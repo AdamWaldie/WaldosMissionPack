@@ -3,12 +3,23 @@ call compile preprocessFileLineNumbers "auditBootstrap.sqf";
 call compile preprocessFileLineNumbers "auditPreInitServer.sqf";
 
 /*
-Server-authoritative optional feature configuration and activation
+ * Author: WaldoTheWarfighter
+ * Starts authoritative WMP systems once on the server. Mission makers normally edit files inside
+ * MissionConfig, not this entry point. Put a custom call here only when its function header says
+ * that the server owns the world state, spawning, database operation or public-variable broadcast.
+ * Player UI and local ACE actions do not belong here.
+ *
+ * Arguments: None (Arma calls this file automatically on the server).
+ * Return Value: Nothing.
+ * Current caller: Arma's server mission lifecycle, including hosted and dedicated servers.
+ */
 
-These limits and asset pools are consumed only by server-validated world mutations. Keeping them
-here gives one authoritative value and prevents clients or headless clients from installing their
-own copies. Persistence starts its database branch here; player capture/apply starts locally.
-*/
+/* STARTUP ORDER
+ * 1. ACRE compiles and publishes its authoritative communications plan.
+ * 2. SERVER feature settings are loaded from MissionConfig.
+ * 3. Server-owned features start.
+ * 4. Runtime readiness is broadcast last so players and JIP clients see a complete snapshot.
+ */
 [] call Waldo_fnc_ACRE2Init;
 ["SERVER"] call Waldo_fnc_LoadFeatureConfigs;
 if (missionNamespace getVariable ["Waldo_Jamming_Enable", true]) then {
@@ -46,7 +57,8 @@ MissionScripts\Paradrop has all the paradrop related functions. Waldos_functions
 
 For basic usage, most "Plane" class assets, and some Helicopters have static line &/or HALO jump capabilities added automatically. The C130J from RHS and its inherritants also have full use of these systems.
 
-You can also tweak the below variables to supply custom parachute classes, as well as change the requirements for HALO & Static Line jumps to be availble to perform.
+Edit `MissionConfig\airOperationsConfig.sqf` for parachute classes and jump requirements. Do not paste
+those settings below or create another global activation here.
 
 This affects both the automatically added vehicles, and those you manually add via:
 [this] call Waldo_fnc_VehicleJumpSetup;
@@ -82,7 +94,7 @@ one run ID, machine role, feature area, feature name, severity, and event. Check
 loaded, active, disabled, unconfigured, unavailable, and error states. A hosted server also
 shows warnings through systemChat.
 
-Set the flag below to false to disable it for a shipping mission.
+Set `Waldo_RunDiagnostics` in `MissionConfig\missionSystemsConfig.sqf`.
 */
 if (missionNamespace getVariable ["Waldo_RunDiagnostics", true]) then {
     [] spawn {
@@ -110,7 +122,7 @@ with [seconds] call Waldo_fnc_SafeStartTimer.
 Confinement defaults to a 75m radius around each player's start position. To use one shared zone,
 place a marker and set Waldo_SafeStart_ZoneMarker to its name. Tune or disable below.
 
-Set Waldo_SafeStart_AutoStart to false to start the mission live (no safestart).
+Set `Waldo_SafeStart_AutoStart` in `MissionConfig\missionSystemsConfig.sqf` to start live.
 */
 if (missionNamespace getVariable ["Waldo_SafeStart_AutoStart", true]) then {
     [true] call Waldo_fnc_SafeStart;
@@ -124,9 +136,9 @@ no need to open Zeus. These settings are applied once, server-side, at mission s
 broadcast to all players (JIP / rejoining players inherit them automatically). You can still
 fine-tune everything live in the Zeus "Waldos Economy Systems" menu afterwards.
 
-FIRST enable the suite in init.sqf (set Waldo_Economy_Enable = true;), OR drop one of the
-"[WMP] Waldos Economy Systems" compositions. THEN, to pre-load a configuration, set any of the
-variables below (leave them as-is to configure purely in Zeus).
+Enable and configure the suite in `MissionConfig\economyConfig.sqf`, or use a documented WMP
+economy composition. The examples below are custom server-side overrides only; most beginners
+should leave them commented and use the configuration file.
 
 Option A - load a bundled preset (quickest):
     Waldo_Economy_Preset      - "LOW", "MEDIUM" or "HIGH" (increasing complexity). LOW is a single

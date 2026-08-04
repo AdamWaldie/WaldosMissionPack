@@ -23,7 +23,11 @@ _options params ["_saveCargo", "_saveDamage", "_saveFuel", "_saveAmmo", "_savePo
 private _databaseName = missionNamespace getVariable ["Waldo_Persistence_DatabaseName", "WaldosMissionPack"];
 private _safeDatabaseName = [_databaseName, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
 if (_safeDatabaseName == "") then {_safeDatabaseName = "WaldosMissionPack"};
-private _db = ["new", format ["%1_OBJECT_%2", _safeDatabaseName, _key]] call OO_INIDBI;
+private _scopeMode = toUpper (missionNamespace getVariable ["Waldo_Persistence_Scope", "MISSION"]);
+private _scopeSource = if (_scopeMode == "CAMPAIGN") then {_safeDatabaseName} else {format ["%1_%2_%3", _safeDatabaseName, missionName, worldName]};
+private _scopeKey = [_scopeSource, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
+if (_scopeKey == "") then {_scopeKey = format ["WaldosMissionPack_%1", worldName]};
+private _db = ["new", format ["%1_OBJECT_%2", _scopeKey, _key]] call OO_INIDBI;
 private _cargo = if (_saveCargo) then {
     [getItemCargo _object, getWeaponCargo _object, getMagazineCargo _object, getBackpackCargo _object]
 } else {[]};

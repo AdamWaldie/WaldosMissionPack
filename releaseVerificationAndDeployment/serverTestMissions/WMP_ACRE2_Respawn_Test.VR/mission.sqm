@@ -1,8 +1,8 @@
 version=12;
 class Mission
 {
-    addOns[]={"A3_Characters_F_BLUFOR","A3_Map_VR"};
-    addOnsAuto[]={"A3_Characters_F_BLUFOR","A3_Map_VR"};
+    addOns[]={"A3_Characters_F","A3_Characters_F_BLUFOR","A3_Map_VR"};
+    addOnsAuto[]={"A3_Characters_F","A3_Characters_F_BLUFOR","A3_Map_VR"};
     randomSeed=772341;
     class Intel
     {
@@ -37,7 +37,7 @@ class Mission
                     skill=0.6;
                     text="acre_alpha_1";
                     description="ALPHA 1 Radio Tester@ACRE2 Test";
-                    init="if (isServer) then {(group this) setGroupIdGlobal ['ALPHA']}; if (local this) then {removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
+                    init="if (isServer) then {(group this) setGroupIdGlobal ['ALPHA']}; if (local this) then {this unlinkItem 'ItemRadio'; this removeItem 'ItemRadio'; removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
                 };
                 class Item1
                 {
@@ -50,7 +50,7 @@ class Mission
                     skill=0.6;
                     text="acre_alpha_2";
                     description="ALPHA 2 Radio Tester@ACRE2 Test";
-                    init="if (local this) then {removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
+                    init="if (local this) then {this unlinkItem 'ItemRadio'; this removeItem 'ItemRadio'; removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
                 };
             };
         };
@@ -72,7 +72,7 @@ class Mission
                     skill=0.6;
                     text="acre_bravo_1";
                     description="BRAVO 1 Radio Tester@ACRE2 Test";
-                    init="if (isServer) then {(group this) setGroupIdGlobal ['BRAVO']}; if (local this) then {removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
+                    init="if (isServer) then {(group this) setGroupIdGlobal ['BRAVO']}; if (local this) then {this unlinkItem 'ItemRadio'; this removeItem 'ItemRadio'; removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
                 };
                 class Item1
                 {
@@ -85,7 +85,7 @@ class Mission
                     skill=0.6;
                     text="acre_bravo_2";
                     description="BRAVO 2 Radio Tester@ACRE2 Test";
-                    init="if (local this) then {removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
+                    init="if (local this) then {this unlinkItem 'ItemRadio'; this removeItem 'ItemRadio'; removeBackpack this; this addBackpack 'B_AssaultPack_mcamo'; this addItemToBackpack 'ACRE_PRC343'; this addItemToBackpack 'ACRE_PRC152'; this addItemToBackpack 'ACRE_PRC77'};";
                 };
             };
         };

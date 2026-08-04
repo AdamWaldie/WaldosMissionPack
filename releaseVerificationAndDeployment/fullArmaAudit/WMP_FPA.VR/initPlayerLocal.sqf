@@ -4,10 +4,10 @@ call compile preprocessFileLineNumbers "auditPreInitPlayerLocal.sqf";
 
 /*
  * Author: WaldoTheWarfighter
- * initPlayerLocal.sqf - runs per-player on each join. Saves the starting loadout and re-applies it
- * on respawn via a CBA event. Vehicle recovery actions are bound to vehicles by VehicleInit.
- * handler. Two optional behaviours (save-on-arsenal-close, respawn-with-what-you-died-with) are
- * included commented out below.
+ * Runs once for each player's own interface client. It starts local UI/actions, applies the
+ * server-published ACRE plan, and owns that player's respawn snapshot. Mission makers normally edit
+ * MissionConfig rather than this file. Add a custom call here only when its function header says
+ * player-local, hasInterface, local UI, local interaction, or local player state.
  *
  * Arguments:
  * None (engine entry point; runs locally for each player)
@@ -17,13 +17,19 @@ call compile preprocessFileLineNumbers "auditPreInitPlayerLocal.sqf";
  */
 
 /*
-Player-local optional feature configuration and activation
-
-These defaults are installed only on machines with a player interface. The isNil guards preserve
-newer values published by the server before a JIP player reaches initPlayerLocal.sqf. Server-owned
-or cross-locality features wait for init.sqf to finish its shared configuration before starting.
+PLAYER-LOCAL STARTUP
+These settings and activations exist only on machines with a player interface. Guarded defaults do
+not replace newer server values already received by a JIP player. Do not move server-owned feature
+startup into this file: every player would create a competing copy.
 */
 if (hasInterface) then {
+    // Diary records belong to the local player object. Dedicated clients can enter this file before
+    // that object is usable, so install the briefing asynchronously after a bounded readiness wait.
+    [] spawn {
+        private _deadline = diag_tickTime + 30;
+        waitUntil {uiSleep 0.1; !isNull player || {diag_tickTime >= _deadline}};
+        if (!isNull player) then {call Waldo_fnc_AddDocs};
+    };
     [] call Waldo_fnc_ACRE2Init;
     // InfoText marks completion after the fake loading/title presentation. Features may queue
     // non-critical notices against this state instead of drawing over the introduction.
@@ -94,9 +100,6 @@ if (hasInterface) then {
     };
 };
 
-//Post-Init Setup of saved Loadout (Measure taken to help prevent Naked/unarmed People)
-
-
 // Save a base-class inventory on mission start. ACRE startup replaces this with the fully assigned
 // inventory plus player-level radio snapshot after its one-time baseline configuration.
 [false] call Waldo_fnc_SaveLoadout;
@@ -105,12 +108,17 @@ if (hasInterface) then {
 ["CAManBase", "Respawn", {
     params ["_unit"];
     if (_unit == player) then {
+        private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
+        private _currentIdentity = [getPlayerUID _unit, vehicleVarName _unit, _sideKey];
+        private _savedIdentity = missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []];
+        private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
         private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
-        if (count _savedLoadout > 0) then {_unit setUnitLoadout _savedLoadout};
+        if (_identityMatches && {count _savedLoadout > 0}) then {_unit setUnitLoadout _savedLoadout};
         private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
         missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
         missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
-        private _savedRadios = missionNamespace getVariable ["Waldo_Player_RadioState", []];
+        private _savedRadios = if (_identityMatches) then {missionNamespace getVariable ["Waldo_Player_RadioState", []]} else {[]};
+        if (!_identityMatches) then {diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity]};
         if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
             missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
             [_savedRadios, _generation] spawn {

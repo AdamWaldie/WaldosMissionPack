@@ -41,30 +41,25 @@ _text = _text + "<br/><font size='14'>Radio Nets</font><br/>";
     if ((_x select 0) in _myNets) then {_line = format ["<font color='#47ff47'>%1</font>", _line]};
     _text = _text + _line + '<br/>';
 } forEach _nets;
-private _last = uiNamespace getVariable ['Waldo_ACRE2_LastApplication', []];
-_text = _text + "<br/><font size='14'>Carried Radio Verification</font><br/>";
-if (count _last >= 7 && {(_last select 2) == _sideKey} && {(_last select 3) == _groupKey}) then {
-    {
-        _x params ['_radioId', '_base', '_occurrence', '_setting', '_spatial', '_netLabel', ['_mode', 'CHANNEL']];
-        private _ear = if (_spatial == 'CENTER') then {'BOTH'} else {_spatial};
-        private _verification = if (_mode == 'FREQUENCY') then {'REQUEST ACCEPTED; PHYSICAL CHECK REQUIRED'} else {'READ BACK'};
-        _text = _text + format ['%1 #%2 - %3 - %4 ear (%5; %6)<br/>', _base, _occurrence, _netLabel, _ear, _setting, _verification];
-    } forEach (_last select 4);
-    {
-        _text = _text + format ["<font color='#ffb347'>UNAPPLIED: %1</font><br/>", _x];
-    } forEach (_last select 5);
-    if (count (_last select 6) > 0) then {
-        _text = _text + format ['Preserved/unmanaged carried radios: %1<br/>', count (_last select 6)];
-    };
-} else {
-    _text = _text + 'No verified local radio application is available yet.<br/>';
-};
-private _old = uiNamespace getVariable ['Waldo_ACRE2_CEOIRecord', -1];
-if (_old isEqualType 0 && {_old >= 0}) then {player removeDiaryRecord ['ACRE2', _old]};
-if !(uiNamespace getVariable ['Waldo_ACRE2_DiarySubject', false]) then {
+private _oldOwner = missionNamespace getVariable ['Waldo_ACRE2_CEOIOwner', objNull];
+private _records = +(missionNamespace getVariable ['Waldo_ACRE2_CEOIRecords', []]);
+private _legacyRecord = missionNamespace getVariable ['Waldo_ACRE2_CEOIRecord', -1];
+if !(_legacyRecord isEqualType 0) then {_records pushBack _legacyRecord};
+{
+    // Diary content remains visible when Arma replaces the player object on respawn. Remove each
+    // known handle from the current diary first; also ask the previous owner while it still exists.
+    player removeDiaryRecord ['ACRE2', _x];
+    if (!isNull _oldOwner && {_oldOwner != player}) then {_oldOwner removeDiaryRecord ['ACRE2', _x]};
+} forEach _records;
+missionNamespace setVariable ['Waldo_ACRE2_CEOIRecords', []];
+if ((missionNamespace getVariable ['Waldo_ACRE2_DiarySubjectOwner', objNull]) != player) then {
     player createDiarySubject ['ACRE2', 'ACRE2'];
-    uiNamespace setVariable ['Waldo_ACRE2_DiarySubject', true];
+    missionNamespace setVariable ['Waldo_ACRE2_DiarySubjectOwner', player];
 };
 private _record = player createDiaryRecord ['ACRE2', ['CEOI', _text]];
-uiNamespace setVariable ['Waldo_ACRE2_CEOIRecord', _record];
+missionNamespace setVariable ['Waldo_ACRE2_CEOIRecord', _record];
+missionNamespace setVariable ['Waldo_ACRE2_CEOIRecords', [_record]];
+missionNamespace setVariable ['Waldo_ACRE2_CEOIOwner', player];
+missionNamespace setVariable ['Waldo_ACRE2_CEOIReady', true];
+diag_log format ['[WMP ACRE] CEOI built for %1/%2.', _sideKey, _groupKey];
 true

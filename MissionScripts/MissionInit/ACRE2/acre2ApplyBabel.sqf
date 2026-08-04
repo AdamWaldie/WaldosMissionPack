@@ -33,10 +33,10 @@ if (_defaultIndex >= 0) then {
     };
     if (_matches) exitWith {_languages = +_overrideLanguages; _initial = _overrideInitial};
 } forEach (_babel getOrDefault ['unitOverrides', []]);
-private _lastSide = uiNamespace getVariable ['Waldo_ACRE2_BabelSide', ''];
+private _lastSide = missionNamespace getVariable ['Waldo_ACRE2_BabelSide', ''];
 if (_lastSide != '' && {_lastSide != _sideKey} && {!(_babel getOrDefault ['changeOnSideChange', false])}) then {
-    _languages = +(uiNamespace getVariable ['Waldo_ACRE2_BabelLanguages', _languages]);
-    _initial = uiNamespace getVariable ['Waldo_ACRE2_BabelSpeaking', _initial];
+    _languages = +(missionNamespace getVariable ['Waldo_ACRE2_BabelLanguages', _languages]);
+    _initial = missionNamespace getVariable ['Waldo_ACRE2_BabelSpeaking', _initial];
 };
 private _knownIds = (_babel getOrDefault ['languages', []]) apply {_x select 0};
 _languages = _languages select {_x in _knownIds};
@@ -62,16 +62,25 @@ if (!_spokenAccepted || {!_speakingAccepted} || {!_speakingMatches}) exitWith {
     diag_log format ['[WMP ACRE] Babel API rejected the local language application (expected speaking language %1).', _initial];
     false
 };
-uiNamespace setVariable ['Waldo_ACRE2_BabelSide', _sideKey];
-uiNamespace setVariable ['Waldo_ACRE2_BabelLanguages', +_languages];
-uiNamespace setVariable ['Waldo_ACRE2_BabelSpeaking', _initial];
-private _old = uiNamespace getVariable ['Waldo_ACRE2_BabelRecord', -1];
-if (_old isEqualType 0 && {_old >= 0}) then {player removeDiaryRecord ['ACRE2', _old]};
-if !(uiNamespace getVariable ['Waldo_ACRE2_DiarySubject', false]) then {
+missionNamespace setVariable ['Waldo_ACRE2_BabelSide', _sideKey];
+missionNamespace setVariable ['Waldo_ACRE2_BabelLanguages', +_languages];
+missionNamespace setVariable ['Waldo_ACRE2_BabelSpeaking', _initial];
+private _oldOwner = missionNamespace getVariable ['Waldo_ACRE2_BabelOwner', objNull];
+private _records = +(missionNamespace getVariable ['Waldo_ACRE2_BabelRecords', []]);
+private _legacyRecord = missionNamespace getVariable ['Waldo_ACRE2_BabelRecord', -1];
+if !(_legacyRecord isEqualType 0) then {_records pushBack _legacyRecord};
+{
+    player removeDiaryRecord ['ACRE2', _x];
+    if (!isNull _oldOwner && {_oldOwner != player}) then {_oldOwner removeDiaryRecord ['ACRE2', _x]};
+} forEach _records;
+missionNamespace setVariable ['Waldo_ACRE2_BabelRecords', []];
+if ((missionNamespace getVariable ['Waldo_ACRE2_DiarySubjectOwner', objNull]) != player) then {
     player createDiarySubject ['ACRE2', 'ACRE2'];
-    uiNamespace setVariable ['Waldo_ACRE2_DiarySubject', true];
+    missionNamespace setVariable ['Waldo_ACRE2_DiarySubjectOwner', player];
 };
 private _names = _languages apply {private _index = _knownIds find _x; ((_babel get 'languages') select _index) select 1};
 private _record = player createDiaryRecord ['ACRE2', ['Babel', format ['Understood: %1<br/>Speaking: %2', _names joinString ', ', _initial]]];
-uiNamespace setVariable ['Waldo_ACRE2_BabelRecord', _record];
+missionNamespace setVariable ['Waldo_ACRE2_BabelRecord', _record];
+missionNamespace setVariable ['Waldo_ACRE2_BabelRecords', [_record]];
+missionNamespace setVariable ['Waldo_ACRE2_BabelOwner', player];
 true

@@ -26,20 +26,14 @@ private _side = _config get "side";
 private _fighterClasses = _config getOrDefault ["fighterClasses", [_config getOrDefault ["fighterClass", "O_Plane_Fighter_02_F"]]];
 private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
 
-// Fighters in a wave are spread around the spawn ring on distinct angles (not independent random
-// angles, which can coincide closely enough to collide) and converge on distinct points around the
-// centre rather than the exact same waypoint, so a multi-fighter wave cannot pile up on one spot.
-private _angleStep = 360 / (_count max 1);
-private _baseAngle = random 360;
 for "_i" from 1 to _count do {
     private _fighterClass = if (count _fighterAssignments == _count) then {
         _fighterAssignments select (_i - 1)
     } else {
         selectRandom _fighterClasses
     };
-    private _angle = _baseAngle + ((_i - 1) * _angleStep);
-    private _spawn2D = _centre getPos [_radius * (_config getOrDefault ["fighterSpawnRangeMultiplier", 2]), _angle];
-    private _height = (_config getOrDefault ["fighterSpawnAltitude", 1000]) + ((_i - 1) * 60);
+    private _spawn2D = _centre getPos [_radius * (_config getOrDefault ["fighterSpawnRangeMultiplier", 2]), random 360];
+    private _height = (_config getOrDefault ["fighterSpawnAltitude", 1000]) + ((_i - 1) * 40);
     private _spawnPosition = [_spawn2D select 0, _spawn2D select 1, _height];
     private _fighter = createVehicle [_fighterClass, _spawnPosition, [], 0, "FLY"];
     _fighter setPosATL _spawnPosition;
@@ -51,8 +45,7 @@ for "_i" from 1 to _count do {
     private _group = createGroup _side;
     (crew _fighter) joinSilent _group;
     {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
-    private _approachPoint = if (_count > 1) then {_centre getPos [60, _angle + 180]} else {_centre};
-    private _waypoint = _group addWaypoint [_approachPoint, 0];
+    private _waypoint = _group addWaypoint [_centre, 0];
     // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.
     _waypoint setWaypointType "MOVE";
     _waypoint setWaypointBehaviour "COMBAT";

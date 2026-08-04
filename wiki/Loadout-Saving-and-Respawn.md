@@ -17,12 +17,22 @@ the player changes group.
 
 Persistence can optionally store radio state separately by base class plus deterministic same-type occurrence. It preserves channel or WMP-known manual frequency, ear, volume, audio source and the selected radio. Alternate PTT and speaker mode are never changed. A manually tuned frequency that was not applied by WMP cannot be read through ACRE's public API, so it cannot be reconstructed; configured WMP frequency assignments can.
 
+For a PRC-343, ACRE reports one absolute position across its 16 blocks. WMP converts that value
+back to `[block, channel]` when the player saves, so changes to either knob survive respawn. Two
+radios of the same type remain separate as occurrence 1 and occurrence 2, including independent
+left/right/both ear settings.
+
 This separation is necessary because the inventory is only the container for a radio item. ACRE's
 live channel and spatial settings belong to that player's temporary unique radio instance. They are
 therefore player-level state, not additional fields inside `getUnitLoadout`. `SaveLoadout` and
 `Waldo_Persistence_SaveLoadout` and `Waldo_Persistence_SaveRadios` are independent cross-session
 switches. Ordinary `Waldo_fnc_SaveLoadout` still preserves both inventory and supported radio state
 for mission respawns regardless of whether INIDBI2 radio persistence is enabled.
+
+Ordinary respawn snapshots stay on that player's client and are tagged with Steam UID, playable-slot
+variable name and side. A hosted player changing to a different slot cannot inherit the previous
+slot's snapshot. INIDBI player records are server-owned, UID-separated and mission-scoped by
+default; set `Waldo_Persistence_Scope = "CAMPAIGN"` only for intentional cross-mission saves.
 
 Restore order is:
 

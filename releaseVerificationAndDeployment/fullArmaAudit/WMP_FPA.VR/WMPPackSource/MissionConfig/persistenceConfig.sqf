@@ -16,7 +16,7 @@
  * mandatory; enabled does not mean available, and the feature remains inactive if the gate fails.
  * Player state needs no custom registration. World objects must be registered with stable keys.
  *
- * EDIT FOR A NORMAL MISSION: Enable, Save* policy and DatabaseName.
+ * EDIT FOR A NORMAL MISSION: Enable, Save* policy, DatabaseName and Scope.
  * LEAVE ALONE UNLESS EXTENDING/TESTING: save intervals and DefaultCustomVariables.
  * CUSTOM CALLS: register pre-placed
  * persistent objects from initServer.sqf with Waldo_fnc_PersistenceRegisterObject after enabling;
@@ -24,7 +24,9 @@
  *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - Enable and the Save* switches define the campaign contract and should be reviewed
- * per mission. DatabaseName separates campaigns; changing it starts a different logical save set.
+ * per mission. DatabaseName names the save collection. Scope controls whether WMP adds the
+ * current mission and terrain to that name. Keep MISSION unless several missions intentionally
+ * share one campaign record; choose CAMPAIGN only for that deliberate cross-mission use case.
  * SavePosition is deliberately false because restoring an old position can bypass mission flow.
  * SaveRadios is deliberately false unless radio-state persistence is part of the mission design.
  * ADVANCED TUNING - save intervals are seconds and should normally remain 60. Lower values increase
@@ -61,6 +63,7 @@ createHashMapFromArray [
         ["Waldo_Persistence_SavePosition", false],        // Restore position; may bypass mission progression.
         ["Waldo_Persistence_SaveRadios", false],          // Per-player radio state; see ordering/identity above.
         ["Waldo_Persistence_DatabaseName", "WaldosMissionPack"], // Stable campaign/database key.
+        ["Waldo_Persistence_Scope", "MISSION"],          // MISSION isolates player/object saves; CAMPAIGN deliberately shares them.
         // ADVANCED TUNING: database cadence and serialised object state.
         ["Waldo_Persistence_PlayerSaveInterval", 60],     // Seconds; lower means more writes.
         ["Waldo_Persistence_ObjectSaveInterval", 60],     // Seconds; lower means more writes.

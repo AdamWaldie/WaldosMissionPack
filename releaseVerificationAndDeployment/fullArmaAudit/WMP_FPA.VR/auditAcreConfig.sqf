@@ -1,10 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Derives the full-audit ACRE configuration from the release root configuration. Managed test
- * radios use distinctive non-channel-1 assignments and named operational nets. Every supported
- * carried-radio profile has a paired squad inventory in the generated mission. Radio-specific nets
- * prove that unrelated radios no longer impose a shared channel capacity. It also enables the
- * configured deterministic Babel examples and partial multilingual overrides for this QA mission.
+ * radios use distinctive non-channel-1 assignments and named operational nets. Every playable
+ * audit soldier carries one PRC-343, one PRC-152 and one PRC-148, so the same example can be
+ * verified from any slot. It also enables the configured deterministic Babel examples and partial
+ * multilingual overrides for this QA mission.
  *
  * Arguments: None.
  * Return Value: HASHMAP - audit-specific ACRE configuration consumed as MissionConfig\acreConfig.sqf.
@@ -22,15 +22,8 @@ if (_westIndex >= 0) then {
     if (_groupIndex >= 0) then {
         (_groups select _groupIndex) set [3, [
             ['ACRE_PRC343', 1, [7, 13], 'LEFT'],
-            ['ACRE_PRC343', 2, [12, 6], 'RIGHT'],
             ['ACRE_PRC152', 1, 'CAS2', 'RIGHT'],
-            ['ACRE_PRC152', 2, 'CONVOY', 'LEFT'],
-            ['ACRE_PRC148', 1, 'CFF1', 'BOTH'],
-            ['ACRE_PRC117F', 1, 'AIR', 'BOTH'],
-            ['ACRE_BF888S', 1, 'BF_LOCAL', 'RIGHT'],
-            ['ACRE_SEM52SL', 1, 'SEM_LOCAL', 'LEFT'],
-            ['ACRE_PRC77', 1, 'LEGACY', 'RIGHT'],
-            ['ACRE_SEM70', 1, 'LEGACY', 'LEFT']
+            ['ACRE_PRC148', 1, 'CFF1', 'BOTH']
         ]];
     };
 };
