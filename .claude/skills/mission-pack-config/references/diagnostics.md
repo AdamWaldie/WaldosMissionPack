@@ -1,0 +1,34 @@
+# Mission diagnostics
+
+Read-only server + client health check at mission start, run after the
+loadout scan. Every RPT entry uses one searchable frame:
+
+```
+[WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]
+```
+
+A hosted server also surfaces warnings via `systemChat`.
+
+## Config (`initServer.sqf`)
+
+```sqf
+// Set false to silence startup diagnostics in a released mission.
+missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
+```
+
+For a released/live mission (not QA), it's reasonable to suggest setting
+this `false` to avoid RPT noise and player-facing warning chat — mention
+this as an option rather than a default recommendation, since it's also
+useful for the user to leave on while first configuring the pack.
+
+## What it checks
+
+Distinguishes `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`,
+`UNAVAILABLE`, `ERROR`. Covers representative public APIs, mod dependencies,
+loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare,
+party games, interaction equipment, Economy, Zeus registration, local HUD
+state, 3D markers, and ACE-vs-vanilla actions.
+
+The latest report broadcasts as `Waldo_Diagnostics_LastReport`:
+`[warningCount, finishedAt, serverChecks, clientReports, runId]` — useful if
+scripting something that should wait for or react to the diagnostic pass.
