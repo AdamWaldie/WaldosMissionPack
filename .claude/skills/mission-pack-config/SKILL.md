@@ -1,6 +1,6 @@
 ---
 name: mission-pack-config
-description: Configures WaldosMissionPack (WMP) — the Arma 3 mission scripting starter framework in this repo — for a specific mission. Covers every WMP system — loadout/logistics, AI rebalance, ACRE2 radio setup, paradrop, radio jamming/EMP/signal trackers, MHQ, respawn options, ENDEX/AAR, safestart, mission diagnostics, tasks/objectives, VVD, Zeus Enhanced modules, the Waldos Economy Systems suite, table minigames, interaction minigames, UI notifications, and the description.ext mission-maker checklist. Use this whenever the user wants to set up, enable, tune, or debug any WMP feature, wants "a mission configured with X", asks what a WMP variable or function does, or is editing init.sqf/initServer.sqf/initPlayerLocal.sqf/description.ext/economyConfig.sqf for this pack — even if they only name one feature, since features interact (e.g. ACRE2 setup depends on mission.sqm loadouts, Economy depends on Zeus Enhanced). Always check this skill before hand-writing WMP config from memory — the reference files are the faithful, current spec.
+description: Configures WaldosMissionPack (WMP) — the Arma 3 mission scripting starter framework in this repo — for a specific mission, and answers "how do I..." / "how does X work" questions about using it. Covers every WMP system — loadout/logistics, AI rebalance, ACRE2 radio setup, paradrop, radio jamming/EMP/signal trackers, MHQ, respawn options, ENDEX/AAR, safestart, mission diagnostics, tasks/objectives, VVD, Zeus Enhanced modules, the Waldos Economy Systems suite, table minigames, interaction minigames, UI notifications, and the description.ext mission-maker checklist. Use this whenever the user wants to set up, enable, tune, or debug any WMP feature, wants "a mission configured with X", asks what a WMP variable or function does, asks how to use a feature as a player/curator/mission maker, or is editing init.sqf/initServer.sqf/initPlayerLocal.sqf/description.ext/economyConfig.sqf for this pack — even if they only name one feature, since features interact (e.g. ACRE2 setup depends on mission.sqm loadouts, Economy depends on Zeus Enhanced). Always check this skill before hand-writing WMP config or usage guidance from memory — the reference files (and the wiki) are the faithful, current spec.
 ---
 
 # WMP Mission Pack Configuration
@@ -67,6 +67,16 @@ If you're running as the ChatGPT wrapper (see `chatgpt/INSTRUCTIONS.md`),
 direct-edit mode is never available — you only have patch + instruction mode,
 and you'll need to ask the user to paste their current file contents before
 you can give a precise insertion point.
+
+4. **Q&A mode** — the user isn't asking you to touch any file at all, just
+   "how do I plant a signal tracker", "how does jamming falloff work", "what
+   does the Zeus Fortify Budget module do", "how do players respawn with
+   their gear". Nothing to edit or patch here — just answer from the
+   relevant `references/*.md` file(s) (and `CLAUDE.md` if available), citing
+   the actual variable/function names and Zeus module names rather than
+   paraphrasing loosely. This covers players and curators asking about
+   in-game usage, not just mission makers configuring init files. Still
+   route through Step 3 below to find the right reference file(s) first.
 
 ## Step 2: find out what's actually in play
 
@@ -187,3 +197,13 @@ relevant section of `CLAUDE.md` directly (or grep the actual `.sqf` under
 `MissionScripts/`) rather than guessing — mission makers copy what you give
 them verbatim into a live mission, and a wrong classname or param order fails
 silently or breaks a briefing at the worst time.
+
+For pure usage/"how do I" questions specifically, the WMP wiki
+(https://github.com/AdamWaldie/WaldosMissionPack/wiki) has per-feature
+tutorial pages (setup → usage/options → examples) written for mission makers
+rather than scripters, plus dedicated hub pages for larger systems (Waldos
+Economy Systems, Zeus module parity, mission diagnostics). If you can fetch
+it, prefer it over guessing for anything the `references/*.md` files and
+`CLAUDE.md` leave vague — and still say plainly when even that doesn't
+resolve it, rather than inventing a classname, function signature, or param
+order.
