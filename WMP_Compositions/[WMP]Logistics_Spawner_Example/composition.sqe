@@ -17,7 +17,7 @@ class items
 				{
 					position[]={-0.064453125,1.4305115e-006,1.3242188};
 				};
-				title="Logistics spawner setup - west";
+				title="Logistics spawner setup - west. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
 				id=9;
 				atlOffset=1.4305115e-006;
 			};

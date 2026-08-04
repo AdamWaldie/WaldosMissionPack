@@ -53,7 +53,7 @@ class items
 				{
 					position[]={0.79296875,0,4.2929688};
 				};
-				title="Mobile HQ Example (WIP)";
+				title="Mobile HQ Example (WIP). Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System";
 				description="MobileHQVehicle - MHQ vehicle" \n """MobileHeadQuartersLayer"" - Eden Editor Layer for additional objects" \n "" \n "This is an Extreme example, it works best with smaller, basic structures." \n "" \n "This also has the logistics system enabled, which requires both the boolean variable set to true, as well as an invisible helipad from the base game being present (""Land_HelipadEmpty_F"")";
 				id=70;
 				atlOffset=0.063899279;

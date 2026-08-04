@@ -46,7 +46,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-6,0};};
-		title="Vehicle Recovery: workshop MAIN, recoverable MRAP and AUTO open-deck HEMTT carrier. Its model-space deck offset keeps one package physical and visible; [] would use engine cargo or virtual fallback.";
+		title="Vehicle Recovery: workshop MAIN, recoverable MRAP and AUTO open-deck HEMTT carrier. Its model-space deck offset keeps one package physical and visible; [] would use engine cargo or virtual fallback. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Recovery-And-Squad-Rallies#vehicle-recovery";
 		id=4;
 	};
 };

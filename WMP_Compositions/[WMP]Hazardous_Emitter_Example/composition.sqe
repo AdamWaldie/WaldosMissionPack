@@ -10,8 +10,8 @@ class items
 		class PositionInfo {position[]={0,0,0};};
 		class Attributes
 		{
-			name="WMP_HazardEmitter";
-			init="[""composition_hazard"", this, 15, createHashMapFromArray [[""type"", ""TOXIC""], [""label"", ""Toxic Leak""], [""rate"", 2], [""decay"", 0.5], [""notifyTransitions"", true], [""damageThresholds"", [[8, 0.03], [20, 0.08]]], [""fatalExposure"", 45], [""damageType"", ""stab""]]] call Waldo_fnc_HazardRegisterEmitter;";
+			name="WMP_HazardZoneCentre";
+			init="[""composition_hazard"", [getPosATL this, 15], createHashMapFromArray [[""type"", ""TOXIC""], [""label"", ""Toxic Leak""], [""rate"", 2], [""decay"", 0.5], [""intensityMode"", ""CONSTANT""], [""notifyTransitions"", true], [""damageThresholds"", [[8, 0.03], [20, 0.08]]], [""fatalExposure"", 45], [""damageType"", ""stab""]]] call Waldo_fnc_HazardRegisterZone;";
 		};
 		id=1;
 		type="Land_GasTank_01_yellow_F";
@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-4,0};};
-		title="Hazardous emitter: 15 m toxic leak with entry/exit warnings, staged injury and fatal exposure. Edit the profile in the object's init field to represent another hazard.";
+		title="Hazardous zone: fixed 15 m toxic area with entry/exit warnings, constant exposure, staged injury and fatal exposure. Edit the profile in the object's init field to represent another hazard; use HazardRegisterEmitter for a moving source. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
 		id=2;
 	};
 };

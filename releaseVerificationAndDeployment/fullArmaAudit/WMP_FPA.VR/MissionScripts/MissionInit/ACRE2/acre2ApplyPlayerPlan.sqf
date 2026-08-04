@@ -18,6 +18,7 @@
  * Example: [true, "RESPAWN"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
  * Result: applicable carried-radio occurrences receive the authored baseline once for this loadout.
  * Current callers: Waldo_fnc_ACRE2SchedulePlayerRefresh and persistence fallback.
+ * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting
  */
 params [["_force", false, [true]], ["_reason", "MANUAL", [""]], ["_retryAllowed", true, [true]]];
 if (!hasInterface || {isNull player} || {!(isClass (configFile >> "CfgPatches" >> "acre_main"))}) exitWith {false};
@@ -60,6 +61,17 @@ private _tuningFor = {
 };
 private _normaliseEar = {params ["_value"]; private _ear = toUpper _value; if (_ear == "BOTH") then {"CENTER"} else {_ear}};
 private _defaultEar = {params ["_profile", "_occurrence"]; private _ears = _profile select 2; _ears select (((_occurrence - 1) min ((count _ears) - 1)) max 0)};
+private _profileClasses = _profiles apply {toUpperANSI (_x select 0)};
+private _inventoryRadios = (items player + assignedItems player) select {
+    private _item = toUpperANSI _x;
+    (_profileClasses findIf {_item == _x || {_item find (_x + "_ID_") == 0}}) >= 0
+};
+if (!(_inventoryRadios isEqualTo []) && {_radios isEqualTo []}) exitWith {
+    private _message = format ["Supported radio items exist in the inventory (%1), but ACRE returned no unique carried radios.", _inventoryRadios];
+    missionNamespace setVariable ["Waldo_ACRE2_LastApplication", [false, _reason, _sideKey, _groupKey, [], [_message], [], []]];
+    diag_log format ["[WMP ACRE] %1", _message];
+    false
+};
 
 // Apply the first matching side-scoped override. MERGE updates assignment identities; REPLACE starts clean.
 {
@@ -117,6 +129,15 @@ private _typeCounts = createHashMap;
         } forEach _netKeys;
         if (count _compatibleNets >= _occurrence) then {
             _resolved pushBack [_radioId, _base, _occurrence, (_compatibleNets select (_occurrence - 1)) select 0, [_profile, _occurrence] call _defaultEar];
+        } else {
+            _success = false;
+            _problems pushBack format [
+                "%1#%2 is carried, but group %3 has only %4 compatible named net(s). Add a tuning for this radio class or an explicit assignment.",
+                _base,
+                _occurrence,
+                _groupKey,
+                count _compatibleNets
+            ];
         };
     };
 } forEach _radios;

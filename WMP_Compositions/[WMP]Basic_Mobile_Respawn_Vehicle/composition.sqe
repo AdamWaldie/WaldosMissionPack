@@ -17,7 +17,7 @@ class items
 				{
 					position[]={-0.90039063,0.089553595,1.3945313};
 				};
-				title="Mobile Respawn Vehicle With ACE Arsenal & Loadout saving";
+				title="Mobile Respawn Vehicle With ACE Arsenal & Loadout saving. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Loadout-Saving-and-Respawn";
 				id=1;
 				atlOffset=0.089553595;
 			};

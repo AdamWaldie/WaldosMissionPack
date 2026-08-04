@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-4,0};};
-		title="Radio Jammer: 300 m omnidirectional field with a standard circuit-bypass Disable Jammer interaction. A successful disable leaves the prop intact and exposes Reactivate Jammer.";
+		title="Radio Jammer: 300 m omnidirectional field with a standard circuit-bypass Disable Jammer interaction. A successful disable leaves the prop intact and exposes Reactivate Jammer. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming";
 		id=2;
 	};
 };

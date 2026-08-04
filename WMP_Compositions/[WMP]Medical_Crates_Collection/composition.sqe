@@ -48,7 +48,7 @@ class items
 		{
 			position[]={-0.55273438,0,0.18554688};
 		};
-		title="Medical crates, one with and one without field hospital";
+		title="Medical crates, one with and one without field hospital. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
 		id=7844;
 	};
 };

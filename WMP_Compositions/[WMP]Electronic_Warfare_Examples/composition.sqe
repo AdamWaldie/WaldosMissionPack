@@ -1,0 +1,39 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=3;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={-4,0,0};};
+		class Attributes
+		{
+			name="WMP_EMPImmuneVehicle";
+			init="[this] call Waldo_fnc_EMPImmune;";
+		};
+		id=1;
+		type="B_MRAP_01_F";
+	};
+	class Item1
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={4,0,0};};
+		class Attributes
+		{
+			name="WMP_TrackedVehicle";
+			init="[this, west, ""Tracked Vehicle""] call Waldo_fnc_Tracker;";
+		};
+		id=2;
+		type="B_MRAP_01_F";
+	};
+	class Item2
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-5,0};};
+		title="Electronic Warfare: left vehicle is EMP-immune; right vehicle is tracked by WEST. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers";
+		id=3;
+	};
+};

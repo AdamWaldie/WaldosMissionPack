@@ -45,7 +45,28 @@ compatible net or left unchanged.
 
 A shared net key is meaningful only when its tunings are interoperable. The official PRC-148/152/117F presets use matching frequencies at matching channel numbers. BF-888S and SEM52SL occupy different bands and therefore use separate local nets. PRC-77 and SEM70 can share an explicit common frequency. There is no global net count or smallest-radio capacity limit.
 
-Built-in limits are PRC-148 32 channels, PRC-152/117F 100, BF-888S 16 and SEM52SL 12 ordinary channels. PRC-77 tunes 30–75.95 MHz in 50 kHz steps; SEM70 tunes 30–79.975 MHz in 25 kHz steps. Unknown radios and vehicle racks are preserved.
+### Radio compatibility and special nets
+
+Do not assume that the same channel number means two different radio families can communicate.
+WMP resolves every net against the **base radio class** and ignores incompatible net rows.
+
+| Radio | WMP target | Capacity or range | Safe authoring rule |
+|---|---|---|---|
+| PRC-343 | `[block, channel]` | 16 channels per block; 16 blocks under `FULL_RANGE`, 5 under `SIDE_ISOLATED` | Use the group's PRC-343 field or an explicit PRC-343 assignment. It does not consume LR named-net rows. |
+| PRC-148 | Channel number | Channels 1-32 | May share a named net with PRC-152/117F when official side-preset channel numbers match. |
+| PRC-152 | Channel number | Channels 1-100 | May share numbered-channel PLT/AIR/CAS nets with PRC-148/117F. |
+| PRC-117F | Channel number | Channels 1-100 | May share numbered-channel PLT/AIR/CAS nets with PRC-148/152. |
+| BF-888S | Channel number | Channels 1-16 | Different band: use a BF-888S-specific net such as `BF_LOCAL`. |
+| SEM52SL | Channel number | Channels 1-12 | Different band: use a SEM52SL-specific net such as `SEM_LOCAL`. |
+| PRC-77 | Explicit MHz | 30-75.95 MHz, 50 kHz steps | Use a frequency net. It can share with SEM70 only at a value valid for both, such as 34.000 MHz. |
+| SEM70 | Explicit MHz | 30-79.975 MHz, 25 kHz steps | Use a frequency net; never substitute an ordinary channel number. |
+| Unknown radio or vehicle rack | Unmanaged | Unknown | WMP preserves it. Register a tested carried-radio profile rather than guessing. |
+
+A group may safely list `PLT1`, `BF_LOCAL`, `SEM_LOCAL` and `LEGACY` together. Each carried radio
+selects only compatible tunings: a PRC-152 cannot consume `BF_LOCAL`, and a BF-888S cannot consume
+the PRC-77 frequency. If a supported carried radio has no compatible tuning, WMP records the exact
+class and occurrence as an assignment problem and leaves that radio unchanged; it does not silently
+force channel 1.
 
 ## Groups, duplicate radios and ears
 

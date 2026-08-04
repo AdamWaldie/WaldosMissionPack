@@ -25,7 +25,7 @@ class items
 		{
 			position[]={0,0,2};
 		};
-		title="Waldos Economy Systems - leave this object placed. It boots the Resource/Research/Build/Buy + Ground Command suite. Open Zeus and use the 'Waldos Economy Systems' menu. See the WMP wiki for setup and the import/export config strings.";
+		title="Waldos Economy Systems - leave this object placed. It boots the Resource/Research/Build/Buy + Ground Command suite. Open Zeus and use the 'Waldos Economy Systems' menu. See the WMP wiki for setup and the import/export config strings. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems";
 		id=2;
 	};
 };

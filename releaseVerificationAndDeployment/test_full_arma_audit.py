@@ -153,6 +153,12 @@ class FullAuditTests(unittest.TestCase):
             self.assertIsNotNone(category, folder.name)
             self.assertIn(category.group(1), allowed_categories, folder.name)
             self.assertEqual(composition.count("{"), composition.count("}"), folder.name)
+            if 'dataType="Comment"' in composition:
+                self.assertIn(
+                    "https://github.com/AdamWaldie/WaldosMissionPack/wiki/",
+                    composition,
+                    f"{folder.name}: Eden feature comments must link their wiki article",
+                )
             for function_name in set(re.findall(r"Waldo_fnc_[A-Za-z0-9_]+", composition)):
                 short_name = function_name.removeprefix("Waldo_fnc_")
                 self.assertRegex(functions, rf"class\s+{re.escape(short_name)}\b", folder.name)
@@ -170,7 +176,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Features intentionally without compositions", catalogue)
         self.assertIn("Vehicle Recovery Workshop Example", catalogue)
         self.assertIn("Field Resupply Hub Example", catalogue)
-        self.assertIn("Hazardous Emitter Example", catalogue)
+        self.assertIn("Hazardous Zone Example", catalogue)
+        self.assertIn("Bomb Defusal Example", catalogue)
+        self.assertIn("Electronic Warfare Examples", catalogue)
+        self.assertIn("Custom 3D Marker Example", catalogue)
 
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
@@ -571,7 +580,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("[] call Waldo_fnc_ACRE2Init;", init_server)
         self.assertIn("[] call Waldo_fnc_ACRE2Init;", init_player)
         self.assertIn("if (isServer &&", acre_init)
-        self.assertIn("private _deadline = diag_tickTime + 30;", acre_refresh)
+        self.assertIn("private _deadline = diag_tickTime + 120;", acre_refresh)
+        self.assertIn('["INITIAL_LATE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh', acre_refresh)
+        self.assertIn("if (_planApplied", acre_refresh)
         self.assertNotIn("Waldo_ACRE2_PlanReady", acre_init)
         self.assertIn('missionNamespace getVariable ["Waldo_ACRE2_Plan", []]', acre_refresh)
         self.assertIn('if (hasInterface) then {["",""] call Waldo_fnc_InfoText};', init)

@@ -18,7 +18,7 @@ class items
 					position[]={-4.9328613,0.00084686279,-8.871582};
 					angles[]={0.0023920804,0,0};
 				};
-				title="AutoFortify Example";
+				title="AutoFortify Example. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup";
 				description="Remember to make sure players have a fortify tool!";
 				id=38;
 				atlOffset=7.6293945e-006;
@@ -296,7 +296,7 @@ class items
 			skill=0.2;
 		};
 		id=203;
-		type="Land_BagFenceLong";
+		type="Land_BagFence_Long_F";
 	};
 	class Item5
 	{
@@ -313,7 +313,7 @@ class items
 			skill=0.2;
 		};
 		id=208;
-		type="Land_BagFenceRound";
+		type="Land_BagFence_Round_F";
 	};
 	class Item6
 	{
@@ -330,7 +330,7 @@ class items
 			skill=0.2;
 		};
 		id=209;
-		type="Land_BagFenceShort";
+		type="Land_BagFence_Short_F";
 	};
 	class Item7
 	{
@@ -381,7 +381,7 @@ class items
 			skill=0.2;
 		};
 		id=198;
-		type="Hedgehog";
+		type="Land_CzechHedgehog_01_new_F";
 		atlOffset=7.6293945e-006;
 	};
 };

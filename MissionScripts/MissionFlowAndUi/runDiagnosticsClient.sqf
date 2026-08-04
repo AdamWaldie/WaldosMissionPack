@@ -15,6 +15,7 @@
  *
  * Example:
  * ["diag_01"] call Waldo_fnc_RunDiagnosticsClient;
+ * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mission-Diagnostics
  */
 if (!hasInterface) exitWith {false};
 params [["_runId", "", [""]]];
@@ -66,10 +67,37 @@ if (_acreEnabled) then {
     private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
     private _radios = if (isNil "acre_api_fnc_getCurrentRadioList") then {[]} else {[] call acre_api_fnc_getCurrentRadioList};
     private _unique = _radios select {"_ID_" in toUpper _x};
+    private _profiles = [_acreConfig] call Waldo_fnc_ACRE2GetRadioProfiles;
+    private _profileClasses = _profiles apply {toUpperANSI (_x select 0)};
+    private _inventoryRadios = (items player + assignedItems player) select {
+        private _item = toUpperANSI _x;
+        (_profileClasses findIf {_item == _x || {_item find (_x + "_ID_") == 0}}) >= 0
+    };
+    private _acreApiReady = !isNil "acre_api_fnc_isInitialized" && {[] call acre_api_fnc_isInitialized};
+    private _edenRadioSetup = player getVariable ["acre_sys_radio_setup", ""];
     private _last = missionNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
     private _lastOk = count _last > 0 && {_last select 0};
-    private _state = if (!_planValid || {_sideIndex < 0} || {_groupIndex < 0} || {_radios isEqualTo []} || {!_lastOk}) then {"ERROR"} else {"ACTIVE"};
-    ["radio", "acre-player-presetting", _state, format ["rawGroup='%1' normalized=%2 side=%3 planRevision=%4 sideMatch=%5 groupMatch=%6 radios=%7 unique=%8 loadoutGeneration=%9 restoredGeneration=%10 lastApplication=%11", _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _radios, count _unique, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last]] call _add;
+    private _expectsRadios = !(_inventoryRadios isEqualTo []);
+    private _state = if (!_planValid || {_sideIndex < 0} || {_groupIndex < 0} || {_expectsRadios && {(_radios isEqualTo [] || {!_lastOk})}}) then {"ERROR"} else {if (_expectsRadios) then {"ACTIVE"} else {"UNCONFIGURED"}};
+    private _plainFinding = if (!_planValid) then {"The server did not publish a valid ACRE plan."} else {
+        if (_sideIndex < 0) then {format ["No ACRE side block matches %1.", _sideKey]} else {
+            if (_groupIndex < 0) then {format ["Group '%1' is not listed in acreConfig.sqf.", _rawGroup]} else {
+                if (_expectsRadios && {!_acreApiReady}) then {"ACRE has not finished converting the player's carried radios to unique IDs."} else {
+                    if (_expectsRadios && {_radios isEqualTo []}) then {"Supported radio items exist in the inventory, but ACRE returned no current radios."} else {
+                        if (_expectsRadios && {!_lastOk}) then {format ["The radio plan was not applied successfully: %1", _last param [5, []]]} else {
+                            if (_expectsRadios) then {"Carried radios and the configured group plan were applied."} else {"This player carries no supported ACRE radio; no assignment is required."}
+                        }
+                    }
+                }
+            }
+        }
+    };
+    ["radio", "acre-player-presetting", _state, format ["finding=%1 rawGroup='%2' normalized=%3 side=%4 planRevision=%5 sideMatch=%6 groupMatch=%7 inventoryRadios=%8 currentRadios=%9 unique=%10 acreReady=%11 edenRadioSetup=%12 loadoutGeneration=%13 restoredGeneration=%14 lastApplication=%15 readinessFailure=%16", _plainFinding, _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _inventoryRadios, _radios, count _unique, _acreApiReady, _edenRadioSetup, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last, missionNamespace getVariable ["Waldo_ACRE2_LastReadinessFailure", []]]] call _add;
+    if !(_edenRadioSetup isEqualTo "") then {
+        ["radio", "acre-eden-radio-attribute", "ERROR", format ["This unit has an Eden ACRE Radio Setup attribute (%1). It can overwrite acreConfig.sqf during startup. Clear that unit attribute and let WMP own the initial assignment.", _edenRadioSetup]] call _add;
+    } else {
+        ["radio", "acre-eden-radio-attribute", "LOADED", "No conflicting Eden ACRE Radio Setup attribute is present."] call _add;
+    };
 } else {
     ["radio", "acre-player-presetting", if (_acreLoaded) then {"DISABLED"} else {"UNAVAILABLE"}, format ["loaded=%1 configEnabled=%2", _acreLoaded, _acreConfig getOrDefault ["enabled", false]]] call _add;
 };
