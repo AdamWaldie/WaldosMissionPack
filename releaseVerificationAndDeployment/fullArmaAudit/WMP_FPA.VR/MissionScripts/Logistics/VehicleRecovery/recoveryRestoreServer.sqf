@@ -37,6 +37,8 @@ private _customVariables = _state param [14, [], [[]]];
 private _footprint = (_state param [15, 3, [0]]) max (missionNamespace getVariable ["Waldo_Recovery_PlacementClearance", 3]);
 private _carrierMode = _state param [16, "AUTO", [""]];
 private _carrierCapacity = _state param [17, 1, [0]];
+private _carrierDeckOffset = _state param [18, [], [[]]];
+private _carrierDeckDirection = _state param [19, 0, [0]];
 
 private _position = [_workshop, _class, _footprint, [_package, _retained]] call Waldo_fnc_RecoveryResolveRestorePosition;
 if (_position isEqualTo []) exitWith {
@@ -85,7 +87,7 @@ private _interactionOptions = createHashMapFromArray [
 ];
 [_vehicle, _config select 0, _config select 1, _config select 2, _config select 3, _config select 4, _config select 5, _config select 6, _interactionOptions]
     call Waldo_fnc_RecoveryRegisterVehicle;
-if (_wasCarrier) then {[_vehicle, _carrierRange, _carrierMode, _carrierCapacity] call Waldo_fnc_RecoveryRegisterCarrier};
+if (_wasCarrier) then {[_vehicle, _carrierRange, _carrierMode, _carrierCapacity, _carrierDeckOffset, _carrierDeckDirection] call Waldo_fnc_RecoveryRegisterCarrier};
 if !(_wasAlive) then {
     private _callback = if (_onRestored isEqualType "") then {missionNamespace getVariable [_onRestored, {}]} else {_onRestored};
     if (_callback isEqualType {}) then {[_vehicle, _retained, _workshop] call _callback};

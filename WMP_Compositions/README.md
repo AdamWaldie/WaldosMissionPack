@@ -22,7 +22,9 @@ copies of feature logic.
 1. Place the composition in Eden and keep its objects separated as supplied.
 2. Read the nearby Eden comment before changing an init field.
 3. Change only the clearly named side, range, stock, key, class or toggle arguments.
-4. Keep `if (isServer) then { ... };` around registrations and global inventory/world mutations.
+4. Call WMP's documented public setup function directly. Its implementation owns server authority,
+   client-local setup and JIP replay; mission makers should not add an `isServer` wrapper unless the
+   specific function documentation explicitly requires one.
 5. Do not move player-local action setup into `initServer.sqf`; WMP registration functions publish
    the correct client/JIP setup themselves.
 6. Copy the full matching version of `MissionScripts`, `MissionConfig`, `description.ext` and init

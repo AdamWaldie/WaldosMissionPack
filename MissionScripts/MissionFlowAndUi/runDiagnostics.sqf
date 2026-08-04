@@ -164,11 +164,20 @@ private _thresholdsValid = _minAltitude < _maxAltitude && {_maxSpeed > 0};
 private _acreLoaded = isClass (configFile >> "CfgPatches" >> "acre_main");
 ["radio", "Radio configuration"] call _section;
 if (_acreLoaded) then {
-    {
-        _x params ["_variable", "_label"];
-        private _channels = missionNamespace getVariable [_variable, []];
-        ["radio", format ["%1-lr-channels", _label], if (_channels isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["%1 channel assignment(s)", count _channels], false] call _status;
-    } forEach [["Waldo_ACRE2Setup_LRChannels_BLUFOR", "BLUFOR"], ["Waldo_ACRE2Setup_LRChannels_OPFOR", "OPFOR"], ["Waldo_ACRE2Setup_LRChannels_IND", "INDEP"], ["Waldo_ACRE2Setup_LRChannels_CIV", "CIV"]];
+    private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
+    private _acreEnabled = _acreConfig getOrDefault ["enabled", false];
+    private _acrePlan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
+    private _planValid = count _acrePlan >= 4 && {(_acrePlan select 0) == 3};
+    private _revision = if (_planValid) then {_acrePlan select 1} else {-1};
+    private _sidePlans = if (_planValid) then {_acrePlan select 2} else {[]};
+    private _groupCount = 0;
+    {_groupCount = _groupCount + count (_x param [3, []]);} forEach _sidePlans;
+    ["radio", "acre-config", if (!_acreEnabled) then {"DISABLED"} else {if (count _acreConfig == 0) then {"ERROR"} else {"LOADED"}}, format ["enabled=%1 strict=%2 presetPolicy=%3 namedDisplays=%4", _acreEnabled, _acreConfig getOrDefault ["strict", true], _acreConfig getOrDefault ["prc343PresetPolicy", "MISSING"], _acreConfig getOrDefault ["namedDisplays", false]], _acreEnabled && {count _acreConfig == 0}] call _status;
+    ["radio", "acre-authoritative-plan", if (!_acreEnabled) then {"DISABLED"} else {if (_planValid && {_groupCount > 0}) then {"LOADED"} else {"ERROR"}}, format ["schema=%1 revision=%2 sides=%3 groups=%4 diagnostics=%5", if (count _acrePlan > 0) then {_acrePlan select 0} else {-1}, _revision, count _sidePlans, _groupCount, if (_planValid) then {_acrePlan select 3} else {[]}], _acreEnabled && {!_planValid || {_groupCount == 0}}] call _status;
+    private _babel = _acreConfig getOrDefault ["babel", createHashMap];
+    ["radio", "acre-babel", if !(_babel getOrDefault ["enabled", false]) then {"DISABLED"} else {if (count (_babel getOrDefault ["languages", []]) > 0) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 languages=%2", _babel getOrDefault ["enabled", false], count (_babel getOrDefault ["languages", []])], (_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}] call _status;
+} else {
+    ["radio", "acre-runtime", "UNAVAILABLE", "ACRE2 is not loaded; WMP radio presetting is inactive", false] call _status;
 };
 
 ["systems", "Feature runtime state"] call _section;
@@ -205,9 +214,37 @@ private _vvdPads = _missionObjects select {_x getVariable ["Waldo_VVD_ServerConf
 private _recoveryWorkshops = _missionObjects select {_x getVariable ["Waldo_Recovery_Workshop", false]};
 private _recoveryVehicles = _missionObjects select {_x getVariable ["Waldo_Recovery_Registered", false]};
 private _recoveryPackages = (missionNamespace getVariable ["Waldo_Recovery_Packages", []]) select {!isNull _x};
+private _recoveryCarriers = _missionObjects select {_x getVariable ["Waldo_Recovery_Carrier", false]};
+private _attachedPackages = 0;
+private _virtualPackages = 0;
+{_attachedPackages = _attachedPackages + count ((_x getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x}); _virtualPackages = _virtualPackages + count ((_x getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x});} forEach _recoveryCarriers;
 private _recoveryConfigured = !(_recoveryWorkshops isEqualTo []) || {!(_recoveryVehicles isEqualTo [])};
 private _recoveryBroken = !(_recoveryPackages isEqualTo []) && {_recoveryWorkshops isEqualTo []};
-["logistics", "vehicle-recovery", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryBroken) then {"ERROR"} else {if (_recoveryPackages isEqualTo []) then {"LOADED"} else {"ACTIVE"}}}, format ["workshops=%1 vehicles=%2 packages=%3 monitor=%4", count _recoveryWorkshops, count _recoveryVehicles, count _recoveryPackages, missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]], _recoveryBroken] call _status;
+["logistics", "vehicle-recovery", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryBroken) then {"ERROR"} else {if (_recoveryPackages isEqualTo []) then {"LOADED"} else {"ACTIVE"}}}, format ["workshops=%1 vehicles=%2 carriers=%3 packages=%4 attached=%5 virtual=%6 monitor=%7", count _recoveryWorkshops, count _recoveryVehicles, count _recoveryCarriers, count _recoveryPackages, _attachedPackages, _virtualPackages, missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]], _recoveryBroken] call _status;
+
+private _tacticalDisplays = _missionObjects select {_x getVariable ["Waldo_TacticalDisplay_Registered", false]};
+["interface", "tactical-displays", if (_tacticalDisplays isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["registered=%1", count _tacticalDisplays], false] call _status;
+private _hazardZones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
+private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", false];
+["environment", "hazard-zones", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardZones isEqualTo []) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 zones=%2", _hazardEnabled, count _hazardZones], _hazardEnabled && {_hazardZones isEqualTo []}] call _status;
+private _resupplyHubs = _missionObjects select {_x getVariable ["Waldo_FieldResupply_Hub", false]};
+private _resupplyCarriers = allPlayers select {_x getVariable ["Waldo_FieldResupply_Carrier", false]};
+["logistics", "field-resupply-runtime", if (_resupplyHubs isEqualTo [] && {_resupplyCarriers isEqualTo []}) then {"UNCONFIGURED"} else {"LOADED"}, format ["hubs=%1 carriers=%2", count _resupplyHubs, count _resupplyCarriers], false] call _status;
+
+{
+    _x params ["_feature", "_serverVariable", "_publicVariable"];
+    private _serverRegistry = missionNamespace getVariable [_serverVariable, createHashMap];
+    private _publicSystems = missionNamespace getVariable [_publicVariable, []];
+    private _serverCount = count (keys _serverRegistry);
+    private _publicCount = count _publicSystems;
+    private _consistent = _serverCount == _publicCount;
+    ["runtime-system", _feature, if (_serverCount == 0) then {"UNCONFIGURED"} else {if (_consistent) then {"ACTIVE"} else {"ERROR"}}, format ["server=%1 publicJip=%2", _serverCount, _publicCount], !_consistent] call _status;
+} forEach [
+    ["dynamic-aa", "Waldo_DynamicAA_Registry", "Waldo_DynamicAA_PublicSystems"],
+    ["dynamic-ao", "Waldo_DynamicAO_Registry", "Waldo_DynamicAO_PublicSystems"],
+    ["airborne-gunship", "Waldo_Gunship_Registry", "Waldo_Gunship_PublicSystems"],
+    ["paradrop-drop-zones", "Waldo_Paradrop_DropZones", "Waldo_Paradrop_PublicDropZones"]
+];
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 ["integration", "ACE and Zeus integration"] call _section;

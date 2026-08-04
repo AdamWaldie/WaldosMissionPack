@@ -16,7 +16,7 @@
  * Boolean - true when forwarded or registered; otherwise false.
  *
  * Example:
- * if (isServer) then {[this, west, -1] call Waldo_fnc_FieldResupplyRegisterHub;};
+ * [this, west, -1] call Waldo_fnc_FieldResupplyRegisterHub;
  *
  * Current callers: Field Resupply ZEN hub module, audit hub setup and mission-maker object setup.
  */
@@ -37,6 +37,6 @@ _hubs pushBackUnique _hub;
 missionNamespace setVariable ["Waldo_FieldResupply_Hubs", _hubs, true];
 missionNamespace setVariable ["Waldo_FieldResupply_Enable", true, true];
 [[["Waldo_FieldResupply_Enable", true]], false] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];
-[_hub] remoteExecCall ["Waldo_fnc_FieldResupplySetupHubLocal", -2, format ["Waldo_FieldResupply_Hub_%1", netId _hub]];
-[] remoteExecCall ["Waldo_fnc_FieldResupplyInit", -2, "Waldo_FieldResupply_Init"];
+[_hub] remoteExecCall ["Waldo_fnc_FieldResupplySetupHubLocal", 0, format ["Waldo_FieldResupply_Hub_%1", netId _hub]];
+[] remoteExecCall ["Waldo_fnc_FieldResupplyInit", 0, "Waldo_FieldResupply_Init"];
 true

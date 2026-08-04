@@ -30,7 +30,9 @@ private _sideIndex = (_plan select 2) findIf {(_x select 0) == _sideKey};
 if (_sideIndex < 0) exitWith {false};
 private _sidePlan = (_plan select 2) select _sideIndex;
 _sidePlan params ["_unusedSide", "_preset", "_nets", "_groups"];
-private _groupKey = toUpper groupId group player;
+// Eden/CBA callsigns commonly alternate spaces, hyphens, underscores and dots. Treat those
+// separators as presentation so `VIKING-2-3` and `Viking 2-3` resolve to the same authored group.
+private _groupKey = toUpperANSI ((((groupId group player) splitString " -_.") joinString ""));
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
 if (_groupIndex < 0) exitWith {
     diag_log format ["[WMP ACRE] No %1 plan for group %2.", _sideKey, _groupKey];

@@ -23,6 +23,7 @@ params [
     ["_isFacility", true],
     ["_Scale", 1]
 ];
+if (!isServer) exitWith {false};
 
 // add medical equipment
 clearweaponcargoGlobal _crate;

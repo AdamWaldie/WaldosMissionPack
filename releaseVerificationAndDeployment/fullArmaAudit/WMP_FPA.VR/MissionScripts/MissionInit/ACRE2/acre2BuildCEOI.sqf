@@ -27,7 +27,7 @@ if (_sideIndex < 0) exitWith {false};
 private _sidePlan = (_plan select 2) select _sideIndex;
 private _nets = _sidePlan select 2;
 private _groups = _sidePlan select 3;
-private _groupKey = toUpper groupId group player;
+private _groupKey = toUpperANSI ((((groupId group player) splitString ' -_.') joinString ''));
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
 private _radios = if (isNil 'acre_api_fnc_getCurrentRadioList') then {[]} else {[] call Waldo_fnc_ACRE2GetOrderedRadios};
 private _current = createHashMap;

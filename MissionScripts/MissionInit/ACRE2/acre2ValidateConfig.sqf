@@ -119,7 +119,7 @@ private _validateAssignment = {
         {
             if (count _x != 4) then {_errors pushBack format ["Malformed %1 group %2.", _sideKey, _x]} else {
                 _x params ["_groupId", "_netRefs", "_fallback343", "_assignments"];
-                private _groupKey = toUpper _groupId;
+                private _groupKey = toUpperANSI (((_groupId splitString " -_.") joinString ""));
                 if (_groupKey in _groupKeys) then {_errors pushBack format ["Duplicate %1 group %2.", _sideKey, _groupKey]};
                 _groupKeys pushBack _groupKey;
                 {if (_netMap getOrDefault [toUpper _x, []] isEqualTo []) then {_errors pushBack format ["%1/%2 references unknown net %3.", _sideKey, _groupKey, _x]}} forEach _netRefs;

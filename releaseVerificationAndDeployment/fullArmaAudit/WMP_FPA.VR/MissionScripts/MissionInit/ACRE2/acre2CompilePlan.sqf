@@ -19,6 +19,7 @@
 params [["_config", createHashMap, [createHashMap]], ["_revision", 1, [0]]];
 private _sidePlans = [];
 private _diagnostics = [];
+private _normaliseGroupKey = {toUpperANSI (((_this splitString " -_.") joinString ""))};
 private _hashText = {
     params ["_text", "_modulus"];
     private _hash = 5381;
@@ -46,13 +47,13 @@ private _hashText = {
         private _explicit343 = _assignments select {toUpper (_x select 0) == "ACRE_PRC343" && {(_x select 2) isEqualType []}};
         if (count _explicit343 > 0) then {
             {private _target = _x select 2; _used pushBackUnique (((_target select 0) - 1) * 16 + (_target select 1))} forEach _explicit343;
-            _allocations set [toUpper _groupId, +((_explicit343 select 0) select 2)];
+            _allocations set [_groupId call _normaliseGroupKey, +((_explicit343 select 0) select 2)];
         } else {
             if !(_fallback343 isEqualTo []) then {
                 _used pushBackUnique (((_fallback343 select 0) - 1) * 16 + (_fallback343 select 1));
-                _allocations set [toUpper _groupId, +_fallback343];
+                _allocations set [_groupId call _normaliseGroupKey, +_fallback343];
             } else {
-                _autoKeys pushBack (toUpper _groupId);
+                _autoKeys pushBack (_groupId call _normaliseGroupKey);
             };
         };
     } forEach _sourceGroups;
@@ -93,7 +94,7 @@ private _hashText = {
             if (_ear == "BOTH") then {_ear = "CENTER"};
             [toUpper (_x select 0), _x select 1, _x select 2, _ear]
         };
-        [toUpper _groupId, _netKeys apply {toUpper _x}, _allocations getOrDefault [toUpper _groupId, []], _normalisedAssignments]
+        [_groupId call _normaliseGroupKey, _netKeys apply {toUpper _x}, _allocations getOrDefault [_groupId call _normaliseGroupKey, []], _normalisedAssignments]
     };
     _sidePlans pushBack [_sideKey, _preset, _nets, _groups];
 } forEach (_config getOrDefault ["sides", []]);

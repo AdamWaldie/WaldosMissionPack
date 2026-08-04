@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_RadioJammer";
-			init="if (isServer) then {[this, 300, ""ALL"", ""ALL"", 50, 1, true, false, [], [], false, true] call Waldo_fnc_Jammer;};";
+			init="[this, 300, ""ALL"", ""ALL"", 50, 1, true, false, [], [], false, true, createHashMapFromArray [[""disableChallenge"", true], [""challengeId"", ""circuit""], [""difficulty"", ""standard""], [""engineerOnly"", false], [""resultMode"", ""DISABLE""], [""allowPlayerToggle"", true]]] call Waldo_fnc_Jammer;";
 		};
 		id=1;
 		type="Land_TTowerSmall_1_F";
@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-4,0};};
-		title="Radio Jammer: 300 m omnidirectional field, affects all sides and bands, starts active, no player map marker, visible to Zeus. Configure disable/reactivate interaction defaults in MissionConfig electronicWarfareConfig.sqf.";
+		title="Radio Jammer: 300 m omnidirectional field with a standard circuit-bypass Disable Jammer interaction. A successful disable leaves the prop intact and exposes Reactivate Jammer.";
 		id=2;
 	};
 };

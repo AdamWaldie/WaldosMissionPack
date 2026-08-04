@@ -23,12 +23,12 @@ if (!hasInterface || {isNull _target} || {_target getVariable ["Waldo_Recovery_C
 private _load = _target addAction [
     "<t color='#F4C542'>Load Recovery Package</t>",
     {params ["_target", "_actor"]; [_actor, "LOAD", _target] remoteExecCall ["Waldo_fnc_RecoveryRequestServer", 2];},
-    [], 1.4, true, true, "", "_this distance _target <= ((_target getVariable ['Waldo_Recovery_CarrierRange', 10]) max 3) && {alive _target} && {abs speed _target < 1} && {(count (getVehicleCargo _target)) + (count (_target getVariable ['Waldo_Recovery_VirtualPackages', []])) < (_target getVariable ['Waldo_Recovery_CarrierCapacity', 1])}", 30
+    [], 1.4, true, true, "", "_this distance _target <= ((_target getVariable ['Waldo_Recovery_CarrierRange', 10]) max 3) && {alive _target} && {abs speed _target < 1} && {(count (getVehicleCargo _target)) + (count (_target getVariable ['Waldo_Recovery_AttachedPackages', []])) + (count (_target getVariable ['Waldo_Recovery_VirtualPackages', []])) < (_target getVariable ['Waldo_Recovery_CarrierCapacity', 1])}", 30
 ];
 private _unload = _target addAction [
     "<t color='#F4C542'>Unload Recovery Package</t>",
     {params ["_target", "_actor"]; [_actor, "UNLOAD", _target] remoteExecCall ["Waldo_fnc_RecoveryRequestServer", 2];},
-    [], 1.4, true, true, "", "_this distance _target <= ((_target getVariable ['Waldo_Recovery_CarrierRange', 10]) max 3) && {alive _target} && {abs speed _target < 1} && {(count (getVehicleCargo _target)) + (count (_target getVariable ['Waldo_Recovery_VirtualPackages', []])) > 0}", 30
+    [], 1.4, true, true, "", "_this distance _target <= ((_target getVariable ['Waldo_Recovery_CarrierRange', 10]) max 3) && {alive _target} && {abs speed _target < 1} && {(count (getVehicleCargo _target)) + (count (_target getVariable ['Waldo_Recovery_AttachedPackages', []])) + (count (_target getVariable ['Waldo_Recovery_VirtualPackages', []])) > 0}", 30
 ];
 _target setVariable ["Waldo_Recovery_CarrierActionIds", [_load, _unload]];
 _target setVariable ["Waldo_Recovery_CarrierActionsInstalled", true];

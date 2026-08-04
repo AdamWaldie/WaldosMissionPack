@@ -51,19 +51,23 @@ The server report checks:
 - required and optional mod patches;
 - mission loadout scraping and playable-side results;
 - configured crate, parachute, and paradrop values;
-- ACRE2 channel configuration;
+- ACRE2 configuration, authoritative plan schema/revision, group counts and Babel readiness;
 - Economy, party-game, interaction-procedure, jamming, SafeStart, AAR/ENDEX, and custom 3D-marker state;
 - configured MHQ and VVD equipment;
+- recovery workshops, carriers, attached/virtual package state, Field Resupply hubs/carriers and Tactical Displays;
+- Hazard evaluator state and server/JIP registry parity for Dynamic AA, Dynamic AO, gunships and paradrop operations;
 - ACE and Zeus integration availability.
 
 Each interface client reports:
 
 - its own CBA, ACE, ZEN, ACRE2, and TFAR patch state;
+- its raw and normalized ACRE callsign, side/group plan match, carried unique radios, loadout generations and last presetting result;
 - SafeStart state, loop, timer, and HUD;
 - jamming factor, registry, client loop, and HUD;
 - core and Economy Zeus module registration counts;
 - the custom 3D-marker renderer;
 - ACE or vanilla interaction installation on registered audit fixtures.
+- Tactical Display actions and Hazard snapshot/evaluator state.
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
 
@@ -84,6 +88,10 @@ private _warningCount = [] call Waldo_fnc_RunDiagnostics;
 ```
 
 The function returns the number of warnings. If it is called from unscheduled server code, it starts the check in a scheduled thread and returns `0` immediately.
+
+Zeus can run the same read-only check during play from **WMP Interface & QA > Diagnostics - Run Full Pack Audit**. The module does not repair or change feature state; it requests the server run and tells the curator where to inspect the correlated RPT entries.
+
+For an ACRE presetting failure, find `feature=ACRE-PLAYER-PRESETTING` in the affected client's RPT. The detail shows the callsign before and after separator normalization, side/group match, plan revision, current unique radios, saved-loadout generations and `lastApplication`. This distinguishes a callsign/config mismatch from radios that were absent, not yet unique, or deliberately restored from a saved personal state.
 
 Other WMP systems can write a line with the same frame without starting a full diagnostic run:
 

@@ -1,10 +1,9 @@
 version=54;
-name="[WMP] Halo And Static Line C130 Drop Examples";
+name="[WMP] Halo And Static Line Blackfish Drop Examples";
 author="WaldoTheWarfighter";
 category="Waldos Mission Pack Compositions - Air Operations";
 requiredAddons[]=
 {
 	"A3_Structures_F_Mil_Flags",
-	"rhsusf_c_troops",
-	"RHS_US_A2_AirImport"
+	"A3_Air_F_Exp_VTOL_01"
 };
