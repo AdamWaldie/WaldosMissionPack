@@ -20,3 +20,4 @@
         if (_targetName isEqualTo "") exitWith {[]};
 
         [_targetName] call Waldo_fnc_EcoBuild_getBuildDefinition
+

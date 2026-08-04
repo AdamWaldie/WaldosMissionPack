@@ -13,7 +13,7 @@
  */
 
 [
-    "Fortify Budget Manager",
+    "Fortify Budget Manager", 
     [
         // Slider to set the budget alteration amount
         ["SLIDER", ["Alteration Amount", "Amount added to or removed from the selected side's fortify budget."], [0, 500, 100, 0], false],
@@ -48,3 +48,4 @@
         [_sideToAlter, _budget, player] remoteExecCall ["Waldo_fnc_ZenFortifyBudgetServer", 2];
     }
 ] call zen_dialog_fnc_create;
+

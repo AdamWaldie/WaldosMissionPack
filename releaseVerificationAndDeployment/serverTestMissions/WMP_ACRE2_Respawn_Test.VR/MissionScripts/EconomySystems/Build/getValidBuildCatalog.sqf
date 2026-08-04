@@ -18,3 +18,4 @@
         _catalog select {
             !([_x, _catalog] call Waldo_fnc_EcoBuild_hasBuildEntryError)
         }
+

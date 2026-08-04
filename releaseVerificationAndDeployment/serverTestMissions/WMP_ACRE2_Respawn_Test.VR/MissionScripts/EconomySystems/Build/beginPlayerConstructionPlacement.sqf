@@ -183,3 +183,4 @@
             "This construction base remains available after confirmation."
         };
         [format ["PLACEMENT ACTIVE // Aim at the site. Q/E rotates. %1 Escape cancels safely.", _sourceText], 12] call Waldo_fnc_EcoCore_notifyActorLocal;
+

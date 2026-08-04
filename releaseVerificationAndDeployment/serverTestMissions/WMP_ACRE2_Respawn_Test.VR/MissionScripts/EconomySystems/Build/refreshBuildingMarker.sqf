@@ -42,3 +42,4 @@
         _markerName setMarkerType _markerClass;
         _markerName setMarkerColor _markerColor;
         _markerName setMarkerText _label;
+

@@ -31,3 +31,4 @@
         } forEach (call Waldo_fnc_EcoBuild_getSpawnedBuildings);
 
         _bonus
+

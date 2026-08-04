@@ -47,7 +47,7 @@ if (_arsenal == true) then {
         ["AmmoboxInit",[_target,true]] call BIS_fnc_arsenal;
         [_target, true] call ace_arsenal_fnc_initBox;
     } else {
-        //Add Limited Ace Arsenal
+        //Add Limited Ace Arsenal 
         [_target,_crateSide,false] call Waldo_fnc_CreateLimitedArsenal;
     };
 };

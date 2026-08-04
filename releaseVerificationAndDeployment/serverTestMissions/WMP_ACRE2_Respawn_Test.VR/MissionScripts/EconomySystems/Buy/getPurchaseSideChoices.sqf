@@ -15,3 +15,4 @@
  */
 
         ["EVERYONE", "BLUFOR", "OPFOR", "INDEP"]
+

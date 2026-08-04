@@ -42,3 +42,4 @@
         if (_selected >= 0) then {
             _list lbSetCurSel _selected;
         };
+

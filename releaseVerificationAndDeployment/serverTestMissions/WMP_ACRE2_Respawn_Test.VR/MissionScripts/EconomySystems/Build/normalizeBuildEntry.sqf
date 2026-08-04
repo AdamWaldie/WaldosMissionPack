@@ -69,3 +69,4 @@
             _availability,
             _category
         ]
+

@@ -44,6 +44,7 @@ if (!isNull _objectPos) then {
         format ["Use %1 (%2) without replacing it.", getText (configFile >> "CfgVehicles" >> (typeOf _objectPos) >> "displayName"), typeOf _objectPos]
     ]]];
 };
+private _disableProcedureOptions = ["circuit"] call Waldo_fnc_MiniGameInteractionOptions;
 
 [
     "Waldos Radio Jammer",
@@ -71,19 +72,18 @@ if (!isNull _objectPos) then {
         ["LIST", ["Spawned emitter object", "Exact physical class created when Emitter source is Spawn."], [_emitterClasses, _emitterLabels, 0, 4]],
         ["CHECKBOX", ["Allow Reactivation", "Add Activate Jammer while the field is off. Turning it off still requires Disable Jammer, so this cannot bypass the procedure below."], true, false],
         ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant hostile field disablement with a shared interaction challenge."], true, false],
-        ["TOOLBOX:WIDE", ["Disable Procedure", "Procedure players complete to shut down the jammer."], [0, 2, 2, ["Circuit bypass", "Signal alignment", "Command authentication", "Control-wire isolation"]]],
+        ["COMBO", ["Disable Procedure", "Choose any shared interaction procedure for shutting down the jammer."], _disableProcedureOptions],
         ["TOOLBOX:WIDE", ["Procedure Difficulty", "Shared interaction difficulty profile."], [1, 1, 4, ["Easy", "Standard", "Hard", "Expert"]]],
         ["CHECKBOX", ["Engineer only", "Hide the field-disable action from non-engineers. Disabled by default so public Zeus players can use the objective."], false],
         ["TOOLBOX:WIDE", ["Successful disable result", "Disable keeps the prop and turns the field off; destroy removes it."], [0, 1, 2, ["Disable field", "Destroy emitter"]]]
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_radius", "_falloff", "_strengthPct", "_sideIndex", "_bandIndex", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_sourceIndex", "_className", "_allowPlayerToggle", "_disableChallenge", "_challengeIndex", "_difficultyIndex", "_engineerOnly", "_resultIndex"];
+        _args params ["_radius", "_falloff", "_strengthPct", "_sideIndex", "_bandIndex", "_active", "_arc", "_bearing", "_pulse", "_pulseOn", "_pulseOff", "_jamUAV", "_marker", "_show3D", "_sourceIndex", "_className", "_allowPlayerToggle", "_disableChallenge", "_challengeId", "_difficultyIndex", "_engineerOnly", "_resultIndex"];
         _pos params ["_modulePos", "_objectPos", "_sourceValues"];
         private _sideStr = ["ALL", "WEST", "EAST", "IND", "CIV"] param [_sideIndex, "ALL"];
         private _bandsText = ["ALL", "30-88", "225-400", "30-88;225-400"] param [_bandIndex, "ALL"];
         private _source = _sourceValues param [_sourceIndex, "SPAWN"];
-        private _challengeId = ["circuit", "radiotune", "commandinput", "wirecut"] param [_challengeIndex, "circuit"];
         private _difficulty = ["easy", "standard", "hard", "expert"] param [_difficultyIndex, "standard"];
         private _resultMode = ["DISABLE", "DESTROY"] param [_resultIndex, "DISABLE"];
         private _existingObject = if (_source isEqualTo "EXISTING") then {_objectPos} else {objNull};

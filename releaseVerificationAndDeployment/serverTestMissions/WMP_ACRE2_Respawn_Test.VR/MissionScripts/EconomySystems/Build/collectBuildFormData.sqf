@@ -106,3 +106,4 @@
             _availability,
             [ctrlText _categoryCtrl] call Waldo_fnc_EcoCore_trimString
         ]] call Waldo_fnc_EcoBuild_normalizeBuildEntry
+

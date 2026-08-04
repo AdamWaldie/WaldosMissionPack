@@ -88,3 +88,4 @@
             + _lineBreak
             + (_effects joinString _lineBreak)
         ), 18] call Waldo_fnc_EcoCore_notifyActorLocal;
+

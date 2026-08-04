@@ -16,3 +16,4 @@
 
         private _catalog = call Waldo_fnc_EcoResearch_getResearchCatalog;
         _catalog select { !([_x, _catalog] call Waldo_fnc_EcoResearch_hasResearchEntryError) }
+

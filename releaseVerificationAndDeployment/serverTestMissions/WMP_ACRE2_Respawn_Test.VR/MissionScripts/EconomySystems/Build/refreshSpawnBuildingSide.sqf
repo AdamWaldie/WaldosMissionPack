@@ -31,3 +31,4 @@
             _valueCtrl ctrlSetText ([(_choices select _index)] call Waldo_fnc_EcoResource_getZoneOwnerLabel);
             _valueCtrl ctrlCommit 0;
         };
+

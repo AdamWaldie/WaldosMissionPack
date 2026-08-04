@@ -18,7 +18,7 @@ private _playerGroup = "";
 if (_group == "") then { _playerGroup = "in your squad" } else { _playerGroup = formatText["under the callsign <font color='#addde6'>%1</font>", _group]};
 
 private _worldName = getText (configFile >> "CfgWorlds" >> worldName >> "description");
-private _serverName = if (serverName != "") then {serverName} else {"localhost"};
+private _serverName = if (serverName != "") then {serverName} else {"localhost"}; 
 
 
 private _abilityMedic = "";

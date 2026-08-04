@@ -26,15 +26,15 @@ if (isClass(configFile >> "CfgPatches" >> "ace_main")) then {
 };
 
 //Prevent whacky things from happening by denying special actions from IFA3 & other mods
-inGameUISetEventHandler ["action",
-  " _action = _this select 4;
-    if ( _action in ['Unmount','Turn left','Turn right'] ) then {
-        hint 'You cannot do that!';
-        true
-    } else {
-        false
-    }
-  "
+inGameUISetEventHandler ["action",  
+  " _action = _this select 4;  
+    if ( _action in ['Unmount','Turn left','Turn right'] ) then { 
+        hint 'You cannot do that!'; 
+        true 
+    } else { 
+        false 
+    } 
+  "  
 ];
 
 //Set custom title for addaction

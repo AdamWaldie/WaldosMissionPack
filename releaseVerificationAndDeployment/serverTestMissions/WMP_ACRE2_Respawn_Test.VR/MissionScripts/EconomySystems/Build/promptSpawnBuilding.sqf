@@ -141,3 +141,4 @@
 
         [_disp] call Waldo_fnc_EcoBuild_refreshSpawnBuildingSide;
         [_disp] call Waldo_fnc_EcoBuild_populateSpawnBuildingList;
+

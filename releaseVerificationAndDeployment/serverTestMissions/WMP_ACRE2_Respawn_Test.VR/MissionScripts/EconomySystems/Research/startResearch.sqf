@@ -42,3 +42,4 @@
 
         [_caller, format ["%1: research started.", _researchName]] call Waldo_fnc_EcoCore_notifyActor;
         [_sideKey, [_entry param [0, ""], 1 max (_entry param [4, 60]), 0, 0, serverTime]] call Waldo_fnc_EcoResearch_setSideActiveResearch;
+

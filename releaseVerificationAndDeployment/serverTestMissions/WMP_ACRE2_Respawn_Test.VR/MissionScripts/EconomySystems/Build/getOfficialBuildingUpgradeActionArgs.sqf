@@ -412,3 +412,4 @@
             "private _sideKey = switch (side group _this) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'};}; private _catalog = missionNamespace getVariable ['WaldoEcoBuild_BuildCatalog', []]; if ((typeName _catalog) != 'ARRAY') then {_catalog = [];}; private _buildName = _target getVariable ['WaldoEcoBuild_BuildDefinitionName', '']; private _index = _catalog findIf {((_x param [0, '']) == _buildName)}; private _upgradeName = ''; if (_index >= 0) then {_upgradeName = (_catalog select _index) param [18, ''];}; (_upgradeName != '') && {(_target getVariable ['WaldoEcoBuild_BuildOwnerSideKey','NONE']) == _sideKey} && {!(_target getVariable ['WaldoEcoBuild_IsUpgrading', false])}",
             20
         ]
+

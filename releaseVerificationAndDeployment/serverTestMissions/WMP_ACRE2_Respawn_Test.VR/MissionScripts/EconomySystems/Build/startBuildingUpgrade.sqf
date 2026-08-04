@@ -66,3 +66,4 @@
             serverTime
         ];
         [_runtimeRows] call Waldo_fnc_EcoBuild_setUpgradeJobRuntime;
+

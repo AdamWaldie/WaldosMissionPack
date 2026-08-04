@@ -29,3 +29,4 @@
         if ((_rows findIf {(_x param [0, ""]) isEqualTo _jobId}) >= 0) exitWith {};
         _rows pushBack [_jobId, _buildName, _sideKey];
         [_rows] call Waldo_fnc_EcoBuild_setActiveConstructionJobs;
+

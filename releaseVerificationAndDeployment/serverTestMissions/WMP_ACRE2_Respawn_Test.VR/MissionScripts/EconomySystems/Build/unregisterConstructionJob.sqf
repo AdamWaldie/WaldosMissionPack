@@ -22,3 +22,4 @@
         private _rows = call Waldo_fnc_EcoBuild_getActiveConstructionJobs;
         _rows = _rows select {(_x param [0, ""]) isNotEqualTo _jobId};
         [_rows] call Waldo_fnc_EcoBuild_setActiveConstructionJobs;
+

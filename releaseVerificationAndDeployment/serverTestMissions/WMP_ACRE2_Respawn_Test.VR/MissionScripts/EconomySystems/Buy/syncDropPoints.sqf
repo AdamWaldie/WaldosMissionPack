@@ -48,3 +48,4 @@
         if (_changed || {(count _kept) isNotEqualTo (count _rows)}) then {
             [_kept] call Waldo_fnc_EcoBuy_setDropPoints;
         };
+

@@ -22,3 +22,4 @@
             case "GUER": {"INDEP"};
             default {"EVERYONE"};
         }
+

@@ -17,7 +17,7 @@ player createDiaryRecord["Radio Reports",
         "
 <font color='#addde6'>SUNBEAM 5, this is SUNBEAM 1, SITREP for you over!</font><br/><br/>
 <font color='#addde6'>SUNBEAM 1, this is SUNBEAM 5, Sent It, over!</font><br/><br/>
-
+  
 <font color='#addde6'>Line 1: Recent Friendly Activity And location</font><br/>
     - Current Friendly Locations and Sub Unit locations.<br/>
     - Recent actions taken by unit.<br/>

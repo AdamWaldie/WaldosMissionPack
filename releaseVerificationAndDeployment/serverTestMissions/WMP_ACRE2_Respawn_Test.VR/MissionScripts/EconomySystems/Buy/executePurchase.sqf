@@ -57,3 +57,4 @@
         [[_spawned], true] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;
 
         [_caller, format ["%1 purchased - delivered to the drop point.", _purchaseName]] call Waldo_fnc_EcoCore_notifyActor;
+

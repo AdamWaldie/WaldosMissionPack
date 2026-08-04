@@ -28,3 +28,4 @@
         };
         if ((count ([(_entry param [5, "Ground"]), _origin, _entry param [4, ""], _sideKey] call Waldo_fnc_EcoBuy_findAvailableDropPoint)) <= 0) exitWith {"drop"};
         "ready"
+

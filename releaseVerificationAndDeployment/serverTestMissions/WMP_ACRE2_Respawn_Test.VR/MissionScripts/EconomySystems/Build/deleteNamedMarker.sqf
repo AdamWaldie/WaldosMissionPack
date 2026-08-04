@@ -21,3 +21,4 @@
 
         [_markerName] call Waldo_fnc_EcoBuild_removeSharedMarkerName;
         deleteMarker _markerName;
+

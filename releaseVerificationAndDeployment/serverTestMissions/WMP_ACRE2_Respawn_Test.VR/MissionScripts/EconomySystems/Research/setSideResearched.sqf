@@ -31,3 +31,4 @@
         } forEach _rows;
 
         missionNamespace setVariable [_varName, _clean, true];
+

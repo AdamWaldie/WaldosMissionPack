@@ -23,3 +23,4 @@
 
         if (_index < 0) exitWith {"mil_dot"};
         (_choices select _index) param [0, "mil_dot"]
+

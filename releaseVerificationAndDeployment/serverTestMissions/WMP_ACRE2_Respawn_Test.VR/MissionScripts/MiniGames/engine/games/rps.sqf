@@ -698,3 +698,4 @@ Waldo_MG_fnc_openRPSLocal = {
         };
     };
 };
+

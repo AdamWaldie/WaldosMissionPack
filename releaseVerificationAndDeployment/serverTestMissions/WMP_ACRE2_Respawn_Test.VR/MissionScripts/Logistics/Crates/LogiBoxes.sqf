@@ -44,12 +44,12 @@ _logiSide = side _player;
 // Find area external to vehicle on vehicles right hand side
 _vehiclePositionOffsetOnDirectionLogi = getDir _target + _offsetDegrees;
 
-//Create Safezone & Mark with
+//Create Safezone & Mark with 
 _knownSafePositionLogi = [_target, _offsetDistance, _vehiclePositionOffsetOnDirectionLogi] call BIS_fnc_relPos;
 
 // Object Position Definition
-_medPos = _knownSafePositionLogi getPos [2,(_vehiclePositionOffsetOnDirectionLogi + 40)];
-_ammoPos = _knownSafePositionLogi getPos [2,(_vehiclePositionOffsetOnDirectionLogi - 40)];
+_medPos = _knownSafePositionLogi getPos [2,(_vehiclePositionOffsetOnDirectionLogi + 40)]; 
+_ammoPos = _knownSafePositionLogi getPos [2,(_vehiclePositionOffsetOnDirectionLogi - 40)]; 
 _otherPosLow = _knownSafePositionLogi getPos [2.25,_vehiclePositionOffsetOnDirectionLogi];
 _otherPosHigh = _knownSafePositionLogi getPos [1.60,_vehiclePositionOffsetOnDirectionLogi];
 
@@ -59,7 +59,7 @@ _medicalBoxClass = missionNamespace getVariable "Logi_MedicalBoxClass";
 _boxToSpawn = "B_supplyCrate_F";
 if (isNil "_supplyBoxClass" && isNil "_medicalBoxClass") then
 {
-
+    
     if (_boxType == "Medical") then {
         if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
         _boxToSpawn = "ACE_medicalSupplyCrate_advanced";
@@ -69,15 +69,15 @@ if (isNil "_supplyBoxClass" && isNil "_medicalBoxClass") then
         };
     };
     if (_boxType == "Supply" || _boxType == "Ammo") then {
-        _boxToSpawn = "B_supplyCrate_F";
-        _supplyBoxClass = "B_supplyCrate_F";
+        _boxToSpawn = "B_supplyCrate_F"; 
+        _supplyBoxClass = "B_supplyCrate_F";     
     };
 } else {
     if (_boxType == "Medical") then {
         _boxToSpawn = Logi_MedicalBoxClass;
     };
     if (_boxType == "Supply" || _boxType == "Ammo") then {
-        _boxToSpawn = _supplyBoxClass;
+        _boxToSpawn = _supplyBoxClass;       
     };
 };
 // Get Track & Wheel
@@ -112,7 +112,7 @@ clearMagazineCargoGlobal _box;
 clearWeaponCargoGlobal _box;
 
 
-// Medical boxes
+// Medical boxes 
 if (_boxType == "Medical") then {
     _box setPos _medPos;
     if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {

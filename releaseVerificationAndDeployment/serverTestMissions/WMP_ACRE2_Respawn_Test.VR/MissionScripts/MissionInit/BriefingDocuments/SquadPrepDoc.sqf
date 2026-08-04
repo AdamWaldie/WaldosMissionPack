@@ -17,7 +17,7 @@ player createDiaryRecord["Preperation",
         "
 <font color='#addde6' size='20'>                       SQUAD PREPERATION<br/>
 -----------------------------------------------------------------</font><br/><br/>
-
+  
 <font color='#addde6'>1. Identify ASL and FTL</font><br/>
     - Ensure that they are able to stay for the entire op period.<br/>
     - ASL stands for Assistant Squad Leader. He leads a fireteam. He is your 2IC (2nd In command).<br/>

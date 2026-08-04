@@ -17,7 +17,7 @@ player createDiaryRecord["Preperation",
         "
 <font color='#addde6' size='20'>                       FIRE COMMANDS - ALDO!<br/>
 -----------------------------------------------------------------</font><br/><br/>
-
+  
 <font color='#addde6'>ALERT</font><br/>
     - Who/What are you speaking to?
     Example:<br/>
@@ -48,7 +48,7 @@ player createDiaryRecord["Preperation",
             - Autorifles: 5 rounds every 4-5 Seconds.<br/>
         - Sustained:
             - Rifles: 1 round every 1.5 Seconds.<br/>
-            - Autorifles: 10 rounds every 2-3 Seconds.<br/>
+            - Autorifles: 10 rounds every 2-3 Seconds.<br/> 
         - Scan and Shoot<br/>
             - fire when able to get killshot.<br/><br/>
 

@@ -91,3 +91,4 @@
         [_items, true] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;
 
         _items
+

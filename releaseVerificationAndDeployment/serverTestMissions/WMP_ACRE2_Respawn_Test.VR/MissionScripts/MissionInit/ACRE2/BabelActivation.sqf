@@ -1,11 +1,11 @@
 /*
 Author: WaldoTheWarfighter
 
-Description:
+Description: 
 The script activates the Babel system in Arma 3 with Advanced Combat Radio Environment 2 (ACRE2). It sets up the languages spoken by different sides and defines the languages spoken by interpreters. It adds all the necessary languages to the ACRE2 Babel system, assigns them to the respective units based on the side they belong to, and creates a diary record with a list of languages spoken in the area, highlighting the ones the player can speak.
 
 Arguments:
-_languages - An array of sub-arrays. Each sub-array contains a side (West, East, Independent, Civilian) and the languages they speak as strings.
+_languages - An array of sub-arrays. Each sub-array contains a side (West, East, Independent, Civilian) and the languages they speak as strings. 
 _interpreters - An array of units that are interpreters. These units can speak all languages.
 
 Returns:

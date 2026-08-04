@@ -70,3 +70,4 @@
         if (_iconIndex < 0) then {_iconIndex = 0;};
         _disp setVariable ["WaldoEcoBuy_ConfigIconIndex", _iconIndex];
         [_disp] call Waldo_fnc_EcoBuy_refreshPurchaseConfigIcon;
+

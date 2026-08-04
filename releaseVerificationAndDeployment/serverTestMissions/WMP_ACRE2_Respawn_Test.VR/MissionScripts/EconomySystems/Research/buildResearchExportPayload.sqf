@@ -28,3 +28,4 @@
         } forEach _catalog;
 
         str ["WaldoEcoResearch_RESEARCH_V1", _includeResearched, _payloadCatalog]
+

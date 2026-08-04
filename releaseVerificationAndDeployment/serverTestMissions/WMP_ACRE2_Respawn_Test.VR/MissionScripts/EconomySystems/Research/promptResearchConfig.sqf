@@ -302,3 +302,4 @@
         [_disp, [_nameEdit, _descEdit, _costsEdit, _reqsEdit, _exclusiveEdit, _timeEdit, _colorEdit], _nameEdit] call Waldo_fnc_EcoResearch_setPromptInputTargets;
         [_disp] call Waldo_fnc_EcoResearch_populateResearchConfigList;
         [_disp, -1] call Waldo_fnc_EcoResearch_loadResearchIntoPrompt;
+

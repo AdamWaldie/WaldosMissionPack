@@ -15,3 +15,4 @@
  */
 
         +(missionNamespace getVariable ["WaldoEcoResearch_ResearchCatalog", []])
+

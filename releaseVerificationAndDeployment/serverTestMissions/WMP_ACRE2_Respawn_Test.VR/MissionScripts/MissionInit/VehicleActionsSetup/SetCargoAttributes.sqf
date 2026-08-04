@@ -16,7 +16,7 @@
  * [myCrate, -1, 2, true, false] call Waldo_fnc_SetCargoAttributes;
  * [myCrate, nil, nil, true, false] call Waldo_fnc_SetCargoAttributes;
  *
- *
+ * 
  */
 
 params [

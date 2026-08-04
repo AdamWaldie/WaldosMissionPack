@@ -81,3 +81,4 @@
 
         _building setVariable ["WaldoEcoBuild_DetectorContactMarkers", _markerNames, true];
         _building setVariable ["WaldoEcoBuild_LastDetectionScan", serverTime, false];
+

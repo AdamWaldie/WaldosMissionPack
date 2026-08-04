@@ -91,7 +91,9 @@ private _activeText = [];
     private _wasInside = _previousInside getOrDefault [_key, false];
     if (_inside != _wasInside) then {
         private _transition = _profile getOrDefault [if (_inside) then {"onEnter"} else {"onExit"}, {}];
+        if (_transition isEqualType "") then {_transition = missionNamespace getVariable [_transition, {}]};
         if (_transition isEqualType {}) then {[player, _key, _profile] call _transition};
+        diag_log format ["[WMP HAZARD] Player transition: zone='%1' inside=%2 exposure=%3.", _key, _inside, _exposure];
         if (_profile getOrDefault ["notifyTransitions", missionNamespace getVariable ["Waldo_Hazard_NotifyTransitions", true]]) then {
             private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "Hazardous Area"]];
             private _messageKey = ["exitMessage", "enterMessage"] select _inside;
@@ -150,6 +152,7 @@ private _activeText = [];
     if (_fatalAt >= 0 && {_exposure >= _fatalAt}) then {player setDamage 1};
 
     private _onTick = _profile getOrDefault ["onTick", {}];
+    if (_onTick isEqualType "") then {_onTick = missionNamespace getVariable [_onTick, {}]};
     if (_onTick isEqualType {}) then {
         [player, _inside, _intensity, _exposure, _profile] call _onTick;
     };

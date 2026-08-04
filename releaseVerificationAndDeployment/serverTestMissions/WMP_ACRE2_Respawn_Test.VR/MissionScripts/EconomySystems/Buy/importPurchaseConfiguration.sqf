@@ -27,3 +27,4 @@
         } forEach (_payload param [1, []]);
 
         [_catalog] call Waldo_fnc_EcoBuy_setPurchaseCatalog;
+

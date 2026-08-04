@@ -39,6 +39,16 @@ private _lastApplied = if (count _lastApplication >= 5) then {_lastApplication s
             _setting = _applied select 3;
         };
     };
+    // acre_api_fnc_getRadioChannel always returns a flat channel Number, even for a BLOCK_CHANNEL
+    // radio (e.g. PRC-343) whose restore path (acre2ApplyRadioState.sqf) expects a [block, channel]
+    // pair. The override above already supplies that pair when this occurrence was managed by the
+    // last WMP application; when it wasn't (an unmanaged/preserved radio, or no prior application
+    // yet this session), convert the raw flat number back into [block, channel] here - the inverse of
+    // acre2ApplyPlayerPlan.sqf's `(block - 1) * 16 + channel` - so a later restore never indexes into
+    // a Number ("Error select: Type Number, expected Array").
+    if (_mode == "BLOCK_CHANNEL" && {_setting isEqualType 0}) then {
+        _setting = [(floor ((_setting - 1) / 16)) + 1, ((_setting - 1) mod 16) + 1];
+    };
     // ACRE exposes no public frequency read-back. Only persist a frequency when the current WMP
     // application requested it; otherwise omit that occurrence instead of saving a bogus channel.
     if (_mode != "FREQUENCY" || {_appliedIndex >= 0}) then {

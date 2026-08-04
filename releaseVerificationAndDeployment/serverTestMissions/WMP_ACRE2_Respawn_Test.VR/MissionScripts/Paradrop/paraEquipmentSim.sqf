@@ -1,5 +1,5 @@
 /*
-This function run a para jump simulation on a given player.
+This function run a para jump simulation on a given player. 
 
 Arguments:
 0: Player <OBJECT>

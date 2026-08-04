@@ -17,7 +17,7 @@ player createDiaryRecord["Preperation",
         "
 <font color='#addde6' size='20'>                       FIRETEAM PREPERATION<br/>
 -----------------------------------------------------------------</font><br/><br/>
-
+  
 <font color='#addde6'>1. Identify Fireteam Members</font><br/><br/>
 <font color='#addde6'>2. Ensure Team Is Coloured Up</font><br/><br/>
 <font color='#addde6'>3. Designate Team Roles<br/></font><br/>

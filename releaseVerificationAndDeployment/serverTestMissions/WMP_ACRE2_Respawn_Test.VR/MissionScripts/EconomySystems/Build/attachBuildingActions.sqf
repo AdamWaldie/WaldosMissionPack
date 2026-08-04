@@ -56,3 +56,4 @@
             "WaldoEcoBuild_ClaimActionAddedLocal",
             [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingClaimActionArgs
         ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+
