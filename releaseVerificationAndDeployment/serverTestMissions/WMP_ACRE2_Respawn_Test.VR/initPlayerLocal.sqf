@@ -177,7 +177,10 @@ if (missionNamespace getVariable ["Waldo_ACRE2_Enabled", false]) then {
     waitUntil {
         uiSleep 0.2;
         !isNull acre_loadout_crate
-        && {(uiNamespace getVariable ["Waldo_ACRE2_CEOIRecord", -1]) >= 0 || {diag_tickTime >= _deadline}}
+        // Waldo_ACRE2_CEOIRecord is a Diary Record once built (createDiaryRecord's return type), not
+        // a Number - only its unset default (-1) is a Number, so readiness must be type-checked
+        // rather than compared with >=, which throws once the record exists.
+        && {!((uiNamespace getVariable ["Waldo_ACRE2_CEOIRecord", -1]) isEqualType 0) || {diag_tickTime >= _deadline}}
     };
     if (isNull acre_loadout_crate || {acre_loadout_crate getVariable ["Waldo_ACRE_TestReportActions", false]}) exitWith {};
     acre_loadout_crate addAction [
@@ -204,7 +207,8 @@ if (missionNamespace getVariable ["Waldo_ACRE2_Enabled", false]) then {
             } else {
                 "disabled by MissionConfig\\acreConfig.sqf"
             };
-            private _message = format ["Applied radio entries: %1. CEOI: %2. Babel: %3%4", _applied, ["MISSING", "READY"] select ((uiNamespace getVariable ["Waldo_ACRE2_CEOIRecord", -1]) >= 0), _babelState, if (_problems isEqualTo []) then {"."} else {format [". Problems: %1", _problems]}];
+            private _ceoiReady = !((uiNamespace getVariable ["Waldo_ACRE2_CEOIRecord", -1]) isEqualType 0);
+            private _message = format ["Applied radio entries: %1. CEOI: %2. Babel: %3%4", _applied, ["MISSING", "READY"] select _ceoiReady, _babelState, if (_problems isEqualTo []) then {"."} else {format [". Problems: %1", _problems]}];
             ["ACRE2 TEST", _message, if (_applied > 0 && {_problems isEqualTo []}) then {"SUCCESS"} else {"WARNING"}, "ACRE2_TEST", 12]
                 call Waldo_fnc_FeatureNotifyLocal;
         },
