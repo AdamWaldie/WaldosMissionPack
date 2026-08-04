@@ -635,6 +635,11 @@ class FullAuditTests(unittest.TestCase):
             init_server.index("Waldo_fnc_ACRE2Init"),
         )
         self.assertIn("roleDescription _leader", callsigns)
+        self.assertIn("Alpha Rifleman` has no `@` and is ignored", callsigns)
+        self.assertIn("Alpha Team Leader@Viking", callsigns)
+        self.assertIn("_description find '@'", callsigns)
+        self.assertIn("_description select [_separator + 1]", callsigns)
+        self.assertIn("_requested find '@' >= 0", callsigns)
         self.assertIn("setGroupIdGlobal", callsigns)
         self.assertIn("CBA_fnc_setCallsign", callsigns)
         self.assertIn("Duplicate @Callsign", callsigns)

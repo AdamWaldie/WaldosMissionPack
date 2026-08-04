@@ -118,6 +118,11 @@ groups without `@Callsign` are left unchanged, and duplicate or empty suffixes a
 written to the RPT. Put the suffix on the **group leader**, and keep it identical to the group key in
 `MissionConfig\acreConfig.sqf`.
 
+The role text before `@` is deliberately irrelevant. `Alpha Rifleman` does nothing;
+`Alpha Team Leader@Viking` assigns `Viking`; and `Alpha Team Leader@Viking-1-1` assigns
+`Viking-1-1`. This lets team-colour/role naming and group callsigns coexist without WMP mistaking a
+role such as `Alpha Rifleman` for a radio callsign.
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

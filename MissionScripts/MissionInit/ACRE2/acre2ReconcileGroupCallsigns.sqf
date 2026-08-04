@@ -11,7 +11,11 @@
  * Arguments: None.
  * Return Value: ARRAY - [renamed count, unchanged count, rejected count].
  *
- * Example: call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
+ * Role examples:
+ * - `Alpha Rifleman` has no `@` and is ignored.
+ * - `Alpha Team Leader@Viking` sets the leader's group callsign to `Viking`.
+ * - `Alpha Team Leader@Viking-1-1` sets it to `Viking-1-1`.
+ * Example call: call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
  * Current caller: initServer.sqf before authoritative ACRE plan compilation.
  */
 if (!isServer) exitWith {[0, 0, 0]};
@@ -46,9 +50,9 @@ private _rejected = 0;
         } else {
             private _requested = [_description select [_separator + 1]] call _trimWhitespace;
             private _key = toUpper _requested;
-            if (_requested == '') then {
+            if (_requested == '' || {_requested find '@' >= 0}) then {
                 _rejected = _rejected + 1;
-                diag_log format ['[WMP ACRE] Empty @Callsign suffix rejected for group %1.', groupId _group];
+                diag_log format ['[WMP ACRE] Empty or malformed @Callsign suffix rejected for group %1.', groupId _group];
             } else {
                 private _existing = _claimed getOrDefault [_key, grpNull];
                 if (!isNull _existing && {_existing != _group}) then {
