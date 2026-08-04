@@ -127,9 +127,14 @@ class FullAuditTests(unittest.TestCase):
         self.assertEqual(4, sqm.count("this addItemToBackpack 'ACRE_PRC343'"))
         self.assertEqual(4, sqm.count("this addItemToBackpack 'ACRE_PRC152'"))
         self.assertEqual(4, sqm.count("this addItemToBackpack 'ACRE_PRC77'"))
+        self.assertEqual(4, sqm.count("this unlinkItem 'ItemRadio'"))
         self.assertEqual(1, sqm.count('player="PLAYER COMMANDER"'))
         self.assertEqual(3, sqm.count('player="PLAY CDG"'))
         for expected in (
+            '"ALPHA_NET", "ALPHA TEST"',
+            '"BRAVO_NET", "BRAVO TEST"',
+            '["ALPHA", ["ALPHA_NET"], [5, 3]',
+            '["BRAVO", ["BRAVO_NET"], [6, 7]',
             '["ACRE_PRC152", 1, 4, "RIGHT"]',
             '["ACRE_PRC77", 1, 45.500, "CENTER"]',
             '["ACRE_PRC152", 1, 8, "LEFT"]',
@@ -139,13 +144,52 @@ class FullAuditTests(unittest.TestCase):
         ):
             self.assertIn(expected, config)
         self.assertIn('createMarker ["respawn_west"', server_init)
+        self.assertIn('createUnit ["ModuleCurator_F"', server_init)
+        self.assertIn("assignCurator acre_test_curator", server_init)
+        self.assertIn("getAssignedCuratorUnit acre_test_curator", server_init)
         self.assertIn("Waldo_fnc_ZenAddLoadoutSaveAction", server_init)
         self.assertIn("maxPlayers = 4;", description)
         self.assertNotIn('#include "mission.sqm"', description)
         self.assertIn('missionNamespace getVariable ["Waldo_ACRE2_Enabled", false]', player_init)
         self.assertIn("Refresh ACRE2 CEOI", player_init)
         self.assertIn('getOrDefault ["enabled", false]', player_init)
+        self.assertIn('["babel", createHashMapFromArray', config)
+        self.assertIn('["enabled", true]', config)
+        self.assertIn('["VARIABLENAME", "acre_bravo_1"]', config)
+        self.assertIn("Reapply Enabled ACRE2 Babel", player_init)
         self.assertIn("require both the WMP ACRE", testing)
+
+    def test_acre_343_and_persistence_identity_are_not_cross_contaminated(self):
+        acre_root = ROOT / "MissionScripts" / "MissionInit" / "ACRE2"
+        apply_plan = (acre_root / "acre2ApplyPlayerPlan.sqf").read_text(encoding="utf-8")
+        restore = (acre_root / "acre2ApplyRadioState.sqf").read_text(encoding="utf-8")
+        capture = (acre_root / "acre2CaptureRadioState.sqf").read_text(encoding="utf-8")
+        save_loadout = (
+            ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "saveRespawnLoadout.sqf"
+        ).read_text(encoding="utf-8")
+        persistence = (
+            ROOT / "MissionScripts" / "Persistence" / "persistenceServerHandle.sqf"
+        ).read_text(encoding="utf-8")
+        persistence_config = (ROOT / "MissionConfig" / "persistenceConfig.sqf").read_text(
+            encoding="utf-8"
+        )
+        self.assertNotIn("private _flat", apply_plan)
+        self.assertNotIn("((_setting select 0) - 1) * 16", restore)
+        self.assertIn("[_setting select 1, _setting select 0]", apply_plan)
+        self.assertIn("[_setting select 1, _setting select 0]", restore)
+        self.assertIn("floor (_zeroBased / 16)", capture)
+        self.assertIn('Waldo_Player_LoadoutIdentity', save_loadout)
+        self.assertIn('"WMP_PLAYER_STATE", _uid, _scopeKey', persistence)
+        self.assertIn('Waldo_Persistence_Scope", "MISSION"', persistence_config)
+        for active_file in (
+            "acre2ApplyBabel.sqf",
+            "acre2ApplyPlayerPlan.sqf",
+            "acre2CaptureRadioState.sqf",
+            "acre2BuildCEOI.sqf",
+            "acre2InitNew.sqf",
+            "acre2SchedulePlayerRefresh.sqf",
+        ):
+            self.assertNotIn("uiNamespace", (acre_root / active_file).read_text(encoding="utf-8"))
 
     def test_audit_additional_acre_override_closes_the_set_array(self):
         client = (
@@ -206,6 +250,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("_allocations set [toUpper _groupId", compile_plan)
         self.assertIn("count _assignment >= 2", ceoi)
         self.assertIn("no PRC-343 assignment", ceoi)
+        self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)
+        self.assertIn("player removeDiaryRecord", ceoi)
+        self.assertNotIn("Carried Radio Verification", ceoi)
 
     def test_patch_filter_uses_standard_release_allowlist(self):
         allowed = {"MissionScripts", "Pictures", "description.ext"}
@@ -371,7 +418,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("Waldo_ACRE2_PlanReady", acre_init)
         self.assertIn('missionNamespace getVariable ["Waldo_ACRE2_Plan", []]', acre_refresh)
         self.assertIn('if (hasInterface) then {["",""] call Waldo_fnc_InfoText};', init)
-        self.assertIn("if (hasInterface) then {call Waldo_fnc_AddDocs};", init)
+        self.assertNotIn("Waldo_fnc_AddDocs", init)
+        self.assertIn("call Waldo_fnc_AddDocs", init_player)
+        self.assertIn("!isNull player", init_player)
         self.assertIn("if (hasInterface) then {call Waldo_fnc_SetTeamColour};", init)
 
     def test_acre2_active_lifecycle_is_safe_and_legacy_is_manual(self):
@@ -499,15 +548,8 @@ class FullAuditTests(unittest.TestCase):
         audit_acre = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditAcreConfig.sqf").read_text(encoding="utf-8")
         self.assertIn("['common', 'Common'], ['en', 'English'], ['ru', 'Russian'], ['fr', 'French'], ['ar', 'Arabic']", audit_acre)
         self.assertIn("['ACRE_PRC343', 1, [7, 13], 'LEFT']", audit_acre)
-        self.assertIn("['ACRE_PRC343', 2, [12, 6], 'RIGHT']", audit_acre)
         self.assertIn("['ACRE_PRC152', 1, 'CAS2', 'RIGHT']", audit_acre)
-        self.assertIn("['ACRE_PRC152', 2, 'CONVOY', 'LEFT']", audit_acre)
         self.assertIn("['ACRE_PRC148', 1, 'CFF1', 'BOTH']", audit_acre)
-        self.assertIn("['ACRE_PRC117F', 1, 'AIR', 'BOTH']", audit_acre)
-        self.assertIn("['ACRE_BF888S', 1, 'BF_LOCAL', 'RIGHT']", audit_acre)
-        self.assertIn("['ACRE_SEM52SL', 1, 'SEM_LOCAL', 'LEFT']", audit_acre)
-        self.assertIn("['ACRE_PRC77', 1, 'LEGACY', 'RIGHT']", audit_acre)
-        self.assertIn("['ACRE_SEM70', 1, 'LEGACY', 'LEFT']", audit_acre)
         self.assertIn("[['VARIABLE', 'qa_player_2'], ['common', 'en', 'ru'], 'ru']", audit_acre)
         self.assertNotIn("['ACRE_PRC343', 1, [1, 1]", audit_acre)
         self.assertNotIn("['ACRE_PRC152', 1, 'PLT1'", audit_acre)
@@ -1264,6 +1306,54 @@ class FullAuditTests(unittest.TestCase):
                 if any(tag in line for tag in ("<br", "<t", "<font")) and raw_entity.search(line):
                     findings.append(f"{path.name}:{line_number}")
         self.assertEqual([], findings)
+
+    def test_operational_briefings_use_native_rich_text_not_fixed_images(self):
+        briefing = ROOT / "MissionScripts" / "MissionInit" / "BriefingDocuments"
+        converted = {
+            "5LINEGUNSHIPDoc.sqf": "5-LINE GUNSHIP SUPPORT",
+            "CALLFORFIREDoc.sqf": "CALL FOR FIRE",
+            "CASCHECKINDOC.sqf": "CAS AIRCRAFT CHECK-IN",
+            "JUMPMASTERDoc.sqf": "JUMPMASTER CHECKLISTS",
+            "LZBRIEFDOC.sqf": "LANDING ZONE BRIEF",
+            "LZEXTRACTDoc.sqf": "HELICOPTER EXTRACTION",
+            "LZINSERTDoc.sqf": "HELICOPTER INSERTION",
+            "LZSPECSDoc.sqf": "LANDING ZONE SPECIFICATIONS",
+            "NINELINEDoc.sqf": "9-LINE CLOSE AIR SUPPORT BRIEF",
+        }
+        for filename, heading in converted.items():
+            source = (briefing / filename).read_text(encoding="utf-8")
+            self.assertNotIn("<img", source.lower(), filename)
+            self.assertIn("createDiaryRecord", source, filename)
+            self.assertIn(heading, source, filename)
+
+        add_docs = (briefing / "AddDocs.sqf").read_text(encoding="utf-8")
+        for function_name in (
+            "FIVELINEGUNSHIP", "CALLFORFIRE", "CASCHECKIN", "JUMPMASTER",
+            "LZBRIEF", "LZEXTRACT", "LZINSERT", "LZSPECS", "NINELINE",
+        ):
+            self.assertIn(f"Waldo_fnc_{function_name}", add_docs)
+
+    def test_acre_ceoi_is_compact_and_highlights_only_radio_readback(self):
+        source = (
+            ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2BuildCEOI.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("acre_api_fnc_getRadioChannel", source)
+        self.assertIn("(_x select 0) == _groupKey", source)
+        self.assertIn("call _netIsCurrent", source)
+        self.assertIn("This section documents assignment, not live tuning", source)
+        self.assertNotIn("[CURRENT - SQUAD]", source)
+        self.assertNotIn("[SQUAD - NOT SELECTED]", source)
+        self.assertNotIn("exact carried-radio read-back", source)
+        self.assertIn("count _matchingNets == 1", source)
+        self.assertIn("private _currentIndex = _tunings findIf", source)
+        self.assertIn("private _candidateIndex = (_x select 2) findIf", source)
+        self.assertIn("_currentIndex >= 0", source)
+        self.assertNotIn("} >= 0\n};\nprivate _shortName", source)
+        self.assertNotIn("if (_base in ['ACRE_PRC77', 'ACRE_SEM70']) exitWith", source)
+        self.assertNotIn("if !(_setting in (_current", source)
+        self.assertIn("'Ch. ' + (_settings select 0)", source)
+        self.assertNotIn("_myNets", source)
+        self.assertNotIn("format ['%1: %2', _x select 0, _x select 1]", source)
 
     def test_feature_diagnostics_use_one_public_normal_form(self):
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")

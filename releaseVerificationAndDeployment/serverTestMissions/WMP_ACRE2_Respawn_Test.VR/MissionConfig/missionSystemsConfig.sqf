@@ -54,7 +54,7 @@ createHashMapFromArray [
         ["Waldo_Rally_AllowRegroup", false],        // BOOL: permit redeploy behavior defined by rally runtime.
         // MISSION MAKER: optional pack systems.
         ["Waldo_Economy_Enable", false],            // BOOL: runtime only; catalogue/resources require economy setup.
-        ["Waldo_MiniGames_Enable", true],           // BOOL: allow registered interaction-equipment challenges.
+        ["Waldo_MiniGames_Enable", false],          // ACRE test isolation: unrelated minigames disabled.
         ["Waldo_CorpseTraps_Enable", false],        // BOOL: enable corpse-trap handling where configured.
         // ADVANCED global ACE behavior; normally retain pack defaults.
         ["ACE_maxWeightDrag", 10000],               // ACE mass limit; pack-established permissive drag policy.
@@ -63,10 +63,10 @@ createHashMapFromArray [
     ]],
     ["server", [
         // MISSION MAKER: server diagnostics and safestart contract; JIP-published.
-        ["Waldo_RunDiagnostics", true, true],       // BOOL: run pack configuration/lifecycle diagnostics.
+        ["Waldo_RunDiagnostics", false, true],      // ACRE test isolation: only explicit ACRE evidence is relevant.
         ["Waldo_SafeStart_Confine", false, true],   // BOOL: keep players inside configured start area while active.
         ["Waldo_SafeStart_Radius", 150, false],     // METRES: fallback confinement radius when marker is blank.
         ["Waldo_SafeStart_ZoneMarker", "", false], // STRING: existing area marker name; blank selects radius mode.
-        ["Waldo_SafeStart_AutoStart", true, true]   // BOOL: begin mission in safestart; runtime control can end it.
+        ["Waldo_SafeStart_AutoStart", false, true]  // ACRE test isolation: no overlay over the CEOI.
     ]]
 ]

@@ -34,14 +34,20 @@ if (_uid == "") exitWith {false};
 private _databaseName = missionNamespace getVariable ["Waldo_Persistence_DatabaseName", "WaldosMissionPack"];
 private _safeDatabaseName = [_databaseName, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
 if (_safeDatabaseName == "") then {_safeDatabaseName = "WaldosMissionPack"};
-private _fileName = format ["%1_PLAYER_%2", _safeDatabaseName, _uid];
+private _scopeMode = toUpper (missionNamespace getVariable ["Waldo_Persistence_Scope", "MISSION"]);
+private _scopeSource = if (_scopeMode == "CAMPAIGN") then {_safeDatabaseName} else {format ["%1_%2_%3", _safeDatabaseName, missionName, worldName]};
+private _scopeKey = [_scopeSource, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
+if (_scopeKey == "") then {_scopeKey = format ["WaldosMissionPack_%1", worldName]};
+private _fileName = format ["%1_PLAYER_%2", _scopeKey, _uid];
 private _db = ["new", _fileName] call OO_INIDBI;
 
 switch (toUpperANSI _operation) do {
     case "LOAD_PLAYER": {
-        private _state = ["read", ["WMP", "PlayerState", []]] call _db;
-        if (count _state > 0) then {
-            [_state] remoteExecCall ["Waldo_fnc_PersistenceClientApply", _requestOwner];
+        private _stored = ["read", ["WMP", "PlayerState", []]] call _db;
+        if (count _stored >= 4 && {(_stored select 0) == "WMP_PLAYER_STATE"} && {(_stored select 1) == _uid} && {(_stored select 2) == _scopeKey}) then {
+            [_stored select 3] remoteExecCall ["Waldo_fnc_PersistenceClientApply", _requestOwner];
+        } else {
+            if (count _stored > 0) then {diag_log format ["[WMP PERSISTENCE] Rejected stored player state whose identity did not match UID/scope %1/%2.", _uid, _scopeKey]};
         };
         true
     };
@@ -49,7 +55,7 @@ switch (toUpperANSI _operation) do {
         if (count _payload < 6 || {(_payload select 0) != 1}) exitWith {false};
         ["write", ["WMP", "Schema", 1]] call _db;
         ["write", ["WMP", "PlayerName", name _requestPlayer]] call _db;
-        ["write", ["WMP", "PlayerState", _payload]] call _db;
+        ["write", ["WMP", "PlayerState", ["WMP_PLAYER_STATE", _uid, _scopeKey, _payload]]] call _db;
         true
     };
     default {

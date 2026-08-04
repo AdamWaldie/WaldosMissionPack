@@ -29,6 +29,8 @@ if (
     _radioState = [] call Waldo_fnc_ACRE2CaptureRadioState;
 };
 missionNamespace setVariable ["Waldo_Player_RadioState", _radioState];
+private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
+missionNamespace setVariable ["Waldo_Player_LoadoutIdentity", [getPlayerUID player, vehicleVarName player, _sideKey]];
 if (_showNotification) then {
     [
         "RESPAWN LOADOUT SAVED",

@@ -5,6 +5,17 @@ upload the supplied ZIP/PBO through the server's normal mission deployment proce
 
 Required mods: CBA_A3, ACE3 and ACRE2. The mission contains the current WMP source directly.
 
+For a local dedicated/client test, close Arma and run:
+
+```powershell
+.\releaseVerificationAndDeployment\launch_acre2_respawn_test.ps1
+```
+
+The launcher uses 3840×2160 and `-noBattlEye`, does not open Eden, and refuses to launch if the
+test-specific `ALPHA_NET`/`BRAVO_NET` configuration has been replaced by the generic pack example.
+The server creates one full-addons curator and assigns it to the first connected tester, then
+reassigns it after player-object replacement so Zeus remains available after respawn.
+
 ## Slots and expected initial state
 
 | Slot/group | PRC-343 | PRC-152 | PRC-77 | Ear setup |
@@ -29,8 +40,10 @@ the radio's default channel/frequency.
 8. Reconnect/JIP and confirm the authored baseline is applied to a player with no local saved
    respawn snapshot.
 
-Babel is deliberately disabled, but the mission config contains a documented `VARIABLENAME`
-override for `acre_bravo_1` so that selector can be enabled for a separate Babel test.
+Babel is enabled for this ACRE test. WEST defaults understand Common and English and initially
+speak English. `acre_bravo_1` uses the documented `VARIABLENAME` override, additionally understands
+Russian and initially speaks Russian. Confirm both the Babel diary record and speaking-language
+selection exist immediately after joining, then remain singular after respawn.
 
 # CEOI and optional Babel
 
@@ -41,7 +54,5 @@ the WMP ACRE setup is disabled. Babel controls and the Babel diary entry require
 setup and `babel.enabled=true` in `MissionConfig\acreConfig.sqf`; the shipped mission deliberately
 leaves Babel disabled.
 
-When testing Babel, change only `babel.enabled` to `true`, restart the mission, and use **Reapply
-Enabled ACRE2 Babel** if a manual retry is required. The Babel action and Babel diary entry must not
-exist while Babel is disabled. If the root WMP ACRE setting is disabled, neither the CEOI controls
-nor the ACRE expected-settings diary should exist.
+Use **Reapply Enabled ACRE2 Babel** only as a manual diagnostic; normal initial setup must not depend
+on it. If the root WMP ACRE setting is disabled, neither CEOI nor Babel controls/records should exist.

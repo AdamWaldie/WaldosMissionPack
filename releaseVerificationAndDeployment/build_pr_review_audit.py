@@ -155,7 +155,19 @@ def legacy_playable_units_with_loadouts(source: bytes) -> bytes:
             ]
         )
         commands.extend(f'this addItem "{item}"' for item in loadout["items"])
-        commands.extend(f'this addItemToBackpack "{item}"' for item in loadout.get("backpack_items", []))
+        # The nested Eden inventories remain the broad loadout-scraper fixture, but every
+        # soldier a tester can actually occupy receives the same concise ACRE example kit.
+        # This makes the configured PRC-343, PRC-152 and PRC-148 assignments immediately
+        # testable from every playable slot without duplicate unique radios obscuring results.
+        commands.extend(
+            f'this addItemToBackpack "{item}"'
+            for item in loadout.get("backpack_items", [])
+            if not item.upper().startswith("ACRE_")
+        )
+        commands.extend(
+            f'this addItemToBackpack "{radio}"'
+            for radio in ("ACRE_PRC343", "ACRE_PRC152", "ACRE_PRC148")
+        )
         linked_items = ["ItemMap", "ItemCompass", "ItemWatch", "ItemGPS", "NVGoggles"]
         if loadout.get("vanilla_radio", True):
             linked_items.append("ItemRadio")
