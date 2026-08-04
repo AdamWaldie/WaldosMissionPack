@@ -61,7 +61,7 @@ private _defaultName = ["AO"] call Waldo_fnc_CreateRuntimeId;
         ["SLIDER", ["Outer-ring minefields", "Each field has its own Zeus cleanup anchor."], [0, 15, 0, 0]],
         ["CHECKBOX", ["Show minefield markers", "Show a red border around each generated mine cluster."], false],
         ["SLIDER", ["Manned roadblocks", "Checkpoints require roads inside the AO and may legitimately spawn fewer."], [0, 12, 0, 0]],
-        ["CHECKBOX", ["Show AO marker", "Global side-coloured AO border and named centre marker."], true]
+        ["CHECKBOX", ["Show AO marker", "Global side-coloured AO border and named centre marker. Off by default for Zeus-created AOs."], false]
     ],
     {
         params ["_values", "_arguments"];
@@ -73,10 +73,13 @@ private _defaultName = ["AO"] call Waldo_fnc_CreateRuntimeId;
             "_civCars", "_mines", "_mineMarkers", "_roadblocks", "_showMarker"
         ];
         private _row = _factions select ((_factions findIf {(_x select 1) == _faction}) max 0);
-        private _id = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
+        private _displayName = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-"] call BIS_fnc_filterString;
+        if (_displayName == "") then {_displayName = "Dynamic AO"};
+        _displayName = _displayName select [0, 64];
+        private _id = [_displayName, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
         if (_id == "") then {_id = ["AO"] call Waldo_fnc_CreateRuntimeId};
         private _config = createHashMapFromArray [
-            ["id", _id], ["center", _modulePosition], ["side", _row select 0], ["faction", _faction],
+            ["id", _id], ["displayName", _displayName], ["center", _modulePosition], ["side", _row select 0], ["faction", _faction],
             ["radius", _radius], ["patrolGroups", round _patrols],
             ["garrisonGroups", round _garrisons], ["staticTurrets", round _statics],
             ["vehiclePatrols", round _vehicles], ["vehicleMix", [_car, _apc, _tank]],

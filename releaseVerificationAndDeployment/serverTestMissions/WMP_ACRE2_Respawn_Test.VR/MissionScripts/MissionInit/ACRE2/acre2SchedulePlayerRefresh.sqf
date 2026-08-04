@@ -18,16 +18,16 @@
  */
 params [["_reason", "MANUAL", [""]], ["_applyPlan", true, [true]]];
 if (!hasInterface || {isNull player}) exitWith {false};
-private _token = (uiNamespace getVariable ["Waldo_ACRE2_RefreshToken", 0]) + 1;
-uiNamespace setVariable ["Waldo_ACRE2_RefreshToken", _token];
-uiNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (uiNamespace getVariable ["Waldo_ACRE2_RefreshApplyPlan", false]) || {_applyPlan}];
+private _token = (missionNamespace getVariable ["Waldo_ACRE2_RefreshToken", 0]) + 1;
+missionNamespace setVariable ["Waldo_ACRE2_RefreshToken", _token];
+missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace getVariable ["Waldo_ACRE2_RefreshApplyPlan", false]) || {_applyPlan}];
 [_token, _reason] spawn {
     params ["_token", "_reason"];
     private _deadline = diag_tickTime + 30;
     waitUntil {
         uiSleep 0.1;
         private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
-        (uiNamespace getVariable ["Waldo_ACRE2_RefreshToken", -1]) != _token
+        (missionNamespace getVariable ["Waldo_ACRE2_RefreshToken", -1]) != _token
             || {diag_tickTime >= _deadline}
             || {
                 !isNull player
@@ -38,14 +38,14 @@ uiNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (uiNamespace getVariabl
                 && {!(missionNamespace getVariable ["Waldo_ACRE2_RadioRestoreInProgress", false])}
             }
     };
-    if ((uiNamespace getVariable ["Waldo_ACRE2_RefreshToken", -1]) != _token) exitWith {};
+    if ((missionNamespace getVariable ["Waldo_ACRE2_RefreshToken", -1]) != _token) exitWith {};
     private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
     if (diag_tickTime >= _deadline || {count _plan < 4} || {!([] call acre_api_fnc_isInitialized)}) exitWith {
-        uiNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
+        missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
         diag_log format ["[WMP ACRE] %1 refresh timed out; mission startup continues.", _reason];
     };
-    private _applyPlan = uiNamespace getVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
-    uiNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
+    private _applyPlan = missionNamespace getVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
+    missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
     private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
     if !(missionNamespace getVariable ["Waldo_ACRE2_PresetNamesReady", false]) then {[_config] call Waldo_fnc_ACRE2ApplyPresetNames};
     if (_applyPlan) then {[true, _reason] call Waldo_fnc_ACRE2ApplyPlayerPlan};

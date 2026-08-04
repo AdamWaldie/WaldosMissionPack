@@ -20,3 +20,4 @@
         if (isNull _disp) exitWith {};
         _disp setVariable ["WaldoEcoBuild_SpawnSideIndex", (_disp getVariable ["WaldoEcoBuild_SpawnSideIndex", 0]) + _delta];
         [_disp] call Waldo_fnc_EcoBuild_refreshSpawnBuildingSide;
+

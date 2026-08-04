@@ -20,3 +20,4 @@
         private _time = 1 max _baseTime;
         private _multiplier = 1 + ((0 max _bonusPercent) / 100);
         _time / _multiplier
+

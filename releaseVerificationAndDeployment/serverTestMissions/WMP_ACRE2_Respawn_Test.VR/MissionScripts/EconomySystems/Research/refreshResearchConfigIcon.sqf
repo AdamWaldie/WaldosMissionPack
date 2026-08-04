@@ -16,3 +16,4 @@
 
         params ["_disp"];
         [_disp, "WaldoEcoResearch_ConfigIconIndex", "WaldoEcoResearch_ConfigIconValue"] call Waldo_fnc_EcoCore_refreshMarkerIconSelector;
+

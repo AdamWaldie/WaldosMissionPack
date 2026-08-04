@@ -39,7 +39,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
         // pollute the vanilla action menu even when ACE was the active interaction surface.
         diag_log format ["[WMP LOGISTICS] ACE medical facility enabled crate=%1", netId _crate];
     };
-    //Add ACE Medical supplies
+    //Add ACE Medical supplies   
    //Common Items
     _crate addItemCargoGlobal ["ACE_SpareBarrel",(_Scale * 4)];
     _crate addItemCargoGlobal ["ACE_EarPlugs",(_Scale * 25)];
@@ -67,7 +67,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["ACE_plasmaIV",(_Scale * 30)];
     _crate addItemCargoGlobal ["ACE_plasmaIV_500",(_Scale * 40)];
     _crate addItemCargoGlobal ["ACE_plasmaIV_250",(_Scale * 50)];
-
+    
     //Blood
     _crate addItemCargoGlobal ["ACE_bloodIV",(_Scale * 30)];
     _crate addItemCargoGlobal ["ACE_bloodIV_500",(_Scale * 40)];
@@ -77,7 +77,7 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["ACE_morphine",(_Scale * 25)];
     _crate addItemCargoGlobal ["ACE_epinephrine",(_Scale * 40)];
     _crate addItemCargoGlobal ["ACE_adenosine",(_Scale * 40)];
-
+    
 } else {
     //Add vanilla Medical
     _crate addItemCargoGlobal ["FirstAidKit",(_Scale * 40)];

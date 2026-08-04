@@ -29,3 +29,4 @@
         } forEach (_payload param [2, []]);
 
         [_catalog] call Waldo_fnc_EcoBuild_setBuildCatalog;
+

@@ -34,7 +34,7 @@ private _groupKey = toUpper groupId group player;
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
 if (_groupIndex < 0) exitWith {
     diag_log format ["[WMP ACRE] No %1 plan for group %2.", _sideKey, _groupKey];
-    uiNamespace setVariable ["Waldo_ACRE2_LastApplication", [false, _reason, _sideKey, _groupKey, [], ["No matching group plan."], [], []]];
+    missionNamespace setVariable ["Waldo_ACRE2_LastApplication", [false, _reason, _sideKey, _groupKey, [], ["No matching group plan."], [], []]];
     false
 };
 private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
@@ -81,7 +81,7 @@ private _defaultEar = {params ["_profile", "_occurrence"]; private _ears = _prof
     };
 } forEach (_config getOrDefault ["radioOverrides", []]);
 private _signature = format ["%1|%2|%3|%4|%5", _plan select 1, _sideKey, _groupKey, _generation, _explicitAssignments];
-if (!_force && {(uiNamespace getVariable ["Waldo_ACRE2_AppliedSignature", ""]) == _signature}) exitWith {true};
+if (!_force && {(missionNamespace getVariable ["Waldo_ACRE2_AppliedSignature", ""]) == _signature}) exitWith {true};
 
 private _resolved = [];
 private _explicitIdentities = [];
@@ -119,7 +119,7 @@ private _typeCounts = createHashMap;
     };
 } forEach _radios;
 
-private _frequencySettings = [];
+private _setupSettings = [];
 private _managedIds = [];
 {
     _x params ["_radioId", "_base", "_occurrence", "_target", "_ear"];
@@ -137,9 +137,9 @@ private _managedIds = [];
         } else {_setting = _tuning select 1; _netLabel = _net select 1};
     };
     if (_ready && {_mode == "BLOCK_CHANNEL"}) then {
-        private _flat = ((_setting select 0) - 1) * 16 + (_setting select 1);
-        if !([_radioId, _flat] call acre_api_fnc_setRadioChannel) then {_success = false};
-        if (([_radioId] call acre_api_fnc_getRadioChannel) != _flat) then {_success = false; _problems pushBack format ["%1#%2 PRC-343 read-back failed.", _base, _occurrence]};
+        // WMP authors PRC-343 values as [block, channel]. ACRE setupRadios expects
+        // [channel, block]; a flattened 1-256 channel is not a valid PRC-343 assignment.
+        _setupSettings pushBack [_base, _occurrence, [_setting select 1, _setting select 0]];
     };
     if (_ready && {_mode == "CHANNEL"}) then {
         if !([_radioId, _setting] call acre_api_fnc_setRadioChannel) then {_success = false};
@@ -151,7 +151,7 @@ private _managedIds = [];
             private _whole = floor _setting;
             _setting = [_whole, round ((_setting - _whole) * _divisor)];
         };
-        _frequencySettings pushBack [_base, _occurrence, _setting];
+        _setupSettings pushBack [_base, _occurrence, _setting];
         _pendingFrequency pushBack [_radioId, _base, _occurrence, _setting, _netLabel];
     };
     if (_ready) then {
@@ -160,26 +160,27 @@ private _managedIds = [];
         _applied pushBack [_radioId, _base, _occurrence, _setting, _ear, _netLabel, _mode];
     };
 } forEach _resolved;
-if (count _frequencySettings > 0) then {
+if (count _setupSettings > 0) then {
     // setupRadios consumes repeated same-type settings in carried-radio order. Sorting by class then
     // occurrence prevents an explicit occurrence-two row from being applied to occurrence one.
-    _frequencySettings sort true;
+    _setupSettings sort true;
     private _broad = [] call acre_api_fnc_getCurrentRadioList;
     private _safe = true;
     {
         private _base = toUpper (_x select 0);
         if !((_broad select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == _base}) isEqualTo (_radios select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == _base})) then {_safe = false};
-    } forEach _frequencySettings;
+    } forEach _setupSettings;
     if (!_safe || {isNil "acre_api_fnc_setupRadios"}) then {_success = false; _problems pushBack "Frequency setup is ambiguous while same-type external/rack radios are accessible."} else {
-        private _frequencyRequest = _frequencySettings apply {[_x select 0, _x select 2]};
-        if !(_frequencyRequest call acre_api_fnc_setupRadios) then {_success = false; _problems pushBack "ACRE rejected the frequency setup request."};
+        private _setupRequest = _setupSettings apply {[_x select 0, _x select 2]};
+        if !(_setupRequest call acre_api_fnc_setupRadios) then {_success = false; _problems pushBack "ACRE rejected the radio setup request."};
     };
 };
 {if !(_x in _managedIds) then {_preserved pushBack [_x, [_x] call acre_api_fnc_getBaseRadio]}} forEach _radios;
-if (!_success && {_retryAllowed} && {count _frequencySettings == 0}) exitWith {if (canSuspend) then {uiSleep 0.2}; [true, _reason, false] call Waldo_fnc_ACRE2ApplyPlayerPlan};
-if (_success) then {uiNamespace setVariable ["Waldo_ACRE2_AppliedSignature", _signature]} else {
+if (!_success && {_retryAllowed} && {count _setupSettings == 0}) exitWith {if (canSuspend) then {uiSleep 0.2}; [true, _reason, false] call Waldo_fnc_ACRE2ApplyPlayerPlan};
+if (_success) then {missionNamespace setVariable ["Waldo_ACRE2_AppliedSignature", _signature]} else {
     diag_log format ["[WMP ACRE] Assignment failed during %1: %2", _reason, _problems];
     if (_config getOrDefault ["notifyAssignmentProblems", true] && {!(_reason in ["INITIAL", "RESPAWN"])}) then {["ACRE2", "One or more applicable radio assignments failed. Check the CEOI or RPT.", "WARNING", "ACRE2_ASSIGNMENT"] call Waldo_fnc_FeatureNotifyLocal};
 };
-uiNamespace setVariable ["Waldo_ACRE2_LastApplication", [_success, _reason, _sideKey, _groupKey, _applied, _problems, _preserved, _pendingFrequency]];
+if (_success) then {diag_log format ["[WMP ACRE] %1 radio plan applied for %2/%3: %4 managed, %5 preserved.", _reason, _sideKey, _groupKey, count _applied, count _preserved]};
+missionNamespace setVariable ["Waldo_ACRE2_LastApplication", [_success, _reason, _sideKey, _groupKey, _applied, _problems, _preserved, _pendingFrequency]];
 _success

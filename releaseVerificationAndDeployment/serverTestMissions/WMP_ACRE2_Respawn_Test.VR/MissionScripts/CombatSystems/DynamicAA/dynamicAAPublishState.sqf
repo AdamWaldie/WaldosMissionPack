@@ -1,6 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Publishes network-safe Dynamic AA summaries for markers, ZEN removal, diagnostics, and JIP clients.
+ * Publishes network-safe Dynamic AA summaries, including the human-readable display name, for
+ * markers, ZEN removal, diagnostics, and JIP clients.
  *
  * Arguments:
  * None
@@ -26,7 +27,8 @@ private _summaries = [];
         _config get "side",
         _state getOrDefault ["active", false],
         _state getOrDefault ["detected", false],
-        _state getOrDefault ["radar", objNull]
+        _state getOrDefault ["radar", objNull],
+        _config getOrDefault ["displayName", _x]
     ];
 } forEach keys _registry;
 missionNamespace setVariable ["Waldo_DynamicAA_PublicSystems", _summaries, true];

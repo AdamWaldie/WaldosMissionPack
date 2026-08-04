@@ -25,3 +25,4 @@
         private _playerSide = [side group _unit] call Waldo_fnc_EcoResource_getSideKeyFromSide;
 
         (_ownerSide in ["WEST", "EAST", "GUER"]) && {_playerSide isEqualTo _ownerSide}
+

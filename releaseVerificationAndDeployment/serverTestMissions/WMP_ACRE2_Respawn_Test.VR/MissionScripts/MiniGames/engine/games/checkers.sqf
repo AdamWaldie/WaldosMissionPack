@@ -215,8 +215,8 @@ Waldo_MG_fnc_checkersCountSidePieces = {
         };
     } forEach _board;
     _count
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_checkersPublishRevisionServer = {
     params [["_table", objNull]];
@@ -1034,4 +1034,6 @@ Waldo_MG_fnc_openCheckersLocal = {
             uiSleep Waldo_MG_CFG_CHECKERS_UI_TICK;
         };
     };
-};
+}; 
+ 
+

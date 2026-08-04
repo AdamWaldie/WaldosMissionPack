@@ -31,3 +31,4 @@
         if !([_targetEntry, _sideKey] call Waldo_fnc_EcoBuild_canAffordBuildForSide) exitWith {"cost"};
 
         "upgrade"
+

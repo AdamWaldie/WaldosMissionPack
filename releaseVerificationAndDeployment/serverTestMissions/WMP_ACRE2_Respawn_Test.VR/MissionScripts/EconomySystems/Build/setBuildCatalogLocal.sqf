@@ -16,3 +16,4 @@
 
         params [["_catalog", []]];
         missionNamespace setVariable ["WaldoEcoBuild_BuildCatalog", [_catalog] call Waldo_fnc_EcoBuild_normalizeBuildCatalog];
+

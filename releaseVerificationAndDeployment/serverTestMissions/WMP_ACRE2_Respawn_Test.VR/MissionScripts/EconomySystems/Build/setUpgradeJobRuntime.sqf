@@ -16,3 +16,4 @@
 
         params [["_rows", []]];
         missionNamespace setVariable ["WaldoEcoBuild_UpgradeJobRuntime", _rows];
+

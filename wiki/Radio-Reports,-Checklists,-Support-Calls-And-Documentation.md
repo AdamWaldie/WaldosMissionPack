@@ -4,7 +4,9 @@
 
 _Associated Files: MissionScripts\MissionInit\BriefingDocuments\_
 
-As of WMP v4.7.0 the pack provides an extensive set of in-game documentation, quick-reference templates, and checklists accessible from the player's map screen briefing tab. All documents are automatically populated by `Waldo_fnc_AddDocs`, which is called from `init.sqf`.
+The pack provides in-game documentation, quick-reference templates, and checklists in the player's map diary. `Waldo_fnc_AddDocs` installs them locally for each player during mission startup.
+
+Operational reference cards use native rich text rather than fixed-size pictures. Text wraps to the player's diary width, remains readable at different resolutions and UI scales, and can be copied or updated without re-exporting an image. The converted references include the five-line gunship brief, nine-line CAS brief, CAS check-in, call for fire, landing-zone brief, helicopter insertion and extraction, landing-zone specifications, and jumpmaster checklists.
 
 ---
 
@@ -79,7 +81,15 @@ Example of the basic pattern:
 player createDiaryRecord ["Diary", ["My Document Title", "Content goes here.<br/>More text on next line."]];
 ```
 
-Documents support HTML-style tags for formatting: `<br/>` for line breaks, `<b>` for bold, `<u>` for underline, and image references via `<img image='path\to\image.paa'/>`.
+Documents support Arma structured-text tags such as `<br/>` for line breaks and `<font>` for colour and size. Prefer native text for operational instructions. Avoid using a screenshot of text: fixed-size images crop, scale poorly, cannot wrap, and are harder for players using accessibility or unusual UI settings.
+
+Keep each entry easy to scan:
+
+- Start with one clear title.
+- Use short, numbered sections in the order players must transmit or act.
+- Give examples directly below the field they explain.
+- Reserve colour for headings, examples and warnings; the instructions must still be understandable without colour.
+- Test the map diary at the supported aspect ratios and UI scales before release.
 
 <!-- WMP-WIKI-NAV -->
 ---

@@ -157,3 +157,4 @@
 
         [_disp] call Waldo_fnc_EcoBuy_refreshDropPointType;
         [_disp] call Waldo_fnc_EcoBuy_refreshDropPointSide;
+

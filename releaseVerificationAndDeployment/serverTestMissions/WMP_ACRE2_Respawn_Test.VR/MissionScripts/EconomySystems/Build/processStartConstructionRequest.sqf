@@ -53,3 +53,4 @@
         if ((count _pos) < 3) then {_pos = [_pos select 0, _pos select 1, 0];};
 
         [_pos, _dir, _actor, _buildName, _source] call Waldo_fnc_EcoBuild_startPlacedConstruction;
+

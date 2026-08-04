@@ -42,6 +42,9 @@ private _id = _config getOrDefault ["id", ""];
 private _center = _config getOrDefault ["center", _config getOrDefault ["centre", []]];
 private _faction = _config getOrDefault ["faction", ""];
 private _side = _config getOrDefault ["side", east];
+private _displayName = [_config getOrDefault ["displayName", _id], "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-"] call BIS_fnc_filterString;
+if (_displayName == "") then {_displayName = _id};
+_displayName = _displayName select [0, 64];
 if (_id == "" || {count _center < 2} || {_faction == ""}) exitWith {
     ["AO id, centre and enemy faction are required.", "ERROR"] call _notify;
     false
@@ -76,6 +79,7 @@ _config set ["id", _id];
 _config set ["center", [_center select 0, _center select 1, 0]];
 _config set ["side", _side];
 _config set ["faction", _faction];
+_config set ["displayName", _displayName];
 _config set ["radius", _radius];
 private _registry = missionNamespace getVariable ["Waldo_DynamicAO_Registry", createHashMap];
 if (_id in keys _registry) then {[_id] call Waldo_fnc_DynamicAODestroy};
@@ -100,8 +104,12 @@ private _trackGroup = {
     _group
 };
 private _spawnUnit = {
-    params ["_group", "_class", "_position"];
-    private _unit = _group createUnit [_class, _position, [], 0, "NONE"];
+    params ["_group", "_class", "_position", ["_placementRadius", 0, [0]]];
+    // Runtime-created infantry must not share one exact model-space position. On a dedicated
+    // server the overlapping collision geometries can prevent the leader and followers from
+    // acquiring their first path even though the group's waypoint is valid.
+    private _unit = _group createUnit [_class, _position, [], _placementRadius, "NONE"];
+    _objects pushBack _unit;
     if (!isNil "Waldo_fnc_AIApplyProfile") then {[_unit] call Waldo_fnc_AIApplyProfile};
     _unit
 };
@@ -148,7 +156,7 @@ for "_patrolIndex" from 1 to _patrolCount do {
     private _group = createGroup _side;
     [_group] call _trackGroup;
     for "_unitIndex" from 1 to (4 + floor random 5) do {
-        [_group, selectRandom _infantry, _position] call _spawnUnit;
+        [_group, selectRandom _infantry, _position, 12] call _spawnUnit;
     };
     [_group, _center, _radius, _simple, "SAFE", "LIMITED", ["COLUMN", "STAG COLUMN", "WEDGE"]]
         call Waldo_fnc_DynamicAOAddPatrolWaypoints;
@@ -319,9 +327,7 @@ if (_config getOrDefault ["showMarker", true]) then {
     _point setMarkerShape "ICON";
     _point setMarkerType "mil_objective";
     _point setMarkerColor _colour;
-    private _factionName = getText (configFile >> "CfgFactionClasses" >> _faction >> "displayName");
-    if (_factionName == "") then {_factionName = _faction};
-    _point setMarkerText format ["AO of %1", _factionName];
+    _point setMarkerText _displayName;
     _markers = [_area, _point];
 };
 
@@ -333,7 +339,9 @@ _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAO_Registry", _registry];
 {
     private _curator = _x;
-    _curator addCuratorEditableObjects [_objects, true];
+    private _editableObjects = +_objects;
+    {{_editableObjects pushBackUnique _x} forEach units _x} forEach _groups;
+    _curator addCuratorEditableObjects [_editableObjects, true];
     {
         private _fieldAnchor = _x getOrDefault ["anchor", objNull];
         if (!isNull _fieldAnchor) then {_curator addCuratorEditableObjects [[_fieldAnchor], false]};

@@ -105,3 +105,4 @@
 
         _disp setVariable ["WaldoEcoBuild_ConfigIconIndex", [(_entry param [5, ""])] call Waldo_fnc_EcoCore_findMarkerIconIndex];
         [_disp] call Waldo_fnc_EcoBuild_refreshBuildConfigIcon;
+

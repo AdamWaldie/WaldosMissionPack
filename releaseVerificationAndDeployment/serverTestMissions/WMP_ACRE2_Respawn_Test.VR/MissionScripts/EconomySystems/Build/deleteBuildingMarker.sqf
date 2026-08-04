@@ -31,3 +31,4 @@
 
         deleteMarker _markerName;
         _building setVariable ["WaldoEcoBuild_MarkerName", nil, true];
+

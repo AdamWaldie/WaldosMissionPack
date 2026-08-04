@@ -27,7 +27,7 @@ private _values = _systems apply {_x select 0};
 private _labels = _systems apply {
     private _factionName = getText (configFile >> "CfgFactionClasses" >> (_x select 4) >> "displayName");
     if (_factionName == "") then {_factionName = _x select 4};
-    format ["%1 - %2 (%3m)", _x select 0, _factionName, round ((_x select 1) distance2D _modulePos)]
+    format ["%1 - %2 (%3m)", _x param [6, _x select 0], _factionName, round ((_x select 1) distance2D _modulePos)]
 };
 private _nearest = 0;
 private _distance = 1e10;

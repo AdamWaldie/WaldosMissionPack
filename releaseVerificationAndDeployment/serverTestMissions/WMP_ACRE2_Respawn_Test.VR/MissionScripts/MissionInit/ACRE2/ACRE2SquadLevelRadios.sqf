@@ -92,7 +92,7 @@ private _blockToStartNumber = createHashMap;
                         _allocatedChannels pushBack _x;
                     };
                 } forEach [255, 1];
-            };
+            };          
         } else {
             // Channel assignment for callsigns with a squad number
             if (_extractedSquadNumber find ["-",0] > 0 || _extractedSquadNumber find [".",0] > 0) then {

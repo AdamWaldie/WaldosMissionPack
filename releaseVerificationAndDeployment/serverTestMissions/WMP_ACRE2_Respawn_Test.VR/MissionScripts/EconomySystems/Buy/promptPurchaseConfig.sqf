@@ -354,3 +354,4 @@
         [_disp] call Waldo_fnc_EcoBuy_refreshPurchaseConfigIcon;
         [_disp] call Waldo_fnc_EcoBuy_populatePurchaseConfigList;
         [_disp, -1] call Waldo_fnc_EcoBuy_loadPurchaseIntoPrompt;
+

@@ -36,3 +36,4 @@
         };
 
         [_sideKey, _rows] call Waldo_fnc_EcoResearch_setSideResearched;
+

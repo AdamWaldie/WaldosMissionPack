@@ -203,9 +203,26 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('vehicle="B_medic_F"', mission)
         self.assertIn('vehicle="B_soldier_AT_F"', mission)
         self.assertEqual(5, mission.count('this linkItem ""NVGoggles""'))
+        self.assertEqual(5, mission.count('this addItemToBackpack ""ACRE_PRC343""'))
+        self.assertEqual(5, mission.count('this addItemToBackpack ""ACRE_PRC152""'))
+        self.assertEqual(5, mission.count('this addItemToBackpack ""ACRE_PRC148""'))
+        for unsupported_test_radio in (
+            "ACRE_PRC117F", "ACRE_BF888S", "ACRE_SEM52SL", "ACRE_PRC77", "ACRE_SEM70",
+        ):
+            self.assertNotIn(f'this addItemToBackpack ""{unsupported_test_radio}""', mission)
         commander = mission.split('class Item0 {', 1)[1].split('class Item1 {', 1)[0]
         self.assertNotIn('this linkItem ""ItemRadio""', commander)
         self.assertIn('(group this) setGroupIdGlobal [""VIKING-1-1""]', commander)
+
+    def test_pr_audit_acre_example_uses_release_framework_and_three_playable_radios(self):
+        source = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+            / "auditAcreConfig.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("MissionConfig\\releaseAcreConfig.sqf", source)
+        self.assertIn("['ACRE_PRC343', 1, [7, 13], 'LEFT']", source)
+        self.assertIn("['ACRE_PRC152', 1, 'CAS2', 'RIGHT']", source)
+        self.assertIn("['ACRE_PRC148', 1, 'CFF1', 'BOTH']", source)
 
     def test_range_does_not_duplicate_pack_initializers(self):
         server = (

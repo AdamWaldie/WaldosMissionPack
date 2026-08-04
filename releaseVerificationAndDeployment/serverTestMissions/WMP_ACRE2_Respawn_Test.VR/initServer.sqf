@@ -15,6 +15,29 @@ _respawnMarker setMarkerType "respawn_inf";
 _respawnMarker setMarkerColor "ColorWEST";
 _respawnMarker setMarkerText "WMP ACRE2 TEST RANGE";
 
+// This is a QA mission: the first connected tester must always receive server-assigned Zeus.
+// The server follows player-object replacement so respawn cannot silently remove curator access.
+private _curatorGroup = createGroup [sideLogic, true];
+acre_test_curator = _curatorGroup createUnit ["ModuleCurator_F", [0, 0, 0], [], 0, "NONE"];
+acre_test_curator setVariable ["Addons", 3, true];
+acre_test_curator addCuratorAddons activatedAddons;
+publicVariable "acre_test_curator";
+[] spawn {
+    while {true} do {
+        private _testers = allPlayers select {!(_x isKindOf "HeadlessClient_F")};
+        if (count _testers > 0) then {
+            private _tester = _testers select 0;
+            private _assigned = getAssignedCuratorUnit acre_test_curator;
+            if (_assigned != _tester) then {
+                if (!isNull _assigned) then {unassignCurator acre_test_curator};
+                _tester assignCurator acre_test_curator;
+            };
+            acre_test_curator addCuratorEditableObjects [allUnits + vehicles, true];
+        };
+        sleep 1;
+    };
+};
+
 clearWeaponCargoGlobal acre_loadout_crate;
 clearMagazineCargoGlobal acre_loadout_crate;
 clearItemCargoGlobal acre_loadout_crate;

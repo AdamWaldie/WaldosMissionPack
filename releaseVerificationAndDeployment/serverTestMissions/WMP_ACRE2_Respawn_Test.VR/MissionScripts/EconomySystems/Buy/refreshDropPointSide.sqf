@@ -32,3 +32,4 @@
             _valueCtrl ctrlSetText ([(_choices select _index)] call Waldo_fnc_EcoBuy_getDropPointSideLabel);
             _valueCtrl ctrlCommit 0;
         };
+

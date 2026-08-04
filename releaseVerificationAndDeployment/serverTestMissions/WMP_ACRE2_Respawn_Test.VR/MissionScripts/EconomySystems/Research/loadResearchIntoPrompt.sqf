@@ -57,3 +57,4 @@
 
         _disp setVariable ["WaldoEcoResearch_ConfigIconIndex", [(_entry param [5, ""])] call Waldo_fnc_EcoCore_findMarkerIconIndex];
         [_disp] call Waldo_fnc_EcoResearch_refreshResearchConfigIcon;
+

@@ -25,7 +25,7 @@ missionNamespace setVariable ["Waldo_InfoText_Complete", false];
 waitUntil {!isNull findDisplay 46};
 //Grab Mission Name & Terrain Name automatically
 //If provided with a string in the correct parameter slot, accepts that inplace of the automatic generation
-_missionTitle = getText (missionConfigFile >> "onLoadName");;
+_missionTitle = getText (missionConfigFile >> "onLoadName");; 
 if (_title != "") then {
     _missionTitle = _title;
 };
@@ -103,12 +103,12 @@ _date = if (_longDate) then {
 //_date = "";
 
 // ----- TIME SETTING -----
-_timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString;
+_timeConfig = [dayTime, "ARRAY"] call BIS_fnc_timeToString; 
 _time = (_timeConfig select 0) + (_timeConfig select 1) + ' hrs';
 
 // ----- LOCATION SETTING -----
 _missionTime = str (time/60);
-_localePos = 'Grid ' + mapGridPosition player + ', ' + _localeName;
+_localePos = 'Grid ' + mapGridPosition player + ', ' + _localeName; 
 _groupInfo = rank player + ' ' + name player + ', ' + groupID (group player);
 
 // ---- TEXT FORMATTING -----
@@ -142,16 +142,16 @@ uiSleep 5;
 ] spawn BIS_fnc_typeText;
 uiSleep 6;
 
-_text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];
-_text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";
-_text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
+_text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];  
+_text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";  
+_text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";  
 
-[
-    [
-        [_missionTitle, _text1],
-        [_localePos, _text2],
-        [_groupInfo, _text3, 5]
-    ]
+[  
+    [  
+        [_missionTitle, _text1],  
+        [_localePos, _text2],  
+        [_groupInfo, _text3, 5]  
+    ]  
 ] spawn BIS_fnc_typeText;
 
 uiSleep 3;
@@ -161,7 +161,7 @@ _unit = player;
 // Determine animation to use from given Params
 _usedAnimation = switch (_animate) do {
     case "NONE": {};
-
+    
     case "WALK": {
         [_unit] spawn {
             params ["_unit"];

@@ -21,3 +21,4 @@
         private _index = _choices findIf {(toLower _x) isEqualTo (toLower _trimmed)};
         if (_index < 0) exitWith {"Ground"};
         _choices select _index
+

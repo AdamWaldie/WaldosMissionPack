@@ -24,7 +24,7 @@ In vehicle init:
 params["_targetObject"];
 
 // Finds all synced Objects. Hides the model and attaches the object to vehicle.
-_syncLogic = nearestObject [_targetObject, "Logic"];
+_syncLogic = nearestObject [_targetObject, "Logic"]; 
 _AttachingLayerContents = synchronizedObjects _syncLogic;
 
 // Attach Relative Position to MHQ vehicle & hide globally

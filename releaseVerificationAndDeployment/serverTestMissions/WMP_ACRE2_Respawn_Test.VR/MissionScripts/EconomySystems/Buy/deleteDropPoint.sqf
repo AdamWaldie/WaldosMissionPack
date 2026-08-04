@@ -38,3 +38,4 @@
 
         _rows deleteAt _index;
         [_rows] call Waldo_fnc_EcoBuy_setDropPoints;
+

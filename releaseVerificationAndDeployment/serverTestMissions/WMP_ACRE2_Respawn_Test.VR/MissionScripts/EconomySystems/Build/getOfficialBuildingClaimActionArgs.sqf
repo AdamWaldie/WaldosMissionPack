@@ -39,3 +39,4 @@
             "private _sideKey = switch (side group _this) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'};}; (_sideKey in ['WEST','EAST','GUER']) && {(_target getVariable ['WaldoEcoBuild_BuildOwnerSideKey','NONE']) != _sideKey} && {!(_target getVariable ['WaldoEcoBuild_IsUpgrading', false])}",
             20
         ]
+

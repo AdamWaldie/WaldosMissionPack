@@ -49,3 +49,4 @@
         player setVariable ["WaldoEcoBuild_ConstructionPreviewPos", [0, 0, 0]];
         player setVariable ["WaldoEcoBuild_ConstructionPreviewDir", 0];
         player setVariable ["WaldoEcoBuild_ConstructionPreviewDirOffset", 0];
+

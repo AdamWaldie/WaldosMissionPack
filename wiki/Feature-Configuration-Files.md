@@ -134,8 +134,19 @@ See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 | `Waldo_Persistence_SaveFoodWater` | Saves supported survival values. |
 | `Waldo_Persistence_SavePosition` | Saves/restores player position; disabled by default for mission safety. |
 | `Waldo_Persistence_SaveRadios` | Stores supported radio channel/spatial state separately from base-class loadouts. |
-| `Waldo_Persistence_DatabaseName` | INIDBI2 database namespace. |
+| `Waldo_Persistence_DatabaseName` | Human-chosen name for this mission or campaign's save collection. |
+| `Waldo_Persistence_Scope` | `"MISSION"` isolates player and object records by database name + mission + terrain. `"CAMPAIGN"` deliberately shares records between missions with the same database name. |
 | `Waldo_Persistence_DefaultCustomVariables` | Object-variable names copied for registered persistent objects. |
+
+Normal standalone mission example:
+
+```sqf
+["Waldo_Persistence_DatabaseName", "Operation_Nightjar"],
+["Waldo_Persistence_Scope", "MISSION"]
+```
+
+The server also binds each record to the requesting Steam UID and rejects stored identity that does
+not match. Use `CAMPAIGN` only when cross-mission player progression is intentional.
 
 ## `interfaceConfig.sqf` — shared
 

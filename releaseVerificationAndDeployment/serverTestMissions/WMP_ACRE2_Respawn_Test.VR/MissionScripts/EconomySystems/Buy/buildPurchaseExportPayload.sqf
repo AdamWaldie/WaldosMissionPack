@@ -16,3 +16,4 @@
 
         private _catalog = call Waldo_fnc_EcoBuy_getPurchaseCatalog;
         str ["WaldoEcoBuy_PURCHASE_V1", _catalog]
+

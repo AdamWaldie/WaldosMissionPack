@@ -101,12 +101,17 @@ if (hasInterface) then {
 ["CAManBase", "Respawn", {
     params ["_unit"];
     if (_unit == player) then {
+        private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
+        private _currentIdentity = [getPlayerUID _unit, vehicleVarName _unit, _sideKey];
+        private _savedIdentity = missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []];
+        private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
         private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
-        if (count _savedLoadout > 0) then {_unit setUnitLoadout _savedLoadout};
+        if (_identityMatches && {count _savedLoadout > 0}) then {_unit setUnitLoadout _savedLoadout};
         private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
         missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
         missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
-        private _savedRadios = missionNamespace getVariable ["Waldo_Player_RadioState", []];
+        private _savedRadios = if (_identityMatches) then {missionNamespace getVariable ["Waldo_Player_RadioState", []]} else {[]};
+        if (!_identityMatches) then {diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity]};
         if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
             missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
             [_savedRadios, _generation] spawn {
@@ -177,7 +182,13 @@ if (missionNamespace getVariable ["Waldo_ACRE2_Enabled", false]) then {
     waitUntil {
         uiSleep 0.2;
         !isNull acre_loadout_crate
-        && {(uiNamespace getVariable ["Waldo_ACRE2_CEOIRecord", -1]) >= 0 || {diag_tickTime >= _deadline}}
+        && {
+            (
+                missionNamespace getVariable ["Waldo_ACRE2_CEOIReady", false]
+                && {(missionNamespace getVariable ["Waldo_ACRE2_CEOIOwner", objNull]) == player}
+            )
+            || {diag_tickTime >= _deadline}
+        }
     };
     if (isNull acre_loadout_crate || {acre_loadout_crate getVariable ["Waldo_ACRE_TestReportActions", false]}) exitWith {};
     acre_loadout_crate addAction [
@@ -196,15 +207,17 @@ if (missionNamespace getVariable ["Waldo_ACRE2_Enabled", false]) then {
             private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
             private _babel = _config getOrDefault ["babel", createHashMap];
             private _babelEnabled = _babel getOrDefault ["enabled", false];
-            private _last = uiNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
+            private _last = missionNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
             private _applied = if (count _last >= 5) then {count (_last select 4)} else {0};
             private _problems = if (count _last >= 6) then {_last select 5} else {["No completed local application"]};
             private _babelState = if (_babelEnabled) then {
-                format ["enabled; understood %1; speaking %2", uiNamespace getVariable ["Waldo_ACRE2_BabelLanguages", []], uiNamespace getVariable ["Waldo_ACRE2_BabelSpeaking", "UNSET"]]
+                format ["enabled; understood %1; speaking %2", missionNamespace getVariable ["Waldo_ACRE2_BabelLanguages", []], missionNamespace getVariable ["Waldo_ACRE2_BabelSpeaking", "UNSET"]]
             } else {
                 "disabled by MissionConfig\\acreConfig.sqf"
             };
-            private _message = format ["Applied radio entries: %1. CEOI: %2. Babel: %3%4", _applied, ["MISSING", "READY"] select ((uiNamespace getVariable ["Waldo_ACRE2_CEOIRecord", -1]) >= 0), _babelState, if (_problems isEqualTo []) then {"."} else {format [". Problems: %1", _problems]}];
+            private _ceoiReady = missionNamespace getVariable ["Waldo_ACRE2_CEOIReady", false]
+                && {(missionNamespace getVariable ["Waldo_ACRE2_CEOIOwner", objNull]) == player};
+            private _message = format ["Applied radio entries: %1. CEOI: %2. Babel: %3%4", _applied, ["MISSING", "READY"] select _ceoiReady, _babelState, if (_problems isEqualTo []) then {"."} else {format [". Problems: %1", _problems]}];
             ["ACRE2 TEST", _message, if (_applied > 0 && {_problems isEqualTo []}) then {"SUCCESS"} else {"WARNING"}, "ACRE2_TEST", 12]
                 call Waldo_fnc_FeatureNotifyLocal;
         },

@@ -42,7 +42,7 @@ real_vicwatch = [_vic] spawn{
             _displaypoints set [_forEachIndex, format ["%1: %2",_x, _damaged select _forEachIndex]];
             //create array of strings in "hitpoint: damage" format
         } forEach _hitpoints;
-
+        
         for "_i" from 0 to _pointsNumber + 2 do {
             _hintlist pushBack _i;
         };

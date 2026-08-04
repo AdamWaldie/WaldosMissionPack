@@ -57,3 +57,4 @@
         if ((_actor distance2D _center) > 20) exitWith {};
 
         [_sideKey, _researchName, _actor] call Waldo_fnc_EcoResearch_startResearch;
+

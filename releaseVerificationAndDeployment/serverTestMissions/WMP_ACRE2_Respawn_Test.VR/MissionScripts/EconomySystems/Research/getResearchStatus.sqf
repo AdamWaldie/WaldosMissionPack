@@ -31,3 +31,4 @@
         if !([_sideKey, _entry] call Waldo_fnc_EcoResearch_canAffordResearch) exitWith {"unaffordable"};
 
         "ready"
+

@@ -22,3 +22,4 @@
         private _allowed = _entry param [6, "EVERYONE"];
         if (_allowed isEqualTo "EVERYONE") exitWith {true};
         ([_sideKey] call Waldo_fnc_EcoBuy_getPlayerPurchaseSideLabel) isEqualTo _allowed
+

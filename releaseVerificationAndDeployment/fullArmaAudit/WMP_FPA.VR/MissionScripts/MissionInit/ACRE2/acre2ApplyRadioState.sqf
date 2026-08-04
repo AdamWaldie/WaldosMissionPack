@@ -28,12 +28,17 @@ private _deadline = diag_tickTime + 10;
 waitUntil {
     uiSleep 0.1;
     private _list = [] call Waldo_fnc_ACRE2GetOrderedRadios;
-    (([] call acre_api_fnc_isInitialized) && {count _list >= count _savedRadios}) || {diag_tickTime >= _deadline}
+    private _allOccurrencesReady = {
+        private _base = _x select 0;
+        private _ordinal = _x select 1;
+        ({toUpper ([_x] call acre_api_fnc_getBaseRadio) == toUpper _base} count _list) >= _ordinal
+    } count _savedRadios == count _savedRadios;
+    (([] call acre_api_fnc_isInitialized) && {_allOccurrencesReady}) || {diag_tickTime >= _deadline}
 };
 private _radios = [] call Waldo_fnc_ACRE2GetOrderedRadios;
 private _counts = createHashMap;
 private _success = true;
-private _frequencySettings = [];
+private _setupSettings = [];
 private _selectedId = "";
 private _audioSourceClasses = ["ACRE_PRC148", "ACRE_PRC152", "ACRE_SEM52SL", "ACRE_SEM70"];
 {
@@ -50,11 +55,14 @@ private _audioSourceClasses = ["ACRE_PRC148", "ACRE_PRC152", "ACRE_SEM52SL", "AC
         private _volume = _saved select 5;
         private _audioSource = _saved select 6;
         if (toUpper _mode == "FREQUENCY") then {
-            _frequencySettings pushBack [_base, _setting];
+            _setupSettings pushBack [_base, _ordinal, _setting];
         } else {
-            private _channel = if (toUpper _mode == "BLOCK_CHANNEL") then {((_setting select 0) - 1) * 16 + (_setting select 1)} else {_setting};
-            if !([_radioId, _channel] call acre_api_fnc_setRadioChannel) then {_success = false};
-            if (([_radioId] call acre_api_fnc_getRadioChannel) != _channel) then {_success = false};
+            if (toUpper _mode == "BLOCK_CHANNEL") then {
+                _setupSettings pushBack [_base, _ordinal, [_setting select 1, _setting select 0]];
+            } else {
+                if !([_radioId, _setting] call acre_api_fnc_setRadioChannel) then {_success = false};
+                if (([_radioId] call acre_api_fnc_getRadioChannel) != _setting) then {_success = false};
+            };
         };
         if !([_radioId, _spatial] call acre_api_fnc_setRadioSpatial) then {_success = false};
         if (_volume >= 0 && {!([_radioId, _volume] call acre_api_fnc_setRadioVolume)}) then {_success = false};
@@ -68,9 +76,9 @@ private _audioSourceClasses = ["ACRE_PRC148", "ACRE_PRC152", "ACRE_SEM52SL", "AC
     private _matchingCount = {_base == ([_x] call acre_api_fnc_getBaseRadio)} count _radios;
     if (_matchingCount < _ordinal) then {_success = false};
 } forEach _savedRadios;
-if (count _frequencySettings > 0) then {
+if (count _setupSettings > 0) then {
     private _broadRadios = [] call acre_api_fnc_getCurrentRadioList;
-    private _frequencyClasses = _frequencySettings apply {toUpper (_x select 0)};
+    private _frequencyClasses = _setupSettings apply {toUpper (_x select 0)};
     private _safeFrequencyOrder = true;
     {
         private _base = _x;
@@ -78,7 +86,9 @@ if (count _frequencySettings > 0) then {
         private _carriedMatching = _radios select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == _base};
         if !(_broadMatching isEqualTo _carriedMatching) then {_safeFrequencyOrder = false};
     } forEach (_frequencyClasses arrayIntersect _frequencyClasses);
-    if (!_safeFrequencyOrder || {isNil "acre_api_fnc_setupRadios"} || {!(_frequencySettings call acre_api_fnc_setupRadios)}) then {_success = false};
+    _setupSettings sort true;
+    private _setupRequest = _setupSettings apply {[_x select 0, _x select 2]};
+    if (!_safeFrequencyOrder || {isNil "acre_api_fnc_setupRadios"} || {!(_setupRequest call acre_api_fnc_setupRadios)}) then {_success = false};
 };
 if (_selectedId != "" && {!([_selectedId] call acre_api_fnc_setCurrentRadio)}) then {_success = false};
 if (_success) then {missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", _generation]};

@@ -26,3 +26,4 @@
             [_areaMarker] call Waldo_fnc_EcoBuild_deleteNamedMarker;
             _building setVariable ["WaldoEcoBuild_DetectorAreaMarker", "", true];
         };
+

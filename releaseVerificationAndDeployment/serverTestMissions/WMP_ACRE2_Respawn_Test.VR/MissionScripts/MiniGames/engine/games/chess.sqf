@@ -488,8 +488,8 @@ Waldo_MG_fnc_chessIsInsufficientMaterial = {
         };
     } forEach _minorPieces;
     _bishopsOnly
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_chessPublishRevisionServer = {
     params [["_table", objNull]];
@@ -684,8 +684,8 @@ Waldo_MG_fnc_chessResetServer = {
     [_table] call Waldo_MG_fnc_chessClearServer;
     _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_processChessMoveRequestServer = {
     params [
@@ -1459,8 +1459,8 @@ Waldo_MG_fnc_openChessLocal = {
     _display setVariable ["Waldo_MG_ChessMovePending", false];
     _display setVariable ["Waldo_MG_ChessPromotionPending", []];
     _display setVariable ["Waldo_MG_ChessResignArmedUntil", -1];
-    [_display] call Waldo_MG_fnc_installEscapeGuardLocal;
-
+    [_display] call Waldo_MG_fnc_installEscapeGuardLocal; 
+ 
     private _focusSink = _display ctrlCreate ["RscButton", -1];
     _focusSink ctrlSetPosition [-10, -10, 0.001, 0.001];
     _focusSink ctrlSetText "";
@@ -1706,4 +1706,6 @@ Waldo_MG_fnc_openChessLocal = {
             uiSleep Waldo_MG_CFG_CHESS_UI_TICK;
         };
     };
-};
+}; 
+ 
+

@@ -60,3 +60,4 @@
         if (_operation isEqualTo "UPGRADE") exitWith {
             [_building, _actor] call Waldo_fnc_EcoBuild_startBuildingUpgrade;
         };
+

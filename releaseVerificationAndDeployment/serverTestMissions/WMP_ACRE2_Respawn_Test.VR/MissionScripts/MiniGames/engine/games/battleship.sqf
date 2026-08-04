@@ -94,8 +94,8 @@ Waldo_MG_fnc_battleshipFleetComplete = {
         };
     };
     _complete
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_battleshipCreateEmptySnapshot = {
     [
@@ -275,8 +275,8 @@ Waldo_MG_fnc_battleshipReconcilePlayersServer = {
             [_table, _unit, _seat] call Waldo_MG_fnc_battleshipHandleDepartureServer;
         };
     };
-};
-
+}; 
+ 
 
 Waldo_MG_fnc_processBattleshipActionRequestServer = {
     params [["_unit", objNull], ["_request", []]];
@@ -1139,4 +1139,6 @@ Waldo_MG_fnc_openBattleshipLocal = {
             uiSleep Waldo_MG_CFG_BATTLESHIP_UI_TICK;
         };
     };
-};
+}; 
+ 
+

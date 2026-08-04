@@ -26,3 +26,4 @@
             && {(_x getVariable ["WaldoEcoBuild_BuildOwnerSideKey", "NONE"]) isEqualTo _sideKey}
             && {_x getVariable ["WaldoEcoBuild_Operational", true]}
         }) >= 0
+

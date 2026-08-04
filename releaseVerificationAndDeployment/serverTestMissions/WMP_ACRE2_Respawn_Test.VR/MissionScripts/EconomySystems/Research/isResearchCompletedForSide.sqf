@@ -25,3 +25,4 @@
         if (_index >= 0 && {(_catalog select _index) param [7, false]}) exitWith {true};
 
         (([_sideKey] call Waldo_fnc_EcoResearch_getSideResearched) findIf {(toLower _x) isEqualTo (toLower _name)}) >= 0
+

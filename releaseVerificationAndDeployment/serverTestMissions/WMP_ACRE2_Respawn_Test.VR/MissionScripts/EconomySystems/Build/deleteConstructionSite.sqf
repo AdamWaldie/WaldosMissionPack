@@ -23,3 +23,4 @@
                 deleteVehicle _x;
             };
         } forEach _items;
+

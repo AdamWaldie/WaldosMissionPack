@@ -73,3 +73,4 @@
         [_building, _entry] call Waldo_fnc_EcoBuild_attachBuildingActions;
         diag_log format ["[WMP ECO] Configured building created object=%1 name=%2 class=%3 side=%4 position=%5 direction=%6", netId _building, _buildName, typeOf _building, _sideKey, getPosATL _building, getDir _building];
         _building
+

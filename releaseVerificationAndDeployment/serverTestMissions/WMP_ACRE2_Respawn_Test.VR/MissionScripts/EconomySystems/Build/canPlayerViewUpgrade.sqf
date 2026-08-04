@@ -28,3 +28,4 @@
         (_ownerSide in ["WEST", "EAST", "GUER"])
         && {_playerSide isEqualTo _ownerSide}
         && {_targetName isNotEqualTo ""}
+

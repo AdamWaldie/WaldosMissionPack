@@ -17,3 +17,4 @@
 
         params ["_disp", ["_delta", 0]];
         [_disp, _delta, "WaldoEcoResearch_ConfigIconIndex", "WaldoEcoResearch_ConfigIconValue"] call Waldo_fnc_EcoCore_cycleMarkerIconSelector;
+

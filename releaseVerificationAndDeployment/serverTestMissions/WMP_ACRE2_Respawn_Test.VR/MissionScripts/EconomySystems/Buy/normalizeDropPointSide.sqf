@@ -22,3 +22,4 @@
         if (_trimmed in ["OPFOR", "EAST"]) exitWith {"EAST"};
         if (_trimmed in ["INDEP", "INDFOR", "GUER", "INDEPENDENT"]) exitWith {"GUER"};
         "ANY"
+

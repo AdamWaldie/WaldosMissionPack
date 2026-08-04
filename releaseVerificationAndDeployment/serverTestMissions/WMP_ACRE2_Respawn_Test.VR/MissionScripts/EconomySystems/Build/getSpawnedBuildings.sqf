@@ -15,3 +15,4 @@
  */
 
         +(missionNamespace getVariable ["WaldoEcoBuild_SpawnedBuildings", []])
+

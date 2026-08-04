@@ -1,7 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Defines shared WMP mission configuration and starts systems whose state or behavior is consumed
- * on every machine. Guarded defaults preserve authoritative live changes for JIP clients.
+ * Starts WMP code that must exist on every machine: server, players and headless clients.
+ * Mission makers normally DO NOT enable features here. Edit the clearly named files inside
+ * MissionConfig instead. WMP loads their SHARED settings below without overwriting values that a
+ * server has already broadcast to a joining player.
  *
  * Arguments: None.
  * Return Value: Nothing; initializes shared mission state and schedules feature startup.
@@ -10,10 +12,19 @@
  * Current caller: the Arma mission initialization sequence on server, clients and headless clients.
 */
 
-//Lighting Setup Engine - Optional
+/* BEGINNER START HERE
+ * - A setting needed everywhere belongs in MissionConfig and is loaded here as SHARED data.
+ * - A server-owned system starts in initServer.sqf.
+ * - Player UI, local actions and personal state start in initPlayerLocal.sqf.
+ * - A custom call belongs here only when its documentation explicitly says "every machine".
+ * Never move a server or player-local activation here merely to make it run earlier: that creates
+ * duplicate authorities and JIP races.
+ */
+
+// OPTIONAL VISUAL EXPERIMENT: uncomment only if this mission wants the post-process effect.
 //"LightShafts" ppEffectAdjust [0.9, 0.8, 0.9, 0.8];
 
-//Third Party Scripts (Look at mentioned file to enable 
+// OPTIONAL THIRD-PARTY ENTRY POINT: review that file before enabling it.
 //[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 
 
@@ -48,10 +59,9 @@ run research at a Research Center, construct and upgrade buildings, and let play
 A trusted "Ground Command" controls spending. Everything is driven live from the Zeus menu
 "Waldos Economy Systems" - no editor work required beyond enabling it.
 
-Set the flag below to true to start the economy suite (runs on all machines; it self-branches
-between the server authority loops and the client Zeus menu). It is OFF by default so missions
-that do not use it pay no cost. You can also enable it without editing this file by dropping the
-"[WMP] Waldos Economy Systems" composition (its object boots the suite from its own init).
+Set `Waldo_Economy_Enable` in `MissionConfig\economyConfig.sqf`. It is OFF by default. Server and
+player startup are already routed through their correct init files; do not add another activation
+call here. A WMP economy composition may also supply mission setup where documented.
 
 To pre-configure the economy from the editor (a bundled LOW/MEDIUM/HIGH preset, a full exported
 config string, or commitment mode) without opening Zeus, see the "Waldos Economy Systems"
@@ -118,11 +128,12 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 
 /*===========================================================================================================================*/
 
-/*
-AI Tweak setup
-These commands initiate Waldos AI Tweaks. It is an Either/OR situation, where the DAY OR NIGHT mode can be active per mission.
-Daytime Mission parameter - uncomment this for daytime AI values.
-*/
+/* AI REBALANCE AND HELICOPTER LANDING
+ * Normal setup: MissionConfig\aiConfig.sqf.
+ * Waldo_AIRebalance_Mode is "DAY" or "NIGHT"; the profile is MILITIA, LINE, VETERAN or ELITE.
+ * Do not add another AITweak call here. This readiness-aware activation uses the settings received
+ * from server authority and applies the chosen baseline to local AI when locality changes.
+ */
 [] spawn {
     waitUntil {
         missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
@@ -137,18 +148,14 @@ Daytime Mission parameter - uncomment this for daytime AI values.
     };
     [] call Waldo_fnc_ImprovedHelicopterLandingInit;
 };
-// Nightime Mission - uncomment this for nightime AI values.
-//"NIGHT" call Waldo_fnc_AITweak;
-
-
 /*===========================================================================================================================*/
 
 
 /*
-ACRE2 communications and Babel are authored in MissionConfig\acreConfig.sqf. CfgFunctions pre-init registers
-deterministic preset labels and Babel definitions; initServer.sqf publishes the authoritative plan;
-initPlayerLocal.sqf applies carried-radio state, CEOI and local language knowledge. Multiplayer
-init.sqf deliberately owns no ACRE defaults, waits or mutable authority.
+ACRE2 communications and Babel are authored only in MissionConfig\acreConfig.sqf. Do not call the
+radio setup from this file. Pre-init registers labels/languages, initServer publishes one plan, and
+initPlayerLocal applies each player's radios and CEOI after ACRE is ready. That separation prevents
+JIP clients from replacing the server plan or retuning somebody else's radios.
 */
 
 
@@ -211,13 +218,6 @@ This adds vehicle functions to affected vehicles:
 
 */
 call Waldo_fnc_InitVehicles;
-
-/*
-
-Briefing documents
-
-*/
-if (hasInterface) then {call Waldo_fnc_AddDocs};
 
 /*
 

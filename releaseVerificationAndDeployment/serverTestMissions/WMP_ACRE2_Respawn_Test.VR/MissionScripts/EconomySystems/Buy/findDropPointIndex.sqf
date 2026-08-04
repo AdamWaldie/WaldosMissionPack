@@ -18,3 +18,4 @@
 
         private _rows = call Waldo_fnc_EcoBuy_getDropPoints;
         _rows findIf {((_x param [0, ""]) isEqualTo _dropPointId)}
+

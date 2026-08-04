@@ -34,3 +34,4 @@
         _markerName setMarkerText "";
         _markerName setMarkerPos (getPosATL _building);
         _markerName
+

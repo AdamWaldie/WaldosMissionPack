@@ -17,3 +17,4 @@
         params [["_rows", []]];
         if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};
         missionNamespace setVariable ["WaldoEcoBuy_DropPoints", _rows, true];
+

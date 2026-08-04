@@ -24,3 +24,4 @@
         } forEach (_building getVariable ["WaldoEcoBuild_DetectorContactMarkers", []]);
 
         _building setVariable ["WaldoEcoBuild_DetectorContactMarkers", [], true];
+

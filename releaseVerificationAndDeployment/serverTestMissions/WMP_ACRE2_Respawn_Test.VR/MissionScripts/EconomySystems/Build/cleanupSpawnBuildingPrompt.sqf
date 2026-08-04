@@ -38,3 +38,4 @@
             "WaldoEcoBuild_SpawnTargetPos"
         ]] call Waldo_fnc_EcoCore_clearDisplayVariables;
         [_disp] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;
+

@@ -15,3 +15,4 @@
  */
 
         +(missionNamespace getVariable ["WaldoEcoBuy_DropPoints", []])
+

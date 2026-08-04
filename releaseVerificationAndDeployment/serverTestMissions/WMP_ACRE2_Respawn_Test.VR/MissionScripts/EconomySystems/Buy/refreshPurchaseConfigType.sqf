@@ -32,3 +32,4 @@
             _valueCtrl ctrlSetText (_choices select _index);
             _valueCtrl ctrlCommit 0;
         };
+

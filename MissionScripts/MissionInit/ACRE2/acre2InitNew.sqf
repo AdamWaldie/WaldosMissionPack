@@ -28,8 +28,8 @@ if (isServer && {isNil {missionNamespace getVariable "Waldo_ACRE2_Plan"}}) then 
     // One public value is the readiness sentinel and payload, avoiding separate JIP arrival order.
     missionNamespace setVariable ["Waldo_ACRE2_Plan", _plan, true];
 };
-if (hasInterface && {isNil {uiNamespace getVariable "Waldo_ACRE2_ClientInitStarted"}}) then {
-    uiNamespace setVariable ["Waldo_ACRE2_ClientInitStarted", true];
+if (hasInterface && {isNil {missionNamespace getVariable "Waldo_ACRE2_ClientInitStarted"}}) then {
+    missionNamespace setVariable ["Waldo_ACRE2_ClientInitStarted", true];
     ["INITIAL", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
     private _babel = _config getOrDefault ["babel", createHashMap];
     if (_babel getOrDefault ["followPlayerUnit", true]) then {
@@ -39,9 +39,9 @@ if (hasInterface && {isNil {uiNamespace getVariable "Waldo_ACRE2_ClientInitStart
             // player-object replacements refresh Babel/CEOI only and never retune radios mid-game.
             if (_newUnit isEqualTo player) then {["UNIT_REPLACEMENT", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh};
         }, false] call CBA_fnc_addPlayerEventHandler;
-        uiNamespace setVariable ["Waldo_ACRE2_UnitHandler", _unitHandler];
+        missionNamespace setVariable ["Waldo_ACRE2_UnitHandler", _unitHandler];
     };
     private _groupHandler = ["group", {["GROUP_CHANGE", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh}] call CBA_fnc_addPlayerEventHandler;
-    uiNamespace setVariable ["Waldo_ACRE2_GroupHandler", _groupHandler];
+    missionNamespace setVariable ["Waldo_ACRE2_GroupHandler", _groupHandler];
 };
 true

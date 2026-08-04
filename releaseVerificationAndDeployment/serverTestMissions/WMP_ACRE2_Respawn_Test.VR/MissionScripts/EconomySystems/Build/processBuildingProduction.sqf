@@ -169,3 +169,4 @@
         } forEach _rows;
 
         [_kept] call Waldo_fnc_EcoBuild_setSpawnedBuildings;
+

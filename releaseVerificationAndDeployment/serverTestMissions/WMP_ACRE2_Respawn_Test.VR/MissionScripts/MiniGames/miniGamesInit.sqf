@@ -45,8 +45,8 @@ private _wmgDuplicateRuntime = (_wmgRuntimeVersion == Waldo_MG_Version) && {
     isNull _wmgCompositionHost || {_wmgRuntimeHost == _wmgCompositionHost}
 };
 if (_wmgDuplicateRuntime) exitWith {};
-missionNamespace setVariable ["Waldo_MG_RuntimeKeyLocal", [Waldo_MG_Version, _wmgCompositionHost]];
-
+missionNamespace setVariable ["Waldo_MG_RuntimeKeyLocal", [Waldo_MG_Version, _wmgCompositionHost]]; 
+ 
 
     #include "engine\config.sqf"
     #include "engine\core.sqf"

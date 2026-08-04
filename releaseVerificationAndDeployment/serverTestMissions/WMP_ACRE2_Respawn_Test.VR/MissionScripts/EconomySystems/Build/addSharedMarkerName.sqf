@@ -24,3 +24,4 @@
         private _markers = call Waldo_fnc_EcoResource_getActiveResourceMarkers;
         _markers pushBackUnique _markerName;
         missionNamespace setVariable ["WaldoEcoResource_ActiveResourceMarkers", _markers, true];
+

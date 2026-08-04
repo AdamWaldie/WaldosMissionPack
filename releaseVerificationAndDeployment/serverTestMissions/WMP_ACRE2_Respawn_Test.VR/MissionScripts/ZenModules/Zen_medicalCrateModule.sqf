@@ -17,11 +17,11 @@
 params ["_modulePos", "_objectPos"];
 
 [
-    "Waldos Medical Crate",
+    "Waldos Medical Crate", 
     [
         ["SLIDER:PERCENT", ["Supply size", "Regulate the total amount of supplies in the crate"], [0, 1, 2], false],
         ["CHECKBOX", ["Set as Field Hospital", "Set this crate to act as field hospital"], true, false]
-    ],
+    ], 
     {
         params ["_arg", "_pos"];
         _arg params ["_size","_fieldHopsital"];

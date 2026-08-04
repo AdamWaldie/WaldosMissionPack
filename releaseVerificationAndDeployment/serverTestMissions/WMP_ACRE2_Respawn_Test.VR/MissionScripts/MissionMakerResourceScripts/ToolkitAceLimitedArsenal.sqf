@@ -8,7 +8,7 @@ License: Distributable and editable with proper attribution.
 
 /*================================MANUAL METHODOLOGY=========================
 
-This can be used to make an Arsenal only with the items from your precreated loadouts.
+This can be used to make an Arsenal only with the items from your precreated loadouts. 
 This is the best choice if you do not want to make a full arsenal available to have your Loadouts spawnable.
 
  I. Spawn the same amount of units as you have loadouts, give each unit one of them
