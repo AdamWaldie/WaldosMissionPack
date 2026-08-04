@@ -17,10 +17,10 @@ if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {false};
 private _plan = missionNamespace getVariable ['Waldo_ACRE2_Plan', []];
 // During the pre-start briefing the server plan may not yet have reached this client. Compilation is
 // pure and deterministic, so a local display-only preview is safe; it is never stored or used to tune.
-if (count _plan < 4 || {(_plan select 0) != 3}) then {
+if (count _plan < 4 || {(_plan select 0) != 4}) then {
     _plan = [_config, 0] call Waldo_fnc_ACRE2CompilePlan;
 };
-if (count _plan < 4 || {(_plan select 0) != 3}) exitWith {false};
+if (count _plan < 4 || {(_plan select 0) != 4}) exitWith {false};
 private _sideKey = switch (side player) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'}};
 private _sideIndex = (_plan select 2) findIf {(_x select 0) == _sideKey};
 if (_sideIndex < 0) exitWith {false};
@@ -30,6 +30,7 @@ private _groups = _sidePlan select 3;
 private _groupKey = toUpperANSI ((((groupId group player) splitString ' -_.') joinString ''));
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
 private _radios = if (isNil 'acre_api_fnc_getCurrentRadioList') then {[]} else {[] call Waldo_fnc_ACRE2GetOrderedRadios};
+private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;
 private _current = createHashMap;
 {
     private _base = toUpper ([_x] call acre_api_fnc_getBaseRadio);
@@ -43,37 +44,9 @@ private _current = createHashMap;
     _current set [_base, _values];
 } forEach _radios;
 private _netIsCurrent = {
-    params ['_netKey', '_tunings'];
-    private _currentIndex = _tunings findIf {
-        private _base = toUpper (_x select 0);
-        private _setting = _x select 1;
-        // ACRE exposes channel read-back for channel radios, but not the tuned frequency for
-        // manual-frequency radios. Do not claim those are current from stale setup state.
-        private _canRead = !(_base in ['ACRE_PRC77', 'ACRE_SEM70'])
-            && {_setting in (_current getOrDefault [_base, []])};
-        if (!_canRead) then {
-            false
-        } else {
-            // A physical channel cannot identify which named net was intended when configuration
-            // duplicates a tuning. Ambiguous nets remain unhighlighted instead of both appearing live.
-            private _matchingNets = _nets select {
-                private _candidateIndex = (_x select 2) findIf {
-                    toUpper (_x select 0) == _base && {(_x select 1) isEqualTo _setting}
-                };
-                _candidateIndex >= 0
-            };
-            count _matchingNets == 1 && {((_matchingNets select 0) select 0) == _netKey}
-        }
-    };
-    _currentIndex >= 0
-};
-private _shortName = {
-    params ['_base'];
-    createHashMapFromArray [
-        ['ACRE_PRC148', '148'], ['ACRE_PRC152', '152'], ['ACRE_PRC117F', '117F'],
-        ['ACRE_BF888S', '888'], ['ACRE_SEM52SL', 'SEM52'], ['ACRE_PRC77', '77'],
-        ['ACRE_SEM70', 'SEM70']
-    ] getOrDefault [toUpper _base, _base]
+    params ['_family', '_setting'];
+    private _compatibleClasses = _profiles select {toUpper (_x select 5) == toUpper _family && {toUpper (_x select 1) == 'CHANNEL'}} apply {toUpper (_x select 0)};
+    (_compatibleClasses findIf {_setting in (_current getOrDefault [_x, []])}) >= 0
 };
 private _displaySetting = {
     params ['_setting'];
@@ -83,7 +56,7 @@ private _displaySetting = {
 private _text = "<font size='16'>Communications Electronics Operating Instructions</font><br/><br/>";
 _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
 {
-    private _assignment = _x select 2;
+    private _assignment = _x select 1;
     private _line = if (_assignment isEqualType [] && {count _assignment >= 2}) then {
         format ['%1 - Block %2, Channel %3', _x select 0, _assignment select 0, _assignment select 1]
     } else {
@@ -99,21 +72,11 @@ _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
 } forEach _groups;
 _text = _text + "<br/><font size='14'>Radio Nets</font><br/>";
 {
-    private _tunings = _x select 2;
-    private _settings = [];
-    {_settings pushBackUnique ([_x select 1] call _displaySetting)} forEach _tunings;
-    private _detail = if (count _settings == 1) then {
-        private _firstBase = toUpper ((_tunings select 0) select 0);
-        if (_firstBase in ['ACRE_PRC77', 'ACRE_SEM70']) then {
-            (_settings select 0) + ' MHz'
-        } else {
-            'Ch. ' + (_settings select 0)
-        }
-    } else {
-        (_tunings apply {format ['%1 %2', [_x select 0] call _shortName, [_x select 1] call _displaySetting]}) joinString ', '
-    };
+    private _family = _x select 2;
+    private _setting = _x select 3;
+    private _detail = if (toUpper _family == 'LEGACY_VHF') then {([_setting] call _displaySetting) + ' MHz'} else {'Ch. ' + ([_setting] call _displaySetting)};
     private _line = format ['%1 - %2', _x select 1, _detail];
-    if ([_x select 0, _tunings] call _netIsCurrent) then {
+    if ([_family, _setting] call _netIsCurrent) then {
         _line = format ["<font color='#47ff47'>[CURRENT] %1</font>", _line];
     };
     _text = _text + _line + '<br/>';

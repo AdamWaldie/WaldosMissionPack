@@ -45,10 +45,28 @@ private _frequencyValid = {
     private _khz = round ((_mhz - floor _mhz) * 1000);
     abs ((_khz / (_range select 2)) - round (_khz / (_range select 2))) < 0.001
 };
+private _profileAcceptsValue = {
+    params ["_value", "_profile", "_max343Block"];
+    private _mode = toUpper (_profile select 1);
+    switch (_mode) do {
+        case "BLOCK_CHANNEL": {
+            _value isEqualType [] && {count _value == 2} &&
+            {(_value select 0) >= 1} && {(_value select 0) <= _max343Block} &&
+            {(_value select 1) >= 1} && {(_value select 1) <= 16}
+        };
+        case "CHANNEL": {
+            _value isEqualType 0 && {_value >= 1} &&
+            {_value <= (_profile select 3)} && {_value == floor _value}
+        };
+        case "FREQUENCY": {[_value, _profile select 4] call _frequencyValid};
+        default {false};
+    }
+};
 private _profileClasses = [];
+private _profileFamilies = [];
 {
-    if (count _x != 5) then {_errors pushBack format ["Malformed radio profile %1.", _x]} else {
-        _x params ["_class", "_mode", "_ears", "_maxChannel", "_range"];
+    if (count _x != 6) then {_errors pushBack format ["Malformed radio profile %1; expected [class, mode, ears, maximum channel, frequency range, net family].", _x]} else {
+        _x params ["_class", "_mode", "_ears", "_maxChannel", "_range", "_family"];
         private _upperClass = toUpper _class;
         if (_upperClass in _profileClasses) then {_errors pushBack format ["Duplicate radio profile %1.", _class]};
         _profileClasses pushBack _upperClass;
@@ -56,6 +74,7 @@ private _profileClasses = [];
         if (count _ears == 0 || {{!(([toUpper _x] call _normaliseEar) in ["LEFT", "RIGHT", "CENTER"])} count _ears > 0}) then {_errors pushBack format ["%1 has invalid default ears.", _class]};
         if (toUpper _mode in ["BLOCK_CHANNEL", "CHANNEL"] && {_maxChannel < 1}) then {_errors pushBack format ["%1 requires a positive channel capacity.", _class]};
         if (toUpper _mode == "FREQUENCY" && {count _range != 4}) then {_errors pushBack format ["%1 requires [minimum MHz, maximum MHz, step kHz, divisor].", _class]};
+        if (_family == "") then {_errors pushBack format ["%1 requires a net family.", _class]} else {_profileFamilies pushBackUnique (toUpper _family)};
     };
 } forEach _profiles;
 private _expectedPresets = createHashMapFromArray [["WEST", "default3"], ["EAST", "default2"], ["GUER", "default4"], ["CIV", "default"]];
@@ -74,12 +93,11 @@ private _validateAssignment = {
     if (_target isEqualType "") then {
         private _net = _netMap getOrDefault [toUpper _target, []];
         if (count _net == 0) exitWith {_errors pushBack format ["%1 references unknown net %2.", _context, _target]};
-        private _tuningIndex = (_net select 2) findIf {toUpper (_x select 0) == toUpper _class};
-        if (_tuningIndex < 0) exitWith {_errors pushBack format ["%1 net %2 has no tuning for %3.", _context, _target, _class]};
-        _resolved = ((_net select 2) select _tuningIndex) select 1;
+        if (toUpper (_net select 2) != toUpper (_profile select 5)) exitWith {_errors pushBack format ["%1 cannot assign %2 to %3: net family %4 does not match radio family %5.", _context, _target, _class, _net select 2, _profile select 5]};
+        _resolved = _net select 3;
     };
     if (_mode == "BLOCK_CHANNEL" && {!(_resolved isEqualType [] && {count _resolved == 2} && {(_resolved select 0) >= 1} && {(_resolved select 0) <= _max343Block} && {(_resolved select 1) >= 1} && {(_resolved select 1) <= 16})}) then {_errors pushBack format ["%1 PRC-343 target must be [block 1-%2, channel 1-16].", _context, _max343Block]};
-    if (_mode == "CHANNEL" && {!(_resolved isEqualType 0 && {_resolved >= 1} && {_resolved <= (_profile select 3)} && {_resolved == floor _resolved})}) then {_errors pushBack format ["%1/%2 channel exceeds this radio's capacity.", _context, _class]};
+    if (_mode == "CHANNEL" && {!(_resolved isEqualType 0 && {_resolved >= 1} && {_resolved <= (_profile select 3)} && {_resolved == floor _resolved})}) then {_errors pushBack format ["%1/%2 channel %3 is outside this radio's supported range 1-%4.", _context, _class, _resolved, _profile select 3]};
     if (_mode == "FREQUENCY" && {!([_resolved, _profile select 4] call _frequencyValid)}) then {_errors pushBack format ["%1/%2 has invalid frequency %3.", _context, _class, _resolved]};
 };
 {
@@ -93,24 +111,22 @@ private _validateAssignment = {
         private _netMap = createHashMap;
         private _sideTuningTargets = [];
         {
-            if (count _x != 3) then {_errors pushBack format ["Malformed %1 net %2.", _sideKey, _x]} else {
-                _x params ["_netKey", "_label", "_tunings"];
+            if (count _x != 4) then {_errors pushBack format ["Malformed %1 net %2; expected [key, display name, radio family, one value].", _sideKey, _x]} else {
+                _x params ["_netKey", "_label", "_family", "_value"];
                 private _key = toUpper _netKey;
                 if !((_netMap getOrDefault [_key, []]) isEqualTo []) then {_errors pushBack format ["Duplicate %1 net %2.", _sideKey, _key]};
                 if (count _label > 12) then {_warnings pushBack format ["%1/%2 physical label will be truncated to 12 characters.", _sideKey, _key]};
-                private _classes = [];
-                {
-                    if (count _x != 2) then {_errors pushBack format ["Malformed %1/%2 tuning %3.", _sideKey, _key, _x]} else {
-                        private _class = toUpper (_x select 0);
-                        if (_class in _classes) then {_errors pushBack format ["Duplicate %1/%2 tuning for %3.", _sideKey, _key, _class]};
-                        _classes pushBack _class;
-                        private _tuningIdentity = format ["%1#%2", _class, _x select 1];
-                        if (_tuningIdentity in _sideTuningTargets) then {_errors pushBack format ["%1 reuses %2 in multiple named nets.", _sideKey, _tuningIdentity]};
-                        _sideTuningTargets pushBack _tuningIdentity;
-                        [[_x select 0, 1, _x select 1, "CENTER"], format ["%1/%2", _sideKey, _key], createHashMap, if (_policy == "FULL_RANGE" || {_preset == "default"}) then {16} else {5}] call _validateAssignment;
-                    };
-                } forEach _tunings;
-                _netMap set [_key, [_key, _label, _tunings]];
+                private _upperFamily = toUpper _family;
+                if !(_upperFamily in _profileFamilies) then {_errors pushBack format ["%1/%2 uses unknown radio family %3.", _sideKey, _key, _family]};
+                private _tuningIdentity = format ["%1#%2", _upperFamily, _value];
+                if (_tuningIdentity in _sideTuningTargets) then {_errors pushBack format ["%1 reuses %2 in multiple named nets, so current-net highlighting would be ambiguous.", _sideKey, _tuningIdentity]};
+                _sideTuningTargets pushBack _tuningIdentity;
+                _netMap set [_key, [_key, _label, _upperFamily, _value]];
+                private _familyProfiles = _profiles select {toUpper (_x select 5) == _upperFamily};
+                private _netMax343Block = if (_policy == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
+                if (count _familyProfiles > 0 && {_familyProfiles findIf {[_value, _x, _netMax343Block] call _profileAcceptsValue} < 0}) then {
+                    _errors pushBack format ["%1/%2 value %3 is unsupported by every radio in family %4.", _sideKey, _key, _value, _upperFamily];
+                };
             };
         } forEach _nets;
         private _groupKeys = [];
@@ -118,12 +134,27 @@ private _validateAssignment = {
         private _maxBlock = if (_policy == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
         {
             if (count _x != 4) then {_errors pushBack format ["Malformed %1 group %2.", _sideKey, _x]} else {
-                _x params ["_groupId", "_netRefs", "_fallback343", "_assignments"];
+                _x params ["_groupId", "_fallback343", "_defaults", "_assignments"];
                 private _groupKey = toUpperANSI (((_groupId splitString " -_.") joinString ""));
                 if (_groupKey in _groupKeys) then {_errors pushBack format ["Duplicate %1 group %2.", _sideKey, _groupKey]};
                 _groupKeys pushBack _groupKey;
-                {if (_netMap getOrDefault [toUpper _x, []] isEqualTo []) then {_errors pushBack format ["%1/%2 references unknown net %3.", _sideKey, _groupKey, _x]}} forEach _netRefs;
-                if !(_fallback343 isEqualTo []) then {[["ACRE_PRC343", 1, _fallback343, "CENTER"], format ["%1/%2", _sideKey, _groupKey], _netMap, _maxBlock] call _validateAssignment};
+                if !(_fallback343 isEqualTo []) then {
+                    [["ACRE_PRC343", 1, _fallback343, "CENTER"], format ["%1/%2", _sideKey, _groupKey], _netMap, _maxBlock] call _validateAssignment;
+                    if (count _fallback343 == 2) then {
+                        private _flat = ((_fallback343 select 0) - 1) * 16 + (_fallback343 select 1);
+                        if (_flat in _used343) then {private _message = format ["%1 explicit PRC-343 collision at %2.", _sideKey, _fallback343]; if (_strict) then {_errors pushBack _message} else {_warnings pushBack _message}};
+                        _used343 pushBack _flat;
+                    };
+                };
+                private _defaultClasses = [];
+                {
+                    if (count _x != 3) then {_errors pushBack format ["Malformed %1/%2 default %3; expected [radio class, net/direct value, ear].", _sideKey, _groupKey, _x]} else {
+                        private _class = toUpper (_x select 0);
+                        if (_class in _defaultClasses) then {_errors pushBack format ["%1/%2 duplicates default for %3.", _sideKey, _groupKey, _class]};
+                        _defaultClasses pushBack _class;
+                        [[_x select 0, 1, _x select 1, _x select 2], format ["%1/%2/default %3", _sideKey, _groupKey, _class], _netMap, _maxBlock] call _validateAssignment;
+                    };
+                } forEach _defaults;
                 private _identities = [];
                 {
                     private _identity = format ["%1#%2", toUpper (_x param [0, ""]), _x param [1, 0]];

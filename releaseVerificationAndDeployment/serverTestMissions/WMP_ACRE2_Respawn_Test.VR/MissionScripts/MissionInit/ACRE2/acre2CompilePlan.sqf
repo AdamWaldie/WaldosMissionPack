@@ -19,6 +19,7 @@
 params [["_config", createHashMap, [createHashMap]], ["_revision", 1, [0]]];
 private _sidePlans = [];
 private _diagnostics = [];
+private _normaliseGroupKey = {toUpperANSI (((_this splitString " -_.") joinString ""))};
 private _hashText = {
     params ["_text", "_modulus"];
     private _hash = 5381;
@@ -33,33 +34,39 @@ private _hashText = {
         case "INDEPENDENT"; case "INDEP"; case "GUER": {"GUER"};
         default {"CIV"};
     };
-    private _nets = _sourceNets apply {
-        [toUpper (_x select 0), _x select 1, (_x select 2) apply {[toUpper (_x select 0), _x select 1]}]
-    };
+    // A named net has one value and one compatibility family. Radio profiles, not the mission
+    // maker, define which physical radios belong to that family.
+    private _nets = _sourceNets apply {[toUpper (_x select 0), _x select 1, toUpper (_x select 2), _x select 3]};
     private _maxBlock = if (toUpper (_config getOrDefault ["prc343PresetPolicy", "FULL_RANGE"]) == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
     private _capacity = _maxBlock * 16;
     private _used = [];
     private _autoKeys = [];
+    private _autoSources = createHashMap;
     private _allocations = createHashMap;
     {
-        _x params ["_groupId", "_netKeys", "_fallback343", "_assignments"];
+        _x params ["_groupId", "_fallback343", "_defaults", "_assignments"];
         private _explicit343 = _assignments select {toUpper (_x select 0) == "ACRE_PRC343" && {(_x select 2) isEqualType []}};
         if (count _explicit343 > 0) then {
             {private _target = _x select 2; _used pushBackUnique (((_target select 0) - 1) * 16 + (_target select 1))} forEach _explicit343;
-            _allocations set [toUpper _groupId, +((_explicit343 select 0) select 2)];
+            _allocations set [_groupId call _normaliseGroupKey, +((_explicit343 select 0) select 2)];
         } else {
             if !(_fallback343 isEqualTo []) then {
                 _used pushBackUnique (((_fallback343 select 0) - 1) * 16 + (_fallback343 select 1));
-                _allocations set [toUpper _groupId, +_fallback343];
+                _allocations set [_groupId call _normaliseGroupKey, +_fallback343];
             } else {
-                _autoKeys pushBack (toUpper _groupId);
+                private _normalisedGroup = _groupId call _normaliseGroupKey;
+                _autoKeys pushBack _normalisedGroup;
+                // Matching deliberately ignores separators, but PRC-343 shorthand needs the
+                // original callsign so `Viking 2-3` remains two numbers instead of becoming 23.
+                _autoSources set [_normalisedGroup, _groupId];
             };
         };
     } forEach _sourceGroups;
     _autoKeys sort true;
     {
         private _groupKey = _x;
-        private _matches = _groupKey regexFind ["[0-9]+"];
+        private _allocationSource = _autoSources getOrDefault [_groupKey, _groupKey];
+        private _matches = _allocationSource regexFind ["[0-9]+"];
         private _numbers = _matches apply {parseNumber (((_x select 0) select 0))};
         private _candidate = -1;
         if (count _numbers >= 2) then {
@@ -68,7 +75,7 @@ private _hashText = {
             if (_block >= 1 && {_block <= _maxBlock} && {_channel >= 1} && {_channel <= 16}) then {_candidate = (_block - 1) * 16 + _channel};
         };
         if (_candidate < 1 && {count _numbers == 1} && {(_numbers select 0) >= 1} && {(_numbers select 0) <= 16}) then {
-            private _prefixMatches = _groupKey regexFind ["^[^0-9]+"];
+            private _prefixMatches = _allocationSource regexFind ["^[^0-9]+"];
             private _prefix = if (count _prefixMatches > 0) then {((_prefixMatches select 0) select 0) select 0} else {_groupKey};
             _candidate = ([_prefix, _maxBlock] call _hashText) * 16 + (_numbers select 0);
         };
@@ -87,14 +94,19 @@ private _hashText = {
         };
     } forEach _autoKeys;
     private _groups = _sourceGroups apply {
-        _x params ["_groupId", "_netKeys", "_unused343", "_assignments"];
+        _x params ["_groupId", "_unused343", "_defaults", "_assignments"];
         private _normalisedAssignments = _assignments apply {
             private _ear = toUpper (_x select 3);
             if (_ear == "BOTH") then {_ear = "CENTER"};
             [toUpper (_x select 0), _x select 1, _x select 2, _ear]
         };
-        [toUpper _groupId, _netKeys apply {toUpper _x}, _allocations getOrDefault [toUpper _groupId, []], _normalisedAssignments]
+        private _normalisedDefaults = _defaults apply {
+            private _ear = toUpper (_x select 2);
+            if (_ear == "BOTH") then {_ear = "CENTER"};
+            [toUpper (_x select 0), _x select 1, _ear]
+        };
+        [_groupId call _normaliseGroupKey, _allocations getOrDefault [_groupId call _normaliseGroupKey, []], _normalisedDefaults, _normalisedAssignments]
     };
     _sidePlans pushBack [_sideKey, _preset, _nets, _groups];
 } forEach (_config getOrDefault ["sides", []]);
-[3, _revision, _sidePlans, _diagnostics]
+[4, _revision, _sidePlans, _diagnostics]

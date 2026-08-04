@@ -25,20 +25,14 @@ createHashMapFromArray [
         "WEST",
         "default3",
         [
-            ["ALPHA_NET", "ALPHA TEST", [["ACRE_PRC152", 4], ["ACRE_PRC77", 45.500]]],
-            ["BRAVO_NET", "BRAVO TEST", [["ACRE_PRC152", 8], ["ACRE_PRC77", 51.000]]]
+            ["ALPHA_NET", "ALPHA TEST", "PRC_LR", 4],
+            ["BRAVO_NET", "BRAVO TEST", "PRC_LR", 8],
+            ["ALPHA_77", "ALPHA 77", "LEGACY_VHF", 45.500],
+            ["BRAVO_77", "BRAVO 77", "LEGACY_VHF", 51.000]
         ],
         [
-            ["ALPHA", ["ALPHA_NET"], [5, 3], [
-                ["ACRE_PRC343", 1, [5, 3], "LEFT"],
-                ["ACRE_PRC152", 1, 4, "RIGHT"],
-                ["ACRE_PRC77", 1, 45.500, "CENTER"]
-            ]],
-            ["BRAVO", ["BRAVO_NET"], [6, 7], [
-                ["ACRE_PRC343", 1, [6, 7], "RIGHT"],
-                ["ACRE_PRC152", 1, 8, "LEFT"],
-                ["ACRE_PRC77", 1, 51.000, "CENTER"]
-            ]]
+            ["ALPHA", [5, 3], [["ACRE_PRC152", "ALPHA_NET", "RIGHT"], ["ACRE_PRC77", "ALPHA_77", "CENTER"]], []],
+            ["BRAVO", [6, 7], [["ACRE_PRC152", "BRAVO_NET", "LEFT"], ["ACRE_PRC77", "BRAVO_77", "CENTER"]], []]
         ]
     ]]],
     ["babel", createHashMapFromArray [

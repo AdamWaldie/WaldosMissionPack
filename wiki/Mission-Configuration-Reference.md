@@ -266,25 +266,35 @@ Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing
 
 `enabled` gates the complete replacement lifecycle. `prc343PresetPolicy` defaults to `FULL_RANGE`, preserving all sixteen PRC-343 blocks while other radios retain their official side presets; `SIDE_ISOLATED` reduces combat-side PRC-343 presets to five blocks. Group changes refresh the CEOI but never rewrite radios. Built-in radio capabilities live in code. `additionalRadioProfiles` is an advanced escape hatch for a tested third-party carried radio. Unknown radios and vehicle racks are preserved.
 
-An explicit assignment is `[base class, same-type occurrence, target, ear]`. This allows two identical radios to use independent nets and `LEFT`, `RIGHT` or `BOTH` ears. Rows are optional templates: missing occurrences are skipped and extra/captured radios remain untouched. `radioOverrides` are side-scoped and can `MERGE` with or `REPLACE` the group list for a UID, editor variable or role. Alternate PTT defaults are always left to the player.
+A net is `[key, label, radio family, one value]`; it never contains separate per-radio channels. A
+group default is `[base class, target, ear]` and applies to every carried radio of that class. An
+occurrence override is `[base class, same-type occurrence, target, ear]`, allowing two identical
+radios to use different nets and ears. Missing occurrences are skipped and unconfigured radios are
+preserved. `radioOverrides` are side-scoped player/role exceptions. PTT defaults remain untouched.
 
 ### ACRE2 Long-Range Channel Names (CEOI)
 
 ```sqf
 ["WEST", "default3", [
-    ["PLT1", "PLATOON 1", [["ACRE_PRC148", 2], ["ACRE_PRC152", 2], ["ACRE_PRC117F", 2]]],
-    ["AIRGND", "AIR-GND", [["ACRE_PRC148", 6], ["ACRE_PRC152", 6], ["ACRE_PRC117F", 6]]]
+    ["PLT1", "PLATOON 1", "PRC_LR", 2],
+    ["AIRGND", "AIR-GND", "PRC_LR", 6]
 ], [
-    ["VIKING-1-1", ["PLT1", "AIRGND"], [], [
-        ["ACRE_PRC343", 1, [1, 1], "LEFT"],
-        ["ACRE_PRC343", 2, [1, 2], "RIGHT"],
-        ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
+    ["VIKING-2-3", [2, 3], [
+        ["ACRE_PRC148", "PLT1", "RIGHT"],
+        ["ACRE_PRC152", "PLT1", "RIGHT"],
+        ["ACRE_PRC117F", "PLT1", "CENTER"]
+    ], [
         ["ACRE_PRC152", 2, "AIRGND", "LEFT"]
     ]]
 ]]
 ```
 
-Each net contains per-radio tunings and drives both assignment and CEOI output. A blank PRC-343 field requests deterministic callsign allocation; an explicit `[block, channel]` reserves that slot. Each carried radio independently selects a compatible group net, so concurrent radio families do not share an artificial capacity ceiling. Frequency radios use a net tuning or direct frequency through ACRE's asynchronous public setup API.
+`PRC_LR` covers PRC-148/152/117F because their official side presets interoperate at matching channel
+numbers. BF-888S, SEM52SL and legacy frequency radios use separate families. Validation rejects a
+family mismatch, a channel outside the specifically assigned radio's capacity, or an invalid
+frequency range/step. A net needs at least one capable radio in its declared family, but a less-capable
+radio does not invalidate that net until the mission assigns that radio to it. A blank
+PRC-343 field requests deterministic callsign allocation; explicit `[block, channel]` reserves it.
 
 ### ACRE2 Babel (optional — disabled by default)
 

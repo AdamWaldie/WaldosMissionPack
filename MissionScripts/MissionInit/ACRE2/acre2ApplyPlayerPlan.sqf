@@ -1,8 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Applies the current server plan to supported local carried radios. Explicit rows are optional
- * templates, so an absent radio occurrence is skipped rather than treated as a failure. Unlisted,
- * unsupported and captured radios are preserved. Frequency requests use ACRE's asynchronous public
+ * Applies the current server plan to supported local carried radios. Class defaults apply to every
+ * carried occurrence; explicit occurrence rows override them and skip absent radios. Unlisted,
+ * unsupported and captured radios are preserved. Named nets contain one family-scoped value rather
+ * than per-radio tunings. Frequency requests use ACRE's asynchronous public
  * setupRadios API and are recorded as accepted but unverified because no public frequency read API
  * exists. PTT, volume, speaker mode and current-radio selection are never changed.
  * Locality and authority: call on the player's interface client after ACRE unique radios exist and
@@ -25,7 +26,7 @@ if (!hasInterface || {isNull player} || {!(isClass (configFile >> "CfgPatches" >
 private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
 if !(_config getOrDefault ["enabled", true]) exitWith {true};
 private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
-if (count _plan < 4 || {(_plan select 0) != 3}) exitWith {false};
+if (count _plan < 4 || {(_plan select 0) != 4}) exitWith {false};
 private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
 private _sideIndex = (_plan select 2) findIf {(_x select 0) == _sideKey};
 if (_sideIndex < 0) exitWith {false};
@@ -43,7 +44,7 @@ if (_groupIndex < 0) exitWith {
 private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
 if ((missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1]) == _generation) exitWith {true};
 private _groupPlan = _groups select _groupIndex;
-_groupPlan params ["_unusedGroup", "_netKeys", "_shortAssignment", "_explicitAssignments"];
+_groupPlan params ["_unusedGroup", "_shortAssignment", "_defaultAssignments", "_explicitAssignments"];
 private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;
 private _radios = [] call Waldo_fnc_ACRE2GetOrderedRadios;
 private _problems = [];
@@ -54,11 +55,7 @@ private _success = true;
 private _profileFor = {params ["_base"]; private _i = _profiles findIf {toUpper (_x select 0) == toUpper _base}; if (_i < 0) then {[]} else {_profiles select _i}};
 private _radiosOfType = {params ["_base"]; _radios select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == toUpper _base}};
 private _netFor = {params ["_key"]; private _i = _nets findIf {(_x select 0) == toUpper _key}; if (_i < 0) then {[]} else {_nets select _i}};
-private _tuningFor = {
-    params ["_net", "_base"];
-    private _i = (_net select 2) findIf {toUpper (_x select 0) == toUpper _base};
-    if (_i < 0) then {[]} else {(_net select 2) select _i}
-};
+private _netCompatible = {params ["_net", "_profile"]; count _net == 4 && {count _profile >= 6} && {toUpper (_net select 2) == toUpper (_profile select 5)}};
 private _normaliseEar = {params ["_value"]; private _ear = toUpper _value; if (_ear == "BOTH") then {"CENTER"} else {_ear}};
 private _defaultEar = {params ["_profile", "_occurrence"]; private _ears = _profile select 2; _ears select (((_occurrence - 1) min ((count _ears) - 1)) max 0)};
 private _profileClasses = _profiles apply {toUpperANSI (_x select 0)};
@@ -85,7 +82,7 @@ if (!(_inventoryRadios isEqualTo []) && {_radios isEqualTo []}) exitWith {
             default {false};
         };
         if (_matches) exitWith {
-            if (toUpper _mode == "REPLACE") then {_explicitAssignments = []};
+            if (toUpper _mode == "REPLACE") then {_explicitAssignments = []; _defaultAssignments = []};
             {
                 private _identity = format ["%1#%2", toUpper (_x select 0), _x select 1];
                 private _existing = _explicitAssignments findIf {format ["%1#%2", toUpper (_x select 0), _x select 1] == _identity};
@@ -112,7 +109,8 @@ if (count _shortRadios > 0 && {!(_shortAssignment isEqualTo [])} && {!("ACRE_PRC
     private _profile = ["ACRE_PRC343"] call _profileFor;
     _resolved pushBack [_shortRadios select 0, "ACRE_PRC343", 1, _shortAssignment, [_profile, 1] call _defaultEar];
 };
-// Every supported carried occurrence independently takes the first compatible configured net.
+// An explicit occurrence row wins. Otherwise the group default for that physical radio class is
+// applied to every carried occurrence. Radios without either rule remain untouched.
 private _typeCounts = createHashMap;
 {
     private _radioId = _x;
@@ -122,22 +120,10 @@ private _typeCounts = createHashMap;
     _typeCounts set [_base, _occurrence];
     private _identity = format ["%1#%2", _base, _occurrence];
     if (count _profile > 0 && {toUpper (_profile select 1) != "BLOCK_CHANNEL"} && {!(_identity in _explicitIdentities)}) then {
-        private _compatibleNets = [];
-        {
-            private _net = [_x] call _netFor;
-            if (count _net > 0 && {count ([_net, _base] call _tuningFor) > 0}) then {_compatibleNets pushBack _net};
-        } forEach _netKeys;
-        if (count _compatibleNets >= _occurrence) then {
-            _resolved pushBack [_radioId, _base, _occurrence, (_compatibleNets select (_occurrence - 1)) select 0, [_profile, _occurrence] call _defaultEar];
-        } else {
-            _success = false;
-            _problems pushBack format [
-                "%1#%2 is carried, but group %3 has only %4 compatible named net(s). Add a tuning for this radio class or an explicit assignment.",
-                _base,
-                _occurrence,
-                _groupKey,
-                count _compatibleNets
-            ];
+        private _defaultIndex = _defaultAssignments findIf {toUpper (_x select 0) == _base};
+        if (_defaultIndex >= 0) then {
+            private _default = _defaultAssignments select _defaultIndex;
+            _resolved pushBack [_radioId, _base, _occurrence, _default select 1, [_default select 2] call _normaliseEar];
         };
     };
 } forEach _radios;
@@ -153,11 +139,10 @@ private _managedIds = [];
     private _ready = true;
     if (_target isEqualType "") then {
         private _net = [_target] call _netFor;
-        private _tuning = if (count _net > 0) then {[_net, _base] call _tuningFor} else {[]};
-        if (count _tuning == 0) then {
+        if !([_net, _profile] call _netCompatible) then {
             _ready = false; _success = false;
-            _problems pushBack format ["%1#%2 net %3 has no compatible tuning.", _base, _occurrence, _target];
-        } else {_setting = _tuning select 1; _netLabel = _net select 1};
+            _problems pushBack format ["%1#%2 cannot use net %3: radio family %4 does not match net family %5.", _base, _occurrence, _target, _profile param [5, "UNKNOWN"], _net param [2, "UNKNOWN"]];
+        } else {_setting = _net select 3; _netLabel = _net select 1};
     };
     if (_ready && {_mode == "BLOCK_CHANNEL"}) then {
         // WMP authors PRC-343 values as [block, channel]. ACRE setupRadios expects

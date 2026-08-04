@@ -22,26 +22,21 @@ Leave `strict` and `additionalRadioProfiles` alone unless extending or diagnosin
 
 ## What is a net?
 
-A **net** is simply a named radio conversation, such as Platoon, Company or Air-to-Ground. The net
-tells WMP which channel each supported radio must use to join that conversation.
-
-A net is `[key, label, tunings]`. Each tuning is `[base radio class, target]`:
+A **net** is one named radio conversation, such as Platoon, Company or Air-to-Ground. It has exactly
+one tuning value. A net is `[key, label, family, value]`:
 
 ```sqf
 [
-    "PLT1",      // 0: short internal name used elsewhere in this config.
-    "PLATOON 1", // 1: name players see on supported radio displays and in the CEOI.
-    [             // 2: channel used by each radio type.
-        ["ACRE_PRC148", 2], // PRC-148 uses channel 2 for PLATOON 1.
-        ["ACRE_PRC152", 2], // PRC-152 uses channel 2 for PLATOON 1.
-        ["ACRE_PRC117F", 2] // PRC-117F uses channel 2 for PLATOON 1.
-    ]
+    "PLT1",      // 0: short internal name used by group rows.
+    "PLATOON 1", // 1: name shown on supported displays and in the CEOI.
+    "PRC_LR",    // 2: compatible radio family: PRC-148, PRC-152 and PRC-117F.
+    2             // 3: the one value for this net: channel 2.
 ]
 ```
 
-The result is straightforward: a player assigned to `PLT1` who carries any listed radio starts on
-that radio's channel 2. A radio not listed in this net cannot use this net and is left for the next
-compatible net or left unchanged.
+The result is straightforward: a compatible PRC-148, PRC-152 or PRC-117F assigned to `PLT1` starts
+on channel 2. A BF-888S cannot use `PLT1`, even though it also has a channel 2, because it belongs to
+a different frequency family and would not join the same conversation.
 
 A shared net key is meaningful only when its tunings are interoperable. The official PRC-148/152/117F presets use matching frequencies at matching channel numbers. BF-888S and SEM52SL occupy different bands and therefore use separate local nets. PRC-77 and SEM70 can share an explicit common frequency. There is no global net count or smallest-radio capacity limit.
 
@@ -62,37 +57,44 @@ WMP resolves every net against the **base radio class** and ignores incompatible
 | SEM70 | Explicit MHz | 30-79.975 MHz, 25 kHz steps | Use a frequency net; never substitute an ordinary channel number. |
 | Unknown radio or vehicle rack | Unmanaged | Unknown | WMP preserves it. Register a tested carried-radio profile rather than guessing. |
 
-A group may safely list `PLT1`, `BF_LOCAL`, `SEM_LOCAL` and `LEGACY` together. Each carried radio
-selects only compatible tunings: a PRC-152 cannot consume `BF_LOCAL`, and a BF-888S cannot consume
-the PRC-77 frequency. If a supported carried radio has no compatible tuning, WMP records the exact
-class and occurrence as an assignment problem and leaves that radio unchanged; it does not silently
-force channel 1.
+The shipped families are `PRC_LR`, `BF888`, `SEM52`, `LEGACY_VHF` and the separate PRC-343 block
+system. A net remains valid when at least one radio in that family supports its value. Validation
+then checks each actual group/player assignment against the selected radio. This permits, for
+example, a higher PRC-152/117F channel while clearly rejecting that same net on a PRC-148 whose
+32-channel capacity is too small. A legacy frequency that does
+not fit both PRC-77 and SEM70 range/step rules.
 
 ## Groups, duplicate radios and ears
 
-A group is `[editor group ID, ordered fallback nets, PRC-343 assignment, explicit templates]`:
+A group is `[editor group ID, PRC-343 assignment, radio defaults, occurrence overrides]`:
 
 ```sqf
 [
-    "VIKING-1-1",      // 0: exact groupId set for this squad in Eden Editor.
-    ["PLT1", "AIRGND"], // 1: preferred nets, checked from left to right.
-    [],                 // 2: empty means automatically assign the first PRC-343 from the groupId.
-    [                   // 3: optional exact assignments for individual carried radios.
-        ["ACRE_PRC343", 1, [5, 16], "LEFT"], // first PRC-343 -> block 5/channel 16 -> left ear.
-        ["ACRE_PRC343", 2, [6, 3], "RIGHT"], // second PRC-343 -> block 6/channel 3 -> right ear.
-        ["ACRE_PRC152", 1, "PLT1", "RIGHT"], // first PRC-152 -> PLT1 -> right ear.
-        ["ACRE_PRC152", 2, "AIRGND", "LEFT"] // second PRC-152 -> AIRGND -> left ear.
+    "VIKING-2-3", // 0: groupId set for this squad in Eden Editor.
+    [2, 3],         // 1: explicit PRC-343 Block 2, Channel 3. Use [] for automatic inference.
+    [               // 2: defaults apply to every carried occurrence of each listed class.
+        ["ACRE_PRC148", "PLT1", "RIGHT"],
+        ["ACRE_PRC152", "PLT1", "RIGHT"],
+        ["ACRE_PRC117F", "PLT1", "CENTER"]
+    ],
+    [               // 3: overrides change one same-type occurrence.
+        ["ACRE_PRC152", 2, "AIRGND", "LEFT"] // only the second PRC-152 differs.
     ]
 ]
 ```
 
-The occurrence is one-based within that base class. Templates apply only when the occurrence exists, so one squad row can cover different role loadouts without reporting missing radios. An empty explicit list assigns each supported carried radio to the first compatible group net; repeated radios take successive compatible nets. Unmatched and captured radios remain untouched.
+The example gives every carried PRC-152 PLT1/right-ear as its baseline, then changes only the second
+PRC-152 to AIRGND/left-ear. Overrides are one-based within that base class and are skipped when that
+occurrence is absent. A radio class with neither a default nor an occurrence override remains
+untouched; there is no hidden priority or “next compatible net” behaviour.
 
 `LEFT`, `RIGHT` and `BOTH`/`CENTER` are independent per occurrence. An empty PRC-343 field requests deterministic callsign allocation. Two valid numeric callsign components are interpreted as block/channel; otherwise WMP hashes the callsign and probes collisions deterministically. Explicit slots always win and invalid explicit values are rejected rather than clamped.
 
 ## Side-scoped player overrides
 
-Overrides are `[side, selector, mode, assignments]`. `MERGE` replaces matching `[class, occurrence]` identities and retains other group rows. `REPLACE` starts with an empty list.
+Overrides are `[side, selector, mode, assignments]`. `MERGE` replaces matching `[class, occurrence]`
+identities while retaining group defaults and other overrides. `REPLACE` discards both group defaults
+and occurrence overrides before applying its list.
 
 ```sqf
 ["WEST", ["ROLE", "JTAC"], "MERGE", [
@@ -119,7 +121,11 @@ ACRE's `setupRadios` frequency path is asynchronous and exposes no public freque
 
 ## Diagnostics and testing
 
-The CEOI is generated from the compiled plan and lists every net's radio-specific tuning, the current group's PRC-343 assignment, applied occurrences/ears, failures and preserved radios. Frequency entries are explicitly request-based rather than falsely described as read-back verified.
+The CEOI is generated from the compiled plan and lists each named net once, the current group's
+PRC-343 assignment, and live channel highlights where ACRE provides read-back. Diagnostics report
+unknown families, incompatible group assignments, channel-capacity failures, invalid frequency
+ranges/steps, missing radio occurrences, ACRE readiness and conflicting Eden radio attributes.
+Frequency entries remain request-based rather than falsely described as read-back verified.
 
 The full audit mission distributes every supported carried radio among playable squad members, with at least one same-class partner. Its ACRE station tests duplicate radios, independent ears, named non-channel-1 assignments, PRC-77/SEM70 requests, filtered loadout respawn, Babel and preserved extra radios. Legacy functions remain manual emergency fallbacks only.
 

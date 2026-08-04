@@ -29,11 +29,11 @@
  * - babel: language content and defaults. It remains inert while babel.enabled is false.
  *
  * NETS
- * A net is [stable key, display label, radio tunings]. A tuning is [base radio class, target].
- * CHANNEL radios use a channel number. FREQUENCY radios use MHz or ACRE's [MHz, fractional] pair.
- * A shared key means actual interoperability only when its radio tunings resolve to compatible
- * frequencies. Shipped PRC-148/152/117F presets share frequencies at matching channel numbers;
- * BF-888S and SEM52SL use separate nets. PRC-77 and SEM70 can share an explicit common frequency.
+ * A net is [stable key, display label, radio family, one value]. It never contains a different
+ * channel per radio. PRC_LR means PRC-148/152/117F using the same side-preset channel. BF888 and
+ * SEM52 are separate channel families. LEGACY_VHF is a frequency shared by PRC-77 and SEM70.
+ * A net is valid when at least one radio in its family supports the value. Assigning that net to a
+ * less-capable family member is rejected and diagnosed for that specific radio.
  *
  * RADIO COMPATIBILITY - READ BEFORE ADDING OR REUSING A NET:
  * - ACRE_PRC343 uses [block, channel]. It does not use the named long-range net rows.
@@ -44,36 +44,35 @@
  * - ACRE_PRC77 and ACRE_SEM70 use explicit MHz. They may share a net only where that frequency is
  *   valid for both radios; 34.000 MHz is a valid shared example.
  * - Unknown and vehicle-rack radios are deliberately preserved and never guessed.
- * A group may list all these keys together. WMP filters them by class: a PRC-152 cannot consume
- * BF_LOCAL or LEGACY. A supported carried radio with no compatible tuning is reported by class and
- * occurrence and left unchanged; WMP does not silently force it onto channel 1.
+ * A PRC-152 cannot consume BF_LOCAL or LEGACY even when the number happens to fit. Diagnostics name
+ * the group, radio occurrence, requested net, expected family and invalid range when setup is wrong.
  *
  * GROUPS AND OPTIONAL RADIO TEMPLATES
- * A group is [editor group ID, ordered fallback net keys, PRC-343 [block,channel] or [], explicit
- * assignments]. An assignment is [base class, same-type occurrence, target, ear]. Explicit rows are
- * optional templates: they apply when that occurrence is carried and are quietly ignored otherwise.
+ * A group is [editor group ID, PRC-343 [block,channel] or [], defaults, occurrence overrides].
+ * A default is [base class, target net/direct value, ear] and applies to every carried radio of that
+ * class. An override is [base class, same-type occurrence, target, ear]. Override occurrence 2 can
+ * therefore put a second PRC-152 on a different net and ear while occurrence 1 keeps the default.
  * LEFT, RIGHT and BOTH/CENTER are supported independently per radio. PTT, volume and speaker settings
- * remain player-owned. With no explicit rows, WMP assigns the first carried radio of each supported
- * type to the first compatible group net; there is no cross-radio priority list or global net cap.
+ * remain player-owned. A radio class without a default or matching override is preserved unchanged.
  * Automatic PRC-343 allocation is deterministic from the callsign when its group field is [].
  *
  * OVERRIDES
  * radioOverrides entries are [side, [UID|VARIABLE|ROLE, value], MERGE|REPLACE, assignments]. MERGE
- * replaces matching [class, occurrence] rows and preserves the rest. REPLACE discards group rows.
+ * replaces matching [class, occurrence] rows and preserves group defaults/rest. REPLACE discards
+ * both group defaults and occurrence overrides before applying the player/role rows.
  * Side scoping prevents a net from another side being accepted accidentally.
  *
  * ADVANCED EXTENSION
  * additionalRadioProfiles is only for a tested third-party carried radio. Entry format is
- * [class, BLOCK_CHANNEL|CHANNEL|FREQUENCY, default ears, maximum channel, frequency range]. WMP's
+ * [class, BLOCK_CHANNEL|CHANNEL|FREQUENCY, default ears, maximum channel, frequency range, family]. WMP's
  * built-in ACRE profiles live in code and should not be copied here. Unknown radios and racks are
  * preserved. WMP does not retune on group changes or poll radios during play.
  *
  * HOW TO READ THE DATA BELOW:
  * This file is returned directly as one HashMap, so each top-level row is `[setting key, value]`.
  * Side rows are `[side ID, official ACRE preset, nets ARRAY, groups ARRAY]`. Net rows are
- * `[net key, display label, tunings ARRAY]`; each tuning is `[base radio class, channel number]` for
- * channel radios or `[base radio class, MHz]` for frequency radios. Group rows are
- * `[editor groupId, ordered fallback net keys, PRC-343 [block,channel] or [], assignments]`.
+ * `[net key, display label, radio family, one channel/frequency value]`. Group rows are
+ * `[editor groupId, PRC-343 [block,channel] or [], default rows, occurrence override rows]`.
  * Matching ignores capitalization and common callsign separators: spaces, hyphens, underscores and
  * dots. `VIKING-2-3`, `Viking 2-3` and `viking_2_3` therefore select the same group row.
  * Assignment rows are `[base radio class, same-type occurrence starting at 1, target, ear]`.
@@ -81,12 +80,11 @@
  * RIGHT or BOTH. Radios not present in a player's inventory are simply skipped.
  *
  * WORKED EXAMPLES:
- * `['ACRE_PRC152', 2]` inside PLT1 means PLT1 uses channel 2 on every carried PRC-152 assigned
- * to that net. `['ACRE_PRC77', 34.000]` means tune the analogue PRC-77 to 34 MHz. A group row of
- * `['VIKING-1-1',['PLT1','AIRGND'],[],[]]` matches editor groupId VIKING-1-1, automatically derives
- * its PRC-343 block/channel from that callsign, and assigns each supported carried radio to the
- * first compatible named net. To give two PRC-152s different ears/nets, use assignments such as
- * `[['ACRE_PRC152',1,'PLT1','LEFT'],['ACRE_PRC152',2,'AIRGND','RIGHT']]`.
+ * `['PLT1','PLATOON 1','PRC_LR',2]` means the one PLATOON 1 value is channel 2 for compatible
+ * PRC-148/152/117F radios. A default `['ACRE_PRC152','PLT1','RIGHT']` puts every carried 152 on
+ * PLT1 in the right ear. Override `['ACRE_PRC152',2,'AIRGND','LEFT']` changes only the second 152.
+ * Group PRC-343 `[2,3]` explicitly means Block 2, Channel 3; `[]` asks WMP to infer it from a
+ * callsign such as Viking 2-3, otherwise WMP uses deterministic collision-safe allocation.
  *
  * PLAYER LOADOUT AND RESPAWN RULES:
  * ACRE's `_ID_n` class identifies a unique local physical radio and must never be persisted as an
@@ -136,7 +134,7 @@ createHashMapFromArray [
     // WHAT IT CHANGES: teaches WMP how to configure a tested third-party carried radio.
     // VALUES: [] for none, or documented profile rows. Beginners should leave this empty.
     // EXAMPLE: a channel radio profile would look like:
-    // ["RADIO_CLASSNAME", "CHANNEL", ["RIGHT", "LEFT"], MAXIMUM_CHANNEL, []]
+    // ["RADIO_CLASSNAME", "CHANNEL", ["RIGHT", "LEFT"], MAXIMUM_CHANNEL, [], "FAMILY_NAME"]
     // RESULT: [] means unknown/third-party radios remain untouched.
     ["additionalRadioProfiles", []],
 
@@ -170,136 +168,42 @@ createHashMapFromArray [
         [
             "WEST",      // 0: applies to BLUFOR players.
             "default3",  // 1: BLUFOR's official ACRE preset. Do not invent or copy another preset.
-            [              // 2: NETS available to WEST groups.
-                [
-                    "PLT1",      // 0: short internal key used by group assignments below.
-                    "PLATOON 1", // 1: player-facing name shown on supported radio displays/CEOI.
-                    [             // 2: how each supported radio reaches this net.
-                        ["ACRE_PRC148", 2],  // A PRC-148 uses its channel 2.
-                        ["ACRE_PRC152", 2],  // A PRC-152 uses its channel 2.
-                        ["ACRE_PRC117F", 2]  // A PRC-117F uses its channel 2.
-                    ]
-                ],
-                [
-                    "PLT2",      // internal net key used by group rows.
-                    "PLATOON 2", // player-facing name.
-                    [             // channel used by each listed radio type.
-                        ["ACRE_PRC148", 3],  // PRC-148 channel 3.
-                        ["ACRE_PRC152", 3],  // PRC-152 channel 3.
-                        ["ACRE_PRC117F", 3]  // PRC-117F channel 3.
-                    ]
-                ],
-                [
-                    "PLT3",      // internal net key.
-                    "PLATOON 3", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 4], ["ACRE_PRC152", 4], ["ACRE_PRC117F", 4] // channel 4 on each listed radio.
-                    ]
-                ],
-                [
-                    "COY",     // internal net key.
-                    "COMPANY", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 5], ["ACRE_PRC152", 5], ["ACRE_PRC117F", 5] // company net: channel 5.
-                    ]
-                ],
-                [
-                    "AIRGND", // internal net key.
-                    "AIR-GND", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 6], ["ACRE_PRC152", 6], ["ACRE_PRC117F", 6] // air-to-ground net: channel 6.
-                    ]
-                ],
-                [
-                    "AIR",     // internal net key.
-                    "AIR-AIR", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 7], ["ACRE_PRC152", 7], ["ACRE_PRC117F", 7] // air-to-air net: channel 7.
-                    ]
-                ],
-                [
-                    "CAS1",  // internal net key.
-                    "CAS 1", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 8], ["ACRE_PRC152", 8], ["ACRE_PRC117F", 8] // first CAS net: channel 8.
-                    ]
-                ],
-                [
-                    "CAS2",  // internal net key.
-                    "CAS 2", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 9], ["ACRE_PRC152", 9], ["ACRE_PRC117F", 9] // second CAS net: channel 9.
-                    ]
-                ],
-                [
-                    "CFF1",  // internal net key.
-                    "CFF 1", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 10], ["ACRE_PRC152", 10], ["ACRE_PRC117F", 10] // first fires net: channel 10.
-                    ]
-                ],
-                [
-                    "CFF2",  // internal net key.
-                    "CFF 2", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 11], ["ACRE_PRC152", 11], ["ACRE_PRC117F", 11] // second fires net: channel 11.
-                    ]
-                ],
-                [
-                    "CONVOY", // internal net key.
-                    "CONVOY", // player-facing name.
-                    [
-                        ["ACRE_PRC148", 12], ["ACRE_PRC152", 12], ["ACRE_PRC117F", 12] // convoy net: channel 12.
-                    ]
-                ],
-                [
-                    "BF_LOCAL", // SPECIAL RADIO ONLY: BF-888S. Not interchangeable with PRC channels.
-                    "LOCAL BF", // player-facing name.
-                    [
-                        ["ACRE_BF888S", 4] // the BF-888S uses its own channel 4; this does not consume PRC channels.
-                    ]
-                ],
-                [
-                    "SEM_LOCAL", // SPECIAL RADIO ONLY: SEM52SL. Not interchangeable with BF/PRC channels.
-                    "LOCAL SEM", // player-facing name.
-                    [
-                        ["ACRE_SEM52SL", 4] // the SEM52SL uses its own channel 4.
-                    ]
-                ],
-                [
-                    "LEGACY", // FREQUENCY RADIO ONLY: PRC-77/SEM70; the MHz value must suit each radio.
-                    "LEGACY", // player-facing name.
-                    [
-                        ["ACRE_PRC77", 34.000], // frequency radio: tune PRC-77 to 34.000 MHz.
-                        ["ACRE_SEM70", 34.000]   // frequency radio: tune SEM70 to the same 34.000 MHz.
-                    ]
-                ]
+            [ // 2: NETS. Every named net has exactly one value.
+                ["PLT1", "PLATOON 1", "PRC_LR", 2],     // PRC-148/152/117F channel 2.
+                ["PLT2", "PLATOON 2", "PRC_LR", 3],     // PRC-148/152/117F channel 3.
+                ["PLT3", "PLATOON 3", "PRC_LR", 4],     // PRC-148/152/117F channel 4.
+                ["COY", "COMPANY", "PRC_LR", 5],        // PRC long-range family channel 5.
+                ["AIRGND", "AIR-GND", "PRC_LR", 6],     // PRC long-range family channel 6.
+                ["AIR", "AIR-AIR", "PRC_LR", 7],        // PRC long-range family channel 7.
+                ["CAS1", "CAS 1", "PRC_LR", 8],         // PRC long-range family channel 8.
+                ["CAS2", "CAS 2", "PRC_LR", 9],         // PRC long-range family channel 9.
+                ["CFF1", "CFF 1", "PRC_LR", 10],        // PRC long-range family channel 10.
+                ["CFF2", "CFF 2", "PRC_LR", 11],        // PRC long-range family channel 11.
+                ["CONVOY", "CONVOY", "PRC_LR", 12],     // PRC long-range family channel 12.
+                ["BF_LOCAL", "LOCAL BF", "BF888", 4],   // BF-888S only; channel 4.
+                ["SEM_LOCAL", "LOCAL SEM", "SEM52", 4], // SEM52SL only; channel 4.
+                ["LEGACY", "LEGACY", "LEGACY_VHF", 34.000] // PRC-77/SEM70 shared valid frequency.
             ],
-            [ // 3: GROUPS. The first text matches the group's Eden `groupId` (case/separators are ignored).
+            [ // 3: GROUPS: [groupId, PRC-343 slot or [], defaults, occurrence overrides].
                 [
-                    "VIKING-1-1", // 0: Eden groupId. `Viking 1-1` also matches; change the words/numbers for your squad.
-                    ["PLT1", "AIRGND", "BF_LOCAL", "SEM_LOCAL", "LEGACY"], // 1: preferred nets, in order.
-                    [], // 2: empty = automatically choose this group's PRC-343 block/channel from its groupId.
-                    []  // 3: empty = automatically assign carried supported radios to the first compatible net above.
+                    "VIKING-1-1", // matches common separator/capitalisation variants.
+                    [1, 1],         // explicit PRC-343 Block 1, Channel 1. Use [] for callsign inference.
+                    [ // Defaults apply to every carried occurrence of that radio class.
+                        ["ACRE_PRC148", "PLT1", "RIGHT"],
+                        ["ACRE_PRC152", "PLT1", "RIGHT"],
+                        ["ACRE_PRC117F", "PLT1", "CENTER"],
+                        ["ACRE_BF888S", "BF_LOCAL", "LEFT"],
+                        ["ACRE_SEM52SL", "SEM_LOCAL", "LEFT"],
+                        ["ACRE_PRC77", "LEGACY", "RIGHT"],
+                        ["ACRE_SEM70", "LEGACY", "RIGHT"]
+                    ],
+                    [ // Explicit rows override one same-type occurrence. Missing occurrences are skipped.
+                        ["ACRE_PRC152", 2, "AIRGND", "LEFT"] // second 152 uses AIR-GND, unlike the first.
+                    ]
                 ],
-                [
-                    "VIKING 5",       // company/HQ groupId.
-                    ["COY", "AIRGND"], // company first; air-ground is the next compatible choice.
-                    [],                // automatic PRC-343 assignment.
-                    []                 // automatic carried-radio assignment.
-                ],
-                [
-                    "VIKING 3.2",       // third-platoon groupId example.
-                    ["PLT3", "AIRGND"], // third-platoon net first.
-                    [],                  // automatic PRC-343 assignment.
-                    []                   // automatic other-radio assignments.
-                ],
-                [
-                    "BANSHEE",         // aviation groupId example.
-                    ["AIRGND", "AIR"], // air-ground first, then air-to-air.
-                    [],                 // automatic PRC-343 assignment.
-                    []                  // automatic other-radio assignments.
-                ]
+                ["VIKING 5", [], [["ACRE_PRC152", "COY", "RIGHT"], ["ACRE_PRC117F", "COY", "CENTER"]], [["ACRE_PRC152", 2, "AIRGND", "LEFT"]]],
+                ["VIKING 3.2", [], [["ACRE_PRC148", "PLT3", "RIGHT"], ["ACRE_PRC152", "PLT3", "RIGHT"]], []],
+                ["BANSHEE", [], [["ACRE_PRC148", "AIRGND", "RIGHT"], ["ACRE_PRC152", "AIRGND", "RIGHT"]], [["ACRE_PRC152", 2, "AIR", "LEFT"]]]
             ]
         ],
         [

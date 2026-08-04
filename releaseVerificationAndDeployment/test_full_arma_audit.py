@@ -299,12 +299,12 @@ class FullAuditTests(unittest.TestCase):
         for expected in (
             '"ALPHA_NET", "ALPHA TEST"',
             '"BRAVO_NET", "BRAVO TEST"',
-            '["ALPHA", ["ALPHA_NET"], [5, 3]',
-            '["BRAVO", ["BRAVO_NET"], [6, 7]',
-            '["ACRE_PRC152", 1, 4, "RIGHT"]',
-            '["ACRE_PRC77", 1, 45.500, "CENTER"]',
-            '["ACRE_PRC152", 1, 8, "LEFT"]',
-            '["ACRE_PRC77", 1, 51.000, "CENTER"]',
+            '["ALPHA", [5, 3]',
+            '["BRAVO", [6, 7]',
+            '["ACRE_PRC152", "ALPHA_NET", "RIGHT"]',
+            '["ACRE_PRC77", "ALPHA_77", "CENTER"]',
+            '["ACRE_PRC152", "BRAVO_NET", "LEFT"]',
+            '["ACRE_PRC77", "BRAVO_77", "CENTER"]',
             '[5, 3]',
             '[6, 7]',
         ):
@@ -422,6 +422,22 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)
         self.assertIn("player removeDiaryRecord", ceoi)
         self.assertNotIn("Carried Radio Verification", ceoi)
+
+    def test_hazard_tick_proves_local_spatial_evaluation(self):
+        tick = (
+            ROOT
+            / "MissionScripts"
+            / "EnvironmentalSystems"
+            / "HazardousEnvironments"
+            / "hazardTick.sqf"
+        ).read_text(encoding="utf-8")
+        client_diagnostics = (
+            ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnosticsClient.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("if (remoteExecutedOwner > 0) exitWith", tick)
+        self.assertIn('missionNamespace setVariable ["Waldo_Hazard_LastEvaluation"', tick)
+        self.assertIn('missionNamespace getVariable ["Waldo_Hazard_LastEvaluation"', client_diagnostics)
+        self.assertIn("freshEvaluation=%5", client_diagnostics)
 
     def test_patch_filter_uses_standard_release_allowlist(self):
         allowed = {"MissionScripts", "Pictures", "description.ext"}
@@ -668,16 +684,25 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('"radioPriority"', acre_config)
         self.assertNotIn('"radioProfiles"', acre_config)
         self.assertIn('["additionalRadioProfiles", []]', acre_config)
-        self.assertIn("0: short internal key used by group assignments below", acre_config)
-        self.assertIn("case/separators are ignored", acre_config)
-        self.assertIn("empty = automatically choose this group's PRC-343 block/channel", acre_config)
+        self.assertIn("Every named net has exactly one value", acre_config)
+        self.assertIn("matches common separator/capitalisation variants", acre_config)
+        self.assertIn("Use [] for callsign inference", acre_config)
         self.assertIn("every language is [short internal ID, name shown to players]", acre_config)
-        self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 32, []]', profiles)
+        self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 32, [], "PRC_LR"]', profiles)
         self.assertIn('["ACRE_PRC343", "BLOCK_CHANNEL", ["LEFT", "RIGHT", "CENTER"]', profiles)
-        self.assertIn('["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 12, []]', profiles)
+        self.assertIn('["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 12, [], "SEM52"]', profiles)
         self.assertGreaterEqual(acre_config.count('"LEGACY"'), 2)
-        self.assertIn('["ACRE_PRC77", 34.000]', acre_config)
-        self.assertIn('["ACRE_SEM70", 34.000]', acre_config)
+        self.assertIn('["LEGACY", "LEGACY", "LEGACY_VHF", 34.000]', acre_config)
+        self.assertIn('An explicit occurrence row wins', apply_plan)
+        self.assertIn('_defaultAssignments findIf', apply_plan)
+        self.assertIn('toUpper (_net select 2) == toUpper (_profile select 5)', apply_plan)
+        self.assertIn('expected [key, display name, radio family, one value]', validate_config)
+        self.assertIn('channel %3 is outside this radio\'s supported range 1-%4', validate_config)
+        self.assertIn('net family %4 does not match radio family %5', validate_config)
+        self.assertIn('value %3 is unsupported by every radio in family %4', validate_config)
+        self.assertIn('_familyProfiles findIf {[_value, _x, _netMax343Block] call _profileAcceptsValue}', validate_config)
+        self.assertIn('_channel <= ((_profiles select _profileIndex) select 3)', labels)
+        self.assertIn('[4, _revision, _sidePlans, _diagnostics]', compile_plan)
         self.assertIn('if (_ear == "BOTH") then {"CENTER"}', apply_plan)
         self.assertIn('acre_api_fnc_setupRadios', apply_plan)
         self.assertIn('Waldo_fnc_ACRE2GetOrderedRadios', apply_plan)
@@ -1540,14 +1565,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("[CURRENT - SQUAD]", source)
         self.assertNotIn("[SQUAD - NOT SELECTED]", source)
         self.assertNotIn("exact carried-radio read-back", source)
-        self.assertIn("count _matchingNets == 1", source)
-        self.assertIn("private _currentIndex = _tunings findIf", source)
-        self.assertIn("private _candidateIndex = (_x select 2) findIf", source)
-        self.assertIn("_currentIndex >= 0", source)
-        self.assertNotIn("} >= 0\n};\nprivate _shortName", source)
+        self.assertIn("private _compatibleClasses = _profiles select", source)
+        self.assertIn("toUpper (_x select 5) == toUpper _family", source)
+        self.assertIn("(_compatibleClasses findIf", source)
         self.assertNotIn("if (_base in ['ACRE_PRC77', 'ACRE_SEM70']) exitWith", source)
         self.assertNotIn("if !(_setting in (_current", source)
-        self.assertIn("'Ch. ' + (_settings select 0)", source)
+        self.assertIn("'Ch. ' + ([_setting] call _displaySetting)", source)
         self.assertNotIn("_myNets", source)
         self.assertNotIn("format ['%1: %2', _x select 0, _x select 1]", source)
 
