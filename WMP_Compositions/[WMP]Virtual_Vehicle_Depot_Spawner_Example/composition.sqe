@@ -121,7 +121,7 @@ class items
 		{
 			position[]={0.67578125,0,4.6796875};
 		};
-		title="the name of the spawner object will be what appears as the garage name";
+		title="the name of the spawner object will be what appears as the garage name. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot";
 		id=7819;
 	};
 	class Item2
@@ -131,7 +131,7 @@ class items
 		{
 			position[]={-0.32617188,0,-3.1601563};
 		};
-		title="Laptop is the spawner, everything is available to everyone";
+		title="Laptop is the spawner, everything is available to everyone. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot";
 		id=7820;
 	};
 };

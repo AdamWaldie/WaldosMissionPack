@@ -346,7 +346,7 @@ class items
 		{
 			position[]={-0.017578125,0,0.19335938};
 		};
-		title="Starter Crate Composition, side setup with arsenal";
+		title="Starter Crate Composition, side setup with arsenal. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
 		id=7821;
 	};
 };

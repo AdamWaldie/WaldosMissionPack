@@ -11,6 +11,17 @@ Mission Systems and Mission Tools so Eden does not present one undifferentiated 
 
 ## Newly covered systems
 
+- **Bomb Defusal Example:** an editable electronic device with the standard wire-cutting challenge
+  and explosive failure consequence.
+- **Construction Objects Example:** an ACE construction supply crate using the modern construction
+  audio profile.
+- **Electronic Warfare Examples:** one EMP-immune vehicle and one WEST-tracked vehicle, spaced for
+  immediate testing.
+- **Object Scaling Example:** a decorative object converted to a supported Simple Object at 175%
+  scale. The comment warns that conversion replaces the original object reference.
+- **Custom 3D Marker Example:** a signal relay with labelled marker options written as readable
+  key/value pairs in its init field.
+
 - **Vehicle Recovery Workshop Example:** a safely spaced workshop, recoverable MRAP and generic
   `AUTO` carrier. All share workshop key `MAIN`; the workshop includes optional area and point
   markers.
@@ -18,17 +29,22 @@ Mission Systems and Mission Tools so Eden does not present one undifferentiated 
   with Zeus or `[unit, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier`.
 - **Radio Jammer Example:** a 300 m omnidirectional jammer affecting all sides and bands. It starts
   active, is curator-visible, and uses the mission's configured disable/reactivate interaction.
-- **Hazardous Emitter Example:** a 15 m toxic leak with entry/exit notification, staged damage and
+- **Hazardous Zone Example:** a fixed 15 m toxic leak with entry/exit notification, staged damage and
   fatal exposure. Its inline profile is deliberately visible so it can be rewritten for scenario RP.
 - **Tactical Display Example:** a supported map board that opens the client Tactical Display. It
   follows the viewer's side, uses a 2000 m radius and may show known enemy contacts.
 
 ## Locality rule
 
-Composition init fields that register shared state or change global cargo use an `isServer` guard.
-The public function then publishes actions/settings for connected players and JIP. Local-only Eden
-actions, such as teleport boarding points, run on each interface through their repeat-safe setup
-path. Do not remove these boundaries when editing examples.
+Composition init fields call the public feature API directly. Each API routes authority to the
+server and publishes local/JIP setup where required; beginners should not need to add repetitive
+`isServer` wrappers. Local-only Eden actions, such as teleport boarding points, run on each
+interface through their repeat-safe setup path. Do not add a locality guard unless that function's
+wiki article explicitly requires one.
+
+Every WMP Eden comment includes the direct URL of the matching wiki article. Keep that link when
+copying or adapting the example so the next mission maker can recover the parameter and locality
+guidance from inside Eden.
 
 ## Why some features have no composition
 

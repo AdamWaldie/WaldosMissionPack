@@ -35,6 +35,19 @@
  * frequencies. Shipped PRC-148/152/117F presets share frequencies at matching channel numbers;
  * BF-888S and SEM52SL use separate nets. PRC-77 and SEM70 can share an explicit common frequency.
  *
+ * RADIO COMPATIBILITY - READ BEFORE ADDING OR REUSING A NET:
+ * - ACRE_PRC343 uses [block, channel]. It does not use the named long-range net rows.
+ * - ACRE_PRC148, ACRE_PRC152 and ACRE_PRC117F use numbered channels. Matching channel numbers on
+ *   their official side presets are interoperable, so they may share PLT/AIR/CAS nets.
+ * - ACRE_BF888S is a 16-channel radio in a different band. Give it a BF-only net such as BF_LOCAL.
+ * - ACRE_SEM52SL is a 12-channel radio in a different band. Give it a SEM52-only net.
+ * - ACRE_PRC77 and ACRE_SEM70 use explicit MHz. They may share a net only where that frequency is
+ *   valid for both radios; 34.000 MHz is a valid shared example.
+ * - Unknown and vehicle-rack radios are deliberately preserved and never guessed.
+ * A group may list all these keys together. WMP filters them by class: a PRC-152 cannot consume
+ * BF_LOCAL or LEGACY. A supported carried radio with no compatible tuning is reported by class and
+ * occurrence and left unchanged; WMP does not silently force it onto channel 1.
+ *
  * GROUPS AND OPTIONAL RADIO TEMPLATES
  * A group is [editor group ID, ordered fallback net keys, PRC-343 [block,channel] or [], explicit
  * assignments]. An assignment is [base class, same-type occurrence, target, ear]. Explicit rows are
@@ -240,21 +253,21 @@ createHashMapFromArray [
                     ]
                 ],
                 [
-                    "BF_LOCAL", // internal net key.
+                    "BF_LOCAL", // SPECIAL RADIO ONLY: BF-888S. Not interchangeable with PRC channels.
                     "LOCAL BF", // player-facing name.
                     [
                         ["ACRE_BF888S", 4] // the BF-888S uses its own channel 4; this does not consume PRC channels.
                     ]
                 ],
                 [
-                    "SEM_LOCAL", // internal net key.
+                    "SEM_LOCAL", // SPECIAL RADIO ONLY: SEM52SL. Not interchangeable with BF/PRC channels.
                     "LOCAL SEM", // player-facing name.
                     [
                         ["ACRE_SEM52SL", 4] // the SEM52SL uses its own channel 4.
                     ]
                 ],
                 [
-                    "LEGACY", // internal net key; rename this if a clearer mission name is available.
+                    "LEGACY", // FREQUENCY RADIO ONLY: PRC-77/SEM70; the MHz value must suit each radio.
                     "LEGACY", // player-facing name.
                     [
                         ["ACRE_PRC77", 34.000], // frequency radio: tune PRC-77 to 34.000 MHz.

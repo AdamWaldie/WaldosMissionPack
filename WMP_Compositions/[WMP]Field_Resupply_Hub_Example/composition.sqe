@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-3,0};};
-		title="Field Resupply hub: unlimited stock and all sides. Assign portable crates to infantry with ZEN or [unit, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier.";
+		title="Field Resupply hub: unlimited stock and all sides. Assign portable crates to infantry with ZEN or [unit, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply";
 		id=2;
 	};
 };

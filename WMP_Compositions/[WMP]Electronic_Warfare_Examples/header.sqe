@@ -1,5 +1,5 @@
 version=54;
-name="[WMP] Hazardous Zone Example";
+name="[WMP] Electronic Warfare Examples";
 author="WaldoTheWarfighter";
 category="Waldos Mission Pack Compositions - Combat Systems";
-requiredAddons[]={"A3_Structures_F_Exp_Industrial_Port"};
+requiredAddons[]={"A3_Soft_F_MRAP_01"};

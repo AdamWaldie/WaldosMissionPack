@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-3,0};};
-		title="Tactical Display: the board opens the WMP tactical map. sideUnknown follows each viewer; radius is 2000 m; known enemy contacts are enabled.";
+		title="Tactical Display: the board opens the WMP tactical map. sideUnknown follows each viewer; radius is 2000 m; known enemy contacts are enabled. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#tactical-display";
 		id=2;
 	};
 };

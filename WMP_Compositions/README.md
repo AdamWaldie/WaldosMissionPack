@@ -21,6 +21,8 @@ copies of feature logic.
 
 1. Place the composition in Eden and keep its objects separated as supplied.
 2. Read the nearby Eden comment before changing an init field.
+   Every shipped comment links directly to the matching WMP wiki article; keep that URL when you
+   copy or adapt the example.
 3. Change only the clearly named side, range, stock, key, class or toggle arguments.
 4. Call WMP's documented public setup function directly. Its implementation owns server authority,
    client-local setup and JIP replay; mission makers should not add an `isServer` wrapper unless the
@@ -47,8 +49,13 @@ copies of feature logic.
 | Mass AttachTo / Vehicle Mounted Weapon | Vehicle construction helpers |
 | Halo and Static Line Paradrop Examples | Boarding and aircraft jump setup |
 | Radio Jammer Example | Server-owned, movable jammer fixture |
-| Hazardous Emitter Example | Dangerous moving-object hazard with visible transition feedback |
+| Hazardous Zone Example | Reliable fixed-area hazard with visible transition feedback and real danger |
 | Tactical Display Example | Supported map-board access point |
+| Bomb Defusal Example | Standard wire-cutting challenge with an explosive failure consequence |
+| Construction Objects Example | ACE construction supply object with modern construction audio |
+| Electronic Warfare Examples | EMP immunity and side-restricted signal tracking fixtures |
+| Object Scaling Example | Supported Simple Object conversion and scale setup |
+| Custom 3D Marker Example | Object-anchored, side-aware world marker with readable options |
 | Economy Systems and Low/Medium/High | Runtime enablement and optional preset |
 | Teleport Script Example | Paired local addActions |
 
@@ -58,6 +65,5 @@ Dynamic AO and Dynamic AA are server-authoritative generated systems; Zeus or sc
 clearer and safer than shipping pre-spawned clusters. Improved helicopter landing is an automatic AI
 handler driven by waypoints. Accessibility, treatment feedback and UI themes are player-interface
 features. Persistence depends on server extensions and mission policy. Rally points are player-role
-state. Object scaling is target-specific and may convert decorative objects to simple objects. Those
-features remain documented through MissionConfig, public calls, the full audit mission and focused
+state. Those features remain documented through MissionConfig, public calls, the full audit mission and focused
 Zeus modules where appropriate.

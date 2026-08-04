@@ -101,7 +101,7 @@ class items
 		{
 			position[]={-0.5390625,0,-0.84179688};
 		};
-		title="Properly Setup Zeus";
+		title="Properly Setup Zeus. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Modules";
 		id=7007;
 	};
 	class Item2

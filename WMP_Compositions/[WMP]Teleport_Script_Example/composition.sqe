@@ -44,7 +44,7 @@ class items
 		{
 			position[]={-0.36523438,0,0.10546875};
 		};
-		title="Teleport Script";
+		title="Teleport Script. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions";
 		id=7004;
 	};
 };
