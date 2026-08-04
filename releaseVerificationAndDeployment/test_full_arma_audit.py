@@ -69,6 +69,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("::set-output", workflow)
 
     def test_release_version_helper_persists_the_complete_rc_tag(self):
+        cover_source = (
+            ROOT / "releaseVerificationAndDeployment" / "generateLoadingScreen.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("\nfrom PIL import", cover_source)
+        self.assertGreater(cover_source.index("from PIL import"), cover_source.index("if args.print_version:"))
         helper_spec = importlib.util.spec_from_file_location(
             "set_description_version", VERSION_HELPER_PATH
         )

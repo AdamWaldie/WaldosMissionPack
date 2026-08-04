@@ -32,8 +32,6 @@ import os
 import re
 import sys
 
-from PIL import Image, ImageDraw, ImageFont
-
 # --- Layout calibration (measured against the original 1920x1080 cover image) ---
 TITLE_TEXT = "WALDO'S MISSION PACK"
 TEXT_COLOR = (62, 118, 211)   # steel blue, sampled from the original text
@@ -91,6 +89,13 @@ def main():
     if args.print_version:
         print(version)
         return
+
+    # Pillow is a rendering-only dependency. Keep parsing/importing this helper usable in the
+    # lightweight validator environment, which checks exact tag handling without drawing a cover.
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError as exc:
+        sys.exit("ERROR: Pillow is required to render the loading screen: {}".format(exc))
 
     for path, label in ((args.base, "base image"), (args.font, "font")):
         if not os.path.isfile(path):
