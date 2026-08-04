@@ -12,12 +12,14 @@
  * 1: loading range <NUMBER> (default 10)
  * 2: cargo mode <STRING> - "AUTO", "VIRTUAL" or "PHYSICAL" (default "AUTO")
  * 3: package capacity <NUMBER> (default 1)
+ * 4: attached-deck offset <ARRAY> - model-space [left/right, forward/back, height], or [] to disable
+ * 5: attached-deck direction <NUMBER> - package direction relative to carrier (default 0)
  *
  * Return Value:
  * Boolean - true when forwarded or registered; false when invalid or unauthorized.
  *
  * Example:
- * [this, 10, "AUTO", 2] call Waldo_fnc_RecoveryRegisterCarrier;
+ * [this, 10, "AUTO", 2, [0, -1.3, 1.25], 0] call Waldo_fnc_RecoveryRegisterCarrier;
  *
  * Current callers: Vehicle Recovery ZEN carrier module, restored-carrier replay and mission setup.
  */
@@ -26,10 +28,12 @@ params [
     ["_carrier", objNull, [objNull]],
     ["_range", 10, [0]],
     ["_mode", "AUTO", [""]],
-    ["_capacity", 1, [0]]
+    ["_capacity", 1, [0]],
+    ["_deckOffset", [], [[]]],
+    ["_deckDirection", 0, [0]]
 ];
 if (isNull _carrier || {!(_carrier isKindOf "AllVehicles")} || {_carrier isKindOf "CAManBase"}) exitWith {false};
-if (!isServer) exitWith {[_carrier, _range, _mode, _capacity] remoteExecCall ["Waldo_fnc_RecoveryRegisterCarrier", 2]; true};
+if (!isServer) exitWith {[_carrier, _range, _mode, _capacity, _deckOffset, _deckDirection] remoteExecCall ["Waldo_fnc_RecoveryRegisterCarrier", 2]; true};
 private _authorized = true;
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};
@@ -43,6 +47,11 @@ _carrier setVariable ["Waldo_Recovery_Carrier", true, true];
 _carrier setVariable ["Waldo_Recovery_CarrierRange", _range max 3, true];
 _carrier setVariable ["Waldo_Recovery_CarrierMode", _mode, true];
 _carrier setVariable ["Waldo_Recovery_CarrierCapacity", (round _capacity) max 1, true];
+if (count _deckOffset != 3) then {_deckOffset = []};
+_carrier setVariable ["Waldo_Recovery_CarrierDeckOffset", _deckOffset, true];
+_carrier setVariable ["Waldo_Recovery_CarrierDeckDirection", _deckDirection, true];
+private _attachedPackages = (_carrier getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x};
+_carrier setVariable ["Waldo_Recovery_AttachedPackages", _attachedPackages, true];
 private _virtualPackages = (_carrier getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
 _carrier setVariable ["Waldo_Recovery_VirtualPackages", _virtualPackages, true];
 [_carrier] remoteExecCall ["Waldo_fnc_RecoverySetupCarrierLocal", 0, _carrier];

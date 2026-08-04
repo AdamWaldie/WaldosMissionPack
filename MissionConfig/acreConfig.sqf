@@ -60,7 +60,9 @@
  * Side rows are `[side ID, official ACRE preset, nets ARRAY, groups ARRAY]`. Net rows are
  * `[net key, display label, tunings ARRAY]`; each tuning is `[base radio class, channel number]` for
  * channel radios or `[base radio class, MHz]` for frequency radios. Group rows are
- * `[exact editor groupId, ordered fallback net keys, PRC-343 [block,channel] or [], assignments]`.
+ * `[editor groupId, ordered fallback net keys, PRC-343 [block,channel] or [], assignments]`.
+ * Matching ignores capitalization and common callsign separators: spaces, hyphens, underscores and
+ * dots. `VIKING-2-3`, `Viking 2-3` and `viking_2_3` therefore select the same group row.
  * Assignment rows are `[base radio class, same-type occurrence starting at 1, target, ear]`.
  * `target` is a net key or a direct channel/frequency supported by that profile; `ear` is LEFT,
  * RIGHT or BOTH. Radios not present in a player's inventory are simply skipped.
@@ -260,9 +262,9 @@ createHashMapFromArray [
                     ]
                 ]
             ],
-            [ // 3: GROUPS. The first text must exactly match the group's Eden `groupId`.
+            [ // 3: GROUPS. The first text matches the group's Eden `groupId` (case/separators are ignored).
                 [
-                    "VIKING-1-1", // 0: exact Eden groupId. Change this to your squad's group ID.
+                    "VIKING-1-1", // 0: Eden groupId. `Viking 1-1` also matches; change the words/numbers for your squad.
                     ["PLT1", "AIRGND", "BF_LOCAL", "SEM_LOCAL", "LEGACY"], // 1: preferred nets, in order.
                     [], // 2: empty = automatically choose this group's PRC-343 block/channel from its groupId.
                     []  // 3: empty = automatically assign carried supported radios to the first compatible net above.

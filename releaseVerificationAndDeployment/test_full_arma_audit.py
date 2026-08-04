@@ -67,6 +67,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("generateLoadingScreen.py", workflow)
         self.assertIn("$GITHUB_OUTPUT", workflow)
         self.assertNotIn("::set-output", workflow)
+        self.assertIn("types: [published]", workflow)
+        self.assertNotIn("published, prereleased", workflow)
 
     def test_release_version_helper_persists_the_complete_rc_tag(self):
         cover_source = (
@@ -109,6 +111,7 @@ class FullAuditTests(unittest.TestCase):
             description = Path(directory) / "description.ext"
             description.write_text(placeholder, encoding="utf-8")
             self.assertEqual("4.8.XRC", cover.parse_version_from_desc(str(description)))
+        self.assertEqual(300, cover.centered_x(100, 500, 100))
 
     def test_composition_catalogue_uses_current_public_calls_and_locality_guards(self):
         root = ROOT / "WMP_Compositions"
@@ -160,8 +163,8 @@ class FullAuditTests(unittest.TestCase):
                     ]
                     self.assertTrue(init_rows, folder.name)
                     self.assertTrue(
-                        all("isServer" in row for row in init_rows),
-                        f"{folder.name}: {function_name} must remain server guarded",
+                        all("isServer" not in row for row in init_rows),
+                        f"{folder.name}: {function_name} must own locality inside its public API",
                     )
         catalogue = (root / "README.md").read_text(encoding="utf-8")
         self.assertIn("Features intentionally without compositions", catalogue)
@@ -401,7 +404,7 @@ class FullAuditTests(unittest.TestCase):
         ceoi = (
             ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2BuildCEOI.sqf"
         ).read_text(encoding="utf-8")
-        self.assertIn("_allocations set [toUpper _groupId", compile_plan)
+        self.assertIn("_groupId call _normaliseGroupKey", compile_plan)
         self.assertIn("count _assignment >= 2", ceoi)
         self.assertIn("no PRC-343 assignment", ceoi)
         self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)
@@ -652,7 +655,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('"radioProfiles"', acre_config)
         self.assertIn('["additionalRadioProfiles", []]', acre_config)
         self.assertIn("0: short internal key used by group assignments below", acre_config)
-        self.assertIn("0: exact Eden groupId", acre_config)
+        self.assertIn("case/separators are ignored", acre_config)
         self.assertIn("empty = automatically choose this group's PRC-343 block/channel", acre_config)
         self.assertIn("every language is [short internal ID, name shown to players]", acre_config)
         self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 32, []]', profiles)

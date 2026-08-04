@@ -336,7 +336,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 42', source)
+        self.assertIn('Waldo_ZenModuleCount", 43', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")

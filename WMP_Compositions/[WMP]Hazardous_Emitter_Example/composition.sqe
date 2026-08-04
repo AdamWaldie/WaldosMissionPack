@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_HazardEmitter";
-			init="if (isServer) then {[""composition_hazard"", this, 15, createHashMapFromArray [[""type"", ""TOXIC""], [""label"", ""Toxic Leak""], [""rate"", 2], [""decay"", 0.5], [""notifyTransitions"", true], [""damageThresholds"", [[8, 0.03], [20, 0.08]]], [""fatalExposure"", 45], [""damageType"", ""stab""]]] call Waldo_fnc_HazardRegisterEmitter;};";
+			init="[""composition_hazard"", this, 15, createHashMapFromArray [[""type"", ""TOXIC""], [""label"", ""Toxic Leak""], [""rate"", 2], [""decay"", 0.5], [""notifyTransitions"", true], [""damageThresholds"", [[8, 0.03], [20, 0.08]]], [""fatalExposure"", 45], [""damageType"", ""stab""]]] call Waldo_fnc_HazardRegisterEmitter;";
 		};
 		id=1;
 		type="Land_GasTank_01_yellow_F";

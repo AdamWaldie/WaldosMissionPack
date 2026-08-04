@@ -52,8 +52,9 @@ if (_operation == "PACK") exitWith {
         ["An engineer is required to package this vehicle.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _loadedRecovery = (getVehicleCargo _target) select {_x getVariable ["Waldo_Recovery_Package", false]};
+    private _attachedRecovery = (_target getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x};
     private _virtualRecovery = (_target getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
-    if (_target getVariable ["Waldo_Recovery_Carrier", false] && {count _loadedRecovery + count _virtualRecovery > 0}) exitWith {
+    if (_target getVariable ["Waldo_Recovery_Carrier", false] && {count _loadedRecovery + count _attachedRecovery + count _virtualRecovery > 0}) exitWith {
         ["Unload all recovery packages before packaging this carrier.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _cargo = if (_preserveCargo) then {[getWeaponCargo _target, getMagazineCargo _target, getItemCargo _target, getBackpackCargo _target]} else {[]};
@@ -71,7 +72,9 @@ if (_operation == "PACK") exitWith {
         simulationEnabled _target, isDamageAllowed _target,
         _target getVariable ["Waldo_Recovery_OnRestored", {}], _customVariables, _footprint,
         _target getVariable ["Waldo_Recovery_CarrierMode", "AUTO"],
-        _target getVariable ["Waldo_Recovery_CarrierCapacity", 1]
+        _target getVariable ["Waldo_Recovery_CarrierCapacity", 1],
+        _target getVariable ["Waldo_Recovery_CarrierDeckOffset", []],
+        _target getVariable ["Waldo_Recovery_CarrierDeckDirection", 0]
     ];
     private _position = getPosATL _target;
     private _direction = getDir _target;
@@ -102,9 +105,11 @@ if (_operation == "PACK") exitWith {
 if !(_target getVariable ["Waldo_Recovery_Carrier", false]) exitWith {false};
 if (_operation == "LOAD") exitWith {
     private _manifest = (_target getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
+    private _attached = (_target getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x};
     _target setVariable ["Waldo_Recovery_VirtualPackages", _manifest, true];
+    _target setVariable ["Waldo_Recovery_AttachedPackages", _attached, true];
     private _capacity = (_target getVariable ["Waldo_Recovery_CarrierCapacity", 1]) max 1;
-    if (count (getVehicleCargo _target) + count _manifest >= _capacity) exitWith {
+    if (count (getVehicleCargo _target) + count _attached + count _manifest >= _capacity) exitWith {
         ["This recovery carrier is at package capacity.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _range = _target getVariable ["Waldo_Recovery_CarrierRange", 10];
@@ -123,6 +128,7 @@ if (_operation == "LOAD") exitWith {
         !isNull _x
         && {_x getVariable ["Waldo_Recovery_Package", false]}
         && {isNull isVehicleCargo _x}
+        && {!(_x getVariable ["Waldo_Recovery_IsAttachedLoaded", false])}
         && {!(_x getVariable ["Waldo_Recovery_IsVirtualLoaded", false])}
         && {!(_x getVariable ["Waldo_Recovery_Transition", false])}
     };
@@ -137,10 +143,27 @@ if (_operation == "LOAD") exitWith {
     private _package = _near select 0 select 1;
     private _mode = _target getVariable ["Waldo_Recovery_CarrierMode", "AUTO"];
     private _canPhysical = vehicleCargoEnabled _target && {(_target canVehicleCargo _package) param [0, false]};
-    if (_mode == "PHYSICAL" && {!_canPhysical}) exitWith {
+    private _deckOffset = _target getVariable ["Waldo_Recovery_CarrierDeckOffset", []];
+    private _canAttach = count _deckOffset == 3;
+    if (_mode == "PHYSICAL" && {!_canPhysical} && {!_canAttach}) exitWith {
         ["That package does not fit this vehicle's configured physical cargo bay.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
-    private _usePhysical = _mode == "PHYSICAL" || {_mode == "AUTO" && {_canPhysical}};
+    private _usePhysical = _canPhysical && {_mode in ["PHYSICAL", "AUTO"]};
+    private _useAttached = !_usePhysical && {_canAttach} && {_mode in ["PHYSICAL", "AUTO"]};
+    if (_useAttached) exitWith {
+        _package setVariable ["Waldo_Recovery_Transition", true];
+        _package enableSimulationGlobal false;
+        _package allowDamage false;
+        _package attachTo [_target, _deckOffset];
+        _package setDir (_target getVariable ["Waldo_Recovery_CarrierDeckDirection", 0]);
+        _package setVariable ["Waldo_Recovery_IsAttachedLoaded", true, true];
+        _package setVariable ["Waldo_Recovery_AttachedCarrier", _target, true];
+        _attached pushBack _package;
+        _target setVariable ["Waldo_Recovery_AttachedPackages", _attached, true];
+        _package setVariable ["Waldo_Recovery_Transition", false];
+        ["Recovery package secured visibly on the carrier deck.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor];
+        true
+    };
     if !(_usePhysical) exitWith {
         _package setVariable ["Waldo_Recovery_Transition", true];
         _package setVariable ["Waldo_Recovery_VirtualCarrier", _target, true];
@@ -171,6 +194,28 @@ if (_operation == "LOAD") exitWith {
     true
 };
 if (_operation == "UNLOAD") exitWith {
+    private _attached = (_target getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x};
+    if !(_attached isEqualTo []) exitWith {
+        private _package = _attached deleteAt ((count _attached) - 1);
+        private _position = [_target, _package, [_target, _package]] call Waldo_fnc_RecoveryResolveUnloadPosition;
+        if (_position isEqualTo []) exitWith {
+            ["No clear package-sized unloading area was found beside the carrier.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor];
+            false
+        };
+        _package setVariable ["Waldo_Recovery_Transition", true];
+        detach _package;
+        _target setVariable ["Waldo_Recovery_AttachedPackages", _attached, true];
+        _package setVariable ["Waldo_Recovery_IsAttachedLoaded", false, true];
+        _package setVariable ["Waldo_Recovery_AttachedCarrier", objNull, true];
+        _package setDir getDir _target;
+        _package setPosATL _position;
+        _package setVectorUp surfaceNormal _position;
+        _package allowDamage true;
+        _package enableSimulationGlobal true;
+        _package setVariable ["Waldo_Recovery_Transition", false];
+        ["Recovery package unloaded from the carrier deck.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor];
+        true
+    };
     private _manifest = (_target getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
     if !(_manifest isEqualTo []) exitWith {
         private _package = _manifest deleteAt ((count _manifest) - 1);

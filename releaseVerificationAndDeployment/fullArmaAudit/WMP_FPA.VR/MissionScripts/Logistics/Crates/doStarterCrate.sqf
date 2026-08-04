@@ -25,6 +25,9 @@ e.g.
 
 */
 params["_target","_arsenal",["_crateSide",west],["_unrestrictedArsenal",false]];
+// Public editor call: every machine may execute an object's init field, but the server owns all
+// global inventory mutations and publishes the client-local actions for hosted, dedicated and JIP.
+if (!isServer) exitWith {};
 
 //Wait Until Init is completed & players ingame (Postinit hack)
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };

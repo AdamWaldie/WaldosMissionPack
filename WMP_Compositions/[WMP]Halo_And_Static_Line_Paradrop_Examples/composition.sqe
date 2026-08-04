@@ -14,7 +14,7 @@ class items
 		flags=5;
 		class Attributes
 		{
-			init="[this,c130Plane,""C130 Drop Plane""] call Waldo_fnc_MoveInCargoPlane;";
+			init="[this,c130Plane,""Blackfish Static-Line Aircraft""] call Waldo_fnc_MoveInCargoPlane;";
 			name="jump";
 		};
 		id=7680;
@@ -31,7 +31,7 @@ class items
 		flags=5;
 		class Attributes
 		{
-			init="[this,c130Plane_1,""C130 HALO Plane""] call Waldo_fnc_MoveInCargoPlane;";
+			init="[this,c130Plane_1,""Blackfish HALO Aircraft""] call Waldo_fnc_MoveInCargoPlane;";
 			name="jump_3";
 		};
 		id=7719;
@@ -59,7 +59,7 @@ class items
 					name="c130PlaneD";
 				};
 				id=7664;
-				type="rhsusf_airforce_pilot";
+				type="B_Pilot_F";
 			};
 			class Item1
 			{
@@ -74,7 +74,7 @@ class items
 				{
 				};
 				id=7665;
-				type="rhsusf_airforce_pilot";
+				type="B_Pilot_F";
 				atlOffset=5.9999166;
 			};
 			class Item2
@@ -218,7 +218,7 @@ class items
 			reportOwnPosition=1;
 		};
 		id=7663;
-		type="RHS_C130J";
+		type="B_T_VTOL_01_infantry_F";
 		atlOffset=315.82898;
 		class CustomAttributes
 		{
@@ -237,7 +237,7 @@ class items
 								"STRING"
 							};
 						};
-						value="[[[[""rhs_weap_m4_carryhandle"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""rhs_mag_30Rnd_556x45_M855A1_Stanag"",""rhsusf_100Rnd_556x45_soft_pouch"",""rhs_mag_M441_HE"",""rhs_mag_m714_White"",""rhs_mag_m662_red"",""rhs_mag_m67"",""rhs_mag_m18_green"",""rhs_mag_m18_red"",""rhs_mag_an_m8hc""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
+						value="[[[[""arifle_MX_F"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""30Rnd_65x39_caseless_mag"",""100Rnd_65x39_caseless_mag"",""1Rnd_HE_Grenade_shell"",""1Rnd_Smoke_Grenade_shell"",""1Rnd_SmokeRed_Grenade_shell"",""HandGrenade"",""SmokeShellGreen"",""SmokeShellRed"",""SmokeShell""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
 					};
 				};
 			};
@@ -266,7 +266,7 @@ class items
 					name="c130PlaneD_1";
 				};
 				id=7709;
-				type="rhsusf_airforce_pilot";
+					type="B_Pilot_F";
 				atlOffset=-43.458817;
 			};
 			class Item1
@@ -283,7 +283,7 @@ class items
 				{
 				};
 				id=7710;
-				type="rhsusf_airforce_pilot";
+					type="B_Pilot_F";
 				atlOffset=-37.4589;
 			};
 			class Item2
@@ -427,7 +427,7 @@ class items
 			reportOwnPosition=1;
 		};
 		id=7718;
-		type="RHS_C130J";
+		type="B_T_VTOL_01_infantry_F";
 		atlOffset=1200;
 		class CustomAttributes
 		{
@@ -446,7 +446,7 @@ class items
 								"STRING"
 							};
 						};
-						value="[[[[""rhs_weap_m4_carryhandle"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""rhs_mag_30Rnd_556x45_M855A1_Stanag"",""rhsusf_100Rnd_556x45_soft_pouch"",""rhs_mag_M441_HE"",""rhs_mag_m714_White"",""rhs_mag_m662_red"",""rhs_mag_m67"",""rhs_mag_m18_green"",""rhs_mag_m18_red"",""rhs_mag_an_m8hc""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
+						value="[[[[""arifle_MX_F"",""FirstAidKit"",""Medikit""],[2,20,4]],[[""30Rnd_65x39_caseless_mag"",""100Rnd_65x39_caseless_mag"",""1Rnd_HE_Grenade_shell"",""1Rnd_Smoke_Grenade_shell"",""1Rnd_SmokeRed_Grenade_shell"",""HandGrenade"",""SmokeShellGreen"",""SmokeShellRed"",""SmokeShell""],[30,8,16,4,2,4,2,2,4]],[[""ToolKit""],[1]],[[""B_Parachute""],[14]]],false]";
 					};
 				};
 			};

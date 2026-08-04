@@ -21,6 +21,7 @@ Called via Zen Module as defined in Zen_medicalCrateModule.sqf
 */
 
 params ["_crate", ["_scalar",1],["_crateSupplySide",west],["_weaponsAttachmentsUniforms",false],["_includeLaunchersAndLauncherAmmo",false]];
+if (!isServer) exitWith {};
 
 clearweaponcargoGlobal _crate;
 clearmagazinecargoGlobal _crate;

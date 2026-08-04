@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_FieldResupplyHub";
-			init="if (isServer) then {[this, sideUnknown, -1] call Waldo_fnc_FieldResupplyRegisterHub;};";
+			init="[this, sideUnknown, -1] call Waldo_fnc_FieldResupplyRegisterHub;";
 		};
 		id=1;
 		type="B_supplyCrate_F";

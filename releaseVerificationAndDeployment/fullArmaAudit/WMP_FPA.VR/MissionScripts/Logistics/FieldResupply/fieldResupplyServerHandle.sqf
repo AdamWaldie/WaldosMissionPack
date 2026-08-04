@@ -139,7 +139,7 @@ switch (toUpperANSI _operation) do {
         _crate setVariable ["Waldo_FieldResupply_InitialCharges", _charges, true];
         _crate setVariable ["Waldo_FieldResupply_CargoRows", _rows, true];
         _unit setVariable ["Waldo_FieldResupply_Crates", _carried - 1, true];
-        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, false, [0, 0, 0], 0] call ace_dragging_fnc_setDraggable};
+        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, true, [0, 0, 0], 0] call ace_dragging_fnc_setDraggable};
         if !(isNil "ace_dragging_fnc_setCarryable") then {[_crate, true, [0, 2, 1], 0] call ace_dragging_fnc_setCarryable};
         [_crate] remoteExecCall ["Waldo_fnc_FieldResupplySetupCrateLocal", -2, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
         [format ["Field resupply deployed with %1 uses; %2 portable crate(s) remain.", _charges, _carried - 1], "SUCCESS"] call _notify;

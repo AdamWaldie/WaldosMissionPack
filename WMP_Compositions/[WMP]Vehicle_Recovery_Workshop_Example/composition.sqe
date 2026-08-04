@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_RecoveryWorkshop";
-			init="if (isServer) then {[this, ""MAIN"", 50, sideUnknown, 100, true] call Waldo_fnc_RecoveryRegisterWorkshop;};";
+			init="[this, ""MAIN"", 50, sideUnknown, 100, true] call Waldo_fnc_RecoveryRegisterWorkshop;";
 		};
 		id=1;
 		type="Land_Cargo_House_V1_F";
@@ -24,7 +24,7 @@ class items
 		class Attributes
 		{
 			name="WMP_RecoveryExampleVehicle";
-			init="if (isServer) then {[this, ""MAIN"", 0.55, true, false, ""B_Slingload_01_Cargo_F"", true, 1] call Waldo_fnc_RecoveryRegisterVehicle;};";
+			init="[this, ""MAIN"", 0.55, true, false, ""B_Slingload_01_Cargo_F"", true, 1] call Waldo_fnc_RecoveryRegisterVehicle;";
 		};
 		id=2;
 		type="B_MRAP_01_F";
@@ -37,7 +37,7 @@ class items
 		class Attributes
 		{
 			name="WMP_RecoveryCarrier";
-			init="if (isServer) then {[this, 12, ""AUTO"", 2] call Waldo_fnc_RecoveryRegisterCarrier;};";
+			init="[this, 12, ""AUTO"", 1, [0, -1.3, 1.25], 0] call Waldo_fnc_RecoveryRegisterCarrier;";
 		};
 		id=3;
 		type="B_Truck_01_transport_F";
@@ -46,7 +46,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-6,0};};
-		title="Vehicle Recovery: workshop MAIN, recoverable MRAP and AUTO carrier. Objects are deliberately spaced. Change the shared key, side, radii and package class in the init fields.";
+		title="Vehicle Recovery: workshop MAIN, recoverable MRAP and AUTO open-deck HEMTT carrier. Its model-space deck offset keeps one package physical and visible; [] would use engine cargo or virtual fallback.";
 		id=4;
 	};
 };

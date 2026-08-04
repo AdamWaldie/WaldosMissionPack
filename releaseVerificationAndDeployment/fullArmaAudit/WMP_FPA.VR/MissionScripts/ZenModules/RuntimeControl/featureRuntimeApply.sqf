@@ -114,6 +114,7 @@ switch (toUpperANSI _action) do {
             clearMagazineCargoGlobal _hub;
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
+            [_hub, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
             [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };
         if (isNull _hub) exitWith {false};

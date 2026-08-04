@@ -1,7 +1,9 @@
 name: Deploy
 on:
   release:
-      types: [ published, prereleased ]
+      # `published` is emitted for both stable releases and prereleases. Listening to
+      # `prereleased` as well starts this workflow twice for one published prerelease.
+      types: [published]
 jobs:
   build:
     name: Create And Upload Release

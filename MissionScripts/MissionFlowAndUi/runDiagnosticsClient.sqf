@@ -52,6 +52,28 @@ private _consumeFeatureReport = {
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_EcoCore_getDiagnostics] call _consumeFeatureReport;
 
+private _acreLoaded = isClass (configFile >> "CfgPatches" >> "acre_main");
+private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
+private _acreEnabled = _acreLoaded && {_acreConfig getOrDefault ["enabled", false]};
+if (_acreEnabled) then {
+    private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
+    private _planValid = count _plan >= 4 && {(_plan select 0) == 3};
+    private _rawGroup = groupId group player;
+    private _groupKey = toUpperANSI (((_rawGroup splitString " -_.") joinString ""));
+    private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
+    private _sideIndex = if (_planValid) then {(_plan select 2) findIf {(_x select 0) == _sideKey}} else {-1};
+    private _groups = if (_sideIndex >= 0) then {((_plan select 2) select _sideIndex) param [3, []]} else {[]};
+    private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
+    private _radios = if (isNil "acre_api_fnc_getCurrentRadioList") then {[]} else {[] call acre_api_fnc_getCurrentRadioList};
+    private _unique = _radios select {"_ID_" in toUpper _x};
+    private _last = missionNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
+    private _lastOk = count _last > 0 && {_last select 0};
+    private _state = if (!_planValid || {_sideIndex < 0} || {_groupIndex < 0} || {_radios isEqualTo []} || {!_lastOk}) then {"ERROR"} else {"ACTIVE"};
+    ["radio", "acre-player-presetting", _state, format ["rawGroup='%1' normalized=%2 side=%3 planRevision=%4 sideMatch=%5 groupMatch=%6 radios=%7 unique=%8 loadoutGeneration=%9 restoredGeneration=%10 lastApplication=%11", _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _radios, count _unique, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last]] call _add;
+} else {
+    ["radio", "acre-player-presetting", if (_acreLoaded) then {"DISABLED"} else {"UNAVAILABLE"}, format ["loaded=%1 configEnabled=%2", _acreLoaded, _acreConfig getOrDefault ["enabled", false]]] call _add;
+};
+
 private _jamEnabled = missionNamespace getVariable ["Waldo_Jamming_Enable", false];
 private _jamFactor = 0;
 if (_jamEnabled && {!isNil "Waldo_fnc_JammingFactor"} && {alive player}) then {
@@ -66,7 +88,7 @@ private _jamClientState = if (!_jamEnabled) then {"DISABLED"} else {
 ["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 hud=%4", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
-["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 42) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=42", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
+["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 43) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=43", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
 private _economyActive = missionNamespace getVariable ["WaldoEcoCore_ModuleActive", false];
 ["zeus", "economy-modules", if (!_economyActive) then {"DISABLED"} else {if ((missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=19", missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]]] call _add;
 
@@ -78,6 +100,13 @@ private _interactionObjects = missionNamespace getVariable ["Waldo_QA_Interactio
 
 private _aceInteractLoaded = isClass (configFile >> "CfgPatches" >> "ace_interact_menu");
 private _localObjects = allMissionObjects "All";
+private _tacticalDisplays = _localObjects select {_x getVariable ["Waldo_TacticalDisplay_Registered", false]};
+private _missingTacticalActions = _tacticalDisplays select {(_x getVariable ["Waldo_TacticalDisplay_LocalAction", -1]) < 0};
+["interface", "tactical-display-actions", if (_tacticalDisplays isEqualTo []) then {"UNCONFIGURED"} else {if (_missingTacticalActions isEqualTo []) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 missingLocalAction=%2", count _tacticalDisplays, count _missingTacticalActions]] call _add;
+private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", false];
+private _hazardZones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
+private _hazardClient = missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false];
+["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient]] call _add;
 private _mhqObjects = _localObjects select {_x getVariable ["Waldo_MHQ_ServerConfigured", false]};
 if (_mhqObjects isEqualTo []) then {
     ["logistics", "mhq-actions", "UNCONFIGURED", "No configured MHQ is present"] call _add;

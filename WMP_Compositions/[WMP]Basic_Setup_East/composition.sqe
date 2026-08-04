@@ -22,7 +22,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-init="if (isServer) then {[this, 1, east, false, false] spawn Waldo_fnc_SupplyCratePopulate;};";
+init="[this, 1, east, false, false] spawn Waldo_fnc_SupplyCratePopulate;";
 					name="supplyBox_ammoOnly_east_1";
 					dynamicSimulation=1;
 				};
@@ -41,7 +41,7 @@ init="if (isServer) then {[this, 1, east, false, false] spawn Waldo_fnc_SupplyCr
 				flags=4;
 				class Attributes
 				{
-init="if (isServer) then {[this, true, 1] call Waldo_fnc_MedicalCratePopulate;};";
+init="[this, true, 1] call Waldo_fnc_MedicalCratePopulate;";
 					name="medicalCrate_Fieldhospital_2";
 				};
 				id=11;
@@ -59,7 +59,7 @@ init="if (isServer) then {[this, true, 1] call Waldo_fnc_MedicalCratePopulate;};
 				flags=4;
 				class Attributes
 				{
-init="if (isServer) then {[this, true, east, false] spawn Waldo_fnc_DoStarterCrate;};";
+init="[this, true, east, false] spawn Waldo_fnc_DoStarterCrate;";
 					name="StarterCrate_East_Arsenal_1";
 					dynamicSimulation=1;
 				};

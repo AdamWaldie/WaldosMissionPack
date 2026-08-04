@@ -246,6 +246,15 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 42];
+["WMP Interface & QA", "Diagnostics - Run Full Pack Audit",
+    {
+        diag_log format ["[WMP ZEN] invoked module=Full Pack Diagnostics curator=%1 payload=%2", name player, _this];
+        [] remoteExecCall ["Waldo_fnc_RunDiagnostics", 2];
+        ["DIAGNOSTICS", "Full pack audit requested. Results are written to the server and client RPTs.", "INFO", "DIAGNOSTICS", 6] call Waldo_fnc_FeatureNotifyLocal;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+missionNamespace setVariable ["Waldo_ZenModuleCount", 43];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
-diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 42], clientOwner];
+diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 43], clientOwner];

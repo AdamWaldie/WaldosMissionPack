@@ -19,7 +19,7 @@
  * Boolean - true when forwarded or registered; otherwise false.
  *
  * Example:
- * if (isServer) then {[mapBoard, west, 2000, true] call Waldo_fnc_TacticalDisplayRegister;};
+ * [mapBoard, west, 2000, true] call Waldo_fnc_TacticalDisplayRegister;
  *
  * Current callers: Tactical Display ZEN module, audit station and mission-maker setup.
  */
@@ -55,7 +55,9 @@ if (_interactionEnabled && {!isNil "Waldo_fnc_MiniGameInteractionReset"} && {!is
 if (!_interactionEnabled && {!isNil {_object getVariable "Waldo_MG_Int_Active"}}) then {
     _object setVariable ["Waldo_MG_Int_Active", false, true];
 };
-[_object] remoteExecCall ["Waldo_fnc_TacticalDisplaySetupLocal", -2, format ["Waldo_TacticalDisplay_%1", netId _object]];
+// Target every machine rather than "clients except server": a hosted server also owns an interface.
+// TacticalDisplaySetupLocal self-gates on hasInterface, so dedicated servers remain a harmless no-op.
+[_object] remoteExecCall ["Waldo_fnc_TacticalDisplaySetupLocal", 0, format ["Waldo_TacticalDisplay_%1", netId _object]];
 if (_interactionEnabled) then {
     [_object, [_challengeId, _difficulty]] remoteExecCall ["Waldo_fnc_TacticalDisplayInteractionSetup", 0, _object];
 };
