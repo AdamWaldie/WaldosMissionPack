@@ -1,7 +1,7 @@
 version=54;
 name="[WMP] Halo And Static Line C130 Drop Examples";
 author="WaldoTheWarfighter";
-category="Waldos Mission Pack Compositions";
+category="Waldos Mission Pack Compositions - Air Operations";
 requiredAddons[]=
 {
 	"A3_Structures_F_Mil_Flags",

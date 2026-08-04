@@ -68,7 +68,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("$GITHUB_OUTPUT", workflow)
         self.assertNotIn("::set-output", workflow)
 
-    def test_release_version_helper_accepts_rc_tag_without_persisting_suffix(self):
+    def test_release_version_helper_persists_the_complete_rc_tag(self):
+        cover_source = (
+            ROOT / "releaseVerificationAndDeployment" / "generateLoadingScreen.py"
+        ).read_text(encoding="utf-8")
+        self.assertNotIn("\nfrom PIL import", cover_source)
+        self.assertGreater(cover_source.index("from PIL import"), cover_source.index("if args.print_version:"))
         helper_spec = importlib.util.spec_from_file_location(
             "set_description_version", VERSION_HELPER_PATH
         )
@@ -76,14 +81,123 @@ class FullAuditTests(unittest.TestCase):
         assert helper_spec and helper_spec.loader
         helper_spec.loader.exec_module(helper)
         source = 'onLoadName = "Waldo Mission Pack v4.8.0";\n'
-        match = re.match(r"^[vV]?(\d+\.\d+(?:\.\d+)?)", "v4.8.1RC")
+        match = re.fullmatch(r"[vV]?([0-9A-Za-z][0-9A-Za-z._-]*)", "v4.8.1RC")
         self.assertIsNotNone(match)
         updated, count = helper.VERSION_PATTERN.subn(
             r"\g<1>" + match.group(1) + r"\g<3>", source, count=1
         )
         self.assertEqual(1, count)
-        self.assertIn("v4.8.1", updated)
-        self.assertNotIn("RC", updated)
+        self.assertIn("v4.8.1RC", updated)
+
+        placeholder_match = re.fullmatch(
+            r"[vV]?([0-9A-Za-z][0-9A-Za-z._-]*)", "v4.8.XRC"
+        )
+        self.assertIsNotNone(placeholder_match)
+        placeholder, count = helper.VERSION_PATTERN.subn(
+            r"\g<1>" + placeholder_match.group(1) + r"\g<3>", source, count=1
+        )
+        self.assertEqual(1, count)
+        self.assertIn("v4.8.XRC", placeholder)
+        cover_generator = importlib.util.spec_from_file_location(
+            "generate_loading_screen",
+            ROOT / "releaseVerificationAndDeployment" / "generateLoadingScreen.py",
+        )
+        cover = importlib.util.module_from_spec(cover_generator)
+        assert cover_generator and cover_generator.loader
+        cover_generator.loader.exec_module(cover)
+        with tempfile.TemporaryDirectory() as directory:
+            description = Path(directory) / "description.ext"
+            description.write_text(placeholder, encoding="utf-8")
+            self.assertEqual("4.8.XRC", cover.parse_version_from_desc(str(description)))
+
+    def test_composition_catalogue_uses_current_public_calls_and_locality_guards(self):
+        root = ROOT / "WMP_Compositions"
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(
+            encoding="utf-8"
+        )
+        allowed_categories = {
+            "Waldos Mission Pack Compositions - Foundation",
+            "Waldos Mission Pack Compositions - Logistics",
+            "Waldos Mission Pack Compositions - Air Operations",
+            "Waldos Mission Pack Compositions - Combat Systems",
+            "Waldos Mission Pack Compositions - Interface",
+            "Waldos Mission Pack Compositions - Mission Systems",
+            "Waldos Mission Pack Compositions - Mission Tools",
+        }
+        global_mutations = {
+            "Waldo_fnc_SupplyCratePopulate",
+            "Waldo_fnc_DoStarterCrate",
+            "Waldo_fnc_MedicalCratePopulate",
+            "Waldo_fnc_RecoveryRegisterWorkshop",
+            "Waldo_fnc_RecoveryRegisterVehicle",
+            "Waldo_fnc_RecoveryRegisterCarrier",
+            "Waldo_fnc_FieldResupplyRegisterHub",
+            "Waldo_fnc_TacticalDisplayRegister",
+            "Waldo_fnc_Jammer",
+            "Waldo_fnc_HazardRegisterEmitter",
+        }
+        folders = [path for path in root.iterdir() if path.is_dir()]
+        self.assertGreaterEqual(len(folders), 25)
+        for folder in folders:
+            header_path = folder / "header.sqe"
+            composition_path = folder / "composition.sqe"
+            self.assertTrue(header_path.is_file(), folder.name)
+            self.assertTrue(composition_path.is_file(), folder.name)
+            header = header_path.read_text(encoding="utf-8")
+            composition = composition_path.read_text(encoding="utf-8")
+            self.assertIn('author="WaldoTheWarfighter";', header, folder.name)
+            category = re.search(r'^category="([^"]+)";', header, flags=re.MULTILINE)
+            self.assertIsNotNone(category, folder.name)
+            self.assertIn(category.group(1), allowed_categories, folder.name)
+            self.assertEqual(composition.count("{"), composition.count("}"), folder.name)
+            for function_name in set(re.findall(r"Waldo_fnc_[A-Za-z0-9_]+", composition)):
+                short_name = function_name.removeprefix("Waldo_fnc_")
+                self.assertRegex(functions, rf"class\s+{re.escape(short_name)}\b", folder.name)
+                if function_name in global_mutations:
+                    init_rows = [
+                        row for row in composition.splitlines()
+                        if "init=" in row and function_name in row
+                    ]
+                    self.assertTrue(init_rows, folder.name)
+                    self.assertTrue(
+                        all("isServer" in row for row in init_rows),
+                        f"{folder.name}: {function_name} must remain server guarded",
+                    )
+        catalogue = (root / "README.md").read_text(encoding="utf-8")
+        self.assertIn("Features intentionally without compositions", catalogue)
+        self.assertIn("Vehicle Recovery Workshop Example", catalogue)
+        self.assertIn("Field Resupply Hub Example", catalogue)
+        self.assertIn("Hazardous Emitter Example", catalogue)
+
+    def test_user_facing_source_uses_current_zeus_and_author_wording(self):
+        roots = (
+            ROOT / "MissionScripts",
+            ROOT / "MissionConfig",
+            ROOT / "WMP_Compositions",
+            ROOT / "wiki",
+        )
+        texts = [
+            (ROOT / "README.md").read_text(encoding="utf-8"),
+            (ROOT / "init.sqf").read_text(encoding="utf-8"),
+            (ROOT / "initServer.sqf").read_text(encoding="utf-8"),
+            (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8"),
+        ]
+        for root in roots:
+            for path in root.rglob("*"):
+                if path.suffix.lower() in {".sqf", ".md", ".sqe"}:
+                    texts.append(path.read_text(encoding="utf-8", errors="replace"))
+        combined = "\n".join(texts)
+        for stale in (
+            "PubZeus",
+            "pub-Zeus",
+            "public Zeus players",
+            "Do not claim original authorship",
+            "Original author unknown",
+            "Not my script originally",
+            "I claim no rights",
+            "Claude -",
+        ):
+            self.assertNotIn(stale, combined)
 
     def test_sqf_validator_rejects_known_engine_invalid_commands(self):
         with tempfile.TemporaryDirectory() as directory:
@@ -482,6 +596,11 @@ class FullAuditTests(unittest.TestCase):
         refresh = (root / "acre2SchedulePlayerRefresh.sqf").read_text(encoding="utf-8")
         acre_config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
         babel = (root / "acre2ApplyBabel.sqf").read_text(encoding="utf-8")
+        babel_diary = (root / "acre2BuildBabelDiary.sqf").read_text(encoding="utf-8")
+        ceoi = (root / "acre2BuildCEOI.sqf").read_text(encoding="utf-8")
+        callsigns = (root / "acre2ReconcileGroupCallsigns.sqf").read_text(encoding="utf-8")
+        add_docs = (ROOT / "MissionScripts" / "MissionInit" / "BriefingDocuments" / "AddDocs.sqf").read_text(encoding="utf-8")
+        init_server = (ROOT / "initServer.sqf").read_text(encoding="utf-8")
         loadout = (root / "acre2FilterLoadout.sqf").read_text(encoding="utf-8")
         active = "\n".join((preinit, labels, compile_plan, apply_plan, babel, loadout))
         self.assertIn("preInit = 1", registry)
@@ -506,6 +625,26 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("isNil '_spoken'", babel)
         self.assertIn("isNil '_speakingReadBack'", babel)
         self.assertIn("babelGetSpeakingLanguageId", babel)
+        self.assertIn("Waldo_fnc_ACRE2BuildBabelDiary", babel)
+        self.assertIn("Waldo_fnc_ACRE2BuildBabelDiary", add_docs)
+        self.assertIn("Waldo_fnc_ACRE2BuildCEOI", add_docs)
+        self.assertIn("Waldo_fnc_ACRE2CompilePlan", ceoi)
+        self.assertNotIn("setRadioChannel", ceoi)
+        self.assertLess(
+            init_server.index("Waldo_fnc_ACRE2ReconcileGroupCallsigns"),
+            init_server.index("Waldo_fnc_ACRE2Init"),
+        )
+        self.assertIn("roleDescription _leader", callsigns)
+        self.assertIn("Alpha Rifleman` has no `@` and is ignored", callsigns)
+        self.assertIn("Alpha Team Leader@Viking", callsigns)
+        self.assertIn("_description find '@'", callsigns)
+        self.assertIn("_description select [_separator + 1]", callsigns)
+        self.assertIn("_requested find '@' >= 0", callsigns)
+        self.assertIn("setGroupIdGlobal", callsigns)
+        self.assertIn("CBA_fnc_setCallsign", callsigns)
+        self.assertIn("Duplicate @Callsign", callsigns)
+        self.assertNotIn("setRadioChannel", callsigns)
+        self.assertIn("createDiaryRecord", babel_diary)
         self.assertIn("_initial in _languages", babel)
         self.assertNotIn('["version",', acre_config)
         self.assertIn('["prc343PresetPolicy", "FULL_RANGE"]', acre_config)
@@ -1104,7 +1243,7 @@ class FullAuditTests(unittest.TestCase):
             ROOT / "MissionScripts" / "EconomySystems" / "Core" / "setCommitmentModeEnabled.sqf",
             ROOT / "MissionScripts" / "EconomySystems" / "Core" / "setTestingNoticeEnabled.sqf",
             ROOT / "MissionScripts" / "EconomySystems" / "Resource" / "getZoneInfoText.sqf",
-            ROOT / "MissionScripts" / "EconomySystems" / "Resource" / "startPubZeusZoneActionBridge.sqf",
+            ROOT / "MissionScripts" / "EconomySystems" / "Resource" / "startZeusZoneActionBridge.sqf",
             ROOT / "MissionScripts" / "MissionMakerResourceScripts" / "vehicleDamageMonitor.sqf",
         ]
         findings = [str(source.relative_to(ROOT)) for source in sources if "\\n" in source.read_text(encoding="utf-8")]

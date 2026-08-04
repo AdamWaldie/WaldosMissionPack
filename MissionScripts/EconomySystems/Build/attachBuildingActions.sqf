@@ -31,29 +31,29 @@
             _building,
             "WaldoEcoBuild_InspectActionAddedLocal",
             [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingInspectActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 
         [
             _building,
             "WaldoEcoBuild_DisableActionAddedLocal",
             ["DISABLE", _entry] call Waldo_fnc_EcoBuild_getOfficialBuildingManageActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 
         [
             _building,
             "WaldoEcoBuild_EnableActionAddedLocal",
             ["ENABLE", _entry] call Waldo_fnc_EcoBuild_getOfficialBuildingManageActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 
         [
             _building,
             "WaldoEcoBuild_UpgradeActionAddedLocal",
             [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingUpgradeActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 
         [
             _building,
             "WaldoEcoBuild_ClaimActionAddedLocal",
             [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingClaimActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 

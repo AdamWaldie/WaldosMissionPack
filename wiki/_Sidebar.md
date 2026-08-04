@@ -79,6 +79,7 @@
 * [AI Convoy System](AI-Convoy-System)
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
+* [Eden Compositions](Eden-Compositions)
 * [Coding Standards](Coding-Standards)
 
 **Optional and Advanced Systems**

@@ -24,7 +24,7 @@
             _researchCenter,
             "WaldoEcoResearch_DisplayResourcesAddedLocal",
             call Waldo_fnc_EcoResearch_getOfficialResourceDisplayActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 
         [
             _researchCenter,
@@ -585,12 +585,12 @@
                 "true",
                 8
             ]
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 
         if (isNil "Waldo_fnc_EcoBuild_getOfficialConstructionModeActionArgs") exitWith {-1};
         [
             _researchCenter,
             "WaldoEcoResearch_ConstructionModeActionAddedLocal",
             call Waldo_fnc_EcoBuild_getOfficialConstructionModeActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 

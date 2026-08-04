@@ -24,5 +24,5 @@
             _vehicle,
             "WaldoEcoBuild_PlayerConstructionActionAddedLocal",
             call Waldo_fnc_EcoBuild_getOfficialConstructionModeActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction
 

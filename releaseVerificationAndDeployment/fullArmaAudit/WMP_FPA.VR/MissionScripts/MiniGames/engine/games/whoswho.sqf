@@ -4,7 +4,7 @@
  *
  * Original engine: "Party Games Scripted" by |LorD|[Habilidade]Deus Ex.
  * Ported into WaldosMissionPack and rebranded to the Waldo_MG_ namespace; game
- * logic is preserved from the original composition. Do not claim original authorship.
+ * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
  * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).

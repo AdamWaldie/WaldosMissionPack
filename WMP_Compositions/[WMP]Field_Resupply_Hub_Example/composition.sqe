@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_FieldResupplyHub";
+			init="if (isServer) then {[this, sideUnknown, -1] call Waldo_fnc_FieldResupplyRegisterHub;};";
+		};
+		id=1;
+		type="B_supplyCrate_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-3,0};};
+		title="Field Resupply hub: unlimited stock and all sides. Assign portable crates to infantry with ZEN or [unit, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier.";
+		id=2;
+	};
+};

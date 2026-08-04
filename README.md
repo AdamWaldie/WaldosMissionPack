@@ -3,9 +3,8 @@ A package of mission scripts for mission makers designed to be highly flexible, 
 
 ## License
 
-WaldosMissionPack is released under the [MIT License](LICENSE). Third-party
-scripts, ports, fonts, and assets retain their original notices and terms where
-identified in their source or adjacent license files.
+WaldosMissionPack is released under the [MIT License](LICENSE). Assets retain any notices required
+by adjacent licence files.
 
 ![alt text](https://github.com/AdamWaldie/WaldosMissionPack/blob/main/Pictures/loading.jpg?raw=true)
 
@@ -27,7 +26,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Custom loadout & logistics system which scrapes the kits of all playable characters to fulfil base logistical needs - such as starter crates and supply crates. (Disable scenario Binarization, and edit loadouts via ACE Arsenal to ensure 100% satisfaction)
 - Vehicle Ambush/Camo scripts.
 - Vehicle unflipping actions
-- Simple AI convoy script expanded and enhanced from Tovas original.
+- Configurable AI convoy system with mission-maker and Zeus workflows.
 - Teleportation Script
 - Endex & Safestart Scripts - including an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers) in the ENDEX popup.
 - Script-driven Tasks/Objectives helpers - JIP-safe BIS task wrappers with automatic map markers that also feed the After-Action Report.
@@ -41,8 +40,8 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Dynamic Anti-Air - multiple named radar-controlled air-defence zones, available through script or guided Zeus placement, with configurable side/faction asset pools, altitude rules, dynamic static/mobile responses and fighter scrambling.
 - Airborne Gunship Support - multiple named existing or spawned gunships with side/faction pools, assigned player controllers, validated turret profiles, configurable combat orbits, automatic RTB/service cycles, friendly markers and focused Zeus operation.
 - AI rebalance profiles - preserves existing behavior by default while offering PUBLIC, STANDARD and VETERAN baselines plus faction and role overrides for new missions.
-- Waldos Economy Systems - a pub-Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus Enhanced module menu (ZEN required for the in-Zeus menu). Its Zeus builder exports readable public setup calls for `MissionConfig\economyConfig.sqf`, including placed economy fixtures; the existing portable catalogue string remains available for transfer and import.
-- Waldos Mini Games - twelve seated multiplayer party games (Battleship, Who's Who, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, RPS, UNO) plus ten diegetic field-equipment procedures. Players inspect distinct EOD controllers, diagnostic tablets, access terminals, lock cylinders, breaker cabinets, maintenance hatches, radios, hydraulic manifolds, secure consoles, and tactical command uplinks. Procedures use procedural Arma controls as their complete primary presentation, with colourblind-safe redundant cues, integrated operating instructions, curated easy/standard/hard/expert difficulty profiles, immersive mission-specific profiles, optional low-opacity material textures, one-line Eden setup, exclusive server-owned attempts, persistent `IDLE`/`RUNNING`/`SUCCESS`/`FAILURE` state usable in ACE or vanilla conditions, authoritative callbacks/CBA events, and an optional party-table equipment picker. (Table engine ported from "Party Games Scripted" by |LorÐ|™[Habilidade]Ðeus Ex.)
+- Waldos Economy Systems - a Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus Enhanced module menu (ZEN required for the in-Zeus menu). Its Zeus builder exports readable setup calls for `MissionConfig\economyConfig.sqf`, including placed economy fixtures; the existing portable catalogue string remains available for transfer and import.
+- Waldos Mini Games - twelve seated multiplayer party games (Battleship, Who's Who, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, RPS, UNO) plus ten diegetic field-equipment procedures. Players inspect distinct EOD controllers, diagnostic tablets, access terminals, lock cylinders, breaker cabinets, maintenance hatches, radios, hydraulic manifolds, secure consoles, and tactical command uplinks. Procedures use procedural Arma controls as their complete primary presentation, with colourblind-safe redundant cues, integrated operating instructions, curated easy/standard/hard/expert difficulty profiles, immersive mission-specific profiles, optional low-opacity material textures, one-line Eden setup, exclusive server-owned attempts, persistent `IDLE`/`RUNNING`/`SUCCESS`/`FAILURE` state usable in ACE or vanilla conditions, authoritative callbacks/CBA events, and an optional party-table equipment picker.
 - Optional ACE corpse traps - consume any compatible vanilla or modded throwable to rig a body; opening its inventory releases the stored projectile.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
@@ -90,19 +89,10 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 
 # Supported Addons
 - ACRE 2 (optional; configure or disable it in `MissionConfig\acreConfig.sqf`)
-- TFAR (Inherrent support via 3Eden)
+- TFAR (inherent support through Eden configuration)
 - Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
-
-# Credits
-- Waldo - Lead Developer
-- RazzMaTazz - Original Cover Image
-- Val - Master of Parachute Recollection for Skyward Affairs
-- Rowdy - CIO (Chief Idiotproofing Officer)
-- Claude - Best documentation Writer in the west
-
-***
 
 <p align="center"><a href="https://www.buymeacoffee.com/thewaldo123" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-blue.png" alt="Buy Me A Coffee" style="height: 41px !important;width: 174px !important;box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;-webkit-box-shadow: 0px 3px 2px 0px rgba(190, 190, 190, 0.5) !important;" ></a></p>
 

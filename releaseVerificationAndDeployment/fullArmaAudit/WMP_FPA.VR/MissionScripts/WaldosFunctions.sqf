@@ -117,7 +117,9 @@ class CfgFunctions
             class ACRE2CompilePlan {file = "MissionScripts\MissionInit\ACRE2\acre2CompilePlan.sqf";};
             class ACRE2ApplyPlayerPlan {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPlayerPlan.sqf";};
             class ACRE2BuildCEOI {file = "MissionScripts\MissionInit\ACRE2\acre2BuildCEOI.sqf";};
+            class ACRE2BuildBabelDiary {file = "MissionScripts\MissionInit\ACRE2\acre2BuildBabelDiary.sqf";};
             class ACRE2ApplyBabel {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyBabel.sqf";};
+            class ACRE2ReconcileGroupCallsigns {file = "MissionScripts\MissionInit\ACRE2\acre2ReconcileGroupCallsigns.sqf";};
             class BabelActivation {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyBabel.sqf";};
             class ACRE2FilterLoadout {file = "MissionScripts\MissionInit\ACRE2\acre2FilterLoadout.sqf";};
             class ACRE2CaptureRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2CaptureRadioState.sqf";};
@@ -885,14 +887,14 @@ class CfgFunctions
             class EcoCore_ensureLocalObjectAction {
                 file = "MissionScripts\EconomySystems\Core\ensureLocalObjectAction.sqf";
             };
-            class EcoCore_getPubZeusActionJipId {
-                file = "MissionScripts\EconomySystems\Core\getPubZeusActionJipId.sqf";
+            class EcoCore_getZeusActionJipId {
+                file = "MissionScripts\EconomySystems\Core\getZeusActionJipId.sqf";
             };
-            class EcoCore_clearPubZeusObjectAction {
-                file = "MissionScripts\EconomySystems\Core\clearPubZeusObjectAction.sqf";
+            class EcoCore_clearZeusObjectAction {
+                file = "MissionScripts\EconomySystems\Core\clearZeusObjectAction.sqf";
             };
-            class EcoCore_publishPubZeusObjectAction {
-                file = "MissionScripts\EconomySystems\Core\publishPubZeusObjectAction.sqf";
+            class EcoCore_publishZeusObjectAction {
+                file = "MissionScripts\EconomySystems\Core\publishZeusObjectAction.sqf";
             };
             class EcoCore_normalizeNameValueRows {
                 file = "MissionScripts\EconomySystems\Core\normalizeNameValueRows.sqf";
@@ -1377,8 +1379,8 @@ class CfgFunctions
             class EcoResource_startZoneCaptureRequestLoop {
                 file = "MissionScripts\EconomySystems\Resource\startZoneCaptureRequestLoop.sqf";
             };
-            class EcoResource_startPubZeusZoneActionBridge {
-                file = "MissionScripts\EconomySystems\Resource\startPubZeusZoneActionBridge.sqf";
+            class EcoResource_startZeusZoneActionBridge {
+                file = "MissionScripts\EconomySystems\Resource\startZeusZoneActionBridge.sqf";
             };
             class EcoResource_generateZoneResources {
                 file = "MissionScripts\EconomySystems\Resource\generateZoneResources.sqf";

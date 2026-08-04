@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Get pub zeus action jip id.
+ * Get Zeus action jip id.
  *
  * Part of the Waldos Economy Systems suite (shared core system).
  *
@@ -12,7 +12,7 @@
  * Any - see function body
  *
  * Example:
- * [_object, _flagVar] call Waldo_fnc_EcoCore_getPubZeusActionJipId;
+ * [_object, _flagVar] call Waldo_fnc_EcoCore_getZeusActionJipId;
  */
 
     params [
@@ -27,7 +27,7 @@
     private _jipId = _object getVariable [_jipVar, ""];
     if (_jipId isEqualTo "") then {
         _jipId = format [
-            "WaldoEco_PubZeusAction_%1_%2_%3",
+            "WaldoEco_ZeusAction_%1_%2_%3",
             _flagVar,
             floor (diag_tickTime * 1000),
             floor (random 1000000)

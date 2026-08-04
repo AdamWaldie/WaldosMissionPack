@@ -33,7 +33,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, west, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, west, true, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_FullCompliment_west";
 					dynamicSimulation=1;
 				};
@@ -52,7 +52,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, east, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, east, true, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_FullCompliment_east";
 					dynamicSimulation=1;
 				};
@@ -71,7 +71,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, independent, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, independent, true, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_FullCompliment_independent";
 					dynamicSimulation=1;
 				};
@@ -90,7 +90,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, civilian, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, civilian, true, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_FullCompliment_civilian";
 					dynamicSimulation=1;
 				};
@@ -109,7 +109,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, west, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, west, false, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_ammoOnly_west";
 					dynamicSimulation=1;
 				};
@@ -128,7 +128,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, east, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, east, false, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_ammoOnly_east";
 					dynamicSimulation=1;
 				};
@@ -147,7 +147,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, independent, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, independent, false, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_ammoOnly_independent";
 					dynamicSimulation=1;
 				};
@@ -166,7 +166,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, civilian, false] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, civilian, false, false] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_ammoOnly_civilian";
 					dynamicSimulation=1;
 				};
@@ -185,7 +185,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, civilian, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, civilian, false, true] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_launchersOnly_civilian";
 					dynamicSimulation=1;
 				};
@@ -204,7 +204,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, independent, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, independent, false, true] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_launchersOnly_independent";
 					dynamicSimulation=1;
 				};
@@ -223,7 +223,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, east, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, east, false, true] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_launchersOnly_east";
 					dynamicSimulation=1;
 				};
@@ -242,7 +242,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this, 1, west, false, true] spawn Waldo_fnc_SupplyCratePopulate;";
+					init="if (isServer) then {[this, 1, west, false, true] spawn Waldo_fnc_SupplyCratePopulate;};";
 					name="supplyBox_launchersOnly_west";
 					dynamicSimulation=1;
 				};

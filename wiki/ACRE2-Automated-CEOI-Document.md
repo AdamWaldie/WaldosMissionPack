@@ -8,7 +8,13 @@ block/channel and named long-range nets, and reports any setup problem instead o
 
 Only the player's side is shown. The current group's short-range assignment and radio-specific net tunings are highlighted. Carried-radio lines identify base class, same-type occurrence, resolved request, ear, applicable failures and the count of preserved/unmanaged radios. Missing optional templates are not failures. Frequency-radio requests are marked as asynchronous/unverified because ACRE exposes no public frequency read-back.
 
-The record is rebuilt after join, group change and player-object replacement, replacing the previous record instead of duplicating it. Group changes update this reference only and never retune radios.
+The planned CEOI is created from the pure mission configuration during player-local briefing setup,
+so it is visible on the map **before Continue** even when ACRE has not finished creating physical
+radio IDs. If the authoritative server plan has not arrived yet, WMP compiles an identical
+display-only preview locally; that preview is never used to tune a radio. After ACRE starts, the
+record is rebuilt from authoritative plan and live read-back. Join, group change and player-object
+replacement all replace the previous record instead of duplicating it. Group changes update this
+reference only and never retune radios.
 
 Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`; `Waldo_fnc_ACRE2Init` handles generation. The full audit mission includes a core-console action to force a rebuild while checking physical radios.
 

@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Start pub zeus zone action bridge.
+ * Start Zeus zone action bridge.
  *
  * Part of the Waldos Economy Systems suite (Resource system).
  *
@@ -12,12 +12,12 @@
  * Nothing
  *
  * Example:
- * [_target, _caller] call Waldo_fnc_EcoResource_startPubZeusZoneActionBridge;
+ * [_target, _caller] call Waldo_fnc_EcoResource_startZeusZoneActionBridge;
  */
 
     if (!([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority)) exitWith {};
-    if (missionNamespace getVariable ["WaldoEcoResource_PubZeusZoneActionBridgeStarted", false]) exitWith {};
-    missionNamespace setVariable ["WaldoEcoResource_PubZeusZoneActionBridgeStarted", true];
+    if (missionNamespace getVariable ["WaldoEcoResource_ZeusZoneActionBridgeStarted", false]) exitWith {};
+    missionNamespace setVariable ["WaldoEcoResource_ZeusZoneActionBridgeStarted", true];
 
     [] spawn {
         while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
@@ -26,16 +26,16 @@
                 if (isNull _unit) then {continue;};
                 if (!(_unit getVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", false])) then {
                     {
-                        [_unit, _x] call Waldo_fnc_EcoCore_clearPubZeusObjectAction;
+                        [_unit, _x] call Waldo_fnc_EcoCore_clearZeusObjectAction;
                     } forEach [
-                        "WaldoEcoResource_PubZeusZoneCaptureActionAddedLocal",
-                        "WaldoEcoResource_PubZeusZoneInfoActionAddedLocal",
-                        "WaldoEcoResource_PubZeusZoneCaptureActionAddedLocalV2",
-                        "WaldoEcoResource_PubZeusZoneInfoActionAddedLocalV2"
+                        "WaldoEcoResource_ZeusZoneCaptureActionAddedLocal",
+                        "WaldoEcoResource_ZeusZoneInfoActionAddedLocal",
+                        "WaldoEcoResource_ZeusZoneCaptureActionAddedLocalV2",
+                        "WaldoEcoResource_ZeusZoneInfoActionAddedLocalV2"
                     ];
-                    _unit setVariable ["WaldoEcoResource_PubZeusCanCaptureZone", false, true];
-                    _unit setVariable ["WaldoEcoResource_PubZeusInResourceZone", false, true];
-                    _unit setVariable ["WaldoEcoResource_PubZeusCurrentZoneId", "", true];
+                    _unit setVariable ["WaldoEcoResource_ZeusCanCaptureZone", false, true];
+                    _unit setVariable ["WaldoEcoResource_ZeusInResourceZone", false, true];
+                    _unit setVariable ["WaldoEcoResource_ZeusCurrentZoneId", "", true];
                     _unit setVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", true, false];
                 };
             } forEach allPlayers;
@@ -54,8 +54,8 @@
                     if (
                         !isNull _anchor
                         && {
-                            (_anchor getVariable ["WaldoEcoResource_PubZeusZoneCaptureActionAddedLocalV3_Published", false])
-                            || {_anchor getVariable ["WaldoEcoResource_PubZeusZoneInfoActionAddedLocalV3_Published", false]}
+                            (_anchor getVariable ["WaldoEcoResource_ZeusZoneCaptureActionAddedLocalV3_Published", false])
+                            || {_anchor getVariable ["WaldoEcoResource_ZeusZoneInfoActionAddedLocalV3_Published", false]}
                         }
                     ) then {
                         _anchor setVariable ["WaldoEcoResource_ZoneDeleting", true];
@@ -74,7 +74,7 @@
 
                     [
                         _anchor,
-                        "WaldoEcoResource_PubZeusZoneCaptureActionAddedLocalV4",
+                        "WaldoEcoResource_ZeusZoneCaptureActionAddedLocalV4",
                         [
                             "Capture Resource Area",
                             {
@@ -156,11 +156,11 @@
                             "private _moduleActive = missionNamespace getVariable ['WaldoEcoCore_ModuleActive', true]; private _actor = _this; private _cameraTarget = cameraOn; if (!isNull _cameraTarget) then {if (_cameraTarget isKindOf 'Man') then {if (alive _cameraTarget) then {_actor = _cameraTarget;};};}; private _targetZoneId = _target getVariable ['WaldoEcoResource_ZoneId', '']; private _sideKey = switch (side group _actor) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'NONE'};}; private _ok = false; if (_moduleActive) then {if (_sideKey != 'NONE') then {private _zones = missionNamespace getVariable ['WaldoEcoResource_ResourceZones', []]; {if (!_ok) then {private _zoneId = _x param [0, '']; if (_zoneId == _targetZoneId) then {private _zonePos = _x param [2, [0, 0, 0]]; private _zoneRadius = _x param [3, 0]; if (((getPosATL _actor) distance2D _zonePos) <= _zoneRadius) then {private _ownerSideKey = _x param [5, 'NONE']; if (_ownerSideKey != _sideKey) then {_ok = true;};};};};} forEach _zones;};}; _ok",
                             _actionRadius
                         ]
-                    ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+                    ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
 
                     [
                         _anchor,
-                        "WaldoEcoResource_PubZeusZoneInfoActionAddedLocalV4",
+                        "WaldoEcoResource_ZeusZoneInfoActionAddedLocalV4",
                         [
                             "Display Area Information",
                             {
@@ -235,11 +235,11 @@
                             "private _moduleActive = missionNamespace getVariable ['WaldoEcoCore_ModuleActive', true]; private _actor = _this; private _cameraTarget = cameraOn; if (!isNull _cameraTarget) then {if (_cameraTarget isKindOf 'Man') then {if (alive _cameraTarget) then {_actor = _cameraTarget;};};}; private _targetZoneId = _target getVariable ['WaldoEcoResource_ZoneId', '']; private _ok = false; if (_moduleActive) then {private _zones = missionNamespace getVariable ['WaldoEcoResource_ResourceZones', []]; {if (!_ok) then {private _zoneId = _x param [0, '']; if (_zoneId == _targetZoneId) then {private _zonePos = _x param [2, [0, 0, 0]]; private _zoneRadius = _x param [3, 0]; if (((getPosATL _actor) distance2D _zonePos) <= _zoneRadius) then {_ok = true;};};};} forEach _zones;}; _ok",
                             _actionRadius
                         ]
-                    ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+                    ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
                 } forEach (call Waldo_fnc_EcoResource_getResourceZones);
 
             uiSleep 2;
         };
 
-        missionNamespace setVariable ["WaldoEcoResource_PubZeusZoneActionBridgeStarted", false];
+        missionNamespace setVariable ["WaldoEcoResource_ZeusZoneActionBridgeStarted", false];
     };

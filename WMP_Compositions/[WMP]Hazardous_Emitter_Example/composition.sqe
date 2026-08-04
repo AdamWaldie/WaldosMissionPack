@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_HazardEmitter";
+			init="if (isServer) then {[""composition_hazard"", this, 15, createHashMapFromArray [[""type"", ""TOXIC""], [""label"", ""Toxic Leak""], [""rate"", 2], [""decay"", 0.5], [""notifyTransitions"", true], [""damageThresholds"", [[8, 0.03], [20, 0.08]]], [""fatalExposure"", 45], [""damageType"", ""stab""]]] call Waldo_fnc_HazardRegisterEmitter;};";
+		};
+		id=1;
+		type="Land_GasTank_01_yellow_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Hazardous emitter: 15 m toxic leak with entry/exit warnings, staged injury and fatal exposure. Edit the profile in the object's init field to represent another hazard.";
+		id=2;
+	};
+};

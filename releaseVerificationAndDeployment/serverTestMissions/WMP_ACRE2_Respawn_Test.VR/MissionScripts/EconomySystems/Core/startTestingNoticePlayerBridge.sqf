@@ -25,7 +25,7 @@
                     _x,
                     "WaldoEcoCore_TestingNoticeActionAddedLocalV2",
                     call Waldo_fnc_EcoCore_getTestingNoticeActionArgs
-                ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+                ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
             } forEach allPlayers;
 
             uiSleep 1;

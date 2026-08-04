@@ -32,8 +32,6 @@ import os
 import re
 import sys
 
-from PIL import Image, ImageDraw, ImageFont
-
 # --- Layout calibration (measured against the original 1920x1080 cover image) ---
 TITLE_TEXT = "WALDO'S MISSION PACK"
 TEXT_COLOR = (62, 118, 211)   # steel blue, sampled from the original text
@@ -54,13 +52,15 @@ DEFAULT_DESC = os.path.join(PROJECT_ROOT, "description.ext")
 
 
 def parse_version_from_desc(desc_path):
-    """Extract X.Y[.Z] from the onLoadName field of description.ext."""
+    """Extract the complete safe release tag text from description.ext's onLoadName."""
     try:
         with open(desc_path, "r", encoding="utf-8", errors="replace") as fh:
             text = fh.read()
     except OSError as exc:
         sys.exit("ERROR: cannot read description.ext ({}): {}".format(desc_path, exc))
-    match = re.search(r'onLoadName\s*=\s*"[^"]*v(\d+\.\d+(?:\.\d+)?)"', text)
+    match = re.search(
+        r'onLoadName\s*=\s*"[^"]*v([0-9A-Za-z][0-9A-Za-z._-]*)"', text
+    )
     if not match:
         sys.exit("ERROR: could not parse a version from onLoadName in " + desc_path)
     return match.group(1)
@@ -89,6 +89,13 @@ def main():
     if args.print_version:
         print(version)
         return
+
+    # Pillow is a rendering-only dependency. Keep parsing/importing this helper usable in the
+    # lightweight validator environment, which checks exact tag handling without drawing a cover.
+    try:
+        from PIL import Image, ImageDraw, ImageFont
+    except ImportError as exc:
+        sys.exit("ERROR: Pillow is required to render the loading screen: {}".format(exc))
 
     for path, label in ((args.base, "base image"), (args.font, "font")):
         if not os.path.isfile(path):

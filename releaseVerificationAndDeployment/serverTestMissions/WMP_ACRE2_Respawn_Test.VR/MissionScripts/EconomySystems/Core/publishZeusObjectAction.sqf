@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Publish pub zeus object action.
+ * Publish Zeus object action.
  *
  * Part of the Waldos Economy Systems suite (shared core system).
  *
@@ -15,7 +15,7 @@
  * Nothing
  *
  * Example:
- * [_object, _flagVar, _actionArgs, _target, _useJip] call Waldo_fnc_EcoCore_publishPubZeusObjectAction;
+ * [_object, _flagVar, _actionArgs, _target, _useJip] call Waldo_fnc_EcoCore_publishZeusObjectAction;
  */
 
     params [
@@ -50,7 +50,7 @@
     _object setVariable [_publishedVar, true, true];
 
     if (_useJip) then {
-        private _jipId = [_object, _flagVar] call Waldo_fnc_EcoCore_getPubZeusActionJipId;
+        private _jipId = [_object, _flagVar] call Waldo_fnc_EcoCore_getZeusActionJipId;
         [_object, _flagVar, _actionArgs] remoteExec ["Waldo_fnc_EcoCore_ensureLocalObjectAction", _target, _jipId];
     } else {
         [_object, _flagVar, _actionArgs] remoteExec ["Waldo_fnc_EcoCore_ensureLocalObjectAction", _target];
