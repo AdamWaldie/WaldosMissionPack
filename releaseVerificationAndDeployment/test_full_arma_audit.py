@@ -414,6 +414,9 @@ class FullAuditTests(unittest.TestCase):
             ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2BuildCEOI.sqf"
         ).read_text(encoding="utf-8")
         self.assertIn("_groupId call _normaliseGroupKey", compile_plan)
+        self.assertIn("_autoSources set [_normalisedGroup, _groupId]", compile_plan)
+        self.assertIn('private _matches = _allocationSource regexFind ["[0-9]+"]', compile_plan)
+        self.assertNotIn('private _matches = _groupKey regexFind ["[0-9]+"]', compile_plan)
         self.assertIn("count _assignment >= 2", ceoi)
         self.assertIn("no PRC-343 assignment", ceoi)
         self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)

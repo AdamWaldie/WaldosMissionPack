@@ -41,6 +41,7 @@ private _hashText = {
     private _capacity = _maxBlock * 16;
     private _used = [];
     private _autoKeys = [];
+    private _autoSources = createHashMap;
     private _allocations = createHashMap;
     {
         _x params ["_groupId", "_netKeys", "_fallback343", "_assignments"];
@@ -53,14 +54,19 @@ private _hashText = {
                 _used pushBackUnique (((_fallback343 select 0) - 1) * 16 + (_fallback343 select 1));
                 _allocations set [_groupId call _normaliseGroupKey, +_fallback343];
             } else {
-                _autoKeys pushBack (_groupId call _normaliseGroupKey);
+                private _normalisedGroup = _groupId call _normaliseGroupKey;
+                _autoKeys pushBack _normalisedGroup;
+                // Matching deliberately ignores separators, but PRC-343 shorthand needs the
+                // original callsign so `Viking 2-3` remains two numbers instead of becoming 23.
+                _autoSources set [_normalisedGroup, _groupId];
             };
         };
     } forEach _sourceGroups;
     _autoKeys sort true;
     {
         private _groupKey = _x;
-        private _matches = _groupKey regexFind ["[0-9]+"];
+        private _allocationSource = _autoSources getOrDefault [_groupKey, _groupKey];
+        private _matches = _allocationSource regexFind ["[0-9]+"];
         private _numbers = _matches apply {parseNumber (((_x select 0) select 0))};
         private _candidate = -1;
         if (count _numbers >= 2) then {
@@ -69,7 +75,7 @@ private _hashText = {
             if (_block >= 1 && {_block <= _maxBlock} && {_channel >= 1} && {_channel <= 16}) then {_candidate = (_block - 1) * 16 + _channel};
         };
         if (_candidate < 1 && {count _numbers == 1} && {(_numbers select 0) >= 1} && {(_numbers select 0) <= 16}) then {
-            private _prefixMatches = _groupKey regexFind ["^[^0-9]+"];
+            private _prefixMatches = _allocationSource regexFind ["^[^0-9]+"];
             private _prefix = if (count _prefixMatches > 0) then {((_prefixMatches select 0) select 0) select 0} else {_groupKey};
             _candidate = ([_prefix, _maxBlock] call _hashText) * 16 + (_numbers select 0);
         };
