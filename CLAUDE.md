@@ -60,7 +60,11 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json
 ```
 
-Build config: `releaseVerificationAndDeployment/config.json` defines an explicit `include` allowlist and the output name/version. New repository folders do not ship unless deliberately added. The builder rejects QA/tooling folders and runtime logs before and after archive creation; patch releases use the same allowlist. Output zips land in `release/`. The deploy workflow uploads the main WMP pack, patch, Compositions, and Unit Insignias. The dormant Exemplar build remains available manually but is not currently produced by `deploy.sh`.
+Build config: `releaseVerificationAndDeployment/config.json` defines an explicit `include` allowlist and the output name/version. New repository folders do not ship unless deliberately added. The builder rejects QA/tooling folders and runtime logs before and after archive creation; patch releases use the same allowlist. Output zips land in `release/`. The deploy workflow uploads the main WMP pack, patch, Compositions, Unit Insignias, and the Claude Mission Config Skill. The dormant Exemplar build remains available manually but is not currently produced by `deploy.sh`.
+
+### Claude Mission Config Skill (separate release item)
+
+`.claude/skills/mission-pack-config/` — a Claude Skill (usable with Claude Code or Claude.ai) that guides configuring every WMP feature for a mission. It is **not** included in the main WMP pack build (`config.json` deliberately excludes `.claude`); it ships as its own zip via `releaseVerificationAndDeployment/config_claudeSkill.json` (`scriptName: "Claude Mission Config Skill"`, `include: [".claude", "LICENSE"]`), built in `deploy.sh` alongside the other special builds and uploaded to the release as `Claude_Mission_Config_Skill-<version>.zip`. Unzipping it into a mission project drops `.claude/skills/mission-pack-config/` at that project's root, same layout as this repo. See the wiki's **Claude Mission Config Skill** page for usage with both Claude and ChatGPT, and `.claude/skills/mission-pack-config/SKILL.md` for the skill's own routing logic and per-feature reference files.
 
 ### Full development audit mission
 

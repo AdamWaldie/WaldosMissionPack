@@ -1,0 +1,9 @@
+{
+    "build" : {
+        "scriptName": "Claude Mission Config Skill",
+        "include": [
+            ".claude",
+            "LICENSE"
+        ]
+    }
+}

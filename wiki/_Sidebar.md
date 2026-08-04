@@ -6,6 +6,7 @@
 * [Mission Configuration](Mission-Configuration-Reference)
 * [Feature Configuration Files](Feature-Configuration-Files)
 * [Mission Diagnostics](Mission-Diagnostics)
+* [Claude Mission Config Skill](Claude-Mission-Config-Skill)
 * [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 * [Zeus and Script API Parity](Zeus-And-Script-API-Parity)
 

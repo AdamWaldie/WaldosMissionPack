@@ -50,6 +50,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process
 - Auto-generated cover/loading screen - the title and version are rendered programmatically from description.ext and kept in sync on every push and release.
+- Claude Mission Config Skill - a separate downloadable release item that teaches an AI assistant (Claude or ChatGPT) how to configure every feature in this pack for your mission, with per-feature reference docs and clear guidance on what it can safely edit for you versus what still needs doing by hand in Eden Editor.
 
 
 # QuickStart Guide
