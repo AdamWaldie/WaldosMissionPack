@@ -23,12 +23,16 @@ not replace newer server values already received by a JIP player. Do not move se
 startup into this file: every player would create a competing copy.
 */
 if (hasInterface) then {
-    // Diary records belong to the local player object. Dedicated clients can enter this file before
-    // that object is usable, so install the briefing asynchronously after a bounded readiness wait.
-    [] spawn {
-        private _deadline = diag_tickTime + 30;
-        waitUntil {uiSleep 0.1; !isNull player || {diag_tickTime >= _deadline}};
-        if (!isNull player) then {call Waldo_fnc_AddDocs};
+    // Install briefing records synchronously whenever the player already exists so they are visible
+    // before Continue. The bounded asynchronous path is only a fallback for a genuinely late player.
+    if (!isNull player) then {
+        call Waldo_fnc_AddDocs;
+    } else {
+        [] spawn {
+            private _deadline = diag_tickTime + 30;
+            waitUntil {uiSleep 0.1; !isNull player || {diag_tickTime >= _deadline}};
+            if (!isNull player) then {call Waldo_fnc_AddDocs};
+        };
     };
     [] call Waldo_fnc_ACRE2Init;
     // InfoText marks completion after the fake loading/title presentation. Features may queue

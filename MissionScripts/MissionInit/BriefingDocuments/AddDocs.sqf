@@ -45,6 +45,12 @@ call Waldo_fnc_SQUADPREDOC;
 
 player createDiarySubject ["Player Information","Player Information"];
 call Waldo_fnc_GENINFO;
+
+// CEOI and planned Babel information are briefing documents too. These builders do not wait for
+// live ACRE radio IDs, so enabled ACRE content is visible before the mission starts. Runtime ACRE
+// application replaces the same records later with verified current state.
+[] call Waldo_fnc_ACRE2BuildCEOI;
+[] call Waldo_fnc_ACRE2BuildBabelDiary;
 missionNamespace setVariable ["Waldo_BriefingDocumentsOwner", player];
 diag_log format ["[WMP BRIEFING] Rich briefing documents installed for %1.", name player];
 true

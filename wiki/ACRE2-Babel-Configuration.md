@@ -39,7 +39,12 @@ for a slot-based override to continue matching; use `UID` when identity must fol
 
 When `followPlayerUnit` is true, Babel knowledge and the radio plan are reapplied after a local player-object replacement. When false, no unit-change handler is installed. By default a side change preserves learned languages; set `changeOnSideChange` to `true` only when side membership should redefine knowledge.
 
-The Babel diary record is replaced rather than duplicated. The active wrapper is `Waldo_fnc_BabelActivation`; the previous argument-based implementation remains available only as `Waldo_fnc_BabelActivation_Legacy`.
+When Babel and the main ACRE configuration are enabled, the planned Babel diary record is created
+during briefing setup without waiting for ACRE runtime initialization. Players can therefore read
+their configured languages before pressing Continue. Runtime application later verifies those same
+values through ACRE and replaces the record rather than adding a duplicate. The active wrapper is
+`Waldo_fnc_BabelActivation`; the previous argument-based implementation remains available only as
+`Waldo_fnc_BabelActivation_Legacy`.
 
 <!-- WMP-WIKI-NAV -->
 ---

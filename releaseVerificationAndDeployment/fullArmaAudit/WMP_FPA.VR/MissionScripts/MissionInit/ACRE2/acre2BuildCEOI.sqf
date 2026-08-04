@@ -11,7 +11,15 @@
  * Current callers: Waldo_fnc_ACRE2Init and player-object replacement handling.
  */
 if (!hasInterface || {isNull player}) exitWith {false};
+private _config = missionNamespace getVariable ['Waldo_ACRE2_Config', createHashMap];
+if !(_config getOrDefault ['enabled', true]) exitWith {false};
+if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {false};
 private _plan = missionNamespace getVariable ['Waldo_ACRE2_Plan', []];
+// During the pre-start briefing the server plan may not yet have reached this client. Compilation is
+// pure and deterministic, so a local display-only preview is safe; it is never stored or used to tune.
+if (count _plan < 4 || {(_plan select 0) != 3}) then {
+    _plan = [_config, 0] call Waldo_fnc_ACRE2CompilePlan;
+};
 if (count _plan < 4 || {(_plan select 0) != 3}) exitWith {false};
 private _sideKey = switch (side player) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'}};
 private _sideIndex = (_plan select 2) findIf {(_x select 0) == _sideKey};

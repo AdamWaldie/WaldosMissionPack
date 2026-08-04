@@ -65,22 +65,4 @@ if (!_spokenAccepted || {!_speakingAccepted} || {!_speakingMatches}) exitWith {
 missionNamespace setVariable ['Waldo_ACRE2_BabelSide', _sideKey];
 missionNamespace setVariable ['Waldo_ACRE2_BabelLanguages', +_languages];
 missionNamespace setVariable ['Waldo_ACRE2_BabelSpeaking', _initial];
-private _oldOwner = missionNamespace getVariable ['Waldo_ACRE2_BabelOwner', objNull];
-private _records = +(missionNamespace getVariable ['Waldo_ACRE2_BabelRecords', []]);
-private _legacyRecord = missionNamespace getVariable ['Waldo_ACRE2_BabelRecord', -1];
-if !(_legacyRecord isEqualType 0) then {_records pushBack _legacyRecord};
-{
-    player removeDiaryRecord ['ACRE2', _x];
-    if (!isNull _oldOwner && {_oldOwner != player}) then {_oldOwner removeDiaryRecord ['ACRE2', _x]};
-} forEach _records;
-missionNamespace setVariable ['Waldo_ACRE2_BabelRecords', []];
-if ((missionNamespace getVariable ['Waldo_ACRE2_DiarySubjectOwner', objNull]) != player) then {
-    player createDiarySubject ['ACRE2', 'ACRE2'];
-    missionNamespace setVariable ['Waldo_ACRE2_DiarySubjectOwner', player];
-};
-private _names = _languages apply {private _index = _knownIds find _x; ((_babel get 'languages') select _index) select 1};
-private _record = player createDiaryRecord ['ACRE2', ['Babel', format ['Understood: %1<br/>Speaking: %2', _names joinString ', ', _initial]]];
-missionNamespace setVariable ['Waldo_ACRE2_BabelRecord', _record];
-missionNamespace setVariable ['Waldo_ACRE2_BabelRecords', [_record]];
-missionNamespace setVariable ['Waldo_ACRE2_BabelOwner', player];
-true
+[] call Waldo_fnc_ACRE2BuildBabelDiary

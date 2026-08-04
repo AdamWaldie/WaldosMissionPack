@@ -117,7 +117,9 @@ class CfgFunctions
             class ACRE2CompilePlan {file = "MissionScripts\MissionInit\ACRE2\acre2CompilePlan.sqf";};
             class ACRE2ApplyPlayerPlan {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPlayerPlan.sqf";};
             class ACRE2BuildCEOI {file = "MissionScripts\MissionInit\ACRE2\acre2BuildCEOI.sqf";};
+            class ACRE2BuildBabelDiary {file = "MissionScripts\MissionInit\ACRE2\acre2BuildBabelDiary.sqf";};
             class ACRE2ApplyBabel {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyBabel.sqf";};
+            class ACRE2ReconcileGroupCallsigns {file = "MissionScripts\MissionInit\ACRE2\acre2ReconcileGroupCallsigns.sqf";};
             class BabelActivation {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyBabel.sqf";};
             class ACRE2FilterLoadout {file = "MissionScripts\MissionInit\ACRE2\acre2FilterLoadout.sqf";};
             class ACRE2CaptureRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2CaptureRadioState.sqf";};

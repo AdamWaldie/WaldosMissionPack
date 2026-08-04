@@ -102,6 +102,22 @@ The CEOI is generated from the compiled plan and lists every net's radio-specifi
 
 The full audit mission distributes every supported carried radio among playable squad members, with at least one same-class partner. Its ACRE station tests duplicate radios, independent ears, named non-channel-1 assignments, PRC-77/SEM70 requests, filtered loadout respawn, Babel and preserved extra radios. Legacy functions remain manual emergency fallbacks only.
 
+## Group callsign fallback
+
+ACRE assignments match the group's live `groupId`, not merely the text shown in an Eden unit slot.
+WMP therefore checks the group leader's role description on the server before compiling the radio
+plan. If it contains an explicit suffix such as:
+
+```text
+Squad Leader@VIKING-1-1
+```
+
+WMP globally sets that group's callsign to `VIKING-1-1` and verifies the read-back. This covers the
+case where CBA's Eden callsign attribute did not survive mission startup. It is only a fallback:
+groups without `@Callsign` are left unchanged, and duplicate or empty suffixes are rejected and
+written to the RPT. Put the suffix on the **group leader**, and keep it identical to the group key in
+`MissionConfig\acreConfig.sqf`.
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

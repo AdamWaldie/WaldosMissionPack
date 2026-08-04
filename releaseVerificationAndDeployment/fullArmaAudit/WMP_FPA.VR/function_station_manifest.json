@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 841,
+  "registeredFunctionCount": 843,
   "runtimeFunctionCount": 385,
-  "functionCount": 1226,
+  "functionCount": 1228,
   "stations": [
     {
       "id": "control",
@@ -639,8 +639,20 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ACRE2BuildBabelDiary",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2BuildBabelDiary.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ACRE2ApplyBabel",
       "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyBabel.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ReconcileGroupCallsigns",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ReconcileGroupCallsigns.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
