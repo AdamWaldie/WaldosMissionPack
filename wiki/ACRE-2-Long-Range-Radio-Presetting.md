@@ -73,19 +73,19 @@ A group is `[editor group ID, assignment rows]`. Every radio uses
 [
     "VIKING-2-3", // 0: groupId set for this squad in Eden Editor.
     [               // 1: [class, ALL/occurrence, net or direct value, ear].
-        ["ACRE_PRC343", "ALL", [2, 3], "LEFT"],
+        ["ACRE_PRC343", 1, [2, 3], "LEFT"],
         ["ACRE_PRC343", 2, [2, 4], "RIGHT"],
         ["ACRE_PRC148", "ALL", "PLT1", "RIGHT"],
-        ["ACRE_PRC152", "ALL", "PLT1", "RIGHT"],
+        ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
         ["ACRE_PRC152", 2, "AIRGND", "LEFT"],
         ["ACRE_PRC117F", "ALL", "PLT1", "BOTH"]
     ]
 ]
 ```
 
-`ALL` is the readable class default. A one-based numbered row wins for that occurrence and is skipped
-when absent. The same rule covers multiple PRC-343s and their ears. A radio class with neither an
-`ALL` nor numbered row remains untouched; there is no hidden priority or next-compatible-net behavior.
+`ALL` is the readable choice when every carried radio of that class is identical. When duplicates
+differ, number every intended occurrence (`1`, `2`, and so on). Do not combine `ALL` and numbered
+rows for one class; validation rejects that ambiguity. Missing numbered occurrences are simply skipped.
 
 `LEFT`, `RIGHT` and `BOTH`/`CENTER` are independent per occurrence. A PRC-343 assignment target of
 `[]` requests deterministic callsign allocation. Two valid numeric callsign components are interpreted
@@ -93,8 +93,8 @@ as block/channel; otherwise WMP hashes the callsign and probes collisions determ
 
 ## Side-scoped player overrides
 
-Overrides are `[side, selector, mode, assignments]`. `MERGE` replaces matching
-`[class, ALL/occurrence]` identities while retaining other rows. `REPLACE` discards the group rows.
+Overrides are `[side, selector, mode, assignments]`. `MERGE` accepts readable `ALL` rows and retains
+the rest of the group plan. When duplicate radios differ, use `REPLACE` with the complete numbered list.
 
 ```sqf
 ["WEST", ["ROLE", "JTAC"], "MERGE", [
@@ -136,10 +136,10 @@ WMP therefore checks the group leader's role description on the server before co
 plan. If it contains an explicit suffix such as:
 
 ```text
-Squad Leader@VIKING-1-1
+Squad Leader@VIKING 2-3
 ```
 
-WMP globally sets that group's callsign to `VIKING-1-1` and verifies the read-back. This covers the
+WMP globally sets that group's callsign to `VIKING 2-3` and verifies the read-back. This covers the
 case where CBA's Eden callsign attribute did not survive mission startup. It is only a fallback:
 groups without `@Callsign` are left unchanged, and duplicate or empty suffixes are rejected and
 written to the RPT. Put the suffix on the **group leader**, and keep it identical to the group key in

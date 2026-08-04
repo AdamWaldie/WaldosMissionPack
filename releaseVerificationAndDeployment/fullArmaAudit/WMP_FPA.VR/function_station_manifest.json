@@ -413,6 +413,16 @@
         0
       ],
       "description": "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."
+    },
+    {
+      "id": "compositions",
+      "title": "EDEN COMPOSITION CATALOGUE",
+      "position": [
+        350,
+        40,
+        0
+      ],
+      "description": "Every shipped composition classname, addon declaration, init call and wiki-linked editor guide."
     }
   ],
   "functions": [

@@ -33,6 +33,12 @@ Mission Systems and Mission Tools so Eden does not present one undifferentiated 
   fatal exposure. Its inline profile is deliberately visible so it can be rewritten for scenario RP.
 - **Tactical Display Example:** a supported map board that opens the client Tactical Display. It
   follows the viewer's side, uses a 2000 m radius and may show known enemy contacts.
+- **Loadout Save Point Example:** a laptop with both the ACE interaction and WMP-blue vanilla action;
+  the save includes supported ACRE radio state and is restored for that player only.
+- **Explosive Wall Breaching Example:** an explicit 8 m wall profile whose demolition-charge result
+  leaves two 4 m sections and a clearly visible central gap.
+- **Emergency Dismount Vehicle Example:** an upright, simulated MRAP that enables the feature without
+  risking a startup collision; overturn or destroy it during play to expose the action.
 
 ## Locality rule
 
@@ -48,9 +54,12 @@ guidance from inside Eden.
 
 ## Why some features have no composition
 
-Generated AO/AA systems, player accessibility, treatment feedback, persistence, UI themes, rally
-state and automatic AI handlers do not become clearer or safer when represented by a decorative
-Eden object. Use their `MissionConfig` settings, public setup call or focused Zeus module instead.
+Generated AO/AA systems, airborne gunships and dynamic drop zones must be created once by the server;
+an Eden init runs on every machine, so their safe beginner path is `initServer.sqf` or Zeus rather
+than a misleading composition. Player accessibility, treatment feedback, persistence, UI themes,
+rally state, terrain-tree felling and automatic AI handlers likewise do not become clearer or safer
+when represented by a decorative Eden object. Use their `MissionConfig` settings, documented public
+setup call, full audit station or focused Zeus module instead.
 
 <!-- WMP-WIKI-NAV -->
 ---

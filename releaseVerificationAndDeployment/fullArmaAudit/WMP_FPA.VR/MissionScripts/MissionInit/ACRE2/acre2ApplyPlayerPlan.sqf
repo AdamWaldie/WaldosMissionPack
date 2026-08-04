@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Applies the current server plan to supported local carried radios. A unified ALL row applies to
- * every carried occurrence of its class; a numbered occurrence row overrides it. This includes
+ * every carried occurrence of its class; alternatively, numbered rows configure differing duplicate
+ * radios. Validation prevents mixing those two styles for one class. This includes
  * PRC-343 block/channel and ear settings. Absent occurrences are skipped. Unlisted,
  * unsupported and captured radios are preserved. Named nets contain one family-scoped value rather
  * than per-radio tunings. Frequency requests use ACRE's asynchronous public
@@ -96,8 +97,8 @@ private _signature = format ["%1|%2|%3|%4|%5", _plan select 1, _sideKey, _groupK
 if (!_force && {(missionNamespace getVariable ["Waldo_ACRE2_AppliedSignature", ""]) == _signature}) exitWith {true};
 
 private _resolved = [];
-// A numbered occurrence wins over the readable ALL rule for the same physical radio class.
-// Radios without either rule remain untouched.
+// Validated plans use ALL or numbered rows for a class, never both. Checking the exact occurrence
+// first keeps lookup deterministic. Radios without either style remain untouched.
 private _typeCounts = createHashMap;
 {
     private _radioId = _x;

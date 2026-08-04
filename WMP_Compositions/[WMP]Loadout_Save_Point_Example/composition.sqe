@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_LoadoutSavePoint";
+			init="[this] call Waldo_fnc_ZenAddLoadoutSaveAction;";
+		};
+		id=1;
+		type="Land_Laptop_unfolded_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-3};};
+		title="Loadout Save Point: installs the blue vanilla action and ACE interaction locally for every player and JIP client. The saved loadout includes supported ACRE radio state. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Loadout-Saving-and-Respawn";
+		id=2;
+	};
+};

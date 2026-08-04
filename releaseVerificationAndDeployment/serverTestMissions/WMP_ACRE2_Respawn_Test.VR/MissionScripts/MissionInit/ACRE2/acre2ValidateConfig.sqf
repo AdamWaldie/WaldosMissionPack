@@ -141,10 +141,20 @@ private _validateAssignment = {
                 _groupKeys pushBack _groupKey;
                 private _identities = [];
                 private _group343Slots = [];
+                private _allClasses = [];
+                private _numberedClasses = [];
                 {
                     private _scope = _x param [1, 0];
                     if (_scope isEqualType "") then {_scope = toUpper _scope};
-                    private _identity = format ["%1#%2", toUpper (_x param [0, ""]), _scope];
+                    private _class = toUpper (_x param [0, ""]);
+                    if (_scope isEqualType "" && {_scope == "ALL"}) then {
+                        if (_class in _numberedClasses) then {_errors pushBack format ["%1/%2 mixes ALL and numbered rows for %3; use ALL alone or number every occurrence.", _sideKey, _groupKey, _class]};
+                        _allClasses pushBackUnique _class;
+                    } else {
+                        if (_class in _allClasses) then {_errors pushBack format ["%1/%2 mixes ALL and numbered rows for %3; use ALL alone or number every occurrence.", _sideKey, _groupKey, _class]};
+                        _numberedClasses pushBackUnique _class;
+                    };
+                    private _identity = format ["%1#%2", _class, _scope];
                     if (_identity in _identities) then {_errors pushBack format ["%1/%2 duplicates %3.", _sideKey, _groupKey, _identity]};
                     _identities pushBack _identity;
                     [_x, format ["%1/%2/%3", _sideKey, _groupKey, _identity], _netMap, _maxBlock, true] call _validateAssignment;
@@ -176,6 +186,7 @@ private _validateAssignment = {
         if (count _data == 0) then {_errors pushBack format ["Override references unknown side %1.", _sourceSide]} else {
             if !(toUpper (_selector select 0) in ["UID", "VARIABLE", "ROLE"]) then {_errors pushBack format ["Invalid override selector %1.", _selector select 0]};
             if !(toUpper _mode in ["MERGE", "REPLACE"]) then {_errors pushBack format ["Override mode must be MERGE or REPLACE, not %1.", _mode]};
+            if (toUpper _mode == "MERGE" && {_assignments findIf {!((_x param [1, 0]) isEqualType "" && {toUpper (_x select 1) == "ALL"})} >= 0}) then {_errors pushBack "MERGE radio overrides may use only ALL rows; use REPLACE with a complete numbered list when duplicate radios differ."};
             {[_x, format ["override %1/%2", _sideKey, _selector select 1], _data select 0, _data select 1] call _validateAssignment} forEach _assignments;
         };
     };

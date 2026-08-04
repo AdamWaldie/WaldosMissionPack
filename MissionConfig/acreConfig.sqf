@@ -51,16 +51,16 @@
  * GROUPS AND RADIO ASSIGNMENTS
  * A group is [editor group ID, assignment rows]. Every radio uses the same assignment shape:
  * [base class, "ALL" or same-type occurrence, target, ear]. "ALL" is the readable default for every
- * carried radio of that class. A numbered row wins for only that occurrence, so occurrence 2 can put
- * a second PRC-152 on another net/ear. PRC-343 is no longer a disconnected group field: its target is
+ * carried radio of that class. When duplicate radios differ, use numbered rows for each one instead;
+ * never combine ALL and numbered rows for the same class. PRC-343 is no longer a disconnected group field: its target is
  * [block,channel], and [] asks WMP to infer the slot from the callsign. LEFT, RIGHT and BOTH/CENTER
  * work independently on every radio, including multiple PRC-343s. PTT, volume and speaker settings
  * remain player-owned. A radio without a matching ALL or numbered row is preserved unchanged.
  *
  * OVERRIDES
  * radioOverrides entries are [side, [UID|VARIABLE|ROLE, value], MERGE|REPLACE, assignments]. MERGE
- * replaces matching [class, ALL/occurrence] rows and preserves the rest. REPLACE discards the
- * group's rows before applying the player/role rows.
+ * replaces matching ALL rows and preserves the rest. Numbered exceptions use REPLACE with a complete
+ * explicit radio list, avoiding a hidden ALL-versus-number precedence rule.
  * Side scoping prevents a net from another side being accepted accidentally.
  *
  * ADVANCED EXTENSION
@@ -83,7 +83,8 @@
  * WORKED EXAMPLES:
  * `['PLT1','PLATOON 1','PRC_LR',2]` means the one PLATOON 1 value is channel 2 for compatible
  * PRC-148/152/117F radios. `['ACRE_PRC152','ALL','PLT1','RIGHT']` puts every carried 152 on PLT1
- * in the right ear. `['ACRE_PRC152',2,'AIRGND','LEFT']` changes only the second 152. A PRC-343 target
+ * in the right ear. To make two 152s differ, use occurrence 1 for PLT1 and occurrence 2 for AIRGND
+ * instead of ALL. A PRC-343 target
  * `[2,3]` explicitly means Block 2, Channel 3; `[]` asks WMP to infer it from a
  * callsign such as Viking 2-3, otherwise WMP uses deterministic collision-safe allocation.
  *
@@ -187,13 +188,13 @@ createHashMapFromArray [
             ],
             [ // 3: GROUPS. Each row is [editor groupId, assignment rows].
                 [
-                    "VIKING-1-1", // matches common separator/capitalisation variants.
+                    "VIKING 2-3", // TestMission squad; matches common separator/capitalisation variants.
                     [ // [radio class, "ALL" or occurrence number, net/direct value, LEFT/RIGHT/BOTH].
-                        ["ACRE_PRC343", "ALL", [1, 1], "LEFT"], // every 343: Block 1/Ch 1, left ear. Use [] for callsign inference.
-                        ["ACRE_PRC343", 2, [1, 2], "RIGHT"],    // second 343 only: Block 1/Ch 2, right ear.
+                        ["ACRE_PRC343", 1, [2, 3], "LEFT"],     // first 343: Block 2/Ch 3, left ear. Use [] for callsign inference.
+                        ["ACRE_PRC343", 2, [2, 4], "RIGHT"],    // second 343: Block 2/Ch 4, right ear.
                         ["ACRE_PRC148", "ALL", "PLT1", "RIGHT"],
-                        ["ACRE_PRC152", "ALL", "PLT1", "RIGHT"],
-                        ["ACRE_PRC152", 2, "AIRGND", "LEFT"], // second 152 overrides ALL.
+                        ["ACRE_PRC152", 1, "PLT1", "RIGHT"],  // first 152.
+                        ["ACRE_PRC152", 2, "AIRGND", "LEFT"], // second 152.
                         ["ACRE_PRC117F", "ALL", "PLT1", "BOTH"],
                         ["ACRE_BF888S", "ALL", "BF_HANDHELD", "LEFT"],
                         ["ACRE_SEM52SL", "ALL", "SEM_HANDHELD", "LEFT"],
@@ -201,9 +202,9 @@ createHashMapFromArray [
                         ["ACRE_SEM70", "ALL", "VHF_COMMON", "RIGHT"]
                     ]
                 ],
-                ["VIKING 5", [["ACRE_PRC343", "ALL", [], "LEFT"], ["ACRE_PRC152", "ALL", "COY", "RIGHT"], ["ACRE_PRC117F", "ALL", "COY", "BOTH"], ["ACRE_PRC152", 2, "AIRGND", "LEFT"]]],
+                ["VIKING 2-7", [["ACRE_PRC343", 1, [2, 7], "LEFT"], ["ACRE_PRC152", 1, "COY", "RIGHT"], ["ACRE_PRC152", 2, "AIRGND", "LEFT"], ["ACRE_PRC117F", "ALL", "COY", "BOTH"]]],
                 ["VIKING 3.2", [["ACRE_PRC343", "ALL", [], "LEFT"], ["ACRE_PRC148", "ALL", "PLT3", "RIGHT"], ["ACRE_PRC152", "ALL", "PLT3", "RIGHT"]]],
-                ["BANSHEE", [["ACRE_PRC343", "ALL", [], "LEFT"], ["ACRE_PRC148", "ALL", "AIRGND", "RIGHT"], ["ACRE_PRC152", "ALL", "AIRGND", "RIGHT"], ["ACRE_PRC152", 2, "AIR", "LEFT"]]]
+                ["BANSHEE", [["ACRE_PRC343", "ALL", [], "LEFT"], ["ACRE_PRC148", "ALL", "AIRGND", "RIGHT"], ["ACRE_PRC152", 1, "AIRGND", "RIGHT"], ["ACRE_PRC152", 2, "AIR", "LEFT"]]]
             ]
         ],
         [

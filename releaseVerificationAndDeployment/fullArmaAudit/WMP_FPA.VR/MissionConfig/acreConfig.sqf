@@ -18,9 +18,9 @@ private _westIndex = _sides findIf {toUpper (_x select 0) == 'WEST'};
 if (_westIndex >= 0) then {
     private _west = _sides select _westIndex;
     private _groups = _west select 3;
-    private _groupIndex = _groups findIf {toUpper (_x select 0) == 'VIKING-1-1'};
+    private _groupIndex = _groups findIf {toUpper (_x select 0) == 'VIKING 2-3'};
     if (_groupIndex >= 0) then {
-        (_groups select _groupIndex) set [3, [
+        (_groups select _groupIndex) set [1, [
             ['ACRE_PRC343', 1, [7, 13], 'LEFT'],
             ['ACRE_PRC152', 1, 'CAS2', 'RIGHT'],
             ['ACRE_PRC148', 1, 'CFF1', 'BOTH']

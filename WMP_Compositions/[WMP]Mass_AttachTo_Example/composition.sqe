@@ -2,7 +2,7 @@ version=54;
 center[]={23331.543,3.1900001,18949.701};
 class items
 {
-	items=1;
+	items=2;
 	class Item0
 	{
 		dataType="Layer";
@@ -80,5 +80,12 @@ class items
 		};
 		id=115;
 		atlOffset=-24.966003;
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-5};};
+		title="Mass AttachTo Example: synchronised decorative parts are converted to vehicle-relative attachments. Keep the vehicle and parts separated while editing so simulation settles safely. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Simple-Mass-Attach-Items";
+		id=10115;
 	};
 };

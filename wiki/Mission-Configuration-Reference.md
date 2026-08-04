@@ -268,9 +268,9 @@ Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing
 
 A net is `[key, label, radio family, one value]`; it never contains separate per-radio channels. A
 group is `[group ID, assignment rows]`, and every assignment is
-`[base class, "ALL" or same-type occurrence, target, ear]`. `ALL` configures every carried radio of
-that class; a numbered row overrides one physical occurrence. This includes PRC-343 block/channel
-and ear setup. Missing occurrences are skipped and unconfigured radios are preserved.
+`[base class, "ALL" or same-type occurrence, target, ear]`. Use `ALL` only when every radio of that
+class is identical. If duplicate radios differ, number every intended occurrence; combining `ALL`
+and numbered rows for one class is rejected. This includes PRC-343 block/channel and ear setup.
 
 ### ACRE2 Long-Range Channel Names (CEOI)
 
@@ -280,9 +280,9 @@ and ear setup. Missing occurrences are skipped and unconfigured radios are prese
     ["AIRGND", "AIR-GND", "PRC_LR", 6]
 ], [
     ["VIKING-2-3", [
-        ["ACRE_PRC343", "ALL", [2, 3], "LEFT"],
+        ["ACRE_PRC343", 1, [2, 3], "LEFT"],
         ["ACRE_PRC148", "ALL", "PLT1", "RIGHT"],
-        ["ACRE_PRC152", "ALL", "PLT1", "RIGHT"],
+        ["ACRE_PRC152", 1, "PLT1", "RIGHT"],
         ["ACRE_PRC152", 2, "AIRGND", "LEFT"]
     ]]
 ]]

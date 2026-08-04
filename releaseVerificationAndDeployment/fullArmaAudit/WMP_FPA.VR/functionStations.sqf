@@ -40,5 +40,6 @@ missionNamespace setVariable ["Waldo_QA_FunctionStations", [
     ["dynamic-paradrop", "DYNAMIC PARADROP", [300, 40, 0], "Server-owned DZ route, timed jumpers, operational markers and teardown.", ["Waldo_fnc_ParadropCreateDropZone", "Waldo_fnc_ParadropDropZoneZen", "Waldo_fnc_ParadropRemoveDropZone"]],
     ["ai-helicopter-landing", "AI HELICOPTER LANDING", [325, 40, 0], "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior.", []],
     ["ui-theme-qa", "UI THEME QA", [325, 0, 0], "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching.", []],
-    ["dynamic-ao", "DYNAMIC AO", [350, 0, 0], "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup.", []]
+    ["dynamic-ao", "DYNAMIC AO", [350, 0, 0], "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup.", []],
+    ["compositions", "EDEN COMPOSITION CATALOGUE", [350, 40, 0], "Every shipped composition classname, addon declaration, init call and wiki-linked editor guide.", []]
 ], true];

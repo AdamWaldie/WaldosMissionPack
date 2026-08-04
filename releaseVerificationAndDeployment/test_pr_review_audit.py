@@ -212,7 +212,7 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertNotIn(f'this addItemToBackpack ""{unsupported_test_radio}""', mission)
         commander = mission.split('class Item0 {', 1)[1].split('class Item1 {', 1)[0]
         self.assertNotIn('this linkItem ""ItemRadio""', commander)
-        self.assertIn('(group this) setGroupIdGlobal [""VIKING-1-1""]', commander)
+        self.assertIn('(group this) setGroupIdGlobal [""VIKING 2-3""]', commander)
 
     def test_pr_audit_acre_example_uses_release_framework_and_three_playable_radios(self):
         source = (

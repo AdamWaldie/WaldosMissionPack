@@ -140,7 +140,9 @@ class FullAuditTests(unittest.TestCase):
             "Waldo_fnc_HazardRegisterEmitter",
         }
         folders = [path for path in root.iterdir() if path.is_dir()]
-        self.assertGreaterEqual(len(folders), 25)
+        self.assertGreaterEqual(len(folders), 34)
+        catalogue_types = set()
+        catalogue_addons = set()
         for folder in folders:
             header_path = folder / "header.sqe"
             composition_path = folder / "composition.sqe"
@@ -149,16 +151,51 @@ class FullAuditTests(unittest.TestCase):
             header = header_path.read_text(encoding="utf-8")
             composition = composition_path.read_text(encoding="utf-8")
             self.assertIn('author="WaldoTheWarfighter";', header, folder.name)
+            self.assertIn('name="[WMP]', header, folder.name)
+            self.assertTrue(folder.name.startswith("[WMP]"), folder.name)
             category = re.search(r'^category="([^"]+)";', header, flags=re.MULTILINE)
             self.assertIsNotNone(category, folder.name)
             self.assertIn(category.group(1), allowed_categories, folder.name)
             self.assertEqual(composition.count("{"), composition.count("}"), folder.name)
-            if 'dataType="Comment"' in composition:
-                self.assertIn(
-                    "https://github.com/AdamWaldie/WaldosMissionPack/wiki/",
-                    composition,
-                    f"{folder.name}: Eden feature comments must link their wiki article",
+            comment_count = composition.count('dataType="Comment"')
+            wiki_link_count = composition.count(
+                "https://github.com/AdamWaldie/WaldosMissionPack/wiki/"
+            )
+            self.assertGreater(comment_count, 0, f"{folder.name}: missing Eden guidance comment")
+            self.assertGreaterEqual(
+                wiki_link_count,
+                comment_count,
+                f"{folder.name}: every Eden feature comment must link its wiki article",
+            )
+            ids = [int(value) for value in re.findall(r"^\s*id=(\d+);", composition, re.MULTILINE)]
+            self.assertEqual(len(ids), len(set(ids)), f"{folder.name}: duplicate Eden entity id")
+            types = re.findall(r'^\s*type="([^"]+)";', composition, re.MULTILINE)
+            catalogue_types.update(value for value in types if value not in {"Move", "Cycle", "Sync"})
+            addon_block = re.search(r"requiredAddons\[\]\s*=\s*\{([^}]*)\}", header)
+            if addon_block:
+                catalogue_addons.update(re.findall(r'"([^"]+)"', addon_block.group(1)))
+            self.assertTrue(all(types), f"{folder.name}: blank entity classname")
+            for forbidden_prefix in ("rhs_", "RHS_", "CUP_", "cup_"):
+                self.assertFalse(
+                    any(value.startswith(forbidden_prefix) for value in types),
+                    f"{folder.name}: release composition must not silently require {forbidden_prefix} content",
                 )
+            init_values = re.findall(r'\binit="((?:""|[^"])*)";', composition)
+            for index, encoded_init in enumerate(init_values):
+                decoded_init = encoded_init.replace('""', '"')
+                with tempfile.NamedTemporaryFile(
+                    mode="w", suffix=".sqf", encoding="utf-8", delete=False
+                ) as temporary:
+                    temporary.write(decoded_init)
+                    temporary_path = Path(temporary.name)
+                try:
+                    self.assertEqual(
+                        0,
+                        SQF_VALIDATOR.check_sqf_syntax(temporary_path),
+                        f"{folder.name}: invalid SQF in Eden init field {index + 1}",
+                    )
+                finally:
+                    temporary_path.unlink(missing_ok=True)
             for function_name in set(re.findall(r"Waldo_fnc_[A-Za-z0-9_]+", composition)):
                 short_name = function_name.removeprefix("Waldo_fnc_")
                 self.assertRegex(functions, rf"class\s+{re.escape(short_name)}\b", folder.name)
@@ -172,6 +209,17 @@ class FullAuditTests(unittest.TestCase):
                         all("isServer" not in row for row in init_rows),
                         f"{folder.name}: {function_name} must own locality inside its public API",
                     )
+        qa_source = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "compositionCatalogueQA.sqf"
+        ).read_text(encoding="utf-8")
+        class_block = qa_source.split("private _declaredAddons", 1)[0]
+        addon_block = qa_source.split("private _declaredAddons", 1)[1].split("];", 1)[0]
+        self.assertEqual(catalogue_types, set(re.findall(r'"([A-Za-z0-9_]+)"', class_block)))
+        self.assertEqual(catalogue_addons, set(re.findall(r'"([A-Za-z0-9_]+)"', addon_block)))
         catalogue = (root / "README.md").read_text(encoding="utf-8")
         self.assertIn("Features intentionally without compositions", catalogue)
         self.assertIn("Vehicle Recovery Workshop Example", catalogue)
@@ -180,6 +228,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Bomb Defusal Example", catalogue)
         self.assertIn("Electronic Warfare Examples", catalogue)
         self.assertIn("Custom 3D Marker Example", catalogue)
+        self.assertIn("Loadout Save Point Example", catalogue)
+        self.assertIn("Explosive Wall Breaching Example", catalogue)
+        self.assertIn("Emergency Dismount Vehicle Example", catalogue)
 
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
@@ -696,14 +747,17 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 12, [], "SEM52"]', profiles)
         self.assertGreaterEqual(acre_config.count('"VHF_COMMON"'), 3)
         self.assertIn('["VHF_COMMON", "VHF COMMON", "LEGACY_VHF", 51.000]', acre_config)
-        self.assertIn('["ACRE_PRC343", "ALL", [1, 1], "LEFT"]', acre_config)
-        self.assertIn('["ACRE_PRC343", 2, [1, 2], "RIGHT"]', acre_config)
-        self.assertIn('A numbered occurrence wins over the readable ALL rule', apply_plan)
+        self.assertIn('["ACRE_PRC343", 1, [2, 3], "LEFT"]', acre_config)
+        self.assertIn('["ACRE_PRC343", 2, [2, 4], "RIGHT"]', acre_config)
+        self.assertIn('["VIKING 2-7", [["ACRE_PRC343", 1, [2, 7], "LEFT"]', acre_config)
+        self.assertIn('Validated plans use ALL or numbered rows for a class, never both', apply_plan)
         self.assertIn('toUpper str (_x select 1) == "ALL"', apply_plan)
         self.assertIn('toUpper (_net select 2) == toUpper (_profile select 5)', apply_plan)
         self.assertIn('expected [key, display name, radio family, one value]', validate_config)
         self.assertIn('channel %3 is outside this radio\'s supported range 1-%4', validate_config)
         self.assertIn('net family %4 does not match radio family %5', validate_config)
+        self.assertIn('mixes ALL and numbered rows for %3', validate_config)
+        self.assertIn('MERGE radio overrides may use only ALL rows', validate_config)
         self.assertIn('value %3 is unsupported by every radio in family %4', validate_config)
         self.assertIn('_familyProfiles findIf {[_value, _x, _netMax343Block] call _profileAcceptsValue}', validate_config)
         self.assertIn('_channel <= ((_profiles select _profileIndex) select 3)', labels)
@@ -772,7 +826,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('(group this) setGroupIdGlobal', builder)
         self.assertIn('text="{loadout["name"]}"', builder)
         audit_preinit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditPreInitServer.sqf").read_text(encoding="utf-8")
-        self.assertIn('setGroupIdGlobal ["VIKING-1-1"]', audit_preinit)
+        self.assertIn('setGroupIdGlobal ["VIKING 2-3"]', audit_preinit)
         audit_acre = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditAcreConfig.sqf").read_text(encoding="utf-8")
         self.assertIn("['common', 'Common'], ['en', 'English'], ['ru', 'Russian'], ['fr', 'French'], ['ar', 'Arabic']", audit_acre)
         self.assertIn("['ACRE_PRC343', 1, [7, 13], 'LEFT']", audit_acre)
