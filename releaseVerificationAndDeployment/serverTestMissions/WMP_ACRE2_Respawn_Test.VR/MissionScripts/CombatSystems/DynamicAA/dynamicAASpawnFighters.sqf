@@ -24,11 +24,22 @@ private _centre = _config get "centre";
 private _radius = _config get "radius";
 private _side = _config get "side";
 private _fighterClasses = _config getOrDefault ["fighterClasses", [_config getOrDefault ["fighterClass", "O_Plane_Fighter_02_F"]]];
+private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
 
+// Fighters in a wave are spread around the spawn ring on distinct angles (not independent random
+// angles, which can coincide closely enough to collide) and converge on distinct points around the
+// centre rather than the exact same waypoint, so a multi-fighter wave cannot pile up on one spot.
+private _angleStep = 360 / (_count max 1);
+private _baseAngle = random 360;
 for "_i" from 1 to _count do {
-    private _fighterClass = selectRandom _fighterClasses;
-    private _spawn2D = _centre getPos [_radius * (_config getOrDefault ["fighterSpawnRangeMultiplier", 2]), random 360];
-    private _height = (_config getOrDefault ["fighterSpawnAltitude", 1000]) + ((_i - 1) * 40);
+    private _fighterClass = if (count _fighterAssignments == _count) then {
+        _fighterAssignments select (_i - 1)
+    } else {
+        selectRandom _fighterClasses
+    };
+    private _angle = _baseAngle + ((_i - 1) * _angleStep);
+    private _spawn2D = _centre getPos [_radius * (_config getOrDefault ["fighterSpawnRangeMultiplier", 2]), _angle];
+    private _height = (_config getOrDefault ["fighterSpawnAltitude", 1000]) + ((_i - 1) * 60);
     private _spawnPosition = [_spawn2D select 0, _spawn2D select 1, _height];
     private _fighter = createVehicle [_fighterClass, _spawnPosition, [], 0, "FLY"];
     _fighter setPosATL _spawnPosition;
@@ -40,20 +51,26 @@ for "_i" from 1 to _count do {
     private _group = createGroup _side;
     (crew _fighter) joinSilent _group;
     {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
-    _group setBehaviourStrong "COMBAT";
-    _group setCombatMode "RED";
-    {_group reveal [_x, 4]} forEach _detectedAircraft;
-    private _waypoint = _group addWaypoint [_centre, 0];
-    _waypoint setWaypointType "SAD";
+    private _approachPoint = if (_count > 1) then {_centre getPos [60, _angle + 180]} else {_centre};
+    private _waypoint = _group addWaypoint [_approachPoint, 0];
+    // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.
+    _waypoint setWaypointType "MOVE";
     _waypoint setWaypointBehaviour "COMBAT";
     _waypoint setWaypointCombatMode "RED";
     _waypoint setWaypointSpeed "FULL";
+    [_group, true, _detectedAircraft] call Waldo_fnc_DynamicAASetGroupState;
     private _objects = _state get "objects";
     _objects pushBack _fighter;
     _state set ["objects", _objects];
     private _groups = _state get "groups";
     _groups pushBackUnique _group;
     _state set ["groups", _groups];
+    private _defenceGroups = _state getOrDefault ["defenceGroups", []];
+    _defenceGroups pushBackUnique _group;
+    _state set ["defenceGroups", _defenceGroups];
+    private _editableObjects = [_fighter];
+    {_editableObjects pushBackUnique _x} forEach units _group;
+    {_x addCuratorEditableObjects [_editableObjects, true]} forEach allCurators;
 };
 _state set ["fightersScrambled", true];
 _state set ["fighterWaves", (_state getOrDefault ["fighterWaves", 0]) + 1];

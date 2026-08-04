@@ -28,16 +28,26 @@ if !(local _group) exitWith {
     true
 };
 
+private _eligibleTargets = _targets select {!isNull _x && {alive _x} && {_x isKindOf "Air"}};
+
 {
     if (_active) then {
         _x enableAI "TARGET";
-        _x enableAI "AUTOTARGET";
+        // Strict detector ownership: ordinary Arma auto-targeting would allow the crew to acquire
+        // low aircraft and ground units after one eligible aircraft activated the site. AUTOTARGET
+        // alone is not enough - AUTOCOMBAT lets a unit independently decide to engage a perceived
+        // threat (a below-floor aircraft it can see, or ground infantry suppressing it) without ever
+        // being doTarget-assigned to it, so it must be disabled alongside AUTOTARGET.
+        _x disableAI "AUTOTARGET";
+        _x disableAI "AUTOCOMBAT";
         _x enableAI "WEAPONAIM";
         _x enableAI "SUPPRESSION";
     } else {
         _x doTarget objNull;
+        _x doWatch objNull;
         _x disableAI "TARGET";
         _x disableAI "AUTOTARGET";
+        _x disableAI "AUTOCOMBAT";
         _x disableAI "WEAPONAIM";
         _x disableAI "SUPPRESSION";
     };
@@ -47,6 +57,12 @@ _group enableAttack _active;
 _group setCombatMode (["BLUE", "RED"] select _active);
 _group setBehaviourStrong (["SAFE", "COMBAT"] select _active);
 if (_active) then {
-    {_group reveal [_x, 4]} forEach (_targets select {!isNull _x});
+    {_group reveal [_x, 4]} forEach _eligibleTargets;
+    private _targetCount = count _eligibleTargets;
+    if (_targetCount > 0) then {
+        {
+            _x doTarget (_eligibleTargets select (_forEachIndex mod _targetCount));
+        } forEach units _group;
+    };
 };
 true
