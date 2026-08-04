@@ -36,6 +36,31 @@
  * third field means the server owns the value and broadcasts later changes; it is not another
  * enable switch. These settings configure the EW service only. A jammer object must still be
  * registered or created, and its own range/power/frequency settings remain object-specific.
+ *
+ * SETTING-BY-SETTING GUIDE:
+ * - Waldo_Jamming_Enable (MISSION MAKER): true runs EW support; a jammer object must still be registered/created.
+ * - Waldo_Jamming_Notify (MISSION MAKER): true shows affected players continuous WMP interference feedback.
+ * - Waldo_Jamming_LOS (MISSION MAKER): true lets terrain and objects reduce effective jammer signal.
+ * - Waldo_Jamming_BurnThrough (MISSION MAKER): true lets radios very close to one another overcome interference.
+ * - Waldo_Jamming_BurnThroughRef (ADVANCED): reference distance in metres used by burn-through calculations.
+ * - Waldo_Jamming_Curve (ADVANCED): LINEAR or INVSQ attenuation; retain LINEAR unless deliberately testing falloff.
+ * - Waldo_Jamming_Destructible (MISSION MAKER): true stops a registered jammer when its emitter is destroyed.
+ * - Waldo_Jamming_GmOverlay (ADVANCED): true draws curator diagnostics; keep false for ordinary missions.
+ * - Waldo_Jamming_ScanRange (MISSION MAKER): maximum RDF scan range, also limited by the jammer's active field.
+ * - Waldo_Jamming_ScanBearingArc (MISSION MAKER): total vague bearing sector width in degrees; larger is less precise.
+ * - Waldo_Jamming_ScanDistanceBands (MISSION MAKER): three increasing metre thresholds for vague range wording.
+ * - Waldo_Jamming_AllowPlayerToggle (MISSION MAKER): allows reactivation while off; cannot bypass active disablement.
+ * - Waldo_Jamming_DisableChallenge (MISSION MAKER): true requires the selected minigame to disable an active jammer.
+ * - Waldo_Jamming_DisableChallengeId (MISSION MAKER): registered interaction-equipment ID, for example "circuit".
+ * - Waldo_Jamming_DisableDifficulty (MISSION MAKER): easy, standard, hard or expert.
+ * - Waldo_Jamming_DisableEngineerOnly (MISSION MAKER): false lets anyone try; true requires ACE engineer status.
+ * - Waldo_Jamming_DisableResult (MISSION MAKER): DISABLE creates a repairable state; DEACTIVATE is an ordinary off state.
+ *
+ * BEGINNER EXAMPLE:
+ * Keep the defaults below, place a suitable object in Eden, and put `[this] call Waldo_fnc_Jammer;`
+ * in that object's Init field. Players may disable the active field through the circuit challenge and
+ * later activate it again. Object-specific range, affected radio rules and custom interaction options
+ * belong to the Waldo_fnc_Jammer call documented on the Radio Jamming wiki page, not in this file.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Electronic Warfare", "Radio Jamming"]],

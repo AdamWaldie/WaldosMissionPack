@@ -37,6 +37,40 @@
  * `[variable, guarded default, publish]`; publish true is replayed to clients/JIP and false remains
  * server-only. Enabling a feature activates its lifecycle but does not invent required catalogue,
  * marker or object content. Values under the ACE heading are global ACE policy, not WMP modules.
+ *
+ * SETTING-BY-SETTING GUIDE - SQUAD RALLY:
+ * - Waldo_Rally_Enable (MISSION MAKER): installs the eligible squad-leader self-action when true.
+ * - Waldo_Rally_ObjectClass (MISSION MAKER): valid CfgVehicles object used as the deployed rally.
+ * - Waldo_Rally_Duration (MISSION MAKER): active lifetime in seconds; use a positive value.
+ * - Waldo_Rally_DeploymentTime (MISSION MAKER): uninterrupted placement action duration in seconds.
+ * - Waldo_Rally_Cooldown (MISSION MAKER): group delay after pack-up/expiry before another deployment.
+ * - Waldo_Rally_EnemyExclusionRadius (MISSION MAKER): hostile units within this many metres block placement.
+ * - Waldo_Rally_MinimumGroupMembers (MISSION MAKER): living members required, including the leader.
+ * - Waldo_Rally_PlacementDistance (MISSION MAKER): requested object distance ahead of the leader.
+ * - Waldo_Rally_MaximumSlope (MISSION MAKER): steepest accepted terrain angle in degrees.
+ * - Waldo_Rally_RespawnClearance (ADVANCED): empty radius required around a chosen respawn position.
+ * - Waldo_Rally_RespawnSearchDistance (ADVANCED): maximum radius searched for an open respawn position.
+ * - Waldo_Rally_AllowRegroup (MISSION MAKER): permits the runtime's optional regroup/redeploy behaviour.
+ *
+ * SETTING-BY-SETTING GUIDE - OPTIONAL SYSTEMS AND ACE POLICY:
+ * - Waldo_Economy_Enable (MISSION MAKER): starts economy runtime; resources/catalogues still need setup.
+ * - Waldo_MiniGames_Enable (MISSION MAKER): permits registered interaction-equipment challenges.
+ * - Waldo_CorpseTraps_Enable (MISSION MAKER): permits corpse-trap handling where traps are configured.
+ * - ACE_maxWeightDrag (GLOBAL ACE POLICY): maximum draggable mass; 10000 preserves permissive pack behaviour.
+ * - ACE_maxWeightCarry (GLOBAL ACE POLICY): maximum carryable mass; 6000 preserves pack behaviour.
+ * - ace_hearing_disableVolumeUpdate (GLOBAL ACE POLICY): retain true unless deliberately changing ACE hearing globally.
+ *
+ * SETTING-BY-SETTING GUIDE - DIAGNOSTICS AND SAFESTART:
+ * - Waldo_RunDiagnostics (MISSION MAKER): runs setup/lifecycle diagnostics; keep true while building/testing.
+ * - Waldo_SafeStart_Confine (MISSION MAKER): when protection is active, keep players inside the configured area.
+ * - Waldo_SafeStart_Radius (MISSION MAKER): fallback circular radius when ZoneMarker is blank.
+ * - Waldo_SafeStart_ZoneMarker (MISSION MAKER): existing marker name used as confinement area; "" uses Radius.
+ * - Waldo_SafeStart_AutoStart (MISSION MAKER): false starts live; Zeus may still enable protection mid-mission.
+ *
+ * BEGINNER RALLY TEST: set Enable true and leave the remaining rally defaults unchanged. Use a
+ * group leader in a living two-person group, move more than 100 m from enemies, and use the Squad
+ * Rally self-action on terrain below 20 degrees. The safe-position settings affect where players
+ * reappear, not where the visible rally object is initially requested.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Squad Rally", "Economy", "Mini Games", "Corpse Traps", "ACE Logistics", "Diagnostics", "Safestart"]],

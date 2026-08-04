@@ -72,6 +72,40 @@
  * demo charge contributes 1 and the satchel contributes 3. Derived/scripted ammo subclasses inherit
  * the configured base-class strength. `deleteOriginal = false` is the safe default because a hidden
  * object can be restored with Waldo_fnc_BreachingReset; a deleted object cannot.
+ *
+ * SETTING-BY-SETTING GUIDE - HAZARDS:
+ * - Waldo_Hazard_Enable (MISSION MAKER): starts local exposure checks; zones/emitters still require registration.
+ * - Waldo_Hazard_Interval (ADVANCED): seconds between exposure updates; lower values increase client work.
+ * - Waldo_Hazard_ShowStatus (MISSION MAKER): shows one continuously updated exposure panel rather than stacked cards.
+ * - Waldo_Hazard_NotifyTransitions (MISSION MAKER): shows entry/exit messages when awareness rules permit them.
+ * - Waldo_Hazard_NotificationDuration (MISSION MAKER): lifetime in seconds for transition messages.
+ * - Waldo_Hazard_Presets (MISSION MAKER): reusable named profile HashMaps; zones select one and may override fields.
+ *
+ * SETTING-BY-SETTING GUIDE - TREE FELLING:
+ * - Waldo_TreeFelling_Enable: enables actions/handlers; it does not add an axe to player inventories.
+ * - Waldo_TreeFelling_Range: maximum player-to-tree distance in metres.
+ * - Waldo_TreeFelling_BaseHits: strikes required before height and tool multipliers are applied.
+ * - Waldo_TreeFelling_HeightFactor: extra strikes per metre; 0.25 means one extra per four metres.
+ * - Waldo_TreeFelling_HitCooldown: shortest accepted interval between strikes, in seconds.
+ * - Waldo_TreeFelling_WeaponPatterns: case-insensitive weapon-class fragments accepted as tools.
+ * - Waldo_TreeFelling_AllowedClasses: exact exceptional tree classes; [] uses normal model-name detection.
+ * - Waldo_TreeFelling_FallenClasses: general valid CfgVehicles replacement pool.
+ * - Waldo_TreeFelling_FallenClassesSmall: optional short-tree pool; [] falls back to the general pool.
+ * - Waldo_TreeFelling_FallenClassesMedium: optional medium-tree pool; [] falls back to the general pool.
+ * - Waldo_TreeFelling_FallenClassesLarge: optional tall-tree pool; [] falls back to the general pool.
+ * - Waldo_TreeFelling_SizeThresholds: two increasing heights `[small end, medium end]` in metres.
+ * - Waldo_TreeFelling_DirectionMode: RANDOM, STRIKE (away from user) or ORIGINAL tree bearing.
+ * - Waldo_TreeFelling_ClearBushes: true also removes nearby bushes after an accepted action.
+ * - Waldo_TreeFelling_BushRadius: bush-removal radius in metres.
+ * - Waldo_TreeFelling_ToolEfficiency: fragment -> positive multiplier; exact or longest match wins.
+ * - Waldo_TreeFelling_ProtectedAreas: marker/trigger/area entries in which felling is refused.
+ * - Waldo_TreeFelling_Yields: `[CfgVehicles class, count]` reward rows spawned after felling.
+ * - Waldo_TreeFelling_RegrowSeconds: positive delay restores the tree; -1 or 0 means never.
+ *
+ * SETTING-BY-SETTING GUIDE - BREACHING:
+ * - Waldo_Breaching_Enable: starts ACE explosive detection; only explicitly profiled object classes react.
+ * - Waldo_Breaching_Profiles: target CfgVehicles class -> complete profile described and demonstrated below.
+ * - Waldo_Breaching_ExplosiveStrengths: CfgAmmo class -> positive force contributed by one detonation.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Hazardous Environments", "Tree Felling", "Explosive Breaching"]],

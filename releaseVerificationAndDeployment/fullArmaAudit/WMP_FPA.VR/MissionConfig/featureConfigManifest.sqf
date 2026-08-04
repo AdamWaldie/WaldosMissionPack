@@ -21,6 +21,11 @@
  * HOW TO READ THE DATA BELOW: each string is a mission-relative pure-data config path. Order is
  * deterministic but settings in different files must not depend on it. Do not add acreConfig.sqf:
  * ACRE pre-init must read it before this ordinary SHARED/SERVER/PLAYER_LOCAL loader lifecycle.
+ *
+ * SETTING-BY-SETTING GUIDE: there are no mission settings in this file. Every row is an
+ * infrastructure path. Ordinary mission makers should not add, remove, rename or reorder rows.
+ * A new path is valid only when a new pure-data config file, loader scope, documentation page,
+ * generated-audit copy and regression coverage are introduced together.
  */
 [
     "MissionConfig\persistenceConfig.sqf",

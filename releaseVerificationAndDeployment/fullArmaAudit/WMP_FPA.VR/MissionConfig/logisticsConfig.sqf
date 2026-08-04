@@ -42,6 +42,42 @@
  * Recovery DefaultCustomVariables is an ARRAY of variable-name STRINGs; only serialisable values
  * are copied into a vehicle package. PackageClasses is an ordered fallback pool of CfgVehicles
  * classes and may be overridden per registered vehicle.
+ *
+ * SETTING-BY-SETTING GUIDE - FIELD RESUPPLY:
+ * - Waldo_FieldResupply_Enable (MISSION MAKER): permits hubs/actions; register a hub and assign carriers separately.
+ * - Waldo_FieldResupply_CrateClass (MISSION MAKER): valid CfgVehicles crate spawned empty for each deployment.
+ * - Waldo_FieldResupply_DefaultCarrierCapacity (MISSION MAKER): logical crates granted to a newly assigned carrier.
+ * - Waldo_FieldResupply_ChargesPerCrate (MISSION MAKER): resupply transactions available from one deployed crate.
+ * - Waldo_FieldResupply_MagazinesPerType (MISSION MAKER): flat quantity per compatible type when capacity mode is off.
+ * - Waldo_FieldResupply_UseCapacityBasedAmounts (MISSION MAKER): true uses the five capacity bands below.
+ * - Waldo_FieldResupply_CapacityAmounts (MISSION MAKER): five issued quantities for 1-4, 5-10, 11-40, 41-70, 71+ rounds.
+ * - Waldo_FieldResupply_MinimumMagazineRounds (MISSION MAKER): lower-capacity magazines are excluded automatically.
+ * - Waldo_FieldResupply_AllowedMagazines (MISSION MAKER): [] discovers compatible carried types; otherwise exact allowlist.
+ * - Waldo_FieldResupply_BlockedMagazines (MISSION MAKER): exact deny list, applied after and overriding the allowlist.
+ * - Waldo_FieldResupply_RetainOnRespawn (MISSION MAKER): preserves that player's carrier allowance after respawn.
+ *
+ * SETTING-BY-SETTING GUIDE - VEHICLE RECOVERY:
+ * - Waldo_Recovery_ScanInterval (ADVANCED): seconds between carrier/package state checks; lower costs more server time.
+ * - Waldo_Recovery_NotificationRadius (MISSION MAKER): completed-recovery messages reach players this near the workshop.
+ * - Waldo_Recovery_CreateWorkshopMarkers (MISSION MAKER): creates an area marker and exact-position marker per workshop.
+ * - Waldo_Recovery_PlacementClearance (ADVANCED): extra metres required around the restored vehicle footprint.
+ * - Waldo_Recovery_DefaultCustomVariables (MISSION MAKER): serialisable object-variable names copied for every vehicle.
+ * - Waldo_Recovery_PackageClasses (MISSION MAKER): ordered fallback CfgVehicles classes for virtualised packages.
+ *
+ * SETTING-BY-SETTING GUIDE - SCALING AND CRATES:
+ * - Waldo_ObjectScaling_Minimum (MISSION MAKER): smallest positive scale accepted by the server.
+ * - Waldo_ObjectScaling_Maximum (MISSION MAKER): largest scale accepted; must not be smaller than Minimum.
+ * - Waldo_ObjectScaling_AllowClientRequests (ADVANCED): normally false; server/ZEN remains scaling authority.
+ * - Logi_SupplyBoxClass (MISSION MAKER): valid CfgVehicles supply crate used by logistics spawners.
+ * - Logi_MedicalBoxClass (AUTOMATIC): ACE crate when ACE medical exists, otherwise the vanilla fallback.
+ *
+ * BEGINNER EXAMPLES:
+ * - Field resupply: enable it, then place `[this] call Waldo_fnc_FieldResupplyRegisterHub;` on a hub
+ *   only if that function's current header lists object-init use; otherwise register from initServer.sqf.
+ * - Recovery: register a workshop, recoverable vehicles and optional carrier separately. PackageClasses
+ *   changes the visual/physical container pool; it does not make an arbitrary truck a carrier.
+ * - Custom variables: `["MyMission_DoorState", "MyMission_CargoCount"]` copies only those values
+ *   when they are serialisable; code, UI controls and local object references are not safe save data.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Object Scaling", "Logistics Crates"]],

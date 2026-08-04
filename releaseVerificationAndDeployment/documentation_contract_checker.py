@@ -27,6 +27,19 @@ CONFIG_REQUIRED = (
     "Result:",
     "Current caller",
     "HOW TO READ THE DATA BELOW:",
+    "SETTING-BY-SETTING GUIDE",
+)
+SETTING_ROW = re.compile(r'^\s*\["((?:Waldo_|WALDO_|ACE_|ace_|Logi_)[^"]+)"\s*,', re.M)
+ACRE_REQUIRED_KEYS = (
+    "enabled",
+    "strict",
+    "prc343PresetPolicy",
+    "namedDisplays",
+    "notifyAssignmentProblems",
+    "additionalRadioProfiles",
+    "radioOverrides",
+    "sides",
+    "babel",
 )
 AI_AUTHOR = re.compile(r"^\s*\*\s*Author:\s*(?:Claude|ChatGPT|Codex|OpenAI)\b", re.I | re.M)
 ATTRIBUTION_HEADING = re.compile(r"^#{1,6}\s+Attributions?\s*$", re.I | re.M)
@@ -65,10 +78,38 @@ def audit(base: str | None) -> tuple[int, list[str]]:
     findings: list[str] = []
     checked = 0
 
+    config_reference = (ROOT / "wiki" / "Feature-Configuration-Files.md").read_text(
+        encoding="utf-8", errors="replace"
+    )
     for path in sorted((ROOT / "MissionConfig").glob("*.sqf")):
         checked += 1
         for finding in audit_file(path, CONFIG_REQUIRED):
             findings.append(f"{path.relative_to(ROOT)}: {finding}")
+        text = path.read_text(encoding="utf-8", errors="replace")
+        header = text.split("*/", 1)[0]
+        for setting in SETTING_ROW.findall(text):
+            if setting not in header:
+                findings.append(
+                    f"{path.relative_to(ROOT)}: setting `{setting}` is not named in its "
+                    "SETTING-BY-SETTING GUIDE"
+                )
+            if f"`{setting}`" not in config_reference:
+                findings.append(
+                    f"{path.relative_to(ROOT)}: setting `{setting}` is missing from "
+                    "wiki/Feature-Configuration-Files.md"
+                )
+
+    acre_config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(
+        encoding="utf-8", errors="replace"
+    )
+    for key in ACRE_REQUIRED_KEYS:
+        if f'["{key}",' not in acre_config:
+            findings.append(f"MissionConfig/acreConfig.sqf: missing top-level key `{key}`")
+        if f"`{key}`" not in config_reference:
+            findings.append(
+                f"MissionConfig/acreConfig.sqf: key `{key}` is missing from "
+                "wiki/Feature-Configuration-Files.md"
+            )
 
     scripts = changed_sqf(base) if base else []
     for path in scripts:

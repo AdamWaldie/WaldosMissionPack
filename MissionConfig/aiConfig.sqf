@@ -36,6 +36,41 @@
  * variable does not already exist, on every machine that may own AI. A value already supplied by
  * mission code or JIP is preserved. Mode selects lighting conditions; ApplyMode independently
  * selects which AI population receives the profile.
+ *
+ * SETTING-BY-SETTING GUIDE - AI REBALANCE:
+ * - Waldo_AIRebalance_Enable (MISSION MAKER): true applies WMP skill profiles; false leaves AI skills alone.
+ * - Waldo_AIRebalance_Profile (MISSION MAKER): MILITIA, LINE, VETERAN or ELITE; LINE is the normal baseline.
+ * - Waldo_AIRebalance_Mode (MISSION MAKER): DAY or NIGHT; NIGHT uses the deliberately lower low-light values.
+ * - Waldo_AI_ApplyMode (MISSION MAKER): EXISTING, NEW or BOTH; choose which AI population receives the profile.
+ * - Waldo_AI_RestoreOnStop (ADVANCED): true restores the skills WMP recorded when its handler is stopped.
+ * - Waldo_AI_SkillVariance (ADVANCED): random offset added within safe bounds; 0 gives repeatable values.
+ * - Waldo_AI_IncludedSides (MISSION MAKER): [] allows every side; example ["WEST", "GUER"] limits application.
+ * - Waldo_AI_IncludedFactions (MISSION MAKER): [] allows all; otherwise list CfgFactionClasses names.
+ * - Waldo_AI_ExcludedFactions (MISSION MAKER): listed factions are always skipped after the include checks.
+ * - Waldo_AI_ExcludedClasses (MISSION MAKER): exact CfgVehicles unit classes that WMP must never modify.
+ *
+ * SETTING-BY-SETTING GUIDE - IMPROVED HELICOPTER LANDING:
+ * - Waldo_ImprovedHelicopterLanding_Enable (MISSION MAKER): true watches local AI helicopter landing waypoints.
+ * - Waldo_ImprovedHelicopterLanding_MinimumActivationDistance (ADVANCED): waypoint must begin at least this far away.
+ * - Waldo_ImprovedHelicopterLanding_TriggerDistance (ADVANCED): distance at which WMP starts approach control.
+ * - Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor (ADVANCED): scales the speed-sensitive takeover test.
+ * - Waldo_ImprovedHelicopterLanding_TransitAltitude (ADVANCED): preferred clear-ground approach height in metres AGL.
+ * - Waldo_ImprovedHelicopterLanding_GlideSlopeRatio (ADVANCED): horizontal travel per metre of planned descent.
+ * - Waldo_ImprovedHelicopterLanding_TreeScanRadius (ADVANCED): vegetation search radius around the landing point.
+ * - Waldo_ImprovedHelicopterLanding_TreeSafetyBuffer (ADVANCED): extra clearance above detected tree canopies.
+ * - Waldo_ImprovedHelicopterLanding_MaximumTreeHoverHeight (ADVANCED): ceiling on canopy-induced hover correction.
+ * - Waldo_ImprovedHelicopterLanding_GoAroundTriggerDistance (ADVANCED): range in which excessive height is tested.
+ * - Waldo_ImprovedHelicopterLanding_GoAroundHeight (ADVANCED): safe AGL climb target for a retry.
+ * - Waldo_ImprovedHelicopterLanding_GoAroundExitDistance (ADVANCED): distance flown clear before turning back.
+ * - Waldo_ImprovedHelicopterLanding_GoAroundSpeed (ADVANCED): commanded retry speed in kilometres per hour.
+ * - Waldo_ImprovedHelicopterLanding_MaximumGoArounds (ADVANCED): maximum automatic retries per landing order.
+ * - Waldo_ImprovedHelicopterLanding_MaximumClimbRate (ADVANCED): upward command clamp in metres per second.
+ * - Waldo_ImprovedHelicopterLanding_MaximumDescentRate (ADVANCED): downward command clamp in metres per second.
+ * - Waldo_ImprovedHelicopterLanding_TouchdownRadius (ADVANCED): accepted horizontal error; 5 m is the current default.
+ * - Waldo_ImprovedHelicopterLanding_FinalCommitDistance (ADVANCED): range at which flare/final landing begins.
+ * - Waldo_ImprovedHelicopterLanding_ControlInterval (ADVANCED): controller update period; lowering it costs more CPU.
+ * - Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds (ADVANCED): landed hold; 20 s prevents immediate takeoff.
+ * - Waldo_AI_ProfileDisplayNames (INFRASTRUCTURE): labels for diagnostics/UI; keys must match implementation IDs.
  */
 createHashMapFromArray [
     ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings"]],

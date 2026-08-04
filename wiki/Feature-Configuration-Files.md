@@ -287,8 +287,10 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | Setting | Purpose / units |
 |---|---|
 | `Waldo_Gunship_Enable` | Master permission for airborne gunship support. Default `true`; it does not spawn an aircraft by itself. |
-| `Waldo_Gunship_DefaultAltitude` / `MaximumAltitude` | Default and upper orbit altitude in metres. |
-| `Waldo_Gunship_DefaultRadius` / `MaximumRadius` | Default and upper orbit radius in metres. |
+| `Waldo_Gunship_DefaultAltitude` | Default orbit altitude in metres when a request does not override it. |
+| `Waldo_Gunship_MaximumAltitude` | Server-accepted upper orbit altitude in metres. |
+| `Waldo_Gunship_DefaultRadius` | Default orbit radius in metres when a request does not override it. |
+| `Waldo_Gunship_MaximumRadius` | Server-accepted upper orbit radius in metres. |
 | `Waldo_Gunship_DefaultServiceDuration` | Available service time in seconds. |
 | `Waldo_Gunship_MonitorInterval` | Server state-check interval in seconds. |
 | `Waldo_Gunship_MinimumFuel` | Fuel fraction that requests service/return. |
@@ -316,7 +318,8 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_DynamicAA_MaximumFighters` | Maximum fighters created by one system. |
 | `Waldo_DynamicAA_SideAssetPools` | Shared fallback radar, static, mobile and fighter content pools by operational side. |
 | `Waldo_DynamicAA_FactionAssetPools` | Shared faction/content profiles; selection is independent of operational side. |
-| `WALDO_STATIC_MINALTITUDE` / `MAXALTITUDE` | Valid static-line jump altitude band. |
+| `WALDO_STATIC_MINALTITUDE` | Lowest valid static-line release altitude in metres. |
+| `WALDO_STATIC_MAXALTITUDE` | Highest valid static-line release altitude; must exceed the minimum. |
 | `WALDO_STATIC_MAXSPEED` | Maximum static-line aircraft speed. |
 | `WALDO_STATIC_STATICCHUTE` | Default static-line parachute classname. |
 | `WALDO_PARA_HALOALTITUDE` | Minimum HALO jump altitude. |
@@ -343,7 +346,8 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Recovery_PlacementClearance` | Required clearance around restored vehicles. |
 | `Waldo_Recovery_DefaultCustomVariables` | Additional variables/scripts copied through packages. |
 | `Waldo_Recovery_PackageClasses` | Classes recognised as virtual recovery packages. |
-| `Waldo_ObjectScaling_Minimum` / `Maximum` | Server-accepted object scale range. |
+| `Waldo_ObjectScaling_Minimum` | Smallest positive object scale accepted by the server. |
+| `Waldo_ObjectScaling_Maximum` | Largest object scale accepted by the server; must be at least the minimum. |
 | `Waldo_ObjectScaling_AllowClientRequests` | Permits validated non-server scale requests. |
 | `Logi_SupplyBoxClass` | JIP-published logistics supply crate class. |
 | `Logi_MedicalBoxClass` | JIP-published medical crate class; ACE crate when ACE Medical exists. |
@@ -366,7 +370,9 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_TreeFelling_WeaponPatterns` | Case-insensitive weapon-classname fragments treated as axes. Arma has no vanilla axe; add a fragment from the axe mod used by the mission. |
 | `Waldo_TreeFelling_AllowedClasses` | Exact tree object classes accepted when their model path does not contain `tree`; normally leave empty. |
 | `Waldo_TreeFelling_FallenClasses` | General replacement log classes. |
-| `Waldo_TreeFelling_FallenClassesSmall` / `Medium` / `Large` | Optional size-specific replacement pools; an empty list falls back to `FallenClasses`. |
+| `Waldo_TreeFelling_FallenClassesSmall` | Optional short-tree replacement pool; an empty list falls back to `FallenClasses`. |
+| `Waldo_TreeFelling_FallenClassesMedium` | Optional medium-tree replacement pool; an empty list falls back to `FallenClasses`. |
+| `Waldo_TreeFelling_FallenClassesLarge` | Optional tall-tree replacement pool; an empty list falls back to `FallenClasses`. |
 | `Waldo_TreeFelling_SizeThresholds` | `[end of small, end of medium]` tree-height boundaries in metres. |
 | `Waldo_TreeFelling_DirectionMode` | `RANDOM`, `STRIKE` (away from the player), or `ORIGINAL`. |
 | `Waldo_TreeFelling_ClearBushes` | Removes nearby bushes after a successful fell. |
@@ -425,13 +431,35 @@ annotated profile and advanced replacement-row format.
 | `Waldo_Economy_Enable` | Enables the optional WMP economy. |
 | `Waldo_MiniGames_Enable` | Enables interaction-equipment challenges. |
 | `Waldo_CorpseTraps_Enable` | Enables configured corpse-trap handling. |
-| `ACE_maxWeightDrag` / `ACE_maxWeightCarry` | ACE logistics weight limits. |
+| `ACE_maxWeightDrag` | Maximum ACE draggable mass; the shipped value preserves permissive WMP logistics. |
+| `ACE_maxWeightCarry` | Maximum ACE carryable mass; the shipped value preserves permissive WMP logistics. |
 | `ace_hearing_disableVolumeUpdate` | Disables ACE's automatic hearing-volume adjustment. |
 | `Waldo_RunDiagnostics` | Runs the server startup diagnostics report. |
 | `Waldo_SafeStart_Confine` | Restricts players to the safestart area. |
 | `Waldo_SafeStart_Radius` | Fallback safestart radius in metres. |
 | `Waldo_SafeStart_ZoneMarker` | Optional marker defining the safestart area. |
 | `Waldo_SafeStart_AutoStart` | `false` starts live while retaining Zeus controls; `true` begins the mission under Safestart protection. |
+
+## `economyConfig.sqf`
+
+This file is executable server-side mission-maker authoring rather than a pure setting HashMap.
+`_useExample = false` keeps the demonstration inactive. Set it to `true` only in a disposable test,
+then return it to `false` and copy the required rows into **YOUR ECONOMY**.
+
+| Row or call | Fields, in order |
+|---|---|
+| Resource | `name`, HTML hex `colour`, `icon path`, `storage cap` (`-1` unlimited) |
+| Research | `name`, `description`, `cost rows`, `requirements`, `time in seconds` |
+| Building | research fields, advanced condition/callback fields, initially built flag, object class, optional produced resource/amount/interval |
+| Purchase | `name`, `description`, `cost rows`, `requirements`, object class, `Ground`/`Air`/`Naval`, access ID |
+| Resource zone | position, name, radius, deposit rows, side ID, production interval |
+| Resource crate | position, `[resource name, amount]` content rows |
+| Research centre | world position |
+| Purchase drop | position, category, direction in degrees, access ID |
+
+Each positional field and a working result are documented immediately above the active examples in
+`MissionConfig\economyConfig.sqf`. Catalogue calls run once on server authority after the economy
+runtime and any selected preset/import have been applied.
 
 ## Adding or changing settings
 
