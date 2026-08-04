@@ -573,6 +573,11 @@ class PrReviewAuditTests(unittest.TestCase):
         tick = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardTick.sqf").read_text(encoding="utf-8")
         self.assertIn("Waldo_Hazard_LocalDamageStages", tick)
         self.assertIn("notifyDamageStages", tick)
+        self.assertNotIn('{!((_profile getOrDefault ["detectorItems"', tick)
+        self.assertNotIn('{!((_profile getOrDefault ["detectorObjects"', tick)
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('{!((_profile getOrDefault ["detectorItems"', zen)
+        self.assertNotIn('{!((_profile getOrDefault ["detectorObjects"', zen)
 
     def test_dismount_fixture_has_live_simulation_and_vehicle_bound_controls(self):
         audit = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"

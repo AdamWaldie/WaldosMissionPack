@@ -94,9 +94,9 @@ private _zoneDiagnostics = [];
     _exposure = _exposure min (_profile getOrDefault ["maximumExposure", 1e10]);
     _exposures set [_key, _exposure];
     private _awarenessConfigured =
-        {!((_profile getOrDefault ["detectorItems", []]) isEqualTo [])}
-        || {!((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])}
-        || {"awarenessCondition" in _profile};
+        !((_profile getOrDefault ["detectorItems", []]) isEqualTo [])
+        || !((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])
+        || ("awarenessCondition" in _profile);
     private _aware = [player, _key, _profile, _inside, _exposure] call Waldo_fnc_HazardAwareness;
     private _showNotifications = !(_profile getOrDefault ["requireAwarenessForNotifications", _awarenessConfigured]) || {_aware};
     private _showLiveStatus = !(_profile getOrDefault ["requireAwarenessForStatus", _awarenessConfigured]) || {_aware};

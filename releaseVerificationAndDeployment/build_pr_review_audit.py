@@ -39,6 +39,7 @@ RANGE_FILES = (
     "featureRangeServer.sqf",
     "featureRangeClient.sqf",
     "auditAcreConfig.sqf",
+    "compositionCatalogueQA.sqf",
     "extendedFeatureStationsServer.sqf",
     "extendedFeatureStationsClient.sqf",
     "functionStations.sqf",

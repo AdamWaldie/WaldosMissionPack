@@ -508,9 +508,9 @@ switch (toUpperANSI _feature) do {
         private _presetLabels = _presetKeys apply {
             private _profile = _presets get _x;
             private _detectorGated =
-                {!((_profile getOrDefault ["detectorItems", []]) isEqualTo [])}
-                || {!((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])}
-                || {"awarenessCondition" in _profile};
+                !((_profile getOrDefault ["detectorItems", []]) isEqualTo [])
+                || !((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])
+                || ("awarenessCondition" in _profile);
             format ["%1 - %2%3", _x, _profile getOrDefault ["label", "Hazardous Area"], ["", " (detector-aware)"] select _detectorGated]
         };
         [
