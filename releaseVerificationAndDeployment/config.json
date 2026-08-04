@@ -6,6 +6,7 @@
             "MissionScripts",
             "MissionConfig",
             "Pictures",
+            ".claude",
             "description.ext",
             "init.sqf",
             "initPlayerLocal.sqf",
