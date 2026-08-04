@@ -73,9 +73,31 @@ Profiles can represent contamination, toxic gas, extreme temperature, vacuum or 
 
 ## Tree felling
 
-Set `Waldo_TreeFelling_Enable = true`. Players receive a contextual **Fell Tree / Clear Brush** action when an allowed axe/hatchet pattern is equipped. Repeated validated swings fell trees on the server; optional brush clearing removes nearby bushes. Fallen assets can be configured globally or as small, medium and large height tiers. The system also chains an existing melee swing callback when present.
+Arma 3 does not include a vanilla hand-held axe. You need an axe or hatchet weapon from a mod or
+your own mission content. The quickest working setup is:
 
-Tune range, weapon-name patterns, hit scaling, cooldown, brush radius, size thresholds, fall direction and replacement classes with `Waldo_TreeFelling_*`. Start and stop it with `Waldo_fnc_TreeFellingInit` and `Waldo_fnc_TreeFellingStop`; it intentionally has no ZEN module.
+1. Open `MissionConfig/environmentConfig.sqf`.
+2. Change `Waldo_TreeFelling_Enable` from `false` to `true`.
+3. Find the axe weapon's classname. If it contains `axe` or `hatchet`, the shipped patterns already
+   recognise it. Otherwise add a distinctive part of its classname to
+   `Waldo_TreeFelling_WeaponPatterns`.
+4. Equip the axe, look at a tree within 3 metres, and use **Fell Tree / Clear Brush**.
+
+For example, both `MyMod_FireAxe` and `myMod_small_axe` match the pattern `"axe"`; comparison ignores
+capital letters. `Waldo_TreeFelling_ToolEfficiency` uses the same kind of fragments. A value of `2`
+makes a matching tool twice as effective, while `0.5` makes it half as effective. An exact classname
+wins over a fragment, and the longest matching fragment wins when several match.
+
+The general `FallenClasses` list is used unless the appropriate small, medium or large list contains
+objects. The two `SizeThresholds` values mean "end of small" and "end of medium": `[7, 15]` treats a
+6 m tree as small, a 10 m tree as medium and a 20 m tree as large. `RANDOM`, `STRIKE`, and `ORIGINAL`
+choose the replacement log's direction. `ProtectedAreas` normally contains Eden marker names, such
+as `["base_no_logging", "town_safe_zone"]`. `Yields` contains `[object classname, count]` rows, such
+as `[["Land_WoodenLog_F", 2]]`. A positive `RegrowSeconds` restores the original tree during the
+current mission; `-1` or `0` disables regrowth.
+
+Start and stop the automatic client action with `Waldo_fnc_TreeFellingInit` and
+`Waldo_fnc_TreeFellingStop`. Tree felling intentionally has no ZEN module.
 
 ## Emergency dismount
 
@@ -110,24 +132,61 @@ Colour-vision profiles are personal rather than mission-authoritative. Standard,
 
 ## Explosive wall breaching
 
-Breaching requires ACE explosives and remains inactive unless `Waldo_Breaching_Enable` is true. Define an explicit profile for each breachable object class; an empty profile map breaches nothing.
+Breaching requires ACE Explosives. WMP ships a disabled, ready-to-test profile for the vanilla
+`Land_City2_8m_F` 8 m City Wall. To test it:
+
+1. Place that wall in Eden.
+2. In `MissionConfig/environmentConfig.sqf`, change `Waldo_Breaching_Enable` to `true`.
+3. Place and detonate an ACE M112 demolition block or satchel within 5 metres of the wall.
+
+Only that exact wall class reacts. Enabling the feature does not affect unrelated walls or buildings.
+The shipped profile opens the full 8 m section and keeps the hidden original available for a reset.
+
+This is the complete beginner profile from the config:
 
 ```sqf
-Waldo_Breaching_Profiles set ["Land_City2_8m_F", createHashMapFromArray [
-    ["radius", 5],
-    ["explosives", ["DemoCharge_Remote_Ammo"]],
-    ["destroyOriginal", true],
-    ["hideOriginal", true],
-    ["replacements", [
-        ["Land_City2_4m_F", [-2, 0, 0], 0, "CAN_COLLIDE"],
-        ["Land_City2_4m_F", [2, 0, 0], 0, "CAN_COLLIDE"]
+Waldo_Breaching_Profiles = createHashMapFromArray [
+    ["Land_City2_8m_F", createHashMapFromArray [ // exact target object classname
+        ["radius", 5],                            // charge must explode within 5 metres
+        ["explosives", [                          // allowed CfgAmmo classnames
+            "DemoCharge_Remote_Ammo",
+            "SatchelCharge_Remote_Ammo"
+        ]],
+        ["requiredStrength", 1],                  // accumulated force needed to breach
+        ["destroyOriginal", true],                // damage the original wall
+        ["hideOriginal", true],                   // hide it and clear the opening
+        ["deleteOriginal", false],                // false allows Waldo_fnc_BreachingReset
+        ["replacements", []]                      // no debris or partial wall sections
     ]]
-]];
+];
 ```
 
-The server validates the detonation, applies each target once, and can spawn replacements relative to the original wall. Profiles also support `deleteOriginal` and an `onBreach` callback. Stop with `Waldo_fnc_BreachingStop`.
+The number beside each explosive in `Waldo_Breaching_ExplosiveStrengths` is the force contributed by
+one detonation. The shipped demo charge is `1`; the satchel is `3`. A profile with
+`requiredStrength = 2` therefore needs two demo charges or one satchel. Scripted subclasses inherit
+their configured base ammo class's strength. These are **CfgAmmo** names, not inventory magazine
+names: use `DemoCharge_Remote_Ammo`, not `DemoCharge_Remote_Mag`.
 
-Replacement specifications support model-relative offsets, yaw or full `[pitch, bank, yaw]` rotation, collision placement mode, `ATL`/`ASL`/`ASLW` positioning and scale. Profiles and complex debris layouts are configured through the scripted API; breaching intentionally has no ZEN module.
+To add another breachable class, copy the entire target/profile block, put a comma between the two
+blocks, and replace only the first target classname for the initial test. Keep `replacements = []`
+until the basic breach works. A malformed classname affects no object; WMP diagnostics reports the
+profile count and ACE dependency state.
+
+The server validates the detonation and applies each target only once. `destroyOriginal` applies
+damage, `hideOriginal` guarantees the opening is clear, and `deleteOriginal` permanently removes the
+object. Keep `deleteOriginal` false unless permanent deletion is specifically required. Stop the
+system with `Waldo_fnc_BreachingStop`.
+
+Replacement objects are an advanced option. Each row is:
+
+```sqf
+["CfgVehicles_Classname", [leftRight, forwardBack, upDown], yaw, "CAN_COLLIDE", "ATL", scale]
+```
+
+Offsets use the original wall's model axes and are measured in metres. `yaw` is added to the old
+wall direction. The placement mode, position mode and scale may be omitted; their safe defaults are
+`"CAN_COLLIDE"`, `"ATL"`, and `1`. Complex debris layouts require in-game testing because WMP cannot
+cut a new hole into arbitrary model collision geometry. Breaching intentionally has no ZEN module.
 
 ## Object scaling
 

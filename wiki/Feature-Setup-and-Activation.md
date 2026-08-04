@@ -174,8 +174,13 @@ no exposure. Register a pre-planned marker/trigger/area on the server:
     ["reactor", "reactor_zone", _profile] call Waldo_fnc_HazardRegisterZone;
     ["leaking_truck", leakingTruck, 8, _profile] call Waldo_fnc_HazardRegisterEmitter;
 
-Tree felling and breaching initialise automatically. A class without a breach profile is not
-breachable. Neither feature has a ZEN setup module.
+Tree felling and breaching initialise automatically, but each still needs usable content. Arma has
+no vanilla axe: the player's equipped weapon classname must contain one of the configured tree-tool
+patterns. For a first breaching test, place the vanilla `Land_City2_8m_F` wall, change only
+`Waldo_Breaching_Enable` to `true`, and detonate an ACE demo charge within 5 m. The shipped profile
+already handles that exact wall; no other object class becomes breachable. Neither feature has a
+ZEN setup module. The full setting-by-setting examples are in
+[Optional Feature Systems](Optional-Feature-Systems#tree-felling).
 
 ### interfaceConfig.sqf
 

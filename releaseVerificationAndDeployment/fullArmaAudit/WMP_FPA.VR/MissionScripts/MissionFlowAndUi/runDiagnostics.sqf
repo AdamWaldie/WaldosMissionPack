@@ -260,9 +260,54 @@ private _persistenceRuntime = [] call Waldo_fnc_PersistenceDependencyAvailable;
 
 private _breachingEnabled = missionNamespace getVariable ["Waldo_Breaching_Enable", false];
 private _breachingDependency = isClass (configFile >> "CfgPatches" >> "ace_explosives");
-private _breachingProfileCount = count (keys (missionNamespace getVariable ["Waldo_Breaching_Profiles", createHashMap]));
-private _breachingValid = _breachingDependency && {_breachingProfileCount > 0};
-["optional-feature", "explosive-breaching", if (!_breachingEnabled) then {"DISABLED"} else {if (_breachingValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceExplosives=%2 profiles=%3", _breachingEnabled, _breachingDependency, _breachingProfileCount], _breachingEnabled && {!_breachingValid}] call _status;
+private _breachingProfiles = missionNamespace getVariable ["Waldo_Breaching_Profiles", createHashMap];
+private _breachingStrengths = missionNamespace getVariable ["Waldo_Breaching_ExplosiveStrengths", createHashMap];
+private _breachingIssues = [];
+if !(_breachingProfiles isEqualType createHashMap) then {
+    _breachingIssues pushBack "Waldo_Breaching_Profiles is not a HashMap";
+    _breachingProfiles = createHashMap;
+};
+if !(_breachingStrengths isEqualType createHashMap) then {
+    _breachingIssues pushBack "Waldo_Breaching_ExplosiveStrengths is not a HashMap";
+    _breachingStrengths = createHashMap;
+};
+{
+    private _targetClass = _x;
+    private _profile = _breachingProfiles get _targetClass;
+    if !(isClass (configFile >> "CfgVehicles" >> _targetClass)) then {
+        _breachingIssues pushBack format ["unknown target CfgVehicles class %1", _targetClass];
+    };
+    if !(_profile isEqualType createHashMap) then {
+        _breachingIssues pushBack format ["profile for %1 is not a HashMap", _targetClass];
+    } else {
+        private _radius = _profile getOrDefault ["radius", 6];
+        private _requiredStrength = _profile getOrDefault ["requiredStrength", 1];
+        if !(_radius isEqualType 0) then {_breachingIssues pushBack format ["%1 radius is not a number", _targetClass]};
+        if !(_requiredStrength isEqualType 0) then {_breachingIssues pushBack format ["%1 requiredStrength is not a number", _targetClass]};
+        private _explosives = _profile getOrDefault ["explosives", []];
+        if !(_explosives isEqualType []) then {
+            _breachingIssues pushBack format ["%1 explosives is not an array", _targetClass];
+        } else {
+            {
+                if !(_x isEqualType "" && {isClass (configFile >> "CfgAmmo" >> _x)}) then {
+                    _breachingIssues pushBack format ["%1 has unknown CfgAmmo class %2", _targetClass, _x];
+                };
+            } forEach _explosives;
+        };
+        private _replacements = _profile getOrDefault ["replacements", []];
+        if !(_replacements isEqualType []) then {_breachingIssues pushBack format ["%1 replacements is not an array", _targetClass]};
+    };
+} forEach keys _breachingProfiles;
+{
+    private _strength = _breachingStrengths get _x;
+    if !(isClass (configFile >> "CfgAmmo" >> _x)) then {_breachingIssues pushBack format ["unknown strength CfgAmmo class %1", _x]};
+    if !(_strength isEqualType 0 && {_strength > 0}) then {_breachingIssues pushBack format ["%1 strength must be a positive number", _x]};
+} forEach keys _breachingStrengths;
+private _breachingProfileCount = count (keys _breachingProfiles);
+private _breachingValid = _breachingDependency && {_breachingProfileCount > 0} && {_breachingIssues isEqualTo []};
+private _breachingDetail = format ["enabled=%1 aceExplosives=%2 profiles=%3", _breachingEnabled, _breachingDependency, _breachingProfileCount];
+if !(_breachingIssues isEqualTo []) then {_breachingDetail = _breachingDetail + "; " + (_breachingIssues joinString "; ")};
+["optional-feature", "explosive-breaching", if (!_breachingEnabled) then {"DISABLED"} else {if (_breachingValid) then {"LOADED"} else {"ERROR"}}, _breachingDetail, _breachingEnabled && {!_breachingValid}] call _status;
 
 private _treatmentEnabled = missionNamespace getVariable ["Waldo_TreatmentFeedback_Enable", false];
 private _treatmentDependency = isClass (configFile >> "CfgPatches" >> "ace_medical");
@@ -295,8 +340,56 @@ private _gunshipValid = _gunshipBoundsValid && {_invalidGunshipClasses isEqualTo
     ["optional-feature", format ["dynamic-aa-%1", _x], if (_emptyCategories isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["source=%1 emptyCategories=%2", _aaPool getOrDefault ["source", str _x], _emptyCategories], !(_emptyCategories isEqualTo [])] call _status;
 } forEach [west, east, independent];
 
-private _invalidTreeClasses = (missionNamespace getVariable ["Waldo_TreeFelling_FallenClasses", []]) select {!(isClass (configFile >> "CfgVehicles" >> _x))};
-["optional-feature", "tree-felling-replacements", if (_invalidTreeClasses isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["invalidClasses=%1", _invalidTreeClasses], !(_invalidTreeClasses isEqualTo [])] call _status;
+private _treeEnabled = missionNamespace getVariable ["Waldo_TreeFelling_Enable", false];
+private _treeIssues = [];
+private _treePatterns = missionNamespace getVariable ["Waldo_TreeFelling_WeaponPatterns", []];
+private _treeAllowedClasses = missionNamespace getVariable ["Waldo_TreeFelling_AllowedClasses", []];
+private _treeReplacementLists = [
+    ["FallenClasses", missionNamespace getVariable ["Waldo_TreeFelling_FallenClasses", []]],
+    ["FallenClassesSmall", missionNamespace getVariable ["Waldo_TreeFelling_FallenClassesSmall", []]],
+    ["FallenClassesMedium", missionNamespace getVariable ["Waldo_TreeFelling_FallenClassesMedium", []]],
+    ["FallenClassesLarge", missionNamespace getVariable ["Waldo_TreeFelling_FallenClassesLarge", []]]
+];
+if !(_treePatterns isEqualType [] && {_treePatterns findIf {!(_x isEqualType "") || {_x == ""}} < 0}) then {
+    _treeIssues pushBack "WeaponPatterns must be a list of non-empty text fragments";
+};
+if !(_treeAllowedClasses isEqualType []) then {
+    _treeIssues pushBack "AllowedClasses must be an array";
+    _treeAllowedClasses = [];
+};
+{
+    if !(isClass (configFile >> "CfgVehicles" >> _x)) then {_treeIssues pushBack format ["unknown allowed CfgVehicles class %1", _x]};
+} forEach _treeAllowedClasses;
+{
+    _x params ["_settingName", "_classes"];
+    if !(_classes isEqualType []) then {
+        _treeIssues pushBack format ["%1 must be an array", _settingName];
+    } else {
+        {
+            if !(isClass (configFile >> "CfgVehicles" >> _x)) then {_treeIssues pushBack format ["%1 has unknown CfgVehicles class %2", _settingName, _x]};
+        } forEach _classes;
+    };
+} forEach _treeReplacementLists;
+private _treeThresholds = missionNamespace getVariable ["Waldo_TreeFelling_SizeThresholds", [7, 15]];
+if !(_treeThresholds isEqualType [] && {count _treeThresholds >= 2} && {(_treeThresholds select 0) isEqualType 0} && {(_treeThresholds select 1) isEqualType 0} && {(_treeThresholds select 0) < (_treeThresholds select 1)}) then {
+    _treeIssues pushBack "SizeThresholds must contain two increasing numbers, for example [7, 15]";
+};
+private _treeDirectionSetting = missionNamespace getVariable ["Waldo_TreeFelling_DirectionMode", "RANDOM"];
+private _treeDirection = if (_treeDirectionSetting isEqualType "") then {toUpperANSI _treeDirectionSetting} else {"INVALID"};
+if !(_treeDirection in ["RANDOM", "STRIKE", "ORIGINAL"]) then {_treeIssues pushBack "DirectionMode must be RANDOM, STRIKE or ORIGINAL"};
+private _treeEfficiencies = missionNamespace getVariable ["Waldo_TreeFelling_ToolEfficiency", createHashMap];
+if !(_treeEfficiencies isEqualType createHashMap) then {
+    _treeIssues pushBack "ToolEfficiency must be a HashMap";
+} else {
+    {
+        private _value = _treeEfficiencies get _x;
+        if (_x == "" || {!(_value isEqualType 0 && {_value > 0})}) then {_treeIssues pushBack format ["ToolEfficiency row %1 must use a non-empty fragment and positive number", _x]};
+    } forEach keys _treeEfficiencies;
+};
+private _treeValid = _treeIssues isEqualTo [];
+private _treeDetail = format ["enabled=%1 patterns=%2 direction=%3", _treeEnabled, _treePatterns, _treeDirection];
+if (!_treeValid) then {_treeDetail = _treeDetail + "; " + (_treeIssues joinString "; ")};
+["optional-feature", "tree-felling", if (!_treeEnabled) then {"DISABLED"} else {if (_treeValid) then {"LOADED"} else {"ERROR"}}, _treeDetail, _treeEnabled && {!_treeValid}] call _status;
 
 // Ask every interface client for local UI, mod and action state. The server retains authority over
 // the final report and accepts a response only from its claimed network owner.

@@ -48,7 +48,24 @@ if (_model find "tree" < 0 && {_allowedClasses find typeOf _target < 0}) exitWit
 private _bounds = boundingBoxReal _target;
 private _height = abs (((_bounds select 1) select 2) - ((_bounds select 0) select 2));
 private _toolProfiles = missionNamespace getVariable ["Waldo_TreeFelling_ToolEfficiency", createHashMap];
-private _efficiency = (_toolProfiles getOrDefault [_weapon, 1]) max 0.05;
+if !(_toolProfiles isEqualType createHashMap) then {_toolProfiles = createHashMap};
+private _toolProfileKeys = keys _toolProfiles;
+private _exactToolIndex = _toolProfileKeys findIf {toLowerANSI _x == _weaponLower};
+private _efficiency = 1;
+if (_exactToolIndex >= 0) then {
+    _efficiency = _toolProfiles get (_toolProfileKeys select _exactToolIndex);
+} else {
+    private _bestPatternLength = -1;
+    {
+        private _pattern = toLowerANSI _x;
+        if (_pattern != "" && {_weaponLower find _pattern >= 0} && {count _pattern > _bestPatternLength}) then {
+            _efficiency = _toolProfiles get _x;
+            _bestPatternLength = count _pattern;
+        };
+    } forEach _toolProfileKeys;
+};
+if !(_efficiency isEqualType 0) then {_efficiency = 1};
+_efficiency = _efficiency max 0.05;
 private _required = ceil (((missionNamespace getVariable ["Waldo_TreeFelling_BaseHits", 4]) + (_height * (missionNamespace getVariable ["Waldo_TreeFelling_HeightFactor", 0.35]))) / _efficiency);
 private _hits = (_target getVariable ["Waldo_TreeFelling_Hits", 0]) + 1;
 _target setVariable ["Waldo_TreeFelling_Hits", _hits, true];
@@ -82,7 +99,7 @@ private _fallenObject = objNull;
 if (count _validClasses > 0) then {
     private _fallen = createVehicle [selectRandom _validClasses, _position, [], 0, "CAN_COLLIDE"];
     _fallenObject = _fallen;
-    private _directionMode = toUpperANSI (missionNamespace getVariable ["Waldo_TreeFelling_DirectionMode", if (missionNamespace getVariable ["Waldo_TreeFelling_FallenRandomDirection", true]) then {"RANDOM"} else {"ORIGINAL"}]);
+    private _directionMode = toUpperANSI (missionNamespace getVariable ["Waldo_TreeFelling_DirectionMode", "RANDOM"]);
     private _fallenDirection = switch (_directionMode) do {
         case "STRIKE": {_unit getDir _target};
         case "ORIGINAL": {_direction + random [-15, 0, 15]};

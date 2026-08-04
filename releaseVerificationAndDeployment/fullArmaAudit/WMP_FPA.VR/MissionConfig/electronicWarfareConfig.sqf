@@ -53,10 +53,10 @@ createHashMapFromArray [
         ["Waldo_Jamming_ScanBearingArc", 30, true], // ADVANCED total vague bearing sector in degrees.
         ["Waldo_Jamming_ScanDistanceBands", [35, 150, 600], true], // METRES: <=35 nearby, <=150 close, <=600 distant, then very distant.
         ["Waldo_Jamming_AllowPlayerToggle", true, true], // BOOL: ordinary activate/deactivate operator action.
-        ["Waldo_Jamming_DisableChallenge", false, true], // BOOL: add hostile-disable interaction/minigame.
+        ["Waldo_Jamming_DisableChallenge", true, true], // true: active jammers use Disable Jammer and its minigame instead of a bypass toggle.
         ["Waldo_Jamming_DisableChallengeId", "circuit", true], // STRING: registered interaction-equipment ID.
         ["Waldo_Jamming_DisableDifficulty", "standard", true], // STRING: easy, standard, hard or expert.
-        ["Waldo_Jamming_DisableEngineerOnly", true, true], // BOOL: restrict disable challenge to engineers.
+        ["Waldo_Jamming_DisableEngineerOnly", false, true], // false: anyone may try; true: only ACE engineers may try.
         ["Waldo_Jamming_DisableResult", "DISABLE", true] // DISABLE or DEACTIVATE.
     ]]
 ]

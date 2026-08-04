@@ -20,7 +20,11 @@ Arbitrary three-dimensional mesh volumes are not reliable in SQF; compose suppor
 
 ## Tree felling
 
-Tree felling supports protected markers/triggers, exact tool-efficiency overrides, random/original/strike fall direction, configurable resource yields and optional session-only regrowth. Terrain-object identities are not stable enough to promise restart-safe regrowth; persistence should track authored objects or mission-level state instead.
+Tree felling supports protected markers/triggers, case-insensitive classname or fragment efficiency
+overrides, random/original/strike fall direction, configurable resource yields and optional
+session-only regrowth. Exact tool matches take priority; otherwise the longest matching fragment is
+used. Terrain-object identities are not stable enough to promise restart-safe regrowth; persistence
+should track authored objects or mission-level state instead.
 
 ## Emergency dismount
 

@@ -68,10 +68,10 @@ createHashMapFromArray [
         ["Waldo_ImprovedHelicopterLanding_MaximumGoArounds", 1], // COUNT: maximum automatic retries for one landing order.
         ["Waldo_ImprovedHelicopterLanding_MaximumClimbRate", 8], // METRES/SECOND: vertical command clamp.
         ["Waldo_ImprovedHelicopterLanding_MaximumDescentRate", 10], // METRES/SECOND: descent command clamp.
-        ["Waldo_ImprovedHelicopterLanding_TouchdownRadius", 2], // METRES: horizontal tolerance for exact touchdown.
+        ["Waldo_ImprovedHelicopterLanding_TouchdownRadius", 5], // METRES: accepted horizontal error. Larger is easier but less exact.
         ["Waldo_ImprovedHelicopterLanding_FinalCommitDistance", 75], // METRES: begin the final flare/landing phase.
         ["Waldo_ImprovedHelicopterLanding_ControlInterval", 0.05], // SECONDS: local control-loop interval; performance-sensitive.
-        ["Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds", 8], // SECONDS: hold landed state to prevent immediate takeoff.
+        ["Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds", 20], // SECONDS: keep the AI landed before releasing controls; prevents immediate takeoff.
         ["Waldo_AI_ProfileDisplayNames", createHashMapFromArray [ // ADVANCED: labels only; keys are implementation IDs.
             ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
             ["LINE", "WMP Line"], ["VETERAN", "WMP Veteran"], ["ELITE", "WMP Elite"]

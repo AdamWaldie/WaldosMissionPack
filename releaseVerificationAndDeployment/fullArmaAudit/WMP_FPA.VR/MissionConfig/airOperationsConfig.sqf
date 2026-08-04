@@ -50,7 +50,7 @@ createHashMapFromArray [
     ["featureFamilies", ["Airborne Gunship", "Dynamic Paradrop", "Dynamic Anti-Air"]],
     ["shared", [
         // MISSION MAKER: gunship availability, service rules and independent aircraft content pools.
-        ["Waldo_Gunship_Enable", false],             // BOOL: permits registration/use; creates no aircraft itself.
+        ["Waldo_Gunship_Enable", true],             // BOOL: permits registration/use; creates no aircraft itself.
         ["Waldo_Gunship_DefaultAltitude", 700],      // METRES ASL/ATL as selected by the gunship controller.
         ["Waldo_Gunship_MaximumAltitude", 5000],     // METRES: validation ceiling for scripted/ZEN requests.
         ["Waldo_Gunship_DefaultRadius", 1500],       // METRES: default orbit radius around the target area.
@@ -67,7 +67,9 @@ createHashMapFromArray [
         ["Waldo_Gunship_SideAircraftPools", createHashMapFromArray [ // SIDE ID -> candidate CfgVehicles classes.
             ["WEST", ["B_T_VTOL_01_armed_F"]], ["EAST", []], ["INDEPENDENT", []], ["CIVILIAN", []]
         ]],
-        ["Waldo_Gunship_FactionAircraftPools", createHashMap], // optional faction key -> aircraft classname ARRAY.
+        // OPTIONAL: normally leave empty. Add `CfgFactionClasses name -> aircraft classname ARRAY`
+        // rows only when a named faction must use a narrower pool than the side pool above.
+        ["Waldo_Gunship_FactionAircraftPools", createHashMap],
         // MISSION MAKER: classnames shown by paradrop and boarding selectors.
         ["Waldo_Paradrop_AircraftClasses", [ // transport-capable CfgVehicles classes offered to scripts/ZEN.
             "B_T_VTOL_01_infantry_F", "O_T_VTOL_02_infantry_dynamicLoadout_F",

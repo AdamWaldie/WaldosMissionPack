@@ -46,11 +46,32 @@
  * `requireAwarenessFor*` booleans can override that policy.
  * A zone may override these keys without changing the reusable preset.
  *
- * Breaching profiles are keyed by target CfgVehicles class. A profile uses `radius` (metres),
- * `explosives` (required strength), `destroyOriginal`, `hideOriginal`, `deleteOriginal`, and
- * `replacements` (array of replacement definitions). ExplosiveStrengths maps CfgAmmo class to the
- * numeric strength contributed by one detonation. Empty profile maps deliberately make nothing
- * breachable until a mission supplies content.
+ * QUICK START - TREE FELLING:
+ * 1. Change Waldo_TreeFelling_Enable to true.
+ * 2. Check the classname of the axe supplied by your mod. It must contain one of the text fragments
+ *    in Waldo_TreeFelling_WeaponPatterns. For example, `myMod_fireAxe` matches `"axe"`.
+ * 3. Leave the remaining settings unchanged for the first test. Look at a tree within 3 metres,
+ *    equip the axe and use the Fell Tree / Clear Brush action.
+ * Arma 3 has no vanilla hand-held axe weapon, so enabling this feature without an axe mod or custom
+ * weapon cannot create a usable cutting tool by itself.
+ *
+ * QUICK START - EXPLOSIVE BREACHING:
+ * 1. Place an 8 m City Wall (`Land_City2_8m_F`) in Eden.
+ * 2. Change Waldo_Breaching_Enable to true. The shipped profile below is already ready to use.
+ * 3. In game, place and detonate an ACE M112 demolition block or satchel within 5 metres of it.
+ * The example affects only that exact wall class. It does not make every wall in the mission
+ * destructible. Copy the complete example profile and replace its target classname to add another.
+ *
+ * HOW TO READ A BREACH PROFILE:
+ * The first quoted classname is the object that may be breached. Settings inside its HashMap are:
+ * `radius` = how close the explosion must be; `explosives` = allowed CfgAmmo classnames;
+ * `requiredStrength` = total force needed; `destroyOriginal` = damage the target;
+ * `hideOriginal` = hide the target and its collision; `deleteOriginal` = permanently delete it;
+ * `replacements` = optional objects spawned relative to the old target. Keep replacements empty for
+ * a simple full-width opening. ExplosiveStrengths assigns force to each CfgAmmo class: the shipped
+ * demo charge contributes 1 and the satchel contributes 3. Derived/scripted ammo subclasses inherit
+ * the configured base-class strength. `deleteOriginal = false` is the safe default because a hidden
+ * object can be restored with Waldo_fnc_BreachingReset; a deleted object cannot.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Hazardous Environments", "Tree Felling", "Explosive Breaching"]],
@@ -96,31 +117,63 @@ createHashMapFromArray [
                 ["damageStageMessages", ["Oxygen deprivation is causing injury.", "Critical oxygen deprivation: reach pressure immediately."]]
             ]]
         ]],
-        // MISSION MAKER enablement/content with ADVANCED hit and world-geometry tuning.
-        ["Waldo_TreeFelling_Enable", false],        // BOOL: install felling handlers on interface clients/server.
-        ["Waldo_TreeFelling_Range", 3],             // METRES: maximum usable tree/tool distance.
-        ["Waldo_TreeFelling_BaseHits", 3],          // HITS: base strikes required before height adjustment.
-        ["Waldo_TreeFelling_HeightFactor", 0.25],   // HITS PER METRE: extra resistance from tree height.
-        ["Waldo_TreeFelling_HitCooldown", 0.7],     // SECONDS: minimum accepted time between strikes.
-        ["Waldo_TreeFelling_WeaponPatterns", ["axe", "hatchet"]], // lower-case substrings matched in tool classnames.
-        ["Waldo_TreeFelling_FallenClasses", ["Land_WoodenLog_F"]], // fallback CfgVehicles replacement pool.
-        ["Waldo_TreeFelling_FallenClassesSmall", []],  // optional pool used below first SizeThreshold.
-        ["Waldo_TreeFelling_FallenClassesMedium", []], // optional pool between SizeThresholds.
-        ["Waldo_TreeFelling_FallenClassesLarge", []],  // optional pool above second SizeThreshold.
-        ["Waldo_TreeFelling_SizeThresholds", [7, 15]], // METRES `[small/medium, medium/large]` boundaries.
-        ["Waldo_TreeFelling_FallenRandomDirection", true], // compatibility BOOL; DirectionMode is authoritative.
-        ["Waldo_TreeFelling_DirectionMode", "RANDOM"], // STRING: RANDOM, STRIKE (away from user) or ORIGINAL tree bearing.
-        ["Waldo_TreeFelling_ClearBushes", false],   // BOOL: remove nearby bush terrain objects when felled.
-        ["Waldo_TreeFelling_BushRadius", 4],        // METRES: bush-clearance radius.
-        ["Waldo_TreeFelling_ToolEfficiency", createHashMap], // HashMap classname/pattern to positive hit multiplier.
-        ["Waldo_TreeFelling_ProtectedAreas", []],   // ARRAY of inArea-compatible markers/triggers/locations/area arrays.
-        ["Waldo_TreeFelling_Yields", []],           // ARRAY of `[CfgVehicles class, count]` objects spawned per tree.
-        ["Waldo_TreeFelling_RegrowSeconds", -1],    // SECONDS: -1 never regrows; non-negative schedules regrowth.
-        // MISSION MAKER: server-validated breach targets and explosive effectiveness.
-        ["Waldo_Breaching_Enable", false],          // BOOL: install explosive detection; profiles still required.
-        ["Waldo_Breaching_Profiles", createHashMap], // HashMap target classname -> profile described above.
-        ["Waldo_Breaching_ExplosiveStrengths", createHashMapFromArray [ // CfgAmmo classname -> positive strength units.
-            ["DemoCharge_Remote_Ammo", 1], ["SatchelCharge_Remote_Ammo", 3]
+        // TREE FELLING - START HERE. Change only false to true for your first test.
+        ["Waldo_TreeFelling_Enable", false],        // false = off; true = players can use configured axe weapons.
+        ["Waldo_TreeFelling_Range", 3],             // Player must be this many metres or closer to the tree.
+        ["Waldo_TreeFelling_BaseHits", 3],          // Every tree needs at least this many accepted strikes.
+        ["Waldo_TreeFelling_HeightFactor", 0.25],   // Taller trees need 1 extra strike per 4 metres of height.
+        ["Waldo_TreeFelling_HitCooldown", 0.7],     // Ignore strikes made less than 0.7 seconds apart.
+
+        // A weapon is accepted when its classname contains either word below, ignoring capitals.
+        // Example: `myMod_fireAxe` matches "axe". Add a new quoted fragment for another axe mod.
+        ["Waldo_TreeFelling_WeaponPatterns", ["axe", "hatchet"]],
+
+        // Normally leave this empty. Add an exact tree object classname only when a mod tree's model
+        // name does not contain the word "tree": ["MyMod_OldOak_F", "MyMod_Pine_F"].
+        ["Waldo_TreeFelling_AllowedClasses", []],
+
+        // The original tree is hidden and one object from the applicable list is placed in its place.
+        ["Waldo_TreeFelling_FallenClasses", ["Land_WoodenLog_F"]], // Used when a size list below is empty.
+        ["Waldo_TreeFelling_FallenClassesSmall", []],  // Trees shorter than 7 m; [] uses FallenClasses.
+        ["Waldo_TreeFelling_FallenClassesMedium", []], // Trees from 7 m through 15 m; [] uses FallenClasses.
+        ["Waldo_TreeFelling_FallenClassesLarge", []],  // Trees taller than 15 m; [] uses FallenClasses.
+        ["Waldo_TreeFelling_SizeThresholds", [7, 15]], // First number ends small; second ends medium.
+        ["Waldo_TreeFelling_DirectionMode", "RANDOM"], // RANDOM, STRIKE (away from player), or ORIGINAL.
+        ["Waldo_TreeFelling_ClearBushes", false],   // true also clears bushes near a successful strike.
+        ["Waldo_TreeFelling_BushRadius", 4],        // Bush clearing distance in metres; ignored when false above.
+
+        // Optional cutting-speed multipliers. The longest matching classname fragment wins.
+        // 1 = normal, 2 = twice as effective, 0.5 = half as effective.
+        ["Waldo_TreeFelling_ToolEfficiency", createHashMapFromArray [
+            ["axe", 1],
+            ["hatchet", 1]
+        ]],
+
+        // Optional no-felling areas. Use existing Eden marker names: ["base_no_logging", "town_safe_zone"].
+        ["Waldo_TreeFelling_ProtectedAreas", []],
+        // Optional reward objects per felled tree. Example: [["Land_WoodenLog_F", 2]].
+        ["Waldo_TreeFelling_Yields", []],
+        ["Waldo_TreeFelling_RegrowSeconds", -1],    // -1 or 0 = never; a positive number regrows after that many seconds.
+
+        // EXPLOSIVE BREACHING - START HERE. The example wall is safe but inactive until this is true.
+        ["Waldo_Breaching_Enable", false],
+        ["Waldo_Breaching_Profiles", createHashMapFromArray [
+            // TARGET OBJECT CLASSNAME: this exact vanilla 8 m wall becomes breachable.
+            ["Land_City2_8m_F", createHashMapFromArray [
+                ["radius", 5], // Explosion must be within 5 metres of the wall.
+                ["explosives", ["DemoCharge_Remote_Ammo", "SatchelCharge_Remote_Ammo"]],
+                ["requiredStrength", 1], // One demo charge (1) or one satchel (3) is enough.
+                ["destroyOriginal", true], // Damage the original wall when the threshold is reached.
+                ["hideOriginal", true],    // Hide it to guarantee a clear full-width opening.
+                ["deleteOriginal", false], // Keep it recoverable with Waldo_fnc_BreachingReset.
+                ["replacements", []]       // [] = create no debris or replacement wall sections.
+            ]]
+            // To add another target, place a comma above and copy the entire target/profile block.
+        ]],
+        ["Waldo_Breaching_ExplosiveStrengths", createHashMapFromArray [
+            // CfgAmmo classname, force contributed by one detonation.
+            ["DemoCharge_Remote_Ammo", 1],
+            ["SatchelCharge_Remote_Ammo", 3]
         ]]
     ]]
 ]

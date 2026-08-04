@@ -113,10 +113,10 @@ These let you tune how realistic/gamey the jamming feels. All are on by default.
 | `Waldo_Jamming_ScanBearingArc` | `30` | Width in degrees of the quantised bearing sector reported to the operator. |
 | `Waldo_Jamming_ScanDistanceBands` | `[35, 150, 600]` | Absolute metre thresholds separating deliberately vague `VERY CLOSE`, `NEARBY`, `DISTANT` and `VERY DISTANT` reports. Absolute bands prevent a nearby source being described as distant merely because it has a large configured footprint. |
 | `Waldo_Jamming_AllowPlayerToggle` | `true` | Legacy setting name retained for compatibility. It now allows **Activate Jammer** while an emitter is inactive. Players must use **Disable Jammer** to turn an active field off, so the direct/challenged procedure cannot be bypassed. Activation also resets the optional procedure for repeat use. |
-| `Waldo_Jamming_DisableChallenge` | `false` | Require a shared field-equipment procedure before player disablement. Existing missions remain unchanged until opted in; the Zeus placement module opts in by default. |
+| `Waldo_Jamming_DisableChallenge` | `true` | Require the shared field-equipment procedure before player disablement. Set `false` only when an immediate **Disable Jammer** action is preferred. The ordinary operator toggle cannot bypass disablement while the jammer is active. |
 | `Waldo_Jamming_DisableChallengeId` | `"circuit"` | Shared procedure used by challenge-enabled emitters. Any registered interaction challenge id is accepted. |
 | `Waldo_Jamming_DisableDifficulty` | `"standard"` | `easy`, `standard`, `hard`, or `expert`. |
-| `Waldo_Jamming_DisableEngineerOnly` | `true` | Require ACE engineer capability. This is checked locally for action visibility and again by the server. |
+| `Waldo_Jamming_DisableEngineerOnly` | `false` | `false` lets any player attempt the procedure; `true` requires ACE engineer capability. The server validates this again when the attempt completes. |
 | `Waldo_Jamming_DisableResult` | `"DISABLE"` | `DISABLE` leaves a curator-reactivatable object; `DESTROY` destroys and deregisters it. |
 
 ## EW toolkit (for players, no Zeus needed)
