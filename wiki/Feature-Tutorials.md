@@ -98,6 +98,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 - [WMP Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
 - [Zeus and Script API Parity](Zeus-And-Script-API-Parity)
 - [Mission Diagnostics](Mission-Diagnostics)
+- [Claude Mission Config Skill](Claude-Mission-Config-Skill)
 - [Mission Configuration Reference](Mission-Configuration-Reference)
 - [Coding and Documentation Standards](Coding-Standards)
 

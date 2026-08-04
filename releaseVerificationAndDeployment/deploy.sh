@@ -24,6 +24,7 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 # Special Builds
 #python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_unitInsignias.json --deploy
+python3 releaseVerificationAndDeployment/build.py --build config_claudeSkill.json --deploy
 
 sed -i "s/DEVBUILD/${VERSION_TAG}/g" WMP_Compositions/*/header.sqe
 
