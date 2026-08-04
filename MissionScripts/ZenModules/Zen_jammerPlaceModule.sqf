@@ -74,7 +74,7 @@ private _disableProcedureOptions = ["circuit"] call Waldo_fnc_MiniGameInteractio
         ["CHECKBOX", ["Require Field Disable Procedure", "Replace instant hostile field disablement with a shared interaction challenge."], true, false],
         ["COMBO", ["Disable Procedure", "Choose any shared interaction procedure for shutting down the jammer."], _disableProcedureOptions],
         ["TOOLBOX:WIDE", ["Procedure Difficulty", "Shared interaction difficulty profile."], [1, 1, 4, ["Easy", "Standard", "Hard", "Expert"]]],
-        ["CHECKBOX", ["Engineer only", "Hide the field-disable action from non-engineers. Disabled by default so public Zeus players can use the objective."], false],
+        ["CHECKBOX", ["Engineer only", "Hide the field-disable action from non-engineers. Disabled by default so ordinary players can use the objective."], false],
         ["TOOLBOX:WIDE", ["Successful disable result", "Disable keeps the prop and turns the field off; destroy removes it."], [0, 1, 2, ["Disable field", "Destroy emitter"]]]
     ],
     {

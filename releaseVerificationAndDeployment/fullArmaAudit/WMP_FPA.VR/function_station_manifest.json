@@ -2595,20 +2595,20 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_EcoCore_getPubZeusActionJipId",
-      "file": "MissionScripts/EconomySystems/Core/getPubZeusActionJipId.sqf",
+      "name": "Waldo_fnc_EcoCore_getZeusActionJipId",
+      "file": "MissionScripts/EconomySystems/Core/getZeusActionJipId.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_EcoCore_clearPubZeusObjectAction",
-      "file": "MissionScripts/EconomySystems/Core/clearPubZeusObjectAction.sqf",
+      "name": "Waldo_fnc_EcoCore_clearZeusObjectAction",
+      "file": "MissionScripts/EconomySystems/Core/clearZeusObjectAction.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_EcoCore_publishPubZeusObjectAction",
-      "file": "MissionScripts/EconomySystems/Core/publishPubZeusObjectAction.sqf",
+      "name": "Waldo_fnc_EcoCore_publishZeusObjectAction",
+      "file": "MissionScripts/EconomySystems/Core/publishZeusObjectAction.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
@@ -3573,8 +3573,8 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_EcoResource_startPubZeusZoneActionBridge",
-      "file": "MissionScripts/EconomySystems/Resource/startPubZeusZoneActionBridge.sqf",
+      "name": "Waldo_fnc_EcoResource_startZeusZoneActionBridge",
+      "file": "MissionScripts/EconomySystems/Resource/startZeusZoneActionBridge.sqf",
       "station": "economy-resource",
       "activation": "manual"
     },

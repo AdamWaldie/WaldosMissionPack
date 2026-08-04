@@ -24,5 +24,5 @@
             _purchaseTerminal,
             "WaldoEcoBuy_PurchaseActionAddedLocalV2",
             call Waldo_fnc_EcoBuy_getOfficialPurchaseActionArgs
-        ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction
+        ] call Waldo_fnc_EcoCore_publishZeusObjectAction
 

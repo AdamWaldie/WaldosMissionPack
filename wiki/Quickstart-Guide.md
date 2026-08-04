@@ -97,6 +97,9 @@ The compositions archive is separate from the mission pack.
 
 Compositions accelerate setup but do not replace the scripts in the mission folder.
 
+See [Eden Compositions](Eden-Compositions) for the semantic categories, current catalogue,
+customisation rules and features that intentionally remain script/Zeus-only.
+
 ## Where to go next
 
 - [Feature Index](Feature-Tutorials) — choose a capability.

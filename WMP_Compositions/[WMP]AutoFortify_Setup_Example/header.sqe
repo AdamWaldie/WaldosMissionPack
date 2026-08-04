@@ -1,7 +1,7 @@
 version=54;
 name="[WMP] AutoFortify Setup Example";
 author="WaldoTheWarfighter";
-category="Waldos Mission Pack Compositions";
+category="Waldos Mission Pack Compositions - Logistics";
 requiredAddons[]=
 {
 	"A3_Characters_F",

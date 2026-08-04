@@ -8,7 +8,7 @@
  *
  * Original engine: "Party Games Scripted" by |LorD|[Habilidade]Deus Ex.
  * Ported into WaldosMissionPack and rebranded to the Waldo_MG_ namespace; game
- * logic is preserved from the original composition. Do not claim original authorship.
+ * logic is maintained as part of the WMP party-game framework.
  *
  * Arguments:
  * None

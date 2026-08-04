@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_TacticalDisplay";
+			init="if (isServer) then {[this, sideUnknown, 2000, true] call Waldo_fnc_TacticalDisplayRegister;};";
+		};
+		id=1;
+		type="Land_MapBoard_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-3,0};};
+		title="Tactical Display: the board opens the WMP tactical map. sideUnknown follows each viewer; radius is 2000 m; known enemy contacts are enabled.";
+		id=2;
+	};
+};

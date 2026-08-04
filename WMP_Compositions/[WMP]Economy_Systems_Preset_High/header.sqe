@@ -1,7 +1,7 @@
 version=54;
 name="[WMP] Waldos Economy Systems - High Preset";
 author="WaldoTheWarfighter";
-category="Waldos Mission Pack Compositions";
+category="Waldos Mission Pack Compositions - Mission Systems";
 requiredAddons[]=
 {
 	"A3_Structures_F_Mil_Helipads"

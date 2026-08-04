@@ -17,7 +17,7 @@ AUDIT_ROOT = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
 TEMPLATE = AUDIT_ROOT / "FullArmaAudit.VR"
 RANGE_TEMPLATE = AUDIT_ROOT / "WMP_FPA.VR"
 CONFIG = ROOT / "releaseVerificationAndDeployment" / "config.json"
-VERSION = re.compile(r'onLoadName\s*=\s*"[^"]*?v([0-9]+\.[0-9]+\.[0-9]+)"')
+VERSION = re.compile(r'onLoadName\s*=\s*"[^"]*?v([0-9A-Za-z][0-9A-Za-z._-]*)"')
 IDENTITY = {
     "onLoadName": "WMP FULL PACK PR AUDIT",
     "onLoadMission": "Ongoing full-pack pull request audit",

@@ -422,7 +422,7 @@ class items
 		flags=2;
 		class Attributes
 		{
-			init="c130Plane_1 call Waldo_fnc_VehicleJumpSetup;c130Plane_1 flyInHeight 1200;c130Plane limitSpeed 300";
+			init="c130Plane_1 call Waldo_fnc_VehicleJumpSetup;c130Plane_1 flyInHeight 1200;c130Plane_1 limitSpeed 300";
 			name="c130Plane_1";
 			reportOwnPosition=1;
 		};

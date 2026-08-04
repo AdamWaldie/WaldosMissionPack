@@ -90,7 +90,7 @@ if (hasInterface && {isNil "WaldoEcoCommand_LocalIdentityLoopStarted"}) then {
 };
 
 [] call Waldo_fnc_EcoResource_startZoneCaptureRequestLoop;
-[] call Waldo_fnc_EcoResource_startPubZeusZoneActionBridge;
+[] call Waldo_fnc_EcoResource_startZeusZoneActionBridge;
 
 [] call Waldo_fnc_EcoResource_startCrateCollectRequestLoop;
 

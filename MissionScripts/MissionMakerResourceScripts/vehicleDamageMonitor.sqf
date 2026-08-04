@@ -1,24 +1,14 @@
 /*
-Script for verifying how much damage a vehicle is taken and what parts are affected. It prints this to a hint.
+ * Author: WaldoTheWarfighter
+ * Debug helper that monitors the vehicle under the local cursor and reports total and named
+ * hit-point damage until that vehicle is destroyed or removed.
+ *
+ * Arguments: None; resolves `cursorObject` locally when executed.
+ * Return Value: Script handle stored in `real_vicwatch`.
+ * Example: execute this file locally from the debug console while aiming at a vehicle.
+ * Current caller: manual mission-maker diagnostics only.
+ */
 
-This version is used via:
-
-1) Load into the editor or wherever you have debug permissions.
-
-2) Aim your weapon at a vehicle.
-
-3) Access the debug console.
-
-4) Paste the script in the debug console and local exec.
-
-The script will continuously run until the vehicle or unit has been deleted or destroyed.
-
-This scripts original author is known as "Real" at the time of this scritps inclusion in this pack.
-I claim no rights to the script. Please credit them.
-
-*/
-
-//Original Script
 _vic = cursorObject //vehicle to test hitpoints
 ;
 terminate real_vicwatch;

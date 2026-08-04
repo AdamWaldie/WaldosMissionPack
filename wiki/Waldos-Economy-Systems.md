@@ -6,7 +6,7 @@ _Associated Files: MissionScripts\EconomySystems\ (the `Waldo_fnc_Eco*` function
 
 ![Economy resource authoring](images/economy/economy-resources.png)
 
-Waldos Economy Systems is a **pub-Zeus, RTS-style economy suite** built into the pack. It lets you run a resource economy, a tech tree, base construction, and a vehicle store entirely from inside Zeus — no scripting needed by the operator, and no Eden work needed beyond turning it on. It works for any curator, including a player-controlled Zeus.
+Waldos Economy Systems is a **Zeus, RTS-style economy suite** built into the pack. It lets you run a resource economy, a tech tree, base construction, and a vehicle store entirely from inside Zeus — no scripting needed by the operator, and no Eden work needed beyond turning it on. It works for any curator, including a player-controlled Zeus.
 
 > **Requires Zeus Enhanced (ZEN).** Every action is a ZEN custom module under the **"Waldos Economy Systems"** category in the Zeus module list. Without ZEN loaded the economy still runs on the server (income, research, production, player requests), but there is no in-Zeus authoring menu. ZEN is already a common dependency for the pack's other Zeus modules.
 

@@ -13,7 +13,7 @@ class items
 		};
 		class Attributes
 		{
-			init="Waldo_Economy_Preset = ""HIGH""; [] spawn Waldo_fnc_EcoInit;";
+			init="missionNamespace setVariable [""Waldo_Economy_Enable"", true]; if (isServer) then {missionNamespace setVariable [""Waldo_Economy_Preset"", ""HIGH"", true];}; [] call Waldo_fnc_EcoInit;";
 		};
 		id=1;
 		type="Land_HelipadEmpty_F";

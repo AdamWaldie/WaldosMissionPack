@@ -54,13 +54,15 @@ DEFAULT_DESC = os.path.join(PROJECT_ROOT, "description.ext")
 
 
 def parse_version_from_desc(desc_path):
-    """Extract X.Y[.Z] from the onLoadName field of description.ext."""
+    """Extract the complete safe release tag text from description.ext's onLoadName."""
     try:
         with open(desc_path, "r", encoding="utf-8", errors="replace") as fh:
             text = fh.read()
     except OSError as exc:
         sys.exit("ERROR: cannot read description.ext ({}): {}".format(desc_path, exc))
-    match = re.search(r'onLoadName\s*=\s*"[^"]*v(\d+\.\d+(?:\.\d+)?)"', text)
+    match = re.search(
+        r'onLoadName\s*=\s*"[^"]*v([0-9A-Za-z][0-9A-Za-z._-]*)"', text
+    )
     if not match:
         sys.exit("ERROR: could not parse a version from onLoadName in " + desc_path)
     return match.group(1)

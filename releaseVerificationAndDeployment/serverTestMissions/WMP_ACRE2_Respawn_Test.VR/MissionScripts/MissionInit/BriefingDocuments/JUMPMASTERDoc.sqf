@@ -1,49 +1,37 @@
 /*
  * Author: WaldoTheWarfighter
- * Adds the jumpmaster (paradrop) checklist to the player's map diary.
+ * Adds jumpmaster administration, drop sequence and stick-brief guidance to the player's map diary.
+ * This client-only function is called by Waldo_fnc_AddDocs during player setup.
  *
- * Arguments:
- * None
- *
- * Return Value:
- * Nothing
+ * Arguments: None
+ * Return Value: Nothing
  *
  * Example:
  * call Waldo_fnc_JUMPMASTER;
  */
 
-player createDiaryRecord["Checklists",
-    ["JUMPMASTER CHECKLISTS",
-        "
-<font color='#addde6' size='20'>                    JUMPMASTER CHECKLISTS<br/>
------------------------------------------------------------------</font><br/><br/>
-<font color='#addde6'>ADMIN CHECKLIST</font><br/><br/>
-<img image='MissionScripts\MissionInit\BriefingDocuments\BriefImages\AB_Admin_Checklist.paa' width='367' height='166'/><br/><br/>
-<font color='#addde6'>DROP CHECKLIST</font><br/><br/>
-<img image='MissionScripts\MissionInit\BriefingDocuments\BriefImages\AB_Drop_Checklist.paa' width='367' height='238'/><br/><br/>
-<font color='#addde6'>Organize Stick:</font><br/><br/>
-Usually the stick will consist of 2 squads plus platoon, company or other staff.  The stick can consist of no more than 24 troopers not including the jumpmaster.  The stick should be organized as follows:<br/><br/>
-
-1.	The jump order of squads is determined by the company commander or OIC.<br/><br/>
-
-2.	The stick should be organized by squad in squad file. Alpha team, SL, Bravo team. Buddy teams should always be together in the stick.  Command elements can be placed in the center of the stick and should be assigned a jump buddy.<br/><br/>
-
-3.	Once ordered in file, the jumpmaster will walk down the file, assigning a number to each trooper.  The first trooper in the stick is numbered 1.  Caution the troopers to remember their number and place in the stick.<br/><br/>
-
-<font color='#addde6'>Brief the Stick:</font><br/><br/>
-Conduct the briefing as follows:<br/><br/>
-
-1.	Assign the jump frequency. SR 100 by default. Increment up by 1 for each subsequent stick.<br/><br/>
-
-2.	On the map, identify the drop zone and the route onto it.  Provide the grid reference of the drop zone rally point.<br/><br/>
-
-3.	Confirm the timings, order of operations and basic jump commands.<br/><br/>
-
-4.	Landing plan including the order of aircraft, i.e. will they be in the first aircraft, second or third etc. (Or in the case of multiple passes of a single aircraft, the order they will be going in)<br/><br/>
-
-5.	Procedure for requesting medical aid on the DZ.  Contact SL on squad SR and request CLS or platoon medic.<br/><br/>
-
-6.	Take questions.
-        "
-    ]
-];
+player createDiaryRecord ["Checklists", ["Jumpmaster Checklists", "
+<font color='#addde6' size='20'>JUMPMASTER CHECKLISTS</font><br/><br/>
+<font color='#addde6' size='16'>ADMINISTRATION</font><br/>
+<font color='#d8f2f7'>1. Meet OIC</font> — confirm the marked drop zone, loading assembly point and number of sticks.<br/>
+<font color='#d8f2f7'>2. Coordinate</font> — confirm jump order, aircraft and stick loading.<br/>
+<font color='#d8f2f7'>3. Brief pilots</font> — route, ingress, egress, 300 m altitude and 240 km/h airspeed; jump frequency for the aircraft.<br/>
+<font color='#d8f2f7'>4. Move</font> — assemble and await troopers.<br/>
+<font color='#d8f2f7'>5. Organise and brief stick</font> — use the guidance below.<br/>
+<font color='#d8f2f7'>6. Load</font> — load by stick order, teleport or boarding doors. Jumpmaster boards last.<br/><br/>
+<font color='#addde6' size='16'>DROP SEQUENCE</font><br/>
+<font color='#d8f2f7'>Monitor</font> — track transit to the drop zone.<br/>
+<font color='#d8f2f7'>Get ready</font> — issue at approximately 30 seconds; troopers prepare to jump.<br/>
+<font color='#d8f2f7'>Stand by</font> — issue at 10–15 seconds; troopers prepare the jump action.<br/>
+<font color='#d8f2f7'>Go, go, go</font> — call numbers from one at approximately one trooper every two seconds.<br/>
+<font color='#d8f2f7'>Red light</font> — stop jumping at the end of the zone. Tell aircrew whether the aircraft is empty or another pass is required; jumpmaster exits last where possible.<br/><br/>
+<font color='#addde6' size='16'>ORGANISE THE STICK</font><br/>
+Normally two squads plus staff, up to 24 troopers excluding jumpmaster. Keep buddy teams together; place command elements centrally with a jump buddy. Number every trooper from one and make each remember their place.<br/><br/>
+<font color='#addde6' size='16'>BRIEF THE STICK</font><br/>
+• Jump frequency; increment for later sticks when required.<br/>
+• Drop zone, route and rally-point grid.<br/>
+• Timings, sequence and jump commands.<br/>
+• Aircraft or pass order.<br/>
+• Procedure for medical support on the drop zone.<br/>
+• Questions.
+"]];

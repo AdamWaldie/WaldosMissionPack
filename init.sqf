@@ -54,7 +54,7 @@ if (isServer) then {
 /*
 Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command)
 
-A pub-Zeus economy suite: define resources, capturable income zones and collectable crates,
+A Zeus economy suite: define resources, capturable income zones and collectable crates,
 run research at a Research Center, construct and upgrade buildings, and let players buy vehicles.
 A trusted "Ground Command" controls spending. Everything is driven live from the Zeus menu
 "Waldos Economy Systems" - no editor work required beyond enabling it.

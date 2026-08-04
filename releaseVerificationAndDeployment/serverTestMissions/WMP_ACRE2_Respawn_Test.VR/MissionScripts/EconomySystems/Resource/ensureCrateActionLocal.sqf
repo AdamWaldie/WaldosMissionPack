@@ -53,4 +53,4 @@
             "!(_target getVariable ['WaldoEcoResource_Collected', false])",
             5
         ]
-    ] call Waldo_fnc_EcoCore_publishPubZeusObjectAction
+    ] call Waldo_fnc_EcoCore_publishZeusObjectAction

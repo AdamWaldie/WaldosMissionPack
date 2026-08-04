@@ -56,7 +56,7 @@
         diag_log format ["[WMP ECO] Partial crate collection crate=%1 actor=%2 applied=%3 remaining=%4", netId _crate, name _caller, _appliedRows, _leftoverRows];
     } else {
         private _crateId = netId _crate;
-        [_crate, "WaldoEcoResource_CollectActionAddedLocal"] call Waldo_fnc_EcoCore_clearPubZeusObjectAction;
+        [_crate, "WaldoEcoResource_CollectActionAddedLocal"] call Waldo_fnc_EcoCore_clearZeusObjectAction;
         [_crate] call Waldo_fnc_EcoResource_deleteCrateMarker;
         // Hide and disable immediately while Arma propagates network-object deletion.
         _crate hideObjectGlobal true;

@@ -8,7 +8,7 @@
       "reason": "One consolidated authority pass must inspect connected players for the existing request-variable contract; object requests use registries and this replaces two separate player scans."
     },
     {
-      "key": "recurring_broadcast|MissionScripts/EconomySystems/Resource/startPubZeusZoneActionBridge.sqf|<file>|broadcast_setvariable_in_recurring_loop",
+      "key": "recurring_broadcast|MissionScripts/EconomySystems/Resource/startZeusZoneActionBridge.sqf|<file>|broadcast_setvariable_in_recurring_loop",
       "max_count": 6,
       "reason": "Legacy state cleanup is once per player and zone identifiers are change-gated; remaining matches include user-triggered action closures lexically nested in the guarded bridge."
     },

@@ -15,7 +15,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,true,west] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, true, west, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_West_Arsenal";
 			dynamicSimulation=1;
 		};
@@ -57,7 +57,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,false,west] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, false, west, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_West_NoArsenal";
 			dynamicSimulation=1;
 		};
@@ -99,7 +99,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,true,east] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, true, east, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_East_Arsenal";
 			dynamicSimulation=1;
 		};
@@ -141,7 +141,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,false,east] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, false, east, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_east_NoArsenal";
 			dynamicSimulation=1;
 		};
@@ -183,7 +183,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,true,independent] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, true, independent, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_independent_Arsenal";
 			dynamicSimulation=1;
 		};
@@ -225,7 +225,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,false,independent] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, false, independent, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_independent_NoArsenal";
 			dynamicSimulation=1;
 		};
@@ -267,7 +267,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,true,civilian] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, true, civilian, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_civilian_Arsenal";
 			dynamicSimulation=1;
 		};
@@ -309,7 +309,7 @@ class items
 		flags=4;
 		class Attributes
 		{
-			init="[this,false,civilian] spawn Waldo_fnc_DoStarterCrate;";
+			init="if (isServer) then {[this, false, civilian, false] spawn Waldo_fnc_DoStarterCrate;};";
 			name="StarterCrate_civilian_NoArsenal";
 			dynamicSimulation=1;
 		};

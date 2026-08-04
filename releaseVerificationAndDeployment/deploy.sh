@@ -3,12 +3,9 @@
 set -e
 
 VERSION_TAG=$*
-TAG_VERSION=${VERSION_TAG#v}      # strip an optional leading "v"
-TAG_CORE=${TAG_VERSION%%-*}       # drop a prerelease suffix (e.g. 4.8.0-rc1 -> 4.8.0)
-
 # The release tag is authoritative. Update only this workflow checkout before packaging so the
 # shipped mission title and generated cover always match without requiring a pre-release commit.
-python3 releaseVerificationAndDeployment/set_description_version.py "${TAG_CORE}"
+python3 releaseVerificationAndDeployment/set_description_version.py "${VERSION_TAG}"
 
 mkdir release/
 

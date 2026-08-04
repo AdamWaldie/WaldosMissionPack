@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Clear pub zeus object action.
+ * Clear Zeus object action.
  *
  * Part of the Waldos Economy Systems suite (shared core system).
  *
@@ -12,7 +12,7 @@
  * Nothing
  *
  * Example:
- * [_object, _flagVar] call Waldo_fnc_EcoCore_clearPubZeusObjectAction;
+ * [_object, _flagVar] call Waldo_fnc_EcoCore_clearZeusObjectAction;
  */
 
     params [

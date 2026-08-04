@@ -27,7 +27,9 @@ import sys
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
 PROJECT_ROOT = os.path.dirname(SCRIPT_DIR)
 DEFAULT_DESC = os.path.join(PROJECT_ROOT, "description.ext")
-VERSION_PATTERN = re.compile(r'(onLoadName\s*=\s*"[^"]*v)(\d+\.\d+(?:\.\d+)?)("[^;]*;)')
+VERSION_PATTERN = re.compile(
+    r'(onLoadName\s*=\s*"[^"]*v)(\d+\.\d+(?:\.\d+)?[0-9A-Za-z.-]*)("[^;]*;)'
+)
 
 
 def main():
@@ -38,11 +40,13 @@ def main():
     parser.add_argument("--desc", default=DEFAULT_DESC)
     args = parser.parse_args()
 
-    # description.ext uses the numeric mission-pack version. The full tag, including RC/prerelease
-    # text, remains available to package names and the cover generator invoked by deploy.sh.
-    match = re.match(r"^[vV]?(\d+\.\d+(?:\.\d+)?)", args.version)
+    # Store the complete safe tag identifier so the mission browser/title agrees with the archive
+    # and cover. Only the conventional leading "v" is omitted because the title already supplies it.
+    # WMP has historically used both numeric tags and placeholders such as v4.8.XRC, so the release
+    # workflow must copy rather than reinterpret the repository's chosen tag.
+    match = re.fullmatch(r"[vV]?([0-9A-Za-z][0-9A-Za-z._-]*)", args.version)
     if not match:
-        sys.exit("ERROR: release version must start with X.Y or X.Y.Z: " + args.version)
+        sys.exit("ERROR: release tag may contain only letters, numbers, dots, underscores and hyphens: " + args.version)
     version = match.group(1)
 
     try:
