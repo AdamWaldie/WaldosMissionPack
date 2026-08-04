@@ -38,7 +38,7 @@ TEXT_COLOR = (62, 118, 211)   # steel blue, sampled from the original text
 TITLE_SIZE = 70               # px -> rendered title ~825x51 (original ~822x53)
 TITLE_XY = (125, 375)         # top-left anchor of the visible glyphs
 VERSION_SIZE = 190            # px -> rendered "4.7.2" ~428x137 (original ~424x141)
-VERSION_XY = (292, 465)       # top-left anchor of the visible glyphs
+VERSION_Y = 465               # top anchor; horizontal position is centred under the title
 JPEG_QUALITY = 92
 
 SCRIPT_DIR = os.path.dirname(os.path.realpath(__file__))
@@ -72,6 +72,11 @@ def draw_line(draw, text, font, target_xy):
     draw.text((target_xy[0] - left, target_xy[1] - top), text, font=font, fill=TEXT_COLOR)
 
 
+def centered_x(container_x, container_width, child_width):
+    """Return the visible-glyph X coordinate that shares the container's centreline."""
+    return round(container_x + ((container_width - child_width) / 2))
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate the WMP loading screen.")
     parser.add_argument("version", nargs="?", help="Version to render (default: from description.ext)")
@@ -103,8 +108,15 @@ def main():
 
     image = Image.open(args.base).convert("RGB")
     draw = ImageDraw.Draw(image)
-    draw_line(draw, TITLE_TEXT, ImageFont.truetype(args.font, TITLE_SIZE), TITLE_XY)
-    draw_line(draw, version, ImageFont.truetype(args.font, VERSION_SIZE), VERSION_XY)
+    title_font = ImageFont.truetype(args.font, TITLE_SIZE)
+    version_font = ImageFont.truetype(args.font, VERSION_SIZE)
+    title_box = draw.textbbox((0, 0), TITLE_TEXT, font=title_font)
+    version_box = draw.textbbox((0, 0), version, font=version_font)
+    title_width = title_box[2] - title_box[0]
+    version_width = version_box[2] - version_box[0]
+    version_x = centered_x(TITLE_XY[0], title_width, version_width)
+    draw_line(draw, TITLE_TEXT, title_font, TITLE_XY)
+    draw_line(draw, version, version_font, (version_x, VERSION_Y))
 
     os.makedirs(os.path.dirname(args.out), exist_ok=True)
     image.save(args.out, "JPEG", quality=JPEG_QUALITY)

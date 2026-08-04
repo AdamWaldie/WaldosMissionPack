@@ -67,6 +67,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("generateLoadingScreen.py", workflow)
         self.assertIn("$GITHUB_OUTPUT", workflow)
         self.assertNotIn("::set-output", workflow)
+        self.assertIn("types: [published]", workflow)
+        self.assertNotIn("published, prereleased", workflow)
 
     def test_release_version_helper_persists_the_complete_rc_tag(self):
         cover_source = (
@@ -109,6 +111,7 @@ class FullAuditTests(unittest.TestCase):
             description = Path(directory) / "description.ext"
             description.write_text(placeholder, encoding="utf-8")
             self.assertEqual("4.8.XRC", cover.parse_version_from_desc(str(description)))
+        self.assertEqual(300, cover.centered_x(100, 500, 100))
 
     def test_composition_catalogue_uses_current_public_calls_and_locality_guards(self):
         root = ROOT / "WMP_Compositions"
