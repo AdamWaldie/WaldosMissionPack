@@ -31,8 +31,8 @@ createHashMapFromArray [
             ["BRAVO_77", "BRAVO 77", "LEGACY_VHF", 51.000]
         ],
         [
-            ["ALPHA", [5, 3], [["ACRE_PRC152", "ALPHA_NET", "RIGHT"], ["ACRE_PRC77", "ALPHA_77", "CENTER"]], []],
-            ["BRAVO", [6, 7], [["ACRE_PRC152", "BRAVO_NET", "LEFT"], ["ACRE_PRC77", "BRAVO_77", "CENTER"]], []]
+            ["ALPHA", [["ACRE_PRC343", "ALL", [5, 3], "LEFT"], ["ACRE_PRC152", "ALL", "ALPHA_NET", "RIGHT"], ["ACRE_PRC77", "ALL", "ALPHA_77", "BOTH"]]],
+            ["BRAVO", [["ACRE_PRC343", "ALL", [6, 7], "RIGHT"], ["ACRE_PRC152", "ALL", "BRAVO_NET", "LEFT"], ["ACRE_PRC77", "ALL", "BRAVO_77", "BOTH"]]]
         ]
     ]]],
     ["babel", createHashMapFromArray [

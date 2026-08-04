@@ -17,10 +17,10 @@ if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {false};
 private _plan = missionNamespace getVariable ['Waldo_ACRE2_Plan', []];
 // During the pre-start briefing the server plan may not yet have reached this client. Compilation is
 // pure and deterministic, so a local display-only preview is safe; it is never stored or used to tune.
-if (count _plan < 4 || {(_plan select 0) != 4}) then {
+if (count _plan < 4 || {(_plan select 0) != 5}) then {
     _plan = [_config, 0] call Waldo_fnc_ACRE2CompilePlan;
 };
-if (count _plan < 4 || {(_plan select 0) != 4}) exitWith {false};
+if (count _plan < 4 || {(_plan select 0) != 5}) exitWith {false};
 private _sideKey = switch (side player) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'}};
 private _sideIndex = (_plan select 2) findIf {(_x select 0) == _sideKey};
 if (_sideIndex < 0) exitWith {false};
@@ -56,7 +56,10 @@ private _displaySetting = {
 private _text = "<font size='16'>Communications Electronics Operating Instructions</font><br/><br/>";
 _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
 {
-    private _assignment = _x select 1;
+    private _rules = _x select 1;
+    private _ruleIndex = _rules findIf {toUpper (_x select 0) == 'ACRE_PRC343' && {(_x select 1) isEqualType 0} && {(_x select 1) == 1}};
+    if (_ruleIndex < 0) then {_ruleIndex = _rules findIf {toUpper (_x select 0) == 'ACRE_PRC343' && {toUpper str (_x select 1) == 'ALL'}}};
+    private _assignment = if (_ruleIndex < 0) then {[]} else {(_rules select _ruleIndex) select 2};
     private _line = if (_assignment isEqualType [] && {count _assignment >= 2}) then {
         format ['%1 - Block %2, Channel %3', _x select 0, _assignment select 0, _assignment select 1]
     } else {

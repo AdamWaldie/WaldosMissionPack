@@ -44,20 +44,25 @@ private _hashText = {
     private _autoSources = createHashMap;
     private _allocations = createHashMap;
     {
-        _x params ["_groupId", "_fallback343", "_defaults", "_assignments"];
-        private _explicit343 = _assignments select {toUpper (_x select 0) == "ACRE_PRC343" && {(_x select 2) isEqualType []}};
-        if (count _explicit343 > 0) then {
-            {private _target = _x select 2; _used pushBackUnique (((_target select 0) - 1) * 16 + (_target select 1))} forEach _explicit343;
-            _allocations set [_groupId call _normaliseGroupKey, +((_explicit343 select 0) select 2)];
-        } else {
-            if !(_fallback343 isEqualTo []) then {
-                _used pushBackUnique (((_fallback343 select 0) - 1) * 16 + (_fallback343 select 1));
-                _allocations set [_groupId call _normaliseGroupKey, +_fallback343];
+        _x params ["_groupId", "_assignments"];
+        private _shortRules = _assignments select {toUpper (_x select 0) == "ACRE_PRC343"};
+        {
+            private _target = _x select 2;
+            if (_target isEqualType [] && {count _target == 2}) then {
+                _used pushBackUnique (((_target select 0) - 1) * 16 + (_target select 1));
+            };
+        } forEach _shortRules;
+        private _primaryIndex = _shortRules findIf {(_x select 1) isEqualType 0 && {(_x select 1) == 1}};
+        if (_primaryIndex < 0) then {_primaryIndex = _shortRules findIf {toUpper str (_x select 1) == "ALL"}};
+        if (_primaryIndex >= 0) then {
+            private _target = (_shortRules select _primaryIndex) select 2;
+            if (_target isEqualType [] && {count _target == 2}) then {
+                _allocations set [_groupId call _normaliseGroupKey, +_target];
             } else {
                 private _normalisedGroup = _groupId call _normaliseGroupKey;
                 _autoKeys pushBack _normalisedGroup;
-                // Matching deliberately ignores separators, but PRC-343 shorthand needs the
-                // original callsign so `Viking 2-3` remains two numbers instead of becoming 23.
+                // Matching deliberately ignores separators, but shorthand needs the original
+                // callsign so `Viking 2-3` remains two numbers instead of becoming 23.
                 _autoSources set [_normalisedGroup, _groupId];
             };
         };
@@ -94,19 +99,20 @@ private _hashText = {
         };
     } forEach _autoKeys;
     private _groups = _sourceGroups apply {
-        _x params ["_groupId", "_unused343", "_defaults", "_assignments"];
+        _x params ["_groupId", "_assignments"];
         private _normalisedAssignments = _assignments apply {
             private _ear = toUpper (_x select 3);
             if (_ear == "BOTH") then {_ear = "CENTER"};
-            [toUpper (_x select 0), _x select 1, _x select 2, _ear]
+            private _scope = _x select 1;
+            if (_scope isEqualType "") then {_scope = toUpper _scope};
+            private _target = _x select 2;
+            if (toUpper (_x select 0) == "ACRE_PRC343" && {_target isEqualTo []}) then {
+                _target = +(_allocations getOrDefault [_groupId call _normaliseGroupKey, []]);
+            };
+            [toUpper (_x select 0), _scope, _target, _ear]
         };
-        private _normalisedDefaults = _defaults apply {
-            private _ear = toUpper (_x select 2);
-            if (_ear == "BOTH") then {_ear = "CENTER"};
-            [toUpper (_x select 0), _x select 1, _ear]
-        };
-        [_groupId call _normaliseGroupKey, _allocations getOrDefault [_groupId call _normaliseGroupKey, []], _normalisedDefaults, _normalisedAssignments]
+        [_groupId call _normaliseGroupKey, _normalisedAssignments]
     };
     _sidePlans pushBack [_sideKey, _preset, _nets, _groups];
 } forEach (_config getOrDefault ["sides", []]);
-[4, _revision, _sidePlans, _diagnostics]
+[5, _revision, _sidePlans, _diagnostics]

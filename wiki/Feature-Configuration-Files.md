@@ -354,7 +354,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 |---|---|
 | `Waldo_Hazard_Enable` | Master hazardous-environment opt-in. |
 | `Waldo_Hazard_Interval` | Local exposure update interval in seconds. |
-| `Waldo_Hazard_ShowStatus` | Shows the live hazard status element. |
+| `Waldo_Hazard_ShowStatus` | Optional continuous exposure card. Defaults off so entry/exit notices are not duplicated. A zone profile may override it with `showStatus`. |
 | `Waldo_Hazard_NotifyTransitions` | Announces entering/leaving a zone. |
 | `Waldo_Hazard_NotificationDuration` | Transition-card duration in seconds. |
 | `Waldo_Hazard_Presets` | Named profiles. Each profile may set `type`, `label`, `rate`, `decay`, protection/vehicle modifiers, `damageType`, staged `[exposure, damage]` thresholds, stage messages and `fatalExposure`. Networked callbacks use missionNamespace function-name strings. |

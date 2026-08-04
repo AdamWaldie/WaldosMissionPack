@@ -167,7 +167,7 @@ if (_acreLoaded) then {
     private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
     private _acreEnabled = _acreConfig getOrDefault ["enabled", false];
     private _acrePlan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
-    private _planValid = count _acrePlan >= 4 && {(_acrePlan select 0) == 4};
+    private _planValid = count _acrePlan >= 4 && {(_acrePlan select 0) == 5};
     private _revision = if (_planValid) then {_acrePlan select 1} else {-1};
     private _sidePlans = if (_planValid) then {_acrePlan select 2} else {[]};
     private _groupCount = 0;

@@ -47,13 +47,13 @@ WMP resolves every net against the **base radio class** and ignores incompatible
 
 | Radio | WMP target | Capacity or range | Safe authoring rule |
 |---|---|---|---|
-| PRC-343 | `[block, channel]` | 16 channels per block; 16 blocks under `FULL_RANGE`, 5 under `SIDE_ISOLATED` | Use the group's PRC-343 field or an explicit PRC-343 assignment. It does not consume LR named-net rows. |
+| PRC-343 | `[block, channel]` | 16 channels per block; 16 blocks under `FULL_RANGE`, 5 under `SIDE_ISOLATED` | Uses the same assignment row as every other radio; `[]` requests callsign inference. |
 | PRC-148 | Channel number | Channels 1-32 | May share a named net with PRC-152/117F when official side-preset channel numbers match. |
 | PRC-152 | Channel number | Channels 1-100 | May share numbered-channel PLT/AIR/CAS nets with PRC-148/117F. |
 | PRC-117F | Channel number | Channels 1-100 | May share numbered-channel PLT/AIR/CAS nets with PRC-148/152. |
-| BF-888S | Channel number | Channels 1-16 | Different band: use a BF-888S-specific net such as `BF_LOCAL`. |
-| SEM52SL | Channel number | Channels 1-12 | Different band: use a SEM52SL-specific net such as `SEM_LOCAL`. |
-| PRC-77 | Explicit MHz | 30-75.95 MHz, 50 kHz steps | Use a frequency net. It can share with SEM70 only at a value valid for both, such as 34.000 MHz. |
+| BF-888S | Channel number | Channels 1-16 | Different band: use a BF-888S-specific net such as `BF_HANDHELD`. |
+| SEM52SL | Channel number | Channels 1-12 | Different band: use a SEM52SL-specific net such as `SEM_HANDHELD`. |
+| PRC-77 | Explicit MHz | 30-75.95 MHz, 50 kHz steps | Use a frequency net. It can share with SEM70 only at a value valid for both, such as 51.000 MHz. |
 | SEM70 | Explicit MHz | 30-79.975 MHz, 25 kHz steps | Use a frequency net; never substitute an ordinary channel number. |
 | Unknown radio or vehicle rack | Unmanaged | Unknown | WMP preserves it. Register a tested carried-radio profile rather than guessing. |
 
@@ -61,44 +61,44 @@ The shipped families are `PRC_LR`, `BF888`, `SEM52`, `LEGACY_VHF` and the separa
 system. A net remains valid when at least one radio in that family supports its value. Validation
 then checks each actual group/player assignment against the selected radio. This permits, for
 example, a higher PRC-152/117F channel while clearly rejecting that same net on a PRC-148 whose
-32-channel capacity is too small. A legacy frequency that does
-not fit both PRC-77 and SEM70 range/step rules.
+32-channel capacity is too small. A shared legacy frequency must fit both PRC-77 and SEM70
+range/step rules when both radios are assigned to it.
 
 ## Groups, duplicate radios and ears
 
-A group is `[editor group ID, PRC-343 assignment, radio defaults, occurrence overrides]`:
+A group is `[editor group ID, assignment rows]`. Every radio uses
+`[radio class, "ALL" or occurrence number, target, ear]`:
 
 ```sqf
 [
     "VIKING-2-3", // 0: groupId set for this squad in Eden Editor.
-    [2, 3],         // 1: explicit PRC-343 Block 2, Channel 3. Use [] for automatic inference.
-    [               // 2: defaults apply to every carried occurrence of each listed class.
-        ["ACRE_PRC148", "PLT1", "RIGHT"],
-        ["ACRE_PRC152", "PLT1", "RIGHT"],
-        ["ACRE_PRC117F", "PLT1", "CENTER"]
-    ],
-    [               // 3: overrides change one same-type occurrence.
-        ["ACRE_PRC152", 2, "AIRGND", "LEFT"] // only the second PRC-152 differs.
+    [               // 1: [class, ALL/occurrence, net or direct value, ear].
+        ["ACRE_PRC343", "ALL", [2, 3], "LEFT"],
+        ["ACRE_PRC343", 2, [2, 4], "RIGHT"],
+        ["ACRE_PRC148", "ALL", "PLT1", "RIGHT"],
+        ["ACRE_PRC152", "ALL", "PLT1", "RIGHT"],
+        ["ACRE_PRC152", 2, "AIRGND", "LEFT"],
+        ["ACRE_PRC117F", "ALL", "PLT1", "BOTH"]
     ]
 ]
 ```
 
-The example gives every carried PRC-152 PLT1/right-ear as its baseline, then changes only the second
-PRC-152 to AIRGND/left-ear. Overrides are one-based within that base class and are skipped when that
-occurrence is absent. A radio class with neither a default nor an occurrence override remains
-untouched; there is no hidden priority or “next compatible net” behaviour.
+`ALL` is the readable class default. A one-based numbered row wins for that occurrence and is skipped
+when absent. The same rule covers multiple PRC-343s and their ears. A radio class with neither an
+`ALL` nor numbered row remains untouched; there is no hidden priority or next-compatible-net behavior.
 
-`LEFT`, `RIGHT` and `BOTH`/`CENTER` are independent per occurrence. An empty PRC-343 field requests deterministic callsign allocation. Two valid numeric callsign components are interpreted as block/channel; otherwise WMP hashes the callsign and probes collisions deterministically. Explicit slots always win and invalid explicit values are rejected rather than clamped.
+`LEFT`, `RIGHT` and `BOTH`/`CENTER` are independent per occurrence. A PRC-343 assignment target of
+`[]` requests deterministic callsign allocation. Two valid numeric callsign components are interpreted
+as block/channel; otherwise WMP hashes the callsign and probes collisions deterministically.
 
 ## Side-scoped player overrides
 
-Overrides are `[side, selector, mode, assignments]`. `MERGE` replaces matching `[class, occurrence]`
-identities while retaining group defaults and other overrides. `REPLACE` discards both group defaults
-and occurrence overrides before applying its list.
+Overrides are `[side, selector, mode, assignments]`. `MERGE` replaces matching
+`[class, ALL/occurrence]` identities while retaining other rows. `REPLACE` discards the group rows.
 
 ```sqf
 ["WEST", ["ROLE", "JTAC"], "MERGE", [
-    ["ACRE_PRC152", 1, "AIRGND", "RIGHT"]
+    ["ACRE_PRC152", "ALL", "AIRGND", "RIGHT"]
 ]]
 ```
 

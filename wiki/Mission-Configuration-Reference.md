@@ -114,7 +114,7 @@ Runs **on the server only**. Its server defaults are loaded synchronously from t
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
-Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. Individual zone profiles can override both without changing other zones.
+Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. The separate continuous exposure card defaults off through `Waldo_Hazard_ShowStatus`; a zone profile can opt in with `showStatus` without changing other zones.
 
 ### Logistics Crate Classnames
 
@@ -267,10 +267,10 @@ Edit the pure-data `MissionConfig\acreConfig.sqf`. Each side defines an existing
 `enabled` gates the complete replacement lifecycle. `prc343PresetPolicy` defaults to `FULL_RANGE`, preserving all sixteen PRC-343 blocks while other radios retain their official side presets; `SIDE_ISOLATED` reduces combat-side PRC-343 presets to five blocks. Group changes refresh the CEOI but never rewrite radios. Built-in radio capabilities live in code. `additionalRadioProfiles` is an advanced escape hatch for a tested third-party carried radio. Unknown radios and vehicle racks are preserved.
 
 A net is `[key, label, radio family, one value]`; it never contains separate per-radio channels. A
-group default is `[base class, target, ear]` and applies to every carried radio of that class. An
-occurrence override is `[base class, same-type occurrence, target, ear]`, allowing two identical
-radios to use different nets and ears. Missing occurrences are skipped and unconfigured radios are
-preserved. `radioOverrides` are side-scoped player/role exceptions. PTT defaults remain untouched.
+group is `[group ID, assignment rows]`, and every assignment is
+`[base class, "ALL" or same-type occurrence, target, ear]`. `ALL` configures every carried radio of
+that class; a numbered row overrides one physical occurrence. This includes PRC-343 block/channel
+and ear setup. Missing occurrences are skipped and unconfigured radios are preserved.
 
 ### ACRE2 Long-Range Channel Names (CEOI)
 
@@ -279,11 +279,10 @@ preserved. `radioOverrides` are side-scoped player/role exceptions. PTT defaults
     ["PLT1", "PLATOON 1", "PRC_LR", 2],
     ["AIRGND", "AIR-GND", "PRC_LR", 6]
 ], [
-    ["VIKING-2-3", [2, 3], [
-        ["ACRE_PRC148", "PLT1", "RIGHT"],
-        ["ACRE_PRC152", "PLT1", "RIGHT"],
-        ["ACRE_PRC117F", "PLT1", "CENTER"]
-    ], [
+    ["VIKING-2-3", [
+        ["ACRE_PRC343", "ALL", [2, 3], "LEFT"],
+        ["ACRE_PRC148", "ALL", "PLT1", "RIGHT"],
+        ["ACRE_PRC152", "ALL", "PLT1", "RIGHT"],
         ["ACRE_PRC152", 2, "AIRGND", "LEFT"]
     ]]
 ]]
@@ -294,7 +293,8 @@ numbers. BF-888S, SEM52SL and legacy frequency radios use separate families. Val
 family mismatch, a channel outside the specifically assigned radio's capacity, or an invalid
 frequency range/step. A net needs at least one capable radio in its declared family, but a less-capable
 radio does not invalidate that net until the mission assigns that radio to it. A blank
-PRC-343 field requests deterministic callsign allocation; explicit `[block, channel]` reserves it.
+A PRC-343 row whose target is `[]` requests deterministic callsign allocation; explicit
+`[block, channel]` reserves it.
 
 ### ACRE2 Babel (optional — disabled by default)
 

@@ -38,7 +38,9 @@
  * `label` player text, `rate` exposure gained per second, `decay` exposure lost per second outside,
  * `damageType` ACE/engine damage type, `damageThresholds` ascending `[exposure, damage fraction]`
  * stages, optional `fatalExposure`, optional `protectInVehicles`, optional `vehicleFactor`, and one
- * message per damage stage. A zone may override these keys without changing the reusable preset.
+ * message per damage stage. `showStatus` optionally enables the continuous exposure card for that
+ * profile; leave it false/absent to use only the clearer entry, exit and damage-stage notices.
+ * A zone may override these keys without changing the reusable preset.
  *
  * Breaching profiles are keyed by target CfgVehicles class. A profile uses `radius` (metres),
  * `explosives` (required strength), `destroyOriginal`, `hideOriginal`, `deleteOriginal`, and
@@ -52,7 +54,7 @@ createHashMapFromArray [
         // MISSION MAKER master switch; ADVANCED cadence/presentation defaults.
         ["Waldo_Hazard_Enable", false],             // BOOL: run local exposure evaluation; creates no zones.
         ["Waldo_Hazard_Interval", 1],               // SECONDS: evaluation cadence; performance-sensitive.
-        ["Waldo_Hazard_ShowStatus", true],          // BOOL: show ongoing exposure/status presentation.
+        ["Waldo_Hazard_ShowStatus", false],         // BOOL: optional live exposure card; false avoids duplicating entry/exit notices.
         ["Waldo_Hazard_NotifyTransitions", true],   // BOOL: notify on entering/leaving a hazardous area.
         ["Waldo_Hazard_NotificationDuration", 6],   // SECONDS: transition-notification lifetime.
         // MISSION MAKER: reusable RP/gameplay profiles; zones may override individual keys.

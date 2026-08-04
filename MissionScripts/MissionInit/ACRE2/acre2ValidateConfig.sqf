@@ -81,12 +81,13 @@ private _expectedPresets = createHashMapFromArray [["WEST", "default3"], ["EAST"
 private _sideData = createHashMap;
 private _sideKeys = [];
 private _validateAssignment = {
-    params ["_assignment", "_context", "_netMap", "_max343Block"];
+    params ["_assignment", "_context", "_netMap", "_max343Block", ["_allowAutomatic343", false]];
     if (count _assignment != 4) exitWith {_errors pushBack format ["Malformed %1 assignment %2.", _context, _assignment]};
     _assignment params ["_class", "_occurrence", "_target", "_ear"];
     private _profile = [_class] call _profileFor;
     if (count _profile == 0) exitWith {_errors pushBack format ["%1 uses unsupported radio %2.", _context, _class]};
-    if !(_occurrence isEqualType 0 && {_occurrence >= 1} && {_occurrence == floor _occurrence}) then {_errors pushBack format ["%1/%2 occurrence must be an integer of 1 or greater.", _context, _class]};
+    private _all = _occurrence isEqualType "" && {toUpper _occurrence == "ALL"};
+    if !(_all || {_occurrence isEqualType 0 && {_occurrence >= 1} && {_occurrence == floor _occurrence}}) then {_errors pushBack format ["%1/%2 scope must be ALL or an occurrence number of 1 or greater.", _context, _class]};
     if !(([_ear] call _normaliseEar) in ["LEFT", "RIGHT", "CENTER"]) then {_errors pushBack format ["%1/%2 has invalid ear %3.", _context, _class, _ear]};
     private _mode = toUpper (_profile select 1);
     private _resolved = _target;
@@ -96,7 +97,7 @@ private _validateAssignment = {
         if (toUpper (_net select 2) != toUpper (_profile select 5)) exitWith {_errors pushBack format ["%1 cannot assign %2 to %3: net family %4 does not match radio family %5.", _context, _target, _class, _net select 2, _profile select 5]};
         _resolved = _net select 3;
     };
-    if (_mode == "BLOCK_CHANNEL" && {!(_resolved isEqualType [] && {count _resolved == 2} && {(_resolved select 0) >= 1} && {(_resolved select 0) <= _max343Block} && {(_resolved select 1) >= 1} && {(_resolved select 1) <= 16})}) then {_errors pushBack format ["%1 PRC-343 target must be [block 1-%2, channel 1-16].", _context, _max343Block]};
+    if (_mode == "BLOCK_CHANNEL" && {!(_allowAutomatic343 && {_resolved isEqualTo []})} && {!(_resolved isEqualType [] && {count _resolved == 2} && {(_resolved select 0) >= 1} && {(_resolved select 0) <= _max343Block} && {(_resolved select 1) >= 1} && {(_resolved select 1) <= 16})}) then {_errors pushBack format ["%1 PRC-343 target must be [] for callsign inference or [block 1-%2, channel 1-16].", _context, _max343Block]};
     if (_mode == "CHANNEL" && {!(_resolved isEqualType 0 && {_resolved >= 1} && {_resolved <= (_profile select 3)} && {_resolved == floor _resolved})}) then {_errors pushBack format ["%1/%2 channel %3 is outside this radio's supported range 1-%4.", _context, _class, _resolved, _profile select 3]};
     if (_mode == "FREQUENCY" && {!([_resolved, _profile select 4] call _frequencyValid)}) then {_errors pushBack format ["%1/%2 has invalid frequency %3.", _context, _class, _resolved]};
 };
@@ -133,41 +134,35 @@ private _validateAssignment = {
         private _used343 = [];
         private _maxBlock = if (_policy == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
         {
-            if (count _x != 4) then {_errors pushBack format ["Malformed %1 group %2.", _sideKey, _x]} else {
-                _x params ["_groupId", "_fallback343", "_defaults", "_assignments"];
+            if (count _x != 2) then {_errors pushBack format ["Malformed %1 group %2; expected [group ID, assignment rows].", _sideKey, _x]} else {
+                _x params ["_groupId", "_assignments"];
                 private _groupKey = toUpperANSI (((_groupId splitString " -_.") joinString ""));
                 if (_groupKey in _groupKeys) then {_errors pushBack format ["Duplicate %1 group %2.", _sideKey, _groupKey]};
                 _groupKeys pushBack _groupKey;
-                if !(_fallback343 isEqualTo []) then {
-                    [["ACRE_PRC343", 1, _fallback343, "CENTER"], format ["%1/%2", _sideKey, _groupKey], _netMap, _maxBlock] call _validateAssignment;
-                    if (count _fallback343 == 2) then {
-                        private _flat = ((_fallback343 select 0) - 1) * 16 + (_fallback343 select 1);
-                        if (_flat in _used343) then {private _message = format ["%1 explicit PRC-343 collision at %2.", _sideKey, _fallback343]; if (_strict) then {_errors pushBack _message} else {_warnings pushBack _message}};
-                        _used343 pushBack _flat;
-                    };
-                };
-                private _defaultClasses = [];
-                {
-                    if (count _x != 3) then {_errors pushBack format ["Malformed %1/%2 default %3; expected [radio class, net/direct value, ear].", _sideKey, _groupKey, _x]} else {
-                        private _class = toUpper (_x select 0);
-                        if (_class in _defaultClasses) then {_errors pushBack format ["%1/%2 duplicates default for %3.", _sideKey, _groupKey, _class]};
-                        _defaultClasses pushBack _class;
-                        [[_x select 0, 1, _x select 1, _x select 2], format ["%1/%2/default %3", _sideKey, _groupKey, _class], _netMap, _maxBlock] call _validateAssignment;
-                    };
-                } forEach _defaults;
                 private _identities = [];
+                private _group343Slots = [];
                 {
-                    private _identity = format ["%1#%2", toUpper (_x param [0, ""]), _x param [1, 0]];
+                    private _scope = _x param [1, 0];
+                    if (_scope isEqualType "") then {_scope = toUpper _scope};
+                    private _identity = format ["%1#%2", toUpper (_x param [0, ""]), _scope];
                     if (_identity in _identities) then {_errors pushBack format ["%1/%2 duplicates %3.", _sideKey, _groupKey, _identity]};
                     _identities pushBack _identity;
-                    [_x, format ["%1/%2/%3", _sideKey, _groupKey, _identity], _netMap, _maxBlock] call _validateAssignment;
+                    [_x, format ["%1/%2/%3", _sideKey, _groupKey, _identity], _netMap, _maxBlock, true] call _validateAssignment;
                     if (toUpper (_x param [0, ""]) == "ACRE_PRC343" && {(_x param [2, []]) isEqualType []} && {count (_x param [2, []]) == 2}) then {
                         private _target = _x select 2;
                         private _flat = ((_target select 0) - 1) * 16 + (_target select 1);
-                        if (_flat in _used343) then {private _message = format ["%1 explicit PRC-343 collision at %2.", _sideKey, _target]; if (_strict) then {_errors pushBack _message} else {_warnings pushBack _message}};
-                        _used343 pushBack _flat;
+                        _group343Slots pushBackUnique _flat;
                     };
                 } forEach _assignments;
+                {
+                    if (_x in _used343) then {
+                        private _block = floor ((_x - 1) / 16) + 1;
+                        private _channel = ((_x - 1) mod 16) + 1;
+                        private _message = format ["%1 explicit PRC-343 collision at Block %2, Channel %3.", _sideKey, _block, _channel];
+                        if (_strict) then {_errors pushBack _message} else {_warnings pushBack _message};
+                    };
+                    _used343 pushBackUnique _x;
+                } forEach _group343Slots;
             };
         } forEach _groups;
         _sideData set [_sideKey, [_netMap, _maxBlock]];

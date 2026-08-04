@@ -59,7 +59,7 @@ private _acreEnabled = _acreLoaded && {_acreConfig getOrDefault ["enabled", fals
 if (_acreEnabled) then {
     private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
     private _configValidation = missionNamespace getVariable ["Waldo_ACRE2_ConfigValidation", [false, ["ACRE configuration was not validated."], []]];
-    private _planValid = count _plan >= 4 && {(_plan select 0) == 4};
+    private _planValid = count _plan >= 4 && {(_plan select 0) == 5};
     private _rawGroup = groupId group player;
     private _groupKey = toUpperANSI (((_rawGroup splitString " -_.") joinString ""));
     private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};

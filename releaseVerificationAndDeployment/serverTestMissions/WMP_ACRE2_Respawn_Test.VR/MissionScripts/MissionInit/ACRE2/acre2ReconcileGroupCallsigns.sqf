@@ -49,7 +49,7 @@ private _rejected = 0;
             _unchanged = _unchanged + 1;
         } else {
             private _requested = [_description select [_separator + 1]] call _trimWhitespace;
-            private _key = toUpper _requested;
+            private _key = toUpperANSI (((_requested splitString " -_.") joinString ""));
             if (_requested == '' || {_requested find '@' >= 0}) then {
                 _rejected = _rejected + 1;
                 diag_log format ['[WMP ACRE] Empty or malformed @Callsign suffix rejected for group %1.', groupId _group];
@@ -60,7 +60,7 @@ private _rejected = 0;
                     diag_log format ['[WMP ACRE] Duplicate @Callsign %1 rejected for group %2; already claimed by %3.', _requested, groupId _group, groupId _existing];
                 } else {
                     _claimed set [_key, _group];
-                    if (toUpper groupId _group == _key) then {
+                    if (toUpperANSI ((((groupId _group) splitString " -_.") joinString "")) == _key) then {
                         _unchanged = _unchanged + 1;
                     } else {
                         if (isNil 'CBA_fnc_setCallsign') then {
@@ -68,10 +68,10 @@ private _rejected = 0;
                         } else {
                             [_group, _requested] call CBA_fnc_setCallsign;
                         };
-                        if (toUpper groupId _group != _key) then {
+                        if (toUpperANSI ((((groupId _group) splitString " -_.") joinString "")) != _key) then {
                             _group setGroupIdGlobal [_requested];
                         };
-                        if (toUpper groupId _group == _key) then {
+                        if (toUpperANSI ((((groupId _group) splitString " -_.") joinString "")) == _key) then {
                             _renamed = _renamed + 1;
                             diag_log format ['[WMP ACRE] Group callsign reconciled from leader role description: %1.', _requested];
                         } else {

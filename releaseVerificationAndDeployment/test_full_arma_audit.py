@@ -299,12 +299,12 @@ class FullAuditTests(unittest.TestCase):
         for expected in (
             '"ALPHA_NET", "ALPHA TEST"',
             '"BRAVO_NET", "BRAVO TEST"',
-            '["ALPHA", [5, 3]',
-            '["BRAVO", [6, 7]',
-            '["ACRE_PRC152", "ALPHA_NET", "RIGHT"]',
-            '["ACRE_PRC77", "ALPHA_77", "CENTER"]',
-            '["ACRE_PRC152", "BRAVO_NET", "LEFT"]',
-            '["ACRE_PRC77", "BRAVO_77", "CENTER"]',
+            '["ALPHA", [["ACRE_PRC343", "ALL", [5, 3], "LEFT"]',
+            '["BRAVO", [["ACRE_PRC343", "ALL", [6, 7], "RIGHT"]',
+            '["ACRE_PRC152", "ALL", "ALPHA_NET", "RIGHT"]',
+            '["ACRE_PRC77", "ALL", "ALPHA_77", "BOTH"]',
+            '["ACRE_PRC152", "ALL", "BRAVO_NET", "LEFT"]',
+            '["ACRE_PRC77", "ALL", "BRAVO_77", "BOTH"]',
             '[5, 3]',
             '[6, 7]',
         ):
@@ -436,6 +436,9 @@ class FullAuditTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("if (remoteExecutedOwner > 0) exitWith", tick)
         self.assertIn('missionNamespace setVariable ["Waldo_Hazard_LastEvaluation"', tick)
+        self.assertIn('_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", false]]', tick)
+        environment = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Hazard_ShowStatus", false]', environment)
         self.assertIn('missionNamespace getVariable ["Waldo_Hazard_LastEvaluation"', client_diagnostics)
         self.assertIn("freshEvaluation=%5", client_diagnostics)
 
@@ -691,10 +694,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["ACRE_PRC148", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 32, [], "PRC_LR"]', profiles)
         self.assertIn('["ACRE_PRC343", "BLOCK_CHANNEL", ["LEFT", "RIGHT", "CENTER"]', profiles)
         self.assertIn('["ACRE_SEM52SL", "CHANNEL", ["RIGHT", "LEFT", "CENTER"], 12, [], "SEM52"]', profiles)
-        self.assertGreaterEqual(acre_config.count('"LEGACY"'), 2)
-        self.assertIn('["LEGACY", "LEGACY", "LEGACY_VHF", 34.000]', acre_config)
-        self.assertIn('An explicit occurrence row wins', apply_plan)
-        self.assertIn('_defaultAssignments findIf', apply_plan)
+        self.assertGreaterEqual(acre_config.count('"VHF_COMMON"'), 3)
+        self.assertIn('["VHF_COMMON", "VHF COMMON", "LEGACY_VHF", 51.000]', acre_config)
+        self.assertIn('["ACRE_PRC343", "ALL", [1, 1], "LEFT"]', acre_config)
+        self.assertIn('["ACRE_PRC343", 2, [1, 2], "RIGHT"]', acre_config)
+        self.assertIn('A numbered occurrence wins over the readable ALL rule', apply_plan)
+        self.assertIn('toUpper str (_x select 1) == "ALL"', apply_plan)
         self.assertIn('toUpper (_net select 2) == toUpper (_profile select 5)', apply_plan)
         self.assertIn('expected [key, display name, radio family, one value]', validate_config)
         self.assertIn('channel %3 is outside this radio\'s supported range 1-%4', validate_config)
@@ -702,7 +707,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('value %3 is unsupported by every radio in family %4', validate_config)
         self.assertIn('_familyProfiles findIf {[_value, _x, _netMax343Block] call _profileAcceptsValue}', validate_config)
         self.assertIn('_channel <= ((_profiles select _profileIndex) select 3)', labels)
-        self.assertIn('[4, _revision, _sidePlans, _diagnostics]', compile_plan)
+        self.assertIn('[5, _revision, _sidePlans, _diagnostics]', compile_plan)
+        self.assertIn('["_groupId", "_assignments"]', compile_plan)
         self.assertIn('if (_ear == "BOTH") then {"CENTER"}', apply_plan)
         self.assertIn('acre_api_fnc_setupRadios', apply_plan)
         self.assertIn('Waldo_fnc_ACRE2GetOrderedRadios', apply_plan)
@@ -723,7 +729,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_ACRE2_RefreshApplyPlan', refresh)
         self.assertIn('["UNIT_REPLACEMENT", false]', acre_init)
         self.assertNotIn('Missing %1 occurrence', apply_plan)
-        self.assertIn('count _matching >= _occurrence', apply_plan)
+        self.assertIn('(_x select 1) == _occurrence', apply_plan)
+        self.assertIn('toUpper str (_x select 1) == "ALL"', apply_plan)
         audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         self.assertIn("ACRE2: SHOW PLAN / RADIO STATUS", audit_client)
         self.assertIn("ACRE2: SHOW SQUAD RADIO PAIRS", audit_client)

@@ -114,7 +114,7 @@ private _zoneDiagnostics = [];
         _previousInside set [_key, _inside];
     };
 
-    if (_inside || {_exposure > 0}) then {
+    if ((_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", false]]) && {_inside || {_exposure > 0}}) then {
         private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "HAZARD"]];
         _activeText pushBack format ["%1: %2", _label, (_exposure toFixed 2)];
     };
@@ -169,7 +169,7 @@ missionNamespace setVariable ["Waldo_Hazard_LastEvaluation", [diag_tickTime, get
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
-private _status = if (missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]) then {_activeText joinString "<br/>"} else {""};
+private _status = _activeText joinString "<br/>";
 private _previousStatus = uiNamespace getVariable ["Waldo_Hazard_StatusText", ""];
 if (_status != _previousStatus) then {
     uiNamespace setVariable ["Waldo_Hazard_StatusText", _status];
