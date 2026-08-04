@@ -141,11 +141,14 @@ if (_invalidClass >= 0 || {_missingPool}) exitWith {
     false
 };
 
-// sizeOf is evaluated only after class validation. The resulting radius is deliberately generous:
-// generated ZEN layouts favour a clear, stable installation over a tightly packed composition.
+// sizeOf is evaluated only after class validation. sizeOf reflects map-icon sizing, not the vehicle's
+// real physical footprint, so it is padded rather than trusted directly - the multiplier here must
+// stay above 1 or the computed clearance can end up smaller than the vehicle itself, letting two
+// assets be scheduled close enough to spawn inside one another. The resulting radius is deliberately
+// generous: generated ZEN layouts favour a clear, stable installation over a tightly packed composition.
 private _classClearance = {
     params ["_class", "_minimum"];
-    ((((sizeOf _class) * 0.75) max _minimum) min 100)
+    ((((sizeOf _class) * 1.5) max _minimum) min 100)
 };
 private _largestClearance = {
     params ["_candidateClasses", "_minimum"];
@@ -260,8 +263,8 @@ private _resolvedPlan = [];
 private _finalReservations = [];
 private _resolveFinalPosition = {
     params ["_candidate", "_class"];
-    private _footprint = [_class, 8] call _classClearance;
-    private _clearance = _footprint + 5;
+    private _footprint = [_class, 14] call _classClearance;
+    private _clearance = _footprint + 10;
     private _result = [];
     private _ringStep = ((_footprint * 2) + 15) max 35;
     for "_ring" from 0 to 16 do {
