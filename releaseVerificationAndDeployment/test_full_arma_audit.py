@@ -31,6 +31,8 @@ SQF_VALIDATOR = importlib.util.module_from_spec(SQF_VALIDATOR_SPEC)
 assert SQF_VALIDATOR_SPEC and SQF_VALIDATOR_SPEC.loader
 SQF_VALIDATOR_SPEC.loader.exec_module(SQF_VALIDATOR)
 
+VERSION_HELPER_PATH = ROOT / "releaseVerificationAndDeployment" / "set_description_version.py"
+
 
 class FullAuditTests(unittest.TestCase):
     @staticmethod
@@ -44,6 +46,44 @@ class FullAuditTests(unittest.TestCase):
         release_config = json.loads((ROOT / "releaseVerificationAndDeployment" / "config.json").read_text(encoding="utf-8"))
         self.assertTrue(license_text.startswith("MIT License"))
         self.assertIn("LICENSE", release_config["build"]["include"])
+
+    def test_release_tag_updates_version_cover_then_packages_and_syncs_main(self):
+        deploy = (ROOT / "releaseVerificationAndDeployment" / "deploy.sh").read_text(
+            encoding="utf-8"
+        )
+        workflow = (ROOT / ".github" / "workflows" / "deploy.yml").read_text(
+            encoding="utf-8"
+        )
+        version_update = deploy.index("set_description_version.py")
+        cover_update = deploy.index("generateLoadingScreen.py")
+        package_build = deploy.index("build.py --deploy")
+        self.assertLess(version_update, cover_update)
+        self.assertLess(cover_update, package_build)
+        self.assertNotIn("description.ext version", deploy)
+        self.assertTrue(VERSION_HELPER_PATH.is_file())
+        self.assertIn("sync-main-version:", workflow)
+        self.assertIn("needs: build", workflow)
+        self.assertIn("set_description_version.py", workflow)
+        self.assertIn("generateLoadingScreen.py", workflow)
+        self.assertIn("$GITHUB_OUTPUT", workflow)
+        self.assertNotIn("::set-output", workflow)
+
+    def test_release_version_helper_accepts_rc_tag_without_persisting_suffix(self):
+        helper_spec = importlib.util.spec_from_file_location(
+            "set_description_version", VERSION_HELPER_PATH
+        )
+        helper = importlib.util.module_from_spec(helper_spec)
+        assert helper_spec and helper_spec.loader
+        helper_spec.loader.exec_module(helper)
+        source = 'onLoadName = "Waldo Mission Pack v4.8.0";\n'
+        match = re.match(r"^[vV]?(\d+\.\d+(?:\.\d+)?)", "v4.8.1RC")
+        self.assertIsNotNone(match)
+        updated, count = helper.VERSION_PATTERN.subn(
+            r"\g<1>" + match.group(1) + r"\g<3>", source, count=1
+        )
+        self.assertEqual(1, count)
+        self.assertIn("v4.8.1", updated)
+        self.assertNotIn("RC", updated)
 
     def test_sqf_validator_rejects_known_engine_invalid_commands(self):
         with tempfile.TemporaryDirectory() as directory:

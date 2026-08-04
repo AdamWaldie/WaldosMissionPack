@@ -11,7 +11,7 @@ jobs:
         uses: actions/checkout@master
       - name: Get the version
         id: get_version
-        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\//}
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -60,3 +60,39 @@ jobs:
           args: release/WMP_Exemplar_Mission-${{ steps.get_version.outputs.VERSION }}.zip application/zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  sync-main-version:
+    name: Sync main branch version and cover image
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Get the version
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> "$GITHUB_OUTPUT"
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Pillow (cover image generator)
+        run: pip install Pillow
+      - name: Bump description.ext to the release version
+        run: python3 releaseVerificationAndDeployment/set_description_version.py "${{ steps.get_version.outputs.VERSION }}"
+      - name: Regenerate cover image from description.ext
+        run: python3 releaseVerificationAndDeployment/generateLoadingScreen.py
+      - name: Commit and push if either file changed
+        run: |
+          if git diff --quiet -- description.ext Pictures/loading.jpg; then
+            echo "description.ext and cover image already match this release; nothing to commit."
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add description.ext Pictures/loading.jpg
+            git commit -m "ci: bump version to ${{ steps.get_version.outputs.VERSION }} and refresh cover image [skip ci]"
+            git push origin HEAD:main
+          fi
