@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 843,
+  "registeredFunctionCount": 845,
   "runtimeFunctionCount": 385,
-  "functionCount": 1228,
+  "functionCount": 1230,
   "stations": [
     {
       "id": "control",
@@ -2121,6 +2121,18 @@
     {
       "name": "Waldo_fnc_HazardProtectionFactor",
       "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardProtectionFactor.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardAwareness",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardAwareness.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardHud",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardHud.sqf",
       "station": "hazards",
       "activation": "manual"
     },

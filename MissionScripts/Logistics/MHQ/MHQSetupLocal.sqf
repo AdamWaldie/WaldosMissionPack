@@ -11,7 +11,7 @@ if (_target getVariable ["Waldo_MHQ_LocalActionsInstalled", false]) exitWith {
     // Re-evaluate components on the later object-keyed JIP call without duplicating
     // the already installed deploy/tear-down actions.
     if ((_target getVariable ["Waldo_MHQ_Config", ["", false]]) param [1, false]) then {
-        [_target, _logisticsDirection, _logisticsDistance] call Waldo_fnc_SetupQuarterMaster;
+        [_target, _logisticsDirection, _logisticsDistance, true] call Waldo_fnc_SetupQuarterMaster;
     };
     true
 };
@@ -120,7 +120,7 @@ if (_aceReady) then {
 };
 
 if ((_target getVariable ["Waldo_MHQ_Config", ["", false]]) param [1, false]) then {
-    [_target, _logisticsDirection, _logisticsDistance] call Waldo_fnc_SetupQuarterMaster;
+    [_target, _logisticsDirection, _logisticsDistance, true] call Waldo_fnc_SetupQuarterMaster;
 };
 
 _target setVariable ["Waldo_MHQ_InteractionMode", if (_aceReady) then {"ACE"} else {"VANILLA"}];

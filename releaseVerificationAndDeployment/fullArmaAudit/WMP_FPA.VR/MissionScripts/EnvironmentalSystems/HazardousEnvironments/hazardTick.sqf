@@ -4,10 +4,12 @@
  *
  * This function runs only on each player's client from Waldo_fnc_HazardInit. Exposure and zone
  * transition state are local to that player; registered zone definitions are shared/JIP-replayed.
- * Optional entry/exit cards use the WMP notification UI once per transition and are controlled by
- * Waldo_Hazard_NotifyTransitions or a profile's notifyTransitions override. Profile onEnter,
- * onExit and onTick callbacks continue to run locally. Currently called by the HazardInit loop and
- * directly by the full-pack function station.
+ * Optional entry/exit cards use the WMP notification UI once per transition. Live exposure uses
+ * one continuously updated specialist HUD rather than notification lanes. Profiles may require a
+ * carried/worn detector, nearby detector object or custom awareness condition before either form
+ * of information is visible; physical exposure and damage still apply. Profile onEnter, onExit and
+ * onTick callbacks continue to run locally. Currently called by the HazardInit loop and directly
+ * by the full-pack function station.
  *
  * Arguments:
  * 0: interval <NUMBER> - seconds represented by this tick
@@ -91,6 +93,13 @@ private _zoneDiagnostics = [];
     };
     _exposure = _exposure min (_profile getOrDefault ["maximumExposure", 1e10]);
     _exposures set [_key, _exposure];
+    private _awarenessConfigured =
+        {!((_profile getOrDefault ["detectorItems", []]) isEqualTo [])}
+        || {!((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])}
+        || {"awarenessCondition" in _profile};
+    private _aware = [player, _key, _profile, _inside, _exposure] call Waldo_fnc_HazardAwareness;
+    private _showNotifications = !(_profile getOrDefault ["requireAwarenessForNotifications", _awarenessConfigured]) || {_aware};
+    private _showLiveStatus = !(_profile getOrDefault ["requireAwarenessForStatus", _awarenessConfigured]) || {_aware};
 
     private _wasInside = _previousInside getOrDefault [_key, false];
     if (_inside != _wasInside) then {
@@ -98,7 +107,7 @@ private _zoneDiagnostics = [];
         if (_transition isEqualType "") then {_transition = missionNamespace getVariable [_transition, {}]};
         if (_transition isEqualType {}) then {[player, _key, _profile] call _transition};
         diag_log format ["[WMP HAZARD] Player transition: zone='%1' inside=%2 exposure=%3.", _key, _inside, _exposure];
-        if (_profile getOrDefault ["notifyTransitions", missionNamespace getVariable ["Waldo_Hazard_NotifyTransitions", true]]) then {
+        if (_showNotifications && {_profile getOrDefault ["notifyTransitions", missionNamespace getVariable ["Waldo_Hazard_NotifyTransitions", true]]}) then {
             private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "Hazardous Area"]];
             private _messageKey = ["exitMessage", "enterMessage"] select _inside;
             private _defaultMessage = ["You have left the hazardous zone.", "You have entered a hazardous zone."] select _inside;
@@ -114,7 +123,7 @@ private _zoneDiagnostics = [];
         _previousInside set [_key, _inside];
     };
 
-    if ((_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", false]]) && {_inside || {_exposure > 0}}) then {
+    if (_showLiveStatus && {(_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]])} && {_inside || {_exposure > 0}}) then {
         private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "HAZARD"]];
         _activeText pushBack format ["%1: %2", _label, (_exposure toFixed 2)];
     };
@@ -130,7 +139,7 @@ private _zoneDiagnostics = [];
     } forEach (_profile getOrDefault ["damageThresholds", []]);
 
     private _previousStage = _previousStages getOrDefault [_key, -1];
-    if (_damageStage > _previousStage && {_profile getOrDefault ["notifyDamageStages", true]}) then {
+    if (_showNotifications && {_damageStage > _previousStage} && {_profile getOrDefault ["notifyDamageStages", true]}) then {
         private _stageMessages = _profile getOrDefault ["damageStageMessages", []];
         private _stageMessage = _stageMessages param [_damageStage, _profile getOrDefault ["damageMessage", "Exposure is now causing physical harm."]];
         [
@@ -169,14 +178,5 @@ missionNamespace setVariable ["Waldo_Hazard_LastEvaluation", [diag_tickTime, get
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
-private _status = _activeText joinString "<br/>";
-private _previousStatus = uiNamespace getVariable ["Waldo_Hazard_StatusText", ""];
-if (_status != _previousStatus) then {
-    uiNamespace setVariable ["Waldo_Hazard_StatusText", _status];
-    if (_status isEqualTo "") then {
-        ["HAZARD_STATUS"] call Waldo_fnc_DismissUiNotification;
-    } else {
-        ["HAZARD EXPOSURE", _status, "WARNING", 0, "TOP_RIGHT", "HAZARD_STATUS", "ENVIRONMENT", "REPLACE", 2]
-            call Waldo_fnc_ShowUiNotification;
-    };
-};
+uiNamespace setVariable ["Waldo_Hazard_StatusText", _activeText joinString " | "];
+[_activeText] call Waldo_fnc_HazardHud;

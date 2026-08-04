@@ -87,7 +87,7 @@ is replayed to JIP by the feature.
 | Object scaling | logisticsConfig.sqf | Min/max/authority bounds | Scale by call or ZEN |
 | Rally / minigames / corpse traps | missionSystemsConfig.sqf | Enable and policy | None |
 | Economy | missionSystemsConfig.sqf plus economy config | Enable runtime | Configure economy preset/catalogues |
-| Diagnostics / safestart | missionSystemsConfig.sqf | Review server policy | None |
+| Diagnostics / safestart | missionSystemsConfig.sqf | Safestart starts inactive; review server policy | Use WMP Mission Flow Zeus controls when needed |
 | Persistence | persistenceConfig.sqf | Enable/save policy/database | Install INIDBI2; register world objects |
 
 ## Config-by-config recipes

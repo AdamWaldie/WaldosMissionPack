@@ -7,7 +7,7 @@ _Associated Files: `initServer.sqf`, `MissionScripts\MissionFlowAndUi\safeStart.
 
 ![SafeStart countdown](images/mission-flow/safestart-countdown.png)
 
-Safestart freezes every player at the start of a mission so people can load in, sort kit and get organised before anyone can shoot. It is the reversible mirror of the [ENDEX](ENDEX-Script-&-Custom-End-Screen) script — turn it on to hold the mission, lift it to go live.
+Safestart can freeze every player so people can load in, sort kit and get organised before anyone can shoot. Missions start live by default, but Zeus can activate Safestart at any point. It is the reversible mirror of the [ENDEX](ENDEX-Script-&-Custom-End-Screen) script — turn it on to hold the mission, lift it to go live.
 
 While Safestart is active:
 * All weapons are placed on safe (ACE), and **every** shot, thrown grenade, launcher round, underbarrel round and crewed vehicle weapon round is deleted — firing just shows a red **"Hold Fire!"** prompt.
@@ -18,20 +18,20 @@ While Safestart is active:
 
 The freeze runs on its own variables, so it never clashes with ENDEX.
 
-## Auto-start (the default)
+## Starting state
 
-Safestart starts automatically from `initServer.sqf`. Its server-owned defaults are exposed in `MissionConfig\missionSystemsConfig.sqf`:
+Safestart is available automatically but starts **inactive**. Its server-owned defaults are exposed in `MissionConfig\missionSystemsConfig.sqf`:
 
 ```sqf
 missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
 missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
 missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false = start the mission live (no safestart)
+missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true]; // false = start live; Zeus can activate it later
 ```
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `Waldo_SafeStart_AutoStart` | `true` | `false` = mission starts live, no Safestart. |
+| `Waldo_SafeStart_AutoStart` | `false` | `false` starts live while retaining all Zeus controls; `true` begins protected. |
 | `Waldo_SafeStart_Confine` | `true` | `false` = freeze weapons/damage but let players move freely. |
 | `Waldo_SafeStart_Radius` | `75` | Confinement radius in metres around each player's start position. |
 | `Waldo_SafeStart_ZoneMarker` | `""` | Set to a marker name to confine everyone to **one shared zone** (the marker's position and size) instead of a per-player radius. |
@@ -68,13 +68,14 @@ The report identifies whether the code is loaded, whether SafeStart is active, i
 
 ## Zeus usage
 
-Three modules are registered under **WMP Mission Flow** in the Zeus menu:
+Three modules are registered under **WMP Mission Flow** in the Zeus menu. They remain available even
+though Safestart starts inactive:
 
 | Module | Action |
 |---|---|
-| **Safestart - Activate** | Freezes the mission (`[true] call Waldo_fnc_SafeStart`). |
-| **Safestart - Go Live (Lift)** | Lifts the freeze and cancels any countdown. |
-| **Safestart - Start Go-Live Countdown** | Prompts for a number of seconds, then starts the auto go-live timer. Player HUDs display the remaining time as `MM:SS`. |
+| **SafeStart: Enable Protection** | Freezes the mission (`[true] call Waldo_fnc_SafeStart`). Use this to begin a hold during play. |
+| **SafeStart: Go Live Now** | Lifts the freeze and cancels any countdown. |
+| **SafeStart: Start Go-Live Timer** | Activates protection if needed, prompts for seconds, then lifts it automatically. Player HUDs display `MM:SS`. |
 
 [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) are covered separately.
 
@@ -87,8 +88,8 @@ Three modules are registered under **WMP Mission Flow** in the Zeus menu:
 // Confine everyone to one shared zone called "startzone" instead of per-player radii (initServer.sqf):
 missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "startzone", true];
 
-// Ship a mission that starts live, but keep the Zeus modules available to freeze later (initServer.sqf):
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true];
+// Make one mission begin protected instead of using the shipped live default:
+missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true];
 ```
 
 ## See also

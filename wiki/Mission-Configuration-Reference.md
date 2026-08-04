@@ -114,7 +114,7 @@ Runs **on the server only**. Its server defaults are loaded synchronously from t
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
-Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. The separate continuous exposure card defaults off through `Waldo_Hazard_ShowStatus`; a zone profile can opt in with `showStatus` without changing other zones.
+Shared hazard presentation defaults live in `MissionConfig\environmentConfig.sqf`: `Waldo_Hazard_NotifyTransitions` enables entry/exit WMP cards and `Waldo_Hazard_NotificationDuration` sets their lifetime. `Waldo_Hazard_ShowStatus` defaults on and uses one continuously updated lower-left specialist panel rather than notification lanes. A profile can override `showStatus`. Optional detector items, nearby detector objects or an advanced awareness condition can hide status and notices from players without the required information source while exposure and damage continue normally.
 
 ### Logistics Crate Classnames
 
@@ -157,13 +157,14 @@ For non-RHS missions, replace `"rhs_d6_Parachute"` with `"NonSteerable_Parachute
 Edit the `Waldo_SafeStart_*` SERVER entries in `MissionConfig\missionSystemsConfig.sqf`. The
 snippet below describes resulting runtime state; WMP already starts/publishes it.
 
-Freezes all players at mission start until you go live. Auto-starts by default.
+When active, freezes all players until you go live. It starts inactive by default, while the Zeus
+activate, lift and countdown controls remain available throughout the mission.
 
 ```sqf
 missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
 missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
 missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false = start the mission live
+missionNamespace setVariable ["Waldo_SafeStart_AutoStart", false, true]; // true = begin under protection
 ```
 
 See [Safestart](Safestart) for the go-live API and Zeus modules.

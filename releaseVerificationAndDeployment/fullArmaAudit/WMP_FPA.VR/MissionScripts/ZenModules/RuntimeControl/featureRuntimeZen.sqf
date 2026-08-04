@@ -507,7 +507,11 @@ switch (toUpperANSI _feature) do {
         if (count _presetKeys == 0) exitWith {systemChat "[WMP] No hazardous-environment presets are configured."};
         private _presetLabels = _presetKeys apply {
             private _profile = _presets get _x;
-            format ["%1 - %2", _x, _profile getOrDefault ["label", "Hazardous Area"]]
+            private _detectorGated =
+                {!((_profile getOrDefault ["detectorItems", []]) isEqualTo [])}
+                || {!((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])}
+                || {"awarenessCondition" in _profile};
+            format ["%1 - %2%3", _x, _profile getOrDefault ["label", "Hazardous Area"], ["", " (detector-aware)"] select _detectorGated]
         };
         [
             "Hazardous Environment: Choose Type",
@@ -538,13 +542,15 @@ switch (toUpperANSI _feature) do {
                         ["CHECKBOX", ["Vehicles protect", "Being inside a vehicle provides the configured protection factor."], _preset getOrDefault ["protectInVehicles", false]],
                         ["CHECKBOX", ["Interiors protect", "Being inside a building provides the configured protection factor."], _preset getOrDefault ["protectIndoors", false]],
                         ["SLIDER", ["Protected exposure factor", "0 is complete protection; 1 is none."], [0, 1, _preset getOrDefault ["equipmentFactor", 0.05], 2]],
+                        ["CHECKBOX", ["Show continuous exposure panel", "Show one continuously updated lower-left panel. This does not create or queue repeated notification cards."], _preset getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]]],
                         ["CHECKBOX", ["Notify on entry and exit", "Show each affected player one WMP notification when crossing the zone boundary."], _preset getOrDefault ["notifyTransitions", missionNamespace getVariable ["Waldo_Hazard_NotifyTransitions", true]]],
+                        ["COMBO", ["Who can see hazard information", "Preset rules use any detector items, nearby detector objects or custom condition configured by the mission maker. Everyone ignores those information gates but does not change protection or damage."], [["PRESET", "EVERYONE"], ["Use preset detector rules", "Everyone"], 0]],
                         ["CHECKBOX", ["Copy setup script", "Copy an equivalent mission-maker call for permanent setup."], false]
                     ],
                     {
                         params ["_values", "_arguments"];
                         _arguments params ["_modulePos", "_presetKey", "_preset"];
-                        _values params ["_label", "_enterMessage", "_exitMessage", "_radius", "_intensityMode", "_rate", "_decay", "_maximumExposure", "_threshold", "_damage", "_fatalExposure", "_vehicles", "_indoors", "_factor", "_notifyTransitions", "_copy"];
+                        _values params ["_label", "_enterMessage", "_exitMessage", "_radius", "_intensityMode", "_rate", "_decay", "_maximumExposure", "_threshold", "_damage", "_fatalExposure", "_vehicles", "_indoors", "_factor", "_showStatus", "_notifyTransitions", "_informationVisibility", "_copy"];
                         private _profile = createHashMap;
                         {_profile set [_x, _preset get _x]} forEach keys _preset;
                         _profile set ["label", _label];
@@ -561,7 +567,12 @@ switch (toUpperANSI _feature) do {
                         _profile set ["protectIndoors", _indoors];
                         _profile set ["indoorFactor", _factor];
                         _profile set ["equipmentFactor", _factor];
+                        _profile set ["showStatus", _showStatus];
                         _profile set ["notifyTransitions", _notifyTransitions];
+                        if (_informationVisibility isEqualTo "EVERYONE") then {
+                            _profile set ["requireAwarenessForStatus", false];
+                            _profile set ["requireAwarenessForNotifications", false];
+                        };
                         private _key = ["hazard"] call Waldo_fnc_CreateRuntimeId;
                         ["HAZARD_SET", [_key, [_modulePos, _radius], _profile]] call Waldo_fnc_FeatureRuntimeApply;
                         if (_copy) then {

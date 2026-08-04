@@ -1,8 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
  * Temporarily hides every concurrent WMP HUD card while a higher-priority local interface owns the
- * view. Notification stacks, SafeStart and electronic-warfare controls are restored together and
- * immediately reflowed, preserving queued state without drawing through ACE interaction.
+ * view. Notification stacks, SafeStart, electronic-warfare and hazardous-environment controls are
+ * restored together and immediately reflowed, preserving queued state without drawing through ACE
+ * interaction.
  *
  * Arguments:
  * 0: suppressed <BOOL> (default false)

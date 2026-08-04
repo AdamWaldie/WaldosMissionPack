@@ -24,6 +24,7 @@ These modules allow users to:
 * Register, assign and operate airborne gunship support
 * Register vehicle-recovery workshops, recoverable vehicles and recovery carriers
 * Configure temporary squad rally respawns during play
+* Enable, time or lift SafeStart protection during play, even though it starts inactive by default
 
 WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped under **WMP Mission Flow**, **WMP Logistics**, **WMP Combat Systems**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules remain under **Waldos Economy Systems**.
 
@@ -66,6 +67,15 @@ The ENDEX module performs the following actions:
 * If a player tries to fire their weapon or use grenades, it is deleted and a popup tells them to cease firing.
 
 It does NOT end the mission.
+
+## SafeStart Modules
+
+SafeStart is loaded but **inactive by default**, so a normal mission begins live. Under **WMP Mission
+Flow**, Zeus can use **SafeStart: Enable Protection** to freeze firing and damage immediately,
+**SafeStart: Start Go-Live Timer** to enable protection and begin a seconds-based countdown, or
+**SafeStart: Go Live Now** to lift protection and cancel a timer. These modules call the same
+server-authoritative API as scripts, publish the current state for JIP players and remain available
+for the whole mission. See [Safestart](Safestart) for confinement and mission-start overrides.
 
 An example of it in use can be seen below:
 ![Zeus Endex execution example](https://i.imgur.com/PBpewY8.png)
@@ -122,7 +132,7 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Hazardous Environments
 
-**Hazard - Create** first selects a mission-configured hazard preset, then exposes plain-language RP name/messages, intensity, range, exposure, recovery, damage, fatal threshold and protection controls. The preset supplies semantic type and any configured protective equipment. It can also copy a setup call for later mission authoring.
+**Hazard - Create** first selects a mission-configured hazard preset, then exposes plain-language RP name/messages, intensity, range, exposure, recovery, damage, fatal threshold and protection controls. Detector-aware presets are labelled in the first selector. Zeus can keep their mission-maker detector rules or deliberately make hazard information visible to everyone, independently from physical protection/damage. The dialog also controls the continuous exposure panel and can copy a setup call for later mission authoring.
 
 **Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
 

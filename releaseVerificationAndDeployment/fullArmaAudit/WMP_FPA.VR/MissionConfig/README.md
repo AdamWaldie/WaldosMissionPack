@@ -103,7 +103,7 @@ HashMaps have a local field-by-field legend plus a worked example where ambiguit
 | Rally / minigames / corpse traps | `missionSystemsConfig.sqf` | Automatic | Enable and configure the feature |
 | Economy | `missionSystemsConfig.sqf` | Automatic runtime + content setup | Enable, then configure the dedicated economy preset/catalogue |
 | Economy authored catalogues/layout | `economyConfig.sqf` | Server call-driven | Enable economy, then edit the worked public setup calls in this file |
-| Diagnostics / safestart | `missionSystemsConfig.sqf` | Automatic | Review the shipped server policy |
+| Diagnostics / safestart | `missionSystemsConfig.sqf` | Automatic availability; Safestart starts inactive | Review policy; Zeus can enable it during play |
 | Persistence | `persistenceConfig.sqf` | Automatic + dependency gate | Enable; install INIDBI2 server-side; register world objects separately |
 
 ## Where custom calls belong

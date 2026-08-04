@@ -420,6 +420,12 @@ _mhqLogic synchronizeObjectsAdd [_mhqPartOne, _mhqPartTwo, _mhqTent, _mhqCrate, 
 [_mhq, true, true, 180, 5] call Waldo_fnc_MHQSetup;
 missionNamespace setVariable ["Waldo_QA_MHQ", _mhq, true];
 
+// Exact Logistics Spawner composition path: standalone info stand, immediately active without an
+// MHQ deploy state. The object-keyed global call installs local/JIP interactions and server state.
+private _standaloneQuartermaster = ["qa_standalone_quartermaster", "Land_InfoStand_V1_F", [-82, 60, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
+[_standaloneQuartermaster, 0, 4, false] remoteExecCall ["Waldo_fnc_SetupQuarterMaster", 0, _standaloneQuartermaster];
+missionNamespace setVariable ["Waldo_QA_StandaloneQuartermaster", _standaloneQuartermaster, true];
+
 private _vvdPad = ["qa_vvd_pad", "Land_JumpTarget_F", [-105, 48, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
 private _vvdTable = ["qa_vvd_table", "Land_CampingTable_F", [-105, 34, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
 private _vvdLaptop = ["qa_vvd_laptop", "Land_Laptop_unfolded_F", [-105, 34, 0.82], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
@@ -436,7 +442,7 @@ _dropAircraft enableSimulationGlobal false;
 _dropAircraft flyInHeight 55;
 private _dropFlag = ["qa_drop_flag", "FlagPole_F", [-35, 38, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
 missionNamespace setVariable ["Waldo_QA_Paradrop", [_dropFlag, _dropAircraft], true];
-["logistics", "LOGISTICS / PARADROP", [-73, 45, 0], "MHQ deployment, quartermaster and airborne jump transport."] call Waldo_QA_fnc_registerFeatureStationServer;
+["logistics", "LOGISTICS / PARADROP", [-73, 45, 0], "MHQ deployment, standalone info-stand quartermaster and airborne jump transport."] call Waldo_QA_fnc_registerFeatureStationServer;
 
 Waldo_QA_fnc_activateDropAircraftServer = {
     if (!isServer) exitWith {};

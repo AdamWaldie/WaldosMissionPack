@@ -43,7 +43,7 @@ copies of feature logic.
 | Field Resupply Hub Example | Refill hub; assign infantry carriers by script or Zeus |
 | Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
 | Vehicle Recovery Workshop Example | Spaced workshop, recoverable vehicle and generic AUTO carrier |
-| Logistics Spawner Example | Quartermaster access point |
+| Logistics Spawner Example | Immediately active standalone quartermaster access point |
 | MHQ With Logistics Spawner | Deployable command post with synchronized parts |
 | Virtual Vehicle Depot Spawner Example | Terminal and safely separated spawn point |
 | AutoFortify Setup Example | Synced ACE Fortify catalogue |

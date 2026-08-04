@@ -487,9 +487,9 @@ class FullAuditTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("if (remoteExecutedOwner > 0) exitWith", tick)
         self.assertIn('missionNamespace setVariable ["Waldo_Hazard_LastEvaluation"', tick)
-        self.assertIn('_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", false]]', tick)
+        self.assertIn('_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]]', tick)
         environment = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
-        self.assertIn('["Waldo_Hazard_ShowStatus", false]', environment)
+        self.assertIn('["Waldo_Hazard_ShowStatus", true]', environment)
         self.assertIn('missionNamespace getVariable ["Waldo_Hazard_LastEvaluation"', client_diagnostics)
         self.assertIn("freshEvaluation=%5", client_diagnostics)
 
@@ -958,6 +958,60 @@ class FullAuditTests(unittest.TestCase):
             self.assertIn(str(idc), cleanup)
         self.assertIn('["Ended"', player_init)
         self.assertIn('["EntityKilled"', player_init)
+
+    def test_safestart_defaults_live_but_retains_zeus_activation(self):
+        config = (ROOT / "MissionConfig" / "missionSystemsConfig.sqf").read_text(encoding="utf-8")
+        server_init = (ROOT / "initServer.sqf").read_text(encoding="utf-8")
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_SafeStart_AutoStart", false, true]', config)
+        self.assertIn('getVariable ["Waldo_SafeStart_AutoStart", false]', server_init)
+        self.assertIn('"SafeStart: Enable Protection"', zen)
+        self.assertIn('[true] remoteExec ["Waldo_fnc_SafeStart", 2]', zen)
+
+    def test_standalone_quartermaster_is_active_but_mhq_remains_deployment_controlled(self):
+        setup = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "initQuartermaster.sqf").read_text(encoding="utf-8")
+        mhq = (ROOT / "MissionScripts" / "Logistics" / "MHQ" / "MHQSetupLocal.sqf").read_text(encoding="utf-8")
+        composition = (
+            ROOT / "WMP_Compositions" / "[WMP]Logistics_Spawner_Example" / "composition.sqe"
+        ).read_text(encoding="utf-8")
+        self.assertIn('["_deploymentControlled", false, [false]]', setup)
+        self.assertIn('_target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true]', setup)
+        self.assertIn('remoteExecCall ["Waldo_fnc_SetupQuarterMaster", 2]', setup)
+        self.assertIn("<t color='#79C7FF'>Logistics Quartermaster</t>", setup)
+        self.assertIn('"Waldo_QM_InfoActionId"', setup)
+        self.assertGreaterEqual(
+            mhq.count('[_target, _logisticsDirection, _logisticsDistance, true] call Waldo_fnc_SetupQuarterMaster'),
+            2,
+        )
+        self.assertIn('[this,0,4] call Waldo_fnc_SetupQuarterMaster', composition)
+        audit = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('"Land_InfoStand_V1_F"', audit)
+        self.assertIn('remoteExecCall ["Waldo_fnc_SetupQuarterMaster", 0, _standaloneQuartermaster]', audit)
+
+    def test_hazard_status_is_continuous_detector_aware_and_globally_reserved(self):
+        config = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
+        hazard = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
+        tick = (hazard / "hazardTick.sqf").read_text(encoding="utf-8")
+        hud_path = hazard / "hazardHud.sqf"
+        hud = hud_path.read_text(encoding="utf-8")
+        awareness = (hazard / "hazardAwareness.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Hazard_ShowStatus", true]', config)
+        self.assertIn("call Waldo_fnc_HazardHud", tick)
+        self.assertNotIn('"HAZARD_STATUS"', tick)
+        self.assertNotIn("Waldo_fnc_ShowUiNotification", self.sqf_without_comments(hud_path))
+        self.assertIn('"HAZARDOUS_ENVIRONMENT_STATUS"', hud)
+        self.assertIn('["BOTTOM_LEFT"]', hud)
+        self.assertIn("Waldo_fnc_RegisterUiReservationLocal", hud)
+        for setting in ("detectorItems", "detectorObjects", "detectorObjectRange", "awarenessCondition"):
+            self.assertIn(setting, awareness)
+        self.assertIn("requireAwarenessForNotifications", tick)
+        self.assertIn("requireAwarenessForStatus", tick)
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        self.assertIn("Who can see hazard information", zen)
+        self.assertIn("Use preset detector rules", zen)
+        self.assertIn('requireAwarenessForStatus", false', zen)
 
     def test_economy_prompts_preserve_zeus_and_capture_gameplay_input(self):
         core = ROOT / "MissionScripts" / "EconomySystems" / "Core"

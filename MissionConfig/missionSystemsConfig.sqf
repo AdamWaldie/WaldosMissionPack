@@ -6,12 +6,14 @@
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
  * Arguments: None. Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.
  *
- * Example: set Waldo_SafeStart_AutoStart false to ship live while retaining runtime controls.
- * Result: the server starts outside safestart while its normal runtime controls remain available.
+ * Example: leave Waldo_SafeStart_AutoStart false to begin live, then use the Zeus
+ * "SafeStart: Enable Protection" module if the mission needs to be paused safely in progress.
+ * Result: no protection is applied at mission start, but every runtime control remains available.
  * Current callers: init.sqf (SHARED) and initServer.sqf (SERVER) through the loader.
  *
  * ACTIVATION MODEL: AUTOMATIC WHEN ENABLED, WITH FEATURE-SPECIFIC CONTENT.
- * Rally, minigames, corpse traps, diagnostics and safestart start through the existing lifecycle.
+ * Rally, minigames, corpse traps, diagnostics and Safestart controls load through the existing
+ * lifecycle. Loading SafeStart controls does not activate protection when AutoStart is false.
  * Economy enablement starts its runtime, but economy resources/catalogues still come from the
  * dedicated economy setup/presets. The ACE values here are global policy, not separate features.
  *
@@ -67,6 +69,6 @@ createHashMapFromArray [
         ["Waldo_SafeStart_Confine", false, true],   // BOOL: keep players inside configured start area while active.
         ["Waldo_SafeStart_Radius", 150, false],     // METRES: fallback confinement radius when marker is blank.
         ["Waldo_SafeStart_ZoneMarker", "", false], // STRING: existing area marker name; blank selects radius mode.
-        ["Waldo_SafeStart_AutoStart", true, true]   // BOOL: begin mission in safestart; runtime control can end it.
+        ["Waldo_SafeStart_AutoStart", false, true]  // BOOL: false starts live (default); Zeus can enable protection later.
     ]]
 ]
