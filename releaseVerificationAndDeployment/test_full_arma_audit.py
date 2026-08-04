@@ -147,6 +147,19 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('getOrDefault ["enabled", false]', player_init)
         self.assertIn("require both the WMP ACRE", testing)
 
+    def test_audit_additional_acre_override_closes_the_set_array(self):
+        client = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "featureRangeClient.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn(
+            '["ACRE_SEM52SL", 1, 12, "LEFT"]\n            ]]]];',
+            client,
+        )
+
     def test_runtime_ids_and_dedicated_zen_bridges_are_safe(self):
         runtime_id_path = (
             ROOT / "MissionScripts" / "MissionInit" / "Configuration" / "createRuntimeId.sqf"
@@ -172,6 +185,16 @@ class FullAuditTests(unittest.TestCase):
             source = (ROOT / "MissionScripts" / relative).read_text(encoding="utf-8")
             self.assertIn("isServer", source, relative)
             self.assertIn(token, source, relative)
+
+    def test_dense_jammer_dialog_uses_non_overlapping_inline_selectors(self):
+        jammer = (
+            ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(jammer.count('["COMBO"'), 1)
+        self.assertIn('Waldo_fnc_MiniGameInteractionOptions', jammer)
+        self.assertGreaterEqual(jammer.count('["TOOLBOX:WIDE"'), 5)
+        self.assertIn('["LIST", ["Spawned emitter object"', jammer)
+        self.assertIn('_sourceValues param [_sourceIndex, "SPAWN"]', jammer)
 
     def test_acre_ceoi_handles_explicit_and_missing_343_assignments(self):
         compile_plan = (
@@ -1152,7 +1175,7 @@ class FullAuditTests(unittest.TestCase):
         recovery = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryRegisterVehicle.sqf").read_text(encoding="utf-8")
         recovery_interaction = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryInteractionSetup.sqf").read_text(encoding="utf-8")
         recovery_restore = (ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
-        for label in ("Require Radar Shutdown Procedure", "Shutdown Procedure", "Procedure Difficulty"):
+        for label in ("Player radar shutdown objective", "Procedure", "Difficulty"):
             self.assertIn(label, aa_zen)
         for label in ("Require Recovery Preparation", "Preparation Procedure", "Require Display Authentication", "Authentication Procedure"):
             self.assertIn(label, runtime_zen)
@@ -1547,13 +1570,124 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('configProperties [configFile >> "CfgVehicles"', runtime)
         self.assertIn("operational side", runtime.lower())
         self.assertIn("does not restrict the physical", runtime)
-        self.assertIn("does not restrict the physical AA assets", dynamic_aa)
+        self.assertIn("not physical equipment", dynamic_aa)
+        self.assertIn('"Faction/content profile"', dynamic_aa)
+        self.assertIn('"Exact mixed equipment"', dynamic_aa)
+        for stage in ('"Dynamic AA: Detection and Behaviour"', '"Dynamic AA: Faction Profile"', '"Dynamic AA: Exact Equipment Set %1"'):
+            self.assertIn(stage, dynamic_aa)
+        self.assertIn("uiSleep 0", dynamic_aa)
         self.assertNotIn('["EDIT", ["Aircraft class"', runtime)
         self.assertNotIn('["EDIT", ["System ID"', runtime + dynamic_aa)
         self.assertNotIn('["EDIT", ["Asset faction/pool key"', dynamic_aa)
-        self.assertIn('["COMBO", ["Emitter source"', jammer)
-        self.assertIn('["COMBO", ["Spawned emitter object"', jammer)
-        self.assertIn('["COMBO", ["ACRE frequency coverage"', jammer)
+        self.assertIn('["TOOLBOX:WIDE", ["Emitter source"', jammer)
+        self.assertIn('["LIST", ["Spawned emitter object"', jammer)
+        self.assertIn('["TOOLBOX:WIDE", ["ACRE frequency coverage"', jammer)
+
+    def test_dynamic_aa_has_valid_default_detection_and_independent_asset_selection(self):
+        detector = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAADetectorLoop.sqf").read_text(encoding="utf-8")
+        create = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf").read_text(encoding="utf-8")
+        zen = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZen.sqf").read_text(encoding="utf-8")
+        placement = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZenPlacement.sqf").read_text(encoding="utf-8")
+        publish = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAPublishState.sqf").read_text(encoding="utf-8")
+        remove = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAARemoveZen.sqf").read_text(encoding="utf-8")
+        audit_server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        group_state = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASetGroupState.sqf").read_text(encoding="utf-8")
+        destroy = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAADestroy.sqf").read_text(encoding="utf-8")
+        fighters = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASpawnFighters.sqf").read_text(encoding="utf-8")
+        config = (ROOT / "MissionConfig" / "airOperationsConfig.sqf").read_text(encoding="utf-8")
+        shared, server = config.split('["server", [', 1)
+        self.assertIn('getOrDefault ["detectionFilter", {true}]', detector)
+        self.assertNotIn('getOrDefault ["detectionFilter", {}]', detector)
+        self.assertIn('_accepted isEqualType true', detector)
+        self.assertIn('createVehicleCrew _vehicle', create)
+        self.assertIn('_vehicle setVehicleRadar 1', create)
+        self.assertIn('["assetSelectionMode", ["PROFILE", "EXACT"]', zen)
+        self.assertIn('_settings get "assetSelectionMode"', zen)
+        for assignment in ("radarAssignments", "staticAssignments", "mobileAssignments", "fighterAssignments"):
+            self.assertIn(f'_settings set ["{assignment}"', zen)
+            self.assertIn(assignment, create)
+        self.assertIn('"Add another mixed equipment set"', zen)
+        self.assertNotIn("openMap", placement)
+        self.assertIn("server is placing its assets", placement)
+        self.assertIn('getOrDefault ["radarCount", 1]', create)
+        self.assertIn('getOrDefault ["staticCount", 0]', create)
+        self.assertIn('getOrDefault ["mobileCount", 0]', create)
+        self.assertIn('["showMarkerDetails", _showMarkerDetails]', zen)
+        self.assertIn('"System and marker name"', zen)
+        self.assertIn('["displayName", _displayName]', zen)
+        self.assertIn('_config getOrDefault ["displayName", _id]', create)
+        self.assertIn('_config set ["displayName", _displayName]', create)
+        self.assertIn('_config getOrDefault ["displayName", _x]', publish)
+        self.assertIn('_nearest param [8, _id]', remove)
+        self.assertIn('format ["Remove Dynamic AA: %1", _displayName]', remove)
+        self.assertIn('"Show range and altitude limits"', zen)
+        self.assertIn('getOrDefault ["showMarkerDetails", true]', create)
+        self.assertIn('floor %3m / ceiling %4m', create)
+        self.assertIn('format ["%1 - range %2m / floor %3m / ceiling %4m", _displayName', create)
+        self.assertNotIn('format ["%1 AA", _id]', create)
+        self.assertIn('sizeOf _class', create)
+        self.assertIn('_effectiveStaticSpacing', create)
+        self.assertIn('no collision-safe generated layout was available', create)
+        self.assertNotIn('BIS_fnc_findSafePos', create)
+        self.assertIn('private _assetPlan = []', create)
+        self.assertIn('private _resolvedPlan = []', create)
+        self.assertIn('findEmptyPosition [0, _footprint max 5, _class]', create)
+        self.assertIn('private _finalReservations = []', create)
+        self.assertIn('createVehicle [_class, _position, [], 0, "CAN_COLLIDE"]', create)
+        self.assertIn('all partial assets were removed', create)
+        aa_audit = audit_server.split("Waldo_QA_fnc_createDynamicAAServer = {", 1)[1].split("Waldo_QA_fnc_destroyDynamicAAServer", 1)[0]
+        self.assertIn('["radarCount", 1], ["staticCount", 1], ["mobileCount", 1]', aa_audit)
+        self.assertNotIn('["radarPosition",', aa_audit)
+        self.assertNotIn('["staticPositions",', aa_audit)
+        self.assertNotIn('["mobilePositions",', aa_audit)
+        self.assertIn('private _separated = true', aa_audit)
+        self.assertIn('minimumMargin', aa_audit)
+        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', create)
+        self.assertIn('_x disableAI "AUTOTARGET"', group_state)
+        self.assertNotIn('_x enableAI "AUTOTARGET"', group_state)
+        self.assertIn('_eligibleTargets = _targets select', group_state)
+        self.assertIn('[_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo', destroy)
+        self.assertIn('_waypoint setWaypointType "MOVE"', fighters)
+        self.assertNotIn('_waypoint setWaypointType "SAD"', fighters)
+        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', fighters)
+        self.assertIn('[_id, _config getOrDefault ["cleanupOnRadarLoss", false]] call', detector)
+        self.assertNotIn('[_id, _config getOrDefault ["cleanupOnRadarLoss", false]] spawn', detector)
+        radar_predicate = detector.split('private _operationalRadars = _radars select {', 1)[1].split('};', 1)[0]
+        self.assertIn('private _basicOperational', radar_predicate)
+        self.assertNotIn('exitWith', radar_predicate)
+        self.assertIn('Waldo_DynamicAA_FactionAssetPools', shared)
+        self.assertNotIn('Waldo_DynamicAA_FactionAssetPools', server)
+
+    def test_shared_interaction_selectors_expose_the_complete_catalogue(self):
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        options = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "miniGameInteractionOptions.sqf").read_text(encoding="utf-8")
+        aa = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZen.sqf").read_text(encoding="utf-8")
+        jammer = (ROOT / "MissionScripts" / "ZenModules" / "Zen_jammerPlaceModule.sqf").read_text(encoding="utf-8")
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
+        self.assertIn("class MiniGameInteractionOptions", functions)
+        for challenge in ("wirecut", "minesweeper", "keypad", "lockpick", "circuit", "repair", "radiotune", "pressure", "sequence", "commandinput"):
+            self.assertIn(f'["{challenge}",', options)
+        self.assertIn('Waldo_MG_ChallengeRegistry', options)
+        self.assertIn('["circuit"] call Waldo_fnc_MiniGameInteractionOptions', aa)
+        self.assertIn('["circuit"] call Waldo_fnc_MiniGameInteractionOptions', jammer)
+        self.assertIn('["repair"] call Waldo_fnc_MiniGameInteractionOptions', runtime)
+        self.assertIn('["commandinput"] call Waldo_fnc_MiniGameInteractionOptions', runtime)
+
+    def test_hazard_runtime_uses_one_ordered_authoritative_snapshot(self):
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        publish = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardPublishState.sqf").read_text(encoding="utf-8")
+        receive = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardReceiveSnapshot.sqf").read_text(encoding="utf-8")
+        register = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments" / "hazardRegisterZone.sqf").read_text(encoding="utf-8")
+        hazard_cases = runtime.split('case "HAZARD_SET": {', 1)[1].split('case "BREACH_SET": {', 1)[0]
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_HazardRegisterZone"', hazard_cases)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_HazardInit"', hazard_cases)
+        self.assertIn('call Waldo_fnc_HazardRegisterZone', hazard_cases)
+        self.assertIn('"Waldo_Hazard_RuntimeSnapshot"', publish)
+        self.assertIn('["Waldo_fnc_HazardReceiveSnapshot", 0', publish)
+        self.assertIn('if !(isServer)', register)
+        self.assertIn('call Waldo_fnc_HazardPublishState', register)
+        self.assertIn('Waldo_Hazard_SnapshotReceived', receive)
+        self.assertIn('use a function-name STRING', publish)
 
     def test_ai_profiles_have_wmp_names_and_nvg_aware_low_light_tuning(self):
         profile_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")

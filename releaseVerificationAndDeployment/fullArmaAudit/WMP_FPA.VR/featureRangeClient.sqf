@@ -373,7 +373,7 @@ if (!isNull _coreConsole) then {
                 ["ACRE_PRC117F", 1, 7, "BOTH"],
                 ["ACRE_BF888S", 1, 14, "RIGHT"],
                 ["ACRE_SEM52SL", 1, 12, "LEFT"]
-            ]]];
+            ]]]];
             private _result = [true, "QA_ADDITIONAL_CHANNEL_PROFILES"] call Waldo_fnc_ACRE2ApplyPlayerPlan;
             _config set ["radioOverrides", _savedOverrides];
             private _ordered = [] call Waldo_fnc_ACRE2GetOrderedRadios;

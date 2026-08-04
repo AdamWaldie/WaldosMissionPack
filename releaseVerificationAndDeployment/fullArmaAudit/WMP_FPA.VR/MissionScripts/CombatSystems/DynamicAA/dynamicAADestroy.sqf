@@ -38,6 +38,7 @@ if !(_remoteAuthorized) exitWith {false};
 private _registry = missionNamespace getVariable ["Waldo_DynamicAA_Registry", createHashMap];
 if !(_id in (keys _registry)) exitWith {false};
 private _state = _registry get _id;
+private _displayName = (_state get "config") getOrDefault ["displayName", _id];
 _state set ["active", false];
 {
     if (!isNull _x) then {_x setVariable ["Waldo_DynamicAA_InteractionAvailable", false, true]};
@@ -45,6 +46,11 @@ _state set ["active", false];
 {
     if (!isNull _x) then {[_x, false] call Waldo_fnc_DynamicAASetGroupState};
 } forEach (_state getOrDefault ["defenceGroups", []]);
+{
+    if (!isNull _x && {_x isKindOf "AllVehicles"}) then {
+        [_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo;
+    };
+} forEach (_state getOrDefault ["objects", []]);
 private _handle = _state getOrDefault ["handle", scriptNull];
 if !(scriptDone _handle) then {terminate _handle};
 
@@ -66,7 +72,7 @@ if (_deleteAssets) then {
 } else {
     {
         _x setMarkerColor "ColorGrey";
-        if (markerShape _x == "ICON") then {_x setMarkerText format ["%1 AA disabled", _id]};
+        if (markerShape _x == "ICON") then {_x setMarkerText format ["%1 - disabled", _displayName]};
     } forEach (_state getOrDefault ["markers", []]);
     _registry set [_id, _state];
 };

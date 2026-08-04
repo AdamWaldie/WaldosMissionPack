@@ -303,8 +303,8 @@ See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 | `Waldo_DynamicAA_MaximumRadius` | Maximum accepted system radius in metres. |
 | `Waldo_DynamicAA_MaximumAltitude` | Maximum accepted detection altitude. |
 | `Waldo_DynamicAA_MaximumFighters` | Maximum fighters created by one system. |
-| `Waldo_DynamicAA_SideAssetPools` | JIP-published radar, static, mobile and fighter pools by side. |
-| `Waldo_DynamicAA_FactionAssetPools` | JIP-published faction overrides. |
+| `Waldo_DynamicAA_SideAssetPools` | Shared fallback radar, static, mobile and fighter content pools by operational side. |
+| `Waldo_DynamicAA_FactionAssetPools` | Shared faction/content profiles; selection is independent of operational side. |
 | `WALDO_STATIC_MINALTITUDE` / `MAXALTITUDE` | Valid static-line jump altitude band. |
 | `WALDO_STATIC_MAXSPEED` | Maximum static-line aircraft speed. |
 | `WALDO_STATIC_STATICCHUTE` | Default static-line parachute classname. |
@@ -346,7 +346,7 @@ See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 | `Waldo_Hazard_ShowStatus` | Shows the live hazard status element. |
 | `Waldo_Hazard_NotifyTransitions` | Announces entering/leaving a zone. |
 | `Waldo_Hazard_NotificationDuration` | Transition-card duration in seconds. |
-| `Waldo_Hazard_Presets` | Named profiles. Each profile may set `type`, `label`, `rate`, `decay`, protection/vehicle modifiers, `damageType`, staged `[exposure, damage]` thresholds, stage messages and `fatalExposure`. |
+| `Waldo_Hazard_Presets` | Named profiles. Each profile may set `type`, `label`, `rate`, `decay`, protection/vehicle modifiers, `damageType`, staged `[exposure, damage]` thresholds, stage messages and `fatalExposure`. Networked callbacks use missionNamespace function-name strings. |
 | `Waldo_TreeFelling_Enable` | Master tree-felling opt-in. |
 | `Waldo_TreeFelling_Range` | Maximum axe interaction range. |
 | `Waldo_TreeFelling_BaseHits` | Base strikes required. |

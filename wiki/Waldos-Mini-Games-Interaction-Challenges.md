@@ -564,7 +564,7 @@ default. Integrations must not force a procedure onto every use of the underlyin
 
 | Candidate | Fit | Useful procedure | Integration boundary |
 |---|---|---|---|
-| Dynamic AA central radar | Strong | Circuit, wire isolation or command authentication | One successful server callback disables the named AA system. Radar destruction and curator reactivation must reset or consume the procedure consistently. |
+| Dynamic AA central radar | Strong | Any shared built-in or registered custom procedure | One successful server callback disables the named AA system. Radar destruction and curator reactivation must reset or consume the procedure consistently. |
 | Hazard/life-support control panel | Strong | Circuit, pressure or command authentication | Activate, stabilise or purge a specific hazardous zone through its authoritative zone API. This creates useful repair/sabotage RP without putting a procedure on exposure itself. |
 | Vehicle recovery preparation | Strong, opt-in | Repair or hydraulics | Gate the first package/rigging transition, not loading, unloading and every workshop operation. Revalidate vehicle, carrier and exclusion area after success. |
 | Locked tactical display or intelligence terminal | Strong, opt-in | Keypad, lockpick or command authentication | Unlock the display globally or for a configured audience. Do not make routine map viewing repeat the procedure. |

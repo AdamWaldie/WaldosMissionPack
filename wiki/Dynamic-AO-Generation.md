@@ -68,7 +68,8 @@ Cleanup is repeat-safe:
 | `minefields` | `0` | 0–15 outer-ring mine clusters |
 | `showMineMarkers` | `false` | Global red border around each field |
 | `roadblocks` | `0` | 0–12 manned checkpoints on roads inside the AO |
-| `showMarker` | `true` | Global side-coloured border and `AO of [faction]` centre marker |
+| `displayName` | `id` | Human-readable AO name used by the centre marker and ZEN removal list |
+| `showMarker` | script default `true`; Zeus default off | Global side-coloured border and the configured `displayName` centre marker. Enable **Show AO marker** in Zeus when the AO should be public. |
 
 ## Runtime discovery and classification
 
@@ -88,7 +89,7 @@ The pool cache is local to each machine's immutable runtime configuration. Creat
 
 Only the server owns the full registry of objects, groups, mines and markers. Clients receive `Waldo_DynamicAO_PublicSystems`, a compact JIP-safe summary used by the remove dialog and diagnostics. Arma global markers handle their own JIP synchronization.
 
-Every generated object is added to current curator editable objects. Whole-AO cleanup removes the registry entry first, then deletes tracked mines, field anchors, objects, units, groups and markers. This order makes deletion-event cleanup repeat-safe. Generated AI are passed through `Waldo_fnc_AIApplyProfile` after their final group assignment and remain eligible for the handler's new-unit and locality-change paths. The active WMP profile is therefore authoritative. A legacy scripted config may still contain `skill`; it is accepted for compatibility but ignored.
+Every generated object is added to current curator editable objects. Whole-AO cleanup removes the registry entry first, then deletes tracked mines, field anchors, objects, units, groups and markers. This order makes deletion-event cleanup repeat-safe. Patrol generation is server-local, enables movement/pathing, leaves Arma's engine-created waypoint lifecycle intact and appends the MOVE/CYCLE route without a competing direct movement order. Infantry in a new patrol receive placement clearance around the group start instead of sharing one exact position; this prevents collision-locked squads on dedicated servers. Generated AI are passed through `Waldo_fnc_AIApplyProfile` after their final group assignment and remain eligible for the handler's new-unit and locality-change paths. The active WMP profile is therefore authoritative. A legacy scripted config may still contain `skill`; it is accepted for compatibility but ignored.
 
 ## Engine and terrain boundaries
 

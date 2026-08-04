@@ -8,12 +8,18 @@
  * Arguments:
  * 0: config <HASHMAP> with:
  *    Required: id <STRING> safe unique key; centre <ARRAY> detection centre.
+ *    Naming: displayName <STRING> is the human-readable marker/removal name (default: id).
  *    Detection: side <SIDE>, radius, minimumAltitude, maximumAltitude, engagementRadius <METRES>,
  *      detectionDwell, clearDelay and detectionInterval <SECONDS>.
- *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY>;
- *      staticSiteSpacing <METRES>; radarDirection <DEGREES>.
+ *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY> for
+ *      authored layouts. Otherwise radarCount/staticCount/mobileCount produce a terrain-safe,
+ *      server-generated layout around centre. staticSiteSpacing <METRES>; radarDirection <DEGREES>.
  *    Response: fighterCount <NUMBER>; initialAmmoFraction <0..1>; createMarkers <BOOL>.
- *    Pool selection: faction <STRING> or radar/static/mobile/fighter class overrides. Omitted values
+ *      showMarkerDetails <BOOL> controls whether marker text includes range, floor and ceiling
+ *      and defaults true; it does not enable markers by itself.
+ *    Pool selection: faction <STRING> is a content profile independent of side. Exact ZEN selection
+ *      uses radarAssignments/staticAssignments/mobileAssignments/fighterAssignments, with one class
+ *      per requested slot. Script callers may still use the singular class overrides. Omitted values
  *      resolve through MissionConfig airOperationsConfig side/faction pools.
  *    Optional shutdown interaction: shutdownInteraction <BOOL>, shutdownChallenge <STRING> and
  *      shutdownDifficulty <easy|standard|hard|expert>.
@@ -39,22 +45,31 @@ if !(isServer) exitWith {
 };
 
 private _remoteAuthorized = true;
+private _requestOwner = remoteExecutedOwner;
 if (remoteExecutedOwner > 0) then {
     private _callerIndex = allPlayers findIf {owner _x == remoteExecutedOwner};
     private _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
     _remoteAuthorized = !isNull _caller && {!isNull (getAssignedCuratorLogic _caller)};
 };
 if !(_remoteAuthorized) exitWith {false};
+private _reply = {
+    params ["_message", "_state"];
+    if (_requestOwner > 2) then {
+        ["DYNAMIC AA", _message, _state, "DYNAMIC_AA_CREATE", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
+    };
+};
 
 private _id = _config getOrDefault ["id", ""];
 private _centre = _config getOrDefault ["centre", []];
 if (_id == "" || {count _centre < 2}) exitWith {
     diag_log "[WMP DYNAMIC AA] Creation rejected: id and centre are required.";
+    ["Creation rejected: a valid system ID and detection centre are required.", "ERROR"] call _reply;
     false
 };
 private _safeId = [_id, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
 if (_safeId != _id) exitWith {
     diag_log format ["[WMP DYNAMIC AA] Creation rejected: id '%1' contains unsupported characters.", _id];
+    ["Creation rejected: the generated system ID contains unsupported characters.", "ERROR"] call _reply;
     false
 };
 
@@ -72,30 +87,124 @@ private _clearDelay = (_config getOrDefault ["clearDelay", 5]) max 0;
 private _staticSiteSpacing = ((_config getOrDefault ["staticSiteSpacing", 30]) max 10) min 200;
 private _fighterCount = round (((_config getOrDefault ["fighterCount", 0]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumFighters", 12]));
 private _detectionInterval = (_config getOrDefault ["detectionInterval", missionNamespace getVariable ["Waldo_DynamicAA_DefaultDetectionInterval", 1]]) max 0.25;
-private _radarPosition = _config getOrDefault ["radarPosition", _centre];
-private _radarPositions = _config getOrDefault ["radarPositions", [_radarPosition]];
-if (count _radarPositions == 0) then {_radarPositions = [_radarPosition]};
+private _radarAssignments = _config getOrDefault ["radarAssignments", []];
+private _staticAssignments = _config getOrDefault ["staticAssignments", []];
+private _mobileAssignments = _config getOrDefault ["mobileAssignments", []];
+private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
 private _pool = [_config, _side] call Waldo_fnc_DynamicAAResolveAssetPool;
-private _radarClasses = if ("radarClass" in (keys _config)) then {[_config get "radarClass"]} else {_config getOrDefault ["radarClasses", _pool get "radarClasses"]};
-private _staticSitePools = if ("staticClasses" in (keys _config)) then {[+(_config get "staticClasses")]} else {_config getOrDefault ["staticSitePools", _pool get "staticSitePools"]};
-private _mobileClasses = if ("mobileClass" in (keys _config)) then {[_config get "mobileClass"]} else {_config getOrDefault ["mobileClasses", _pool get "mobileClasses"]};
-private _fighterClasses = if ("fighterClass" in (keys _config)) then {[_config get "fighterClass"]} else {_config getOrDefault ["fighterClasses", _pool get "fighterClasses"]};
+private _radarClasses = if (count _radarAssignments > 0) then {+_radarAssignments} else {
+    if ("radarClass" in (keys _config)) then {[_config get "radarClass"]} else {_config getOrDefault ["radarClasses", _pool get "radarClasses"]}
+};
+private _staticSitePools = if ("staticClass" in (keys _config)) then {
+    [[_config get "staticClass"]]
+} else {
+    if (count _staticAssignments > 0) then {_staticAssignments apply {[_x]}} else {
+        if ("staticClasses" in (keys _config)) then {[+(_config get "staticClasses")]} else {_config getOrDefault ["staticSitePools", _pool get "staticSitePools"]}
+    }
+};
+private _mobileClasses = if (count _mobileAssignments > 0) then {+_mobileAssignments} else {
+    if ("mobileClass" in (keys _config)) then {[_config get "mobileClass"]} else {_config getOrDefault ["mobileClasses", _pool get "mobileClasses"]}
+};
+private _fighterClasses = if (count _fighterAssignments > 0) then {+_fighterAssignments} else {
+    if ("fighterClass" in (keys _config)) then {[_config get "fighterClass"]} else {_config getOrDefault ["fighterClasses", _pool get "fighterClasses"]}
+};
+private _radarSlotCount = if ("radarPositions" in keys _config) then {(count (_config get "radarPositions")) max 1} else {
+    if ("radarPosition" in keys _config) then {1} else {round ((_config getOrDefault ["radarCount", 1]) max 1 min 4)}
+};
+private _staticSlotCount = if ("staticPositions" in keys _config) then {count (_config get "staticPositions")} else {round ((_config getOrDefault ["staticCount", 0]) max 0 min 8)};
+private _mobileSlotCount = if ("mobilePositions" in keys _config) then {count (_config get "mobilePositions")} else {round ((_config getOrDefault ["mobileCount", 0]) max 0 min 8)};
+private _assignmentMismatch = (count _radarAssignments > 0 && {count _radarAssignments != _radarSlotCount})
+    || {count _staticAssignments > 0 && {count _staticAssignments != _staticSlotCount}}
+    || {count _mobileAssignments > 0 && {count _mobileAssignments != _mobileSlotCount}}
+    || {count _fighterAssignments > 0 && {count _fighterAssignments != _fighterCount}};
+if (_assignmentMismatch) exitWith {
+    diag_log format ["[WMP DYNAMIC AA] '%1' rejected: exact assignment counts do not match requested slots.", _id];
+    ["Creation rejected: exact equipment selections do not match the requested asset counts.", "ERROR"] call _reply;
+    false
+};
+private _displayName = [_config getOrDefault ["displayName", _id], "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789 _-()[]"] call BIS_fnc_filterString;
+if (_displayName == "") then {_displayName = _id};
+_displayName = _displayName select [0, 64];
 private _classes = +_radarClasses;
-if (count (_config getOrDefault ["mobilePositions", []]) > 0) then {_classes append _mobileClasses};
+if (_mobileSlotCount > 0) then {_classes append _mobileClasses};
 if (_fighterCount > 0) then {_classes append _fighterClasses};
-if (count (_config getOrDefault ["staticPositions", []]) > 0) then {{_classes append _x} forEach _staticSitePools};
+if (_staticSlotCount > 0) then {{_classes append _x} forEach _staticSitePools};
 private _invalidClass = _classes findIf {!isClass (configFile >> "CfgVehicles" >> _x)};
 private _missingPool = count _radarClasses == 0
-    || {count (_config getOrDefault ["staticPositions", []]) > 0 && {count _staticSitePools == 0}}
-    || {count (_config getOrDefault ["mobilePositions", []]) > 0 && {count _mobileClasses == 0}}
+    || {_staticSlotCount > 0 && {count _staticSitePools == 0}}
+    || {_mobileSlotCount > 0 && {count _mobileClasses == 0}}
     || {_fighterCount > 0 && {count _fighterClasses == 0}};
 if (_invalidClass >= 0 || {_missingPool}) exitWith {
     private _reason = if (_invalidClass >= 0) then {format ["invalid classname %1", _classes select _invalidClass]} else {"a required asset pool is empty"};
     diag_log format ["[WMP DYNAMIC AA] '%1' rejected: %2.", _id, _reason];
+    [format ["Creation rejected: %1.", _reason], "ERROR"] call _reply;
+    false
+};
+
+// sizeOf is evaluated only after class validation. The resulting radius is deliberately generous:
+// generated ZEN layouts favour a clear, stable installation over a tightly packed composition.
+private _classClearance = {
+    params ["_class", "_minimum"];
+    ((((sizeOf _class) * 0.75) max _minimum) min 100)
+};
+private _largestClearance = {
+    params ["_candidateClasses", "_minimum"];
+    private _largest = _minimum;
+    {_largest = _largest max ([_x, _minimum] call _classClearance)} forEach _candidateClasses;
+    _largest
+};
+private _staticComponentClasses = [];
+{{_staticComponentClasses pushBackUnique _x} forEach _x} forEach _staticSitePools;
+private _staticComponentClearance = [_staticComponentClasses, 14] call _largestClearance;
+private _effectiveStaticSpacing = _staticSiteSpacing max (_staticComponentClearance * 1.5);
+private _makeLayoutRing = {
+    params ["_count", "_distance", ["_includeCentre", false], ["_angleOffset", 0]];
+    private _positions = [];
+    private _centreOffset = if (_includeCentre) then {1} else {0};
+    for "_index" from 0 to (_count - 1) do {
+        private _candidate = if (_includeCentre && {_index == 0}) then {
+            +_centre
+        } else {
+            private _ringIndex = _index - _centreOffset;
+            private _ringCount = _count - _centreOffset;
+            _centre getPos [_distance, (_ringIndex * (360 / (_ringCount max 1))) + _angleOffset]
+        };
+        _candidate set [2, 0];
+        _positions pushBack _candidate;
+    };
+    _positions
+};
+private _radarPositions = if ("radarPositions" in keys _config) then {
+    +(_config get "radarPositions")
+} else {
+    if ("radarPosition" in keys _config) then {[_config get "radarPosition"]} else {
+        [_radarSlotCount, 140, true, 0] call _makeLayoutRing
+    }
+};
+_radarPositions = _radarPositions select {_x isEqualType [] && {count _x >= 2}};
+if (count _radarPositions == 0 && {_radarSlotCount > 0}) then {_radarPositions = [+_centre]};
+private _layoutRadius = ((_radius * 0.35) max 120) min 700;
+private _staticAuthored = "staticPositions" in keys _config;
+private _staticPositions = if (_staticAuthored) then {+(_config get "staticPositions")} else {
+    [_staticSlotCount, _layoutRadius, false, 20] call _makeLayoutRing
+};
+_staticPositions = _staticPositions select {_x isEqualType [] && {count _x >= 2}};
+private _mobileAuthored = "mobilePositions" in keys _config;
+private _mobilePositions = if (_mobileAuthored) then {+(_config get "mobilePositions")} else {
+    [_mobileSlotCount, _layoutRadius * 0.65, false, 200] call _makeLayoutRing
+};
+_mobilePositions = _mobilePositions select {_x isEqualType [] && {count _x >= 2}};
+private _layoutFailed = count _radarPositions != _radarSlotCount
+    || {count _staticPositions != _staticSlotCount}
+    || {count _mobilePositions != _mobileSlotCount};
+if (_layoutFailed) exitWith {
+    diag_log format ["[WMP DYNAMIC AA] '%1' rejected: no collision-safe generated layout was available.", _id];
+    ["Creation rejected: the server could not find enough clear positions for the requested AA assets. Try a more open location or fewer assets.", "ERROR"] call _reply;
     false
 };
 
 _config set ["id", _id];
+_config set ["displayName", _displayName];
 _config set ["centre", _centre];
 _config set ["side", _side];
 _config set ["radius", _radius];
@@ -104,68 +213,156 @@ _config set ["maximumAltitude", _maximumAltitude];
 _config set ["engagementRadius", _engagementRadius];
 _config set ["detectionDwell", _detectionDwell];
 _config set ["clearDelay", _clearDelay];
-_config set ["staticSiteSpacing", _staticSiteSpacing];
+_config set ["staticSiteSpacing", _effectiveStaticSpacing];
 _config set ["fighterCount", _fighterCount];
 _config set ["detectionInterval", _detectionInterval];
-_config set ["radarPosition", _radarPosition];
+_config set ["radarPosition", _radarPositions select 0];
 _config set ["radarPositions", _radarPositions];
 _config set ["radarClasses", _radarClasses];
 _config set ["staticSitePools", _staticSitePools];
 _config set ["mobileClasses", _mobileClasses];
 _config set ["fighterClasses", _fighterClasses];
+_config set ["radarAssignments", _radarAssignments];
+_config set ["staticAssignments", _staticAssignments];
+_config set ["mobileAssignments", _mobileAssignments];
+_config set ["fighterAssignments", _fighterAssignments];
 _config set ["resolvedAssetPool", _pool getOrDefault ["source", "SIDE"]];
 
-private _radars = _radarPositions apply {
-    private _radar = createVehicle [selectRandom _radarClasses, _x, [], 0, "NONE"];
-    _radar setDir (_config getOrDefault ["radarDirection", random 360]);
-    _radar
-};
-private _radar = _radars select 0;
-private _objects = +_radars;
+private _objects = [];
 private _groups = [];
 private _defenceGroups = [];
-
+private _assetPlan = [];
+{
+    private _class = if (count _radarAssignments > 0) then {_radarAssignments select _forEachIndex} else {selectRandom _radarClasses};
+    _assetPlan pushBack ["RADAR", _class, _x, _config getOrDefault ["radarDirection", random 360]];
+} forEach _radarPositions;
 {
     private _base = _x;
     private _direction = _base getDir _centre;
-    private _staticClasses = selectRandom _staticSitePools;
-    private _staticClassCount = (count _staticClasses) max 1;
-    private _positions = _staticClasses apply {
-        _base getPos [_staticSiteSpacing, _direction + 180 + ((_forEachIndex * 360) / _staticClassCount)]
-    };
+    private _siteClasses = if (count _staticAssignments > 0) then {[_staticAssignments select _forEachIndex]} else {selectRandom _staticSitePools};
+    private _siteClassCount = (count _siteClasses) max 1;
     {
-        private _vehicle = createVehicle [_x, _positions select _forEachIndex, [], 0, "NONE"];
-        _vehicle setVehicleAmmo (((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1);
-        _vehicle setDir _direction;
-        createVehicleCrew _vehicle;
-        private _oldGroups = [];
-        {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
-        private _group = createGroup _side;
-        (crew _vehicle) joinSilent _group;
-        {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
-        [_group, false] call Waldo_fnc_DynamicAASetGroupState;
-        _objects pushBack _vehicle;
-        _groups pushBackUnique _group;
-        _defenceGroups pushBackUnique _group;
-    } forEach _staticClasses;
-} forEach (_config getOrDefault ["staticPositions", []]);
-
+        private _candidate = if (_siteClassCount == 1) then {_base} else {
+            _base getPos [_effectiveStaticSpacing, _direction + 180 + ((_forEachIndex * 360) / _siteClassCount)]
+        };
+        _assetPlan pushBack ["STATIC", _x, _candidate, _direction];
+    } forEach _siteClasses;
+} forEach _staticPositions;
 {
-    private _mobileClass = selectRandom _mobileClasses;
-    private _vehicle = createVehicle [_mobileClass, _x, [], 0, "NONE"];
-    _vehicle setVehicleAmmo (((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1);
-    _vehicle setDir (_x getDir _centre);
+    private _class = if (count _mobileAssignments > 0) then {_mobileAssignments select _forEachIndex} else {selectRandom _mobileClasses};
+    _assetPlan pushBack ["MOBILE", _class, _x, _x getDir _centre];
+} forEach _mobilePositions;
+
+// Resolve every final component before creating the first vehicle. findEmptyPosition protects the
+// real selected class against existing world objects; the additional reservation list protects
+// planned assets that do not exist yet and therefore cannot be seen by the engine query.
+private _resolvedPlan = [];
+private _finalReservations = [];
+private _resolveFinalPosition = {
+    params ["_candidate", "_class"];
+    private _footprint = [_class, 8] call _classClearance;
+    private _clearance = _footprint + 5;
+    private _result = [];
+    private _ringStep = ((_footprint * 2) + 15) max 35;
+    for "_ring" from 0 to 16 do {
+        if (count _result >= 2) exitWith {};
+        private _samples = if (_ring == 0) then {1} else {(8 + (_ring * 2)) min 32};
+        for "_sample" from 0 to (_samples - 1) do {
+            if (count _result >= 2) exitWith {};
+            private _samplePosition = if (_ring == 0) then {+_candidate} else {
+                _candidate getPos [_ring * _ringStep, (_sample * (360 / _samples)) + ((_ring mod 2) * (180 / _samples))]
+            };
+            _samplePosition set [2, 0];
+            private _exact = _samplePosition findEmptyPosition [0, _footprint max 5, _class];
+            if (count _exact >= 2) then {
+                _exact set [2, 0];
+                private _plannedOverlap = _finalReservations findIf {
+                    _x params ["_reservedPosition", "_reservedClearance"];
+                    _exact distance2D _reservedPosition < (_clearance + _reservedClearance)
+                };
+                private _objectBlockers = nearestObjects [_exact, [], _clearance, true];
+                private _terrainBlockers = nearestTerrainObjects [
+                    _exact,
+                    ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "BUILDING", "HOUSE", "FENCE", "WALL"],
+                    _clearance,
+                    false,
+                    true
+                ];
+                private _waterCompatible = if (_class isKindOf "Ship") then {surfaceIsWater _exact} else {!surfaceIsWater _exact};
+                if (_plannedOverlap < 0 && {_objectBlockers isEqualTo []} && {_terrainBlockers isEqualTo []} && {_waterCompatible}) then {
+                    _result = _exact;
+                    _finalReservations pushBack [_result, _clearance];
+                };
+            };
+        };
+    };
+    _result
+};
+private _planFailed = false;
+{
+    _x params ["_kind", "_class", "_candidate", "_direction"];
+    private _position = [_candidate, _class] call _resolveFinalPosition;
+    if (count _position < 2) then {
+        _planFailed = true;
+        diag_log format ["[WMP DYNAMIC AA] '%1' placement failed for %2 %3 near %4.", _id, _kind, _class, _candidate];
+    } else {
+        _resolvedPlan pushBack [_kind, _class, _position, _direction, [_class, 8] call _classClearance];
+    };
+} forEach _assetPlan;
+if (_planFailed || {count _resolvedPlan != count _assetPlan}) exitWith {
+    ["Creation rejected: one or more selected AA components had no complete collision-free footprint. Try a more open location or fewer assets.", "ERROR"] call _reply;
+    false
+};
+diag_log format ["[WMP DYNAMIC AA] '%1' resolved placement plan: %2", _id, _resolvedPlan apply {[_x select 0, _x select 1, _x select 2, _x select 4]}];
+
+private _assignCrew = {
+    params ["_vehicle", "_defence"];
     createVehicleCrew _vehicle;
+    if (count crew _vehicle == 0) exitWith {grpNull};
     private _oldGroups = [];
     {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
     private _group = createGroup _side;
     (crew _vehicle) joinSilent _group;
     {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
-    [_group, false] call Waldo_fnc_DynamicAASetGroupState;
-    _objects pushBack _vehicle;
     _groups pushBackUnique _group;
-    _defenceGroups pushBackUnique _group;
-} forEach (_config getOrDefault ["mobilePositions", []]);
+    if (_defence) then {
+        [_group, false] call Waldo_fnc_DynamicAASetGroupState;
+        _defenceGroups pushBackUnique _group;
+    } else {
+        _group setCombatMode "RED";
+    };
+    _group
+};
+private _radars = [];
+private _spawnFailed = false;
+{
+    _x params ["_kind", "_class", "_position", "_direction"];
+    private _vehicle = createVehicle [_class, _position, [], 0, "CAN_COLLIDE"];
+    if (isNull _vehicle) then {
+        _spawnFailed = true;
+    } else {
+        _vehicle setPosATL _position;
+        _vehicle setDir _direction;
+        _objects pushBack _vehicle;
+        if (_kind == "RADAR") then {
+            _radars pushBack _vehicle;
+            if (_vehicle isKindOf "AllVehicles") then {
+                [_vehicle, false] call _assignCrew;
+                _vehicle setVehicleRadar 1;
+            };
+        } else {
+            _vehicle setVehicleAmmo (((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1);
+            [_vehicle, true] call _assignCrew;
+        };
+    };
+} forEach _resolvedPlan;
+if (_spawnFailed || {count _radars == 0}) exitWith {
+    {{if (!isNull _x) then {deleteVehicle _x}} forEach crew _x; deleteVehicle _x} forEach _objects;
+    {{if (!isNull _x) then {deleteVehicle _x}} forEach units _x; deleteGroup _x} forEach _groups;
+    ["Creation failed while materialising the validated AA plan; all partial assets were removed.", "ERROR"] call _reply;
+    false
+};
+private _radar = _radars select 0;
 
 private _markerPrefix = format ["Waldo_DynamicAA_%1", _id];
 private _markers = [];
@@ -184,7 +381,12 @@ if (_config getOrDefault ["createMarkers", true]) then {
     _iconMarker setMarkerShape "ICON";
     _iconMarker setMarkerType "o_antiair";
     _iconMarker setMarkerColor _colour;
-    _iconMarker setMarkerText format ["%1 AA - %2m / floor %3m", _id, round _radius, round _minimumAltitude];
+    private _markerText = if (_config getOrDefault ["showMarkerDetails", true]) then {
+        format ["%1 - range %2m / floor %3m / ceiling %4m", _displayName, round _radius, round _minimumAltitude, round _maximumAltitude]
+    } else {
+        _displayName
+    };
+    _iconMarker setMarkerText _markerText;
     _markers = [_areaMarker, _iconMarker];
 };
 
@@ -196,6 +398,9 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
+private _editableObjects = +_objects;
+{{_editableObjects pushBackUnique _x} forEach units _x} forEach _groups;
+{_x addCuratorEditableObjects [_editableObjects, true]} forEach allCurators;
 if (_config getOrDefault ["shutdownInteraction", false]) then {
     private _interactionSettings = [_id, _config getOrDefault ["shutdownChallenge", "circuit"], _config getOrDefault ["shutdownDifficulty", "standard"]];
     _radar setVariable ["Waldo_DynamicAA_SystemId", _id, true];
@@ -207,5 +412,6 @@ _state set ["handle", _handle];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 [] call Waldo_fnc_DynamicAAPublishState;
-diag_log format ["[WMP DYNAMIC AA] '%1' active: radius %2m, altitude floor %3m, asset pool %4.", _id, _radius, _minimumAltitude, _config get "resolvedAssetPool"];
+diag_log format ["[WMP DYNAMIC AA] '%1' (%2) active: radius %3m, altitude floor %4m, asset pool %5.", _displayName, _id, _radius, _minimumAltitude, _config get "resolvedAssetPool"];
+[format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
 true

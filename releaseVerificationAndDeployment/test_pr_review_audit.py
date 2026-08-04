@@ -252,7 +252,8 @@ class PrReviewAuditTests(unittest.TestCase):
             "VERIFY UID GATE DENIES",
             "SIMULATE CONFIGURED DEMO CHARGE",
             "ASSIGN ME 2 FIELD CRATES",
-            "CREATE QA DYNAMIC AA SYSTEM",
+            "CREATE AA - BUILDING RADAR",
+            "CREATE AA - CREWED RADAR UNIT",
             "SPAWN ABOVE-ALTITUDE WEST UAV",
             "SPAWN QA GUNSHIP",
             "RESET RECOVERY LANE",
@@ -479,8 +480,10 @@ class PrReviewAuditTests(unittest.TestCase):
 
     def test_dynamic_aa_target_is_crewed_airborne_and_retained_in_the_zone(self):
         source = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
-        for token in ('["mobileClass", "O_APC_Tracked_02_AA_F"]', '["mobilePositions", [[175, -110, 0]]]', "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
+        for token in ('["radarAssignments", [_radarClass]]', '["staticAssignments", ["B_AAA_System_01_F"]]', '["mobileAssignments", ["O_APC_Tracked_02_AA_F"]]', '["radarCount", 1]', '["staticCount", 1]', '["mobileCount", 1]', "private _separated = true", "private _minimumMargin", "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
             self.assertIn(token, source)
+        self.assertNotIn('["staticPositions",', source)
+        self.assertNotIn('["mobilePositions",', source)
 
     def test_field_resupply_has_logical_cargo_grouped_ace_controls_and_blue_information(self):
         root = ROOT / "MissionScripts" / "Logistics" / "FieldResupply"
@@ -700,10 +703,23 @@ class PrReviewAuditTests(unittest.TestCase):
         dynamic_aa = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf").read_text(encoding="utf-8")
         dynamic_aa_detector = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAADetectorLoop.sqf").read_text(encoding="utf-8")
         self.assertIn('getOrDefault ["staticSiteSpacing", 30]', dynamic_aa)
-        self.assertIn("getPos [_staticSiteSpacing", dynamic_aa)
+        self.assertIn("getPos [_effectiveStaticSpacing", dynamic_aa)
+        self.assertIn("sizeOf _class", dynamic_aa)
+        self.assertIn("no collision-safe generated layout was available", dynamic_aa)
+        self.assertIn("private _resolvedPlan = []", dynamic_aa)
+        self.assertIn("findEmptyPosition", dynamic_aa)
         self.assertIn('getOrDefault ["maximumOperationalRadarDamage", 0.8]', dynamic_aa_detector)
-        self.assertIn("damage _radar >= _maximumRadarDamage", dynamic_aa_detector)
+        self.assertIn("damage _radar < _maximumRadarDamage", dynamic_aa_detector)
+        self.assertIn("simulationEnabled _radar", dynamic_aa_detector)
         self.assertIn("radarOperationalCondition", dynamic_aa_detector)
+        dynamic_aa_state = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAASetGroupState.sqf").read_text(encoding="utf-8")
+        dynamic_aa_destroy = (scripts / "CombatSystems" / "DynamicAA" / "dynamicAADestroy.sqf").read_text(encoding="utf-8")
+        self.assertIn('_x disableAI "AUTOTARGET"', dynamic_aa_state)
+        self.assertNotIn('_x enableAI "AUTOTARGET"', dynamic_aa_state)
+        self.assertIn('_eligibleTargets', dynamic_aa_state)
+        self.assertIn('[_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo', dynamic_aa_destroy)
+        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', dynamic_aa)
+        self.assertIn('getOrDefault ["showMarkerDetails", true]', dynamic_aa)
 
         recovery = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterWorkshop.sqf").read_text(encoding="utf-8")
         restore = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
@@ -883,10 +899,23 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('AI skill', zen)
         route = (ao_dir / "dynamicAOAddPatrolWaypoints.sqf").read_text(encoding="utf-8")
         for token in (
-            'deleteWaypoint', 'enableAI "PATH"', 'enableAI "MOVE"', 'setCurrentWaypoint',
-            'setBehaviour _behaviour', 'setSpeedMode _speed', 'setWaypointFormation _formation',
+            'enableAI "PATH"', 'enableAI "MOVE"', 'setBehaviour _behaviour',
+            'setSpeedMode _speed', 'setWaypointFormation _formation',
         ):
             self.assertIn(token, route)
+        self.assertNotIn('deleteWaypoint', route)
+        self.assertNotIn('setCurrentWaypoint', route)
+        self.assertNotIn('doMove', route)
+        placement = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZenPlacement.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('openMap', placement)
+        self.assertNotIn('onMapSingleClick', placement)
+        self.assertIn('server is placing its assets', placement)
+        self.assertIn('_objects pushBack _unit', create)
+        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', create)
+        self.assertIn('_position, 12] call _spawnUnit', create)
+        self.assertIn('_point setMarkerText _displayName', create)
+        self.assertIn('["displayName", _displayName]', zen)
+        self.assertIn('Off by default for Zeus-created AOs."], false]', zen)
         self.assertIn('_group addVehicle _vehicle', create)
         self.assertIn('"SAFE", "LIMITED", ["COLUMN", "STAG COLUMN", "WEDGE"]', create)
         self.assertIn('"AWARE", "NORMAL"', create)
@@ -951,7 +980,7 @@ class PrReviewAuditTests(unittest.TestCase):
         jammer_server = (ROOT / "MissionScripts" / "ZenModules" / "ZenCreateJammerServer.sqf").read_text(encoding="utf-8")
         jammer_interaction = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammerInteraction.sqf").read_text(encoding="utf-8")
         self.assertIn('["EXISTING"]', jammer_zen)
-        self.assertIn('[_emitterClasses, _emitterLabels, 0]', jammer_zen)
+        self.assertIn('[_emitterClasses, _emitterLabels, 0, 4]', jammer_zen)
         self.assertIn('private _existingObject = if (_source isEqualTo "EXISTING")', jammer_zen)
         self.assertIn('player,\n            _existingObject', jammer_zen)
         self.assertIn('ZenAssignObjectOwnerServer', jammer_server)

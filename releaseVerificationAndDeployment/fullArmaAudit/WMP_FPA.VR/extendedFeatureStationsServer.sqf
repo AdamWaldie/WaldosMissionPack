@@ -337,27 +337,42 @@ Waldo_QA_fnc_revealTacticalHostileServer = {
 
 // Dynamic AA is created only on request so no live weapons exist during ordinary range use.
 Waldo_QA_fnc_createDynamicAAServer = {
-    params [["_actor", objNull, [objNull]]];
-    [_actor] spawn {
-        params ["_actor"];
+    params [["_actor", objNull, [objNull]], ["_radarClass", "Land_Radar_F", [""]]];
+    [_actor, _radarClass] spawn {
+        params ["_actor", "_radarClass"];
         uiSleep 0;
         private _config = createHashMapFromArray [
-            ["id", "QA_AA"], ["centre", [175, -160, 0]], ["radarPosition", [175, -210, 0]],
+            ["id", "QA_AA"], ["displayName", "QA Generated Air Defence"], ["centre", [175, -160, 0]],
             ["side", east], ["radius", 600], ["engagementRadius", 550],
             ["minimumAltitude", 60], ["maximumAltitude", 500], ["detectionDwell", 2],
-            ["clearDelay", 5], ["mobileClass", "O_APC_Tracked_02_AA_F"],
-            ["staticPositions", []], ["mobilePositions", [[175, -110, 0]]],
+            ["clearDelay", 5], ["faction", "BLU_F"], ["assetSelectionMode", "EXACT"],
+            ["radarAssignments", [_radarClass]], ["staticAssignments", ["B_AAA_System_01_F"]], ["mobileAssignments", ["O_APC_Tracked_02_AA_F"]],
+            ["radarCount", 1], ["staticCount", 1], ["mobileCount", 1],
             ["fighterCount", 0], ["createMarkers", true],
             ["shutdownInteraction", true], ["shutdownChallenge", "circuit"], ["shutdownDifficulty", "easy"]
         ];
         private _created = [_config] call Waldo_fnc_DynamicAACreate;
         private _state = (missionNamespace getVariable ["Waldo_DynamicAA_Registry", createHashMap]) getOrDefault ["QA_AA", createHashMap];
         private _objects = _state getOrDefault ["objects", []];
-        private _hasRadar = _objects findIf {!isNull _x && {_x isKindOf "Land_Radar_F"}} >= 0;
+        private _hasRadar = _objects findIf {!isNull _x && {typeOf _x == _radarClass} && {!(_x isKindOf "AllVehicles") || {count crew _x > 0}}} >= 0;
+        private _hasStaticAA = _objects findIf {!isNull _x && {_x isKindOf "B_AAA_System_01_F"} && {count crew _x > 0}} >= 0;
         private _hasMobileAA = _objects findIf {!isNull _x && {_x isKindOf "O_APC_Tracked_02_AA_F"} && {count crew _x > 0}} >= 0;
-        private _ready = _created && {_hasRadar} && {_hasMobileAA};
-        diag_log format ["WMP DYNAMIC AA QA SYSTEM: created=%1 radar=%2 crewedMobileAA=%3 objects=%4", _created, _hasRadar, _hasMobileAA, _objects apply {typeOf _x}];
-        [_actor, "DYNAMIC AA QA", ["Creation was incomplete: the separate radar dependency and crewed mobile Tigris response were not both present. Inspect the runtime log.", "Created two separate assets 100 m apart: the southern radar is the shutdown dependency; the northern crewed Tigris is the mobile AA response. Spawn the protected UAV to trigger the Tigris."] select _ready, ["ERROR", "SUCCESS"] select _ready] call Waldo_QA_fnc_notifyActorServer;
+        private _separated = true;
+        private _minimumMargin = 1e10;
+        for "_left" from 0 to (count _objects - 2) do {
+            for "_right" from (_left + 1) to (count _objects - 1) do {
+                private _leftObject = _objects select _left;
+                private _rightObject = _objects select _right;
+                private _leftClearance = (((((sizeOf (typeOf _leftObject)) * 0.75) max 8) min 100) + 5);
+                private _rightClearance = (((((sizeOf (typeOf _rightObject)) * 0.75) max 8) min 100) + 5);
+                private _margin = (_leftObject distance2D _rightObject) - (_leftClearance + _rightClearance);
+                _minimumMargin = _minimumMargin min _margin;
+                if (_margin < 0) then {_separated = false};
+            };
+        };
+        private _ready = _created && {_hasRadar} && {_hasStaticAA} && {_hasMobileAA} && {_separated};
+        diag_log format ["WMP DYNAMIC AA QA SYSTEM: created=%1 requestedRadar=%2 radarReady=%3 staticReady=%4 mobileReady=%5 separated=%6 minimumMargin=%7 assets=%8", _created, _radarClass, _hasRadar, _hasStaticAA, _hasMobileAA, _separated, _minimumMargin, _objects apply {[typeOf _x, getPosATL _x]}];
+        [_actor, "DYNAMIC AA QA", ["Generated placement failed or at least two final class footprints overlap. Inspect the runtime log for exact asset positions and the minimum margin.", format ["Created a collision-checked generated layout: %1 radar, BLUFOR Praetorian and OPFOR Tigris, all operated by the OPFOR operational side. Minimum clearance margin: %2m. Spawn the protected UAV to trigger both weapons.", _radarClass, _minimumMargin toFixed 1]] select _ready, ["ERROR", "SUCCESS"] select _ready] call Waldo_QA_fnc_notifyActorServer;
     };
 };
 Waldo_QA_fnc_destroyDynamicAAServer = {[] spawn {uiSleep 0; ["QA_AA", true] call Waldo_fnc_DynamicAADestroy}};

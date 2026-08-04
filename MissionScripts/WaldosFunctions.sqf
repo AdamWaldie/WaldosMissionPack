@@ -712,6 +712,8 @@ class CfgFunctions
             class HazardRegisterPresetZone {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardRegisterPresetZone.sqf";};
             class HazardRegisterEmitter {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardRegisterEmitter.sqf";};
             class HazardUnregisterZone {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardUnregisterZone.sqf";};
+            class HazardPublishState {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardPublishState.sqf";};
+            class HazardReceiveSnapshot {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardReceiveSnapshot.sqf";};
             class HazardProtectionFactor {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardProtectionFactor.sqf";};
             class HazardTick {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardTick.sqf";};
             class HazardInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInit.sqf";};
@@ -2279,6 +2281,9 @@ class CfgFunctions
             };
             class MiniGameInteractionTableSetup {
                 file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionTableSetup.sqf";
+            };
+            class MiniGameInteractionOptions {
+                file = "MissionScripts\InteractionsMinigames\Integration\miniGameInteractionOptions.sqf";
             };
             class MiniGameEquipmentPicker {
                 file = "MissionScripts\InteractionsMinigames\Integration\equipmentPicker.sqf";
