@@ -480,8 +480,10 @@ class PrReviewAuditTests(unittest.TestCase):
 
     def test_dynamic_aa_target_is_crewed_airborne_and_retained_in_the_zone(self):
         source = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
-        for token in ('["radarAssignments", [_radarClass]]', '["staticAssignments", ["B_AAA_System_01_F"]]', '["mobileAssignments", ["O_APC_Tracked_02_AA_F"]]', '["staticPositions", [[125, -110, 0]]]', '["mobilePositions", [[225, -110, 0]]]', "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
+        for token in ('["radarAssignments", [_radarClass]]', '["staticAssignments", ["B_AAA_System_01_F"]]', '["mobileAssignments", ["O_APC_Tracked_02_AA_F"]]', '["radarCount", 1]', '["staticCount", 1]', '["mobileCount", 1]', "private _separated = true", "private _minimumMargin", "west createVehicleCrew _target", "_target engineOn true", "setVelocityModelSpace", 'setWaypointType "LOITER"', "setWaypointLoiterRadius", "WMP DYNAMIC AA QA TARGET"):
             self.assertIn(token, source)
+        self.assertNotIn('["staticPositions",', source)
+        self.assertNotIn('["mobilePositions",', source)
 
     def test_field_resupply_has_logical_cargo_grouped_ace_controls_and_blue_information(self):
         root = ROOT / "MissionScripts" / "Logistics" / "FieldResupply"
@@ -703,8 +705,9 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('getOrDefault ["staticSiteSpacing", 30]', dynamic_aa)
         self.assertIn("getPos [_effectiveStaticSpacing", dynamic_aa)
         self.assertIn("sizeOf _class", dynamic_aa)
-        self.assertIn("_staticSiteClearance", dynamic_aa)
         self.assertIn("no collision-safe generated layout was available", dynamic_aa)
+        self.assertIn("private _resolvedPlan = []", dynamic_aa)
+        self.assertIn("findEmptyPosition", dynamic_aa)
         self.assertIn('getOrDefault ["maximumOperationalRadarDamage", 0.8]', dynamic_aa_detector)
         self.assertIn("damage _radar < _maximumRadarDamage", dynamic_aa_detector)
         self.assertIn("simulationEnabled _radar", dynamic_aa_detector)

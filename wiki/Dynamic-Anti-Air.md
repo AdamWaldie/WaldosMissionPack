@@ -120,11 +120,13 @@ radar or disabling its simulation also takes it out of the operational count and
 `cleanupOnRadarLoss`. Radar loss immediately clears assigned targets and ammunition from retained
 defences, so a disabled installation cannot continue firing.
 
-Classnames are validated before anything spawns. Generated layouts calculate conservative clearance
-from each selected class with `sizeOf`, reserve the entire integrated static-site footprint rather than
-only its centre, and increase internal component spacing when needed. If enough clear positions cannot
-be found, creation is rejected instead of falling back to overlapping coordinates. This is sequential
-server placement, not a placement race. Explicit scripted positions remain under the mission maker's control. Spawned
+Classnames are validated before anything spawns. Creation now builds a complete two-pass asset plan:
+the engine checks every selected class against existing world objects with `findEmptyPosition`, while a
+separate `sizeOf`-based reservation checks it against every other planned AA component that does not yet
+exist. Integrated sites are expanded into their individual radar/SAM/AAA positions before validation.
+No vehicle is created until every final footprint passes. If planning fails, nothing spawns; if an
+unexpected materialisation failure occurs, every partial object and crew is rolled back. This is
+sequential server placement, not a placement race. Explicit scripted positions are also resolved safely. Spawned
 objects, crew, groups, markers and detector handles are retained in the server registry for
 deterministic cleanup and are added to every available curator.
 
