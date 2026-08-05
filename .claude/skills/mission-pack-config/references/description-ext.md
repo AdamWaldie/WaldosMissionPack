@@ -29,3 +29,17 @@ field).
 
 If configuring `Waldo_fnc_ENDEX`'s custom end path (see `endex-aar.md`),
 `CfgDebriefing` → `End1` also lives in `description.ext`.
+
+## MissionConfig is not `#include`-d here
+
+The mandatory includes in `description.ext` are unchanged:
+`MissionScripts\WaldosFunctions.sqf` (function registration),
+`MissionScripts\Logistics\VirtualVehicleDepot\GarageDisplayDefine.hpp` (VVD
+GUI), and `class MissionSQM { #include "mission.sqm" };` (loadout scraping).
+The `MissionConfig\*.sqf` feature-setting files are **not** `#include`-d in
+`description.ext` — they're pure-data files WMP's own lifecycle scripts
+`compile preprocessFileLineNumbers` at the right stage (pre-init for
+`acreConfig.sqf`; `init.sqf`/`initServer.sqf`/`initPlayerLocal.sqf` for the
+rest via `Waldo_fnc_LoadFeatureConfigs`). Never suggest adding a
+`MissionConfig` file to the includes block — that would be redundant at best
+and load it at the wrong lifecycle stage at worst.

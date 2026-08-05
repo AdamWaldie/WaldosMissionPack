@@ -37,7 +37,11 @@ avoids configuring dead code.
 - **No ZEN**: Economy Systems still runs server-side (income, research,
   production, request handling) but has zero in-game authoring UI — the user
   must hand-author `MissionConfig/economyConfig.sqf` instead. All 15 core +
-  19 Economy Zeus modules simply don't register.
+  19 Economy Zeus modules simply don't register. Same story for every other
+  feature's ZEN modules (Dynamic AA, gunship, transport services,
+  persistence, hazards, vehicle recovery, jammer, etc.) — the underlying
+  script APIs and `MissionConfig` settings still work without ZEN, only the
+  in-Zeus authoring/runtime-control menus disappear.
 - **No ACRE2, no TFAR**: jamming's engines never install (both are gated),
   so `Waldo_fnc_Jammer` etc. can still be placed but have no radios to
   affect.

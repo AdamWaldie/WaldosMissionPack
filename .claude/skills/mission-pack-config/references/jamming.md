@@ -2,8 +2,8 @@
 
 Localised, area-denial jamming. A *jammer* is any world object with a
 radius; radios inside lose comms with linear falloff at the edge. Enabled by
-default (`Waldo_Jamming_Enable = true` in `init.sqf`) but **has zero effect
-until a jammer is placed** — safe to leave on in every mission.
+default (`Waldo_Jamming_Enable = true`) but **has zero effect until a jammer
+is placed** — safe to leave on in every mission.
 
 ## Architecture
 
@@ -12,6 +12,31 @@ engines. Placing/toggling/removing jammers always goes through the server
 (calls forward automatically if made from a client). Each client installs
 the radio engines from `init.sqf` (JIP-safe) — the ACRE2 custom signal
 function and/or TFAR throttle loop, plus an on-screen jammed watcher.
+
+## Config (`MissionConfig\electronicWarfareConfig.sqf`) — server, JIP-published
+
+All entries live here now, not in `init.sqf`/`initServer.sqf` — edit the
+config file, not a `setVariable` call pasted into an init file.
+
+```sqf
+["Waldo_Jamming_Enable", true, true],          // starts EW service; still no jammer until one is registered
+["Waldo_Jamming_Notify", true, true],          // on-screen interference feedback
+["Waldo_Jamming_LOS", true, true],             // terrain between jammer and radio blocks the field
+["Waldo_Jamming_BurnThrough", true, true],     // higher-power radios resist jamming
+["Waldo_Jamming_BurnThroughRef", 500, true],   // ADVANCED reference power (mW)
+["Waldo_Jamming_Curve", "LINEAR", true],       // ADVANCED LINEAR or INVSQ falloff
+["Waldo_Jamming_Destructible", true, true],    // destroying the jammer object auto-deregisters it
+["Waldo_Jamming_GmOverlay", false, true],      // ADVANCED curator-only Draw3D diagnostics
+["Waldo_Jamming_ScanRange", 3000, true],       // ADVANCED handheld RDF max scan range (m)
+["Waldo_Jamming_ScanBearingArc", 30, true],    // NEW: total vague bearing sector width (deg) reported by a scan
+["Waldo_Jamming_ScanDistanceBands", [35, 150, 600], true], // NEW: metre thresholds for nearby/close/distant RDF wording
+["Waldo_Jamming_AllowPlayerToggle", true, true],   // NEW: legacy direct activate/deactivate action
+["Waldo_Jamming_DisableChallenge", true, true],    // NEW: true = active jammers require the disable interaction procedure instead of a plain toggle
+["Waldo_Jamming_DisableChallengeId", "circuit", true], // NEW: registered interaction-equipment ID used for the disable procedure
+["Waldo_Jamming_DisableDifficulty", "standard", true], // NEW: easy | standard | hard | expert
+["Waldo_Jamming_DisableEngineerOnly", false, true],    // NEW: true restricts the disable attempt to ACE engineers
+["Waldo_Jamming_DisableResult", "DISABLE", true]       // NEW: DISABLE (repairable/reactivatable) or DEACTIVATE (ordinary off)
+```
 
 ## Placing a jammer
 
@@ -42,7 +67,30 @@ Returns a numeric jammer id.
 [myTower, true]  call Waldo_fnc_JammerRemove;   // remove + delete the object
 ```
 
-## Global model flags (`init.sqf`)
+`Waldo_fnc_JammerToggle` respects `Waldo_Jamming_AllowPlayerToggle` /
+`Waldo_Jamming_DisableChallenge` for player-triggered calls the same way the
+in-game action does — a script/trigger call from a trusted mission source
+bypasses those player-facing gates.
+
+## Player-facing actions and the disable challenge (new)
+
+Every jammer object gets ACE actions **Toggle Radio Jammer** and **Disable
+Radio Jammer**. With `Waldo_Jamming_DisableChallenge` at its default `true`,
+disabling an *active* jammer now requires completing the configured
+interaction-equipment procedure (`Waldo_Jamming_DisableChallengeId`, default
+`"circuit"`, at `Waldo_Jamming_DisableDifficulty`) rather than an instant
+toggle — see `references/misc-mission-maker-tools.md` or the interaction
+minigames reference for how those procedures play out. `Waldo_Jamming_DisableEngineerOnly`
+restricts the attempt to ACE engineers when `true` (default `false`, anyone
+may try). On success the jammer moves to `Waldo_Jamming_DisableResult`:
+`"DISABLE"` (repairable — someone can toggle it back on later) or
+`"DEACTIVATE"` (ordinary off state, same as the old plain toggle). Every
+player also gets an ACE self-action **Scan for Radio Jammers**
+(`Waldo_fnc_JammerScan`) reporting bearing (quantised to `ScanBearingArc`
+sectors) / coarse range (`ScanDistanceBands` wording) / strength to the
+nearest active emitter.
+
+## Global model flags (reference, all in `electronicWarfareConfig.sqf`)
 
 | Flag | Default | Effect |
 |---|---|---|
@@ -53,18 +101,6 @@ Returns a numeric jammer id.
 | `Waldo_Jamming_Destructible` | `true` | Destroying the jammer object auto-deregisters it |
 | `Waldo_Jamming_GmOverlay` | `false` | Curator-only Draw3D marker/facing-line over each jammer |
 | `Waldo_Jamming_ScanRange` | `3000` | Detection range (m) of the handheld RDF ACE self-action |
-
-```sqf
-Waldo_Jamming_Enable = true;                                          // false = feature off entirely
-missionNamespace setVariable ["Waldo_Jamming_Notify", true, true];    // on-screen "radio jammed" prompt
-```
-
-## Player-facing actions
-
-Every jammer object gets ACE actions **Toggle Radio Jammer** (anyone) and
-**Disable Radio Jammer** (engineers, destroys it). Every player gets an ACE
-self-action **Scan for Radio Jammers** (`Waldo_fnc_JammerScan`) reporting
-bearing / coarse range / strength to the nearest active emitter.
 
 ## UAV / UGV jamming (`jamUAV = true`)
 
@@ -83,6 +119,7 @@ ACRE2 jamming only works under signal model **LOS Multipath** (default) or
 
 ## Zeus ("Waldos Mission Modules")
 
-**Jammer: Place New Emitter** (full dialog matching the script params above,
-plus per-emitter curator 3D marker and emitter class), **Jammer: Toggle
-Nearest Emitter**, **Jammer: Delete Nearest Emitter**.
+**Radio Jammer - Place** (`Waldo_fnc_ZenJammerPlace`; full dialog matching
+the script params above, plus per-emitter curator 3D marker and emitter
+class), **Radio Jammer - Toggle Nearest** (`Waldo_fnc_ZenJammerToggle`),
+**Radio Jammer - Remove Nearest** (`Waldo_fnc_ZenJammerRemove`).

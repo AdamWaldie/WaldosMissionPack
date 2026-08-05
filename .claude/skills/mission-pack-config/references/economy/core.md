@@ -2,12 +2,13 @@
 
 ## Enabling (OFF by default — missions that don't use it pay no cost)
 
+`Waldo_Economy_Enable` now lives in `MissionConfig\missionSystemsConfig.sqf`
+(a `shared` entry, loaded automatically on every machine — do not paste the
+old `if (Waldo_Economy_Enable) then { [] spawn Waldo_fnc_EcoInit; }`
+lifecycle block into `init.sqf` yourself, WMP already runs it):
+
 ```sqf
-// init.sqf - runs on all machines, self-branches server authority vs. client menu:
-Waldo_Economy_Enable = true;
-if (Waldo_Economy_Enable) then {
-    [] spawn Waldo_fnc_EcoInit;
-};
+["Waldo_Economy_Enable", false],  // BOOL: starts economy runtime; catalogue/resources still need setup
 ```
 
 Or drop the **`[WMP] Waldos Economy Systems`** composition (in

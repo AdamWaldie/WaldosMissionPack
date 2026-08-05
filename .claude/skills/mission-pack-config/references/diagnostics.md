@@ -9,12 +9,15 @@ loadout scan. Every RPT entry uses one searchable frame:
 
 A hosted server also surfaces warnings via `systemChat`.
 
-## Config (`initServer.sqf`)
+## Config (`MissionConfig\missionSystemsConfig.sqf`)
 
 ```sqf
 // Set false to silence startup diagnostics in a released mission.
-missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
+["Waldo_RunDiagnostics", true, true],  // server entry, JIP-published
 ```
+
+This is a `server` entry loaded by `initServer.sqf` — edit the config file,
+don't paste a `setVariable` call into `initServer.sqf` yourself.
 
 For a released/live mission (not QA), it's reasonable to suggest setting
 this `false` to avoid RPT noise and player-facing warning chat — mention
