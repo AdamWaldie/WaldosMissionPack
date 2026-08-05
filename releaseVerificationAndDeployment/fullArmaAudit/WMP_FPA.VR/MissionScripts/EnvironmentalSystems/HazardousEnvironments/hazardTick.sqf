@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Evaluates all registered hazard zones for the local player and applies profile effects.
  *
  * This function runs only on each player's client from Waldo_fnc_HazardInit. Exposure and zone
@@ -10,6 +10,8 @@
  * of information is visible; physical exposure and damage still apply. Profile onEnter, onExit and
  * onTick callbacks continue to run locally. Currently called by the HazardInit loop and directly
  * by the full-pack function station.
+ * Locality and authority: Interface-client only. It consumes JIP-replayed zone definitions and
+ * mutates only the executing player's exposure, effects, callbacks and presentation.
  *
  * Arguments:
  * 0: interval <NUMBER> - seconds represented by this tick
@@ -19,6 +21,8 @@
  *
  * Example:
  * [1] call Waldo_fnc_HazardTick;
+ * Result: Applies one second-equivalent exposure update and refreshes that player's hazard UI.
+ * Current callers: Waldo_fnc_HazardInit loop and the full-pack audit function station.
  */
 
 params [["_interval", 1, [0]]];

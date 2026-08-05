@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Stops local hazard evaluation and clears its status display.
  *
  * This affects only the executing client and leaves authoritative zone definitions untouched. It is

@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Starts the repeat-safe local hazardous-environment evaluator.
  *
  * The evaluator waits for the authoritative runtime snapshot before starting, then owns only the

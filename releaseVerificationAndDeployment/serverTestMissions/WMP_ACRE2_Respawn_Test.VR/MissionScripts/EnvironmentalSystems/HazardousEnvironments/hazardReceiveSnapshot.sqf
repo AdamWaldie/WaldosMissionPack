@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Applies one server-authored hazardous-environment snapshot and reconciles the local evaluator.
  *
  * Arguments:

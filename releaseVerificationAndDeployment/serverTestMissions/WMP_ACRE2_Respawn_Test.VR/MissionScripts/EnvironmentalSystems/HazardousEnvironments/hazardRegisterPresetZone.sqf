@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Registers a hazardous zone from one feature-specific preset plus optional overrides.
  *
  * The preset is copied before overrides are applied, so repeated registrations do not mutate the

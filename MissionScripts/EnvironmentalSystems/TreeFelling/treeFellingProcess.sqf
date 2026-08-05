@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Server-authoritatively accumulates tree hits and creates a reusable fallen-tree object.
+ * Locality and authority: Server-only target mutation. Player clients request it through the
+ * registered remote call; owner, range, cooldown, tool and target checks are repeated on the server.
  *
  * Arguments:
  * 0: unit <OBJECT> - requesting player
@@ -12,6 +14,8 @@
  *
  * Example:
  * [_unit, _weapon, _tree] remoteExecCall ["Waldo_fnc_TreeFellingProcess", 2];
+ * Result: Accepts one valid strike, or fells/replaces the tree when accumulated hits reach the threshold.
+ * Current caller: Waldo_fnc_TreeFellingSwing after the local player completes the cutting action.
  */
 
 params ["_unit", "_weapon", "_target"];

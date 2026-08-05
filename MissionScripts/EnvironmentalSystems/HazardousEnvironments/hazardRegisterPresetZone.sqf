@@ -1,10 +1,12 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Registers a hazardous zone from one feature-specific preset plus optional overrides.
  *
  * The preset is copied before overrides are applied, so repeated registrations do not mutate the
  * shared preset catalogue. Registration is delegated to Waldo_fnc_HazardRegisterZone. This is
  * currently called directly by mission scripts and inventoried by the full-pack function station.
+ * Locality and authority: Call on the server. It copies local configuration data, then delegates
+ * authoritative validation, storage and publication to Waldo_fnc_HazardRegisterZone.
  *
  * Arguments:
  * 0: key <STRING> - stable unique zone name
@@ -17,6 +19,8 @@
  *
  * Example:
  * ["reactor", reactorTrigger, "SEVERE", createHashMapFromArray [["notifyTransitions", true]]] call Waldo_fnc_HazardRegisterPresetZone;
+ * Result: Registers `reactor` with a copied SEVERE profile plus the supplied override.
+ * Current callers: server mission scripts and the full-pack audit function station.
  */
 
 params ["_key", "_area", ["_presetKey", "MILD", [""]], ["_overrides", createHashMap, [createHashMap]]];

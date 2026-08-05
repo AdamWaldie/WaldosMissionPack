@@ -1,15 +1,18 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Publishes one ordered, replaceable hazardous-environment snapshot from the authoritative server.
  *
  * Enablement and the complete zone registry travel in the same payload, preventing dedicated and
  * JIP clients from starting against stale or missing zones. Networked profiles may reference
  * callbacks by missionNamespace function-name STRING. Raw CODE callbacks remain server-local and
  * are omitted from the transported copy because executable code is not safe JIP state.
+ * Locality and authority: Server-only. It serialises the authoritative registry and publishes one
+ * replaceable remote-exec snapshot to all current clients and JIP clients.
  *
  * Arguments: None.
  * Return Value: BOOLEAN - true on the server.
  * Example: [] call Waldo_fnc_HazardPublishState;
+ * Result: Every client receives one ordered enable-plus-zone snapshot; the previous JIP payload is replaced.
  * Current callers: register/remove zone and authoritative runtime control.
  */
 

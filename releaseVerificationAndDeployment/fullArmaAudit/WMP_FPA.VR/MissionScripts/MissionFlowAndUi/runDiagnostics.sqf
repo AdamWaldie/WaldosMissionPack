@@ -1,12 +1,17 @@
 /*
+ * Author: WaldoTheWarfighter
  * Server-side pack diagnostics. Reports dependency and subsystem state as
  * LOADED, ACTIVE, DISABLED, UNCONFIGURED, UNAVAILABLE or ERROR. The structured
  * report is broadcast in Waldo_Diagnostics_LastReport for audit tools/JIP.
  * Existing callers still receive the number of warnings.
+ * Locality and authority: Server-only and scheduled. Unschedulable calls spawn one server run;
+ * concurrent runs are rejected. Clients supply bounded local reports, but the server owns output.
  *
  * Arguments: None
  * Return Value: Number <NUMBER> - count of warnings raised
  * Example: [] spawn Waldo_fnc_RunDiagnostics;
+ * Result: Publishes one structured diagnostic report and returns its warning count.
+ * Current callers: initServer.sqf startup diagnostics, ZEN diagnostics and audit tooling.
  */
 if (!isServer) exitWith {0};
 if (!canSuspend) exitWith {_this spawn Waldo_fnc_RunDiagnostics; 0};

@@ -634,6 +634,21 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("if !(_toolProfiles isEqualType createHashMap)", process)
         self.assertIn("if !(_efficiency isEqualType 0)", process)
 
+    def test_val_author_credit_is_preserved_for_contributed_features(self):
+        hazard_dir = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
+        hazard_scripts = sorted(hazard_dir.glob("*.sqf"))
+        self.assertGreater(len(hazard_scripts), 0)
+        for path in hazard_scripts:
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("Author: WaldoTheWarfighter, Val", text, path.name)
+
+        mhq = (ROOT / "MissionScripts" / "Logistics" / "MHQ" / "MHQSetup.sqf").read_text(encoding="utf-8")
+        vehicle_camo = (
+            ROOT / "MissionScripts" / "Logistics" / "VehicleCamoScript" / "vehicleCamo.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Author: WaldoTheWarfighter, Val", mhq)
+        self.assertIn("Authors: Val & WaldoTheWarfighter", vehicle_camo)
+
     def test_breaching_config_ships_a_disabled_working_beginner_example(self):
         config = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
         handler = (ROOT / "MissionScripts" / "CombatSystems" / "Breaching" / "breachingServerHandle.sqf").read_text(encoding="utf-8")

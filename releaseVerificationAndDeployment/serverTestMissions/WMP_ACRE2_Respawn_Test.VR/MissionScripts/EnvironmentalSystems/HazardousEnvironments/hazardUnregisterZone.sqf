@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Removes a named hazardous-environment zone without disturbing other zones.
  *
  * Unauthorized client remote execution is rejected. The authoritative runtime path broadcasts

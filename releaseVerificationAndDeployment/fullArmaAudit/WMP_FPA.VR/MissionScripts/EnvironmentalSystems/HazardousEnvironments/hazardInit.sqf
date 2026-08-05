@@ -1,11 +1,13 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Starts the repeat-safe local hazardous-environment evaluator.
  *
  * The evaluator waits for the authoritative runtime snapshot before starting, then owns only the
  * local player's exposure, transition notifications and effects. It is called from
  * initPlayerLocal.sqf when enabled, from live ZEN activation for existing clients, and through JIP
  * replay. Repeated calls do not create duplicate loops.
+ * Locality and authority: Interface-client only. It consumes the server snapshot but owns only
+ * that player's local evaluator, exposure state, effects and UI.
  *
  * Arguments:
  * None
@@ -15,6 +17,8 @@
  *
  * Example:
  * [] call Waldo_fnc_HazardInit;
+ * Result: Starts one local evaluation loop, or returns true when it was already running.
+ * Current callers: initPlayerLocal.sqf lifecycle, Waldo_fnc_HazardReceiveSnapshot and runtime activation.
  */
 
 if !(hasInterface) exitWith {false};

@@ -1,10 +1,12 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Removes a named hazardous-environment zone without disturbing other zones.
  *
  * Unauthorized client remote execution is rejected. The authoritative runtime path broadcasts
  * removal and clears the matching JIP registration. This is currently called by the ZEN remove
  * module, Waldo_fnc_FeatureRuntimeApply and mission scripts.
+ * Locality and authority: Server-authoritative. Unapproved client remote execution is rejected;
+ * accepted removal republishes the complete registry through the replaceable JIP snapshot.
  *
  * Arguments:
  * 0: key <STRING> - registered zone name
@@ -15,6 +17,8 @@
  *
  * Example:
  * ["reactor"] call Waldo_fnc_HazardUnregisterZone;
+ * Result: Removes only `reactor`, disables hazards if no zones remain and updates every client/JIP.
+ * Current callers: ZEN removal, Waldo_fnc_FeatureRuntimeApply and server mission scripts.
  */
 
 params [["_key", "", [""]], ["_authorisedRuntime", false, [false]]];

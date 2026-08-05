@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Registers a moving object as a contact/proximity hazard emitter.
  *
  * This adapter stores emitterRadius in the supplied profile and delegates registration/locality to

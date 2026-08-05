@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Calculates protection for one unit against a configurable hazard profile.
  *
  * Vehicle, interior and equipment protection are combined into one exposure multiplier. This is a

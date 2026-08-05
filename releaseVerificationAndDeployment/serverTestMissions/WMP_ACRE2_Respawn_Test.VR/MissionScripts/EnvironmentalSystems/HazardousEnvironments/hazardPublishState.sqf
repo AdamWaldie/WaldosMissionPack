@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Publishes one ordered, replaceable hazardous-environment snapshot from the authoritative server.
  *
  * Enablement and the complete zone registry travel in the same payload, preventing dedicated and

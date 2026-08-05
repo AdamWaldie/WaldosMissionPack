@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Installs a deployable command post on a vehicle or static object.
  *
  * The setup is repeat-safe. The server owns deployment state, synchronized-part visibility,

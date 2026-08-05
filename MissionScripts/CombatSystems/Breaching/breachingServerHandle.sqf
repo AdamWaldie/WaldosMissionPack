@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Validates an explosion and applies matching breach profiles exactly once on the server.
+ * Locality and authority: Server-only target mutation. The explosive owner's client may submit the
+ * event, but network ownership, configured ammo, range, strength and repeat state are server-validated.
  *
  * Arguments:
  * 0: unit <OBJECT> - explosive owner when known
@@ -12,6 +14,8 @@
  *
  * Example:
  * [player, getPosWorld _charge, typeOf _charge] remoteExecCall ["Waldo_fnc_BreachingServerHandle", 2];
+ * Result: Breaches each matching nearby configured target once and returns the number affected.
+ * Current caller: Waldo_fnc_BreachingInit explosive event handling.
  */
 
 params [
