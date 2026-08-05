@@ -271,6 +271,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_ImprovedHelicopterLanding_MinimumActivationDistance` | Minimum initial aircraft-to-waypoint distance in metres. |
 | `Waldo_ImprovedHelicopterLanding_TriggerDistance` | Distance at which approach control begins. |
 | `Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor` | Speed-sensitive approach trigger multiplier. |
+| `Waldo_ImprovedHelicopterLanding_MinimumApproachSpeed` | Minimum approach-entry speed in km/h outside the close descent envelope. |
 | `Waldo_ImprovedHelicopterLanding_TransitAltitude` | Nominal approach altitude in metres. |
 | `Waldo_ImprovedHelicopterLanding_GlideSlopeRatio` | Horizontal distance per metre of descent. |
 | `Waldo_ImprovedHelicopterLanding_TreeScanRadius` | Landing-site tree scan radius in metres. |
@@ -360,6 +361,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Transport_DefaultDestinationDwell` | Destination disembark window before RTB. |
 | `Waldo_HeliTransport_DefaultAltitude` | Default AI helicopter transit height in metres. |
 | `Waldo_HeliTransport_DefaultLzSearchRadius` | Maximum safe-LZ adjustment from the player's helicopter pickup/destination click. |
+| `Waldo_HeliTransport_DefaultLzClearanceScale` | Multiplier applied to the helicopter's real model bounding box when validating an LZ. Default 2.0. |
 | `Waldo_HeliTransport_DefaultSeparation` | Minimum spacing in metres between helicopter bases, active LZs and bulk pickup slots. Default 60. |
 | `Waldo_GroundTransport_DefaultRoadSearchRadius` | Radius searched for a connected road around a ground-transport click. |
 | `Waldo_GroundTransport_DefaultSeparation` | Minimum spacing in metres between ground-transport bases, active stops and bulk pickup slots. Default 18. |

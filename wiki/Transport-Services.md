@@ -75,7 +75,7 @@ When ACE Interact is unavailable, WMP-blue scroll-wheel pickup actions preserve 
 
 The client only opens the map and sends the chosen point. The server then selects and atomically reserves the nearest eligible service from the requested typed pool. It resolves a reachable service point, records a unique request number and tells the machine currently owning that AI group to move. That owner can be the server, a headless client or another client; if locality changes mid-journey, dispatch transfers to the new owner without allowing an old arrival report to complete the newer task.
 
-Helicopters receive a real departure `MOVE` waypoint followed by Arma's supported `SCRIPTED` landing waypoint using `A3\functions_f\waypoints\fn_wpLand.sqf`. When improved landing is enabled, its local tracker recognises that landing script and takes over the approach. If it cannot acquire, Arma's landing script and the invisible-helipad `landAt` fallback continue the same landing order. WMP never uses the invalid `LAND` waypoint type.
+Helicopter movement deliberately retains the proven service sequence from the original implementation: one `TR UNLOAD` waypoint, then the vehicle command `land "LAND"` inside 300 metres, followed by a physical-touchdown check. WMP adds a required takeoff gate because the original distance-only test ordered an aircraft to land immediately when an LZ was selected within 300 metres of its base. Improved landing may take ownership of the final approach after physical takeoff; while it is active, Transport Services withholds the original LAND command. If the improved controller cannot acquire or aborts, the original LAND command is issued automatically as the fallback. No departure, terminal `MOVE`, or scripted landing waypoint is inserted.
 
 At pickup the vehicle stops and enters **BOARDING**. It does not know a destination yet. After a passenger uses **Select Destination**, the service explicitly releases the pickup stop order and begins a new **TO_DESTINATION** movement. At destination it enters **DISEMBARKING**, waits for passengers to leave or for the configured dwell timer, then physically returns to its recorded base. Emergency teleport is disabled by default; an empty service that fails physical RTB may reset only when the mission maker explicitly enables `failSafeReset`.
 
@@ -90,10 +90,9 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 
 ### Helicopter movement
 
-- A clicked point is accepted only when a safe landing point can be found inside `landingSearchRadius`, which defaults to 75 metres. The notification reports adjustments greater than 10 metres and the destination marker shows the actual service point.
-- WMP creates an invisible helipad at that exact resolved point and uses `landAt` for the touchdown.
-- Air Transport uses the normal improved-helicopter-landing path by default. It first creates a 75 m departure MOVE waypoint so Arma cannot complete the landing task while the helicopter is still parked, then creates the supported LAND waypoint. The same global, locality-aware tracker used by every other AI helicopter acquires that second waypoint at the standard speed-aware distance. Transport only monitors touchdown and request state. The invisible-helipad `landAt` controller remains a fallback when the normal controller does not acquire or aborts.
-- The service uses an exact MOVE waypoint followed by the dedicated landing order. It does not use `TR UNLOAD`, whose dedicated-server behaviour is unsuitable for an AI-crewed aircraft carrying only player passengers.
+- WMP first validates the exact clicked point and keeps it unchanged when it is flat, on land, separated from another active LZ and clear for the aircraft. Only a genuinely unsafe click starts a deterministic nearest-first search inside `landingSearchRadius`, which defaults to 75 metres. WMP reads the aircraft's real model bounding box and requires an obstacle-free envelope large enough to contain that box scaled to 2 times its width and length. The clearance check uses the circle enclosing that complete box, so it is deliberately conservative. People standing at a requested pickup do not invalidate it, while another parked vehicle does. The notification reports adjustments greater than 10 metres and the destination marker shows the actual service point.
+- WMP creates an invisible helipad at that exact resolved point. The service retains the original `TR UNLOAD` route and `land "LAND"` fallback; WMP's global locality-aware improved-landing controller is the only flight-path addition.
+- Registered air transports reacquire the improved controller immediately after physical takeoff, before the original 300 m LAND fallback can intervene. The controller now supplies a minimum approach-entry speed instead of inheriting an almost stationary lift-off speed, preventing the former slow Little Bird approach without delaying transport takeover.
 - Active helicopter LZs are kept at least `minimumSeparation` metres apart; the default is 60 metres. Bulk pickup lays out a deterministic grid of separated landing slots around the clicked centre.
 
 These choices follow Bohemia's documented behaviour: [`doStop` must be released with `doFollow`](https://community.bohemia.net/wiki/doFollow), a zero-radius [`addWaypoint`](https://community.bohemia.net/wiki/addWaypoint) can still be shifted while radius `-1` is exact, and [`landAt`](https://community.bohemia.net/wiki/landAt) targets a specific helipad.
@@ -103,18 +102,19 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 | Option | Beginner meaning |
 |---|---|
 | `landingSearchRadius` | Maximum metres a helicopter LZ may move away from the clicked point. |
+| `landingClearanceScale` | Multiplies the helicopter's real model width and length for LZ clearance. Default `2.0`; values below `1` are rejected. |
 | `roadSearchRadius` | Maximum metres searched for a road around a ground-transport click. |
 | `minimumSeparation` | Minimum metres between active destinations and bulk service slots. Defaults to 60 for helicopters and 18 for ground vehicles. Prepared bases may be closer; registration rejects only physically overlapping vehicle footprints. |
 | `groundSpeedLimit` | Maximum ground-transport speed in km/h. |
 | `pathRetrySeconds` | Seconds without progress before the driver receives the same order again. |
 | `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey. |
-| `useImprovedLanding` | Default `true`: use WMP's vector approach and flare. Set `false` only to force the simpler invisible-helipad `landAt` fallback. |
+| `useImprovedLanding` | Default `true`: apply WMP's vector-guided final approach to the original `TR UNLOAD` service route. Set `false` to use only the original `land "LAND"` behavior. |
 | `invulnerable` | Default `false`: when enabled, protects the transport and its original AI service crew across locality changes. Passenger players remain vulnerable. |
 | `failSafeReset` | Default `false`; opt-in emergency teleport after an empty physical RTB fails. |
 
 ## ZEN and lifecycle
 
-Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides a player-facing display name and plain-language timing/recovery settings, and rejects a type/vehicle mismatch. Internal service IDs are always generated automatically and are never exposed to Zeus. A successful registration publishes the pool availability, installs player controls, creates the optional marker and renames the AI crew group to the display name. A rejected registration sends Zeus the exact reason. **Transport Service - Return to Base** immediately cancels a selected registered service without an extra confirmation dialog.
+Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides a player-facing display name and plain-language timing/recovery settings, and rejects a type/vehicle mismatch. Internal service IDs are always generated automatically and are never exposed to Zeus. A successful registration publishes the pool availability, installs player controls, creates the optional marker and renames the AI crew group to the display name—even when the registration originated from a remote curator and the AI group is owned by another machine. A rejected registration sends Zeus the exact reason. **Transport Service - Return to Base** immediately cancels a selected registered service without an extra confirmation dialog.
 
 Registrations survive WMP vehicle-recovery reconstruction through the built-in `Waldo_TransportService_Registration` recovery variable. Deleted/dead services are removed from the server registry and their markers. Player actions are reinstalled after respawn and JIP availability is published by type.
 

@@ -47,14 +47,31 @@ while {
                 private _distance = _helicopter distance2D _position;
                 private _triggerDistance = ((abs speed _helicopter) * ([_helicopter, "TriggerSpeedFactor", 4.2] call Waldo_fnc_ImprovedHelicopterLandingSetting))
                     max ([_helicopter, "TriggerDistance", 500] call Waldo_fnc_ImprovedHelicopterLandingSetting);
+                private _velocity = velocity _helicopter;
+                private _horizontalSpeed = sqrt (((_velocity select 0) ^ 2) + ((_velocity select 1) ^ 2));
+                private _minimumApproachSpeed = (([_helicopter, "MinimumApproachSpeed", 55] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 0) / 3.6;
+                private _transitAltitude = ([_helicopter, "TransitAltitude", 30] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 15;
+                private _glideRatio = ([_helicopter, "GlideSlopeRatio", 4] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 2;
+                private _finalCommitDistance = ([_helicopter, "FinalCommitDistance", 75] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 10;
+                // On a short leg the helicopter can enter TriggerDistance before it has even accelerated away
+                // from the pad. Preserve vanilla departure control until it has useful forward speed, unless it
+                // has already reached the distance genuinely needed for the descent and final flare.
+                private _closeApproachDistance = ((_transitAltitude * _glideRatio) max (_finalCommitDistance * 2)) min _triggerDistance;
+                // Registered air transports retain immediate post-takeoff acquisition. Their dispatch has an
+                // original LAND fallback inside 300 m, so delaying takeover creates a race with that fallback.
+                private _approachReady = _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ImmediateAcquisition", false]
+                    || {_horizontalSpeed >= _minimumApproachSpeed}
+                    || {_distance <= _closeApproachDistance};
                 if (
                     _landingType
                     && {_distance > _minimumDistance}
                     && {_distance <= _triggerDistance}
+                    && {_approachReady}
                     && {isEngineOn _helicopter}
+                    && {!isTouchingGround _helicopter}
                     && {isNull (getSlingLoad _helicopter)}
                 ) then {
-                    diag_log format ["[WMP AI LANDING] Controller acquiring helicopter=%1 waypoint=%2 type=%3 distance=%4", netId _helicopter, _index, _type, round _distance];
+                    diag_log format ["[WMP AI LANDING] Controller acquiring helicopter=%1 waypoint=%2 type=%3 distance=%4 horizontalSpeed=%5 closeEnvelope=%6", netId _helicopter, _index, _type, round _distance, round (_horizontalSpeed * 3.6), round _closeApproachDistance];
                     [_helicopter, _position, _type, _index, _script] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
                     _lastSignature = [];
                 };

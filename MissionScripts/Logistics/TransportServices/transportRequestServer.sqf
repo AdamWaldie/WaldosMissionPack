@@ -206,27 +206,53 @@ if (_type == "GROUND") then {
     };
 } else {
     private _maximumRadius = _config getOrDefault ["landingSearchRadius", 75];
+    private _clearanceScale = (_config getOrDefault ["landingClearanceScale", 2.0]) max 1;
+    private _bounds = boundingBoxReal _vehicle;
+    _bounds params ["_boundsMinimum", "_boundsMaximum"];
+    private _vehicleWidth = abs ((_boundsMaximum select 0) - (_boundsMinimum select 0));
+    private _vehicleLength = abs ((_boundsMaximum select 1) - (_boundsMinimum select 1));
+    private _clearanceHalfWidth = ((_vehicleWidth * _clearanceScale) * 0.5) max 1.5;
+    private _clearanceHalfLength = ((_vehicleLength * _clearanceScale) * 0.5) max 1.5;
+    // The engine clearance test accepts a circular object-clearance distance. Circumscribing the
+    // scaled model selection box is conservative, but guarantees that the complete footprint fits.
+    private _clearanceRadius = sqrt ((_clearanceHalfWidth ^ 2) + (_clearanceHalfLength ^ 2));
     private _safe = [];
-    private _searchRadii = [0, _minimumSeparation, _minimumSeparation * 2, _minimumSeparation * 3];
-    {
-        private _radius = _x;
-        if (_safe isEqualTo [] && {_radius <= _maximumRadius}) then {
-            for "_angle" from 0 to 315 step 45 do {
+    private _isExactLzSafe = {
+        params ["_candidate"];
+        if (surfaceIsWater _candidate || {!([_candidate] call _isSeparated)}) exitWith {false};
+        // isFlatEmpty validates the position supplied; unlike BIS_fnc_findSafePos it does not
+        // silently choose a different point. Ignore the requested aircraft itself and people who
+        // are expected to be standing at a pickup click, but reject another parked vehicle.
+        private _flat = _candidate isFlatEmpty [_clearanceRadius min 50, -1, 0.35, _clearanceRadius, 0, false, _vehicle];
+        if (_flat isEqualTo []) exitWith {false};
+        private _blockingVehicle = (nearestObjects [_candidate, ["AllVehicles"], _clearanceRadius, true]) findIf {
+            _x != _vehicle && {!(_x isKindOf "CAManBase")}
+        };
+        _blockingVehicle < 0
+    };
+    if ([_requestedTarget] call _isExactLzSafe) then {
+        _safe = [_requestedTarget select 0, _requestedTarget select 1, 0];
+    } else {
+        // Search deterministic nearest-first rings only after the exact click fails. This avoids
+        // the former behaviour where the first check itself was allowed to wander up to 60 m.
+        private _searchStep = _clearanceRadius max 5;
+        for "_radius" from _searchStep to _maximumRadius step _searchStep do {
+            for "_angle" from 0 to 330 step 30 do {
                 if (_safe isEqualTo []) then {
-                    private _centre = if (_radius == 0) then {_target} else {_target getPos [_radius, _angle]};
-                    private _candidate = [_centre, 0, (_minimumSeparation max 20), 12, 0, 0.35, 0] call BIS_fnc_findSafePos;
-                    if (count _candidate >= 2 && {!(_candidate isEqualTo [0, 0, 0])} && {!surfaceIsWater _candidate} && {_candidate distance2D _requestedTarget <= _maximumRadius} && {[_candidate] call _isSeparated}) then {
+                    private _candidate = _requestedTarget getPos [_radius, _angle];
+                    if ([_candidate] call _isExactLzSafe) then {
                         _safe = [_candidate select 0, _candidate select 1, 0];
                     };
                 };
             };
         };
-    } forEach _searchRadii;
+    };
     if (_safe isEqualTo []) then {
-        _targetFailure = format ["No safe landing zone was found within %1 metres of the selected point.", round _maximumRadius];
+        _targetFailure = format ["No safe landing zone large enough for this helicopter's %1 x %2 metre clearance footprint was found within %3 metres of the selected point.", round (_clearanceHalfWidth * 2), round (_clearanceHalfLength * 2), round _maximumRadius];
         _targetValid = false;
     } else {
         _target = _safe;
+        diag_log format ["[WMP TRANSPORT] LZ clearance service=%1 aircraft=%2 model=%3x%4 scale=%5 required=%6x%7 radius=%8", _id, typeOf _vehicle, round _vehicleWidth, round _vehicleLength, _clearanceScale, round (_clearanceHalfWidth * 2), round (_clearanceHalfLength * 2), round _clearanceRadius];
     };
 };
 };

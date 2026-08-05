@@ -14,6 +14,7 @@
  * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
  *    destinationDwell, allowedSides, allowedGroups, leadersOnly, showMarker, repairAtBase,
  *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
+ *    landingClearanceScale,
  *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
  *    invulnerable (vehicle and original AI service crew; default false) and
  *    useImprovedLanding. minimumSeparation spaces active destinations/bulk service slots (default:
@@ -104,6 +105,7 @@ private _config = createHashMapFromArray [
     ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
     ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
     ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 75]]) max 10],
+    ["landingClearanceScale", (_optionMap getOrDefault ["landingClearanceScale", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0]]) max 1],
     ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
     ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]}]) max 0],
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
@@ -167,10 +169,14 @@ private _registrationOptions = [];
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
 _vehicle lockDriver true;
 if (_type == "HELICOPTER") then {_vehicle flyInHeight (_config get "cruiseAltitude")};
-// A service helicopter has its own pickup/destination/RTB controller. Excluding it from the global
-// vector landing feature prevents two local controllers from fighting over flight and touchdown.
+// Retain the original TR UNLOAD route. Improved landing is the only default addition and owns the
+// vector-guided final approach; the transport LAND command remains a fallback if it cannot acquire.
 if (_type == "HELICOPTER") then {
     _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true];
+    // Transport's original LAND fallback begins inside 300 m. The global acceleration gate must
+    // not delay controller acquisition past that fallback; the controller itself supplies the
+    // minimum entry speed needed to avoid the former slow Little Bird approach.
+    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_ImmediateAcquisition", _config get "useImprovedLanding", true];
 };
 missionNamespace setVariable [if (_type == "HELICOPTER") then {"Waldo_HeliTransport_Available"} else {"Waldo_GroundTransport_Available"}, true, true];
 [] remoteExecCall ["Waldo_fnc_TransportInteractionInitLocal", 0, "Waldo_Transport_Interactions"];

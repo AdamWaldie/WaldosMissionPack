@@ -511,7 +511,7 @@ private _transportHeli = ["qa_transport_heli", "B_Heli_Light_01_F", [270, 52, 0]
 private _transportGround = ["qa_transport_ground", "B_MRAP_01_F", [280, 52, 0], 180, true] call Waldo_QA_fnc_getFeatureObjectServer;
 if (crew _transportHeli isEqualTo []) then {createVehicleCrew _transportHeli};
 if (crew _transportGround isEqualTo []) then {createVehicleCrew _transportGround};
-[_transportHeli, "HELICOPTER", "QA_RAVEN", "QA Raven", createHashMapFromArray [["showMarker", true], ["cruiseAltitude", 80], ["boardingSeconds", 180]]] call Waldo_fnc_TransportRegister;
+[_transportHeli, "HELICOPTER", "QA_RAVEN", "QA Raven", createHashMapFromArray [["showMarker", true], ["cruiseAltitude", 80], ["boardingSeconds", 180], ["useImprovedLanding", true]]] call Waldo_fnc_TransportRegister;
 [_transportGround, "GROUND", "QA_TAXI", "QA Taxi", createHashMapFromArray [["showMarker", true], ["boardingSeconds", 180]]] call Waldo_fnc_TransportRegister;
 missionNamespace setVariable ["Waldo_QA_TransportVehicles", [_transportHeli, _transportGround], true];
 ["transport-services", "TRANSPORT SERVICES", [275, 40, 0], "Request each typed pool, select a destination, disembark and verify physical return-to-base."] call Waldo_QA_fnc_registerFeatureStationServer;
