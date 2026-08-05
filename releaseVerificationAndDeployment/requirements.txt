@@ -16,3 +16,9 @@ sqflint
 # (Pictures/loading.jpg). It is installed by the update-cover.yml and deploy.yml
 # workflows and by deploy.sh; install it locally to regenerate the cover by hand.
 Pillow
+
+# PyYAML is required by claude_skill_validator.py and package_claude_skill_upload.py
+# to parse SKILL.md's frontmatter the same way claude.ai's own uploader does. It is
+# installed by the testing.yml and deploy.yml workflows; install it locally to run
+# either script or regenerate the claude.ai-upload-ready skill package by hand.
+PyYAML
