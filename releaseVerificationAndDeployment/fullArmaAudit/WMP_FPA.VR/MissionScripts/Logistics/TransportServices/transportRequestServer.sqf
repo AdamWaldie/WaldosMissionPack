@@ -233,6 +233,7 @@ if (_type == "HELICOPTER") then {
 private _serial = (missionNamespace getVariable ["Waldo_Transport_RequestSerial", 0]) + 1;
 missionNamespace setVariable ["Waldo_Transport_RequestSerial", _serial];
 _entry set ["requestId", _serial];
+_vehicle setVariable ["Waldo_TransportService_RequestId", _serial, true];
 _entry set ["requester", _requester];
 if (!_internalRtb && {_requesterUid != ""}) then {_entry set ["requesterUID", _requesterUid]};
 _entry set ["state", switch (_phase) do {case "PICKUP": {"TO_PICKUP"}; case "DESTINATION": {"TO_DESTINATION"}; default {"RTB"}}];
@@ -261,7 +262,7 @@ if (!isNull _requester) then {
     private _adjustment = _requestedTarget distance2D _target;
     private _adjustmentText = if (_adjustment > 10) then {format [" The exact service point was adjusted %1 metres to reachable ground.", round _adjustment]} else {""};
     private _verb = if (_retargetingPickup) then {"updated its pickup point"} else {if (_retrying) then {format ["is retrying its %1 route", toLowerANSI _phase]} else {format ["accepted the %1 request", toLowerANSI _phase]}};
-    [_type, format ["%1 %2.%3", _entry get "name", _verb, _adjustmentText], "INFO"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+    [_type, format ["%1 %2.%3", _entry get "name", _verb, _adjustmentText], "INFO", _id] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
 };
 [_vehicle, _id, _serial, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner group driver _vehicle];
 true

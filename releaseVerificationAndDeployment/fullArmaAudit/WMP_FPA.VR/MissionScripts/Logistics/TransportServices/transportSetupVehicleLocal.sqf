@@ -33,7 +33,7 @@ private _infoId = _vehicle addAction [
     {
         params ["_target", "_caller", "_actionId", "_arguments"];
         _arguments params ["_type", "_name", "_role"];
-        [_type, format ["%1 is a %2 and is currently %3. Request and manage named transports through ACE Self Interact > WMP Transport, or use this transport's own controls.", _name, toLowerANSI _role, _target getVariable ["Waldo_TransportService_State", "UNKNOWN"]], "INFO"] call Waldo_fnc_TransportNotifyLocal;
+        [_type, format ["%1 is a %2 and is currently %3. Request and manage named transports through ACE Self Interact > WMP Transport, or use this transport's own controls.", _name, toLowerANSI _role, _target getVariable ["Waldo_TransportService_State", "UNKNOWN"]], "INFO", _target getVariable ["Waldo_TransportService_Id", netId _target]] call Waldo_fnc_TransportNotifyLocal;
     },
     [_type, _name, _role], -90, false, true, "",
     "_target getVariable ['Waldo_TransportService_Registered', false]", 8
@@ -76,7 +76,7 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
     [_vehicle, 0, ["ACE_MainActions"], _root] call ace_interact_menu_fnc_addActionToObject;
     private _status = [format ["%1_Status", _rootId], "Transport Status", "\a3\ui_f\data\igui\cfg\simpletasks\types\documents_ca.paa", {
         params ["_target"];
-        [_target getVariable ["Waldo_TransportService_Type", "GROUND"], format ["%1 is %2.", _target getVariable ["Waldo_TransportService_Name", "Transport"], _target getVariable ["Waldo_TransportService_State", "UNKNOWN"]], "INFO"] call Waldo_fnc_TransportNotifyLocal;
+        [_target getVariable ["Waldo_TransportService_Type", "GROUND"], format ["%1 is %2.", _target getVariable ["Waldo_TransportService_Name", "Transport"], _target getVariable ["Waldo_TransportService_State", "UNKNOWN"]], "INFO", _target getVariable ["Waldo_TransportService_Id", netId _target]] call Waldo_fnc_TransportNotifyLocal;
     }, {true}] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _status] call ace_interact_menu_fnc_addActionToObject;
     private _move = [format ["%1_Move", _rootId], "Move Pickup Point", "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa", {

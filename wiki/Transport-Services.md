@@ -60,6 +60,7 @@ To travel:
 - **Request All Available** dispatches every eligible available transport of that type around one clicked centre. WMP assigns separate slots instead of sending the fleet to one coordinate.
 - **Return All Controlled to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
+- Retargeting publishes a new request token before redispatch. Superseded AI-owner loops stop before they can land, stop or report against the old point.
 - **Manage Active Services** lists transports reserved by the player, transports currently carrying the player, and all transports for Zeus. Every row includes the configured service name and live state.
 - The same named controls also exist directly on each transport. Being inside or near another transport no longer changes which object the action addresses.
 - The original requester may move pickup or order RTB while outside the vehicle. A passenger may select destination or order RTB for the transport they occupy. Zeus may manage any registered transport.
@@ -90,7 +91,7 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 
 - A clicked point is accepted only when a safe landing point can be found inside `landingSearchRadius`, which defaults to 75 metres. The notification reports adjustments greater than 10 metres and the destination marker shows the actual service point.
 - WMP creates an invisible helipad at that exact resolved point and uses `landAt` for the touchdown.
-- Registered service helicopters are excluded from the global improved-helicopter-landing controller by default. The transport system owns takeoff, landing, waiting and RTB, preventing two flight controllers from fighting over one aircraft. Advanced registrations may set `useImprovedLanding` true, but this is deliberately not the default.
+- Air Transport uses the improved vector landing controller by default. Transport invokes it directly against its own MOVE waypoint, gaining the controlled flare, slope alignment, canopy clearance and go-around logic without allowing the global waypoint tracker to acquire the same aircraft. The invisible-helipad `landAt` controller remains a fallback when vector control cannot safely acquire.
 - The service uses an exact MOVE waypoint followed by the dedicated landing order. It does not use `TR UNLOAD`, whose dedicated-server behaviour is unsuitable for an AI-crewed aircraft carrying only player passengers.
 - Active helicopter LZs are kept at least `minimumSeparation` metres apart; the default is 60 metres. Bulk pickup lays out a deterministic grid of separated landing slots around the clicked centre.
 
@@ -106,7 +107,7 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 | `groundSpeedLimit` | Maximum ground-transport speed in km/h. |
 | `pathRetrySeconds` | Seconds without progress before the driver receives the same order again. |
 | `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey. |
-| `useImprovedLanding` | Advanced compatibility switch; false gives the transport service exclusive landing control. |
+| `useImprovedLanding` | Default `true`: use WMP's vector approach and flare. Set `false` only to force the simpler invisible-helipad `landAt` fallback. |
 | `failSafeReset` | Default `false`; opt-in emergency teleport after an empty physical RTB fails. |
 
 ## ZEN and lifecycle
@@ -116,6 +117,8 @@ Use **WMP Transport > Transport Service - Register** on an existing AI-crewed ve
 Registrations survive WMP vehicle-recovery reconstruction through the built-in `Waldo_TransportService_Registration` recovery variable. Deleted/dead services are removed from the server registry and their markers. Player actions are reinstalled after respawn and JIP availability is published by type.
 
 Global defaults live in `MissionConfig\logisticsConfig.sqf`. `Waldo_TransportServices_Enable` enables the inert framework; no vehicles exist until they are registered.
+
+All Transport feedback uses the master WMP notification system. Each named vehicle owns an independent replacement channel, so simultaneous services use global stacking and overflow while repeated state from one vehicle coalesces. Theme, colour-vision presentation, queue limits and ACE-interaction suppression are inherited automatically.
 
 <!-- WMP-WIKI-NAV -->
 ---

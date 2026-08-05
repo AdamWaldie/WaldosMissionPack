@@ -70,5 +70,5 @@ private _spacing = if (_type == "HELICOPTER") then {missionNamespace getVariable
 } forEach _ids;
 
 private _verb = if (_command == "PICKUP_ALL") then {"pickup"} else {"return-to-base"};
-[_type, format ["Bulk %1 accepted by %2 of %3 eligible %4 transports.", _verb, _accepted, _count, toLowerANSI _type], if (_accepted > 0) then {"SUCCESS"} else {"WARNING"}] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+[_type, format ["Bulk %1 accepted by %2 of %3 eligible %4 transports.", _verb, _accepted, _count, toLowerANSI _type], if (_accepted > 0) then {"SUCCESS"} else {"WARNING"}, "FLEET"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
 _accepted

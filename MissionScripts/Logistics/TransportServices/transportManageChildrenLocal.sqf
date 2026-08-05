@@ -55,7 +55,7 @@ private _children = [];
                     private _service = _this select 2;
                     private _type = _service getVariable ["Waldo_TransportService_Type", "GROUND"];
                     private _message = format ["%1 is %2.", _service getVariable ["Waldo_TransportService_Name", "Transport Service"], _service getVariable ["Waldo_TransportService_State", "UNKNOWN"]];
-                    [_type, _message, "INFO"] call Waldo_fnc_TransportNotifyLocal;
+                    [_type, _message, "INFO", _service getVariable ["Waldo_TransportService_Id", netId _service]] call Waldo_fnc_TransportNotifyLocal;
                 },
                 {true}, {}, _service
             ] call ace_interact_menu_fnc_createAction;

@@ -97,7 +97,7 @@ private _config = createHashMapFromArray [
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
-    ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", false]]
+    ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
 private _baseConflict = (keys _services) findIf {
@@ -137,6 +137,7 @@ _vehicle setVariable ["Waldo_TransportService_Id", _id, true];
 _vehicle setVariable ["Waldo_TransportService_Type", _type, true];
 _vehicle setVariable ["Waldo_TransportService_Name", _displayName, true];
 _vehicle setVariable ["Waldo_TransportService_State", "AVAILABLE", true];
+_vehicle setVariable ["Waldo_TransportService_RequestId", -1, true];
 _vehicle setVariable ["Waldo_TransportService_RequesterUID", "", true];
 _vehicle setVariable ["Waldo_TransportService_Registered", true, true];
 _vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];

@@ -15,6 +15,7 @@
  */
 params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", ["_landingPad", objNull, [objNull]]];
 if (isNull _vehicle || {isNull driver _vehicle}) exitWith {false};
+if (_vehicle getVariable ["Waldo_TransportService_RequestId", -1] != _requestId) exitWith {false};
 private _group = group driver _vehicle;
 if (!local _group) exitWith {
     [_vehicle, _id, _requestId, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group];
@@ -57,15 +58,28 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
 [_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint] spawn {
     params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint"];
     private _group = group driver _vehicle;
+    private _stale = {_vehicle getVariable ["Waldo_TransportService_RequestId", -1] != _requestId};
     private _timeout = diag_tickTime + (missionNamespace getVariable ["Waldo_Transport_TravelTimeout", 900]);
     private _stopRadius = (_config getOrDefault ["stopRadius", if (_helicopter) then {35} else {12}]) max 5;
     if (_helicopter) then {
-        waitUntil {sleep 1; !local _group || {!alive _vehicle} || {!alive driver _vehicle} || {_vehicle distance2D _target <= 220} || {diag_tickTime >= _timeout}};
-        if (local _group && {alive _vehicle} && {alive driver _vehicle} && {_vehicle distance2D _target <= 220}) then {
-            private _accepted = if (isNull _landingPad) then {false} else {_vehicle landAt [_landingPad, "LAND"]};
-            if (!_accepted) then {_vehicle land "LAND"};
+        waitUntil {sleep 1; call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_vehicle distance2D _target <= 220} || {diag_tickTime >= _timeout}};
+        if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {_vehicle distance2D _target <= 220}) then {
+            private _accepted = false;
+            if (
+                _config getOrDefault ["useImprovedLanding", true]
+                && {missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]}
+                && {!isNil "Waldo_fnc_ImprovedHelicopterLandingExecuteLocal"}
+            ) then {
+                // Transport owns the MOVE waypoint and invokes the vector controller directly.
+                // The global tracker ignores MOVE tasks, preventing a second controller from acquiring.
+                _accepted = [_vehicle, _target, "MOVE", _waypoint select 1, ""] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
+            };
+            if (!_accepted && {!(call _stale)}) then {
+                _accepted = if (isNull _landingPad) then {false} else {_vehicle landAt [_landingPad, "LAND"]};
+                if (!_accepted) then {_vehicle land "LAND"};
+            };
         };
-        waitUntil {sleep 1; !local _group || {!alive _vehicle} || {!alive driver _vehicle} || {(isTouchingGround _vehicle || {getPosATL _vehicle select 2 < 1.5}) && {_vehicle distance2D _target <= _stopRadius}} || {diag_tickTime >= _timeout}};
+        waitUntil {sleep 1; call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {(isTouchingGround _vehicle || {getPosATL _vehicle select 2 < 1.5}) && {_vehicle distance2D _target <= _stopRadius}} || {diag_tickTime >= _timeout}};
     } else {
         private _bestDistance = _vehicle distance2D _target;
         private _lastProgress = diag_tickTime;
@@ -75,17 +89,18 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             sleep 1;
             private _distance = _vehicle distance2D _target;
             if (_distance < (_bestDistance - 5)) then {_bestDistance = _distance; _lastProgress = diag_tickTime};
-            if (diag_tickTime - _lastProgress >= _retrySeconds && {_retriesRemaining > 0} && {alive driver _vehicle} && {local _group}) then {
+            if (!(call _stale) && {diag_tickTime - _lastProgress >= _retrySeconds} && {_retriesRemaining > 0} && {alive driver _vehicle} && {local _group}) then {
                 units _group doFollow leader _group;
                 _group setCurrentWaypoint _waypoint;
                 _retriesRemaining = _retriesRemaining - 1;
                 _lastProgress = diag_tickTime;
                 diag_log format ["[WMP TRANSPORT] Reissued ground path service=%1 request=%2 remaining=%3 distance=%4", _id, _requestId, _retriesRemaining, round _distance];
             };
-            !local _group || {!alive _vehicle} || {!alive driver _vehicle} || {_distance <= _stopRadius} || {diag_tickTime >= _timeout}
+            call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_distance <= _stopRadius} || {diag_tickTime >= _timeout}
         };
-        if (alive _vehicle && {_vehicle distance2D _target <= _stopRadius}) then {doStop driver _vehicle};
+        if (!(call _stale) && {alive _vehicle} && {_vehicle distance2D _target <= _stopRadius}) then {doStop driver _vehicle};
     };
+    if (call _stale) exitWith {diag_log format ["[WMP TRANSPORT] Superseded controller stopped service=%1 request=%2", _id, _requestId]};
     if (!local _group) exitWith {[_vehicle, _id, _requestId, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group]};
     private _arrived = alive _vehicle && {alive driver _vehicle} && {_vehicle distance2D _target <= _stopRadius};
     [_id, _requestId, _phase, if (_arrived) then {"ARRIVED"} else {"FAILED"}] remoteExecCall ["Waldo_fnc_TransportReportServer", 2];
