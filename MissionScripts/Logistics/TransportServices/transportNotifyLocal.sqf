@@ -10,4 +10,4 @@
  */
 params [["_type", "GROUND", [""]], ["_message", "", [""]], ["_state", "INFO", [""]]];
 private _heli = toUpperANSI _type == "HELICOPTER";
-[["GROUND TAXI", "HELICOPTER TRANSPORT"] select _heli, _message, _state, ["GROUND_TAXI", "HELI_TRANSPORT"] select _heli, 7] call Waldo_fnc_FeatureNotifyLocal
+[["GROUND TRANSPORT", "HELICOPTER TRANSPORT"] select _heli, _message, _state, ["GROUND_TRANSPORT", "HELI_TRANSPORT"] select _heli, 7] call Waldo_fnc_FeatureNotifyLocal

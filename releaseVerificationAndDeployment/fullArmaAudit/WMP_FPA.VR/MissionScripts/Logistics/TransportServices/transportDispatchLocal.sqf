@@ -4,7 +4,7 @@
  * It creates only local control state, clears only that group's waypoints, applies the configured
  * non-combat movement policy and reports arrival/failure with the authoritative request ID.
  * Service helicopters use an exclusive invisible-helipad/landAt controller so the global improved
- * landing feature cannot fight the taxi lifecycle.
+ * landing feature cannot fight the transport lifecycle.
  * Locality and authority: runs only where the AI driver group is local; server request IDs remain authoritative.
  *
  * Arguments: vehicle, service ID, request ID, phase, target ATL position, config HashMap and the
@@ -21,14 +21,15 @@ if (!local _group) exitWith {
     true
 };
 for "_i" from ((count waypoints _group) - 1) to 0 step -1 do {deleteWaypoint [_group, _i]};
-_group setBehaviourStrong (_config getOrDefault ["behaviour", "CARELESS"]);
+private _helicopter = _vehicle isKindOf "Helicopter";
+private _movementBehaviour = if (_helicopter) then {_config getOrDefault ["behaviour", "CARELESS"]} else {"SAFE"};
+_group setBehaviourStrong _movementBehaviour;
 _group setCombatMode "BLUE";
 _group setSpeedMode (_config getOrDefault ["speedMode", "FULL"]);
 // Stop orders persist across deleted/replaced waypoints. Release every crew member before each
 // pickup, destination or RTB dispatch so a vehicle stopped in the prior phase can move again.
 units _group doFollow leader _group;
 _vehicle engineOn true;
-private _helicopter = _vehicle isKindOf "Helicopter";
 if (_helicopter) then {
     if (_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
         [_vehicle, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
@@ -38,16 +39,19 @@ if (_helicopter) then {
     _vehicle flyInHeight ((_config getOrDefault ["cruiseAltitude", 80]) max 20);
 } else {
     _vehicle limitSpeed (_config getOrDefault ["groundSpeedLimit", 60]);
+    // Prefer the engine's connected-road route when both the vehicle and resolved target are on a
+    // road. Off-road requests retain normal terrain pathfinding instead of being pinned to roads.
+    private _roadRoute = !((_vehicle nearRoads 30) isEqualTo []) && {!((_target nearRoads 20) isEqualTo [])};
+    driver _vehicle forceFollowRoad _roadRoute;
 };
 // Radius -1 gives exact waypoint placement. Radius 0 may still be shifted by the engine.
 private _waypoint = _group addWaypoint [ATLToASL _target, -1];
 _waypoint setWaypointType "MOVE";
-_waypoint setWaypointBehaviour (_config getOrDefault ["behaviour", "CARELESS"]);
+_waypoint setWaypointBehaviour _movementBehaviour;
 _waypoint setWaypointCombatMode "BLUE";
 _waypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);
 _waypoint setWaypointCompletionRadius ((_config getOrDefault ["stopRadius", if (_helicopter) then {35} else {12}]) max 5);
 _group setCurrentWaypoint _waypoint;
-if (!_helicopter) then {driver _vehicle doMove _target};
 diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 owner=%6", _id, _requestId, _phase, _target, _helicopter, clientOwner];
 
 [_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint] spawn {
@@ -74,7 +78,6 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             if (diag_tickTime - _lastProgress >= _retrySeconds && {_retriesRemaining > 0} && {alive driver _vehicle} && {local _group}) then {
                 units _group doFollow leader _group;
                 _group setCurrentWaypoint _waypoint;
-                driver _vehicle doMove _target;
                 _retriesRemaining = _retriesRemaining - 1;
                 _lastProgress = diag_tickTime;
                 diag_log format ["[WMP TRANSPORT] Reissued ground path service=%1 request=%2 remaining=%3 distance=%4", _id, _requestId, _retriesRemaining, round _distance];

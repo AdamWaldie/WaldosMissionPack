@@ -45,7 +45,7 @@ private _declaredAddons = [
     "A3_Structures_F_Mil_BagFence", "A3_Structures_F_Mil_Cargo",
     "A3_Structures_F_Mil_Flags", "A3_Structures_F_Mil_Fortification",
     "A3_Structures_F_Mil_Helipads", "A3_Structures_F_Orange_Humanitarian_Camps",
-    "A3_Structures_F_Walls", "A3_Supplies_F_Exp", "A3_Supplies_F_Exp_Ammoboxes", "A3_Weapons_F",
+    "A3_Structures_F_Walls", "A3_Supplies_F_Exp_Ammoboxes", "A3_Weapons_F",
     "A3_Weapons_F_Acc", "A3_Weapons_F_Ammoboxes", "A3_Weapons_F_Items",
     "A3_Weapons_F_Pistols_P07", "A3_Weapons_F_Rifles_MX", "ace_attach", "ace_ballistics",
     "ace_cargo", "ace_chemlights", "ace_dragging", "ace_laserpointer", "ace_medical_engine",

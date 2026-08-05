@@ -412,18 +412,18 @@ switch (toUpperANSI _feature) do {
         [
             "Register Transport Service",
             [
-                ["COMBO", ["Service type", "Helicopter and ground taxis use independent pools."], [["HELICOPTER", "GROUND"], ["Helicopter", "Ground taxi"], if (_isHelicopter) then {0} else {1}]],
+                ["COMBO", ["Service type", "Helicopter and ground transports use independent pools."], [["HELICOPTER", "GROUND"], ["Helicopter transport", "Ground transport"], if (_isHelicopter) then {0} else {1}]],
                 ["EDIT", ["Service ID", "Unique setup key. Leave blank to generate one."], ""],
                 ["EDIT", ["Display name", "Player-facing callsign. Leave blank to use the crew group callsign."], ""],
                 ["CHECKBOX", ["Squad leaders only", "Only group leaders may request this service."], false],
                 ["CHECKBOX", ["Show map marker", "Track the service vehicle on the map."], true],
                 ["SLIDER", ["Boarding window", "Seconds at pickup before an unused service returns to base."], [30, 900, missionNamespace getVariable ["Waldo_Transport_DefaultBoardingSeconds", 300], 0]],
                 ["SLIDER", ["Destination dwell", "Seconds allowed for disembarking before return to base."], [10, 300, missionNamespace getVariable ["Waldo_Transport_DefaultDestinationDwell", 45], 0]],
-                ["SLIDER", ["Helicopter transit height", "Metres above terrain; ignored by ground taxis."], [20, 300, missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 80], 0]],
+                ["SLIDER", ["Helicopter transit height", "Metres above terrain; ignored by ground transports."], [20, 300, missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 80], 0]],
                 ["CHECKBOX", ["Repair at base", "Fully repair the service after a completed return."], false],
                 ["CHECKBOX", ["Refuel at base", "Fully refuel the service after a completed return."], true],
                 ["CHECKBOX", ["Force late passengers out", "Move remaining passengers out when destination dwell expires."], false],
-                ["CHECKBOX", ["Empty-vehicle fail-safe", "If physical return fails and no players are aboard, safely reset at base."], true]
+                ["CHECKBOX", ["Emergency position reset", "OFF by default. If physical RTB fails and no players are aboard, teleport the transport to base."], false]
             ],
             {
                 params ["_values", "_target"];

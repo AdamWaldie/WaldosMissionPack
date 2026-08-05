@@ -26,9 +26,10 @@ if !(isServer) exitWith {
 };
 
 private _authorized = true;
+private _caller = objNull;
 if (remoteExecutedOwner > 0) then {
     private _callerIndex = allPlayers findIf {owner _x == remoteExecutedOwner};
-    private _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
+    _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
     _authorized = !isNull _caller && {!isNull (getAssignedCuratorLogic _caller)};
 };
 if !(_authorized) exitWith {false};
@@ -160,7 +161,7 @@ switch (toUpperANSI _action) do {
     case "TRANSPORT_RTB": {
         _settings params ["_target"];
         private _type = _target getVariable ["Waldo_TransportService_Type", ""];
-        private _ok = _type in ["HELICOPTER", "GROUND"] && {["RTB", _type, _target, [], objNull] call Waldo_fnc_TransportRequestServer};
+        private _ok = _type in ["HELICOPTER", "GROUND"] && {["RTB", _type, _target, [], _caller] call Waldo_fnc_TransportRequestServer};
         ["TRANSPORT SERVICE", if (_ok) then {"Return-to-base ordered."} else {"The selected vehicle is not a registered transport service."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
     };
     case "RALLY_CONFIG": {

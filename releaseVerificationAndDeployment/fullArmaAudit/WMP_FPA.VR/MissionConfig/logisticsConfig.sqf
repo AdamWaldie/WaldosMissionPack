@@ -72,14 +72,14 @@
  * - Logi_MedicalBoxClass (AUTOMATIC): ACE crate when ACE medical exists, otherwise the vanilla fallback.
  *
  * SETTING-BY-SETTING GUIDE - TRANSPORT SERVICES:
- * - Waldo_TransportServices_Enable: permits registered helicopter and ground taxi services; creates none.
+ * - Waldo_TransportServices_Enable: permits registered helicopter and ground transport services; creates none.
  * - Waldo_Transport_TravelTimeout: maximum seconds allowed for one physical journey before failure recovery.
  * - Waldo_Transport_DefaultBoardingSeconds: maximum pickup wait before an unused service returns to base.
  * - Waldo_Transport_DefaultDestinationDwell: maximum destination wait before physical RTB begins.
  * - Waldo_HeliTransport_DefaultAltitude: default transit height in metres for registered helicopters.
  * - Waldo_HeliTransport_DefaultLzSearchRadius: furthest a safe helicopter LZ may move from the map click.
- * - Waldo_GroundTaxi_DefaultRoadSearchRadius: road search around a clicked ground-taxi position.
- * - Waldo_GroundTaxi_DefaultSpeedLimit: road-safe AI taxi speed cap in kilometres per hour.
+ * - Waldo_GroundTransport_DefaultRoadSearchRadius: road search around a clicked ground-transport position.
+ * - Waldo_GroundTransport_DefaultSpeedLimit: road-safe AI transport speed cap in kilometres per hour.
  * - Waldo_Transport_DefaultPathRetrySeconds: no-progress interval before a ground driver is reordered.
  * - Waldo_Transport_DefaultPathRetryLimit: maximum automatic ground movement reorders per journey.
  *
@@ -92,7 +92,7 @@
  *   when they are serialisable; code, UI controls and local object references are not safe save data.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Taxi", "Object Scaling", "Logistics Crates"]],
+    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Object Scaling", "Logistics Crates"]],
     ["shared", [
         // MISSION MAKER: field-resupply content and balance.
         ["Waldo_FieldResupply_Enable", false],       // BOOL: enables service/actions; hubs/carriers still need registration.
@@ -128,8 +128,8 @@ createHashMapFromArray [
         ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: destination disembark window.
         ["Waldo_HeliTransport_DefaultAltitude", 80, false], // METRES: default helicopter transit height.
         ["Waldo_HeliTransport_DefaultLzSearchRadius", 75, false], // METRES: maximum permitted LZ adjustment from the click.
-        ["Waldo_GroundTaxi_DefaultRoadSearchRadius", 200, false], // METRES: nearest-road search around pickup/destination.
-        ["Waldo_GroundTaxi_DefaultSpeedLimit", 60, false], // KM/H: road-safe AI taxi speed cap.
+        ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false], // METRES: nearest-road search around pickup/destination.
+        ["Waldo_GroundTransport_DefaultSpeedLimit", 60, false], // KM/H: road-safe AI transport speed cap.
         ["Waldo_Transport_DefaultPathRetrySeconds", 25, false], // SECONDS without progress before reissuing an order.
         ["Waldo_Transport_DefaultPathRetryLimit", 3, false], // COUNT: automatic ground path retries per journey.
         // MISSION MAKER scale bounds; ADVANCED client-authority switch.

@@ -143,7 +143,7 @@ private _hudEligible = if (_hudEnabled) then {[player] call Waldo_fnc_WmpHudElig
 private _hudStarted = missionNamespace getVariable ["Waldo_WmpHud_ClientStarted", false];
 ["interface", "wmp-hud", if (!_hudEnabled) then {"DISABLED"} else {if (!_hudEligible) then {"UNCONFIGURED"} else {if (_hudStarted) then {"ACTIVE"} else {"ERROR"}}}, format ["enabled=%1 eligible=%2 clientStarted=%3 visible=%4", _hudEnabled, _hudEligible, _hudStarted, missionNamespace getVariable ["Waldo_WmpHud_Visible", false]]] call _add;
 private _transportInstalled = player getVariable ["Waldo_Transport_InteractionsInstalled", false];
-private _transportAvailable = missionNamespace getVariable ["Waldo_HeliTransport_Available", false] || {missionNamespace getVariable ["Waldo_GroundTaxi_Available", false]};
+private _transportAvailable = missionNamespace getVariable ["Waldo_HeliTransport_Available", false] || {missionNamespace getVariable ["Waldo_GroundTransport_Available", false]};
 ["logistics", "transport-client-actions", if (!_transportAvailable) then {"UNCONFIGURED"} else {if (_transportInstalled) then {"LOADED"} else {"ERROR"}}, format ["available=%1 interactionsInstalled=%2", _transportAvailable, _transportInstalled]] call _add;
 private _mhqObjects = _localObjects select {_x getVariable ["Waldo_MHQ_ServerConfigured", false]};
 if (_mhqObjects isEqualTo []) then {

@@ -6,7 +6,7 @@
  * task. Access rules are validated against the requesting player's live side/group/leadership.
  *
  * Arguments:
- * 0: action <STRING> - REQUEST_PICKUP, SET_DESTINATION or RTB.
+ * 0: action <STRING> - REQUEST_PICKUP, REQUEST_ADDITIONAL, MOVE_PICKUP, SET_DESTINATION, RETRY or RTB.
  * 1: service type <STRING> - HELICOPTER or GROUND.
  * 2: vehicle <OBJECT> - required for destination/RTB; ignored for pickup.
  * 3: map position <ARRAY> - pickup/destination position.
@@ -16,7 +16,7 @@
  *
  * Example:
  * ["REQUEST_PICKUP", "GROUND", objNull, getPosATL player, player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
- * Result: reserves the nearest eligible available ground taxi and dispatches its local AI group.
+ * Result: reserves the nearest eligible available ground transport and dispatches its local AI group.
  * Current caller: Waldo_fnc_TransportOpenMapLocal and the RTB self-action.
  */
 
@@ -31,6 +31,10 @@ if !(_type in ["HELICOPTER", "GROUND"]) exitWith {false};
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
 private _entry = createHashMap;
 private _id = "";
+private _retargetingPickup = false;
+private _retrying = false;
+private _requestRejected = false;
+private _requesterUid = if (isNull _requester) then {""} else {getPlayerUID _requester};
 
 private _canUse = {
     params ["_candidate", "_requester"];
@@ -43,8 +47,37 @@ private _canUse = {
     _sideAllowed && _groupAllowed && _leaderAllowed
 };
 
-if (_action == "REQUEST_PICKUP") then {
+if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
     if (count _position < 2) exitWith {false};
+    // The normal request safely retargets one existing pickup. Additional requests deliberately
+    // reserve another asset, keeping multi-vehicle lifts possible without accidental duplication.
+    private _ownedIds = (keys _services) select {
+        private _candidate = _services get _x;
+        _candidate getOrDefault ["type", ""] == _type
+        && {_requesterUid != ""}
+        && {_candidate getOrDefault ["requesterUID", ""] == _requesterUid}
+        && {_candidate getOrDefault ["state", "AVAILABLE"] != "AVAILABLE"}
+    };
+    if (_action == "REQUEST_PICKUP" && {count _ownedIds > 1}) exitWith {
+        [_type, "You have several active transports of this type. Use Manage Active Services and move the named transport's pickup point, or explicitly request an additional transport.", "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+        _requestRejected = true
+    };
+    if (_action == "REQUEST_PICKUP" && {count _ownedIds == 1}) then {
+        _id = _ownedIds select 0;
+        private _owned = _services get _id;
+        private _ownedState = _owned getOrDefault ["state", ""];
+        if !(_ownedState in ["TO_PICKUP", "BOARDING"]) exitWith {
+            [_type, format ["%1 is already handling your request (%2). Manage that named transport or return it to base before requesting another.", _owned get "name", _ownedState], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+            _requestRejected = true;
+            _id = ""
+        };
+        _entry = _owned;
+        _retargetingPickup = true;
+    };
+    if (!_requestRejected) then {
+    if (_retargetingPickup) then {
+        _vehicle = _entry get "vehicle";
+    } else {
     private _pool = (missionNamespace getVariable ["Waldo_Transport_Pools", createHashMap]) getOrDefault [_type, []];
     private _bestDistance = 1e12;
     {
@@ -60,17 +93,33 @@ if (_action == "REQUEST_PICKUP") then {
         };
     } forEach _pool;
     if (_id == "") exitWith {
-        [_type, "No eligible service is currently available.", "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
-        false
+        [_type, "No eligible transport is currently available.", "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+        _requestRejected = true
+    };
+    };
     };
 } else {
-    if (isNull _vehicle) exitWith {false};
+    if (isNull _vehicle) exitWith {_requestRejected = true};
     _id = _vehicle getVariable ["Waldo_TransportService_Id", ""];
     _entry = _services getOrDefault [_id, createHashMap];
-    if (_entry isEqualTo createHashMap) exitWith {false};
-    if (!_internalRtb && {!([_entry, _requester] call _canUse)}) exitWith {false};
-    if (!_internalRtb && {!(_requester in crew _vehicle || {!isNull getAssignedCuratorLogic _requester})}) exitWith {false};
+    if (_entry isEqualTo createHashMap) exitWith {_requestRejected = true};
+    if (!_internalRtb && {!([_entry, _requester] call _canUse)}) exitWith {_requestRejected = true};
+    private _isCurator = !isNull getAssignedCuratorLogic _requester;
+    private _isCrew = _requester in crew _vehicle;
+    private _ownsRequest = _requesterUid != "" && {_entry getOrDefault ["requesterUID", ""] == _requesterUid};
+    private _actionAllowed = switch (_action) do {
+        case "MOVE_PICKUP": {_isCurator || {_ownsRequest}};
+        case "SET_DESTINATION": {_isCurator || {_isCrew}};
+        case "RETRY": {_isCurator || {_isCrew} || {_ownsRequest}};
+        case "RTB": {_isCurator || {_isCrew} || {_ownsRequest}};
+        default {false};
+    };
+    if (!_internalRtb && {!_actionAllowed}) exitWith {
+        [_type, format ["You cannot control %1. Use the named transport reserved by you, a transport you are travelling in, or Zeus control.", _entry getOrDefault ["name", "this transport"]], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+        _requestRejected = true
+    };
 };
+if (_requestRejected || {_id == ""}) exitWith {false};
 
 _vehicle = _entry get "vehicle";
 private _config = _entry get "config";
@@ -79,9 +128,22 @@ private _phase = "";
 private _target = _position;
 switch (_action) do {
     case "REQUEST_PICKUP": {_phase = "PICKUP"};
+    case "REQUEST_ADDITIONAL": {_phase = "PICKUP"};
+    case "MOVE_PICKUP": {
+        if (!(_state in ["TO_PICKUP", "BOARDING"]) || {count _position < 2}) exitWith {};
+        _phase = "PICKUP";
+        _retargetingPickup = true;
+    };
     case "SET_DESTINATION": {
         if (_state != "BOARDING" || {count _position < 2}) exitWith {};
         _phase = "DESTINATION";
+    };
+    case "RETRY": {
+        if (_state != "STUCK") exitWith {};
+        _phase = _entry getOrDefault ["lastFailedPhase", ""];
+        _target = _entry getOrDefault ["target", []];
+        if !(_phase in ["PICKUP", "DESTINATION", "RTB"] && {count _target >= 2}) then {_phase = ""};
+        _retrying = _phase != "";
     };
     case "RTB": {_phase = "RTB"; _target = _entry get "startPos"};
 };
@@ -134,12 +196,14 @@ private _serial = (missionNamespace getVariable ["Waldo_Transport_RequestSerial"
 missionNamespace setVariable ["Waldo_Transport_RequestSerial", _serial];
 _entry set ["requestId", _serial];
 _entry set ["requester", _requester];
+if (!_internalRtb && {_requesterUid != ""}) then {_entry set ["requesterUID", _requesterUid]};
 _entry set ["state", switch (_phase) do {case "PICKUP": {"TO_PICKUP"}; case "DESTINATION": {"TO_DESTINATION"}; default {"RTB"}}];
 _entry set ["phaseStarted", serverTime];
 _entry set ["target", _target];
 _services set [_id, _entry];
 missionNamespace setVariable ["Waldo_Transport_Services", _services];
 _vehicle setVariable ["Waldo_TransportService_State", _entry get "state", true];
+_vehicle setVariable ["Waldo_TransportService_RequesterUID", _entry getOrDefault ["requesterUID", ""], true];
 private _destinationMarker = format ["Waldo_Transport_Destination_%1", _id];
 deleteMarker _destinationMarker;
 createMarker [_destinationMarker, _target];
@@ -158,7 +222,8 @@ diag_log format [
 if (!isNull _requester) then {
     private _adjustment = _requestedTarget distance2D _target;
     private _adjustmentText = if (_adjustment > 10) then {format [" The exact service point was adjusted %1 metres to reachable ground.", round _adjustment]} else {""};
-    [_type, format ["%1 accepted the %2 request.%3", _entry get "name", toLowerANSI _phase, _adjustmentText], "INFO"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+    private _verb = if (_retargetingPickup) then {"updated its pickup point"} else {if (_retrying) then {format ["is retrying its %1 route", toLowerANSI _phase]} else {format ["accepted the %1 request", toLowerANSI _phase]}};
+    [_type, format ["%1 %2.%3", _entry get "name", _verb, _adjustmentText], "INFO"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
 };
 [_vehicle, _id, _serial, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner group driver _vehicle];
 true

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 861,
+  "registeredFunctionCount": 864,
   "runtimeFunctionCount": 385,
-  "functionCount": 1246,
+  "functionCount": 1249,
   "stations": [
     {
       "id": "control",
@@ -362,7 +362,7 @@
         40,
         0
       ],
-      "description": "Independent helicopter and ground taxi pools, pickup, destination, disembark and physical RTB."
+      "description": "Independent helicopter and ground transport pools, named management, pickup, destination, disembark and physical RTB."
     },
     {
       "id": "rally",
@@ -1463,8 +1463,26 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_TransportManageChildrenLocal",
+      "file": "MissionScripts/Logistics/TransportServices/transportManageChildrenLocal.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_TransportSetupVehicleLocal",
       "file": "MissionScripts/Logistics/TransportServices/transportSetupVehicleLocal.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TransportSetProtectionLocal",
+      "file": "MissionScripts/Logistics/TransportServices/transportSetProtectionLocal.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TransportRefreshProtectionServer",
+      "file": "MissionScripts/Logistics/TransportServices/transportRefreshProtectionServer.sqf",
       "station": "transport-services",
       "activation": "manual"
     },

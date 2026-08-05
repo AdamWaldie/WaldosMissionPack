@@ -169,7 +169,7 @@ createHashMapFromArray [
             ["RALLY_POINT", "BOTTOM_RIGHT", true],        // squad rally status at bottom-right.
             ["AIRBORNE_GUNSHIP", "BOTTOM_RIGHT", true],   // gunship status at bottom-right.
             ["HELI_TRANSPORT", "BOTTOM_RIGHT", true],     // helicopter transport status.
-            ["GROUND_TAXI", "BOTTOM_RIGHT", true]         // ground taxi status.
+            ["GROUND_TRANSPORT", "BOTTOM_RIGHT", true]    // ground transport status.
         ]],
         // MISSION MAKER: ACE treatment feedback content and recipients.
         ["Waldo_TreatmentFeedback_Enable", false], // BOOL: install ACE treatment event feedback locally.

@@ -72,7 +72,7 @@ STATIONS = [
     ("dynamic-aa", "DYNAMIC ANTI-AIR", (175, 0), "Named radar system, pooled assets, altitude detection and teardown."),
     ("gunship", "AIRBORNE GUNSHIP", (200, 0), "Registration, assignment, orbit, service and removal lifecycle."),
     ("vehicle-recovery", "VEHICLE RECOVERY", (225, 0), "Damage-gated packaging, carrier handling and keyed workshop restoration."),
-    ("transport-services", "TRANSPORT SERVICES", (275, 40), "Independent helicopter and ground taxi pools, pickup, destination, disembark and physical RTB."),
+    ("transport-services", "TRANSPORT SERVICES", (275, 40), "Independent helicopter and ground transport pools, named management, pickup, destination, disembark and physical RTB."),
     ("rally", "SQUAD RALLY", (250, 0), "Leader deployment, group respawn, regroup, expiry and removal."),
     ("nested-loadouts", "NESTED LOADOUT SCRAPE", (275, 0), "Playable inventories inside nested Eden folders feeding crate and arsenal pools."),
     ("dynamic-paradrop", "DYNAMIC PARADROP", (300, 40), "Server-owned DZ route, timed jumpers, operational markers and teardown."),

@@ -64,6 +64,8 @@ copies of feature logic.
 
 ## Features intentionally without compositions
 
+- **WMP HUD** is configured player-locally through `MissionConfig\interfaceConfig.sqf`; it has no world-object placement requirement, so a composition would be misleading. Use the full audit mission for live HUD testing.
+
 Dynamic AO, Dynamic AA, airborne gunships and generated drop zones are server-authoritative generated
 systems; Zeus or an `initServer.sqf` call is clearer and safer than an Eden composition whose init
 would execute on every machine. Improved helicopter landing is an automatic AI handler driven by

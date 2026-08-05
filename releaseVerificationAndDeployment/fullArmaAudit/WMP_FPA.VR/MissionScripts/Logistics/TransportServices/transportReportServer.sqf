@@ -32,15 +32,16 @@ if (_result == "FAILED") exitWith {
     private _landingPad = _entry getOrDefault ["landingPad", objNull];
     if (!isNull _landingPad) then {deleteVehicle _landingPad};
     _entry deleteAt "landingPad";
-    if (!isNull _requester) then {[_type, format ["%1 could not complete the task.", _entry get "name"], "ERROR"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
-    if (_phase == "RTB" && {_config getOrDefault ["failSafeReset", true]} && {(crew _vehicle findIf {isPlayer _x}) < 0}) then {
+    if (!isNull _requester) then {[_type, format ["%1 is stuck and could not complete its %2 route. Clear the obstruction, then use Manage Active Services > %1 > Retry Current Route or order RTB.", _entry get "name", toLowerANSI _phase], "ERROR"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
+    if (_phase == "RTB" && {_config getOrDefault ["failSafeReset", false]} && {(crew _vehicle findIf {isPlayer _x}) < 0}) then {
         _vehicle setVehiclePosition [_entry get "startPos", [], 0, "NONE"];
         _vehicle setDir (_entry get "startDir");
         _vehicle setVelocity [0, 0, 0];
         [_id, _requestId, "RTB", "ARRIVED"] call Waldo_fnc_TransportReportServer;
     } else {
-        _entry set ["state", "UNAVAILABLE"];
-        _vehicle setVariable ["Waldo_TransportService_State", "UNAVAILABLE", true];
+        _entry set ["state", "STUCK"];
+        _entry set ["lastFailedPhase", _phase];
+        _vehicle setVariable ["Waldo_TransportService_State", "STUCK", true];
         _services set [_id, _entry];
         missionNamespace setVariable ["Waldo_Transport_Services", _services];
     };
@@ -53,7 +54,7 @@ switch (_phase) do {
         [_group, getPosATL _vehicle] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
         _entry set ["state", "BOARDING"];
         _vehicle setVariable ["Waldo_TransportService_State", "BOARDING", true];
-        if (!isNull _requester) then {[_type, format ["%1 is ready for boarding. Enter the vehicle and select a destination through WMP Interface.", _entry get "name"], "SUCCESS"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
+        if (!isNull _requester) then {[_type, format ["%1 is ready for boarding. Enter the transport and select a destination through WMP Logistics > Transport Services.", _entry get "name"], "SUCCESS"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
         [_id, _requestId, _config getOrDefault ["boardingSeconds", 300]] spawn {
             params ["_id", "_requestId", "_seconds"];
             sleep (_seconds max 15);
@@ -103,8 +104,10 @@ switch (_phase) do {
         _entry deleteAt "landingPad";
         _entry set ["state", "AVAILABLE"];
         _entry set ["requester", objNull];
+        _entry set ["requesterUID", ""];
         _entry set ["requestId", -1];
         _vehicle setVariable ["Waldo_TransportService_State", "AVAILABLE", true];
+        _vehicle setVariable ["Waldo_TransportService_RequesterUID", "", true];
         _vehicle setDir (_entry get "startDir");
         if (_config getOrDefault ["refuelAtBase", true]) then {_vehicle setFuel 1};
         if (_config getOrDefault ["repairAtBase", false]) then {_vehicle setDamage 0};

@@ -86,12 +86,12 @@ private _config = createHashMapFromArray [
     ["repairAtBase", _optionMap getOrDefault ["repairAtBase", false]],
     ["refuelAtBase", _optionMap getOrDefault ["refuelAtBase", true]],
     ["forceDisembark", _optionMap getOrDefault ["forceDisembark", false]],
-    ["failSafeReset", _optionMap getOrDefault ["failSafeReset", true]],
+    ["failSafeReset", _optionMap getOrDefault ["failSafeReset", false]],
     ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
     ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
     ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 75]]) max 10],
-    ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTaxi_DefaultRoadSearchRadius", 200]]) max 0],
-    ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTaxi_DefaultSpeedLimit", 60]]) max 5],
+    ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
+    ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
     ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", false]]
@@ -104,7 +104,7 @@ if !(_existing isEqualTo createHashMap) then {
 };
 private _entry = createHashMapFromArray [
     ["id", _id], ["type", _type], ["name", _displayName], ["vehicle", _vehicle],
-    ["state", "AVAILABLE"], ["requestId", -1], ["requester", objNull], ["config", _config],
+    ["state", "AVAILABLE"], ["requestId", -1], ["requester", objNull], ["requesterUID", ""], ["config", _config],
     ["startPos", getPosATL _vehicle], ["startDir", getDir _vehicle], ["baseCrew", +crew _vehicle],
     ["phaseStarted", serverTime]
 ];
@@ -120,7 +120,10 @@ _vehicle setVariable ["Waldo_TransportService_Id", _id, true];
 _vehicle setVariable ["Waldo_TransportService_Type", _type, true];
 _vehicle setVariable ["Waldo_TransportService_Name", _displayName, true];
 _vehicle setVariable ["Waldo_TransportService_State", "AVAILABLE", true];
+_vehicle setVariable ["Waldo_TransportService_RequesterUID", "", true];
 _vehicle setVariable ["Waldo_TransportService_Registered", true, true];
+_vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];
+_vehicle setDamage 0;
 private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
@@ -131,9 +134,10 @@ if (_type == "HELICOPTER") then {_vehicle flyInHeight (_config get "cruiseAltitu
 if (_type == "HELICOPTER") then {
     _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true];
 };
-missionNamespace setVariable [if (_type == "HELICOPTER") then {"Waldo_HeliTransport_Available"} else {"Waldo_GroundTaxi_Available"}, true, true];
+missionNamespace setVariable [if (_type == "HELICOPTER") then {"Waldo_HeliTransport_Available"} else {"Waldo_GroundTransport_Available"}, true, true];
 [] remoteExecCall ["Waldo_fnc_TransportInteractionInitLocal", 0, "Waldo_Transport_Interactions"];
 [_vehicle] remoteExecCall ["Waldo_fnc_TransportSetupVehicleLocal", 0, _vehicle];
+_entry = [_entry] call Waldo_fnc_TransportRefreshProtectionServer;
 
 if (_config get "showMarker") then {
     private _marker = format ["Waldo_Transport_%1", _id];
