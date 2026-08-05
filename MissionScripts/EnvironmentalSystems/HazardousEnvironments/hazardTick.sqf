@@ -156,6 +156,8 @@ private _zoneDiagnostics = [];
     };
     _previousStages set [_key, _damageStage];
 
+    [_key, _profile, _inside, _intensity, _exposure, _damage, _aware] call Waldo_fnc_HazardAudioFeedback;
+
     if (_damage > 0) then {
         if (isClass (configFile >> "CfgPatches" >> "ace_medical")) then {
             private _bodyPart = selectRandom ["Head", "Body", "LeftArm", "RightArm", "LeftLeg", "RightLeg"];

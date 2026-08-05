@@ -33,6 +33,8 @@ missionNamespace setVariable ["Waldo_Hazard_ClientStarted", true];
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", createHashMap];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", createHashMap];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
+missionNamespace setVariable ["Waldo_Hazard_LocalAudioTimers", createHashMap];
+[] call Waldo_fnc_HazardInteractionInit;
 private _interval = (missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25;
 private _handle = [_interval] spawn {
     params ["_interval"];

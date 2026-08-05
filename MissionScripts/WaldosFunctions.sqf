@@ -463,6 +463,18 @@ class CfgFunctions
             class RecoveryMonitorServer {file = "MissionScripts\Logistics\VehicleRecovery\recoveryMonitorServer.sqf";};
             class RecoverySpillVirtualPackageServer {file = "MissionScripts\Logistics\VehicleRecovery\recoverySpillVirtualPackageServer.sqf";};
         };
+        class TransportServices {
+            class TransportInitServer {file = "MissionScripts\Logistics\TransportServices\transportInitServer.sqf";};
+            class TransportRegister {file = "MissionScripts\Logistics\TransportServices\transportRegister.sqf";};
+            class TransportNotifyLocal {file = "MissionScripts\Logistics\TransportServices\transportNotifyLocal.sqf";};
+            class TransportOpenMapLocal {file = "MissionScripts\Logistics\TransportServices\transportOpenMapLocal.sqf";};
+            class TransportInteractionInitLocal {file = "MissionScripts\Logistics\TransportServices\transportInteractionInitLocal.sqf";};
+            class TransportRequestServer {file = "MissionScripts\Logistics\TransportServices\transportRequestServer.sqf";};
+            class TransportDispatchLocal {file = "MissionScripts\Logistics\TransportServices\transportDispatchLocal.sqf";};
+            class TransportReportServer {file = "MissionScripts\Logistics\TransportServices\transportReportServer.sqf";};
+            class TransportStopGroupLocal {file = "MissionScripts\Logistics\TransportServices\transportStopGroupLocal.sqf";};
+            class TransportMonitorServer {file = "MissionScripts\Logistics\TransportServices\transportMonitorServer.sqf";};
+        };
         class VehicleCamo {
             class VehicleCamoSetup {
                 file = "MissionScripts\Logistics\VehicleCamoScript\vehicleCamo.sqf";
@@ -718,6 +730,10 @@ class CfgFunctions
             class HazardReceiveSnapshot {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardReceiveSnapshot.sqf";};
             class HazardProtectionFactor {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardProtectionFactor.sqf";};
             class HazardAwareness {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardAwareness.sqf";};
+            class HazardAudioFeedback {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardAudioFeedback.sqf";};
+            class HazardReadExposureLocal {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardReadExposureLocal.sqf";};
+            class HazardApplyTreatmentLocal {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardApplyTreatmentLocal.sqf";};
+            class HazardInteractionInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInteractionInit.sqf";};
             class HazardHud {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardHud.sqf";};
             class HazardTick {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardTick.sqf";};
             class HazardInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInit.sqf";};
@@ -739,9 +755,10 @@ class CfgFunctions
         class Accessibility
         {
             class AccessibilitySelfInteractionInit {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilitySelfInteractionInit.sqf";};
-            class AccessibilityPIDInit {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDInit.sqf";};
-            class AccessibilityPIDToggle {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDToggle.sqf";};
-            class AccessibilityPIDStop {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilityPIDStop.sqf";};
+            class WmpHudEligible {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudEligible.sqf";};
+            class WmpHudInit {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudInit.sqf";};
+            class WmpHudToggle {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudToggle.sqf";};
+            class WmpHudStop {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudStop.sqf";};
         };
         class Breaching
         {

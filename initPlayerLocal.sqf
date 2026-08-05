@@ -79,8 +79,8 @@ if (hasInterface) then {
         if (missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false]) then {
             [] call Waldo_fnc_EmergencyDismountInit;
         };
-        if (missionNamespace getVariable ["Waldo_AccessibilityPID_Enable", false]) then {
-            [] call Waldo_fnc_AccessibilityPIDInit;
+        if (missionNamespace getVariable ["Waldo_WmpHud_Enable", false]) then {
+            [] call Waldo_fnc_WmpHudInit;
         };
         if (missionNamespace getVariable ["Waldo_Persistence_Enable", false]) then {
             [] call Waldo_fnc_PersistenceInit;
@@ -143,6 +143,7 @@ if (hasInterface) then {
         };
         [] call Waldo_fnc_SetupUiCleanupAction;
         [] call Waldo_fnc_AccessibilitySelfInteractionInit;
+        [] call Waldo_fnc_TransportInteractionInitLocal;
     };
 }] call CBA_fnc_addClassEventHandler;
 

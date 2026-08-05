@@ -216,33 +216,39 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_EmergencyDismount_AllowedKinds` | Vehicle inheritance classes eligible for monitoring. |
 | `Waldo_EmergencyDismount_VehicleProfiles` | Per-vehicle-class setting overrides. |
 
-### Accessibility PID
+### WMP HUD
 
 | Setting | Purpose / units |
 |---|---|
-| `Waldo_AccessibilityPID_Enable` | Enables PID for eligible local users. |
-| `Waldo_AccessibilityPID_AllowedUIDs` | Steam UID allowlist; `[]` permits every player. |
-| `Waldo_AccessibilityPID_DefaultVisible` | Initial local visibility. |
-| `Waldo_AccessibilityPID_AllowToggle` | Exposes the accessibility self-interaction toggle. |
-| `Waldo_AccessibilityPID_IconRange` | Maximum icon range in metres. |
-| `Waldo_AccessibilityPID_NameRange` | Maximum name range in metres. |
-| `Waldo_AccessibilityPID_RequireLOS` | Requires local view line of sight. |
-| `Waldo_AccessibilityPID_IncludeAI` | Includes friendly AI. |
-| `Waldo_AccessibilityPID_IconScale` | Base chevron/icon scale. |
-| `Waldo_AccessibilityPID_TextScale` | Base name text scale. |
-| `Waldo_AccessibilityPID_DistanceFade` | Fades presentation with distance. |
-| `Waldo_AccessibilityPID_GroupOnly` | Restricts PID to the player's group. |
-| `Waldo_AccessibilityPID_ShowIncapacitated` | Retains identifiers for incapacitated friendlies. |
-| `Waldo_AccessibilityPID_ShowIcons` | Draws the friendly chevron/icon. |
-| `Waldo_AccessibilityPID_ShowNames` | Draws names within `NameRange`. |
-| `Waldo_AccessibilityPID_ShowVehicleCrew` | Includes eligible friendly vehicle occupants. |
-| `Waldo_AccessibilityPID_Font` | Arma font classname used for clear 3D text. |
-| `Waldo_AccessibilityPID_TextDistanceGrowth` | Additional text scale per metre. |
-| `Waldo_AccessibilityPID_TextMaximumScale` | Upper bound for distance-scaled text. |
-| `Waldo_AccessibilityPID_TextHeadOffset` | Metres above the visual head anchor for names. |
-| `Waldo_AccessibilityPID_IconHeadOffset` | Metres above the visual head anchor for icons. |
-| `Waldo_AccessibilityPID_OutlineScale` | Dark outline scale relative to foreground text. |
-| `Waldo_AccessibilityPID_OutlineColour` | RGBA outline colour. |
+| `Waldo_WmpHud_Enable` | Installs the local WMP HUD framework. |
+| `Waldo_WmpHud_SystemName` | Player-facing system name used by HUD feedback. |
+| `Waldo_WmpHud_AccessibilityUIDs` | Steam UID strings that qualify without campaign equipment. |
+| `Waldo_WmpHud_ExcludedUIDs` | Steam UID strings denied through every route. |
+| `Waldo_WmpHud_AllowEveryone` | Explicitly grants the HUD to every player. |
+| `Waldo_WmpHud_Headgear` | Headgear classnames granting high-tech campaign access. |
+| `Waldo_WmpHud_Facewear` | Glasses and facewear classnames granting high-tech campaign access. |
+| `Waldo_WmpHud_NVGs` | NVG and HMD classnames granting high-tech campaign access. |
+| `Waldo_WmpHud_DefaultVisible` | Initial visibility for equipment-qualified users. |
+| `Waldo_WmpHud_AccessibilityDefaultVisible` | Initial visibility for accessibility UIDs. |
+| `Waldo_WmpHud_AllowToggle` | Exposes the WMP Interface self-interaction toggle. |
+| `Waldo_WmpHud_Icon` | Texture path used for the friendly marker. |
+| `Waldo_WmpHud_Colour` | Optional RGBA override; `[]` follows the colour-vision-aware theme. |
+| `Waldo_WmpHud_IconRange`, `NameRange` | Separate maximum friendly icon/name ranges in metres. |
+| `Waldo_WmpHud_RequireLOS` | Requires local view line of sight. |
+| `Waldo_WmpHud_IncludeAI` | Includes friendly AI. |
+| `Waldo_WmpHud_IconScale`, `TextScale` | Base chevron and name sizes. |
+| `Waldo_WmpHud_DistanceFade` | Fades presentation with distance. |
+| `Waldo_WmpHud_GroupOnly` | Restricts the HUD to the player's group. |
+| `Waldo_WmpHud_ShowIncapacitated` | Keeps identifiers visible on incapacitated friendlies. |
+| `Waldo_WmpHud_ShowIcons` | Enables the friendly marker layer. |
+| `Waldo_WmpHud_ShowNames` | Enables names inside the configured name range. |
+| `Waldo_WmpHud_ShowVehicleCrew` | Permits identifiers for units inside vehicles. |
+| `Waldo_WmpHud_Font`, `TextDistanceGrowth` | Advanced readable text styling and distance scaling. |
+| `Waldo_WmpHud_TextMaximumScale` | Upper bound for name scaling at range. |
+| `Waldo_WmpHud_TextHeadOffset` | Name height above the animated head anchor in metres. |
+| `Waldo_WmpHud_IconHeadOffset` | Marker height above the animated head anchor in metres. |
+| `Waldo_WmpHud_OutlineScale` | Contrast outline scale relative to the name. |
+| `Waldo_WmpHud_OutlineColour` | RGBA contrast-outline colour. |
 
 ## `aiConfig.sqf` — shared
 
@@ -346,6 +352,11 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Recovery_PlacementClearance` | Required clearance around restored vehicles. |
 | `Waldo_Recovery_DefaultCustomVariables` | Additional variables/scripts copied through packages. |
 | `Waldo_Recovery_PackageClasses` | Classes recognised as virtual recovery packages. |
+| `Waldo_TransportServices_Enable` | Enables the inert shared transport framework; vehicles still require registration. |
+| `Waldo_Transport_TravelTimeout` | Maximum seconds for one physical pickup, destination or RTB journey. |
+| `Waldo_Transport_DefaultBoardingSeconds` | Pickup boarding window before automatic RTB. |
+| `Waldo_Transport_DefaultDestinationDwell` | Destination disembark window before RTB. |
+| `Waldo_HeliTransport_DefaultAltitude` | Default AI helicopter transit height in metres. |
 | `Waldo_ObjectScaling_Minimum` | Smallest positive object scale accepted by the server. |
 | `Waldo_ObjectScaling_Maximum` | Largest object scale accepted by the server; must be at least the minimum. |
 | `Waldo_ObjectScaling_AllowClientRequests` | Permits validated non-server scale requests. |
@@ -361,6 +372,12 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Hazard_ShowStatus` | Continuous exposure panel. Defaults on, updates in place and never consumes notification-card lanes. A profile may override it with `showStatus`. |
 | `Waldo_Hazard_NotifyTransitions` | Announces entering/leaving a zone. |
 | `Waldo_Hazard_NotificationDuration` | Transition-card duration in seconds. |
+| `Waldo_Hazard_DosimeterEnable` | Enables exposure-reading interactions. |
+| `Waldo_Hazard_DosimeterRequireItem` | Requires a configured carried dosimeter item when true. |
+| `Waldo_Hazard_DosimeterItems` | Item classnames accepted as dosimeters. |
+| `Waldo_Hazard_Treatments` | Treatment rows: `[consumed item class, readable name, exposure reduction]`. |
+| `Waldo_Hazard_TreatmentDuration` | ACE treatment progress duration in seconds. |
+| `Waldo_Hazard_TreatmentMedicOnly` | Restricts exposure treatment to units with the Medic trait. |
 | `Waldo_Hazard_Presets` | Named profiles. In addition to exposure/damage/protection, a profile may use `detectorItems`, `detectorObjects`, `detectorObjectRange`, `awarenessCondition`, `requireAwarenessForStatus` and `requireAwarenessForNotifications`. Awareness changes information only; danger still applies. Networked callbacks use missionNamespace function-name strings. |
 | `Waldo_TreeFelling_Enable` | Master tree-felling opt-in. |
 | `Waldo_TreeFelling_Range` | Maximum axe interaction range. |

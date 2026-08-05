@@ -12,7 +12,7 @@
 
 private _vehicleClasses = [
     "ACE_medicalSupplyCrate_advanced", "B_G_HMG_02_high_F", "B_HMG_01_high_F",
-    "B_Mortar_01_F", "B_MRAP_01_F", "B_Pilot_F", "B_Soldier_SL_F", "B_supplyCrate_F",
+    "B_Heli_Light_01_F", "B_Mortar_01_F", "B_MRAP_01_F", "B_Pilot_F", "B_Soldier_SL_F", "B_supplyCrate_F",
     "B_T_VTOL_01_infantry_F", "B_Truck_01_covered_F", "B_Truck_01_medical_F",
     "B_Truck_01_transport_F", "Box_NATO_Equip_F", "C_Van_01_transport_F", "Flag_Blue_F",
     "Flag_Red_F", "FlagPole_F", "Land_AirConditioner_03_F", "Land_BagBunker_Small_F",
@@ -32,7 +32,7 @@ private _vehicleClasses = [
     "SatelliteAntenna_01_Sand_F"
 ];
 private _declaredAddons = [
-    "A3_Air_F_Exp_VTOL_01", "A3_Characters_F", "A3_Characters_F_Mark", "A3_Modules_F",
+    "A3_Air_F_Exp_VTOL_01", "A3_Air_F_Heli_Light_01", "A3_Characters_F", "A3_Characters_F_Mark", "A3_Modules_F",
     "A3_Modules_F_Curator_Curator", "A3_Modules_F_Multiplayer",
     "A3_Props_F_Enoch_Military_Camps", "A3_Props_F_Enoch_Military_Equipment",
     "A3_Props_F_Orange_Humanitarian_Camps", "A3_Soft_F_Beta_Truck_01",
@@ -45,7 +45,7 @@ private _declaredAddons = [
     "A3_Structures_F_Mil_BagFence", "A3_Structures_F_Mil_Cargo",
     "A3_Structures_F_Mil_Flags", "A3_Structures_F_Mil_Fortification",
     "A3_Structures_F_Mil_Helipads", "A3_Structures_F_Orange_Humanitarian_Camps",
-    "A3_Structures_F_Walls", "A3_Supplies_F_Exp_Ammoboxes", "A3_Weapons_F",
+    "A3_Structures_F_Walls", "A3_Supplies_F_Exp", "A3_Supplies_F_Exp_Ammoboxes", "A3_Weapons_F",
     "A3_Weapons_F_Acc", "A3_Weapons_F_Ammoboxes", "A3_Weapons_F_Items",
     "A3_Weapons_F_Pistols_P07", "A3_Weapons_F_Rifles_MX", "ace_attach", "ace_ballistics",
     "ace_cargo", "ace_chemlights", "ace_dragging", "ace_laserpointer", "ace_medical_engine",

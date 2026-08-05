@@ -2,7 +2,7 @@
 if (!hasInterface) exitWith {};
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientReady", false];
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientStarting", false];
-// Production intentionally limits PID to its configured recipient. The audit
-// must make the current tester eligible locally without weakening that default.
+// Production keeps accessibility access limited to configured recipients. The audit
+// makes the current tester eligible locally without weakening release defaults.
 private _auditUid = getPlayerUID player;
-missionNamespace setVariable ["Waldo_AccessibilityPID_AllowedUIDs", if (_auditUid == "") then {[]} else {[_auditUid]}];
+missionNamespace setVariable ["Waldo_WmpHud_AccessibilityUIDs", if (_auditUid == "") then {[]} else {[_auditUid]}];

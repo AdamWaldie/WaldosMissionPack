@@ -79,6 +79,12 @@
  * - Waldo_Hazard_ShowStatus (MISSION MAKER): shows one continuously updated exposure panel rather than stacked cards.
  * - Waldo_Hazard_NotifyTransitions (MISSION MAKER): shows entry/exit messages when awareness rules permit them.
  * - Waldo_Hazard_NotificationDuration (MISSION MAKER): lifetime in seconds for transition messages.
+ * - Waldo_Hazard_DosimeterEnable: installs exposure-reading interactions when hazards are enabled.
+ * - Waldo_Hazard_DosimeterRequireItem: true requires one class from DosimeterItems to read exposure.
+ * - Waldo_Hazard_DosimeterItems: carried/assigned item classnames accepted as a dosimeter.
+ * - Waldo_Hazard_Treatments: rows of `[item classname, readable name, exposure reduction]`; [] disables treatment.
+ * - Waldo_Hazard_TreatmentDuration: ACE progress duration in seconds before the item is consumed.
+ * - Waldo_Hazard_TreatmentMedicOnly: true restricts treatment to units with Arma's Medic trait.
  * - Waldo_Hazard_Presets (MISSION MAKER): reusable named profile HashMaps; zones select one and may override fields.
  *
  * SETTING-BY-SETTING GUIDE - TREE FELLING:
@@ -116,6 +122,14 @@ createHashMapFromArray [
         ["Waldo_Hazard_ShowStatus", true],          // BOOL: one continuous lower-left exposure panel; not a notification card.
         ["Waldo_Hazard_NotifyTransitions", true],   // BOOL: notify on entering/leaving a hazardous area.
         ["Waldo_Hazard_NotificationDuration", 6],   // SECONDS: transition-notification lifetime.
+        ["Waldo_Hazard_DosimeterEnable", true],     // BOOL: install Read Exposure self/target interactions.
+        ["Waldo_Hazard_DosimeterRequireItem", false], // false allows roleplay checks without a specific mod item.
+        ["Waldo_Hazard_DosimeterItems", []],        // exact carried/assigned item classnames when requirement is true.
+        ["Waldo_Hazard_Treatments", [               // each row: [consumed item classname, readable name, reduction].
+            // ["armst_item_antirad", "Anti-radiation medication", 2]
+        ]],
+        ["Waldo_Hazard_TreatmentDuration", 4],      // SECONDS: completed ACE progress before consuming the item.
+        ["Waldo_Hazard_TreatmentMedicOnly", false], // true requires the administering unit's Medic trait.
         // MISSION MAKER: reusable RP/gameplay profiles; zones may override individual keys.
         // BEGINNER: each preset below is `PRESET NAME` followed by its settings HashMap.
         // `rate` adds exposure each second; `decay` removes it after leaving. Each threshold row is
@@ -143,6 +157,35 @@ createHashMapFromArray [
                 ["type", "HAZARD"], ["label", "Severe Hazard"], ["rate", 2], ["decay", 0.1],
                 ["damageType", "stab"], ["damageThresholds", [[8, 0.03], [20, 0.08], [35, 0.15]]], ["fatalExposure", 60],
                 ["damageStageMessages", ["Hazard exposure is causing injury.", "Severe exposure: evacuate immediately.", "Critical exposure: death is imminent."]]
+            ]],
+            ["RADIATION", createHashMapFromArray [
+                ["type", "RADIATION"],             // separate accumulated exposure channel.
+                ["label", "Radioactive Area"],
+                ["rate", 1],
+                ["decay", 0.001],
+                ["damageType", "stab"],
+                ["damageThresholds", [[1, 0.05], [4, 0.3], [5, 0.8]]],
+                ["fatalExposure", 6],
+                ["protectInVehicles", true],
+                ["vehicleFactor", 0.01],
+                ["protectIndoors", false],
+                ["equipmentFactor", 0.01],
+                ["protectiveItems", createHashMapFromArray [
+                    ["headgear", []],               // add protective helmet classnames here.
+                    ["goggles", []],                // add gas-mask/facewear classnames here.
+                    ["hmd", []]                     // add protective NVG/HMD classnames here.
+                ]],
+                ["audioEnabled", true],             // radiation-only local Geiger/cough feedback.
+                ["audioRequiresAwareness", false],  // true ties sound to detector/awareness rules.
+                ["geigerLowSounds", ["Waldo_Hazard_GeigerLow1", "Waldo_Hazard_GeigerLow2", "Waldo_Hazard_GeigerLow3", "Waldo_Hazard_GeigerLow4"]],
+                ["geigerHighSounds", ["Waldo_Hazard_Geiger1", "Waldo_Hazard_Geiger2", "Waldo_Hazard_Geiger3", "Waldo_Hazard_Geiger4"]],
+                ["geigerHighIntensity", 0.5],       // intensity 0-1 where the high sound pool begins.
+                ["geigerMinimumInterval", 0.45],    // fastest seconds between clicks near maximum intensity.
+                ["geigerMaximumInterval", 2.5],    // slowest seconds between clicks near zone edge.
+                ["coughEnabled", true],
+                ["coughSounds", ["Waldo_Hazard_Cough1", "Waldo_Hazard_Cough2", "Waldo_Hazard_Cough3"]],
+                ["coughCooldown", 12],              // minimum seconds between injury coughs.
+                ["damageStageMessages", ["Radiation exposure is causing injury.", "Radiation sickness is becoming severe.", "Critical radiation dose: evacuate immediately."]]
             ]],
             ["VACUUM", createHashMapFromArray [
                 ["type", "NO_OXYGEN"], ["label", "Unpressurised Area"], ["rate", 8], ["decay", 2],

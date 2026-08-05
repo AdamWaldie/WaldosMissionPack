@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+    items=2;
+    class Item0
+    {
+        dataType="Object";
+        side="Empty";
+        class PositionInfo {position[]={0,0,0};};
+        class Attributes
+        {
+            name="WMP_HudEquipment";
+            init="clearItemCargoGlobal this; this addItemCargoGlobal [""G_Goggles_VR"", 8];";
+        };
+        id=1;
+        type="Box_NATO_Equip_F";
+    };
+    class Item1
+    {
+        dataType="Comment";
+        class PositionInfo {position[]={0,-4,0};};
+        title="WMP HUD campaign-equipment example. The shipped interfaceConfig lists G_Goggles_VR as qualifying facewear; configured accessibility UIDs qualify without taking equipment. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/WMP-HUD";
+        id=2;
+    };
+};

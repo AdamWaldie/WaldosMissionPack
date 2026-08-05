@@ -17,7 +17,7 @@ evaluator.
 
 | Pattern | Meaning | Example |
 |---|---|---|
-| Automatic | Enable/configure it and WMP starts it | AI rebalance, rally, accessibility PID |
+| Automatic | Enable/configure it and WMP starts it | AI rebalance, rally, WMP HUD |
 | Enable + register | WMP starts support, but needs a world object/zone/unit | jammer, hazards, field resupply |
 | Call-driven | Config supplies pools/defaults/bounds; a call creates each instance | Dynamic AA, paradrop, gunship |
 | Consumed setting | Another existing feature reads the value | logistics crate class, UI placement |

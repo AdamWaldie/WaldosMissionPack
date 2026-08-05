@@ -117,7 +117,7 @@ private _jamClientState = if (!_jamEnabled) then {"DISABLED"} else {
 ["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 hud=%4", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
-["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 43) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=43", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
+["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=45", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
 private _economyActive = missionNamespace getVariable ["WaldoEcoCore_ModuleActive", false];
 ["zeus", "economy-modules", if (!_economyActive) then {"DISABLED"} else {if ((missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=19", missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]]] call _add;
 
@@ -138,6 +138,13 @@ private _hazardClient = missionNamespace getVariable ["Waldo_Hazard_ClientStarte
 private _hazardEvaluation = missionNamespace getVariable ["Waldo_Hazard_LastEvaluation", []];
 private _hazardFresh = count _hazardEvaluation >= 3 && {(diag_tickTime - (_hazardEvaluation select 0)) <= ((missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25) * 3};
 ["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 freshEvaluation=%5 lastEvaluation=%6", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardFresh, _hazardEvaluation]] call _add;
+private _hudEnabled = missionNamespace getVariable ["Waldo_WmpHud_Enable", false];
+private _hudEligible = if (_hudEnabled) then {[player] call Waldo_fnc_WmpHudEligible} else {false};
+private _hudStarted = missionNamespace getVariable ["Waldo_WmpHud_ClientStarted", false];
+["interface", "wmp-hud", if (!_hudEnabled) then {"DISABLED"} else {if (!_hudEligible) then {"UNCONFIGURED"} else {if (_hudStarted) then {"ACTIVE"} else {"ERROR"}}}, format ["enabled=%1 eligible=%2 clientStarted=%3 visible=%4", _hudEnabled, _hudEligible, _hudStarted, missionNamespace getVariable ["Waldo_WmpHud_Visible", false]]] call _add;
+private _transportInstalled = player getVariable ["Waldo_Transport_InteractionsInstalled", false];
+private _transportAvailable = missionNamespace getVariable ["Waldo_HeliTransport_Available", false] || {missionNamespace getVariable ["Waldo_GroundTaxi_Available", false]};
+["logistics", "transport-client-actions", if (!_transportAvailable) then {"UNCONFIGURED"} else {if (_transportInstalled) then {"LOADED"} else {"ERROR"}}, format ["available=%1 interactionsInstalled=%2", _transportAvailable, _transportInstalled]] call _add;
 private _mhqObjects = _localObjects select {_x getVariable ["Waldo_MHQ_ServerConfigured", false]};
 if (_mhqObjects isEqualTo []) then {
     ["logistics", "mhq-actions", "UNCONFIGURED", "No configured MHQ is present"] call _add;

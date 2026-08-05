@@ -372,17 +372,18 @@ Runs **once locally when each player joins**. Respawn behavior is handled by the
 ### Player-Local Optional Feature Settings
 
 Treatment-feedback presentation, tactical-display access, emergency-dismount behavior and
-accessibility PID eligibility/presentation are loaded here, but mission makers edit their values in
+WMP HUD eligibility/presentation are loaded here, but mission makers edit their values in
 `MissionConfig\interfaceConfig.sqf`. ZEN custom modules are registered here because only interface
 clients consume them. Do not copy these settings into initPlayerLocal.sqf.
 
 Player-local feature activation waits for an ordered server runtime snapshot. This ensures a mid-mission ZEN change is applied before a joining player installs actions, displays or event handlers.
 
 ```sqf
-// Enabled only for the listed player IDs by default; [] allows every player.
-Waldo_AccessibilityPID_Enable = true;
-Waldo_AccessibilityPID_AllowedUIDs = ["76561198094931408"];
-Waldo_AccessibilityPID_Font = "PuristaBold";
+// The listed UID always qualifies; other players require configured campaign equipment.
+Waldo_WmpHud_Enable = true;
+Waldo_WmpHud_AccessibilityUIDs = ["76561198094931408"];
+Waldo_WmpHud_Facewear = ["G_Goggles_VR"];
+Waldo_WmpHud_Font = "PuristaBold";
 ```
 
 Colour-vision presentation is selected personally through **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** and stored in `profileNamespace` as `Waldo_UI_ColourVisionProfile`. Do not publish it from `initServer.sqf` or overwrite it in `init.sqf`; it is intentionally different for each player. Scripted local selection is available when building another accessibility UI:

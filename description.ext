@@ -55,7 +55,12 @@ class MissionSQM {
 
 //MHQ 
 class CfgSounds {
-	sounds[] = {Audio_Deploy_New, Audio_Deploy_Old, Waldo_CorpseTrap_Plant, Waldo_CorpseTrap_Spoon};
+	sounds[] = {
+        Audio_Deploy_New, Audio_Deploy_Old, Waldo_CorpseTrap_Plant, Waldo_CorpseTrap_Spoon,
+        Waldo_Hazard_Cough1, Waldo_Hazard_Cough2, Waldo_Hazard_Cough3,
+        Waldo_Hazard_Geiger1, Waldo_Hazard_Geiger2, Waldo_Hazard_Geiger3, Waldo_Hazard_Geiger4,
+        Waldo_Hazard_GeigerLow1, Waldo_Hazard_GeigerLow2, Waldo_Hazard_GeigerLow3, Waldo_Hazard_GeigerLow4
+    };
 	class Audio_Deploy_New
 	{
 		name = "Audio_Deploy_New";
@@ -80,6 +85,17 @@ class CfgSounds {
 		sound[] = {"MissionScripts\CorpseTraps\Audio\spoon.wav", 1.5, 1};
 		titles[] = { 1, "" };
 	};
+	class Waldo_Hazard_Cough1 {name = "Waldo_Hazard_Cough1"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\cough1.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_Cough2 {name = "Waldo_Hazard_Cough2"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\cough2.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_Cough3 {name = "Waldo_Hazard_Cough3"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\cough3.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_Geiger1 {name = "Waldo_Hazard_Geiger1"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geiger1.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_Geiger2 {name = "Waldo_Hazard_Geiger2"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geiger2.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_Geiger3 {name = "Waldo_Hazard_Geiger3"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geiger3.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_Geiger4 {name = "Waldo_Hazard_Geiger4"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geiger4.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_GeigerLow1 {name = "Waldo_Hazard_GeigerLow1"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geigerLow1.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_GeigerLow2 {name = "Waldo_Hazard_GeigerLow2"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geigerLow2.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_GeigerLow3 {name = "Waldo_Hazard_GeigerLow3"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geigerLow3.ogg", 1, 1}; titles[] = {};};
+	class Waldo_Hazard_GeigerLow4 {name = "Waldo_Hazard_GeigerLow4"; sound[] = {"MissionScripts\EnvironmentalSystems\HazardousEnvironments\Audio\geigerLow4.ogg", 1, 1}; titles[] = {};};
 };
 
 

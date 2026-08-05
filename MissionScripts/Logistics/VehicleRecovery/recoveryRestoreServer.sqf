@@ -88,6 +88,11 @@ private _interactionOptions = createHashMapFromArray [
 [_vehicle, _config select 0, _config select 1, _config select 2, _config select 3, _config select 4, _config select 5, _config select 6, _interactionOptions]
     call Waldo_fnc_RecoveryRegisterVehicle;
 if (_wasCarrier) then {[_vehicle, _carrierRange, _carrierMode, _carrierCapacity, _carrierDeckOffset, _carrierDeckDirection] call Waldo_fnc_RecoveryRegisterCarrier};
+private _transportRegistration = _vehicle getVariable ["Waldo_TransportService_Registration", []];
+if (count _transportRegistration >= 4) then {
+    _transportRegistration params ["_transportType", "_transportId", "_transportName", "_transportOptions"];
+    [_vehicle, _transportType, _transportId, _transportName, _transportOptions] call Waldo_fnc_TransportRegister;
+};
 if !(_wasAlive) then {
     private _callback = if (_onRestored isEqualType "") then {missionNamespace getVariable [_onRestored, {}]} else {_onRestored};
     if (_callback isEqualType {}) then {[_vehicle, _retained, _workshop] call _callback};

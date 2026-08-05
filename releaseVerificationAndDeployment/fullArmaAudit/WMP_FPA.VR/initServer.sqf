@@ -26,6 +26,9 @@ call compile preprocessFileLineNumbers "auditPreInitServer.sqf";
 call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
 [] call Waldo_fnc_ACRE2Init;
 ["SERVER"] call Waldo_fnc_LoadFeatureConfigs;
+if (missionNamespace getVariable ["Waldo_TransportServices_Enable", true]) then {
+    [] call Waldo_fnc_TransportInitServer;
+};
 if (missionNamespace getVariable ["Waldo_Jamming_Enable", true]) then {
     [] call Waldo_fnc_JammingInit;
 };

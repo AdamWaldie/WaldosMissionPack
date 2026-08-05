@@ -265,8 +265,8 @@ class PrReviewAuditTests(unittest.TestCase):
             "RELOAD SAVED QA CRATE",
             "RESET QA PATIENT WOUND",
             "OVERTURN VEHICLE",
-            "ENABLE PID FOR THIS TESTER",
-            "VERIFY UID GATE DENIES",
+            "ENABLE WMP HUD FOR THIS TESTER",
+            "VERIFY EXCLUSION WINS",
             "SIMULATE CONFIGURED DEMO CHARGE",
             "ASSIGN ME 2 FIELD CRATES",
             "CREATE AA - BUILDING RADAR",
@@ -285,7 +285,7 @@ class PrReviewAuditTests(unittest.TestCase):
             ROOT / "MissionScripts" / "Respawn" / "RallyPoint" / "rallyPointInit.sqf",
             ROOT / "MissionScripts" / "Persistence" / "persistenceSaveObject.sqf",
             ROOT / "MissionScripts" / "Persistence" / "persistenceLoadObject.sqf",
-            ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf",
+            ROOT / "MissionScripts" / "MissionFlowAndUi" / "WmpHud" / "wmpHudInit.sqf",
             ROOT / "MissionScripts" / "MissionInit" / "VehicleActionsSetup" / "EmergencyDismount" / "emergencyDismountInit.sqf",
             ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery" / "recoveryMonitorServer.sqf",
         )
@@ -302,14 +302,18 @@ class PrReviewAuditTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn('["76561198094931408"]', pack)
         self.assertIn("getPlayerUID player", preinit)
-        self.assertIn('Waldo_AccessibilityPID_AllowedUIDs", if (_auditUid == "")', preinit)
-        pid = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf").read_text(encoding="utf-8")
-        self.assertNotIn('Waldo_AccessibilityPID_Style', pid)
-        self.assertNotIn('Waldo_AccessibilityPID_FarLabel', pid)
-        self.assertIn('Waldo_AccessibilityPID_TextDistanceGrowth", 0.00025', pid)
-        self.assertIn('Waldo_AccessibilityPID_TextMaximumScale", 0.05', pid)
-        self.assertIn('Waldo_AccessibilityPID_TextHeadOffset", 0.30', pid)
-        self.assertIn('Waldo_AccessibilityPID_IconHeadOffset", 0.75', pid)
+        self.assertIn('Waldo_WmpHud_AccessibilityUIDs", if (_auditUid == "")', preinit)
+        pid = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "WmpHud" / "wmpHudInit.sqf").read_text(encoding="utf-8")
+        eligibility = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "WmpHud" / "wmpHudEligible.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_WmpHud_TextDistanceGrowth", 0.00025', pid)
+        self.assertIn('Waldo_WmpHud_TextMaximumScale", 0.05', pid)
+        self.assertIn('Waldo_WmpHud_TextHeadOffset", 0.30', pid)
+        self.assertIn('Waldo_WmpHud_IconHeadOffset", 0.75', pid)
+        self.assertIn('Waldo_WmpHud_AccessibilityUIDs', eligibility)
+        self.assertIn('Waldo_WmpHud_ExcludedUIDs', eligibility)
+        self.assertIn('Waldo_WmpHud_Headgear', eligibility)
+        self.assertIn('Waldo_WmpHud_Facewear', eligibility)
+        self.assertIn('Waldo_WmpHud_NVGs', eligibility)
         self.assertIn('selectionPosition "head"', pid)
         self.assertIn('modelToWorldVisual _headModelPosition', pid)
         self.assertIn('"PuristaBold"', pid)
@@ -336,7 +340,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 43', source)
+        self.assertIn('Waldo_ZenModuleCount", 45', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
@@ -385,7 +389,7 @@ class PrReviewAuditTests(unittest.TestCase):
 
     def test_accessibility_toggle_is_an_ace_self_interaction(self):
         accessibility = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilitySelfInteractionInit.sqf").read_text(encoding="utf-8")
-        pid = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilityPIDInit.sqf").read_text(encoding="utf-8")
+        hud = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "WmpHud" / "wmpHudInit.sqf").read_text(encoding="utf-8")
         self.assertIn('"Waldo_Accessibility_Root"', accessibility)
         self.assertIn('[] call Waldo_fnc_SetupUiCleanupAction;', accessibility)
         self.assertIn('["ACE_SelfActions", "Waldo_UI_SelfRoot"]', accessibility)
@@ -394,12 +398,12 @@ class PrReviewAuditTests(unittest.TestCase):
             accessibility,
         )
         self.assertIn('"Waldo_Accessibility_ColourVision"', accessibility)
-        self.assertIn('"Waldo_AccessibilityPID_Toggle"', accessibility)
+        self.assertIn('"Waldo_WmpHud_Toggle"', accessibility)
         self.assertIn("Waldo_fnc_UiColourVisionOpenLocal", accessibility)
         self.assertIn("Accessibility: Colour Vision", accessibility)
         self.assertNotIn("Accessibility: Toggle Friendly Identification", accessibility)
-        self.assertIn("Waldo_fnc_AccessibilitySelfInteractionInit", pid)
-        self.assertNotIn("ace_interact_menu_fnc_createAction", pid)
+        self.assertIn("Waldo_fnc_AccessibilitySelfInteractionInit", hud)
+        self.assertNotIn("ace_interact_menu_fnc_createAction", hud)
 
     def test_colour_vision_profiles_are_personal_and_theme_aware(self):
         profile = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiColourVisionProfile.sqf").read_text(encoding="utf-8")

@@ -166,6 +166,10 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## AI Helicopter Landing
 
+## Transport Services
+
+**Transport Service - Register** must be placed on an existing living AI-crewed helicopter or land vehicle. It registers the selected type into its independent pool and exposes plain-language service name, access, marker, boarding, destination, helicopter altitude, base servicing and empty-vehicle fail-safe options. **Transport Service - Return to Base** cancels the current task for a selected registered service and orders a physical RTB. See [Helicopter Transport and Ground Taxi Services](Transport-Services).
+
 ## UI Theme QA
 
 **UI QA - Set Visual Theme** selects Default/Modern, Second World War, Vietnam/Cold War or Science Fiction styling. It changes presentation globally and can show the requesting curator a three-card semantic/stacking preview. See [UI Visual Themes](UI-Visual-Themes).

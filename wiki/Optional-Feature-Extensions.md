@@ -30,7 +30,7 @@ should track authored objects or mission-level state instead.
 
 Allowed vehicle kinds and exact-class profiles can override the global trigger, exit, protection, recovery and damage settings. A minimum overturned duration prevents brief rolls from triggering extraction. Aircraft are excluded by default because general emergency ejection cannot be safe across every airframe; missions may explicitly opt in with a tested profile.
 
-## Accessibility PID
+## WMP HUD
 
 The friendly aid can independently show icons and names, filter to the player's group, include/exclude incapacitated units and vehicle crew, scale its presentation and fade with distance. It remains friendly-only and line-of-sight-aware. Arma has no safe general-purpose friendly silhouette-through-walls primitive, so this feature does not simulate one.
 

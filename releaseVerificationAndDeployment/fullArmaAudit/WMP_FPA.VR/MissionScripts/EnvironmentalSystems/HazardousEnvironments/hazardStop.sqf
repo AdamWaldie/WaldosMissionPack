@@ -23,6 +23,7 @@ if !(hasInterface) exitWith {};
 missionNamespace setVariable ["Waldo_Hazard_ClientStarted", false];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", createHashMap];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
+missionNamespace setVariable ["Waldo_Hazard_LocalAudioTimers", createHashMap];
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", createHashMap];
 private _handle = missionNamespace getVariable ["Waldo_Hazard_ClientLoop", scriptNull];
 if !(scriptDone _handle) then {terminate _handle};

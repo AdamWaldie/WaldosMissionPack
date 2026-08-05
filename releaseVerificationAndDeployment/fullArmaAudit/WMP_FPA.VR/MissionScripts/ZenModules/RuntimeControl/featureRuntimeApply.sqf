@@ -146,6 +146,23 @@ switch (toUpperANSI _action) do {
         ["VEHICLE RECOVERY", if (_ok) then {format ["Recovery carrier registered in %1 mode.", toUpperANSI _mode]} else {"Carrier registration was rejected. Check the selected vehicle."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "RECOVERY_ZEN"] call _reply;
         _ok
     };
+    case "TRANSPORT_REGISTER": {
+        _settings params ["_target", "_type", "_id", "_name", "_leadersOnly", "_showMarker", "_boarding", "_dwell", "_altitude", "_repair", "_refuel", "_forceOut", "_failSafe"];
+        private _options = createHashMapFromArray [
+            ["leadersOnly", _leadersOnly], ["showMarker", _showMarker],
+            ["boardingSeconds", _boarding], ["destinationDwell", _dwell],
+            ["cruiseAltitude", _altitude], ["repairAtBase", _repair],
+            ["refuelAtBase", _refuel], ["forceDisembark", _forceOut], ["failSafeReset", _failSafe]
+        ];
+        private _ok = [_target, _type, _id, _name, _options] call Waldo_fnc_TransportRegister;
+        ["TRANSPORT SERVICE", if (_ok) then {"Service registered."} else {"Registration rejected. Select a living AI-crewed vehicle matching the chosen type."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
+    };
+    case "TRANSPORT_RTB": {
+        _settings params ["_target"];
+        private _type = _target getVariable ["Waldo_TransportService_Type", ""];
+        private _ok = _type in ["HELICOPTER", "GROUND"] && {["RTB", _type, _target, [], objNull] call Waldo_fnc_TransportRequestServer};
+        ["TRANSPORT SERVICE", if (_ok) then {"Return-to-base ordered."} else {"The selected vehicle is not a registered transport service."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
+    };
     case "RALLY_CONFIG": {
         _settings params ["_enable", "_objectClass", "_duration", "_deploymentTime", "_cooldown", "_enemyRadius", "_minimumMembers", "_placement", "_slope", "_regroup"];
         if !(isClass (configFile >> "CfgVehicles" >> _objectClass)) exitWith {false};
@@ -197,22 +214,6 @@ switch (toUpperANSI _action) do {
         } else {
             [] remoteExecCall ["Waldo_fnc_EmergencyDismountStop", -2];
             [] remoteExecCall ["", "Waldo_EmergencyDismount_RuntimeInit"];
-        };
-    };
-    case "ACCESS_CONFIG": {
-        _settings params ["_enable", "_iconRange", "_nameRange", "_lineOfSight", "_includeAI", "_allowToggle", "_visible"];
-        [
-            ["Waldo_AccessibilityPID_Enable", _enable], ["Waldo_AccessibilityPID_IconRange", _iconRange max 10],
-            ["Waldo_AccessibilityPID_NameRange", _nameRange max 0], ["Waldo_AccessibilityPID_RequireLOS", _lineOfSight],
-            ["Waldo_AccessibilityPID_IncludeAI", _includeAI], ["Waldo_AccessibilityPID_AllowToggle", _allowToggle],
-            ["Waldo_AccessibilityPID_DefaultVisible", _visible]
-        ] call _publishAll;
-        if (_enable) then {
-            [] remoteExecCall ["Waldo_fnc_AccessibilityPIDStop", -2];
-            [] remoteExecCall ["Waldo_fnc_AccessibilityPIDInit", -2, "Waldo_AccessibilityPID_RuntimeInit"];
-        } else {
-            [] remoteExecCall ["Waldo_fnc_AccessibilityPIDStop", -2];
-            [] remoteExecCall ["", "Waldo_AccessibilityPID_RuntimeInit"];
         };
     };
     case "AI_CONFIG": {

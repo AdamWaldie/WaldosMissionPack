@@ -55,7 +55,7 @@ The server report checks:
 - Economy, party-game, interaction-procedure, jamming, SafeStart, AAR/ENDEX, and custom 3D-marker state;
 - configured MHQ and VVD equipment;
 - recovery workshops, carriers, attached/virtual package state, Field Resupply hubs/carriers and Tactical Displays;
-- Hazard evaluator state and server/JIP registry parity for Dynamic AA, Dynamic AO, gunships and paradrop operations;
+- Hazard evaluator/audio state, typed helicopter/ground transport registries, and server/JIP registry parity for Dynamic AA, Dynamic AO, gunships and paradrop operations;
 - ACE and Zeus integration availability.
 
 Each interface client reports:
@@ -67,7 +67,7 @@ Each interface client reports:
 - core and Economy Zeus module registration counts;
 - the custom 3D-marker renderer;
 - ACE or vanilla interaction installation on registered audit fixtures.
-- Tactical Display actions and Hazard snapshot/evaluator state.
+- Tactical Display actions, WMP HUD eligibility/runtime state, transport actions and Hazard snapshot/evaluator state.
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
 
