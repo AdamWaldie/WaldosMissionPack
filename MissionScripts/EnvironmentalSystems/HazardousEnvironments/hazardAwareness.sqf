@@ -1,9 +1,11 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Decides whether one player can perceive a hazard's UI feedback. Hazards remain physically
  * dangerous when feedback is hidden; this controls information only. By default every player is
  * aware. A profile may require carried/worn detector items, a nearby detector object, an advanced
  * callback, or any combination of those requirements.
+ * Locality and authority: Pure local calculation. HazardTick calls it on the interface client
+ * that owns the affected player; it publishes and mutates no authoritative state.
  *
  * Arguments:
  * 0: unit <OBJECT> - player whose awareness is being checked.
@@ -23,6 +25,7 @@
  *
  * Example:
  * [_unit, "REACTOR", _profile, true, 0.4] call Waldo_fnc_HazardAwareness;
+ * Result: Returns whether that player may see information for this hazard; danger is unchanged.
  * Current caller: Waldo_fnc_HazardTick before transition or continuous hazard UI is shown.
  */
 params [

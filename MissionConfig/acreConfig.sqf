@@ -20,13 +20,16 @@
  * MISSION MAKER: begin with the shipped net/group examples and replace editor group IDs.
  * ADVANCED: add third-party radio profiles only after confirming their ACRE API behaviour.
  *
- * NORMAL MISSION SETTINGS
+ * SETTING-BY-SETTING GUIDE - NORMAL MISSION SETTINGS
  * - enabled: master switch for WMP's replacement ACRE lifecycle.
  * - prc343PresetPolicy: FULL_RANGE keeps all 16 blocks; SIDE_ISOLATED uses ACRE side presets and
  *   gives combat sides five blocks. FULL_RANGE does not provide side frequency isolation.
  * - namedDisplays: labels PRC-148/152/117F channels without changing their frequencies.
  * - sides: [side, official ACRE preset, nets, groups]. Keep the shipped official preset per side.
  * - babel: language content and defaults. It remains inert while babel.enabled is false.
+ * - notifyAssignmentProblems: true warns affected players when their authored baseline cannot apply.
+ * - radioOverrides: optional side-scoped UID, Eden Variable Name or role exceptions.
+ * - additionalRadioProfiles: advanced definitions for tested third-party carried radios only.
  *
  * NETS
  * Every named net has exactly one value.
@@ -79,6 +82,11 @@
  * Assignment rows are `[base radio class, "ALL" or same-type occurrence starting at 1, target, ear]`.
  * `target` is a net key or a direct channel/frequency supported by that profile; `ear` is LEFT,
  * RIGHT or BOTH. Radios not present in a player's inventory are simply skipped.
+ * Babel rows are also positional: language `[internal ID, display name]`, side default
+ * `[side, understood language IDs, initial speaking ID]`, and unit override
+ * `[[UID|VARIABLENAME, selector value], understood IDs, initial speaking ID]`. The speaking ID must
+ * exist in the understood list. changeOnSideChange=false preserves learned languages; followPlayerUnit=true
+ * reapplies the assignment when respawn replaces the local player object.
  *
  * WORKED EXAMPLES:
  * `['PLT1','PLATOON 1','PRC_LR',2]` means the one PLATOON 1 value is channel 2 for compatible

@@ -1,10 +1,12 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Installs a deployable command post on a vehicle or static object.
  *
  * The setup is repeat-safe. The server owns deployment state, synchronized-part visibility,
  * respawn positions, markers and vehicle locking. ACE actions are installed locally on every
  * client (including JIP); vanilla actions are installed only when ACE Interact is unavailable.
+ * Locality and authority: Safe from an Eden object Init field on every machine. The server owns
+ * state/world mutation and publishes one object-keyed JIP action setup; interface clients install UI.
  *
  * Arguments:
  * 0: target <OBJECT>
@@ -13,8 +15,12 @@
  * 3: logistics direction <NUMBER> (default 180)
  * 4: logistics distance <NUMBER> (default 4)
  *
+ * Return Value: Boolean - true when a non-null target was accepted.
+ *
  * Example:
  * [this, true, true, 180, 4] call Waldo_fnc_MHQSetup;
+ * Result: Configures this object as a repeat-safe deployable MHQ with an optional quartermaster.
+ * Current callers: Eden object Init fields, compositions and mission scripts registering an MHQ.
  */
 
 params [

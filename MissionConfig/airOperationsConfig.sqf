@@ -45,12 +45,56 @@
  * of the operational side. Dynamic-AA side/faction entries are HashMaps containing `radarClasses`,
  * `staticSitePools` (each nested array is one complete radar/weapon site), `mobileClasses`, and
  * `fighterClasses`. Empty arrays disable that response type without disabling the whole system.
+ *
+ * SETTING-BY-SETTING GUIDE - GUNSHIP:
+ * - Waldo_Gunship_Enable (MISSION MAKER): permits registration and ZEN creation; it spawns nothing by itself.
+ * - Waldo_Gunship_DefaultAltitude (MISSION MAKER): starting orbit altitude used when a call/module does not override it.
+ * - Waldo_Gunship_MaximumAltitude (ADVANCED): server rejection ceiling for requested orbit altitudes.
+ * - Waldo_Gunship_DefaultRadius (MISSION MAKER): starting orbit radius when no request-specific value is supplied.
+ * - Waldo_Gunship_MaximumRadius (ADVANCED): server rejection ceiling for requested orbit radii.
+ * - Waldo_Gunship_DefaultServiceDuration (MISSION MAKER): seconds a sortie remains available before RTB/service.
+ * - Waldo_Gunship_MonitorInterval (ADVANCED): seconds between server state checks; lower values cost more CPU.
+ * - Waldo_Gunship_MinimumFuel (MISSION MAKER): fraction 0-1 that causes RTB when fuel falls to/below it.
+ * - Waldo_Gunship_MaximumDamage (MISSION MAKER): fraction 0-1 that causes RTB when damage reaches/exceeds it.
+ * - Waldo_Gunship_ServiceFuelFraction (MISSION MAKER): fuel fraction after a completed service cycle.
+ * - Waldo_Gunship_ServiceAmmoFraction (MISSION MAKER): ammunition fraction after service.
+ * - Waldo_Gunship_ServiceDamage (MISSION MAKER): remaining damage after service; 0 means fully repaired.
+ * - Waldo_Gunship_MaximumServiceCycles (MISSION MAKER): -1 unlimited, 0 no return sortie, or a positive limit.
+ * - Waldo_Gunship_ReturnWhenOutOfAmmo (MISSION MAKER): true orders RTB when no usable weapon ammunition remains.
+ * - Waldo_Gunship_SideAircraftPools (MISSION MAKER): side fallback -> valid aircraft classes; selection side is separate.
+ * - Waldo_Gunship_FactionAircraftPools (OPTIONAL): faction-specific narrower pools; leave empty for side-pool selection.
+ *
+ * SETTING-BY-SETTING GUIDE - PARADROP:
+ * - Waldo_Paradrop_AircraftClasses (MISSION MAKER): transport aircraft offered by scripts and ZEN selectors.
+ * - Waldo_Paradrop_StaticChuteClasses (MISSION MAKER): vehicle parachute classes usable for static-line jumps.
+ * - Waldo_Paradrop_HaloBackpackClasses (MISSION MAKER): backpack classes that provide steerable HALO parachutes.
+ * - Waldo_Paradrop_BoardingPointClasses (MISSION MAKER): movable objects offered as labelled boarding points.
+ * - WALDO_STATIC_MINALTITUDE (MISSION MAKER): lowest permitted static-line drop altitude in metres.
+ * - WALDO_STATIC_MAXALTITUDE (MISSION MAKER): highest permitted static-line drop altitude; must exceed the minimum.
+ * - WALDO_STATIC_MAXSPEED (MISSION MAKER): fastest permitted static-line release speed in kilometres per hour.
+ * - WALDO_STATIC_STATICCHUTE (MISSION MAKER): preferred static-line chute class; WMP falls back if it is unavailable.
+ * - WALDO_PARA_HALOALTITUDE (MISSION MAKER): default HALO release altitude in metres.
+ * - WALDO_PARA_HALOCHUTE (MISSION MAKER): default steerable parachute backpack class.
+ *
+ * SETTING-BY-SETTING GUIDE - DYNAMIC AA:
+ * - Waldo_DynamicAA_SideAssetPools (MISSION MAKER): fallback AA content by operational side.
+ * - Waldo_DynamicAA_FactionAssetPools (MISSION MAKER): optional content by faction, independent from operational side.
+ * - Waldo_DynamicAA_DefaultDetectionInterval (ADVANCED): seconds between server target scans.
+ * - Waldo_DynamicAA_MaximumRadius (ADVANCED): largest detection/engagement radius the server accepts.
+ * - Waldo_DynamicAA_MaximumAltitude (ADVANCED): largest altitude ceiling the server accepts.
+ * - Waldo_DynamicAA_MaximumFighters (ADVANCED): maximum fighters one AA system may scramble.
+ *
+ * POOL EXAMPLE:
+ * `["MY_FACTION", createHashMapFromArray [["radarClasses", ["My_Radar_F"]],
+ * ["staticSitePools", [["My_Radar_F", "My_SAM_F"]]], ["mobileClasses", ["My_AA_F"]],
+ * ["fighterClasses", ["My_Fighter_F"]]]]]` defines selectable content only. A script/ZEN request
+ * still chooses operational side, quantities, position, radii and interaction policy.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Airborne Gunship", "Dynamic Paradrop", "Dynamic Anti-Air"]],
     ["shared", [
         // MISSION MAKER: gunship availability, service rules and independent aircraft content pools.
-        ["Waldo_Gunship_Enable", false],             // BOOL: permits registration/use; creates no aircraft itself.
+        ["Waldo_Gunship_Enable", true],             // BOOL: permits registration/use; creates no aircraft itself.
         ["Waldo_Gunship_DefaultAltitude", 700],      // METRES ASL/ATL as selected by the gunship controller.
         ["Waldo_Gunship_MaximumAltitude", 5000],     // METRES: validation ceiling for scripted/ZEN requests.
         ["Waldo_Gunship_DefaultRadius", 1500],       // METRES: default orbit radius around the target area.
@@ -67,7 +111,9 @@ createHashMapFromArray [
         ["Waldo_Gunship_SideAircraftPools", createHashMapFromArray [ // SIDE ID -> candidate CfgVehicles classes.
             ["WEST", ["B_T_VTOL_01_armed_F"]], ["EAST", []], ["INDEPENDENT", []], ["CIVILIAN", []]
         ]],
-        ["Waldo_Gunship_FactionAircraftPools", createHashMap], // optional faction key -> aircraft classname ARRAY.
+        // OPTIONAL: normally leave empty. Add `CfgFactionClasses name -> aircraft classname ARRAY`
+        // rows only when a named faction must use a narrower pool than the side pool above.
+        ["Waldo_Gunship_FactionAircraftPools", createHashMap],
         // MISSION MAKER: classnames shown by paradrop and boarding selectors.
         ["Waldo_Paradrop_AircraftClasses", [ // transport-capable CfgVehicles classes offered to scripts/ZEN.
             "B_T_VTOL_01_infantry_F", "O_T_VTOL_02_infantry_dynamicLoadout_F",

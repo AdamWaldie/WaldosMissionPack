@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Registers or replaces a named hazardous-environment zone.
  * Profiles are hash maps so mission makers can extend them without changing the API.
  *

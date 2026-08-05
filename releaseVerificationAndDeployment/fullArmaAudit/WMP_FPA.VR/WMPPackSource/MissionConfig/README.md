@@ -30,6 +30,10 @@ not only the underlying data type.
 Every editable setting follows this documentation pattern in its own config file. The explanation
 is part of the setting: do not delete it when copying or changing the active value.
 
+Every `.sqf` config also includes a searchable **SETTING-BY-SETTING GUIDE**. The repository
+validator requires that guide and requires every named WMP/ACE/Logistics setting to appear in
+`wiki/Feature-Configuration-Files.md`. Adding a setting without updating both layers fails CI.
+
 ```sqf
 // SETTING: Waldo_AIRebalance_Mode (MISSION MAKER)
 // WHAT IT CHANGES: which lighting-condition skill variant AI use.

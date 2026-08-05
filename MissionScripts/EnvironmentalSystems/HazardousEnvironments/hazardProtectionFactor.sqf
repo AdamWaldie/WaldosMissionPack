@@ -1,10 +1,12 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Calculates protection for one unit against a configurable hazard profile.
  *
  * Vehicle, interior and equipment protection are combined into one exposure multiplier. This is a
  * pure locality-safe calculation currently called once per active zone by Waldo_fnc_HazardTick and
  * available to custom profile callbacks or mission scripts.
+ * Locality and authority: Pure local calculation against the supplied unit/profile. It is normally
+ * executed by the affected player's client and changes no network state.
  *
  * Arguments:
  * 0: unit <OBJECT>
@@ -15,6 +17,8 @@
  *
  * Example:
  * private _factor = [player, _profile] call Waldo_fnc_HazardProtectionFactor;
+ * Result: Returns 0 for full protection, 1 for no protection, or a partial exposure multiplier.
+ * Current caller: Waldo_fnc_HazardTick once for each active zone affecting the local player.
  */
 
 params ["_unit", "_profile"];

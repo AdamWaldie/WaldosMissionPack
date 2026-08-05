@@ -627,6 +627,43 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('["Land_WoodenLog_F"]', root_init)
         self.assertIn('["Land_WoodenLog_F"]', process)
         self.assertNotIn("Land_TreeTrunk_01_F", root_init)
+        self.assertIn('["Waldo_TreeFelling_AllowedClasses", []]', root_init)
+        self.assertNotIn("Waldo_TreeFelling_FallenRandomDirection", root_init)
+        self.assertIn("_bestPatternLength", process)
+        self.assertIn("toLowerANSI _x == _weaponLower", process)
+        self.assertIn("if !(_toolProfiles isEqualType createHashMap)", process)
+        self.assertIn("if !(_efficiency isEqualType 0)", process)
+
+    def test_val_author_credit_is_preserved_for_contributed_features(self):
+        hazard_dir = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
+        hazard_scripts = sorted(hazard_dir.glob("*.sqf"))
+        self.assertGreater(len(hazard_scripts), 0)
+        for path in hazard_scripts:
+            text = path.read_text(encoding="utf-8")
+            self.assertIn("Author: WaldoTheWarfighter, Val", text, path.name)
+
+        mhq = (ROOT / "MissionScripts" / "Logistics" / "MHQ" / "MHQSetup.sqf").read_text(encoding="utf-8")
+        vehicle_camo = (
+            ROOT / "MissionScripts" / "Logistics" / "VehicleCamoScript" / "vehicleCamo.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("Author: WaldoTheWarfighter, Val", mhq)
+        self.assertIn("Authors: Val & WaldoTheWarfighter", vehicle_camo)
+
+    def test_breaching_config_ships_a_disabled_working_beginner_example(self):
+        config = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
+        handler = (ROOT / "MissionScripts" / "CombatSystems" / "Breaching" / "breachingServerHandle.sqf").read_text(encoding="utf-8")
+        diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnostics.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Breaching_Enable", false]', config)
+        self.assertIn('["Land_City2_8m_F", createHashMapFromArray [', config)
+        self.assertIn('["requiredStrength", 1]', config)
+        self.assertIn('["deleteOriginal", false]', config)
+        self.assertIn('["replacements", []]', config)
+        self.assertIn("_parentStrengthIndex", handler)
+        self.assertIn("_validProfileClasses", handler)
+        self.assertIn("unknown target CfgVehicles class", diagnostics)
+        self.assertIn("unknown CfgAmmo class", diagnostics)
+        self.assertIn("SizeThresholds must contain two increasing numbers", diagnostics)
+        self.assertIn("ToolEfficiency must be a HashMap", diagnostics)
 
 
     def test_corrected_feature_workflows_have_runtime_controls_and_bounds(self):

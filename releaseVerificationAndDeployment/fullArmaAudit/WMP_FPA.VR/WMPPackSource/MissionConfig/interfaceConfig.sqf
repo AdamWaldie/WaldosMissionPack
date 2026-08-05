@@ -52,6 +52,84 @@
  * VehicleProfiles is keyed by exact vehicle classname. Its HashMap may override the unprefixed
  * setting names read by the dismount controller, for example `OnOverturn`, `OnDestroyed`,
  * `PreserveVelocity`, `RequireClearExit`, `MinimumOverturnSeconds` and `UpThreshold`.
+ *
+ * SETTING-BY-SETTING GUIDE - THEME AND NOTIFICATIONS:
+ * - Waldo_UI_Theme (MISSION MAKER): DEFAULT, WW2, VIETNAM or SCIFI; affects WMP UI, not Arma/ACE menus.
+ * - Waldo_UI_CustomThemes (ADVANCED): complete new theme definitions; leave empty unless all tokens are tested.
+ * - Waldo_UI_ThemeOverrides (ADVANCED): partial token overrides for an existing theme ID.
+ * - Waldo_UiNotification_MaximumQueued (ADVANCED): maximum pending cards; oldest excess entries are discarded.
+ * - Waldo_UiNotification_QueueLifetime (ADVANCED): seconds a pending card may wait before expiring.
+ * - Waldo_UiNotification_MaximumPerPlacement (ADVANCED): simultaneous visible lanes in one screen region.
+ * - Waldo_UiNotification_ReflowDuration (ADVANCED): seconds used to slide remaining cards into closed gaps.
+ * - Waldo_UiNotification_AllowPlacementOverflow (MISSION MAKER): true sends excess cards to fallback regions.
+ * - Waldo_UiNotification_OverflowPlacements (MISSION MAKER): ordered fallback screen regions; TOP is reserved.
+ * - Waldo_UI_PanelPlacements (MISSION MAKER): `[feature channel, placement, can stack]` routing rows.
+ *
+ * SETTING-BY-SETTING GUIDE - TREATMENT FEEDBACK:
+ * - Waldo_TreatmentFeedback_Enable: installs local ACE medical-event feedback when true.
+ * - Waldo_TreatmentFeedback_ShowStart: shows the treatment-begin event.
+ * - Waldo_TreatmentFeedback_ShowSuccess: shows ACE's successful-completion event.
+ * - Waldo_TreatmentFeedback_ShowFailure: shows interruption/failure events.
+ * - Waldo_TreatmentFeedback_NotifyPatient: patient receives their local copy.
+ * - Waldo_TreatmentFeedback_NotifyMedic: treatment giver receives a separate local copy.
+ * - Waldo_TreatmentFeedback_ShowMedicName: includes the giver's name in patient-facing text.
+ * - Waldo_TreatmentFeedback_ShowBodyPart: includes the translated treated-body-part label.
+ * - Waldo_TreatmentFeedback_StartTitle: player-facing title for treatment beginning.
+ * - Waldo_TreatmentFeedback_SuccessTitle: player-facing title for successful completion.
+ * - Waldo_TreatmentFeedback_FailureTitle: player-facing title for interruption/failure.
+ * - Waldo_TreatmentFeedback_Duration: seconds the resulting card remains after the event fires.
+ * - Waldo_TreatmentFeedback_TreatmentNames: optional treatment classname -> readable label overrides.
+ * - Waldo_TreatmentFeedback_BodyPartNames: ACE body-part ID -> readable label map.
+ *
+ * SETTING-BY-SETTING GUIDE - TACTICAL DISPLAY:
+ * - Waldo_TacticalDisplay_AccessDistance: interaction range in metres around a registered whiteboard/map board.
+ * - Waldo_TacticalDisplay_MaximumOpenDistance: display closes when the player moves beyond this range.
+ * - Waldo_TacticalDisplay_MinimumKnowledge: Arma knowsAbout threshold 0-4; higher shows fewer contacts.
+ *
+ * SETTING-BY-SETTING GUIDE - EMERGENCY DISMOUNT:
+ * - Waldo_EmergencyDismount_Enable: installs self-actions when true; eligible vehicles need simulation enabled.
+ * - Waldo_EmergencyDismount_OnOverturn: permits extraction after the overturn delay.
+ * - Waldo_EmergencyDismount_OnDestroyed: permits extraction from destroyed eligible vehicles.
+ * - Waldo_EmergencyDismount_PreserveVelocity: keeps vehicle momentum after exit; false is safer.
+ * - Waldo_EmergencyDismount_ProtectDuringExit: temporarily prevents relocation damage.
+ * - Waldo_EmergencyDismount_ProtectionSeconds: duration of that temporary protection.
+ * - Waldo_EmergencyDismount_ClearPositionRadius: safe-position search radius around the vehicle.
+ * - Waldo_EmergencyDismount_RequireClearExit: true refuses when no safe point exists; false permits fallback.
+ * - Waldo_EmergencyDismount_UseEject: advanced engine ejection rather than WMP safe relocation.
+ * - Waldo_EmergencyDismount_RecoverUnconscious: permits relocation of unconscious occupants.
+ * - Waldo_EmergencyDismount_MinimumOverturnSeconds: continuous overturn time required before use.
+ * - Waldo_EmergencyDismount_DamageOnExit: damage fraction 0-1 applied after extraction.
+ * - Waldo_EmergencyDismount_AllowedKinds: isKindOf roots accepted by the feature.
+ * - Waldo_EmergencyDismount_VehicleProfiles: exact vehicle class -> per-class override HashMap.
+ *
+ * SETTING-BY-SETTING GUIDE - ACCESSIBILITY PID:
+ * - Waldo_AccessibilityPID_Enable: makes PID available; eligibility and the player's local toggle still apply.
+ * - Waldo_AccessibilityPID_AllowedUIDs: Steam UID strings; [] permits every player.
+ * - Waldo_AccessibilityPID_DefaultVisible: initial local visibility for an eligible player.
+ * - Waldo_AccessibilityPID_AllowToggle: exposes the Accessibility self-action for visibility control.
+ * - Waldo_AccessibilityPID_IconRange: maximum chevron range in metres.
+ * - Waldo_AccessibilityPID_NameRange: maximum name/role text range in metres.
+ * - Waldo_AccessibilityPID_RequireLOS: hides identification through occluding geometry when true.
+ * - Waldo_AccessibilityPID_IncludeAI: includes friendly AI targets when true.
+ * - Waldo_AccessibilityPID_IconScale: base chevron size.
+ * - Waldo_AccessibilityPID_TextScale: close-range name/role text size.
+ * - Waldo_AccessibilityPID_DistanceFade: progressively reduces alpha with distance.
+ * - Waldo_AccessibilityPID_GroupOnly: true restricts identification to the player's current group.
+ * - Waldo_AccessibilityPID_ShowIncapacitated: keeps incapacitated friendlies identifiable.
+ * - Waldo_AccessibilityPID_ShowIcons: enables the high-clarity chevron layer.
+ * - Waldo_AccessibilityPID_ShowNames: enables name/role text within NameRange.
+ * - Waldo_AccessibilityPID_ShowVehicleCrew: includes friendlies currently inside vehicles.
+ * - Waldo_AccessibilityPID_Font (ADVANCED): Arma font classname used by Draw3D text.
+ * - Waldo_AccessibilityPID_TextDistanceGrowth (ADVANCED): scale added per metre before the clamp.
+ * - Waldo_AccessibilityPID_TextMaximumScale (ADVANCED): maximum text size at range.
+ * - Waldo_AccessibilityPID_TextHeadOffset (ADVANCED): text baseline metres above the head selection.
+ * - Waldo_AccessibilityPID_IconHeadOffset (ADVANCED): chevron centre metres above the head selection.
+ * - Waldo_AccessibilityPID_OutlineScale (ADVANCED): contrast outline size relative to foreground text.
+ * - Waldo_AccessibilityPID_OutlineColour (ADVANCED): RGBA 0-1 contrast colour behind text.
+ *
+ * PANEL EXAMPLE: `["RALLY_POINT", "BOTTOM_RIGHT", true]` routes rally cards to the bottom-right
+ * stack. Keep continuous hazard and jammer overlays out of this list: their dedicated layouts are
+ * deliberately deconflicted by the UI manager rather than queued as notification cards.
  */
 createHashMapFromArray [
     ["featureFamilies", ["UI Themes", "Notification UI", "Treatment Feedback", "Tactical Display", "Emergency Dismount", "Accessibility"]],

@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Evaluates all registered hazard zones for the local player and applies profile effects.
  *
  * This function runs only on each player's client from Waldo_fnc_HazardInit. Exposure and zone

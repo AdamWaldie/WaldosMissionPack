@@ -1,10 +1,12 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Draws one continuously updated hazardous-environment status panel. It does not use notification
  * cards or their queue. The panel owns the lower-left specialist region while the electronic-
  * warfare panel owns lower-right, and both register with the global WMP UI reservation service so
  * ordinary notifications reflow around whichever panels are currently visible. ACE interaction
  * suppression is inherited automatically from that shared service.
+ * Locality and authority: Interface-client only. It creates and updates controls on display 46
+ * for the executing player and never changes server hazard state.
  *
  * Arguments:
  * 0: status lines <ARRAY<STRING>> - current visible hazard labels/exposure values; [] hides panel.
@@ -13,6 +15,7 @@
  *
  * Example:
  * [["Toxic Leak: 1.14"]] call Waldo_fnc_HazardHud;
+ * Result: Shows or updates one lower-left hazard panel; an empty array hides and releases it.
  * Current callers: Waldo_fnc_HazardTick and Waldo_fnc_HazardStop.
  */
 if (!hasInterface) exitWith {false};

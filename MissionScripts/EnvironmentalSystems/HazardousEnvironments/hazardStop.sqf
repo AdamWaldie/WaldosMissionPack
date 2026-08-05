@@ -1,9 +1,11 @@
 /*
- * Author: WaldoTheWarfighter
+ * Author: WaldoTheWarfighter, Val
  * Stops local hazard evaluation and clears its status display.
  *
  * This affects only the executing client and leaves authoritative zone definitions untouched. It is
  * currently called by live runtime deactivation, mission cleanup and the full-pack function station.
+ * Locality and authority: Interface-client only. It stops local evaluation/UI and deliberately
+ * leaves the server-owned zone registry unchanged.
  *
  * Arguments:
  * None
@@ -13,6 +15,8 @@
  *
  * Example:
  * [] call Waldo_fnc_HazardStop;
+ * Result: Terminates the local loop, clears local exposure/transition state and hides the panel.
+ * Current callers: runtime deactivation, snapshot reconciliation, cleanup and the audit station.
  */
 
 if !(hasInterface) exitWith {};
