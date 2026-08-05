@@ -36,7 +36,17 @@ The optional fifth argument is a readable HashMap. Omit it for the safe defaults
 ]] call Waldo_fnc_TransportRegister;
 ```
 
-Players request a pickup through **ACE Self Interact > WMP Interface > Transport Services** and click a pickup point. Once aboard at the pickup, **Select Destination** opens the map. **Return Service to Base** cancels the current journey. Vanilla blue pickup actions are installed when ACE Interact is unavailable.
+Each registered vehicle has a WMP-blue informational addAction naming it as a **Helicopter Transport Service** or **Ground Taxi Service**. Use that action if you encounter a vehicle and are unsure what it does.
+
+To travel:
+
+1. Open **ACE Self Interact > WMP Interface > Transport Services**.
+2. Choose **Request Helicopter Pickup** or **Request Ground Taxi** and click the desired pickup point on the map.
+3. Wait for the named service and board it.
+4. While aboard, return to the same self-interaction menu and choose **Select Destination**.
+5. Click the destination on the map and disembark after arrival. **Return Service to Base** cancels the current journey.
+
+When ACE Interact is unavailable, WMP-blue scroll-wheel pickup actions preserve the essential request path.
 
 Helicopters use a WMP improved-AI-landing-compatible landing waypoint and stop at pickup/destination rather than immediately taking off again. Ground taxis resolve requested points to nearby roads. Return is physical by default. `failSafeReset` may reposition only an empty service that failed to return before the configured deadline; it never teleports players.
 

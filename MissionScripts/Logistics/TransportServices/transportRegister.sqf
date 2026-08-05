@@ -121,6 +121,7 @@ _vehicle lockDriver true;
 if (_type == "HELICOPTER") then {_vehicle flyInHeight (_config get "cruiseAltitude")};
 missionNamespace setVariable [if (_type == "HELICOPTER") then {"Waldo_HeliTransport_Available"} else {"Waldo_GroundTaxi_Available"}, true, true];
 [] remoteExecCall ["Waldo_fnc_TransportInteractionInitLocal", 0, "Waldo_Transport_Interactions"];
+[_vehicle] remoteExecCall ["Waldo_fnc_TransportSetupVehicleLocal", 0, _vehicle];
 
 if (_config get "showMarker") then {
     private _marker = format ["Waldo_Transport_%1", _id];

@@ -101,7 +101,11 @@ private _zoneDiagnostics = [];
         !((_profile getOrDefault ["detectorItems", []]) isEqualTo [])
         || !((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])
         || ("awarenessCondition" in _profile);
-    private _aware = [player, _key, _profile, _inside, _exposure] call Waldo_fnc_HazardAwareness;
+    private _awareResult = [player, _key, _profile, _inside, _exposure] call Waldo_fnc_HazardAwareness;
+    // A mission-supplied awareness callback is not allowed to break the complete hazard tick.
+    // Invalid callback output hides detector-gated information while physical danger continues.
+    private _aware = false;
+    if (_awareResult isEqualType true) then {_aware = _awareResult};
     private _showNotifications = !(_profile getOrDefault ["requireAwarenessForNotifications", _awarenessConfigured]) || {_aware};
     private _showLiveStatus = !(_profile getOrDefault ["requireAwarenessForStatus", _awarenessConfigured]) || {_aware};
 

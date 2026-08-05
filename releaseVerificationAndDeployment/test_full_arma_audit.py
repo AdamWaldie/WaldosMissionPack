@@ -251,6 +251,23 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("G_Goggles_VR", hud)
         self.assertIn("WMP-HUD", hud)
 
+    def test_transport_services_have_repeat_safe_blue_identification_and_clear_usage(self):
+        root = ROOT / "MissionScripts" / "Logistics" / "TransportServices"
+        register = (root / "transportRegister.sqf").read_text(encoding="utf-8")
+        info = (root / "transportSetupVehicleLocal.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        wiki = (ROOT / "wiki" / "Transport-Services.md").read_text(encoding="utf-8")
+        self.assertIn("class TransportSetupVehicleLocal", functions)
+        self.assertIn('remoteExecCall ["Waldo_fnc_TransportSetupVehicleLocal", 0, _vehicle]', register)
+        self.assertIn("Waldo_TransportService_InfoActionId", info)
+        self.assertIn("removeAction _oldAction", info)
+        self.assertIn("<t color='#79C7FF'>", info)
+        self.assertIn("Helicopter Transport", info)
+        self.assertIn("Ground Taxi", info)
+        self.assertIn("ACE Self Interact > WMP Interface > Transport Services", info)
+        self.assertIn("WMP-blue informational addAction", wiki)
+        self.assertIn("Select Destination", wiki)
+
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
             ROOT / "MissionScripts",
@@ -1025,6 +1042,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_fnc_RegisterUiReservationLocal", hud)
         for setting in ("detectorItems", "detectorObjects", "detectorObjectRange", "awarenessCondition"):
             self.assertIn(setting, awareness)
+        self.assertIn("if !(_result isEqualType true) exitWith {false}", awareness)
+        self.assertNotIn("_result isEqualType true && {_result}", awareness)
+        self.assertIn("private _awareResult =", tick)
+        self.assertIn("private _aware = false", tick)
+        self.assertIn("if (_awareResult isEqualType true) then {_aware = _awareResult}", tick)
         self.assertIn("requireAwarenessForNotifications", tick)
         self.assertIn("requireAwarenessForStatus", tick)
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")

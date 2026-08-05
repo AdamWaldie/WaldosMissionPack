@@ -61,6 +61,10 @@ private _condition = _profile getOrDefault ["awarenessCondition", {}];
 if (_condition isEqualType "") then {_condition = missionNamespace getVariable [_condition, {}]};
 if (_condition isEqualType {}) exitWith {
     private _result = [_unit, _key, _profile, _inside, _exposure] call _condition;
-    _result isEqualType true && {_result}
+    // Do not place _result inside the lazy-code form of &&. Arma evaluates that nested code in a
+    // separate scope, where the private result is unavailable and produces an undefined-variable
+    // error once per hazard tick.
+    if !(_result isEqualType true) exitWith {false};
+    _result
 };
 true

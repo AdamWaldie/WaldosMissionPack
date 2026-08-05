@@ -469,6 +469,7 @@ class CfgFunctions
             class TransportNotifyLocal {file = "MissionScripts\Logistics\TransportServices\transportNotifyLocal.sqf";};
             class TransportOpenMapLocal {file = "MissionScripts\Logistics\TransportServices\transportOpenMapLocal.sqf";};
             class TransportInteractionInitLocal {file = "MissionScripts\Logistics\TransportServices\transportInteractionInitLocal.sqf";};
+            class TransportSetupVehicleLocal {file = "MissionScripts\Logistics\TransportServices\transportSetupVehicleLocal.sqf";};
             class TransportRequestServer {file = "MissionScripts\Logistics\TransportServices\transportRequestServer.sqf";};
             class TransportDispatchLocal {file = "MissionScripts\Logistics\TransportServices\transportDispatchLocal.sqf";};
             class TransportReportServer {file = "MissionScripts\Logistics\TransportServices\transportReportServer.sqf";};

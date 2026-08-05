@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 860,
+  "registeredFunctionCount": 861,
   "runtimeFunctionCount": 385,
-  "functionCount": 1245,
+  "functionCount": 1246,
   "stations": [
     {
       "id": "control",
@@ -1459,6 +1459,12 @@
     {
       "name": "Waldo_fnc_TransportInteractionInitLocal",
       "file": "MissionScripts/Logistics/TransportServices/transportInteractionInitLocal.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TransportSetupVehicleLocal",
+      "file": "MissionScripts/Logistics/TransportServices/transportSetupVehicleLocal.sqf",
       "station": "transport-services",
       "activation": "manual"
     },
