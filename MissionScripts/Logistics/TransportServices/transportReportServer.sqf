@@ -54,7 +54,7 @@ switch (_phase) do {
         [_group, getPosATL _vehicle] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
         _entry set ["state", "BOARDING"];
         _vehicle setVariable ["Waldo_TransportService_State", "BOARDING", true];
-        if (!isNull _requester) then {[_type, format ["%1 is ready for boarding. Enter the transport and select a destination through WMP Logistics > Transport Services.", _entry get "name"], "SUCCESS"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
+        if (!isNull _requester) then {[_type, format ["%1 is ready for boarding. Enter the transport and select a destination through WMP Transport.", _entry get "name"], "SUCCESS"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
         [_id, _requestId, _config getOrDefault ["boardingSeconds", 300]] spawn {
             params ["_id", "_requestId", "_seconds"];
             sleep (_seconds max 15);

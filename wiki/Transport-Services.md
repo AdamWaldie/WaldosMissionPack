@@ -45,8 +45,8 @@ Each registered vehicle has a WMP-blue informational action naming it as a **Hel
 
 To travel:
 
-1. Open **ACE Self Interact > WMP Logistics > Transport Services**.
-2. Choose **Request Helicopter Pickup** or **Request Ground Transport** and click the desired pickup point on the map.
+1. Open **ACE Self Interact > WMP Transport**.
+2. Choose **Helicopter Transport** or **Ground Transport**, then **Request / Move Pickup** and click the desired point on the map.
 3. Wait for the named service and board it.
 4. While aboard, return to the same self-interaction menu and choose **Select Destination**.
 5. Click the destination on the map and disembark after arrival. **Return This Transport to Base** cancels that named transport's current journey.
@@ -54,9 +54,11 @@ To travel:
 ### Multiple transports and changing a request
 
 - The normal request path manages one active helicopter and one active ground transport per player.
-- **Request Additional Helicopter Transport** and **Request Additional Ground Transport** deliberately reserve another available vehicle for large groups. Repeat the explicit action for each additional lift required.
-- **Multiple Transports > Request All Available...** dispatches every eligible available transport of that type around one clicked centre. WMP assigns separate slots instead of sending the fleet to one coordinate.
-- **Multiple Transports > Return All Controlled... to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
+- The first menu level is deliberately short and scalable: **Helicopter Transport**, **Ground Transport** and **Manage Active Services**. Air and ground controls do not compete for the same radial-menu space.
+- **Request / Move Pickup** requests the first service, or retargets that player's single inbound/boarding service of the same type.
+- **Request Another...** appears only when the player already controls an active same-type transport and another is available. It deliberately reserves another vehicle for a larger lift.
+- **Request All Available** dispatches every eligible available transport of that type around one clicked centre. WMP assigns separate slots instead of sending the fleet to one coordinate.
+- **Return All Controlled to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
 - **Manage Active Services** lists transports reserved by the player, transports currently carrying the player, and all transports for Zeus. Every row includes the configured service name and live state.
 - The same named controls also exist directly on each transport. Being inside or near another transport no longer changes which object the action addresses.
@@ -109,7 +111,7 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 
 ## ZEN and lifecycle
 
-Use **WMP Logistics > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides plain-language timing and recovery settings, and rejects a type/vehicle mismatch. **Transport Service - Return to Base** cancels a selected registered service.
+Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides plain-language timing and recovery settings, and rejects a type/vehicle mismatch. **Transport Service - Return to Base** cancels a selected registered service.
 
 Registrations survive WMP vehicle-recovery reconstruction through the built-in `Waldo_TransportService_Registration` recovery variable. Deleted/dead services are removed from the server registry and their markers. Player actions are reinstalled after respawn and JIP availability is published by type.
 

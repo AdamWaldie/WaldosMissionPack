@@ -33,7 +33,7 @@ private _infoId = _vehicle addAction [
     {
         params ["_target", "_caller", "_actionId", "_arguments"];
         _arguments params ["_type", "_name", "_role"];
-        [_type, format ["%1 is a %2 and is currently %3. Request and manage named transports through ACE Self Interact > WMP Logistics > Transport Services, or use this transport's own controls.", _name, toLowerANSI _role, _target getVariable ["Waldo_TransportService_State", "UNKNOWN"]], "INFO"] call Waldo_fnc_TransportNotifyLocal;
+        [_type, format ["%1 is a %2 and is currently %3. Request and manage named transports through ACE Self Interact > WMP Transport, or use this transport's own controls.", _name, toLowerANSI _role, _target getVariable ["Waldo_TransportService_State", "UNKNOWN"]], "INFO"] call Waldo_fnc_TransportNotifyLocal;
     },
     [_type, _name, _role], -90, false, true, "",
     "_target getVariable ['Waldo_TransportService_Registered', false]", 8

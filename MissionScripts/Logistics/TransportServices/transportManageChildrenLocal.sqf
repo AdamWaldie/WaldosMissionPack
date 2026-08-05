@@ -14,7 +14,7 @@
  * Example:
  * [player] call Waldo_fnc_TransportManageChildrenLocal;
  * Result: returns named entries for services reserved by, or currently carrying, the player.
- * Current caller: Manage Active Services under ACE Self Interact > WMP Logistics > Transport Services.
+ * Current caller: Manage Active Services under ACE Self Interact > WMP Transport.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
  */
 params [["_player", objNull, [objNull]]];

@@ -16,7 +16,7 @@
  *
  * Example:
  * ["PICKUP_ALL", "HELICOPTER", getPosATL player, player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2];
- * Current callers: WMP Logistics > Transport Services > Multiple Transports controls.
+ * Current callers: WMP Transport > Fleet Controls.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
  */
 params [
