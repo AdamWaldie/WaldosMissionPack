@@ -29,6 +29,9 @@ jobs:
     - name: Test the Claude Mission Config Skill validator
       working-directory: releaseVerificationAndDeployment
       run: python3 -m unittest -v test_claude_skill_validator.py
+    - name: Test the claude.ai skill upload packager
+      working-directory: releaseVerificationAndDeployment
+      run: python3 -m unittest -v test_package_claude_skill_upload.py
     - name: Test interaction equipment UI checker
       working-directory: releaseVerificationAndDeployment
       run: python3 -m unittest -v test_interaction_ui_checker.py
