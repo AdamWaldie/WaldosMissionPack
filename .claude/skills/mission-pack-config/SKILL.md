@@ -154,6 +154,15 @@ and either check the repo (mod-dependent code is always guarded by a
 - CBA_A3 and ACE3 are **required** — assume present.
 - ACRE2, TFAR, Zeus Enhanced (ZEN), LAMBS are **optional** — ask, or check
   what the user's `@mods` list / server config implies.
+- For a question about one of these mods' **own native behaviour** — not
+  WMP's integration with it — route to `references/mods/*.md`
+  (`cba.md`, `ace3.md`, `acre2-mod.md`, `tfar.md`, `zeus-enhanced-mod.md`,
+  `lambs.md`) rather than answering from general knowledge. Each of those
+  files itself starts by pointing back at the WMP-specific reference file
+  to check first — the mod files are for what WMP doesn't wrap or
+  configure (e.g. "how does ACE's full arsenal API work", "what does LAMBS
+  Danger.fsm actually change", "how do I write a Zeus Enhanced module from
+  scratch").
 
 Also confirm which config layer you're actually looking at before proposing
 an edit: `MissionConfig\*.sqf` for settings, the narrow init files only for
@@ -221,7 +230,32 @@ find a page this table doesn't name explicitly.
 | Headless client + player markers | `references/headless-client.md` | Still plain `execVM`, no `MissionConfig` file |
 | Custom 3D world markers | `references/3d-markers.md` | No `MissionConfig` file — pure call API |
 | Misc mission-maker tools (AI convoy, map locations, vehicle camo, teleport, weapon mounting, construction objects, ACE Fortify, radio reports, team colour) | `references/misc-mission-maker-tools.md` | Compact catch-all — one short subsection each |
-| Vanilla SQF/Arma engine mechanics (not WMP-specific) | `references/sqf-arma-basics.md` | Debugging support — syntax recap, error-message meanings, Eden basics, official biki lookup links |
+
+### Vanilla SQF/Arma engine mechanics (not WMP-specific)
+
+Three dedicated files, split by concern — read only the one(s) the question
+actually needs:
+
+| Question is about... | Reference | Covers |
+|---|---|---|
+| The SQF language itself | `references/sqf-language-reference.md` | Data types (ARRAY/STRING/NUMBER/BOOLEAN/OBJECT/GROUP/SIDE/CODE/HashMap/Config) and what you can do with each, control flow, scope/declaration rules, string/array formatting, compile mechanics, common gotchas (float equality, array copy semantics, `forEach` scoping) |
+| How a mission actually runs | `references/arma-scripting-architecture.md` | `call`/`spawn`/`execVM`/`execFSM`/`remoteExec` in depth (scheduled vs unscheduled, targeting semantics), the event-handler ecosystem (vanilla/CBA/Mission EHs, FSMs), multiplayer locality in depth, `CfgFunctions`, config architecture, Eden Editor mechanics (init fields, syncing, Game Logic, module attributes, waypoints) |
+| Diagnosing a broken script | `references/sqf-debugging.md` | Error-message meanings, reading an RPT block, debugging tools (print-debugging, performance/state inspection, the in-editor Debug Console), a general isolation methodology, official biki lookup links, community support sources |
+
+All three are scoped to **debugging and general scripting/engine questions
+incidental to using or extending WMP** — not a full scripting course. Any
+WMP-specific variable, function, error, or config field still routes to
+that feature's own `references/*.md` file first.
+
+### Mod documentation (native mod behaviour beyond what WMP wraps)
+
+`references/mods/` — one file per WMP-dependency mod (`cba.md`, `ace3.md`,
+`acre2-mod.md`, `tfar.md`, `zeus-enhanced-mod.md`, `lambs.md`), each a real
+orientation to that mod's own systems/settings plus official docs links —
+not just a link table. Every one of them starts by pointing back at the
+WMP-specific reference file(s) to check first (e.g. `acre2-mod.md` points
+at `references/acre2.md` and `jamming.md`) — only reach for the mod file
+when the question is about behaviour WMP doesn't configure.
 
 ## Step 4: when the user reports something broken, not something to configure
 
@@ -253,7 +287,7 @@ reference file's config section:
    check the surrounding context, not just the reported line in isolation.
    **For what a specific error message actually means** ("Undefined
    variable", "Generic error", "Missing ;", "Type X, expected Y", a
-   `Script not found` path error) see `references/sqf-arma-basics.md`'s
+   `Script not found` path error) see `references/sqf-debugging.md`'s
    "Common error patterns" and "Reading an RPT error block" sections —
    don't guess at the cause from the message alone.
 4. **Check `references/mod-detection.md` before assuming a bug.** The
@@ -261,7 +295,7 @@ reference file's config section:
    is a missing-mod guard clause silently no-op'ing (no error, no chat
    message, nothing) — ACRE2/TFAR/ZEN absent, or a signal-model mismatch for
    jamming. Confirm the required mod is actually loaded and active before
-   troubleshooting further. `references/sqf-arma-basics.md`'s "silent
+   troubleshooting further. `references/sqf-debugging.md`'s "silent
    failure vs a visible error" note explains why a clean RPT with nothing
    visibly happening points here rather than at a script bug.
 5. Once you've identified the actual feature involved, route through **Step
@@ -271,38 +305,47 @@ reference file's config section:
 
 ## Basic SQF/Arma engine questions and vanilla-command lookups
 
-If a mission maker asks a basic SQF syntax or Eden Editor question that's
-incidental to configuring WMP — "what's the difference between `call` and
-`spawn`", "how do I open the RPT log", "how do I sync two objects in Eden",
-"why does Arma say my bracket count is wrong", "what does `setVariable`
-return" — this is now a proper reference file, not just an inline
-allowance: **`references/sqf-arma-basics.md`**. It covers core syntax
-(statement termination, `_local` vs global vars, `missionNamespace`,
-`params`, and a `call`/`spawn`/`execVM`/`remoteExec` comparison table with
-why `sleep`/`waitUntil` need a scheduled environment), common error-message
-meanings (tied into the debugging step above), the Eden Editor mechanics
-WMP actually touches (init fields and their ordering pitfalls, Variable
-Name, syncing, Game Logic, module attributes vs script config), and
-print-debugging tools (`systemChat`/`hint`/`diag_log`,
-`-showScriptErrors`, `isNil`/`isNull`/`typeName`).
+If a mission maker asks a basic SQF/Eden question, or something more
+substantial about how the language or engine works, that's incidental to
+configuring or extending WMP — "what's the difference between `call` and
+`spawn`", "how do I open the RPT log", "how do I sync two objects in
+Eden", "why does Arma say my bracket count is wrong", "what does
+`setVariable` return", "how do event handlers work", "why did my object's
+locality change" — route to the three dedicated files described in Step
+3's "Vanilla SQF/Arma engine mechanics" section:
+`references/sqf-language-reference.md` (the language),
+`references/arma-scripting-architecture.md` (execution model, locality,
+events, `CfgFunctions`, Eden mechanics), and `references/sqf-debugging.md`
+(errors, RPT, debugging tools, methodology, and the official biki lookup
+table). All three carry real depth — data types with the operations you
+can actually perform on them, a full execution-model comparison table with
+*why* scheduled vs unscheduled matters, the complete event-handler
+ecosystem, multiplayer locality in depth, and so on — read whichever one
+the question actually needs rather than assuming a single short answer
+covers it.
 
-It also carries the **official Bohemia Interactive Community wiki (biki)
-lookup table** — the biki main page, the Scripting Commands category, and
-the Eden Editor page — plus explicit permission to fetch a specific
+`references/sqf-debugging.md` carries the **official Bohemia Interactive
+Community wiki (biki) lookup table** — the biki main page, the Scripting
+Commands category, the Functions Viewer/`CfgFunctions` category, and the
+Eden Editor page — plus explicit permission to fetch a specific
 `https://community.bistudio.com/wiki/<commandName>` page when unsure of a
 **vanilla** Arma command's exact signature, return type, or locality,
 rather than guessing. This is the same "don't guess" policy the rest of
 this skill applies to WMP's own functions, just extended to vanilla engine
 commands — use it, don't recall a command's behaviour from memory when the
-page is one fetch away.
+page is one fetch away. For a **mod's own** native behaviour (ACE, ACRE2,
+TFAR, ZEN, LAMBS) beyond the biki's vanilla-engine scope, see
+`references/mods/*.md` instead — described in Step 3's "Mod documentation"
+section above.
 
-Keep this skill's centre of gravity on **WMP itself**: that reference file
-is scoped to debugging/understanding vanilla mechanics that come up while
-using WMP, not a full scripting course. Any WMP-specific variable,
-function, or error still routes to that feature's own `references/*.md`
-file first — don't answer a WMP question out of `sqf-arma-basics.md`, and
-don't turn a one-line syntax question into a general SQF tutorial or treat
-an unrelated pasted script as something this skill should review.
+Keep this skill's centre of gravity on **WMP itself**: these files are
+scoped to debugging/understanding vanilla mechanics and mod-native
+behaviour that come up while using or extending WMP, not a full scripting
+course. Any WMP-specific variable, function, or error still routes to that
+feature's own `references/*.md` file first — don't answer a WMP question
+out of the vanilla-engine or mods reference files, and don't turn a one-line
+syntax question into a general SQF tutorial or treat an unrelated pasted
+script as something this skill should review.
 
 ## Step 5: after editing (direct-edit mode only)
 
