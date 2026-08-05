@@ -3,8 +3,9 @@
  * Executes one validated transport movement on the machine currently owning the AI driver group.
  * It creates only local control state, clears only that group's waypoints, applies the configured
  * non-combat movement policy and reports arrival/failure with the authoritative request ID.
- * Service helicopters use the normal global improved-landing tracker with an invisible-helipad
- * landAt fallback when that tracker cannot acquire or safely complete the approach.
+ * Service helicopters fly a normal MOVE route, then invoke the shared improved-landing controller
+ * explicitly at the approach point. This avoids inventing a LAND waypoint type that Arma does not
+ * support, while retaining an invisible-helipad landAt fallback.
  * Locality and authority: runs only where the AI driver group is local; server request IDs remain authoritative.
  *
  * Arguments: vehicle, service ID, request ID, phase, target ATL position, config HashMap and the
@@ -49,7 +50,7 @@ private _standardImprovedLanding = _helicopter
     && {_config getOrDefault ["useImprovedLanding", true]}
     && {missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]};
 // A landing waypoint can complete immediately while a helicopter is still parked. Give helicopters
-// a real 75 metre departure MOVE leg before the destination LAND/MOVE waypoint. This is the same
+// a real 75 metre departure MOVE leg before the destination approach waypoint. This is the same
 // engine-safe sequence required for ordinary take-off-to-landing routes.
 private _departureWaypoint = [];
 if (_helicopter) then {
@@ -64,7 +65,9 @@ if (_helicopter) then {
 };
 // Radius -1 gives exact waypoint placement. Radius 0 may still be shifted by the engine.
 private _waypoint = _group addWaypoint [_target, -1];
-_waypoint setWaypointType (if (_standardImprovedLanding) then {"LAND"} else {"MOVE"});
+// LAND is a vehicle command, not a valid setWaypointType value. Keep the engine route as MOVE;
+// the scheduled controller below hands the approach to improved landing when it enters range.
+_waypoint setWaypointType "MOVE";
 _waypoint setWaypointBehaviour _movementBehaviour;
 _waypoint setWaypointCombatMode "BLUE";
 _waypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);
@@ -98,14 +101,13 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
         if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {currentWaypoint _group == _landingWaypointIndex} && {_vehicle distance2D _target <= _triggerDistance}) then {
             private _accepted = false;
             if (_standardImprovedLanding) then {
-                private _acquireDeadline = diag_tickTime + 4;
-                waitUntil {
-                    sleep 0.2;
-                    call _stale
-                    || {_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}
-                    || {diag_tickTime >= _acquireDeadline}
-                };
-                _accepted = _vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false];
+                _accepted = [
+                    _vehicle,
+                    _target,
+                    "MOVE",
+                    _landingWaypointIndex,
+                    ""
+                ] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
             };
             if (!_accepted && {!(call _stale)}) then {
                 _accepted = if (isNull _landingPad) then {false} else {_vehicle landAt [_landingPad, "LAND"]};

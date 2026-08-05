@@ -31,7 +31,11 @@ if (!isNull _controller && {_config getOrDefault ["notifyController", true]}) th
     [_message] remoteExecCall ["Waldo_fnc_GunshipNotifyLocal", owner _controller];
 };
 if (_config getOrDefault ["announceSide", false]) then {
-    ["AIRBORNE GUNSHIP", _message, "INFO", "AIRBORNE_GUNSHIP"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", (_config getOrDefault ["side", west])];
+    private _sideRecipients = allPlayers select {
+        side group _x == (_config getOrDefault ["side", west])
+        && {isNull _controller || {_x != _controller} || {!(_config getOrDefault ["notifyController", true])}}
+    };
+    ["AIRBORNE GUNSHIP", _message, "INFO", "AIRBORNE_GUNSHIP"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _sideRecipients];
 };
 private _callback = _config getOrDefault ["onStateChanged", {}];
 if (_callback isEqualType {}) then {[_id, _previous, _status, _state] call _callback};

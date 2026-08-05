@@ -51,7 +51,9 @@ _ids = [_ids, [], {
 private _accepted = 0;
 private _count = count _ids;
 private _columns = ceil (sqrt (_count max 1));
-private _spacing = if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]};
+// Each requested slot may be shifted while finding reachable ground. Use twice the single-service
+// minimum so neighbouring searches do not begin on each other's exclusion boundary.
+private _spacing = 2 * (if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]});
 {
     private _entry = _services get _x;
     private _vehicle = _entry get "vehicle";
@@ -62,13 +64,19 @@ private _spacing = if (_type == "HELICOPTER") then {missionNamespace getVariable
         private _offsetX = (_column - ((_columns - 1) / 2)) * _spacing;
         private _offsetY = (_row - ((_rows - 1) / 2)) * _spacing;
         private _slot = [(_position select 0) + _offsetX, (_position select 1) + _offsetY, 0];
-        ["REQUEST_SPECIFIC", _type, _vehicle, _slot, _requester] call Waldo_fnc_TransportRequestServer
+        ["REQUEST_SPECIFIC", _type, _vehicle, _slot, _requester, true] call Waldo_fnc_TransportRequestServer
     } else {
-        ["RTB", _type, _vehicle, [], _requester] call Waldo_fnc_TransportRequestServer
+        ["RTB", _type, _vehicle, [], _requester, true] call Waldo_fnc_TransportRequestServer
     };
     if (_ok) then {_accepted = _accepted + 1};
 } forEach _ids;
 
 private _verb = if (_command == "PICKUP_ALL") then {"pickup"} else {"return-to-base"};
-[_type, format ["Bulk %1 accepted by %2 of %3 eligible %4 transports.", _verb, _accepted, _count, toLowerANSI _type], if (_accepted > 0) then {"SUCCESS"} else {"WARNING"}, "FLEET"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+private _failed = _count - _accepted;
+private _resultText = if (_count == 0) then {
+    format ["No eligible %1 transports were available for the bulk %2 request.", toLowerANSI _type, _verb]
+} else {
+    format ["Bulk %1: %2 accepted%3.", _verb, _accepted, if (_failed > 0) then {format [", %1 could not be assigned a clear service point", _failed]} else {""}]
+};
+[_type, _resultText, if (_accepted > 0) then {"SUCCESS"} else {"WARNING"}, "FLEET"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
 _accepted

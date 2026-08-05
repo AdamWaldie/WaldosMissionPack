@@ -1,8 +1,7 @@
 /*
  * Author: WaldoTheWarfighter, Val
- * Builds a live, scalable list of named available transports of one type that this player may use.
- * Selecting a row opens the normal map picker and requests that exact vehicle instead of allowing
- * the server to choose the nearest eligible service.
+ * Builds one live, scalable list of named transports of one type. Available rows request that exact
+ * vehicle; active rows owned by or carrying the player expose that vehicle's management controls.
  * Locality and authority: interface-client display filtering only. The server repeats all access,
  * availability and requester checks before atomically reserving the selected transport.
  *
@@ -10,9 +9,9 @@
  * 0: player <OBJECT>
  * 1: service type <STRING> - HELICOPTER or GROUND.
  *
- * Return Value: <ARRAY> - ACE dynamic child-action rows for eligible available services.
+ * Return Value: <ARRAY> - ACE dynamic child-action rows for available and manageable services.
  * Example: [player, "HELICOPTER"] call Waldo_fnc_TransportAvailableChildrenLocal;
- * Current callers: Select Specific Transport under the helicopter and ground self-action branches.
+ * Current callers: Select / Manage Transport under the helicopter and ground self-action branches.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
  */
 
@@ -71,4 +70,6 @@ private _children = [];
     ] call ace_interact_menu_fnc_createAction;
     _children pushBack [_action, [], _player];
 } forEach _services;
+// Active rows use the same type-specific list instead of a separate top-level management category.
+_children append ([_player, _type] call Waldo_fnc_TransportManageChildrenLocal);
 _children

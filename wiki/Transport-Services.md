@@ -54,24 +54,22 @@ To travel:
 ### Multiple transports and changing a request
 
 - The normal request path manages one active helicopter and one active ground transport per player.
-- The first menu level is deliberately short and scalable: **Helicopter Transport**, **Ground Transport** and **Manage Active Services**. Air and ground controls do not compete for the same radial-menu space.
+- The first menu level is deliberately short and scalable: **Helicopter Transport** and **Ground Transport**. Air and ground controls do not compete for the same radial-menu space.
 - **Request / Move Pickup** requests the first service, or retargets that player's single inbound/boarding service of the same type.
-- **Request Another...** appears only when the player already controls an active same-type transport and another is available. It deliberately reserves another vehicle for a larger lift.
-- **Select Specific Transport** opens a live alphabetical list of named, eligible, currently available services. Selecting one opens the normal map picker and requests that exact asset. This list is nested under the air/ground branch so large fleets do not overwhelm the top-level ACE menu.
-- **Request All Available** dispatches every eligible available transport of that type around one clicked centre. WMP assigns separate slots instead of sending the fleet to one coordinate.
+- **Select / Manage Transport** opens one live alphabetical list. Available services can be requested directly; active services reserved by or carrying the player expose move, destination, retry and RTB controls. Zeus can manage every active service. This replaces the old separate “Request Another” and “Manage Active Services” entries.
+- **Request All Available** dispatches every eligible available transport of that type around one clicked centre. WMP uses enlarged, separate search slots instead of sending the fleet to one coordinate, then shows one combined result card instead of one card per vehicle.
 - **Return All Controlled to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
 - Retargeting publishes a new request token before redispatch. Superseded AI-owner loops stop before they can land, stop or report against the old point.
-- **Manage Active Services** lists transports reserved by the player, transports currently carrying the player, and all transports for Zeus. Every row includes the configured service name and live state.
 - The same named controls also exist directly on each transport. Being inside or near another transport no longer changes which object the action addresses.
 - The original requester may move pickup or order RTB while outside the vehicle. A passenger may select destination or order RTB for the transport they occupy. Zeus may manage any registered transport.
 - Once a transport is travelling to a destination, disembarking or returning, a repeated pickup is refused with the existing transport's name and state. Return it to base or let its lifecycle complete before requesting another of that type.
 
 ### If a transport becomes stuck
 
-The ground controller watches progress and reselects its existing route up to `pathRetryLimit` times. If the vehicle still cannot progress, or either transport type exceeds its journey deadline, the server publishes **STUCK** rather than silently losing the reservation. The requester receives the transport name and failed phase. Clear the obstruction, then use **Manage Active Services > [name] > Retry Current Route**, use the same control directly on the vehicle, or order that exact transport to RTB. Emergency teleport remains off unless `failSafeReset` was explicitly enabled.
+The ground controller watches progress and reselects its existing route up to `pathRetryLimit` times. If the vehicle still cannot progress, or either transport type exceeds its journey deadline, the server publishes **STUCK** rather than silently losing the reservation. The requester and player passengers receive the transport name and failed phase. Clear the obstruction, then use **Select / Manage Transport > [name] > Retry Current Route**, use the same control directly on the vehicle, or order that exact transport to RTB. Emergency teleport remains off unless `failSafeReset` was explicitly enabled.
 
-When ACE Interact is unavailable, WMP-blue scroll-wheel pickup actions preserve the essential request path.
+When ACE Interact is unavailable, WMP-blue scroll-wheel pickup actions preserve the essential request path. If ACE is installed but still initialising, WMP waits for it instead of leaving duplicate scroll-wheel actions beside the ACE category.
 
 ## What the system does after each click
 

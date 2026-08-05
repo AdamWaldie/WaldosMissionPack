@@ -262,6 +262,7 @@ class FullAuditTests(unittest.TestCase):
         info = (root / "transportSetupVehicleLocal.sqf").read_text(encoding="utf-8")
         notify = (root / "transportNotifyLocal.sqf").read_text(encoding="utf-8")
         manage = (root / "transportManageChildrenLocal.sqf").read_text(encoding="utf-8")
+        available = (root / "transportAvailableChildrenLocal.sqf").read_text(encoding="utf-8")
         protection = (root / "transportSetProtectionLocal.sqf").read_text(encoding="utf-8")
         protection_refresh = (root / "transportRefreshProtectionServer.sqf").read_text(encoding="utf-8")
         interactions = (root / "transportInteractionInitLocal.sqf").read_text(encoding="utf-8")
@@ -293,10 +294,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_Transport_GroundRoot", interactions)
         self.assertNotIn("Waldo_Logistics_SelfRoot", interactions)
         self.assertIn("Request / Move Pickup", interactions)
-        self.assertIn("Request Another Helicopter", interactions)
-        self.assertIn("Select Specific Transport", interactions)
+        self.assertNotIn("Request Another Helicopter", interactions)
+        self.assertIn("Select / Manage Transport", interactions)
         self.assertIn("Waldo_fnc_TransportAvailableChildrenLocal", interactions)
-        self.assertIn("Manage Active Services", interactions)
+        self.assertNotIn("Manage Active Services", interactions)
+        self.assertIn("Waldo_fnc_TransportManageChildrenLocal", available)
         self.assertIn("Waldo_TransportService_RequesterUID", manage)
         self.assertIn("Waldo_fnc_ShowUiNotification", notify)
         self.assertIn('"WMP TRANSPORT", "REPLACE"', notify)
@@ -333,10 +335,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Select Destination", wiki)
         self.assertIn('Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true', register)
         self.assertIn('"useImprovedLanding", true', register)
-        self.assertIn('then {"LAND"} else {"MOVE"}', dispatch)
+        self.assertIn('_waypoint setWaypointType "MOVE"', dispatch)
         self.assertIn('"TriggerSpeedFactor", 4.2', dispatch)
         self.assertIn('"TriggerDistance", 500', dispatch)
-        self.assertNotIn("Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", dispatch)
+        self.assertIn("Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", dispatch)
         self.assertIn('roadsConnectedTo _x', request)
         self.assertIn('"Land_HelipadEmpty_F"', request)
         self.assertIn('Waldo_HeliTransport_DefaultLzSearchRadius", 75', register)
@@ -347,6 +349,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('"PICKUP_ALL"', bulk)
         self.assertIn('"RTB_ALL"', bulk)
         self.assertIn('"REQUEST_SPECIFIC"', bulk)
+        self.assertIn('_requester, true] call Waldo_fnc_TransportRequestServer', bulk)
+        self.assertIn('private _spacing = 2 *', bulk)
+        self.assertIn('if (!_aceReady) then', info)
+        self.assertIn('CfgPatches" >> "ace_interact_menu', info)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", 0]', (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAANotifyState.sqf").read_text(encoding="utf-8"))
         self.assertIn("Request All Available Helicopter Transports", interactions)
         self.assertIn("Return All Controlled Ground Transports to Base", interactions)
         self.assertIn('Waldo_fnc_TransportBulkRequestServer", 2', map_ui)
@@ -376,6 +383,27 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('getOrDefault ["failSafeReset", false]', report)
         self.assertIn('set ["state", "STUCK"]', report)
         self.assertIn('set ["lastFailedPhase", _phase]', report)
+
+    def test_integrated_notification_audiences_are_explicit(self):
+        mission_scripts = ROOT / "MissionScripts"
+        broad_targets = []
+        for path in mission_scripts.rglob("*.sqf"):
+            text = path.read_text(encoding="utf-8")
+            if 'remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", 0]' in text:
+                broad_targets.append(path.relative_to(ROOT).as_posix())
+        self.assertEqual([], broad_targets, f"Feature notifications must use an explicit player audience: {broad_targets}")
+
+        transport_bulk = (mission_scripts / "Logistics" / "TransportServices" / "transportBulkRequestServer.sqf").read_text(encoding="utf-8")
+        transport_report = (mission_scripts / "Logistics" / "TransportServices" / "transportReportServer.sqf").read_text(encoding="utf-8")
+        dynamic_aa = (mission_scripts / "CombatSystems" / "DynamicAA" / "dynamicAANotifyState.sqf").read_text(encoding="utf-8")
+        gunship = (mission_scripts / "CombatSystems" / "AirborneGunship" / "gunshipSetState.sqf").read_text(encoding="utf-8")
+        mhq = (mission_scripts / "Logistics" / "MHQ" / "MHQRequestServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('_requester, true] call Waldo_fnc_TransportRequestServer', transport_bulk)
+        self.assertIn('(crew _vehicle) select {isPlayer _x}', transport_report)
+        self.assertIn('allPlayers select {side group _x == _side}', dynamic_aa)
+        self.assertIn('_x != _controller', gunship)
+        self.assertNotIn('BIS_fnc_showNotification', mhq)
+        self.assertIn('allPlayers select {side group _x == side group _actor}', mhq)
 
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (

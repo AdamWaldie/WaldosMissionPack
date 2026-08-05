@@ -62,6 +62,8 @@ The function returns a unique token for a displayed card, `"QUEUED"` when the re
 
 Timed cards automatically fit their reading time to their title and message length. A short confirmation clears near the configured three-second minimum; progressively longer text remains longer, up to—but never beyond—the duration supplied by its caller. This preserves every feature's existing duration as a safe ceiling while reducing the time small cards occupy a lane. Set `Waldo_UiNotification_MinimumDuration` for the shortest readable lifetime and leave `Waldo_UiNotification_CharactersPerSecond` at its tested default unless accessibility testing supports a different reading rate.
 
+The shipped minimum is **3 seconds**. There is deliberately no second global maximum: each call supplies its own ceiling. The generic example defaults to 8 seconds, Transport Services supplies 7 seconds, and `0` means a persistent status card that remains until replaced or dismissed.
+
 ## Channels, stacking and replacement
 
 A channel identifies one stream of related notifications. Different channels can share a screen region without drawing over one another. WMP measures and stacks up to three active cards in that region. As an earlier card expires, every surviving card smoothly closes the gap until the stack is gone. When that region is full, independent channels can use the configured overflow regions at the same time before any request waits in the queue.
@@ -183,6 +185,26 @@ private _targetOwner = owner _player;
 ```
 
 The notification system does not broadcast gameplay state. Publish authoritative state separately, then notify the clients who need to see it.
+
+### Audience rules used by integrated features
+
+WMP adapters follow these audience boundaries so a server-side event does not become an accidental mission-wide broadcast:
+
+| Event | Intended recipients |
+|---|---|
+| Request validation, setup failure or Zeus action | The requesting player/curator only |
+| Transport accepted or ready for boarding | The player who requested that named transport |
+| Transport stuck or arrived at destination | The requester plus current player passengers |
+| Bulk transport request | The requester receives one fleet summary; individual vehicle cards are suppressed |
+| Rally deployment/removal | Members of that squad |
+| Recovery completion | Players inside the configured workshop notification radius |
+| Medical feedback | Patient and/or treatment giver according to the feature settings |
+| Dynamic AA detection or scramble | Players on the AA system's configured side |
+| Gunship side announcement | Players on the configured side; the controller is excluded when they already receive the private controller message |
+| Mobile command-post state change | Players on the deploying side |
+| Persistent personal equipment/status | Only the local player whose state is being represented |
+
+Do not target `0` for ordinary feature notifications: that includes machines which cannot display UI and frequently leaks information to the opposing side. Use an owner ID for a private response, an explicit player-object array for a calculated audience, or `-2` only for an intentionally global player announcement.
 
 ## Cleanup and recovery
 

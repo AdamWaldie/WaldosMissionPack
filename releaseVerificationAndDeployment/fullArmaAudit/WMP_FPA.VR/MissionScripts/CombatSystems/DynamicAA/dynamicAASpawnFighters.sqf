@@ -71,6 +71,7 @@ _state set ["lastFighterScramble", diag_tickTime];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 if (_config getOrDefault ["announce", true]) then {
-    ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _count], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", 0];
+    private _recipients = allPlayers select {side group _x == _side};
+    ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _count], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
 };
 _count

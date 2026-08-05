@@ -12,6 +12,8 @@
  * 2: vehicle <OBJECT> - required for destination/RTB; ignored for pickup.
  * 3: map position <ARRAY> - pickup/destination position.
  * 4: requester <OBJECT> - player making the request.
+ * 5: suppress requester notification <BOOL> - internal bulk calls use true so one fleet summary
+ *    replaces one card per vehicle.
  *
  * Return Value: Boolean - true when accepted.
  *
@@ -21,7 +23,7 @@
  * Current caller: Waldo_fnc_TransportOpenMapLocal and the RTB self-action.
  */
 
-params ["_action", "_type", "_vehicle", ["_position", [], [[]]], "_requester"];
+params ["_action", "_type", "_vehicle", ["_position", [], [[]]], "_requester", ["_suppressRequesterNotification", false, [false]]];
 _action = toUpperANSI _action;
 _type = toUpperANSI _type;
 private _internalRtb = remoteExecutedOwner == 0 && {_action == "RTB"};
@@ -36,6 +38,12 @@ private _retargetingPickup = false;
 private _retrying = false;
 private _requestRejected = false;
 private _requesterUid = if (isNull _requester) then {""} else {getPlayerUID _requester};
+private _notifyRequester = {
+    params ["_type", "_message", "_severity", ["_channel", "TRANSPORT", [""]]];
+    if (!_suppressRequesterNotification && {!isNull _requester}) then {
+        [_type, _message, _severity, _channel] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+    };
+};
 
 private _canUse = {
     params ["_candidate", "_requester"];
@@ -61,7 +69,7 @@ if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
         && {_candidate getOrDefault ["state", "AVAILABLE"] != "AVAILABLE"}
     };
     if (_action == "REQUEST_PICKUP" && {count _ownedIds > 1}) exitWith {
-        [_type, "You have several active transports of this type. Use Manage Active Services and move the named transport's pickup point, or explicitly request an additional transport.", "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+        [_type, "You have several active transports of this type. Use Select / Manage Transport and choose the named vehicle you want to control.", "WARNING"] call _notifyRequester;
         _requestRejected = true
     };
     if (_action == "REQUEST_PICKUP" && {count _ownedIds == 1}) then {
@@ -69,7 +77,7 @@ if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
         private _owned = _services get _id;
         private _ownedState = _owned getOrDefault ["state", ""];
         if !(_ownedState in ["TO_PICKUP", "BOARDING"]) exitWith {
-            [_type, format ["%1 is already handling your request (%2). Manage that named transport or return it to base before requesting another.", _owned get "name", _ownedState], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+            [_type, format ["%1 is already handling your request (%2). Use Select / Manage Transport to control it or select another available vehicle.", _owned get "name", _ownedState], "WARNING"] call _notifyRequester;
             _requestRejected = true;
             _id = ""
         };
@@ -95,7 +103,7 @@ if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
         };
     } forEach _pool;
     if (_id == "") exitWith {
-        [_type, "No eligible transport is currently available.", "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+        [_type, "No eligible transport is currently available.", "WARNING"] call _notifyRequester;
         _requestRejected = true
     };
     };
@@ -118,7 +126,7 @@ if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
         default {false};
     };
     if (!_internalRtb && {!_actionAllowed}) exitWith {
-        [_type, format ["You cannot control %1. Use the named transport reserved by you, a transport you are travelling in, or Zeus control.", _entry getOrDefault ["name", "this transport"]], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+        [_type, format ["You cannot control %1. Use the named transport reserved by you, a transport you are travelling in, or Zeus control.", _entry getOrDefault ["name", "this transport"]], "WARNING"] call _notifyRequester;
         _requestRejected = true
     };
 };
@@ -154,6 +162,7 @@ switch (_action) do {
 if (_phase == "") exitWith {false};
 private _requestedTarget = +_target;
 private _targetValid = true;
+private _targetFailure = "";
 private _minimumSeparation = _config getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {60} else {18}];
 private _occupiedTargets = [];
 {
@@ -214,9 +223,7 @@ if (_type == "GROUND") then {
         };
     } forEach _searchRadii;
     if (_safe isEqualTo []) then {
-        if (!isNull _requester) then {
-            [_type, format ["No safe landing zone was found within %1 metres of the selected point.", round _maximumRadius], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
-        };
+        _targetFailure = format ["No safe landing zone was found within %1 metres of the selected point.", round _maximumRadius];
         _targetValid = false;
     } else {
         _target = _safe;
@@ -224,7 +231,8 @@ if (_type == "GROUND") then {
 };
 };
 if (!_targetValid) exitWith {
-    if (!isNull _requester) then {[_type, format ["No clear service point with %1 metres separation was found near the selected position.", round _minimumSeparation], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
+    if (_targetFailure == "") then {_targetFailure = format ["No clear service point with %1 metres separation was found near the selected position.", round _minimumSeparation]};
+    [_type, _targetFailure, "WARNING"] call _notifyRequester;
     false
 };
 
@@ -270,7 +278,7 @@ if (!isNull _requester) then {
     private _adjustment = _requestedTarget distance2D _target;
     private _adjustmentText = if (_adjustment > 10) then {format [" The exact service point was adjusted %1 metres to reachable ground.", round _adjustment]} else {""};
     private _verb = if (_retargetingPickup) then {"updated its pickup point"} else {if (_retrying) then {format ["is retrying its %1 route", toLowerANSI _phase]} else {format ["accepted the %1 request", toLowerANSI _phase]}};
-    [_type, format ["%1 %2.%3", _entry get "name", _verb, _adjustmentText], "INFO", _id] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+    [_type, format ["%1 %2.%3", _entry get "name", _verb, _adjustmentText], "INFO", _id] call _notifyRequester;
 };
 [_vehicle, _id, _serial, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner group driver _vehicle];
 true

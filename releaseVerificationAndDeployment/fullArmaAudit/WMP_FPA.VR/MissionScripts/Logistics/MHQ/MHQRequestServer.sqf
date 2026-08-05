@@ -15,7 +15,7 @@ if (isNull _target || {isNull _actor} || {!alive _actor}) exitWith {false};
 if (isRemoteExecuted && {_requestOwner != owner _actor}) exitWith {false};
 if (!(_target getVariable ["Waldo_MHQ_ServerConfigured", false])) exitWith {false};
 if (_actor distance _target > 6 || {abs speed _target >= 1}) exitWith {
-    ["Command post operation rejected: stop the vehicle and remain within 6 metres.", _actor] call Waldo_fnc_DynamicText;
+    ["MOBILE COMMAND POST", "Operation rejected: stop the vehicle and remain within 6 metres.", "WARNING", "MHQ"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor];
     false
 };
 if (_target getVariable ["Waldo_MHQ_Transition", false]) exitWith {false};
@@ -57,8 +57,8 @@ if (_operation == "DEPLOY") then {
     _target setVariable ["Waldo_MHQ_Name", _name, true];
     _target setVariable ["Waldo_MHQ_Status", true, true];
     if (_logistics) then {_target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true];};
-    ["Command Post " + _name + " deployed and vehicle locked.", _actor] call Waldo_fnc_DynamicText;
-    ["TaskSucceeded", ["", "Command Post " + _name + " Established"]] remoteExecCall ["BIS_fnc_showNotification", 0];
+    private _recipients = allPlayers select {side group _x == side group _actor};
+    ["MOBILE COMMAND POST", "Command Post " + _name + " established; the vehicle is locked.", "SUCCESS", "MHQ"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
 } else {
     {if (!isNull _x) then {_x hideObjectGlobal true;};} forEach _deployParts;
     private _respawn = _target getVariable ["Waldo_MHQ_RespawnHandle", []];
@@ -73,8 +73,8 @@ if (_operation == "DEPLOY") then {
     _target setVariable ["Waldo_MHQ_RespawnHandle", []];
     _target setVariable ["Waldo_MHQ_Marker", ""];
     if (_logistics) then {_target setVariable ["Waldo_LogisticsQM_CurrentStatus", false, true];};
-    ["Command Post " + _name + " torn down; vehicle unlocked.", _actor] call Waldo_fnc_DynamicText;
-    ["TaskCanceled", ["", "Command Post " + _name + " Torn Down"]] remoteExecCall ["BIS_fnc_showNotification", 0];
+    private _recipients = allPlayers select {side group _x == side group _actor};
+    ["MOBILE COMMAND POST", "Command Post " + _name + " torn down; the vehicle is unlocked.", "INFO", "MHQ"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
 };
 
 if (_audioPath != "") then {

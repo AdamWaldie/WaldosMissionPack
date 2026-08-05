@@ -8,21 +8,25 @@
  *
  * Arguments:
  * 0: player <OBJECT> - player for whom the service list is being built.
+ * 1: service type <STRING> - HELICOPTER or GROUND; empty includes both.
  *
  * Return Value: <ARRAY> - ACE dynamic child-action rows.
  *
  * Example:
- * [player] call Waldo_fnc_TransportManageChildrenLocal;
+ * [player, "HELICOPTER"] call Waldo_fnc_TransportManageChildrenLocal;
  * Result: returns named entries for services reserved by, or currently carrying, the player.
- * Current caller: Manage Active Services under ACE Self Interact > WMP Transport.
+ * Current caller: each type's Select / Manage Transport list.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services
  */
-params [["_player", objNull, [objNull]]];
+params [["_player", objNull, [objNull]], ["_requestedType", "", [""]]];
 if (!hasInterface || {isNull _player}) exitWith {[]};
+_requestedType = toUpperANSI _requestedType;
 
 private _uid = getPlayerUID _player;
 private _services = vehicles select {
     _x getVariable ["Waldo_TransportService_Registered", false]
+    && {_x getVariable ["Waldo_TransportService_State", "AVAILABLE"] != "AVAILABLE"}
+    && {_requestedType == "" || {_x getVariable ["Waldo_TransportService_Type", ""] == _requestedType}}
     && {
         _player in crew _x
         || {_uid != "" && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}}

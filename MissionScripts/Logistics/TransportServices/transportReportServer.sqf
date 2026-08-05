@@ -22,6 +22,12 @@ if (remoteExecutedOwner > 0 && {remoteExecutedOwner != _expectedOwner}) exitWith
 private _type = _entry get "type";
 private _requester = _entry getOrDefault ["requester", objNull];
 private _config = _entry get "config";
+private _notifyTransportAudience = {
+    params ["_message", "_severity"];
+    private _recipients = (crew _vehicle) select {isPlayer _x};
+    if (!isNull _requester && {isPlayer _requester}) then {_recipients pushBackUnique _requester};
+    {[_type, _message, _severity, _id] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _x]} forEach _recipients;
+};
 _phase = toUpperANSI _phase;
 _result = toUpperANSI _result;
 diag_log format ["[WMP TRANSPORT] Report service=%1 request=%2 phase=%3 result=%4 state=%5", _id, _requestId, _phase, _result, _entry getOrDefault ["state", "UNKNOWN"]];
@@ -32,7 +38,7 @@ if (_result == "FAILED") exitWith {
     private _landingPad = _entry getOrDefault ["landingPad", objNull];
     if (!isNull _landingPad) then {deleteVehicle _landingPad};
     _entry deleteAt "landingPad";
-    if (!isNull _requester) then {[_type, format ["%1 is stuck and could not complete its %2 route. Clear the obstruction, then use Manage Active Services > %1 > Retry Current Route or order RTB.", _entry get "name", toLowerANSI _phase], "ERROR", _id] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
+    [format ["%1 is stuck and could not complete its %2 route. Clear the obstruction, then use Select / Manage Transport > %1 > Retry Current Route or order RTB.", _entry get "name", toLowerANSI _phase], "ERROR"] call _notifyTransportAudience;
     if (_phase == "RTB" && {_config getOrDefault ["failSafeReset", false]} && {(crew _vehicle findIf {isPlayer _x}) < 0}) then {
         _vehicle setVehiclePosition [_entry get "startPos", [], 0, "NONE"];
         _vehicle setDir (_entry get "startDir");
@@ -72,7 +78,7 @@ switch (_phase) do {
         [_group, getPosATL _vehicle] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
         _entry set ["state", "DISEMBARKING"];
         _vehicle setVariable ["Waldo_TransportService_State", "DISEMBARKING", true];
-        if (!isNull _requester) then {[_type, format ["%1 reached the destination. Dismount when ready.", _entry get "name"], "SUCCESS", _id] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
+        [format ["%1 reached the destination. Dismount when ready.", _entry get "name"], "SUCCESS"] call _notifyTransportAudience;
         [_id, _requestId] spawn {
             params ["_id", "_requestId"];
             private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
