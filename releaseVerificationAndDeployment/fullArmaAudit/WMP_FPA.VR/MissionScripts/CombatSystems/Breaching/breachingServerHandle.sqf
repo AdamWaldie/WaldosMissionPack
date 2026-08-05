@@ -99,7 +99,12 @@ private _breached = 0;
     };
 } forEach _validProfileClasses;
 
-if (_breached > 0 && {!isNull _unit} && {isPlayer _unit}) then {
+if (
+    _breached > 0
+    && {missionNamespace getVariable ["Waldo_Breaching_ShowNotifications", false]}
+    && {!isNull _unit}
+    && {isPlayer _unit}
+) then {
     ["EXPLOSIVE BREACH", format ["%1 configured section(s) breached.", _breached], "SUCCESS", "EXPLOSIVE_BREACH"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _unit];
 };
 

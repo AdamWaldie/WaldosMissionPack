@@ -616,6 +616,8 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("BIS_fnc_replaceWithSimpleObject", implementation)
         self.assertIn("getObjectScale _scaledObject", implementation)
         self.assertIn("addCuratorEditableObjects", implementation)
+        self.assertIn("WMP OBJECT SCALE", implementation)
+        self.assertIn("Waldo_fnc_FeatureNotifyLocal", implementation)
 
     def test_diagnostics_accept_nested_loadouts_and_real_interaction_ids(self):
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnostics.sqf").read_text(encoding="utf-8")
@@ -658,12 +660,14 @@ class PrReviewAuditTests(unittest.TestCase):
         handler = (ROOT / "MissionScripts" / "CombatSystems" / "Breaching" / "breachingServerHandle.sqf").read_text(encoding="utf-8")
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnostics.sqf").read_text(encoding="utf-8")
         self.assertIn('["Waldo_Breaching_Enable", false]', config)
+        self.assertIn('["Waldo_Breaching_ShowNotifications", false]', config)
         self.assertIn('["Land_City2_8m_F", createHashMapFromArray [', config)
         self.assertIn('["requiredStrength", 1]', config)
         self.assertIn('["deleteOriginal", false]', config)
         self.assertIn('["replacements", []]', config)
         self.assertIn("_parentStrengthIndex", handler)
         self.assertIn("_validProfileClasses", handler)
+        self.assertIn('Waldo_Breaching_ShowNotifications", false', handler)
         self.assertIn("unknown target CfgVehicles class", diagnostics)
         self.assertIn("unknown CfgAmmo class", diagnostics)
         self.assertIn("SizeThresholds must contain two increasing numbers", diagnostics)

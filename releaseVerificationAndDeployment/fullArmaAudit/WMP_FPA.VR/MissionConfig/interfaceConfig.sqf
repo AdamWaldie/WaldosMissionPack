@@ -160,7 +160,7 @@ createHashMapFromArray [
             ["WMP_HUD", "TOP_RIGHT", true],               // WMP HUD messages in top-right lanes.
             ["EMERGENCY_DISMOUNT", "TOP_RIGHT", true],    // dismount messages share/reflow those lanes.
             ["DYNAMIC_AA", "BOTTOM_RIGHT", true],         // AA state at bottom-right.
-            ["EXPLOSIVE_BREACH", "BOTTOM_RIGHT", true],   // breach feedback at bottom-right.
+            ["EXPLOSIVE_BREACH", "BOTTOM_RIGHT", true],   // opt-in breach feedback route; breaching is silent by default.
             ["TREE_FELLING", "BOTTOM_RIGHT", true],       // tree progress at bottom-right.
             ["FIELD_RESUPPLY", "BOTTOM_LEFT", true],      // resupply messages at bottom-left.
             ["VEHICLE_RECOVERY", "BOTTOM_LEFT", true],    // recovery messages at bottom-left.

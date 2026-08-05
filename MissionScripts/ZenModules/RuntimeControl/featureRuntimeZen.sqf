@@ -413,7 +413,6 @@ switch (toUpperANSI _feature) do {
             "Register Transport Service",
             [
                 ["COMBO", ["Service type", "Helicopter and ground transports use independent pools."], [["HELICOPTER", "GROUND"], ["Helicopter transport", "Ground transport"], if (_isHelicopter) then {0} else {1}]],
-                ["EDIT", ["Service ID", "Unique setup key. Leave blank to generate one."], ""],
                 ["EDIT", ["Display name", "Player-facing callsign. Leave blank to use the crew group callsign."], ""],
                 ["CHECKBOX", ["Squad leaders only", "Only group leaders may request this service."], false],
                 ["CHECKBOX", ["Show map marker", "Track the service vehicle on the map."], true],
@@ -422,6 +421,7 @@ switch (toUpperANSI _feature) do {
                 ["SLIDER", ["Helicopter transit height", "Metres above terrain; ignored by ground transports."], [20, 300, missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 80], 0]],
                 ["CHECKBOX", ["Repair at base", "Fully repair the service after a completed return."], false],
                 ["CHECKBOX", ["Refuel at base", "Fully refuel the service after a completed return."], true],
+                ["CHECKBOX", ["Invulnerable service", "Protect the transport and its original AI service crew. Passenger players remain vulnerable."], false],
                 ["CHECKBOX", ["Force late passengers out", "Move remaining passengers out when destination dwell expires."], false],
                 ["CHECKBOX", ["Emergency position reset", "OFF by default. If physical RTB fails and no players are aboard, teleport the transport to base."], false]
             ],
@@ -436,16 +436,7 @@ switch (toUpperANSI _feature) do {
     case "TRANSPORT_RTB": {
         private _target = [_objectPos, _modulePos, ["LandVehicle", "Helicopter"], "Select a registered transport-service vehicle."] call _resolveTarget;
         if (isNull _target) exitWith {};
-        [
-            "Return Transport to Base",
-            [["CHECKBOX", ["Confirm", "Cancel the current task and physically return this service to its registered base."], false]],
-            {
-                params ["_values", "_target"];
-                if (_values select 0) then {["TRANSPORT_RTB", [_target]] call Waldo_fnc_FeatureRuntimeApply};
-            },
-            {},
-            _target
-        ] call zen_dialog_fnc_create;
+        ["TRANSPORT_RTB", [_target]] call Waldo_fnc_FeatureRuntimeApply;
     };
     case "RALLY": {
         private _rallyClasses = ["Land_SatelliteAntenna_01_F", "Land_Radio_F", "Land_TentA_F", "Land_Sleeping_bag_blue_folded_F"];

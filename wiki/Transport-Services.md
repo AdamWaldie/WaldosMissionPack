@@ -2,7 +2,7 @@
 
 > **Use this page when:** you want reusable AI-crewed air or ground transports that players can call during a mission.
 
-WMP Transport Services manages helicopters and ground vehicles in separate typed pools. A helicopter request can never reserve a ground vehicle, and two requests cannot reserve the same vehicle. The server owns registration, access rules, reservations, request IDs, requester identity, state and JIP-visible vehicle status. The machine currently owning the AI group performs movement, so server, headless-client and client-local AI are supported. Registered vehicles and their original AI service crew are invulnerable; passenger players are not.
+WMP Transport Services manages helicopters and ground vehicles in separate typed pools. A helicopter request can never reserve a ground vehicle, and two requests cannot reserve the same vehicle. The server owns registration, access rules, reservations, request IDs, requester identity, state and JIP-visible vehicle status. The machine currently owning the AI group performs movement, so server, headless-client and client-local AI are supported. Optional invulnerability covers only the vehicle and its original AI service crew; it is off by default and never protects passenger players.
 
 ## Beginner setup
 
@@ -91,7 +91,7 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 
 - A clicked point is accepted only when a safe landing point can be found inside `landingSearchRadius`, which defaults to 75 metres. The notification reports adjustments greater than 10 metres and the destination marker shows the actual service point.
 - WMP creates an invisible helipad at that exact resolved point and uses `landAt` for the touchdown.
-- Air Transport uses the improved vector landing controller by default. Transport invokes it directly against its own MOVE waypoint, gaining the controlled flare, slope alignment, canopy clearance and go-around logic without allowing the global waypoint tracker to acquire the same aircraft. The invisible-helipad `landAt` controller remains a fallback when vector control cannot safely acquire.
+- Air Transport uses the normal improved-helicopter-landing path by default. It creates a supported LAND waypoint and lets the same global, locality-aware tracker used by every other AI helicopter acquire at the standard speed-aware distance. Transport only monitors touchdown and request state. The invisible-helipad `landAt` controller remains a fallback when the normal controller does not acquire or aborts.
 - The service uses an exact MOVE waypoint followed by the dedicated landing order. It does not use `TR UNLOAD`, whose dedicated-server behaviour is unsuitable for an AI-crewed aircraft carrying only player passengers.
 - Active helicopter LZs are kept at least `minimumSeparation` metres apart; the default is 60 metres. Bulk pickup lays out a deterministic grid of separated landing slots around the clicked centre.
 
@@ -103,16 +103,17 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 |---|---|
 | `landingSearchRadius` | Maximum metres a helicopter LZ may move away from the clicked point. |
 | `roadSearchRadius` | Maximum metres searched for a road around a ground-transport click. |
-| `minimumSeparation` | Minimum metres between same-type bases and active service points. Defaults to 60 for helicopters and 18 for ground vehicles. Registration is refused when pre-placed bases violate it. |
+| `minimumSeparation` | Minimum metres between active destinations and bulk service slots. Defaults to 60 for helicopters and 18 for ground vehicles. Prepared bases may be closer; registration rejects only physically overlapping vehicle footprints. |
 | `groundSpeedLimit` | Maximum ground-transport speed in km/h. |
 | `pathRetrySeconds` | Seconds without progress before the driver receives the same order again. |
 | `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey. |
 | `useImprovedLanding` | Default `true`: use WMP's vector approach and flare. Set `false` only to force the simpler invisible-helipad `landAt` fallback. |
+| `invulnerable` | Default `false`: when enabled, protects the transport and its original AI service crew across locality changes. Passenger players remain vulnerable. |
 | `failSafeReset` | Default `false`; opt-in emergency teleport after an empty physical RTB fails. |
 
 ## ZEN and lifecycle
 
-Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides plain-language timing and recovery settings, and rejects a type/vehicle mismatch. **Transport Service - Return to Base** cancels a selected registered service.
+Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides a player-facing display name and plain-language timing/recovery settings, and rejects a type/vehicle mismatch. Internal service IDs are always generated automatically and are never exposed to Zeus. A successful registration publishes the pool availability, installs player controls, creates the optional marker and renames the AI crew group to the display name. A rejected registration sends Zeus the exact reason. **Transport Service - Return to Base** immediately cancels a selected registered service without an extra confirmation dialog.
 
 Registrations survive WMP vehicle-recovery reconstruction through the built-in `Waldo_TransportService_Registration` recovery variable. Deleted/dead services are removed from the server registry and their markers. Player actions are reinstalled after respawn and JIP availability is published by type.
 

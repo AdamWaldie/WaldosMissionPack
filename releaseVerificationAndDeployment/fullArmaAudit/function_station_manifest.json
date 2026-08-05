@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 865,
+  "registeredFunctionCount": 866,
   "runtimeFunctionCount": 385,
-  "functionCount": 1250,
+  "functionCount": 1251,
   "stations": [
     {
       "id": "control",
@@ -1477,6 +1477,12 @@
     {
       "name": "Waldo_fnc_TransportSetProtectionLocal",
       "file": "MissionScripts/Logistics/TransportServices/transportSetProtectionLocal.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TransportSetGroupNameLocal",
+      "file": "MissionScripts/Logistics/TransportServices/transportSetGroupNameLocal.sqf",
       "station": "transport-services",
       "activation": "manual"
     },

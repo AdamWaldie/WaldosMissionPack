@@ -3,8 +3,8 @@
  * Executes one validated transport movement on the machine currently owning the AI driver group.
  * It creates only local control state, clears only that group's waypoints, applies the configured
  * non-combat movement policy and reports arrival/failure with the authoritative request ID.
- * Service helicopters use an exclusive invisible-helipad/landAt controller so the global improved
- * landing feature cannot fight the transport lifecycle.
+ * Service helicopters use the normal global improved-landing tracker with an invisible-helipad
+ * landAt fallback when that tracker cannot acquire or safely complete the approach.
  * Locality and authority: runs only where the AI driver group is local; server request IDs remain authoritative.
  *
  * Arguments: vehicle, service ID, request ID, phase, target ATL position, config HashMap and the
@@ -47,7 +47,10 @@ if (_helicopter) then {
 };
 // Radius -1 gives exact waypoint placement. Radius 0 may still be shifted by the engine.
 private _waypoint = _group addWaypoint [ATLToASL _target, -1];
-_waypoint setWaypointType "MOVE";
+private _standardImprovedLanding = _helicopter
+    && {_config getOrDefault ["useImprovedLanding", true]}
+    && {missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]};
+_waypoint setWaypointType (if (_standardImprovedLanding) then {"LAND"} else {"MOVE"});
 _waypoint setWaypointBehaviour _movementBehaviour;
 _waypoint setWaypointCombatMode "BLUE";
 _waypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);
@@ -62,21 +65,49 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
     private _timeout = diag_tickTime + (missionNamespace getVariable ["Waldo_Transport_TravelTimeout", 900]);
     private _stopRadius = (_config getOrDefault ["stopRadius", if (_helicopter) then {35} else {12}]) max 5;
     if (_helicopter) then {
-        waitUntil {sleep 1; call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_vehicle distance2D _target <= 220} || {diag_tickTime >= _timeout}};
-        if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {_vehicle distance2D _target <= 220}) then {
+        private _standardImprovedLanding = _config getOrDefault ["useImprovedLanding", true]
+            && {missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]};
+        private _triggerDistance = if (_standardImprovedLanding && {!isNil "Waldo_fnc_ImprovedHelicopterLandingSetting"}) then {
+            ((abs speed _vehicle) * ([_vehicle, "TriggerSpeedFactor", 4.2] call Waldo_fnc_ImprovedHelicopterLandingSetting))
+                max ([_vehicle, "TriggerDistance", 500] call Waldo_fnc_ImprovedHelicopterLandingSetting)
+        } else {220};
+        waitUntil {sleep 1; call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_vehicle distance2D _target <= _triggerDistance} || {diag_tickTime >= _timeout}};
+        if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {_vehicle distance2D _target <= _triggerDistance}) then {
             private _accepted = false;
-            if (
-                _config getOrDefault ["useImprovedLanding", true]
-                && {missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]}
-                && {!isNil "Waldo_fnc_ImprovedHelicopterLandingExecuteLocal"}
-            ) then {
-                // Transport owns the MOVE waypoint and invokes the vector controller directly.
-                // The global tracker ignores MOVE tasks, preventing a second controller from acquiring.
-                _accepted = [_vehicle, _target, "MOVE", _waypoint select 1, ""] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;
+            if (_standardImprovedLanding) then {
+                private _acquireDeadline = diag_tickTime + 4;
+                waitUntil {
+                    sleep 0.2;
+                    call _stale
+                    || {_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}
+                    || {diag_tickTime >= _acquireDeadline}
+                };
+                _accepted = _vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false];
             };
             if (!_accepted && {!(call _stale)}) then {
                 _accepted = if (isNull _landingPad) then {false} else {_vehicle landAt [_landingPad, "LAND"]};
                 if (!_accepted) then {_vehicle land "LAND"};
+            };
+            if (_accepted && {_standardImprovedLanding}) then {
+                waitUntil {
+                    sleep 0.5;
+                    call _stale
+                    || {!local _group}
+                    || {!alive _vehicle}
+                    || {!alive driver _vehicle}
+                    || {(isTouchingGround _vehicle || {getPosATL _vehicle select 2 < 1.5}) && {_vehicle distance2D _target <= _stopRadius}}
+                    || {!(_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
+                    || {diag_tickTime >= _timeout}
+                };
+                if (
+                    !(call _stale)
+                    && {alive _vehicle}
+                    && {!isTouchingGround _vehicle}
+                    && {!(_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
+                ) then {
+                    private _fallbackAccepted = if (isNull _landingPad) then {false} else {_vehicle landAt [_landingPad, "LAND"]};
+                    if (!_fallbackAccepted) then {_vehicle land "LAND"};
+                };
             };
         };
         waitUntil {sleep 1; call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {(isTouchingGround _vehicle || {getPosATL _vehicle select 2 < 1.5}) && {_vehicle distance2D _target <= _stopRadius}} || {diag_tickTime >= _timeout}};

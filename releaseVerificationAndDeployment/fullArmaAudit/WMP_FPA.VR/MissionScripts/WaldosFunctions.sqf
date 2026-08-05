@@ -472,6 +472,7 @@ class CfgFunctions
             class TransportManageChildrenLocal {file = "MissionScripts\Logistics\TransportServices\transportManageChildrenLocal.sqf";};
             class TransportSetupVehicleLocal {file = "MissionScripts\Logistics\TransportServices\transportSetupVehicleLocal.sqf";};
             class TransportSetProtectionLocal {file = "MissionScripts\Logistics\TransportServices\transportSetProtectionLocal.sqf";};
+            class TransportSetGroupNameLocal {file = "MissionScripts\Logistics\TransportServices\transportSetGroupNameLocal.sqf";};
             class TransportRefreshProtectionServer {file = "MissionScripts\Logistics\TransportServices\transportRefreshProtectionServer.sqf";};
             class TransportRequestServer {file = "MissionScripts\Logistics\TransportServices\transportRequestServer.sqf";};
             class TransportBulkRequestServer {file = "MissionScripts\Logistics\TransportServices\transportBulkRequestServer.sqf";};

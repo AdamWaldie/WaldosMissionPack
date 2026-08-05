@@ -406,6 +406,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_TreeFelling_Yields` | Optional `[CfgVehicles classname, count]` reward rows spawned per tree. |
 | `Waldo_TreeFelling_RegrowSeconds` | Positive regrowth delay in seconds; `-1` or `0` disables regrowth. |
 | `Waldo_Breaching_Enable` | Master ACE explosive-breaching opt-in. The shipped wall profile remains harmless while this is false. |
+| `Waldo_Breaching_ShowNotifications` | Default false. Opt in only if successful breaches should notify the player who placed the charge. |
 | `Waldo_Breaching_Profiles` | Target CfgVehicles classname to profile map. The shipped `Land_City2_8m_F` example is ready to test. Each profile explains radius, allowed CfgAmmo classes, required force, original-object handling and optional replacements inline. |
 | `Waldo_Breaching_ExplosiveStrengths` | CfgAmmo classname to force per detonation. These are ammo classes such as `DemoCharge_Remote_Ammo`, not inventory magazine classes. |
 

@@ -111,6 +111,8 @@
  * SETTING-BY-SETTING GUIDE - BREACHING:
  * - Waldo_Breaching_Enable: starts ACE explosive detection; only explicitly profiled object classes react.
  * - Waldo_Breaching_Profiles: target CfgVehicles class -> complete profile described and demonstrated below.
+ * - Waldo_Breaching_ShowNotifications: false keeps successful breaches mechanically silent. Set
+ *   true only when the player who placed the charge should receive a WMP notification card.
  * - Waldo_Breaching_ExplosiveStrengths: CfgAmmo class -> positive force contributed by one detonation.
  */
 createHashMapFromArray [
@@ -234,6 +236,7 @@ createHashMapFromArray [
 
         // EXPLOSIVE BREACHING - START HERE. The example wall is safe but inactive until this is true.
         ["Waldo_Breaching_Enable", false],
+        ["Waldo_Breaching_ShowNotifications", false], // BOOL: opt in to a WMP UI card for the player who placed a successful charge. Default breaches are silent.
         ["Waldo_Breaching_Profiles", createHashMapFromArray [
             // TARGET OBJECT CLASSNAME: this exact vanilla 8 m wall becomes breachable.
             ["Land_City2_8m_F", createHashMapFromArray [

@@ -148,15 +148,23 @@ switch (toUpperANSI _action) do {
         _ok
     };
     case "TRANSPORT_REGISTER": {
-        _settings params ["_target", "_type", "_id", "_name", "_leadersOnly", "_showMarker", "_boarding", "_dwell", "_altitude", "_repair", "_refuel", "_forceOut", "_failSafe"];
+        _settings params ["_target", "_type", "_name", "_leadersOnly", "_showMarker", "_boarding", "_dwell", "_altitude", "_repair", "_refuel", "_invulnerable", "_forceOut", "_failSafe"];
         private _options = createHashMapFromArray [
             ["leadersOnly", _leadersOnly], ["showMarker", _showMarker],
             ["boardingSeconds", _boarding], ["destinationDwell", _dwell],
             ["cruiseAltitude", _altitude], ["repairAtBase", _repair],
-            ["refuelAtBase", _refuel], ["forceDisembark", _forceOut], ["failSafeReset", _failSafe]
+            ["refuelAtBase", _refuel], ["invulnerable", _invulnerable],
+            ["forceDisembark", _forceOut], ["failSafeReset", _failSafe]
         ];
-        private _ok = [_target, _type, _id, _name, _options] call Waldo_fnc_TransportRegister;
-        ["TRANSPORT SERVICE", if (_ok) then {"Service registered."} else {"Registration rejected. Select a living AI-crewed vehicle matching the chosen type."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
+        // ZEN always generates the internal registry ID; Zeus configures only the visible identity.
+        private _ok = [_target, _type, "", _name, _options] call Waldo_fnc_TransportRegister;
+        private _detail = if (_ok) then {
+            format ["%1 registered as %2. Player controls and the optional map marker are now active.", _target getVariable ["Waldo_TransportService_Name", "Transport service"], _target getVariable ["Waldo_TransportService_Id", "generated service"]]
+        } else {
+            missionNamespace getVariable ["Waldo_Transport_LastRegistrationError", "Registration was rejected for an unknown reason. Check the server RPT."]
+        };
+        ["TRANSPORT SERVICE", _detail, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
+        _ok
     };
     case "TRANSPORT_RTB": {
         _settings params ["_target"];

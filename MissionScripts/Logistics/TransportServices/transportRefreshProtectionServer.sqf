@@ -19,9 +19,14 @@ params [["_entry", createHashMap, [createHashMap]]];
 if (!isServer || {_entry isEqualTo createHashMap}) exitWith {_entry};
 private _vehicle = _entry getOrDefault ["vehicle", objNull];
 if (isNull _vehicle || {isNull driver _vehicle}) exitWith {_entry};
+private _enabled = (_entry getOrDefault ["config", createHashMap]) getOrDefault ["invulnerable", false];
 private _owners = [owner _vehicle, groupOwner group driver _vehicle];
-if !(_entry getOrDefault ["protectionOwners", []] isEqualTo _owners) then {
-    [_vehicle] remoteExecCall ["Waldo_fnc_TransportSetProtectionLocal", 0];
-    _entry set ["protectionOwners", _owners];
+if (
+    !(_entry getOrDefault ["protectionOwners", []] isEqualTo (if (_enabled) then {_owners} else {[]}))
+    || {_entry getOrDefault ["protectionEnabled", false] != _enabled}
+) then {
+    [_vehicle, _enabled] remoteExecCall ["Waldo_fnc_TransportSetProtectionLocal", 0];
+    _entry set ["protectionOwners", if (_enabled) then {_owners} else {[]}];
+    _entry set ["protectionEnabled", _enabled];
 };
 _entry

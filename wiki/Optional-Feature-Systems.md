@@ -145,6 +145,9 @@ Breaching requires ACE Explosives. WMP ships a disabled, ready-to-test profile f
 
 Only that exact wall class reacts. Enabling the feature does not affect unrelated walls or buildings.
 The shipped profile opens the full 8 m section and keeps the hidden original available for a reset.
+Successful breaches are silent by default and do not occupy a WMP notification lane. Set
+`Waldo_Breaching_ShowNotifications` to `true` only when the player who placed the successful charge
+should receive a confirmation card.
 
 This is the complete beginner profile from the config:
 

@@ -14,9 +14,10 @@
  * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
  *    destinationDwell, allowedSides, allowedGroups, leadersOnly, showMarker, repairAtBase,
  *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
- *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit and
- *    useImprovedLanding. minimumSeparation is metres between this service's base/stops and another
- *    service of the same type (default: helicopters 60, ground vehicles 18).
+ *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
+ *    invulnerable (vehicle and original AI service crew; default false) and
+ *    useImprovedLanding. minimumSeparation spaces active destinations/bulk service slots (default:
+ *    helicopters 60, ground vehicles 18); prepared bases are checked only for physical overlap.
  *
  * Return Value: Boolean - true when forwarded or registered.
  *
@@ -44,13 +45,21 @@ if (!isServer) exitWith {
     true
 };
 
+private _reject = {
+    params ["_message"];
+    missionNamespace setVariable ["Waldo_Transport_LastRegistrationError", _message];
+    diag_log format ["[WMP TRANSPORT] Registration rejected: %1", _message];
+    false
+};
+missionNamespace setVariable ["Waldo_Transport_LastRegistrationError", ""];
+
 private _authorized = remoteExecutedOwner == 0;
 if (!_authorized) then {
     private _callerIndex = allPlayers findIf {owner _x == remoteExecutedOwner};
     private _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
     _authorized = !isNull _caller && {!isNull getAssignedCuratorLogic _caller};
 };
-if (!_authorized) exitWith {false};
+if (!_authorized) exitWith {["Only the server or an assigned curator may register a transport."] call _reject};
 if !(missionNamespace getVariable ["Waldo_FeatureConfig_SERVER_Ready", false]) exitWith {
     [_vehicle, _type, _id, _displayName, _options] spawn {
         params ["_vehicle", "_type", "_id", "_displayName", "_options"];
@@ -59,15 +68,17 @@ if !(missionNamespace getVariable ["Waldo_FeatureConfig_SERVER_Ready", false]) e
     };
     true
 };
-if !(missionNamespace getVariable ["Waldo_TransportServices_Enable", false]) exitWith {false};
-if (_type == "HELICOPTER" && {!(_vehicle isKindOf "Helicopter")}) exitWith {false};
-if (_type == "GROUND" && {!(_vehicle isKindOf "LandVehicle") || {_vehicle isKindOf "StaticWeapon"}}) exitWith {false};
-if (isNull driver _vehicle || {!alive driver _vehicle} || {isPlayer driver _vehicle}) exitWith {false};
+if !(missionNamespace getVariable ["Waldo_TransportServices_Enable", false]) exitWith {["Transport Services is disabled in MissionConfig/logisticsConfig.sqf."] call _reject};
+if (_type == "HELICOPTER" && {!(_vehicle isKindOf "Helicopter")}) exitWith {["Helicopter service was selected, but the target is not a helicopter."] call _reject};
+if (_type == "GROUND" && {!(_vehicle isKindOf "LandVehicle") || {_vehicle isKindOf "StaticWeapon"}}) exitWith {["Ground service was selected, but the target is not a driveable ground vehicle."] call _reject};
+if (isNull driver _vehicle) exitWith {["The selected vehicle has no driver."] call _reject};
+if (!alive driver _vehicle) exitWith {["The selected vehicle's driver is dead."] call _reject};
+if (isPlayer driver _vehicle) exitWith {["The selected vehicle must have an AI driver."] call _reject};
 
 [] call Waldo_fnc_TransportInitServer;
 if (_id == "") then {_id = format ["%1_%2", _type, floor (random 1000000)]};
 _id = [_id, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
-if (_id == "") exitWith {false};
+if (_id == "") exitWith {["The generated or supplied service ID contained no usable characters."] call _reject};
 if (_displayName == "") then {_displayName = groupId group driver _vehicle};
 
 private _optionMap = createHashMap;
@@ -87,6 +98,7 @@ private _config = createHashMapFromArray [
     ["showMarker", _optionMap getOrDefault ["showMarker", true]],
     ["repairAtBase", _optionMap getOrDefault ["repairAtBase", false]],
     ["refuelAtBase", _optionMap getOrDefault ["refuelAtBase", true]],
+    ["invulnerable", _optionMap getOrDefault ["invulnerable", false]],
     ["forceDisembark", _optionMap getOrDefault ["forceDisembark", false]],
     ["failSafeReset", _optionMap getOrDefault ["failSafeReset", false]],
     ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
@@ -100,25 +112,33 @@ private _config = createHashMapFromArray [
     ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
+// minimumSeparation protects active destinations and bulk landing slots. At a prepared base,
+// mission makers may park services closer together. Reject only physical overlap, using each
+// vehicle's real model footprint plus a small safety margin.
+private _footprintRadius = {
+    params ["_object"];
+    private _bounds = boundingBoxReal _object;
+    _bounds params ["_minimum", "_maximum"];
+    private _halfWidth = abs ((_maximum select 0) - (_minimum select 0)) * 0.5;
+    private _halfLength = abs ((_maximum select 1) - (_minimum select 1)) * 0.5;
+    (sqrt (_halfWidth * _halfWidth + _halfLength * _halfLength)) max 1
+};
+private _vehicleFootprint = [_vehicle] call _footprintRadius;
 private _baseConflict = (keys _services) findIf {
     private _other = _services get _x;
     private _otherVehicle = _other getOrDefault ["vehicle", objNull];
-    private _otherConfig = _other getOrDefault ["config", createHashMap];
     _other getOrDefault ["type", ""] == _type
     && {!isNull _otherVehicle}
     && {_otherVehicle != _vehicle}
-    && {getPosATL _vehicle distance2D (_other getOrDefault ["startPos", getPosATL _otherVehicle]) < ((_config get "minimumSeparation") max (_otherConfig getOrDefault ["minimumSeparation", 0]))}
+    && {getPosATL _vehicle distance2D (_other getOrDefault ["startPos", getPosATL _otherVehicle]) < (_vehicleFootprint + ([_otherVehicle] call _footprintRadius) + 2)}
 };
 if (_baseConflict >= 0) exitWith {
     private _other = _services get ((keys _services) select _baseConflict);
-    diag_log format ["[WMP TRANSPORT] Registration rejected: %1 base is too close to %2. Move the vehicles apart or lower minimumSeparation deliberately.", _displayName, _other getOrDefault ["name", "another transport"]];
-    false
+    [format ["%1 physically overlaps %2. Move the vehicles far enough apart that their model footprints do not touch.", _displayName, _other getOrDefault ["name", "another transport"]]] call _reject
 };
 private _existing = _services getOrDefault [_id, createHashMap];
-if !(_existing isEqualTo createHashMap) then {
-    private _oldVehicle = _existing getOrDefault ["vehicle", objNull];
-    if (!isNull _oldVehicle && {_oldVehicle != _vehicle}) exitWith {false};
-};
+private _oldVehicle = _existing getOrDefault ["vehicle", objNull];
+if (!isNull _oldVehicle && {_oldVehicle != _vehicle}) exitWith {[format ["Service ID %1 is already used by another vehicle.", _id]] call _reject};
 private _entry = createHashMapFromArray [
     ["id", _id], ["type", _type], ["name", _displayName], ["vehicle", _vehicle],
     ["state", "AVAILABLE"], ["requestId", -1], ["requester", objNull], ["requesterUID", ""], ["config", _config],
@@ -141,7 +161,7 @@ _vehicle setVariable ["Waldo_TransportService_RequestId", -1, true];
 _vehicle setVariable ["Waldo_TransportService_RequesterUID", "", true];
 _vehicle setVariable ["Waldo_TransportService_Registered", true, true];
 _vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];
-_vehicle setDamage 0;
+if (_config get "invulnerable") then {_vehicle setDamage 0};
 private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
@@ -168,4 +188,7 @@ if (_config get "showMarker") then {
 };
 _services set [_id, _entry];
 missionNamespace setVariable ["Waldo_Transport_Services", _services];
+private _serviceGroup = group driver _vehicle;
+if (!isNull _serviceGroup) then {[_serviceGroup, _displayName] call Waldo_fnc_TransportSetGroupNameLocal};
+diag_log format ["[WMP TRANSPORT] Registered service=%1 name=%2 type=%3 vehicle=%4 marker=%5", _id, _displayName, _type, typeOf _vehicle, _config get "showMarker"];
 true
