@@ -234,6 +234,23 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Explosive Wall Breaching Example", catalogue)
         self.assertIn("Emergency Dismount Vehicle Example", catalogue)
 
+    def test_new_feature_compositions_are_functional_examples(self):
+        root = ROOT / "WMP_Compositions"
+        transport = (root / "[WMP]Transport_Services_Example" / "composition.sqe").read_text(encoding="utf-8")
+        hazard = (root / "[WMP]Radiation_Hazard_Example" / "composition.sqe").read_text(encoding="utf-8")
+        hud = (root / "[WMP]WMP_HUD_Equipment_Example" / "composition.sqe").read_text(encoding="utf-8")
+
+        self.assertEqual(2, transport.count("createVehicleCrew this"))
+        self.assertIn('""HELICOPTER""', transport)
+        self.assertIn('""GROUND""', transport)
+        self.assertIn('type="B_Heli_Light_01_F"', transport)
+        self.assertIn('type="B_MRAP_01_F"', transport)
+        self.assertIn("Keep simulation enabled", transport)
+        self.assertIn("Waldo_fnc_HazardRegisterPresetZone", hazard)
+        self.assertIn('""RADIATION""', hazard)
+        self.assertIn("G_Goggles_VR", hud)
+        self.assertIn("WMP-HUD", hud)
+
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
             ROOT / "MissionScripts",
