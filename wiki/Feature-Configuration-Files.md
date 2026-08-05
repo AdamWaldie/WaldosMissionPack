@@ -164,6 +164,8 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 |---|---|
 | `Waldo_UiNotification_MaximumQueued` | Maximum pending notification channels before coalescing/eviction. |
 | `Waldo_UiNotification_QueueLifetime` | Seconds a pending notification may wait before expiry. |
+| `Waldo_UiNotification_MinimumDuration` | Shortest lifetime in seconds for a concise timed card. |
+| `Waldo_UiNotification_CharactersPerSecond` | Reading-speed divisor that scales longer text up to each call's existing maximum. |
 | `Waldo_UiNotification_MaximumPerPlacement` | Simultaneous cards in one screen placement. |
 | `Waldo_UiNotification_ReflowDuration` | Seconds used to animate surviving cards into closed gaps. |
 | `Waldo_UiNotification_AllowPlacementOverflow` | Allows a full stream to spill into configured alternate placements. |

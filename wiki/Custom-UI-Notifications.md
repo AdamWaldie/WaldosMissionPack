@@ -50,7 +50,7 @@ The arguments are:
 | `title` | String | Main notification heading |
 | `message` | String or structured text | Explanation shown below the heading |
 | `state` | String | `INFO`, `SUCCESS`, `WARNING` or `ERROR` |
-| `duration` | Number | Lifetime in seconds; `0` remains until replaced or dismissed |
+| `duration` | Number | Maximum lifetime in seconds; `0` remains until replaced or dismissed |
 | `placement` | String | Requested screen region |
 | `channel` | String | Ownership and sequencing key, such as `LOGISTICS` or `ELECTRONIC_WARFARE` |
 | `source` | String | Small system or mission label above the title |
@@ -59,6 +59,8 @@ The arguments are:
 | `allowLocalOverride` | Boolean | Whether an authorized player placement may be used |
 
 The function returns a unique token for a displayed card, `"QUEUED"` when the request enters a bounded queue, or an empty string when no interface is available. If the gameplay display is still opening, WMP keeps one bounded, coalesced waiting set and waits for it for up to 20 seconds rather than starting one waiter per request.
+
+Timed cards automatically fit their reading time to their title and message length. A short confirmation clears near the configured three-second minimum; progressively longer text remains longer, up to—but never beyond—the duration supplied by its caller. This preserves every feature's existing duration as a safe ceiling while reducing the time small cards occupy a lane. Set `Waldo_UiNotification_MinimumDuration` for the shortest readable lifetime and leave `Waldo_UiNotification_CharactersPerSecond` at its tested default unless accessibility testing supports a different reading rate.
 
 ## Channels, stacking and replacement
 
@@ -98,6 +100,8 @@ The queue is capped at 12 channels by default. Pending cards expire after 15 sec
 ```sqf
 Waldo_UiNotification_MaximumQueued = 12;
 Waldo_UiNotification_QueueLifetime = 15;
+Waldo_UiNotification_MinimumDuration = 3;
+Waldo_UiNotification_CharactersPerSecond = 18;
 Waldo_UiNotification_MaximumPerPlacement = 3;
 Waldo_UiNotification_ReflowDuration = 0.18;
 Waldo_UiNotification_AllowPlacementOverflow = true;

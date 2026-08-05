@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_HazardZoneCentre";
-			init="[""composition_hazard"", [getPosATL this, 15], createHashMapFromArray [[""type"", ""TOXIC""], [""label"", ""Toxic Leak""], [""rate"", 2], [""decay"", 0.5], [""intensityMode"", ""CONSTANT""], [""notifyTransitions"", true], [""damageThresholds"", [[8, 0.03], [20, 0.08]]], [""fatalExposure"", 45], [""damageType"", ""stab""]]] call Waldo_fnc_HazardRegisterZone;";
+			init="[""composition_radiation_emitter"", [getPosATL this, 15], ""SEVERE_RADIATION"", createHashMapFromArray [[""intensityMode"", ""CONSTANT""]]] call Waldo_fnc_HazardRegisterPresetZone;";
 		};
 		id=1;
 		type="Land_GasTank_01_yellow_F";
@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-4,0};};
-		title="Hazardous zone: fixed 15 m toxic area with entry/exit warnings, constant exposure, staged injury and fatal exposure. Edit the profile in the object's init field to represent another hazard; use HazardRegisterEmitter for a moving source. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
+		title="Severe radiation zone: fixed 15 m area with packaged Geiger/cough audio, entry/exit warnings, constant exposure, staged injury and fatal dose. Use HazardRegisterEmitter for a moving source. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
 		id=2;
 	};
 };

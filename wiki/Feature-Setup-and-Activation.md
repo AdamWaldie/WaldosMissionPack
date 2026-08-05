@@ -170,7 +170,7 @@ optional disable challenge.
 no exposure. Register a pre-planned marker/trigger/area on the server:
 
     private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap])
-        getOrDefault ["SEVERE", createHashMap];
+        getOrDefault ["SEVERE_RADIATION", createHashMap];
     ["reactor", "reactor_zone", _profile] call Waldo_fnc_HazardRegisterZone;
     ["leaking_truck", leakingTruck, 8, _profile] call Waldo_fnc_HazardRegisterEmitter;
 

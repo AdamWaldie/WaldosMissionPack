@@ -11,7 +11,7 @@ class items
         class Attributes
         {
             name="WMP_RadiationSource";
-            init="[""composition_radiation"", [getPosATL this, 25], ""RADIATION""] call Waldo_fnc_HazardRegisterPresetZone;";
+            init="[""composition_radiation"", [getPosATL this, 25], ""MODERATE_RADIATION""] call Waldo_fnc_HazardRegisterPresetZone;";
         };
         id=1;
         type="Land_GasTank_01_yellow_F";

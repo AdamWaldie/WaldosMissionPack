@@ -4,13 +4,15 @@
  * Transient cards stack across channels and may spill into other screen regions.
  * Pending state is bounded, expires, and coalesces by channel to prevent notification after-play.
  * Persistent cards replace the current owner of their channel.
- * Duration 0 keeps the card visible until it is replaced or cleared.
+ * Duration 0 keeps the card visible until it is replaced or cleared. For timed cards, the supplied
+ * duration is the maximum: WMP shortens concise messages toward the configured readable minimum and
+ * progressively grants longer text more reading time, without ever extending a caller's old timing.
  *
  * Arguments:
  * 0: Title <STRING>
  * 1: Message <STRING or TEXT>
  * 2: State <STRING> INFO | SUCCESS | WARNING | ERROR (default INFO)
- * 3: Duration <NUMBER> seconds, 0 = persistent (default 8)
+ * 3: Maximum duration <NUMBER> seconds, 0 = persistent (default 8)
  * 4: Placement <STRING> TOP | TOP_RIGHT | CENTER | BOTTOM_LEFT | BOTTOM_CENTER | BOTTOM_RIGHT
  * 5: Channel <STRING> replacement/ownership key (default MISSION)
  * 6: Source label <STRING> (default WALDOS MISSION PACK)
@@ -40,6 +42,15 @@ params [
     ["_allowLocalOverride", false, [true]],
     ["_fromQueue", false, [true]]
 ];
+
+private _messageText = if ((typeName _message) isEqualTo "TEXT") then {str _message} else {_message};
+if (_duration > 0 && {!_fromQueue}) then {
+    private _maximumDuration = _duration max 1;
+    private _minimumDuration = ((missionNamespace getVariable ["Waldo_UiNotification_MinimumDuration", 3]) max 1) min _maximumDuration;
+    private _charactersPerSecond = ((missionNamespace getVariable ["Waldo_UiNotification_CharactersPerSecond", 18]) max 5) min 60;
+    private _characterCount = count toArray format ["%1 %2", _title, _messageText];
+    _duration = (_minimumDuration + (_characterCount / _charactersPerSecond)) min _maximumDuration;
+};
 
 private _display = findDisplay 46;
 if (isNull _display) exitWith {
@@ -156,7 +167,6 @@ _accent ctrlSetBackgroundColor _accentColour;
 _trim ctrlSetBackgroundColor (_theme getOrDefault ["trim", _theme getOrDefault ["accent", [0.10, 0.38, 0.66, 1]]]);
 _content ctrlSetBackgroundColor [0, 0, 0, 0];
 
-private _messageText = if ((typeName _message) isEqualTo "TEXT") then {str _message} else {_message};
 private _styledSource = (_theme getOrDefault ["sourcePrefix", ""]) + toUpper _source + (_theme getOrDefault ["sourceSuffix", ""]);
 private _styledTitle = (_theme getOrDefault ["titlePrefix", ""]) + _title + (_theme getOrDefault ["titleSuffix", ""]);
 _content ctrlSetStructuredText parseText format [

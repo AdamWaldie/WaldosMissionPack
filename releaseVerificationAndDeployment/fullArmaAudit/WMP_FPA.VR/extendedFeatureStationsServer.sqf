@@ -106,16 +106,18 @@ Waldo_QA_fnc_injurePatientServer = {
     true
 };
 
-// Live exposure lane: protection makes it safe, while an unprotected player receives measurable
-// ACE/vanilla damage quickly enough to validate that this is a real gameplay hazard.
+// Live radiation lane: start from the shipped severe preset so this station also verifies the
+// packaged Geiger/cough audio, then add only the small range-specific overrides required by QA.
 private _hazardEmitter = ["qa_hazard_emitter"] call _get;
-private _hazardProfile = createHashMapFromArray [
-      ["type", "VACUUM"], ["label", "QA OXYGEN DEFICIENCY"], ["rate", 4],
-      ["decay", 0.5], ["maximumExposure", 40], ["emitterRadius", 8],
-      ["intensityMode", "CONSTANT"], ["damageThresholds", [[4, 0.1], [10, 0.2], [18, 0.35]]],
-      ["damageStageMessages", ["Breathing is impaired; leave the area or equip protection.", "Severe oxygen deprivation is causing injury.", "Critical exposure: death is imminent."]],
-      ["fatalExposure", 24], ["damageType", "stab"],
-      ["protectiveItemsAnySlot", ["H_PilotHelmetFighter_B"]], ["equipmentFactor", 0]
+private _hazardProfile = createHashMap;
+private _hazardPreset = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap]) getOrDefault ["SEVERE_RADIATION", createHashMap];
+{_hazardProfile set [_x, _hazardPreset get _x]} forEach keys _hazardPreset;
+{
+    _hazardProfile set _x;
+} forEach [
+    ["label", "QA SEVERE RADIATION"], ["maximumExposure", 40], ["emitterRadius", 8],
+    ["intensityMode", "CONSTANT"], ["damageThresholds", [[4, 0.1], [10, 0.2], [18, 0.35]]],
+    ["fatalExposure", 24], ["protectiveItemsAnySlot", ["H_PilotHelmetFighter_B"]], ["equipmentFactor", 0]
 ];
 // Exercise the real mid-mission authority path: ordered enable state, current
 // and JIP zone registration, followed by the local evaluator start.

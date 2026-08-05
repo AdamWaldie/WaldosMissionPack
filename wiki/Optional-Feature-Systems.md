@@ -53,24 +53,14 @@ Set `Waldo_Hazard_Enable = true`, then register any number of zones from `initSe
 
 Hazard information can be conditional. `detectorItems` requires at least one listed carried, worn or assigned classname. `detectorObjects` plus `detectorObjectRange` requires a nearby detector object. Advanced missions may set `awarenessCondition` to CODE locally or a missionNamespace function-name string for JIP-safe profiles. When any detector/condition is configured, both continuous status and transition/damage notices require awareness by default. Set `requireAwarenessForStatus` or `requireAwarenessForNotifications` to `false` to exempt that UI. These settings never provide protection: an unaware player still accumulates exposure and takes configured damage.
 
-The `RADIATION` preset demonstrates the restored detector audio without forcing it onto every hazard type. `audioEnabled`, `audioRequiresAwareness`, `geigerLowSounds`, `geigerHighSounds`, `geigerMinInterval`, `geigerMaxInterval`, `coughSounds` and `coughCooldown` control local Geiger/cough feedback. Intensity shortens the Geiger interval and chooses the low/high pool; coughing occurs only after actual configured damage. Audio timers are local and keyed per zone, so they create no recurring network traffic.
+The shipped `LOW_RADIATION`, `MODERATE_RADIATION` and `SEVERE_RADIATION` presets are ready-to-use ionising-radiation examples. All three use the packaged Geiger and injury-cough audio; their dose rate, recovery, shielding factors, injury thresholds, fatal dose and audio cadence increase by severity. `audioEnabled`, `audioRequiresAwareness`, `geigerLowSounds`, `geigerHighSounds`, `geigerMinimumInterval`, `geigerMaximumInterval`, `coughSounds` and `coughCooldown` control that local feedback. Intensity shortens the Geiger interval and chooses the low/high pool; coughing occurs only after actual configured damage. Audio timers are local and keyed per zone, so they create no recurring network traffic. Custom profiles may still represent toxins, heat, vacuum or other roleplay hazards, but those are no longer misleadingly presented as ready-made defaults.
 
 With ACE Interact, **Hazard Equipment** self/other actions can read current exposure and apply configured treatment items. `Waldo_Hazard_DosimeterItems` controls who may read exposure, while `Waldo_Hazard_Treatments` contains `[consumed item classname, readable name, exposure reduction]` rows and `Waldo_Hazard_TreatmentDuration` controls progress time. Treatment removes the carried item on the giver's machine and reduces exposure only on the patient-owning machine. Leave either list empty to disable that part without disabling hazards.
 
 ```sqf
-private _profile = createHashMapFromArray [
-    ["type", "NO_OXYGEN"],
-    ["label", "Unpressurised Area"],
-    ["rate", 8],
-    ["decay", 2],
-    ["protectInVehicles", true],
-    ["vehicleFactor", 0],
-    ["protectiveItems", createHashMapFromArray [
-        ["headgear", ["H_PilotHelmetFighter_B"]]
-    ]],
-    ["damageThresholds", [[30, 0.01], [60, 0.04]]]
-];
-["hangar_vacuum", "vacuum_zone", _profile] call Waldo_fnc_HazardRegisterZone;
+private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap])
+    getOrDefault ["MODERATE_RADIATION", createHashMap];
+["reactor_leak", "reactor_zone", _profile] call Waldo_fnc_HazardRegisterZone;
 ```
 
 Profiles can represent contamination, toxic gas, extreme temperature, vacuum or custom hazards. `damageThresholds` are ordered `[exposure, damage-per-evaluator-tick]` tiers; `fatalExposure` forces death at the configured exposure, or `-1` disables it. Crossing a new damaging tier produces one WMP warning by default; override `notifyDamageStages`, `damageMessage` or `damageStageMessages` for the scenario. Protection can come from equipment, vehicles or interiors. For dedicated-safe `onEnter`, `onExit` or `onTick` behaviour, store the callback function in `missionNamespace` and put its function-name string in the profile; raw CODE callbacks are intentionally not transmitted as JIP state. For a moving source, use `[_key, _object, _radius, _profile] call Waldo_fnc_HazardRegisterEmitter`. Unregister on the server with `Waldo_fnc_HazardUnregisterZone`, or stop only the current client's evaluation with `Waldo_fnc_HazardStop`.

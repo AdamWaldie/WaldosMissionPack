@@ -14,7 +14,7 @@
  * Return Value: <BOOL> - true after the panel was updated or hidden.
  *
  * Example:
- * [["Toxic Leak: 1.14"]] call Waldo_fnc_HazardHud;
+ * [["Reactor Radiation: 1.14"]] call Waldo_fnc_HazardHud;
  * Result: Shows or updates one lower-left hazard panel; an empty array hides and releases it.
  * Current callers: Waldo_fnc_HazardTick and Waldo_fnc_HazardStop.
  */

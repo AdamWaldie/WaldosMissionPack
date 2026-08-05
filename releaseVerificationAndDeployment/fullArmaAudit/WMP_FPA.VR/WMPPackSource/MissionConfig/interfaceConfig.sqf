@@ -59,6 +59,8 @@
  * - Waldo_UI_ThemeOverrides (ADVANCED): partial token overrides for an existing theme ID.
  * - Waldo_UiNotification_MaximumQueued (ADVANCED): maximum pending cards; oldest excess entries are discarded.
  * - Waldo_UiNotification_QueueLifetime (ADVANCED): seconds a pending card may wait before expiring.
+ * - Waldo_UiNotification_MinimumDuration (MISSION MAKER): shortest readable timed-card lifetime.
+ * - Waldo_UiNotification_CharactersPerSecond (ADVANCED): reading-speed divisor used below each call's old maximum.
  * - Waldo_UiNotification_MaximumPerPlacement (ADVANCED): simultaneous visible lanes in one screen region.
  * - Waldo_UiNotification_ReflowDuration (ADVANCED): seconds used to slide remaining cards into closed gaps.
  * - Waldo_UiNotification_AllowPlacementOverflow (MISSION MAKER): true sends excess cards to fallback regions.
@@ -150,6 +152,8 @@ createHashMapFromArray [
         // ADVANCED TUNING: global notification queue and animation behavior.
         ["Waldo_UiNotification_MaximumQueued", 12], // COUNT: oldest pending messages are discarded beyond this bound.
         ["Waldo_UiNotification_QueueLifetime", 15], // SECONDS: pending message expires instead of playing much later.
+        ["Waldo_UiNotification_MinimumDuration", 3], // SECONDS: concise cards clear after at least this readable interval.
+        ["Waldo_UiNotification_CharactersPerSecond", 18], // CHARACTERS/SECOND: longer title/body text scales toward the caller's maximum.
         ["Waldo_UiNotification_MaximumPerPlacement", 3], // LANES: simultaneous panels at one screen placement.
         ["Waldo_UiNotification_ReflowDuration", 0.18], // SECONDS: animation when a stack closes its gap.
         ["Waldo_UiNotification_AllowPlacementOverflow", true], // BOOL: use next placement when all lanes are occupied.

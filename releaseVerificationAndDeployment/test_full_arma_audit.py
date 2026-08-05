@@ -248,7 +248,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('type="B_MRAP_01_F"', transport)
         self.assertIn("Keep simulation enabled", transport)
         self.assertIn("Waldo_fnc_HazardRegisterPresetZone", hazard)
-        self.assertIn('""RADIATION""', hazard)
+        self.assertIn('""MODERATE_RADIATION""', hazard)
         self.assertFalse((root / "[WMP]WMP_HUD_Equipment_Example" / "header.sqe").exists())
         self.assertFalse((root / "[WMP]WMP_HUD_Equipment_Example" / "composition.sqe").exists())
 
@@ -1165,6 +1165,13 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Who can see hazard information", zen)
         self.assertIn("Use preset detector rules", zen)
         self.assertIn('requireAwarenessForStatus", false', zen)
+        for preset in ("LOW_RADIATION", "MODERATE_RADIATION", "SEVERE_RADIATION"):
+            self.assertIn(f'["{preset}", createHashMapFromArray', config)
+        self.assertEqual(3, config.count('["audioEnabled", true]'))
+        self.assertEqual(3, config.count('["geigerLowSounds",'))
+        self.assertEqual(3, config.count('["geigerHighSounds",'))
+        self.assertNotIn('["VACUUM", createHashMapFromArray', config)
+        self.assertNotIn('["MILD", createHashMapFromArray', config)
 
     def test_economy_prompts_preserve_zeus_and_capture_gameplay_input(self):
         core = ROOT / "MissionScripts" / "EconomySystems" / "Core"
@@ -1980,6 +1987,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_UiPanelQueue", drain)
         self.assertIn("Waldo_UiNotification_MaximumQueued", show)
         self.assertIn("Waldo_UiNotification_QueueLifetime", show)
+        self.assertIn("Waldo_UiNotification_MinimumDuration", show)
+        self.assertIn("Waldo_UiNotification_CharactersPerSecond", show)
+        self.assertIn("_characterCount", show)
+        self.assertIn("min _maximumDuration", show)
         self.assertIn("Waldo_UiNotification_AllowPlacementOverflow", show)
         self.assertIn("Waldo_UiNotification_OverflowPlacements", drain)
         self.assertIn("Waldo_UI_PanelsSuppressed", show)
