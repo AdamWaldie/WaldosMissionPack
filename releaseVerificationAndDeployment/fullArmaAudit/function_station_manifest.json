@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 864,
+  "registeredFunctionCount": 865,
   "runtimeFunctionCount": 385,
-  "functionCount": 1249,
+  "functionCount": 1250,
   "stations": [
     {
       "id": "control",
@@ -1489,6 +1489,12 @@
     {
       "name": "Waldo_fnc_TransportRequestServer",
       "file": "MissionScripts/Logistics/TransportServices/transportRequestServer.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TransportBulkRequestServer",
+      "file": "MissionScripts/Logistics/TransportServices/transportBulkRequestServer.sqf",
       "station": "transport-services",
       "activation": "manual"
     },

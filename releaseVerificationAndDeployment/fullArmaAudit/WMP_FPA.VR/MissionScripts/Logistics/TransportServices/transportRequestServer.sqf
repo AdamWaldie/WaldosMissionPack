@@ -6,7 +6,8 @@
  * task. Access rules are validated against the requesting player's live side/group/leadership.
  *
  * Arguments:
- * 0: action <STRING> - REQUEST_PICKUP, REQUEST_ADDITIONAL, MOVE_PICKUP, SET_DESTINATION, RETRY or RTB.
+ * 0: action <STRING> - REQUEST_PICKUP, REQUEST_ADDITIONAL, REQUEST_SPECIFIC (internal bulk use),
+ *    MOVE_PICKUP, SET_DESTINATION, RETRY or RTB.
  * 1: service type <STRING> - HELICOPTER or GROUND.
  * 2: vehicle <OBJECT> - required for destination/RTB; ignored for pickup.
  * 3: map position <ARRAY> - pickup/destination position.
@@ -108,6 +109,7 @@ if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
     private _isCrew = _requester in crew _vehicle;
     private _ownsRequest = _requesterUid != "" && {_entry getOrDefault ["requesterUID", ""] == _requesterUid};
     private _actionAllowed = switch (_action) do {
+        case "REQUEST_SPECIFIC": {_entry getOrDefault ["state", ""] == "AVAILABLE"};
         case "MOVE_PICKUP": {_isCurator || {_ownsRequest}};
         case "SET_DESTINATION": {_isCurator || {_isCrew}};
         case "RETRY": {_isCurator || {_isCrew} || {_ownsRequest}};
@@ -129,6 +131,7 @@ private _target = _position;
 switch (_action) do {
     case "REQUEST_PICKUP": {_phase = "PICKUP"};
     case "REQUEST_ADDITIONAL": {_phase = "PICKUP"};
+    case "REQUEST_SPECIFIC": {_phase = "PICKUP"};
     case "MOVE_PICKUP": {
         if (!(_state in ["TO_PICKUP", "BOARDING"]) || {count _position < 2}) exitWith {};
         _phase = "PICKUP";
@@ -150,27 +153,59 @@ switch (_action) do {
 if (_phase == "") exitWith {false};
 private _requestedTarget = +_target;
 private _targetValid = true;
+private _minimumSeparation = _config getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {60} else {18}];
+private _occupiedTargets = [];
+{
+    if (_x != _id) then {
+        private _other = _services get _x;
+        if (_other getOrDefault ["type", ""] == _type && {_other getOrDefault ["state", "AVAILABLE"] != "AVAILABLE"}) then {
+            private _otherTarget = _other getOrDefault ["target", []];
+            if (count _otherTarget >= 2) then {_occupiedTargets pushBack _otherTarget};
+        };
+    };
+} forEach keys _services;
+private _isSeparated = {
+    params ["_candidate"];
+    _occupiedTargets findIf {_candidate distance2D _x < _minimumSeparation} < 0
+};
 
 if (_type == "GROUND") then {
     private _roads = _target nearRoads (_config getOrDefault ["roadSearchRadius", 200]);
     if !(_roads isEqualTo []) then {
         private _connected = _roads select {count (roadsConnectedTo _x) > 0};
         private _candidates = if (_connected isEqualTo []) then {_roads} else {_connected};
-        private _nearest = _candidates select 0;
-        {if (_x distance2D _target < _nearest distance2D _target) then {_nearest = _x}} forEach _candidates;
-        _target = getPosATL _nearest;
+        _candidates = [_candidates, [], {_x distance2D _target}, "ASCEND"] call BIS_fnc_sortBy;
+        private _resolved = [];
+        {
+            private _roadPosition = getPosATL _x;
+            private _clearPosition = _roadPosition findEmptyPosition [0, (_minimumSeparation max 12), typeOf _vehicle];
+            if (_clearPosition isEqualTo []) then {_clearPosition = _roadPosition};
+            if ([_clearPosition] call _isSeparated) exitWith {_resolved = _clearPosition};
+        } forEach _candidates;
+        if (_resolved isEqualTo []) then {_targetValid = false} else {_target = _resolved};
+    } else {
+        private _clearPosition = _target findEmptyPosition [0, (_minimumSeparation max 12), typeOf _vehicle];
+        if !(_clearPosition isEqualTo []) then {_target = _clearPosition};
+        if !([_target] call _isSeparated) then {_targetValid = false};
     };
 } else {
     private _maximumRadius = _config getOrDefault ["landingSearchRadius", 75];
     private _safe = [];
+    private _searchRadii = [0, _minimumSeparation, _minimumSeparation * 2, _minimumSeparation * 3];
     {
-        if (_safe isEqualTo [] && {_x <= _maximumRadius}) then {
-            private _candidate = [_target, 0, _x, 12, 0, 0.35, 0] call BIS_fnc_findSafePos;
-            if (count _candidate >= 2 && {!(_candidate isEqualTo [0, 0, 0])} && {!surfaceIsWater _candidate} && {_candidate distance2D _target <= _x}) then {
-                _safe = [_candidate select 0, _candidate select 1, 0];
+        private _radius = _x;
+        if (_safe isEqualTo [] && {_radius <= _maximumRadius}) then {
+            for "_angle" from 0 to 315 step 45 do {
+                if (_safe isEqualTo []) then {
+                    private _centre = if (_radius == 0) then {_target} else {_target getPos [_radius, _angle]};
+                    private _candidate = [_centre, 0, (_minimumSeparation max 20), 12, 0, 0.35, 0] call BIS_fnc_findSafePos;
+                    if (count _candidate >= 2 && {!(_candidate isEqualTo [0, 0, 0])} && {!surfaceIsWater _candidate} && {_candidate distance2D _requestedTarget <= _maximumRadius} && {[_candidate] call _isSeparated}) then {
+                        _safe = [_candidate select 0, _candidate select 1, 0];
+                    };
+                };
             };
         };
-    } forEach [15, 30, 50, 75, 100, 150, 250];
+    } forEach _searchRadii;
     if (_safe isEqualTo []) then {
         if (!isNull _requester) then {
             [_type, format ["No safe landing zone was found within %1 metres of the selected point.", round _maximumRadius], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
@@ -180,7 +215,10 @@ if (_type == "GROUND") then {
         _target = _safe;
     };
 };
-if (!_targetValid) exitWith {false};
+if (!_targetValid) exitWith {
+    if (!isNull _requester) then {[_type, format ["No clear service point with %1 metres separation was found near the selected position.", round _minimumSeparation], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
+    false
+};
 
 private _oldLandingPad = _entry getOrDefault ["landingPad", objNull];
 if (!isNull _oldLandingPad) then {deleteVehicle _oldLandingPad};

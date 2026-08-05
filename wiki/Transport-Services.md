@@ -55,6 +55,8 @@ To travel:
 
 - The normal request path manages one active helicopter and one active ground transport per player.
 - **Request Additional Helicopter Transport** and **Request Additional Ground Transport** deliberately reserve another available vehicle for large groups. Repeat the explicit action for each additional lift required.
+- **Multiple Transports > Request All Available...** dispatches every eligible available transport of that type around one clicked centre. WMP assigns separate slots instead of sending the fleet to one coordinate.
+- **Multiple Transports > Return All Controlled... to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
 - **Manage Active Services** lists transports reserved by the player, transports currently carrying the player, and all transports for Zeus. Every row includes the configured service name and live state.
 - The same named controls also exist directly on each transport. Being inside or near another transport no longer changes which object the action addresses.
@@ -80,6 +82,7 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 - When both the transport and resolved destination are on roads, the driver is told to follow roads. Off-road endpoints retain normal terrain pathfinding.
 - Every new phase clears old waypoints, releases persistent `doStop` state and creates one exact waypoint.
 - If the transport makes no useful progress for `pathRetrySeconds`, WMP reselects the existing waypoint up to `pathRetryLimit` times. This can recover a stale AI order without overriding the route planner, but it cannot make an unsuitable vehicle cross impassable terrain or repair a broken road network.
+- Stops are resolved to clear vehicle positions and kept at least `minimumSeparation` metres from other active ground-service targets. The default is 18 metres. Arma still owns route planning, so two vehicles can meet on a narrow road; WMP prevents intentional shared endpoints rather than pretending it can guarantee traffic separation everywhere.
 
 ### Helicopter movement
 
@@ -87,6 +90,7 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 - WMP creates an invisible helipad at that exact resolved point and uses `landAt` for the touchdown.
 - Registered service helicopters are excluded from the global improved-helicopter-landing controller by default. The transport system owns takeoff, landing, waiting and RTB, preventing two flight controllers from fighting over one aircraft. Advanced registrations may set `useImprovedLanding` true, but this is deliberately not the default.
 - The service uses an exact MOVE waypoint followed by the dedicated landing order. It does not use `TR UNLOAD`, whose dedicated-server behaviour is unsuitable for an AI-crewed aircraft carrying only player passengers.
+- Active helicopter LZs are kept at least `minimumSeparation` metres apart; the default is 60 metres. Bulk pickup lays out a deterministic grid of separated landing slots around the clicked centre.
 
 These choices follow Bohemia's documented behaviour: [`doStop` must be released with `doFollow`](https://community.bohemia.net/wiki/doFollow), a zero-radius [`addWaypoint`](https://community.bohemia.net/wiki/addWaypoint) can still be shifted while radius `-1` is exact, and [`landAt`](https://community.bohemia.net/wiki/landAt) targets a specific helipad.
 
@@ -96,6 +100,7 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 |---|---|
 | `landingSearchRadius` | Maximum metres a helicopter LZ may move away from the clicked point. |
 | `roadSearchRadius` | Maximum metres searched for a road around a ground-transport click. |
+| `minimumSeparation` | Minimum metres between same-type bases and active service points. Defaults to 60 for helicopters and 18 for ground vehicles. Registration is refused when pre-placed bases violate it. |
 | `groundSpeedLimit` | Maximum ground-transport speed in km/h. |
 | `pathRetrySeconds` | Seconds without progress before the driver receives the same order again. |
 | `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey. |

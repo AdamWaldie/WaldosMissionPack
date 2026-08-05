@@ -78,7 +78,9 @@
  * - Waldo_Transport_DefaultDestinationDwell: maximum destination wait before physical RTB begins.
  * - Waldo_HeliTransport_DefaultAltitude: default transit height in metres for registered helicopters.
  * - Waldo_HeliTransport_DefaultLzSearchRadius: furthest a safe helicopter LZ may move from the map click.
+ * - Waldo_HeliTransport_DefaultSeparation: minimum spacing between helicopter service points and bases.
  * - Waldo_GroundTransport_DefaultRoadSearchRadius: road search around a clicked ground-transport position.
+ * - Waldo_GroundTransport_DefaultSeparation: minimum spacing between ground service points and bases.
  * - Waldo_GroundTransport_DefaultSpeedLimit: road-safe AI transport speed cap in kilometres per hour.
  * - Waldo_Transport_DefaultPathRetrySeconds: no-progress interval before a ground driver is reordered.
  * - Waldo_Transport_DefaultPathRetryLimit: maximum automatic ground movement reorders per journey.
@@ -128,7 +130,9 @@ createHashMapFromArray [
         ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: destination disembark window.
         ["Waldo_HeliTransport_DefaultAltitude", 80, false], // METRES: default helicopter transit height.
         ["Waldo_HeliTransport_DefaultLzSearchRadius", 75, false], // METRES: maximum permitted LZ adjustment from the click.
+        ["Waldo_HeliTransport_DefaultSeparation", 60, false], // METRES: space helicopter bases/LZs apart to reduce rotor and landing conflicts.
         ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false], // METRES: nearest-road search around pickup/destination.
+        ["Waldo_GroundTransport_DefaultSeparation", 18, false], // METRES: space vehicle bases/stops apart to reduce blocking and collisions.
         ["Waldo_GroundTransport_DefaultSpeedLimit", 60, false], // KM/H: road-safe AI transport speed cap.
         ["Waldo_Transport_DefaultPathRetrySeconds", 25, false], // SECONDS without progress before reissuing an order.
         ["Waldo_Transport_DefaultPathRetryLimit", 3, false], // COUNT: automatic ground path retries per journey.

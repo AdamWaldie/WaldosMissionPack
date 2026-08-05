@@ -4,7 +4,7 @@
  * The selected position is submitted to the server; no client creates waypoints or reserves assets.
  * Locality and authority: interface-client map UI only; the server validates the submitted click.
  *
- * Arguments: 0 request action <STRING>; 1 service type <STRING>; 2 vehicle <OBJECT> (optional).
+ * Arguments: 0 request action <STRING>, including PICKUP_ALL; 1 service type <STRING>; 2 vehicle <OBJECT> (optional).
  * Return Value: Boolean - true when the map selector opened.
  * Example: ["REQUEST_PICKUP", "HELICOPTER", objNull] call Waldo_fnc_TransportOpenMapLocal;
  * Current callers: WMP transport ACE and vanilla self-actions.
@@ -22,7 +22,11 @@ private _handlerId = addMissionEventHandler ["MapSingleClick", {
     removeMissionEventHandler ["MapSingleClick", _thisEventHandler];
     missionNamespace setVariable ["Waldo_Transport_MapHandler", -1];
     openMap [false, false];
-    [_action, _type, _vehicle, _pos, player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
+    if (_action == "PICKUP_ALL") then {
+        ["PICKUP_ALL", _type, _pos, player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2];
+    } else {
+        [_action, _type, _vehicle, _pos, player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
+    };
 }, [_action, toUpperANSI _type, _vehicle]];
 missionNamespace setVariable ["Waldo_Transport_MapHandler", _handlerId];
 [] spawn {

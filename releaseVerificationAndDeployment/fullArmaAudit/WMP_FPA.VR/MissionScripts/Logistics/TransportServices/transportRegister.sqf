@@ -14,7 +14,9 @@
  * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
  *    destinationDwell, allowedSides, allowedGroups, leadersOnly, showMarker, repairAtBase,
  *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
- *    roadSearchRadius, groundSpeedLimit, pathRetrySeconds, pathRetryLimit and useImprovedLanding.
+ *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit and
+ *    useImprovedLanding. minimumSeparation is metres between this service's base/stops and another
+ *    service of the same type (default: helicopters 60, ground vehicles 18).
  *
  * Return Value: Boolean - true when forwarded or registered.
  *
@@ -91,12 +93,27 @@ private _config = createHashMapFromArray [
     ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
     ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 75]]) max 10],
     ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
+    ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]}]) max 0],
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
     ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", false]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
+private _baseConflict = (keys _services) findIf {
+    private _other = _services get _x;
+    private _otherVehicle = _other getOrDefault ["vehicle", objNull];
+    private _otherConfig = _other getOrDefault ["config", createHashMap];
+    _other getOrDefault ["type", ""] == _type
+    && {!isNull _otherVehicle}
+    && {_otherVehicle != _vehicle}
+    && {getPosATL _vehicle distance2D (_other getOrDefault ["startPos", getPosATL _otherVehicle]) < ((_config get "minimumSeparation") max (_otherConfig getOrDefault ["minimumSeparation", 0]))}
+};
+if (_baseConflict >= 0) exitWith {
+    private _other = _services get ((keys _services) select _baseConflict);
+    diag_log format ["[WMP TRANSPORT] Registration rejected: %1 base is too close to %2. Move the vehicles apart or lower minimumSeparation deliberately.", _displayName, _other getOrDefault ["name", "another transport"]];
+    false
+};
 private _existing = _services getOrDefault [_id, createHashMap];
 if !(_existing isEqualTo createHashMap) then {
     private _oldVehicle = _existing getOrDefault ["vehicle", objNull];

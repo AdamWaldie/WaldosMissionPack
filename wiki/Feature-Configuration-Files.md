@@ -358,7 +358,9 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Transport_DefaultDestinationDwell` | Destination disembark window before RTB. |
 | `Waldo_HeliTransport_DefaultAltitude` | Default AI helicopter transit height in metres. |
 | `Waldo_HeliTransport_DefaultLzSearchRadius` | Maximum safe-LZ adjustment from the player's helicopter pickup/destination click. |
+| `Waldo_HeliTransport_DefaultSeparation` | Minimum spacing in metres between helicopter bases, active LZs and bulk pickup slots. Default 60. |
 | `Waldo_GroundTransport_DefaultRoadSearchRadius` | Radius searched for a connected road around a ground-transport click. |
+| `Waldo_GroundTransport_DefaultSeparation` | Minimum spacing in metres between ground-transport bases, active stops and bulk pickup slots. Default 18. |
 | `Waldo_GroundTransport_DefaultSpeedLimit` | Default AI ground-transport speed cap in kilometres per hour. |
 | `Waldo_Transport_DefaultPathRetrySeconds` | No-progress interval before a ground movement order is reissued. |
 | `Waldo_Transport_DefaultPathRetryLimit` | Maximum automatic order retries during one ground journey. |
