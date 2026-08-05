@@ -34,13 +34,9 @@ if !(isServer) exitWith {
     [_object, _scale, _asSimple] remoteExecCall ["Waldo_fnc_ObjectScale", 2];
     _object
 };
-private _requestOwner = remoteExecutedOwner;
 private _reject = {
     params ["_message"];
     diag_log format ["[WMP OBJECT SCALE] Rejected: %1", _message];
-    if (_requestOwner > 2) then {
-        ["OBJECT SCALE", _message, "ERROR", "OBJECT_SCALE_ZEN", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
-    };
     objNull
 };
 if (isNull _object) exitWith {["No valid object reached the server."] call _reject};
@@ -79,7 +75,4 @@ if (abs ((getObjectScale _scaledObject) - _scale) > 0.001) exitWith {["Arma did 
 _scaledObject setVariable ["Waldo_ObjectScaleOriginal", _originalScale, true];
 _scaledObject setVariable ["Waldo_ObjectScale", _scale, true];
 diag_log format ["[WMP OBJECT SCALE] Applied scale=%1 class=%2 simple=%3 object=%4", _scale, typeOf _scaledObject, isSimpleObject _scaledObject, _scaledObject];
-if (_requestOwner > 2) then {
-    ["OBJECT SCALE", format ["%1 scaled to %2x and verified by the server.", getText (configOf _scaledObject >> "displayName"), _scale], "SUCCESS", "OBJECT_SCALE_ZEN", 5] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
-};
 _scaledObject

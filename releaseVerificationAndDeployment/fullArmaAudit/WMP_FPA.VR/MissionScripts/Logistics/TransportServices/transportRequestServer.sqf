@@ -39,6 +39,7 @@ private _requesterUid = if (isNull _requester) then {""} else {getPlayerUID _req
 
 private _canUse = {
     params ["_candidate", "_requester"];
+    if (!isNull getAssignedCuratorLogic _requester) exitWith {true};
     private _config = _candidate get "config";
     private _allowedSides = _config getOrDefault ["allowedSides", []];
     private _sideAllowed = _allowedSides isEqualTo [] || {side group _requester in _allowedSides};
@@ -169,6 +170,12 @@ private _isSeparated = {
     _occupiedTargets findIf {_candidate distance2D _x < _minimumSeparation} < 0
 };
 
+// RTB means the exact registered base, not another generic service point. Registration already
+// rejects overlapping base footprints. Running the ordinary safe-position search here moved
+// helicopters away from their own pads and could leave them permanently in RTB.
+if (_phase == "RTB") then {
+    _target = +(_entry get "startPos");
+} else {
 if (_type == "GROUND") then {
     private _roads = _target nearRoads (_config getOrDefault ["roadSearchRadius", 200]);
     if !(_roads isEqualTo []) then {
@@ -214,6 +221,7 @@ if (_type == "GROUND") then {
     } else {
         _target = _safe;
     };
+};
 };
 if (!_targetValid) exitWith {
     if (!isNull _requester) then {[_type, format ["No clear service point with %1 metres separation was found near the selected position.", round _minimumSeparation], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};

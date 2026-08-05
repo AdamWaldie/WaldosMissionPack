@@ -57,6 +57,7 @@ To travel:
 - The first menu level is deliberately short and scalable: **Helicopter Transport**, **Ground Transport** and **Manage Active Services**. Air and ground controls do not compete for the same radial-menu space.
 - **Request / Move Pickup** requests the first service, or retargets that player's single inbound/boarding service of the same type.
 - **Request Another...** appears only when the player already controls an active same-type transport and another is available. It deliberately reserves another vehicle for a larger lift.
+- **Select Specific Transport** opens a live alphabetical list of named, eligible, currently available services. Selecting one opens the normal map picker and requests that exact asset. This list is nested under the air/ground branch so large fleets do not overwhelm the top-level ACE menu.
 - **Request All Available** dispatches every eligible available transport of that type around one clicked centre. WMP assigns separate slots instead of sending the fleet to one coordinate.
 - **Return All Controlled to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
@@ -91,7 +92,7 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 
 - A clicked point is accepted only when a safe landing point can be found inside `landingSearchRadius`, which defaults to 75 metres. The notification reports adjustments greater than 10 metres and the destination marker shows the actual service point.
 - WMP creates an invisible helipad at that exact resolved point and uses `landAt` for the touchdown.
-- Air Transport uses the normal improved-helicopter-landing path by default. It creates a supported LAND waypoint and lets the same global, locality-aware tracker used by every other AI helicopter acquire at the standard speed-aware distance. Transport only monitors touchdown and request state. The invisible-helipad `landAt` controller remains a fallback when the normal controller does not acquire or aborts.
+- Air Transport uses the normal improved-helicopter-landing path by default. It first creates a 75 m departure MOVE waypoint so Arma cannot complete the landing task while the helicopter is still parked, then creates the supported LAND waypoint. The same global, locality-aware tracker used by every other AI helicopter acquires that second waypoint at the standard speed-aware distance. Transport only monitors touchdown and request state. The invisible-helipad `landAt` controller remains a fallback when the normal controller does not acquire or aborts.
 - The service uses an exact MOVE waypoint followed by the dedicated landing order. It does not use `TR UNLOAD`, whose dedicated-server behaviour is unsuitable for an AI-crewed aircraft carrying only player passengers.
 - Active helicopter LZs are kept at least `minimumSeparation` metres apart; the default is 60 metres. Bulk pickup lays out a deterministic grid of separated landing slots around the clicked centre.
 
@@ -116,6 +117,9 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides a player-facing display name and plain-language timing/recovery settings, and rejects a type/vehicle mismatch. Internal service IDs are always generated automatically and are never exposed to Zeus. A successful registration publishes the pool availability, installs player controls, creates the optional marker and renames the AI crew group to the display name. A rejected registration sends Zeus the exact reason. **Transport Service - Return to Base** immediately cancels a selected registered service without an extra confirmation dialog.
 
 Registrations survive WMP vehicle-recovery reconstruction through the built-in `Waldo_TransportService_Registration` recovery variable. Deleted/dead services are removed from the server registry and their markers. Player actions are reinstalled after respawn and JIP availability is published by type.
+
+RTB always targets the service's exact registered base position. The generic safe-position search is
+used for player-selected stops, not for returning a service to its own prepared parking point.
 
 Global defaults live in `MissionConfig\logisticsConfig.sqf`. `Waldo_TransportServices_Enable` enables the inert framework; no vehicles exist until they are registered.
 

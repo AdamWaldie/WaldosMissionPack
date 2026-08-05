@@ -45,18 +45,32 @@ if (_helicopter) then {
     private _roadRoute = !((_vehicle nearRoads 30) isEqualTo []) && {!((_target nearRoads 20) isEqualTo [])};
     driver _vehicle forceFollowRoad _roadRoute;
 };
-// Radius -1 gives exact waypoint placement. Radius 0 may still be shifted by the engine.
-private _waypoint = _group addWaypoint [ATLToASL _target, -1];
 private _standardImprovedLanding = _helicopter
     && {_config getOrDefault ["useImprovedLanding", true]}
     && {missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]};
+// A landing waypoint can complete immediately while a helicopter is still parked. Give helicopters
+// a real 75 metre departure MOVE leg before the destination LAND/MOVE waypoint. This is the same
+// engine-safe sequence required for ordinary take-off-to-landing routes.
+private _departureWaypoint = [];
+if (_helicopter) then {
+    private _departurePosition = _vehicle getPos [75, _vehicle getDir _target];
+    _departurePosition set [2, 0];
+    _departureWaypoint = _group addWaypoint [_departurePosition, -1];
+    _departureWaypoint setWaypointType "MOVE";
+    _departureWaypoint setWaypointBehaviour _movementBehaviour;
+    _departureWaypoint setWaypointCombatMode "BLUE";
+    _departureWaypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);
+    _departureWaypoint setWaypointCompletionRadius 15;
+};
+// Radius -1 gives exact waypoint placement. Radius 0 may still be shifted by the engine.
+private _waypoint = _group addWaypoint [_target, -1];
 _waypoint setWaypointType (if (_standardImprovedLanding) then {"LAND"} else {"MOVE"});
 _waypoint setWaypointBehaviour _movementBehaviour;
 _waypoint setWaypointCombatMode "BLUE";
 _waypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);
 _waypoint setWaypointCompletionRadius ((_config getOrDefault ["stopRadius", if (_helicopter) then {35} else {12}]) max 5);
-_group setCurrentWaypoint _waypoint;
-diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 owner=%6", _id, _requestId, _phase, _target, _helicopter, clientOwner];
+_group setCurrentWaypoint (if (_helicopter) then {_departureWaypoint} else {_waypoint});
+diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 departure=%6 landing=%7 owner=%8", _id, _requestId, _phase, _target, _helicopter, if (_helicopter) then {_departureWaypoint select 1} else {-1}, _waypoint select 1, clientOwner];
 
 [_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint] spawn {
     params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint"];
@@ -71,8 +85,17 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             ((abs speed _vehicle) * ([_vehicle, "TriggerSpeedFactor", 4.2] call Waldo_fnc_ImprovedHelicopterLandingSetting))
                 max ([_vehicle, "TriggerDistance", 500] call Waldo_fnc_ImprovedHelicopterLandingSetting)
         } else {220};
-        waitUntil {sleep 1; call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_vehicle distance2D _target <= _triggerDistance} || {diag_tickTime >= _timeout}};
-        if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {_vehicle distance2D _target <= _triggerDistance}) then {
+        private _landingWaypointIndex = _waypoint select 1;
+        waitUntil {
+            sleep 1;
+            call _stale
+            || {!local _group}
+            || {!alive _vehicle}
+            || {!alive driver _vehicle}
+            || {currentWaypoint _group == _landingWaypointIndex && {_vehicle distance2D _target <= _triggerDistance}}
+            || {diag_tickTime >= _timeout}
+        };
+        if (!(call _stale) && {local _group} && {alive _vehicle} && {alive driver _vehicle} && {currentWaypoint _group == _landingWaypointIndex} && {_vehicle distance2D _target <= _triggerDistance}) then {
             private _accepted = false;
             if (_standardImprovedLanding) then {
                 private _acquireDeadline = diag_tickTime + 4;

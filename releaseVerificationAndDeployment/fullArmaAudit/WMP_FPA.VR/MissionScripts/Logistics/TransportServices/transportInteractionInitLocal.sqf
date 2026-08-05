@@ -23,6 +23,8 @@ if (_aceReady) then {
         missionNamespace getVariable ["Waldo_HeliTransport_Available", false] || {vehicles findIf {_x getVariable ["Waldo_TransportService_Type", ""] == "HELICOPTER" && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} >= 0}
     }] call ace_interact_menu_fnc_createAction;
     [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_HelicopterRoot"], _heli] call ace_interact_menu_fnc_addActionToObject;
+    private _specificHeli = ["Waldo_Transport_SelectHelicopter", "Select Specific Transport", "\a3\ui_f\data\igui\cfg\simpletasks\types\choose_ca.paa", {}, {missionNamespace getVariable ["Waldo_HeliTransport_Available", false]}, {params ["_target", "_player"]; [_player, "HELICOPTER"] call Waldo_fnc_TransportAvailableChildrenLocal}] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_HelicopterRoot"], _specificHeli] call ace_interact_menu_fnc_addActionToObject;
     private _groundRoot = ["Waldo_Transport_GroundRoot", "Ground Transport", "\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa", {}, {true}] call ace_interact_menu_fnc_createAction;
     [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root"], _groundRoot] call ace_interact_menu_fnc_addActionToObject;
     private _ground = ["Waldo_Transport_RequestGround", "Request / Move Pickup", "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa", {["REQUEST_PICKUP", "GROUND", objNull] call Waldo_fnc_TransportOpenMapLocal}, {
@@ -30,6 +32,8 @@ if (_aceReady) then {
         missionNamespace getVariable ["Waldo_GroundTransport_Available", false] || {vehicles findIf {_x getVariable ["Waldo_TransportService_Type", ""] == "GROUND" && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} >= 0}
     }] call ace_interact_menu_fnc_createAction;
     [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_GroundRoot"], _ground] call ace_interact_menu_fnc_addActionToObject;
+    private _specificGround = ["Waldo_Transport_SelectGround", "Select Specific Transport", "\a3\ui_f\data\igui\cfg\simpletasks\types\choose_ca.paa", {}, {missionNamespace getVariable ["Waldo_GroundTransport_Available", false]}, {params ["_target", "_player"]; [_player, "GROUND"] call Waldo_fnc_TransportAvailableChildrenLocal}] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_GroundRoot"], _specificGround] call ace_interact_menu_fnc_addActionToObject;
     private _additionalHeli = ["Waldo_Transport_RequestAdditionalHeli", "Request Another Helicopter", "\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa", {["REQUEST_ADDITIONAL", "HELICOPTER", objNull] call Waldo_fnc_TransportOpenMapLocal}, {
         private _uid = getPlayerUID player;
         missionNamespace getVariable ["Waldo_HeliTransport_Available", false] && {!isNull getAssignedCuratorLogic player || {vehicles findIf {_x getVariable ["Waldo_TransportService_Type", ""] == "HELICOPTER" && {_x getVariable ["Waldo_TransportService_State", "AVAILABLE"] != "AVAILABLE"} && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} >= 0}}

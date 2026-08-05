@@ -617,7 +617,10 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("getObjectScale _scaledObject", implementation)
         self.assertIn("addCuratorEditableObjects", implementation)
         self.assertIn("WMP OBJECT SCALE", implementation)
-        self.assertIn("Waldo_fnc_FeatureNotifyLocal", implementation)
+        self.assertNotIn("Waldo_fnc_FeatureNotifyLocal", implementation)
+        transform = (ROOT / "MissionScripts" / "MissionMakerResourceScripts" / "ObjectTransforms" / "objectTransformSet.sqf").read_text(encoding="utf-8")
+        self.assertIn("private _existingScale = getObjectScale _object", transform)
+        self.assertIn("[_object, _scaleToApply, _asSimple] call Waldo_fnc_ObjectScale", transform)
 
     def test_diagnostics_accept_nested_loadouts_and_real_interaction_ids(self):
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnostics.sqf").read_text(encoding="utf-8")

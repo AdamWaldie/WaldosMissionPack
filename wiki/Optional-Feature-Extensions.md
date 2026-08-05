@@ -41,6 +41,9 @@ Explosive classes can have strengths, while each breach profile can require accu
 ## Scaling and transforms
 
 Helpers support reset, multiply, copy, bounded area scaling, full pitch/bank/yaw, ATL/ASL/ASLW placement and scripted spawning. Scale is uniform because `setObjectScale` has no per-axis mode. Visual and collision geometry may disagree on some assets, so unusual scales require in-game testing.
+Combined transforms always apply position and orientation first, then apply or restore scale last.
+When the scale argument is negative, WMP preserves the object's current scale instead of allowing
+Arma's direction commands to reset it to 1.
 
 ## AI rebalance
 

@@ -40,7 +40,6 @@ if (isNull _target) exitWith {systemChat "[WMP] Object Scaling: place the module
         if (_asSimple && {count (crew _target) > 0 || {(getPosATL _target select 2) > 1}}) exitWith {
             systemChat "[WMP] Only empty decorative objects placed on the ground can be converted for scaling.";
         };
-        systemChat format ["[WMP] Scaling %1 to %2x; the server will verify the result.", getText (configOf _target >> "displayName"), _scale];
         [_target, _scale, _asSimple] remoteExecCall ["Waldo_fnc_ObjectScale", 2];
     },
     {},
