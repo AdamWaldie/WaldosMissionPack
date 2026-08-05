@@ -28,4 +28,14 @@ blindly: "save on arsenal close" means players keep whatever kit they last
 built in Arsenal; "respawn with what you died with" means the death-moment
 inventory becomes the new spawn kit. Ask which behaviour the mission wants
 before uncommenting — enabling both can produce confusing double-saves
-depending on order of events.
+depending on order of events. These two snippets are genuinely still
+`initPlayerLocal.sqf` code, not `MissionConfig` data — they're commented-out
+event-handler registrations, not pure settings, so they weren't migrated.
+
+## Related: Squad Rally Points (temporary respawn positions)
+
+A separate, newer system — group-owned *temporary* respawn points a squad
+leader deploys/packs mid-mission, distinct from the permanent starting
+respawn behaviour above. Configured via `Waldo_Rally_*` in
+`MissionConfig\missionSystemsConfig.sqf`. See
+`references/vehicle-recovery-rallies.md`.

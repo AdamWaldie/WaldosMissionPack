@@ -12,13 +12,13 @@ Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four,
 Rock Paper Scissors, UNO. Players walk up to a supported table object, seat
 (up to four), vote for a game, play. Server-authoritative; JIP-safe.
 
-Enable in `init.sqf`:
+Enable via `Waldo_MiniGames_Enable` in `MissionConfig\missionSystemsConfig.sqf`
+(a `shared` entry, loaded automatically on every machine from `init.sqf` —
+default `true`, do not paste the old `if (Waldo_MiniGames_Enable) then {...}`
+lifecycle block into `init.sqf` yourself, WMP already runs it):
 
 ```sqf
-Waldo_MiniGames_Enable = true;
-if (Waldo_MiniGames_Enable) then {
-    [] call Waldo_fnc_MiniGamesInit;
-};
+["Waldo_MiniGames_Enable", true],  // BOOL: installs the table-games engine
 ```
 
 Tables are detected **by class**: `Land_CampingTable_F`,
@@ -123,3 +123,11 @@ audio-caption preferences.
 - `Waldo_fnc_MiniGameEquipmentGallery` — developer visual-review picker for
   all ten procedures, useful when a user wants to preview equipment styles
   before committing to one.
+
+## 3. ACE Corpse Traps (related but separate feature)
+
+Not part of "minigames" proper, but shares the same `missionSystemsConfig.sqf`
+neighbourhood and player mental model ("another pass/fail interaction
+system") — see `references/corpse-traps.md` if the user's request is
+actually about rigging bodies with concealed throwables, not table games or
+field-equipment procedures.

@@ -6,14 +6,22 @@ is deleted, players take/deal no damage, players are confined to a safe
 zone, and an on-screen banner shows (with a live countdown if a timer is
 running). JIP and respawning players are re-frozen automatically.
 
-## Config (`initServer.sqf`) — auto-starts by default
+## Config (`MissionConfig\missionSystemsConfig.sqf`) — starts inactive by default
+
+**Default flipped:** `Waldo_SafeStart_AutoStart` now defaults to `false`
+(mission goes live immediately) — it used to default `true`. Also note
+`Waldo_SafeStart_Radius` default is now `150`, not `75`.
 
 ```sqf
-missionNamespace setVariable ["Waldo_SafeStart_Confine", true, true];   // safe-zone confinement on/off
-missionNamespace setVariable ["Waldo_SafeStart_Radius", 75, true];      // per-player radius (metres)
-missionNamespace setVariable ["Waldo_SafeStart_ZoneMarker", "", true];  // marker name for one shared zone (else per-player anchor)
-missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true]; // false = no safestart at start
+["Waldo_SafeStart_Confine", false, true],  // server: safe-zone confinement on/off
+["Waldo_SafeStart_Radius", 150, false],    // server: per-player fallback radius (metres) when ZoneMarker is blank
+["Waldo_SafeStart_ZoneMarker", "", false], // server: marker name for one shared zone (else per-player anchor)
+["Waldo_SafeStart_AutoStart", false, true] // server: true = begin under protection; false (default) = start live
 ```
+
+These are `server` entries (loaded by `initServer.sqf`, JIP-published where
+marked `true`) — do not paste `setVariable` calls into `initServer.sqf`
+yourself, edit the config file and let the loader publish them.
 
 If a shared zone marker is used, it must exist in the mission (an Eden
 Editor placement — instruction mode). If left `""`, each player gets a
@@ -38,4 +46,7 @@ Separate authoritative state — see `endex-aar.md`.
 
 **Safestart - Activate**, **Safestart - Go Live (Lift)**, and **Safestart -
 Start Go-Live Countdown** (seconds, displayed as `MM:SS`; the Lift module
-can overrule the countdown at any time).
+can overrule the countdown at any time). Since Safestart now starts inactive
+by default, a mission that wants a protected start either sets
+`Waldo_SafeStart_AutoStart` to `true` in the config, or a curator uses the
+Activate module after mission start.

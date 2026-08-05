@@ -25,16 +25,22 @@ readable as text and the whole scan silently produces nothing. Both of these
 are Eden Editor GUI steps — instruction mode, never something you do
 directly, and never something achieved by editing `mission.sqm`.
 
-## Config (`initServer.sqf`)
+## Config (`MissionConfig\logisticsConfig.sqf`)
 
 ```sqf
-missionNamespace setVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F", true];
-missionNamespace setVariable ["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced", true];
+["Logi_SupplyBoxClass", "B_supplyCrate_F", true],               // server entry, JIP-published
+["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced", true] // defaults to ACE advanced crate if ACE Medical is loaded, IDAP crate otherwise
 ```
 
-These just set the classnames used when supply/medical crates are spawned
-(by Zeus modules or scripts) — swap in whatever crate object the mission
-uses.
+These are `server` entries loaded by `initServer.sqf` — edit the config
+file, don't paste `setVariable` calls into `initServer.sqf` yourself. They
+just set the classnames used when supply/medical crates are spawned (by Zeus
+modules or scripts) — swap in whatever crate object the mission uses.
+
+This same file also carries Field Resupply, Vehicle Recovery, Transport
+Services and Object Scaling settings — see `field-resupply.md`,
+`vehicle-recovery-rallies.md`, `transport-services.md` and
+`object-scaling.md` respectively.
 
 ## TFAR note
 

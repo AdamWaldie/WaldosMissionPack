@@ -1,17 +1,41 @@
-# Paradrop (HALO / static-line)
+# Paradrop — now "Dynamic Paradrop Operations"
 
-Most "Plane"-class assets get HALO/static-line jump actions automatically —
-no per-vehicle config needed in the common case.
+Two layers exist, and it's important to know which the user means:
 
-## Config (`initServer.sqf`)
+1. **Automatic per-vehicle jump actions** — most "Plane"-class assets
+   auto-detect and get static-line/HALO actions with no per-vehicle config.
+   Unchanged in spirit from before, just reconfigured (below).
+2. **Dynamic Drop Zone Operations (new)** — a server-owned, ZEN- or
+   script-created drop route: an AI-piloted aircraft flies a run-in circuit
+   (standby/green/centre/red/departure gates) at a forced height/speed,
+   with boarding, configurable static-line/HALO player actions, optional AI
+   jumpers, markers and teardown. This is the "call-driven" system per
+   `wiki/Feature-Setup-and-Activation.md` — config supplies pools/envelopes,
+   a call/ZEN module creates each drop zone instance.
+
+## Config (`MissionConfig\airOperationsConfig.sqf`)
+
+Jump envelope/thresholds are now `server` entries in this file (loaded by
+`initServer.sqf`, JIP-published) — do not paste `setVariable` calls into
+`initServer.sqf` yourself:
 
 ```sqf
-missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];  // metres
-missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];
-missionNamespace setVariable ["WALDO_STATIC_MAXSPEED", 310, true];     // km/h
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true];
-missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];
-missionNamespace setVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute", true];
+["WALDO_STATIC_MINALTITUDE", 180, true],           // metres AGL minimum
+["WALDO_STATIC_MAXALTITUDE", 350, true],           // metres AGL maximum
+["WALDO_STATIC_MAXSPEED", 310, true],              // km/h maximum
+["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true], // static-line chute class
+["WALDO_PARA_HALOALTITUDE", 1000, true],           // metres AGL minimum for HALO
+["WALDO_PARA_HALOCHUTE", "B_Parachute", true]      // HALO backpack class
+```
+
+Shared content pools (loaded on every machine from `init.sqf`, feed both the
+automatic per-vehicle jump actions and the dynamic drop-zone selectors):
+
+```sqf
+["Waldo_Paradrop_AircraftClasses", [ /* transport aircraft offered by scripts/ZEN */ ]],
+["Waldo_Paradrop_StaticChuteClasses", ["NonSteerable_Parachute_F"]],
+["Waldo_Paradrop_HaloBackpackClasses", ["B_Parachute", "O_Parachute", "I_Parachute"]],
+["Waldo_Paradrop_BoardingPointClasses", [ /* movable objects offered as labelled boarding points */ ]]
 ```
 
 - Static-line jumps only activate within the altitude/speed window above —
@@ -19,16 +43,81 @@ missionNamespace setVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute", true];
   and speed against these thresholds first.
 - `WALDO_STATIC_STATICCHUTE` / `WALDO_PARA_HALOCHUTE` are parachute
   classnames — swap for a mod's chute (e.g. an RHS one) if the mission uses
-  one instead of vanilla.
+  one instead of vanilla. For non-RHS missions, use
+  `"NonSteerable_Parachute_F"` (vanilla, fixed-wing).
 
 ## Custom / non-auto-detecting aircraft
 
-If a vehicle doesn't get the jump action automatically (custom mod aircraft
-sometimes don't), add to its **Eden Editor init field**:
+If a vehicle doesn't get the jump action automatically, add to its **Eden
+Editor init field** (a script call, not a `mission.sqm` edit — safe to hand
+over as a paste-in snippet):
 
 ```sqf
 [this] call Waldo_fnc_VehicleJumpSetup;
+// or apply only one type:
+[this, 1000, "B_Parachute"] call Waldo_fnc_AddHaloJump;
+[this, 180, 350, 310, "rhs_d6_Parachute"] call Waldo_fnc_AddStaticJump;
 ```
 
-This is a script call, not a `mission.sqm` edit — safe to give the user as a
-paste-into-init-field snippet even though it's placed via Eden.
+`Waldo_fnc_VehicleJumpSetup` reads the current `airOperationsConfig.sqf`
+values automatically.
+
+## Dynamic Drop Zone Operations (new system)
+
+### Scripted (`initServer.sqf`, server call-driven)
+
+```sqf
+private _drop = createHashMapFromArray [
+    ["id", "DZ_ALPHA"], ["name", "DZ ALPHA"], ["centre", getMarkerPos "dz_alpha"],
+    ["side", west], ["aircraftClass", "B_T_VTOL_01_infantry_F"],
+    ["direction", 90], ["altitude", 250], ["maximumSpeed", 220],
+    ["lifecycle", "LOOP"], ["circuitDirection", "LEFT"],
+    ["staticJumpEnabled", true], ["staticMinimumAltitude", 180],
+    ["staticMaximumAltitude", 350], ["staticMaximumSpeed", 310],
+    ["staticChuteClass", "NonSteerable_Parachute_F"],
+    ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
+    ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true]
+];
+[_drop] call Waldo_fnc_ParadropCreateDropZone;
+```
+
+`lifecycle`: `"LOOP"` (repeat wide circuit and re-run), `"SINGLE_RETAIN"`
+(loiter after one pass), or `"SINGLE_DESPAWN"` (clean up after one pass).
+The route validates itself against the requested jump envelopes — static
+speed stays at least 40 km/h above the capped route speed, altitude stays
+inside every enabled jump window, and an unsupported door-animation
+requirement disables itself automatically rather than silently breaking.
+
+```sqf
+[dzId, playerOrGroup] call Waldo_fnc_ParadropEmbark;         // move players into the aircraft
+["DZ_ALPHA"] call Waldo_fnc_ParadropRemoveDropZone;          // teardown
+```
+
+### Zeus ("Waldos Mission Modules" / WMP Combat Systems)
+
+**Paradrop - Create Drop Zone**, **Paradrop - Embark Players**, **Paradrop -
+Remove Operation**. The create dialog separates operational side (AI pilot +
+any requested AI jumpers) from physical airframe (any faction's aircraft
+class). Default aircraft: one AI pilot, **zero AI cargo** — cargo seats are
+left for players. Embark uses the player standing under the module first,
+then curator selection; falls back to a physical boarding object (default a
+flagpole) with a blue **Board Paradrop Aircraft** addAction if no player
+target is given.
+
+Mission makers can extend the friendly-name dropdowns before startup:
+
+```sqf
+Waldo_Paradrop_AircraftClasses pushBackUnique "My_Transport_Aircraft";
+Waldo_Paradrop_StaticChuteClasses pushBackUnique "My_Static_Line_Chute";
+Waldo_Paradrop_HaloBackpackClasses pushBackUnique "My_Steerable_Parachute_Backpack";
+Waldo_Paradrop_BoardingPointClasses pushBackUnique "My_Boarding_Point_Object";
+```
+
+## Equipment simulation and jump settings check
+
+Unchanged: `Waldo_fnc_paraEquipmentSim` runs automatically on every jump
+(basic mode unequips/loses NVGs, soft headgear and non-tactical glasses;
+`[player, true] call Waldo_fnc_paraEquipmentSim;` for advanced/permanent-loss
+mode — not exposed as a standard param, a direct call). "Check Jump
+Settings" ACE self-action reports the aircraft's current jump
+type/requirements — added automatically, no setup needed.

@@ -32,6 +32,29 @@ question, not as the primary config doc for any one feature.
 Waldos Economy Systems registers its own separate, larger set of Zeus
 modules (15 core + 19 Economy) — see `economy/README.md`, not this file.
 
+## Other WMP Zeus categories (not "Waldos Mission Modules")
+
+Newer features register under their own domain-named Zeus categories rather
+than the original "Waldos Mission Modules" catch-all. This overview file
+doesn't re-list every one of them — route to the feature's own reference
+file, which names its exact module(s):
+
+| Category (approximate) | Feature | Reference |
+|---|---|---|
+| WMP Combat Systems | Dynamic AA - Create/Remove Nearest | `dynamic-aa.md` |
+| WMP Combat Systems | Dynamic AO - Create/Remove | `dynamic-ao.md` |
+| WMP Combat Systems | Gunship - Register/Assign/Set Orbit/Operational Control | `gunship.md` |
+| WMP Combat Systems / Air Operations | Paradrop - Create Drop Zone/Embark Players/Remove Operation | `paradrop.md` |
+| WMP Logistics | Vehicle Recovery - Register Workshop/Vehicle/Carrier | `vehicle-recovery-rallies.md` |
+| WMP Logistics | Field Resupply hub/carrier modules | `field-resupply.md` |
+| WMP Transport | Transport Service - Register / Return to Base | `transport-services.md` |
+| WMP Mission Flow / Respawn | Squad Rally Control | `vehicle-recovery-rallies.md` |
+| — | Persistence - Control/Register Object/Save Now | `persistence.md` |
+| — | Hazard - Create/Remove Nearest | `hazardous-environments.md` |
+| — | Scale Object | `object-scaling.md` |
+| — | Tactical Display registration | `tactical-display.md` |
+| — | UI QA - Set Visual Theme | `ui-themes.md` |
+
 ## Static vs runtime verification
 
 A repo-side static parity checker (`zeus_script_parity_checker.py`, in the
