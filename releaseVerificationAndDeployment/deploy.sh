@@ -23,6 +23,12 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_unitInsignias.json --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_claudeSkill.json --deploy
 
+# The build above packs ".claude/skills/mission-pack-config/" with that path prefix intact, for
+# unzipping into the root of a mission project (Claude Code auto-discovers it there). claude.ai's
+# own "Upload skill" dialog needs a different archive shape — the skill folder itself at the zip
+# root — so package that separately rather than trying to make one zip serve both.
+python3 releaseVerificationAndDeployment/package_claude_skill_upload.py "${VERSION_TAG}" release
+
 sed -i "s/DEVBUILD/${VERSION_TAG}/g" WMP_Compositions/*/header.sqe
 
 # Make a patch release
