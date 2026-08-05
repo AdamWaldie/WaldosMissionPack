@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+    items=2;
+    class Item0
+    {
+        dataType="Object";
+        side="Empty";
+        class PositionInfo {position[]={0,0,0};};
+        class Attributes
+        {
+            name="WMP_RadiationSource";
+            init="[""composition_radiation"", [getPosATL this, 25], ""MODERATE_RADIATION""] call Waldo_fnc_HazardRegisterPresetZone;";
+        };
+        id=1;
+        type="Land_GasTank_01_yellow_F";
+    };
+    class Item1
+    {
+        dataType="Comment";
+        class PositionInfo {position[]={0,-5,0};};
+        title="Radiation preset example with real exposure/damage, protection, local Geiger/cough audio, continuous status and optional Hazard Equipment interactions. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
+        id=2;
+    };
+};

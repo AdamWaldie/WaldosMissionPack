@@ -77,6 +77,8 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Logistics", "Vehicle Recovery - Register Workshop", "RECOVERY_WORKSHOP", "\A3\ui_f\data\igui\cfg\actions\repair_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Vehicle", "RECOVERY_VEHICLE", "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Carrier", "RECOVERY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"],
+    ["WMP Transport", "Transport Service - Register", "TRANSPORT_REGISTER", "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"],
+    ["WMP Transport", "Transport Service - Return to Base", "TRANSPORT_RTB", "\A3\ui_f\data\igui\cfg\simpletasks\types\meet_ca.paa"],
     ["WMP Mission Flow", "Respawn - Squad Rally Control", "RALLY", "\A3\ui_f\data\map\markers\military\start_CA.paa"],
     ["WMP Interface & QA", "Tactical Display - Register", "TACTICAL_DISPLAY", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Register or Spawn", "GUNSHIP_REGISTER", "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"],
@@ -255,6 +257,6 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 43];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 45];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
-diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 43], clientOwner];
+diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 45], clientOwner];

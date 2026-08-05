@@ -505,6 +505,17 @@ private _immuneVehicle = ["qa_ew_immune", "B_MRAP_01_F", [18, -102, 0], 270, fal
 missionNamespace setVariable ["Waldo_QA_EWObjects", [_jammer, _trackedVehicle, _immuneVehicle], true];
 ["ew", "ELECTRONIC WARFARE", [-8, -102, 0], "Radio jammer, UAV jamming, tracker, EMP target and immune vehicle."] call Waldo_QA_fnc_registerFeatureStationServer;
 
+// Transport services: real simulated vehicles, living AI crews, independent pools and enough
+// clearance for physical departure/arrival. Player self-actions exercise pickup, destination and RTB.
+private _transportHeli = ["qa_transport_heli", "B_Heli_Light_01_F", [270, 52, 0], 180, true] call Waldo_QA_fnc_getFeatureObjectServer;
+private _transportGround = ["qa_transport_ground", "B_MRAP_01_F", [280, 52, 0], 180, true] call Waldo_QA_fnc_getFeatureObjectServer;
+if (crew _transportHeli isEqualTo []) then {createVehicleCrew _transportHeli};
+if (crew _transportGround isEqualTo []) then {createVehicleCrew _transportGround};
+[_transportHeli, "HELICOPTER", "QA_RAVEN", "QA Raven", createHashMapFromArray [["showMarker", true], ["cruiseAltitude", 80], ["boardingSeconds", 180], ["useImprovedLanding", true]]] call Waldo_fnc_TransportRegister;
+[_transportGround, "GROUND", "QA_TAXI", "QA Taxi", createHashMapFromArray [["showMarker", true], ["boardingSeconds", 180]]] call Waldo_fnc_TransportRegister;
+missionNamespace setVariable ["Waldo_QA_TransportVehicles", [_transportHeli, _transportGround], true];
+["transport-services", "TRANSPORT SERVICES", [275, 40, 0], "Request each typed pool, select a destination, disembark and verify physical return-to-base."] call Waldo_QA_fnc_registerFeatureStationServer;
+
 // Register the exhaustive function directory after the genuine feature fixtures.
 // Each public API maps to exactly one physical subsystem station; internal helpers are
 // documented there but are never invoked automatically during a manual session.

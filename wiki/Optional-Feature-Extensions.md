@@ -30,7 +30,7 @@ should track authored objects or mission-level state instead.
 
 Allowed vehicle kinds and exact-class profiles can override the global trigger, exit, protection, recovery and damage settings. A minimum overturned duration prevents brief rolls from triggering extraction. Aircraft are excluded by default because general emergency ejection cannot be safe across every airframe; missions may explicitly opt in with a tested profile.
 
-## Accessibility PID
+## WMP HUD
 
 The friendly aid can independently show icons and names, filter to the player's group, include/exclude incapacitated units and vehicle crew, scale its presentation and fade with distance. It remains friendly-only and line-of-sight-aware. Arma has no safe general-purpose friendly silhouette-through-walls primitive, so this feature does not simulate one.
 
@@ -41,6 +41,9 @@ Explosive classes can have strengths, while each breach profile can require accu
 ## Scaling and transforms
 
 Helpers support reset, multiply, copy, bounded area scaling, full pitch/bank/yaw, ATL/ASL/ASLW placement and scripted spawning. Scale is uniform because `setObjectScale` has no per-axis mode. Visual and collision geometry may disagree on some assets, so unusual scales require in-game testing.
+Combined transforms always apply position and orientation first, then apply or restore scale last.
+When the scale argument is negative, WMP preserves the object's current scale instead of allowing
+Arma's direction commands to reset it to 1.
 
 ## AI rebalance
 

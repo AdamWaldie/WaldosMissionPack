@@ -54,6 +54,7 @@
  * - Waldo_ImprovedHelicopterLanding_MinimumActivationDistance (ADVANCED): waypoint must begin at least this far away.
  * - Waldo_ImprovedHelicopterLanding_TriggerDistance (ADVANCED): distance at which WMP starts approach control.
  * - Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor (ADVANCED): scales the speed-sensitive takeover test.
+ * - Waldo_ImprovedHelicopterLanding_MinimumApproachSpeed (ADVANCED): minimum entry speed in km/h; prevents slow short legs.
  * - Waldo_ImprovedHelicopterLanding_TransitAltitude (ADVANCED): preferred clear-ground approach height in metres AGL.
  * - Waldo_ImprovedHelicopterLanding_GlideSlopeRatio (ADVANCED): horizontal travel per metre of planned descent.
  * - Waldo_ImprovedHelicopterLanding_TreeScanRadius (ADVANCED): vegetation search radius around the landing point.
@@ -91,6 +92,7 @@ createHashMapFromArray [
         ["Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", 50], // METRES: waypoint must start at least this far away.
         ["Waldo_ImprovedHelicopterLanding_TriggerDistance", 500], // METRES: controller takes over inside this distance.
         ["Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor", 4.2], // MULTIPLIER: approach-speed trigger scaling.
+        ["Waldo_ImprovedHelicopterLanding_MinimumApproachSpeed", 55], // KM/H: minimum speed when scripted approach control begins.
         ["Waldo_ImprovedHelicopterLanding_TransitAltitude", 30], // METRES AGL: clear-terrain approach height.
         ["Waldo_ImprovedHelicopterLanding_GlideSlopeRatio", 4], // RATIO: horizontal distance per metre of descent.
         ["Waldo_ImprovedHelicopterLanding_TreeScanRadius", 25], // METRES: vegetation search around touchdown.

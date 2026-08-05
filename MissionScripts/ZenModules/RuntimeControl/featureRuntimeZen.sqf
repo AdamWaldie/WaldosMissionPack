@@ -32,6 +32,18 @@ params [
     ["_objectPos", objNull, [objNull]]
 ];
 if !(hasInterface) exitWith {};
+private _resolveTarget = {
+    params ["_selected", "_position", ["_kinds", [], [[]]], ["_failureText", "Select a valid object.", [""]]];
+    private _target = _selected;
+    if (isNull _target) then {
+        private _nearby = nearestObjects [_position, _kinds, 20, true];
+        _target = _nearby param [0, objNull];
+    };
+    if (isNull _target) then {
+        ["WMP ZEN", _failureText, "ERROR", "ZEN_TARGET"] call Waldo_fnc_FeatureNotifyLocal;
+    };
+    _target
+};
 
 switch (toUpperANSI _feature) do {
     case "GUNSHIP_REGISTER": {
@@ -393,6 +405,39 @@ switch (toUpperANSI _feature) do {
             }, {}, _target
         ] call zen_dialog_fnc_create;
     };
+    case "TRANSPORT_REGISTER": {
+        private _target = [_objectPos, _modulePos, ["LandVehicle", "Helicopter"], "Select an AI-crewed helicopter or ground vehicle."] call _resolveTarget;
+        if (isNull _target) exitWith {};
+        private _isHelicopter = _target isKindOf "Helicopter";
+        [
+            "Register Transport Service",
+            [
+                ["COMBO", ["Service type", "Helicopter and ground transports use independent pools."], [["HELICOPTER", "GROUND"], ["Helicopter transport", "Ground transport"], if (_isHelicopter) then {0} else {1}]],
+                ["EDIT", ["Display name", "Player-facing callsign. Leave blank to use the crew group callsign."], ""],
+                ["CHECKBOX", ["Squad leaders only", "Only group leaders may request this service."], false],
+                ["CHECKBOX", ["Show map marker", "Track the service vehicle on the map."], true],
+                ["SLIDER", ["Boarding window", "Seconds at pickup before an unused service returns to base."], [30, 900, missionNamespace getVariable ["Waldo_Transport_DefaultBoardingSeconds", 300], 0]],
+                ["SLIDER", ["Destination dwell", "Seconds allowed for disembarking before return to base."], [10, 300, missionNamespace getVariable ["Waldo_Transport_DefaultDestinationDwell", 45], 0]],
+                ["SLIDER", ["Helicopter transit height", "Metres above terrain; ignored by ground transports."], [20, 300, missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 80], 0]],
+                ["CHECKBOX", ["Repair at base", "Fully repair the service after a completed return."], false],
+                ["CHECKBOX", ["Refuel at base", "Fully refuel the service after a completed return."], true],
+                ["CHECKBOX", ["Invulnerable service", "Protect the transport and its original AI service crew. Passenger players remain vulnerable."], false],
+                ["CHECKBOX", ["Force late passengers out", "Move remaining passengers out when destination dwell expires."], false],
+                ["CHECKBOX", ["Emergency position reset", "OFF by default. If physical RTB fails and no players are aboard, teleport the transport to base."], false]
+            ],
+            {
+                params ["_values", "_target"];
+                ["TRANSPORT_REGISTER", [_target] + _values] call Waldo_fnc_FeatureRuntimeApply;
+            },
+            {},
+            _target
+        ] call zen_dialog_fnc_create;
+    };
+    case "TRANSPORT_RTB": {
+        private _target = [_objectPos, _modulePos, ["LandVehicle", "Helicopter"], "Select a registered transport-service vehicle."] call _resolveTarget;
+        if (isNull _target) exitWith {};
+        ["TRANSPORT_RTB", [_target]] call Waldo_fnc_FeatureRuntimeApply;
+    };
     case "RALLY": {
         private _rallyClasses = ["Land_SatelliteAntenna_01_F", "Land_Radio_F", "Land_TentA_F", "Land_Sleeping_bag_blue_folded_F"];
         private _configuredRallyClass = missionNamespace getVariable ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"];
@@ -456,24 +501,6 @@ switch (toUpperANSI _feature) do {
             {
                 params ["_values"];
                 ["TREE_CONFIG", _values] call Waldo_fnc_FeatureRuntimeApply;
-            }
-        ] call zen_dialog_fnc_create;
-    };
-    case "ACCESSIBILITY": {
-        [
-            "Friendly Identification Aid",
-            [
-                ["CHECKBOX", ["Enable", "Enable for eligible players."], missionNamespace getVariable ["Waldo_AccessibilityPID_Enable", false]],
-                ["SLIDER", ["Icon range", "Maximum friendly icon range."], [10, 1000, missionNamespace getVariable ["Waldo_AccessibilityPID_IconRange", 300], 0]],
-                ["SLIDER", ["Name range", "Maximum friendly name range."], [0, 300, missionNamespace getVariable ["Waldo_AccessibilityPID_NameRange", 50], 0]],
-                ["CHECKBOX", ["Require line of sight", "Hide identification through obstructing geometry."], missionNamespace getVariable ["Waldo_AccessibilityPID_RequireLOS", true]],
-                ["CHECKBOX", ["Include AI", "Include friendly AI as well as players."], missionNamespace getVariable ["Waldo_AccessibilityPID_IncludeAI", false]],
-                ["CHECKBOX", ["Player toggle", "Give players a local show/hide action."], missionNamespace getVariable ["Waldo_AccessibilityPID_AllowToggle", true]],
-                ["CHECKBOX", ["Visible by default", "Initial local visibility state."], missionNamespace getVariable ["Waldo_AccessibilityPID_DefaultVisible", true]]
-            ],
-            {
-                params ["_values"];
-                ["ACCESS_CONFIG", _values] call Waldo_fnc_FeatureRuntimeApply;
             }
         ] call zen_dialog_fnc_create;
     };

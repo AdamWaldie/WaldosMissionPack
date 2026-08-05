@@ -17,7 +17,7 @@ evaluator.
 
 | Pattern | Meaning | Example |
 |---|---|---|
-| Automatic | Enable/configure it and WMP starts it | AI rebalance, rally, accessibility PID |
+| Automatic | Enable/configure it and WMP starts it | AI rebalance, rally, WMP HUD |
 | Enable + register | WMP starts support, but needs a world object/zone/unit | jammer, hazards, field resupply |
 | Call-driven | Config supplies pools/defaults/bounds; a call creates each instance | Dynamic AA, paradrop, gunship |
 | Consumed setting | Another existing feature reads the value | logistics crate class, UI placement |
@@ -170,7 +170,7 @@ optional disable challenge.
 no exposure. Register a pre-planned marker/trigger/area on the server:
 
     private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap])
-        getOrDefault ["SEVERE", createHashMap];
+        getOrDefault ["SEVERE_RADIATION", createHashMap];
     ["reactor", "reactor_zone", _profile] call Waldo_fnc_HazardRegisterZone;
     ["leaking_truck", leakingTruck, 8, _profile] call Waldo_fnc_HazardRegisterEmitter;
 

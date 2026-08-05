@@ -34,7 +34,12 @@ if !(isServer) exitWith {
     [_object, _scale, _asSimple] remoteExecCall ["Waldo_fnc_ObjectScale", 2];
     _object
 };
-if (isNull _object) exitWith {objNull};
+private _reject = {
+    params ["_message"];
+    diag_log format ["[WMP OBJECT SCALE] Rejected: %1", _message];
+    objNull
+};
+if (isNull _object) exitWith {["No valid object reached the server."] call _reject};
 
 private _remoteAuthorized = true;
 if (remoteExecutedOwner > 0) then {
@@ -43,7 +48,7 @@ if (remoteExecutedOwner > 0) then {
     private _isCurator = !isNull _caller && {!isNull (getAssignedCuratorLogic _caller)};
     _remoteAuthorized = _isCurator || {missionNamespace getVariable ["Waldo_ObjectScaling_AllowClientRequests", false]};
 };
-if !(_remoteAuthorized) exitWith {objNull};
+if !(_remoteAuthorized) exitWith {["Only an assigned curator may scale objects through the ZEN module."] call _reject};
 
 private _minimum = missionNamespace getVariable ["Waldo_ObjectScaling_Minimum", 0.1];
 private _maximum = missionNamespace getVariable ["Waldo_ObjectScaling_Maximum", 10];
@@ -51,20 +56,23 @@ _scale = (_scale max _minimum) min _maximum;
 
 private _scaledObject = _object;
 private _originalScale = _object getVariable ["Waldo_ObjectScaleOriginal", getObjectScale _object];
+if (_asSimple && {!isSimpleObject _object} && {count (crew _object) > 0 || {(getPosATL _object select 2) > 1}}) exitWith {
+    ["Conversion requires an empty decorative object resting on the ground."] call _reject
+};
 if (_asSimple && {!isSimpleObject _object}) then {
-    if (count (crew _object) > 0 || {(getPosATL _object select 2) > 0.5}) exitWith {objNull};
     private _variableName = vehicleVarName _object;
     _scaledObject = [_object] call BIS_fnc_replaceWithSimpleObject;
-    if (isNull _scaledObject) exitWith {objNull};
-    if (_variableName != "") then {
+    if (!isNull _scaledObject && {_variableName != ""}) then {
         _scaledObject setVehicleVarName _variableName;
         missionNamespace setVariable [_variableName, _scaledObject, true];
     };
-    { _x addCuratorEditableObjects [[_scaledObject], false] } forEach allCurators;
+    if (!isNull _scaledObject) then {{_x addCuratorEditableObjects [[_scaledObject], false]} forEach allCurators};
 };
-if (!isSimpleObject _scaledObject && {isNull (attachedTo _scaledObject)}) exitWith {objNull};
+if (isNull _scaledObject) exitWith {["Arma could not convert this class to a Simple Object."] call _reject};
+if (!isSimpleObject _scaledObject && {isNull (attachedTo _scaledObject)}) exitWith {["Arma supports scaling only Simple Objects or attached objects. Enable decorative-object conversion for this target."] call _reject};
 _scaledObject setObjectScale _scale;
-if (abs ((getObjectScale _scaledObject) - _scale) > 0.001) exitWith {objNull};
+if (abs ((getObjectScale _scaledObject) - _scale) > 0.001) exitWith {["Arma did not retain the requested scale for this object class."] call _reject};
 _scaledObject setVariable ["Waldo_ObjectScaleOriginal", _originalScale, true];
 _scaledObject setVariable ["Waldo_ObjectScale", _scale, true];
+diag_log format ["[WMP OBJECT SCALE] Applied scale=%1 class=%2 simple=%3 object=%4", _scale, typeOf _scaledObject, isSimpleObject _scaledObject, _scaledObject];
 _scaledObject

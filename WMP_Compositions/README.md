@@ -43,6 +43,7 @@ copies of feature logic.
 | Field Resupply Hub Example | Refill hub; assign infantry carriers by script or Zeus |
 | Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
 | Vehicle Recovery Workshop Example | Spaced workshop, recoverable vehicle and generic AUTO carrier |
+| Helicopter and Ground Transport Services | AI-crewed named air/ground services with current LZ clearance and improved-landing defaults |
 | Logistics Spawner Example | Immediately active standalone quartermaster access point |
 | MHQ With Logistics Spawner | Deployable command post with synchronized parts |
 | Virtual Vehicle Depot Spawner Example | Terminal and safely separated spawn point |
@@ -63,6 +64,8 @@ copies of feature logic.
 | Teleport Script Example | Paired local addActions |
 
 ## Features intentionally without compositions
+
+- **WMP HUD** is configured player-locally through `MissionConfig\interfaceConfig.sqf`; it has no world-object placement requirement, so a composition would be misleading. Use the full audit mission for live HUD testing.
 
 Dynamic AO, Dynamic AA, airborne gunships and generated drop zones are server-authoritative generated
 systems; Zeus or an `initServer.sqf` call is clearer and safer than an Eden composition whose init

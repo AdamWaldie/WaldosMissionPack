@@ -138,23 +138,24 @@ private _dismount = missionNamespace getVariable ["Waldo_QA_DismountVehicle", ob
 }] call _add;
 
 private _access = "qa_sign_accessibility" call _get;
-[_access, "Waldo_QA_EnablePID", "ENABLE PID FOR THIS TESTER", {
+[_access, "Waldo_QA_EnablePID", "ENABLE WMP HUD FOR THIS TESTER", {
     private _uid = getPlayerUID player;
-    missionNamespace setVariable ["Waldo_AccessibilityPID_Enable", true];
-    missionNamespace setVariable ["Waldo_AccessibilityPID_AllowedUIDs", if (_uid == "") then {[]} else {[_uid]}];
-    missionNamespace setVariable ["Waldo_AccessibilityPID_IncludeAI", true];
-    [] call Waldo_fnc_AccessibilityPIDStop;
-    private _ok = [] call Waldo_fnc_AccessibilityPIDInit;
-    ["ACCESSIBILITY PID", ["PID did not start for this tester.", "PID started for this tester; friendly AI markers should be visible."] select _ok, ["ERROR", "SUCCESS"] select _ok, "PID_QA"] call Waldo_fnc_FeatureNotifyLocal;
+    missionNamespace setVariable ["Waldo_WmpHud_Enable", true];
+    missionNamespace setVariable ["Waldo_WmpHud_AccessibilityUIDs", if (_uid == "") then {[]} else {[_uid]}];
+    missionNamespace setVariable ["Waldo_WmpHud_ExcludedUIDs", []];
+    missionNamespace setVariable ["Waldo_WmpHud_IncludeAI", true];
+    [] call Waldo_fnc_WmpHudStop;
+    private _ok = [] call Waldo_fnc_WmpHudInit;
+    ["WMP HUD", ["WMP HUD did not start for this tester.", "WMP HUD started; friendly AI markers should be visible."] select _ok, ["ERROR", "SUCCESS"] select _ok, "WMP_HUD_QA"] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
-[_access, "Waldo_QA_DenyPID", "VERIFY UID GATE DENIES", {
-    [] call Waldo_fnc_AccessibilityPIDStop;
-    missionNamespace setVariable ["Waldo_AccessibilityPID_AllowedUIDs", ["WMP_QA_NON_MATCHING_UID"]];
-    private _started = [] call Waldo_fnc_AccessibilityPIDInit;
-    ["ACCESSIBILITY UID GATE", ["Expected denial confirmed. PID remained stopped.", "UID gate failed: PID started for an ineligible tester."] select _started, ["SUCCESS", "ERROR"] select _started, "PID_QA"] call Waldo_fnc_FeatureNotifyLocal;
+[_access, "Waldo_QA_DenyPID", "VERIFY EXCLUSION WINS", {
+    [] call Waldo_fnc_WmpHudStop;
+    missionNamespace setVariable ["Waldo_WmpHud_ExcludedUIDs", [getPlayerUID player]];
+    private _started = [] call Waldo_fnc_WmpHudInit;
+    ["WMP HUD ELIGIBILITY", ["Expected denial confirmed; WMP HUD remained stopped.", "Exclusion failed: WMP HUD started for a denied tester."] select _started, ["SUCCESS", "ERROR"] select _started, "WMP_HUD_QA"] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
-[_access, "Waldo_QA_TogglePID", "TOGGLE FRIENDLY PID VISIBILITY", {
-    [] call Waldo_fnc_AccessibilityPIDToggle;
+[_access, "Waldo_QA_TogglePID", "TOGGLE WMP HUD VISIBILITY", {
+    [] call Waldo_fnc_WmpHudToggle;
 }] call _add;
 private _breach = "qa_sign_breaching" call _get;
 [_breach, "Waldo_QA_TestBreach", "SIMULATE CONFIGURED DEMO CHARGE", {

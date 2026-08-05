@@ -1,15 +1,15 @@
 /*
  * Author: WaldoTheWarfighter
  * Defines global visual-theme defaults and interface-local notification, treatment, tactical,
- * emergency-dismount and accessibility presentation settings. It never opens displays or actions.
+ * emergency-dismount, WMP HUD and accessibility presentation settings. It never opens displays or actions.
  *
  * Schema: SHARED entries run on every machine; PLAYER_LOCAL entries run only for hasInterface.
  * Each entry is [missionNamespace variable name, guarded default value].
  * Arguments: None.
  * Return Value: HASHMAP consumed by Waldo_fnc_LoadFeatureConfigs.
  *
- * Example: set Waldo_AccessibilityPID_AllowedUIDs to [] to permit every player to use PID.
- * Result: every interface client may use PID when the feature is enabled and locally toggled on.
+ * Example: add a Steam UID to Waldo_WmpHud_AccessibilityUIDs so that person can always use the HUD.
+ * Result: that player receives the WMP HUD in every campaign; everyone else needs configured gear.
  * Current callers: init.sqf (SHARED) and initPlayerLocal.sqf (PLAYER_LOCAL) through the loader.
  *
  * ACTIVATION MODEL: AUTOMATIC LOCAL UI, EXCEPT TACTICAL DISPLAY REGISTRATION.
@@ -59,6 +59,8 @@
  * - Waldo_UI_ThemeOverrides (ADVANCED): partial token overrides for an existing theme ID.
  * - Waldo_UiNotification_MaximumQueued (ADVANCED): maximum pending cards; oldest excess entries are discarded.
  * - Waldo_UiNotification_QueueLifetime (ADVANCED): seconds a pending card may wait before expiring.
+ * - Waldo_UiNotification_MinimumDuration (MISSION MAKER): shortest readable timed-card lifetime.
+ * - Waldo_UiNotification_CharactersPerSecond (ADVANCED): reading-speed divisor used below each call's old maximum.
  * - Waldo_UiNotification_MaximumPerPlacement (ADVANCED): simultaneous visible lanes in one screen region.
  * - Waldo_UiNotification_ReflowDuration (ADVANCED): seconds used to slide remaining cards into closed gaps.
  * - Waldo_UiNotification_AllowPlacementOverflow (MISSION MAKER): true sends excess cards to fallback regions.
@@ -102,37 +104,45 @@
  * - Waldo_EmergencyDismount_AllowedKinds: isKindOf roots accepted by the feature.
  * - Waldo_EmergencyDismount_VehicleProfiles: exact vehicle class -> per-class override HashMap.
  *
- * SETTING-BY-SETTING GUIDE - ACCESSIBILITY PID:
- * - Waldo_AccessibilityPID_Enable: makes PID available; eligibility and the player's local toggle still apply.
- * - Waldo_AccessibilityPID_AllowedUIDs: Steam UID strings; [] permits every player.
- * - Waldo_AccessibilityPID_DefaultVisible: initial local visibility for an eligible player.
- * - Waldo_AccessibilityPID_AllowToggle: exposes the Accessibility self-action for visibility control.
- * - Waldo_AccessibilityPID_IconRange: maximum chevron range in metres.
- * - Waldo_AccessibilityPID_NameRange: maximum name/role text range in metres.
- * - Waldo_AccessibilityPID_RequireLOS: hides identification through occluding geometry when true.
- * - Waldo_AccessibilityPID_IncludeAI: includes friendly AI targets when true.
- * - Waldo_AccessibilityPID_IconScale: base chevron size.
- * - Waldo_AccessibilityPID_TextScale: close-range name/role text size.
- * - Waldo_AccessibilityPID_DistanceFade: progressively reduces alpha with distance.
- * - Waldo_AccessibilityPID_GroupOnly: true restricts identification to the player's current group.
- * - Waldo_AccessibilityPID_ShowIncapacitated: keeps incapacitated friendlies identifiable.
- * - Waldo_AccessibilityPID_ShowIcons: enables the high-clarity chevron layer.
- * - Waldo_AccessibilityPID_ShowNames: enables name/role text within NameRange.
- * - Waldo_AccessibilityPID_ShowVehicleCrew: includes friendlies currently inside vehicles.
- * - Waldo_AccessibilityPID_Font (ADVANCED): Arma font classname used by Draw3D text.
- * - Waldo_AccessibilityPID_TextDistanceGrowth (ADVANCED): scale added per metre before the clamp.
- * - Waldo_AccessibilityPID_TextMaximumScale (ADVANCED): maximum text size at range.
- * - Waldo_AccessibilityPID_TextHeadOffset (ADVANCED): text baseline metres above the head selection.
- * - Waldo_AccessibilityPID_IconHeadOffset (ADVANCED): chevron centre metres above the head selection.
- * - Waldo_AccessibilityPID_OutlineScale (ADVANCED): contrast outline size relative to foreground text.
- * - Waldo_AccessibilityPID_OutlineColour (ADVANCED): RGBA 0-1 contrast colour behind text.
+ * SETTING-BY-SETTING GUIDE - WMP HUD:
+ * - Waldo_WmpHud_Enable: installs the local friendly-identification HUD when true.
+ * - Waldo_WmpHud_SystemName: campaign-facing name used by its toggle notification (for example Auspex).
+ * - Waldo_WmpHud_AccessibilityUIDs: Steam UIDs that always qualify without campaign equipment.
+ * - Waldo_WmpHud_ExcludedUIDs: Steam UIDs that never qualify; exclusions override every route.
+ * - Waldo_WmpHud_AllowEveryone: gives every player the HUD without equipment; normally leave false.
+ * - Waldo_WmpHud_Headgear: headgear classnames that grant high-tech campaign access.
+ * - Waldo_WmpHud_Facewear: glasses/facewear classnames that grant high-tech campaign access.
+ * - Waldo_WmpHud_NVGs: NVG/HMD classnames that grant high-tech campaign access.
+ * - Waldo_WmpHud_DefaultVisible: initial state for an equipment-qualified player.
+ * - Waldo_WmpHud_AccessibilityDefaultVisible: initial state for an accessibility UID.
+ * - Waldo_WmpHud_AllowToggle: exposes the WMP Interface self-action.
+ * - Waldo_WmpHud_Icon: optional texture path for the friendly marker.
+ * - Waldo_WmpHud_Colour: RGBA colour; [] follows the active colour-vision-aware UI theme.
+ * - Waldo_WmpHud_IconRange: maximum friendly icon distance in metres.
+ * - Waldo_WmpHud_NameRange: maximum friendly name distance in metres.
+ * - Waldo_WmpHud_RequireLOS: hides identification through occluding geometry when true.
+ * - Waldo_WmpHud_IncludeAI: includes friendly AI targets when true.
+ * - Waldo_WmpHud_IconScale/TextScale: base Draw3D sizes.
+ * - Waldo_WmpHud_DistanceFade: progressively reduces alpha with distance.
+ * - Waldo_WmpHud_GroupOnly: restricts identification to the player's current group.
+ * - Waldo_WmpHud_ShowIncapacitated: retains identifiers on incapacitated friendlies.
+ * - Waldo_WmpHud_ShowIcons: draws the friendly marker layer.
+ * - Waldo_WmpHud_ShowNames: draws names inside NameRange.
+ * - Waldo_WmpHud_ShowVehicleCrew: permits identifiers for units inside vehicles.
+ * - Waldo_WmpHud_Font: Arma font classname used for names.
+ * - Waldo_WmpHud_TextDistanceGrowth: small scale increase per metre before the maximum clamp.
+ * - Waldo_WmpHud_TextMaximumScale: largest allowed name scale at range.
+ * - Waldo_WmpHud_TextHeadOffset: name height above the animated head position in metres.
+ * - Waldo_WmpHud_IconHeadOffset: marker height above the animated head position in metres.
+ * - Waldo_WmpHud_OutlineScale: contrast-outline size relative to the name.
+ * - Waldo_WmpHud_OutlineColour: outline RGBA colour; defaults to near-black for clarity.
  *
  * PANEL EXAMPLE: `["RALLY_POINT", "BOTTOM_RIGHT", true]` routes rally cards to the bottom-right
  * stack. Keep continuous hazard and jammer overlays out of this list: their dedicated layouts are
  * deliberately deconflicted by the UI manager rather than queued as notification cards.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["UI Themes", "Notification UI", "Treatment Feedback", "Tactical Display", "Emergency Dismount", "Accessibility"]],
+    ["featureFamilies", ["UI Themes", "Notification UI", "Treatment Feedback", "Tactical Display", "Emergency Dismount", "WMP HUD", "Accessibility"]],
     ["shared", [
         ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: DEFAULT, WW2, VIETNAM or SCIFI.
         ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: complete named custom-theme definitions.
@@ -142,6 +152,8 @@ createHashMapFromArray [
         // ADVANCED TUNING: global notification queue and animation behavior.
         ["Waldo_UiNotification_MaximumQueued", 12], // COUNT: oldest pending messages are discarded beyond this bound.
         ["Waldo_UiNotification_QueueLifetime", 15], // SECONDS: pending message expires instead of playing much later.
+        ["Waldo_UiNotification_MinimumDuration", 3], // SECONDS: concise cards clear after at least this readable interval.
+        ["Waldo_UiNotification_CharactersPerSecond", 18], // CHARACTERS/SECOND: longer title/body text scales toward the caller's maximum.
         ["Waldo_UiNotification_MaximumPerPlacement", 3], // LANES: simultaneous panels at one screen placement.
         ["Waldo_UiNotification_ReflowDuration", 0.18], // SECONDS: animation when a stack closes its gap.
         ["Waldo_UiNotification_AllowPlacementOverflow", true], // BOOL: use next placement when all lanes are occupied.
@@ -149,17 +161,19 @@ createHashMapFromArray [
         ["Waldo_UI_PanelPlacements", [              // MISSION MAKER: channel routing; avoid reserved TOP.
             // Every row is [feature message channel, screen area, may stack with simultaneous cards].
             ["TREATMENT_FEEDBACK", "BOTTOM_CENTER", true], // medical feedback at padded bottom-centre.
-            ["ACCESSIBILITY_PID", "TOP_RIGHT", true],      // accessibility messages in top-right lanes.
+            ["WMP_HUD", "TOP_RIGHT", true],               // WMP HUD messages in top-right lanes.
             ["EMERGENCY_DISMOUNT", "TOP_RIGHT", true],    // dismount messages share/reflow those lanes.
             ["DYNAMIC_AA", "BOTTOM_RIGHT", true],         // AA state at bottom-right.
-            ["EXPLOSIVE_BREACH", "BOTTOM_RIGHT", true],   // breach feedback at bottom-right.
+            ["EXPLOSIVE_BREACH", "BOTTOM_RIGHT", true],   // opt-in breach feedback route; breaching is silent by default.
             ["TREE_FELLING", "BOTTOM_RIGHT", true],       // tree progress at bottom-right.
             ["FIELD_RESUPPLY", "BOTTOM_LEFT", true],      // resupply messages at bottom-left.
             ["VEHICLE_RECOVERY", "BOTTOM_LEFT", true],    // recovery messages at bottom-left.
             ["PERSISTENCE", "BOTTOM_LEFT", true],         // database messages at bottom-left.
             ["RESPAWN_LOADOUT", "BOTTOM_LEFT", true],     // loadout-save confirmation at bottom-left.
             ["RALLY_POINT", "BOTTOM_RIGHT", true],        // squad rally status at bottom-right.
-            ["AIRBORNE_GUNSHIP", "BOTTOM_RIGHT", true]    // gunship status at bottom-right.
+            ["AIRBORNE_GUNSHIP", "BOTTOM_RIGHT", true],   // gunship status at bottom-right.
+            ["HELI_TRANSPORT", "BOTTOM_RIGHT", true],     // helicopter transport status.
+            ["GROUND_TRANSPORT", "BOTTOM_RIGHT", true]    // ground transport status.
         ]],
         // MISSION MAKER: ACE treatment feedback content and recipients.
         ["Waldo_TreatmentFeedback_Enable", false], // BOOL: install ACE treatment event feedback locally.
@@ -198,30 +212,37 @@ createHashMapFromArray [
         ["Waldo_EmergencyDismount_DamageOnExit", 0], // Damage fraction 0-1.
         ["Waldo_EmergencyDismount_AllowedKinds", ["LandVehicle", "Ship"]], // isKindOf roots.
         ["Waldo_EmergencyDismount_VehicleProfiles", createHashMap], // ADVANCED per-class safety overrides.
-        // MISSION MAKER: PID eligibility and visible information.
-        ["Waldo_AccessibilityPID_Enable", true],    // BOOL: makes PID available to eligible local players.
-        ["Waldo_AccessibilityPID_AllowedUIDs", ["76561198094931408"]], // Steam UID strings; [] allows all players.
-        ["Waldo_AccessibilityPID_DefaultVisible", true], // BOOL: initial state for an eligible player.
-        ["Waldo_AccessibilityPID_AllowToggle", true], // BOOL: show Accessibility self-action to change visibility.
-        ["Waldo_AccessibilityPID_IconRange", 300],   // METRES: maximum friendly chevron range.
-        ["Waldo_AccessibilityPID_NameRange", 50],   // METRES: maximum name/role text range.
-        ["Waldo_AccessibilityPID_RequireLOS", true], // BOOL: hide identifiers through occluding geometry.
-        ["Waldo_AccessibilityPID_IncludeAI", false], // BOOL: include friendly AI as PID targets.
-        ["Waldo_AccessibilityPID_IconScale", 0.8],   // DrawIcon3D scale multiplier.
-        ["Waldo_AccessibilityPID_TextScale", 0.035], // close-range DrawIcon3D text scale.
-        ["Waldo_AccessibilityPID_DistanceFade", true], // BOOL: progressively reduce alpha with distance.
-        ["Waldo_AccessibilityPID_GroupOnly", false], // BOOL: restrict targets to player's group rather than side.
-        ["Waldo_AccessibilityPID_ShowIncapacitated", true], // BOOL: retain PID on incapacitated friendlies.
-        ["Waldo_AccessibilityPID_ShowIcons", true], // BOOL: draw the high-clarity chevron/icon layer.
-        ["Waldo_AccessibilityPID_ShowNames", true], // BOOL: draw name/role text within NameRange.
-        ["Waldo_AccessibilityPID_ShowVehicleCrew", false], // BOOL: draw identifiers for units currently in vehicles.
+        // MISSION MAKER: dual campaign-equipment and accessibility WMP HUD eligibility.
+        ["Waldo_WmpHud_Enable", true],              // BOOL: install the local HUD framework.
+        ["Waldo_WmpHud_SystemName", "WMP HUD"],    // STRING: campaign-facing system name, e.g. "Auspex".
+        ["Waldo_WmpHud_AccessibilityUIDs", ["76561198094931408"]], // Steam UIDs that bypass equipment.
+        ["Waldo_WmpHud_ExcludedUIDs", []],          // Steam UIDs denied even if equipment is worn.
+        ["Waldo_WmpHud_AllowEveryone", false],      // true bypasses both UID and equipment checks.
+        ["Waldo_WmpHud_Headgear", []],              // CfgWeapons headgear classnames granting HUD access.
+        ["Waldo_WmpHud_Facewear", [                 // CfgGlasses facewear classnames granting HUD access.
+            "FIG_CadianOGMaskFaceW", "FIG_CadianOGMaskFaceWGrey", "bio_1_fg", "bio_2_fg", "bio_3_fg", "bio_4_fg"
+        ]],
+        ["Waldo_WmpHud_NVGs", [                     // CfgWeapons NVG/HMD classnames granting HUD access.
+            "FIG_SniperNVGs", "FIG_CadianAuspecs", "FIG_CadianAuspecsKasr", "FIG_CadianAuspecs150th",
+            "FIG_CadianAuspecsKasr150th", "FIG_CadianAuspecsGrey", "FIG_CadianAuspecsKasrGrey",
+            "ic_bionicEye", "TIOW_Bionic_Eye", "TIOW_Bionic_Eye_Green", "TIOW_Bionic_Eye_2",
+            "TIOW_Bionic_Eye_2_Green", "TIOW_IG_NVG"
+        ]],
+        ["Waldo_WmpHud_DefaultVisible", true],       // initial state when qualified by equipment.
+        ["Waldo_WmpHud_AccessibilityDefaultVisible", true], // initial state for accessibility UIDs.
+        ["Waldo_WmpHud_AllowToggle", true],         // show the WMP Interface self-action.
+        ["Waldo_WmpHud_Icon", "\a3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
+        ["Waldo_WmpHud_Colour", []],                // [] follows colour-vision-aware theme; otherwise RGBA 0-1.
+        ["Waldo_WmpHud_IconRange", 300], ["Waldo_WmpHud_NameRange", 50],
+        ["Waldo_WmpHud_RequireLOS", true], ["Waldo_WmpHud_IncludeAI", false],
+        ["Waldo_WmpHud_IconScale", 0.8], ["Waldo_WmpHud_TextScale", 0.035],
+        ["Waldo_WmpHud_DistanceFade", true], ["Waldo_WmpHud_GroupOnly", false],
+        ["Waldo_WmpHud_ShowIncapacitated", true], ["Waldo_WmpHud_ShowIcons", true],
+        ["Waldo_WmpHud_ShowNames", true], ["Waldo_WmpHud_ShowVehicleCrew", false],
         // ADVANCED TUNING: tested Draw3D typography/geometry; validate at close and maximum range.
-        ["Waldo_AccessibilityPID_Font", "PuristaBold"], // Arma font class used for maximum legibility.
-        ["Waldo_AccessibilityPID_TextDistanceGrowth", 0.00025], // scale added per metre before MaximumScale clamp.
-        ["Waldo_AccessibilityPID_TextMaximumScale", 0.05], // upper Draw3D text-scale clamp at range.
-        ["Waldo_AccessibilityPID_TextHeadOffset", 0.30], // METRES above head selection for text baseline.
-        ["Waldo_AccessibilityPID_IconHeadOffset", 0.75], // METRES above head selection for chevron/icon centre.
-        ["Waldo_AccessibilityPID_OutlineScale", 1.12], // shadow/outline size relative to foreground text.
-        ["Waldo_AccessibilityPID_OutlineColour", [0.03, 0.03, 0.03, 1]] // RGBA 0-1 contrast outline.
+        ["Waldo_WmpHud_Font", "PuristaBold"], ["Waldo_WmpHud_TextDistanceGrowth", 0.00025],
+        ["Waldo_WmpHud_TextMaximumScale", 0.05], ["Waldo_WmpHud_TextHeadOffset", 0.30],
+        ["Waldo_WmpHud_IconHeadOffset", 0.75], ["Waldo_WmpHud_OutlineScale", 1.12],
+        ["Waldo_WmpHud_OutlineColour", [0.03, 0.03, 0.03, 1]]
     ]]
 ]

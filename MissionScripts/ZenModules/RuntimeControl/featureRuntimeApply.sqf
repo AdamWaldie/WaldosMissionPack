@@ -26,9 +26,10 @@ if !(isServer) exitWith {
 };
 
 private _authorized = true;
+private _caller = objNull;
 if (remoteExecutedOwner > 0) then {
     private _callerIndex = allPlayers findIf {owner _x == remoteExecutedOwner};
-    private _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
+    _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
     _authorized = !isNull _caller && {!isNull (getAssignedCuratorLogic _caller)};
 };
 if !(_authorized) exitWith {false};
@@ -146,6 +147,31 @@ switch (toUpperANSI _action) do {
         ["VEHICLE RECOVERY", if (_ok) then {format ["Recovery carrier registered in %1 mode.", toUpperANSI _mode]} else {"Carrier registration was rejected. Check the selected vehicle."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "RECOVERY_ZEN"] call _reply;
         _ok
     };
+    case "TRANSPORT_REGISTER": {
+        _settings params ["_target", "_type", "_name", "_leadersOnly", "_showMarker", "_boarding", "_dwell", "_altitude", "_repair", "_refuel", "_invulnerable", "_forceOut", "_failSafe"];
+        private _options = createHashMapFromArray [
+            ["leadersOnly", _leadersOnly], ["showMarker", _showMarker],
+            ["boardingSeconds", _boarding], ["destinationDwell", _dwell],
+            ["cruiseAltitude", _altitude], ["repairAtBase", _repair],
+            ["refuelAtBase", _refuel], ["invulnerable", _invulnerable],
+            ["forceDisembark", _forceOut], ["failSafeReset", _failSafe]
+        ];
+        // ZEN always generates the internal registry ID; Zeus configures only the visible identity.
+        private _ok = [_target, _type, "", _name, _options] call Waldo_fnc_TransportRegister;
+        private _detail = if (_ok) then {
+            format ["%1 registered as %2. Player controls and the optional map marker are now active.", _target getVariable ["Waldo_TransportService_Name", "Transport service"], _target getVariable ["Waldo_TransportService_Id", "generated service"]]
+        } else {
+            missionNamespace getVariable ["Waldo_Transport_LastRegistrationError", "Registration was rejected for an unknown reason. Check the server RPT."]
+        };
+        ["TRANSPORT SERVICE", _detail, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
+        _ok
+    };
+    case "TRANSPORT_RTB": {
+        _settings params ["_target"];
+        private _type = _target getVariable ["Waldo_TransportService_Type", ""];
+        private _ok = _type in ["HELICOPTER", "GROUND"] && {["RTB", _type, _target, [], _caller] call Waldo_fnc_TransportRequestServer};
+        ["TRANSPORT SERVICE", if (_ok) then {"Return-to-base ordered."} else {"The selected vehicle is not a registered transport service."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
+    };
     case "RALLY_CONFIG": {
         _settings params ["_enable", "_objectClass", "_duration", "_deploymentTime", "_cooldown", "_enemyRadius", "_minimumMembers", "_placement", "_slope", "_regroup"];
         if !(isClass (configFile >> "CfgVehicles" >> _objectClass)) exitWith {false};
@@ -197,22 +223,6 @@ switch (toUpperANSI _action) do {
         } else {
             [] remoteExecCall ["Waldo_fnc_EmergencyDismountStop", -2];
             [] remoteExecCall ["", "Waldo_EmergencyDismount_RuntimeInit"];
-        };
-    };
-    case "ACCESS_CONFIG": {
-        _settings params ["_enable", "_iconRange", "_nameRange", "_lineOfSight", "_includeAI", "_allowToggle", "_visible"];
-        [
-            ["Waldo_AccessibilityPID_Enable", _enable], ["Waldo_AccessibilityPID_IconRange", _iconRange max 10],
-            ["Waldo_AccessibilityPID_NameRange", _nameRange max 0], ["Waldo_AccessibilityPID_RequireLOS", _lineOfSight],
-            ["Waldo_AccessibilityPID_IncludeAI", _includeAI], ["Waldo_AccessibilityPID_AllowToggle", _allowToggle],
-            ["Waldo_AccessibilityPID_DefaultVisible", _visible]
-        ] call _publishAll;
-        if (_enable) then {
-            [] remoteExecCall ["Waldo_fnc_AccessibilityPIDStop", -2];
-            [] remoteExecCall ["Waldo_fnc_AccessibilityPIDInit", -2, "Waldo_AccessibilityPID_RuntimeInit"];
-        } else {
-            [] remoteExecCall ["Waldo_fnc_AccessibilityPIDStop", -2];
-            [] remoteExecCall ["", "Waldo_AccessibilityPID_RuntimeInit"];
         };
     };
     case "AI_CONFIG": {

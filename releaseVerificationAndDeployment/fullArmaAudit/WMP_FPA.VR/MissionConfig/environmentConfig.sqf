@@ -25,7 +25,9 @@
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - enable switches, named hazard presets, axe/tool class patterns, fallen-object
  * pools, protected areas/yields and breaching profiles/explosive strengths are mission content.
- * Hazard types are free stable IDs consumed by profiles (shipped examples HAZARD and NO_OXYGEN).
+ * Hazard types are free stable IDs consumed by profiles. All shipped presets use RADIATION so dose
+ * carries consistently between radiation zones; a custom non-radiological profile should use its own
+ * clear type ID, such as TOXIN or NO_OXYGEN, to keep that exposure separate.
  * Each damage threshold is [exposure, damage fraction]; fatalExposure is seconds/exposure units.
  * Tree DirectionMode is RANDOM, STRIKE or ORIGINAL; RegrowSeconds -1 disables regrowth.
  * ADVANCED TUNING - hazard tick interval, exposure rate/decay, tree hit/cooldown/size geometry and
@@ -79,6 +81,12 @@
  * - Waldo_Hazard_ShowStatus (MISSION MAKER): shows one continuously updated exposure panel rather than stacked cards.
  * - Waldo_Hazard_NotifyTransitions (MISSION MAKER): shows entry/exit messages when awareness rules permit them.
  * - Waldo_Hazard_NotificationDuration (MISSION MAKER): lifetime in seconds for transition messages.
+ * - Waldo_Hazard_DosimeterEnable: installs exposure-reading interactions when hazards are enabled.
+ * - Waldo_Hazard_DosimeterRequireItem: true requires one class from DosimeterItems to read exposure.
+ * - Waldo_Hazard_DosimeterItems: carried/assigned item classnames accepted as a dosimeter.
+ * - Waldo_Hazard_Treatments: rows of `[item classname, readable name, exposure reduction]`; [] disables treatment.
+ * - Waldo_Hazard_TreatmentDuration: ACE progress duration in seconds before the item is consumed.
+ * - Waldo_Hazard_TreatmentMedicOnly: true restricts treatment to units with Arma's Medic trait.
  * - Waldo_Hazard_Presets (MISSION MAKER): reusable named profile HashMaps; zones select one and may override fields.
  *
  * SETTING-BY-SETTING GUIDE - TREE FELLING:
@@ -105,6 +113,8 @@
  * SETTING-BY-SETTING GUIDE - BREACHING:
  * - Waldo_Breaching_Enable: starts ACE explosive detection; only explicitly profiled object classes react.
  * - Waldo_Breaching_Profiles: target CfgVehicles class -> complete profile described and demonstrated below.
+ * - Waldo_Breaching_ShowNotifications: false keeps successful breaches mechanically silent. Set
+ *   true only when the player who placed the charge should receive a WMP notification card.
  * - Waldo_Breaching_ExplosiveStrengths: CfgAmmo class -> positive force contributed by one detonation.
  */
 createHashMapFromArray [
@@ -116,39 +126,81 @@ createHashMapFromArray [
         ["Waldo_Hazard_ShowStatus", true],          // BOOL: one continuous lower-left exposure panel; not a notification card.
         ["Waldo_Hazard_NotifyTransitions", true],   // BOOL: notify on entering/leaving a hazardous area.
         ["Waldo_Hazard_NotificationDuration", 6],   // SECONDS: transition-notification lifetime.
+        ["Waldo_Hazard_DosimeterEnable", true],     // BOOL: install Read Exposure self/target interactions.
+        ["Waldo_Hazard_DosimeterRequireItem", false], // false allows roleplay checks without a specific mod item.
+        ["Waldo_Hazard_DosimeterItems", []],        // exact carried/assigned item classnames when requirement is true.
+        ["Waldo_Hazard_Treatments", [               // each row: [consumed item classname, readable name, reduction].
+            // ["armst_item_antirad", "Anti-radiation medication", 2]
+        ]],
+        ["Waldo_Hazard_TreatmentDuration", 4],      // SECONDS: completed ACE progress before consuming the item.
+        ["Waldo_Hazard_TreatmentMedicOnly", false], // true requires the administering unit's Medic trait.
         // MISSION MAKER: reusable RP/gameplay profiles; zones may override individual keys.
         // BEGINNER: each preset below is `PRESET NAME` followed by its settings HashMap.
-        // `rate` adds exposure each second; `decay` removes it after leaving. Each threshold row is
+        // All three shipped presets model ionising radiation and use the packaged Geiger/cough audio.
+        // `rate` adds dose each second; `decay` removes it after leaving. Each threshold row is
         // `[exposure needed, damage added]`. For example `[20, 0.01]` means 1% damage at exposure 20.
         ["Waldo_Hazard_Presets", createHashMapFromArray [ // preset ID -> complete/partial hazard profile schema above.
-            ["MILD", createHashMapFromArray [
-                ["type", "HAZARD"],             // internal exposure category; zones of this type share exposure.
-                ["label", "Hazardous Area"],    // text shown to the player.
-                ["rate", 0.5],                  // gain 0.5 exposure per second while inside.
-                ["decay", 0.25],                // lose 0.25 exposure per second while safely outside.
-                ["damageType", "stab"],         // ACE/engine damage type used when a threshold fires.
-                ["damageThresholds", [
-                    [20, 0.01],                   // at exposure 20, apply 1% damage per damage event.
-                    [45, 0.02]                    // at exposure 45, apply 2% damage per damage event.
+            ["LOW_RADIATION", createHashMapFromArray [
+                ["type", "RADIATION"],             // all radiation zones contribute to one accumulated dose.
+                ["label", "Low Radiation Area"],
+                ["rate", 0.25],
+                ["decay", 0.02],
+                ["damageType", "stab"],
+                ["damageThresholds", [[30, 0.01], [60, 0.02]]],
+                ["fatalExposure", 120],
+                ["protectInVehicles", true], ["vehicleFactor", 0.25],
+                ["protectIndoors", true], ["indoorFactor", 0.6],
+                ["equipmentFactor", 0.25],
+                ["protectiveItems", createHashMapFromArray [["headgear", []], ["goggles", []], ["hmd", []]]],
+                ["audioEnabled", true],
+                ["audioRequiresAwareness", false],
+                ["geigerLowSounds", ["Waldo_Hazard_GeigerLow1", "Waldo_Hazard_GeigerLow2", "Waldo_Hazard_GeigerLow3", "Waldo_Hazard_GeigerLow4"]],
+                ["geigerHighSounds", ["Waldo_Hazard_Geiger1", "Waldo_Hazard_Geiger2", "Waldo_Hazard_Geiger3", "Waldo_Hazard_Geiger4"]],
+                ["geigerHighIntensity", 0.65], ["geigerMinimumInterval", 0.65], ["geigerMaximumInterval", 3.2],
+                ["coughEnabled", true], ["coughSounds", ["Waldo_Hazard_Cough1", "Waldo_Hazard_Cough2", "Waldo_Hazard_Cough3"]], ["coughCooldown", 18],
+                ["damageStageMessages", ["Radiation dose is beginning to cause injury.", "Accumulated radiation dose is becoming dangerous; evacuate or use protection."]]
+            ]],
+            ["MODERATE_RADIATION", createHashMapFromArray [
+                ["type", "RADIATION"],
+                ["label", "Radiation Area"],
+                ["rate", 1],
+                ["decay", 0.005],
+                ["damageType", "stab"],
+                ["damageThresholds", [[10, 0.02], [25, 0.05], [50, 0.1]]],
+                ["fatalExposure", 90],
+                ["protectInVehicles", true],
+                ["vehicleFactor", 0.1],
+                ["protectIndoors", true],
+                ["indoorFactor", 0.4],
+                ["equipmentFactor", 0.1],
+                ["protectiveItems", createHashMapFromArray [
+                    ["headgear", []],               // add protective helmet classnames here.
+                    ["goggles", []],                // add gas-mask/facewear classnames here.
+                    ["hmd", []]                     // add protective NVG/HMD classnames here.
                 ]],
-                // OPTIONAL INFORMATION GATE EXAMPLES (uncomment and replace classnames if wanted):
-                // ["detectorItems", ["ACE_microDAGR"]], // at least one listed carried/worn item.
-                // ["detectorObjects", ["Land_Device_disassembled_F"]], // nearby detector object.
-                // ["detectorObjectRange", 5], // metres from a detector object.
-                // ["requireAwarenessForStatus", true], // hide live panel without detector/condition.
-                // ["requireAwarenessForNotifications", true], // also hide entry/damage notices.
-                ["damageStageMessages", ["Continued exposure is causing injury.", "Exposure is becoming severe; evacuate or use protection."]]
+                ["audioEnabled", true],             // radiation-only local Geiger/cough feedback.
+                ["audioRequiresAwareness", false],  // true ties sound to detector/awareness rules.
+                ["geigerLowSounds", ["Waldo_Hazard_GeigerLow1", "Waldo_Hazard_GeigerLow2", "Waldo_Hazard_GeigerLow3", "Waldo_Hazard_GeigerLow4"]],
+                ["geigerHighSounds", ["Waldo_Hazard_Geiger1", "Waldo_Hazard_Geiger2", "Waldo_Hazard_Geiger3", "Waldo_Hazard_Geiger4"]],
+                ["geigerHighIntensity", 0.5],       // intensity 0-1 where the high sound pool begins.
+                ["geigerMinimumInterval", 0.45],    // fastest seconds between clicks near maximum intensity.
+                ["geigerMaximumInterval", 2.5],    // slowest seconds between clicks near zone edge.
+                ["coughEnabled", true],
+                ["coughSounds", ["Waldo_Hazard_Cough1", "Waldo_Hazard_Cough2", "Waldo_Hazard_Cough3"]],
+                ["coughCooldown", 12],              // minimum seconds between injury coughs.
+                ["damageStageMessages", ["Radiation exposure is causing injury.", "Radiation sickness is becoming severe.", "Critical radiation dose: evacuate immediately."]]
             ]],
-            ["SEVERE", createHashMapFromArray [
-                ["type", "HAZARD"], ["label", "Severe Hazard"], ["rate", 2], ["decay", 0.1],
-                ["damageType", "stab"], ["damageThresholds", [[8, 0.03], [20, 0.08], [35, 0.15]]], ["fatalExposure", 60],
-                ["damageStageMessages", ["Hazard exposure is causing injury.", "Severe exposure: evacuate immediately.", "Critical exposure: death is imminent."]]
-            ]],
-            ["VACUUM", createHashMapFromArray [
-                ["type", "NO_OXYGEN"], ["label", "Unpressurised Area"], ["rate", 8], ["decay", 2],
-                ["protectInVehicles", true], ["vehicleFactor", 0], ["damageType", "stab"],
-                ["damageThresholds", [[8, 0.04], [20, 0.12]]], ["fatalExposure", 35],
-                ["damageStageMessages", ["Oxygen deprivation is causing injury.", "Critical oxygen deprivation: reach pressure immediately."]]
+            ["SEVERE_RADIATION", createHashMapFromArray [
+                ["type", "RADIATION"], ["label", "Severe Radiation Area"], ["rate", 3], ["decay", 0.001],
+                ["damageType", "stab"], ["damageThresholds", [[5, 0.04], [15, 0.12], [30, 0.25]]], ["fatalExposure", 45],
+                ["protectInVehicles", true], ["vehicleFactor", 0.05], ["protectIndoors", true], ["indoorFactor", 0.2], ["equipmentFactor", 0.05],
+                ["protectiveItems", createHashMapFromArray [["headgear", []], ["goggles", []], ["hmd", []]]],
+                ["audioEnabled", true], ["audioRequiresAwareness", false],
+                ["geigerLowSounds", ["Waldo_Hazard_GeigerLow1", "Waldo_Hazard_GeigerLow2", "Waldo_Hazard_GeigerLow3", "Waldo_Hazard_GeigerLow4"]],
+                ["geigerHighSounds", ["Waldo_Hazard_Geiger1", "Waldo_Hazard_Geiger2", "Waldo_Hazard_Geiger3", "Waldo_Hazard_Geiger4"]],
+                ["geigerHighIntensity", 0.35], ["geigerMinimumInterval", 0.3], ["geigerMaximumInterval", 1.8],
+                ["coughEnabled", true], ["coughSounds", ["Waldo_Hazard_Cough1", "Waldo_Hazard_Cough2", "Waldo_Hazard_Cough3"]], ["coughCooldown", 8],
+                ["damageStageMessages", ["High radiation dose is causing injury.", "Severe radiation sickness: evacuate immediately.", "Critical radiation dose: death is imminent."]]
             ]]
         ]],
         // TREE FELLING - START HERE. Change only false to true for your first test.
@@ -191,6 +243,7 @@ createHashMapFromArray [
 
         // EXPLOSIVE BREACHING - START HERE. The example wall is safe but inactive until this is true.
         ["Waldo_Breaching_Enable", false],
+        ["Waldo_Breaching_ShowNotifications", false], // BOOL: opt in to a WMP UI card for the player who placed a successful charge. Default breaches are silent.
         ["Waldo_Breaching_Profiles", createHashMapFromArray [
             // TARGET OBJECT CLASSNAME: this exact vanilla 8 m wall becomes breachable.
             ["Land_City2_8m_F", createHashMapFromArray [

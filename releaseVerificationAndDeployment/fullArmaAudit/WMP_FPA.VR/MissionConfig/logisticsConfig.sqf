@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Defines field-resupply, vehicle-recovery, object-scaling and logistics-crate defaults. World
+ * Defines field-resupply, vehicle-recovery, transport-service, object-scaling and logistics-crate defaults. World
  * mutation remains server-authoritative and object interactions remain client-local/JIP-safe.
  *
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
@@ -71,6 +71,21 @@
  * - Logi_SupplyBoxClass (MISSION MAKER): valid CfgVehicles supply crate used by logistics spawners.
  * - Logi_MedicalBoxClass (AUTOMATIC): ACE crate when ACE medical exists, otherwise the vanilla fallback.
  *
+ * SETTING-BY-SETTING GUIDE - TRANSPORT SERVICES:
+ * - Waldo_TransportServices_Enable: permits registered helicopter and ground transport services; creates none.
+ * - Waldo_Transport_TravelTimeout: maximum seconds allowed for one physical journey before failure recovery.
+ * - Waldo_Transport_DefaultBoardingSeconds: maximum pickup wait before an unused service returns to base.
+ * - Waldo_Transport_DefaultDestinationDwell: maximum destination wait before physical RTB begins.
+ * - Waldo_HeliTransport_DefaultAltitude: default transit height in metres for registered helicopters.
+ * - Waldo_HeliTransport_DefaultLzSearchRadius: furthest a safe helicopter LZ may move from the map click.
+ * - Waldo_HeliTransport_DefaultLzClearanceScale: scales the aircraft's real model footprint when testing an LZ.
+ * - Waldo_HeliTransport_DefaultSeparation: minimum spacing between helicopter service points and bases.
+ * - Waldo_GroundTransport_DefaultRoadSearchRadius: road search around a clicked ground-transport position.
+ * - Waldo_GroundTransport_DefaultSeparation: minimum spacing between ground service points and bases.
+ * - Waldo_GroundTransport_DefaultSpeedLimit: road-safe AI transport speed cap in kilometres per hour.
+ * - Waldo_Transport_DefaultPathRetrySeconds: no-progress interval before a ground driver is reordered.
+ * - Waldo_Transport_DefaultPathRetryLimit: maximum automatic ground movement reorders per journey.
+ *
  * BEGINNER EXAMPLES:
  * - Field resupply: enable it, then place `[this] call Waldo_fnc_FieldResupplyRegisterHub;` on a hub
  *   only if that function's current header lists object-init use; otherwise register from initServer.sqf.
@@ -80,7 +95,7 @@
  *   when they are serialisable; code, UI controls and local object references are not safe save data.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Object Scaling", "Logistics Crates"]],
+    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Object Scaling", "Logistics Crates"]],
     ["shared", [
         // MISSION MAKER: field-resupply content and balance.
         ["Waldo_FieldResupply_Enable", false],       // BOOL: enables service/actions; hubs/carriers still need registration.
@@ -105,10 +120,24 @@ createHashMapFromArray [
         ["Waldo_Recovery_NotificationRadius", 100], // METRES: audience around workshop for completed recovery.
         ["Waldo_Recovery_CreateWorkshopMarkers", true], // BOOL: area and exact-position markers per workshop.
         ["Waldo_Recovery_PlacementClearance", 3],   // METRES: extra clear footprint required for restoration.
-        ["Waldo_Recovery_DefaultCustomVariables", []], // ARRAY of serialisable variable-name strings copied for every vehicle.
+        ["Waldo_Recovery_DefaultCustomVariables", ["Waldo_TransportService_Registration"]], // ARRAY of serialisable variable-name strings copied for every vehicle. This built-in row preserves transport-service setup when recovery rebuilds a vehicle.
         ["Waldo_Recovery_PackageClasses", ["B_Slingload_01_Cargo_F", "Land_Pallet_MilBoxes_F"]] // ordered valid package object classes.
     ]],
     ["server", [
+        // MISSION MAKER service defaults; registering a vehicle still remains a separate explicit call.
+        ["Waldo_TransportServices_Enable", true, true], // BOOL: enables inert shared service framework.
+        ["Waldo_Transport_TravelTimeout", 900, false], // SECONDS: one physical movement deadline.
+        ["Waldo_Transport_DefaultBoardingSeconds", 300, false], // SECONDS: pickup boarding window.
+        ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: destination disembark window.
+        ["Waldo_HeliTransport_DefaultAltitude", 80, false], // METRES: default helicopter transit height.
+        ["Waldo_HeliTransport_DefaultLzSearchRadius", 75, false], // METRES: maximum permitted LZ adjustment from the click.
+        ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0, false], // MULTIPLIER: require an obstacle-free area enclosing 2x the helicopter model box.
+        ["Waldo_HeliTransport_DefaultSeparation", 60, false], // METRES: space helicopter bases/LZs apart to reduce rotor and landing conflicts.
+        ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false], // METRES: nearest-road search around pickup/destination.
+        ["Waldo_GroundTransport_DefaultSeparation", 18, false], // METRES: space vehicle bases/stops apart to reduce blocking and collisions.
+        ["Waldo_GroundTransport_DefaultSpeedLimit", 60, false], // KM/H: road-safe AI transport speed cap.
+        ["Waldo_Transport_DefaultPathRetrySeconds", 25, false], // SECONDS without progress before reissuing an order.
+        ["Waldo_Transport_DefaultPathRetryLimit", 3, false], // COUNT: automatic ground path retries per journey.
         // MISSION MAKER scale bounds; ADVANCED client-authority switch.
         ["Waldo_ObjectScaling_Minimum", 0.1, false],   // Positive scale multiplier.
         ["Waldo_ObjectScaling_Maximum", 10, false], // Positive scale multiplier; must be >= Minimum.

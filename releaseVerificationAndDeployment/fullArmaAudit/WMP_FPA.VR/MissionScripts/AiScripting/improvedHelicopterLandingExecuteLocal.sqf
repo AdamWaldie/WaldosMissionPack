@@ -53,7 +53,9 @@ private _startPositionASL = getPosASL _helicopter;
 private _startTerrainASL = getTerrainHeightASL _startPositionASL;
 private _targetTerrainASL = getTerrainHeightASL _targetPosition;
 private _startDistance = (_helicopter distance2D _targetPosition) max 1;
-private _entrySpeed = ((abs speed _helicopter) / 3.6) max 8;
+// Do not inherit an almost stationary take-off speed as the pace for the entire approach. This is
+// particularly visible on agile light helicopters and short transport legs.
+private _entrySpeed = ((abs speed _helicopter) / 3.6) max ((([_helicopter, "MinimumApproachSpeed", 55] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 0) / 3.6);
 private _transitAltitude = ((getPosATL _helicopter) select 2) max ([_helicopter, "TransitAltitude", 30] call Waldo_fnc_ImprovedHelicopterLandingSetting);
 private _glideRatio = ([_helicopter, "GlideSlopeRatio", 4] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 2;
 private _descentDistance = (_transitAltitude * _glideRatio) max 150;

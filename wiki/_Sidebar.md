@@ -20,6 +20,7 @@
 * [Mission UI Text](Mission-UI-Text-Overlays)
 * [Tasks and Objectives](Tasks-And-Objectives)
 * [Custom 3D Markers](Custom-3D-World-Markers)
+* [WMP HUD](WMP-HUD)
 
 **Field Equipment**
 
@@ -58,6 +59,7 @@
 * [Logistics and Crates](Logistics-System,-Starter-Crates-And-Quartermaster)
 * [Loadout Saving](Loadout-Saving-and-Respawn)
 * [Vehicle Recovery and Squad Rallies](Vehicle-Recovery-And-Squad-Rallies)
+* [Helicopter and Ground Transport](Transport-Services)
 * [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 * [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
 * [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)

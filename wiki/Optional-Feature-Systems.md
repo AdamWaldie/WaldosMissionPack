@@ -10,7 +10,7 @@ The server owns mutable mission state, registries, persistence I/O and world cha
 
 ## Runtime Zeus controls
 
-When Zeus Enhanced is loaded, the categorized WMP palette includes focused runtime controls for persistence, persistent-object registration, hazardous-zone creation/removal, emergency dismount, airborne gunships and AI rebalance. These modules validate the assigned curator on the server and remove the need to pre-plan those features in Eden. Hazard dialogs can also copy equivalent setup calls to the curator's clipboard for permanent configuration later. Treatment feedback, tree felling, accessibility PID and breaching remain script-configured and intentionally have no ZEN modules.
+When Zeus Enhanced is loaded, the categorized WMP palette includes focused runtime controls for persistence, persistent-object registration, hazardous-zone creation/removal, transport services, airborne gunships and AI rebalance. These modules validate the assigned curator on the server and remove the need to pre-plan those features in Eden. Hazard dialogs can also copy equivalent setup calls to the curator's clipboard for permanent configuration later. Treatment feedback, tree felling, WMP HUD, emergency dismount and breaching remain script-configured and intentionally have no ZEN modules.
 
 ## Persistence
 
@@ -53,20 +53,14 @@ Set `Waldo_Hazard_Enable = true`, then register any number of zones from `initSe
 
 Hazard information can be conditional. `detectorItems` requires at least one listed carried, worn or assigned classname. `detectorObjects` plus `detectorObjectRange` requires a nearby detector object. Advanced missions may set `awarenessCondition` to CODE locally or a missionNamespace function-name string for JIP-safe profiles. When any detector/condition is configured, both continuous status and transition/damage notices require awareness by default. Set `requireAwarenessForStatus` or `requireAwarenessForNotifications` to `false` to exempt that UI. These settings never provide protection: an unaware player still accumulates exposure and takes configured damage.
 
+The shipped `LOW_RADIATION`, `MODERATE_RADIATION` and `SEVERE_RADIATION` presets are ready-to-use ionising-radiation examples. All three use the packaged Geiger and injury-cough audio; their dose rate, recovery, shielding factors, injury thresholds, fatal dose and audio cadence increase by severity. `audioEnabled`, `audioRequiresAwareness`, `geigerLowSounds`, `geigerHighSounds`, `geigerMinimumInterval`, `geigerMaximumInterval`, `coughSounds` and `coughCooldown` control that local feedback. Intensity shortens the Geiger interval and chooses the low/high pool; coughing occurs only after actual configured damage. Audio timers are local and keyed per zone, so they create no recurring network traffic. Custom profiles may still represent toxins, heat, vacuum or other roleplay hazards, but those are no longer misleadingly presented as ready-made defaults.
+
+With ACE Interact, **Hazard Equipment** self/other actions can read current exposure and apply configured treatment items. `Waldo_Hazard_DosimeterItems` controls who may read exposure, while `Waldo_Hazard_Treatments` contains `[consumed item classname, readable name, exposure reduction]` rows and `Waldo_Hazard_TreatmentDuration` controls progress time. Treatment removes the carried item on the giver's machine and reduces exposure only on the patient-owning machine. Leave either list empty to disable that part without disabling hazards.
+
 ```sqf
-private _profile = createHashMapFromArray [
-    ["type", "NO_OXYGEN"],
-    ["label", "Unpressurised Area"],
-    ["rate", 8],
-    ["decay", 2],
-    ["protectInVehicles", true],
-    ["vehicleFactor", 0],
-    ["protectiveItems", createHashMapFromArray [
-        ["headgear", ["H_PilotHelmetFighter_B"]]
-    ]],
-    ["damageThresholds", [[30, 0.01], [60, 0.04]]]
-];
-["hangar_vacuum", "vacuum_zone", _profile] call Waldo_fnc_HazardRegisterZone;
+private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap])
+    getOrDefault ["MODERATE_RADIATION", createHashMap];
+["reactor_leak", "reactor_zone", _profile] call Waldo_fnc_HazardRegisterZone;
 ```
 
 Profiles can represent contamination, toxic gas, extreme temperature, vacuum or custom hazards. `damageThresholds` are ordered `[exposure, damage-per-evaluator-tick]` tiers; `fatalExposure` forces death at the configured exposure, or `-1` disables it. Crossing a new damaging tier produces one WMP warning by default; override `notifyDamageStages`, `damageMessage` or `damageStageMessages` for the scenario. Protection can come from equipment, vehicles or interiors. For dedicated-safe `onEnter`, `onExit` or `onTick` behaviour, store the callback function in `missionNamespace` and put its function-name string in the profile; raw CODE callbacks are intentionally not transmitted as JIP state. For a moving source, use `[_key, _object, _radius, _profile] call Waldo_fnc_HazardRegisterEmitter`. Unregister on the server with `Waldo_fnc_HazardUnregisterZone`, or stop only the current client's evaluation with `Waldo_fnc_HazardStop`.
@@ -107,26 +101,26 @@ Use the `Waldo_EmergencyDismount_*` settings to select overturn/destruction trig
 
 Land vehicles also receive a local **Set Vehicle Upright** action on the vehicle itself when tipped and nearly stationary. The server validates proximity, forwards the operation to the vehicle's owning machine and places it above the terrain using its real model bounds and the local surface normal. Vehicle simulation must remain enabled for both the emergency extraction and upright mechanics.
 
-## Friendly identification accessibility aid
+## WMP HUD
 
-The aid is enabled by default for its original intended recipient (`76561198094931408`) through `Waldo_AccessibilityPID_AllowedUIDs` in `initPlayerLocal.sqf`. Other players do not install the overlay. Add further UIDs as needed, set the array to `[]` to permit everyone, or set `Waldo_AccessibilityPID_Enable = false` to disable it entirely. Eligible players receive a line-of-sight-aware friendly marker with separate icon and name ranges.
+WMP HUD retains its dual purpose. Steam UIDs listed in `Waldo_WmpHud_AccessibilityUIDs` qualify without equipment, preserving the original accessibility use in any campaign. High-technology missions can independently grant the same HUD through configured headgear, facewear or NVGs/HMDs. Excluded UIDs override both routes; `AllowEveryone` is an explicit mission-wide bypass.
 
-The aid is presentation-only and does not alter side relations or reveal enemies. Its established accessibility behaviour is preserved: the friendly icon remains visible out to icon range and the full player name is added inside name range. The name borrows only the referenced bold typography treatment, using a tight manual outline and distance-compensated text sizing; it never replaces the persistent icon or introduces an ambiguous far-range letter. Players can toggle the complete aid when `Waldo_AccessibilityPID_AllowToggle` is enabled. Use `Waldo_fnc_AccessibilityPIDToggle` from another UI if desired, and `Waldo_fnc_AccessibilityPIDStop` for cleanup.
+The presentation remains friendly-only, line-of-sight aware and local. It does not alter side relations or reveal enemies. The persistent icon remains visible to icon range and full name/role text appears inside name range. A tight contrast outline and capped distance scaling preserve clarity without replacing the icon or growing excessively at range. Use `Waldo_fnc_WmpHudToggle` from another local UI, and `Waldo_fnc_WmpHudStop` for cleanup.
 
 | Setting | Default | Purpose |
 |---|---|---|
-| `Waldo_AccessibilityPID_Font` | `"PuristaBold"` | Arma font used for overhead tags. |
-| `Waldo_AccessibilityPID_TextScale` | `0.035` | Near-range base text size. |
-| `Waldo_AccessibilityPID_TextDistanceGrowth` | `0.00025` | Gentle text-size increase per metre, preventing shrinkage without dominating the view. |
-| `Waldo_AccessibilityPID_TextMaximumScale` | `0.05` | Hard cap on distance scaling. |
-| `Waldo_AccessibilityPID_TextHeadOffset` | `0.30` | Animated head-relative name height, keeping the label above standing, crouched and prone units. |
-| `Waldo_AccessibilityPID_IconHeadOffset` | `0.75` | Animated head-relative chevron height, leaving a clear gap above the name. |
-| `Waldo_AccessibilityPID_OutlineScale` | `1.12` | Size of the dark outline pass relative to the foreground. |
-| `Waldo_AccessibilityPID_OutlineColour` | `[0.03, 0.03, 0.03, 1]` | Outline colour; its alpha follows PID distance fade. |
+| `Waldo_WmpHud_Font` | `"PuristaBold"` | Arma font used for overhead tags. |
+| `Waldo_WmpHud_TextScale` | `0.035` | Near-range base text size. |
+| `Waldo_WmpHud_TextDistanceGrowth` | `0.00025` | Gentle text-size increase per metre. |
+| `Waldo_WmpHud_TextMaximumScale` | `0.05` | Hard cap on distance scaling. |
+| `Waldo_WmpHud_TextHeadOffset` | `0.30` | Animated head-relative name height. |
+| `Waldo_WmpHud_IconHeadOffset` | `0.75` | Animated head-relative chevron height. |
+| `Waldo_WmpHud_OutlineScale` | `1.12` | Size of the dark outline pass relative to the foreground. |
+| `Waldo_WmpHud_OutlineColour` | `[0.03, 0.03, 0.03, 1]` | Outline colour; alpha follows distance fade. |
 
 The label foreground still comes from the current WMP theme and the player's personal colour-vision profile. Both anchors follow the model's animated `head` selection through `modelToWorldVisual`, with a safe origin-based fallback for unusual unit models. The two text passes use no engine shadow, avoiding the offset double-exposure effect produced by combining a manual outline with `drawIcon3D` shadow mode.
 
-Eligible players can show or hide the aid through **ACE Self Interact > WMP Interface > Accessibility > Toggle Friendly Identification**. The same Accessibility category is available to every player beneath **WMP Interface** and opens **Colour Vision Settings**, whose local profile also supplies an appropriate PID marker colour. Configure eligibility, icon/name ranges, line-of-sight policy and AI inclusion player-locally; this feature intentionally has no ZEN module. `Waldo_AccessibilityPID_AllowedUIDs` remains available for pre-planned per-player eligibility.
+Eligible players can show or hide it through **ACE Self Interact > WMP Interface > Toggle WMP HUD**, with a blue vanilla addAction fallback. The Accessibility category beneath WMP Interface continues to own Colour Vision Settings. Configure WMP HUD eligibility and presentation player-locally; it intentionally has no ZEN module. See the [complete WMP HUD guide](WMP-HUD).
 
 Colour-vision profiles are personal rather than mission-authoritative. Standard, red-green-aware, protan-aware, blue-yellow-aware and high-contrast monochrome palettes remap semantic/focus colours while retaining words, icons, shapes and patterns. The choice persists in the player's Arma profile and does not alter other players or the mission's era theme.
 
@@ -141,6 +135,9 @@ Breaching requires ACE Explosives. WMP ships a disabled, ready-to-test profile f
 
 Only that exact wall class reacts. Enabling the feature does not affect unrelated walls or buildings.
 The shipped profile opens the full 8 m section and keeps the hidden original available for a reset.
+Successful breaches are silent by default and do not occupy a WMP notification lane. Set
+`Waldo_Breaching_ShowNotifications` to `true` only when the player who placed the successful charge
+should receive a confirmation card.
 
 This is the complete beginner profile from the config:
 

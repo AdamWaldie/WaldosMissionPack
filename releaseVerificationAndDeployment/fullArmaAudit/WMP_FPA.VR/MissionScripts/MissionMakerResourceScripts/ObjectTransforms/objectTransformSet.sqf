@@ -29,6 +29,12 @@ if (remoteExecutedOwner > 0) then {
     private _caller = if (_index >= 0) then {allPlayers select _index} else {objNull};
     if (isNull _caller || {isNull (getAssignedCuratorLogic _caller)}) exitWith {objNull};
 };
+// Capture scale before any position/direction work. Arma resets the transformation matrix scale to
+// 1 when direction or orientation changes, so an omitted scale means "preserve current scale", not
+// "allow this transform to silently undo prior scaling".
+private _existingScale = getObjectScale _object;
+private _scaleToApply = if (_scale > 0) then {_scale} else {_existingScale};
+private _reapplyScale = _scale > 0 || {abs (_existingScale - 1) > 0.001};
 switch (toUpperANSI _mode) do {
     case "ASL": {_object setPosASL _position};
     case "ASLW": {_object setPosASLW _position};
@@ -42,5 +48,5 @@ private _up = [
     cos _bank * cos _pitch
 ];
 _object setVectorDirAndUp [_direction, _up];
-if (_scale > 0) exitWith {[_object, _scale, _asSimple] call Waldo_fnc_ObjectScale};
+if (_reapplyScale) exitWith {[_object, _scaleToApply, _asSimple] call Waldo_fnc_ObjectScale};
 _object
