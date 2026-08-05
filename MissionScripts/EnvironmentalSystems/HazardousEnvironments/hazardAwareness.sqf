@@ -57,14 +57,14 @@ if !(_detectorObjects isEqualTo []) then {
 };
 if (!_aware) exitWith {false};
 
-private _condition = _profile getOrDefault ["awarenessCondition", {}];
+// Most hazards do not need an advanced callback. An absent setting means that the detector checks
+// above are the complete awareness test; do not execute an empty Code value because SQF returns
+// nil from {}, leaving the receiving variable undefined.
+if !("awarenessCondition" in _profile) exitWith {true};
+private _condition = _profile get "awarenessCondition";
 if (_condition isEqualType "") then {_condition = missionNamespace getVariable [_condition, {}]};
-if (_condition isEqualType {}) exitWith {
-    private _result = [_unit, _key, _profile, _inside, _exposure] call _condition;
-    // Do not place _result inside the lazy-code form of &&. Arma evaluates that nested code in a
-    // separate scope, where the private result is unavailable and produces an undefined-variable
-    // error once per hazard tick.
-    if !(_result isEqualType true) exitWith {false};
-    _result
-};
-true
+if !(_condition isEqualType {}) exitWith {false};
+private _result = [_unit, _key, _profile, _inside, _exposure] call _condition;
+if (isNil "_result") exitWith {false};
+if !(_result isEqualType true) exitWith {false};
+_result

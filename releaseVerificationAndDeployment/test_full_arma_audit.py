@@ -1042,10 +1042,13 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_fnc_RegisterUiReservationLocal", hud)
         for setting in ("detectorItems", "detectorObjects", "detectorObjectRange", "awarenessCondition"):
             self.assertIn(setting, awareness)
+        self.assertIn('if !("awarenessCondition" in _profile) exitWith {true}', awareness)
+        self.assertIn('if (isNil "_result") exitWith {false}', awareness)
         self.assertIn("if !(_result isEqualType true) exitWith {false}", awareness)
         self.assertNotIn("_result isEqualType true && {_result}", awareness)
         self.assertIn("private _awareResult =", tick)
         self.assertIn("private _aware = false", tick)
+        self.assertIn('if !(isNil "_awareResult") then', tick)
         self.assertIn("if (_awareResult isEqualType true) then {_aware = _awareResult}", tick)
         self.assertIn("requireAwarenessForNotifications", tick)
         self.assertIn("requireAwarenessForStatus", tick)

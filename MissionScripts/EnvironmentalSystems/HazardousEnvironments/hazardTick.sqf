@@ -105,7 +105,9 @@ private _zoneDiagnostics = [];
     // A mission-supplied awareness callback is not allowed to break the complete hazard tick.
     // Invalid callback output hides detector-gated information while physical danger continues.
     private _aware = false;
-    if (_awareResult isEqualType true) then {_aware = _awareResult};
+    if !(isNil "_awareResult") then {
+        if (_awareResult isEqualType true) then {_aware = _awareResult};
+    };
     private _showNotifications = !(_profile getOrDefault ["requireAwarenessForNotifications", _awarenessConfigured]) || {_aware};
     private _showLiveStatus = !(_profile getOrDefault ["requireAwarenessForStatus", _awarenessConfigured]) || {_aware};
 
