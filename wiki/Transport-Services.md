@@ -75,6 +75,8 @@ When ACE Interact is unavailable, WMP-blue scroll-wheel pickup actions preserve 
 
 The client only opens the map and sends the chosen point. The server then selects and atomically reserves the nearest eligible service from the requested typed pool. It resolves a reachable service point, records a unique request number and tells the machine currently owning that AI group to move. That owner can be the server, a headless client or another client; if locality changes mid-journey, dispatch transfers to the new owner without allowing an old arrival report to complete the newer task.
 
+Helicopters receive a real departure `MOVE` waypoint followed by Arma's supported `SCRIPTED` landing waypoint using `A3\functions_f\waypoints\fn_wpLand.sqf`. When improved landing is enabled, its local tracker recognises that landing script and takes over the approach. If it cannot acquire, Arma's landing script and the invisible-helipad `landAt` fallback continue the same landing order. WMP never uses the invalid `LAND` waypoint type.
+
 At pickup the vehicle stops and enters **BOARDING**. It does not know a destination yet. After a passenger uses **Select Destination**, the service explicitly releases the pickup stop order and begins a new **TO_DESTINATION** movement. At destination it enters **DISEMBARKING**, waits for passengers to leave or for the configured dwell timer, then physically returns to its recorded base. Emergency teleport is disabled by default; an empty service that fails physical RTB may reset only when the mission maker explicitly enables `failSafeReset`.
 
 ### Ground transport movement
