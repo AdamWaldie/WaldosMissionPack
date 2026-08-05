@@ -22,6 +22,8 @@ while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do
             if (_marker != "") then {deleteMarker _marker};
             private _destinationMarker = _entry getOrDefault ["destinationMarker", ""];
             if (_destinationMarker != "") then {deleteMarker _destinationMarker};
+            private _landingPad = _entry getOrDefault ["landingPad", objNull];
+            if (!isNull _landingPad) then {deleteVehicle _landingPad};
             private _type = _entry getOrDefault ["type", "GROUND"];
             private _pool = _pools getOrDefault [_type, []];
             _pool = _pool - [_id];

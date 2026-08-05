@@ -13,7 +13,8 @@
  * 3: display name <STRING> - player-facing callsign/name; blank uses groupId.
  * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
  *    destinationDwell, allowedSides, allowedGroups, leadersOnly, showMarker, repairAtBase,
- *    refuelAtBase, forceDisembark, failSafeReset, speedMode and behaviour.
+ *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
+ *    roadSearchRadius, groundSpeedLimit, pathRetrySeconds, pathRetryLimit and useImprovedLanding.
  *
  * Return Value: Boolean - true when forwarded or registered.
  *
@@ -86,8 +87,14 @@ private _config = createHashMapFromArray [
     ["refuelAtBase", _optionMap getOrDefault ["refuelAtBase", true]],
     ["forceDisembark", _optionMap getOrDefault ["forceDisembark", false]],
     ["failSafeReset", _optionMap getOrDefault ["failSafeReset", true]],
-    ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", "FULL"])],
-    ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])]
+    ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
+    ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
+    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 75]]) max 10],
+    ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTaxi_DefaultRoadSearchRadius", 200]]) max 0],
+    ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTaxi_DefaultSpeedLimit", 60]]) max 5],
+    ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
+    ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
+    ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", false]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
 private _existing = _services getOrDefault [_id, createHashMap];
@@ -119,6 +126,11 @@ private _registrationOptions = [];
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
 _vehicle lockDriver true;
 if (_type == "HELICOPTER") then {_vehicle flyInHeight (_config get "cruiseAltitude")};
+// A service helicopter has its own pickup/destination/RTB controller. Excluding it from the global
+// vector landing feature prevents two local controllers from fighting over flight and touchdown.
+if (_type == "HELICOPTER") then {
+    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true];
+};
 missionNamespace setVariable [if (_type == "HELICOPTER") then {"Waldo_HeliTransport_Available"} else {"Waldo_GroundTaxi_Available"}, true, true];
 [] remoteExecCall ["Waldo_fnc_TransportInteractionInitLocal", 0, "Waldo_Transport_Interactions"];
 [_vehicle] remoteExecCall ["Waldo_fnc_TransportSetupVehicleLocal", 0, _vehicle];

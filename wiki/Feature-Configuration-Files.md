@@ -357,6 +357,11 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Transport_DefaultBoardingSeconds` | Pickup boarding window before automatic RTB. |
 | `Waldo_Transport_DefaultDestinationDwell` | Destination disembark window before RTB. |
 | `Waldo_HeliTransport_DefaultAltitude` | Default AI helicopter transit height in metres. |
+| `Waldo_HeliTransport_DefaultLzSearchRadius` | Maximum safe-LZ adjustment from the player's helicopter pickup/destination click. |
+| `Waldo_GroundTaxi_DefaultRoadSearchRadius` | Radius searched for a connected road around a taxi click. |
+| `Waldo_GroundTaxi_DefaultSpeedLimit` | Default AI ground-taxi speed cap in kilometres per hour. |
+| `Waldo_Transport_DefaultPathRetrySeconds` | No-progress interval before a ground movement order is reissued. |
+| `Waldo_Transport_DefaultPathRetryLimit` | Maximum automatic order retries during one ground journey. |
 | `Waldo_ObjectScaling_Minimum` | Smallest positive object scale accepted by the server. |
 | `Waldo_ObjectScaling_Maximum` | Largest object scale accepted by the server; must be at least the minimum. |
 | `Waldo_ObjectScaling_AllowClientRequests` | Permits validated non-server scale requests. |

@@ -254,6 +254,10 @@ class FullAuditTests(unittest.TestCase):
     def test_transport_services_have_repeat_safe_blue_identification_and_clear_usage(self):
         root = ROOT / "MissionScripts" / "Logistics" / "TransportServices"
         register = (root / "transportRegister.sqf").read_text(encoding="utf-8")
+        request = (root / "transportRequestServer.sqf").read_text(encoding="utf-8")
+        dispatch = (root / "transportDispatchLocal.sqf").read_text(encoding="utf-8")
+        report = (root / "transportReportServer.sqf").read_text(encoding="utf-8")
+        monitor = (root / "transportMonitorServer.sqf").read_text(encoding="utf-8")
         info = (root / "transportSetupVehicleLocal.sqf").read_text(encoding="utf-8")
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         wiki = (ROOT / "wiki" / "Transport-Services.md").read_text(encoding="utf-8")
@@ -267,6 +271,23 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("ACE Self Interact > WMP Interface > Transport Services", info)
         self.assertIn("WMP-blue informational addAction", wiki)
         self.assertIn("Select Destination", wiki)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true', register)
+        self.assertIn('"useImprovedLanding", false', register)
+        self.assertIn('roadsConnectedTo _x', request)
+        self.assertIn('"Land_HelipadEmpty_F"', request)
+        self.assertIn('Waldo_HeliTransport_DefaultLzSearchRadius", 75', register)
+        self.assertNotIn('5, 500, 15', request)
+        self.assertIn('units _group doFollow leader _group', dispatch)
+        self.assertIn('addWaypoint [ATLToASL _target, -1]', dispatch)
+        self.assertIn('_vehicle landAt [_landingPad, "LAND"]', dispatch)
+        self.assertIn('_vehicle landAt [_landingPad, "NONE"]', dispatch)
+        self.assertNotIn('setWaypointType (if (_helicopter) then {"TR UNLOAD"}', dispatch)
+        self.assertIn('driver _vehicle doMove _target', dispatch)
+        self.assertIn('Reissued ground path', dispatch)
+        self.assertNotIn('if (!local _group) exitWith {};', dispatch)
+        self.assertIn('remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group]', dispatch)
+        self.assertIn('deleteVehicle _landingPad', report)
+        self.assertIn('deleteVehicle _landingPad', monitor)
 
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (

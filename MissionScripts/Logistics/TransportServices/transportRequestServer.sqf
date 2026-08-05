@@ -86,17 +86,48 @@ switch (_action) do {
     case "RTB": {_phase = "RTB"; _target = _entry get "startPos"};
 };
 if (_phase == "") exitWith {false};
+private _requestedTarget = +_target;
+private _targetValid = true;
 
 if (_type == "GROUND") then {
-    private _roads = _target nearRoads 120;
+    private _roads = _target nearRoads (_config getOrDefault ["roadSearchRadius", 200]);
     if !(_roads isEqualTo []) then {
-        private _nearest = _roads select 0;
-        {if (_x distance2D _target < _nearest distance2D _target) then {_nearest = _x}} forEach _roads;
+        private _connected = _roads select {count (roadsConnectedTo _x) > 0};
+        private _candidates = if (_connected isEqualTo []) then {_roads} else {_connected};
+        private _nearest = _candidates select 0;
+        {if (_x distance2D _target < _nearest distance2D _target) then {_nearest = _x}} forEach _candidates;
         _target = getPosATL _nearest;
     };
 } else {
-    private _safe = [_target, 5, 500, 15, 0, 0.5, 0] call BIS_fnc_findSafePos;
-    if !(_safe isEqualTo [0, 0, 0]) then {_target = _safe};
+    private _maximumRadius = _config getOrDefault ["landingSearchRadius", 75];
+    private _safe = [];
+    {
+        if (_safe isEqualTo [] && {_x <= _maximumRadius}) then {
+            private _candidate = [_target, 0, _x, 12, 0, 0.35, 0] call BIS_fnc_findSafePos;
+            if (count _candidate >= 2 && {!(_candidate isEqualTo [0, 0, 0])} && {!surfaceIsWater _candidate} && {_candidate distance2D _target <= _x}) then {
+                _safe = [_candidate select 0, _candidate select 1, 0];
+            };
+        };
+    } forEach [15, 30, 50, 75, 100, 150, 250];
+    if (_safe isEqualTo []) then {
+        if (!isNull _requester) then {
+            [_type, format ["No safe landing zone was found within %1 metres of the selected point.", round _maximumRadius], "WARNING"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+        };
+        _targetValid = false;
+    } else {
+        _target = _safe;
+    };
+};
+if (!_targetValid) exitWith {false};
+
+private _oldLandingPad = _entry getOrDefault ["landingPad", objNull];
+if (!isNull _oldLandingPad) then {deleteVehicle _oldLandingPad};
+_entry deleteAt "landingPad";
+private _landingPad = objNull;
+if (_type == "HELICOPTER") then {
+    _landingPad = createVehicle ["Land_HelipadEmpty_F", _target, [], 0, "CAN_COLLIDE"];
+    _landingPad setPosATL _target;
+    _entry set ["landingPad", _landingPad];
 };
 
 private _serial = (missionNamespace getVariable ["Waldo_Transport_RequestSerial", 0]) + 1;
@@ -119,7 +150,15 @@ _destinationMarker setMarkerColor (switch (_requestSide) do {case west: {"ColorW
 _entry set ["destinationMarker", _destinationMarker];
 _services set [_id, _entry];
 missionNamespace setVariable ["Waldo_Transport_Services", _services];
+diag_log format [
+    "[WMP TRANSPORT] Accepted service=%1 type=%2 request=%3 phase=%4 requested=%5 resolved=%6 adjustment=%7 owner=%8",
+    _id, _type, _serial, _phase, _requestedTarget, _target, round (_requestedTarget distance2D _target), groupOwner group driver _vehicle
+];
 
-if (!isNull _requester) then {[_type, format ["%1 accepted the %2 request.", _entry get "name", toLowerANSI _phase], "INFO"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
-[_vehicle, _id, _serial, _phase, _target, _config] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner group driver _vehicle];
+if (!isNull _requester) then {
+    private _adjustment = _requestedTarget distance2D _target;
+    private _adjustmentText = if (_adjustment > 10) then {format [" The exact service point was adjusted %1 metres to reachable ground.", round _adjustment]} else {""};
+    [_type, format ["%1 accepted the %2 request.%3", _entry get "name", toLowerANSI _phase, _adjustmentText], "INFO"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester];
+};
+[_vehicle, _id, _serial, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner group driver _vehicle];
 true

@@ -24,10 +24,14 @@ private _requester = _entry getOrDefault ["requester", objNull];
 private _config = _entry get "config";
 _phase = toUpperANSI _phase;
 _result = toUpperANSI _result;
+diag_log format ["[WMP TRANSPORT] Report service=%1 request=%2 phase=%3 result=%4 state=%5", _id, _requestId, _phase, _result, _entry getOrDefault ["state", "UNKNOWN"]];
 private _destinationMarker = _entry getOrDefault ["destinationMarker", ""];
 if (_destinationMarker != "") then {deleteMarker _destinationMarker; _entry deleteAt "destinationMarker"};
 
 if (_result == "FAILED") exitWith {
+    private _landingPad = _entry getOrDefault ["landingPad", objNull];
+    if (!isNull _landingPad) then {deleteVehicle _landingPad};
+    _entry deleteAt "landingPad";
     if (!isNull _requester) then {[_type, format ["%1 could not complete the task.", _entry get "name"], "ERROR"] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
     if (_phase == "RTB" && {_config getOrDefault ["failSafeReset", true]} && {(crew _vehicle findIf {isPlayer _x}) < 0}) then {
         _vehicle setVehiclePosition [_entry get "startPos", [], 0, "NONE"];
@@ -94,6 +98,9 @@ switch (_phase) do {
         };
     };
     case "RTB": {
+        private _landingPad = _entry getOrDefault ["landingPad", objNull];
+        if (!isNull _landingPad) then {deleteVehicle _landingPad};
+        _entry deleteAt "landingPad";
         _entry set ["state", "AVAILABLE"];
         _entry set ["requester", objNull];
         _entry set ["requestId", -1];

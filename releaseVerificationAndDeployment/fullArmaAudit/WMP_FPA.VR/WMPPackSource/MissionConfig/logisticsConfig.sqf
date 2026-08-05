@@ -77,6 +77,11 @@
  * - Waldo_Transport_DefaultBoardingSeconds: maximum pickup wait before an unused service returns to base.
  * - Waldo_Transport_DefaultDestinationDwell: maximum destination wait before physical RTB begins.
  * - Waldo_HeliTransport_DefaultAltitude: default transit height in metres for registered helicopters.
+ * - Waldo_HeliTransport_DefaultLzSearchRadius: furthest a safe helicopter LZ may move from the map click.
+ * - Waldo_GroundTaxi_DefaultRoadSearchRadius: road search around a clicked ground-taxi position.
+ * - Waldo_GroundTaxi_DefaultSpeedLimit: road-safe AI taxi speed cap in kilometres per hour.
+ * - Waldo_Transport_DefaultPathRetrySeconds: no-progress interval before a ground driver is reordered.
+ * - Waldo_Transport_DefaultPathRetryLimit: maximum automatic ground movement reorders per journey.
  *
  * BEGINNER EXAMPLES:
  * - Field resupply: enable it, then place `[this] call Waldo_fnc_FieldResupplyRegisterHub;` on a hub
@@ -122,6 +127,11 @@ createHashMapFromArray [
         ["Waldo_Transport_DefaultBoardingSeconds", 300, false], // SECONDS: pickup boarding window.
         ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: destination disembark window.
         ["Waldo_HeliTransport_DefaultAltitude", 80, false], // METRES: default helicopter transit height.
+        ["Waldo_HeliTransport_DefaultLzSearchRadius", 75, false], // METRES: maximum permitted LZ adjustment from the click.
+        ["Waldo_GroundTaxi_DefaultRoadSearchRadius", 200, false], // METRES: nearest-road search around pickup/destination.
+        ["Waldo_GroundTaxi_DefaultSpeedLimit", 60, false], // KM/H: road-safe AI taxi speed cap.
+        ["Waldo_Transport_DefaultPathRetrySeconds", 25, false], // SECONDS without progress before reissuing an order.
+        ["Waldo_Transport_DefaultPathRetryLimit", 3, false], // COUNT: automatic ground path retries per journey.
         // MISSION MAKER scale bounds; ADVANCED client-authority switch.
         ["Waldo_ObjectScaling_Minimum", 0.1, false],   // Positive scale multiplier.
         ["Waldo_ObjectScaling_Maximum", 10, false], // Positive scale multiplier; must be >= Minimum.
