@@ -42,10 +42,10 @@ class PackageClaudeSkillUploadTests(unittest.TestCase):
         tops = {name.split("/", 1)[0] for name in entries}
         self.assertEqual(tops, {"example-skill"})
 
-    def test_chatgpt_directory_is_excluded(self):
-        # Regression test: a Claude skill upload should contain only what
-        # Claude's skill system actually loads (SKILL.md + references/) —
-        # not a different product's Custom GPT instructions.
+    def test_chatgpt_directory_is_included(self):
+        # The claude.ai upload package ships the same content as the
+        # mission-project release zip — chatgpt/INSTRUCTIONS.md included —
+        # only the archive's root layout differs between the two.
         _write_skill(self.skill_dir)
         chatgpt_dir = self.skill_dir / "chatgpt"
         chatgpt_dir.mkdir()
@@ -53,7 +53,7 @@ class PackageClaudeSkillUploadTests(unittest.TestCase):
 
         packager.package(self.skill_dir, self.output_path)
         entries = self._zip_entries()
-        self.assertFalse(any("chatgpt" in name for name in entries))
+        self.assertIn("example-skill/chatgpt/INSTRUCTIONS.md", entries)
         self.assertIn("example-skill/SKILL.md", entries)
         self.assertIn("example-skill/references/example.md", entries)
 
@@ -110,7 +110,7 @@ class PackageClaudeSkillUploadTests(unittest.TestCase):
         packager.package(packager.SKILL_DIR, self.output_path)
         entries = self._zip_entries()
         self.assertIn("mission-pack-config/SKILL.md", entries)
-        self.assertFalse(any("chatgpt" in name for name in entries))
+        self.assertIn("mission-pack-config/chatgpt/INSTRUCTIONS.md", entries)
         tops = {name.split("/", 1)[0] for name in entries}
         self.assertEqual(tops, {"mission-pack-config"})
 

@@ -15,17 +15,8 @@ fails validation ("must contain a SKILL.md file").
 This script produces that second, upload-ready shape as its own artifact.
 Both are shipped: the release zip for dropping into a mission project /
 Claude Code, this one for claude.ai's/the Skills API's direct upload path.
-
-This package also deliberately contains LESS than the release zip: only
-what a Claude skill itself actually is (SKILL.md plus its references/*
-bundled resources, per Anthropic's own skill anatomy —
-name+description frontmatter, instructions, reference files). ChatGPT's
-Custom GPT entry point (chatgpt/INSTRUCTIONS.md) is a different product's
-config, not part of the skill Claude loads or executes — including it here
-would just be dead weight/clutter in something meant to be exactly "what
-you'd want to take in as a skill." It still ships in the mission-project
-release zip, where a mission maker reasonably wants both entry points
-side by side.
+Both packages ship the exact same content — SKILL.md, references/* and
+chatgpt/INSTRUCTIONS.md — only the archive's root layout differs.
 
 Usage:
     python3 releaseVerificationAndDeployment/package_claude_skill_upload.py [version_tag] [output_dir]
@@ -42,24 +33,15 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILL_DIR = REPO_ROOT / ".claude" / "skills" / "mission-pack-config"
 
 # Mirror package_skill.py's exclusions so this stays consistent with the
-# general Anthropic skill-packaging convention (no build artifacts, no
-# evals-only content shipped to end users).
+# general Anthropic skill-packaging convention (no build artifacts shipped
+# to end users). Everything else under the skill folder - including
+# chatgpt/INSTRUCTIONS.md - ships as part of the skill build.
 EXCLUDE_DIRS = {"__pycache__", "node_modules"}
 EXCLUDE_FILES = {".DS_Store"}
-# Excluded only at the skill root (not if a reference file elsewhere happens
-# to sit under a same-named directory) — mirrors package_skill.py's handling
-# of "evals". "chatgpt" is Custom GPT instructions for an entirely different
-# product; it isn't part of what Claude loads as this skill.
-ROOT_EXCLUDE_DIRS = {"chatgpt"}
 
 
 def _should_exclude(rel_path: Path) -> bool:
-    # rel_path is relative to skill_dir.parent, so parts[0] is the skill
-    # folder name and parts[1] (if present) is the first subdir under it.
-    parts = rel_path.parts
-    if any(part in EXCLUDE_DIRS for part in parts):
-        return True
-    if len(parts) > 1 and parts[1] in ROOT_EXCLUDE_DIRS:
+    if any(part in EXCLUDE_DIRS for part in rel_path.parts):
         return True
     return rel_path.name in EXCLUDE_FILES
 
