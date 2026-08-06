@@ -85,11 +85,21 @@ the object's init field:
 - Waits (bounded, 30s) for a pilot to exist, so it's safe even if a
   separate init-field call (e.g. `Waldo_fnc_MoveInCargoPlane` on another
   object) assigns the crew — order between the two doesn't matter.
+- Requested (or configured-default) jump envelope values are clamped by
+  `Waldo_fnc_ParadropNormalizeJumpEnvelope` around the route's actual
+  altitude/speed before the jump action is installed — the fix for a jump
+  action that never becomes available because the route and the envelope
+  were set independently and can't both be satisfied at once.
+  `Waldo_fnc_ParadropCreateDropZone` normalizes the same way.
 - `options` HashMap: jump envelope overrides (default from
-  `airOperationsConfig.sqf`'s `WALDO_STATIC_*`/`WALDO_PARA_*`),
-  `lifecycle` (`LOOP` default/`RETAIN`/`DESPAWN`), `circuitDirection`
-  (`LEFT` default/`RIGHT`), `approachDistance`/`runLength`/`exitDistance`,
-  `createMarkers` (off by default). Full list in the script header.
+  `airOperationsConfig.sqf`'s `WALDO_STATIC_*`/`WALDO_PARA_*`, then
+  normalized as above), `lifecycle` (`LOOP` default/`RETAIN`/`DESPAWN`),
+  `circuitDirection` (`LEFT` default/`RIGHT`),
+  `approachDistance`/`runLength`/`exitDistance`, `name` (marker label,
+  default `"Drop Zone"`), `createMarkers` (**on by default** — the same
+  AREA/STANDBY/GREEN/RED/POINT markers as the Dynamic Drop Zone system, so
+  the mission maker sees a working drop zone immediately; pass `false` for
+  a clutter-free operation). Full list in the script header.
 - No registry, no generated jumpers, no map markers by default — use the
   Dynamic Drop Zone system instead for a managed, repeatable operation.
 

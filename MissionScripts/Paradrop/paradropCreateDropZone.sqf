@@ -57,10 +57,15 @@ private _altitude = ((_config getOrDefault ["altitude", 250]) max 100) min 2000;
 private _maximumSpeed = ((_config getOrDefault ["maximumSpeed", 220]) max 80) min 500;
 private _staticEnabled = _config getOrDefault ["staticJumpEnabled", true];
 private _haloEnabled = _config getOrDefault ["haloJumpEnabled", false];
-private _staticMinimum = ((_config getOrDefault ["staticMinimumAltitude", 180]) max 0) min ((_altitude - 25) max 0);
-private _staticMaximum = ((_config getOrDefault ["staticMaximumAltitude", 350]) max (_altitude + 75)) min 2500;
-private _staticMaximumSpeed = ((_config getOrDefault ["staticMaximumSpeed", 310]) max (_maximumSpeed + 40)) min 700;
-private _haloMinimum = ((_config getOrDefault ["haloMinimumAltitude", 1000]) max 0) min _altitude;
+private _envelope = [
+    _altitude, _maximumSpeed,
+    _config getOrDefault ["staticMinimumAltitude", 180], _config getOrDefault ["staticMaximumAltitude", 350],
+    _config getOrDefault ["staticMaximumSpeed", 310], _config getOrDefault ["haloMinimumAltitude", 1000]
+] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
+private _staticMinimum = _envelope get "staticMinimumAltitude";
+private _staticMaximum = _envelope get "staticMaximumAltitude";
+private _staticMaximumSpeed = _envelope get "staticMaximumSpeed";
+private _haloMinimum = _envelope get "haloMinimumAltitude";
 private _automaticMode = toUpperANSI (_config getOrDefault ["automaticJumpMode", "STATIC"]);
 if (_config getOrDefault ["autoDropPlayers", false]) then {
     if (_automaticMode == "STATIC" && {!_staticEnabled}) then {_automaticMode = if (_haloEnabled) then {"HALO"} else {"NONE"}};

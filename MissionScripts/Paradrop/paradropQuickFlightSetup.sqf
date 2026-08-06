@@ -33,7 +33,9 @@
  *    paradrop entry point), requireOpenDoor (default true, ignored if the airframe has no recognised door/ramp
  *    animation), lifecycle (LOOP/RETAIN/DESPAWN, default LOOP), circuitDirection (LEFT/RIGHT,
  *    default LEFT), approachDistance/runLength/exitDistance (metres, default 2500 each),
- *    createMarkers (default false - this entry point is deliberately map-clutter-free unless asked).
+ *    createMarkers (default true - AREA/STANDBY/GREEN/RED/POINT markers matching Waldo_fnc_
+ *    ParadropCreateDropZone's layout, so a mission maker sees a working drop zone immediately; set
+ *    false for a map-clutter-free operation), name (marker label, default "Drop Zone").
  *
  * Return Value:
  * Boolean - true when accepted (the actual route/actions are applied a moment later on the server
@@ -111,14 +113,25 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
         private _recognizedDoorSources = ["ramp_bottom", "door_2_1", "door_2_2", "jumpdoor_1", "jumpdoor_2", "back_ramp_switch", "back_ramp_half_switch", "RearDoors", "Door_1_source", "ramp_anim"];
         if (_recognizedDoorSources findIf {isClass (_animationSources >> _x)} < 0) then {_requireDoor = false};
     };
+    // Requesting a route altitude/speed and a jump envelope independently is exactly how a jump
+    // action ends up permanently unavailable (the aircraft cruises outside its own configured
+    // window). Normalize the envelope around the route this aircraft is actually flying, the same
+    // way the Dynamic Drop Zone system already does.
+    private _envelope = [
+        _altitude, _maxSpeed,
+        _options getOrDefault ["staticMinimumAltitude", missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE", 180]],
+        _options getOrDefault ["staticMaximumAltitude", missionNamespace getVariable ["WALDO_STATIC_MAXALTITUDE", 350]],
+        _options getOrDefault ["staticMaximumSpeed", missionNamespace getVariable ["WALDO_STATIC_MAXSPEED", 310]],
+        _options getOrDefault ["haloMinimumAltitude", missionNamespace getVariable ["WALDO_PARA_HALOALTITUDE", 1000]]
+    ] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
     private _jumpConfig = createHashMapFromArray [
         ["staticJumpEnabled", _options getOrDefault ["staticJumpEnabled", true]],
-        ["staticMinimumAltitude", _options getOrDefault ["staticMinimumAltitude", missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE", 180]]],
-        ["staticMaximumAltitude", _options getOrDefault ["staticMaximumAltitude", missionNamespace getVariable ["WALDO_STATIC_MAXALTITUDE", 350]]],
-        ["staticMaximumSpeed", _options getOrDefault ["staticMaximumSpeed", missionNamespace getVariable ["WALDO_STATIC_MAXSPEED", 310]]],
+        ["staticMinimumAltitude", _envelope get "staticMinimumAltitude"],
+        ["staticMaximumAltitude", _envelope get "staticMaximumAltitude"],
+        ["staticMaximumSpeed", _envelope get "staticMaximumSpeed"],
         ["staticChuteClass", _options getOrDefault ["staticChuteClass", missionNamespace getVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F"]]],
         ["haloJumpEnabled", _options getOrDefault ["haloJumpEnabled", false]],
-        ["haloMinimumAltitude", _options getOrDefault ["haloMinimumAltitude", missionNamespace getVariable ["WALDO_PARA_HALOALTITUDE", 1000]]],
+        ["haloMinimumAltitude", _envelope get "haloMinimumAltitude"],
         ["haloBackpackClass", _options getOrDefault ["haloBackpackClass", missionNamespace getVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute"]]],
         ["requireOpenDoor", _requireDoor]
     ];
@@ -128,20 +141,39 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
         _jumpConfig set ["staticChuteClass", "NonSteerable_Parachute_F"];
     };
     [_aircraft, _jumpConfig] remoteExec ["Waldo_fnc_ParadropConfigureAircraftLocal", 0, _aircraft];
+    diag_log format [
+        "[WMP PARADROP] Quick flight setup jump envelope: aircraft=%1 static=%2 static-alt=%3-%4m static-speed<=%5 halo=%6 halo-alt>=%7.",
+        typeOf _aircraft, _jumpConfig get "staticJumpEnabled", round (_envelope get "staticMinimumAltitude"), round (_envelope get "staticMaximumAltitude"),
+        round (_envelope get "staticMaximumSpeed"), _jumpConfig get "haloJumpEnabled", round (_envelope get "haloMinimumAltitude")
+    ];
 
-    if (_options getOrDefault ["createMarkers", false]) then {
-        private _direction2 = _resolvedDirection;
+    // On by default: the whole point of this entry point is a mission maker getting a working,
+    // visible drop zone from one line, not a silent invisible route. Set createMarkers to false in
+    // options for a map-clutter-free operation instead.
+    if (_options getOrDefault ["createMarkers", true]) then {
+        private _label = _options getOrDefault ["name", "Drop Zone"];
+        private _runLength = _options getOrDefault ["runLength", 2500];
         private _prefix = format ["Waldo_DZQ_%1", netId _aircraft];
+        private _zoneMarker = createMarker [format ["%1_AREA", _prefix], _centre];
+        _zoneMarker setMarkerShape "RECTANGLE";
+        _zoneMarker setMarkerBrush "Border";
+        _zoneMarker setMarkerDir _resolvedDirection;
+        _zoneMarker setMarkerSize [100, (_runLength * 0.65) max 200];
+        _zoneMarker setMarkerColor "ColorBlack";
         {
             _x params ["_suffix", "_key", "_colour", "_text"];
             private _marker = createMarker [format ["%1_%2", _prefix, _suffix], _route get _key];
             _marker setMarkerShape "RECTANGLE";
             _marker setMarkerBrush "SolidBorder";
-            _marker setMarkerDir _direction2;
+            _marker setMarkerDir _resolvedDirection;
             _marker setMarkerSize [30, 4];
             _marker setMarkerColor _colour;
             _marker setMarkerText _text;
         } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
+        private _point = createMarker [format ["%1_POINT", _prefix], _centre];
+        _point setMarkerType "mil_end";
+        _point setMarkerColor "ColorBlack";
+        _point setMarkerText _label;
     };
 
     diag_log format ["[WMP PARADROP] Quick flight setup complete: aircraft=%1 pilot=%2 centre=%3 direction=%4 altitude=%5 speed=%6.", typeOf _aircraft, driver _aircraft, _centre, round _resolvedDirection, _altitude, _maxSpeed];

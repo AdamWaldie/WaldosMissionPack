@@ -153,12 +153,22 @@ reason a hand-set-up paradrop plane behaves unpredictably (wandering off the jum
 altitude/speed, or never turning back for another pass). If you want to keep your own waypoints,
 don't call this function — set the aircraft up manually instead (see below).
 
+Whatever static-line/HALO envelope you request (or the mission's configured defaults) is passed
+through `Waldo_fnc_ParadropNormalizeJumpEnvelope` before the jump action is installed, which clamps
+it to stay reachable at the route's actual altitude/speed. This is the fix for a jump action that
+never becomes available at all: the hold-action's live condition checks the aircraft's altitude and
+speed against that envelope every frame, and a route altitude/speed set independently of the
+envelope is exactly how the two end up unable to ever agree. `Waldo_fnc_ParadropCreateDropZone`
+normalizes the same way, so both entry points behave identically here.
+
 `options` is a HashMap for anything beyond the defaults — jump envelope overrides (falls back to the
-mission's `MissionConfig\airOperationsConfig.sqf` values), `lifecycle` (`LOOP` default / `RETAIN` /
-`DESPAWN`), `circuitDirection` (`LEFT` default / `RIGHT`), `approachDistance`/`runLength`/
-`exitDistance`, and `createMarkers` (off by default — this entry point is deliberately map-clutter-free
-unless you ask for the standby/green/red lines). See the script's own header for the complete list
-and a HALO one-shot example.
+mission's `MissionConfig\airOperationsConfig.sqf` values, then normalized as above), `lifecycle`
+(`LOOP` default / `RETAIN` / `DESPAWN`), `circuitDirection` (`LEFT` default / `RIGHT`),
+`approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`), and
+`createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
+`Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
+for a map-clutter-free operation). See the script's own header for the complete list and a HALO
+one-shot example.
 
 This shares its actual flight-route logic (`Waldo_fnc_ParadropBuildFlightRoute`) with the fuller
 Dynamic Drop-Zone system below — the same proven standby/green/red/exit route and the same
