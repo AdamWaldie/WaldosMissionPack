@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Resolves the mission-wide WMP era theme and overlays the current player's colour-vision profile.
- * DEFAULT, WW2, VIETNAM and SCIFI have distinct typography, materials, rails, control chrome and
- * copy motifs while retaining identical feature behavior. Missions may extend Waldo_UI_CustomThemes
+ * DEFAULT, WW2, VIETNAM, SCIFI and PARCHMENT have distinct typography, materials, rails, control
+ * chrome and copy motifs while retaining identical feature behavior. Missions may extend Waldo_UI_CustomThemes
  * and Waldo_UI_ThemeOverrides; accessibility semantic overrides are applied last and locally.
  *
  * Arguments:
@@ -70,6 +70,18 @@ private _themes = createHashMapFromArray [
         ["sourcePrefix", "SYS::"], ["sourceSuffix", " // ONLINE"], ["titlePrefix", "[ "], ["titleSuffix", " ]"], ["motif", "TACTICAL NODE"],
         ["textHex", "#D1FAFF"], ["mutedHex", "#66B8D1"], ["accentHex", "#35DCF6"],
         ["successHex", "#35EDA5"], ["warningHex", "#FFB93A"], ["dangerHex", "#FF3B83"]
+    ]],
+    ["PARCHMENT", createHashMapFromArray [
+        ["id", "PARCHMENT"], ["label", "Parchment / Fantasy"], ["font", "PuristaMedium"], ["fontBold", "PuristaSemibold"],
+        ["shade", [0.10, 0.07, 0.03, 0.75]], ["panel", [0.82, 0.72, 0.52, 0.97]], ["panelAlt", [0.74, 0.63, 0.42, 1]],
+        ["header", [0.42, 0.28, 0.14, 1]], ["button", [0.70, 0.60, 0.40, 1]], ["buttonActive", [0.60, 0.14, 0.12, 1]],
+        ["edit", [0.88, 0.80, 0.62, 1]], ["list", [0.80, 0.70, 0.50, 1]], ["casing", [0.28, 0.19, 0.10, 1]],
+        ["accent", [0.60, 0.14, 0.12, 1]], ["accentActive", [0.78, 0.22, 0.16, 1]], ["trim", [0.46, 0.34, 0.12, 0.9]],
+        ["text", [0.18, 0.11, 0.05, 1]], ["muted", [0.38, 0.30, 0.18, 1]], ["success", [0.24, 0.42, 0.16, 1]],
+        ["warning", [0.62, 0.42, 0.08, 1]], ["danger", [0.58, 0.12, 0.10, 1]], ["railMode", "DOUBLE"],
+        ["sourcePrefix", "ROYAL CHANCERY // "], ["sourceSuffix", " // SEALED"], ["titlePrefix", "PROCLAMATION: "], ["titleSuffix", ""], ["motif", "ILLUMINATED SCROLL"],
+        ["textHex", "#2E1C0D"], ["mutedHex", "#614D2E"], ["accentHex", "#99241F"],
+        ["successHex", "#3D6B29"], ["warningHex", "#9E6B14"], ["dangerHex", "#941F1A"]
     ]]
 ];
 private _custom = missionNamespace getVariable ["Waldo_UI_CustomThemes", createHashMap];
