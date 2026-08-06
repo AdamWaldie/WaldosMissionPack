@@ -62,7 +62,9 @@ if (_wasAlive && {!isNull _retained}) then {
         _vehicle setVehicleVarName _variableName;
         missionNamespace setVariable [_variableName, _vehicle, true];
     };
-    {_x params ["_name", "_value"]; _vehicle setVariable [_name, _value, true]} forEach _customVariables;
+    // Guard against a malformed (non-pair) entry rather than throwing "Undefined variable" mid-restore
+    // - see recoveryRequestServer.sqf's PACK branch for why an entry could otherwise be short.
+    {if (count _x == 2) then {_x params ["_name", "_value"]; _vehicle setVariable [_name, _value, true]}} forEach _customVariables;
 };
 
 deleteVehicle _package;
