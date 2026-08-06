@@ -75,6 +75,36 @@ class PackageClaudeSkillUploadTests(unittest.TestCase):
             packager.package(self.skill_dir, self.output_path)
         self.assertFalse(self.output_path.exists())
 
+    def test_nested_reference_subdirectories_use_forward_slashes(self):
+        # Regression test: every arcname must use '/' regardless of host OS,
+        # and real nested folders (e.g. references/mods/*.md in the actual
+        # skill) must appear as genuine subdirectory entries, not collapse.
+        _write_skill(self.skill_dir)
+        nested_dir = self.skill_dir / "references" / "nested"
+        nested_dir.mkdir()
+        (nested_dir / "deep.md").write_text("# Nested\n", encoding="utf-8")
+
+        packager.package(self.skill_dir, self.output_path)
+        entries = self._zip_entries()
+        self.assertIn("example-skill/references/nested/deep.md", entries)
+        self.assertFalse(any("\\" in name for name in entries))
+
+    def test_windows_style_relative_path_normalizes_to_forward_slashes(self):
+        # Regression test for the actual reported bug: on Windows, a
+        # relative Path's native string form uses backslashes. Passing that
+        # straight to ZipFile.write embeds the backslash literally in the
+        # arcname instead of producing a real subdirectory separator (the
+        # ZIP format requires '/'), which collapses every folder in the
+        # archive - exactly what made claude.ai's uploader reject the
+        # skill as "not at root" even though every file was present. This
+        # doesn't require running on Windows to verify: PureWindowsPath
+        # reproduces the exact platform string semantics package() relies
+        # on .as_posix() to normalize away.
+        from pathlib import PureWindowsPath
+        windows_style = PureWindowsPath("mission-pack-config", "references", "nested", "deep.md")
+        self.assertIn("\\", str(windows_style))
+        self.assertEqual(windows_style.as_posix(), "mission-pack-config/references/nested/deep.md")
+
     def test_real_repo_skill_packages_to_correct_shape(self):
         # End-to-end guard against the real shipped skill.
         packager.package(packager.SKILL_DIR, self.output_path)
