@@ -53,7 +53,16 @@ private _zoneDiagnostics = [];
             _intensity = 1 - ((player distance2D getMarkerPos _area) / _radius);
         };
     };
-    if (_area isEqualType objNull) then {
+    if (_area isEqualType objNull && {isNull _area}) then {
+        // A moving-emitter anchor (Waldo_fnc_HazardRegisterEmitter) can be deleted mid-mission
+        // (vehicle wreck cleanup, a scripted deleteVehicle) without the zone being unregistered.
+        // distance2D's behaviour against objNull isn't something to rely on for a damage gate -
+        // treat a null anchor as "not inside" rather than risk every player reading as inside a
+        // hazard that no longer has a real position.
+        _inside = false;
+        _intensity = 0;
+    };
+    if (_area isEqualType objNull && {!isNull _area}) then {
         if (_area isKindOf "EmptyDetector") then {
             _inside = player inArea _area;
             if (_inside) then {

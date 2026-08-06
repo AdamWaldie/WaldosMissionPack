@@ -20,13 +20,32 @@
  * Example:
  * ["reactor", reactorTrigger, "SEVERE_RADIATION", createHashMapFromArray [["notifyTransitions", true]]] call Waldo_fnc_HazardRegisterPresetZone;
  * Result: Registers `reactor` with a copied severe-radiation profile plus the supplied override.
- * Current callers: server mission scripts and the full-pack audit function station.
+ * Current callers: server mission scripts, the shipped Radiation Hazard composition's object init
+ * field, and the full-pack audit function station.
  */
 
 params ["_key", "_area", ["_presetKey", "LOW_RADIATION", [""]], ["_overrides", createHashMap, [createHashMap]]];
+// Waldo_Hazard_Presets is SHARED-scope config, loaded by init.sqf's "SHARED" LoadFeatureConfigs
+// call. Object init fields (this is exactly how the shipped Radiation Hazard composition triggers
+// registration) are not guaranteed to run after init.sqf - a preset lookup here can silently and
+// permanently miss on that race, registering nothing with no error. Defer once instead of failing:
+// re-parses the same original arguments after init.sqf's Waldo_SharedFeatureConfigReady flag is
+// set, then falls through to the normal synchronous path unchanged for every other caller (server
+// mission scripts, ZEN) that already runs after full startup.
+if !(missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]) exitWith {
+    [_this] spawn {
+        params ["_args"];
+        waitUntil {missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]};
+        _args call Waldo_fnc_HazardRegisterPresetZone;
+    };
+    true
+};
 private _presets = missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap];
 _presetKey = toUpperANSI _presetKey;
-if !(_presetKey in (keys _presets)) exitWith {false};
+if !(_presetKey in (keys _presets)) exitWith {
+    diag_log format ["[WMP HAZARD] Preset zone '%1' rejected: unknown preset '%2'.", _key, _presetKey];
+    false
+};
 private _profile = createHashMap;
 private _preset = _presets get _presetKey;
 {_profile set [_x, _preset get _x]} forEach keys _preset;
