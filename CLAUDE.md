@@ -241,16 +241,22 @@ drop point, plus the configured jump action — without the full Dynamic Drop Zo
 
 It clears the aircraft's existing waypoints before adding the generated route — leftover Eden
 waypoints fighting a scripted route is the single most common reason a hand-wired paradrop plane
-was unreliable. Waits (bounded, 30s) for a pilot if the aircraft's crew hasn't spawned in yet, so it
+was unreliable. If the pilot's group has other units besides this aircraft's crew, the crew is
+automatically isolated into a dedicated fresh group first so those other units never lose their own
+waypoints. Waits (bounded, 30s) for a pilot if the aircraft's crew hasn't spawned in yet, so it
 is safe to call from an object's own init field even when another init field (e.g.
 `Waldo_fnc_MoveInCargoPlane`) assigns that pilot. Before installing the jump action, the requested
-static-line/HALO envelope is run through `Waldo_fnc_ParadropNormalizeJumpEnvelope`, which clamps it
-around the route's actual altitude/speed — a jump action gated on altitude/speed thresholds the
-plane's own route can never satisfy is the concrete "jump action never becomes available" failure
-this closes; the same normalize call is shared by `ParadropCreateDropZone` below. `createMarkers`
-defaults to `true` (AREA/STANDBY/GREEN/RED/POINT markers, same layout as `ParadropCreateDropZone`)
-so a mission maker sees a working drop zone immediately — pass `false` for a map-clutter-free
-operation. See the script header for the full `options` HashMap (jump envelope overrides,
+static-line/HALO envelope is run through `Waldo_fnc_ParadropNormalizeJumpEnvelope`, using the same
+clamped altitude/speed `Waldo_fnc_ParadropBuildFlightRoute` actually flew (not the raw input) —
+a jump action gated on altitude/speed thresholds the plane's own route can never satisfy is the
+concrete "jump action never becomes available" failure this closes; `ParadropCreateDropZone` below
+normalizes off the same route-returned basis. `createMarkers` defaults to `true`
+(AREA/STANDBY/GREEN/RED/POINT markers, same layout as `ParadropCreateDropZone`) so a mission maker
+sees a working drop zone immediately — pass `false` for a map-clutter-free operation. Markers are
+removed automatically on aircraft death/deletion or once a `DESPAWN` lifecycle run reaches its exit
+point; this never deletes the aircraft or its crew, since this entry point never owns their
+lifecycle (unlike `ParadropCreateDropZone`, whose `DESPAWN` does delete the aircraft it spawned).
+See the script header for the full `options` HashMap (jump envelope overrides,
 `lifecycle` LOOP/RETAIN/DESPAWN, `circuitDirection`, `createMarkers`, `name`).
 
 The exact same route logic (`Waldo_fnc_ParadropBuildFlightRoute`) powers the fuller **Dynamic Drop

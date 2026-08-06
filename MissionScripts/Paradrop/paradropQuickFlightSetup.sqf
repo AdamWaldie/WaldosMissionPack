@@ -14,9 +14,19 @@
  *
  * Unlike the Dynamic Drop Zone system, this does not create or re-crew the aircraft: it uses
  * whichever group currently owns the driver's seat, waiting (bounded) for a pilot to exist if the
- * aircraft was just placed and crew spawn-in is still in progress. Static-line and HALO jump
- * actions are installed through the exact same Waldo_fnc_ParadropConfigureAircraftLocal used by the
- * Dynamic Drop Zone system, so both paths behave identically once airborne.
+ * aircraft was just placed and crew spawn-in is still in progress. If that group has other units
+ * besides this aircraft's crew (e.g. a squad leader who is also the pilot), the crew is moved into a
+ * dedicated fresh group first - Waldo_fnc_ParadropBuildFlightRoute clears every waypoint of whatever
+ * group it's given, and a shared group must not lose waypoints that belong to units who were never
+ * part of this aircraft. Static-line and HALO jump actions are installed through the exact same
+ * Waldo_fnc_ParadropConfigureAircraftLocal used by the Dynamic Drop Zone system, so both paths behave
+ * identically once airborne.
+ *
+ * A lightweight cleanup watcher removes this call's own markers (never the aircraft or its crew,
+ * which this function never owned in the first place) once the aircraft is destroyed/deleted, or
+ * once a "DESPAWN" lifecycle run reaches its exit point. This is a deliberately smaller contract than
+ * Waldo_fnc_ParadropRemoveDropZone, which does delete the aircraft it spawned - see the difference
+ * called out in the lifecycle option below.
  *
  * Arguments:
  * 0: aircraft <OBJECT> - placed, ideally already crewed with a pilot (e.g. via
@@ -31,10 +41,13 @@
  *    staticChuteClass, haloMinimumAltitude/haloBackpackClass (all default from the mission's
  *    configured WALDO_STATIC_ and WALDO_PARA_ envelope variables, same as every other WMP
  *    paradrop entry point), requireOpenDoor (default true, ignored if the airframe has no recognised door/ramp
- *    animation), lifecycle (LOOP/RETAIN/DESPAWN, default LOOP), circuitDirection (LEFT/RIGHT,
- *    default LEFT), approachDistance/runLength/exitDistance (metres, default 2500 each),
- *    createMarkers (default true - AREA/STANDBY/GREEN/RED/POINT markers matching Waldo_fnc_
- *    ParadropCreateDropZone's layout, so a mission maker sees a working drop zone immediately; set
+ *    animation), lifecycle (LOOP/RETAIN/DESPAWN, default LOOP - DESPAWN here means the created
+ *    markers are removed once the one pass completes, not that the aircraft is deleted; this
+ *    function never owns the aircraft's lifecycle, unlike Waldo_fnc_ParadropCreateDropZone),
+ *    circuitDirection (LEFT/RIGHT, default LEFT), approachDistance/runLength/exitDistance (metres,
+ *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED/POINT markers matching
+ *    Waldo_fnc_ParadropCreateDropZone's layout, so a mission maker sees a working drop zone
+ *    immediately; automatically cleaned up on aircraft death/deletion or DESPAWN completion; set
  *    false for a map-clutter-free operation), name (marker label, default "Drop Zone").
  *
  * Return Value:
@@ -74,8 +87,14 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
     // Eden, or assigned by another object's init field such as Waldo_fnc_MoveInCargoPlane) exists
     // yet. Wait for both mission init and an actual pilot rather than failing immediately - the
     // single biggest source of "the plane just sits there" reports for a script wired up this way.
-    waitUntil {sleep 0.5; missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {isNull _aircraft}};
+    // Bounded the same way as the pilot wait below it: a mission that never sets WALDO_INIT_COMPLETE
+    // (broken init.sqf, non-standard init flow) must not leave this spawned handle looping forever.
+    private _initDeadline = serverTime + 30;
+    waitUntil {sleep 0.5; missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {isNull _aircraft} || {serverTime >= _initDeadline}};
     if (isNull _aircraft) exitWith {};
+    if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) exitWith {
+        diag_log format ["[WMP PARADROP] Quick flight setup abandoned for %1: WALDO_INIT_COMPLETE never became true within 30 seconds.", typeOf _aircraft];
+    };
     private _deadline = serverTime + 30;
     waitUntil {sleep 0.5; isNull _aircraft || {!isNull (driver _aircraft)} || {serverTime >= _deadline}};
     if (isNull _aircraft) exitWith {};
@@ -96,7 +115,22 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
     private _resolvedDirection = if (_direction >= 0) then {_direction mod 360} else {
         [getPosATL _aircraft, _centre] call BIS_fnc_dirTo
     };
-    private _flightGroup = group driver _aircraft;
+
+    // Waldo_fnc_ParadropBuildFlightRoute clears every waypoint of the group it's given. That's safe
+    // when the group belongs only to this aircraft's crew, but the pilot's actual Eden group may
+    // contain other units entirely (a squad leader also flying, a multi-crew group with members
+    // elsewhere) - wiping their waypoints too would be a surprising side effect of a call meant to
+    // only touch this one aircraft. Isolate the crew into a dedicated fresh group first, only when
+    // the group actually needs it.
+    private _originalGroup = group driver _aircraft;
+    private _flightGroup = _originalGroup;
+    private _crew = crew _aircraft;
+    if ({!(_x in _crew)} count units _originalGroup > 0) then {
+        _flightGroup = createGroup [side _originalGroup, true];
+        {[_x] joinSilent _flightGroup} forEach _crew;
+        if (count units _originalGroup == 0) then {deleteGroup _originalGroup};
+    };
+
     private _route = [
         _aircraft, _flightGroup, _centre, _resolvedDirection, _altitude, _maxSpeed,
         _options getOrDefault ["approachDistance", 2500], _options getOrDefault ["runLength", 2500],
@@ -106,6 +140,13 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
     if (_route isEqualTo createHashMap) exitWith {
         diag_log format ["[WMP PARADROP] Quick flight setup failed for %1: the flight route could not be built.", typeOf _aircraft];
     };
+    private _lifecycle = toUpperANSI (_options getOrDefault ["lifecycle", "LOOP"]);
+    if !(_lifecycle in ["LOOP", "RETAIN", "DESPAWN"]) then {_lifecycle = "LOOP"};
+    // The route builder clamps altitude/speed internally and hands the real values back - use those
+    // (not the raw params above) as the basis for everything that follows, so the jump envelope is
+    // always normalized off what the aircraft is actually flying.
+    private _routeAltitude = _route get "altitude";
+    private _routeMaxSpeed = _route get "maxSpeed";
 
     private _requireDoor = _options getOrDefault ["requireOpenDoor", true];
     if (_requireDoor) then {
@@ -118,7 +159,7 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
     // window). Normalize the envelope around the route this aircraft is actually flying, the same
     // way the Dynamic Drop Zone system already does.
     private _envelope = [
-        _altitude, _maxSpeed,
+        _routeAltitude, _routeMaxSpeed,
         _options getOrDefault ["staticMinimumAltitude", missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE", 180]],
         _options getOrDefault ["staticMaximumAltitude", missionNamespace getVariable ["WALDO_STATIC_MAXALTITUDE", 350]],
         _options getOrDefault ["staticMaximumSpeed", missionNamespace getVariable ["WALDO_STATIC_MAXSPEED", 310]],
@@ -150,6 +191,7 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
     // On by default: the whole point of this entry point is a mission maker getting a working,
     // visible drop zone from one line, not a silent invisible route. Set createMarkers to false in
     // options for a map-clutter-free operation instead.
+    private _markers = [];
     if (_options getOrDefault ["createMarkers", true]) then {
         private _label = _options getOrDefault ["name", "Drop Zone"];
         private _runLength = _options getOrDefault ["runLength", 2500];
@@ -160,6 +202,7 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
         _zoneMarker setMarkerDir _resolvedDirection;
         _zoneMarker setMarkerSize [100, (_runLength * 0.65) max 200];
         _zoneMarker setMarkerColor "ColorBlack";
+        _markers pushBack _zoneMarker;
         {
             _x params ["_suffix", "_key", "_colour", "_text"];
             private _marker = createMarker [format ["%1_%2", _prefix, _suffix], _route get _key];
@@ -169,13 +212,32 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
             _marker setMarkerSize [30, 4];
             _marker setMarkerColor _colour;
             _marker setMarkerText _text;
+            _markers pushBack _marker;
         } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
         private _point = createMarker [format ["%1_POINT", _prefix], _centre];
         _point setMarkerType "mil_end";
         _point setMarkerColor "ColorBlack";
         _point setMarkerText _label;
+        _markers pushBack _point;
     };
 
-    diag_log format ["[WMP PARADROP] Quick flight setup complete: aircraft=%1 pilot=%2 centre=%3 direction=%4 altitude=%5 speed=%6.", typeOf _aircraft, driver _aircraft, _centre, round _resolvedDirection, _altitude, _maxSpeed];
+    // Cleanup watcher: this function never owns the aircraft's lifecycle (unlike
+    // Waldo_fnc_ParadropCreateDropZone, which spawns and therefore deletes its own aircraft), so this
+    // only ever removes the markers created above - never the aircraft or its crew. Runs regardless
+    // of createMarkers so it's always a correct no-op when there's nothing to clean up.
+    if (count _markers > 0) then {
+        [_aircraft, _markers, _lifecycle, _route] spawn {
+            params ["_aircraft", "_markers", "_lifecycle", "_route"];
+            waitUntil {
+                sleep 1;
+                isNull _aircraft
+                || {!alive _aircraft}
+                || {_lifecycle == "DESPAWN" && {_aircraft distance2D (_route get "exit") < 200}}
+            };
+            {deleteMarker _x} forEach _markers;
+        };
+    };
+
+    diag_log format ["[WMP PARADROP] Quick flight setup complete: aircraft=%1 pilot=%2 centre=%3 direction=%4 altitude=%5 speed=%6.", typeOf _aircraft, driver _aircraft, _centre, round _resolvedDirection, round _routeAltitude, round _routeMaxSpeed];
 };
 true

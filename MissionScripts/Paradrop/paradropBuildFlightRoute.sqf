@@ -35,7 +35,11 @@
  *
  * Return Value:
  * HashMap - key positions for the caller (standby, green, centre, red, spawn, exit, hold), each a
- * 3D position with Z set to the route altitude. Empty HashMap when the aircraft/group is invalid.
+ * 3D position with Z set to the route altitude, plus the actual clamped "altitude" and "maxSpeed"
+ * this route was built with (clamping happens inside this function - callers that need to reason
+ * about the aircraft's real flight envelope, e.g. to normalize a jump envelope against it, must read
+ * these back rather than reusing their own unclamped input values). Empty HashMap when the
+ * aircraft/group is invalid.
  *
  * Example:
  * [_aircraft, _flightGroup, getMarkerPos "dz1", 45, 250, 220, 2500, 2500, 2500, "LOOP", "LEFT"]
@@ -121,5 +125,6 @@ if (_lifecycle == "RETAIN") then {
 
 createHashMapFromArray [
     ["standby", _standby], ["green", _green], ["centre", _centre], ["red", _red],
-    ["spawn", _spawn], ["exit", _exit], ["hold", _hold]
+    ["spawn", _spawn], ["exit", _exit], ["hold", _hold],
+    ["altitude", _altitude], ["maxSpeed", _maxSpeed]
 ]

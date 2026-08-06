@@ -151,24 +151,31 @@ The aircraft's own existing waypoints are cleared before the generated route is 
 a leftover Eden waypoint competing with a scripted route for the AI's attention is the most common
 reason a hand-set-up paradrop plane behaves unpredictably (wandering off the jump run, ignoring
 altitude/speed, or never turning back for another pass). If you want to keep your own waypoints,
-don't call this function — set the aircraft up manually instead (see below).
+don't call this function — set the aircraft up manually instead (see below). If the pilot's Eden
+group has other units besides this aircraft's crew (a squad leader who's also the pilot, a
+multi-crew group with members elsewhere), the crew is automatically moved into a dedicated fresh
+group first, so those other units keep their own waypoints untouched.
 
 Whatever static-line/HALO envelope you request (or the mission's configured defaults) is passed
-through `Waldo_fnc_ParadropNormalizeJumpEnvelope` before the jump action is installed, which clamps
-it to stay reachable at the route's actual altitude/speed. This is the fix for a jump action that
-never becomes available at all: the hold-action's live condition checks the aircraft's altitude and
-speed against that envelope every frame, and a route altitude/speed set independently of the
-envelope is exactly how the two end up unable to ever agree. `Waldo_fnc_ParadropCreateDropZone`
-normalizes the same way, so both entry points behave identically here.
+through `Waldo_fnc_ParadropNormalizeJumpEnvelope` before the jump action is installed, using the same
+clamped altitude/speed the route was actually built with — not your raw input — so it stays
+reachable no matter what altitude/speed you pass in. This is the fix for a jump action that never
+becomes available at all: the hold-action's live condition checks the aircraft's altitude and speed
+against that envelope every frame, and a route altitude/speed set independently of the envelope is
+exactly how the two end up unable to ever agree. `Waldo_fnc_ParadropCreateDropZone` normalizes off
+the same route-returned basis, so both entry points behave identically here.
 
 `options` is a HashMap for anything beyond the defaults — jump envelope overrides (falls back to the
 mission's `MissionConfig\airOperationsConfig.sqf` values, then normalized as above), `lifecycle`
-(`LOOP` default / `RETAIN` / `DESPAWN`), `circuitDirection` (`LEFT` default / `RIGHT`),
+(`LOOP` default / `RETAIN` / `DESPAWN` — `DESPAWN` here only means the markers below are cleaned up
+once the pass completes, not that the aircraft is deleted; this function never owns the aircraft's
+lifecycle), `circuitDirection` (`LEFT` default / `RIGHT`),
 `approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`), and
 `createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
 `Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
-for a map-clutter-free operation). See the script's own header for the complete list and a HALO
-one-shot example.
+for a map-clutter-free operation). Markers are removed automatically once the aircraft is
+destroyed/deleted, or once a `DESPAWN` run reaches its exit point. See the script's own header for
+the complete list and a HALO one-shot example.
 
 This shares its actual flight-route logic (`Waldo_fnc_ParadropBuildFlightRoute`) with the fuller
 Dynamic Drop-Zone system below — the same proven standby/green/red/exit route and the same

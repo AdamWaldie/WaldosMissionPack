@@ -161,7 +161,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ["CHECKBOX", ["Enable HALO jump", "Adds a HALO player jump action using a steerable parachute backpack."], false],
         ["SLIDER", ["HALO minimum altitude", "Preferred AGL floor. If it exceeds route altitude, the server lowers it to the route altitude so HALO remains available."], [100, 5000, 1000, 0]],
         ["COMBO", ["HALO parachute backpack", "Steerable backpack equipped after HALO exit."], [_haloChutes, _haloLabels, 0]],
-        ["CHECKBOX", ["Require open ramp/door", "Requires one of WMP's recognized ramp/door animation sources. Automatically disabled when the selected airframe exposes none."], false],
+        ["CHECKBOX", ["Require open ramp/door", "Requires one of WMP's recognized ramp/door animation sources. Automatically disabled when the selected airframe exposes none."], true],
         ["CHECKBOX", ["Automatically sequence player cargo", "Forces embarked players out at the green line; normally leave off for jumpmaster-controlled player actions."], false],
         ["COMBO", ["Automatic jump type", "Method used only for automatic sequencing. If that method is disabled, the server uses the enabled alternative or disables automatic player exits."], [["STATIC", "HALO"], ["Static line", "HALO"], 0]],
         ["SLIDER", ["Optional generated AI jumpers", "AI cargo created for this operation. Default zero keeps the aircraft for players."], [0, 60, 0, 0]],

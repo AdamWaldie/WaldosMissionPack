@@ -81,7 +81,10 @@ the object's init field:
 - **Clears the aircraft's existing waypoints first.** A leftover Eden
   waypoint fighting the generated route is the #1 reason a hand-set-up
   paradrop plane misbehaves — don't call this on an aircraft whose manual
-  waypoints the mission maker wants to keep.
+  waypoints the mission maker wants to keep. If the pilot's group has other
+  units besides this aircraft's crew (e.g. a squad leader who's also the
+  pilot), the crew is automatically moved into a dedicated fresh group first
+  so those other units never lose their own waypoints.
 - Waits (bounded, 30s) for a pilot to exist, so it's safe even if a
   separate init-field call (e.g. `Waldo_fnc_MoveInCargoPlane` on another
   object) assigns the crew — order between the two doesn't matter.
@@ -100,8 +103,14 @@ the object's init field:
   AREA/STANDBY/GREEN/RED/POINT markers as the Dynamic Drop Zone system, so
   the mission maker sees a working drop zone immediately; pass `false` for
   a clutter-free operation). Full list in the script header.
-- No registry, no generated jumpers, no map markers by default — use the
-  Dynamic Drop Zone system instead for a managed, repeatable operation.
+- Markers are removed automatically once the aircraft is destroyed/deleted,
+  or once a `DESPAWN` lifecycle run reaches its exit point — this does
+  **not** delete the aircraft or its crew, since this entry point never
+  created or owned them in the first place (unlike `Waldo_fnc_
+  ParadropCreateDropZone`, whose `DESPAWN` does delete the aircraft it
+  spawned).
+- No registry, no generated jumpers by default — use the Dynamic Drop Zone
+  system instead for a managed, repeatable operation with those features.
 
 ## Dynamic Drop Zone Operations (new system)
 
@@ -122,12 +131,17 @@ private _drop = createHashMapFromArray [
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```
 
-`lifecycle`: `"LOOP"` (repeat wide circuit and re-run), `"SINGLE_RETAIN"`
-(loiter after one pass), or `"SINGLE_DESPAWN"` (clean up after one pass).
+`lifecycle`: `"LOOP"` (repeat wide circuit and re-run), `"RETAIN"`
+(loiter after one pass), or `"DESPAWN"` (delete the aircraft/crew/markers
+after one pass — this system spawned and owns them, unlike
+`Waldo_fnc_ParadropQuickFlightSetup`, see above).
 The route validates itself against the requested jump envelopes — static
 speed stays at least 40 km/h above the capped route speed, altitude stays
 inside every enabled jump window, and an unsupported door-animation
 requirement disables itself automatically rather than silently breaking.
+`requireOpenDoor` defaults `true` here too (aligned with the quick-setup
+entry point above) — safe because it self-disables for any airframe
+without a recognised door/ramp animation.
 
 ```sqf
 [dzId, playerOrGroup] call Waldo_fnc_ParadropEmbark;         // move players into the aircraft

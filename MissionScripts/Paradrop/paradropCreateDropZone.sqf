@@ -57,33 +57,23 @@ private _altitude = ((_config getOrDefault ["altitude", 250]) max 100) min 2000;
 private _maximumSpeed = ((_config getOrDefault ["maximumSpeed", 220]) max 80) min 500;
 private _staticEnabled = _config getOrDefault ["staticJumpEnabled", true];
 private _haloEnabled = _config getOrDefault ["haloJumpEnabled", false];
-private _envelope = [
-    _altitude, _maximumSpeed,
-    _config getOrDefault ["staticMinimumAltitude", 180], _config getOrDefault ["staticMaximumAltitude", 350],
-    _config getOrDefault ["staticMaximumSpeed", 310], _config getOrDefault ["haloMinimumAltitude", 1000]
-] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
-private _staticMinimum = _envelope get "staticMinimumAltitude";
-private _staticMaximum = _envelope get "staticMaximumAltitude";
-private _staticMaximumSpeed = _envelope get "staticMaximumSpeed";
-private _haloMinimum = _envelope get "haloMinimumAltitude";
 private _automaticMode = toUpperANSI (_config getOrDefault ["automaticJumpMode", "STATIC"]);
 if (_config getOrDefault ["autoDropPlayers", false]) then {
     if (_automaticMode == "STATIC" && {!_staticEnabled}) then {_automaticMode = if (_haloEnabled) then {"HALO"} else {"NONE"}};
     if (_automaticMode == "HALO" && {!_haloEnabled}) then {_automaticMode = if (_staticEnabled) then {"STATIC"} else {"NONE"}};
     if (_automaticMode == "NONE") then {_config set ["autoDropPlayers", false]};
 };
-private _requireDoor = _config getOrDefault ["requireOpenDoor", false];
+// requireOpenDoor defaults true here to match Waldo_fnc_ParadropQuickFlightSetup - the check is a
+// no-op anyway for any airframe without a recognised door/ramp animation, so this only changes
+// behaviour for airframes that actually have one.
+private _requireDoor = _config getOrDefault ["requireOpenDoor", true];
 if (_requireDoor) then {
     private _animationSources = configFile >> "CfgVehicles" >> _class >> "AnimationSources";
     private _recognizedDoorSources = ["ramp_bottom", "door_2_1", "door_2_2", "jumpdoor_1", "jumpdoor_2", "back_ramp_switch", "back_ramp_half_switch", "RearDoors", "Door_1_source", "ramp_anim"];
     if (_recognizedDoorSources findIf {isClass (_animationSources >> _x)} < 0) then {_requireDoor = false};
 };
 _config set ["staticJumpEnabled", _staticEnabled];
-_config set ["staticMinimumAltitude", _staticMinimum];
-_config set ["staticMaximumAltitude", _staticMaximum];
-_config set ["staticMaximumSpeed", _staticMaximumSpeed];
 _config set ["haloJumpEnabled", _haloEnabled];
-_config set ["haloMinimumAltitude", _haloMinimum];
 _config set ["automaticJumpMode", _automaticMode];
 _config set ["requireOpenDoor", _requireDoor];
 private _approach = ((_config getOrDefault ["approachDistance", 2500]) max 800) min 10000;
@@ -133,6 +123,25 @@ if (_route isEqualTo createHashMap) exitWith {
 private _green = _route get "green";
 private _red = _route get "red";
 private _exit = _route get "exit";
+
+// Normalized against the route's own returned altitude/speed (not the pre-clamp local variables
+// above) so this and Waldo_fnc_ParadropQuickFlightSetup can never drift onto a different basis than
+// what the aircraft is actually flying.
+private _routeAltitude = _route get "altitude";
+private _routeMaxSpeed = _route get "maxSpeed";
+private _envelope = [
+    _routeAltitude, _routeMaxSpeed,
+    _config getOrDefault ["staticMinimumAltitude", 180], _config getOrDefault ["staticMaximumAltitude", 350],
+    _config getOrDefault ["staticMaximumSpeed", 310], _config getOrDefault ["haloMinimumAltitude", 1000]
+] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
+private _staticMinimum = _envelope get "staticMinimumAltitude";
+private _staticMaximum = _envelope get "staticMaximumAltitude";
+private _staticMaximumSpeed = _envelope get "staticMaximumSpeed";
+private _haloMinimum = _envelope get "haloMinimumAltitude";
+_config set ["staticMinimumAltitude", _staticMinimum];
+_config set ["staticMaximumAltitude", _staticMaximum];
+_config set ["staticMaximumSpeed", _staticMaximumSpeed];
+_config set ["haloMinimumAltitude", _haloMinimum];
 
 // One object-keyed replay configures current clients and JIP clients with both selected jump
 // systems. The setup function reconciles repeated configuration rather than duplicating actions.
@@ -240,5 +249,5 @@ missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
     };
 };
 diag_log format ["[WMP PARADROP] Created id=%1 name=%2 side=%3 airframe=%4 pilot=%5 optionalJumpers=%6 lifecycle=%7 markers=%8", _id, _name, _side, _class, _pilot, count _jumpers, _lifecycle, count _markers];
-[format ["%1 created for players. Route %2m AGL / %3 km/h; static envelope %4-%5m / <=%6 km/h; HALO floor %7m. Use Paradrop - Embark Players to board.", _name, round _altitude, round _maximumSpeed, round _staticMinimum, round _staticMaximum, round _staticMaximumSpeed, round _haloMinimum], "SUCCESS"] call _notifyRequester;
+[format ["%1 created for players. Route %2m AGL / %3 km/h; static envelope %4-%5m / <=%6 km/h; HALO floor %7m. Use Paradrop - Embark Players to board.", _name, round _routeAltitude, round _routeMaxSpeed, round _staticMinimum, round _staticMaximum, round _staticMaximumSpeed, round _haloMinimum], "SUCCESS"] call _notifyRequester;
 true
