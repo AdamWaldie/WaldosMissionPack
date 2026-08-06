@@ -12,10 +12,11 @@
  * 2: requester <OBJECT> (default objNull) - curator authorization for remote calls
  * 3: notify requester <BOOL> (default true)
  * 4: delete markers <BOOL> (default true) - explicit removal (this function called directly, e.g.
- *    the ZEN "Remove Operation" module) defaults to tearing down the markers along with everything
- *    else. Automatic cleanup on DESPAWN/aircraft loss instead passes the operation's own configured
- *    removeMarkersOnCleanup option here (default false there - see Waldo_fnc_ParadropCreateDropZone),
- *    so a map marker isn't yanked out from under a mission maker who wanted it left in place.
+ *    the ZEN "Remove Operation" module) always tears down the markers along with everything else.
+ *    Automatic cleanup (on aircraft loss or a DESPAWN pass completing normally) passes the inverse of
+ *    the operation's own configured keepMarkersOnCleanup option here (default false there, so markers
+ *    are deleted by default - see Waldo_fnc_ParadropCreateDropZone), so a mission maker who wants the
+ *    markers left in place can opt out.
  *
  * Return Value: Boolean - true when a registered operation was removed.
  *

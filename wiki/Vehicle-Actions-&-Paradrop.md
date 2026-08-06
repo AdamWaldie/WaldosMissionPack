@@ -168,16 +168,16 @@ the same route-returned basis, so both entry points behave identically here.
 `options` is a HashMap for anything beyond the defaults — jump envelope overrides (falls back to the
 mission's `MissionConfig\airOperationsConfig.sqf` values, then normalized as above), `lifecycle`
 (`LOOP` default / `RETAIN` / `DESPAWN` — this function never deletes the aircraft under any
-lifecycle; `DESPAWN` only changes which waypoints get added and is the trigger point for
-`removeMarkersOnCleanup` below), `circuitDirection` (`LEFT` default / `RIGHT`),
+lifecycle; `DESPAWN` only changes which waypoints get added and is one of the two automatic
+marker-cleanup triggers below), `circuitDirection` (`LEFT` default / `RIGHT`),
 `approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`),
 `createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
 `Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
-for a map-clutter-free operation), and `removeMarkersOnCleanup` (**off by default** — the markers are
-left on the map even after the aircraft is gone, since a mission maker who placed a drop zone marker
-generally wants it to stay; set `true` to remove them automatically once the aircraft is
-destroyed/deleted, or once a `DESPAWN` run reaches its exit point — this never affects the aircraft
-or crew either way). See the script's own header for the complete list and a HALO one-shot example.
+for a map-clutter-free operation), and `keepMarkersOnCleanup` (**off by default** — the markers are
+removed automatically once the aircraft is destroyed/deleted, or once a `DESPAWN` run reaches its
+exit point, since a marker for a drop zone that's no longer active is just stale; set `true` to leave
+them on the map instead — this never affects the aircraft or crew either way). See the script's own
+header for the complete list and a HALO one-shot example.
 
 This shares its actual flight-route logic (`Waldo_fnc_ParadropBuildFlightRoute`) with the fuller
 Dynamic Drop-Zone system below — the same proven standby/green/red/exit route and the same
@@ -203,9 +203,10 @@ line or HALO method.
 Post-pass behavior is explicit: **Loop and repeat** flies a wide left- or right-hand circuit through
 a point behind the original spawn before beginning the next aligned run; **Single pass - retain**
 loiters beyond the exit; **Single pass - despawn** deletes the aircraft, its crew and the operation
-(a lost aircraft is cleaned up the same way). The map markers created for the operation are **left in
-place** by this automatic cleanup unless you check **Remove markers when the operation ends
-automatically** in the create dialog (`removeMarkersOnCleanup`, off by default) — explicitly using
+(a lost aircraft is cleaned up the same way). The map markers created for the operation are **removed
+automatically** along with this cleanup, since a marker for a drop zone that's no longer active is
+just stale — check **Keep markers when the operation ends automatically** in the create dialog
+(`keepMarkersOnCleanup`, off by default) to leave them on the map instead. Explicitly using
 **Paradrop - Remove Operation** always removes the markers regardless of that setting. Speed input is
 in km/h and is converted to the engine's metres-per-second `forceSpeed` unit.
 
@@ -234,8 +235,8 @@ PARADROP** and **CREATE QA BOARDING POINT** controls.
 Optional global map symbology includes the overall rectangular drop zone, small standby/green/red
 line rectangles and a named point marker. Arma itself makes these global markers available to JIP
 clients. **Paradrop - Remove Operation** always cleans the markers (and can delete the operation
-aircraft); the automatic cleanup on a despawn pass or aircraft loss only removes them if
-`removeMarkersOnCleanup` was enabled at creation.
+aircraft); the automatic cleanup on a despawn pass or aircraft loss removes them too unless
+`keepMarkersOnCleanup` was enabled at creation.
 
 Mission makers can extend the friendly-name dropdowns before startup:
 
@@ -259,7 +260,7 @@ private _drop = createHashMapFromArray [
     ["staticChuteClass", "NonSteerable_Parachute_F"],
     ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
     ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true],
-    ["removeMarkersOnCleanup", false]
+    ["keepMarkersOnCleanup", false]
 ];
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```

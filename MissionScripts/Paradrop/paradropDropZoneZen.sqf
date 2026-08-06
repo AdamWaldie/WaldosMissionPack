@@ -167,7 +167,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ["SLIDER", ["Optional generated AI jumpers", "AI cargo created for this operation. Default zero keeps the aircraft for players."], [0, 60, 0, 0]],
         ["SLIDER", ["Automatic jump interval", "Seconds between forced player or optional AI exits."], [0.5, 10, 2, 1]],
         ["CHECKBOX", ["Create map markers", "Creates DZ, standby, green, red and named point markers."], true],
-        ["CHECKBOX", ["Remove markers when the operation ends automatically", "Applies to an automatic DESPAWN pass or the aircraft being lost - the markers are left in place by default. Explicitly using Paradrop - Remove Operation always removes markers regardless of this setting."], false]
+        ["CHECKBOX", ["Keep markers when the operation ends automatically", "Applies to an automatic DESPAWN pass or the aircraft being lost - the markers are removed along with the operation by default. Explicitly using Paradrop - Remove Operation always removes markers regardless of this setting."], false]
     ],
     {
         params ["_values", "_modulePosition"];
@@ -175,7 +175,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
             "_name", "_side", "_class", "_direction", "_altitude", "_speed", "_approach", "_length", "_exit",
             "_lifecycle", "_circuitDirection", "_staticEnabled", "_staticMin", "_staticMax", "_staticSpeed", "_staticChute",
             "_haloEnabled", "_haloMin", "_haloChute", "_requireDoor", "_dropPlayers", "_automaticMode", "_count", "_interval", "_markers",
-            "_removeMarkersOnCleanup"
+            "_keepMarkersOnCleanup"
         ];
         private _idBase = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
         if (_idBase == "") then {_idBase = "DZ"};
@@ -189,7 +189,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
             ["haloMinimumAltitude", _haloMin], ["haloBackpackClass", _haloChute], ["requireOpenDoor", _requireDoor],
             ["autoDropPlayers", _dropPlayers], ["automaticJumpMode", _automaticMode], ["jumperCount", round _count],
             ["createJumpers", _count > 0], ["jumpInterval", _interval], ["createMarkers", _markers],
-            ["removeMarkersOnCleanup", _removeMarkersOnCleanup]
+            ["keepMarkersOnCleanup", _keepMarkersOnCleanup]
         ];
         [_config, player] remoteExecCall ["Waldo_fnc_ParadropCreateDropZone", 2];
     },

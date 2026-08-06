@@ -102,16 +102,16 @@ the object's init field:
   default `"Drop Zone"`), `createMarkers` (**on by default** — the same
   AREA/STANDBY/GREEN/RED/POINT markers as the Dynamic Drop Zone system, so
   the mission maker sees a working drop zone immediately; pass `false` for
-  a clutter-free operation), `removeMarkersOnCleanup` (**off by default** —
-  the markers stay on the map even after the aircraft is gone, since a
-  mission maker who placed one generally wants it to stay). Full list in
-  the script header.
-- Set `removeMarkersOnCleanup: true` to opt into automatic marker removal
-  once the aircraft is destroyed/deleted, or once a `DESPAWN` lifecycle
-  run reaches its exit point — this still does **not** delete the aircraft
-  or its crew either way, since this entry point never created or owned
-  them in the first place (unlike `Waldo_fnc_ParadropCreateDropZone`,
-  whose `DESPAWN` does delete the aircraft it spawned).
+  a clutter-free operation), `keepMarkersOnCleanup` (**off by default** —
+  the markers are removed automatically once the aircraft is
+  destroyed/deleted, or once a `DESPAWN` lifecycle run reaches its exit
+  point, since a marker for a drop zone that's no longer active is just
+  stale). Full list in the script header.
+- Set `keepMarkersOnCleanup: true` to opt out and leave the markers on the
+  map instead — this still does **not** delete the aircraft or its crew
+  either way, since this entry point never created or owned them in the
+  first place (unlike `Waldo_fnc_ParadropCreateDropZone`, whose `DESPAWN`
+  does delete the aircraft it spawned).
 - No registry, no generated jumpers by default — use the Dynamic Drop Zone
   system instead for a managed, repeatable operation with those features.
 
@@ -130,7 +130,7 @@ private _drop = createHashMapFromArray [
     ["staticChuteClass", "NonSteerable_Parachute_F"],
     ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
     ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true],
-    ["removeMarkersOnCleanup", false]
+    ["keepMarkersOnCleanup", false]
 ];
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```
@@ -138,10 +138,12 @@ private _drop = createHashMapFromArray [
 `lifecycle`: `"LOOP"` (repeat wide circuit and re-run), `"RETAIN"`
 (loiter after one pass), or `"DESPAWN"` (delete the aircraft/crew after
 one pass — this system spawned and owns them, unlike `Waldo_fnc_
-ParadropQuickFlightSetup`, see above). Markers are only deleted alongside
-that automatic teardown if `removeMarkersOnCleanup` was set `true` at
-creation (default `false` — they're left on the map); an explicit
-`Waldo_fnc_ParadropRemoveDropZone` call always removes them regardless.
+ParadropQuickFlightSetup`, see above; a lost aircraft is cleaned up the
+same way). Markers are deleted alongside that automatic teardown by
+default too, since a marker for a drop zone that's no longer active is
+just stale — set `keepMarkersOnCleanup: true` at creation to leave them
+on the map instead. An explicit `Waldo_fnc_ParadropRemoveDropZone` call
+always removes them regardless.
 The route validates itself against the requested jump envelopes — static
 speed stays at least 40 km/h above the capped route speed, altitude stays
 inside every enabled jump window, and an unsupported door-animation

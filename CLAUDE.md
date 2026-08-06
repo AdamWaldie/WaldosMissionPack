@@ -253,13 +253,12 @@ concrete "jump action never becomes available" failure this closes; `ParadropCre
 normalizes off the same route-returned basis. `createMarkers` defaults to `true`
 (AREA/STANDBY/GREEN/RED/POINT markers, same layout as `ParadropCreateDropZone`) so a mission maker
 sees a working drop zone immediately — pass `false` for a map-clutter-free operation. Markers are
-left in place by default even after the aircraft is gone; set `removeMarkersOnCleanup` to `true` to
-opt into automatic removal on aircraft death/deletion or once a `DESPAWN` lifecycle run reaches its
-exit point. Neither the default nor the opt-in ever deletes the aircraft or its crew, since this
-entry point never owns their lifecycle (unlike `ParadropCreateDropZone`, whose `DESPAWN` does delete
-the aircraft it spawned). See the script header for the full `options` HashMap (jump envelope
-overrides, `lifecycle` LOOP/RETAIN/DESPAWN, `circuitDirection`, `createMarkers`,
-`removeMarkersOnCleanup`, `name`).
+removed automatically on aircraft death/deletion or once a `DESPAWN` lifecycle run reaches its exit
+point; set `keepMarkersOnCleanup` to `true` to opt out and leave them on the map instead. Neither
+this nor the opt-out ever deletes the aircraft or its crew, since this entry point never owns their
+lifecycle (unlike `ParadropCreateDropZone`, whose `DESPAWN` does delete the aircraft it spawned). See
+the script header for the full `options` HashMap (jump envelope overrides, `lifecycle`
+LOOP/RETAIN/DESPAWN, `circuitDirection`, `createMarkers`, `keepMarkersOnCleanup`, `name`).
 
 The exact same route logic (`Waldo_fnc_ParadropBuildFlightRoute`) powers the fuller **Dynamic Drop
 Zone Operations** system (`Waldo_fnc_ParadropCreateDropZone`, the ZEN "Dynamic Paradrop" module) —

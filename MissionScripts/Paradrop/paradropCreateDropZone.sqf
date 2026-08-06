@@ -14,10 +14,12 @@
  * 0: configuration <HASHMAP> - id, name, centre, direction, side, aircraftClass, altitude,
  *    maximumSpeed, approachDistance, runLength, exitDistance, jumperCount, jumpInterval,
  *    lifecycle, circuitDirection, static/halo jump settings, jumperClass, createJumpers,
- *    autoDropPlayers, automaticJumpMode, createMarkers and removeMarkersOnCleanup (default false -
- *    automatic teardown on a DESPAWN pass or aircraft loss deletes the spawned aircraft/crew but
- *    leaves the markers in place unless this is set true; an explicit Waldo_fnc_ParadropRemoveDropZone
- *    call, e.g. the ZEN "Remove Operation" module, always removes markers regardless of this option).
+ *    autoDropPlayers, automaticJumpMode, createMarkers and keepMarkersOnCleanup (default false).
+ *    Automatic teardown always deletes the spawned aircraft/crew, on either aircraft loss or a
+ *    DESPAWN pass completing normally, and by default removes the markers along with them - a marker
+ *    for a drop zone that's no longer active is just stale. Set keepMarkersOnCleanup true to leave
+ *    the markers on the map instead. An explicit Waldo_fnc_ParadropRemoveDropZone call, e.g. the ZEN
+ *    "Remove Operation" module, always removes markers regardless of this option.
  * 1: requester <OBJECT> (default objNull) - curator used to authorize remote requests.
  *
  * Return Value:
@@ -220,7 +222,7 @@ missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
     private _green = _state get "green";
     private _red = _state get "red";
     private _deadline = serverTime + ((_config getOrDefault ["operationTimeout", 900]) max 60);
-    private _removeMarkersOnCleanup = _config getOrDefault ["removeMarkersOnCleanup", false];
+    private _deleteMarkersOnCleanup = !(_config getOrDefault ["keepMarkersOnCleanup", false]);
     waitUntil {sleep 0.25; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D _green < 180} || {serverTime >= _deadline}};
     if (!isNull _aircraft && {alive _aircraft} && {serverTime < _deadline}) then {
         private _dropUnits = +(_state getOrDefault ["jumpers", []]);
@@ -247,9 +249,12 @@ missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
     };
     waitUntil {sleep 1; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D (_state get "red") < 180} || {serverTime >= _deadline}};
     waitUntil {sleep 1; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D (_state getOrDefault ["exit", _state get "red"]) < 220} || {serverTime >= _deadline}};
-    if (isNull _aircraft || {!alive _aircraft}) exitWith {[_id, true, objNull, false, _removeMarkersOnCleanup] call Waldo_fnc_ParadropRemoveDropZone};
+    // Automatic teardown removes its markers by default on either trigger - a marker for a drop zone
+    // that's no longer active is just stale - unless the mission maker opted out with
+    // keepMarkersOnCleanup.
+    if (isNull _aircraft || {!alive _aircraft}) exitWith {[_id, true, objNull, false, _deleteMarkersOnCleanup] call Waldo_fnc_ParadropRemoveDropZone};
     if ((_state getOrDefault ["lifecycle", "LOOP"]) == "DESPAWN") then {
-        [_id, true, objNull, false, _removeMarkersOnCleanup] call Waldo_fnc_ParadropRemoveDropZone;
+        [_id, true, objNull, false, _deleteMarkersOnCleanup] call Waldo_fnc_ParadropRemoveDropZone;
     };
 };
 diag_log format ["[WMP PARADROP] Created id=%1 name=%2 side=%3 airframe=%4 pilot=%5 optionalJumpers=%6 lifecycle=%7 markers=%8", _id, _name, _side, _class, _pilot, count _jumpers, _lifecycle, count _markers];
