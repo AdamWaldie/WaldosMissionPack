@@ -22,7 +22,11 @@
  * Waldo_fnc_ParadropConfigureAircraftLocal used by the Dynamic Drop Zone system, so both paths behave
  * identically once airborne.
  *
- * A lightweight cleanup watcher removes this call's own markers (never the aircraft or its crew,
+ * Markers created by this call are left in place by default, the same way Waldo_fnc_
+ * ParadropCreateDropZone's automatic cleanup leaves them by default - a mission maker who placed a
+ * drop zone marker generally wants it to stay on the map, not vanish the moment the plane is shot
+ * down or finishes a one-shot run. Set the removeMarkersOnCleanup option to opt into a lightweight
+ * cleanup watcher instead, which removes this call's own markers (never the aircraft or its crew,
  * which this function never owned in the first place) once the aircraft is destroyed/deleted, or
  * once a "DESPAWN" lifecycle run reaches its exit point. This is a deliberately smaller contract than
  * Waldo_fnc_ParadropRemoveDropZone, which does delete the aircraft it spawned - see the difference
@@ -41,14 +45,16 @@
  *    staticChuteClass, haloMinimumAltitude/haloBackpackClass (all default from the mission's
  *    configured WALDO_STATIC_ and WALDO_PARA_ envelope variables, same as every other WMP
  *    paradrop entry point), requireOpenDoor (default true, ignored if the airframe has no recognised door/ramp
- *    animation), lifecycle (LOOP/RETAIN/DESPAWN, default LOOP - DESPAWN here means the created
- *    markers are removed once the one pass completes, not that the aircraft is deleted; this
- *    function never owns the aircraft's lifecycle, unlike Waldo_fnc_ParadropCreateDropZone),
+ *    animation), lifecycle (LOOP/RETAIN/DESPAWN, default LOOP - this function never deletes the
+ *    aircraft under any lifecycle, unlike Waldo_fnc_ParadropCreateDropZone; DESPAWN only changes
+ *    which waypoints get added and is the trigger point for removeMarkersOnCleanup below),
  *    circuitDirection (LEFT/RIGHT, default LEFT), approachDistance/runLength/exitDistance (metres,
  *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED/POINT markers matching
  *    Waldo_fnc_ParadropCreateDropZone's layout, so a mission maker sees a working drop zone
- *    immediately; automatically cleaned up on aircraft death/deletion or DESPAWN completion; set
- *    false for a map-clutter-free operation), name (marker label, default "Drop Zone").
+ *    immediately; set false for a map-clutter-free operation), removeMarkersOnCleanup (default
+ *    false - the created markers are left on the map even after the aircraft is gone; opt in to
+ *    remove them once the aircraft is destroyed/deleted, or once a DESPAWN run reaches its exit
+ *    point; never affects the aircraft or crew either way), name (marker label, default "Drop Zone").
  *
  * Return Value:
  * Boolean - true when accepted (the actual route/actions are applied a moment later on the server
@@ -221,11 +227,13 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
         _markers pushBack _point;
     };
 
-    // Cleanup watcher: this function never owns the aircraft's lifecycle (unlike
-    // Waldo_fnc_ParadropCreateDropZone, which spawns and therefore deletes its own aircraft), so this
-    // only ever removes the markers created above - never the aircraft or its crew. Runs regardless
-    // of createMarkers so it's always a correct no-op when there's nothing to clean up.
-    if (count _markers > 0) then {
+    // Cleanup watcher: opt-in only (removeMarkersOnCleanup, default false) - a mission maker who
+    // placed a drop zone marker generally wants it to stay on the map, not vanish the moment the
+    // plane is shot down or finishes a one-shot run. This function never owns the aircraft's
+    // lifecycle (unlike Waldo_fnc_ParadropCreateDropZone, which spawns and therefore deletes its own
+    // aircraft), so even when enabled this only ever removes the markers created above - never the
+    // aircraft or its crew.
+    if (count _markers > 0 && {_options getOrDefault ["removeMarkersOnCleanup", false]}) then {
         [_aircraft, _markers, _lifecycle, _route] spawn {
             params ["_aircraft", "_markers", "_lifecycle", "_route"];
             waitUntil {
