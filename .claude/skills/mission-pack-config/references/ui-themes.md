@@ -9,7 +9,7 @@ tactical display, interaction equipment, Economy prompts, table-game chrome.
 ## Mission theme — config (`MissionConfig\interfaceConfig.sqf` — shared)
 
 ```sqf
-["Waldo_UI_Theme", "DEFAULT"],           // DEFAULT | WW2 | VIETNAM | SCIFI | registered custom ID
+["Waldo_UI_Theme", "DEFAULT"],           // DEFAULT | WW2 | VIETNAM | SCIFI | PARCHMENT | registered custom ID
 ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: full named custom-theme definitions
 ["Waldo_UI_ThemeOverrides", createHashMap]   // ADVANCED: partial token overrides for the selected theme
 ```
@@ -20,6 +20,7 @@ tactical display, interaction equipment, Economy prompts, table-game chrome.
 | `WW2` | Olive field equipment, khaki paper/brass, War Department copy |
 | `VIETNAM` | Green phosphor/field-radio shell, amber controls, field-net copy |
 | `SCIFI` | Deep navy node display, cyan/magenta rails, bracketed titles |
+| `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, "Royal Chancery" proclamation copy |
 
 Semantic success/warning/error colours, written state text, symbols and
 shapes remain distinct/present in every theme — interaction procedures

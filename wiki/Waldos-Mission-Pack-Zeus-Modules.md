@@ -172,7 +172,7 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## UI Theme QA
 
-**UI QA - Set Visual Theme** selects Default/Modern, Second World War, Vietnam/Cold War or Science Fiction styling. It changes presentation globally and can show the requesting curator a three-card semantic/stacking preview. See [UI Visual Themes](UI-Visual-Themes).
+**UI QA - Set Visual Theme** selects Default/Modern, Second World War, Vietnam/Cold War, Science Fiction or Parchment/Fantasy styling. It changes presentation globally and can show the requesting curator a three-card semantic/stacking preview. See [UI Visual Themes](UI-Visual-Themes).
 
 ## Squad Rally Points
 

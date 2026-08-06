@@ -1,6 +1,6 @@
 # UI Visual Themes
 
-> **Use this page when:** you want WMP interfaces to match a modern, Second World War, Vietnam/Cold War or science-fiction mission without changing how any feature works.
+> **Use this page when:** you want WMP interfaces to match a modern, Second World War, Vietnam/Cold War, science-fiction or fantasy/olden-times mission without changing how any feature works.
 
 WMP has one visual theme setting shared by its notification cards, SafeStart, electronic-warfare display, hazardous-environment status, tactical display, interaction equipment, Economy authoring prompts and table-game interface chrome. Themes change fonts, materials, rails, control chrome, copy motifs, colours and accents only. Control positions, input handling, feature state, authority and gameplay rules do not change.
 
@@ -18,6 +18,7 @@ Built-in values are:
 | `WW2` | Olive field equipment, khaki paper/brass tones, bottom rule and War Department field-order copy |
 | `VIETNAM` | Green phosphor/field-radio shell, amber controls, double scan rails and field-net copy |
 | `SCIFI` | Deep navy node display, cyan/magenta split rails, bracketed titles and system-status copy |
+| `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, "Royal Chancery" proclamation copy for fantasy/olden-times missions |
 
 Semantic success, warning and error colours remain distinct in every style. Every state also carries a written state and symbol, and interaction procedures use labels, shapes or patterns rather than requiring colour recognition.
 
@@ -39,7 +40,7 @@ The shared resolver applies the personal profile after mission theme overrides. 
 
 ## Live QA switch
 
-**UI QA - Set Visual Theme** provides a named dropdown for all four styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
+**UI QA - Set Visual Theme** provides a named dropdown for all five styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
 
 Live selections are included in WMP's ordered runtime snapshot as well as the public mission value, so a joining player resolves the server's current style before optional feature interfaces activate.
 

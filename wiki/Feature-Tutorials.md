@@ -11,7 +11,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) | Animated operation titles during load-in |
 | [Mission UI Text Overlays](Mission-UI-Text-Overlays) | Dynamic text, timed notices, and respawn text |
 | [Custom UI Notifications](Custom-UI-Notifications) | Accessible mission cards, placement, stacking, and FIFO delivery |
-| [UI Visual Themes](UI-Visual-Themes) | Global visual-only Default, WW2, Vietnam, and science-fiction interface styles |
+| [UI Visual Themes](UI-Visual-Themes) | Global visual-only Default, WW2, Vietnam, science-fiction, and parchment/fantasy interface styles |
 | [Safestart](Safestart) | Preparation protection and timed go-live |
 | [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) | End-of-operation protection, AAR, and mission end |
 | [Tasks and Objectives](Tasks-And-Objectives) | JIP-safe objective creation and resolution |
