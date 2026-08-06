@@ -60,7 +60,38 @@ over as a paste-in snippet):
 ```
 
 `Waldo_fnc_VehicleJumpSetup` reads the current `airOperationsConfig.sqf`
-values automatically.
+values automatically. **It only adds the jump action — it does not fly the
+plane anywhere.** For that, see the next two sections.
+
+## Reliable AI flight — quick setup (`Waldo_fnc_ParadropQuickFlightSetup`)
+
+The simple alternative to the full Dynamic Drop Zone system below, for an
+aircraft the mission maker already placed and crewed in Eden. One call in
+the object's init field:
+
+```sqf
+[this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
+// [aircraft, target(marker name/position/object), direction(-1=auto), altitude, maxSpeed, options]
+```
+
+- Builds a reliable standby → green → red → exit AI route (looping by
+  default) using the exact same route logic as the Dynamic Drop Zone system
+  (`Waldo_fnc_ParadropBuildFlightRoute`) — both stay in sync, fixes to one
+  benefit the other.
+- **Clears the aircraft's existing waypoints first.** A leftover Eden
+  waypoint fighting the generated route is the #1 reason a hand-set-up
+  paradrop plane misbehaves — don't call this on an aircraft whose manual
+  waypoints the mission maker wants to keep.
+- Waits (bounded, 30s) for a pilot to exist, so it's safe even if a
+  separate init-field call (e.g. `Waldo_fnc_MoveInCargoPlane` on another
+  object) assigns the crew — order between the two doesn't matter.
+- `options` HashMap: jump envelope overrides (default from
+  `airOperationsConfig.sqf`'s `WALDO_STATIC_*`/`WALDO_PARA_*`),
+  `lifecycle` (`LOOP` default/`RETAIN`/`DESPAWN`), `circuitDirection`
+  (`LEFT` default/`RIGHT`), `approachDistance`/`runLength`/`exitDistance`,
+  `createMarkers` (off by default). Full list in the script header.
+- No registry, no generated jumpers, no map markers by default — use the
+  Dynamic Drop Zone system instead for a managed, repeatable operation.
 
 ## Dynamic Drop Zone Operations (new system)
 

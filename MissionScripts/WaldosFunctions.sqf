@@ -582,8 +582,14 @@ class CfgFunctions
             class JumpSettingsCheck {
                 file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
             };
+            class ParadropBuildFlightRoute {
+                file = "MissionScripts\Paradrop\paradropBuildFlightRoute.sqf";
+            };
             class ParadropCreateDropZone {
                 file = "MissionScripts\Paradrop\paradropCreateDropZone.sqf";
+            };
+            class ParadropQuickFlightSetup {
+                file = "MissionScripts\Paradrop\paradropQuickFlightSetup.sqf";
             };
             class ParadropConfigureAircraftLocal {
                 file = "MissionScripts\Paradrop\paradropConfigureAircraftLocal.sqf";

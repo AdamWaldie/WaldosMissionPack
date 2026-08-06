@@ -84,21 +84,15 @@ _config set ["requireOpenDoor", _requireDoor];
 private _approach = ((_config getOrDefault ["approachDistance", 2500]) max 800) min 10000;
 private _runLength = ((_config getOrDefault ["runLength", 2500]) max 300) min 6000;
 private _exitDistance = ((_config getOrDefault ["exitDistance", 2500]) max 800) min 10000;
-private _standby = [_centre, _runLength * 0.65, _direction + 180] call BIS_fnc_relPos;
-private _green = [_centre, _runLength * 0.5, _direction + 180] call BIS_fnc_relPos;
-private _red = [_centre, _runLength * 0.5, _direction] call BIS_fnc_relPos;
-private _spawn = [_standby, _approach, _direction + 180] call BIS_fnc_relPos;
-private _exit = [_red, _exitDistance, _direction] call BIS_fnc_relPos;
 private _lifecycle = toUpperANSI (_config getOrDefault ["lifecycle", if (_config getOrDefault ["deleteAfterRun", false]) then {"DESPAWN"} else {"LOOP"}]);
 if !(_lifecycle in ["LOOP", "RETAIN", "DESPAWN"]) then {_lifecycle = "LOOP"};
 private _circuitDirection = toUpperANSI (_config getOrDefault ["circuitDirection", "LEFT"]);
-private _circuitTurn = if (_circuitDirection == "RIGHT") then {90} else {-90};
-private _circuitWidth = ((_approach max _runLength) * 0.75) max 1200;
-private _crosswind = [_exit, _circuitWidth, _direction + _circuitTurn] call BIS_fnc_relPos;
-private _downwind = [_spawn, _circuitWidth, _direction + _circuitTurn] call BIS_fnc_relPos;
-private _rejoin = [_spawn, _approach * 0.6, _direction + 180] call BIS_fnc_relPos;
-private _hold = [_exit, 1800, _direction] call BIS_fnc_relPos;
-{_x set [2, _altitude]} forEach [_standby, _green, _centre, _red, _spawn, _exit, _crosswind, _downwind, _rejoin, _hold];
+// Only the standby/spawn point is needed before the aircraft exists (to know where to create it).
+// Waldo_fnc_ParadropBuildFlightRoute derives the same point again once the aircraft is real, along
+// with the rest of the route (green/red/exit/etc) it hands back below.
+private _standby = [_centre, _runLength * 0.65, _direction + 180] call BIS_fnc_relPos;
+private _spawn = [_standby, _approach, _direction + 180] call BIS_fnc_relPos;
+_spawn set [2, _altitude];
 
 private _aircraft = createVehicle [_class, _spawn, [], 0, "FLY"];
 _aircraft setPosATL _spawn;
@@ -120,41 +114,20 @@ private _oldGroups = [];
 private _flightGroup = createGroup _side;
 [_pilot] joinSilent _flightGroup;
 {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
-_flightGroup setBehaviourStrong "CARELESS";
-_flightGroup setCombatMode "BLUE";
-_flightGroup setSpeedMode "LIMITED";
-_aircraft flyInHeight [_altitude, true];
-_aircraft limitSpeed _maximumSpeed;
-// limitSpeed is km/h, while forceSpeed is metres/second. Applying one raw value to both caused
-// extreme overspeed and the apparent lateral break at the drop zone.
-_aircraft forceSpeed (_maximumSpeed / 3.6);
-_aircraft engineOn true;
 _aircraft setVehicleLock "UNLOCKED";
 
-private _addRouteWaypoint = {
-    params ["_position", ["_type", "MOVE"], ["_radius", 40]];
-    // A negative placement radius consumes ASL and creates an exact waypoint. Radius zero may be
-    // displaced by nearby terrain objects, which is unacceptable on a marked jump run.
-    private _waypoint = _flightGroup addWaypoint [AGLToASL _position, -1];
-    _waypoint setWaypointType _type;
-    _waypoint setWaypointBehaviour "CARELESS";
-    _waypoint setWaypointCombatMode "BLUE";
-    _waypoint setWaypointSpeed "LIMITED";
-    _waypoint setWaypointCompletionRadius _radius;
-    _waypoint
+private _route = [
+    _aircraft, _flightGroup, _centre, _direction, _altitude, _maximumSpeed,
+    _approach, _runLength, _exitDistance, _lifecycle, _circuitDirection
+] call Waldo_fnc_ParadropBuildFlightRoute;
+if (_route isEqualTo createHashMap) exitWith {
+    deleteVehicle _aircraft; deleteGroup _flightGroup;
+    ["Creation failed: the flight route could not be built.", "ERROR"] call _notifyRequester;
+    false
 };
-{
-    [_x, "MOVE", if (_forEachIndex in [1, 2, 3]) then {30} else {100}] call _addRouteWaypoint;
-} forEach [_standby, _green, _centre, _red, _exit];
-if (_lifecycle == "LOOP") then {
-    {[_x, "MOVE", 180] call _addRouteWaypoint} forEach [_crosswind, _downwind, _rejoin];
-    [_spawn, "CYCLE", 120] call _addRouteWaypoint;
-};
-if (_lifecycle == "RETAIN") then {
-    private _loiter = [_hold, "LOITER", 250] call _addRouteWaypoint;
-    _loiter setWaypointLoiterRadius 900;
-    _loiter setWaypointLoiterType "CIRCLE_L";
-};
+private _green = _route get "green";
+private _red = _route get "red";
+private _exit = _route get "exit";
 
 // One object-keyed replay configures current clients and JIP clients with both selected jump
 // systems. The setup function reconciles repeated configuration rather than duplicating actions.

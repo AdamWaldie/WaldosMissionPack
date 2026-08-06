@@ -129,6 +129,45 @@ This is added automatically alongside jump actions. No setup required.
 
 ---
 
+## Reliable Quick Flight Setup
+
+_Associated Files: `MissionScripts\Paradrop\paradropQuickFlightSetup.sqf`,
+`MissionScripts\Paradrop\paradropBuildFlightRoute.sqf`_
+
+For a plane you've already placed and crewed yourself in Eden, one call in its init field gives it a
+reliable AI-flown paradrop route — no ZEN, no registry, no generated jumpers:
+
+```sqf
+[this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
+```
+
+Arguments: `[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a marker
+name, a position, or an object; `direction` (`-1` by default) is computed automatically from the
+aircraft's position toward the target if you don't set one. It waits (up to 30 seconds) for a pilot
+to exist before doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane`
+call on another object in the same composition — both init fields can run in any order.
+
+The aircraft's own existing waypoints are cleared before the generated route is added. This matters:
+a leftover Eden waypoint competing with a scripted route for the AI's attention is the most common
+reason a hand-set-up paradrop plane behaves unpredictably (wandering off the jump run, ignoring
+altitude/speed, or never turning back for another pass). If you want to keep your own waypoints,
+don't call this function — set the aircraft up manually instead (see below).
+
+`options` is a HashMap for anything beyond the defaults — jump envelope overrides (falls back to the
+mission's `MissionConfig\airOperationsConfig.sqf` values), `lifecycle` (`LOOP` default / `RETAIN` /
+`DESPAWN`), `circuitDirection` (`LEFT` default / `RIGHT`), `approachDistance`/`runLength`/
+`exitDistance`, and `createMarkers` (off by default — this entry point is deliberately map-clutter-free
+unless you ask for the standby/green/red lines). See the script's own header for the complete list
+and a HALO one-shot example.
+
+This shares its actual flight-route logic (`Waldo_fnc_ParadropBuildFlightRoute`) with the fuller
+Dynamic Drop-Zone system below — the same proven standby/green/red/exit route and the same
+altitude/speed handling, so both paths fly identically once airborne. Use the Dynamic Drop-Zone
+system instead when you want a managed, repeatable operation with generated AI jumpers, a Zeus
+create/remove workflow, or map symbology by default.
+
+---
+
 ## Dynamic Drop-Zone Operations
 
 ZEN provides **Paradrop - Create Drop Zone**, **Paradrop - Embark Players** and **Paradrop - Remove
