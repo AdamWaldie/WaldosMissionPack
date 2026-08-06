@@ -15,6 +15,8 @@ fails validation ("must contain a SKILL.md file").
 This script produces that second, upload-ready shape as its own artifact.
 Both are shipped: the release zip for dropping into a mission project /
 Claude Code, this one for claude.ai's/the Skills API's direct upload path.
+Both packages ship the exact same content — SKILL.md, references/* and
+chatgpt/INSTRUCTIONS.md — only the archive's root layout differs.
 
 Usage:
     python3 releaseVerificationAndDeployment/package_claude_skill_upload.py [version_tag] [output_dir]
@@ -31,8 +33,9 @@ REPO_ROOT = Path(__file__).resolve().parent.parent
 SKILL_DIR = REPO_ROOT / ".claude" / "skills" / "mission-pack-config"
 
 # Mirror package_skill.py's exclusions so this stays consistent with the
-# general Anthropic skill-packaging convention (no build artifacts, no
-# evals-only content shipped to end users).
+# general Anthropic skill-packaging convention (no build artifacts shipped
+# to end users). Everything else under the skill folder - including
+# chatgpt/INSTRUCTIONS.md - ships as part of the skill build.
 EXCLUDE_DIRS = {"__pycache__", "node_modules"}
 EXCLUDE_FILES = {".DS_Store"}
 
@@ -73,7 +76,20 @@ def package(skill_dir: Path, output_path: Path):
             rel_path = file_path.relative_to(skill_dir.parent)
             if _should_exclude(rel_path):
                 continue
-            zf.write(file_path, rel_path)
+            # The ZIP format requires forward slashes as directory separators
+            # regardless of host OS. On Windows, rel_path is a WindowsPath,
+            # and passing it (or str(rel_path)) straight to ZipFile.write
+            # writes arcnames with backslashes instead - the zip has no real
+            # subdirectories at all, just filenames containing a literal "\"
+            # character. Every real folder structure in the archive (the
+            # skill's own "<name>/SKILL.md" root, "<name>/references/...")
+            # silently collapses, which is exactly what a strict reader like
+            # claude.ai's uploader rejects ("skill not at root" even though
+            # every file is technically present). as_posix() forces forward
+            # slashes on every platform, matching what this script already
+            # verified correctly on Linux/macOS by coincidence of using the
+            # native separator there.
+            zf.write(file_path, rel_path.as_posix())
 
     print(f"Wrote claude.ai-upload-ready skill package: {output_path}")
 
