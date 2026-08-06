@@ -1,5 +1,7 @@
 /*
 This function populates an advanced medical crate, with the option to enable the box as a field hospital if desired.
+When enabled with ACE medical present, a "FIELD HOSPITAL" 3D marker is attached to the crate so players can see
+which crate grants the locational treatment boost without opening its inventory or reading the mission briefing.
 
 Params:
 _crate - object to populate (Passed from module where thee classname of the box is defined)
@@ -34,11 +36,23 @@ clearbackpackcargoGlobal _crate;
 //Verify ACE Medical Activation, then perform due dilligence
 if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     //Check if option selected for medical locational boost
+    private _markerId = format ["WMP_FieldHospital_%1", netId _crate];
     if (_isFacility) then {
         _crate setVariable ["ace_medical_isMedicalFacility", true, true];
-        // ACE medical already exposes the facility state. A decorative addAction here used to
-        // pollute the vanilla action menu even when ACE was the active interaction surface.
+        // ACE medical already exposes the facility state to treatment logic, but that gives
+        // players no visible reason to bring casualties to this specific crate over any other
+        // one - a persistent 3D marker is the non-intrusive indicator (no addAction, so it
+        // never pollutes the vanilla/ACE interaction menu the way a prior decorative action did).
+        [_markerId, _crate, createHashMapFromArray [
+            ["text", "FIELD HOSPITAL"],
+            ["icon", "\z\ACE\addons\medical_gui\ui\cross.paa"],
+            ["colour", [0.35, 0.85, 0.45, 0.95]],
+            ["offset", [0, 0, 1.2]],
+            ["distance", 40]
+        ]] call Waldo_fnc_Create3DMarker;
         diag_log format ["[WMP LOGISTICS] ACE medical facility enabled crate=%1", netId _crate];
+    } else {
+        [_markerId] call Waldo_fnc_Remove3DMarker;
     };
     //Add ACE Medical supplies   
    //Common Items
