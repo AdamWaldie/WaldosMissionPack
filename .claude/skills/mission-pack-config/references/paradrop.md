@@ -145,9 +145,10 @@ just stale — set `keepMarkersOnCleanup: true` at creation to leave them
 on the map instead. An explicit `Waldo_fnc_ParadropRemoveDropZone` call
 always removes them regardless.
 The route validates itself against the requested jump envelopes — static
-speed stays at least 40 km/h above the capped route speed, altitude stays
-inside every enabled jump window, and an unsupported door-animation
-requirement disables itself automatically rather than silently breaking.
+speed stays at least 60 km/h above the capped route speed, altitude stays
+inside every enabled jump window with margin to absorb normal AI autopilot
+wander, and an unsupported door-animation requirement disables itself
+automatically rather than silently breaking.
 `requireOpenDoor` defaults `true` here too (aligned with the quick-setup
 entry point above) — safe because it self-disables for any airframe
 without a recognised door/ramp animation.

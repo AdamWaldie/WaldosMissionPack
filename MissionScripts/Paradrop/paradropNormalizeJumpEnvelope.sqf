@@ -18,15 +18,20 @@
  *
  * Return Value:
  * HashMap - staticMinimumAltitude, staticMaximumAltitude, staticMaximumSpeed, haloMinimumAltitude,
- * each guaranteed satisfiable at the supplied route altitude/speed:
- * - staticMinimumAltitude never exceeds route altitude - 25 m (a static-line jumper must be able to
- *   release at least 25 m below the route's cruise altitude).
- * - staticMaximumAltitude never falls below route altitude + 75 m (route altitude must sit inside
- *   the static-line window with headroom, not right at its edge).
- * - staticMaximumSpeed never falls below route speed + 40 km/h (the aircraft's actual cruise speed
+ * each guaranteed satisfiable at the supplied route altitude/speed with headroom to spare - the
+ * static/HALO hold-action conditions re-check the aircraft's *live* altitude/speed every frame
+ * they're offered, and AI flyInHeight/limitSpeed autopilot routinely wanders a few metres/km-h
+ * around its nominal route target rather than holding it exactly. A margin sized to the route's
+ * commanded value alone would flicker the action on and off with that normal wander; these margins
+ * are deliberately generous enough to absorb it:
+ * - staticMinimumAltitude never exceeds route altitude - 50 m (a static-line jumper must be able to
+ *   release at least 50 m below the route's cruise altitude).
+ * - staticMaximumAltitude never falls below route altitude + 120 m (route altitude must sit well
+ *   inside the static-line window, not near its edge).
+ * - staticMaximumSpeed never falls below route speed + 60 km/h (the aircraft's actual cruise speed
  *   must stay comfortably under the jump's speed ceiling, not brush against it).
- * - haloMinimumAltitude never exceeds route altitude (HALO release must be reachable at cruise
- *   altitude, not above it).
+ * - haloMinimumAltitude never exceeds route altitude - 50 m (HALO release must stay reachable even
+ *   if the aircraft is briefly a little below its nominal cruise altitude, not just exactly at it).
  *
  * Example:
  * [250, 220, 180, 350, 310, 1000] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
@@ -43,9 +48,16 @@ params [
     ["_rawHaloMin", 1000, [0]]
 ];
 
+// Buffers absorb normal AI flyInHeight/limitSpeed wander around the route's commanded
+// altitude/speed so a brief autopilot dip/spike doesn't flicker the jump hold-action unavailable.
+private _staticMinAltitudeBuffer = 50;
+private _staticMaxAltitudeBuffer = 120;
+private _staticMaxSpeedBuffer = 60;
+private _haloMinAltitudeBuffer = 50;
+
 createHashMapFromArray [
-    ["staticMinimumAltitude", (_rawStaticMin max 0) min ((_altitude - 25) max 0)],
-    ["staticMaximumAltitude", (_rawStaticMax max (_altitude + 75)) min 2500],
-    ["staticMaximumSpeed", (_rawStaticMaxSpeed max (_maxSpeed + 40)) min 700],
-    ["haloMinimumAltitude", (_rawHaloMin max 0) min _altitude]
+    ["staticMinimumAltitude", (_rawStaticMin max 0) min ((_altitude - _staticMinAltitudeBuffer) max 0)],
+    ["staticMaximumAltitude", (_rawStaticMax max (_altitude + _staticMaxAltitudeBuffer)) min 2500],
+    ["staticMaximumSpeed", (_rawStaticMaxSpeed max (_maxSpeed + _staticMaxSpeedBuffer)) min 700],
+    ["haloMinimumAltitude", (_rawHaloMin max 0) min ((_altitude - _haloMinAltitudeBuffer) max 0)]
 ]

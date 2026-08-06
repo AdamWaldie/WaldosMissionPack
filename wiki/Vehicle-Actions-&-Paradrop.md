@@ -216,8 +216,8 @@ steerable parachute backpack and minimum altitude. The optional door requirement
 for airframes whose ramp animations are not among the supported names. Both action sets are
 installed for current clients and JIP clients. The authoritative creation API normalizes enabled
 jump envelopes against the requested route: the route altitude remains inside each enabled
-altitude window, static-line maximum speed stays at least 40 km/h above capped route speed, and an
-unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
+altitude window with margin to absorb normal AI autopilot wander, static-line maximum speed stays
+at least 60 km/h above capped route speed, and an unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
 enabled alternative or turns itself off instead of silently selecting a disabled jump method.
 
 **Paradrop - Embark Players** uses the player directly underneath the placed module first, then the
