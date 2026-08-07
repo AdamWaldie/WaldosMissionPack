@@ -158,6 +158,12 @@ was never placed, or its name doesn't exactly match the `target` string. This ca
 in-game via `systemChat` ("`<aircraft> has no flight target: place a map marker named "..."`"), not
 just the RPT log, specifically so this beginner mistake is easy to spot and fix.
 
+The **"[WMP] Halo And Static Line Blackfish Drop Examples"** composition (Eden Editor →
+Compositions → Waldos Mission Pack Compositions - Air Operations) demonstrates this end to end: it
+already includes both aircraft wired up as above *and* their `"dz1"`/`"dz2"` target markers, so
+dropping it into a mission and hitting play works immediately with no extra setup — drag the two
+markers to wherever you actually want each drop zone to be.
+
 The aircraft's own existing waypoints are cleared before the generated route is added. This matters:
 a leftover Eden waypoint competing with a scripted route for the AI's attention is the most common
 reason a hand-set-up paradrop plane behaves unpredictably (wandering off the jump run, ignoring
