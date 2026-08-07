@@ -104,7 +104,7 @@ private _config = createHashMapFromArray [
     ["failSafeReset", _optionMap getOrDefault ["failSafeReset", false]],
     ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
     ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
-    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 75]]) max 10],
+    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 250]]) max 10],
     ["landingClearanceScale", (_optionMap getOrDefault ["landingClearanceScale", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0]]) max 1],
     ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
     ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]}]) max 0],

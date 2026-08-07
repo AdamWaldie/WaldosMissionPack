@@ -279,6 +279,19 @@ _helicopter setVariable [
 if (_landed && {local _helicopter}) then {
     [_helicopter, _group, _targetPosition, _waypointType, _expectedWaypoint, _expectedScript, count (waypoints _group)] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
 } else {
-    [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    // Do not repeat the restore when something else already reclaimed and reconfigured the
+    // aircraft while this approach was still catching up to its own abort - most commonly a fresh
+    // Waldo_fnc_TransportDispatchLocal retargeting call (a mid-approach MOVE_PICKUP/SET_DESTINATION,
+    // i.e. the player moved the LZ), which calls this same restore function itself before wiping
+    // waypoints and then applies its own real cruise flyInHeight/land state. This loop's own Active
+    // flag being already false at this point means someone else is responsible for the aircraft's
+    // flight state now; calling restore again here would stomp that fresh state with the default
+    // ~30m transit altitude, degrading the aircraft to a slow, low-altitude crawl toward the new
+    // target with no clean cancel - the concrete "moves like a snail and lands randomly enroute
+    // after moving the LZ" symptom this closes. Mirrors the equivalent fix already applied to the
+    // post-touchdown ground-anchor loop in Waldo_fnc_ImprovedHelicopterLandingAnchorLocal.
+    if (_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
+        [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    };
 };
 _landed

@@ -174,7 +174,10 @@ class FullAuditTests(unittest.TestCase):
             ids = [int(value) for value in re.findall(r"^\s*id=(\d+);", composition, re.MULTILINE)]
             self.assertEqual(len(ids), len(set(ids)), f"{folder.name}: duplicate Eden entity id")
             types = re.findall(r'^\s*type="([^"]+)";', composition, re.MULTILINE)
-            catalogue_types.update(value for value in types if value not in {"Move", "Cycle", "Sync"})
+            # Non-classname uses of type="..." in this format: Waypoint type (Move/Cycle), a Sync
+            # link's CustomData type, and a Marker's CfgMarkers icon type (e.g. mil_end) - none of
+            # these are CfgVehicles classnames and none belong in the catalogue checked below.
+            catalogue_types.update(value for value in types if value not in {"Move", "Cycle", "Sync", "mil_end"})
             addon_block = re.search(r"requiredAddons\[\]\s*=\s*\{([^}]*)\}", header)
             if addon_block:
                 catalogue_addons.update(re.findall(r'"([^"]+)"', addon_block.group(1)))
@@ -352,7 +355,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", dispatch)
         self.assertIn('roadsConnectedTo _x', request)
         self.assertIn('"Land_HelipadEmpty_F"', request)
-        self.assertIn('Waldo_HeliTransport_DefaultLzSearchRadius", 75', register)
+        self.assertIn('Waldo_HeliTransport_DefaultLzSearchRadius", 250', register)
         self.assertIn('Waldo_HeliTransport_DefaultLzClearanceScale", 2.0', register)
         self.assertIn('"landingClearanceScale"', register)
         self.assertIn("boundingBoxReal _vehicle", request)

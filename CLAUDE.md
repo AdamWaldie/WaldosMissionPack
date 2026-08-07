@@ -239,6 +239,10 @@ drop point, plus the configured jump action — without the full Dynamic Drop Zo
 // [aircraft, target(marker name/position/object), direction(-1 = auto), altitude, maxSpeed, options]
 ```
 
+`target` as a marker name is the beginner-friendly option: place a named marker in Eden and
+reference it here, no coordinate math needed. A marker that was never placed or is misnamed is
+reported in-game via `systemChat`, not just the RPT log.
+
 It clears the aircraft's existing waypoints before adding the generated route — leftover Eden
 waypoints fighting a scripted route is the single most common reason a hand-wired paradrop plane
 was unreliable. If the pilot's group has other units besides this aircraft's crew, the crew is

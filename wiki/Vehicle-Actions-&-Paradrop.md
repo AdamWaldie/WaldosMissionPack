@@ -134,18 +134,35 @@ This is added automatically alongside jump actions. No setup required.
 _Associated Files: `MissionScripts\Paradrop\paradropQuickFlightSetup.sqf`,
 `MissionScripts\Paradrop\paradropBuildFlightRoute.sqf`_
 
-For a plane you've already placed and crewed yourself in Eden, one call in its init field gives it a
-reliable AI-flown paradrop route — no ZEN, no registry, no generated jumpers:
+For a plane you've already placed and crewed yourself in Eden, two steps give it a reliable
+AI-flown paradrop route — no ZEN, no registry, no generated jumpers:
+
+1. Place a marker anywhere on the map and name it (Eden Editor toolbar → Markers) — this is the
+   drop zone the plane will fly toward. Any name works; `"dz1"` is just the example below.
+2. In the aircraft's init field:
 
 ```sqf
 [this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
 ```
 
-Arguments: `[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a marker
-name, a position, or an object; `direction` (`-1` by default) is computed automatically from the
-aircraft's position toward the target if you don't set one. It waits (up to 30 seconds) for a pilot
-to exist before doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane`
-call on another object in the same composition — both init fields can run in any order.
+That's it — no marker math, no waypoints to place by hand. Arguments:
+`[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a marker name (the
+beginner-friendly option — reference whatever you named the marker in step 1), a raw position, or
+an object; `direction` (`-1` by default) is computed automatically from the aircraft's position
+toward the target if you don't set one. It waits (up to 30 seconds) for a pilot to exist before
+doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane` call on
+another object in the same composition — both init fields can run in any order.
+
+**If the plane never takes off toward its target**, the most common cause is step 1 — the marker
+was never placed, or its name doesn't exactly match the `target` string. This case reports itself
+in-game via `systemChat` ("`<aircraft> has no flight target: place a map marker named <name>...`"), not
+just the RPT log, specifically so this beginner mistake is easy to spot and fix.
+
+The **"[WMP] Halo And Static Line Blackfish Drop Examples"** composition (Eden Editor →
+Compositions → Waldos Mission Pack Compositions - Air Operations) demonstrates this end to end: it
+already includes both aircraft wired up as above *and* their `"dz1"`/`"dz2"` target markers, so
+dropping it into a mission and hitting play works immediately with no extra setup — drag the two
+markers to wherever you actually want each drop zone to be.
 
 The aircraft's own existing waypoints are cleared before the generated route is added. This matters:
 a leftover Eden waypoint competing with a scripted route for the AI's attention is the most common

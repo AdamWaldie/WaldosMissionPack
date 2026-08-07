@@ -33,7 +33,10 @@
  * Arguments:
  * 0: aircraft <OBJECT> - placed, ideally already crewed with a pilot (e.g. via
  *    Waldo_fnc_MoveInCargoPlane in the object's own init field, or an Eden-assigned crew).
- * 1: target <STRING, ARRAY or OBJECT> - drop point: a marker name, a position, or an object.
+ * 1: target <STRING, ARRAY or OBJECT> - drop point: a marker name, a position, or an object. A
+ *    marker name is the beginner-friendly option - place a marker in Eden, name it, put that name
+ *    here. A mistyped or never-placed marker name is reported clearly (see Return Value) rather
+ *    than silently sending the aircraft toward the map's [0,0] corner.
  * 2: direction <NUMBER> - degrees; the aircraft approaches the target along this heading. -1 (the
  *    default) computes a sensible heading automatically from the aircraft's position to the target.
  * 3: altitude <NUMBER> - route altitude AGL in metres (default 250, clamped 100-2000).
@@ -57,7 +60,9 @@
  * Return Value:
  * Boolean - true when accepted (the actual route/actions are applied a moment later on the server
  * once a pilot is confirmed present; check the RPT for "[WMP PARADROP] Quick flight setup" if a
- * plane never starts flying).
+ * plane never starts flying). A target marker name that doesn't exist on the map is also reported
+ * in-game via systemChat, not just the RPT - the single most common beginner setup mistake with
+ * this function is placing the aircraft before placing (or correctly naming) its target marker.
  *
  * Example:
  * [this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
@@ -114,6 +119,18 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
         diag_log format ["[WMP PARADROP] Quick flight setup abandoned for %1: no pilot became available within 30 seconds. Assign a crew (Eden crew or Waldo_fnc_MoveInCargoPlane) before this call.", typeOf _aircraft];
     };
 
+    // getMarkerPos on a marker name that doesn't exist returns [0,0,0], not an empty array - it
+    // would otherwise silently pass the position check below and send the aircraft toward the
+    // map's [0,0] corner. markerType returning "" is the actual "no such marker" signal, and it's
+    // the single most common beginner mistake with this function (aircraft placed and configured,
+    // target marker forgotten or misspelled), so it gets its own clearly worded, in-game-visible
+    // rejection rather than folding into the generic "didn't resolve" case below.
+    private _missingMarker = typeName _target == "STRING" && {_target != ""} && {markerType _target == ""};
+    if (_missingMarker) exitWith {
+        private _message = format ["[WMP PARADROP] %1 has no flight target: place a map marker named %2 (Eden Editor > Markers) for it to fly toward.", typeOf _aircraft, _target];
+        diag_log format ["[WMP PARADROP] Quick flight setup rejected for %1: marker %2 does not exist.", typeOf _aircraft, _target];
+        [_message] remoteExec ["systemChat", 0];
+    };
     private _centre = switch (typeName _target) do {
         case "STRING": {if (_target == "") then {[]} else {getMarkerPos _target}};
         case "ARRAY": {_target};

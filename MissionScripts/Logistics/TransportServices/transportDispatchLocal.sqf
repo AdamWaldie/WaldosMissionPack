@@ -9,15 +9,36 @@
  * fighting the vector controller.
  * Locality and authority: runs only where the AI driver group is local; server request IDs remain authoritative.
  *
- * Arguments: vehicle, service ID, request ID, phase, target ATL position, config HashMap and the
- * server-created invisible landing pad (helicopters only).
+ * Arguments: vehicle, service ID, request ID, phase, target ATL position, config HashMap, the
+ * server-created invisible landing pad (helicopters only), and an internal retries-remaining
+ * counter (default 20) used only by this function's own requestId-replication retry - callers
+ * should never pass it.
  * Return Value: Boolean - true when dispatched on the owning machine.
  * Example: [_heli,"RAVEN_1",12,"PICKUP",_lz,_config] call Waldo_fnc_TransportDispatchLocal;
  * Current caller: Waldo_fnc_TransportRequestServer owner-targeted remote execution.
  */
-params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", ["_landingPad", objNull, [objNull]]];
+params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", ["_landingPad", objNull, [objNull]], ["_retriesRemaining", 20, [0]]];
 if (isNull _vehicle || {isNull driver _vehicle}) exitWith {false};
-if (_vehicle getVariable ["Waldo_TransportService_RequestId", -1] != _requestId) exitWith {false};
+// Waldo_TransportService_RequestId is a broadcast object variable (setVariable [...,true]); this
+// call is a directly targeted remoteExecCall the server issues in the same frame it sets that
+// variable. Those two network messages travel through separate paths with no ordering guarantee
+// between them - the direct call can legitimately arrive here before the broadcast update does,
+// which would otherwise make a perfectly valid, brand-new dispatch look stale and silently drop it
+// (no waypoint is ever created; the vehicle just sits with whatever orders it had before). Retry
+// briefly instead of exiting immediately; a request that is genuinely superseded will still never
+// match and correctly gives up once retries run out.
+if (_vehicle getVariable ["Waldo_TransportService_RequestId", -1] != _requestId) exitWith {
+    if (_retriesRemaining <= 0) exitWith {
+        diag_log format ["[WMP TRANSPORT] Dispatch dropped: service=%1 request=%2 requestId never replicated to this machine.", _id, _requestId];
+        false
+    };
+    [_vehicle, _id, _requestId, _phase, _target, _config, _landingPad, _retriesRemaining - 1] spawn {
+        params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_landingPad", "_retriesRemaining"];
+        sleep 0.1;
+        [_vehicle, _id, _requestId, _phase, _target, _config, _landingPad, _retriesRemaining] call Waldo_fnc_TransportDispatchLocal;
+    };
+    false
+};
 private _group = group driver _vehicle;
 if (!local _group) exitWith {
     [_vehicle, _id, _requestId, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group];

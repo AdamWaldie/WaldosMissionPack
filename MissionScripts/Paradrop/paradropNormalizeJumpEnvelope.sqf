@@ -23,10 +23,13 @@
  * they're offered, and AI flyInHeight/limitSpeed autopilot routinely wanders a few metres/km-h
  * around its nominal route target rather than holding it exactly. A margin sized to the route's
  * commanded value alone would flicker the action on and off with that normal wander; these margins
- * are deliberately generous enough to absorb it:
+ * are deliberately generous enough to absorb it, while staying inside the natural headroom the
+ * pack's own shipped WALDO_STATIC_/WALDO_PARA_ defaults already leave around the route builder's
+ * own default 250 m / 220 km/h - a mission maker's untouched preset values are never widened by
+ * this function, only a genuinely incompatible custom combination is:
  * - staticMinimumAltitude never exceeds route altitude - 50 m (a static-line jumper must be able to
  *   release at least 50 m below the route's cruise altitude).
- * - staticMaximumAltitude never falls below route altitude + 120 m (route altitude must sit well
+ * - staticMaximumAltitude never falls below route altitude + 90 m (route altitude must sit well
  *   inside the static-line window, not near its edge).
  * - staticMaximumSpeed never falls below route speed + 60 km/h (the aircraft's actual cruise speed
  *   must stay comfortably under the jump's speed ceiling, not brush against it).
@@ -50,8 +53,12 @@ params [
 
 // Buffers absorb normal AI flyInHeight/limitSpeed wander around the route's commanded
 // altitude/speed so a brief autopilot dip/spike doesn't flicker the jump hold-action unavailable.
+// Each is sized to stay inside the natural headroom the shipped WALDO_STATIC_/WALDO_PARA_ defaults
+// (180/350/310/1000) already leave around the route builder's own default 250 m / 220 km/h, so an
+// untouched default configuration is never altered by this function - only genuinely incompatible
+// custom altitude/speed/envelope combinations are.
 private _staticMinAltitudeBuffer = 50;
-private _staticMaxAltitudeBuffer = 120;
+private _staticMaxAltitudeBuffer = 90;
 private _staticMaxSpeedBuffer = 60;
 private _haloMinAltitudeBuffer = 50;
 
