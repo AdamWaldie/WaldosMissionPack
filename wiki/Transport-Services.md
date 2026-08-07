@@ -41,7 +41,7 @@ The optional fifth argument is a readable HashMap. Omit it for the safe defaults
 ]] call Waldo_fnc_TransportRegister;
 ```
 
-Each registered vehicle has a WMP-blue informational action naming it as a **Helicopter Transport** or **Ground Transport**. The vehicle's ACE category and vanilla controls always include its configured name and affect that exact vehicle.
+Each registered vehicle has a WMP-blue informational action naming it as a **Helicopter Transport** or **Ground Transport** and reporting its current state - installed as a vanilla `addAction` alongside ACE, not only as a fallback when ACE is absent, so it's reachable without opening ACE Self Interact first. The vehicle's ACE category and vanilla controls always include its configured name and affect that exact vehicle; the four operational controls (move pickup, select destination, RTB, retry) remain ACE-priority with a vanilla fallback only when ACE genuinely isn't available.
 
 To travel:
 

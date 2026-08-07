@@ -97,6 +97,16 @@ if (isNull _aircraft || {!(_aircraft isKindOf "Air")}) exitWith {false};
 _aircraft setVariable ["Waldo_Paradrop_ManuallyConfigured", true, isServer];
 if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSetup", 2]; true};
 
+// This object's own init field runs on every machine (standard Eden behaviour), so every non-server
+// machine above just forwarded the exact same call here - with more than one client connected, the
+// server can receive it several times for the same aircraft. Waldo_fnc_ParadropBuildFlightRoute
+// deletes and rebuilds the whole group's waypoint list; a second rebuild landing mid-flight is
+// exactly how a LOOP aircraft ends up flying only one pass before falling back to loitering near
+// wherever its waypoint list happened to be cut off. Only the first arrival for this aircraft
+// actually builds the route.
+if (_aircraft getVariable ["Waldo_Paradrop_QuickSetupStarted", false]) exitWith {false};
+_aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
+
 [_aircraft, _target, _direction, _altitude, _maxSpeed, _options] spawn {
     params ["_aircraft", "_target", "_direction", "_altitude", "_maxSpeed", "_options"];
 

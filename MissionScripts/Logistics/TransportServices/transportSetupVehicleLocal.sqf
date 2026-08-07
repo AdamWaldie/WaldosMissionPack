@@ -55,13 +55,13 @@ private _type = _vehicle getVariable ["Waldo_TransportService_Type", "GROUND"];
 private _name = _vehicle getVariable ["Waldo_TransportService_Name", "Transport"];
 private _heli = _type == "HELICOPTER";
 private _role = ["Ground Transport", "Helicopter Transport"] select _heli;
-private _infoId = -1;
-private _moveId = -1;
-private _destinationId = -1;
-private _rtbId = -1;
-private _retryId = -1;
-if (!_aceReady) then {
-_infoId = _vehicle addAction [
+// The informational action is a discoverability cue, not a control ACE should take priority over -
+// installed alongside ACE (not only as a vanilla fallback), the same dual-surface policy used
+// elsewhere in the pack (loadout-save points, party tables, Field Hospital crates): a player who
+// hasn't opened ACE Self Interact on this exact vehicle should still be able to scroll-wheel it and
+// immediately see what it is and its current state. The four operational controls below remain
+// ACE-priority/vanilla-fallback only, since ACE's own equivalents already cover them when available.
+private _infoId = _vehicle addAction [
     format ["<t color='#79C7FF'>%1: %2</t>", _role, _name],
     {
         params ["_target", "_caller", "_actionId", "_arguments"];
@@ -71,6 +71,11 @@ _infoId = _vehicle addAction [
     [_type, _name, _role], -90, false, true, "",
     "_target getVariable ['Waldo_TransportService_Registered', false]", 8
 ];
+private _moveId = -1;
+private _destinationId = -1;
+private _rtbId = -1;
+private _retryId = -1;
+if (!_aceReady) then {
 _moveId = _vehicle addAction [
     "<t color='#79C7FF'>Move This Transport's Pickup Point</t>",
     {params ["_target"]; ["MOVE_PICKUP", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal},
