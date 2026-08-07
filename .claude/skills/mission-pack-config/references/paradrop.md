@@ -66,14 +66,20 @@ plane anywhere.** For that, see the next two sections.
 ## Reliable AI flight — quick setup (`Waldo_fnc_ParadropQuickFlightSetup`)
 
 The simple alternative to the full Dynamic Drop Zone system below, for an
-aircraft the mission maker already placed and crewed in Eden. One call in
-the object's init field:
+aircraft the mission maker already placed and crewed in Eden. Two steps:
+place a named marker as the drop zone, then one call in the object's init
+field:
 
 ```sqf
 [this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
 // [aircraft, target(marker name/position/object), direction(-1=auto), altitude, maxSpeed, options]
 ```
 
+- `target` as a marker name is the beginner-friendly option: place a
+  marker anywhere in Eden, name it, reference that name here — no
+  coordinate math. If the marker was never placed or the name doesn't
+  match exactly, this is reported in-game via `systemChat`, not just the
+  RPT log — the #1 beginner mistake with this function.
 - Builds a reliable standby → green → red → exit AI route (looping by
   default) using the exact same route logic as the Dynamic Drop Zone system
   (`Waldo_fnc_ParadropBuildFlightRoute`) — both stay in sync, fixes to one
