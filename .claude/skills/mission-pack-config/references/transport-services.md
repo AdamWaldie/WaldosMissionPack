@@ -13,7 +13,7 @@ separate typed pools; a request can never cross-reserve.
 ["Waldo_Transport_DefaultBoardingSeconds", 300, false],
 ["Waldo_Transport_DefaultDestinationDwell", 45, false],
 ["Waldo_HeliTransport_DefaultAltitude", 80, false],
-["Waldo_HeliTransport_DefaultLzSearchRadius", 75, false],
+["Waldo_HeliTransport_DefaultLzSearchRadius", 250, false],
 ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0, false], // multiplier on real helicopter model bounding box
 ["Waldo_HeliTransport_DefaultSeparation", 60, false],
 ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false],
