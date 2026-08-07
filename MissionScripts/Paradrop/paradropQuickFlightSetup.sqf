@@ -121,7 +121,7 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
     if (_missingMarker) exitWith {
         private _message = format ["[WMP PARADROP] %1 has no flight target: place a map marker named ""%2"" (Eden Editor > Markers) for it to fly toward.", typeOf _aircraft, _target];
         diag_log format ["[WMP PARADROP] Quick flight setup rejected for %1: marker ""%2"" does not exist.", typeOf _aircraft, _target];
-        _message remoteExec ["systemChat", 0];
+        [_message] remoteExec ["systemChat", 0];
     };
     private _centre = switch (typeName _target) do {
         case "STRING": {if (_target == "") then {[]} else {getMarkerPos _target}};
