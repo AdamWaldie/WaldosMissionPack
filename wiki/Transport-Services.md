@@ -43,6 +43,8 @@ The optional fifth argument is a readable HashMap. Omit it for the safe defaults
 
 Each registered vehicle has a WMP-blue informational action naming it as a **Helicopter Transport** or **Ground Transport**. The vehicle's ACE category and vanilla controls always include its configured name and affect that exact vehicle.
 
+The optional service marker (`showMarker`) shows `<display name> - <state>` (for example `Raven One - Available`, `Raven One - To Pickup`, `Raven One - RTB`) and is kept in sync with the service's live position, facing and state every server tick - not just its display name at registration time. Set `showMarker` to `false` for a map-clutter-free operation instead.
+
 To travel:
 
 1. Open **ACE Self Interact > WMP Transport**.

@@ -188,9 +188,14 @@ if (_config get "showMarker") then {
     deleteMarker _marker;
     createMarker [_marker, getPosATL _vehicle];
     _marker setMarkerType (if (_type == "HELICOPTER") then {"loc_heli"} else {"loc_car"});
-    _marker setMarkerText _displayName;
+    // Matches the "name - state" format Waldo_fnc_TransportMonitorServer keeps updated afterward -
+    // a freshly registered service is always AVAILABLE, so this is the same text the monitor's own
+    // first tick would set a moment later.
+    private _initialMarkerText = format ["%1 - Available", _displayName];
+    _marker setMarkerText _initialMarkerText;
     _marker setMarkerColor (switch (side driver _vehicle) do {case west: {"ColorWEST"}; case east: {"ColorEAST"}; case independent: {"ColorGUER"}; case civilian: {"ColorCIV"}; default {"ColorUNKNOWN"}});
     _entry set ["marker", _marker];
+    _entry set ["markerText", _initialMarkerText];
 };
 _services set [_id, _entry];
 missionNamespace setVariable ["Waldo_Transport_Services", _services];
