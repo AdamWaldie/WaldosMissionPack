@@ -79,6 +79,9 @@
  * - Waldo_Hazard_Enable (MISSION MAKER): starts local exposure checks; zones/emitters still require registration.
  * - Waldo_Hazard_Interval (ADVANCED): seconds between exposure updates; lower values increase client work.
  * - Waldo_Hazard_ShowStatus (MISSION MAKER): shows one continuously updated exposure panel rather than stacked cards.
+ * - Waldo_Hazard_StatusGraceSeconds (MISSION MAKER): the panel behaves like a live Geiger counter -
+ *   it follows presence in a hazard type's zone(s), not the (deliberately slower) exposure decay.
+ *   This is how long it lingers after the player leaves every zone of that type before hiding.
  * - Waldo_Hazard_NotifyTransitions (MISSION MAKER): shows entry/exit messages when awareness rules permit them.
  * - Waldo_Hazard_NotificationDuration (MISSION MAKER): lifetime in seconds for transition messages.
  * - Waldo_Hazard_DosimeterEnable: installs exposure-reading interactions when hazards are enabled.
@@ -124,6 +127,7 @@ createHashMapFromArray [
         ["Waldo_Hazard_Enable", false],             // BOOL: run local exposure evaluation; creates no zones.
         ["Waldo_Hazard_Interval", 1],               // SECONDS: evaluation cadence; performance-sensitive.
         ["Waldo_Hazard_ShowStatus", true],          // BOOL: one continuous lower-left exposure panel; not a notification card.
+        ["Waldo_Hazard_StatusGraceSeconds", 6],     // SECONDS: panel lingers this long after leaving every zone of a type - presence-based, like a Geiger counter, not tied to exposure decaying to zero.
         ["Waldo_Hazard_NotifyTransitions", true],   // BOOL: notify on entering/leaving a hazardous area.
         ["Waldo_Hazard_NotificationDuration", 6],   // SECONDS: transition-notification lifetime.
         ["Waldo_Hazard_DosimeterEnable", true],     // BOOL: install Read Exposure self/target interactions.

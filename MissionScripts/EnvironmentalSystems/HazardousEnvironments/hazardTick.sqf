@@ -11,7 +11,13 @@
  * onTick callbacks continue to run locally. The status panel shows one combined line per hazard
  * `type` (summed across every zone/emitter contributing to it), not one line per zone key - all
  * three shipped radiation presets share type "RADIATION" specifically so their dose reads as one
- * figure. Currently called by the HazardInit loop and directly by the full-pack function station.
+ * figure. The panel and the underlying physical exposure are deliberately different things: exposure
+ * keeps accumulating/decaying at its own configured `rate`/`decay` regardless of whether the panel is
+ * on screen (still driving damageThresholds/fatalExposure later), but the panel itself behaves like a
+ * live Geiger counter - it follows the player being inside a zone of that type, and only lingers
+ * Waldo_Hazard_StatusGraceSeconds after the player leaves every zone of that type, not until the
+ * numeric exposure value happens to decay to zero (which can legitimately take much longer). Currently
+ * called by the HazardInit loop and directly by the full-pack function station.
  * Locality and authority: Interface-client only. It consumes JIP-replayed zone definitions and
  * mutates only the executing player's exposure, effects, callbacks and presentation.
  *
@@ -40,6 +46,10 @@ private _zoneDiagnostics = [];
 // contributions per type here and emit exactly one status line per type after the loop below,
 // instead of one line per zone key.
 private _typeAggregates = createHashMap;
+// Panel visibility is tracked separately from the exposure value itself - see the header note.
+// This is the "was any zone of this type showable-inside within the grace window" clock.
+private _typeLastInside = missionNamespace getVariable ["Waldo_Hazard_LocalTypeLastInside", createHashMap];
+private _graceSeconds = missionNamespace getVariable ["Waldo_Hazard_StatusGraceSeconds", 6];
 
 {
     _x params ["_key", "_area", "_profile"];
@@ -155,6 +165,9 @@ private _typeAggregates = createHashMap;
         private _entry = _typeAggregates getOrDefault [_type, [_label, 0]];
         _entry set [1, (_entry select 1) + _exposure];
         _typeAggregates set [_type, _entry];
+        // Reset this type's grace clock every tick the player is actually inside one of its zones -
+        // like a Geiger counter, the panel should track presence, not the slower-decaying dose figure.
+        if (_inside) then {_typeLastInside set [_type, diag_tickTime];};
     };
 
     private _damage = 0;
@@ -202,11 +215,23 @@ private _typeAggregates = createHashMap;
     };
 } forEach +(missionNamespace getVariable ["Waldo_Hazard_Zones", []]);
 
-// One combined status line per hazard type, not per contributing zone key.
+// One combined status line per hazard type, not per contributing zone key. Visibility follows the
+// grace clock above (presence-based, like a Geiger counter falling silent), not the exposure value
+// itself - the physical exposure/effect keeps decaying at its own configured pace either way.
 {
-    _x params ["_label", "_exposureSum"];
-    _activeText pushBack format ["%1: %2", _label, (_exposureSum toFixed 2)];
-} forEach (values _typeAggregates);
+    private _type = _x;
+    (_typeAggregates get _type) params ["_label", "_exposureSum"];
+    private _lastInside = _typeLastInside getOrDefault [_type, -1e6];
+    if ((diag_tickTime - _lastInside) <= _graceSeconds) then {
+        _activeText pushBack format ["%1: %2", _label, (_exposureSum toFixed 2)];
+    };
+} forEach (keys _typeAggregates);
+
+// Drop grace-clock entries long past their window so this hashmap doesn't grow forever across a
+// mission with many transient hazard types (moving emitters, ZEN-placed/removed zones, etc).
+{
+    if ((diag_tickTime - (_typeLastInside get _x)) > (_graceSeconds * 20)) then {_typeLastInside deleteAt _x};
+} forEach (keys _typeLastInside);
 
 // Diagnostics must prove that spatial evaluation is actually advancing. Merely having a loop
 // handle and a zone registry previously allowed a permanently inert evaluator to report ACTIVE.
@@ -214,6 +239,7 @@ missionNamespace setVariable ["Waldo_Hazard_LastEvaluation", [diag_tickTime, get
 
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
+missionNamespace setVariable ["Waldo_Hazard_LocalTypeLastInside", _typeLastInside];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
 uiNamespace setVariable ["Waldo_Hazard_StatusText", _activeText joinString " | "];
 [_activeText] call Waldo_fnc_HazardHud;
