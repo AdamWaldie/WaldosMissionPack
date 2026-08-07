@@ -149,9 +149,10 @@ That's it — no marker math, no waypoints to place by hand. Arguments:
 `[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a marker name (the
 beginner-friendly option — reference whatever you named the marker in step 1), a raw position, or
 an object; `direction` (`-1` by default) is computed automatically from the aircraft's position
-toward the target if you don't set one. It waits (up to 30 seconds) for a pilot to exist before
-doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane` call on
-another object in the same composition — both init fields can run in any order.
+toward the target if you don't set one. It waits (up to 180 seconds - a heavy multi-feature mission
+can legitimately still be finishing init.sqf, and this is a one-time setup cost) for a pilot to
+exist before doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane`
+call on another object in the same composition — both init fields can run in any order.
 
 **If the plane never takes off toward its target**, the most common cause is step 1 — the marker
 was never placed, or its name doesn't exactly match the `target` string. This case reports itself
