@@ -256,7 +256,10 @@ a jump action gated on altitude/speed thresholds the plane's own route can never
 concrete "jump action never becomes available" failure this closes; `ParadropCreateDropZone` below
 normalizes off the same route-returned basis. `createMarkers` defaults to `true`
 (AREA/STANDBY/GREEN/RED/POINT markers, same layout as `ParadropCreateDropZone`) so a mission maker
-sees a working drop zone immediately — pass `false` for a map-clutter-free operation. Markers are
+sees a working drop zone immediately — pass `false` for a map-clutter-free operation. AREA/STANDBY/
+GREEN/RED are created invisible (alpha 0 — still real, queryable markers at the exact route
+positions) so only the single named POINT marker at the drop point is actually shown on the map,
+instead of the previous five-marker stack. Markers are
 removed automatically on aircraft death/deletion or once a `DESPAWN` lifecycle run reaches its exit
 point; set `keepMarkersOnCleanup` to `true` to opt out and leave them on the map instead. Neither
 this nor the opt-out ever deletes the aircraft or its crew, since this entry point never owns their

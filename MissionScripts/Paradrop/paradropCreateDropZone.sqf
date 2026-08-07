@@ -4,7 +4,9 @@
  *
  * Operational side controls crew and generated jumper allegiance; airframe class is deliberately
  * independent. The server owns registry, groups, waypoints, jump timing and cleanup. Global Arma
- * markers provide normal JIP visibility without a custom replay layer. The aircraft carries only
+ * markers provide normal JIP visibility without a custom replay layer. The AREA/STANDBY/GREEN/RED
+ * route markers are created invisible (alpha 0, still real/queryable markers) so only the single
+ * named POINT marker at the drop point is actually shown on the map. The aircraft carries only
  * one AI pilot by default, receives the selected static-line/HALO actions on every client and can
  * fly a wide re-alignment circuit, remain after one pass or despawn. Jump envelopes are normalized
  * against the selected route altitude and speed so customization cannot silently make every jump
@@ -196,6 +198,12 @@ if (_config getOrDefault ["createMarkers", true]) then {
     _zoneMarker setMarkerDir _direction;
     _zoneMarker setMarkerSize [100, (_runLength * 0.65) max 200];
     _zoneMarker setMarkerColor "ColorBlack";
+    // AREA/STANDBY/GREEN/RED stay invisible (alpha 0) - they remain real markers at the exact route
+    // positions (still queryable by name, e.g. getMarkerPos, and still visible to a mission maker who
+    // reveals them deliberately) but are not shown on the map. The single named marker below is
+    // layered on top of this whole set as the one thing players actually see, instead of the previous
+    // five-marker stack.
+    _zoneMarker setMarkerAlpha 0;
     _markers pushBack _zoneMarker;
     {
         _x params ["_suffix", "_position", "_colour", "_text"];
@@ -206,6 +214,7 @@ if (_config getOrDefault ["createMarkers", true]) then {
         _marker setMarkerSize [30, 4];
         _marker setMarkerColor _colour;
         _marker setMarkerText _text;
+        _marker setMarkerAlpha 0;
         _markers pushBack _marker;
     } forEach [["STANDBY", _standby, "ColorYellow", "STANDBY"], ["GREEN", _green, "ColorGreen", "GREEN LINE"], ["RED", _red, "ColorRed", "RED LINE"]];
     private _point = createMarker [format ["%1_POINT", _prefix], _centre];

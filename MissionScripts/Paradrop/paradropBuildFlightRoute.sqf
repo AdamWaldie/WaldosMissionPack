@@ -121,8 +121,38 @@ private _addRouteWaypoint = {
     [_x, "MOVE", if (_forEachIndex in [1, 2, 3]) then {50} else {100}] call _addRouteWaypoint;
 } forEach [_standby, _green, _centre, _red, _exit];
 if (_lifecycle == "LOOP") then {
-    {[_x, "MOVE", 180] call _addRouteWaypoint} forEach [_crosswind, _downwind, _rejoin];
-    [_spawn, "CYCLE", 120] call _addRouteWaypoint;
+    {[_x, "MOVE", 180] call _addRouteWaypoint} forEach [_crosswind, _downwind, _rejoin, _spawn];
+    // Arma's native "CYCLE" waypoint type does not reliably resume at waypoint index 0 - the engine
+    // resumes at whichever waypoint in the group's list is geometrically nearest to the cycle
+    // waypoint's own position. For this route's shape that is "rejoin" (~_approach*0.6 away), not
+    // "standby" (a full _approach away by design) - so a native CYCLE waypoint here collapses the
+    // loop into a tight rejoin<->spawn shuttle after the very first pass instead of re-flying the
+    // marked standby->green->red->exit line, and anything anchored to that flight (drop timing, a
+    // mission maker's own per-pass marker/trigger logic) ends up scattered relative to where the
+    // first clean pass put it. Force a deterministic restart at index 0 instead of trusting that
+    // engine heuristic.
+    // This function clears and rebuilds the group's whole waypoint list on every call (see the file
+    // header), so a stray second call against the same still-flying group (both callers already
+    // guard against that themselves, but this loop must not assume it will always be true) must not
+    // stack a second copy of this watcher on top of the first.
+    if !(_flightGroup getVariable ["Waldo_Paradrop_CycleGuardStarted", false]) then {
+        _flightGroup setVariable ["Waldo_Paradrop_CycleGuardStarted", true];
+        [_flightGroup, _spawn] spawn {
+            params ["_flightGroup", "_spawn"];
+            while {!isNull _flightGroup && {count units _flightGroup > 0}} do {
+                waitUntil {
+                    sleep 1;
+                    isNull _flightGroup
+                    || {count units _flightGroup == 0}
+                    || {!alive leader _flightGroup}
+                    || {(leader _flightGroup) distance2D _spawn < 150}
+                };
+                if (isNull _flightGroup || {count units _flightGroup == 0} || {!alive leader _flightGroup}) exitWith {};
+                _flightGroup setCurrentWaypoint [_flightGroup, 0];
+                sleep 5; // clear the spawn radius before re-arming so this doesn't refire mid-restart.
+            };
+        };
+    };
 };
 if (_lifecycle == "RETAIN") then {
     private _loiter = [_hold, "LOITER", 250] call _addRouteWaypoint;
