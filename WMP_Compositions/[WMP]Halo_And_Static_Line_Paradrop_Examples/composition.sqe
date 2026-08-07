@@ -43,7 +43,7 @@ class items
 		side="West";
 		class Entities
 		{
-			items=9;
+			items=2;
 			class Item0
 			{
 				dataType="Object";
@@ -76,90 +76,6 @@ class items
 				id=7665;
 				type="B_Pilot_F";
 				atlOffset=5.9999166;
-			};
-			class Item2
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={564.70313,105.00903,635.41406};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7706;
-				type="Move";
-			};
-			class Item3
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-515.36914,98.569023,-2062.5098};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7701;
-				type="Move";
-			};
-			class Item4
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-1707.4922,111.73911,-4987.7197};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7702;
-				type="Move";
-			};
-			class Item5
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-1702.5059,106.57302,-4751.4072};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7703;
-				type="Move";
-			};
-			class Item6
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-596.41406,99.077759,-2023.4658};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7704;
-				type="Move";
-			};
-			class Item7
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={528.16797,106.35275,652.13281};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7705;
-				type="Move";
-			};
-			class Item8
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={569.36523,110.82248,686.51758};
-				type="Cycle";
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7707;
 			};
 		};
 		class Attributes
@@ -250,7 +166,7 @@ class items
 		side="West";
 		class Entities
 		{
-			items=9;
+			items=2;
 			class Item0
 			{
 				dataType="Object";
@@ -285,90 +201,6 @@ class items
 				id=7710;
 					type="B_Pilot_F";
 				atlOffset=-37.4589;
-			};
-			class Item2
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={363.80273,4.7227936,2756.2227};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7711;
-				type="Move";
-			};
-			class Item3
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-716.26953,133.13348,58.298828};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7712;
-				type="Move";
-			};
-			class Item4
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-1908.3926,99.387474,-2866.9111};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7713;
-				type="Move";
-			};
-			class Item5
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-1903.4063,134.80023,-2630.5986};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7714;
-				type="Move";
-			};
-			class Item6
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={-797.31445,121.89677,97.34375};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7715;
-				type="Move";
-			};
-			class Item7
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={327.26758,0.45301056,2772.9414};
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7716;
-				type="Move";
-			};
-			class Item8
-			{
-				dataType="Waypoint";
-				loiterAltitude=-3.4028235e+038;
-				position[]={368.46484,0,2807.3262};
-				type="Cycle";
-				class Effects
-				{
-				};
-				showWP="NEVER";
-				id=7717;
 			};
 		};
 		class Attributes
@@ -457,7 +289,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-12};};
-		title="HALO and Static-Line Examples: two vanilla NATO passenger Blackfish aircraft, crews, boarding flags and repeat routes. Static-line uses 300 m and flies toward marker ""dz1""; HALO uses 1200 m and flies toward marker ""dz2"" (both included below - drag them to where you actually want the drop). Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
+		title="HALO and Static-Line Examples: two vanilla NATO passenger Blackfish aircraft, crews and boarding flags, flown by Waldo_fnc_ParadropQuickFlightSetup (no manual waypoints needed - it builds and flies the route itself). Static-line uses 300 m and flies toward marker ""dz1""; HALO uses 1200 m and flies toward marker ""dz2"" (both included below - drag them to where you actually want the drop). The ""dz1""/""dz2"" markers you see now are only the target point you place; once the mission runs, the script automatically adds a full AREA/STANDBY/GREEN/RED/POINT marker corridor around the actual flown route - nothing else to set up. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
 		id=17718;
 	};
 	class Item7
