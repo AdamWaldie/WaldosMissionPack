@@ -87,7 +87,7 @@ _destinationId = _vehicle addAction [
     "<t color='#79C7FF'>Select This Transport's Destination</t>",
     {params ["_target"]; ["SET_DESTINATION", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal},
     [], -92, false, true, "",
-    "_target getVariable ['Waldo_TransportService_State',''] == 'BOARDING' && {_this in crew _target || {!isNull getAssignedCuratorLogic _this}}",
+    "(_target getVariable ['Waldo_TransportService_State',''] in ['BOARDING','TO_DESTINATION']) && {_this in crew _target || {!isNull getAssignedCuratorLogic _this}}",
     8
 ];
 _rtbId = _vehicle addAction [
@@ -127,7 +127,7 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
     [_vehicle, 0, ["ACE_MainActions", _rootId], _move] call ace_interact_menu_fnc_addActionToObject;
     private _destination = [format ["%1_Destination", _rootId], "Select Destination", "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa", {
         params ["_target"]; ["SET_DESTINATION", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal;
-    }, {params ["_target", "_player"]; _target getVariable ["Waldo_TransportService_State", ""] == "BOARDING" && {_player in crew _target || {!isNull getAssignedCuratorLogic _player}}}] call ace_interact_menu_fnc_createAction;
+    }, {params ["_target", "_player"]; (_target getVariable ["Waldo_TransportService_State", ""] in ["BOARDING", "TO_DESTINATION"]) && {_player in crew _target || {!isNull getAssignedCuratorLogic _player}}}] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _destination] call ace_interact_menu_fnc_addActionToObject;
     private _retry = [format ["%1_Retry", _rootId], "Retry Current Route", "\a3\ui_f\data\igui\cfg\actions\reload_ca.paa", {
         params ["_target", "_player"]; ["RETRY", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
