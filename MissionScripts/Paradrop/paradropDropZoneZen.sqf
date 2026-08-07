@@ -154,12 +154,8 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ["COMBO", ["After the pass", "Loop flies a wide circuit and realigns for another pass; retain makes one pass; despawn cleans the operation."], [["LOOP", "RETAIN", "DESPAWN"], ["Loop and repeat", "Single pass - retain aircraft", "Single pass - despawn"], 0]],
         ["COMBO", ["Circuit direction", "Side used for the wide return circuit."], [["LEFT", "RIGHT"], ["Left-hand circuit", "Right-hand circuit"], 0]],
         ["CHECKBOX", ["Enable static-line jump", "Adds the configured static-line player jump action to cargo."], true],
-        ["SLIDER", ["Static minimum altitude", "Preferred AGL floor. If it exceeds route altitude, the server lowers it to keep static-line actions usable."], [50, 1500, 180, 0]],
-        ["SLIDER", ["Static maximum altitude", "Preferred AGL ceiling. The server raises it above route altitude with turbulence margin when needed."], [50, 2500, 350, 0]],
-        ["SLIDER", ["Static maximum speed", "Preferred jump-speed ceiling. It is raised above route speed when needed so the aircraft cannot suppress its own action."], [80, 700, 310, 0]],
         ["COMBO", ["Static-line parachute", "Parachute vehicle created immediately after exit."], [_staticChutes, _staticLabels, 0]],
         ["CHECKBOX", ["Enable HALO jump", "Adds a HALO player jump action using a steerable parachute backpack."], false],
-        ["SLIDER", ["HALO minimum altitude", "Preferred AGL floor. If it exceeds route altitude, the server lowers it to the route altitude so HALO remains available."], [100, 5000, 1000, 0]],
         ["COMBO", ["HALO parachute backpack", "Steerable backpack equipped after HALO exit."], [_haloChutes, _haloLabels, 0]],
         ["CHECKBOX", ["Require open ramp/door", "Requires one of WMP's recognized ramp/door animation sources. Automatically disabled when the selected airframe exposes none."], true],
         ["CHECKBOX", ["Automatically sequence player cargo", "Forces embarked players out at the green line; normally leave off for jumpmaster-controlled player actions."], false],
@@ -173,20 +169,26 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         params ["_values", "_modulePosition"];
         _values params [
             "_name", "_side", "_class", "_direction", "_altitude", "_speed", "_approach", "_length", "_exit",
-            "_lifecycle", "_circuitDirection", "_staticEnabled", "_staticMin", "_staticMax", "_staticSpeed", "_staticChute",
-            "_haloEnabled", "_haloMin", "_haloChute", "_requireDoor", "_dropPlayers", "_automaticMode", "_count", "_interval", "_markers",
+            "_lifecycle", "_circuitDirection", "_staticEnabled", "_staticChute",
+            "_haloEnabled", "_haloChute", "_requireDoor", "_dropPlayers", "_automaticMode", "_count", "_interval", "_markers",
             "_keepMarkersOnCleanup"
         ];
         private _idBase = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
         if (_idBase == "") then {_idBase = "DZ"};
         private _id = [_idBase] call Waldo_fnc_CreateRuntimeId;
+        // No staticMinimumAltitude/staticMaximumAltitude/staticMaximumSpeed/haloMinimumAltitude keys
+        // here - Waldo_fnc_ParadropCreateDropZone always runs whatever it gets (its own mission-
+        // configured WALDO_STATIC_/WALDO_PARA_ defaults, absent an override) through
+        // Waldo_fnc_ParadropNormalizeJumpEnvelope regardless, so exposing raw numeric sliders here
+        // only invited Zeus to think precise tuning mattered/was their job when the server was
+        // always going to keep it jump-usable anyway. Enable/disable and chute class remain because
+        // those are genuine choices, not safety-critical numbers.
         private _config = createHashMapFromArray [
             ["id", _id], ["name", _name], ["centre", _modulePosition], ["side", _side], ["aircraftClass", _class],
             ["direction", _direction], ["altitude", _altitude], ["maximumSpeed", _speed], ["approachDistance", _approach],
             ["runLength", _length], ["exitDistance", _exit], ["lifecycle", _lifecycle], ["circuitDirection", _circuitDirection],
-            ["staticJumpEnabled", _staticEnabled], ["staticMinimumAltitude", _staticMin], ["staticMaximumAltitude", _staticMax],
-            ["staticMaximumSpeed", _staticSpeed], ["staticChuteClass", _staticChute], ["haloJumpEnabled", _haloEnabled],
-            ["haloMinimumAltitude", _haloMin], ["haloBackpackClass", _haloChute], ["requireOpenDoor", _requireDoor],
+            ["staticJumpEnabled", _staticEnabled], ["staticChuteClass", _staticChute], ["haloJumpEnabled", _haloEnabled],
+            ["haloBackpackClass", _haloChute], ["requireOpenDoor", _requireDoor],
             ["autoDropPlayers", _dropPlayers], ["automaticJumpMode", _automaticMode], ["jumperCount", round _count],
             ["createJumpers", _count > 0], ["jumpInterval", _interval], ["createMarkers", _markers],
             ["keepMarkersOnCleanup", _keepMarkersOnCleanup]
