@@ -2,6 +2,10 @@
  * Author: WaldoTheWarfighter, Val
  * Maintains registered transport markers and removes dead/deleted services from their typed pools.
  * It performs no movement planning and publishes availability booleans only when pool state changes.
+ * Besides tracking each vehicle's live position/facing, the marker's own text is kept in sync with
+ * that service's current state (Available, Boarding, To Pickup, To Destination, RTB, Disembarking,
+ * Stuck) - a marker that only ever shows the callsign gives no indication a transport is already
+ * busy without opening the interaction menu on it.
  * Locality and authority: server-only registry cleanup and JIP availability publication.
  *
  * Arguments: None.
@@ -10,6 +14,10 @@
  * Current caller: Waldo_fnc_TransportInitServer once per mission.
  */
 if (!isServer) exitWith {};
+private _stateLabels = createHashMapFromArray [
+    ["AVAILABLE", "Available"], ["BOARDING", "Boarding"], ["DISEMBARKING", "Disembarking"],
+    ["TO_PICKUP", "To Pickup"], ["TO_DESTINATION", "To Destination"], ["RTB", "RTB"], ["STUCK", "Stuck"]
+];
 while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do {
     private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
     private _pools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []]]];
@@ -36,7 +44,18 @@ while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do
                 _services set [_id, _entry];
             };
             private _marker = _entry getOrDefault ["marker", ""];
-            if (_marker != "") then {_marker setMarkerPos getPosATL _vehicle; _marker setMarkerDir getDir _vehicle};
+            if (_marker != "") then {
+                _marker setMarkerPos getPosATL _vehicle;
+                _marker setMarkerDir getDir _vehicle;
+                private _state = _entry getOrDefault ["state", "AVAILABLE"];
+                private _stateLabel = _stateLabels getOrDefault [_state, _state];
+                private _markerText = format ["%1 - %2", _entry getOrDefault ["name", _id], _stateLabel];
+                private _lastMarkerText = _entry getOrDefault ["markerText", ""];
+                if (_markerText != _lastMarkerText) then {
+                    _marker setMarkerText _markerText;
+                    _entry set ["markerText", _markerText];
+                };
+            };
         };
     } forEach +(keys _services);
     missionNamespace setVariable ["Waldo_Transport_Services", _services];
