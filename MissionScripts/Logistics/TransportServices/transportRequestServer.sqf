@@ -205,7 +205,7 @@ if (_type == "GROUND") then {
         if !([_target] call _isSeparated) then {_targetValid = false};
     };
 } else {
-    private _maximumRadius = _config getOrDefault ["landingSearchRadius", 75];
+    private _maximumRadius = _config getOrDefault ["landingSearchRadius", 250];
     private _clearanceScale = (_config getOrDefault ["landingClearanceScale", 2.0]) max 1;
     private _bounds = boundingBoxReal _vehicle;
     _bounds params ["_boundsMinimum", "_boundsMaximum"];
