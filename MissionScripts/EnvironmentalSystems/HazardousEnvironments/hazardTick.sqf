@@ -228,10 +228,15 @@ private _graceSeconds = missionNamespace getVariable ["Waldo_Hazard_StatusGraceS
 } forEach (keys _typeAggregates);
 
 // Drop grace-clock entries long past their window so this hashmap doesn't grow forever across a
-// mission with many transient hazard types (moving emitters, ZEN-placed/removed zones, etc).
+// mission with many transient hazard types (moving emitters, ZEN-placed/removed zones, etc). Build
+// a fresh replacement rather than deleteAt-while-iterating its own keys.
+private _prunedTypeLastInside = createHashMap;
 {
-    if ((diag_tickTime - (_typeLastInside get _x)) > (_graceSeconds * 20)) then {_typeLastInside deleteAt _x};
-} forEach (keys _typeLastInside);
+    if ((diag_tickTime - (_typeLastInside get _x)) <= (_graceSeconds * 20)) then {
+        _prunedTypeLastInside set [_x, _typeLastInside get _x];
+    };
+} forEach (+(keys _typeLastInside));
+_typeLastInside = _prunedTypeLastInside;
 
 // Diagnostics must prove that spatial evaluation is actually advancing. Merely having a loop
 // handle and a zone registry previously allowed a permanently inert evaluator to report ACTIVE.
