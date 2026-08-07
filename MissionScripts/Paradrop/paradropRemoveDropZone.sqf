@@ -11,13 +11,19 @@
  * 1: delete aircraft <BOOL> (default true)
  * 2: requester <OBJECT> (default objNull) - curator authorization for remote calls
  * 3: notify requester <BOOL> (default true)
+ * 4: delete markers <BOOL> (default true) - explicit removal (this function called directly, e.g.
+ *    the ZEN "Remove Operation" module) always tears down the markers along with everything else.
+ *    Automatic cleanup (on aircraft loss or a DESPAWN pass completing normally) passes the inverse of
+ *    the operation's own configured keepMarkersOnCleanup option here (default false there, so markers
+ *    are deleted by default - see Waldo_fnc_ParadropCreateDropZone), so a mission maker who wants the
+ *    markers left in place can opt out.
  *
  * Return Value: Boolean - true when a registered operation was removed.
  *
  * Example: ["DZ_ALPHA", true, player, true] remoteExecCall ["Waldo_fnc_ParadropRemoveDropZone", 2];
  * Current callers: ParadropRemoveDropZoneZen, automatic run cleanup and mission scripts.
  */
-params [["_id", "", [""]], ["_deleteAircraft", true, [false]], ["_requester", objNull, [objNull]], ["_notifyRequester", true, [false]]];
+params [["_id", "", [""]], ["_deleteAircraft", true, [false]], ["_requester", objNull, [objNull]], ["_notifyRequester", true, [false]], ["_deleteMarkers", true, [false]]];
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropRemoveDropZone", 2]; true};
 if (remoteExecutedOwner > 0) then {
     if (isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}) exitWith {false};
@@ -25,7 +31,7 @@ if (remoteExecutedOwner > 0) then {
 private _registry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", createHashMap];
 if !(_id in keys _registry) exitWith {false};
 private _state = _registry get _id;
-{deleteMarker _x} forEach (_state getOrDefault ["markers", []]);
+if (_deleteMarkers) then {{deleteMarker _x} forEach (_state getOrDefault ["markers", []])};
 {if (!isNull _x) then {deleteVehicle _x}} forEach (_state getOrDefault ["boardingPoints", []]);
 private _aircraft = _state getOrDefault ["aircraft", objNull];
 if (_deleteAircraft && {!isNull _aircraft} && {(crew _aircraft) findIf {isPlayer _x} >= 0}) then {

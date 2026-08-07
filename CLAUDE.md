@@ -209,22 +209,62 @@ private _RadioSetups = [
 
 Group names must match exactly what is set in Eden Editor. Channel numbers reference the position in the `Waldo_ACRE2Setup_LRChannels_BLUFOR/OPFOR/IND/CIV` arrays (1-indexed). AN/PRC-343 short-range radios are assigned automatically based on squad numerical designations. CEOI auto-populates in the map screen.
 
-### Paradrop Configuration (`initServer.sqf`)
+### Paradrop Configuration (`MissionConfig\airOperationsConfig.sqf`)
 
-Most "Plane"-class assets automatically get HALO/static-line actions. Override thresholds here:
+Most "Plane"-class assets automatically get HALO/static-line actions. Override the shared envelope in `MissionConfig\airOperationsConfig.sqf` (published as `true`/broadcast SERVER entries — do not paste these as raw `setVariable` calls into an init file, the loader owns them):
+
 ```sqf
-missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];  // metres
-missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];
-missionNamespace setVariable ["WALDO_STATIC_MAXSPEED", 310, true];     // km/h
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true];
-missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];
-missionNamespace setVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute", true];
+["WALDO_STATIC_MINALTITUDE", 180],  // metres
+["WALDO_STATIC_MAXALTITUDE", 350],
+["WALDO_STATIC_MAXSPEED", 310],     // km/h
+["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute"],
+["WALDO_PARA_HALOALTITUDE", 1000],
+["WALDO_PARA_HALOCHUTE", "B_Parachute"]
 ```
 
 For custom aircraft that don't auto-detect, add in the object's init field in Eden Editor:
 ```sqf
 [this] call Waldo_fnc_VehicleJumpSetup;
 ```
+This only adds the jump action — it does not fly the plane anywhere.
+
+#### Reliable AI flight — quick setup (`Waldo_fnc_ParadropQuickFlightSetup`)
+
+For a mission maker's own placed-and-crewed aircraft, one call from the object's init field gives it
+a reliable AI-flown route (standby → green line → red line → exit, looping by default) toward a
+drop point, plus the configured jump action — without the full Dynamic Drop Zone registry below:
+
+```sqf
+[this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
+// [aircraft, target(marker name/position/object), direction(-1 = auto), altitude, maxSpeed, options]
+```
+
+It clears the aircraft's existing waypoints before adding the generated route — leftover Eden
+waypoints fighting a scripted route is the single most common reason a hand-wired paradrop plane
+was unreliable. If the pilot's group has other units besides this aircraft's crew, the crew is
+automatically isolated into a dedicated fresh group first so those other units never lose their own
+waypoints. Waits (bounded, 30s) for a pilot if the aircraft's crew hasn't spawned in yet, so it
+is safe to call from an object's own init field even when another init field (e.g.
+`Waldo_fnc_MoveInCargoPlane`) assigns that pilot. Before installing the jump action, the requested
+static-line/HALO envelope is run through `Waldo_fnc_ParadropNormalizeJumpEnvelope`, using the same
+clamped altitude/speed `Waldo_fnc_ParadropBuildFlightRoute` actually flew (not the raw input) —
+a jump action gated on altitude/speed thresholds the plane's own route can never satisfy is the
+concrete "jump action never becomes available" failure this closes; `ParadropCreateDropZone` below
+normalizes off the same route-returned basis. `createMarkers` defaults to `true`
+(AREA/STANDBY/GREEN/RED/POINT markers, same layout as `ParadropCreateDropZone`) so a mission maker
+sees a working drop zone immediately — pass `false` for a map-clutter-free operation. Markers are
+removed automatically on aircraft death/deletion or once a `DESPAWN` lifecycle run reaches its exit
+point; set `keepMarkersOnCleanup` to `true` to opt out and leave them on the map instead. Neither
+this nor the opt-out ever deletes the aircraft or its crew, since this entry point never owns their
+lifecycle (unlike `ParadropCreateDropZone`, whose `DESPAWN` does delete the aircraft it spawned). See
+the script header for the full `options` HashMap (jump envelope overrides, `lifecycle`
+LOOP/RETAIN/DESPAWN, `circuitDirection`, `createMarkers`, `keepMarkersOnCleanup`, `name`).
+
+The exact same route logic (`Waldo_fnc_ParadropBuildFlightRoute`) powers the fuller **Dynamic Drop
+Zone Operations** system (`Waldo_fnc_ParadropCreateDropZone`, the ZEN "Dynamic Paradrop" module) —
+which additionally spawns/crews the aircraft itself, manages a named registry, optional generated
+jumpers, auto-drop-on-approach and map markers. Use the ZEN module or `ParadropCreateDropZone` for a
+managed multi-use operation; use `ParadropQuickFlightSetup` for a mission maker's own placed plane.
 
 ### Radio Jamming — ACRE2 / TFAR (`init.sqf`)
 

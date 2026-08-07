@@ -161,19 +161,21 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ["CHECKBOX", ["Enable HALO jump", "Adds a HALO player jump action using a steerable parachute backpack."], false],
         ["SLIDER", ["HALO minimum altitude", "Preferred AGL floor. If it exceeds route altitude, the server lowers it to the route altitude so HALO remains available."], [100, 5000, 1000, 0]],
         ["COMBO", ["HALO parachute backpack", "Steerable backpack equipped after HALO exit."], [_haloChutes, _haloLabels, 0]],
-        ["CHECKBOX", ["Require open ramp/door", "Requires one of WMP's recognized ramp/door animation sources. Automatically disabled when the selected airframe exposes none."], false],
+        ["CHECKBOX", ["Require open ramp/door", "Requires one of WMP's recognized ramp/door animation sources. Automatically disabled when the selected airframe exposes none."], true],
         ["CHECKBOX", ["Automatically sequence player cargo", "Forces embarked players out at the green line; normally leave off for jumpmaster-controlled player actions."], false],
         ["COMBO", ["Automatic jump type", "Method used only for automatic sequencing. If that method is disabled, the server uses the enabled alternative or disables automatic player exits."], [["STATIC", "HALO"], ["Static line", "HALO"], 0]],
         ["SLIDER", ["Optional generated AI jumpers", "AI cargo created for this operation. Default zero keeps the aircraft for players."], [0, 60, 0, 0]],
         ["SLIDER", ["Automatic jump interval", "Seconds between forced player or optional AI exits."], [0.5, 10, 2, 1]],
-        ["CHECKBOX", ["Create map markers", "Creates DZ, standby, green, red and named point markers."], true]
+        ["CHECKBOX", ["Create map markers", "Creates DZ, standby, green, red and named point markers."], true],
+        ["CHECKBOX", ["Keep markers when the operation ends automatically", "Applies to an automatic DESPAWN pass or the aircraft being lost - the markers are removed along with the operation by default. Explicitly using Paradrop - Remove Operation always removes markers regardless of this setting."], false]
     ],
     {
         params ["_values", "_modulePosition"];
         _values params [
             "_name", "_side", "_class", "_direction", "_altitude", "_speed", "_approach", "_length", "_exit",
             "_lifecycle", "_circuitDirection", "_staticEnabled", "_staticMin", "_staticMax", "_staticSpeed", "_staticChute",
-            "_haloEnabled", "_haloMin", "_haloChute", "_requireDoor", "_dropPlayers", "_automaticMode", "_count", "_interval", "_markers"
+            "_haloEnabled", "_haloMin", "_haloChute", "_requireDoor", "_dropPlayers", "_automaticMode", "_count", "_interval", "_markers",
+            "_keepMarkersOnCleanup"
         ];
         private _idBase = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
         if (_idBase == "") then {_idBase = "DZ"};
@@ -186,7 +188,8 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
             ["staticMaximumSpeed", _staticSpeed], ["staticChuteClass", _staticChute], ["haloJumpEnabled", _haloEnabled],
             ["haloMinimumAltitude", _haloMin], ["haloBackpackClass", _haloChute], ["requireOpenDoor", _requireDoor],
             ["autoDropPlayers", _dropPlayers], ["automaticJumpMode", _automaticMode], ["jumperCount", round _count],
-            ["createJumpers", _count > 0], ["jumpInterval", _interval], ["createMarkers", _markers]
+            ["createJumpers", _count > 0], ["jumpInterval", _interval], ["createMarkers", _markers],
+            ["keepMarkersOnCleanup", _keepMarkersOnCleanup]
         ];
         [_config, player] remoteExecCall ["Waldo_fnc_ParadropCreateDropZone", 2];
     },

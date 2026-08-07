@@ -14,7 +14,12 @@
  * 0: configuration <HASHMAP> - id, name, centre, direction, side, aircraftClass, altitude,
  *    maximumSpeed, approachDistance, runLength, exitDistance, jumperCount, jumpInterval,
  *    lifecycle, circuitDirection, static/halo jump settings, jumperClass, createJumpers,
- *    autoDropPlayers, automaticJumpMode and createMarkers.
+ *    autoDropPlayers, automaticJumpMode, createMarkers and keepMarkersOnCleanup (default false).
+ *    Automatic teardown always deletes the spawned aircraft/crew, on either aircraft loss or a
+ *    DESPAWN pass completing normally, and by default removes the markers along with them - a marker
+ *    for a drop zone that's no longer active is just stale. Set keepMarkersOnCleanup true to leave
+ *    the markers on the map instead. An explicit Waldo_fnc_ParadropRemoveDropZone call, e.g. the ZEN
+ *    "Remove Operation" module, always removes markers regardless of this option.
  * 1: requester <OBJECT> (default objNull) - curator used to authorize remote requests.
  *
  * Return Value:
@@ -57,48 +62,37 @@ private _altitude = ((_config getOrDefault ["altitude", 250]) max 100) min 2000;
 private _maximumSpeed = ((_config getOrDefault ["maximumSpeed", 220]) max 80) min 500;
 private _staticEnabled = _config getOrDefault ["staticJumpEnabled", true];
 private _haloEnabled = _config getOrDefault ["haloJumpEnabled", false];
-private _staticMinimum = ((_config getOrDefault ["staticMinimumAltitude", 180]) max 0) min ((_altitude - 25) max 0);
-private _staticMaximum = ((_config getOrDefault ["staticMaximumAltitude", 350]) max (_altitude + 75)) min 2500;
-private _staticMaximumSpeed = ((_config getOrDefault ["staticMaximumSpeed", 310]) max (_maximumSpeed + 40)) min 700;
-private _haloMinimum = ((_config getOrDefault ["haloMinimumAltitude", 1000]) max 0) min _altitude;
 private _automaticMode = toUpperANSI (_config getOrDefault ["automaticJumpMode", "STATIC"]);
 if (_config getOrDefault ["autoDropPlayers", false]) then {
     if (_automaticMode == "STATIC" && {!_staticEnabled}) then {_automaticMode = if (_haloEnabled) then {"HALO"} else {"NONE"}};
     if (_automaticMode == "HALO" && {!_haloEnabled}) then {_automaticMode = if (_staticEnabled) then {"STATIC"} else {"NONE"}};
     if (_automaticMode == "NONE") then {_config set ["autoDropPlayers", false]};
 };
-private _requireDoor = _config getOrDefault ["requireOpenDoor", false];
+// requireOpenDoor defaults true here to match Waldo_fnc_ParadropQuickFlightSetup - the check is a
+// no-op anyway for any airframe without a recognised door/ramp animation, so this only changes
+// behaviour for airframes that actually have one.
+private _requireDoor = _config getOrDefault ["requireOpenDoor", true];
 if (_requireDoor) then {
     private _animationSources = configFile >> "CfgVehicles" >> _class >> "AnimationSources";
     private _recognizedDoorSources = ["ramp_bottom", "door_2_1", "door_2_2", "jumpdoor_1", "jumpdoor_2", "back_ramp_switch", "back_ramp_half_switch", "RearDoors", "Door_1_source", "ramp_anim"];
     if (_recognizedDoorSources findIf {isClass (_animationSources >> _x)} < 0) then {_requireDoor = false};
 };
 _config set ["staticJumpEnabled", _staticEnabled];
-_config set ["staticMinimumAltitude", _staticMinimum];
-_config set ["staticMaximumAltitude", _staticMaximum];
-_config set ["staticMaximumSpeed", _staticMaximumSpeed];
 _config set ["haloJumpEnabled", _haloEnabled];
-_config set ["haloMinimumAltitude", _haloMinimum];
 _config set ["automaticJumpMode", _automaticMode];
 _config set ["requireOpenDoor", _requireDoor];
 private _approach = ((_config getOrDefault ["approachDistance", 2500]) max 800) min 10000;
 private _runLength = ((_config getOrDefault ["runLength", 2500]) max 300) min 6000;
 private _exitDistance = ((_config getOrDefault ["exitDistance", 2500]) max 800) min 10000;
-private _standby = [_centre, _runLength * 0.65, _direction + 180] call BIS_fnc_relPos;
-private _green = [_centre, _runLength * 0.5, _direction + 180] call BIS_fnc_relPos;
-private _red = [_centre, _runLength * 0.5, _direction] call BIS_fnc_relPos;
-private _spawn = [_standby, _approach, _direction + 180] call BIS_fnc_relPos;
-private _exit = [_red, _exitDistance, _direction] call BIS_fnc_relPos;
 private _lifecycle = toUpperANSI (_config getOrDefault ["lifecycle", if (_config getOrDefault ["deleteAfterRun", false]) then {"DESPAWN"} else {"LOOP"}]);
 if !(_lifecycle in ["LOOP", "RETAIN", "DESPAWN"]) then {_lifecycle = "LOOP"};
 private _circuitDirection = toUpperANSI (_config getOrDefault ["circuitDirection", "LEFT"]);
-private _circuitTurn = if (_circuitDirection == "RIGHT") then {90} else {-90};
-private _circuitWidth = ((_approach max _runLength) * 0.75) max 1200;
-private _crosswind = [_exit, _circuitWidth, _direction + _circuitTurn] call BIS_fnc_relPos;
-private _downwind = [_spawn, _circuitWidth, _direction + _circuitTurn] call BIS_fnc_relPos;
-private _rejoin = [_spawn, _approach * 0.6, _direction + 180] call BIS_fnc_relPos;
-private _hold = [_exit, 1800, _direction] call BIS_fnc_relPos;
-{_x set [2, _altitude]} forEach [_standby, _green, _centre, _red, _spawn, _exit, _crosswind, _downwind, _rejoin, _hold];
+// Only the standby/spawn point is needed before the aircraft exists (to know where to create it).
+// Waldo_fnc_ParadropBuildFlightRoute derives the same point again once the aircraft is real, along
+// with the rest of the route (green/red/exit/etc) it hands back below.
+private _standby = [_centre, _runLength * 0.65, _direction + 180] call BIS_fnc_relPos;
+private _spawn = [_standby, _approach, _direction + 180] call BIS_fnc_relPos;
+_spawn set [2, _altitude];
 
 private _aircraft = createVehicle [_class, _spawn, [], 0, "FLY"];
 _aircraft setPosATL _spawn;
@@ -120,41 +114,39 @@ private _oldGroups = [];
 private _flightGroup = createGroup _side;
 [_pilot] joinSilent _flightGroup;
 {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
-_flightGroup setBehaviourStrong "CARELESS";
-_flightGroup setCombatMode "BLUE";
-_flightGroup setSpeedMode "LIMITED";
-_aircraft flyInHeight [_altitude, true];
-_aircraft limitSpeed _maximumSpeed;
-// limitSpeed is km/h, while forceSpeed is metres/second. Applying one raw value to both caused
-// extreme overspeed and the apparent lateral break at the drop zone.
-_aircraft forceSpeed (_maximumSpeed / 3.6);
-_aircraft engineOn true;
 _aircraft setVehicleLock "UNLOCKED";
 
-private _addRouteWaypoint = {
-    params ["_position", ["_type", "MOVE"], ["_radius", 40]];
-    // A negative placement radius consumes ASL and creates an exact waypoint. Radius zero may be
-    // displaced by nearby terrain objects, which is unacceptable on a marked jump run.
-    private _waypoint = _flightGroup addWaypoint [AGLToASL _position, -1];
-    _waypoint setWaypointType _type;
-    _waypoint setWaypointBehaviour "CARELESS";
-    _waypoint setWaypointCombatMode "BLUE";
-    _waypoint setWaypointSpeed "LIMITED";
-    _waypoint setWaypointCompletionRadius _radius;
-    _waypoint
+private _route = [
+    _aircraft, _flightGroup, _centre, _direction, _altitude, _maximumSpeed,
+    _approach, _runLength, _exitDistance, _lifecycle, _circuitDirection
+] call Waldo_fnc_ParadropBuildFlightRoute;
+if (_route isEqualTo createHashMap) exitWith {
+    deleteVehicle _aircraft; deleteGroup _flightGroup;
+    ["Creation failed: the flight route could not be built.", "ERROR"] call _notifyRequester;
+    false
 };
-{
-    [_x, "MOVE", if (_forEachIndex in [1, 2, 3]) then {30} else {100}] call _addRouteWaypoint;
-} forEach [_standby, _green, _centre, _red, _exit];
-if (_lifecycle == "LOOP") then {
-    {[_x, "MOVE", 180] call _addRouteWaypoint} forEach [_crosswind, _downwind, _rejoin];
-    [_spawn, "CYCLE", 120] call _addRouteWaypoint;
-};
-if (_lifecycle == "RETAIN") then {
-    private _loiter = [_hold, "LOITER", 250] call _addRouteWaypoint;
-    _loiter setWaypointLoiterRadius 900;
-    _loiter setWaypointLoiterType "CIRCLE_L";
-};
+private _green = _route get "green";
+private _red = _route get "red";
+private _exit = _route get "exit";
+
+// Normalized against the route's own returned altitude/speed (not the pre-clamp local variables
+// above) so this and Waldo_fnc_ParadropQuickFlightSetup can never drift onto a different basis than
+// what the aircraft is actually flying.
+private _routeAltitude = _route get "altitude";
+private _routeMaxSpeed = _route get "maxSpeed";
+private _envelope = [
+    _routeAltitude, _routeMaxSpeed,
+    _config getOrDefault ["staticMinimumAltitude", 180], _config getOrDefault ["staticMaximumAltitude", 350],
+    _config getOrDefault ["staticMaximumSpeed", 310], _config getOrDefault ["haloMinimumAltitude", 1000]
+] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
+private _staticMinimum = _envelope get "staticMinimumAltitude";
+private _staticMaximum = _envelope get "staticMaximumAltitude";
+private _staticMaximumSpeed = _envelope get "staticMaximumSpeed";
+private _haloMinimum = _envelope get "haloMinimumAltitude";
+_config set ["staticMinimumAltitude", _staticMinimum];
+_config set ["staticMaximumAltitude", _staticMaximum];
+_config set ["staticMaximumSpeed", _staticMaximumSpeed];
+_config set ["haloMinimumAltitude", _haloMinimum];
 
 // One object-keyed replay configures current clients and JIP clients with both selected jump
 // systems. The setup function reconciles repeated configuration rather than duplicating actions.
@@ -230,6 +222,7 @@ missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
     private _green = _state get "green";
     private _red = _state get "red";
     private _deadline = serverTime + ((_config getOrDefault ["operationTimeout", 900]) max 60);
+    private _deleteMarkersOnCleanup = !(_config getOrDefault ["keepMarkersOnCleanup", false]);
     waitUntil {sleep 0.25; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D _green < 180} || {serverTime >= _deadline}};
     if (!isNull _aircraft && {alive _aircraft} && {serverTime < _deadline}) then {
         private _dropUnits = +(_state getOrDefault ["jumpers", []]);
@@ -256,11 +249,14 @@ missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
     };
     waitUntil {sleep 1; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D (_state get "red") < 180} || {serverTime >= _deadline}};
     waitUntil {sleep 1; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D (_state getOrDefault ["exit", _state get "red"]) < 220} || {serverTime >= _deadline}};
-    if (isNull _aircraft || {!alive _aircraft}) exitWith {[_id, true, objNull, false] call Waldo_fnc_ParadropRemoveDropZone};
+    // Automatic teardown removes its markers by default on either trigger - a marker for a drop zone
+    // that's no longer active is just stale - unless the mission maker opted out with
+    // keepMarkersOnCleanup.
+    if (isNull _aircraft || {!alive _aircraft}) exitWith {[_id, true, objNull, false, _deleteMarkersOnCleanup] call Waldo_fnc_ParadropRemoveDropZone};
     if ((_state getOrDefault ["lifecycle", "LOOP"]) == "DESPAWN") then {
-        [_id, true, objNull, false] call Waldo_fnc_ParadropRemoveDropZone;
+        [_id, true, objNull, false, _deleteMarkersOnCleanup] call Waldo_fnc_ParadropRemoveDropZone;
     };
 };
 diag_log format ["[WMP PARADROP] Created id=%1 name=%2 side=%3 airframe=%4 pilot=%5 optionalJumpers=%6 lifecycle=%7 markers=%8", _id, _name, _side, _class, _pilot, count _jumpers, _lifecycle, count _markers];
-[format ["%1 created for players. Route %2m AGL / %3 km/h; static envelope %4-%5m / <=%6 km/h; HALO floor %7m. Use Paradrop - Embark Players to board.", _name, round _altitude, round _maximumSpeed, round _staticMinimum, round _staticMaximum, round _staticMaximumSpeed, round _haloMinimum], "SUCCESS"] call _notifyRequester;
+[format ["%1 created for players. Route %2m AGL / %3 km/h; static envelope %4-%5m / <=%6 km/h; HALO floor %7m. Use Paradrop - Embark Players to board.", _name, round _routeAltitude, round _routeMaxSpeed, round _staticMinimum, round _staticMaximum, round _staticMaximumSpeed, round _haloMinimum], "SUCCESS"] call _notifyRequester;
 true

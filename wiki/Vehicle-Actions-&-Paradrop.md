@@ -129,6 +129,64 @@ This is added automatically alongside jump actions. No setup required.
 
 ---
 
+## Reliable Quick Flight Setup
+
+_Associated Files: `MissionScripts\Paradrop\paradropQuickFlightSetup.sqf`,
+`MissionScripts\Paradrop\paradropBuildFlightRoute.sqf`_
+
+For a plane you've already placed and crewed yourself in Eden, one call in its init field gives it a
+reliable AI-flown paradrop route — no ZEN, no registry, no generated jumpers:
+
+```sqf
+[this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
+```
+
+Arguments: `[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a marker
+name, a position, or an object; `direction` (`-1` by default) is computed automatically from the
+aircraft's position toward the target if you don't set one. It waits (up to 30 seconds) for a pilot
+to exist before doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane`
+call on another object in the same composition — both init fields can run in any order.
+
+The aircraft's own existing waypoints are cleared before the generated route is added. This matters:
+a leftover Eden waypoint competing with a scripted route for the AI's attention is the most common
+reason a hand-set-up paradrop plane behaves unpredictably (wandering off the jump run, ignoring
+altitude/speed, or never turning back for another pass). If you want to keep your own waypoints,
+don't call this function — set the aircraft up manually instead (see below). If the pilot's Eden
+group has other units besides this aircraft's crew (a squad leader who's also the pilot, a
+multi-crew group with members elsewhere), the crew is automatically moved into a dedicated fresh
+group first, so those other units keep their own waypoints untouched.
+
+Whatever static-line/HALO envelope you request (or the mission's configured defaults) is passed
+through `Waldo_fnc_ParadropNormalizeJumpEnvelope` before the jump action is installed, using the same
+clamped altitude/speed the route was actually built with — not your raw input — so it stays
+reachable no matter what altitude/speed you pass in. This is the fix for a jump action that never
+becomes available at all: the hold-action's live condition checks the aircraft's altitude and speed
+against that envelope every frame, and a route altitude/speed set independently of the envelope is
+exactly how the two end up unable to ever agree. `Waldo_fnc_ParadropCreateDropZone` normalizes off
+the same route-returned basis, so both entry points behave identically here.
+
+`options` is a HashMap for anything beyond the defaults — jump envelope overrides (falls back to the
+mission's `MissionConfig\airOperationsConfig.sqf` values, then normalized as above), `lifecycle`
+(`LOOP` default / `RETAIN` / `DESPAWN` — this function never deletes the aircraft under any
+lifecycle; `DESPAWN` only changes which waypoints get added and is one of the two automatic
+marker-cleanup triggers below), `circuitDirection` (`LEFT` default / `RIGHT`),
+`approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`),
+`createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
+`Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
+for a map-clutter-free operation), and `keepMarkersOnCleanup` (**off by default** — the markers are
+removed automatically once the aircraft is destroyed/deleted, or once a `DESPAWN` run reaches its
+exit point, since a marker for a drop zone that's no longer active is just stale; set `true` to leave
+them on the map instead — this never affects the aircraft or crew either way). See the script's own
+header for the complete list and a HALO one-shot example.
+
+This shares its actual flight-route logic (`Waldo_fnc_ParadropBuildFlightRoute`) with the fuller
+Dynamic Drop-Zone system below — the same proven standby/green/red/exit route and the same
+altitude/speed handling, so both paths fly identically once airborne. Use the Dynamic Drop-Zone
+system instead when you want a managed, repeatable operation with generated AI jumpers, a Zeus
+create/remove workflow, or map symbology by default.
+
+---
+
 ## Dynamic Drop-Zone Operations
 
 ZEN provides **Paradrop - Create Drop Zone**, **Paradrop - Embark Players** and **Paradrop - Remove
@@ -144,7 +202,12 @@ line or HALO method.
 
 Post-pass behavior is explicit: **Loop and repeat** flies a wide left- or right-hand circuit through
 a point behind the original spawn before beginning the next aligned run; **Single pass - retain**
-loiters beyond the exit; **Single pass - despawn** cleans the aircraft and operation. Speed input is
+loiters beyond the exit; **Single pass - despawn** deletes the aircraft, its crew and the operation
+(a lost aircraft is cleaned up the same way). The map markers created for the operation are **removed
+automatically** along with this cleanup, since a marker for a drop zone that's no longer active is
+just stale — check **Keep markers when the operation ends automatically** in the create dialog
+(`keepMarkersOnCleanup`, off by default) to leave them on the map instead. Explicitly using
+**Paradrop - Remove Operation** always removes the markers regardless of that setting. Speed input is
 in km/h and is converted to the engine's metres-per-second `forceSpeed` unit.
 
 The create dialog independently enables and configures static-line and HALO player actions. Static
@@ -153,8 +216,8 @@ steerable parachute backpack and minimum altitude. The optional door requirement
 for airframes whose ramp animations are not among the supported names. Both action sets are
 installed for current clients and JIP clients. The authoritative creation API normalizes enabled
 jump envelopes against the requested route: the route altitude remains inside each enabled
-altitude window, static-line maximum speed stays at least 40 km/h above capped route speed, and an
-unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
+altitude window with margin to absorb normal AI autopilot wander, static-line maximum speed stays
+at least 60 km/h above capped route speed, and an unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
 enabled alternative or turns itself off instead of silently selecting a disabled jump method.
 
 **Paradrop - Embark Players** uses the player directly underneath the placed module first, then the
@@ -171,7 +234,9 @@ PARADROP** and **CREATE QA BOARDING POINT** controls.
 
 Optional global map symbology includes the overall rectangular drop zone, small standby/green/red
 line rectangles and a named point marker. Arma itself makes these global markers available to JIP
-clients. The removal module cleans the markers and can delete the operation aircraft.
+clients. **Paradrop - Remove Operation** always cleans the markers (and can delete the operation
+aircraft); the automatic cleanup on a despawn pass or aircraft loss removes them too unless
+`keepMarkersOnCleanup` was enabled at creation.
 
 Mission makers can extend the friendly-name dropdowns before startup:
 
@@ -194,7 +259,8 @@ private _drop = createHashMapFromArray [
     ["staticMaximumAltitude", 350], ["staticMaximumSpeed", 310],
     ["staticChuteClass", "NonSteerable_Parachute_F"],
     ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
-    ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true]
+    ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true],
+    ["keepMarkersOnCleanup", false]
 ];
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```
