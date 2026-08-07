@@ -213,7 +213,7 @@ class items
 		flags=2;
 		class Attributes
 		{
-			init="c130Plane call Waldo_fnc_VehicleJumpSetup;c130Plane flyInHeight 300;c130Plane limitSpeed 300";
+			init="[this,""dz1"",-1,300,300] call Waldo_fnc_ParadropQuickFlightSetup;";
 			name="c130Plane";
 			reportOwnPosition=1;
 		};
@@ -422,7 +422,7 @@ class items
 		flags=2;
 		class Attributes
 		{
-			init="c130Plane_1 call Waldo_fnc_VehicleJumpSetup;c130Plane_1 flyInHeight 1200;c130Plane_1 limitSpeed 300";
+			init="[this,""dz2"",-1,1200,250,createHashMapFromArray[[""staticJumpEnabled"",false],[""haloJumpEnabled"",true],[""name"",""HALO Drop Zone""]]] call Waldo_fnc_ParadropQuickFlightSetup;";
 			name="c130Plane_1";
 			reportOwnPosition=1;
 		};
