@@ -51,10 +51,11 @@
  *    which waypoints get added and is one of the two automatic marker-cleanup triggers below),
  *    circuitDirection (LEFT/RIGHT, default LEFT), approachDistance/runLength/exitDistance (metres,
  *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED markers matching
- *    Waldo_fnc_ParadropCreateDropZone's layout, so a mission maker sees a working drop zone
- *    immediately, plus a POINT marker at the target - but only when target was not itself a marker
- *    name, since that marker already sits exactly there and a second icon/label on top of it would
- *    just overlap; set false for a map-clutter-free operation), keepMarkersOnCleanup (default false -
+ *    Waldo_fnc_ParadropCreateDropZone's layout, created invisible (alpha 0, still real/queryable
+ *    markers) so a mission maker gets the route's positional markers without the map clutter, plus a
+ *    visible POINT marker at the target - but only when target was not itself a marker name, since
+ *    that marker already sits exactly there and a second icon/label on top of it would just overlap;
+ *    set false for a map-clutter-free operation), keepMarkersOnCleanup (default false -
  *    the created markers are removed automatically once the aircraft is destroyed/deleted, or once a
  *    DESPAWN run reaches its exit point; set true to leave them on the map instead; never affects the
  *    aircraft or crew either way), name (marker label, default "Drop Zone").
@@ -248,6 +249,12 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
         _zoneMarker setMarkerDir _resolvedDirection;
         _zoneMarker setMarkerSize [100, (_runLength * 0.65) max 200];
         _zoneMarker setMarkerColor "ColorBlack";
+        // AREA/STANDBY/GREEN/RED stay invisible (alpha 0) - they remain real markers at the exact
+        // route positions (still queryable by name, e.g. getMarkerPos, and still visible to a mission
+        // maker who reveals them deliberately) but are not shown on the map. The POINT marker below is
+        // layered on top of this whole set as the one thing players actually see, instead of the
+        // previous stacked five-marker layout.
+        _zoneMarker setMarkerAlpha 0;
         _markers pushBack _zoneMarker;
         {
             _x params ["_suffix", "_key", "_colour", "_text"];
@@ -258,6 +265,7 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
             _marker setMarkerSize [30, 4];
             _marker setMarkerColor _colour;
             _marker setMarkerText _text;
+            _marker setMarkerAlpha 0;
             _markers pushBack _marker;
         } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
         // When target was a marker name, that marker already sits exactly at _centre - creating
