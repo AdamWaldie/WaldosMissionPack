@@ -129,7 +129,7 @@ class items
 		flags=2;
 		class Attributes
 		{
-			init="[this,""dz1"",-1,300,300] call Waldo_fnc_ParadropQuickFlightSetup;";
+			init="[this,""dz1"",-1,300,300,createHashMapFromArray[[""staticJumpEnabled"",true],[""haloJumpEnabled"",false],[""name"",""Static-Line Drop Zone""]]] call Waldo_fnc_ParadropQuickFlightSetup;";
 			name="c130Plane";
 			reportOwnPosition=1;
 		};

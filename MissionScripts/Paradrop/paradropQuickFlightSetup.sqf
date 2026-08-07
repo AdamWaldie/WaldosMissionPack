@@ -50,9 +50,11 @@
  *    aircraft under any lifecycle, unlike Waldo_fnc_ParadropCreateDropZone; DESPAWN only changes
  *    which waypoints get added and is one of the two automatic marker-cleanup triggers below),
  *    circuitDirection (LEFT/RIGHT, default LEFT), approachDistance/runLength/exitDistance (metres,
- *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED/POINT markers matching
+ *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED markers matching
  *    Waldo_fnc_ParadropCreateDropZone's layout, so a mission maker sees a working drop zone
- *    immediately; set false for a map-clutter-free operation), keepMarkersOnCleanup (default false -
+ *    immediately, plus a POINT marker at the target - but only when target was not itself a marker
+ *    name, since that marker already sits exactly there and a second icon/label on top of it would
+ *    just overlap; set false for a map-clutter-free operation), keepMarkersOnCleanup (default false -
  *    the created markers are removed automatically once the aircraft is destroyed/deleted, or once a
  *    DESPAWN run reaches its exit point; set true to leave them on the map instead; never affects the
  *    aircraft or crew either way), name (marker label, default "Drop Zone").
@@ -258,11 +260,17 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
             _marker setMarkerText _text;
             _markers pushBack _marker;
         } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
-        private _point = createMarker [format ["%1_POINT", _prefix], _centre];
-        _point setMarkerType "mil_end";
-        _point setMarkerColor "ColorBlack";
-        _point setMarkerText _label;
-        _markers pushBack _point;
+        // When target was a marker name, that marker already sits exactly at _centre - creating
+        // another icon+label marker on top of it just doubles up (overlapping text, two stacked
+        // icons) instead of adding information. Only add the POINT marker for an ARRAY/OBJECT
+        // target, where nothing was already there to mark the drop point itself.
+        if !(typeName _target == "STRING" && {_target != ""}) then {
+            private _point = createMarker [format ["%1_POINT", _prefix], _centre];
+            _point setMarkerType "mil_end";
+            _point setMarkerColor "ColorBlack";
+            _point setMarkerText _label;
+            _markers pushBack _point;
+        };
     };
 
     // Cleanup watcher. Markers are removed automatically once the aircraft is destroyed/deleted, or
