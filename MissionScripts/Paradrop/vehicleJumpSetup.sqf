@@ -18,6 +18,11 @@ params ["_vehicle"];
 //Basic prevention of sillyness
 if (_vehicle iskindOf "man") exitWith {};
 
+// Mark as explicitly configured so Waldo_fnc_AddVehicleFunctions' own auto-detection for jump-
+// capable classes (which would otherwise add its own conflicting static/HALO defaults) skips this
+// vehicle instead of racing this call for the final hold-action state.
+_vehicle setVariable ["Waldo_Paradrop_ManuallyConfigured", true];
+
 // No Restrictions. Mission Makers please use responsibly!
 // As called from unit init, enviroment is unscheduled, so we force a schedule with spawn, and add actions after units ingame. Not  efficent, but easier to use / more adaptable for the end user.
 _schdenvirohndlr = [_vehicle] spawn {

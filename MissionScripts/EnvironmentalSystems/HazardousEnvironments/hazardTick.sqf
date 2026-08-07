@@ -8,8 +8,10 @@
  * one continuously updated specialist HUD rather than notification lanes. Profiles may require a
  * carried/worn detector, nearby detector object or custom awareness condition before either form
  * of information is visible; physical exposure and damage still apply. Profile onEnter, onExit and
- * onTick callbacks continue to run locally. Currently called by the HazardInit loop and directly
- * by the full-pack function station.
+ * onTick callbacks continue to run locally. The status panel shows one combined line per hazard
+ * `type` (summed across every zone/emitter contributing to it), not one line per zone key - all
+ * three shipped radiation presets share type "RADIATION" specifically so their dose reads as one
+ * figure. Currently called by the HazardInit loop and directly by the full-pack function station.
  * Locality and authority: Interface-client only. It consumes JIP-replayed zone definitions and
  * mutates only the executing player's exposure, effects, callbacks and presentation.
  *
@@ -33,6 +35,11 @@ private _previousInside = missionNamespace getVariable ["Waldo_Hazard_LocalInsid
 private _previousStages = missionNamespace getVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
 private _activeText = [];
 private _zoneDiagnostics = [];
+// Multiple zones/emitters commonly share one hazard `type` (all three shipped radiation presets
+// use "RADIATION" specifically so their dose is meant to read as one combined figure). Collect
+// contributions per type here and emit exactly one status line per type after the loop below,
+// instead of one line per zone key.
+private _typeAggregates = createHashMap;
 
 {
     _x params ["_key", "_area", "_profile"];
@@ -143,8 +150,11 @@ private _zoneDiagnostics = [];
     };
 
     if (_showLiveStatus && {(_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]])} && {_inside || {_exposure > 0}}) then {
-        private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "HAZARD"]];
-        _activeText pushBack format ["%1: %2", _label, (_exposure toFixed 2)];
+        private _type = _profile getOrDefault ["type", _profile getOrDefault ["label", "HAZARD"]];
+        private _label = _profile getOrDefault ["label", _type];
+        private _entry = _typeAggregates getOrDefault [_type, [_label, 0]];
+        _entry set [1, (_entry select 1) + _exposure];
+        _typeAggregates set [_type, _entry];
     };
 
     private _damage = 0;
@@ -191,6 +201,12 @@ private _zoneDiagnostics = [];
         [player, _inside, _intensity, _exposure, _profile] call _onTick;
     };
 } forEach +(missionNamespace getVariable ["Waldo_Hazard_Zones", []]);
+
+// One combined status line per hazard type, not per contributing zone key.
+{
+    _x params ["_label", "_exposureSum"];
+    _activeText pushBack format ["%1: %2", _label, (_exposureSum toFixed 2)];
+} forEach (values _typeAggregates);
 
 // Diagnostics must prove that spatial evaluation is actually advancing. Merely having a loop
 // handle and a zone registry previously allowed a permanently inert evaluator to report ACTIVE.

@@ -99,6 +99,10 @@ _aircraft setPosATL _spawn;
 _aircraft setDir _direction;
 _aircraft setVelocityModelSpace [0, _maximumSpeed / 3.6, 0];
 createVehicleCrew _aircraft;
+// Same guard as Waldo_fnc_ParadropQuickFlightSetup: mark this spawned aircraft as explicitly
+// configured before any client's Waldo_fnc_AddVehicleFunctions auto-detection (installed on the
+// "AllVehicles" init class event) has a chance to add its own conflicting static/HALO defaults.
+_aircraft setVariable ["Waldo_Paradrop_ManuallyConfigured", true, true];
 if (isNull driver _aircraft) exitWith {deleteVehicle _aircraft; ["Creation failed: the selected airframe could not be crewed.", "ERROR"] call _notifyRequester; false};
 private _pilot = driver _aircraft;
 private _oldGroups = [];

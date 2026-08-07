@@ -89,7 +89,7 @@ if (typeName _options == "HASHMAP") then {
     {if (_x isEqualType [] && {count _x >= 2}) then {_optionMap set [_x select 0, _x select 1]}} forEach _options;
 };
 private _config = createHashMapFromArray [
-    ["cruiseAltitude", _optionMap getOrDefault ["cruiseAltitude", missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 80]]],
+    ["cruiseAltitude", _optionMap getOrDefault ["cruiseAltitude", missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 50]]],
     ["stopRadius", _optionMap getOrDefault ["stopRadius", if (_type == "HELICOPTER") then {35} else {12}]],
     ["boardingSeconds", _optionMap getOrDefault ["boardingSeconds", missionNamespace getVariable ["Waldo_Transport_DefaultBoardingSeconds", 300]]],
     ["destinationDwell", _optionMap getOrDefault ["destinationDwell", missionNamespace getVariable ["Waldo_Transport_DefaultDestinationDwell", 45]]],
