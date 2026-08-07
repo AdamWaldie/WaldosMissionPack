@@ -155,7 +155,7 @@ another object in the same composition — both init fields can run in any order
 
 **If the plane never takes off toward its target**, the most common cause is step 1 — the marker
 was never placed, or its name doesn't exactly match the `target` string. This case reports itself
-in-game via `systemChat` ("`<aircraft> has no flight target: place a map marker named "..."`"), not
+in-game via `systemChat` ("`<aircraft> has no flight target: place a map marker named <name>...`"), not
 just the RPT log, specifically so this beginner mistake is easy to spot and fix.
 
 The **"[WMP] Halo And Static Line Blackfish Drop Examples"** composition (Eden Editor →
