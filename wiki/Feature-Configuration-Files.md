@@ -381,6 +381,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Hazard_Enable` | Master hazardous-environment opt-in. |
 | `Waldo_Hazard_Interval` | Local exposure update interval in seconds. |
 | `Waldo_Hazard_ShowStatus` | Continuous exposure panel. Defaults on, updates in place and never consumes notification-card lanes. A profile may override it with `showStatus`. |
+| `Waldo_Hazard_StatusGraceSeconds` | Seconds the exposure panel lingers per hazard type after the player leaves every zone of that type. Presence-based, like a Geiger counter - independent of the (deliberately slower) exposure value decaying to zero. |
 | `Waldo_Hazard_NotifyTransitions` | Announces entering/leaving a zone. |
 | `Waldo_Hazard_NotificationDuration` | Transition-card duration in seconds. |
 | `Waldo_Hazard_DosimeterEnable` | Enables exposure-reading interactions. |

@@ -87,6 +87,14 @@ params [
     ["_options", createHashMap, [createHashMap]]
 ];
 if (isNull _aircraft || {!(_aircraft isKindOf "Air")}) exitWith {false};
+// Set as early and as synchronously as possible - before any waiting, before the isServer forward
+// below - so Waldo_fnc_AddVehicleFunctions' own class-based auto-detection (which fires on "init"
+// for classes like B_T_VTOL_01_infantry_F/RHS_C130J_Base and would otherwise unconditionally add
+// BOTH static and HALO with mission-global defaults) can see this aircraft is being explicitly
+// configured and skip its own jump-action setup instead of fighting this call for the final state.
+// Broadcast from the server (every machine also sets it locally as its own init field runs, at
+// roughly the same moment) so JIP clients that never execute this object's init field still see it.
+_aircraft setVariable ["Waldo_Paradrop_ManuallyConfigured", true, isServer];
 if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSetup", 2]; true};
 
 [_aircraft, _target, _direction, _altitude, _maxSpeed, _options] spawn {

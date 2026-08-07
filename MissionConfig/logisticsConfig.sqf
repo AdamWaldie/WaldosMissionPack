@@ -129,7 +129,7 @@ createHashMapFromArray [
         ["Waldo_Transport_TravelTimeout", 900, false], // SECONDS: one physical movement deadline.
         ["Waldo_Transport_DefaultBoardingSeconds", 300, false], // SECONDS: pickup boarding window.
         ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: destination disembark window.
-        ["Waldo_HeliTransport_DefaultAltitude", 80, false], // METRES: default helicopter transit height.
+        ["Waldo_HeliTransport_DefaultAltitude", 50, false], // METRES: default helicopter transit height.
         ["Waldo_HeliTransport_DefaultLzSearchRadius", 250, false], // METRES: maximum permitted LZ adjustment from the click.
         ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0, false], // MULTIPLIER: require an obstacle-free area enclosing 2x the helicopter model box.
         ["Waldo_HeliTransport_DefaultSeparation", 60, false], // METRES: space helicopter bases/LZs apart to reduce rotor and landing conflicts.

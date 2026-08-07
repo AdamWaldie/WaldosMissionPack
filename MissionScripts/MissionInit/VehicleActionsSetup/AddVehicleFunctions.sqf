@@ -45,6 +45,10 @@ if (isNil "_staticChute") then
     missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute"];
     _staticChute = "rhs_d6_Parachute";
 };
+// The RHS chute above silently fails to install (Waldo_fnc_AddStaticJump exits early on an unknown
+// class) on any mission without RHS loaded - fall back to the vanilla fixed-wing chute so a non-RHS
+// mission's auto-detected static-line action actually appears instead of just disappearing.
+if !(isClass (configFile >> "CfgVehicles" >> _staticChute)) then {_staticChute = "NonSteerable_Parachute_F";};
 private _haloAlt = missionNamespace getVariable "WALDO_PARA_HALOALTITUDE";
 //Get HALO Altitude & CHUTe Arguments
 if (isNil "_haloAlt") then
@@ -82,65 +86,36 @@ if (_vehicle iskindOf "RHS_UH1_Base") then {
     [_vehicle] call Waldo_fnc_AddExitActions;
 };
 
-if (_vehicle iskindOf "RHS_Mi24_base") then {
-    [_vehicle] call Waldo_fnc_AddExitActions;
-    [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
-    [_vehicle] call Waldo_fnc_JumpSettingsCheck;
-};
-
-if (_vehicle iskindOf "RHS_Mi8_base") then {
-    [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
-    [_vehicle] call Waldo_fnc_JumpSettingsCheck;
-};
-
-if (_vehicle iskindOf "Heli_Transport_02_base_F") then {
-    [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
-    [_vehicle] call Waldo_fnc_JumpSettingsCheck;
-};
-// C130J supports both HALO and static-line jumps; their hold actions have
-// mutually-exclusive altitude conditions so only the valid one shows at a time.
-if (_vehicle iskindOf "RHS_C130J_Base") then {
-    /*
-    Waldo_fnc_AddHaloJump Arguments:
-    0: Vehicle             <OBJECT>
-    1: Minimum altitude    <NUMBER> (Optional) (Default; 5000)
-    4: Chute Vehicle Class <OBJECT> (Optional) (Default; "B_Parachute")
-    */
-    [_vehicle, _haloAlt, _haloChute] call Waldo_fnc_AddHaloJump;
-    /*
-    Waldo_fnc_AddStaticJump Arguments:
-    0: Vehicle             <OBJECT>
-    1: Minimum altitude    <NUMBER> (Optional) (Default; 180)
-    2: Maximum altitude    <NUMBER> (Optional) (Default; 350)
-    3: Maximum speed       <NUMBER> (Optional) (Default; 310)
-    4: Chute Vehicle Class <OBJECT> (Optional) (Default; "rhs_d6_Parachute") Requires RHS, respecify alternative if required. (NonSteerable_Parachute_F is vanilla)
-    */
-    [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
-    // leave this one as is.
-    [_vehicle] call Waldo_fnc_JumpSettingsCheck;
-};
-
-
-if (_vehicle iskindOf "B_T_VTOL_01_infantry_F") then {
-    private _haloAlt = missionNamespace getVariable "WALDO_PARA_HALOALTITUDE";
-    /*
-    Waldo_fnc_AddHaloJump Arguments:
-    0: Vehicle             <OBJECT>
-    1: Minimum altitude    <NUMBER> (Optional) (Default; 5000)
-    4: Chute Vehicle Class <OBJECT> (Optional) (Default; "B_Parachute")
-    */
-    [_vehicle, _haloAlt, _haloChute] call Waldo_fnc_AddHaloJump;
-    /*
-    Waldo_fnc_AddStaticJump Arguments:
-    0: Vehicle             <OBJECT>
-    1: Minimum altitude    <NUMBER> (Optional) (Default; 180)
-    2: Maximum altitude    <NUMBER> (Optional) (Default; 350)
-    3: Maximum speed       <NUMBER> (Optional) (Default; 310)
-    4: Chute Vehicle Class <OBJECT> (Optional) (Default; "rhs_d6_Parachute") Requires RHS, respecify alternative if required. (NonSteerable_Parachute_F is vanilla)
-    */
-    [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
-    // leave this one as is.
-    [_vehicle] call Waldo_fnc_JumpSettingsCheck;
+// Jump-capable auto-detected classes: a mission maker can always take manual control of any of
+// these same aircraft with Waldo_fnc_VehicleJumpSetup, Waldo_fnc_ParadropQuickFlightSetup or the
+// Dynamic Drop Zone system (Waldo_fnc_ParadropCreateDropZone / the ZEN module) - all three mark the
+// aircraft with Waldo_Paradrop_ManuallyConfigured before installing their own static/HALO envelope.
+// This auto-detection must not then fight that explicit setup with its own mission-global defaults
+// (that conflict, not just being redundant, is a real bug: this block's hardcoded static chute
+// fallback is the RHS class "rhs_d6_Parachute", which silently fails to install - leaving only
+// HALO active - on any non-RHS mission, exactly the shipped vanilla example compositions). Defer
+// past WALDO_INIT_COMPLETE so an object's own init-field setup call (which runs synchronously at
+// vehicle creation, before this deferred check) has always had the chance to set the flag first.
+if (
+    _vehicle iskindOf "RHS_Mi24_base"
+    || {_vehicle iskindOf "RHS_Mi8_base"}
+    || {_vehicle iskindOf "Heli_Transport_02_base_F"}
+    || {_vehicle iskindOf "RHS_C130J_Base"}
+    || {_vehicle iskindOf "B_T_VTOL_01_infantry_F"}
+) then {
+    if (_vehicle iskindOf "RHS_Mi24_base") then {[_vehicle] call Waldo_fnc_AddExitActions;};
+    [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute, _haloAlt, _haloChute] spawn {
+        params ["_vehicle", "_staticMinAlt", "_staticMaxAlt", "_staticMaxSpd", "_staticChute", "_haloAlt", "_haloChute"];
+        waitUntil {sleep 0; missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {isNull _vehicle}};
+        if (isNull _vehicle || {_vehicle getVariable ["Waldo_Paradrop_ManuallyConfigured", false]}) exitWith {};
+        // C130J and the Blackfish support both HALO and static-line jumps; their hold actions have
+        // mutually-exclusive altitude conditions so only the valid one shows at a time.
+        if (_vehicle iskindOf "RHS_C130J_Base" || {_vehicle iskindOf "B_T_VTOL_01_infantry_F"}) then {
+            [_vehicle, _haloAlt, _haloChute] call Waldo_fnc_AddHaloJump;
+        };
+        [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
+        [_vehicle] call Waldo_fnc_JumpSettingsCheck;
+    };
 };
 
 if (_vehicle iskindOf "MRAP_01_base_F") then {
