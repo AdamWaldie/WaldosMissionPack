@@ -352,7 +352,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal", dispatch)
         self.assertIn('roadsConnectedTo _x', request)
         self.assertIn('"Land_HelipadEmpty_F"', request)
-        self.assertIn('Waldo_HeliTransport_DefaultLzSearchRadius", 75', register)
+        self.assertIn('Waldo_HeliTransport_DefaultLzSearchRadius", 250', register)
         self.assertIn('Waldo_HeliTransport_DefaultLzClearanceScale", 2.0', register)
         self.assertIn('"landingClearanceScale"', register)
         self.assertIn("boundingBoxReal _vehicle", request)
