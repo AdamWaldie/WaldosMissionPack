@@ -37,10 +37,17 @@ private _section = {
     params ["_area", "_title"];
     ["INFO", _area, "section", "SECTION", _title] call _log;
 };
+// _hint is an optional, plain-language remediation step (what to actually go and change) attached
+// to a failing or unconfigured-but-likely-wanted check. It is folded into the same detail text
+// (so the [area,feature,state,detail] report shape every consumer already reads stays unchanged)
+// rather than adding a new field, and it is what actually reaches the hosted-server systemChat line
+// a mission maker sees in the moment - the terse state=/detail= pair alone tells you *that*
+// something is wrong, a hint tells you *what to do about it*.
 private _status = {
-    params ["_category", "_name", "_state", ["_detail", ""], ["_warn", false]];
-    _report pushBack [_category, _name, _state, _detail];
-    [if (_warn) then {"ERROR"} else {"INFO"}, _category, _name, "CHECK", format ["state=%1 detail=%2", _state, _detail]] call _log;
+    params ["_category", "_name", "_state", ["_detail", ""], ["_warn", false], ["_hint", ""]];
+    private _fullDetail = if (_hint == "") then {_detail} else {format ["%1; fix: %2", _detail, _hint]};
+    _report pushBack [_category, _name, _state, _fullDetail];
+    [if (_warn) then {"ERROR"} else {"INFO"}, _category, _name, "CHECK", format ["state=%1 detail=%2", _state, _fullDetail]] call _log;
     if (_warn) then {_warnings = _warnings + 1;};
 };
 private _consumeFeatureReport = {
@@ -145,13 +152,20 @@ if (_configuredLoadoutSides == 0) then {
 // Configured classes. Blank values are unconfigured; bad non-blank values are errors.
 ["configuration", "Mission-maker class and threshold settings"] call _section;
 {
-    _x params ["_variable", "_label"];
+    _x params ["_variable", "_label", ["_hint", ""]];
     private _class = missionNamespace getVariable [_variable, ""];
     if (_class == "") then {
         ["configuration", _label, "UNCONFIGURED", _variable, false] call _status;
     } else {
         private _valid = isClass (configFile >> "CfgVehicles" >> _class);
-        ["configuration", _label, if (_valid) then {"LOADED"} else {"ERROR"}, format ["%1 = %2", _variable, _class], !_valid] call _status;
+        // A known real gotcha: this exact class only exists when RHS is loaded, and the check
+        // above already fails it as ERROR on a non-RHS mission - surface the actual fix, not just
+        // "class not found", since this specific default has silently broken static-line jumps on
+        // vanilla missions before.
+        private _resolvedHint = if (!_valid && {_class == "rhs_d6_Parachute"}) then {
+            format ["%1 defaults to the RHS class rhs_d6_Parachute; either load RHS or set %2 to the vanilla NonSteerable_Parachute_F.", _variable, _variable]
+        } else {_hint};
+        ["configuration", _label, if (_valid) then {"LOADED"} else {"ERROR"}, format ["%1 = %2", _variable, _class], !_valid, _resolvedHint] call _status;
     };
 } forEach [
     ["Logi_SupplyBoxClass", "supply-box"],
@@ -164,7 +178,14 @@ private _minAltitude = missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE",
 private _maxAltitude = missionNamespace getVariable ["WALDO_STATIC_MAXALTITUDE", 350];
 private _maxSpeed = missionNamespace getVariable ["WALDO_STATIC_MAXSPEED", 310];
 private _thresholdsValid = _minAltitude < _maxAltitude && {_maxSpeed > 0};
-["configuration", "static-line-thresholds", if (_thresholdsValid) then {"LOADED"} else {"ERROR"}, format ["min=%1 max=%2 maxSpeed=%3", _minAltitude, _maxAltitude, _maxSpeed], !_thresholdsValid] call _status;
+["configuration", "static-line-thresholds", if (_thresholdsValid) then {"LOADED"} else {"ERROR"}, format ["min=%1 max=%2 maxSpeed=%3", _minAltitude, _maxAltitude, _maxSpeed], !_thresholdsValid, if (_thresholdsValid) then {""} else {"WALDO_STATIC_MINALTITUDE must be lower than WALDO_STATIC_MAXALTITUDE, and WALDO_STATIC_MAXSPEED must be positive - a jump hold-action condition that can never be true is the usual symptom."}] call _status;
+
+// HALO has no equivalent threshold check anywhere else in diagnostics - a nonsensical altitude
+// (negative, or below the static-line window, or absurdly high) silently produces a HALO jump
+// action that never becomes available, with nothing pointing a mission maker at the actual cause.
+private _haloAltitude = missionNamespace getVariable ["WALDO_PARA_HALOALTITUDE", 1000];
+private _haloAltitudeValid = _haloAltitude > 0 && {_haloAltitude <= 15000};
+["configuration", "halo-altitude-threshold", if (_haloAltitudeValid) then {"LOADED"} else {"ERROR"}, format ["WALDO_PARA_HALOALTITUDE=%1", _haloAltitude], !_haloAltitudeValid, if (_haloAltitudeValid) then {""} else {"Set WALDO_PARA_HALOALTITUDE to a positive, realistic HALO release altitude in metres AGL (1000 is the shipped default)."}] call _status;
 
 private _acreLoaded = isClass (configFile >> "CfgPatches" >> "acre_main");
 ["radio", "Radio configuration"] call _section;
@@ -183,6 +204,43 @@ if (_acreLoaded) then {
     ["radio", "acre-babel", if !(_babel getOrDefault ["enabled", false]) then {"DISABLED"} else {if (count (_babel getOrDefault ["languages", []]) > 0) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 languages=%2", _babel getOrDefault ["enabled", false], count (_babel getOrDefault ["languages", []])], (_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}] call _status;
 } else {
     ["radio", "acre-runtime", "UNAVAILABLE", "ACRE2 is not loaded; WMP radio presetting is inactive", false] call _status;
+};
+
+// Dedicated Paradrop coverage - previously this system had no runtime section of its own at all,
+// only the generic class-validity checks above. The single most useful thing diagnostics can add
+// here is visibility into the split between Waldo_fnc_AddVehicleFunctions' automatic jump-action
+// detection and a mission maker's own explicit setup (Waldo_fnc_ParadropQuickFlightSetup /
+// Waldo_fnc_VehicleJumpSetup / Waldo_fnc_ParadropCreateDropZone) - the two used to silently fight
+// over the same aircraft; Waldo_Paradrop_ManuallyConfigured is how that's resolved now, and a
+// mission maker has no other way to see which of their aircraft ended up in which group.
+["paradrop", "Paradrop jump-capable aircraft"] call _section;
+private _jumpCapableClasses = ["RHS_Mi24_base", "RHS_Mi8_base", "Heli_Transport_02_base_F", "RHS_C130J_Base", "B_T_VTOL_01_infantry_F"];
+private _jumpCapableAircraft = (allMissionObjects "Air") select {
+    private _type = typeOf _x;
+    _jumpCapableClasses findIf {_type isKindOf _x} >= 0
+};
+private _manuallyConfigured = _jumpCapableAircraft select {_x getVariable ["Waldo_Paradrop_ManuallyConfigured", false]};
+private _staticJumpInstalled = _jumpCapableAircraft select {(_x getVariable ["Waldo_Static_Jump_ActionId", -1]) >= 0};
+private _haloJumpInstalled = _jumpCapableAircraft select {(_x getVariable ["Waldo_Halo_Jump_ActionId", -1]) >= 0};
+if (_jumpCapableAircraft isEqualTo []) then {
+    ["paradrop", "jump-capable-aircraft", "UNCONFIGURED", "No auto-detected jump-capable aircraft (Blackfish/C130J/Mi8/Mi24/Heli_Transport_02) are present in the mission", false] call _status;
+} else {
+    private _autoDetected = count _jumpCapableAircraft - count _manuallyConfigured;
+    private _neitherJumpType = _jumpCapableAircraft select {!(_x in _staticJumpInstalled) && {!(_x in _haloJumpInstalled)}};
+    // Server-side object variables are set locally per interface client, not broadcast - this check
+    // can only see what has replicated to the server's own local state, which is why it reports
+    // "server-visible" rather than an absolute guarantee. It still catches the common case: an
+    // aircraft this server machine expects to have jump actions but doesn't.
+    ["paradrop", "jump-capable-aircraft", if (_neitherJumpType isEqualTo []) then {"ACTIVE"} else {"ERROR"}, format ["total=%1 manuallyConfigured=%2 autoDetected=%3 staticInstalled=%4 haloInstalled=%5 neitherInstalled=%6 (server-visible)", count _jumpCapableAircraft, count _manuallyConfigured, _autoDetected, count _staticJumpInstalled, count _haloJumpInstalled, count _neitherJumpType], !(_neitherJumpType isEqualTo []), if (_neitherJumpType isEqualTo []) then {""} else {"An aircraft with neither static-line nor HALO installed usually means its own object init field never ran a setup call, or WALDO_INIT_COMPLETE never became true in time - check the RPT for [WMP PARADROP] lines naming that aircraft."}] call _status;
+};
+
+private _dropZoneRegistry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", createHashMap];
+private _dropZonePublic = missionNamespace getVariable ["Waldo_Paradrop_PublicDropZones", []];
+if (count (keys _dropZoneRegistry) == 0) then {
+    ["paradrop", "dynamic-drop-zones", "UNCONFIGURED", "No Waldo_fnc_ParadropCreateDropZone operations are registered", false] call _status;
+} else {
+    private _zoneConsistent = count (keys _dropZoneRegistry) == count _dropZonePublic;
+    ["paradrop", "dynamic-drop-zones", if (_zoneConsistent) then {"ACTIVE"} else {"ERROR"}, format ["registered=%1 publicJip=%2 ids=%3", count (keys _dropZoneRegistry), count _dropZonePublic, keys _dropZoneRegistry], !_zoneConsistent, if (_zoneConsistent) then {""} else {"The server registry and the broadcast JIP list have drifted apart - a JIP client may see a stale or missing drop zone. This usually means a custom script mutated the registry directly instead of going through Waldo_fnc_ParadropCreateDropZone/Waldo_fnc_ParadropRemoveDropZone."}] call _status;
 };
 
 ["systems", "Feature runtime state"] call _section;
@@ -216,6 +274,13 @@ private _deployedMhqs = {_x getVariable ["Waldo_MHQ_Status", false]} count _mhqO
 ["logistics", "mhq-runtime", if (_mhqObjects isEqualTo []) then {"UNCONFIGURED"} else {if (_deployedMhqs > 0) then {"ACTIVE"} else {"LOADED"}}, format ["configured=%1 deployed=%2", count _mhqObjects, _deployedMhqs], false] call _status;
 private _vvdPads = _missionObjects select {_x getVariable ["Waldo_VVD_ServerConfigured", false]};
 ["logistics", "vvd-runtime", if (_vvdPads isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["configuredSpawnPads=%1", count _vvdPads], false] call _status;
+private _aceMedicalLoaded = isClass (configFile >> "CfgPatches" >> "ace_medical");
+private _fieldHospitals = _missionObjects select {_x getVariable ["ace_medical_isMedicalFacility", false]};
+if (_fieldHospitals isEqualTo []) then {
+    ["logistics", "field-hospital-runtime", "UNCONFIGURED", "No crate has ace_medical_isMedicalFacility set; Waldo_fnc_MedicalCratePopulate was never called with _isFacility true", false] call _status;
+} else {
+    ["logistics", "field-hospital-runtime", if (_aceMedicalLoaded) then {"ACTIVE"} else {"ERROR"}, format ["facilityCrates=%1; per-object action installation is reported by the client audit", count _fieldHospitals], !_aceMedicalLoaded, if (_aceMedicalLoaded) then {""} else {"ACE medical is not loaded, so this locational treatment boost cannot take effect - load ace_medical or stop marking crates as facilities."}] call _status;
+};
 private _recoveryWorkshops = _missionObjects select {_x getVariable ["Waldo_Recovery_Workshop", false]};
 private _recoveryVehicles = _missionObjects select {_x getVariable ["Waldo_Recovery_Registered", false]};
 private _recoveryPackages = (missionNamespace getVariable ["Waldo_Recovery_Packages", []]) select {!isNull _x};
@@ -259,10 +324,11 @@ private _resupplyCarriers = allPlayers select {_x getVariable ["Waldo_FieldResup
     private _consistent = _serverCount == _publicCount;
     ["runtime-system", _feature, if (_serverCount == 0) then {"UNCONFIGURED"} else {if (_consistent) then {"ACTIVE"} else {"ERROR"}}, format ["server=%1 publicJip=%2", _serverCount, _publicCount], !_consistent] call _status;
 } forEach [
+    // paradrop-drop-zones is intentionally not repeated here - the dedicated Paradrop section above
+    // already reports Waldo_Paradrop_DropZones/PublicDropZones with a specific remediation hint.
     ["dynamic-aa", "Waldo_DynamicAA_Registry", "Waldo_DynamicAA_PublicSystems"],
     ["dynamic-ao", "Waldo_DynamicAO_Registry", "Waldo_DynamicAO_PublicSystems"],
-    ["airborne-gunship", "Waldo_Gunship_Registry", "Waldo_Gunship_PublicSystems"],
-    ["paradrop-drop-zones", "Waldo_Paradrop_DropZones", "Waldo_Paradrop_PublicDropZones"]
+    ["airborne-gunship", "Waldo_Gunship_Registry", "Waldo_Gunship_PublicSystems"]
 ];
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
