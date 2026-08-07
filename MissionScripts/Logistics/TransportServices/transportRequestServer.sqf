@@ -147,7 +147,12 @@ switch (_action) do {
         _retargetingPickup = true;
     };
     case "SET_DESTINATION": {
-        if (_state != "BOARDING" || {count _position < 2}) exitWith {};
+        // Symmetric with MOVE_PICKUP retargeting a still-inbound pickup: a destination already
+        // being travelled to can be changed too, not just the first one picked while boarding.
+        // The same fresh-serial/requestId mechanism below invalidates any superseded AI-owner
+        // loop before it can land, stop or report against the old destination.
+        if !(_state in ["BOARDING", "TO_DESTINATION"]) exitWith {};
+        if (count _position < 2) exitWith {};
         _phase = "DESTINATION";
     };
     case "RETRY": {

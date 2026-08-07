@@ -110,8 +110,15 @@ private _addRouteWaypoint = {
     _waypoint setWaypointCompletionRadius _radius;
     _waypoint
 };
+// The green/centre/red run-line waypoints are deliberately tighter than standby/exit to keep the
+// jump line geometrically precise, but too tight for a fast aircraft's turning radius is a known
+// Arma AI failure mode: it can perpetually fail to satisfy the completion radius and circle trying,
+// rather than actually breaking off toward the next waypoint - which reads exactly as "only one
+// pass, then loitering" instead of continuing the loop. 50 m still keeps the line tight relative to
+// the run length while giving faster-than-default aircraft (missions commonly configure well above
+// the 220 km/h default) real room to satisfy it.
 {
-    [_x, "MOVE", if (_forEachIndex in [1, 2, 3]) then {30} else {100}] call _addRouteWaypoint;
+    [_x, "MOVE", if (_forEachIndex in [1, 2, 3]) then {50} else {100}] call _addRouteWaypoint;
 } forEach [_standby, _green, _centre, _red, _exit];
 if (_lifecycle == "LOOP") then {
     {[_x, "MOVE", 180] call _addRouteWaypoint} forEach [_crosswind, _downwind, _rejoin];

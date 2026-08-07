@@ -175,6 +175,21 @@ if (_vvdTerminals isEqualTo []) then {
     ["logistics", "vvd-actions", if (_vvdValid) then {"LOADED"} else {"ERROR"}, format ["terminals=%1 expectedMode=%2", count _vvdTerminals, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}]] call _add;
 };
 
+private _fieldHospitals = _localObjects select {_x getVariable ["ace_medical_isMedicalFacility", false]};
+if (_fieldHospitals isEqualTo []) then {
+    ["logistics", "field-hospital-actions", "UNCONFIGURED", "No field hospital crate is present"] call _add;
+} else {
+    // Waldo_fnc_MedicalCrateFacilityActionLocal installs the vanilla addAction unconditionally and
+    // the ACE action only when ACE Interact is loaded (both together, not one as a fallback for the
+    // other) - a crate missing either the expected ACE path or its vanilla action id means the
+    // install call never reached that crate on this client.
+    private _fieldHospitalsMissingAction = _fieldHospitals select {
+        (_x getVariable ["Waldo_FieldHospital_VanillaActionId", -1]) < 0
+        || {_aceInteractLoaded && {(_x getVariable ["Waldo_FieldHospital_AceActionPath", []]) isEqualTo []}}
+    };
+    ["logistics", "field-hospital-actions", if (_fieldHospitalsMissingAction isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["crates=%1 missingAction=%2 expectedMode=%3", count _fieldHospitals, count _fieldHospitalsMissingAction, if (_aceInteractLoaded) then {"ACE+VANILLA"} else {"VANILLA"}]] call _add;
+};
+
 private _warnings = {_x select 2 == "ERROR"} count _checks;
 ["core", "diagnostics", "INFO", "END", format ["checks=%1 errors=%2", count _checks, _warnings], _runId, format ["CLIENT:%1", clientOwner]] call Waldo_fnc_DiagnosticLog;
 [_runId, clientOwner, name player, getPlayerUID player, _checks] remoteExecCall ["Waldo_fnc_DiagnosticsReceiveClient", 2];

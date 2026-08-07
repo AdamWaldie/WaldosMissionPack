@@ -53,9 +53,10 @@ The server report checks:
 - configured crate, parachute, and paradrop values;
 - ACRE2 configuration, authoritative plan schema/revision, group counts and Babel readiness;
 - Economy, party-game, interaction-procedure, jamming, SafeStart, AAR/ENDEX, and custom 3D-marker state;
-- configured MHQ and VVD equipment;
+- configured MHQ, VVD and Field Hospital equipment;
 - recovery workshops, carriers, attached/virtual package state, Field Resupply hubs/carriers and Tactical Displays;
-- Hazard evaluator/audio state, typed helicopter/ground transport registries, and server/JIP registry parity for Dynamic AA, Dynamic AO, gunships and paradrop operations;
+- Hazard evaluator/audio state, typed helicopter/ground transport registries, and server/JIP registry parity for Dynamic AA, Dynamic AO and gunships;
+- Paradrop, in its own dedicated section: static-line/HALO altitude and chute-class thresholds, how many auto-detected jump-capable aircraft in the mission carry a server-visible static/HALO hold-action versus neither, the split between `Waldo_fnc_AddVehicleFunctions` auto-detection and a mission maker's own explicit setup call, and Dynamic Drop Zone registry/JIP parity;
 - ACE and Zeus integration availability.
 
 Each interface client reports:
@@ -67,9 +68,19 @@ Each interface client reports:
 - core and Economy Zeus module registration counts;
 - the custom 3D-marker renderer;
 - ACE or vanilla interaction installation on registered audit fixtures.
-- Tactical Display actions, WMP HUD eligibility/runtime state, transport actions and Hazard snapshot/evaluator state.
+- Tactical Display actions, WMP HUD eligibility/runtime state, transport actions, Field Hospital action installation and Hazard snapshot/evaluator state.
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
+
+## Assistive hints
+
+A check that fails or is unexpectedly unconfigured can carry a short, plain-language remediation
+hint alongside its terse `state=`/`detail=` pair - not just *that* something is wrong, but *what to
+go and change*. A hint is folded into the same `detail` text as `"; fix: <hint>"`, so it reaches
+every existing consumer (RPT, `Waldo_Diagnostics_LastReport`, the hosted-server `systemChat` line)
+without changing the `[area, feature, state, detail]` report shape. For example, an invalid
+`WALDO_STATIC_STATICCHUTE` pointing at the RHS-only default without RHS loaded reports the exact
+variable to change and the vanilla fallback class to use, instead of just "class not found".
 
 ## Enabling diagnostics
 

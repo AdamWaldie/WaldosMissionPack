@@ -138,10 +138,16 @@ private _exit = _route get "exit";
 // what the aircraft is actually flying.
 private _routeAltitude = _route get "altitude";
 private _routeMaxSpeed = _route get "maxSpeed";
+// Fall back to the mission's own configured WALDO_STATIC_/WALDO_PARA_ envelope (airOperationsConfig.sqf),
+// not hardcoded literals - matches Waldo_fnc_ParadropQuickFlightSetup, so a ZEN-created drop zone that
+// doesn't override a threshold gets the mission maker's actual configured default, not the shipped
+// pack default regardless of what the mission configured.
 private _envelope = [
     _routeAltitude, _routeMaxSpeed,
-    _config getOrDefault ["staticMinimumAltitude", 180], _config getOrDefault ["staticMaximumAltitude", 350],
-    _config getOrDefault ["staticMaximumSpeed", 310], _config getOrDefault ["haloMinimumAltitude", 1000]
+    _config getOrDefault ["staticMinimumAltitude", missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE", 180]],
+    _config getOrDefault ["staticMaximumAltitude", missionNamespace getVariable ["WALDO_STATIC_MAXALTITUDE", 350]],
+    _config getOrDefault ["staticMaximumSpeed", missionNamespace getVariable ["WALDO_STATIC_MAXSPEED", 310]],
+    _config getOrDefault ["haloMinimumAltitude", missionNamespace getVariable ["WALDO_PARA_HALOALTITUDE", 1000]]
 ] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
 private _staticMinimum = _envelope get "staticMinimumAltitude";
 private _staticMaximum = _envelope get "staticMaximumAltitude";
@@ -155,6 +161,14 @@ _config set ["haloMinimumAltitude", _haloMinimum];
 // One object-keyed replay configures current clients and JIP clients with both selected jump
 // systems. The setup function reconciles repeated configuration rather than duplicating actions.
 [_aircraft, _config] remoteExec ["Waldo_fnc_ParadropConfigureAircraftLocal", 0, _aircraft];
+// Mirrors Waldo_fnc_ParadropQuickFlightSetup's own envelope log line - without this, a ZEN-created
+// operation's actual normalized envelope was invisible in the RPT, making a reported "jump action
+// doesn't work" impossible to diagnose from logs alone.
+diag_log format [
+    "[WMP PARADROP] Dynamic drop zone jump envelope: id=%1 aircraft=%2 static=%3 static-alt=%4-%5m static-speed<=%6 halo=%7 halo-alt>=%8.",
+    _id, _class, _config get "staticJumpEnabled", round _staticMinimum, round _staticMaximum,
+    round _staticMaximumSpeed, _config get "haloJumpEnabled", round _haloMinimum
+];
 
 private _jumpers = [];
 private _jumpGroup = grpNull;
@@ -235,8 +249,8 @@ missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
         };
         private _interval = ((_config getOrDefault ["jumpInterval", 2]) max 0.5) min 10;
         private _automaticMode = toUpperANSI (_config getOrDefault ["automaticJumpMode", "STATIC"]);
-        private _staticChute = _config getOrDefault ["staticChuteClass", _config getOrDefault ["chuteClass", "NonSteerable_Parachute_F"]];
-        private _haloChute = _config getOrDefault ["haloBackpackClass", "B_Parachute"];
+        private _staticChute = _config getOrDefault ["staticChuteClass", _config getOrDefault ["chuteClass", missionNamespace getVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F"]]];
+        private _haloChute = _config getOrDefault ["haloBackpackClass", missionNamespace getVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute"]];
         {
             if (_aircraft distance2D _red <= 150) exitWith {
                 diag_log format ["[WMP PARADROP] Red line reached; remaining jumpers retained id=%1", _id];

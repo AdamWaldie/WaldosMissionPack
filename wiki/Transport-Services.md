@@ -41,7 +41,7 @@ The optional fifth argument is a readable HashMap. Omit it for the safe defaults
 ]] call Waldo_fnc_TransportRegister;
 ```
 
-Each registered vehicle has a WMP-blue informational action naming it as a **Helicopter Transport** or **Ground Transport**. The vehicle's ACE category and vanilla controls always include its configured name and affect that exact vehicle.
+Each registered vehicle has a WMP-blue informational action naming it as a **Helicopter Transport** or **Ground Transport** and reporting its current state - installed as a vanilla `addAction` alongside ACE, not only as a fallback when ACE is absent, so it's reachable without opening ACE Self Interact first. The vehicle's ACE category and vanilla controls always include its configured name and affect that exact vehicle; the four operational controls (move pickup, select destination, RTB, retry) remain ACE-priority with a vanilla fallback only when ACE genuinely isn't available.
 
 To travel:
 
@@ -60,6 +60,7 @@ To travel:
 - **Request All Available** dispatches every eligible available transport of that type around one clicked centre. WMP uses enlarged, separate search slots instead of sending the fleet to one coordinate, then shows one combined result card instead of one card per vehicle.
 - **Return All Controlled to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
+- **Select Destination** works the same way once a destination is already set: choosing it again while the transport is already travelling to that destination (`TO_DESTINATION`) retargets it, the same as retargeting a pickup - it does not require returning to `BOARDING` first.
 - Retargeting publishes a new request token before redispatch. Superseded AI-owner loops stop before they can land, stop or report against the old point.
 - The same named controls also exist directly on each transport. Being inside or near another transport no longer changes which object the action addresses.
 - The original requester may move pickup or order RTB while outside the vehicle. A passenger may select destination or order RTB for the transport they occupy. Zeus may manage any registered transport.
