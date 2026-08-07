@@ -45,5 +45,9 @@ missionNamespace setVariable ["Waldo_Gunship_PublicSystems", _summaries, true];
     ],
     false
 ] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];
-[] remoteExecCall ["Waldo_fnc_GunshipSetupLocal", -2, "Waldo_Gunship_LocalSetup"];
+// Target 0 (all machines), not -2 ("all clients except owner 2"): a listen server's host shares
+// owner 2 with the embedded server, so -2 silently never reconciled controller actions/markers on
+// the hosting player's own client. Waldo_fnc_GunshipSetupLocal already guards on hasInterface, so
+// target 0 stays a safe no-op on a pure dedicated server.
+[] remoteExecCall ["Waldo_fnc_GunshipSetupLocal", 0, "Waldo_Gunship_LocalSetup"];
 _summaries
