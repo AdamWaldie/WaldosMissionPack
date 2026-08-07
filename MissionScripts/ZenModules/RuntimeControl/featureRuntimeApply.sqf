@@ -98,9 +98,16 @@ switch (toUpperANSI _action) do {
             ["Waldo_TreatmentFeedback_NotifyPatient", _notifyPatient], ["Waldo_TreatmentFeedback_NotifyMedic", _notifyMedic],
             ["Waldo_TreatmentFeedback_ShowMedicName", _showMedic], ["Waldo_TreatmentFeedback_ShowBodyPart", _showBodyPart]
         ] call _publishAll;
+        // -2 ("all clients except owner 2") never reaches a listen server's own host client, since
+        // the host shares owner 2 with the embedded server - so the direct hasInterface calls below
+        // are required to actually apply this on a hosting player's own machine, not just remote
+        // clients. Every target function here already guards on hasInterface, so these are safe
+        // no-ops on a pure dedicated server.
         [] remoteExecCall ["Waldo_fnc_TreatmentFeedbackStop", -2];
+        if (hasInterface) then {[] call Waldo_fnc_TreatmentFeedbackStop};
         if (_enable) then {
             [] remoteExecCall ["Waldo_fnc_TreatmentFeedbackInit", -2, "Waldo_TreatmentFeedback_RuntimeInit"];
+            if (hasInterface) then {[] call Waldo_fnc_TreatmentFeedbackInit};
         } else {
             [] remoteExecCall ["", "Waldo_TreatmentFeedback_RuntimeInit"];
         };
@@ -182,9 +189,12 @@ switch (toUpperANSI _action) do {
             ["Waldo_Rally_PlacementDistance", (_placement max 1) min 10], ["Waldo_Rally_MaximumSlope", (_slope max 0) min 45],
             ["Waldo_Rally_AllowRegroup", _regroup]
         ] call _publishAll;
+        // See the listen-host note above TREATMENT_CONFIG's equivalent calls.
         [] remoteExecCall ["Waldo_fnc_RallyPointStop", -2];
+        if (hasInterface) then {[] call Waldo_fnc_RallyPointStop};
         if (_enable) then {
             [] remoteExecCall ["Waldo_fnc_RallyPointInit", -2, "Waldo_Rally_RuntimeInit"];
+            if (hasInterface) then {[] call Waldo_fnc_RallyPointInit};
         } else {
             [] call Waldo_fnc_RallyPointRemoveAllServer;
             [] remoteExecCall ["", "Waldo_Rally_RuntimeInit"];
@@ -202,10 +212,13 @@ switch (toUpperANSI _action) do {
             ["Waldo_TreeFelling_HitCooldown", _cooldown max 0.1], ["Waldo_TreeFelling_ClearBushes", _clearBushes],
             ["Waldo_TreeFelling_BushRadius", _bushRadius max 0]
         ] call _publishAll;
+        // See the listen-host note above TREATMENT_CONFIG's equivalent calls.
         if (_enable) then {
             [] remoteExecCall ["Waldo_fnc_TreeFellingInit", -2, "Waldo_TreeFelling_RuntimeInit"];
+            if (hasInterface) then {[] call Waldo_fnc_TreeFellingInit};
         } else {
             [] remoteExecCall ["Waldo_fnc_TreeFellingStop", -2];
+            if (hasInterface) then {[] call Waldo_fnc_TreeFellingStop};
             [] remoteExecCall ["", "Waldo_TreeFelling_RuntimeInit"];
         };
     };
@@ -218,10 +231,13 @@ switch (toUpperANSI _action) do {
             ["Waldo_EmergencyDismount_ClearPositionRadius", _clearRadius max 0], ["Waldo_EmergencyDismount_RequireClearExit", _requireClear],
             ["Waldo_EmergencyDismount_UseEject", _useEject], ["Waldo_EmergencyDismount_RecoverUnconscious", _recover]
         ] call _publishAll;
+        // See the listen-host note above TREATMENT_CONFIG's equivalent calls.
         if (_enable) then {
             [] remoteExecCall ["Waldo_fnc_EmergencyDismountInit", -2, "Waldo_EmergencyDismount_RuntimeInit"];
+            if (hasInterface) then {[] call Waldo_fnc_EmergencyDismountInit};
         } else {
             [] remoteExecCall ["Waldo_fnc_EmergencyDismountStop", -2];
+            if (hasInterface) then {[] call Waldo_fnc_EmergencyDismountStop};
             [] remoteExecCall ["", "Waldo_EmergencyDismount_RuntimeInit"];
         };
     };

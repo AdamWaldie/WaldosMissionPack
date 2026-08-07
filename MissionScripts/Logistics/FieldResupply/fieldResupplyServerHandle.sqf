@@ -141,7 +141,12 @@ switch (toUpperANSI _operation) do {
         _unit setVariable ["Waldo_FieldResupply_Crates", _carried - 1, true];
         if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, true, [0, 0, 0], 0] call ace_dragging_fnc_setDraggable};
         if !(isNil "ace_dragging_fnc_setCarryable") then {[_crate, true, [0, 2, 1], 0] call ace_dragging_fnc_setCarryable};
-        [_crate] remoteExecCall ["Waldo_fnc_FieldResupplySetupCrateLocal", -2, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
+        // Target 0 (all machines), matching FieldResupplyRegisterHub's own equivalent call - not -2
+        // ("all clients", which excludes owner 2). On a listen server the host's own client shares
+        // owner 2 with the server, so -2 silently skipped installing the crate's local actions on
+        // exactly the machine most mission makers test from; FieldResupplySetupCrateLocal already
+        // guards with hasInterface, so target 0 stays a safe no-op on a pure dedicated server.
+        [_crate] remoteExecCall ["Waldo_fnc_FieldResupplySetupCrateLocal", 0, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
         [format ["Field resupply deployed with %1 uses; %2 portable crate(s) remain.", _charges, _carried - 1], "SUCCESS"] call _notify;
         true
     };
@@ -154,7 +159,12 @@ switch (toUpperANSI _operation) do {
         };
         private _charges = _crate getVariable ["Waldo_FieldResupply_Charges", 0];
         if (_charges <= 0) exitWith {["This Field Resupply crate is exhausted.", "WARNING"] call _notify; false};
-        private _compatibleClasses = ([_unit] call _getMagazineRows) apply {_x select 0};
+        // compatibleMagazines reflects what the unit's current weapons can load, not what they
+        // currently happen to be carrying - a unit that has fired dry on a magazine type (or is
+        // carrying none of it for any other reason) must still be able to draw more of it from the
+        // crate. Deriving this from _getMagazineRows (which reads the unit's own inventory) made
+        // that exact "actually needs a refill" case always report no compatible ammunition.
+        private _compatibleClasses = compatibleMagazines _unit;
         private _storedRows = _crate getVariable ["Waldo_FieldResupply_CargoRows", []];
         private _grantRows = _storedRows select {(_x param [0, "", [""]]) in _compatibleClasses};
         if (count _grantRows == 0) exitWith {
@@ -183,7 +193,11 @@ switch (toUpperANSI _operation) do {
         private _maximum = _unit getVariable ["Waldo_FieldResupply_MaxCrates", 0];
         private _carried = _unit getVariable ["Waldo_FieldResupply_Crates", 0];
         if (_recoverable && {_carried >= _maximum}) exitWith {["Carrier capacity is full.", "WARNING"] call _notify; false};
-        [] remoteExecCall ["", format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
+        // Cancel the crate's persistent JIP-replay entry before deleting it - the JIP id is the
+        // 3rd remoteExecCall argument, not the 2nd (target); passing it as target previously called
+        // a no-op function at a garbage destination and left the JIP entry (and its now-dangling
+        // crate object reference) stored for any future joining player.
+        [] remoteExecCall ["", 0, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
         deleteVehicle _crate;
         if (_recoverable) then {
             _unit setVariable ["Waldo_FieldResupply_Crates", _carried + 1, true];

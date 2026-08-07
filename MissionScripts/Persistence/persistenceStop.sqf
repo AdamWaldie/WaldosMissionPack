@@ -14,11 +14,15 @@
 
 params [["_localOnly", false, [false]]];
 
-if !(isServer) exitWith {
-    if !(_localOnly) then {[] remoteExecCall ["Waldo_fnc_PersistenceStop", 2]};
+private _stopClientLoop = {
     private _clientHandle = missionNamespace getVariable ["Waldo_Persistence_ClientLoop", scriptNull];
     if !(scriptDone _clientHandle) then {terminate _clientHandle};
     missionNamespace setVariable ["Waldo_Persistence_ClientStarted", false];
+};
+
+if !(isServer) exitWith {
+    if !(_localOnly) then {[] remoteExecCall ["Waldo_fnc_PersistenceStop", 2]};
+    call _stopClientLoop;
 };
 
 private _remoteAuthorized = true;
@@ -39,4 +43,9 @@ private _handle = missionNamespace getVariable ["Waldo_Persistence_ServerLoop", 
 if !(scriptDone _handle) then {terminate _handle};
 missionNamespace setVariable ["Waldo_Persistence_ServerStarted", false];
 [true] remoteExecCall ["Waldo_fnc_PersistenceStop", -2];
+// -2 ("all clients except owner 2") never reaches a listen server's own host client, since the
+// host shares owner 2 with the embedded server - so on a listen server this machine's own
+// Waldo_Persistence_ClientLoop (started under hasInterface in persistenceInit.sqf) was never
+// terminated by the broadcast above. Stop it directly here too.
+if (hasInterface) then {call _stopClientLoop};
 diag_log "[WMP PERSISTENCE] Persistence stopped; stored records were retained.";
