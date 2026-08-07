@@ -106,17 +106,22 @@ if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSet
     // single biggest source of "the plane just sits there" reports for a script wired up this way.
     // Bounded the same way as the pilot wait below it: a mission that never sets WALDO_INIT_COMPLETE
     // (broken init.sqf, non-standard init flow) must not leave this spawned handle looping forever.
-    private _initDeadline = serverTime + 30;
+    // 180s, not 30s - this is a one-time setup cost, and a heavy multi-feature mission (many
+    // compositions, ACRE/ACE/Zeus registration, background Steam Workshop lookups, first-load asset
+    // streaming) can legitimately still be mid-init.sqf at 30s without anything actually being
+    // broken; a real "give up" deadline still exists, it just isn't tight enough to fire on a slow
+    // but healthy mission load.
+    private _initDeadline = serverTime + 180;
     waitUntil {sleep 0.5; missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {isNull _aircraft} || {serverTime >= _initDeadline}};
     if (isNull _aircraft) exitWith {};
     if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) exitWith {
-        diag_log format ["[WMP PARADROP] Quick flight setup abandoned for %1: WALDO_INIT_COMPLETE never became true within 30 seconds.", typeOf _aircraft];
+        diag_log format ["[WMP PARADROP] Quick flight setup abandoned for %1: WALDO_INIT_COMPLETE never became true within 180 seconds.", typeOf _aircraft];
     };
-    private _deadline = serverTime + 30;
+    private _deadline = serverTime + 180;
     waitUntil {sleep 0.5; isNull _aircraft || {!isNull (driver _aircraft)} || {serverTime >= _deadline}};
     if (isNull _aircraft) exitWith {};
     if (isNull driver _aircraft) exitWith {
-        diag_log format ["[WMP PARADROP] Quick flight setup abandoned for %1: no pilot became available within 30 seconds. Assign a crew (Eden crew or Waldo_fnc_MoveInCargoPlane) before this call.", typeOf _aircraft];
+        diag_log format ["[WMP PARADROP] Quick flight setup abandoned for %1: no pilot became available within 180 seconds. Assign a crew (Eden crew or Waldo_fnc_MoveInCargoPlane) before this call.", typeOf _aircraft];
     };
 
     // getMarkerPos on a marker name that doesn't exist returns [0,0,0], not an empty array - it

@@ -91,9 +91,11 @@ field:
   units besides this aircraft's crew (e.g. a squad leader who's also the
   pilot), the crew is automatically moved into a dedicated fresh group first
   so those other units never lose their own waypoints.
-- Waits (bounded, 30s) for a pilot to exist, so it's safe even if a
-  separate init-field call (e.g. `Waldo_fnc_MoveInCargoPlane` on another
-  object) assigns the crew — order between the two doesn't matter.
+- Waits (bounded, 180s - generous since this is a one-time setup cost and a
+  heavy multi-feature mission can legitimately still be finishing init.sqf)
+  for a pilot to exist, so it's safe even if a separate init-field call
+  (e.g. `Waldo_fnc_MoveInCargoPlane` on another object) assigns the crew —
+  order between the two doesn't matter.
 - Requested (or configured-default) jump envelope values are clamped by
   `Waldo_fnc_ParadropNormalizeJumpEnvelope` around the route's actual
   altitude/speed before the jump action is installed — the fix for a jump

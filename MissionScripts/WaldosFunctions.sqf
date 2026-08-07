@@ -380,6 +380,9 @@ class CfgFunctions
             class MedicalCratePopulate {
                 file = "MissionScripts\Logistics\Crates\doMedicalCrate.sqf";
             };
+            class MedicalCrateFacilityActionLocal {
+                file = "MissionScripts\Logistics\Crates\medicalCrateFacilityActionLocal.sqf";
+            };
             class SupplyCratePopulate {
                 file = "MissionScripts\Logistics\Crates\doSupplyCrate.sqf";
             };
