@@ -325,6 +325,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_DynamicAA_MaximumRadius` | Maximum accepted system radius in metres. |
 | `Waldo_DynamicAA_MaximumAltitude` | Maximum accepted detection altitude. |
 | `Waldo_DynamicAA_MaximumFighters` | Maximum fighters created by one system. |
+| `Waldo_DynamicAA_MaxSlopeDegrees` | Steepest terrain (degrees) a component may be placed on; rejected the same as a nearby tree/rock/building. |
 | `Waldo_DynamicAA_SideAssetPools` | Shared fallback radar, static, mobile and fighter content pools by operational side. |
 | `Waldo_DynamicAA_FactionAssetPools` | Shared faction/content profiles; selection is independent of operational side. |
 | `WALDO_STATIC_MINALTITUDE` | Lowest valid static-line release altitude in metres. |

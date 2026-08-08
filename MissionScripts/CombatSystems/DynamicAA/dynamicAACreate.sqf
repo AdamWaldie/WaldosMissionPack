@@ -256,6 +256,13 @@ private _assetPlan = [];
 // Resolve every final component before creating the first vehicle. findEmptyPosition protects the
 // real selected class against existing world objects; the additional reservation list protects
 // planned assets that do not exist yet and therefore cannot be seen by the engine query.
+// findEmptyPosition does not itself reject steep terrain - a clutter-free patch of open hillside
+// passes every other check here just as readily as flat ground, which used to mean either a
+// visibly tilted radar/launcher on a slope or (on a hillside dense enough that every open patch
+// also happens to carry rocks/trees) the whole ring search failing outright with a misleading
+// "no complete collision-free footprint" reason. Reject candidates over Waldo_DynamicAA_MaxSlopeDegrees
+// explicitly so the search keeps walking outward toward an actually flat shelf instead.
+private _maxSlopeDegrees = missionNamespace getVariable ["Waldo_DynamicAA_MaxSlopeDegrees", 12];
 private _resolvedPlan = [];
 private _finalReservations = [];
 private _resolveFinalPosition = {
@@ -289,7 +296,10 @@ private _resolveFinalPosition = {
                     true
                 ];
                 private _waterCompatible = if (_class isKindOf "Ship") then {surfaceIsWater _exact} else {!surfaceIsWater _exact};
-                if (_plannedOverlap < 0 && {_objectBlockers isEqualTo []} && {_terrainBlockers isEqualTo []} && {_waterCompatible}) then {
+                // surfaceNormal is a unit vector; its Z component is the cosine of the angle between
+                // the ground and world-up, so acos of it is the slope in degrees directly (0 = flat).
+                private _slopeOk = _class isKindOf "Ship" || {(acos ((surfaceNormal _exact) select 2)) <= _maxSlopeDegrees};
+                if (_plannedOverlap < 0 && {_objectBlockers isEqualTo []} && {_terrainBlockers isEqualTo []} && {_waterCompatible} && {_slopeOk}) then {
                     _result = _exact;
                     _finalReservations pushBack [_result, _clearance];
                 };
