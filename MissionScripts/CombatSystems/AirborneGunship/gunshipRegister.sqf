@@ -81,7 +81,13 @@ if (isNull _aircraft) then {
     createVehicleCrew _aircraft;
     _spawned = true;
 };
-if (!isNull _aircraft && {isNull driver _aircraft} && {_config getOrDefault ["createCrew", true]}) then {createVehicleCrew _aircraft};
+// createVehicleCrew only ever fills EMPTY positions (it never ejects/replaces an existing occupant),
+// so this is safe to run unconditionally rather than only when there is no driver at all. An
+// Eden-placed aircraft that already has a placed-and-crewed pilot (driver not null) previously never
+// reached this call, which left any gunner turret with no AI assigned - the turret still physically
+// existed on the airframe, but with nobody sitting in it "Take Control" had nothing to discover below
+// and nothing to hand control of even if a profile was configured manually.
+if (!isNull _aircraft && {_config getOrDefault ["createCrew", true]}) then {createVehicleCrew _aircraft};
 if (isNull _aircraft || {!(_aircraft isKindOf "Air")} || {isNull driver _aircraft}) exitWith {
     if (_spawned && {!isNull _aircraft}) then {deleteVehicleCrew _aircraft; deleteVehicle _aircraft};
     ["Registration failed: the selected aircraft could not be created with an AI pilot.", "ERROR"] call _notifyRequester;
@@ -103,10 +109,15 @@ private _radius = ((_config getOrDefault ["radius", missionNamespace getVariable
 private _altitude = ((_config getOrDefault ["altitude", missionNamespace getVariable ["Waldo_Gunship_DefaultAltitude", 700]]) max 100) min (missionNamespace getVariable ["Waldo_Gunship_MaximumAltitude", 5000]);
 private _turrets = _config getOrDefault ["turretProfiles", []];
 if (count _turrets == 0) then {
+    // allTurrets [.., true] lists every turret path the airframe actually has, independent of whether
+    // anyone is currently sitting in it - unlike the previous fullCrew-based discovery, which only
+    // found turrets that already happened to be crewed at this exact moment. That made discovery
+    // depend on crew-fill timing/success instead of the airframe's own turret layout; the
+    // createVehicleCrew fix above now fills these before Take Control tries to use one, but discovery
+    // itself should not silently come up empty just because a turret's crew hadn't been assigned yet.
     {
-        private _path = _x select 3;
-        if (count _path > 0) then {_turrets pushBackUnique [format ["Turret %1", _path], _path]};
-    } forEach fullCrew [_aircraft, "gunner", false];
+        if (count _x > 0) then {_turrets pushBackUnique [format ["Turret %1", _x], _x]};
+    } forEach (allTurrets [_aircraft, true]);
 };
 _config set ["id", _id];
 _config set ["aircraft", _aircraft];

@@ -450,7 +450,7 @@ Sends a WMP notification card to a chosen audience instead of a single local pla
 
 Config keys: `title`, `message`, `state` (`INFO`/`SUCCESS`/`WARNING`/`ERROR`), `duration`, `placement`, `channel`, `source` (same meaning as `Waldo_fnc_ShowUiNotification`'s arguments), plus `audience` — `ALL` (default), `SIDE` (reads `side`), `GROUP` (reads `group`, matched case-insensitively against `groupId`), or `UNITS` (reads an explicit `units` array of player objects). Returns the number of distinct players actually reached.
 
-Zeus ("Waldos Mission Modules"): **Mission Flow: Send Notification** — a dialog for title/message, type, duration, placement, and audience (All / By Side / By Group or Player / Selected Unit(s)), routed through the curator-authenticated `Waldo_fnc_ZenNotifyServer` bridge before calling the same public function. By Group or Player opens a second dropdown listing the chosen side's current groups and players together, live (no typed callsign) — see `Waldo_fnc_ZenNotifyPickRecipient`.
+Zeus ("Waldos Mission Modules"): **Mission Flow: Send Notification** — a dialog for title/message, type, duration, placement, a "Send to all players" checkbox, and a single ZEN-native **OWNERS** recipient picker (its own Sides/Groups/Players tabs, live multi-select, no typed callsign) for everything short of "everyone." Picked sides/groups/players are resolved into one deduplicated unit list before sending, so a player covered by more than one selection is never notified twice. Routed through the curator-authenticated `Waldo_fnc_ZenNotifyServer` bridge before calling the same public function.
 
 ### Safestart (optional)
 

@@ -565,9 +565,6 @@ class CfgFunctions
             class ZenNotifyServer {
                 file = "MissionScripts\ZenModules\zenNotifyServer.sqf";
             };
-            class ZenNotifyPickRecipient {
-                file = "MissionScripts\ZenModules\zenNotifyPickRecipient.sqf";
-            };
         };
         class Paradrop {
             class AddHaloJump {
