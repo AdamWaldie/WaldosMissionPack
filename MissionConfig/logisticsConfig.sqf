@@ -98,7 +98,7 @@ createHashMapFromArray [
     ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Object Scaling", "Logistics Crates"]],
     ["shared", [
         // MISSION MAKER: field-resupply content and balance.
-        ["Waldo_FieldResupply_Enable", false],       // BOOL: enables service/actions; hubs/carriers still need registration.
+        ["Waldo_FieldResupply_Enable", true],       // BOOL: enables service/actions; hubs/carriers still need registration.
         ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"], // CfgVehicles class for deployed empty physical crate.
         ["Waldo_FieldResupply_DefaultCarrierCapacity", 2], // CRATES: default assigned player carrying capacity.
         ["Waldo_FieldResupply_ChargesPerCrate", 5], // USES: logical resupply transactions before crate empties.
