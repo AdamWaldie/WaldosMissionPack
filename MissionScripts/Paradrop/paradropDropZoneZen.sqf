@@ -4,7 +4,10 @@
  * operations. Operational side, airframe, static-line chute and HALO backpack are independent
  * validated selectors. EMBARK is context-sensitive: a player underneath the module or in the
  * curator selection offers that player or their active player group, while no player target offers
- * a labelled boarding-object picker.
+ * a labelled boarding-object picker. EMBARK's operation list also includes any aircraft set up with
+ * Waldo_fnc_ParadropQuickFlightSetup (a mission maker's own placed-and-crewed plane), not only
+ * registry-backed Waldo_fnc_ParadropCreateDropZone operations - REMOVE stays registry-only, since a
+ * quick-setup aircraft was never spawned or owned by this system to begin with.
  * Creation defaults to an empty player transport with one AI pilot and a continuous circuit;
  * generated AI cargo is explicitly optional.
  *
@@ -28,7 +31,7 @@ if !(hasInterface && {isClass (configFile >> "CfgPatches" >> "zen_main")}) exitW
 _mode = toUpperANSI _mode;
 
 private _systems = missionNamespace getVariable ["Waldo_Paradrop_PublicDropZones", []];
-if (_mode in ["REMOVE", "EMBARK"] && {count _systems == 0}) exitWith {
+if (_mode == "REMOVE" && {count _systems == 0}) exitWith {
     ["PARADROP", "No dynamic paradrop operations are registered.", "WARNING", "PARADROP_ZEN", 6]
         call Waldo_fnc_FeatureNotifyLocal;
     false
@@ -37,6 +40,25 @@ private _systemIds = _systems apply {_x select 0};
 private _systemLabels = _systems apply {
     private _airframeName = getText (configFile >> "CfgVehicles" >> (_x select 5) >> "displayName");
     format ["%1 - %2", _x select 1, if (_airframeName == "") then {_x select 5} else {_airframeName}]
+};
+
+if (_mode == "EMBARK") then {
+    // Embark also sees aircraft that were never registered as a managed drop zone operation - e.g. a
+    // mission maker's own placed-and-crewed plane set up with Waldo_fnc_ParadropQuickFlightSetup -
+    // via the same Waldo_Paradrop_PublicAircraft list that feeds their live map marker. Skip any id
+    // already covered above so a registered operation is never listed twice.
+    {
+        _x params ["_id", "_name", "_aircraft"];
+        if !(_id in _systemIds || {isNull _aircraft} || {!alive _aircraft}) then {
+            _systemIds pushBack _id;
+            _systemLabels pushBack format ["%1 - %2", _name, getText (configFile >> "CfgVehicles" >> (typeOf _aircraft) >> "displayName")];
+        };
+    } forEach (missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []]);
+};
+if (_mode in ["REMOVE", "EMBARK"] && {count _systemIds == 0}) exitWith {
+    ["PARADROP", "No dynamic paradrop operations are registered.", "WARNING", "PARADROP_ZEN", 6]
+        call Waldo_fnc_FeatureNotifyLocal;
+    false
 };
 
 if (_mode == "REMOVE") exitWith {

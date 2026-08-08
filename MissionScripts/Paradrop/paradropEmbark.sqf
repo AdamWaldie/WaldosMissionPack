@@ -1,14 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Server-authoritative boarding service for a registered dynamic paradrop operation. It can move
- * selected players directly into cargo or create a terrain-snapped boarding object with a
- * repeat-safe blue addAction. Flag carriers receive the standard blue flag texture. Boarding
- * objects have simulation disabled and are explicitly added to every curator so they remain safe
- * to reposition in Zeus. Requests are curator-authenticated; only active player units are
- * transferred and available cargo capacity is checked again on each owning client.
+ * Server-authoritative boarding service for a dynamic paradrop operation OR a mission maker's own
+ * placed-and-crewed aircraft set up with Waldo_fnc_ParadropQuickFlightSetup. It can move selected
+ * players directly into cargo or create a terrain-snapped boarding object with a repeat-safe blue
+ * addAction. Flag carriers receive the standard blue flag texture. Boarding objects have simulation
+ * disabled and are explicitly added to every curator so they remain safe to reposition in Zeus.
+ * Requests are curator-authenticated; only active player units are transferred and available cargo
+ * capacity is checked again on each owning client. The operation ID is looked up in the
+ * Waldo_fnc_ParadropCreateDropZone registry first; if not found there, it falls back to
+ * Waldo_Paradrop_PublicAircraft (also fed by Waldo_fnc_ParadropQuickFlightSetup), so this works for
+ * editor-placed aircraft that were never registered as a managed drop zone operation. A boarding
+ * point created against a non-registered aircraft is not tracked for later cleanup, since there is
+ * no Waldo_fnc_ParadropRemoveDropZone call for it - it is left on the map like any other placed object.
  *
  * Arguments:
- * 0: operation ID <STRING>
+ * 0: operation ID <STRING> - a Waldo_fnc_ParadropCreateDropZone id, or a
+ *    Waldo_Paradrop_PublicAircraft id (e.g. a Waldo_fnc_ParadropQuickFlightSetup aircraft's
+ *    "QUICK_<netId>" id).
  * 1: mode <STRING> - SELECTION, POLE or BOTH
  * 2: selected units <ARRAY> - curator selection expanded client-side; non-players are ignored
  * 3: boarding-point position <ARRAY>
@@ -51,10 +59,28 @@ private _notify = {
 };
 
 private _registry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", createHashMap];
-if !(_id in keys _registry) exitWith {["The selected paradrop operation no longer exists.", "ERROR"] call _notify; false};
-private _state = _registry get _id;
-private _aircraft = _state getOrDefault ["aircraft", objNull];
-private _name = _state getOrDefault ["name", _id];
+private _isRegistered = _id in keys _registry;
+private _state = if (_isRegistered) then {_registry get _id} else {createHashMap};
+private _aircraft = objNull;
+private _name = _id;
+if (_isRegistered) then {
+    _aircraft = _state getOrDefault ["aircraft", objNull];
+    _name = _state getOrDefault ["name", _id];
+} else {
+    // Falls back to Waldo_Paradrop_PublicAircraft - fed by Waldo_fnc_ParadropQuickFlightSetup as well
+    // as the registry above - so a curator can also embark players onto a mission maker's own
+    // placed-and-crewed aircraft (no Waldo_fnc_ParadropCreateDropZone registry entry at all), not just
+    // registry-backed Dynamic Drop Zone operations. Only SELECTION/POLE cargo transfer makes sense
+    // here - there is no jumper/registry state to update, so boarding points created this way are not
+    // tracked for later cleanup (there is no matching Waldo_fnc_ParadropRemoveDropZone call for them).
+    private _publicAircraft = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+    private _entry = _publicAircraft findIf {(_x select 0) == _id};
+    if (_entry >= 0) then {
+        (_publicAircraft select _entry) params ["", "_entryName", "_entryAircraft"];
+        _aircraft = _entryAircraft;
+        _name = _entryName;
+    };
+};
 if (isNull _aircraft || {!alive _aircraft}) exitWith {["The selected paradrop aircraft is unavailable.", "ERROR"] call _notify; false};
 
 _mode = toUpperANSI _mode;
@@ -90,11 +116,13 @@ if (_mode in ["POLE", "BOTH"]) then {
         if (_point isKindOf "FlagCarrierCore") then {_point setFlagTexture "\A3\Data_F\Flags\Flag_blue_CO.paa";};
         _point setVariable ["Waldo_Paradrop_BoardingOperation", _id, true];
         [_point, _aircraft, _label] remoteExec ["Waldo_fnc_MoveInCargoPlane", 0, _point];
-        private _points = +(_state getOrDefault ["boardingPoints", []]);
-        _points pushBack _point;
-        _state set ["boardingPoints", _points];
-        _registry set [_id, _state];
-        missionNamespace setVariable ["Waldo_Paradrop_DropZones", _registry];
+        if (_isRegistered) then {
+            private _points = +(_state getOrDefault ["boardingPoints", []]);
+            _points pushBack _point;
+            _state set ["boardingPoints", _points];
+            _registry set [_id, _state];
+            missionNamespace setVariable ["Waldo_Paradrop_DropZones", _registry];
+        };
         [_point, owner _requester, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         _didWork = true;
         [format ["Boarding point created for %1.", _name], "SUCCESS"] call _notify;

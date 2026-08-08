@@ -249,7 +249,11 @@ altitude window with margin to absorb normal AI autopilot wander, static-line ma
 at least 60 km/h above capped route speed, and an unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
 enabled alternative or turns itself off instead of silently selecting a disabled jump method.
 
-**Paradrop - Embark Players** uses the player directly underneath the placed module first, then the
+**Paradrop - Embark Players** lists both registry-backed Dynamic Drop Zone operations and any aircraft
+set up with `Waldo_fnc_ParadropQuickFlightSetup` (a mission maker's own placed-and-crewed plane) - it
+is not limited to operations created through **Paradrop - Create Drop Zone**. **Paradrop - Remove
+Operation** stays registry-only, since a quick-setup aircraft was never spawned or owned by this
+system to begin with. It uses the player directly underneath the placed module first, then the
 curator selection:
 
 - with a player selected, choose that player or all active players in that player's group and move them directly into free cargo seats;
