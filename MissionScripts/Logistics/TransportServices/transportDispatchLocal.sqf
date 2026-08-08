@@ -59,7 +59,9 @@ if (_helicopter) then {
         [_vehicle, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
     };
     _vehicle land "NONE";
-    _vehicle flyInHeight ((_config getOrDefault ["cruiseAltitude", 80]) max 20);
+    // Array form forces strict AGL terrain-following - see Waldo_fnc_TransportRegister's matching
+    // comment for the long-route/elevation-change failure mode this avoids.
+    _vehicle flyInHeight [(_config getOrDefault ["cruiseAltitude", 80]) max 20, true];
 } else {
     _vehicle limitSpeed (_config getOrDefault ["groundSpeedLimit", 60]);
     // Prefer the engine's connected-road route when both the vehicle and resolved target are on a
