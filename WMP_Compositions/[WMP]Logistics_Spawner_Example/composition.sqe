@@ -33,7 +33,7 @@ class items
 				flags=4;
 				class Attributes
 				{
-					init="[this,0,4] call Waldo_fnc_SetupQuarterMaster; ";
+					init="[this, 0, 4, false] call Waldo_fnc_SetupQuarterMaster;";
 					name="QuarterMaster_MissionparametersBoxes";
 					dynamicSimulation=1;
 				};

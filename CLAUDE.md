@@ -353,6 +353,22 @@ Plant a tracker on a unit or vehicle and a chosen side follows it live on the ma
 ```
 Players get an ACE **Plant Signal Tracker** action on units and vehicles; Zeus gets a **Plant Signal Tracker** module (attaches to the nearest unit, tracked by a chosen side). Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
 
+### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
+
+Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, optional Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
+
+```sqf
+["reactor", reactorTrigger, "SEVERE_RADIATION"] call Waldo_fnc_HazardRegisterPresetZone;   // preset + area
+["leaking_truck", truck1, 8, _profile] call Waldo_fnc_HazardRegisterEmitter;               // moving source, radius
+["reactor"] call Waldo_fnc_HazardUnregisterZone;                                            // remove
+```
+
+Set `["markerEnabled", true]` in a profile to tie a broadcast `Waldo_fnc_Create3DMarker` world marker to the zone's own area — for an object/emitter area this anchors directly to the source object, so the marker tracks a moving vehicle live and every player (not just whoever is currently exposed) can see where the hazard is. Optional `["marker", HASHMAP]` supplies `Waldo_fnc_Create3DMarker` options (icon/colour/text/offset/distance/sides); unset keys default to a warning icon, the profile's `label`, and a 200 m view distance. The marker is created once at registration and torn down automatically wherever the zone is unregistered — it plays no part in the per-tick evaluation loop.
+
+`insideBuilding` (used only when a profile sets `protectIndoors: true`, true for every shipped radiation preset) is a documented-expensive engine query; `Waldo_fnc_HazardTick` throttles it to once per `Waldo_Hazard_IndoorCacheSeconds` (default 3) per zone via `Waldo_fnc_HazardProtectionFactor`'s optional cache-key argument, instead of re-testing it on every tick a player stands inside a zone.
+
+See `wiki/Optional-Feature-Systems.md#hazardous-environments` for the full preset catalogue, protection/awareness options and the Radiation Hazard / Hazard Emitter Moving compositions.
+
 ### MHQ / Mobile Command Post (Eden Editor)
 
 1. Place a vehicle (or static object) with a variable name, e.g. `MHQ_1`

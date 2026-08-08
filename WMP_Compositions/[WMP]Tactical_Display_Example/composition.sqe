@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_TacticalDisplay";
-			init="[this, sideUnknown, 2000, true] call Waldo_fnc_TacticalDisplayRegister;";
+			init="[this, sideUnknown, 2000, true, createHashMapFromArray [[""enabled"", false], [""challengeId"", ""commandinput""], [""difficulty"", ""standard""]]] call Waldo_fnc_TacticalDisplayRegister;";
 		};
 		id=1;
 		type="Land_MapBoard_F";

@@ -22,7 +22,15 @@ params [
     ["_visionRequested", missionNamespace getVariable ["Waldo_UI_ColourVisionProfileLocal", profileNamespace getVariable ["Waldo_UI_ColourVisionProfile", "STANDARD"]], [""]]
 ];
 private _id = toUpperANSI _requested;
-private _themes = createHashMapFromArray [
+// The five built-in theme entries below are static literals with no runtime dependency - rebuilding
+// all ~150 nested keys from scratch on every call (this function is invoked at least once per
+// notification card and once per tick by every specialist HUD - hazard, jamming, SafeStart - while
+// visible) was pure waste. Build the catalogue once per client session and reuse it; only the merge
+// below (custom themes, mission overrides, colour-vision profile) still runs fresh every call, so
+// live theme changes and accessibility selection remain immediate.
+private _themes = uiNamespace getVariable ["Waldo_UI_BaseThemeCatalogue", createHashMap];
+if (count _themes == 0) then {
+_themes = createHashMapFromArray [
     ["DEFAULT", createHashMapFromArray [
         ["id", "DEFAULT"], ["label", "Default / Modern"], ["font", "RobotoCondensed"], ["fontBold", "RobotoCondensedBold"],
         ["shade", [0, 0, 0, 0.72]], ["panel", [0.008, 0.018, 0.030, 0.95]], ["panelAlt", [0.035, 0.065, 0.095, 0.99]],
@@ -84,13 +92,19 @@ private _themes = createHashMapFromArray [
         ["successHex", "#3D6B29"], ["warningHex", "#9E6B14"], ["dangerHex", "#941F1A"]
     ]]
 ];
-private _custom = missionNamespace getVariable ["Waldo_UI_CustomThemes", createHashMap];
-if (typeName _custom == "HASHMAP") then {
-    {private _value = _custom get _x; if (typeName _value == "HASHMAP") then {_themes set [toUpperANSI _x, _value];};} forEach keys _custom;
+uiNamespace setVariable ["Waldo_UI_BaseThemeCatalogue", _themes];
 };
-if (isNil {_themes get _id}) then {_id = "DEFAULT";};
+// A mission-defined custom theme can reuse a built-in id to override it. Looking that up here
+// (rather than merging every custom entry into the cached catalogue, as before) means the shared
+// cache above is never mutated by mission-supplied data - it stays a pure, reusable copy of the
+// five literal themes across the whole client session.
+private _custom = missionNamespace getVariable ["Waldo_UI_CustomThemes", createHashMap];
+private _base = if (typeName _custom == "HASHMAP") then {_custom get _id} else {nil};
+if (isNil "_base" || {typeName _base != "HASHMAP"}) then {
+    _base = _themes get _id;
+    if (isNil "_base") then {_id = "DEFAULT"; _base = _themes get _id;};
+};
 private _resolved = createHashMap;
-private _base = _themes get _id;
 {_resolved set [_x, _base get _x];} forEach keys _base;
 _resolved set ["id", _id];
 private _overrides = missionNamespace getVariable ["Waldo_UI_ThemeOverrides", createHashMap];

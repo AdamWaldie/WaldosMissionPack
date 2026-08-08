@@ -1186,7 +1186,7 @@ class FullAuditTests(unittest.TestCase):
             mhq.count('[_target, _logisticsDirection, _logisticsDistance, true] call Waldo_fnc_SetupQuarterMaster'),
             2,
         )
-        self.assertIn('[this,0,4] call Waldo_fnc_SetupQuarterMaster', composition)
+        self.assertIn('[this, 0, 4, false] call Waldo_fnc_SetupQuarterMaster', composition)
         audit = (
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf"
         ).read_text(encoding="utf-8")

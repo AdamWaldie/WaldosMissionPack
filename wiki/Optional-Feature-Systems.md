@@ -65,6 +65,15 @@ private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", create
 
 Profiles can represent contamination, toxic gas, extreme temperature, vacuum or custom hazards. `damageThresholds` are ordered `[exposure, damage-per-evaluator-tick]` tiers; `fatalExposure` forces death at the configured exposure, or `-1` disables it. Crossing a new damaging tier produces one WMP warning by default; override `notifyDamageStages`, `damageMessage` or `damageStageMessages` for the scenario. Protection can come from equipment, vehicles or interiors. For dedicated-safe `onEnter`, `onExit` or `onTick` behaviour, store the callback function in `missionNamespace` and put its function-name string in the profile; raw CODE callbacks are intentionally not transmitted as JIP state. For a moving source, use `[_key, _object, _radius, _profile] call Waldo_fnc_HazardRegisterEmitter`. Unregister on the server with `Waldo_fnc_HazardUnregisterZone`, or stop only the current client's evaluation with `Waldo_fnc_HazardStop`.
 
+### Tying a hazard to a world marker
+
+The per-player HUD and entry/exit cards only tell the currently-exposed player something is wrong. Set `["markerEnabled", true]` in a profile to also register a `Waldo_fnc_Create3DMarker` world marker anchored to the zone's own area - for a moving emitter (`Waldo_fnc_HazardRegisterEmitter`), the marker is anchored directly to the source object and tracks it live, so anyone on the marker's visible sides can see where the danger actually is without needing to be inside it. Fixed-area zones resolve to their static centre position instead. Optional `["marker", HASHMAP]` supplies any `Waldo_fnc_Create3DMarker` option (`icon`, `colour`, `text`, `offset`, `distance`, `sides`); anything left unset defaults to a warning icon, the profile's `label`, and a 200 m view distance. The marker is created once when the zone registers and removed automatically by every removal path (`Waldo_fnc_HazardUnregisterZone`, the ZEN remove module, and an emitter's own destroy/delete cleanup) - it adds nothing to the per-tick evaluation loop. The shipped Hazard Emitter Moving Example composition uses this option.
+
+```sqf
+_profile set ["markerEnabled", true];
+["leaking_truck", truck1, 8, _profile] call Waldo_fnc_HazardRegisterEmitter;
+```
+
 ## Tree felling
 
 Arma 3 does not include a vanilla hand-held axe. You need an axe or hatchet weapon from a mod or
