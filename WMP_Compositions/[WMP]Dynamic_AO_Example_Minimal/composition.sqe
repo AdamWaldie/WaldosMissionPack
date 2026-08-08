@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_DynamicAO_Anchor";
-			init="[createHashMapFromArray [[""id"", ""composition_ao_minimal""], [""center"", getPosATL this]]] call Waldo_fnc_DynamicAOCreate;";
+			init="[createHashMapFromArray [[""id"", ""composition_ao_minimal""], [""center"", getPosATL this], [""faction"", ""OPF_F""]]] call Waldo_fnc_DynamicAOCreate;";
 		};
 		id=1;
 		type="Land_HelipadEmpty_F";
@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-5,0};};
-		title="Dynamic AO (Minimal): the smallest working call - id and center are all that's required. Generates a default east-side, 500 m radius area of operations with 3 patrol groups (garrisons, statics and vehicles are all off unless configured). See the Dynamic AO Example (Full) composition to see and edit every option; every supported config key is in wiki/Dynamic-AO-Generation.md. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-AO-Generation";
+		title="Dynamic AO (Minimal): the smallest working call - id, center and faction are all that's required (faction has no default and must be set, unlike most other keys here). Generates a default east-side, 500 m radius area of operations using OPF_F (vanilla CSAT) with 3 patrol groups (garrisons, statics and vehicles are all off unless configured). See the Dynamic AO Example (Full) composition to see and edit every option; every supported config key is in wiki/Dynamic-AO-Generation.md. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-AO-Generation";
 		id=2;
 	};
 };

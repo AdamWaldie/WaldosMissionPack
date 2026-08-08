@@ -12,6 +12,18 @@ one permanent loop per marker.
 
 ## Create or update a marker
 
+Smallest working call — a stable ID and an anchor, everything else takes its default:
+
+```sqf
+["generator_alpha", generator_1] call Waldo_fnc_Create3DMarker;
+```
+
+The anchor can be an object or an ATL position. Calling the function again with
+the same ID updates the existing marker in place. Calls made on clients are forwarded to
+the server automatically.
+
+Add an options HashMap as the third argument to override any default:
+
 ```sqf
 [
     "generator_alpha",
@@ -26,10 +38,6 @@ one permanent loop per marker.
     ]
 ] call Waldo_fnc_Create3DMarker;
 ```
-
-The anchor can be an object or an ATL position. Calling the function again with
-the same ID updates the existing marker. Calls made on clients are forwarded to
-the server automatically.
 
 | Option | Default | Purpose |
 |---|---|---|
@@ -57,6 +65,12 @@ the server automatically.
 Use stable, mission-specific IDs. Always pair colour with meaningful text and
 an appropriate icon so the marker remains understandable for colourblind
 players.
+
+## See also
+
+- [Eden Compositions](Eden-Compositions) — the `[WMP]Custom_3D_Marker_Example` Minimal/Full pair
+- [Optional Feature Systems](Optional-Feature-Systems)
+- [Mission Configuration Reference](Mission-Configuration-Reference)
 
 <!-- WMP-WIKI-NAV -->
 ---

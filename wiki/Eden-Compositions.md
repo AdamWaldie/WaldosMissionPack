@@ -7,38 +7,22 @@ WMP compositions are shipped as a separate archive. They accelerate mission auth
 include the feature scripts themselves. Install the matching WMP release in the mission first.
 
 The catalogue is split into Foundation, Logistics, Air Operations, Combat Systems, Interface,
-Mission Systems and Mission Tools so Eden does not present one undifferentiated list.
+Mission Systems and Mission Tools so Eden does not present one undifferentiated list. The full,
+current, per-composition list lives in `WMP_Compositions/README.md` inside the pack (its "Current
+catalogue" table) — this page explains how to *read* a composition, not a duplicate inventory that
+would otherwise go stale as compositions are added.
 
-## Newly covered systems
+## Minimal and Full pairs
 
-- **Bomb Defusal Example:** an editable electronic device with the standard wire-cutting challenge
-  and explosive failure consequence.
-- **Construction Objects Example:** an ACE construction supply crate using the modern construction
-  audio profile.
-- **Electronic Warfare Examples:** one EMP-immune vehicle and one WEST-tracked vehicle, spaced for
-  immediate testing.
-- **Object Scaling Example:** a decorative object converted to a supported Simple Object at 175%
-  scale. The comment warns that conversion replaces the original object reference.
-- **Custom 3D Marker Example:** a signal relay with labelled marker options written as readable
-  key/value pairs in its init field.
+Every composition with real optional parameters ships as two folders:
 
-- **Vehicle Recovery Workshop Example:** a safely spaced workshop, recoverable MRAP and generic
-  `AUTO` carrier. All share workshop key `MAIN`; the workshop includes optional area and point
-  markers.
-- **Field Resupply Hub Example:** an unlimited, all-side hub. Assign portable crates to infantry
-  with Zeus or `[unit, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier`.
-- **Radio Jammer Example:** a 300 m omnidirectional jammer affecting all sides and bands. It starts
-  active, is curator-visible, and uses the mission's configured disable/reactivate interaction.
-- **Hazardous Zone Example:** a fixed 15 m toxic leak with entry/exit notification, staged damage and
-  fatal exposure. Its inline profile is deliberately visible so it can be rewritten for scenario RP.
-- **Tactical Display Example:** a supported map board that opens the client Tactical Display. It
-  follows the viewer's side, uses a 2000 m radius and may show known enemy contacts.
-- **Loadout Save Point Example:** a laptop with both the ACE interaction and WMP-blue vanilla action;
-  the save includes supported ACRE radio state and is restored for that player only.
-- **Explosive Wall Breaching Example:** an explicit 8 m wall profile whose demolition-charge result
-  leaves two 4 m sections and a clearly visible central gap.
-- **Emergency Dismount Vehicle Example:** an upright, simulated MRAP that enables the feature without
-  risking a startup collision; overturn or destroy it during play to expose the action.
+- **`..._Minimal`** — the smallest call that actually works: only the function's truly required
+  arguments, relying entirely on its own documented defaults for everything else. Start here.
+- **`..._Full`** — the same object(s) with every option set explicitly, so a mission maker can see
+  and edit each one once the basics make sense.
+
+A composition without real optional parameters (a fixed prop, or a call that's already minimal by
+nature) ships as a single unsuffixed folder instead of a redundant pair.
 
 ## Locality rule
 
@@ -54,12 +38,23 @@ guidance from inside Eden.
 
 ## Why some features have no composition
 
-Generated AO/AA systems, airborne gunships and dynamic drop zones must be created once by the server;
-an Eden init runs on every machine, so their safe beginner path is `initServer.sqf` or Zeus rather
-than a misleading composition. Player accessibility, treatment feedback, persistence, UI themes,
-rally state, terrain-tree felling and automatic AI handlers likewise do not become clearer or safer
-when represented by a decorative Eden object. Use their `MissionConfig` settings, documented public
-setup call, full audit station or focused Zeus module instead.
+Dynamic AA, Dynamic AO Generation and Airborne Gunship Support all ship compositions — their
+registration functions (`Waldo_fnc_DynamicAACreate`, `Waldo_fnc_DynamicAOCreate`,
+`Waldo_fnc_GunshipRegister`) self-forward a non-server call to the server exactly like
+`Waldo_fnc_Jammer` or `Waldo_fnc_HazardRegisterZone`, which already shipped as compositions, so an
+Eden init running on every machine is safe for them too. Only **generated drop zones**
+(`Waldo_fnc_ParadropCreateDropZone`) remain excluded for a genuinely different reason: that function
+spawns and owns its own aircraft/crew, and an Eden object cannot represent "spawn this on demand" the
+way it represents "here is a real placed thing" — use `initServer.sqf` or the "Dynamic Paradrop" ZEN
+module instead. The [Halo and Static-Line Paradrop Examples](Vehicle-Actions-&-Paradrop) composition
+covers the placed-and-crewed-aircraft case instead.
+
+Player accessibility, treatment feedback, persistence enablement itself (though registering one
+specific persistent object is exactly as composable as the systems above — see the Persistence
+Object Example composition), UI themes, rally state, terrain-tree felling and automatic AI handlers
+likewise do not become clearer or safer when represented by a decorative Eden object. Use their
+`MissionConfig` settings, documented public setup call, full audit station or focused Zeus module
+instead.
 
 <!-- WMP-WIKI-NAV -->
 ---

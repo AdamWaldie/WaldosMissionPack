@@ -9,6 +9,32 @@ server sends the complete side/group setup to joining players, and each player's
 configures only the radios that player carries after ACRE is ready. Do not add ACRE waits or radio
 setup calls to multiplayer `init.sqf`.
 
+## Smallest working example: one group, one net
+
+Before the full nets/families/overrides model below, here is the minimum that gets one squad
+talking to each other on their own channel — everything else on this page is depth for when a
+mission needs more than this. Inside the `"sides"` row for `WEST` in `MissionConfig\acreConfig.sqf`
+(keep the shipped official ACRE preset name):
+
+```sqf
+[
+    "WEST", "default3",
+    [ // NETS: [key, label, family, value]
+        ["PLT1", "PLATOON 1", "PRC_LR", 2]
+    ],
+    [ // GROUPS: [editor groupId, assignment rows]
+        ["ALPHA-1-1", [                          // must match the Eden group's groupId
+            ["ACRE_PRC343", "ALL", [1, 1], "LEFT"],   // short-range squad radio, block 1 channel 1
+            ["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]   // long-range radio tuned to the PLT1 net
+        ]]
+    ]
+]
+```
+
+Every carried PRC-343 in that group starts on block 1/channel 1, and every carried PRC-152 starts on
+the `PLT1` net. Read on for multiple nets, duplicate radios needing different tunings, per-player
+overrides and named displays.
+
 ## Settings to edit
 
 - `enabled`: master switch for the replacement lifecycle.
