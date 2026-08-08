@@ -141,11 +141,18 @@ if (_invalidClass >= 0 || {_missingPool}) exitWith {
     false
 };
 
-// sizeOf is evaluated only after class validation. The resulting radius is deliberately generous:
-// generated ZEN layouts favour a clear, stable installation over a tightly packed composition.
+// sizeOf is evaluated only after class validation. It approximates an object's MAP ICON size (per
+// Bohemia's own command documentation), not its physical footprint - it is used here only because
+// it is the one size query that works on a classname alone, before anything is spawned to measure
+// with boundingBoxReal. For a large "detection installation" prop like Land_Radar_F that map-icon
+// size can run well past the ground space the object actually occupies; combined with the previous
+// 0.75 multiplier and a 100 m cap, that produced clearance requirements real, organically-dressed
+// terrain (rocky/forested hillsides, not manicured airfields) could fail to satisfy anywhere across
+// a large search, even on what looks like genuinely open ground. Scaled down and capped tighter -
+// still comfortably larger than the supplied per-role minimum for every shipped class.
 private _classClearance = {
     params ["_class", "_minimum"];
-    ((((sizeOf _class) * 0.75) max _minimum) min 100)
+    ((((sizeOf _class) * 0.5) max _minimum) min 40)
 };
 private _largestClearance = {
     params ["_candidateClasses", "_minimum"];
@@ -287,7 +294,13 @@ private _resolveFinalPosition = {
                     _x params ["_reservedPosition", "_reservedClearance"];
                     _exact distance2D _reservedPosition < (_clearance + _reservedClearance)
                 };
-                private _objectBlockers = nearestObjects [_exact, [], _clearance, true];
+                // Unfiltered nearestObjects catches anything sitting nearby regardless of relevance -
+                // most notably the curator's own body/camera at ring 0 when a ZEN module is dropped
+                // exactly where they are standing, and any other player/AI unit passing through later
+                // rings. Neither should ever block a physical AA installation.
+                private _objectBlockers = (nearestObjects [_exact, [], _clearance, true]) select {
+                    !(_x isKindOf "CAManBase") && {!(_x isKindOf "Logic")}
+                };
                 private _terrainBlockers = nearestTerrainObjects [
                     _exact,
                     ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "BUILDING", "HOUSE", "FENCE", "WALL"],
