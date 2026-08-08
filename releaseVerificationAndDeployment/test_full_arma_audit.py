@@ -243,7 +243,7 @@ class FullAuditTests(unittest.TestCase):
     def test_new_feature_compositions_are_functional_examples(self):
         root = ROOT / "WMP_Compositions"
         transport = (root / "[WMP]Transport_Services_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
-        hazard = (root / "[WMP]Radiation_Hazard_Example" / "composition.sqe").read_text(encoding="utf-8")
+        hazard = (root / "[WMP]Radiation_Hazard_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
 
         self.assertEqual(2, transport.count("createVehicleCrew this"))
         self.assertIn('""HELICOPTER""', transport)

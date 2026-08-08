@@ -1,0 +1,10 @@
+version=54;
+name="[WMP] Vehicle Recovery Workshop Example (Minimal)";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions - Logistics";
+requiredAddons[]=
+{
+	"A3_Structures_F_Mil_Cargo",
+	"A3_Soft_F_MRAP_01",
+	"A3_Soft_F_Beta_Truck_01"
+};

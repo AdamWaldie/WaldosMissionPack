@@ -1,0 +1,52 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=4;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_RecoveryWorkshop";
+			init="[this] call Waldo_fnc_RecoveryRegisterWorkshop;";
+		};
+		id=1;
+		type="Land_Cargo_House_V1_F";
+	};
+	class Item1
+	{
+		dataType="Object";
+		side="West";
+		class PositionInfo {position[]={18,0,0};};
+		class Attributes
+		{
+			name="WMP_RecoveryExampleVehicle";
+			init="[this] call Waldo_fnc_RecoveryRegisterVehicle;";
+		};
+		id=2;
+		type="B_MRAP_01_F";
+	};
+	class Item2
+	{
+		dataType="Object";
+		side="West";
+		class PositionInfo {position[]={0,18,0};};
+		class Attributes
+		{
+			name="WMP_RecoveryCarrier";
+			init="[this] call Waldo_fnc_RecoveryRegisterCarrier;";
+		};
+		id=3;
+		type="B_Truck_01_transport_F";
+	};
+	class Item3
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-6,0};};
+		title="Vehicle Recovery (Minimal): the smallest working calls - workshop MAIN, an MRAP that becomes recoverable once damaged 55%+, and an AUTO carrier that uses engine cargo/virtual fallback (no physical deck placement without an explicit offset). See the Vehicle Recovery Workshop Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Recovery-And-Squad-Rallies#vehicle-recovery";
+		id=4;
+	};
+};

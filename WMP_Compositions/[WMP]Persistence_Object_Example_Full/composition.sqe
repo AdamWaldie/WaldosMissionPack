@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_PersistentSupplyCrate";
+			init="[this, ""composition_persistence_crate"", [true, true, false, false, true]] call Waldo_fnc_PersistenceRegisterObject;";
+		};
+		id=1;
+		type="Box_NATO_Equip_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Persistence Object Example (Full parameter reference): the options array shown explicitly - registers this crate's cargo and position but not damage/fuel/ammo with Waldo_fnc_PersistenceRegisterObject - no isServer wrapper needed, the same public call is safe to leave directly in an object's init field on every machine. Does nothing until Waldo_Persistence_Enable is set true in MissionConfig\persistenceConfig.sqf (or via the Zeus ""Persistence - Control"" module) and a working server INIDBI2 extension is detected; use ""Persistence - Register Object"" in Zeus to do the same during play instead. See the Persistence Object Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#persistence";
+		id=2;
+	};
+};

@@ -1,5 +1,0 @@
-version=54;
-name="[WMP] Hazard Emitter Moving Example";
-author="WaldoTheWarfighter, Val";
-category="Waldos Mission Pack Compositions - Combat Systems";
-requiredAddons[]={"A3_Soft_F_Gamma_Van_01"};

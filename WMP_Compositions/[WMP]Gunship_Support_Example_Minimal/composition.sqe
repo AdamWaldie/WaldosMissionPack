@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="West";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			init="[createHashMapFromArray [[""id"", ""EXAMPLE_GUNSHIP""], [""aircraft"", this]]] call Waldo_fnc_GunshipRegister;";
+			name="gunshipAircraft";
+		};
+		id=1;
+		type="B_T_VTOL_01_armed_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Airborne Gunship Support (Minimal): the smallest working call - id and the aircraft are all that's required. GunshipRegister crews it automatically (no placed pilot needed) and it orbits its own spawn position at the default radius/altitude since no explicit orbit was given. See the Gunship Support Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
+		id=2;
+	};
+};

@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_RadioJammer";
+			init="[this, 300, ""ALL"", ""ALL"", 50, 1, true, false, [], [], false, true, createHashMapFromArray [[""disableChallenge"", true], [""challengeId"", ""circuit""], [""difficulty"", ""standard""], [""engineerOnly"", false], [""resultMode"", ""DISABLE""], [""allowPlayerToggle"", true]]] call Waldo_fnc_Jammer;";
+		};
+		id=1;
+		type="Land_TTowerSmall_1_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Radio Jammer (Full parameter reference): every Waldo_fnc_Jammer option shown explicitly, including the curator-only GM overlay marker and the circuit-bypass Disable Jammer interaction. A successful disable leaves the prop intact and exposes Reactivate Jammer. See the Radio Jammer Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming";
+		id=2;
+	};
+};
