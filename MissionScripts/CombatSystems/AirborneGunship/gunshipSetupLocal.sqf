@@ -73,28 +73,38 @@ private _newVanillaActions = [];
         _aircraftMarkerName setMarkerDirLocal getDir _aircraft;
         _aircraftMarkerName setMarkerTextLocal format ["%1 - %2", _callsign, _status];
         if (count _orbit >= 2) then {
+            // Empty/invisible on purpose: this stays a real, queryable marker at the exact orbit
+            // position (getMarkerPos still works) but must not itself draw an icon or label on the map
+            // - the aircraft marker above already shows callsign/status, and a second always-visible
+            // circle+text stacked over the orbit point is just clutter.
             if (markerShape _orbitMarkerName == "") then {
                 createMarkerLocal [_orbitMarkerName, _orbit];
-                _orbitMarkerName setMarkerTypeLocal "mil_circle";
-                _orbitMarkerName setMarkerColorLocal _markerColour;
+                _orbitMarkerName setMarkerTypeLocal "Empty";
+                _orbitMarkerName setMarkerAlphaLocal 0;
             };
             _orbitMarkerName setMarkerPosLocal _orbit;
-            _orbitMarkerName setMarkerTextLocal format ["%1 Orbit", _callsign];
         };
     } else {
         deleteMarkerLocal format ["Waldo_Gunship_%1_Aircraft", _id];
         deleteMarkerLocal format ["Waldo_Gunship_%1_Orbit", _id];
     };
 
-    if (_controller isEqualTo player) then {
+    // Status is visible to any player on a friendly side, even if nobody is the assigned controller
+    // yet - a player who is not the controller previously saw no menu at all, no matter what state
+    // the gunship was in, which is indistinguishable from "take control is just broken" (the reported
+    // symptom). Operational commands (orbit/service/turret/release) remain controller-only below.
+    private _isFriendlySide = (side group player) getFriend _side >= 0.6;
+    if (_isFriendlySide) then {
         // Designate Orbit and Return for Service are legitimately available while the aircraft is
         // still TRANSIT-ing to its orbit (the server's SET_ORBIT/SERVICE operations already allow
         // this), so gating the whole menu behind a single ON_STATION/CONTROLLED "_available" boolean
         // hid both of those actions - and the entire operational menu - during that window, most
         // visibly right after initial registration/controller assignment. Only weapon control
         // genuinely requires the aircraft to be physically on station.
-        private _canOrbitOrService = _status in ["TRANSIT", "ON_STATION", "CONTROLLED"];
-        private _canTakeControl = _status in ["ON_STATION", "CONTROLLED"];
+        private _isControllerSelf = _controller isEqualTo player;
+        private _canOrbitOrService = _isControllerSelf && {_status in ["TRANSIT", "ON_STATION", "CONTROLLED"]};
+        private _canTakeControl = _isControllerSelf && {_status in ["ON_STATION", "CONTROLLED"]};
+        private _controllerLabel = if (isNull _controller) then {"no controller assigned - ask your curator to run Gunship: Assign Controller"} else {if (_isControllerSelf) then {"you"} else {name _controller}};
         if !(isNil "ace_interact_menu_fnc_createAction") then {
             private _categoryId = format ["Waldo_Gunship_%1", _id];
             private _category = [_categoryId, format ["Gunship: %1", _callsign], "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa", {}, {true}] call ace_interact_menu_fnc_createAction;
@@ -102,26 +112,24 @@ private _newVanillaActions = [];
             private _paths = [[player, 1, ["ACE_SelfActions", _categoryId]]];
             private _statusAction = [format ["%1_Status", _categoryId], format ["Status: %1", _status], "\A3\ui_f\data\igui\cfg\simpletasks\types\repair_ca.paa", {
                 private _args = _this select 2;
-                _args params ["_callsign", "_status", "_completeAt"];
+                _args params ["_callsign", "_status", "_completeAt", "_controllerLabel"];
                 private _detail = switch (_status) do {
                     case "SERVICING": {format ["Service underway. Approximately %1 seconds remaining. Tasking and weapon control are locked.", ceil ((_completeAt - serverTime) max 0)]};
                     case "RTB": {"Returning to the service orbit. Tasking and weapon control are locked."};
                     case "TRANSIT": {"En route to its orbit. Orbit and service can be redirected now; weapon control unlocks once on station."};
                     default {"The aircraft is currently unavailable for tasking."};
                 };
-                [format ["%1: %2", _callsign, _detail]] call Waldo_fnc_GunshipNotifyLocal;
-            }, {true}, {}, [_callsign, _status, _serviceCompleteAt]] call ace_interact_menu_fnc_createAction;
+                [format ["%1: %2 Controller: %3.", _callsign, _detail, _controllerLabel]] call Waldo_fnc_GunshipNotifyLocal;
+            }, {true}, {}, [_callsign, _status, _serviceCompleteAt, _controllerLabel]] call ace_interact_menu_fnc_createAction;
             [player, 1, ["ACE_SelfActions", _categoryId], _statusAction] call ace_interact_menu_fnc_addActionToObject;
             _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_Status", _categoryId]]];
-            if (_canOrbitOrService) then {
+            if (_isControllerSelf) then {
                 private _orbitAction = [format ["%1_Orbit", _categoryId], "Designate Orbit", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa", {private _args = _this select 2; [(_args select 0)] call Waldo_fnc_GunshipSelectOrbitLocal}, {(_this select 2) select 1}, {}, [_id, _canOrbitOrService]] call ace_interact_menu_fnc_createAction;
                 [player, 1, ["ACE_SelfActions", _categoryId], _orbitAction] call ace_interact_menu_fnc_addActionToObject;
                 _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_Orbit", _categoryId]]];
                 private _serviceAction = [format ["%1_Service", _categoryId], "Return for Service", "\A3\ui_f\data\igui\cfg\simpletasks\types\repair_ca.paa", {private _args = _this select 2; [(_args select 0), "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, {(_this select 2) select 1}, {}, [_id, _canOrbitOrService]] call ace_interact_menu_fnc_createAction;
                 [player, 1, ["ACE_SelfActions", _categoryId], _serviceAction] call ace_interact_menu_fnc_addActionToObject;
                 _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_Service", _categoryId]]];
-            };
-            if (_canTakeControl) then {
                 {
                     _x params ["_label", "_path"];
                     private _actionId = format ["%1_Turret_%2", _categoryId, _forEachIndex];
@@ -129,30 +137,28 @@ private _newVanillaActions = [];
                     [player, 1, ["ACE_SelfActions", _categoryId], _action] call ace_interact_menu_fnc_addActionToObject;
                     _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, _actionId]];
                 } forEach _turretProfiles;
+                private _releaseAction = [format ["%1_Release", _categoryId], "Release Weapon Control", "\A3\ui_f\data\igui\cfg\actions\getout_ca.paa", {private _id = _this select 2; [_id, "RELEASE_CONTROL", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, {missionNamespace getVariable ["Waldo_Gunship_ControlledId", ""] == (_this select 2)}, {}, _id] call ace_interact_menu_fnc_createAction;
+                [player, 1, ["ACE_SelfActions", _categoryId], _releaseAction] call ace_interact_menu_fnc_addActionToObject;
+                _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_Release", _categoryId]]];
             };
-            private _releaseAction = [format ["%1_Release", _categoryId], "Release Weapon Control", "\A3\ui_f\data\igui\cfg\actions\getout_ca.paa", {private _id = _this select 2; [_id, "RELEASE_CONTROL", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, {missionNamespace getVariable ["Waldo_Gunship_ControlledId", ""] == (_this select 2)}, {}, _id] call ace_interact_menu_fnc_createAction;
-            [player, 1, ["ACE_SelfActions", _categoryId], _releaseAction] call ace_interact_menu_fnc_addActionToObject;
-            _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_Release", _categoryId]]];
             _newAceActions append _paths;
         } else {
             private _actions = [];
             _actions pushBack (player addAction [format ["<t color='#79C7FF'>%1: Status (%2)</t>", _callsign, _status], {
                 private _args = _this select 3;
-                _args params ["_callsign", "_status", "_completeAt"];
+                _args params ["_callsign", "_status", "_completeAt", "_controllerLabel"];
                 private _remaining = if (_status == "SERVICING") then {format ["; %1 seconds remaining", ceil ((_completeAt - serverTime) max 0)]} else {""};
-                [format ["%1 is %2%3.", _callsign, toLowerANSI _status, _remaining]] call Waldo_fnc_GunshipNotifyLocal;
-            }, [_callsign, _status, _serviceCompleteAt], 1.5, false, true]);
-            if (_canOrbitOrService) then {
+                [format ["%1 is %2%3. Controller: %4.", _callsign, toLowerANSI _status, _remaining, _controllerLabel]] call Waldo_fnc_GunshipNotifyLocal;
+            }, [_callsign, _status, _serviceCompleteAt, _controllerLabel], 1.5, false, true]);
+            if (_isControllerSelf) then {
                 _actions pushBack (player addAction [format ["%1: Designate Orbit", _callsign], {[(_this select 3)] call Waldo_fnc_GunshipSelectOrbitLocal}, _id, 1.5, false, true, "", str _canOrbitOrService]);
                 _actions pushBack (player addAction [format ["%1: Return for Service", _callsign], {[_this select 3, "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, _id, 1.5, false, true, "", str _canOrbitOrService]);
-            };
-            if (_canTakeControl) then {
                 {
                     _x params ["_label", "_path"];
                     _actions pushBack (player addAction [format ["%1: Control %2", _callsign, _label], {private _args = _this select 3; [_args select 0, "TAKE_CONTROL", [_args select 1], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, [_id, _path], 1.5, false, true, "", str _canTakeControl]);
                 } forEach _turretProfiles;
+                _actions pushBack (player addAction [format ["%1: Release Weapon Control", _callsign], {[_this select 3, "RELEASE_CONTROL", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, _id, 1.5, false, true, "", "missionNamespace getVariable ['Waldo_Gunship_ControlledId', ''] != ''"]);
             };
-            _actions pushBack (player addAction [format ["%1: Release Weapon Control", _callsign], {[_this select 3, "RELEASE_CONTROL", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, _id, 1.5, false, true, "", "missionNamespace getVariable ['Waldo_Gunship_ControlledId', ''] != ''"]);
             _newVanillaActions append _actions;
         };
     };

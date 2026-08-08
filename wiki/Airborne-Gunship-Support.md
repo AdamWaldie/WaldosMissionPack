@@ -28,6 +28,29 @@ The feature is disabled by default. Calling `Waldo_fnc_GunshipRegister` or using
    ```
    Every other key below (callsign, side, home/orbit markers, altitude, radius, service envelope, turret profiles) has a working default — add only the ones a mission actually needs to change.
 
+## Controller assignment (FAC / JTAC)
+
+Nothing is assigned as controller by default — not even the Minimal/Full example compositions set
+one, since a composition can't hardcode "whichever player joins." Until a controller exists:
+
+- Every player on a friendly side can still see a **Status** interaction (aircraft callsign,
+  current state, and who — if anyone — is the assigned controller), so the aircraft is never
+  invisible or silently broken.
+- Designating an orbit, requesting service, releasing control and — the one players hit most —
+  taking control of a turret all stay locked to that one player, so nobody else's menu shows those
+  actions at all. This is deliberate access control (the equivalent of a FAC/JTAC role), not a bug;
+  if "take control" seems to do nothing, check Status first — it names the missing step.
+
+Assign a controller one of three ways:
+1. **Zeus (recommended for a live session):** curator runs **Gunship - Assign Controller**, which
+   assigns the nearest player.
+2. **Script/init, by object:** `["controller", gunshipController]` in the config passed to
+   `Waldo_fnc_GunshipRegister` (see the full example below).
+3. **Script/init, by UID (survives that player's respawn):** `["controllerUID", "<steam64id>"]`.
+
+Re-running `["spectre_1", "ASSIGN", [newController], objNull] call Waldo_fnc_GunshipServerHandle;`
+reassigns control at any time (also releasing the previous controller's turret access).
+
 ## Scripted setup (every option)
 
 Run registration from `initServer.sqf` after the aircraft and player slots exist:

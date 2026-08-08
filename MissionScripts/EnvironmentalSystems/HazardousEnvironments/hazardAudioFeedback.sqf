@@ -1,9 +1,12 @@
 /*
  * Author: WaldoTheWarfighter, Val
- * Plays optional local radiation feedback for one hazard profile without making audio a property of
- * every hazardous environment. Geiger cadence increases with current zone intensity; low/high pools
- * are independently configurable. Injury coughs require actual damaging exposure and use a separate
- * cooldown. All timing state is local and keyed by zone, preventing JIP traffic or notification spam.
+ * Plays local radiation feedback for one hazard profile. audioEnabled/coughEnabled default true (a
+ * profile opts OUT with an explicit false, not in) so a mission maker's own hazard profile still gets
+ * Geiger/cough feedback without remembering to ask for it; a profile with no geiger/cough sound pools
+ * configured still plays nothing, since the sound lookups below no-op on an empty array either way.
+ * Geiger cadence increases with current zone intensity; low/high pools are independently configurable.
+ * Injury coughs require actual damaging exposure and use a separate cooldown. All timing state is
+ * local and keyed by zone, preventing JIP traffic or notification spam.
  * Locality and authority: interface-client audio only; no sound cadence or exposure state is broadcast.
  *
  * Arguments:
@@ -24,7 +27,7 @@
  */
 
 params ["_key", "_profile", "_inside", "_intensity", "_exposure", "_damage", "_aware"];
-if (!hasInterface || {!(_profile getOrDefault ["audioEnabled", false])}) exitWith {};
+if (!hasInterface || {!(_profile getOrDefault ["audioEnabled", true])}) exitWith {};
 if ((_profile getOrDefault ["audioRequiresAwareness", false]) && {!_aware}) exitWith {};
 
 private _timers = missionNamespace getVariable ["Waldo_Hazard_LocalAudioTimers", createHashMap];
@@ -44,7 +47,7 @@ if (_inside && {_intensity > 0}) then {
     };
 };
 
-if (_damage > 0 && {_profile getOrDefault ["coughEnabled", false]}) then {
+if (_damage > 0 && {_profile getOrDefault ["coughEnabled", true]}) then {
     private _nextCough = _timers getOrDefault ["COUGH", 0];
     if (_now >= _nextCough) then {
         private _sounds = _profile getOrDefault ["coughSounds", []];

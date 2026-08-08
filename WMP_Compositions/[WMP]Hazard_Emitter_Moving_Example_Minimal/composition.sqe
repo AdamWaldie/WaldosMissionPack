@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-5,0};};
-		title="Hazard Emitter (Moving) (Minimal): the smallest working call - a key and the source object are all that's required, giving a 3 m field with no damage/audio/marker configured (an empty profile). See the Hazard Emitter Moving Example (Full) composition for a fully configured radiation profile with damage, audio and the smallest working call's every option shown. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
+		title="Hazard Emitter (Moving) (Minimal): the smallest working call - a key and the source object are all that's required, giving a 3 m field with no damage/marker configured (an empty profile). Audio feedback defaults ON, but plays nothing here since no Geiger/cough sound pools are configured either - see the Hazard Emitter Moving Example (Full) composition for a fully configured radiation profile with damage, audio and the smallest working call's every option shown. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
 		id=2;
 	};
 };

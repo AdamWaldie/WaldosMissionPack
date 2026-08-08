@@ -355,7 +355,7 @@ Players get an ACE **Plant Signal Tracker** action on units and vehicles; Zeus g
 
 ### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
 
-Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, optional Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
+Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
 
 ```sqf
 ["reactor", reactorTrigger, "SEVERE_RADIATION"] call Waldo_fnc_HazardRegisterPresetZone;   // preset + area

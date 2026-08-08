@@ -141,6 +141,9 @@ createHashMapFromArray [
         // MISSION MAKER: reusable RP/gameplay profiles; zones may override individual keys.
         // BEGINNER: each preset below is `PRESET NAME` followed by its settings HashMap.
         // All three shipped presets model ionising radiation and use the packaged Geiger/cough audio.
+        // audioEnabled/coughEnabled default true even if a custom profile omits them entirely - audio
+        // is opt-OUT (set false explicitly to silence a profile), not opt-in. A profile with no
+        // geiger/cough sound pools configured still plays nothing either way.
         // `rate` adds dose each second; `decay` removes it per second after leaving (sized so a
         // brief pass through a preset zone clears from the status panel in well under a minute,
         // not tens of minutes). Each threshold row is
