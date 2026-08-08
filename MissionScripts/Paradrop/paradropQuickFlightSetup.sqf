@@ -243,18 +243,21 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
         private _label = _options getOrDefault ["name", "Drop Zone"];
         private _runLength = _options getOrDefault ["runLength", 2500];
         private _prefix = format ["Waldo_DZQ_%1", netId _aircraft];
+        // When target was a marker name, that marker already sits exactly at _centre and the POINT
+        // marker below is skipped (a second icon+label on top of it would just double up). AREA/
+        // STANDBY/GREEN/RED only go invisible (alpha 0) in the ARRAY/OBJECT-target branch below, where
+        // the POINT marker is actually created to replace them as the one visible thing - making them
+        // invisible here too, with nothing created to take their place, would leave the corridor with
+        // no visible representation at all: the target's own marker was never a substitute for it, it
+        // conveys different information (the flown route, not just the drop point).
+        private _targetIsMarker = typeName _target == "STRING" && {_target != ""};
         private _zoneMarker = createMarker [format ["%1_AREA", _prefix], _centre];
         _zoneMarker setMarkerShape "RECTANGLE";
         _zoneMarker setMarkerBrush "Border";
         _zoneMarker setMarkerDir _resolvedDirection;
         _zoneMarker setMarkerSize [100, (_runLength * 0.65) max 200];
         _zoneMarker setMarkerColor "ColorBlack";
-        // AREA/STANDBY/GREEN/RED stay invisible (alpha 0) - they remain real markers at the exact
-        // route positions (still queryable by name, e.g. getMarkerPos, and still visible to a mission
-        // maker who reveals them deliberately) but are not shown on the map. The POINT marker below is
-        // layered on top of this whole set as the one thing players actually see, instead of the
-        // previous stacked five-marker layout.
-        _zoneMarker setMarkerAlpha 0;
+        if !(_targetIsMarker) then {_zoneMarker setMarkerAlpha 0;};
         _markers pushBack _zoneMarker;
         {
             _x params ["_suffix", "_key", "_colour", "_text"];
@@ -265,14 +268,10 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
             _marker setMarkerSize [30, 4];
             _marker setMarkerColor _colour;
             _marker setMarkerText _text;
-            _marker setMarkerAlpha 0;
+            if !(_targetIsMarker) then {_marker setMarkerAlpha 0;};
             _markers pushBack _marker;
         } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
-        // When target was a marker name, that marker already sits exactly at _centre - creating
-        // another icon+label marker on top of it just doubles up (overlapping text, two stacked
-        // icons) instead of adding information. Only add the POINT marker for an ARRAY/OBJECT
-        // target, where nothing was already there to mark the drop point itself.
-        if !(typeName _target == "STRING" && {_target != ""}) then {
+        if !(_targetIsMarker) then {
             private _point = createMarker [format ["%1_POINT", _prefix], _centre];
             _point setMarkerType "mil_end";
             _point setMarkerColor "ColorBlack";

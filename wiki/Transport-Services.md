@@ -56,17 +56,25 @@ To travel:
 ### Multiple transports and changing a request
 
 - The normal request path manages one active helicopter and one active ground transport per player.
-- The first menu level is deliberately short and scalable: **Helicopter Transport** and **Ground Transport**. Air and ground controls do not compete for the same radial-menu space.
+- The first menu level is deliberately short and scalable: **Helicopter Transport**, **Ground Transport** and **All Transports**. Per-type and fleet-wide controls do not compete for the same radial-menu space.
 - **Request / Move Pickup** requests the first service, or retargets that player's single inbound/boarding service of the same type.
 - **Select / Manage Transport** opens one live alphabetical list. Available services can be requested directly; active services reserved by or carrying the player expose move, destination, retry and RTB controls. Zeus can manage every active service. This replaces the old separate “Request Another” and “Manage Active Services” entries.
-- **Request All Available** dispatches every eligible available transport of that type around one clicked centre. WMP uses enlarged, separate search slots instead of sending the fleet to one coordinate, then shows one combined result card instead of one card per vehicle.
-- **Return All Controlled to Base** returns every active same-type transport reserved by you or carrying you. Zeus may return every active transport of that type. “Available” vehicles are already at base and are therefore not included in RTB.
+- **All Transports** groups every action that affects the whole fleet rather than one named vehicle: **Request All Available Helicopters/Ground Vehicles** dispatches every eligible available transport of that type around one clicked centre (WMP uses enlarged, separate search slots instead of sending the fleet to one coordinate, then shows one combined result card instead of one card per vehicle), and **Return All Helicopters/Ground Vehicles to Base** returns every active same-type transport reserved by you or carrying you (Zeus may return every active transport of that type; “Available” vehicles are already at base and are therefore not included).
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
 - **Select Destination** works the same way once a destination is already set: choosing it again while the transport is already travelling to that destination (`TO_DESTINATION`) retargets it, the same as retargeting a pickup - it does not require returning to `BOARDING` first.
 - Retargeting publishes a new request token before redispatch. Superseded AI-owner loops stop before they can land, stop or report against the old point.
 - The same named controls also exist directly on each transport. Being inside or near another transport no longer changes which object the action addresses.
 - The original requester may move pickup or order RTB while outside the vehicle. A passenger may select destination or order RTB for the transport they occupy. Zeus may manage any registered transport.
 - Once a transport is travelling to a destination, disembarking or returning, a repeated pickup is refused with the existing transport's name and state. Return it to base or let its lifecycle complete before requesting another of that type.
+
+### Manual control
+
+Both instruction sets are always available - a squad leader elsewhere can command a transport remotely through the controls above whenever it is AI-driven, and anyone already aboard (any seat, not just the requester or a leader) can instead fly or drive it themselves:
+
+- **Take Manual Control**, available directly on the vehicle (ACE `Transport: [name]` category or the vanilla scroll action), reseats its AI pilot into a free cargo or turret position and puts the requesting player in the driver's seat. It refuses rather than eject the AI pilot when no free seat exists. Taking control clears the transport's current waypoints and cancels any AI dispatch in progress, exactly like a superseding remote request does.
+- While a transport shows **Manual Control**, remote dispatch (move pickup, select destination, RTB, retry) is not meaningful - there is no AI order to redirect. **Release Manual Control**, usable by the current player pilot or Zeus, reseats the AI pilot back into the driver's seat, reapplies its standing orders (behaviour, speed mode, cruise altitude) and returns the service to **Available** wherever it currently sits - no forced return-to-base flight.
+- If a manual pilot disconnects, dies or otherwise leaves the driver's seat without releasing control first, `Waldo_fnc_TransportMonitorServer` recovers automatically on its next tick so the transport is never permanently stranded away from AI control.
+- If the original AI pilot dies while displaced in cargo/turret, releasing control is refused (there is no one to hand off to) and the transport stays under manual control until re-crewed.
 
 ### If a transport becomes stuck
 

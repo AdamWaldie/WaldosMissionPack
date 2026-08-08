@@ -204,6 +204,9 @@ class CfgFunctions
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
               };
+              class NotificationBroadcast {
+                  file = "MissionScripts\MissionFlowAndUi\notificationBroadcast.sqf";
+              };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
               class RestyleUiNotificationsLocal {file = "MissionScripts\MissionFlowAndUi\restyleUiNotificationsLocal.sqf";};
@@ -484,6 +487,9 @@ class CfgFunctions
             class TransportReportServer {file = "MissionScripts\Logistics\TransportServices\transportReportServer.sqf";};
             class TransportStopGroupLocal {file = "MissionScripts\Logistics\TransportServices\transportStopGroupLocal.sqf";};
             class TransportMonitorServer {file = "MissionScripts\Logistics\TransportServices\transportMonitorServer.sqf";};
+            class TransportTakeManualServer {file = "MissionScripts\Logistics\TransportServices\transportTakeManualServer.sqf";};
+            class TransportReleaseManualServer {file = "MissionScripts\Logistics\TransportServices\transportReleaseManualServer.sqf";};
+            class TransportManualLocal {file = "MissionScripts\Logistics\TransportServices\transportManualLocal.sqf";};
         };
         class VehicleCamo {
             class VehicleCamoSetup {
@@ -552,6 +558,12 @@ class CfgFunctions
             };
             class ZenTrackerServer {
                 file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
+            };
+            class ZenNotify {
+                file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
+            };
+            class ZenNotifyServer {
+                file = "MissionScripts\ZenModules\zenNotifyServer.sqf";
             };
         };
         class Paradrop {

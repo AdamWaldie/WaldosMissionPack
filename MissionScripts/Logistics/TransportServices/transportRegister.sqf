@@ -168,7 +168,12 @@ private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
 _vehicle lockDriver true;
-if (_type == "HELICOPTER") then {_vehicle flyInHeight (_config get "cruiseAltitude")};
+// The 2-element array form forces strict AGL terrain-following instead of leaving the AI free to
+// compute its own "safe" cruise profile - over long routes with real elevation change, plain
+// single-argument flyInHeight lets the AI climb far above the requested altitude and produces the
+// intermittent stop/start hunting this was tuned to fix. Waldo_fnc_ParadropBuildFlightRoute already
+// established this exact fix for the same class of AI flight behaviour.
+if (_type == "HELICOPTER") then {_vehicle flyInHeight [_config get "cruiseAltitude", true]};
 // Retain the original TR UNLOAD route. Improved landing is the only default addition and owns the
 // vector-guided final approach; the transport LAND command remains a fallback if it cannot acquire.
 if (_type == "HELICOPTER") then {

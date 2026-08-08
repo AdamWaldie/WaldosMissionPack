@@ -138,6 +138,7 @@ class FullAuditTests(unittest.TestCase):
             "Waldo_fnc_TacticalDisplayRegister",
             "Waldo_fnc_Jammer",
             "Waldo_fnc_HazardRegisterEmitter",
+            "Waldo_fnc_PersistenceRegisterObject",
         }
         folders = [path for path in root.iterdir() if path.is_dir()]
         self.assertGreaterEqual(len(folders), 34)
@@ -376,8 +377,14 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('if (!_aceReady) then', info)
         self.assertIn('CfgPatches" >> "ace_interact_menu', info)
         self.assertNotIn('remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", 0]', (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAANotifyState.sqf").read_text(encoding="utf-8"))
-        self.assertIn("Request All Available Helicopter Transports", interactions)
-        self.assertIn("Return All Controlled Ground Transports to Base", interactions)
+        # Fleet-wide bulk actions live under their own "All Transports" category (a sibling of
+        # Helicopter Transport / Ground Transport in ACE), so it is obvious which controls address
+        # one named vehicle and which affect the whole fleet; the vanilla fallback carries the same
+        # distinction through an explicit text prefix since it has no true submenu nesting.
+        self.assertIn("Waldo_Transport_AllRoot", interactions)
+        self.assertIn('"All Transports"', interactions)
+        self.assertIn("All Transports: Request All Available Helicopters", interactions)
+        self.assertIn("All Transports: Return All Ground Vehicles to Base", interactions)
         self.assertIn('Waldo_fnc_TransportBulkRequestServer", 2', map_ui)
         self.assertIn("deterministic grid", wiki)
         self.assertNotIn('5, 500, 15', request)
@@ -1179,7 +1186,7 @@ class FullAuditTests(unittest.TestCase):
             mhq.count('[_target, _logisticsDirection, _logisticsDistance, true] call Waldo_fnc_SetupQuarterMaster'),
             2,
         )
-        self.assertIn('[this,0,4] call Waldo_fnc_SetupQuarterMaster', composition)
+        self.assertIn('[this, 0, 4, false] call Waldo_fnc_SetupQuarterMaster', composition)
         audit = (
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf"
         ).read_text(encoding="utf-8")

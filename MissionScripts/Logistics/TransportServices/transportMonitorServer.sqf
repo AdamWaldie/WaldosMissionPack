@@ -4,8 +4,10 @@
  * It performs no movement planning and publishes availability booleans only when pool state changes.
  * Besides tracking each vehicle's live position/facing, the marker's own text is kept in sync with
  * that service's current state (Available, Boarding, To Pickup, To Destination, RTB, Disembarking,
- * Stuck) - a marker that only ever shows the callsign gives no indication a transport is already
- * busy without opening the interaction menu on it.
+ * Manual Control, Stuck) - a marker that only ever shows the callsign gives no indication a transport
+ * is already busy without opening the interaction menu on it. Also recovers a transport left under
+ * manual control after its player pilot disconnects, dies or otherwise leaves the driver's seat, so a
+ * squad leader elsewhere is never permanently locked out of a transport an absent player was flying.
  * Locality and authority: server-only registry cleanup and JIP availability publication.
  *
  * Arguments: None.
@@ -16,7 +18,8 @@
 if (!isServer) exitWith {};
 private _stateLabels = createHashMapFromArray [
     ["AVAILABLE", "Available"], ["BOARDING", "Boarding"], ["DISEMBARKING", "Disembarking"],
-    ["TO_PICKUP", "To Pickup"], ["TO_DESTINATION", "To Destination"], ["RTB", "RTB"], ["STUCK", "Stuck"]
+    ["TO_PICKUP", "To Pickup"], ["TO_DESTINATION", "To Destination"], ["RTB", "RTB"], ["STUCK", "Stuck"],
+    ["MANUAL", "Manual Control"]
 ];
 while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do {
     private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
@@ -38,6 +41,16 @@ while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do
             _pools set [_type, _pool];
             _services deleteAt _id;
         } else {
+            // A manual pilot who disconnects, dies or gets out leaves the driver's seat occupied by
+            // something that is no longer a live human (a disconnected unit reverts to non-player).
+            // Recover automatically so the transport is never permanently stranded away from AI
+            // control just because its player pilot is gone - the marker/state text below will
+            // reflect the recovered state on this same tick once _entry is refreshed.
+            if ((_entry getOrDefault ["state", ""]) == "MANUAL" && {!isPlayer driver _vehicle}) then {
+                [_vehicle, objNull] call Waldo_fnc_TransportReleaseManualServer;
+                _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
+                _entry = _services getOrDefault [_id, _entry];
+            };
             private _protectionOwners = [owner _vehicle, groupOwner group driver _vehicle];
             if !(_entry getOrDefault ["protectionOwners", []] isEqualTo _protectionOwners) then {
                 _entry = [_entry] call Waldo_fnc_TransportRefreshProtectionServer;

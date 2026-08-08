@@ -124,7 +124,23 @@ Classnames are validated before anything spawns. Creation now builds a complete 
 the engine checks every selected class against existing world objects with `findEmptyPosition`, while a
 separate `sizeOf`-based reservation checks it against every other planned AA component that does not yet
 exist. Integrated sites are expanded into their individual radar/SAM/AAA positions before validation.
-No vehicle is created until every final footprint passes. If planning fails, nothing spawns; if an
+Each candidate is also rejected if it sits on terrain steeper than `Waldo_DynamicAA_MaxSlopeDegrees`
+(default 12°) - the same rejection path as a nearby tree, rock or building - so a search that starts on
+a hillside keeps stepping outward (up to 16 rings, roughly 35 m apart) toward an actually flat shelf
+instead of leaving a radar or launcher visibly tilted. No vehicle is created until every final footprint
+passes.
+
+Per-component clearance comes from `sizeOf` - the only size query that works on a bare classname before
+anything is actually spawned to measure with `boundingBoxReal` - which Bohemia's own documentation
+describes as a map-icon-size approximation, not a physical footprint. Scaled and capped conservatively
+(not generously) so a large icon size on an installation-style class like `Land_Radar_F` cannot demand
+an unrealistically large fully-clear circle. The "anything nearby blocks placement" check also ignores
+units and curator/logic objects, since a curator's own body standing at the drop point (or any
+player/AI passing through later rings) is not a real obstruction. Both changes exist because the
+combination previously rejected placement across an entire large search even on genuinely open,
+non-manicured terrain.
+
+If planning fails, nothing spawns; if an
 unexpected materialisation failure occurs, every partial object and crew is rolled back. This is
 sequential server placement, not a placement race. Explicit scripted positions are also resolved safely. Spawned
 objects, crew, groups, markers and detector handles are retained in the server registry for

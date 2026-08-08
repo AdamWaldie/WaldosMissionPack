@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_DefusalBomb";
-			init="[this] call Waldo_fnc_BombDefuseSetup;";
+			init="[this, createHashMapFromArray [[""actionTitle"", ""Defuse Bomb""], [""equipmentTitle"", ""EOD CONTROLLER""], [""wireCount"", 5], [""timeLimit"", 20], [""detonateOnFailure"", true], [""explosive"", ""IEDLandBig_Remote_Ammo""], [""oneShot"", true]]] call Waldo_fnc_BombDefuseSetup;";
 		};
 		id=1;
 		type="Land_Device_disassembled_F";

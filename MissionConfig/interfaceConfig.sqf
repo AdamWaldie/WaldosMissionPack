@@ -219,14 +219,14 @@ createHashMapFromArray [
         ["Waldo_WmpHud_ExcludedUIDs", []],          // Steam UIDs denied even if equipment is worn.
         ["Waldo_WmpHud_AllowEveryone", false],      // true bypasses both UID and equipment checks.
         ["Waldo_WmpHud_Headgear", []],              // CfgWeapons headgear classnames granting HUD access.
+        // Shipped default uses only vanilla Arma 3 classnames (no mod dependency) - matches the
+        // worked example in wiki/WMP-HUD.md exactly. Replace with your own campaign-specific
+        // headgear/facewear/NVG classnames (from any mod your unit runs) as needed.
         ["Waldo_WmpHud_Facewear", [                 // CfgGlasses facewear classnames granting HUD access.
-            "FIG_CadianOGMaskFaceW", "FIG_CadianOGMaskFaceWGrey", "bio_1_fg", "bio_2_fg", "bio_3_fg", "bio_4_fg"
+            "G_Goggles_VR"
         ]],
         ["Waldo_WmpHud_NVGs", [                     // CfgWeapons NVG/HMD classnames granting HUD access.
-            "FIG_SniperNVGs", "FIG_CadianAuspecs", "FIG_CadianAuspecsKasr", "FIG_CadianAuspecs150th",
-            "FIG_CadianAuspecsKasr150th", "FIG_CadianAuspecsGrey", "FIG_CadianAuspecsKasrGrey",
-            "ic_bionicEye", "TIOW_Bionic_Eye", "TIOW_Bionic_Eye_Green", "TIOW_Bionic_Eye_2",
-            "TIOW_Bionic_Eye_2_Green", "TIOW_IG_NVG"
+            "NVGogglesB_blk_F"
         ]],
         ["Waldo_WmpHud_DefaultVisible", true],       // initial state when qualified by equipment.
         ["Waldo_WmpHud_AccessibilityDefaultVisible", true], // initial state for accessibility UIDs.

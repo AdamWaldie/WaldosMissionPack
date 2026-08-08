@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_DynamicAA_Anchor";
+			init="[createHashMapFromArray [[""id"", ""composition_aa""], [""centre"", getPosATL this], [""side"", west], [""radius"", 2000], [""radarCount"", 1], [""staticCount"", 1], [""mobileCount"", 1], [""fighterCount"", 0], [""createMarkers"", true]]] call Waldo_fnc_DynamicAACreate;";
+		};
+		id=1;
+		type="Land_HelipadEmpty_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-5,0};};
+		title="Dynamic Anti-Air: generates a radar, one static AA site and one mobile AA vehicle around this object on mission start (move the object to relocate the whole system before placing). Needs real open, reasonably flat ground nearby for every component's collision-free footprint - a spot crowded with trees/buildings, or on a hillside steeper than Waldo_DynamicAA_MaxSlopeDegrees (12 degrees by default), rejects the whole system with an RPT/ERROR notice naming which component failed rather than placing on top of an obstruction or leaving it visibly tilted; move the object somewhere more open and flatter and it will place cleanly. Give a curator the ""Dynamic AA - Create"" ZEN module for live/replacement systems instead of duplicating this composition. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-Anti-Air";
+		id=2;
+	};
+};

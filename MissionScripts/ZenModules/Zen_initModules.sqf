@@ -142,6 +142,14 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\Missions_F_Orange\Data\Img\Showcase_LawsOfWar\action_end_sim_CA.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Mission Flow", "Mission Flow: Send Notification",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenNotify;
+    },
+    "\A3\ui_f\data\igui\cfg\simpletasks\types\Radio_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Logistics", "Medical: Create Field Hospital Crate",
     {
         diag_log format ["[WMP ZEN] invoked module=Field Hospital Crate curator=%1 payload=%2", name player, _this];
