@@ -50,7 +50,7 @@ params ["_modulePos", "_objectPos"];
         if (_audience == "UNITS") then {
             private _curator = getAssignedCuratorLogic player;
             if !(isNull _curator) then {
-                _units = ((curatorSelected _curator) param [0, []]) select {isPlayer _x};
+                _units = (curatorSelected select 0) select {isPlayer _x};
             };
             if (_units isEqualTo [] && {!isNull _objectPos} && {isPlayer _objectPos}) then {_units = [_objectPos];};
         };
