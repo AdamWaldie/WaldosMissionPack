@@ -192,9 +192,17 @@ Shared configuration belongs in `init.sqf`, player presentation/actions in `init
 
 The same systems can be configured during play under **Waldos Mission Modules**. ZEN requests pass through `Waldo_fnc_FeatureRuntimeApply`, which accepts assigned curators only, publishes configuration, sends an ordered live-setting payload before locality-appropriate initializers, and retains JIP initialization where required. Joining clients and headless clients request an ordered server snapshot before activating locality-sensitive features; do not replace that handshake with assumptions about public-variable delivery order. Hazard and breaching dialogs can export equivalent setup calls for permanent mission configuration.
 
-Dynamic AA is configured through `Waldo_fnc_DynamicAACreate` or the **Dynamic AA - Create** ZEN module. Every system requires a unique ID and owns its radar, response groups, markers and detector handle so it can be replaced or cleaned independently.
+Dynamic AA is configured through `Waldo_fnc_DynamicAACreate` or the **Dynamic AA - Create** ZEN module. Every system requires a unique ID and owns its radar, response groups, markers and detector handle so it can be replaced or cleaned independently. The **Dynamic AA Example** composition anchors one system to a placed object for editor-time setup.
 
-Airborne Gunship Support uses the same named-instance principle but a separate feature-specific state machine. `Waldo_fnc_GunshipRegister` accepts existing or pooled/spawned aircraft, explicit turret profiles and service policy. Aircraft lifecycle and permissions remain server-owned; map selection, local markers, notifications and approved remote-control handoff run on clients. Do not assume turret paths are portable between aircraft mods.
+Airborne Gunship Support uses the same named-instance principle but a separate feature-specific state machine. `Waldo_fnc_GunshipRegister` accepts existing or pooled/spawned aircraft, explicit turret profiles and service policy. Aircraft lifecycle and permissions remain server-owned; map selection, local markers, notifications and approved remote-control handoff run on clients. Do not assume turret paths are portable between aircraft mods. The **Gunship Support Example** composition registers a placed, crewed VTOL for editor-time setup, orbiting a movable marker.
+
+Dynamic AO (`Waldo_fnc_DynamicAOCreate`, the **Dynamic AO - Create** ZEN module) builds a complete
+randomized area of operations — infantry patrols, building garrisons, static weapons, weighted
+vehicle/air patrols, civilians, parked cars, minefields and manned roadblocks, each independently
+optional — from one HashMap config. Generated AI use the active WMP AI profile. Reusing an `id`
+replaces the previous AO safely; the invisible centre anchor and per-minefield anchors are
+curator-editable deletion handles. See `wiki/Dynamic-AO-Generation.md` for every supported config key.
+The **Dynamic AO Example** composition anchors one AO to a placed object for editor-time setup.
 
 ### ACRE2 Radio Setup (`init.sqf`)
 
@@ -742,7 +750,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
-- `CombatSystems/` — airborne gunship support, explosive breaching and Dynamic AA
+- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO
 - `EnvironmentalSystems/` — hazardous environments and tree felling
 - `MedicalSystems/` — patient treatment feedback
 - `Persistence/` — optional INIDBI2-backed persistence

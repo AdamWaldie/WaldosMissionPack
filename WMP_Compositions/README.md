@@ -50,8 +50,11 @@ copies of feature logic.
 | AutoFortify Setup Example | Synced ACE Fortify catalogue |
 | Mass AttachTo / Vehicle Mounted Weapon | Vehicle construction helpers |
 | Halo and Static Line Paradrop Examples | Boarding and aircraft jump setup |
+| Gunship Support Example | Crewed VTOL registered with `Waldo_fnc_GunshipRegister`, orbiting a movable marker with automatic service |
 | Radio Jammer Example | Server-owned, movable jammer fixture |
 | Hazardous Zone Example | Reliable fixed-area hazard with visible transition feedback and real danger |
+| Dynamic AA Example | Anchor object generating a radar, static and mobile AA site around itself |
+| Dynamic AO Example | Anchor object generating a randomized area of operations around itself |
 | Explosive Wall Breaching Example | Explicit demolition-charge profile with a visibly testable centre gap |
 | Emergency Dismount Vehicle Example | Simulation-safe upright vehicle that enables overturn/destroyed extraction |
 | Tactical Display Example | Supported map-board access point |
@@ -67,11 +70,14 @@ copies of feature logic.
 
 - **WMP HUD** is configured player-locally through `MissionConfig\interfaceConfig.sqf`; it has no world-object placement requirement, so a composition would be misleading. Use the full audit mission for live HUD testing.
 
-Dynamic AO, Dynamic AA, airborne gunships and generated drop zones are server-authoritative generated
-systems; Zeus or an `initServer.sqf` call is clearer and safer than an Eden composition whose init
-would execute on every machine. Improved helicopter landing is an automatic AI handler driven by
-ordinary landing waypoints. Accessibility, treatment feedback and UI themes are player-interface
-features. Persistence depends on a server extension and mission database policy. Rally points are
-player-role state. Tree felling operates on terrain vegetation, which Eden compositions cannot own.
-Those systems remain covered by beginner configuration, public calls, the full audit mission and
-focused Zeus modules where appropriate.
+Generated drop zones (`Waldo_fnc_ParadropCreateDropZone`) spawn and own their own aircraft/crew, unlike
+the Gunship, Dynamic AA and Dynamic AO compositions above (which register/anchor around an object the
+mission maker already placed) or the Halo/Static-Line Paradrop compositions (which fly an
+already-placed, already-crewed aircraft) - a spawn-its-own-aircraft system is Zeus/script-only for the
+same reason `Waldo_fnc_ParadropCreateDropZone` itself is not used by any composition: an Eden object
+cannot represent "spawn this on demand" the way it represents "here is a real placed thing". Improved
+helicopter landing is an automatic AI handler driven by ordinary landing waypoints. Accessibility,
+treatment feedback and UI themes are player-interface features. Persistence depends on a server
+extension and mission database policy. Rally points are player-role state. Tree felling operates on
+terrain vegetation, which Eden compositions cannot own. Those systems remain covered by beginner
+configuration, public calls, the full audit mission and focused Zeus modules where appropriate.
