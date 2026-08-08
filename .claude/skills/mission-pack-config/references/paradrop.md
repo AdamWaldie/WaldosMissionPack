@@ -118,11 +118,20 @@ field:
   destroyed/deleted, or once a `DESPAWN` lifecycle run reaches its exit
   point, since a marker for a drop zone that's no longer active is just
   stale). Full list in the script header.
-- Set `keepMarkersOnCleanup: true` to opt out and leave the markers on the
-  map instead — this still does **not** delete the aircraft or its crew
-  either way, since this entry point never created or owned them in the
-  first place (unlike `Waldo_fnc_ParadropCreateDropZone`, whose `DESPAWN`
-  does delete the aircraft it spawned).
+- `createMarkers` also adds a **live-updating aircraft marker** (same
+  mechanism airborne gunships use) that tracks the plane's actual
+  position/heading every frame while it's flying, visible only to a
+  friendly side — this is what makes a pre-placed target marker feel
+  "replaced" by a working drop zone once the aircraft actually takes off,
+  instead of staying a fixed icon with no sense of where the plane
+  currently is. It's always removed once the aircraft is gone, regardless
+  of `keepMarkersOnCleanup` (that option only affects the static
+  AREA/STANDBY/GREEN/RED/POINT markers).
+- Set `keepMarkersOnCleanup: true` to opt out and leave the static markers
+  on the map instead — this still does **not** delete the aircraft or its
+  crew either way, since this entry point never created or owned them in
+  the first place (unlike `Waldo_fnc_ParadropCreateDropZone`, whose
+  `DESPAWN` does delete the aircraft it spawned).
 - No registry, no generated jumpers by default — use the Dynamic Drop Zone
   system instead for a managed, repeatable operation with those features.
 
