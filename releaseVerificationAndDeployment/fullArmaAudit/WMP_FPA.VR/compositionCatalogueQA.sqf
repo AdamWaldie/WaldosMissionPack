@@ -12,7 +12,7 @@
 
 private _vehicleClasses = [
     "ACE_medicalSupplyCrate_advanced", "B_G_HMG_02_high_F", "B_HMG_01_high_F",
-    "B_Heli_Light_01_F", "B_Mortar_01_F", "B_MRAP_01_F", "B_Pilot_F", "B_Soldier_SL_F", "B_supplyCrate_F",
+    "B_Heli_Light_01_F", "B_Mortar_01_F", "B_MRAP_01_F", "B_Pilot_F", "B_Soldier_SL_F", "B_Soldier_TL_F", "B_supplyCrate_F",
     "B_T_VTOL_01_armed_F", "B_T_VTOL_01_infantry_F", "B_Truck_01_covered_F", "B_Truck_01_medical_F",
     "B_Truck_01_transport_F", "Box_NATO_Equip_F", "C_Van_01_transport_F", "Flag_Blue_F",
     "Flag_Red_F", "FlagPole_F", "Land_AirConditioner_03_F", "Land_BagBunker_Small_F",

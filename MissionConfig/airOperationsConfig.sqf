@@ -182,7 +182,7 @@ createHashMapFromArray [
         ["WALDO_STATIC_MINALTITUDE", 180, true], // METRES: lowest accepted static-line drop altitude.
         ["WALDO_STATIC_MAXALTITUDE", 350, true], // METRES: highest accepted static-line drop altitude.
         ["WALDO_STATIC_MAXSPEED", 310, true], // KM/H: maximum aircraft speed for static-line release.
-        ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true], // CLASSNAME: default static-line chute; runtime fallback applies if absent.
+        ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true], // CLASSNAME: default static-line chute (vanilla); runtime fallback applies if absent. Set to an RHS or other mod's chute class if the mission uses one.
         ["WALDO_PARA_HALOALTITUDE", 1000, true], // METRES: default freefall/HALO drop altitude.
         ["WALDO_PARA_HALOCHUTE", "B_Parachute", true] // CLASSNAME: default steerable parachute backpack.
     ]],

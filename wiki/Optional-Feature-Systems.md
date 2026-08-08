@@ -46,13 +46,31 @@ server validates the identity stored inside a record before sending it to a clie
 
 ACRE-aware persistence filters unique `_ID_n` radio classes before storage. When `Waldo_Persistence_SaveRadios` is enabled, channel and spatial state are stored separately by base radio class and same-type ordinal. A restore creates fresh unique radios first and then reapplies persisted state; when disabled, the current side/group mission plan is applied instead. ACRE being absent leaves ordinary loadouts unchanged.
 
-Register an editor object from `initServer.sqf` or its init field:
+### Registering objects — `Waldo_fnc_PersistenceRegisterObject`
+
+Register an editor object from `initServer.sqf` or its own init field:
 
 ```sqf
 [supplyCrate, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceRegisterObject;
+// [object, key, [cargo, damage, fuel, ammo/pylons, position, customVariableNames]]
 ```
 
-The five booleans control cargo, damage, fuel, ammunition/pylons and position. Keys must be stable and unique. Registrations made while the database starts are queued. Call `Waldo_fnc_PersistenceStop` to save registered objects and stop the system without deleting its database.
+| Argument | Type | Meaning |
+|---|---|---|
+| `object` | Object | The thing to persist |
+| `key` | String | Stable, unique within the mission. Letters/digits/underscore/dash only — anything else is rejected (logged) rather than silently mangled |
+| `options[0..4]` | Bool (each) | Save cargo / damage / fuel / ammunition-pylons / position. Missing values default `true`, so a bare `[obj, "key"]` call saves everything |
+| `options[5]` | Array\<String\> | Extra serialisable variable names, beyond the five built-in fields. Defaults to `Waldo_Persistence_DefaultCustomVariables` when omitted — see [Optional Feature Extensions](Optional-Feature-Extensions) |
+
+Registering the **same key again** (a re-run init field, or using the ZEN module twice near the same object) **replaces** the previous entry rather than duplicating it — safe to call more than once. Registrations made while the database is still starting are queued by key and replayed once it's ready.
+
+**Calling contract.** This function is stricter than most WMP "no `isServer` wrapper needed" calls (`Waldo_fnc_Jammer`, `Waldo_fnc_HazardRegisterPresetZone`, ...), which self-forward to the server with `remoteExecCall` when invoked from a client — this one does **not** forward itself, and a client `remoteExecCall` is rejected outright. It only works:
+- from an object's own **Eden init field** (which runs identically on every machine; only the server's own execution of that line actually registers anything — that's what "no wrapper needed" means here, not "safe to `remoteExecCall`"), or
+- from a **direct `call`/`spawn`** by code already running on the server (`initServer.sqf`, another server-only script, or a server-side handler — see how the ZEN module below reaches it).
+
+A mission-specific curator/client-triggered registration flow needs its own authenticated server-side bridge mirroring that pattern; it must not `remoteExecCall` this function directly.
+
+Call `Waldo_fnc_PersistenceStop` to save registered objects and stop the system without deleting its database.
 
 ## Patient treatment feedback
 
@@ -87,7 +105,7 @@ For a custom (non-preset) profile, or to override specific preset fields, see th
 
 Hazard information can be conditional. `detectorItems` requires at least one listed carried, worn or assigned classname. `detectorObjects` plus `detectorObjectRange` requires a nearby detector object. Advanced missions may set `awarenessCondition` to CODE locally or a missionNamespace function-name string for JIP-safe profiles. When any detector/condition is configured, both continuous status and transition/damage notices require awareness by default. Set `requireAwarenessForStatus` or `requireAwarenessForNotifications` to `false` to exempt that UI. These settings never provide protection: an unaware player still accumulates exposure and takes configured damage.
 
-The shipped `LOW_RADIATION`, `MODERATE_RADIATION` and `SEVERE_RADIATION` presets are ready-to-use ionising-radiation examples. All three use the packaged Geiger and injury-cough audio; their dose rate, recovery, shielding factors, injury thresholds, fatal dose and audio cadence increase by severity. `audioEnabled`, `audioRequiresAwareness`, `geigerLowSounds`, `geigerHighSounds`, `geigerMinimumInterval`, `geigerMaximumInterval`, `coughSounds` and `coughCooldown` control that local feedback. Intensity shortens the Geiger interval and chooses the low/high pool; coughing occurs only after actual configured damage. Audio timers are local and keyed per zone, so they create no recurring network traffic. Custom profiles may still represent toxins, heat, vacuum or other roleplay hazards, but those are no longer misleadingly presented as ready-made defaults.
+The shipped `LOW_RADIATION`, `MODERATE_RADIATION` and `SEVERE_RADIATION` presets are ready-to-use ionising-radiation examples. All three use the packaged Geiger and injury-cough audio; their dose rate, recovery, shielding factors, injury thresholds, fatal dose and audio cadence increase by severity. `audioEnabled`, `audioRequiresAwareness`, `geigerLowSounds`, `geigerHighSounds`, `geigerMinimumInterval`, `geigerMaximumInterval`, `coughSounds` and `coughCooldown` control that local feedback. `audioEnabled` and `coughEnabled` default **true** even on a hand-authored profile that never sets them — audio is opt-out, not opt-in; a profile with no sound pools configured still plays nothing regardless. Intensity shortens the Geiger interval and chooses the low/high pool; coughing occurs only after actual configured damage. Audio timers are local and keyed per zone, so they create no recurring network traffic. Custom profiles may still represent toxins, heat, vacuum or other roleplay hazards, but those are no longer misleadingly presented as ready-made defaults.
 
 With ACE Interact, **Hazard Equipment** self/other actions can read current exposure and apply configured treatment items. `Waldo_Hazard_DosimeterItems` controls who may read exposure, while `Waldo_Hazard_Treatments` contains `[consumed item classname, readable name, exposure reduction]` rows and `Waldo_Hazard_TreatmentDuration` controls progress time. Treatment removes the carried item on the giver's machine and reduces exposure only on the patient-owning machine. Leave either list empty to disable that part without disabling hazards.
 

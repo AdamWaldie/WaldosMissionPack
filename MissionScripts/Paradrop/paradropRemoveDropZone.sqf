@@ -56,6 +56,10 @@ missionNamespace setVariable ["Waldo_Paradrop_DropZones", _registry];
 private _public = missionNamespace getVariable ["Waldo_Paradrop_PublicDropZones", []];
 _public = _public select {(_x select 0) != _id};
 missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
+private _publicAircraft = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+_publicAircraft = _publicAircraft select {(_x select 0) != _id};
+missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
+[] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
 diag_log format ["[WMP PARADROP] Removed id=%1 deleteAircraft=%2", _id, _deleteAircraft];
 if (!isNull _requester && {_notifyRequester}) then {
     ["DYNAMIC PARADROP", "Operation state and associated map markers removed.", "SUCCESS", "PARADROP_REMOVE", 6] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _requester];

@@ -2,7 +2,7 @@ version=54;
 center[]={0,0,0};
 class items
 {
-	items=4;
+	items=5;
 	class Item0
 	{
 		dataType="Group";
@@ -57,6 +57,21 @@ class items
 		id=100;
 		atlOffset=700;
 	};
+	class Item4
+	{
+		dataType="Object";
+		class PositionInfo {position[]={4,0,4};};
+		side="West";
+		flags=6;
+		class Attributes
+		{
+			init="if (isServer) then {[this] spawn {params [""_unit""]; waitUntil {sleep 0.1; ""EXAMPLE_GUNSHIP"" in keys (missionNamespace getVariable [""Waldo_Gunship_Registry"", createHashMap])}; [""EXAMPLE_GUNSHIP"", ""ASSIGN"", [_unit], objNull] call Waldo_fnc_GunshipServerHandle;};};";
+			name="gunshipController";
+			description="Gunship Controller (FAC/JTAC) - already assigned to SPECTRE on mission start; see this unit's init field.";
+		};
+		id=113;
+		type="B_Soldier_TL_F";
+	};
 	class Item1
 	{
 		dataType="Object";
@@ -91,7 +106,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-6,0};};
-		title="Airborne Gunship Support (Full parameter reference): this crewed VTOL is registered with Waldo_fnc_GunshipRegister on mission start with callsign/side/home/orbit/radius/altitude all shown explicitly - it flies to and orbits the ""Gunship Orbit"" marker (drag it to reposition), automatically returns to service at low fuel/damage/ammo per the configured envelope, then resumes its orbit. Give a curator the ""Airborne Gunship Support"" ZEN menu for live control (request service, retask, change orbit) instead of duplicating this composition. See the Gunship Support Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
+		title="Airborne Gunship Support (Full parameter reference): this crewed VTOL is registered with Waldo_fnc_GunshipRegister on mission start with callsign/side/home/orbit/radius/altitude all shown explicitly - it flies to and orbits the ""Gunship Orbit"" marker (drag it to reposition), automatically returns to service at low fuel/damage/ammo per the configured envelope, then resumes its orbit. The nearby ""gunshipController"" unit (a rifleman - stand-in for a real FAC/JTAC role) is automatically assigned as SPECTRE's controller on mission start via its own init field, a server-only Waldo_fnc_GunshipServerHandle ""ASSIGN"" call that waits for registration to finish first - copy that one-line pattern onto any unit to make it the standing controller without touching Zeus. Without an assignment like this, any player on a friendly side can still see status, but weapon control, orbit retasking and service recall stay locked - a curator can always reassign later with ""Gunship: Assign Controller"" (or the init call above can add [""controller"", someUnit] / [""controllerUID"", ""...""] directly). Give a curator the ""Airborne Gunship Support"" ZEN menu for live control (request service, retask, change orbit) instead of duplicating this composition. See the Gunship Support Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
 		id=112;
 	};
 };

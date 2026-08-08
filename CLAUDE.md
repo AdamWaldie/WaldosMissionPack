@@ -225,7 +225,7 @@ Most "Plane"-class assets automatically get HALO/static-line actions. Override t
 ["WALDO_STATIC_MINALTITUDE", 180],  // metres
 ["WALDO_STATIC_MAXALTITUDE", 350],
 ["WALDO_STATIC_MAXSPEED", 310],     // km/h
-["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute"],
+["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F"], // vanilla; e.g. "rhs_d6_Parachute" if the mission runs RHS
 ["WALDO_PARA_HALOALTITUDE", 1000],
 ["WALDO_PARA_HALOCHUTE", "B_Parachute"]
 ```
@@ -355,7 +355,7 @@ Players get an ACE **Plant Signal Tracker** action on units and vehicles; Zeus g
 
 ### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
 
-Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, optional Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
+Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
 
 ```sqf
 ["reactor", reactorTrigger, "SEVERE_RADIATION"] call Waldo_fnc_HazardRegisterPresetZone;   // preset + area
@@ -450,7 +450,7 @@ Sends a WMP notification card to a chosen audience instead of a single local pla
 
 Config keys: `title`, `message`, `state` (`INFO`/`SUCCESS`/`WARNING`/`ERROR`), `duration`, `placement`, `channel`, `source` (same meaning as `Waldo_fnc_ShowUiNotification`'s arguments), plus `audience` — `ALL` (default), `SIDE` (reads `side`), `GROUP` (reads `group`, matched case-insensitively against `groupId`), or `UNITS` (reads an explicit `units` array of player objects). Returns the number of distinct players actually reached.
 
-Zeus ("Waldos Mission Modules"): **Mission Flow: Send Notification** — a dialog for title/message, type, duration, placement, and audience (All / By Side / By Group / Selected Unit(s)), routed through the curator-authenticated `Waldo_fnc_ZenNotifyServer` bridge before calling the same public function.
+Zeus ("Waldos Mission Modules"): **Mission Flow: Send Notification** — a dialog for title/message, type, duration, placement, a "Send to all players" checkbox, and a single ZEN-native **OWNERS** recipient picker (its own Sides/Groups/Players tabs, live multi-select, no typed callsign) for everything short of "everyone." Picked sides/groups/players are resolved into one deduplicated unit list before sending, so a player covered by more than one selection is never notified twice. Routed through the curator-authenticated `Waldo_fnc_ZenNotifyServer` bridge before calling the same public function.
 
 ### Safestart (optional)
 
@@ -505,7 +505,7 @@ Optional INIDBI2-backed save/restore for player state and specific registered wo
 ["Waldo_Persistence_Scope", "MISSION"]      // MISSION isolates by mission+terrain; CAMPAIGN shares by database name
 ```
 
-Player state saves/restores automatically once active (`initServer.sqf` starts the server branch, `initPlayerLocal.sqf` starts client capture). World objects must be registered explicitly — `Waldo_fnc_PersistenceRegisterObject` is safe to call directly from an object's own Eden init field with **no `isServer` wrapper**: it silently no-ops on every non-server machine, and the server's own execution of that same init line is what actually registers it, exactly like `Waldo_fnc_Jammer`. Registrations made before the database finishes starting are queued and replayed automatically.
+Player state saves/restores automatically once active (`initServer.sqf` starts the server branch, `initPlayerLocal.sqf` starts client capture). World objects must be registered explicitly — `Waldo_fnc_PersistenceRegisterObject` is safe to call directly from an object's own Eden init field with **no `isServer` wrapper**: it silently no-ops on every non-server machine, and the server's own execution of that same init line is what actually registers it, exactly like `Waldo_fnc_Jammer`. Registrations made before the database finishes starting are queued and replayed automatically. **Unlike** `Waldo_fnc_Jammer`, though, it does **not** self-forward when called on a client — a `remoteExecCall` from a client is rejected outright, so a curator/client-triggered registration flow (like the ZEN "Persistence - Register Object" module) needs its own authenticated server-side bridge that `call`/`spawn`s this function locally on the server, rather than `remoteExecCall`-ing it directly. Re-registering an already-used key replaces that entry instead of duplicating it. Options are `[cargo, damage, fuel, ammo/pylons, position, customVariableNames]`; the first five booleans default `true` when omitted, and `customVariableNames` (an array, extending persistence to mission-specific variables) defaults to `Waldo_Persistence_DefaultCustomVariables`. See `wiki/Optional-Feature-Systems.md#persistence` for the full calling contract.
 
 ```sqf
 [this, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceRegisterObject;

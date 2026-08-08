@@ -624,6 +624,12 @@ class CfgFunctions
             class ParadropDropZoneZen {
                 file = "MissionScripts\Paradrop\paradropDropZoneZen.sqf";
             };
+            class ParadropSetupLocal {
+                file = "MissionScripts\Paradrop\paradropSetupLocal.sqf";
+            };
+            class ParadropUpdateMarkersLocal {
+                file = "MissionScripts\Paradrop\paradropUpdateMarkersLocal.sqf";
+            };
         };
         class VehicleSetup {
             class SetupVehicleUprightLocal {

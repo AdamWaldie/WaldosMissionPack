@@ -236,8 +236,13 @@ It returns the number of distinct players actually reached.
 
 **Waldos Mission Modules > Mission Flow: Send Notification** exposes the same call from the Zeus
 menu: title and message text fields, a type selector (`INFO`/`SUCCESS`/`WARNING`/`ERROR`), a duration
-slider, a placement selector, and an audience selector (All / By Side / By Group / Selected Unit(s)).
-Selecting **Selected Unit(s)** sends only to the curator's currently-selected Zeus units. The module
+slider, a placement selector, a **Send to all players** checkbox, and a single **Recipients** picker
+using ZEN's native `OWNERS` dialog control - its own Sides / Groups / Players tabs with live
+multi-select lists, no typed callsign, all in one dialog (no chained follow-up picker). A curator can
+mix selections freely, e.g. one side plus a couple of extra individual players; the module resolves
+every picked side/group/player into one deduplicated unit list before sending, so a player covered by
+more than one selection is never notified twice. Checking **Send to all players** ignores the picker
+entirely. Dropping the module directly on a player pre-selects them in the Players tab. The module
 routes through a curator-authenticated server bridge (`Waldo_fnc_ZenNotifyServer`) before calling
 `Waldo_fnc_NotificationBroadcast`, matching the EMP and Signal Tracker modules' authorization pattern.
 

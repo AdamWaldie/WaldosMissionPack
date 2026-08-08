@@ -54,11 +54,16 @@
  *    Waldo_fnc_ParadropCreateDropZone's layout, created invisible (alpha 0, still real/queryable
  *    markers) so a mission maker gets the route's positional markers without the map clutter, plus a
  *    visible POINT marker at the target - but only when target was not itself a marker name, since
- *    that marker already sits exactly there and a second icon/label on top of it would just overlap;
- *    set false for a map-clutter-free operation), keepMarkersOnCleanup (default false -
- *    the created markers are removed automatically once the aircraft is destroyed/deleted, or once a
- *    DESPAWN run reaches its exit point; set true to leave them on the map instead; never affects the
- *    aircraft or crew either way), name (marker label, default "Drop Zone").
+ *    that marker already sits exactly there and a second icon/label on top of it would just overlap -
+ *    and a live-updating b_plane aircraft marker (same mechanism as airborne gunships: friendly-side
+ *    visible, position/heading refreshed every frame while the aircraft is alive) that tracks this
+ *    aircraft the whole time it's flying, always removed on cleanup regardless of
+ *    keepMarkersOnCleanup below; set createMarkers false for a map-clutter-free operation with none
+ *    of this), keepMarkersOnCleanup (default false -
+ *    the created static markers are removed automatically once the aircraft is destroyed/deleted, or
+ *    once a DESPAWN run reaches its exit point; set true to leave them on the map instead; never
+ *    affects the live aircraft marker (always removed) or the aircraft/crew either way), name
+ *    (marker label, default "Drop Zone" - also the live aircraft marker's label).
  *
  * Return Value:
  * Boolean - true when accepted (the actual route/actions are applied a moment later on the server
@@ -278,24 +283,44 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
             _point setMarkerText _label;
             _markers pushBack _point;
         };
-    };
 
-    // Cleanup watcher. Markers are removed automatically once the aircraft is destroyed/deleted, or
-    // once a DESPAWN run reaches its exit point - a marker for a drop zone that's no longer active is
-    // just stale either way. Set keepMarkersOnCleanup true to opt out and leave them on the map. This
-    // function never owns the aircraft's lifecycle either way (unlike Waldo_fnc_ParadropCreateDropZone,
-    // which spawns and therefore deletes its own aircraft), so this only ever removes the markers
-    // created above - never the aircraft or its crew.
-    if (count _markers > 0 && {!(_options getOrDefault ["keepMarkersOnCleanup", false])}) then {
-        [_aircraft, _markers, _lifecycle, _route] spawn {
-            params ["_aircraft", "_markers", "_lifecycle", "_route"];
+        // Live-updating aircraft marker, the same pattern airborne gunships already use
+        // (Waldo_fnc_GunshipSetupLocal/UpdateMarkersLocal): tracks this aircraft's actual
+        // position/heading every frame via Waldo_fnc_ParadropSetupLocal/UpdateMarkersLocal, instead
+        // of only ever showing the static corridor/point markers created above. This is what makes a
+        // pre-placed target marker feel "replaced" by a working drop zone once the aircraft is
+        // actually flying, rather than a fixed icon with no sense of where the plane currently is.
+        // Always deregistered on cleanup below regardless of keepMarkersOnCleanup - a marker for an
+        // aircraft that's no longer flying (or no longer exists) has nothing left to track.
+        private _quickId = format ["QUICK_%1", netId _aircraft];
+        private _publicAircraft = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+        private _aircraftIndex = _publicAircraft findIf {(_x select 0) == _quickId};
+        private _aircraftSummary = [_quickId, _label, _aircraft, side _flightGroup];
+        if (_aircraftIndex >= 0) then {_publicAircraft set [_aircraftIndex, _aircraftSummary]} else {_publicAircraft pushBack _aircraftSummary};
+        missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
+        [] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
+
+        // Cleanup watcher. Static markers are removed automatically once the aircraft is
+        // destroyed/deleted, or once a DESPAWN run reaches its exit point - a marker for a drop zone
+        // that's no longer active is just stale either way. Set keepMarkersOnCleanup true to opt out
+        // and leave the static corridor/point markers on the map instead; the live aircraft marker
+        // registered above is always deregistered regardless of that option. This function never owns
+        // the aircraft's lifecycle either way (unlike Waldo_fnc_ParadropCreateDropZone, which spawns
+        // and therefore deletes its own aircraft), so this only ever removes markers/registrations
+        // created above - never the aircraft or its crew.
+        [_aircraft, _markers, _quickId, _lifecycle, _route, !(_options getOrDefault ["keepMarkersOnCleanup", false])] spawn {
+            params ["_aircraft", "_markers", "_quickId", "_lifecycle", "_route", "_deleteMarkers"];
             waitUntil {
                 sleep 1;
                 isNull _aircraft
                 || {!alive _aircraft}
                 || {_lifecycle == "DESPAWN" && {_aircraft distance2D (_route get "exit") < 200}}
             };
-            {deleteMarker _x} forEach _markers;
+            if (_deleteMarkers) then {{deleteMarker _x} forEach _markers};
+            private _publicAircraft = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+            _publicAircraft = _publicAircraft select {(_x select 0) != _quickId};
+            missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
+            [] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
         };
     };
 

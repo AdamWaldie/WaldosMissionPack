@@ -23,7 +23,7 @@ Jump envelope/thresholds are now `server` entries in this file (loaded by
 ["WALDO_STATIC_MINALTITUDE", 180, true],           // metres AGL minimum
 ["WALDO_STATIC_MAXALTITUDE", 350, true],           // metres AGL maximum
 ["WALDO_STATIC_MAXSPEED", 310, true],              // km/h maximum
-["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true], // static-line chute class
+["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true], // static-line chute class (vanilla default)
 ["WALDO_PARA_HALOALTITUDE", 1000, true],           // metres AGL minimum for HALO
 ["WALDO_PARA_HALOCHUTE", "B_Parachute", true]      // HALO backpack class
 ```
@@ -42,9 +42,12 @@ automatic per-vehicle jump actions and the dynamic drop-zone selectors):
   if a user reports "no jump option," check the aircraft's actual altitude
   and speed against these thresholds first.
 - `WALDO_STATIC_STATICCHUTE` / `WALDO_PARA_HALOCHUTE` are parachute
-  classnames — swap for a mod's chute (e.g. an RHS one) if the mission uses
-  one instead of vanilla. For non-RHS missions, use
-  `"NonSteerable_Parachute_F"` (vanilla, fixed-wing).
+  classnames — `WALDO_STATIC_STATICCHUTE` defaults to vanilla
+  (`"NonSteerable_Parachute_F"`); swap for a mod's chute (e.g. RHS's
+  `"rhs_d6_Parachute"`, steerable) if the mission actually runs that mod. A
+  runtime fallback catches a configured class that isn't actually loaded and
+  substitutes vanilla, but `Waldo_fnc_RunDiagnostics` still flags the
+  mismatch — don't leave it configured for a mod the mission doesn't use.
 
 ## Custom / non-auto-detecting aircraft
 
@@ -115,11 +118,20 @@ field:
   destroyed/deleted, or once a `DESPAWN` lifecycle run reaches its exit
   point, since a marker for a drop zone that's no longer active is just
   stale). Full list in the script header.
-- Set `keepMarkersOnCleanup: true` to opt out and leave the markers on the
-  map instead — this still does **not** delete the aircraft or its crew
-  either way, since this entry point never created or owned them in the
-  first place (unlike `Waldo_fnc_ParadropCreateDropZone`, whose `DESPAWN`
-  does delete the aircraft it spawned).
+- `createMarkers` also adds a **live-updating aircraft marker** (same
+  mechanism airborne gunships use) that tracks the plane's actual
+  position/heading every frame while it's flying, visible only to a
+  friendly side — this is what makes a pre-placed target marker feel
+  "replaced" by a working drop zone once the aircraft actually takes off,
+  instead of staying a fixed icon with no sense of where the plane
+  currently is. It's always removed once the aircraft is gone, regardless
+  of `keepMarkersOnCleanup` (that option only affects the static
+  AREA/STANDBY/GREEN/RED/POINT markers).
+- Set `keepMarkersOnCleanup: true` to opt out and leave the static markers
+  on the map instead — this still does **not** delete the aircraft or its
+  crew either way, since this entry point never created or owned them in
+  the first place (unlike `Waldo_fnc_ParadropCreateDropZone`, whose
+  `DESPAWN` does delete the aircraft it spawned).
 - No registry, no generated jumpers by default — use the Dynamic Drop Zone
   system instead for a managed, repeatable operation with those features.
 

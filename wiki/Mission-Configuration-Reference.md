@@ -143,14 +143,14 @@ Replace the classname string with any crate classname from your mod set.
 missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180,  true]; // metres AGL minimum
 missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350,  true]; // metres AGL maximum
 missionNamespace setVariable ["WALDO_STATIC_MAXSPEED",    310,  true]; // km/h maximum
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true]; // chute class
+missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]; // chute class (vanilla default)
 
 // HALO — jump available above this altitude
 missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000,  true]; // metres AGL minimum
 missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true]; // chute class
 ```
 
-For non-RHS missions, replace `"rhs_d6_Parachute"` with `"NonSteerable_Parachute_F"` (vanilla).
+For missions running RHS, replace `"NonSteerable_Parachute_F"` with `"rhs_d6_Parachute"` for a steerable static-line chute.
 
 ### Safestart
 

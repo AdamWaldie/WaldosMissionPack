@@ -250,7 +250,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('""GROUND""', transport)
         self.assertIn('type="B_Heli_Light_01_F"', transport)
         self.assertIn('type="B_MRAP_01_F"', transport)
-        self.assertIn('""landingSearchRadius"", 75', transport)
+        self.assertIn('""landingSearchRadius"", 250', transport)
         self.assertIn('""landingClearanceScale"", 2.0', transport)
         self.assertIn('""useImprovedLanding"", true', transport)
         self.assertIn("ACE Self Interact > WMP Transport", transport)

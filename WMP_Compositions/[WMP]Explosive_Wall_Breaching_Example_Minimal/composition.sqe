@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_BreachableWall";
-			init="Waldo_Breaching_Enable = true; if (isNil ""Waldo_Breaching_Profiles"") then {Waldo_Breaching_Profiles = createHashMap;}; Waldo_Breaching_Profiles set [""Land_City2_8m_F"", createHashMap];";
+			init="Waldo_Breaching_Enable = true; if (isNil ""Waldo_Breaching_Profiles"") then {Waldo_Breaching_Profiles = createHashMap;}; Waldo_Breaching_Profiles set [""Land_City2_8m_F"", createHashMap]; [] call Waldo_fnc_BreachingInit;";
 		};
 		id=1;
 		type="Land_City2_8m_F";

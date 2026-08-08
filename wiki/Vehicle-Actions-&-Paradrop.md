@@ -191,11 +191,19 @@ marker-cleanup triggers below), `circuitDirection` (`LEFT` default / `RIGHT`),
 `approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`),
 `createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
 `Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
-for a map-clutter-free operation), and `keepMarkersOnCleanup` (**off by default** — the markers are
-removed automatically once the aircraft is destroyed/deleted, or once a `DESPAWN` run reaches its
+for a map-clutter-free operation), and `keepMarkersOnCleanup` (**off by default** — the static markers
+are removed automatically once the aircraft is destroyed/deleted, or once a `DESPAWN` run reaches its
 exit point, since a marker for a drop zone that's no longer active is just stale; set `true` to leave
 them on the map instead — this never affects the aircraft or crew either way). See the script's own
 header for the complete list and a HALO one-shot example.
+
+`createMarkers` also adds a **live-updating aircraft marker** — the same mechanism Airborne Gunship
+Support uses for its own aircraft — that tracks the plane's real position/heading every frame while
+it's flying, visible only to a friendly side. This is what actually "replaces" a pre-placed target
+marker with a working drop zone once the aircraft takes off, rather than leaving only a fixed icon on
+the map with no sense of where the plane currently is. It's always removed once the aircraft is gone,
+regardless of `keepMarkersOnCleanup` (that option only ever affects the static
+AREA/STANDBY/GREEN/RED/POINT markers).
 
 This shares its actual flight-route logic (`Waldo_fnc_ParadropBuildFlightRoute`) with the fuller
 Dynamic Drop-Zone system below — the same proven standby/green/red/exit route and the same
@@ -225,7 +233,10 @@ loiters beyond the exit; **Single pass - despawn** deletes the aircraft, its cre
 automatically** along with this cleanup, since a marker for a drop zone that's no longer active is
 just stale — check **Keep markers when the operation ends automatically** in the create dialog
 (`keepMarkersOnCleanup`, off by default) to leave them on the map instead. Explicitly using
-**Paradrop - Remove Operation** always removes the markers regardless of that setting. Speed input is
+**Paradrop - Remove Operation** always removes the markers regardless of that setting. As with the
+quick-setup flight above, the operation also carries a live-updating aircraft marker that tracks the
+plane's real position/heading every frame while it flies; that one is always removed with the
+operation regardless of `keepMarkersOnCleanup`. Speed input is
 in km/h and is converted to the engine's metres-per-second `forceSpeed` unit.
 
 The create dialog independently enables and configures static-line and HALO player actions. Static
@@ -238,7 +249,11 @@ altitude window with margin to absorb normal AI autopilot wander, static-line ma
 at least 60 km/h above capped route speed, and an unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
 enabled alternative or turns itself off instead of silently selecting a disabled jump method.
 
-**Paradrop - Embark Players** uses the player directly underneath the placed module first, then the
+**Paradrop - Embark Players** lists both registry-backed Dynamic Drop Zone operations and any aircraft
+set up with `Waldo_fnc_ParadropQuickFlightSetup` (a mission maker's own placed-and-crewed plane) - it
+is not limited to operations created through **Paradrop - Create Drop Zone**. **Paradrop - Remove
+Operation** stays registry-only, since a quick-setup aircraft was never spawned or owned by this
+system to begin with. It uses the player directly underneath the placed module first, then the
 curator selection:
 
 - with a player selected, choose that player or all active players in that player's group and move them directly into free cargo seats;
@@ -295,14 +310,14 @@ Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to 
 missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];  // metres AGL
 missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];  // metres AGL
 missionNamespace setVariable ["WALDO_STATIC_MAXSPEED",    310, true];  // km/h
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true]; // chute class
+missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]; // chute class (vanilla default)
 
 // HALO
 missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];  // metres AGL minimum
 missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true];        // chute class
 ```
 
-For a non-RHS static chute (if you don't have RHS), use `"NonSteerable_Parachute_F"` (vanilla, fixed-wing).
+For a steerable static chute with RHS, use `"rhs_d6_Parachute"` instead.
 
 ---
 

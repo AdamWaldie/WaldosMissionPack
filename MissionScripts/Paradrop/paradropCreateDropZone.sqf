@@ -6,7 +6,9 @@
  * independent. The server owns registry, groups, waypoints, jump timing and cleanup. Global Arma
  * markers provide normal JIP visibility without a custom replay layer. The AREA/STANDBY/GREEN/RED
  * route markers are created invisible (alpha 0, still real/queryable markers) so only the single
- * named POINT marker at the drop point is actually shown on the map. The aircraft carries only
+ * named POINT marker at the drop point is actually shown on the map, alongside a live-updating
+ * b_plane marker (same mechanism as airborne gunships, via Waldo_fnc_ParadropSetupLocal) that
+ * tracks the aircraft's actual position/heading every frame while it flies. The aircraft carries only
  * one AI pilot by default, receives the selected static-line/HALO actions on every client and can
  * fly a wide re-alignment circuit, remain after one pass or despawn. Jump envelopes are normalized
  * against the selected route altitude and speed so customization cannot silently make every jump
@@ -237,6 +239,16 @@ private _publicIndex = _public findIf {(_x select 0) == _id};
 private _summary = [_id, _name, _aircraft, _centre, _side, _class];
 if (_publicIndex >= 0) then {_public set [_publicIndex, _summary]} else {_public pushBack _summary};
 missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
+// Separate from Waldo_Paradrop_PublicDropZones above - that list drives the ZEN Embark dropdown and
+// must only ever contain registry-backed operations. This one only feeds the live aircraft marker
+// (Waldo_fnc_ParadropSetupLocal/UpdateMarkersLocal, the same pattern airborne gunships use) and is
+// also fed by Waldo_fnc_ParadropQuickFlightSetup, which has no registry entry of its own.
+private _publicAircraft = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+private _aircraftIndex = _publicAircraft findIf {(_x select 0) == _id};
+private _aircraftSummary = [_id, _name, _aircraft, _side];
+if (_aircraftIndex >= 0) then {_publicAircraft set [_aircraftIndex, _aircraftSummary]} else {_publicAircraft pushBack _aircraftSummary};
+missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
+[] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
 
 [_id] spawn {
     params ["_id"];
