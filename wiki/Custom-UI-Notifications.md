@@ -206,6 +206,41 @@ WMP adapters follow these audience boundaries so a server-side event does not be
 
 Do not target `0` for ordinary feature notifications: that includes machines which cannot display UI and frequently leaks information to the opposing side. Use an owner ID for a private response, an explicit player-object array for a calculated audience, or `-2` only for an intentionally global player announcement.
 
+## Broadcasting to an audience (`Waldo_fnc_NotificationBroadcast`)
+
+`Waldo_fnc_ShowUiNotification` shows a card on whichever machine runs it; it does not choose an
+audience for you. `Waldo_fnc_NotificationBroadcast` wraps it with audience targeting so mission code
+and Zeus curators do not have to hand-resolve player lists. It is server-authoritative — calling it
+from a client forwards to the server automatically, the same pattern as `Waldo_fnc_Jammer`.
+
+```sqf
+[createHashMapFromArray [
+    ["title", "FALL BACK"], ["message", "Regroup at the rally point."], ["state", "WARNING"],
+    ["duration", 10], ["placement", "TOP"], ["audience", "SIDE"], ["side", west]
+]] call Waldo_fnc_NotificationBroadcast;
+```
+
+The single hashmap argument accepts every `Waldo_fnc_ShowUiNotification` field (`title`, `message`,
+`state`, `duration`, `placement`, `channel`, `source`) plus:
+
+| Key | Type | Meaning |
+|---|---|---|
+| `audience` | String | `ALL` (default), `SIDE`, `GROUP`, or `UNITS` |
+| `side` | Side | Read when `audience` is `SIDE` |
+| `group` | String | Group callsign, matched case-insensitively against `groupId`; read when `audience` is `GROUP` |
+| `units` | Array\<Object\> | Explicit player units; read when `audience` is `UNITS` |
+
+It returns the number of distinct players actually reached.
+
+### Zeus module
+
+**Waldos Mission Modules > Mission Flow: Send Notification** exposes the same call from the Zeus
+menu: title and message text fields, a type selector (`INFO`/`SUCCESS`/`WARNING`/`ERROR`), a duration
+slider, a placement selector, and an audience selector (All / By Side / By Group / Selected Unit(s)).
+Selecting **Selected Unit(s)** sends only to the curator's currently-selected Zeus units. The module
+routes through a curator-authenticated server bridge (`Waldo_fnc_ZenNotifyServer`) before calling
+`Waldo_fnc_NotificationBroadcast`, matching the EMP and Signal Tracker modules' authorization pattern.
+
 ## Cleanup and recovery
 
 Remove all local WMP-owned panels and transient displays:

@@ -53,12 +53,14 @@ copies of feature logic.
 | Gunship Support Example | Crewed VTOL registered with `Waldo_fnc_GunshipRegister`, orbiting a movable marker with automatic service |
 | Radio Jammer Example | Server-owned, movable jammer fixture |
 | Hazardous Zone Example | Reliable fixed-area hazard with visible transition feedback and real danger |
+| Hazard Emitter Moving Example | Contamination field that follows a vehicle, via `Waldo_fnc_HazardRegisterEmitter` directly |
 | Dynamic AA Example | Anchor object generating a radar, static and mobile AA site around itself |
 | Dynamic AO Example | Anchor object generating a randomized area of operations around itself |
 | Explosive Wall Breaching Example | Explicit demolition-charge profile with a visibly testable centre gap |
 | Emergency Dismount Vehicle Example | Simulation-safe upright vehicle that enables overturn/destroyed extraction |
 | Tactical Display Example | Supported map-board access point |
 | Bomb Defusal Example | Standard wire-cutting challenge with an explosive failure consequence |
+| Interaction Examples Showcase | All ten field-equipment procedures side by side, cycling easy/standard/hard/expert |
 | Construction Objects Example | ACE construction supply object with modern construction audio |
 | Electronic Warfare Examples | EMP immunity and side-restricted signal tracking fixtures |
 | Object Scaling Example | Supported Simple Object conversion and scale setup |

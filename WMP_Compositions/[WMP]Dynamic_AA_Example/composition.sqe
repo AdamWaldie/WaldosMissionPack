@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-5,0};};
-		title="Dynamic Anti-Air: generates a radar, one static AA site and one mobile AA vehicle around this object on mission start (move the object to relocate the whole system before placing). Give a curator the ""Dynamic AA - Create"" ZEN module for live/replacement systems instead of duplicating this composition. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-Anti-Air";
+		title="Dynamic Anti-Air: generates a radar, one static AA site and one mobile AA vehicle around this object on mission start (move the object to relocate the whole system before placing). Needs real open ground nearby for every component's collision-free footprint - a spot crowded with trees or buildings rejects the whole system with an RPT/ERROR notice naming which component failed rather than placing on top of an obstruction; move the object somewhere more open and it will place cleanly. Give a curator the ""Dynamic AA - Create"" ZEN module for live/replacement systems instead of duplicating this composition. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-Anti-Air";
 		id=2;
 	};
 };

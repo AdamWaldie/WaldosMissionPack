@@ -421,6 +421,21 @@ Arguments are `[title, message, state, duration, placement, channel, source]`. S
 
 Players receive **WMP Interface > Clear Stuck WMP UI** as an ACE self-interaction. Vanilla `addAction` is installed only when ACE interaction is unavailable. Setup runs on JIP and respawn and has no authority scheduler or public state.
 
+### Zeus-authored notification broadcasts (`Waldo_fnc_NotificationBroadcast`)
+
+Sends a WMP notification card to a chosen audience instead of a single local player. Server-authoritative — self-forwards to the server when called from a client, same as `Waldo_fnc_Jammer`.
+
+```sqf
+[createHashMapFromArray [
+    ["title", "FALL BACK"], ["message", "Regroup at the rally point."], ["state", "WARNING"],
+    ["duration", 10], ["placement", "TOP"], ["audience", "SIDE"], ["side", west]
+]] call Waldo_fnc_NotificationBroadcast;
+```
+
+Config keys: `title`, `message`, `state` (`INFO`/`SUCCESS`/`WARNING`/`ERROR`), `duration`, `placement`, `channel`, `source` (same meaning as `Waldo_fnc_ShowUiNotification`'s arguments), plus `audience` — `ALL` (default), `SIDE` (reads `side`), `GROUP` (reads `group`, matched case-insensitively against `groupId`), or `UNITS` (reads an explicit `units` array of player objects). Returns the number of distinct players actually reached.
+
+Zeus ("Waldos Mission Modules"): **Mission Flow: Send Notification** — a dialog for title/message, type, duration, placement, and audience (All / By Side / By Group / Selected Unit(s)), routed through the curator-authenticated `Waldo_fnc_ZenNotifyServer` bridge before calling the same public function.
+
 ### Safestart (optional)
 
 Freezes all players at mission start — the reversible mirror of ENDEX. While active: weapons are safe and every shot/grenade/launcher/vehicle-weapon round is deleted, players take and deal **no damage**, players are **confined to a safe zone**, and an on-screen **banner** (with a live go-live countdown when a timer is running) is shown. JIP and respawning players are re-frozen automatically.
@@ -991,6 +1006,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Radio Jammer - Remove Nearest → calls `Waldo_fnc_ZenJammerRemove` (removes + deletes the nearest jammer)
 - EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
+- Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 
 ---
 

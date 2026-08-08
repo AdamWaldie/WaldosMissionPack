@@ -204,6 +204,9 @@ class CfgFunctions
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
               };
+              class NotificationBroadcast {
+                  file = "MissionScripts\MissionFlowAndUi\notificationBroadcast.sqf";
+              };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
               class RestyleUiNotificationsLocal {file = "MissionScripts\MissionFlowAndUi\restyleUiNotificationsLocal.sqf";};
@@ -555,6 +558,12 @@ class CfgFunctions
             };
             class ZenTrackerServer {
                 file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
+            };
+            class ZenNotify {
+                file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
+            };
+            class ZenNotifyServer {
+                file = "MissionScripts\ZenModules\zenNotifyServer.sqf";
             };
         };
         class Paradrop {
