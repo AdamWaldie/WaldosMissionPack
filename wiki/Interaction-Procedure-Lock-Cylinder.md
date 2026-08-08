@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the tension-and-pin lock procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `lockpick` procedure exposes the pin stacks, shear line, pick, tension state, and cylinder progress of a mechanical lock.
 
 | Operating card | Active cylinder |
 |---|---|
 | ![Lock operating card](images/interaction-procedures/interaction-lockpick-briefing.png) | ![Cutaway lock cylinder](images/interaction-procedures/interaction-lockpick-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "lockpick"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

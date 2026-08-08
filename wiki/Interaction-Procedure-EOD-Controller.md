@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the loom-identification and isolation procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `wirecut` procedure represents a rugged field controller used to isolate and sever one live lead. It is suitable for bombs, demolition charges, vehicle sabotage, and booby-trapped equipment.
 
 | Operating card | Active controller |
 |---|---|
 | ![EOD operating card](images/interaction-procedures/interaction-wirecut-briefing.png) | ![EOD controller](images/interaction-procedures/interaction-wirecut-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "wirecut"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the terminal-routing circuit procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `circuit` procedure represents a breaker cabinet, fuse panel, or communications relay whose isolated terminals must be routed to matching buses.
 
 | Operating card | Active cabinet |
 |---|---|
 | ![Breaker operating card](images/interaction-procedures/interaction-circuit-briefing.png) | ![Breaker cabinet](images/interaction-procedures/interaction-circuit-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "circuit"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

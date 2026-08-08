@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the observe-and-repeat control sequence.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `sequence` procedure represents a guarded control console that plays progressively longer authorization signals.
 
 | Operating card | Active console |
 |---|---|
 | ![Sequence operating card](images/interaction-procedures/interaction-sequence-briefing.png) | ![Secure sequence console](images/interaction-procedures/interaction-sequence-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "sequence"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

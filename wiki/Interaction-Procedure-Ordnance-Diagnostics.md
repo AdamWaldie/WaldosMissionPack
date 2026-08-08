@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the explosive-circuit matrix procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `minesweeper` procedure presents a portable explosive-circuit matrix. Use it for trigger diagnosis, minefield control units, fault maps, or damaged electronics.
 
 | Operating card | Active tablet |
 |---|---|
 | ![Diagnostic operating card](images/interaction-procedures/interaction-minesweeper-briefing.png) | ![Ordnance diagnostic tablet](images/interaction-procedures/interaction-minesweeper-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "minesweeper"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

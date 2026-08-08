@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the calibrated torque repair procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `repair` procedure represents a service hatch containing fasteners that must be tightened to their engraved torque specifications.
 
 | Operating card | Active hatch |
 |---|---|
 | ![Maintenance operating card](images/interaction-procedures/interaction-repair-briefing.png) | ![Maintenance hatch](images/interaction-procedures/interaction-repair-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "repair"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

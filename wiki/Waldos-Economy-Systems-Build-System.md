@@ -46,6 +46,35 @@ In Zeus: **Build → Configure Buildings** (a tabbed editor for the many fields)
 * Boosts: buildings can shorten research and construction times, and raise resource storage caps.
 * Upkeep: a building can consume resources over time to keep running.
 
+### Full row reference
+
+Every field beyond `name` is optional and defaults sensibly if omitted — the example above only sets the first 12:
+
+| # | Field | Default | Purpose |
+|---|---|---|---|
+| 0 | `name` | required | Catalogue key and display name |
+| 1 | `description` | `""` | Shown in the build menu |
+| 2 | `costRows` | `[]` | `[["Resource", amount], ...]` |
+| 3 | `requirements` | `[]` | Research/building names that must exist first |
+| 4 | `buildTime` | `60` | Seconds, minimum `1` |
+| 5 | `icon` | resource default icon | Menu icon path |
+| 6 | `color` | resource default colour | Menu accent colour |
+| 7 | *(reserved)* | `false` | Internal "already built" flag — leave as `false` in a catalogue definition |
+| 8 | `className` | `""` | `CfgVehicles` classname spawned on completion |
+| 9 | `produceResource` | `""` | Resource name this building generates while standing |
+| 10 | `produceAmount` | `0` | Amount produced per interval |
+| 11 | `produceInterval` | `0` | Seconds between production ticks |
+| 12 | `researchSpeedBoost` | `0` | Reduces research time mission-wide while standing |
+| 13 | `buildSpeedBoost` | `0` | Reduces construction time mission-wide while standing |
+| 14 | `detectorRange` | `0` | Non-zero makes this a RADAR building (see below) |
+| 15 | `upkeepCosts` | `[]` | `[["Resource", amount], ...]` consumed per upkeep interval |
+| 16 | `upkeepInterval` | `0` | Seconds between upkeep charges |
+| 17 | `storageRows` | `[]` | `[["Resource", capacityBoost], ...]` |
+| 18 | `upgradeTo` | `""` | Name of the catalogue entry this building can upgrade into |
+| 19 | `buildLimit` | `0` | Maximum standing count per side; `0` is unlimited |
+| 20 | `availability` | `["ALL"]` | Sides allowed to build this entry |
+| 21 | `category` | `""` | Optional menu grouping label |
+
 ## Upgrades & limits
 
 Buildings can be **upgraded** into a higher tier, and you can cap how many of a building a side may have (**build limits**). Availability can be restricted per side.
