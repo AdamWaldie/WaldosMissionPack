@@ -32,9 +32,9 @@ Every player has a local colour-vision overlay independent of the mission-wide e
 | `RED_GREEN` | Blue/cyan/amber/violet separation for common red-green deficiencies |
 | `PROTAN` | Avoids dark-red cues and uses cyan/blue/gold/magenta states |
 | `TRITAN` | Turquoise/green/vermilion/magenta separation for blue-yellow deficiencies |
-| `HIGH_CONTRAST` | Symbol-led, high-contrast near-monochrome presentation |
+| `HIGH_CONTRAST` | Widens separation between semantic/focus states toward white/grey; symbol-led |
 
-The choice is stored in `profileNamespace`, applies immediately to theme-aware displays and persists for that player. It is never broadcast: two players can use different colour-vision profiles while seeing the same WW2, Vietnam or SCIFI mission theme. Mission makers should not set this globally.
+Every profile follows the same rule: it overrides only the semantic/focus tokens (accent, success, warning, danger and their active/hex variants) - never a theme's own panel, chrome, material or text colours. The choice is stored in `profileNamespace`, applies immediately to theme-aware displays and persists for that player. It is never broadcast: two players can use different colour-vision profiles while seeing the same WW2, Vietnam or SCIFI mission theme, and the theme's own stylistic identity is always preserved. Mission makers should not set this globally.
 
 The shared resolver applies the personal profile after mission theme overrides. Use `Waldo_fnc_UiColourVisionApplyLocal` only for local accessibility tooling; use `Waldo_fnc_UiThemeSetServer` for the mission-wide era.
 

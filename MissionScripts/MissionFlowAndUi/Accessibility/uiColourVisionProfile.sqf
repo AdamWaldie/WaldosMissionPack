@@ -54,17 +54,20 @@ private _profiles = createHashMapFromArray [
     ]],
     ["HIGH_CONTRAST", createHashMapFromArray [
         ["id", "HIGH_CONTRAST"], ["label", "High-contrast monochrome"],
-        ["description", "Near-monochrome presentation with maximum text contrast and symbol-led states."],
+        // Previously also overrode shade/panel/panelAlt/header/casing/button/edit/list/text/muted -
+        // chrome and material tokens this header explicitly promises stay theme-owned. That flattened
+        // every era theme (WW2 olive, Vietnam green, SciFi blue, Parchment tan, ...) into the same
+        // near-black panel with white text, erasing the chosen theme's actual look instead of just
+        // sharpening state separation - the concrete "accessibility settings mess with UI themes"
+        // complaint this closes. Every shipped theme already pairs its own text/panel colours with
+        // adequate contrast (Parchment in particular is a light panel with dark text; forcing white
+        // text here made it unreadable) - HIGH_CONTRAST only needs to widen separation between the
+        // semantic/focus states themselves, exactly like RED_GREEN/PROTAN/TRITAN already do.
+        ["description", "Maximises separation between semantic states without replacing the selected theme's own colours and materials."],
         ["overrides", createHashMapFromArray [
-            ["shade", [0, 0, 0, 0.88]], ["panel", [0.01, 0.01, 0.01, 0.99]],
-            ["panelAlt", [0.10, 0.10, 0.10, 1]], ["header", [0.16, 0.16, 0.16, 1]],
-            ["casing", [0.04, 0.04, 0.04, 1]], ["button", [0.14, 0.14, 0.14, 1]],
-            ["edit", [0.02, 0.02, 0.02, 1]], ["list", [0.02, 0.02, 0.02, 1]], ["text", [1, 1, 1, 1]],
-            ["muted", [0.78, 0.78, 0.78, 1]], ["accent", [1, 1, 1, 1]],
-            ["accentActive", [0.82, 0.82, 0.82, 1]], ["success", [0.88, 0.88, 0.88, 1]],
-            ["warning", [0.68, 0.68, 0.68, 1]], ["danger", [1, 1, 1, 1]],
-            ["textHex", "#FFFFFF"], ["mutedHex", "#C8C8C8"], ["accentHex", "#FFFFFF"],
-            ["successHex", "#E0E0E0"], ["warningHex", "#ADADAD"], ["dangerHex", "#FFFFFF"]
+            ["accent", [1, 1, 1, 1]], ["accentActive", [0.82, 0.82, 0.82, 1]],
+            ["success", [0.88, 0.88, 0.88, 1]], ["warning", [0.68, 0.68, 0.68, 1]], ["danger", [1, 1, 1, 1]],
+            ["accentHex", "#FFFFFF"], ["successHex", "#E0E0E0"], ["warningHex", "#ADADAD"], ["dangerHex", "#FFFFFF"]
         ]]
     ]]
 ];

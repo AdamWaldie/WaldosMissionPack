@@ -47,6 +47,17 @@ if (!_enabled) exitWith {
     true
 };
 
+// The map isn't a separate top-level display in Arma - it renders as a large control inside this
+// same display 46 - so a panel positioned by fixed safe-zone coordinates stays drawn on top of it
+// unless it explicitly checks visibleMap. Just hide rather than unregister the reservation: this
+// runs every second from the SafeStart service loop, so the panel reappears at its normal position
+// within a second of the map closing without another system being able to claim the slot in between.
+if (visibleMap) exitWith {
+    _control ctrlShow false;
+    _frame ctrlShow false;
+    true
+};
+
 _control ctrlSetStructuredText parseText _content;
 private _panelW = safeZoneW * 0.48;
 private _padX = _panelW * 0.035;
