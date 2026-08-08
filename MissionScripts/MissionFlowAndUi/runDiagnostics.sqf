@@ -160,8 +160,9 @@ if (_configuredLoadoutSides == 0) then {
         private _valid = isClass (configFile >> "CfgVehicles" >> _class);
         // A known real gotcha: this exact class only exists when RHS is loaded, and the check
         // above already fails it as ERROR on a non-RHS mission - surface the actual fix, not just
-        // "class not found", since this specific default has silently broken static-line jumps on
-        // vanilla missions before.
+        // "class not found". No longer the shipped default (WALDO_STATIC_STATICCHUTE now defaults
+        // to vanilla), but the wiki still shows this as the example RHS override, so it remains a
+        // realistic mission-maker mistake.
         private _resolvedHint = if (!_valid && {_class == "rhs_d6_Parachute"}) then {
             format ["%1 defaults to the RHS class rhs_d6_Parachute; either load RHS or set %2 to the vanilla NonSteerable_Parachute_F.", _variable, _variable]
         } else {_hint};

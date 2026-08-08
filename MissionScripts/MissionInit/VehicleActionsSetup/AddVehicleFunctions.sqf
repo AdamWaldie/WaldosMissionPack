@@ -42,12 +42,13 @@ if (isNil "_staticMaxSpd") then
 private _staticChute = missionNamespace getVariable "WALDO_STATIC_STATICCHUTE";
 if (isNil "_staticChute") then
 {
-    missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute"];
-    _staticChute = "rhs_d6_Parachute";
+    missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F"];
+    _staticChute = "NonSteerable_Parachute_F";
 };
-// The RHS chute above silently fails to install (Waldo_fnc_AddStaticJump exits early on an unknown
-// class) on any mission without RHS loaded - fall back to the vanilla fixed-wing chute so a non-RHS
-// mission's auto-detected static-line action actually appears instead of just disappearing.
+// A mission maker's own configured chute (e.g. an RHS class) silently fails to install
+// (Waldo_fnc_AddStaticJump exits early on an unknown class) on a mission that doesn't actually have
+// that mod loaded - fall back to the vanilla fixed-wing chute so the auto-detected static-line action
+// still appears instead of just disappearing.
 if !(isClass (configFile >> "CfgVehicles" >> _staticChute)) then {_staticChute = "NonSteerable_Parachute_F";};
 private _haloAlt = missionNamespace getVariable "WALDO_PARA_HALOALTITUDE";
 //Get HALO Altitude & CHUTe Arguments
@@ -91,11 +92,11 @@ if (_vehicle iskindOf "RHS_UH1_Base") then {
 // Dynamic Drop Zone system (Waldo_fnc_ParadropCreateDropZone / the ZEN module) - all three mark the
 // aircraft with Waldo_Paradrop_ManuallyConfigured before installing their own static/HALO envelope.
 // This auto-detection must not then fight that explicit setup with its own mission-global defaults
-// (that conflict, not just being redundant, is a real bug: this block's hardcoded static chute
-// fallback is the RHS class "rhs_d6_Parachute", which silently fails to install - leaving only
-// HALO active - on any non-RHS mission, exactly the shipped vanilla example compositions). Defer
-// past WALDO_INIT_COMPLETE so an object's own init-field setup call (which runs synchronously at
-// vehicle creation, before this deferred check) has always had the chance to set the flag first.
+// (that conflict, not just being redundant, is a real bug - see the class-existence fallback above,
+// which exists specifically for a mission maker who configures a mod chute class without loading
+// that mod). Defer past WALDO_INIT_COMPLETE so an object's own init-field setup call (which runs
+// synchronously at vehicle creation, before this deferred check) has always had the chance to set
+// the flag first.
 if (
     _vehicle iskindOf "RHS_Mi24_base"
     || {_vehicle iskindOf "RHS_Mi8_base"}

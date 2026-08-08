@@ -71,8 +71,8 @@ _schdenvirohndlr = [_vehicle] spawn {
     private _staticChute = missionNamespace getVariable "WALDO_STATIC_STATICCHUTE";
     if (isNil "_staticChute") then
     {
-        missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute"];
-        _staticChute = "rhs_d6_Parachute";
+        missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F"];
+        _staticChute = "NonSteerable_Parachute_F";
     };
     /*
     Waldo_fnc_AddStaticJump Arguments:
@@ -80,7 +80,7 @@ _schdenvirohndlr = [_vehicle] spawn {
     1: Minimum altitude    <NUMBER> (Optional) (Default; 180)
     2: Maximum altitude    <NUMBER> (Optional) (Default; 350)
     3: Maximum speed       <NUMBER> (Optional) (Default; 310)
-    4: Chute Vehicle Class <OBJECT> (Optional) (Default; "rhs_d6_Parachute") Requires RHS, respecify alternative if required. (NonSteerable_Parachute_F is vanilla)
+    4: Chute Vehicle Class <OBJECT> (Optional) (Default; "NonSteerable_Parachute_F", vanilla) Set to an RHS or other mod's chute class if the mission uses one instead.
     */
     [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
     // leave this one as is.

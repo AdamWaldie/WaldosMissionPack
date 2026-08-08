@@ -225,7 +225,7 @@ Most "Plane"-class assets automatically get HALO/static-line actions. Override t
 ["WALDO_STATIC_MINALTITUDE", 180],  // metres
 ["WALDO_STATIC_MAXALTITUDE", 350],
 ["WALDO_STATIC_MAXSPEED", 310],     // km/h
-["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute"],
+["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F"], // vanilla; e.g. "rhs_d6_Parachute" if the mission runs RHS
 ["WALDO_PARA_HALOALTITUDE", 1000],
 ["WALDO_PARA_HALOCHUTE", "B_Parachute"]
 ```

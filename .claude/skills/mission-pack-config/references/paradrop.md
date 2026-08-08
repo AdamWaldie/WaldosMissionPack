@@ -23,7 +23,7 @@ Jump envelope/thresholds are now `server` entries in this file (loaded by
 ["WALDO_STATIC_MINALTITUDE", 180, true],           // metres AGL minimum
 ["WALDO_STATIC_MAXALTITUDE", 350, true],           // metres AGL maximum
 ["WALDO_STATIC_MAXSPEED", 310, true],              // km/h maximum
-["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true], // static-line chute class
+["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true], // static-line chute class (vanilla default)
 ["WALDO_PARA_HALOALTITUDE", 1000, true],           // metres AGL minimum for HALO
 ["WALDO_PARA_HALOCHUTE", "B_Parachute", true]      // HALO backpack class
 ```
@@ -42,9 +42,12 @@ automatic per-vehicle jump actions and the dynamic drop-zone selectors):
   if a user reports "no jump option," check the aircraft's actual altitude
   and speed against these thresholds first.
 - `WALDO_STATIC_STATICCHUTE` / `WALDO_PARA_HALOCHUTE` are parachute
-  classnames — swap for a mod's chute (e.g. an RHS one) if the mission uses
-  one instead of vanilla. For non-RHS missions, use
-  `"NonSteerable_Parachute_F"` (vanilla, fixed-wing).
+  classnames — `WALDO_STATIC_STATICCHUTE` defaults to vanilla
+  (`"NonSteerable_Parachute_F"`); swap for a mod's chute (e.g. RHS's
+  `"rhs_d6_Parachute"`, steerable) if the mission actually runs that mod. A
+  runtime fallback catches a configured class that isn't actually loaded and
+  substitutes vanilla, but `Waldo_fnc_RunDiagnostics` still flags the
+  mismatch — don't leave it configured for a mod the mission doesn't use.
 
 ## Custom / non-auto-detecting aircraft
 

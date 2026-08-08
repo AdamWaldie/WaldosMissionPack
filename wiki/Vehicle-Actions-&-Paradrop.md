@@ -295,14 +295,14 @@ Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to 
 missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];  // metres AGL
 missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];  // metres AGL
 missionNamespace setVariable ["WALDO_STATIC_MAXSPEED",    310, true];  // km/h
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "rhs_d6_Parachute", true]; // chute class
+missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]; // chute class (vanilla default)
 
 // HALO
 missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];  // metres AGL minimum
 missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true];        // chute class
 ```
 
-For a non-RHS static chute (if you don't have RHS), use `"NonSteerable_Parachute_F"` (vanilla, fixed-wing).
+For a steerable static chute with RHS, use `"rhs_d6_Parachute"` instead.
 
 ---
 
