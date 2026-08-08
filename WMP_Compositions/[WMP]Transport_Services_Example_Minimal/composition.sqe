@@ -1,0 +1,39 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+    items=3;
+    class Item0
+    {
+        dataType="Object";
+        side="West";
+        class PositionInfo {position[]={-18,0,0}; angles[]={0,0,1.5708};};
+        class Attributes
+        {
+            name="WMP_RavenOne";
+            init="createVehicleCrew this; [this, ""HELICOPTER""] call Waldo_fnc_TransportRegister;";
+        };
+        id=1;
+        type="B_Heli_Light_01_F";
+    };
+    class Item1
+    {
+        dataType="Object";
+        side="West";
+        class PositionInfo {position[]={18,0,0}; angles[]={0,0,4.71239};};
+        class Attributes
+        {
+            name="WMP_GroundOne";
+            init="createVehicleCrew this; [this, ""GROUND""] call Waldo_fnc_TransportRegister;";
+        };
+        id=2;
+        type="B_MRAP_01_F";
+    };
+    class Item2
+    {
+        dataType="Comment";
+        class PositionInfo {position[]={0,-8,0};};
+        title="Transport Services (Minimal): the smallest working calls - id/display name auto-generate and every other option falls back to its default. Keep simulation enabled for each vehicle and its crew. See the Transport Services Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
+        id=3;
+    };
+};

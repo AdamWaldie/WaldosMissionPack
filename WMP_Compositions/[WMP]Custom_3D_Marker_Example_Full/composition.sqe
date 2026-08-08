@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_MarkerAnchor";
+			init="[""composition_marker"", this, [[""text"", ""SIGNAL RELAY""], [""icon"", ""\\A3\\ui_f\\data\\map\\mapcontrol\\Transmitter_CA.paa""], [""colour"", [0.35, 0.85, 1, 0.95]], [""offset"", [0,0,3]], [""width"", 0.8], [""height"", 0.8], [""distance"", 100], [""sides"", [""ALL""]]]] call Waldo_fnc_Create3DMarker;";
+		};
+		id=1;
+		type="Land_TTowerSmall_1_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Custom 3D Marker (Full parameter reference): icon, colour, width, height, offset, distance and sides all shown explicitly - copy and edit any key. See the Custom 3D Marker Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers";
+		id=2;
+	};
+};

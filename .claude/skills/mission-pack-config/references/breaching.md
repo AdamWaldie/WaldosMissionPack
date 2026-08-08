@@ -36,6 +36,14 @@ Only the exact configured wall class reacts — unrelated walls/buildings are
 untouched. Successful breaches are silent by default (no notification lane
 used); set `Waldo_Breaching_ShowNotifications` to `true` to opt in.
 
+Even faster than the manual steps above:
+`WMP_Compositions/[WMP]Explosive_Wall_Breaching_Example_Minimal` is a
+pre-placed wall whose init already sets an empty profile (every default —
+6 m radius, any demolition charge, destroys the original with no
+replacement pieces), ready to test immediately. `_Full` shows the same
+wall with every profile key set explicitly, including a two-piece
+replacement layout, once the minimal version is understood.
+
 ## Requiring more than one charge
 
 `requiredStrength` on the profile compares against `ExplosiveStrengths` — a

@@ -32,6 +32,17 @@ own type ID (e.g. `TOXIN`, `NO_OXYGEN`) to keep exposure separate.
 
 ## Registering a zone (`initServer.sqf`)
 
+The beginner-friendly path — one call, preset name as a plain string, no
+manual HashMap lookup:
+
+```sqf
+["reactor_leak", "reactor_zone", "MODERATE_RADIATION"] call Waldo_fnc_HazardRegisterPresetZone;
+// [key, area, presetKey, overrides(optional)] - copies the preset so repeated calls never mutate the shared catalogue
+```
+
+The manual/advanced path, for a hand-built profile or when overriding
+several fields at once:
+
 ```sqf
 private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap])
     getOrDefault ["MODERATE_RADIATION", createHashMap];
@@ -41,6 +52,27 @@ private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", create
 
 `Waldo_fnc_HazardUnregisterZone` removes a zone server-side;
 `Waldo_fnc_HazardStop` stops only the current client's local evaluation.
+Called from an object's own Eden init field (as the shipped compositions
+below do), `Waldo_fnc_HazardRegisterPresetZone` self-defers if `init.sqf`
+hasn't finished loading `Waldo_Hazard_Presets` yet, so ordering against
+`init.sqf` is never a beginner trap.
+
+### Eden compositions (beginner drop-in)
+
+Three shipped examples, each with a Minimal (smallest working call) and
+Full (every option shown) pair:
+
+- `[WMP]Hazardous_Emitter_Example_Minimal`/`_Full` — a fixed severe-radiation
+  zone (`Waldo_fnc_HazardRegisterPresetZone`); Full adds an
+  `intensityMode: CONSTANT` override.
+- `[WMP]Hazard_Emitter_Moving_Example_Minimal`/`_Full` — a contamination
+  field that follows a vehicle (`Waldo_fnc_HazardRegisterEmitter` directly,
+  not the preset wrapper, since an emitter always needs an explicit
+  profile).
+- `[WMP]Radiation_Hazard_Example_Minimal`/`_Full` — "Radiation Hazard With
+  Audio"; Minimal uses no overrides, Full adds
+  `label`/`notifyTransitions`/`notifyDamageStages`/`showStatus` overrides
+  on top of the `MODERATE_RADIATION` preset.
 
 ## Awareness / detector gating (information only, never protection)
 

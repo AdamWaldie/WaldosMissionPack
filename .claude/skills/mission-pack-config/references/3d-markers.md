@@ -48,6 +48,14 @@ client forward to the server automatically.
 ["generator_alpha"] call Waldo_fnc_Remove3DMarker;
 ```
 
+## Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Custom_3D_Marker_Example_Minimal` is a pre-placed
+object with just `["signal_relay", this] call Waldo_fnc_Create3DMarker;` —
+every option above at its default (text, icon, colour, distance, sides).
+`_Full` shows the options HashMap set explicitly for a mission maker
+learning what each key changes.
+
 ## Gotchas
 
 - Use stable, mission-specific IDs — reusing one updates rather than

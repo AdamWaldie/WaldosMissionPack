@@ -1,5 +1,0 @@
-version=54;
-name="[WMP] Radio Jammer Example";
-author="WaldoTheWarfighter";
-category="Waldos Mission Pack Compositions - Combat Systems";
-requiredAddons[]={"A3_Structures_F_Ind_Transmitter_Tower"};

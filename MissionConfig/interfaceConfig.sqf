@@ -24,7 +24,7 @@
  * manually from init.sqf or duplicate their initPlayerLocal lifecycle.
  *
  * CUSTOMISATION GUIDE:
- * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM, SCIFI or PARCHMENT), treatment-feedback policy,
+ * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL), treatment-feedback policy,
  * emergency-dismount policy and accessibility eligibility/presentation are intended choices.
  * Panel placement names are TOP_RIGHT, CENTER, BOTTOM_LEFT, BOTTOM_CENTER and BOTTOM_RIGHT; TOP is
  * reserved for mission-flow banners. Panel entries are [channel, placement, allow stacking].
@@ -54,7 +54,7 @@
  * `PreserveVelocity`, `RequireClearExit`, `MinimumOverturnSeconds` and `UpThreshold`.
  *
  * SETTING-BY-SETTING GUIDE - THEME AND NOTIFICATIONS:
- * - Waldo_UI_Theme (MISSION MAKER): DEFAULT, WW2, VIETNAM, SCIFI or PARCHMENT; affects WMP UI, not Arma/ACE menus.
+ * - Waldo_UI_Theme (MISSION MAKER): DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL; affects WMP UI, not Arma/ACE menus.
  * - Waldo_UI_CustomThemes (ADVANCED): complete new theme definitions; leave empty unless all tokens are tested.
  * - Waldo_UI_ThemeOverrides (ADVANCED): partial token overrides for an existing theme ID.
  * - Waldo_UiNotification_MaximumQueued (ADVANCED): maximum pending cards; oldest excess entries are discarded.
@@ -144,7 +144,7 @@
 createHashMapFromArray [
     ["featureFamilies", ["UI Themes", "Notification UI", "Treatment Feedback", "Tactical Display", "Emergency Dismount", "WMP HUD", "Accessibility"]],
     ["shared", [
-        ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: DEFAULT, WW2, VIETNAM, SCIFI or PARCHMENT.
+        ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL.
         ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: complete named custom-theme definitions.
         ["Waldo_UI_ThemeOverrides", createHashMap]   // ADVANCED: partial overrides keyed by theme ID.
     ]],
@@ -219,14 +219,14 @@ createHashMapFromArray [
         ["Waldo_WmpHud_ExcludedUIDs", []],          // Steam UIDs denied even if equipment is worn.
         ["Waldo_WmpHud_AllowEveryone", false],      // true bypasses both UID and equipment checks.
         ["Waldo_WmpHud_Headgear", []],              // CfgWeapons headgear classnames granting HUD access.
+        // Shipped default uses only vanilla Arma 3 classnames (no mod dependency) - matches the
+        // worked example in wiki/WMP-HUD.md exactly. Replace with your own campaign-specific
+        // headgear/facewear/NVG classnames (from any mod your unit runs) as needed.
         ["Waldo_WmpHud_Facewear", [                 // CfgGlasses facewear classnames granting HUD access.
-            "FIG_CadianOGMaskFaceW", "FIG_CadianOGMaskFaceWGrey", "bio_1_fg", "bio_2_fg", "bio_3_fg", "bio_4_fg"
+            "G_Goggles_VR"
         ]],
         ["Waldo_WmpHud_NVGs", [                     // CfgWeapons NVG/HMD classnames granting HUD access.
-            "FIG_SniperNVGs", "FIG_CadianAuspecs", "FIG_CadianAuspecsKasr", "FIG_CadianAuspecs150th",
-            "FIG_CadianAuspecsKasr150th", "FIG_CadianAuspecsGrey", "FIG_CadianAuspecsKasrGrey",
-            "ic_bionicEye", "TIOW_Bionic_Eye", "TIOW_Bionic_Eye_Green", "TIOW_Bionic_Eye_2",
-            "TIOW_Bionic_Eye_2_Green", "TIOW_IG_NVG"
+            "NVGogglesB_blk_F"
         ]],
         ["Waldo_WmpHud_DefaultVisible", true],       // initial state when qualified by equipment.
         ["Waldo_WmpHud_AccessibilityDefaultVisible", true], // initial state for accessibility UIDs.

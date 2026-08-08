@@ -1,0 +1,39 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+    items=3;
+    class Item0
+    {
+        dataType="Object";
+        side="West";
+        class PositionInfo {position[]={-18,0,0}; angles[]={0,0,1.5708};};
+        class Attributes
+        {
+            name="WMP_RavenOne";
+            init="createVehicleCrew this; [this, ""HELICOPTER"", ""RAVEN_1"", ""Raven One"", createHashMapFromArray [[""leadersOnly"", false], [""showMarker"", true], [""cruiseAltitude"", 80], [""landingSearchRadius"", 75], [""landingClearanceScale"", 2.0], [""useImprovedLanding"", true], [""keepEngineOnAway"", true]]] call Waldo_fnc_TransportRegister;";
+        };
+        id=1;
+        type="B_Heli_Light_01_F";
+    };
+    class Item1
+    {
+        dataType="Object";
+        side="West";
+        class PositionInfo {position[]={18,0,0}; angles[]={0,0,4.71239};};
+        class Attributes
+        {
+            name="WMP_GroundOne";
+            init="createVehicleCrew this; [this, ""GROUND"", ""GROUND_1"", ""Ground One"", createHashMapFromArray [[""leadersOnly"", false], [""showMarker"", true]]] call Waldo_fnc_TransportRegister;";
+        };
+        id=2;
+        type="B_MRAP_01_F";
+    };
+    class Item2
+    {
+        dataType="Comment";
+        class PositionInfo {position[]={0,-8,0};};
+        title="Transport Services (Full parameter reference): two independent AI-crewed pools, each with every Waldo_fnc_TransportRegister option shown explicitly. Use ACE Self Interact > WMP Transport to request a named or nearest service. Raven One keeps an exact safe click or searches up to 75 m for an LZ enclosing 2x its model footprint. Keep simulation enabled for each vehicle and its crew, and leave clear space around both bases. See the Transport Services Example (Minimal) composition for the smallest working calls. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
+        id=3;
+    };
+};

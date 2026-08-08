@@ -46,6 +46,15 @@ replaces the old AO. Key bounds: `radius` 100–2000m, `patrolGroups` 0–12,
 0–10/0–8, `minefields` 0–15, `roadblocks` 0–12. Full table in
 `wiki/Dynamic-AO-Generation.md`.
 
+### Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Dynamic_AO_Example_Minimal` anchors a randomized AO
+to a placed object with only `id` and `center` set — `patrolGroups`/
+`garrisonGroups` default to a small `3` each, every other category
+(static turrets, vehicle/air patrols, civilians, minefields, roadblocks)
+defaults to `0`/off. `_Full` shows every category/key explicitly on the
+same anchor object.
+
 ## Runtime classification (engine inheritance, not a hand-authored pool)
 
 `Waldo_fnc_DynamicAOResolvePools` classifies the selected faction's public

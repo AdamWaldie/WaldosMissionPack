@@ -79,6 +79,10 @@ Adds a "Defuse Bomb" interaction (wire-cut challenge) with
 detonate-on-failure. Pass an options array for `wireCount`, `timeLimit`,
 `detonateOnFailure`, `explosive`, etc. if the default needs tuning.
 
+`WMP_Compositions/[WMP]Bomb_Defusal_Example_Minimal` is a pre-placed object
+with just the bare `[this] call Waldo_fnc_BombDefuseSetup;` call above.
+`_Full` shows the options array set explicitly on the same object.
+
 ### Generic hook (for custom success/failure logic)
 
 ```sqf

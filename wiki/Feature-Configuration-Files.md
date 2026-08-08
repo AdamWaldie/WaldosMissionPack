@@ -85,7 +85,7 @@ Recommended review by file:
 
 - Sides: `WEST`, `EAST`, `GUER`/`INDEPENDENT`, and `CIV`/`CIVILIAN` as documented by the specific system.
 - AI profiles: `MILITIA`, `LINE`, `VETERAN`, `ELITE`; mode `DAY` or `NIGHT`; apply mode `BOTH`, `EXISTING` or `NEW`.
-- UI themes: `DEFAULT`, `WW2`, `VIETNAM`, `SCIFI`, `PARCHMENT`.
+- UI themes: `DEFAULT`, `WW2`, `VIETNAM`, `SCIFI`, `PARCHMENT`, `MINIMAL`.
 - Notification placements: `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER`, `BOTTOM_RIGHT`. `TOP` is reserved for mission-flow banners.
 - ACRE PRC-343 assignment: `[block, channel]`; both are 1–16 under the default `FULL_RANGE` policy. `SIDE_ISOLATED` reduces WEST/EAST/GUER blocks to 1–5. `[]` requests deterministic allocation.
 - ACRE explicit radio: `[base class, same-type occurrence, target, ear]`; ears are `LEFT`, `RIGHT`, `BOTH` or `CENTER`.
@@ -152,7 +152,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 
 | Setting | Purpose / valid values |
 |---|---|
-| `Waldo_UI_Theme` | Global visual theme: `DEFAULT`, `WW2`, `VIETNAM`, `SCIFI`, `PARCHMENT`, or registered custom ID. |
+| `Waldo_UI_Theme` | Global visual theme: `DEFAULT`, `WW2`, `VIETNAM`, `SCIFI`, `PARCHMENT`, `MINIMAL`, or registered custom ID. |
 | `Waldo_UI_CustomThemes` | Custom theme definitions keyed by theme ID. |
 | `Waldo_UI_ThemeOverrides` | Mission-wide component-level theme overrides. |
 
@@ -325,6 +325,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_DynamicAA_MaximumRadius` | Maximum accepted system radius in metres. |
 | `Waldo_DynamicAA_MaximumAltitude` | Maximum accepted detection altitude. |
 | `Waldo_DynamicAA_MaximumFighters` | Maximum fighters created by one system. |
+| `Waldo_DynamicAA_MaxSlopeDegrees` | Steepest terrain (degrees) a component may be placed on; rejected the same as a nearby tree/rock/building. |
 | `Waldo_DynamicAA_SideAssetPools` | Shared fallback radar, static, mobile and fighter content pools by operational side. |
 | `Waldo_DynamicAA_FactionAssetPools` | Shared faction/content profiles; selection is independent of operational side. |
 | `WALDO_STATIC_MINALTITUDE` | Lowest valid static-line release altitude in metres. |

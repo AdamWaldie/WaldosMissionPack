@@ -40,9 +40,9 @@ HashMap overrides per-service options (`leadersOnly`, `showMarker`,
 `cruiseAltitude`, `boardingSeconds`, `destinationDwell`,
 `landingSearchRadius`, `roadSearchRadius`, `groundSpeedLimit`,
 `pathRetrySeconds`, `pathRetryLimit`, `repairAtBase`, `refuelAtBase`,
-`forceDisembark`, `failSafeReset`, `invulnerable`, `useImprovedLanding`) —
-see `wiki/Transport-Services.md` for the full table if a specific option
-needs tuning.
+`forceDisembark`, `failSafeReset`, `invulnerable`, `useImprovedLanding`,
+`keepEngineOnAway`) — see `wiki/Transport-Services.md` for the full table
+if a specific option needs tuning.
 
 ## Player usage
 
@@ -61,6 +61,15 @@ reservation — retry via the same menu or send it to RTB.
 vehicle; dialog picks type, display name, timing/recovery in plain
 language) and **Transport Service - Return to Base**.
 
+## Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Transport_Services_Example_Minimal` is a pre-crewed
+helicopter and ground vehicle each registered with only the required
+arguments (`createVehicleCrew this; [this, "HELICOPTER"/"GROUND"] call
+Waldo_fnc_TransportRegister;`). `_Full` shows the same pair with LZ
+clearance, improved-landing and other options set explicitly, including
+`keepEngineOnAway`.
+
 ## Gotchas
 
 - Registrations survive WMP vehicle-recovery reconstruction via the
@@ -71,3 +80,8 @@ language) and **Transport Service - Return to Base**.
   on that registration.
 - Optional `invulnerable` only protects the vehicle and its original AI
   service crew — never passenger players.
+- `keepEngineOnAway` (helicopters only, default `true`) re-asserts
+  `engineOn true` right after touchdown at a pickup/destination stop away
+  from base, overriding vanilla `TR UNLOAD`'s engine idle-down. RTB
+  shutdown is unaffected either way — set `false` to restore the old
+  idle-down-away-from-base behaviour.

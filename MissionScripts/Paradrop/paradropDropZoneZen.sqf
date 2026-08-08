@@ -147,7 +147,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ["COMBO", ["Airframe", "Choose any configured cargo aircraft independently of operational side."], [_classes, _labels, 0]],
         ["SLIDER", ["Run direction", "Aircraft heading through standby, green and red lines."], [0, 359, 0, 0]],
         ["SLIDER", ["Flight/drop altitude", "Forced terrain-relative route height. Enabled jump floors/ceilings are server-normalized around this altitude so actions remain usable."], [100, 2000, 250, 0]],
-        ["SLIDER", ["Maximum speed", "Forced route speed in km/h. Static-line maximum jump speed is kept at least 40 km/h above this value."], [80, 500, 220, 0]],
+        ["SLIDER", ["Maximum speed", "Forced route speed in km/h. Static-line maximum jump speed is kept at least 60 km/h above this value."], [80, 500, 220, 0]],
         ["SLIDER", ["Approach distance", "Straight run-in before the standby line."], [800, 10000, 2500, 0]],
         ["SLIDER", ["Drop-zone length", "Distance between green and red lines."], [300, 6000, 2500, 0]],
         ["SLIDER", ["Exit distance", "Straight route after the red line before lifecycle handling."], [800, 10000, 2500, 0]],

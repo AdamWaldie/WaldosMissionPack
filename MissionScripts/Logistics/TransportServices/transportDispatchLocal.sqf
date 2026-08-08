@@ -59,7 +59,9 @@ if (_helicopter) then {
         [_vehicle, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
     };
     _vehicle land "NONE";
-    _vehicle flyInHeight ((_config getOrDefault ["cruiseAltitude", 80]) max 20);
+    // Array form forces strict AGL terrain-following - see Waldo_fnc_TransportRegister's matching
+    // comment for the long-route/elevation-change failure mode this avoids.
+    _vehicle flyInHeight [(_config getOrDefault ["cruiseAltitude", 80]) max 20, true];
 } else {
     _vehicle limitSpeed (_config getOrDefault ["groundSpeedLimit", 60]);
     // Prefer the engine's connected-road route when both the vehicle and resolved target are on a
@@ -119,6 +121,12 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             };
             call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_touchdown} || {diag_tickTime >= _timeout}
         };
+        // Vanilla TR UNLOAD waypoint completion can idle a helicopter's engine down on its own once
+        // it settles - independent of anything WMP's own scripts do. keepEngineOnAway (default true)
+        // re-asserts it explicitly right after touchdown at a pickup/destination stop, so a passenger
+        // isn't left waiting on a cold helicopter away from base; only RTB (Waldo_fnc_TransportReportServer)
+        // is meant to actually shut the engine down, once the vehicle is parked back at its own base.
+        if (alive _vehicle && {_config getOrDefault ["keepEngineOnAway", true]}) then {_vehicle engineOn true;};
     } else {
         private _bestDistance = _vehicle distance2D _target;
         private _lastProgress = diag_tickTime;

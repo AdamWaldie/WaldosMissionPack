@@ -1,5 +1,0 @@
-version=54;
-name="[WMP] Tactical Display Example";
-author="WaldoTheWarfighter";
-category="Waldos Mission Pack Compositions - Interface";
-requiredAddons[]={"A3_Structures_F_Civ_InfoBoards"};

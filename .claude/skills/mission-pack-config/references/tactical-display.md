@@ -43,6 +43,14 @@ selected — see `wiki/Optional-Feature-Extensions.md`'s tactical display
 section for exact module wording if the user needs it; the script call
 above is the documented reference.
 
+## Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Tactical_Display_Example_Minimal` is a pre-placed
+map board with just `[this] call Waldo_fnc_TacticalDisplayRegister;` —
+side defaults to `sideUnknown` (follows the viewer), radius 2000m, known
+enemies shown, no authentication gate. `_Full` shows every parameter
+including the optional authentication gate set explicitly.
+
 ## Gotchas
 
 - Use a map board/whiteboard-style object, not a generic infostand or data

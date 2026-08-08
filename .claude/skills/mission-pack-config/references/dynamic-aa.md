@@ -15,7 +15,8 @@ a call or ZEN module creates each named system.
 ["Waldo_DynamicAA_DefaultDetectionInterval", 1, false],
 ["Waldo_DynamicAA_MaximumRadius", 50000, false],
 ["Waldo_DynamicAA_MaximumAltitude", 10000, false],
-["Waldo_DynamicAA_MaximumFighters", 12, false]
+["Waldo_DynamicAA_MaximumFighters", 12, false],
+["Waldo_DynamicAA_MaxSlopeDegrees", 12, false]
 ```
 
 A faction pool overrides only the keys it defines; missing categories fall
@@ -39,7 +40,18 @@ Reusing an `id` safely replaces that system. `altitudeMode`: `AUTO`
 defaults worth knowing: `radius` 2000m, `minimumAltitude` 50m,
 `requiredOperationalRadars` 1, `maximumOperationalRadarDamage` 0.8,
 `fighterCooldown` 300s, `cleanupOnRadarLoss` false (defaults to leaving
-disabled assets rather than deleting them). Full key table in
+disabled assets rather than deleting them).
+
+### Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Dynamic_AA_Example_Minimal` anchors a system to a
+placed object with only `id` and `centre` set — every other key (side,
+radius, altitude, asset counts) takes its default above. `_Full` shows
+every option explicitly on the same anchor object. Both need real open,
+reasonably flat ground nearby — see the Gotchas section above if placement
+is rejected.
+
+Full key table in
 `wiki/Dynamic-Anti-Air.md`.
 
 ## Optional radar shutdown objective
@@ -67,3 +79,14 @@ mobile assets in a spaced terrain-safe layout, no map clicks needed) and
   rolls back every partial object/crew.
 - `dwell`/`clearDelay` provide hysteresis so a boundary-skimming aircraft
   doesn't rapidly toggle the network.
+- If a user reports "rejected placement" on ground that looks open and
+  flat, the two things to check are `Waldo_DynamicAA_MaxSlopeDegrees`
+  (default 12° — a component whose exact candidate spot is steeper than
+  this is rejected the same way a nearby tree/building would be, and the
+  ring search keeps walking outward for a flatter shelf) and per-component
+  clearance, which is derived from `sizeOf` (a map-icon-size estimate, not
+  true physical geometry) scaled conservatively rather than generously so a
+  large map-icon class like `Land_Radar_F` doesn't reject placement across
+  an entire search radius; the object-blocker check also ignores nearby
+  units/curator logic objects rather than treating anything nearby as an
+  obstruction. The RPT/ZEN error names which component failed.

@@ -75,6 +75,8 @@ private _moveId = -1;
 private _destinationId = -1;
 private _rtbId = -1;
 private _retryId = -1;
+private _takeManualId = -1;
+private _releaseManualId = -1;
 if (!_aceReady) then {
 _moveId = _vehicle addAction [
     "<t color='#79C7FF'>Move This Transport's Pickup Point</t>",
@@ -104,8 +106,24 @@ _retryId = _vehicle addAction [
     "private _uid = getPlayerUID _this; _target getVariable ['Waldo_TransportService_State',''] == 'STUCK' && {_this in crew _target || {_uid != '' && {_target getVariable ['Waldo_TransportService_RequesterUID',''] == _uid}} || {!isNull getAssignedCuratorLogic _this}}",
     8
 ];
+// Manual control: any crew member already aboard (not only the requester/leader) can take direct
+// control themselves instead of waiting on a remote dispatch; the current pilot or Zeus hands it back.
+_takeManualId = _vehicle addAction [
+    "<t color='#79C7FF'>Take Manual Control</t>",
+    {params ["_target", "_caller"]; [_target, _caller] remoteExecCall ["Waldo_fnc_TransportTakeManualServer", 2]},
+    [], -95, false, true, "",
+    "_target getVariable ['Waldo_TransportService_State',''] != 'MANUAL' && {_this in crew _target || {!isNull getAssignedCuratorLogic _this}}",
+    8
+];
+_releaseManualId = _vehicle addAction [
+    "<t color='#79C7FF'>Release Manual Control</t>",
+    {params ["_target", "_caller"]; [_target, _caller] remoteExecCall ["Waldo_fnc_TransportReleaseManualServer", 2]},
+    [], -96, false, true, "",
+    "_target getVariable ['Waldo_TransportService_State',''] == 'MANUAL' && {driver _target == _this || {!isNull getAssignedCuratorLogic _this}}",
+    8
+];
 };
-_vehicle setVariable ["Waldo_TransportService_ActionIds", [_infoId, _moveId, _destinationId, _rtbId, _retryId]];
+_vehicle setVariable ["Waldo_TransportService_ActionIds", [_infoId, _moveId, _destinationId, _rtbId, _retryId, _takeManualId, _releaseManualId]];
 _vehicle setVariable ["Waldo_TransportService_InfoActionId", _infoId];
 
 if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled", false])}) then {
@@ -145,6 +163,25 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
         !((_target getVariable ["Waldo_TransportService_State", ""]) in ["AVAILABLE", "RTB"]) && {_player in crew _target || {_uid != "" && {_target getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} || {!isNull getAssignedCuratorLogic _player}}
     }] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _rtb] call ace_interact_menu_fnc_addActionToObject;
+    // Manual control: any crew member already aboard (not only the requester/leader) can take direct
+    // control themselves instead of waiting on a remote dispatch; the current pilot or Zeus hands it
+    // back. Squad leaders retain remote command through the actions above whenever the transport is
+    // AI-driven - both instruction sets are always available, whichever one currently applies is just
+    // whichever machine is in the driver's seat.
+    private _takeManual = [format ["%1_TakeManual", _rootId], "Take Manual Control", "\a3\ui_f\data\igui\cfg\actions\enter_ca.paa", {
+        params ["_target", "_player"]; [_target, _player] remoteExecCall ["Waldo_fnc_TransportTakeManualServer", 2];
+    }, {
+        params ["_target", "_player"];
+        _target getVariable ["Waldo_TransportService_State", ""] != "MANUAL" && {_player in crew _target || {!isNull getAssignedCuratorLogic _player}}
+    }] call ace_interact_menu_fnc_createAction;
+    [_vehicle, 0, ["ACE_MainActions", _rootId], _takeManual] call ace_interact_menu_fnc_addActionToObject;
+    private _releaseManual = [format ["%1_ReleaseManual", _rootId], "Release Manual Control", "\a3\ui_f\data\igui\cfg\actions\eject_ca.paa", {
+        params ["_target", "_player"]; [_target, _player] remoteExecCall ["Waldo_fnc_TransportReleaseManualServer", 2];
+    }, {
+        params ["_target", "_player"];
+        _target getVariable ["Waldo_TransportService_State", ""] == "MANUAL" && {driver _target == _player || {!isNull getAssignedCuratorLogic _player}}
+    }] call ace_interact_menu_fnc_createAction;
+    [_vehicle, 0, ["ACE_MainActions", _rootId], _releaseManual] call ace_interact_menu_fnc_addActionToObject;
     _vehicle setVariable ["Waldo_TransportService_AceInstalled", true];
 };
 true

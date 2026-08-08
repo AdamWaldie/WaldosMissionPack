@@ -113,7 +113,7 @@ private _graceSeconds = missionNamespace getVariable ["Waldo_Hazard_StatusGraceS
     _zoneDiagnostics pushBack [_key, _inside, _distance, _intensity, typeName _area];
     private _exposure = _exposures getOrDefault [_key, 0];
     if (_inside) then {
-        private _protection = [player, _profile] call Waldo_fnc_HazardProtectionFactor;
+        private _protection = [player, _profile, _key] call Waldo_fnc_HazardProtectionFactor;
         _exposure = _exposure + ((_profile getOrDefault ["rate", 1]) * _intensity * _protection * _interval);
         {
             _exposures set [_x, ((_exposures getOrDefault [_x, 0]) - ((_profile getOrDefault ["decontaminationRate", 1]) * _interval)) max 0];

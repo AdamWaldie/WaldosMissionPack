@@ -123,6 +123,15 @@ field:
 - No registry, no generated jumpers by default — use the Dynamic Drop Zone
   system instead for a managed, repeatable operation with those features.
 
+### Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Halo_And_Static_Line_Paradrop_Examples_Minimal` is
+one self-crewed aircraft flying toward marker `"dz1"` with the default
+static-line envelope (`[this, "dz1"] call
+Waldo_fnc_ParadropQuickFlightSetup;`). `_Full` shows two aircraft (a
+second HALO-configured one toward `"dz2"`) with every option set
+explicitly — a good next step once the Minimal version is understood.
+
 ## Dynamic Drop Zone Operations (new system)
 
 ### Scripted (`initServer.sqf`, server call-driven)

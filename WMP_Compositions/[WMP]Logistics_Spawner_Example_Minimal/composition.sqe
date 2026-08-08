@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="QuarterMaster_MissionparametersBoxes";
+			init="[this] call Waldo_fnc_SetupQuarterMaster;";
+		};
+		id=1;
+		type="Land_InfoStand_V1_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-3,0};};
+		title="Logistics Spawner (Minimal): the smallest working call - a standalone quartermaster spawns crates 2 m ahead of this object at the default bearing. See the Logistics Spawner Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
+		id=2;
+	};
+};

@@ -43,6 +43,15 @@ instead of registering an existing aircraft; or use `aircraftClasses`/
 discovers currently crewed gunner turret paths — explicit profiles are
 recommended for mod aircraft since turret layouts vary.
 
+### Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Gunship_Support_Example_Minimal` registers a placed,
+crewed VTOL with only `id` and `aircraft` set (every other key defaults —
+no explicit turret profiles, WMP auto-discovers them). `_Full` shows every
+option explicitly (callsign, side, home/orbit markers, altitude, radius,
+service envelope, turret profiles) on the same crewed VTOL, orbiting a
+movable marker.
+
 ## Lifecycle and runtime control
 
 States: `INITIALISING`, `TRANSIT`, `ON_STATION`, `CONTROLLED`, `RTB`,

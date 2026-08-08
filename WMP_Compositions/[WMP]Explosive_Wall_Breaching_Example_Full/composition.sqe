@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_BreachableWall";
+			init="Waldo_Breaching_Enable = true; if (isNil ""Waldo_Breaching_Profiles"") then {Waldo_Breaching_Profiles = createHashMap;}; Waldo_Breaching_Profiles set [""Land_City2_8m_F"", createHashMapFromArray [[""radius"", 5], [""explosives"", [""DemoCharge_Remote_Ammo""]], [""destroyOriginal"", true], [""hideOriginal"", true], [""replacements"", [[""Land_City2_4m_F"", [-2,0,0], 0, ""CAN_COLLIDE""], [""Land_City2_4m_F"", [2,0,0], 0, ""CAN_COLLIDE""]]]]];";
+		};
+		id=1;
+		type="Land_City2_8m_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-5};};
+		title="Explosive Wall Breaching (Full parameter reference): every profile key shown explicitly - radius, an explicit allowed-explosives list, destroyOriginal, hideOriginal and a two-piece replacements layout. Detonate an ACE demolition charge within 5 m; the 8 m wall is replaced by two 4 m sections with a visible central gap. See the Explosive Wall Breaching Example (Minimal) composition for the smallest working profile. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#explosive-wall-breaching";
+		id=2;
+	};
+};

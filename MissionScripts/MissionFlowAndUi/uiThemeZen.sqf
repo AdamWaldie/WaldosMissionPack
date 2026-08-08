@@ -14,8 +14,8 @@
  */
 
 if !(hasInterface && {isClass (configFile >> "CfgPatches" >> "zen_dialog")}) exitWith {};
-private _ids = ["DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT"];
-private _labels = ["Default / Modern", "Second World War", "Vietnam / Cold War", "Science Fiction", "Parchment / Fantasy"];
+private _ids = ["DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT", "MINIMAL"];
+private _labels = ["Default / Modern", "Second World War", "Vietnam / Cold War", "Science Fiction", "Parchment / Fantasy", "Minimal / Low Profile"];
 private _current = toUpperANSI (missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"]);
 private _defaultIndex = _ids find _current;
 if (_defaultIndex < 0) then {_defaultIndex = 0;};

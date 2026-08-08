@@ -192,9 +192,17 @@ Shared configuration belongs in `init.sqf`, player presentation/actions in `init
 
 The same systems can be configured during play under **Waldos Mission Modules**. ZEN requests pass through `Waldo_fnc_FeatureRuntimeApply`, which accepts assigned curators only, publishes configuration, sends an ordered live-setting payload before locality-appropriate initializers, and retains JIP initialization where required. Joining clients and headless clients request an ordered server snapshot before activating locality-sensitive features; do not replace that handshake with assumptions about public-variable delivery order. Hazard and breaching dialogs can export equivalent setup calls for permanent mission configuration.
 
-Dynamic AA is configured through `Waldo_fnc_DynamicAACreate` or the **Dynamic AA - Create** ZEN module. Every system requires a unique ID and owns its radar, response groups, markers and detector handle so it can be replaced or cleaned independently.
+Dynamic AA is configured through `Waldo_fnc_DynamicAACreate` or the **Dynamic AA - Create** ZEN module. Every system requires a unique ID and owns its radar, response groups, markers and detector handle so it can be replaced or cleaned independently. The **Dynamic AA Example** composition anchors one system to a placed object for editor-time setup. Component placement rejects any candidate steeper than `Waldo_DynamicAA_MaxSlopeDegrees` (default 12°, `MissionConfig\airOperationsConfig.sqf`) the same way it rejects a nearby tree or building, so the ring search keeps walking outward toward a flatter shelf instead of leaving a radar or launcher visibly tilted on a hillside; the whole creation is rejected with a clear ZEN error if no component finds a flat, clutter-free spot within the search radius. Per-component clearance is derived from `sizeOf` (a map-icon-oriented size estimate, not true physical geometry - the only size query available before an object is actually spawned) scaled and capped conservatively rather than generously, and the object-blocker check ignores units/curator logic objects rather than treating anything nearby as an obstruction; both existed specifically because a large map-icon size on a class like `Land_Radar_F` combined with an unfiltered "any nearby object blocks" check could reject placement across an entire large search even on genuinely open, non-manicured terrain.
 
-Airborne Gunship Support uses the same named-instance principle but a separate feature-specific state machine. `Waldo_fnc_GunshipRegister` accepts existing or pooled/spawned aircraft, explicit turret profiles and service policy. Aircraft lifecycle and permissions remain server-owned; map selection, local markers, notifications and approved remote-control handoff run on clients. Do not assume turret paths are portable between aircraft mods.
+Airborne Gunship Support uses the same named-instance principle but a separate feature-specific state machine. `Waldo_fnc_GunshipRegister` accepts existing or pooled/spawned aircraft, explicit turret profiles and service policy. Aircraft lifecycle and permissions remain server-owned; map selection, local markers, notifications and approved remote-control handoff run on clients. Do not assume turret paths are portable between aircraft mods. The **Gunship Support Example** composition registers a placed, crewed VTOL for editor-time setup, orbiting a movable marker.
+
+Dynamic AO (`Waldo_fnc_DynamicAOCreate`, the **Dynamic AO - Create** ZEN module) builds a complete
+randomized area of operations — infantry patrols, building garrisons, static weapons, weighted
+vehicle/air patrols, civilians, parked cars, minefields and manned roadblocks, each independently
+optional — from one HashMap config. Generated AI use the active WMP AI profile. Reusing an `id`
+replaces the previous AO safely; the invisible centre anchor and per-minefield anchors are
+curator-editable deletion handles. See `wiki/Dynamic-AO-Generation.md` for every supported config key.
+The **Dynamic AO Example** composition anchors one AO to a placed object for editor-time setup.
 
 ### ACRE2 Radio Setup (`init.sqf`)
 
@@ -345,6 +353,22 @@ Plant a tracker on a unit or vehicle and a chosen side follows it live on the ma
 ```
 Players get an ACE **Plant Signal Tracker** action on units and vehicles; Zeus gets a **Plant Signal Tracker** module (attaches to the nearest unit, tracked by a chosen side). Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
 
+### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
+
+Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, optional Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
+
+```sqf
+["reactor", reactorTrigger, "SEVERE_RADIATION"] call Waldo_fnc_HazardRegisterPresetZone;   // preset + area
+["leaking_truck", truck1, 8, _profile] call Waldo_fnc_HazardRegisterEmitter;               // moving source, radius
+["reactor"] call Waldo_fnc_HazardUnregisterZone;                                            // remove
+```
+
+Set `["markerEnabled", true]` in a profile to tie a broadcast `Waldo_fnc_Create3DMarker` world marker to the zone's own area — for an object/emitter area this anchors directly to the source object, so the marker tracks a moving vehicle live and every player (not just whoever is currently exposed) can see where the hazard is. Optional `["marker", HASHMAP]` supplies `Waldo_fnc_Create3DMarker` options (icon/colour/text/offset/distance/sides); unset keys default to a warning icon, the profile's `label`, and a 200 m view distance. The marker is created once at registration and torn down automatically wherever the zone is unregistered — it plays no part in the per-tick evaluation loop.
+
+`insideBuilding` (used only when a profile sets `protectIndoors: true`, true for every shipped radiation preset) is a documented-expensive engine query; `Waldo_fnc_HazardTick` throttles it to once per `Waldo_Hazard_IndoorCacheSeconds` (default 3) per zone via `Waldo_fnc_HazardProtectionFactor`'s optional cache-key argument, instead of re-testing it on every tick a player stands inside a zone.
+
+See `wiki/Optional-Feature-Systems.md#hazardous-environments` for the full preset catalogue, protection/awareness options and the Radiation Hazard / Hazard Emitter Moving compositions.
+
 ### MHQ / Mobile Command Post (Eden Editor)
 
 1. Place a vehicle (or static object) with a variable name, e.g. `MHQ_1`
@@ -413,6 +437,21 @@ Arguments are `[title, message, state, duration, placement, channel, source]`. S
 
 Players receive **WMP Interface > Clear Stuck WMP UI** as an ACE self-interaction. Vanilla `addAction` is installed only when ACE interaction is unavailable. Setup runs on JIP and respawn and has no authority scheduler or public state.
 
+### Zeus-authored notification broadcasts (`Waldo_fnc_NotificationBroadcast`)
+
+Sends a WMP notification card to a chosen audience instead of a single local player. Server-authoritative — self-forwards to the server when called from a client, same as `Waldo_fnc_Jammer`.
+
+```sqf
+[createHashMapFromArray [
+    ["title", "FALL BACK"], ["message", "Regroup at the rally point."], ["state", "WARNING"],
+    ["duration", 10], ["placement", "TOP"], ["audience", "SIDE"], ["side", west]
+]] call Waldo_fnc_NotificationBroadcast;
+```
+
+Config keys: `title`, `message`, `state` (`INFO`/`SUCCESS`/`WARNING`/`ERROR`), `duration`, `placement`, `channel`, `source` (same meaning as `Waldo_fnc_ShowUiNotification`'s arguments), plus `audience` — `ALL` (default), `SIDE` (reads `side`), `GROUP` (reads `group`, matched case-insensitively against `groupId`), or `UNITS` (reads an explicit `units` array of player objects). Returns the number of distinct players actually reached.
+
+Zeus ("Waldos Mission Modules"): **Mission Flow: Send Notification** — a dialog for title/message, type, duration, placement, and audience (All / By Side / By Group / Selected Unit(s)), routed through the curator-authenticated `Waldo_fnc_ZenNotifyServer` bridge before calling the same public function.
+
 ### Safestart (optional)
 
 Freezes all players at mission start — the reversible mirror of ENDEX. While active: weapons are safe and every shot/grenade/launcher/vehicle-weapon round is deleted, players take and deal **no damage**, players are **confined to a safe zone**, and an on-screen **banner** (with a live go-live countdown when a timer is running) is shown. JIP and respawning players are re-frozen automatically.
@@ -450,6 +489,30 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 ```
 
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Zeus registration, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
+
+### Persistence (optional, `MissionConfig\persistenceConfig.sqf`)
+
+Optional INIDBI2-backed save/restore for player state and specific registered world objects. Off by default (`Waldo_Persistence_Enable = false`); the server also independently probes for a real, loaded INIDBI2 extension (not just a `CfgPatches` entry) and disables itself cleanly if the probe fails. Database access is server-only; clients only capture/apply their own state.
+
+```sqf
+// MissionConfig\persistenceConfig.sqf
+["Waldo_Persistence_Enable", false],        // requires a working server INIDBI2 extension
+["Waldo_Persistence_SaveLoadout", true],    // filtered inventory (unique ACRE IDs stripped)
+["Waldo_Persistence_SaveMedical", true],    // ACE medical state
+["Waldo_Persistence_SaveFoodWater", false],
+["Waldo_Persistence_SavePosition", false],  // off by default - can bypass mission flow
+["Waldo_Persistence_SaveRadios", false],    // per-player ACRE state
+["Waldo_Persistence_Scope", "MISSION"]      // MISSION isolates by mission+terrain; CAMPAIGN shares by database name
+```
+
+Player state saves/restores automatically once active (`initServer.sqf` starts the server branch, `initPlayerLocal.sqf` starts client capture). World objects must be registered explicitly — `Waldo_fnc_PersistenceRegisterObject` is safe to call directly from an object's own Eden init field with **no `isServer` wrapper**: it silently no-ops on every non-server machine, and the server's own execution of that same init line is what actually registers it, exactly like `Waldo_fnc_Jammer`. Registrations made before the database finishes starting are queued and replayed automatically.
+
+```sqf
+[this, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceRegisterObject;
+// options: [save cargo, save damage, save fuel, save ammo/pylons, save position]
+```
+
+The **Persistence Object Example** composition demonstrates this pattern. Zeus ("Waldos Mission Modules"): **Persistence - Control** (start/reconfigure/stop), **Persistence - Register Object** (assign a stable key/fields to the nearest object during play), **Persistence - Save Now** (immediate capture without stopping the system). See `wiki/Optional-Feature-Systems.md#persistence`.
 
 ### Performance regression audit
 
@@ -742,7 +805,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
-- `CombatSystems/` — airborne gunship support, explosive breaching and Dynamic AA
+- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO
 - `EnvironmentalSystems/` — hazardous environments and tree felling
 - `MedicalSystems/` — patient treatment feedback
 - `Persistence/` — optional INIDBI2-backed persistence
@@ -959,6 +1022,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Radio Jammer - Remove Nearest → calls `Waldo_fnc_ZenJammerRemove` (removes + deletes the nearest jammer)
 - EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
+- Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 
 ---
 

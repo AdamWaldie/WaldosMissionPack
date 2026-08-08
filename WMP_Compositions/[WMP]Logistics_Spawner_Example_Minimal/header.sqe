@@ -1,0 +1,8 @@
+version=54;
+name="[WMP] Logistics Spawner Example (Minimal)";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions - Logistics";
+requiredAddons[]=
+{
+	"A3_Structures_F_Civ_InfoBoards"
+};

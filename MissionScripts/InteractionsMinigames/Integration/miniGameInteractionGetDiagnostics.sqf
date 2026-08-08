@@ -32,8 +32,15 @@ private _aceLoaded = isClass (configFile >> "CfgPatches" >> "ace_interact_menu")
 private _invalidObjects = _objects select {
     private _challenge = _x getVariable ["Waldo_MG_Int_ChallengeId", ""];
     private _known = (_procedures findIf {(_x select 0) == _challenge}) >= 0;
-    private _vanilla = !hasInterface || {_x getVariable ["Waldo_MG_Int_VanillaActionInstalled", false]};
-    private _ace = !_aceLoaded || {!hasInterface} || {_x getVariable ["Waldo_MG_Int_ACEActionInstalled", false]};
+    // installAction:false is a documented, intentional setup mode (Waldo_MG_Int_InteractionMode ==
+    // "FEATURE_ACTION") for callers - the radio jammer's "Disable Jammer" action is the shipped
+    // example - that install their own action and only use this framework for the challenge/state
+    // machinery, deliberately without a second ACE/vanilla entry point for the same object. Neither
+    // action is ever expected to install for those objects; flagging them as "invalid" was a false
+    // positive that never reflected an actual failure to interact.
+    private _featureOwned = (_x getVariable ["Waldo_MG_Int_InteractionMode", ""]) == "FEATURE_ACTION";
+    private _vanilla = _featureOwned || {!hasInterface} || {_x getVariable ["Waldo_MG_Int_VanillaActionInstalled", false]};
+    private _ace = _featureOwned || {!_aceLoaded} || {!hasInterface} || {_x getVariable ["Waldo_MG_Int_ACEActionInstalled", false]};
     !_known || {!_vanilla} || {!_ace}
 };
 _checks pushBack ["interactions", "configured-equipment", if (!(_invalidObjects isEqualTo [])) then {"ERROR"} else {if (_objects isEqualTo []) then {"UNCONFIGURED"} else {if ((_objects findIf {(_x getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING"}) >= 0) then {"ACTIVE"} else {"LOADED"}}}, format ["objects=%1 invalid=%2 ACE=%3 vanillaRequired=%4", count _objects, count _invalidObjects, _aceLoaded, hasInterface]];

@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_MarkerAnchor";
+			init="[""signal_relay"", this] call Waldo_fnc_Create3DMarker;";
+		};
+		id=1;
+		type="Land_TTowerSmall_1_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Custom 3D Marker (Minimal): a stable id plus the anchor object is all that is required - options fall back to a default dot icon, no text, all sides and 75 m view distance. See the Custom 3D Marker Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers";
+		id=2;
+	};
+};

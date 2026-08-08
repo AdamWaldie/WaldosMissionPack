@@ -141,11 +141,18 @@ if (_invalidClass >= 0 || {_missingPool}) exitWith {
     false
 };
 
-// sizeOf is evaluated only after class validation. The resulting radius is deliberately generous:
-// generated ZEN layouts favour a clear, stable installation over a tightly packed composition.
+// sizeOf is evaluated only after class validation. It approximates an object's MAP ICON size (per
+// Bohemia's own command documentation), not its physical footprint - it is used here only because
+// it is the one size query that works on a classname alone, before anything is spawned to measure
+// with boundingBoxReal. For a large "detection installation" prop like Land_Radar_F that map-icon
+// size can run well past the ground space the object actually occupies; combined with the previous
+// 0.75 multiplier and a 100 m cap, that produced clearance requirements real, organically-dressed
+// terrain (rocky/forested hillsides, not manicured airfields) could fail to satisfy anywhere across
+// a large search, even on what looks like genuinely open ground. Scaled down and capped tighter -
+// still comfortably larger than the supplied per-role minimum for every shipped class.
 private _classClearance = {
     params ["_class", "_minimum"];
-    ((((sizeOf _class) * 0.75) max _minimum) min 100)
+    ((((sizeOf _class) * 0.5) max _minimum) min 40)
 };
 private _largestClearance = {
     params ["_candidateClasses", "_minimum"];
@@ -256,6 +263,13 @@ private _assetPlan = [];
 // Resolve every final component before creating the first vehicle. findEmptyPosition protects the
 // real selected class against existing world objects; the additional reservation list protects
 // planned assets that do not exist yet and therefore cannot be seen by the engine query.
+// findEmptyPosition does not itself reject steep terrain - a clutter-free patch of open hillside
+// passes every other check here just as readily as flat ground, which used to mean either a
+// visibly tilted radar/launcher on a slope or (on a hillside dense enough that every open patch
+// also happens to carry rocks/trees) the whole ring search failing outright with a misleading
+// "no complete collision-free footprint" reason. Reject candidates over Waldo_DynamicAA_MaxSlopeDegrees
+// explicitly so the search keeps walking outward toward an actually flat shelf instead.
+private _maxSlopeDegrees = missionNamespace getVariable ["Waldo_DynamicAA_MaxSlopeDegrees", 12];
 private _resolvedPlan = [];
 private _finalReservations = [];
 private _resolveFinalPosition = {
@@ -280,7 +294,13 @@ private _resolveFinalPosition = {
                     _x params ["_reservedPosition", "_reservedClearance"];
                     _exact distance2D _reservedPosition < (_clearance + _reservedClearance)
                 };
-                private _objectBlockers = nearestObjects [_exact, [], _clearance, true];
+                // Unfiltered nearestObjects catches anything sitting nearby regardless of relevance -
+                // most notably the curator's own body/camera at ring 0 when a ZEN module is dropped
+                // exactly where they are standing, and any other player/AI unit passing through later
+                // rings. Neither should ever block a physical AA installation.
+                private _objectBlockers = (nearestObjects [_exact, [], _clearance, true]) select {
+                    !(_x isKindOf "CAManBase") && {!(_x isKindOf "Logic")}
+                };
                 private _terrainBlockers = nearestTerrainObjects [
                     _exact,
                     ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "BUILDING", "HOUSE", "FENCE", "WALL"],
@@ -289,7 +309,10 @@ private _resolveFinalPosition = {
                     true
                 ];
                 private _waterCompatible = if (_class isKindOf "Ship") then {surfaceIsWater _exact} else {!surfaceIsWater _exact};
-                if (_plannedOverlap < 0 && {_objectBlockers isEqualTo []} && {_terrainBlockers isEqualTo []} && {_waterCompatible}) then {
+                // surfaceNormal is a unit vector; its Z component is the cosine of the angle between
+                // the ground and world-up, so acos of it is the slope in degrees directly (0 = flat).
+                private _slopeOk = _class isKindOf "Ship" || {(acos ((surfaceNormal _exact) select 2)) <= _maxSlopeDegrees};
+                if (_plannedOverlap < 0 && {_objectBlockers isEqualTo []} && {_terrainBlockers isEqualTo []} && {_waterCompatible} && {_slopeOk}) then {
                     _result = _exact;
                     _finalReservations pushBack [_result, _clearance];
                 };

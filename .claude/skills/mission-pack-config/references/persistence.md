@@ -47,6 +47,16 @@ and stops the system without deleting its database. Dynamic objects are
 unique keys; write mission-specific recreation logic for objects that don't
 exist when a save loads.
 
+### Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Persistence_Object_Example_Minimal` registers a
+crate with only a stable key and the object itself — no options array, so
+every field (cargo/damage/fuel/ammo/position) saves by default. `_Full`
+shows the options array explicitly, registering only cargo and position.
+Either way the object does nothing until `Waldo_Persistence_Enable` is
+`true` and a working server INIDBI2 extension is detected (see Config
+above).
+
 ## Zeus
 
 **Persistence - Control** (start/reconfigure/stop), **Persistence -

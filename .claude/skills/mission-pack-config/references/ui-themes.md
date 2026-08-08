@@ -9,7 +9,7 @@ tactical display, interaction equipment, Economy prompts, table-game chrome.
 ## Mission theme — config (`MissionConfig\interfaceConfig.sqf` — shared)
 
 ```sqf
-["Waldo_UI_Theme", "DEFAULT"],           // DEFAULT | WW2 | VIETNAM | SCIFI | PARCHMENT | registered custom ID
+["Waldo_UI_Theme", "DEFAULT"],           // DEFAULT | WW2 | VIETNAM | SCIFI | PARCHMENT | MINIMAL | registered custom ID
 ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: full named custom-theme definitions
 ["Waldo_UI_ThemeOverrides", createHashMap]   // ADVANCED: partial token overrides for the selected theme
 ```
@@ -20,11 +20,23 @@ tactical display, interaction equipment, Economy prompts, table-game chrome.
 | `WW2` | Olive field equipment, khaki paper/brass, War Department copy |
 | `VIETNAM` | Green phosphor/field-radio shell, amber controls, field-net copy |
 | `SCIFI` | Deep navy node display, cyan/magenta rails, bracketed titles |
-| `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, "Royal Chancery" proclamation copy |
+| `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, "Royal Chancery" proclamation copy, `Caveat`/`CaveatBold` handwritten font (`CfgFontFamilies`) |
+| `MINIMAL` | Low-profile/no-frills style; also the one theme that sets the `compact` token (see below) |
 
 Semantic success/warning/error colours, written state text, symbols and
 shapes remain distinct/present in every theme — interaction procedures
 never require colour recognition alone.
+
+### The `compact` token — the one exception to "themes never change size"
+
+Every other theme token is cosmetic only (colour/font/copy) and never
+changes a card's layout or size. `compact` is the deliberate, opt-in-only
+exception: `showUiNotification.sqf` reads it (`getOrDefault ["compact",
+false]`) and scales notification-card width, padding, max content height
+and internal text sizes down (~0.78×) when true. Only `MINIMAL` sets it by
+default; a custom theme/override can opt into it the same way. Don't add a
+second sizing token — extend `compact` (or its consuming scale factor) if
+a future theme also needs a smaller footprint.
 
 ## Personal colour-vision profile (per player, never set mission-wide)
 
