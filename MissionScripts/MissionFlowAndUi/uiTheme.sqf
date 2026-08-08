@@ -90,6 +90,19 @@ _themes = createHashMapFromArray [
         ["sourcePrefix", "ROYAL CHANCERY // "], ["sourceSuffix", " // SEALED"], ["titlePrefix", "PROCLAMATION: "], ["titleSuffix", ""], ["motif", "ILLUMINATED SCROLL"],
         ["textHex", "#2E1C0D"], ["mutedHex", "#614D2E"], ["accentHex", "#99241F"],
         ["successHex", "#3D6B29"], ["warningHex", "#9E6B14"], ["dangerHex", "#941F1A"]
+    ]],
+    ["MINIMAL", createHashMapFromArray [
+        ["id", "MINIMAL"], ["label", "Minimal / Low Profile"], ["font", "RobotoCondensed"], ["fontBold", "RobotoCondensedBold"],
+        ["shade", [0, 0, 0, 0.32]], ["panel", [0.03, 0.03, 0.035, 0.55]], ["panelAlt", [0.06, 0.06, 0.07, 0.6]],
+        ["header", [0.05, 0.05, 0.06, 0.5]], ["button", [0.08, 0.08, 0.09, 0.6]], ["buttonActive", [0.30, 0.55, 0.78, 0.85]],
+        ["edit", [0.04, 0.04, 0.05, 0.6]], ["list", [0.045, 0.045, 0.055, 0.55]], ["casing", [0.10, 0.10, 0.11, 0.5]],
+        ["accent", [0.45, 0.62, 0.78, 0.9]], ["accentActive", [0.60, 0.78, 0.92, 1]], ["trim", [0.45, 0.62, 0.78, 0.55]],
+        ["text", [0.95, 0.95, 0.96, 1]], ["muted", [0.68, 0.70, 0.73, 1]], ["success", [0.40, 0.72, 0.55, 0.9]],
+        ["warning", [0.85, 0.68, 0.30, 0.9]], ["danger", [0.80, 0.35, 0.35, 0.9]], ["railMode", "TOP"],
+        ["sourcePrefix", ""], ["sourceSuffix", ""], ["titlePrefix", ""], ["titleSuffix", ""], ["motif", "NOTICE"],
+        ["compact", true],
+        ["textHex", "#F2F3F5"], ["mutedHex", "#AEB4BA"], ["accentHex", "#73B3E0"],
+        ["successHex", "#6BC48C"], ["warningHex", "#D9AD4C"], ["dangerHex", "#CC5959"]
     ]]
 ];
 uiNamespace setVariable ["Waldo_UI_BaseThemeCatalogue", _themes];
