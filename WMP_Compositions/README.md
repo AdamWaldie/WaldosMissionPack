@@ -64,6 +64,7 @@ copies of feature logic.
 | Object Scaling Example | Supported Simple Object conversion and scale setup |
 | Custom 3D Marker Example | Object-anchored, side-aware world marker with readable options |
 | Economy Systems and Low/Medium/High | Runtime enablement and optional preset |
+| Persistence Object Example | Crate registered with `Waldo_fnc_PersistenceRegisterObject`, no `isServer` wrapper needed |
 | Teleport Script Example | Paired local addActions |
 
 ## Features intentionally without compositions
@@ -77,7 +78,11 @@ already-placed, already-crewed aircraft) - a spawn-its-own-aircraft system is Ze
 same reason `Waldo_fnc_ParadropCreateDropZone` itself is not used by any composition: an Eden object
 cannot represent "spawn this on demand" the way it represents "here is a real placed thing". Improved
 helicopter landing is an automatic AI handler driven by ordinary landing waypoints. Accessibility,
-treatment feedback and UI themes are player-interface features. Persistence depends on a server
-extension and mission database policy. Rally points are player-role state. Tree felling operates on
-terrain vegetation, which Eden compositions cannot own. Those systems remain covered by beginner
-configuration, public calls, the full audit mission and focused Zeus modules where appropriate.
+treatment feedback and UI themes are player-interface features. Starting the Persistence system
+itself (the `Waldo_Persistence_Enable` flag, its INIDBI2 dependency probe and the server database
+scope) depends on a server extension and mission database policy that has no single placeable object
+to represent it - but registering one *specific* world object once persistence is running is exactly
+as composable as the systems above, see the Persistence Object Example composition. Rally points are
+player-role state. Tree felling operates on terrain vegetation, which Eden compositions cannot own.
+Those systems remain covered by beginner configuration, public calls, the full audit mission and
+focused Zeus modules where appropriate.

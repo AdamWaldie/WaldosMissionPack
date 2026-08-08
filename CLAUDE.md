@@ -459,6 +459,30 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Zeus registration, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
 
+### Persistence (optional, `MissionConfig\persistenceConfig.sqf`)
+
+Optional INIDBI2-backed save/restore for player state and specific registered world objects. Off by default (`Waldo_Persistence_Enable = false`); the server also independently probes for a real, loaded INIDBI2 extension (not just a `CfgPatches` entry) and disables itself cleanly if the probe fails. Database access is server-only; clients only capture/apply their own state.
+
+```sqf
+// MissionConfig\persistenceConfig.sqf
+["Waldo_Persistence_Enable", false],        // requires a working server INIDBI2 extension
+["Waldo_Persistence_SaveLoadout", true],    // filtered inventory (unique ACRE IDs stripped)
+["Waldo_Persistence_SaveMedical", true],    // ACE medical state
+["Waldo_Persistence_SaveFoodWater", false],
+["Waldo_Persistence_SavePosition", false],  // off by default - can bypass mission flow
+["Waldo_Persistence_SaveRadios", false],    // per-player ACRE state
+["Waldo_Persistence_Scope", "MISSION"]      // MISSION isolates by mission+terrain; CAMPAIGN shares by database name
+```
+
+Player state saves/restores automatically once active (`initServer.sqf` starts the server branch, `initPlayerLocal.sqf` starts client capture). World objects must be registered explicitly — `Waldo_fnc_PersistenceRegisterObject` is safe to call directly from an object's own Eden init field with **no `isServer` wrapper**: it silently no-ops on every non-server machine, and the server's own execution of that same init line is what actually registers it, exactly like `Waldo_fnc_Jammer`. Registrations made before the database finishes starting are queued and replayed automatically.
+
+```sqf
+[this, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceRegisterObject;
+// options: [save cargo, save damage, save fuel, save ammo/pylons, save position]
+```
+
+The **Persistence Object Example** composition demonstrates this pattern. Zeus ("Waldos Mission Modules"): **Persistence - Control** (start/reconfigure/stop), **Persistence - Register Object** (assign a stable key/fields to the nearest object during play), **Persistence - Save Now** (immediate capture without stopping the system). See `wiki/Optional-Feature-Systems.md#persistence`.
+
 ### Performance regression audit
 
 `releaseVerificationAndDeployment/performance_audit.py` is a comment/string-aware static guard for recurring SQF work. CI rejects new or expanded high-severity world scans, recurring broadcasts/remote execution and unbounded schedulers unless `performance_baseline.json` contains a path/function-specific reviewed reason. Run the scanner and its unit tests before changing persistent loops:

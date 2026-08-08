@@ -138,6 +138,7 @@ class FullAuditTests(unittest.TestCase):
             "Waldo_fnc_TacticalDisplayRegister",
             "Waldo_fnc_Jammer",
             "Waldo_fnc_HazardRegisterEmitter",
+            "Waldo_fnc_PersistenceRegisterObject",
         }
         folders = [path for path in root.iterdir() if path.is_dir()]
         self.assertGreaterEqual(len(folders), 34)

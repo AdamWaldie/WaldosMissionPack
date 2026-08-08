@@ -1,9 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
  * Registers an editor-placed or scripted object for repeat-safe server persistence.
- * This is a server-only mission setup call. When persistence is enabled but its dependency/startup
+ * Server-only work: it silently no-ops (returns false) on every non-server machine, so it is safe to
+ * call directly from an object's own Eden init field with no isServer wrapper - exactly like
+ * Waldo_fnc_Jammer and Waldo_fnc_HazardRegisterPresetZone, the server's own execution of that same
+ * init line is what actually registers it. When persistence is enabled but its dependency/startup
  * gate is still pending, registration is queued by key and replayed after activation. The function
- * does not enable persistence and returns false when called on a client or when the feature is off.
+ * does not enable persistence itself and returns false while the feature is off.
  *
  * Arguments:
  * 0: object <OBJECT> - object to persist
@@ -16,12 +19,11 @@
  * Boolean - true when registered
  *
  * Example:
- * if (isServer) then {
- *     [supplyCrate, "base_supply_1", [true, false, false, false, false]]
- *         call Waldo_fnc_PersistenceRegisterObject;
- * };
+ * // From an object's own init field in Eden - no isServer wrapper needed:
+ * [this, "base_supply_1", [true, false, false, false, false]] call Waldo_fnc_PersistenceRegisterObject;
  *
- * Current callers: mission-maker server setup, persistence ZEN registration and audit mission.
+ * Current callers: mission-maker server setup, the Persistence Object Example composition, the
+ * "Persistence - Register Object" ZEN module and the audit mission.
  */
 
 params [
