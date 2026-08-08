@@ -80,7 +80,7 @@ _themes = createHashMapFromArray [
         ["successHex", "#35EDA5"], ["warningHex", "#FFB93A"], ["dangerHex", "#FF3B83"]
     ]],
     ["PARCHMENT", createHashMapFromArray [
-        ["id", "PARCHMENT"], ["label", "Parchment / Fantasy"], ["font", "PuristaMedium"], ["fontBold", "PuristaSemibold"],
+        ["id", "PARCHMENT"], ["label", "Parchment / Fantasy"], ["font", "Caveat"], ["fontBold", "CaveatBold"],
         ["shade", [0.10, 0.07, 0.03, 0.75]], ["panel", [0.82, 0.72, 0.52, 0.97]], ["panelAlt", [0.74, 0.63, 0.42, 1]],
         ["header", [0.42, 0.28, 0.14, 1]], ["button", [0.70, 0.60, 0.40, 1]], ["buttonActive", [0.60, 0.14, 0.12, 1]],
         ["edit", [0.88, 0.80, 0.62, 1]], ["list", [0.80, 0.70, 0.50, 1]], ["casing", [0.28, 0.19, 0.10, 1]],
