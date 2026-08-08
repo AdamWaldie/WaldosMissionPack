@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the evidence-driven keypad procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `keypad` procedure represents an access terminal or safe controller whose authorization code must be recovered from on-screen records.
 
 | Operating card | Active terminal |
 |---|---|
 | ![Access operating card](images/interaction-procedures/interaction-keypad-briefing.png) | ![Industrial access terminal](images/interaction-procedures/interaction-keypad-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "keypad"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

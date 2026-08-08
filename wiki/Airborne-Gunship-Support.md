@@ -18,7 +18,17 @@ interaction, including approximate remaining service time.
 
 The feature is disabled by default. Calling `Waldo_fnc_GunshipRegister` or using the registration Zeus module explicitly enables it.
 
-## Scripted setup
+## Three ways to get one flying
+
+1. **No scripting:** place a crewed aircraft in Eden, then in a running mission use the **Gunship - Register or Spawn** Zeus module on it (see Focused Zeus modules below).
+2. **Drop-in example:** place the `[WMP]Gunship_Support_Example_Minimal` composition from `WMP_Compositions/` — a crewed VTOL already registered with the minimum required keys.
+3. **Smallest working script call**, in the placed-and-crewed aircraft's own init field:
+   ```sqf
+   [createHashMapFromArray [["id", "spectre_1"], ["aircraft", this]]] call Waldo_fnc_GunshipRegister;
+   ```
+   Every other key below (callsign, side, home/orbit markers, altitude, radius, service envelope, turret profiles) has a working default — add only the ones a mission actually needs to change.
+
+## Scripted setup (every option)
 
 Run registration from `initServer.sqf` after the aircraft and player slots exist:
 

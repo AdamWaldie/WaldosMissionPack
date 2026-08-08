@@ -12,6 +12,7 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 |---|---|
 | Install WMP in a mission | [Quickstart Guide](Quickstart-Guide) |
 | Find a feature | [Feature Index](Feature-Tutorials) |
+| Drop in a ready-made example instead of scripting from scratch | [Eden Compositions](Eden-Compositions) |
 | Configure mission entry files | [Mission Configuration Reference](Mission-Configuration-Reference) |
 | Set up or activate a feature | [Feature Setup and Activation](Feature-Setup-and-Activation) |
 | Find a feature setting | [Feature Configuration Files](Feature-Configuration-Files) |
@@ -38,6 +39,8 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 - [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 - [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
 - [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
+- [Transport Services](Transport-Services) — reusable AI helicopter/ground pickup and delivery
+- [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies)
 
 ### Economy and base building
 

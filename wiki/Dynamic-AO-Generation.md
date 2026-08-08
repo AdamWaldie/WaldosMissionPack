@@ -20,6 +20,18 @@ The modules are registered only when Zeus Enhanced is available. The script API 
 
 Call the generator on the server. A non-server call is forwarded to the server, but remote player requests are accepted only from an assigned curator.
 
+Unlike most other keys, **`faction` has no default and is genuinely required** alongside `id` and
+`center` — omitting it makes the whole call silently do nothing (no error, no spawned assets). The
+smallest working call is:
+
+```sqf
+[createHashMapFromArray [
+    ["id", "AO_NORTH"], ["center", getMarkerPos "ao_north"], ["faction", "OPF_F"]
+]] call Waldo_fnc_DynamicAOCreate;
+```
+
+For every other option set explicitly:
+
 ```sqf
 private _config = createHashMapFromArray [
     ["id", "AO_NORTH"], ["center", getMarkerPos "ao_north"],

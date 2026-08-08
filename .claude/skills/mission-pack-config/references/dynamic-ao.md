@@ -49,8 +49,10 @@ replaces the old AO. Key bounds: `radius` 100–2000m, `patrolGroups` 0–12,
 ### Eden composition (beginner drop-in)
 
 `WMP_Compositions/[WMP]Dynamic_AO_Example_Minimal` anchors a randomized AO
-to a placed object with only `id` and `center` set — `patrolGroups`/
-`garrisonGroups` default to a small `3` each, every other category
+to a placed object with `id`, `center` and `faction` set (`faction` has no
+default and is the one truly required key beyond `id`/`center` — omitting
+it makes the whole call a silent no-op) — `patrolGroups`/`garrisonGroups`
+default to a small `3` each, every other category
 (static turrets, vehicle/air patrols, civilians, minefields, roadblocks)
 defaults to `0`/off. `_Full` shows every category/key explicitly on the
 same anchor object.

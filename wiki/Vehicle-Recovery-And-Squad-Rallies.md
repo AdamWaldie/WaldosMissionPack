@@ -8,6 +8,16 @@ Both systems keep authoritative registries and world mutation on the server and 
 
 Vehicle recovery is opt-in per object. Register one or more workshops, recoverable vehicles and optional carrier vehicles. A damaged, empty and stationary registered vehicle can be packaged into a transportable cargo object. When an unloaded, grounded package enters a workshop with the matching key, the server restores the vehicle at a clear position.
 
+Quickest working setup — every call below only needs its first argument (the object), so a mission maker can drop three objects and go, then tighten the details later:
+
+```sqf
+[this] call Waldo_fnc_RecoveryRegisterWorkshop;   // in a repair depot's init field - key/radius/side all default
+[this] call Waldo_fnc_RecoveryRegisterVehicle;    // in a damaged vehicle's init field - workshop key defaults too
+[this] call Waldo_fnc_RecoveryRegisterCarrier;    // in a truck's init field - mode defaults to AUTO
+```
+
+The `[WMP]Vehicle_Recovery_Workshop_Example_Minimal` composition (see [Eden Compositions](Eden-Compositions)) places all three pre-wired this way. For explicit control over every option:
+
 ```sqf
 [repairDepot, "FOB_ALPHA", 50, west] call Waldo_fnc_RecoveryRegisterWorkshop;
 [damagedTank, "FOB_ALPHA", 0.55, true, true, "B_Slingload_01_Cargo_F", true, 1]
@@ -75,6 +85,13 @@ Primary settings in `init.sqf` are:
 Direct regroup is disabled by default because it bypasses the normal respawn flow. When deliberately enabled, only a living member of the owning group can request it and the server selects a clear destination beside the active rally.
 
 Runtime ZEN changes are published as an ordered setting bundle before client actions start. JIP clients request the latest server snapshot; disabling the system removes local actions, clears its keyed initializer and removes active rallies.
+
+## See also
+
+- [Eden Compositions](Eden-Compositions)
+- [Optional Feature Systems](Optional-Feature-Systems)
+- [Transport Services](Transport-Services)
+- [Mission Configuration Reference](Mission-Configuration-Reference)
 
 <!-- WMP-WIKI-NAV -->
 ---

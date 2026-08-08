@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the directional command-entry procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `commandinput` procedure is a directional command-entry console inspired by field support and terminal authorization interfaces.
 
 | Operating card | Active uplink |
 |---|---|
 | ![Uplink operating card](images/interaction-procedures/interaction-commandinput-briefing.png) | ![Tactical command uplink](images/interaction-procedures/interaction-commandinput-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "commandinput"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 

@@ -68,7 +68,7 @@ copies of feature logic.
 | Hazard Emitter Moving Example (Full) | Contamination field that follows a vehicle, via `Waldo_fnc_HazardRegisterEmitter` directly, every option shown |
 | Dynamic AA Example (Minimal) | Smallest working anchor object - id and centre only |
 | Dynamic AA Example (Full) | Anchor object generating a radar, static and mobile AA site around itself, every option shown |
-| Dynamic AO Example (Minimal) | Smallest working anchor object - id and centre only |
+| Dynamic AO Example (Minimal) | Smallest working anchor object - id, centre and faction (faction has no default) |
 | Dynamic AO Example (Full) | Anchor object generating a randomized area of operations around itself, every option shown |
 | Explosive Wall Breaching Example (Minimal) | Smallest working profile - an empty HashMap uses every default |
 | Explosive Wall Breaching Example (Full) | Explicit demolition-charge profile with a visibly testable centre gap, every key shown |

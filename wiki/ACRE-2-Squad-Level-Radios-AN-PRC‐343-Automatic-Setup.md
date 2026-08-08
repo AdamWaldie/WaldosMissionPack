@@ -2,6 +2,12 @@
 
 > **Use this page when:** you need repeatable PRC-343 block/channel allocation by side and group.
 
+_Associated Files: `MissionConfig\acreConfig.sqf`; `MissionScripts\MissionInit\ACRE2\`_
+
+This is the PRC-343-specific detail for one part of the group assignment row described in full on
+[ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting) — start there for the
+overall nets/groups model if this is your first time configuring ACRE2 radios.
+
 PRC-343 assignments come from `MissionConfig\acreConfig.sqf`. The server sends the completed setup
 to players, while each player's own computer configures the radio they carry. Side and group ID are
 both used, so identical callsigns on opposing sides do not overwrite one another.
@@ -38,6 +44,12 @@ it is ambiguous to a beginner. Unlisted occurrences remain untouched. Ear accept
 Both values must be between 1 and 16. Invalid assignments are rejected. With strict validation enabled, collisions are rejected; with strict mode disabled, they are retained and clearly reported. For a PRC-343 row whose target is `[]`, two numeric callsign components become block/channel, a single numeric component becomes the channel within the callsign prefix's deterministic block, and a callsign without numbers receives a deterministic free slot.
 
 The client converts the pair to ACRE's flat channel only when it applies a unique PRC-343 radio ID. The default `prc343PresetPolicy = "FULL_RANGE"` deliberately assigns the PRC-343 `default` preset on every side, exposing B1–B16 while leaving long-range radios on their normal side presets. Set the policy to `SIDE_ISOLATED` only when side-separated PRC-343 frequencies are required; WEST `default3`, EAST `default2`, and Independent `default4` then expose B1–B5. The CEOI continues to show the clearer block/channel form, and WMP rejects out-of-range blocks before ACRE can silently clamp them.
+
+## See also
+
+- [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting)
+- [ACRE2 Automated CEOI Document](ACRE2-Automated-CEOI-Document)
+- [ACRE2 Babel Configuration](ACRE2-Babel-Configuration)
 
 <!-- WMP-WIKI-NAV -->
 ---

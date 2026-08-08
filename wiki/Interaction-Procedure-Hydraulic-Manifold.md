@@ -2,11 +2,19 @@
 
 > **Use this page when:** you are configuring or operating the coupled pressure-balancing procedure.
 
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`_
+
 The `pressure` procedure represents a hydraulic, pneumatic, fuel-pressure, or coolant-control manifold with coupled lines.
 
 | Operating card | Active manifold |
 |---|---|
 | ![Pressure operating card](images/interaction-procedures/interaction-pressure-briefing.png) | ![Hydraulic manifold](images/interaction-procedures/interaction-pressure-active.png) |
+
+**Simplest setup** — every other option below has a working default:
+
+```sqf
+[this, "pressure"] call Waldo_fnc_MiniGameInteractionSetup;
+```
 
 ## Operator procedure
 
