@@ -1,8 +1,8 @@
 version=54;
-name="[WMP] Logistics Spawner Example (Full)";
+name="[WMP] MHQ With Logistics Spawner (Minimal)";
 author="WaldoTheWarfighter";
 category="Waldos Mission Pack Compositions - Logistics";
 requiredAddons[]=
 {
-	"A3_Structures_F_Civ_InfoBoards"
+	"A3_Soft_F_Beta_Truck_01"
 };

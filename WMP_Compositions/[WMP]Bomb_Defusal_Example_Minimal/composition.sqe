@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_DefusalBomb";
+			init="[this] call Waldo_fnc_BombDefuseSetup;";
+		};
+		id=1;
+		type="Land_Device_disassembled_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-3,0};};
+		title="Bomb Defusal (Minimal): the smallest working call - every option falls back to its default (5 wires, 20s, detonates on failure). See the Bomb Defusal Example (Full) composition to see and edit every available option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Bomb-Defusal";
+		id=2;
+	};
+};

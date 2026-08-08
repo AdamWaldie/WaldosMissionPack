@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-3,0};};
-		title="Bomb Defusal: adds the standard wire-cutting challenge and explosive failure consequence. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Bomb-Defusal";
+		title="Bomb Defusal (Full parameter reference): every Waldo_fnc_BombDefuseSetup option shown explicitly at its default value - copy and edit any key. See the Bomb Defusal Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Bomb-Defusal";
 		id=2;
 	};
 };

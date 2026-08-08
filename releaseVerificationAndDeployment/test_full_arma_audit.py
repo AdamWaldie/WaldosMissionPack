@@ -242,7 +242,7 @@ class FullAuditTests(unittest.TestCase):
 
     def test_new_feature_compositions_are_functional_examples(self):
         root = ROOT / "WMP_Compositions"
-        transport = (root / "[WMP]Transport_Services_Example" / "composition.sqe").read_text(encoding="utf-8")
+        transport = (root / "[WMP]Transport_Services_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
         hazard = (root / "[WMP]Radiation_Hazard_Example" / "composition.sqe").read_text(encoding="utf-8")
 
         self.assertEqual(2, transport.count("createVehicleCrew this"))
@@ -1175,7 +1175,7 @@ class FullAuditTests(unittest.TestCase):
         setup = (ROOT / "MissionScripts" / "Logistics" / "Crates" / "initQuartermaster.sqf").read_text(encoding="utf-8")
         mhq = (ROOT / "MissionScripts" / "Logistics" / "MHQ" / "MHQSetupLocal.sqf").read_text(encoding="utf-8")
         composition = (
-            ROOT / "WMP_Compositions" / "[WMP]Logistics_Spawner_Example" / "composition.sqe"
+            ROOT / "WMP_Compositions" / "[WMP]Logistics_Spawner_Example_Full" / "composition.sqe"
         ).read_text(encoding="utf-8")
         self.assertIn('["_deploymentControlled", false, [false]]', setup)
         self.assertIn('_target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true]', setup)

@@ -16,9 +16,12 @@
  *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
  *    landingClearanceScale,
  *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
- *    invulnerable (vehicle and original AI service crew; default false) and
- *    useImprovedLanding. minimumSeparation spaces active destinations/bulk service slots (default:
- *    helicopters 60, ground vehicles 18); prepared bases are checked only for physical overlap.
+ *    invulnerable (vehicle and original AI service crew; default false),
+ *    useImprovedLanding and keepEngineOnAway (helicopters only; default true - keeps the engine
+ *    running at a pickup/destination stop away from base, overriding vanilla TR UNLOAD idle-down;
+ *    set false to allow it to idle down like a normal AI landing). minimumSeparation spaces active
+ *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18); prepared bases
+ *    are checked only for physical overlap.
  *
  * Return Value: Boolean - true when forwarded or registered.
  *

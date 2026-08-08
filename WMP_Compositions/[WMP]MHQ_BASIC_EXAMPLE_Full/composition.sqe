@@ -6,7 +6,7 @@ class items
 	class Item0
 	{
 		dataType="Layer";
-		name="[WMP] MHQ BASIC EXAMPLE";
+		name="[WMP] MHQ BASIC EXAMPLE (Full)";
 		class Entities
 		{
 			items=41;
@@ -53,7 +53,7 @@ class items
 				{
 					position[]={0.79296875,0,4.2929688};
 				};
-				title="Mobile HQ Example (WIP). Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System";
+				title="Mobile HQ (Full - elaborate build-out, WIP). Waldo_fnc_MHQSetup called with every option explicit ([this,true,true,180,5]: modern audio, logistics enabled, 180 degree bearing, 5 m distance). See the MHQ Basic Example (Minimal) composition for the smallest working call with no synced decoration. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System";
 				description="MobileHQVehicle - MHQ vehicle" \n """MobileHeadQuartersLayer"" - Eden Editor Layer for additional objects" \n "" \n "This is an Extreme example, it works best with smaller, basic structures." \n "" \n "This also has the logistics system enabled, which requires both the boolean variable set to true, as well as an invisible helipad from the base game being present (""Land_HelipadEmpty_F"")";
 				id=70;
 				atlOffset=0.063899279;
