@@ -1,8 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
  * Zeus module handler: gathers title/message/type/duration/placement and audience, then forwards to
- * Waldo_fnc_ZenNotifyServer. The "Selected Unit(s)" audience uses whichever player units are
- * currently selected in Zeus (curatorSelected), falling back to the object the module was dropped on.
+ * Waldo_fnc_ZenNotifyServer. "By Group" no longer takes a typed callsign - picking it opens a second,
+ * side-filtered dropdown (Waldo_fnc_ZenNotifyPickRecipient below) listing that side's current groups
+ * and players together, live, so a curator who actually means "just this one player" can pick a
+ * player entry from the same list instead of falling back to typing a callsign or re-running the
+ * module as Selected Unit(s). "Selected Unit(s)" is unchanged and still uses whichever player units
+ * are currently selected in Zeus (curatorSelected), falling back to the object the module was
+ * dropped on, for a curator who wants Zeus's native multi-unit selection instead.
  *
  * Arguments:
  * 0: modulePos <ARRAY> - position the curator placed the module.
@@ -37,30 +42,38 @@ params ["_modulePos", "_objectPos"];
                 0
             ], false],
         ["COMBO", ["Audience", "Who receives this card."],
-            [["ALL", "SIDE", "GROUP", "UNITS"], ["All Players", "By Side", "By Group", "Selected Unit(s)"], 0], false],
-        ["COMBO", ["Side (if By Side)", "Used only when Audience is By Side."],
-            [["WEST", "EAST", "IND", "CIV"], ["BLUFOR", "OPFOR", "INDFOR", "CIVILIAN"], 0], false],
-        ["EDIT", ["Group name (if By Group)", "Matched against each unit's group callsign, case-insensitive."], ""]
+            [["ALL", "SIDE", "GROUP", "UNITS"], ["All Players", "By Side", "By Group or Player", "Selected Unit(s)"], 0], false],
+        ["COMBO", ["Side (if By Side / By Group or Player)", "Used for By Side, and to list that side's current groups/players for By Group or Player."],
+            [["WEST", "EAST", "IND", "CIV"], ["BLUFOR", "OPFOR", "INDFOR", "CIVILIAN"], 0], false]
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_title", "_message", "_state", "_duration", "_placement", "_audience", "_sideStr", "_group"];
+        _args params ["_title", "_message", "_state", "_duration", "_placement", "_audience", "_sideStr"];
         _pos params ["_modulePos", "_objectPos"];
-        private _units = [];
-        if (_audience == "UNITS") then {
-            private _curator = getAssignedCuratorLogic player;
-            if !(isNull _curator) then {
-                _units = (curatorSelected select 0) select {isPlayer _x};
-            };
-            if (_units isEqualTo [] && {!isNull _objectPos} && {isPlayer _objectPos}) then {_units = [_objectPos];};
-        };
         private _sideIndex = ["WEST", "EAST", "IND", "CIV"] find _sideStr;
         private _side = [west, east, independent, civilian] select (_sideIndex max 0);
         private _config = createHashMapFromArray [
             ["title", _title], ["message", _message], ["state", _state], ["duration", _duration],
-            ["placement", _placement], ["audience", _audience], ["side", _side], ["group", _group], ["units", _units]
+            ["placement", _placement], ["side", _side]
         ];
-        [_config, player] remoteExecCall ["Waldo_fnc_ZenNotifyServer", 2];
+        switch (_audience) do {
+            case "UNITS": {
+                private _curator = getAssignedCuratorLogic player;
+                private _units = [];
+                if !(isNull _curator) then {_units = (curatorSelected select 0) select {isPlayer _x};};
+                if (_units isEqualTo [] && {!isNull _objectPos} && {isPlayer _objectPos}) then {_units = [_objectPos];};
+                _config set ["audience", "UNITS"];
+                _config set ["units", _units];
+                [_config, player] remoteExecCall ["Waldo_fnc_ZenNotifyServer", 2];
+            };
+            case "GROUP": {
+                [_config, _side] call Waldo_fnc_ZenNotifyPickRecipient;
+            };
+            default {
+                _config set ["audience", _audience];
+                [_config, player] remoteExecCall ["Waldo_fnc_ZenNotifyServer", 2];
+            };
+        };
         diag_log format ["[WMP ZEN] invoked module=Send Notification curator=%1 audience=%2 title=%3", name player, _audience, _title];
     },
     {},

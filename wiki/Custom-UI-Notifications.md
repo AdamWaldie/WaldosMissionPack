@@ -236,10 +236,15 @@ It returns the number of distinct players actually reached.
 
 **Waldos Mission Modules > Mission Flow: Send Notification** exposes the same call from the Zeus
 menu: title and message text fields, a type selector (`INFO`/`SUCCESS`/`WARNING`/`ERROR`), a duration
-slider, a placement selector, and an audience selector (All / By Side / By Group / Selected Unit(s)).
-Selecting **Selected Unit(s)** sends only to the curator's currently-selected Zeus units. The module
-routes through a curator-authenticated server bridge (`Waldo_fnc_ZenNotifyServer`) before calling
-`Waldo_fnc_NotificationBroadcast`, matching the EMP and Signal Tracker modules' authorization pattern.
+slider, a placement selector, and an audience selector (All / By Side / By Group or Player / Selected
+Unit(s)). Picking **By Group or Player** opens a second dropdown, built live from the chosen side's
+current groups and players together (`[Group] Alpha 1-1 (4)`, `[Player] Waldo`, ...) - no typed
+callsign - so a curator who really means "just this one player" can pick a player entry from the same
+list instead of falling back to a typed callsign or re-running the module as Selected Unit(s).
+Selecting **Selected Unit(s)** instead sends only to the curator's currently-selected Zeus units
+(Zeus's own native multi-unit selection). The module routes through a curator-authenticated server
+bridge (`Waldo_fnc_ZenNotifyServer`) before calling `Waldo_fnc_NotificationBroadcast`, matching the
+EMP and Signal Tracker modules' authorization pattern.
 
 ## Cleanup and recovery
 
