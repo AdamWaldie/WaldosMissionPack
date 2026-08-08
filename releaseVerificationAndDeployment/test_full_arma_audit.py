@@ -433,7 +433,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('allPlayers select {side group _x == _side}', dynamic_aa)
         self.assertIn('_x != _controller', gunship)
         self.assertNotIn('BIS_fnc_showNotification', mhq)
-        self.assertIn('allPlayers select {side group _x == side group _actor}', mhq)
+        self.assertNotIn('allPlayers select {side group _x == side group _actor}', mhq)
+        self.assertEqual(3, mhq.count('remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor]'))
 
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
