@@ -60,6 +60,12 @@ Returns a numeric jammer id.
 - `duty`: `[]` constant, or `[onSec, offSec]` to pulse.
 - `jamUAV`: also jams drones in the field (see UAV section below).
 
+`WMP_Compositions/[WMP]Radio_Jammer_Example_Minimal` is a pre-placed object
+with just the simple `[this] call Waldo_fnc_Jammer;` form above for a
+beginner to drop in and test. `_Full` shows every positional parameter set
+explicitly (bands/falloff/strength/sector/duty/jamUAV) for learning what
+each one does.
+
 ## Managing jammers (server-authoritative, safe from a client)
 
 ```sqf

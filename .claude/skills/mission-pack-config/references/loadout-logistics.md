@@ -48,3 +48,32 @@ Services and Object Scaling settings — see `field-resupply.md`,
 `mission.sqm`, so TFAR radios placed via Eden's native radio assignment flow
 in the loadout automatically end up in supply crates too, with no extra
 config.
+
+## Standalone Quartermaster access point
+
+The simple always-available way to give players a retrieval point without a
+full MHQ. One call in any object/NPC's Eden init field:
+
+```sqf
+[this] call Waldo_fnc_SetupQuarterMaster;
+// or with spawn placement: [target, spawn bearing, spawn distance, deployment controlled]
+[this, 180, 4] call Waldo_fnc_SetupQuarterMaster;
+```
+
+Safe to leave directly in an object's init field — no `isServer` wrapper
+needed, it publishes standalone availability itself. Installs ACE
+interaction actions (Medical/Ammo/Supply Box, Spare Track, Spare Wheel),
+with vanilla `addAction` fallback when ACE is absent. Crate requests are
+always validated and spawned server-side through
+`Waldo_fnc_LogisticsSpawner`. The fourth argument (`deploymentControlled`)
+is for systems that own their own deploy state, like the MHQ — normal
+mission makers should leave it `false`/omitted. See
+`wiki/Logistics-System,-Starter-Crates-And-Quartermaster.md` for the full
+walkthrough.
+
+### Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Logistics_Spawner_Example_Minimal` is a pre-placed
+point with just `[this] call Waldo_fnc_SetupQuarterMaster;`. `_Full` shows
+the spawn-bearing/spawn-distance arguments set explicitly on the same
+point, immediately active as a standalone quartermaster.

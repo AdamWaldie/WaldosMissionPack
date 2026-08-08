@@ -21,3 +21,14 @@ Setup is mostly Eden Editor work — **instruction mode** for steps 1-4.
 
 Players get ACE3 "Deploy/Tear Down Command Post" actions. Deployed state
 creates a named respawn point and map marker automatically.
+
+## Eden composition (beginner drop-in)
+
+For a beginner who'd rather place a working example than build steps 1-4 by
+hand, `WMP_Compositions/[WMP]MHQ_BASIC_EXAMPLE_Minimal` is a single truck
+already wired with the plain `[this] call Waldo_fnc_MHQSetup;` call — drop
+it in and it works. `[WMP]MHQ_BASIC_EXAMPLE_Full` is the complete synced
+Logic/tent/crate layout with every `Waldo_fnc_MHQSetup` option shown
+explicitly, for learning what each one does once the Minimal version is
+understood. Placing a composition is still an Eden Editor action —
+instruction mode, per SKILL.md Step 1.

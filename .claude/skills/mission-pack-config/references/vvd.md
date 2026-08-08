@@ -26,3 +26,13 @@ teardown.
 If the user reports orphaned/duplicate vehicles or crew, this is the first
 thing to check — and if VVD is core to their mission design, recommend
 thorough testing with their exact mod set before relying on it live.
+
+## Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Virtual_Vehicle_Depot_Spawner_Example_Minimal` is a
+terminal and safely separated spawn point wired with only the two required
+arguments (`[this, Circle_Helipad] call Waldo_fnc_VVDInit;` — every
+vehicle type and side allowed by default). `_Full` shows every parameter
+set explicitly (types, allowed sides, side-lock, vehicle-type-lock, UAV
+handling, range, post-spawn script). Still repeat the WIP caveat above
+regardless of which variant the user places.

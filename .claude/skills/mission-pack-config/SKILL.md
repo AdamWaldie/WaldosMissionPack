@@ -189,6 +189,29 @@ both. When precision matters beyond what's here, consult the live wiki (see
 above) — its `Home.md`/`Feature-Catalogue.md` pages are the fastest way to
 find a page this table doesn't name explicitly.
 
+### Eden compositions — the beginner's fastest path to "it works"
+
+`WMP_Compositions/` ships ready-to-place Eden examples for many features
+(catalogue in `WMP_Compositions/README.md`). Where a feature has one, this
+is usually the fastest way to get a genuinely new mission maker to a
+working result, and worth mentioning even when they only asked for a
+script snippet — placing a pre-built composition and reading its call
+beats typing one from scratch. Every composition with real optional
+parameters ships as a pair:
+
+- **`..._Minimal`** — the smallest call that actually works: only the
+  function's truly required arguments, relying entirely on its own
+  documented defaults for everything else. Point a beginner here first.
+- **`..._Full`** — the same object(s) with every option set explicitly, so
+  a mission maker can see and edit each one once they understand the
+  basics. Point here for "what else can I configure" or "how do I learn
+  every option."
+
+Placing either is still an Eden Editor action — instruction mode (Step 1),
+never something you edit directly. The relevant `references/*.md` file
+notes the exact composition name(s) where one exists; don't invent a
+composition name that isn't documented there.
+
 | Feature | Reference | Notes |
 |---|---|---|
 | Loadout & logistics (supply/medical crates, mission.sqm scraping) | `references/loadout-logistics.md` | Everything else depends on this |

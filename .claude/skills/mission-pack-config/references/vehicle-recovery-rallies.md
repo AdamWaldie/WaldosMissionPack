@@ -58,6 +58,14 @@ damage/occupancy/movement/distance/engineer check.
 optional prep procedure), **- Register Carrier** (Automatic/Virtual
 Manifest/Physical Cargo Bay, 1–10 package capacity).
 
+### Eden composition (beginner drop-in)
+
+`WMP_Compositions/[WMP]Vehicle_Recovery_Workshop_Example_Minimal` places a
+workshop, a damaged vehicle and a generic carrier, each wired with only its
+required arguments (`[this] call Waldo_fnc_Recovery{RegisterWorkshop,
+RegisterVehicle,RegisterCarrier};`). `_Full` shows the same spaced layout
+with every option explicit on all three calls.
+
 ## Squad rally points ("automatic" pattern)
 
 Temporary group-owned respawn positions the current group leader can
