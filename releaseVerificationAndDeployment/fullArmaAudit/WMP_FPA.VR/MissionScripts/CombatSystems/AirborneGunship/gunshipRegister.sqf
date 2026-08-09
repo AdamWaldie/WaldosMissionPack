@@ -20,8 +20,10 @@
  *      true only applies when this function dynamically spawns the aircraft. An existing Eden
  *      aircraft must already contain its intended correctly sided crew; registration never creates
  *      or fills crew for a composition aircraft.
- *    Flight: home/orbit <ARRAY>, radius/altitude <NUMBER>, direction <STRING CIRCLE_L|CIRCLE_R>,
- *      spawnDirection <NUMBER>.
+ *    Flight: home <ARRAY>; orbit <ARRAY or marker-name STRING>; radius/altitude <NUMBER>;
+ *      direction <STRING CIRCLE_L|CIRCLE_R>; spawnDirection <NUMBER>. When orbit is a marker name,
+ *      WMP reads its position, then deletes that Eden placeholder after successful registration so
+ *      only the live WMP orbit marker remains.
  *    Service: minimumFuel, maximumDamage, serviceFuelFraction, serviceAmmoFraction and
  *      serviceDamage <NUMBER 0..1>; serviceDuration <SECONDS>; maximumServiceCycles <-1 unlimited>;
  *      returnWhenOutOfAmmo <BOOL>.
@@ -36,7 +38,7 @@
  * private _gunship = createHashMapFromArray [
  *     ["id", "SPECTRE"], ["callsign", "SPECTRE"], ["side", west],
  *     ["aircraftClass", "B_T_VTOL_01_armed_F"],
- *     ["spawnPosition", [1000, 1000, 700]], ["orbit", [4000, 4000, 0]]
+ *     ["spawnPosition", [1000, 1000, 700]], ["orbit", "gunship_initial_orbit"]
  * ];
  * [_gunship] call Waldo_fnc_GunshipRegister;
  * Result: SPECTRE is created, crewed and registered, or the request returns false without partial state.
@@ -63,6 +65,18 @@ private _notifyRequester = {
 private _id = _config getOrDefault ["id", ""];
 private _safeId = [_id, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
 if (_id == "" || {_safeId != _id}) exitWith {["Registration rejected: a safe unique id is required.", "ERROR"] call _notifyRequester; false};
+private _orbitInput = _config getOrDefault ["orbit", []];
+private _orbitSourceMarker = "";
+if (_orbitInput isEqualType "") then {
+    _orbitSourceMarker = _orbitInput;
+};
+if (_orbitInput isEqualType "" && {_orbitSourceMarker == "" || {markerShape _orbitSourceMarker == ""}}) exitWith {
+    [format ["Registration rejected: orbit marker '%1' does not exist.", _orbitSourceMarker], "ERROR"] call _notifyRequester;
+    false
+};
+if (_orbitSourceMarker != "") then {
+    _config set ["orbit", getMarkerPos _orbitSourceMarker];
+};
 private _registry = missionNamespace getVariable ["Waldo_Gunship_Registry", createHashMap];
 if (_id in keys _registry) then {[_id, false] call Waldo_fnc_GunshipDestroy};
 
@@ -163,6 +177,10 @@ _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_Gunship_Registry", _registry];
 [] call Waldo_fnc_GunshipPublishState;
 private _started = [_id, _orbit, "TRANSIT"] call Waldo_fnc_GunshipSetOrbit;
+if (_started && {_orbitSourceMarker != ""}) then {
+    deleteMarker _orbitSourceMarker;
+    diag_log format ["[WMP GUNSHIP] %1 replaced Eden orbit marker '%2' with its live WMP orbit marker.", _id, _orbitSourceMarker];
+};
 [
     if (_started) then {format ["%1 registered and flying to its orbit.", _config getOrDefault ["callsign", _id]]} else {"Registration created an aircraft but its initial orbit could not be assigned."},
     if (_started) then {"SUCCESS"} else {"ERROR"}

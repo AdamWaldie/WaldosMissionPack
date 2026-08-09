@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 884,
+  "registeredFunctionCount": 885,
   "runtimeFunctionCount": 385,
-  "functionCount": 1269,
+  "functionCount": 1270,
   "stations": [
     {
       "id": "control",
@@ -1807,6 +1807,12 @@
     {
       "name": "Waldo_fnc_ParadropConfigureAircraftNetworkedLocal",
       "file": "MissionScripts/Paradrop/paradropConfigureAircraftNetworkedLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropSetAircraftInvincibilityLocal",
+      "file": "MissionScripts/Paradrop/paradropSetAircraftInvincibilityLocal.sqf",
       "station": "paradrop",
       "activation": "manual"
     },

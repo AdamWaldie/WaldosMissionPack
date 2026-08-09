@@ -77,7 +77,7 @@ private _config = createHashMapFromArray [
     ["controller", gunshipController],
     ["side", west],
     ["home", getMarkerPos "gunship_service_orbit"],
-    ["orbit", getMarkerPos "gunship_initial_orbit"],
+    ["orbit", "gunship_initial_orbit"],
     ["altitude", 700],
     ["radius", 1500],
     ["direction", "CIRCLE_L"],
@@ -93,6 +93,11 @@ private _config = createHashMapFromArray [
 ];
 [_config] call Waldo_fnc_GunshipRegister;
 ```
+
+Passing the initial `orbit` as a marker-name string is recommended. WMP reads the marker position
+and, after successful registration, deletes the Eden placeholder so the live callsign-labelled WMP
+orbit marker replaces it. Passing `getMarkerPos` still supplies a valid position, but discards the
+marker name, so WMP cannot know which placeholder should be removed.
 
 Omit `aircraft` and provide `aircraftClass` plus `spawnPosition` to create the asset. Alternatively provide `aircraftClasses`, `faction`, or use the mission's `Waldo_Gunship_SideAircraftPools` and `Waldo_Gunship_FactionAircraftPools`. Invalid or non-aircraft classes are rejected before spawning.
 

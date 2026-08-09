@@ -186,6 +186,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ["CHECKBOX", ["Automatically sequence player cargo", "Forces embarked players out at the green line; normally leave off for jumpmaster-controlled player actions."], false],
         ["SLIDER", ["Optional generated AI jumpers", "AI cargo created for this operation. Default zero keeps the aircraft for players."], [0, 60, 0, 0]],
         ["SLIDER", ["Automatic jump interval", "Seconds between forced player or optional AI exits."], [0.5, 10, 2, 1]],
+        ["CHECKBOX", ["Invincible drop aircraft", "Prevents normal engine damage for this operation and reapplies protection after locality changes. Scripted damage can still apply. Shipped default off."], missionNamespace getVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false]],
         ["CHECKBOX", ["Create map markers", "Creates DZ, standby, green, red and named point markers."], true],
         ["CHECKBOX", ["Keep markers when the operation ends automatically", "Applies to an automatic DESPAWN pass or the aircraft being lost - the markers are removed along with the operation by default. Explicitly using Paradrop - Remove Operation always removes markers regardless of this setting."], false]
     ],
@@ -194,7 +195,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         _values params [
             "_name", "_side", "_class", "_direction", "_jumpMethods", "_requestedAltitude", "_requestedSpeed",
             "_approach", "_length", "_exit", "_lifecycle", "_circuitDirection", "_staticChute",
-            "_haloChute", "_dropPlayers", "_count", "_interval", "_markers",
+            "_haloChute", "_dropPlayers", "_count", "_interval", "_aircraftInvincible", "_markers",
             "_keepMarkersOnCleanup"
         ];
         private _idBase = [_name, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
@@ -226,6 +227,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
             ["haloBackpackClass", _haloChute], ["requireOpenDoor", false],
             ["autoDropPlayers", _dropPlayers], ["automaticJumpMode", if (_jumpMethods == "HALO") then {"HALO"} else {"STATIC"}], ["jumperCount", round _count],
             ["createJumpers", _count > 0], ["jumpInterval", _interval], ["createMarkers", _markers],
+            ["aircraftInvincible", _aircraftInvincible],
             ["keepMarkersOnCleanup", _keepMarkersOnCleanup]
         ];
         [_config, player] remoteExecCall ["Waldo_fnc_ParadropCreateDropZone", 2];

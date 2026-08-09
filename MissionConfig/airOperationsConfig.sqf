@@ -79,6 +79,9 @@
  * - WALDO_PARA_HALOCHUTE (MISSION MAKER): default steerable parachute backpack class.
  * - Waldo_Paradrop_DefaultHaloRouteAltitude (MISSION MAKER): default HALO route height used by ZEN/direct setup.
  * - Waldo_Paradrop_DefaultHaloRouteSpeed (MISSION MAKER): default HALO route speed used by ZEN/direct setup.
+ * - Waldo_Paradrop_DefaultAircraftInvincible (MISSION MAKER): false by default; when true, new
+ *   paradrop operations protect their aircraft from normal engine damage. A per-operation script
+ *   option or the ZEN checkbox can override this default.
  *
  * SETTING-BY-SETTING GUIDE - DYNAMIC AA:
  * - Waldo_DynamicAA_SideAssetPools (MISSION MAKER): fallback AA content by operational side.
@@ -132,6 +135,7 @@ createHashMapFromArray [
             "FlagPole_F", "Land_InfoStand_V1_F", "Land_InfoStand_V2_F", "Land_MapBoard_F",
             "Land_Laptop_unfolded_F", "Land_CampingTable_small_F", "Land_PortableLight_single_F"
         ]],
+        ["Waldo_Paradrop_DefaultAircraftInvincible", false], // BOOL: default damage protection for scripted/ZEN paradrop aircraft; ZEN starts off.
         // MISSION MAKER: read on both the curator client (friendly selectors) and server (validated spawning).
         // The pool key is only a content profile; it never changes the operational side selected in ZEN.
         ["Waldo_DynamicAA_SideAssetPools", createHashMapFromArray [ // SIDE ID -> fallback AA content HashMap.

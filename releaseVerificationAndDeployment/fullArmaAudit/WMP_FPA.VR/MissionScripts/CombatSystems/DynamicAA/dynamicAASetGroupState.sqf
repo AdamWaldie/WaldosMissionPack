@@ -7,6 +7,9 @@
  * Spawned ground defences have all AI features disabled while the gate is closed; aircraft retain
  * movement AI so a scrambled fighter does not fall out of the sky. Remote-target sharing is disabled
  * for every defence vehicle so another radar, Zeus unit or AI group cannot bypass the WMP detector.
+ * FIREWEAPON is gated explicitly as well as TARGET/AUTOTARGET: modern Arma exposes it as a separate
+ * AI feature, so relying on the older ALL bundle alone can leave a crew physically able to fire
+ * while WMP still reports the site closed.
  *
  * Locality and authority:
  * The Dynamic AA server loop is authoritative. This function remotes the actual AI commands to the
@@ -66,9 +69,11 @@ private _knownTargets = (_group targets []) select {!isNull _x};
     if (_vehicle != _unit) then {
         _vehicle setVehicleReceiveRemoteTargets false;
         _vehicle setVehicleReportRemoteTargets false;
+        _vehicle setVehicleRadar ([0, 1] select _active);
     };
     if (_active) then {
         _unit enableAI "ALL";
+        _unit enableAI "FIREWEAPON";
         _unit enableAI "TARGET";
         // Strict detector ownership: ordinary Arma auto-targeting would allow the crew to acquire
         // low aircraft and ground units after one eligible aircraft activated the site.
@@ -78,6 +83,7 @@ private _knownTargets = (_group targets []) select {!isNull _x};
     } else {
         _unit doTarget objNull;
         _unit doWatch objNull;
+        _unit disableAI "FIREWEAPON";
         if (_vehicle isKindOf "Air") then {
             // Keep MOVE and flight-control AI alive; only its ability to acquire/fire is suppressed.
             _unit disableAI "TARGET";

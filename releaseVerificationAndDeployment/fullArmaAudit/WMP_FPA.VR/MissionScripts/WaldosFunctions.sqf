@@ -629,6 +629,9 @@ class CfgFunctions
             class ParadropConfigureAircraftNetworkedLocal {
                 file = "MissionScripts\Paradrop\paradropConfigureAircraftNetworkedLocal.sqf";
             };
+            class ParadropSetAircraftInvincibilityLocal {
+                file = "MissionScripts\Paradrop\paradropSetAircraftInvincibilityLocal.sqf";
+            };
             class ParadropEmbark {
                 file = "MissionScripts\Paradrop\paradropEmbark.sqf";
             };

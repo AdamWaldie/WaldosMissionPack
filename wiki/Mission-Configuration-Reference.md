@@ -148,6 +148,7 @@ missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachut
 // HALO — jump available above this altitude
 missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000,  true]; // metres AGL minimum
 missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true]; // chute class
+missionNamespace setVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false, true]; // default off
 ```
 
 For missions running RHS, replace `"NonSteerable_Parachute_F"` with `"rhs_d6_Parachute"` for a steerable static-line chute.

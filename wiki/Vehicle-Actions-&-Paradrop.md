@@ -206,6 +206,9 @@ mission's `MissionConfig\airOperationsConfig.sqf` values, then normalized as abo
 lifecycle; `DESPAWN` only changes which waypoints get added and is one of the two automatic
 marker-cleanup triggers below), `circuitDirection` (`LEFT` default / `RIGHT`),
 `approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`),
+`aircraftInvincible` (**off by default** — protects the aircraft from normal engine damage for the
+life of the operation and reapplies protection if ownership moves between the server, a headless
+client or a player client; scripted `setDamage`/`setHit` calls can still damage it),
 `createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
 `Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
 for a map-clutter-free operation), and `keepMarkersOnCleanup` (**off by default** — the static markers
@@ -270,6 +273,10 @@ the documented `requireOpenDoor` option. Actions are installed for current
 clients and JIP clients through a network-ID resolver, so a newly spawned aircraft is not silently
 received as `objNull` before replication finishes.
 
+**Invincible drop aircraft** is available in the ZEN create dialog and is off by default. It is the
+same `aircraftInvincible` setting used by both script APIs. The protection is locality-aware and is
+removed again if an operation is removed while its aircraft is retained.
+
 Scripted setups remain fully customizable through `Waldo_fnc_ParadropCreateDropZone`. The server
 normalizes those custom envelopes against the requested route, but mission makers using the script
 API are responsible for testing their chosen flight behaviour and airframe.
@@ -323,7 +330,7 @@ private _drop = createHashMapFromArray [
     ["staticChuteClass", "NonSteerable_Parachute_F"],
     ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
     ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true],
-    ["keepMarkersOnCleanup", false]
+    ["keepMarkersOnCleanup", false], ["aircraftInvincible", false]
 ];
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```
@@ -349,6 +356,7 @@ missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];  // metres
 missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true];        // chute class
 missionNamespace setVariable ["Waldo_Paradrop_DefaultHaloRouteAltitude", 1200, true];  // metres AGL
 missionNamespace setVariable ["Waldo_Paradrop_DefaultHaloRouteSpeed", 250, true];      // km/h
+missionNamespace setVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false, true]; // normal damage protection default
 ```
 
 For a steerable static chute with RHS, use `"rhs_d6_Parachute"` instead.

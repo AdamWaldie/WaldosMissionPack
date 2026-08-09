@@ -56,6 +56,13 @@ if !(_id in keys _registry) exitWith {
     if (!isNull _quickAircraft) then {
         private _actionJipKey = _quickAircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];
         if (_actionJipKey != "") then {[] remoteExecCall ["", _actionJipKey]};
+        private _damageJipKey = _quickAircraft getVariable ["Waldo_Paradrop_DamageJipKey", ""];
+        if (_damageJipKey != "") then {[] remoteExecCall ["", _damageJipKey]};
+        if (!_deleteAircraft && {_quickAircraft getVariable ["Waldo_Paradrop_AircraftInvincible", false]}) then {
+            [netId _quickAircraft, false] remoteExecCall ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0];
+        };
+        _quickAircraft setVariable ["Waldo_Paradrop_AircraftInvincible", false, true];
+        _quickAircraft setVariable ["Waldo_Paradrop_DamageJipKey", "", true];
         [_quickAircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0];
         _quickAircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
         _quickAircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
@@ -86,6 +93,15 @@ if (_deleteAircraft && {!isNull _aircraft} && {(crew _aircraft) findIf {isPlayer
     if (!isNull _requester && {_notifyRequester}) then {
         ["DYNAMIC PARADROP", "Operation and markers removed, but the aircraft was retained because players are aboard.", "WARNING", "PARADROP_REMOVE", 8] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _requester];
     };
+};
+if (!isNull _aircraft) then {
+    private _damageJipKey = _aircraft getVariable ["Waldo_Paradrop_DamageJipKey", ""];
+    if (_damageJipKey != "") then {[] remoteExecCall ["", _damageJipKey]};
+    if (!_deleteAircraft && {_aircraft getVariable ["Waldo_Paradrop_AircraftInvincible", false]}) then {
+        [netId _aircraft, false] remoteExecCall ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0];
+    };
+    _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", false, true];
+    _aircraft setVariable ["Waldo_Paradrop_DamageJipKey", "", true];
 };
 if (!_deleteAircraft && {!isNull _aircraft}) then {
     private _actionJipKey = _aircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];

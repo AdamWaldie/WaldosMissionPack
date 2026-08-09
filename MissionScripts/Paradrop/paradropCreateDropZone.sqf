@@ -22,7 +22,8 @@
  * 0: configuration <HASHMAP> - id, name, centre, direction, side, aircraftClass, altitude,
  *    maximumSpeed, approachDistance, runLength, exitDistance, jumperCount, jumpInterval,
  *    lifecycle, circuitDirection, static/halo jump settings, jumperClass, createJumpers,
- *    autoDropPlayers, automaticJumpMode, createMarkers and keepMarkersOnCleanup (default false).
+ *    autoDropPlayers, automaticJumpMode, createMarkers, keepMarkersOnCleanup and
+ *    aircraftInvincible (default Waldo_Paradrop_DefaultAircraftInvincible, shipped false).
  *    Automatic teardown always deletes the spawned aircraft/crew, on either aircraft loss or a
  *    DESPAWN pass completing normally, and by default removes the markers along with them - a marker
  *    for a drop zone that's no longer active is just stale. Set keepMarkersOnCleanup true to leave
@@ -93,6 +94,11 @@ if (_jumpMethods in ["STATIC", "HALO", "BOTH"]) then {
     _maximumSpeed = (_maximumSpeed max 80) min _maximumZenSpeed;
 };
 private _automaticMode = toUpperANSI (_config getOrDefault ["automaticJumpMode", "STATIC"]);
+private _aircraftInvincible = _config getOrDefault [
+    "aircraftInvincible",
+    missionNamespace getVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false]
+];
+_config set ["aircraftInvincible", _aircraftInvincible];
 if (_config getOrDefault ["autoDropPlayers", false]) then {
     if (_automaticMode == "STATIC" && {!_staticEnabled}) then {_automaticMode = if (_haloEnabled) then {"HALO"} else {"NONE"}};
     if (_automaticMode == "HALO" && {!_haloEnabled}) then {_automaticMode = if (_staticEnabled) then {"STATIC"} else {"NONE"}};
@@ -249,6 +255,12 @@ private _actionJipKey = format ["WMP_Paradrop_Actions_%1", _id];
 _aircraft setVariable ["Waldo_Paradrop_ActionJipKey", _actionJipKey, true];
 private _jumpConfigPairs = keys _jumpConfig apply {[_x, _jumpConfig get _x]};
 [netId _aircraft, _jumpConfigPairs] remoteExec ["Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _actionJipKey];
+if (_aircraftInvincible) then {
+    private _damageJipKey = format ["WMP_Paradrop_Damage_%1", _id];
+    _aircraft setVariable ["Waldo_Paradrop_DamageJipKey", _damageJipKey, true];
+    _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", true, true];
+    [netId _aircraft, true] remoteExec ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0, _damageJipKey];
+};
 // Mirrors Waldo_fnc_ParadropQuickFlightSetup's own envelope log line - without this, a ZEN-created
 // operation's actual normalized envelope was invisible in the RPT, making a reported "jump action
 // doesn't work" impossible to diagnose from logs alone.

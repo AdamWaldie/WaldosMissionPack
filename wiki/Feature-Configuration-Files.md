@@ -320,6 +320,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Paradrop_DefaultStaticRouteSpeed` | Initial Static-Line route-speed value in km/h. Shipped value `300`; keep it at or below `WALDO_STATIC_MAXSPEED`. |
 | `Waldo_Paradrop_DefaultHaloRouteAltitude` | Initial HALO route-altitude value in metres AGL. Shipped value `1200`; keep it at or above `WALDO_PARA_HALOALTITUDE`. |
 | `Waldo_Paradrop_DefaultHaloRouteSpeed` | Initial HALO route-speed value in km/h. Shipped value `250`; HALO has no static-line speed ceiling unless the operation enables both jump methods. |
+| `Waldo_Paradrop_DefaultAircraftInvincible` | Default damage protection for quick/scripted/ZEN paradrop aircraft. Shipped `false`; individual calls and the ZEN checkbox may override it. Protection follows aircraft locality and does not block scripted `setDamage`/`setHit`. |
 
 ### Server Dynamic AA and jump limits
 

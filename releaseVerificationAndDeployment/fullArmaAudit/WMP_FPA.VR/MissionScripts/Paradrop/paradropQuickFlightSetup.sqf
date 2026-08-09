@@ -76,7 +76,9 @@
  *    aircraft is destroyed/deleted, or once a DESPAWN run reaches its exit point; set true to leave
  *    them on the map instead; never affects the taken-over target marker, the live aircraft marker
  *    (always removed), or the aircraft/crew either way), name (marker label, default "Drop Zone" -
- *    also the live aircraft marker's label).
+ *    also the live aircraft marker's label), aircraftInvincible (default from
+ *    Waldo_Paradrop_DefaultAircraftInvincible, shipped false; true protects this aircraft from
+ *    normal engine damage while the operation exists and follows locality changes).
  *
  * Return Value:
  * Boolean - true when accepted (the actual route/actions are applied a moment later on the server
@@ -293,6 +295,16 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
     _aircraft setVariable ["Waldo_Paradrop_ActionJipKey", _actionJipKey, true];
     private _jumpConfigPairs = keys _jumpConfig apply {[_x, _jumpConfig get _x]};
     [netId _aircraft, _jumpConfigPairs] remoteExec ["Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _actionJipKey];
+    private _aircraftInvincible = _options getOrDefault [
+        "aircraftInvincible",
+        missionNamespace getVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false]
+    ];
+    if (_aircraftInvincible) then {
+        private _damageJipKey = format ["WMP_Paradrop_Damage_%1", _safeNetId];
+        _aircraft setVariable ["Waldo_Paradrop_DamageJipKey", _damageJipKey, true];
+        _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", true, true];
+        [netId _aircraft, true] remoteExec ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0, _damageJipKey];
+    };
     diag_log format [
         "[WMP PARADROP] Quick flight setup jump envelope: aircraft=%1 static=%2 static-alt=%3-%4m static-speed<=%5 halo=%6 halo-alt>=%7.",
         typeOf _aircraft, _jumpConfig get "staticJumpEnabled", round (_envelope get "staticMinimumAltitude"), round (_envelope get "staticMaximumAltitude"),
@@ -374,7 +386,8 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
     missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
     private _quickRegistry = missionNamespace getVariable ["Waldo_Paradrop_QuickSetups", createHashMap];
     _quickRegistry set [_quickId, createHashMapFromArray [
-        ["name", _label], ["aircraft", _aircraft], ["flightGroup", _flightGroup], ["markers", _markers]
+        ["name", _label], ["aircraft", _aircraft], ["flightGroup", _flightGroup], ["markers", _markers],
+        ["aircraftInvincible", _aircraftInvincible]
     ]];
     missionNamespace setVariable ["Waldo_Paradrop_QuickSetups", _quickRegistry];
     [] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
@@ -398,6 +411,6 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
     };
 
     _aircraft setVariable ["Waldo_Paradrop_QuickSetupComplete", true, true];
-    diag_log format ["[WMP PARADROP] Quick flight setup complete: aircraft=%1 pilot=%2 centre=%3 direction=%4 altitude=%5 speed=%6.", typeOf _aircraft, driver _aircraft, _centre, round _resolvedDirection, round _routeAltitude, round _routeMaxSpeed];
+    diag_log format ["[WMP PARADROP] Quick flight setup complete: aircraft=%1 pilot=%2 centre=%3 direction=%4 altitude=%5 speed=%6 invincible=%7.", typeOf _aircraft, driver _aircraft, _centre, round _resolvedDirection, round _routeAltitude, round _routeMaxSpeed, _aircraftInvincible];
 };
 true

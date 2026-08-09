@@ -123,7 +123,7 @@ class items
 		flags=2;
 		class Attributes
 		{
-			init="[createHashMapFromArray [[""id"", ""EXAMPLE_GUNSHIP""], [""aircraft"", this], [""callsign"", ""SPECTRE""], [""side"", west], [""home"", getPosATL this], [""orbit"", getMarkerPos ""gunshipOrbit""], [""radius"", 1500], [""altitude"", 700]]] call Waldo_fnc_GunshipRegister;";
+			init="[createHashMapFromArray [[""id"", ""EXAMPLE_GUNSHIP""], [""aircraft"", this], [""callsign"", ""SPECTRE""], [""side"", west], [""home"", getPosATL this], [""orbit"", ""gunshipOrbit""], [""radius"", 1500], [""altitude"", 700]]] call Waldo_fnc_GunshipRegister;";
 			name="gunshipAircraft";
 			reportOwnPosition=1;
 		};
@@ -150,7 +150,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-6};};
-		title="Airborne gunship guided example. The VTOL already has its complete four-person BLUFOR editor crew: pilot, copilot and both weapon operators. Its init registers that existing aircraft as SPECTRE and never creates crew. Move the Gunship Orbit marker to set the patrol centre. The separately grouped BLUFOR gunshipController receives control at mission start. Keep aircraft/crew simulation enabled and edit named settings in the aircraft init. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
+		title="Airborne gunship guided example. The VTOL already has its complete four-person BLUFOR editor crew: pilot, copilot and both weapon operators. Its init registers that existing aircraft as SPECTRE and never creates crew. Move the Gunship Orbit marker to set the patrol centre; registration removes that placeholder and replaces it with SPECTRE's live orbit marker. The separately grouped BLUFOR gunshipController receives control at mission start. Keep aircraft/crew simulation enabled and edit named settings in the aircraft init. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
 		id=112;
 	};
 };
