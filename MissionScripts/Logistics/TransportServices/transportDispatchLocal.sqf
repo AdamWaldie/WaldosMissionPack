@@ -7,6 +7,12 @@
  * the vehicle LAND command inside 300 metres. WMP improved landing is the only addition: when its
  * controller owns the final approach, the original LAND command waits as a fallback instead of
  * fighting the vector controller.
+ * Ground services stall-detect (no progress for pathRetrySeconds) and reissue the same waypoint up
+ * to pathRetryLimit times. The first such reissue also drops forceFollowRoad (config
+ * avoidRoadObstacles, default true) if it was active, since a road-pinned AI driver cannot
+ * manoeuvre around a parked vehicle, wreck or other obstruction blocking that exact road segment -
+ * normal off-road pathfinding is the AI's own obstacle/vehicle avoidance and only runs once the
+ * road pin is released.
  * Locality and authority: runs only where the AI driver group is local; server request IDs remain authoritative.
  *
  * Arguments: vehicle, service ID, request ID, phase, target ATL position, config HashMap, the
@@ -54,6 +60,7 @@ _group setSpeedMode (_config getOrDefault ["speedMode", "FULL"]);
 // pickup, destination or RTB dispatch so a vehicle stopped in the prior phase can move again.
 units _group doFollow leader _group;
 _vehicle engineOn true;
+private _dispatchRoadRoute = false;
 if (_helicopter) then {
     if (_vehicle getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
         [_vehicle, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
@@ -68,6 +75,7 @@ if (_helicopter) then {
     // road. Off-road requests retain normal terrain pathfinding instead of being pinned to roads.
     private _roadRoute = !((_vehicle nearRoads 30) isEqualTo []) && {!((_target nearRoads 20) isEqualTo [])};
     driver _vehicle forceFollowRoad _roadRoute;
+    _dispatchRoadRoute = _roadRoute;
 };
 // Preserve the original transport mechanic. Radius 0 and TR UNLOAD are intentional here: this is
 // the sequence proven by the supplied implementation, with the safe LZ already resolved by server.
@@ -82,8 +90,8 @@ if (!_helicopter) then {
 _group setCurrentWaypoint _waypoint;
 diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 waypoint=%6 type=%7 owner=%8", _id, _requestId, _phase, _target, _helicopter, _waypoint select 1, waypointType _waypoint, clientOwner];
 
-[_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint] spawn {
-    params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint"];
+[_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint, _dispatchRoadRoute] spawn {
+    params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint", "_roadRoute"];
     private _group = group driver _vehicle;
     private _stale = {_vehicle getVariable ["Waldo_TransportService_RequestId", -1] != _requestId};
     private _timeout = diag_tickTime + (missionNamespace getVariable ["Waldo_Transport_TravelTimeout", 900]);
@@ -132,16 +140,27 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
         private _lastProgress = diag_tickTime;
         private _retrySeconds = _config getOrDefault ["pathRetrySeconds", 25];
         private _retriesRemaining = _config getOrDefault ["pathRetryLimit", 3];
+        private _avoidRoadObstacles = _config getOrDefault ["avoidRoadObstacles", true];
         waitUntil {
             sleep 1;
             private _distance = _vehicle distance2D _target;
             if (_distance < (_bestDistance - 5)) then {_bestDistance = _distance; _lastProgress = diag_tickTime};
             if (!(call _stale) && {diag_tickTime - _lastProgress >= _retrySeconds} && {_retriesRemaining > 0} && {alive driver _vehicle} && {local _group}) then {
+                // A stall this long usually means the vehicle refuses to route around something while
+                // pinned to the road network - a parked car, wreck or roadblock. forceFollowRoad
+                // deliberately overrides the AI's own off-road obstacle/vehicle avoidance, so the first
+                // thing to give up is the road pin itself: dropping it lets normal terrain pathfinding
+                // route the driver around whatever it is stuck on instead of endlessly re-requesting
+                // the same blocked road segment.
+                if (_roadRoute && {_avoidRoadObstacles}) then {
+                    driver _vehicle forceFollowRoad false;
+                    _roadRoute = false;
+                };
                 units _group doFollow leader _group;
                 _group setCurrentWaypoint _waypoint;
                 _retriesRemaining = _retriesRemaining - 1;
                 _lastProgress = diag_tickTime;
-                diag_log format ["[WMP TRANSPORT] Reissued ground path service=%1 request=%2 remaining=%3 distance=%4", _id, _requestId, _retriesRemaining, round _distance];
+                diag_log format ["[WMP TRANSPORT] Reissued ground path service=%1 request=%2 remaining=%3 distance=%4 offRoad=%5", _id, _requestId, _retriesRemaining, round _distance, !_roadRoute];
             };
             call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_distance <= _stopRadius} || {diag_tickTime >= _timeout}
         };

@@ -74,7 +74,7 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `side` | `east` | `west`, `east`, or `independent` |
 | `faction` | `""` | Optional content-profile key in `Waldo_DynamicAA_FactionAssetPools`; independent of `side` |
 | `radius` | `2000` | Detection radius in metres |
-| `minimumAltitude` | `50` | Detection altitude floor |
+| `minimumAltitude` | `60` | Detection altitude floor |
 | `maximumAltitude` | configured pack maximum | Detection altitude ceiling |
 | `altitudeMode` | `AUTO` | `AUTO`, `ATL`, or `ASL` |
 | `engagementRadius` | detection radius | Smaller radius within which enabled defences may engage |

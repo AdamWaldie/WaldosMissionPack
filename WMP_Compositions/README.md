@@ -78,6 +78,15 @@ copies of feature logic.
 | Bomb Defusal Example (Minimal) | Smallest working wire-cutting challenge |
 | Bomb Defusal Example (Full) | Standard wire-cutting challenge with an explosive failure consequence, every option shown |
 | Interaction Examples Showcase | All ten field-equipment procedures side by side, cycling easy/standard/hard/expert |
+| Minesweeper Interaction Example | Passing/failing marks a real `Waldo_fnc_CreateObjective` task SUCCEEDED/FAILED |
+| Keypad Interaction Example | Passing unlocks a nearby locked vehicle; failing leaves it locked |
+| Lockpick Interaction Example | Passing populates a nearby empty crate with `Waldo_fnc_SupplyCratePopulate`; failing leaves it empty |
+| Circuit Interaction Example | Failing fires a real `Waldo_fnc_EMP` burst on the surrounding area; passing is safe |
+| Repair Interaction Example | Passing repairs and restarts a nearby heavily damaged vehicle; failing leaves it disabled |
+| RadioTune Interaction Example | Passing calls `Waldo_fnc_JammerToggle` to switch off a nearby live radio jammer |
+| Pressure Interaction Example | Failing applies real damage to the acting player; passing is safe |
+| Sequence Interaction Example | Passing sends a `Waldo_fnc_NotificationBroadcast` card to a whole side |
+| CommandInput Interaction Example | Passing plants a `Waldo_fnc_Tracker` signal tracker on a nearby vehicle |
 | Construction Objects Example | ACE construction supply object with modern construction audio |
 | Electronic Warfare Examples | EMP immunity and side-restricted signal tracking fixtures |
 | Object Scaling Example | Supported Simple Object conversion and scale setup |

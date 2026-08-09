@@ -61,6 +61,18 @@ control, or request service (a deliberate availability cycle, not an
 instant refill — releases control, transits, locks tasking, waits
 `serviceDuration`, applies configured fuel/ammo/damage, returns).
 
+No controller (FAC/JTAC) is assigned by default — not even by the example compositions, since a
+composition can't hardcode "whichever player joins". Beginner-friendly way to give it one from
+mission start, from a placed unit's own Eden init field (no `isServer` wrapper needed, and it waits
+bounded for the id to finish registering first since init fields have no guaranteed order against
+each other):
+
+```sqf
+[this, "spectre_1"] call Waldo_fnc_GunshipAssignControllerOnStart;
+```
+
+Raw runtime calls (used by the ZEN modules, or for reassigning later):
+
 ```sqf
 ["spectre_1", "ASSIGN", [newController], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", "SET_ORBIT", [getMarkerPos "target_area"], objNull] call Waldo_fnc_GunshipServerHandle;

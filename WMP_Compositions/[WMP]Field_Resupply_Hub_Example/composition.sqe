@@ -2,7 +2,7 @@ version=54;
 center[]={0,0,0};
 class items
 {
-	items=2;
+	items=3;
 	class Item0
 	{
 		dataType="Object";
@@ -16,11 +16,26 @@ class items
 		id=1;
 		type="B_supplyCrate_F";
 	};
+	class Item2
+	{
+		dataType="Object";
+		class PositionInfo {position[]={3,0,3};};
+		side="West";
+		flags=6;
+		class Attributes
+		{
+			name="WMP_FieldResupplyCarrier";
+			init="[this, 2, 3] call Waldo_fnc_FieldResupplyAssignCarrier;";
+			description="Field Resupply Carrier - already assigned 2/3 portable crates on mission start; see this unit's init field.";
+		};
+		id=3;
+		type="B_Soldier_F";
+	};
 	class Item1
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,-3,0};};
-		title="Field Resupply hub: unlimited stock and all sides. Assign portable crates to infantry with ZEN or [unit, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply";
+		title="Field Resupply hub: unlimited stock and all sides. The nearby ""WMP_FieldResupplyCarrier"" unit is already assigned as a carrier on mission start (2 crates, 3 maximum) via its own init field - [this, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier; - copy that one-line call onto any infantry unit instead of only doing it live through Zeus. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply";
 		id=2;
 	};
 };

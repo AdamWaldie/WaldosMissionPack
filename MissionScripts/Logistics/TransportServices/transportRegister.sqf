@@ -5,6 +5,10 @@
  * Registration is repeat-safe and stores enough public object state for JIP interactions while the
  * full mutable registry remains server-only.
  * Locality and authority: callable anywhere and self-forwards; only the server mutates registration state.
+ * The driver seat is locked to players and the captured AI service crew is prevented from
+ * dismounting (allowGetOut false); a vehicle that becomes too heavily damaged to remain effective
+ * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written
+ * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
  *
  * Arguments:
  * 0: vehicle <OBJECT>
@@ -16,6 +20,10 @@
  *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
  *    landingClearanceScale,
  *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
+ *    avoidRoadObstacles (ground only; default true - once a route stalls with no progress for
+ *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
+ *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
+ *    false to keep retrying the exact same road-locked path instead),
  *    invulnerable (vehicle and original AI service crew; default false),
  *    useImprovedLanding and keepEngineOnAway (helicopters only; default true - keeps the engine
  *    running at a pickup/destination stop away from base, overriding vanilla TR UNLOAD idle-down;
@@ -114,6 +122,7 @@ private _config = createHashMapFromArray [
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
+    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]],
     ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
@@ -171,6 +180,12 @@ private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
 _vehicle lockDriver true;
+// The original AI service crew must stay put - an AI driver/gunner who dismounts mid-route (e.g.
+// after taking fire, or vanilla "danger" behaviour near infantry) strands the vehicle exactly like a
+// vanished driver would, without the monitor's own driver-death check ever catching it. This only
+// touches crew captured at registration time; a player who later boards as cargo/passenger is
+// unaffected.
+{_x allowGetOut false} forEach crew _vehicle;
 // The 2-element array form forces strict AGL terrain-following instead of leaving the AI free to
 // compute its own "safe" cruise profile - over long routes with real elevation change, plain
 // single-argument flyInHeight lets the AI climb far above the requested altitude and produces the

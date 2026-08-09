@@ -79,7 +79,7 @@ if (_id in (keys _registry)) then {[_id, true] call Waldo_fnc_DynamicAADestroy};
 private _side = _config getOrDefault ["side", east];
 if !(_side in [west, east, independent]) then {_side = east};
 private _radius = ((_config getOrDefault ["radius", 2000]) max 100) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumRadius", 50000]);
-private _minimumAltitude = ((_config getOrDefault ["minimumAltitude", 50]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]);
+private _minimumAltitude = ((_config getOrDefault ["minimumAltitude", 60]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]);
 private _maximumAltitude = ((_config getOrDefault ["maximumAltitude", missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]]) max _minimumAltitude) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]);
 private _engagementRadius = ((_config getOrDefault ["engagementRadius", _radius]) max 100) min _radius;
 private _detectionDwell = (_config getOrDefault ["detectionDwell", 0]) max 0;

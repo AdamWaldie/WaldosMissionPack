@@ -71,6 +71,8 @@ This finite-resource ammunition feature lets a hub refill carrier crate allowanc
    ```
 3. The carrier (must be wearing a backpack) gets **Check Resupply Crates** (refill at the hub) and **Deploy Field Resupply** (drop a crate for others) under ACE Interact's **Field Resupply** category, with scroll-wheel fallbacks only when ACE Interact is unavailable. Deployment is restricted to being on foot.
 
+The `[WMP]Field_Resupply_Hub_Example` composition places both a hub and a pre-assigned carrier unit together, so it's a working setup out of the box rather than only the hub half.
+
 A deployed crate derives logical supply rows from the carrier's compatible loaded/carried magazine classes, but its physical inventory stays empty so Gear access cannot bypass charge consumption. A WMP-blue informational addAction identifies the crate and reports its remaining charges. Server checks enforce ownership, distance, side access, stock and capacity. Focused Zeus modules register a nearby hub, assign a nearby carrier, or grant additional portable crates during play — no scripting needed for a Zeus-run mission.
 
 Mission scripts can grant crates with `[_carrier, _amount, _expandCapacity] call Waldo_fnc_FieldResupplyGrantCrates`. The default `false` expansion flag clamps the grant to the carrier's existing spare capacity; `true` raises capacity enough to fit the entire grant. The server broadcasts the updated count and informs only the receiving player. If a grant occurs during startup, its notification waits until the stock fake loading/title presentation has finished, with a 60-second safety release for missions that replace the intro without publishing completion.

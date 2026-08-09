@@ -335,6 +335,15 @@ contextual activation button is pressed. A compact control reminder remains visi
 | `sequence` | Secure console: repeat authorization signals | `[pads(3-6,4), rounds(1-8,4), speed(0.25-1.5,0.85), timeLimit(0), title]` | Mouse or number keys 1-6; `R` replays once per stage |
 | `commandinput` | Tactical uplink: enter displayed directional packets | `[baseLength(3-8,4), rounds(1-6,3), maxMistakes(1-6,3), timeLimit(45), title]` | Arrow keys or labelled direction controls |
 
+The **Interaction Examples Showcase** composition places all ten procedures side by side purely for
+visual/preset comparison. For a real gameplay outcome wired to each one via `onSuccess`/`onFailure` -
+completing a task, unlocking a vehicle, populating a supply crate, an EMP burst, a vehicle repair,
+toggling a radio jammer, real player damage, a side-wide notification, and a signal tracker - see the
+nine dedicated `*_Interaction_Example` compositions (Minesweeper, Keypad, Lockpick, Circuit, Repair,
+RadioTune, Pressure, Sequence, CommandInput; `wirecut` is covered by
+[Bomb Defusal](Bomb-Defusal) instead). Each copies directly onto your own object - swap the
+`onSuccess`/`onFailure` code and the `nearestObject` classname for whatever your mission needs.
+
 ### Bomb defusal (`wirecut`)
 
 The EOD controller presents physical bay, connector, insulation, continuity and routed-bus readings.

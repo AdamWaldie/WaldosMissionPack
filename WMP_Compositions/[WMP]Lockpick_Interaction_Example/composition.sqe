@@ -1,0 +1,39 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=3;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_Interaction_Lockpick_Console";
+			init="[this, ""lockpick"", createHashMapFromArray [[""difficulty"", ""expert""], [""actionTitle"", ""Pick Cabinet Lock""], [""title"", ""LOCKED SUPPLY CABINET""], [""onSuccess"", {params ['_obj']; private _crate = nearestObject [_obj, 'B_supplyCrate_F']; if (!isNull _crate) then {[_crate, 1, west, false, false] spawn Waldo_fnc_SupplyCratePopulate;}; ['Lock picked. Supply cache revealed.'] remoteExec ['systemChat', 0];}], [""onFailure"", {['The pick snapped. The lock is unaffected.'] remoteExec ['systemChat', 0];}]]] call Waldo_fnc_MiniGameInteractionSetup;";
+		};
+		id=1;
+		type="Land_PortableCabinet_01_4drawers_sand_F";
+	};
+	class Item1
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={4,2,0};};
+		class Attributes
+		{
+			name="WMP_Interaction_Lockpick_Crate";
+			init="clearWeaponCargoGlobal this; clearMagazineCargoGlobal this; clearItemCargoGlobal this; clearBackpackCargoGlobal this;";
+		};
+		id=2;
+		type="B_supplyCrate_F";
+	};
+	class Item2
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Lockpick Interaction Example: a real gameplay outcome, not just the procedure by itself. The nearby crate starts empty; passing the lockpick procedure populates it with Waldo_fnc_SupplyCratePopulate (the same call used by the Logistics system), failing leaves it empty. Copy the onSuccess pattern in the console's init field onto your own object to reward any other action. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
+		id=3;
+	};
+};

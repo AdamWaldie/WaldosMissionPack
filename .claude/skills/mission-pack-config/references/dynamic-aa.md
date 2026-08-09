@@ -37,7 +37,7 @@ private _aa = createHashMapFromArray [
 
 Reusing an `id` safely replaces that system. `altitudeMode`: `AUTO`
 (terrain-relative over land, sea-level over water), `ATL`, `ASL`. Key
-defaults worth knowing: `radius` 2000m, `minimumAltitude` 50m,
+defaults worth knowing: `radius` 2000m, `minimumAltitude` 60m,
 `requiredOperationalRadars` 1, `maximumOperationalRadarDamage` 0.8,
 `fighterCooldown` 300s, `cleanupOnRadarLoss` false (defaults to leaving
 disabled assets rather than deleting them).

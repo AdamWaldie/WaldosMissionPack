@@ -1,0 +1,39 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=3;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_Interaction_Minesweeper_Console";
+			init="[this, ""minesweeper"", createHashMapFromArray [[""difficulty"", ""standard""], [""actionTitle"", ""Operate Trigger Analyser""], [""title"", ""IED TRIGGER ANALYSER""], [""onSuccess"", {['ied_trigger_analysis', 'SUCCEEDED'] call Waldo_fnc_SetObjectiveState; ['Trigger safely disabled.'] remoteExec ['systemChat', 0];}], [""onFailure"", {['ied_trigger_analysis', 'FAILED'] call Waldo_fnc_SetObjectiveState; ['Trigger analysis failed - the device remains active.'] remoteExec ['systemChat', 0];}]]] call Waldo_fnc_MiniGameInteractionSetup;";
+		};
+		id=1;
+		type="Land_MultiScreenComputer_01_sand_F";
+	};
+	class Item1
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,2,0};};
+		class Attributes
+		{
+			name="WMP_Interaction_Minesweeper_Task";
+			init="['ied_trigger_analysis', west, 'Disable IED Trigger', 'Use the trigger analyser to safely disable the nearby device.', getPosATL this] call Waldo_fnc_CreateObjective;";
+		};
+		id=2;
+		type="Logic";
+	};
+	class Item2
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="Minesweeper Interaction Example: a real gameplay outcome, not just the procedure by itself. Succeeding the trigger analyser marks the accompanying WEST task SUCCEEDED; failing it marks the task FAILED - both via the same Waldo_fnc_CreateObjective/Waldo_fnc_SetObjectiveState task helper documented for scripted objectives. Copy the onSuccess/onFailure pattern in the console's init field onto your own object to drive any outcome you want. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
+		id=3;
+	};
+};

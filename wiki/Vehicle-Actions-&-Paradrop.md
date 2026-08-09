@@ -148,11 +148,22 @@ AI-flown paradrop route — no ZEN, no registry, no generated jumpers:
 That's it — no marker math, no waypoints to place by hand. Arguments:
 `[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a marker name (the
 beginner-friendly option — reference whatever you named the marker in step 1), a raw position, or
-an object; `direction` (`-1` by default) is computed automatically from the aircraft's position
-toward the target if you don't set one. It waits (up to 180 seconds - a heavy multi-feature mission
-can legitimately still be finishing init.sqf, and this is a one-time setup cost) for a pilot to
-exist before doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane`
-call on another object in the same composition — both init fields can run in any order.
+an object; `direction` (`-1` by default), when `target` is a marker, uses **that marker's own Eden
+"Direction" rotation** — rotate the marker in Eden to set the approach heading, no coordinate math
+needed. For a raw position or object target it falls back to computing a heading from the aircraft's
+position toward the target. It waits (up to 180 seconds - a heavy multi-feature mission can
+legitimately still be finishing init.sqf, and this is a one-time setup cost) for a pilot to exist
+before doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane` call
+on another object in the same composition — both init fields can run in any order.
+
+When `target` is a marker, `createMarkers` (on by default) **takes that marker over** rather than
+leaving it exactly as placed or stacking a second marker on top of it: it's restyled to the same
+black "mil_end" look as the generated route uses, labelled with the call's `name`, and its own
+rotation reset to 0 (a point icon needs no directional rotation, unlike the rectangular corridor
+markers). This is what makes a placeholder marker actually feel replaced by a working drop zone once
+the aircraft starts flying, instead of an unstyled pin that lingers unchanged for the whole mission.
+That takeover is never deleted by `keepMarkersOnCleanup` or automatic cleanup — this function never
+created that marker, so it never owns deleting it either.
 
 **If the plane never takes off toward its target**, the most common cause is step 1 — the marker
 was never placed, or its name doesn't exactly match the `target` string. This case reports itself

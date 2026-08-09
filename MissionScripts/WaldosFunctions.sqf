@@ -487,6 +487,7 @@ class CfgFunctions
             class TransportReportServer {file = "MissionScripts\Logistics\TransportServices\transportReportServer.sqf";};
             class TransportStopGroupLocal {file = "MissionScripts\Logistics\TransportServices\transportStopGroupLocal.sqf";};
             class TransportMonitorServer {file = "MissionScripts\Logistics\TransportServices\transportMonitorServer.sqf";};
+            class TransportNotifyLoss {file = "MissionScripts\Logistics\TransportServices\transportNotifyLoss.sqf";};
             class TransportTakeManualServer {file = "MissionScripts\Logistics\TransportServices\transportTakeManualServer.sqf";};
             class TransportReleaseManualServer {file = "MissionScripts\Logistics\TransportServices\transportReleaseManualServer.sqf";};
             class TransportManualLocal {file = "MissionScripts\Logistics\TransportServices\transportManualLocal.sqf";};
@@ -735,6 +736,7 @@ class CfgFunctions
             class GunshipMonitor {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipMonitor.sqf";};
             class GunshipServiceAircraft {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServiceAircraft.sqf";};
             class GunshipServerHandle {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServerHandle.sqf";};
+            class GunshipAssignControllerOnStart {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipAssignControllerOnStart.sqf";};
             class GunshipDestroy {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipDestroy.sqf";};
             class GunshipStop {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipStop.sqf";};
             class GunshipSelectOrbitLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSelectOrbitLocal.sqf";};

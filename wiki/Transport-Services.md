@@ -34,6 +34,7 @@ The optional fifth argument is a readable HashMap. Omit it for the safe defaults
     ["groundSpeedLimit", 60],
     ["pathRetrySeconds", 25],
     ["pathRetryLimit", 3],
+    ["avoidRoadObstacles", true],
     ["repairAtBase", false],
     ["refuelAtBase", true],
     ["forceDisembark", false],
@@ -97,6 +98,7 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 - When both the transport and resolved destination are on roads, the driver is told to follow roads. Off-road endpoints retain normal terrain pathfinding.
 - Every new phase clears old waypoints, releases persistent `doStop` state and creates one exact waypoint.
 - If the transport makes no useful progress for `pathRetrySeconds`, WMP reselects the existing waypoint up to `pathRetryLimit` times. This can recover a stale AI order without overriding the route planner, but it cannot make an unsuitable vehicle cross impassable terrain or repair a broken road network.
+- The first reselect also drops the road-follow order (`avoidRoadObstacles`, default `true`) if it was active. A driver forced to follow a road cannot manoeuvre around a parked vehicle, wreck or roadblock sitting on that exact segment - releasing the road pin hands the stall back to the AI's own off-road pathfinding, which is where its real obstacle and vehicle avoidance lives. Set `avoidRoadObstacles` to `false` to keep retrying the identical road-locked path instead.
 - Stops are resolved to clear vehicle positions and kept at least `minimumSeparation` metres from other active ground-service targets. The default is 18 metres. Arma still owns route planning, so two vehicles can meet on a narrow road; WMP prevents intentional shared endpoints rather than pretending it can guarantee traffic separation everywhere.
 
 ### Helicopter movement
@@ -119,6 +121,7 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 | `groundSpeedLimit` | Maximum ground-transport speed in km/h. |
 | `pathRetrySeconds` | Seconds without progress before the driver receives the same order again. |
 | `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey. |
+| `avoidRoadObstacles` | Ground only, default `true`: the first stalled retry drops the road-follow order so off-road pathfinding can route around whatever blocked the road. Set `false` to keep retrying the same road-locked path instead. |
 | `useImprovedLanding` | Default `true`: apply WMP's vector-guided final approach to the original `TR UNLOAD` service route. Set `false` to use only the original `land "LAND"` behavior. |
 | `keepEngineOnAway` | Helicopters only, default `true`: re-asserts the engine on right after touchdown at a pickup/destination stop away from base, overriding vanilla `TR UNLOAD` idle-down, so a passenger isn't left waiting on a cold helicopter. Set `false` to allow it to idle down like a normal AI landing. Engine shutdown at base (RTB) is unaffected either way. |
 | `invulnerable` | Default `false`: when enabled, protects the transport and its original AI service crew across locality changes. Passenger players remain vulnerable. |
@@ -129,6 +132,8 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 Use **WMP Transport > Transport Service - Register** on an existing AI-crewed vehicle. The dialog selects the service type independently, provides a player-facing display name and plain-language timing/recovery settings, and rejects a type/vehicle mismatch. Internal service IDs are always generated automatically and are never exposed to Zeus. A successful registration publishes the pool availability, installs player controls, creates the optional marker and renames the AI crew group to the display name—even when the registration originated from a remote curator and the AI group is owned by another machine. A rejected registration sends Zeus the exact reason. **Transport Service - Return to Base** immediately cancels a selected registered service without an extra confirmation dialog.
 
 Registrations survive WMP vehicle-recovery reconstruction through the built-in `Waldo_TransportService_Registration` recovery variable. Deleted/dead services are removed from the server registry and their markers. Player actions are reinstalled after respawn and JIP availability is published by type.
+
+Registration locks the driver seat to players and prevents the captured AI service crew from dismounting (`allowGetOut false`) — a driver who bails out mid-route (taking fire, vanilla "danger" behaviour near infantry) otherwise stranded the vehicle the same way a dead driver would, just without the monitor's driver-death check ever catching it. A passenger who boards later as cargo is unaffected. A registered vehicle that becomes too heavily damaged to remain effective — `Waldo_Transport_MaxEffectiveDamage` in `MissionConfig\logisticsConfig.sqf`, default `0.8` — is written off the service pool the same way an outright loss is, and (unlike a self-evident loss) every player on the service's `allowedSides` gets a warning card naming it, since a vehicle quietly vanishing from availability otherwise has no explanation.
 
 RTB always targets the service's exact registered base position. The generic safe-position search is
 used for player-selected stops, not for returning a service to its own prepared parking point.

@@ -83,6 +83,13 @@ field:
   coordinate math. If the marker was never placed or the name doesn't
   match exactly, this is reported in-game via `systemChat`, not just the
   RPT log — the #1 beginner mistake with this function.
+- `direction` (`-1` default) uses that marker's own Eden "Direction"
+  rotation when `target` is a marker — rotate the marker, that sets the
+  approach heading. `createMarkers` (default `true`) then **takes the
+  marker over** instead of leaving it untouched or stacking a second one
+  on top: restyled to the same black "mil_end" look, labelled with `name`,
+  rotation reset to 0. Never deleted by cleanup — this function didn't
+  create it, so it doesn't own deleting it either.
 - Builds a reliable standby → green → red → exit AI route (looping by
   default) using the exact same route logic as the Dynamic Drop Zone system
   (`Waldo_fnc_ParadropBuildFlightRoute`) — both stay in sync, fixes to one

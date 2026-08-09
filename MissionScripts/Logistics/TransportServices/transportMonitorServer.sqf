@@ -1,7 +1,11 @@
 /*
  * Author: WaldoTheWarfighter, Val
- * Maintains registered transport markers and removes dead/deleted services from their typed pools.
- * It performs no movement planning and publishes availability booleans only when pool state changes.
+ * Maintains registered transport markers and removes dead/deleted/combat-ineffective services from
+ * their typed pools - a vehicle destroyed, missing its driver, or damaged at or above
+ * Waldo_Transport_MaxEffectiveDamage (default 0.8) is written off the same way; the damage case also
+ * notifies every player on the service's allowedSides, since (unlike outright loss) that one is not
+ * self-evident. It performs no movement planning and publishes availability booleans only when pool
+ * state changes.
  * Besides tracking each vehicle's live position/facing, the marker's own text is kept in sync with
  * that service's current state (Available, Boarding, To Pickup, To Destination, RTB, Disembarking,
  * Manual Control, Stuck) - a marker that only ever shows the callsign gives no indication a transport
@@ -28,7 +32,26 @@ while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do
         private _id = _x;
         private _entry = _services get _id;
         private _vehicle = _entry getOrDefault ["vehicle", objNull];
-        if (isNull _vehicle || {!alive _vehicle} || {isNull driver _vehicle} || {!alive driver _vehicle}) then {
+        // A transport at or above this damage fraction is combat-ineffective even while technically
+        // still "alive" - previously only outright destruction (or driver death) wrote a service off,
+        // so a vehicle limping along at, say, 95% damage stayed in the pool looking fully available.
+        private _maxEffectiveDamage = missionNamespace getVariable ["Waldo_Transport_MaxEffectiveDamage", 0.8];
+        private _destroyed = isNull _vehicle || {!alive _vehicle};
+        private _driverLost = !_destroyed && {isNull driver _vehicle || {!alive driver _vehicle}};
+        private _tooDamaged = !_destroyed && !_driverLost && {damage _vehicle >= _maxEffectiveDamage};
+        if (_destroyed || _driverLost || _tooDamaged) then {
+            if (_tooDamaged) then {
+                // Destroyed/driver-lost transports are self-evidently gone; a still-standing but
+                // written-off vehicle is not, so this is the one case that needs telling anyone who
+                // relies on it - otherwise a side just sees its transport quietly vanish from
+                // availability with no explanation. Split into its own locally-called helper so this
+                // recurring monitor loop stays free of remote execution itself.
+                [
+                    _entry getOrDefault ["name", _id],
+                    _entry getOrDefault ["type", "GROUND"],
+                    (_entry getOrDefault ["config", createHashMap]) getOrDefault ["allowedSides", []]
+                ] call Waldo_fnc_TransportNotifyLoss;
+            };
             private _marker = _entry getOrDefault ["marker", ""];
             if (_marker != "") then {deleteMarker _marker};
             private _destinationMarker = _entry getOrDefault ["destinationMarker", ""];
