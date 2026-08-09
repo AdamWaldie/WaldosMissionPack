@@ -34,7 +34,12 @@ if (_requestId >= 0 && {!isNull _vehicle} && {_vehicle getVariable ["Waldo_Trans
     false
 };
 for "_i" from ((count waypoints _group) - 1) to 0 step -1 do {deleteWaypoint [_group, _i]};
-doStop leader _group;
+private _awayHelicopterHold = !isNull _vehicle && {_vehicle isKindOf "Helicopter"} && {_requestId >= 0};
+// doStop is appropriate for ground vehicles and a completed RTB, but it also tells an AI pilot it
+// has no pending movement. During an away landing that order can idle the turbine even while WMP
+// repeatedly calls engineOn true. MOVE/PATH suspension below is sufficient to prevent lift-off
+// without issuing the engine-shutdown-prone stop order.
+if !(_awayHelicopterHold) then {doStop leader _group};
 if (!isNull _vehicle && {_vehicle isKindOf "Helicopter"}) then {
     _vehicle land "LAND";
     if (_keepEngineOn) then {_vehicle engineOn true};
@@ -45,7 +50,6 @@ if (!isNull _vehicle && {_vehicle isKindOf "Helicopter"}) then {
         _vehicle disableAI "PATH";
         driver _vehicle disableAI "MOVE";
         driver _vehicle disableAI "PATH";
-        driver _vehicle disableAI "FSM";
         diag_log format ["[WMP TRANSPORT] Grounded away hold started vehicle=%1 request=%2 engineOn=%3 owner=%4", netId _vehicle, _requestId, _keepEngineOn, clientOwner];
         [_vehicle, _group, _position, _requestId, _keepEngineOn, _holdToken] spawn {
             params ["_vehicle", "_group", "_position", "_requestId", "_keepEngineOn", "_holdToken"];
@@ -57,7 +61,6 @@ if (!isNull _vehicle && {_vehicle isKindOf "Helicopter"}) then {
                 && {_vehicle getVariable ["Waldo_TransportService_LocalHoldToken", ""] == _holdToken}
             } do {
                 _vehicle land "LAND";
-                doStop driver _vehicle;
                 if (_keepEngineOn) then {_vehicle engineOn true};
                 uiSleep 0.25;
             };
