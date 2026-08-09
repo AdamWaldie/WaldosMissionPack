@@ -89,14 +89,14 @@ _destinationId = _vehicle addAction [
     "<t color='#79C7FF'>Send This Transport to Destination</t>",
     {params ["_target"]; ["SET_DESTINATION", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal},
     [], -92, false, true, "",
-    "_this in crew _target && {(_target getVariable ['Waldo_TransportService_State',''] in ['BOARDING','TO_DESTINATION'])}",
+    "_this in crew _target && {(_target getVariable ['Waldo_TransportService_State',''] in ['AVAILABLE','TO_PICKUP','BOARDING','TO_DESTINATION','DISEMBARKING','STUCK'])}",
     8
 ];
 _rtbId = _vehicle addAction [
     "<t color='#79C7FF'>Return This Transport to Base</t>",
     {params ["_target", "_caller"]; ["RTB", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _caller] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2]},
     [], -93, false, true, "",
-    "_this in crew _target && {!((_target getVariable ['Waldo_TransportService_State','']) in ['AVAILABLE','RTB'])}",
+    "_this in crew _target && {(_target getVariable ['Waldo_TransportService_State','']) != 'RTB'}",
     8
 ];
 _retryId = _vehicle addAction [
@@ -131,7 +131,7 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
         params ["_target"]; ["SET_DESTINATION", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal;
     }, {
         params ["_target", "_player"];
-        _player in crew _target && {_target getVariable ["Waldo_TransportService_State", ""] in ["BOARDING", "TO_DESTINATION"]}
+        _player in crew _target && {_target getVariable ["Waldo_TransportService_State", ""] in ["AVAILABLE", "TO_PICKUP", "BOARDING", "TO_DESTINATION", "DISEMBARKING", "STUCK"]}
     }] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _destination] call ace_interact_menu_fnc_addActionToObject;
     private _retry = [format ["%1_Retry", _rootId], "Retry Current Route", "\a3\ui_f\data\igui\cfg\actions\reload_ca.paa", {
@@ -146,7 +146,7 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
         params ["_target", "_player"]; ["RTB", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
     }, {
         params ["_target", "_player"];
-        _player in crew _target && {!((_target getVariable ["Waldo_TransportService_State", ""]) in ["AVAILABLE", "RTB"])}
+        _player in crew _target && {_target getVariable ["Waldo_TransportService_State", ""] != "RTB"}
     }] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _rtb] call ace_interact_menu_fnc_addActionToObject;
     _vehicle setVariable ["Waldo_TransportService_AceInstalled", true];

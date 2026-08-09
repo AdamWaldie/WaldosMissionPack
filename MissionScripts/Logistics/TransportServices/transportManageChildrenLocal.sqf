@@ -80,7 +80,7 @@ private _children = [];
                 "Waldo_Transport_ExactDestination", "Select Destination",
                 "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa",
                 {private _service = _this select 2; ["SET_DESTINATION", _service getVariable ["Waldo_TransportService_Type", "GROUND"], _service] call Waldo_fnc_TransportOpenMapLocal},
-                {private _service = _this select 2; (_service getVariable ["Waldo_TransportService_State", ""] in ["BOARDING", "TO_DESTINATION"]) && {player in crew _service || {!isNull getAssignedCuratorLogic player}}}, {}, _service
+                {private _service = _this select 2; (_service getVariable ["Waldo_TransportService_State", ""] in ["AVAILABLE", "TO_PICKUP", "BOARDING", "TO_DESTINATION", "DISEMBARKING", "STUCK"]) && {player in crew _service || {!isNull getAssignedCuratorLogic player}}}, {}, _service
             ] call ace_interact_menu_fnc_createAction;
             _controls pushBack [_destination, [], player];
             private _retry = [

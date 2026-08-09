@@ -129,23 +129,32 @@ private _jumpAircraft = (allMissionObjects "Air") select {
 if (_jumpAircraft isEqualTo []) then {
     ["paradrop", "jump-actions-local", "UNCONFIGURED", "No jump-capable aircraft are present on this client."] call _add;
 } else {
-    // Count predicates directly. Keeping these as numbers avoids an engine-side select-result
-    // ambiguity observed on live clients, where the diagnostic's filtered result could surface as
-    // the final BOOL predicate and then fault when passed to count.
-    private _pendingJumpCount = {!(_x getVariable ["Waldo_Paradrop_LocalSetupComplete", false])} count _jumpAircraft;
-    private _missingJumpCount = {
-        if !(_x getVariable ["Waldo_Paradrop_LocalSetupComplete", false]) exitWith {false};
-        private _expected = _x getVariable ["Waldo_Paradrop_ConfiguredJumpTypes", []];
-        if !(_expected isEqualType []) then {_expected = []};
-        if (count _expected != 2) then {
-            _expected = [
-                true,
-                _x isKindOf "RHS_C130J_Base" || {_x isKindOf "B_T_VTOL_01_infantry_F"}
-            ];
+    // Use explicit numeric accumulators. Arma has returned the final BOOL predicate from both the
+    // filtered-array and predicate-count forms in live diagnostics, so neither overloaded form is
+    // safe here. This diagnostic must always leave both values as NUMBERs.
+    private _pendingJumpCount = 0;
+    private _missingJumpCount = 0;
+    {
+        private _aircraft = _x;
+        private _ready = _aircraft getVariable ["Waldo_Paradrop_LocalSetupComplete", false];
+        if (!_ready) then {
+            _pendingJumpCount = _pendingJumpCount + 1;
+        } else {
+            private _expected = _aircraft getVariable ["Waldo_Paradrop_ConfiguredJumpTypes", []];
+            if !(_expected isEqualType []) then {_expected = []};
+            if (count _expected != 2) then {
+                _expected = [
+                    true,
+                    _aircraft isKindOf "RHS_C130J_Base" || {_aircraft isKindOf "B_T_VTOL_01_infantry_F"}
+                ];
+            };
+            private _missingStatic = (_expected select 0) && {(_aircraft getVariable ["Waldo_Static_Jump_ActionId", -1]) < 0};
+            private _missingHalo = (_expected select 1) && {(_aircraft getVariable ["Waldo_Halo_Jump_ActionId", -1]) < 0};
+            if (_missingStatic || {_missingHalo}) then {
+                _missingJumpCount = _missingJumpCount + 1;
+            };
         };
-        ((_expected select 0) && {(_x getVariable ["Waldo_Static_Jump_ActionId", -1]) < 0})
-        || {(_expected select 1) && {(_x getVariable ["Waldo_Halo_Jump_ActionId", -1]) < 0}}
-    } count _jumpAircraft;
+    } forEach _jumpAircraft;
     private _jumpState = if (_missingJumpCount > 0) then {"ERROR"} else {
         if (_pendingJumpCount > 0) then {"LOADED"} else {"ACTIVE"}
     };

@@ -248,6 +248,14 @@ These cards are live messages, so they are not replayed to players who join late
 named-key configuration or code which needs the exact reached-player count on the server, use the
 lower-level broadcast function below.
 
+### Eden notification trigger
+
+Place **Waldos Mission Pack Compositions - Interface > [WMP] Notification Trigger** for a ready-made
+25 m, any-player trigger. It calls the same beginner-facing function shown above, is server-only to
+prevent multiplayer duplicates, and does not fire until a player enters its area. Edit the trigger's
+**On Activation** field to change the title, message, type or recipients. Change the ordinary Eden
+trigger fields if it should repeat, use a rectangle, or activate for a different presence condition.
+
 `Waldo_fnc_ShowUiNotification` shows a card on whichever machine runs it; it does not choose an
 audience for you. `Waldo_fnc_NotificationBroadcast` wraps it with audience targeting so mission code
 and Zeus curators do not have to hand-resolve player lists. It is server-authoritative — calling it

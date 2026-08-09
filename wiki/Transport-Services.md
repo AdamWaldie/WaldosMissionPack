@@ -58,9 +58,10 @@ Every registered transport also exposes **Send to Destination** and **Return Thi
 Base** directly on the vehicle through ACE interaction. These two controls are available to every
 player currently inside that exact transport, regardless of who requested it or which seat they
 occupy. The map click and RTB order still use the normal server-authoritative request path, and the
-server rejects a forged request unless the player is actually part of the vehicle crew. State restrictions still apply: destination selection is
-available while boarding or already travelling to a destination, and RTB is unnecessary while the
-transport is already available at base or returning there.
+server rejects a forged request unless the player is actually part of the vehicle crew. An occupant
+can select a destination immediately after boarding a registered transport at its base; a prior pickup
+request is not required. RTB remains available to occupants unless that exact transport is already
+returning to base.
 
 ### Multiple transports and changing a request
 
