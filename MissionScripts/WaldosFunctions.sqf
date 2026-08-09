@@ -735,6 +735,7 @@ class CfgFunctions
             class GunshipMonitor {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipMonitor.sqf";};
             class GunshipServiceAircraft {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServiceAircraft.sqf";};
             class GunshipServerHandle {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServerHandle.sqf";};
+            class GunshipAssignControllerOnStart {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipAssignControllerOnStart.sqf";};
             class GunshipDestroy {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipDestroy.sqf";};
             class GunshipStop {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipStop.sqf";};
             class GunshipSelectOrbitLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSelectOrbitLocal.sqf";};

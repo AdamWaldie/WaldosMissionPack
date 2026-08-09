@@ -41,12 +41,24 @@ one, since a composition can't hardcode "whichever player joins." Until a contro
   actions at all. This is deliberate access control (the equivalent of a FAC/JTAC role), not a bug;
   if "take control" seems to do nothing, check Status first — it names the missing step.
 
-Assign a controller one of three ways:
+Assign a controller one of four ways:
 1. **Zeus (recommended for a live session):** curator runs **Gunship - Assign Controller**, which
    assigns the nearest player.
-2. **Script/init, by object:** `["controller", gunshipController]` in the config passed to
-   `Waldo_fnc_GunshipRegister` (see the full example below).
-3. **Script/init, by UID (survives that player's respawn):** `["controllerUID", "<steam64id>"]`.
+2. **Eden, from a placed unit's own init field (recommended for "always has a controller from
+   mission start"):**
+   ```sqf
+   [this, "spectre_1"] call Waldo_fnc_GunshipAssignControllerOnStart;
+   ```
+   The beginner-friendly one-liner - place a unit near the gunship (a stand-in for a real FAC/JTAC
+   role), give it this init call with the gunship's `id`, done. Object init fields have no
+   guaranteed order against each other, so this waits (bounded, default 60s) for that id to finish
+   registering before assigning it - safe regardless of whether the controller unit's or the
+   aircraft's init field happens to run first. See it in place in the Gunship Support Example (Full)
+   composition.
+3. **Script/init, by object:** `["controller", gunshipController]` in the config passed to
+   `Waldo_fnc_GunshipRegister` (see the full example below) - use this when the controller unit is
+   guaranteed to already exist (e.g. created earlier in the same script) before registration runs.
+4. **Script/init, by UID (survives that player's respawn):** `["controllerUID", "<steam64id>"]`.
 
 Re-running `["spectre_1", "ASSIGN", [newController], objNull] call Waldo_fnc_GunshipServerHandle;`
 reassigns control at any time (also releasing the previous controller's turret access).
