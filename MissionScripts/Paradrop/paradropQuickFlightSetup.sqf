@@ -61,21 +61,20 @@
  *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED markers matching
  *    Waldo_fnc_ParadropCreateDropZone's layout, created invisible (alpha 0, still real/queryable
  *    markers) so a mission maker gets the route's positional markers without the map clutter. When
- *    target is NOT a marker name, also creates a visible black "mil_end" POINT marker at the target.
- *    When target IS a marker name, that placeholder marker is instead taken over in place - restyled
- *    to the same black "mil_end" look, labelled with this call's name, and its own rotation reset to
- *    0 (a point icon needs no directional rotation) - rather than a second marker being stacked on
- *    top of it, or the original placeholder being left completely unchanged for the rest of the
- *    mission. That takeover is never added to the cleanup list below - this function never created
- *    that marker, so it never deletes it either. Also creates a live-updating b_plane aircraft marker
+ *    target is a marker name, its position and direction are read first, then a new WMP-owned visible
+ *    black "mil_end" POINT marker is created and the original Eden setup marker is deleted after the
+ *    operation registers successfully. This matches the gunship orbit-marker lifecycle: the marker
+ *    placed by the mission maker is configuration input, not a second live marker left under WMP's
+ *    own display. Also creates a live-updating b_plane aircraft marker
  *    (same mechanism as airborne gunships: friendly-side visible, position/heading refreshed every
  *    frame while the aircraft is alive) that tracks this aircraft the whole time it's flying, always
  *    removed on cleanup regardless of keepMarkersOnCleanup below; set createMarkers false for a
  *    map-clutter-free operation with none of this), keepMarkersOnCleanup (default false -
  *    the created static AREA/STANDBY/GREEN/RED/POINT markers are removed automatically once the
  *    aircraft is destroyed/deleted, or once a DESPAWN run reaches its exit point; set true to leave
- *    them on the map instead; never affects the taken-over target marker, the live aircraft marker
- *    (always removed), or the aircraft/crew either way), name (marker label, default "Drop Zone" -
+ *    them on the map instead; never restores the consumed Eden setup marker and never affects the
+ *    live aircraft marker (always removed), or the aircraft/crew either way), name (marker label,
+ *    default "Drop Zone" -
  *    also the live aircraft marker's label), aircraftInvincible (default from
  *    Waldo_Paradrop_DefaultAircraftInvincible, shipped false; true protects this aircraft from
  *    normal engine damage while the operation exists and follows locality changes).
@@ -345,27 +344,15 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
             if !(_targetIsMarker) then {_marker setMarkerAlpha 0;};
             _markers pushBack _marker;
         } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
-        if (_targetIsMarker) then {
-            // Take over the mission maker's own placeholder marker instead of leaving it exactly as
-            // originally placed (whatever icon/name it had in Eden) or stacking a second marker on
-            // top of it - this is what actually "replaces" it with a working drop zone marker once
-            // the aircraft is flying, instead of an untouched placeholder that lingers unchanged for
-            // the whole mission. Its own rotation was already read above as the resolved approach
-            // direction; reset to 0 here since a point icon has no need for directional rotation the
-            // way the rectangular corridor markers above do. It becomes part of the registered
-            // operation so removal behaves identically to a runtime-created drop zone.
-            _target setMarkerType "mil_end";
-            _target setMarkerColor "ColorBlack";
-            _target setMarkerText _label;
-            _target setMarkerDir 0;
-            _markers pushBackUnique _target;
-        } else {
-            private _point = createMarker [format ["%1_POINT", _prefix], _centre];
-            _point setMarkerType "mil_end";
-            _point setMarkerColor "ColorBlack";
-            _point setMarkerText _label;
-            _markers pushBack _point;
-        };
+        // Always create a WMP-owned point marker. If the target came from Eden, that marker is only
+        // setup input: its position/direction were captured above and it is deleted after the live
+        // operation is registered below. Reusing the authored marker made paradrop unlike gunship,
+        // retained arbitrary Eden styling, and could visibly overlay WMP's corridor/aircraft markers.
+        private _point = createMarker [format ["%1_POINT", _prefix], _centre];
+        _point setMarkerType "mil_end";
+        _point setMarkerColor "ColorBlack";
+        _point setMarkerText _label;
+        _markers pushBack _point;
 
         // Live-updating aircraft marker, the same pattern airborne gunships already use
         // (Waldo_fnc_GunshipSetupLocal/UpdateMarkersLocal): tracks this aircraft's actual
@@ -390,6 +377,13 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
         ["aircraftInvincible", _aircraftInvincible]
     ]];
     missionNamespace setVariable ["Waldo_Paradrop_QuickSetups", _quickRegistry];
+    // Consume the Eden designation only after the route, actions, WMP markers and registry all exist.
+    // A failure before this point therefore leaves the mission maker's marker intact for diagnosis.
+    // deleteMarker is global; this server-owned transition matches gunshipRegister.sqf exactly.
+    if (_targetIsMarker && {markerType _target != ""}) then {
+        deleteMarker _target;
+        diag_log format ["[WMP PARADROP] %1 replaced Eden drop-zone marker '%2' with its live WMP markers.", _quickId, _target];
+    };
     [] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
 
     // Automatic cleanup deregisters the operation. Explicit Zeus removal may also delete its
