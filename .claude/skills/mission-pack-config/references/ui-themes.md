@@ -20,7 +20,7 @@ tactical display, interaction equipment, Economy prompts, table-game chrome.
 | `WW2` | Olive field equipment, khaki paper/brass, War Department copy |
 | `VIETNAM` | Green phosphor/field-radio shell, amber controls, field-net copy |
 | `SCIFI` | Deep navy node display, cyan/magenta rails, bracketed titles |
-| `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, "Royal Chancery" proclamation copy, `Caveat`/`CaveatBold` handwritten font (`CfgFontFamilies`) |
+| `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, "Royal Chancery" proclamation copy, `PuristaLight`/`PuristaBold` font |
 | `MINIMAL` | Low-profile/no-frills style; also the one theme that sets the `compact` token (see below) |
 
 Semantic success/warning/error colours, written state text, symbols and

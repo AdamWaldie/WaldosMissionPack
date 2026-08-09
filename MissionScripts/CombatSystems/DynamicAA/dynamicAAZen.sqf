@@ -66,7 +66,7 @@ private _shutdownOptions = ["circuit"] call Waldo_fnc_MiniGameInteractionOptions
         ["TOOLBOX:WIDE", ["Operational side", "Controls crew allegiance and hostile detection, not physical equipment."], [1, 1, 3, ["BLUFOR", "OPFOR", "Independent"]]],
         ["TOOLBOX:WIDE", ["Equipment selection", "Choose one reusable faction profile or manually select mixed equipment."], [0, 1, 2, ["Faction profile", "Exact mixed equipment"]]],
         ["SLIDER", ["Detection radius (m)", "Horizontal detection range."], [100, 10000, 2000, 0]],
-        ["SLIDER", ["Minimum altitude (m)", "Aircraft below this height are ignored."], [0, 1500, 50, 0]],
+        ["SLIDER", ["Minimum altitude (m)", "Aircraft below this height are ignored."], [0, 1500, 60, 0]],
         ["SLIDER", ["Maximum altitude (m)", "Aircraft above this height are ignored."], [50, 10000, 10000, 0]],
         ["SLIDER", ["Engagement radius (m)", "Defences activate only inside this range."], [100, 10000, 2000, 0]],
         ["SLIDER", ["Detection dwell (s)", "Continuous detection time before activation."], [0, 30, 0, 1]],
