@@ -38,6 +38,20 @@ per-player radius anchor instead — no marker needed.
 Manual and timed go-live notices explain which protections were removed and
 stay visible for `Waldo_SafeStart_GoLiveHintDuration` seconds (default 12).
 
+## Player-side panel and acknowledgement
+
+Only one compact SafeStart panel exists per player; starting or changing a
+countdown updates the existing panel rather than stacking another. Each
+player can open **ACE Self Interactions > WMP Interface > Acknowledge
+SafeStart** while protection is active to hide *only their own* panel —
+this never touches weapons/damage/confinement, the timer, or any other
+player's display. Acknowledging the plain waiting phase hides the panel
+until a countdown starts; the countdown is treated as a new phase and
+reopens it (so a player who dismissed the wait still sees go-live
+approaching), and it can be acknowledged a second time to hide it again
+until go-live. The acknowledgement itself is cleared whenever SafeStart
+ends and never carries forward into a later activation.
+
 ## Relationship to ENDEX
 
 Separate authoritative state — see `endex-aar.md`.

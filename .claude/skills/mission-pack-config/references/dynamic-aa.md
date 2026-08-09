@@ -69,11 +69,36 @@ optional radar-shutdown objective — the server auto-places radar/static/
 mobile assets in a spaced terrain-safe layout, no map clicks needed) and
 **Dynamic AA - Remove Nearest**.
 
+## Engagement model — five independent gates
+
+A hostile crewed aircraft may be targeted only when **all** of these hold;
+losing any one closes the defence group, clears its target, makes it
+forget/ignore engine-known targets, and blocks remote datalink targeting
+(a final owner-local fired-projectile gate stops the engine itself from
+firing at a target that was eligible a moment ago):
+
+1. It's a living Air vehicle with a hostile living crew.
+2. Horizontally inside the detection radius.
+3. Its ATL/ASL altitude is between the floor and ceiling.
+4. Horizontally inside the (separate, usually smaller) engagement radius.
+5. The system is enabled and has a live, enabled radar.
+
+Ground vehicles never pass gate 1 — Dynamic AA cannot be made to engage
+ground targets. Detection/engagement radii are horizontal only; altitude
+is a wholly separate floor/ceiling check.
+
 ## Gotchas
 
 - Detection is server-owned; AI state/targeting/ammo dispatch to each
   group's current owner, so systems keep working after AI moves to a
   headless client.
+- On a dedicated server, spawned crew/groups are explicitly verified on
+  the requested operational side after creation — this closes an earlier
+  bug where dedicated-server-spawned AA crew could end up on the wrong
+  side. A pre-planned `initServer.sqf`/Eden-init creation is queued until
+  the server's own initialization sentinel is ready rather than racing
+  network-object creation; a Zeus-created system runs after mission start
+  so it skips that queue.
 - Classnames are validated and two-pass placement-checked before anything
   spawns — if planning fails, nothing spawns; a materialisation failure
   rolls back every partial object/crew.

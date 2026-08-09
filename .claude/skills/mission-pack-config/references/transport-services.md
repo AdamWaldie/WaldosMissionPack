@@ -13,8 +13,8 @@ separate typed pools; a request can never cross-reserve.
 ["Waldo_Transport_DefaultBoardingSeconds", 300, false],
 ["Waldo_Transport_DefaultDestinationDwell", 45, false],
 ["Waldo_HeliTransport_DefaultAltitude", 50, false],
-["Waldo_HeliTransport_DefaultLzSearchRadius", 250, false],
-["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0, false], // multiplier on real helicopter model bounding box
+["Waldo_HeliTransport_DefaultLzSearchRadius", 500, false],
+["Waldo_HeliTransport_DefaultLzClearanceScale", 1.5, false], // multiplier on real helicopter model bounding box
 ["Waldo_HeliTransport_DefaultSeparation", 60, false],
 ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false],
 ["Waldo_GroundTransport_DefaultSeparation", 18, false],
@@ -58,6 +58,20 @@ Base** returns everything reserved by or carrying the player. A stuck
 transport publishes **STUCK** rather than silently dropping the
 reservation — retry via the same menu or send it to RTB.
 
+External vehicle interaction (approaching the vehicle from outside) is
+identification/status only — it names the vehicle and reports its current
+state. The operational controls (move pickup, select destination, RTB,
+retry) live in that exact vehicle's **own ACE self-interaction tree** —
+any player physically occupying it can reach them there, independent of
+who originally requested it or which seat they're in. An occupant can
+select a destination immediately after boarding at base without a prior
+pickup request. Outside the vehicle, only the original requester may move
+pickup or order RTB; a passenger inside may select destination or order
+RTB for the transport they occupy; Zeus may manage any registered
+transport. The server validates control against exact current crew
+membership (object + UID) — a request from someone not actually aboard is
+rejected, so this can't be spoofed by proximity alone.
+
 ## Zeus
 
 **WMP Transport > Transport Service - Register** (on an existing AI-crewed
@@ -75,6 +89,12 @@ clearance, improved-landing and other options set explicitly, including
 
 ## Gotchas
 
+- At destination the transport waits (up to `destinationDwell`, default
+  `45`s) for every player passenger to physically leave before ordering
+  RTB — it never forces anyone out by default. Only with `forceDisembark`
+  explicitly enabled does WMP request `moveOut` at the timeout, giving a
+  short exit-animation grace before RTB. A newer destination/RTB order
+  always invalidates a stale wait.
 - Registrations survive WMP vehicle-recovery reconstruction via the
   built-in `Waldo_TransportService_Registration` recovery variable — no
   extra work needed if the mission also uses `vehicle-recovery-rallies.md`.
