@@ -5,8 +5,13 @@
  * The server owns assignment and respawn carry-over. A curator may invoke the public function
  * remotely; ordinary remote clients are rejected. Carrier variables are public so the owning
  * client can evaluate interaction conditions, while the server remains authoritative for every
- * change. A single server respawn handler transfers carrier state when configured and asks the new
+ * change. Eden unit init fields execute everywhere, so non-server copies are ignored; ZEN sends
+ * live assignments through the validated server runtime bridge. A single server respawn handler transfers carrier state when configured and asks the new
  * owner to reinstall its local controls.
+ *
+ * Locality and authority:
+ * The server validates and publishes carrier entitlement. Eden client copies exit; the owning
+ * interface installs actions from the published object state and receives them again after JIP.
  *
  * Arguments:
  * 0: unit <OBJECT> - infantry unit that may carry and deploy field-resupply crates.
@@ -14,19 +19,17 @@
  * 2: maximum crates <NUMBER> - carrier capacity (default 2).
  *
  * Return Value:
- * Boolean - true when the request was forwarded or assignment succeeded; otherwise false.
+ * Boolean - true when assigned (or when a duplicate non-server Eden copy was ignored); otherwise false.
  *
  * Example:
- * if (isServer) then {[this, 3, 3] call Waldo_fnc_FieldResupplyAssignCarrier;};
+ * [this, 3, 3] call Waldo_fnc_FieldResupplyAssignCarrier;
+ * Result: this infantry unit can carry up to three logical resupply crates and starts with three.
  *
  * Current callers: Field Resupply ZEN assignment, audit carrier station and mission-maker setup.
  */
 
 params [["_unit", objNull, [objNull]], ["_crates", 1, [0]], ["_maximum", 2, [0]]];
-if !(isServer) exitWith {
-    [_unit, _crates, _maximum] remoteExecCall ["Waldo_fnc_FieldResupplyAssignCarrier", 2];
-    true
-};
+if !(isServer) exitWith {true};
 if (isNull _unit || {!(_unit isKindOf "CAManBase")}) exitWith {false};
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};

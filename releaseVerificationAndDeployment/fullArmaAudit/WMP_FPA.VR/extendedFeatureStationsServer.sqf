@@ -87,7 +87,7 @@ _patient disableAI "PATH";
 _patient disableAI "AUTOCOMBAT";
 _patient setUnitPos "UP";
 [_patient] call Waldo_QA_fnc_trackFeatureObjectServer;
-missionNamespace setVariable ["Waldo_QA_TreatmentPatient", _patient, true];
+missionNamespace setVariable ["Waldo_QA_TreatmentPatient", _patient];
 private _medicalSupplies = ["qa_treatment_supplies", "B_supplyCrate_F", [182, 87, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
 clearItemCargoGlobal _medicalSupplies;
 {_medicalSupplies addItemCargoGlobal [_x, 20]} forEach ["ACE_fieldDressing", "ACE_packingBandage", "ACE_elasticBandage", "ACE_tourniquet", "ACE_morphine", "ACE_epinephrine"];
@@ -198,7 +198,7 @@ _hostile disableAI "PATH";
 _hostile setName "QA Known Hostile";
 {(group _x) reveal [_hostile, 4]} forEach allPlayers;
 [_hostile] call Waldo_QA_fnc_trackFeatureObjectServer;
-missionNamespace setVariable ["Waldo_QA_TacticalHostile", _hostile, true];
+missionNamespace setVariable ["Waldo_QA_TacticalHostile", _hostile];
 private _profileGroup = createGroup west;
 private _profileUnits = [];
 {
@@ -211,7 +211,7 @@ private _profileUnits = [];
     _profileUnits pushBack _unit;
     [_unit] call Waldo_QA_fnc_trackFeatureObjectServer;
 } forEach ["B_Soldier_F", "B_soldier_AR_F", "B_Soldier_M_F"];
-missionNamespace setVariable ["Waldo_QA_ProfileUnits", _profileUnits, true];
+missionNamespace setVariable ["Waldo_QA_ProfileUnits", _profileUnits];
 
 // Breaching uses the documented 8 m wall and replacement segments.
 private _breachWall = ["qa_breach_wall"] call _get;
@@ -518,10 +518,10 @@ Waldo_QA_fnc_createParadropServer = {
     private _config = createHashMapFromArray [
         ["id", "QA_DZ"], ["name", "QA DROP ZONE"], ["centre", [500, 500, 0]],
         ["direction", 90], ["side", west], ["aircraftClass", "B_Heli_Transport_01_F"],
-        ["altitude", 180], ["maximumSpeed", 160], ["approachDistance", 1500],
+        ["altitude", 300], ["maximumSpeed", 220], ["approachDistance", 1500],
         ["runLength", 1200], ["exitDistance", 1500], ["jumperCount", 0],
         ["jumpInterval", 2], ["staticJumpEnabled", true], ["staticMinimumAltitude", 120],
-        ["staticMaximumAltitude", 350], ["staticMaximumSpeed", 250],
+        ["staticMaximumAltitude", 400], ["staticMaximumSpeed", 310],
         ["staticChuteClass", "NonSteerable_Parachute_F"], ["haloJumpEnabled", false],
         ["requireOpenDoor", false], ["automaticJumpMode", "STATIC"],
         ["createJumpers", false], ["autoDropPlayers", false], ["createMarkers", true],

@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Custom 3D Marker (Full parameter reference): icon, colour, width, height, offset, distance and sides all shown explicitly - copy and edit any key. See the Custom 3D Marker Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-3D-World-Markers";
 		id=2;
 	};

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 881,
+  "registeredFunctionCount": 885,
   "runtimeFunctionCount": 385,
-  "functionCount": 1266,
+  "functionCount": 1270,
   "stations": [
     {
       "id": "control",
@@ -889,6 +889,18 @@
     {
       "name": "Waldo_fnc_SendNotification",
       "file": "MissionScripts/MissionFlowAndUi/sendNotification.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_NotificationTrigger",
+      "file": "MissionScripts/MissionFlowAndUi/notificationTrigger.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_NotificationTriggerActivate",
+      "file": "MissionScripts/MissionFlowAndUi/notificationTriggerActivate.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -1789,6 +1801,18 @@
     {
       "name": "Waldo_fnc_ParadropConfigureAircraftLocal",
       "file": "MissionScripts/Paradrop/paradropConfigureAircraftLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropConfigureAircraftNetworkedLocal",
+      "file": "MissionScripts/Paradrop/paradropConfigureAircraftNetworkedLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropSetAircraftInvincibilityLocal",
+      "file": "MissionScripts/Paradrop/paradropSetAircraftInvincibilityLocal.sqf",
       "station": "paradrop",
       "activation": "manual"
     },

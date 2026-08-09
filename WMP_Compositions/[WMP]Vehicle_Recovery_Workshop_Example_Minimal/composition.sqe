@@ -33,7 +33,7 @@ class items
 	{
 		dataType="Object";
 		side="West";
-		class PositionInfo {position[]={0,18,0};};
+		class PositionInfo {position[]={0,0,18};};
 		class Attributes
 		{
 			name="WMP_RecoveryCarrier";
@@ -45,7 +45,7 @@ class items
 	class Item3
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-6,0};};
+		class PositionInfo {position[]={0,0,-6};};
 		title="Vehicle Recovery (Minimal): the smallest working calls - workshop MAIN, an MRAP that becomes recoverable once damaged 55%+, and an AUTO carrier that uses engine cargo/virtual fallback (no physical deck placement without an explicit offset). See the Vehicle Recovery Workshop Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Recovery-And-Squad-Rallies#vehicle-recovery";
 		id=4;
 	};

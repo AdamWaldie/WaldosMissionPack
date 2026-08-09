@@ -56,6 +56,11 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 # QuickStart Guide
 You can always find the most recent quickstart guide at this URL: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide
 
+# Planned Features
+
+Agreed work for releases after the current one is tracked in [FEATURE_LOG.md](FEATURE_LOG.md). Items
+in that file are planned work and should not be treated as features already included in a release.
+
 # Release Validation
 The canonical feature test is the hosted **WMP FULL PACK PR AUDIT** VR mission. Its builder stages
 the exact release allowlist and runs the pack's real `description.ext`, `init.sqf`,

@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Circuit Interaction Example: a real gameplay outcome, not just the procedure by itself. Failing the breaker cabinet fires a genuine Waldo_fnc_EMP burst (20 m, 15 s) centred on the cabinet - nearby NVGs and vehicle engines go down for the duration. Passing is safe. Copy the onFailure pattern in the console's init field onto your own object to attach any real consequence to failure. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=2;
 	};

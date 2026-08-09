@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Pressure Interaction Example: a real gameplay outcome, not just the procedure by itself. Failing the manifold procedure applies real damage (+0.15) directly to the acting player - a genuine consequence, not just a message. Passing vents safely. Copy the onFailure pattern in the console's init field onto your own object for any other real penalty. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=2;
 	};

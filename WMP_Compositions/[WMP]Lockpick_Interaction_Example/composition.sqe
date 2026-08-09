@@ -32,7 +32,7 @@ class items
 	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Lockpick Interaction Example: a real gameplay outcome, not just the procedure by itself. The nearby crate starts empty; passing the lockpick procedure populates it with Waldo_fnc_SupplyCratePopulate (the same call used by the Logistics system), failing leaves it empty. Copy the onSuccess pattern in the console's init field onto your own object to reward any other action. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=3;
 	};

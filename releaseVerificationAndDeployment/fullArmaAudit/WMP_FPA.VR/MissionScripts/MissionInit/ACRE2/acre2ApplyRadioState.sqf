@@ -58,7 +58,13 @@ private _audioSourceClasses = ["ACRE_PRC148", "ACRE_PRC152", "ACRE_SEM52SL", "AC
             _setupSettings pushBack [_base, _ordinal, _setting];
         } else {
             if (toUpper _mode == "BLOCK_CHANNEL") then {
-                _setupSettings pushBack [_base, _ordinal, [_setting select 1, _setting select 0]];
+                // PRC-343 state is saved as beginner-facing [block, channel], while ACRE's direct
+                // channel API exposes one absolute 1-256 position. Restore the actual unique ID
+                // synchronously so success cannot be reported before ACRE's asynchronous
+                // setupRadios helper has done any work.
+                private _absoluteChannel = (((_setting select 0) - 1) * 16) + (_setting select 1);
+                if !([_radioId, _absoluteChannel] call acre_api_fnc_setRadioChannel) then {_success = false};
+                if (([_radioId] call acre_api_fnc_getRadioChannel) != _absoluteChannel) then {_success = false};
             } else {
                 if !([_radioId, _setting] call acre_api_fnc_setRadioChannel) then {_success = false};
                 if (([_radioId] call acre_api_fnc_getRadioChannel) != _setting) then {_success = false};

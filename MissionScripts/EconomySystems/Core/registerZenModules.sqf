@@ -17,7 +17,7 @@
  * authority, so placement works on dedicated servers. Non-placement actions ignore the
  * position and open their existing dialog / toggle.
  *
- * Locality / Authority:
+ * Locality and authority:
  * Runs on interface clients only. Dialogs run on the curator client; authoritative changes are
  * forwarded by the existing handlers to the server. ZEN registrations are local UI state.
  *
@@ -36,6 +36,7 @@
  *
  * Example:
  * [] call Waldo_fnc_EcoCore_registerZenModules;
+ * Result: this curator client receives one WMP Economy Systems ZEN catalogue.
  */
 
     if (!hasInterface) exitWith {};

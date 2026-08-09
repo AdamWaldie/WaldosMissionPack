@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_TacticalDisplay";
-			init="[this, sideUnknown, 2000, true, createHashMapFromArray [[""enabled"", false], [""challengeId"", ""commandinput""], [""difficulty"", ""standard""]]] call Waldo_fnc_TacticalDisplayRegister;";
+			init="[this, ""VIEWER"", 2000, true, createHashMapFromArray [[""enabled"", false], [""challengeId"", ""commandinput""], [""difficulty"", ""standard""]]] call Waldo_fnc_TacticalDisplayRegister;";
 		};
 		id=1;
 		type="Land_MapBoard_F";
@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-3,0};};
+		class PositionInfo {position[]={0,0,-3};};
 		title="Tactical Display (Full parameter reference): every Waldo_fnc_TacticalDisplayRegister option shown explicitly, including the optional interaction-options hashmap (off by default). See the Tactical Display Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#tactical-display";
 		id=2;
 	};

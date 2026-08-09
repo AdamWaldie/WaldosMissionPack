@@ -2,6 +2,12 @@
 
 > **Use this page when:** you need vehicle interactions, static-line or HALO jumps, and their equipment simulation settings.
 
+The shipped Minimal and Full Eden paradrop compositions use passenger Blackfish aircraft with their
+normal four-person editor crew: pilot, copilot and two crew chiefs. WMP does not create replacement
+crew for an aircraft that already exists in Eden. This preserves the side and group chosen by the
+mission maker and avoids duplicate or empty-side AI in multiplayer. Runtime crew creation is
+reserved for an aircraft genuinely spawned by the Zeus module or script API.
+
 _Associated Files:_
 - _MissionScripts\VehicleActionsSetup_
 - _MissionScripts\Paradrop_
@@ -200,6 +206,9 @@ mission's `MissionConfig\airOperationsConfig.sqf` values, then normalized as abo
 lifecycle; `DESPAWN` only changes which waypoints get added and is one of the two automatic
 marker-cleanup triggers below), `circuitDirection` (`LEFT` default / `RIGHT`),
 `approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`),
+`aircraftInvincible` (**off by default** — protects the aircraft from normal engine damage for the
+life of the operation and reapplies protection if ownership moves between the server, a headless
+client or a player client; scripted `setDamage`/`setHit` calls can still damage it),
 `createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
 `Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
 for a map-clutter-free operation), and `keepMarkersOnCleanup` (**off by default** — the static markers
@@ -247,18 +256,30 @@ just stale — check **Keep markers when the operation ends automatically** in t
 **Paradrop - Remove Operation** always removes the markers regardless of that setting. As with the
 quick-setup flight above, the operation also carries a live-updating aircraft marker that tracks the
 plane's real position/heading every frame while it flies; that one is always removed with the
-operation regardless of `keepMarkersOnCleanup`. Speed input is
-in km/h and is converted to the engine's metres-per-second `forceSpeed` unit.
+operation regardless of `keepMarkersOnCleanup`.
 
-The create dialog independently enables and configures static-line and HALO player actions. Static
-line selects a parachute vehicle plus minimum/maximum altitude and maximum speed. HALO selects a
-steerable parachute backpack and minimum altitude. The optional door requirement can be disabled
-for airframes whose ramp animations are not among the supported names. Both action sets are
-installed for current clients and JIP clients. The authoritative creation API normalizes enabled
-jump envelopes against the requested route: the route altitude remains inside each enabled
-altitude window with margin to absorb normal AI autopilot wander, static-line maximum speed stays
-at least 60 km/h above capped route speed, and an unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
-enabled alternative or turns itself off instead of silently selecting a disabled jump method.
+The Zeus create dialog offers **Static-Line**, **HALO**, or **Static-Line and HALO**, plus requested
+route altitude and speed. Its initial values come from `MissionConfig\airOperationsConfig.sqf`: the
+shipped Static-Line profile is the same 300 m / 300 km/h profile used by the working full Eden
+composition, while the shipped HALO profile is 1,200 m / 250 km/h. The client explains the limits,
+and the server independently hard-gates the request against `WALDO_STATIC_MINALTITUDE`,
+`WALDO_STATIC_MAXALTITUDE`, `WALDO_STATIC_MAXSPEED`, and `WALDO_PARA_HALOALTITUDE`. **Both** raises
+the route to the HALO floor and expands the generated Static-Line ceiling around that accepted
+route, so both selected actions remain mechanically possible. An incompatible request is adjusted
+to the nearest valid value; it is never allowed to create an operation whose selected action cannot
+be used. Zeus-created operations do not impose a ramp/door prerequisite because their AI
+aircraft do not provide the passenger a dependable door control; scripted and Eden setups retain
+the documented `requireOpenDoor` option. Actions are installed for current
+clients and JIP clients through a network-ID resolver, so a newly spawned aircraft is not silently
+received as `objNull` before replication finishes.
+
+**Invincible drop aircraft** is available in the ZEN create dialog and is off by default. It is the
+same `aircraftInvincible` setting used by both script APIs. The protection is locality-aware and is
+removed again if an operation is removed while its aircraft is retained.
+
+Scripted setups remain fully customizable through `Waldo_fnc_ParadropCreateDropZone`. The server
+normalizes those custom envelopes against the requested route, but mission makers using the script
+API are responsible for testing their chosen flight behaviour and airframe.
 
 **Paradrop - Embark Players** and **Paradrop - Remove Operation** list both registry-backed Dynamic
 Drop Zone operations and aircraft set up with `Waldo_fnc_ParadropQuickFlightSetup` (a mission
@@ -302,14 +323,14 @@ The equivalent server-side API is:
 private _drop = createHashMapFromArray [
     ["id", "DZ_ALPHA"], ["name", "DZ ALPHA"], ["centre", getMarkerPos "dz_alpha"],
     ["side", west], ["aircraftClass", "B_T_VTOL_01_infantry_F"],
-    ["direction", 90], ["altitude", 250], ["maximumSpeed", 220],
+    ["direction", 90], ["altitude", 300], ["maximumSpeed", 300],
     ["lifecycle", "LOOP"], ["circuitDirection", "LEFT"],
     ["staticJumpEnabled", true], ["staticMinimumAltitude", 180],
     ["staticMaximumAltitude", 350], ["staticMaximumSpeed", 310],
     ["staticChuteClass", "NonSteerable_Parachute_F"],
     ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
     ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true],
-    ["keepMarkersOnCleanup", false]
+    ["keepMarkersOnCleanup", false], ["aircraftInvincible", false]
 ];
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```
@@ -327,10 +348,15 @@ missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];  // metres
 missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];  // metres AGL
 missionNamespace setVariable ["WALDO_STATIC_MAXSPEED",    310, true];  // km/h
 missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]; // chute class (vanilla default)
+missionNamespace setVariable ["Waldo_Paradrop_DefaultStaticRouteAltitude", 300, true]; // metres AGL
+missionNamespace setVariable ["Waldo_Paradrop_DefaultStaticRouteSpeed", 300, true];    // km/h
 
 // HALO
 missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];  // metres AGL minimum
 missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true];        // chute class
+missionNamespace setVariable ["Waldo_Paradrop_DefaultHaloRouteAltitude", 1200, true];  // metres AGL
+missionNamespace setVariable ["Waldo_Paradrop_DefaultHaloRouteSpeed", 250, true];      // km/h
+missionNamespace setVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false, true]; // normal damage protection default
 ```
 
 For a steerable static chute with RHS, use `"rhs_d6_Parachute"` instead.

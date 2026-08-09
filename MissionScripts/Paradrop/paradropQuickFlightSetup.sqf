@@ -30,6 +30,10 @@
  * which does delete the aircraft it spawned - see the difference called out in the lifecycle option
  * below.
  *
+ * Locality and authority: An Eden init field may invoke this on every machine, but only the server
+ * configures the server-local aircraft and flight group. Duplicate calls are rejected; aircraft
+ * settings are broadcast and each interface client installs its own jump interactions for JIP.
+ *
  * Arguments:
  * 0: aircraft <OBJECT> - placed, ideally already crewed with a pilot (e.g. via
  *    Waldo_fnc_MoveInCargoPlane in the object's own init field, or an Eden-assigned crew).
@@ -41,8 +45,10 @@
  *    default) uses the target marker's own Eden "Direction" rotation when target is a marker name -
  *    rotate the marker in Eden to set the approach heading, no coordinate math needed - or otherwise
  *    computes a sensible heading automatically from the aircraft's position to the target.
- * 3: altitude <NUMBER> - route altitude AGL in metres (default 250, clamped 100-2000).
- * 4: maximum speed <NUMBER> - km/h (default 220, clamped 80-500).
+ * 3: altitude <NUMBER> - route altitude AGL in metres (default from
+ *    Waldo_Paradrop_DefaultStaticRouteAltitude, shipped as 300; clamped 100-2000).
+ * 4: maximum speed <NUMBER> - km/h (default from Waldo_Paradrop_DefaultStaticRouteSpeed, shipped
+ *    as 300; clamped 80-500).
  * 5: options <HASHMAP> - optional overrides: staticJumpEnabled (default true), haloJumpEnabled
  *    (default false), staticMinimumAltitude/staticMaximumAltitude/staticMaximumSpeed/
  *    staticChuteClass, haloMinimumAltitude/haloBackpackClass (all default from the mission's
@@ -70,7 +76,9 @@
  *    aircraft is destroyed/deleted, or once a DESPAWN run reaches its exit point; set true to leave
  *    them on the map instead; never affects the taken-over target marker, the live aircraft marker
  *    (always removed), or the aircraft/crew either way), name (marker label, default "Drop Zone" -
- *    also the live aircraft marker's label).
+ *    also the live aircraft marker's label), aircraftInvincible (default from
+ *    Waldo_Paradrop_DefaultAircraftInvincible, shipped false; true protects this aircraft from
+ *    normal engine damage while the operation exists and follows locality changes).
  *
  * Return Value:
  * Boolean - true when accepted (the actual route/actions are applied a moment later on the server
@@ -78,11 +86,14 @@
  * plane never starts flying). A target marker name that doesn't exist on the map is also reported
  * in-game via systemChat, not just the RPT - the single most common beginner setup mistake with
  * this function is placing the aircraft before placing (or correctly naming) its target marker.
+ * Eden object init fields run on every machine. The server-owned aircraft is configured once by
+ * the server; a non-owning client copy exits without forwarding a duplicate request.
+ * Result: A successful call schedules one shared route and matching jump actions for the aircraft.
  *
  * Example:
  * [this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
  * Result: the plane this is placed on flies a standby/green/red/exit run toward marker "dz1" at
- * 250 m / 220 km/h, looping to repeat, with the mission's configured static-line jump action ready.
+ * 300 m / 300 km/h, looping to repeat, with the mission's configured static-line jump action ready.
  *
  * Example (HALO instead of static-line, one-shot):
  * [this, getMarkerPos "dz2", -1, 1200, 250, createHashMapFromArray [
@@ -97,8 +108,8 @@ params [
     ["_aircraft", objNull, [objNull]],
     ["_target", "", ["", [], objNull]],
     ["_direction", -1, [0]],
-    ["_altitude", 250, [0]],
-    ["_maxSpeed", 220, [0]],
+    ["_altitude", missionNamespace getVariable ["Waldo_Paradrop_DefaultStaticRouteAltitude", 300], [0]],
+    ["_maxSpeed", missionNamespace getVariable ["Waldo_Paradrop_DefaultStaticRouteSpeed", 300], [0]],
     ["_options", createHashMap, [createHashMap]]
 ];
 if (isNull _aircraft || {!(_aircraft isKindOf "Air")}) exitWith {false};
@@ -110,7 +121,11 @@ if (isNull _aircraft || {!(_aircraft isKindOf "Air")}) exitWith {false};
 // Broadcast from the server (every machine also sets it locally as its own init field runs, at
 // roughly the same moment) so JIP clients that never execute this object's init field still see it.
 _aircraft setVariable ["Waldo_Paradrop_ManuallyConfigured", true, isServer];
-if !(isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSetup", 2]; true};
+if !(isServer) exitWith {
+    if (!local _aircraft) exitWith {true};
+    _this remoteExecCall ["Waldo_fnc_ParadropQuickFlightSetup", 2];
+    true
+};
 
 // This object's own init field runs on every machine (standard Eden behaviour), so every non-server
 // machine above just forwarded the exact same call here - with more than one client connected, the
@@ -189,6 +204,19 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
         if (_targetIsMarker) then {markerDir _target} else {[getPosATL _aircraft, _centre] call BIS_fnc_dirTo}
     };
 
+    // Apply the same MissionConfig safety gates used by the ZEN/server entry point before building
+    // the shared route. This keeps the convenient direct Eden call from requesting a Static-Line
+    // speed above its own configured release ceiling, while preserving the selected jump methods.
+    private _staticEnabled = _options getOrDefault ["staticJumpEnabled", true];
+    private _haloEnabled = _options getOrDefault ["haloJumpEnabled", false];
+    private _staticMinimum = _options getOrDefault ["staticMinimumAltitude", missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE", 180]];
+    private _staticMaximum = (_options getOrDefault ["staticMaximumAltitude", missionNamespace getVariable ["WALDO_STATIC_MAXALTITUDE", 350]]) max _staticMinimum;
+    private _staticSpeedCeiling = _options getOrDefault ["staticMaximumSpeed", missionNamespace getVariable ["WALDO_STATIC_MAXSPEED", 310]];
+    private _haloMinimum = _options getOrDefault ["haloMinimumAltitude", missionNamespace getVariable ["WALDO_PARA_HALOALTITUDE", 1000]];
+    if (_staticEnabled) then {_maxSpeed = _maxSpeed min _staticSpeedCeiling};
+    if (_staticEnabled && {!_haloEnabled}) then {_altitude = (_altitude max _staticMinimum) min _staticMaximum};
+    if (_haloEnabled) then {_altitude = _altitude max _haloMinimum};
+
     // Waldo_fnc_ParadropBuildFlightRoute clears every waypoint of the group it's given. That's safe
     // when the group belongs only to this aircraft's crew, but the pilot's actual Eden group may
     // contain other units entirely (a squad leader also flying, a multi-crew group with members
@@ -262,7 +290,21 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
         [_jumpConfig get "staticJumpEnabled", _jumpConfig get "haloJumpEnabled"],
         true
     ];
-    [_aircraft, _jumpConfig] remoteExec ["Waldo_fnc_ParadropConfigureAircraftLocal", 0, _aircraft];
+    private _safeNetId = [netId _aircraft, "0123456789"] call BIS_fnc_filterString;
+    private _actionJipKey = format ["WMP_Paradrop_Actions_QUICK_%1", _safeNetId];
+    _aircraft setVariable ["Waldo_Paradrop_ActionJipKey", _actionJipKey, true];
+    private _jumpConfigPairs = keys _jumpConfig apply {[_x, _jumpConfig get _x]};
+    [netId _aircraft, _jumpConfigPairs] remoteExec ["Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _actionJipKey];
+    private _aircraftInvincible = _options getOrDefault [
+        "aircraftInvincible",
+        missionNamespace getVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false]
+    ];
+    if (_aircraftInvincible) then {
+        private _damageJipKey = format ["WMP_Paradrop_Damage_%1", _safeNetId];
+        _aircraft setVariable ["Waldo_Paradrop_DamageJipKey", _damageJipKey, true];
+        _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", true, true];
+        [netId _aircraft, true] remoteExec ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0, _damageJipKey];
+    };
     diag_log format [
         "[WMP PARADROP] Quick flight setup jump envelope: aircraft=%1 static=%2 static-alt=%3-%4m static-speed<=%5 halo=%6 halo-alt>=%7.",
         typeOf _aircraft, _jumpConfig get "staticJumpEnabled", round (_envelope get "staticMinimumAltitude"), round (_envelope get "staticMaximumAltitude"),
@@ -344,7 +386,8 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
     missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
     private _quickRegistry = missionNamespace getVariable ["Waldo_Paradrop_QuickSetups", createHashMap];
     _quickRegistry set [_quickId, createHashMapFromArray [
-        ["name", _label], ["aircraft", _aircraft], ["flightGroup", _flightGroup], ["markers", _markers]
+        ["name", _label], ["aircraft", _aircraft], ["flightGroup", _flightGroup], ["markers", _markers],
+        ["aircraftInvincible", _aircraftInvincible]
     ]];
     missionNamespace setVariable ["Waldo_Paradrop_QuickSetups", _quickRegistry];
     [] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
@@ -368,6 +411,6 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
     };
 
     _aircraft setVariable ["Waldo_Paradrop_QuickSetupComplete", true, true];
-    diag_log format ["[WMP PARADROP] Quick flight setup complete: aircraft=%1 pilot=%2 centre=%3 direction=%4 altitude=%5 speed=%6.", typeOf _aircraft, driver _aircraft, _centre, round _resolvedDirection, round _routeAltitude, round _routeMaxSpeed];
+    diag_log format ["[WMP PARADROP] Quick flight setup complete: aircraft=%1 pilot=%2 centre=%3 direction=%4 altitude=%5 speed=%6 invincible=%7.", typeOf _aircraft, driver _aircraft, _centre, round _resolvedDirection, round _routeAltitude, round _routeMaxSpeed, _aircraftInvincible];
 };
 true

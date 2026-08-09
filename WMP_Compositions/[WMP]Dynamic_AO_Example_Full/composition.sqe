@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-5,0};};
+		class PositionInfo {position[]={0,0,-5};};
 		title="Dynamic AO (Full parameter reference): side/faction/radius/patrolGroups shown explicitly - generates a randomized area of operations (patrols, garrisons, statics, vehicles) around this object on mission start (move the object to relocate the whole AO before placing). Give a curator the Dynamic AO ZEN module for live/replacement AOs instead of duplicating this composition. See every supported config key in wiki/Dynamic-AO-Generation.md. See the Dynamic AO Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-AO-Generation";
 		id=2;
 	};

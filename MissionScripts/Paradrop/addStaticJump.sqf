@@ -1,8 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
  * Installs or reconciles a local static-line jump hold action on an aircraft. The action is
- * available only to cargo occupants inside the configured altitude/speed envelope and can
- * optionally require a recognised open ramp or door. Repeated calls replace stale settings.
+ * usable only to cargo occupants inside the configured altitude/speed envelope and can optionally
+ * require a recognised open ramp or door. The action is offered only while every live safety
+ * condition is satisfied; once started, its short hold is not invalidated by a transient engine
+ * read-back change. Repeated calls replace stale settings.
+ *
+ * Locality and authority: Run locally on each interface client. It creates only that client's
+ * hold action; the networked aircraft settings are supplied by the server-owned paradrop setup.
  *
  * Arguments:
  * 0: aircraft <OBJECT>
@@ -15,8 +20,9 @@
  *
  * Return Value:
  * Number - local hold-action ID, or -1 when disabled/invalid.
+ * Result: The caller can store the returned ID when it needs to inspect the locally installed action.
  *
- * Called by:
+ * Current callers:
  * Waldo_fnc_VehicleJumpSetup, Waldo_fnc_AddVehicleFunctions and
  * Waldo_fnc_ParadropConfigureAircraftLocal.
  *

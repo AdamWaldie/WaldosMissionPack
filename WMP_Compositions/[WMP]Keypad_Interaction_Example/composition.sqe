@@ -32,7 +32,7 @@ class items
 	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Keypad Interaction Example: a real gameplay outcome, not just the procedure by itself. The van starts locked; passing the keypad procedure unlocks it, failing leaves it locked. Copy the onSuccess/onFailure pattern in the console's init field onto your own object, and swap the nearestObject classname for whatever you want to unlock. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=3;
 	};

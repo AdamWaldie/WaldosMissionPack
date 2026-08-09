@@ -48,7 +48,7 @@ class items
 		{
 			position[]={-0.55273438,0,0.18554688};
 		};
-		title="Medical crates, one with and one without field hospital. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
+		title="ACE medical-crate examples. Both use stock level 1. The crate named medicalCrate_Fieldhospital passes true and becomes a field hospital; medicalCrate_noFieldHospital passes false and remains an ordinary supply crate. Copy one crate, then change the final 1 only if your mission defines another medical stock level. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
 		id=7844;
 	};
 };

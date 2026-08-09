@@ -19,8 +19,8 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-3,0};};
-		title="Construction Objects: ACE construction supply using modern construction audio. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects";
+		class PositionInfo {position[]={0,0,-3};};
+		title="Construction supply quick start. Players use ACE interaction on this crate to take construction objects. In [this, true], this is the crate and true enables the modern construction sound; change true to false for the legacy sound. Keep the crate on reachable ground. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Construction-Objects";
 		id=2;
 	};
 };

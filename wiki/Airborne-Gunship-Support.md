@@ -21,7 +21,7 @@ The feature is disabled by default. Calling `Waldo_fnc_GunshipRegister` or using
 ## Three ways to get one flying
 
 1. **No scripting:** place a crewed aircraft in Eden, then in a running mission use the **Gunship - Register or Spawn** Zeus module on it (see Focused Zeus modules below).
-2. **Drop-in example:** place the `[WMP]Gunship_Support_Example_Minimal` composition from `WMP_Compositions/` — a crewed VTOL already registered with the minimum required keys.
+2. **Drop-in example:** place the `[WMP]Gunship_Support_Example_Minimal` composition from `WMP_Compositions/` — an armed Blackfish with its complete four-person BLUFOR editor crew (pilot, copilot and two weapon operators), already registered with the minimum required keys.
 3. **Smallest working script call**, in the placed-and-crewed aircraft's own init field:
    ```sqf
    [createHashMapFromArray [["id", "spectre_1"], ["aircraft", this]]] call Waldo_fnc_GunshipRegister;
@@ -30,8 +30,10 @@ The feature is disabled by default. Calling `Waldo_fnc_GunshipRegister` or using
 
 ## Controller assignment (FAC / JTAC)
 
-Nothing is assigned as controller by default — not even the Minimal/Full example compositions set
-one, since a composition can't hardcode "whichever player joins." Until a controller exists:
+Nothing is assigned as controller by the Minimal example. The Full teaching composition includes a
+separate, correctly grouped BLUFOR team leader and assigns that unit as its example controller at
+mission start; replace it with the intended playable FAC/JTAC or use Zeus during play. Until a
+controller exists:
 
 - Every player on a friendly side can still see a **Status** interaction (aircraft callsign,
   current state, and who — if anyone — is the assigned controller), so the aircraft is never
@@ -75,7 +77,7 @@ private _config = createHashMapFromArray [
     ["controller", gunshipController],
     ["side", west],
     ["home", getMarkerPos "gunship_service_orbit"],
-    ["orbit", getMarkerPos "gunship_initial_orbit"],
+    ["orbit", "gunship_initial_orbit"],
     ["altitude", 700],
     ["radius", 1500],
     ["direction", "CIRCLE_L"],
@@ -92,7 +94,18 @@ private _config = createHashMapFromArray [
 [_config] call Waldo_fnc_GunshipRegister;
 ```
 
+Passing the initial `orbit` as a marker-name string is recommended. WMP reads the marker position
+and, after successful registration, deletes the Eden placeholder so the live callsign-labelled WMP
+orbit marker replaces it. Passing `getMarkerPos` still supplies a valid position, but discards the
+marker name, so WMP cannot know which placeholder should be removed.
+
 Omit `aircraft` and provide `aircraftClass` plus `spawnPosition` to create the asset. Alternatively provide `aircraftClasses`, `faction`, or use the mission's `Waldo_Gunship_SideAircraftPools` and `Waldo_Gunship_FactionAircraftPools`. Invalid or non-aircraft classes are rejected before spawning.
+
+An existing Eden aircraft must already contain its intended crew. Registration does not silently
+fill an existing aircraft because doing so can duplicate placed crew and briefly create incorrectly
+sided AI on multiplayer machines. Runtime crew creation is used only when the script or ZEN module
+actually spawns a new aircraft. For the vanilla armed Blackfish, the editor example contains four
+crew linked to the pilot, copilot, left-gunner and right-gunner stations.
 
 If `turretProfiles` is empty, the feature discovers currently crewed gunner turret paths. Explicit profiles are recommended for mod aircraft because turret layouts vary significantly.
 

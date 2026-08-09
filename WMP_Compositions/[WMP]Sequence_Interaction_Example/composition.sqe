@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Sequence Interaction Example: a real gameplay outcome, not just the procedure by itself. Passing the desk sequence broadcasts a Waldo_fnc_NotificationBroadcast WMP UI card to the whole WEST side (not just the acting player) - the same audience-targeted call used by Zeus's Send Notification module. Copy the onSuccess pattern in the console's init field onto your own object to alert a side, group or unit list. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=2;
 	};

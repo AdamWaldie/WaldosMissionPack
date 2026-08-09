@@ -1,15 +1,29 @@
 /*
  * Author: WaldoTheWarfighter
- * Runs one named Dynamic AA detector and activates defences only for hostile aircraft above its floor.
+ * Runs the server-authoritative detector for one named Dynamic AA system.
+ *
+ * The zone is a horizontal map circle: aircraft are tested with distance2D, then independently
+ * checked against the configured altitude floor and ceiling. Only hostile, crewed aircraft that pass
+ * those checks are sent to the owner of each defence group. This prevents the engine's 3D distance
+ * calculation from unintentionally shrinking the zone for high aircraft.
+ *
+ * Locality and authority:
+ * Runs only on the server and updates the public Dynamic AA snapshot on transitions. AI commands are
+ * delegated by Waldo_fnc_DynamicAASetGroupState to each group's current owner. The loop is removed by
+ * deleting/deactivating its registry entry; only one loop is started per registered system.
  *
  * Arguments:
  * 0: id <STRING> - registered system id
  *
  * Return Value:
- * Nothing
+ * Nothing. The spawned loop exits when the system is removed, deactivated or loses required radar.
+ *
+ * Current callers:
+ * Waldo_fnc_DynamicAACreate after the server has registered and published the complete system state.
  *
  * Example:
  * ["north_sector"] spawn Waldo_fnc_DynamicAADetectorLoop;
+ * Result: the system stays closed except while hostile aircraft pass every current gate.
  */
 
 params [["_id", "", [""]]];
@@ -49,7 +63,9 @@ while {true} do {
     private _maximumAltitude = _config getOrDefault ["maximumAltitude", 1e10];
     private _mode = toUpperANSI (_config getOrDefault ["altitudeMode", "AUTO"]);
     private _aaSide = _config get "side";
-    private _aircraft = nearestObjects [_centre, ["Air"], _radius, true] select {
+    // vehicles is intentional here. nearestObjects uses a 3D sphere, which would make a 2 km map
+    // zone only about 1.7 km wide for an aircraft flying 1 km above it.
+    private _aircraft = vehicles select {
         private _candidate = _x;
         private _position = getPosWorld _candidate;
         private _altitude = switch (_mode) do {
@@ -59,7 +75,9 @@ while {true} do {
                 if (surfaceIsWater _position) then {getPosASL _candidate select 2} else {getPosATL _candidate select 2}
             };
         };
-        alive _candidate
+        _candidate isKindOf "Air"
+        && {alive _candidate}
+        && {_candidate distance2D _centre <= _radius}
         && {_altitude >= _minimumAltitude}
         && {_altitude <= _maximumAltitude}
         && {{alive _x && {_aaSide getFriend (side group _x) < 0.6}} count crew _candidate > 0}
@@ -96,17 +114,15 @@ while {true} do {
     private _engaged = _detected && {count _engagementAircraft > 0};
     private _wasEngaged = _state getOrDefault ["engaged", false];
 
-    // Re-issue only the currently eligible detector targets on every pass. This both follows a
-    // changing aircraft set and prevents a remembered below-floor or ground target from surviving.
-    if (_engaged) then {
-        {[_x, true, _engagementAircraft] call Waldo_fnc_DynamicAASetGroupState} forEach (_state getOrDefault ["defenceGroups", []]);
-    };
+    // Re-issue the gate on every pass, including while closed. Arma may reacquire a hostile from
+    // ordinary visual knowledge after the transition that first closed the site; a one-shot close
+    // therefore is not a durable safety boundary. This periodic authoritative close also follows
+    // AI groups after locality migration without relying on a state transition to happen again.
+    {
+        [_x, _engaged, _engagementAircraft] call Waldo_fnc_DynamicAASetGroupState;
+    } forEach (_state getOrDefault ["defenceGroups", []]);
 
     if (_engaged != _wasEngaged) then {
-        {
-            private _defenceGroup = _x;
-            [_defenceGroup, _engaged, _engagementAircraft] call Waldo_fnc_DynamicAASetGroupState;
-        } forEach (_state getOrDefault ["defenceGroups", []]);
         if (_engaged && {_config getOrDefault ["rearmOnActivation", false]}) then {
             private _ammoFraction = ((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1;
             {

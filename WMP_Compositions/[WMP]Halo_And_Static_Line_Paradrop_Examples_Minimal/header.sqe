@@ -1,5 +1,5 @@
 version=54;
-name="[WMP] Halo And Static Line Blackfish Drop Examples (Minimal)";
+name="[WMP] HALO and Static-Line Paradrop Example (Minimal)";
 author="WaldoTheWarfighter";
 category="Waldos Mission Pack Compositions - Air Operations";
 requiredAddons[]=

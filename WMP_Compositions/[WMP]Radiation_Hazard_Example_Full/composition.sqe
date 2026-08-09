@@ -19,7 +19,7 @@ class items
     class Item1
     {
         dataType="Comment";
-        class PositionInfo {position[]={0,-5,0};};
+		class PositionInfo {position[]={0,0,-5};};
         title="Radiation Hazard (Full parameter reference): the preset overrides hashmap shown explicitly (label/notifyTransitions/notifyDamageStages/showStatus) on top of the MODERATE_RADIATION preset's real exposure/damage, protection, local Geiger/cough audio, continuous status and optional Hazard Equipment interactions. See the Radiation Hazard Example (Minimal) composition for the smallest working call (no overrides). Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
         id=2;
     };

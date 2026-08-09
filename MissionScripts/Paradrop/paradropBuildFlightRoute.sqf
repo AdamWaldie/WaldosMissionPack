@@ -17,6 +17,9 @@
  * leftover manual waypoint silently fight each other for the AI's attention. Callers that want to
  * keep their own waypoints should not call this function.
  *
+ * Locality and authority: Run where the pilot group is local, normally the server for WMP-created
+ * operations. The caller must remote the request if the pilot group moves to a headless client.
+ *
  * Arguments:
  * 0: aircraft <OBJECT> - must already exist, be crewed (a driver present) and be in the air or able
  *    to become airborne; this function does not create, position or crew the aircraft.
@@ -24,8 +27,8 @@
  * 2: centre <ARRAY> - drop point position (2 or 3 element ATL-ish position; Z is normalised to
  *    altitude below).
  * 3: direction <NUMBER> - degrees; the aircraft approaches centre flying along this heading.
- * 4: altitude <NUMBER> - route altitude AGL in metres (default 250, clamped 100-2000).
- * 5: maximum speed <NUMBER> - km/h (default 220, clamped 80-500).
+ * 4: altitude <NUMBER> - route altitude AGL in metres (default 300, clamped 100-2000).
+ * 5: maximum speed <NUMBER> - km/h (default 300, clamped 80-500).
  * 6: approach distance <NUMBER> - metres from standby to the spawn/rejoin point (default 2500).
  * 7: run length <NUMBER> - metres of the green-to-red jump run (default 2500).
  * 8: exit distance <NUMBER> - metres flown past the red line before turning off (default 2500).
@@ -40,9 +43,10 @@
  * about the aircraft's real flight envelope, e.g. to normalize a jump envelope against it, must read
  * these back rather than reusing their own unclamped input values). Empty HashMap when the
  * aircraft/group is invalid.
+ * Result: A valid group receives the complete route and the caller receives its normalized geometry.
  *
  * Example:
- * [_aircraft, _flightGroup, getMarkerPos "dz1", 45, 250, 220, 2500, 2500, 2500, "LOOP", "LEFT"]
+ * [_aircraft, _flightGroup, getMarkerPos "dz1", 45, 300, 300, 2500, 2500, 2500, "LOOP", "LEFT"]
  *     call Waldo_fnc_ParadropBuildFlightRoute;
  *
  * Current callers: Waldo_fnc_ParadropCreateDropZone, Waldo_fnc_ParadropQuickFlightSetup.
@@ -53,8 +57,8 @@ params [
     ["_flightGroup", grpNull, [grpNull]],
     ["_centre", [], [[]]],
     ["_direction", 0, [0]],
-    ["_altitude", 250, [0]],
-    ["_maxSpeed", 220, [0]],
+    ["_altitude", 300, [0]],
+    ["_maxSpeed", 300, [0]],
     ["_approach", 2500, [0]],
     ["_runLength", 2500, [0]],
     ["_exitDistance", 2500, [0]],
@@ -90,11 +94,9 @@ private _hold = [_exit, 1800, _direction] call BIS_fnc_relPos;
 _flightGroup setBehaviourStrong "CARELESS";
 _flightGroup setCombatMode "BLUE";
 _flightGroup setSpeedMode "LIMITED";
-_aircraft flyInHeight [_altitude, true];
 _aircraft limitSpeed _maxSpeed;
 // limitSpeed is km/h, while forceSpeed is metres/second. Applying one raw value to both causes
-// extreme overspeed and an apparent lateral break at the drop zone - the exact failure mode that
-// made ad hoc paradrop aircraft setups unreliable before this route builder existed.
+// extreme overspeed and an apparent lateral break at the drop zone.
 _aircraft forceSpeed (_maxSpeed / 3.6);
 _aircraft engineOn true;
 
@@ -116,7 +118,7 @@ private _addRouteWaypoint = {
 // rather than actually breaking off toward the next waypoint - which reads exactly as "only one
 // pass, then loitering" instead of continuing the loop. 50 m still keeps the line tight relative to
 // the run length while giving faster-than-default aircraft (missions commonly configure well above
-// the 220 km/h default) real room to satisfy it.
+// the 300 km/h default) real room to satisfy it.
 // _standby is added on its own, and its real [group, index] return value is kept, rather than
 // assuming it lands at waypoint index 0 alongside the rest in one forEach: a freshly createGroup'd
 // flight group (Waldo_fnc_ParadropCreateDropZone's own dedicated pilot group) can carry an implicit
@@ -170,6 +172,17 @@ if (_lifecycle == "RETAIN") then {
     _loiter setWaypointLoiterRadius 900;
     _loiter setWaypointLoiterType "CIRCLE_L";
 };
+
+// Select the first real route waypoint explicitly. Newly created groups can retain an implicit
+// creation waypoint even though it is not returned by `waypoints`, leaving the aircraft flying its
+// default state instead of this route. Apply flyInHeight last as well: enabling simulation or
+// activating the first waypoint after an earlier altitude order can make a freshly spawned plane
+// settle back to Arma's default ~100 m flight height. Use the scalar form used by ZEN's proven Fly
+// Height module: the documented forced-array form is not retained by the Passenger Blackfish in
+// this dynamic creation lifecycle. The caller may still have simulation disabled while this route
+// is assembled; the order persists and the dynamic-spawn caller repeats it once the aircraft is live.
+_flightGroup setCurrentWaypoint _standbyWaypoint;
+_aircraft flyInHeight _altitude;
 
 createHashMapFromArray [
     ["standby", _standby], ["green", _green], ["centre", _centre], ["red", _red],

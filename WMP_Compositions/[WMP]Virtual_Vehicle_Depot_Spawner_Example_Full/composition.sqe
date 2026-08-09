@@ -131,7 +131,7 @@ class items
 		{
 			position[]={-0.32617188,0,-3.1601563};
 		};
-		title="Laptop is the spawner, everything is available to everyone. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot";
+		title="Player-use point. This laptop opens the depot; the nearby helipad is the separate vehicle spawn point. This example deliberately allows every vehicle type and every side, so restrict the named settings in the laptop init before using it in a live mission. Keep the spawn point clear and do not place scenery on the helipad. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Virtual-Vehicle-Depot";
 		id=7820;
 	};
 };

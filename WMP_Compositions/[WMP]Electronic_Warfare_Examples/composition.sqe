@@ -32,8 +32,8 @@ class items
 	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-5,0};};
-		title="Electronic Warfare: left vehicle is EMP-immune; right vehicle is tracked by WEST. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers";
+		class PositionInfo {position[]={0,0,-5};};
+		title="Electronic-warfare quick starts. The left MRAP ignores WMP EMP effects. The right MRAP broadcasts a WEST-only tracker named Tracked Vehicle. Copy the relevant vehicle init onto your own vehicle; replace west to change who receives the tracker. These examples do not create an EMP or jammer by themselves. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Electronic-Warfare-EMP-And-Signal-Trackers";
 		id=3;
 	};
 };

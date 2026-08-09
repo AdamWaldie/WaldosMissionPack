@@ -11,6 +11,10 @@
  * quantities and remain configurable. Empty placement, incompatible supply and salvage edge cases
  * fail safely.
  *
+ * Locality and authority:
+ * Runs only on the server. It verifies that remote callers own the supplied player unit, publishes
+ * resulting stock/charge state, and asks object owners/clients only for their local side effects.
+ *
  * Arguments:
  * 0: unit <OBJECT> - requesting player unit.
  * 1: operation <STRING> - REFILL, DEPLOY, TAKE or SALVAGE.
@@ -21,6 +25,7 @@
  *
  * Example:
  * [player, "DEPLOY", []] remoteExecCall ["Waldo_fnc_FieldResupplyServerHandle", 2];
+ * Result: one logical crate is safely deployed, or the request is rejected without consuming stock.
  *
  * Current callers: carrier self-actions, registered hub actions and deployed-crate actions.
  */
@@ -164,7 +169,11 @@ switch (toUpperANSI _operation) do {
         // carrying none of it for any other reason) must still be able to draw more of it from the
         // crate. Deriving this from _getMagazineRows (which reads the unit's own inventory) made
         // that exact "actually needs a refill" case always report no compatible ammunition.
-        private _compatibleClasses = compatibleMagazines _unit;
+        private _compatibleClasses = [];
+        {
+            if (_x != "") then {_compatibleClasses append (compatibleMagazines _x)};
+        } forEach [primaryWeapon _unit, secondaryWeapon _unit, handgunWeapon _unit];
+        _compatibleClasses = _compatibleClasses arrayIntersect _compatibleClasses;
         private _storedRows = _crate getVariable ["Waldo_FieldResupply_CargoRows", []];
         private _grantRows = _storedRows select {(_x param [0, "", [""]]) in _compatibleClasses};
         if (count _grantRows == 0) exitWith {

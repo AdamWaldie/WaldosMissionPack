@@ -153,6 +153,35 @@ class FullAuditTests(unittest.TestCase):
             self.assertTrue(composition_path.is_file(), folder.name)
             header = header_path.read_text(encoding="utf-8")
             composition = composition_path.read_text(encoding="utf-8")
+            for forbidden_side in ('sideUnknown', 'sideEmpty', 'side="Unknown"'):
+                self.assertNotIn(
+                    forbidden_side,
+                    composition,
+                    f"{folder.name}: compositions must use real editor sides/groups",
+                )
+            # Top-level infantry objects import as empty/unknown-side editor entities even when a
+            # hand-written `side="West"` row looks plausible. Find the least-indented Item blocks
+            # (the composition's own entities, not nested group members) and reject infantry there.
+            item_starts = list(re.finditer(r"^(?P<indent>[ \t]+)class\s+Item\d+\b", composition, re.MULTILINE))
+            if item_starts:
+                def indent_width(value: str) -> int:
+                    return sum(4 if char == "\t" else 1 for char in value)
+
+                minimum_indent = min(indent_width(match.group("indent")) for match in item_starts)
+                top_level = [match for match in item_starts if indent_width(match.group("indent")) == minimum_indent]
+                for item_index, match in enumerate(top_level):
+                    end = top_level[item_index + 1].start() if item_index + 1 < len(top_level) else len(composition)
+                    block = composition[match.start():end]
+                    data_type = re.search(r'dataType="([^"]+)";', block)
+                    entity_type = re.search(r'^\s*type="([^"]+)";', block, re.MULTILINE)
+                    if data_type and data_type.group(1) == "Object" and entity_type:
+                        self.assertIsNone(
+                            re.search(
+                                r'(^|_)(Soldier|soldier|Pilot|pilot|Crew|crew|Officer|officer|Medic|medic|Survivor|survivor)(_|$)',
+                                entity_type.group(1),
+                            ),
+                            f"{folder.name}: infantry {entity_type.group(1)} must be inside a dataType Group block",
+                        )
             author = re.search(r'^author="([^"]+)";', header, flags=re.MULTILINE)
             self.assertIsNotNone(author, folder.name)
             self.assertIn("WaldoTheWarfighter", [name.strip() for name in author.group(1).split(",")], folder.name)
@@ -172,6 +201,29 @@ class FullAuditTests(unittest.TestCase):
                 comment_count,
                 f"{folder.name}: every Eden feature comment must link its wiki article",
             )
+            # Eden SQE PositionInfo is [east/west, vertical height, north/south]. Several hand-made
+            # examples previously put their intended north/south offset in the height field, burying
+            # the teaching comment and stacking the functional objects along one line.
+            comment_chunks = composition.split('dataType="Comment";')[1:]
+            for comment_index, chunk in enumerate(comment_chunks, start=1):
+                position = re.search(r"position\[\]=\{([^}]*)\}", chunk)
+                self.assertIsNotNone(position, f"{folder.name}: comment {comment_index} has no position")
+                coordinates = [float(value) for value in position.group(1).split(",")]
+                self.assertLessEqual(
+                    abs(coordinates[1]),
+                    1,
+                    f"{folder.name}: comment {comment_index} is floating/buried; use the third coordinate for map spacing",
+                )
+                title = re.search(r'title="((?:""|[^"])*)";', chunk)
+                self.assertIsNotNone(title, f"{folder.name}: comment {comment_index} has no guidance text")
+                self.assertGreaterEqual(
+                    len(title.group(1)), 200,
+                    f"{folder.name}: comment {comment_index} is a label, not a beginner quick start",
+                )
+                self.assertLessEqual(
+                    len(title.group(1)), 650,
+                    f"{folder.name}: comment {comment_index} is an unreadable wall of text",
+                )
             ids = [int(value) for value in re.findall(r"^\s*id=(\d+);", composition, re.MULTILINE)]
             self.assertEqual(len(ids), len(set(ids)), f"{folder.name}: duplicate Eden entity id")
             types = re.findall(r'^\s*type="([^"]+)";', composition, re.MULTILINE)
@@ -191,6 +243,11 @@ class FullAuditTests(unittest.TestCase):
             init_values = re.findall(r'\binit="((?:""|[^"])*)";', composition)
             for index, encoded_init in enumerate(init_values):
                 decoded_init = encoded_init.replace('""', '"')
+                self.assertNotIn(
+                    "createVehicleCrew",
+                    decoded_init,
+                    f"{folder.name}: pre-placed examples must contain their intended editor crew, not create it from init",
+                )
                 with tempfile.NamedTemporaryFile(
                     mode="w", suffix=".sqf", encoding="utf-8", delete=False
                 ) as temporary:
@@ -238,20 +295,39 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Custom 3D Marker Example", catalogue)
         self.assertIn("Notification Trigger", catalogue)
         notification_composition = (ROOT / "WMP_Compositions" / "[WMP]Notification_Trigger" / "composition.sqe").read_text(encoding="utf-8")
-        self.assertIn('dataType="Trigger";', notification_composition)
-        self.assertIn('activationBy="ANYPLAYER";', notification_composition)
-        self.assertIn('serverOnly=1;', notification_composition)
-        self.assertIn("Waldo_fnc_SendNotification", notification_composition)
+        self.assertNotIn('dataType="Trigger";', notification_composition)
+        self.assertIn('type="Land_HelipadEmpty_F";', notification_composition)
+        self.assertIn("Waldo_fnc_NotificationTrigger", notification_composition)
         self.assertIn("Loadout Save Point Example", catalogue)
         self.assertIn("Explosive Wall Breaching Example", catalogue)
         self.assertIn("Emergency Dismount Vehicle Example", catalogue)
+
+        showcase = (root / "[WMP]Interaction_Examples_Showcase" / "composition.sqe").read_text(encoding="utf-8")
+        recovery_full = (root / "[WMP]Vehicle_Recovery_Workshop_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
+        self.assertIn("position[]={-10,0,6}", showcase)
+        self.assertIn("position[]={10,0,-4}", showcase)
+        self.assertNotIn("position[]={-10,6,0}", showcase)
+        self.assertIn("position[]={0,0,18}", recovery_full)
+        self.assertNotIn("position[]={0,18,0}", recovery_full)
 
     def test_new_feature_compositions_are_functional_examples(self):
         root = ROOT / "WMP_Compositions"
         transport = (root / "[WMP]Transport_Services_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
         hazard = (root / "[WMP]Radiation_Hazard_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
+        paradrop_minimal = (root / "[WMP]Halo_And_Static_Line_Paradrop_Examples_Minimal" / "composition.sqe").read_text(encoding="utf-8")
+        gunship_full = (root / "[WMP]Gunship_Support_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
+        gunship_minimal = (root / "[WMP]Gunship_Support_Example_Minimal" / "composition.sqe").read_text(encoding="utf-8")
+        field_resupply = (root / "[WMP]Field_Resupply_Hub_Example" / "composition.sqe").read_text(encoding="utf-8")
+        gunship_register = (
+            ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipRegister.sqf"
+        ).read_text(encoding="utf-8")
 
-        self.assertEqual(2, transport.count("createVehicleCrew this"))
+        self.assertNotIn("createVehicleCrew", transport)
+        self.assertNotIn('""createCrew""', transport)
+        self.assertNotIn('""crewSide""', transport)
+        self.assertIn('class CrewLinks', transport)
+        self.assertIn('type="B_Helipilot_F"', transport)
+        self.assertIn('type="B_crew_F"', transport)
         self.assertIn('""HELICOPTER""', transport)
         self.assertIn('""GROUND""', transport)
         self.assertIn('type="B_Heli_Light_01_F"', transport)
@@ -262,6 +338,36 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("ACE Self Interact > WMP Transport", transport)
         self.assertNotIn("Taxi", transport)
         self.assertIn("Keep simulation enabled", transport)
+        self.assertNotIn("createVehicleCrew this", paradrop_minimal)
+        self.assertIn('class CrewLinks', paradrop_minimal)
+        self.assertIn('side="West"', paradrop_minimal)
+        self.assertIn('300 m AGL / 300 km/h', paradrop_minimal)
+        self.assertEqual(4, paradrop_minimal.count('type="B_Pilot_F"'))
+        self.assertIn('turretPath[]={1}', paradrop_minimal)
+        self.assertIn('turretPath[]={2}', paradrop_minimal)
+        paradrop_full = (root / "[WMP]Halo_And_Static_Line_Paradrop_Examples_Full" / "composition.sqe").read_text(encoding="utf-8")
+        self.assertEqual(8, paradrop_full.count('type="B_Pilot_F"'))
+        self.assertEqual(4, paradrop_full.count('turretPath[]={1}'))
+        self.assertEqual(4, paradrop_full.count('turretPath[]={2}'))
+        self.assertIn('class CrewLinks', gunship_full)
+        self.assertIn('class CrewLinks', gunship_minimal)
+        self.assertNotIn('""createCrew""', gunship_full)
+        self.assertNotIn('createVehicleCrew', gunship_full)
+        self.assertNotIn('createVehicleCrew', gunship_minimal)
+        self.assertEqual(4, gunship_full.count('type="B_Pilot_F"'))
+        self.assertEqual(4, gunship_minimal.count('type="B_Pilot_F"'))
+        for turret_path in ('turretPath[]={0}', 'turretPath[]={1}', 'turretPath[]={2}'):
+            self.assertIn(turret_path, gunship_full)
+            self.assertIn(turret_path, gunship_minimal)
+        self.assertIn('dataType="Group";', field_resupply)
+        self.assertIn('type="B_Soldier_F";', field_resupply)
+        self.assertIn("real BLUFOR-grouped rifleman", field_resupply)
+        self.assertIn('type="B_Soldier_TL_F";', gunship_full)
+        self.assertIn("separately grouped BLUFOR gunshipController", gunship_full)
+        self.assertEqual(1, gunship_register.count("createVehicleCrew _aircraft"))
+        self.assertIn('[""orbit"", ""gunshipOrbit""]', gunship_full)
+        self.assertNotIn('getMarkerPos ""gunshipOrbit""', gunship_full)
+        self.assertIn('deleteMarker _orbitSourceMarker', gunship_register)
         self.assertIn("Waldo_fnc_HazardRegisterPresetZone", hazard)
         self.assertIn('""MODERATE_RADIATION""', hazard)
         self.assertFalse((root / "[WMP]WMP_HUD_Equipment_Example" / "header.sqe").exists())
@@ -343,6 +449,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("allowDamage false", protection)
         self.assertIn("isDamageAllowed _object", protection)
         self.assertIn('"invulnerable", false', register)
+        self.assertIn('if (!isServer) exitWith {true};', register)
+        self.assertIn('case "TRANSPORT_REGISTER"', runtime_apply)
+        self.assertNotIn('createVehicleCrew _vehicle', register)
+        self.assertNotIn('"createCrew"', register)
+        self.assertNotIn('"crewSide"', register)
+        self.assertIn('The selected transport has no AI driver', register)
         self.assertIn('"Invulnerable service"', runtime_zen)
         self.assertIn('["invulnerable", _invulnerable]', runtime_apply)
         self.assertIn("Waldo_Transport_LastRegistrationError", runtime_apply)
@@ -363,6 +475,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('remoteExecCall ["Waldo_fnc_TransportSetProtectionLocal", 0]', protection_refresh)
         self.assertIn("protectionOwners", protection_refresh)
         self.assertIn("WMP-blue informational action", wiki)
+
         self.assertIn("Select Destination", wiki)
         self.assertIn('Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true', register)
         self.assertIn('Waldo_ImprovedHelicopterLanding_ImmediateAcquisition", _config get "useImprovedLanding"', register)
@@ -431,6 +544,67 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('getOrDefault ["failSafeReset", false]', report)
         self.assertIn('set ["state", "STUCK"]', report)
         self.assertIn('set ["lastFailedPhase", _phase]', report)
+
+    def test_authoritative_object_registrations_ignore_duplicate_eden_client_copies(self):
+        scripts = ROOT / "MissionScripts"
+        registrations = [
+            scripts / "Logistics" / "FieldResupply" / "fieldResupplyRegisterHub.sqf",
+            scripts / "Logistics" / "FieldResupply" / "fieldResupplyAssignCarrier.sqf",
+            scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterWorkshop.sqf",
+            scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterVehicle.sqf",
+            scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterCarrier.sqf",
+            scripts / "MissionFlowAndUi" / "TacticalDisplay" / "tacticalDisplayRegister.sqf",
+        ]
+        for path in registrations:
+            source = path.read_text(encoding="utf-8")
+            self.assertTrue(
+                'if (!isServer) exitWith {true};' in source
+                or 'if !(isServer) exitWith {true};' in source,
+                path.name,
+            )
+
+        runtime_apply = (
+            scripts / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf"
+        ).read_text(encoding="utf-8")
+        for function_name in (
+            "FieldResupplyRegisterHub",
+            "FieldResupplyAssignCarrier",
+            "RecoveryRegisterWorkshop",
+            "RecoveryRegisterVehicle",
+            "RecoveryRegisterCarrier",
+            "TacticalDisplayRegister",
+            "TransportRegister",
+        ):
+            self.assertIn(f"Waldo_fnc_{function_name}", runtime_apply)
+
+        gunship = (
+            scripts / "CombatSystems" / "AirborneGunship" / "gunshipRegister.sqf"
+        ).read_text(encoding="utf-8")
+        zen_runtime = (
+            scripts / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('if !(isServer) exitWith {true};', gunship)
+        self.assertIn(
+            '[_config] remoteExecCall ["Waldo_fnc_GunshipRegister", 2];',
+            zen_runtime,
+        )
+
+        quick_paradrop = (
+            scripts / "Paradrop" / "paradropQuickFlightSetup.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('if (!local _aircraft) exitWith {true};', quick_paradrop)
+
+        dynamic_aa_create = (
+            scripts / "CombatSystems" / "DynamicAA" / "dynamicAACreate.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('if !(isServer) exitWith {true};', dynamic_aa_create)
+        for relative in (
+            ("CombatSystems", "DynamicAO", "dynamicAOCreate.sqf"),
+            ("Paradrop", "paradropCreateDropZone.sqf"),
+        ):
+            source = scripts.joinpath(*relative).read_text(encoding="utf-8")
+            self.assertIn("Eden init fields run on", source)
+            self.assertIn("if (isNull _requester) exitWith {true};", source)
 
     def test_integrated_notification_audiences_are_explicit(self):
         mission_scripts = ROOT / "MissionScripts"
@@ -613,9 +787,14 @@ class FullAuditTests(unittest.TestCase):
             encoding="utf-8"
         )
         self.assertNotIn("private _flat", apply_plan)
-        self.assertNotIn("((_setting select 0) - 1) * 16", restore)
-        self.assertIn("[_setting select 1, _setting select 0]", apply_plan)
-        self.assertIn("[_setting select 1, _setting select 0]", restore)
+        for active_path in (apply_plan, restore):
+            self.assertIn("private _absoluteChannel", active_path)
+            self.assertIn("((_setting select 0) - 1) * 16", active_path)
+            self.assertIn("acre_api_fnc_setRadioChannel", active_path)
+            self.assertIn("acre_api_fnc_getRadioChannel", active_path)
+            self.assertNotIn("[_setting select 1, _setting select 0]", active_path)
+        self.assertIn("setupRadios helper has done any work", restore)
+        self.assertIn("automatic respawn snapshot", apply_plan)
         self.assertIn("floor (_zeroBased / 16)", capture)
         self.assertIn('Waldo_Player_LoadoutIdentity', save_loadout)
         self.assertIn('"WMP_PLAYER_STATE", _uid, _scopeKey', persistence)
@@ -973,7 +1152,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["ACRE_PRC343", 2, [2, 4], "RIGHT"]', acre_config)
         self.assertIn('["VIKING 2-7", [["ACRE_PRC343", 1, [2, 7], "LEFT"]', acre_config)
         self.assertIn('Validated plans use ALL or numbered rows for a class, never both', apply_plan)
-        self.assertIn('toUpper str (_x select 1) == "ALL"', apply_plan)
+        self.assertIn('toUpper (_x select 1) == "ALL"', apply_plan)
+        self.assertNotIn('toUpper str (_x select 1)', apply_plan)
         self.assertIn('toUpper (_net select 2) == toUpper (_profile select 5)', apply_plan)
         self.assertIn('expected [key, display name, radio family, one value]', validate_config)
         self.assertIn('channel %3 is outside this radio\'s supported range 1-%4', validate_config)
@@ -982,6 +1162,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('MERGE radio overrides may use only ALL rows', validate_config)
         self.assertIn('value %3 is unsupported by every radio in family %4', validate_config)
         self.assertIn('_familyProfiles findIf {[_value, _x, _netMax343Block] call _profileAcceptsValue}', validate_config)
+        self.assertNotIn('toUpper str (_x select 1)', compile_plan)
+        self.assertNotIn('toUpper str (_x select 1)', ceoi)
         self.assertIn('_channel <= ((_profiles select _profileIndex) select 3)', labels)
         self.assertIn('[5, _revision, _sidePlans, _diagnostics]', compile_plan)
         self.assertIn('["_groupId", "_assignments"]', compile_plan)
@@ -995,6 +1177,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('acre_api_fnc_getRadioAudioSource', capture_radio)
         self.assertIn('acre_api_fnc_setCurrentRadio', restore_radio)
         self.assertIn('toUpper _mode == "BLOCK_CHANNEL"', restore_radio)
+        self.assertIn('private _absoluteChannel', restore_radio)
+        self.assertIn('private _absoluteChannel', apply_plan)
+        self.assertIn('acre_api_fnc_getRadioChannel) != _absoluteChannel', restore_radio)
+        self.assertIn('acre_api_fnc_getRadioChannel) != _absoluteChannel', apply_plan)
         self.assertNotIn('MultiPushToTalk', "\n".join((apply_plan, capture_radio, restore_radio, acre_config)))
         self.assertNotIn("retuneOnGroupChange", acre_init)
         self.assertIn('["GROUP_CHANGE", false]', acre_init)
@@ -1006,7 +1192,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["UNIT_REPLACEMENT", false]', acre_init)
         self.assertNotIn('Missing %1 occurrence', apply_plan)
         self.assertIn('(_x select 1) == _occurrence', apply_plan)
-        self.assertIn('toUpper str (_x select 1) == "ALL"', apply_plan)
+        self.assertIn('toUpper (_x select 1) == "ALL"', apply_plan)
+        self.assertNotIn('toUpper str (_x select 1)', apply_plan)
         audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
         self.assertIn("ACRE2: SHOW PLAN / RADIO STATUS", audit_client)
         self.assertIn("ACRE2: SHOW SQUAD RADIO PAIRS", audit_client)
@@ -2098,6 +2285,14 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("deleteVehicleCrew _quickAircraft", paradrop_remove)
         self.assertIn("Pre-placed aircraft deletion suppressed because players remain aboard", paradrop_remove)
         self.assertNotIn("Pre-placed Eden aircraft are always retained", paradrop_zen)
+        paradrop_create = (ROOT / "MissionScripts" / "Paradrop" / "paradropCreateDropZone.sqf").read_text(encoding="utf-8")
+        paradrop_invincibility = (ROOT / "MissionScripts" / "Paradrop" / "paradropSetAircraftInvincibilityLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('"aircraftInvincible",', paradrop_create)
+        self.assertIn('"aircraftInvincible",', paradrop_quick)
+        self.assertIn('"Invincible drop aircraft"', paradrop_zen)
+        self.assertIn('addEventHandler ["Local"', paradrop_invincibility)
+        self.assertIn('_aircraft allowDamage !_invincible', paradrop_invincibility)
+        self.assertIn('Waldo_Paradrop_DamageJipKey', paradrop_create + paradrop_quick + paradrop_remove)
         self.assertIn("class ParadropRemoveAircraftActionsLocal", functions)
         self.assertIn("_pendingJumpCount", diagnostics_client)
         self.assertIn("private _pendingJumpCount = 0;", diagnostics_client)
@@ -2305,8 +2500,10 @@ class FullAuditTests(unittest.TestCase):
         zen = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZen.sqf").read_text(encoding="utf-8")
         placement = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAZenPlacement.sqf").read_text(encoding="utf-8")
         publish = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAAPublishState.sqf").read_text(encoding="utf-8")
+        notify = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAANotifyState.sqf").read_text(encoding="utf-8")
         remove = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAARemoveZen.sqf").read_text(encoding="utf-8")
         audit_server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        automated_audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "FullArmaAudit.VR" / "runServerAudit.sqf").read_text(encoding="utf-8")
         group_state = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASetGroupState.sqf").read_text(encoding="utf-8")
         destroy = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAADestroy.sqf").read_text(encoding="utf-8")
         fighters = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASpawnFighters.sqf").read_text(encoding="utf-8")
@@ -2358,14 +2555,32 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('["mobilePositions",', aa_audit)
         self.assertIn('private _separated = true', aa_audit)
         self.assertIn('minimumMargin', aa_audit)
-        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', create)
-        self.assertIn('_x disableAI "AUTOTARGET"', group_state)
-        self.assertNotIn('_x enableAI "AUTOTARGET"', group_state)
+        self.assertIn('addCuratorEditableObjects [_assets, true]', create)
+        self.assertIn('sleep 0.1', create)
+        self.assertIn('_unit disableAI "AUTOTARGET"', group_state)
+        self.assertNotIn('_unit enableAI "AUTOTARGET"', group_state)
         self.assertIn('_eligibleTargets = _targets select', group_state)
+        self.assertIn('_group targets []', group_state)
+        self.assertIn('_group ignoreTarget _target', group_state)
+        self.assertIn('_group forgetTarget _target', group_state)
+        self.assertIn('setVehicleReceiveRemoteTargets false', group_state)
+        self.assertIn('setVehicleReportRemoteTargets false', group_state)
+        self.assertIn('_unit disableAI "FIREWEAPON"', group_state)
+        self.assertIn('_unit enableAI "FIREWEAPON"', group_state)
+        self.assertIn('setVehicleRadar ([0, 1] select _active)', group_state)
+        self.assertIn('_unit disableAI "ALL"', group_state)
+        self.assertIn('_candidate distance2D _centre <= _radius', detector)
+        self.assertNotIn('nearestObjects [_centre, ["Air"]', detector)
+        self.assertIn('[_x, _engaged, _engagementAircraft] call Waldo_fnc_DynamicAASetGroupState', detector)
+        self.assertIn('including while closed', detector)
+        self.assertIn('deleteGroupWhenEmpty true', create)
+        self.assertIn('if (_recipients isEqualTo []) exitWith {}', notify)
+        self.assertIn('if !(_recipients isEqualTo []) then', fighters)
         self.assertIn('[_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo', destroy)
         self.assertIn('_waypoint setWaypointType "MOVE"', fighters)
         self.assertNotIn('_waypoint setWaypointType "SAD"', fighters)
-        self.assertIn('addCuratorEditableObjects [_editableObjects, true]', fighters)
+        self.assertIn('addCuratorEditableObjects [_assets, true]', fighters)
+        self.assertIn('sleep 0.1', fighters)
         self.assertIn('[_id, _config getOrDefault ["cleanupOnRadarLoss", false]] call', detector)
         self.assertNotIn('[_id, _config getOrDefault ["cleanupOnRadarLoss", false]] spawn', detector)
         radar_predicate = detector.split('private _operationalRadars = _radars select {', 1)[1].split('};', 1)[0]
@@ -2373,6 +2588,16 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('exitWith', radar_predicate)
         self.assertIn('Waldo_DynamicAA_FactionAssetPools', shared)
         self.assertNotIn('Waldo_DynamicAA_FactionAssetPools', server)
+        self.assertIn('"core/dynamic-aa/envelope-and-locality"', automated_audit)
+        for token in ('["minimumAltitude", 100]', '["maximumAltitude", 300]', '["engagementRadius", 500]'):
+            self.assertIn(token, automated_audit)
+        self.assertIn('private _belowClosed', automated_audit)
+        self.assertIn('private _detectionOnly', automated_audit)
+        self.assertIn('private _insideEngaged', automated_audit)
+        self.assertIn('private _aboveClosed', automated_audit)
+        self.assertIn('private _groundNotEngaged', automated_audit)
+        self.assertIn('private _autoTargetClosed', automated_audit)
+        self.assertIn('private _closedOnOwners', automated_audit)
 
     def test_shared_interaction_selectors_expose_the_complete_catalogue(self):
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")

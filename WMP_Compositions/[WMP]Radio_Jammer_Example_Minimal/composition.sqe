@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Radio Jammer (Minimal): the smallest working call - a 300 m omnidirectional field jamming everyone, all bands, active immediately, with only the standard Toggle Radio Jammer action (no engineer Disable Jammer interaction, no curator overlay marker). See the Radio Jammer Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming";
 		id=2;
 	};

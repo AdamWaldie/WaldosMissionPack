@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Mobile HQ (Minimal): the smallest working call - deploy/tear-down ACE actions with legacy audio, logistics disabled, defaults for bearing/distance. No decoration is synced. See the MHQ Basic Example (Full) composition for a fully dressed camp with every option shown. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Mobile-Command-Post-With-Integrated-Logistics-System";
 		id=2;
 	};

@@ -19,8 +19,8 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
-		title="Persistence Object Example (Minimal): the smallest working call - a stable key and the object are all that's required. Omitting the options array saves everything by default (cargo, damage, fuel, ammo/pylons and position). No isServer wrapper needed - safe to leave directly in an object's init field on every machine. Does nothing until Waldo_Persistence_Enable is set true (see the Full composition's comment). See the Persistence Object Example (Full) composition to see and edit which fields are saved. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#persistence";
+		class PositionInfo {position[]={0,0,-4};};
+		title="Persistent-object minimal example. A stable key plus this object saves every supported field: cargo, damage, fuel, ammunition/pylons and position. Leave the call directly in the object init; do not add isServer. It operates only when persistence is enabled and server INIDBI2 is available. Use the Full example when only selected fields should persist. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#persistence";
 		id=2;
 	};
 };

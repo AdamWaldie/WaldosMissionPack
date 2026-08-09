@@ -43,7 +43,7 @@ class items
 		side="West";
 		class Entities
 		{
-			items=2;
+			items=4;
 			class Item0
 			{
 				dataType="Object";
@@ -77,6 +77,24 @@ class items
 				type="B_Pilot_F";
 				atlOffset=5.9999166;
 			};
+			class Item2
+			{
+				dataType="Object";
+				class PositionInfo {position[]={2491.8086,93.130981,865.53906}; angles[]={0,3.5128067,0};};
+				side="West";
+				class Attributes {};
+				id=7666;
+				type="B_Pilot_F";
+			};
+			class Item3
+			{
+				dataType="Object";
+				class PositionInfo {position[]={2491.8086,99.130981,865.53906}; angles[]={0,3.5128067,0};};
+				side="West";
+				class Attributes {};
+				id=7667;
+				type="B_Pilot_F";
+			};
 		};
 		class Attributes
 		{
@@ -86,11 +104,11 @@ class items
 		{
 			class LinkIDProvider
 			{
-				nextID=2;
+				nextID=4;
 			};
 			class Links
 			{
-				items=2;
+				items=4;
 				class Item0
 				{
 					linkID=0;
@@ -111,6 +129,20 @@ class items
 						role=2;
 						turretPath[]={0};
 					};
+				};
+				class Item2
+				{
+					linkID=2;
+					item0=7666;
+					item1=7663;
+					class CustomData {role=2; turretPath[]={1};};
+				};
+				class Item3
+				{
+					linkID=3;
+					item0=7667;
+					item1=7663;
+					class CustomData {role=2; turretPath[]={2};};
 				};
 			};
 		};
@@ -166,7 +198,7 @@ class items
 		side="West";
 		class Entities
 		{
-			items=2;
+			items=4;
 			class Item0
 			{
 				dataType="Object";
@@ -202,6 +234,24 @@ class items
 					type="B_Pilot_F";
 				atlOffset=-37.4589;
 			};
+			class Item2
+			{
+				dataType="Object";
+				class PositionInfo {position[]={2290.9082,94.5728,2986.3477}; angles[]={0,3.5128067,0};};
+				side="West";
+				class Attributes {};
+				id=7711;
+				type="B_Pilot_F";
+			};
+			class Item3
+			{
+				dataType="Object";
+				class PositionInfo {position[]={2290.9082,100.5728,2986.3477}; angles[]={0,3.5128067,0};};
+				side="West";
+				class Attributes {};
+				id=7712;
+				type="B_Pilot_F";
+			};
 		};
 		class Attributes
 		{
@@ -211,11 +261,11 @@ class items
 		{
 			class LinkIDProvider
 			{
-				nextID=2;
+				nextID=4;
 			};
 			class Links
 			{
-				items=2;
+				items=4;
 				class Item0
 				{
 					linkID=0;
@@ -236,6 +286,20 @@ class items
 						role=2;
 						turretPath[]={0};
 					};
+				};
+				class Item2
+				{
+					linkID=2;
+					item0=7711;
+					item1=7718;
+					class CustomData {role=2; turretPath[]={1};};
+				};
+				class Item3
+				{
+					linkID=3;
+					item0=7712;
+					item1=7718;
+					class CustomData {role=2; turretPath[]={2};};
 				};
 			};
 		};
@@ -289,7 +353,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-12};};
-		title="HALO and Static-Line Examples (Full parameter reference): two vanilla NATO passenger Blackfish aircraft, crews and boarding flags, flown by Waldo_fnc_ParadropQuickFlightSetup with every option shown explicitly (no manual waypoints needed - it builds and flies the route itself). Static-line uses 300 m and flies toward marker ""dz1""; HALO uses 1200 m and flies toward marker ""dz2"" (both included below - drag them to where you actually want the drop). The ""dz1""/""dz2"" markers you see now are only the target point you place; once the mission runs, the script automatically adds a full AREA/STANDBY/GREEN/RED/POINT marker corridor around the actual flown route - nothing else to set up. See the Halo And Static Line Paradrop Examples (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
+		title="HALO and static-line guided examples. Both NATO passenger Blackfish contain their normal four-person BLUFOR editor crew: pilot, copilot and two crew chiefs. The static aircraft targets dz1 at 300 m; the HALO aircraft targets dz2 at 1200 m. Drag those target markers before play. WMP creates the AREA/STANDBY/GREEN/RED corridor at runtime. Keep simulation enabled; use Minimal for one static-line flight. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
 		id=17718;
 	};
 	class Item7
@@ -325,11 +389,11 @@ class VehicleInVehicleLinks
 {
 	class LinkIDProvider
 	{
-		nextID=4;
+		nextID=8;
 	};
 	class Links
 	{
-		items=4;
+		items=8;
 		class Item0
 		{
 			linkID=0;
@@ -372,5 +436,9 @@ class VehicleInVehicleLinks
 				turretPath[]={0};
 			};
 		};
+		class Item4 {linkID=4; item0=7666; item1=7663; class CustomData {role=2; turretPath[]={1};};};
+		class Item5 {linkID=5; item0=7667; item1=7663; class CustomData {role=2; turretPath[]={2};};};
+		class Item6 {linkID=6; item0=7711; item1=7718; class CustomData {role=2; turretPath[]={1};};};
+		class Item7 {linkID=7; item0=7712; item1=7718; class CustomData {role=2; turretPath[]={2};};};
 	};
 };

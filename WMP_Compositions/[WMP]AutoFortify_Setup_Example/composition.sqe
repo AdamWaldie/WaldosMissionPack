@@ -18,7 +18,7 @@ class items
 					position[]={-4.9328613,0.00084686279,-8.871582};
 					angles[]={0.0023920804,0,0};
 				};
-				title="AutoFortify Example. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup";
+				title="Automatic ACE Fortify quick start. The logic spends a 500-point WEST budget using only the synchronised defences. Place the composition, move/add/remove the example objects, keep them synchronised to the logic, then change west or 500 in the logic's init if needed. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Automatic-ACE-Fortify-Setup";
 				description="Remember to make sure players have a fortify tool!";
 				id=38;
 				atlOffset=7.6293945e-006;

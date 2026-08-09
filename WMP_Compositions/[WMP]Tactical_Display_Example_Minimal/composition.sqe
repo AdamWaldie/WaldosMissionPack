@@ -19,8 +19,8 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-3,0};};
-		title="Tactical Display (Minimal): the board opens the WMP tactical map with defaults (sideUnknown follows each viewer, 2000 m radius, known enemy contacts enabled, no interaction lock). See the Tactical Display Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#tactical-display";
+		class PositionInfo {position[]={0,0,-3};};
+		title="Tactical Display (Minimal): the board opens the WMP tactical map with defaults (VIEWER follows each player's own side, 2000 m radius, known enemy contacts enabled, no interaction lock). See the Tactical Display Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#tactical-display";
 		id=2;
 	};
 };

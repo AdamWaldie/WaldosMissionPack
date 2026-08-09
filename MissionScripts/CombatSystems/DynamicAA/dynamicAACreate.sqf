@@ -2,14 +2,20 @@
  * Author: WaldoTheWarfighter
  * Creates or replaces a named, server-authoritative Dynamic AA system from an extensible hash-map configuration.
  * The config file supplies candidate asset pools and safety bounds; it does not call this function.
- * Use initServer.sqf for pre-planned systems or ZEN for live creation. Non-server calls route to the
- * server and remote player requests require an assigned curator. Reusing an id replaces the system.
+ * Use initServer.sqf for pre-planned systems or ZEN for live creation. The same call may be placed in
+ * an Eden object init: only its server execution creates the system and client duplicates exit safely.
+ * ZEN requests are sent to the server and require an assigned curator. Reusing an id replaces it.
+ *
+ * Locality and authority:
+ * The server validates, creates and publishes the registry snapshot. ZEN requests require a curator;
+ * AI commands later follow each group's current owner. Repeated ids replace the existing system.
  *
  * Arguments:
  * 0: config <HASHMAP> with:
  *    Required: id <STRING> safe unique key; centre <ARRAY> detection centre.
  *    Naming: displayName <STRING> is the human-readable marker/removal name (default: id).
- *    Detection: side <SIDE>, radius, minimumAltitude, maximumAltitude, engagementRadius <METRES>,
+ *    Detection: side <SIDE>; radius and engagementRadius are horizontal map distances <METRES>;
+ *      minimumAltitude/maximumAltitude are the independent flight floor/ceiling <METRES>,
  *      detectionDwell, clearDelay and detectionInterval <SECONDS>.
  *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY> for
  *      authored layouts. Otherwise radarCount/staticCount/mobileCount produce a terrain-safe,
@@ -34,15 +40,16 @@
  *     ["radius", 2500], ["minimumAltitude", 80]
  * ];
  * [_config] call Waldo_fnc_DynamicAACreate;
+ * Result: one validated system is registered; a failed complete layout leaves no partial assets.
  *
- * Current callers: Dynamic AA ZEN creation, audit mission and mission-maker server scripts.
+ * Current callers: Dynamic AA ZEN creation, compositions, audit mission and mission-maker server
+ * scripts. ZEN submits to the server; ordinary non-server execution exits quietly so an Eden init
+ * does not submit one duplicate system per connected client. Server registry/snapshot publication
+ * supplies JIP state, while group-local AI work follows the group's current owner/headless client.
  */
 
 params [["_config", createHashMap, [createHashMap]]];
-if !(isServer) exitWith {
-    [_config] remoteExecCall ["Waldo_fnc_DynamicAACreate", 2];
-    true
-};
+if !(isServer) exitWith {true};
 
 private _remoteAuthorized = true;
 private _requestOwner = remoteExecutedOwner;
@@ -344,9 +351,14 @@ private _assignCrew = {
     if (count crew _vehicle == 0) exitWith {grpNull};
     private _oldGroups = [];
     {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
-    private _group = createGroup _side;
+    private _group = createGroup [_side, true];
     (crew _vehicle) joinSilent _group;
-    {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+    // createVehicleCrew may briefly create one or more config-side groups. Mark those groups for
+    // engine-managed deletion rather than deleting freshly networked groups in the same frame; the
+    // latter produced Type_112/Type_116 object-not-found traffic on dedicated servers.
+    {
+        if (!isNull _x && {_x != _group}) then {_x deleteGroupWhenEmpty true};
+    } forEach _oldGroups;
     _groups pushBackUnique _group;
     if (_defence) then {
         [_group, false] call Waldo_fnc_DynamicAASetGroupState;
@@ -421,9 +433,17 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
-private _editableObjects = +_objects;
-{{_editableObjects pushBackUnique _x} forEach units _x} forEach _groups;
-{_x addCuratorEditableObjects [_editableObjects, true]} forEach allCurators;
+// Newly created network objects are not guaranteed to be available to curator replication in the
+// same simulation frame. Adding vehicles and every crew unit immediately (then asking includeCrew
+// to add those units a second time) produced Type_112/116 "Object not found" traffic on dedicated
+// servers and stale Zeus entries. Defer one frame and add each root asset once; includeCrew supplies
+// its crew after the objects have valid network identities.
+[+_objects] spawn {
+    params ["_assets"];
+    sleep 0.1;
+    _assets = _assets select {!isNull _x};
+    {_x addCuratorEditableObjects [_assets, true]} forEach allCurators;
+};
 if (_config getOrDefault ["shutdownInteraction", false]) then {
     private _interactionSettings = [_id, _config getOrDefault ["shutdownChallenge", "circuit"], _config getOrDefault ["shutdownDifficulty", "standard"]];
     _radar setVariable ["Waldo_DynamicAA_SystemId", _id, true];
@@ -435,6 +455,10 @@ _state set ["handle", _handle];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 [] call Waldo_fnc_DynamicAAPublishState;
-diag_log format ["[WMP DYNAMIC AA] '%1' (%2) active: radius %3m, altitude floor %4m, asset pool %5.", _displayName, _id, _radius, _minimumAltitude, _config get "resolvedAssetPool"];
+diag_log format [
+    "[WMP DYNAMIC AA] '%1' (%2) active: detection=%3m engagement=%4m altitude=%5-%6m %7 assetPool=%8.",
+    _displayName, _id, _radius, _engagementRadius, _minimumAltitude, _maximumAltitude,
+    _config getOrDefault ["altitudeMode", "AUTO"], _config get "resolvedAssetPool"
+];
 [format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
 true

@@ -19,7 +19,9 @@ waitUntil {
     {!isNil "Waldo_fnc_EcoInit"}
 };
 
-missionNamespace setVariable ["Waldo_QA_FeatureObjects", [], true];
+// Server-private bookkeeping. Broadcasting this array is both unnecessary and unsafe: a freshly
+// created AI unit can enter the array before the engine assigns its multiplayer network identity.
+missionNamespace setVariable ["Waldo_QA_FeatureObjects", []];
 missionNamespace setVariable ["Waldo_QA_FeatureStations", [], true];
 call compile preprocessFileLineNumbers "functionStations.sqf";
 
@@ -28,7 +30,26 @@ Waldo_QA_fnc_trackFeatureObjectServer = {
     if (isNull _object) exitWith {objNull};
     private _objects = +(missionNamespace getVariable ["Waldo_QA_FeatureObjects", []]);
     _objects pushBackUnique _object;
-    missionNamespace setVariable ["Waldo_QA_FeatureObjects", _objects, true];
+    missionNamespace setVariable ["Waldo_QA_FeatureObjects", _objects];
+
+    // Curator state is authoritative on the server, but newly created units may not yet have a
+    // network identity. Add each fixture only after the engine can resolve its netId. This avoids
+    // timing-dependent Ref-to-nonnetwork warnings and remains safe when the curator is created later.
+    if (_object isKindOf "CAManBase") then {
+        [_object] spawn {
+            params ["_networkObject"];
+            private _deadline = diag_tickTime + 5;
+            waitUntil {
+                uiSleep 0.05;
+                isNull _networkObject
+                || {netId _networkObject != "0:0" && {!isNull objectFromNetId (netId _networkObject)}}
+                || {diag_tickTime >= _deadline}
+            };
+            if (isNull _networkObject || {netId _networkObject == "0:0"}) exitWith {};
+            private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
+            if (!isNull _curator) then {_curator addCuratorEditableObjects [[_networkObject], true]};
+        };
+    };
     _object
 };
 
@@ -76,12 +97,16 @@ Waldo_QA_fnc_registerFeatureStationServer = {
     _marker setMarkerType "mil_dot";
     _marker setMarkerColor "ColorBLUFOR";
     _marker setMarkerText _title;
-    [format ["Waldo_QA_Station3D_%1", _id], _position, createHashMapFromArray [
-        ["text", _title],
-        ["offset", [0, 0, 2.4]],
-        ["distance", 10],
-        ["colour", [0.49, 0.78, 1, 0.95]]
-    ]] call Waldo_fnc_Create3DMarker;
+    [_id, _position, _title] spawn {
+        params ["_stationId", "_stationPosition", "_stationTitle"];
+        uiSleep 0.2;
+        [format ["Waldo_QA_Station3D_%1", _stationId], _stationPosition, createHashMapFromArray [
+            ["text", _stationTitle],
+            ["offset", [0, 0, 2.4]],
+            ["distance", 10],
+            ["colour", [0.49, 0.78, 1, 0.95]]
+        ]] call Waldo_fnc_Create3DMarker;
+    };
     true
 };
 
@@ -308,12 +333,17 @@ Waldo_QA_fnc_spawnAARTargetServer = {
     _target allowDamage true;
     _target setVariable ["Waldo_QA_AARTarget", true, true];
     missionNamespace setVariable ["Waldo_QA_AARTargetGroup", _group];
-    missionNamespace setVariable ["Waldo_QA_AARTarget", _target, true];
-    ["qa_aar_live_target", _target, createHashMapFromArray [
-        ["text", "AAR LIVE TARGET | SHOOT TO RECORD OPFOR KIA"],
-        ["icon", "\a3\ui_f\data\map\markers\military\destroy_CA.paa"],
-        ["colour", [1, 0.72, 0.25, 1]], ["offset", [0, 0, 2.2]], ["distance", 100]
-    ]] call Waldo_fnc_Create3DMarker;
+    missionNamespace setVariable ["Waldo_QA_AARTarget", _target];
+    [_target] spawn {
+        params ["_delayedTarget"];
+        uiSleep 0.2;
+        if (isNull _delayedTarget) exitWith {};
+        ["qa_aar_live_target", _delayedTarget, createHashMapFromArray [
+            ["text", "AAR LIVE TARGET | SHOOT TO RECORD OPFOR KIA"],
+            ["icon", "\a3\ui_f\data\map\markers\military\destroy_CA.paa"],
+            ["colour", [1, 0.72, 0.25, 1]], ["offset", [0, 0, 2.2]], ["distance", 100]
+        ]] call Waldo_fnc_Create3DMarker;
+    };
     if (!isNull _actor) then {
         ["AAR live target reset 19 metres north of this station. Shoot it, then run ENDEX + AAR to verify the recorded OPFOR KIA.", _actor] call Waldo_fnc_DynamicText;
     };
@@ -610,7 +640,10 @@ if (isNull _curator) then {
     diag_log "WMP FULL AUDIT FAIL: Zeus curator could not be created";
 } else {
     _curator setVariable ["showNotification", false];
-    _curator addCuratorEditableObjects [missionNamespace getVariable ["Waldo_QA_FeatureObjects", []], true];
+    private _networkReadyObjects = (missionNamespace getVariable ["Waldo_QA_FeatureObjects", []]) select {
+        !isNull _x && {netId _x != "0:0"}
+    };
+    _curator addCuratorEditableObjects [_networkReadyObjects, true];
     missionNamespace setVariable ["Waldo_QA_Curator", _curator, true];
     [] spawn {
         waitUntil {

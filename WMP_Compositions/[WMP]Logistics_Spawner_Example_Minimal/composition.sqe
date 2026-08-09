@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-3,0};};
+		class PositionInfo {position[]={0,0,-3};};
 		title="Logistics Spawner (Minimal): the smallest working call - a standalone quartermaster spawns crates 2 m ahead of this object at the default bearing. See the Logistics Spawner Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
 		id=2;
 	};

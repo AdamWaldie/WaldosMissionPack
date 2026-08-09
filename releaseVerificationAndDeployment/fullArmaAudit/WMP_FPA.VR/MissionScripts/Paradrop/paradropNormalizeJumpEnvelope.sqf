@@ -8,6 +8,9 @@
  * Setting a route altitude and a jump envelope independently is exactly how that mismatch happens;
  * this function is the one place both paradrop entry points make sure it can't.
  *
+ * Locality and authority: Pure calculation; safe on any machine. It reads no mission state and
+ * changes no aircraft, player or public variable.
+ *
  * Arguments:
  * 0: route altitude <NUMBER> - metres AGL the aircraft will actually fly at.
  * 1: route maximum speed <NUMBER> - km/h the aircraft will actually be capped to.
@@ -18,33 +21,37 @@
  *
  * Return Value:
  * HashMap - staticMinimumAltitude, staticMaximumAltitude, staticMaximumSpeed, haloMinimumAltitude,
- * each guaranteed satisfiable at the supplied route altitude/speed with headroom to spare - the
+ * altitude values adjusted where necessary to remain reachable at the supplied route altitude. The
+ * static speed ceiling is preserved exactly: both public entry points validate/clamp the route speed
+ * before calling this helper rather than weakening a mission-maker safety limit. The
  * static/HALO hold-action conditions re-check the aircraft's *live* altitude/speed every frame
  * they're offered, and AI flyInHeight/limitSpeed autopilot routinely wanders a few metres/km-h
  * around its nominal route target rather than holding it exactly. A margin sized to the route's
  * commanded value alone would flicker the action on and off with that normal wander; these margins
  * are deliberately generous enough to absorb it, while staying inside the natural headroom the
  * pack's own shipped WALDO_STATIC_/WALDO_PARA_ defaults already leave around the route builder's
- * own default 250 m / 220 km/h - a mission maker's untouched preset values are never widened by
+ * own default 300 m / 300 km/h - a mission maker's untouched preset values are never widened by
  * this function, only a genuinely incompatible custom combination is:
  * - staticMinimumAltitude never exceeds route altitude - 50 m (a static-line jumper must be able to
  *   release at least 50 m below the route's cruise altitude).
- * - staticMaximumAltitude never falls below route altitude + 90 m (route altitude must sit well
+ * - staticMaximumAltitude never falls below route altitude + 50 m (route altitude must sit well
  *   inside the static-line window, not near its edge).
- * - staticMaximumSpeed never falls below route speed + 60 km/h (the aircraft's actual cruise speed
- *   must stay comfortably under the jump's speed ceiling, not brush against it).
+ * - staticMaximumSpeed remains the mission maker's configured ceiling. ZEN/server validation must
+ *   keep a Static-Line route at or below that value; this helper must not silently turn a configured
+ *   310 km/h safety limit into 360 km/h.
  * - haloMinimumAltitude never exceeds route altitude - 50 m (HALO release must stay reachable even
  *   if the aircraft is briefly a little below its nominal cruise altitude, not just exactly at it).
+ * Result: The returned HashMap is safe to pass to both jump-action installers.
  *
  * Example:
- * [250, 220, 180, 350, 310, 1000] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
+ * [300, 300, 180, 350, 310, 1000] call Waldo_fnc_ParadropNormalizeJumpEnvelope;
  *
  * Current callers: Waldo_fnc_ParadropCreateDropZone, Waldo_fnc_ParadropQuickFlightSetup.
  */
 
 params [
-    ["_altitude", 250, [0]],
-    ["_maxSpeed", 220, [0]],
+    ["_altitude", 300, [0]],
+    ["_maxSpeed", 300, [0]],
     ["_rawStaticMin", 180, [0]],
     ["_rawStaticMax", 350, [0]],
     ["_rawStaticMaxSpeed", 310, [0]],
@@ -54,17 +61,16 @@ params [
 // Buffers absorb normal AI flyInHeight/limitSpeed wander around the route's commanded
 // altitude/speed so a brief autopilot dip/spike doesn't flicker the jump hold-action unavailable.
 // Each is sized to stay inside the natural headroom the shipped WALDO_STATIC_/WALDO_PARA_ defaults
-// (180/350/310/1000) already leave around the route builder's own default 250 m / 220 km/h, so an
+// (180/350/310/1000) already leave around the route builder's own default 300 m / 300 km/h, so an
 // untouched default configuration is never altered by this function - only genuinely incompatible
 // custom altitude/speed/envelope combinations are.
 private _staticMinAltitudeBuffer = 50;
-private _staticMaxAltitudeBuffer = 90;
-private _staticMaxSpeedBuffer = 60;
+private _staticMaxAltitudeBuffer = 50;
 private _haloMinAltitudeBuffer = 50;
 
 createHashMapFromArray [
     ["staticMinimumAltitude", (_rawStaticMin max 0) min ((_altitude - _staticMinAltitudeBuffer) max 0)],
     ["staticMaximumAltitude", (_rawStaticMax max (_altitude + _staticMaxAltitudeBuffer)) min 2500],
-    ["staticMaximumSpeed", (_rawStaticMaxSpeed max (_maxSpeed + _staticMaxSpeedBuffer)) min 700],
+    ["staticMaximumSpeed", (_rawStaticMaxSpeed max 0) min 700],
     ["haloMinimumAltitude", (_rawHaloMin max 0) min ((_altitude - _haloMinAltitudeBuffer) max 0)]
 ]

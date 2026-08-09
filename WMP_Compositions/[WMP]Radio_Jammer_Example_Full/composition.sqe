@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Radio Jammer (Full parameter reference): every Waldo_fnc_Jammer option shown explicitly, including the curator-only GM overlay marker and the circuit-bypass Disable Jammer interaction. A successful disable leaves the prop intact and exposes Reactivate Jammer. See the Radio Jammer Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Radio-Jamming";
 		id=2;
 	};
