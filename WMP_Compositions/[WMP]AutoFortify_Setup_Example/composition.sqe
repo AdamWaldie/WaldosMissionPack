@@ -247,7 +247,7 @@ class items
 			position[]={0.56192017,1.6619949,-5.8196869};
 			angles[]={-0,2.5734062,0.0023920804};
 		};
-		side="Empty";
+		side="West";
 		flags=4;
 		class Attributes
 		{
@@ -262,7 +262,7 @@ class items
 		{
 			position[]={2.1800232,0.72162628,1.9930573};
 		};
-		side="Empty";
+		side="West";
 		flags=4;
 		class Attributes
 		{

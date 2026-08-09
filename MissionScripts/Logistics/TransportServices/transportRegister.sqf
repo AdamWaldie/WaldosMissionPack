@@ -5,9 +5,10 @@
  * Registration is repeat-safe and stores enough public object state for JIP interactions while the
  * full mutable registry remains server-only.
  * Locality and authority: callable anywhere and self-forwards; only the server mutates registration state.
- * The driver seat is locked to players and the captured AI service crew has fleeing/panic
- * disabled (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily
- * damaged to remain effective
+ * The driver seat is left open to players - a player may board it directly at any time, the same as
+ * any other vehicle, with no need to go through Take Manual Control first. The captured AI service
+ * crew has fleeing/panic disabled (allowFleeing 0) so it will not bail out under fire and leave the
+ * seat empty in the first place; a vehicle that becomes too heavily damaged to remain effective
  * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written
  * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
  *
@@ -180,13 +181,13 @@ if (_config get "invulnerable") then {_vehicle setDamage 0};
 private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
-_vehicle lockDriver true;
-// The original AI service crew must stay put - an AI driver/gunner who panics and bails out under
-// fire strands the vehicle exactly like a vanished driver would, without the monitor's own
-// driver-death check ever catching it. allowFleeing 0 is the documented Arma command for
-// suppressing that panic/flee behaviour (there is no separate "prevent getting out" command); it
-// only touches crew captured at registration time - a player who later boards as cargo/passenger
-// is unaffected.
+// Deliberately not lockDriver true - a player may walk up and board the driver's seat directly like
+// any other vehicle, with no forced detour through Take Manual Control. The original AI service crew
+// must still stay put on its own: an AI driver/gunner who panics and bails out under fire strands the
+// vehicle exactly like a vanished driver would, without the monitor's own driver-death check ever
+// catching it. allowFleeing 0 is the documented Arma command for suppressing that panic/flee behaviour
+// (there is no separate "prevent getting out" command); it only touches crew captured at registration
+// time - a player who later boards as cargo/passenger is unaffected.
 {_x allowFleeing 0} forEach crew _vehicle;
 // The 2-element array form forces strict AGL terrain-following instead of leaving the AI free to
 // compute its own "safe" cruise profile - over long routes with real elevation change, plain
