@@ -9,7 +9,7 @@ class items
 		side="West";
 		class Entities
 		{
-			items=2;
+			items=4;
 			class Item0
 			{
 				dataType="Object";
@@ -30,14 +30,32 @@ class items
 				type="B_Pilot_F";
 				atlOffset=6;
 			};
+			class Item2
+			{
+				dataType="Object";
+				class PositionInfo {position[]={4,0,0};};
+				side="West";
+				class Attributes {};
+				id=103;
+				type="B_Pilot_F";
+			};
+			class Item3
+			{
+				dataType="Object";
+				class PositionInfo {position[]={6,0,0};};
+				side="West";
+				class Attributes {};
+				id=104;
+				type="B_Pilot_F";
+			};
 		};
 		class Attributes {speedMode="LIMITED";};
 		class CrewLinks
 		{
-			class LinkIDProvider {nextID=2;};
+			class LinkIDProvider {nextID=4;};
 			class Links
 			{
-				items=2;
+				items=4;
 				class Item0
 				{
 					linkID=0;
@@ -52,6 +70,20 @@ class items
 					item1=110;
 					class CustomData {role=2; turretPath[]={0};};
 				};
+				class Item2
+				{
+					linkID=2;
+					item0=103;
+					item1=110;
+					class CustomData {role=2; turretPath[]={1};};
+				};
+				class Item3
+				{
+					linkID=3;
+					item0=104;
+					item1=110;
+					class CustomData {role=2; turretPath[]={2};};
+				};
 			};
 		};
 		id=100;
@@ -59,18 +91,29 @@ class items
 	};
 	class Item4
 	{
-		dataType="Object";
-		class PositionInfo {position[]={4,0,4};};
 		side="West";
-		flags=6;
-		class Attributes
+		dataType="Group";
+		class Entities
 		{
-			init="[this, ""EXAMPLE_GUNSHIP""] call Waldo_fnc_GunshipAssignControllerOnStart;";
-			name="gunshipController";
-			description="Gunship Controller (FAC/JTAC) - already assigned to SPECTRE on mission start; see this unit's init field.";
+			items=1;
+			class Item0
+			{
+				dataType="Object";
+				class PositionInfo {position[]={4,0,4};};
+				side="West";
+				flags=6;
+				class Attributes
+				{
+					init="[this, ""EXAMPLE_GUNSHIP""] call Waldo_fnc_GunshipAssignControllerOnStart;";
+					name="gunshipController";
+					description="Gunship Controller (FAC/JTAC) - already assigned to SPECTRE on mission start; see this unit's init field.";
+				};
+				id=113;
+				type="B_Soldier_TL_F";
+			};
 		};
-		id=113;
-		type="B_Soldier_TL_F";
+		class Attributes {};
+		id=114;
 	};
 	class Item1
 	{
@@ -107,16 +150,16 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-6};};
-		title="Airborne gunship guided example. The VTOL already has correctly sided pilot and turret crew; its init registers that existing aircraft as SPECTRE and does not create crew. Move the Gunship Orbit marker to set the patrol centre. The nearby gunshipController unit receives control at mission start. Keep aircraft/crew simulation enabled and edit named settings in the aircraft init. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
+		title="Airborne gunship guided example. The VTOL already has its complete four-person BLUFOR editor crew: pilot, copilot and both weapon operators. Its init registers that existing aircraft as SPECTRE and never creates crew. Move the Gunship Orbit marker to set the patrol centre. The separately grouped BLUFOR gunshipController receives control at mission start. Keep aircraft/crew simulation enabled and edit named settings in the aircraft init. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
 		id=112;
 	};
 };
 class VehicleInVehicleLinks
 {
-	class LinkIDProvider {nextID=2;};
+	class LinkIDProvider {nextID=4;};
 	class Links
 	{
-		items=2;
+		items=4;
 		class Item0
 		{
 			linkID=0;
@@ -130,6 +173,20 @@ class VehicleInVehicleLinks
 			item0=102;
 			item1=110;
 			class CustomData {role=2; turretPath[]={0};};
+		};
+		class Item2
+		{
+			linkID=2;
+			item0=103;
+			item1=110;
+			class CustomData {role=2; turretPath[]={1};};
+		};
+		class Item3
+		{
+			linkID=3;
+			item0=104;
+			item1=110;
+			class CustomData {role=2; turretPath[]={2};};
 		};
 	};
 };

@@ -9,7 +9,7 @@ class items
 		side="West";
 		class Entities
 		{
-			items=2;
+			items=4;
 			class Item0
 			{
 				dataType="Object";
@@ -28,13 +28,31 @@ class items
 				id=2;
 				type="B_Pilot_F";
 			};
+			class Item2
+			{
+				dataType="Object";
+				side="West";
+				class PositionInfo {position[]={0,18,0};};
+				class Attributes {};
+				id=7;
+				type="B_Pilot_F";
+			};
+			class Item3
+			{
+				dataType="Object";
+				side="West";
+				class PositionInfo {position[]={0,24,0};};
+				class Attributes {};
+				id=8;
+				type="B_Pilot_F";
+			};
 		};
 		class CrewLinks
 		{
-			class LinkIDProvider {nextID=2;};
+			class LinkIDProvider {nextID=4;};
 			class Links
 			{
-				items=2;
+				items=4;
 				class Item0
 				{
 					linkID=0;
@@ -48,6 +66,20 @@ class items
 					item0=2;
 					item1=3;
 					class CustomData {role=2; turretPath[]={0};};
+				};
+				class Item2
+				{
+					linkID=2;
+					item0=7;
+					item1=3;
+					class CustomData {role=2; turretPath[]={1};};
+				};
+				class Item3
+				{
+					linkID=3;
+					item0=8;
+					item1=3;
+					class CustomData {role=2; turretPath[]={2};};
 				};
 			};
 		};
@@ -84,7 +116,19 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-6};};
-		title="HALO and Static-Line Example (Minimal): the smallest working call - one passenger Blackfish with an explicitly placed BLUFOR pilot/copilot flies toward marker ""dz1"" with the default static-line jump action ready (300 m AGL / 300 km/h route, no HALO). No automatic createVehicleCrew call is used because the composition already contains its correctly sided crew. See the Halo And Static Line Paradrop Examples (Full) composition to see and edit every option, including a second HALO-configured aircraft. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
+		title="HALO and Static-Line Example (Minimal): one passenger Blackfish with its normal four-person BLUFOR editor crew (pilot, copilot and two crew chiefs) flies toward marker dz1 with the default static-line action ready at 300 m AGL / 300 km/h. No runtime crew is created. Use the Full example to edit every option or add a HALO aircraft. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
 		id=6;
+	};
+};
+class VehicleInVehicleLinks
+{
+	class LinkIDProvider {nextID=4;};
+	class Links
+	{
+		items=4;
+		class Item0 {linkID=0; item0=1; item1=3; class CustomData {role=1;};};
+		class Item1 {linkID=1; item0=2; item1=3; class CustomData {role=2; turretPath[]={0};};};
+		class Item2 {linkID=2; item0=7; item1=3; class CustomData {role=2; turretPath[]={1};};};
+		class Item3 {linkID=3; item0=8; item1=3; class CustomData {role=2; turretPath[]={2};};};
 	};
 };

@@ -251,10 +251,23 @@ lower-level broadcast function below.
 ### Eden notification trigger
 
 Place **Waldos Mission Pack Compositions - Interface > [WMP] Notification Trigger** for a ready-made
-25 m, any-player trigger. It calls the same beginner-facing function shown above, is server-only to
-prevent multiplayer duplicates, and does not fire until a player enters its area. Edit the trigger's
-**On Activation** field to change the title, message, type or recipients. Change the ordinary Eden
-trigger fields if it should repeat, use a rectangle, or activate for a different presence condition.
+25 m, any-player notification area. The visible editor entity is an empty-helipad anchor, not a raw
+Trigger entity: move that anchor to move the area, and edit its **Init** field to change the radius,
+title, message or type. WMP creates the actual trigger on the server so multiplayer clients cannot
+send duplicates. This also avoids an Arma/Eden native crash encountered when placing a hand-authored
+Trigger entity from an SQE composition.
+
+The composition's beginner call is:
+
+```sqf
+[this, 25, "MESSAGE FROM COMMAND", "Move to the marked assembly area.", "INFO"]
+    call Waldo_fnc_NotificationTrigger;
+```
+
+The positions mean: anchor object, radius in metres, title, message and card type. Optional later
+positions accept recipients, duration, repeatable, placement, channel and source; the full typed list
+is documented in `notificationTrigger.sqf`. Running setup again on the same anchor safely replaces
+its old server trigger.
 
 `Waldo_fnc_ShowUiNotification` shows a card on whichever machine runs it; it does not choose an
 audience for you. `Waldo_fnc_NotificationBroadcast` wraps it with audience targeting so mission code

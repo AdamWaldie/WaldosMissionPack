@@ -48,7 +48,7 @@ short init demonstrates every internal option.
 | Basic Mobile Respawn Vehicle | Minimal mobile respawn example |
 | Basic Player Controlled Zeus | Player/curator foundation |
 | Starter, Supply and Medical Crate Collections | Side and contents variants with server-owned population |
-| Field Resupply Hub Example | Refill hub; assign infantry carriers by script or Zeus |
+| Field Resupply Hub Example | Refill hub plus a correctly BLUFOR-grouped, pre-assigned infantry carrier |
 | Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
 | Vehicle Recovery Workshop Example (Minimal) | Smallest working workshop/vehicle/carrier registration - required args only |
 | Vehicle Recovery Workshop Example (Full) | Spaced workshop, recoverable vehicle and generic AUTO carrier with guided common options |
@@ -64,7 +64,7 @@ short init demonstrates every internal option.
 | Mass AttachTo / Vehicle Mounted Weapon | Vehicle construction helpers |
 | Halo and Static Line Paradrop Examples (Minimal) | Smallest working self-crewed aircraft flying a static-line route |
 | Halo and Static Line Paradrop Examples (Full) | Boarding and aircraft jump setup for two guided route examples |
-| Gunship Support Example (Minimal) | Smallest working registration for a crewed VTOL |
+| Gunship Support Example (Minimal) | Smallest registration for an armed Blackfish with its complete four-person editor crew |
 | Gunship Support Example (Full) | Crewed VTOL registered with `Waldo_fnc_GunshipRegister`, orbiting a movable marker with automatic service |
 | Radio Jammer Example (Minimal) | Smallest working jammer fixture |
 | Radio Jammer Example (Full) | Server-owned, movable jammer fixture with guided disable/reactivation options |
@@ -100,7 +100,7 @@ short init demonstrates every internal option.
 | Object Scaling Example | Supported Simple Object conversion and scale setup |
 | Custom 3D Marker Example (Minimal) | Smallest working object-anchored marker |
 | Custom 3D Marker Example (Full) | Object-anchored, side-aware world marker with readable options, every option shown |
-| Notification Trigger | Server-only 25 m Eden trigger that sends one editable WMP notification without firing at mission load |
+| Notification Trigger | Movable Eden anchor that creates a safe server-owned 25 m notification area at runtime |
 | Economy Systems and Low/Medium/High | Runtime enablement and optional preset |
 | Persistence Object Example (Minimal) | Smallest working call - key and object only, every field saved by default |
 | Persistence Object Example (Full) | Crate registered with `Waldo_fnc_PersistenceRegisterObject`, no `isServer` wrapper needed, options shown |

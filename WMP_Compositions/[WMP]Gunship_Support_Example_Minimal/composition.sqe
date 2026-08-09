@@ -2,8 +2,35 @@ version=54;
 center[]={0,0,0};
 class items
 {
-	items=2;
+	items=3;
 	class Item0
+	{
+		dataType="Group";
+		side="West";
+		class Entities
+		{
+			items=4;
+			class Item0 {dataType="Object"; class PositionInfo {position[]={0,0,0};}; side="West"; flags=6; class Attributes {}; id=101; type="B_Pilot_F";};
+			class Item1 {dataType="Object"; class PositionInfo {position[]={2,0,0};}; side="West"; class Attributes {}; id=102; type="B_Pilot_F";};
+			class Item2 {dataType="Object"; class PositionInfo {position[]={4,0,0};}; side="West"; class Attributes {}; id=103; type="B_Pilot_F";};
+			class Item3 {dataType="Object"; class PositionInfo {position[]={6,0,0};}; side="West"; class Attributes {}; id=104; type="B_Pilot_F";};
+		};
+		class Attributes {speedMode="LIMITED";};
+		class CrewLinks
+		{
+			class LinkIDProvider {nextID=4;};
+			class Links
+			{
+				items=4;
+				class Item0 {linkID=0; item0=101; item1=110; class CustomData {role=1;};};
+				class Item1 {linkID=1; item0=102; item1=110; class CustomData {role=2; turretPath[]={0};};};
+				class Item2 {linkID=2; item0=103; item1=110; class CustomData {role=2; turretPath[]={1};};};
+				class Item3 {linkID=3; item0=104; item1=110; class CustomData {role=2; turretPath[]={2};};};
+			};
+		};
+		id=100;
+	};
+	class Item1
 	{
 		dataType="Object";
 		side="West";
@@ -13,14 +40,26 @@ class items
 			init="[createHashMapFromArray [[""id"", ""EXAMPLE_GUNSHIP""], [""aircraft"", this]]] call Waldo_fnc_GunshipRegister;";
 			name="gunshipAircraft";
 		};
-		id=1;
+		id=110;
 		type="B_T_VTOL_01_armed_F";
 	};
-	class Item1
+	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,0,-4};};
-		title="Airborne Gunship Support (Minimal): the smallest working call - id and the aircraft are all that's required. GunshipRegister crews it automatically (no placed pilot needed) and it orbits its own spawn position at the default radius/altitude since no explicit orbit was given. See the Gunship Support Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
-		id=2;
+		class PositionInfo {position[]={0,0,-8};};
+		title="Airborne Gunship Support (Minimal): the smallest working existing-aircraft call. The armed Blackfish includes its complete four-person BLUFOR editor crew: pilot, copilot and both weapon operators. Registration uses that crew and does not create replacements. The aircraft orbits its spawn position with default radius/altitude because no orbit was supplied. Use the Full example to edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
+		id=111;
+	};
+};
+class VehicleInVehicleLinks
+{
+	class LinkIDProvider {nextID=4;};
+	class Links
+	{
+		items=4;
+		class Item0 {linkID=0; item0=101; item1=110; class CustomData {role=1;};};
+		class Item1 {linkID=1; item0=102; item1=110; class CustomData {role=2; turretPath[]={0};};};
+		class Item2 {linkID=2; item0=103; item1=110; class CustomData {role=2; turretPath[]={1};};};
+		class Item3 {linkID=3; item0=104; item1=110; class CustomData {role=2; turretPath[]={2};};};
 	};
 };

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 882,
+  "registeredFunctionCount": 884,
   "runtimeFunctionCount": 385,
-  "functionCount": 1267,
+  "functionCount": 1269,
   "stations": [
     {
       "id": "control",
@@ -889,6 +889,18 @@
     {
       "name": "Waldo_fnc_SendNotification",
       "file": "MissionScripts/MissionFlowAndUi/sendNotification.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_NotificationTrigger",
+      "file": "MissionScripts/MissionFlowAndUi/notificationTrigger.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_NotificationTriggerActivate",
+      "file": "MissionScripts/MissionFlowAndUi/notificationTriggerActivate.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },

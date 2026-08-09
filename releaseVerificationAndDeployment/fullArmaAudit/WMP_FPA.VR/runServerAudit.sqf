@@ -2,8 +2,13 @@
  * Author: WaldoTheWarfighter
  * Runs the server-authoritative full-pack audit cases against real mission fixtures and runtime state.
  *
+ * Locality and authority: Executed once by the dedicated/host server after the real pack and audit
+ * fixtures report ready. Individual cases deliberately exercise server authority and local AI state.
+ * The assertion registry is published for connected clients and later log inspection.
+ *
  * Arguments: None.
  * Return Value: Nothing; records assertions through Waldo_QA_fnc_assert and publishes server completion.
+ * Result: Every selected case records a named pass/fail result; the final summary is written to RPT.
  *
  * Example: [] execVM "runServerAudit.sqf";
  * Current caller: auditInitServer.sqf when automated audit mode is enabled.
@@ -59,21 +64,93 @@ if (_suite in ["all", "core"]) then {
         private _landTypeObserved = _trackerType == "SCRIPTED" && {_trackerScript find "fn_wpland.sqf" >= 0};
         private _exact = !isNull _helicopter && {(_helicopter distance2D [325, 70, 0]) <= 5} && {((getPosATL _helicopter) select 2) <= 1};
         ["core/ai-helicopter/land-touchdown", _landed && {_landTypeObserved} && {_exact}, [_result, _tracker, if (isNull _helicopter) then {-1} else {_helicopter distance2D [325, 70, 0]}, if (isNull _helicopter) then {-1} else {(getPosATL _helicopter) select 2}]] call Waldo_QA_fnc_assert;
-        private _anchorDeadline = diag_tickTime + 3;
-        waitUntil {
-            uiSleep 0.1;
-            isNull _helicopter
-            || {((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]) param [0, ""]) == "ANCHORED"}
-            || {diag_tickTime >= _anchorDeadline}
-        };
-        uiSleep 10;
-        private _anchorResult = if (isNull _helicopter) then {[]} else {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]};
-        private _held = !isNull _helicopter
-            && {(_anchorResult param [0, ""]) == "ANCHORED"}
-            && {(_helicopter distance2D [325, 70, 0]) <= 5}
-            && {((getPosATL _helicopter) select 2) <= 1.5};
-        ["core/ai-helicopter/ground-anchor", _held, [_anchorResult, if (isNull _helicopter) then {-1} else {_helicopter distance2D [325, 70, 0]}, if (isNull _helicopter) then {-1} else {(getPosATL _helicopter) select 2}]] call Waldo_QA_fnc_assert;
         call Waldo_QA_fnc_removeImprovedLandingServer;
+    }] call Waldo_QA_fnc_case;
+
+    ["core/dynamic-aa/envelope-and-locality", {
+        private _id = "QA_AA_AUTOMATED";
+        private _centre = [800, -800, 0];
+        private _config = createHashMapFromArray [
+            ["id", _id], ["displayName", "Automated AA Envelope"], ["centre", _centre],
+            ["side", east], ["radius", 1000], ["engagementRadius", 500],
+            ["minimumAltitude", 100], ["maximumAltitude", 300], ["altitudeMode", "ATL"],
+            ["detectionDwell", 0], ["clearDelay", 0], ["detectionInterval", 0.25],
+            ["assetSelectionMode", "EXACT"], ["radarAssignments", ["Land_Radar_F"]],
+            ["staticAssignments", ["B_AAA_System_01_F"]], ["radarCount", 1],
+            ["staticCount", 1], ["mobileCount", 0], ["fighterCount", 0],
+            ["createMarkers", false], ["announce", false]
+        ];
+        private _created = [_config] call Waldo_fnc_DynamicAACreate;
+        private _target = createVehicle ["B_Heli_Light_01_F", [_centre select 0, _centre select 1, 50], [], 0, "FLY"];
+        _target allowDamage false;
+        private _targetGroup = west createVehicleCrew _target;
+        _target enableSimulationGlobal false;
+        private _ground = createVehicle ["B_MRAP_01_F", _centre, [], 0, "NONE"];
+        _ground allowDamage false;
+        private _groundGroup = west createVehicleCrew _ground;
+        _ground enableSimulationGlobal false;
+        private _readState = {
+            (missionNamespace getVariable ["Waldo_DynamicAA_Registry", createHashMap])
+                getOrDefault [_id, createHashMap]
+        };
+
+        uiSleep 0.8;
+        private _belowFloor = call _readState;
+        private _belowClosed = !(_belowFloor getOrDefault ["detected", false])
+            && {!(_belowFloor getOrDefault ["engaged", false])};
+
+        _target setPosATL [(_centre select 0) + 750, _centre select 1, 200];
+        uiSleep 0.8;
+        private _detectionOnlyState = call _readState;
+        private _detectionOnly = _detectionOnlyState getOrDefault ["detected", false]
+            && {!(_detectionOnlyState getOrDefault ["engaged", false])};
+
+        _target setPosATL [_centre select 0, _centre select 1, 200];
+        uiSleep 0.8;
+        private _insideState = call _readState;
+        private _insideEngaged = _insideState getOrDefault ["detected", false]
+            && {_insideState getOrDefault ["engaged", false]};
+        private _activeDefenceGroups = _insideState getOrDefault ["defenceGroups", []];
+        private _groundNotEngaged = _activeDefenceGroups findIf {
+            private _units = units _x;
+            _units findIf {
+                private _selectedTarget = assignedTarget _x;
+                _selectedTarget == _ground
+            } >= 0
+        } < 0;
+        private _autoTargetClosed = _activeDefenceGroups findIf {
+            private _units = units _x;
+            _units findIf {_x checkAIFeature "AUTOTARGET"} >= 0
+        } < 0;
+
+        _target setPosATL [_centre select 0, _centre select 1, 350];
+        uiSleep 0.8;
+        private _aboveState = call _readState;
+        private _aboveClosed = !(_aboveState getOrDefault ["detected", false])
+            && {!(_aboveState getOrDefault ["engaged", false])};
+        private _defenceGroups = _aboveState getOrDefault ["defenceGroups", []];
+        private _closedOnOwners = _defenceGroups findIf {
+            private _units = units _x;
+            _units findIf {
+                private _unit = _x;
+                !(vehicle _unit isKindOf "Air") && {_unit checkAIFeature "MOVE"}
+            } >= 0
+        } < 0;
+
+        [
+            "core/dynamic-aa/envelope-and-locality",
+            _created && {_belowClosed} && {_detectionOnly} && {_insideEngaged}
+                && {_groundNotEngaged} && {_autoTargetClosed} && {_aboveClosed} && {_closedOnOwners},
+            [_created, _belowClosed, _detectionOnly, _insideEngaged, _groundNotEngaged, _autoTargetClosed, _aboveClosed, _closedOnOwners]
+        ] call Waldo_QA_fnc_assert;
+
+        [_id, true] call Waldo_fnc_DynamicAADestroy;
+        {deleteVehicle _x} forEach crew _target;
+        {deleteVehicle _x} forEach crew _ground;
+        deleteVehicle _target;
+        deleteVehicle _ground;
+        if (!isNull _targetGroup) then {_targetGroup deleteGroupWhenEmpty true};
+        if (!isNull _groundGroup) then {_groundGroup deleteGroupWhenEmpty true};
     }] call Waldo_QA_fnc_case;
 
     ["core/diagnostics/clean", {

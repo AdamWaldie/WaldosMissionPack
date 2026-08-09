@@ -2,6 +2,12 @@
 
 > **Use this page when:** you need vehicle interactions, static-line or HALO jumps, and their equipment simulation settings.
 
+The shipped Minimal and Full Eden paradrop compositions use passenger Blackfish aircraft with their
+normal four-person editor crew: pilot, copilot and two crew chiefs. WMP does not create replacement
+crew for an aircraft that already exists in Eden. This preserves the side and group chosen by the
+mission maker and avoids duplicate or empty-side AI in multiplayer. Runtime crew creation is
+reserved for an aircraft genuinely spawned by the Zeus module or script API.
+
 _Associated Files:_
 - _MissionScripts\VehicleActionsSetup_
 - _MissionScripts\Paradrop_

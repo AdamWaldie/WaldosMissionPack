@@ -5,31 +5,23 @@ class items
 	items=2;
 	class Item0
 	{
-		dataType="Trigger";
+		dataType="Object";
 		class PositionInfo {position[]={0,0,0};};
+		side="Empty";
+		flags=4;
 		class Attributes
 		{
-			condition="this";
-			onActivation="[""MESSAGE FROM COMMAND"", ""Edit this message in the trigger's On Activation field."", ""INFO""] call Waldo_fnc_SendNotification;";
-			sizeA=25;
-			sizeB=25;
-			timeoutMin=0;
-			timeoutMid=0;
-			timeoutMax=0;
-			isRectangle=0;
-			activationBy="ANYPLAYER";
-			activationType="PRESENT";
-			repeatable=0;
-			serverOnly=1;
+			name="WMP_NotificationTriggerAnchor";
+			init="[this, 25, ""MESSAGE FROM COMMAND"", ""Edit this message in the anchor object's Init field."", ""INFO""] call Waldo_fnc_NotificationTrigger;";
 		};
 		id=1;
-		type="EmptyDetector";
+		type="Land_HelipadEmpty_F";
 	};
 	class Item1
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-32};};
-		title="Notification Trigger: entering the 25 m trigger sends one INFO card to all players. Edit the title, message, type and optional recipients in the trigger's On Activation field. Keep Server Only enabled so multiplayer clients do not send duplicates. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications";
+		title="Notification area: this empty-helipad anchor creates a safe 25 m server-owned trigger and sends one INFO card to all players who enter. Move the anchor to move the area. Edit the radius, title, message and type in the anchor object's Init field; add recipients, duration or repeatability only when needed. The trigger itself is created at runtime because hand-authored Trigger entities can crash Eden during composition placement. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications";
 		id=2;
 	};
 };

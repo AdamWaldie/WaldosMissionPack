@@ -18,24 +18,35 @@ class items
 	};
 	class Item2
 	{
-		dataType="Object";
-		class PositionInfo {position[]={3,0,3};};
+		dataType="Group";
 		side="West";
-		flags=6;
-		class Attributes
+		class Entities
 		{
-			name="WMP_FieldResupplyCarrier";
-			init="[this, 2, 3] call Waldo_fnc_FieldResupplyAssignCarrier;";
-			description="Field Resupply Carrier - already assigned 2/3 portable crates on mission start; see this unit's init field.";
+			items=1;
+			class Item0
+			{
+				dataType="Object";
+				class PositionInfo {position[]={3,0,3};};
+				side="West";
+				flags=6;
+				class Attributes
+				{
+					name="WMP_FieldResupplyCarrier";
+					init="[this, 2, 3] call Waldo_fnc_FieldResupplyAssignCarrier;";
+					description="Field Resupply Carrier - already assigned 2/3 portable crates on mission start; see this unit's init field.";
+				};
+				id=3;
+				type="B_Soldier_F";
+			};
 		};
-		id=3;
-		type="B_Soldier_F";
+		class Attributes {};
+		id=4;
 	};
 	class Item1
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-3};};
-		title="Field Resupply hub: unlimited stock and all sides. The nearby ""WMP_FieldResupplyCarrier"" unit is already assigned as a carrier on mission start (2 crates, 3 maximum) via its own init field - [this, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier; - copy that one-line call onto any infantry unit instead of only doing it live through Zeus. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply";
+		title="Field Resupply hub: unlimited stock and all sides. The nearby WMP_FieldResupplyCarrier is a real BLUFOR-grouped rifleman, not a side-empty decorative unit, and starts with 2 of 3 portable crates through its Init call: [this, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier;. Copy that call onto an infantry unit which already belongs to the intended side/group. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply";
 		id=2;
 	};
 };

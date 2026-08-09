@@ -217,6 +217,12 @@ class CfgFunctions
               class SendNotification {
                   file = "MissionScripts\MissionFlowAndUi\sendNotification.sqf";
               };
+              class NotificationTrigger {
+                  file = "MissionScripts\MissionFlowAndUi\notificationTrigger.sqf";
+              };
+              class NotificationTriggerActivate {
+                  file = "MissionScripts\MissionFlowAndUi\notificationTriggerActivate.sqf";
+              };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
               class RestyleUiNotificationsLocal {file = "MissionScripts\MissionFlowAndUi\restyleUiNotificationsLocal.sqf";};

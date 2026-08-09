@@ -153,6 +153,35 @@ class FullAuditTests(unittest.TestCase):
             self.assertTrue(composition_path.is_file(), folder.name)
             header = header_path.read_text(encoding="utf-8")
             composition = composition_path.read_text(encoding="utf-8")
+            for forbidden_side in ('sideUnknown', 'sideEmpty', 'side="Unknown"'):
+                self.assertNotIn(
+                    forbidden_side,
+                    composition,
+                    f"{folder.name}: compositions must use real editor sides/groups",
+                )
+            # Top-level infantry objects import as empty/unknown-side editor entities even when a
+            # hand-written `side="West"` row looks plausible. Find the least-indented Item blocks
+            # (the composition's own entities, not nested group members) and reject infantry there.
+            item_starts = list(re.finditer(r"^(?P<indent>[ \t]+)class\s+Item\d+\b", composition, re.MULTILINE))
+            if item_starts:
+                def indent_width(value: str) -> int:
+                    return sum(4 if char == "\t" else 1 for char in value)
+
+                minimum_indent = min(indent_width(match.group("indent")) for match in item_starts)
+                top_level = [match for match in item_starts if indent_width(match.group("indent")) == minimum_indent]
+                for item_index, match in enumerate(top_level):
+                    end = top_level[item_index + 1].start() if item_index + 1 < len(top_level) else len(composition)
+                    block = composition[match.start():end]
+                    data_type = re.search(r'dataType="([^"]+)";', block)
+                    entity_type = re.search(r'^\s*type="([^"]+)";', block, re.MULTILINE)
+                    if data_type and data_type.group(1) == "Object" and entity_type:
+                        self.assertIsNone(
+                            re.search(
+                                r'(^|_)(Soldier|soldier|Pilot|pilot|Crew|crew|Officer|officer|Medic|medic|Survivor|survivor)(_|$)',
+                                entity_type.group(1),
+                            ),
+                            f"{folder.name}: infantry {entity_type.group(1)} must be inside a dataType Group block",
+                        )
             author = re.search(r'^author="([^"]+)";', header, flags=re.MULTILINE)
             self.assertIsNotNone(author, folder.name)
             self.assertIn("WaldoTheWarfighter", [name.strip() for name in author.group(1).split(",")], folder.name)
@@ -214,6 +243,11 @@ class FullAuditTests(unittest.TestCase):
             init_values = re.findall(r'\binit="((?:""|[^"])*)";', composition)
             for index, encoded_init in enumerate(init_values):
                 decoded_init = encoded_init.replace('""', '"')
+                self.assertNotIn(
+                    "createVehicleCrew",
+                    decoded_init,
+                    f"{folder.name}: pre-placed examples must contain their intended editor crew, not create it from init",
+                )
                 with tempfile.NamedTemporaryFile(
                     mode="w", suffix=".sqf", encoding="utf-8", delete=False
                 ) as temporary:
@@ -261,10 +295,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Custom 3D Marker Example", catalogue)
         self.assertIn("Notification Trigger", catalogue)
         notification_composition = (ROOT / "WMP_Compositions" / "[WMP]Notification_Trigger" / "composition.sqe").read_text(encoding="utf-8")
-        self.assertIn('dataType="Trigger";', notification_composition)
-        self.assertIn('activationBy="ANYPLAYER";', notification_composition)
-        self.assertIn('serverOnly=1;', notification_composition)
-        self.assertIn("Waldo_fnc_SendNotification", notification_composition)
+        self.assertNotIn('dataType="Trigger";', notification_composition)
+        self.assertIn('type="Land_HelipadEmpty_F";', notification_composition)
+        self.assertIn("Waldo_fnc_NotificationTrigger", notification_composition)
         self.assertIn("Loadout Save Point Example", catalogue)
         self.assertIn("Explosive Wall Breaching Example", catalogue)
         self.assertIn("Emergency Dismount Vehicle Example", catalogue)
@@ -283,6 +316,8 @@ class FullAuditTests(unittest.TestCase):
         hazard = (root / "[WMP]Radiation_Hazard_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
         paradrop_minimal = (root / "[WMP]Halo_And_Static_Line_Paradrop_Examples_Minimal" / "composition.sqe").read_text(encoding="utf-8")
         gunship_full = (root / "[WMP]Gunship_Support_Example_Full" / "composition.sqe").read_text(encoding="utf-8")
+        gunship_minimal = (root / "[WMP]Gunship_Support_Example_Minimal" / "composition.sqe").read_text(encoding="utf-8")
+        field_resupply = (root / "[WMP]Field_Resupply_Hub_Example" / "composition.sqe").read_text(encoding="utf-8")
         gunship_register = (
             ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipRegister.sqf"
         ).read_text(encoding="utf-8")
@@ -307,9 +342,28 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('class CrewLinks', paradrop_minimal)
         self.assertIn('side="West"', paradrop_minimal)
         self.assertIn('300 m AGL / 300 km/h', paradrop_minimal)
+        self.assertEqual(4, paradrop_minimal.count('type="B_Pilot_F"'))
+        self.assertIn('turretPath[]={1}', paradrop_minimal)
+        self.assertIn('turretPath[]={2}', paradrop_minimal)
+        paradrop_full = (root / "[WMP]Halo_And_Static_Line_Paradrop_Examples_Full" / "composition.sqe").read_text(encoding="utf-8")
+        self.assertEqual(8, paradrop_full.count('type="B_Pilot_F"'))
+        self.assertEqual(4, paradrop_full.count('turretPath[]={1}'))
+        self.assertEqual(4, paradrop_full.count('turretPath[]={2}'))
         self.assertIn('class CrewLinks', gunship_full)
+        self.assertIn('class CrewLinks', gunship_minimal)
         self.assertNotIn('""createCrew""', gunship_full)
         self.assertNotIn('createVehicleCrew', gunship_full)
+        self.assertNotIn('createVehicleCrew', gunship_minimal)
+        self.assertEqual(4, gunship_full.count('type="B_Pilot_F"'))
+        self.assertEqual(4, gunship_minimal.count('type="B_Pilot_F"'))
+        for turret_path in ('turretPath[]={0}', 'turretPath[]={1}', 'turretPath[]={2}'):
+            self.assertIn(turret_path, gunship_full)
+            self.assertIn(turret_path, gunship_minimal)
+        self.assertIn('dataType="Group";', field_resupply)
+        self.assertIn('type="B_Soldier_F";', field_resupply)
+        self.assertIn("real BLUFOR-grouped rifleman", field_resupply)
+        self.assertIn('type="B_Soldier_TL_F";', gunship_full)
+        self.assertIn("separately grouped BLUFOR gunshipController", gunship_full)
         self.assertEqual(1, gunship_register.count("createVehicleCrew _aircraft"))
         self.assertIn("Waldo_fnc_HazardRegisterPresetZone", hazard)
         self.assertIn('""MODERATE_RADIATION""', hazard)

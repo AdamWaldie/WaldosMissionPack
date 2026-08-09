@@ -28,7 +28,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Vehicle unflipping actions
 - Configurable AI convoy system with mission-maker and Zeus workflows.
 - Teleportation Script
-- Endex & Safestart Scripts - including an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers) in the ENDEX popup.
+- Endex & Safestart Scripts - Safestart is available but inactive by default and can be enabled by Zeus; ENDEX includes an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers).
 - Script-driven Tasks/Objectives helpers - JIP-safe BIS task wrappers with automatic map markers that also feed the After-Action Report.
 - Mission Diagnostics - a read-only server and client health report with run IDs, machine roles, feature areas, explicit loaded/disabled/unavailable states, and structured RPT output.
 - Performance regression audit - a CI-enforced static review of recurring SQF schedulers, world searches, UI redraws and network publication, with reviewed exceptions and documented in-engine verification limits.
@@ -36,6 +36,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Checked Zeus/script parity for all 42 core and 19 Economy modules. Direct modules use the public API; authoring adapters translate Zeus selections into the same public calls. Shared mutations use curator-authenticated server bridges where required, while interface-only export/preview tools stay local. The checked-in parity manifest prevents missing controls and invented API links from silently shipping.
 - Server-owned custom 3D world markers with object/position anchors, JIP support, side and distance filtering, accessible icon-plus-text labels, and one shared renderer.
 - Safe-zone-aware WMP notification cards with accessible states, mission-authored channel placement, optional permitted local overrides, FIFO sequencing, bounded non-overlapping stacks, duplicate coalescing and an ACE/vanilla emergency UI cleanup action.
+- Zeus-authored UI notifications - a "Mission Flow: Send Notification" module (and matching `Waldo_fnc_NotificationBroadcast` script API) sends a WMP notification card with a chosen type, duration and placement to everyone, one side, a named group, or selected units.
 - Optional feature systems - dependency-gated persistence, ACE patient treatment feedback, hazardous environments and moving emitters, tree felling and brush clearing, emergency dismount, a friendly-identification accessibility aid, profile-driven explosive wall breaching, server-validated transforms, finite field resupply and authenticated tactical displays. All default off, expose repeat-safe configuration and cleanup APIs, and use focused Zeus Enhanced modules where runtime operation is useful.
 - Dynamic Anti-Air - multiple named radar-controlled air-defence zones, available through script or guided Zeus placement, with configurable side/faction asset pools, altitude rules, dynamic static/mobile responses and fighter scrambling.
 - Airborne Gunship Support - multiple named existing or spawned gunships with side/faction pools, assigned player controllers, validated turret profiles, configurable combat orbits, automatic RTB/service cycles, friendly markers and focused Zeus operation.
@@ -49,10 +50,16 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process
 - Auto-generated cover/loading screen - the title and version are rendered programmatically from description.ext and kept in sync on every push and release.
+- Claude Mission Config Skill - a separate downloadable release item that teaches an AI assistant (Claude or ChatGPT) how to configure every feature in this pack for your mission, with per-feature reference docs and clear guidance on what it can safely edit for you versus what still needs doing by hand in Eden Editor.
 
 
 # QuickStart Guide
 You can always find the most recent quickstart guide at this URL: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Quickstart-Guide
+
+# Planned Features
+
+Agreed work for releases after the current one is tracked in [FEATURE_LOG.md](FEATURE_LOG.md). Items
+in that file are planned work and should not be treated as features already included in a release.
 
 # Release Validation
 The canonical feature test is the hosted **WMP FULL PACK PR AUDIT** VR mission. Its builder stages

@@ -71,7 +71,11 @@ This finite-resource ammunition feature lets a hub refill carrier crate allowanc
    ```
 3. The carrier (must be wearing a backpack) gets **Check Resupply Crates** (refill at the hub) and **Deploy Field Resupply** (drop a crate for others) under ACE Interact's **Field Resupply** category, with scroll-wheel fallbacks only when ACE Interact is unavailable. Deployment is restricted to being on foot.
 
-The `[WMP]Field_Resupply_Hub_Example` composition places both a hub and a pre-assigned carrier unit together, so it's a working setup out of the box rather than only the hub half.
+The `[WMP]Field_Resupply_Hub_Example` composition places both a hub and a pre-assigned carrier unit
+together, so it is a working setup out of the box rather than only the hub half. The carrier is a
+real member of a BLUFOR group. When building your own version, place the infantry normally under its
+intended side/group and then add the carrier call to that unit's Init field; do not hand-author a
+standalone infantry object in SQE, because Eden imports that as an empty/unknown-side entity.
 
 A deployed crate derives logical supply rows from the carrier's compatible loaded/carried magazine classes, but its physical inventory stays empty so Gear access cannot bypass charge consumption. A WMP-blue informational addAction identifies the crate and reports its remaining charges. Server checks enforce ownership, distance, side access, stock and capacity. Focused Zeus modules register a nearby hub, assign a nearby carrier, or grant additional portable crates during play — no scripting needed for a Zeus-run mission.
 
