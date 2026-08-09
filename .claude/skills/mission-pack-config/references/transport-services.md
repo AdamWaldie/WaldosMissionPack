@@ -83,11 +83,9 @@ clearance, improved-landing and other options set explicitly, including
   on that registration.
 - Optional `invulnerable` only protects the vehicle and its original AI
   service crew — never passenger players.
-- The driver seat is left open — a player may board it directly, no need
-  to go through Take Manual Control. Registration instead disables
-  fleeing/panic on the captured AI crew (`allowFleeing 0`), so a driver
-  taking fire can't strand the vehicle by bailing out and leaving the
-  seat empty.
+- Registration locks the driver seat to players and disables fleeing/panic
+  on the captured AI crew (`allowFleeing 0`), so a driver taking fire
+  can't strand the vehicle by bailing out.
 - `Waldo_Transport_MaxEffectiveDamage` (`MissionConfig\logisticsConfig.sqf`,
   default `0.8`) writes a still-"alive" but too-heavily-damaged transport
   off the service pool the same as an outright loss, and warns every
