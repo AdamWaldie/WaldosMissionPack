@@ -109,6 +109,12 @@ The shipped `LOW_RADIATION`, `MODERATE_RADIATION` and `SEVERE_RADIATION` presets
 
 With ACE Interact, **Hazard Equipment** self/other actions can read current exposure and apply configured treatment items. `Waldo_Hazard_DosimeterItems` controls who may read exposure, while `Waldo_Hazard_Treatments` contains `[consumed item classname, readable name, exposure reduction]` rows and `Waldo_Hazard_TreatmentDuration` controls progress time. Treatment removes the carried item on the giver's machine and reduces exposure only on the patient-owning machine. Leave either list empty to disable that part without disabling hazards.
 
+Exposure belongs to the current player object and resets on death/respawn. The replacement unit does
+not inherit the dead unit's dose, damage-stage attribution, inside-zone transition, status panel or
+audio timers. If the respawn point is still inside a live zone, exposure starts again from zero on
+the replacement unit and then accumulates normally. A synchronous player-object check backs up the
+respawn event handler, so this rule does not depend on multiplayer event ordering.
+
 ```sqf
 private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap])
     getOrDefault ["MODERATE_RADIATION", createHashMap];

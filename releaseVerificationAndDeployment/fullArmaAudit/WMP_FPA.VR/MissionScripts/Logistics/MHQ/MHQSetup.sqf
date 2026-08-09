@@ -53,13 +53,25 @@ if (isServer && {!(_target getVariable ["Waldo_MHQ_ServerConfigured", false])}) 
     // beside the MHQ without synchronizing it directly to the vehicle.
     if (isNull _syncLogic) then {_syncLogic = nearestObject [_target, "Logic"];};
     private _deployParts = if (isNull _syncLogic) then {[]} else {synchronizedObjects _syncLogic};
-    _deployParts = _deployParts select {!isNull _x && {_x != _target}};
+    // A synchronization helper can also be linked to modules or other logic objects. Those are not
+    // deployable scenery and attaching them to the MHQ can drag unrelated state graphs into the
+    // vehicle hierarchy. Keep only unique physical objects and reject any object already above the
+    // MHQ in an attachment chain, which would create a recursive attachment cycle.
+    _deployParts = _deployParts select {!isNull _x && {_x != _target} && {!(_x isKindOf "Logic")}};
+    _deployParts = _deployParts arrayIntersect _deployParts;
+    _deployParts = _deployParts select {
+        private _candidate = _x;
+        private _cursor = _target;
+        private _cycle = false;
+        while {!isNull _cursor && {!_cycle}} do {
+            if (_cursor isEqualTo _candidate) then {_cycle = true} else {_cursor = attachedTo _cursor};
+        };
+        !_cycle
+    };
     _target setVariable ["Waldo_MHQ_DeployParts", _deployParts, true];
 
-    if (!isNull _syncLogic) then {
-        [_syncLogic, _target] call BIS_fnc_attachToRelative;
-    };
     {
+        detach _x;
         [_x, _target] call BIS_fnc_attachToRelative;
         hideObjectGlobal _x;
     } forEach _deployParts;

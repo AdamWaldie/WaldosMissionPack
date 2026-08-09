@@ -5,7 +5,9 @@
  * The zone is a horizontal map circle: aircraft are tested with distance2D, then independently
  * checked against the configured altitude floor and ceiling. Only hostile, crewed aircraft that pass
  * those checks are sent to the owner of each defence group. This prevents the engine's 3D distance
- * calculation from unintentionally shrinking the zone for high aircraft.
+ * calculation from unintentionally shrinking the zone for high aircraft. The same approved object
+ * list drives the owner-local Fired gate, so opening the site for one valid aircraft cannot permit
+ * an independently acquired ground, low, high or out-of-zone target.
  *
  * Locality and authority:
  * Runs only on the server and updates the public Dynamic AA snapshot on transitions. AI commands are

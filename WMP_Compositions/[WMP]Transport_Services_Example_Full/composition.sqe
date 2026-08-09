@@ -83,7 +83,7 @@ class items
         class Attributes
         {
             name="WMP_RavenOne";
-            init="[this, ""HELICOPTER"", ""RAVEN_1"", ""Raven One"", createHashMapFromArray [[""leadersOnly"", false], [""showMarker"", true], [""cruiseAltitude"", 50], [""landingSearchRadius"", 250], [""landingClearanceScale"", 2.0], [""useImprovedLanding"", true], [""keepEngineOnAway"", true]]] call Waldo_fnc_TransportRegister;";
+            init="[this, ""HELICOPTER"", ""RAVEN_1"", ""Raven One"", createHashMapFromArray [[""leadersOnly"", false], [""showMarker"", true], [""cruiseAltitude"", 50], [""landingSearchRadius"", 500], [""landingClearanceScale"", 1.5], [""useImprovedLanding"", true]]] call Waldo_fnc_TransportRegister;";
         };
         id=1;
         type="B_Heli_Light_01_F";
@@ -105,7 +105,7 @@ class items
     {
         dataType="Comment";
 		class PositionInfo {position[]={0,0,-8};};
-        title="Transport Services (Full parameter reference): both vehicles already contain correctly sided WEST AI drivers. Their init fields only register the existing transports; they never create crew. Use ACE Self Interact > WMP Transport to request a named or nearest service. Raven One keeps an exact safe click or searches up to 250 m for an LZ enclosing 2x its model footprint. Keep simulation enabled and leave clear space around both bases. See the Transport Services Example (Minimal) composition for the smallest working calls. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
+        title="Transport Services (guided example): both vehicles already contain correctly sided WEST AI drivers. Their init fields only register the existing transports; they never create crew. Use ACE Self Interact > WMP Transport to request a named or nearest service. Raven One searches up to 500 m and uses the shipped 1.5x landing-clearance multiplier. Keep simulation enabled and leave clear space around both bases. See the minimal composition for the smallest working calls. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
         id=3;
     };
 };

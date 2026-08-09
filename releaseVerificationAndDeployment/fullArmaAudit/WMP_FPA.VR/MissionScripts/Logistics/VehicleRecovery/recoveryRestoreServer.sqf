@@ -107,7 +107,11 @@ private _recipients = allPlayers select {
     _x distance2D _workshop <= _notificationRadius
     && {_workshopSide == sideUnknown || {_workshopSide getFriend side group _x >= 0.6}}
 };
-if !(_recipients isEqualTo []) then {
-    ["A recovered vehicle is ready at the workshop.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _recipients];
-};
+// Target each eligible player's network owner explicitly. An object-array remote target is easy to
+// misread in hosted sessions (where server and Zeus share a machine) and previously allowed the
+// workshop message to appear on the host while the remote player performing the delivery missed it.
+private _recipientOwners = (_recipients apply {owner _x}) arrayIntersect (_recipients apply {owner _x});
+{
+    ["A recovered vehicle is ready at the workshop.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _x];
+} forEach _recipientOwners;
 _vehicle

@@ -710,6 +710,9 @@ class PrReviewAuditTests(unittest.TestCase):
         gunship = (scripts / "CombatSystems" / "AirborneGunship" / "gunshipSetupLocal.sqf").read_text(encoding="utf-8")
         self.assertIn("_x select 2", gunship)
         self.assertIn("Waldo_Gunship_AceActions", gunship)
+        self.assertIn("if (_isControllerSelf) then", gunship)
+        self.assertNotIn("private _isFriendlySide", gunship)
+        self.assertIn("Waldo_Gunship_LastActionSnapshot", gunship)
         self.assertIn("simpletasks\\types\\repair_ca.paa", gunship)
         self.assertIn("serviceCompleteAt", gunship)
         self.assertIn("Tasking and weapon control are locked", gunship)
@@ -854,7 +857,8 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('setVehicleRadar ([0, 1] select _active)', dynamic_aa_state)
         self.assertIn('_candidate distance2D _centre <= _radius', dynamic_aa_detector)
         self.assertIn('[_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo', dynamic_aa_destroy)
-        self.assertIn('addCuratorEditableObjects [_assets, true]', dynamic_aa)
+        self.assertIn('netId _x in ["", "0:0"]', dynamic_aa)
+        self.assertIn('addCuratorEditableObjects [_editable, false]', dynamic_aa)
         self.assertIn('sleep 0.1', dynamic_aa)
         self.assertIn('getOrDefault ["showMarkerDetails", true]', dynamic_aa)
 
@@ -1013,7 +1017,8 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn(f'["{theme}"', resolver)
         self.assertIn('missionNamespace setVariable ["Waldo_UI_Theme", _themeId, true]', setter)
         self.assertIn("getAssignedCuratorLogic", setter)
-        self.assertIn('remoteExecCall ["Waldo_fnc_UiThemeApplyLocal", 0]', setter)
+        self.assertIn('missionNamespace setVariable ["Waldo_UI_ThemeRevision", _revision, true]', setter)
+        self.assertIn('remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", 0]', setter)
         self.assertIn("Waldo_UI_CustomThemes", resolver + shared_config)
         self.assertIn("Waldo_UI_ThemeOverrides", resolver + shared_config)
         self.assertIn("Waldo_UI_Theme", shared_config)
@@ -1026,7 +1031,33 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("ctrlTextHeight", restyle_notifications)
         self.assertIn("[_title, _messageText, _state, _source]", notification)
         self.assertIn('"Waldo_UI_Theme"', snapshot)
+        self.assertIn('"Waldo_UI_ThemeRevision"', snapshot)
         self.assertIn("call Waldo_fnc_UiThemeApplyLocal", receive)
+
+    def test_recovery_notifications_use_actor_or_explicit_nearby_player_owners(self):
+        root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"
+        request = (root / "recoveryRequestServer.sqf").read_text(encoding="utf-8")
+        restore = (root / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExecutedOwner != owner _actor', request)
+        self.assertIn('remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]', request)
+        self.assertIn('private _recipientOwners =', restore)
+        self.assertIn('remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _x]', restore)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _recipients]', restore)
+
+    def test_event_notifications_target_explicit_player_owners(self):
+        sources = [
+            ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAANotifyState.sqf",
+            ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASpawnFighters.sqf",
+            ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipSetState.sqf",
+            ROOT / "MissionScripts" / "Logistics" / "TransportServices" / "transportNotifyLoss.sqf",
+        ]
+        for path in sources:
+            source = path.read_text(encoding="utf-8")
+            self.assertIn("apply {owner _x}", source, path.name)
+            self.assertIn("arrayIntersect", source, path.name)
+        combined = "\n".join(path.read_text(encoding="utf-8") for path in sources)
+        self.assertNotIn('FeatureNotifyLocal", _recipients]', combined)
+        self.assertNotIn('FeatureNotifyLocal", _sideRecipients]', combined)
 
 
     def test_dynamic_ao_runtime_generator_and_recent_regressions_are_wired(self):

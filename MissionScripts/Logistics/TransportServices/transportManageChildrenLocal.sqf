@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter, Val
  * Builds the live ACE self-interaction list for transport services the player may manage. Each
  * transport is shown by its mission-maker name and current state, then exposes controls tied to that
- * exact vehicle. This avoids guessing from the vehicle the player currently occupies.
+ * exact vehicle. Requester object and UID are both recognized, so the surface remains available
+ * after issuing an instruction and across player-object/JIP identity changes.
  * Locality and authority: interface-client display logic only. Every state change is still sent to
  * Waldo_fnc_TransportRequestServer for authoritative validation.
  *
@@ -29,6 +30,7 @@ private _services = vehicles select {
     && {_requestedType == "" || {_x getVariable ["Waldo_TransportService_Type", ""] == _requestedType}}
     && {
         _player in crew _x
+        || {_x getVariable ["Waldo_TransportService_Requester", objNull] isEqualTo _player}
         || {_uid != "" && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}}
         || {!isNull getAssignedCuratorLogic _player}
     }
@@ -72,7 +74,11 @@ private _children = [];
                     private _service = _this select 2;
                     private _state = _service getVariable ["Waldo_TransportService_State", ""];
                     private _uid = getPlayerUID player;
-                    _state in ["TO_PICKUP", "BOARDING"] && {_uid != "" && {_service getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid} || {!isNull getAssignedCuratorLogic player}}
+                    _state in ["TO_PICKUP", "BOARDING"] && {
+                        _service getVariable ["Waldo_TransportService_Requester", objNull] isEqualTo player
+                        || {_uid != "" && {_service getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}}
+                        || {!isNull getAssignedCuratorLogic player}
+                    }
                 }, {}, _service
             ] call ace_interact_menu_fnc_createAction;
             _controls pushBack [_move, [], player];
@@ -90,7 +96,12 @@ private _children = [];
                 {
                     private _service = _this select 2;
                     private _uid = getPlayerUID player;
-                    _service getVariable ["Waldo_TransportService_State", ""] == "STUCK" && {player in crew _service || {_uid != "" && {_service getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} || {!isNull getAssignedCuratorLogic player}}
+                    _service getVariable ["Waldo_TransportService_State", ""] == "STUCK" && {
+                        player in crew _service
+                        || {_service getVariable ["Waldo_TransportService_Requester", objNull] isEqualTo player}
+                        || {_uid != "" && {_service getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}}
+                        || {!isNull getAssignedCuratorLogic player}
+                    }
                 }, {}, _service
             ] call ace_interact_menu_fnc_createAction;
             _controls pushBack [_retry, [], player];
@@ -102,7 +113,12 @@ private _children = [];
                     private _service = _this select 2;
                     private _state = _service getVariable ["Waldo_TransportService_State", ""];
                     private _uid = getPlayerUID player;
-                    !(_state in ["AVAILABLE", "RTB"]) && {player in crew _service || {_uid != "" && {_service getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} || {!isNull getAssignedCuratorLogic player}}
+                    !(_state in ["AVAILABLE", "RTB"]) && {
+                        player in crew _service
+                        || {_service getVariable ["Waldo_TransportService_Requester", objNull] isEqualTo player}
+                        || {_uid != "" && {_service getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}}
+                        || {!isNull getAssignedCuratorLogic player}
+                    }
                 }, {}, _service
             ] call ace_interact_menu_fnc_createAction;
             _controls pushBack [_rtb, [], player];

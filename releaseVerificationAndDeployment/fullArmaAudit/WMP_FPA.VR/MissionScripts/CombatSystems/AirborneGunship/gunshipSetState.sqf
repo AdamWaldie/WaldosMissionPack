@@ -1,8 +1,20 @@
 /*
  * Author: WaldoTheWarfighter
- * Applies one validated server-side gunship state transition.
- * Arguments: 0: id <STRING>; 1: status <STRING>; 2: message <STRING>
- * Return Value: Boolean
+ * Applies one validated server-side gunship state transition, publishes the current state for JIP,
+ * releases invalid weapon control and sends optional feedback to the assigned controller and/or
+ * explicitly addressed players on the configured operational side. Repeating the same state with
+ * no message is a no-op.
+ * Locality and authority: server-only registry mutation. UI feedback runs only on each intended
+ * player's interface owner; state callbacks run once on the server.
+ *
+ * Arguments:
+ * 0: system id <STRING>
+ * 1: new status <STRING>
+ * 2: optional player-facing message <STRING> (default generated from callsign/status)
+ *
+ * Return Value: BOOL - true when a valid system was accepted.
+ * Current callers: gunship server controller, orbit and service state machines.
+ * Example: ["spectre_1", "ON_STATION", "Spectre is ready."] call Waldo_fnc_GunshipSetState;
  */
 
 params ["_id", "_status", ["_message", "", [""]]];
@@ -31,11 +43,14 @@ if (!isNull _controller && {_config getOrDefault ["notifyController", true]}) th
     [_message] remoteExecCall ["Waldo_fnc_GunshipNotifyLocal", owner _controller];
 };
 if (_config getOrDefault ["announceSide", false]) then {
-    private _sideRecipients = allPlayers select {
+    private _sideRecipientOwners = (allPlayers select {
         side group _x == (_config getOrDefault ["side", west])
         && {isNull _controller || {_x != _controller} || {!(_config getOrDefault ["notifyController", true])}}
-    };
-    ["AIRBORNE GUNSHIP", _message, "INFO", "AIRBORNE_GUNSHIP"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _sideRecipients];
+    }) apply {owner _x};
+    _sideRecipientOwners = _sideRecipientOwners arrayIntersect _sideRecipientOwners;
+    {
+        ["AIRBORNE GUNSHIP", _message, "INFO", "AIRBORNE_GUNSHIP"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _x];
+    } forEach _sideRecipientOwners;
 };
 private _callback = _config getOrDefault ["onStateChanged", {}];
 if (_callback isEqualType {}) then {[_id, _previous, _status, _state] call _callback};

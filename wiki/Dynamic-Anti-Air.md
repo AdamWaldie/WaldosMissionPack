@@ -16,7 +16,10 @@ of these gates before a defence may target it:
 
 Ground vehicles never pass the aircraft gate. When an aircraft leaves any gate, WMP closes the
 defence group, clears its assigned target, makes the group forget/ignore engine-known targets and
-blocks remote datalink targets. Destroying or disabling the required radar takes the system offline.
+blocks remote datalink targets. A final owner-local fired-projectile gate uses that same server-
+approved aircraft list, preventing Arma from firing at a ground, low, high or out-of-zone target
+after a different eligible aircraft has activated the site. Destroying or disabling the required
+radar takes the system offline.
 
 Detection remains server-owned, while AI state, target revelation and ammunition changes are dispatched to each defence group's or vehicle's current owner. Systems therefore continue to activate correctly after AI is transferred to a headless client.
 
@@ -169,6 +172,12 @@ unexpected materialisation failure occurs, every partial object and crew is roll
 sequential server placement, not a placement race. Explicit scripted positions are also resolved safely. Spawned
 objects, crew, groups, markers and detector handles are retained in the server registry for
 deterministic cleanup and are added to every available curator.
+
+An Eden object-init call can occur while a dedicated server is still turning mission entities into
+network objects. WMP queues that pre-planned creation until its server initialization sentinel is
+ready, creates crew directly on the requested operational side, explicitly associates each vehicle
+with that group, and waits for vehicle and crew network IDs before adding them to Zeus. A Zeus-created
+system already runs after mission start, so it uses the same creator without the startup queue.
 
 The dwell and clear-delay settings provide detection-state hysteresis, preventing an aircraft
 skimming the boundary from rapidly toggling announcements and fighter waves. They do not grant a

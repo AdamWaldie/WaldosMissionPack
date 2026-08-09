@@ -47,4 +47,8 @@ if (_preview && {hasInterface}) then {
     ["SEMANTIC SUCCESS", "Layout and feature behavior remain unchanged.", "SUCCESS", 10, "TOP_RIGHT", "UI_THEME_QA_2", "WMP UI QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
     ["SEMANTIC WARNING", "Check contrast, font readability and three-lane stacking.", "WARNING", 10, "TOP_RIGHT", "UI_THEME_QA_3", "WMP UI QA", "REPLACE"] call Waldo_fnc_ShowUiNotification;
 };
+diag_log format [
+    "[WMP UI] Visual theme applied locally: theme=%1 revision=%2 owner=%3 preview=%4.",
+    toUpperANSI _themeId, missionNamespace getVariable ["Waldo_UI_ThemeRevision", 0], clientOwner, _preview
+];
 true

@@ -63,7 +63,7 @@ if (isNull _requester || {owner _requester != _targetOwner}) exitWith {false};
 // Keep this list to values that Arma can reliably serialise. Mission callbacks and other Code
 // values remain mission-file configuration and are not transported in the runtime snapshot.
 private _names = [
-        "Waldo_UI_Theme",
+        "Waldo_UI_Theme", "Waldo_UI_ThemeRevision",
         "Waldo_Persistence_Enable", "Waldo_Persistence_Active",
         "Waldo_Persistence_PlayerSaveInterval", "Waldo_Persistence_ObjectSaveInterval",
         "Waldo_Persistence_SaveLoadout", "Waldo_Persistence_SaveMedical",

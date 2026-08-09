@@ -61,21 +61,23 @@
  *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED markers matching
  *    Waldo_fnc_ParadropCreateDropZone's layout, created invisible (alpha 0, still real/queryable
  *    markers) so a mission maker gets the route's positional markers without the map clutter. When
- *    target is NOT a marker name, also creates a visible black "mil_end" POINT marker at the target.
- *    When target IS a marker name, that placeholder marker is instead taken over in place - restyled
- *    to the same black "mil_end" look, labelled with this call's name, and its own rotation reset to
- *    0 (a point icon needs no directional rotation) - rather than a second marker being stacked on
- *    top of it, or the original placeholder being left completely unchanged for the rest of the
- *    mission. That takeover is never added to the cleanup list below - this function never created
- *    that marker, so it never deletes it either. Also creates a live-updating b_plane aircraft marker
+ *    target is a marker name, its position and direction are read first, then a new WMP-owned visible
+ *    black "mil_end" POINT marker is created and the original Eden setup marker is deleted
+ *    immediately. A persistent client-local hide watcher also removes any editor copy recreated by
+ *    mission.sqm after the dedicated server's early global deletion. This marker-only preparation is
+ *    synchronous, before the bounded mission-init and pilot waits, so AREA/STANDBY/GREEN/RED/POINT are
+ *    already visible in the pre-mission briefing map without the source marker overlaid. The later
+ *    route registration reuses this exact geometry rather than creating a second set. Also creates a
+ *    live-updating b_plane aircraft marker
  *    (same mechanism as airborne gunships: friendly-side visible, position/heading refreshed every
  *    frame while the aircraft is alive) that tracks this aircraft the whole time it's flying, always
  *    removed on cleanup regardless of keepMarkersOnCleanup below; set createMarkers false for a
  *    map-clutter-free operation with none of this), keepMarkersOnCleanup (default false -
  *    the created static AREA/STANDBY/GREEN/RED/POINT markers are removed automatically once the
  *    aircraft is destroyed/deleted, or once a DESPAWN run reaches its exit point; set true to leave
- *    them on the map instead; never affects the taken-over target marker, the live aircraft marker
- *    (always removed), or the aircraft/crew either way), name (marker label, default "Drop Zone" -
+ *    them on the map instead; never restores the consumed Eden setup marker and never affects the
+ *    live aircraft marker (always removed), or the aircraft/crew either way), name (marker label,
+ *    default "Drop Zone" -
  *    also the live aircraft marker's label), aircraftInvincible (default from
  *    Waldo_Paradrop_DefaultAircraftInvincible, shipped false; true protects this aircraft from
  *    normal engine damage while the operation exists and follows locality changes).
@@ -135,12 +137,84 @@ if !(isServer) exitWith {
 // wherever its waypoint list happened to be cut off. Only the first arrival for this aircraft
 // actually builds the route.
 if (_aircraft getVariable ["Waldo_Paradrop_QuickSetupStarted", false]) exitWith {false};
+// Resolve the authored target before the scheduled mission-init/pilot waits below. Eden object init
+// runs early enough for global markers created here to reach clients while their briefing map is
+// still open; doing this after WALDO_INIT_COMPLETE made pre-planned paradrop markers appear only
+// after mission start, unlike the gunship orbit display.
+private _missingMarker = typeName _target == "STRING" && {_target != ""} && {markerType _target == ""};
+if (_missingMarker) exitWith {
+    _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", format ["Missing marker %1", _target], true];
+    diag_log format ["[WMP PARADROP] Quick flight setup rejected for %1: marker %2 does not exist.", typeOf _aircraft, _target];
+    [format ["%1 has no paradrop target: place an Eden marker named %2.", typeOf _aircraft, _target]] remoteExecCall ["systemChat", 0];
+    false
+};
+private _centre = switch (typeName _target) do {
+    case "STRING": {if (_target == "") then {[]} else {getMarkerPos _target}};
+    case "ARRAY": {_target};
+    case "OBJECT": {if (isNull _target) then {[]} else {getPosATL _target}};
+    default {[]};
+};
+if (count _centre < 2) exitWith {
+    _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "Target did not resolve", true];
+    diag_log format ["[WMP PARADROP] Quick flight setup rejected for %1: target '%2' did not resolve to a position.", typeOf _aircraft, _target];
+    false
+};
+private _targetIsMarker = typeName _target == "STRING" && {_target != ""};
+private _resolvedDirection = if (_direction >= 0) then {
+    _direction mod 360
+} else {
+    if (_targetIsMarker) then {markerDir _target} else {[getPosATL _aircraft, _centre] call BIS_fnc_dirTo}
+};
+private _label = _options getOrDefault ["name", "Drop Zone"];
+private _quickId = format ["QUICK_%1", netId _aircraft];
+private _markers = [];
+if (_options getOrDefault ["createMarkers", true]) then {
+    private _runLength = ((_options getOrDefault ["runLength", 2500]) max 300) min 6000;
+    private _prefix = format ["Waldo_DZQ_%1", netId _aircraft];
+    private _zoneMarker = createMarker [format ["%1_AREA", _prefix], _centre];
+    _zoneMarker setMarkerShape "RECTANGLE";
+    _zoneMarker setMarkerBrush "Border";
+    _zoneMarker setMarkerDir _resolvedDirection;
+    _zoneMarker setMarkerSize [100, (_runLength * 0.65) max 200];
+    _zoneMarker setMarkerColor "ColorBlack";
+    if !(_targetIsMarker) then {_zoneMarker setMarkerAlpha 0};
+    _markers pushBack _zoneMarker;
+    private _briefingLines = createHashMapFromArray [
+        ["standby", [_centre, _runLength * 0.65, _resolvedDirection + 180] call BIS_fnc_relPos],
+        ["green", [_centre, _runLength * 0.5, _resolvedDirection + 180] call BIS_fnc_relPos],
+        ["red", [_centre, _runLength * 0.5, _resolvedDirection] call BIS_fnc_relPos]
+    ];
+    {
+        _x params ["_suffix", "_key", "_colour", "_text"];
+        private _marker = createMarker [format ["%1_%2", _prefix, _suffix], _briefingLines get _key];
+        _marker setMarkerShape "RECTANGLE";
+        _marker setMarkerBrush "SolidBorder";
+        _marker setMarkerDir _resolvedDirection;
+        _marker setMarkerSize [30, 4];
+        _marker setMarkerColor _colour;
+        _marker setMarkerText _text;
+        if !(_targetIsMarker) then {_marker setMarkerAlpha 0};
+        _markers pushBack _marker;
+    } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
+    private _point = createMarker [format ["%1_POINT", _prefix], _centre];
+    _point setMarkerType "mil_end";
+    _point setMarkerColor "ColorBlack";
+    _point setMarkerText _label;
+    _markers pushBack _point;
+};
+if (_targetIsMarker && {markerType _target != ""}) then {
+    private _safeMarkerKey = [_target, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
+    [_target] remoteExecCall ["Waldo_fnc_HideSetupMarkerLocal", 0, format ["WMP_HIDE_SETUP_%1", _safeMarkerKey]];
+    deleteMarker _target;
+    diag_log format ["[WMP PARADROP] %1 published briefing markers and replaced Eden drop-zone marker '%2'.", _quickId, _target];
+};
+
 _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
 _aircraft setVariable ["Waldo_Paradrop_QuickSetupComplete", false, true];
 _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
 
-[_aircraft, _target, _direction, _altitude, _maxSpeed, _options] spawn {
-    params ["_aircraft", "_target", "_direction", "_altitude", "_maxSpeed", "_options"];
+[_aircraft, _target, _direction, _altitude, _maxSpeed, _options, _centre, _targetIsMarker, _resolvedDirection, _markers, _label, _quickId] spawn {
+    params ["_aircraft", "_target", "_direction", "_altitude", "_maxSpeed", "_options", "_centre", "_targetIsMarker", "_resolvedDirection", "_markers", "_label", "_quickId"];
 
     // Called from an object's init field, this can run before the aircraft's own crew (placed in
     // Eden, or assigned by another object's init field such as Waldo_fnc_MoveInCargoPlane) exists
@@ -166,42 +240,6 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
     if (isNull driver _aircraft) exitWith {
         _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "Pilot timeout", true];
         diag_log format ["[WMP PARADROP] Quick flight setup abandoned for %1: no pilot became available within 180 seconds. Assign a crew (Eden crew or Waldo_fnc_MoveInCargoPlane) before this call.", typeOf _aircraft];
-    };
-
-    // getMarkerPos on a marker name that doesn't exist returns [0,0,0], not an empty array - it
-    // would otherwise silently pass the position check below and send the aircraft toward the
-    // map's [0,0] corner. markerType returning "" is the actual "no such marker" signal, and it's
-    // the single most common beginner mistake with this function (aircraft placed and configured,
-    // target marker forgotten or misspelled), so it gets its own clearly worded, in-game-visible
-    // rejection rather than folding into the generic "didn't resolve" case below.
-    private _missingMarker = typeName _target == "STRING" && {_target != ""} && {markerType _target == ""};
-    if (_missingMarker) exitWith {
-        _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", format ["Missing marker %1", _target], true];
-        private _message = format ["[WMP PARADROP] %1 has no flight target: place a map marker named %2 (Eden Editor > Markers) for it to fly toward.", typeOf _aircraft, _target];
-        diag_log format ["[WMP PARADROP] Quick flight setup rejected for %1: marker %2 does not exist.", typeOf _aircraft, _target];
-        [_message] remoteExec ["systemChat", 0];
-    };
-    private _centre = switch (typeName _target) do {
-        case "STRING": {if (_target == "") then {[]} else {getMarkerPos _target}};
-        case "ARRAY": {_target};
-        case "OBJECT": {if (isNull _target) then {[]} else {getPosATL _target}};
-        default {[]};
-    };
-    if (count _centre < 2) exitWith {
-        _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "Target did not resolve", true];
-        diag_log format ["[WMP PARADROP] Quick flight setup rejected for %1: target '%2' did not resolve to a position.", typeOf _aircraft, _target];
-    };
-
-    // When target is a marker, its own Eden "Direction" rotation is the mission maker's one available
-    // way to visually indicate the intended approach heading - rotate the marker, get that heading.
-    // Auto (-1) preferred this over bearing-from-aircraft, which otherwise silently ignored a marker
-    // rotation the mission maker had deliberately set, and depended on where the aircraft happened to
-    // be placed rather than on anything the mission maker actually configured.
-    private _targetIsMarker = typeName _target == "STRING" && {_target != ""};
-    private _resolvedDirection = if (_direction >= 0) then {
-        _direction mod 360
-    } else {
-        if (_targetIsMarker) then {markerDir _target} else {[getPosATL _aircraft, _centre] call BIS_fnc_dirTo}
     };
 
     // Apply the same MissionConfig safety gates used by the ZEN/server entry point before building
@@ -310,72 +348,6 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
         typeOf _aircraft, _jumpConfig get "staticJumpEnabled", round (_envelope get "staticMinimumAltitude"), round (_envelope get "staticMaximumAltitude"),
         round (_envelope get "staticMaximumSpeed"), _jumpConfig get "haloJumpEnabled", round (_envelope get "haloMinimumAltitude")
     ];
-
-    // On by default: the whole point of this entry point is a mission maker getting a working,
-    // visible drop zone from one line, not a silent invisible route. Set createMarkers to false in
-    // options for a map-clutter-free operation instead.
-    private _markers = [];
-    private _label = _options getOrDefault ["name", "Drop Zone"];
-    private _quickId = format ["QUICK_%1", netId _aircraft];
-    if (_options getOrDefault ["createMarkers", true]) then {
-        private _runLength = _options getOrDefault ["runLength", 2500];
-        private _prefix = format ["Waldo_DZQ_%1", netId _aircraft];
-        // AREA/STANDBY/GREEN/RED only go invisible (alpha 0) in the ARRAY/OBJECT-target branch below,
-        // where a POINT marker is actually created to replace them as the one visible thing - making
-        // them invisible here too, with nothing created to take their place, would leave the corridor
-        // with no visible representation at all: a marker target's point is a different thing from the
-        // flown route these convey.
-        private _zoneMarker = createMarker [format ["%1_AREA", _prefix], _centre];
-        _zoneMarker setMarkerShape "RECTANGLE";
-        _zoneMarker setMarkerBrush "Border";
-        _zoneMarker setMarkerDir _resolvedDirection;
-        _zoneMarker setMarkerSize [100, (_runLength * 0.65) max 200];
-        _zoneMarker setMarkerColor "ColorBlack";
-        if !(_targetIsMarker) then {_zoneMarker setMarkerAlpha 0;};
-        _markers pushBack _zoneMarker;
-        {
-            _x params ["_suffix", "_key", "_colour", "_text"];
-            private _marker = createMarker [format ["%1_%2", _prefix, _suffix], _route get _key];
-            _marker setMarkerShape "RECTANGLE";
-            _marker setMarkerBrush "SolidBorder";
-            _marker setMarkerDir _resolvedDirection;
-            _marker setMarkerSize [30, 4];
-            _marker setMarkerColor _colour;
-            _marker setMarkerText _text;
-            if !(_targetIsMarker) then {_marker setMarkerAlpha 0;};
-            _markers pushBack _marker;
-        } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
-        if (_targetIsMarker) then {
-            // Take over the mission maker's own placeholder marker instead of leaving it exactly as
-            // originally placed (whatever icon/name it had in Eden) or stacking a second marker on
-            // top of it - this is what actually "replaces" it with a working drop zone marker once
-            // the aircraft is flying, instead of an untouched placeholder that lingers unchanged for
-            // the whole mission. Its own rotation was already read above as the resolved approach
-            // direction; reset to 0 here since a point icon has no need for directional rotation the
-            // way the rectangular corridor markers above do. It becomes part of the registered
-            // operation so removal behaves identically to a runtime-created drop zone.
-            _target setMarkerType "mil_end";
-            _target setMarkerColor "ColorBlack";
-            _target setMarkerText _label;
-            _target setMarkerDir 0;
-            _markers pushBackUnique _target;
-        } else {
-            private _point = createMarker [format ["%1_POINT", _prefix], _centre];
-            _point setMarkerType "mil_end";
-            _point setMarkerColor "ColorBlack";
-            _point setMarkerText _label;
-            _markers pushBack _point;
-        };
-
-        // Live-updating aircraft marker, the same pattern airborne gunships already use
-        // (Waldo_fnc_GunshipSetupLocal/UpdateMarkersLocal): tracks this aircraft's actual
-        // position/heading every frame via Waldo_fnc_ParadropSetupLocal/UpdateMarkersLocal, instead
-        // of only ever showing the static corridor/point markers created above. This is what makes a
-        // pre-placed target marker feel "replaced" by a working drop zone once the aircraft is
-        // actually flying, rather than a fixed icon with no sense of where the plane currently is.
-        // Always deregistered on cleanup below regardless of keepMarkersOnCleanup - a marker for an
-        // aircraft that's no longer flying (or no longer exists) has nothing left to track.
-    };
 
     // Register every pre-placed/quick operation, even when its static markers are disabled. Embark
     // and Remove Operation must describe the live operation rather than depend on marker creation.

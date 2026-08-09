@@ -8,7 +8,12 @@
  *
  * Locality and authority:
  * The server validates, creates and publishes the registry snapshot. ZEN requests require a curator;
- * AI commands later follow each group's current owner. Repeated ids replace the existing system.
+ * AI commands later follow each group's current owner. A call made by an Eden object init is queued
+ * until WMP mission initialization completes: creating crew during the dedicated server's mission-
+ * read phase produces non-network crew references and Zeus presents those otherwise-correct WEST/
+ * EAST groups as Empty. Vehicle crews are then created directly into the selected operational side,
+ * assigned to their final vehicle and exposed to curators only after network IDs exist. Repeated ids
+ * replace the existing system; repeated pre-init calls retain the newest config for that id.
  *
  * Arguments:
  * 0: config <HASHMAP> with:
@@ -78,6 +83,41 @@ if (_safeId != _id) exitWith {
     diag_log format ["[WMP DYNAMIC AA] Creation rejected: id '%1' contains unsupported characters.", _id];
     ["Creation rejected: the generated system ID contains unsupported characters.", "ERROR"] call _reply;
     false
+};
+
+// Eden object init fields execute while a dedicated server is still materialising mission entities.
+// createVehicleCrew at that point can return the correct side/group yet its units are still reported
+// as "Ref to nonnetwork object" and arrive in Zeus as Empty/Unknown. ZEN cannot be used until after
+// mission start, so only pre-planned calls take this path. Queue by ID (latest config wins) and drain
+// once the pack publishes its normal initialization sentinel.
+if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) exitWith {
+    private _pending = missionNamespace getVariable ["Waldo_DynamicAA_PendingCreation", createHashMap];
+    _pending set [_id, _config];
+    missionNamespace setVariable ["Waldo_DynamicAA_PendingCreation", _pending];
+    if !(missionNamespace getVariable ["Waldo_DynamicAA_PendingWorker", false]) then {
+        missionNamespace setVariable ["Waldo_DynamicAA_PendingWorker", true];
+        [] spawn {
+            private _deadline = serverTime + 180;
+            waitUntil {
+                sleep 0.25;
+                missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]
+                || {serverTime >= _deadline}
+            };
+            private _ready = missionNamespace getVariable ["WALDO_INIT_COMPLETE", false];
+            private _queued = missionNamespace getVariable ["Waldo_DynamicAA_PendingCreation", createHashMap];
+            missionNamespace setVariable ["Waldo_DynamicAA_PendingCreation", createHashMap];
+            missionNamespace setVariable ["Waldo_DynamicAA_PendingWorker", false];
+            if (!_ready) exitWith {
+                diag_log format ["[WMP DYNAMIC AA] Discarded %1 queued system(s): WALDO_INIT_COMPLETE was not reached within 180 seconds.", count (keys _queued)];
+            };
+            {
+                diag_log format ["[WMP DYNAMIC AA] Materialising queued pre-planned system '%1' after mission initialization.", _x];
+                [_queued get _x] call Waldo_fnc_DynamicAACreate;
+            } forEach keys _queued;
+        };
+    };
+    diag_log format ["[WMP DYNAMIC AA] Queued pre-planned system '%1' until dedicated mission initialization completes.", _id];
+    true
 };
 
 private _registry = missionNamespace getVariable ["Waldo_DynamicAA_Registry", createHashMap];
@@ -347,18 +387,22 @@ diag_log format ["[WMP DYNAMIC AA] '%1' resolved placement plan: %2", _id, _reso
 
 private _assignCrew = {
     params ["_vehicle", "_defence"];
-    createVehicleCrew _vehicle;
-    if (count crew _vehicle == 0) exitWith {grpNull};
-    private _oldGroups = [];
-    {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
-    private _group = createGroup [_side, true];
-    (crew _vehicle) joinSilent _group;
-    // createVehicleCrew may briefly create one or more config-side groups. Mark those groups for
-    // engine-managed deletion rather than deleting freshly networked groups in the same frame; the
-    // latter produced Type_112/Type_116 object-not-found traffic on dedicated servers.
-    {
-        if (!isNull _x && {_x != _group}) then {_x deleteGroupWhenEmpty true};
-    } forEach _oldGroups;
+    // Create the crew directly on the selected operational side. Creating config-side crew first,
+    // then moving it into a second group, briefly published the wrong group and side on dedicated
+    // servers and generated stale network objects for Zeus. The side form of createVehicleCrew
+    // produces the final group in one operation.
+    private _group = _side createVehicleCrew _vehicle;
+    if (isNull _group || {count crew _vehicle == 0} || {side _group != _side}) exitWith {
+        diag_log format [
+            "[WMP DYNAMIC AA] Crew creation failed: vehicle=%1 requestedSide=%2 group=%3 actualSide=%4 crew=%5.",
+            typeOf _vehicle, _side, _group, side _group, count crew _vehicle
+        ];
+        grpNull
+    };
+    // createVehicleCrew intentionally does not assign the vehicle to the group. That omission is
+    // visible in Zeus as an Empty vehicle separated from its correctly sided crew, especially during
+    // dedicated mission startup. Establish the same group/vehicle relationship Eden creates.
+    _group addVehicle _vehicle;
     _groups pushBackUnique _group;
     if (_defence) then {
         [_group, false] call Waldo_fnc_DynamicAASetGroupState;
@@ -378,16 +422,18 @@ private _spawnFailed = false;
     } else {
         _vehicle setPosATL _position;
         _vehicle setDir _direction;
+        _vehicle setVariable ["Waldo_DynamicAA_SystemId", _id, true];
         _objects pushBack _vehicle;
         if (_kind == "RADAR") then {
             _radars pushBack _vehicle;
             if (_vehicle isKindOf "AllVehicles") then {
-                [_vehicle, false] call _assignCrew;
-                _vehicle setVehicleRadar 1;
+                private _crewGroup = [_vehicle, false] call _assignCrew;
+                if (isNull _crewGroup) then {_spawnFailed = true} else {_vehicle setVehicleRadar 1};
             };
         } else {
             _vehicle setVehicleAmmo (((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1);
-            [_vehicle, true] call _assignCrew;
+            private _crewGroup = [_vehicle, true] call _assignCrew;
+            if (isNull _crewGroup) then {_spawnFailed = true};
         };
     };
 } forEach _resolvedPlan;
@@ -434,15 +480,25 @@ private _state = createHashMapFromArray [
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 // Newly created network objects are not guaranteed to be available to curator replication in the
-// same simulation frame. Adding vehicles and every crew unit immediately (then asking includeCrew
-// to add those units a second time) produced Type_112/116 "Object not found" traffic on dedicated
-// servers and stale Zeus entries. Defer one frame and add each root asset once; includeCrew supplies
-// its crew after the objects have valid network identities.
-[+_objects] spawn {
-    params ["_assets"];
-    sleep 0.1;
-    _assets = _assets select {!isNull _x};
-    {_x addCuratorEditableObjects [_assets, true]} forEach allCurators;
+// same simulation frame. Adding vehicles and crew immediately produced Type_112/116 "Object not
+// found" traffic on dedicated servers and stale Zeus entries. Wait for every explicit vehicle and
+// crew network identity, then add that exact list once without asking curator replication to infer
+// the crew again.
+[+_objects, +_groups] spawn {
+    params ["_assets", "_groups"];
+    private _deadline = diag_tickTime + 10;
+    private _editable = [];
+    waitUntil {
+        sleep 0.1;
+        _assets = _assets select {!isNull _x};
+        _editable = +_assets;
+        {{_editable pushBackUnique _x} forEach units _x} forEach (_groups select {!isNull _x});
+        private _networkReady = (_editable findIf {netId _x in ["", "0:0"]}) < 0;
+        _networkReady || {diag_tickTime >= _deadline}
+    };
+    // Add the final vehicle roots and crew explicitly once. Asking includeCrew to discover units
+    // while their network identity is still settling caused the dedicated Object-not-found flood.
+    {_x addCuratorEditableObjects [_editable, false]} forEach allCurators;
 };
 if (_config getOrDefault ["shutdownInteraction", false]) then {
     private _interactionSettings = [_id, _config getOrDefault ["shutdownChallenge", "circuit"], _config getOrDefault ["shutdownDifficulty", "standard"]];
@@ -456,9 +512,10 @@ _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 [] call Waldo_fnc_DynamicAAPublishState;
 diag_log format [
-    "[WMP DYNAMIC AA] '%1' (%2) active: detection=%3m engagement=%4m altitude=%5-%6m %7 assetPool=%8.",
-    _displayName, _id, _radius, _engagementRadius, _minimumAltitude, _maximumAltitude,
-    _config getOrDefault ["altitudeMode", "AUTO"], _config get "resolvedAssetPool"
+    "[WMP DYNAMIC AA] '%1' (%2) active: side=%3 crewSides=%4 detection=%5m engagement=%6m altitude=%7-%8m %9 assetPool=%10.",
+    _displayName, _id, _side, _groups apply {side _x}, _radius, _engagementRadius,
+    _minimumAltitude, _maximumAltitude, _config getOrDefault ["altitudeMode", "AUTO"],
+    _config get "resolvedAssetPool"
 ];
 [format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
 true

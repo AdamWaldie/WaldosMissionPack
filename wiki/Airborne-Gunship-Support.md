@@ -99,6 +99,11 @@ and, after successful registration, deletes the Eden placeholder so the live cal
 orbit marker replaces it. Passing `getMarkerPos` still supplies a valid position, but discards the
 marker name, so WMP cannot know which placeholder should be removed.
 
+On a dedicated server, briefing clients can recreate their local `mission.sqm` marker after the
+server has consumed it. WMP therefore also sends a persistent interface-local hide instruction for
+that exact source-marker name through the briefing transition. It does not hide the new operational
+orbit marker.
+
 Omit `aircraft` and provide `aircraftClass` plus `spawnPosition` to create the asset. Alternatively provide `aircraftClasses`, `faction`, or use the mission's `Waldo_Gunship_SideAircraftPools` and `Waldo_Gunship_FactionAircraftPools`. Invalid or non-aircraft classes are rejected before spawning.
 
 An existing Eden aircraft must already contain its intended crew. Registration does not silently
