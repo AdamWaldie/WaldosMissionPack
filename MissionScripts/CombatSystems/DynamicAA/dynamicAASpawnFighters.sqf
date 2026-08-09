@@ -3,16 +3,18 @@
  * Spawns the configured fighter response and places it under the same server detector gate as AA.
  *
  * Locality and authority:
- * Server-only creation. The fighter group may later migrate to a headless client; target-state calls
- * are automatically sent to the current owner. Fighters are published through the Dynamic AA system
- * snapshot and added to all active curators. Repeated waves follow the configured wave/cooldown state.
+ * Server-only creation. Crew is created directly on the configured operational side, avoiding a
+ * transient config-side group during dedicated-server replication. The fighter group may later
+ * migrate to a headless client; target-state calls are automatically sent to the current owner.
+ * Fighters are published through the Dynamic AA snapshot and added to all active curators.
+ * Repeated waves follow the configured wave/cooldown state.
  *
  * Arguments:
  * 0: id <STRING>
  * 1: detectedAircraft <ARRAY> - current hostile targets
  *
  * Return Value:
- * Number - fighters requested/spawned during this wave
+ * Number - fighters successfully spawned during this wave
  *
  * Current callers:
  * Waldo_fnc_DynamicAADetectorLoop when an eligible hostile aircraft activates a fighter response.
@@ -34,6 +36,7 @@ private _radius = _config get "radius";
 private _side = _config get "side";
 private _fighterClasses = _config getOrDefault ["fighterClasses", [_config getOrDefault ["fighterClass", "O_Plane_Fighter_02_F"]]];
 private _fighterAssignments = _config getOrDefault ["fighterAssignments", []];
+private _spawnedCount = 0;
 
 for "_i" from 1 to _count do {
     private _fighterClass = if (count _fighterAssignments == _count) then {
@@ -48,46 +51,53 @@ for "_i" from 1 to _count do {
     _fighter setPosATL _spawnPosition;
     _fighter setDir (_spawn2D getDir _centre);
     _fighter flyInHeight _height;
-    createVehicleCrew _fighter;
-    private _oldGroups = [];
-    {_oldGroups pushBackUnique (group _x)} forEach crew _fighter;
-    private _group = createGroup [_side, true];
-    (crew _fighter) joinSilent _group;
-    {
-        if (!isNull _x && {_x != _group}) then {_x deleteGroupWhenEmpty true};
-    } forEach _oldGroups;
-    private _waypoint = _group addWaypoint [_centre, 0];
-    // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.
-    _waypoint setWaypointType "MOVE";
-    _waypoint setWaypointBehaviour "COMBAT";
-    _waypoint setWaypointCombatMode "RED";
-    _waypoint setWaypointSpeed "FULL";
-    [_group, true, _detectedAircraft] call Waldo_fnc_DynamicAASetGroupState;
-    private _objects = _state get "objects";
-    _objects pushBack _fighter;
-    _state set ["objects", _objects];
-    private _groups = _state get "groups";
-    _groups pushBackUnique _group;
-    _state set ["groups", _groups];
-    private _defenceGroups = _state getOrDefault ["defenceGroups", []];
-    _defenceGroups pushBackUnique _group;
-    _state set ["defenceGroups", _defenceGroups];
-    [[_fighter]] spawn {
-        params ["_assets"];
-        sleep 0.1;
-        _assets = _assets select {!isNull _x};
-        {_x addCuratorEditableObjects [_assets, true]} forEach allCurators;
+    // Use the side-aware command directly. A config-side group followed by joinSilent briefly
+    // exposed the wrong/unknown side and stale crew references on dedicated servers.
+    private _group = _side createVehicleCrew _fighter;
+    if (isNull _group || {count crew _fighter == 0} || {side _group != _side}) then {
+        diag_log format [
+            "[WMP DYNAMIC AA] Fighter crew creation failed: class=%1 requestedSide=%2 group=%3 actualSide=%4 crew=%5.",
+            _fighterClass, _side, _group, side _group, count crew _fighter
+        ];
+        {deleteVehicle _x} forEach crew _fighter;
+        deleteVehicle _fighter;
+    } else {
+        private _waypoint = _group addWaypoint [_centre, 0];
+        // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.
+        _waypoint setWaypointType "MOVE";
+        _waypoint setWaypointBehaviour "COMBAT";
+        _waypoint setWaypointCombatMode "RED";
+        _waypoint setWaypointSpeed "FULL";
+        [_group, true, _detectedAircraft] call Waldo_fnc_DynamicAASetGroupState;
+        private _objects = _state get "objects";
+        _objects pushBack _fighter;
+        _state set ["objects", _objects];
+        private _groups = _state get "groups";
+        _groups pushBackUnique _group;
+        _state set ["groups", _groups];
+        private _defenceGroups = _state getOrDefault ["defenceGroups", []];
+        _defenceGroups pushBackUnique _group;
+        _state set ["defenceGroups", _defenceGroups];
+        _spawnedCount = _spawnedCount + 1;
+        [[_fighter]] spawn {
+            params ["_assets"];
+            sleep 0.1;
+            _assets = _assets select {!isNull _x};
+            {_x addCuratorEditableObjects [_assets, true]} forEach allCurators;
+        };
     };
 };
-_state set ["fightersScrambled", true];
-_state set ["fighterWaves", (_state getOrDefault ["fighterWaves", 0]) + 1];
-_state set ["lastFighterScramble", diag_tickTime];
+if (_spawnedCount > 0) then {
+    _state set ["fightersScrambled", true];
+    _state set ["fighterWaves", (_state getOrDefault ["fighterWaves", 0]) + 1];
+    _state set ["lastFighterScramble", diag_tickTime];
+};
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 if (_config getOrDefault ["announce", true]) then {
     private _recipients = allPlayers select {side group _x == _side};
     if !(_recipients isEqualTo []) then {
-        ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _count], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
+        ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _spawnedCount], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
     };
 };
-_count
+_spawnedCount

@@ -8,7 +8,9 @@
  *
  * Locality and authority:
  * The server validates, creates and publishes the registry snapshot. ZEN requests require a curator;
- * AI commands later follow each group's current owner. Repeated ids replace the existing system.
+ * AI commands later follow each group's current owner. Vehicle crews are created directly into the
+ * selected operational side so dedicated servers never publish a transient config-side group.
+ * Repeated ids replace the existing system.
  *
  * Arguments:
  * 0: config <HASHMAP> with:
@@ -347,18 +349,18 @@ diag_log format ["[WMP DYNAMIC AA] '%1' resolved placement plan: %2", _id, _reso
 
 private _assignCrew = {
     params ["_vehicle", "_defence"];
-    createVehicleCrew _vehicle;
-    if (count crew _vehicle == 0) exitWith {grpNull};
-    private _oldGroups = [];
-    {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
-    private _group = createGroup [_side, true];
-    (crew _vehicle) joinSilent _group;
-    // createVehicleCrew may briefly create one or more config-side groups. Mark those groups for
-    // engine-managed deletion rather than deleting freshly networked groups in the same frame; the
-    // latter produced Type_112/Type_116 object-not-found traffic on dedicated servers.
-    {
-        if (!isNull _x && {_x != _group}) then {_x deleteGroupWhenEmpty true};
-    } forEach _oldGroups;
+    // Create the crew directly on the selected operational side. Creating config-side crew first,
+    // then moving it into a second group, briefly published the wrong group and side on dedicated
+    // servers and generated stale network objects for Zeus. The side form of createVehicleCrew
+    // produces the final group in one operation.
+    private _group = _side createVehicleCrew _vehicle;
+    if (isNull _group || {count crew _vehicle == 0} || {side _group != _side}) exitWith {
+        diag_log format [
+            "[WMP DYNAMIC AA] Crew creation failed: vehicle=%1 requestedSide=%2 group=%3 actualSide=%4 crew=%5.",
+            typeOf _vehicle, _side, _group, side _group, count crew _vehicle
+        ];
+        grpNull
+    };
     _groups pushBackUnique _group;
     if (_defence) then {
         [_group, false] call Waldo_fnc_DynamicAASetGroupState;
@@ -382,12 +384,13 @@ private _spawnFailed = false;
         if (_kind == "RADAR") then {
             _radars pushBack _vehicle;
             if (_vehicle isKindOf "AllVehicles") then {
-                [_vehicle, false] call _assignCrew;
-                _vehicle setVehicleRadar 1;
+                private _crewGroup = [_vehicle, false] call _assignCrew;
+                if (isNull _crewGroup) then {_spawnFailed = true} else {_vehicle setVehicleRadar 1};
             };
         } else {
             _vehicle setVehicleAmmo (((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1);
-            [_vehicle, true] call _assignCrew;
+            private _crewGroup = [_vehicle, true] call _assignCrew;
+            if (isNull _crewGroup) then {_spawnFailed = true};
         };
     };
 } forEach _resolvedPlan;
@@ -456,9 +459,10 @@ _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 [] call Waldo_fnc_DynamicAAPublishState;
 diag_log format [
-    "[WMP DYNAMIC AA] '%1' (%2) active: detection=%3m engagement=%4m altitude=%5-%6m %7 assetPool=%8.",
-    _displayName, _id, _radius, _engagementRadius, _minimumAltitude, _maximumAltitude,
-    _config getOrDefault ["altitudeMode", "AUTO"], _config get "resolvedAssetPool"
+    "[WMP DYNAMIC AA] '%1' (%2) active: side=%3 crewSides=%4 detection=%5m engagement=%6m altitude=%7-%8m %9 assetPool=%10.",
+    _displayName, _id, _side, _groups apply {side _x}, _radius, _engagementRadius,
+    _minimumAltitude, _maximumAltitude, _config getOrDefault ["altitudeMode", "AUTO"],
+    _config get "resolvedAssetPool"
 ];
 [format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
 true
