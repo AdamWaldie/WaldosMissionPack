@@ -38,7 +38,9 @@
  *    here. A mistyped or never-placed marker name is reported clearly (see Return Value) rather
  *    than silently sending the aircraft toward the map's [0,0] corner.
  * 2: direction <NUMBER> - degrees; the aircraft approaches the target along this heading. -1 (the
- *    default) computes a sensible heading automatically from the aircraft's position to the target.
+ *    default) uses the target marker's own Eden "Direction" rotation when target is a marker name -
+ *    rotate the marker in Eden to set the approach heading, no coordinate math needed - or otherwise
+ *    computes a sensible heading automatically from the aircraft's position to the target.
  * 3: altitude <NUMBER> - route altitude AGL in metres (default 250, clamped 100-2000).
  * 4: maximum speed <NUMBER> - km/h (default 220, clamped 80-500).
  * 5: options <HASHMAP> - optional overrides: staticJumpEnabled (default true), haloJumpEnabled
@@ -52,18 +54,23 @@
  *    circuitDirection (LEFT/RIGHT, default LEFT), approachDistance/runLength/exitDistance (metres,
  *    default 2500 each), createMarkers (default true - AREA/STANDBY/GREEN/RED markers matching
  *    Waldo_fnc_ParadropCreateDropZone's layout, created invisible (alpha 0, still real/queryable
- *    markers) so a mission maker gets the route's positional markers without the map clutter, plus a
- *    visible POINT marker at the target - but only when target was not itself a marker name, since
- *    that marker already sits exactly there and a second icon/label on top of it would just overlap -
- *    and a live-updating b_plane aircraft marker (same mechanism as airborne gunships: friendly-side
- *    visible, position/heading refreshed every frame while the aircraft is alive) that tracks this
- *    aircraft the whole time it's flying, always removed on cleanup regardless of
- *    keepMarkersOnCleanup below; set createMarkers false for a map-clutter-free operation with none
- *    of this), keepMarkersOnCleanup (default false -
- *    the created static markers are removed automatically once the aircraft is destroyed/deleted, or
- *    once a DESPAWN run reaches its exit point; set true to leave them on the map instead; never
- *    affects the live aircraft marker (always removed) or the aircraft/crew either way), name
- *    (marker label, default "Drop Zone" - also the live aircraft marker's label).
+ *    markers) so a mission maker gets the route's positional markers without the map clutter. When
+ *    target is NOT a marker name, also creates a visible black "mil_end" POINT marker at the target.
+ *    When target IS a marker name, that placeholder marker is instead taken over in place - restyled
+ *    to the same black "mil_end" look, labelled with this call's name, and its own rotation reset to
+ *    0 (a point icon needs no directional rotation) - rather than a second marker being stacked on
+ *    top of it, or the original placeholder being left completely unchanged for the rest of the
+ *    mission. That takeover is never added to the cleanup list below - this function never created
+ *    that marker, so it never deletes it either. Also creates a live-updating b_plane aircraft marker
+ *    (same mechanism as airborne gunships: friendly-side visible, position/heading refreshed every
+ *    frame while the aircraft is alive) that tracks this aircraft the whole time it's flying, always
+ *    removed on cleanup regardless of keepMarkersOnCleanup below; set createMarkers false for a
+ *    map-clutter-free operation with none of this), keepMarkersOnCleanup (default false -
+ *    the created static AREA/STANDBY/GREEN/RED/POINT markers are removed automatically once the
+ *    aircraft is destroyed/deleted, or once a DESPAWN run reaches its exit point; set true to leave
+ *    them on the map instead; never affects the taken-over target marker, the live aircraft marker
+ *    (always removed), or the aircraft/crew either way), name (marker label, default "Drop Zone" -
+ *    also the live aircraft marker's label).
  *
  * Return Value:
  * Boolean - true when accepted (the actual route/actions are applied a moment later on the server
@@ -164,8 +171,16 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
         diag_log format ["[WMP PARADROP] Quick flight setup rejected for %1: target '%2' did not resolve to a position.", typeOf _aircraft, _target];
     };
 
-    private _resolvedDirection = if (_direction >= 0) then {_direction mod 360} else {
-        [getPosATL _aircraft, _centre] call BIS_fnc_dirTo
+    // When target is a marker, its own Eden "Direction" rotation is the mission maker's one available
+    // way to visually indicate the intended approach heading - rotate the marker, get that heading.
+    // Auto (-1) preferred this over bearing-from-aircraft, which otherwise silently ignored a marker
+    // rotation the mission maker had deliberately set, and depended on where the aircraft happened to
+    // be placed rather than on anything the mission maker actually configured.
+    private _targetIsMarker = typeName _target == "STRING" && {_target != ""};
+    private _resolvedDirection = if (_direction >= 0) then {
+        _direction mod 360
+    } else {
+        if (_targetIsMarker) then {markerDir _target} else {[getPosATL _aircraft, _centre] call BIS_fnc_dirTo}
     };
 
     // Waldo_fnc_ParadropBuildFlightRoute clears every waypoint of the group it's given. That's safe
@@ -248,14 +263,11 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
         private _label = _options getOrDefault ["name", "Drop Zone"];
         private _runLength = _options getOrDefault ["runLength", 2500];
         private _prefix = format ["Waldo_DZQ_%1", netId _aircraft];
-        // When target was a marker name, that marker already sits exactly at _centre and the POINT
-        // marker below is skipped (a second icon+label on top of it would just double up). AREA/
-        // STANDBY/GREEN/RED only go invisible (alpha 0) in the ARRAY/OBJECT-target branch below, where
-        // the POINT marker is actually created to replace them as the one visible thing - making them
-        // invisible here too, with nothing created to take their place, would leave the corridor with
-        // no visible representation at all: the target's own marker was never a substitute for it, it
-        // conveys different information (the flown route, not just the drop point).
-        private _targetIsMarker = typeName _target == "STRING" && {_target != ""};
+        // AREA/STANDBY/GREEN/RED only go invisible (alpha 0) in the ARRAY/OBJECT-target branch below,
+        // where a POINT marker is actually created to replace them as the one visible thing - making
+        // them invisible here too, with nothing created to take their place, would leave the corridor
+        // with no visible representation at all: a marker target's point is a different thing from the
+        // flown route these convey.
         private _zoneMarker = createMarker [format ["%1_AREA", _prefix], _centre];
         _zoneMarker setMarkerShape "RECTANGLE";
         _zoneMarker setMarkerBrush "Border";
@@ -276,7 +288,20 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupStarted", true];
             if !(_targetIsMarker) then {_marker setMarkerAlpha 0;};
             _markers pushBack _marker;
         } forEach [["STANDBY", "standby", "ColorYellow", "STANDBY"], ["GREEN", "green", "ColorGreen", "GREEN LINE"], ["RED", "red", "ColorRed", "RED LINE"]];
-        if !(_targetIsMarker) then {
+        if (_targetIsMarker) then {
+            // Take over the mission maker's own placeholder marker instead of leaving it exactly as
+            // originally placed (whatever icon/name it had in Eden) or stacking a second marker on
+            // top of it - this is what actually "replaces" it with a working drop zone marker once
+            // the aircraft is flying, instead of an untouched placeholder that lingers unchanged for
+            // the whole mission. Its own rotation was already read above as the resolved approach
+            // direction; reset to 0 here since a point icon has no need for directional rotation the
+            // way the rectangular corridor markers above do. Never added to _markers/cleaned up -
+            // this function never created this marker, so it never owns deleting it either.
+            _target setMarkerType "mil_end";
+            _target setMarkerColor "ColorBlack";
+            _target setMarkerText _label;
+            _target setMarkerDir 0;
+        } else {
             private _point = createMarker [format ["%1_POINT", _prefix], _centre];
             _point setMarkerType "mil_end";
             _point setMarkerColor "ColorBlack";
