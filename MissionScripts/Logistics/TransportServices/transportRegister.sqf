@@ -20,6 +20,10 @@
  *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
  *    landingClearanceScale,
  *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
+ *    avoidRoadObstacles (ground only; default true - once a route stalls with no progress for
+ *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
+ *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
+ *    false to keep retrying the exact same road-locked path instead),
  *    invulnerable (vehicle and original AI service crew; default false),
  *    useImprovedLanding and keepEngineOnAway (helicopters only; default true - keeps the engine
  *    running at a pickup/destination stop away from base, overriding vanilla TR UNLOAD idle-down;
@@ -118,6 +122,7 @@ private _config = createHashMapFromArray [
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
+    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]],
     ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];

@@ -39,10 +39,13 @@ current position/direction becomes its base. Optional fifth-argument
 HashMap overrides per-service options (`leadersOnly`, `showMarker`,
 `cruiseAltitude`, `boardingSeconds`, `destinationDwell`,
 `landingSearchRadius`, `roadSearchRadius`, `groundSpeedLimit`,
-`pathRetrySeconds`, `pathRetryLimit`, `repairAtBase`, `refuelAtBase`,
-`forceDisembark`, `failSafeReset`, `invulnerable`, `useImprovedLanding`,
-`keepEngineOnAway`) — see `wiki/Transport-Services.md` for the full table
-if a specific option needs tuning.
+`pathRetrySeconds`, `pathRetryLimit`, `avoidRoadObstacles`, `repairAtBase`,
+`refuelAtBase`, `forceDisembark`, `failSafeReset`, `invulnerable`,
+`useImprovedLanding`, `keepEngineOnAway`) — see `wiki/Transport-Services.md`
+for the full table if a specific option needs tuning. Ground services
+stall-detect and, on the first retry, drop a road-follow order
+(`avoidRoadObstacles`, default `true`) so off-road pathfinding can route the
+AI driver around a parked vehicle or wreck blocking that road segment.
 
 ## Player usage
 
