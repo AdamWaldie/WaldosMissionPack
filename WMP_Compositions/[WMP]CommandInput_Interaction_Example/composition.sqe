@@ -1,0 +1,38 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=3;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_Interaction_CommandInput_Console";
+			init="[this, ""commandinput"", createHashMapFromArray [[""difficulty"", ""standard""], [""actionTitle"", ""Access Tactical Uplink""], [""title"", ""TACTICAL UPLINK""], [""onSuccess"", {params ['_obj']; private _truck = nearestObject [_obj, 'B_Truck_01_transport_F']; if (!isNull _truck) then {[_truck, west, 'Convoy Lead'] call Waldo_fnc_Tracker;}; ['Uplink established. Convoy Lead is now tracked.'] remoteExec ['systemChat', 0];}], [""onFailure"", {['Uplink access denied.'] remoteExec ['systemChat', 0];}]]] call Waldo_fnc_MiniGameInteractionSetup;";
+		};
+		id=1;
+		type="Land_Computer_01_sand_F";
+	};
+	class Item1
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={4,2,0};};
+		class Attributes
+		{
+			name="WMP_Interaction_CommandInput_Truck";
+		};
+		id=2;
+		type="B_Truck_01_transport_F";
+	};
+	class Item2
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-4,0};};
+		title="CommandInput Interaction Example: a real gameplay outcome, not just the procedure by itself. Passing the tactical uplink procedure plants a live Waldo_fnc_Tracker on the nearby truck, tracked by WEST - the Electronic Warfare C-Track system. Copy the onSuccess pattern in the console's init field onto your own object to tag any unit or vehicle. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
+		id=3;
+	};
+};
