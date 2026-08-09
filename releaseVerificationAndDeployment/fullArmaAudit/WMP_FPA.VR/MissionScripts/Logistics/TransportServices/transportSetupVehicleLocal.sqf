@@ -2,7 +2,9 @@
  * Author: WaldoTheWarfighter, Val
  * Adds repeat-safe controls directly to one registered transport. Its mission-maker name and live state
  * make clear which exact vehicle will move. ACE users receive a Transport Service category; vanilla
- * users receive equivalent WMP-blue actions. Controls only submit requests to server authority.
+ * users receive equivalent WMP-blue actions. Every player currently inside the vehicle may send a
+ * valid-state transport to a destination or order it to RTB, regardless of requester or seat. The
+ * server rechecks crew membership, registration and state before accepting either request.
  * Locality and authority: runs locally on every interface client, including JIP. Public vehicle
  * state is read here, while Waldo_fnc_TransportRequestServer validates every requested change.
  *
@@ -55,13 +57,13 @@ private _type = _vehicle getVariable ["Waldo_TransportService_Type", "GROUND"];
 private _name = _vehicle getVariable ["Waldo_TransportService_Name", "Transport"];
 private _heli = _type == "HELICOPTER";
 private _role = ["Ground Transport", "Helicopter Transport"] select _heli;
-private _infoId = -1;
-private _moveId = -1;
-private _destinationId = -1;
-private _rtbId = -1;
-private _retryId = -1;
-if (!_aceReady) then {
-_infoId = _vehicle addAction [
+// The informational action is a discoverability cue, not a control ACE should take priority over -
+// installed alongside ACE (not only as a vanilla fallback), the same dual-surface policy used
+// elsewhere in the pack (loadout-save points, party tables, Field Hospital crates): a player who
+// hasn't opened ACE Self Interact on this exact vehicle should still be able to scroll-wheel it and
+// immediately see what it is and its current state. The four operational controls below remain
+// ACE-priority/vanilla-fallback only, since ACE's own equivalents already cover them when available.
+private _infoId = _vehicle addAction [
     format ["<t color='#79C7FF'>%1: %2</t>", _role, _name],
     {
         params ["_target", "_caller", "_actionId", "_arguments"];
@@ -71,6 +73,11 @@ _infoId = _vehicle addAction [
     [_type, _name, _role], -90, false, true, "",
     "_target getVariable ['Waldo_TransportService_Registered', false]", 8
 ];
+private _moveId = -1;
+private _destinationId = -1;
+private _rtbId = -1;
+private _retryId = -1;
+if (!_aceReady) then {
 _moveId = _vehicle addAction [
     "<t color='#79C7FF'>Move This Transport's Pickup Point</t>",
     {params ["_target"]; ["MOVE_PICKUP", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal},
@@ -79,17 +86,17 @@ _moveId = _vehicle addAction [
     8
 ];
 _destinationId = _vehicle addAction [
-    "<t color='#79C7FF'>Select This Transport's Destination</t>",
+    "<t color='#79C7FF'>Send This Transport to Destination</t>",
     {params ["_target"]; ["SET_DESTINATION", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal},
     [], -92, false, true, "",
-    "_target getVariable ['Waldo_TransportService_State',''] == 'BOARDING' && {_this in crew _target || {!isNull getAssignedCuratorLogic _this}}",
+    "_this in crew _target && {(_target getVariable ['Waldo_TransportService_State',''] in ['BOARDING','TO_DESTINATION'])}",
     8
 ];
 _rtbId = _vehicle addAction [
     "<t color='#79C7FF'>Return This Transport to Base</t>",
     {params ["_target", "_caller"]; ["RTB", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _caller] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2]},
     [], -93, false, true, "",
-    "private _uid = getPlayerUID _this; !((_target getVariable ['Waldo_TransportService_State','']) in ['AVAILABLE','RTB']) && {_this in crew _target || {_uid != '' && {_target getVariable ['Waldo_TransportService_RequesterUID',''] == _uid}} || {!isNull getAssignedCuratorLogic _this}}",
+    "_this in crew _target && {!((_target getVariable ['Waldo_TransportService_State','']) in ['AVAILABLE','RTB'])}",
     8
 ];
 _retryId = _vehicle addAction [
@@ -120,9 +127,12 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
         (_target getVariable ["Waldo_TransportService_State", ""]) in ["TO_PICKUP", "BOARDING"] && {_uid != "" && {_target getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid} || {!isNull getAssignedCuratorLogic _player}}
     }] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _move] call ace_interact_menu_fnc_addActionToObject;
-    private _destination = [format ["%1_Destination", _rootId], "Select Destination", "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa", {
+    private _destination = [format ["%1_Destination", _rootId], "Send to Destination", "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa", {
         params ["_target"]; ["SET_DESTINATION", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal;
-    }, {params ["_target", "_player"]; _target getVariable ["Waldo_TransportService_State", ""] == "BOARDING" && {_player in crew _target || {!isNull getAssignedCuratorLogic _player}}}] call ace_interact_menu_fnc_createAction;
+    }, {
+        params ["_target", "_player"];
+        _player in crew _target && {_target getVariable ["Waldo_TransportService_State", ""] in ["BOARDING", "TO_DESTINATION"]}
+    }] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _destination] call ace_interact_menu_fnc_addActionToObject;
     private _retry = [format ["%1_Retry", _rootId], "Retry Current Route", "\a3\ui_f\data\igui\cfg\actions\reload_ca.paa", {
         params ["_target", "_player"]; ["RETRY", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
@@ -136,8 +146,7 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
         params ["_target", "_player"]; ["RTB", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
     }, {
         params ["_target", "_player"];
-        private _uid = getPlayerUID _player;
-        !((_target getVariable ["Waldo_TransportService_State", ""]) in ["AVAILABLE", "RTB"]) && {_player in crew _target || {_uid != "" && {_target getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} || {!isNull getAssignedCuratorLogic _player}}
+        _player in crew _target && {!((_target getVariable ["Waldo_TransportService_State", ""]) in ["AVAILABLE", "RTB"])}
     }] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _rtb] call ace_interact_menu_fnc_addActionToObject;
     _vehicle setVariable ["Waldo_TransportService_AceInstalled", true];

@@ -5,6 +5,12 @@
  * Registration is repeat-safe and stores enough public object state for JIP interactions while the
  * full mutable registry remains server-only.
  * Locality and authority: callable anywhere and self-forwards; only the server mutates registration state.
+ * The driver seat is locked (lockDriver true, intentional - direct boarding is not the supported
+ * path) and the captured AI service crew has fleeing/panic disabled
+ * (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily damaged to
+ * remain effective
+ * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written
+ * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
  *
  * Arguments:
  * 0: vehicle <OBJECT>
@@ -16,9 +22,16 @@
  *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
  *    landingClearanceScale,
  *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
- *    invulnerable (vehicle and original AI service crew; default false) and
- *    useImprovedLanding. minimumSeparation spaces active destinations/bulk service slots (default:
- *    helicopters 60, ground vehicles 18); prepared bases are checked only for physical overlap.
+ *    avoidRoadObstacles (ground only; default true - once a route stalls with no progress for
+ *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
+ *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
+ *    false to keep retrying the exact same road-locked path instead),
+ *    invulnerable (vehicle and original AI service crew; default false),
+ *    useImprovedLanding and keepEngineOnAway (helicopters only; default true - keeps the engine
+ *    running at a pickup/destination stop away from base, overriding vanilla TR UNLOAD idle-down;
+ *    set false to allow it to idle down like a normal AI landing). minimumSeparation spaces active
+ *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18); prepared bases
+ *    are checked only for physical overlap.
  *
  * Return Value: Boolean - true when forwarded or registered.
  *
@@ -89,7 +102,7 @@ if (typeName _options == "HASHMAP") then {
     {if (_x isEqualType [] && {count _x >= 2}) then {_optionMap set [_x select 0, _x select 1]}} forEach _options;
 };
 private _config = createHashMapFromArray [
-    ["cruiseAltitude", _optionMap getOrDefault ["cruiseAltitude", missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 80]]],
+    ["cruiseAltitude", _optionMap getOrDefault ["cruiseAltitude", missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 50]]],
     ["stopRadius", _optionMap getOrDefault ["stopRadius", if (_type == "HELICOPTER") then {35} else {12}]],
     ["boardingSeconds", _optionMap getOrDefault ["boardingSeconds", missionNamespace getVariable ["Waldo_Transport_DefaultBoardingSeconds", 300]]],
     ["destinationDwell", _optionMap getOrDefault ["destinationDwell", missionNamespace getVariable ["Waldo_Transport_DefaultDestinationDwell", 45]]],
@@ -104,13 +117,14 @@ private _config = createHashMapFromArray [
     ["failSafeReset", _optionMap getOrDefault ["failSafeReset", false]],
     ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
     ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
-    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 75]]) max 10],
+    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 250]]) max 10],
     ["landingClearanceScale", (_optionMap getOrDefault ["landingClearanceScale", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0]]) max 1],
     ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
     ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]}]) max 0],
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
+    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]],
     ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
 ];
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
@@ -168,7 +182,19 @@ private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
 _vehicle lockDriver true;
-if (_type == "HELICOPTER") then {_vehicle flyInHeight (_config get "cruiseAltitude")};
+// The original AI service crew must stay put - an AI driver/gunner who panics and bails out under
+// fire strands the vehicle exactly like a vanished driver would, without the monitor's own
+// driver-death check ever catching it. allowFleeing 0 is the documented Arma command for
+// suppressing that panic/flee behaviour (there is no separate "prevent getting out" command); it
+// only touches crew captured at registration time - a player who later boards as cargo/passenger
+// is unaffected.
+{_x allowFleeing 0} forEach crew _vehicle;
+// The 2-element array form forces strict AGL terrain-following instead of leaving the AI free to
+// compute its own "safe" cruise profile - over long routes with real elevation change, plain
+// single-argument flyInHeight lets the AI climb far above the requested altitude and produces the
+// intermittent stop/start hunting this was tuned to fix. Waldo_fnc_ParadropBuildFlightRoute already
+// established this exact fix for the same class of AI flight behaviour.
+if (_type == "HELICOPTER") then {_vehicle flyInHeight [_config get "cruiseAltitude", true]};
 // Retain the original TR UNLOAD route. Improved landing is the only default addition and owns the
 // vector-guided final approach; the transport LAND command remains a fallback if it cannot acquire.
 if (_type == "HELICOPTER") then {
@@ -188,9 +214,14 @@ if (_config get "showMarker") then {
     deleteMarker _marker;
     createMarker [_marker, getPosATL _vehicle];
     _marker setMarkerType (if (_type == "HELICOPTER") then {"loc_heli"} else {"loc_car"});
-    _marker setMarkerText _displayName;
+    // Matches the "name - state" format Waldo_fnc_TransportMonitorServer keeps updated afterward -
+    // a freshly registered service is always AVAILABLE, so this is the same text the monitor's own
+    // first tick would set a moment later.
+    private _initialMarkerText = format ["%1 - Available", _displayName];
+    _marker setMarkerText _initialMarkerText;
     _marker setMarkerColor (switch (side driver _vehicle) do {case west: {"ColorWEST"}; case east: {"ColorEAST"}; case independent: {"ColorGUER"}; case civilian: {"ColorCIV"}; default {"ColorUNKNOWN"}});
     _entry set ["marker", _marker];
+    _entry set ["markerText", _initialMarkerText];
 };
 _services set [_id, _entry];
 missionNamespace setVariable ["Waldo_Transport_Services", _services];

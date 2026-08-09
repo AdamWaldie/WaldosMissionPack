@@ -24,7 +24,7 @@
  * manually from init.sqf or duplicate their initPlayerLocal lifecycle.
  *
  * CUSTOMISATION GUIDE:
- * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM, SCIFI or PARCHMENT), treatment-feedback policy,
+ * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL), treatment-feedback policy,
  * emergency-dismount policy and accessibility eligibility/presentation are intended choices.
  * Panel placement names are TOP_RIGHT, CENTER, BOTTOM_LEFT, BOTTOM_CENTER and BOTTOM_RIGHT; TOP is
  * reserved for mission-flow banners. Panel entries are [channel, placement, allow stacking].
@@ -54,7 +54,7 @@
  * `PreserveVelocity`, `RequireClearExit`, `MinimumOverturnSeconds` and `UpThreshold`.
  *
  * SETTING-BY-SETTING GUIDE - THEME AND NOTIFICATIONS:
- * - Waldo_UI_Theme (MISSION MAKER): DEFAULT, WW2, VIETNAM, SCIFI or PARCHMENT; affects WMP UI, not Arma/ACE menus.
+ * - Waldo_UI_Theme (MISSION MAKER): DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL; affects WMP UI, not Arma/ACE menus.
  * - Waldo_UI_CustomThemes (ADVANCED): complete new theme definitions; leave empty unless all tokens are tested.
  * - Waldo_UI_ThemeOverrides (ADVANCED): partial token overrides for an existing theme ID.
  * - Waldo_UiNotification_MaximumQueued (ADVANCED): maximum pending cards; oldest excess entries are discarded.
@@ -144,7 +144,7 @@
 createHashMapFromArray [
     ["featureFamilies", ["UI Themes", "Notification UI", "Treatment Feedback", "Tactical Display", "Emergency Dismount", "WMP HUD", "Accessibility"]],
     ["shared", [
-        ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: DEFAULT, WW2, VIETNAM, SCIFI or PARCHMENT.
+        ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL.
         ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: complete named custom-theme definitions.
         ["Waldo_UI_ThemeOverrides", createHashMap]   // ADVANCED: partial overrides keyed by theme ID.
     ]],

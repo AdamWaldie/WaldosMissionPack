@@ -221,18 +221,39 @@ private _jumpCapableAircraft = (allMissionObjects "Air") select {
     _jumpCapableClasses findIf {_type isKindOf _x} >= 0
 };
 private _manuallyConfigured = _jumpCapableAircraft select {_x getVariable ["Waldo_Paradrop_ManuallyConfigured", false]};
-private _staticJumpInstalled = _jumpCapableAircraft select {(_x getVariable ["Waldo_Static_Jump_ActionId", -1]) >= 0};
-private _haloJumpInstalled = _jumpCapableAircraft select {(_x getVariable ["Waldo_Halo_Jump_ActionId", -1]) >= 0};
 if (_jumpCapableAircraft isEqualTo []) then {
     ["paradrop", "jump-capable-aircraft", "UNCONFIGURED", "No auto-detected jump-capable aircraft (Blackfish/C130J/Mi8/Mi24/Heli_Transport_02) are present in the mission", false] call _status;
 } else {
     private _autoDetected = count _jumpCapableAircraft - count _manuallyConfigured;
-    private _neitherJumpType = _jumpCapableAircraft select {!(_x in _staticJumpInstalled) && {!(_x in _haloJumpInstalled)}};
-    // Server-side object variables are set locally per interface client, not broadcast - this check
-    // can only see what has replicated to the server's own local state, which is why it reports
-    // "server-visible" rather than an absolute guarantee. It still catches the common case: an
-    // aircraft this server machine expects to have jump actions but doesn't.
-    ["paradrop", "jump-capable-aircraft", if (_neitherJumpType isEqualTo []) then {"ACTIVE"} else {"ERROR"}, format ["total=%1 manuallyConfigured=%2 autoDetected=%3 staticInstalled=%4 haloInstalled=%5 neitherInstalled=%6 (server-visible)", count _jumpCapableAircraft, count _manuallyConfigured, _autoDetected, count _staticJumpInstalled, count _haloJumpInstalled, count _neitherJumpType], !(_neitherJumpType isEqualTo []), if (_neitherJumpType isEqualTo []) then {""} else {"An aircraft with neither static-line nor HALO installed usually means its own object init field never ran a setup call, or WALDO_INIT_COMPLETE never became true in time - check the RPT for [WMP PARADROP] lines naming that aircraft."}] call _status;
+    private _pending = _manuallyConfigured select {
+        _x getVariable ["Waldo_Paradrop_QuickSetupStarted", false]
+        && {!(_x getVariable ["Waldo_Paradrop_QuickSetupComplete", false])}
+        && {(_x getVariable ["Waldo_Paradrop_QuickSetupFailure", ""]) isEqualTo ""}
+    };
+    private _failed = _manuallyConfigured select {
+        !((_x getVariable ["Waldo_Paradrop_QuickSetupFailure", ""]) isEqualTo "")
+    };
+    private _configured = _manuallyConfigured select {
+        private _types = _x getVariable ["Waldo_Paradrop_ConfiguredJumpTypes", []];
+        count _types == 2 && {(_types select 0) || {_types select 1}}
+    };
+    private _unresolved = _manuallyConfigured select {
+        !(_x in _pending) && {!(_x in _failed)} && {!(_x in _configured)}
+    };
+    private _state = if (!(_failed isEqualTo []) || {!(_unresolved isEqualTo [])}) then {
+        "ERROR"
+    } else {
+        if !(_pending isEqualTo []) then {"LOADED"} else {"ACTIVE"}
+    };
+    // Hold-action IDs are intentionally client-local. The server reports authoritative setup
+    // intent/progress; each interface client's diagnostics verifies the actual local action IDs.
+    ["paradrop", "jump-capable-aircraft", _state, format [
+        "total=%1 manuallyConfigured=%2 autoDetected=%3 configuredProfiles=%4 pending=%5 failed=%6 unresolved=%7; local action installation is reported by each client",
+        count _jumpCapableAircraft, count _manuallyConfigured, _autoDetected, count _configured,
+        count _pending, count _failed, count _unresolved
+    ], _state == "ERROR", if (_failed isEqualTo [] && {_unresolved isEqualTo []}) then {""} else {
+        format ["Failed aircraft=%1 unresolved aircraft=%2. Check [WMP PARADROP] RPT entries.", _failed apply {typeOf _x}, _unresolved apply {typeOf _x}]
+    }] call _status;
 };
 
 private _dropZoneRegistry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", createHashMap];

@@ -11,21 +11,67 @@
  * 1: delete aircraft <BOOL> (default true)
  * 2: requester <OBJECT> (default objNull) - curator authorization for remote calls
  * 3: notify requester <BOOL> (default true)
+ * 4: delete markers <BOOL> (default true) - explicit removal (this function called directly, e.g.
+ *    the ZEN "Remove Operation" module) always tears down the markers along with everything else.
+ *    Automatic cleanup (on aircraft loss or a DESPAWN pass completing normally) passes the inverse of
+ *    the operation's own configured keepMarkersOnCleanup option here (default false there, so markers
+ *    are deleted by default - see Waldo_fnc_ParadropCreateDropZone), so a mission maker who wants the
+ *    markers left in place can opt out.
  *
- * Return Value: Boolean - true when a registered operation was removed.
+ * Pre-placed Eden/quick-flight operations use the same removal contract as runtime-created ones:
+ * markers and registration are removed, and the delete-aircraft option removes aircraft and AI crew
+ * unless a player is aboard. A retained aircraft loses its WMP jump interactions.
+ *
+ * Return Value: Boolean - true when a registered dynamic or quick/Eden operation was removed.
  *
  * Example: ["DZ_ALPHA", true, player, true] remoteExecCall ["Waldo_fnc_ParadropRemoveDropZone", 2];
  * Current callers: ParadropRemoveDropZoneZen, automatic run cleanup and mission scripts.
  */
-params [["_id", "", [""]], ["_deleteAircraft", true, [false]], ["_requester", objNull, [objNull]], ["_notifyRequester", true, [false]]];
+params [["_id", "", [""]], ["_deleteAircraft", true, [false]], ["_requester", objNull, [objNull]], ["_notifyRequester", true, [false]], ["_deleteMarkers", true, [false]]];
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropRemoveDropZone", 2]; true};
 if (remoteExecutedOwner > 0) then {
     if (isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}) exitWith {false};
 };
 private _registry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", createHashMap];
-if !(_id in keys _registry) exitWith {false};
+if !(_id in keys _registry) exitWith {
+    private _quickRegistry = missionNamespace getVariable ["Waldo_Paradrop_QuickSetups", createHashMap];
+    if !(_id in keys _quickRegistry) exitWith {false};
+    private _quickState = _quickRegistry get _id;
+    if (_deleteMarkers) then {{deleteMarker _x} forEach (_quickState getOrDefault ["markers", []])};
+    private _quickAircraft = _quickState getOrDefault ["aircraft", objNull];
+    private _deletionSuppressed = false;
+    if (_deleteAircraft && {!isNull _quickAircraft} && {(crew _quickAircraft) findIf {isPlayer _x} >= 0}) then {
+        _deleteAircraft = false;
+        _deletionSuppressed = true;
+        diag_log format ["[WMP PARADROP] Pre-placed aircraft deletion suppressed because players remain aboard id=%1", _id];
+        if (!isNull _requester && {_notifyRequester}) then {
+            ["PARADROP", "Operation and markers removed, but the aircraft was retained because players are aboard.", "WARNING", "PARADROP_REMOVE", 8]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _requester];
+        };
+    };
+    if (!isNull _quickAircraft) then {
+        [_quickAircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0, _quickAircraft];
+        _quickAircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
+        _quickAircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
+    };
+    if (_deleteAircraft && {!isNull _quickAircraft}) then {deleteVehicleCrew _quickAircraft; deleteVehicle _quickAircraft};
+    private _quickFlightGroup = _quickState getOrDefault ["flightGroup", grpNull];
+    if (!isNull _quickFlightGroup && {count units _quickFlightGroup == 0}) then {deleteGroup _quickFlightGroup};
+    _quickRegistry deleteAt _id;
+    missionNamespace setVariable ["Waldo_Paradrop_QuickSetups", _quickRegistry];
+    private _publicAircraft = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+    _publicAircraft = _publicAircraft select {(_x select 0) != _id};
+    missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
+    [] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
+    diag_log format ["[WMP PARADROP] Removed pre-placed/quick operation id=%1 deleteAircraft=%2.", _id, _deleteAircraft];
+    if (!isNull _requester && {_notifyRequester} && {!_deletionSuppressed}) then {
+        ["PARADROP", "Operation state, interactions and associated map markers removed.", "SUCCESS", "PARADROP_REMOVE", 7]
+            remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _requester];
+    };
+    true
+};
 private _state = _registry get _id;
-{deleteMarker _x} forEach (_state getOrDefault ["markers", []]);
+if (_deleteMarkers) then {{deleteMarker _x} forEach (_state getOrDefault ["markers", []])};
 {if (!isNull _x) then {deleteVehicle _x}} forEach (_state getOrDefault ["boardingPoints", []]);
 private _aircraft = _state getOrDefault ["aircraft", objNull];
 if (_deleteAircraft && {!isNull _aircraft} && {(crew _aircraft) findIf {isPlayer _x} >= 0}) then {
@@ -34,6 +80,11 @@ if (_deleteAircraft && {!isNull _aircraft} && {(crew _aircraft) findIf {isPlayer
     if (!isNull _requester && {_notifyRequester}) then {
         ["DYNAMIC PARADROP", "Operation and markers removed, but the aircraft was retained because players are aboard.", "WARNING", "PARADROP_REMOVE", 8] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _requester];
     };
+};
+if (!_deleteAircraft && {!isNull _aircraft}) then {
+    [_aircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0, _aircraft];
+    _aircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
+    _aircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
 };
 if (_deleteAircraft && {!isNull _aircraft}) then {deleteVehicleCrew _aircraft; deleteVehicle _aircraft};
 if (_deleteAircraft) then {
@@ -50,6 +101,10 @@ missionNamespace setVariable ["Waldo_Paradrop_DropZones", _registry];
 private _public = missionNamespace getVariable ["Waldo_Paradrop_PublicDropZones", []];
 _public = _public select {(_x select 0) != _id};
 missionNamespace setVariable ["Waldo_Paradrop_PublicDropZones", _public, true];
+private _publicAircraft = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+_publicAircraft = _publicAircraft select {(_x select 0) != _id};
+missionNamespace setVariable ["Waldo_Paradrop_PublicAircraft", _publicAircraft, true];
+[] remoteExecCall ["Waldo_fnc_ParadropSetupLocal", 0];
 diag_log format ["[WMP PARADROP] Removed id=%1 deleteAircraft=%2", _id, _deleteAircraft];
 if (!isNull _requester && {_notifyRequester}) then {
     ["DYNAMIC PARADROP", "Operation state and associated map markers removed.", "SUCCESS", "PARADROP_REMOVE", 6] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _requester];

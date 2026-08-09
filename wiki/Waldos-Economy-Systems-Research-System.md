@@ -10,7 +10,7 @@ The Research System adds a **tech tree** to [Waldos Economy Systems](Waldos-Econ
 
 ## The Research Center
 
-Research is conducted at a Research Center (`Land_Research_HQ_F`). Players interact with it through the ACE menu to view available research and start it. Place one in Zeus (**Waldos Economy Systems → Research → Spawn Research Center**), from script, or designate an editor-placed `Land_Research_HQ_F`:
+Research is conducted at a Research Center (`Land_Research_HQ_F`). Players interact with it through the ACE menu to view available research and start it. Place one in Zeus (**WMP Economy Systems → Research → Spawn Research Center**), from script, or designate an editor-placed `Land_Research_HQ_F`:
 
 ```sqf
 [getMarkerPos "research_1"] call Waldo_fnc_EcoResearch_spawnResearchCenter;   // spawn

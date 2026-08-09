@@ -4,13 +4,13 @@
 
 _Associated Files: MissionScripts\EconomySystems\Command\ (`Waldo_fnc_EcoCommand_*`), MissionScripts\EconomySystems\Core\ (`Waldo_fnc_EcoCore_*`)_
 
-Alongside the four economy systems, [Waldos Economy Systems](Waldos-Economy-Systems) ships several management tools, all reached from the **Waldos Economy Systems** menu in Zeus.
+Alongside the four economy systems, [Waldos Economy Systems](Waldos-Economy-Systems) ships several management tools, all reached from the **WMP Economy Systems** menu in Zeus.
 
 ## Ground Command
 
 By default, any player on a side can spend that side's resources. **Ground Command** lets you restrict that to trusted players: designate someone as Ground Command and only they (and Zeus) may spend resources, order research, and manage/upgrade buildings for the side. This gives you a clear commander role without locking everyone else out of the rest of the game.
 
-Assign it live in Zeus: **Waldos Economy Systems → Ground Command**, then pick the player(s).
+Assign it live in Zeus: **WMP Economy Systems → Ground Command**, then pick the player(s).
 
 > Ground Command is intentionally **Zeus-only** — its permission keys are tied to a player's current connection, so it can't be reliably pre-set from the editor. Assign it once the mission is running.
 

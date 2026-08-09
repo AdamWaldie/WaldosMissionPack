@@ -76,6 +76,7 @@ if (isClass (configFile >> "CfgPatches" >> "ace_interact_menu")) then {
 // plus enter/leave banners and a periodic chat reminder, so a jam is never confused with a game bug.
 if (missionNamespace getVariable ["Waldo_Jamming_UiRunning", false]) exitWith {};
 missionNamespace setVariable ["Waldo_Jamming_UiRunning", true];
+missionNamespace setVariable ["Waldo_Jamming_UiReady", false];
 
 [] spawn {
     // Radio effects are active immediately, but the opening title presentation
@@ -124,6 +125,9 @@ missionNamespace setVariable ["Waldo_Jamming_UiRunning", true];
             [0] call Waldo_fnc_JammingHud;
         };
 
+        // Diagnostics must not treat the deliberate pre-title wait as a missing HUD. This becomes
+        // true only after the first real factor sample has reconciled the persistent panel.
+        missionNamespace setVariable ["Waldo_Jamming_UiReady", true];
         _prev = _jammed;
         // Tighter tick while jammed so the meter blinks and tracks movement smoothly.
         sleep ([2, 0.5] select _jammed);

@@ -1,14 +1,16 @@
 /*
  * Author: WaldoTheWarfighter
- * Draws Safestart status in a dedicated main-display control. Keeping the
- * persistent countdown out of Arma's global hint channel allows other systems
- * to present important transient messages at the same time.
+ * Draws the compact local Safestart status in a dedicated main-display control. Keeping the
+ * persistent countdown out of Arma's global hint channel allows other systems to present important
+ * transient messages at the same time. A player's local acknowledgement suppresses only the
+ * current WAITING or COUNTDOWN presentation phase; changing from waiting to countdown makes the
+ * panel visible again. Authority, protection and JIP state are unaffected.
  *
  * Arguments: 0: enabled <BOOL>; 1: structured content <STRING>.
  * Return Value: BOOL - true when the local HUD was updated or hidden.
  *
  * Example: [true, "Weapons safe"] call Waldo_fnc_SafeStartHud;
- * Current caller: the local SafeStart state service.
+ * Current callers: the local SafeStart state service and Waldo_fnc_SafeStartAcknowledgeLocal.
  */
 if (!hasInterface) exitWith {false};
 params [['_enabled', true, [true]], ['_content', '', ['']]];
@@ -47,16 +49,35 @@ if (!_enabled) exitWith {
     true
 };
 
+private _phase = if ((missionNamespace getVariable ["Waldo_SafeStart_EndTime", 0]) > 0) then {"COUNTDOWN"} else {"WAITING"};
+if ((uiNamespace getVariable ["Waldo_SafeStart_AcknowledgedPhase", ""]) isEqualTo _phase) exitWith {
+    _control ctrlShow false;
+    _frame ctrlShow false;
+    ["SAFESTART_STATUS", [_frame, _control], ["TOP", "TOP_RIGHT"], false] call Waldo_fnc_RegisterUiReservationLocal;
+    true
+};
+
+// The map isn't a separate top-level display in Arma - it renders as a large control inside this
+// same display 46 - so a panel positioned by fixed safe-zone coordinates stays drawn on top of it
+// unless it explicitly checks visibleMap. Just hide rather than unregister the reservation: this
+// runs every second from the SafeStart service loop, so the panel reappears at its normal position
+// within a second of the map closing without another system being able to claim the slot in between.
+if (visibleMap) exitWith {
+    _control ctrlShow false;
+    _frame ctrlShow false;
+    true
+};
+
 _control ctrlSetStructuredText parseText _content;
-private _panelW = safeZoneW * 0.48;
-private _padX = _panelW * 0.035;
-private _padY = safeZoneH * 0.012;
+private _panelW = safeZoneW * 0.40;
+private _padX = _panelW * 0.03;
+private _padY = safeZoneH * 0.008;
 private _panelX = safeZoneX + ((safeZoneW - _panelW) / 2);
 private _panelY = safeZoneY + (safeZoneH * 0.045);
-private _maximumContentH = safeZoneH * 0.32;
+private _maximumContentH = safeZoneH * 0.24;
 _control ctrlSetPosition [_panelX + _padX, _panelY + _padY, _panelW - (2 * _padX), _maximumContentH];
 _control ctrlCommit 0;
-private _contentH = (((ctrlTextHeight _control) + (safeZoneH * 0.008)) max (safeZoneH * 0.10)) min _maximumContentH;
+private _contentH = (((ctrlTextHeight _control) + (safeZoneH * 0.006)) max (safeZoneH * 0.075)) min _maximumContentH;
 private _panelH = _contentH + (2 * _padY);
 _frame ctrlSetPosition [_panelX, _panelY, _panelW, _panelH];
 _control ctrlSetPosition [_panelX + _padX, _panelY + _padY, _panelW - (2 * _padX), _contentH];

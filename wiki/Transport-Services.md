@@ -54,6 +54,14 @@ To travel:
 4. While aboard, return to the same self-interaction menu and choose **Select Destination**.
 5. Click the destination on the map and disembark after arrival. **Return This Transport to Base** cancels that named transport's current journey.
 
+Every registered transport also exposes **Send to Destination** and **Return This Transport to
+Base** directly on the vehicle through ACE interaction. These two controls are available to every
+player currently inside that exact transport, regardless of who requested it or which seat they
+occupy. The map click and RTB order still use the normal server-authoritative request path, and the
+server rejects a forged request unless the player is actually part of the vehicle crew. State restrictions still apply: destination selection is
+available while boarding or already travelling to a destination, and RTB is unnecessary while the
+transport is already available at base or returning there.
+
 ### Multiple transports and changing a request
 
 - The normal request path manages one active helicopter and one active ground transport per player.
@@ -67,15 +75,6 @@ To travel:
 - The same named controls also exist directly on each transport. Being inside or near another transport no longer changes which object the action addresses.
 - The original requester may move pickup or order RTB while outside the vehicle. A passenger may select destination or order RTB for the transport they occupy. Zeus may manage any registered transport.
 - Once a transport is travelling to a destination, disembarking or returning, a repeated pickup is refused with the existing transport's name and state. Return it to base or let its lifecycle complete before requesting another of that type.
-
-### Manual control
-
-Both instruction sets are always available - a squad leader elsewhere can command a transport remotely through the controls above whenever it is AI-driven, and anyone already aboard (any seat, not just the requester or a leader) can instead fly or drive it themselves:
-
-- **Take Manual Control**, available directly on the vehicle (ACE `Transport: [name]` category or the vanilla scroll action), reseats its AI pilot into a free cargo or turret position and puts the requesting player in the driver's seat. It refuses rather than eject the AI pilot when no free seat exists. Taking control clears the transport's current waypoints and cancels any AI dispatch in progress, exactly like a superseding remote request does.
-- While a transport shows **Manual Control**, remote dispatch (move pickup, select destination, RTB, retry) is not meaningful - there is no AI order to redirect. **Release Manual Control**, usable by the current player pilot or Zeus, reseats the AI pilot back into the driver's seat, reapplies its standing orders (behaviour, speed mode, cruise altitude) and returns the service to **Available** wherever it currently sits - no forced return-to-base flight.
-- If a manual pilot disconnects, dies or otherwise leaves the driver's seat without releasing control first, `Waldo_fnc_TransportMonitorServer` recovers automatically on its next tick so the transport is never permanently stranded away from AI control.
-- If the original AI pilot dies while displaced in cargo/turret, releasing control is refused (there is no one to hand off to) and the transport stays under manual control until re-crewed.
 
 ### If a transport becomes stuck
 

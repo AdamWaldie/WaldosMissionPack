@@ -63,7 +63,23 @@ switch (_phase) do {
         if (!isNull _requester) then {[_type, format ["%1 is ready for boarding. Enter the transport and select a destination through WMP Transport.", _entry get "name"], "SUCCESS", _id] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
         [_id, _requestId, _config getOrDefault ["boardingSeconds", 300]] spawn {
             params ["_id", "_requestId", "_seconds"];
-            sleep (_seconds max 15);
+            private _deadline = serverTime + (_seconds max 15);
+            // keepEngineOnAway's touchdown assertion in Waldo_fnc_TransportDispatchLocal only covers the
+            // instant of landing - the boarding wait itself can run for the whole configured window
+            // (default 300s), long enough for vanilla Arma's own idle-engine management to switch a
+            // stationary helicopter back off mid-wait. Poll and re-assert for the duration instead of once.
+            waitUntil {
+                sleep 5;
+                private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
+                private _entry = _services getOrDefault [_id, createHashMap];
+                if (_entry isEqualTo createHashMap || {_entry getOrDefault ["requestId", -1] != _requestId} || {_entry getOrDefault ["state", ""] != "BOARDING"}) exitWith {true};
+                private _vehicle = _entry get "vehicle";
+                private _config = _entry get "config";
+                if (alive _vehicle && {_vehicle isKindOf "Helicopter"} && {_config getOrDefault ["keepEngineOnAway", true]}) then {
+                    _vehicle engineOn true;
+                };
+                serverTime >= _deadline
+            };
             private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
             private _entry = _services getOrDefault [_id, createHashMap];
             if !(_entry isEqualTo createHashMap) then {
@@ -87,8 +103,17 @@ switch (_phase) do {
             private _vehicle = _entry get "vehicle";
             private _config = _entry get "config";
             private _deadline = serverTime + (_config getOrDefault ["destinationDwell", 45]);
+            private _keepEngineOn = _vehicle isKindOf "Helicopter" && {_config getOrDefault ["keepEngineOnAway", true]};
+            private _lastEngineAssert = 0;
             waitUntil {
                 sleep 1;
+                // Same idle-down risk as the boarding wait: the destination dwell can also run for its
+                // whole configured window, so re-assert periodically rather than relying on the one-shot
+                // touchdown assertion alone.
+                if (_keepEngineOn && {alive _vehicle} && {serverTime - _lastEngineAssert >= 5}) then {
+                    _vehicle engineOn true;
+                    _lastEngineAssert = serverTime;
+                };
                 private _baseCrew = _entry getOrDefault ["baseCrew", []];
                 (crew _vehicle findIf {!(_x in _baseCrew)}) < 0 || {serverTime >= _deadline} || {!alive _vehicle}
             };

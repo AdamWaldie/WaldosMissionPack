@@ -12,7 +12,7 @@ The Buy System lets players **purchase vehicles** with their side's [resources](
 
 ## Purchase terminals
 
-Players buy from a **purchase terminal** (`Land_Laptop_unfolded_F`) via the ACE interaction menu. Spawn one in Zeus (**Waldos Economy Systems → Buy → Spawn Purchase Terminal**), from script, or designate an editor-placed laptop:
+Players buy from a **purchase terminal** (`Land_Laptop_unfolded_F`) via the ACE interaction menu. Spawn one in Zeus (**WMP Economy Systems → Buy → Spawn Purchase Terminal**), from script, or designate an editor-placed laptop:
 
 ```sqf
 [this] call Waldo_fnc_EcoBuy_registerTerminal;   // in a placed Land_Laptop_unfolded_F's init field

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 867,
+  "registeredFunctionCount": 881,
   "runtimeFunctionCount": 385,
-  "functionCount": 1252,
+  "functionCount": 1266,
   "stations": [
     {
       "id": "control",
@@ -827,6 +827,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_SafeStartAcknowledgeLocal",
+      "file": "MissionScripts/MissionFlowAndUi/safeStartAcknowledgeLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_SafeStartNotice",
       "file": "MissionScripts/MissionFlowAndUi/safeStartNotice.sqf",
       "station": "mission-flow",
@@ -871,6 +877,18 @@
     {
       "name": "Waldo_fnc_ShowUiNotification",
       "file": "MissionScripts/MissionFlowAndUi/showUiNotification.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_NotificationBroadcast",
+      "file": "MissionScripts/MissionFlowAndUi/notificationBroadcast.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SendNotification",
+      "file": "MissionScripts/MissionFlowAndUi/sendNotification.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -1229,6 +1247,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_MedicalCrateFacilityActionLocal",
+      "file": "MissionScripts/Logistics/Crates/medicalCrateFacilityActionLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_SupplyCratePopulate",
       "file": "MissionScripts/Logistics/Crates/doSupplyCrate.sqf",
       "station": "loadouts",
@@ -1535,6 +1559,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_TransportNotifyLoss",
+      "file": "MissionScripts/Logistics/TransportServices/transportNotifyLoss.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_VehicleCamoSetup",
       "file": "MissionScripts/Logistics/VehicleCamoScript/vehicleCamo.sqf",
       "station": "loadouts",
@@ -1661,6 +1691,18 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ZenNotify",
+      "file": "MissionScripts/ZenModules/Zen_notifyModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenNotifyServer",
+      "file": "MissionScripts/ZenModules/zenNotifyServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_AddHaloJump",
       "file": "MissionScripts/Paradrop/addHaloJump.sqf",
       "station": "paradrop",
@@ -1721,9 +1763,27 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ParadropBuildFlightRoute",
+      "file": "MissionScripts/Paradrop/paradropBuildFlightRoute.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropNormalizeJumpEnvelope",
+      "file": "MissionScripts/Paradrop/paradropNormalizeJumpEnvelope.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ParadropCreateDropZone",
       "file": "MissionScripts/Paradrop/paradropCreateDropZone.sqf",
       "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropQuickFlightSetup",
+      "file": "MissionScripts/Paradrop/paradropQuickFlightSetup.sqf",
+      "station": "paradrop",
       "activation": "manual"
     },
     {
@@ -1751,9 +1811,27 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ParadropRemoveAircraftActionsLocal",
+      "file": "MissionScripts/Paradrop/paradropRemoveAircraftActionsLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ParadropDropZoneZen",
       "file": "MissionScripts/Paradrop/paradropDropZoneZen.sqf",
       "station": "dynamic-paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropSetupLocal",
+      "file": "MissionScripts/Paradrop/paradropSetupLocal.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropUpdateMarkersLocal",
+      "file": "MissionScripts/Paradrop/paradropUpdateMarkersLocal.sqf",
+      "station": "paradrop",
       "activation": "manual"
     },
     {
@@ -2083,6 +2161,12 @@
     {
       "name": "Waldo_fnc_GunshipServerHandle",
       "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipServerHandle.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipAssignControllerOnStart",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipAssignControllerOnStart.sqf",
       "station": "gunship",
       "activation": "manual"
     },

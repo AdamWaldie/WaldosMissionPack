@@ -208,6 +208,46 @@ Do not target `0` for ordinary feature notifications: that includes machines whi
 
 ## Broadcasting to an audience (`Waldo_fnc_NotificationBroadcast`)
 
+### Simple mission-script call
+
+For ordinary mission scripts, triggers and object init fields, use `Waldo_fnc_SendNotification`.
+It is safe to call on any machine and does not need an `isServer` wrapper:
+
+```sqf
+["COMMAND", "Move to the marked assembly area.", "INFO"] call Waldo_fnc_SendNotification;
+```
+
+The arguments, in order, are:
+
+| Position | Setting | Beginner-friendly meaning |
+|---:|---|---|
+| 0 | Title | Short heading, such as `COMMAND`. |
+| 1 | Message | The text players need to read. Empty messages are rejected. |
+| 2 | Type | `INFO`, `SUCCESS`, `WARNING`, or `ERROR`. |
+| 3 | Recipients | Optional: `"ALL"`, a side such as `west`, a group, one player object, or an array of player objects. |
+| 4 | Duration | Optional seconds. `0` persists; other values are limited to 1-60. |
+| 5 | Placement | Optional: `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER`, or `BOTTOM_RIGHT`. |
+| 6 | Channel | Optional stable key used to replace/coalesce related updates. |
+| 7 | Source | Optional small source label. |
+
+Examples for common audiences:
+
+```sqf
+// Everyone (the three-argument form is usually enough).
+["NOTICE", "The operation begins in five minutes.", "INFO"] call Waldo_fnc_SendNotification;
+
+// BLUFOR only.
+["FALL BACK", "Return to base.", "WARNING", west, 10] call Waldo_fnc_SendNotification;
+
+// One group or one player.
+["ORDERS", "Move to Checkpoint Blue.", "INFO", group player] call Waldo_fnc_SendNotification;
+["DRIVER", "Your vehicle is ready.", "SUCCESS", _driver] call Waldo_fnc_SendNotification;
+```
+
+These cards are live messages, so they are not replayed to players who join later. For advanced
+named-key configuration or code which needs the exact reached-player count on the server, use the
+lower-level broadcast function below.
+
 `Waldo_fnc_ShowUiNotification` shows a card on whichever machine runs it; it does not choose an
 audience for you. `Waldo_fnc_NotificationBroadcast` wraps it with audience targeting so mission code
 and Zeus curators do not have to hand-resolve player lists. It is server-authoritative — calling it

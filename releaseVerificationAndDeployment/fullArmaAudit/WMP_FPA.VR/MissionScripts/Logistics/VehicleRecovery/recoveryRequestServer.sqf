@@ -60,7 +60,16 @@ if (_operation == "PACK") exitWith {
     private _cargo = if (_preserveCargo) then {[getWeaponCargo _target, getMagazineCargo _target, getItemCargo _target, getBackpackCargo _target]} else {[]};
     private _customVariableNames = +(missionNamespace getVariable ["Waldo_Recovery_DefaultCustomVariables", []]);
     {_customVariableNames pushBackUnique _x} forEach (_target getVariable ["Waldo_Recovery_CustomVariables", []]);
-    private _customVariables = _customVariableNames apply {[_x, _target getVariable _x]};
+    // getVariable with no default returns nil for a variable name the target never had set (the
+    // normal case for most vehicles and the built-in "Waldo_TransportService_Registration" entry),
+    // and an SQF array literal silently drops a nil element - [_x, nil] becomes the 1-element
+    // array [_x], not a [name, value] pair. Build the list imperatively and skip unset names so
+    // recoveryRestoreServer.sqf's "_x params ["_name", "_value"]" always gets a real pair.
+    private _customVariables = [];
+    {
+        private _value = _target getVariable [_x, nil];
+        if !(isNil "_value") then {_customVariables pushBack [_x, _value]};
+    } forEach _customVariableNames;
     private _bounds = boundingBoxReal _target;
     private _minimum = _bounds param [0, [-1, -1, -1]];
     private _maximum = _bounds param [1, [1, 1, 1]];

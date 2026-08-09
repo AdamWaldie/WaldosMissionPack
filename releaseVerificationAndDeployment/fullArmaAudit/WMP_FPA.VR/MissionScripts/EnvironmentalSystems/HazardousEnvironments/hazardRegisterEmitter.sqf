@@ -26,4 +26,16 @@
 params ["_key", ["_emitter", objNull, [objNull]], ["_radius", 3, [0]], ["_profile", createHashMap, [createHashMap]]];
 if (isNull _emitter) exitWith {false};
 _profile set ["emitterRadius", _radius max 0.5];
-[_key, _emitter, _profile] call Waldo_fnc_HazardRegisterZone
+private _registered = [_key, _emitter, _profile] call Waldo_fnc_HazardRegisterZone;
+// A moving emitter can be destroyed/deleted mid-mission (wreck cleanup, a scripted deleteVehicle)
+// without anything unregistering its zone, leaving a permanently inert entry in the registry that
+// every client keeps evaluating every tick. Auto-unregister the zone once, the same lifecycle
+// Waldo_Jamming_Destructible already applies to jammer emitters.
+if (_registered) then {
+    _emitter addEventHandler ["Deleted", {
+        params ["_entity"];
+        [_entity getVariable ["Waldo_Hazard_EmitterKey", ""]] call Waldo_fnc_HazardUnregisterZone;
+    }];
+    _emitter setVariable ["Waldo_Hazard_EmitterKey", _key];
+};
+_registered

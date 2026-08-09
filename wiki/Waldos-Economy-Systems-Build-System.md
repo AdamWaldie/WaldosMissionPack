@@ -10,7 +10,7 @@ The Build System is the most intricate part of [Waldos Economy Systems](Waldos-E
 
 ## Construction vehicles
 
-Players build using a **construction vehicle**. From it they pick a building from the catalog, place it, and a construction job runs to completion. Designate any vehicle as a construction vehicle in Zeus (**Waldos Economy Systems → Build → Spawn Construction Vehicle**), from script, or via an editor-placed vehicle's init field:
+Players build using a **construction vehicle**. From it they pick a building from the catalog, place it, and a construction job runs to completion. Designate any vehicle as a construction vehicle in Zeus (**WMP Economy Systems → Build → Spawn Construction Vehicle**), from script, or via an editor-placed vehicle's init field:
 
 ```sqf
 [this] call Waldo_fnc_EcoBuild_registerConstructionVehicle;

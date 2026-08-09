@@ -12,7 +12,7 @@ The Resource System is the backbone of [Waldos Economy Systems](Waldos-Economy-S
 
 Each resource has a **name**, a **colour** (used for its markers/labels), a **map icon**, and an optional **per-side storage cap** (`-1` = unlimited). Want Money, Electricity, or Obamium? Define whatever you like.
 
-In Zeus: open **Waldos Economy Systems → Resource → Configure Resources**. From script:
+In Zeus: open **WMP Economy Systems → Resource → Configure Resources**. From script:
 
 ```sqf
 // [name, "#hexColour", "iconPath", storageCap]

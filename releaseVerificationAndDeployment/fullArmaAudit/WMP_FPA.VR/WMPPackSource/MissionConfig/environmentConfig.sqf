@@ -79,6 +79,9 @@
  * - Waldo_Hazard_Enable (MISSION MAKER): starts local exposure checks; zones/emitters still require registration.
  * - Waldo_Hazard_Interval (ADVANCED): seconds between exposure updates; lower values increase client work.
  * - Waldo_Hazard_ShowStatus (MISSION MAKER): shows one continuously updated exposure panel rather than stacked cards.
+ * - Waldo_Hazard_StatusGraceSeconds (MISSION MAKER): the panel behaves like a live Geiger counter -
+ *   it follows presence in a hazard type's zone(s), not the (deliberately slower) exposure decay.
+ *   This is how long it lingers after the player leaves every zone of that type before hiding.
  * - Waldo_Hazard_NotifyTransitions (MISSION MAKER): shows entry/exit messages when awareness rules permit them.
  * - Waldo_Hazard_NotificationDuration (MISSION MAKER): lifetime in seconds for transition messages.
  * - Waldo_Hazard_DosimeterEnable: installs exposure-reading interactions when hazards are enabled.
@@ -124,6 +127,7 @@ createHashMapFromArray [
         ["Waldo_Hazard_Enable", false],             // BOOL: run local exposure evaluation; creates no zones.
         ["Waldo_Hazard_Interval", 1],               // SECONDS: evaluation cadence; performance-sensitive.
         ["Waldo_Hazard_ShowStatus", true],          // BOOL: one continuous lower-left exposure panel; not a notification card.
+        ["Waldo_Hazard_StatusGraceSeconds", 6],     // SECONDS: panel lingers this long after leaving every zone of a type - presence-based, like a Geiger counter, not tied to exposure decaying to zero.
         ["Waldo_Hazard_NotifyTransitions", true],   // BOOL: notify on entering/leaving a hazardous area.
         ["Waldo_Hazard_NotificationDuration", 6],   // SECONDS: transition-notification lifetime.
         ["Waldo_Hazard_DosimeterEnable", true],     // BOOL: install Read Exposure self/target interactions.
@@ -137,14 +141,19 @@ createHashMapFromArray [
         // MISSION MAKER: reusable RP/gameplay profiles; zones may override individual keys.
         // BEGINNER: each preset below is `PRESET NAME` followed by its settings HashMap.
         // All three shipped presets model ionising radiation and use the packaged Geiger/cough audio.
-        // `rate` adds dose each second; `decay` removes it after leaving. Each threshold row is
+        // audioEnabled/coughEnabled default true even if a custom profile omits them entirely - audio
+        // is opt-OUT (set false explicitly to silence a profile), not opt-in. A profile with no
+        // geiger/cough sound pools configured still plays nothing either way.
+        // `rate` adds dose each second; `decay` removes it per second after leaving (sized so a
+        // brief pass through a preset zone clears from the status panel in well under a minute,
+        // not tens of minutes). Each threshold row is
         // `[exposure needed, damage added]`. For example `[20, 0.01]` means 1% damage at exposure 20.
         ["Waldo_Hazard_Presets", createHashMapFromArray [ // preset ID -> complete/partial hazard profile schema above.
             ["LOW_RADIATION", createHashMapFromArray [
                 ["type", "RADIATION"],             // all radiation zones contribute to one accumulated dose.
                 ["label", "Low Radiation Area"],
                 ["rate", 0.25],
-                ["decay", 0.02],
+                ["decay", 0.05],
                 ["damageType", "stab"],
                 ["damageThresholds", [[30, 0.01], [60, 0.02]]],
                 ["fatalExposure", 120],
@@ -164,7 +173,7 @@ createHashMapFromArray [
                 ["type", "RADIATION"],
                 ["label", "Radiation Area"],
                 ["rate", 1],
-                ["decay", 0.005],
+                ["decay", 0.12],
                 ["damageType", "stab"],
                 ["damageThresholds", [[10, 0.02], [25, 0.05], [50, 0.1]]],
                 ["fatalExposure", 90],
@@ -191,7 +200,7 @@ createHashMapFromArray [
                 ["damageStageMessages", ["Radiation exposure is causing injury.", "Radiation sickness is becoming severe.", "Critical radiation dose: evacuate immediately."]]
             ]],
             ["SEVERE_RADIATION", createHashMapFromArray [
-                ["type", "RADIATION"], ["label", "Severe Radiation Area"], ["rate", 3], ["decay", 0.001],
+                ["type", "RADIATION"], ["label", "Severe Radiation Area"], ["rate", 3], ["decay", 0.2],
                 ["damageType", "stab"], ["damageThresholds", [[5, 0.04], [15, 0.12], [30, 0.25]]], ["fatalExposure", 45],
                 ["protectInVehicles", true], ["vehicleFactor", 0.05], ["protectIndoors", true], ["indoorFactor", 0.2], ["equipmentFactor", 0.05],
                 ["protectiveItems", createHashMapFromArray [["headgear", []], ["goggles", []], ["hmd", []]]],

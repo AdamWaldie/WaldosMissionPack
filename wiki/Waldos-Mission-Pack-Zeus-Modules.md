@@ -26,7 +26,7 @@ These modules allow users to:
 * Configure temporary squad rally respawns during play
 * Enable, time or lift SafeStart protection during play, even though it starts inactive by default
 
-WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped under **WMP Mission Flow**, **WMP Logistics**, **WMP Combat Systems**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules remain under **Waldos Economy Systems**.
+WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped under **WMP Mission Flow**, **WMP Logistics**, **WMP Combat Systems**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**.
 
 Use them to:
 
@@ -158,7 +158,7 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Dynamic Paradrop
 
-**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. The server normalizes each enabled jump altitude/speed envelope around the route, so custom values cannot suppress every action. **Paradrop - Embark Players** detects a player directly under the module or in the curator selection and offers that player/group; with no player target it creates a reusable, curator-movable blue-action boarding object. **Paradrop - Remove Operation** selects a named live operation and removes its aircraft, boarding points and markers without deleting troops that have already jumped. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
+**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. The server normalizes each enabled jump altitude/speed envelope around the route, so custom values cannot suppress every action. **Paradrop - Embark Players** detects a player directly under the module or in the curator selection and offers that player/group; with no player target it creates a reusable, curator-movable blue-action boarding object. **Paradrop - Remove Operation** lists both WMP-spawned dynamic operations and pre-placed Eden/quick-flight operations, applying the same marker cleanup, optional aircraft deletion and player-aboard safety rule to both. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
 
 ## Vehicle Recovery
 

@@ -11,6 +11,9 @@
  * Arguments:
  * 0: unit <OBJECT>
  * 1: profile <HASHMAP>
+ * 2: indoor cache key <STRING> (optional) - when supplied, the expensive `insideBuilding` check is
+ *    throttled to once per Waldo_Hazard_IndoorCacheSeconds (default 3) per key instead of every call;
+ *    omit for the previous always-live behaviour (direct/mission-script calls remain a pure read).
  *
  * Return Value:
  * Number - exposure multiplier from 0 (fully protected) to 1 (unprotected)
@@ -18,18 +21,36 @@
  * Example:
  * private _factor = [player, _profile] call Waldo_fnc_HazardProtectionFactor;
  * Result: Returns 0 for full protection, 1 for no protection, or a partial exposure multiplier.
- * Current caller: Waldo_fnc_HazardTick once for each active zone affecting the local player.
+ * Current caller: Waldo_fnc_HazardTick once for each active zone affecting the local player (with a
+ * cache key so a stationary occupancy state is not re-tested through `insideBuilding` every tick).
  */
 
-params ["_unit", "_profile"];
+params ["_unit", "_profile", ["_cacheKey", "", [""]]];
 if (isNull _unit) exitWith {1};
 
 private _factor = 1;
 if (_profile getOrDefault ["protectInVehicles", false] && {vehicle _unit != _unit}) then {
     _factor = _factor min (_profile getOrDefault ["vehicleFactor", 0]);
 };
-if (_profile getOrDefault ["protectIndoors", false] && {insideBuilding _unit > 0}) then {
-    _factor = _factor min (_profile getOrDefault ["indoorFactor", 0]);
+if (_profile getOrDefault ["protectIndoors", false]) then {
+    private _indoors = if (_cacheKey == "") then {
+        insideBuilding _unit > 0
+    } else {
+        // insideBuilding is a documented-expensive engine query; a hazard zone's protectIndoors gate
+        // otherwise called it on every hazard tick for the entire time a player stood inside the zone.
+        // A unit's building occupancy does not change fast enough to need per-tick resolution.
+        private _cache = missionNamespace getVariable ["Waldo_Hazard_LocalIndoorCache", createHashMap];
+        private _entry = _cache getOrDefault [_cacheKey, [-1e6, false]];
+        _entry params ["_checkedAt", "_wasIndoors"];
+        private _throttle = missionNamespace getVariable ["Waldo_Hazard_IndoorCacheSeconds", 3];
+        if ((diag_tickTime - _checkedAt) >= _throttle) then {
+            _wasIndoors = insideBuilding _unit > 0;
+            _cache set [_cacheKey, [diag_tickTime, _wasIndoors]];
+            missionNamespace setVariable ["Waldo_Hazard_LocalIndoorCache", _cache];
+        };
+        _wasIndoors
+    };
+    if (_indoors) then {_factor = _factor min (_profile getOrDefault ["indoorFactor", 0]);};
 };
 
 private _slots = _profile getOrDefault ["protectiveItems", createHashMap];

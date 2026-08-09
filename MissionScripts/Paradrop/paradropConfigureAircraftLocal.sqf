@@ -51,4 +51,5 @@ if (!hasInterface || {isNull _aircraft}) exitWith {false};
 ] call Waldo_fnc_AddHaloJump;
 
 [_aircraft] call Waldo_fnc_JumpSettingsCheck;
+_aircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", true];
 true

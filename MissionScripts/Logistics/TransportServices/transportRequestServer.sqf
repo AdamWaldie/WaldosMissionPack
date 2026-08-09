@@ -3,7 +3,9 @@
  * Validates and atomically reserves transport services on the server. Typed pools prevent ground
  * and helicopter requests from competing. Every accepted task receives a monotonic request ID;
  * later arrival/failure reports must match it, so delayed locality messages cannot corrupt a newer
- * task. Access rules are validated against the requesting player's live side/group/leadership.
+ * task. Pool requests use side/group/leadership access rules. Direct SET_DESTINATION and RTB vehicle
+ * interactions are available to every player currently inside that vehicle; the server revalidates
+ * crew membership so a nearby outsider cannot invoke them.
  *
  * Arguments:
  * 0: action <STRING> - REQUEST_PICKUP, REQUEST_ADDITIONAL, REQUEST_SPECIFIC (internal bulk use),
@@ -113,9 +115,10 @@ if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
     _id = _vehicle getVariable ["Waldo_TransportService_Id", ""];
     _entry = _services getOrDefault [_id, createHashMap];
     if (_entry isEqualTo createHashMap) exitWith {_requestRejected = true};
-    if (!_internalRtb && {!([_entry, _requester] call _canUse)}) exitWith {_requestRejected = true};
+    private _isCrew = !isNull _requester && {_requester in crew _vehicle};
+    private _crewDirectControl = _action in ["SET_DESTINATION", "RTB"] && {_isCrew};
+    if (!_internalRtb && {!_crewDirectControl} && {!([_entry, _requester] call _canUse)}) exitWith {_requestRejected = true};
     private _isCurator = !isNull getAssignedCuratorLogic _requester;
-    private _isCrew = _requester in crew _vehicle;
     private _ownsRequest = _requesterUid != "" && {_entry getOrDefault ["requesterUID", ""] == _requesterUid};
     private _actionAllowed = switch (_action) do {
         case "REQUEST_SPECIFIC": {_entry getOrDefault ["state", ""] == "AVAILABLE"};
@@ -126,7 +129,7 @@ if (_action in ["REQUEST_PICKUP", "REQUEST_ADDITIONAL"]) then {
         default {false};
     };
     if (!_internalRtb && {!_actionAllowed}) exitWith {
-        [_type, format ["You cannot control %1. Use the named transport reserved by you, a transport you are travelling in, or Zeus control.", _entry getOrDefault ["name", "this transport"]], "WARNING"] call _notifyRequester;
+        [_type, format ["You cannot control %1 from here. Use the actions directly on the vehicle, travel in it, manage your reserved transport, or use Zeus control.", _entry getOrDefault ["name", "this transport"]], "WARNING"] call _notifyRequester;
         _requestRejected = true
     };
 };

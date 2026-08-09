@@ -6,8 +6,8 @@
  * curator selection offers that player or their active player group, while no player target offers
  * a labelled boarding-object picker. EMBARK's operation list also includes any aircraft set up with
  * Waldo_fnc_ParadropQuickFlightSetup (a mission maker's own placed-and-crewed plane), not only
- * registry-backed Waldo_fnc_ParadropCreateDropZone operations - REMOVE stays registry-only, since a
- * quick-setup aircraft was never spawned or owned by this system to begin with.
+ * registry-backed Waldo_fnc_ParadropCreateDropZone operations. REMOVE includes both kinds and uses
+ * the same delete-aircraft option and player-aboard safety rule for each.
  * Creation defaults to an empty player transport with one AI pilot and a continuous circuit;
  * generated AI cargo is explicitly optional.
  *
@@ -31,18 +31,13 @@ if !(hasInterface && {isClass (configFile >> "CfgPatches" >> "zen_main")}) exitW
 _mode = toUpperANSI _mode;
 
 private _systems = missionNamespace getVariable ["Waldo_Paradrop_PublicDropZones", []];
-if (_mode == "REMOVE" && {count _systems == 0}) exitWith {
-    ["PARADROP", "No dynamic paradrop operations are registered.", "WARNING", "PARADROP_ZEN", 6]
-        call Waldo_fnc_FeatureNotifyLocal;
-    false
-};
 private _systemIds = _systems apply {_x select 0};
 private _systemLabels = _systems apply {
     private _airframeName = getText (configFile >> "CfgVehicles" >> (_x select 5) >> "displayName");
-    format ["%1 - %2", _x select 1, if (_airframeName == "") then {_x select 5} else {_airframeName}]
+    format ["[DYNAMIC] %1 - %2", _x select 1, if (_airframeName == "") then {_x select 5} else {_airframeName}]
 };
 
-if (_mode == "EMBARK") then {
+if (_mode in ["REMOVE", "EMBARK"]) then {
     // Embark also sees aircraft that were never registered as a managed drop zone operation - e.g. a
     // mission maker's own placed-and-crewed plane set up with Waldo_fnc_ParadropQuickFlightSetup -
     // via the same Waldo_Paradrop_PublicAircraft list that feeds their live map marker. Skip any id
@@ -51,7 +46,7 @@ if (_mode == "EMBARK") then {
         _x params ["_id", "_name", "_aircraft"];
         if !(_id in _systemIds || {isNull _aircraft} || {!alive _aircraft}) then {
             _systemIds pushBack _id;
-            _systemLabels pushBack format ["%1 - %2", _name, getText (configFile >> "CfgVehicles" >> (typeOf _aircraft) >> "displayName")];
+            _systemLabels pushBack format ["[EDEN] %1 - %2", _name, getText (configFile >> "CfgVehicles" >> (typeOf _aircraft) >> "displayName")];
         };
     } forEach (missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []]);
 };
@@ -63,10 +58,10 @@ if (_mode in ["REMOVE", "EMBARK"] && {count _systemIds == 0}) exitWith {
 
 if (_mode == "REMOVE") exitWith {
     [
-        "Remove Dynamic Paradrop",
+        "Remove Paradrop Operation",
         [
-            ["COMBO", ["Drop zone", "Select the named live operation."], [_systemIds, _systemLabels, 0]],
-            ["CHECKBOX", ["Delete aircraft", "Delete the aircraft and its AI pilot when no players remain aboard."], true]
+            ["COMBO", ["Drop zone", "Select a dynamic operation or a pre-placed Eden/quick-flight operation."], [_systemIds, _systemLabels, 0]],
+            ["CHECKBOX", ["Delete aircraft", "Deletes the selected operation's aircraft and AI crew when no players are aboard."], true]
         ],
         {params ["_values"]; [_values select 0, _values select 1, player] remoteExecCall ["Waldo_fnc_ParadropRemoveDropZone", 2]}
     ] call zen_dialog_fnc_create;

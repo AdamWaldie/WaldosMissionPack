@@ -67,6 +67,14 @@ private _yaw = getDir _helicopter;
 private _startTime = diag_tickTime;
 private _nextValidation = 0;
 private _nextObstacleScan = 0;
+// Deliberately separate from _nextObstacleScan (the tree-canopy hover-height timer below): the two
+// scans have different distance gates (<120 vs >=30) and different rescan intervals (0.5s vs 0.35s).
+// Sharing one timer meant that for the entire overlap band (30-120 m, essentially the whole final
+// approach), the canopy scan's own <120 condition let it claim and reschedule the shared timer every
+// cycle before the forward scan's check ran - starving it completely. _forwardAvoidance would then
+// freeze at whatever value it held from outside 120 m and never update again for the rest of the
+// approach, in either direction.
+private _nextForwardScan = 0;
 private _treeHoverHeight = 0;
 private _forwardAvoidance = 0;
 private _goAround = false;
@@ -187,8 +195,8 @@ while {!_abort && {!_landed}} do {
         _treeHoverHeight = (((_highestCanopy - _targetTerrainASL) max 0) + ([_helicopter, "TreeSafetyBuffer", 5] call Waldo_fnc_ImprovedHelicopterLandingSetting))
             min ([_helicopter, "MaximumTreeHoverHeight", 40] call Waldo_fnc_ImprovedHelicopterLandingSetting);
     };
-    if (_now >= _nextObstacleScan && {_distance >= 30}) then {
-        _nextObstacleScan = _now + 0.35;
+    if (_now >= _nextForwardScan && {_distance >= 30}) then {
+        _nextForwardScan = _now + 0.35;
         private _scanPosition = _helicopter getPos [50, getDir _helicopter];
         private _aheadTrees = nearestTerrainObjects [_scanPosition, ["TREE", "SMALL TREE"], 18, false, true];
         _forwardAvoidance = if (_aheadTrees isEqualTo []) then {(_forwardAvoidance - 2) max 0} else {(_forwardAvoidance + 4) min 25};
@@ -217,7 +225,16 @@ while {!_abort && {!_landed}} do {
     private _desiredVelocityX = if (_goAround) then {sin _goAroundHeading * _desiredSpeed} else {(_targetDeltaX / _targetDeltaMagnitude) * _desiredSpeed};
     private _desiredVelocityY = if (_goAround) then {cos _goAroundHeading * _desiredSpeed} else {(_targetDeltaY / _targetDeltaMagnitude) * _desiredSpeed};
     private _desiredRelativeAltitude = if (_distance > _descentDistance) then {_transitAltitude} else {0.25 + ((_transitAltitude - 0.25) * (_distance / _descentDistance))};
-    _desiredRelativeAltitude = _desiredRelativeAltitude + _forwardAvoidance;
+    // Both obstacle-clearance floors below must release together once genuinely close to touchdown,
+    // matched to the same _distance >= 5 threshold. The forward scan (_nextForwardScan above) also
+    // stops rescanning below 30 m, so whatever value _forwardAvoidance held at that point is frozen
+    // for the final stretch - in a confined clearing, where trees sit within 18 m of the heading the
+    // helicopter freezes facing once nearly overhead, that value is commonly non-zero. Without this
+    // gate the frozen floor keeps adding height right through the hover-and-descend phase with no way
+    // back to zero: the concrete "hovers like a sitting duck, comes down far too slowly" symptom this
+    // closes. Releasing it here at the same distance as the tree-canopy floor is enough regardless of
+    // whether the last in-range scan happened to leave it at zero or not.
+    if (_distance >= 5) then {_desiredRelativeAltitude = _desiredRelativeAltitude + _forwardAvoidance;};
     if (!_goAround && {_distance >= 5}) then {_desiredRelativeAltitude = _desiredRelativeAltitude max _treeHoverHeight;};
     private _progress = 1 - ((_distance / _startDistance) min 1 max 0);
     private _expectedTerrainASL = _startTerrainASL + ((_targetTerrainASL - _startTerrainASL) * _progress);
@@ -279,6 +296,19 @@ _helicopter setVariable [
 if (_landed && {local _helicopter}) then {
     [_helicopter, _group, _targetPosition, _waypointType, _expectedWaypoint, _expectedScript, count (waypoints _group)] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
 } else {
-    [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    // Do not repeat the restore when something else already reclaimed and reconfigured the
+    // aircraft while this approach was still catching up to its own abort - most commonly a fresh
+    // Waldo_fnc_TransportDispatchLocal retargeting call (a mid-approach MOVE_PICKUP/SET_DESTINATION,
+    // i.e. the player moved the LZ), which calls this same restore function itself before wiping
+    // waypoints and then applies its own real cruise flyInHeight/land state. This loop's own Active
+    // flag being already false at this point means someone else is responsible for the aircraft's
+    // flight state now; calling restore again here would stomp that fresh state with the default
+    // ~30m transit altitude, degrading the aircraft to a slow, low-altitude crawl toward the new
+    // target with no clean cancel - the concrete "moves like a snail and lands randomly enroute
+    // after moving the LZ" symptom this closes. Mirrors the equivalent fix already applied to the
+    // post-touchdown ground-anchor loop in Waldo_fnc_ImprovedHelicopterLandingAnchorLocal.
+    if (_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
+        [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    };
 };
 _landed

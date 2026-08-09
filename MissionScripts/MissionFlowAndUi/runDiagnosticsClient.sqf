@@ -111,10 +111,49 @@ if (_jamEnabled && {!isNil "Waldo_fnc_JammingFactor"} && {alive player}) then {
 private _jamCtrl = (findDisplay 46) displayCtrl 5310;
 private _jamHudOk = _jamFactor <= 0 || {!isNull _jamCtrl && {ctrlShown _jamCtrl}};
 private _jamLoopRunning = missionNamespace getVariable ["Waldo_Jamming_UiRunning", false];
+private _jamUiReady = missionNamespace getVariable ["Waldo_Jamming_UiReady", false];
 private _jamClientState = if (!_jamEnabled) then {"DISABLED"} else {
-    if (!_jamHudOk || {!_jamLoopRunning}) then {"ERROR"} else {if (_jamFactor > 0) then {"ACTIVE"} else {"LOADED"}}
+    if (!_jamLoopRunning) then {"ERROR"} else {
+        if (!_jamUiReady) then {"LOADED"} else {
+            if (!_jamHudOk) then {"ERROR"} else {if (_jamFactor > 0) then {"ACTIVE"} else {"LOADED"}}
+        }
+    }
 };
-["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 hud=%4", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
+["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 uiReady=%4 hud=%5", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, _jamUiReady, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
+
+private _jumpCapableClasses = ["RHS_Mi24_base", "RHS_Mi8_base", "Heli_Transport_02_base_F", "RHS_C130J_Base", "B_T_VTOL_01_infantry_F"];
+private _jumpAircraft = (allMissionObjects "Air") select {
+    private _aircraft = _x;
+    _jumpCapableClasses findIf {_aircraft isKindOf _x} >= 0
+};
+if (_jumpAircraft isEqualTo []) then {
+    ["paradrop", "jump-actions-local", "UNCONFIGURED", "No jump-capable aircraft are present on this client."] call _add;
+} else {
+    // Count predicates directly. Keeping these as numbers avoids an engine-side select-result
+    // ambiguity observed on live clients, where the diagnostic's filtered result could surface as
+    // the final BOOL predicate and then fault when passed to count.
+    private _pendingJumpCount = {!(_x getVariable ["Waldo_Paradrop_LocalSetupComplete", false])} count _jumpAircraft;
+    private _missingJumpCount = {
+        if !(_x getVariable ["Waldo_Paradrop_LocalSetupComplete", false]) exitWith {false};
+        private _expected = _x getVariable ["Waldo_Paradrop_ConfiguredJumpTypes", []];
+        if !(_expected isEqualType []) then {_expected = []};
+        if (count _expected != 2) then {
+            _expected = [
+                true,
+                _x isKindOf "RHS_C130J_Base" || {_x isKindOf "B_T_VTOL_01_infantry_F"}
+            ];
+        };
+        ((_expected select 0) && {(_x getVariable ["Waldo_Static_Jump_ActionId", -1]) < 0})
+        || {(_expected select 1) && {(_x getVariable ["Waldo_Halo_Jump_ActionId", -1]) < 0}}
+    } count _jumpAircraft;
+    private _jumpState = if (_missingJumpCount > 0) then {"ERROR"} else {
+        if (_pendingJumpCount > 0) then {"LOADED"} else {"ACTIVE"}
+    };
+    ["paradrop", "jump-actions-local", _jumpState, format [
+        "aircraft=%1 ready=%2 pending=%3 missingExpectedActions=%4",
+        count _jumpAircraft, (count _jumpAircraft) - _pendingJumpCount, _pendingJumpCount, _missingJumpCount
+    ]] call _add;
+};
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 ["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=45", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
