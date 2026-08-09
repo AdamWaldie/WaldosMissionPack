@@ -6,7 +6,7 @@ class items
 	class Item0
 	{
 		dataType="Object";
-		side="Empty";
+		side="West";
 		class PositionInfo {position[]={0,0,0};};
 		class Attributes
 		{

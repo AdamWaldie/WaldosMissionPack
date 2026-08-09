@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Object";
-		side="Empty";
+		side="West";
 		class PositionInfo {position[]={4,2,0};};
 		class Attributes
 		{

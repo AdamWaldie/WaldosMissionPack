@@ -109,7 +109,7 @@ class items
 					position[]={0.22070313,2.2125974,-3.5898438};
 					angles[]={-0,4.8436904,0};
 				};
-				side="Empty";
+				side="West";
 				flags=4;
 				class Attributes
 				{
