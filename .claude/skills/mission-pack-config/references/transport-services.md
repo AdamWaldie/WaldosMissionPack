@@ -80,6 +80,14 @@ clearance, improved-landing and other options set explicitly, including
   on that registration.
 - Optional `invulnerable` only protects the vehicle and its original AI
   service crew — never passenger players.
+- Registration locks the driver seat to players and blocks the captured AI
+  crew from dismounting (`allowGetOut false`), so a driver taking fire or
+  reacting to nearby infantry can't strand the vehicle by bailing out.
+- `Waldo_Transport_MaxEffectiveDamage` (`MissionConfig\logisticsConfig.sqf`,
+  default `0.8`) writes a still-"alive" but too-heavily-damaged transport
+  off the service pool the same as an outright loss, and warns every
+  player on that service's `allowedSides` — unlike an obvious loss, a
+  damaged vehicle quietly dropping out of availability needs telling.
 - `keepEngineOnAway` (helicopters only, default `true`) re-asserts
   `engineOn true` right after touchdown at a pickup/destination stop away
   from base, overriding vanilla `TR UNLOAD`'s engine idle-down. RTB

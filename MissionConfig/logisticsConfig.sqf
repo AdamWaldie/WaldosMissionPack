@@ -85,6 +85,9 @@
  * - Waldo_GroundTransport_DefaultSpeedLimit: road-safe AI transport speed cap in kilometres per hour.
  * - Waldo_Transport_DefaultPathRetrySeconds: no-progress interval before a ground driver is reordered.
  * - Waldo_Transport_DefaultPathRetryLimit: maximum automatic ground movement reorders per journey.
+ * - Waldo_Transport_MaxEffectiveDamage: damage fraction (0-1) at or above which a still-"alive"
+ *   transport is treated as combat-ineffective and written off the same as an outright loss - a
+ *   vehicle limping along at 95% damage was previously left in the pool looking fully available.
  *
  * BEGINNER EXAMPLES:
  * - Field resupply: enable it, then place `[this] call Waldo_fnc_FieldResupplyRegisterHub;` on a hub
@@ -138,6 +141,7 @@ createHashMapFromArray [
         ["Waldo_GroundTransport_DefaultSpeedLimit", 60, false], // KM/H: road-safe AI transport speed cap.
         ["Waldo_Transport_DefaultPathRetrySeconds", 25, false], // SECONDS without progress before reissuing an order.
         ["Waldo_Transport_DefaultPathRetryLimit", 3, false], // COUNT: automatic ground path retries per journey.
+        ["Waldo_Transport_MaxEffectiveDamage", 0.8, false], // FRACTION 0-1: at/above this, a still-"alive" transport is written off like a loss.
         // MISSION MAKER scale bounds; ADVANCED client-authority switch.
         ["Waldo_ObjectScaling_Minimum", 0.1, false],   // Positive scale multiplier.
         ["Waldo_ObjectScaling_Maximum", 10, false], // Positive scale multiplier; must be >= Minimum.

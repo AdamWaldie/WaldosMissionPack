@@ -487,6 +487,7 @@ class CfgFunctions
             class TransportReportServer {file = "MissionScripts\Logistics\TransportServices\transportReportServer.sqf";};
             class TransportStopGroupLocal {file = "MissionScripts\Logistics\TransportServices\transportStopGroupLocal.sqf";};
             class TransportMonitorServer {file = "MissionScripts\Logistics\TransportServices\transportMonitorServer.sqf";};
+            class TransportNotifyLoss {file = "MissionScripts\Logistics\TransportServices\transportNotifyLoss.sqf";};
             class TransportTakeManualServer {file = "MissionScripts\Logistics\TransportServices\transportTakeManualServer.sqf";};
             class TransportReleaseManualServer {file = "MissionScripts\Logistics\TransportServices\transportReleaseManualServer.sqf";};
             class TransportManualLocal {file = "MissionScripts\Logistics\TransportServices\transportManualLocal.sqf";};

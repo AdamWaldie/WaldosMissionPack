@@ -369,6 +369,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_GroundTransport_DefaultSpeedLimit` | Default AI ground-transport speed cap in kilometres per hour. |
 | `Waldo_Transport_DefaultPathRetrySeconds` | No-progress interval before a ground movement order is reissued. |
 | `Waldo_Transport_DefaultPathRetryLimit` | Maximum automatic order retries during one ground journey. |
+| `Waldo_Transport_MaxEffectiveDamage` | Damage fraction (0-1) at/above which a still-"alive" transport is written off the service pool the same as an outright loss. |
 | `Waldo_ObjectScaling_Minimum` | Smallest positive object scale accepted by the server. |
 | `Waldo_ObjectScaling_Maximum` | Largest object scale accepted by the server; must be at least the minimum. |
 | `Waldo_ObjectScaling_AllowClientRequests` | Permits validated non-server scale requests. |
