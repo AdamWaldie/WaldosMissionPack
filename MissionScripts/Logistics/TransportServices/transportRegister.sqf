@@ -5,8 +5,9 @@
  * Registration is repeat-safe and stores enough public object state for JIP interactions while the
  * full mutable registry remains server-only.
  * Locality and authority: callable anywhere and self-forwards; only the server mutates registration state.
- * The driver seat is locked to players and the captured AI service crew is prevented from
- * dismounting (allowGetOut false); a vehicle that becomes too heavily damaged to remain effective
+ * The driver seat is locked to players and the captured AI service crew has fleeing/panic
+ * disabled (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily
+ * damaged to remain effective
  * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written
  * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
  *
@@ -180,12 +181,13 @@ private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
 _vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
 _vehicle lockDriver true;
-// The original AI service crew must stay put - an AI driver/gunner who dismounts mid-route (e.g.
-// after taking fire, or vanilla "danger" behaviour near infantry) strands the vehicle exactly like a
-// vanished driver would, without the monitor's own driver-death check ever catching it. This only
-// touches crew captured at registration time; a player who later boards as cargo/passenger is
-// unaffected.
-{_x allowGetOut false} forEach crew _vehicle;
+// The original AI service crew must stay put - an AI driver/gunner who panics and bails out under
+// fire strands the vehicle exactly like a vanished driver would, without the monitor's own
+// driver-death check ever catching it. allowFleeing 0 is the documented Arma command for
+// suppressing that panic/flee behaviour (there is no separate "prevent getting out" command); it
+// only touches crew captured at registration time - a player who later boards as cargo/passenger
+// is unaffected.
+{_x allowFleeing 0} forEach crew _vehicle;
 // The 2-element array form forces strict AGL terrain-following instead of leaving the AI free to
 // compute its own "safe" cruise profile - over long routes with real elevation change, plain
 // single-argument flyInHeight lets the AI climb far above the requested altitude and produces the
