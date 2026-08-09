@@ -63,10 +63,12 @@
  *    markers) so a mission maker gets the route's positional markers without the map clutter. When
  *    target is a marker name, its position and direction are read first, then a new WMP-owned visible
  *    black "mil_end" POINT marker is created and the original Eden setup marker is deleted
- *    immediately. This marker-only preparation is synchronous, before the bounded mission-init and
- *    pilot waits, so AREA/STANDBY/GREEN/RED/POINT are already visible in the pre-mission briefing map
- *    just like gunship orbit markers. The later route registration reuses this exact geometry rather
- *    than creating a second set. Also creates a live-updating b_plane aircraft marker
+ *    immediately. A persistent client-local hide watcher also removes any editor copy recreated by
+ *    mission.sqm after the dedicated server's early global deletion. This marker-only preparation is
+ *    synchronous, before the bounded mission-init and pilot waits, so AREA/STANDBY/GREEN/RED/POINT are
+ *    already visible in the pre-mission briefing map without the source marker overlaid. The later
+ *    route registration reuses this exact geometry rather than creating a second set. Also creates a
+ *    live-updating b_plane aircraft marker
  *    (same mechanism as airborne gunships: friendly-side visible, position/heading refreshed every
  *    frame while the aircraft is alive) that tracks this aircraft the whole time it's flying, always
  *    removed on cleanup regardless of keepMarkersOnCleanup below; set createMarkers false for a
@@ -201,6 +203,8 @@ if (_options getOrDefault ["createMarkers", true]) then {
     _markers pushBack _point;
 };
 if (_targetIsMarker && {markerType _target != ""}) then {
+    private _safeMarkerKey = [_target, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
+    [_target] remoteExecCall ["Waldo_fnc_HideSetupMarkerLocal", 0, format ["WMP_HIDE_SETUP_%1", _safeMarkerKey]];
     deleteMarker _target;
     diag_log format ["[WMP PARADROP] %1 published briefing markers and replaced Eden drop-zone marker '%2'.", _quickId, _target];
 };

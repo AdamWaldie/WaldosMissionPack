@@ -223,6 +223,9 @@ class CfgFunctions
               class NotificationTriggerActivate {
                   file = "MissionScripts\MissionFlowAndUi\notificationTriggerActivate.sqf";
               };
+              class HideSetupMarkerLocal {
+                  file = "MissionScripts\MissionFlowAndUi\hideSetupMarkerLocal.sqf";
+              };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
               class RestyleUiNotificationsLocal {file = "MissionScripts\MissionFlowAndUi\restyleUiNotificationsLocal.sqf";};
@@ -793,6 +796,7 @@ class CfgFunctions
             class HazardAwareness {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardAwareness.sqf";};
             class HazardAudioFeedback {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardAudioFeedback.sqf";};
             class HazardReadExposureLocal {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardReadExposureLocal.sqf";};
+            class HazardNotifyRequesterServer {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardNotifyRequesterServer.sqf";};
             class HazardApplyTreatmentLocal {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardApplyTreatmentLocal.sqf";};
             class HazardInteractionInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInteractionInit.sqf";};
             class HazardHud {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardHud.sqf";};
@@ -846,6 +850,7 @@ class CfgFunctions
         {
             class DynamicAAResolveAssetPool {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveAssetPool.sqf";};
             class DynamicAASetGroupState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetGroupState.sqf";};
+            class DynamicAAFireGateLocal {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAFireGateLocal.sqf";};
             class DynamicAASetVehicleAmmo {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetVehicleAmmo.sqf";};
             class DynamicAAPublishState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAPublishState.sqf";};
             class DynamicAACreate {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAACreate.sqf";};

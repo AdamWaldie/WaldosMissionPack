@@ -163,10 +163,11 @@ before doing anything, so it's safe to place alongside a separate `Waldo_fnc_Mov
 on another object in the same composition — both init fields can run in any order.
 
 When `target` is a marker, the script immediately reads its position and Eden **Direction**, creates
-the WMP-owned point/corridor markers, then deletes the original setup marker. This marker-only stage
-runs before the script waits for mission initialization and the aircraft's pilot, so the drop-zone
-area and standby/green/red lines are visible in the pre-mission briefing map just like gunship orbit
-markers. Route setup later reuses that exact geometry rather than creating another overlaid set.
+the WMP-owned point/corridor markers, then deletes the original setup marker. Dedicated clients can
+load their mission.sqm marker copy after that server deletion, so WMP also publishes a persistent
+client-local hide watcher for the consumed marker. The drop-zone area and standby/green/red lines are
+therefore visible in the pre-mission briefing map without the red Eden setup marker overlaid. Route
+setup later reuses that exact geometry rather than creating another overlaid set.
 
 **If the plane never takes off toward its target**, the most common cause is step 1 — the marker
 was never placed, or its name doesn't exactly match the `target` string. This case reports itself

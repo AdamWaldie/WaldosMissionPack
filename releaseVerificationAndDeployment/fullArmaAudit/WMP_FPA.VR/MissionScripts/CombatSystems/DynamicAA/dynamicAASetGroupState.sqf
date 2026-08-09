@@ -70,6 +70,7 @@ private _knownTargets = (_group targets []) select {!isNull _x};
         _vehicle setVehicleReceiveRemoteTargets false;
         _vehicle setVehicleReportRemoteTargets false;
         _vehicle setVehicleRadar ([0, 1] select _active);
+        [_vehicle, _active, _eligibleTargets] call Waldo_fnc_DynamicAAFireGateLocal;
     };
     if (_active) then {
         _unit enableAI "ALL";

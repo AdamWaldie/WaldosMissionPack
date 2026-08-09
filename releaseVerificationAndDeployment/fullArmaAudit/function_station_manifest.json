@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 886,
+  "registeredFunctionCount": 889,
   "runtimeFunctionCount": 385,
-  "functionCount": 1271,
+  "functionCount": 1274,
   "stations": [
     {
       "id": "control",
@@ -901,6 +901,12 @@
     {
       "name": "Waldo_fnc_NotificationTriggerActivate",
       "file": "MissionScripts/MissionFlowAndUi/notificationTriggerActivate.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HideSetupMarkerLocal",
+      "file": "MissionScripts/MissionFlowAndUi/hideSetupMarkerLocal.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -2363,6 +2369,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_HazardNotifyRequesterServer",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardNotifyRequesterServer.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_HazardApplyTreatmentLocal",
       "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardApplyTreatmentLocal.sqf",
       "station": "hazards",
@@ -2569,6 +2581,12 @@
     {
       "name": "Waldo_fnc_DynamicAASetGroupState",
       "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAASetGroupState.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAFireGateLocal",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAFireGateLocal.sqf",
       "station": "dynamic-aa",
       "activation": "manual"
     },

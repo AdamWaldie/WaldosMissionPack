@@ -131,10 +131,10 @@ createHashMapFromArray [
         ["Waldo_TransportServices_Enable", true, true], // BOOL: enables inert shared service framework.
         ["Waldo_Transport_TravelTimeout", 900, false], // SECONDS: one physical movement deadline.
         ["Waldo_Transport_DefaultBoardingSeconds", 300, false], // SECONDS: pickup boarding window.
-        ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: destination disembark window.
+        ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: maximum wait for player passengers to leave before RTB is ordered. forceDisembark may first request moveOut.
         ["Waldo_HeliTransport_DefaultAltitude", 50, false], // METRES: default helicopter transit height.
-        ["Waldo_HeliTransport_DefaultLzSearchRadius", 250, false], // METRES: maximum permitted LZ adjustment from the click.
-        ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0, false], // MULTIPLIER: require an obstacle-free area enclosing 2x the helicopter model box.
+        ["Waldo_HeliTransport_DefaultLzSearchRadius", 500, false], // METRES: maximum permitted LZ adjustment from the click.
+        ["Waldo_HeliTransport_DefaultLzClearanceScale", 1.5, false], // MULTIPLIER: expand both model axes; the longer expanded half-axis becomes the circular LZ clearance.
         ["Waldo_HeliTransport_DefaultSeparation", 60, false], // METRES: space helicopter bases/LZs apart to reduce rotor and landing conflicts.
         ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false], // METRES: nearest-road search around pickup/destination.
         ["Waldo_GroundTransport_DefaultSeparation", 18, false], // METRES: space vehicle bases/stops apart to reduce blocking and collisions.

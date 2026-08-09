@@ -178,6 +178,8 @@ missionNamespace setVariable ["Waldo_Gunship_Registry", _registry];
 [] call Waldo_fnc_GunshipPublishState;
 private _started = [_id, _orbit, "TRANSIT"] call Waldo_fnc_GunshipSetOrbit;
 if (_started && {_orbitSourceMarker != ""}) then {
+    private _safeMarkerKey = [_orbitSourceMarker, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
+    [_orbitSourceMarker] remoteExecCall ["Waldo_fnc_HideSetupMarkerLocal", 0, format ["WMP_HIDE_SETUP_%1", _safeMarkerKey]];
     deleteMarker _orbitSourceMarker;
     diag_log format ["[WMP GUNSHIP] %1 replaced Eden orbit marker '%2' with its live WMP orbit marker.", _id, _orbitSourceMarker];
 };

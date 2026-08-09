@@ -857,7 +857,8 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('setVehicleRadar ([0, 1] select _active)', dynamic_aa_state)
         self.assertIn('_candidate distance2D _centre <= _radius', dynamic_aa_detector)
         self.assertIn('[_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo', dynamic_aa_destroy)
-        self.assertIn('addCuratorEditableObjects [_assets, true]', dynamic_aa)
+        self.assertIn('netId _x in ["", "0:0"]', dynamic_aa)
+        self.assertIn('addCuratorEditableObjects [_editable, false]', dynamic_aa)
         self.assertIn('sleep 0.1', dynamic_aa)
         self.assertIn('getOrDefault ["showMarkerDetails", true]', dynamic_aa)
 

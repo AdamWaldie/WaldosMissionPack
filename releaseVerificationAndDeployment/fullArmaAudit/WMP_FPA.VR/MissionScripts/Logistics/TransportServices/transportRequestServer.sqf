@@ -215,17 +215,20 @@ if (_type == "GROUND") then {
         if !([_target] call _isSeparated) then {_targetValid = false};
     };
 } else {
-    private _maximumRadius = _config getOrDefault ["landingSearchRadius", 250];
-    private _clearanceScale = (_config getOrDefault ["landingClearanceScale", 2.0]) max 1;
+    private _maximumRadius = _config getOrDefault ["landingSearchRadius", 500];
+    private _clearanceScale = (_config getOrDefault ["landingClearanceScale", 1.5]) max 1;
     private _bounds = boundingBoxReal _vehicle;
     _bounds params ["_boundsMinimum", "_boundsMaximum"];
     private _vehicleWidth = abs ((_boundsMaximum select 0) - (_boundsMinimum select 0));
     private _vehicleLength = abs ((_boundsMaximum select 1) - (_boundsMinimum select 1));
     private _clearanceHalfWidth = ((_vehicleWidth * _clearanceScale) * 0.5) max 1.5;
     private _clearanceHalfLength = ((_vehicleLength * _clearanceScale) * 0.5) max 1.5;
-    // The engine clearance test accepts a circular object-clearance distance. Circumscribing the
-    // scaled model selection box is conservative, but guarantees that the complete footprint fits.
-    private _clearanceRadius = sqrt ((_clearanceHalfWidth ^ 2) + (_clearanceHalfLength ^ 2));
+    // isFlatEmpty accepts one circular clearance distance. The scale has already expanded both
+    // model axes, so using the box diagonal here compounded the configured safety factor by as much
+    // as another 41 percent and rejected usable sites for medium helicopters. Use the longer scaled
+    // half-axis: this encloses the airframe/rotor extent along both model axes without treating the
+    // empty corners of a rectangular model box as additional rotor clearance.
+    private _clearanceRadius = _clearanceHalfWidth max _clearanceHalfLength;
     private _safe = [];
     private _isExactLzSafe = {
         params ["_candidate"];
@@ -295,6 +298,10 @@ _services set [_id, _entry];
 missionNamespace setVariable ["Waldo_Transport_Services", _services];
 _vehicle setVariable ["Waldo_TransportService_State", _entry get "state", true];
 _vehicle setVariable ["Waldo_TransportService_RequesterUID", _entry getOrDefault ["requesterUID", ""], true];
+// Keep both identities public while the service is active. UID survives a reconnect/JIP player-
+// object replacement; the object reference keeps hosted/SP and same-session control reliable when
+// getPlayerUID is temporarily empty. The remote self-interaction accepts either identity.
+_vehicle setVariable ["Waldo_TransportService_Requester", _entry getOrDefault ["requester", objNull], true];
 private _destinationMarker = format ["Waldo_Transport_Destination_%1", _id];
 deleteMarker _destinationMarker;
 createMarker [_destinationMarker, _target];

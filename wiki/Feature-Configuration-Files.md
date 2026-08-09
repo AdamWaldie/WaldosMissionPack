@@ -381,8 +381,8 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_Transport_DefaultBoardingSeconds` | Pickup boarding window before automatic RTB. |
 | `Waldo_Transport_DefaultDestinationDwell` | Destination disembark window before RTB. |
 | `Waldo_HeliTransport_DefaultAltitude` | Default AI helicopter transit height in metres. |
-| `Waldo_HeliTransport_DefaultLzSearchRadius` | Maximum safe-LZ adjustment from the player's helicopter pickup/destination click. |
-| `Waldo_HeliTransport_DefaultLzClearanceScale` | Multiplier applied to the helicopter's real model bounding box when validating an LZ. Default 2.0. |
+| `Waldo_HeliTransport_DefaultLzSearchRadius` | Maximum safe-LZ adjustment from the player's helicopter pickup/destination click. Default 500 metres. |
+| `Waldo_HeliTransport_DefaultLzClearanceScale` | Multiplier applied to the helicopter's real model bounding box when validating an LZ. Default 1.5. |
 | `Waldo_HeliTransport_DefaultSeparation` | Minimum spacing in metres between helicopter bases, active LZs and bulk pickup slots. Default 60. |
 | `Waldo_GroundTransport_DefaultRoadSearchRadius` | Radius searched for a connected road around a ground-transport click. |
 | `Waldo_GroundTransport_DefaultSeparation` | Minimum spacing in metres between ground-transport bases, active stops and bulk pickup slots. Default 18. |

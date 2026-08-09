@@ -29,10 +29,11 @@
  *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
  *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
  *    false to keep retrying the exact same road-locked path instead),
- *    invulnerable (vehicle and original AI service crew; default false),
- *    useImprovedLanding and keepEngineOnAway (helicopters only; default true - keeps the engine
- *    running at a pickup/destination stop away from base, overriding vanilla TR UNLOAD idle-down;
- *    set false to allow it to idle down like a normal AI landing). minimumSeparation spaces active
+ *    invulnerable (vehicle and original AI service crew; default false), and
+ *    useImprovedLanding (helicopters only; default true). At destination, LAND may naturally idle
+ *    the engine down while boarding/disembarking and never orders passengers out;
+ *    destinationDwell triggers moveOut only when forceDisembark is true, and RTB cannot begin until
+ *    every passenger is physically outside. minimumSeparation spaces active
  *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18); prepared bases
  *    are checked only for physical overlap.
  *
@@ -116,8 +117,8 @@ private _config = createHashMapFromArray [
     ["failSafeReset", _optionMap getOrDefault ["failSafeReset", false]],
     ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
     ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
-    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 250]]) max 10],
-    ["landingClearanceScale", (_optionMap getOrDefault ["landingClearanceScale", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzClearanceScale", 2.0]]) max 1],
+    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 500]]) max 10],
+    ["landingClearanceScale", (_optionMap getOrDefault ["landingClearanceScale", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzClearanceScale", 1.5]]) max 1],
     ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
     ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]}]) max 0],
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
@@ -174,6 +175,7 @@ _vehicle setVariable ["Waldo_TransportService_Name", _displayName, true];
 _vehicle setVariable ["Waldo_TransportService_State", "AVAILABLE", true];
 _vehicle setVariable ["Waldo_TransportService_RequestId", -1, true];
 _vehicle setVariable ["Waldo_TransportService_RequesterUID", "", true];
+_vehicle setVariable ["Waldo_TransportService_Requester", objNull, true];
 _vehicle setVariable ["Waldo_TransportService_Registered", true, true];
 _vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];
 if (_config get "invulnerable") then {_vehicle setDamage 0};
@@ -194,8 +196,9 @@ _vehicle lockDriver true;
 // intermittent stop/start hunting this was tuned to fix. Waldo_fnc_ParadropBuildFlightRoute already
 // established this exact fix for the same class of AI flight behaviour.
 if (_type == "HELICOPTER") then {_vehicle flyInHeight [_config get "cruiseAltitude", true]};
-// Retain the original TR UNLOAD route. Improved landing is the only default addition and owns the
-// vector-guided final approach; the transport LAND command remains a fallback if it cannot acquire.
+// Pickup retains the original TR UNLOAD route. Destination uses LAND so waypoint behaviour cannot
+// bypass voluntary disembarkation; both types remain eligible for improved vector landing and the
+// direct transport LAND command remains a fallback if the controller cannot acquire.
 if (_type == "HELICOPTER") then {
     _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true];
     // Transport's original LAND fallback begins inside 300 m. The global acceleration gate must

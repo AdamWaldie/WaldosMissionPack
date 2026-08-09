@@ -3,10 +3,14 @@
  * Executes one validated transport movement on the machine currently owning the AI driver group.
  * It creates only local control state, clears only that group's waypoints, applies the configured
  * non-combat movement policy and reports arrival/failure with the authoritative request ID.
- * Service helicopters retain the proven transport sequence: one TR UNLOAD waypoint followed by
- * the vehicle LAND command inside 300 metres. WMP improved landing is the only addition: when its
- * controller owns the final approach, the original LAND command waits as a fallback instead of
- * fighting the vector controller.
+ * Service helicopters use TR UNLOAD only when arriving for pickup. Passenger destinations use
+ * Arma's official scripted LAND waypoint (`A3\functions_f\waypoints\fn_wpLand.sqf`): LAND is not a
+ * valid runtime setWaypointType value and becomes UNDEF on a dedicated server, while TR UNLOAD can
+ * order passengers out. The scripted LAND task is recognised by WMP improved landing without
+ * forcing disembarkation. Both paths retain the vehicle LAND fallback inside 300 metres. When WMP
+ * improved landing owns final approach, that fallback waits instead of fighting the controller.
+ * After touchdown the server clears the completed route and permits normal AI engine idle-down;
+ * Transport Services does not impose an engine-running or movement-suspension hold.
  * Ground services stall-detect (no progress for pathRetrySeconds) and reissue the same waypoint up
  * to pathRetryLimit times. The first such reissue also drops forceFollowRoad (config
  * avoidRoadObstacles, default true) if it was active, since a road-pinned AI driver cannot
@@ -50,15 +54,7 @@ if (!local _group) exitWith {
     [_vehicle, _id, _requestId, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group];
     true
 };
-// An away-stop deliberately disables movement so the AI cannot complete TR UNLOAD and immediately
-// lift again between LAND commands. Supersede that hold before touching waypoints or flight orders.
-// The token lets the old scheduled holder see the release without relying on public-variable order.
-_vehicle setVariable ["Waldo_TransportService_LocalHoldToken", ""];
-_vehicle enableAI "MOVE";
-_vehicle enableAI "PATH";
-driver _vehicle enableAI "MOVE";
-driver _vehicle enableAI "PATH";
-driver _vehicle enableAI "FSM";
+// Release the stop applied after the preceding route before assigning this new one.
 for "_i" from ((count waypoints _group) - 1) to 0 step -1 do {deleteWaypoint [_group, _i]};
 private _helicopter = _vehicle isKindOf "Helicopter";
 private _movementBehaviour = if (_helicopter) then {_config getOrDefault ["behaviour", "CARELESS"]} else {"SAFE"};
@@ -86,10 +82,18 @@ if (_helicopter) then {
     driver _vehicle forceFollowRoad _roadRoute;
     _dispatchRoadRoute = _roadRoute;
 };
-// Preserve the original transport mechanic. Radius 0 and TR UNLOAD are intentional here: this is
-// the sequence proven by the supplied implementation, with the safe LZ already resolved by server.
+// Pickup retains the proven TR UNLOAD approach. At a passenger destination, TR UNLOAD also orders
+// cargo out as an engine waypoint side effect, bypassing WMP's forceDisembark option. There is no
+// valid `LAND` setWaypointType token in runtime SQF: assigning it produces UNDEF (confirmed on a
+// dedicated server). Arma's own LAND editor waypoint is a SCRIPTED waypoint using fn_wpLand.sqf.
+// That is also the form recognised by WMP's improved-landing tracker and does not eject cargo.
 private _waypoint = _group addWaypoint [_target, 0];
-_waypoint setWaypointType (if (_helicopter) then {"TR UNLOAD"} else {"MOVE"});
+private _destinationLanding = _helicopter && {toUpperANSI _phase == "DESTINATION"};
+private _waypointType = if (!_helicopter) then {"MOVE"} else {if (_destinationLanding) then {"SCRIPTED"} else {"TR UNLOAD"}};
+_waypoint setWaypointType _waypointType;
+if (_destinationLanding) then {
+    _waypoint setWaypointScript "A3\functions_f\waypoints\fn_wpLand.sqf";
+};
 _waypoint setWaypointBehaviour _movementBehaviour;
 _waypoint setWaypointCombatMode "BLUE";
 _waypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);
@@ -138,12 +142,6 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
             };
             call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_touchdown} || {diag_tickTime >= _timeout}
         };
-        // Vanilla TR UNLOAD waypoint completion can idle a helicopter's engine down on its own once
-        // it settles - independent of anything WMP's own scripts do. keepEngineOnAway (default true)
-        // re-asserts it explicitly right after touchdown at a pickup/destination stop, so a passenger
-        // isn't left waiting on a cold helicopter away from base; only RTB (Waldo_fnc_TransportReportServer)
-        // is meant to actually shut the engine down, once the vehicle is parked back at its own base.
-        if (alive _vehicle && {_config getOrDefault ["keepEngineOnAway", true]}) then {_vehicle engineOn true;};
     } else {
         private _bestDistance = _vehicle distance2D _target;
         private _lastProgress = diag_tickTime;

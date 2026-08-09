@@ -4,6 +4,10 @@
  * the WMP notification UI. When inspecting another player the call forwards to that target's owner,
  * because exposure intentionally remains local rather than being broadcast every evaluator tick.
  * Locality and authority: reads on the target owner's client and notifies only the requesting player.
+ * A self-reading is submitted directly to the local UI. A reading of another network player is
+ * relayed through Waldo_fnc_HazardNotifyRequesterServer so the server-only notification endpoint
+ * does not reject a client-originated remote call. Readings are transient and are not replayed to
+ * JIP clients. Every activation produces a result, including zero measurable exposure.
  *
  * Arguments:
  * 0: target <OBJECT> - player whose exposure is being read.
@@ -19,6 +23,7 @@
 
 params [["_target", objNull, [objNull]], ["_requester", player, [objNull]]];
 if (isNull _target || {isNull _requester} || {!isPlayer _target}) exitWith {false};
+if (remoteExecutedOwner > 2 && {owner _requester != remoteExecutedOwner}) exitWith {false};
 if (!local _target) exitWith {
     [_target, _requester] remoteExecCall ["Waldo_fnc_HazardReadExposureLocal", owner _target];
     true
@@ -34,6 +39,10 @@ private _body = if (_rows isEqualTo []) then {
 } else {
     format ["%1 — %2", name _target, _rows joinString " | "]
 };
-["HAZARD DOSIMETER", _body, if (_rows isEqualTo []) then {"SUCCESS"} else {"WARNING"}, "HAZARD_DOSIMETER", 6]
-    remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _requester];
+private _state = if (_rows isEqualTo []) then {"SUCCESS"} else {"WARNING"};
+if (local _requester && {hasInterface}) then {
+    ["HAZARD DOSIMETER", _body, _state, "HAZARD_DOSIMETER", 6] call Waldo_fnc_FeatureNotifyLocal;
+} else {
+    [_target, _requester, _body, _state] remoteExecCall ["Waldo_fnc_HazardNotifyRequesterServer", 2];
+};
 true

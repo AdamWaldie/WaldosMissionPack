@@ -48,6 +48,7 @@ for "_i" from 1 to _count do {
     private _height = (_config getOrDefault ["fighterSpawnAltitude", 1000]) + ((_i - 1) * 40);
     private _spawnPosition = [_spawn2D select 0, _spawn2D select 1, _height];
     private _fighter = createVehicle [_fighterClass, _spawnPosition, [], 0, "FLY"];
+    _fighter setVariable ["Waldo_DynamicAA_SystemId", _id, true];
     _fighter setPosATL _spawnPosition;
     _fighter setDir (_spawn2D getDir _centre);
     _fighter flyInHeight _height;
@@ -62,6 +63,7 @@ for "_i" from 1 to _count do {
         {deleteVehicle _x} forEach crew _fighter;
         deleteVehicle _fighter;
     } else {
+        _group addVehicle _fighter;
         private _waypoint = _group addWaypoint [_centre, 0];
         // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.
         _waypoint setWaypointType "MOVE";
@@ -79,11 +81,18 @@ for "_i" from 1 to _count do {
         _defenceGroups pushBackUnique _group;
         _state set ["defenceGroups", _defenceGroups];
         _spawnedCount = _spawnedCount + 1;
-        [[_fighter]] spawn {
-            params ["_assets"];
-            sleep 0.1;
-            _assets = _assets select {!isNull _x};
-            {_x addCuratorEditableObjects [_assets, true]} forEach allCurators;
+        [[_fighter], _group] spawn {
+            params ["_assets", "_group"];
+            private _deadline = diag_tickTime + 10;
+            private _editable = [];
+            waitUntil {
+                sleep 0.1;
+                _assets = _assets select {!isNull _x};
+                _editable = +_assets;
+                {_editable pushBackUnique _x} forEach units _group;
+                ((_editable findIf {netId _x in ["", "0:0"]}) < 0) || {diag_tickTime >= _deadline}
+            };
+            {_x addCuratorEditableObjects [_editable, false]} forEach allCurators;
         };
     };
 };

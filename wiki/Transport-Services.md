@@ -34,7 +34,7 @@ The optional fifth argument is a readable HashMap. Omit it for the safe defaults
     ["cruiseAltitude", 90],
     ["boardingSeconds", 240],
     ["destinationDwell", 60],
-    ["landingSearchRadius", 75],
+    ["landingSearchRadius", 500],
     ["roadSearchRadius", 200],
     ["groundSpeedLimit", 60],
     ["pathRetrySeconds", 25],
@@ -73,7 +73,7 @@ returning to base.
 - The normal request path manages one active helicopter and one active ground transport per player.
 - The first menu level is deliberately short and scalable: **Helicopter Transport**, **Ground Transport** and **All Transports**. Per-type and fleet-wide controls do not compete for the same radial-menu space.
 - **Request / Move Pickup** requests the first service, or retargets that player's single inbound/boarding service of the same type.
-- **Select / Manage Transport** opens one live alphabetical list. Available services can be requested directly; active services reserved by or carrying the player expose move, destination, retry and RTB controls. Zeus can manage every active service. This replaces the old separate “Request Another” and “Manage Active Services” entries.
+- **Select / Manage Transport** opens one live alphabetical list. Available services can be requested directly; active services reserved by or carrying the player expose move, destination, retry and RTB controls. Issuing an instruction does not remove this control surface: the named row remains available to its requester until the transport finishes RTB and becomes available again. WMP matches both the live player object and UID so hosted play, respawn/JIP object replacement and dedicated-server use remain reliable. Zeus can manage every active service. This replaces the old separate “Request Another” and “Manage Active Services” entries.
 - **All Transports** groups every action that affects the whole fleet rather than one named vehicle: **Request All Available Helicopters/Ground Vehicles** dispatches every eligible available transport of that type around one clicked centre (WMP uses enlarged, separate search slots instead of sending the fleet to one coordinate, then shows one combined result card instead of one card per vehicle), and **Return All Helicopters/Ground Vehicles to Base** returns every active same-type transport reserved by you or carrying you (Zeus may return every active transport of that type; “Available” vehicles are already at base and are therefore not included).
 - Repeating **Request Pickup** while that player's same-type transport is inbound or boarding moves the existing transport's pickup point. It never silently reserves a second vehicle.
 - **Select Destination** works the same way once a destination is already set: choosing it again while the transport is already travelling to that destination (`TO_DESTINATION`) retargets it, the same as retargeting a pickup - it does not require returning to `BOARDING` first.
@@ -92,9 +92,9 @@ When ACE Interact is unavailable, WMP-blue scroll-wheel pickup actions preserve 
 
 The client only opens the map and sends the chosen point. The server then selects and atomically reserves the nearest eligible service from the requested typed pool. It resolves a reachable service point, records a unique request number and tells the machine currently owning that AI group to move. That owner can be the server, a headless client or another client; if locality changes mid-journey, dispatch transfers to the new owner without allowing an old arrival report to complete the newer task.
 
-Helicopter movement deliberately retains the proven service sequence from the original implementation: one `TR UNLOAD` waypoint, then the vehicle command `land "LAND"` inside 300 metres, followed by a physical-touchdown check. WMP adds a required takeoff gate because the original distance-only test ordered an aircraft to land immediately when an LZ was selected within 300 metres of its base. Improved landing may take ownership of the final approach after physical takeoff; while it is active, Transport Services withholds the original LAND command. If the improved controller cannot acquire or aborts, the original LAND command is issued automatically as the fallback. No departure, terminal `MOVE`, or scripted landing waypoint is inserted.
+Helicopter pickup retains the proven `TR UNLOAD` approach from the original implementation. A passenger destination instead uses Arma's official scripted LAND waypoint (`A3\functions_f\waypoints\fn_wpLand.sqf`) so the engine cannot order cargo out independently of WMP's `forceDisembark` setting. `LAND` by itself is not a valid runtime `setWaypointType` value and becomes `UNDEF`, so mission scripts must not use it as a waypoint type. Both routes use the vehicle command `land "LAND"` inside 300 metres and a physical-touchdown check. WMP adds a required takeoff gate because the original distance-only test ordered an aircraft to land immediately when an LZ was selected within 300 metres of its base. Improved landing may take ownership of the final approach after physical takeoff; while it is active, Transport Services withholds the fallback LAND command.
 
-At pickup the vehicle stops and enters **BOARDING**. It does not know a destination yet. After a passenger uses **Select Destination**, the service explicitly releases the pickup stop order and begins a new **TO_DESTINATION** movement. At destination it enters **DISEMBARKING**, waits for passengers to leave or for the configured dwell timer, then physically returns to its recorded base. Emergency teleport is disabled by default; an empty service that fails physical RTB may reset only when the mission maker explicitly enables `failSafeReset`.
+At pickup the vehicle stops and enters **BOARDING**. It does not know a destination yet. After a passenger uses **Select Destination**, the service releases the stop order and begins a new **TO_DESTINATION** movement. At destination it enters **DISEMBARKING** and remains under the normal `LAND` command until every player passenger is physically outside or `destinationDwell` expires. WMP does not repeatedly force the engine on or suspend flight AI after touchdown; the helicopter may therefore shut its engine down naturally while waiting. With `forceDisembark` disabled (the default), nobody is ejected: an occupied transport simply receives its RTB order when the timeout expires. When enabled, WMP requests `moveOut` at the timeout and gives the exit animation up to ten additional seconds before RTB. A newer destination or RTB order invalidates the older wait so stale workers cannot override it.
 
 ### Ground transport movement
 
@@ -108,8 +108,8 @@ At pickup the vehicle stops and enters **BOARDING**. It does not know a destinat
 
 ### Helicopter movement
 
-- WMP first validates the exact clicked point and keeps it unchanged when it is flat, on land, separated from another active LZ and clear for the aircraft. Only a genuinely unsafe click starts a deterministic nearest-first search inside `landingSearchRadius`, which defaults to 250 metres. WMP reads the aircraft's real model bounding box and requires an obstacle-free envelope large enough to contain that box scaled to 2 times its width and length. The clearance check uses the circle enclosing that complete box, so it is deliberately conservative. People standing at a requested pickup do not invalidate it, while another parked vehicle does. The notification reports adjustments greater than 10 metres and the destination marker shows the actual service point.
-- WMP creates an invisible helipad at that exact resolved point. The service retains the original `TR UNLOAD` route and `land "LAND"` fallback; WMP's global locality-aware improved-landing controller is the only flight-path addition.
+- WMP first validates the exact clicked point and keeps it unchanged when it is flat, on land, separated from another active LZ and clear for the aircraft. Only a genuinely unsafe click starts a deterministic nearest-first search inside `landingSearchRadius`, which defaults to 500 metres. WMP reads the aircraft's real model bounding box and expands both its width and length by `landingClearanceScale` (default 1.5). Arma's terrain check accepts a circle, so WMP uses the longer expanded half-axis rather than the box diagonal; this covers the scaled airframe axes without adding up to 41% of empty-corner overclearance. People standing at a requested pickup do not invalidate it, while another parked vehicle does. The notification reports adjustments greater than 10 metres and the destination marker shows the actual service point.
+- WMP creates an invisible helipad at that exact resolved point. Pickup uses `TR UNLOAD`; destination uses the official scripted LAND task; both retain the `land "LAND"` fallback and WMP's global locality-aware improved-landing controller.
 - Registered air transports reacquire the improved controller immediately after physical takeoff, before the original 300 m LAND fallback can intervene. The controller now supplies a minimum approach-entry speed instead of inheriting an almost stationary lift-off speed, preventing the former slow Little Bird approach without delaying transport takeover.
 - Active helicopter LZs are kept at least `minimumSeparation` metres apart; the default is 60 metres. Bulk pickup lays out a deterministic grid of separated landing slots around the clicked centre.
 
@@ -119,16 +119,18 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 
 | Option | Beginner meaning |
 |---|---|
-| `landingSearchRadius` | Maximum metres a helicopter LZ may move away from the clicked point. |
-| `landingClearanceScale` | Multiplies the helicopter's real model width and length for LZ clearance. Default `2.0`; values below `1` are rejected. |
+| `landingSearchRadius` | Maximum metres a helicopter LZ may move away from the clicked point. Default `500`. |
+| `landingClearanceScale` | Multiplies the helicopter's real model width and length for LZ clearance. Default `1.5`; values below `1` are rejected. |
 | `roadSearchRadius` | Maximum metres searched for a road around a ground-transport click. |
 | `minimumSeparation` | Minimum metres between active destinations and bulk service slots. Defaults to 60 for helicopters and 18 for ground vehicles. Prepared bases may be closer; registration rejects only physically overlapping vehicle footprints. |
 | `groundSpeedLimit` | Maximum ground-transport speed in km/h. |
 | `pathRetrySeconds` | Seconds without progress before the driver receives the same order again. |
 | `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey. |
 | `avoidRoadObstacles` | Ground only, default `true`: the first stalled retry drops the road-follow order so off-road pathfinding can route around whatever blocked the road. Set `false` to keep retrying the same road-locked path instead. |
-| `useImprovedLanding` | Default `true`: apply WMP's vector-guided final approach to the original `TR UNLOAD` service route. Set `false` to use only the original `land "LAND"` behavior. |
-| `keepEngineOnAway` | Helicopters only, default `true`: holds the helicopter on the ground and keeps its engine running throughout pickup boarding or destination disembarkation. The hold is owned by the AI locality machine and ends only when the current request is replaced (destination/RTB), its normal wait expires, locality is lost or the aircraft is destroyed. Set `false` to permit normal AI idle-down while retaining the grounded hold. Engine shutdown at base (RTB) is unaffected either way. |
+| `useImprovedLanding` | Default `true`: apply WMP's vector-guided final approach to pickup `TR UNLOAD` and destination scripted-LAND routes. Set `false` to use the direct `land "LAND"` fallback only. |
+| `destinationDwell` | Maximum seconds the transport waits at destination for all player passengers to leave before ordering RTB. Default `45`. |
+| `forceDisembark` | Default `false`: nobody is ejected; after `destinationDwell`, RTB may begin with remaining passengers aboard. Set `true` to request `moveOut` at the timeout and allow up to ten seconds for the exit animation before RTB. |
+
 | `invulnerable` | Default `false`: when enabled, protects the transport and its original AI service crew across locality changes. Passenger players remain vulnerable. |
 | `failSafeReset` | Default `false`; opt-in emergency teleport after an empty physical RTB fails. |
 
