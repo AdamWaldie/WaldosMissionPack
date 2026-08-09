@@ -25,6 +25,11 @@ request handling) but exposes **no in-game authoring menu** — the mission
 maker must hand-author `MissionConfig/economyConfig.sqf` instead. Check
 `../mod-detection.md` before assuming the Zeus menu route is available.
 
+In the Zeus module browser the suite's own module category is labelled
+**"WMP Economy Systems"** (a rename from the older "Waldos Economy
+Systems" category label) — the feature/system itself is still called
+Waldos Economy Systems everywhere else (docs, README, compositions).
+
 ## Architecture note (for context, not something to reconfigure)
 
 Registered under `class Waldo` in `WaldosFunctions.sqf`, callable as
