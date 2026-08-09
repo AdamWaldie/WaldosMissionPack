@@ -1,11 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Register zen modules.
- *
- * Part of the Waldos Economy Systems suite (shared core system).
+ * Registers every WMP Economy Systems control as a Zeus Enhanced custom module.
  *
  * Registers every Economy Systems action as a Zeus Enhanced custom module under the
- * "Waldos Economy Systems" category. This is the supported replacement for the previous
+ * "WMP Economy Systems" category. This is the supported replacement for the previous
  * raw curator-tree injection: ZEN owns the module list, so there is no per-client polling
  * loop and no dependency on undocumented curator display IDCs. Requires Zeus Enhanced -
  * without it the suite still runs server-side (income, research, production, requests) but
@@ -19,11 +17,22 @@
  * authority, so placement works on dedicated servers. Non-placement actions ignore the
  * position and open their existing dialog / toggle.
  *
+ * Locality / Authority:
+ * Runs on interface clients only. Dialogs run on the curator client; authoritative changes are
+ * forwarded by the existing handlers to the server. ZEN registrations are local UI state.
+ *
+ * Repeat / JIP Behaviour:
+ * Repeat-safe through WaldoEcoCore_ZenModulesRegistered. Every JIP curator registers the module
+ * catalogue when their local economy client lifecycle starts.
+ *
  * Arguments:
- * None
+ * None.
  *
  * Return Value:
- * Nothing
+ * Nothing.
+ *
+ * Current Callers:
+ * Waldo_fnc_EcoInit after the shared economy display/category defaults have been defined.
  *
  * Example:
  * [] call Waldo_fnc_EcoCore_registerZenModules;
@@ -34,7 +43,7 @@
     if (!isNil "WaldoEcoCore_ZenModulesRegistered") exitWith {};
     WaldoEcoCore_ZenModulesRegistered = true;
 
-    private _cat = "Waldos Economy Systems";
+    private _cat = missionNamespace getVariable ["WaldoEcoCore_ZeusHeaderRootText", "WMP Economy Systems"];
     private _icon = "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa";
 
     // ---- Resource ----
