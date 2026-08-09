@@ -128,7 +128,7 @@ These choices follow Bohemia's documented behaviour: [`doStop` must be released 
 | `pathRetryLimit` | Maximum retries during one pickup, destination or RTB journey. |
 | `avoidRoadObstacles` | Ground only, default `true`: the first stalled retry drops the road-follow order so off-road pathfinding can route around whatever blocked the road. Set `false` to keep retrying the same road-locked path instead. |
 | `useImprovedLanding` | Default `true`: apply WMP's vector-guided final approach to the original `TR UNLOAD` service route. Set `false` to use only the original `land "LAND"` behavior. |
-| `keepEngineOnAway` | Helicopters only, default `true`: re-asserts the engine on right after touchdown at a pickup/destination stop away from base, overriding vanilla `TR UNLOAD` idle-down, so a passenger isn't left waiting on a cold helicopter. Set `false` to allow it to idle down like a normal AI landing. Engine shutdown at base (RTB) is unaffected either way. |
+| `keepEngineOnAway` | Helicopters only, default `true`: holds the helicopter on the ground and keeps its engine running throughout pickup boarding or destination disembarkation. The hold is owned by the AI locality machine and ends only when the current request is replaced (destination/RTB), its normal wait expires, locality is lost or the aircraft is destroyed. Set `false` to permit normal AI idle-down while retaining the grounded hold. Engine shutdown at base (RTB) is unaffected either way. |
 | `invulnerable` | Default `false`: when enabled, protects the transport and its original AI service crew across locality changes. Passenger players remain vulnerable. |
 | `failSafeReset` | Default `false`; opt-in emergency teleport after an empty physical RTB fails. |
 

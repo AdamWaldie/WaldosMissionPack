@@ -35,6 +35,12 @@
 
 params [["_interval", 1, [0]]];
 if !(hasInterface && {alive player}) exitWith {};
+// Exposure belongs to one concrete player object, never merely to the client missionNamespace.
+// This synchronous guard closes the small cross-machine/event-order window where the evaluator can
+// see a new respawned unit before EntityRespawned has performed its local cleanup.
+if !((missionNamespace getVariable ["Waldo_Hazard_LocalPlayerObject", objNull]) isEqualTo player) then {
+    [] call Waldo_fnc_HazardResetLocal;
+};
 
 private _exposures = missionNamespace getVariable ["Waldo_Hazard_LocalExposure", createHashMap];
 private _previousInside = missionNamespace getVariable ["Waldo_Hazard_LocalInside", createHashMap];

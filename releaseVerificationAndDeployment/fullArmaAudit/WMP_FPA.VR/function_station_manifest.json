@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 885,
+  "registeredFunctionCount": 886,
   "runtimeFunctionCount": 385,
-  "functionCount": 1270,
+  "functionCount": 1271,
   "stations": [
     {
       "id": "control",
@@ -2377,6 +2377,12 @@
     {
       "name": "Waldo_fnc_HazardHud",
       "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardHud.sqf",
+      "station": "hazards",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HazardResetLocal",
+      "file": "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardResetLocal.sqf",
       "station": "hazards",
       "activation": "manual"
     },

@@ -796,6 +796,7 @@ class CfgFunctions
             class HazardApplyTreatmentLocal {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardApplyTreatmentLocal.sqf";};
             class HazardInteractionInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInteractionInit.sqf";};
             class HazardHud {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardHud.sqf";};
+            class HazardResetLocal {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardResetLocal.sqf";};
             class HazardTick {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardTick.sqf";};
             class HazardInit {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardInit.sqf";};
             class HazardStop {file = "MissionScripts\EnvironmentalSystems\HazardousEnvironments\hazardStop.sqf";};

@@ -50,6 +50,15 @@ if (!local _group) exitWith {
     [_vehicle, _id, _requestId, _phase, _target, _config, _landingPad] remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group];
     true
 };
+// An away-stop deliberately disables movement so the AI cannot complete TR UNLOAD and immediately
+// lift again between LAND commands. Supersede that hold before touching waypoints or flight orders.
+// The token lets the old scheduled holder see the release without relying on public-variable order.
+_vehicle setVariable ["Waldo_TransportService_LocalHoldToken", ""];
+_vehicle enableAI "MOVE";
+_vehicle enableAI "PATH";
+driver _vehicle enableAI "MOVE";
+driver _vehicle enableAI "PATH";
+driver _vehicle enableAI "FSM";
 for "_i" from ((count waypoints _group) - 1) to 0 step -1 do {deleteWaypoint [_group, _i]};
 private _helicopter = _vehicle isKindOf "Helicopter";
 private _movementBehaviour = if (_helicopter) then {_config getOrDefault ["behaviour", "CARELESS"]} else {"SAFE"};

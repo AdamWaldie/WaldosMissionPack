@@ -425,6 +425,34 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('_vehicle land "LAND"', stop)
         self.assertIn('Waldo_TransportService_RequestId', stop)
         self.assertIn('_config getOrDefault ["keepEngineOnAway", true]', report)
+        stop = (ROOT / "MissionScripts/Logistics/TransportServices/transportStopGroupLocal.sqf").read_text(
+            encoding="utf-8"
+        )
+        dispatch = (ROOT / "MissionScripts/Logistics/TransportServices/transportDispatchLocal.sqf").read_text(
+            encoding="utf-8"
+        )
+        self.assertIn('_vehicle disableAI "MOVE"', stop)
+        self.assertIn('driver _vehicle disableAI "FSM"', stop)
+        self.assertIn('if (_keepEngineOn) then {_vehicle engineOn true}', stop)
+        self.assertIn('uiSleep 0.25', stop)
+        self.assertIn('remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group]', stop)
+        self.assertIn('_vehicle setVariable ["Waldo_TransportService_LocalHoldToken", ""]', dispatch)
+        self.assertIn('_vehicle enableAI "MOVE"', dispatch)
+        self.assertIn('driver _vehicle enableAI "FSM"', dispatch)
+        hazard_init = (
+            ROOT / "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardInit.sqf"
+        ).read_text(encoding="utf-8")
+        hazard_tick = (
+            ROOT / "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardTick.sqf"
+        ).read_text(encoding="utf-8")
+        hazard_reset = (
+            ROOT / "MissionScripts/EnvironmentalSystems/HazardousEnvironments/hazardResetLocal.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('addMissionEventHandler ["EntityRespawned"', hazard_init)
+        self.assertIn('Waldo_Hazard_LocalPlayerObject', hazard_tick)
+        self.assertIn('call Waldo_fnc_HazardResetLocal', hazard_tick)
+        self.assertIn('["Waldo_Hazard_LocalExposure", createHashMap]', hazard_reset)
+        self.assertIn('["Waldo_Hazard_LocalDamageStages", createHashMap]', hazard_reset)
         self.assertNotIn("TransportTakeManualServer", functions)
         self.assertNotIn("WMP Interface", interactions)
         self.assertIn('"WMP Transport"', interactions)

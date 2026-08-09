@@ -30,10 +30,17 @@ if ((missionNamespace getVariable ["Waldo_Hazard_Zones", []]) isEqualTo []) exit
 if (missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false]) exitWith {true};
 
 missionNamespace setVariable ["Waldo_Hazard_ClientStarted", true];
-missionNamespace setVariable ["Waldo_Hazard_LocalExposure", createHashMap];
-missionNamespace setVariable ["Waldo_Hazard_LocalInside", createHashMap];
-missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
-missionNamespace setVariable ["Waldo_Hazard_LocalAudioTimers", createHashMap];
+[] call Waldo_fnc_HazardResetLocal;
+if !(missionNamespace getVariable ["Waldo_Hazard_RespawnHandlerInstalled", false]) then {
+    missionNamespace setVariable ["Waldo_Hazard_RespawnHandlerInstalled", true];
+    private _respawnId = addMissionEventHandler ["EntityRespawned", {
+        params ["_newEntity"];
+        if (hasInterface && {local _newEntity} && {isPlayer _newEntity}) then {
+            [] call Waldo_fnc_HazardResetLocal;
+        };
+    }];
+    missionNamespace setVariable ["Waldo_Hazard_RespawnHandlerId", _respawnId];
+};
 [] call Waldo_fnc_HazardInteractionInit;
 private _interval = (missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25;
 private _handle = [_interval] spawn {
