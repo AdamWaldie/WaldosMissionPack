@@ -1,5 +1,8 @@
 /*
 This function populates an advanced medical crate, with the option to enable the box as a field hospital if desired.
+When enabled with ACE medical present, a simple "Field Hospital Info" interaction (ACE Interact plus a linked
+vanilla addAction) is installed on the crate so players can see which crate grants the locational treatment
+boost without opening its inventory or reading the mission briefing - no persistent 3D marker in the world.
 
 Params:
 _crate - object to populate (Passed from module where thee classname of the box is defined)
@@ -36,9 +39,14 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     //Check if option selected for medical locational boost
     if (_isFacility) then {
         _crate setVariable ["ace_medical_isMedicalFacility", true, true];
-        // ACE medical already exposes the facility state. A decorative addAction here used to
-        // pollute the vanilla action menu even when ACE was the active interaction surface.
+        // ACE medical already exposes the facility state to treatment logic, but that gives
+        // players no visible reason to bring casualties to this specific crate over any other
+        // one - a simple informational interaction on the crate itself is the indicator, not a
+        // persistent 3D marker floating in the world.
+        [_crate, true] remoteExec ["Waldo_fnc_MedicalCrateFacilityActionLocal", 0, _crate];
         diag_log format ["[WMP LOGISTICS] ACE medical facility enabled crate=%1", netId _crate];
+    } else {
+        [_crate, false] remoteExec ["Waldo_fnc_MedicalCrateFacilityActionLocal", 0, _crate];
     };
     //Add ACE Medical supplies   
    //Common Items

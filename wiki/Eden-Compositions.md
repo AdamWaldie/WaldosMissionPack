@@ -36,6 +36,12 @@ Every WMP Eden comment includes the direct URL of the matching wiki article. Kee
 copying or adapting the example so the next mission maker can recover the parameter and locality
 guidance from inside Eden.
 
+The **Notification Trigger** is the pre-planned equivalent of the Zeus **Send Notification** module.
+It is a 25 m, any-player, one-use trigger and therefore does not announce anything merely because the
+mission loaded. Edit its **On Activation** field to change the title, message, notification type or
+recipients. Keep **Server Only** enabled in multiplayer; otherwise every client can execute the same
+activation and create duplicate cards. See [Custom WMP UI Notifications](Custom-UI-Notifications).
+
 ## Why some features have no composition
 
 Dynamic AA, Dynamic AO Generation and Airborne Gunship Support all ship compositions — their

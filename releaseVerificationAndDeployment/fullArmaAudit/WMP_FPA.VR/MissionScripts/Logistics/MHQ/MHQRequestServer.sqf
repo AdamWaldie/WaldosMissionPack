@@ -57,8 +57,10 @@ if (_operation == "DEPLOY") then {
     _target setVariable ["Waldo_MHQ_Name", _name, true];
     _target setVariable ["Waldo_MHQ_Status", true, true];
     if (_logistics) then {_target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true];};
-    private _recipients = allPlayers select {side group _x == side group _actor};
-    ["MOBILE COMMAND POST", "Command Post " + _name + " established; the vehicle is locked.", "SUCCESS", "MHQ"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
+    // Only the player who actually deployed it - matching the rejection notice above, and the fact
+    // that every other player on the side already sees the resulting map marker/respawn point
+    // appear; a side-wide card on top of that was noise for everyone except the person who acted.
+    ["MOBILE COMMAND POST", "Command Post " + _name + " established; the vehicle is locked.", "SUCCESS", "MHQ"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor];
 } else {
     {if (!isNull _x) then {_x hideObjectGlobal true;};} forEach _deployParts;
     private _respawn = _target getVariable ["Waldo_MHQ_RespawnHandle", []];
@@ -73,8 +75,7 @@ if (_operation == "DEPLOY") then {
     _target setVariable ["Waldo_MHQ_RespawnHandle", []];
     _target setVariable ["Waldo_MHQ_Marker", ""];
     if (_logistics) then {_target setVariable ["Waldo_LogisticsQM_CurrentStatus", false, true];};
-    private _recipients = allPlayers select {side group _x == side group _actor};
-    ["MOBILE COMMAND POST", "Command Post " + _name + " torn down; the vehicle is unlocked.", "INFO", "MHQ"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
+    ["MOBILE COMMAND POST", "Command Post " + _name + " torn down; the vehicle is unlocked.", "INFO", "MHQ"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor];
 };
 
 if (_audioPath != "") then {

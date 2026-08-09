@@ -6,7 +6,7 @@
  * full mutable registry remains server-only.
  * Locality and authority: callable anywhere and self-forwards; only the server mutates registration state.
  * The driver seat is locked (lockDriver true, intentional - direct boarding is not the supported
- * path, Take Manual Control is) and the captured AI service crew has fleeing/panic disabled
+ * path) and the captured AI service crew has fleeing/panic disabled
  * (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily damaged to
  * remain effective
  * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written

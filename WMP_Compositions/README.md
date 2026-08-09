@@ -92,6 +92,7 @@ copies of feature logic.
 | Object Scaling Example | Supported Simple Object conversion and scale setup |
 | Custom 3D Marker Example (Minimal) | Smallest working object-anchored marker |
 | Custom 3D Marker Example (Full) | Object-anchored, side-aware world marker with readable options, every option shown |
+| Notification Trigger | Server-only 25 m Eden trigger that sends one editable WMP notification without firing at mission load |
 | Economy Systems and Low/Medium/High | Runtime enablement and optional preset |
 | Persistence Object Example (Minimal) | Smallest working call - key and object only, every field saved by default |
 | Persistence Object Example (Full) | Crate registered with `Waldo_fnc_PersistenceRegisterObject`, no `isServer` wrapper needed, options shown |

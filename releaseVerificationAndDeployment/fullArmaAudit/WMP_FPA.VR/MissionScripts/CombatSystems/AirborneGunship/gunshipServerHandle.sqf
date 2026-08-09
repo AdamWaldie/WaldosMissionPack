@@ -46,11 +46,20 @@ switch (toUpperANSI _operation) do {
         [_id, _position, "TRANSIT"] call Waldo_fnc_GunshipSetOrbit
     };
     case "TAKE_CONTROL": {
-        if !(_isController) exitWith {false};
-        if !((_state getOrDefault ["status", ""]) in ["ON_STATION", "CONTROLLED"]) exitWith {false};
+        if !(_isController) exitWith {
+            ["You are not this gunship's assigned controller. Ask your curator to run Gunship: Assign Controller."] remoteExecCall ["Waldo_fnc_GunshipNotifyLocal", owner _requester];
+            false
+        };
+        if !((_state getOrDefault ["status", ""]) in ["ON_STATION", "CONTROLLED"]) exitWith {
+            [format ["%1 is not on station yet - weapon control unlocks once it arrives.", _config getOrDefault ["callsign", _id]]] remoteExecCall ["Waldo_fnc_GunshipNotifyLocal", owner _requester];
+            false
+        };
         private _path = _arguments param [0, []];
         private _validPaths = (_config getOrDefault ["turretProfiles", []]) apply {_x select 1};
-        if !(_path in _validPaths) exitWith {false};
+        if !(_path in _validPaths) exitWith {
+            [format ["%1 has no turret at that station right now - its crew may have changed.", _config getOrDefault ["callsign", _id]]] remoteExecCall ["Waldo_fnc_GunshipNotifyLocal", owner _requester];
+            false
+        };
         [_id, "CONTROLLED", format ["%1 weapon control connected.", _config getOrDefault ["callsign", _id]]] call Waldo_fnc_GunshipSetState;
         [_id, _state getOrDefault ["aircraft", objNull], _path] remoteExecCall ["Waldo_fnc_GunshipGrantControlLocal", owner _requester];
         true

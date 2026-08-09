@@ -56,6 +56,15 @@ Add an options HashMap as the third argument to override any default:
 | `sides` | `["ALL"]` | Visible sides, such as `["WEST","GUER"]`. |
 | `enabled` | `true` | Temporarily hide without deleting. |
 
+For vanilla icon paths, use Bohemia's official
+[Arma 3 CfgMarkers reference](https://community.bohemia.net/wiki/Arma_3%3A_CfgMarkers). Its **Icon
+Path** column can be copied into WMP's `icon` setting. WMP draws that texture in the world rather
+than creating a map marker, so the marker class name itself (for example `b_air`) is not the value
+this setting needs. Bohemia's [drawIcon3D reference](https://community.bohemia.net/wiki/drawIcon3D)
+documents the underlying engine texture requirements and rendering behaviour. A path from a mod is
+only safe when every player has that mod; vanilla paths or mission-local `.paa` files are the most
+portable choices.
+
 ## Remove a marker
 
 ```sqf

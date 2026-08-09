@@ -73,15 +73,15 @@ if (_enable) then {
             while {missionNamespace getVariable ["Waldo_SafeStart_Active", false]} do {
                 // Banner + optional countdown clock.
                 private _theme = [] call Waldo_fnc_UiTheme;
-                private _banner = format ["<t font='%1' color='%2' size='1.4' shadow='1' align='center'>SAFESTART ACTIVE</t><br /><t font='%3' color='%4' size='1.0' align='center'>WEAPONS LOCKED | DAMAGE DISABLED</t><br /><t font='%3' color='%4' size='0.9' align='center'>Remain inside the marked safe area. Zeus may start or cancel the timer.</t><br />", _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["accentHex", "#4FA9E8"], _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"]];
+                private _banner = format ["<t font='%1' color='%2' size='1.2' shadow='1' align='center'>SAFESTART ACTIVE</t><br /><t font='%3' color='%4' size='0.9' align='center'>WEAPONS LOCKED | DAMAGE DISABLED</t><br /><t font='%3' color='%4' size='0.8' align='center'>Remain inside the safe area. Zeus controls go-live.</t><br />", _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["accentHex", "#4FA9E8"], _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"]];
                 private _endTime = missionNamespace getVariable ["Waldo_SafeStart_EndTime", 0];
                 if (_endTime > 0) then {
                     private _rem = (_endTime - serverTime) max 0;
                     private _secs = floor (_rem % 60);
                     private _secStr = if (_secs < 10) then { format ["0%1", _secs] } else { str _secs };
-                    _banner = _banner + format ["<t font='%1' color='%2' size='1.1' align='center'>GO LIVE IN %3:%4</t><br />", _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["warningHex", "#FFD166"], floor (_rem / 60), _secStr];
+                    _banner = _banner + format ["<t font='%1' color='%2' size='1.0' align='center'>GO LIVE IN %3:%4</t><br />", _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["warningHex", "#FFD166"], floor (_rem / 60), _secStr];
                 } else {
-                    _banner = _banner + "<t size='0.9' align='center'>No automatic go-live timer is running.</t><br />";
+                    _banner = _banner + "<t size='0.8' align='center'>No go-live countdown is running.</t><br />";
                 };
                 [true, _banner] call Waldo_fnc_SafeStartHud;
 
@@ -113,6 +113,9 @@ if (_enable) then {
         };
     };
 } else {
+    // Acknowledgement is local presentation state for one activation only. Clear it at go-live so
+    // a later SafeStart activation is never born hidden.
+    uiNamespace setVariable ["Waldo_SafeStart_AcknowledgedPhase", nil];
     // Remove the player's weapon freeze.
     if !(isNil "Waldo_SafeStart_FiredEH") then {
         player removeEventHandler ["Fired", Waldo_SafeStart_FiredEH];

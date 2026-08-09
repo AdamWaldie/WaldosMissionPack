@@ -91,6 +91,10 @@ _policy = toUpper _policy;
 if (_policy isEqualTo "AUTO") then {_policy = if (_duration <= 0) then {"REPLACE"} else {"FIFO"};};
 if !(_policy in ["FIFO", "REPLACE"]) then {_policy = "FIFO";};
 private _theme = [] call Waldo_fnc_UiTheme;
+// The only theme token that changes card footprint rather than colour/font/copy - opt-in per theme
+// (MINIMAL is the only shipped theme that sets it) so every other theme's sizing is untouched.
+private _compact = _theme getOrDefault ["compact", false];
+private _sizeScale = if (_compact) then {0.78} else {1};
 private _semantic = switch (_state) do {
     case "SUCCESS": {[_theme getOrDefault ["successHex", "#6CE5A8"], "[OK]", _theme getOrDefault ["success", [0.18, 0.66, 0.45, 1]]]};
     case "WARNING": {[_theme getOrDefault ["warningHex", "#FFD166"], "[!]", _theme getOrDefault ["warning", [0.88, 0.60, 0.12, 1]]]};
@@ -170,9 +174,9 @@ _content ctrlSetBackgroundColor [0, 0, 0, 0];
 private _styledSource = (_theme getOrDefault ["sourcePrefix", ""]) + toUpper _source + (_theme getOrDefault ["sourceSuffix", ""]);
 private _styledTitle = (_theme getOrDefault ["titlePrefix", ""]) + _title + (_theme getOrDefault ["titleSuffix", ""]);
 _content ctrlSetStructuredText parseText format [
-    "<t align='left' font='%6' color='%7' size='0.72'>%1 // %10</t><br/>" +
-    "<t align='left' font='%8' color='%2' size='1.12' shadow='1'>%3 %4</t><br/>" +
-    "<t align='left' font='%6' color='%9' size='0.88'>%5</t>",
+    "<t align='left' font='%6' color='%7' size='%11'>%1 // %10</t><br/>" +
+    "<t align='left' font='%8' color='%2' size='%12' shadow='1'>%3 %4</t><br/>" +
+    "<t align='left' font='%6' color='%9' size='%13'>%5</t>",
     _styledSource,
     _colour,
     _symbol,
@@ -182,25 +186,28 @@ _content ctrlSetStructuredText parseText format [
     _theme getOrDefault ["mutedHex", "#9FB3C8"],
     _theme getOrDefault ["fontBold", "RobotoCondensedBold"],
     _theme getOrDefault ["textHex", "#FFFFFF"],
-    _theme getOrDefault ["motif", "TACTICAL INTERFACE"]
+    _theme getOrDefault ["motif", "TACTICAL INTERFACE"],
+    0.72 * _sizeScale,
+    1.12 * _sizeScale,
+    0.88 * _sizeScale
 ];
 
 private _visibleW = safeZoneW;
 private _visibleH = safeZoneH;
-private _panelW = switch (_placement) do {
+private _panelW = (switch (_placement) do {
     case "BOTTOM_RIGHT": {_visibleW * 0.235};
     case "TOP_RIGHT": {_visibleW * 0.28};
     case "BOTTOM_LEFT": {_visibleW * 0.34};
     case "BOTTOM_CENTER": {_visibleW * 0.30};
     case "CENTER": {_visibleW * 0.44};
     default {_visibleW * 0.48};
-};
-private _padX = _visibleW * 0.010;
-private _padY = _visibleH * 0.008;
-private _maximumContentH = _visibleH * 0.22;
+}) * _sizeScale;
+private _padX = _visibleW * 0.010 * (if (_compact) then {0.7} else {1});
+private _padY = _visibleH * 0.008 * (if (_compact) then {0.7} else {1});
+private _maximumContentH = _visibleH * 0.22 * _sizeScale;
 _content ctrlSetPosition [0, 0, _panelW - (2 * _padX), _maximumContentH];
 _content ctrlCommit 0;
-private _contentH = (((ctrlTextHeight _content) + (_visibleH * 0.006)) max (_visibleH * 0.07)) min _maximumContentH;
+private _contentH = (((ctrlTextHeight _content) + (_visibleH * 0.006)) max (_visibleH * 0.07 * _sizeScale)) min _maximumContentH;
 private _panelH = _contentH + (2 * _padY);
 private _accentH = (_visibleH * 0.004) max 0.002;
 {_x ctrlShow !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);} forEach [_frame, _accent, _trim, _content];

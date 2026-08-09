@@ -9,7 +9,9 @@
  * again after assignment, runtime activation, JIP or respawn and never publishes authoritative
  * carrier state from the client.
  *
- * Arguments: None.
+ * Arguments:
+ * 0: retries remaining <NUMBER> (default 20) - internal, used only by this function's own
+ *    Waldo_FieldResupply_Enable replication retry below; callers should never pass it.
  *
  * Return Value:
  * Boolean - true when controls already exist or were installed; false when unavailable/disabled.
@@ -20,6 +22,7 @@
  * Current callers: initPlayerLocal.sqf, FieldResupplyAssignCarrier and the local respawn handler.
  */
 
+params [["_retriesRemaining", 20, [0]]];
 if !(hasInterface) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", isServer]) exitWith {
     [] spawn {
@@ -33,7 +36,22 @@ if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", isSer
     };
     true
 };
-if !(missionNamespace getVariable ["Waldo_FieldResupply_Enable", false]) exitWith {false};
+// Waldo_FieldResupply_Enable can be turned on mid-mission (a hub registered after players already
+// joined) via a broadcast setVariable [...,true] paired with a directly targeted remoteExecCall to
+// this same function in the same frame. Those two network messages have no ordering guarantee
+// between them, so the direct call can legitimately arrive here before the broadcast replicates -
+// which would otherwise make a perfectly valid activation look disabled and silently skip
+// installing the player's interaction menu with no retry. Give the broadcast a brief, bounded
+// window to catch up before treating it as genuinely disabled.
+if !(missionNamespace getVariable ["Waldo_FieldResupply_Enable", false]) exitWith {
+    if (_retriesRemaining <= 0) exitWith {false};
+    [_retriesRemaining - 1] spawn {
+        params ["_retriesRemaining"];
+        sleep 0.1;
+        [_retriesRemaining] call Waldo_fnc_FieldResupplyInit;
+    };
+    false
+};
 if (player getVariable ["Waldo_FieldResupply_ActionInstalled", false]) exitWith {true};
 
 private _inspect = {

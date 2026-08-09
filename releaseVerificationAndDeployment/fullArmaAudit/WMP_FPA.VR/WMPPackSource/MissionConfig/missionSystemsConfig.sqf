@@ -95,7 +95,7 @@ createHashMapFromArray [
         // ADVANCED global ACE behavior; normally retain pack defaults.
         ["ACE_maxWeightDrag", 10000],               // ACE mass limit; pack-established permissive drag policy.
         ["ACE_maxWeightCarry", 6000],               // ACE mass limit; pack-established permissive carry policy.
-        ["ace_hearing_disableVolumeUpdate", true]   // BOOL: preserve established ACE hearing volume behavior.
+        ["ace_hearing_disableVolumeUpdate", true]   // BOOL: preserve established ACE hearing volume behavior. DO NOT TOUCH THIS.
     ]],
     ["server", [
         // MISSION MAKER: server diagnostics and safestart contract; JIP-published.

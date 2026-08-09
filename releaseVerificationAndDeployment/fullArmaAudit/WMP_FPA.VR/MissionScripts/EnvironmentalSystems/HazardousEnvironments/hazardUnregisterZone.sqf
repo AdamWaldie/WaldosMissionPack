@@ -30,6 +30,10 @@ if (_index < 0) exitWith {false};
 _zones deleteAt _index;
 missionNamespace setVariable ["Waldo_Hazard_Zones", _zones];
 if (_zones isEqualTo []) then {missionNamespace setVariable ["Waldo_Hazard_Enable", false, true]};
+// Safe no-op when this zone never registered a marker (Waldo_fnc_Remove3DMarker returns false for an
+// unknown id) - every removal path (ZEN, mission scripts, the emitter's own auto-cleanup EventHandler)
+// funnels through here, so this is the single teardown point that needs to know about the marker.
+[format ["WMP_HAZARD_%1", _key]] call Waldo_fnc_Remove3DMarker;
 [] call Waldo_fnc_HazardPublishState;
 diag_log format ["[WMP HAZARD] Removed zone '%1'; authoritative zone count=%2.", _key, count _zones];
 true

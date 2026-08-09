@@ -1,27 +1,40 @@
 /*
-This function apply the Jump Functionality To Aircraft.
+ * Author: WaldoTheWarfighter
+ * Explicitly enables both static-line and HALO actions on one aircraft using the mission's global
+ * paradrop thresholds and chute classes. It marks the aircraft as manually configured before the
+ * generic vehicle handler runs, preventing automatic class detection from racing this setup.
+ *
+ * Locality and authority:
+ * Safe in an Eden object init on every machine. Each interface installs its own hold/ACE actions;
+ * the server publishes the intended jump types for diagnostics and JIP-facing state. Installation
+ * waits for local WMP initialization and is repeat-safe through the action installers.
+ *
+ * Arguments:
+ * 0: aircraft <OBJECT> - non-infantry vehicle receiving static-line and HALO actions.
+ *
+ * Return Value:
+ * Nothing.
+ *
+ * Current callers:
+ * Mission-maker object init fields and legacy paradrop examples.
+ *
+ * Example:
+ * [this] call Waldo_fnc_VehicleJumpSetup;
+ */
 
-C130J from RHS is automatically handled with the below parameters
-
-THIS FEATURE IS PRESENTLY CONFLICTING WITH THE VEHICLE ACTION HANDLER, AND SHOULD ONLY BE CALLED ON VEHICLES NOT COVERED UNDER THAT.
-
-Arguments:
-0: Vehicle <OBJECT>
-
-Example:
-[this] call Waldo_fnc_VehicleJumpSetup;
-*/
-
-params ["_vehicle"];
+params [["_vehicle", objNull, [objNull]]];
 
 
 //Basic prevention of sillyness
-if (_vehicle iskindOf "man") exitWith {};
+if (isNull _vehicle || {_vehicle isKindOf "CAManBase"}) exitWith {};
 
 // Mark as explicitly configured so Waldo_fnc_AddVehicleFunctions' own auto-detection for jump-
 // capable classes (which would otherwise add its own conflicting static/HALO defaults) skips this
 // vehicle instead of racing this call for the final hold-action state.
-_vehicle setVariable ["Waldo_Paradrop_ManuallyConfigured", true];
+_vehicle setVariable ["Waldo_Paradrop_ManuallyConfigured", true, isServer];
+if (isServer) then {
+    _vehicle setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [true, true], true];
+};
 
 // No Restrictions. Mission Makers please use responsibly!
 // As called from unit init, enviroment is unscheduled, so we force a schedule with spawn, and add actions after units ingame. Not  efficent, but easier to use / more adaptable for the end user.
@@ -85,4 +98,5 @@ _schdenvirohndlr = [_vehicle] spawn {
     [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
     // leave this one as is.
     [_vehicle] call Waldo_fnc_JumpSettingsCheck;
+    _vehicle setVariable ["Waldo_Paradrop_LocalSetupComplete", true];
 };

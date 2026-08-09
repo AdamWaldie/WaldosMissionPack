@@ -70,8 +70,8 @@ if (!(missionNamespace getVariable ["WaldoEcoResource_SystemInitialized", false]
     };
 };
 
-WaldoEcoCore_ZeusHeaderRootText = "Waldos Economy Systems";
-WaldoEcoCore_ZeusHeaderRootTooltip = "Waldos Economy Systems";
+WaldoEcoCore_ZeusHeaderRootText = "WMP Economy Systems";
+WaldoEcoCore_ZeusHeaderRootTooltip = "WMP Economy Systems";
 WaldoEcoCore_ZeusHeaderRootColor = [0.25, 0.85, 1, 1];
 
 if (hasInterface && {isNil "WaldoEcoCommand_LocalIdentityLoopStarted"}) then {

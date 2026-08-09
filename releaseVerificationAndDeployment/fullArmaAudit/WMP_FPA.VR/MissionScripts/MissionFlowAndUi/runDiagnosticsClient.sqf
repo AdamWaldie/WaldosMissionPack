@@ -111,10 +111,58 @@ if (_jamEnabled && {!isNil "Waldo_fnc_JammingFactor"} && {alive player}) then {
 private _jamCtrl = (findDisplay 46) displayCtrl 5310;
 private _jamHudOk = _jamFactor <= 0 || {!isNull _jamCtrl && {ctrlShown _jamCtrl}};
 private _jamLoopRunning = missionNamespace getVariable ["Waldo_Jamming_UiRunning", false];
+private _jamUiReady = missionNamespace getVariable ["Waldo_Jamming_UiReady", false];
 private _jamClientState = if (!_jamEnabled) then {"DISABLED"} else {
-    if (!_jamHudOk || {!_jamLoopRunning}) then {"ERROR"} else {if (_jamFactor > 0) then {"ACTIVE"} else {"LOADED"}}
+    if (!_jamLoopRunning) then {"ERROR"} else {
+        if (!_jamUiReady) then {"LOADED"} else {
+            if (!_jamHudOk) then {"ERROR"} else {if (_jamFactor > 0) then {"ACTIVE"} else {"LOADED"}}
+        }
+    }
 };
-["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 hud=%4", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
+["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 uiReady=%4 hud=%5", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, _jamUiReady, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
+
+private _jumpCapableClasses = ["RHS_Mi24_base", "RHS_Mi8_base", "Heli_Transport_02_base_F", "RHS_C130J_Base", "B_T_VTOL_01_infantry_F"];
+private _jumpAircraft = (allMissionObjects "Air") select {
+    private _aircraft = _x;
+    _jumpCapableClasses findIf {_aircraft isKindOf _x} >= 0
+};
+if (_jumpAircraft isEqualTo []) then {
+    ["paradrop", "jump-actions-local", "UNCONFIGURED", "No jump-capable aircraft are present on this client."] call _add;
+} else {
+    // Use explicit numeric accumulators. Arma has returned the final BOOL predicate from both the
+    // filtered-array and predicate-count forms in live diagnostics, so neither overloaded form is
+    // safe here. This diagnostic must always leave both values as NUMBERs.
+    private _pendingJumpCount = 0;
+    private _missingJumpCount = 0;
+    {
+        private _aircraft = _x;
+        private _ready = _aircraft getVariable ["Waldo_Paradrop_LocalSetupComplete", false];
+        if (!_ready) then {
+            _pendingJumpCount = _pendingJumpCount + 1;
+        } else {
+            private _expected = _aircraft getVariable ["Waldo_Paradrop_ConfiguredJumpTypes", []];
+            if !(_expected isEqualType []) then {_expected = []};
+            if (count _expected != 2) then {
+                _expected = [
+                    true,
+                    _aircraft isKindOf "RHS_C130J_Base" || {_aircraft isKindOf "B_T_VTOL_01_infantry_F"}
+                ];
+            };
+            private _missingStatic = (_expected select 0) && {(_aircraft getVariable ["Waldo_Static_Jump_ActionId", -1]) < 0};
+            private _missingHalo = (_expected select 1) && {(_aircraft getVariable ["Waldo_Halo_Jump_ActionId", -1]) < 0};
+            if (_missingStatic || {_missingHalo}) then {
+                _missingJumpCount = _missingJumpCount + 1;
+            };
+        };
+    } forEach _jumpAircraft;
+    private _jumpState = if (_missingJumpCount > 0) then {"ERROR"} else {
+        if (_pendingJumpCount > 0) then {"LOADED"} else {"ACTIVE"}
+    };
+    ["paradrop", "jump-actions-local", _jumpState, format [
+        "aircraft=%1 ready=%2 pending=%3 missingExpectedActions=%4",
+        count _jumpAircraft, (count _jumpAircraft) - _pendingJumpCount, _pendingJumpCount, _missingJumpCount
+    ]] call _add;
+};
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 ["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=45", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
@@ -173,6 +221,21 @@ if (_vvdTerminals isEqualTo []) then {
         }}
     }) < 0;
     ["logistics", "vvd-actions", if (_vvdValid) then {"LOADED"} else {"ERROR"}, format ["terminals=%1 expectedMode=%2", count _vvdTerminals, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}]] call _add;
+};
+
+private _fieldHospitals = _localObjects select {_x getVariable ["ace_medical_isMedicalFacility", false]};
+if (_fieldHospitals isEqualTo []) then {
+    ["logistics", "field-hospital-actions", "UNCONFIGURED", "No field hospital crate is present"] call _add;
+} else {
+    // Waldo_fnc_MedicalCrateFacilityActionLocal installs the vanilla addAction unconditionally and
+    // the ACE action only when ACE Interact is loaded (both together, not one as a fallback for the
+    // other) - a crate missing either the expected ACE path or its vanilla action id means the
+    // install call never reached that crate on this client.
+    private _fieldHospitalsMissingAction = _fieldHospitals select {
+        (_x getVariable ["Waldo_FieldHospital_VanillaActionId", -1]) < 0
+        || {_aceInteractLoaded && {(_x getVariable ["Waldo_FieldHospital_AceActionPath", []]) isEqualTo []}}
+    };
+    ["logistics", "field-hospital-actions", if (_fieldHospitalsMissingAction isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["crates=%1 missingAction=%2 expectedMode=%3", count _fieldHospitals, count _fieldHospitalsMissingAction, if (_aceInteractLoaded) then {"ACE+VANILLA"} else {"VANILLA"}]] call _add;
 };
 
 private _warnings = {_x select 2 == "ERROR"} count _checks;

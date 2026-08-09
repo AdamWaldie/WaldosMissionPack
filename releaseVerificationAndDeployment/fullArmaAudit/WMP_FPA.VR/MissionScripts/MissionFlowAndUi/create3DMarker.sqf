@@ -11,7 +11,7 @@
  * Example:
  * ["generator", generator_1, createHashMapFromArray [
  *     ["text", "GENERATOR ALPHA | OFFLINE"],
- *     ["icon", "\\a3\\ui_f\\data\\map\\markers\\military\\warning_CA.paa"],
+ *     ["icon", "\a3\ui_f\data\map\markers\military\warning_CA.paa"],
  *     ["colour", [1, 0.75, 0.2, 1]], ["offset", [0,0,2.5]], ["distance", 80]
  * ]] call Waldo_fnc_Create3DMarker;
  */

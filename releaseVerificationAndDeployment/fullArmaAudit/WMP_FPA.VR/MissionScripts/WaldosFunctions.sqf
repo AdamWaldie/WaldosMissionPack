@@ -180,6 +180,9 @@ class CfgFunctions
             class SafeStartHud {
                 file = "MissionScripts\MissionFlowAndUi\safeStartHud.sqf";
             };
+            class SafeStartAcknowledgeLocal {
+                file = "MissionScripts\MissionFlowAndUi\safeStartAcknowledgeLocal.sqf";
+            };
             class SafeStartNotice {
                 file = "MissionScripts\MissionFlowAndUi\safeStartNotice.sqf";
             };
@@ -203,6 +206,12 @@ class CfgFunctions
               };
               class ShowUiNotification {
                   file = "MissionScripts\MissionFlowAndUi\showUiNotification.sqf";
+              };
+              class NotificationBroadcast {
+                  file = "MissionScripts\MissionFlowAndUi\notificationBroadcast.sqf";
+              };
+              class SendNotification {
+                  file = "MissionScripts\MissionFlowAndUi\sendNotification.sqf";
               };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
@@ -380,6 +389,9 @@ class CfgFunctions
             class MedicalCratePopulate {
                 file = "MissionScripts\Logistics\Crates\doMedicalCrate.sqf";
             };
+            class MedicalCrateFacilityActionLocal {
+                file = "MissionScripts\Logistics\Crates\medicalCrateFacilityActionLocal.sqf";
+            };
             class SupplyCratePopulate {
                 file = "MissionScripts\Logistics\Crates\doSupplyCrate.sqf";
             };
@@ -481,6 +493,7 @@ class CfgFunctions
             class TransportReportServer {file = "MissionScripts\Logistics\TransportServices\transportReportServer.sqf";};
             class TransportStopGroupLocal {file = "MissionScripts\Logistics\TransportServices\transportStopGroupLocal.sqf";};
             class TransportMonitorServer {file = "MissionScripts\Logistics\TransportServices\transportMonitorServer.sqf";};
+            class TransportNotifyLoss {file = "MissionScripts\Logistics\TransportServices\transportNotifyLoss.sqf";};
         };
         class VehicleCamo {
             class VehicleCamoSetup {
@@ -550,6 +563,12 @@ class CfgFunctions
             class ZenTrackerServer {
                 file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
             };
+            class ZenNotify {
+                file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
+            };
+            class ZenNotifyServer {
+                file = "MissionScripts\ZenModules\zenNotifyServer.sqf";
+            };
         };
         class Paradrop {
             class AddHaloJump {
@@ -582,8 +601,17 @@ class CfgFunctions
             class JumpSettingsCheck {
                 file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
             };
+            class ParadropBuildFlightRoute {
+                file = "MissionScripts\Paradrop\paradropBuildFlightRoute.sqf";
+            };
+            class ParadropNormalizeJumpEnvelope {
+                file = "MissionScripts\Paradrop\paradropNormalizeJumpEnvelope.sqf";
+            };
             class ParadropCreateDropZone {
                 file = "MissionScripts\Paradrop\paradropCreateDropZone.sqf";
+            };
+            class ParadropQuickFlightSetup {
+                file = "MissionScripts\Paradrop\paradropQuickFlightSetup.sqf";
             };
             class ParadropConfigureAircraftLocal {
                 file = "MissionScripts\Paradrop\paradropConfigureAircraftLocal.sqf";
@@ -597,8 +625,17 @@ class CfgFunctions
             class ParadropRemoveDropZone {
                 file = "MissionScripts\Paradrop\paradropRemoveDropZone.sqf";
             };
+            class ParadropRemoveAircraftActionsLocal {
+                file = "MissionScripts\Paradrop\paradropRemoveAircraftActionsLocal.sqf";
+            };
             class ParadropDropZoneZen {
                 file = "MissionScripts\Paradrop\paradropDropZoneZen.sqf";
+            };
+            class ParadropSetupLocal {
+                file = "MissionScripts\Paradrop\paradropSetupLocal.sqf";
+            };
+            class ParadropUpdateMarkersLocal {
+                file = "MissionScripts\Paradrop\paradropUpdateMarkersLocal.sqf";
             };
         };
         class VehicleSetup {
@@ -705,6 +742,7 @@ class CfgFunctions
             class GunshipMonitor {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipMonitor.sqf";};
             class GunshipServiceAircraft {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServiceAircraft.sqf";};
             class GunshipServerHandle {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipServerHandle.sqf";};
+            class GunshipAssignControllerOnStart {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipAssignControllerOnStart.sqf";};
             class GunshipDestroy {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipDestroy.sqf";};
             class GunshipStop {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipStop.sqf";};
             class GunshipSelectOrbitLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSelectOrbitLocal.sqf";};

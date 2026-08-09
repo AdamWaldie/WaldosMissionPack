@@ -260,12 +260,14 @@ altitude window with margin to absorb normal AI autopilot wander, static-line ma
 at least 60 km/h above capped route speed, and an unsupported door-animation requirement is disabled. Automatic sequencing also switches to the
 enabled alternative or turns itself off instead of silently selecting a disabled jump method.
 
-**Paradrop - Embark Players** lists both registry-backed Dynamic Drop Zone operations and any aircraft
-set up with `Waldo_fnc_ParadropQuickFlightSetup` (a mission maker's own placed-and-crewed plane) - it
-is not limited to operations created through **Paradrop - Create Drop Zone**. **Paradrop - Remove
-Operation** stays registry-only, since a quick-setup aircraft was never spawned or owned by this
-system to begin with. It uses the player directly underneath the placed module first, then the
-curator selection:
+**Paradrop - Embark Players** and **Paradrop - Remove Operation** list both registry-backed Dynamic
+Drop Zone operations and aircraft set up with `Waldo_fnc_ParadropQuickFlightSetup` (a mission
+maker's own placed-and-crewed Eden aircraft). Entries are labelled **[DYNAMIC]** or **[EDEN]**.
+Removing an Eden/quick-flight operation follows the same rules as removing a dynamic operation: its
+operation markers, live marker and registration are cleared, and **Delete aircraft** removes its
+aircraft and AI crew unless players are aboard. Turning the checkbox off retains the aircraft but
+removes its WMP jump interactions. It uses the player directly underneath the placed module first,
+then the curator selection:
 
 - with a player selected, choose that player or all active players in that player's group and move them directly into free cargo seats;
 - with no player target, choose a physical boarding object and label, then create it at the module with a blue **Board Paradrop Aircraft** addAction.
@@ -276,10 +278,13 @@ Only players are transferred, pilot/turret seats are never claimed, and full or 
 reported through WMP notifications. The ongoing audit station also exposes **BOARD ME INTO QA
 PARADROP** and **CREATE QA BOARDING POINT** controls.
 
-Optional global map symbology includes the overall rectangular drop zone, small standby/green/red
-line rectangles and a named point marker. Arma itself makes these global markers available to JIP
-clients. **Paradrop - Remove Operation** always cleans the markers (and can delete the operation
-aircraft); the automatic cleanup on a despawn pass or aircraft loss removes them too unless
+The **Create map markers** option is on by default and visibly draws the overall rectangular drop
+zone, small amber standby line, green jump line, red stop line and a named point marker, matching
+the pre-placed quick-flight example. Turn the option off when none of those route markers should be
+shown. Arma itself makes these global markers available to JIP
+clients. **Paradrop - Remove Operation** always cleans the operation markers and can delete either a
+dynamic or pre-placed aircraft when enabled and no players are aboard. Automatic cleanup
+on a despawn pass or aircraft loss removes generated markers too unless
 `keepMarkersOnCleanup` was enabled at creation.
 
 Mission makers can extend the friendly-name dropdowns before startup:

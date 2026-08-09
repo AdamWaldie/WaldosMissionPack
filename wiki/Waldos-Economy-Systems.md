@@ -8,7 +8,7 @@ _Associated Files: MissionScripts\EconomySystems\ (the `Waldo_fnc_Eco*` function
 
 Waldos Economy Systems is a **Zeus, RTS-style economy suite** built into the pack. It lets you run a resource economy, a tech tree, base construction, and a vehicle store entirely from inside Zeus — no scripting needed by the operator, and no Eden work needed beyond turning it on. It works for any curator, including a player-controlled Zeus.
 
-> **Requires Zeus Enhanced (ZEN).** Every action is a ZEN custom module under the **"Waldos Economy Systems"** category in the Zeus module list. Without ZEN loaded the economy still runs on the server (income, research, production, player requests), but there is no in-Zeus authoring menu. ZEN is already a common dependency for the pack's other Zeus modules.
+> **Requires Zeus Enhanced (ZEN).** Every action is a ZEN custom module under the **"WMP Economy Systems"** category in the Zeus module list. Without ZEN loaded the economy still runs on the server (income, research, production, player requests), but there is no in-Zeus authoring menu. ZEN is already a common dependency for the pack's other Zeus modules.
 
 This is the hub page. Each system has its own tutorial:
 
@@ -36,7 +36,7 @@ You never have to touch a script to use this suite. Pick the path that suits you
 
 * **Easiest (≈30 seconds, no scripting, no Eden setup).** In the Eden Editor, open the **Compositions** list (category _Waldos Mission Pack Compositions_) and drag in
   **`[WMP] Waldos Economy Systems - Low / Medium / High Preset`**. That single object boots the suite **and** loads a ready-made, balanced economy for NATO/CSAT/AAF. Play the mission — it just works. (Start with **Low** if you're new to it.)
-* **Live in Zeus (one flag).** Set `Waldo_Economy_Enable = true;` in `init.sqf` (or drop the plain `[WMP] Waldos Economy Systems` composition). Open Zeus — a new **Waldos Economy Systems** root appears in the tree, and you build the whole economy live with menus and dialogs. No editor objects required.
+* **Live in Zeus (one flag).** Set `Waldo_Economy_Enable = true;` in `init.sqf` (or drop the plain `[WMP] Waldos Economy Systems` composition). Open Zeus — a new **WMP Economy Systems** root appears in the tree, and you build the whole economy live with menus and dialogs. No editor objects required.
 * **Bake in your own (full control).** Configure it live in Zeus, hit **Export** to copy a config string, and paste it into `Waldo_Economy_ConfigString` in `initServer.sqf` — or hand-author everything in `MissionConfig\economyConfig.sqf`. It then loads automatically every time the mission runs, for every player including JIP.
 
 > **Tip:** place only **one** Economy Systems object (composition or flag) per mission.

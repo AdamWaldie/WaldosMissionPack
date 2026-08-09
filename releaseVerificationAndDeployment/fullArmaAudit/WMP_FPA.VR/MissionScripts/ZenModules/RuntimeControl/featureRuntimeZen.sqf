@@ -418,7 +418,7 @@ switch (toUpperANSI _feature) do {
                 ["CHECKBOX", ["Show map marker", "Track the service vehicle on the map."], true],
                 ["SLIDER", ["Boarding window", "Seconds at pickup before an unused service returns to base."], [30, 900, missionNamespace getVariable ["Waldo_Transport_DefaultBoardingSeconds", 300], 0]],
                 ["SLIDER", ["Destination dwell", "Seconds allowed for disembarking before return to base."], [10, 300, missionNamespace getVariable ["Waldo_Transport_DefaultDestinationDwell", 45], 0]],
-                ["SLIDER", ["Helicopter transit height", "Metres above terrain; ignored by ground transports."], [20, 300, missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 80], 0]],
+                ["SLIDER", ["Helicopter transit height", "Metres above terrain; ignored by ground transports."], [20, 300, missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 50], 0]],
                 ["CHECKBOX", ["Repair at base", "Fully repair the service after a completed return."], false],
                 ["CHECKBOX", ["Refuel at base", "Fully refuel the service after a completed return."], true],
                 ["CHECKBOX", ["Invulnerable service", "Protect the transport and its original AI service crew. Passenger players remain vulnerable."], false],

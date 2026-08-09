@@ -12,7 +12,14 @@
  * Arguments:
  * 0: key <STRING> - stable unique zone name
  * 1: area <OBJECT|STRING|ARRAY> - trigger, marker, moving emitter, [position, radius], or [position, a, b, angle, rectangle]
- * 2: profile <HASHMAP> - hazard settings and optional onTick callback
+ * 2: profile <HASHMAP> - hazard settings and optional onTick callback. Set ["markerEnabled", true] to
+ *    tie a broadcast Waldo_fnc_Create3DMarker world marker to this zone's own area/object - anchored
+ *    directly to the source object for a moving emitter, so every player can see where the hazard is
+ *    without depending on the per-player exposure HUD. Optional ["marker", HASHMAP] supplies
+ *    Waldo_fnc_Create3DMarker options (icon/colour/text/offset/distance/sides); unset keys fall back
+ *    to a warning icon, the profile's label, and a 200 m view distance. The marker is created once at
+ *    registration and removed automatically when the zone is unregistered - it is not part of the
+ *    per-tick evaluation loop.
  * 3: authorised runtime request <BOOLEAN> - internal server-wrapper proof (default false)
  *
  * Return Value:
@@ -52,4 +59,35 @@ missionNamespace setVariable ["Waldo_Hazard_Zones", _zones];
 missionNamespace setVariable ["Waldo_Hazard_Enable", true, true];
 [] call Waldo_fnc_HazardPublishState;
 diag_log format ["[WMP HAZARD] Registered zone '%1'; authoritative zone count=%2.", _key, count _zones];
+
+if (_profile getOrDefault ["markerEnabled", false]) then {
+    // Resolve one marker anchor from this zone's own area definition - an object anchor (including a
+    // moving emitter) is passed straight through so Waldo_fnc_Create3DMarker's Draw3D renderer tracks
+    // it live; marker/array areas resolve to their static centre position instead.
+    private _anchor = objNull;
+    if (_area isEqualType objNull) then {
+        _anchor = _area;
+    } else {
+        if (_area isEqualType "") then {
+            private _pos = getMarkerPos _area;
+            _anchor = [_pos select 0, _pos select 1, 0];
+        } else {
+            if (_area isEqualType [] && {count _area > 0}) then {_anchor = _area select 0;};
+        };
+    };
+    private _markerValid = if (_anchor isEqualType objNull) then {!isNull _anchor} else {_anchor isEqualType [] && {count _anchor >= 2}};
+    if (_markerValid) then {
+        private _markerOptions = _profile getOrDefault ["marker", createHashMap];
+        if (typeName _markerOptions != "HASHMAP") then {_markerOptions = createHashMap;};
+        private _defaults = createHashMapFromArray [
+            ["text", _profile getOrDefault ["label", _key]],
+            ["icon", "\a3\ui_f\data\map\markers\military\warning_CA.paa"],
+            ["colour", [0.95, 0.35, 0.1, 0.95]],
+            ["distance", 200],
+            ["offset", [0, 0, 2]]
+        ];
+        {if (isNil {_markerOptions get _x}) then {_markerOptions set [_x, _defaults get _x];};} forEach keys _defaults;
+        [format ["WMP_HAZARD_%1", _key], _anchor, _markerOptions] call Waldo_fnc_Create3DMarker;
+    };
+};
 true

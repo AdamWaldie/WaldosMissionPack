@@ -180,6 +180,9 @@ class CfgFunctions
             class SafeStartHud {
                 file = "MissionScripts\MissionFlowAndUi\safeStartHud.sqf";
             };
+            class SafeStartAcknowledgeLocal {
+                file = "MissionScripts\MissionFlowAndUi\safeStartAcknowledgeLocal.sqf";
+            };
             class SafeStartNotice {
                 file = "MissionScripts\MissionFlowAndUi\safeStartNotice.sqf";
             };
@@ -206,6 +209,9 @@ class CfgFunctions
               };
               class NotificationBroadcast {
                   file = "MissionScripts\MissionFlowAndUi\notificationBroadcast.sqf";
+              };
+              class SendNotification {
+                  file = "MissionScripts\MissionFlowAndUi\sendNotification.sqf";
               };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
@@ -488,9 +494,6 @@ class CfgFunctions
             class TransportStopGroupLocal {file = "MissionScripts\Logistics\TransportServices\transportStopGroupLocal.sqf";};
             class TransportMonitorServer {file = "MissionScripts\Logistics\TransportServices\transportMonitorServer.sqf";};
             class TransportNotifyLoss {file = "MissionScripts\Logistics\TransportServices\transportNotifyLoss.sqf";};
-            class TransportTakeManualServer {file = "MissionScripts\Logistics\TransportServices\transportTakeManualServer.sqf";};
-            class TransportReleaseManualServer {file = "MissionScripts\Logistics\TransportServices\transportReleaseManualServer.sqf";};
-            class TransportManualLocal {file = "MissionScripts\Logistics\TransportServices\transportManualLocal.sqf";};
         };
         class VehicleCamo {
             class VehicleCamoSetup {
@@ -621,6 +624,9 @@ class CfgFunctions
             };
             class ParadropRemoveDropZone {
                 file = "MissionScripts\Paradrop\paradropRemoveDropZone.sqf";
+            };
+            class ParadropRemoveAircraftActionsLocal {
+                file = "MissionScripts\Paradrop\paradropRemoveAircraftActionsLocal.sqf";
             };
             class ParadropDropZoneZen {
                 file = "MissionScripts\Paradrop\paradropDropZoneZen.sqf";

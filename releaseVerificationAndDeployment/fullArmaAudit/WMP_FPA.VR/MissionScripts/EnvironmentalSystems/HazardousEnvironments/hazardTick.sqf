@@ -8,8 +8,16 @@
  * one continuously updated specialist HUD rather than notification lanes. Profiles may require a
  * carried/worn detector, nearby detector object or custom awareness condition before either form
  * of information is visible; physical exposure and damage still apply. Profile onEnter, onExit and
- * onTick callbacks continue to run locally. Currently called by the HazardInit loop and directly
- * by the full-pack function station.
+ * onTick callbacks continue to run locally. The status panel shows one combined line per hazard
+ * `type` (summed across every zone/emitter contributing to it), not one line per zone key - all
+ * three shipped radiation presets share type "RADIATION" specifically so their dose reads as one
+ * figure. The panel and the underlying physical exposure are deliberately different things: exposure
+ * keeps accumulating/decaying at its own configured `rate`/`decay` regardless of whether the panel is
+ * on screen (still driving damageThresholds/fatalExposure later), but the panel itself behaves like a
+ * live Geiger counter - it follows the player being inside a zone of that type, and only lingers
+ * Waldo_Hazard_StatusGraceSeconds after the player leaves every zone of that type, not until the
+ * numeric exposure value happens to decay to zero (which can legitimately take much longer). Currently
+ * called by the HazardInit loop and directly by the full-pack function station.
  * Locality and authority: Interface-client only. It consumes JIP-replayed zone definitions and
  * mutates only the executing player's exposure, effects, callbacks and presentation.
  *
@@ -33,6 +41,15 @@ private _previousInside = missionNamespace getVariable ["Waldo_Hazard_LocalInsid
 private _previousStages = missionNamespace getVariable ["Waldo_Hazard_LocalDamageStages", createHashMap];
 private _activeText = [];
 private _zoneDiagnostics = [];
+// Multiple zones/emitters commonly share one hazard `type` (all three shipped radiation presets
+// use "RADIATION" specifically so their dose is meant to read as one combined figure). Collect
+// contributions per type here and emit exactly one status line per type after the loop below,
+// instead of one line per zone key.
+private _typeAggregates = createHashMap;
+// Panel visibility is tracked separately from the exposure value itself - see the header note.
+// This is the "was any zone of this type showable-inside within the grace window" clock.
+private _typeLastInside = missionNamespace getVariable ["Waldo_Hazard_LocalTypeLastInside", createHashMap];
+private _graceSeconds = missionNamespace getVariable ["Waldo_Hazard_StatusGraceSeconds", 6];
 
 {
     _x params ["_key", "_area", "_profile"];
@@ -53,7 +70,16 @@ private _zoneDiagnostics = [];
             _intensity = 1 - ((player distance2D getMarkerPos _area) / _radius);
         };
     };
-    if (_area isEqualType objNull) then {
+    if (_area isEqualType objNull && {isNull _area}) then {
+        // A moving-emitter anchor (Waldo_fnc_HazardRegisterEmitter) can be deleted mid-mission
+        // (vehicle wreck cleanup, a scripted deleteVehicle) without the zone being unregistered.
+        // distance2D's behaviour against objNull isn't something to rely on for a damage gate -
+        // treat a null anchor as "not inside" rather than risk every player reading as inside a
+        // hazard that no longer has a real position.
+        _inside = false;
+        _intensity = 0;
+    };
+    if (_area isEqualType objNull && {!isNull _area}) then {
         if (_area isKindOf "EmptyDetector") then {
             _inside = player inArea _area;
             if (_inside) then {
@@ -87,7 +113,7 @@ private _zoneDiagnostics = [];
     _zoneDiagnostics pushBack [_key, _inside, _distance, _intensity, typeName _area];
     private _exposure = _exposures getOrDefault [_key, 0];
     if (_inside) then {
-        private _protection = [player, _profile] call Waldo_fnc_HazardProtectionFactor;
+        private _protection = [player, _profile, _key] call Waldo_fnc_HazardProtectionFactor;
         _exposure = _exposure + ((_profile getOrDefault ["rate", 1]) * _intensity * _protection * _interval);
         {
             _exposures set [_x, ((_exposures getOrDefault [_x, 0]) - ((_profile getOrDefault ["decontaminationRate", 1]) * _interval)) max 0];
@@ -134,8 +160,14 @@ private _zoneDiagnostics = [];
     };
 
     if (_showLiveStatus && {(_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]])} && {_inside || {_exposure > 0}}) then {
-        private _label = _profile getOrDefault ["label", _profile getOrDefault ["type", "HAZARD"]];
-        _activeText pushBack format ["%1: %2", _label, (_exposure toFixed 2)];
+        private _type = _profile getOrDefault ["type", _profile getOrDefault ["label", "HAZARD"]];
+        private _label = _profile getOrDefault ["label", _type];
+        private _entry = _typeAggregates getOrDefault [_type, [_label, 0]];
+        _entry set [1, (_entry select 1) + _exposure];
+        _typeAggregates set [_type, _entry];
+        // Reset this type's grace clock every tick the player is actually inside one of its zones -
+        // like a Geiger counter, the panel should track presence, not the slower-decaying dose figure.
+        if (_inside) then {_typeLastInside set [_type, diag_tickTime];};
     };
 
     private _damage = 0;
@@ -183,12 +215,36 @@ private _zoneDiagnostics = [];
     };
 } forEach +(missionNamespace getVariable ["Waldo_Hazard_Zones", []]);
 
+// One combined status line per hazard type, not per contributing zone key. Visibility follows the
+// grace clock above (presence-based, like a Geiger counter falling silent), not the exposure value
+// itself - the physical exposure/effect keeps decaying at its own configured pace either way.
+{
+    private _type = _x;
+    (_typeAggregates get _type) params ["_label", "_exposureSum"];
+    private _lastInside = _typeLastInside getOrDefault [_type, -1e6];
+    if ((diag_tickTime - _lastInside) <= _graceSeconds) then {
+        _activeText pushBack format ["%1: %2", _label, (_exposureSum toFixed 2)];
+    };
+} forEach (keys _typeAggregates);
+
+// Drop grace-clock entries long past their window so this hashmap doesn't grow forever across a
+// mission with many transient hazard types (moving emitters, ZEN-placed/removed zones, etc). Build
+// a fresh replacement rather than deleteAt-while-iterating its own keys.
+private _prunedTypeLastInside = createHashMap;
+{
+    if ((diag_tickTime - (_typeLastInside get _x)) <= (_graceSeconds * 20)) then {
+        _prunedTypeLastInside set [_x, _typeLastInside get _x];
+    };
+} forEach (+(keys _typeLastInside));
+_typeLastInside = _prunedTypeLastInside;
+
 // Diagnostics must prove that spatial evaluation is actually advancing. Merely having a loop
 // handle and a zone registry previously allowed a permanently inert evaluator to report ACTIVE.
 missionNamespace setVariable ["Waldo_Hazard_LastEvaluation", [diag_tickTime, getPosATL player, _zoneDiagnostics]];
 
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];
+missionNamespace setVariable ["Waldo_Hazard_LocalTypeLastInside", _typeLastInside];
 missionNamespace setVariable ["Waldo_Hazard_LocalDamageStages", _previousStages];
 uiNamespace setVariable ["Waldo_Hazard_StatusText", _activeText joinString " | "];
 [_activeText] call Waldo_fnc_HazardHud;

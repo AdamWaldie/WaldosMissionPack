@@ -10,7 +10,14 @@
  * Current callers: WMP transport ACE and vanilla self-actions.
  */
 params [["_action", "REQUEST_PICKUP", [""]], ["_type", "GROUND", [""]], ["_vehicle", objNull, [objNull]]];
-if (!hasInterface || {visibleMap}) exitWith {false};
+if !(hasInterface) exitWith {false};
+// Previously bailed out whenever the map was already open (visibleMap), on the assumption that
+// meant a still-pending selection from an earlier call to this same function. That's wrong when the
+// player simply had the map open for any other reason (e.g. opened it manually, or self-interacted
+// for transport while already looking at the map) - the request silently did nothing. A genuinely
+// pending transport click handler is still tracked below and gets replaced (not stacked) by this
+// call; an already-open map for any other reason now just gets this handler attached to it instead
+// of blocking the request, matching Waldo_fnc_GunshipSelectOrbitLocal's proven pattern.
 private _oldHandler = missionNamespace getVariable ["Waldo_Transport_MapHandler", -1];
 if (_oldHandler >= 0) then {removeMissionEventHandler ["MapSingleClick", _oldHandler]};
 missionNamespace setVariable ["Waldo_Transport_MapHandler", -1];

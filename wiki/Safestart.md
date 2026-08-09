@@ -56,7 +56,17 @@ not mistaken for a stuck timer. When Safestart is lifted, the longer go-live
 notice explains that weapon, damage and confinement protections have ended and
 whether the change was manual or timer-driven.
 
-Only one SafeStart panel exists at a time. Starting or changing a countdown updates the existing panel rather than opening another one. The panel waits for the mission title sequence to finish, uses safe-zone padding, and displays configured seconds as `MM:SS` for players.
+Only one compact SafeStart panel exists at a time. Starting or changing a countdown updates the
+existing panel rather than opening another one. The panel waits for the mission title sequence to
+finish, uses safe-zone padding, and displays configured seconds as `MM:SS` for players.
+
+Each player can open **Self Interactions > WMP Interface > Acknowledge SafeStart** while protection
+is active. This only hides that player's panel; weapons, damage protection, confinement, the timer
+and every other player's display remain unchanged. Acknowledging the ordinary waiting phase hides
+the panel until a countdown begins. The countdown is a new phase and makes it visible again, so the
+player sees that go-live is approaching. They may acknowledge it a second time to hide it until
+go-live. The acknowledgement is cleared when SafeStart ends and never carries into a later
+activation.
 
 ## Diagnostics
 

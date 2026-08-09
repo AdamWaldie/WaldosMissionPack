@@ -1,0 +1,35 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Trigger";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			condition="this";
+			onActivation="[""MESSAGE FROM COMMAND"", ""Edit this message in the trigger's On Activation field."", ""INFO""] call Waldo_fnc_SendNotification;";
+			sizeA=25;
+			sizeB=25;
+			timeoutMin=0;
+			timeoutMid=0;
+			timeoutMax=0;
+			isRectangle=0;
+			activationBy="ANYPLAYER";
+			activationType="PRESENT";
+			repeatable=0;
+			serverOnly=1;
+		};
+		id=1;
+		type="EmptyDetector";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,-32,0};};
+		title="Notification Trigger: entering the 25 m trigger sends one INFO card to all players. Edit the title, message, type and optional recipients in the trigger's On Activation field. Keep Server Only enabled so multiplayer clients do not send duplicates. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications";
+		id=2;
+	};
+};

@@ -27,7 +27,7 @@ private _vehicleClasses = [
     "Land_PaperBox_open_empty_F", "Land_PortableCabinet_01_4drawers_sand_F",
     "Land_PortableCabinet_01_7drawers_sand_F", "Land_PortableCabinet_01_bookcase_sand_F",
     "Land_PortableDesk_01_sand_F", "Land_PortableServer_01_cover_sand_F",
-    "Land_PortableServer_01_sand_F", "Land_Router_01_sand_F", "Land_TTowerSmall_1_F",
+    "EmptyDetector", "Land_PortableServer_01_sand_F", "Land_Router_01_sand_F", "Land_TTowerSmall_1_F",
     "Logic", "ModuleCurator_F", "ModuleRespawnPosition_F", "OmniDirectionalAntenna_01_sand_F",
     "SatelliteAntenna_01_Sand_F"
 ];

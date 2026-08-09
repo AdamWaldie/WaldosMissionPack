@@ -116,6 +116,7 @@ if (
         };
         [_vehicle, _staticMinAlt, _staticMaxAlt, _staticMaxSpd, _staticChute] call Waldo_fnc_AddStaticJump;
         [_vehicle] call Waldo_fnc_JumpSettingsCheck;
+        _vehicle setVariable ["Waldo_Paradrop_LocalSetupComplete", true];
     };
 };
 
