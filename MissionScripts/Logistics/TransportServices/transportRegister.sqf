@@ -1,10 +1,13 @@
 /*
  * Author: WaldoTheWarfighter, Val
- * Registers one AI-crewed helicopter or ground vehicle with the authoritative typed transport
- * service. Calls are accepted directly on the server or forwarded from an authorized curator.
+ * Registers one already AI-crewed helicopter or ground vehicle with the authoritative typed
+ * transport service. An Eden vehicle init runs on every machine, but only the server mutates the
+ * registry; every non-server copy deliberately does nothing. ZEN registration reaches
+ * this function through the validated server runtime bridge.
  * Registration is repeat-safe and stores enough public object state for JIP interactions while the
  * full mutable registry remains server-only.
- * Locality and authority: callable anywhere and self-forwards; only the server mutates registration state.
+ * Locality and authority: call from an Eden object init or server script; only the server copy
+ * mutates registration state. ZEN uses Waldo_fnc_FeatureRuntimeApply as its server bridge.
  * The driver seat is locked (lockDriver true, intentional - direct boarding is not the supported
  * path) and the captured AI service crew has fleeing/panic disabled
  * (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily damaged to
@@ -33,7 +36,7 @@
  *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18); prepared bases
  *    are checked only for physical overlap.
  *
- * Return Value: Boolean - true when forwarded or registered.
+ * Return Value: Boolean - true when registered (or when a duplicate non-server Eden copy was ignored).
  *
  * Example:
  * [this, "HELICOPTER", "RAVEN_1", "Raven One", createHashMapFromArray [["cruiseAltitude", 80]]]
@@ -48,16 +51,7 @@ params [
 ];
 _type = toUpperANSI _type;
 if (isNull _vehicle || {!(_type in ["HELICOPTER", "GROUND"])}) exitWith {false};
-if (!isServer) exitWith {
-    private _safeOptions = _options;
-    if (typeName _safeOptions == "HASHMAP") then {
-        private _pairs = [];
-        {_pairs pushBack [_x, _safeOptions get _x]} forEach keys _safeOptions;
-        _safeOptions = _pairs;
-    };
-    [_vehicle, _type, _id, _displayName, _safeOptions] remoteExecCall ["Waldo_fnc_TransportRegister", 2];
-    true
-};
+if (!isServer) exitWith {true};
 
 private _reject = {
     params ["_message"];
@@ -85,7 +79,18 @@ if !(missionNamespace getVariable ["Waldo_FeatureConfig_SERVER_Ready", false]) e
 if !(missionNamespace getVariable ["Waldo_TransportServices_Enable", false]) exitWith {["Transport Services is disabled in MissionConfig/logisticsConfig.sqf."] call _reject};
 if (_type == "HELICOPTER" && {!(_vehicle isKindOf "Helicopter")}) exitWith {["Helicopter service was selected, but the target is not a helicopter."] call _reject};
 if (_type == "GROUND" && {!(_vehicle isKindOf "LandVehicle") || {_vehicle isKindOf "StaticWeapon"}}) exitWith {["Ground service was selected, but the target is not a driveable ground vehicle."] call _reject};
-if (isNull driver _vehicle) exitWith {["The selected vehicle has no driver."] call _reject};
+
+private _optionMap = createHashMap;
+if (typeName _options == "HASHMAP") then {
+    {_optionMap set [_x, _options get _x]} forEach keys _options;
+} else {
+    {if (_x isEqualType [] && {count _x >= 2}) then {_optionMap set [_x select 0, _x select 1]}} forEach _options;
+};
+
+// Registration never manufactures crew. Eden compositions must contain their correctly sided AI
+// driver, and a Zeus registration must target an already crewed vehicle. A future module that
+// actually spawns a brand-new transport may create its crew as part of that separate spawn workflow.
+if (isNull driver _vehicle) exitWith {["The selected transport has no AI driver. Crew it in Eden (or before using the registration module), then register it again."] call _reject};
 if (!alive driver _vehicle) exitWith {["The selected vehicle's driver is dead."] call _reject};
 if (isPlayer driver _vehicle) exitWith {["The selected vehicle must have an AI driver."] call _reject};
 
@@ -95,12 +100,6 @@ _id = [_id, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] 
 if (_id == "") exitWith {["The generated or supplied service ID contained no usable characters."] call _reject};
 if (_displayName == "") then {_displayName = groupId group driver _vehicle};
 
-private _optionMap = createHashMap;
-if (typeName _options == "HASHMAP") then {
-    {_optionMap set [_x, _options get _x]} forEach keys _options;
-} else {
-    {if (_x isEqualType [] && {count _x >= 2}) then {_optionMap set [_x select 0, _x select 1]}} forEach _options;
-};
 private _config = createHashMapFromArray [
     ["cruiseAltitude", _optionMap getOrDefault ["cruiseAltitude", missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 50]]],
     ["stopRadius", _optionMap getOrDefault ["stopRadius", if (_type == "HELICOPTER") then {35} else {12}]],

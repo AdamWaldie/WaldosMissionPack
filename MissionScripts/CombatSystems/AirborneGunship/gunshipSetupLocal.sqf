@@ -9,6 +9,10 @@
  * permits), while per-turret weapon control only appears once the aircraft is on station or already
  * controlled. It is called by initPlayerLocal, public-state publication and the audit refresh control.
  *
+ * Locality and authority:
+ * Runs only on an interface client and mutates local markers/actions. It consumes the server's
+ * published registry and sends all requested state changes back to server authority.
+ *
  * Arguments:
  * None
  *
@@ -17,6 +21,8 @@
  *
  * Example:
  * [] call Waldo_fnc_GunshipSetupLocal;
+ * Result: this client has exactly the current markers and permitted controller actions.
+ * Current callers: initPlayerLocal, gunship public-state replay and audit refresh controls.
  */
 
 if !(hasInterface) exitWith {false};
@@ -73,15 +79,16 @@ private _newVanillaActions = [];
         _aircraftMarkerName setMarkerDirLocal getDir _aircraft;
         _aircraftMarkerName setMarkerTextLocal format ["%1 - %2", _callsign, _status];
         if (count _orbit >= 2) then {
-            // Empty/invisible on purpose: this stays a real, queryable marker at the exact orbit
-            // position (getMarkerPos still works) but must not itself draw an icon or label on the map
-            // - the aircraft marker above already shows callsign/status, and a second always-visible
-            // circle+text stacked over the orbit point is just clutter.
             if (markerShape _orbitMarkerName == "") then {
                 createMarkerLocal [_orbitMarkerName, _orbit];
-                _orbitMarkerName setMarkerTypeLocal "Empty";
-                _orbitMarkerName setMarkerAlphaLocal 0;
             };
+            // Orbit is operational information, not an invisible implementation marker. Apply
+            // every presentation field during reconciliation so clients upgrading from the former
+            // Empty/alpha-zero version are repaired without requiring a fresh mission.
+            _orbitMarkerName setMarkerTypeLocal "mil_circle";
+            _orbitMarkerName setMarkerColorLocal _markerColour;
+            _orbitMarkerName setMarkerTextLocal format ["%1 Orbit", _callsign];
+            _orbitMarkerName setMarkerAlphaLocal 1;
             _orbitMarkerName setMarkerPosLocal _orbit;
         };
     } else {

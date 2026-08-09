@@ -73,8 +73,12 @@
  * - WALDO_STATIC_MAXALTITUDE (MISSION MAKER): highest permitted static-line drop altitude; must exceed the minimum.
  * - WALDO_STATIC_MAXSPEED (MISSION MAKER): fastest permitted static-line release speed in kilometres per hour.
  * - WALDO_STATIC_STATICCHUTE (MISSION MAKER): preferred static-line chute class; WMP falls back if it is unavailable.
+ * - Waldo_Paradrop_DefaultStaticRouteAltitude (MISSION MAKER): default Static-Line route height used by ZEN/direct setup.
+ * - Waldo_Paradrop_DefaultStaticRouteSpeed (MISSION MAKER): default Static-Line route speed used by ZEN/direct setup.
  * - WALDO_PARA_HALOALTITUDE (MISSION MAKER): default HALO release altitude in metres.
  * - WALDO_PARA_HALOCHUTE (MISSION MAKER): default steerable parachute backpack class.
+ * - Waldo_Paradrop_DefaultHaloRouteAltitude (MISSION MAKER): default HALO route height used by ZEN/direct setup.
+ * - Waldo_Paradrop_DefaultHaloRouteSpeed (MISSION MAKER): default HALO route speed used by ZEN/direct setup.
  *
  * SETTING-BY-SETTING GUIDE - DYNAMIC AA:
  * - Waldo_DynamicAA_SideAssetPools (MISSION MAKER): fallback AA content by operational side.
@@ -183,8 +187,12 @@ createHashMapFromArray [
         ["WALDO_STATIC_MAXALTITUDE", 350, true], // METRES: highest accepted static-line drop altitude.
         ["WALDO_STATIC_MAXSPEED", 310, true], // KM/H: maximum aircraft speed for static-line release.
         ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true], // CLASSNAME: default static-line chute (vanilla); runtime fallback applies if absent. Set to an RHS or other mod's chute class if the mission uses one.
+        ["Waldo_Paradrop_DefaultStaticRouteAltitude", 300, true], // METRES AGL: proven full-composition Static-Line route height.
+        ["Waldo_Paradrop_DefaultStaticRouteSpeed", 300, true], // KM/H: proven full-composition passenger Blackfish Static-Line speed; keep <= WALDO_STATIC_MAXSPEED.
         ["WALDO_PARA_HALOALTITUDE", 1000, true], // METRES: default freefall/HALO drop altitude.
-        ["WALDO_PARA_HALOCHUTE", "B_Parachute", true] // CLASSNAME: default steerable parachute backpack.
+        ["WALDO_PARA_HALOCHUTE", "B_Parachute", true], // CLASSNAME: default steerable parachute backpack.
+        ["Waldo_Paradrop_DefaultHaloRouteAltitude", 1200, true], // METRES AGL: proven full-composition HALO route height.
+        ["Waldo_Paradrop_DefaultHaloRouteSpeed", 250, true] // KM/H: proven full-composition passenger Blackfish HALO speed.
     ]],
     // COMPATIBILITY: old combined chute pool follows the new static-line pool when undefined.
     ["aliases", [["SHARED", "Waldo_Paradrop_ChuteClasses", "Waldo_Paradrop_StaticChuteClasses"]]]

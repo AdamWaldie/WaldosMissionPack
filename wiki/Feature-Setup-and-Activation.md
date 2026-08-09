@@ -28,13 +28,12 @@ evaluator.
 
 Use this for named registries, zones, spawned systems and authoritative objects:
 
-    if (isServer) then {
-        [recoveryWorkshop, "FOB_ALPHA", 50, west] call Waldo_fnc_RecoveryRegisterWorkshop;
-        [recoveryTruck, 10, "AUTO", 2] call Waldo_fnc_RecoveryRegisterCarrier;
-    };
+    [recoveryWorkshop, "FOB_ALPHA", 50, west] call Waldo_fnc_RecoveryRegisterWorkshop;
+    [recoveryTruck, 10, "AUTO", 2] call Waldo_fnc_RecoveryRegisterCarrier;
 
 initServer.sqf runs once on the server. Public functions publish state/actions for current players
-and JIP where required. Do not copy the same block into init.sqf.
+and JIP where required. An additional `if (isServer)` wrapper inside initServer.sqf is redundant and
+makes a beginner's setup harder to read. Do not copy the same block into init.sqf.
 
 ### Editor object init - only where the API explicitly supports it
 
@@ -130,7 +129,9 @@ spawned by this file. Example pre-planned Dynamic AA:
         ["radarPosition", getMarkerPos "aa_north_radar"],
         ["side", east],
         ["radius", 2500],
-        ["minimumAltitude", 80]
+        ["engagementRadius", 2000],
+        ["minimumAltitude", 80],
+        ["maximumAltitude", 3000]
     ];
     [_aa] call Waldo_fnc_DynamicAACreate;
 
@@ -142,8 +143,8 @@ Example paradrop:
         ["centre", getMarkerPos "dz_alpha"],
         ["side", west],
         ["aircraftClass", "B_T_VTOL_01_infantry_F"],
-        ["altitude", 250],
-        ["maximumSpeed", 220]
+        ["altitude", 300],
+        ["maximumSpeed", 300]
     ];
     [_drop] call Waldo_fnc_ParadropCreateDropZone;
 
@@ -189,9 +190,7 @@ ZEN setup module. The full setting-by-setting examples are in
 **Normally leave:** queue/reflow internals, knowledge bounds, safety geometry and Draw3D fine tuning.
 Local systems start automatically. Tactical display is the exception:
 
-    if (isServer) then {
-        [mapBoard, west, 2000, true] call Waldo_fnc_TacticalDisplayRegister;
-    };
+    [mapBoard, west, 2000, true] call Waldo_fnc_TacticalDisplayRegister;
 
 Use a whiteboard/map board or suitable terminal. It opens a local tactical map; it does not paint a
 texture on an arbitrary infostand.

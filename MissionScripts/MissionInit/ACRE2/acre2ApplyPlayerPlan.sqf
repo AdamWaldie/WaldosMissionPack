@@ -108,7 +108,13 @@ private _typeCounts = createHashMap;
     _typeCounts set [_base, _occurrence];
     if (count _profile > 0) then {
         private _ruleIndex = _assignments findIf {toUpper (_x select 0) == _base && {(_x select 1) isEqualType 0} && {(_x select 1) == _occurrence}};
-        if (_ruleIndex < 0) then {_ruleIndex = _assignments findIf {toUpper (_x select 0) == _base && {toUpper str (_x select 1) == "ALL"}}};
+        if (_ruleIndex < 0) then {
+            _ruleIndex = _assignments findIf {
+                toUpper (_x select 0) == _base
+                    && {(_x select 1) isEqualType ""}
+                    && {toUpper (_x select 1) == "ALL"}
+            };
+        };
         if (_ruleIndex >= 0) then {
             private _rule = _assignments select _ruleIndex;
             _resolved pushBack [_radioId, _base, _occurrence, _rule select 2, [_rule select 3] call _normaliseEar];
@@ -133,9 +139,20 @@ private _managedIds = [];
         } else {_setting = _net select 3; _netLabel = _net select 1};
     };
     if (_ready && {_mode == "BLOCK_CHANNEL"}) then {
-        // WMP authors PRC-343 values as [block, channel]. ACRE setupRadios expects
-        // [channel, block]; a flattened 1-256 channel is not a valid PRC-343 assignment.
-        _setupSettings pushBack [_base, _occurrence, [_setting select 1, _setting select 0]];
+        // ACRE reports and directly sets the PRC-343 as one absolute channel from 1 to 256. Its
+        // setupRadios helper accepts [channel, block], but applies that request asynchronously even
+        // after ACRE is initialised. Using it here allowed the automatic respawn snapshot to be
+        // captured before the change occurred, permanently saving the new radio's Block 1/Channel 1
+        // default. Target the already-resolved unique ID directly and require immediate read-back.
+        private _absoluteChannel = (((_setting select 0) - 1) * 16) + (_setting select 1);
+        if !([_radioId, _absoluteChannel] call acre_api_fnc_setRadioChannel) then {
+            _success = false;
+            _problems pushBack format ["%1#%2 Block %3/Channel %4 write failed.", _base, _occurrence, _setting select 0, _setting select 1];
+        };
+        if (([_radioId] call acre_api_fnc_getRadioChannel) != _absoluteChannel) then {
+            _success = false;
+            _problems pushBack format ["%1#%2 Block %3/Channel %4 read-back failed.", _base, _occurrence, _setting select 0, _setting select 1];
+        };
     };
     if (_ready && {_mode == "CHANNEL"}) then {
         if !([_radioId, _setting] call acre_api_fnc_setRadioChannel) then {_success = false};
@@ -157,8 +174,9 @@ private _managedIds = [];
     };
 } forEach _resolved;
 if (count _setupSettings > 0) then {
-    // setupRadios consumes repeated same-type settings in carried-radio order. Sorting by class then
-    // occurrence prevents an explicit occurrence-two row from being applied to occurrence one.
+    // Only frequency radios use setupRadios here. Channel and PRC-343 block/channel radios are
+    // applied directly to their resolved unique IDs so they can be read back synchronously.
+    // Sorting by class then occurrence keeps repeated frequency-radio requests deterministic.
     _setupSettings sort true;
     private _broad = [] call acre_api_fnc_getCurrentRadioList;
     private _safe = true;

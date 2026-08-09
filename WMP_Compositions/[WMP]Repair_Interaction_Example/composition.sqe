@@ -32,7 +32,7 @@ class items
 	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Repair Interaction Example: a real gameplay outcome, not just the procedure by itself. The nearby MRAP starts heavily damaged (0.9) with its engine off; passing the repair procedure sets its damage to 0 and starts the engine, failing leaves it disabled. Copy the onSuccess pattern in the console's init field onto your own object to repair anything else. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=3;
 	};

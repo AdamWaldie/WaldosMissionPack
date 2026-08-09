@@ -25,7 +25,7 @@ class items
 		{
 			position[]={0,0,2};
 		};
-		title="Waldos Economy Systems - HIGH preset. Boots the suite and loads the HIGH preset (WEST=NATO, EAST=CSAT, INDEP=AAF by default). Manage it live in the Zeus 'Waldos Economy Systems' menu. Place only one Economy Systems object per mission. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration";
+		title="WMP Economy Systems - HIGH preset. Boots the suite and loads the HIGH preset (WEST=NATO, EAST=CSAT, INDEP=AAF by default). Manage it live in the Zeus 'WMP Economy Systems' menu. Place only one Economy Systems object per mission. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Economy-Systems-Setup-And-Configuration";
 		id=2;
 	};
 };

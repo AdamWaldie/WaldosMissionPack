@@ -1,16 +1,25 @@
 /*
  * Author: WaldoTheWarfighter
- * Scrambles the configured fighter response for one Dynamic AA system once per activation.
+ * Spawns the configured fighter response and places it under the same server detector gate as AA.
+ *
+ * Locality and authority:
+ * Server-only creation. The fighter group may later migrate to a headless client; target-state calls
+ * are automatically sent to the current owner. Fighters are published through the Dynamic AA system
+ * snapshot and added to all active curators. Repeated waves follow the configured wave/cooldown state.
  *
  * Arguments:
  * 0: id <STRING>
  * 1: detectedAircraft <ARRAY> - current hostile targets
  *
  * Return Value:
- * Number - fighters spawned
+ * Number - fighters requested/spawned during this wave
+ *
+ * Current callers:
+ * Waldo_fnc_DynamicAADetectorLoop when an eligible hostile aircraft activates a fighter response.
  *
  * Example:
  * ["north_sector", _targets] call Waldo_fnc_DynamicAASpawnFighters;
+ * Result: the configured wave is spawned, curator-editable and governed by the same detector gate.
  */
 
 params ["_id", ["_detectedAircraft", [], [[]]]];
@@ -42,9 +51,11 @@ for "_i" from 1 to _count do {
     createVehicleCrew _fighter;
     private _oldGroups = [];
     {_oldGroups pushBackUnique (group _x)} forEach crew _fighter;
-    private _group = createGroup _side;
+    private _group = createGroup [_side, true];
     (crew _fighter) joinSilent _group;
-    {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+    {
+        if (!isNull _x && {_x != _group}) then {_x deleteGroupWhenEmpty true};
+    } forEach _oldGroups;
     private _waypoint = _group addWaypoint [_centre, 0];
     // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.
     _waypoint setWaypointType "MOVE";
@@ -61,9 +72,12 @@ for "_i" from 1 to _count do {
     private _defenceGroups = _state getOrDefault ["defenceGroups", []];
     _defenceGroups pushBackUnique _group;
     _state set ["defenceGroups", _defenceGroups];
-    private _editableObjects = [_fighter];
-    {_editableObjects pushBackUnique _x} forEach units _group;
-    {_x addCuratorEditableObjects [_editableObjects, true]} forEach allCurators;
+    [[_fighter]] spawn {
+        params ["_assets"];
+        sleep 0.1;
+        _assets = _assets select {!isNull _x};
+        {_x addCuratorEditableObjects [_assets, true]} forEach allCurators;
+    };
 };
 _state set ["fightersScrambled", true];
 _state set ["fighterWaves", (_state getOrDefault ["fighterWaves", 0]) + 1];
@@ -72,6 +86,8 @@ _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 if (_config getOrDefault ["announce", true]) then {
     private _recipients = allPlayers select {side group _x == _side};
-    ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _count], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
+    if !(_recipients isEqualTo []) then {
+        ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _count], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
+    };
 };
 _count

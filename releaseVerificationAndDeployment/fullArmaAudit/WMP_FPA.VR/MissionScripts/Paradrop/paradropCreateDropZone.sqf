@@ -14,6 +14,10 @@
  * against the selected route altitude and speed so customization cannot silently make every jump
  * action unavailable. Repeat use is isolated by ID.
  *
+ * Locality and authority: The server validates the request and owns creation, registry state,
+ * route setup and cleanup. A curator client request is authenticated and forwarded to the server;
+ * public state and marker objects provide JIP visibility, while actions are installed locally.
+ *
  * Arguments:
  * 0: configuration <HASHMAP> - id, name, centre, direction, side, aircraftClass, altitude,
  *    maximumSpeed, approachDistance, runLength, exitDistance, jumperCount, jumpInterval,
@@ -28,16 +32,23 @@
  *
  * Return Value:
  * Boolean - true when the operation was created.
+ * Result: A successful call registers one isolated operation and publishes its player-facing state.
  *
  * Example:
  * [createHashMapFromArray [["id","DZ_ALPHA"],["centre",getMarkerPos "dz"],
  * ["side",west],["aircraftClass","B_T_VTOL_01_infantry_F"]]], player]
  * remoteExecCall ["Waldo_fnc_ParadropCreateDropZone", 2];
  *
- * Current callers: ParadropCreateDropZoneZen and mission scripts.
+ * Current callers: ParadropCreateDropZoneZen and server mission scripts. Eden init fields run on
+ * every machine: a non-server copy without an explicit curator requester exits quietly, while an
+ * intentional client request supplies that requester and routes to server.
  */
 params [["_config", createHashMap, [createHashMap]], ["_requester", objNull, [objNull]]];
-if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_ParadropCreateDropZone", 2]; true};
+if (!isServer) exitWith {
+    if (isNull _requester) exitWith {true};
+    _this remoteExecCall ["Waldo_fnc_ParadropCreateDropZone", 2];
+    true
+};
 if (remoteExecutedOwner > 0) then {
     if (isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}) exitWith {false};
 };
@@ -62,10 +73,25 @@ private _name = _config getOrDefault ["name", _id];
 private _direction = (_config getOrDefault ["direction", 0]) mod 360;
 private _side = _config getOrDefault ["side", west];
 if !(_side in [west, east, independent]) then {_side = west};
-private _altitude = ((_config getOrDefault ["altitude", 250]) max 100) min 2000;
-private _maximumSpeed = ((_config getOrDefault ["maximumSpeed", 220]) max 80) min 500;
+private _altitude = ((_config getOrDefault ["altitude", missionNamespace getVariable ["Waldo_Paradrop_DefaultStaticRouteAltitude", 300]]) max 100) min 2000;
+private _maximumSpeed = ((_config getOrDefault ["maximumSpeed", missionNamespace getVariable ["Waldo_Paradrop_DefaultStaticRouteSpeed", 300]]) max 80) min 500;
 private _staticEnabled = _config getOrDefault ["staticJumpEnabled", true];
 private _haloEnabled = _config getOrDefault ["haloJumpEnabled", false];
+// ZEN sends its semantic jump-method choice as well as the already-normalised values. Repeat the
+// hard gates here on authoritative state so a modified/stale client cannot create an unusable route.
+private _jumpMethods = toUpperANSI (_config getOrDefault ["jumpMethods", ""]);
+if (_jumpMethods in ["STATIC", "HALO", "BOTH"]) then {
+    _staticEnabled = _jumpMethods in ["STATIC", "BOTH"];
+    _haloEnabled = _jumpMethods in ["HALO", "BOTH"];
+    private _configuredStaticMinimum = missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE", 180];
+    private _configuredStaticMaximum = (missionNamespace getVariable ["WALDO_STATIC_MAXALTITUDE", 350]) max _configuredStaticMinimum;
+    private _configuredHaloMinimum = missionNamespace getVariable ["WALDO_PARA_HALOALTITUDE", 1000];
+    private _minimumZenAltitude = if (_haloEnabled) then {_configuredHaloMinimum} else {_configuredStaticMinimum};
+    private _maximumZenAltitude = if (_jumpMethods == "STATIC") then {_configuredStaticMaximum} else {2000};
+    _altitude = (_altitude max _minimumZenAltitude) min _maximumZenAltitude;
+    private _maximumZenSpeed = if (_staticEnabled) then {missionNamespace getVariable ["WALDO_STATIC_MAXSPEED", 310]} else {500};
+    _maximumSpeed = (_maximumSpeed max 80) min _maximumZenSpeed;
+};
 private _automaticMode = toUpperANSI (_config getOrDefault ["automaticJumpMode", "STATIC"]);
 if (_config getOrDefault ["autoDropPlayers", false]) then {
     if (_automaticMode == "STATIC" && {!_staticEnabled}) then {_automaticMode = if (_haloEnabled) then {"HALO"} else {"NONE"}};
@@ -98,32 +124,46 @@ private _standby = [_centre, _runLength * 0.65, _direction + 180] call BIS_fnc_r
 private _spawn = [_standby, _approach, _direction + 180] call BIS_fnc_relPos;
 _spawn set [2, _altitude];
 
-private _aircraft = createVehicle [_class, _spawn, [], 0, "FLY"];
-_aircraft setPosATL _spawn;
+// Do not use createVehicle special "FLY" here. The engine applies its own roughly 100 m airborne
+// creation height after creation, which can overwrite an immediate 300 m setPosATL and leave every
+// otherwise-correct route waypoint below the Static-Line envelope. Reproduce the known-good Eden
+// lifecycle instead: create at the calculated position, freeze, place exactly, crew, then unfreeze
+// before the shared route builder applies flyInHeight and waypoints.
+private _aircraft = createVehicle [_class, _spawn, [], 0, "NONE"];
+_aircraft enableSimulationGlobal false;
+_aircraft setPosASL (AGLToASL _spawn);
 _aircraft setDir _direction;
-_aircraft setVelocityModelSpace [0, _maximumSpeed / 3.6, 0];
-createVehicleCrew _aircraft;
 // Same guard as Waldo_fnc_ParadropQuickFlightSetup: mark this spawned aircraft as explicitly
 // configured before any client's Waldo_fnc_AddVehicleFunctions auto-detection (installed on the
 // "AllVehicles" init class event) has a chance to add its own conflicting static/HALO defaults.
 _aircraft setVariable ["Waldo_Paradrop_ManuallyConfigured", true, true];
-if (isNull driver _aircraft) exitWith {deleteVehicle _aircraft; ["Creation failed: the selected airframe could not be crewed.", "ERROR"] call _notifyRequester; false};
-private _pilot = driver _aircraft;
-private _oldGroups = [];
-{_oldGroups pushBackUnique group _x} forEach crew _aircraft;
-// Retain only the pilot. Optional jumpers are created separately and default to zero; gunners and
-// faction-provided cargo must never silently fill a player transport.
-{
-    if (_x != _pilot) then {
-        moveOut _x;
-        deleteVehicle _x;
+// This is a player transport, not an armed response asset. createVehicleCrew creates every engine
+// crew position and then deleting all but the pilot produces unnecessary replicated AI entities and
+// "Object not found" traffic on dedicated servers. Create exactly one pilot in an explicitly sided
+// group instead. Optional jumpers are handled separately below and default to zero.
+private _flightGroup = createGroup [_side, true];
+private _pilotClass = getText (configFile >> "CfgVehicles" >> _class >> "crew");
+if !(isClass (configFile >> "CfgVehicles" >> _pilotClass) && {_pilotClass isKindOf "CAManBase"}) then {
+    _pilotClass = switch (_side) do {
+        case east: {"O_Pilot_F"};
+        case independent: {"I_Pilot_F"};
+        default {"B_Pilot_F"};
     };
-} forEach +(crew _aircraft);
-private _flightGroup = createGroup _side;
-[_pilot] joinSilent _flightGroup;
-{if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+};
+private _pilot = _flightGroup createUnit [_pilotClass, _spawn, [], 0, "NONE"];
+_pilot moveInDriver _aircraft;
+if (isNull _pilot || {driver _aircraft != _pilot}) exitWith {
+    if (!isNull _pilot) then {deleteVehicle _pilot};
+    deleteGroup _flightGroup;
+    deleteVehicle _aircraft;
+    ["Creation failed: the selected airframe could not receive its AI pilot.", "ERROR"] call _notifyRequester;
+    false
+};
 _aircraft setVehicleLock "UNLOCKED";
 
+// Build the complete route while the new aircraft is still frozen. If simulation is enabled before
+// the pilot has a real current waypoint and forced altitude, Arma immediately adopts its default
+// airborne state (roughly 100 m AGL); a later waypoint list alone does not reliably dislodge it.
 private _route = [
     _aircraft, _flightGroup, _centre, _direction, _altitude, _maximumSpeed,
     _approach, _runLength, _exitDistance, _lifecycle, _circuitDirection
@@ -133,6 +173,27 @@ if (_route isEqualTo createHashMap) exitWith {
     ["Creation failed: the flight route could not be built.", "ERROR"] call _notifyRequester;
     false
 };
+// Reassert the exact creation transform after crew and waypoint creation, then make the aircraft
+// live and issue the flight orders against the now-local, simulated AI vehicle. This ordering
+// mirrors the working Eden/pre-placed path while avoiding a one-frame default-flight window.
+_aircraft setDir _direction;
+_aircraft setPosASL (AGLToASL (_route get "spawn"));
+_aircraft enableSimulationGlobal true;
+_aircraft engineOn true;
+_aircraft setVelocityModelSpace [0, (_route get "maxSpeed") / 3.6, 0];
+_aircraft limitSpeed (_route get "maxSpeed");
+_aircraft forceSpeed ((_route get "maxSpeed") / 3.6);
+// Match ZEN's working Fly Height operation exactly. This vehicle is server-created and remains
+// server-local here, so the locality-targeted operation is executed directly on its owner.
+_aircraft flyInHeight (_route get "altitude");
+diag_log format [
+    "[WMP PARADROP] Dynamic aircraft activated: id=%1 requested=%2m AGL actual=%3m AGL speed=%4km/h currentWaypoint=%5.",
+    _id,
+    round (_route get "altitude"),
+    round ((getPosATL _aircraft) # 2),
+    round speed _aircraft,
+    currentWaypoint _flightGroup
+];
 private _green = _route get "green";
 private _red = _route get "red";
 private _exit = _route get "exit";
@@ -162,14 +223,32 @@ _config set ["staticMaximumAltitude", _staticMaximum];
 _config set ["staticMaximumSpeed", _staticMaximumSpeed];
 _config set ["haloMinimumAltitude", _haloMinimum];
 
-// One object-keyed replay configures current clients and JIP clients with both selected jump
-// systems. The setup function reconciles repeated configuration rather than duplicating actions.
+// A named JIP replay sends only the net ID and serialisable settings. A newly created aircraft may
+// not exist on a remote client yet; the local resolver waits for objectFromNetId before installing
+// the repeat-safe actions instead of silently receiving objNull.
 _aircraft setVariable [
     "Waldo_Paradrop_ConfiguredJumpTypes",
     [_config get "staticJumpEnabled", _config get "haloJumpEnabled"],
     true
 ];
-[_aircraft, _config] remoteExec ["Waldo_fnc_ParadropConfigureAircraftLocal", 0, _aircraft];
+private _jumpConfig = createHashMapFromArray [
+    ["staticJumpEnabled", _config get "staticJumpEnabled"],
+    ["staticMinimumAltitude", _staticMinimum],
+    ["staticMaximumAltitude", _staticMaximum],
+    ["staticMaximumSpeed", _staticMaximumSpeed],
+    ["staticChuteClass", _config getOrDefault ["staticChuteClass", missionNamespace getVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F"]]],
+    ["haloJumpEnabled", _config get "haloJumpEnabled"],
+    ["haloMinimumAltitude", _haloMinimum],
+    ["haloBackpackClass", _config getOrDefault ["haloBackpackClass", missionNamespace getVariable ["WALDO_PARA_HALOCHUTE", "B_Parachute"]]],
+    ["requireOpenDoor", _config get "requireOpenDoor"]
+];
+if !(isClass (configFile >> "CfgVehicles" >> (_jumpConfig get "staticChuteClass"))) then {
+    _jumpConfig set ["staticChuteClass", "NonSteerable_Parachute_F"];
+};
+private _actionJipKey = format ["WMP_Paradrop_Actions_%1", _id];
+_aircraft setVariable ["Waldo_Paradrop_ActionJipKey", _actionJipKey, true];
+private _jumpConfigPairs = keys _jumpConfig apply {[_x, _jumpConfig get _x]};
+[netId _aircraft, _jumpConfigPairs] remoteExec ["Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _actionJipKey];
 // Mirrors Waldo_fnc_ParadropQuickFlightSetup's own envelope log line - without this, a ZEN-created
 // operation's actual normalized envelope was invisible in the RPT, making a reported "jump action
 // doesn't work" impossible to diagnose from logs alone.

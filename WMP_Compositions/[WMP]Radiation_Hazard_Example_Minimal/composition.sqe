@@ -19,7 +19,7 @@ class items
     class Item1
     {
         dataType="Comment";
-        class PositionInfo {position[]={0,-5,0};};
+		class PositionInfo {position[]={0,0,-5};};
         title="Radiation Hazard (Minimal): the smallest working call - key, area and the preset name are all that's required. The MODERATE_RADIATION preset already includes real exposure/damage, protection, local Geiger/cough audio and continuous status with no overrides needed. See the Radiation Hazard Example (Full) composition to see and edit override options. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
         id=2;
     };

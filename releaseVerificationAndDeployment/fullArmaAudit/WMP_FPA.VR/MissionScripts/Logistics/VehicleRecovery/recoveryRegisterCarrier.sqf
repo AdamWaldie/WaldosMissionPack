@@ -5,7 +5,13 @@
  * Automatic mode uses Arma vehicle-in-vehicle cargo only when the package fits the carrier's
  * configured cargo bay, then falls back to a server-owned virtual manifest. Virtual mode works on
  * vehicle classes without an engine cargo bay. Physical mode deliberately requires that bay.
- * Registration is repeat-safe and its public settings support local actions and JIP.
+ * Registration is repeat-safe and its public settings support local actions and JIP. Eden object
+ * init fields execute on every machine, so non-server copies are ignored; ZEN sends live requests
+ * through the validated server runtime bridge.
+ *
+ * Locality and authority:
+ * Server-owned carrier/manifest registration. Eden client copies exit; local actions are installed
+ * from published object state for current/JIP clients and every load/unload mutation returns to server.
  *
  * Arguments:
  * 0: carrier <OBJECT>
@@ -16,10 +22,11 @@
  * 5: attached-deck direction <NUMBER> - package direction relative to carrier (default 0)
  *
  * Return Value:
- * Boolean - true when forwarded or registered; false when invalid or unauthorized.
+ * Boolean - true when registered (or when a duplicate non-server Eden copy was ignored); otherwise false.
  *
  * Example:
  * [this, 10, "AUTO", 2, [0, -1.3, 1.25], 0] call Waldo_fnc_RecoveryRegisterCarrier;
+ * Result: this carrier accepts up to two packages using its deck offset or safe automatic fallback.
  *
  * Current callers: Vehicle Recovery ZEN carrier module, restored-carrier replay and mission setup.
  */
@@ -33,7 +40,7 @@ params [
     ["_deckDirection", 0, [0]]
 ];
 if (isNull _carrier || {!(_carrier isKindOf "AllVehicles")} || {_carrier isKindOf "CAManBase"}) exitWith {false};
-if (!isServer) exitWith {[_carrier, _range, _mode, _capacity, _deckOffset, _deckDirection] remoteExecCall ["Waldo_fnc_RecoveryRegisterCarrier", 2]; true};
+if (!isServer) exitWith {true};
 private _authorized = true;
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};

@@ -44,7 +44,7 @@ class items
 		{
 			position[]={-0.36523438,0,0.10546875};
 		};
-		title="Teleport Script. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions";
+		title="Two-way teleport quick start. Interact with either coloured flag to move safely to the other flag. Keep the variable names blueFlag and redFlag because each init refers to the opposite object; edit the quoted action text if you want a different player-facing label. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Teleportation-&-Move-Into-Cargo-Interactions";
 		id=7004;
 	};
 };

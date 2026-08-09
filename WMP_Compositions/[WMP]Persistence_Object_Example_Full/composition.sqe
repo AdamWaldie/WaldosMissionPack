@@ -19,8 +19,8 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
-		title="Persistence Object Example (Full parameter reference): the options array shown explicitly - registers this crate's cargo and position but not damage/fuel/ammo with Waldo_fnc_PersistenceRegisterObject - no isServer wrapper needed, the same public call is safe to leave directly in an object's init field on every machine. Does nothing until Waldo_Persistence_Enable is set true in MissionConfig\persistenceConfig.sqf (or via the Zeus ""Persistence - Control"" module) and a working server INIDBI2 extension is detected; use ""Persistence - Register Object"" in Zeus to do the same during play instead. See the Persistence Object Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#persistence";
+		class PositionInfo {position[]={0,0,-4};};
+		title="Persistent-object guided example. This crate's stable key saves cargo and position but deliberately excludes damage, fuel and ammunition state. The public init call is locality-safe; do not add isServer. It only operates when persistence is enabled and the server has INIDBI2. Edit the named true/false options, or use the Minimal example to save every supported field. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#persistence";
 		id=2;
 	};
 };

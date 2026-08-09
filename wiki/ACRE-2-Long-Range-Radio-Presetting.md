@@ -143,6 +143,13 @@ setup is then saved as the player's first respawn condition. It is not continual
 
 Saved loadouts always pass through `acre_api_fnc_filterUnitLoadout`. Never save or restore an `_ID_n` radio classname: [duplicate unique IDs are a documented cause of respawn failures](https://github.com/IDI-Systems/acre2/issues/1163). Radio state is stored separately by base class and same-type occurrence. When a player uses Save Loadout, their current supported channels, ears, volume, audio source and selected radio become their new respawn condition. INIDBI2 radio persistence carries the same saved state across sessions. The mission plan is used only for initial setup or when no usable saved snapshot exists.
 
+WMP applies numbered-channel radios and the PRC-343 directly to each resolved unique radio ID, then
+reads the channel back before the initial respawn snapshot may be saved. For a PRC-343, the authored
+`[block, channel]` is converted to ACRE's absolute 1-256 channel only at that API boundary. This
+prevents ACRE's asynchronous bulk setup from leaving Block 1/Channel 1 in the first saved snapshot.
+An `"ALL"` assignment is matched as the literal selector, so it also applies correctly to every
+carried PRC-117F/148/152 occurrence instead of being preserved as unmanaged.
+
 ACRE's `setupRadios` frequency path is asynchronous and exposes no public frequency read-back. WMP validates the request and records it as pending/unverified; the audit requires checking the physical PRC-77/SEM70 interface. It refuses frequency setup when same-type rack/external radios make ACRE's occurrence order ambiguous.
 
 ## Diagnostics and testing

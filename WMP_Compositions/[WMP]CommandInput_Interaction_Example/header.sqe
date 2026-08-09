@@ -1,5 +1,5 @@
 version=54;
-name="[WMP] CommandInput Interaction Example";
+name="[WMP] Command Input Interaction Example";
 author="WaldoTheWarfighter";
 category="Waldos Mission Pack Compositions - Interface";
 requiredAddons[]={"A3_Structures_F_Items_Electronics","A3_Soft_F_Beta_Truck_01"};

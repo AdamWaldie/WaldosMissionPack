@@ -316,6 +316,10 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_Paradrop_HaloBackpackClasses` | Steerable/HALO parachute backpack classes. |
 | `Waldo_Paradrop_BoardingPointClasses` | Movable boarding-point object choices. |
 | `Waldo_Paradrop_ChuteClasses` | Compatibility alias populated from static chutes when undefined. |
+| `Waldo_Paradrop_DefaultStaticRouteAltitude` | Initial Static-Line route-altitude value, in metres AGL, shown by the ZEN module and used when the direct setup call omits altitude. Shipped value `300`, matching the full example composition. |
+| `Waldo_Paradrop_DefaultStaticRouteSpeed` | Initial Static-Line route-speed value in km/h. Shipped value `300`; keep it at or below `WALDO_STATIC_MAXSPEED`. |
+| `Waldo_Paradrop_DefaultHaloRouteAltitude` | Initial HALO route-altitude value in metres AGL. Shipped value `1200`; keep it at or above `WALDO_PARA_HALOALTITUDE`. |
+| `Waldo_Paradrop_DefaultHaloRouteSpeed` | Initial HALO route-speed value in km/h. Shipped value `250`; HALO has no static-line speed ceiling unless the operation enables both jump methods. |
 
 ### Server Dynamic AA and jump limits
 
@@ -328,6 +332,21 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_DynamicAA_MaxSlopeDegrees` | Steepest terrain (degrees) a component may be placed on; rejected the same as a nearby tree/rock/building. |
 | `Waldo_DynamicAA_SideAssetPools` | Shared fallback radar, static, mobile and fighter content pools by operational side. |
 | `Waldo_DynamicAA_FactionAssetPools` | Shared faction/content profiles; selection is independent of operational side. |
+
+These are catalogue and safety settings, not the floor/ceiling for one individual system. A specific
+system supplies its `radius`, `engagementRadius`, `minimumAltitude`, `maximumAltitude` and
+`altitudeMode` in the Dynamic AA creation call or ZEN dialog. Both radii are horizontal map distances;
+the altitude band is checked separately. See [Dynamic Anti-Air](Dynamic-Anti-Air) for a copyable
+first system and a boundary-by-boundary test.
+
+### Server paradrop safety envelope
+
+These values are the mission-wide safe defaults used by direct calls and ZEN. They do not create an
+aircraft or drop zone. Start with the shipped values; change them only when your chosen aircraft and
+parachute have been tested at the replacement altitude and speed.
+
+| Setting | Purpose / units |
+|---|---|
 | `WALDO_STATIC_MINALTITUDE` | Lowest valid static-line release altitude in metres. |
 | `WALDO_STATIC_MAXALTITUDE` | Highest valid static-line release altitude; must exceed the minimum. |
 | `WALDO_STATIC_MAXSPEED` | Maximum static-line aircraft speed. |

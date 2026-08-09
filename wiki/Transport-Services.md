@@ -6,7 +6,8 @@ WMP Transport Services manages helicopters and ground vehicles in separate typed
 
 ## Beginner setup
 
-Place an AI-crewed helicopter or land vehicle with simulation enabled. Put this in its Eden init field:
+Place a helicopter or land vehicle with simulation enabled, then place a correctly sided AI driver
+inside it in Eden. Put this in the vehicle's init field:
 
 ```sqf
 [this, "HELICOPTER", "RAVEN_1", "Raven One"] call Waldo_fnc_TransportRegister;
@@ -18,7 +19,11 @@ For a ground transport:
 [this, "GROUND", "GROUND_1", "Ground One"] call Waldo_fnc_TransportRegister;
 ```
 
-The call forwards to server authority itself, so no `if (isServer)` wrapper is required. The vehicle must have a living AI driver. Its current position and direction become its base.
+No `if (isServer)` wrapper and no `createVehicleCrew this` line are required. Eden runs an object init
+on every machine, but WMP deliberately lets only the authoritative server register the service.
+Registration never creates or replaces crew: this avoids duplicate and `sideUnknown` AI on dedicated
+servers and keeps the vehicle's allegiance visible in Eden. Its current position and direction become
+its base. An empty vehicle is rejected with a clear error; add its AI driver and register it again.
 
 The optional fifth argument is a readable HashMap. Omit it for the safe defaults:
 

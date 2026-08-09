@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-3,0};};
+		class PositionInfo {position[]={0,0,-3};};
 		title="Bomb Defusal (Minimal): the smallest working call - every option falls back to its default (5 wires, 20s, detonates on failure). See the Bomb Defusal Example (Full) composition to see and edit every available option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Bomb-Defusal";
 		id=2;
 	};

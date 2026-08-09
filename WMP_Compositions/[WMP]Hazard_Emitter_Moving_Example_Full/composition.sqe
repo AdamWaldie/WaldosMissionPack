@@ -19,8 +19,8 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-5,0};};
-		title="Hazard Emitter (Moving) (Full parameter reference): a 20 m contamination field that follows this vehicle wherever it is driven, instead of a fixed-area zone - the moving counterpart to the Radiation Hazard Example composition. Uses Waldo_fnc_HazardRegisterEmitter directly with a hand-authored profile (no preset key), every option shown explicitly; drag this same call onto any other object to make it the hazard's source. audioEnabled/coughEnabled are shown explicitly here but both already default true even if omitted (audio is opt-out, not opt-in). markerEnabled (shown here as false, matching its off-by-default API) can be set to true to tie a broadcast world marker to this vehicle so every player can see where the danger is, not just whoever is currently exposed. The event handler that unregisters the zone (and any marker) if this vehicle is destroyed/deleted is installed automatically regardless. See the Hazard Emitter Moving Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
+		class PositionInfo {position[]={0,0,-5};};
+		title="Moving radiation-emitter guided example. This vehicle carries a 20 m danger field using a named, hand-written profile rather than a preset. Move or replace the vehicle; the field follows it and is removed when the source is deleted. Audio and coughing are enabled, while the public marker is deliberately off. Edit the named profile values in its init or use the Minimal example for an empty harmless field. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
 		id=2;
 	};
 };

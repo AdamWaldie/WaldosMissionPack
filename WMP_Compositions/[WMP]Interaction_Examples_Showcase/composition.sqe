@@ -7,7 +7,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={-10,6,0};};
+		class PositionInfo {position[]={-10,0,6};};
 		class Attributes
 		{
 			name="WMP_Interaction_WireCut";
@@ -20,7 +20,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={-5,6,0};};
+		class PositionInfo {position[]={-5,0,6};};
 		class Attributes
 		{
 			name="WMP_Interaction_Minesweeper";
@@ -33,7 +33,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={0,6,0};};
+		class PositionInfo {position[]={0,0,6};};
 		class Attributes
 		{
 			name="WMP_Interaction_Keypad";
@@ -46,7 +46,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={5,6,0};};
+		class PositionInfo {position[]={5,0,6};};
 		class Attributes
 		{
 			name="WMP_Interaction_Lockpick";
@@ -59,7 +59,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={10,6,0};};
+		class PositionInfo {position[]={10,0,6};};
 		class Attributes
 		{
 			name="WMP_Interaction_Circuit";
@@ -72,7 +72,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={-10,-4,0};};
+		class PositionInfo {position[]={-10,0,-4};};
 		class Attributes
 		{
 			name="WMP_Interaction_Repair";
@@ -85,7 +85,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={-5,-4,0};};
+		class PositionInfo {position[]={-5,0,-4};};
 		class Attributes
 		{
 			name="WMP_Interaction_RadioTune";
@@ -98,7 +98,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		class Attributes
 		{
 			name="WMP_Interaction_Pressure";
@@ -111,7 +111,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={5,-4,0};};
+		class PositionInfo {position[]={5,0,-4};};
 		class Attributes
 		{
 			name="WMP_Interaction_Sequence";
@@ -124,7 +124,7 @@ class items
 	{
 		dataType="Object";
 		side="Empty";
-		class PositionInfo {position[]={10,-4,0};};
+		class PositionInfo {position[]={10,0,-4};};
 		class Attributes
 		{
 			name="WMP_Interaction_CommandInput";
@@ -136,7 +136,7 @@ class items
 	class Item10
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-14,0};};
+		class PositionInfo {position[]={0,0,-14};};
 		title="Interaction Examples Showcase: all ten field-equipment procedures (wirecut, minesweeper, keypad, lockpick, circuit, repair, radiotune, pressure, sequence, commandinput) side by side, each set up with a single Waldo_fnc_MiniGameInteractionSetup call and cycling through easy/standard/hard/expert difficulty so every profile is represented. Each object is independent - copy one line onto your own object to reuse a single procedure. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=11;
 	};

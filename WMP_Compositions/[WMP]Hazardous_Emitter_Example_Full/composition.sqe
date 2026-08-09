@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Severe Radiation Zone (Full parameter reference): fixed 15 m area with the intensityMode override shown explicitly (CONSTANT, instead of the preset's default linear falloff toward the edge), packaged Geiger/cough audio, entry/exit warnings, staged injury and fatal dose. Use HazardRegisterEmitter for a moving source. See the Hazardous Emitter Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
 		id=2;
 	};

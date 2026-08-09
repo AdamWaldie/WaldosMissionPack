@@ -28,7 +28,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-32,0};};
+		class PositionInfo {position[]={0,0,-32};};
 		title="Notification Trigger: entering the 25 m trigger sends one INFO card to all players. Edit the title, message, type and optional recipients in the trigger's On Activation field. Keep Server Only enabled so multiplayer clients do not send duplicates. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Custom-UI-Notifications";
 		id=2;
 	};

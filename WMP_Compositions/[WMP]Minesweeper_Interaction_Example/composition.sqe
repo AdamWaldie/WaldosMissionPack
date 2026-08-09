@@ -32,7 +32,7 @@ class items
 	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Minesweeper Interaction Example: a real gameplay outcome, not just the procedure by itself. Succeeding the trigger analyser marks the accompanying WEST task SUCCEEDED; failing it marks the task FAILED - both via the same Waldo_fnc_CreateObjective/Waldo_fnc_SetObjectiveState task helper documented for scripted objectives. Copy the onSuccess/onFailure pattern in the console's init field onto your own object to drive any outcome you want. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=3;
 	};

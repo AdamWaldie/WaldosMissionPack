@@ -109,7 +109,7 @@ switch (toUpperANSI _feature) do {
                             _config set ["aircraftClass", _assetValue];
                             _config set ["spawnPosition", [_modulePos select 0, _modulePos select 1, _altitude]];
                         };
-                        [_config] call Waldo_fnc_GunshipRegister;
+                        [_config] remoteExecCall ["Waldo_fnc_GunshipRegister", 2];
                         if (_copy) then {
                             private _assetEntry = "";
                             if (_assetMode == "CLASS") then {

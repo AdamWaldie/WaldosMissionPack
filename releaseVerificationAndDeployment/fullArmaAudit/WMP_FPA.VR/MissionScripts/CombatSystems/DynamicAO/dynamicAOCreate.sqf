@@ -10,6 +10,10 @@
  * centre anchor and per-minefield anchors are curator-editable deletion handles. Reusing an id
  * replaces the old AO safely.
  *
+ * Locality and authority:
+ * Server-owned creation, AI/marker registry and cleanup. Curator client requests route to the server;
+ * AI commands run where their groups are local and compact published state supplies JIP clients.
+ *
  * Arguments:
  * 0: config <HASHMAP> - see Wiki/Dynamic-AO-Generation.md for every supported key
  * 1: requester <OBJECT> - optional curator player used for authorization and feedback
@@ -17,15 +21,22 @@
  * Return Value:
  * Boolean - true when the AO was accepted and registered
  *
- * Current callers: mission scripts, Waldo_fnc_DynamicAOZen and the full-pack audit station.
+ * Current callers: server mission scripts, Waldo_fnc_DynamicAOZen and the full-pack audit station.
+ * Eden init fields run on every machine: a non-server copy without an explicit curator requester
+ * exits quietly, while an intentional client request supplies that requester and routes to server.
  *
  * Example:
  * [createHashMapFromArray [["id","AO_NORTH"],["center",getMarkerPos "ao_north"],
  *  ["side",east],["faction","OPF_F"],["radius",600],["patrolGroups",3]]]
  *  call Waldo_fnc_DynamicAOCreate;
+ * Result: AO_NORTH is registered with its generated assets, or validation leaves no partial AO.
  */
 params [["_config", createHashMap, [createHashMap]], ["_requester", objNull, [objNull]]];
-if (!isServer) exitWith {[_config, _requester] remoteExecCall ["Waldo_fnc_DynamicAOCreate", 2]; true};
+if (!isServer) exitWith {
+    if (isNull _requester) exitWith {true};
+    [_config, _requester] remoteExecCall ["Waldo_fnc_DynamicAOCreate", 2];
+    true
+};
 
 if (remoteExecutedOwner > 0) then {
     if (isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}) exitWith {false};
@@ -337,16 +348,23 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAO_Registry", _registry];
-{
-    private _curator = _x;
-    private _editableObjects = +_objects;
-    {{_editableObjects pushBackUnique _x} forEach units _x} forEach _groups;
-    _curator addCuratorEditableObjects [_editableObjects, true];
+// Curator registration must happen after the engine has networked this frame's newly created units.
+// Every infantry unit/vehicle root is already present in _objects; includeCrew discovers vehicle
+// crews, so appending group units again only duplicates registration and caused dedicated-server
+// "Ref to nonnetwork object" floods during AO creation.
+[+_objects, +_minefields] spawn {
+    params ["_editableObjects", "_fields"];
+    sleep 0.1;
+    _editableObjects = _editableObjects select {!isNull _x};
     {
-        private _fieldAnchor = _x getOrDefault ["anchor", objNull];
-        if (!isNull _fieldAnchor) then {_curator addCuratorEditableObjects [[_fieldAnchor], false]};
-    } forEach _minefields;
-} forEach allCurators;
+        private _curator = _x;
+        _curator addCuratorEditableObjects [_editableObjects, true];
+        {
+            private _fieldAnchor = _x getOrDefault ["anchor", objNull];
+            if (!isNull _fieldAnchor) then {_curator addCuratorEditableObjects [[_fieldAnchor], false]};
+        } forEach _fields;
+    } forEach allCurators;
+};
 [] call Waldo_fnc_DynamicAOPublishState;
 [format ["%1 created: %2 patrols, %3 garrisons, %4 vehicles and %5 air patrols.", _id, _patrolCount, _usableGarrisons, _vehicleCount, _airCount], "SUCCESS"] call _notify;
 diag_log format ["[WMP DYNAMIC AO] Created '%1' faction=%2 side=%3 radius=%4 objects=%5 groups=%6.", _id, _faction, _side, _radius, count _objects, count _groups];

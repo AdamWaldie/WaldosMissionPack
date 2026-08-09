@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_FieldResupplyHub";
-			init="[this, sideUnknown, -1] call Waldo_fnc_FieldResupplyRegisterHub;";
+			init="[this, ""ALL"", -1] call Waldo_fnc_FieldResupplyRegisterHub;";
 		};
 		id=1;
 		type="B_supplyCrate_F";
@@ -34,7 +34,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-3,0};};
+		class PositionInfo {position[]={0,0,-3};};
 		title="Field Resupply hub: unlimited stock and all sides. The nearby ""WMP_FieldResupplyCarrier"" unit is already assigned as a carrier on mission start (2 crates, 3 maximum) via its own init field - [this, currentCrates, maximumCrates] call Waldo_fnc_FieldResupplyAssignCarrier; - copy that one-line call onto any infantry unit instead of only doing it live through Zeus. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply";
 		id=2;
 	};

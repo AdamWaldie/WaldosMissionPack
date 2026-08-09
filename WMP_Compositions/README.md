@@ -5,6 +5,12 @@ pre-placed objects. They require the matching version of WaldosMissionPack insid
 Composition init fields deliberately call the public WMP functions; they do not contain private
 copies of feature logic.
 
+Treat a composition as both a quick start and a worked lesson. **Minimal** examples show the shortest
+supported call. **Full/Guided** examples show a useful configured scenario, but the matching wiki is
+the complete parameter reference. A composition comment must say what the objects do, what a beginner
+may edit, what must remain connected/clear, and where the full guide lives. It must not claim that a
+short init demonstrates every internal option.
+
 ## Categories
 
 | Eden category | What belongs there |
@@ -20,6 +26,8 @@ copies of feature logic.
 ## How to customise safely
 
 1. Place the composition in Eden and keep its objects separated as supplied.
+   In SQE source, `position[]={east/west, height, north/south}`: the second number is vertical height,
+   not map north/south. In Eden, move objects visually instead of hand-editing this source format.
 2. Read the nearby Eden comment before changing an init field.
    Every shipped comment links directly to the matching WMP wiki article; keep that URL when you
    copy or adapt the example.
@@ -43,33 +51,33 @@ copies of feature logic.
 | Field Resupply Hub Example | Refill hub; assign infantry carriers by script or Zeus |
 | Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
 | Vehicle Recovery Workshop Example (Minimal) | Smallest working workshop/vehicle/carrier registration - required args only |
-| Vehicle Recovery Workshop Example (Full) | Spaced workshop, recoverable vehicle and generic AUTO carrier with every option shown |
+| Vehicle Recovery Workshop Example (Full) | Spaced workshop, recoverable vehicle and generic AUTO carrier with guided common options |
 | Helicopter and Ground Transport Services (Minimal) | Smallest working AI-crewed service registration - required args only |
-| Helicopter and Ground Transport Services (Full) | AI-crewed named air/ground services with current LZ clearance and improved-landing defaults, every option shown |
+| Helicopter and Ground Transport Services (Full) | AI-crewed named air/ground services with current LZ clearance and improved-landing defaults |
 | Logistics Spawner Example (Minimal) | Smallest working standalone quartermaster access point |
-| Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with every option shown |
+| Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with guided common options |
 | MHQ With Logistics Spawner (Minimal) | Single truck, smallest working deployable command post |
-| MHQ With Logistics Spawner (Full) | Deployable command post with synchronized parts and every option shown |
+| MHQ With Logistics Spawner (Full) | Deployable command post with synchronized parts and guided common options |
 | Virtual Vehicle Depot Spawner Example (Minimal) | Smallest working terminal and spawn point registration |
-| Virtual Vehicle Depot Spawner Example (Full) | Terminal and safely separated spawn point with every option shown |
-| AutoFortify Setup Example | Synced ACE Fortify catalogue |
+| Virtual Vehicle Depot Spawner Example (Full) | Terminal and safely separated spawn point with guided access/content options |
+| Automatic Fortify Setup Example | Synced ACE Fortify catalogue |
 | Mass AttachTo / Vehicle Mounted Weapon | Vehicle construction helpers |
 | Halo and Static Line Paradrop Examples (Minimal) | Smallest working self-crewed aircraft flying a static-line route |
-| Halo and Static Line Paradrop Examples (Full) | Boarding and aircraft jump setup for two aircraft, every option shown |
+| Halo and Static Line Paradrop Examples (Full) | Boarding and aircraft jump setup for two guided route examples |
 | Gunship Support Example (Minimal) | Smallest working registration for a crewed VTOL |
-| Gunship Support Example (Full) | Crewed VTOL registered with `Waldo_fnc_GunshipRegister`, orbiting a movable marker with automatic service, every option shown |
+| Gunship Support Example (Full) | Crewed VTOL registered with `Waldo_fnc_GunshipRegister`, orbiting a movable marker with automatic service |
 | Radio Jammer Example (Minimal) | Smallest working jammer fixture |
-| Radio Jammer Example (Full) | Server-owned, movable jammer fixture with every option shown |
+| Radio Jammer Example (Full) | Server-owned, movable jammer fixture with guided disable/reactivation options |
 | Hazardous Zone Example (Minimal) | Smallest working fixed-area hazard registration |
-| Hazardous Zone Example (Full) | Reliable fixed-area hazard with visible transition feedback and real danger, every option shown |
+| Hazardous Zone Example (Full) | Reliable fixed-area hazard with visible transition feedback and real danger |
 | Radiation Hazard With Audio (Minimal) | Smallest working call - no profile overrides |
 | Radiation Hazard With Audio (Full) | MODERATE_RADIATION preset with label/notification overrides shown explicitly |
 | Hazard Emitter Moving Example (Minimal) | Smallest working moving contamination field |
-| Hazard Emitter Moving Example (Full) | Contamination field that follows a vehicle, via `Waldo_fnc_HazardRegisterEmitter` directly, every option shown |
+| Hazard Emitter Moving Example (Full) | Contamination field that follows a vehicle, via `Waldo_fnc_HazardRegisterEmitter` directly |
 | Dynamic AA Example (Minimal) | Smallest working anchor object - id and centre only |
-| Dynamic AA Example (Full) | Anchor object generating a radar, static and mobile AA site around itself, every option shown |
+| Dynamic AA Example (Full) | Anchor object generating a safely spaced radar, static and mobile AA site around itself |
 | Dynamic AO Example (Minimal) | Smallest working anchor object - id, centre and faction (faction has no default) |
-| Dynamic AO Example (Full) | Anchor object generating a randomized area of operations around itself, every option shown |
+| Dynamic AO Example (Full) | Anchor object generating a configured randomized area of operations around itself |
 | Explosive Wall Breaching Example (Minimal) | Smallest working profile - an empty HashMap uses every default |
 | Explosive Wall Breaching Example (Full) | Explicit demolition-charge profile with a visibly testable centre gap, every key shown |
 | Emergency Dismount Vehicle Example | Simulation-safe upright vehicle that enables overturn/destroyed extraction |
@@ -83,10 +91,10 @@ copies of feature logic.
 | Lockpick Interaction Example | Passing populates a nearby empty crate with `Waldo_fnc_SupplyCratePopulate`; failing leaves it empty |
 | Circuit Interaction Example | Failing fires a real `Waldo_fnc_EMP` burst on the surrounding area; passing is safe |
 | Repair Interaction Example | Passing repairs and restarts a nearby heavily damaged vehicle; failing leaves it disabled |
-| RadioTune Interaction Example | Passing calls `Waldo_fnc_JammerToggle` to switch off a nearby live radio jammer |
+| Radio Tuning Interaction Example | Passing calls `Waldo_fnc_JammerToggle` to switch off a nearby live radio jammer |
 | Pressure Interaction Example | Failing applies real damage to the acting player; passing is safe |
 | Sequence Interaction Example | Passing sends a `Waldo_fnc_NotificationBroadcast` card to a whole side |
-| CommandInput Interaction Example | Passing plants a `Waldo_fnc_Tracker` signal tracker on a nearby vehicle |
+| Command Input Interaction Example | Passing plants a `Waldo_fnc_Tracker` signal tracker on a nearby vehicle |
 | Construction Objects Example | ACE construction supply object with modern construction audio |
 | Electronic Warfare Examples | EMP immunity and side-restricted signal tracking fixtures |
 | Object Scaling Example | Supported Simple Object conversion and scale setup |

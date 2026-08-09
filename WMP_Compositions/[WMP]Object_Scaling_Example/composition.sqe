@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-3,0};};
+		class PositionInfo {position[]={0,0,-3};};
 		title="Object Scaling: converts this decorative chair to a Simple Object and scales it to 175 percent. The original object reference is replaced. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#object-scaling";
 		id=2;
 	};

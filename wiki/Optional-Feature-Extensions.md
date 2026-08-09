@@ -62,7 +62,7 @@ This finite-resource ammunition feature lets a hub refill carrier crate allowanc
 1. Place an object to act as the refill hub (e.g. an ammo point). In its init field:
    ```sqf
    [this, west, -1] call Waldo_fnc_FieldResupplyRegisterHub;
-   // [hub, servicedSide, stock] - sideUnknown serves everyone, -1 stock is unlimited
+   // [hub, servicedSide, stock] - "ALL" serves everyone, -1 stock is unlimited
    ```
 2. Assign a player (or Zeus-placed AI mule) as a carrier — via Zeus's assignment module during play, or in the unit's init field:
    ```sqf

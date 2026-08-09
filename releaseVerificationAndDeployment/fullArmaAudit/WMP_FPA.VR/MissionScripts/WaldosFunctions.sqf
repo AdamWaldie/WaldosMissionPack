@@ -2,8 +2,12 @@
  * Author: WaldoTheWarfighter
  * Declares the WMP CfgFunctions catalogue and maps public Waldo_fnc_* names to their source files.
  *
+ * Locality and authority: Parsed by Arma on every machine during mission configuration loading.
+ * It declares functions only and performs no authoritative or local runtime work itself.
+ *
  * Arguments: None; this is a configuration include rather than a runtime function.
  * Return Value: CfgFunctions declarations consumed by Arma during mission configuration loading.
+ * Result: Arma compiles the declared Waldo_fnc_* catalogue for use by mission scripts.
  *
  * Example: #include "MissionScripts\WaldosFunctions.sqf"
  * Current caller: description.ext includes this file before mission scripts execute.
@@ -615,6 +619,9 @@ class CfgFunctions
             };
             class ParadropConfigureAircraftLocal {
                 file = "MissionScripts\Paradrop\paradropConfigureAircraftLocal.sqf";
+            };
+            class ParadropConfigureAircraftNetworkedLocal {
+                file = "MissionScripts\Paradrop\paradropConfigureAircraftNetworkedLocal.sqf";
             };
             class ParadropEmbark {
                 file = "MissionScripts\Paradrop\paradropEmbark.sqf";

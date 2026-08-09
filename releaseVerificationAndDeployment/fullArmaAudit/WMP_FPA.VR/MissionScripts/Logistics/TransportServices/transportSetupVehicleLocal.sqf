@@ -110,8 +110,16 @@ _retryId = _vehicle addAction [
 _vehicle setVariable ["Waldo_TransportService_ActionIds", [_infoId, _moveId, _destinationId, _rtbId, _retryId]];
 _vehicle setVariable ["Waldo_TransportService_InfoActionId", _infoId];
 
-if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled", false])}) then {
+private _aceActionVersion = 2;
+if (_aceReady && {_vehicle getVariable ["Waldo_TransportService_AceActionVersion", 0] != _aceActionVersion}) then {
     private _rootId = format ["Waldo_Transport_Object_%1", _vehicle getVariable ["Waldo_TransportService_Id", netId _vehicle]];
+    private _crewRootId = format ["%1_Crew", _rootId];
+    // Versioned removal upgrades transports already present on a client without leaving the old
+    // external-only action tree behind. Removing the root also removes its child actions.
+    if !(isNil "ace_interact_menu_fnc_removeActionFromObject") then {
+        [_vehicle, 0, ["ACE_MainActions", _rootId]] call ace_interact_menu_fnc_removeActionFromObject;
+        [_vehicle, 1, ["ACE_SelfActions", _crewRootId]] call ace_interact_menu_fnc_removeActionFromObject;
+    };
     private _root = [_rootId, format ["Transport: %1", _name], if (_heli) then {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"} else {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"}, {}, {true}] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions"], _root] call ace_interact_menu_fnc_addActionToObject;
     private _status = [format ["%1_Status", _rootId], "Transport Status", "\a3\ui_f\data\igui\cfg\simpletasks\types\documents_ca.paa", {
@@ -127,28 +135,37 @@ if (_aceReady && {!(_vehicle getVariable ["Waldo_TransportService_AceInstalled",
         (_target getVariable ["Waldo_TransportService_State", ""]) in ["TO_PICKUP", "BOARDING"] && {_uid != "" && {_target getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid} || {!isNull getAssignedCuratorLogic _player}}
     }] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions", _rootId], _move] call ace_interact_menu_fnc_addActionToObject;
+
+    // ACE exposes type-1 object actions through the vehicle self-interaction menu while the player
+    // occupies that exact vehicle. Operational crew controls belong here, not in the external
+    // ACE_MainActions tree where the crew condition made them effectively unreachable.
+    private _crewRoot = [_crewRootId, format ["Control %1", _name], if (_heli) then {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"} else {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"}, {}, {
+        params ["_target", "_player"];
+        vehicle _player isEqualTo _target
+    }] call ace_interact_menu_fnc_createAction;
+    [_vehicle, 1, ["ACE_SelfActions"], _crewRoot] call ace_interact_menu_fnc_addActionToObject;
     private _destination = [format ["%1_Destination", _rootId], "Send to Destination", "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa", {
         params ["_target"]; ["SET_DESTINATION", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target] call Waldo_fnc_TransportOpenMapLocal;
     }, {
         params ["_target", "_player"];
-        _player in crew _target && {_target getVariable ["Waldo_TransportService_State", ""] in ["AVAILABLE", "TO_PICKUP", "BOARDING", "TO_DESTINATION", "DISEMBARKING", "STUCK"]}
+        vehicle _player isEqualTo _target && {_player in crew _target} && {_target getVariable ["Waldo_TransportService_State", ""] in ["AVAILABLE", "TO_PICKUP", "BOARDING", "TO_DESTINATION", "DISEMBARKING", "STUCK"]}
     }] call ace_interact_menu_fnc_createAction;
-    [_vehicle, 0, ["ACE_MainActions", _rootId], _destination] call ace_interact_menu_fnc_addActionToObject;
+    [_vehicle, 1, ["ACE_SelfActions", _crewRootId], _destination] call ace_interact_menu_fnc_addActionToObject;
     private _retry = [format ["%1_Retry", _rootId], "Retry Current Route", "\a3\ui_f\data\igui\cfg\actions\reload_ca.paa", {
         params ["_target", "_player"]; ["RETRY", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
     }, {
         params ["_target", "_player"];
-        private _uid = getPlayerUID _player;
-        _target getVariable ["Waldo_TransportService_State", ""] == "STUCK" && {_player in crew _target || {_uid != "" && {_target getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} || {!isNull getAssignedCuratorLogic _player}}
+        vehicle _player isEqualTo _target && {_target getVariable ["Waldo_TransportService_State", ""] == "STUCK"} && {_player in crew _target}
     }] call ace_interact_menu_fnc_createAction;
-    [_vehicle, 0, ["ACE_MainActions", _rootId], _retry] call ace_interact_menu_fnc_addActionToObject;
+    [_vehicle, 1, ["ACE_SelfActions", _crewRootId], _retry] call ace_interact_menu_fnc_addActionToObject;
     private _rtb = [format ["%1_RTB", _rootId], "Return This Transport to Base", "\a3\ui_f_oldman\data\igui\cfg\holdactions\meet_ca.paa", {
         params ["_target", "_player"]; ["RTB", _target getVariable ["Waldo_TransportService_Type", "GROUND"], _target, [], _player] remoteExecCall ["Waldo_fnc_TransportRequestServer", 2];
     }, {
         params ["_target", "_player"];
-        _player in crew _target && {_target getVariable ["Waldo_TransportService_State", ""] != "RTB"}
+        vehicle _player isEqualTo _target && {_player in crew _target} && {_target getVariable ["Waldo_TransportService_State", ""] != "RTB"}
     }] call ace_interact_menu_fnc_createAction;
-    [_vehicle, 0, ["ACE_MainActions", _rootId], _rtb] call ace_interact_menu_fnc_addActionToObject;
+    [_vehicle, 1, ["ACE_SelfActions", _crewRootId], _rtb] call ace_interact_menu_fnc_addActionToObject;
     _vehicle setVariable ["Waldo_TransportService_AceInstalled", true];
+    _vehicle setVariable ["Waldo_TransportService_AceActionVersion", _aceActionVersion];
 };
 true

@@ -1,5 +1,5 @@
 version=54;
-name="[WMP] Vehicle_Mounted_Weapon_Example";
+name="[WMP] Vehicle-Mounted Weapon Example";
 author="WaldoTheWarfighter";
 category="Waldos Mission Pack Compositions - Logistics";
 requiredAddons[]=

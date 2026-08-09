@@ -4,11 +4,35 @@
 
 _Associated Files: `MissionScripts/CombatSystems/DynamicAA/`; `MissionScripts/ZenModules/Zen_initModules.sqf`_
 
-Dynamic Anti-Air creates any number of named, server-authoritative air-defence zones. Each system has a central radar: while it is alive, hostile aircraft at or above the configured altitude floor activate the otherwise dormant defences. Destroying the radar takes that system offline.
+Dynamic Anti-Air creates any number of named, server-authoritative air-defence zones. Each system has
+one or more required radars. While enough radars are alive, hostile crewed aircraft must pass **all**
+of these gates before a defence may target it:
+
+1. It is horizontally inside the circular detection radius shown on the map.
+2. Its selected ATL/ASL altitude is at or above the floor and at or below the ceiling.
+3. Its crew is hostile to the operational AA side.
+4. It passes any optional mission-authored detection filter.
+5. It is also inside the engagement radius before WMP supplies it to the weapons.
+
+Ground vehicles never pass the aircraft gate. When an aircraft leaves any gate, WMP closes the
+defence group, clears its assigned target, makes the group forget/ignore engine-known targets and
+blocks remote datalink targets. Destroying or disabling the required radar takes the system offline.
 
 Detection remains server-owned, while AI state, target revelation and ammunition changes are dispatched to each defence group's or vehicle's current owner. Systems therefore continue to activate correctly after AI is transferred to a headless client.
 
 Altitude mode can be `ATL`, `ASL`, or `AUTO`. Automatic mode uses height above terrain over land and height above sea level over water.
+
+## Beginner quick start
+
+For the first test, place **Dynamic AA Example (Full)** on open, flat ground and do not edit its init.
+It teaches the script setup and creates one radar, one integrated static site and one mobile system.
+Spawn a hostile crewed aircraft above the displayed floor and inside the displayed circle. Then test
+the three boundaries separately: fly below the floor, above the ceiling and outside the engagement
+circle. The weapons must stand down in every case. Finally destroy the required radar; retained AA
+objects must remain unable to fire.
+
+The composition is for a pre-planned system. Use the ZEN module when Zeus needs to create or replace
+a system during play. Do not place the composition and a ZEN system on the same centre for one test.
 
 ## Zeus setup
 
@@ -73,13 +97,13 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `radarCount` | `1` | Number of server-placed radar objects when authored radar positions are omitted |
 | `side` | `east` | `west`, `east`, or `independent` |
 | `faction` | `""` | Optional content-profile key in `Waldo_DynamicAA_FactionAssetPools`; independent of `side` |
-| `radius` | `2000` | Detection radius in metres |
-| `minimumAltitude` | `60` | Detection altitude floor |
-| `maximumAltitude` | configured pack maximum | Detection altitude ceiling |
+| `radius` | `2000` | Horizontal detection radius in metres; altitude does not shrink this map circle |
+| `minimumAltitude` | `60` | Inclusive detection/engagement altitude floor in metres |
+| `maximumAltitude` | configured pack maximum | Inclusive detection/engagement altitude ceiling in metres |
 | `altitudeMode` | `AUTO` | `AUTO`, `ATL`, or `ASL` |
-| `engagementRadius` | detection radius | Smaller radius within which enabled defences may engage |
+| `engagementRadius` | detection radius | Horizontal firing radius. It is clamped to the detection radius and may be smaller. |
 | `detectionDwell` | `0` | Continuous detection time before activation |
-| `clearDelay` | `0` | Clear time before defences stand down |
+| `clearDelay` | `5` | Seconds of detection-state grace. The firing gate still closes immediately when no aircraft remains engagement-eligible. |
 | `requiredOperationalRadars` | `1` | Number of surviving radars required to remain online |
 | `maximumOperationalRadarDamage` | `0.8` | Radar damage at or above this fraction takes the whole system offline |
 | `radarOperationalCondition` | `{}` | Optional server callback receiving `[radar, state, config]`; return false to model power, repairs or objective-specific disable states |
@@ -108,7 +132,7 @@ Run scripted creation on the server. Reusing an ID safely replaces that system. 
 | `createMarkers` | `true` | Create the area and centre markers. This is independent of the label-detail setting below. |
 | `showMarkerDetails` | `true` | When markers exist, include detection range, floor and ceiling in the centre-marker label. Turn this off to leave only the system name without hiding the markers. |
 | `cleanupOnRadarLoss` | `false` | Delete assets instead of leaving them disabled |
-| `announce` | `true` | Publish detection state changes in chat |
+| `announce` | `true` | Send WMP detection/clear notifications to connected players on the operational AA side. No empty-audience remote call is made. |
 | `shutdownInteraction` | `false` | Attach an optional player procedure to the central radar. Existing systems retain ordinary destroy-to-disable behaviour by default. |
 | `shutdownChallenge` | `"circuit"` | Shared interaction procedure used for radar shutdown. Zeus offers every built-in WMP procedure plus registered custom procedures. |
 | `shutdownDifficulty` | `"standard"` | Shared `easy`, `standard`, `hard` or `expert` difficulty profile. |
@@ -146,12 +170,14 @@ sequential server placement, not a placement race. Explicit scripted positions a
 objects, crew, groups, markers and detector handles are retained in the server registry for
 deterministic cleanup and are added to every available curator.
 
-The dwell and clear-delay settings provide hysteresis, preventing an aircraft skimming the boundary
-from rapidly toggling the network. Detection range and engagement range are separate. WMP keeps
-ordinary AI auto-targeting disabled and assigns only the detector's currently eligible aircraft, so
-activation cannot leak into ground targets or aircraft outside the configured altitude band. The
-model deliberately does not claim perfect terrain masking: Arma's scripted visibility and sensor
-state cannot reproduce every radar and datalink behaviour consistently.
+The dwell and clear-delay settings provide detection-state hysteresis, preventing an aircraft
+skimming the boundary from rapidly toggling announcements and fighter waves. They do not grant a
+weapon permission extension: firing requires an aircraft to be engagement-eligible on the current
+server pass. Detection and engagement are horizontal map radii; altitude is evaluated separately.
+WMP disables ordinary auto-targeting, removes remembered non-eligible targets and disables remote
+target sharing on the AI-owning machine, including after headless-client migration. The model does
+not claim perfect terrain masking: Arma's visibility and sensor simulation cannot reproduce every
+real radar behaviour consistently.
 
 ## Side and faction asset pools
 

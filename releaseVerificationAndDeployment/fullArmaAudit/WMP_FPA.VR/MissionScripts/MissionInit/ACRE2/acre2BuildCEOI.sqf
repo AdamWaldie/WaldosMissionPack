@@ -4,10 +4,15 @@
  * local application. It highlights only assignments matching a carried radio's current read-back.
  * Nets sharing one channel are shown once as a channel number instead of repeating every radio class.
  *
+ * Locality and authority:
+ * Player-local diary/UI work only. It reads the server-compiled plan plus verified local ACRE
+ * read-back and replaces its own record, so repeated initialisation/respawn/JIP never duplicates it.
+ *
  * Arguments: None.
  * Return Value: BOOL - true when the CEOI diary record was replaced.
  *
  * Example: [] call Waldo_fnc_ACRE2BuildCEOI;
+ * Result: the local map diary contains one current, compact CEOI record when ACRE setup is enabled.
  * Current callers: Waldo_fnc_ACRE2Init and player-object replacement handling.
  */
 if (!hasInterface || {isNull player}) exitWith {false};
@@ -58,7 +63,13 @@ _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
 {
     private _rules = _x select 1;
     private _ruleIndex = _rules findIf {toUpper (_x select 0) == 'ACRE_PRC343' && {(_x select 1) isEqualType 0} && {(_x select 1) == 1}};
-    if (_ruleIndex < 0) then {_ruleIndex = _rules findIf {toUpper (_x select 0) == 'ACRE_PRC343' && {toUpper str (_x select 1) == 'ALL'}}};
+    if (_ruleIndex < 0) then {
+        _ruleIndex = _rules findIf {
+            toUpper (_x select 0) == 'ACRE_PRC343'
+                && {(_x select 1) isEqualType ''}
+                && {toUpper (_x select 1) == 'ALL'}
+        };
+    };
     private _assignment = if (_ruleIndex < 0) then {[]} else {(_rules select _ruleIndex) select 2};
     private _line = if (_assignment isEqualType [] && {count _assignment >= 2}) then {
         format ['%1 - Block %2, Channel %3', _x select 0, _assignment select 0, _assignment select 1]

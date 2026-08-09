@@ -11,7 +11,7 @@ class items
 		class Attributes
 		{
 			name="WMP_RecoveryWorkshop";
-			init="[this, ""MAIN"", 50, sideUnknown, 100, true] call Waldo_fnc_RecoveryRegisterWorkshop;";
+			init="[this, ""MAIN"", 50, ""ALL"", 100, true] call Waldo_fnc_RecoveryRegisterWorkshop;";
 		};
 		id=1;
 		type="Land_Cargo_House_V1_F";
@@ -33,7 +33,7 @@ class items
 	{
 		dataType="Object";
 		side="West";
-		class PositionInfo {position[]={0,18,0};};
+		class PositionInfo {position[]={0,0,18};};
 		class Attributes
 		{
 			name="WMP_RecoveryCarrier";
@@ -45,7 +45,7 @@ class items
 	class Item3
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-6,0};};
+		class PositionInfo {position[]={0,0,-6};};
 		title="Vehicle Recovery (Full parameter reference): workshop, recoverable MRAP and AUTO open-deck HEMTT carrier, every option shown explicitly. Its model-space deck offset keeps one package physical and visible; [] would use engine cargo or virtual fallback. See the Vehicle Recovery Workshop Example (Minimal) composition for the smallest working calls. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Recovery-And-Squad-Rallies#vehicle-recovery";
 		id=4;
 	};

@@ -1,3 +1,5 @@
+Waldo_QA_BootSuite = "all";
+Waldo_QA_ExpectedVersion = "4.8.1";
 private _root = missionNamespace getVariable ["Waldo_QA_Root", ""];
 if (_root == "") exitWith {diag_log "WMP PR AUDIT FAIL: bootstrap root missing";};
 call compile preprocessFileLineNumbers (_root + "generatedFunctions.sqf");

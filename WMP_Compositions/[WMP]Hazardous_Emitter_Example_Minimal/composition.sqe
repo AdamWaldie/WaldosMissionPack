@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Severe Radiation Zone (Minimal): the smallest working call - key, area and the preset name are all that's required. Uses the SEVERE_RADIATION preset's default linear intensity falloff toward the edge instead of a constant override. See the Hazardous Emitter Example (Full) composition to see and edit the intensityMode override. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Systems#hazardous-environments";
 		id=2;
 	};

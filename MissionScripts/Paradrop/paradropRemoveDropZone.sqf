@@ -22,7 +22,11 @@
  * markers and registration are removed, and the delete-aircraft option removes aircraft and AI crew
  * unless a player is aboard. A retained aircraft loses its WMP jump interactions.
  *
+ * Locality and authority: The server owns removal and cleanup. Curator requests are authenticated
+ * before changing the registry; public aircraft state drives local action removal for all clients.
+ *
  * Return Value: Boolean - true when a registered dynamic or quick/Eden operation was removed.
+ * Result: Successful removal cleans the same WMP-owned state for ZEN and Eden-created operations.
  *
  * Example: ["DZ_ALPHA", true, player, true] remoteExecCall ["Waldo_fnc_ParadropRemoveDropZone", 2];
  * Current callers: ParadropRemoveDropZoneZen, automatic run cleanup and mission scripts.
@@ -50,7 +54,9 @@ if !(_id in keys _registry) exitWith {
         };
     };
     if (!isNull _quickAircraft) then {
-        [_quickAircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0, _quickAircraft];
+        private _actionJipKey = _quickAircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];
+        if (_actionJipKey != "") then {[] remoteExecCall ["", _actionJipKey]};
+        [_quickAircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0];
         _quickAircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
         _quickAircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
     };
@@ -82,9 +88,15 @@ if (_deleteAircraft && {!isNull _aircraft} && {(crew _aircraft) findIf {isPlayer
     };
 };
 if (!_deleteAircraft && {!isNull _aircraft}) then {
-    [_aircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0, _aircraft];
+    private _actionJipKey = _aircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];
+    if (_actionJipKey != "") then {[] remoteExecCall ["", _actionJipKey]};
+    [_aircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0];
     _aircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
     _aircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
+};
+if (_deleteAircraft && {!isNull _aircraft}) then {
+    private _actionJipKey = _aircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];
+    if (_actionJipKey != "") then {[] remoteExecCall ["", _actionJipKey]};
 };
 if (_deleteAircraft && {!isNull _aircraft}) then {deleteVehicleCrew _aircraft; deleteVehicle _aircraft};
 if (_deleteAircraft) then {

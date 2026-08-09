@@ -19,8 +19,8 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-5,0};};
-		title="Dynamic Anti-Air (Minimal): the smallest working call - id and centre are all that's required. Generates just one radar (staticCount/mobileCount default to 0) on the east side within a 2000 m detection radius. See the Dynamic AA Example (Full) composition to see and edit every option, including static/mobile response assets. Needs real open, reasonably flat ground nearby - see the Full composition's comment for placement guidance. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-Anti-Air";
+		class PositionInfo {position[]={0,0,-5};};
+		title="Dynamic Anti-Air (Minimal): id and centre are the smallest working call. It generates one EAST radar with no static/mobile response assets, a 2000 m horizontal detection area, 60 m floor and 10000 m ceiling. This demonstrates defaults, not a balanced live setup. Use the Full example to learn explicit engagement limits and response counts. Place it on open, reasonably flat ground. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Dynamic-Anti-Air";
 		id=2;
 	};
 };

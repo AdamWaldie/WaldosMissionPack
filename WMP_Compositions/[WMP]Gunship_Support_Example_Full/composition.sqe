@@ -97,6 +97,7 @@ class items
 		type="mil_end";
 		colorName="ColorBlue";
 		fillName="Border";
+		alpha=1;
 		a=1;
 		b=1;
 		angle=0;
@@ -105,8 +106,8 @@ class items
 	class Item3
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-6,0};};
-		title="Airborne Gunship Support (Full parameter reference): this crewed VTOL is registered with Waldo_fnc_GunshipRegister on mission start with callsign/side/home/orbit/radius/altitude all shown explicitly - it flies to and orbits the ""Gunship Orbit"" marker (drag it to reposition), automatically returns to service at low fuel/damage/ammo per the configured envelope, then resumes its orbit. The nearby ""gunshipController"" unit (a rifleman - stand-in for a real FAC/JTAC role) is automatically assigned as SPECTRE's controller on mission start via its own init field - Waldo_fnc_GunshipAssignControllerOnStart, which waits for registration to finish first since object init fields have no guaranteed order - copy that one-line call onto any unit to make it the standing controller without touching Zeus. Without an assignment like this, any player on a friendly side can still see status, but weapon control, orbit retasking and service recall stay locked - a curator can always reassign later with ""Gunship: Assign Controller"" (or the init call above can add [""controller"", someUnit] / [""controllerUID"", ""...""] directly). Give a curator the ""Airborne Gunship Support"" ZEN menu for live control (request service, retask, change orbit) instead of duplicating this composition. See the Gunship Support Example (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
+		class PositionInfo {position[]={0,0,-6};};
+		title="Airborne gunship guided example. The VTOL already has correctly sided pilot and turret crew; its init registers that existing aircraft as SPECTRE and does not create crew. Move the Gunship Orbit marker to set the patrol centre. The nearby gunshipController unit receives control at mission start. Keep aircraft/crew simulation enabled and edit named settings in the aircraft init. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
 		id=112;
 	};
 };

@@ -32,7 +32,7 @@ class items
 	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="RadioTune Interaction Example: a real gameplay outcome, not just the procedure by itself. The nearby tower is a live 300 m radio jammer (Waldo_fnc_Jammer); passing the antenna tuning procedure calls Waldo_fnc_JammerToggle to switch it off, failing leaves it jamming. Copy the onSuccess pattern in the console's init field onto your own object to counter any jammer. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=3;
 	};

@@ -19,7 +19,7 @@ class items
 	class Item1
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="Airborne Gunship Support (Minimal): the smallest working call - id and the aircraft are all that's required. GunshipRegister crews it automatically (no placed pilot needed) and it orbits its own spawn position at the default radius/altitude since no explicit orbit was given. See the Gunship Support Example (Full) composition to see and edit every option. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Airborne-Gunship-Support";
 		id=2;
 	};

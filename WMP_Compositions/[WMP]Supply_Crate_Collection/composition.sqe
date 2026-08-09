@@ -17,7 +17,7 @@ class items
 				{
 					position[]={-1.9606018,0.00060272217,-0.05304718};
 				};
-				title="Supply Crate Composition, side setup. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
+				title="Supply-crate reference set. Columns demonstrate full-complement, ammunition-only and launcher-only crates; rows demonstrate WEST, EAST, INDEPENDENT and CIVILIAN scraping. Copy only the example you need. In each call, 1 is quantity scale, the side selects the scraped loadout pool, and the final two true/false values select full or launcher contents. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Logistics-System,-Starter-Crates-And-Quartermaster";
 				id=20;
 				atlOffset=-0.0002822876;
 			};

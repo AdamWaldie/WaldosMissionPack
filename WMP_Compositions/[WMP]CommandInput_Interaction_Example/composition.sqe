@@ -31,7 +31,7 @@ class items
 	class Item2
 	{
 		dataType="Comment";
-		class PositionInfo {position[]={0,-4,0};};
+		class PositionInfo {position[]={0,0,-4};};
 		title="CommandInput Interaction Example: a real gameplay outcome, not just the procedure by itself. Passing the tactical uplink procedure plants a live Waldo_fnc_Tracker on the nearby truck, tracked by WEST - the Electronic Warfare C-Track system. Copy the onSuccess pattern in the console's init field onto your own object to tag any unit or vehicle. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games";
 		id=3;
 	};

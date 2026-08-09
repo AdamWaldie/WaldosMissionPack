@@ -289,7 +289,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={0,0,-12};};
-		title="HALO and Static-Line Examples (Full parameter reference): two vanilla NATO passenger Blackfish aircraft, crews and boarding flags, flown by Waldo_fnc_ParadropQuickFlightSetup with every option shown explicitly (no manual waypoints needed - it builds and flies the route itself). Static-line uses 300 m and flies toward marker ""dz1""; HALO uses 1200 m and flies toward marker ""dz2"" (both included below - drag them to where you actually want the drop). The ""dz1""/""dz2"" markers you see now are only the target point you place; once the mission runs, the script automatically adds a full AREA/STANDBY/GREEN/RED/POINT marker corridor around the actual flown route - nothing else to set up. See the Halo And Static Line Paradrop Examples (Minimal) composition for the smallest working call. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
+		title="HALO and static-line guided examples. Two crewed NATO passenger Blackfish use the same QuickFlightSetup route builder: the static aircraft targets dz1 at 300 m; the HALO aircraft targets dz2 at 1200 m. Drag those target markers before play. WMP creates the AREA/STANDBY/GREEN/RED corridor at runtime. Keep aircraft/crew simulation enabled; use the Minimal example for one static-line flight. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Actions-&-Paradrop";
 		id=17718;
 	};
 	class Item7
