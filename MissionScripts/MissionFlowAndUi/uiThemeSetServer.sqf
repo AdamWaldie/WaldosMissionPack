@@ -25,8 +25,15 @@ if (_requestOwner > 0) then {
 _themeId = toUpperANSI _themeId;
 private _resolved = [_themeId] call Waldo_fnc_UiTheme;
 if ((_resolved getOrDefault ["id", "DEFAULT"]) != _themeId) exitWith {false};
+private _revision = (missionNamespace getVariable ["Waldo_UI_ThemeRevision", 0]) + 1;
 missionNamespace setVariable ["Waldo_UI_Theme", _themeId, true];
-[_themeId, false] remoteExecCall ["Waldo_fnc_UiThemeApplyLocal", 0];
+missionNamespace setVariable ["Waldo_UI_ThemeRevision", _revision, true];
+// Use the same ordered runtime-state receiver as JIP instead of a separate best-effort presentation
+// call. This keeps the authoritative value and its application in one payload on every machine.
+[
+    [["Waldo_UI_Theme", _themeId], ["Waldo_UI_ThemeRevision", _revision]],
+    false
+] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", 0];
 if (_preview && {_requestOwner > 0}) then {[_themeId, true] remoteExecCall ["Waldo_fnc_UiThemeApplyLocal", _requestOwner];};
-diag_log format ["[WMP UI] Global visual theme changed to %1 by owner=%2", _themeId, _requestOwner];
+diag_log format ["[WMP UI] Global visual theme changed to %1 revision=%2 by owner=%3", _themeId, _revision, _requestOwner];
 true

@@ -3,8 +3,9 @@
  * Reconciles JIP-safe gunship markers and controller actions on one client.
  *
  * This repeat-safe client function consumes Waldo_Gunship_PublicSystems. It removes only actions
- * created by this feature and restores controller controls after respawn/JIP. A status readout is
- * always available to the assigned controller; Designate Orbit and Return for Service also stay
+ * created by this feature and restores FAC/JTAC controller controls after respawn/JIP. No gunship
+ * ACE or vanilla interaction is exposed to an unassigned player. A status readout is available to
+ * the assigned controller; Designate Orbit and Return for Service also stay
  * available while the aircraft is still in transit to its orbit (matching what the server actually
  * permits), while per-turret weapon control only appears once the aircraft is on station or already
  * controlled. It is called by initPlayerLocal, public-state publication and the audit refresh control.
@@ -41,6 +42,14 @@ if (isNil {missionNamespace getVariable "Waldo_Gunship_MarkerPFH"}) then {
     missionNamespace setVariable ["Waldo_Gunship_MarkerPFH", _handler];
 };
 private _systems = missionNamespace getVariable ["Waldo_Gunship_PublicSystems", []];
+// Publication can legitimately arrive through the public variable, ordered runtime snapshot and
+// explicit reconcile call in the same frame. Do not tear down and recreate the same ACE tree three
+// times; that action churn was visible in RPTs and needlessly stressed the ACE interaction menu.
+private _lastSystems = missionNamespace getVariable ["Waldo_Gunship_LastActionSnapshot", []];
+private _lastPlayer = missionNamespace getVariable ["Waldo_Gunship_LastActionPlayer", objNull];
+if (_lastPlayer isEqualTo player && {_lastSystems isEqualTo _systems}) exitWith {true};
+missionNamespace setVariable ["Waldo_Gunship_LastActionSnapshot", +_systems];
+missionNamespace setVariable ["Waldo_Gunship_LastActionPlayer", player];
 private _systemIds = _systems apply {_x select 0};
 private _knownIds = missionNamespace getVariable ["Waldo_Gunship_LocalIds", []];
 
@@ -96,19 +105,16 @@ private _newVanillaActions = [];
         deleteMarkerLocal format ["Waldo_Gunship_%1_Orbit", _id];
     };
 
-    // Status is visible to any player on a friendly side, even if nobody is the assigned controller
-    // yet - a player who is not the controller previously saw no menu at all, no matter what state
-    // the gunship was in, which is indistinguishable from "take control is just broken" (the reported
-    // symptom). Operational commands (orbit/service/turret/release) remain controller-only below.
-    private _isFriendlySide = (side group player) getFriend _side >= 0.6;
-    if (_isFriendlySide) then {
+    // The gunship interaction surface is FAC/JTAC equipment. Assignment is explicit server state;
+    // being on a friendly side is not sufficient authority to see even the status category.
+    private _isControllerSelf = _controller isEqualTo player;
+    if (_isControllerSelf) then {
         // Designate Orbit and Return for Service are legitimately available while the aircraft is
         // still TRANSIT-ing to its orbit (the server's SET_ORBIT/SERVICE operations already allow
         // this), so gating the whole menu behind a single ON_STATION/CONTROLLED "_available" boolean
         // hid both of those actions - and the entire operational menu - during that window, most
         // visibly right after initial registration/controller assignment. Only weapon control
         // genuinely requires the aircraft to be physically on station.
-        private _isControllerSelf = _controller isEqualTo player;
         private _canOrbitOrService = _isControllerSelf && {_status in ["TRANSIT", "ON_STATION", "CONTROLLED"]};
         private _canTakeControl = _isControllerSelf && {_status in ["ON_STATION", "CONTROLLED"]};
         private _controllerLabel = if (isNull _controller) then {"no controller assigned - ask your curator to run Gunship: Assign Controller"} else {if (_isControllerSelf) then {"you"} else {name _controller}};

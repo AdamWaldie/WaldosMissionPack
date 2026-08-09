@@ -23,10 +23,12 @@
 
 params [["_name", "", [""]], ["_type", "GROUND", [""]], ["_allowedSides", [], [[]]]];
 if !(isServer) exitWith {};
-private _recipients = allPlayers select {side _x in _allowedSides};
-if (count _recipients == 0) exitWith {};
-[
-    _type,
-    format ["%1 is too heavily damaged to remain effective and has been removed from service.", _name],
-    "WARNING", _name, 8
-] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", _recipients];
+private _recipientOwners = (allPlayers select {side _x in _allowedSides}) apply {owner _x};
+_recipientOwners = _recipientOwners arrayIntersect _recipientOwners;
+{
+    [
+        _type,
+        format ["%1 is too heavily damaged to remain effective and has been removed from service.", _name],
+        "WARNING", _name, 8
+    ] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", _x];
+} forEach _recipientOwners;

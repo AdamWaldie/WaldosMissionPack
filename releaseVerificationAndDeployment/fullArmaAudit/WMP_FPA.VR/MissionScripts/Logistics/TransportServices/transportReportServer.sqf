@@ -57,9 +57,9 @@ if (_result == "FAILED") exitWith {
 switch (_phase) do {
     case "PICKUP": {
         private _group = group driver _vehicle;
-        [_group, getPosATL _vehicle] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
         _entry set ["state", "BOARDING"];
         _vehicle setVariable ["Waldo_TransportService_State", "BOARDING", true];
+        [_group, getPosATL _vehicle, _vehicle, _requestId, _config getOrDefault ["keepEngineOnAway", true]] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
         if (!isNull _requester) then {[_type, format ["%1 is ready for boarding. Enter the transport and select a destination through WMP Transport.", _entry get "name"], "SUCCESS", _id] remoteExecCall ["Waldo_fnc_TransportNotifyLocal", owner _requester]};
         [_id, _requestId, _config getOrDefault ["boardingSeconds", 300]] spawn {
             params ["_id", "_requestId", "_seconds"];
@@ -91,9 +91,9 @@ switch (_phase) do {
     };
     case "DESTINATION": {
         private _group = group driver _vehicle;
-        [_group, getPosATL _vehicle] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
         _entry set ["state", "DISEMBARKING"];
         _vehicle setVariable ["Waldo_TransportService_State", "DISEMBARKING", true];
+        [_group, getPosATL _vehicle, _vehicle, _requestId, _config getOrDefault ["keepEngineOnAway", true]] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
         [format ["%1 reached the destination. Dismount when ready.", _entry get "name"], "SUCCESS"] call _notifyTransportAudience;
         [_id, _requestId] spawn {
             params ["_id", "_requestId"];
@@ -145,7 +145,7 @@ switch (_phase) do {
         if (_config getOrDefault ["repairAtBase", false]) then {_vehicle setDamage 0};
         _vehicle engineOn false;
         private _group = group driver _vehicle;
-        [_group, getPosATL _vehicle] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
+        [_group, getPosATL _vehicle, _vehicle, -1, false] remoteExecCall ["Waldo_fnc_TransportStopGroupLocal", groupOwner _group];
     };
 };
 _services set [_id, _entry];

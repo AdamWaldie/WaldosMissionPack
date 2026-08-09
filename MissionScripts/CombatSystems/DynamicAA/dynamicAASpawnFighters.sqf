@@ -95,9 +95,10 @@ if (_spawnedCount > 0) then {
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
 if (_config getOrDefault ["announce", true]) then {
-    private _recipients = allPlayers select {side group _x == _side};
-    if !(_recipients isEqualTo []) then {
-        ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _spawnedCount], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _recipients];
-    };
+    private _recipientOwners = (allPlayers select {side group _x == _side}) apply {owner _x};
+    _recipientOwners = _recipientOwners arrayIntersect _recipientOwners;
+    {
+        ["AIR DEFENCE", format ["System %1 scrambled %2 fighter(s).", _id, _spawnedCount], "WARNING", "DYNAMIC_AA"] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _x];
+    } forEach _recipientOwners;
 };
 _spawnedCount
