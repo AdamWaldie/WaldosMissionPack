@@ -46,7 +46,7 @@ if (!isServer || {!_internalRtb && {isNull _requester || {!isPlayer _requester}}
 // RTB requested for a remote player is rejected after the aircraft has already entered DISEMBARKING.
 if (!_internalRtb && {remoteExecutedOwner > 0} && {owner _requester != remoteExecutedOwner}) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_TransportServices_Enable", false]) exitWith {false};
-if !(_type in ["HELICOPTER", "GROUND"]) exitWith {false};
+if !(_type in ["HELICOPTER", "GROUND", "BOAT"]) exitWith {false};
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
 private _entry = createHashMap;
 private _id = "";
@@ -187,7 +187,7 @@ if (_phase == "") exitWith {false};
 private _requestedTarget = +_target;
 private _targetValid = true;
 private _targetFailure = "";
-private _minimumSeparation = _config getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {60} else {18}];
+private _minimumSeparation = _config getOrDefault ["minimumSeparation", switch (_type) do {case "HELICOPTER": {60}; case "BOAT": {25}; default {18}}];
 private _occupiedTargets = [];
 {
     if (_x != _id) then {
@@ -227,6 +227,42 @@ if (_type == "GROUND") then {
         private _clearPosition = _target findEmptyPosition [0, (_minimumSeparation max 12), typeOf _vehicle];
         if !(_clearPosition isEqualTo []) then {_target = _clearPosition};
         if !([_target] call _isSeparated) then {_targetValid = false};
+    };
+} else {
+if (_type == "BOAT") then {
+    // Open water only, with a small ring of neighbouring points also required to be water - a
+    // single water-surface sample right at a shoreline edge is exactly the case that beaches the
+    // boat on arrival, since surfaceIsWater says nothing about how close that edge actually is.
+    // This is a real, documented limitation, not full navigable-water routing: it cannot detect an
+    // island or a headland sitting directly between the boat's current position and the resolved
+    // point, only that the point itself sits in a clear stretch of water.
+    private _maximumRadius = _config getOrDefault ["waterSearchRadius", 300];
+    private _shoreClearance = (_minimumSeparation max 15) min 40;
+    private _isOpenWater = {
+        params ["_candidate"];
+        if !(surfaceIsWater _candidate) exitWith {false};
+        if !([_candidate] call _isSeparated) exitWith {false};
+        (([0, 90, 180, 270] apply {_candidate getPos [_shoreClearance, _x]}) select {!(surfaceIsWater _x)}) isEqualTo []
+    };
+    private _safe = [];
+    if ([_requestedTarget] call _isOpenWater) then {
+        _safe = _requestedTarget;
+    } else {
+        private _searchStep = _shoreClearance max 20;
+        for "_radius" from _searchStep to _maximumRadius step _searchStep do {
+            for "_angle" from 0 to 330 step 30 do {
+                if (_safe isEqualTo []) then {
+                    private _candidate = _requestedTarget getPos [_radius, _angle];
+                    if ([_candidate] call _isOpenWater) then {_safe = _candidate};
+                };
+            };
+        };
+    };
+    if (_safe isEqualTo []) then {
+        _targetFailure = format ["No open water clear of the shoreline was found within %1 metres of the selected point. Boat requests must target water, not land.", round _maximumRadius];
+        _targetValid = false;
+    } else {
+        _target = [_safe select 0, _safe select 1, 0];
     };
 } else {
     private _maximumRadius = _config getOrDefault ["landingSearchRadius", 500];
@@ -281,6 +317,7 @@ if (_type == "GROUND") then {
         _target = _safe;
         diag_log format ["[WMP TRANSPORT] LZ clearance service=%1 aircraft=%2 model=%3x%4 scale=%5 required=%6x%7 radius=%8", _id, typeOf _vehicle, round _vehicleWidth, round _vehicleLength, _clearanceScale, round (_clearanceHalfWidth * 2), round (_clearanceHalfLength * 2), round _clearanceRadius];
     };
+};
 };
 };
 if (!_targetValid) exitWith {

@@ -18,7 +18,7 @@
 params [["_player", objNull, [objNull]], ["_type", "GROUND", [""]]];
 if (!hasInterface || {isNull _player}) exitWith {[]};
 _type = toUpperANSI _type;
-if !(_type in ["HELICOPTER", "GROUND"]) exitWith {[]};
+if !(_type in ["HELICOPTER", "GROUND", "BOAT"]) exitWith {[]};
 
 private _isCurator = !isNull getAssignedCuratorLogic _player;
 private _playerSide = side group _player;
@@ -49,7 +49,11 @@ private _children = [];
     private _service = _x;
     private _name = _service getVariable ["Waldo_TransportService_Name", "Transport Service"];
     private _className = getText (configOf _service >> "displayName");
-    private _icon = if (_type == "HELICOPTER") then {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"} else {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"};
+    private _icon = switch (_type) do {
+        case "HELICOPTER": {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"};
+        case "BOAT": {"\a3\ui_f\data\map\vehicleicons\iconShip_ca.paa"};
+        default {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"};
+    };
     private _action = [
         format ["Waldo_Transport_Select_%1", _service getVariable ["Waldo_TransportService_Id", netId _service]],
         format ["%1 — %2", _name, _className],

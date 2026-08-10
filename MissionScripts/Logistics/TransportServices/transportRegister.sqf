@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter, Val
- * Registers one already AI-crewed helicopter or ground vehicle with the authoritative typed
+ * Registers one already AI-crewed helicopter, ground vehicle or boat with the authoritative typed
  * transport service. An Eden vehicle init runs on every machine, but only the server mutates the
  * registry; every non-server copy deliberately does nothing. ZEN registration reaches
  * this function through the validated server runtime bridge.
@@ -17,7 +17,7 @@
  *
  * Arguments:
  * 0: vehicle <OBJECT>
- * 1: service type <STRING> - HELICOPTER or GROUND.
+ * 1: service type <STRING> - HELICOPTER, GROUND or BOAT.
  * 2: service ID <STRING> - unique readable key; blank generates one.
  * 3: display name <STRING> - player-facing callsign/name; blank uses groupId.
  * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
@@ -29,13 +29,15 @@
  *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
  *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
  *    false to keep retrying the exact same road-locked path instead),
+ *    waterSearchRadius (boat only; furthest a safe water service point may move from the clicked
+ *    position), boatSpeedLimit (boat only),
  *    invulnerable (vehicle and original AI service crew; default false), and
  *    useImprovedLanding (helicopters only; default true). At destination, LAND may naturally idle
  *    the engine down while boarding/disembarking and never orders passengers out;
  *    destinationDwell triggers moveOut only when forceDisembark is true, and RTB cannot begin until
  *    every passenger is physically outside. minimumSeparation spaces active
- *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18); prepared bases
- *    are checked only for physical overlap.
+ *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18, boats 25);
+ *    prepared bases are checked only for physical overlap.
  *
  * Return Value: Boolean - true when registered (or when a duplicate non-server Eden copy was ignored).
  *
@@ -51,7 +53,7 @@ params [
     ["_displayName", "", [""]], ["_options", createHashMap, [createHashMap, []]]
 ];
 _type = toUpperANSI _type;
-if (isNull _vehicle || {!(_type in ["HELICOPTER", "GROUND"])}) exitWith {false};
+if (isNull _vehicle || {!(_type in ["HELICOPTER", "GROUND", "BOAT"])}) exitWith {false};
 if (!isServer) exitWith {true};
 
 private _reject = {
@@ -80,6 +82,7 @@ if !(missionNamespace getVariable ["Waldo_FeatureConfig_SERVER_Ready", false]) e
 if !(missionNamespace getVariable ["Waldo_TransportServices_Enable", false]) exitWith {["Transport Services is disabled in MissionConfig/logisticsConfig.sqf."] call _reject};
 if (_type == "HELICOPTER" && {!(_vehicle isKindOf "Helicopter")}) exitWith {["Helicopter service was selected, but the target is not a helicopter."] call _reject};
 if (_type == "GROUND" && {!(_vehicle isKindOf "LandVehicle") || {_vehicle isKindOf "StaticWeapon"}}) exitWith {["Ground service was selected, but the target is not a driveable ground vehicle."] call _reject};
+if (_type == "BOAT" && {!(_vehicle isKindOf "Ship")}) exitWith {["Boat service was selected, but the target is not a boat."] call _reject};
 
 private _optionMap = createHashMap;
 if (typeName _options == "HASHMAP") then {
@@ -120,8 +123,14 @@ private _config = createHashMapFromArray [
     ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 500]]) max 10],
     ["landingClearanceScale", (_optionMap getOrDefault ["landingClearanceScale", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzClearanceScale", 1.5]]) max 1],
     ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
-    ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]}]) max 0],
+    ["waterSearchRadius", (_optionMap getOrDefault ["waterSearchRadius", missionNamespace getVariable ["Waldo_BoatTransport_DefaultWaterSearchRadius", 300]]) max 0],
+    ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", switch (_type) do {
+        case "HELICOPTER": {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]};
+        case "BOAT": {missionNamespace getVariable ["Waldo_BoatTransport_DefaultSeparation", 25]};
+        default {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]};
+    }]) max 0],
     ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
+    ["boatSpeedLimit", (_optionMap getOrDefault ["boatSpeedLimit", missionNamespace getVariable ["Waldo_BoatTransport_DefaultSpeedLimit", 45]]) max 5],
     ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
     ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
     ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]],
@@ -163,7 +172,7 @@ private _entry = createHashMapFromArray [
 ];
 _services set [_id, _entry];
 missionNamespace setVariable ["Waldo_Transport_Services", _services];
-private _pools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []]]];
+private _pools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []], ["BOAT", []]]];
 private _pool = _pools getOrDefault [_type, []];
 _pool pushBackUnique _id;
 _pools set [_type, _pool];
@@ -206,7 +215,11 @@ if (_type == "HELICOPTER") then {
     // minimum entry speed needed to avoid the former slow Little Bird approach.
     _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_ImmediateAcquisition", _config get "useImprovedLanding", true];
 };
-missionNamespace setVariable [if (_type == "HELICOPTER") then {"Waldo_HeliTransport_Available"} else {"Waldo_GroundTransport_Available"}, true, true];
+missionNamespace setVariable [switch (_type) do {
+    case "HELICOPTER": {"Waldo_HeliTransport_Available"};
+    case "BOAT": {"Waldo_BoatTransport_Available"};
+    default {"Waldo_GroundTransport_Available"};
+}, true, true];
 [] remoteExecCall ["Waldo_fnc_TransportInteractionInitLocal", 0, "Waldo_Transport_Interactions"];
 [_vehicle] remoteExecCall ["Waldo_fnc_TransportSetupVehicleLocal", 0, _vehicle];
 _entry = [_entry] call Waldo_fnc_TransportRefreshProtectionServer;
@@ -215,7 +228,10 @@ if (_config get "showMarker") then {
     private _marker = format ["Waldo_Transport_%1", _id];
     deleteMarker _marker;
     createMarker [_marker, getPosATL _vehicle];
-    _marker setMarkerType (if (_type == "HELICOPTER") then {"loc_heli"} else {"loc_car"});
+    // "loc_boat" follows the exact naming pattern of the already-proven loc_heli/loc_car types above,
+    // chosen by analogy rather than confirmed against a live install - marker icon choice only, no
+    // functional effect if the engine falls back to a default icon.
+    _marker setMarkerType (switch (_type) do {case "HELICOPTER": {"loc_heli"}; case "BOAT": {"loc_boat"}; default {"loc_car"}});
     // Matches the "name - state" format Waldo_fnc_TransportMonitorServer keeps updated afterward -
     // a freshly registered service is always AVAILABLE, so this is the same text the monitor's own
     // first tick would set a moment later.
