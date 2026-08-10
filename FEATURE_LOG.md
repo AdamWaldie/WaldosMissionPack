@@ -72,6 +72,46 @@ Required direction:
 - replace the legacy third-party activation path only after the new implementation has passed hosted
   and dedicated-server acceptance, with beginner-friendly configuration and wiki documentation.
 
+### Field Resupply: replace charge-based deployed crates with real crate contents
+
+**Status:** Planned
+
+Redesign deployed Field Resupply crates so they behave like a normal populated supply crate
+(ACE Cargo/Gear access to real inventory) instead of the current limited-`TAKE`-count abstraction.
+Today `Waldo_fnc_FieldResupplyServerHandle`'s `DEPLOY` derives a fixed set of logical magazine rows
+from the deploying carrier's own inventory (`_getMagazineRows`, filtered by
+`Waldo_FieldResupply_AllowedMagazines`/`BlockedMagazines`/`MinimumMagazineRounds`, sized by
+`Waldo_FieldResupply_UseCapacityBasedAmounts`/`MagazinesPerType`/`CapacityAmounts`) and stores it as
+`Waldo_FieldResupply_CargoRows` against a fixed `Waldo_FieldResupply_ChargesPerCrate`; the crate keeps
+empty physical cargo on purpose so `TAKE` (`Waldo_fnc_FieldResupplyReceiveAmmo`) stays the only way to
+draw from it and `SALVAGE` decides recoverability by comparing `Waldo_FieldResupply_Charges` against
+`Waldo_FieldResupply_InitialCharges`. Replace that with real crate cargo populated the same way a
+standard supply crate is (`Waldo_fnc_SupplyCratePopulate`, scoped to the hub's serviced side), so a
+deployed crate can simply be deployed, opened, taken from and salvaged like any other logistics crate.
+
+Required direction:
+
+- populate a deployed crate's actual weapon/magazine/item cargo (via `Waldo_fnc_SupplyCratePopulate`
+  or an equivalent field-resupply-scoped populate path) instead of building
+  `Waldo_FieldResupply_CargoRows` from the carrier's own magazines;
+- drop the per-crate charge count entirely — `TAKE` becomes normal ACE Cargo/Gear interaction against
+  real inventory rather than a server-brokered logical grant gated on remaining charges;
+- redefine `SALVAGE` recoverability from actual remaining cargo (e.g. cargo emptiness/weight) instead
+  of the charges-vs-initial-charges comparison, since there is no charge counter left to compare;
+- decide the fate of the now-obsolete config surface
+  (`Waldo_FieldResupply_ChargesPerCrate`/`AllowedMagazines`/`BlockedMagazines`/
+  `MinimumMagazineRounds`/`UseCapacityBasedAmounts`/`MagazinesPerType`/`CapacityAmounts`) —
+  remove or fold into whatever options the reused populate path exposes (size scalar, side,
+  weapons/attachments/launchers toggles, matching `Waldo_fnc_SupplyCratePopulate`'s own parameters);
+- keep hub stock (`Waldo_FieldResupply_Stock`) and carrier portable-crate capacity
+  (`Waldo_FieldResupply_MaxCrates`/`Crates`) exactly as they are — those govern how many crates a hub
+  can issue and a carrier can carry, and are unrelated to this change;
+- keep the existing ACE dragging/carrying setup on deployed crates, and confirm ACE Cargo/Gear
+  interaction works correctly against the populated contents without the old `TAKE` action installed
+  alongside it;
+- update the Field Resupply ZEN modules, notifications, diagnostics coverage, wiki page section and
+  the audit mission's Field Resupply station to match the new deploy/take/salvage behaviour.
+
 ### Boat transport services
 
 **Status:** Planned
