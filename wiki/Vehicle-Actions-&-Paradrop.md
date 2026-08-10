@@ -254,7 +254,9 @@ Direction** at the intended drop-zone centre first to see it before committing:
 The preview is entirely local to your own Zeus client — nothing is created or changed on the server
 until you actually confirm the create dialog, which keeps its normal validation and clamping. This
 is a convenience step, not a replacement: placing **Paradrop - Create Drop Zone** directly still
-opens straight to the dialog with the slider defaulted to 0°, exactly as before.
+opens straight to the dialog with the slider defaulted to 0°, exactly as before. If you rotate the
+line and then walk away without pressing Enter or Escape, the preview closes itself after 45 seconds
+of inactivity (rotating keeps resetting that clock) rather than staying active indefinitely.
 
 The aircraft flies a CARELESS/BLUE route at a forced terrain-relative height and capped speed. It
 uses exact run-in waypoints through standby, green, centre, red and departure gates. The default

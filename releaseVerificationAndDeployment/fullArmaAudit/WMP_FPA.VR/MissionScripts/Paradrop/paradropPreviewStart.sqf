@@ -18,6 +18,13 @@
  * on Waldo_Paradrop_PreviewActive - exactly like Waldo_fnc_JammerMapDraw's single always-installed
  * handler - rather than added and removed on every preview session.
  *
+ * The active window is bounded (45s, refreshed on every Q/E press) rather than left open until an
+ * explicit Enter/Escape: an abandoned session - e.g. a curator who rotates a couple of times then
+ * places "Paradrop - Create Drop Zone" directly instead of confirming - would otherwise leave Q, E,
+ * Enter and Escape silently swallowed everywhere on this client for the rest of the mission, including
+ * inside unrelated text fields, since Waldo_Paradrop_PreviewActive only reflects curator assignment,
+ * not whether the Zeus GUI or a particular dialog is actually focused.
+ *
  * Locality and authority: curator-client-local only. Nothing here touches server state; the eventual
  * Waldo_fnc_ParadropCreateDropZone call it leads to keeps its own existing curator authentication
  * and server-side clamping untouched.
@@ -45,6 +52,7 @@ if (_direction < 0) then {_direction = missionNamespace getVariable ["Waldo_Para
 missionNamespace setVariable ["Waldo_Paradrop_PreviewActive", true];
 missionNamespace setVariable ["Waldo_Paradrop_PreviewCentre", +_centre];
 missionNamespace setVariable ["Waldo_Paradrop_PreviewDirection", _direction mod 360];
+missionNamespace setVariable ["Waldo_Paradrop_PreviewExpiry", diag_tickTime + 45];
 
 if !(missionNamespace getVariable ["Waldo_Paradrop_PreviewHandlersInstalled", false]) then {
     missionNamespace setVariable ["Waldo_Paradrop_PreviewHandlersInstalled", true];
@@ -52,6 +60,11 @@ if !(missionNamespace getVariable ["Waldo_Paradrop_PreviewHandlersInstalled", fa
     addMissionEventHandler ["Draw3D", {
         if !(missionNamespace getVariable ["Waldo_Paradrop_PreviewActive", false]) exitWith {};
         if (isNull (getAssignedCuratorLogic player)) exitWith {};
+        // Bounded active window - see the file header. A session nobody confirmed or cancelled
+        // self-clears instead of swallowing Q/E/Enter/Escape on this client indefinitely.
+        if (diag_tickTime > (missionNamespace getVariable ["Waldo_Paradrop_PreviewExpiry", 0])) exitWith {
+            [] call Waldo_fnc_ParadropPreviewStop;
+        };
         private _centre = missionNamespace getVariable ["Waldo_Paradrop_PreviewCentre", []];
         if (count _centre < 2) exitWith {};
         private _direction = missionNamespace getVariable ["Waldo_Paradrop_PreviewDirection", 0];
@@ -97,6 +110,7 @@ if !(missionNamespace getVariable ["Waldo_Paradrop_PreviewHandlersInstalled", fa
                 _newDirection = _newDirection mod 360;
                 if (_newDirection < 0) then {_newDirection = _newDirection + 360};
                 missionNamespace setVariable ["Waldo_Paradrop_PreviewDirection", _newDirection];
+                missionNamespace setVariable ["Waldo_Paradrop_PreviewExpiry", diag_tickTime + 45];
                 true
             };
             // Enter: confirm and hand off to the existing create dialog with this heading pre-seeded.
@@ -119,7 +133,7 @@ if !(missionNamespace getVariable ["Waldo_Paradrop_PreviewHandlersInstalled", fa
 
 [
     "PARADROP DIRECTION PREVIEW",
-    "Q/E rotates the run line. Enter confirms and opens Create Dynamic Paradrop with this heading. Escape cancels.",
+    "Q/E rotates the run line. Enter confirms and opens Create Dynamic Paradrop with this heading. Escape cancels. Closes itself after 45s of inactivity.",
     "INFO", 0, "TOP", "PARADROP_PREVIEW", "PARADROP"
 ] call Waldo_fnc_ShowUiNotification;
 
