@@ -2,7 +2,8 @@
 
 > **Use this page when:** you need deterministic carried-radio assignments, independent duplicate radios, named displays, CEOI or optional Babel support.
 
-Associated files: `MissionConfig\acreConfig.sqf` and `MissionScripts\MissionInit\ACRE2\acre2*.sqf`.
+Associated files: `MissionConfig\acreConfig.sqf` and `MissionScripts\MissionInit\ACRE2\acre2*.sqf`
+(vehicle radio racks specifically: `acre2RackSetup.sqf`, `acre2RackApply.sqf`).
 
 All mission authoring lives in `MissionConfig\acreConfig.sqf`. WMP validates it before play, the
 server sends the complete side/group setup to joining players, and each player's own computer
@@ -81,7 +82,8 @@ WMP resolves every net against the **base radio class** and ignores incompatible
 | SEM52SL | Channel number | Channels 1-12 | Different band: use a SEM52SL-specific net such as `SEM_HANDHELD`. |
 | PRC-77 | Explicit MHz | 30-75.95 MHz, 50 kHz steps | Use a frequency net. It can share with SEM70 only at a value valid for both, such as 51.000 MHz. |
 | SEM70 | Explicit MHz | 30-79.975 MHz, 25 kHz steps | Use a frequency net; never substitute an ordinary channel number. |
-| Unknown radio or vehicle rack | Unmanaged | Unknown | WMP preserves it. Register a tested carried-radio profile rather than guessing. |
+| Unknown radio | Unmanaged | Unknown | WMP preserves it. Register a tested carried-radio profile rather than guessing. |
+| Vehicle radio rack | Unmanaged by this carried-radio scan | See "Vehicle radio racks" below | Configured separately, per-vehicle, via `Waldo_fnc_ACRE2RackSetup` - not part of this file. |
 
 The shipped families are `PRC_LR`, `BF888`, `SEM52`, `LEGACY_VHF` and the separate PRC-343 block
 system. A net remains valid when at least one radio in that family supports its value. Validation
@@ -158,6 +160,88 @@ An `"ALL"` assignment is matched as the literal selector, so it also applies cor
 carried PRC-117F/148/152 occurrence instead of being preserved as unmanaged.
 
 ACRE's `setupRadios` frequency path is asynchronous and exposes no public frequency read-back. WMP validates the request and records it as pending/unverified; the audit requires checking the physical PRC-77/SEM70 interface. It refuses frequency setup when same-type rack/external radios make ACRE's occurrence order ambiguous.
+
+## Vehicle radio racks
+
+Vehicle-mounted rack radios (AN/VRC-64, AN/VRC-103, AN/VRC-110, AN/VRC-111, SEM90, or any
+mission-added rack) are a separate, vehicle-scoped surface, deliberately outside
+`acreConfig.sqf`'s per-player carried-radio scan (which preserves rack radios untouched - see the
+table above). One object-init call on the vehicle configures every rack it has:
+
+```sqf
+// Simplest - apply a named ACRE2 preset to every rack on this vehicle. ACRE2 applies that preset's
+// channels to each rack radio automatically as it mounts:
+[this, ["preset", "vrc110_default"]] call Waldo_fnc_ACRE2RackSetup;
+
+// Explicit per-rack control - rack 0 (0-based, in acre_api_fnc_getVehicleRacks order) gets channel
+// 5; rack 1 gets Block 2/Channel 3 after mounting a PRC-117F into it:
+[this, ["assignments", [
+    [0, 5],
+    [1, [2, 3], "ACRE_PRC117F"]
+]]] call Waldo_fnc_ACRE2RackSetup;
+```
+
+`assignments` rows are `[rackIndex or "ALL", setting, mountRadioClass]`:
+
+- `setting` is a channel number, `[block, channel]` for PRC-343-style radios, or a decimal MHz
+  frequency - the same shapes used for carried radios above. `-1` (the default) applies no
+  channel/frequency, useful when a row only needs to mount or remove a radio.
+- `mountRadioClass` (optional) is a base radio classname (e.g. `"ACRE_PRC117F"`) to mount into that
+  rack, or the sentinel `"REMOVE_RACK"`.
+
+### Replacing or removing a rack's radio
+
+A mission maker can give a vehicle a different radio loadout at any point in the mission, not just
+at spawn - call `Waldo_fnc_ACRE2RackSetup` again with a different `assignments` config:
+
+```sqf
+// Later in the mission - re-equip rack 0 with a different radio type, ripping rack 1 out entirely:
+[myVehicle, ["assignments", [
+    [0, 12, "ACRE_PRC152"],
+    [1, -1, "REMOVE_RACK"]
+]]] call Waldo_fnc_ACRE2RackSetup;
+```
+
+- A `mountRadioClass` that differs from what a rack currently holds **replaces** it - ACRE2's own
+  mount call overwrites the previous occupant directly; there is no separate unmount step. This is
+  refused (with an RPT diagnostic, that rack left untouched) when ACRE2's own
+  `acre_api_fnc_isRackRadioRemovable` check reports the current occupant is not removable.
+- `"REMOVE_RACK"` rips the entire physical rack - hardware and radio - off the vehicle via
+  `acre_api_fnc_removeRackFromVehicle`, gated by the same removability check. No public ACRE2 API to
+  unmount only the radio and leave an empty rack in place was found; removal always takes the rack
+  with it. If a mission specifically needs an intentionally-empty slot, place a spare unconfigured
+  rack for that purpose rather than relying on "remove-then-later-remount."
+- Calling `Waldo_fnc_ACRE2RackSetup` again with the **same** config as last time is a no-op (nothing
+  is re-applied) unless a third `force` argument is passed - this is what keeps an Eden object init
+  field, which runs on every connected machine, from repeating the same work once per client at
+  mission start while still allowing a genuinely different later call through.
+
+### How it works, and what is unverified
+
+Rack initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a
+connected player - ACRE2 delegates the actual mount/initialise work to a player's machine internally
+rather than completing it synchronously on the server. `Waldo_fnc_ACRE2RackSetup` self-forwards to
+the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper in an Eden init field), then
+waits with a bounded timeout - 30 seconds for the vehicle's racks to report initialised
+(`acre_api_fnc_areVehicleRacksInitialized`), then 20 seconds per rack for its mounted radio to
+receive a real unique ID rather than sit as a bare, un-initialised base classname
+(`acre_api_fnc_getMountedRackRadio` returns the base class until ACRE2 finishes issuing the ID).
+Both timeouts assume at least one player is connected; an empty dedicated server cannot complete
+rack setup, the same operational constraint ACRE2 itself has.
+
+CHANNEL and BLOCK_CHANNEL-mode rack radios are applied and read back synchronously, exactly like
+carried radios of the same class. **FREQUENCY-mode rack radios (PRC-77/SEM70-family) are the one
+path that has not been proven against a live engine**: no public per-radio frequency-write API
+exists, so this reuses the same batched, ordinal `acre_api_fnc_setupRadios` call carried radios use
+- but computes that specific radio's occurrence directly from its own already-known unique ID's
+position in the broad current-radio list, rather than the ambiguous "which physical radio is this"
+problem the carried-radio path guards against when several same-class radios of unknown identity are
+visible at once. Treat FREQUENCY-mode rack radios as the priority item to verify manually before
+relying on them.
+
+Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row reports how many vehicles have had rack
+setup requested, how many are still pending (mid-wait or timed out without producing an ID), and how
+many reported a problem - check `[WMP ACRE RACK]` RPT entries for detail on any specific vehicle.
 
 ## Diagnostics and testing
 

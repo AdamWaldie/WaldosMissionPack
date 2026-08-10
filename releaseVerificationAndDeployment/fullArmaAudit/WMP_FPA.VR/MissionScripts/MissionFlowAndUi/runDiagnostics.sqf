@@ -203,6 +203,23 @@ if (_acreLoaded) then {
     ["radio", "acre-authoritative-plan", if (!_acreEnabled) then {"DISABLED"} else {if (_planValid && {_groupCount > 0}) then {"LOADED"} else {"ERROR"}}, format ["schema=%1 revision=%2 sides=%3 groups=%4 diagnostics=%5", if (count _acrePlan > 0) then {_acrePlan select 0} else {-1}, _revision, count _sidePlans, _groupCount, if (_planValid) then {_acrePlan select 3} else {[]}], _acreEnabled && {!_planValid || {_groupCount == 0}}] call _status;
     private _babel = _acreConfig getOrDefault ["babel", createHashMap];
     ["radio", "acre-babel", if !(_babel getOrDefault ["enabled", false]) then {"DISABLED"} else {if (count (_babel getOrDefault ["languages", []]) > 0) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 languages=%2", _babel getOrDefault ["enabled", false], count (_babel getOrDefault ["languages", []])], (_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}] call _status;
+
+    // Vehicle radio racks: a vehicle only appears here once Waldo_fnc_ACRE2RackSetup has actually
+    // been called on it (no rack scan runs otherwise). "pending" covers both an in-progress bounded
+    // wait and a rack that never produced its unique radio ID within that wait - the RPT trail from
+    // Waldo_fnc_ACRE2RackApply distinguishes those two cases in detail.
+    private _rackVehicles = (allMissionObjects "All") select {_x getVariable ["Waldo_ACRE2_RackSetupStarted", false]};
+    if (_rackVehicles isEqualTo []) then {
+        ["radio", "acre-vehicle-racks", "UNCONFIGURED", "No vehicle has had Waldo_fnc_ACRE2RackSetup called on it", false] call _status;
+    } else {
+        private _pending = _rackVehicles select {!(_x getVariable ["Waldo_ACRE2_RackSetupComplete", false])};
+        private _problemVehicles = _rackVehicles select {
+            private _result = _x getVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, []]];
+            !((_result param [2, []]) isEqualTo [])
+        };
+        private _state = if (count _problemVehicles > 0) then {"ERROR"} else {if (count _pending > 0) then {"LOADED"} else {"ACTIVE"}};
+        ["radio", "acre-vehicle-racks", _state, format ["configured=%1 pending=%2 withProblems=%3", count _rackVehicles, count _pending, count _problemVehicles], count _problemVehicles > 0, if (_problemVehicles isEqualTo []) then {""} else {"Check [WMP ACRE RACK] RPT entries for the affected vehicle(s)."}] call _status;
+    };
 } else {
     ["radio", "acre-runtime", "UNAVAILABLE", "ACRE2 is not loaded; WMP radio presetting is inactive", false] call _status;
 };

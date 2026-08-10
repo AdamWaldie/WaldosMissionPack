@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 886,
+  "registeredFunctionCount": 888,
   "runtimeFunctionCount": 385,
-  "functionCount": 1271,
+  "functionCount": 1273,
   "stations": [
     {
       "id": "control",
@@ -673,6 +673,18 @@
     {
       "name": "Waldo_fnc_ACRE2SchedulePlayerRefresh",
       "file": "MissionScripts/MissionInit/ACRE2/acre2SchedulePlayerRefresh.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2RackSetup",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2RackSetup.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2RackApply",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2RackApply.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

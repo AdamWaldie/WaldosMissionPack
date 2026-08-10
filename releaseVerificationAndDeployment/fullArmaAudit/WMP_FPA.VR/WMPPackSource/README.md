@@ -19,7 +19,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 
 # Pack Features
 - Loadout saving and respawn system
-- Lifecycle-safe ACRE2 radio, duplicate-radio/ear assignment, named-channel, CEOI, Babel and respawn/persistence handling configured from `MissionConfig\acreConfig.sqf`
+- Lifecycle-safe ACRE2 radio, duplicate-radio/ear assignment, named-channel, CEOI, Babel and respawn/persistence handling configured from `MissionConfig\acreConfig.sqf`; a separate one-line object-init call (`Waldo_fnc_ACRE2RackSetup`) configures vehicle-mounted radio racks (AN/VRC-64/103/110/111, SEM90), including replacing or ripping out a rack's radio later in the mission.
 - Locality-separated feature defaults in `MissionConfig` while init files retain authority, activation and JIP lifecycle
 - Localised Radio Jamming for ACRE2 & TFAR - drop a jammer object (or place one live from Zeus) to deny comms in an area. Terrain line-of-sight, radio-power burn-through, directional cones, pulsing, per-side and (ACRE2) per-band control; optional UAV/drone jamming (freeze autonomous drones, cut controlling players' datalinks); destructible jammers for "blow the tower" objectives, ACE toggle/disable actions and a handheld RDF scanner for EW teams, plus a deliberately loud on-screen jamming HUD so it's never mistaken for a game bug.
 - Electronic Warfare toolkit - a one-shot EMP burst (kills NVGs, vehicle engines and TFAR radios in a radius, with an immunity tag) and C-Track style signal trackers (tag a unit/vehicle and a chosen side follows it live on the map). Both scriptable and available as Zeus modules.
@@ -92,11 +92,11 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 # Required Addons
 - CBA_A3
 - ACE 3 (Field Headquarters, Construction System, Quartermaster Logistics Spawner)
+- Zeus Enhanced & Compat (the in-Zeus authoring surface for most systems added since v4.8 - Economy, Dynamic AA/AO, Gunship, Hazards, Transport, Recovery, Breaching, notifications, and more)
 
 # Supported Addons
 - ACRE 2 (optional; configure or disable it in `MissionConfig\acreConfig.sqf`)
 - TFAR (inherent support through Eden configuration)
-- Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
 
