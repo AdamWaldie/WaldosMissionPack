@@ -279,6 +279,22 @@ Zone Operations** system (`Waldo_fnc_ParadropCreateDropZone`, the ZEN "Dynamic P
 which additionally spawns/crews the aircraft itself, manages a named registry, optional generated
 jumpers, auto-drop-on-approach and map markers. Use the ZEN module or `ParadropCreateDropZone` for a
 managed multi-use operation; use `ParadropQuickFlightSetup` for a mission maker's own placed plane.
+The standby/green/red/spawn/exit/circuit math both entry points build on is itself factored into
+`Waldo_fnc_ParadropRouteGeometry`, a pure helper with no aircraft/group side effects.
+
+#### Deployment-direction preview (ZEN "Paradrop - Preview Deployment Direction")
+
+The "Dynamic Paradrop" create dialog's Run direction slider is otherwise a blind 0-359 number with
+no feedback about which way the aircraft will fly relative to the terrain. Placing the **Paradrop -
+Preview Deployment Direction** module at the intended drop-zone centre instead starts a live,
+curator-local preview: `Waldo_fnc_ParadropPreviewStart` draws the actual standby/green/red/exit line
+(via `Waldo_fnc_ParadropRouteGeometry`) with `Draw3D`, and Q/E rotates it in real time. Enter
+confirms and opens the normal Create Dynamic Paradrop dialog with that heading pre-seeded into the
+Run direction slider (still adjustable there); Escape cancels without opening anything. The preview
+is entirely local to the previewing curator's client — nothing is created or mutated server-side, and
+the create dialog's own curator authentication and server-side clamping are unchanged. This is a
+convenience step, not a replacement for the direct **Paradrop - Create Drop Zone** module, which
+still opens straight to the dialog with the slider defaulted to 0 as before.
 
 ### Radio Jamming — ACRE2 / TFAR (`init.sqf`)
 

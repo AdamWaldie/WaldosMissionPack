@@ -233,10 +233,28 @@ create/remove workflow, or map symbology by default.
 
 ## Dynamic Drop-Zone Operations
 
-ZEN provides **Paradrop - Create Drop Zone**, **Paradrop - Embark Players** and **Paradrop - Remove
-Operation** modules. The create dialog deliberately separates operational side from physical
-airframe: side controls the single AI pilot and any explicitly requested AI jumpers, while the
-airframe may come from any faction.
+ZEN provides **Paradrop - Create Drop Zone**, **Paradrop - Preview Deployment Direction**,
+**Paradrop - Embark Players** and **Paradrop - Remove Operation** modules. The create dialog
+deliberately separates operational side from physical airframe: side controls the single AI pilot
+and any explicitly requested AI jumpers, while the airframe may come from any faction.
+
+### Previewing the deployment direction
+
+The create dialog's **Run direction** slider is otherwise a blind 0-359 number with no feedback
+about which way the line actually falls across the terrain. Place **Paradrop - Preview Deployment
+Direction** at the intended drop-zone centre first to see it before committing:
+
+1. The module immediately draws the real standby/green/red/exit line in 3D at your last-used heading
+   (0° the first time).
+2. **Q/E** rotates the line live in 5° steps — watch it sweep across the terrain in real time.
+3. **Enter** confirms and opens the normal **Create Dynamic Paradrop** dialog with that heading
+   already loaded into the Run direction slider (still adjustable there if you want to fine-tune the
+   number directly). **Escape** cancels without opening anything.
+
+The preview is entirely local to your own Zeus client — nothing is created or changed on the server
+until you actually confirm the create dialog, which keeps its normal validation and clamping. This
+is a convenience step, not a replacement: placing **Paradrop - Create Drop Zone** directly still
+opens straight to the dialog with the slider defaulted to 0°, exactly as before.
 
 The aircraft flies a CARELESS/BLUE route at a forced terrain-relative height and capped speed. It
 uses exact run-in waypoints through standby, green, centre, red and departure gates. The default
