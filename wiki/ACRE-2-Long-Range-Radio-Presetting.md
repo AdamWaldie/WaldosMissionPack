@@ -143,6 +143,13 @@ setup is then saved as the player's first respawn condition. It is not continual
 
 Saved loadouts always pass through `acre_api_fnc_filterUnitLoadout`. Never save or restore an `_ID_n` radio classname: [duplicate unique IDs are a documented cause of respawn failures](https://github.com/IDI-Systems/acre2/issues/1163). Radio state is stored separately by base class and same-type occurrence. When a player uses Save Loadout, their current supported channels, ears, volume, audio source and selected radio become their new respawn condition. INIDBI2 radio persistence carries the same saved state across sessions. The mission plan is used only for initial setup or when no usable saved snapshot exists.
 
+Persistence and initial assignment use an explicit handshake rather than racing. A server result of
+`FOUND` restores the saved radios and suppresses baseline retuning for that loadout generation.
+`NONE` applies the mission baseline and captures it as the first safe save. `FAILED` or a 30-second
+timeout allows the baseline and the rest of WMP to continue, but disables persistence writes for
+that client session so an unread record cannot be overwritten. Mission makers do not disable ACRE
+assignment after a first campaign session; the lifecycle selects persistence or baseline itself.
+
 WMP applies numbered-channel radios and the PRC-343 directly to each resolved unique radio ID, then
 reads the channel back before the initial respawn snapshot may be saved. For a PRC-343, the authored
 `[block, channel]` is converted to ACRE's absolute 1-256 channel only at that API boundary. This
@@ -160,7 +167,7 @@ unknown families, incompatible group assignments, channel-capacity failures, inv
 ranges/steps, missing radio occurrences, ACRE readiness and conflicting Eden radio attributes.
 Frequency entries remain request-based rather than falsely described as read-back verified.
 
-The full audit mission distributes every supported carried radio among playable squad members, with at least one same-class partner. Its ACRE station tests duplicate radios, independent ears, named non-channel-1 assignments, PRC-77/SEM70 requests, filtered loadout respawn, Babel and preserved extra radios. Legacy functions remain manual emergency fallbacks only.
+The full audit mission distributes every supported carried radio among playable squad members, with at least one same-class partner. Its ACRE station tests duplicate radios, independent ears, named non-channel-1 assignments, PRC-77/SEM70 requests, filtered loadout respawn, Babel and preserved extra radios. The obsolete argument-based ACRE setup functions have been removed; `acreConfig.sqf` is the only supported setup path.
 
 ## Group callsign fallback
 

@@ -51,6 +51,10 @@
  * This is per-player state, not data embedded in an inventory classname. If SaveRadios is false,
  * persistence restores the authored ACRE baseline, but subsequent local loadout saves still retain
  * the player's chosen settings for ordinary respawns.
+ * On join/JIP, automatic player writes remain locked until the server explicitly reports FOUND or
+ * NONE and the corresponding saved radios or authored baseline are ready. FAILED or a 30-second
+ * timeout releases ordinary mission/ACRE startup but keeps persistence writes locked, so an unread
+ * database record cannot be replaced by the temporary starting loadout.
  *
  * SETTING-BY-SETTING GUIDE:
  * - Waldo_Persistence_Enable (MISSION MAKER): requests persistence; no save occurs unless the server INIDBI2 gate passes.

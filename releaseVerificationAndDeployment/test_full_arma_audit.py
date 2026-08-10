@@ -1145,7 +1145,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("!isNull player", init_player)
         self.assertIn("if (hasInterface) then {call Waldo_fnc_SetTeamColour};", init)
 
-    def test_acre2_active_lifecycle_is_safe_and_legacy_is_manual(self):
+    def test_acre2_active_lifecycle_is_safe_and_legacy_is_removed(self):
         root = ROOT / "MissionScripts" / "MissionInit" / "ACRE2"
         registry = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         preinit = (root / "acre2PreInit.sqf").read_text(encoding="utf-8")
@@ -1172,10 +1172,22 @@ class FullAuditTests(unittest.TestCase):
         loadout = (root / "acre2FilterLoadout.sqf").read_text(encoding="utf-8")
         active = "\n".join((preinit, labels, compile_plan, apply_plan, babel, loadout))
         self.assertIn("preInit = 1", registry)
-        self.assertIn("ACRE2Init_Legacy", registry)
-        self.assertIn("BabelActivation_Legacy", registry)
-        self.assertNotIn("Waldo_fnc_ACRE2Init_Legacy", active)
-        self.assertNotIn("Waldo_fnc_BabelActivation_Legacy", active)
+        for legacy_name in (
+            "ACRE2Init_Legacy",
+            "ACRE2SquadLevelRadios_Legacy",
+            "GetSRChannelName_Legacy",
+            "CreateACRECEOI_Legacy",
+            "BabelActivation_Legacy",
+        ):
+            self.assertNotIn(legacy_name, registry)
+        for legacy_file in (
+            "ACRE2Init.sqf",
+            "ACRE2SquadLevelRadios.sqf",
+            "GetSRChannelName.sqf",
+            "CreateACRECEOI.sqf",
+            "BabelActivation.sqf",
+        ):
+            self.assertFalse((root / legacy_file).exists())
         self.assertNotIn("acre_api_fnc_copyPreset", active)
         self.assertNotIn("'frequencyTX',", labels)
         self.assertNotIn("'frequencyRX',", labels)
@@ -1340,6 +1352,34 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('missionNamespace setVariable ["Waldo_Player_Inventory", _filteredLoadout]', persistence_apply)
         self.assertIn('missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios]', persistence_apply)
         self.assertIn('Waldo_ACRE2_RestoredRadioGeneration', restore_radio)
+
+    def test_persistence_load_handshake_prevents_acre_and_save_races(self):
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        persistence_root = ROOT / "MissionScripts" / "Persistence"
+        persistence_init = (persistence_root / "persistenceInit.sqf").read_text(encoding="utf-8")
+        persistence_server = (persistence_root / "persistenceServerHandle.sqf").read_text(encoding="utf-8")
+        persistence_apply = (persistence_root / "persistenceClientApply.sqf").read_text(encoding="utf-8")
+        persistence_save = (persistence_root / "persistenceSavePlayerLocal.sqf").read_text(encoding="utf-8")
+        acre_refresh = (
+            ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2SchedulePlayerRefresh.sqf"
+        ).read_text(encoding="utf-8")
+
+        self.assertLess(
+            init_player.index('Waldo_Persistence_PlayerLoadState", "WAITING_RUNTIME'),
+            init_player.index("Waldo_fnc_ACRE2Init"),
+        )
+        for result in ('["FOUND", _stored select 3]', '["NONE", []]', '["FAILED", []]'):
+            self.assertIn(result, persistence_server)
+        self.assertIn('Waldo_Persistence_PlayerLoadState", "PENDING', persistence_init)
+        self.assertIn("diag_tickTime + 30", persistence_init)
+        self.assertIn("Waldo_Persistence_PlayerSaveReady", persistence_init)
+        self.assertIn('== "FAILED"', persistence_init)
+        self.assertIn("Waldo_Persistence_PlayerSaveReady", persistence_save)
+        self.assertIn('in ["DISABLED", "FOUND", "NONE", "FAILED"]', acre_refresh)
+        self.assertIn("Waldo_ACRE2_RestoredRadioGeneration", persistence_apply)
+        self.assertIn('Waldo_Persistence_PlayerLoadState", "FOUND', persistence_apply)
+        self.assertIn('Waldo_Persistence_PlayerLoadState", "NONE', persistence_apply)
+        self.assertIn('Waldo_Persistence_PlayerLoadState", "FAILED', persistence_apply)
 
     def test_logistics_compatibility_notifications_do_not_use_centre_screen(self):
         dynamic_text = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "dynamicText.sqf").read_text(encoding="utf-8")

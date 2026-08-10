@@ -2,7 +2,9 @@
  * Author: WaldoTheWarfighter
  * Debounces join, respawn, player-object and group events into one bounded, readiness-aware local
  * ACRE refresh. A newer request cancels an older waiter. Persistence may hold the refresh while it
- * restores a filtered loadout and newly generated unique radio IDs.
+ * resolves FOUND/NONE/FAILED and restores a filtered loadout and newly generated unique radio IDs.
+ * A failed or timed-out persistence read releases the mission baseline without enabling database
+ * writes, so optional persistence cannot prevent the main ACRE system from operating.
  * Locality and authority: call on the player's interface client. It coalesces only that client's
  * lifecycle events and consumes the complete server-published plan when requested.
  *
@@ -31,6 +33,8 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     waitUntil {
         uiSleep 0.1;
         private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
+        private _persistenceState = missionNamespace getVariable ["Waldo_Persistence_PlayerLoadState", "DISABLED"];
+        private _persistenceResolved = _persistenceState in ["DISABLED", "FOUND", "NONE", "FAILED"];
         (missionNamespace getVariable ["Waldo_ACRE2_RefreshToken", -1]) != _token
             || {diag_tickTime >= _deadline}
             || {
@@ -39,6 +43,7 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
                 && {[] call acre_api_fnc_isInitialized}
                 && {count _plan >= 4}
                 && {(_plan select 0) == 5}
+                && {_persistenceResolved}
                 && {!(missionNamespace getVariable ["Waldo_ACRE2_RadioRestoreInProgress", false])}
             }
     };
@@ -81,6 +86,15 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     [] call Waldo_fnc_ACRE2BuildCEOI;
     if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
         [false] call Waldo_fnc_SaveLoadout;
+    };
+    if (
+        _planApplied
+        && {(missionNamespace getVariable ["Waldo_Persistence_PlayerLoadState", "DISABLED"]) in ["FOUND", "NONE"]}
+        && {_applyPlan}
+    ) then {
+        // A persisted load with no usable radio snapshot, or a first run with no record, is safe to
+        // save only after the authored ACRE baseline has been applied and captured locally.
+        missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", true];
     };
     if (!_planApplied && {_reason in ["INITIAL", "INITIAL_LATE"]}) then {
         diag_log "[WMP ACRE] Initial radio plan failed; the respawn baseline was not saved.";

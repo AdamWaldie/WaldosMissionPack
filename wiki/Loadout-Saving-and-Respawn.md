@@ -43,6 +43,13 @@ Restore order is:
 
 Persisted state therefore wins over baseline retuning without ever storing `_ID_n` classnames. If state restoration fails or the expected occurrence is missing, WMP logs the problem and falls back to the current mission plan.
 
+At join/JIP, WMP explicitly waits for the server to answer `FOUND`, `NONE` or `FAILED`. `FOUND`
+restores the saved player state before automatic writes are permitted. `NONE` applies and captures
+the current `acreConfig.sqf` baseline before the first write. `FAILED`, including a 30-second missing
+response, releases ordinary ACRE and mission startup but keeps that client's persistence writes
+disabled for the session. This fail-open gameplay/fail-closed saving split prevents persistence from
+breaking the main radio system or overwriting an unread database record.
+
 ACRE generates fresh unique IDs after a filtered loadout restore. WMP therefore guarantees occurrence identity—first PRC-152, second PRC-152—not the identity of a particular transient `_ID_n` item. Occurrence follows ACRE's canonical carried-radio order, which is also what ACRE's repeated-radio setup API uses. WMP deliberately does not sort unique IDs independently. Explicit mission assignments manage only their listed occurrences; additional same-type radios are preserved.
 
 ## Manual saving

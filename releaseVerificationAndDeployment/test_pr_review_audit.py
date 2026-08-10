@@ -1162,7 +1162,7 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('BIS_fnc_dynamicText', hazard + legacy)
 
         save_loadout = (ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "saveRespawnLoadout.sqf").read_text(encoding="utf-8")
-        acre = (ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "ACRE2Init.sqf").read_text(encoding="utf-8")
+        acre = (ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2SchedulePlayerRefresh.sqf").read_text(encoding="utf-8")
         self.assertIn('params [["_showNotification", true', save_loadout)
         self.assertIn('if (_showNotification)', save_loadout)
         self.assertIn('[false] call Waldo_fnc_SaveLoadout', acre)

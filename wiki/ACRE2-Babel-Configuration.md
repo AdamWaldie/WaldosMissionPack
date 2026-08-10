@@ -42,9 +42,8 @@ When `followPlayerUnit` is true, Babel knowledge and the radio plan are reapplie
 When Babel and the main ACRE configuration are enabled, the planned Babel diary record is created
 during briefing setup without waiting for ACRE runtime initialization. Players can therefore read
 their configured languages before pressing Continue. Runtime application later verifies those same
-values through ACRE and replaces the record rather than adding a duplicate. The active wrapper is
-`Waldo_fnc_BabelActivation`; the previous argument-based implementation remains available only as
-`Waldo_fnc_BabelActivation_Legacy`.
+values through ACRE and replaces the record rather than adding a duplicate. The supported wrapper is
+`Waldo_fnc_BabelActivation`; the obsolete argument-based implementation has been removed.
 
 <!-- WMP-WIKI-NAV -->
 ---
