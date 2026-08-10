@@ -186,7 +186,9 @@ Waldo_MG_CFG_TABLE_CLASSES = [
     "Land_CampingTable_F",
     "Land_CampingTable_small_F",
     "Land_CampingTable_small_white_F",
-    "Land_TablePlastic_01_F"
+    "Land_TablePlastic_01_F",
+    "Land_WoodenTable_large_F",
+    "Land_WoodenTable_small_F"
 ];
 Waldo_MG_CFG_SEAT_COUNT = 4;
 Waldo_MG_CFG_SEAT_OFFSETS = [

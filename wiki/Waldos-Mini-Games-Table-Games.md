@@ -29,6 +29,8 @@ This is the [Waldos Mini Games](Waldos-Mini-Games) sub-page for the seated games
    | `Land_CampingTable_small_F` | Small camping table |
    | `Land_CampingTable_small_white_F` | Small white camping table |
    | `Land_TablePlastic_01_F` | Plastic table |
+   | `Land_WoodenTable_large_F` | Large wooden table |
+   | `Land_WoodenTable_small_F` | Small wooden table |
 
 3. That's it. Walk a player up to the table and use either the scroll-menu or the nested ACE **Party Table** interaction to **Sit at Table**. Both routes submit the same server-validated request.
 

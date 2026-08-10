@@ -697,7 +697,8 @@ if (Waldo_MiniGames_Enable) then {
 ```
 
 Tables are detected by class (`Land_CampingTable_F`, `Land_CampingTable_small_F`,
-`Land_CampingTable_small_white_F`, `Land_TablePlastic_01_F`). Tuning constants (`Waldo_MG_CFG_*`,
+`Land_CampingTable_small_white_F`, `Land_TablePlastic_01_F`, `Land_WoodenTable_large_F`,
+`Land_WoodenTable_small_F`). Tuning constants (`Waldo_MG_CFG_*`,
 including `Waldo_MG_CFG_TABLE_CLASSES`) live at the top of `MissionScripts/MiniGames/engine/config.sqf`.
 
 **2. Field equipment procedures (single-player, generic hook).** Ten pass/fail procedures gate any
