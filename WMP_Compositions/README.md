@@ -86,6 +86,7 @@ short init demonstrates every internal option.
 | Bomb Defusal Example (Minimal) | Smallest working wire-cutting challenge |
 | Bomb Defusal Example (Full) | Standard wire-cutting challenge with an explosive failure consequence, every option shown |
 | Interaction Examples Showcase | All ten field-equipment procedures side by side, cycling easy/standard/hard/expert |
+| Field Equipment Gallery Example | Single laptop opens the developer/tester picker for all ten field-equipment procedures with stable showcase configs - review or demo every procedure without placing ten separate fixtures |
 | Minesweeper Interaction Example | Passing/failing marks a real `Waldo_fnc_CreateObjective` task SUCCEEDED/FAILED |
 | Keypad Interaction Example | Passing unlocks a nearby locked vehicle; failing leaves it locked |
 | Lockpick Interaction Example | Passing populates a nearby empty crate with `Waldo_fnc_SupplyCratePopulate`; failing leaves it empty |
