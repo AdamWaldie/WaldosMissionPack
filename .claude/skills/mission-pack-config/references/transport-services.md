@@ -1,9 +1,9 @@
-# Transport Services (helicopter + ground)
+# Transport Services (helicopter + ground + boat)
 
 Reusable server-reserved AI transport pools — players request pickup/
 destination from a registered vehicle's crew via ACE Self Interact, the
-server reserves and dispatches it. Helicopters and ground vehicles are
-separate typed pools; a request can never cross-reserve.
+server reserves and dispatches it. Helicopters, ground vehicles and boats
+are separate typed pools; a request can never cross-reserve.
 
 ## Config (`MissionConfig\logisticsConfig.sqf`)
 
@@ -19,6 +19,9 @@ separate typed pools; a request can never cross-reserve.
 ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false],
 ["Waldo_GroundTransport_DefaultSeparation", 18, false],
 ["Waldo_GroundTransport_DefaultSpeedLimit", 60, false],
+["Waldo_BoatTransport_DefaultWaterSearchRadius", 300, false],
+["Waldo_BoatTransport_DefaultSeparation", 25, false],
+["Waldo_BoatTransport_DefaultSpeedLimit", 45, false],
 ["Waldo_Transport_DefaultPathRetrySeconds", 25, false],
 ["Waldo_Transport_DefaultPathRetryLimit", 3, false]
 ```
@@ -31,6 +34,7 @@ registered ("enable + register" pattern).
 ```sqf
 [this, "HELICOPTER", "RAVEN_1", "Raven One"] call Waldo_fnc_TransportRegister;
 [this, "GROUND", "GROUND_1", "Ground One"] call Waldo_fnc_TransportRegister;
+[this, "BOAT", "BOAT_1", "Boat One"] call Waldo_fnc_TransportRegister;
 ```
 
 Forwards to server authority automatically — no `if (isServer)` wrapper
@@ -39,23 +43,33 @@ current position/direction becomes its base. Optional fifth-argument
 HashMap overrides per-service options (`leadersOnly`, `showMarker`,
 `cruiseAltitude`, `boardingSeconds`, `destinationDwell`,
 `landingSearchRadius`, `roadSearchRadius`, `groundSpeedLimit`,
-`pathRetrySeconds`, `pathRetryLimit`, `avoidRoadObstacles`, `repairAtBase`,
-`refuelAtBase`, `forceDisembark`, `failSafeReset`, `invulnerable`,
-`useImprovedLanding`, `keepEngineOnAway`) — see `wiki/Transport-Services.md`
-for the full table if a specific option needs tuning. Ground services
-stall-detect and, on the first retry, drop a road-follow order
-(`avoidRoadObstacles`, default `true`) so off-road pathfinding can route the
-AI driver around a parked vehicle or wreck blocking that road segment.
+`waterSearchRadius`, `boatSpeedLimit`, `pathRetrySeconds`, `pathRetryLimit`,
+`avoidRoadObstacles`, `repairAtBase`, `refuelAtBase`, `forceDisembark`,
+`failSafeReset`, `invulnerable`, `useImprovedLanding`) — see
+`wiki/Transport-Services.md` for the full table if a specific option needs
+tuning. Ground and boat services stall-detect and reissue the same order up
+to `pathRetryLimit` times; ground additionally drops its road-follow order
+(`avoidRoadObstacles`, default `true`) on the first retry so off-road
+pathfinding can route the AI driver around a parked vehicle or wreck
+blocking that road segment. Boats have no road equivalent to drop.
+
+Boat destination/pickup points must resolve to open water — the clicked
+position (and a small ring of points around it, so the boat doesn't beach
+right at the shoreline) must all read `surfaceIsWater`, searched outward up
+to `waterSearchRadius`. A landlocked click is rejected with a clear reason.
+This is a documented limitation, not full navigable-water routing: it
+cannot detect an island or headland sitting between the boat and the
+resolved point.
 
 ## Player usage
 
-**ACE Self Interact > WMP Transport > Helicopter/Ground Transport > Request
-/ Move Pickup**, click the map, board, then **Select Destination**. **Select
-/ Manage Transport** lists every service by name with move/destination/
-retry/RTB controls. **Request All Available** dispatches every eligible
-vehicle of that type around one clicked centre. **Return All Controlled to
-Base** returns everything reserved by or carrying the player. A stuck
-transport publishes **STUCK** rather than silently dropping the
+**ACE Self Interact > WMP Transport > Helicopter/Ground/Boat Transport >
+Request / Move Pickup**, click the map, board, then **Select Destination**.
+**Select / Manage Transport** lists every service by name with move/
+destination/retry/RTB controls. **Request All Available** dispatches every
+eligible vehicle of that type around one clicked centre. **Return All
+Controlled to Base** returns everything reserved by or carrying the player.
+A stuck transport publishes **STUCK** rather than silently dropping the
 reservation — retry via the same menu or send it to RTB.
 
 External vehicle interaction (approaching the vehicle from outside) is
@@ -75,8 +89,9 @@ rejected, so this can't be spoofed by proximity alone.
 ## Zeus
 
 **WMP Transport > Transport Service - Register** (on an existing AI-crewed
-vehicle; dialog picks type, display name, timing/recovery in plain
-language) and **Transport Service - Return to Base**.
+vehicle; dialog picks type — helicopter, ground or boat — display name,
+timing/recovery in plain language) and **Transport Service - Return to
+Base**.
 
 ## Eden composition (beginner drop-in)
 
@@ -84,8 +99,9 @@ language) and **Transport Service - Return to Base**.
 helicopter and ground vehicle each registered with only the required
 arguments (`createVehicleCrew this; [this, "HELICOPTER"/"GROUND"] call
 Waldo_fnc_TransportRegister;`). `_Full` shows the same pair with LZ
-clearance, improved-landing and other options set explicitly, including
-`keepEngineOnAway`.
+clearance, improved-landing and other options set explicitly. Neither
+composition currently ships a boat example; register one directly with the
+`"BOAT"` type shown above.
 
 ## Gotchas
 
@@ -100,7 +116,7 @@ clearance, improved-landing and other options set explicitly, including
   extra work needed if the mission also uses `vehicle-recovery-rallies.md`.
 - Improved AI Helicopter Landing (see `ai-rebalance.md`) takes over the
   final approach automatically unless `useImprovedLanding` is set `false`
-  on that registration.
+  on that registration. Ground and boat transports are unaffected.
 - Optional `invulnerable` only protects the vehicle and its original AI
   service crew — never passenger players.
 - Registration locks the driver seat to players and disables fleeing/panic
@@ -111,8 +127,7 @@ clearance, improved-landing and other options set explicitly, including
   off the service pool the same as an outright loss, and warns every
   player on that service's `allowedSides` — unlike an obvious loss, a
   damaged vehicle quietly dropping out of availability needs telling.
-- `keepEngineOnAway` (helicopters only, default `true`) re-asserts
-  `engineOn true` right after touchdown at a pickup/destination stop away
-  from base, overriding vanilla `TR UNLOAD`'s engine idle-down. RTB
-  shutdown is unaffected either way — set `false` to restore the old
-  idle-down-away-from-base behaviour.
+- A boat requires `isKindOf "Ship"` at registration; a route that must pass
+  close around land can still run the boat aground mid-journey even though
+  its endpoint validated as open water — this is a real, documented
+  limitation of the water-position search, not full pathfinding.

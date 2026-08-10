@@ -114,7 +114,7 @@ Required direction:
 
 ### Boat transport services
 
-**Status:** Planned
+**Status:** Implemented, pending in-engine acceptance testing against real boat classes and coastal terrain.
 
 Extend WMP Transport Services with waterborne transports, using the same player-facing request,
 destination and return-to-base language as the existing ground and air services without pretending

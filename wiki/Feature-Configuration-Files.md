@@ -392,8 +392,11 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_GroundTransport_DefaultRoadSearchRadius` | Radius searched for a connected road around a ground-transport click. |
 | `Waldo_GroundTransport_DefaultSeparation` | Minimum spacing in metres between ground-transport bases, active stops and bulk pickup slots. Default 18. |
 | `Waldo_GroundTransport_DefaultSpeedLimit` | Default AI ground-transport speed cap in kilometres per hour. |
-| `Waldo_Transport_DefaultPathRetrySeconds` | No-progress interval before a ground movement order is reissued. |
-| `Waldo_Transport_DefaultPathRetryLimit` | Maximum automatic order retries during one ground journey. |
+| `Waldo_BoatTransport_DefaultWaterSearchRadius` | Maximum safe-water-point adjustment from the player's boat pickup/destination click. Default 300 metres. |
+| `Waldo_BoatTransport_DefaultSeparation` | Minimum spacing in metres between boat bases, active stops and bulk pickup slots. Default 25. |
+| `Waldo_BoatTransport_DefaultSpeedLimit` | Default AI boat-transport speed cap in kilometres per hour. Default 45. |
+| `Waldo_Transport_DefaultPathRetrySeconds` | No-progress interval before a ground or boat movement order is reissued. |
+| `Waldo_Transport_DefaultPathRetryLimit` | Maximum automatic order retries during one ground or boat journey. |
 | `Waldo_Transport_MaxEffectiveDamage` | Damage fraction (0-1) at/above which a still-"alive" transport is written off the service pool the same as an outright loss. |
 | `Waldo_ObjectScaling_Minimum` | Smallest positive object scale accepted by the server. |
 | `Waldo_ObjectScaling_Maximum` | Largest object scale accepted by the server; must be at least the minimum. |
