@@ -364,13 +364,9 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_FieldResupply_Enable` | Master field-resupply opt-in. |
 | `Waldo_FieldResupply_CrateClass` | Deployed resupply crate class. |
 | `Waldo_FieldResupply_DefaultCarrierCapacity` | Default virtual crates carried. |
-| `Waldo_FieldResupply_ChargesPerCrate` | Resupply uses available from one deployed crate. |
-| `Waldo_FieldResupply_MagazinesPerType` | Fixed magazines granted per compatible type. |
-| `Waldo_FieldResupply_UseCapacityBasedAmounts` | Uses the capacity table instead of the fixed amount. |
-| `Waldo_FieldResupply_CapacityAmounts` | Amounts for the supported magazine-capacity bands. |
-| `Waldo_FieldResupply_MinimumMagazineRounds` | Rejects nearly empty source magazines below this count. |
-| `Waldo_FieldResupply_AllowedMagazines` | Optional explicit magazine allowlist. |
-| `Waldo_FieldResupply_BlockedMagazines` | Explicit denylist applied after discovery. |
+| `Waldo_FieldResupply_CrateSizeScalar` | Multiplies the deployed crate's populated quantities. |
+| `Waldo_FieldResupply_IncludeWeaponsAttachments` | Also populate weapons, attachments and clothing, not just ammunition. |
+| `Waldo_FieldResupply_IncludeLaunchers` | Also populate launchers and launcher ammunition. |
 | `Waldo_FieldResupply_RetainOnRespawn` | Restores carrier entitlement after vehicle respawn. |
 | `Waldo_Recovery_ScanInterval` | Server recovery-monitor interval in seconds. |
 | `Waldo_Recovery_NotificationRadius` | Radius receiving workshop completion notices. |
