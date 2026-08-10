@@ -13,6 +13,7 @@ curator-authenticated server rule as the larger runtime systems.
 
 These modules allow users to:
 * Spawn a Logistics System Supply & Medical Crate to Zeus specification
+* Turn a crewed AI land-vehicle group into a managed [AI Convoy](AI-Convoy-System)
 * Set the mission to [ENDEX](ENDEX-Script-&-Custom-End-Screen)
 * End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
 * Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
@@ -25,6 +26,7 @@ These modules allow users to:
 * Register vehicle-recovery workshops, recoverable vehicles and recovery carriers
 * Configure temporary squad rally respawns during play
 * Enable, time or lift SafeStart protection during play, even though it starts inactive by default
+* Send a [WMP notification card](Custom-UI-Notifications) to everyone, one side, a named group, or selected players
 
 WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped under **WMP Mission Flow**, **WMP Logistics**, **WMP Combat Systems**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**.
 
@@ -57,6 +59,10 @@ This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup),
 
 ![Fortify Budget Module GUI](https://i.imgur.com/GYunnuf.jpg)
 
+## AI Convoy Module
+
+Under **WMP Combat Systems**, **AI: Create Moving Convoy** turns the nearest crewed AI land-vehicle group within 150 m of the module into a managed convoy. Place the module on or near the lead vehicle. The dialog sets max speed, target separation and whether the convoy pushes through contact (keeps moving and only returns fire on the move) instead of stopping to engage. It calls the same [AI Convoy System](AI-Convoy-System) behaviour (`Waldo_fnc_SimpleAiConvoy`) available to scripts, dispatched to whichever machine currently owns the selected group. See [AI Convoy System](AI-Convoy-System) for the full parameter reference and the manual-stop script pattern.
+
 ## ENDEX Module
 
 The ENDEX module performs the following actions:
@@ -88,6 +94,10 @@ However, this variation allows the zeus to end the mission utilising a custom en
 
 Below is an example of the custom mission end screen:
 ![Mission End Screen Example](https://i.imgur.com/xmK9I1e.png)
+
+## Mission Flow: Send Notification
+
+Under **WMP Mission Flow**, sends a [WMP notification card](Custom-UI-Notifications) to a chosen audience instead of a single local player: title/message text, a type selector, duration, placement, a **Send to all players** checkbox, and a single ZEN-native **OWNERS** recipient picker (its own Sides/Groups/Players tabs, live multi-select, no typed callsign) for everything short of "everyone." Picked sides/groups/players are resolved into one deduplicated unit list before sending, so a player covered by more than one selection is never notified twice. Routed through a curator-authenticated server bridge before calling the same `Waldo_fnc_NotificationBroadcast` script API. See the [Custom UI Notifications](Custom-UI-Notifications) page for the full audience rules and the matching script call.
 
 ## Radio Jammer Modules
 
@@ -165,6 +175,8 @@ These modules are repeat-safe and send configuration through a server-authoritat
 **Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, recovery-object class, cargo preservation and restored fuel. Its friendly recovery-object dropdown is built from the mission-extensible `Waldo_Recovery_PackageClasses` pool. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** supports any nearby vehicle. Automatic handling uses its real configured vehicle cargo bay when a package fits and virtualizes otherwise; Virtual Manifest removes that engine dependency entirely, while Physical Cargo Bay deliberately enforces it. Loading range and a combined 1–10 package capacity are configurable. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
 
 ## AI Helicopter Landing
+
+[Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) intentionally has no ZEN module — it is a per-aircraft profile applied through `MissionConfig\aiConfig.sqf` and event-driven locality handlers, not a placeable or runtime-toggled system.
 
 ## Transport Services
 

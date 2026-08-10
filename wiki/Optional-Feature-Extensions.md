@@ -4,7 +4,7 @@
 
 _Associated Files: `init.sqf`; feature implementations under their matching `MissionScripts/` domains_
 
-**First time setting up one of these systems?** This page assumes it's already enabled and running — for the first-time "turn it on" walkthrough, go to [Optional Feature Systems](Optional-Feature-Systems) (persistence, hazardous environments, tree felling, emergency dismount, WMP HUD, explosive breaching, object scaling) or [Waldo's AI Tuning](Waldos-AI-Tweak) (AI rebalance) instead. This page covers the extra options layered on top: deeper customisation and less-common configuration, plus field resupply and tactical display, which don't have their own dedicated page yet.
+**First time setting up one of these systems?** This page assumes it's already enabled and running — for the first-time "turn it on" walkthrough, go to [Optional Feature Systems](Optional-Feature-Systems) (hazardous environments, tree felling, emergency dismount, WMP HUD, explosive breaching, object scaling), [Persistence](Persistence), or [Waldo's AI Tuning](Waldos-AI-Tweak) (AI rebalance) instead. This page covers the extra options layered on top: deeper customisation and less-common configuration, plus field resupply and tactical display, which don't have their own dedicated page yet.
 
 These extensions remain disabled by default, independently configurable and safe to initialise more than once. They use feature-specific settings rather than a mandatory common profile layer.
 
@@ -13,6 +13,8 @@ These extensions remain disabled by default, independently configurable and safe
 Registered objects can persist an allow-list of custom variables in addition to cargo, damage, fuel, ammunition and position. Pass variable names as the sixth registration option, or edit `Waldo_Persistence_DefaultCustomVariables`. Object scale, breach state and stable field-resupply state are included by default. Existing version-one object records remain loadable.
 
 Dynamic objects are not recreated automatically. Register stable editor objects with unique keys; use mission-specific recreation logic for objects that do not exist when a save is loaded.
+
+For enabling persistence itself, the full settings table and `Waldo_fnc_PersistenceRegisterObject`'s calling contract, see the [complete Persistence guide](Persistence).
 
 ## Hazardous environments and contact emitters
 

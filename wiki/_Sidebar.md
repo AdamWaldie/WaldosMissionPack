@@ -87,6 +87,7 @@
 **Optional and Advanced Systems**
 
 * [Complete Feature Catalogue](Feature-Catalogue)
+* [Persistence](Persistence)
 * [Optional Feature Systems](Optional-Feature-Systems)
 * [Optional Feature Extensions](Optional-Feature-Extensions)
 * [Dynamic Anti-Air](Dynamic-Anti-Air)
