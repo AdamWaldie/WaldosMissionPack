@@ -14,8 +14,9 @@ WMP requires:
 
 - CBA_A3
 - ACE 3
+- Zeus Enhanced (the in-Zeus authoring surface for most systems added since v4.8 — Economy, Dynamic AA/AO, Gunship, Hazards, Transport, Recovery, Breaching, notifications, and more)
 
-Load optional integrations such as ACRE2, TFAR, Zeus Enhanced, or LAMBS only when your mission uses them.
+Load optional integrations such as ACRE2, TFAR, or LAMBS only when your mission uses them.
 
 ## 3. Copy WMP into the mission folder
 

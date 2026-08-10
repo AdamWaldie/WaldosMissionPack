@@ -8,8 +8,8 @@ WaldosMissionPack (WMP) is an **Arma 3 mission scripting starter framework**. It
 
 The pack is used by 40+ milsim units. Mission makers are the primary audience — they configure the scripts through the init files and Eden Editor, not by writing new code.
 
-**Required Arma 3 mods:** CBA_A3, ACE 3  
-**Optional:** ACRE 2, TFAR, Zeus Enhanced, LAMBS series
+**Required Arma 3 mods:** CBA_A3, ACE 3, Zeus Enhanced  
+**Optional:** ACRE 2, TFAR, LAMBS series
 
 **Wiki (feature and Zeus module tutorials):** https://github.com/AdamWaldie/WaldosMissionPack/wiki
 
