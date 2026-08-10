@@ -176,7 +176,7 @@ switch (toUpperANSI _action) do {
     case "TRANSPORT_RTB": {
         _settings params ["_target"];
         private _type = _target getVariable ["Waldo_TransportService_Type", ""];
-        private _ok = _type in ["HELICOPTER", "GROUND"] && {["RTB", _type, _target, [], _caller] call Waldo_fnc_TransportRequestServer};
+        private _ok = _type in ["HELICOPTER", "GROUND", "BOAT"] && {["RTB", _type, _target, [], _caller] call Waldo_fnc_TransportRequestServer};
         ["TRANSPORT SERVICE", if (_ok) then {"Return-to-base ordered."} else {"The selected vehicle is not a registered transport service."}, if (_ok) then {"SUCCESS"} else {"ERROR"}, "TRANSPORT_ZEN"] call _reply;
     };
     case "RALLY_CONFIG": {

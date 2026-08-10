@@ -27,6 +27,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Vehicle Ambush/Camo scripts.
 - Vehicle unflipping actions
 - Configurable AI convoy system with mission-maker and Zeus workflows.
+- Transport Services - reusable AI-crewed helicopter, ground and boat transports players call in with a map click, each in its own typed pool. Server-authoritative reservation, request IDs, requester identity and JIP-visible state; movement runs wherever the AI group is currently local. Boat requests resolve to open water clear of the shoreline; ground prefers connected roads; helicopters resolve a clearance-checked landing zone. Stuck detection, retry, optional invulnerability, ACE-first player controls with vanilla fallback, and a ZEN register/RTB workflow are shared across all three types.
 - Teleportation Script
 - Endex & Safestart Scripts - Safestart is available but inactive by default and can be enabled by Zeus; ENDEX includes an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers).
 - Script-driven Tasks/Objectives helpers - JIP-safe BIS task wrappers with automatic map markers that also feed the After-Action Report.
@@ -92,11 +93,11 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 # Required Addons
 - CBA_A3
 - ACE 3 (Field Headquarters, Construction System, Quartermaster Logistics Spawner)
+- Zeus Enhanced & Compat (the in-Zeus authoring surface for most systems added since v4.8 - Economy, Dynamic AA/AO, Gunship, Hazards, Transport, Recovery, Breaching, notifications, and more)
 
 # Supported Addons
 - ACRE 2 (optional; configure or disable it in `MissionConfig\acreConfig.sqf`)
 - TFAR (inherent support through Eden configuration)
-- Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
 

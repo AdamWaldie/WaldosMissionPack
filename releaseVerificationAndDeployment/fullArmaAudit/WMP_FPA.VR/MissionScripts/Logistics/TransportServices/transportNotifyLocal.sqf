@@ -17,12 +17,21 @@ params [
 ];
 if (!hasInterface || {_message == ""}) exitWith {""};
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {""};
-private _heli = toUpperANSI _type == "HELICOPTER";
-private _baseChannel = ["GROUND_TRANSPORT", "HELI_TRANSPORT"] select _heli;
+private _typeUpper = toUpperANSI _type;
+private _baseChannel = switch (_typeUpper) do {
+    case "HELICOPTER": {"HELI_TRANSPORT"};
+    case "BOAT": {"BOAT_TRANSPORT"};
+    default {"GROUND_TRANSPORT"};
+};
+private _title = switch (_typeUpper) do {
+    case "HELICOPTER": {"HELICOPTER TRANSPORT"};
+    case "BOAT": {"BOAT TRANSPORT"};
+    default {"GROUND TRANSPORT"};
+};
 private _safeKey = toUpperANSI ([_serviceKey, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString);
 private _channel = if (_safeKey == "") then {_baseChannel} else {format ["%1_%2", _baseChannel, _safeKey]};
 private _priority = switch (toUpperANSI _state) do {case "ERROR": {3}; case "WARNING": {2}; case "SUCCESS": {1}; default {0}};
 [
-    ["GROUND TRANSPORT", "HELICOPTER TRANSPORT"] select _heli,
+    _title,
     _message, _state, _duration, "TOP_RIGHT", _channel, "WMP TRANSPORT", "REPLACE", _priority
 ] call Waldo_fnc_ShowUiNotification
