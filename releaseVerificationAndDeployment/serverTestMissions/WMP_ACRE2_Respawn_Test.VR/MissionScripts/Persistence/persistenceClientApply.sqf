@@ -1,17 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
- * Applies a server-supplied persistence state to the local player after validation.
+ * Applies a server-supplied persistence load result to the local player after validation.
  * Locality and authority: the server remote-executes this on the owning player client. It rejects
- * requests from any non-server remote owner and mutates only the local player.
+ * requests from any non-server remote owner and mutates only the local player. FOUND restores the
+ * saved state, NONE releases the authored baseline, and FAILED releases gameplay while permanently
+ * withholding automatic persistence writes for this client session. Repeated/stale replies are
+ * rejected by the PENDING state, so one server response owns each join/JIP handshake.
  *
  * Arguments:
- * 0: state <ARRAY> - versioned player-state payload
+ * 0: result <STRING> - FOUND, NONE or FAILED
+ * 1: state <ARRAY> - versioned player-state payload; required only for FOUND
  *
  * Return Value:
  * Boolean - true when the payload was accepted
  *
  * Example:
- * [_state] remoteExecCall ["Waldo_fnc_PersistenceClientApply", owner _player];
+ * ["FOUND", _state] remoteExecCall ["Waldo_fnc_PersistenceClientApply", owner _player];
  *
  * Result:
  * The owning client restores configured player state and prepares its ordinary respawn snapshot.
@@ -20,14 +24,48 @@
  * Waldo_fnc_PersistenceServerHandleLoadPlayer on the server.
  */
 
-params [["_state", [], [[]]]];
+params [["_result", "FAILED", [""]], ["_state", [], [[]]]];
 if !(hasInterface) exitWith {false};
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
-if (count _state < 6) exitWith {false};
+private _currentLoadState = missionNamespace getVariable ["Waldo_Persistence_PlayerLoadState", "FAILED"];
+if !(_currentLoadState in ["PENDING", "WAITING_RUNTIME"]) exitWith {
+    diag_log format ["[WMP PERSISTENCE] Ignored stale player-load result %1 while state was %2.", _result, _currentLoadState];
+    false
+};
+_result = toUpperANSI _result;
+if (_result == "FAILED") exitWith {
+    missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FAILED"];
+    missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", false];
+    diag_log "[WMP PERSISTENCE] Player load failed validation; ACRE baseline released and automatic persistence writes remain disabled.";
+    ["PERSISTENCE_LOAD_FAILED", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+    true
+};
+if (_result == "NONE") exitWith {
+    missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "NONE"];
+    private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
+    private _acreManaged = isClass (configFile >> "CfgPatches" >> "acre_main") && {_acreConfig getOrDefault ["enabled", true]};
+    if (_acreManaged) then {
+        ["PERSISTENCE_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+    } else {
+        [false] call Waldo_fnc_SaveLoadout;
+        missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", true];
+    };
+    true
+};
+if (_result != "FOUND" || {count _state < 6}) exitWith {
+    missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FAILED"];
+    missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", false];
+    diag_log format ["[WMP PERSISTENCE] Rejected malformed player-load result %1.", _result];
+    ["PERSISTENCE_MALFORMED", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+    false
+};
 
 _state params ["_version", "_loadout", "_medical", "_needs", "_position", "_radios"];
 if (_version != 1) exitWith {
+    missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FAILED"];
+    missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", false];
     diag_log format ["[WMP PERSISTENCE] Rejected unsupported player-state version %1.", _version];
+    ["PERSISTENCE_VERSION_FAILED", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
     false
 };
 
@@ -54,23 +92,34 @@ if (missionNamespace getVariable ["Waldo_Persistence_SavePosition", false] && {c
 };
 
 private _generation = missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0];
-if (missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false] && {count _radios > 0}) then {
+private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
+private _acreManaged = isClass (configFile >> "CfgPatches" >> "acre_main") && {_acreConfig getOrDefault ["enabled", true]};
+if (_acreManaged && {missionNamespace getVariable ["Waldo_Persistence_SaveRadios", false]} && {count _radios > 0}) then {
     missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
     [_radios, _generation] spawn {
         params ["_savedRadios", "_loadoutGeneration"];
         if !([_savedRadios, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState) then {
             diag_log "[WMP PERSISTENCE] Saved ACRE radio state could not be restored; applying the current mission plan.";
+            missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FOUND"];
             missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
             ["PERSISTENCE_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         } else {
             missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios];
+            missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FOUND"];
+            missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", true];
             missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
             ["PERSISTENCE_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         };
     };
 } else {
+    missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FOUND"];
     missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
-    ["PERSISTENCE_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+    if (_acreManaged) then {
+        ["PERSISTENCE_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+    } else {
+        [false] call Waldo_fnc_SaveLoadout;
+        missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", true];
+    };
 };
 
 ["PERSISTENCE", "Persistent player state loaded.", "SUCCESS", "PERSISTENCE"] call Waldo_fnc_FeatureNotifyLocal;

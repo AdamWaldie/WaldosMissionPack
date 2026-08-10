@@ -1,6 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
  * Validates player persistence requests and performs all INIDBI2 player reads/writes on the server.
+ * Every LOAD_PLAYER request receives exactly one FOUND, NONE or FAILED response. This explicit reply
+ * is required so a client never starts automatic writes while an older database record is unread.
+ * The server remains the sole database authority; repeated requests are safe and UID/scope isolated.
  *
  * Arguments:
  * 0: operation <STRING> - LOAD_PLAYER or SAVE_PLAYER
@@ -45,9 +48,14 @@ switch (toUpperANSI _operation) do {
     case "LOAD_PLAYER": {
         private _stored = ["read", ["WMP", "PlayerState", []]] call _db;
         if (count _stored >= 4 && {(_stored select 0) == "WMP_PLAYER_STATE"} && {(_stored select 1) == _uid} && {(_stored select 2) == _scopeKey}) then {
-            [_stored select 3] remoteExecCall ["Waldo_fnc_PersistenceClientApply", _requestOwner];
+            ["FOUND", _stored select 3] remoteExecCall ["Waldo_fnc_PersistenceClientApply", _requestOwner];
         } else {
-            if (count _stored > 0) then {diag_log format ["[WMP PERSISTENCE] Rejected stored player state whose identity did not match UID/scope %1/%2.", _uid, _scopeKey]};
+            if (count _stored > 0) then {
+                diag_log format ["[WMP PERSISTENCE] Rejected stored player state whose identity did not match UID/scope %1/%2.", _uid, _scopeKey];
+                ["FAILED", []] remoteExecCall ["Waldo_fnc_PersistenceClientApply", _requestOwner];
+            } else {
+                ["NONE", []] remoteExecCall ["Waldo_fnc_PersistenceClientApply", _requestOwner];
+            };
         };
         true
     };

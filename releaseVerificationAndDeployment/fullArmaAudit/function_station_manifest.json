@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 891,
+  "registeredFunctionCount": 886,
   "runtimeFunctionCount": 385,
-  "functionCount": 1276,
+  "functionCount": 1271,
   "stations": [
     {
       "id": "control",
@@ -583,36 +583,6 @@
     {
       "name": "Waldo_fnc_ACRE2Init",
       "file": "MissionScripts/MissionInit/ACRE2/acre2InitNew.sqf",
-      "station": "mission-init",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ACRE2Init_Legacy",
-      "file": "MissionScripts/MissionInit/ACRE2/ACRE2Init.sqf",
-      "station": "mission-init",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ACRE2SquadLevelRadios_Legacy",
-      "file": "MissionScripts/MissionInit/ACRE2/ACRE2SquadLevelRadios.sqf",
-      "station": "mission-init",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_GetSRChannelName_Legacy",
-      "file": "MissionScripts/MissionInit/ACRE2/GetSRChannelName.sqf",
-      "station": "mission-init",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_CreateACRECEOI_Legacy",
-      "file": "MissionScripts/MissionInit/ACRE2/CreateACRECEOI.sqf",
-      "station": "mission-init",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_BabelActivation_Legacy",
-      "file": "MissionScripts/MissionInit/ACRE2/BabelActivation.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

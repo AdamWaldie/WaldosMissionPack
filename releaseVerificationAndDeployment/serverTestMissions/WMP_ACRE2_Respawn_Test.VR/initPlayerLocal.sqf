@@ -1,9 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * initPlayerLocal.sqf - runs per-player on each join. Saves the starting loadout and re-applies it
- * on respawn via a CBA event. Vehicle recovery actions are bound to vehicles by VehicleInit.
- * handler. Two optional behaviours (save-on-arsenal-close, respawn-with-what-you-died-with) are
- * included commented out below.
+ * Runs once for each player's own interface client. It starts local UI/actions, applies the
+ * server-published ACRE plan, and owns that player's respawn snapshot. Mission makers normally edit
+ * MissionConfig rather than this file. Add a custom call here only when its function header says
+ * player-local, hasInterface, local UI, local interaction, or local player state.
  *
  * Arguments:
  * None (engine entry point; runs locally for each player)
@@ -13,13 +13,28 @@
  */
 
 /*
-Player-local optional feature configuration and activation
-
-These defaults are installed only on machines with a player interface. The isNil guards preserve
-newer values published by the server before a JIP player reaches initPlayerLocal.sqf. Server-owned
-or cross-locality features wait for init.sqf to finish its shared configuration before starting.
+PLAYER-LOCAL STARTUP
+These settings and activations exist only on machines with a player interface. Guarded defaults do
+not replace newer server values already received by a JIP player. Do not move server-owned feature
+startup into this file: every player would create a competing copy.
 */
 if (hasInterface) then {
+    // ACRE's initial assignment must not race a player-persistence read. Start closed, then let the
+    // authoritative runtime snapshot resolve this to DISABLED, PENDING, FOUND, NONE or FAILED.
+    // FAILED deliberately releases ACRE but never permits this client to overwrite an unread save.
+    missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "WAITING_RUNTIME"];
+    missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", false];
+    // Install briefing records synchronously whenever the player already exists so they are visible
+    // before Continue. The bounded asynchronous path is only a fallback for a genuinely late player.
+    if (!isNull player) then {
+        call Waldo_fnc_AddDocs;
+    } else {
+        [] spawn {
+            private _deadline = diag_tickTime + 30;
+            waitUntil {uiSleep 0.1; !isNull player || {diag_tickTime >= _deadline}};
+            if (!isNull player) then {call Waldo_fnc_AddDocs};
+        };
+    };
     [] call Waldo_fnc_ACRE2Init;
     // InfoText marks completion after the fake loading/title presentation. Features may queue
     // non-critical notices against this state instead of drawing over the introduction.
@@ -57,7 +72,11 @@ if (hasInterface) then {
                 || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
             }
         };
-        if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+        if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {
+            missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FAILED"];
+            missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", false];
+            ["PERSISTENCE_RUNTIME_FAILED", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+        };
         if (missionNamespace getVariable ["Waldo_Economy_Enable", false]) then {
             // Client presentation starts only after the server's authoritative preset/catalogues
             // have been published. On a hosted server EcoInit is repeat-safe and this is a no-op.
@@ -69,11 +88,15 @@ if (hasInterface) then {
         if (missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false]) then {
             [] call Waldo_fnc_EmergencyDismountInit;
         };
-        if (missionNamespace getVariable ["Waldo_AccessibilityPID_Enable", false]) then {
-            [] call Waldo_fnc_AccessibilityPIDInit;
+        if (missionNamespace getVariable ["Waldo_WmpHud_Enable", false]) then {
+            [] call Waldo_fnc_WmpHudInit;
         };
         if (missionNamespace getVariable ["Waldo_Persistence_Enable", false]) then {
             [] call Waldo_fnc_PersistenceInit;
+        } else {
+            missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "DISABLED"];
+            missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", true];
+            ["PERSISTENCE_DISABLED", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         };
         if (missionNamespace getVariable ["Waldo_FieldResupply_Enable", false]) then {
             [] call Waldo_fnc_FieldResupplyInit;
@@ -89,9 +112,6 @@ if (hasInterface) then {
         };
     };
 };
-
-//Post-Init Setup of saved Loadout (Measure taken to help prevent Naked/unarmed People)
-
 
 // Save a base-class inventory on mission start. ACRE startup replaces this with the fully assigned
 // inventory plus player-level radio snapshot after its one-time baseline configuration.
@@ -136,6 +156,7 @@ if (hasInterface) then {
         };
         [] call Waldo_fnc_SetupUiCleanupAction;
         [] call Waldo_fnc_AccessibilitySelfInteractionInit;
+        [] call Waldo_fnc_TransportInteractionInitLocal;
     };
 }] call CBA_fnc_addClassEventHandler;
 

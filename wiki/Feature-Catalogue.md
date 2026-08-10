@@ -85,7 +85,7 @@ Runtime configuration is server-authoritative. Current settings are published fo
 - [ACRE 2 Automated CEOI](ACRE2-Automated-CEOI-Document)
 - [ACRE 2 Babel Configuration](ACRE2-Babel-Configuration)
 
-The current ACRE2 framework uses a single `MissionConfig\acreConfig.sqf`, label-only named side presets, deterministic side/group/player/role plans, independent same-type radio occurrences and ears, frequency-radio support, verified JIP-safe CEOI/Babel, and ACRE-filtered respawn/persistence loadouts. Extra radios and alternate PTT remain player-owned. The frozen `_Legacy` functions are manual emergency fallbacks only.
+The current ACRE2 framework uses a single `MissionConfig\acreConfig.sqf`, label-only named side presets, deterministic side/group/player/role plans, independent same-type radio occurrences and ears, frequency-radio support, verified JIP-safe CEOI/Babel, and ACRE-filtered respawn/persistence loadouts. Extra radios and alternate PTT remain player-owned. Obsolete `_Legacy` ACRE setup functions have been removed so there is one supported lifecycle.
 - [Mission Diagnostics](Mission-Diagnostics)
 - [Mission Maker Resource Scripts](Mission-Maker-Resource-Scripts)
 - [Unit Insignias](Unit-Insignias)

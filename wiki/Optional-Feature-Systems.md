@@ -46,6 +46,11 @@ server validates the identity stored inside a record before sending it to a clie
 
 ACRE-aware persistence filters unique `_ID_n` radio classes before storage. When `Waldo_Persistence_SaveRadios` is enabled, channel and spatial state are stored separately by base radio class and same-type ordinal. A restore creates fresh unique radios first and then reapplies persisted state; when disabled, the current side/group mission plan is applied instead. ACRE being absent leaves ordinary loadouts unchanged.
 
+Player loading is acknowledged as `FOUND`, `NONE` or `FAILED` before automatic player saves begin.
+If the read fails or takes more than 30 seconds, gameplay and the ACRE baseline continue normally,
+but player persistence writes remain disabled for that client session. This deliberately protects an
+existing record from being overwritten by a temporary startup loadout.
+
 ### Registering objects — `Waldo_fnc_PersistenceRegisterObject`
 
 Register an editor object from `initServer.sqf` or its own init field:

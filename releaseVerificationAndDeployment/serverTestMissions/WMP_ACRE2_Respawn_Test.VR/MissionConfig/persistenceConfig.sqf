@@ -51,6 +51,29 @@
  * This is per-player state, not data embedded in an inventory classname. If SaveRadios is false,
  * persistence restores the authored ACRE baseline, but subsequent local loadout saves still retain
  * the player's chosen settings for ordinary respawns.
+ * On join/JIP, automatic player writes remain locked until the server explicitly reports FOUND or
+ * NONE and the corresponding saved radios or authored baseline are ready. FAILED or a 30-second
+ * timeout releases ordinary mission/ACRE startup but keeps persistence writes locked, so an unread
+ * database record cannot be replaced by the temporary starting loadout.
+ *
+ * SETTING-BY-SETTING GUIDE:
+ * - Waldo_Persistence_Enable (MISSION MAKER): requests persistence; no save occurs unless the server INIDBI2 gate passes.
+ * - Waldo_Persistence_SaveLoadout (MISSION MAKER): stores filtered player inventory across sessions.
+ * - Waldo_Persistence_SaveMedical (MISSION MAKER): stores/restores supported ACE medical state.
+ * - Waldo_Persistence_SaveFoodWater (MISSION MAKER): stores supported survival values when their system exists.
+ * - Waldo_Persistence_SavePosition (MISSION MAKER): restores the old position; false avoids bypassing mission flow.
+ * - Waldo_Persistence_SaveRadios (MISSION MAKER): persists supported per-player ACRE settings separately from inventory.
+ * - Waldo_Persistence_DatabaseName (MISSION MAKER): stable save collection name; changing it begins a separate dataset.
+ * - Waldo_Persistence_Scope (MISSION MAKER): MISSION isolates by mission/terrain; CAMPAIGN deliberately shares records.
+ * - Waldo_Persistence_PlayerSaveInterval (ADVANCED): seconds between automatic player writes; lower increases I/O.
+ * - Waldo_Persistence_ObjectSaveInterval (ADVANCED): seconds between registered-world-object writes.
+ * - Waldo_Persistence_DefaultCustomVariables (ADVANCED): serialisable object-variable names saved for every object.
+ *
+ * BEGINNER EXAMPLE: install INIDBI2 on the server, change Enable to true, leave Scope as MISSION,
+ * and keep SavePosition/SaveRadios false for the first test. A successful diagnostics report must
+ * say that the runtime extension is available; the config switch alone is not proof. Register a
+ * world object with a stable key only when it also needs persistence. Changing DatabaseName or
+ * Scope later intentionally selects different records rather than migrating old data.
  */
 createHashMapFromArray [
     ["featureFamilies", ["INIDBI2 Persistence"]],

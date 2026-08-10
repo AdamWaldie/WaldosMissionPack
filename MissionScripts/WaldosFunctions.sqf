@@ -99,21 +99,6 @@ class CfgFunctions
             class ACRE2Init {
                 file = "MissionScripts\MissionInit\ACRE2\acre2InitNew.sqf";
             };
-            class ACRE2Init_Legacy {
-                file = "MissionScripts\MissionInit\ACRE2\ACRE2Init.sqf";
-            };
-            class ACRE2SquadLevelRadios_Legacy {
-                file = "MissionScripts\MissionInit\ACRE2\ACRE2SquadLevelRadios.sqf";
-            };
-            class GetSRChannelName_Legacy {
-                file = "MissionScripts\MissionInit\ACRE2\GetSRChannelName.sqf";
-            };
-            class CreateACRECEOI_Legacy {
-                file = "MissionScripts\MissionInit\ACRE2\CreateACRECEOI.sqf";
-            };
-            class BabelActivation_Legacy {
-                file = "MissionScripts\MissionInit\ACRE2\BabelActivation.sqf";
-            };
             class ACRE2ValidateConfig {file = "MissionScripts\MissionInit\ACRE2\acre2ValidateConfig.sqf";};
             class ACRE2GetRadioProfiles {file = "MissionScripts\MissionInit\ACRE2\acre2GetRadioProfiles.sqf";};
             class ACRE2GetOrderedRadios {file = "MissionScripts\MissionInit\ACRE2\acre2GetOrderedRadios.sqf";};
