@@ -762,6 +762,10 @@ accessible Arma controls.
 - `Waldo_fnc_MiniGameAccessibility` — local high-contrast, colourblind, large-text, outlines,
   reduced-motion, and audio-caption preferences. These never change mission difficulty or timers.
 - `Waldo_fnc_MiniGameEquipmentGallery` — developer visual-review picker for all ten procedures.
+- `Waldo_fnc_MiniGameEquipmentGallerySetup` — adds an ACE interaction and linked vanilla action to a
+  placed object that opens the gallery locally for whichever player uses it: `[this] call
+  Waldo_fnc_MiniGameEquipmentGallerySetup;`. Same ACE-first/vanilla-fallback dual-surface policy as
+  the loadout save point. The **Field Equipment Gallery Example** composition places this on a laptop.
 
 **Architecture.** The table engine is ported from the community composition "Party Games Scripted" by
 |LorÐ|™[Habilidade]Ðeus Ex, rebranded to the internal `Waldo_MG_` namespace. Twelve isolated games

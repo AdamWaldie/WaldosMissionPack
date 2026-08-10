@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="Empty";
+		class PositionInfo {position[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_FieldEquipmentGallery";
+			init="[this] call Waldo_fnc_MiniGameEquipmentGallerySetup;";
+		};
+		id=1;
+		type="Land_Laptop_unfolded_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-3};};
+		title="Field Equipment Gallery: installs the blue vanilla action and ACE interaction locally for every player and JIP client. Opens the developer/tester picker for all ten field-equipment procedures (wirecut, minesweeper, keypad, lockpick, circuit, repair, radiotune, pressure, sequence, commandinput) with stable showcase configs, letting anyone try every procedure from one object without placing ten separate fixtures. Purely for review/testing - passing or failing here has no gameplay consequence. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games-Interaction-Challenges";
+		id=2;
+	};
+};
