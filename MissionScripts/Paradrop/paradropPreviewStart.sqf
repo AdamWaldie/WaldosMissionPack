@@ -94,7 +94,7 @@ if !(missionNamespace getVariable ["Waldo_Paradrop_PreviewHandlersInstalled", fa
             if (_key in [16, 18]) exitWith {
                 private _step = 5;
                 private _newDirection = (missionNamespace getVariable ["Waldo_Paradrop_PreviewDirection", 0]) + (if (_key == 18) then {_step} else {-_step});
-                _newDirection = _newDirection % 360;
+                _newDirection = _newDirection mod 360;
                 if (_newDirection < 0) then {_newDirection = _newDirection + 360};
                 missionNamespace setVariable ["Waldo_Paradrop_PreviewDirection", _newDirection];
                 true
