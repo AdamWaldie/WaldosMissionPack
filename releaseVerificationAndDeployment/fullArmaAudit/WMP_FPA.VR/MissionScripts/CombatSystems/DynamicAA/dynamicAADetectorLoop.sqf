@@ -21,7 +21,7 @@
  * Nothing. The spawned loop exits when the system is removed, deactivated or loses required radar.
  *
  * Current callers:
- * Waldo_fnc_DynamicAACreate after the server has registered and published the complete system state.
+ * Waldo_fnc_DynamicAAStartDetectorServer after creation has registered the complete system state.
  *
  * Example:
  * ["north_sector"] spawn Waldo_fnc_DynamicAADetectorLoop;

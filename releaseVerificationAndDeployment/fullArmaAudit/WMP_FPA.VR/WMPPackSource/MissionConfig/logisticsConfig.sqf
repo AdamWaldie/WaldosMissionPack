@@ -75,7 +75,10 @@
  * - Waldo_TransportServices_Enable: permits registered helicopter and ground transport services; creates none.
  * - Waldo_Transport_TravelTimeout: maximum seconds allowed for one physical journey before failure recovery.
  * - Waldo_Transport_DefaultBoardingSeconds: maximum pickup wait before an unused service returns to base.
- * - Waldo_Transport_DefaultDestinationDwell: maximum destination wait before physical RTB begins.
+ * - Waldo_Transport_DefaultDestinationDwell: seconds before optional forceDisembark requests player exits; it never permits occupied RTB.
+ * - Waldo_Transport_DestinationSettleSeconds (ADVANCED): continuous grounded/slow time before automatic RTB.
+ * - Waldo_Transport_DestinationEmptyConfirmSeconds (ADVANCED): continuous human-empty time before automatic RTB.
+ * - Waldo_Transport_DestinationSettleSpeedKph (ADVANCED): maximum speed still considered safely settled.
  * - Waldo_HeliTransport_DefaultAltitude: default transit height in metres for registered helicopters.
  * - Waldo_HeliTransport_DefaultLzSearchRadius: furthest a safe helicopter LZ may move from the map click.
  * - Waldo_HeliTransport_DefaultLzClearanceScale: scales the aircraft's real model footprint when testing an LZ.
@@ -131,7 +134,10 @@ createHashMapFromArray [
         ["Waldo_TransportServices_Enable", true, true], // BOOL: enables inert shared service framework.
         ["Waldo_Transport_TravelTimeout", 900, false], // SECONDS: one physical movement deadline.
         ["Waldo_Transport_DefaultBoardingSeconds", 300, false], // SECONDS: pickup boarding window.
-        ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: maximum wait for player passengers to leave before RTB is ordered. forceDisembark may first request moveOut.
+        ["Waldo_Transport_DefaultDestinationDwell", 45, false], // SECONDS: when forceDisembark may request exit. RTB still waits until no human occupies any seat.
+        ["Waldo_Transport_DestinationSettleSeconds", 3, false], // ADVANCED SECONDS: continuous ground contact/low speed required before automatic RTB.
+        ["Waldo_Transport_DestinationEmptyConfirmSeconds", 2, false], // ADVANCED SECONDS: continuous fullCrew human-empty confirmation required before automatic RTB.
+        ["Waldo_Transport_DestinationSettleSpeedKph", 5, false], // ADVANCED KM/H: maximum total vehicle speed counted as settled at destination.
         ["Waldo_HeliTransport_DefaultAltitude", 50, false], // METRES: default helicopter transit height.
         ["Waldo_HeliTransport_DefaultLzSearchRadius", 500, false], // METRES: maximum permitted LZ adjustment from the click.
         ["Waldo_HeliTransport_DefaultLzClearanceScale", 1.5, false], // MULTIPLIER: expand both model axes; the longer expanded half-axis becomes the circular LZ clearance.

@@ -5,7 +5,14 @@
  * later arrival/failure reports must match it, so delayed locality messages cannot corrupt a newer
  * task. Pool requests use side/group/leadership access rules. Direct SET_DESTINATION and RTB vehicle
  * interactions are available to every player currently inside that vehicle; the server revalidates
- * crew membership so a nearby outsider cannot invoke them.
+ * crew membership so a nearby outsider cannot invoke them. Automatic post-destination RTB uses a
+ * server-to-server call (owner 2); ordinary clients cannot claim that trusted internal path.
+ *
+ * Locality, authority, repeat and JIP behaviour:
+ * The server alone mutates the service registry, request serial, public vehicle state and map marker.
+ * Movement is sent to the current AI-group owner. Repeating or retargeting creates a new request ID,
+ * invalidating the previous owner-local controller. Public object state and the server registry let
+ * JIP clients rebuild their actions without replaying a movement request.
  *
  * Arguments:
  * 0: action <STRING> - REQUEST_PICKUP, REQUEST_ADDITIONAL, REQUEST_SPECIFIC (internal bulk use),
@@ -28,9 +35,16 @@
 params ["_action", "_type", "_vehicle", ["_position", [], [[]]], "_requester", ["_suppressRequesterNotification", false, [false]]];
 _action = toUpperANSI _action;
 _type = toUpperANSI _type;
-private _internalRtb = remoteExecutedOwner == 0 && {_action == "RTB"};
+// A destination-complete worker deliberately remoteExecs back to server owner 2. Testing only for
+// local owner 0 rejected that call and left the vehicle permanently in DISEMBARKING. A real client
+// arrives with its own owner ID, never 2, so this remains an internal-only bypass.
+private _internalRtb = _action == "RTB" && {remoteExecutedOwner in [0, 2]};
 if (!isServer || {!_internalRtb && {isNull _requester || {!isPlayer _requester}}}) exitWith {false};
-if (remoteExecutedOwner > 0 && {owner _requester != remoteExecutedOwner}) exitWith {false};
+// A trusted automatic RTB still carries the original requester object for notification/audit
+// context, but the call now originates from server owner 2 rather than that player's client owner.
+// Apply the anti-spoof owner comparison only to ordinary client requests; otherwise every automatic
+// RTB requested for a remote player is rejected after the aircraft has already entered DISEMBARKING.
+if (!_internalRtb && {remoteExecutedOwner > 0} && {owner _requester != remoteExecutedOwner}) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_TransportServices_Enable", false]) exitWith {false};
 if !(_type in ["HELICOPTER", "GROUND"]) exitWith {false};
 private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
