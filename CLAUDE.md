@@ -489,6 +489,54 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Zeus registration, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
 
+### Headless Client Support (optional)
+
+Native, server-authoritative distribution of AI groups across connected headless clients. No
+mission-maker setup is required: connect a headless client and it self-registers and starts
+receiving eligible AI groups automatically. This replaces the legacy, disabled-by-default
+`MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf` ("Werthles' Headless Kit") third-party
+script, which remains in the repository unmodified for reference only and must not be re-enabled
+alongside this system.
+
+```sqf
+// No configuration needed - just connect a headless client (Arma launch parameter -client
+// -connect=... -password=... against the hosting server, or a Virtual Headless Client Entity).
+// Every machine calls this on the same ordered feature-runtime snapshot handshake as AI
+// rebalance/helicopter landing (init.sqf); it is a no-op on the server and on real players.
+[] call Waldo_fnc_HeadlessDetectLocal;
+```
+
+**Detection and eligibility.** A headless client is identified by the standard, version-stable test
+`!isDedicated && !hasInterface` (not the legacy script's `serverCommandAvailable "#kick"`
+heuristic, which can also be true for a listen-server host or any admin-capable connection). A group
+is eligible for migration only when it has no human player as leader or member, has not set the
+group variable `Waldo_Headless_ExcludeGroup` to `true` (the opt-out convention any WMP subsystem can
+use to pin its own AI server-side), is not `sideLogic` (curator helpers/ZEN module logic), is not
+currently crewing a registered Airborne Gunship aircraft (`Waldo_Gunship_Registry` - gunship crew is
+intentionally server-owned), and is currently local to the server. Every actual `setGroupOwner` call
+in the rework funnels through `Waldo_fnc_HeadlessMigrateGroup`, so the registry never drifts.
+
+**Reapplying locality-sensitive behaviour after migration is not reimplemented per feature** - it
+relies on mechanisms WMP already uses: "current owner executes" redispatch
+(`Waldo_fnc_DynamicAASetGroupState`, the whole `Logistics\TransportServices` folder,
+`Zen_convoyModule.sqf`) and per-unit engine `Local` event-handler adoption (AI rebalance, improved
+helicopter landing). Dynamic AO's patrol-waypoint setup was the one system found not to redispatch
+correctly and has been fixed to match the same pattern.
+
+**Disconnect recovery** is event-driven via the engine's `HandleDisconnect` mission event handler
+(`initServer.sqf`) - a disconnecting headless client's groups return to the server and a rebalance
+pass immediately offers them to any other connected headless client, with no polling loop.
+
+**Diagnostics** (`Waldo_fnc_HeadlessGetDiagnostics`, folded into `Waldo_fnc_RunDiagnostics`) reports
+connected headless-client count, assigned-group count, excluded groups with reasons
+(`Waldo_Headless_ExcludedGroups`), failed transfers (`Waldo_Headless_FailedTransfers`), and ownership
+consistency (registry vs. actual `groupOwner`, and orphaned entries not yet reconciled).
+
+Scripting API: `Waldo_fnc_HeadlessDetectLocal`, `Waldo_fnc_HeadlessRegisterClient`,
+`Waldo_fnc_HeadlessRebalance`, `Waldo_fnc_HeadlessMigrateGroup`,
+`Waldo_fnc_HeadlessReassignOnDisconnect`, `Waldo_fnc_HeadlessGetDiagnostics`. Implemented in
+`MissionScripts\Headless\`. See `wiki/Headless-Client-Support.md`.
+
 ### Persistence (optional, `MissionConfig\persistenceConfig.sqf`)
 
 Optional INIDBI2-backed save/restore for player state and specific registered world objects. Off by default (`Waldo_Persistence_Enable = false`); the server also independently probes for a real, loaded INIDBI2 extension (not just a `CfgPatches` entry) and disables itself cleanly if the probe fails. Database access is server-only; clients only capture/apply their own state.
@@ -812,7 +860,8 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)
 - `MiniGames/` — seated party-game installer and multiplayer engine only.
 - `InteractionsMinigames/` — field-equipment procedures, equipment themes, accessibility core, object/table integration, and all ten challenge implementations.
-- `ThirdPartyScripts/` — Headless client and player marker integrations (disabled by default via commented-out line in `init.sqf`)
+- `Headless/` — Native headless-client AI group distribution (`Waldo_fnc_HeadlessDetectLocal`, `Waldo_fnc_HeadlessRegisterClient`, `Waldo_fnc_HeadlessRebalance`, `Waldo_fnc_HeadlessMigrateGroup`, `Waldo_fnc_HeadlessReassignOnDisconnect`, `Waldo_fnc_HeadlessGetDiagnostics`)
+- `ThirdPartyScripts/` — Player marker integration (disabled by default via commented-out line in `init.sqf`), plus the legacy, superseded, disabled-by-default Werthles' Headless Kit kept for reference only (see `Headless/` above for the native replacement)
 
 ---
 

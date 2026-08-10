@@ -47,7 +47,16 @@ Required direction:
 
 ### Headless-client compatibility rework
 
-**Status:** Planned
+**Status:** Implemented, pending live headless-client acceptance testing
+
+Native headless-client support (`MissionScripts\Headless\`, registered under `WaldosFunctions.sqf`'s
+`Headless` category) has replaced the legacy, disabled-by-default `WerthlesHeadless.sqf` third-party
+script as the default path. The static audit, redesign and code are complete; what remains before
+this entry can be removed per this file's own convention is the mandatory manual test matrix (Dynamic
+AO, Dynamic AA, transports, gunships, paradrops, improved helicopter landing x {no HC, one HC,
+multiple HCs, HC disconnect/reconnect, JIP players}) against a real connected headless-client
+process, which this development environment cannot run. See `CLAUDE.md`'s "Headless Client Support"
+section and `wiki/Headless-Client-Support.md` for the shipped design.
 
 Replace the old optional headless-client integration with a WMP-aware ownership and locality layer.
 The rework must treat group transfer as a normal runtime state change: server-authoritative feature

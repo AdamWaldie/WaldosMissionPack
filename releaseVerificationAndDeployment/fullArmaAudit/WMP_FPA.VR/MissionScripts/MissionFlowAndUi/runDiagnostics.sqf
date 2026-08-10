@@ -83,7 +83,8 @@ private _consumeFeatureReport = {
     ["mission-flow", "safestart-diagnostics-api", "Waldo_fnc_SafeStartGetDiagnostics"],
     ["mission-flow", "endex-diagnostics-api", "Waldo_fnc_ENDEXGetDiagnostics"],
     ["interactions", "equipment-diagnostics-api", "Waldo_fnc_MiniGameInteractionGetDiagnostics"],
-    ["economy", "economy-diagnostics-api", "Waldo_fnc_EcoCore_getDiagnostics"]
+    ["economy", "economy-diagnostics-api", "Waldo_fnc_EcoCore_getDiagnostics"],
+    ["headless", "headless-diagnostics-api", "Waldo_fnc_HeadlessGetDiagnostics"]
 ];
 
 // Required and optional dependencies are deliberately distinct. Optional
@@ -270,6 +271,7 @@ if (count (keys _dropZoneRegistry) == 0) then {
 [call Waldo_fnc_SafeStartGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_MiniGameInteractionGetDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_HeadlessGetDiagnostics] call _consumeFeatureReport;
 
 private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];
 private _partyLoaded = missionNamespace getVariable ["Waldo_MG_SystemInitialized", false];

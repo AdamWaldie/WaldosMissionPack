@@ -79,7 +79,8 @@ Runtime configuration is server-authoritative. Current settings are published fo
 
 - [AI Convoy System](AI-Convoy-System)
 - [Map Location Tools](Map-Location-Tools)
-- [Optional Headless Client and Player Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers)
+- [Headless Client Support](Headless-Client-Support)
+- [Optional Third-Party Scripts (Player Markers)](Third-Party-Scripts-Headless-Client-And-Player-Markers)
 - [ACRE 2 Long-Range Presetting](ACRE-2-Long-Range-Radio-Presetting)
 - [ACRE 2 Short-Range Presetting](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
 - [ACRE 2 Automated CEOI](ACRE2-Automated-CEOI-Document)

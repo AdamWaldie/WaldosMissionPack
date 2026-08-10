@@ -76,7 +76,8 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | AI-only exact landing, slope, canopy, flare, and go-around handling |
 | [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
 | [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
-| [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional headless-client and player-marker integrations |
+| [Headless Client Support](Headless-Client-Support) | Native, always-on AI group distribution across connected headless clients |
+| [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional player-marker integration |
 | [ACE Corpse Traps](ACE-Corpse-Traps) | Concealed throwable traps on bodies |
 | [Unit Insignias](Unit-Insignias) | Applying and adding insignias |
 | [Mission-Maker Resource Scripts](Mission-Maker-Resource-Scripts) | Smaller arsenal, damage, visibility, and config helpers |
