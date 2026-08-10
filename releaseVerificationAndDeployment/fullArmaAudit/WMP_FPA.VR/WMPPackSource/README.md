@@ -44,7 +44,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Waldos Economy Systems - a Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus Enhanced module menu (ZEN required for the in-Zeus menu). Its Zeus builder exports readable setup calls for `MissionConfig\economyConfig.sqf`, including placed economy fixtures; the existing portable catalogue string remains available for transfer and import.
 - Waldos Mini Games - twelve seated multiplayer party games (Battleship, Who's Who, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, RPS, UNO) plus ten diegetic field-equipment procedures. Players inspect distinct EOD controllers, diagnostic tablets, access terminals, lock cylinders, breaker cabinets, maintenance hatches, radios, hydraulic manifolds, secure consoles, and tactical command uplinks. Procedures use procedural Arma controls as their complete primary presentation, with colourblind-safe redundant cues, integrated operating instructions, curated easy/standard/hard/expert difficulty profiles, immersive mission-specific profiles, optional low-opacity material textures, one-line Eden setup, exclusive server-owned attempts, persistent `IDLE`/`RUNNING`/`SUCCESS`/`FAILURE` state usable in ACE or vanilla conditions, authoritative callbacks/CBA events, and an optional party-table equipment picker.
 - Optional ACE corpse traps - consume any compatible vanilla or modded throwable to rig a body; opening its inventory releases the stored projectile.
-- HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
+- HALO & Static Line Jump Scripts with equipment & weapon loss simulation, plus a Dynamic Drop Zone system with a Zeus-driven live deployment-direction preview (rotate the actual flight line in 3D before committing to a heading).
 - [WIP] Virtual Vehicle Deployment Garage
 - Bundled (optional, off by default) third-party scripts - Werthles' Headless Client kit and aeroson's dynamic player markers - wired through a single clean entry point.
 - Extensively documented files to learn how it works, and make use of this pack!
@@ -92,11 +92,11 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 # Required Addons
 - CBA_A3
 - ACE 3 (Field Headquarters, Construction System, Quartermaster Logistics Spawner)
+- Zeus Enhanced & Compat (the in-Zeus authoring surface for most systems added since v4.8 - Economy, Dynamic AA/AO, Gunship, Hazards, Transport, Recovery, Breaching, notifications, and more)
 
 # Supported Addons
 - ACRE 2 (optional; configure or disable it in `MissionConfig\acreConfig.sqf`)
 - TFAR (inherent support through Eden configuration)
-- Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
 

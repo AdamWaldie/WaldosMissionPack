@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 886,
+  "registeredFunctionCount": 889,
   "runtimeFunctionCount": 385,
-  "functionCount": 1271,
+  "functionCount": 1274,
   "stations": [
     {
       "id": "control",
@@ -1757,8 +1757,26 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ParadropRouteGeometry",
+      "file": "MissionScripts/Paradrop/paradropRouteGeometry.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ParadropBuildFlightRoute",
       "file": "MissionScripts/Paradrop/paradropBuildFlightRoute.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropPreviewStart",
+      "file": "MissionScripts/Paradrop/paradropPreviewStart.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropPreviewStop",
+      "file": "MissionScripts/Paradrop/paradropPreviewStop.sqf",
       "station": "paradrop",
       "activation": "manual"
     },

@@ -600,8 +600,17 @@ class CfgFunctions
             class JumpSettingsCheck {
                 file = "MissionScripts\Paradrop\checkForJumpSettings.sqf";
             };
+            class ParadropRouteGeometry {
+                file = "MissionScripts\Paradrop\paradropRouteGeometry.sqf";
+            };
             class ParadropBuildFlightRoute {
                 file = "MissionScripts\Paradrop\paradropBuildFlightRoute.sqf";
+            };
+            class ParadropPreviewStart {
+                file = "MissionScripts\Paradrop\paradropPreviewStart.sqf";
+            };
+            class ParadropPreviewStop {
+                file = "MissionScripts\Paradrop\paradropPreviewStop.sqf";
             };
             class ParadropNormalizeJumpEnvelope {
                 file = "MissionScripts\Paradrop\paradropNormalizeJumpEnvelope.sqf";

@@ -95,6 +95,11 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Air Operations", "Paradrop - Preview Deployment Direction",
+    {params ["_modulePos"]; [_modulePos] call Waldo_fnc_ParadropPreviewStart;},
+    "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Combat Systems", "Dynamic AO - Create",
     {
         params ["_modulePos"];

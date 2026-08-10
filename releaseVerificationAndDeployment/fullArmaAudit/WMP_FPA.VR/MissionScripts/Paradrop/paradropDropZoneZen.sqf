@@ -20,19 +20,24 @@
  * 0: mode <STRING> - CREATE, EMBARK or REMOVE
  * 1: module position <ARRAY>
  * 2: module target <OBJECT> - object underneath the ZEN module, when supplied
+ * 3: preset direction <NUMBER> - CREATE only; degrees, -1 (default) leaves the "Run direction"
+ *    slider at its normal 0 default. Waldo_fnc_ParadropPreviewStart hands its confirmed heading in
+ *    here after the curator has rotated a live route preview, so the slider opens pre-seeded to what
+ *    they already picked instead of a blind 0-359 number; the slider stays adjustable afterward.
  *
  * Return Value:
  * Boolean - true when a dialog was opened.
  * Result: The selected workflow is submitted only after the curator confirms the dialog.
  *
  * Current callers:
- * Paradrop ZEN registrations in Zen_initModules.sqf.
+ * Paradrop ZEN registrations in Zen_initModules.sqf; Waldo_fnc_ParadropPreviewStart (CREATE, with a
+ * confirmed preview heading).
  *
  * Example:
  * ["EMBARK", _modulePos, _objectPos] call Waldo_fnc_ParadropDropZoneZen;
  */
 
-params [["_mode", "CREATE", [""]], ["_modulePos", [], [[]]], ["_moduleTarget", objNull, [objNull]]];
+params [["_mode", "CREATE", [""]], ["_modulePos", [], [[]]], ["_moduleTarget", objNull, [objNull]], ["_presetDirection", -1, [0]]];
 if !(hasInterface && {isClass (configFile >> "CfgPatches" >> "zen_main")}) exitWith {false};
 _mode = toUpperANSI _mode;
 
@@ -172,7 +177,7 @@ private _defaultName = format ["DZ %1", round (serverTime mod 10000)];
         ["EDIT", ["Drop-zone name", "Used by map markers, boarding and removal selectors."], [_defaultName]],
         ["COMBO", ["Operational side", "Controls the AI pilot and optional AI jumpers; it does not filter the airframe."], [[west, east, independent], ["BLUFOR", "OPFOR", "Independent"], 0]],
         ["COMBO", ["Airframe", "Choose any configured cargo aircraft independently of operational side."], [_classes, _labels, 0]],
-        ["SLIDER", ["Run direction", "Aircraft heading through standby, green and red lines."], [0, 359, 0, 0]],
+        ["SLIDER", ["Run direction", "Aircraft heading through standby, green and red lines. Use Paradrop - Preview Deployment Direction first for a live rotating preview of this line."], [0, 359, (if (_presetDirection >= 0) then {_presetDirection} else {0}), 0]],
         ["COMBO", ["Jump methods", "Static-Line, HALO, or both. WMP hard-gates altitude and speed so every selected method is usable."], [["STATIC", "HALO", "BOTH"], ["Static-Line", "HALO", "Static-Line and HALO"], 0]],
         ["SLIDER", ["Route altitude", "Metres AGL, exactly like Waldo_fnc_ParadropQuickFlightSetup. The server keeps it inside the selected jump method's MissionConfig limits."], [100, 2000, _defaultStaticAltitude, 0]],
         ["SLIDER", ["Route speed", "Kilometres per hour, exactly like Waldo_fnc_ParadropQuickFlightSetup. Static-Line routes cannot exceed WALDO_STATIC_MAXSPEED."], [80, 500, _defaultStaticSpeed, 0]],
