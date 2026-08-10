@@ -491,11 +491,26 @@ Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`
 
 ### Headless Client Support (optional)
 
-Native, server-authoritative distribution of AI groups across connected headless clients. No script
-setup is required beyond the mission itself having somewhere for the headless client to connect: this
+Native, server-authoritative distribution of AI groups across connected headless clients. This
 replaces the legacy, disabled-by-default `MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf`
 ("Werthles' Headless Kit") third-party script, which remains in the repository unmodified for
 reference only and must not be re-enabled alongside this system.
+
+**Off by default** (`MissionConfig\headlessConfig.sqf`, `Waldo_Headless_Enable`). The system has not
+yet been verified against a live Arma 3 engine or a connected headless client, so connecting one to a
+mission that has not explicitly turned this on has no effect at all - both
+`Waldo_fnc_HeadlessDetectLocal` (client-side) and `Waldo_fnc_HeadlessRegisterClient` (the actual
+server-side authority boundary) independently refuse to do anything while it's false. Turn it on only
+after running the manual HC test matrix (`wiki/Headless-Client-Support.md`) for your mission's mod
+set:
+
+```sqf
+// MissionConfig\headlessConfig.sqf
+["Waldo_Headless_Enable", false],              // MISSION MAKER: master switch.
+["Waldo_Headless_StartDelaySeconds", 30],      // ADVANCED: grace period before any migration begins.
+["Waldo_Headless_MinGroupAgeSeconds", 10],     // ADVANCED: per-group settle time before eligibility.
+["Waldo_Headless_MigrationPaceSeconds", 3]     // ADVANCED: pause between each queued migration.
+```
 
 **Eden setup (Arma-level, not WMP-specific):** place one "Headless Client" Virtual Entity (3DEN
 Systems/Logic entity category) per headless client slot you want available, and set each one
@@ -503,16 +518,10 @@ Playable. This is ordinary Arma 3 slot plumbing - a headless client connects int
 a player does - and applies regardless of which script manages the AI once connected. WMP's own
 detection does not care about the slot's name or variable name (unlike some third-party HC tooling's
 own naming convention requirements); it identifies a headless client purely by
-`!isDedicated && !hasInterface` at runtime.
-
-```sqf
-// Connect the headless client process itself with the Arma launch parameters
-// -client -connect=<serverIP> -password=<password> against the hosting server (server.cfg must
-// allow-list it in headlessClients[]; that part is ordinary Arma 3 server hosting, outside WMP's
-// scope). Every machine calls this on the same ordered feature-runtime snapshot handshake as AI
-// rebalance/helicopter landing (init.sqf); it is a no-op on the server and on real players.
-[] call Waldo_fnc_HeadlessDetectLocal;
-```
+`!isDedicated && !hasInterface` at runtime. Connect the headless-client process itself with the Arma
+launch parameters `-client -connect=<serverIP> -password=<password>` against the hosting server
+(`server.cfg` must allow-list it in `headlessClients[]`); that part is ordinary Arma 3 server hosting,
+outside WMP's scope.
 
 **Detection and eligibility.** A headless client is identified by the standard, version-stable test
 `!isDedicated && !hasInterface` (not the legacy script's `serverCommandAvailable "#kick"`

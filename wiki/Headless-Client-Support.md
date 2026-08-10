@@ -2,21 +2,37 @@
 
 > **Use this page when:** you're running (or planning to run) one or more Arma 3 headless clients alongside a WMP mission and want AI groups to distribute across them automatically.
 
-_Associated Files: `MissionScripts\Headless\headlessDetectLocal.sqf`, `headlessRegisterClient.sqf`, `headlessRebalance.sqf`, `headlessMigrationWorker.sqf`, `headlessMigrateGroup.sqf`, `headlessReassignOnDisconnect.sqf`, `headlessGetDiagnostics.sqf`, `init.sqf`, `initServer.sqf`, `Waldo_fnc_HeadlessDetectLocal`_
+_Associated Files: `MissionConfig\headlessConfig.sqf`, `MissionScripts\Headless\headlessDetectLocal.sqf`, `headlessRegisterClient.sqf`, `headlessRebalance.sqf`, `headlessMigrationWorker.sqf`, `headlessMigrateGroup.sqf`, `headlessReassignOnDisconnect.sqf`, `headlessGetDiagnostics.sqf`, `init.sqf`, `initServer.sqf`, `Waldo_fnc_HeadlessDetectLocal`_
 
 ## Overview
 
 WMP ships native, server-authoritative headless-client (HC) support: connect a headless client to a
-hosted mission and it self-registers with the server, which then distributes eligible AI groups to
-it automatically. There is nothing to configure in `MissionConfig` and no WMP-specific script setup -
-this is infrastructure-level support that every mission gets for free once a headless client can
-connect.
+hosted mission with the feature turned on and it self-registers with the server, which then
+distributes eligible AI groups to it automatically.
 
 This replaces the legacy, third-party `MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf`
 ("Werthles' Headless Kit" v2.3), which is kept in the repository, unmodified and disabled by default,
 for reference only. It has known deviations from WMP's own model (a non-standard HC detection test,
 a name-string exclusion list unaware of WMP-owned control groups, and no integration with WMP's
 diagnostics or JIP snapshot handshake) and should not be re-enabled.
+
+## Off by default
+
+`Waldo_Headless_Enable` in `MissionConfig\headlessConfig.sqf` defaults to `false`. This system has
+not yet been verified against a live Arma 3 engine or a connected headless client (see "Known
+limitation" below) - connecting a headless client to a mission that has not explicitly turned this on
+has no effect at all. Both `Waldo_fnc_HeadlessDetectLocal` (the client-side check) and
+`Waldo_fnc_HeadlessRegisterClient` (the actual server-side authority boundary) independently refuse
+to do anything while it's false, so there is no partial/accidental activation path.
+
+```sqf
+// MissionConfig\headlessConfig.sqf
+["Waldo_Headless_Enable", false],              // MISSION MAKER: master switch. Turn on only after
+                                                // running the live HC test matrix below for your mod set.
+["Waldo_Headless_StartDelaySeconds", 30],      // ADVANCED: grace period before any migration begins.
+["Waldo_Headless_MinGroupAgeSeconds", 10],     // ADVANCED: per-group settle time before eligibility.
+["Waldo_Headless_MigrationPaceSeconds", 3]     // ADVANCED: pause between each queued migration.
+```
 
 ## Eden setup - one required step, Arma-level not WMP-specific
 
@@ -40,7 +56,9 @@ scope; consult your server host or Bohemia's own headless-client documentation f
 1. **Detection.** Every machine calls `Waldo_fnc_HeadlessDetectLocal` from `init.sqf`, gated behind
    WMP's ordered feature-runtime snapshot handshake (the same one AI rebalance and improved
    helicopter landing use). A headless client is identified with the standard, version-stable test
-   `!isDedicated && !hasInterface`. The server and every real player are no-ops here.
+   `!isDedicated && !hasInterface`. The server and every real player are no-ops here. If
+   `Waldo_Headless_Enable` is false, detection still runs (harmless) but the registration request
+   below is never sent.
 2. **Registration.** A detected headless client asks the server to register it
    (`Waldo_fnc_HeadlessRegisterClient`), which verifies the request came from a genuine remote
    caller (never a spoofed local id) and is not already a connected player, then adds it to
@@ -90,14 +108,14 @@ that documented interaction, not a hypothetical one.
 `Waldo_Headless_StartDelaySeconds` (default 30s) of mission time have passed, even if a headless
 client registers earlier - giving mission-wide AI-spawning infrastructure a moment to get through its
 own initial setup pass before anything starts moving. Both this and the per-group settle time are
-plain `missionNamespace` variables; set them from `initServer.sqf` if your mission's AI setup needs
-more (or less) time, for example:
+edited in `MissionConfig\headlessConfig.sqf` alongside `Waldo_Headless_Enable`, the same place every
+other WMP feature's tunables live - if your mission's AI setup needs more (or less) time:
 
 ```sqf
-// initServer.sqf, before any headless client is expected to connect:
-missionNamespace setVariable ["Waldo_Headless_StartDelaySeconds", 60];
-missionNamespace setVariable ["Waldo_Headless_MinGroupAgeSeconds", 20];
-missionNamespace setVariable ["Waldo_Headless_MigrationPaceSeconds", 5];
+// MissionConfig\headlessConfig.sqf
+["Waldo_Headless_StartDelaySeconds", 60],
+["Waldo_Headless_MinGroupAgeSeconds", 20],
+["Waldo_Headless_MigrationPaceSeconds", 5]
 ```
 
 **Opting a group out.** Any WMP subsystem (or mission script) that owns AI it never wants migrated
@@ -174,7 +192,9 @@ on AI groups that might migrate, not an optional precaution.
 
 ## Diagnostics
 
-`Waldo_fnc_HeadlessGetDiagnostics` feeds into `Waldo_fnc_RunDiagnostics` under area `headless`:
+`Waldo_fnc_HeadlessGetDiagnostics` feeds into `Waldo_fnc_RunDiagnostics` under area `headless`.
+While `Waldo_Headless_Enable` is false, it reports a single `headless-enable: DISABLED` check and
+nothing else; the rows below only apply once enabled:
 
 | Check | States |
 |---|---|

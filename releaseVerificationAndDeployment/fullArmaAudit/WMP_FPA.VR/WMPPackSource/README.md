@@ -46,7 +46,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Optional ACE corpse traps - consume any compatible vanilla or modded throwable to rig a body; opening its inventory releases the stored projectile.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
-- Headless Client Support - native, server-authoritative AI group distribution across connected headless clients, self-registering with no mission-maker setup, replacing the legacy bundled Werthles' Headless Kit (kept disabled, in the repository, for reference only).
+- Headless Client Support - native, server-authoritative AI group distribution across connected headless clients (off by default in `MissionConfig\headlessConfig.sqf` pending live testing), replacing the legacy bundled Werthles' Headless Kit (kept disabled, in the repository, for reference only).
 - Bundled (optional, off by default) third-party script - aeroson's dynamic player markers - wired through a single clean entry point.
 - Extensively documented files to learn how it works, and make use of this pack!
 - Mission Pack Compositions to hasten the learning and mission building process

@@ -80,6 +80,7 @@ Recommended review by file:
 | `electronicWarfareConfig.sqf` | EW rules, player feedback/toggles and disable challenge | Signal curve/reference, RDF fuzz bands and diagnostics overlay |
 | `missionSystemsConfig.sqf` | Rally rules, optional-system enablement, diagnostics and safestart contract | Safe-position geometry and global ACE weight/hearing overrides |
 | `economyConfig.sqf` | Hand-authored economy catalogues and pre-planned economy world setup | Authority guard and setup-call ordering |
+| `headlessConfig.sqf` | Enablement (off by default pending live testing) | Start delay, per-group settle time and migration pacing |
 
 ## Common option formats
 
@@ -496,6 +497,18 @@ annotated profile and advanced replacement-row format.
 | `Waldo_SafeStart_Radius` | Fallback safestart radius in metres. |
 | `Waldo_SafeStart_ZoneMarker` | Optional marker defining the safestart area. |
 | `Waldo_SafeStart_AutoStart` | `false` starts live while retaining Zeus controls; `true` begins the mission under Safestart protection. |
+
+## `headlessConfig.sqf` — shared
+
+See [Headless Client Support](Headless-Client-Support) for Eden setup, eligibility rules and the
+manual test matrix that should be run before enabling this on a live mission.
+
+| Setting | Purpose / units |
+|---|---|
+| `Waldo_Headless_Enable` | Master opt-in. `false` (default) - a connected headless client has no effect at all. |
+| `Waldo_Headless_StartDelaySeconds` | Seconds of mission time before any group migration begins, regardless of when a headless client registers. |
+| `Waldo_Headless_MinGroupAgeSeconds` | Seconds a group must exist before it becomes eligible for migration. |
+| `Waldo_Headless_MigrationPaceSeconds` | Seconds between each queued group migration. |
 
 ## `economyConfig.sqf`
 

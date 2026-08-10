@@ -27,6 +27,12 @@
  *
  * Current caller: init.sqf, gated behind the ordered feature-runtime snapshot handshake so a
  * joining headless client never registers before it has a consistent runtime picture.
+ *
+ * Master switch: Waldo_Headless_Enable (MissionConfig\headlessConfig.sqf) defaults false. This
+ * system has not yet been verified against a live Arma 3 engine or a connected headless client, so
+ * it ships off - connecting a headless client to a mission that has not turned this on has no effect
+ * at all. Detection itself still runs either way (harmless, and useful for diagnostics), only the
+ * actual registration request is gated.
  */
 
 if (missionNamespace getVariable ["Waldo_Headless_DetectRan", false]) exitWith {
@@ -37,6 +43,10 @@ missionNamespace setVariable ["Waldo_Headless_DetectRan", true];
 private _isHeadless = !isDedicated && {!hasInterface};
 missionNamespace setVariable ["Waldo_Headless_IsThisMachine", _isHeadless];
 if !(_isHeadless) exitWith {false};
+if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {
+    diag_log "[WMP HEADLESS] This machine detected itself as a headless client, but Waldo_Headless_Enable is false; not registering.";
+    false
+};
 
 private _label = if (profileName != "") then {profileName} else {format ["HC-%1", clientOwner]};
 diag_log format ["[WMP HEADLESS] This machine detected itself as a headless client (label=%1); requesting registration.", _label];

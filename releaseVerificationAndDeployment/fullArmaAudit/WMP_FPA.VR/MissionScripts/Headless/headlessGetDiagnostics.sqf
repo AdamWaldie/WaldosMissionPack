@@ -7,6 +7,9 @@
  * non-empty "orphaned" count here should only ever be transient (between a client disconnecting and
  * the following rebalance pass reconciling it) rather than a structural leak.
  *
+ * Reports a single DISABLED check while Waldo_Headless_Enable is false, matching the rest of WMP's
+ * optional-feature diagnostics convention.
+ *
  * Locality and authority: read-only, server-only (headless registries are server state).
  *
  * Arguments: None.
@@ -14,6 +17,10 @@
  * Example: [] call Waldo_fnc_HeadlessGetDiagnostics;
  * Current caller: Waldo_fnc_RunDiagnostics.
  */
+
+if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {
+    ["headless", [["headless", "headless-enable", "DISABLED", "Waldo_Headless_Enable is false in MissionConfig\\headlessConfig.sqf"]]] call Waldo_fnc_DiagnosticFeatureReport
+};
 
 private _clients = missionNamespace getVariable ["Waldo_Headless_Clients", []];
 private _managed = missionNamespace getVariable ["Waldo_Headless_ManagedGroups", []];

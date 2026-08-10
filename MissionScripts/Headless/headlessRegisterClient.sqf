@@ -8,7 +8,10 @@
  * Server-only. The registering machine's identity is taken from the engine-verified
  * remoteExecutedOwner, never from a caller-supplied id, so a compromised client cannot register a
  * spoofed headless client for itself. A caller whose owner id already belongs to a connected player
- * is rejected outright - a real headless client never has a player object.
+ * is rejected outright - a real headless client never has a player object. Rejects outright while
+ * Waldo_Headless_Enable is false - a defense-in-depth check independent of
+ * Waldo_fnc_HeadlessDetectLocal's own client-side gate, since this function is the actual authority
+ * boundary.
  *
  * Arguments:
  * 0: label <STRING> - the reporting machine's profileName (or a fallback), for RPT/diagnostics only.
@@ -26,6 +29,7 @@
 
 params [["_label", "", [""]]];
 if !(isServer) exitWith {false};
+if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {false};
 
 private _owner = remoteExecutedOwner;
 if (_owner <= 0) exitWith {false};
