@@ -88,6 +88,12 @@ if (_configPairs isEqualType createHashMap) then {
     {_pairs pushBack [_x, _configPairs get _x];} forEach keys _configPairs;
     _configPairs = _pairs;
 };
+// A single bare [key, value] pair (e.g. ["preset", "x"], the simplest documented call shape) is
+// indistinguishable in form from a list of pairs unless normalised - the same ambiguity
+// Waldo_fnc_Jammer's own _bands parameter has, solved the same way.
+if (_configPairs isEqualType [] && {count _configPairs == 2} && {(_configPairs select 0) isEqualType ""}) then {
+    _configPairs = [_configPairs];
+};
 
 if !(isServer) exitWith {
     [_vehicle, _configPairs, _force] remoteExec ["Waldo_fnc_ACRE2RackSetup", 2];
@@ -109,6 +115,8 @@ if (_vehicle getVariable ["Waldo_ACRE2_RackSetupRunning", false]) exitWith {
 };
 
 _vehicle setVariable ["Waldo_ACRE2_RackSetupRunning", true, true];
+_vehicle setVariable ["Waldo_ACRE2_RackSetupComplete", false, true]; // stale true from an earlier
+    // run would otherwise make diagnostics see this run as already-settled while it is still in flight
 _vehicle setVariable ["Waldo_ACRE2_RackSetupSignature", _signature, true];
 private _configHash = createHashMapFromArray _configPairs;
 [_vehicle, _configHash] spawn Waldo_fnc_ACRE2RackApply;

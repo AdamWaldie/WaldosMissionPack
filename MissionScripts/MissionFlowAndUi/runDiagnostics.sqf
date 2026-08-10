@@ -208,7 +208,7 @@ if (_acreLoaded) then {
     // been called on it (no rack scan runs otherwise). "pending" covers both an in-progress bounded
     // wait and a rack that never produced its unique radio ID within that wait - the RPT trail from
     // Waldo_fnc_ACRE2RackApply distinguishes those two cases in detail.
-    private _rackVehicles = (allMissionObjects "All") select {_x getVariable ["Waldo_ACRE2_RackSetupStarted", false]};
+    private _rackVehicles = (allMissionObjects "All") select {(_x getVariable ["Waldo_ACRE2_RackSetupSignature", ""]) != ""};
     if (_rackVehicles isEqualTo []) then {
         ["radio", "acre-vehicle-racks", "UNCONFIGURED", "No vehicle has had Waldo_fnc_ACRE2RackSetup called on it", false] call _status;
     } else {
