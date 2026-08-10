@@ -370,7 +370,8 @@ diag_log format [
 
 if (!isNull _requester) then {
     private _adjustment = _requestedTarget distance2D _target;
-    private _adjustmentText = if (_adjustment > 10) then {format [" The exact service point was adjusted %1 metres to reachable ground.", round _adjustment]} else {""};
+    private _adjustmentDestination = if (_type == "BOAT") then {"open water"} else {"reachable ground"};
+    private _adjustmentText = if (_adjustment > 10) then {format [" The exact service point was adjusted %1 metres to %2.", round _adjustment, _adjustmentDestination]} else {""};
     private _verb = if (_retargetingPickup) then {"updated its pickup point"} else {if (_retrying) then {format ["is retrying its %1 route", toLowerANSI _phase]} else {format ["accepted the %1 request", toLowerANSI _phase]}};
     [_type, format ["%1 %2.%3", _entry get "name", _verb, _adjustmentText], "INFO", _id] call _notifyRequester;
 };
