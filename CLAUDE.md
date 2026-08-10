@@ -203,18 +203,48 @@ replaces the previous AO safely; the invisible centre anchor and per-minefield a
 curator-editable deletion handles. See `wiki/Dynamic-AO-Generation.md` for every supported config key.
 The **Dynamic AO Example** composition anchors one AO to a placed object for editor-time setup.
 
-### ACRE2 Radio Setup (`init.sqf`)
+### ACRE2 Radio Setup (`MissionConfig\acreConfig.sqf`)
+
+Carried-radio channel/frequency assignment is pure-data configuration, not a script call. `initServer.sqf` calls `[] call Waldo_fnc_ACRE2Init;` with no arguments; it compiles and publishes one authoritative plan read from `MissionConfig\acreConfig.sqf` (groups, per-occurrence radio assignments, named nets, PRC-343 preset policy, Babel). Edit that file, not `init.sqf`:
 
 ```sqf
-private _RadioSetups = [
-    ["Viking-1-1", [1,5]],   // [group name, [LR channel numbers]]
-    ["Viking 5",   [2,7]],
-    ["Banshee",    [4,1]]
-];
-[_RadioSetups] call Waldo_fnc_ACRE2Init;
+// MissionConfig\acreConfig.sqf
+["groups", [
+    ["Viking-1-1", [
+        ["ACRE_PRC152", "ALL", "PLT", "RIGHT"]   // [base class, ALL|occurrence, net or explicit target, ear]
+    ]]
+]]
 ```
 
-Group names must match exactly what is set in Eden Editor. Channel numbers reference the position in the `Waldo_ACRE2Setup_LRChannels_BLUFOR/OPFOR/IND/CIV` arrays (1-indexed). AN/PRC-343 short-range radios are assigned automatically based on squad numerical designations. CEOI auto-populates in the map screen.
+Group IDs must match the Eden editor group ID exactly (an `@Callsign` leader-role suffix is reconciled first). AN/PRC-343 short-range radios auto-allocate deterministically from the callsign. CEOI auto-populates in the map screen. See `wiki/ACRE-2-Long-Range-Radio-Presetting.md` for the full assignment/net/override contract.
+
+#### Vehicle radio racks (`Waldo_fnc_ACRE2RackSetup`)
+
+Vehicle-mounted rack radios (AN/VRC-64, VRC-103, VRC-110, VRC-111, SEM90, or any mission-added rack)
+are a separate, vehicle-scoped surface — not part of `acreConfig.sqf`'s per-player carried-radio
+scan, which deliberately preserves rack radios untouched. One object-init call configures every rack
+on a vehicle:
+
+```sqf
+// Simplest - apply a named ACRE2 preset to every rack on this vehicle:
+[this, ["preset", "vrc110_default"]] call Waldo_fnc_ACRE2RackSetup;
+// Explicit: rack 0 gets channel 5; rack 1 gets Block 2/Channel 3 after mounting a PRC-117F into it:
+[this, ["assignments", [[0, 5], [1, [2, 3], "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
+```
+
+Self-forwards to the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper). Rack
+initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a connected
+player (ACRE2 itself delegates the actual mount work to a player's machine) — the server waits
+(bounded, 30s for the vehicle's racks, then 20s per rack's own radio ID) rather than assuming
+synchronous completion. A `mountRadioClass` in an assignment row **replaces** whatever that rack
+currently holds (gated by ACRE2's own `acre_api_fnc_isRackRadioRemovable` check); the sentinel
+`"REMOVE_RACK"` rips the entire physical rack off the vehicle. The call is safe to repeat later in
+the mission with a different config to re-equip a vehicle — an identical repeat of the last-applied
+config is a no-op unless a third `force` argument is passed, so an Eden init field firing on every
+connected machine at mission start does not redo the work per client. FREQUENCY-mode rack radios
+(PRC-77/SEM70-family) reuse the same ordinal `acre_api_fnc_setupRadios` path carried radios use and
+are recorded as accepted but unverified, same as carried FREQUENCY radios — this is the first thing
+to verify manually. Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row.
 
 ### Paradrop Configuration (`MissionConfig\airOperationsConfig.sqf`)
 

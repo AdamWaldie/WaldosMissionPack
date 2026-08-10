@@ -47,7 +47,10 @@
  * - ACRE_SEM52SL is a 12-channel radio in a different band. Give it a SEM-only net such as SEM_HANDHELD.
  * - ACRE_PRC77 and ACRE_SEM70 use explicit MHz. They may share a net only where that frequency is
  *   valid for both radios; 51.000 MHz is a valid shared example.
- * - Unknown and vehicle-rack radios are deliberately preserved and never guessed.
+ * - Unknown and vehicle-rack radios are deliberately preserved and never guessed by this carried-radio
+ *   scan. Vehicle-mounted rack radios (AN/VRC-64/103/110/111, SEM90) are a separate, vehicle-scoped
+ *   surface configured per-vehicle from an Eden object init field, not from this file - see
+ *   Waldo_fnc_ACRE2RackSetup and wiki/ACRE-2-Long-Range-Radio-Presetting.md.
  * A PRC-152 cannot consume BF_HANDHELD or VHF_COMMON even when the number happens to fit. Diagnostics name
  * the group, radio occurrence, requested net, expected family and invalid range when setup is wrong.
  *
