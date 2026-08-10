@@ -8,7 +8,7 @@ This is the complete top-level index of mission systems currently supplied by Wa
 
 | Feature | What it provides | Primary setup and operation |
 |---|---|---|
-| [INIDBI2 Persistence](Optional-Feature-Systems#persistence) | Optional player and registered-object persistence with a server-runtime dependency gate | `MissionConfig\persistenceConfig.sqf`; database authority in `initServer.sqf`; **Persistence - Control**, **Register Object**, and **Save Now** in ZEN |
+| [INIDBI2 Persistence](Persistence) | Optional player and registered-object persistence with a server-runtime dependency gate | `MissionConfig\persistenceConfig.sqf`; database authority in `initServer.sqf`; **Persistence - Control**, **Register Object**, and **Save Now** in ZEN |
 | [Patient Treatment Feedback](Optional-Feature-Systems#patient-treatment-feedback) | Local ACE treatment start, completion and failure notifications using the pack notification UI | `MissionConfig\interfaceConfig.sqf` and scripted start/stop calls |
 | [Hazardous Environments](Optional-Feature-Systems#hazardous-environments) | Repeatable contamination, toxic, temperature, vacuum/no-oxygen and callback-driven zones | `MissionConfig\environmentConfig.sqf`; scripted registration or ZEN create/remove modules |
 | [Tree Felling](Optional-Feature-Systems#tree-felling) | Axe/hatchet-driven tree replacement, brush clearing, yields, protected areas and optional regrowth | Shared settings and scripted calls |

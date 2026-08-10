@@ -124,6 +124,8 @@ See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 
 ## `persistenceConfig.sqf` — shared
 
+See [Persistence](Persistence) for setup steps, registering world objects, and the Zeus modules.
+
 | Setting | Purpose / units |
 |---|---|
 | `Waldo_Persistence_Enable` | Master opt-in; the server dependency gate can still reject a missing INIDBI2 extension. |

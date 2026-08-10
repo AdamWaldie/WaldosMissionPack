@@ -11,6 +11,12 @@ mission maker who doesn't understand why nothing happened.
 - **CBA_A3** — event system backbone, used everywhere.
 - **ACE3** — interaction menus, medical, arsenal, cargo/dragging, fortify,
   safe-mode locking. ~80 call sites across the pack.
+- **Zeus Enhanced (ZEN)** — the in-Zeus authoring surface for most systems
+  added since v4.8 (Economy, Dynamic AA/AO, Gunship, Hazards, Transport,
+  Recovery, Breaching, notifications, and more). WMP scripts still guard
+  every ZEN-dependent code path with a `zen_main` `CfgPatches` check (see
+  Consequences below for what happens if it's genuinely absent), but it is
+  now a listed required addon, not something to ask about first.
 
 ## Optional (ask the user, or check their mod list / server config)
 
@@ -18,7 +24,6 @@ mission maker who doesn't understand why nothing happened.
 |---|---|---|
 | ACRE2 | `acre_main` | Radio channel auto-assignment, jamming's custom signal hook |
 | TFAR | `task_force_radio` or `tfar_core` | Jamming's distance-multiplier throttle (no scripting setup needed otherwise — Eden Editor native) |
-| Zeus Enhanced (ZEN) | `zen_main` | The entire "Waldos Mission Modules" Zeus menu, all Economy Zeus authoring |
 | LAMBS series | (varies by module) | Not directly integrated by WMP scripts; complements AI behaviour generally |
 
 ## How to check in a live project
@@ -29,15 +34,17 @@ if (isClass(configFile >> "CfgPatches" >> "acre_main")) then { ... };
 
 If you have shell access to the mission's mod list / server launch config,
 grep for these mod folder names instead of asking. Otherwise just ask the
-user which of ACRE2 / TFAR / ZEN they're running — it's a fast question and
+user which of ACRE2 / TFAR they're running — it's a fast question and
 avoids configuring dead code.
 
 ## Consequences for common combinations
 
-- **No ZEN**: Economy Systems still runs server-side (income, research,
-  production, request handling) but has zero in-game authoring UI — the user
-  must hand-author `MissionConfig/economyConfig.sqf` instead. All 15 core +
-  19 Economy Zeus modules simply don't register. Same story for every other
+- **No ZEN** (off-label — ZEN is a required addon, but this still comes up
+  when a mission maker is testing without their full mod list loaded):
+  Economy Systems still runs server-side (income, research, production,
+  request handling) but has zero in-game authoring UI — the user must
+  hand-author `MissionConfig/economyConfig.sqf` instead. All 15 core + 19
+  Economy Zeus modules simply don't register. Same story for every other
   feature's ZEN modules (Dynamic AA, gunship, transport services,
   persistence, hazards, vehicle recovery, jammer, etc.) — the underlying
   script APIs and `MissionConfig` settings still work without ZEN, only the
