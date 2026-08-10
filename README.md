@@ -92,11 +92,11 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 # Required Addons
 - CBA_A3
 - ACE 3 (Field Headquarters, Construction System, Quartermaster Logistics Spawner)
+- Zeus Enhanced & Compat (the in-Zeus authoring surface for most systems added since v4.8 - Economy, Dynamic AA/AO, Gunship, Hazards, Transport, Recovery, Breaching, notifications, and more)
 
 # Supported Addons
 - ACRE 2 (optional; configure or disable it in `MissionConfig\acreConfig.sqf`)
 - TFAR (inherent support through Eden configuration)
-- Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
 

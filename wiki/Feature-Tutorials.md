@@ -86,7 +86,8 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 
 | Feature | Use it for |
 |---|---|
-| [Optional Feature Systems](Optional-Feature-Systems) | Persistence, treatment feedback, hazards, tree felling, emergency dismount, WMP HUD, breaching, and object transforms |
+| [Persistence](Persistence) | Database-backed player state and registered-object save/restore via INIDBI2 |
+| [Optional Feature Systems](Optional-Feature-Systems) | Treatment feedback, hazards, tree felling, emergency dismount, WMP HUD, breaching, and object transforms |
 | [Optional Feature Extensions](Optional-Feature-Extensions) | Field resupply, tactical displays, advanced controls, and engine boundaries |
 | [Dynamic Anti-Air](Dynamic-Anti-Air) | Scripted or Zeus-authored radar-controlled air-defence zones |
 | [Dynamic AO Generation](Dynamic-AO-Generation) | Runtime faction-driven patrols, garrisons, vehicles, air, civilians, mines and roadblocks |

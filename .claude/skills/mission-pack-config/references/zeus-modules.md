@@ -28,9 +28,14 @@ question, not as the primary config doc for any one feature.
 | Radio Jammer - Remove Nearest | `Waldo_fnc_ZenJammerRemove` | `jamming.md` |
 | EMP Detonation | `Waldo_fnc_ZenEMP` | `emp.md` |
 | Plant Signal Tracker | `Waldo_fnc_ZenTracker` | `trackers.md` |
+| Mission Flow: Send Notification | `Waldo_fnc_ZenNotify` → `Waldo_fnc_ZenNotifyServer` → `Waldo_fnc_NotificationBroadcast` | `ui-notifications.md` |
 
 Waldos Economy Systems registers its own separate, larger set of Zeus
-modules (15 core + 19 Economy) — see `economy/README.md`, not this file.
+modules (15 core + 19 Economy) under its own Zeus category — labelled
+**"WMP Economy Systems"** in the module browser (renamed from the older
+"Waldos Economy Systems" category label; the *feature/system* is still
+called Waldos Economy Systems everywhere else) — see `economy/README.md`,
+not this file.
 
 ## Other WMP Zeus categories (not "Waldos Mission Modules")
 

@@ -151,9 +151,15 @@ and the user may not think to mention it. Read `references/mod-detection.md`
 and either check the repo (mod-dependent code is always guarded by a
 `CfgPatches` check — grep for it) or ask the user directly:
 
-- CBA_A3 and ACE3 are **required** — assume present.
-- ACRE2, TFAR, Zeus Enhanced (ZEN), LAMBS are **optional** — ask, or check
-  what the user's `@mods` list / server config implies.
+- CBA_A3, ACE3 and Zeus Enhanced (ZEN) are **required** — assume present.
+  ZEN is specifically the in-Zeus authoring surface for most systems added
+  since v4.8 (Economy, Dynamic AA/AO, Gunship, Hazards, Transport, Recovery,
+  Breaching, notifications, and more); their underlying server-side systems
+  still run without it, but placement/configuration through Zeus does not,
+  so treat a report of a missing Zeus module category as an "is ZEN loaded"
+  question first.
+- ACRE2, TFAR, LAMBS are **optional** — ask, or check what the user's
+  `@mods` list / server config implies.
 - For a question about one of these mods' **own native behaviour** — not
   WMP's integration with it — route to `references/mods/*.md`
   (`cba.md`, `ace3.md`, `acre2-mod.md`, `tfar.md`, `zeus-enhanced-mod.md`,

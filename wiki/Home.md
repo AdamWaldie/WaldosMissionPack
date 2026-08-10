@@ -66,7 +66,8 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 ### Optional and advanced systems
 
 - [Complete Feature Catalogue](Feature-Catalogue) — the full pack inventory and default states.
-- [Optional Feature Systems](Optional-Feature-Systems) — persistence, treatment feedback, hazards, tree felling, emergency dismount, WMP HUD, breaching, and object transforms.
+- [Persistence](Persistence) — database-backed player state and registered-object save/restore via INIDBI2.
+- [Optional Feature Systems](Optional-Feature-Systems) — treatment feedback, hazards, tree felling, emergency dismount, WMP HUD, breaching, and object transforms.
 - [Optional Feature Extensions](Optional-Feature-Extensions) — field resupply, tactical displays, advanced controls, and engine boundaries.
 - [Dynamic Anti-Air](Dynamic-Anti-Air) — reusable radar-controlled air-defence zones for scripts and Zeus.
 - [Dynamic AO Generation](Dynamic-AO-Generation) — server-owned randomized areas of operations created during play.

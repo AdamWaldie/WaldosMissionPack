@@ -89,7 +89,14 @@ field:
   marker over** instead of leaving it untouched or stacking a second one
   on top: restyled to the same black "mil_end" look, labelled with `name`,
   rotation reset to 0. Never deleted by cleanup — this function didn't
-  create it, so it doesn't own deleting it either.
+  create it, so it doesn't own deleting it either. Setup reads the
+  marker's position/direction, creates the WMP-owned point/corridor
+  markers, then deletes the original Eden setup marker immediately (not
+  after the fact) — the drop-zone area and standby/green/red lines are
+  therefore visible in the pre-mission briefing map from the start rather
+  than appearing mid-mission. A dedicated client can still load its own
+  `mission.sqm` copy of that marker after the server's deletion; a
+  persistent client-local watcher hides that stale copy for it.
 - Builds a reliable standby → green → red → exit AI route (looping by
   default) using the exact same route logic as the Dynamic Drop Zone system
   (`Waldo_fnc_ParadropBuildFlightRoute`) — both stay in sync, fixes to one
@@ -117,7 +124,11 @@ field:
   normalized as above), `lifecycle` (`LOOP` default/`RETAIN`/`DESPAWN`),
   `circuitDirection` (`LEFT` default/`RIGHT`),
   `approachDistance`/`runLength`/`exitDistance`, `name` (marker label,
-  default `"Drop Zone"`), `createMarkers` (**on by default** — the same
+  default `"Drop Zone"`), `aircraftInvincible` (**off by default** —
+  protects the aircraft from normal engine damage for the operation's
+  life, locality-aware so protection reapplies if ownership moves between
+  server/headless client/player client; scripted `setDamage`/`setHit`
+  calls can still damage it), `createMarkers` (**on by default** — the same
   AREA/STANDBY/GREEN/RED/POINT markers as the Dynamic Drop Zone system, so
   the mission maker sees a working drop zone immediately; pass `false` for
   a clutter-free operation), `keepMarkersOnCleanup` (**off by default** —
@@ -166,7 +177,7 @@ private _drop = createHashMapFromArray [
     ["staticChuteClass", "NonSteerable_Parachute_F"],
     ["haloJumpEnabled", false], ["haloBackpackClass", "B_Parachute"],
     ["jumperCount", 0], ["autoDropPlayers", false], ["createMarkers", true],
-    ["keepMarkersOnCleanup", false]
+    ["keepMarkersOnCleanup", false], ["aircraftInvincible", false]
 ];
 [_drop] call Waldo_fnc_ParadropCreateDropZone;
 ```
@@ -199,11 +210,25 @@ without a recognised door/ramp animation.
 **Paradrop - Create Drop Zone**, **Paradrop - Embark Players**, **Paradrop -
 Remove Operation**. The create dialog separates operational side (AI pilot +
 any requested AI jumpers) from physical airframe (any faction's aircraft
-class). Default aircraft: one AI pilot, **zero AI cargo** — cargo seats are
-left for players. Embark uses the player standing under the module first,
-then curator selection; falls back to a physical boarding object (default a
-flagpole) with a blue **Board Paradrop Aircraft** addAction if no player
-target is given.
+class), plus an **Invincible drop aircraft** checkbox (off by default — the
+same `aircraftInvincible` setting both script APIs use). Default aircraft:
+one AI pilot, **zero AI cargo** — cargo seats are left for players. Embark
+uses the player standing under the module first, then curator selection;
+falls back to a physical boarding object (default a flagpole) with a blue
+**Board Paradrop Aircraft** addAction if no player target is given.
+
+**Embark Players** and **Remove Operation** list both registry-backed
+Dynamic Drop Zone operations *and* aircraft set up with
+`Waldo_fnc_ParadropQuickFlightSetup` (a mission maker's own placed/crewed
+Eden aircraft) in one unified list — entries are labelled **[DYNAMIC]** or
+**[EDEN]**. Removing an [EDEN] entry follows the same rules as a dynamic
+one: its markers, live aircraft marker and registration are cleared;
+**Delete aircraft** additionally removes the aircraft/AI crew unless
+players are currently aboard, while leaving the checkbox off retains the
+aircraft but strips its WMP jump interactions. Zeus-created operations
+also skip the `requireOpenDoor` ramp/door prerequisite the script/Eden
+paths use, since their AI aircraft don't give the passenger a dependable
+door control.
 
 Mission makers can extend the friendly-name dropdowns before startup:
 

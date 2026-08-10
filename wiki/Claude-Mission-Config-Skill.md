@@ -6,14 +6,9 @@ _Associated Files: `.claude/skills/mission-pack-config/SKILL.md`, `.claude/skill
 
 The Claude Mission Config Skill teaches an AI assistant how WMP's features are configured — variable names, function signatures, defaults, and known gotchas — so it can help you set up loadouts, ACRE2, jamming, the Economy suite, and everything else in this pack without guessing. It's built from the same source of truth as the rest of this documentation, split into one short reference file per feature so the assistant only has to read the parts relevant to what you're asking about.
 
-It ships as its **own separate download**, not inside the main WMP pack zip, as **two different zips** on the [releases page](https://github.com/AdamWaldie/WaldosMissionPack/releases) alongside the main pack, patch, Compositions, and Unit Insignias zips — pick the one that matches how you're installing it:
+It ships as its **own separate download**, not inside the main WMP pack zip: `mission-pack-config-<version>.zip` on the [releases page](https://github.com/AdamWaldie/WaldosMissionPack/releases), alongside the main pack, patch, Compositions, and Unit Insignias zips.
 
-| Zip | Use it for |
-|---|---|
-| `Claude_Mission_Config_Skill-<version>.zip` | Unzipping into the root of your own mission project (Claude Code auto-discovery) |
-| `mission-pack-config-<version>.zip` | claude.ai's/Claude Desktop's **Upload skill** dialog, or the Skills API |
-
-These are not interchangeable — the first keeps a `.claude/skills/mission-pack-config/` path prefix (so it lands in the right place in a mission project), while the second has the skill folder itself at the zip root (`mission-pack-config/SKILL.md`), which is what claude.ai's uploader requires. Uploading the wrong one fails with "must contain a SKILL.md file" even though the skill is right there in the zip — it's the missing/extra path prefix, not corrupt content.
+That zip has the skill folder itself at the zip root (`mission-pack-config/SKILL.md`, no extra path prefix) — the shape claude.ai's/Claude Desktop's **Upload skill** dialog and the Skills API require. It's also the zip to use for a Claude Code mission-project drop-in; see **Setup with Claude** below for the one extra manual step that needs (moving the extracted folder under `.claude/skills/`).
 
 ## What it can and can't do for you
 
@@ -26,9 +21,9 @@ The skill is honest about its own limits, and you should expect it to say so rat
 
 ## Setup with Claude
 
-**Claude Code** (the CLI, or Claude Code on the web): unzip `Claude_Mission_Config_Skill-<version>.zip` into the root of your mission project, so you end up with `.claude/skills/mission-pack-config/` alongside your `init.sqf` and `mission.sqm`. Claude Code auto-discovers project skills under `.claude/skills/` — just ask it to configure a WMP feature (e.g. *"set up ACRE2 radios for my Viking squad on channels 1 and 5"*) and it will consult the skill automatically.
+**Claude Code** (the CLI, or Claude Code on the web): unzip `mission-pack-config-<version>.zip` and move the extracted `mission-pack-config/` folder into your mission project at `.claude/skills/mission-pack-config/` (create the `.claude/skills/` folders if they don't already exist), so it sits alongside your `init.sqf` and `mission.sqm`. Claude Code auto-discovers project skills under `.claude/skills/` — just ask it to configure a WMP feature (e.g. *"set up ACRE2 radios for my Viking squad on channels 1 and 5"*) and it will consult the skill automatically.
 
-**Claude.ai / Claude Desktop**: download `mission-pack-config-<version>.zip` (not the other one — see the table above) and use claude.ai's **Upload skill** dialog (drag-and-drop or click to upload) to add it directly as a skill. If your workflow doesn't have that dialog, the same `mission-pack-config/` folder can be uploaded as a Project's knowledge instead, or its `SKILL.md` and `references/*.md` pasted in directly. Claude won't have file access to your mission project unless you're in an environment that grants it, so expect it to hand you snippets to paste yourself rather than edit files for you — this is the "patch mode" the skill describes internally.
+**Claude.ai / Claude Desktop**: download `mission-pack-config-<version>.zip` and use claude.ai's **Upload skill** dialog (drag-and-drop or click to upload) to add it directly as a skill — no unzipping needed, the archive is already in the shape it expects. If your workflow doesn't have that dialog, the same `mission-pack-config/` folder can be uploaded as a Project's knowledge instead, or its `SKILL.md` and `references/*.md` pasted in directly. Claude won't have file access to your mission project unless you're in an environment that grants it, so expect it to hand you snippets to paste yourself rather than edit files for you — this is the "patch mode" the skill describes internally.
 
 ## Setup with ChatGPT
 

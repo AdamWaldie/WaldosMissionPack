@@ -1,4 +1,4 @@
-# Zeus Enhanced (ZEN) — optional, as a mod
+# Zeus Enhanced (ZEN) — required, as a mod
 
 **What WMP wraps:** WMP's own "Waldos Mission Modules" and the newer
 domain-specific categories (WMP Combat Systems, WMP Logistics, WMP
