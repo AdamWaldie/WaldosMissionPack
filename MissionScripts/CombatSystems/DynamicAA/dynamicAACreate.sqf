@@ -405,7 +405,10 @@ private _assignCrew = {
     _group addVehicle _vehicle;
     _groups pushBackUnique _group;
     if (_defence) then {
-        [_group, false] call Waldo_fnc_DynamicAASetGroupState;
+        // DynamicAACreate may still carry the curator's remoteExecutedOwner after a ZEN request.
+        // Hand the initial close to owner 2 so the group/fire-gate authority check sees the server,
+        // exactly as it does for a pre-planned Eden system.
+        [_group, false, []] remoteExecCall ["Waldo_fnc_DynamicAASetGroupState", 2];
         _defenceGroups pushBackUnique _group;
     } else {
         _group setCombatMode "RED";
@@ -506,10 +509,9 @@ if (_config getOrDefault ["shutdownInteraction", false]) then {
     _radar setVariable ["Waldo_DynamicAA_InteractionAvailable", true, true];
     [_radar, _interactionSettings] remoteExecCall ["Waldo_fnc_DynamicAAInteractionSetup", 0, _radar];
 };
-private _handle = [_id] spawn Waldo_fnc_DynamicAADetectorLoop;
-_state set ["handle", _handle];
-_registry set [_id, _state];
-missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
+// Start through a server-self handoff. A detector spawned directly inside the curator's ZEN
+// remoteExec can inherit that curator owner ID and be rejected by every local fire-gate update.
+[_id] remoteExecCall ["Waldo_fnc_DynamicAAStartDetectorServer", 2];
 [] call Waldo_fnc_DynamicAAPublishState;
 diag_log format [
     "[WMP DYNAMIC AA] '%1' (%2) active: side=%3 crewSides=%4 detection=%5m engagement=%6m altitude=%7-%8m %9 assetPool=%10.",

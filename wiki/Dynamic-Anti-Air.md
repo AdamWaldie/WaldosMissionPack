@@ -35,7 +35,11 @@ circle. The weapons must stand down in every case. Finally destroy the required 
 objects must remain unable to fire.
 
 The composition is for a pre-planned system. Use the ZEN module when Zeus needs to create or replace
-a system during play. Do not place the composition and a ZEN system on the same centre for one test.
+a system during play. Both routes feed the same server-owned detector and enforce the same horizontal
+radii and altitude limits. The ZEN route makes an explicit server-authority handoff before closing the
+weapons and starting that detector; the curator player's network identity therefore cannot prevent the
+initial safety gate from being installed. Do not place the composition and a ZEN system on the same
+centre for one test.
 
 ## Zeus setup
 
@@ -49,6 +53,11 @@ a system during play. Do not place the composition and a ZEN system on the same 
 8. Optionally enable the player radar-shutdown objective and select its procedure and difficulty in the common settings.
 9. Confirm the equipment page. The dedicated server automatically places the requested radar, static-AA and mobile-AA assets in a spaced, terrain-safe layout around the module position. No additional map clicks are required.
 10. Fly a crewed hostile aircraft through the zone at an eligible altitude to verify activation.
+
+The client and server RPT record the requested detection radius, engagement radius, floor, ceiling,
+altitude mode and centre when Zeus confirms the module. The server then records the normalized values
+used by the detector. If a test behaves differently from the dialog, compare those two lines first;
+they distinguish a dialog/payload problem from an aircraft altitude or AI-locality problem.
 
 Each static site selects one configured site template. Mobile launchers and scrambled fighters are independently selected from the resolved side or faction pool, allowing repeated systems to use different valid assets. Fighters spawn outside the zone and engage the detected aircraft. Use **Dynamic AA - Remove Nearest** to remove or disable the nearest named system.
 
@@ -177,7 +186,10 @@ An Eden object-init call can occur while a dedicated server is still turning mis
 network objects. WMP queues that pre-planned creation until its server initialization sentinel is
 ready, creates crew directly on the requested operational side, explicitly associates each vehicle
 with that group, and waits for vehicle and crew network IDs before adding them to Zeus. A Zeus-created
-system already runs after mission start, so it uses the same creator without the startup queue.
+system already runs after mission start, so it uses the same creator without the startup queue. Its
+creation request is received from the curator, but detector startup and the initial weapon-safe state
+are deliberately handed back through server owner 2. This prevents the curator's inherited
+`remoteExecutedOwner` from being mistaken for an unauthorized client by the owner-local fire gate.
 
 The dwell and clear-delay settings provide detection-state hysteresis, preventing an aircraft
 skimming the boundary from rapidly toggling announcements and fighter waves. They do not grant a

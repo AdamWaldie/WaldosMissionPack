@@ -2,8 +2,11 @@
  * Author: WaldoTheWarfighter
  * Tracks the active waypoint of one local AI helicopter and invokes the vector landing controller
  * for LAND, UNLOAD, TRANSPORT UNLOAD and GET OUT tasks. A scripted waypoint is accepted only when
- * its script identifies a landing task. The controller never activates at or inside the configured
- * 50 metre minimum, avoiding take-off waypoints that vanilla Arma completes immediately.
+ * its script identifies a landing task. A MOVE waypoint is accepted only for a registered WMP
+ * transport whose server-broadcast state is TO_DESTINATION; this lets passenger services land
+ * without Arma forcing cargo out or leaving a scripted LAND task alive after route replacement.
+ * The controller never activates at or inside the configured 50 metre minimum, avoiding take-off
+ * waypoints that vanilla Arma completes immediately.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
@@ -37,6 +40,11 @@ while {
                 private _script = toLowerANSI (waypointScript _waypoint);
                 private _landingType = _type in ["LAND", "UNLOAD", "TR UNLOAD", "GETOUT"];
                 if (_type == "SCRIPTED" && {_script find "land" >= 0}) then {_landingType = true;};
+                if (
+                    _type == "MOVE"
+                    && {_helicopter getVariable ["Waldo_TransportService_Registered", false]}
+                    && {_helicopter getVariable ["Waldo_TransportService_State", ""] == "TO_DESTINATION"}
+                ) then {_landingType = true;};
                 private _signature = [_index, _position, _type, _script];
                 if !(_signature isEqualTo _lastSignature) then {
                     _lastSignature = _signature;

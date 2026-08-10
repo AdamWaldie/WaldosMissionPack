@@ -29,11 +29,15 @@ private _config = createHashMap;
 {_config set [_x, _settings get _x]} forEach keys _settings;
 _config set ["id", _id];
 _config set ["centre", _centre];
+_config set ["requestSource", "ZEN"];
 diag_log format [
-    "[WMP DYNAMIC AA] ZEN submitting '%1' for server layout: mode=%2 radar=%3 static=%4 mobile=%5 fighters=%6.",
+    "[WMP DYNAMIC AA] ZEN submitting '%1' for server layout: mode=%2 radar=%3 static=%4 mobile=%5 fighters=%6 detection=%7 engagement=%8 altitude=%9-%10 %11 centre=%12.",
     _id, _config getOrDefault ["assetSelectionMode", "PROFILE"],
     _config getOrDefault ["radarCount", 1], _config getOrDefault ["staticCount", 0],
-    _config getOrDefault ["mobileCount", 0], _config getOrDefault ["fighterCount", 0]
+    _config getOrDefault ["mobileCount", 0], _config getOrDefault ["fighterCount", 0],
+    _config getOrDefault ["radius", 2000], _config getOrDefault ["engagementRadius", 2000],
+    _config getOrDefault ["minimumAltitude", 60], _config getOrDefault ["maximumAltitude", 10000],
+    _config getOrDefault ["altitudeMode", "AUTO"], _centre
 ];
 [_config] remoteExecCall ["Waldo_fnc_DynamicAACreate", 2];
 ["DYNAMIC AA", "System submitted; the server is placing its assets around the selected centre.", "INFO", "DYNAMIC_AA_SUBMIT", 7]

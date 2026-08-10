@@ -3,11 +3,11 @@
  * Executes one validated transport movement on the machine currently owning the AI driver group.
  * It creates only local control state, clears only that group's waypoints, applies the configured
  * non-combat movement policy and reports arrival/failure with the authoritative request ID.
- * Service helicopters use TR UNLOAD only when arriving for pickup. Passenger destinations use
- * Arma's official scripted LAND waypoint (`A3\functions_f\waypoints\fn_wpLand.sqf`): LAND is not a
- * valid runtime setWaypointType value and becomes UNDEF on a dedicated server, while TR UNLOAD can
- * order passengers out. The scripted LAND task is recognised by WMP improved landing without
- * forcing disembarkation. Both paths retain the vehicle LAND fallback inside 300 metres. When WMP
+ * Service helicopters use TR UNLOAD only when arriving for pickup or returning empty to base.
+ * Passenger destinations use a MOVE route which the WMP improved-landing tracker recognises from
+ * the transport's authoritative TO_DESTINATION state. This avoids both TR UNLOAD forcing players
+ * out before touchdown and Arma's scripted LAND task surviving route replacement after touchdown.
+ * Both paths retain the vehicle LAND fallback inside 300 metres. When WMP
  * improved landing owns final approach, that fallback waits instead of fighting the controller.
  * After touchdown the server clears the completed route and permits normal AI engine idle-down;
  * Transport Services does not impose an engine-running or movement-suspension hold.
@@ -82,18 +82,16 @@ if (_helicopter) then {
     driver _vehicle forceFollowRoad _roadRoute;
     _dispatchRoadRoute = _roadRoute;
 };
-// Pickup retains the proven TR UNLOAD approach. At a passenger destination, TR UNLOAD also orders
-// cargo out as an engine waypoint side effect, bypassing WMP's forceDisembark option. There is no
-// valid `LAND` setWaypointType token in runtime SQF: assigning it produces UNDEF (confirmed on a
-// dedicated server). Arma's own LAND editor waypoint is a SCRIPTED waypoint using fn_wpLand.sqf.
-// That is also the form recognised by WMP's improved-landing tracker and does not eject cargo.
+// Pickup and RTB retain the proven TR UNLOAD approach. At a passenger destination, TR UNLOAD orders
+// cargo out as an engine waypoint side effect, bypassing WMP's forceDisembark option. A scripted
+// LAND waypoint avoids that side effect but can leave Arma's waypoint script holding the aircraft
+// after WMP deletes/replaces the landing waypoint. Destination therefore uses an ordinary MOVE
+// route; the improved-landing tracker recognises it only while this registered transport is in the
+// authoritative TO_DESTINATION state, so no general MOVE waypoint is reinterpreted as a landing.
 private _waypoint = _group addWaypoint [_target, 0];
 private _destinationLanding = _helicopter && {toUpperANSI _phase == "DESTINATION"};
-private _waypointType = if (!_helicopter) then {"MOVE"} else {if (_destinationLanding) then {"SCRIPTED"} else {"TR UNLOAD"}};
+private _waypointType = if (!_helicopter || {_destinationLanding}) then {"MOVE"} else {"TR UNLOAD"};
 _waypoint setWaypointType _waypointType;
-if (_destinationLanding) then {
-    _waypoint setWaypointScript "A3\functions_f\waypoints\fn_wpLand.sqf";
-};
 _waypoint setWaypointBehaviour _movementBehaviour;
 _waypoint setWaypointCombatMode "BLUE";
 _waypoint setWaypointSpeed (_config getOrDefault ["speedMode", "FULL"]);

@@ -2,14 +2,34 @@
  * Author: WaldoTheWarfighter, Val
  * Accepts arrival/failure reports from the AI locality owner and advances the authoritative state
  * only when service ID, request ID and phase still match. Pickup arrivals wait for a destination;
- * destination arrivals wait until all player passengers have disembarked or the configured dwell
- * timeout expires, then order RTB; RTB arrivals restore availability. Failed physical RTB may use
+ * destination arrivals wait until the vehicle is continuously settled and all human occupants in
+ * every seat have disembarked, then order RTB; the configured dwell can request an exit but can
+ * never authorise an occupied departure. RTB arrivals restore availability. Failed physical RTB may use
  * the explicitly configured empty-vehicle fail-safe reset.
  *
- * Arguments: 0 service ID; 1 request ID; 2 phase; 3 result (ARRIVED or FAILED).
- * Return Value: Boolean - true when the current request was advanced.
- * Example: ["RAVEN_1",12,"PICKUP","ARRIVED"] remoteExecCall ["Waldo_fnc_TransportReportServer",2];
- * Current caller: Waldo_fnc_TransportDispatchLocal.
+ * Locality, authority, repeat and JIP behaviour:
+ * Server only. Reports are accepted solely from the current driver-group owner. Request IDs reject
+ * late or duplicate reports after retargeting. Destination waiting observes live human occupants in
+ * every fullCrew role while allowing the AI service crew to remain. The automatic RTB transition is explicitly
+ * handed to server owner 2 so it cannot inherit and then fail the AI owner's client-authority check.
+ * Passenger presence is derived from fullCrew with empty seats excluded, covering every occupied
+ * driver, commander, turret, FFV and cargo role. RTB requires both a continuously settled vehicle
+ * and a continuously empty human-occupant list; an early GetOut while the aircraft is still landing
+ * therefore cannot trigger departure.
+ * Public service state remains available to JIP clients; no waiting worker is replayed on clients.
+ *
+ * Arguments:
+ * 0: service ID <STRING>.
+ * 1: request ID <NUMBER> - current authoritative serial.
+ * 2: phase <STRING> - PICKUP, DESTINATION or RTB.
+ * 3: result <STRING> - ARRIVED or FAILED.
+ *
+ * Return Value: <BOOL> - true when the current request was advanced.
+ *
+ * Current caller: Waldo_fnc_TransportDispatchLocal on the current AI-group owner.
+ *
+ * Example:
+ * ["RAVEN_1", 12, "PICKUP", "ARRIVED"] remoteExecCall ["Waldo_fnc_TransportReportServer", 2];
  */
 params ["_id", "_requestId", "_phase", "_result"];
 if (!isServer) exitWith {false};
@@ -89,56 +109,73 @@ switch (_phase) do {
         [format ["%1 reached the destination. Dismount when ready.", _entry get "name"], "SUCCESS"] call _notifyTransportAudience;
         [_id, _requestId] spawn {
             params ["_id", "_requestId"];
+            private _currentPlayerOccupants = {
+                params ["_vehicle"];
+                // Official fullCrew format begins with the unit occupying each seat. The empty-seat
+                // flag is false, so every returned row is an actual driver/turret/FFV/cargo occupant.
+                ((fullCrew [_vehicle, "", false]) apply {_x select 0}) select {
+                    !isNull _x && {isPlayer _x}
+                }
+            };
             private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
             private _entry = _services getOrDefault [_id, createHashMap];
             if (_entry isEqualTo createHashMap) exitWith {};
             private _vehicle = _entry get "vehicle";
             private _config = _entry get "config";
             private _deadline = serverTime + (_config getOrDefault ["destinationDwell", 45]);
+            private _settleSeconds = (missionNamespace getVariable ["Waldo_Transport_DestinationSettleSeconds", 3]) max 0.5;
+            private _emptySeconds = (missionNamespace getVariable ["Waldo_Transport_DestinationEmptyConfirmSeconds", 2]) max 0.5;
+            private _settleSpeed = (missionNamespace getVariable ["Waldo_Transport_DestinationSettleSpeedKph", 5]) max 0;
+            private _settledSince = -1;
+            private _emptySince = -1;
+            private _forceIssued = false;
+            private _cancelled = false;
+            private _remainingPlayers = [];
             waitUntil {
-                sleep 1;
+                sleep 0.25;
                 _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
                 _entry = _services getOrDefault [_id, createHashMap];
                 if (
                     _entry isEqualTo createHashMap
                     || {_entry getOrDefault ["requestId", -1] != _requestId}
                     || {_entry getOrDefault ["state", ""] != "DISEMBARKING"}
-                ) exitWith {true};
+                ) exitWith {_cancelled = true; true};
                 _vehicle = _entry get "vehicle";
                 _config = _entry get "config";
-                private _baseCrew = _entry getOrDefault ["baseCrew", []];
-                private _playerPassengers = (crew _vehicle) select {!(_x in _baseCrew) && {isPlayer _x}};
-                _playerPassengers isEqualTo [] || {serverTime >= _deadline} || {!alive _vehicle}
-            };
-            _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
-            _entry = _services getOrDefault [_id, createHashMap];
-            if (
-                _entry isEqualTo createHashMap
-                || {_entry getOrDefault ["requestId", -1] != _requestId}
-                || {_entry getOrDefault ["state", ""] != "DISEMBARKING"}
-                || {!alive (_entry get "vehicle")}
-            ) exitWith {};
-            _vehicle = _entry get "vehicle";
-            private _baseCrew = _entry getOrDefault ["baseCrew", []];
-            private _remainingPlayers = (crew _vehicle) select {!(_x in _baseCrew) && {isPlayer _x}};
-            // Optional forced exit remains explicit. Give moveOut a short physical-exit grace so
-            // the aircraft does not receive RTB in the same frame passengers are ordered out.
-            if (!(_remainingPlayers isEqualTo []) && {_config getOrDefault ["forceDisembark", false]}) then {
-                {[_x] remoteExecCall ["moveOut", owner _x]} forEach _remainingPlayers;
-                private _exitDeadline = serverTime + 10;
-                waitUntil {
-                    sleep 0.25;
-                    _remainingPlayers = (crew _vehicle) select {!(_x in _baseCrew) && {isPlayer _x}};
-                    _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
-                    _entry = _services getOrDefault [_id, createHashMap];
-                    _remainingPlayers isEqualTo []
-                    || {serverTime >= _exitDeadline}
-                    || {!alive _vehicle}
-                    || {_entry isEqualTo createHashMap}
-                    || {_entry getOrDefault ["requestId", -1] != _requestId}
-                    || {_entry getOrDefault ["state", ""] != "DISEMBARKING"}
+                if (!alive _vehicle || {isNull driver _vehicle} || {!alive driver _vehicle}) exitWith {
+                    _cancelled = true;
+                    true
                 };
+                _remainingPlayers = [_vehicle] call _currentPlayerOccupants;
+                private _speedKph = vectorMagnitude velocity _vehicle * 3.6;
+                private _grounded = isTouchingGround _vehicle || {(getPosATL _vehicle select 2) < 0.5};
+                if (_grounded && {_speedKph <= _settleSpeed}) then {
+                    if (_settledSince < 0) then {_settledSince = serverTime};
+                } else {
+                    _settledSince = -1;
+                };
+                if (_remainingPlayers isEqualTo []) then {
+                    if (_emptySince < 0) then {_emptySince = serverTime};
+                } else {
+                    _emptySince = -1;
+                };
+                // Dwell is now the optional forced-exit prompt, never permission to take off with
+                // somebody aboard. After moveOut WMP still waits for fullCrew to become human-empty.
+                if (
+                    !_forceIssued
+                    && {serverTime >= _deadline}
+                    && {!(_remainingPlayers isEqualTo [])}
+                    && {_config getOrDefault ["forceDisembark", false]}
+                ) then {
+                    {[_x] remoteExecCall ["moveOut", owner _x]} forEach _remainingPlayers;
+                    _forceIssued = true;
+                    diag_log format ["[WMP TRANSPORT] Destination dwell expired; requested passenger exit service=%1 request=%2 players=%3.", _id, _requestId, count _remainingPlayers];
+                };
+                private _settled = _settledSince >= 0 && {serverTime - _settledSince >= _settleSeconds};
+                private _empty = _emptySince >= 0 && {serverTime - _emptySince >= _emptySeconds};
+                _settled && _empty
             };
+            if (_cancelled) exitWith {};
             _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
             _entry = _services getOrDefault [_id, createHashMap];
             if (
@@ -148,12 +185,11 @@ switch (_phase) do {
                 || {!alive (_entry get "vehicle")}
             ) exitWith {};
             _vehicle = _entry get "vehicle";
-            private _requester = _entry getOrDefault ["requester", objNull];
-            if (isNull _requester) then {
-                ["RTB", _entry get "type", _vehicle, [], objNull] call Waldo_fnc_TransportRequestServer;
-            } else {
-                ["RTB", _entry get "type", _vehicle, [], _requester] call Waldo_fnc_TransportRequestServer;
-            };
+            diag_log format [
+                "[WMP TRANSPORT] Destination settled and human-empty; requesting RTB service=%1 request=%2 settleSeconds=%3 emptySeconds=%4 speed=%5kph.",
+                _id, _requestId, _settleSeconds, _emptySeconds, round (vectorMagnitude velocity _vehicle * 3.6)
+            ];
+            [_id, _requestId] remoteExecCall ["Waldo_fnc_TransportAutoRtbServer", 2];
         };
     };
     case "RTB": {

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 889,
+  "registeredFunctionCount": 891,
   "runtimeFunctionCount": 385,
-  "functionCount": 1274,
+  "functionCount": 1276,
   "stations": [
     {
       "id": "control",
@@ -1547,6 +1547,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_TransportAutoRtbServer",
+      "file": "MissionScripts/Logistics/TransportServices/transportAutoRtbServer.sqf",
+      "station": "transport-services",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_TransportBulkRequestServer",
       "file": "MissionScripts/Logistics/TransportServices/transportBulkRequestServer.sqf",
       "station": "transport-services",
@@ -2605,6 +2611,12 @@
     {
       "name": "Waldo_fnc_DynamicAACreate",
       "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAACreate.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAStartDetectorServer",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAStartDetectorServer.sqf",
       "station": "dynamic-aa",
       "activation": "manual"
     },

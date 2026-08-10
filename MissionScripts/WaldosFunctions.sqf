@@ -501,6 +501,7 @@ class CfgFunctions
             class TransportSetGroupNameLocal {file = "MissionScripts\Logistics\TransportServices\transportSetGroupNameLocal.sqf";};
             class TransportRefreshProtectionServer {file = "MissionScripts\Logistics\TransportServices\transportRefreshProtectionServer.sqf";};
             class TransportRequestServer {file = "MissionScripts\Logistics\TransportServices\transportRequestServer.sqf";};
+            class TransportAutoRtbServer {file = "MissionScripts\Logistics\TransportServices\transportAutoRtbServer.sqf";};
             class TransportBulkRequestServer {file = "MissionScripts\Logistics\TransportServices\transportBulkRequestServer.sqf";};
             class TransportDispatchLocal {file = "MissionScripts\Logistics\TransportServices\transportDispatchLocal.sqf";};
             class TransportReportServer {file = "MissionScripts\Logistics\TransportServices\transportReportServer.sqf";};
@@ -854,6 +855,7 @@ class CfgFunctions
             class DynamicAASetVehicleAmmo {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetVehicleAmmo.sqf";};
             class DynamicAAPublishState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAPublishState.sqf";};
             class DynamicAACreate {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAACreate.sqf";};
+            class DynamicAAStartDetectorServer {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAStartDetectorServer.sqf";};
             class DynamicAADetectorLoop {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAADetectorLoop.sqf";};
             class DynamicAANotifyState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAANotifyState.sqf";};
             class DynamicAASpawnFighters {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASpawnFighters.sqf";};
