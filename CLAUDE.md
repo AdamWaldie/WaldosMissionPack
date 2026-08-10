@@ -222,8 +222,11 @@ Group IDs must match the Eden editor group ID exactly (an `@Callsign` leader-rol
 
 Vehicle-mounted rack radios (AN/VRC-64, VRC-103, VRC-110, VRC-111, SEM90, or any mission-added rack)
 are a separate, vehicle-scoped surface — not part of `acreConfig.sqf`'s per-player carried-radio
-scan, which deliberately preserves rack radios untouched. One object-init call configures every rack
-on a vehicle:
+scan, which deliberately preserves rack radios untouched. No mods required for the common case:
+ACRE2 attaches racks by class inheritance, so `Helicopter_Base_F`, `Plane_Base_F`, `Tank_F`,
+`Wheeled_APC_F`, `Boat_Armed_01_base_F` and `MRAP_01/02/03_base_F` already have 1-2 racks the moment
+ACRE2 loads (confirmed against `addons/sys_rack/CfgVehicles.hpp`). One object-init call configures
+every rack on a vehicle:
 
 ```sqf
 // Simplest - apply a named ACRE2 preset to every rack on this vehicle:
@@ -237,8 +240,13 @@ initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and req
 player (ACRE2 itself delegates the actual mount work to a player's machine) — the server waits
 (bounded, 30s for the vehicle's racks, then 20s per rack's own radio ID) rather than assuming
 synchronous completion. A `mountRadioClass` in an assignment row **replaces** whatever that rack
-currently holds (gated by ACRE2's own `acre_api_fnc_isRackRadioRemovable` check); the sentinel
-`"REMOVE_RACK"` rips the entire physical rack off the vehicle. The call is safe to repeat later in
+currently holds, and `"REMOVE_RACK"` rips the entire rack off — both gated by ACRE2's own
+`acre_api_fnc_isRackRadioRemovable` check, which is `false` unless `isRadioRemovable = 1` was set
+where the rack was configured. Checked directly against ACRE2's vanilla vehicle config: of the base
+classes above, that is **only** the MRAP family's empty `Rack_1` (AN/VRC-110) — every other vanilla
+rack pre-mounts a PRC-117F with no `isRadioRemovable` set (defaults false), fixed hardware by
+ACRE2's own design, not a WMP restriction. A mission-added rack can set that flag itself for full
+replace/remove behaviour anywhere. The call is safe to repeat later in
 the mission with a different config to re-equip a vehicle — an identical repeat of the last-applied
 config is a no-op unless a third `force` argument is passed, so an Eden init field firing on every
 connected machine at mission start does not redo the work per client. FREQUENCY-mode rack radios

@@ -189,28 +189,56 @@ table above). One object-init call on the vehicle configures every rack it has:
 - `mountRadioClass` (optional) is a base radio classname (e.g. `"ACRE_PRC117F"`) to mount into that
   rack, or the sentinel `"REMOVE_RACK"`.
 
+### Which vehicles have racks by default
+
+No mods required for the common case. ACRE2 attaches racks by class inheritance, so essentially
+every vanilla Arma 3 helicopter, plane, tank, wheeled APC, armed boat and MRAP-family vehicle already
+has one or two racks the moment ACRE2 loads - confirmed directly against ACRE2's own
+`addons/sys_rack/CfgVehicles.hpp`:
+
+| Vehicle base class | Racks | Default contents |
+|---|---|---|
+| `Helicopter_Base_F`, `Plane_Base_F`, `Tank_F`, `Wheeled_APC_F`, `Boat_Armed_01_base_F`, `VTOL_01_unarmed_base_F` | 1-2 | A PRC-117F, **already mounted, not removable** (see below) |
+| `MRAP_01/02/03_base_F` (Hunter/Strider/Ifrit-family) | 2 | Rack 1: empty AN/VRC-110, **removable**. Rack 2: a PRC-117F, already mounted, not removable |
+
+Call `Waldo_fnc_ACRE2RackSetup` on any of these immediately to retune the pre-mounted PRC-117F's
+channel - that is the common case and needs nothing extra. `acre_api_fnc_getVehicleRacks` returns
+`[]` for a vehicle with no rack class in its inheritance chain (most cars, most static weapons); use
+`acre_api_fnc_addRackToVehicle` (or a mod that already does) to give one a rack first.
+
 ### Replacing or removing a rack's radio
 
 A mission maker can give a vehicle a different radio loadout at any point in the mission, not just
-at spawn - call `Waldo_fnc_ACRE2RackSetup` again with a different `assignments` config:
+at spawn - call `Waldo_fnc_ACRE2RackSetup` again with a different `assignments` config. **This only
+does anything on a rack ACRE2 itself has flagged removable.** Checked directly against ACRE2's
+config: of every vanilla rack in the table above, that is **only** the MRAP family's empty AN/VRC-110
+`Rack_1` - every PRC-117F ACRE2 pre-mounts elsewhere (helicopters, planes, tanks, wheeled APCs, boats,
+and the MRAPs' own `Rack_2`) has no `isRadioRemovable` property set at all, and ACRE2's own internal
+check (`GET_STATE_RACK(...,"isRadioRemovable")`, defaulting to `false` when unset) means that radio
+is fixed hardware by ACRE2's own design, not a WMP restriction. A mission-added rack
+(`acre_api_fnc_addRackToVehicle`) can set `isRadioRemovable = true` itself for full replace/remove
+behaviour anywhere.
 
 ```sqf
-// Later in the mission - re-equip rack 0 with a different radio type, ripping rack 1 out entirely:
-[myVehicle, ["assignments", [
-    [0, 12, "ACRE_PRC152"],
-    [1, -1, "REMOVE_RACK"]
+// On an MRAP-family vehicle - mount a PRC-152 into the empty, removable AN/VRC-110 rack (index
+// depends on acre_api_fnc_getVehicleRacks order for that specific vehicle; 0 in the vanilla config):
+[myMrap, ["assignments", [
+    [0, 12, "ACRE_PRC152"]
 ]]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
 - A `mountRadioClass` that differs from what a rack currently holds **replaces** it - ACRE2's own
   mount call overwrites the previous occupant directly; there is no separate unmount step. This is
   refused (with an RPT diagnostic, that rack left untouched) when ACRE2's own
-  `acre_api_fnc_isRackRadioRemovable` check reports the current occupant is not removable.
+  `acre_api_fnc_isRackRadioRemovable` check reports the current occupant is not removable - as it
+  will for essentially every vanilla vehicle's pre-mounted PRC-117F, per the table above.
 - `"REMOVE_RACK"` rips the entire physical rack - hardware and radio - off the vehicle via
-  `acre_api_fnc_removeRackFromVehicle`, gated by the same removability check. No public ACRE2 API to
-  unmount only the radio and leave an empty rack in place was found; removal always takes the rack
-  with it. If a mission specifically needs an intentionally-empty slot, place a spare unconfigured
-  rack for that purpose rather than relying on "remove-then-later-remount."
+  `acre_api_fnc_removeRackFromVehicle`, gated by the same removability check, with the same
+  practical result: it works on the MRAP's empty `Rack_1`, and is refused everywhere else on a
+  vanilla vehicle. No public ACRE2 API to unmount only the radio and leave an empty rack in place was
+  found; removal always takes the rack with it. If a mission specifically needs an intentionally-empty
+  slot, place a spare unconfigured rack for that purpose rather than relying on
+  "remove-then-later-remount."
 - Calling `Waldo_fnc_ACRE2RackSetup` again with the **same** config as last time is a no-op (nothing
   is re-applied) unless a third `force` argument is passed - this is what keeps an Eden object init
   field, which runs on every connected machine, from repeating the same work once per client at
