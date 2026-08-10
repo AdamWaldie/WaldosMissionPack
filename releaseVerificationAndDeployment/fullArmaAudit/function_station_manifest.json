@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 892,
+  "registeredFunctionCount": 893,
   "runtimeFunctionCount": 385,
-  "functionCount": 1277,
+  "functionCount": 1278,
   "stations": [
     {
       "id": "control",
@@ -773,6 +773,12 @@
     {
       "name": "Waldo_fnc_HeadlessRebalance",
       "file": "MissionScripts/Headless/headlessRebalance.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessMigrationWorker",
+      "file": "MissionScripts/Headless/headlessMigrationWorker.sqf",
       "station": "headless",
       "activation": "manual"
     },

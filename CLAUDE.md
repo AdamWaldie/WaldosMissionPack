@@ -491,17 +491,25 @@ Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`
 
 ### Headless Client Support (optional)
 
-Native, server-authoritative distribution of AI groups across connected headless clients. No
-mission-maker setup is required: connect a headless client and it self-registers and starts
-receiving eligible AI groups automatically. This replaces the legacy, disabled-by-default
-`MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf` ("Werthles' Headless Kit") third-party
-script, which remains in the repository unmodified for reference only and must not be re-enabled
-alongside this system.
+Native, server-authoritative distribution of AI groups across connected headless clients. No script
+setup is required beyond the mission itself having somewhere for the headless client to connect: this
+replaces the legacy, disabled-by-default `MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf`
+("Werthles' Headless Kit") third-party script, which remains in the repository unmodified for
+reference only and must not be re-enabled alongside this system.
+
+**Eden setup (Arma-level, not WMP-specific):** place one "Headless Client" Virtual Entity (3DEN
+Systems/Logic entity category) per headless client slot you want available, and set each one
+Playable. This is ordinary Arma 3 slot plumbing - a headless client connects into a slot the same way
+a player does - and applies regardless of which script manages the AI once connected. WMP's own
+detection does not care about the slot's name or variable name (unlike some third-party HC tooling's
+own naming convention requirements); it identifies a headless client purely by
+`!isDedicated && !hasInterface` at runtime.
 
 ```sqf
-// No configuration needed - just connect a headless client (Arma launch parameter -client
-// -connect=... -password=... against the hosting server, or a Virtual Headless Client Entity).
-// Every machine calls this on the same ordered feature-runtime snapshot handshake as AI
+// Connect the headless client process itself with the Arma launch parameters
+// -client -connect=<serverIP> -password=<password> against the hosting server (server.cfg must
+// allow-list it in headlessClients[]; that part is ordinary Arma 3 server hosting, outside WMP's
+// scope). Every machine calls this on the same ordered feature-runtime snapshot handshake as AI
 // rebalance/helicopter landing (init.sqf); it is a no-op on the server and on real players.
 [] call Waldo_fnc_HeadlessDetectLocal;
 ```
@@ -511,17 +519,41 @@ alongside this system.
 heuristic, which can also be true for a listen-server host or any admin-capable connection). A group
 is eligible for migration only when it has no human player as leader or member, has not set the
 group variable `Waldo_Headless_ExcludeGroup` to `true` (the opt-out convention any WMP subsystem can
-use to pin its own AI server-side), is not `sideLogic` (curator helpers/ZEN module logic), is not
-currently crewing a registered Airborne Gunship aircraft (`Waldo_Gunship_Registry` - gunship crew is
-intentionally server-owned), and is currently local to the server. Every actual `setGroupOwner` call
-in the rework funnels through `Waldo_fnc_HeadlessMigrateGroup`, so the registry never drifts.
+use to pin its own AI server-side - the check only runs on the server, so set it from a context that
+already runs there, such as an Eden init field, or broadcast it explicitly with a client-only script:
+`_group setVariable ["Waldo_Headless_ExcludeGroup", true, true];`), is not `sideLogic` (curator
+helpers/ZEN module logic), is not currently crewing a registered Airborne Gunship aircraft
+(`Waldo_Gunship_Registry` - gunship crew is intentionally server-owned), has existed for at least
+`Waldo_Headless_MinGroupAgeSeconds` (default 10s - a freshly-created group is given a moment to
+finish being populated/configured by whatever spawned it before it can be migrated out from under
+that setup), and is currently local to the server. Every actual `setGroupOwner` call in the rework
+funnels through `Waldo_fnc_HeadlessMigrateGroup`, which also prunes `Waldo_Headless_ManagedGroups` of
+dead/empty groups on every rebalance pass, so the registry never drifts or accumulates stale entries.
+No migration of any kind happens before `Waldo_Headless_StartDelaySeconds` (default 30s) of mission
+time have passed, and eligible groups are migrated through a paced queue
+(`Waldo_fnc_HeadlessMigrationWorker`, `Waldo_Headless_MigrationPaceSeconds` default 3s apart) rather
+than all at once, to avoid a hitch on missions with many AI groups - both defaults mirror the same
+mitigations documented by established headless-client community tooling for exactly these two risks
+(racing another script's AI setup, and lag from too many ownership changes in one frame).
 
 **Reapplying locality-sensitive behaviour after migration is not reimplemented per feature** - it
 relies on mechanisms WMP already uses: "current owner executes" redispatch
 (`Waldo_fnc_DynamicAASetGroupState`, the whole `Logistics\TransportServices` folder,
 `Zen_convoyModule.sqf`) and per-unit engine `Local` event-handler adoption (AI rebalance, improved
 helicopter landing). Dynamic AO's patrol-waypoint setup was the one system found not to redispatch
-correctly and has been fixed to match the same pattern.
+correctly and has been fixed to match the same pattern. A third-party AI mod that binds its own
+per-unit logic to a one-shot init event rather than continuously re-checking locality has no such
+adoption path of its own - `Waldo_fnc_HeadlessMigrateGroup` broadcasts a `Waldo_Headless_GroupMigrated`
+CBA global event (`[group, previousOwner, newOwner]`) after every successful move specifically so a
+mission's own compatibility layer can react; see `wiki/Headless-Client-Support.md` for a worked
+example. This is a mitigation hook, not a guarantee - known-incompatible AI mods are better handled
+with `Waldo_Headless_ExcludeGroup`.
+
+**Trigger/waypoint synchronisation is not preserved across a migration** - this is an Arma engine
+limitation, not something WMP (or the legacy script, which attempted and still needed a workaround
+for it) can fully paper over in script. If a group has a waypoint synced to a trigger, insert a
+non-overlapping spacer waypoint immediately before that synced one; that spacer absorbs the migration
+without disturbing the sync, exactly as documented for the legacy tooling this replaces.
 
 **Disconnect recovery** is event-driven via the engine's `HandleDisconnect` mission event handler
 (`initServer.sqf`) - a disconnecting headless client's groups return to the server and a rebalance
