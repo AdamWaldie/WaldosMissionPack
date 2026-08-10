@@ -21,12 +21,13 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 # Special Builds
 #python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_unitInsignias.json --deploy
-python3 releaseVerificationAndDeployment/build.py --build config_claudeSkill.json --deploy
+#python3 releaseVerificationAndDeployment/build.py --build config_claudeSkill.json --deploy
 
-# The build above packs ".claude/skills/mission-pack-config/" with that path prefix intact, for
-# unzipping into the root of a mission project (Claude Code auto-discovers it there). claude.ai's
-# own "Upload skill" dialog needs a different archive shape — the skill folder itself at the zip
-# root — so package that separately rather than trying to make one zip serve both.
+# Only the claude.ai-upload-ready shape ships now (skill folder at the zip root — what claude.ai's
+# "Upload skill" dialog and the Skills API require, and also what a mission-project drop-in should
+# use, moving the extracted folder under .claude/skills/ by hand). The prefixed
+# ".claude/skills/mission-pack-config/"-rooted zip (config_claudeSkill.json) remains available for
+# a manual build but is not produced by this script, same as the Exemplar build above.
 python3 releaseVerificationAndDeployment/package_claude_skill_upload.py "${VERSION_TAG}" release
 
 sed -i "s/DEVBUILD/${VERSION_TAG}/g" WMP_Compositions/*/header.sqe
