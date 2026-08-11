@@ -22,7 +22,9 @@ private _checks = [];
     _x params ["_id", "_function"];
     private _api = !(isNil _function);
     private _registered = (_registry findIf {(_x param [0, ""]) == _id}) >= 0;
-    _checks pushBack ["interactions", format ["procedure-%1", _id], if (!_api) then {"ERROR"} else {if (_registered) then {"LOADED"} else {"UNCONFIGURED"}}, format ["function=%1 available=%2 locallyRegistered=%3", _function, _api, _registered]];
+    private _procDetail = format ["function=%1 available=%2 locallyRegistered=%3", _function, _api, _registered];
+    if !(_api) then {_procDetail = [_procDetail, format ["%1 is missing from this mission's copy of WMP - re-extract WaldosMissionPack\MissionScripts over this mission (or confirm WaldosFunctions.sqf wasn't edited) so it registers again.", _function]] call Waldo_fnc_DiagnosticFoldHint;};
+    _checks pushBack ["interactions", format ["procedure-%1", _id], if (!_api) then {"ERROR"} else {if (_registered) then {"LOADED"} else {"UNCONFIGURED"}}, _procDetail];
 } forEach _procedures;
 
 if (_objects isEqualTo [] && {hasInterface}) then {
@@ -43,6 +45,8 @@ private _invalidObjects = _objects select {
     private _ace = _featureOwned || {!_aceLoaded} || {!hasInterface} || {_x getVariable ["Waldo_MG_Int_ACEActionInstalled", false]};
     !_known || {!_vanilla} || {!_ace}
 };
-_checks pushBack ["interactions", "configured-equipment", if (!(_invalidObjects isEqualTo [])) then {"ERROR"} else {if (_objects isEqualTo []) then {"UNCONFIGURED"} else {if ((_objects findIf {(_x getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING"}) >= 0) then {"ACTIVE"} else {"LOADED"}}}, format ["objects=%1 invalid=%2 ACE=%3 vanillaRequired=%4", count _objects, count _invalidObjects, _aceLoaded, hasInterface]];
+private _equipmentDetail = format ["objects=%1 invalid=%2 ACE=%3 vanillaRequired=%4", count _objects, count _invalidObjects, _aceLoaded, hasInterface];
+if !(_invalidObjects isEqualTo []) then {_equipmentDetail = [_equipmentDetail, "A configured object references an unknown challenge id, or is missing its expected ACE/vanilla action - check the RPT for errors from Waldo_fnc_MiniGameInteractionSetup on the affected object(s)."] call Waldo_fnc_DiagnosticFoldHint;};
+_checks pushBack ["interactions", "configured-equipment", if (!(_invalidObjects isEqualTo [])) then {"ERROR"} else {if (_objects isEqualTo []) then {"UNCONFIGURED"} else {if ((_objects findIf {(_x getVariable ["Waldo_MG_InteractionState", "IDLE"]) == "RUNNING"}) >= 0) then {"ACTIVE"} else {"LOADED"}}}, _equipmentDetail];
 
 ["interaction-procedures", _checks] call Waldo_fnc_DiagnosticFeatureReport

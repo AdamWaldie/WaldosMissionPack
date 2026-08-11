@@ -29,9 +29,20 @@ useful for the user to leave on while first configuring the pack.
 Distinguishes `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`,
 `UNAVAILABLE`, `ERROR`. Covers representative public APIs, mod dependencies,
 loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare,
-party games, interaction equipment, Economy, Zeus registration, local HUD
-state, 3D markers, and ACE-vs-vanilla actions.
+party games, interaction equipment, Economy, Headless Client, Obituary,
+Zeus registration, the Feature Runtime Control snapshot handshake, Object
+Scaling, UI Theme, Accessibility, Emergency Dismount, Corpse Traps, local
+HUD state, 3D markers, and ACE-vs-vanilla actions.
 
 The latest report broadcasts as `Waldo_Diagnostics_LastReport`:
 `[warningCount, finishedAt, serverChecks, clientReports, runId]` — useful if
 scripting something that should wait for or react to the diagnostic pass.
+
+## Assistive hints
+
+Every `ERROR` check names the actual variable/function/file to go fix, not
+just that something is wrong — folded into the same `detail` text as
+`"; fix: <hint>"` (`Waldo_fnc_DiagnosticFoldHint`). When walking a user
+through a failing check, read and relay that `fix:` clause directly instead
+of guessing at a remediation — it's already written for a newcomer.
+`DISABLED`/`UNCONFIGURED` are expected, not failures, and never carry one.

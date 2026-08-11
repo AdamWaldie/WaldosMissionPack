@@ -551,7 +551,34 @@ Runs a read-only server and client health check at mission start after the loado
 missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 ```
 
-Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Zeus registration, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
+Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Headless Client, Obituary, Zeus registration, the Feature Runtime Control snapshot handshake, Object Scaling bounds, UI Theme application, Accessibility self-interaction, Emergency Dismount, Corpse Traps, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
+
+Every new module's diagnostics rows go through the same two primitives so RPT output never
+fragments into per-feature formats: `Waldo_fnc_DiagnosticLog` (the `[WMP DIAG]` frame shown above)
+and, for a feature large enough to own several rows, `Waldo_fnc_DiagnosticFeatureReport` (normalizes
+those rows into one `[featureName, checks]` result, each check being `[area, feature, state,
+detail]`). A single-flag optional feature typically adds one inline row directly in
+`runDiagnostics.sqf`/`runDiagnosticsClient.sqf` (see `corpse-traps` or `object-scaling`); a feature
+with real internal structure gets its own `*GetDiagnostics.sqf` consumed by both (see
+`Waldo_fnc_ObituaryGetDiagnostics`, `Waldo_fnc_HeadlessGetDiagnostics`). Either way the `area`/
+`feature` identifiers are the module's own name in kebab-case - never a free-text prefix - so every
+row stays searchable and consistent with the rest of the report.
+
+Every check that can report `ERROR` also carries a short, plain-language remediation hint - not just
+*that* something is wrong, but *what to go and change* - so a newcomer reading `systemChat` or RPT
+never has to reverse-engineer the fix from a terse `state=`/`detail=` pair alone. Hints fold into the
+same `detail` text as `"; fix: <hint>"` via the shared `Waldo_fnc_DiagnosticFoldHint`, so the
+`[area, feature, state, detail]` shape every consumer reads never changes. `DISABLED` and
+`UNCONFIGURED` are not failures and never carry a hint; only `ERROR` (and, rarely, an `UNAVAILABLE`
+that reflects a real misconfiguration rather than an intentionally-absent optional mod) does. Use it
+the same way in a new check:
+
+```sqf
+private _hint = if (_valid) then {""} else {"Set Waldo_Example_Class to a real CfgVehicles class."};
+["area", "feature", _state, _detail, _hint] call Waldo_fnc_DiagnosticFoldHint; // feature-report files
+[_category, _name, _state, _detail, _warn, _hint] call _status;                // runDiagnostics.sqf
+[_area, _feature, _state, _detail, _hint] call _add;                           // runDiagnosticsClient.sqf
+```
 
 ### Headless Client Support (optional)
 
