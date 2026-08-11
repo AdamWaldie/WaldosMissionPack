@@ -142,6 +142,16 @@ class CfgFunctions
             class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
             class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
         };
+        class Headless
+        {
+            class HeadlessDetectLocal {file = "MissionScripts\Headless\headlessDetectLocal.sqf";};
+            class HeadlessRegisterClient {file = "MissionScripts\Headless\headlessRegisterClient.sqf";};
+            class HeadlessRebalance {file = "MissionScripts\Headless\headlessRebalance.sqf";};
+            class HeadlessMigrationWorker {file = "MissionScripts\Headless\headlessMigrationWorker.sqf";};
+            class HeadlessMigrateGroup {file = "MissionScripts\Headless\headlessMigrateGroup.sqf";};
+            class HeadlessReassignOnDisconnect {file = "MissionScripts\Headless\headlessReassignOnDisconnect.sqf";};
+            class HeadlessGetDiagnostics {file = "MissionScripts\Headless\headlessGetDiagnostics.sqf";};
+        };
         class teleport
         {
             class Teleport {
@@ -705,6 +715,15 @@ class CfgFunctions
             class TreatmentFeedbackNotify {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackNotify.sqf";};
             class TreatmentFeedbackShowLocal {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackShowLocal.sqf";};
             class TreatmentFeedbackStop {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackStop.sqf";};
+        };
+        class Obituary
+        {
+            class ObituaryInit {file = "MissionScripts\MedicalSystems\Obituary\obituaryInit.sqf";};
+            class ObituaryRecordDeath {file = "MissionScripts\MedicalSystems\Obituary\obituaryRecordDeath.sqf";};
+            class ObituaryClassifyCause {file = "MissionScripts\MedicalSystems\Obituary\obituaryClassifyCause.sqf";};
+            class ObituaryPronounce {file = "MissionScripts\MedicalSystems\Obituary\obituaryPronounce.sqf";};
+            class ObituaryDiaryRenderLocal {file = "MissionScripts\MedicalSystems\Obituary\obituaryDiaryRenderLocal.sqf";};
+            class ObituaryPad2 {file = "MissionScripts\MedicalSystems\Obituary\obituaryPad2.sqf";};
         };
         class FieldResupply
         {

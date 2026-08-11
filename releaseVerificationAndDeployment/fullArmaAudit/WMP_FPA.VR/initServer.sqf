@@ -33,6 +33,17 @@ if (missionNamespace getVariable ["Waldo_Jamming_Enable", true]) then {
     [] call Waldo_fnc_JammingInit;
 };
 
+/*
+Headless client support (server-owned)
+
+Detects connected headless clients (Waldo_fnc_HeadlessDetectLocal, called from init.sqf on every
+machine) and distributes eligible AI groups to them automatically via Waldo_fnc_HeadlessRebalance -
+no per-feature mission-maker workaround needed. This handler reassigns a disconnecting headless
+client's groups back to the server (and on to another connected headless client, if any) the moment
+it drops, rather than leaving them stranded.
+*/
+addMissionEventHandler ["HandleDisconnect", {_this call Waldo_fnc_HeadlessReassignOnDisconnect}];
+
 [] spawn {
     waitUntil {missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]};
     if (missionNamespace getVariable ["Waldo_Economy_Enable", false]) then {

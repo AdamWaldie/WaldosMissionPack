@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 889,
+  "registeredFunctionCount": 901,
   "runtimeFunctionCount": 385,
-  "functionCount": 1274,
+  "functionCount": 1286,
   "stations": [
     {
       "id": "control",
@@ -203,6 +203,16 @@
         0
       ],
       "description": "Optional attributed integrations; opt-in only."
+    },
+    {
+      "id": "headless",
+      "title": "HEADLESS CLIENT SUPPORT",
+      "position": [
+        34,
+        92,
+        0
+      ],
+      "description": "Native detection, registration, rebalance, migration funnel, disconnect recovery and diagnostics."
     },
     {
       "id": "corpse-traps",
@@ -758,6 +768,48 @@
       "name": "Waldo_fnc_ImprovedHelicopterLandingConfigureServer",
       "file": "MissionScripts/AiScripting/improvedHelicopterLandingConfigureServer.sqf",
       "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessDetectLocal",
+      "file": "MissionScripts/Headless/headlessDetectLocal.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessRegisterClient",
+      "file": "MissionScripts/Headless/headlessRegisterClient.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessRebalance",
+      "file": "MissionScripts/Headless/headlessRebalance.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessMigrationWorker",
+      "file": "MissionScripts/Headless/headlessMigrationWorker.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessMigrateGroup",
+      "file": "MissionScripts/Headless/headlessMigrateGroup.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessReassignOnDisconnect",
+      "file": "MissionScripts/Headless/headlessReassignOnDisconnect.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessGetDiagnostics",
+      "file": "MissionScripts/Headless/headlessGetDiagnostics.sqf",
+      "station": "headless",
       "activation": "manual"
     },
     {
@@ -1988,6 +2040,42 @@
       "name": "Waldo_fnc_TreatmentFeedbackStop",
       "file": "MissionScripts/MedicalSystems/TreatmentFeedback/treatmentFeedbackStop.sqf",
       "station": "treatment-feedback",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryInit",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryInit.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryRecordDeath",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryRecordDeath.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryClassifyCause",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryClassifyCause.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryPronounce",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryPronounce.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryDiaryRenderLocal",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryDiaryRenderLocal.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryPad2",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryPad2.sqf",
+      "station": "control",
       "activation": "manual"
     },
     {
