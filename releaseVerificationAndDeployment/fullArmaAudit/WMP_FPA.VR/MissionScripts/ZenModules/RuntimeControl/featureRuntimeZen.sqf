@@ -626,7 +626,11 @@ switch (toUpperANSI _feature) do {
             getPosWorld _area
         };
         {
-            if (((_x select 1) call _getCentre) distance2D _modulePos < (((_nearest select 1) call _getCentre) distance2D _modulePos)) then {_nearest = _x};
+            // _getCentre's _area can itself be an Array (e.g. [position, radius] from HAZARD_CREATE, or
+            // [centre, a, b, angle, rectangle]) - it must be passed wrapped in its own argument array so
+            // params unpacks it as one whole "_area" parameter, not as that array's own positional args
+            // (which silently handed back a bare coordinate Number instead of the position array).
+            if (([_x select 1] call _getCentre) distance2D _modulePos < (([_nearest select 1] call _getCentre) distance2D _modulePos)) then {_nearest = _x};
         } forEach _zones;
         private _key = _nearest select 0;
         [

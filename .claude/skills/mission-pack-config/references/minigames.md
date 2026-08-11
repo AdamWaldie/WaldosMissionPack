@@ -23,7 +23,8 @@ lifecycle block into `init.sqf` yourself, WMP already runs it):
 
 Tables are detected **by class**: `Land_CampingTable_F`,
 `Land_CampingTable_small_F`, `Land_CampingTable_small_white_F`,
-`Land_TablePlastic_01_F`. If the user wants a different table object to
+`Land_TablePlastic_01_F`, `Land_WoodenTable_large_F`,
+`Land_WoodenTable_small_F`. If the user wants a different table object to
 work, that means adding its classname to `Waldo_MG_CFG_TABLE_CLASSES` in
 `MissionScripts/MiniGames/engine/config.sqf` — not something achievable
 purely from `init.sqf`. Other tuning constants (`Waldo_MG_CFG_*`) live in
