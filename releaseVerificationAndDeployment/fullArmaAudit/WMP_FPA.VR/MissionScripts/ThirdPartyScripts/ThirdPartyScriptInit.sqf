@@ -33,11 +33,19 @@ Example code - 0 = ["players"] execVM "player_markers.sqf";
 
 
 /*
-Werthless Headless Client call
+SUPERSEDED - do not enable this block.
 
-Requires:
-Virtual Headless Client Entity
+Werthles' Headless Kit v2.3 is replaced by WMP's own native headless-client support
+(Waldo_fnc_HeadlessDetectLocal / Waldo_fnc_HeadlessRegisterClient / Waldo_fnc_HeadlessRebalance /
+Waldo_fnc_HeadlessMigrateGroup / Waldo_fnc_HeadlessReassignOnDisconnect / Waldo_fnc_HeadlessGetDiagnostics,
+registered under WaldosFunctions.sqf's "Headless" category). It requires no mission-maker setup at
+all: connect a headless client and it self-registers and receives eligible AI groups automatically.
+See FEATURE_LOG.md's "Headless-client compatibility rework" history and wiki/Headless-Client-Support.md.
 
-Reccomended to leave call as is. Information regarding HC can be found in the associated third party script.
+WerthlesHeadless.sqf itself is left in the repository, unmodified and still fully disabled below, for
+reference only - it has known deviations from WMP's own locality/exclusion model (a non-standard
+headless-client detection test, a name-string exclusion list unaware of WMP-owned control groups, and
+zero integration with WMP's diagnostics or JIP snapshot handshake) and has not been re-validated
+against current CBA_A3/ACE3/Arma versions. Do not re-enable it without first reading those notes.
 */
 //[true,30,false,true,30,10,true,[]] execVM "MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf";

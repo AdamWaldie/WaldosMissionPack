@@ -1,6 +1,12 @@
 //WerthlesHeadless.sqf v2.3
 //Part of Werthles' Headless Kit v2.3
 //Split AI Groups Evenly Among Headless Clients
+//
+//SUPERSEDED: WMP now ships its own native headless-client support (see the "Headless" category in
+//WaldosFunctions.sqf and wiki/Headless-Client-Support.md). This third-party script is kept disabled
+//(see ThirdPartyScriptInit.sqf) and unmodified for reference only - do not enable it alongside the
+//native system, and do not re-enable it at all without first reading the notes in
+//ThirdPartyScriptInit.sqf and FEATURE_LOG.md's "Headless-client compatibility rework" history.
 
 //private variables
 private ["_recurrent", "_timeBetween", "_debug", "_advanced", "_startDelay", "_pause", "_report", "_moreBadNames", "_badNames", "_syncGroup", "_trigSyncs", "_waySyncs", "_objSyncs", "_objs", "_wayPoint", "_localCount", "_groupMoving", "_HCName", "_transfers", "_hintType", "_hintParams", "_lineString", "_breakString", "_debugString", "_hintParams1", "_hintParams2", "_stringInfo1", "_stringInfo2", "_stringInfo3", "_stringInfo4", "_strTransfers", "_strRecurrent", "_arb", "_debugging", "_check", "_hcColour", "_z", "_On", "_counts", "_HCgroups", "_null", "_recurrentCheck", "_ll", "_who", "_amount", "_gg", "_whom", "_inWHKHeadlessArray", "_headlessCount", "_unitsInGroup", "_size", "_lead", "_leadOwner", "_leadHeadless", "_WHKDummyWaypoint", "_moveToHC", "_bad", "_syncTrigArray", "_syncWayArray", "_wayNum", "_syncedTrigs", "_syncedWays", "_syncObjectsArray", "_syncObjects", "_nameOfSync", "_found", "_zz", "_HC", "_fewest", "_local", "_newSum", "_firstWaypoint", "_balanced", "_maxHC", "_minHC", "_diff", "_maxHCName", "_maxGroupCount", "_maxGroup"];

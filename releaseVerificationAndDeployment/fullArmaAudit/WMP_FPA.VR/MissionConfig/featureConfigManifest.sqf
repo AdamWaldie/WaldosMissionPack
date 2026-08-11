@@ -35,5 +35,6 @@
     "MissionConfig\logisticsConfig.sqf",
     "MissionConfig\environmentConfig.sqf",
     "MissionConfig\electronicWarfareConfig.sqf",
-    "MissionConfig\missionSystemsConfig.sqf"
+    "MissionConfig\missionSystemsConfig.sqf",
+    "MissionConfig\headlessConfig.sqf"
 ]

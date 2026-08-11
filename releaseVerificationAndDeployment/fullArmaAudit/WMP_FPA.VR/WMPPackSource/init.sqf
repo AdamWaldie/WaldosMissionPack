@@ -150,6 +150,23 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 };
 /*===========================================================================================================================*/
 
+/* HEADLESS CLIENT SUPPORT
+ * Detects whether this machine is a connected headless client and, if so, registers it with the
+ * server so eligible AI groups are distributed to it automatically - no per-feature mission-maker
+ * workaround needed. Has no effect on the server or on players. Gated on the same ordered
+ * feature-runtime snapshot handshake as AI rebalance/helicopter landing above, so a joining headless
+ * client never registers before it has a consistent runtime picture.
+ */
+[] spawn {
+    waitUntil {
+        missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]
+        || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
+    };
+    if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    [] call Waldo_fnc_HeadlessDetectLocal;
+};
+/*===========================================================================================================================*/
+
 
 /*
 ACRE2 communications and Babel are authored only in MissionConfig\acreConfig.sqf. Do not call the

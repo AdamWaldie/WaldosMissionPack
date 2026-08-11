@@ -142,6 +142,16 @@ class CfgFunctions
             class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
             class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
         };
+        class Headless
+        {
+            class HeadlessDetectLocal {file = "MissionScripts\Headless\headlessDetectLocal.sqf";};
+            class HeadlessRegisterClient {file = "MissionScripts\Headless\headlessRegisterClient.sqf";};
+            class HeadlessRebalance {file = "MissionScripts\Headless\headlessRebalance.sqf";};
+            class HeadlessMigrationWorker {file = "MissionScripts\Headless\headlessMigrationWorker.sqf";};
+            class HeadlessMigrateGroup {file = "MissionScripts\Headless\headlessMigrateGroup.sqf";};
+            class HeadlessReassignOnDisconnect {file = "MissionScripts\Headless\headlessReassignOnDisconnect.sqf";};
+            class HeadlessGetDiagnostics {file = "MissionScripts\Headless\headlessGetDiagnostics.sqf";};
+        };
         class teleport
         {
             class Teleport {

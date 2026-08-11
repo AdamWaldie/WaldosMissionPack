@@ -22,6 +22,11 @@
  * Return Value:
  * Group
  *
+ * Locality and authority:
+ * Server-authoritative caller, current-owner execution. A group not local to the calling machine is
+ * redispatched to its current groupOwner (the same pattern as Waldo_fnc_DynamicAASetGroupState) so a
+ * group already migrated to a headless client is still routed correctly instead of being refused.
+ *
  * Example:
  * [_group, _centre, 500, false, "SAFE", "LIMITED", ["COLUMN", "STAG COLUMN", "WEDGE"]]
  * call Waldo_fnc_DynamicAOAddPatrolWaypoints;
@@ -32,7 +37,16 @@ params [
 ];
 if (isNull _group) exitWith {_group};
 if (!local _group) exitWith {
-    diag_log format ["[WMP DYNAMIC AO] Refused to route non-local group %1 on owner %2.", _group, groupOwner _group];
+    if !(isServer) exitWith {
+        diag_log format ["[WMP DYNAMIC AO] Refused to route non-local group %1 on owner %2 from a non-server caller.", _group, groupOwner _group];
+        _group
+    };
+    private _groupOwner = groupOwner _group;
+    if (_groupOwner <= 0 || {_groupOwner == clientOwner}) exitWith {
+        diag_log format ["[WMP DYNAMIC AO] Refused to route group %1 with invalid owner %2.", _group, _groupOwner];
+        _group
+    };
+    [_group, _centre, _radius, _simple, _behaviour, _speed, _formations] remoteExecCall ["Waldo_fnc_DynamicAOAddPatrolWaypoints", _groupOwner];
     _group
 };
 
