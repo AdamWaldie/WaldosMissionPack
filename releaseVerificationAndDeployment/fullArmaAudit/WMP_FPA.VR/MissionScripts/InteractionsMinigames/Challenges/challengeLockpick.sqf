@@ -237,10 +237,21 @@ private _animationStarter = [_display] spawn {
     if (isNull _display) exitWith {};
     [_display] call (_display getVariable ["Waldo_MG_LP_UpdateTension", {}]);
     _display setVariable ["Waldo_MG_LP_StartedAt", diag_tickTime];
+    // equipmentCleanup.sqf normally removes this handler via Waldo_MG_UI_EachFrameHandlers,
+    // but that array is owned by two independently-scheduled scripts with no lock between
+    // them: if Cleanup runs (and clears the array) before the pushBack below executes,
+    // this id is never recorded and the shared cleanup path silently misses it. The handler
+    // therefore also removes itself the first frame it observes Done, using its own id off
+    // the display, so it can never outlive the challenge even when that race is lost.
     private _ehId = addMissionEventHandler ["EachFrame", {
         private _display = uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
-        if (isNull _display || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
+        if (isNull _display) exitWith {};
+        if (_display getVariable ["Waldo_MG_UI_Done", false]) exitWith {
+            removeMissionEventHandler ["EachFrame", (_display getVariable ["Waldo_MG_LP_AnimEhId", -1])];
+        };
         private _sweep = [_display] call (_display getVariable ["Waldo_MG_LP_ComputeSweep", {}]);
+        // Kept in sync for the interaction-equipment QA automation harness, which polls this
+        // variable directly rather than calling ComputeSweep - do not remove as "dead state".
         _display setVariable ["Waldo_MG_LP_Sweep", _sweep];
         [_display, _display getVariable ["Waldo_MG_LP_Marker", controlNull], [3.78 + (26 * _sweep), 19.55, 0.45, 1.8], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
         private _index = _display getVariable ["Waldo_MG_LP_CurrentPin", 0];
@@ -250,6 +261,7 @@ private _animationStarter = [_display] spawn {
             [_display, _display getVariable ["Waldo_MG_LP_PickTip", controlNull], [6 + (_index * (19 / (_display getVariable ["Waldo_MG_LP_Pins", 1]))) + 0.3, 13.9 - (1.85 * _sweep), 0.45, 1.5], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
         };
     }];
+    _display setVariable ["Waldo_MG_LP_AnimEhId", _ehId];
     private _ehHandlers = _display getVariable ["Waldo_MG_UI_EachFrameHandlers", []];
     _ehHandlers pushBack _ehId;
     _display setVariable ["Waldo_MG_UI_EachFrameHandlers", _ehHandlers];
