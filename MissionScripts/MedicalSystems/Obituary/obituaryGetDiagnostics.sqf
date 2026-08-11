@@ -26,15 +26,19 @@ private _entries = missionNamespace getVariable ["Waldo_Obituary_Entries", []];
 private _version = missionNamespace getVariable ["Waldo_Obituary_Version", 0];
 private _obitTally = missionNamespace getVariable ["Waldo_AAR_Obituary", []];
 
+private _dependenciesDetail = format ["enabled=%1 aceMedical=%2 aceInteractMenu=%3", _enabled, _aceMedical, _aceInteract];
+if (_enabled && {!_dependenciesOk}) then {_dependenciesDetail = [_dependenciesDetail, "Waldo_Obituary_Enable is true but ACE medical and/or ACE interact menu is not loaded - load both, or set Waldo_Obituary_Enable to false in MissionConfig\interfaceConfig.sqf."] call Waldo_fnc_DiagnosticFoldHint;};
 private _checks = [
-    ["medical", "obituary-dependencies", if (!_enabled) then {"DISABLED"} else {if (_dependenciesOk) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceMedical=%2 aceInteractMenu=%3", _enabled, _aceMedical, _aceInteract]],
+    ["medical", "obituary-dependencies", if (!_enabled) then {"DISABLED"} else {if (_dependenciesOk) then {"LOADED"} else {"ERROR"}}, _dependenciesDetail],
     ["medical", "obituary-ledger", if (!_enabled) then {"DISABLED"} else {if (count _entries > 0) then {"ACTIVE"} else {"LOADED"}}, format ["entries=%1 version=%2 confirmedVictims=%3 chatAnnounce=%4", count _entries, _version, count _obitTally, missionNamespace getVariable ["Waldo_Obituary_ChatAnnounce", true]]]
 ];
 
 if (hasInterface) then {
     private _started = missionNamespace getVariable ["Waldo_Obituary_Started", false];
     private _rendering = missionNamespace getVariable ["Waldo_Obituary_RenderRunning", false];
-    _checks pushBack ["medical", "obituary-client-action", if (!_enabled) then {"DISABLED"} else {if (!_dependenciesOk) then {"UNAVAILABLE"} else {if (_started && {_rendering}) then {"LOADED"} else {"ERROR"}}}, format ["actionInstalled=%1 diaryRenderLoop=%2", _started, _rendering]];
+    private _clientActionDetail = format ["actionInstalled=%1 diaryRenderLoop=%2", _started, _rendering];
+    if (_enabled && {_dependenciesOk} && {!(_started && {_rendering})}) then {_clientActionDetail = [_clientActionDetail, "The 'Pronounce Dead' action and/or diary render loop failed to install on this client - check the RPT for errors from Waldo_fnc_ObituaryInit."] call Waldo_fnc_DiagnosticFoldHint;};
+    _checks pushBack ["medical", "obituary-client-action", if (!_enabled) then {"DISABLED"} else {if (!_dependenciesOk) then {"UNAVAILABLE"} else {if (_started && {_rendering}) then {"LOADED"} else {"ERROR"}}}, _clientActionDetail];
 };
 
 ["obituary", _checks] call Waldo_fnc_DiagnosticFeatureReport

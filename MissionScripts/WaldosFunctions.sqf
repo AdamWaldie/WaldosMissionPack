@@ -289,6 +289,9 @@ class CfgFunctions
             class DiagnosticFeatureReport {
                 file = "MissionScripts\MissionFlowAndUi\diagnosticFeatureReport.sqf";
             };
+            class DiagnosticFoldHint {
+                file = "MissionScripts\MissionFlowAndUi\diagnosticFoldHint.sqf";
+            };
             class RunDiagnostics {
                 file = "MissionScripts\MissionFlowAndUi\runDiagnostics.sqf";
             };

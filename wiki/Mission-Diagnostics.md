@@ -81,13 +81,37 @@ The server rejects stale reports and reports whose claimed owner does not match 
 
 ## Assistive hints
 
-A check that fails or is unexpectedly unconfigured can carry a short, plain-language remediation
-hint alongside its terse `state=`/`detail=` pair - not just *that* something is wrong, but *what to
-go and change*. A hint is folded into the same `detail` text as `"; fix: <hint>"`, so it reaches
-every existing consumer (RPT, `Waldo_Diagnostics_LastReport`, the hosted-server `systemChat` line)
-without changing the `[area, feature, state, detail]` report shape. For example, an invalid
-`WALDO_STATIC_STATICCHUTE` pointing at the RHS-only default without RHS loaded reports the exact
-variable to change and the vanilla fallback class to use, instead of just "class not found".
+Every check that reports `ERROR` - across the server report, every interface client's report, and
+every feature's own `*GetDiagnostics.sqf` - carries a short, plain-language remediation hint
+alongside its terse `state=`/`detail=` pair: not just *that* something is wrong, but *what to go and
+change*. This is systematic, not opt-in: a check that reports "the ACE dependency this optional
+feature needs isn't loaded," "this client failed to install its local action," or "this registry and
+its JIP mirror have drifted apart" always names the actual variable, function, or file to look at
+next, aimed at a mission maker new to the pack rather than someone who already knows WMP's internals.
+`DISABLED` and `UNCONFIGURED` states are not failures and never carry a hint - only a genuine `ERROR`
+(or the rare `UNAVAILABLE` that reflects a real misconfiguration) does.
+
+A hint is folded into the same `detail` text as `"; fix: <hint>"` by the shared
+`Waldo_fnc_DiagnosticFoldHint` helper, so it reaches every existing consumer (RPT,
+`Waldo_Diagnostics_LastReport`, the hosted-server `systemChat` line) without changing the
+`[area, feature, state, detail]` report shape, and reads identically no matter which of the three
+call sites folded it in:
+
+```sqf
+// A check built directly in runDiagnostics.sqf (server) or runDiagnosticsClient.sqf (client) passes
+// the hint as the helper's own trailing argument:
+[_category, _name, _state, _detail, _warn, _hint] call _status;   // runDiagnostics.sqf
+[_area, _feature, _state, _detail, _hint] call _add;              // runDiagnosticsClient.sqf
+
+// A feature's own *GetDiagnostics.sqf builds its check rows directly, so it folds the hint into its
+// own detail string before pushing the row:
+if (!_valid) then {_detail = [_detail, "Set Waldo_Example_Class to a real CfgVehicles class."] call Waldo_fnc_DiagnosticFoldHint;};
+_checks pushBack ["area", "feature", _state, _detail];
+```
+
+For example, an invalid `WALDO_STATIC_STATICCHUTE` pointing at the RHS-only default without RHS
+loaded reports the exact variable to change and the vanilla fallback class to use, instead of just
+"class not found."
 
 ## Enabling diagnostics
 

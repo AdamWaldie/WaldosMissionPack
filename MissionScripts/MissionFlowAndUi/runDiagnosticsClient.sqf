@@ -22,10 +22,15 @@ params [["_runId", "", [""]]];
 if (_runId isEqualTo "") exitWith {false};
 
 private _checks = [];
+// _hint mirrors Waldo_fnc_RunDiagnostics' server-side _status helper: an optional, plain-language
+// remediation step folded into the same detail text via the shared Waldo_fnc_DiagnosticFoldHint, so
+// a client-local failure is just as assistive as a server one instead of only carrying a terse
+// state=/detail= pair.
 private _add = {
-    params ["_area", "_feature", "_state", ["_detail", ""]];
-    _checks pushBack [_area, _feature, _state, _detail];
-    [_area, _feature, if (_state == "ERROR") then {"ERROR"} else {"INFO"}, "CHECK", format ["state=%1 detail=%2", _state, _detail], _runId, format ["CLIENT:%1", clientOwner]] call Waldo_fnc_DiagnosticLog;
+    params ["_area", "_feature", "_state", ["_detail", ""], ["_hint", ""]];
+    private _fullDetail = [_detail, _hint] call Waldo_fnc_DiagnosticFoldHint;
+    _checks pushBack [_area, _feature, _state, _fullDetail];
+    [_area, _feature, if (_state == "ERROR") then {"ERROR"} else {"INFO"}, "CHECK", format ["state=%1 detail=%2", _state, _fullDetail], _runId, format ["CLIENT:%1", clientOwner]] call Waldo_fnc_DiagnosticLog;
 };
 private _consumeFeatureReport = {
     params ["_featureReport"];
@@ -40,7 +45,7 @@ private _consumeFeatureReport = {
 {
     _x params ["_patch", "_label", "_required"];
     private _loaded = isClass (configFile >> "CfgPatches" >> _patch);
-    ["dependencies", _label, if (_loaded) then {"LOADED"} else {if (_required) then {"ERROR"} else {"UNAVAILABLE"}}, format ["required=%1 patch=%2", _required, _patch]] call _add;
+    ["dependencies", _label, if (_loaded) then {"LOADED"} else {if (_required) then {"ERROR"} else {"UNAVAILABLE"}}, format ["required=%1 patch=%2", _required, _patch], if (_loaded || {!_required}) then {""} else {format ["%1 is required by WMP but is not loaded on this client - add it to this client's mod list.", _label]}] call _add;
 } forEach [
     ["cba_main", "CBA_A3", true],
     ["ace_main", "ACE3", true],
@@ -51,7 +56,7 @@ private _consumeFeatureReport = {
 
 private _runtimeSnapshotReceived = missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false];
 private _runtimeSnapshotFailed = missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
-["runtime-control", "runtime-control-snapshot", if (_runtimeSnapshotReceived) then {"ACTIVE"} else {if (_runtimeSnapshotFailed) then {"ERROR"} else {"LOADED"}}, format ["received=%1 failed=%2 requestInFlight=%3", _runtimeSnapshotReceived, _runtimeSnapshotFailed, missionNamespace getVariable ["Waldo_FeatureRuntimeRequestInFlight", false]]] call _add;
+["runtime-control", "runtime-control-snapshot", if (_runtimeSnapshotReceived) then {"ACTIVE"} else {if (_runtimeSnapshotFailed) then {"ERROR"} else {"LOADED"}}, format ["received=%1 failed=%2 requestInFlight=%3", _runtimeSnapshotReceived, _runtimeSnapshotFailed, missionNamespace getVariable ["Waldo_FeatureRuntimeRequestInFlight", false]], if (!_runtimeSnapshotFailed) then {""} else {"This client did not receive the authoritative runtime snapshot after repeated attempts - check this client's connection, and check the server RPT for [WMP RUNTIME] entries."}] call _add;
 
 // Waldo_fnc_FeatureRuntimeReceiveState calls UiThemeApplyLocal on every machine as part of the
 // runtime snapshot handshake, so Waldo_UI_ResolvedTheme should already match the authoritative
@@ -61,7 +66,7 @@ private _themeId = toUpperANSI (missionNamespace getVariable ["Waldo_UI_Theme", 
 private _resolvedTheme = uiNamespace getVariable ["Waldo_UI_ResolvedTheme", createHashMap];
 private _themeAppliedId = toUpperANSI (_resolvedTheme getOrDefault ["id", ""]);
 private _themeState = if (_themeAppliedId == "") then {if (_runtimeSnapshotReceived) then {"ERROR"} else {"LOADED"}} else {if (_themeAppliedId == _themeId) then {"LOADED"} else {"ERROR"}};
-["interface", "ui-theme", _themeState, format ["theme=%1 locallyApplied=%2 revision=%3", _themeId, if (_themeAppliedId == "") then {"NONE"} else {_themeAppliedId}, missionNamespace getVariable ["Waldo_UI_ThemeRevision", 0]]] call _add;
+["interface", "ui-theme", _themeState, format ["theme=%1 locallyApplied=%2 revision=%3", _themeId, if (_themeAppliedId == "") then {"NONE"} else {_themeAppliedId}, missionNamespace getVariable ["Waldo_UI_ThemeRevision", 0]], if (_themeState != "ERROR") then {""} else {"This client's applied theme does not match the authoritative Waldo_UI_Theme - reopen a WMP display or rejoin; if it persists, check the RPT for errors from Waldo_fnc_UiThemeApplyLocal."}] call _add;
 
 [call Waldo_fnc_SafeStartGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
@@ -108,7 +113,18 @@ if (_acreEnabled) then {
             }
         }
     }};
-    ["radio", "acre-player-presetting", _state, format ["finding=%1 rawGroup='%2' normalized=%3 side=%4 planRevision=%5 sideMatch=%6 groupMatch=%7 inventoryRadios=%8 currentRadios=%9 unique=%10 acreReady=%11 edenRadioSetup=%12 loadoutGeneration=%13 restoredGeneration=%14 lastApplication=%15 readinessFailure=%16", _plainFinding, _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _inventoryRadios, _radios, count _unique, _acreApiReady, _edenRadioSetup, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last, missionNamespace getVariable ["Waldo_ACRE2_LastReadinessFailure", []]]] call _add;
+    private _presetHint = if (_state != "ERROR") then {""} else {
+        if !(_configValidation select 0) then {"Fix the listed acreConfig.sqf validation error(s)."} else {
+            if (!_planValid) then {"Confirm initServer.sqf calls Waldo_fnc_ACRE2Init and that MissionConfig\acreConfig.sqf is well-formed."} else {
+                if (_sideIndex < 0) then {"Add a matching side block for this player's side to MissionConfig\acreConfig.sqf."} else {
+                    if (_groupIndex < 0) then {format ["Add group '%1' to MissionConfig\acreConfig.sqf, or fix its callsign so it matches the Eden editor group ID exactly.", _rawGroup]} else {
+                        "ACRE has not finished converting radios to unique IDs, or the last apply attempt failed - check readinessFailure/lastApplication above and the RPT for [WMP ACRE] entries."
+                    }
+                }
+            }
+        }
+    };
+    ["radio", "acre-player-presetting", _state, format ["finding=%1 rawGroup='%2' normalized=%3 side=%4 planRevision=%5 sideMatch=%6 groupMatch=%7 inventoryRadios=%8 currentRadios=%9 unique=%10 acreReady=%11 edenRadioSetup=%12 loadoutGeneration=%13 restoredGeneration=%14 lastApplication=%15 readinessFailure=%16", _plainFinding, _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _inventoryRadios, _radios, count _unique, _acreApiReady, _edenRadioSetup, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last, missionNamespace getVariable ["Waldo_ACRE2_LastReadinessFailure", []]], _presetHint] call _add;
     if !(_edenRadioSetup isEqualTo "") then {
         ["radio", "acre-eden-radio-attribute", "ERROR", format ["This unit has an Eden ACRE Radio Setup attribute (%1). It can overwrite acreConfig.sqf during startup. Clear that unit attribute and let WMP own the initial assignment.", _edenRadioSetup]] call _add;
     } else {
@@ -134,7 +150,14 @@ private _jamClientState = if (!_jamEnabled) then {"DISABLED"} else {
         }
     }
 };
-["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 uiReady=%4 hud=%5", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, _jamUiReady, !isNull _jamCtrl && {ctrlShown _jamCtrl}]] call _add;
+private _jamHint = if (_jamClientState != "ERROR") then {""} else {
+    if (!_jamLoopRunning) then {
+        "Waldo_fnc_JammingInit did not start on this client - check the RPT for jamming-related errors during initPlayerLocal.sqf."
+    } else {
+        "The jamming HUD panel (IDC 5310) failed to show while this player is inside a jammer field - try the ACE self-action 'Clear Stuck WMP UI' (Waldo_fnc_ClearUiPanels)."
+    }
+};
+["electronic-warfare", "jamming-client", _jamClientState, format ["factor=%1 registry=%2 loop=%3 uiReady=%4 hud=%5", _jamFactor, count (missionNamespace getVariable ["Waldo_Jamming_Registry", []]), _jamLoopRunning, _jamUiReady, !isNull _jamCtrl && {ctrlShown _jamCtrl}], _jamHint] call _add;
 
 private _jumpCapableClasses = ["RHS_Mi24_base", "RHS_Mi8_base", "Heli_Transport_02_base_F", "RHS_C130J_Base", "B_T_VTOL_01_infantry_F"];
 private _jumpAircraft = (allMissionObjects "Air") select {
@@ -176,13 +199,13 @@ if (_jumpAircraft isEqualTo []) then {
     ["paradrop", "jump-actions-local", _jumpState, format [
         "aircraft=%1 ready=%2 pending=%3 missingExpectedActions=%4",
         count _jumpAircraft, (count _jumpAircraft) - _pendingJumpCount, _pendingJumpCount, _missingJumpCount
-    ]] call _add;
+    ], if (_missingJumpCount == 0) then {""} else {"An aircraft finished local jump setup but is still missing an expected static-line/HALO hold-action on this client - check the RPT for [WMP PARADROP] entries, and confirm the jump envelope thresholds (WALDO_STATIC_MIN/MAXALTITUDE, WALDO_STATIC_MAXSPEED, WALDO_PARA_HALOALTITUDE) aren't excluding both jump types."}] call _add;
 };
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
-["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=45", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]]] call _add;
+["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=45", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]], if (!_zenLoaded || {(missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45}) then {""} else {"Zeus Enhanced module registration count does not match the expected 45 - check the RPT for ZEN registration errors from Waldo_fnc_ZenInitModules, or confirm this client's WMP copy matches the server's."}] call _add;
 private _economyActive = missionNamespace getVariable ["WaldoEcoCore_ModuleActive", false];
-["zeus", "economy-modules", if (!_economyActive) then {"DISABLED"} else {if ((missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=19", missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]]] call _add;
+["zeus", "economy-modules", if (!_economyActive) then {"DISABLED"} else {if ((missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=19", missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]], if (!_economyActive || {(missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19}) then {""} else {"Waldos Economy Systems is active but its 19 ZEN modules did not fully register - check the RPT for errors from Waldo_fnc_EcoCore_registerZenModules."}] call _add;
 
 private _markerHandler = missionNamespace getVariable ["Waldo_3DMarker_DrawHandler", -1];
 ["world-ui", "custom-3d-markers", if (_markerHandler >= 0) then {"LOADED"} else {"UNAVAILABLE"}, format ["drawHandler=%1 markers=%2", _markerHandler, count (missionNamespace getVariable ["Waldo_3DMarker_Registry", []])]] call _add;
@@ -194,32 +217,32 @@ private _aceInteractLoaded = isClass (configFile >> "CfgPatches" >> "ace_interac
 private _localObjects = allMissionObjects "All";
 private _tacticalDisplays = _localObjects select {_x getVariable ["Waldo_TacticalDisplay_Registered", false]};
 private _missingTacticalActions = _tacticalDisplays select {(_x getVariable ["Waldo_TacticalDisplay_LocalAction", -1]) < 0};
-["interface", "tactical-display-actions", if (_tacticalDisplays isEqualTo []) then {"UNCONFIGURED"} else {if (_missingTacticalActions isEqualTo []) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 missingLocalAction=%2", count _tacticalDisplays, count _missingTacticalActions]] call _add;
+["interface", "tactical-display-actions", if (_tacticalDisplays isEqualTo []) then {"UNCONFIGURED"} else {if (_missingTacticalActions isEqualTo []) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 missingLocalAction=%2", count _tacticalDisplays, count _missingTacticalActions], if (_missingTacticalActions isEqualTo []) then {""} else {"A registered Tactical Display is missing its local action on this client - reconnect, or check the RPT for errors from Waldo_fnc_TacticalDisplayRegister."}] call _add;
 private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", false];
 private _hazardZones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
 private _hazardClient = missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false];
 private _hazardEvaluation = missionNamespace getVariable ["Waldo_Hazard_LastEvaluation", []];
 private _hazardFresh = count _hazardEvaluation >= 3 && {(diag_tickTime - (_hazardEvaluation select 0)) <= ((missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25) * 3};
-["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 freshEvaluation=%5 lastEvaluation=%6", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardFresh, _hazardEvaluation]] call _add;
+["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 freshEvaluation=%5 lastEvaluation=%6", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardFresh, _hazardEvaluation], if (!_hazardEnabled || {_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}}) then {""} else {"Waldo_Hazard_Enable is true but this client's evaluator loop isn't producing fresh evaluations - check the RPT for hazard-related errors, and confirm the server actually published a zone snapshot."}] call _add;
 private _dismountEnabled = missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false];
 private _dismountStarted = missionNamespace getVariable ["Waldo_EmergencyDismount_ClientStarted", false];
 private _dismountHandle = missionNamespace getVariable ["Waldo_EmergencyDismount_ClientLoop", scriptNull];
 private _dismountRunning = _dismountStarted && {!(scriptDone _dismountHandle)};
-["interface", "emergency-dismount-client", if (!_dismountEnabled) then {"DISABLED"} else {if (_dismountRunning) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 started=%2 loopRunning=%3 interval=%4", _dismountEnabled, _dismountStarted, !(scriptDone _dismountHandle), missionNamespace getVariable ["Waldo_EmergencyDismount_Interval", 0.5]]] call _add;
+["interface", "emergency-dismount-client", if (!_dismountEnabled) then {"DISABLED"} else {if (_dismountRunning) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 started=%2 loopRunning=%3 interval=%4", _dismountEnabled, _dismountStarted, !(scriptDone _dismountHandle), missionNamespace getVariable ["Waldo_EmergencyDismount_Interval", 0.5]], if (!_dismountEnabled || {_dismountRunning}) then {""} else {"Waldo_EmergencyDismount_Enable is true but the local monitor loop isn't running - check the RPT for errors from Waldo_fnc_EmergencyDismountInit, or confirm the Feature Runtime Control snapshot actually reached this client."}] call _add;
 
 private _accessibilityInstalled = player getVariable ["Waldo_Accessibility_SelfInteractionInstalled", false];
 private _accessibilityMode = player getVariable ["Waldo_Accessibility_InteractionMode", ""];
 private _colourVisionId = profileNamespace getVariable ["Waldo_UI_ColourVisionProfile", "STANDARD"];
 private _colourVisionResolved = ([_colourVisionId] call Waldo_fnc_UiColourVisionProfile) getOrDefault ["id", "STANDARD"];
-["interface", "accessibility-self-interaction", if (_accessibilityInstalled) then {"LOADED"} else {"ERROR"}, format ["installed=%1 mode=%2 colourVisionProfile=%3", _accessibilityInstalled, _accessibilityMode, toUpperANSI _colourVisionResolved]] call _add;
+["interface", "accessibility-self-interaction", if (_accessibilityInstalled) then {"LOADED"} else {"ERROR"}, format ["installed=%1 mode=%2 colourVisionProfile=%3", _accessibilityInstalled, _accessibilityMode, toUpperANSI _colourVisionResolved], if (_accessibilityInstalled) then {""} else {"The Accessibility self-interaction menu failed to install on this client - check the RPT for errors from Waldo_fnc_AccessibilitySelfInteractionInit."}] call _add;
 
 private _hudEnabled = missionNamespace getVariable ["Waldo_WmpHud_Enable", false];
 private _hudEligible = if (_hudEnabled) then {[player] call Waldo_fnc_WmpHudEligible} else {false};
 private _hudStarted = missionNamespace getVariable ["Waldo_WmpHud_ClientStarted", false];
-["interface", "wmp-hud", if (!_hudEnabled) then {"DISABLED"} else {if (!_hudEligible) then {"UNCONFIGURED"} else {if (_hudStarted) then {"ACTIVE"} else {"ERROR"}}}, format ["enabled=%1 eligible=%2 clientStarted=%3 visible=%4", _hudEnabled, _hudEligible, _hudStarted, missionNamespace getVariable ["Waldo_WmpHud_Visible", false]]] call _add;
+["interface", "wmp-hud", if (!_hudEnabled) then {"DISABLED"} else {if (!_hudEligible) then {"UNCONFIGURED"} else {if (_hudStarted) then {"ACTIVE"} else {"ERROR"}}}, format ["enabled=%1 eligible=%2 clientStarted=%3 visible=%4", _hudEnabled, _hudEligible, _hudStarted, missionNamespace getVariable ["Waldo_WmpHud_Visible", false]], if (!_hudEnabled || {!_hudEligible} || {_hudStarted}) then {""} else {"Waldo_WmpHud_Enable is true and this player is eligible, but the HUD client loop never started - check the RPT for errors from Waldo_fnc_WmpHudInit."}] call _add;
 private _transportInstalled = player getVariable ["Waldo_Transport_InteractionsInstalled", false];
 private _transportAvailable = missionNamespace getVariable ["Waldo_HeliTransport_Available", false] || {missionNamespace getVariable ["Waldo_GroundTransport_Available", false]};
-["logistics", "transport-client-actions", if (!_transportAvailable) then {"UNCONFIGURED"} else {if (_transportInstalled) then {"LOADED"} else {"ERROR"}}, format ["available=%1 interactionsInstalled=%2", _transportAvailable, _transportInstalled]] call _add;
+["logistics", "transport-client-actions", if (!_transportAvailable) then {"UNCONFIGURED"} else {if (_transportInstalled) then {"LOADED"} else {"ERROR"}}, format ["available=%1 interactionsInstalled=%2", _transportAvailable, _transportInstalled], if (!_transportAvailable || {_transportInstalled}) then {""} else {"A transport service is available but this client's interaction menu wasn't installed - reconnect, or check the RPT for errors from the Transport Services client setup."}] call _add;
 private _mhqObjects = _localObjects select {_x getVariable ["Waldo_MHQ_ServerConfigured", false]};
 if (_mhqObjects isEqualTo []) then {
     ["logistics", "mhq-actions", "UNCONFIGURED", "No configured MHQ is present"] call _add;
@@ -232,7 +255,7 @@ if (_mhqObjects isEqualTo []) then {
             !(_x getVariable ["Waldo_MHQ_VanillaActionsInstalled", false])
         }}
     }) < 0;
-    ["logistics", "mhq-actions", if (_mhqValid) then {"LOADED"} else {"ERROR"}, format ["objects=%1 expectedMode=%2", count _mhqObjects, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}]] call _add;
+    ["logistics", "mhq-actions", if (_mhqValid) then {"LOADED"} else {"ERROR"}, format ["objects=%1 expectedMode=%2", count _mhqObjects, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}], if (_mhqValid) then {""} else {"A configured MHQ is missing its expected local action on this client - check the RPT for errors from Waldo_fnc_MHQSetupLocal, and confirm ACE Interact Menu is loaded if expectedMode=ACE."}] call _add;
 };
 
 private _vvdTerminals = _localObjects select {_x getVariable ["Waldo_VVD_TerminalConfigured", false]};
@@ -247,12 +270,12 @@ if (_vvdTerminals isEqualTo []) then {
             !(_x getVariable ["Waldo_VVD_VanillaActionsInstalled", false])
         }}
     }) < 0;
-    ["logistics", "vvd-actions", if (_vvdValid) then {"LOADED"} else {"ERROR"}, format ["terminals=%1 expectedMode=%2", count _vvdTerminals, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}]] call _add;
+    ["logistics", "vvd-actions", if (_vvdValid) then {"LOADED"} else {"ERROR"}, format ["terminals=%1 expectedMode=%2", count _vvdTerminals, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}], if (_vvdValid) then {""} else {"A configured VVD terminal is missing its expected local action on this client - check the RPT for errors from the VVD local setup, and confirm ACE Interact Menu is loaded if expectedMode=ACE."}] call _add;
 };
 
 private _corpseTrapEnabled = missionNamespace getVariable ["Waldo_CorpseTraps_Enable", false];
 private _corpseTrapInstalled = missionNamespace getVariable ["Waldo_CorpseTrap_Installed", false];
-["interactions", "corpse-trap-actions", if (!_corpseTrapEnabled) then {"DISABLED"} else {if (!_aceInteractLoaded) then {"UNAVAILABLE"} else {if (_corpseTrapInstalled) then {"LOADED"} else {"ERROR"}}}, format ["enabled=%1 aceInteractMenu=%2 installed=%3", _corpseTrapEnabled, _aceInteractLoaded, _corpseTrapInstalled]] call _add;
+["interactions", "corpse-trap-actions", if (!_corpseTrapEnabled) then {"DISABLED"} else {if (!_aceInteractLoaded) then {"UNAVAILABLE"} else {if (_corpseTrapInstalled) then {"LOADED"} else {"ERROR"}}}, format ["enabled=%1 aceInteractMenu=%2 installed=%3", _corpseTrapEnabled, _aceInteractLoaded, _corpseTrapInstalled], if (!_corpseTrapEnabled || {!_aceInteractLoaded} || {_corpseTrapInstalled}) then {""} else {"Waldo_CorpseTraps_Enable is true and ACE Interact Menu is loaded, but the 'Rig Corpse' action failed to install on this client - check the RPT for [WMP CORPSE TRAPS] entries."}] call _add;
 
 private _fieldHospitals = _localObjects select {_x getVariable ["ace_medical_isMedicalFacility", false]};
 if (_fieldHospitals isEqualTo []) then {
@@ -266,7 +289,7 @@ if (_fieldHospitals isEqualTo []) then {
         (_x getVariable ["Waldo_FieldHospital_VanillaActionId", -1]) < 0
         || {_aceInteractLoaded && {(_x getVariable ["Waldo_FieldHospital_AceActionPath", []]) isEqualTo []}}
     };
-    ["logistics", "field-hospital-actions", if (_fieldHospitalsMissingAction isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["crates=%1 missingAction=%2 expectedMode=%3", count _fieldHospitals, count _fieldHospitalsMissingAction, if (_aceInteractLoaded) then {"ACE+VANILLA"} else {"VANILLA"}]] call _add;
+    ["logistics", "field-hospital-actions", if (_fieldHospitalsMissingAction isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["crates=%1 missingAction=%2 expectedMode=%3", count _fieldHospitals, count _fieldHospitalsMissingAction, if (_aceInteractLoaded) then {"ACE+VANILLA"} else {"VANILLA"}], if (_fieldHospitalsMissingAction isEqualTo []) then {""} else {"A field hospital crate is missing its expected action on this client - check the RPT for errors from Waldo_fnc_MedicalCrateFacilityActionLocal."}] call _add;
 };
 
 private _warnings = {_x select 2 == "ERROR"} count _checks;

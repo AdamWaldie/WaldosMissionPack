@@ -45,7 +45,7 @@ private _section = {
 // something is wrong, a hint tells you *what to do about it*.
 private _status = {
     params ["_category", "_name", "_state", ["_detail", ""], ["_warn", false], ["_hint", ""]];
-    private _fullDetail = if (_hint == "") then {_detail} else {format ["%1; fix: %2", _detail, _hint]};
+    private _fullDetail = [_detail, _hint] call Waldo_fnc_DiagnosticFoldHint;
     _report pushBack [_category, _name, _state, _fullDetail];
     [if (_warn) then {"ERROR"} else {"INFO"}, _category, _name, "CHECK", format ["state=%1 detail=%2", _state, _fullDetail]] call _log;
     if (_warn) then {_warnings = _warnings + 1;};
@@ -66,7 +66,7 @@ private _consumeFeatureReport = {
 {
     _x params ["_area", "_feature", "_function"];
     private _available = !(isNil _function);
-    [_area, _feature, if (_available) then {"LOADED"} else {"ERROR"}, format ["function=%1", _function], !_available] call _status;
+    [_area, _feature, if (_available) then {"LOADED"} else {"ERROR"}, format ["function=%1", _function], !_available, if (_available) then {""} else {format ["%1 is missing from this mission's copy of WMP - re-extract WaldosMissionPack\MissionScripts over this mission (or confirm WaldosFunctions.sqf wasn't edited) so it registers again.", _function]}] call _status;
 } forEach [
     ["mission-flow", "safestart-api", "Waldo_fnc_SafeStart"],
     ["mission-flow", "aar-endex-api", "Waldo_fnc_ENDEX"],
@@ -99,7 +99,7 @@ private _consumeFeatureReport = {
 {
     _x params ["_patch", "_label", "_required"];
     private _loaded = isClass (configFile >> "CfgPatches" >> _patch);
-    ["dependency", _label, if (_loaded) then {"LOADED"} else {if (_required) then {"ERROR"} else {"UNAVAILABLE"}}, format ["CfgPatches >> %1", _patch], _required && {!_loaded}] call _status;
+    ["dependency", _label, if (_loaded) then {"LOADED"} else {if (_required) then {"ERROR"} else {"UNAVAILABLE"}}, format ["CfgPatches >> %1", _patch], _required && {!_loaded}, if (_loaded || {!_required}) then {""} else {format ["%1 is required by WMP but is not loaded - add it to this mission's mod list and launch parameters.", _label]}] call _status;
 } forEach [
     ["cba_main", "CBA_A3", true],
     ["ace_main", "ACE3", true],
@@ -124,7 +124,7 @@ waitUntil {
     missionNamespace getVariable ["Logi_MissionScanComplete", false] || {diag_tickTime >= _scanDeadline}
 };
 private _scanComplete = missionNamespace getVariable ["Logi_MissionScanComplete", false];
-["logistics", "mission-loadout-scan", if (_scanComplete) then {"LOADED"} else {"UNAVAILABLE"}, if (_scanComplete) then {"Mission loadout arrays published"} else {"Loadout scan did not complete within 10 seconds"}, !_scanComplete] call _status;
+["logistics", "mission-loadout-scan", if (_scanComplete) then {"LOADED"} else {"UNAVAILABLE"}, if (_scanComplete) then {"Mission loadout arrays published"} else {"Loadout scan did not complete within 10 seconds"}, !_scanComplete, if (_scanComplete) then {""} else {"Waldo_fnc_SideBaseLoadoutSetup did not finish - check the RPT for errors, and confirm mission.sqm is not binarized (Eden Editor > mission Properties > uncheck Binarize)."}] call _status;
 
 private _flattenReal = {
     params ["_array"];
@@ -157,11 +157,11 @@ private _loadoutRoot = missionConfigFile >> "MissionSQM" >> "Mission" >> "Entiti
         ["logistics", format ["%1-loadout", _label], "UNCONFIGURED", "No authored mission-config playable slots use this side", false] call _status;
     } else {
         if (_count > 0) then {_configuredLoadoutSides = _configuredLoadoutSides + 1};
-        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 authored playable slot(s), %2 unique mission-scraped item(s)", _slotCount, _count], _count == 0] call _status;
+        ["logistics", format ["%1-loadout", _label], if (_count > 0) then {"LOADED"} else {"ERROR"}, format ["%1 authored playable slot(s), %2 unique mission-scraped item(s)", _slotCount, _count], _count == 0, if (_count > 0) then {""} else {format ["%1 has playable units placed but no scanned loadout items - open each of this side's playable units in ACE Arsenal at least once and save; a vanilla default loadout produces empty crates.", _label]}] call _status;
     };
 } forEach [["West", "West", "BLUFOR"], ["East", "East", "OPFOR"], ["Independent", "Ind", "INDEP"], ["Civilian", "Civ", "CIV"]];
 if (_configuredLoadoutSides == 0) then {
-    ["logistics", "playable-slots", "ERROR", "No authored playable inventories were found in mission configuration; logistics crates cannot derive mission equipment", true] call _status;
+    ["logistics", "playable-slots", "ERROR", "No authored playable inventories were found in mission configuration; logistics crates cannot derive mission equipment", true, "Place at least one playable unit per side you want logistics support for, and configure its loadout in ACE Arsenal (not vanilla defaults)."] call _status;
 };
 
 // Configured classes. Blank values are unconfigured; bad non-blank values are errors.
@@ -184,10 +184,10 @@ if (_configuredLoadoutSides == 0) then {
         ["configuration", _label, if (_valid) then {"LOADED"} else {"ERROR"}, format ["%1 = %2", _variable, _class], !_valid, _resolvedHint] call _status;
     };
 } forEach [
-    ["Logi_SupplyBoxClass", "supply-box"],
-    ["Logi_MedicalBoxClass", "medical-box"],
-    ["WALDO_STATIC_STATICCHUTE", "static-line-parachute"],
-    ["WALDO_PARA_HALOCHUTE", "halo-parachute"]
+    ["Logi_SupplyBoxClass", "supply-box", "Set Logi_SupplyBoxClass in initServer.sqf to a real CfgVehicles crate class, e.g. ""B_supplyCrate_F""."],
+    ["Logi_MedicalBoxClass", "medical-box", "Set Logi_MedicalBoxClass in initServer.sqf to a real CfgVehicles crate class, e.g. ""ACE_medicalSupplyCrate_advanced""."],
+    ["WALDO_STATIC_STATICCHUTE", "static-line-parachute", "Set WALDO_STATIC_STATICCHUTE in MissionConfig\airOperationsConfig.sqf to a real parachute class, e.g. the vanilla ""NonSteerable_Parachute_F""."],
+    ["WALDO_PARA_HALOCHUTE", "halo-parachute", "Set WALDO_PARA_HALOCHUTE in MissionConfig\airOperationsConfig.sqf to a real parachute class, e.g. the vanilla ""B_Parachute""."]
 ];
 
 private _minAltitude = missionNamespace getVariable ["WALDO_STATIC_MINALTITUDE", 180];
@@ -214,10 +214,10 @@ if (_acreLoaded) then {
     private _sidePlans = if (_planValid) then {_acrePlan select 2} else {[]};
     private _groupCount = 0;
     {_groupCount = _groupCount + count (_x param [3, []]);} forEach _sidePlans;
-    ["radio", "acre-config", if (!_acreEnabled) then {"DISABLED"} else {if (count _acreConfig == 0) then {"ERROR"} else {"LOADED"}}, format ["enabled=%1 strict=%2 presetPolicy=%3 namedDisplays=%4", _acreEnabled, _acreConfig getOrDefault ["strict", true], _acreConfig getOrDefault ["prc343PresetPolicy", "MISSING"], _acreConfig getOrDefault ["namedDisplays", false]], _acreEnabled && {count _acreConfig == 0}] call _status;
-    ["radio", "acre-authoritative-plan", if (!_acreEnabled) then {"DISABLED"} else {if (_planValid && {_groupCount > 0}) then {"LOADED"} else {"ERROR"}}, format ["schema=%1 revision=%2 sides=%3 groups=%4 diagnostics=%5", if (count _acrePlan > 0) then {_acrePlan select 0} else {-1}, _revision, count _sidePlans, _groupCount, if (_planValid) then {_acrePlan select 3} else {[]}], _acreEnabled && {!_planValid || {_groupCount == 0}}] call _status;
+    ["radio", "acre-config", if (!_acreEnabled) then {"DISABLED"} else {if (count _acreConfig == 0) then {"ERROR"} else {"LOADED"}}, format ["enabled=%1 strict=%2 presetPolicy=%3 namedDisplays=%4", _acreEnabled, _acreConfig getOrDefault ["strict", true], _acreConfig getOrDefault ["prc343PresetPolicy", "MISSING"], _acreConfig getOrDefault ["namedDisplays", false]], _acreEnabled && {count _acreConfig == 0}, if (!_acreEnabled || {count _acreConfig > 0}) then {""} else {"Waldo_ACRE2_Config is empty even though ACRE2 presetting is enabled - confirm MissionConfig\acreConfig.sqf actually defines a config and initServer.sqf calls Waldo_fnc_ACRE2Init."}] call _status;
+    ["radio", "acre-authoritative-plan", if (!_acreEnabled) then {"DISABLED"} else {if (_planValid && {_groupCount > 0}) then {"LOADED"} else {"ERROR"}}, format ["schema=%1 revision=%2 sides=%3 groups=%4 diagnostics=%5", if (count _acrePlan > 0) then {_acrePlan select 0} else {-1}, _revision, count _sidePlans, _groupCount, if (_planValid) then {_acrePlan select 3} else {[]}], _acreEnabled && {!_planValid || {_groupCount == 0}}, if (!_acreEnabled || {_planValid && {_groupCount > 0}}) then {""} else {"The server has not published a valid ACRE radio plan, or it has zero groups - check that MissionConfig\acreConfig.sqf's group callsigns match the Eden editor group IDs exactly (an @Callsign leader-role suffix is reconciled first)."}] call _status;
     private _babel = _acreConfig getOrDefault ["babel", createHashMap];
-    ["radio", "acre-babel", if !(_babel getOrDefault ["enabled", false]) then {"DISABLED"} else {if (count (_babel getOrDefault ["languages", []]) > 0) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 languages=%2", _babel getOrDefault ["enabled", false], count (_babel getOrDefault ["languages", []])], (_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}] call _status;
+    ["radio", "acre-babel", if !(_babel getOrDefault ["enabled", false]) then {"DISABLED"} else {if (count (_babel getOrDefault ["languages", []]) > 0) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 languages=%2", _babel getOrDefault ["enabled", false], count (_babel getOrDefault ["languages", []])], (_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}, if !((_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}) then {""} else {"Babel is enabled in MissionConfig\acreConfig.sqf but defines no languages - add at least one entry to its babel languages array."}] call _status;
 
     // Vehicle radio racks: a vehicle only appears here once Waldo_fnc_ACRE2RackSetup has actually
     // been called on it (no rack scan runs otherwise). "pending" covers both an in-progress bounded
@@ -307,7 +307,7 @@ if (count (keys _dropZoneRegistry) == 0) then {
 
 private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];
 private _partyLoaded = missionNamespace getVariable ["Waldo_MG_SystemInitialized", false];
-["system", "party-games", if (_partyLoaded) then {"ACTIVE"} else {if (_partyEnabled) then {"ERROR"} else {"DISABLED"}}, format ["configured=%1 catalogue=%2", _partyEnabled, count (missionNamespace getVariable ["Waldo_MG_Games", []])], _partyEnabled && {!_partyLoaded}] call _status;
+["system", "party-games", if (_partyLoaded) then {"ACTIVE"} else {if (_partyEnabled) then {"ERROR"} else {"DISABLED"}}, format ["configured=%1 catalogue=%2", _partyEnabled, count (missionNamespace getVariable ["Waldo_MG_Games", []])], _partyEnabled && {!_partyLoaded}, if (!_partyEnabled || {_partyLoaded}) then {""} else {"Waldo_MiniGames_Enable is true but Waldo_fnc_MiniGamesInit never completed - confirm init.sqf actually calls it, and check the RPT for errors from the party-games engine install."}] call _status;
 
 private _jammingEnabled = missionNamespace getVariable ["Waldo_Jamming_Enable", false];
 private _tfarLoaded = isClass (configFile >> "CfgPatches" >> "task_force_radio") || {isClass (configFile >> "CfgPatches" >> "tfar_core")};
@@ -316,7 +316,7 @@ private _jammerCount = count (missionNamespace getVariable ["Waldo_Jamming_Regis
 private _jammingState = if (!_jammingEnabled) then {"DISABLED"} else {
     if (!_jammingUsable) then {"ERROR"} else {if (_jammerCount > 0) then {"ACTIVE"} else {"LOADED"}}
 };
-["system", "radio-jamming", _jammingState, format ["ACRE2=%1 TFAR=%2 registeredJammers=%3", _acreLoaded, _tfarLoaded, _jammerCount], _jammingEnabled && {!_jammingUsable}] call _status;
+["system", "radio-jamming", _jammingState, format ["ACRE2=%1 TFAR=%2 registeredJammers=%3", _acreLoaded, _tfarLoaded, _jammerCount], _jammingEnabled && {!_jammingUsable}, if (!_jammingEnabled || {_jammingUsable}) then {""} else {"Waldo_Jamming_Enable is true but neither ACRE2 nor TFAR is loaded, so jamming has no radio engine to act on - load one of those mods, or set Waldo_Jamming_Enable to false."}] call _status;
 
 private _markerCount = count (missionNamespace getVariable ["Waldo_3DMarker_Registry", []]);
 ["system", "custom-3d-markers", if (_markerCount > 0) then {"ACTIVE"} else {"LOADED"}, format ["%1 registered marker(s); client renderer state is reported by client audit", _markerCount], false] call _status;
@@ -355,13 +355,13 @@ private _virtualPackages = 0;
 {_attachedPackages = _attachedPackages + count ((_x getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x}); _virtualPackages = _virtualPackages + count ((_x getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x});} forEach _recoveryCarriers;
 private _recoveryConfigured = !(_recoveryWorkshops isEqualTo []) || {!(_recoveryVehicles isEqualTo [])};
 private _recoveryBroken = !(_recoveryPackages isEqualTo []) && {_recoveryWorkshops isEqualTo []};
-["logistics", "vehicle-recovery", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryBroken) then {"ERROR"} else {if (_recoveryPackages isEqualTo []) then {"LOADED"} else {"ACTIVE"}}}, format ["workshops=%1 vehicles=%2 carriers=%3 packages=%4 attached=%5 virtual=%6 monitor=%7", count _recoveryWorkshops, count _recoveryVehicles, count _recoveryCarriers, count _recoveryPackages, _attachedPackages, _virtualPackages, missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]], _recoveryBroken] call _status;
+["logistics", "vehicle-recovery", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryBroken) then {"ERROR"} else {if (_recoveryPackages isEqualTo []) then {"LOADED"} else {"ACTIVE"}}}, format ["workshops=%1 vehicles=%2 carriers=%3 packages=%4 attached=%5 virtual=%6 monitor=%7", count _recoveryWorkshops, count _recoveryVehicles, count _recoveryCarriers, count _recoveryPackages, _attachedPackages, _virtualPackages, missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]], _recoveryBroken, if (!_recoveryBroken) then {""} else {"Recovery packages exist but no workshop is registered - call Waldo_fnc_RecoveryRegisterWorkshop (or place the Vehicle Recovery Workshop composition) so recovered vehicles have somewhere to return to."}] call _status;
 
 private _tacticalDisplays = _missionObjects select {_x getVariable ["Waldo_TacticalDisplay_Registered", false]};
 ["interface", "tactical-displays", if (_tacticalDisplays isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["registered=%1", count _tacticalDisplays], false] call _status;
 private _hazardZones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
 private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", false];
-["environment", "hazard-zones", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardZones isEqualTo []) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 zones=%2", _hazardEnabled, count _hazardZones], _hazardEnabled && {_hazardZones isEqualTo []}] call _status;
+["environment", "hazard-zones", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardZones isEqualTo []) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 zones=%2", _hazardEnabled, count _hazardZones], _hazardEnabled && {_hazardZones isEqualTo []}, if (!_hazardEnabled || {!(_hazardZones isEqualTo [])}) then {""} else {"Waldo_Hazard_Enable is true but no zone is registered - call Waldo_fnc_HazardRegisterZone/RegisterPresetZone/RegisterEmitter (or place a Hazard composition), or set Waldo_Hazard_Enable to false if this mission doesn't use hazards."}] call _status;
 private _transportEnabled = missionNamespace getVariable ["Waldo_TransportServices_Enable", false];
 private _transportServices = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
 private _transportPools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []], ["BOAT", []]]];
@@ -375,7 +375,7 @@ private _transportIssues = [];
     if !(_x in (_transportPools getOrDefault [_type, []])) then {_transportIssues pushBack format ["%1 is absent from its typed pool", _x]};
 } forEach keys _transportServices;
 private _transportBroken = !(_transportIssues isEqualTo []);
-["logistics", "transport-services", if (!_transportEnabled) then {"DISABLED"} else {if (_transportBroken) then {"ERROR"} else {if (count (keys _transportServices) == 0) then {"UNCONFIGURED"} else {"ACTIVE"}}}, format ["registered=%1 helicopters=%2 ground=%3 boats=%4 issues=%5", count (keys _transportServices), count (_transportPools getOrDefault ["HELICOPTER", []]), count (_transportPools getOrDefault ["GROUND", []]), count (_transportPools getOrDefault ["BOAT", []]), _transportIssues], _transportBroken] call _status;
+["logistics", "transport-services", if (!_transportEnabled) then {"DISABLED"} else {if (_transportBroken) then {"ERROR"} else {if (count (keys _transportServices) == 0) then {"UNCONFIGURED"} else {"ACTIVE"}}}, format ["registered=%1 helicopters=%2 ground=%3 boats=%4 issues=%5", count (keys _transportServices), count (_transportPools getOrDefault ["HELICOPTER", []]), count (_transportPools getOrDefault ["GROUND", []]), count (_transportPools getOrDefault ["BOAT", []]), _transportIssues], _transportBroken, if (!_transportBroken) then {""} else {"A registered transport service is inconsistent with its typed pool - this usually means something mutated Waldo_Transport_Services directly instead of going through Waldo_fnc_TransportRegister; re-register the affected vehicle(s) instead of editing the registry by hand."}] call _status;
 private _resupplyHubs = _missionObjects select {_x getVariable ["Waldo_FieldResupply_Hub", false]};
 // Waldo_FieldResupply_MaxCrates > 0 is the real "is this player an assigned carrier" predicate used
 // throughout the feature (Waldo_fnc_FieldResupplyServerHandle's own _isCarrier, Waldo_fnc_FieldResupplyInit's
@@ -391,7 +391,7 @@ private _resupplyCarriers = allPlayers select {(_x getVariable ["Waldo_FieldResu
     private _serverCount = count (keys _serverRegistry);
     private _publicCount = count _publicSystems;
     private _consistent = _serverCount == _publicCount;
-    ["runtime-system", _feature, if (_serverCount == 0) then {"UNCONFIGURED"} else {if (_consistent) then {"ACTIVE"} else {"ERROR"}}, format ["server=%1 publicJip=%2", _serverCount, _publicCount], !_consistent] call _status;
+    ["runtime-system", _feature, if (_serverCount == 0) then {"UNCONFIGURED"} else {if (_consistent) then {"ACTIVE"} else {"ERROR"}}, format ["server=%1 publicJip=%2", _serverCount, _publicCount], !_consistent, if (_consistent) then {""} else {format ["The %1 server registry and its broadcast JIP list have drifted apart, so a JIP client may not see every system - this usually means something mutated the registry directly instead of going through the feature's own create/destroy functions.", _feature]}] call _status;
 } forEach [
     // paradrop-drop-zones is intentionally not repeated here - the dedicated Paradrop section above
     // already reports Waldo_Paradrop_DropZones/PublicDropZones with a specific remediation hint.
@@ -403,14 +403,14 @@ private _resupplyCarriers = allPlayers select {(_x getVariable ["Waldo_FieldResu
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 ["integration", "ACE and Zeus integration"] call _section;
 private _zenApi = !(isNil "zen_custom_modules_fnc_register");
-["integration", "zen-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if (_zenApi) then {"LOADED"} else {"ERROR"}}, format ["ZEN loaded=%1 registration API=%2", _zenLoaded, _zenApi], _zenLoaded && {!_zenApi}] call _status;
-["integration", "ace-actions", if (isClass (configFile >> "CfgPatches" >> "ace_main")) then {"LOADED"} else {"ERROR"}, "Dependency state only; object action installation is checked by the client audit", !(isClass (configFile >> "CfgPatches" >> "ace_main"))] call _status;
+["integration", "zen-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if (_zenApi) then {"LOADED"} else {"ERROR"}}, format ["ZEN loaded=%1 registration API=%2", _zenLoaded, _zenApi], _zenLoaded && {!_zenApi}, if (!_zenLoaded || {_zenApi}) then {""} else {"ZEN is loaded but zen_custom_modules_fnc_register is unavailable - this usually means Zeus Enhanced failed to fully initialise; check the RPT for ZEN errors or an incompatible ZEN version."}] call _status;
+["integration", "ace-actions", if (isClass (configFile >> "CfgPatches" >> "ace_main")) then {"LOADED"} else {"ERROR"}, "Dependency state only; object action installation is checked by the client audit", !(isClass (configFile >> "CfgPatches" >> "ace_main")), if (isClass (configFile >> "CfgPatches" >> "ace_main")) then {""} else {"ACE3 is required by WMP but is not loaded - see the ace_main dependency check above."}] call _status;
 
 ["optional-features", "Optional feature configuration"] call _section;
 private _persistenceEnabled = missionNamespace getVariable ["Waldo_Persistence_Enable", false];
 private _persistencePatches = missionNamespace getVariable ["Waldo_Persistence_PatchNames", ["inidbi2", "inidbi2_main", "inidbi2_core", "inidbi"]];
 private _persistenceRuntime = [] call Waldo_fnc_PersistenceDependencyAvailable;
-["optional-feature", "persistence-runtime", if (!_persistenceEnabled) then {"DISABLED"} else {if (_persistenceRuntime) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 runtimeDetected=%2", _persistenceEnabled, _persistenceRuntime], _persistenceEnabled && {!_persistenceRuntime}] call _status;
+["optional-feature", "persistence-runtime", if (!_persistenceEnabled) then {"DISABLED"} else {if (_persistenceRuntime) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 runtimeDetected=%2", _persistenceEnabled, _persistenceRuntime], _persistenceEnabled && {!_persistenceRuntime}, if (!_persistenceEnabled || {_persistenceRuntime}) then {""} else {"Waldo_Persistence_Enable is true but the server did not detect a loaded INIDBI2 extension - install/enable INIDBI2 on the server, or set Waldo_Persistence_Enable to false in MissionConfig\persistenceConfig.sqf if you don't need persistence."}] call _status;
 
 private _breachingEnabled = missionNamespace getVariable ["Waldo_Breaching_Enable", false];
 private _breachingDependency = isClass (configFile >> "CfgPatches" >> "ace_explosives");
@@ -461,22 +461,22 @@ private _breachingProfileCount = count (keys _breachingProfiles);
 private _breachingValid = _breachingDependency && {_breachingProfileCount > 0} && {_breachingIssues isEqualTo []};
 private _breachingDetail = format ["enabled=%1 aceExplosives=%2 profiles=%3", _breachingEnabled, _breachingDependency, _breachingProfileCount];
 if !(_breachingIssues isEqualTo []) then {_breachingDetail = _breachingDetail + "; " + (_breachingIssues joinString "; ")};
-["optional-feature", "explosive-breaching", if (!_breachingEnabled) then {"DISABLED"} else {if (_breachingValid) then {"LOADED"} else {"ERROR"}}, _breachingDetail, _breachingEnabled && {!_breachingValid}] call _status;
+["optional-feature", "explosive-breaching", if (!_breachingEnabled) then {"DISABLED"} else {if (_breachingValid) then {"LOADED"} else {"ERROR"}}, _breachingDetail, _breachingEnabled && {!_breachingValid}, if (!_breachingEnabled || {_breachingValid}) then {""} else {"Fix the listed issue(s) in Waldo_Breaching_Profiles / Waldo_Breaching_ExplosiveStrengths (usually set from MissionConfig or a ZEN Breaching module), or confirm ace_explosives is loaded."}] call _status;
 
 private _treatmentEnabled = missionNamespace getVariable ["Waldo_TreatmentFeedback_Enable", false];
 private _treatmentDependency = isClass (configFile >> "CfgPatches" >> "ace_medical");
-["optional-feature", "treatment-feedback", if (!_treatmentEnabled) then {"DISABLED"} else {if (_treatmentDependency) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceMedical=%2", _treatmentEnabled, _treatmentDependency], _treatmentEnabled && {!_treatmentDependency}] call _status;
+["optional-feature", "treatment-feedback", if (!_treatmentEnabled) then {"DISABLED"} else {if (_treatmentDependency) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceMedical=%2", _treatmentEnabled, _treatmentDependency], _treatmentEnabled && {!_treatmentDependency}, if (!_treatmentEnabled || {_treatmentDependency}) then {""} else {"Waldo_TreatmentFeedback_Enable is true but ace_medical is not loaded - load ACE medical, or set Waldo_TreatmentFeedback_Enable to false."}] call _status;
 
 private _resupplyEnabled = missionNamespace getVariable ["Waldo_FieldResupply_Enable", false];
 private _resupplyClass = missionNamespace getVariable ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"];
 private _resupplyValid = isClass (configFile >> "CfgVehicles" >> _resupplyClass);
-["optional-feature", "field-resupply", if (!_resupplyEnabled) then {"DISABLED"} else {if (_resupplyValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 crateClass=%2", _resupplyEnabled, _resupplyClass], _resupplyEnabled && {!_resupplyValid}] call _status;
+["optional-feature", "field-resupply", if (!_resupplyEnabled) then {"DISABLED"} else {if (_resupplyValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 crateClass=%2", _resupplyEnabled, _resupplyClass], _resupplyEnabled && {!_resupplyValid}, if (!_resupplyEnabled || {_resupplyValid}) then {""} else {"Waldo_FieldResupply_CrateClass does not resolve to a real CfgVehicles class - fix it in MissionConfig\logisticsConfig.sqf, or leave it unset to use the default Box_NATO_Ammo_F."}] call _status;
 
 private _rallyEnabled = missionNamespace getVariable ["Waldo_Rally_Enable", false];
 private _rallyClass = missionNamespace getVariable ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"];
 private _rallyClassValid = isClass (configFile >> "CfgVehicles" >> _rallyClass);
 private _activeRallies = {_x getVariable ["Waldo_Rally_Active", false]} count allGroups;
-["optional-feature", "squad-rally-points", if (!_rallyEnabled) then {"DISABLED"} else {if (!_rallyClassValid) then {"ERROR"} else {if (_activeRallies > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["enabled=%1 objectClass=%2 activeGroups=%3", _rallyEnabled, _rallyClass, _activeRallies], _rallyEnabled && {!_rallyClassValid}] call _status;
+["optional-feature", "squad-rally-points", if (!_rallyEnabled) then {"DISABLED"} else {if (!_rallyClassValid) then {"ERROR"} else {if (_activeRallies > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["enabled=%1 objectClass=%2 activeGroups=%3", _rallyEnabled, _rallyClass, _activeRallies], _rallyEnabled && {!_rallyClassValid}, if (!_rallyEnabled || {_rallyClassValid}) then {""} else {"Waldo_Rally_ObjectClass does not resolve to a real CfgVehicles class - fix it wherever Rally Points was configured (RALLY_CONFIG via Feature Runtime Control, or MissionConfig), or leave it unset to use the default Land_SatelliteAntenna_01_F."}] call _status;
 
 private _gunshipEnabled = missionNamespace getVariable ["Waldo_Gunship_Enable", false];
 private _gunshipAltitude = missionNamespace getVariable ["Waldo_Gunship_DefaultAltitude", 700];
@@ -486,12 +486,12 @@ private _invalidGunshipClasses = [];
 private _gunshipPools = missionNamespace getVariable ["Waldo_Gunship_SideAircraftPools", createHashMap];
 {{if !(isClass (configFile >> "CfgVehicles" >> _x) && {_x isKindOf "Air"}) then {_invalidGunshipClasses pushBackUnique _x;};} forEach (_gunshipPools get _x);} forEach keys _gunshipPools;
 private _gunshipValid = _gunshipBoundsValid && {_invalidGunshipClasses isEqualTo []};
-["optional-feature", "airborne-gunship", if (!_gunshipEnabled) then {"DISABLED"} else {if (_gunshipValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 altitude=%2 radius=%3 invalidClasses=%4", _gunshipEnabled, _gunshipAltitude, _gunshipRadius, _invalidGunshipClasses], _gunshipEnabled && {!_gunshipValid}] call _status;
+["optional-feature", "airborne-gunship", if (!_gunshipEnabled) then {"DISABLED"} else {if (_gunshipValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 altitude=%2 radius=%3 invalidClasses=%4", _gunshipEnabled, _gunshipAltitude, _gunshipRadius, _invalidGunshipClasses], _gunshipEnabled && {!_gunshipValid}, if (!_gunshipEnabled || {_gunshipValid}) then {""} else {"Check that Waldo_Gunship_DefaultAltitude/Radius sit within Waldo_Gunship_MaximumAltitude/Radius, and that every class listed in Waldo_Gunship_SideAircraftPools is a real Air-kind CfgVehicles class."}] call _status;
 
 {
     private _aaPool = [createHashMap, _x] call Waldo_fnc_DynamicAAResolveAssetPool;
     private _emptyCategories = ["radarClasses", "staticSitePools", "mobileClasses", "fighterClasses"] select {count (_aaPool getOrDefault [_x, []]) == 0};
-    ["optional-feature", format ["dynamic-aa-%1", _x], if (_emptyCategories isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["source=%1 emptyCategories=%2", _aaPool getOrDefault ["source", str _x], _emptyCategories], !(_emptyCategories isEqualTo [])] call _status;
+    ["optional-feature", format ["dynamic-aa-%1", _x], if (_emptyCategories isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["source=%1 emptyCategories=%2", _aaPool getOrDefault ["source", str _x], _emptyCategories], !(_emptyCategories isEqualTo []), if (_emptyCategories isEqualTo []) then {""} else {format ["Waldo_fnc_DynamicAAResolveAssetPool found no %1 for this side - add classes to that side's Dynamic AA asset pool in MissionConfig\airOperationsConfig.sqf, or load the mod that provides them.", _emptyCategories joinString ", "]}] call _status;
 } forEach [west, east, independent];
 
 private _treeEnabled = missionNamespace getVariable ["Waldo_TreeFelling_Enable", false];
@@ -543,12 +543,12 @@ if !(_treeEfficiencies isEqualType createHashMap) then {
 private _treeValid = _treeIssues isEqualTo [];
 private _treeDetail = format ["enabled=%1 patterns=%2 direction=%3", _treeEnabled, _treePatterns, _treeDirection];
 if (!_treeValid) then {_treeDetail = _treeDetail + "; " + (_treeIssues joinString "; ")};
-["optional-feature", "tree-felling", if (!_treeEnabled) then {"DISABLED"} else {if (_treeValid) then {"LOADED"} else {"ERROR"}}, _treeDetail, _treeEnabled && {!_treeValid}] call _status;
+["optional-feature", "tree-felling", if (!_treeEnabled) then {"DISABLED"} else {if (_treeValid) then {"LOADED"} else {"ERROR"}}, _treeDetail, _treeEnabled && {!_treeValid}, if (!_treeEnabled || {_treeValid}) then {""} else {"Fix the listed configuration issue(s) in the Tree Felling settings (Waldo_TreeFelling_* variables, usually set via the Feature Runtime Control TREE_CONFIG bridge or MissionConfig)."}] call _status;
 
 private _corpseTrapEnabled = missionNamespace getVariable ["Waldo_CorpseTraps_Enable", false];
 private _corpseTrapDependency = isClass (configFile >> "CfgPatches" >> "ace_interact_menu");
 private _corpseTrapRigged = _missionObjects select {(_x getVariable ["Waldo_CorpseTrap_State", ""]) != ""};
-["optional-feature", "corpse-traps", if (!_corpseTrapEnabled) then {"DISABLED"} else {if (!_corpseTrapDependency) then {"ERROR"} else {if (count _corpseTrapRigged > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["enabled=%1 aceInteractMenu=%2 rigged=%3", _corpseTrapEnabled, _corpseTrapDependency, count _corpseTrapRigged], _corpseTrapEnabled && {!_corpseTrapDependency}] call _status;
+["optional-feature", "corpse-traps", if (!_corpseTrapEnabled) then {"DISABLED"} else {if (!_corpseTrapDependency) then {"ERROR"} else {if (count _corpseTrapRigged > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["enabled=%1 aceInteractMenu=%2 rigged=%3", _corpseTrapEnabled, _corpseTrapDependency, count _corpseTrapRigged], _corpseTrapEnabled && {!_corpseTrapDependency}, if (!_corpseTrapEnabled || {_corpseTrapDependency}) then {""} else {"Waldo_CorpseTraps_Enable is true but ace_interact_menu is not loaded - load ACE interaction menu, or set Waldo_CorpseTraps_Enable to false in MissionConfig\missionSystemsConfig.sqf."}] call _status;
 
 // Ask every interface client for local UI, mod and action state. The server retains authority over
 // the final report and accepts a response only from its claimed network owner.

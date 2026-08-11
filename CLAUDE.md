@@ -564,6 +564,22 @@ with real internal structure gets its own `*GetDiagnostics.sqf` consumed by both
 `feature` identifiers are the module's own name in kebab-case - never a free-text prefix - so every
 row stays searchable and consistent with the rest of the report.
 
+Every check that can report `ERROR` also carries a short, plain-language remediation hint - not just
+*that* something is wrong, but *what to go and change* - so a newcomer reading `systemChat` or RPT
+never has to reverse-engineer the fix from a terse `state=`/`detail=` pair alone. Hints fold into the
+same `detail` text as `"; fix: <hint>"` via the shared `Waldo_fnc_DiagnosticFoldHint`, so the
+`[area, feature, state, detail]` shape every consumer reads never changes. `DISABLED` and
+`UNCONFIGURED` are not failures and never carry a hint; only `ERROR` (and, rarely, an `UNAVAILABLE`
+that reflects a real misconfiguration rather than an intentionally-absent optional mod) does. Use it
+the same way in a new check:
+
+```sqf
+private _hint = if (_valid) then {""} else {"Set Waldo_Example_Class to a real CfgVehicles class."};
+["area", "feature", _state, _detail, _hint] call Waldo_fnc_DiagnosticFoldHint; // feature-report files
+[_category, _name, _state, _detail, _warn, _hint] call _status;                // runDiagnostics.sqf
+[_area, _feature, _state, _detail, _hint] call _add;                           // runDiagnosticsClient.sqf
+```
+
 ### Headless Client Support (optional)
 
 Native, server-authoritative distribution of AI groups across connected headless clients. This
