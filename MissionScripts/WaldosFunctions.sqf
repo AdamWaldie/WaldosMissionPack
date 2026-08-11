@@ -2368,6 +2368,9 @@ class CfgFunctions
             class MiniGameEquipmentGallery {
                 file = "MissionScripts\InteractionsMinigames\Integration\equipmentGallery.sqf";
             };
+            class MiniGameEquipmentGallerySetup {
+                file = "MissionScripts\InteractionsMinigames\Integration\equipmentGallerySetup.sqf";
+            };
             class BombDefuseSetup {
                 file = "MissionScripts\InteractionsMinigames\Integration\bombDefuseSetup.sqf";
             };
