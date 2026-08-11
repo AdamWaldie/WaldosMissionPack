@@ -26,6 +26,7 @@ _display setVariable ["Waldo_MG_LP_Period", _period];
 _display setVariable ["Waldo_MG_LP_ZoneWidth", _zoneWidth];
 _display setVariable ["Waldo_MG_LP_ZoneStart", 0.15 + random (0.7 - _zoneWidth)];
 _display setVariable ["Waldo_MG_LP_Sweep", 0];
+_display setVariable ["Waldo_MG_LP_StartedAt", -1];
 _display setVariable ["Waldo_MG_LP_Tension", 0.5];
 _display setVariable ["Waldo_MG_LP_TensionTarget", 0.25 + random 0.5];
 _display setVariable ["Waldo_MG_LP_TensionTolerance", 0.10];
@@ -161,10 +162,23 @@ _display setVariable ["Waldo_MG_LP_UpdateZone", {
 }];
 [_display] call (_display getVariable ["Waldo_MG_LP_UpdateZone", {}]);
 
+// Single source of truth for the pick height, derived fresh from elapsed time
+// rather than read back off the last rendered animation tick. SET PIN must
+// judge the exact instant the player pressed it, not a value that can be up
+// to one scheduler tick stale - that gap is what read as an input delay.
+_display setVariable ["Waldo_MG_LP_ComputeSweep", {
+    params ["_display"];
+    private _startedAt = _display getVariable ["Waldo_MG_LP_StartedAt", -1];
+    if (_startedAt < 0) exitWith {0};
+    private _period = _display getVariable ["Waldo_MG_LP_Period", 2.8];
+    private _phase = ((diag_tickTime - _startedAt) mod _period) / _period;
+    if (_phase <= 0.5) then {_phase * 2} else {(1 - _phase) * 2}
+}];
+
 _display setVariable ["Waldo_MG_LP_SetPin", {
     params ["_display"];
     if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false]}) exitWith {};
-    private _sweep = _display getVariable ["Waldo_MG_LP_Sweep", 0];
+    private _sweep = [_display] call (_display getVariable ["Waldo_MG_LP_ComputeSweep", {}]);
     private _zoneStart = _display getVariable ["Waldo_MG_LP_ZoneStart", 0];
     private _zoneWidth = _display getVariable ["Waldo_MG_LP_ZoneWidth", 0.16];
     private _tension = _display getVariable ["Waldo_MG_LP_Tension", 0.5];
@@ -209,15 +223,35 @@ _setButton ctrlAddEventHandler ["ButtonClick", {private _display = ctrlParent (_
     false
 }] call Waldo_fnc_MiniGameEquipmentAddDisplayHandler;
 
-private _animationWorker = [_display] spawn {
+// The pick sweep used to be driven by a spawned uiSleep loop. Scheduled scripts
+// share a per-frame execution budget with every other running script in the
+// mission, so under load that loop can fall meaningfully behind real elapsed
+// time - the rendered marker (and, before the SetPin fix above, the SET PIN
+// judgement itself) would visibly lag the moment the player actually pressed
+// the key. addMissionEventHandler ["EachFrame", ...] runs unscheduled, once
+// per rendered frame, independent of the scheduler queue, so the marker stays
+// locked to Waldo_MG_LP_ComputeSweep's own real-time result every frame.
+private _animationStarter = [_display] spawn {
     params ["_display"];
     waitUntil {isNull _display || {_display getVariable ["Waldo_IMG_Started", false]}};
-    if (!isNull _display) then {[_display] call (_display getVariable ["Waldo_MG_LP_UpdateTension", {}]);};
-    private _started = diag_tickTime;
-    while {!isNull _display && {!(_display getVariable ["Waldo_MG_UI_Done", false])}} do {
-        private _period = _display getVariable ["Waldo_MG_LP_Period", 2.8];
-        private _phase = ((diag_tickTime - _started) mod _period) / _period;
-        private _sweep = if (_phase <= 0.5) then {_phase * 2} else {(1 - _phase) * 2};
+    if (isNull _display) exitWith {};
+    [_display] call (_display getVariable ["Waldo_MG_LP_UpdateTension", {}]);
+    _display setVariable ["Waldo_MG_LP_StartedAt", diag_tickTime];
+    // equipmentCleanup.sqf normally removes this handler via Waldo_MG_UI_EachFrameHandlers,
+    // but that array is owned by two independently-scheduled scripts with no lock between
+    // them: if Cleanup runs (and clears the array) before the pushBack below executes,
+    // this id is never recorded and the shared cleanup path silently misses it. The handler
+    // therefore also removes itself the first frame it observes Done, using its own id off
+    // the display, so it can never outlive the challenge even when that race is lost.
+    private _ehId = addMissionEventHandler ["EachFrame", {
+        private _display = uiNamespace getVariable ["Waldo_MG_ActiveChallengeDisplay", displayNull];
+        if (isNull _display) exitWith {};
+        if (_display getVariable ["Waldo_MG_UI_Done", false]) exitWith {
+            removeMissionEventHandler ["EachFrame", (_display getVariable ["Waldo_MG_LP_AnimEhId", -1])];
+        };
+        private _sweep = [_display] call (_display getVariable ["Waldo_MG_LP_ComputeSweep", {}]);
+        // Kept in sync for the interaction-equipment QA automation harness, which polls this
+        // variable directly rather than calling ComputeSweep - do not remove as "dead state".
         _display setVariable ["Waldo_MG_LP_Sweep", _sweep];
         [_display, _display getVariable ["Waldo_MG_LP_Marker", controlNull], [3.78 + (26 * _sweep), 19.55, 0.45, 1.8], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
         private _index = _display getVariable ["Waldo_MG_LP_CurrentPin", 0];
@@ -226,10 +260,13 @@ private _animationWorker = [_display] spawn {
             [_display, _keyPins select _index, [6 + (_index * (19 / (_display getVariable ["Waldo_MG_LP_Pins", 1]))), 12.4 - (1.85 * _sweep), 1.1, 3.8], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
             [_display, _display getVariable ["Waldo_MG_LP_PickTip", controlNull], [6 + (_index * (19 / (_display getVariable ["Waldo_MG_LP_Pins", 1]))) + 0.3, 13.9 - (1.85 * _sweep), 0.45, 1.5], 0] call Waldo_fnc_MiniGameEquipmentSetPosition;
         };
-        uiSleep 0.016;
-    };
+    }];
+    _display setVariable ["Waldo_MG_LP_AnimEhId", _ehId];
+    private _ehHandlers = _display getVariable ["Waldo_MG_UI_EachFrameHandlers", []];
+    _ehHandlers pushBack _ehId;
+    _display setVariable ["Waldo_MG_UI_EachFrameHandlers", _ehHandlers];
 };
 private _workers = _display getVariable ["Waldo_MG_UI_Workers", []];
-_workers pushBack _animationWorker;
+_workers pushBack _animationStarter;
 _display setVariable ["Waldo_MG_UI_Workers", _workers];
 [_display] call Waldo_fnc_MiniGameEquipmentBriefing;
