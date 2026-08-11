@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need the shared setup, state, accessibility, customization, or controls for WMP interaction procedures.
 
-_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`, `Waldo_fnc_MiniGameInteraction`, `Waldo_fnc_MiniGameInteractionTableSetup`, `Waldo_fnc_BombDefuseSetup`, `Waldo_fnc_MiniGameChallenge`_
+_Associated Files: `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGameInteractionSetup`, `Waldo_fnc_MiniGameInteraction`, `Waldo_fnc_MiniGameInteractionTableSetup`, `Waldo_fnc_BombDefuseSetup`, `Waldo_fnc_MiniGameChallenge`, `Waldo_fnc_MiniGameEquipmentGallery`, `Waldo_fnc_MiniGameEquipmentGallerySetup`_
 
 
 ![Field equipment procedures](images/interaction-procedures/interaction-circuit-active.png)
@@ -606,6 +606,28 @@ Review briefing, active, warning, success, failure, timeout, help, and abort sta
 supported resolutions and UI scales. Repeat with local accessibility settings enabled. Static SQF
 validation cannot prove in-engine font metrics or optional texture availability, so mission release testing
 should still include 4:3, 16:10, 16:9, ultrawide, reduced resolution, and common Arma UI scales.
+
+#### Field Equipment Gallery composition (in-editor, no console needed)
+
+`Waldo_fnc_MiniGameEquipmentGallerySetup` installs the same gallery behind an ordinary object
+interaction, so reviewers, testers, and mission makers without console access can open it in a normal
+play session:
+
+```sqf
+// From an object's Eden init field:
+[this] call Waldo_fnc_MiniGameEquipmentGallerySetup;
+```
+
+This installs an ACE interaction (**Open Field Equipment Gallery**) and a linked vanilla `addAction`
+on the object at the same time - the same dual-surface ACE-first/vanilla-fallback policy used by the
+loadout save point, so the vanilla entry stays available as a discoverability cue even without ACE.
+Both routes open the gallery locally for whoever used the action; the result never affects gameplay,
+party-table state, or anything else in the mission.
+
+Drop the **Field Equipment Gallery Example** composition (`WMP_Compositions/`) into the editor for a
+ready-made laptop that does this - the same "try every procedure from one object" station used in
+WMP's own PR review audit mission. It requires no other setup and can be placed anywhere, including a
+QA-only corner of a mission that never ships to players.
 
 ### Disposable Arma QA mission
 
