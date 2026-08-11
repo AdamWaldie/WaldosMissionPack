@@ -551,7 +551,18 @@ Runs a read-only server and client health check at mission start after the loado
 missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 ```
 
-Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Zeus registration, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
+Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Headless Client, Obituary, Zeus registration, the Feature Runtime Control snapshot handshake, Object Scaling bounds, UI Theme application, Accessibility self-interaction, Emergency Dismount, Corpse Traps, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
+
+Every new module's diagnostics rows go through the same two primitives so RPT output never
+fragments into per-feature formats: `Waldo_fnc_DiagnosticLog` (the `[WMP DIAG]` frame shown above)
+and, for a feature large enough to own several rows, `Waldo_fnc_DiagnosticFeatureReport` (normalizes
+those rows into one `[featureName, checks]` result, each check being `[area, feature, state,
+detail]`). A single-flag optional feature typically adds one inline row directly in
+`runDiagnostics.sqf`/`runDiagnosticsClient.sqf` (see `corpse-traps` or `object-scaling`); a feature
+with real internal structure gets its own `*GetDiagnostics.sqf` consumed by both (see
+`Waldo_fnc_ObituaryGetDiagnostics`, `Waldo_fnc_HeadlessGetDiagnostics`). Either way the `area`/
+`feature` identifiers are the module's own name in kebab-case - never a free-text prefix - so every
+row stays searchable and consistent with the rest of the report.
 
 ### Headless Client Support (optional)
 

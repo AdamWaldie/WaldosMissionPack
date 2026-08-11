@@ -47,16 +47,19 @@ Each check reports one of these states in its message:
 
 The server report checks:
 
-- representative public APIs from mission flow, logistics, world UI, electronic warfare, party games, interaction equipment, and the economy;
+- representative public APIs from mission flow, logistics, world UI, electronic warfare, party games, interaction equipment, the economy, headless-client support, object scaling and the feature runtime control bridge;
 - required and optional mod patches;
 - mission loadout scraping and playable-side results;
 - configured crate, parachute, and paradrop values;
 - ACRE2 configuration, authoritative plan schema/revision, group counts and Babel readiness;
-- Economy, party-game, interaction-procedure, jamming, SafeStart, AAR/ENDEX, and custom 3D-marker state;
+- Economy, party-game, interaction-procedure, jamming, SafeStart, AAR/ENDEX, Obituary, headless-client, and custom 3D-marker state;
 - configured MHQ, VVD and Field Hospital equipment;
 - recovery workshops, carriers, attached/virtual package state, Field Resupply hubs/carriers and Tactical Displays;
 - Hazard evaluator/audio state, typed helicopter/ground transport registries, and server/JIP registry parity for Dynamic AA, Dynamic AO and gunships;
 - Paradrop, in its own dedicated section: static-line/HALO altitude and chute-class thresholds, how many auto-detected jump-capable aircraft in the mission carry a server-visible static/HALO hold-action versus neither, the split between `Waldo_fnc_AddVehicleFunctions` auto-detection and a mission maker's own explicit setup call, and Dynamic Drop Zone registry/JIP parity;
+- the Feature Runtime Control snapshot handshake (`Waldo_FeatureRuntimeStateReady`) that JIP and headless clients depend on before activating locality-sensitive optional features;
+- Object Scaling's configured min/max bounds and how many mission objects currently carry a non-default scale;
+- Corpse Traps' `Waldo_CorpseTraps_Enable` state, its ACE Interact dependency, and how many corpses in the mission are currently rigged;
 - ACE and Zeus integration availability.
 
 Each interface client reports:
@@ -67,8 +70,12 @@ Each interface client reports:
 - jamming factor, registry, client loop, and HUD;
 - core and Economy Zeus module registration counts;
 - the custom 3D-marker renderer;
-- ACE or vanilla interaction installation on registered audit fixtures.
-- Tactical Display actions, WMP HUD eligibility/runtime state, transport actions, Field Hospital action installation and Hazard snapshot/evaluator state.
+- ACE or vanilla interaction installation on registered audit fixtures;
+- Tactical Display actions, WMP HUD eligibility/runtime state, transport actions, Field Hospital action installation and Hazard snapshot/evaluator state;
+- whether the Feature Runtime Control snapshot has arrived on this machine, and whether the locally applied UI Theme matches the authoritative one it carries;
+- the Accessibility self-interaction menu's install mode (ACE/vanilla) and this player's resolved colour-vision profile;
+- the Emergency Dismount monitor loop and, when Corpse Traps is enabled, whether this client actually installed the "Rig Corpse" interaction;
+- Obituary's medic-only "Pronounce Dead" action install state and its local diary render loop.
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
 
@@ -121,9 +128,20 @@ private _safeStart = [] call Waldo_fnc_SafeStartGetDiagnostics;
 private _endex = [] call Waldo_fnc_ENDEXGetDiagnostics;
 private _economy = [] call Waldo_fnc_EcoCore_getDiagnostics;
 private _equipment = [] call Waldo_fnc_MiniGameInteractionGetDiagnostics;
+private _headless = [] call Waldo_fnc_HeadlessGetDiagnostics;
+private _obituary = [] call Waldo_fnc_ObituaryGetDiagnostics;
 ```
 
 Each returns `[featureName, checks]`; every check is `[area, feature, state, detail]`. The interaction helper optionally accepts an array of configured equipment objects. `RunDiagnostics` consumes these same helpers, preventing its interpretation from drifting away from the feature's own health report.
+
+A feature small enough to be a single config flag (Corpse Traps, Object Scaling, Emergency
+Dismount's client loop, the Feature Runtime Control snapshot, UI Theme, Accessibility) does not need
+its own `*GetDiagnostics.sqf` - it adds one inline `[area, feature, state, detail]` row directly in
+`runDiagnostics.sqf` (server) or `runDiagnosticsClient.sqf` (interface client), through the same
+`_status`/`_add` helper every other row in that script already uses. Either shape ends up going
+through `Waldo_fnc_DiagnosticLog`'s frame, so a new module's rows read exactly like every other
+module's - the `area`/`feature` values are the only thing that should ever identify which module a
+line belongs to.
 
 ## Structured result
 

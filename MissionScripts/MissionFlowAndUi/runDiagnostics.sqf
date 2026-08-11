@@ -72,19 +72,25 @@ private _consumeFeatureReport = {
     ["mission-flow", "aar-endex-api", "Waldo_fnc_ENDEX"],
     ["mission-flow", "objectives-api", "Waldo_fnc_CreateObjective"],
     ["world-ui", "custom-3d-marker-api", "Waldo_fnc_Create3DMarker"],
+    ["interface", "ui-theme-api", "Waldo_fnc_UiTheme"],
+    ["interface", "accessibility-api", "Waldo_fnc_AccessibilitySelfInteractionInit"],
     ["logistics", "mhq-api", "Waldo_fnc_MHQSetup"],
     ["logistics", "vvd-api", "Waldo_fnc_VVDInit"],
+    ["object-transforms", "object-scaling-api", "Waldo_fnc_ObjectScale"],
+    ["runtime-control", "feature-runtime-api", "Waldo_fnc_FeatureRuntimeApply"],
     ["electronic-warfare", "jammer-api", "Waldo_fnc_Jammer"],
     ["electronic-warfare", "emp-api", "Waldo_fnc_EMP"],
     ["electronic-warfare", "tracker-api", "Waldo_fnc_Tracker"],
     ["party-games", "party-table-api", "Waldo_fnc_MiniGamesInit"],
     ["interactions", "equipment-api", "Waldo_fnc_MiniGameInteractionSetup"],
     ["economy", "economy-api", "Waldo_fnc_EcoInit"],
+    ["medical", "obituary-api", "Waldo_fnc_ObituaryPronounce"],
     ["mission-flow", "safestart-diagnostics-api", "Waldo_fnc_SafeStartGetDiagnostics"],
     ["mission-flow", "endex-diagnostics-api", "Waldo_fnc_ENDEXGetDiagnostics"],
     ["interactions", "equipment-diagnostics-api", "Waldo_fnc_MiniGameInteractionGetDiagnostics"],
     ["economy", "economy-diagnostics-api", "Waldo_fnc_EcoCore_getDiagnostics"],
-    ["headless", "headless-diagnostics-api", "Waldo_fnc_HeadlessGetDiagnostics"]
+    ["headless", "headless-diagnostics-api", "Waldo_fnc_HeadlessGetDiagnostics"],
+    ["medical", "obituary-diagnostics-api", "Waldo_fnc_ObituaryGetDiagnostics"]
 ];
 
 // Required and optional dependencies are deliberately distinct. Optional
@@ -101,6 +107,14 @@ private _consumeFeatureReport = {
     ["acre_main", "ACRE2", false],
     ["task_force_radio", "TFAR", false]
 ];
+
+// The ordered runtime-feature snapshot (Waldo_fnc_FeatureRuntimeRequestState/ReceiveState) is the
+// handshake JIP and headless clients use before activating locality-sensitive optional features
+// (Obituary, Emergency Dismount, Treatment Feedback, Rally Points, Tree Felling, Persistence, ...)
+// against the server's actual current settings instead of local defaults. If initServer.sqf never
+// published readiness, every one of those client-side installers is stuck waiting indefinitely.
+private _runtimeControlReady = missionNamespace getVariable ["Waldo_FeatureRuntimeStateReady", false];
+["runtime-control", "runtime-control-authority", if (_runtimeControlReady) then {"ACTIVE"} else {"ERROR"}, format ["ready=%1", _runtimeControlReady], !_runtimeControlReady, if (_runtimeControlReady) then {""} else {"initServer.sqf did not publish Waldo_FeatureRuntimeStateReady - JIP and headless clients cannot request the authoritative runtime snapshot, so locality-sensitive optional features gated on it will never activate for them."}] call _status;
 
 // Loadout scan: do not wait forever when the subsystem was not loaded.
 ["logistics", "Loadouts and configured logistics classes"] call _section;
@@ -289,6 +303,7 @@ if (count (keys _dropZoneRegistry) == 0) then {
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_MiniGameInteractionGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_HeadlessGetDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
 
 private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];
 private _partyLoaded = missionNamespace getVariable ["Waldo_MG_SystemInitialized", false];
@@ -315,6 +330,15 @@ private _deployedMhqs = {_x getVariable ["Waldo_MHQ_Status", false]} count _mhqO
 ["logistics", "mhq-runtime", if (_mhqObjects isEqualTo []) then {"UNCONFIGURED"} else {if (_deployedMhqs > 0) then {"ACTIVE"} else {"LOADED"}}, format ["configured=%1 deployed=%2", count _mhqObjects, _deployedMhqs], false] call _status;
 private _vvdPads = _missionObjects select {_x getVariable ["Waldo_VVD_ServerConfigured", false]};
 ["logistics", "vvd-runtime", if (_vvdPads isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["configuredSpawnPads=%1", count _vvdPads], false] call _status;
+
+// Object scaling is callable and server-validated with no background initializer of its own, so
+// there is no "enabled" state to report - only whether the configured bounds are sane and how many
+// objects in the mission currently carry a non-default scale.
+private _scaleMinimum = missionNamespace getVariable ["Waldo_ObjectScaling_Minimum", 0.1];
+private _scaleMaximum = missionNamespace getVariable ["Waldo_ObjectScaling_Maximum", 10];
+private _scaleBoundsValid = _scaleMinimum > 0 && {_scaleMaximum > _scaleMinimum};
+private _scaledObjects = _missionObjects select {!isNil {_x getVariable "Waldo_ObjectScale"}};
+["object-transforms", "object-scaling", if (!_scaleBoundsValid) then {"ERROR"} else {if (count _scaledObjects > 0) then {"ACTIVE"} else {"LOADED"}}, format ["min=%1 max=%2 allowClientRequests=%3 scaledObjects=%4", _scaleMinimum, _scaleMaximum, missionNamespace getVariable ["Waldo_ObjectScaling_AllowClientRequests", false], count _scaledObjects], !_scaleBoundsValid, if (_scaleBoundsValid) then {""} else {"Waldo_ObjectScaling_Minimum must be greater than 0 and lower than Waldo_ObjectScaling_Maximum."}] call _status;
 private _aceMedicalLoaded = isClass (configFile >> "CfgPatches" >> "ace_medical");
 private _fieldHospitals = _missionObjects select {_x getVariable ["ace_medical_isMedicalFacility", false]};
 if (_fieldHospitals isEqualTo []) then {
@@ -520,6 +544,11 @@ private _treeValid = _treeIssues isEqualTo [];
 private _treeDetail = format ["enabled=%1 patterns=%2 direction=%3", _treeEnabled, _treePatterns, _treeDirection];
 if (!_treeValid) then {_treeDetail = _treeDetail + "; " + (_treeIssues joinString "; ")};
 ["optional-feature", "tree-felling", if (!_treeEnabled) then {"DISABLED"} else {if (_treeValid) then {"LOADED"} else {"ERROR"}}, _treeDetail, _treeEnabled && {!_treeValid}] call _status;
+
+private _corpseTrapEnabled = missionNamespace getVariable ["Waldo_CorpseTraps_Enable", false];
+private _corpseTrapDependency = isClass (configFile >> "CfgPatches" >> "ace_interact_menu");
+private _corpseTrapRigged = _missionObjects select {(_x getVariable ["Waldo_CorpseTrap_State", ""]) != ""};
+["optional-feature", "corpse-traps", if (!_corpseTrapEnabled) then {"DISABLED"} else {if (!_corpseTrapDependency) then {"ERROR"} else {if (count _corpseTrapRigged > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["enabled=%1 aceInteractMenu=%2 rigged=%3", _corpseTrapEnabled, _corpseTrapDependency, count _corpseTrapRigged], _corpseTrapEnabled && {!_corpseTrapDependency}] call _status;
 
 // Ask every interface client for local UI, mod and action state. The server retains authority over
 // the final report and accepts a response only from its claimed network owner.

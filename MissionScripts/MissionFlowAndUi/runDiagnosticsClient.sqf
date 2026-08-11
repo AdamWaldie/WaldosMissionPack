@@ -49,9 +49,24 @@ private _consumeFeatureReport = {
     ["task_force_radio", "TFAR", false]
 ];
 
+private _runtimeSnapshotReceived = missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false];
+private _runtimeSnapshotFailed = missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
+["runtime-control", "runtime-control-snapshot", if (_runtimeSnapshotReceived) then {"ACTIVE"} else {if (_runtimeSnapshotFailed) then {"ERROR"} else {"LOADED"}}, format ["received=%1 failed=%2 requestInFlight=%3", _runtimeSnapshotReceived, _runtimeSnapshotFailed, missionNamespace getVariable ["Waldo_FeatureRuntimeRequestInFlight", false]]] call _add;
+
+// Waldo_fnc_FeatureRuntimeReceiveState calls UiThemeApplyLocal on every machine as part of the
+// runtime snapshot handshake, so Waldo_UI_ResolvedTheme should already match the authoritative
+// Waldo_UI_Theme by the time that snapshot has arrived. Before it arrives, no local application has
+// been attempted yet, which is expected and not an error.
+private _themeId = toUpperANSI (missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"]);
+private _resolvedTheme = uiNamespace getVariable ["Waldo_UI_ResolvedTheme", createHashMap];
+private _themeAppliedId = toUpperANSI (_resolvedTheme getOrDefault ["id", ""]);
+private _themeState = if (_themeAppliedId == "") then {if (_runtimeSnapshotReceived) then {"ERROR"} else {"LOADED"}} else {if (_themeAppliedId == _themeId) then {"LOADED"} else {"ERROR"}};
+["interface", "ui-theme", _themeState, format ["theme=%1 locallyApplied=%2 revision=%3", _themeId, if (_themeAppliedId == "") then {"NONE"} else {_themeAppliedId}, missionNamespace getVariable ["Waldo_UI_ThemeRevision", 0]]] call _add;
+
 [call Waldo_fnc_SafeStartGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_EcoCore_getDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
 
 private _acreLoaded = isClass (configFile >> "CfgPatches" >> "acre_main");
 private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
@@ -186,6 +201,18 @@ private _hazardClient = missionNamespace getVariable ["Waldo_Hazard_ClientStarte
 private _hazardEvaluation = missionNamespace getVariable ["Waldo_Hazard_LastEvaluation", []];
 private _hazardFresh = count _hazardEvaluation >= 3 && {(diag_tickTime - (_hazardEvaluation select 0)) <= ((missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25) * 3};
 ["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 freshEvaluation=%5 lastEvaluation=%6", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardFresh, _hazardEvaluation]] call _add;
+private _dismountEnabled = missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false];
+private _dismountStarted = missionNamespace getVariable ["Waldo_EmergencyDismount_ClientStarted", false];
+private _dismountHandle = missionNamespace getVariable ["Waldo_EmergencyDismount_ClientLoop", scriptNull];
+private _dismountRunning = _dismountStarted && {!(scriptDone _dismountHandle)};
+["interface", "emergency-dismount-client", if (!_dismountEnabled) then {"DISABLED"} else {if (_dismountRunning) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 started=%2 loopRunning=%3 interval=%4", _dismountEnabled, _dismountStarted, !(scriptDone _dismountHandle), missionNamespace getVariable ["Waldo_EmergencyDismount_Interval", 0.5]]] call _add;
+
+private _accessibilityInstalled = player getVariable ["Waldo_Accessibility_SelfInteractionInstalled", false];
+private _accessibilityMode = player getVariable ["Waldo_Accessibility_InteractionMode", ""];
+private _colourVisionId = profileNamespace getVariable ["Waldo_UI_ColourVisionProfile", "STANDARD"];
+private _colourVisionResolved = ([_colourVisionId] call Waldo_fnc_UiColourVisionProfile) getOrDefault ["id", "STANDARD"];
+["interface", "accessibility-self-interaction", if (_accessibilityInstalled) then {"LOADED"} else {"ERROR"}, format ["installed=%1 mode=%2 colourVisionProfile=%3", _accessibilityInstalled, _accessibilityMode, toUpperANSI _colourVisionResolved]] call _add;
+
 private _hudEnabled = missionNamespace getVariable ["Waldo_WmpHud_Enable", false];
 private _hudEligible = if (_hudEnabled) then {[player] call Waldo_fnc_WmpHudEligible} else {false};
 private _hudStarted = missionNamespace getVariable ["Waldo_WmpHud_ClientStarted", false];
@@ -222,6 +249,10 @@ if (_vvdTerminals isEqualTo []) then {
     }) < 0;
     ["logistics", "vvd-actions", if (_vvdValid) then {"LOADED"} else {"ERROR"}, format ["terminals=%1 expectedMode=%2", count _vvdTerminals, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}]] call _add;
 };
+
+private _corpseTrapEnabled = missionNamespace getVariable ["Waldo_CorpseTraps_Enable", false];
+private _corpseTrapInstalled = missionNamespace getVariable ["Waldo_CorpseTrap_Installed", false];
+["interactions", "corpse-trap-actions", if (!_corpseTrapEnabled) then {"DISABLED"} else {if (!_aceInteractLoaded) then {"UNAVAILABLE"} else {if (_corpseTrapInstalled) then {"LOADED"} else {"ERROR"}}}, format ["enabled=%1 aceInteractMenu=%2 installed=%3", _corpseTrapEnabled, _aceInteractLoaded, _corpseTrapInstalled]] call _add;
 
 private _fieldHospitals = _localObjects select {_x getVariable ["ace_medical_isMedicalFacility", false]};
 if (_fieldHospitals isEqualTo []) then {

@@ -724,6 +724,7 @@ class CfgFunctions
             class ObituaryPronounce {file = "MissionScripts\MedicalSystems\Obituary\obituaryPronounce.sqf";};
             class ObituaryDiaryRenderLocal {file = "MissionScripts\MedicalSystems\Obituary\obituaryDiaryRenderLocal.sqf";};
             class ObituaryPad2 {file = "MissionScripts\MedicalSystems\Obituary\obituaryPad2.sqf";};
+            class ObituaryGetDiagnostics {file = "MissionScripts\MedicalSystems\Obituary\obituaryGetDiagnostics.sqf";};
         };
         class FieldResupply
         {
