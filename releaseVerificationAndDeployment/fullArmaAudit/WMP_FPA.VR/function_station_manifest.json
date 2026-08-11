@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 889,
+  "registeredFunctionCount": 890,
   "runtimeFunctionCount": 385,
-  "functionCount": 1274,
+  "functionCount": 1275,
   "stations": [
     {
       "id": "control",
@@ -5659,6 +5659,12 @@
     {
       "name": "Waldo_fnc_MiniGameEquipmentGallery",
       "file": "MissionScripts/InteractionsMinigames/Integration/equipmentGallery.sqf",
+      "station": "interaction-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGameEquipmentGallerySetup",
+      "file": "MissionScripts/InteractionsMinigames/Integration/equipmentGallerySetup.sqf",
       "station": "interaction-core",
       "activation": "manual"
     },
