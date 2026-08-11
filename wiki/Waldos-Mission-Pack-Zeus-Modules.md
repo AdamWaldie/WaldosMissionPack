@@ -180,7 +180,7 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Transport Services
 
-**Transport Service - Register** must be placed on an existing living AI-crewed helicopter or land vehicle. It registers the selected type into its independent pool and exposes plain-language service name, access, marker, boarding, destination, helicopter altitude, base servicing and opt-in emergency-reset options. **Transport Service - Return to Base** cancels the current task for a selected registered service and orders a physical RTB. See [Helicopter and Ground Transport Services](Transport-Services).
+**Transport Service - Register** must be placed on an existing living AI-crewed helicopter, land vehicle or boat. It registers the selected type into its independent pool and exposes plain-language service name, access, marker, boarding, destination, helicopter altitude, base servicing and opt-in emergency-reset options. **Transport Service - Return to Base** cancels the current task for a selected registered service and orders a physical RTB. See [Helicopter, Ground and Boat Transport Services](Transport-Services).
 
 ## UI Theme QA
 

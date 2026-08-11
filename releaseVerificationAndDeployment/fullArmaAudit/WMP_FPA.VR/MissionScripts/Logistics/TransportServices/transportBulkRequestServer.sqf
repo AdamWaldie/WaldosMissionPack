@@ -25,7 +25,7 @@ params [
 ];
 _command = toUpperANSI _command;
 _type = toUpperANSI _type;
-if (!isServer || {!(_command in ["PICKUP_ALL", "RTB_ALL"])} || {!(_type in ["HELICOPTER", "GROUND"])} || {isNull _requester} || {!isPlayer _requester}) exitWith {0};
+if (!isServer || {!(_command in ["PICKUP_ALL", "RTB_ALL"])} || {!(_type in ["HELICOPTER", "GROUND", "BOAT"])} || {isNull _requester} || {!isPlayer _requester}) exitWith {0};
 if (remoteExecutedOwner > 0 && {owner _requester != remoteExecutedOwner}) exitWith {0};
 if (_command == "PICKUP_ALL" && {count _position < 2}) exitWith {0};
 
@@ -53,7 +53,11 @@ private _count = count _ids;
 private _columns = ceil (sqrt (_count max 1));
 // Each requested slot may be shifted while finding reachable ground. Use twice the single-service
 // minimum so neighbouring searches do not begin on each other's exclusion boundary.
-private _spacing = 2 * (if (_type == "HELICOPTER") then {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]} else {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]});
+private _spacing = 2 * (switch (_type) do {
+    case "HELICOPTER": {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]};
+    case "BOAT": {missionNamespace getVariable ["Waldo_BoatTransport_DefaultSeparation", 25]};
+    default {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]};
+});
 {
     private _entry = _services get _x;
     private _vehicle = _entry get "vehicle";

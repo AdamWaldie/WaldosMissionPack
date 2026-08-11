@@ -69,7 +69,7 @@
  * - Logi_MedicalBoxClass (AUTOMATIC): ACE crate when ACE medical exists, otherwise the vanilla fallback.
  *
  * SETTING-BY-SETTING GUIDE - TRANSPORT SERVICES:
- * - Waldo_TransportServices_Enable: permits registered helicopter and ground transport services; creates none.
+ * - Waldo_TransportServices_Enable: permits registered helicopter, ground and boat transport services; creates none.
  * - Waldo_Transport_TravelTimeout: maximum seconds allowed for one physical journey before failure recovery.
  * - Waldo_Transport_DefaultBoardingSeconds: maximum pickup wait before an unused service returns to base.
  * - Waldo_Transport_DefaultDestinationDwell: seconds before optional forceDisembark requests player exits; it never permits occupied RTB.
@@ -83,8 +83,11 @@
  * - Waldo_GroundTransport_DefaultRoadSearchRadius: road search around a clicked ground-transport position.
  * - Waldo_GroundTransport_DefaultSeparation: minimum spacing between ground service points and bases.
  * - Waldo_GroundTransport_DefaultSpeedLimit: road-safe AI transport speed cap in kilometres per hour.
- * - Waldo_Transport_DefaultPathRetrySeconds: no-progress interval before a ground driver is reordered.
- * - Waldo_Transport_DefaultPathRetryLimit: maximum automatic ground movement reorders per journey.
+ * - Waldo_BoatTransport_DefaultWaterSearchRadius: furthest a safe open-water service point may move from the map click.
+ * - Waldo_BoatTransport_DefaultSeparation: minimum spacing between boat service points and bases.
+ * - Waldo_BoatTransport_DefaultSpeedLimit: AI boat transport speed cap in kilometres per hour.
+ * - Waldo_Transport_DefaultPathRetrySeconds: no-progress interval before a ground or boat driver is reordered.
+ * - Waldo_Transport_DefaultPathRetryLimit: maximum automatic ground/boat movement reorders per journey.
  * - Waldo_Transport_MaxEffectiveDamage: damage fraction (0-1) at or above which a still-"alive"
  *   transport is treated as combat-ineffective and written off the same as an outright loss - a
  *   vehicle limping along at 95% damage was previously left in the pool looking fully available.
@@ -98,7 +101,7 @@
  *   when they are serialisable; code, UI controls and local object references are not safe save data.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Object Scaling", "Logistics Crates"]],
+    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Boat Transport", "Object Scaling", "Logistics Crates"]],
     ["shared", [
         // MISSION MAKER: field-resupply content and balance. A deployed crate is populated exactly
         // like a standard supply crate (Waldo_fnc_SupplyCratePopulate) scoped to the servicing hub's
@@ -134,6 +137,9 @@ createHashMapFromArray [
         ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200, false], // METRES: nearest-road search around pickup/destination.
         ["Waldo_GroundTransport_DefaultSeparation", 18, false], // METRES: space vehicle bases/stops apart to reduce blocking and collisions.
         ["Waldo_GroundTransport_DefaultSpeedLimit", 60, false], // KM/H: road-safe AI transport speed cap.
+        ["Waldo_BoatTransport_DefaultWaterSearchRadius", 300, false], // METRES: nearest-open-water search around a pickup/destination click.
+        ["Waldo_BoatTransport_DefaultSeparation", 25, false], // METRES: space boat bases/stops apart to reduce blocking and collisions.
+        ["Waldo_BoatTransport_DefaultSpeedLimit", 45, false], // KM/H: AI boat transport speed cap.
         ["Waldo_Transport_DefaultPathRetrySeconds", 25, false], // SECONDS without progress before reissuing an order.
         ["Waldo_Transport_DefaultPathRetryLimit", 3, false], // COUNT: automatic ground path retries per journey.
         ["Waldo_Transport_MaxEffectiveDamage", 0.8, false], // FRACTION 0-1: at/above this, a still-"alive" transport is written off like a loss.

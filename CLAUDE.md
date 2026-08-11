@@ -383,6 +383,32 @@ See `wiki/Optional-Feature-Systems.md#hazardous-environments` for the full prese
 ```
 Players get ACE3 "Deploy/Tear Down Command Post" actions. Deployed state creates a named respawn point and map marker.
 
+### Transport Services — Helicopter, Ground and Boat (`MissionConfig\logisticsConfig.sqf`)
+
+Reusable AI-crewed transports players call in with a map click. Helicopter, ground and boat
+transports use independent typed pools — a request for one type can never reserve a vehicle of
+another. Place an already AI-crewed vehicle and register it from the vehicle's own init field (no
+`isServer` wrapper, no `createVehicleCrew` line — Eden runs the init on every machine but only the
+server mutates the registry):
+
+```sqf
+[this, "HELICOPTER", "RAVEN_1", "Raven One"] call Waldo_fnc_TransportRegister;
+[this, "GROUND", "GROUND_1", "Ground One"] call Waldo_fnc_TransportRegister;
+[this, "BOAT", "BOAT_1", "Boat One"] call Waldo_fnc_TransportRegister;
+// [vehicle, "HELICOPTER"|"GROUND"|"BOAT", serviceId, displayName, optional HashMap of options]
+```
+
+Players use **ACE Self Interact > WMP Transport > Helicopter/Ground/Boat Transport** to request
+pickup, select a destination once aboard, and manage or RTB their active service; **All Transports**
+groups fleet-wide bulk pickup/RTB per type. Boat requests resolve to open water only — the clicked
+point (and a small ring of neighbouring points around it, to avoid beaching right at the shoreline)
+must all read `surfaceIsWater`; a landlocked click is rejected with a clear reason. This is a
+documented limitation, not full navigable-water routing: it cannot detect an island or headland
+sitting directly between the boat and the resolved point. Ground transports prefer connected roads
+within `roadSearchRadius`; helicopters resolve a clearance-checked landing zone within
+`landingSearchRadius`. See `wiki/Transport-Services.md` for the full per-type option reference,
+stuck/retry behaviour and the ZEN "Transport Service - Register"/"Return to Base" modules.
+
 ### Respawn Options (`initPlayerLocal.sqf`)
 
 Two optional behaviours are commented out by default — uncomment to enable:

@@ -57,6 +57,7 @@ if (!local _group) exitWith {
 // Release the stop applied after the preceding route before assigning this new one.
 for "_i" from ((count waypoints _group) - 1) to 0 step -1 do {deleteWaypoint [_group, _i]};
 private _helicopter = _vehicle isKindOf "Helicopter";
+private _boat = !_helicopter && {_vehicle isKindOf "Ship"};
 private _movementBehaviour = if (_helicopter) then {_config getOrDefault ["behaviour", "CARELESS"]} else {"SAFE"};
 _group setBehaviourStrong _movementBehaviour;
 _group setCombatMode "BLUE";
@@ -75,12 +76,17 @@ if (_helicopter) then {
     // comment for the long-route/elevation-change failure mode this avoids.
     _vehicle flyInHeight [(_config getOrDefault ["cruiseAltitude", 80]) max 20, true];
 } else {
-    _vehicle limitSpeed (_config getOrDefault ["groundSpeedLimit", 60]);
-    // Prefer the engine's connected-road route when both the vehicle and resolved target are on a
-    // road. Off-road requests retain normal terrain pathfinding instead of being pinned to roads.
-    private _roadRoute = !((_vehicle nearRoads 30) isEqualTo []) && {!((_target nearRoads 20) isEqualTo [])};
-    driver _vehicle forceFollowRoad _roadRoute;
-    _dispatchRoadRoute = _roadRoute;
+    if (_boat) then {
+        _vehicle limitSpeed (_config getOrDefault ["boatSpeedLimit", 45]);
+    } else {
+        _vehicle limitSpeed (_config getOrDefault ["groundSpeedLimit", 60]);
+        // Prefer the engine's connected-road route when both the vehicle and resolved target are on
+        // a road. Off-road requests retain normal terrain pathfinding instead of being pinned to
+        // roads. Boats have no equivalent road network, so this stays ground-only.
+        private _roadRoute = !((_vehicle nearRoads 30) isEqualTo []) && {!((_target nearRoads 20) isEqualTo [])};
+        driver _vehicle forceFollowRoad _roadRoute;
+        _dispatchRoadRoute = _roadRoute;
+    };
 };
 // Pickup and RTB retain the proven TR UNLOAD approach. At a passenger destination, TR UNLOAD orders
 // cargo out as an engine waypoint side effect, bypassing WMP's forceDisembark option. A scripted
@@ -101,8 +107,8 @@ if (!_helicopter) then {
 _group setCurrentWaypoint _waypoint;
 diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 waypoint=%6 type=%7 owner=%8", _id, _requestId, _phase, _target, _helicopter, _waypoint select 1, waypointType _waypoint, clientOwner];
 
-[_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint, _dispatchRoadRoute] spawn {
-    params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint", "_roadRoute"];
+[_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint, _dispatchRoadRoute, _boat] spawn {
+    params ["_vehicle", "_id", "_requestId", "_phase", "_target", "_config", "_helicopter", "_landingPad", "_waypoint", "_roadRoute", "_boat"];
     private _group = group driver _vehicle;
     private _stale = {_vehicle getVariable ["Waldo_TransportService_RequestId", -1] != _requestId};
     private _timeout = diag_tickTime + (missionNamespace getVariable ["Waldo_Transport_TravelTimeout", 900]);
@@ -165,7 +171,7 @@ diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 
                 _group setCurrentWaypoint _waypoint;
                 _retriesRemaining = _retriesRemaining - 1;
                 _lastProgress = diag_tickTime;
-                diag_log format ["[WMP TRANSPORT] Reissued ground path service=%1 request=%2 remaining=%3 distance=%4 offRoad=%5", _id, _requestId, _retriesRemaining, round _distance, !_roadRoute];
+                diag_log format ["[WMP TRANSPORT] Reissued %1 path service=%2 request=%3 remaining=%4 distance=%5 offRoad=%6", if (_boat) then {"boat"} else {"ground"}, _id, _requestId, _retriesRemaining, round _distance, !_roadRoute];
             };
             call _stale || {!local _group} || {!alive _vehicle} || {!alive driver _vehicle} || {_distance <= _stopRadius} || {diag_tickTime >= _timeout}
         };

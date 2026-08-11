@@ -42,6 +42,19 @@ if (_aceReady) then {
         || {vehicles findIf {_x getVariable ["Waldo_TransportService_Type", ""] == "GROUND" && {_x getVariable ["Waldo_TransportService_Requester", objNull] isEqualTo player || {_uid != "" && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} || {player in crew _x} || {!isNull getAssignedCuratorLogic player}}} >= 0}
     }, {params ["_target", "_player"]; [_player, "GROUND"] call Waldo_fnc_TransportAvailableChildrenLocal}] call ace_interact_menu_fnc_createAction;
     [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_GroundRoot"], _specificGround] call ace_interact_menu_fnc_addActionToObject;
+    private _boatRoot = ["Waldo_Transport_BoatRoot", "Boat Transport", "\a3\ui_f\data\map\vehicleicons\iconShip_ca.paa", {}, {true}] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root"], _boatRoot] call ace_interact_menu_fnc_addActionToObject;
+    private _boat = ["Waldo_Transport_RequestBoat", "Request / Move Pickup", "\a3\ui_f_oldman\data\igui\cfg\holdactions\map_ca.paa", {["REQUEST_PICKUP", "BOAT", objNull] call Waldo_fnc_TransportOpenMapLocal}, {
+        private _uid = getPlayerUID player;
+        missionNamespace getVariable ["Waldo_BoatTransport_Available", false] || {vehicles findIf {_x getVariable ["Waldo_TransportService_Type", ""] == "BOAT" && {_x getVariable ["Waldo_TransportService_Requester", objNull] isEqualTo player || {_uid != "" && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}}}} >= 0}
+    }] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_BoatRoot"], _boat] call ace_interact_menu_fnc_addActionToObject;
+    private _specificBoat = ["Waldo_Transport_SelectBoat", "Select / Manage Transport", "\a3\ui_f\data\igui\cfg\simpletasks\types\documents_ca.paa", {}, {
+        private _uid = getPlayerUID player;
+        missionNamespace getVariable ["Waldo_BoatTransport_Available", false]
+        || {vehicles findIf {_x getVariable ["Waldo_TransportService_Type", ""] == "BOAT" && {_x getVariable ["Waldo_TransportService_Requester", objNull] isEqualTo player || {_uid != "" && {_x getVariable ["Waldo_TransportService_RequesterUID", ""] == _uid}} || {player in crew _x} || {!isNull getAssignedCuratorLogic player}}} >= 0}
+    }, {params ["_target", "_player"]; [_player, "BOAT"] call Waldo_fnc_TransportAvailableChildrenLocal}] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_BoatRoot"], _specificBoat] call ace_interact_menu_fnc_addActionToObject;
     // Fleet-wide actions that affect every transport of a type live under their own "All Transports"
     // category, a sibling of Helicopter Transport / Ground Transport, instead of duplicated inside
     // each type-specific submenu - it should be obvious at a glance which controls address one named
@@ -56,15 +69,22 @@ if (_aceReady) then {
     [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_AllRoot"], _allHeliRtb] call ace_interact_menu_fnc_addActionToObject;
     private _allGroundRtb = ["Waldo_Transport_AllGroundRtb", "Return All Ground Vehicles to Base", "\a3\ui_f\data\igui\cfg\simpletasks\types\land_ca.paa", {["RTB_ALL", "GROUND", [], player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2]}, {true}] call ace_interact_menu_fnc_createAction;
     [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_AllRoot"], _allGroundRtb] call ace_interact_menu_fnc_addActionToObject;
+    private _allBoatPickup = ["Waldo_Transport_AllBoatPickup", "Request All Available Boats", "\a3\ui_f\data\igui\cfg\simpletasks\types\meet_ca.paa", {["PICKUP_ALL", "BOAT", objNull] call Waldo_fnc_TransportOpenMapLocal}, {missionNamespace getVariable ["Waldo_BoatTransport_Available", false]}] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_AllRoot"], _allBoatPickup] call ace_interact_menu_fnc_addActionToObject;
+    private _allBoatRtb = ["Waldo_Transport_AllBoatRtb", "Return All Boats to Base", "\a3\ui_f\data\igui\cfg\simpletasks\types\land_ca.paa", {["RTB_ALL", "BOAT", [], player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2]}, {true}] call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions", "Waldo_Transport_Root", "Waldo_Transport_AllRoot"], _allBoatRtb] call ace_interact_menu_fnc_addActionToObject;
 } else {
     player addAction ["<t color='#79C7FF'>Request Helicopter Pickup</t>", {["REQUEST_PICKUP", "HELICOPTER", objNull] call Waldo_fnc_TransportOpenMapLocal}, [], -82, false, true, "", "private _uid = getPlayerUID _this; missionNamespace getVariable ['Waldo_HeliTransport_Available',false] || {vehicles findIf {_x getVariable ['Waldo_TransportService_Type',''] == 'HELICOPTER' && {_x getVariable ['Waldo_TransportService_Requester',objNull] isEqualTo _this || {_uid != '' && {_x getVariable ['Waldo_TransportService_RequesterUID',''] == _uid}}}} >= 0}"];
     player addAction ["<t color='#79C7FF'>Request Ground Transport</t>", {["REQUEST_PICKUP", "GROUND", objNull] call Waldo_fnc_TransportOpenMapLocal}, [], -83, false, true, "", "private _uid = getPlayerUID _this; missionNamespace getVariable ['Waldo_GroundTransport_Available',false] || {vehicles findIf {_x getVariable ['Waldo_TransportService_Type',''] == 'GROUND' && {_x getVariable ['Waldo_TransportService_Requester',objNull] isEqualTo _this || {_uid != '' && {_x getVariable ['Waldo_TransportService_RequesterUID',''] == _uid}}}} >= 0}"];
+    player addAction ["<t color='#79C7FF'>Request Boat Transport</t>", {["REQUEST_PICKUP", "BOAT", objNull] call Waldo_fnc_TransportOpenMapLocal}, [], -84, false, true, "", "private _uid = getPlayerUID _this; missionNamespace getVariable ['Waldo_BoatTransport_Available',false] || {vehicles findIf {_x getVariable ['Waldo_TransportService_Type',''] == 'BOAT' && {_x getVariable ['Waldo_TransportService_Requester',objNull] isEqualTo _this || {_uid != '' && {_x getVariable ['Waldo_TransportService_RequesterUID',''] == _uid}}}} >= 0}"];
     // Vanilla addAction has no true submenu nesting, so the "All Transports:" prefix carries the same
     // fleet-wide-vs-one-vehicle distinction the ACE category provides structurally.
     player addAction ["<t color='#79C7FF'>All Transports: Request All Available Helicopters</t>", {["PICKUP_ALL", "HELICOPTER", objNull] call Waldo_fnc_TransportOpenMapLocal}, [], -86, false, true, "", "missionNamespace getVariable ['Waldo_HeliTransport_Available',false]"];
     player addAction ["<t color='#79C7FF'>All Transports: Request All Available Ground Vehicles</t>", {["PICKUP_ALL", "GROUND", objNull] call Waldo_fnc_TransportOpenMapLocal}, [], -87, false, true, "", "missionNamespace getVariable ['Waldo_GroundTransport_Available',false]"];
+    player addAction ["<t color='#79C7FF'>All Transports: Request All Available Boats</t>", {["PICKUP_ALL", "BOAT", objNull] call Waldo_fnc_TransportOpenMapLocal}, [], -90, false, true, "", "missionNamespace getVariable ['Waldo_BoatTransport_Available',false]"];
     player addAction ["<t color='#79C7FF'>All Transports: Return All Helicopters to Base</t>", {["RTB_ALL", "HELICOPTER", [], player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2]}, [], -88, false, true];
     player addAction ["<t color='#79C7FF'>All Transports: Return All Ground Vehicles to Base</t>", {["RTB_ALL", "GROUND", [], player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2]}, [], -89, false, true];
+    player addAction ["<t color='#79C7FF'>All Transports: Return All Boats to Base</t>", {["RTB_ALL", "BOAT", [], player] remoteExecCall ["Waldo_fnc_TransportBulkRequestServer", 2]}, [], -91, false, true];
 };
 player setVariable ["Waldo_Transport_InteractionsInstalled", true];
 true

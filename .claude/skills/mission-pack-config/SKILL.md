@@ -240,7 +240,7 @@ composition name that isn't documented there.
 | UI notifications / recovery | `references/ui-notifications.md` | |
 | `description.ext` mission-maker checklist | `references/description-ext.md` | |
 | WMP HUD (friendly 3D identification) | `references/wmp-hud.md` | |
-| Helicopter/ground transport services | `references/transport-services.md` | |
+| Helicopter/ground/boat transport services | `references/transport-services.md` | |
 | Hazardous environments (contamination/toxic/etc.) | `references/hazardous-environments.md` | |
 | Tree felling | `references/tree-felling.md` | Arma has no vanilla axe — needs a mod weapon |
 | Explosive wall breaching | `references/breaching.md` | Requires ACE Explosives |
