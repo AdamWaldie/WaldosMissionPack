@@ -85,6 +85,9 @@ if (hasInterface) then {
         if (missionNamespace getVariable ["Waldo_TreatmentFeedback_Enable", false]) then {
             [] call Waldo_fnc_TreatmentFeedbackInit;
         };
+        if (missionNamespace getVariable ["Waldo_Obituary_Enable", true]) then {
+            [] call Waldo_fnc_ObituaryInit;
+        };
         if (missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false]) then {
             [] call Waldo_fnc_EmergencyDismountInit;
         };

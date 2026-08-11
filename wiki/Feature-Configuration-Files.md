@@ -193,6 +193,14 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_TreatmentFeedback_TreatmentNames` | Treatment-class to display-name overrides. |
 | `Waldo_TreatmentFeedback_BodyPartNames` | ACE body-part key to readable label map. |
 
+### Obituary / confirmed-death reporting
+
+| Setting | Purpose |
+|---|---|
+| `Waldo_Obituary_Enable` | Installs the medic-only "Pronounce Dead" ACE target interaction. Defaults `true`, unlike other `MedicalSystems/` features. |
+| `Waldo_Obituary_ChatAnnounce` | Also broadcasts the terse systemChat pronounce line. |
+| `Waldo_Obituary_DiaryPollInterval` | Seconds between local diary-record sync checks. |
+
 ### Tactical display
 
 | Setting | Purpose / units |

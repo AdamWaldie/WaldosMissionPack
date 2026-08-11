@@ -253,6 +253,7 @@ composition name that isn't documented there.
 | Tactical display | `references/tactical-display.md` | Needs a map-board-style object, not any object |
 | Field resupply | `references/field-resupply.md` | |
 | Patient treatment feedback | `references/medical-feedback.md` | Requires ACE medical |
+| Obituary / confirmed-death reporting | `references/obituary.md` | Requires ACE medical + ACE interaction; defaults ON |
 | Vehicle recovery + squad rally points | `references/vehicle-recovery-rallies.md` | Two related but independent systems |
 | UI visual themes + colour-vision accessibility | `references/ui-themes.md` | Theme is mission-wide; colour-vision is per player, never set it globally |
 | ACE Corpse Traps | `references/corpse-traps.md` | |

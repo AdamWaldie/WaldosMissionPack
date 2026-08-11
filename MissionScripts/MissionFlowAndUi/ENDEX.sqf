@@ -2,8 +2,12 @@
  * Author: WaldoTheWarfighter
  * ENDEX (exercise end) - freezes the mission: broadcasts "ENDEX ENDEX ENDEX", puts weapons on ACE
  * safety, heals all players, deletes fired rounds, sets all AI to CARELESS/BLUE, makes players
- * invincible, and shows the WMP debrief panel (including the After-Action Report when AAR tracking ran).
- * Also available via the Zeus "Waldos Mission Modules - Call Endex" module.
+ * invincible, and shows the WMP debrief panel (including the After-Action Report when AAR tracking
+ * ran). The AAR report includes a "Confirmed deaths" section from Waldo_AAR_Obituary when the
+ * Obituary system has recorded any medic-pronounced deaths. Also available via the Zeus "Waldos
+ * Mission Modules - Call Endex" module.
+ * Locality and authority: server publishes the authoritative Waldo_ENDEX_Active transition once,
+ * then every interface client applies the local freeze/report itself; safe to call on any machine.
  *
  * Arguments:
  * None
@@ -13,6 +17,8 @@
  *
  * Example:
  * [] spawn Waldo_fnc_ENDEX;
+ * Result: the mission freezes and every interface client shows the debrief panel with the AAR.
+ * Current callers: mission-maker scripting/triggers and the Zeus "Call Endex" module.
  */
 
 params [["_applyLocal", false, [false]]];
@@ -74,6 +80,17 @@ if !(isNil {missionNamespace getVariable "Waldo_AAR_StartTime"}) then {
     // Friendly-fire incidents (only shown if any)
     if (_ff > 0) then {
         _aar = _aar + format ["<t align='center'>Friendly-fire incidents: %1</t><br />", _ff];
+    };
+
+    // Confirmed deaths (only shown if any were pronounced via the medic Pronounce Dead action)
+    private _obituary = missionNamespace getVariable ["Waldo_AAR_Obituary", []];
+    if (count _obituary > 0) then {
+        private _sortedObituary = [_obituary, [], {toLower (_x select 0)}, "ASCEND"] call BIS_fnc_sortBy;
+        _aar = _aar + "<t align='center'>Confirmed deaths:</t><br />";
+        {
+            _x params ["_obitName", "_obitCount"];
+            _aar = _aar + format ["<t align='center'>%1 (%2)</t><br />", _obitName, _obitCount];
+        } forEach _sortedObituary;
     };
 
     // Objective summary (only shown if any tasks were registered via Waldo_fnc_CreateObjective)
