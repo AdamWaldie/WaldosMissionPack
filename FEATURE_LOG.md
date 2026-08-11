@@ -74,7 +74,7 @@ Required direction:
 
 ### Field Resupply: replace charge-based deployed crates with real crate contents
 
-**Status:** Planned
+**Status:** Implemented, pending in-engine ACE Cargo/Gear and salvage acceptance testing.
 
 Redesign deployed Field Resupply crates so they behave like a normal populated supply crate
 (ACE Cargo/Gear access to real inventory) instead of the current limited-`TAKE`-count abstraction.

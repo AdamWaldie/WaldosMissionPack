@@ -56,6 +56,12 @@ if !(missionNamespace getVariable ["Waldo_FieldResupply_ServerRespawnHandler", f
                 (_oldEntity getVariable ["Waldo_FieldResupply_Crates", 0]) min _maximum,
                 true
             ];
+            // Carries over which side DEPLOY should populate from too - server-only, matches how
+            // Waldo_fnc_FieldResupplyServerHandle's REFILL case itself sets it (non-broadcast).
+            private _carrierSide = _oldEntity getVariable ["Waldo_FieldResupply_CarrierSide", ""];
+            if (typeName _carrierSide == "SIDE") then {
+                _newEntity setVariable ["Waldo_FieldResupply_CarrierSide", _carrierSide];
+            };
         };
         [] remoteExecCall ["Waldo_fnc_FieldResupplyInit", owner _newEntity];
     }];

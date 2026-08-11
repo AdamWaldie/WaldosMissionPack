@@ -59,7 +59,7 @@ The system does not automatically alter difficulty in response to server perform
 
 ## Field resupply
 
-This finite-resource ammunition feature lets a hub refill carrier crate allowances, carriers deploy charge-limited crates, players take validated magazine types, and crates be salvaged. Quickest working setup — both calls are server-owned, safe to leave in each object's own Eden init field:
+This finite-stock ammunition feature lets a hub refill carrier crate allowances, carriers deploy a real populated crate for others, players draw from it through ordinary ACE Cargo/Gear interaction, and unused crates be salvaged. There is no per-crate charge counter and no WMP-brokered "take" action — a deployed crate is populated exactly like a standard supply crate (`Waldo_fnc_SupplyCratePopulate`), scoped to the servicing hub's own side. Quickest working setup — both calls are server-owned, safe to leave in each object's own Eden init field:
 
 1. Place an object to act as the refill hub (e.g. an ammo point). In its init field:
    ```sqf
@@ -79,11 +79,11 @@ real member of a BLUFOR group. When building your own version, place the infantr
 intended side/group and then add the carrier call to that unit's Init field; do not hand-author a
 standalone infantry object in SQE, because Eden imports that as an empty/unknown-side entity.
 
-A deployed crate derives logical supply rows from the carrier's compatible loaded/carried magazine classes, but its physical inventory stays empty so Gear access cannot bypass charge consumption. A WMP-blue informational addAction identifies the crate and reports its remaining charges. Server checks enforce ownership, distance, side access, stock and capacity. Focused Zeus modules register a nearby hub, assign a nearby carrier, or grant additional portable crates during play — no scripting needed for a Zeus-run mission.
+A deployed crate is populated exactly like a standard supply crate — real weapons, magazines, items and (optionally) launchers/attachments — scoped to the side the carrier last refilled from (falling back to the carrier's own side if never refilled from a hub). Take supplies from it with ordinary ACE Cargo/Gear interaction; there is no separate WMP "take" action. A WMP-blue informational addAction identifies the crate and points players at Gear/Cargo. Server checks enforce ownership, distance, side access, stock and capacity. Focused Zeus modules register a nearby hub, assign a nearby carrier, or grant additional portable crates during play — no scripting needed for a Zeus-run mission.
 
 Mission scripts can grant crates with `[_carrier, _amount, _expandCapacity] call Waldo_fnc_FieldResupplyGrantCrates`. The default `false` expansion flag clamps the grant to the carrier's existing spare capacity; `true` raises capacity enough to fit the entire grant. The server broadcasts the updated count and informs only the receiving player. If a grant occurs during startup, its notification waits until the stock fake loading/title presentation has finished, with a 60-second safety release for missions that replace the intro without publishing completion.
 
-Magazine allow/block lists, minimum magazine capacity, crate class, charge count, carry capacity and respawn retention are configurable. Capacity-based issue amounts default to 4 magazines for capacities up to 4 rounds, 3 up to 10, 8 up to 40, 3 up to 70 and 2 above 70; missions may replace those five amounts or select a fixed amount. Unused crates can be recovered by a carrier, while removing a partly consumed crate recovers no portable crate. It does not guess vehicle-ammunition compatibility or manufacture mod ammunition outside the configured rules.
+Crate class, carry capacity, respawn retention and the populate-path's own size scalar/weapons-attachments/launchers toggles are configurable (`Waldo_FieldResupply_CrateSizeScalar`/`IncludeWeaponsAttachments`/`IncludeLaunchers`, mirroring `Waldo_fnc_SupplyCratePopulate`'s own parameters). A servicing side with no scanned playable-unit loadouts fails DEPLOY with a clear warning rather than spawning a silently empty crate. **Salvage recoverability compares the crate's actual cargo against a snapshot taken right after it was populated**: unchanged cargo is recoverable back into the carrier's allowance; a crate a player has drawn from, or dropped foreign items into, is not salvageable. It does not guess vehicle-ammunition compatibility or manufacture mod ammunition outside what the side's own scanned loadouts contain.
 
 ## Tactical display
 

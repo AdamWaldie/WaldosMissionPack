@@ -1,28 +1,24 @@
 # Field resupply
 
 Finite-resource ammunition system: a hub refills carrier crate allowances,
-carriers deploy charge-limited crates, players take validated magazine
-types, crates can be salvaged. "Register" pattern.
+carriers deploy a real populated crate for others, players take from it
+through ordinary ACE Cargo/Gear interaction, and unused crates can be
+salvaged. "Register" pattern. A deployed crate is populated exactly like a
+standard supply crate (`Waldo_fnc_SupplyCratePopulate`), scoped to the
+servicing hub's own side — there is no separate charge counter or magazine
+allow/block list.
 
 ## Config (`MissionConfig\logisticsConfig.sqf` — shared)
 
 ```sqf
 ["Waldo_FieldResupply_Enable", false],
 ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"],
-["Waldo_FieldResupply_DefaultCarrierCapacity", 2],       // crates a carrier can hold
-["Waldo_FieldResupply_ChargesPerCrate", 5],              // resupply uses per deployed crate
-["Waldo_FieldResupply_MagazinesPerType", 1],             // fixed count per type when capacity mode is off
-["Waldo_FieldResupply_UseCapacityBasedAmounts", true],   // false = always use MagazinesPerType
-["Waldo_FieldResupply_CapacityAmounts", [ /* per magazine-capacity band */ ]],
-["Waldo_FieldResupply_MinimumMagazineRounds", 2],        // excludes grenades/single-round ordnance by default
-["Waldo_FieldResupply_AllowedMagazines", []],            // [] discovers carried types
-["Waldo_FieldResupply_BlockedMagazines", []],            // wins over allowlist
+["Waldo_FieldResupply_DefaultCarrierCapacity", 2],           // crates a carrier can hold
+["Waldo_FieldResupply_CrateSizeScalar", 1],                  // multiplies populated quantities
+["Waldo_FieldResupply_IncludeWeaponsAttachments", false],    // also populate weapons/attachments/clothing
+["Waldo_FieldResupply_IncludeLaunchers", false],             // also populate launchers/launcher ammo
 ["Waldo_FieldResupply_RetainOnRespawn", true]
 ```
-
-Capacity-based amounts default to 4 magazines up to 4-round capacity, 3 up
-to 10, 8 up to 40, 3 up to 70, 2 above 70 — replace those five bands or
-switch to a fixed `MagazinesPerType` amount.
 
 ## Registering (`initServer.sqf`)
 
@@ -44,20 +40,27 @@ Granting crates directly (e.g. as a reward):
 
 ## Player usage
 
-**Field Resupply** category on the carrier, hub or deployed crate: assigned
+**Field Resupply** category on the carrier or deployed crate: assigned
 carriers wearing a backpack get **Check Resupply Crates** and **Deploy Field
-Resupply** (foot-only). A deployed crate derives logical supply rows from
-the carrier's compatible loaded/carried magazines but keeps its physical
-inventory empty so ACE Gear can't bypass charge consumption.
+Resupply** (foot-only). DEPLOY populates a real crate from the side the
+carrier last refilled from (or the carrier's own side if never refilled from
+a hub) — open its Gear or Cargo to draw supplies, exactly like any other
+logistics crate. There is no WMP "take" action.
 
 ## Zeus
 
 Focused modules register a nearby hub, assign a nearby carrier, or grant
 additional portable crates during play.
 
+## Salvage recoverability
+
+A deployed crate is only recoverable back into the carrier's allowance if
+its cargo is unchanged from when it was populated — a crate a player has
+already drawn from, or dropped foreign items into, is not salvageable.
+
 ## Gotchas
 
+- DEPLOY fails with a clear warning instead of spawning a silently empty
+  crate if the servicing side has no scanned playable-unit loadouts.
 - Does not guess vehicle-ammunition compatibility or manufacture mod ammo
-  outside the configured rules.
-- Removing a partly consumed crate recovers no portable crate — only unused
-  crates can be recovered by a carrier.
+  outside what the side's own scanned loadouts contain.

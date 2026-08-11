@@ -26,34 +26,31 @@
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - field-resupply enablement/content, carrier capacity, recovery package classes,
  * workshop markers, object-scale bounds and logistics crate classes are intended choices.
- * Magazine allow/block arrays contain magazine classnames; an empty allowlist permits discovered
- * compatible magazines. Recovery custom variables use the documented serialisable variable schema.
- * ADVANCED TUNING - capacity-band amounts, minimum rounds, recovery scan interval/clearance and
- * client scale requests affect balance, traffic or placement safety. Intervals are seconds,
- * radii/clearance are metres and object scale is a positive multiplier. Client scale requests should
- * normally remain false. Medical crate selection is dependency-sensitive and normally automatic.
+ * A deployed field-resupply crate's content is entirely governed by
+ * Waldo_fnc_SupplyCratePopulate's own side scan (Logi_MissionSQMArray_*, the same pool starter/logi
+ * crates already draw from) - there is no separate magazine allow/block list to configure here.
+ * Recovery custom variables use the documented serialisable variable schema.
+ * ADVANCED TUNING - recovery scan interval/clearance and client scale requests affect balance,
+ * traffic or placement safety. Intervals are seconds, radii/clearance are metres and object scale is
+ * a positive multiplier. Client scale requests should normally remain false. Medical crate selection
+ * is dependency-sensitive and normally automatic.
  *
  * HOW TO READ THE DATA BELOW:
  * `shared` rows are `[variable, default]`. `server` rows are `[variable, default, publish]` where
  * publish true sends the authoritative value to clients/JIP. `conditional` rows are
  * `[scope, variable, required CfgPatches class, value when present, value when absent, publish]`.
  * None of these rows creates a hub, carrier, workshop or crate by itself.
- * CapacityAmounts is ordered by magazine capacity: `[1-4 rounds, 5-10, 11-40, 41-70, 71+]`.
  * Recovery DefaultCustomVariables is an ARRAY of variable-name STRINGs; only serialisable values
  * are copied into a vehicle package. PackageClasses is an ordered fallback pool of CfgVehicles
  * classes and may be overridden per registered vehicle.
  *
  * SETTING-BY-SETTING GUIDE - FIELD RESUPPLY:
  * - Waldo_FieldResupply_Enable (MISSION MAKER): permits hubs/actions; register a hub and assign carriers separately.
- * - Waldo_FieldResupply_CrateClass (MISSION MAKER): valid CfgVehicles crate spawned empty for each deployment.
+ * - Waldo_FieldResupply_CrateClass (MISSION MAKER): valid CfgVehicles crate spawned and populated for each deployment.
  * - Waldo_FieldResupply_DefaultCarrierCapacity (MISSION MAKER): logical crates granted to a newly assigned carrier.
- * - Waldo_FieldResupply_ChargesPerCrate (MISSION MAKER): resupply transactions available from one deployed crate.
- * - Waldo_FieldResupply_MagazinesPerType (MISSION MAKER): flat quantity per compatible type when capacity mode is off.
- * - Waldo_FieldResupply_UseCapacityBasedAmounts (MISSION MAKER): true uses the five capacity bands below.
- * - Waldo_FieldResupply_CapacityAmounts (MISSION MAKER): five issued quantities for 1-4, 5-10, 11-40, 41-70, 71+ rounds.
- * - Waldo_FieldResupply_MinimumMagazineRounds (MISSION MAKER): lower-capacity magazines are excluded automatically.
- * - Waldo_FieldResupply_AllowedMagazines (MISSION MAKER): [] discovers compatible carried types; otherwise exact allowlist.
- * - Waldo_FieldResupply_BlockedMagazines (MISSION MAKER): exact deny list, applied after and overriding the allowlist.
+ * - Waldo_FieldResupply_CrateSizeScalar (MISSION MAKER): multiplies the populated magazine/item/weapon quantities.
+ * - Waldo_FieldResupply_IncludeWeaponsAttachments (MISSION MAKER): also populate weapons, attachments and clothing.
+ * - Waldo_FieldResupply_IncludeLaunchers (MISSION MAKER): also populate launchers and launcher ammunition.
  * - Waldo_FieldResupply_RetainOnRespawn (MISSION MAKER): preserves that player's carrier allowance after respawn.
  *
  * SETTING-BY-SETTING GUIDE - VEHICLE RECOVERY:
@@ -103,23 +100,15 @@
 createHashMapFromArray [
     ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Object Scaling", "Logistics Crates"]],
     ["shared", [
-        // MISSION MAKER: field-resupply content and balance.
+        // MISSION MAKER: field-resupply content and balance. A deployed crate is populated exactly
+        // like a standard supply crate (Waldo_fnc_SupplyCratePopulate) scoped to the servicing hub's
+        // side, so these mirror that function's own parameters rather than a separate charge model.
         ["Waldo_FieldResupply_Enable", true],       // BOOL: enables service/actions; hubs/carriers still need registration.
-        ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"], // CfgVehicles class for deployed empty physical crate.
+        ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"], // CfgVehicles class for the deployed physical crate.
         ["Waldo_FieldResupply_DefaultCarrierCapacity", 2], // CRATES: default assigned player carrying capacity.
-        ["Waldo_FieldResupply_ChargesPerCrate", 5], // USES: logical resupply transactions before crate empties.
-        ["Waldo_FieldResupply_MagazinesPerType", 1], // COUNT issued per compatible type when capacity mode is false.
-        ["Waldo_FieldResupply_UseCapacityBasedAmounts", true], // ADVANCED: false uses MagazinesPerType for every type.
-        ["Waldo_FieldResupply_CapacityAmounts", [
-            4, // magazines issued when each magazine holds 1-4 rounds.
-            3, // magazines issued when each magazine holds 5-10 rounds.
-            8, // magazines issued when each magazine holds 11-40 rounds.
-            3, // magazines issued when each magazine holds 41-70 rounds.
-            2  // magazines issued when each magazine holds 71 or more rounds.
-        ]],
-        ["Waldo_FieldResupply_MinimumMagazineRounds", 2], // ROUNDS: excludes grenades/single-round ordnance by default.
-        ["Waldo_FieldResupply_AllowedMagazines", []], // ARRAY of exact magazine classes; [] discovers carried types.
-        ["Waldo_FieldResupply_BlockedMagazines", []], // ARRAY of exact classes always excluded; wins over allowlist.
+        ["Waldo_FieldResupply_CrateSizeScalar", 1], // SCALAR: multiplies populated magazine/item/weapon quantities.
+        ["Waldo_FieldResupply_IncludeWeaponsAttachments", false], // BOOL: also populate weapons, attachments, clothing and gear, not just ammunition.
+        ["Waldo_FieldResupply_IncludeLaunchers", false], // BOOL: also populate launchers and launcher ammunition.
         ["Waldo_FieldResupply_RetainOnRespawn", true], // BOOL: retain assigned carrier status/count after respawn.
         // ADVANCED recovery cadence/placement followed by MISSION MAKER presentation/content.
         ["Waldo_Recovery_ScanInterval", 3],            // Seconds; lower values increase server scans.
