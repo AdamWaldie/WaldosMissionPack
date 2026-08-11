@@ -1,0 +1,58 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+    items=6;
+    class Item0
+    {
+        dataType="Logic";
+        class PositionInfo {position[]={-16,0,0};};
+        name="HC_1";
+        id=1;
+        type="HeadlessClient";
+        class Attributes {isPlayableLogic=1;};
+    };
+    class Item1
+    {
+        dataType="Logic";
+        class PositionInfo {position[]={-8,0,0};};
+        name="HC_2";
+        id=2;
+        type="HeadlessClient";
+        class Attributes {isPlayableLogic=1;};
+    };
+    class Item2
+    {
+        dataType="Logic";
+        class PositionInfo {position[]={0,0,0};};
+        name="HC_3";
+        id=3;
+        type="HeadlessClient";
+        class Attributes {isPlayableLogic=1;};
+    };
+    class Item3
+    {
+        dataType="Logic";
+        class PositionInfo {position[]={8,0,0};};
+        name="HC_4";
+        id=4;
+        type="HeadlessClient";
+        class Attributes {isPlayableLogic=1;};
+    };
+    class Item4
+    {
+        dataType="Logic";
+        class PositionInfo {position[]={16,0,0};};
+        name="HC_5";
+        id=5;
+        type="HeadlessClient";
+        class Attributes {isPlayableLogic=1;};
+    };
+    class Item5
+    {
+        dataType="Comment";
+		class PositionInfo {position[]={0,0,-8};};
+        title="Headless Client Setup (5 slots): HC_1 through HC_5 are vanilla Headless Client Virtual Entities marked Playable - ordinary Arma slot plumbing, not a WMP object; the variable names are for your own reference only, WMP detects a headless client purely by !isDedicated && !hasInterface at runtime. Delete slots you don't need. This alone does nothing: set Waldo_Headless_Enable to true in MissionConfig\\headlessConfig.sqf, then allow-list each HC's IP in server.cfg's headlessClients[] and launch it with -client -connect=<serverIP>. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Headless-Client-Support";
+        id=6;
+    };
+};

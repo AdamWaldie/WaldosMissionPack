@@ -47,6 +47,7 @@ short init demonstrates every internal option.
 | Basic Setup West/East/Independent/Civilian | Side-specific respawn and starter logistics |
 | Basic Mobile Respawn Vehicle | Minimal mobile respawn example |
 | Basic Player Controlled Zeus | Player/curator foundation |
+| Headless Client Setup Example | Five named, playable Headless Client Virtual Entities ready for `Waldo_Headless_Enable` |
 | Starter, Supply and Medical Crate Collections | Side and contents variants with server-owned population |
 | Field Resupply Hub Example | Refill hub plus a correctly BLUFOR-grouped, pre-assigned infantry carrier |
 | Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
@@ -126,10 +127,7 @@ scope) depends on a server extension and mission database policy that has no sin
 to represent it - but registering one *specific* world object once persistence is running is exactly
 as composable as the systems above, see the Persistence Object Example composition. Rally points are
 player-role state. Tree felling operates on terrain vegetation, which Eden compositions cannot own.
-Headless Client support needs only a vanilla Arma 3 Headless Client Virtual Entity marked Playable -
-ordinary Arma slot plumbing with no WMP function call attached to it, unlike every object-init
-composition above; its actual toggle and tuning live in `MissionConfig\headlessConfig.sqf`. Mission
-Diagnostics is a fully automatic startup check with no placeable object at all - one flag in
+Mission Diagnostics is a fully automatic startup check with no placeable object at all - one flag in
 `initServer.sqf`. Obituary / confirmed-death reporting installs on every machine automatically and
 its player-facing confirmation step runs on whichever corpse a medic is already standing over, not a
 placed fixture. Those systems remain covered by beginner configuration, public calls, the full audit

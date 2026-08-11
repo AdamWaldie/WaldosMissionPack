@@ -1,0 +1,5 @@
+version=54;
+name="[WMP] Headless Client Setup Example";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions - Foundation";
+requiredAddons[]={};

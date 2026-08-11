@@ -46,6 +46,11 @@ own module can identify them - **WMP's native system has no such requirement**: 
 headless client purely at runtime, by `!isDedicated && !hasInterface`, so the slot can be named
 anything.
 
+`WMP_Compositions/[WMP]Headless_Client_Setup_Example` drops in five named, Playable Headless Client
+Virtual Entities (`HC_1`-`HC_5`) at once so you don't have to place and flag each one by hand - delete
+whichever you don't need. The names are for your own reference only; WMP's detection doesn't care
+what a slot is called.
+
 Actually connecting the headless-client process to your hosted/dedicated server - allow-listing its
 IP in `server.cfg`'s `headlessClients[]`, and launching the HC process itself with
 `-client -connect=<serverIP> -password=<password>` - is ordinary Arma 3 server hosting, outside WMP's
