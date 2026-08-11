@@ -206,6 +206,11 @@ channel - that is the common case and needs nothing extra. `acre_api_fnc_getVehi
 `[]` for a vehicle with no rack class in its inheritance chain (most cars, most static weapons); use
 `acre_api_fnc_addRackToVehicle` (or a mod that already does) to give one a rack first.
 
+`WMP_Compositions/[WMP]ACRE2_Vehicle_Radio_Rack_Example_Minimal` places a Hunter with the shortest
+working call - a single named preset applied to every rack. `_Full` shows the same vehicle with
+explicit per-rack `assignments` (mounting a replacement radio into the removable AN/VRC-110 and
+retuning the fixed PRC-117F), matching the two examples below.
+
 ### Replacing or removing a rack's radio
 
 A mission maker can give a vehicle a different radio loadout at any point in the mission, not just

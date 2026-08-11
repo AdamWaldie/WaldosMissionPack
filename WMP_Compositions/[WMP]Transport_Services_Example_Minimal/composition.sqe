@@ -2,7 +2,7 @@ version=54;
 center[]={0,0,0};
 class items
 {
-    items=5;
+    items=7;
     class Item0
     {
         dataType="Group";
@@ -77,17 +77,53 @@ class items
     {
         dataType="Comment";
 		class PositionInfo {position[]={0,0,-8};};
-        title="Transport Services (Minimal): the smallest working calls. Each vehicle already contains one correctly sided WEST AI driver; the init only registers that existing transport and never creates crew. IDs/display names and every other option use defaults. Keep simulation enabled. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
+        title="Transport Services (Minimal): the smallest working calls. Each vehicle already contains one correctly sided WEST AI driver; the init only registers that existing transport and never creates crew. IDs/display names and every other option use defaults. Keep simulation enabled; place Boat One directly on/adjacent to water yourself before saving. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
         id=3;
+    };
+    class Item5
+    {
+        dataType="Group";
+        side="West";
+        class Entities
+        {
+            items=1;
+            class Item0
+            {
+                dataType="Object";
+                class PositionInfo {position[]={0,0,30}; angles[]={0,0,0};};
+                side="West";
+                flags=6;
+                class Attributes {};
+                id=301;
+                type="B_crew_F";
+            };
+        };
+        class Attributes {};
+        class CrewLinks
+        {
+            class LinkIDProvider {nextID=1;};
+            class Links {items=1; class Item0 {linkID=0; item0=301; item1=4; class CustomData {role=1;};};};
+        };
+        id=300;
+    };
+    class Item6
+    {
+        dataType="Object";
+        side="West";
+        class PositionInfo {position[]={0,0,30}; angles[]={0,0,0};};
+        class Attributes {name="WMP_BoatOne"; init="[this, ""BOAT""] call Waldo_fnc_TransportRegister;";};
+        id=4;
+        type="B_Boat_Transport_01_F";
     };
 };
 class VehicleInVehicleLinks
 {
-    class LinkIDProvider {nextID=2;};
+    class LinkIDProvider {nextID=3;};
     class Links
     {
-        items=2;
+        items=3;
         class Item0 {linkID=0; item0=101; item1=1; class CustomData {role=1;};};
         class Item1 {linkID=1; item0=201; item1=2; class CustomData {role=1;};};
+        class Item2 {linkID=2; item0=301; item1=4; class CustomData {role=1;};};
     };
 };

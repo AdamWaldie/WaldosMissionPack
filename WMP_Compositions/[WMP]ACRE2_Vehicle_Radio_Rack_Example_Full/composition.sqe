@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+    items=2;
+    class Item0
+    {
+        dataType="Object";
+        side="West";
+        class PositionInfo {position[]={0,0,0}; angles[]={0,0,0};};
+        class Attributes
+        {
+            name="WMP_RackHunter";
+            init="[this, [""assignments"", [[0, 5, ""ACRE_PRC152""], [1, [2, 3]]]]] call Waldo_fnc_ACRE2RackSetup;";
+        };
+        id=1;
+        type="B_MRAP_01_F";
+    };
+    class Item1
+    {
+        dataType="Comment";
+		class PositionInfo {position[]={0,0,-8};};
+        title="ACRE2 Vehicle Radio Rack (guided example): explicit per-rack control on the same Hunter as the Minimal composition. Rack 0 is the empty, removable AN/VRC-110 - mounts a PRC-152 on channel 5. Rack 1 is the pre-mounted, non-removable PRC-117F - only its channel (here Block 2/Channel 3) can be retuned; only a removable rack accepts a mountRadioClass or ""REMOVE_RACK"". Rack order matches acre_api_fnc_getVehicleRacks. An unchanged repeat call is a safe no-op. Requires a connected player. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting";
+        id=2;
+    };
+};

@@ -1,0 +1,5 @@
+version=54;
+name="[WMP] ACRE2 Vehicle Radio Rack Example (Full)";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions - Logistics";
+requiredAddons[]={"A3_Soft_F_MRAP_01"};

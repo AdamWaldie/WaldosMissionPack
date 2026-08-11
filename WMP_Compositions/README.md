@@ -52,8 +52,10 @@ short init demonstrates every internal option.
 | Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
 | Vehicle Recovery Workshop Example (Minimal) | Smallest working workshop/vehicle/carrier registration - required args only |
 | Vehicle Recovery Workshop Example (Full) | Spaced workshop, recoverable vehicle and generic AUTO carrier with guided common options |
-| Helicopter and Ground Transport Services (Minimal) | Smallest working AI-crewed service registration - required args only |
-| Helicopter and Ground Transport Services (Full) | AI-crewed named air/ground services with current LZ clearance and improved-landing defaults |
+| Helicopter, Ground and Boat Transport Services (Minimal) | Smallest working AI-crewed service registration for all three types - required args only |
+| Helicopter, Ground and Boat Transport Services (Full) | AI-crewed named air/ground/boat services with current LZ clearance, water-search radius and improved-landing defaults |
+| ACRE2 Vehicle Radio Rack Example (Minimal) | Smallest working call - a named preset applied to every rack on a Hunter |
+| ACRE2 Vehicle Radio Rack Example (Full) | Same Hunter with explicit per-rack channel/mount control, every option shown |
 | Logistics Spawner Example (Minimal) | Smallest working standalone quartermaster access point |
 | Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with guided common options |
 | MHQ With Logistics Spawner (Minimal) | Single truck, smallest working deployable command post |
