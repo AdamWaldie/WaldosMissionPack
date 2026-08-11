@@ -513,6 +513,43 @@ Player state saves/restores automatically once active (`initServer.sqf` starts t
 
 The **Persistence Object Example** composition demonstrates this pattern. Zeus ("Waldos Mission Modules"): **Persistence - Control** (start/reconfigure/stop), **Persistence - Register Object** (assign a stable key/fields to the nearest object during play), **Persistence - Save Now** (immediate capture without stopping the system). See `wiki/Optional-Feature-Systems.md#persistence`.
 
+### Field Resupply (optional, `MissionConfig\logisticsConfig.sqf`)
+
+A finite-stock ammunition feature: a registered hub refills a carrier's crate allowance, the carrier
+deploys a real populated supply crate for others, and players draw from it through ordinary ACE
+Cargo/Gear interaction — there is no WMP-brokered "take" action and no per-crate charge counter.
+Deployed crates are populated exactly like a standard supply crate (`Waldo_fnc_SupplyCratePopulate`),
+scoped to the servicing hub's own side.
+
+```sqf
+// Refill hub, in an object's Eden init field:
+[this, west, -1] call Waldo_fnc_FieldResupplyRegisterHub;
+// [hub, servicedSide ("ALL" or a side), stock (-1 = unlimited)]
+
+// Carrier, in a unit's Eden init field:
+[this, 3, 3] call Waldo_fnc_FieldResupplyAssignCarrier;
+// [unit, startingCrates, maximumCrates]
+```
+
+The carrier (must be wearing a backpack, on foot) gets **Check Resupply Crates** and **Deploy Field
+Resupply** under ACE Interact's Field Resupply category (scroll-wheel fallbacks without ACE). DEPLOY
+reads the side stamped onto the carrier the last time they REFILLed from a hub (falling back to the
+carrier's own side if never refilled from a hub) and populates a real crate from that side's scanned
+mission loadouts — the same `Logi_MissionSQMArray_<Side>` pool starter/logi crates already draw from.
+A side with no scanned loadouts (e.g. no playable units placed on it) fails DEPLOY with a clear
+warning rather than spawning a silently empty crate.
+
+**SALVAGE recoverability** is decided by comparing the crate's actual current cargo against a
+snapshot taken right after it was populated: unchanged cargo is recoverable back into the carrier's
+allowance, anything taken from or added to the crate is not. This is the stricter of the two options
+the design considered (cargo emptiness/weight was the other) — a crate a player has already drawn
+from, or dropped foreign items into, is not salvageable.
+
+Config keys (`Waldo_FieldResupply_*`): `Enable`, `CrateClass`, `DefaultCarrierCapacity`,
+`CrateSizeScalar` (multiplies populated quantities, matching `Waldo_fnc_SupplyCratePopulate`'s own
+scalar), `IncludeWeaponsAttachments`, `IncludeLaunchers`, `RetainOnRespawn`. Mission scripts can grant
+extra crates with `Waldo_fnc_FieldResupplyGrantCrates`. See `wiki/Optional-Feature-Extensions.md#field-resupply`.
+
 ### Performance regression audit
 
 `releaseVerificationAndDeployment/performance_audit.py` is a comment/string-aware static guard for recurring SQF work. CI rejects new or expanded high-severity world scans, recurring broadcasts/remote execution and unbounded schedulers unless `performance_baseline.json` contains a path/function-specific reviewed reason. Run the scanner and its unit tests before changing persistent loops:

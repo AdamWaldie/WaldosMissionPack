@@ -1,4 +1,4 @@
-/* Cancels active input and removes every shared display handler and worker. */
+/* Cancels active input and removes every shared display handler, per-frame handler and worker. */
 disableSerialization;
 params [["_display", displayNull, [displayNull]], ["_phase", "CANCEL", [""]]];
 if (isNull _display) exitWith {false};
@@ -16,4 +16,8 @@ _display setVariable ["Waldo_MG_UI_DisplayHandlers", []];
     if (!scriptDone _x) then {terminate _x;};
 } forEach (_display getVariable ["Waldo_MG_UI_Workers", []]);
 _display setVariable ["Waldo_MG_UI_Workers", []];
+{
+    removeMissionEventHandler ["EachFrame", _x];
+} forEach (_display getVariable ["Waldo_MG_UI_EachFrameHandlers", []]);
+_display setVariable ["Waldo_MG_UI_EachFrameHandlers", []];
 true

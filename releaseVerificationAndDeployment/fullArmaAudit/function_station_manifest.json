@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 887,
+  "registeredFunctionCount": 886,
   "runtimeFunctionCount": 385,
-  "functionCount": 1272,
+  "functionCount": 1271,
   "stations": [
     {
       "id": "control",
@@ -1993,12 +1993,6 @@
     {
       "name": "Waldo_fnc_FieldResupplySetupCrateLocal",
       "file": "MissionScripts/Logistics/FieldResupply/fieldResupplySetupCrateLocal.sqf",
-      "station": "field-resupply",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_FieldResupplyReceiveAmmo",
-      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyReceiveAmmo.sqf",
       "station": "field-resupply",
       "activation": "manual"
     },

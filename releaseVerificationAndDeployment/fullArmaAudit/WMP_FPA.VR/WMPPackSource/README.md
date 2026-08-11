@@ -37,12 +37,14 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Server-owned custom 3D world markers with object/position anchors, JIP support, side and distance filtering, accessible icon-plus-text labels, and one shared renderer.
 - Safe-zone-aware WMP notification cards with accessible states, mission-authored channel placement, optional permitted local overrides, FIFO sequencing, bounded non-overlapping stacks, duplicate coalescing and an ACE/vanilla emergency UI cleanup action.
 - Zeus-authored UI notifications - a "Mission Flow: Send Notification" module (and matching `Waldo_fnc_NotificationBroadcast` script API) sends a WMP notification card with a chosen type, duration and placement to everyone, one side, a named group, or selected units.
-- Optional feature systems - dependency-gated persistence, ACE patient treatment feedback, hazardous environments and moving emitters, tree felling and brush clearing, emergency dismount, a friendly-identification accessibility aid, profile-driven explosive wall breaching, server-validated transforms, finite field resupply and authenticated tactical displays. All default off, expose repeat-safe configuration and cleanup APIs, and use focused Zeus Enhanced modules where runtime operation is useful.
+- Optional feature systems - dependency-gated persistence, ACE patient treatment feedback, hazardous environments and moving emitters, tree felling and brush clearing, emergency dismount, a friendly-identification accessibility aid, profile-driven explosive wall breaching, server-validated transforms, finite-stock field resupply with real populated crates recovered via ACE Cargo/Gear, and authenticated tactical displays. All default off, expose repeat-safe configuration and cleanup APIs, and use focused Zeus Enhanced modules where runtime operation is useful.
 - Dynamic Anti-Air - multiple named radar-controlled air-defence zones, available through script or guided Zeus placement, with configurable side/faction asset pools, altitude rules, dynamic static/mobile responses and fighter scrambling.
 - Airborne Gunship Support - multiple named existing or spawned gunships with side/faction pools, assigned player controllers, validated turret profiles, configurable combat orbits, automatic RTB/service cycles, friendly markers and focused Zeus operation.
 - AI rebalance profiles - preserves existing behavior by default while offering PUBLIC, STANDARD and VETERAN baselines plus faction and role overrides for new missions.
 - Waldos Economy Systems - a Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus Enhanced module menu (ZEN required for the in-Zeus menu). Its Zeus builder exports readable setup calls for `MissionConfig\economyConfig.sqf`, including placed economy fixtures; the existing portable catalogue string remains available for transfer and import.
-- Waldos Mini Games - twelve seated multiplayer party games (Battleship, Who's Who, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, RPS, UNO) plus ten diegetic field-equipment procedures. Players inspect distinct EOD controllers, diagnostic tablets, access terminals, lock cylinders, breaker cabinets, maintenance hatches, radios, hydraulic manifolds, secure consoles, and tactical command uplinks. Procedures use procedural Arma controls as their complete primary presentation, with colourblind-safe redundant cues, integrated operating instructions, curated easy/standard/hard/expert difficulty profiles, immersive mission-specific profiles, optional low-opacity material textures, one-line Eden setup, exclusive server-owned attempts, persistent `IDLE`/`RUNNING`/`SUCCESS`/`FAILURE` state usable in ACE or vanilla conditions, authoritative callbacks/CBA events, and an optional party-table equipment picker.
+- Waldos Mini Games - twelve seated multiplayer party games (Battleship, Who's Who, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers, Connect Four, RPS, UNO) plus ten diegetic field-equipment procedures. Players inspect distinct EOD controllers, diagnostic tablets, access terminals, lock cylinders, breaker cabinets, maintenance hatches, radios, hydraulic manifolds, secure consoles, and tactical command uplinks. Procedures use procedural Arma controls as their complete primary presentation, with colourblind-safe redundant cues, integrated operating instructions, curated easy/standard/hard/expert difficulty profiles, immersive mission-specific profiles, optional low-opacity material textures, one-line Eden setup, exclusive server-owned attempts, persistent `IDLE`/`RUNNING`/`SUCCESS`/`FAILURE` state usable in ACE or vanilla conditions, authoritative callbacks/CBA events, an optional party-table equipment picker, and a one-object Field
+  Equipment Gallery composition that lets reviewers/testers try every procedure without placing ten
+  separate fixtures.
 - Optional ACE corpse traps - consume any compatible vanilla or modded throwable to rig a body; opening its inventory releases the stored projectile.
 - HALO & Static Line Jump Scripts with equipment & weapon loss simulation.
 - [WIP] Virtual Vehicle Deployment Garage
@@ -92,11 +94,11 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mission-Pack-Zeus-Mo
 # Required Addons
 - CBA_A3
 - ACE 3 (Field Headquarters, Construction System, Quartermaster Logistics Spawner)
+- Zeus Enhanced & Compat (the in-Zeus authoring surface for most systems added since v4.8 - Economy, Dynamic AA/AO, Gunship, Hazards, Transport, Recovery, Breaching, notifications, and more)
 
 # Supported Addons
 - ACRE 2 (optional; configure or disable it in `MissionConfig\acreConfig.sqf`)
 - TFAR (inherent support through Eden configuration)
-- Zeus Enhanced & Compat
 - LAMBS Series of mods (Tutorial Mission Requires this, the pack can work without it)
 - All unit mods compatable
 

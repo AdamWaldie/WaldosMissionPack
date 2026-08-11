@@ -29,11 +29,28 @@ if (!local _target) exitWith {
     true
 };
 private _exposures = missionNamespace getVariable ["Waldo_Hazard_LocalExposure", createHashMap];
+// Waldo_Hazard_LocalExposure is keyed by zone runtime key (Waldo_fnc_HazardTick tracks each zone's
+// physical dose independently so decay/rate stays per-zone), not by hazard type - resolve each
+// zone's configured type/label from the shared registry the same way the live status panel does
+// instead of surfacing the raw generated zone key (e.g. "hazard_2_2026_8_10_17_39_45_167_1").
+private _zones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
+private _typeAggregates = createHashMap;
+{
+    _x params ["_key", "_area", "_profile"];
+    private _value = _exposures getOrDefault [_key, 0];
+    if (_value > 0) then {
+        private _type = _profile getOrDefault ["type", _profile getOrDefault ["label", "HAZARD"]];
+        private _label = _profile getOrDefault ["label", _type];
+        private _entry = _typeAggregates getOrDefault [_type, [_label, 0]];
+        _entry set [1, (_entry select 1) + _value];
+        _typeAggregates set [_type, _entry];
+    };
+} forEach _zones;
 private _rows = [];
 {
-    private _value = _exposures getOrDefault [_x, 0];
-    if (_value > 0) then {_rows pushBack format ["%1: %2", _x, _value toFixed 2]};
-} forEach ((keys _exposures) call BIS_fnc_sortAlphabetically);
+    (_typeAggregates get _x) params ["_label", "_sum"];
+    _rows pushBack format ["%1: %2", _label, _sum toFixed 2];
+} forEach ((keys _typeAggregates) call BIS_fnc_sortAlphabetically);
 private _body = if (_rows isEqualTo []) then {
     format ["%1 has no measurable exposure.", name _target]
 } else {
