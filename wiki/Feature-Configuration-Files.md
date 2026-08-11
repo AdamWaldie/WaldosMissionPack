@@ -193,6 +193,14 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_TreatmentFeedback_TreatmentNames` | Treatment-class to display-name overrides. |
 | `Waldo_TreatmentFeedback_BodyPartNames` | ACE body-part key to readable label map. |
 
+### Obituary / confirmed-death reporting
+
+| Setting | Purpose |
+|---|---|
+| `Waldo_Obituary_Enable` | Installs the medic-only "Pronounce Dead" ACE target interaction. Defaults `true`, unlike other `MedicalSystems/` features. |
+| `Waldo_Obituary_ChatAnnounce` | Also broadcasts the terse systemChat pronounce line. |
+| `Waldo_Obituary_DiaryPollInterval` | Seconds between local diary-record sync checks. |
+
 ### Tactical display
 
 | Setting | Purpose / units |
@@ -364,13 +372,9 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_FieldResupply_Enable` | Master field-resupply opt-in. |
 | `Waldo_FieldResupply_CrateClass` | Deployed resupply crate class. |
 | `Waldo_FieldResupply_DefaultCarrierCapacity` | Default virtual crates carried. |
-| `Waldo_FieldResupply_ChargesPerCrate` | Resupply uses available from one deployed crate. |
-| `Waldo_FieldResupply_MagazinesPerType` | Fixed magazines granted per compatible type. |
-| `Waldo_FieldResupply_UseCapacityBasedAmounts` | Uses the capacity table instead of the fixed amount. |
-| `Waldo_FieldResupply_CapacityAmounts` | Amounts for the supported magazine-capacity bands. |
-| `Waldo_FieldResupply_MinimumMagazineRounds` | Rejects nearly empty source magazines below this count. |
-| `Waldo_FieldResupply_AllowedMagazines` | Optional explicit magazine allowlist. |
-| `Waldo_FieldResupply_BlockedMagazines` | Explicit denylist applied after discovery. |
+| `Waldo_FieldResupply_CrateSizeScalar` | Multiplies the deployed crate's populated quantities. |
+| `Waldo_FieldResupply_IncludeWeaponsAttachments` | Also populate weapons, attachments and clothing, not just ammunition. |
+| `Waldo_FieldResupply_IncludeLaunchers` | Also populate launchers and launcher ammunition. |
 | `Waldo_FieldResupply_RetainOnRespawn` | Restores carrier entitlement after vehicle respawn. |
 | `Waldo_Recovery_ScanInterval` | Server recovery-monitor interval in seconds. |
 | `Waldo_Recovery_NotificationRadius` | Radius receiving workshop completion notices. |
@@ -392,8 +396,11 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_GroundTransport_DefaultRoadSearchRadius` | Radius searched for a connected road around a ground-transport click. |
 | `Waldo_GroundTransport_DefaultSeparation` | Minimum spacing in metres between ground-transport bases, active stops and bulk pickup slots. Default 18. |
 | `Waldo_GroundTransport_DefaultSpeedLimit` | Default AI ground-transport speed cap in kilometres per hour. |
-| `Waldo_Transport_DefaultPathRetrySeconds` | No-progress interval before a ground movement order is reissued. |
-| `Waldo_Transport_DefaultPathRetryLimit` | Maximum automatic order retries during one ground journey. |
+| `Waldo_BoatTransport_DefaultWaterSearchRadius` | Maximum safe-water-point adjustment from the player's boat pickup/destination click. Default 300 metres. |
+| `Waldo_BoatTransport_DefaultSeparation` | Minimum spacing in metres between boat bases, active stops and bulk pickup slots. Default 25. |
+| `Waldo_BoatTransport_DefaultSpeedLimit` | Default AI boat-transport speed cap in kilometres per hour. Default 45. |
+| `Waldo_Transport_DefaultPathRetrySeconds` | No-progress interval before a ground or boat movement order is reissued. |
+| `Waldo_Transport_DefaultPathRetryLimit` | Maximum automatic order retries during one ground or boat journey. |
 | `Waldo_Transport_MaxEffectiveDamage` | Damage fraction (0-1) at/above which a still-"alive" transport is written off the service pool the same as an outright loss. |
 | `Waldo_ObjectScaling_Minimum` | Smallest positive object scale accepted by the server. |
 | `Waldo_ObjectScaling_Maximum` | Largest object scale accepted by the server; must be at least the minimum. |

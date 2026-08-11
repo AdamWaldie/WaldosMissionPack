@@ -338,20 +338,24 @@ private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", fa
 ["environment", "hazard-zones", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardZones isEqualTo []) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 zones=%2", _hazardEnabled, count _hazardZones], _hazardEnabled && {_hazardZones isEqualTo []}] call _status;
 private _transportEnabled = missionNamespace getVariable ["Waldo_TransportServices_Enable", false];
 private _transportServices = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
-private _transportPools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []]]];
+private _transportPools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []], ["BOAT", []]]];
 private _transportIssues = [];
 {
     private _entry = _transportServices get _x;
     private _vehicle = _entry getOrDefault ["vehicle", objNull];
     private _type = _entry getOrDefault ["type", ""];
     if (isNull _vehicle) then {_transportIssues pushBack format ["%1 has no vehicle", _x]};
-    if !(_type in ["HELICOPTER", "GROUND"]) then {_transportIssues pushBack format ["%1 has invalid type %2", _x, _type]};
+    if !(_type in ["HELICOPTER", "GROUND", "BOAT"]) then {_transportIssues pushBack format ["%1 has invalid type %2", _x, _type]};
     if !(_x in (_transportPools getOrDefault [_type, []])) then {_transportIssues pushBack format ["%1 is absent from its typed pool", _x]};
 } forEach keys _transportServices;
 private _transportBroken = !(_transportIssues isEqualTo []);
-["logistics", "transport-services", if (!_transportEnabled) then {"DISABLED"} else {if (_transportBroken) then {"ERROR"} else {if (count (keys _transportServices) == 0) then {"UNCONFIGURED"} else {"ACTIVE"}}}, format ["registered=%1 helicopters=%2 ground=%3 issues=%4", count (keys _transportServices), count (_transportPools getOrDefault ["HELICOPTER", []]), count (_transportPools getOrDefault ["GROUND", []]), _transportIssues], _transportBroken] call _status;
+["logistics", "transport-services", if (!_transportEnabled) then {"DISABLED"} else {if (_transportBroken) then {"ERROR"} else {if (count (keys _transportServices) == 0) then {"UNCONFIGURED"} else {"ACTIVE"}}}, format ["registered=%1 helicopters=%2 ground=%3 boats=%4 issues=%5", count (keys _transportServices), count (_transportPools getOrDefault ["HELICOPTER", []]), count (_transportPools getOrDefault ["GROUND", []]), count (_transportPools getOrDefault ["BOAT", []]), _transportIssues], _transportBroken] call _status;
 private _resupplyHubs = _missionObjects select {_x getVariable ["Waldo_FieldResupply_Hub", false]};
-private _resupplyCarriers = allPlayers select {_x getVariable ["Waldo_FieldResupply_Carrier", false]};
+// Waldo_FieldResupply_MaxCrates > 0 is the real "is this player an assigned carrier" predicate used
+// throughout the feature (Waldo_fnc_FieldResupplyServerHandle's own _isCarrier, Waldo_fnc_FieldResupplyInit's
+// _isCarrier/_canDeploy) - Waldo_FieldResupply_Carrier is never actually set anywhere and previously
+// made this row always report zero carriers regardless of real assignments.
+private _resupplyCarriers = allPlayers select {(_x getVariable ["Waldo_FieldResupply_MaxCrates", 0]) > 0};
 ["logistics", "field-resupply-runtime", if (_resupplyHubs isEqualTo [] && {_resupplyCarriers isEqualTo []}) then {"UNCONFIGURED"} else {"LOADED"}, format ["hubs=%1 carriers=%2", count _resupplyHubs, count _resupplyCarriers], false] call _status;
 
 {

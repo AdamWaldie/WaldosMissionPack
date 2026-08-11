@@ -18,9 +18,10 @@ if (!isServer) exitWith {false};
 if (missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]) exitWith {true};
 missionNamespace setVariable ["Waldo_Transport_ServerStarted", true];
 missionNamespace setVariable ["Waldo_Transport_Services", createHashMap];
-missionNamespace setVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []]]];
+missionNamespace setVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []], ["BOAT", []]]];
 missionNamespace setVariable ["Waldo_Transport_RequestSerial", 0];
 missionNamespace setVariable ["Waldo_HeliTransport_Available", false, true];
 missionNamespace setVariable ["Waldo_GroundTransport_Available", false, true];
+missionNamespace setVariable ["Waldo_BoatTransport_Available", false, true];
 [] spawn Waldo_fnc_TransportMonitorServer;
 true

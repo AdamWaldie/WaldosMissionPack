@@ -55,8 +55,12 @@ if (!_aceReady && {_aceExpected} && {!_allowVanillaFallback}) exitWith {
 
 private _type = _vehicle getVariable ["Waldo_TransportService_Type", "GROUND"];
 private _name = _vehicle getVariable ["Waldo_TransportService_Name", "Transport"];
-private _heli = _type == "HELICOPTER";
-private _role = ["Ground Transport", "Helicopter Transport"] select _heli;
+private _role = switch (_type) do {case "HELICOPTER": {"Helicopter Transport"}; case "BOAT": {"Boat Transport"}; default {"Ground Transport"}};
+private _typeIcon = switch (_type) do {
+    case "HELICOPTER": {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"};
+    case "BOAT": {"\a3\ui_f\data\map\vehicleicons\iconShip_ca.paa"};
+    default {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"};
+};
 // The informational action is a discoverability cue, not a control ACE should take priority over -
 // installed alongside ACE (not only as a vanilla fallback), the same dual-surface policy used
 // elsewhere in the pack (loadout-save points, party tables, Field Hospital crates): a player who
@@ -120,7 +124,7 @@ if (_aceReady && {_vehicle getVariable ["Waldo_TransportService_AceActionVersion
         [_vehicle, 0, ["ACE_MainActions", _rootId]] call ace_interact_menu_fnc_removeActionFromObject;
         [_vehicle, 1, ["ACE_SelfActions", _crewRootId]] call ace_interact_menu_fnc_removeActionFromObject;
     };
-    private _root = [_rootId, format ["Transport: %1", _name], if (_heli) then {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"} else {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"}, {}, {true}] call ace_interact_menu_fnc_createAction;
+    private _root = [_rootId, format ["Transport: %1", _name], _typeIcon, {}, {true}] call ace_interact_menu_fnc_createAction;
     [_vehicle, 0, ["ACE_MainActions"], _root] call ace_interact_menu_fnc_addActionToObject;
     private _status = [format ["%1_Status", _rootId], "Transport Status", "\a3\ui_f\data\igui\cfg\simpletasks\types\documents_ca.paa", {
         params ["_target"];
@@ -139,7 +143,7 @@ if (_aceReady && {_vehicle getVariable ["Waldo_TransportService_AceActionVersion
     // ACE exposes type-1 object actions through the vehicle self-interaction menu while the player
     // occupies that exact vehicle. Operational crew controls belong here, not in the external
     // ACE_MainActions tree where the crew condition made them effectively unreachable.
-    private _crewRoot = [_crewRootId, format ["Control %1", _name], if (_heli) then {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"} else {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"}, {}, {
+    private _crewRoot = [_crewRootId, format ["Control %1", _name], _typeIcon, {}, {
         params ["_target", "_player"];
         vehicle _player isEqualTo _target
     }] call ace_interact_menu_fnc_createAction;

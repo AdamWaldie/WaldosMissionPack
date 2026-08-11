@@ -107,6 +107,7 @@ _display setVariable ["Waldo_MG_UI_GridCell", [_contentW / 40, _contentH / 25]];
 _display setVariable ["Waldo_MG_UI_EquipmentControls", []];
 _display setVariable ["Waldo_MG_UI_DisplayHandlers", []];
 _display setVariable ["Waldo_MG_UI_Workers", []];
+_display setVariable ["Waldo_MG_UI_EachFrameHandlers", []];
 _display setVariable ["Waldo_MG_UI_DragControl", controlNull];
 _display setVariable ["Waldo_IMG_Profile", _profile];
 _display setVariable ["Waldo_IMG_AbortPending", false];

@@ -2009,12 +2009,6 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_FieldResupplyReceiveAmmo",
-      "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyReceiveAmmo.sqf",
-      "station": "field-resupply",
-      "activation": "manual"
-    },
-    {
       "name": "Waldo_fnc_FieldResupplyRegisterHub",
       "file": "MissionScripts/Logistics/FieldResupply/fieldResupplyRegisterHub.sqf",
       "station": "field-resupply",

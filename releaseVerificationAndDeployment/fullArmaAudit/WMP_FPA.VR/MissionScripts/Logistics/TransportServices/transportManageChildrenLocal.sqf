@@ -43,7 +43,11 @@ private _children = [];
     private _name = _service getVariable ["Waldo_TransportService_Name", "Transport Service"];
     private _state = _service getVariable ["Waldo_TransportService_State", "UNKNOWN"];
     private _type = _service getVariable ["Waldo_TransportService_Type", "GROUND"];
-    private _icon = if (_type == "HELICOPTER") then {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"} else {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"};
+    private _icon = switch (_type) do {
+        case "HELICOPTER": {"\a3\ui_f\data\igui\cfg\simpletasks\types\Heli_ca.paa"};
+        case "BOAT": {"\a3\ui_f\data\map\vehicleicons\iconShip_ca.paa"};
+        default {"\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa"};
+    };
     private _serviceAction = [
         format ["Waldo_Transport_Manage_%1", _service getVariable ["Waldo_TransportService_Id", netId _service]],
         format ["%1 [%2]", _name, _state],

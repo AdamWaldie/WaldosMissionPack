@@ -25,14 +25,18 @@ Waldo_ENDEX_ReportDuration // seconds the combined end report stays visible, def
 ## What the AAR reports
 
 Duration, KIA per side, player losses, vehicles lost per side, WIA per side,
-friendly-fire incidents, an objective summary, and a top-fraggers
-leaderboard. Each line is omitted automatically when its tally is empty —
-nothing to configure there.
+friendly-fire incidents, confirmed deaths, an objective summary, and a
+top-fraggers leaderboard. Each line is omitted automatically when its tally
+is empty — nothing to configure there.
 
 - Vehicle losses / friendly fire / fraggers all come from the same
   `EntityKilled` handler reading `_killer`/`_instigator`: same-side kill =
   friendly fire; enemy kill by a human player feeds the leaderboard
   (`Waldo_AAR_Frags`).
+- Confirmed deaths (`Waldo_AAR_Obituary`) is a separate, later tally fed by
+  the medic "Pronounce Dead" action, not by `EntityKilled` — see
+  `obituary.md`. Listed alphabetically by victim name with a count, not as a
+  leaderboard.
 - **WIA requires ACE medical.** An `ace_unconscious` listener in `init.sqf`
   forwards each unit's first unconsciousness to the server via
   `Waldo_fnc_AARWound`. Without ACE medical loaded, WIA simply won't count —

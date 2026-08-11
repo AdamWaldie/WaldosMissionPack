@@ -187,7 +187,7 @@ The compatibility profile preserves established missions. New missions can selec
 
 ### Optional Feature Systems (`init.sqf`, `initPlayerLocal.sqf`, `initServer.sqf`)
 
-Shared configuration belongs in `init.sqf`, player presentation/actions in `initPlayerLocal.sqf`, and server-only limits, asset pools and authority startup in `initServer.sqf`; configuration never belongs inside implementation scripts. Guard defaults with `isNil` so a JIP machine does not overwrite state published after a mid-mission ZEN change. Persistence requires a detected INIDBI2 runtime and keeps database access on the server. Object scaling is callable and server-validated without a background initializer. Dynamic AA resolves assets through its own server-side side/faction pools; do not replace these independent contracts with a shared profile framework. AI rebalance and breaching are all-machine initialisers because AI ownership and detonation-event locality can move across server, client and headless-client machines.
+Shared configuration belongs in `init.sqf`, player presentation/actions in `initPlayerLocal.sqf`, and server-only limits, asset pools and authority startup in `initServer.sqf`; configuration never belongs inside implementation scripts. Guard defaults with `isNil` so a JIP machine does not overwrite state published after a mid-mission ZEN change. Persistence requires a detected INIDBI2 runtime and keeps database access on the server. Object scaling is callable and server-validated without a background initializer. Dynamic AA resolves assets through its own server-side side/faction pools; do not replace these independent contracts with a shared profile framework. AI rebalance and breaching are all-machine initialisers because AI ownership and detonation-event locality can move across server, client and headless-client machines. Obituary death capture is likewise installed on every machine since `Killed` is a global-effect event handler; only the medic's confirmation step (`Waldo_fnc_ObituaryPronounce`) is server-authoritative.
 
 The same systems can be configured during play under **Waldos Mission Modules**. ZEN requests pass through `Waldo_fnc_FeatureRuntimeApply`, which accepts assigned curators only, publishes configuration, sends an ordered live-setting payload before locality-appropriate initializers, and retains JIP initialization where required. Joining clients and headless clients request an ordered server snapshot before activating locality-sensitive features; do not replace that handshake with assumptions about public-variable delivery order. Hazard and breaching dialogs can export equivalent setup calls for permanent mission configuration.
 
@@ -421,6 +421,32 @@ See `wiki/Optional-Feature-Systems.md#hazardous-environments` for the full prese
 ```
 Players get ACE3 "Deploy/Tear Down Command Post" actions. Deployed state creates a named respawn point and map marker.
 
+### Transport Services — Helicopter, Ground and Boat (`MissionConfig\logisticsConfig.sqf`)
+
+Reusable AI-crewed transports players call in with a map click. Helicopter, ground and boat
+transports use independent typed pools — a request for one type can never reserve a vehicle of
+another. Place an already AI-crewed vehicle and register it from the vehicle's own init field (no
+`isServer` wrapper, no `createVehicleCrew` line — Eden runs the init on every machine but only the
+server mutates the registry):
+
+```sqf
+[this, "HELICOPTER", "RAVEN_1", "Raven One"] call Waldo_fnc_TransportRegister;
+[this, "GROUND", "GROUND_1", "Ground One"] call Waldo_fnc_TransportRegister;
+[this, "BOAT", "BOAT_1", "Boat One"] call Waldo_fnc_TransportRegister;
+// [vehicle, "HELICOPTER"|"GROUND"|"BOAT", serviceId, displayName, optional HashMap of options]
+```
+
+Players use **ACE Self Interact > WMP Transport > Helicopter/Ground/Boat Transport** to request
+pickup, select a destination once aboard, and manage or RTB their active service; **All Transports**
+groups fleet-wide bulk pickup/RTB per type. Boat requests resolve to open water only — the clicked
+point (and a small ring of neighbouring points around it, to avoid beaching right at the shoreline)
+must all read `surfaceIsWater`; a landlocked click is rejected with a clear reason. This is a
+documented limitation, not full navigable-water routing: it cannot detect an island or headland
+sitting directly between the boat and the resolved point. Ground transports prefer connected roads
+within `roadSearchRadius`; helicopters resolve a clearance-checked landing zone within
+`landingSearchRadius`. See `wiki/Transport-Services.md` for the full per-type option reference,
+stuck/retry behaviour and the ZEN "Transport Service - Register"/"Return to Base" modules.
+
 ### Respawn Options (`initPlayerLocal.sqf`)
 
 Two optional behaviours are commented out by default — uncomment to enable:
@@ -550,6 +576,43 @@ Player state saves/restores automatically once active (`initServer.sqf` starts t
 ```
 
 The **Persistence Object Example** composition demonstrates this pattern. Zeus ("Waldos Mission Modules"): **Persistence - Control** (start/reconfigure/stop), **Persistence - Register Object** (assign a stable key/fields to the nearest object during play), **Persistence - Save Now** (immediate capture without stopping the system). See `wiki/Optional-Feature-Systems.md#persistence`.
+
+### Field Resupply (optional, `MissionConfig\logisticsConfig.sqf`)
+
+A finite-stock ammunition feature: a registered hub refills a carrier's crate allowance, the carrier
+deploys a real populated supply crate for others, and players draw from it through ordinary ACE
+Cargo/Gear interaction — there is no WMP-brokered "take" action and no per-crate charge counter.
+Deployed crates are populated exactly like a standard supply crate (`Waldo_fnc_SupplyCratePopulate`),
+scoped to the servicing hub's own side.
+
+```sqf
+// Refill hub, in an object's Eden init field:
+[this, west, -1] call Waldo_fnc_FieldResupplyRegisterHub;
+// [hub, servicedSide ("ALL" or a side), stock (-1 = unlimited)]
+
+// Carrier, in a unit's Eden init field:
+[this, 3, 3] call Waldo_fnc_FieldResupplyAssignCarrier;
+// [unit, startingCrates, maximumCrates]
+```
+
+The carrier (must be wearing a backpack, on foot) gets **Check Resupply Crates** and **Deploy Field
+Resupply** under ACE Interact's Field Resupply category (scroll-wheel fallbacks without ACE). DEPLOY
+reads the side stamped onto the carrier the last time they REFILLed from a hub (falling back to the
+carrier's own side if never refilled from a hub) and populates a real crate from that side's scanned
+mission loadouts — the same `Logi_MissionSQMArray_<Side>` pool starter/logi crates already draw from.
+A side with no scanned loadouts (e.g. no playable units placed on it) fails DEPLOY with a clear
+warning rather than spawning a silently empty crate.
+
+**SALVAGE recoverability** is decided by comparing the crate's actual current cargo against a
+snapshot taken right after it was populated: unchanged cargo is recoverable back into the carrier's
+allowance, anything taken from or added to the crate is not. This is the stricter of the two options
+the design considered (cargo emptiness/weight was the other) — a crate a player has already drawn
+from, or dropped foreign items into, is not salvageable.
+
+Config keys (`Waldo_FieldResupply_*`): `Enable`, `CrateClass`, `DefaultCarrierCapacity`,
+`CrateSizeScalar` (multiplies populated quantities, matching `Waldo_fnc_SupplyCratePopulate`'s own
+scalar), `IncludeWeaponsAttachments`, `IncludeLaunchers`, `RetainOnRespawn`. Mission scripts can grant
+extra crates with `Waldo_fnc_FieldResupplyGrantCrates`. See `wiki/Optional-Feature-Extensions.md#field-resupply`.
 
 ### Performance regression audit
 
@@ -849,7 +912,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
 - `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO
 - `EnvironmentalSystems/` — hazardous environments and tree felling
-- `MedicalSystems/` — patient treatment feedback
+- `MedicalSystems/` — patient treatment feedback, confirmed-death Obituary reporting
 - `Persistence/` — optional INIDBI2-backed persistence
 - Cross-cutting optional features live with their owning domain: accessibility and tactical display under `MissionFlowAndUi/`, emergency dismount under `MissionInit/VehicleActionsSetup/`, field resupply under `Logistics/`, object transforms under `MissionMakerResourceScripts/`, and runtime controls under `ZenModules/`
 - `EconomySystems/` — Waldos Economy Systems (Resource / Research / Build / Buy + Ground Command). 449 `Waldo_fnc_Eco*` functions across `Core/`, `Resource/`, `Research/`, `Build/`, `Buy/`, `Command/`, plus the `economyInit.sqf` bootstrap (`Waldo_fnc_EcoInit`)

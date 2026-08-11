@@ -609,7 +609,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('driver _vehicle doMove _target', dispatch)
         self.assertIn("forceFollowRoad _roadRoute", dispatch)
         self.assertIn('then {_config getOrDefault ["behaviour", "CARELESS"]} else {"SAFE"}', dispatch)
-        self.assertIn('Reissued ground path', dispatch)
+        # Ground and boat share the same stall-detect/reissue worker (boats have no road network to
+        # pin to, so the road-drop branch simply never fires for them); the log line names which one
+        # actually stalled instead of always claiming "ground".
+        self.assertIn('Reissued %1 path', dispatch)
+        self.assertIn('if (_boat) then {"boat"} else {"ground"}', dispatch)
         self.assertNotIn('if (!local _group) exitWith {};', dispatch)
         self.assertIn('remoteExecCall ["Waldo_fnc_TransportDispatchLocal", groupOwner _group]', dispatch)
         self.assertIn("Waldo_TransportService_RequestId", dispatch)

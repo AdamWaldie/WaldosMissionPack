@@ -706,12 +706,20 @@ class CfgFunctions
             class TreatmentFeedbackShowLocal {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackShowLocal.sqf";};
             class TreatmentFeedbackStop {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackStop.sqf";};
         };
+        class Obituary
+        {
+            class ObituaryInit {file = "MissionScripts\MedicalSystems\Obituary\obituaryInit.sqf";};
+            class ObituaryRecordDeath {file = "MissionScripts\MedicalSystems\Obituary\obituaryRecordDeath.sqf";};
+            class ObituaryClassifyCause {file = "MissionScripts\MedicalSystems\Obituary\obituaryClassifyCause.sqf";};
+            class ObituaryPronounce {file = "MissionScripts\MedicalSystems\Obituary\obituaryPronounce.sqf";};
+            class ObituaryDiaryRenderLocal {file = "MissionScripts\MedicalSystems\Obituary\obituaryDiaryRenderLocal.sqf";};
+            class ObituaryPad2 {file = "MissionScripts\MedicalSystems\Obituary\obituaryPad2.sqf";};
+        };
         class FieldResupply
         {
             class FieldResupplyInit {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyInit.sqf";};
             class FieldResupplySetupHubLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplySetupHubLocal.sqf";};
             class FieldResupplySetupCrateLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplySetupCrateLocal.sqf";};
-            class FieldResupplyReceiveAmmo {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyReceiveAmmo.sqf";};
             class FieldResupplyRegisterHub {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyRegisterHub.sqf";};
             class FieldResupplyAssignCarrier {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyAssignCarrier.sqf";};
             class FieldResupplyGrantCrates {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyGrantCrates.sqf";};
