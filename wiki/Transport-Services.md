@@ -25,6 +25,11 @@ For a boat transport:
 [this, "BOAT", "BOAT_1", "Boat One"] call Waldo_fnc_TransportRegister;
 ```
 
+`WMP_Compositions/[WMP]Transport_Services_Example_Minimal` and `_Full` are drop-in Eden examples with
+all three types (helicopter, ground, boat) pre-placed and pre-crewed - the fastest way to see a
+working registration before writing your own. Move the boat object onto/adjacent to water yourself
+after placing the composition.
+
 No `if (isServer)` wrapper and no `createVehicleCrew this` line are required. Eden runs an object init
 on every machine, but WMP deliberately lets only the authoritative server register the service.
 Registration never creates or replaces crew: this avoids duplicate and `sideUnknown` AI on dedicated

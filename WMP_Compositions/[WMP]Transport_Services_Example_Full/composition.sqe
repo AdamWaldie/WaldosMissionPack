@@ -2,7 +2,7 @@ version=54;
 center[]={0,0,0};
 class items
 {
-    items=5;
+    items=7;
     class Item0
     {
         dataType="Group";
@@ -105,16 +105,65 @@ class items
     {
         dataType="Comment";
 		class PositionInfo {position[]={0,0,-8};};
-        title="Transport Services (guided example): both vehicles already contain correctly sided WEST AI drivers. Their init fields only register the existing transports; they never create crew. Use ACE Self Interact > WMP Transport to request a named or nearest service. Raven One searches up to 500 m and uses the shipped 1.5x landing-clearance multiplier. Keep simulation enabled and leave clear space around both bases. See the minimal composition for the smallest working calls. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
+        title="Transport Services (guided example): all three vehicles already contain correctly sided WEST AI drivers. Their init fields only register the existing transports; they never create crew. Use ACE Self Interact > WMP Transport to request a service. Raven One uses the 1.5x landing-clearance multiplier; Boat One searches open water up to 400 m and rejects a landlocked click. Keep simulation enabled; move Boat One onto/adjacent to water before saving. See the minimal composition for the shortest calls. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Transport-Services";
         id=3;
+    };
+    class Item5
+    {
+        dataType="Group";
+        side="West";
+        class Entities
+        {
+            items=1;
+            class Item0
+            {
+                dataType="Object";
+                class PositionInfo {position[]={0,0,30}; angles[]={0,0,0};};
+                side="West";
+                flags=6;
+                class Attributes {};
+                id=301;
+                type="B_crew_F";
+            };
+        };
+        class Attributes {speedMode="NORMAL";};
+        class CrewLinks
+        {
+            class LinkIDProvider {nextID=1;};
+            class Links
+            {
+                items=1;
+                class Item0
+                {
+                    linkID=0;
+                    item0=301;
+                    item1=4;
+                    class CustomData {role=1;};
+                };
+            };
+        };
+        id=300;
+    };
+    class Item6
+    {
+        dataType="Object";
+        side="West";
+        class PositionInfo {position[]={0,0,30}; angles[]={0,0,0};};
+        class Attributes
+        {
+            name="WMP_BoatOne";
+            init="[this, ""BOAT"", ""BOAT_1"", ""Boat One"", createHashMapFromArray [[""leadersOnly"", false], [""showMarker"", true], [""waterSearchRadius"", 400], [""boatSpeedLimit"", 45]]] call Waldo_fnc_TransportRegister;";
+        };
+        id=4;
+        type="B_Boat_Transport_01_F";
     };
 };
 class VehicleInVehicleLinks
 {
-    class LinkIDProvider {nextID=2;};
+    class LinkIDProvider {nextID=3;};
     class Links
     {
-        items=2;
+        items=3;
         class Item0
         {
             linkID=0;
@@ -127,6 +176,13 @@ class VehicleInVehicleLinks
             linkID=1;
             item0=201;
             item1=2;
+            class CustomData {role=1;};
+        };
+        class Item2
+        {
+            linkID=2;
+            item0=301;
+            item1=4;
             class CustomData {role=1;};
         };
     };

@@ -47,13 +47,16 @@ short init demonstrates every internal option.
 | Basic Setup West/East/Independent/Civilian | Side-specific respawn and starter logistics |
 | Basic Mobile Respawn Vehicle | Minimal mobile respawn example |
 | Basic Player Controlled Zeus | Player/curator foundation |
+| Headless Client Setup Example | Five named, playable Headless Client Virtual Entities ready for `Waldo_Headless_Enable` |
 | Starter, Supply and Medical Crate Collections | Side and contents variants with server-owned population |
 | Field Resupply Hub Example | Refill hub plus a correctly BLUFOR-grouped, pre-assigned infantry carrier |
 | Loadout Save Point Example | Laptop with ACE and WMP-blue vanilla save actions, including ACRE radio state |
 | Vehicle Recovery Workshop Example (Minimal) | Smallest working workshop/vehicle/carrier registration - required args only |
 | Vehicle Recovery Workshop Example (Full) | Spaced workshop, recoverable vehicle and generic AUTO carrier with guided common options |
-| Helicopter and Ground Transport Services (Minimal) | Smallest working AI-crewed service registration - required args only |
-| Helicopter and Ground Transport Services (Full) | AI-crewed named air/ground services with current LZ clearance and improved-landing defaults |
+| Helicopter, Ground and Boat Transport Services (Minimal) | Smallest working AI-crewed service registration for all three types - required args only |
+| Helicopter, Ground and Boat Transport Services (Full) | AI-crewed named air/ground/boat services with current LZ clearance, water-search radius and improved-landing defaults |
+| ACRE2 Vehicle Radio Rack Example (Minimal) | Smallest working call - a named preset applied to every rack on a Hunter |
+| ACRE2 Vehicle Radio Rack Example (Full) | Same Hunter with explicit per-rack channel/mount control, every option shown |
 | Logistics Spawner Example (Minimal) | Smallest working standalone quartermaster access point |
 | Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with guided common options |
 | MHQ With Logistics Spawner (Minimal) | Single truck, smallest working deployable command post |
@@ -124,5 +127,8 @@ scope) depends on a server extension and mission database policy that has no sin
 to represent it - but registering one *specific* world object once persistence is running is exactly
 as composable as the systems above, see the Persistence Object Example composition. Rally points are
 player-role state. Tree felling operates on terrain vegetation, which Eden compositions cannot own.
-Those systems remain covered by beginner configuration, public calls, the full audit mission and
-focused Zeus modules where appropriate.
+Mission Diagnostics is a fully automatic startup check with no placeable object at all - one flag in
+`initServer.sqf`. Obituary / confirmed-death reporting installs on every machine automatically and
+its player-facing confirmation step runs on whichever corpse a medic is already standing over, not a
+placed fixture. Those systems remain covered by beginner configuration, public calls, the full audit
+mission and focused Zeus modules where appropriate.

@@ -11,7 +11,7 @@
  */
 
 private _vehicleClasses = [
-    "ACE_medicalSupplyCrate_advanced", "B_G_HMG_02_high_F", "B_HMG_01_high_F",
+    "ACE_medicalSupplyCrate_advanced", "B_Boat_Transport_01_F", "B_G_HMG_02_high_F", "B_HMG_01_high_F",
     "B_crew_F", "B_Helipilot_F", "B_Heli_Light_01_F", "B_Mortar_01_F", "B_MRAP_01_F", "B_Pilot_F", "B_Soldier_F", "B_Soldier_SL_F", "B_Soldier_TL_F", "B_supplyCrate_F",
     "B_T_VTOL_01_armed_F", "B_T_VTOL_01_infantry_F", "B_Truck_01_covered_F", "B_Truck_01_medical_F",
     "B_Truck_01_transport_F", "Box_NATO_Equip_F", "C_Van_01_transport_F", "Flag_Blue_F",
@@ -20,7 +20,7 @@ private _vehicleClasses = [
     "Land_CampingChair_V2_F", "Land_CampingTable_F", "Land_Cargo_House_V1_F",
     "Land_City2_8m_F", "Land_Computer_01_sand_F", "Land_CzechHedgehog_01_new_F",
     "Land_Device_disassembled_F", "Land_GasTank_01_yellow_F", "Land_HBarrier_3_F",
-    "Land_HelipadEmpty_F", "Land_InfoStand_V1_F", "Land_JumpTarget_F",
+    "Land_HelipadEmpty_F", "Land_InfoStand_V1_F", "Land_JumpTarget_F", "HeadlessClient",
     "Land_Laptop_03_sand_F", "Land_Laptop_unfolded_F", "Land_MapBoard_F",
     "Land_MedicalTent_01_floor_dark_F", "Land_MedicalTent_01_NATO_generic_open_F",
     "Land_MultiScreenComputer_01_sand_F", "Land_Pallet_MilBoxes_F",
@@ -32,7 +32,7 @@ private _vehicleClasses = [
     "SatelliteAntenna_01_Sand_F"
 ];
 private _declaredAddons = [
-    "A3_Air_F_Exp_VTOL_01", "A3_Air_F_Heli_Light_01", "A3_Characters_F", "A3_Characters_F_Mark", "A3_Modules_F",
+    "A3_Air_F_Exp_VTOL_01", "A3_Air_F_Heli_Light_01", "A3_Boat_F_Boat_Transport_01", "A3_Characters_F", "A3_Characters_F_Mark", "A3_Modules_F",
     "A3_Modules_F_Curator_Curator", "A3_Modules_F_Multiplayer",
     "A3_Props_F_Enoch_Military_Camps", "A3_Props_F_Enoch_Military_Equipment",
     "A3_Props_F_Orange_Humanitarian_Camps", "A3_Soft_F_Beta_Truck_01",

@@ -96,12 +96,13 @@ Base**.
 ## Eden composition (beginner drop-in)
 
 `WMP_Compositions/[WMP]Transport_Services_Example_Minimal` is a pre-crewed
-helicopter and ground vehicle each registered with only the required
-arguments (`createVehicleCrew this; [this, "HELICOPTER"/"GROUND"] call
-Waldo_fnc_TransportRegister;`). `_Full` shows the same pair with LZ
-clearance, improved-landing and other options set explicitly. Neither
-composition currently ships a boat example; register one directly with the
-`"BOAT"` type shown above.
+helicopter, ground vehicle and boat, each registered with only the required
+arguments (`[this, "HELICOPTER"/"GROUND"/"BOAT"] call
+Waldo_fnc_TransportRegister;` against an already-placed, already-crewed
+vehicle). `_Full` shows the same trio with LZ clearance, water-search
+radius, improved-landing and other options set explicitly. Move the boat
+onto/adjacent to water yourself after placing the composition - the source
+position is a spacing placeholder, not a validated water tile.
 
 ## Gotchas
 

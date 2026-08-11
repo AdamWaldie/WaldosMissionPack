@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 901,
+  "registeredFunctionCount": 903,
   "runtimeFunctionCount": 385,
-  "functionCount": 1286,
+  "functionCount": 1288,
   "stations": [
     {
       "id": "control",
@@ -1107,6 +1107,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_DiagnosticFoldHint",
+      "file": "MissionScripts/MissionFlowAndUi/diagnosticFoldHint.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_RunDiagnostics",
       "file": "MissionScripts/MissionFlowAndUi/runDiagnostics.sqf",
       "station": "mission-flow",
@@ -2075,6 +2081,12 @@
     {
       "name": "Waldo_fnc_ObituaryPad2",
       "file": "MissionScripts/MedicalSystems/Obituary/obituaryPad2.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryGetDiagnostics",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryGetDiagnostics.sqf",
       "station": "control",
       "activation": "manual"
     },

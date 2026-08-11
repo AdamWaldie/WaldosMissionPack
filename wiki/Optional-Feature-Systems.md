@@ -89,6 +89,43 @@ Start, success and failure notifications can be enabled independently. Patient n
 
 Call `Waldo_fnc_TreatmentFeedbackInit` or `Waldo_fnc_TreatmentFeedbackStop` on interface clients after changing the player-local settings. This feature intentionally has no ZEN module. The ACE event identifier `ace_treatmentSucceded` is intentionally retained exactly as defined.
 
+## Obituary and confirmed-death reporting
+
+Requires ACE Medical and ACE interaction. Enabled by **default**, unlike most other optional
+features in this list. A medic-only **Pronounce Dead** ACE interaction on a corpse replaces Arma's
+terse default death message with a formatted KIA report — time of death, cause, grid reference, and
+a friendly-fire callout when applicable — and feeds a "Confirmed deaths" section into the ENDEX
+After-Action Report (see [ENDEX and After-Action Report](Feature-Tutorials)).
+
+Quickest working setup — no setup needed, it just works:
+
+1. Have a medic interact with a corpse. **ACE Main Actions** (the target/corpse menu), not ACE Self
+   Actions — this is intentional, the report is about the body, not the medic.
+2. Select **Pronounce Dead**. Every player nearby with line of sight to the corpse sees the
+   formatted report; the diary entry described below updates for everyone.
+3. To disable it entirely, set `Waldo_Obituary_Enable` to `false` in
+   `MissionConfig\interfaceConfig.sqf`.
+
+| Setting (`MissionConfig\interfaceConfig.sqf`, player-local) | Default | Purpose |
+|---|---|---|
+| `Waldo_Obituary_Enable` | `true` | Installs the interaction and death-capture handler |
+| `Waldo_Obituary_ChatAnnounce` | `true` | Also broadcasts the terse `systemChat` pronounce line |
+| `Waldo_Obituary_DiaryPollInterval` | `3` | Seconds between local diary-record sync checks |
+
+Runs automatically from `initPlayerLocal.sqf` via `[] call Waldo_fnc_ObituaryInit;` whenever
+`Waldo_Obituary_Enable` is true — no ZEN module, since this is an always-available medic action
+rather than a curator-authored placement.
+
+Every player gets **one** "Obituary" diary record that updates in place as deaths are confirmed,
+not one record per death, and it survives the reading player's own respawn. Every name-dependent
+value (victim name, instigator name) and the cause-of-death classification are computed and cached
+**at the moment of death**, not when a medic later pronounces it — this keeps the report correct
+even if the victim or killer has since disconnected. Friendly fire is flagged normally, except when
+the instigator is a Zeus curator remote-controlling a unit (`getAssignedCuratorLogic` distinguishes
+this from a real human player). `Waldo_AAR_Obituary` — the AAR's "Confirmed deaths" tally — is
+populated only when a death is actually pronounced, a distinct, later count from the AAR's own
+KIA/friendly-fire tallies.
+
 ## Hazardous environments
 
 Repeatable exposure zones (radiation is the shipped preset family) with real damage, protection and a HUD. Quickest working setup, using a shipped preset — no profile authoring needed:

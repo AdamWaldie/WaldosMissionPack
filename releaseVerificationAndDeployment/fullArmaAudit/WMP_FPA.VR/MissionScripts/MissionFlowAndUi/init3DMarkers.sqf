@@ -11,9 +11,9 @@ private _handler = addMissionEventHandler ["Draw3D", {
         ];
         if (_enabled) then {
             private _position = if (_anchor isEqualType objNull) then {
-                if (isNull _anchor) then {[]} else {(visiblePositionASL _anchor) vectorAdd _offset}
+                if (isNull _anchor) then {[]} else {(getPosASL _anchor) vectorAdd _offset}
             } else {
-                AGLToASL ((_anchor select [0, 3]) vectorAdd _offset)
+                ATLToASL ((_anchor select [0, 3]) vectorAdd _offset)
             };
             private _sideNames = _sides apply {if (_x isEqualType "") then {toUpper _x} else {toUpper str _x}};
             private _sideVisible = "ALL" in _sideNames || {_playerSide in _sideNames};
