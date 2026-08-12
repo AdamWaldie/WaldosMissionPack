@@ -44,6 +44,11 @@
  * are copied into a vehicle package. PackageClasses is an ordered fallback pool of CfgVehicles
  * classes and may be overridden per registered vehicle.
  *
+ * SETTING-BY-SETTING GUIDE - RESPAWN LOADOUT:
+ * - Waldo_Respawn_SaveOnDeath (MISSION MAKER): off by default. false = respawn uses the mission-start
+ *   baseline plus the last manual Loadout Save Point action; true = a "CAManBase"/"Killed" handler in
+ *   initPlayerLocal.sqf captures loadout+radio on every death and restores it on respawn instead.
+ *
  * SETTING-BY-SETTING GUIDE - FIELD RESUPPLY:
  * - Waldo_FieldResupply_Enable (MISSION MAKER): permits hubs/actions; register a hub and assign carriers separately.
  * - Waldo_FieldResupply_CrateClass (MISSION MAKER): valid CfgVehicles crate spawned and populated for each deployment.

@@ -371,6 +371,7 @@ parachute have been tested at the replacement altitude and speed.
 
 | Setting | Purpose / units |
 |---|---|
+| `Waldo_Respawn_SaveOnDeath` | Off by default. `false` = respawn uses the mission-start baseline plus the last manual Loadout Save Point action; `true` = capture loadout and radio on every death and restore it on respawn instead. |
 | `Waldo_FieldResupply_Enable` | Master field-resupply opt-in. |
 | `Waldo_FieldResupply_CrateClass` | Deployed resupply crate class. |
 | `Waldo_FieldResupply_DefaultCarrierCapacity` | Default virtual crates carried. |
