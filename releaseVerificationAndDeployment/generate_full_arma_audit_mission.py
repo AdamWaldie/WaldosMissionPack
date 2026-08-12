@@ -114,6 +114,7 @@ FIXTURES = [
     fixture("qa_core_console", "Land_Laptop_unfolded_F", 10, 45, direction=180),
     fixture("qa_acre_table", "Land_CampingTable_small_F", 18, 34, direction=180),
     fixture("qa_acre_console", "Land_Laptop_unfolded_F", 18, 34, 0.82, 180),
+    fixture("qa_acre_rack_vehicle", "B_MRAP_01_F", 29, 34, direction=270),
     fixture("qa_convoy_1", "B_MRAP_01_F", 28, 54),
     fixture("qa_convoy_2", "B_MRAP_01_F", 28, 70),
     fixture("qa_ew_jammer", "Land_TTowerSmall_1_F", 0, -102),

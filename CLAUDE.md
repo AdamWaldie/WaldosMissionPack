@@ -234,24 +234,19 @@ Group IDs must match the Eden editor group ID exactly (an `@Callsign` leader-rol
 
 #### Vehicle radio racks (`Waldo_fnc_ACRE2RackSetup`)
 
-Vehicle-mounted rack radios (AN/VRC-64, VRC-103, VRC-110, VRC-111, SEM90, or any mission-added rack)
-are a separate, vehicle-scoped surface — not part of `acreConfig.sqf`'s per-player carried-radio
-scan, which deliberately preserves rack radios untouched. No mods required for the common case:
+Vehicle-mounted rack radios (AN/VRC-64, VRC-103, VRC-110, VRC-111, SEM90, or a mission-added rack)
+are separate from `acreConfig.sqf`'s per-player carried-radio scan. Their reusable `rackProfiles`
+nevertheless live in the same config and may reuse its side-specific named nets. No extra rack mod
+is required for the common case:
 ACRE2 attaches racks by class inheritance, so `Helicopter_Base_F`, `Plane_Base_F`, `Tank_F`,
 `Wheeled_APC_F`, `Boat_Armed_01_base_F` and `MRAP_01/02/03_base_F` already have 1-2 racks the moment
-ACRE2 loads (confirmed against `addons/sys_rack/CfgVehicles.hpp`). One object-init call configures
-every rack on a vehicle:
+ACRE2 loads. One object Init call configures every intended rack on a vehicle:
 
 ```sqf
-// Simplest - retune whatever is already mounted in every rack on this vehicle:
-[this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
-// Explicit: rack 0 gets channel 5; rack 1 gets channel 44 after mounting a PRC-117F into it:
-[this, ["assignments", [[0, 5], [1, 44, "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
-// preset (optional) applies a named ACRE2 preset before the vehicle's racks initialise. A preset name
-// is a name ACRE2 itself defines for an actual radio model - a rack designation like AN/VRC-110 names
-// the mounting hardware, not a radio, and is never a valid preset name itself. WMP does not ship or
-// guarantee any preset name; verify one exists in your ACRE2 install before relying on it:
-[this, ["preset", "your_verified_preset_name"]] call Waldo_fnc_ACRE2RackSetup;
+// Recommended: a central rack profile. No isServer wrapper is required.
+[this, "COMMAND_VEHICLE"] call Waldo_fnc_ACRE2RackSetup;
+// Inline exception: reuse WEST AIRGND from the same named net table as carried radios.
+[this, [["netSide", "WEST"], ["assignments", [[["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"]]]]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
 Self-forwards to the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper). Rack
@@ -278,17 +273,11 @@ ACRE2's own design, not a WMP restriction. A mission-added rack can set that fla
 replace/remove behaviour anywhere. The call is safe to repeat later in
 the mission with a different config to re-equip a vehicle — an identical repeat of the last-applied
 config is a no-op unless a third `force` argument is passed, so an Eden init field firing on every
-connected machine at mission start does not redo the work per client. FREQUENCY-mode rack radios
-(PRC-77/SEM70-family) reuse the same ordinal `acre_api_fnc_setupRadios` path carried radios use and
-are recorded as accepted but unverified, same as carried FREQUENCY radios — this is the first thing
-to verify manually. ACRE2's per-rack radio state (mounted radio, removability, live channel) is
-tracked locally on whichever connected client ACRE2 delegated that rack to, not synced to the server
-— reading it directly from the server works by coincidence on a listen server (host = server = client)
-but fails on a genuine dedicated server. `Waldo_fnc_ACRE2RackApply` therefore never calls those
-specific ACRE2 state functions itself; it broadcasts each read/write via `Waldo_fnc_ACRE2RackClientAction`
-to every connected human player (deliberately excluding headless clients, which can never hold this
-state) and uses whichever one answers, without needing to know in advance which
-client ACRE2 picked. Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row.
+connected machine at mission start does not redo the work per client. The server waits for ACRE's
+synchronized rack and unique-radio state, then tunes and reads numbered channels back. Named targets
+such as `PLT1` and `AIRGND` use the same side-specific net table as carried radios. PRC-77 and SEM70
+frequency programming must come from an existing ACRE preset applied before rack initialisation.
+Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row and `[WMP ACRE RACK]` RPT entries.
 
 ### Paradrop Configuration (`MissionConfig\airOperationsConfig.sqf`)
 

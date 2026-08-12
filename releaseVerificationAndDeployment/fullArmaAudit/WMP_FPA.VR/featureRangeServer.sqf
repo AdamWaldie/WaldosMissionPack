@@ -496,8 +496,11 @@ private _coreConsole = ["qa_core_console", "Land_Laptop_unfolded_F", [10, 45, 0]
 missionNamespace setVariable ["Waldo_QA_CoreConsole", _coreConsole, true];
 private _acreTable = ["qa_acre_table", "Land_CampingTable_small_F", [18, 34, 0], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
 private _acreConsole = ["qa_acre_console", "Land_Laptop_unfolded_F", [18, 34, 0.82], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
+private _acreRackVehicle = ["qa_acre_rack_vehicle", "B_MRAP_01_F", [29, 34, 0], 270, false] call Waldo_QA_fnc_getFeatureObjectServer;
 missionNamespace setVariable ["Waldo_QA_ACREConsole", _acreConsole, true];
-["acre", "ACRE2 COMMUNICATIONS", [18, 27, 0], "Preconfigured duplicate radios, named nets, listening ears, Babel, respawn and persistence."] call Waldo_QA_fnc_registerFeatureStationServer;
+missionNamespace setVariable ["Waldo_QA_ACRERackVehicle", _acreRackVehicle, true];
+[_acreRackVehicle, "COMMAND_VEHICLE"] call Waldo_fnc_ACRE2RackSetup;
+["acre", "ACRE2 COMMUNICATIONS", [18, 27, 0], "Carried radios, named nets, Babel, respawn/persistence and a real COMMAND_VEHICLE rack profile."] call Waldo_QA_fnc_registerFeatureStationServer;
 [] call Waldo_fnc_SideBaseLoadoutSetup;
 [_supplyCrate, true, west, false] spawn Waldo_fnc_DoStarterCrate;
 [_medicalCrate, true, 1] call Waldo_fnc_MedicalCratePopulate;

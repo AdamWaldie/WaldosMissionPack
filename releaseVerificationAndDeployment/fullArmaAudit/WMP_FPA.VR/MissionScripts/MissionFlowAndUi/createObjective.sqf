@@ -47,13 +47,15 @@ if (!isServer) exitWith {
 [_owner, _taskId, [_description, _title, _title], _destination, _state, 1, true, _taskType, true] call BIS_fnc_taskCreate;
 
 // Register the task in the AAR objective ledger (broadcast so the ENDEX debrief, which runs
-// client-side, can read it). Ledger entries are [taskId, state].
+// client-side, can read it). Store the player-facing title as well as the scripting ID: the ID is
+// useful to code, but strings such as "ied_trigger_analysis" are poor debrief content.
+// Ledger entries are [taskId, title, state].
 private _ledger = +(missionNamespace getVariable ["Waldo_AAR_Tasks", []]);
 private _at = _ledger findIf {(_x select 0) isEqualTo _taskId};
 if (_at < 0) then {
-    _ledger pushBack [_taskId, _state];
+    _ledger pushBack [_taskId, _title, _state];
 } else {
-    (_ledger select _at) set [1, _state];
+    _ledger set [_at, [_taskId, _title, _state]];
 };
 missionNamespace setVariable ["Waldo_AAR_Tasks", _ledger, true];
 

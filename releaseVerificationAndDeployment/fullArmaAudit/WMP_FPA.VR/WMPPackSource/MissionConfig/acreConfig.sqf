@@ -29,6 +29,7 @@
  * - babel: language content and defaults. It remains inert while babel.enabled is false.
  * - notifyAssignmentProblems: true warns affected players when their authored baseline cannot apply.
  * - radioOverrides: optional side-scoped UID, Eden Variable Name or role exceptions.
+ * - rackProfiles: reusable vehicle/object rack setups. Beginners may use the supplied examples.
  * - additionalRadioProfiles: advanced definitions for tested third-party carried radios only.
  *
  * NETS
@@ -47,10 +48,9 @@
  * - ACRE_SEM52SL is a 12-channel radio in a different band. Give it a SEM-only net such as SEM_HANDHELD.
  * - ACRE_PRC77 and ACRE_SEM70 use explicit MHz. They may share a net only where that frequency is
  *   valid for both radios; 51.000 MHz is a valid shared example.
- * - Unknown and vehicle-rack radios are deliberately preserved and never guessed by this carried-radio
- *   scan. Vehicle-mounted rack radios (AN/VRC-64/103/110/111, SEM90) are a separate, vehicle-scoped
- *   surface configured per-vehicle from an Eden object init field, not from this file - see
- *   Waldo_fnc_ACRE2RackSetup and wiki/ACRE-2-Long-Range-Radio-Presetting.md.
+ * - Unknown and vehicle-rack radios are deliberately preserved by the carried-radio scan.
+ *   Vehicle-mounted racks use the separate rackProfiles section below plus a simple object Init
+ *   call such as `[this, "COMMAND_VEHICLE"] call Waldo_fnc_ACRE2RackSetup;`.
  * A PRC-152 cannot consume BF_HANDHELD or VHF_COMMON even when the number happens to fit. Diagnostics name
  * the group, radio occurrence, requested net, expected family and invalid range when setup is wrong.
  *
@@ -163,6 +163,98 @@ createHashMapFromArray [
     // ["RADIO_CLASSNAME", "CHANNEL", ["RIGHT", "LEFT"], MAXIMUM_CHANNEL, [], "FAMILY_NAME"]
     // RESULT: [] means unknown/third-party radios remain untouched.
     ["additionalRadioProfiles", []],
+
+    // SETTING: rackProfiles (OPTIONAL VEHICLE/OBJECT RADIO RACK SETUP)
+    // WHAT IT CHANGES: defines reusable named starting setups for ACRE racks. Nothing happens merely
+    // because a profile exists here: place its call in the target vehicle/object's Eden Init field.
+    // SIMPLE CALL: [this, "EXISTING_RACKS_CHANNEL_5"] call Waldo_fnc_ACRE2RackSetup;
+    // MIXED CALL: [this, "COMMAND_VEHICLE", [["assignments", [["ALL", "AIRGND"]]]]] call Waldo_fnc_ACRE2RackSetup;
+    // The mixed call loads COMMAND_VEHICLE, then replaces that profile's assignments with the inline
+    // row. This is explicit top-level replacement, not a hidden array merge.
+    //
+    // Each profile is ["UNIQUE_PROFILE_NAME", SETTINGS]. SETTINGS supports:
+    // - preset: existing ACRE preset name. Applied BEFORE rack initialisation. The same named preset
+    //   must exist for every mounted radio class that should use it. Use this for full programmed
+    //   channel/frequency data, especially PRC-77 and SEM70 racks.
+    // - netSide: AUTO, WEST, EAST, GUER or CIV. AUTO uses the vehicle class side, then accepts a net
+    //   key only when exactly one compatible side defines it. Set this explicitly on ambiguous props.
+    // - addRacks: optional physical rack definitions. Each is [rack class, named rack settings].
+    // - assignments: optional tuning/replacement jobs after racks exist and synchronize. The target
+    //   should normally be a net key from the sides section above, e.g. "PLT1" or "AIRGND". WMP
+    //   checks that the mounted radio belongs to that net's radio family, then uses its one value.
+    //
+    // addRacks named settings:
+    // - count: desired TOTAL racks of this class on the object, not "add this many". That makes a
+    //   retry safe. count=1 adds one only when the object currently has no rack of that class.
+    // - displayName / shortName: ACE interaction names. Keep shortName at five characters or fewer.
+    // - removable: whether users/scripts may remove the mounted radio later.
+    // - access: ACRE access positions. ["inside"] is the safest beginner default; ["external"] is
+    //   useful for a radio table or command post accessible while standing beside it.
+    // - disabled: positions denied access; [] denies none of the otherwise allowed positions.
+    // - mountedRadio: compatible base radio or "" for an empty rack.
+    // - components: advanced ACRE component classes; [] uses no extra authored component.
+    // - intercoms: connected ACRE intercom IDs, e.g. ["intercom_1"], or [] for none.
+    //
+    // assignment row: [RACK SELECTOR, NET KEY OR CHANNEL, OPTIONAL RADIO ACTION]
+    // Selectors: "ALL"; 0-based rack number; "ACRE_VRC110" for every rack of that type; or
+    // ["ACRE_VRC110", 1] for the first rack of that type. Type selectors survive unrelated rack
+    // order changes and are recommended. Use a central net key such as "AIRGND" whenever possible;
+    // a number is a direct channel override. -1 leaves tuning unchanged. The optional third value is
+    // a compatible radio classname, "UNMOUNT_RADIO", "REMOVE_RACK", or "" for no hardware change.
+    // Compatible pairs are VRC64/PRC77, VRC103/PRC117F, VRC110/PRC152, VRC111/PRC148, SEM90/SEM70.
+    ["rackProfiles", [
+        [
+            "EXISTING_RACKS_CHANNEL_5",
+            [
+                ["preset", ""],
+                ["netSide", "WEST"],
+                ["addRacks", []],
+                ["assignments", [["ALL", "COY"]]] // Reuse WEST COY (PRC_LR channel 5).
+            ]
+        ],
+        [
+            "COMMAND_VEHICLE",
+            [
+                ["preset", "default3"], // Existing ACRE preset, applied before initialization.
+                ["netSide", "WEST"],
+                ["addRacks", [
+                    [
+                        "ACRE_VRC110", // AN/VRC-110 hardware; accepts an ACRE_PRC152.
+                        [
+                            ["count", 1],
+                            ["displayName", "Command Radio"],
+                            ["shortName", "CMD"],
+                            ["removable", true],
+                            ["access", ["inside"]],
+                            ["disabled", []],
+                            ["mountedRadio", "ACRE_PRC152"],
+                            ["components", []],
+                            ["intercoms", []]
+                        ]
+                    ]
+                ]],
+                ["assignments", [
+                    // Mounts the radio when the vehicle already has an empty VRC-110.
+                    [["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"] // WEST AIRGND, PRC_LR channel 6.
+                ]]
+            ]
+        ],
+        [
+            "EXTERNAL_RADIO_POINT",
+            [
+                ["preset", "default3"],
+                ["netSide", "WEST"],
+                ["addRacks", [
+                    ["ACRE_VRC103", [
+                        ["count", 1], ["displayName", "Radio Point"], ["shortName", "RDO"],
+                        ["removable", false], ["access", ["external"]], ["disabled", []],
+                        ["mountedRadio", "ACRE_PRC117F"], ["components", []], ["intercoms", []]
+                    ]]
+                ]],
+                ["assignments", [[["ACRE_VRC103", 1], "PLT1", "ACRE_PRC117F"]]]
+            ]
+        ]
+    ]],
 
     // SETTING: radioOverrides (OPTIONAL PLAYER/ROLE EXCEPTIONS)
     // WHAT IT CHANGES: gives one side-specific UID, Eden variable or role a different starting setup.

@@ -33,7 +33,28 @@ if !(_obituary isEqualTo []) then {
 private _tasks = missionNamespace getVariable ["Waldo_AAR_Tasks", []];
 if !(_tasks isEqualTo []) then {
     private _lines = [];
-    {_lines pushBack format ["%1 - %2", _x param [0, "Objective"], _x param [1, "UNKNOWN"]]} forEach _tasks;
+    private _objectiveCounts = createHashMapFromArray [["SUCCEEDED", 0], ["FAILED", 0], ["CANCELED", 0], ["OUTSTANDING", 0]];
+    {
+        private _legacyRow = count _x < 3;
+        private _title = if (_legacyRow) then {"Mission objective"} else {_x param [1, "Mission objective"]};
+        private _state = toUpper (_x param [if (_legacyRow) then {1} else {2}, "UNKNOWN"]);
+        private _presentation = switch (_state) do {
+            case "SUCCEEDED": {["COMPLETED", "#4BD98A", "SUCCEEDED"]};
+            case "FAILED": {["FAILED", "#E85D68", "FAILED"]};
+            case "CANCELED": {["CANCELLED", "#AAB3BD", "CANCELED"]};
+            default {["OUTSTANDING", "#F2C45E", "OUTSTANDING"]};
+        };
+        _presentation params ["_label", "_colour", "_countKey"];
+        _objectiveCounts set [_countKey, (_objectiveCounts get _countKey) + 1];
+        _lines pushBack format ["<t color='%1'>[%2]</t> %3", _colour, _label, _title];
+    } forEach _tasks;
+    _lines insert [0, [format [
+        "Completed %1 | Failed %2 | Cancelled %3 | Outstanding %4",
+        _objectiveCounts get "SUCCEEDED",
+        _objectiveCounts get "FAILED",
+        _objectiveCounts get "CANCELED",
+        _objectiveCounts get "OUTSTANDING"
+    ]]];
     _sections pushBack ["OBJECTIVES", _lines];
 };
 private _frags = missionNamespace getVariable ["Waldo_AAR_Frags", []];

@@ -84,7 +84,7 @@ WMP resolves every net against the **base radio class** and ignores incompatible
 | PRC-77 | Explicit MHz | 30-75.95 MHz, 50 kHz steps | Use a frequency net. It can share with SEM70 only at a value valid for both, such as 51.000 MHz. |
 | SEM70 | Explicit MHz | 30-79.975 MHz, 25 kHz steps | Use a frequency net; never substitute an ordinary channel number. |
 | Unknown radio | Unmanaged | Unknown | WMP preserves it. Register a tested carried-radio profile rather than guessing. |
-| Vehicle radio rack | Unmanaged by this carried-radio scan | See [ACRE2 Vehicle Radio Racks](ACRE2-Vehicle-Radio-Rack-Setup) | Configured separately, per-vehicle, via `Waldo_fnc_ACRE2RackSetup` - not part of this file. |
+| Vehicle radio rack | Unmanaged by the player-carried scan | See [ACRE2 Vehicle Radio Racks](ACRE2-Vehicle-Radio-Rack-Setup) | Uses `rackProfiles` in this same file and reuses these named side/net definitions, but is applied per vehicle with `Waldo_fnc_ACRE2RackSetup`. |
 
 The shipped families are `PRC_LR`, `BF888`, `SEM52`, `LEGACY_VHF` and the separate PRC-343 block
 system. A net remains valid when at least one radio in that family supports its value. Validation

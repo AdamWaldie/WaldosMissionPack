@@ -297,6 +297,20 @@ if (!isNull _coreConsole) then {
         [_message, "OK", 10] call Waldo_fnc_MiniGameInteractionNotifyClient;
         diag_log format ["[WMP QA ACRE] %1 plan=%2", _message, _plan];
     }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_acreConsole, "Waldo_QA_ACRERackStatus", "ACRE2: SHOW VEHICLE RACK STATUS", {
+        private _rackVehicle = missionNamespace getVariable ["Waldo_QA_ACRERackVehicle", objNull];
+        if (isNull _rackVehicle) exitWith {["The rack test vehicle is unavailable.", "ERROR", 8] call Waldo_fnc_MiniGameInteractionNotifyClient};
+        private _state = _rackVehicle getVariable ["Waldo_ACRE2_RackSetupState", "NOT_REQUESTED"];
+        private _result = _rackVehicle getVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, []]];
+        [format ["COMMAND_VEHICLE rack state: %1 | applied/requested/problems: %2. Inspect the vehicle's physical ACRE rack interface after COMPLETE.", _state, _result], if (_state == "COMPLETE" && {(_result select 2) isEqualTo []}) then {"OK"} else {"INFO"}, 14] call Waldo_fnc_MiniGameInteractionNotifyClient;
+        diag_log format ["[WMP QA ACRE RACK] vehicle=%1 state=%2 result=%3", _rackVehicle, _state, _result];
+    }] call Waldo_QA_fnc_addAuditActionLocal;
+    [_acreConsole, "Waldo_QA_ACRERackApply", "ACRE2: REAPPLY VEHICLE RACK PROFILE", {
+        private _rackVehicle = missionNamespace getVariable ["Waldo_QA_ACRERackVehicle", objNull];
+        if (isNull _rackVehicle) exitWith {["The rack test vehicle is unavailable.", "ERROR", 8] call Waldo_fnc_MiniGameInteractionNotifyClient};
+        [_rackVehicle, "COMMAND_VEHICLE", [], true] call Waldo_fnc_ACRE2RackSetup;
+        ["COMMAND_VEHICLE was requested again. Use SHOW VEHICLE RACK STATUS after synchronization completes.", "INFO", 10] call Waldo_fnc_MiniGameInteractionNotifyClient;
+    }] call Waldo_QA_fnc_addAuditActionLocal;
     [_acreConsole, "Waldo_QA_ACRESquadMatrix", "ACRE2: SHOW SQUAD RADIO PAIRS", {
         private _matrix = [
             "Commander + Medic: 2x PRC-343, 2x PRC-152, 1x PRC-148",

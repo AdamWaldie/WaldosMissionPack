@@ -191,6 +191,111 @@ private _validateAssignment = {
         };
     };
 } forEach (_config getOrDefault ["radioOverrides", []]);
+private _rackCompatibility = createHashMapFromArray [
+    ["ACRE_VRC64", "ACRE_PRC77"], ["ACRE_VRC103", "ACRE_PRC117F"],
+    ["ACRE_VRC110", "ACRE_PRC152"], ["ACRE_VRC111", "ACRE_PRC148"],
+    ["ACRE_SEM90", "ACRE_SEM70"]
+];
+private _rackProfileNames = [];
+{
+    if !(_x isEqualType [] && {count _x == 2} && {(_x select 0) isEqualType ""}) then {
+        _errors pushBack format ["Malformed vehicle rack profile %1; expected [profile name, settings].", _x];
+    } else {
+        _x params ["_profileName", "_sourceSettings"];
+        private _upperName = toUpper _profileName;
+        if (_profileName == "") then {_errors pushBack "A vehicle rack profile name cannot be empty."};
+        if (_upperName in _rackProfileNames) then {_errors pushBack format ["Duplicate vehicle rack profile %1.", _profileName]};
+        _rackProfileNames pushBack _upperName;
+        private _profilePairs = _sourceSettings;
+        if (_profilePairs isEqualType createHashMap) then {
+            private _converted = [];
+            {_converted pushBack [_x, _profilePairs get _x]} forEach keys _profilePairs;
+            _profilePairs = _converted;
+        };
+        if !(_profilePairs isEqualType [] && {{_x isEqualType [] && {count _x == 2} && {(_x select 0) isEqualType ""}} count _profilePairs == count _profilePairs}) then {
+            _errors pushBack format ["Vehicle rack profile %1 settings must be [key,value] rows.", _profileName];
+        } else {
+            private _rackSettings = createHashMapFromArray _profilePairs;
+            private _preset = _rackSettings getOrDefault ["preset", ""];
+            if !(_preset isEqualType "") then {_errors pushBack format ["Vehicle rack profile %1 preset must be a string.", _profileName]};
+            private _netSide = [_rackSettings getOrDefault ["netSide", "AUTO"]] call _normaliseSide;
+            if !(_netSide in ["AUTO", "WEST", "EAST", "GUER", "CIV"]) then {_errors pushBack format ["Vehicle rack profile %1 netSide must be AUTO, WEST, EAST, GUER or CIV.", _profileName]};
+            private _addRacks = _rackSettings getOrDefault ["addRacks", []];
+            private _assignments = _rackSettings getOrDefault ["assignments", []];
+            if !(_addRacks isEqualType []) then {_errors pushBack format ["Vehicle rack profile %1 addRacks must be an array.", _profileName]} else {
+                {
+                    if !(_x isEqualType [] && {count _x == 2} && {(_x select 0) isEqualType ""}) then {
+                        _errors pushBack format ["Vehicle rack profile %1 has malformed addRacks row %2.", _profileName, _x];
+                    } else {
+                        _x params ["_rackClass", "_sourceRack"];
+                        private _upperRack = toUpper _rackClass;
+                        if !(_upperRack in keys _rackCompatibility) then {_errors pushBack format ["Vehicle rack profile %1 uses unknown built-in rack %2.", _profileName, _rackClass]};
+                        private _rackPairs = _sourceRack;
+                        if (_rackPairs isEqualType createHashMap) then {
+                            private _convertedRack = [];
+                            {_convertedRack pushBack [_x, _rackPairs get _x]} forEach keys _rackPairs;
+                            _rackPairs = _convertedRack;
+                        };
+                        if !(_rackPairs isEqualType [] && {{_x isEqualType [] && {count _x == 2} && {(_x select 0) isEqualType ""}} count _rackPairs == count _rackPairs}) then {
+                            _errors pushBack format ["Vehicle rack profile %1/%2 settings must be named [key,value] rows.", _profileName, _rackClass];
+                        } else {
+                            private _definition = createHashMapFromArray _rackPairs;
+                            private _count = _definition getOrDefault ["count", 1];
+                            private _shortName = _definition getOrDefault ["shortName", "RADIO"];
+                            private _mounted = toUpper (_definition getOrDefault ["mountedRadio", ""]);
+                            if !(_count isEqualType 0 && {_count >= 1} && {_count == floor _count}) then {_errors pushBack format ["Vehicle rack profile %1/%2 count must be a whole number of 1 or greater.", _profileName, _rackClass]};
+                            if !(_shortName isEqualType "" && {count _shortName <= 5} && {_shortName != ""}) then {_errors pushBack format ["Vehicle rack profile %1/%2 shortName must contain 1-5 characters.", _profileName, _rackClass]};
+                            private _expectedRadio = _rackCompatibility getOrDefault [_upperRack, ""];
+                            if (_mounted != "" && {_mounted != _expectedRadio}) then {_errors pushBack format ["Vehicle rack profile %1/%2 cannot mount %3; use %4.", _profileName, _rackClass, _mounted, _expectedRadio]};
+                            if !((_definition getOrDefault ["removable", true]) isEqualType true) then {_errors pushBack format ["Vehicle rack profile %1/%2 removable must be true or false.", _profileName, _rackClass]};
+                            {if !((_definition getOrDefault [_x, []]) isEqualType []) then {_errors pushBack format ["Vehicle rack profile %1/%2 %3 must be an array.", _profileName, _rackClass, _x]}} forEach ["access", "disabled", "components", "intercoms"];
+                        };
+                    };
+                } forEach _addRacks;
+            };
+            if !(_assignments isEqualType []) then {_errors pushBack format ["Vehicle rack profile %1 assignments must be an array.", _profileName]} else {
+                {
+                    if !(_x isEqualType [] && {count _x >= 2} && {count _x <= 3}) then {
+                        _errors pushBack format ["Vehicle rack profile %1 has malformed assignment %2.", _profileName, _x];
+                    } else {
+                        private _selector = _x select 0;
+                        private _selectorValid = _selector isEqualType 0 || {_selector isEqualType ""} || {
+                            _selector isEqualType [] && {count _selector == 2} && {(_selector select 0) isEqualType ""} && {(_selector select 1) isEqualType 0 && {(_selector select 1) >= 1}}
+                        };
+                        if (!_selectorValid) then {_errors pushBack format ["Vehicle rack profile %1 has invalid selector %2.", _profileName, _selector]};
+                        private _replacement = toUpper (_x param [2, ""]);
+                        private _selectorClass = if (_selector isEqualType "" && {toUpper _selector != "ALL"}) then {toUpper _selector} else {if (_selector isEqualType []) then {toUpper (_selector select 0)} else {""}};
+                        if (_selectorClass != "" && {_replacement != ""} && {!(_replacement in ["REMOVE_RACK", "UNMOUNT_RADIO"])}) then {
+                            private _expectedRadio = _rackCompatibility getOrDefault [_selectorClass, ""];
+                            if (_expectedRadio == "" || {_expectedRadio != _replacement}) then {_errors pushBack format ["Vehicle rack profile %1 selector %2 cannot mount %3.", _profileName, _selector, _replacement]};
+                        };
+                        private _target = _x select 1;
+                        if (_target isEqualType "" && {_selectorClass != ""}) then {
+                            private _radioClass = if (_replacement != "" && {!(_replacement in ["REMOVE_RACK", "UNMOUNT_RADIO"])}) then {_replacement} else {_rackCompatibility getOrDefault [_selectorClass, ""]};
+                            private _radioProfile = [_radioClass] call _profileFor;
+                            if (_radioProfile isEqualTo []) then {
+                                _errors pushBack format ["Vehicle rack profile %1 selector %2 cannot resolve named net %3 without a known compatible radio.", _profileName, _selector, _target];
+                            } else {
+                                private _candidateSides = if (_netSide == "AUTO") then {["WEST", "EAST", "GUER", "CIV"]} else {[_netSide]};
+                                private _matches = 0;
+                                {
+                                    private _sideEntry = _sideData getOrDefault [_x, []];
+                                    if !(_sideEntry isEqualTo []) then {
+                                        private _net = (_sideEntry select 0) getOrDefault [toUpper _target, []];
+                                        if !(_net isEqualTo []) then {
+                                            if (toUpper (_net select 2) == toUpper (_radioProfile select 5)) then {_matches = _matches + 1};
+                                        };
+                                    };
+                                } forEach _candidateSides;
+                                if (_matches != 1) then {_errors pushBack format ["Vehicle rack profile %1 net %2 is missing, ambiguous or incompatible for %3 on netSide %4.", _profileName, _target, _radioClass, _netSide]};
+                            };
+                        };
+                    };
+                } forEach _assignments;
+            };
+        };
+    };
+} forEach (_config getOrDefault ["rackProfiles", []]);
 private _babel = _config getOrDefault ["babel", createHashMap];
 {
     _x params ["_key", "_default"];

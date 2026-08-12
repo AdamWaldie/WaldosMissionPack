@@ -119,8 +119,6 @@ class CfgFunctions
             class ACRE2SchedulePlayerRefresh {file = "MissionScripts\MissionInit\ACRE2\acre2SchedulePlayerRefresh.sqf";};
             class ACRE2RackSetup {file = "MissionScripts\MissionInit\ACRE2\acre2RackSetup.sqf";};
             class ACRE2RackApply {file = "MissionScripts\MissionInit\ACRE2\acre2RackApply.sqf";};
-            class ACRE2RackClientAction {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientAction.sqf";};
-            class ACRE2RackClientActionResult {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientActionResult.sqf";};
         };
         class AI 
         {
