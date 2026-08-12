@@ -10,7 +10,7 @@ class items
         name="HC_1";
         id=1;
         type="HeadlessClient_F";
-        class Attributes {isPlayableLogic=1;};
+        class Attributes {isPlayableLogic=1; forceHeadlessClient=1;};
     };
     class Item1
     {
@@ -19,7 +19,7 @@ class items
         name="HC_2";
         id=2;
         type="HeadlessClient_F";
-        class Attributes {isPlayableLogic=1;};
+        class Attributes {isPlayableLogic=1; forceHeadlessClient=1;};
     };
     class Item2
     {
@@ -28,7 +28,7 @@ class items
         name="HC_3";
         id=3;
         type="HeadlessClient_F";
-        class Attributes {isPlayableLogic=1;};
+        class Attributes {isPlayableLogic=1; forceHeadlessClient=1;};
     };
     class Item3
     {
@@ -37,7 +37,7 @@ class items
         name="HC_4";
         id=4;
         type="HeadlessClient_F";
-        class Attributes {isPlayableLogic=1;};
+        class Attributes {isPlayableLogic=1; forceHeadlessClient=1;};
     };
     class Item4
     {
@@ -46,7 +46,7 @@ class items
         name="HC_5";
         id=5;
         type="HeadlessClient_F";
-        class Attributes {isPlayableLogic=1;};
+        class Attributes {isPlayableLogic=1; forceHeadlessClient=1;};
     };
     class Item5
     {
