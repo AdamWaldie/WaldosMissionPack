@@ -118,9 +118,21 @@ private _clientRackQuery = {
         _gotResult = !(isNil {missionNamespace getVariable _requestId});
         _gotResult || {time > _deadline}
     };
-    private _result = if (_gotResult) then {missionNamespace getVariable _requestId} else {nil};
-    missionNamespace setVariable [_requestId, nil];
-    _result
+    // `private _x = ... else {nil};` never actually defines `_x` when the else-branch is taken -
+    // assigning nil to a variable is SQF's documented way to undefine it, not to set a "known nil"
+    // value - so a later bare reference to that variable throws "Undefined variable" instead of
+    // safely reading nil (confirmed live: this fired on every timed-out query). Returning the
+    // possibly-nil value directly as the block's own final expression, rather than through a private
+    // assignment first, avoids the trap entirely; callers already safely check with the string form
+    // isNil "_result" rather than a bare reference, so a genuine nil return here is fine for them.
+    if (_gotResult) then {
+        private _resultValue = missionNamespace getVariable _requestId; // known non-nil - _gotResult confirmed it
+        missionNamespace setVariable [_requestId, nil];
+        _resultValue
+    } else {
+        missionNamespace setVariable [_requestId, nil];
+        nil
+    };
 };
 
 private _preset = _config getOrDefault ["preset", ""];
