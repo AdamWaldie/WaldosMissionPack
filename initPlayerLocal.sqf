@@ -1,11 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
- * Runs once for each player's own interface client (mission start or JIP join only - the engine
- * re-executes this file on every respawn too, which this script guards against below). It starts
- * local UI/actions, applies the server-published ACRE plan, and installs the handler that owns that
- * player's respawn snapshot. Mission makers normally edit MissionConfig rather than this file. Add a
- * custom call here only when its function header says player-local, hasInterface, local UI, local
- * interaction, or local player state.
+ * The engine re-executes this file on every respawn (and JIP), not only at mission start - only the
+ * loadout-baseline capture and the "Respawn" handler registration further down are guarded to run
+ * once per client; everything else here is designed to re-run per respawn so it rebinds to the
+ * fresh unit object (ACE self-actions, ACRE assignment, etc. are per-object, not per-class). It
+ * starts local UI/actions, applies the server-published ACRE plan, and owns that player's respawn
+ * snapshot. Mission makers normally edit MissionConfig rather than this file. Add a custom call here
+ * only when its function header says player-local, hasInterface, local UI, local interaction, or
+ * local player state.
  *
  * Arguments:
  * None (engine entry point; runs locally for each player)
@@ -13,15 +15,6 @@
  * Return Value:
  * Nothing
  */
-
-// The engine re-runs initPlayerLocal.sqf on every respawn, not only at mission start/JIP. Without
-// this guard, the one-time setup below re-executes on each respawn: it immediately re-captures the
-// freshly-spawned unit's raw default loadout into Waldo_Player_Inventory (clobbering whatever was
-// actually saved) and stacks a duplicate "Respawn" handler registration. The single handler
-// registered on the true first run already persists and keeps handling every later respawn, so
-// nothing below needs to run again.
-if !(isNil "Waldo_InitPlayerLocal_FirstRunDone") exitWith {};
-Waldo_InitPlayerLocal_FirstRunDone = true;
 
 /*
 PLAYER-LOCAL STARTUP
@@ -127,54 +120,65 @@ if (hasInterface) then {
     };
 };
 
-// Save a base-class inventory on mission start. ACRE startup replaces this with the fully assigned
-// inventory plus player-level radio snapshot after its one-time baseline configuration.
-[false] call Waldo_fnc_SaveLoadout;
+// The engine re-executes this whole file on every respawn, not only at mission start/JIP. Guard just
+// this block - the mission-start baseline capture and the "Respawn" handler registration - to run
+// once per client: without the guard, a respawn rerunning Waldo_fnc_SaveLoadout here would
+// immediately re-capture the freshly-spawned unit's raw default loadout into Waldo_Player_Inventory,
+// clobbering whatever loadout was actually saved, and each rerun would also stack a duplicate
+// "Respawn" handler registration. The single handler registered below persists at the engine level
+// and keeps firing correctly on every later respawn without this block needing to run again.
+if (isNil "Waldo_InitPlayerLocal_RespawnHandlerInstalled") then {
+    Waldo_InitPlayerLocal_RespawnHandlerInstalled = true;
 
-// Respawn restores the last explicitly saved inventory and supported personal ACRE settings.
-["CAManBase", "Respawn", {
-    params ["_unit"];
-    if (_unit == player) then {
-        private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
-        // UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so
-        // vehicleVarName never matches the Eden-named unit a snapshot was captured against.
-        private _currentIdentity = [getPlayerUID _unit, _sideKey];
-        private _savedIdentity = missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []];
-        private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
-        private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
-        if (_identityMatches && {count _savedLoadout > 0}) then {_unit setUnitLoadout _savedLoadout};
-        private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
-        missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
-        missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
-        private _savedRadios = if (_identityMatches) then {missionNamespace getVariable ["Waldo_Player_RadioState", []]} else {[]};
-        if (!_identityMatches) then {diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity]};
-        if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
-            missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
-            [_savedRadios, _generation] spawn {
-                params ["_radioState", "_loadoutGeneration"];
-                private _restored = [_radioState, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState;
-                missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
-                if (_restored) then {
-                    ["RESPAWN_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
-                } else {
-                    diag_log "[WMP ACRE] Saved respawn radio state could not be restored; applying the current mission plan.";
-                    ["RESPAWN_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+    // Save a base-class inventory on mission start. ACRE startup replaces this with the fully assigned
+    // inventory plus player-level radio snapshot after its one-time baseline configuration.
+    [false] call Waldo_fnc_SaveLoadout;
+
+    // Respawn restores the last explicitly saved inventory and supported personal ACRE settings.
+    ["CAManBase", "Respawn", {
+        params ["_unit"];
+        if (_unit == player) then {
+            private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
+            // UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so
+            // vehicleVarName never matches the Eden-named unit a snapshot was captured against.
+            private _currentIdentity = [getPlayerUID _unit, _sideKey];
+            private _savedIdentity = missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []];
+            private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
+            private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
+            if (_identityMatches && {count _savedLoadout > 0}) then {_unit setUnitLoadout _savedLoadout};
+            private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
+            missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
+            missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
+            private _savedRadios = if (_identityMatches) then {missionNamespace getVariable ["Waldo_Player_RadioState", []]} else {[]};
+            if (!_identityMatches) then {diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity]};
+            if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
+                missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
+                [_savedRadios, _generation] spawn {
+                    params ["_radioState", "_loadoutGeneration"];
+                    private _restored = [_radioState, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState;
+                    missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
+                    if (_restored) then {
+                        ["RESPAWN_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+                    } else {
+                        diag_log "[WMP ACRE] Saved respawn radio state could not be restored; applying the current mission plan.";
+                        ["RESPAWN_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+                    };
                 };
+            } else {
+                ["RESPAWN_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
             };
-        } else {
-            ["RESPAWN_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+            // Respawn Text
+            [] spawn Waldo_fnc_RespawnText;
+            // Re-apply safestart if it is still active (respawn resets damage/handlers/position)
+            if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
+                [true] call Waldo_fnc_SafeStartApply;
+            };
+            [] call Waldo_fnc_SetupUiCleanupAction;
+            [] call Waldo_fnc_AccessibilitySelfInteractionInit;
+            [] call Waldo_fnc_TransportInteractionInitLocal;
         };
-        // Respawn Text
-        [] spawn Waldo_fnc_RespawnText;
-        // Re-apply safestart if it is still active (respawn resets damage/handlers/position)
-        if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
-            [true] call Waldo_fnc_SafeStartApply;
-        };
-        [] call Waldo_fnc_SetupUiCleanupAction;
-        [] call Waldo_fnc_AccessibilitySelfInteractionInit;
-        [] call Waldo_fnc_TransportInteractionInitLocal;
-    };
-}] call CBA_fnc_addClassEventHandler;
+    }] call CBA_fnc_addClassEventHandler;
+};
 
 // Apply safestart to this client if a freeze is already active when they join (JIP).
 if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {

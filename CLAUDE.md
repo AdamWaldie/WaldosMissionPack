@@ -137,12 +137,15 @@ Mission load
         │     ├─ ["",""] call Waldo_fnc_InfoText        (intro title screen)
         │     └─ Sets WALDO_INIT_COMPLETE flag
         │
-        └─ initPlayerLocal.sqf  (per-player; the engine re-executes this file on every
-              │                  join/JIP/respawn, but a `Waldo_InitPlayerLocal_FirstRunDone`
-              │                  guard at the top makes the setup below run only once per client)
-              ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout
-              ├─ Registers the CBA "Respawn" handler (installed once; keeps firing on every
-              │     later respawn without the rest of this file re-running)
+        └─ initPlayerLocal.sqf  (per-player; the engine re-executes this whole file on every
+              │                  join/JIP/respawn - most of it is designed to re-run each time so it
+              │                  rebinds to the fresh unit object, e.g. re-installing ACE self-actions,
+              │                  which are per-object. Only the loadout baseline capture + "Respawn"
+              │                  handler registration are guarded by `Waldo_InitPlayerLocal_
+              │                  RespawnHandlerInstalled` to run once per client)
+              ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout (guarded, once)
+              ├─ Registers the CBA "Respawn" handler (guarded, once; keeps firing on every
+              │     later respawn without this block re-running)
               └─ CBA Respawn event → restores saved loadout/radio state for that respawn
 ```
 
