@@ -198,7 +198,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 
 | Setting | Purpose |
 |---|---|
-| `Waldo_Obituary_Enable` | Installs the medic-only "Pronounce Dead" ACE self-interaction submenu. Defaults `true`, unlike other `MedicalSystems/` features. |
+| `Waldo_Obituary_Enable` | Installs the "Pronounce Dead" ACE self-interaction submenu (vanilla Medic trait or ACE Medic/Doctor role). Defaults `true`, unlike other `MedicalSystems/` features. |
 | `Waldo_Obituary_ChatAnnounce` | Also broadcasts the terse systemChat pronounce line. |
 | `Waldo_Obituary_DiaryPollInterval` | Seconds between local diary-record sync checks. |
 | `Waldo_Obituary_Radius` | Metres around the medic the "Pronounce Dead" self-action scans for eligible corpses; each one in range gets its own named row for individual acknowledgement. |
@@ -371,6 +371,7 @@ parachute have been tested at the replacement altitude and speed.
 
 | Setting | Purpose / units |
 |---|---|
+| `Waldo_Respawn_SaveOnDeath` | Off by default. `false` = respawn uses the mission-start baseline plus the last manual Loadout Save Point action; `true` = capture loadout and radio on every death and restore it on respawn instead. |
 | `Waldo_FieldResupply_Enable` | Master field-resupply opt-in. |
 | `Waldo_FieldResupply_CrateClass` | Deployed resupply crate class. |
 | `Waldo_FieldResupply_DefaultCarrierCapacity` | Default virtual crates carried. |

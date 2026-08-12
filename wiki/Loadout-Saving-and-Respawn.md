@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need starting, manual or persistent player equipment across respawn, including ACRE2 radios.
 
-Basic respawn loadout saving is automatic. `Waldo_fnc_SaveLoadout` stores the player's current equipment and the local respawn handler restores it. `respawnOnStart = -1` remains required.
+Basic respawn loadout saving is automatic: the mission-start baseline is captured once, and the local respawn handler restores the last snapshot `Waldo_fnc_SaveLoadout` wrote - by default that means the manual **Loadout Save Point** ACE/vanilla action, since automatic capture on death (`Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf`) is off by default. Set it to `true` for players to instead respawn with whatever they were carrying at the moment of death. `respawnOnStart = -1` remains required.
 
 ## ACRE2-safe storage
 
@@ -29,10 +29,11 @@ therefore player-level state, not additional fields inside `getUnitLoadout`. `Sa
 switches. Ordinary `Waldo_fnc_SaveLoadout` still preserves both inventory and supported radio state
 for mission respawns regardless of whether INIDBI2 radio persistence is enabled.
 
-Ordinary respawn snapshots stay on that player's client and are tagged with Steam UID, playable-slot
-variable name and side. A hosted player changing to a different slot cannot inherit the previous
-slot's snapshot. INIDBI player records are server-owned, UID-separated and mission-scoped by
-default; set `Waldo_Persistence_Scope = "CAMPAIGN"` only for intentional cross-mission saves.
+Ordinary respawn snapshots stay on that player's client and are tagged with Steam UID and side only -
+a scripted respawn always creates a fresh, unnamed unit object, so identity cannot key off a
+playable-slot variable name. INIDBI player records are server-owned, UID-separated and
+mission-scoped by default; set `Waldo_Persistence_Scope = "CAMPAIGN"` only for intentional
+cross-mission saves.
 
 Restore order is:
 

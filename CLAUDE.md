@@ -469,18 +469,28 @@ within `roadSearchRadius`; helicopters resolve a clearance-checked landing zone 
 `landingSearchRadius`. See `wiki/Transport-Services.md` for the full per-type option reference,
 stuck/retry behaviour and the ZEN "Transport Service - Register"/"Return to Base" modules.
 
-### Respawn Options (`initPlayerLocal.sqf`)
+### Respawn Options (`initPlayerLocal.sqf`, `MissionConfig\logisticsConfig.sqf`)
 
-**"Respawn with what you died with" is enabled by default** — a `"CAManBase"`/`"Killed"` handler calls
+**Default behaviour:** the mission-start baseline (captured once automatically) plus whatever a
+player last saved through the manual **Loadout Save Point** ACE/vanilla action
+(`Waldo_fnc_SaveLoadout`, `Zen_loadoutSaveSetup.sqf`) — a deliberate player or mission-maker action,
+not an automatic capture on every death.
+
+**"Respawn with what you died with"** is an opt-in toggle, off by default:
+```sqf
+// MissionConfig\logisticsConfig.sqf
+["Waldo_Respawn_SaveOnDeath", false],   // true = capture loadout+radio on every death
+```
+When `true`, a `"CAManBase"`/`"Killed"` handler in `initPlayerLocal.sqf` calls
 `[false] call Waldo_fnc_SaveLoadout;` for the dying player, which captures both loadout and supported
 ACRE2 radio state as one snapshot (see `Waldo_fnc_SaveLoadout`'s own header), restored on respawn.
-Without this (or the alternative below), the only capture ever taken is the one-time mission-start
-baseline, and every respawn silently reverts to the starting kit and starting radio channels — comment
-the handler back out only if that starting-kit-every-respawn behaviour is what a mission wants.
+Identity between the saved snapshot and the respawned unit is matched by player UID + side only — a
+scripted respawn always creates a fresh, unnamed unit object, so matching on `vehicleVarName` (as an
+earlier revision did) never matches and silently drops the restore.
 
-A second, alternative behaviour is commented out by default — uncomment to enable instead (or in
-addition; whichever snapshot was captured most recently wins, since both write the same
-`Waldo_Player_Inventory`/`Waldo_Player_RadioState` state):
+A second, alternative behaviour is commented out by default in `initPlayerLocal.sqf` — uncomment to
+enable instead (or in addition to the config toggle above; whichever snapshot was captured most
+recently wins, since both write the same `Waldo_Player_Inventory`/`Waldo_Player_RadioState` state):
 
 ```sqf
 // Save loadout when closing ACE Arsenal (respawn with chosen kit, captured only on a deliberate

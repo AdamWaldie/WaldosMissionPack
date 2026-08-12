@@ -125,7 +125,9 @@ if (hasInterface) then {
     params ["_unit"];
     if (_unit == player) then {
         private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
-        private _currentIdentity = [getPlayerUID _unit, vehicleVarName _unit, _sideKey];
+        // UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so
+        // vehicleVarName never matches the Eden-named unit a snapshot was captured against.
+        private _currentIdentity = [getPlayerUID _unit, _sideKey];
         private _savedIdentity = missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []];
         private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
         private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
@@ -203,16 +205,19 @@ select a loadout and then forget about having to use the arsenal after respawnin
 /*
 =====================RESPAWN WITH LOADOUT ON DEATH====================================
 
-Players respawn with whatever equipment and ACRE2 radio channels they had at the moment of death,
-instead of only the mission-start baseline Waldo_fnc_SaveLoadout captured once during ACRE2's initial
-setup. Waldo_fnc_SaveLoadout captures both loadout and supported radio state together (see its own
-header), so this one handler fixes both. Comment this back out if a mission wants respawns to always
-reset to the starting kit.
+Off by default (Waldo_Respawn_SaveOnDeath in MissionConfig\logisticsConfig.sqf). The default respawn
+source is the mission-start baseline plus whatever a player last saved through the manual "Loadout
+Save Point" ACE/vanilla action (Waldo_fnc_SaveLoadout, Zen_loadoutSaveSetup.sqf). Set
+Waldo_Respawn_SaveOnDeath to true for players to instead respawn with whatever equipment and ACRE2
+radio channels they had at the moment of death - Waldo_fnc_SaveLoadout captures both loadout and
+supported radio state together (see its own header), so this one handler fixes both.
 */
 
-["CAManBase", "Killed", {
-    params ["_unit"];
-    if (_unit == player) then {
-        [false] call Waldo_fnc_SaveLoadout;
-    };
-}] call CBA_fnc_addClassEventHandler;
+if (missionNamespace getVariable ["Waldo_Respawn_SaveOnDeath", false]) then {
+    ["CAManBase", "Killed", {
+        params ["_unit"];
+        if (_unit == player) then {
+            [false] call Waldo_fnc_SaveLoadout;
+        };
+    }] call CBA_fnc_addClassEventHandler;
+};

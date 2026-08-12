@@ -5,21 +5,33 @@ loadout-saving system depends on it. If a user asks to "fix respawn" or
 change respawn behaviour, this specific setting is off-limits regardless of
 what else changes.
 
-**"Respawn with what you died with" ships enabled by default** in `initPlayerLocal.sqf` — without it
-(or the alternative below), the only loadout/radio snapshot ever taken is the one-time mission-start
-baseline, and every respawn silently reverts to the starting kit and starting radio channels:
+**Default behaviour** is the mission-start baseline plus whatever a player last saved through the
+manual **Loadout Save Point** ACE/vanilla action (`Waldo_fnc_SaveLoadout`,
+`Zen_loadoutSaveSetup.sqf`) — nothing is captured automatically on death unless opted in below.
+
+**"Respawn with what you died with"** is off by default, toggled in `MissionConfig\logisticsConfig.sqf`:
 
 ```sqf
-["CAManBase", "Killed", {
-    params ["_unit"];
-    if (_unit == player) then {
-        [false] call Waldo_fnc_SaveLoadout;
-    };
-}] call CBA_fnc_addClassEventHandler;
+["Waldo_Respawn_SaveOnDeath", false],   // true = capture loadout+radio on every death
 ```
 
-A second, alternative behaviour is commented out by default — uncomment instead if the mission wants
-"whatever kit was last built in Arsenal" rather than "whatever was carried at death":
+When `true`, a `"CAManBase"`/`"Killed"` handler in `initPlayerLocal.sqf` captures both loadout and
+radio on every death and restores it on respawn:
+
+```sqf
+if (missionNamespace getVariable ["Waldo_Respawn_SaveOnDeath", false]) then {
+    ["CAManBase", "Killed", {
+        params ["_unit"];
+        if (_unit == player) then {
+            [false] call Waldo_fnc_SaveLoadout;
+        };
+    }] call CBA_fnc_addClassEventHandler;
+};
+```
+
+A second, alternative behaviour is commented out by default in `initPlayerLocal.sqf` — uncomment
+instead if the mission wants "whatever kit was last built in Arsenal" rather than "whatever was
+carried at death":
 
 ```sqf
 // Save loadout when closing ACE Arsenal (respawn with chosen kit, no battlefield-looted-gear

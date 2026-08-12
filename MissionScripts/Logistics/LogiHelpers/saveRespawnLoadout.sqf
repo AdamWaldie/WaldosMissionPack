@@ -30,7 +30,9 @@ if (
 };
 missionNamespace setVariable ["Waldo_Player_RadioState", _radioState];
 private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
-missionNamespace setVariable ["Waldo_Player_LoadoutIdentity", [getPlayerUID player, vehicleVarName player, _sideKey]];
+// UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so vehicleVarName
+// never matches between the unit a snapshot was captured against and the unit checking it on respawn.
+missionNamespace setVariable ["Waldo_Player_LoadoutIdentity", [getPlayerUID player, _sideKey]];
 if (_showNotification) then {
     [
         "RESPAWN LOADOUT SAVED",

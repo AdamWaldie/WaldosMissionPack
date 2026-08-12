@@ -21,7 +21,7 @@
 
 params [["_player", objNull, [objNull]]];
 if (!hasInterface || {isNull _player}) exitWith {[]};
-if !(_player getUnitTrait "Medic") exitWith {[]};
+if !([_player] call Waldo_fnc_ObituaryIsQualifiedMedic) exitWith {[]};
 
 private _radius = missionNamespace getVariable ["Waldo_Obituary_Radius", 15];
 private _corpses = (nearestObjects [_player, ["CAManBase"], _radius]) select {

@@ -30,7 +30,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - Transport Services - reusable AI-crewed helicopter, ground and boat transports players call in with a map click, each in its own typed pool. Server-authoritative reservation, request IDs, requester identity and JIP-visible state; movement runs wherever the AI group is currently local. Boat requests resolve to open water clear of the shoreline; ground prefers connected roads; helicopters resolve a clearance-checked landing zone. Stuck detection, retry, optional invulnerability, ACE-first player controls with vanilla fallback, and a ZEN register/RTB workflow are shared across all three types.
 - Teleportation Script
 - Endex & Safestart Scripts - Safestart is available but inactive by default and can be enabled by Zeus; ENDEX includes an automatic After-Action Report (duration, KIA/WIA, vehicle losses, friendly fire, objectives, top fraggers).
-- Obituary / confirmed-death reporting - enabled by default. A medic's "Pronounce Dead" ACE self-interaction lists every eligible corpse within range for individual acknowledgement, replacing Arma's terse death message with a formatted KIA report (time, cause, grid, friendly-fire callout) and feeding a "Confirmed deaths" section into the After-Action Report.
+- Obituary / confirmed-death reporting - enabled by default. A "Pronounce Dead" ACE self-interaction, available to the vanilla Medic trait or an ACE Medic/Doctor role, lists every eligible corpse within range for individual acknowledgement, replacing Arma's terse death message with a formatted KIA report (time, cause, grid, friendly-fire callout) and feeding a "Confirmed deaths" section into the After-Action Report.
 - Script-driven Tasks/Objectives helpers - JIP-safe BIS task wrappers with automatic map markers that also feed the After-Action Report.
 - Mission Diagnostics - a read-only server and client health report with run IDs, machine roles, feature areas, explicit loaded/disabled/unavailable states, and structured RPT output.
 - Performance regression audit - a CI-enforced static review of recurring SQF schedulers, world searches, UI redraws and network publication, with reviewed exceptions and documented in-engine verification limits.
@@ -76,7 +76,7 @@ workflow and evidence rules are documented under `releaseVerificationAndDeployme
 
 # Other Information
 - All files are provided with description on their utilisation and purpose.
-- initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
+- initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. By default respawn uses the mission-start baseline plus the manual Loadout Save Point action; set `Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf` to `true` to instead respawn with whatever was carried at death.
 - Its recommended that you download Visual Studio Code & Its SQF plugins. Itll make any script reading in Arma 3 easier on you! 
     - Visual Studio Code: https://code.visualstudio.com/
     - SQF Language Extension: https://marketplace.visualstudio.com/items?itemName=vlad333000.sqf

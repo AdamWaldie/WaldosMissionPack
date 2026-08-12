@@ -31,7 +31,7 @@ if (player getVariable ["Waldo_Obituary_SelfInteractionInstalled", false]) exitW
 if (isNil "ace_interact_menu_fnc_createAction" || {isNil "ace_interact_menu_fnc_addActionToObject"}) exitWith {false};
 
 private _root = ["Waldo_Obituary_Root", "Pronounce Dead", "a3\ui_f\data\igui\cfg\actions\heal_ca.paa", {}, {
-    (_this select 1) getUnitTrait "Medic"
+    [_this select 1] call Waldo_fnc_ObituaryIsQualifiedMedic
 }, {
     params ["_target", "_player"];
     [_player] call Waldo_fnc_ObituaryChildrenLocal
