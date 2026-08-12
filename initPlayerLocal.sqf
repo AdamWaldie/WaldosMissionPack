@@ -203,18 +203,16 @@ select a loadout and then forget about having to use the arsenal after respawnin
 /*
 =====================RESPAWN WITH LOADOUT ON DEATH====================================
 
-UNCOMMENT THE BELOW IF YOU WANT PEOPLE TO RESPAWN WITH WHAT THEY DIED WITH!
-
-
+Players respawn with whatever equipment and ACRE2 radio channels they had at the moment of death,
+instead of only the mission-start baseline Waldo_fnc_SaveLoadout captured once during ACRE2's initial
+setup. Waldo_fnc_SaveLoadout captures both loadout and supported radio state together (see its own
+header), so this one handler fixes both. Comment this back out if a mission wants respawns to always
+reset to the starting kit.
 */
 
-/*
 ["CAManBase", "Killed", {
     params ["_unit"];
     if (_unit == player) then {
         [false] call Waldo_fnc_SaveLoadout;
     };
 }] call CBA_fnc_addClassEventHandler;
-
-
-*/
