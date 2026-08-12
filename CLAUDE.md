@@ -242,13 +242,16 @@ every rack on a vehicle:
 
 Self-forwards to the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper). Rack
 initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a connected
-player already close enough for ACRE2 to run that vehicle's rack init on their machine (ACRE2 itself
-delegates the actual mount work to a player's machine) — the server waits (bounded, 30s for the
-vehicle's racks, then 20s per rack's own radio ID) rather than assuming synchronous completion. An
-Eden init field fires at mission start regardless of whether a player has actually reached the
-vehicle yet, so a mission where players take longer than ~30s to reach a rack-equipped vehicle will
-legitimately time out (RPT: `racks-not-initialised`) — this is not itself a fault; re-call the
-function later (e.g. once a player is confirmed in/near the vehicle) to retry. A `mountRadioClass` in
+player (ACRE2 itself delegates the actual mount work to a player's machine). The worker waits in two
+separate, differently-bounded phases: first (up to 300s) for any player to be connected at all - a
+dedicated server can fire this object's Eden init field before its lobby has filled, which is outside
+WMP's or ACRE2's control - then it calls `acre_api_fnc_initVehicleRacks` itself rather than passively
+waiting for ACRE2 to trigger it (that function must be executed explicitly per ACRE2's own source; it
+delegates to any available connected player, not one near the vehicle), and waits a much shorter
+bounded 30s for the vehicle's racks to report initialised, then 20s per rack's own radio ID. Only a
+dedicated server that never receives any player within 300s will legitimately fail (RPT:
+`no-player-connected`) — this is not itself a fault; re-call the function later once a player has
+joined. A `mountRadioClass` in
 an assignment row **replaces** whatever that rack
 currently holds, and `"REMOVE_RACK"` rips the entire rack off — both gated by ACRE2's own
 `acre_api_fnc_isRackRadioRemovable` check, which is `false` unless `isRadioRemovable = 1` was set

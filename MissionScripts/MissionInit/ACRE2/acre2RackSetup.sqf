@@ -26,13 +26,16 @@
  * Waldo_ACRE2_RackSetupRunning clears. The actual mount/initialise-rack work ACRE2 performs is itself
  * delegated internally by ACRE2 to a connected player's machine (see
  * acre_api_fnc_addRackToVehicle/mountRackRadio) - this function does not need its own
- * object-locality redispatch on top of that. The bounded 30s wait in Waldo_fnc_ACRE2RackApply for
- * acre_api_fnc_areVehicleRacksInitialized needs at least one player already connected and close
- * enough for ACRE2 to actually run that vehicle's rack init on their machine within that window - an
- * Eden init field fires at mission start regardless of whether any player has reached the vehicle
- * yet, so a large mission where players take longer than ~30s to walk to a rack-equipped vehicle will
- * legitimately time out (RPT: "racks-not-initialised"). This is not itself a fault; re-call this
- * function later (e.g. once a player is confirmed in/near the vehicle) to retry.
+ * object-locality redispatch on top of that. Waldo_fnc_ACRE2RackApply waits (bounded, up to 300s) for
+ * any player to be connected to the server at all before doing anything - a mission-hosting condition
+ * outside WMP's or ACRE2's control, since a dedicated server can fire this object's Eden init field
+ * before its lobby has filled. Once a player exists, it calls acre_api_fnc_initVehicleRacks itself
+ * rather than passively waiting for ACRE2 to trigger it - per ACRE2's own source that function must be
+ * executed explicitly, and it delegates to any available connected player (not one near the vehicle
+ * specifically) - so the following bounded 30s wait for acre_api_fnc_areVehicleRacksInitialized to
+ * report true is normally satisfied within a few seconds. Only a dedicated server that never receives
+ * any player within 300s of this call will legitimately fail (RPT: "no-player-connected"); this is not
+ * itself a fault - re-call this function later once a player has joined.
  *
  * Arguments:
  * 0: Vehicle <OBJECT> - the vehicle whose already-defined racks (via CfgVehicles/CfgAcreRacks, or

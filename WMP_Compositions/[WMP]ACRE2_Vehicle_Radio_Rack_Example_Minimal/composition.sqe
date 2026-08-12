@@ -20,7 +20,7 @@ class items
     {
         dataType="Comment";
 		class PositionInfo {position[]={0,0,-8};};
-        title="ACRE2 Vehicle Radio Rack (Minimal): the smallest working call. This Hunter already has two racks once ACRE2 loads - an empty, removable AN/VRC-110 (rack 0) and a pre-mounted PRC-117F (rack 1). ""ALL"" retunes whichever radio is already mounted in every rack to channel 5, no per-rack config or ACRE2 preset needed. Silently no-ops without ACRE2. Requires a connected player near the vehicle within ~30s of mission start for ACRE2's rack init to finish - re-run the call later if that window is missed. See the Full composition for per-rack control. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Vehicle-Radio-Rack-Setup";
+        title="ACRE2 Vehicle Radio Rack (Minimal): the smallest working call. This Hunter already has two racks once ACRE2 loads - an empty, removable AN/VRC-110 (rack 0) and a pre-mounted PRC-117F (rack 1). ""ALL"" retunes whichever radio is already mounted in every rack to channel 5, no per-rack config or ACRE2 preset needed. Silently no-ops without ACRE2. Requires a connected player (anywhere on the server) for ACRE2's rack init to finish. See the Full composition for per-rack control. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Vehicle-Radio-Rack-Setup";
         id=2;
     };
 };

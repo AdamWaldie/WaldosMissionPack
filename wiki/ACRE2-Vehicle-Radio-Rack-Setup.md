@@ -27,10 +27,10 @@ itself. Most vanilla Arma 3 vehicles already have one or two racks the moment AC
    ```sqf
    [this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
    ```
-3. Done. Save, preview the mission with a player connected (rack setup needs a real connected player
-   near the vehicle within about 30 seconds — see "Why nothing happens on an empty test server"
-   below), get in the vehicle, and its rack radio(s) will be tuned to channel 5 automatically as
-   ACRE2 finishes mounting them.
+3. Done. Save, preview the mission with a player connected (rack setup needs a real connected
+   player somewhere on the server — see "Why nothing happens on an empty test server" below), get in
+   the vehicle, and its rack radio(s) will be tuned to channel 5 automatically as ACRE2 finishes
+   mounting them.
 
 That's it — most mission makers never need anything beyond this one line. Everything past this
 point is for when you want more control.
@@ -109,30 +109,49 @@ different config, and it re-applies. Calling it again with the **exact same** co
 does nothing (this is intentional — it is what makes it safe for the one-liner above to sit in an
 init field that every connected player's machine technically runs).
 
-## Why nothing happens on an empty test server (or a big mission)
+## Why nothing happens on an empty test server
 
-ACRE2 needs an actual connected player **already close to the vehicle** to finish setting its racks
-up — this is an ACRE2 engine behaviour, not a WMP choice. If you preview/host with nobody connected,
-or the vehicle sits empty, the radio simply will not finish initialising and nothing will be tuned.
+ACRE2 needs an actual connected player **somewhere on the server** to finish setting a vehicle's
+racks up — this is an ACRE2 engine behaviour, not a WMP choice; ACRE2 delegates that work to a
+connected player's own machine (any connected player, not specifically one near or inside the
+vehicle). `Waldo_fnc_ACRE2RackSetup` triggers ACRE2's own rack initialisation itself as soon as a
+player exists (it does not wait around hoping ACRE2 gets to it on its own), so on a normal hosted
+mission setup completes within a few seconds of a player being connected, regardless of where that
+player currently is on the map.
 
-This also matters on a real mission: the vehicle's init field runs the instant the mission starts,
-but the setup call only waits about **30 seconds** for a player to be near enough for ACRE2 to
-actually do the work. On a large mission where players spend more than 30 seconds walking from their
-spawn to the vehicle, that first attempt will time out (you'll see
-`racks-not-initialised (no connected player, or ACRE2 setup failed within 30s)` in the RPT log) even
-though nothing is actually wrong. This is expected, not a bug — get a player in (or near) the vehicle
-and simply call `Waldo_fnc_ACRE2RackSetup` again (same line, e.g. from a trigger once a player is
-confirmed near the vehicle, or just re-run it manually) and it will complete within a few seconds.
+The one genuine gap this can't paper over: a **dedicated server that auto-starts its mission before
+anyone has joined** fires this vehicle's Eden init field with zero players connected — nothing ACRE2
+does can initialise a rack with nobody there to do the work. WMP handles this by waiting, separately
+and much more patiently (up to **5 minutes**), for a player to actually be connected before it even
+attempts anything with ACRE2; only once a player exists does the short 30-second ACRE2 wait start. If
+you still see `no-player-connected (nobody joined the server within 300s of this call)` in the RPT, no
+player joined that server within 5 minutes of the mission starting — call
+`Waldo_fnc_ACRE2RackSetup` again once someone has. If instead you see
+`racks-not-initialised (no connected player, or ACRE2 setup failed within 30s)`, a player was
+connected but ACRE2 itself failed to finish within 30 seconds — this is the case worth reporting if it
+recurs, since it means ACRE2's own initialisation did not complete even with the explicit trigger.
 
 ## How it works, and what is unverified
 
 Rack initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a
 connected player — ACRE2 delegates the actual mount/initialise work to a player's machine internally
 rather than completing it synchronously on the server. `Waldo_fnc_ACRE2RackSetup` self-forwards to
-the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper in an Eden init field), then
-waits with a bounded timeout — 30 seconds for the vehicle's racks to report initialised
-(`acre_api_fnc_areVehicleRacksInitialized`), then 20 seconds per rack for its mounted radio to
-receive a real unique ID rather than sit as a bare, un-initialised base classname
+the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper in an Eden init field), which then
+runs two separate, differently-bounded waits rather than one shared timeout:
+
+1. **Up to 5 minutes** for any player to be connected to the server at all — a dedicated server can
+   fire this vehicle's Eden init field before its lobby has filled, which is a mission-hosting
+   condition outside WMP's or ACRE2's control.
+2. Once a player exists, it calls `acre_api_fnc_initVehicleRacks` on the vehicle itself — per ACRE2's
+   own source, that function must be executed explicitly and is not triggered automatically on
+   vehicle creation or by player proximity; it delegates the actual work to whichever connected
+   player ACRE2 selects, not necessarily one near the vehicle. Calling it directly, rather than
+   passively waiting for ACRE2 to trigger it on its own, is what makes the following **30-second**
+   wait for `acre_api_fnc_areVehicleRacksInitialized` to report true normally resolve within a few
+   seconds regardless of where players currently are on the map.
+
+Then 20 seconds per rack for its mounted radio to receive a real unique ID rather than sit as a bare,
+un-initialised base classname
 (`acre_api_fnc_getMountedRackRadio` returns the base class until ACRE2 finishes issuing the ID).
 
 CHANNEL-mode rack radios (PRC-148/152/117F) are applied and read back synchronously, exactly like
@@ -168,10 +187,12 @@ Drop either into Eden and read its in-editor comment for a walkthrough.
 
 ## Something not working?
 
-- **Nothing is tuned at all, and the RPT shows `racks-not-initialised`:** a player wasn't close
-  enough to the vehicle within ~30 seconds of mission start — see "Why nothing happens on an empty
-  test server (or a big mission)" above. Get a player to the vehicle and call
-  `Waldo_fnc_ACRE2RackSetup` again.
+- **Nothing is tuned at all, and the RPT shows `no-player-connected`:** nobody joined the server
+  within 5 minutes of the call — see "Why nothing happens on an empty test server" above. Call
+  `Waldo_fnc_ACRE2RackSetup` again once a player is connected.
+- **Nothing is tuned at all, and the RPT shows `racks-not-initialised`:** a player was connected but
+  ACRE2 itself failed to finish initialising within 30 seconds — this is worth reporting if it
+  recurs, since it means ACRE2's own initialisation did not complete even with the explicit trigger.
 - **A swap or "REMOVE_RACK" is being ignored:** that rack is fixed hardware on this vehicle (true for
   every vanilla PRC-117F rack) — see "Swapping or removing what's mounted" above.
 - **Still stuck:** check the RPT log for lines starting `[WMP ACRE RACK]` — they name the exact
