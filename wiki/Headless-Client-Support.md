@@ -56,6 +56,13 @@ IP in `server.cfg`'s `headlessClients[]`, and launching the HC process itself wi
 `-client -connect=<serverIP> -password=<password>` - is ordinary Arma 3 server hosting, outside WMP's
 scope; consult your server host or Bohemia's own headless-client documentation for that step.
 
+**Headless clients count toward `description.ext`'s `maxPlayers`.** A connecting HC with an
+allow-listed IP is meant to auto-fill the first free Headless Client slot with no manual role
+selection - but if `maxPlayers` was only sized for your human player count, adding several HCs on top
+of it can silently prevent them from ever being assigned a slot, even though the underlying network
+connection itself succeeds (still visible in the RPT/server log). Size `maxPlayers` for human players
+**plus** every headless client slot you intend to fill.
+
 ## How it works
 
 1. **Detection.** Every machine calls `Waldo_fnc_HeadlessDetectLocal` from `init.sqf`, gated behind
