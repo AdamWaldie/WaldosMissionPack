@@ -198,9 +198,10 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 
 | Setting | Purpose |
 |---|---|
-| `Waldo_Obituary_Enable` | Installs the medic-only "Pronounce Dead" ACE target interaction. Defaults `true`, unlike other `MedicalSystems/` features. |
+| `Waldo_Obituary_Enable` | Installs the medic-only "Pronounce Dead" ACE self-interaction submenu. Defaults `true`, unlike other `MedicalSystems/` features. |
 | `Waldo_Obituary_ChatAnnounce` | Also broadcasts the terse systemChat pronounce line. |
 | `Waldo_Obituary_DiaryPollInterval` | Seconds between local diary-record sync checks. |
+| `Waldo_Obituary_Radius` | Metres around the medic the "Pronounce Dead" self-action scans for eligible corpses; each one in range gets its own named row for individual acknowledgement. |
 
 ### Tactical display
 
