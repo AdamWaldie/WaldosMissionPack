@@ -67,11 +67,14 @@ if (_at < 0) then {
 };
 missionNamespace setVariable ["Waldo_AAR_Obituary", _obit, true];
 
-// Obituary document state (broadcast, JIP-safe like the Jammer/Tracker registries).
+// Obituary document state. Keep the fields as plain serialisable data so each client can group all
+// of one player's deaths onto one page instead of consuming one diary record per body.
 private _entries = +(missionNamespace getVariable ["Waldo_Obituary_Entries", []]);
-_entries pushBack _textBlock;
+_entries pushBack [_markerId, _victimName, _toDiscovery, name _player, _toDeath, _causeText, _markerName, _gridRef, _textBlock];
 missionNamespace setVariable ["Waldo_Obituary_Entries", _entries, true];
-missionNamespace setVariable ["Waldo_Obituary_Text", (_entries joinString "<hr/><br/>"), true];
+// Compatibility mirror for scripts that only inspect whether obituary text exists. The diary
+// renderer uses Waldo_Obituary_Entries and never presents this combined string.
+missionNamespace setVariable ["Waldo_Obituary_Text", _textBlock, true];
 missionNamespace setVariable ["Waldo_Obituary_Version", (missionNamespace getVariable ["Waldo_Obituary_Version", 0]) + 1, true];
 
 if (missionNamespace getVariable ["Waldo_Obituary_ChatAnnounce", true]) then {

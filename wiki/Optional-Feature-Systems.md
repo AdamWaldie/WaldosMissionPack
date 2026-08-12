@@ -127,8 +127,10 @@ rather than a curator-authored placement. The self-action root reinstalls itself
 (`Waldo_fnc_ObituarySelfInteractionInit`, the same pattern `Waldo_fnc_AccessibilitySelfInteractionInit`
 uses), since `ACE_SelfActions` lives on the player object Arma replaces each time.
 
-Every player gets **one** "Obituary" diary record that updates in place as deaths are confirmed,
-not one record per death, and it survives the reading player's own respawn. Every name-dependent
+Every player gets a **Confirmed Deaths - Index** plus **one diary page per player name**. Repeat
+deaths are numbered and separated inside that player's page. This keeps the record count bounded by
+the number of distinct players instead of consuming one of Arma's diary records for every body, and
+the pages survive the reading player's own respawn. Every name-dependent
 value (victim name, instigator name) and the cause-of-death classification are computed and cached
 **at the moment of death**, not when a medic later pronounces it — this keeps the report correct
 even if the victim or killer has since disconnected. Friendly fire is flagged normally, except when

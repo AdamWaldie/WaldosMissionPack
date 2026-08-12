@@ -19,7 +19,7 @@ if (missionNamespace getVariable ["Waldo_Rally_RespawnHandlerInstalled", false])
 missionNamespace setVariable ["Waldo_Rally_RespawnHandlerInstalled", true];
 addMissionEventHandler ["EntityRespawned", {
     params ["_newEntity"];
-    if (local _newEntity && {_newEntity isKindOf "CAManBase"} && {missionNamespace getVariable ["Waldo_Rally_Enable", false]}) then {
+    if (local _newEntity && {_newEntity isEqualTo player} && {missionNamespace getVariable ["Waldo_Rally_Enable", false]}) then {
         [_newEntity] call Waldo_fnc_RallyPointSetupLocal;
         private _group = group _newEntity;
         private _rally = _group getVariable ["Waldo_Rally_Object", objNull];

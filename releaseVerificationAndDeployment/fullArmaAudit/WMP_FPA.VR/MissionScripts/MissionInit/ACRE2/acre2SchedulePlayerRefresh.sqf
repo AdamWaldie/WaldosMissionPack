@@ -88,7 +88,8 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     if (_applyPlan) then {_planApplied = [true, _reason] call Waldo_fnc_ACRE2ApplyPlayerPlan};
     [] call Waldo_fnc_ACRE2ApplyBabel;
     [] call Waldo_fnc_ACRE2BuildCEOI;
-    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+        missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", _reason];
         [false] call Waldo_fnc_SaveLoadout;
     };
     if (

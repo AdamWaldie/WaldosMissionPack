@@ -33,6 +33,9 @@ class CfgFunctions
             class SetTeamColour {
                 file = "MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf";
             };
+            class AceSetNameRespawnBindingRepair {
+                file = "MissionScripts\MissionInit\aceSetNameRespawnBindingRepair.sqf";
+            };
         };
         class BriefDocs 
         {
@@ -173,11 +176,11 @@ class CfgFunctions
             class ENDEXReset {
                 file = "MissionScripts\MissionFlowAndUi\ENDEXReset.sqf";
             };
+            class ENDEXBuildReportPages {
+                file = "MissionScripts\MissionFlowAndUi\endexBuildReportPages.sqf";
+            };
             class AARTrack {
                 file = "MissionScripts\MissionFlowAndUi\aarTrack.sqf";
-            };
-            class AARWound {
-                file = "MissionScripts\MissionFlowAndUi\aarWound.sqf";
             };
             class SafeStart {
                 file = "MissionScripts\MissionFlowAndUi\safeStart.sqf";
@@ -208,6 +211,9 @@ class CfgFunctions
             };
             class ProtectionReleaseSafety {
                 file = "MissionScripts\MissionFlowAndUi\protectionReleaseSafety.sqf";
+            };
+            class ProtectionRespawnLocal {
+                file = "MissionScripts\MissionFlowAndUi\protectionRespawnLocal.sqf";
             };
               class CleanupTransientUi {
                   file = "MissionScripts\MissionFlowAndUi\cleanupTransientUi.sqf";
