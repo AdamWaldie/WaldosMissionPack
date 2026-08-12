@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 913,
+  "registeredFunctionCount": 917,
   "runtimeFunctionCount": 385,
-  "functionCount": 1298,
+  "functionCount": 1302,
   "stations": [
     {
       "id": "control",
@@ -1365,6 +1365,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_RespawnRestoreLoadout",
+      "file": "MissionScripts/Logistics/LogiHelpers/respawnRestoreLoadout.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_SetupQuarterMaster",
       "file": "MissionScripts/Logistics/Crates/initQuartermaster.sqf",
       "station": "loadouts",
@@ -2111,6 +2117,24 @@
     {
       "name": "Waldo_fnc_ObituaryInit",
       "file": "MissionScripts/MedicalSystems/Obituary/obituaryInit.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryIsQualifiedMedic",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryIsQualifiedMedic.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituarySelfInteractionInit",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituarySelfInteractionInit.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ObituaryChildrenLocal",
+      "file": "MissionScripts/MedicalSystems/Obituary/obituaryChildrenLocal.sqf",
       "station": "control",
       "activation": "manual"
     },

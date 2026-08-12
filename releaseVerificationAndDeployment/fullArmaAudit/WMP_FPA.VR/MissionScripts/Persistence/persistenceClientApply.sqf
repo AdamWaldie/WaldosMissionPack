@@ -75,7 +75,8 @@ if (missionNamespace getVariable ["Waldo_Persistence_SaveLoadout", true] && {cou
     player setUnitLoadout _filteredLoadout;
     missionNamespace setVariable ["Waldo_Player_Inventory", _filteredLoadout];
     private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
-    missionNamespace setVariable ["Waldo_Player_LoadoutIdentity", [getPlayerUID player, vehicleVarName player, _sideKey]];
+    // UID+side only - matches saveRespawnLoadout.sqf; vehicleVarName never survives a scripted respawn.
+    missionNamespace setVariable ["Waldo_Player_LoadoutIdentity", [getPlayerUID player, _sideKey]];
     missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1];
     missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
 };

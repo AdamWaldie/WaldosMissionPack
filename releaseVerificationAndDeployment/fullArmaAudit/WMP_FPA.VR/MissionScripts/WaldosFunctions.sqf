@@ -418,6 +418,9 @@ class CfgFunctions
             class SaveLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\saveRespawnLoadout.sqf";
             };
+            class RespawnRestoreLoadout {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnRestoreLoadout.sqf";
+            };
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
             };
@@ -738,6 +741,9 @@ class CfgFunctions
         class Obituary
         {
             class ObituaryInit {file = "MissionScripts\MedicalSystems\Obituary\obituaryInit.sqf";};
+            class ObituaryIsQualifiedMedic {file = "MissionScripts\MedicalSystems\Obituary\obituaryIsQualifiedMedic.sqf";};
+            class ObituarySelfInteractionInit {file = "MissionScripts\MedicalSystems\Obituary\obituarySelfInteractionInit.sqf";};
+            class ObituaryChildrenLocal {file = "MissionScripts\MedicalSystems\Obituary\obituaryChildrenLocal.sqf";};
             class ObituaryRecordDeath {file = "MissionScripts\MedicalSystems\Obituary\obituaryRecordDeath.sqf";};
             class ObituaryClassifyCause {file = "MissionScripts\MedicalSystems\Obituary\obituaryClassifyCause.sqf";};
             class ObituaryPronounce {file = "MissionScripts\MedicalSystems\Obituary\obituaryPronounce.sqf";};

@@ -1138,7 +1138,11 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("[] call Waldo_fnc_ACRE2Init;", init_server)
         self.assertIn("[] call Waldo_fnc_ACRE2Init;", init_player)
         self.assertIn("if (isServer &&", acre_init)
-        self.assertIn("private _deadline = diag_tickTime + 120;", acre_refresh)
+        # The deadline is bounded by a configurable MissionConfig\acreConfig.sqf value
+        # (readinessTimeoutSeconds) rather than a hardcoded literal, but it must still resolve to a
+        # concrete numeric deadline computed once up front - never an unbounded wait.
+        self.assertIn('getOrDefault ["readinessTimeoutSeconds", 120]', acre_refresh)
+        self.assertIn("private _deadline = diag_tickTime + _readinessTimeout;", acre_refresh)
         self.assertIn('["INITIAL_LATE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh', acre_refresh)
         self.assertIn("if (_planApplied", acre_refresh)
         self.assertNotIn("Waldo_ACRE2_PlanReady", acre_init)
@@ -1163,6 +1167,9 @@ class FullAuditTests(unittest.TestCase):
         restore_radio = (root / "acre2ApplyRadioState.sqf").read_text(encoding="utf-8")
         save_respawn = (ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "saveRespawnLoadout.sqf").read_text(encoding="utf-8")
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        respawn_restore = (
+            ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "respawnRestoreLoadout.sqf"
+        ).read_text(encoding="utf-8")
         persistence_apply = (ROOT / "MissionScripts" / "Persistence" / "persistenceClientApply.sqf").read_text(encoding="utf-8")
         profiles = (root / "acre2GetRadioProfiles.sqf").read_text(encoding="utf-8")
         refresh = (root / "acre2SchedulePlayerRefresh.sqf").read_text(encoding="utf-8")
@@ -1349,10 +1356,16 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("_speakingReadBack isEqualType 0", babel)
         self.assertIn('Waldo_fnc_ACRE2CaptureRadioState', save_respawn)
         self.assertIn('Waldo_Player_RadioState', save_respawn)
-        self.assertIn('Waldo_Player_RadioState', init_player)
-        self.assertIn('Waldo_fnc_ACRE2ApplyRadioState', init_player)
-        self.assertIn('["RESPAWN_RESTORED", false]', init_player)
+        # The respawn-time restore body (radio state application, RESPAWN_RESTORED refresh reason)
+        # lives in the extracted, shared Waldo_fnc_RespawnRestoreLoadout - called from both of
+        # initPlayerLocal.sqf's independent respawn triggers - rather than inline in
+        # initPlayerLocal.sqf itself.
+        self.assertIn('Waldo_Player_RadioState', respawn_restore)
+        self.assertIn('Waldo_fnc_ACRE2ApplyRadioState', respawn_restore)
+        self.assertIn('["RESPAWN_RESTORED", false]', respawn_restore)
+        self.assertIn('Waldo_fnc_RespawnRestoreLoadout', init_player)
         self.assertNotIn('["RESPAWN", true]', init_player)
+        self.assertNotIn('["RESPAWN", true]', respawn_restore)
         self.assertIn('missionNamespace setVariable ["Waldo_Player_Inventory", _filteredLoadout]', persistence_apply)
         self.assertIn('missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios]', persistence_apply)
         self.assertIn('Waldo_ACRE2_RestoredRadioGeneration', restore_radio)
@@ -2385,6 +2398,9 @@ class FullAuditTests(unittest.TestCase):
         clear = (flow / "clearUiPanels.sqf").read_text(encoding="utf-8")
         setup = (flow / "setupUiCleanupAction.sqf").read_text(encoding="utf-8")
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        respawn_restore = (
+            ROOT / "MissionScripts" / "Logistics" / "LogiHelpers" / "respawnRestoreLoadout.sqf"
+        ).read_text(encoding="utf-8")
         player_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         send = (flow / "sendNotification.sqf").read_text(encoding="utf-8")
@@ -2479,7 +2495,16 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("} else {", setup)
         self.assertIn("player addAction", setup)
         self.assertIn("Waldo_UI_CleanupActionInstalled", setup)
-        self.assertGreaterEqual(init_player.count("Waldo_fnc_SetupUiCleanupAction"), 2)
+        # The respawn-path call now lives in the extracted, shared Waldo_fnc_RespawnRestoreLoadout
+        # (MissionScripts/Logistics/LogiHelpers/respawnRestoreLoadout.sqf, called from both of
+        # initPlayerLocal.sqf's independent respawn triggers) rather than inline in initPlayerLocal.sqf
+        # itself - count across both so this still verifies "installed at initial setup AND
+        # re-installed on respawn" rather than just counting raw text in one file.
+        self.assertGreaterEqual(
+            init_player.count("Waldo_fnc_SetupUiCleanupAction")
+            + respawn_restore.count("Waldo_fnc_SetupUiCleanupAction"),
+            2,
+        )
         self.assertIn("Waldo_fnc_SetupUiAcePriority", init_player)
         ace_priority = (flow / "setupUiAcePriority.sqf").read_text(encoding="utf-8")
         suppression = (flow / "setUiPanelsSuppressed.sqf").read_text(encoding="utf-8")

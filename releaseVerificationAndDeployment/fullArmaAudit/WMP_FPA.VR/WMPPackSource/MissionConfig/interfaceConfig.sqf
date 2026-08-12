@@ -84,12 +84,14 @@
  * - Waldo_TreatmentFeedback_BodyPartNames: ACE body-part ID -> readable label map.
  *
  * SETTING-BY-SETTING GUIDE - OBITUARY:
- * - Waldo_Obituary_Enable: installs the medic-only "Pronounce Dead" ACE target interaction when
+ * - Waldo_Obituary_Enable: installs the medic-only "Pronounce Dead" ACE self-interaction submenu when
  *   true. Defaults true (unlike Treatment Feedback) - this feature has no off switch in the
  *   reference script it replaces and is meant to be the mission's confirmed-death report by
  *   default; do not "correct" this default to false by pattern-matching on the MedicalSystems folder.
  * - Waldo_Obituary_ChatAnnounce: also broadcasts the terse systemChat pronounce line.
  * - Waldo_Obituary_DiaryPollInterval: seconds between local diary-record sync checks (ADVANCED).
+ * - Waldo_Obituary_Radius: metres around the medic the "Pronounce Dead" self-action scans for
+ *   eligible corpses; each one in range gets its own named row for individual acknowledgement.
  *
  * SETTING-BY-SETTING GUIDE - TACTICAL DISPLAY:
  * - Waldo_TacticalDisplay_AccessDistance: interaction range in metres around a registered whiteboard/map board.
@@ -202,9 +204,10 @@ createHashMapFromArray [
             ["leftleg", "Left leg"], ["rightleg", "Right leg"]
         ]],
         // MISSION MAKER: Obituary / confirmed-death reporting. Defaults on, unlike Treatment Feedback.
-        ["Waldo_Obituary_Enable", true], // BOOL: install the medic "Pronounce Dead" ACE target interaction.
+        ["Waldo_Obituary_Enable", true], // BOOL: install the medic "Pronounce Dead" ACE self-interaction submenu.
         ["Waldo_Obituary_ChatAnnounce", true], // BOOL: also broadcast the terse systemChat pronounce line.
         ["Waldo_Obituary_DiaryPollInterval", 3], // SECONDS: local diary-render poll cadence (ADVANCED).
+        ["Waldo_Obituary_Radius", 15], // METRES: scan range for the "Pronounce Dead" self-action's corpse list.
         // MISSION MAKER distances; ADVANCED knowledge threshold (Arma knowsAbout scale 0-4).
         ["Waldo_TacticalDisplay_AccessDistance", 4], // METRES: distance at which display interaction appears.
         ["Waldo_TacticalDisplay_MaximumOpenDistance", 8], // METRES: UI closes beyond this distance.
