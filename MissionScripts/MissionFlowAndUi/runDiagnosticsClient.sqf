@@ -300,24 +300,16 @@ if (_fieldHospitals isEqualTo []) then {
 };
 
 private _lastRestore = missionNamespace getVariable ["Waldo_Player_LastRespawnRestore", []];
+private _respawnSnapshot = missionNamespace getVariable ["Waldo_Player_RespawnSnapshot", []];
+private _respawnSnapshotSource = missionNamespace getVariable ["Waldo_Player_RespawnSnapshotSource", "NONE"];
+private _snapshotRadioCount = if (count _respawnSnapshot >= 3 && {count (_respawnSnapshot select 2) >= 2}) then {count ((_respawnSnapshot select 2) select 1)} else {0};
+private _snapshotAge = if (count _respawnSnapshot >= 4) then {round (diag_tickTime - (_respawnSnapshot select 3))} else {-1};
+["respawn", "snapshot", if (count _respawnSnapshot >= 4) then {"ACTIVE"} else {"ERROR"}, format ["source=%1 ageSeconds=%2 loadoutEntries=%3 radioOccurrences=%4", _respawnSnapshotSource, _snapshotAge, if (count _respawnSnapshot >= 2) then {count (_respawnSnapshot select 1)} else {0}, _snapshotRadioCount], if (count _respawnSnapshot >= 4) then {""} else {"No atomic respawn snapshot exists. The player will retain the freshly spawned unit loadout until the mission baseline, a save action, or persistence creates one."}] call _add;
 if (count _lastRestore < 3) then {
     ["respawn", "loadout-restore", "UNCONFIGURED", "This client has not respawned yet this session; nothing to report."] call _add;
 } else {
     _lastRestore params ["_restoreIdentityMatched", "_restoreCount", "_restoreTickTime"];
     ["respawn", "loadout-restore", if (_restoreIdentityMatched) then {"ACTIVE"} else {"ERROR"}, format ["identityMatched=%1 restoredEntries=%2 secondsAgo=%3", _restoreIdentityMatched, _restoreCount, round (diag_tickTime - _restoreTickTime)], if (_restoreIdentityMatched) then {""} else {"The last respawn's saved-loadout identity (UID+side) did not match this player - the mission-start baseline was applied instead. Check the RPT for the matching [WMP LOADOUT] line, and confirm Waldo_Player_LoadoutIdentity/Waldo_Player_Inventory are being set by Waldo_fnc_SaveLoadout."}] call _add;
-};
-
-// Known upstream ACE3 issue, not a WMP defect: ace_nametags/ace_dogtags' own config-based "respawn"
-// event handler (CfgEventHandlers.hpp: respawn = QUOTE(call FUNC(setName));) forwards the engine's
-// [unit, corpse] respawn params wholesale into ace_common_fnc_setName, whose second parameter
-// (_forceSet) has no type guard - the corpse Object lands there and the function throws "Type
-// Object, expected Bool" on every scripted respawn. This is informational only: WMP calls neither
-// ace_common_fnc_setName nor sets ace_setCustomName anywhere, and there is no mission-side fix short
-// of overriding ACE's own config event handler, so this check never carries a "fix" hint.
-private _nametagsLoaded = isClass (configFile >> "CfgPatches" >> "ace_nametags");
-private _dogtagsLoaded = isClass (configFile >> "CfgPatches" >> "ace_dogtags");
-if (_nametagsLoaded || _dogtagsLoaded) then {
-    ["dependencies", "ace-nametags-respawn-compat", "LOADED", format ["nametags=%1 dogtags=%2 - a harmless 'Type Object, expected Bool' error from ace/addons/common/functions/fnc_setName.sqf on respawn is a known upstream ACE3 issue in its own config-based respawn handler, not a WMP defect; ACE's separate PlayerChanged hook still names the unit correctly.", _nametagsLoaded, _dogtagsLoaded]] call _add;
 };
 
 private _warnings = {_x select 2 == "ERROR"} count _checks;

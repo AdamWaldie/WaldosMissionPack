@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 917,
+  "registeredFunctionCount": 919,
   "runtimeFunctionCount": 385,
-  "functionCount": 1302,
+  "functionCount": 1304,
   "stations": [
     {
       "id": "control",
@@ -477,6 +477,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_AceSetNameRespawnBindingRepair",
+      "file": "MissionScripts/MissionInit/aceSetNameRespawnBindingRepair.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_AddDocs",
       "file": "MissionScripts/MissionInit/BriefingDocuments/AddDocs.sqf",
       "station": "mission-init",
@@ -873,14 +879,14 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_AARTrack",
-      "file": "MissionScripts/MissionFlowAndUi/aarTrack.sqf",
+      "name": "Waldo_fnc_ENDEXBuildReportPages",
+      "file": "MissionScripts/MissionFlowAndUi/endexBuildReportPages.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_AARWound",
-      "file": "MissionScripts/MissionFlowAndUi/aarWound.sqf",
+      "name": "Waldo_fnc_AARTrack",
+      "file": "MissionScripts/MissionFlowAndUi/aarTrack.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -941,6 +947,12 @@
     {
       "name": "Waldo_fnc_ProtectionReleaseSafety",
       "file": "MissionScripts/MissionFlowAndUi/protectionReleaseSafety.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ProtectionRespawnLocal",
+      "file": "MissionScripts/MissionFlowAndUi/protectionRespawnLocal.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },

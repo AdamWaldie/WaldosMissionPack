@@ -1356,19 +1356,88 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("_speakingReadBack isEqualType 0", babel)
         self.assertIn('Waldo_fnc_ACRE2CaptureRadioState', save_respawn)
         self.assertIn('Waldo_Player_RadioState', save_respawn)
-        # The respawn-time restore body (radio state application, RESPAWN_RESTORED refresh reason)
-        # lives in the extracted, shared Waldo_fnc_RespawnRestoreLoadout - called from both of
-        # initPlayerLocal.sqf's independent respawn triggers - rather than inline in
-        # initPlayerLocal.sqf itself.
+        self.assertIn('Waldo_Player_RespawnSnapshot', save_respawn)
+        self.assertIn('the previous complete respawn snapshot was preserved', save_respawn)
+        # The respawn-time restore body lives in the extracted shared function, called by one local
+        # Respawn event handler. Repeat protection must be client-owned; a unit variable can be
+        # inherited by a later respawn body and suppress every restore after the first.
         self.assertIn('Waldo_Player_RadioState', respawn_restore)
+        self.assertIn('Waldo_Player_RespawnSnapshot', respawn_restore)
+        self.assertIn('Waldo_RespawnRestoreHandledUnit', respawn_restore)
+        self.assertNotIn('_unit getVariable ["Waldo_RespawnRestoreHandled"', respawn_restore)
         self.assertIn('Waldo_fnc_ACRE2ApplyRadioState', respawn_restore)
         self.assertIn('["RESPAWN_RESTORED", false]', respawn_restore)
+        self.assertIn('setVariable ["acre_sys_radio_setup", "", true]', respawn_restore)
         self.assertIn('Waldo_fnc_RespawnRestoreLoadout', init_player)
+        self.assertIn('[_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout', init_player)
+        self.assertIn('player addEventHandler ["Respawn"', init_player)
+        self.assertNotIn('["CAManBase", "Respawn", {', init_player)
+        self.assertNotIn('"unit",\n        {\n            params ["_newUnit", ["_oldUnit"', init_player)
+        self.assertNotIn('re-executes this whole file on every respawn', init_player)
         self.assertNotIn('["RESPAWN", true]', init_player)
         self.assertNotIn('["RESPAWN", true]', respawn_restore)
         self.assertIn('missionNamespace setVariable ["Waldo_Player_Inventory", _filteredLoadout]', persistence_apply)
-        self.assertIn('missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios]', persistence_apply)
+        self.assertIn('[false] call Waldo_fnc_SaveLoadout', persistence_apply)
         self.assertIn('Waldo_ACRE2_RestoredRadioGeneration', restore_radio)
+        self.assertIn('"PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE"', refresh)
+
+        ace_binding = (
+            ROOT / "MissionScripts" / "MissionInit" / "aceSetNameRespawnBindingRepair.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('getVariable ["cba_xeh_respawn", []]', ace_binding)
+        self.assertIn('_callbackTextLower find "ace_common_fnc_setname" >= 0', ace_binding)
+        self.assertIn('{[_this select 0] call ace_common_fnc_setName}', ace_binding)
+        self.assertIn('Waldo_ACE_SetNameRespawnBindingSafe', ace_binding)
+        self.assertIn('Waldo_fnc_AceSetNameRespawnBindingRepair', init_player)
+        self.assertIn('player getVariable "cba_xeh_respawn"', init_player)
+        self.assertIn('Timed out waiting for CBA', init_player)
+        self.assertNotIn("ace_common_fnc_setName =", init_player)
+
+        protection_respawn = (
+            ROOT / "MissionScripts" / "MissionFlowAndUi" / "protectionRespawnLocal.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('Waldo_SafeStart_FiredEH = nil', protection_respawn)
+        self.assertIn('Waldo_PreventWeaponsFireEventHandler = nil', protection_respawn)
+        self.assertIn('[true, "RESPAWN"] call Waldo_fnc_SafeStartApply', protection_respawn)
+        self.assertIn('[true] call Waldo_fnc_ENDEX', protection_respawn)
+        self.assertIn('Waldo_fnc_ProtectionRespawnLocal', respawn_restore)
+
+        rally = (ROOT / "MissionScripts" / "Respawn" / "RallyPoint" / "rallyPointInit.sqf").read_text(encoding="utf-8")
+        self.assertIn('_newEntity isEqualTo player', rally)
+        self.assertNotIn('_newEntity isKindOf "CAManBase"', rally)
+
+    def test_obituary_groups_deaths_by_player_and_endex_uses_one_rotating_card(self):
+        obituary = (ROOT / "MissionScripts" / "MedicalSystems" / "Obituary" / "obituaryDiaryRenderLocal.sqf").read_text(encoding="utf-8")
+        pronounce = (ROOT / "MissionScripts" / "MedicalSystems" / "Obituary" / "obituaryPronounce.sqf").read_text(encoding="utf-8")
+        endex = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "ENDEX.sqf").read_text(encoding="utf-8")
+        pages = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "endexBuildReportPages.sqf").read_text(encoding="utf-8")
+        self.assertIn('private _grouped = createHashMap', obituary)
+        self.assertIn('_grouped getOrDefault [_victimName, []]', obituary)
+        self.assertIn('DEATH %1 OF %2', obituary)
+        self.assertIn('Waldo_Obituary_Records', obituary)
+        self.assertIn('private _individualPageLimit = 240', obituary)
+        self.assertIn('Additional Personnel', obituary)
+        self.assertIn('_entries pushBack [_markerId, _victimName', pronounce)
+        self.assertIn('Waldo_fnc_ENDEXBuildReportPages', endex)
+        self.assertIn('"ENDEX", "WMP OPERATIONS", "REPLACE"', endex)
+        self.assertIn('Waldo_ENDEX_PageGeneration', endex)
+        self.assertIn('CONFIRMED DEATHS', pages)
+        self.assertIn('private _sections = [["SUMMARY"', pages)
+        self.assertIn('private _singlePageRows = 12', pages)
+        self.assertIn('ceil (_remainingRows / _remainingPages)', pages)
+        self.assertNotIn('WIA //', pages)
+        self.assertNotIn('_pages pushBack ["PERSONNEL"', pages)
+        self.assertNotIn('_pages pushBack ["VEHICLE LOSSES"', pages)
+        self.assertNotIn('WIA //', pages)
+
+    def test_paradrop_live_marker_reconciler_does_not_depend_on_remote_call_order(self):
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        setup = (ROOT / "MissionScripts" / "Paradrop" / "paradropSetupLocal.sqf").read_text(encoding="utf-8")
+        update = (ROOT / "MissionScripts" / "Paradrop" / "paradropUpdateMarkersLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('[] call Waldo_fnc_ParadropSetupLocal', init_player)
+        self.assertIn('Waldo_Paradrop_MarkerPFH', setup)
+        self.assertIn('Waldo_Paradrop_PublicAircraft', update)
+        self.assertIn('createMarkerLocal', update)
 
     def test_persistence_load_handshake_prevents_acre_and_save_races(self):
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")

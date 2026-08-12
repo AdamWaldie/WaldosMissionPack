@@ -3,7 +3,7 @@ private _active = missionNamespace getVariable ["Waldo_ENDEX_Active", false];
 private _aar = missionNamespace getVariable ["Waldo_AAR_Initialised", false];
 private _checks = [
     ["mission-flow", "endex-authority", if (_active) then {"ACTIVE"} else {"LOADED"}, format ["active=%1 reportDuration=%2", _active, missionNamespace getVariable ["Waldo_ENDEX_ReportDuration", 45]]],
-    ["mission-flow", "aar-ledger", if (_aar) then {"ACTIVE"} else {"UNCONFIGURED"}, format ["initialised=%1 startTime=%2 KIA=%3 WIA=%4 vehicleKIA=%5 friendlyFire=%6", _aar, missionNamespace getVariable ["Waldo_AAR_StartTime", -1], missionNamespace getVariable ["Waldo_AAR_KIA", [0,0,0,0]], missionNamespace getVariable ["Waldo_AAR_WIA", [0,0,0,0]], missionNamespace getVariable ["Waldo_AAR_VehKIA", [0,0,0,0]], missionNamespace getVariable ["Waldo_AAR_FF", 0]]]
+    ["mission-flow", "aar-ledger", if (_aar) then {"ACTIVE"} else {"UNCONFIGURED"}, format ["initialised=%1 startTime=%2 KIA=%3 vehicleKIA=%4 friendlyFire=%5", _aar, missionNamespace getVariable ["Waldo_AAR_StartTime", -1], missionNamespace getVariable ["Waldo_AAR_KIA", [0,0,0,0]], missionNamespace getVariable ["Waldo_AAR_VehKIA", [0,0,0,0]], missionNamespace getVariable ["Waldo_AAR_FF", 0]]]
 ];
 
 if (hasInterface) then {

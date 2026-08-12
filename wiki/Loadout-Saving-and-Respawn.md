@@ -65,6 +65,16 @@ Pass `[false]` for automatic startup work that must not display a notification o
 
 ACE Respawn can conflict with this mission-owned restore path and should remain disabled in ACE addon settings.
 
+## ACE 3.21.1 name warning
+
+ACE 3.21.1 changed `ace_common_fnc_setName` from one argument to two: the unit object and an optional
+Boolean **force set name** flag. Its extended Respawn handler still forwards Arma's normal
+`[new unit, old corpse]` event payload, which places the corpse object in that Boolean slot and logs
+`Type Object, expected Bool` before WMP's loadout handler runs. CBA stores its compiled extended
+Respawn callbacks on each local unit. WMP finds only the callback which calls ACE's name helper and
+replaces it with the same unchanged ACE function receiving only the new unit. All other ACE/CBA
+callbacks remain untouched, and WMP does not replace ACE code or assign a different player name.
+
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

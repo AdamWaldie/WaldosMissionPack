@@ -5,8 +5,8 @@
  * handler (fires on every machine for every entity, so a single server-side
  * registration captures all kills regardless of unit locality): infantry KIA per side,
  * player losses, vehicles destroyed per side, friendly-fire kills, and a per-player
- * kill leaderboard. Wounded (WIA) are tallied separately via Waldo_fnc_AARWound, fed
- * by the ACE unconscious listener registered in init.sqf. No per-frame loops.
+ * kill leaderboard. Temporary unconscious/WIA events are deliberately not tracked because they
+ * are not mission outcomes and duplicate the more useful KIA record. No per-frame loops.
  *
  * Arguments:
  * None
@@ -25,7 +25,6 @@ missionNamespace setVariable ["Waldo_AAR_Initialised", true];
 // [west, east, independent, civilian] tallies, plus scalar/leaderboard extras.
 missionNamespace setVariable ["Waldo_AAR_KIA", [0,0,0,0], true];      // infantry KIA per side
 missionNamespace setVariable ["Waldo_AAR_VehKIA", [0,0,0,0], true];   // vehicles destroyed per side
-missionNamespace setVariable ["Waldo_AAR_WIA", [0,0,0,0], true];      // unique wounded per side (ACE, see Waldo_fnc_AARWound)
 missionNamespace setVariable ["Waldo_AAR_PlayerKIA", 0, true];        // human player deaths
 missionNamespace setVariable ["Waldo_AAR_FF", 0, true];              // friendly-fire kills
 missionNamespace setVariable ["Waldo_AAR_Frags", [], true];          // [[name, kills], ...] enemy kills by players

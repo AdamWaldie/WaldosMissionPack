@@ -19,14 +19,15 @@
  *
  * Example:
  * [] call Waldo_fnc_ParadropSetupLocal;
- * Current callers: Waldo_fnc_ParadropCreateDropZone, Waldo_fnc_ParadropRemoveDropZone and
- * Waldo_fnc_ParadropQuickFlightSetup, each time Waldo_Paradrop_PublicAircraft changes.
+ * Current callers: initPlayerLocal.sqf unconditionally, plus Waldo_fnc_ParadropCreateDropZone,
+ * Waldo_fnc_ParadropRemoveDropZone and Waldo_fnc_ParadropQuickFlightSetup when state changes.
  */
 
 if !(hasInterface) exitWith {false};
 if (isNil {missionNamespace getVariable "Waldo_Paradrop_MarkerPFH"}) then {
     private _handler = [{[] call Waldo_fnc_ParadropUpdateMarkersLocal}, 1] call CBA_fnc_addPerFrameHandler;
     missionNamespace setVariable ["Waldo_Paradrop_MarkerPFH", _handler];
+    diag_log format ["[WMP PARADROP] Live aircraft marker reconciler started clientOwner=%1.", clientOwner];
 };
 
 private _systems = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
