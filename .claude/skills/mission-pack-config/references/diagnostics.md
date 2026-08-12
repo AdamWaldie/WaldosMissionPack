@@ -7,7 +7,11 @@ loadout scan. Every RPT entry uses one searchable frame:
 [WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]
 ```
 
-A hosted server also surfaces warnings via `systemChat`.
+A hosted (listen-server) host also surfaces warnings and the completion summary via `systemChat`
+directly. On a genuine dedicated server (no console of its own), the same lines are instead
+remote-executed to every currently assigned curator's client, so an admin watching through Zeus
+still gets in-game visibility rather than only RPT — see `Waldo_fnc_HeadlessDebugLog` for the
+identical pattern used by headless-client debug output.
 
 ## Config (`MissionConfig\missionSystemsConfig.sqf`)
 

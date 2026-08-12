@@ -566,7 +566,7 @@ go-live notices explain which protections were removed and remain visible for
 
 ### Mission Diagnostics (optional)
 
-Runs a read-only server and client health check at mission start after the loadout scan. Every RPT entry uses the same searchable frame: `[WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]`. A hosted server also shows warnings through `systemChat`.
+Runs a read-only server and client health check at mission start after the loadout scan. Every RPT entry uses the same searchable frame: `[WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]`. A hosted (listen-server) host also sees warnings and the completion summary through `systemChat` directly; on a genuine dedicated server (no local console of its own) the same lines are remote-executed to every currently assigned curator's client instead, so an admin watching through Zeus still gets in-game visibility rather than only RPT.
 
 ```sqf
 // In initServer.sqf. Set false to silence startup diagnostics in a released mission.
