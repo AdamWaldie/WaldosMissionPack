@@ -9,7 +9,7 @@ class items
         class PositionInfo {position[]={-16,0,0};};
         name="HC_1";
         id=1;
-        type="HeadlessClient";
+        type="HeadlessClient_F";
         class Attributes {isPlayableLogic=1;};
     };
     class Item1
@@ -18,7 +18,7 @@ class items
         class PositionInfo {position[]={-8,0,0};};
         name="HC_2";
         id=2;
-        type="HeadlessClient";
+        type="HeadlessClient_F";
         class Attributes {isPlayableLogic=1;};
     };
     class Item2
@@ -27,7 +27,7 @@ class items
         class PositionInfo {position[]={0,0,0};};
         name="HC_3";
         id=3;
-        type="HeadlessClient";
+        type="HeadlessClient_F";
         class Attributes {isPlayableLogic=1;};
     };
     class Item3
@@ -36,7 +36,7 @@ class items
         class PositionInfo {position[]={8,0,0};};
         name="HC_4";
         id=4;
-        type="HeadlessClient";
+        type="HeadlessClient_F";
         class Attributes {isPlayableLogic=1;};
     };
     class Item4
@@ -45,7 +45,7 @@ class items
         class PositionInfo {position[]={16,0,0};};
         name="HC_5";
         id=5;
-        type="HeadlessClient";
+        type="HeadlessClient_F";
         class Attributes {isPlayableLogic=1;};
     };
     class Item5

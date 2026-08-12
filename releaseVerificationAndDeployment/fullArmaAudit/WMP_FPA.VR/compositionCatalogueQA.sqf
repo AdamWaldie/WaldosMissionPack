@@ -20,7 +20,7 @@ private _vehicleClasses = [
     "Land_CampingChair_V2_F", "Land_CampingTable_F", "Land_Cargo_House_V1_F",
     "Land_City2_8m_F", "Land_Computer_01_sand_F", "Land_CzechHedgehog_01_new_F",
     "Land_Device_disassembled_F", "Land_GasTank_01_yellow_F", "Land_HBarrier_3_F",
-    "Land_HelipadEmpty_F", "Land_InfoStand_V1_F", "Land_JumpTarget_F", "HeadlessClient",
+    "Land_HelipadEmpty_F", "Land_InfoStand_V1_F", "Land_JumpTarget_F", "HeadlessClient_F",
     "Land_Laptop_03_sand_F", "Land_Laptop_unfolded_F", "Land_MapBoard_F",
     "Land_MedicalTent_01_floor_dark_F", "Land_MedicalTent_01_NATO_generic_open_F",
     "Land_MultiScreenComputer_01_sand_F", "Land_Pallet_MilBoxes_F",

@@ -163,6 +163,10 @@ ACRE's `setupRadios` frequency path is asynchronous and exposes no public freque
 
 ## Vehicle radio racks
 
+> New to rack radios? [ACRE2 Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup) is a
+> beginner-focused walkthrough covering the same feature; this section is the full technical
+> reference.
+
 Vehicle-mounted rack radios (AN/VRC-64, AN/VRC-103, AN/VRC-110, AN/VRC-111, SEM90, or any
 mission-added rack) are a separate, vehicle-scoped surface, deliberately outside
 `acreConfig.sqf`'s per-player carried-radio scan (which preserves rack radios untouched - see the
