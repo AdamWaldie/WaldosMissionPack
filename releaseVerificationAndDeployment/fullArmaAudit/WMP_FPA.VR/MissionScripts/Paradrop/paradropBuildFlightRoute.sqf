@@ -67,6 +67,12 @@ params [
 ];
 if (!isServer || {isNull _aircraft} || {isNull _flightGroup} || {count _centre < 2}) exitWith {createHashMap};
 
+// This route is actively driven by a continuous server-spawned watcher below (the LOOP restart guard)
+// and depends on the aircraft/group staying local to whichever machine is running it - an external
+// headless rebalance (WMP's own, or ACE's separate ace_headless module) moving this group mid-flight
+// would desynchronise that watcher. Pin server-side by default; see headlessPinCrew.sqf for detail.
+[_aircraft] call Waldo_fnc_HeadlessPinCrew;
+
 _direction = _direction mod 360;
 _altitude = (_altitude max 100) min 2000;
 _maxSpeed = (_maxSpeed max 80) min 500;

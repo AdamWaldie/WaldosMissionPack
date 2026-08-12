@@ -448,6 +448,12 @@ if (_spawnFailed || {count _radars == 0}) exitWith {
 };
 private _radar = _radars select 0;
 
+// Pin every spawned component server-side by default against automatic headless-client migration.
+// Detection/engagement is continuously driven server-side (Waldo_fnc_DynamicAASetGroupState) and an
+// external headless rebalance mid-setup - WMP's own, or ACE's separate, uncoordinated ace_headless
+// module - can race that setup. See headlessPinCrew.sqf for detail.
+{[_x] call Waldo_fnc_HeadlessPinCrew;} forEach _objects;
+
 private _markerPrefix = format ["Waldo_DynamicAA_%1", _id];
 private _markers = [];
 if (_config getOrDefault ["createMarkers", true]) then {

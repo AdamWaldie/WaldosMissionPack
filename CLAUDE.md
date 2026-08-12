@@ -671,6 +671,23 @@ mission's own compatibility layer can react; see `wiki/Headless-Client-Support.m
 example. This is a mitigation hook, not a guarantee - known-incompatible AI mods are better handled
 with `Waldo_Headless_ExcludeGroup`.
 
+**ACE's own `ace_headless` module is a separate, uncoordinated mover, not part of this rework.**
+If a required-mod ACE feature (not WMP's own `Waldo_fnc_Headless*` system) is what's actually
+redistributing groups on a given mission, none of the above eligibility rules, settle-time,
+`Waldo_Headless_ExcludeGroup` opt-out, or pacing apply - ACE decides independently, and confirmed live
+against `ace_headless`'s own "Full Rebalance" behaviour, it moves every eligible group immediately
+with no settle-time grace period at all. Real-time, continuously-driven WMP systems -
+`Waldo_fnc_GunshipRegister`, the paradrop flight route builder (`Waldo_fnc_ParadropBuildFlightRoute`,
+covering both `Waldo_fnc_ParadropQuickFlightSetup` and `Waldo_fnc_ParadropCreateDropZone`),
+`Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` - therefore call
+`Waldo_fnc_HeadlessPinCrew` on their own managed vehicle(s) by default, which sets both
+`Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) and ACE's own
+`acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
+with units in a blacklisted vehicle). Dynamic AO is deliberately not pinned - its patrol-waypoint
+redispatch is specifically designed and tested to survive migration, and large AI populations
+benefiting from headless offloading is Dynamic AO's main real-world use case; pin it yourself with
+`Waldo_fnc_HeadlessPinCrew` per-object if a specific Dynamic AO deployment needs to stay server-side.
+
 **Trigger/waypoint synchronisation is not preserved across a migration** - this is an Arma engine
 limitation, not something WMP (or the legacy script, which attempted and still needed a workaround
 for it) can fully paper over in script. If a group has a waypoint synced to a trigger, insert a
@@ -688,8 +705,10 @@ consistency (registry vs. actual `groupOwner`, and orphaned entries not yet reco
 
 Scripting API: `Waldo_fnc_HeadlessDetectLocal`, `Waldo_fnc_HeadlessRegisterClient`,
 `Waldo_fnc_HeadlessRebalance`, `Waldo_fnc_HeadlessMigrateGroup`,
-`Waldo_fnc_HeadlessReassignOnDisconnect`, `Waldo_fnc_HeadlessGetDiagnostics`. Implemented in
-`MissionScripts\Headless\`. See `wiki/Headless-Client-Support.md`.
+`Waldo_fnc_HeadlessReassignOnDisconnect`, `Waldo_fnc_HeadlessGetDiagnostics`,
+`Waldo_fnc_HeadlessPinCrew` (pins a vehicle's crew server-side against both WMP's own rebalance and
+ACE's separate `ace_headless` module - see below). Implemented in `MissionScripts\Headless\`. See
+`wiki/Headless-Client-Support.md`.
 
 ### Persistence (optional, `MissionConfig\persistenceConfig.sqf`)
 

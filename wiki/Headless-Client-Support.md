@@ -188,6 +188,35 @@ The one system found *not* to redispatch correctly, Dynamic AO's patrol-waypoint
 (`Waldo_fnc_DynamicAOAddPatrolWaypoints`), was fixed to match the same redispatch pattern as part of
 this rework.
 
+## Real-time systems pin themselves server-side by default
+
+Confirmed live: **ACE's own `ace_headless` module is a separate, uncoordinated mover** - if that
+required-mod feature (not WMP's own system) is what's actually redistributing groups on a mission,
+none of WMP's eligibility rules, settle-time or pacing above apply, since ACE decides independently.
+Its own "Full Rebalance" behaviour moves every eligible group immediately with **no settle-time grace
+period at all**, which can race a WMP system's own in-progress setup or simply move a group WMP
+expects to keep continuously driving.
+
+For that reason, `Waldo_fnc_GunshipRegister`, the shared paradrop flight-route builder
+(`Waldo_fnc_ParadropBuildFlightRoute`, used by both `Waldo_fnc_ParadropQuickFlightSetup` and
+`Waldo_fnc_ParadropCreateDropZone`), `Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` pin
+their own managed vehicle(s) server-side by default via `Waldo_fnc_HeadlessPinCrew`. That call sets
+**both** `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) **and** ACE's own
+`acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
+with units in a blacklisted vehicle) - the pin holds regardless of which headless system a mission
+actually uses.
+
+**Dynamic AO is deliberately not pinned** - its patrol-waypoint redispatch is specifically designed
+and tested to survive migration (see above), and offloading a large AI population to headless clients
+is Dynamic AO's main real-world use case. If a specific Dynamic AO deployment needs to stay
+server-side, call `[_object] call Waldo_fnc_HeadlessPinCrew;` on it yourself.
+
+```sqf
+// Pin any other custom AI vehicle/group server-side against both WMP's native rebalance and
+// ACE's ace_headless module:
+[_vehicle] call Waldo_fnc_HeadlessPinCrew;
+```
+
 ## Third-party AI mod compatibility (VCOM AI, LAMBS, ASR AI3, ...)
 
 The legacy `WerthlesHeadless.sqf`'s best-known failure mode was AI going unresponsive after a

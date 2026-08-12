@@ -153,6 +153,7 @@ class CfgFunctions
             class HeadlessMigrateGroup {file = "MissionScripts\Headless\headlessMigrateGroup.sqf";};
             class HeadlessReassignOnDisconnect {file = "MissionScripts\Headless\headlessReassignOnDisconnect.sqf";};
             class HeadlessGetDiagnostics {file = "MissionScripts\Headless\headlessGetDiagnostics.sqf";};
+            class HeadlessPinCrew {file = "MissionScripts\Headless\headlessPinCrew.sqf";};
         };
         class teleport
         {
