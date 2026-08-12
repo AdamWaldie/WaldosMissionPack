@@ -101,8 +101,14 @@
  *   when they are serialisable; code, UI controls and local object references are not safe save data.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Boat Transport", "Object Scaling", "Logistics Crates"]],
+    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Boat Transport", "Object Scaling", "Logistics Crates", "Respawn Loadout"]],
     ["shared", [
+        // MISSION MAKER: respawn loadout capture policy. Default is OFF - the mission-start baseline
+        // (initPlayerLocal.sqf) plus the manual "Loadout Save Point" ACE/vanilla action
+        // (Waldo_fnc_SaveLoadout, Zen_loadoutSaveSetup.sqf) are the respawn source unless a mission
+        // maker opts into automatic death capture here. Consumed by the "CAManBase"/"Killed" handler
+        // in initPlayerLocal.sqf, which registers only when this is true.
+        ["Waldo_Respawn_SaveOnDeath", false], // BOOL: capture loadout+radio on every death; respawn restores it instead of the last manual/mission-start save.
         // MISSION MAKER: field-resupply content and balance. A deployed crate is populated exactly
         // like a standard supply crate (Waldo_fnc_SupplyCratePopulate) scoped to the servicing hub's
         // side, so these mirror that function's own parameters rather than a separate charge model.

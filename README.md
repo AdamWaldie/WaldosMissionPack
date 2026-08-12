@@ -76,7 +76,7 @@ workflow and evidence rules are documented under `releaseVerificationAndDeployme
 
 # Other Information
 - All files are provided with description on their utilisation and purpose.
-- initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. You can choose whether to respawn with starting equipment, or what they died with in that file.
+- initPlayerLocal.sqf utilises CBA eventhandlers to provide respawn loadout saving/loading. By default respawn uses the mission-start baseline plus the manual Loadout Save Point action; set `Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf` to `true` to instead respawn with whatever was carried at death.
 - Its recommended that you download Visual Studio Code & Its SQF plugins. Itll make any script reading in Arma 3 easier on you! 
     - Visual Studio Code: https://code.visualstudio.com/
     - SQF Language Extension: https://marketplace.visualstudio.com/items?itemName=vlad333000.sqf
