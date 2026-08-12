@@ -418,6 +418,9 @@ class CfgFunctions
             class SaveLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\saveRespawnLoadout.sqf";
             };
+            class RespawnRestoreLoadout {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnRestoreLoadout.sqf";
+            };
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
             };

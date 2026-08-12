@@ -140,13 +140,21 @@ Mission load
         └─ initPlayerLocal.sqf  (per-player; the engine re-executes this whole file on every
               │                  join/JIP/respawn - most of it is designed to re-run each time so it
               │                  rebinds to the fresh unit object, e.g. re-installing ACE self-actions,
-              │                  which are per-object. Only the loadout baseline capture + "Respawn"
-              │                  handler registration are guarded by `Waldo_InitPlayerLocal_
+              │                  which are per-object. Only the loadout baseline capture + the two
+              │                  respawn triggers below are guarded by `Waldo_InitPlayerLocal_
               │                  RespawnHandlerInstalled` to run once per client)
               ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout (guarded, once)
-              ├─ Registers the CBA "Respawn" handler (guarded, once; keeps firing on every
-              │     later respawn without this block re-running)
-              └─ CBA Respawn event → restores saved loadout/radio state for that respawn
+              ├─ Registers TWO independent respawn triggers (guarded, once each; both call the
+              │     same idempotent Waldo_fnc_RespawnRestoreLoadout, so either firing first is
+              │     enough - deliberately not relying on a single signal):
+              │       1. CBA "Respawn" extended EH, gated on `local _unit` (not `_unit == player`,
+              │          which is not guaranteed reassigned at the exact tick this fires)
+              │       2. CBA_fnc_addPlayerEventHandler "unit" (the same mechanism ACRE2Init already
+              │          uses for its own respawn radio refresh), gated on the previous player
+              │          object being dead/gone so a non-respawn reassignment (e.g. Zeus takeover)
+              │          never gets the respawn loadout stamped over it
+              └─ Waldo_fnc_RespawnRestoreLoadout restores the saved loadout/radio state once per
+                    life (Waldo_RespawnRestoreHandled guards the second trigger from double-firing)
 ```
 
 ### Key Global Variables (missionNamespace)

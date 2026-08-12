@@ -30,6 +30,18 @@ if (isServer && {isNil {missionNamespace getVariable "Waldo_ACRE2_Plan"}}) then 
 };
 if (hasInterface && {isNil {missionNamespace getVariable "Waldo_ACRE2_ClientInitStarted"}}) then {
     missionNamespace setVariable ["Waldo_ACRE2_ClientInitStarted", true];
+    // Actively pre-empt a unit's Eden "ACRE Radio Setup" attribute rather than letting it win a race
+    // against ACRE's own initialization and cleaning up afterwards. ACRE applies that attribute
+    // (acre_sys_radio_setup) as one of the last steps of its own per-unit init, gated behind ACRE
+    // becoming fully ready - which can legitimately take anywhere from a few seconds to minutes on a
+    // heavy modset. This runs here, at the very start of WMP's own client-side ACRE lifecycle (called
+    // from initPlayerLocal.sqf near mission start), so it lands well before ACRE's own init reaches
+    // that step in every observed case. Clearing does not touch acreConfig.sqf's own plan in any way;
+    // it only stops the competing Eden-authored setup from ever being read. Waldo_fnc_SchedulePlayerRefresh's
+    // readinessTimeoutSeconds wait/retry (MissionConfig\acreConfig.sqf) remains as the fallback for the
+    // (unverified against a live ACRE install) case where ACRE reads this variable earlier than WMP can
+    // clear it, or re-derives it from mission.sqm on its own schedule.
+    if (!isNull player) then {player setVariable ["acre_sys_radio_setup", "", true]};
     ["INITIAL", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
     private _babel = _config getOrDefault ["babel", createHashMap];
     if (_babel getOrDefault ["followPlayerUnit", true]) then {

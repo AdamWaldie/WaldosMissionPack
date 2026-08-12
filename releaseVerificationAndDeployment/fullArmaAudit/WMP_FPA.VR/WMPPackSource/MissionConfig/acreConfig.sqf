@@ -143,6 +143,19 @@ createHashMapFromArray [
     // EXAMPLE/RESULT: true reports a missing group mapping instead of failing silently.
     ["notifyAssignmentProblems", true],
 
+    // SETTING: readinessTimeoutSeconds (ADVANCED TUNING)
+    // WHAT IT CHANGES: how long WMP waits for ACRE2 to finish converting a joining player's carried
+    // radios to unique IDs (acre_api_fnc_isInitialized) before giving up on that attempt and retrying.
+    // A heavy modset, a slow terrain (large ACE advanced_ballistics initialization is a known
+    // contributor), or a loaded server can legitimately push this past the default. When this window
+    // expires before ACRE finishes, whatever a unit's Eden "ACRE Radio Setup" attribute applied is
+    // left in place until the automatic retry catches up - it is not a permanent loss, but it is a
+    // visible delay worth tuning out on a mission that consistently needs longer.
+    // VALUES: seconds, default 120. Raise it if WMP Diagnostics or RPT repeatedly shows
+    // "ACRE did not finish converting carried radios to unique IDs within N seconds" on this mission.
+    // EXAMPLE/RESULT: 180 gives a heavy-modset mission an extra minute before WMP retries.
+    ["readinessTimeoutSeconds", 120],
+
     // SETTING: additionalRadioProfiles (ADVANCED)
     // WHAT IT CHANGES: teaches WMP how to configure a tested third-party carried radio.
     // VALUES: [] for none, or documented profile rows. Beginners should leave this empty.

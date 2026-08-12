@@ -28,8 +28,12 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     params ["_token", "_reason"];
     // ACRE documents isInitialized as the point at which carried base radios have become unique
     // IDs. Large modsets and Eden-defined radio attributes can legitimately take longer than the
-    // rest of mission init, so this asynchronous waiter allows two minutes without blocking WMP.
-    private _deadline = diag_tickTime + 120;
+    // rest of mission init, so this asynchronous waiter allows a configurable window (default two
+    // minutes, MissionConfig\acreConfig.sqf readinessTimeoutSeconds) without blocking WMP. A mission
+    // that consistently needs longer than the default should raise this rather than repeatedly
+    // riding out the automatic INITIAL_LATE retry below.
+    private _readinessTimeout = (missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap]) getOrDefault ["readinessTimeoutSeconds", 120];
+    private _deadline = diag_tickTime + _readinessTimeout;
     waitUntil {
         uiSleep 0.1;
         private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
@@ -61,7 +65,7 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
             (_profileClasses findIf {_item == _x || {_item find (_x + "_ID_") == 0}}) >= 0
         };
         private _detail = if (!_acreReady && {!(_inventoryRadios isEqualTo [])}) then {
-            format ["ACRE did not finish converting carried radios to unique IDs within 120 seconds. Carried radio classes: %1.", _inventoryRadios]
+            format ["ACRE did not finish converting carried radios to unique IDs within %1 seconds. Carried radio classes: %2.", _readinessTimeout, _inventoryRadios]
         } else {
             if (count _plan < 4) then {"The server ACRE plan did not arrive."} else {format ["ACRE reported ready but returned no usable carried radios: %1.", _currentRadios]}
         };

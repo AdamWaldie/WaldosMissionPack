@@ -26,11 +26,24 @@ private _report = [];
 private _runId = format ["%1-%2", floor serverTime, floor (random 1000000)];
 missionNamespace setVariable ["Waldo_Diagnostics_ActiveRun", _runId, true];
 missionNamespace setVariable ["Waldo_Diagnostics_ClientReports", []];
+// Broadcasts an in-game chat line to whichever machines can actually show one: locally when the
+// calling machine has an interface (a listen-server host sees it directly), and to every currently
+// assigned curator's client (allCurators/getAssignedCuratorUnit) otherwise - a genuine dedicated
+// server has no console of its own to show systemChat on, so without this an admin running one had
+// no in-game visibility into diagnostics at all short of tailing RPT by hand. Mirrors the legacy
+// WerthlesHeadless.sqf's own approach of remote-executing its debug hint onto a specific connected
+// player rather than only ever running a local-only call gated on the executing machine's interface.
+private _notifyAdmins = {
+    params ["_text"];
+    if (hasInterface) then {systemChat _text;};
+    private _curatorUnits = (allCurators apply {getAssignedCuratorUnit _x}) select {!isNull _x};
+    if (count _curatorUnits > 0) then {[_text] remoteExec ["systemChat", _curatorUnits];};
+};
 private _log = {
     params ["_level", "_area", "_feature", "_event", "_message"];
     [_area, _feature, _level, _event, _message, _runId, "SERVER"] call Waldo_fnc_DiagnosticLog;
-    if (_level in ["WARN", "ERROR"] && {hasInterface}) then {
-        systemChat format ["[WMP DIAG] %1", _message];
+    if (_level in ["WARN", "ERROR"]) then {
+        [format ["[WMP DIAG] %1", _message]] call _notifyAdmins;
     };
 };
 private _section = {
@@ -584,6 +597,6 @@ private _summary = if (_warnings == 0) then {
 };
 [if (_warnings > 0) then {"WARN"} else {"INFO"}, "core", "diagnostics", "SUMMARY", _summary] call _log;
 ["INFO", "core", "diagnostics", "END", format ["serverChecks=%1 clientReports=%2 warnings=%3", count _report, count _clientReports, _warnings]] call _log;
-if (hasInterface) then {systemChat format ["[WMP DIAG] %1", _summary];};
+[format ["[WMP DIAG] %1", _summary]] call _notifyAdmins;
 missionNamespace setVariable ["Waldo_Diagnostics_Running", false];
 _warnings

@@ -126,7 +126,7 @@ if (_acreEnabled) then {
     };
     ["radio", "acre-player-presetting", _state, format ["finding=%1 rawGroup='%2' normalized=%3 side=%4 planRevision=%5 sideMatch=%6 groupMatch=%7 inventoryRadios=%8 currentRadios=%9 unique=%10 acreReady=%11 edenRadioSetup=%12 loadoutGeneration=%13 restoredGeneration=%14 lastApplication=%15 readinessFailure=%16", _plainFinding, _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _inventoryRadios, _radios, count _unique, _acreApiReady, _edenRadioSetup, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last, missionNamespace getVariable ["Waldo_ACRE2_LastReadinessFailure", []]], _presetHint] call _add;
     if !(_edenRadioSetup isEqualTo "") then {
-        ["radio", "acre-eden-radio-attribute", "ERROR", format ["This unit has an Eden ACRE Radio Setup attribute (%1). It can overwrite acreConfig.sqf during startup. Clear that unit attribute and let WMP own the initial assignment.", _edenRadioSetup]] call _add;
+        ["radio", "acre-eden-radio-attribute", "ERROR", format ["This unit still has an Eden ACRE Radio Setup attribute (%1) after Waldo_fnc_ACRE2Init already tries to clear acre_sys_radio_setup at client-init time - either ACRE2 re-populated/read it before that clear ran, or ACRE2Init did not run for this player. It can overwrite acreConfig.sqf during startup. Clear that unit's ACRE Radio Setup attribute in Eden directly so nothing has to race it. WMP's own overwrite still runs automatically once ACRE is ready (see [WMP ACRE] RPT entries for the retry, and Waldo_ACRE2_Config's readinessTimeoutSeconds in MissionConfig\\acreConfig.sqf to tune how long that takes on a heavy modset), but clearing the attribute at the source is the reliable fix.", _edenRadioSetup]] call _add;
     } else {
         ["radio", "acre-eden-radio-attribute", "LOADED", "No conflicting Eden ACRE Radio Setup attribute is present."] call _add;
     };
@@ -297,6 +297,27 @@ if (_fieldHospitals isEqualTo []) then {
         || {_aceInteractLoaded && {(_x getVariable ["Waldo_FieldHospital_AceActionPath", []]) isEqualTo []}}
     };
     ["logistics", "field-hospital-actions", if (_fieldHospitalsMissingAction isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["crates=%1 missingAction=%2 expectedMode=%3", count _fieldHospitals, count _fieldHospitalsMissingAction, if (_aceInteractLoaded) then {"ACE+VANILLA"} else {"VANILLA"}], if (_fieldHospitalsMissingAction isEqualTo []) then {""} else {"A field hospital crate is missing its expected action on this client - check the RPT for errors from Waldo_fnc_MedicalCrateFacilityActionLocal."}] call _add;
+};
+
+private _lastRestore = missionNamespace getVariable ["Waldo_Player_LastRespawnRestore", []];
+if (count _lastRestore < 3) then {
+    ["respawn", "loadout-restore", "UNCONFIGURED", "This client has not respawned yet this session; nothing to report."] call _add;
+} else {
+    _lastRestore params ["_restoreIdentityMatched", "_restoreCount", "_restoreTickTime"];
+    ["respawn", "loadout-restore", if (_restoreIdentityMatched) then {"ACTIVE"} else {"ERROR"}, format ["identityMatched=%1 restoredEntries=%2 secondsAgo=%3", _restoreIdentityMatched, _restoreCount, round (diag_tickTime - _restoreTickTime)], if (_restoreIdentityMatched) then {""} else {"The last respawn's saved-loadout identity (UID+side) did not match this player - the mission-start baseline was applied instead. Check the RPT for the matching [WMP LOADOUT] line, and confirm Waldo_Player_LoadoutIdentity/Waldo_Player_Inventory are being set by Waldo_fnc_SaveLoadout."}] call _add;
+};
+
+// Known upstream ACE3 issue, not a WMP defect: ace_nametags/ace_dogtags' own config-based "respawn"
+// event handler (CfgEventHandlers.hpp: respawn = QUOTE(call FUNC(setName));) forwards the engine's
+// [unit, corpse] respawn params wholesale into ace_common_fnc_setName, whose second parameter
+// (_forceSet) has no type guard - the corpse Object lands there and the function throws "Type
+// Object, expected Bool" on every scripted respawn. This is informational only: WMP calls neither
+// ace_common_fnc_setName nor sets ace_setCustomName anywhere, and there is no mission-side fix short
+// of overriding ACE's own config event handler, so this check never carries a "fix" hint.
+private _nametagsLoaded = isClass (configFile >> "CfgPatches" >> "ace_nametags");
+private _dogtagsLoaded = isClass (configFile >> "CfgPatches" >> "ace_dogtags");
+if (_nametagsLoaded || _dogtagsLoaded) then {
+    ["dependencies", "ace-nametags-respawn-compat", "LOADED", format ["nametags=%1 dogtags=%2 - a harmless 'Type Object, expected Bool' error from ace/addons/common/functions/fnc_setName.sqf on respawn is a known upstream ACE3 issue in its own config-based respawn handler, not a WMP defect; ACE's separate PlayerChanged hook still names the unit correctly.", _nametagsLoaded, _dogtagsLoaded]] call _add;
 };
 
 private _warnings = {_x select 2 == "ERROR"} count _checks;

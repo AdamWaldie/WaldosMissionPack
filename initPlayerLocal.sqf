@@ -135,73 +135,46 @@ if (isNil "Waldo_InitPlayerLocal_RespawnHandlerInstalled") then {
     [false] call Waldo_fnc_SaveLoadout;
 
     // Respawn restores the last explicitly saved inventory and supported personal ACRE settings.
+    // Two independent triggers call the shared, idempotent Waldo_fnc_RespawnRestoreLoadout rather than
+    // depending on a single signal - the same "don't just wait and hope, actively cover the failure
+    // mode" approach applied to the ACRE Eden-attribute race. Waldo_fnc_RespawnRestoreLoadout's own
+    // per-unit "Waldo_RespawnRestoreHandled" guard makes it safe for both to fire for the same life.
+    //
+    // Trigger 1: the "CAManBase"/"Respawn" extended event handler. Gated on locality, not "_unit ==
+    // player" - the engine does not guarantee `player` has been reassigned to the new unit at the
+    // exact tick this event fires, and when it hasn't, that comparison silently skips everything with
+    // no error and no log line (this was the actual cause of the restore never running even with an
+    // otherwise-correct identity check and guard). This extended event handler only ever fires on
+    // whichever machine the new unit is local to in the first place - the same guarantee ACE's own
+    // respawn/init handlers rely on (ace/addons/common/CfgEventHandlers.hpp checks
+    // "local (_this select 0)" rather than comparing against `player`).
     ["CAManBase", "Respawn", {
         params ["_unit"];
-        // Unconditional, unguarded proof-of-dispatch line - written before any gate below, so RPT can
-        // distinguish "this CBA extended event handler never fired at all" from "it fired but a gate
-        // inside skipped the body". Cheap and permanent: one line per actual respawn, not a loop.
+        // Unconditional, unguarded proof-of-dispatch line - written before any gate, so RPT can
+        // distinguish "this extended event handler never fired at all" from "it fired but a gate
+        // skipped the restore". Cheap and permanent: one line per actual respawn, not a loop.
         diag_log format ["[WMP LOADOUT] Respawn event received for %1 (local=%2, isPlayer=%3, player==_unit=%4).", _unit, local _unit, isPlayer _unit, _unit == player];
-        // Gate on locality, not "_unit == player". The engine does not guarantee `player` has been
-        // reassigned to the new unit at the exact tick this event fires - if it hasn't, `_unit ==
-        // player` is false and the entire restore below silently never runs, with no error and no
-        // log line (this was the actual cause of loadout/radio state never restoring even with an
-        // otherwise-correct identity check and guard). This extended "Respawn" event handler only
-        // ever fires on whichever machine the new unit is local to in the first place - the same
-        // guarantee ACE's own respawn/init handlers rely on (see ace/addons/common/CfgEventHandlers.hpp,
-        // which checks "local (_this select 0)" rather than comparing against `player`).
-        if (local _unit) then {
-            private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
-            // UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so
-            // vehicleVarName never matches the Eden-named unit a snapshot was captured against.
-            private _currentIdentity = [getPlayerUID _unit, _sideKey];
-            private _savedIdentity = missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []];
-            private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
-            private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
-            private _restoredCount = 0;
-            if (_identityMatches && {count _savedLoadout > 0}) then {
-                _unit setUnitLoadout _savedLoadout;
-                _restoredCount = count _savedLoadout;
-            };
-            private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
-            missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
-            missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
-            private _savedRadios = if (_identityMatches) then {missionNamespace getVariable ["Waldo_Player_RadioState", []]} else {[]};
-            // Log both outcomes, not just the mismatch case - a silent success path is exactly what
-            // made a real restore indistinguishable from "still getting the baseline" while debugging
-            // this system; diagnostics below also read the tracked outcome for a client-local check.
-            if (_identityMatches) then {
-                diag_log format ["[WMP LOADOUT] Restored saved loadout (%1 entries) for identity %2.", _restoredCount, _currentIdentity];
-            } else {
-                diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity];
-            };
-            missionNamespace setVariable ["Waldo_Player_LastRespawnRestore", [_identityMatches, _restoredCount, diag_tickTime]];
-            if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
-                missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
-                [_savedRadios, _generation] spawn {
-                    params ["_radioState", "_loadoutGeneration"];
-                    private _restored = [_radioState, _loadoutGeneration] call Waldo_fnc_ACRE2ApplyRadioState;
-                    missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
-                    if (_restored) then {
-                        ["RESPAWN_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
-                    } else {
-                        diag_log "[WMP ACRE] Saved respawn radio state could not be restored; applying the current mission plan.";
-                        ["RESPAWN_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
-                    };
-                };
-            } else {
-                ["RESPAWN_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
-            };
-            // Respawn Text
-            [] spawn Waldo_fnc_RespawnText;
-            // Re-apply safestart if it is still active (respawn resets damage/handlers/position)
-            if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
-                [true] call Waldo_fnc_SafeStartApply;
-            };
-            [] call Waldo_fnc_SetupUiCleanupAction;
-            [] call Waldo_fnc_AccessibilitySelfInteractionInit;
-            [] call Waldo_fnc_TransportInteractionInitLocal;
-        };
+        [_unit] call Waldo_fnc_RespawnRestoreLoadout;
     }] call CBA_fnc_addClassEventHandler;
+
+    // Trigger 2: CBA's own "player object changed" event - the exact same mechanism
+    // Waldo_fnc_ACRE2Init already uses to refresh radios on respawn (see acre2InitNew.sqf's "unit"
+    // handler), and unambiguous by construction: CBA only calls this once `player` itself already
+    // equals the new unit, so there is no reassignment-timing question here at all. CBA passes
+    // [_newPlayer, _oldPlayer] - only treat this as a respawn (and restore the saved loadout) when the
+    // previous player object is dead or gone; a "unit" change with a still-alive old unit is some
+    // other kind of player-object reassignment (e.g. a Zeus takeover), not a death/respawn, and must
+    // not have the respawn loadout stamped over whatever that unit already legitimately has.
+    [
+        "unit",
+        {
+            params ["_newUnit", ["_oldUnit", objNull]];
+            private _isRespawn = isNull _oldUnit || {!alive _oldUnit};
+            diag_log format ["[WMP LOADOUT] Player-unit-changed event received for %1 (oldUnit=%2, oldAlive=%3, treatingAsRespawn=%4).", _newUnit, _oldUnit, !isNull _oldUnit && {alive _oldUnit}, _isRespawn];
+            if (_isRespawn) then {[_newUnit] call Waldo_fnc_RespawnRestoreLoadout};
+        },
+        false
+    ] call CBA_fnc_addPlayerEventHandler;
 };
 
 // Apply safestart to this client if a freeze is already active when they join (JIP).

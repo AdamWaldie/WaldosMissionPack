@@ -18,11 +18,34 @@ it to `acreConfig.sqf` (below), don't keep it.
 ["prc343PresetPolicy", "FULL_RANGE"], // FULL_RANGE = blocks 1-16 all sides; SIDE_ISOLATED = separated but blocks 1-5 on combat sides
 ["namedDisplays", true],              // label supported PRC-148/152/117F channel displays
 ["notifyAssignmentProblems", true],   // warn the affected player when their setup fails to apply
+["readinessTimeoutSeconds", 120],     // ADVANCED TUNING: how long WMP waits for ACRE's own radio-ID
+                                       // conversion before giving up and retrying — raise this on a
+                                       // heavy modset/slow-loading mission if RPT or WMP Diagnostics
+                                       // repeatedly shows a timeout here; this is only a fallback (see
+                                       // "Eden ACRE Radio Setup attribute" below for the primary fix)
 ["additionalRadioProfiles", []],      // ADVANCED: tested third-party carried radios only — leave empty
 ["radioOverrides", []],               // optional per-UID/VARIABLE/ROLE exceptions, see below
 ["sides", [ /* per-side [side, ACRE preset, nets, groups] blocks — see below */ ]],
 ["babel", createHashMapFromArray [ /* language config — see below */ ]]
 ```
+
+### Eden ACRE Radio Setup attribute (unit-level conflict)
+
+A unit's own Eden **ACRE Radio Setup** attribute (Attributes panel, per-unit) is a second,
+competing radio-assignment path that can fight `acreConfig.sqf` — the two aren't merged, one wins.
+When `enabled` is `true`, `Waldo_fnc_ACRE2Init` actively clears that unit's `acre_sys_radio_setup`
+variable at client-init time so WMP's plan is the only one ACRE ever actually applies, rather than
+waiting for the Eden attribute to apply and overwriting it afterward. This runs very early (mission
+start, before ACRE's own per-unit init typically reaches that step), so it wins in every observed
+case — but it's a preemption of ACRE's own internal timing, not a guarantee, since ACRE's exact
+schedule for reading that attribute isn't something WMP controls. `readinessTimeoutSeconds` above is
+the fallback for the remaining race window: if ACRE still applies the Eden attribute before WMP's
+clear lands, the automatic retry re-applies the correct `acreConfig.sqf` plan once ACRE is ready.
+
+**The reliable fix is still to clear the attribute in Eden directly** (unit → Attributes → ACRE Radio
+Setup) rather than relying on the runtime preemption. WMP Diagnostics' `radio`/`acre-eden-radio-attribute`
+check reports `ERROR` whenever it's still present after the clear should have run — treat that as a
+sign to clear it at the source, not just a slow-init symptom to wait out.
 
 ### Sides, nets and groups
 
