@@ -137,7 +137,19 @@ if (isNil "Waldo_InitPlayerLocal_RespawnHandlerInstalled") then {
     // Respawn restores the last explicitly saved inventory and supported personal ACRE settings.
     ["CAManBase", "Respawn", {
         params ["_unit"];
-        if (_unit == player) then {
+        // Unconditional, unguarded proof-of-dispatch line - written before any gate below, so RPT can
+        // distinguish "this CBA extended event handler never fired at all" from "it fired but a gate
+        // inside skipped the body". Cheap and permanent: one line per actual respawn, not a loop.
+        diag_log format ["[WMP LOADOUT] Respawn event received for %1 (local=%2, isPlayer=%3, player==_unit=%4).", _unit, local _unit, isPlayer _unit, _unit == player];
+        // Gate on locality, not "_unit == player". The engine does not guarantee `player` has been
+        // reassigned to the new unit at the exact tick this event fires - if it hasn't, `_unit ==
+        // player` is false and the entire restore below silently never runs, with no error and no
+        // log line (this was the actual cause of loadout/radio state never restoring even with an
+        // otherwise-correct identity check and guard). This extended "Respawn" event handler only
+        // ever fires on whichever machine the new unit is local to in the first place - the same
+        // guarantee ACE's own respawn/init handlers rely on (see ace/addons/common/CfgEventHandlers.hpp,
+        // which checks "local (_this select 0)" rather than comparing against `player`).
+        if (local _unit) then {
             private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
             // UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so
             // vehicleVarName never matches the Eden-named unit a snapshot was captured against.
