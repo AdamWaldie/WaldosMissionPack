@@ -516,6 +516,7 @@ manual test matrix that should be run before enabling this on a live mission.
 | `Waldo_Headless_StartDelaySeconds` | Seconds of mission time before any group migration begins, regardless of when a headless client registers. |
 | `Waldo_Headless_MinGroupAgeSeconds` | Seconds a group must exist before it becomes eligible for migration. |
 | `Waldo_Headless_MigrationPaceSeconds` | Seconds between each queued group migration. |
+| `Waldo_Headless_Debug` | `false` (default). Extended per-event debug detail (load tables, exclusion tallies) to RPT/hosted-server chat. Toggle live with `Waldo_fnc_HeadlessDebugToggle` or the "Headless Client - Toggle Debug" ZEN module. |
 
 ## `economyConfig.sqf`
 

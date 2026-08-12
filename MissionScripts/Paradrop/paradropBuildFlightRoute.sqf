@@ -70,7 +70,11 @@ if (!isServer || {isNull _aircraft} || {isNull _flightGroup} || {count _centre <
 // This route is actively driven by a continuous server-spawned watcher below (the LOOP restart guard)
 // and depends on the aircraft/group staying local to whichever machine is running it - an external
 // headless rebalance (WMP's own, or ACE's separate ace_headless module) moving this group mid-flight
-// would desynchronise that watcher. Pin server-side by default; see headlessPinCrew.sqf for detail.
+// would desynchronise that watcher. It also carries mission-maker-configured setup - altitude, speed,
+// direction, the standby/green/red waypoint script below - that is applied once by this function and
+// never reapplied; a bare setGroupOwner does not replay it, so a migrated route would silently lose
+// its configured flight envelope and waypoints rather than just going stale. Pin server-side by
+// default; see headlessPinCrew.sqf for detail.
 [_aircraft] call Waldo_fnc_HeadlessPinCrew;
 
 _direction = _direction mod 360;

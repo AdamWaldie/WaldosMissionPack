@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 906,
+  "registeredFunctionCount": 909,
   "runtimeFunctionCount": 385,
-  "functionCount": 1291,
+  "functionCount": 1294,
   "stations": [
     {
       "id": "control",
@@ -827,6 +827,18 @@
     {
       "name": "Waldo_fnc_HeadlessPinCrew",
       "file": "MissionScripts/Headless/headlessPinCrew.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessDebugLog",
+      "file": "MissionScripts/Headless/headlessDebugLog.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessDebugToggle",
+      "file": "MissionScripts/Headless/headlessDebugToggle.sqf",
       "station": "headless",
       "activation": "manual"
     },
@@ -1745,6 +1757,12 @@
     {
       "name": "Waldo_fnc_ZenJammerRemove",
       "file": "MissionScripts/ZenModules/Zen_jammerRemoveModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenHeadlessDebugToggle",
+      "file": "MissionScripts/ZenModules/Zen_headlessDebugToggleModule.sqf",
       "station": "zen",
       "activation": "manual"
     },

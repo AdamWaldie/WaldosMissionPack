@@ -42,5 +42,9 @@ private _orphaned = _managed select {(_x select 1) == _ownerId};
     private _group = _x select 0;
     if !(isNull _group) then {[_group, 2] call Waldo_fnc_HeadlessMigrateGroup;};
 } forEach _orphaned;
+["DISCONNECT", format [
+    "owner=%1 label=%2 orphanedGroups=%3 remainingClients=%4",
+    _ownerId, _label, count _orphaned, count _clients
+]] call Waldo_fnc_HeadlessDebugLog;
 
 [] call Waldo_fnc_HeadlessRebalance;

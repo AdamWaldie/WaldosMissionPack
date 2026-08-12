@@ -265,6 +265,14 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 45];
+["WMP Mission Tools", "Headless Client - Toggle Debug",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessDebugToggle;
+    },
+    "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+missionNamespace setVariable ["Waldo_ZenModuleCount", 46];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
 diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 45], clientOwner];

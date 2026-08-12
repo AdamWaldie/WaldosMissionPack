@@ -48,6 +48,7 @@ if (_idx >= 0) then {
     diag_log format ["[WMP HEADLESS] Registered headless client owner=%1 label=%2.", _owner, _label];
 };
 missionNamespace setVariable ["Waldo_Headless_Clients", _registry, true];
+["REGISTER", format ["owner=%1 label=%2 connectedClients=%3", _owner, _label, count _registry]] call Waldo_fnc_HeadlessDebugLog;
 
 [] call Waldo_fnc_HeadlessRebalance;
 true

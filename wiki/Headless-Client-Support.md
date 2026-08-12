@@ -206,10 +206,22 @@ their own managed vehicle(s) server-side by default via `Waldo_fnc_HeadlessPinCr
 with units in a blacklisted vehicle) - the pin holds regardless of which headless system a mission
 actually uses.
 
-**Dynamic AO is deliberately not pinned** - its patrol-waypoint redispatch is specifically designed
-and tested to survive migration (see above), and offloading a large AI population to headless clients
-is Dynamic AO's main real-world use case. If a specific Dynamic AO deployment needs to stay
-server-side, call `[_object] call Waldo_fnc_HeadlessPinCrew;` on it yourself.
+**Paradrop and Gunship carry a second, independent reason to pin, beyond just desyncing a watcher
+script.** Both apply mission-maker-configured setup once - flight altitude/speed/direction and the
+scripted standby/green/red waypoint route for Paradrop, turret profiles/orbit/service policy for
+Gunship - to a specific aircraft/group, and never reapply it. A bare `setGroupOwner` does not replay
+that setup, so migrating either mid-operation would silently drop the mission maker's own configured
+flight behaviour, not merely go stale until the next tick. Any custom system with the same shape - a
+one-shot configuration script bound to a specific managed vehicle/group that never re-applies itself -
+should pin the same way.
+
+**Dynamic AO and Transport Services are deliberately not pinned** - both are specifically designed
+(and, for Dynamic AO, tested) to survive migration, and both name headless offloading as an intended
+use case rather than a risk: Dynamic AO's patrol-waypoint redispatch (see above), and Transport
+Services' own `Logistics\TransportServices\transportDispatchLocal.sqf`, written explicitly as
+"current owner executes" - it re-targets itself to whichever machine currently owns the driver group,
+so a mid-route migration is a supported case, not a failure mode. If a specific Dynamic AO deployment
+needs to stay server-side anyway, call `[_object] call Waldo_fnc_HeadlessPinCrew;` on it yourself.
 
 ```sqf
 // Pin any other custom AI vehicle/group server-side against both WMP's native rebalance and
@@ -251,6 +263,34 @@ absorbs the migration without disturbing the sync. This is the same documented w
 legacy tooling this system replaces (which attempted its own capture/reapply of sync state in script
 and still needed it), so treat it as required practice for any mission using trigger-synced waypoints
 on AI groups that might migrate, not an optional precaution.
+
+## Extended debug output
+
+Off by default (`Waldo_Headless_Debug` in `MissionConfig\headlessConfig.sqf`). The four core events
+(registration, rebalance pass, migration, disconnect) already write a one-line `diag_log` entry to
+RPT unconditionally - that baseline trail is one-shot-per-event and cheap enough to always keep.
+`Waldo_Headless_Debug` adds the noisier, genuinely optional extra detail a mission maker only wants
+while actively diagnosing HC behaviour: per-client load tables on every rebalance pass, an
+exclusion-reason tally, migrated-group unit counts, and disconnect/reassign summaries. Routed through
+`Waldo_fnc_HeadlessDebugLog`, which writes the shared `[WMP DIAG]` frame (`Waldo_fnc_DiagnosticLog`)
+plus a hosted-server `systemChat` line (matching `Waldo_fnc_RunDiagnostics`'s own visibility
+convention - a genuine dedicated server has no console to show it to and relies on RPT). Costs nothing
+when off: a single `getVariable` check at each of the four call sites.
+
+This is the direct successor to the legacy `WerthlesHeadless.sqf`'s own in-mission "Toggle WHK Debug"
+action (`WHKDEBUGHC`) - the same "flip debug on the fly, get instant confirmation" intent, carried
+into WMP's own `[WMP DIAG]`/notification-card conventions instead of that script's dedicated
+`WHKDEBUGGER`/hint plumbing, and extended to be curator-triggerable from Zeus rather than a single
+hard-coded admin's `addAction`:
+
+```sqf
+[] call Waldo_fnc_HeadlessDebugToggle;      // flip the current state
+[true] call Waldo_fnc_HeadlessDebugToggle;  // force on
+```
+
+Or use the **Headless Client - Toggle Debug** ZEN module ("Waldos Mission Modules" > WMP Mission
+Tools) - no dialog, it flips the state immediately and confirms the new state with a WMP notification
+card to every assigned curator. No mission restart is required either way.
 
 ## Diagnostics
 

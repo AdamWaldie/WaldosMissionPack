@@ -12,7 +12,14 @@
  * Support section) are designed around WMP's own paced migration; they are not a guarantee against
  * every third-party mover's own timing, so these specific systems pin themselves out of automatic
  * migration by default rather than assume compatibility that has not been proven against ACE's own
- * module.
+ * module. A second, separate reason applies to Paradrop and Airborne Gunship specifically: both carry
+ * mission-maker-configured setup - flight altitude/speed/direction and the scripted standby/green/red
+ * waypoint route for Paradrop, turret profiles/orbit/service policy for Gunship - applied once to a
+ * specific aircraft/group by their own registration script and never reapplied afterwards. A bare
+ * setGroupOwner does not replay that setup, so migrating either mid-operation would not just desync a
+ * watcher, it would silently drop the mission maker's own configured behaviour outright. Systems
+ * without that one-shot configured-setup property (e.g. Dynamic AO, see below) don't share this
+ * second reason, only the first.
  *
  * Sets both the convention WMP's own native headless system respects (Waldo_Headless_ExcludeGroup,
  * checked by Waldo_fnc_HeadlessRebalance) and ACE's own ace_headless module's blacklist

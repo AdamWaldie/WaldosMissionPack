@@ -683,10 +683,33 @@ covering both `Waldo_fnc_ParadropQuickFlightSetup` and `Waldo_fnc_ParadropCreate
 `Waldo_fnc_HeadlessPinCrew` on their own managed vehicle(s) by default, which sets both
 `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) and ACE's own
 `acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
-with units in a blacklisted vehicle). Dynamic AO is deliberately not pinned - its patrol-waypoint
+with units in a blacklisted vehicle). Paradrop and Gunship carry a second, independent reason to pin:
+both apply mission-maker-configured setup - flight altitude/speed/direction and the scripted
+standby/green/red waypoint route for Paradrop, turret profiles/orbit/service policy for Gunship - once
+to a specific aircraft/group, and never reapply it. A bare `setGroupOwner` does not replay that setup,
+so migrating either mid-operation would silently drop the mission maker's own configured behaviour,
+not just desync a watcher script. Dynamic AO is deliberately not pinned - its patrol-waypoint
 redispatch is specifically designed and tested to survive migration, and large AI populations
 benefiting from headless offloading is Dynamic AO's main real-world use case; pin it yourself with
 `Waldo_fnc_HeadlessPinCrew` per-object if a specific Dynamic AO deployment needs to stay server-side.
+Transport Services is also deliberately not pinned for the same reason as Dynamic AO - its dispatch
+logic (`Logistics\TransportServices\transportDispatchLocal.sqf`) is explicitly written as
+"current owner executes" redispatch and re-targets itself to whichever machine currently owns the
+driver group, so a mid-route migration is a supported case, not a failure mode.
+
+**Extended debug output** (`Waldo_Headless_Debug`, off by default in `MissionConfig\headlessConfig.sqf`)
+adds richer per-event detail - per-client load tables on every rebalance pass, exclusion-reason
+tallies, migrated-group unit counts, disconnect/reassign summaries - on top of the one-line RPT trail
+`Waldo_fnc_HeadlessRegisterClient`/`Rebalance`/`MigrateGroup`/`ReassignOnDisconnect` already write
+unconditionally. Routed through `Waldo_fnc_HeadlessDebugLog` (the shared `[WMP DIAG]` framing,
+`Waldo_fnc_DiagnosticLog`, plus a hosted-server `systemChat` line matching `Waldo_fnc_RunDiagnostics`'s
+own visibility convention), so it costs nothing when off and never introduces a separate notification
+channel. Toggle it live in-mission - no restart required - with `[] call Waldo_fnc_HeadlessDebugToggle;`
+or the **Headless Client - Toggle Debug** ZEN module, which confirms the new state with a WMP
+notification card to every assigned curator. This is the direct successor to the legacy
+`WerthlesHeadless.sqf`'s own in-mission "Toggle WHK Debug" action (`WHKDEBUGHC`) - same "flip debug
+on the fly, get instant confirmation" intent, carried into WMP's own diagnostics/notification
+conventions and made curator-triggerable from Zeus rather than a single hard-coded admin's `addAction`.
 
 **Trigger/waypoint synchronisation is not preserved across a migration** - this is an Arma engine
 limitation, not something WMP (or the legacy script, which attempted and still needed a workaround
@@ -707,8 +730,9 @@ Scripting API: `Waldo_fnc_HeadlessDetectLocal`, `Waldo_fnc_HeadlessRegisterClien
 `Waldo_fnc_HeadlessRebalance`, `Waldo_fnc_HeadlessMigrateGroup`,
 `Waldo_fnc_HeadlessReassignOnDisconnect`, `Waldo_fnc_HeadlessGetDiagnostics`,
 `Waldo_fnc_HeadlessPinCrew` (pins a vehicle's crew server-side against both WMP's own rebalance and
-ACE's separate `ace_headless` module - see below). Implemented in `MissionScripts\Headless\`. See
-`wiki/Headless-Client-Support.md`.
+ACE's separate `ace_headless` module - see above), `Waldo_fnc_HeadlessDebugLog` (internal, gated by
+`Waldo_Headless_Debug`), `Waldo_fnc_HeadlessDebugToggle` (flip extended debug live). Implemented in
+`MissionScripts\Headless\`. See `wiki/Headless-Client-Support.md`.
 
 ### Persistence (optional, `MissionConfig\persistenceConfig.sqf`)
 
@@ -1286,6 +1310,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
+- Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 
 ---
 
