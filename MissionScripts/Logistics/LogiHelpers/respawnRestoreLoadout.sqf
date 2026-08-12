@@ -21,8 +21,29 @@
  * CBA_fnc_addPlayerEventHandler "unit" handler.
  */
 params [["_unit", objNull, [objNull]]];
-if (isNull _unit || {!(local _unit)}) exitWith {false};
-if (_unit getVariable ["Waldo_RespawnRestoreHandled", false]) exitWith {false};
+if (isNull _unit) exitWith {diag_log "[WMP LOADOUT] RespawnRestoreLoadout skipped: called with a null unit."; false};
+if (_unit getVariable ["Waldo_RespawnRestoreHandled", false]) exitWith {
+    diag_log format ["[WMP LOADOUT] RespawnRestoreLoadout skipped for %1: already handled for this life.", _unit];
+    false
+};
+if !(local _unit) exitWith {
+    // A silent, single-shot drop here is exactly what left a respawn with no restore and no
+    // explanation in RPT even after the trigger fired - retry briefly instead of giving up on the
+    // first check. `player` can be reassigned to this unit fractionally before the engine's own
+    // locality bookkeeping catches up; this covers that gap without blocking the caller.
+    diag_log format ["[WMP LOADOUT] RespawnRestoreLoadout: %1 not yet local, retrying for up to 5s.", _unit];
+    [_unit] spawn {
+        params ["_unit"];
+        private _deadline = diag_tickTime + 5;
+        waitUntil {sleep 0.05; local _unit || {diag_tickTime >= _deadline}};
+        if (local _unit) then {
+            [_unit] call Waldo_fnc_RespawnRestoreLoadout;
+        } else {
+            diag_log format ["[WMP LOADOUT] RespawnRestoreLoadout: %1 never became local within 5s; giving up. This should not happen for a client's own respawned unit - report this RPT.", _unit];
+        };
+    };
+    false
+};
 _unit setVariable ["Waldo_RespawnRestoreHandled", true];
 
 private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
