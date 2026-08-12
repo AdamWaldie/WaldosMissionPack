@@ -1,9 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Runs once for each player's own interface client. It starts local UI/actions, applies the
- * server-published ACRE plan, and owns that player's respawn snapshot. Mission makers normally edit
- * MissionConfig rather than this file. Add a custom call here only when its function header says
- * player-local, hasInterface, local UI, local interaction, or local player state.
+ * Runs once for each player's own interface client (mission start or JIP join only - the engine
+ * re-executes this file on every respawn too, which this script guards against below). It starts
+ * local UI/actions, applies the server-published ACRE plan, and installs the handler that owns that
+ * player's respawn snapshot. Mission makers normally edit MissionConfig rather than this file. Add a
+ * custom call here only when its function header says player-local, hasInterface, local UI, local
+ * interaction, or local player state.
  *
  * Arguments:
  * None (engine entry point; runs locally for each player)
@@ -11,6 +13,15 @@
  * Return Value:
  * Nothing
  */
+
+// The engine re-runs initPlayerLocal.sqf on every respawn, not only at mission start/JIP. Without
+// this guard, the one-time setup below re-executes on each respawn: it immediately re-captures the
+// freshly-spawned unit's raw default loadout into Waldo_Player_Inventory (clobbering whatever was
+// actually saved) and stacks a duplicate "Respawn" handler registration. The single handler
+// registered on the true first run already persists and keeps handling every later respawn, so
+// nothing below needs to run again.
+if !(isNil "Waldo_InitPlayerLocal_FirstRunDone") exitWith {};
+Waldo_InitPlayerLocal_FirstRunDone = true;
 
 /*
 PLAYER-LOCAL STARTUP

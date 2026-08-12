@@ -137,10 +137,13 @@ Mission load
         │     ├─ ["",""] call Waldo_fnc_InfoText        (intro title screen)
         │     └─ Sets WALDO_INIT_COMPLETE flag
         │
-        └─ initPlayerLocal.sqf  (per-player, on each join/respawn)
-              ├─ Saves starting loadout via BIS_fnc_saveInventory
-              ├─ Adds "Flip Vehicle" action
-              └─ CBA Respawn event → restores saved loadout + re-adds flip action
+        └─ initPlayerLocal.sqf  (per-player; the engine re-executes this file on every
+              │                  join/JIP/respawn, but a `Waldo_InitPlayerLocal_FirstRunDone`
+              │                  guard at the top makes the setup below run only once per client)
+              ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout
+              ├─ Registers the CBA "Respawn" handler (installed once; keeps firing on every
+              │     later respawn without the rest of this file re-running)
+              └─ CBA Respawn event → restores saved loadout/radio state for that respawn
 ```
 
 ### Key Global Variables (missionNamespace)
