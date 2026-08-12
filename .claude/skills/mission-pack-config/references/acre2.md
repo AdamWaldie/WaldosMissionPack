@@ -18,6 +18,12 @@ it to `acreConfig.sqf` (below), don't keep it.
 ["prc343PresetPolicy", "FULL_RANGE"], // FULL_RANGE = blocks 1-16 all sides; SIDE_ISOLATED = separated but blocks 1-5 on combat sides
 ["namedDisplays", true],              // label supported PRC-148/152/117F channel displays
 ["notifyAssignmentProblems", true],   // warn the affected player when their setup fails to apply
+["readinessTimeoutSeconds", 120],     // ADVANCED TUNING: how long WMP waits for ACRE's own radio-ID
+                                       // conversion before giving up and retrying — raise this on a
+                                       // heavy modset/slow-loading mission if RPT or WMP Diagnostics
+                                       // repeatedly shows a timeout here; WMP's own overwrite of any
+                                       // Eden "ACRE Radio Setup" unit attribute is delayed, not lost,
+                                       // until the automatic retry catches up
 ["additionalRadioProfiles", []],      // ADVANCED: tested third-party carried radios only — leave empty
 ["radioOverrides", []],               // optional per-UID/VARIABLE/ROLE exceptions, see below
 ["sides", [ /* per-side [side, ACRE preset, nets, groups] blocks — see below */ ]],
