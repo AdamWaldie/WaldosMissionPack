@@ -299,6 +299,27 @@ if (_fieldHospitals isEqualTo []) then {
     ["logistics", "field-hospital-actions", if (_fieldHospitalsMissingAction isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["crates=%1 missingAction=%2 expectedMode=%3", count _fieldHospitals, count _fieldHospitalsMissingAction, if (_aceInteractLoaded) then {"ACE+VANILLA"} else {"VANILLA"}], if (_fieldHospitalsMissingAction isEqualTo []) then {""} else {"A field hospital crate is missing its expected action on this client - check the RPT for errors from Waldo_fnc_MedicalCrateFacilityActionLocal."}] call _add;
 };
 
+private _lastRestore = missionNamespace getVariable ["Waldo_Player_LastRespawnRestore", []];
+if (count _lastRestore < 3) then {
+    ["respawn", "loadout-restore", "UNCONFIGURED", "This client has not respawned yet this session; nothing to report."] call _add;
+} else {
+    _lastRestore params ["_restoreIdentityMatched", "_restoreCount", "_restoreTickTime"];
+    ["respawn", "loadout-restore", if (_restoreIdentityMatched) then {"ACTIVE"} else {"ERROR"}, format ["identityMatched=%1 restoredEntries=%2 secondsAgo=%3", _restoreIdentityMatched, _restoreCount, round (diag_tickTime - _restoreTickTime)], if (_restoreIdentityMatched) then {""} else {"The last respawn's saved-loadout identity (UID+side) did not match this player - the mission-start baseline was applied instead. Check the RPT for the matching [WMP LOADOUT] line, and confirm Waldo_Player_LoadoutIdentity/Waldo_Player_Inventory are being set by Waldo_fnc_SaveLoadout."}] call _add;
+};
+
+// Known upstream ACE3 issue, not a WMP defect: ace_nametags/ace_dogtags' own config-based "respawn"
+// event handler (CfgEventHandlers.hpp: respawn = QUOTE(call FUNC(setName));) forwards the engine's
+// [unit, corpse] respawn params wholesale into ace_common_fnc_setName, whose second parameter
+// (_forceSet) has no type guard - the corpse Object lands there and the function throws "Type
+// Object, expected Bool" on every scripted respawn. This is informational only: WMP calls neither
+// ace_common_fnc_setName nor sets ace_setCustomName anywhere, and there is no mission-side fix short
+// of overriding ACE's own config event handler, so this check never carries a "fix" hint.
+private _nametagsLoaded = isClass (configFile >> "CfgPatches" >> "ace_nametags");
+private _dogtagsLoaded = isClass (configFile >> "CfgPatches" >> "ace_dogtags");
+if (_nametagsLoaded || _dogtagsLoaded) then {
+    ["dependencies", "ace-nametags-respawn-compat", "LOADED", format ["nametags=%1 dogtags=%2 - a harmless 'Type Object, expected Bool' error from ace/addons/common/functions/fnc_setName.sqf on respawn is a known upstream ACE3 issue in its own config-based respawn handler, not a WMP defect; ACE's separate PlayerChanged hook still names the unit correctly.", _nametagsLoaded, _dogtagsLoaded]] call _add;
+};
+
 private _warnings = {_x select 2 == "ERROR"} count _checks;
 ["core", "diagnostics", "INFO", "END", format ["checks=%1 errors=%2", count _checks, _warnings], _runId, format ["CLIENT:%1", clientOwner]] call Waldo_fnc_DiagnosticLog;
 [_runId, clientOwner, name player, getPlayerUID player, _checks] remoteExecCall ["Waldo_fnc_DiagnosticsReceiveClient", 2];

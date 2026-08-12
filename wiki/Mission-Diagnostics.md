@@ -75,7 +75,9 @@ Each interface client reports:
 - whether the Feature Runtime Control snapshot has arrived on this machine, and whether the locally applied UI Theme matches the authoritative one it carries;
 - the Accessibility self-interaction menu's install mode (ACE/vanilla) and this player's resolved colour-vision profile;
 - the Emergency Dismount monitor loop and, when Corpse Traps is enabled, whether this client actually installed the "Rig Corpse" interaction;
-- Obituary's "Pronounce Dead" action install state (vanilla Medic trait or ACE Medic/Doctor role) and its local diary render loop.
+- Obituary's "Pronounce Dead" action install state (vanilla Medic trait or ACE Medic/Doctor role) and its local diary render loop;
+- this client's last respawn loadout-restore outcome (`respawn`/`loadout-restore`): whether the saved identity (UID+side) matched, how many loadout entries were restored, and how long ago - `UNCONFIGURED` before this client's first respawn of the session, `ERROR` on an identity mismatch (baseline retained instead of the saved loadout);
+- whether `ace_nametags`/`ace_dogtags` is loaded (`dependencies`/`ace-nametags-respawn-compat`) - informational only. Their own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool`. This is a known upstream ACE3 issue, not a WMP defect - WMP never calls that function or sets `ace_setCustomName` - and there is no mission-side fix, so the check never carries a remediation hint.
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
 

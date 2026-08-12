@@ -137,10 +137,16 @@ Mission load
         │     ├─ ["",""] call Waldo_fnc_InfoText        (intro title screen)
         │     └─ Sets WALDO_INIT_COMPLETE flag
         │
-        └─ initPlayerLocal.sqf  (per-player, on each join/respawn)
-              ├─ Saves starting loadout via BIS_fnc_saveInventory
-              ├─ Adds "Flip Vehicle" action
-              └─ CBA Respawn event → restores saved loadout + re-adds flip action
+        └─ initPlayerLocal.sqf  (per-player; the engine re-executes this whole file on every
+              │                  join/JIP/respawn - most of it is designed to re-run each time so it
+              │                  rebinds to the fresh unit object, e.g. re-installing ACE self-actions,
+              │                  which are per-object. Only the loadout baseline capture + "Respawn"
+              │                  handler registration are guarded by `Waldo_InitPlayerLocal_
+              │                  RespawnHandlerInstalled` to run once per client)
+              ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout (guarded, once)
+              ├─ Registers the CBA "Respawn" handler (guarded, once; keeps firing on every
+              │     later respawn without this block re-running)
+              └─ CBA Respawn event → restores saved loadout/radio state for that respawn
 ```
 
 ### Key Global Variables (missionNamespace)
@@ -586,6 +592,8 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 ```
 
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Headless Client, Obituary, Zeus registration, the Feature Runtime Control snapshot handshake, Object Scaling bounds, UI Theme application, Accessibility self-interaction, Emergency Dismount, Corpse Traps, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
+
+Two respawn-focused client checks close the loop on the loadout-restore system: `respawn`/`loadout-restore` reads a `Waldo_Player_LastRespawnRestore` snapshot `[identityMatched, restoredEntries, tickTime]` set by `initPlayerLocal.sqf`'s `"Respawn"` handler on every actual respawn (`UNCONFIGURED` before this client's first respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved loadout); `dependencies`/`ace-nametags-respawn-compat` is informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
 
 Every new module's diagnostics rows go through the same two primitives so RPT output never
 fragments into per-feature formats: `Waldo_fnc_DiagnosticLog` (the `[WMP DIAG]` frame shown above)
