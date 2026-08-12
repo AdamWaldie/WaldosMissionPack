@@ -145,12 +145,24 @@ if (isNil "Waldo_InitPlayerLocal_RespawnHandlerInstalled") then {
             private _savedIdentity = missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []];
             private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
             private _savedLoadout = missionNamespace getVariable ["Waldo_Player_Inventory", []];
-            if (_identityMatches && {count _savedLoadout > 0}) then {_unit setUnitLoadout _savedLoadout};
+            private _restoredCount = 0;
+            if (_identityMatches && {count _savedLoadout > 0}) then {
+                _unit setUnitLoadout _savedLoadout;
+                _restoredCount = count _savedLoadout;
+            };
             private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
             missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
             missionNamespace setVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1];
             private _savedRadios = if (_identityMatches) then {missionNamespace getVariable ["Waldo_Player_RadioState", []]} else {[]};
-            if (!_identityMatches) then {diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity]};
+            // Log both outcomes, not just the mismatch case - a silent success path is exactly what
+            // made a real restore indistinguishable from "still getting the baseline" while debugging
+            // this system; diagnostics below also read the tracked outcome for a client-local check.
+            if (_identityMatches) then {
+                diag_log format ["[WMP LOADOUT] Restored saved loadout (%1 entries) for identity %2.", _restoredCount, _currentIdentity];
+            } else {
+                diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity];
+            };
+            missionNamespace setVariable ["Waldo_Player_LastRespawnRestore", [_identityMatches, _restoredCount, diag_tickTime]];
             if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
                 missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
                 [_savedRadios, _generation] spawn {

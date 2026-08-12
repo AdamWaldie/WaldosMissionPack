@@ -38,6 +38,15 @@ Zeus registration, the Feature Runtime Control snapshot handshake, Object
 Scaling, UI Theme, Accessibility, Emergency Dismount, Corpse Traps, local
 HUD state, 3D markers, and ACE-vs-vanilla actions.
 
+Two respawn-focused client checks: `respawn`/`loadout-restore` reports the
+last respawn's identity-match outcome and restored item count (`UNCONFIGURED`
+before this client's first respawn, `ERROR` on an identity mismatch); and
+`dependencies`/`ace-nametags-respawn-compat` is an informational-only note
+(never `ERROR`, no fix hint) that fires when `ace_nametags`/`ace_dogtags` is
+loaded, explaining the known upstream ACE3 `fnc_setName` "Type Object,
+expected Bool" respawn error - ACE's own config-based `respawn` handler, not
+a WMP defect.
+
 The latest report broadcasts as `Waldo_Diagnostics_LastReport`:
 `[warningCount, finishedAt, serverChecks, clientReports, runId]` — useful if
 scripting something that should wait for or react to the diagnostic pass.
