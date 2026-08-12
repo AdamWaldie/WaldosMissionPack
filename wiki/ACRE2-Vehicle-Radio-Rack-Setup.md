@@ -157,7 +157,7 @@ asynchronous CBA event delegated to a player's machine, the same as `acre_api_fn
 on a mission with a lot of other systems competing for that same player's machine, that event can
 take longer than a short window to actually land and process, so this wait is deliberately generous.
 
-### Why this needs every connected client, not just the server
+### Why this needs every connected human player, not just the server
 
 ACRE2's per-rack radio *state* (what's mounted, whether it's removable, its live channel) is tracked
 locally on whichever connected client ACRE2 delegated that rack's mount/init work to — it is **not**
@@ -165,10 +165,13 @@ synced to the server. On a listen server (the common case when previewing/hostin
 this is invisible: the host process is simultaneously the server and a client, so "local" state is
 already shared. On a genuine dedicated server it is not, and reading rack state directly from the
 server throws `[ACRE] (api) WARNING: Non existant rack ID provided` even with a player connected and
-racks correctly initialised. `Waldo_fnc_ACRE2RackApply` works around this by broadcasting every rack
-state read/write to all connected clients and using whichever one actually answers — it does not need
-to know in advance which client ACRE2 picked. This is transparent to mission makers; the only visible
-effect is that setup now works correctly on a dedicated server as well as a listen server.
+racks correctly initialised. `Waldo_fnc_ACRE2RackApply` works around this by sending every rack state
+read/write to every connected **human player** and using whichever one actually answers — it does not
+need to know in advance which client ACRE2 picked. Headless clients are deliberately excluded from
+this: they can never hold ACRE2 rack/radio state (no interface, no real ACRE2 session), so including
+them would only add network/script overhead on a mission running several with zero chance of a useful
+answer. This is transparent to mission makers; the only visible effect is that setup now works
+correctly on a dedicated server as well as a listen server.
 
 CHANNEL-mode rack radios (PRC-148/152/117F) are applied and read back synchronously, exactly like
 carried radios of the same class — this is the tested, verified path. **FREQUENCY-mode rack radios

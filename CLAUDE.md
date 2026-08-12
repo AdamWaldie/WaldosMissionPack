@@ -272,7 +272,8 @@ tracked locally on whichever connected client ACRE2 delegated that rack to, not 
 — reading it directly from the server works by coincidence on a listen server (host = server = client)
 but fails on a genuine dedicated server. `Waldo_fnc_ACRE2RackApply` therefore never calls those
 specific ACRE2 state functions itself; it broadcasts each read/write via `Waldo_fnc_ACRE2RackClientAction`
-to every connected client and uses whichever one answers, without needing to know in advance which
+to every connected human player (deliberately excluding headless clients, which can never hold this
+state) and uses whichever one answers, without needing to know in advance which
 client ACRE2 picked. Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row.
 
 ### Paradrop Configuration (`MissionConfig\airOperationsConfig.sqf`)

@@ -93,11 +93,17 @@ if (count allPlayers == 0) exitWith {
     [false, 0, 0, ["no-player-connected (nobody joined the server within 300s of this call)"]] call _finish
 };
 
-// Broadcasts one rack-state read/write to every connected client and returns the first reported
-// result, since we cannot know in advance which client ACRE2 delegated this rack's live state to -
-// see the file header. Re-broadcasts every 0.5s so a client that connects/becomes ready mid-wait, or
-// a rack whose state only becomes readable partway through (e.g. GET_ID before ACRE2 has issued a
-// unique ID yet), is still caught within the timeout. Returns nil on timeout.
+// Broadcasts one rack-state read/write to every connected human player and returns the first
+// reported result, since we cannot know in advance which client ACRE2 delegated this rack's live
+// state to - see the file header. Targets allPlayers explicitly rather than remoteExec mode 0 (every
+// machine) or -2 (every client) - a headless client can never hold ACRE2 rack/radio state (no
+// interface, no real ACRE2 session) and allPlayers already excludes them by construction (see
+// Waldo_fnc_HeadlessRegisterClient's own identical assumption), so sending this at every connected
+// headless client every 0.5s for the whole wait window is pure unnecessary network/script overhead on
+// a mission running several of them, with zero chance of ever getting a useful answer back. Re-sends
+// every 0.5s so a client that connects/becomes ready mid-wait, or a rack whose state only becomes
+// readable partway through (e.g. GET_ID before ACRE2 has issued a unique ID yet), is still caught
+// within the timeout. Returns nil on timeout.
 private _clientRackQuery = {
     params ["_rackId", "_action", "_args", "_timeoutSeconds"];
     private _requestId = format ["Waldo_ACRE2_RackQuery_%1_%2_%3", _rackId, _action, diag_tickTime];
@@ -105,7 +111,10 @@ private _clientRackQuery = {
     private _gotResult = false;
     waitUntil {
         sleep 0.5;
-        [_rackId, _action, _args, _requestId] remoteExecCall ["Waldo_fnc_ACRE2RackClientAction", 0];
+        private _targets = allPlayers apply {owner _x};
+        if (count _targets > 0) then {
+            [_rackId, _action, _args, _requestId] remoteExecCall ["Waldo_fnc_ACRE2RackClientAction", _targets];
+        };
         _gotResult = !(isNil {missionNamespace getVariable _requestId});
         _gotResult || {time > _deadline}
     };
