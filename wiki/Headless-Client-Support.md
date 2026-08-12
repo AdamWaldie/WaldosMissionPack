@@ -292,6 +292,41 @@ Or use the **Headless Client - Toggle Debug** ZEN module ("Waldos Mission Module
 Tools) - no dialog, it flips the state immediately and confirms the new state with a WMP notification
 card to every assigned curator. No mission restart is required either way.
 
+## Manual control from Zeus
+
+Two further modules under **WMP Mission Tools** give a curator direct control over handoffs, on top
+of the always-running automatic pass:
+
+- **Headless Client - Force Rebalance Now** - runs one `Waldo_fnc_HeadlessRebalance` pass immediately.
+  This still applies every normal eligibility rule (start delay, settle time, exclusions) - it only
+  skips waiting for the next automatic trigger (registration or disconnect), useful right after
+  enabling the feature mid-test or clearing a group's `Waldo_Headless_ExcludeGroup` flag.
+- **Headless Client - Manual Handoff** - a dialog listing the 10 nearest eligible AI groups to where
+  the module was placed (no human leader/member, nearest first) and a destination: auto-balance
+  (whichever connected client currently has the fewest managed groups), return to server, or a named
+  connected headless client. Applies immediately via `Waldo_fnc_HeadlessManualHandoff`, which still
+  refuses a player-led group and still routes through `Waldo_fnc_HeadlessMigrateGroup` - the single
+  funnel every migration in this rework uses, so the registry and diagnostics never drift regardless
+  of whether a move was automatic or curator-directed.
+
+```sqf
+[] call Waldo_fnc_HeadlessForceRebalance;
+[_group, "AUTO"] call Waldo_fnc_HeadlessManualHandoff;   // best-load connected client
+[_group, "SERVER"] call Waldo_fnc_HeadlessManualHandoff; // force back to the server
+```
+
+**All three of these modules - Toggle Debug included - are registered only when
+`Waldo_Headless_Enable` is true.** Every other WMP ZEN module registers unconditionally because it's
+useful regardless of mission config; a Zeus menu offering to toggle headless debug output or hand
+groups to a headless client would be pure clutter (and a misleading affordance) on the vast majority
+of missions that never turn this system on. Registration happens in a short bounded wait for the same
+`Waldo_SharedFeatureConfigReady` sentinel `initPlayerLocal.sqf` itself waits on, since `Waldo_Headless_Enable`
+is SHARED-scope config loaded by `init.sqf` and there is no guaranteed ordering between `init.sqf` and
+`initPlayerLocal.sqf`. `Waldo_ZenModuleCount` is 45 without these three, 48 with them -
+`Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either value as `LOADED`, since a
+diagnostics run that lands inside that short registration window would otherwise report a false error
+on a perfectly healthy headless-enabled mission.
+
 ## Diagnostics
 
 `Waldo_fnc_HeadlessGetDiagnostics` feeds into `Waldo_fnc_RunDiagnostics` under area `headless`.

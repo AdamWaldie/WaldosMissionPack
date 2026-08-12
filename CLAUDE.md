@@ -731,8 +731,11 @@ Scripting API: `Waldo_fnc_HeadlessDetectLocal`, `Waldo_fnc_HeadlessRegisterClien
 `Waldo_fnc_HeadlessReassignOnDisconnect`, `Waldo_fnc_HeadlessGetDiagnostics`,
 `Waldo_fnc_HeadlessPinCrew` (pins a vehicle's crew server-side against both WMP's own rebalance and
 ACE's separate `ace_headless` module - see above), `Waldo_fnc_HeadlessDebugLog` (internal, gated by
-`Waldo_Headless_Debug`), `Waldo_fnc_HeadlessDebugToggle` (flip extended debug live). Implemented in
-`MissionScripts\Headless\`. See `wiki/Headless-Client-Support.md`.
+`Waldo_Headless_Debug`), `Waldo_fnc_HeadlessDebugToggle` (flip extended debug live),
+`Waldo_fnc_HeadlessForceRebalance` (run one rebalance pass immediately), `Waldo_fnc_HeadlessManualHandoff`
+(hand a specific group to a specific destination immediately, bypassing the normal eligibility scan -
+still refuses a player-led group and still routes through `Waldo_fnc_HeadlessMigrateGroup`). Implemented
+in `MissionScripts\Headless\`. See `wiki/Headless-Client-Support.md`.
 
 ### Persistence (optional, `MissionConfig\persistenceConfig.sqf`)
 
@@ -1310,7 +1313,14 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
+
+**Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
+true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
+mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
+is 45 without them, 48 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
+- Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
+- Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)
 
 ---
 

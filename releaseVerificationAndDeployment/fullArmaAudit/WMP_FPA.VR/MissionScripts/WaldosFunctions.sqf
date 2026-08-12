@@ -156,6 +156,8 @@ class CfgFunctions
             class HeadlessPinCrew {file = "MissionScripts\Headless\headlessPinCrew.sqf";};
             class HeadlessDebugLog {file = "MissionScripts\Headless\headlessDebugLog.sqf";};
             class HeadlessDebugToggle {file = "MissionScripts\Headless\headlessDebugToggle.sqf";};
+            class HeadlessForceRebalance {file = "MissionScripts\Headless\headlessForceRebalance.sqf";};
+            class HeadlessManualHandoff {file = "MissionScripts\Headless\headlessManualHandoff.sqf";};
         };
         class teleport
         {
@@ -572,6 +574,12 @@ class CfgFunctions
             };
             class ZenHeadlessDebugToggle {
                 file = "MissionScripts\ZenModules\Zen_headlessDebugToggleModule.sqf";
+            };
+            class ZenHeadlessForceRebalance {
+                file = "MissionScripts\ZenModules\Zen_headlessForceRebalanceModule.sqf";
+            };
+            class ZenHeadlessManualHandoff {
+                file = "MissionScripts\ZenModules\Zen_headlessManualHandoffModule.sqf";
             };
             class ZenEMP {
                 file = "MissionScripts\ZenModules\Zen_empModule.sqf";

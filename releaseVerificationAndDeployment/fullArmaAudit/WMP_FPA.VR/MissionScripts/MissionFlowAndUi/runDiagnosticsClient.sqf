@@ -203,7 +203,14 @@ if (_jumpAircraft isEqualTo []) then {
 };
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
-["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if ((missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=45", missionNamespace getVariable ["Waldo_ZenModuleCount", 0]], if (!_zenLoaded || {(missionNamespace getVariable ["Waldo_ZenModuleCount", 0]) == 45}) then {""} else {"Zeus Enhanced module registration count does not match the expected 45 - check the RPT for ZEN registration errors from Waldo_fnc_ZenInitModules, or confirm this client's WMP copy matches the server's."}] call _add;
+// 45 always-registered modules; +3 headless-client control modules only when Waldo_Headless_Enable is
+// true, and only once that conditional registration block (a bounded async wait on
+// Waldo_SharedFeatureConfigReady in Waldo_fnc_ZenInitModules) has actually finished - a diagnostics
+// run that lands inside that window legitimately reads 45 even on a headless-enabled mission, so both
+// counts are accepted rather than racing a false ERROR.
+private _zenCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
+private _zenOk = _zenCount in [45, 48];
+["zeus", "core-modules", if (!_zenLoaded) then {"UNAVAILABLE"} else {if (_zenOk) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=45 (48 with Headless Client Support enabled)", _zenCount], if (!_zenLoaded || _zenOk) then {""} else {"Zeus Enhanced module registration count does not match the expected 45 (or 48 with Headless Client Support enabled) - check the RPT for ZEN registration errors from Waldo_fnc_ZenInitModules, or confirm this client's WMP copy matches the server's."}] call _add;
 private _economyActive = missionNamespace getVariable ["WaldoEcoCore_ModuleActive", false];
 ["zeus", "economy-modules", if (!_economyActive) then {"DISABLED"} else {if ((missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19) then {"LOADED"} else {"ERROR"}}, format ["registered=%1 expected=19", missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]], if (!_economyActive || {(missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0]) == 19}) then {""} else {"Waldos Economy Systems is active but its 19 ZEN modules did not fully register - check the RPT for errors from Waldo_fnc_EcoCore_registerZenModules."}] call _add;
 
