@@ -54,7 +54,7 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 - [Radio Jamming](Radio-Jamming) — ACRE2/TFAR interference, UAV effects, and Zeus controls.
 - [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers)
 - [ACRE2 Radio Setup](ACRE-2-Long-Range-Radio-Presetting)
-- [ACRE2 Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup) — beginner guide to vehicle rack radios.
+- [ACRE2 Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup) — vehicle rack radio configuration, from quickstart to full reference.
 - [ACRE2 Babel](ACRE2-Babel-Configuration)
 
 ### Games and field equipment

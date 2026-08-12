@@ -2,9 +2,9 @@
 
 > **Use this page when:** you have a vehicle (Hunter, helicopter, tank, boat, plane, APC...) and you
 > want its built-in ACRE2 rack radio tuned to a channel, or you want to swap what radio is mounted in
-> it. Start here if you have never touched rack radios before — for the full technical reference see
-> the "Vehicle radio racks" section of
-> [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting#vehicle-radio-racks).
+> it. This is the complete reference for vehicle rack radios, from the smallest working call through
+> the underlying ACRE2 mechanics. Personal/carried squad radios are a separate surface, configured in
+> [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting).
 
 Associated files: `MissionScripts\MissionInit\ACRE2\acre2RackSetup.sqf`,
 `MissionScripts\MissionInit\ACRE2\acre2RackApply.sqf`.
@@ -45,16 +45,19 @@ point is for when you want more control.
 
 ## "Which vehicle can I even use this on?"
 
-No mods required for the common case — ACRE2 gives most vanilla vehicle classes a rack the moment it
-loads:
+No mods required for the common case — ACRE2 attaches racks by class inheritance, so most vanilla
+Arma 3 vehicle classes already have a rack the moment it loads — confirmed directly against ACRE2's
+own `addons/sys_rack/CfgVehicles.hpp`:
 
-| If your vehicle is a... | It already has... |
-|---|---|
-| Helicopter, plane, tank, wheeled APC, armed boat, VTOL | A PRC-117F, already mounted and **fixed** (cannot be swapped or removed — see below) |
-| Hunter / Strider / Ifrit (MRAP family) | Two racks: an **empty AN/VRC-110 you can freely re-equip**, plus a fixed PRC-117F |
+| Vehicle base class | Racks | It already has... |
+|---|---|---|
+| `Helicopter_Base_F`, `Plane_Base_F`, `Tank_F`, `Wheeled_APC_F`, `Boat_Armed_01_base_F`, `VTOL_01_unarmed_base_F` | 1-2 | A PRC-117F, already mounted and **fixed** (cannot be swapped or removed — see below) |
+| `MRAP_01/02/03_base_F` (Hunter/Strider/Ifrit-family) | 2 | Rack 0: an **empty AN/VRC-110 you can freely re-equip**. Rack 1: a fixed PRC-117F |
 
-Anything not on that list (most cars, most static weapons) has no rack at all — `Waldo_fnc_ACRE2RackSetup`
-silently does nothing on those, it will not error.
+Anything not on that list (most cars, most static weapons) has no rack at all —
+`acre_api_fnc_getVehicleRacks` returns `[]` for it, and `Waldo_fnc_ACRE2RackSetup` silently does
+nothing there — it will not error. Use `acre_api_fnc_addRackToVehicle` (or a mod that already does)
+to give such a vehicle a rack first.
 
 If you only want to retune the channel of whatever is already mounted (the common case for
 helicopters, planes, tanks, APCs and boats), the one-line call above already does that — read no
@@ -66,8 +69,8 @@ Instead of a preset, hand it an `assignments` list — one row per rack you want
 
 ```sqf
 [this, ["assignments", [
-    [0, 5],                           // rack 0: just set channel 5
-    [1, [2, 3], "ACRE_PRC117F"]       // rack 1: mount a PRC-117F, then set it to Block 2 / Channel 3
+    [0, 5],                        // rack 0: just set channel 5
+    [1, 44, "ACRE_PRC117F"]        // rack 1: mount a PRC-117F, then set it to channel 44
 ]]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
@@ -77,9 +80,11 @@ Each row is `[rackIndex, channelOrFrequency, mountRadioClass (optional)]`:
   to apply the same row to every rack on the vehicle. Order matches whatever ACRE2 itself reports for
   that vehicle — if you are not sure which index is which on a specific vehicle, start with `"ALL"`
   or just experiment.
-- **`channelOrFrequency`** — a plain channel number, `[block, channel]` (same idea as a squad
-  PRC-343), or a decimal MHz frequency for a PRC-77/SEM70-style radio. Use `-1` (or leave the row as
-  just `[rackIndex]`) if you only want to mount/remove a radio and not touch its channel.
+- **`channelOrFrequency`** — a plain channel number for most radios (PRC-148/152/117F), `[block,
+  channel]` **only** for a PRC-343 (it has no plain channel number, only block+channel), or a decimal
+  MHz frequency for a PRC-77/SEM70-style radio. Do not use `[block, channel]` for a PRC-148/152/117F —
+  those radios only have a plain channel number, no block concept. Use `-1` (or leave the row as just
+  `[rackIndex]`) if you only want to mount/remove a radio and not touch its channel.
 - **`mountRadioClass`** (optional) — a radio classname like `"ACRE_PRC152"` to swap into that rack,
   or the special word `"REMOVE_RACK"` to rip the rack out entirely. Leave it out to keep whatever is
   already mounted.
@@ -119,6 +124,38 @@ though nothing is actually wrong. This is expected, not a bug — get a player i
 and simply call `Waldo_fnc_ACRE2RackSetup` again (same line, e.g. from a trigger once a player is
 confirmed near the vehicle, or just re-run it manually) and it will complete within a few seconds.
 
+## How it works, and what is unverified
+
+Rack initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a
+connected player — ACRE2 delegates the actual mount/initialise work to a player's machine internally
+rather than completing it synchronously on the server. `Waldo_fnc_ACRE2RackSetup` self-forwards to
+the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper in an Eden init field), then
+waits with a bounded timeout — 30 seconds for the vehicle's racks to report initialised
+(`acre_api_fnc_areVehicleRacksInitialized`), then 20 seconds per rack for its mounted radio to
+receive a real unique ID rather than sit as a bare, un-initialised base classname
+(`acre_api_fnc_getMountedRackRadio` returns the base class until ACRE2 finishes issuing the ID).
+
+CHANNEL-mode rack radios (PRC-148/152/117F) are applied and read back synchronously, exactly like
+carried radios of the same class — this is the tested, verified path. **FREQUENCY-mode rack radios
+(PRC-77/SEM70-family) are the one path that has not been proven against a live engine**: no public
+per-radio frequency-write API exists, so this reuses the same batched, ordinal
+`acre_api_fnc_setupRadios` call carried radios use, computing that specific radio's occurrence from
+its own already-known unique ID's position in the broad current-radio list. Treat FREQUENCY-mode rack
+radios as the priority item to verify manually before relying on them.
+
+**Why some racks refuse a swap or `"REMOVE_RACK"`:** both are gated by ACRE2's own
+`acre_api_fnc_isRackRadioRemovable` check, which is `false` unless `isRadioRemovable = 1` was set
+where that rack was configured. Checked directly against ACRE2's vanilla vehicle config, that is
+**only** the MRAP family's empty AN/VRC-110 rack — every PRC-117F ACRE2 pre-mounts elsewhere has no
+`isRadioRemovable` property set at all, so it is fixed hardware by ACRE2's own design, not a WMP
+restriction. A mission-added rack (`acre_api_fnc_addRackToVehicle`) can set that flag itself for full
+replace/remove behaviour anywhere. No public ACRE2 API to unmount only the radio and leave an empty
+rack in place was found — `"REMOVE_RACK"` always takes the physical rack with it.
+
+Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row reports how many vehicles have had rack
+setup requested, how many are still pending (mid-wait or timed out without producing an ID), and how
+many reported a problem — check `[WMP ACRE RACK]` RPT entries for detail on any specific vehicle.
+
 ## Try it yourself
 
 Two ready-made compositions in `WMP_Compositions/` demonstrate this on a placed, crewed Hunter:
@@ -143,9 +180,8 @@ Drop either into Eden and read its in-editor comment for a walkthrough.
 
 ## See also
 
-- [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting) — personal/carried radio
-  setup, and the full technical reference for rack radios (asynchronous timing, FREQUENCY-mode
-  caveats, diagnostics detail).
+- [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting) — personal/carried squad
+  radio setup (a separate surface from vehicle racks).
 - [AN/PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
 - [Mission Diagnostics](Mission-Diagnostics)
 

@@ -73,8 +73,8 @@
  * Example:
  * // Simplest - retune whatever is already mounted in every rack on this vehicle to channel 5:
  * [this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
- * // Explicit: rack 0 gets channel 5, rack 1 gets Block 2/Channel 3, mounting a PRC-117F into rack 1 first:
- * [this, ["assignments", [[0, 5], [1, [2, 3], "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
+ * // Explicit: rack 0 gets channel 5, rack 1 gets channel 44, mounting a PRC-117F into rack 1 first:
+ * [this, ["assignments", [[0, 5], [1, 44, "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
  * // Later in the mission - re-equip rack 0 with a different radio type, ripping rack 1 out entirely:
  * [this, ["assignments", [[0, 12, "ACRE_PRC152"], [1, -1, "REMOVE_RACK"]]]] call Waldo_fnc_ACRE2RackSetup;
  *

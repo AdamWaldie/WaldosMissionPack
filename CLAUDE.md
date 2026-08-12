@@ -231,8 +231,8 @@ every rack on a vehicle:
 ```sqf
 // Simplest - retune whatever is already mounted in every rack on this vehicle:
 [this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
-// Explicit: rack 0 gets channel 5; rack 1 gets Block 2/Channel 3 after mounting a PRC-117F into it:
-[this, ["assignments", [[0, 5], [1, [2, 3], "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
+// Explicit: rack 0 gets channel 5; rack 1 gets channel 44 after mounting a PRC-117F into it:
+[this, ["assignments", [[0, 5], [1, 44, "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
 // preset (optional) applies a named ACRE2 preset before the vehicle's racks initialise. A preset name
 // is a name ACRE2 itself defines for an actual radio model - a rack designation like AN/VRC-110 names
 // the mounting hardware, not a radio, and is never a valid preset name itself. WMP does not ship or
