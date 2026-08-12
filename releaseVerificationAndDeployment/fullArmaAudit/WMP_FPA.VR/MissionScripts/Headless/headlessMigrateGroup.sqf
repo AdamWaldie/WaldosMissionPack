@@ -99,4 +99,8 @@ if (_finalOwner == 2) then {
 
 ["Waldo_Headless_GroupMigrated", [_group, _previousOwner, _finalOwner]] call CBA_fnc_globalEvent;
 diag_log format ["[WMP HEADLESS] Group %1 migrated from owner=%2 to owner=%3.", _group, _previousOwner, _finalOwner];
+["MIGRATE", format [
+    "group=%1 unitCount=%2 previousOwner=%3 newOwner=%4 destination=%5",
+    _group, count units _group, _previousOwner, _finalOwner, if (_finalOwner == 2) then {"SERVER"} else {"HC"}
+]] call Waldo_fnc_HeadlessDebugLog;
 true

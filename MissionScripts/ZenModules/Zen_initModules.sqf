@@ -268,3 +268,45 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
 missionNamespace setVariable ["Waldo_ZenModuleCount", 45];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
 diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 45], clientOwner];
+
+// Headless-client control modules are registered separately, and only when Waldo_Headless_Enable is
+// actually true - unlike every module above, which is always useful regardless of mission config, a
+// Zeus menu offering to toggle headless debug output or hand groups to a headless client is pure
+// clutter (and a misleading affordance) on the vast majority of missions that never turn HC support
+// on. Waldo_Headless_Enable is SHARED-scope config loaded by init.sqf, which is not guaranteed to
+// have finished before this file runs (initPlayerLocal.sqf races init.sqf), so this waits on the
+// same Waldo_SharedFeatureConfigReady sentinel initPlayerLocal.sqf itself waits on before reading it.
+[] spawn {
+    private _deadline = diag_tickTime + 30;
+    waitUntil {uiSleep 0.1; missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false] || {diag_tickTime >= _deadline}};
+    if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {
+        diag_log format ["[WMP ZEN] Headless client modules not registered on clientOwner=%1: Waldo_Headless_Enable is false.", clientOwner];
+    };
+
+    ["WMP Mission Tools", "Headless Client - Toggle Debug",
+        {
+            params ["_modulePos", "_objectPos"];
+            [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessDebugToggle;
+        },
+        "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
+    ] call zen_custom_modules_fnc_register;
+
+    ["WMP Mission Tools", "Headless Client - Force Rebalance Now",
+        {
+            params ["_modulePos", "_objectPos"];
+            [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessForceRebalance;
+        },
+        "\A3\ui_f\data\igui\cfg\simpletasks\types\reammo_ca.paa"
+    ] call zen_custom_modules_fnc_register;
+
+    ["WMP Mission Tools", "Headless Client - Manual Handoff",
+        {
+            params ["_modulePos", "_objectPos"];
+            [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessManualHandoff;
+        },
+        "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"
+    ] call zen_custom_modules_fnc_register;
+
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 3];
+    diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 48]];
+};

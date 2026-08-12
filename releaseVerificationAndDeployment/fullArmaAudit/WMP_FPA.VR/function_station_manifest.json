@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 905,
+  "registeredFunctionCount": 913,
   "runtimeFunctionCount": 385,
-  "functionCount": 1290,
+  "functionCount": 1298,
   "stations": [
     {
       "id": "control",
@@ -821,6 +821,36 @@
     {
       "name": "Waldo_fnc_HeadlessGetDiagnostics",
       "file": "MissionScripts/Headless/headlessGetDiagnostics.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessPinCrew",
+      "file": "MissionScripts/Headless/headlessPinCrew.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessDebugLog",
+      "file": "MissionScripts/Headless/headlessDebugLog.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessDebugToggle",
+      "file": "MissionScripts/Headless/headlessDebugToggle.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessForceRebalance",
+      "file": "MissionScripts/Headless/headlessForceRebalance.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessManualHandoff",
+      "file": "MissionScripts/Headless/headlessManualHandoff.sqf",
       "station": "headless",
       "activation": "manual"
     },
@@ -1739,6 +1769,24 @@
     {
       "name": "Waldo_fnc_ZenJammerRemove",
       "file": "MissionScripts/ZenModules/Zen_jammerRemoveModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenHeadlessDebugToggle",
+      "file": "MissionScripts/ZenModules/Zen_headlessDebugToggleModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenHeadlessForceRebalance",
+      "file": "MissionScripts/ZenModules/Zen_headlessForceRebalanceModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenHeadlessManualHandoff",
+      "file": "MissionScripts/ZenModules/Zen_headlessManualHandoffModule.sqf",
       "station": "zen",
       "activation": "manual"
     },

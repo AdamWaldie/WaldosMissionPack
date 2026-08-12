@@ -160,6 +160,14 @@ _config set ["maximumServiceCycles", round (_config getOrDefault ["maximumServic
 _config set ["returnWhenOutOfAmmo", _config getOrDefault ["returnWhenOutOfAmmo", missionNamespace getVariable ["Waldo_Gunship_ReturnWhenOutOfAmmo", true]]];
 _aircraft setVariable ["Waldo_Gunship_Id", _id, true];
 _aircraft enableSimulationGlobal true;
+// Gunship crew is continuously driven by Waldo_fnc_GunshipMonitor and expected to stay server-owned
+// (already excluded from WMP's own native headless rebalance via Waldo_Gunship_Registry) - pin it
+// against ACE's own, uncoordinated ace_headless module too, since that mover has no knowledge of
+// this system and no settle-time protection. This registration also carries mission-maker-configured
+// setup (turret profiles, orbit, service policy above) applied once to this aircraft/group and never
+// reapplied by a bare setGroupOwner - a migration wouldn't just desync the monitor, it would silently
+// drop the configured orbit/turret behaviour. See headlessPinCrew.sqf for detail.
+[_aircraft] call Waldo_fnc_HeadlessPinCrew;
 private _controller = _config getOrDefault ["controller", objNull];
 if (!isNull _controller && {!(_controller isKindOf "CAManBase")}) then {_controller = objNull};
 private _controllerUID = _config getOrDefault ["controllerUID", if (!isNull _controller && {isPlayer _controller}) then {getPlayerUID _controller} else {""}];

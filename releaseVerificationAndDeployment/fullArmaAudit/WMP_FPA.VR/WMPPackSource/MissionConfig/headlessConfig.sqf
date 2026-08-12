@@ -21,7 +21,7 @@
  * headless client connects.
  *
  * EDIT FOR A NORMAL MISSION: Enable, once the live test matrix has been run for your mod set.
- * LEAVE ALONE UNLESS EXTENDING/TESTING: the three pacing/settle-time values below.
+ * LEAVE ALONE UNLESS EXTENDING/TESTING: the three pacing/settle-time values below, and Debug.
  * CUSTOM CALLS: none for normal use - a group opts itself out at any time with
  * `_group setVariable ["Waldo_Headless_ExcludeGroup", true];` (see wiki/Headless-Client-Support.md).
  *
@@ -41,10 +41,21 @@
  *   configuring it.
  * - Waldo_Headless_MigrationPaceSeconds (ADVANCED): pause between each queued group migration -
  *   moving many groups in the same frame is a known source of a server hitch.
+ * - Waldo_Headless_Debug (ADVANCED/TROUBLESHOOTING): off by default. Extends the one-line-per-event
+ *   RPT trail every registration/rebalance/migration/disconnect already writes unconditionally with
+ *   the noisier, genuinely optional detail (per-client load tables, exclusion-reason tallies) a
+ *   mission maker only wants while actively diagnosing HC behaviour - see Waldo_fnc_HeadlessDebugLog.
+ *   Toggle live in-mission with Waldo_fnc_HeadlessDebugToggle or the "Headless Client - Toggle Debug"
+ *   ZEN module, no mission restart required - the same in-mission toggle intent as the legacy
+ *   MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf's own "Toggle WHK Debug" action, carried
+ *   into WMP's own [WMP DIAG] RPT framing and notification-card conventions and made
+ *   curator-triggerable from Zeus rather than a single hard-coded admin's addAction. Costs nothing
+ *   when off (a single getVariable check at each of the four event sites).
  *
  * BEGINNER TEST: after running the manual HC matrix once, set Enable to true, connect one headless
  * client, and confirm it appears in the "headless-clients" diagnostics row
- * (Waldo_fnc_HeadlessGetDiagnostics / Waldo_fnc_RunDiagnostics) after the start delay elapses.
+ * (Waldo_fnc_HeadlessGetDiagnostics / Waldo_fnc_RunDiagnostics) after the start delay elapses. Set
+ * Debug to true (or toggle it live from Zeus) to also see per-pass detail in RPT/hosted-server chat.
  */
 createHashMapFromArray [
     ["featureFamilies", ["Headless Client Support"]],
@@ -54,6 +65,8 @@ createHashMapFromArray [
         // ADVANCED TUNING: startup grace period, per-group settle time, and inter-migration pacing.
         ["Waldo_Headless_StartDelaySeconds", 30],   // SECONDS: no migration begins before this.
         ["Waldo_Headless_MinGroupAgeSeconds", 10],  // SECONDS: minimum group age before eligibility.
-        ["Waldo_Headless_MigrationPaceSeconds", 3]  // SECONDS: pause between each queued migration.
+        ["Waldo_Headless_MigrationPaceSeconds", 3], // SECONDS: pause between each queued migration.
+        // TROUBLESHOOTING: extended per-event debug detail. Off by default; toggle live from Zeus.
+        ["Waldo_Headless_Debug", false]
     ]]
 ]

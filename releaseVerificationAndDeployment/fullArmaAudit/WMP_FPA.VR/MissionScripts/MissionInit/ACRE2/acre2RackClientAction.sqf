@@ -9,17 +9,19 @@
  * functions directly from the server works only by coincidence on a listen server (where the host is
  * simultaneously the server and a client, so "local" state is shared); on a genuine dedicated server
  * it throws "[ACRE] (api) WARNING: Non existant rack ID provided" and a follow-on script error,
- * because the server's own local ACRE2 state genuinely never had that rack's data. Broadcasting this
- * action to every connected client and letting whichever one actually holds the live state succeed
- * removes the need to know in advance which client ACRE2 chose - a client with no visibility into the
- * rack ID simply throws internally (caught here) and reports nothing, so only a genuine holder of the
- * state ever answers.
+ * because the server's own local ACRE2 state genuinely never had that rack's data. Sending this
+ * action to every connected human player and letting whichever one actually holds the live state
+ * succeed removes the need to know in advance which client ACRE2 chose - a client with no visibility
+ * into the rack ID simply throws internally (caught here) and reports nothing, so only a genuine
+ * holder of the state ever answers.
  *
  * Locality and authority:
- * Runs on every connected client (remoteExec target 0 from the server); a client with no interface
- * (dedicated server's own copy, a headless client with no live ACRE2 session) exits immediately and
- * harmlessly. Every ACRE2 call is wrapped in isNil {CODE}, SQF's standard safe-eval idiom - it
- * evaluates CODE and reports true on both a nil result and a runtime error inside it, so an
+ * Runs on every connected human player's machine - the caller targets allPlayers explicitly rather
+ * than remoteExec mode 0/-2, since a headless client can never hold ACRE2 rack/radio state and would
+ * otherwise receive this call every 0.5s for no possible benefit on a mission running several of
+ * them. The hasInterface guard below is still kept as a second, cheap safety net in case a caller
+ * ever targets more broadly. Every ACRE2 call is wrapped in isNil {CODE}, SQF's standard safe-eval
+ * idiom - it evaluates CODE and reports true on both a nil result and a runtime error inside it, so an
  * unrecognised rack ID on this machine is treated as "this machine cannot answer" rather than crashing
  * or reporting a false result. Reports back to the server only on a successful, meaningful read/write
  * via Waldo_fnc_ACRE2RackClientActionResult; multiple clients successfully reporting the same result

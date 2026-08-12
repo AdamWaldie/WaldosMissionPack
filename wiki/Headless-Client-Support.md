@@ -188,6 +188,47 @@ The one system found *not* to redispatch correctly, Dynamic AO's patrol-waypoint
 (`Waldo_fnc_DynamicAOAddPatrolWaypoints`), was fixed to match the same redispatch pattern as part of
 this rework.
 
+## Real-time systems pin themselves server-side by default
+
+Confirmed live: **ACE's own `ace_headless` module is a separate, uncoordinated mover** - if that
+required-mod feature (not WMP's own system) is what's actually redistributing groups on a mission,
+none of WMP's eligibility rules, settle-time or pacing above apply, since ACE decides independently.
+Its own "Full Rebalance" behaviour moves every eligible group immediately with **no settle-time grace
+period at all**, which can race a WMP system's own in-progress setup or simply move a group WMP
+expects to keep continuously driving.
+
+For that reason, `Waldo_fnc_GunshipRegister`, the shared paradrop flight-route builder
+(`Waldo_fnc_ParadropBuildFlightRoute`, used by both `Waldo_fnc_ParadropQuickFlightSetup` and
+`Waldo_fnc_ParadropCreateDropZone`), `Waldo_fnc_DynamicAACreate`, and `Waldo_fnc_SimpleAiConvoy` pin
+their own managed vehicle(s) server-side by default via `Waldo_fnc_HeadlessPinCrew`. That call sets
+**both** `Waldo_Headless_ExcludeGroup` (protects against WMP's own native rebalance) **and** ACE's own
+`acex_headless_blacklist` on the vehicle (protects against `ace_headless`, which excludes any group
+with units in a blacklisted vehicle) - the pin holds regardless of which headless system a mission
+actually uses.
+
+**Paradrop and Gunship carry a second, independent reason to pin, beyond just desyncing a watcher
+script.** Both apply mission-maker-configured setup once - flight altitude/speed/direction and the
+scripted standby/green/red waypoint route for Paradrop, turret profiles/orbit/service policy for
+Gunship - to a specific aircraft/group, and never reapply it. A bare `setGroupOwner` does not replay
+that setup, so migrating either mid-operation would silently drop the mission maker's own configured
+flight behaviour, not merely go stale until the next tick. Any custom system with the same shape - a
+one-shot configuration script bound to a specific managed vehicle/group that never re-applies itself -
+should pin the same way.
+
+**Dynamic AO and Transport Services are deliberately not pinned** - both are specifically designed
+(and, for Dynamic AO, tested) to survive migration, and both name headless offloading as an intended
+use case rather than a risk: Dynamic AO's patrol-waypoint redispatch (see above), and Transport
+Services' own `Logistics\TransportServices\transportDispatchLocal.sqf`, written explicitly as
+"current owner executes" - it re-targets itself to whichever machine currently owns the driver group,
+so a mid-route migration is a supported case, not a failure mode. If a specific Dynamic AO deployment
+needs to stay server-side anyway, call `[_object] call Waldo_fnc_HeadlessPinCrew;` on it yourself.
+
+```sqf
+// Pin any other custom AI vehicle/group server-side against both WMP's native rebalance and
+// ACE's ace_headless module:
+[_vehicle] call Waldo_fnc_HeadlessPinCrew;
+```
+
 ## Third-party AI mod compatibility (VCOM AI, LAMBS, ASR AI3, ...)
 
 The legacy `WerthlesHeadless.sqf`'s best-known failure mode was AI going unresponsive after a
@@ -222,6 +263,69 @@ absorbs the migration without disturbing the sync. This is the same documented w
 legacy tooling this system replaces (which attempted its own capture/reapply of sync state in script
 and still needed it), so treat it as required practice for any mission using trigger-synced waypoints
 on AI groups that might migrate, not an optional precaution.
+
+## Extended debug output
+
+Off by default (`Waldo_Headless_Debug` in `MissionConfig\headlessConfig.sqf`). The four core events
+(registration, rebalance pass, migration, disconnect) already write a one-line `diag_log` entry to
+RPT unconditionally - that baseline trail is one-shot-per-event and cheap enough to always keep.
+`Waldo_Headless_Debug` adds the noisier, genuinely optional extra detail a mission maker only wants
+while actively diagnosing HC behaviour: per-client load tables on every rebalance pass, an
+exclusion-reason tally, migrated-group unit counts, and disconnect/reassign summaries. Routed through
+`Waldo_fnc_HeadlessDebugLog`, which writes the shared `[WMP DIAG]` frame (`Waldo_fnc_DiagnosticLog`)
+plus a hosted-server `systemChat` line (matching `Waldo_fnc_RunDiagnostics`'s own visibility
+convention - a genuine dedicated server has no console to show it to and relies on RPT). Costs nothing
+when off: a single `getVariable` check at each of the four call sites.
+
+This is the direct successor to the legacy `WerthlesHeadless.sqf`'s own in-mission "Toggle WHK Debug"
+action (`WHKDEBUGHC`) - the same "flip debug on the fly, get instant confirmation" intent, carried
+into WMP's own `[WMP DIAG]`/notification-card conventions instead of that script's dedicated
+`WHKDEBUGGER`/hint plumbing, and extended to be curator-triggerable from Zeus rather than a single
+hard-coded admin's `addAction`:
+
+```sqf
+[] call Waldo_fnc_HeadlessDebugToggle;      // flip the current state
+[true] call Waldo_fnc_HeadlessDebugToggle;  // force on
+```
+
+Or use the **Headless Client - Toggle Debug** ZEN module ("Waldos Mission Modules" > WMP Mission
+Tools) - no dialog, it flips the state immediately and confirms the new state with a WMP notification
+card to every assigned curator. No mission restart is required either way.
+
+## Manual control from Zeus
+
+Two further modules under **WMP Mission Tools** give a curator direct control over handoffs, on top
+of the always-running automatic pass:
+
+- **Headless Client - Force Rebalance Now** - runs one `Waldo_fnc_HeadlessRebalance` pass immediately.
+  This still applies every normal eligibility rule (start delay, settle time, exclusions) - it only
+  skips waiting for the next automatic trigger (registration or disconnect), useful right after
+  enabling the feature mid-test or clearing a group's `Waldo_Headless_ExcludeGroup` flag.
+- **Headless Client - Manual Handoff** - a dialog listing the 10 nearest eligible AI groups to where
+  the module was placed (no human leader/member, nearest first) and a destination: auto-balance
+  (whichever connected client currently has the fewest managed groups), return to server, or a named
+  connected headless client. Applies immediately via `Waldo_fnc_HeadlessManualHandoff`, which still
+  refuses a player-led group and still routes through `Waldo_fnc_HeadlessMigrateGroup` - the single
+  funnel every migration in this rework uses, so the registry and diagnostics never drift regardless
+  of whether a move was automatic or curator-directed.
+
+```sqf
+[] call Waldo_fnc_HeadlessForceRebalance;
+[_group, "AUTO"] call Waldo_fnc_HeadlessManualHandoff;   // best-load connected client
+[_group, "SERVER"] call Waldo_fnc_HeadlessManualHandoff; // force back to the server
+```
+
+**All three of these modules - Toggle Debug included - are registered only when
+`Waldo_Headless_Enable` is true.** Every other WMP ZEN module registers unconditionally because it's
+useful regardless of mission config; a Zeus menu offering to toggle headless debug output or hand
+groups to a headless client would be pure clutter (and a misleading affordance) on the vast majority
+of missions that never turn this system on. Registration happens in a short bounded wait for the same
+`Waldo_SharedFeatureConfigReady` sentinel `initPlayerLocal.sqf` itself waits on, since `Waldo_Headless_Enable`
+is SHARED-scope config loaded by `init.sqf` and there is no guaranteed ordering between `init.sqf` and
+`initPlayerLocal.sqf`. `Waldo_ZenModuleCount` is 45 without these three, 48 with them -
+`Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either value as `LOADED`, since a
+diagnostics run that lands inside that short registration window would otherwise report a false error
+on a perfectly healthy headless-enabled mission.
 
 ## Diagnostics
 

@@ -169,4 +169,15 @@ if (_queuedNow > 0 && {!(missionNamespace getVariable ["Waldo_Headless_Migration
 };
 
 diag_log format ["[WMP HEADLESS] Rebalance pass: eligible=%1 excluded=%2 queuedNow=%3 queueLength=%4 clients=%5.", count _eligible, count _excluded, _queuedNow, count _queue, count _clients];
+private _reasonTally = [];
+{
+    _x params ["", "_reason"];
+    private _tIdx = _reasonTally findIf {(_x select 0) == _reason};
+    if (_tIdx >= 0) then {(_reasonTally select _tIdx) set [1, ((_reasonTally select _tIdx) select 1) + 1];}
+    else {_reasonTally pushBack [_reason, 1];};
+} forEach _excluded;
+["REBALANCE", format [
+    "eligible=%1 excluded=%2 queuedNow=%3 queueLength=%4 loadByOwner=%5 excludedReasons=%6",
+    count _eligible, count _excluded, _queuedNow, count _queue, _loadByOwner, _reasonTally
+]] call Waldo_fnc_HeadlessDebugLog;
 _queuedNow
