@@ -75,7 +75,7 @@ Each interface client reports:
 - whether the Feature Runtime Control snapshot has arrived on this machine, and whether the locally applied UI Theme matches the authoritative one it carries;
 - the Accessibility self-interaction menu's install mode (ACE/vanilla) and this player's resolved colour-vision profile;
 - the Emergency Dismount monitor loop and, when Corpse Traps is enabled, whether this client actually installed the "Rig Corpse" interaction;
-- Obituary's medic-only "Pronounce Dead" action install state and its local diary render loop.
+- Obituary's "Pronounce Dead" action install state (vanilla Medic trait or ACE Medic/Doctor role) and its local diary render loop.
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
 

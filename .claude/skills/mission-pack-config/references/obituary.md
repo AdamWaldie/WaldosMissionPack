@@ -1,10 +1,14 @@
 # Obituary / confirmed-death reporting
 
-A medic-only "Pronounce Dead" ACE **self-interaction** that lists every eligible corpse within range,
+A "Pronounce Dead" ACE **self-interaction** that lists every eligible corpse within range,
 individually, for acknowledgement — replacing terse default death messages with a formatted KIA
 report: time of death, cause, grid-reference location, and a friendly-fire callout when applicable.
 Feeds a "Confirmed deaths" section into the ENDEX After-Action Report (see `endex-aar.md`), listing
 each victim's name and how many times their death was confirmed.
+
+Eligibility (`Waldo_fnc_ObituaryIsQualifiedMedic`) is the vanilla "Medic" unit trait **or** an ACE
+Advanced Medical role of Medic or Doctor (`ACE_medical_medicClass` 1 or 2) — a unit can hold an ACE
+Medical role without the vanilla trait ever being set, so either qualifies.
 
 Earlier versions used a per-corpse ACE_MainActions **target** interaction instead (stand within 3m of,
 and look directly at, one exact body). That was replaced with an `ACE_SelfActions` submenu

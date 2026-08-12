@@ -92,11 +92,14 @@ Call `Waldo_fnc_TreatmentFeedbackInit` or `Waldo_fnc_TreatmentFeedbackStop` on i
 ## Obituary and confirmed-death reporting
 
 Requires ACE Medical and ACE interaction. Enabled by **default**, unlike most other optional
-features in this list. A medic-only **Pronounce Dead** ACE self-interaction lists every eligible
-corpse within range, individually, and replaces Arma's terse default death message with a formatted
-KIA report — time of death, cause, grid reference, and a friendly-fire callout when applicable — and
-feeds a "Confirmed deaths" section into the ENDEX After-Action Report (see
-[ENDEX and After-Action Report](Feature-Tutorials)).
+features in this list. A **Pronounce Dead** ACE self-interaction lists every eligible corpse within
+range, individually, and replaces Arma's terse default death message with a formatted KIA report —
+time of death, cause, grid reference, and a friendly-fire callout when applicable — and feeds a
+"Confirmed deaths" section into the ENDEX After-Action Report (see
+[ENDEX and After-Action Report](Feature-Tutorials)). Eligibility (`Waldo_fnc_ObituaryIsQualifiedMedic`)
+is the vanilla "Medic" unit trait **or** an ACE Advanced Medical role of Medic or Doctor
+(`ACE_medical_medicClass` 1 or 2) — a unit can hold an ACE Medical role without the vanilla trait
+ever being set, so either qualifies.
 
 Quickest working setup — no setup needed, it just works:
 

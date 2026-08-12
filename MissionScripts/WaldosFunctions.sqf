@@ -738,6 +738,7 @@ class CfgFunctions
         class Obituary
         {
             class ObituaryInit {file = "MissionScripts\MedicalSystems\Obituary\obituaryInit.sqf";};
+            class ObituaryIsQualifiedMedic {file = "MissionScripts\MedicalSystems\Obituary\obituaryIsQualifiedMedic.sqf";};
             class ObituarySelfInteractionInit {file = "MissionScripts\MedicalSystems\Obituary\obituarySelfInteractionInit.sqf";};
             class ObituaryChildrenLocal {file = "MissionScripts\MedicalSystems\Obituary\obituaryChildrenLocal.sqf";};
             class ObituaryRecordDeath {file = "MissionScripts\MedicalSystems\Obituary\obituaryRecordDeath.sqf";};
