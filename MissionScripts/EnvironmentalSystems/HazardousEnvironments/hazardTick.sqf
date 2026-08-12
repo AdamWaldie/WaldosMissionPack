@@ -223,13 +223,17 @@ private _graceSeconds = missionNamespace getVariable ["Waldo_Hazard_StatusGraceS
 
 // One combined status line per hazard type, not per contributing zone key. Visibility follows the
 // grace clock above (presence-based, like a Geiger counter falling silent), not the exposure value
-// itself - the physical exposure/effect keeps decaying at its own configured pace either way.
+// itself - the physical exposure/effect keeps decaying at its own configured pace either way. Labelled
+// by the hazard TYPE itself (e.g. "RADIATION"), not any one contributing zone's own narrative `label`
+// - a single type routinely aggregates several differently-labelled zones/presets by design (see
+// environmentConfig.sqf: "all radiation zones contribute to one accumulated dose"), so showing one
+// arbitrary zone's label here would misrepresent a combined reading as if it came from just that zone.
 {
     private _type = _x;
     (_typeAggregates get _type) params ["_label", "_exposureSum"];
     private _lastInside = _typeLastInside getOrDefault [_type, -1e6];
     if ((diag_tickTime - _lastInside) <= _graceSeconds) then {
-        _activeText pushBack format ["%1: %2", _label, (_exposureSum toFixed 2)];
+        _activeText pushBack format ["%1: %2", _type, (_exposureSum toFixed 2)];
     };
 } forEach (keys _typeAggregates);
 

@@ -17,12 +17,29 @@
  * - per ACRE2's own source comment it "must be executed" and is not triggered automatically on
  * vehicle creation; without calling it ourselves, ACRE2 only appears to trigger it once a player
  * actually enters/approaches the vehicle, which can take far longer than any fixed wait or never
- * happen at all for a parked, uncrewed vehicle. A rack's mounted radio can likewise sit as an un-initialised
- * base classname for a period before ACRE2 issues its real unique ID
+ * happen at all for a parked, uncrewed vehicle. A rack's mounted radio can likewise sit as an
+ * un-initialised base classname for a period before ACRE2 issues its real unique ID
  * (acre_api_fnc_getMountedRackRadio returns the bare base class until then) - readiness is detected
  * by comparing the plain and base-class-forced reads of that same call, exactly mirroring how
  * carried-radio code already distinguishes a resolved unique ID from a base class via
  * acre_api_fnc_getBaseRadio.
+ *
+ * ACRE2's per-rack radio STATE (acre_api_fnc_getMountedRackRadio, acre_api_fnc_isRackRadioRemovable,
+ * acre_api_fnc_setRadioChannel/getRadioChannel, acre_api_fnc_getCurrentRadioList) is tracked locally
+ * on whichever connected client ACRE2 itself delegated the rack's mount/init work to - it is not
+ * synced to the server (confirmed against ACRE2's own source: acre_sys_rack_fnc_getState reads a
+ * local acre_sys_data_radioData store, not a broadcast variable). Calling these functions directly
+ * from the server therefore only works by coincidence on a listen server, where the host process is
+ * simultaneously the server and a client and so shares that "local" state; on a genuine dedicated
+ * server it throws "[ACRE] (api) WARNING: Non existant rack ID provided" followed by a script error,
+ * confirmed live. Every read/write against this state is therefore routed through
+ * Waldo_fnc_ACRE2RackClientAction, broadcast to every connected client so whichever one actually holds
+ * the state can answer - this file no longer calls those specific ACRE2 functions directly. Only the
+ * genuinely server-side ACRE2 calls (acre_api_fnc_setVehicleRacksPreset, acre_api_fnc_initVehicleRacks,
+ * acre_api_fnc_mountRackRadio, acre_api_fnc_removeRackFromVehicle, acre_api_fnc_areVehicleRacksInitialized,
+ * acre_api_fnc_getVehicleRacks) remain here, matching ACRE2's own "Must be executed on the server"
+ * documentation for the write-triggering ones and the vehicle-attached (broadcast) storage the last two
+ * read from.
  *
  * FREQUENCY-mode rack radios (PRC-77/SEM70-family) are the one path here that has not been proven
  * against a live engine: no public per-radio frequency-write API exists (the same limitation
@@ -76,6 +93,27 @@ if (count allPlayers == 0) exitWith {
     [false, 0, 0, ["no-player-connected (nobody joined the server within 300s of this call)"]] call _finish
 };
 
+// Broadcasts one rack-state read/write to every connected client and returns the first reported
+// result, since we cannot know in advance which client ACRE2 delegated this rack's live state to -
+// see the file header. Re-broadcasts every 0.5s so a client that connects/becomes ready mid-wait, or
+// a rack whose state only becomes readable partway through (e.g. GET_ID before ACRE2 has issued a
+// unique ID yet), is still caught within the timeout. Returns nil on timeout.
+private _clientRackQuery = {
+    params ["_rackId", "_action", "_args", "_timeoutSeconds"];
+    private _requestId = format ["Waldo_ACRE2_RackQuery_%1_%2_%3", _rackId, _action, diag_tickTime];
+    private _deadline = time + _timeoutSeconds;
+    private _gotResult = false;
+    waitUntil {
+        sleep 0.5;
+        [_rackId, _action, _args, _requestId] remoteExecCall ["Waldo_fnc_ACRE2RackClientAction", 0];
+        _gotResult = !(isNil {missionNamespace getVariable _requestId});
+        _gotResult || {time > _deadline}
+    };
+    private _result = if (_gotResult) then {missionNamespace getVariable _requestId} else {nil};
+    missionNamespace setVariable [_requestId, nil];
+    _result
+};
+
 private _preset = _config getOrDefault ["preset", ""];
 if (_preset != "") then {
     [_vehicle, _preset] call acre_api_fnc_setVehicleRacksPreset;
@@ -112,19 +150,22 @@ private _profileFor = {
     if (_i < 0) then {[]} else {_profiles select _i}
 };
 
-// Waits (bounded) for a rack's mounted radio to have a real unique ID rather than a bare base class.
+// Waits (bounded) for a rack's mounted radio to have a real unique ID rather than a bare base class,
+// via _clientRackQuery (see file header for why this cannot be read directly on the server).
+// acre_api_fnc_mountRackRadio is itself asynchronous - like acre_api_fnc_initVehicleRacks, it fires a
+// CBA targeted event to a connected player's machine and returns immediately, without waiting for
+// that event to actually land and process. On a mission with a lot of other systems competing for
+// that same player's machine (many CBA event handlers, other spawned workers), the event can
+// genuinely take longer than a short window to be handled - confirmed live against a real, heavily
+// loaded audit mission where this consistently hit a tighter 20s budget on a rack that had just been
+// requested to mount a radio. 45s gives real headroom without materially changing the worst case for
+// a rack that is never going to receive an ID at all (an intentionally-untouched empty rack, or one
+// where the mount was refused - see the not-removable/no-mount branches above, which already return
+// before reaching this wait).
 private _waitForRackRadioId = {
     params ["_rackId"];
-    private _radioId = "";
-    private _rackDeadline = time + 20;
-    waitUntil {
-        sleep 0.5;
-        private _raw = [_rackId, false] call acre_api_fnc_getMountedRackRadio;
-        private _base = [_rackId, true] call acre_api_fnc_getMountedRackRadio;
-        if (_raw != "" && {_raw != _base}) then {_radioId = _raw;};
-        (_radioId != "") || {time > _rackDeadline}
-    };
-    _radioId
+    private _result = [_rackId, "GET_ID", [], 45] call _clientRackQuery;
+    if (isNil "_result") then {""} else {_result}
 };
 
 private _applyChannel = {
@@ -134,23 +175,24 @@ private _applyChannel = {
     switch (_mode) do {
         case "BLOCK_CHANNEL"; case "CHANNEL": {
             private _channel = if (_setting isEqualType []) then {(((_setting select 0) - 1) * 16) + (_setting select 1)} else {_setting};
-            private _set = [_radioId, _channel] call acre_api_fnc_setRadioChannel;
-            private _verified = ([_radioId] call acre_api_fnc_getRadioChannel) == _channel;
+            private _result = [_radioId, "SET_CHANNEL", [_radioId, _channel], 15] call _clientRackQuery;
+            if (isNil "_result") exitWith {
+                diag_log format ["[WMP ACRE RACK] %1 channel %2 write/read-back timed out - no connected client reported a result.", _radioId, _channel];
+                false
+            };
+            _result params [["_set", false], ["_verified", false]];
             if (!_set || {!_verified}) then {diag_log format ["[WMP ACRE RACK] %1 channel %2 write/read-back failed.", _radioId, _channel];};
             _set && _verified
         };
         case "FREQUENCY": {
-            private _broad = [] call acre_api_fnc_getCurrentRadioList;
-            private _sameBase = _broad select {toUpper ([_x] call acre_api_fnc_getBaseRadio) == toUpper _base};
-            private _occurrence = (_sameBase find _radioId) + 1;
-            if (_occurrence <= 0 || {isNil "acre_api_fnc_setupRadios"}) exitWith {
-                diag_log format ["[WMP ACRE RACK] Could not resolve a safe occurrence for frequency rack radio %1.", _radioId];
-                false
-            };
             private _divisor = (_profile select 4) select 3;
             private _whole = floor _setting;
             private _freqSetting = [_whole, round ((_setting - _whole) * _divisor)];
-            private _result = [[_base, _occurrence, _freqSetting]] call acre_api_fnc_setupRadios;
+            private _result = [_radioId, "SET_FREQUENCY", [_radioId, _base, _freqSetting], 15] call _clientRackQuery;
+            if (isNil "_result") exitWith {
+                diag_log format ["[WMP ACRE RACK] Could not resolve a safe occurrence for frequency rack radio %1 - no connected client reported a result.", _radioId];
+                false
+            };
             diag_log format ["[WMP ACRE RACK] %1 frequency %2 requested via setupRadios (accepted=%3, unverified - no public frequency read-back API).", _radioId, _setting, _result];
             _result
         };
@@ -163,10 +205,15 @@ private _applyChannel = {
 
 private _applyOne = {
     params ["_rackId", "_setting", "_mountClass"];
-    private _currentBase = [_rackId, true] call acre_api_fnc_getMountedRackRadio;
+    private _currentBaseResult = [_rackId, "GET_BASE", [], 10] call _clientRackQuery;
+    private _currentBase = if (isNil "_currentBaseResult") then {""} else {_currentBaseResult};
+    private _isRemovable = {
+        private _result = [_rackId, "IS_REMOVABLE", [], 10] call _clientRackQuery;
+        if (isNil "_result") then {false} else {_result}
+    };
 
     if (_mountClass == "REMOVE_RACK") exitWith {
-        if (_currentBase != "" && {!([_rackId] call acre_api_fnc_isRackRadioRemovable)}) exitWith {
+        if (_currentBase != "" && {!(call _isRemovable)}) exitWith {
             diag_log format ["[WMP ACRE RACK] Rack %1 radio is not removable; REMOVE_RACK refused.", _rackId];
             false
         };
@@ -174,7 +221,7 @@ private _applyOne = {
     };
 
     if (_mountClass != "" && {toUpper _mountClass != toUpper _currentBase}) then {
-        if (_currentBase != "" && {!([_rackId] call acre_api_fnc_isRackRadioRemovable)}) exitWith {
+        if (_currentBase != "" && {!(call _isRemovable)}) exitWith {
             diag_log format ["[WMP ACRE RACK] Rack %1 currently holds %2, which is not removable; requested replacement %3 refused.", _rackId, _currentBase, _mountClass];
             false
         };
@@ -185,7 +232,7 @@ private _applyOne = {
 
     private _radioId = [_rackId] call _waitForRackRadioId;
     if (_radioId == "") exitWith {
-        diag_log format ["[WMP ACRE RACK] Rack %1 on vehicle %2 has not produced a unique radio ID within 20s (empty rack, or ACRE2 has not finished issuing it yet).", _rackId, _vehicle];
+        diag_log format ["[WMP ACRE RACK] Rack %1 on vehicle %2 has not produced a unique radio ID within 45s (empty rack, ACRE2 has not finished issuing it yet, or no connected client currently has visibility into this rack's state).", _rackId, _vehicle];
         false
     };
     private _base = toUpper ([_radioId] call acre_api_fnc_getBaseRadio);

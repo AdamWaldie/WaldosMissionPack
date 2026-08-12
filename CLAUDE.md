@@ -248,7 +248,9 @@ dedicated server can fire this object's Eden init field before its lobby has fil
 WMP's or ACRE2's control - then it calls `acre_api_fnc_initVehicleRacks` itself rather than passively
 waiting for ACRE2 to trigger it (that function must be executed explicitly per ACRE2's own source; it
 delegates to any available connected player, not one near the vehicle), and waits a much shorter
-bounded 30s for the vehicle's racks to report initialised, then 20s per rack's own radio ID. Only a
+bounded 30s for the vehicle's racks to report initialised, then 45s per rack's own radio ID (mounting
+a radio is itself an asynchronous CBA event to a player's machine, and can take longer than a short
+window on a mission with many other systems competing for that same machine). Only a
 dedicated server that never receives any player within 300s will legitimately fail (RPT:
 `no-player-connected`) — this is not itself a fault; re-call the function later once a player has
 joined. A `mountRadioClass` in
@@ -265,7 +267,13 @@ config is a no-op unless a third `force` argument is passed, so an Eden init fie
 connected machine at mission start does not redo the work per client. FREQUENCY-mode rack radios
 (PRC-77/SEM70-family) reuse the same ordinal `acre_api_fnc_setupRadios` path carried radios use and
 are recorded as accepted but unverified, same as carried FREQUENCY radios — this is the first thing
-to verify manually. Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row.
+to verify manually. ACRE2's per-rack radio state (mounted radio, removability, live channel) is
+tracked locally on whichever connected client ACRE2 delegated that rack to, not synced to the server
+— reading it directly from the server works by coincidence on a listen server (host = server = client)
+but fails on a genuine dedicated server. `Waldo_fnc_ACRE2RackApply` therefore never calls those
+specific ACRE2 state functions itself; it broadcasts each read/write via `Waldo_fnc_ACRE2RackClientAction`
+to every connected client and uses whichever one answers, without needing to know in advance which
+client ACRE2 picked. Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row.
 
 ### Paradrop Configuration (`MissionConfig\airOperationsConfig.sqf`)
 

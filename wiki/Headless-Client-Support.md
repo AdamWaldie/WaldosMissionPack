@@ -47,14 +47,42 @@ headless client purely at runtime, by `!isDedicated && !hasInterface`, so the sl
 anything.
 
 `WMP_Compositions/[WMP]Headless_Client_Setup_Example` drops in five named, Playable Headless Client
-Virtual Entities (`HC_1`-`HC_5`) at once so you don't have to place and flag each one by hand - delete
-whichever you don't need. The names are for your own reference only; WMP's detection doesn't care
-what a slot is called.
+Virtual Entities (`HC_1`-`HC_5`) at once, each with `forceHeadlessClient` set, so you don't have to
+place and flag each one by hand - delete whichever you don't need. The names are for your own
+reference only; WMP's detection doesn't care what a slot is called.
 
 Actually connecting the headless-client process to your hosted/dedicated server - allow-listing its
 IP in `server.cfg`'s `headlessClients[]`, and launching the HC process itself with
 `-client -connect=<serverIP> -password=<password>` - is ordinary Arma 3 server hosting, outside WMP's
 scope; consult your server host or Bohemia's own headless-client documentation for that step.
+
+**Headless clients count toward `description.ext`'s `maxPlayers`.** A connecting HC with an
+allow-listed IP is meant to auto-fill the first free Headless Client slot with no manual role
+selection - but if `maxPlayers` was only sized for your human player count, adding several HCs on top
+of it can silently prevent them from ever being assigned a slot, even though the underlying network
+connection itself succeeds (still visible in the RPT/server log). Size `maxPlayers` for human players
+**plus** every headless client slot you intend to fill.
+
+### Connected but not filling a slot
+
+If the server log shows a headless client's connection succeeding (look for the trusted/local
+signature - very high bandwidth and `ping=0`, matching a `localClient[]` entry) but it never appears
+occupying one of the placed slots:
+
+- **There is no admin control to manually assign it.** Slot assignment for a genuine, IP-authorized
+  `-client` connection is handled entirely and automatically by the Arma engine at the moment of
+  connection - an admin's "Virtual" category in the player list only shows headless clients *after*
+  they have already been auto-assigned; it is not a tool for assigning an unslotted one. If auto-slotting
+  didn't happen, the fix is on the connection/mission side (see the checks above and below), not
+  something an admin can force from in-game.
+- Check `maxPlayers` first (above).
+- Confirm the connecting IP matches `headlessClients[]` **exactly** - and `localClient[]` too, if the
+  HC runs on the same physical machine as the server.
+- If you are launching headless clients through a managed hosting panel's own "launch N headless
+  clients" automation rather than a raw `-client -connect=<serverIP>` command line, treat that
+  automation as a separate, unverified layer - some panels have known bugs specific to their
+  auto-launch feature. Testing one HC launched manually via a raw command line against the same
+  server isolates whether the panel's automation is the actual cause.
 
 ## How it works
 

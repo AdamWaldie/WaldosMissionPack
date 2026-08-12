@@ -171,7 +171,8 @@ The most commonly-tuned keys of a hazard profile hash map — a preset already s
 
 | Key | Default | Purpose |
 |---|---|---|
-| `label` | `""` | RP-facing name shown in entry/exit cards and the status panel |
+| `type` | `""` | Hazard category (e.g. `"RADIATION"`) that zones/presets accumulate into **one combined dose** — see below |
+| `label` | `""` | RP-facing name shown in entry/exit cards, damage-stage notices and world markers |
 | `intensityMode` | `"LINEAR"` | `LINEAR` fades toward the edge; `CONSTANT` is full intensity everywhere inside the zone |
 | `rate` | `1` | Exposure gained per second while inside, at full intensity |
 | `decay` | `0.1` | Exposure lost per second while outside the zone |
@@ -184,6 +185,14 @@ The most commonly-tuned keys of a hazard profile hash map — a preset already s
 | `notifyTransitions` | `true` (global default) | Per-profile override of entry/exit cards |
 | `markerEnabled` | `false` | Registers a `Waldo_fnc_Create3DMarker` world marker — see below |
 | `detectorItems` / `detectorObjects` | unset | Restrict awareness (status/notices only, never protection) to players with a listed item or near a listed object |
+
+Multiple zones/presets sharing the same `type` (e.g. the shipped `LOW_RADIATION`/`MODERATE_RADIATION`/
+`SEVERE_RADIATION` presets, or several hand-placed emitters) contribute to one combined dose per
+player, and the continuous status panel and the "Read Hazard Exposure" dosimeter reading both show
+**one line per type**, identified by the `type` value itself — not by any single contributing zone's
+`label`, since a combined reading can never correctly be attributed to just one of the zones behind
+it. `label` remains the identity shown for a *specific* zone: entry/exit cards, damage-stage notices
+and that zone's own world marker.
 
 ### Tying a hazard to a world marker
 

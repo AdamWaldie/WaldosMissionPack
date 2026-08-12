@@ -46,10 +46,12 @@ private _typeAggregates = createHashMap;
         _typeAggregates set [_type, _entry];
     };
 } forEach _zones;
+// Labelled by the hazard TYPE itself (e.g. "RADIATION"), not any one contributing zone's own
+// narrative `label` - see hazardTick.sqf's matching status-panel aggregation for why.
 private _rows = [];
 {
     (_typeAggregates get _x) params ["_label", "_sum"];
-    _rows pushBack format ["%1: %2", _label, _sum toFixed 2];
+    _rows pushBack format ["%1: %2", _x, _sum toFixed 2];
 } forEach ((keys _typeAggregates) call BIS_fnc_sortAlphabetically);
 private _body = if (_rows isEqualTo []) then {
     format ["%1 has no measurable exposure.", name _target]
