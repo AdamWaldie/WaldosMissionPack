@@ -248,7 +248,9 @@ dedicated server can fire this object's Eden init field before its lobby has fil
 WMP's or ACRE2's control - then it calls `acre_api_fnc_initVehicleRacks` itself rather than passively
 waiting for ACRE2 to trigger it (that function must be executed explicitly per ACRE2's own source; it
 delegates to any available connected player, not one near the vehicle), and waits a much shorter
-bounded 30s for the vehicle's racks to report initialised, then 20s per rack's own radio ID. Only a
+bounded 30s for the vehicle's racks to report initialised, then 45s per rack's own radio ID (mounting
+a radio is itself an asynchronous CBA event to a player's machine, and can take longer than a short
+window on a mission with many other systems competing for that same machine). Only a
 dedicated server that never receives any player within 300s will legitimately fail (RPT:
 `no-player-connected`) — this is not itself a fault; re-call the function later once a player has
 joined. A `mountRadioClass` in

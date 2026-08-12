@@ -113,10 +113,20 @@ private _profileFor = {
 };
 
 // Waits (bounded) for a rack's mounted radio to have a real unique ID rather than a bare base class.
+// acre_api_fnc_mountRackRadio is itself asynchronous - like acre_api_fnc_initVehicleRacks, it fires a
+// CBA targeted event to a connected player's machine and returns immediately, without waiting for
+// that event to actually land and process. On a mission with a lot of other systems competing for
+// that same player's machine (many CBA event handlers, other spawned workers), the event can
+// genuinely take longer than a short window to be handled - confirmed live against a real, heavily
+// loaded audit mission where this consistently hit a tighter 20s budget on a rack that had just been
+// requested to mount a radio. 45s gives real headroom without materially changing the worst case for
+// a rack that is never going to receive an ID at all (an intentionally-untouched empty rack, or one
+// where the mount was refused - see the not-removable/no-mount branches above, which already return
+// before reaching this wait).
 private _waitForRackRadioId = {
     params ["_rackId"];
     private _radioId = "";
-    private _rackDeadline = time + 20;
+    private _rackDeadline = time + 45;
     waitUntil {
         sleep 0.5;
         private _raw = [_rackId, false] call acre_api_fnc_getMountedRackRadio;
@@ -185,7 +195,7 @@ private _applyOne = {
 
     private _radioId = [_rackId] call _waitForRackRadioId;
     if (_radioId == "") exitWith {
-        diag_log format ["[WMP ACRE RACK] Rack %1 on vehicle %2 has not produced a unique radio ID within 20s (empty rack, or ACRE2 has not finished issuing it yet).", _rackId, _vehicle];
+        diag_log format ["[WMP ACRE RACK] Rack %1 on vehicle %2 has not produced a unique radio ID within 45s (empty rack, or ACRE2 has not finished issuing it yet).", _rackId, _vehicle];
         false
     };
     private _base = toUpper ([_radioId] call acre_api_fnc_getBaseRadio);
