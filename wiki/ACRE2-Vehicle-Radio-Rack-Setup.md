@@ -25,18 +25,23 @@ itself. Most vanilla Arma 3 vehicles already have one or two racks the moment AC
    boat — see the table below for the full list).
 2. Double-click it, open its **Init** field, and paste:
    ```sqf
-   [this, ["preset", "vrc110_default"]] call Waldo_fnc_ACRE2RackSetup;
+   [this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
    ```
 3. Done. Save, preview the mission with a player connected (rack setup needs a real connected player
-   — see "Why nothing happens on an empty test server" below), get in the vehicle, and its rack
-   radio(s) will be tuned automatically as ACRE2 finishes mounting them.
+   near the vehicle within about 30 seconds — see "Why nothing happens on an empty test server"
+   below), get in the vehicle, and its rack radio(s) will be tuned to channel 5 automatically as
+   ACRE2 finishes mounting them.
 
 That's it — most mission makers never need anything beyond this one line. Everything past this
 point is for when you want more control.
 
-`vrc110_default` is one of ACRE2's own built-in preset names, not a WMP invention — it is the same
-kind of preset you already pick for personal radios in the ACRE2 in-game radio settings. Any ACRE2
-preset name works here.
+> **A note on ACRE2 "presets":** `Waldo_fnc_ACRE2RackSetup` also accepts a `["preset", "name"]`
+> config that hands a preset name straight to ACRE2's own `acre_api_fnc_setVehicleRacksPreset`. A
+> preset name is a name ACRE2 defines for an actual **radio model** (e.g. a PRC-152 or PRC-117F
+> preset) — a rack designation like AN/VRC-110 names the vehicle's **mounting hardware**, not a
+> radio, and is never itself a valid preset name. WMP does not ship or guarantee any preset name
+> works in your install; use `assignments` (explicit channel numbers, as above) unless you have
+> already confirmed a specific preset name in your own ACRE2 setup.
 
 ## "Which vehicle can I even use this on?"
 
@@ -52,8 +57,8 @@ Anything not on that list (most cars, most static weapons) has no rack at all �
 silently does nothing on those, it will not error.
 
 If you only want to retune the channel of whatever is already mounted (the common case for
-helicopters, planes, tanks, APCs and boats), the one-line preset call above already does that — read
-no further.
+helicopters, planes, tanks, APCs and boats), the one-line call above already does that — read no
+further.
 
 ## Want more control? Explicit per-rack assignment
 
@@ -99,18 +104,26 @@ different config, and it re-applies. Calling it again with the **exact same** co
 does nothing (this is intentional — it is what makes it safe for the one-liner above to sit in an
 init field that every connected player's machine technically runs).
 
-## Why nothing happens on an empty test server
+## Why nothing happens on an empty test server (or a big mission)
 
-ACRE2 needs an actual connected player to finish setting a vehicle's racks up — this is an ACRE2
-engine behaviour, not a WMP choice. If you preview/host with nobody connected, or the vehicle sits
-empty, the radio simply will not finish initialising and nothing will be tuned. Get a player in (or
-near) the vehicle and it will complete within a few seconds.
+ACRE2 needs an actual connected player **already close to the vehicle** to finish setting its racks
+up — this is an ACRE2 engine behaviour, not a WMP choice. If you preview/host with nobody connected,
+or the vehicle sits empty, the radio simply will not finish initialising and nothing will be tuned.
+
+This also matters on a real mission: the vehicle's init field runs the instant the mission starts,
+but the setup call only waits about **30 seconds** for a player to be near enough for ACRE2 to
+actually do the work. On a large mission where players spend more than 30 seconds walking from their
+spawn to the vehicle, that first attempt will time out (you'll see
+`racks-not-initialised (no connected player, or ACRE2 setup failed within 30s)` in the RPT log) even
+though nothing is actually wrong. This is expected, not a bug — get a player in (or near) the vehicle
+and simply call `Waldo_fnc_ACRE2RackSetup` again (same line, e.g. from a trigger once a player is
+confirmed near the vehicle, or just re-run it manually) and it will complete within a few seconds.
 
 ## Try it yourself
 
 Two ready-made compositions in `WMP_Compositions/` demonstrate this on a placed, crewed Hunter:
 
-- **`[WMP] ACRE2 Vehicle Radio Rack Example (Minimal)`** — the one-line preset call above.
+- **`[WMP] ACRE2 Vehicle Radio Rack Example (Minimal)`** — the one-line `"ALL"` call above.
 - **`[WMP] ACRE2 Vehicle Radio Rack Example (Full)`** — explicit per-rack control: swaps the empty
   rack to a PRC-152 on channel 5, and retunes the fixed PRC-117F.
 
@@ -118,8 +131,10 @@ Drop either into Eden and read its in-editor comment for a walkthrough.
 
 ## Something not working?
 
-- **Nothing is tuned at all:** make sure ACRE2 itself is loaded, and that a player is actually
-  connected (see above).
+- **Nothing is tuned at all, and the RPT shows `racks-not-initialised`:** a player wasn't close
+  enough to the vehicle within ~30 seconds of mission start — see "Why nothing happens on an empty
+  test server (or a big mission)" above. Get a player to the vehicle and call
+  `Waldo_fnc_ACRE2RackSetup` again.
 - **A swap or "REMOVE_RACK" is being ignored:** that rack is fixed hardware on this vehicle (true for
   every vanilla PRC-117F rack) — see "Swapping or removing what's mounted" above.
 - **Still stuck:** check the RPT log for lines starting `[WMP ACRE RACK]` — they name the exact

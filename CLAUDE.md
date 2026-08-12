@@ -229,17 +229,27 @@ ACRE2 loads (confirmed against `addons/sys_rack/CfgVehicles.hpp`). One object-in
 every rack on a vehicle:
 
 ```sqf
-// Simplest - apply a named ACRE2 preset to every rack on this vehicle:
-[this, ["preset", "vrc110_default"]] call Waldo_fnc_ACRE2RackSetup;
+// Simplest - retune whatever is already mounted in every rack on this vehicle:
+[this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
 // Explicit: rack 0 gets channel 5; rack 1 gets Block 2/Channel 3 after mounting a PRC-117F into it:
 [this, ["assignments", [[0, 5], [1, [2, 3], "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
+// preset (optional) applies a named ACRE2 preset before the vehicle's racks initialise. A preset name
+// is a name ACRE2 itself defines for an actual radio model - a rack designation like AN/VRC-110 names
+// the mounting hardware, not a radio, and is never a valid preset name itself. WMP does not ship or
+// guarantee any preset name; verify one exists in your ACRE2 install before relying on it:
+[this, ["preset", "your_verified_preset_name"]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
 Self-forwards to the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper). Rack
 initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a connected
-player (ACRE2 itself delegates the actual mount work to a player's machine) — the server waits
-(bounded, 30s for the vehicle's racks, then 20s per rack's own radio ID) rather than assuming
-synchronous completion. A `mountRadioClass` in an assignment row **replaces** whatever that rack
+player already close enough for ACRE2 to run that vehicle's rack init on their machine (ACRE2 itself
+delegates the actual mount work to a player's machine) — the server waits (bounded, 30s for the
+vehicle's racks, then 20s per rack's own radio ID) rather than assuming synchronous completion. An
+Eden init field fires at mission start regardless of whether a player has actually reached the
+vehicle yet, so a mission where players take longer than ~30s to reach a rack-equipped vehicle will
+legitimately time out (RPT: `racks-not-initialised`) — this is not itself a fault; re-call the
+function later (e.g. once a player is confirmed in/near the vehicle) to retry. A `mountRadioClass` in
+an assignment row **replaces** whatever that rack
 currently holds, and `"REMOVE_RACK"` rips the entire rack off — both gated by ACRE2's own
 `acre_api_fnc_isRackRadioRemovable` check, which is `false` unless `isRadioRemovable = 1` was set
 where the rack was configured. Checked directly against ACRE2's vanilla vehicle config: of the base

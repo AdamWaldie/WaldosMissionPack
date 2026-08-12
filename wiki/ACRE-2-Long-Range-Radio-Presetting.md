@@ -173,9 +173,8 @@ mission-added rack) are a separate, vehicle-scoped surface, deliberately outside
 table above). One object-init call on the vehicle configures every rack it has:
 
 ```sqf
-// Simplest - apply a named ACRE2 preset to every rack on this vehicle. ACRE2 applies that preset's
-// channels to each rack radio automatically as it mounts:
-[this, ["preset", "vrc110_default"]] call Waldo_fnc_ACRE2RackSetup;
+// Simplest - retune whatever is already mounted in every rack on this vehicle, no mount needed:
+[this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
 
 // Explicit per-rack control - rack 0 (0-based, in acre_api_fnc_getVehicleRacks order) gets channel
 // 5; rack 1 gets Block 2/Channel 3 after mounting a PRC-117F into it:
@@ -183,6 +182,13 @@ table above). One object-init call on the vehicle configures every rack it has:
     [0, 5],
     [1, [2, 3], "ACRE_PRC117F"]
 ]]] call Waldo_fnc_ACRE2RackSetup;
+
+// Optional third form - apply a named ACRE2 preset before the racks initialise instead of listing
+// channels yourself. A preset name is a name ACRE2 itself defines for an actual radio model (e.g. a
+// PRC-152 or PRC-117F preset) - a rack designation like AN/VRC-110 names the vehicle's mounting
+// hardware, not a radio, and is never itself a valid preset name. WMP does not ship or guarantee any
+// preset name here; verify one actually exists for your ACRE2 install/mod set before relying on it:
+[this, ["preset", "your_verified_preset_name"]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
 `assignments` rows are `[rackIndex or "ALL", setting, mountRadioClass]`:
@@ -192,6 +198,10 @@ table above). One object-init call on the vehicle configures every rack it has:
   channel/frequency, useful when a row only needs to mount or remove a radio.
 - `mountRadioClass` (optional) is a base radio classname (e.g. `"ACRE_PRC117F"`) to mount into that
   rack, or the sentinel `"REMOVE_RACK"`.
+
+`assignments` is the tested default path — it does not depend on any ACRE2 preset existing, and
+reuses the same channel-set-then-read-back logic already verified for carried radios. Prefer it over
+`preset` unless you have already confirmed your preset name works in your own ACRE2 install.
 
 ### Which vehicles have racks by default
 
@@ -264,7 +274,13 @@ waits with a bounded timeout - 30 seconds for the vehicle's racks to report init
 receive a real unique ID rather than sit as a bare, un-initialised base classname
 (`acre_api_fnc_getMountedRackRadio` returns the base class until ACRE2 finishes issuing the ID).
 Both timeouts assume at least one player is connected; an empty dedicated server cannot complete
-rack setup, the same operational constraint ACRE2 itself has.
+rack setup, the same operational constraint ACRE2 itself has. More specifically, a player needs to
+already be close enough for ACRE2 to actually run that vehicle's rack init **on their own machine**
+within the 30-second window — an Eden init field fires the moment the mission starts, not when a
+player reaches the vehicle, so on a mission where players take longer than ~30s to walk to a
+rack-equipped vehicle, the call will legitimately time out (`racks-not-initialised` in the RPT). This
+is an expected outcome of the timeout, not a fault; re-call `Waldo_fnc_ACRE2RackSetup` again later
+(e.g. from a trigger once a player is confirmed in or near the vehicle) to retry.
 
 CHANNEL and BLOCK_CHANNEL-mode rack radios are applied and read back synchronously, exactly like
 carried radios of the same class. **FREQUENCY-mode rack radios (PRC-77/SEM70-family) are the one
