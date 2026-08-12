@@ -83,6 +83,7 @@ Runtime configuration is server-authoritative. Current settings are published fo
 - [Headless Client Support](Headless-Client-Support)
 - [Optional Third-Party Scripts (Player Markers)](Third-Party-Scripts-Headless-Client-And-Player-Markers)
 - [ACRE 2 Long-Range Presetting](ACRE-2-Long-Range-Radio-Presetting)
+- [ACRE 2 Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup)
 - [ACRE 2 Short-Range Presetting](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
 - [ACRE 2 Automated CEOI](ACRE2-Automated-CEOI-Document)
 - [ACRE 2 Babel Configuration](ACRE2-Babel-Configuration)

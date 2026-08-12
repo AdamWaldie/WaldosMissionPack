@@ -229,17 +229,30 @@ ACRE2 loads (confirmed against `addons/sys_rack/CfgVehicles.hpp`). One object-in
 every rack on a vehicle:
 
 ```sqf
-// Simplest - apply a named ACRE2 preset to every rack on this vehicle:
-[this, ["preset", "vrc110_default"]] call Waldo_fnc_ACRE2RackSetup;
-// Explicit: rack 0 gets channel 5; rack 1 gets Block 2/Channel 3 after mounting a PRC-117F into it:
-[this, ["assignments", [[0, 5], [1, [2, 3], "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
+// Simplest - retune whatever is already mounted in every rack on this vehicle:
+[this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
+// Explicit: rack 0 gets channel 5; rack 1 gets channel 44 after mounting a PRC-117F into it:
+[this, ["assignments", [[0, 5], [1, 44, "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
+// preset (optional) applies a named ACRE2 preset before the vehicle's racks initialise. A preset name
+// is a name ACRE2 itself defines for an actual radio model - a rack designation like AN/VRC-110 names
+// the mounting hardware, not a radio, and is never a valid preset name itself. WMP does not ship or
+// guarantee any preset name; verify one exists in your ACRE2 install before relying on it:
+[this, ["preset", "your_verified_preset_name"]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
 Self-forwards to the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper). Rack
 initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a connected
-player (ACRE2 itself delegates the actual mount work to a player's machine) — the server waits
-(bounded, 30s for the vehicle's racks, then 20s per rack's own radio ID) rather than assuming
-synchronous completion. A `mountRadioClass` in an assignment row **replaces** whatever that rack
+player (ACRE2 itself delegates the actual mount work to a player's machine). The worker waits in two
+separate, differently-bounded phases: first (up to 300s) for any player to be connected at all - a
+dedicated server can fire this object's Eden init field before its lobby has filled, which is outside
+WMP's or ACRE2's control - then it calls `acre_api_fnc_initVehicleRacks` itself rather than passively
+waiting for ACRE2 to trigger it (that function must be executed explicitly per ACRE2's own source; it
+delegates to any available connected player, not one near the vehicle), and waits a much shorter
+bounded 30s for the vehicle's racks to report initialised, then 20s per rack's own radio ID. Only a
+dedicated server that never receives any player within 300s will legitimately fail (RPT:
+`no-player-connected`) — this is not itself a fault; re-call the function later once a player has
+joined. A `mountRadioClass` in
+an assignment row **replaces** whatever that rack
 currently holds, and `"REMOVE_RACK"` rips the entire rack off — both gated by ACRE2's own
 `acre_api_fnc_isRackRadioRemovable` check, which is `false` unless `isRadioRemovable = 1` was set
 where the rack was configured. Checked directly against ACRE2's vanilla vehicle config: of the base

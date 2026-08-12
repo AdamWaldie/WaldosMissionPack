@@ -8,8 +8,16 @@
  *
  * Rack readiness is genuinely asynchronous in ACRE2 and requires a connected player - ACRE2
  * delegates the actual rack-initialisation and radio-mount work to a player's machine internally
- * (see acre_api_fnc_addRackToVehicle/mountRackRadio), so this waits with a bounded timeout rather
- * than assuming synchronous completion. A rack's mounted radio can likewise sit as an un-initialised
+ * (see acre_api_fnc_addRackToVehicle/mountRackRadio). This worker waits in two deliberately separate,
+ * differently-bounded phases rather than one shared timeout: first (up to 300s) for any player to be
+ * connected at all - a mission-hosting condition outside WMP's or ACRE2's control, since a dedicated
+ * server can auto-start its mission (and fire this object's Eden init field) before its lobby has
+ * filled - then (up to 30s) for ACRE2 itself to report the vehicle's racks initialised. The second
+ * phase is short because acre_api_fnc_initVehicleRacks is called explicitly here rather than assumed
+ * - per ACRE2's own source comment it "must be executed" and is not triggered automatically on
+ * vehicle creation; without calling it ourselves, ACRE2 only appears to trigger it once a player
+ * actually enters/approaches the vehicle, which can take far longer than any fixed wait or never
+ * happen at all for a parked, uncrewed vehicle. A rack's mounted radio can likewise sit as an un-initialised
  * base classname for a period before ACRE2 issues its real unique ID
  * (acre_api_fnc_getMountedRackRadio returns the bare base class until then) - readiness is detected
  * by comparing the plain and base-class-forced reads of that same call, exactly mirroring how
@@ -52,9 +60,37 @@ private _finish = {
 if !(isServer) exitWith {[false, 0, 0, ["not-server"]] call _finish};
 if (isNull _vehicle) exitWith {[false, 0, 0, ["null-vehicle"]] call _finish};
 
+// ACRE2 delegates the actual rack/radio work to a connected player's machine, so on a dedicated
+// server that auto-starts its mission before anyone has joined, calling into ACRE2 immediately from
+// an object's own Eden init field can race a lobby that is still filling. This wait is deliberately
+// separate from - and much longer than - the 30s ACRE2-readiness wait below: "is any player
+// connected yet" is a mission-hosting condition outside WMP's or ACRE2's control and can legitimately
+// take minutes, while "did ACRE2 finish initialising once a player exists" is normally a few seconds
+// now that this function triggers it explicitly instead of waiting on ACRE2's own trigger.
+private _playerDeadline = time + 300;
+waitUntil {
+    sleep 1;
+    (count allPlayers > 0) || {time > _playerDeadline}
+};
+if (count allPlayers == 0) exitWith {
+    [false, 0, 0, ["no-player-connected (nobody joined the server within 300s of this call)"]] call _finish
+};
+
 private _preset = _config getOrDefault ["preset", ""];
 if (_preset != "") then {
     [_vehicle, _preset] call acre_api_fnc_setVehicleRacksPreset;
+};
+
+// acre_api_fnc_initVehicleRacks must be called explicitly - ACRE2 does not initialise a vehicle's
+// config-defined racks on vehicle creation or on a fixed timer of its own; per ACRE2's own source
+// comment, it is driven by ACRE2's own internal triggers (observed in practice to depend on a player
+// actually entering/approaching the vehicle, which can take much longer than any fixed wait, or never
+// happen at all for a parked, uncrewed vehicle nobody gets in). Requesting it ourselves here removes
+// that dependency instead of passively hoping ACRE2 gets to it before the wait below times out. Safe
+// to call even if some other path already triggered it - the function itself no-ops once
+// areVehicleRacksInitialized is already true.
+if !([_vehicle] call acre_api_fnc_areVehicleRacksInitialized) then {
+    [_vehicle] call acre_api_fnc_initVehicleRacks;
 };
 
 private _deadline = time + 30;

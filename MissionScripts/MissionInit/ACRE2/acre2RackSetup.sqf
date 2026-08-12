@@ -26,16 +26,30 @@
  * Waldo_ACRE2_RackSetupRunning clears. The actual mount/initialise-rack work ACRE2 performs is itself
  * delegated internally by ACRE2 to a connected player's machine (see
  * acre_api_fnc_addRackToVehicle/mountRackRadio) - this function does not need its own
- * object-locality redispatch on top of that.
+ * object-locality redispatch on top of that. Waldo_fnc_ACRE2RackApply waits (bounded, up to 300s) for
+ * any player to be connected to the server at all before doing anything - a mission-hosting condition
+ * outside WMP's or ACRE2's control, since a dedicated server can fire this object's Eden init field
+ * before its lobby has filled. Once a player exists, it calls acre_api_fnc_initVehicleRacks itself
+ * rather than passively waiting for ACRE2 to trigger it - per ACRE2's own source that function must be
+ * executed explicitly, and it delegates to any available connected player (not one near the vehicle
+ * specifically) - so the following bounded 30s wait for acre_api_fnc_areVehicleRacksInitialized to
+ * report true is normally satisfied within a few seconds. Only a dedicated server that never receives
+ * any player within 300s of this call will legitimately fail (RPT: "no-player-connected"); this is not
+ * itself a fault - re-call this function later once a player has joined.
  *
  * Arguments:
  * 0: Vehicle <OBJECT> - the vehicle whose already-defined racks (via CfgVehicles/CfgAcreRacks, or
  *    added earlier with acre_api_fnc_addRackToVehicle) should be configured.
  * 1: Config <HASHMAP or ARRAY of [key, value] pairs> - optional settings:
  *    preset <STRING> - an ACRE2 preset name (acre_api_fnc_setVehicleRacksPreset) applied before the
- *      vehicle's racks initialise. This is the simplest path: ACRE2 applies that preset's channels to
- *      every rack radio automatically as it mounts. Only takes effect before first initialisation -
- *      changing it on an already-initialised vehicle has no effect; use per-rack assignments instead.
+ *      vehicle's racks initialise. ACRE2 applies that preset's channels to every rack radio
+ *      automatically as it mounts. Only takes effect before first initialisation - changing it on an
+ *      already-initialised vehicle has no effect; use per-rack assignments instead. A preset name is
+ *      a name ACRE2 itself defines for an actual radio model (e.g. a PRC-152/PRC-117F preset) - a
+ *      rack designation like AN/VRC-110 names the vehicle mounting hardware, not a radio, and is
+ *      never itself a valid preset name. WMP does not ship or guarantee any preset name; verify a
+ *      name exists in your ACRE2 install/mod set before relying on it - `assignments` below (explicit
+ *      channel numbers) does not depend on any preset existing and is the tested default path.
  *    assignments <ARRAY> - explicit per-rack rows, each
  *      [rackIndex <NUMBER, 0-based into acre_api_fnc_getVehicleRacks order> or "ALL",
  *       setting <NUMBER channel, [block, channel] for PRC-343-style radios, or decimal MHz frequency;
@@ -60,10 +74,10 @@
  * Boolean - true when setup was accepted and (re)started server-side.
  *
  * Example:
- * // Simplest - apply a named ACRE2 preset to every rack on this vehicle:
- * [this, ["preset", "vrc110_default"]] call Waldo_fnc_ACRE2RackSetup;
- * // Explicit: rack 0 gets channel 5, rack 1 gets Block 2/Channel 3, mounting a PRC-117F into rack 1 first:
- * [this, ["assignments", [[0, 5], [1, [2, 3], "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
+ * // Simplest - retune whatever is already mounted in every rack on this vehicle to channel 5:
+ * [this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
+ * // Explicit: rack 0 gets channel 5, rack 1 gets channel 44, mounting a PRC-117F into rack 1 first:
+ * [this, ["assignments", [[0, 5], [1, 44, "ACRE_PRC117F"]]]] call Waldo_fnc_ACRE2RackSetup;
  * // Later in the mission - re-equip rack 0 with a different radio type, ripping rack 1 out entirely:
  * [this, ["assignments", [[0, 12, "ACRE_PRC152"], [1, -1, "REMOVE_RACK"]]]] call Waldo_fnc_ACRE2RackSetup;
  *

@@ -64,6 +64,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Radio Jamming](Radio-Jamming) | ACRE2/TFAR radio and UAV interference |
 | [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) | One-shot EMP and side-private tracking |
 | [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting) | Mission-defined ACRE2 channels |
+| [Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup) | Tuning/swapping vehicle rack radios, quickstart through full reference |
 | [AN/PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup) | Squad-level radio assignment |
 | [Automated CEOI](ACRE2-Automated-CEOI-Document) | Player-readable radio plan |
 | [Babel Configuration](ACRE2-Babel-Configuration) | Languages and interpreters |
