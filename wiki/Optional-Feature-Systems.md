@@ -92,29 +92,37 @@ Call `Waldo_fnc_TreatmentFeedbackInit` or `Waldo_fnc_TreatmentFeedbackStop` on i
 ## Obituary and confirmed-death reporting
 
 Requires ACE Medical and ACE interaction. Enabled by **default**, unlike most other optional
-features in this list. A medic-only **Pronounce Dead** ACE interaction on a corpse replaces Arma's
-terse default death message with a formatted KIA report — time of death, cause, grid reference, and
-a friendly-fire callout when applicable — and feeds a "Confirmed deaths" section into the ENDEX
-After-Action Report (see [ENDEX and After-Action Report](Feature-Tutorials)).
+features in this list. A medic-only **Pronounce Dead** ACE self-interaction lists every eligible
+corpse within range, individually, and replaces Arma's terse default death message with a formatted
+KIA report — time of death, cause, grid reference, and a friendly-fire callout when applicable — and
+feeds a "Confirmed deaths" section into the ENDEX After-Action Report (see
+[ENDEX and After-Action Report](Feature-Tutorials)).
 
 Quickest working setup — no setup needed, it just works:
 
-1. Have a medic interact with a corpse. **ACE Main Actions** (the target/corpse menu), not ACE Self
-   Actions — this is intentional, the report is about the body, not the medic.
-2. Select **Pronounce Dead**. Every player nearby with line of sight to the corpse sees the
-   formatted report; the diary entry described below updates for everyone.
+1. Open **ACE Self Interaction** and select **Pronounce Dead**. The submenu is built fresh every time
+   it opens, listing every eligible corpse within `Waldo_Obituary_Radius` metres, nearest first — pick
+   the exact one you mean. Earlier versions used an **ACE Main Actions** (target/corpse) interaction
+   instead, requiring the medic to stand within 3m of, and look directly at, one exact body; the
+   self-interaction submenu keeps the same per-corpse precision (no blind "nearest body" guess when
+   several are close together) without that proximity requirement.
+2. Select a specific corpse's row. Every player sees the formatted report via the broadcast diary
+   entry described below.
 3. To disable it entirely, set `Waldo_Obituary_Enable` to `false` in
    `MissionConfig\interfaceConfig.sqf`.
 
 | Setting (`MissionConfig\interfaceConfig.sqf`, player-local) | Default | Purpose |
 |---|---|---|
-| `Waldo_Obituary_Enable` | `true` | Installs the interaction and death-capture handler |
+| `Waldo_Obituary_Enable` | `true` | Installs the self-interaction submenu and death-capture handler |
 | `Waldo_Obituary_ChatAnnounce` | `true` | Also broadcasts the terse `systemChat` pronounce line |
 | `Waldo_Obituary_DiaryPollInterval` | `3` | Seconds between local diary-record sync checks |
+| `Waldo_Obituary_Radius` | `15` | Metres scanned for eligible corpses from the self-action |
 
 Runs automatically from `initPlayerLocal.sqf` via `[] call Waldo_fnc_ObituaryInit;` whenever
 `Waldo_Obituary_Enable` is true — no ZEN module, since this is an always-available medic action
-rather than a curator-authored placement.
+rather than a curator-authored placement. The self-action root reinstalls itself on every respawn
+(`Waldo_fnc_ObituarySelfInteractionInit`, the same pattern `Waldo_fnc_AccessibilitySelfInteractionInit`
+uses), since `ACE_SelfActions` lives on the player object Arma replaces each time.
 
 Every player gets **one** "Obituary" diary record that updates in place as deaths are confirmed,
 not one record per death, and it survives the reading player's own respawn. Every name-dependent

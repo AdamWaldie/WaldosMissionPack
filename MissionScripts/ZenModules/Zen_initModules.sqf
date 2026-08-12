@@ -296,7 +296,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
             params ["_modulePos", "_objectPos"];
             [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessForceRebalance;
         },
-        "\A3\ui_f\data\igui\cfg\simpletasks\types\reammo_ca.paa"
+        "\A3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"
     ] call zen_custom_modules_fnc_register;
 
     ["WMP Mission Tools", "Headless Client - Manual Handoff",

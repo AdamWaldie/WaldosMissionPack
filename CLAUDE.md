@@ -471,21 +471,23 @@ stuck/retry behaviour and the ZEN "Transport Service - Register"/"Return to Base
 
 ### Respawn Options (`initPlayerLocal.sqf`)
 
-Two optional behaviours are commented out by default — uncomment to enable:
+**"Respawn with what you died with" is enabled by default** — a `"CAManBase"`/`"Killed"` handler calls
+`[false] call Waldo_fnc_SaveLoadout;` for the dying player, which captures both loadout and supported
+ACRE2 radio state as one snapshot (see `Waldo_fnc_SaveLoadout`'s own header), restored on respawn.
+Without this (or the alternative below), the only capture ever taken is the one-time mission-start
+baseline, and every respawn silently reverts to the starting kit and starting radio channels — comment
+the handler back out only if that starting-kit-every-respawn behaviour is what a mission wants.
+
+A second, alternative behaviour is commented out by default — uncomment to enable instead (or in
+addition; whichever snapshot was captured most recently wins, since both write the same
+`Waldo_Player_Inventory`/`Waldo_Player_RadioState` state):
 
 ```sqf
-// Save loadout when closing ACE Arsenal (respawn with chosen kit):
+// Save loadout when closing ACE Arsenal (respawn with chosen kit, captured only on a deliberate
+// Arsenal close rather than on every death - no battlefield-looted-gear carryover):
 ["ace_arsenal_displayClosed", {
-    [player, [missionNamespace, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
+    [false] call Waldo_fnc_SaveLoadout;
 }] call CBA_fnc_addEventHandler;
-
-// Respawn with what you died with (instead of starting kit):
-["CAManBase", "Killed", {
-    params ["_unit"];
-    if (_unit == player) then {
-        [_unit, [player, "Waldo_Player_Inventory"]] call BIS_fnc_saveInventory;
-    };
-}] call CBA_fnc_addClassEventHandler;
 ```
 
 ### ENDEX / Mission End
@@ -566,7 +568,7 @@ go-live notices explain which protections were removed and remain visible for
 
 ### Mission Diagnostics (optional)
 
-Runs a read-only server and client health check at mission start after the loadout scan. Every RPT entry uses the same searchable frame: `[WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]`. A hosted server also shows warnings through `systemChat`.
+Runs a read-only server and client health check at mission start after the loadout scan. Every RPT entry uses the same searchable frame: `[WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]`. A hosted (listen-server) host also sees warnings and the completion summary through `systemChat` directly; on a genuine dedicated server (no local console of its own) the same lines are remote-executed to every currently assigned curator's client instead, so an admin watching through Zeus still gets in-game visibility rather than only RPT.
 
 ```sqf
 // In initServer.sqf. Set false to silence startup diagnostics in a released mission.

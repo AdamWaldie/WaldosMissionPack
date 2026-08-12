@@ -17,9 +17,15 @@
  *
  * Locality and authority:
  * Server-only (the headless system's own event stream is entirely server-side); a no-op elsewhere.
- * systemChat only fires when hasInterface (a listen-server host), matching Waldo_fnc_RunDiagnostics'
- * own hosted-server visibility convention - a real dedicated server has no console to show it to and
- * relies on RPT, which the DiagnosticLog line above already covers.
+ * A local systemChat still fires when hasInterface (a listen-server host sees it directly), but on a
+ * genuine dedicated server that machine has no console to show it on - so this also remoteExecs the
+ * same line to every currently assigned curator's client (allCurators/getAssignedCuratorUnit), the
+ * same admin-audience mechanism Waldo_fnc_HeadlessDebugToggle already uses for its own confirmation
+ * notification. This mirrors what the legacy WerthlesHeadless.sqf actually did - BIS_fnc_MP-ing its
+ * debug hint to the specific connected player (WHKDEBUGGER) who toggled it, not a local-only call
+ * gated on the executing machine's own interface - rather than the RPT-only fallback this rework
+ * originally shipped with, which left dedicated-server admins with no in-game visibility at all
+ * unless they tailed the server's own RPT file by hand.
  *
  * Arguments:
  * 0: event <STRING> - short event tag, e.g. "REGISTER", "REBALANCE", "MIGRATE", "DISCONNECT".
@@ -40,6 +46,7 @@ if !(isServer) exitWith {};
 if !(missionNamespace getVariable ["Waldo_Headless_Debug", false]) exitWith {};
 
 ["headless-client", "headless-client", "INFO", _event, _message] call Waldo_fnc_DiagnosticLog;
-if (hasInterface) then {
-    systemChat format ["[WMP HEADLESS] %1: %2", _event, _message];
-};
+private _text = format ["[WMP HEADLESS] %1: %2", _event, _message];
+if (hasInterface) then {systemChat _text;};
+private _curatorUnits = (allCurators apply {getAssignedCuratorUnit _x}) select {!isNull _x};
+if (count _curatorUnits > 0) then {[_text] remoteExec ["systemChat", _curatorUnits];};
