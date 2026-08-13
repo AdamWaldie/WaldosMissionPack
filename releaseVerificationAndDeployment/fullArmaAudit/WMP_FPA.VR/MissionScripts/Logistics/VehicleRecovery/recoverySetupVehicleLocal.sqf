@@ -41,7 +41,9 @@ private _condition = {
     _target getVariable ["Waldo_Recovery_Registered", false]
     && {_player distance _target < 5}
     && {vehicle _player == _player}
-    && {count crew _target == 0}
+    // Destroyed vehicle wrecks often retain dead crew proxies. They are not occupants and must not
+    // make a wreck registered through Zeus permanently fail its packaging condition.
+    && {{alive _x} count crew _target == 0}
     && {abs speed _target < 1}
     && {(damage _target >= (_config select 1)) || {!alive _target}}
     && {!(_config select 3) || {_player getUnitTrait "engineer"}}
@@ -78,5 +80,8 @@ if (_aceReady) then {
     _target setVariable ["Waldo_Recovery_VehicleVanillaActionsInstalled", true];
 };
 _target setVariable ["Waldo_Recovery_VehicleActionInstalled", true];
-diag_log format ["[WMP RECOVERY] Vehicle interaction installed object=%1 mode=%2 procedure=%3 owner=%4.", netId _target, ["VANILLA", "ACE"] select _aceReady, count _interactionSettings >= 2, clientOwner];
+private _livingCrew = {alive _x} count crew _target;
+private _eligibleNow = [_target, player] call _condition;
+_target setVariable ["Waldo_Recovery_LastLocalActionCheck", [diag_tickTime, clientOwner, ["VANILLA", "ACE"] select _aceReady, _eligibleNow, alive _target, count crew _target, _livingCrew]];
+diag_log format ["[WMP RECOVERY] Vehicle interaction installed object=%1 mode=%2 procedure=%3 clientOwner=%4 eligibleNow=%5 alive=%6 crewTotal=%7 crewLiving=%8 registered=%9.", netId _target, ["VANILLA", "ACE"] select _aceReady, count _interactionSettings >= 2, clientOwner, _eligibleNow, alive _target, count crew _target, _livingCrew, _target getVariable ["Waldo_Recovery_Registered", false]];
 true

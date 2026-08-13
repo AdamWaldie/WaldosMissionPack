@@ -167,6 +167,7 @@ class CfgFunctions
             class HeadlessPinCrew {file = "MissionScripts\Headless\headlessPinCrew.sqf";};
             class HeadlessDebugLog {file = "MissionScripts\Headless\headlessDebugLog.sqf";};
             class HeadlessDebugToggle {file = "MissionScripts\Headless\headlessDebugToggle.sqf";};
+            class HeadlessDebugDisplayLocal {file = "MissionScripts\Headless\headlessDebugDisplayLocal.sqf";};
             class HeadlessForceRebalance {file = "MissionScripts\Headless\headlessForceRebalance.sqf";};
             class HeadlessManualHandoff {file = "MissionScripts\Headless\headlessManualHandoff.sqf";};
         };
@@ -300,6 +301,9 @@ class CfgFunctions
             };
             class Init3DMarkers {
                 file = "MissionScripts\MissionFlowAndUi\init3DMarkers.sqf";
+            };
+            class ZenCreate3DMarker {
+                file = "MissionScripts\MissionFlowAndUi\zenCreate3DMarker.sqf";
             };
         };
         class Diagnostics
@@ -2431,6 +2435,15 @@ class CfgFunctions
             };
             class BombDefuseSetup {
                 file = "MissionScripts\InteractionsMinigames\Integration\bombDefuseSetup.sqf";
+            };
+            class ZenFieldEquipment {
+                file = "MissionScripts\InteractionsMinigames\Integration\zenFieldEquipment.sqf";
+            };
+            class FieldEquipmentZenSetupLocal {
+                file = "MissionScripts\InteractionsMinigames\Integration\fieldEquipmentZenSetupLocal.sqf";
+            };
+            class FieldEquipmentOutcomeServer {
+                file = "MissionScripts\InteractionsMinigames\Integration\fieldEquipmentOutcomeServer.sqf";
             };
             // Built-in interaction challenges.
             class MiniGameWireCut {

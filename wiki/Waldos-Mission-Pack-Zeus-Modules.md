@@ -28,7 +28,7 @@ These modules allow users to:
 * Enable, time or lift SafeStart protection during play, even though it starts inactive by default
 * Send a [WMP notification card](Custom-UI-Notifications) to everyone, one side, a named group, or selected players
 
-WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped by purpose under **WMP Mission Flow**, **WMP Logistics**, **WMP Transport**, **WMP AI & Combat**, **WMP Electronic Warfare**, **WMP Environment**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**.
+WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped by purpose under **WMP Mission Flow**, **WMP Logistics**, **WMP Transport**, **WMP AI & Combat**, **WMP Electronic Warfare**, **WMP Environment**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**. Headless-client controls use their own **WMP Headless Client** category and appear only when `Waldo_Headless_Enable` is true.
 
 Use them to:
 
@@ -142,6 +142,8 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Hazardous Environments
 
+These modules appear only when `Waldo_Hazard_Enable` is `true` in `MissionConfig\environmentConfig.sqf`. A disabled hazard runtime therefore does not leave unusable controls in Zeus.
+
 **Hazard - Create** first selects a mission-configured hazard preset, then exposes plain-language RP name/messages, intensity, range, exposure, recovery, damage, fatal threshold and protection controls. Detector-aware presets are labelled in the first selector. Zeus can keep their mission-maker detector rules or deliberately make hazard information visible to everyone, independently from physical protection/damage. The dialog also controls the continuous exposure panel and can copy a setup call for later mission authoring.
 
 **Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
@@ -172,7 +174,17 @@ These modules are repeat-safe and send configuration through a server-authoritat
 
 ## Vehicle Recovery
 
-**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, recovery-object class, cargo preservation and restored fuel. Its friendly recovery-object dropdown is built from the mission-extensible `Waldo_Recovery_PackageClasses` pool. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** supports any nearby vehicle. Automatic handling uses its real configured vehicle cargo bay when a package fits and virtualizes otherwise; Virtual Manifest removes that engine dependency entirely, while Physical Cargo Bay deliberately enforces it. Loading range and a combined 1–10 package capacity are configurable. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, recovery-object class, cargo preservation and restored fuel. It may be placed directly on an already-destroyed wreck: dead crew proxies retained by Arma do not count as occupants, while any living occupant still blocks packaging. Its friendly recovery-object dropdown is built from the mission-extensible `Waldo_Recovery_PackageClasses` pool. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** supports any nearby vehicle. Automatic handling uses its real configured vehicle cargo bay when a package fits and virtualizes otherwise; Virtual Manifest removes that engine dependency entirely, while Physical Cargo Bay deliberately enforces it. Loading range and a combined 1–10 package capacity are configurable. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+
+## Custom 3D Marker and Field Equipment
+
+**Create Custom 3D Marker** is a safe front end to the scripted marker API. Choose a plain-language icon, accessible colour, side audience, height, range and size. Place it on an object to follow that object, or on empty ground for a fixed marker. WMP validates the curated choices on the server; Zeus never needs a texture path or config classname.
+
+**Add WMP Field Equipment Interaction** must be placed directly on the intended object. It offers every built-in named procedure, difficulty and a short action label, plus safe success outcomes: record completion, activate, deactivate, unlock, destroy or delete the selected object. **EOD bomb defusal** adds the same live defusal wrapper used by scripts and may detonate on failure. Repeat/retry controls are explicit. Full custom callback code remains script-only so a client dialog cannot inject arbitrary server behaviour.
+
+## Headless Client
+
+When `Waldo_Headless_Enable` is true, the separate **WMP Headless Client** category provides debug overlay, forced rebalance and manual handoff controls. The overlay labels each AI group with its live owner and unit count: server, named HC, unexpected owner or a red registry mismatch. The confirmation also reports connected HCs, managed groups and mismatches. See [Headless Client Support](Headless-Client-Support).
 
 ## AI Helicopter Landing
 

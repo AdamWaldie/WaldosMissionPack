@@ -561,6 +561,13 @@ include AA/radar shutdown, vehicle recovery diagnostics, field-resupply repair, 
 displays and gunship servicing. These should remain feature-specific options rather than blanket
 requirements because their authority, cancellation and repeatability rules differ.
 
+Zeus can apply this framework to an existing object with **WMP Mission Tools > Add WMP Field
+Equipment Interaction**. The first selector chooses a normal field-equipment procedure or the EOD
+bomb-defusal wrapper. Every choice uses player-facing names; no function or config classname is
+entered. The success selector is intentionally limited to server-validated outcomes (complete,
+activate, deactivate, unlock, destroy or delete). Use the scripted API below when a mission needs a
+custom callback, task transition or feature-specific state change.
+
 ### Feature-integration suitability
 
 Every built-in bridge follows an inheritance contract. The feature action owns a **semantic default

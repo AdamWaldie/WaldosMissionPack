@@ -105,6 +105,15 @@ if (!_helicopter) then {
     _waypoint setWaypointCompletionRadius ((_config getOrDefault ["stopRadius", 12]) max 5);
 };
 _group setCurrentWaypoint _waypoint;
+// Only this exact WMP-created destination MOVE may be interpreted as a landing task. The old
+// state-only test meant any later Zeus MOVE waypoint could make a registered transport descend
+// aggressively while TO_DESTINATION was still replicated. Index, request and position together
+// distinguish our route from a curator replacement even when Arma reuses waypoint indices.
+if (_destinationLanding) then {
+    _vehicle setVariable ["Waldo_TransportService_LandingOrder", [_requestId, _waypoint select 1, +_target], true];
+} else {
+    _vehicle setVariable ["Waldo_TransportService_LandingOrder", [], true];
+};
 diag_log format ["[WMP TRANSPORT] Local dispatch service=%1 request=%2 phase=%3 target=%4 helicopter=%5 waypoint=%6 type=%7 owner=%8", _id, _requestId, _phase, _target, _helicopter, _waypoint select 1, waypointType _waypoint, clientOwner];
 
 [_vehicle, _id, _requestId, _phase, _target, _config, _helicopter, _landingPad, _waypoint, _dispatchRoadRoute, _boat] spawn {

@@ -2801,6 +2801,9 @@ class FullAuditTests(unittest.TestCase):
         restore = (root / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
         monitor = (root / "recoveryMonitorServer.sqf").read_text(encoding="utf-8")
         unload_position = (root / "recoveryResolveUnloadPosition.sqf").read_text(encoding="utf-8")
+        local_setup = (root / "recoverySetupVehicleLocal.sqf").read_text(encoding="utf-8")
+        interaction = (root / "recoveryInteractionSetup.sqf").read_text(encoding="utf-8")
+        runtime_zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
         self.assertIn('remoteExecCall ["Waldo_fnc_RecoverySetupVehicleLocal", 0, _vehicle]', register_vehicle)
         self.assertIn("getAssignedCuratorLogic", register_vehicle + register_workshop)
         self.assertIn("remoteExecutedOwner != owner _actor", request)
@@ -2825,7 +2828,46 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_Recovery_IsVirtualLoaded", monitor)
         self.assertIn("Waldo_Recovery_ScanInterval", monitor)
         self.assertIn("Waldo_Recovery_PackageClasses", register_vehicle)
+        self.assertIn("{alive _x} count crew _target == 0", local_setup)
+        self.assertIn("{alive _x} count crew _target > 0", request)
+        self.assertIn("{alive _x} count crew _this == 0", interaction)
+        self.assertIn("Waldo_Recovery_LastLocalActionCheck", local_setup)
+        self.assertIn("crewLiving=", local_setup + register_vehicle)
+        recovery_zen = runtime_zen[runtime_zen.index('case "RECOVERY_VEHICLE"'):runtime_zen.index('case "TRANSPORT_REGISTER"')]
+        self.assertIn("Place Register Vehicle directly on the intended vehicle or wreck", recovery_zen)
+        self.assertIn("Place Register Carrier directly on the intended carrier vehicle", recovery_zen)
+        self.assertNotIn("nearestObjects", recovery_zen)
         self.assertNotRegex(monitor, r"setVariable\s*\[[^\]]+,\s*true,\s*true\s*\]")
+
+    def test_optional_zen_modules_and_hc_visual_triage_are_guarded(self):
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        overlay = (ROOT / "MissionScripts" / "Headless" / "headlessDebugDisplayLocal.sqf").read_text(encoding="utf-8")
+        toggle = (ROOT / "MissionScripts" / "Headless" / "headlessDebugToggle.sqf").read_text(encoding="utf-8")
+        self.assertIn('getVariable ["Waldo_Hazard_Enable", false]', zen)
+        self.assertIn('getVariable ["Waldo_Headless_Enable", false]', zen)
+        self.assertIn('"WMP Headless Client"', zen)
+        self.assertIn('addMissionEventHandler ["Draw3D"', overlay)
+        self.assertIn('groupOwner _group', overlay)
+        self.assertIn('MISMATCH', overlay)
+        self.assertIn('ownership mismatches:', toggle)
+
+    def test_friendly_zen_marker_and_field_equipment_use_server_bridge(self):
+        marker = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "zenCreate3DMarker.sqf").read_text(encoding="utf-8")
+        equipment = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "zenFieldEquipment.sqf").read_text(encoding="utf-8")
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        self.assertIn('"CREATE_3D_MARKER"', marker + runtime)
+        self.assertIn('"FIELD_EQUIPMENT"', equipment + runtime)
+        self.assertIn('"EOD bomb defusal"', equipment)
+        self.assertIn('Place this module directly on the object', equipment)
+        self.assertNotIn('["EDIT", ["Icon class', marker)
+
+    def test_normal_move_waypoints_do_not_trigger_improved_landing(self):
+        tracker = (ROOT / "MissionScripts" / "AiScripting" / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
+        dispatch = (ROOT / "MissionScripts" / "Logistics" / "TransportServices" / "transportDispatchLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_TransportService_LandingOrder', tracker)
+        self.assertIn('(_landingOrder select 1) == _index', tracker)
+        self.assertIn('(_landingOrder select 2) distance2D _position < 2', tracker)
+        self.assertIn('Waldo_TransportService_LandingOrder', dispatch)
 
     def test_rally_points_are_group_owned_and_do_not_leak_global_markers(self):
         root = ROOT / "MissionScripts" / "Respawn" / "RallyPoint"

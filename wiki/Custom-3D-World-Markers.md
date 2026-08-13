@@ -10,6 +10,15 @@ positions. Markers are server-owned, broadcast to every client and immediately
 available to JIP players. All markers share one local `Draw3D` handler, avoiding
 one permanent loop per marker.
 
+## Fastest setup in Zeus
+
+Place **WMP Mission Tools > Create Custom 3D Marker**. Drop it directly on an object when the marker
+should follow that object, or place it on empty ground for a fixed marker. The dialog provides named
+icons such as Objective, Warning, Infantry, Vehicle and Supply, plus readable colour, side audience,
+height, size and maximum-distance choices. You do not need to know a texture path or config
+classname. The script API below remains available when a mission needs a custom image or a stable ID
+that another script updates later.
+
 ## Create or update a marker
 
 Smallest working call — a stable ID and an anchor, everything else takes its default:

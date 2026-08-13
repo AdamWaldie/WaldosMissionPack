@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 923,
+  "registeredFunctionCount": 928,
   "runtimeFunctionCount": 385,
-  "functionCount": 1308,
+  "functionCount": 1313,
   "stations": [
     {
       "id": "control",
@@ -873,6 +873,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_HeadlessDebugDisplayLocal",
+      "file": "MissionScripts/Headless/headlessDebugDisplayLocal.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_HeadlessForceRebalance",
       "file": "MissionScripts/Headless/headlessForceRebalance.sqf",
       "station": "headless",
@@ -1169,6 +1175,12 @@
     {
       "name": "Waldo_fnc_Init3DMarkers",
       "file": "MissionScripts/MissionFlowAndUi/init3DMarkers.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenCreate3DMarker",
+      "file": "MissionScripts/MissionFlowAndUi/zenCreate3DMarker.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -5879,6 +5891,24 @@
     {
       "name": "Waldo_fnc_BombDefuseSetup",
       "file": "MissionScripts/InteractionsMinigames/Integration/bombDefuseSetup.sqf",
+      "station": "interaction-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenFieldEquipment",
+      "file": "MissionScripts/InteractionsMinigames/Integration/zenFieldEquipment.sqf",
+      "station": "interaction-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldEquipmentZenSetupLocal",
+      "file": "MissionScripts/InteractionsMinigames/Integration/fieldEquipmentZenSetupLocal.sqf",
+      "station": "interaction-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_FieldEquipmentOutcomeServer",
+      "file": "MissionScripts/InteractionsMinigames/Integration/fieldEquipmentOutcomeServer.sqf",
       "station": "interaction-core",
       "activation": "manual"
     },

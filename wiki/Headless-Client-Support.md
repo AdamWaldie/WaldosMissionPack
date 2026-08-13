@@ -124,6 +124,26 @@ occupying one of the placed slots:
    a small hitch here), and a rebalance pass immediately offers them to any other connected headless
    client. This is event-driven - there is no polling loop watching for disconnects.
 
+## Live Zeus triage and ownership overlay
+
+When `Waldo_Headless_Enable` is `true`, WMP adds a dedicated **WMP Headless Client** category in
+Zeus. It is absent when HC support is disabled. **Toggle Debug Overlay** enables both the extended
+RPT/system-chat trail and a curator-only 3D ownership overlay:
+
+- orange `SERVER` labels identify AI groups still owned by the server;
+- blue labels name the connected HC which owns the group;
+- yellow `OWNER n` labels identify an unexpected non-HC network owner;
+- red `MISMATCH` labels show that WMP's managed registry disagrees with Arma's live `groupOwner`;
+- every label also includes the group callsign and current AI count, so colour is not required.
+
+The overlay reads current ownership continuously and follows migrations without re-running a
+module. It is shown only to assigned curators and is replayed for a JIP curator while debug remains
+enabled. **Force Rebalance Now** reports how many groups were newly queued and how many HCs are
+connected. **Manual Group Handoff** lists nearby AI-only groups and named destinations. The normal
+**Diagnostics - Run Full Pack Audit** module continues to report client count, distribution owner,
+managed/excluded groups, adoption acknowledgements, failed transfers, ownership mismatches and the
+migration queue in the RPT.
+
 ## Eligibility
 
 ### WMP feature assets always remain on the server

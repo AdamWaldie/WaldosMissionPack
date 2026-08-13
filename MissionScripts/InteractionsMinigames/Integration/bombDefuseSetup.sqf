@@ -75,9 +75,11 @@ private _customFailure = ["onFailure", {}] call _opt;
 
 // Detonation parameters live on the object so the (asynchronous, server-side) callbacks can
 // read them without capturing this scope.
-_object setVariable ["Waldo_MG_Bomb_Detonate", _detonate, true];
-_object setVariable ["Waldo_MG_Bomb_Explosive", _explosive, true];
-_object setVariable ["Waldo_MG_Bomb_DefusedVar", _successVariable, true];
+// Eden calls execute on every machine. Only the server publishes these shared values; each client
+// still stores the same local callbacks below for its ACE action without broadcasting duplicates.
+_object setVariable ["Waldo_MG_Bomb_Detonate", _detonate, isServer];
+_object setVariable ["Waldo_MG_Bomb_Explosive", _explosive, isServer];
+_object setVariable ["Waldo_MG_Bomb_DefusedVar", _successVariable, isServer];
 _object setVariable ["Waldo_MG_Bomb_OnSuccess", _customSuccess];
 _object setVariable ["Waldo_MG_Bomb_OnFailure", _customFailure];
 
