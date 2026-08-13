@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter, Val
- * Starts the repeat-safe server authority for WMP helicopter and ground transport services.
+ * Starts the repeat-safe server authority for WMP helicopter, ground and boat transport services.
  * The server owns registry membership, pool availability, reservations, request IDs and public
  * state. AI movement is dispatched separately to the machine that owns each driver group.
  * Locality and authority: server-only registry initialization; no interface state is created here.

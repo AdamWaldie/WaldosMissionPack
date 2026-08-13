@@ -199,14 +199,17 @@ The guarded `Waldo_*` defaults cover persistence policy, field resupply, airborn
 
 Do not move presentation-only settings back here. Player UI/actions belong in `initPlayerLocal.sqf`; server-only limits and pools belong in `initServer.sqf`. See the [Complete Feature Catalogue](Feature-Catalogue).
 
-### Third-Party Scripts (disabled by default)
+### Third-Party Player Markers (disabled by default)
 
 ```sqf
-// Remove the // to enable headless client and player markers
+// Remove the // to enable the legacy player-marker integration
 // [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
 ```
 
-See [Headless Client & Player Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers) for the options inside that file.
+This legacy entry point does not enable WMP's Headless Client manager. Configure the native manager
+through `MissionConfig\headlessConfig.sqf`; see [Headless Client Support](Headless-Client-Support).
+See [Third-Party Scripts and Player Markers](Third-Party-Scripts-Headless-Client-And-Player-Markers)
+for the optional marker settings inside the legacy file.
 
 ### Mini Games (table games)
 

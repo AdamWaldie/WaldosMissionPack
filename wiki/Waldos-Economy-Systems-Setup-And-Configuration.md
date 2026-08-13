@@ -19,9 +19,9 @@ It is **off by default**, so missions that don't use it pay no performance cost.
 * **Easiest — drop a composition** (Eden compositions list, category _Waldos Mission Pack Compositions_). No scripting, no init fields:
   * `[WMP] Waldos Economy Systems - Low / Medium / High Preset` — boots the suite **and** loads a ready-made economy. This is the fastest way to a playable economy; start with **Low** if you're new to it.
   * `[WMP] Waldos Economy Systems` — boots the suite only, so you configure it yourself (live in Zeus or via the files below).
-* **Or set one flag in `init.sqf`:**
+* **Or set one flag in `MissionConfig\missionSystemsConfig.sqf`:**
   ```sqf
-  Waldo_Economy_Enable = true;   // init.sqf then runs: [] spawn Waldo_fnc_EcoInit;
+  ["Waldo_Economy_Enable", true], // starts the server-owned economy runtime
   ```
 
 Place only one Economy Systems object per mission.
@@ -68,7 +68,10 @@ Define catalogs and place world objects with the server-side helpers:
 
 The generated recipe preserves the authoring result: resource definitions, initial side balances and marker visibility; research, construction and purchasing catalogues; and the current resource zones, uncollected resource crates, research centres, construction sources, completed economy buildings, delivery points and purchase terminals. Calls are emitted in dependency order so the catalogues exist before their placed equipment is created.
 
-Export from a clean authoring session before normal play begins. The exporter records the current world positions, directions, classes and economy tags; it is not intended to turn an in-progress campaign save into mission source. Keep `Waldo_Economy_Enable = true` in `init.sqf`.
+Export from a clean authoring session before normal play begins. The exporter records the current
+world positions, directions, classes and economy tags; it is not intended to turn an in-progress
+campaign save into mission source. Keep `Waldo_Economy_Enable` set to `true` in
+`MissionConfig\missionSystemsConfig.sqf`.
 
 Use **Config Copy** only when you need the older portable catalogue string for `Waldo_Economy_ConfigString` in `initServer.sqf` or for **Import**. Older exported configuration strings remain compatible.
 

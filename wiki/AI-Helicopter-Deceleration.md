@@ -38,6 +38,30 @@ No init call or ZEN module is required. To exclude one unusual airframe, put thi
 this setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 ```
 
+### What you should edit
+
+| Setting | Default | Beginner guidance |
+|---|---:|---|
+| `Waldo_HelicopterDeceleration_Enable` | `false` | The only setting most missions should change. Enable it after testing the airframes used. |
+| `Waldo_HelicopterDeceleration_IncludeVTOL` | `false` | Leave off unless you specifically tested VTOL aeroplane/hover transitions. |
+| `Waldo_HelicopterDeceleration_Debug` | `false` | Turn on temporarily when diagnosing why a correction started or stopped. |
+
+The remaining `Waldo_HelicopterDeceleration_*` rows are advanced safety thresholds. Leave them at
+their shipped values unless a repeatable test with one aircraft demonstrates a specific problem.
+
+## What success looks like
+
+- The helicopter follows its existing waypoint route normally.
+- Braking no longer produces a large unwanted climb.
+- A landing waypoint still uses Improved Landing without interference.
+- Low-altitude, player-piloted, remote-controlled and UAV aircraft are unchanged.
+- Moving or deleting a landing waypoint releases landing control normally; the deceleration helper
+  does not invent a replacement waypoint.
+
+There is intentionally no composition: the feature reacts to ordinary AI helicopter flight and has
+no object or station to place. Test it with the full audit mission or a normal crewed AI helicopter
+and route.
+
 ## Safety model
 
 - correction runs only on the aircraft's current owner and follows locality migration;

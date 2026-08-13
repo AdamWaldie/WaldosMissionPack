@@ -2,7 +2,9 @@
 
 > **Use this page when:** you need to configure, operate, or extend a player-controlled airborne gunship.
 
-_Associated Files: `MissionScripts/CombatSystems/AirborneGunship/`; `init.sqf`_
+_Associated Files: `MissionConfig\airOperationsConfig.sqf`,
+`MissionScripts\CombatSystems\AirborneGunship\`, `initServer.sqf`, and the public
+`Waldo_fnc_Gunship*` functions._
 
 Airborne Gunship Support manages any number of named, crewed aircraft through a server-owned lifecycle. It can register an existing aircraft or spawn a configured class, assign a player controller, move between combat and service orbits, provide validated remote turret control, and return automatically when fuel, damage or ammunition limits are reached.
 

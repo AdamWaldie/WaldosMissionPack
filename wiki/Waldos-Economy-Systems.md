@@ -36,7 +36,10 @@ You never have to touch a script to use this suite. Pick the path that suits you
 
 * **Easiest (≈30 seconds, no scripting, no Eden setup).** In the Eden Editor, open the **Compositions** list (category _Waldos Mission Pack Compositions_) and drag in
   **`[WMP] Waldos Economy Systems - Low / Medium / High Preset`**. That single object boots the suite **and** loads a ready-made, balanced economy for NATO/CSAT/AAF. Play the mission — it just works. (Start with **Low** if you're new to it.)
-* **Live in Zeus (one flag).** Set `Waldo_Economy_Enable = true;` in `init.sqf` (or drop the plain `[WMP] Waldos Economy Systems` composition). Open Zeus — a new **WMP Economy Systems** root appears in the tree, and you build the whole economy live with menus and dialogs. No editor objects required.
+* **Live in Zeus (one flag).** Set `Waldo_Economy_Enable` to `true` in
+  `MissionConfig\missionSystemsConfig.sqf` (or drop the plain `[WMP] Waldos Economy Systems`
+  composition). Open Zeus—a new **WMP Economy Systems** root appears in the tree, and you build the
+  whole economy live with menus and dialogs. No editor objects required.
 * **Bake in your own (full control).** Configure it live in Zeus, hit **Export** to copy a config string, and paste it into `Waldo_Economy_ConfigString` in `initServer.sqf` — or hand-author everything in `MissionConfig\economyConfig.sqf`. It then loads automatically every time the mission runs, for every player including JIP.
 
 > **Tip:** place only **one** Economy Systems object (composition or flag) per mission.

@@ -196,6 +196,9 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 
 ### Obituary / confirmed-death reporting
 
+See [Obituary and Confirmed Deaths](Obituary-and-Confirmed-Deaths) for the beginner workflow,
+qualification rules, diary layout, multiplayer behaviour and troubleshooting.
+
 | Setting | Purpose |
 |---|---|
 | `Waldo_Obituary_Enable` | Installs the "Pronounce Dead" ACE self-interaction submenu (vanilla Medic trait or ACE Medic/Doctor role). Defaults `true`, unlike other `MedicalSystems/` features. |
@@ -524,7 +527,7 @@ annotated profile and advanced replacement-row format.
 ## `headlessConfig.sqf` — shared
 
 See [Headless Client Support](Headless-Client-Support) for Eden setup, eligibility rules and the
-manual test matrix that should be run before enabling this on a live mission.
+mission/mod test checklist that should be run before enabling this on a live mission.
 
 | Setting | Purpose / units |
 |---|---|

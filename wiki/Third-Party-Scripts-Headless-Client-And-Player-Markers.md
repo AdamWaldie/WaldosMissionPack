@@ -57,7 +57,7 @@ You can combine options, e.g. `["players", "ais"] execVM "...player_markers.sqf"
 
 ## See also
 
-* [Headless Client Support](Headless-Client-Support) — the native, always-on replacement for the legacy headless-client script
+* [Headless Client Support](Headless-Client-Support) — the native, opt-in replacement for the legacy headless-client script
 * [Mission Configuration Reference](Mission-Configuration-Reference) — where the loader line lives in `init.sqf`
 * [Waldos AI Tweak](Waldos-AI-Tweak) — AI skill tuning that works alongside headless offloading
 * [AI Convoy System](AI-Convoy-System)

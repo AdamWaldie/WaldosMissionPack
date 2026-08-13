@@ -1,8 +1,20 @@
-/* Author: WaldoTheWarfighter. Returns normalized Economy diagnostics. */
+/*
+ * Author: WaldoTheWarfighter
+ * Returns normalized Economy diagnostics for the core runtime, catalogues and placed registries.
+ * Read-only and repeat-safe. Runs wherever diagnostics request it; it does not change economy state.
+ *
+ * Arguments: None.
+ * Return Value: ARRAY of WMP diagnostic rows.
+ * Current caller: Waldo_fnc_RunDiagnostics.
+ *
+ * Example:
+ * private _rows = [] call Waldo_fnc_EcoCore_getDiagnostics;
+ * Result: `_rows` describes disabled, active, unconfigured and invalid economy state.
+ */
 private _enabled = missionNamespace getVariable ["Waldo_Economy_Enable", false];
 private _active = missionNamespace getVariable ["WaldoEcoCore_ModuleActive", false];
 private _coreDetail = format ["configured=%1 active=%2 commitment=%3", _enabled, _active, missionNamespace getVariable ["WaldoEcoCore_CommitmentMode", false]];
-if (_enabled && {!_active}) then {_coreDetail = [_coreDetail, "Waldo_Economy_Enable is true but Waldo_fnc_EcoInit never completed - confirm init.sqf actually spawns it, and check the RPT for [WMP ECO] errors."] call Waldo_fnc_DiagnosticFoldHint;};
+if (_enabled && {!_active}) then {_coreDetail = [_coreDetail, "Waldo_Economy_Enable is true but Waldo_fnc_EcoInit never completed - confirm MissionConfig\missionSystemsConfig.sqf enables it, then check the RPT for [WMP ECO] errors."] call Waldo_fnc_DiagnosticFoldHint;};
 private _checks = [
     ["economy", "core", if (!_enabled) then {"DISABLED"} else {if (_active) then {"ACTIVE"} else {"ERROR"}}, _coreDetail]
 ];

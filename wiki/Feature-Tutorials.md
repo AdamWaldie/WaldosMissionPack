@@ -26,6 +26,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster) | Mission-derived supplies and limited arsenals |
 | [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal, and manual loadout persistence |
 | [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies) | Recoverable vehicle logistics and temporary group respawns |
+| [Helicopter, Ground and Boat Transport](Transport-Services) | Reusable AI-crewed transport services for land, air, and open water |
 | [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) | Deployable MHQ and logistics |
 | [Virtual Vehicle Depot](Virtual-Vehicle-Depot) | Virtual garage and vehicle deployment |
 | [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop) | Vehicle interactions, static line, and HALO |
@@ -75,9 +76,10 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 |---|---|
 | [Waldo's AI Tuning](Waldos-AI-Tweak) | Day/night AI behavior profiles |
 | [Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) | AI-only exact landing, slope, canopy, flare, and go-around handling |
+| [AI Helicopter Deceleration](AI-Helicopter-Deceleration) | Optional cruise-only correction for helicopters that zoom-climb while braking |
 | [AI Convoy System](AI-Convoy-System) | Scripted vehicle convoys |
 | [Map Location Tools](Map-Location-Tools) | Creating or renaming map locations |
-| [Headless Client Support](Headless-Client-Support) | Native, always-on AI group distribution across connected headless clients |
+| [Headless Client Support](Headless-Client-Support) | Optional AI distribution across connected headless clients; disabled by default |
 | [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers) | Optional player-marker integration |
 | [ACE Corpse Traps](ACE-Corpse-Traps) | Concealed throwable traps on bodies |
 | [Unit Insignias](Unit-Insignias) | Applying and adding insignias |
@@ -89,6 +91,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | Feature | Use it for |
 |---|---|
 | [Persistence](Persistence) | Database-backed player state and registered-object save/restore via INIDBI2 |
+| [Obituary and Confirmed Deaths](Obituary-and-Confirmed-Deaths) | Medic confirmation of deaths, readable diary records, and ENDEX reporting |
 | [Optional Feature Systems](Optional-Feature-Systems) | Treatment feedback, obituary and confirmed-death reporting, hazards, tree felling, emergency dismount, WMP HUD, breaching, and object transforms |
 | [Optional Feature Extensions](Optional-Feature-Extensions) | Field resupply, tactical displays, advanced controls, and engine boundaries |
 | [Dynamic Anti-Air](Dynamic-Anti-Air) | Scripted or Zeus-authored radar-controlled air-defence zones |
