@@ -4,7 +4,8 @@
  *
  * Existing local AI are processed immediately. A CBA CAManBase init handler catches newly created
  * units, including Zeus placements, and a per-unit Local event handler reapplies the active profile
- * after server/headless-client ownership changes. Players are never modified. WMP Line is the
+ * after server/headless-client ownership changes. ACE Headless's documented post-transfer event is
+ * also handled explicitly and acknowledged to the server. Players are never modified. WMP Line is the
  * default baseline; its established values are intentionally retained rather than made harder.
  * Locality and authority: run on every AI-owning machine. Server/JIP runtime state selects the
  * profile; each server or headless-client owner applies skills only to its local AI.
@@ -118,6 +119,41 @@ if !(missionNamespace getVariable ["Waldo_AI_HandlerInstalled", false]) then {
             [_unit] call Waldo_fnc_AIApplyProfile;
         };
     }, true, [], true] call CBA_fnc_addClassEventHandler;
+};
+
+// ACE Headless can be the active owner scheduler even when WMP's optional HC distributor is off.
+// Its documented post-transfer event runs on the destination owner and reports whether the engine
+// transfer actually succeeded. Adopt ordinary AI there instead of assuming WMP initiated the move.
+if !(missionNamespace getVariable ["Waldo_AI_ACEHeadlessHandlerInstalled", false]) then {
+    missionNamespace setVariable ["Waldo_AI_ACEHeadlessHandlerInstalled", true];
+    ["ace_headless_groupTransferPost", {
+        params ["_group", "_headlessEntity", "_previousOwner", "_newOwner", "_transferredSuccessfully"];
+        // ACE raises this event on both the old locality and the destination HC. During the transfer
+        // window `local _group` can still be true on the old owner, so the destination owner ID is
+        // the authoritative gate. Without it, the server or a different HC can acknowledge work it
+        // did not own (visible as sender/claimedOwner mismatches in dedicated-server diagnostics).
+        if (_transferredSuccessfully && {!isDedicated} && {!hasInterface} && {clientOwner == _newOwner}
+            && {local _group} && {missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]}) then {
+            private _applied = 0;
+            {
+                if (local _x && {!isPlayer _x} && {!(_x getVariable ["Waldo_ServerOwnedFeature", false])}
+                    && {[_x] call Waldo_fnc_AIApplyProfile}) then {
+                    _applied = _applied + 1;
+                };
+            } forEach units _group;
+            diag_log format ["[WMP AI] ACE HC adoption group=%1 previousOwner=%2 newOwner=%3 localUnits=%4 applied=%5 profile=%6/%7.",
+                _group, _previousOwner, _newOwner, {local _x} count units _group, _applied,
+                missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"],
+                missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"]
+            ];
+            if (_newOwner > 2) then {
+                [_group, _headlessEntity, _previousOwner, _newOwner, _applied,
+                    missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"],
+                    missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"]
+                ] remoteExecCall ["Waldo_fnc_AIHeadlessAdoptionResultServer", 2];
+            };
+        };
+    }] call CBA_fnc_addEventHandler;
 };
 
 if (toUpperANSI (missionNamespace getVariable ["Waldo_AI_ApplyMode", "BOTH"]) != "NEW") then {

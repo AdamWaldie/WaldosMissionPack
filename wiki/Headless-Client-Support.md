@@ -92,11 +92,17 @@ occupying one of the placed slots:
    `!isDedicated && !hasInterface`. The server and every real player are no-ops here. If
    `Waldo_Headless_Enable` is false, detection still runs (harmless) but the registration request
    below is never sent.
-2. **Registration.** A detected headless client asks the server to register it
-   (`Waldo_fnc_HeadlessRegisterClient`), which verifies the request came from a genuine remote
-   caller (never a spoofed local id) and is not already a connected player, then adds it to
-   `Waldo_Headless_Clients` and immediately runs a rebalance pass.
-3. **Rebalancing.** `Waldo_fnc_HeadlessRebalance` walks every group in the mission, works out which
+2. **Registration.** A detected headless client asks the server to register it and retries that
+   authenticated request for at most 30 seconds. This handles the dedicated-server startup window
+   where the HC process is connected but its `HeadlessClient_F` entity is not yet visible. The server
+   registry is repeat-safe, so a retry refreshes the existing row rather than duplicating it.
+   (`Waldo_fnc_HeadlessRegisterClient`), which verifies the remote owner controls an engine
+   `HeadlessClient_F` virtual entity. Do not use `allPlayers` as a rejection test here: Arma includes
+   headless clients in `allPlayers`. A verified HC is then added to
+   `Waldo_Headless_Clients`. If ACE Headless is loaded, ACE is the sole automatic distributor and
+   WMP listens for verified post-transfer events; this avoids two schedulers racing over the same
+   group. Without ACE Headless, registration immediately starts WMP's own rebalance pass.
+3. **Rebalancing.** When WMP owns automatic distribution, `Waldo_fnc_HeadlessRebalance` walks every group in the mission, works out which
    *eligible* ones should move to whichever connected headless client currently has the fewest
    assigned/queued groups, and queues them in `Waldo_Headless_MigrationQueue`.
 4. **Paced migration.** `Waldo_fnc_HeadlessMigrationWorker` drains that queue one group at a time,
@@ -106,6 +112,12 @@ occupying one of the placed slots:
    groups back-to-back in the same frame is a known source of a server hitch on a busy mission; this
    is the same reason established headless-client community tooling paces its own transfers instead
    of moving everything the instant it becomes eligible.
+   The destination then confirms the group is local before WMP reapplies the selected AI profile.
+   Successful handoffs log `[WMP HEADLESS] Adoption complete` with owner, unit counts and profile;
+   a timeout is reported by the `headless-ai-adoption` diagnostic instead of being silently ignored.
+   If ACE Headless performs the migration instead, WMP listens to ACE's documented
+   `ace_headless_groupTransferPost` event on the destination HC, applies the same profile, and sends
+   an authenticated result to the server. The server RPT then records `[WMP AI] Verified HC adoption`.
 5. **Disconnect recovery.** `initServer.sqf` installs a `HandleDisconnect` mission event handler
    (`Waldo_fnc_HeadlessReassignOnDisconnect`). When a headless client disconnects, its groups return
    to the server immediately (not through the paced queue - losing AI ownership briefly is worse than
@@ -114,6 +126,24 @@ occupying one of the placed slots:
 
 ## Eligibility
 
+### WMP feature assets always remain on the server
+
+Headless clients receive ordinary eligible mission AI only. WMP state-machine assets that require
+continuous server-local control are never offloaded: Paradrop aircraft and jump groups, Airborne
+Gunships, Dynamic AA, Transport Services and WMP AI convoys stay on server owner `2`. Their
+registries, waypoint controllers, cleanup and live transitions are server-authoritative, so
+splitting crew ownership would create races and broken behaviour.
+
+Dynamic AO is the deliberate exception. Its groups are temporarily pinned while the server creates
+their units, vehicles and waypoints. Once the AO registry is complete, those temporary exclusions
+are removed and the finished groups may be distributed to HCs. The AO registry and cleanup remain
+server-authoritative; locality-sensitive movement and the WMP AI profile run on the group owner.
+
+Each feature marks its group/vehicle `Waldo_ServerOwnedFeature`. The scheduler filters that flag and
+the final migration function checks it again immediately before `setGroupOwner`. This closes the
+case where a group was queued just before feature registration. WMP also sets ACE Headless's vehicle
+blacklist. Diagnostics report the exclusions as `headless-wmp-server-owned`.
+
 A group is migrated only when **all** of the following hold. Anything excluded is recorded (with a
 reason) in `Waldo_Headless_ExcludedGroups`, refreshed on every rebalance pass:
 
@@ -121,6 +151,7 @@ reason) in `Waldo_Headless_ExcludedGroups`, refreshed on every rebalance pass:
 |---|---|
 | The group is empty | `empty` |
 | Any member (including the leader) is a human player | `player-led` |
+| WMP classifies the group or crewed vehicle as a server-owned feature | `wmp-server-owned` |
 | The group variable `Waldo_Headless_ExcludeGroup` is `true` | `opted-out` |
 | The group's side is `sideLogic` (curator helpers/ZEN module logic) | `curator-logic` |
 | The group currently crews a registered Airborne Gunship aircraft (`Waldo_Gunship_Registry`) | `gunship-crew` |

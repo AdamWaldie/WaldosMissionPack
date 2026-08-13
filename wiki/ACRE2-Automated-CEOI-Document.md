@@ -6,7 +6,14 @@ The CEOI is the player's in-game radio reference. WMP combines the mission's sta
 setup with what the player's computer actually applied. It lists the side, callsign, PRC-343
 block/channel and named long-range nets, and reports any setup problem instead of silently guessing.
 
-Only the player's side is shown. The current group's short-range assignment and radio-specific net tunings are highlighted. Carried-radio lines identify base class, same-type occurrence, resolved request, ear, applicable failures and the count of preserved/unmanaged radios. Missing optional templates are not failures. Frequency-radio requests are marked as asynchronous/unverified because ACRE exposes no public frequency read-back.
+Only the player's side is shown. **Squad Radio Assignments** appears only when at least one group on
+that side has a valid PRC-343 assignment; groups without one are omitted instead of producing empty
+placeholder rows. If nobody is assigned a PRC-343, the complete section is omitted. The current
+group's short-range assignment and authored long-range net assignments are highlighted green before
+the mission starts. After ACRE is ready, matching live radio read-back is also green. Carried-radio lines
+identify base class, same-type occurrence, resolved request, ear, applicable failures and the count
+of preserved/unmanaged radios. Missing optional templates are not failures. Frequency-radio
+requests are marked as asynchronous/unverified because ACRE exposes no public frequency read-back.
 
 The planned CEOI is created from the pure mission configuration during player-local briefing setup,
 so it is visible on the map **before Continue** even when ACRE has not finished creating physical

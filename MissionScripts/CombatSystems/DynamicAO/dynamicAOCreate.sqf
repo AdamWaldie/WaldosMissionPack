@@ -112,6 +112,13 @@ private _roads = (_center nearRoads _radius) call BIS_fnc_arrayShuffle;
 private _trackGroup = {
     params ["_group"];
     _groups pushBackUnique _group;
+    // Dynamic AO is pinned only while this server-side build is incomplete. The flags are removed
+    // after every unit, vehicle and waypoint has been registered, allowing the finished AI groups
+    // to move to a headless client safely.
+    _group setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _group setVariable ["Waldo_Headless_ExcludeGroup", true, true];
+    _group setVariable ["acex_headless_blacklist", true, true];
+    if (!isNil "ace_headless_fnc_blacklist") then {[_group, true, 2, 0] call ace_headless_fnc_blacklist};
     _group
 };
 private _spawnUnit = {
@@ -120,6 +127,8 @@ private _spawnUnit = {
     // server the overlapping collision geometries can prevent the leader and followers from
     // acquiring their first path even though the group's waypoint is valid.
     private _unit = _group createUnit [_class, _position, [], _placementRadius, "NONE"];
+    _unit setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _unit setVariable ["acex_headless_blacklist", true, true];
     _objects pushBack _unit;
     if (!isNil "Waldo_fnc_AIApplyProfile") then {[_unit] call Waldo_fnc_AIApplyProfile};
     _unit
@@ -150,6 +159,9 @@ private _weightedClass = {
 };
 private _crewVehicle = {
     params ["_vehicle"];
+    _vehicle setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _vehicle setVariable ["acex_headless_blacklist", true, true];
+    if (!isNil "ace_headless_fnc_blacklist") then {[_vehicle, true, 2, 0] call ace_headless_fnc_blacklist};
     createVehicleCrew _vehicle;
     private _oldGroups = [];
     {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
@@ -348,6 +360,32 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAO_Registry", _registry];
+// Construction is complete. Dynamic AO authority and cleanup remain on the server, while the
+// finished AI groups may now be owned by a headless client. Clear both WMP and ACE temporary pins;
+// ACE's public API requests an ordinary (not forced) rebalance so existing unrelated groups stay put.
+{
+    _x setVariable ["Waldo_ServerOwnedFeature", false, true];
+    _x setVariable ["Waldo_Headless_ExcludeGroup", false, true];
+    _x setVariable ["acex_headless_blacklist", false, true];
+    {
+        _x setVariable ["Waldo_ServerOwnedFeature", false, true];
+        _x setVariable ["acex_headless_blacklist", false, true];
+    } forEach units _x;
+} forEach _groups;
+private _aoVehicles = [];
+{
+    {
+        private _vehicle = vehicle _x;
+        if (_vehicle != _x) then {_aoVehicles pushBackUnique _vehicle};
+    } forEach units _x;
+} forEach _groups;
+{
+    _x setVariable ["Waldo_ServerOwnedFeature", false, true];
+    _x setVariable ["acex_headless_blacklist", false, true];
+} forEach _aoVehicles;
+if (!isNil "ace_headless_fnc_blacklist" && {count _groups > 0}) then {
+    [_groups + _aoVehicles, false, -1, 1] call ace_headless_fnc_blacklist;
+};
 // Curator registration must happen after the engine has networked this frame's newly created units.
 // Every infantry unit/vehicle root is already present in _objects; includeCrew discovers vehicle
 // crews, so appending group units again only duplicates registration and caused dedicated-server

@@ -1,12 +1,16 @@
 /*
  * Author: WaldoTheWarfighter
- * This function load all custom ZEN modules. Requires Zen Mod to run propperly. The function will terminate if not.
+ * Registers WMP's Zeus Enhanced modules in task-oriented categories. Combat/AI generation,
+ * electronic warfare, environmental hazards, air operations, transport, logistics, mission flow,
+ * mission tools and interface/QA are separated so curators can find a control by purpose.
  *
- * Arguments:
- * None
+ * Locality and repeat/JIP behaviour:
+ * Player-interface only. Every curator client (including JIP) registers its own local palette after
+ * ZEN is available. A missionNamespace guard prevents duplicate registration on the same machine.
+ * Module effects retain their documented server/object-owner authority; this file only creates UI.
  *
- * Return Value:
- * Nothing
+ * Arguments: None.
+ * Return Value: Nothing.
  *
  * Example: [] call Waldo_fnc_ZenInitModules;
  * Current caller: initPlayerLocal.sqf after local player and ZEN readiness.
@@ -33,7 +37,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AA - Create",
+["WMP AI & Combat", "Dynamic AA - Create",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAAZen;
@@ -41,7 +45,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconStaticAA_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AA - Remove Nearest",
+["WMP AI & Combat", "Dynamic AA - Remove Nearest",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAARemoveZen;
@@ -85,9 +89,9 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Air Operations", "Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
     ["WMP Air Operations", "Gunship - Set Orbit", "GUNSHIP_ORBIT", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
-    ["WMP Combat Systems", "Hazard - Create", "HAZARD_CREATE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
-    ["WMP Combat Systems", "Hazard - Remove Nearest", "HAZARD_REMOVE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
-    ["WMP Mission Tools", "AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
+    ["WMP Environment", "Hazard - Create", "HAZARD_CREATE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
+    ["WMP Environment", "Hazard - Remove Nearest", "HAZARD_REMOVE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
+    ["WMP AI & Combat", "AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
 ];
 
 ["WMP Air Operations", "Paradrop - Create Drop Zone",
@@ -95,7 +99,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AO - Create",
+["WMP AI & Combat", "Dynamic AO - Create",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAOZen;
@@ -103,7 +107,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\markers\nato\o_inf.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AO - Remove",
+["WMP AI & Combat", "Dynamic AO - Remove",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAORemoveZen;
@@ -169,7 +173,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\z\ACE\addons\fortify\ui\hammer_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "AI: Create Moving Convoy",
+["WMP AI & Combat", "Convoy - Create Moving Group",
     {
         diag_log format ["[WMP ZEN] invoked module=Spawn AI Convoy curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -211,7 +215,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Jammer: Place New Emitter",
+["WMP Electronic Warfare", "Jammer - Place Emitter",
     {
         diag_log format ["[WMP ZEN] invoked module=Radio Jammer Place curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -220,7 +224,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\interact_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Jammer: Toggle Nearest Emitter",
+["WMP Electronic Warfare", "Jammer - Toggle Nearest",
     {
         diag_log format ["[WMP ZEN] invoked module=Radio Jammer Toggle curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -229,7 +233,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\interact_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Jammer: Delete Nearest Emitter",
+["WMP Electronic Warfare", "Jammer - Delete Nearest",
     {
         diag_log format ["[WMP ZEN] invoked module=Radio Jammer Remove curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -238,7 +242,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\map\markers\military\destroy_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "EW: Detonate EMP at Cursor",
+["WMP Electronic Warfare", "EMP - Detonate at Cursor",
     {
         diag_log format ["[WMP ZEN] invoked module=EMP Detonation curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -247,7 +251,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\backpack_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Tracker: Attach to Selected Object",
+["WMP Electronic Warfare", "Tracker - Attach to Selected Object",
     {
         diag_log format ["[WMP ZEN] invoked module=Plant Signal Tracker curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];

@@ -59,6 +59,18 @@ ZEN provides three modules:
 - **Vehicle Recovery - Register Vehicle** configures the nearest vehicle's recovery policy and an optional simplified preparation procedure: enable, procedure and difficulty.
 - **Vehicle Recovery - Register Carrier** enables package loading and unloading on the nearest vehicle and exposes Automatic, Virtual Manifest or Physical Cargo Bay handling plus a 1–10 package capacity.
 
+With ACE Interact loaded, a registered recoverable vehicle receives **Package for Recovery** on the
+vehicle and a carrier receives **Vehicle Recovery > Load Recovery Package / Unload Recovery
+Package**. Without ACE Interact, the same controls appear as vanilla actions. Runtime registration,
+re-registration and JIP all reinstall the expected local controls repeat-safely. The procedure option
+is genuinely optional: when it is off, **Package for Recovery** submits the normal server PACK
+request immediately.
+
+For troubleshooting, run `[] call Waldo_fnc_RunDiagnostics`. The server report checks orphaned
+vehicles/packages and workshop keys; each client reports registered recovery objects missing their
+expected ACE or vanilla actions. Every registration and PACK/LOAD/UNLOAD request also writes one
+`[WMP RECOVERY]` RPT line naming the object, operation, owner and active mode.
+
 Living vehicles are retained hidden while packaged and restored as the same object, preserving object identity, event handlers, actions, applied scripts and external references. A destroyed vehicle cannot be resurrected reliably, so that path creates a replacement, restores its Eden variable name, copies the configured custom-variable allowlist and invokes `Waldo_Recovery_OnRestored` for mission-specific rebinding. Crew and attached objects are not recreated. Use persistence separately for long-term mission saves.
 
 ## Squad rally points

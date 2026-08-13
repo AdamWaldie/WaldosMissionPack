@@ -187,6 +187,7 @@ _vehicle setVariable ["Waldo_TransportService_RequesterUID", "", true];
 _vehicle setVariable ["Waldo_TransportService_Requester", objNull, true];
 _vehicle setVariable ["Waldo_TransportService_Registered", true, true];
 _vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];
+[_vehicle] call Waldo_fnc_HeadlessPinCrew;
 if (_config get "invulnerable") then {_vehicle setDamage 0};
 private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;

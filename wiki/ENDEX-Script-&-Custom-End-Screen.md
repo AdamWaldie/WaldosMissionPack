@@ -55,7 +55,7 @@ report can include:
 | Duration | Time since mission start |
 | KIA by side | Dead infantry |
 | Player losses | Human-player deaths |
-| Vehicles lost by side | Destroyed vehicles |
+| Vehicles lost by side | Destroyed vehicles, attributed to their last valid operational side rather than an unconscious crew member's temporary Civilian side |
 | Friendly fire | Kills where shooter and victim share a side |
 | Objectives | Tasks managed through WMP objective helpers |
 | Top fraggers | Enemy kills credited to human players |

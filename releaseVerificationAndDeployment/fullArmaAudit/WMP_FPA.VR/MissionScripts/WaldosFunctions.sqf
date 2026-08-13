@@ -134,6 +134,12 @@ class CfgFunctions
             class AIRebalanceInit {
                 file = "MissionScripts\AiScripting\aiRebalanceInit.sqf";
             };
+            class AIHeadlessAdoptionResultServer {
+                file = "MissionScripts\AiScripting\aiHeadlessAdoptionResultServer.sqf";
+            };
+            class AIGetDiagnostics {
+                file = "MissionScripts\AiScripting\aiGetDiagnostics.sqf";
+            };
             class AIApplyProfile {
                 file = "MissionScripts\AiScripting\aiApplyProfile.sqf";
             };
@@ -155,6 +161,7 @@ class CfgFunctions
             class HeadlessRebalance {file = "MissionScripts\Headless\headlessRebalance.sqf";};
             class HeadlessMigrationWorker {file = "MissionScripts\Headless\headlessMigrationWorker.sqf";};
             class HeadlessMigrateGroup {file = "MissionScripts\Headless\headlessMigrateGroup.sqf";};
+            class HeadlessAdoptGroupLocal {file = "MissionScripts\Headless\headlessAdoptGroupLocal.sqf";};
             class HeadlessReassignOnDisconnect {file = "MissionScripts\Headless\headlessReassignOnDisconnect.sqf";};
             class HeadlessGetDiagnostics {file = "MissionScripts\Headless\headlessGetDiagnostics.sqf";};
             class HeadlessPinCrew {file = "MissionScripts\Headless\headlessPinCrew.sqf";};

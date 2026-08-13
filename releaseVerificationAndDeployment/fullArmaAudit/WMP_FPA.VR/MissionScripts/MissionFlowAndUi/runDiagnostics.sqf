@@ -103,6 +103,7 @@ private _consumeFeatureReport = {
     ["interactions", "equipment-diagnostics-api", "Waldo_fnc_MiniGameInteractionGetDiagnostics"],
     ["economy", "economy-diagnostics-api", "Waldo_fnc_EcoCore_getDiagnostics"],
     ["headless", "headless-diagnostics-api", "Waldo_fnc_HeadlessGetDiagnostics"],
+    ["ai", "ai-diagnostics-api", "Waldo_fnc_AIGetDiagnostics"],
     ["medical", "obituary-diagnostics-api", "Waldo_fnc_ObituaryGetDiagnostics"]
 ];
 
@@ -331,6 +332,7 @@ if (count (keys _dropZoneRegistry) == 0) then {
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_MiniGameInteractionGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_HeadlessGetDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_AIGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
 
 private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];
@@ -384,6 +386,16 @@ private _virtualPackages = 0;
 private _recoveryConfigured = !(_recoveryWorkshops isEqualTo []) || {!(_recoveryVehicles isEqualTo [])};
 private _recoveryBroken = !(_recoveryPackages isEqualTo []) && {_recoveryWorkshops isEqualTo []};
 ["logistics", "vehicle-recovery", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryBroken) then {"ERROR"} else {if (_recoveryPackages isEqualTo []) then {"LOADED"} else {"ACTIVE"}}}, format ["workshops=%1 vehicles=%2 carriers=%3 packages=%4 attached=%5 virtual=%6 monitor=%7", count _recoveryWorkshops, count _recoveryVehicles, count _recoveryCarriers, count _recoveryPackages, _attachedPackages, _virtualPackages, missionNamespace getVariable ["Waldo_Recovery_MonitorRunning", false]], _recoveryBroken, if (!_recoveryBroken) then {""} else {"Recovery packages exist but no workshop is registered - call Waldo_fnc_RecoveryRegisterWorkshop (or place the Vehicle Recovery Workshop composition) so recovered vehicles have somewhere to return to."}] call _status;
+private _workshopKeys = _recoveryWorkshops apply {_x getVariable ["Waldo_Recovery_WorkshopKey", ""]};
+private _orphanVehicles = _recoveryVehicles select {
+    private _config = _x getVariable ["Waldo_Recovery_Config", []];
+    count _config < 7 || {!((_config param [0, ""]) in _workshopKeys)}
+};
+private _invalidPackages = _recoveryPackages select {
+    !(_x getVariable ["Waldo_Recovery_Package", false]) || {count (_x getVariable ["Waldo_Recovery_State", []]) < 7}
+};
+private _recoveryIntegrityBroken = !(_orphanVehicles isEqualTo []) || {!(_invalidPackages isEqualTo [])};
+["logistics", "vehicle-recovery-integrity", if (!_recoveryConfigured) then {"UNCONFIGURED"} else {if (_recoveryIntegrityBroken) then {"ERROR"} else {"LOADED"}}, format ["workshopKeys=%1 orphanVehicles=%2 invalidPackages=%3", _workshopKeys, _orphanVehicles apply {netId _x}, _invalidPackages apply {netId _x}], _recoveryIntegrityBroken, if (!_recoveryIntegrityBroken) then {""} else {"A registered vehicle references no active workshop, or a package is missing its recovery state. Re-register the named vehicle with the ZEN Vehicle Recovery module and inspect [WMP RECOVERY] RPT lines."}] call _status;
 
 private _tacticalDisplays = _missionObjects select {_x getVariable ["Waldo_TacticalDisplay_Registered", false]};
 ["interface", "tactical-displays", if (_tacticalDisplays isEqualTo []) then {"UNCONFIGURED"} else {"LOADED"}, format ["registered=%1", count _tacticalDisplays], false] call _status;

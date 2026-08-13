@@ -25,6 +25,8 @@ params [["_actor", objNull, [objNull]], ["_operation", "", [""]], ["_target", ob
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_RecoveryRequestServer", 2]; false};
 if (isNull _actor || {isNull _target} || {!alive _actor}) exitWith {false};
 if (isRemoteExecuted && {remoteExecutedOwner != owner _actor}) exitWith {false};
+missionNamespace setVariable ["Waldo_Recovery_LastRequest", [serverTime, netId _actor, owner _actor, toUpperANSI _operation, netId _target, typeOf _target], true];
+diag_log format ["[WMP RECOVERY] Request actor=%1 actorOwner=%2 operation=%3 target=%4 class=%5 registeredVehicle=%6 registeredCarrier=%7.", netId _actor, owner _actor, toUpperANSI _operation, netId _target, typeOf _target, _target getVariable ["Waldo_Recovery_Registered", false], _target getVariable ["Waldo_Recovery_Carrier", false]];
 private _interactionRange = if (_target getVariable ["Waldo_Recovery_Carrier", false]) then {
     (_target getVariable ["Waldo_Recovery_CarrierRange", 10]) max 3
 } else {

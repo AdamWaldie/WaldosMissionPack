@@ -284,6 +284,27 @@ private _corpseTrapEnabled = missionNamespace getVariable ["Waldo_CorpseTraps_En
 private _corpseTrapInstalled = missionNamespace getVariable ["Waldo_CorpseTrap_Installed", false];
 ["interactions", "corpse-trap-actions", if (!_corpseTrapEnabled) then {"DISABLED"} else {if (!_aceInteractLoaded) then {"UNAVAILABLE"} else {if (_corpseTrapInstalled) then {"LOADED"} else {"ERROR"}}}, format ["enabled=%1 aceInteractMenu=%2 installed=%3", _corpseTrapEnabled, _aceInteractLoaded, _corpseTrapInstalled], if (!_corpseTrapEnabled || {!_aceInteractLoaded} || {_corpseTrapInstalled}) then {""} else {"Waldo_CorpseTraps_Enable is true and ACE Interact Menu is loaded, but the 'Rig Corpse' action failed to install on this client - check the RPT for [WMP CORPSE TRAPS] entries."}] call _add;
 
+private _recoveryVehiclesLocal = _localObjects select {_x getVariable ["Waldo_Recovery_Registered", false]};
+private _recoveryCarriersLocal = _localObjects select {_x getVariable ["Waldo_Recovery_Carrier", false]};
+private _recoveryVehicleActionsMissing = _recoveryVehiclesLocal select {
+    if (_aceInteractLoaded) then {
+        !(_x getVariable ["Waldo_Recovery_VehicleACEActionsInstalled", false])
+            || {_x getVariable ["Waldo_Recovery_VehicleVanillaActionsInstalled", false]}
+    } else {
+        !(_x getVariable ["Waldo_Recovery_VehicleVanillaActionsInstalled", false])
+    }
+};
+private _recoveryCarrierActionsMissing = _recoveryCarriersLocal select {
+    if (_aceInteractLoaded) then {
+        !(_x getVariable ["Waldo_Recovery_CarrierACEActionsInstalled", false])
+            || {_x getVariable ["Waldo_Recovery_CarrierVanillaActionsInstalled", false]}
+    } else {
+        !(_x getVariable ["Waldo_Recovery_CarrierVanillaActionsInstalled", false])
+    }
+};
+private _recoveryActionsBroken = !(_recoveryVehicleActionsMissing isEqualTo []) || {!(_recoveryCarrierActionsMissing isEqualTo [])};
+["logistics", "vehicle-recovery-actions", if ((_recoveryVehiclesLocal + _recoveryCarriersLocal) isEqualTo []) then {"UNCONFIGURED"} else {if (_recoveryActionsBroken) then {"ERROR"} else {"LOADED"}}, format ["vehicles=%1 carriers=%2 expectedMode=%3 missingVehicleActions=%4 missingCarrierActions=%5", count _recoveryVehiclesLocal, count _recoveryCarriersLocal, if (_aceInteractLoaded) then {"ACE"} else {"VANILLA"}, _recoveryVehicleActionsMissing apply {netId _x}, _recoveryCarrierActionsMissing apply {netId _x}], if (!_recoveryActionsBroken) then {""} else {"Recovery registration reached this client but its object interactions did not install. Check [WMP RECOVERY] client RPT lines and re-run the registration module."}] call _add;
+
 private _fieldHospitals = _localObjects select {_x getVariable ["ace_medical_isMedicalFacility", false]};
 if (_fieldHospitals isEqualTo []) then {
     ["logistics", "field-hospital-actions", "UNCONFIGURED", "No field hospital crate is present"] call _add;

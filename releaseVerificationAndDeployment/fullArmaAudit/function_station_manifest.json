@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 920,
+  "registeredFunctionCount": 923,
   "runtimeFunctionCount": 385,
-  "functionCount": 1305,
+  "functionCount": 1308,
   "stations": [
     {
       "id": "control",
@@ -741,6 +741,18 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_AIHeadlessAdoptionResultServer",
+      "file": "MissionScripts/AiScripting/aiHeadlessAdoptionResultServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIGetDiagnostics",
+      "file": "MissionScripts/AiScripting/aiGetDiagnostics.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_AIApplyProfile",
       "file": "MissionScripts/AiScripting/aiApplyProfile.sqf",
       "station": "ai-rebalance",
@@ -821,6 +833,12 @@
     {
       "name": "Waldo_fnc_HeadlessMigrateGroup",
       "file": "MissionScripts/Headless/headlessMigrateGroup.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessAdoptGroupLocal",
+      "file": "MissionScripts/Headless/headlessAdoptGroupLocal.sqf",
       "station": "headless",
       "activation": "manual"
     },

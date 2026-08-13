@@ -12,8 +12,8 @@
  *
  * Arguments: None.
  * Return Value: Boolean - true after local state and presentation are reset.
- * Current callers: HazardInit, HazardStop, the local EntityRespawned handler and HazardTick's
- * player-object generation guard.
+ * Current callers: HazardInit, HazardStop, the local EntityRespawned handler, ACE full-heal/Zeus
+ * heal handling and HazardTick's player-object generation guard.
  *
  * Example:
  * [] call Waldo_fnc_HazardResetLocal;

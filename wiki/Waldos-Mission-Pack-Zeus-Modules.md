@@ -28,7 +28,7 @@ These modules allow users to:
 * Enable, time or lift SafeStart protection during play, even though it starts inactive by default
 * Send a [WMP notification card](Custom-UI-Notifications) to everyone, one side, a named group, or selected players
 
-WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped under **WMP Mission Flow**, **WMP Logistics**, **WMP Combat Systems**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**.
+WMP's Zeus modules require Zeus Enhanced. To keep the palette usable, they are grouped by purpose under **WMP Mission Flow**, **WMP Logistics**, **WMP Transport**, **WMP AI & Combat**, **WMP Electronic Warfare**, **WMP Environment**, **WMP Air Operations**, **WMP Mission Tools**, and **WMP Interface & QA**. Economy modules are grouped under **WMP Economy Systems**.
 
 Use them to:
 
@@ -61,7 +61,7 @@ This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup),
 
 ## AI Convoy Module
 
-Under **WMP Combat Systems**, **AI: Create Moving Convoy** turns the nearest crewed AI land-vehicle group within 150 m of the module into a managed convoy. Place the module on or near the lead vehicle. The dialog sets max speed, target separation and whether the convoy pushes through contact (keeps moving and only returns fire on the move) instead of stopping to engage. It calls the same [AI Convoy System](AI-Convoy-System) behaviour (`Waldo_fnc_SimpleAiConvoy`) available to scripts, dispatched to whichever machine currently owns the selected group. See [AI Convoy System](AI-Convoy-System) for the full parameter reference and the manual-stop script pattern.
+Under **WMP AI & Combat**, **Convoy - Create Moving Group** turns the nearest crewed AI land-vehicle group within 150 m of the module into a managed convoy. Place the module on or near the lead vehicle. The dialog sets max speed, target separation and whether the convoy pushes through contact (keeps moving and only returns fire on the move) instead of stopping to engage. It calls the same [AI Convoy System](AI-Convoy-System) behaviour (`Waldo_fnc_SimpleAiConvoy`) available to scripts, dispatched to whichever machine currently owns the selected group. See [AI Convoy System](AI-Convoy-System) for the full parameter reference and the manual-stop script pattern.
 
 ## ENDEX Module
 
@@ -122,7 +122,7 @@ Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Tracke
 
 ## Dynamic AO Modules
 
-Under **WMP Combat Systems**, **Dynamic AO - Create** uses one live friendly-name faction/side selector and exposes independent patrol, garrison, static, weighted vehicle/air, civilian, minefield, roadblock, pathing and marker controls. The entered AO name is retained as the centre-marker and removal-list name while a safe internal ID is generated separately. Patrol routes preserve Arma's waypoint-zero state and explicitly activate their first movement waypoint on dedicated authority. **Dynamic AO - Remove** lists active AOs and preselects the nearest one. Deleting the hidden AO centre anchor invokes the same complete cleanup; minefield anchors remove only their own field. See [Dynamic AO Generation](Dynamic-AO-Generation).
+Under **WMP AI & Combat**, **Dynamic AO - Create** uses one live friendly-name faction/side selector and exposes independent patrol, garrison, static, weighted vehicle/air, civilian, minefield, roadblock, pathing and marker controls. The entered AO name is retained as the centre-marker and removal-list name while a safe internal ID is generated separately. Patrol routes preserve Arma's waypoint-zero state and explicitly activate their first movement waypoint on dedicated authority. **Dynamic AO - Remove** lists active AOs and preselects the nearest one. Deleting the hidden AO centre anchor invokes the same complete cleanup; minefield anchors remove only their own field. See [Dynamic AO Generation](Dynamic-AO-Generation).
 
 ## Scale Object Module
 

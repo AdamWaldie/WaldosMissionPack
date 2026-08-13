@@ -14,7 +14,10 @@ This follows ACRE2's public [Vehicle Racks framework](https://acre2.idi-systems.
 
 ## Recommended: central profile plus one short vehicle call
 
-Edit `MissionConfig\acreConfig.sqf` and find `rackProfiles`. WMP ships three explained examples.
+Edit `MissionConfig\acreConfig.sqf` and find `rackProfiles`. WMP ships three ready-to-use profiles
+plus commented, copyable examples for every supported selector, hardware action, rack/radio pair and
+access pattern. The commented examples are deliberately inert: enabling ACRE does not add, empty or
+remove a rack until an object calls a profile containing that row.
 Then paste this in the vehicle or object's Eden **Init** field:
 
 ```sqf
@@ -153,6 +156,18 @@ An assignment row is:
 | `"ACRE_VRC110"` | Every VRC-110 on the object. |
 | `["ACRE_VRC110", 1]` | First VRC-110, regardless of unrelated rack order. Recommended. |
 
+The four selectors can use each tuning form below. Hardware changes require one explicit rack (a
+number or `[class, occurrence]`) so a beginner cannot accidentally empty every rack on a vehicle.
+
+| Tuning/action value | Result |
+|---|---|
+| `"AIRGND"` | Resolve the named net through `netSide`, validate the radio family, then tune it. Recommended. |
+| `6` | Tune a numbered-channel radio directly to channel 6. This does not create a reusable name. |
+| `-1` | Leave tuning unchanged; use this with `UNMOUNT_RADIO` or `REMOVE_RACK`. |
+| `"ACRE_PRC152"` as field 3 | Mount or replace the selected removable rack's radio, then apply field 2. |
+| `"UNMOUNT_RADIO"` as field 3 | Remove the radio but retain the physical removable rack. |
+| `"REMOVE_RACK"` as field 3 | Remove the complete removable rack. |
+
 Examples:
 
 ```sqf
@@ -169,6 +184,23 @@ Examples:
 Replacing an occupied radio is an ordered operation: WMP asks ACRE to unmount it, waits for a
 synchronized empty rack, mounts the compatible replacement, waits for its unique ID, then tunes and
 reads the channel back. Fixed racks are tunable but cannot be emptied, replaced or removed.
+
+## Complete combination checklist
+
+The central `acreConfig.sqf` comments include copyable rows for all supported combinations:
+
+- all five built-in pairs: VRC-64/PRC-77, VRC-103/PRC-117F, VRC-110/PRC-152,
+  VRC-111/PRC-148 and SEM90/SEM70;
+- an existing mounted radio, a newly-added pre-mounted rack and a newly-added empty rack;
+- inside-only, external-only and combined inside/external access;
+- all-racks, numeric-position, rack-class and class-plus-occurrence selectors;
+- named-net and direct numbered-channel tuning, plus “leave tuning unchanged”;
+- mount/replace, unmount-radio and remove-complete-rack actions;
+- a reusable central profile, a fully-inline call and a central profile with one inline override.
+
+PRC-77 and SEM70 are the exception to “direct channel”: they use frequency/mode presets. Select an
+existing tested ACRE preset in the profile before rack initialisation. WMP intentionally rejects a
+decimal frequency assignment rather than claiming it configured a radio that ACRE cannot read back.
 
 ## Dedicated-server lifecycle
 

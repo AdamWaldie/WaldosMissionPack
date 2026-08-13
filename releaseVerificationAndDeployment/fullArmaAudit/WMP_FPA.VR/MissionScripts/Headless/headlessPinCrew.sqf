@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Pins a crewed vehicle server-side against automatic headless-client migration. For real-time,
+ * Pins a crewed vehicle server-side against automatic headless-client migration. The vehicle and
+ * crew group receive the common Waldo_ServerOwnedFeature classification, and a crew group already
+ * moved by an external HC system is immediately returned to owner 2. For real-time,
  * behaviour-sensitive WMP systems (Airborne Gunship, Paradrop flight routes, Dynamic AA, AI convoys)
  * an external headless rebalance racing WMP's own in-progress setup script - or simply moving a group
  * WMP expects to keep driving every frame - can corrupt that system's state. Confirmed live: ACE's
@@ -38,6 +40,11 @@
  * Return Value:
  * Boolean - true when the vehicle was pinned (false on an invalid/null vehicle, or off-server).
  *
+ * Return-to-server and repeat/JIP behaviour:
+ * Repeating the call is safe. Public classification flags make later WMP and ACE rebalance passes
+ * exclude the group. A current HC-owned crew is returned through Waldo_fnc_HeadlessMigrateGroup;
+ * this is authoritative live state and is not independently replayed for JIP clients.
+ *
  * Example:
  * [_aircraft] call Waldo_fnc_HeadlessPinCrew;
  * Result: _aircraft and every current crew group are excluded from both WMP's native headless
@@ -51,8 +58,20 @@ params [["_vehicle", objNull, [objNull]]];
 if !(isServer) exitWith {false};
 if (isNull _vehicle) exitWith {false};
 
+_vehicle setVariable ["Waldo_ServerOwnedFeature", true, true];
 _vehicle setVariable ["acex_headless_blacklist", true, true];
 private _groups = [];
 {_groups pushBackUnique group _x} forEach (crew _vehicle);
-{_x setVariable ["Waldo_Headless_ExcludeGroup", true, true]} forEach _groups;
+{
+    _x setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _x setVariable ["Waldo_Headless_ExcludeGroup", true, true];
+    _x setVariable ["acex_headless_blacklist", true, true];
+    {_x setVariable ["acex_headless_blacklist", true, true]} forEach units _x;
+    if (groupOwner _x != 2) then {[_x, 2] call Waldo_fnc_HeadlessMigrateGroup};
+} forEach _groups;
+if (!isNil "ace_headless_fnc_blacklist") then {
+    // Use ACE's public API as well as its documented variable. Owner 2 makes the server-only intent
+    // explicit if ACE already moved the group before WMP registration completed.
+    [[_vehicle] + _groups, true, 2, 0] call ace_headless_fnc_blacklist;
+};
 true

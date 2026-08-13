@@ -477,6 +477,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('addMissionEventHandler ["EntityRespawned"', hazard_init)
         self.assertIn('Waldo_Hazard_LocalPlayerObject', hazard_tick)
         self.assertIn('call Waldo_fnc_HazardResetLocal', hazard_tick)
+        self.assertIn('ace_medical_treatment_fullHealLocalMod', hazard_init)
         self.assertIn('["Waldo_Hazard_LocalExposure", createHashMap]', hazard_reset)
         self.assertIn('["Waldo_Hazard_LocalDamageStages", createHashMap]', hazard_reset)
         self.assertIn('has no measurable exposure', hazard_read)
@@ -707,6 +708,17 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('BIS_fnc_showNotification', mhq)
         self.assertNotIn('allPlayers select {side group _x == side group _actor}', mhq)
         self.assertEqual(3, mhq.count('remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor]'))
+
+    def test_full_audit_enables_headless_support_and_debug(self):
+        audit_preinit = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "auditPreInit.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Headless_Enable", true]', audit_preinit)
+        self.assertIn('["Waldo_Headless_Debug", true]', audit_preinit)
 
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
@@ -942,7 +954,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["LIST", ["Spawned emitter object"', jammer)
         self.assertIn('_sourceValues param [_sourceIndex, "SPAWN"]', jammer)
 
-    def test_acre_ceoi_handles_explicit_and_missing_343_assignments(self):
+    def test_acre_ceoi_omits_squad_section_when_no_343_is_assigned(self):
         compile_plan = (
             ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2CompilePlan.sqf"
         ).read_text(encoding="utf-8")
@@ -954,7 +966,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('private _matches = _allocationSource regexFind ["[0-9]+"]', compile_plan)
         self.assertNotIn('private _matches = _groupKey regexFind ["[0-9]+"]', compile_plan)
         self.assertIn("count _assignment >= 2", ceoi)
-        self.assertIn("no PRC-343 assignment", ceoi)
+        self.assertIn("private _squadAssignments = [];", ceoi)
+        self.assertIn("if !(_squadAssignments isEqualTo []) then", ceoi)
+        self.assertNotIn("no PRC-343 assignment", ceoi)
         self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)
         self.assertIn("player removeDiaryRecord", ceoi)
         self.assertNotIn("Carried Radio Verification", ceoi)
@@ -1496,10 +1510,68 @@ class FullAuditTests(unittest.TestCase):
         self.assertFalse((rack_root / "acre2RackClientAction.sqf").exists())
         self.assertFalse((rack_root / "acre2RackClientActionResult.sqf").exists())
 
+    def test_headless_registration_ai_adoption_and_wmp_server_ownership_are_explicit(self):
+        headless = ROOT / "MissionScripts" / "Headless"
+        register = (headless / "headlessRegisterClient.sqf").read_text(encoding="utf-8")
+        migrate = (headless / "headlessMigrateGroup.sqf").read_text(encoding="utf-8")
+        adopt = (headless / "headlessAdoptGroupLocal.sqf").read_text(encoding="utf-8")
+        rebalance = (headless / "headlessRebalance.sqf").read_text(encoding="utf-8")
+        pin = (headless / "headlessPinCrew.sqf").read_text(encoding="utf-8")
+        dynamic_ao = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAO" / "dynamicAOCreate.sqf").read_text(encoding="utf-8")
+        dynamic_aa_fighters = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASpawnFighters.sqf").read_text(encoding="utf-8")
+        ai_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")
+        ai_ack = (ROOT / "MissionScripts" / "AiScripting" / "aiHeadlessAdoptionResultServer.sqf").read_text(encoding="utf-8")
+        ai_diagnostics = (ROOT / "MissionScripts" / "AiScripting" / "aiGetDiagnostics.sqf").read_text(encoding="utf-8")
+        transport = (ROOT / "MissionScripts" / "Logistics" / "TransportServices" / "transportRegister.sqf").read_text(encoding="utf-8")
+        paradrop = (ROOT / "MissionScripts" / "Paradrop" / "paradropCreateDropZone.sqf").read_text(encoding="utf-8")
+
+        self.assertIn('entities "HeadlessClient_F"', register)
+        self.assertNotIn('allPlayers findIf {owner _x == _owner}', register)
+        self.assertIn('Waldo_fnc_HeadlessAdoptGroupLocal", _finalOwner', migrate)
+        self.assertIn('waitUntil {', adopt)
+        self.assertIn('local _group', adopt)
+        self.assertIn('call Waldo_fnc_AIApplyProfile', adopt)
+        self.assertIn('Waldo_Headless_LastAdoption', adopt)
+        self.assertIn('Waldo_ServerOwnedFeature', rebalance)
+        self.assertIn('Waldo_ServerOwnedFeature', migrate)
+        self.assertIn('Waldo_ServerOwnedFeature', pin)
+        self.assertIn('[_groups + _aoVehicles, false, -1, 1] call ace_headless_fnc_blacklist', dynamic_ao)
+        self.assertIn('_x setVariable ["Waldo_ServerOwnedFeature", false, true]', dynamic_ao)
+        self.assertNotIn('[_vehicle] call Waldo_fnc_HeadlessPinCrew', dynamic_ao)
+        self.assertIn('[_fighter] call Waldo_fnc_HeadlessPinCrew', dynamic_aa_fighters)
+        self.assertIn('"ace_headless_groupTransferPost"', ai_init)
+        self.assertIn('Waldo_fnc_AIHeadlessAdoptionResultServer', ai_init)
+        self.assertIn('_sender != _newOwner', ai_ack)
+        self.assertIn('owner _headlessEntity != _newOwner', ai_ack)
+        self.assertIn('groupOwner _group != _newOwner', ai_ack)
+        self.assertIn('Waldo_AI_HeadlessAdoptionResults', ai_ack)
+        self.assertIn('Waldo_Headless_ExternalScheduler', register)
+        self.assertIn('CfgPatches" >> "ace_headless', register)
+        detect = (headless / "headlessDetectLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExecCall ["Waldo_fnc_HeadlessRegisterClient", 2]', detect)
+        self.assertIn('_attempt < 15', detect)
+        self.assertIn('entities "HeadlessClient_F"', ai_diagnostics)
+        self.assertIn('Waldo_AI_LastHeadlessAdoption', ai_diagnostics)
+        self.assertIn('ai-headless-adoption', ai_diagnostics)
+        self.assertIn('call Waldo_fnc_HeadlessPinCrew', transport)
+        self.assertIn('Waldo_ServerOwnedFeature', paradrop)
+
     def test_acre_rack_profiles_are_beginner_facing_and_validated(self):
         config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
         validate = (ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2ValidateConfig.sqf").read_text(encoding="utf-8")
         self.assertIn('["rackProfiles", [', config)
+        for rack_class, radio_class in (
+            ("ACRE_VRC64", "ACRE_PRC77"),
+            ("ACRE_VRC103", "ACRE_PRC117F"),
+            ("ACRE_VRC110", "ACRE_PRC152"),
+            ("ACRE_VRC111", "ACRE_PRC148"),
+            ("ACRE_SEM90", "ACRE_SEM70"),
+        ):
+            self.assertIn(f'"{rack_class}"', config)
+            self.assertIn(f'"{radio_class}"', config)
+        self.assertIn('"UNMOUNT_RADIO"', config)
+        self.assertIn('"REMOVE_RACK"', config)
+        self.assertIn('["inside", "external"]', config)
         self.assertIn('"EXISTING_RACKS_COY"', config)
         self.assertIn('"COMMAND_VEHICLE"', config)
         self.assertIn('"EXTERNAL_RADIO_POINT"', config)
@@ -1509,6 +1581,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Vehicle rack profile %1/%2 cannot mount %3; use %4', validate)
         self.assertIn('shortName must contain 1-4 characters', validate)
         self.assertIn('cannot use selector ALL for radio/rack hardware action', validate)
+        self.assertLess(config.index('["sides", ['), config.index('["rackProfiles", ['))
         generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
         audit_server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
         audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
@@ -1516,6 +1589,19 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('[_acreRackVehicle, "COMMAND_VEHICLE"] call Waldo_fnc_ACRE2RackSetup', audit_server)
         self.assertIn('Waldo_QA_ACRERackStatus', audit_client)
         self.assertIn('Waldo_QA_ACRERackApply', audit_client)
+
+    def test_aar_vehicle_losses_use_stable_operational_side(self):
+        source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "aarTrack.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_AAR_OperationalSide', source)
+        self.assertIn('Waldo_AAR_CacheVehicleSide', source)
+        self.assertIn('[east, west, independent, civilian]', source)
+        self.assertNotIn('_sides find (side _killed)', source)
+
+    def test_grouped_helicopters_release_wmp_exact_landing_control(self):
+        source = (ROOT / "MissionScripts" / "AiScripting" / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('count _groupHelicopters != 1', source)
+        self.assertIn('call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal', source)
+        self.assertIn('count _groupHelicopters == 1', source)
 
     def test_paradrop_live_marker_reconciler_does_not_depend_on_remote_call_order(self):
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")

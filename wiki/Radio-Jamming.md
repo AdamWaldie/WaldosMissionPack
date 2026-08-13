@@ -151,13 +151,13 @@ A destructible jammer can drive an EW objective without a separate trigger:
 
 ## Zeus usage
 
-Three modules live under **Modules > WMP Combat Systems** (Zeus Enhanced required):
+Three modules live under **Modules > WMP Electronic Warfare** (Zeus Enhanced required):
 
 | Module | Action |
 |---|---|
-| **Jammer: Place New Emitter** | Opens a dialog for radio behaviour, emitter type, and an optional field-disable procedure. Zeus exposes only enable, procedure and difficulty. Engineer-only, disable-not-destroy and bypass prevention are semantic defaults; advanced overrides remain available through the script API. |
-| **Jammer: Toggle Nearest Emitter** | Switches the nearest registered jammer on or off. |
-| **Jammer: Delete Nearest Emitter** | Removes the nearest registered jammer and deletes its emitter object. |
+| **Jammer - Place Emitter** | Opens a dialog for radio behaviour, emitter type, and an optional field-disable procedure. Zeus exposes only enable, procedure and difficulty. Engineer-only, disable-not-destroy and bypass prevention are semantic defaults; advanced overrides remain available through the script API. |
+| **Jammer - Toggle Nearest** | Switches the nearest registered jammer on or off. |
+| **Jammer - Delete Nearest** | Removes the nearest registered jammer and deletes its emitter object. |
 
 When the module is placed on empty ground, the selected displayed emitter class is sent directly to the server and that exact object is spawned, simulation-enabled, added to every curator, and transferred to the requesting curator for smooth movement. Place the module directly on any existing object to expose **Use object under module** instead: that object becomes the emitter without changing its class, transform, damage, cargo, or simulation state. This supports mission and mod objects without asking Zeus for a raw classname. In both modes the field and interactions remain attached to the live object after it is moved. The dialog also selects whether field disablement is public or engineer-only and whether success disables the field or destroys the prop. Enable **Show Curator 3D Marker** for only that emitter. `Waldo_Jamming_GmOverlay = true` remains the global mission-maker override that displays every registered jammer.
 

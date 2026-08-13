@@ -512,18 +512,16 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('["staticPositions",', source)
         self.assertNotIn('["mobilePositions",', source)
 
-    def test_field_resupply_has_logical_cargo_grouped_ace_controls_and_blue_information(self):
+    def test_field_resupply_has_real_cargo_grouped_ace_controls_and_blue_information(self):
         root = ROOT / "MissionScripts" / "Logistics" / "FieldResupply"
         server = (root / "fieldResupplyServerHandle.sqf").read_text(encoding="utf-8")
         carrier = (root / "fieldResupplyInit.sqf").read_text(encoding="utf-8")
         crate = (root / "fieldResupplySetupCrateLocal.sqf").read_text(encoding="utf-8")
         hub = (root / "fieldResupplySetupHubLocal.sqf").read_text(encoding="utf-8")
-        self.assertNotIn("addMagazineCargoGlobal", server)
-        self.assertNotIn("getMagazineCargo _crate", server)
-        self.assertIn("clearMagazineCargoGlobal _crate", server)
-        self.assertIn("magazinesAmmoFull _sourceUnit", server)
-        self.assertIn("Waldo_FieldResupply_UseCapacityBasedAmounts", server)
-        self.assertIn("Waldo_FieldResupply_InitialCharges", server)
+        self.assertIn("getMagazineCargo _crate", server)
+        self.assertIn("Waldo_FieldResupply_CargoSnapshot", server)
+        self.assertIn("Waldo_fnc_SupplyCratePopulate", server)
+        self.assertNotIn('case "TAKE"', server)
         self.assertIn("ACE_SelfActions", carrier)
         self.assertIn("Waldo_FieldResupply_InspectCarrier", carrier)
         self.assertIn("Waldo_FieldResupply_Deploy", carrier)
@@ -1112,8 +1110,8 @@ class PrReviewAuditTests(unittest.TestCase):
         ):
             self.assertIn(control, zen)
         for category in (
-            "WMP Mission Flow", "WMP Logistics", "WMP Combat Systems", "WMP Air Operations",
-            "WMP Mission Tools", "WMP Interface & QA",
+            "WMP Mission Flow", "WMP Logistics", "WMP AI & Combat", "WMP Electronic Warfare",
+            "WMP Environment", "WMP Air Operations", "WMP Mission Tools", "WMP Interface & QA",
         ):
             self.assertIn(category, modules)
         self.assertNotIn("Generate in editor", create + zen)
