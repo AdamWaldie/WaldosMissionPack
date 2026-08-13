@@ -1579,6 +1579,35 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('call Waldo_fnc_HeadlessPinCrew', transport)
         self.assertIn('Waldo_ServerOwnedFeature', paradrop)
 
+    def test_headless_debug_and_hazard_release_defaults_remain_disabled(self):
+        headless = (ROOT / "MissionConfig" / "headlessConfig.sqf").read_text(encoding="utf-8")
+        environment = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
+        staged_headless = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "MissionConfig"
+            / "headlessConfig.sqf"
+        ).read_text(encoding="utf-8")
+        staged_environment = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "MissionConfig"
+            / "environmentConfig.sqf"
+        ).read_text(encoding="utf-8")
+
+        for source in (headless, staged_headless):
+            self.assertIn('["Waldo_Headless_Enable", false]', source)
+            self.assertIn('["Waldo_Headless_Debug", false]', source)
+            self.assertNotIn('["Waldo_Headless_Enable", true]', source)
+            self.assertNotIn('["Waldo_Headless_Debug", true]', source)
+        for source in (environment, staged_environment):
+            self.assertIn('["Waldo_Hazard_Enable", false]', source)
+            self.assertNotIn('["Waldo_Hazard_Enable", true]', source)
+
     def test_acre_rack_profiles_are_beginner_facing_and_validated(self):
         config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
         validate = (ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2ValidateConfig.sqf").read_text(encoding="utf-8")
