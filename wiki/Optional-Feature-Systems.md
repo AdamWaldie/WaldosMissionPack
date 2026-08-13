@@ -170,6 +170,11 @@ audio timers. If the respawn point is still inside a live zone, exposure starts 
 the replacement unit and then accumulates normally. A synchronous player-object check backs up the
 respawn event handler, so this rule does not depend on multiplayer event ordering.
 
+ACE full healing also clears the complete local hazard state. This includes the Zeus **Heal** action:
+ACE raises its local full-heal event on the patient machine, and WMP clears dose, damage stage,
+attribution, transition state, audio timers and the live panel there. The player may immediately
+begin accumulating a new dose if they remain inside an active zone.
+
 ```sqf
 private _profile = (missionNamespace getVariable ["Waldo_Hazard_Presets", createHashMap])
     getOrDefault ["MODERATE_RADIATION", createHashMap];

@@ -477,6 +477,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('addMissionEventHandler ["EntityRespawned"', hazard_init)
         self.assertIn('Waldo_Hazard_LocalPlayerObject', hazard_tick)
         self.assertIn('call Waldo_fnc_HazardResetLocal', hazard_tick)
+        self.assertIn('ace_medical_treatment_fullHealLocalMod', hazard_init)
         self.assertIn('["Waldo_Hazard_LocalExposure", createHashMap]', hazard_reset)
         self.assertIn('["Waldo_Hazard_LocalDamageStages", createHashMap]', hazard_reset)
         self.assertIn('has no measurable exposure', hazard_read)
@@ -1540,9 +1541,15 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('[_fighter] call Waldo_fnc_HeadlessPinCrew', dynamic_aa_fighters)
         self.assertIn('"ace_headless_groupTransferPost"', ai_init)
         self.assertIn('Waldo_fnc_AIHeadlessAdoptionResultServer', ai_init)
-        self.assertIn('remoteExecutedOwner != _newOwner', ai_ack)
+        self.assertIn('_sender != _newOwner', ai_ack)
+        self.assertIn('owner _headlessEntity != _newOwner', ai_ack)
         self.assertIn('groupOwner _group != _newOwner', ai_ack)
         self.assertIn('Waldo_AI_HeadlessAdoptionResults', ai_ack)
+        self.assertIn('Waldo_Headless_ExternalScheduler', register)
+        self.assertIn('CfgPatches" >> "ace_headless', register)
+        detect = (headless / "headlessDetectLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExecCall ["Waldo_fnc_HeadlessRegisterClient", 2]', detect)
+        self.assertIn('_attempt < 15', detect)
         self.assertIn('entities "HeadlessClient_F"', ai_diagnostics)
         self.assertIn('Waldo_AI_LastHeadlessAdoption', ai_diagnostics)
         self.assertIn('ai-headless-adoption', ai_diagnostics)
@@ -1574,6 +1581,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Vehicle rack profile %1/%2 cannot mount %3; use %4', validate)
         self.assertIn('shortName must contain 1-4 characters', validate)
         self.assertIn('cannot use selector ALL for radio/rack hardware action', validate)
+        self.assertLess(config.index('["sides", ['), config.index('["rackProfiles", ['))
         generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
         audit_server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeServer.sqf").read_text(encoding="utf-8")
         audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "featureRangeClient.sqf").read_text(encoding="utf-8")
@@ -1581,6 +1589,19 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('[_acreRackVehicle, "COMMAND_VEHICLE"] call Waldo_fnc_ACRE2RackSetup', audit_server)
         self.assertIn('Waldo_QA_ACRERackStatus', audit_client)
         self.assertIn('Waldo_QA_ACRERackApply', audit_client)
+
+    def test_aar_vehicle_losses_use_stable_operational_side(self):
+        source = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "aarTrack.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_AAR_OperationalSide', source)
+        self.assertIn('Waldo_AAR_CacheVehicleSide', source)
+        self.assertIn('[east, west, independent, civilian]', source)
+        self.assertNotIn('_sides find (side _killed)', source)
+
+    def test_grouped_helicopters_release_wmp_exact_landing_control(self):
+        source = (ROOT / "MissionScripts" / "AiScripting" / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('count _groupHelicopters != 1', source)
+        self.assertIn('call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal', source)
+        self.assertIn('count _groupHelicopters == 1', source)
 
     def test_paradrop_live_marker_reconciler_does_not_depend_on_remote_call_order(self):
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")

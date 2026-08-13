@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Builds the local CEOI from the authoritative communications plan and the most recent verified
- * local application. It highlights only assignments matching a carried radio's current read-back.
+ * local application. It highlights the player's authored group assignments during the pre-mission
+ * briefing, then also recognises assignments matching a carried radio's current read-back.
  * Nets sharing one channel are shown once as a channel number instead of repeating every radio class.
  * The squad-radio section is omitted when no group on the player's side has a valid PRC-343
  * block/channel assignment, avoiding an empty list of "not assigned" placeholders.
@@ -36,6 +37,15 @@ private _nets = _sidePlan select 2;
 private _groups = _sidePlan select 3;
 private _groupKey = toUpperANSI ((((groupId group player) splitString ' -_.') joinString ''));
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
+private _assignedNetKeys = [];
+if (_groupIndex >= 0) then {
+    {
+        private _target = _x param [2, ""];
+        if (_target isEqualType "" && {_target != ""}) then {
+            _assignedNetKeys pushBackUnique (toUpperANSI _target);
+        };
+    } forEach ((_groups select _groupIndex) select 1);
+};
 private _radios = if (isNil 'acre_api_fnc_getCurrentRadioList') then {[]} else {[] call Waldo_fnc_ACRE2GetOrderedRadios};
 private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;
 private _current = createHashMap;
@@ -97,8 +107,11 @@ _text = _text + "<font size='14'>Radio Nets</font><br/>";
     private _setting = _x select 3;
     private _detail = if (toUpper _family == 'LEGACY_VHF') then {([_setting] call _displaySetting) + ' MHz'} else {'Ch. ' + ([_setting] call _displaySetting)};
     private _line = format ['%1 - %2', _x select 1, _detail];
-    if ([_family, _setting] call _netIsCurrent) then {
-        _line = format ["<font color='#47ff47'>[CURRENT] %1</font>", _line];
+    if (toUpperANSI (_x select 0) in _assignedNetKeys || {[_family, _setting] call _netIsCurrent}) then {
+        // Green means this net is part of the player's authored group plan, or is confirmed by
+        // live radio read-back after mission start. Keeping the label unchanged makes the briefing
+        // compact while still making long-range assignments visible before unique radios exist.
+        _line = format ["<font color='#47ff47'>%1</font>", _line];
     };
     _text = _text + _line + '<br/>';
 } forEach _nets;

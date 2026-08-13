@@ -8,7 +8,7 @@ Dynamic AO is a runtime-only, server-authoritative generator. It does not requir
 
 ## Zeus workflow
 
-Open **Modules → WMP Combat Systems → Dynamic AO - Create** and place it at the intended centre. The dialog uses a live **enemy faction and side** selector. Entries are friendly names such as `[OPFOR] CSAT`; no config classname or separate side selection is required, so the two values cannot contradict each other.
+Open **Modules → WMP AI & Combat → Dynamic AO - Create** and place it at the intended centre. The dialog uses a live **enemy faction and side** selector. Entries are friendly names such as `[OPFOR] CSAT`; no config classname or separate side selection is required, so the two values cannot contradict each other.
 
 Vehicle and air percentages are relative weights. They do not need to total 100. Empty categories automatically fall through to a non-empty category belonging to the selected faction. Generated units use WMP's active AI profile (Line by default), including its faction, role, night-equipment and locality handling; Dynamic AO does not maintain a competing skill slider. Ground patrols begin in SAFE behaviour at LIMITED speed so they walk or drive as an ambient patrol until contact changes their state. Infantry select column, staggered column or wedge once per route; aircraft retain AWARE/NORMAL flight behaviour. The create module exposes every bounded AO option listed below.
 

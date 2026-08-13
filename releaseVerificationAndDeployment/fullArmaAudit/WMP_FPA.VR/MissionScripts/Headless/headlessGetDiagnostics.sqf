@@ -28,6 +28,7 @@ private _excluded = missionNamespace getVariable ["Waldo_Headless_ExcludedGroups
 private _failed = missionNamespace getVariable ["Waldo_Headless_FailedTransfers", []];
 private _queue = missionNamespace getVariable ["Waldo_Headless_MigrationQueue", []];
 private _workerActive = missionNamespace getVariable ["Waldo_Headless_MigrationWorkerActive", false];
+private _externalScheduler = missionNamespace getVariable ["Waldo_Headless_ExternalScheduler", false];
 private _clientOwnerIds = _clients apply {_x select 0};
 
 private _assigned = _managed select {(_x select 1) isEqualType 0 && {(_x select 1) in _clientOwnerIds}};
@@ -47,6 +48,7 @@ private _consistencyDetail = format ["mismatched=%1 orphaned=%2", count _mismatc
 if (count _mismatched > 0 || {count _orphaned > 0}) then {_consistencyDetail = [_consistencyDetail, "The headless registry and actual group ownership have drifted apart - this should self-correct on the next rebalance pass; if it persists, check the RPT for [WMP HEADLESS] errors from Waldo_fnc_HeadlessMigrateGroup."] call Waldo_fnc_DiagnosticFoldHint;};
 private _checks = [
     ["headless", "headless-clients", if (count _clients > 0) then {"ACTIVE"} else {"UNCONFIGURED"}, format ["connected=%1", count _clients]],
+    ["headless", "headless-distribution-owner", "LOADED", if (_externalScheduler) then {"ACE Headless is the sole automatic group distributor; WMP applies AI settings after ACE handoff"} else {"WMP is the automatic group distributor"}],
     ["headless", "headless-managed-groups", if (count _assigned > 0) then {"ACTIVE"} else {"LOADED"}, format ["assigned=%1", count _assigned]],
     ["headless", "headless-excluded-groups", "LOADED", format ["excluded=%1 (reasons in Waldo_Headless_ExcludedGroups / RPT)", count _excluded]],
     ["headless", "headless-wmp-server-owned", "LOADED", format ["pinnedGroups=%1; WMP state-machine assets never migrate", count _serverOwned]],

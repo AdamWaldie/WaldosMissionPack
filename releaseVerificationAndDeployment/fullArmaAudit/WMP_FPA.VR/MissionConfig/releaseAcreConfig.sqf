@@ -164,7 +164,7 @@ createHashMapFromArray [
     // RESULT: [] means unknown/third-party radios remain untouched.
     ["additionalRadioProfiles", []],
 
-    // SETTING: rackProfiles (OPTIONAL VEHICLE/OBJECT RADIO RACK SETUP)
+    // REFERENCE FOR rackProfiles (THE ACTUAL SETTING IS AFTER `sides` BELOW)
     // WHAT IT CHANGES: defines reusable named starting setups for ACRE racks. Nothing happens merely
     // because a profile exists here: place its call in the target vehicle/object's Eden Init field.
     // SIMPLE CALL: [this, "EXISTING_RACKS_COY"] call Waldo_fnc_ACRE2RackSetup;
@@ -181,7 +181,7 @@ createHashMapFromArray [
     //   key only when exactly one compatible side defines it. Set this explicitly on ambiguous props.
     // - addRacks: optional physical rack definitions. Each is [rack class, named rack settings].
     // - assignments: optional tuning/replacement jobs after racks exist and synchronize. The target
-    //   should normally be a net key from the sides section above, e.g. "PLT1" or "AIRGND". WMP
+    //   should normally be a net key from the sides section below, e.g. "PLT1" or "AIRGND". WMP
     //   checks that the mounted radio belongs to that net's radio family, then uses its one value.
     //
     // addRacks named settings:
@@ -237,60 +237,6 @@ createHashMapFromArray [
     // Use ["access", ["external"]] for a radio table, ["inside", "external"] for both, or
     // ["mountedRadio", ""] for an initially empty rack. PRC-77/SEM70 frequency programming must
     // come from a tested ACRE preset; it is not a numbered-channel assignment.
-    ["rackProfiles", [
-        [
-            "EXISTING_RACKS_COY",
-            [
-                ["preset", ""], // Blank safely reuses WEST's configured default3 preset.
-                ["netSide", "WEST"],
-                ["addRacks", []],
-                ["assignments", [["ALL", "COY"]]] // Reuse WEST COY (PRC_LR channel 5).
-            ]
-        ],
-        [
-            "COMMAND_VEHICLE",
-            [
-                ["preset", "default3"], // Existing ACRE preset, applied before initialization.
-                ["netSide", "WEST"],
-                ["addRacks", [
-                    [
-                        "ACRE_VRC110", // AN/VRC-110 hardware; accepts an ACRE_PRC152.
-                        [
-                            ["count", 1],
-                            ["displayName", "Command Radio"],
-                            ["shortName", "CMD"],
-                            ["removable", true],
-                            ["access", ["inside"]],
-                            ["disabled", []],
-                            ["mountedRadio", "ACRE_PRC152"],
-                            ["components", []],
-                            ["intercoms", []]
-                        ]
-                    ]
-                ]],
-                ["assignments", [
-                    // Mounts the radio when the vehicle already has an empty VRC-110.
-                    [["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"] // WEST AIRGND, PRC_LR channel 6.
-                ]]
-            ]
-        ],
-        [
-            "EXTERNAL_RADIO_POINT",
-            [
-                ["preset", "default3"],
-                ["netSide", "WEST"],
-                ["addRacks", [
-                    ["ACRE_VRC103", [
-                        ["count", 1], ["displayName", "Radio Point"], ["shortName", "RDO"],
-                        ["removable", false], ["access", ["external"]], ["disabled", []],
-                        ["mountedRadio", "ACRE_PRC117F"], ["components", []], ["intercoms", []]
-                    ]]
-                ]],
-                ["assignments", [[["ACRE_VRC103", 1], "PLT1", "ACRE_PRC117F"]]]
-            ]
-        ]
-    ]],
-
     // SETTING: radioOverrides (OPTIONAL PLAYER/ROLE EXCEPTIONS)
     // WHAT IT CHANGES: gives one side-specific UID, Eden variable or role a different starting setup.
     // VALUES: [] for no exceptions, or one/more four-field override blocks.
@@ -375,6 +321,64 @@ createHashMapFromArray [
             "default",           // Civilian's official ACRE preset.
             [],                   // no Civilian nets supplied yet.
             []                    // no Civilian group mappings supplied yet.
+        ]
+    ]],
+
+    // SETTING: rackProfiles (OPTIONAL, AFTER THE RADIO NETS ABOVE)
+    // Rack assignments deliberately live after `sides`: their friendly net keys (COY, AIRGND,
+    // PLT1, etc.) refer back to the single channel/frequency definitions above. Configure player
+    // radios first, then reuse those exact nets here for vehicle/object racks.
+    ["rackProfiles", [
+        [
+            "EXISTING_RACKS_COY",
+            [
+                ["preset", ""], // Blank safely reuses WEST's configured default3 preset.
+                ["netSide", "WEST"],
+                ["addRacks", []],
+                ["assignments", [["ALL", "COY"]]] // Reuse WEST COY (PRC_LR channel 5).
+            ]
+        ],
+        [
+            "COMMAND_VEHICLE",
+            [
+                ["preset", "default3"], // Existing ACRE preset, applied before initialization.
+                ["netSide", "WEST"],
+                ["addRacks", [
+                    [
+                        "ACRE_VRC110", // AN/VRC-110 hardware; accepts an ACRE_PRC152.
+                        [
+                            ["count", 1],
+                            ["displayName", "Command Radio"],
+                            ["shortName", "CMD"],
+                            ["removable", true],
+                            ["access", ["inside"]],
+                            ["disabled", []],
+                            ["mountedRadio", "ACRE_PRC152"],
+                            ["components", []],
+                            ["intercoms", []]
+                        ]
+                    ]
+                ]],
+                ["assignments", [
+                    // Mounts the radio when the vehicle already has an empty VRC-110.
+                    [["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"] // WEST AIRGND, PRC_LR channel 6.
+                ]]
+            ]
+        ],
+        [
+            "EXTERNAL_RADIO_POINT",
+            [
+                ["preset", "default3"],
+                ["netSide", "WEST"],
+                ["addRacks", [
+                    ["ACRE_VRC103", [
+                        ["count", 1], ["displayName", "Radio Point"], ["shortName", "RDO"],
+                        ["removable", false], ["access", ["external"]], ["disabled", []],
+                        ["mountedRadio", "ACRE_PRC117F"], ["components", []], ["intercoms", []]
+                    ]]
+                ]],
+                ["assignments", [[["ACRE_VRC103", 1], "PLT1", "ACRE_PRC117F"]]]
+            ]
         ]
     ]],
 

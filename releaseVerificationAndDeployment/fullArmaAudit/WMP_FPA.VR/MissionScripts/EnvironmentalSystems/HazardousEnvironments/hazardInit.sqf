@@ -41,6 +41,19 @@ if !(missionNamespace getVariable ["Waldo_Hazard_RespawnHandlerInstalled", false
     }];
     missionNamespace setVariable ["Waldo_Hazard_RespawnHandlerId", _respawnId];
 };
+// ACE's full-heal implementation raises this local extension event for every full heal, including
+// the Zeus heal action. Reset the complete WMP hazard lifecycle on that same unit so accumulated
+// dose, damage stage, attribution and pending presentation cannot survive an administrative heal.
+if !(missionNamespace getVariable ["Waldo_Hazard_FullHealHandlerInstalled", false]) then {
+    missionNamespace setVariable ["Waldo_Hazard_FullHealHandlerInstalled", true];
+    ["ace_medical_treatment_fullHealLocalMod", {
+        params ["_patient"];
+        if (hasInterface && {_patient isEqualTo player} && {local _patient}) then {
+            [] call Waldo_fnc_HazardResetLocal;
+            diag_log format ["[WMP HAZARD] Full medical heal cleared hazard state object=%1 owner=%2.", netId _patient, clientOwner];
+        };
+    }] call CBA_fnc_addEventHandler;
+};
 [] call Waldo_fnc_HazardInteractionInit;
 private _interval = (missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25;
 private _handle = [_interval] spawn {

@@ -92,12 +92,17 @@ occupying one of the placed slots:
    `!isDedicated && !hasInterface`. The server and every real player are no-ops here. If
    `Waldo_Headless_Enable` is false, detection still runs (harmless) but the registration request
    below is never sent.
-2. **Registration.** A detected headless client asks the server to register it
+2. **Registration.** A detected headless client asks the server to register it and retries that
+   authenticated request for at most 30 seconds. This handles the dedicated-server startup window
+   where the HC process is connected but its `HeadlessClient_F` entity is not yet visible. The server
+   registry is repeat-safe, so a retry refreshes the existing row rather than duplicating it.
    (`Waldo_fnc_HeadlessRegisterClient`), which verifies the remote owner controls an engine
    `HeadlessClient_F` virtual entity. Do not use `allPlayers` as a rejection test here: Arma includes
    headless clients in `allPlayers`. A verified HC is then added to
-   `Waldo_Headless_Clients` and immediately runs a rebalance pass.
-3. **Rebalancing.** `Waldo_fnc_HeadlessRebalance` walks every group in the mission, works out which
+   `Waldo_Headless_Clients`. If ACE Headless is loaded, ACE is the sole automatic distributor and
+   WMP listens for verified post-transfer events; this avoids two schedulers racing over the same
+   group. Without ACE Headless, registration immediately starts WMP's own rebalance pass.
+3. **Rebalancing.** When WMP owns automatic distribution, `Waldo_fnc_HeadlessRebalance` walks every group in the mission, works out which
    *eligible* ones should move to whichever connected headless client currently has the fewest
    assigned/queued groups, and queues them in `Waldo_Headless_MigrationQueue`.
 4. **Paced migration.** `Waldo_fnc_HeadlessMigrationWorker` drains that queue one group at a time,

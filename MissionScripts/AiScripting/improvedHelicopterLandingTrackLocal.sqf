@@ -6,7 +6,9 @@
  * transport whose server-broadcast state is TO_DESTINATION; this lets passenger services land
  * without Arma forcing cargo out or leaving a scripted LAND task alive after route replacement.
  * The controller never activates at or inside the configured 50 metre minimum, avoiding take-off
- * waypoints that vanilla Arma completes immediately.
+ * waypoints that vanilla Arma completes immediately. A group containing more than one helicopter
+ * keeps vanilla formation/waypoint flight: one group waypoint cannot safely provide a separate
+ * exact touchdown point for every aircraft, and driving all of them at one point causes collisions.
  *
  * Arguments:
  * 0: helicopter <OBJECT>
@@ -31,6 +33,20 @@ while {
         };
         if (!isNull _pilot && {!isPlayer _pilot} && {isNull (remoteControlled _pilot)} && {alive _pilot} && {_pilotAwake}) then {
             private _group = group _pilot;
+            private _groupHelicopters = [];
+            {
+                private _groupVehicle = vehicle _x;
+                if (_groupVehicle isKindOf "Helicopter") then {
+                    _groupHelicopters pushBackUnique _groupVehicle;
+                };
+            } forEach units _group;
+            // If Zeus groups an aircraft while WMP still owns a previous landing controller, release
+            // that controller immediately. Otherwise its zero-height/anchor state can survive into
+            // the new formation route and pull the newly grouped aircraft towards the terrain.
+            if (count _groupHelicopters != 1 && {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}) then {
+                [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+                diag_log format ["[WMP AI LANDING] Released controller because helicopter joined a %1-aircraft group helicopter=%2.", count _groupHelicopters, netId _helicopter];
+            };
             private _index = currentWaypoint _group;
             private _waypoints = waypoints _group;
             if (_index >= 0 && {_index < count _waypoints}) then {
@@ -72,6 +88,7 @@ while {
                     || {_distance <= _closeApproachDistance};
                 if (
                     _landingType
+                    && {count _groupHelicopters == 1}
                     && {_distance > _minimumDistance}
                     && {_distance <= _triggerDistance}
                     && {_approachReady}

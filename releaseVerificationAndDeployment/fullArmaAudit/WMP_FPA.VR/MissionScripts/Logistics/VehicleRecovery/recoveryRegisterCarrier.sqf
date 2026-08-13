@@ -62,4 +62,5 @@ _carrier setVariable ["Waldo_Recovery_AttachedPackages", _attachedPackages, true
 private _virtualPackages = (_carrier getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
 _carrier setVariable ["Waldo_Recovery_VirtualPackages", _virtualPackages, true];
 [_carrier] remoteExecCall ["Waldo_fnc_RecoverySetupCarrierLocal", 0, _carrier];
+diag_log format ["[WMP RECOVERY] Carrier registered object=%1 class=%2 range=%3 mode=%4 capacity=%5 deckOffset=%6 owner=%7.", netId _carrier, typeOf _carrier, _range max 3, _mode, (round _capacity) max 1, _deckOffset, owner _carrier];
 true

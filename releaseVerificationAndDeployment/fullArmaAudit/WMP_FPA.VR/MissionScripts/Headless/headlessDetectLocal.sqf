@@ -9,6 +9,9 @@
  * serverCommandAvailable "#kick" heuristic, which can also true on a listen-server host or any
  * admin-capable connection. Self-forwards to the server exactly like Waldo_fnc_Jammer, so it is
  * safe to call unconditionally on every machine (server and every player are simply ignored).
+ * A headless client retries its authenticated registration for up to 30 seconds. This closes the
+ * dedicated-server startup race where the request can arrive before its HeadlessClient_F entity is
+ * visible to the server; the server registry remains repeat-safe, so retries cannot duplicate it.
  *
  * Locality and authority:
  * Detection runs locally on every machine. Registration is server-authoritative
@@ -49,6 +52,25 @@ if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {
 };
 
 private _label = if (profileName != "") then {profileName} else {format ["HC-%1", clientOwner]};
-diag_log format ["[WMP HEADLESS] This machine detected itself as a headless client (label=%1); requesting registration.", _label];
-[_label] remoteExec ["Waldo_fnc_HeadlessRegisterClient", 2];
+diag_log format ["[WMP HEADLESS] This machine detected itself as a headless client (label=%1); starting bounded registration.", _label];
+[_label] spawn {
+    params ["_label"];
+    private _attempt = 0;
+    waitUntil {
+        _attempt = _attempt + 1;
+        private _registered = (missionNamespace getVariable ["Waldo_Headless_Clients", []]) findIf {
+            _x param [0, -1] == clientOwner
+        } >= 0;
+        if (!_registered) then {
+            diag_log format ["[WMP HEADLESS] Registration attempt %1/15 owner=%2 label=%3.", _attempt, clientOwner, _label];
+            [_label] remoteExecCall ["Waldo_fnc_HeadlessRegisterClient", 2];
+        };
+        if (!_registered && {_attempt < 15}) then {uiSleep 2};
+        _registered || {_attempt >= 15}
+    };
+    private _registered = (missionNamespace getVariable ["Waldo_Headless_Clients", []]) findIf {
+        _x param [0, -1] == clientOwner
+    } >= 0;
+    diag_log format ["[WMP HEADLESS] Bounded registration finished owner=%1 registered=%2 attempts=%3.", clientOwner, _registered, _attempt];
+};
 true

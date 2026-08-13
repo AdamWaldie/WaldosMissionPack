@@ -96,6 +96,11 @@ private _isHcTarget = _targetOwner in _clientOwnerIds;
 private _finalOwner = if (_isHcTarget) then {_targetOwner} else {2};
 
 private _previousOwner = groupOwner _group;
+if (_previousOwner == _finalOwner) exitWith {
+    if (_finalOwner == 2) then {[] call _removeRegistryEntry};
+    diag_log format ["[WMP HEADLESS] Group %1 already belongs to owner=%2; migration treated as complete.", _group, _finalOwner];
+    true
+};
 private _ok = _group setGroupOwner _finalOwner;
 if !(_ok) exitWith {
     diag_log format ["[WMP HEADLESS] setGroupOwner failed for group=%1 target=%2.", _group, _finalOwner];

@@ -43,7 +43,7 @@ centre for one test.
 
 ## Zeus setup
 
-1. Place **WMP Combat Systems → Dynamic AA - Create** at the centre of the detection zone.
+1. Place **WMP AI & Combat → Dynamic AA - Create** at the centre of the detection zone.
 2. Enter a human-readable **System and marker name**, such as `Northern Air Defence`. This is independent from the generated internal cleanup ID.
 3. Choose the operational side. This controls crew allegiance and hostile detection only.
 4. Choose **Faction profile** for a reusable pool, or **Exact mixed equipment** for direct class selection. Physical equipment may come from any configured faction and does not change its operational side.

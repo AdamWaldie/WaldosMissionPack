@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
  * Server-authoritative headless-client registration. Adds a newly detected headless client to
- * Waldo_Headless_Clients (or refreshes its label if already known) and triggers a rebalance pass so
- * eligible AI groups are distributed to it.
+ * Waldo_Headless_Clients (or refreshes its label if already known). WMP performs its own automatic
+ * rebalance only when ACE Headless is absent. When ACE Headless is loaded, ACE remains the single
+ * automatic scheduler and WMP uses its adoption event to apply locality-sensitive AI settings;
+ * running two independent balancers against the same groups would create ownership races.
  *
  * Locality and authority:
  * Server-only. The registering machine's identity is taken from the engine-verified
@@ -25,7 +27,7 @@
  * Result: the calling machine's network owner id is added to Waldo_Headless_Clients and a
  * rebalance pass runs.
  *
- * Current caller: Waldo_fnc_HeadlessDetectLocal, once per connected headless client.
+ * Current caller: Waldo_fnc_HeadlessDetectLocal, with bounded repeat-safe startup retries.
  */
 
 params [["_label", "", [""]]];
@@ -54,5 +56,11 @@ if (_idx >= 0) then {
 missionNamespace setVariable ["Waldo_Headless_Clients", _registry, true];
 ["REGISTER", format ["owner=%1 label=%2 connectedClients=%3", _owner, _label, count _registry]] call Waldo_fnc_HeadlessDebugLog;
 
-[] call Waldo_fnc_HeadlessRebalance;
+private _aceHeadless = isClass (configFile >> "CfgPatches" >> "ace_headless");
+missionNamespace setVariable ["Waldo_Headless_ExternalScheduler", _aceHeadless, true];
+if (_aceHeadless) then {
+    diag_log format ["[WMP HEADLESS] Registered owner=%1; ACE Headless owns automatic distribution, WMP adoption hooks remain active.", _owner];
+} else {
+    [] call Waldo_fnc_HeadlessRebalance;
+};
 true

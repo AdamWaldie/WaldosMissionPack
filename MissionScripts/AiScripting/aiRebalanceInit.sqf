@@ -128,7 +128,12 @@ if !(missionNamespace getVariable ["Waldo_AI_ACEHeadlessHandlerInstalled", false
     missionNamespace setVariable ["Waldo_AI_ACEHeadlessHandlerInstalled", true];
     ["ace_headless_groupTransferPost", {
         params ["_group", "_headlessEntity", "_previousOwner", "_newOwner", "_transferredSuccessfully"];
-        if (_transferredSuccessfully && {local _group} && {missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]}) then {
+        // ACE raises this event on both the old locality and the destination HC. During the transfer
+        // window `local _group` can still be true on the old owner, so the destination owner ID is
+        // the authoritative gate. Without it, the server or a different HC can acknowledge work it
+        // did not own (visible as sender/claimedOwner mismatches in dedicated-server diagnostics).
+        if (_transferredSuccessfully && {!isDedicated} && {!hasInterface} && {clientOwner == _newOwner}
+            && {local _group} && {missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]}) then {
             private _applied = 0;
             {
                 if (local _x && {!isPlayer _x} && {!(_x getVariable ["Waldo_ServerOwnedFeature", false])}
@@ -142,7 +147,7 @@ if !(missionNamespace getVariable ["Waldo_AI_ACEHeadlessHandlerInstalled", false
                 missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"]
             ];
             if (_newOwner > 2) then {
-                [_group, _previousOwner, _newOwner, _applied,
+                [_group, _headlessEntity, _previousOwner, _newOwner, _applied,
                     missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"],
                     missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"]
                 ] remoteExecCall ["Waldo_fnc_AIHeadlessAdoptionResultServer", 2];
