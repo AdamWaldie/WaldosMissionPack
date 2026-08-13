@@ -423,6 +423,9 @@ private _spawnFailed = false;
     if (isNull _vehicle) then {
         _spawnFailed = true;
     } else {
+        // Blacklist the empty vehicle before crew creation. ACE Headless schedules from unit init;
+        // waiting until the full cluster exists leaves a race where the fresh crew can be moved.
+        [_vehicle] call Waldo_fnc_HeadlessPinCrew;
         _vehicle setPosATL _position;
         _vehicle setDir _direction;
         _vehicle setVariable ["Waldo_DynamicAA_SystemId", _id, true];

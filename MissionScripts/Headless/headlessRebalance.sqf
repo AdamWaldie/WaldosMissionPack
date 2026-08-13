@@ -17,6 +17,9 @@
  * - a group with the group variable Waldo_Headless_ExcludeGroup set true - the opt-out convention
  *   any WMP subsystem can set on groups it owns and wants pinned to the server, without this feature
  *   needing to know that subsystem by name;
+ * - any group or crewed vehicle classified Waldo_ServerOwnedFeature by WMP. This central check is
+ *   intentionally independent of individual feature registries and also recognises ACE's vehicle
+ *   blacklist, so WMP state-machine assets never enter the HC queue;
  * - sideLogic groups (curator helper/ZEN module logic);
  * - any group currently crewing a registered Airborne Gunship aircraft (Waldo_Gunship_Registry) -
  *   gunship crew is documented as staying server-owned and its control handoff is unrelated to
@@ -92,32 +95,41 @@ private _eligible = [];
         if ((units _group) findIf {isPlayer _x} >= 0) then {
             _reason = "player-led";
         } else {
-            if (_group getVariable ["Waldo_Headless_ExcludeGroup", false]) then {
-                _reason = "opted-out";
+            if (_group getVariable ["Waldo_ServerOwnedFeature", false]
+                || {(units _group) findIf {
+                    private _vehicle = vehicle _x;
+                    _vehicle getVariable ["Waldo_ServerOwnedFeature", false]
+                    || {_vehicle getVariable ["acex_headless_blacklist", false]}
+                } >= 0}) then {
+                _reason = "wmp-server-owned";
             } else {
-                if (side _group == sideLogic) then {
-                    _reason = "curator-logic";
+                if (_group getVariable ["Waldo_Headless_ExcludeGroup", false]) then {
+                    _reason = "opted-out";
                 } else {
-                    if (_group in _gunshipCrewGroups) then {
-                        _reason = "gunship-crew";
+                    if (side _group == sideLogic) then {
+                        _reason = "curator-logic";
                     } else {
-                        private _firstSeen = _group getVariable ["Waldo_Headless_FirstSeenTime", -1];
-                        if (_firstSeen < 0) then {
-                            _group setVariable ["Waldo_Headless_FirstSeenTime", time];
-                            _reason = "too-new";
+                        if (_group in _gunshipCrewGroups) then {
+                            _reason = "gunship-crew";
                         } else {
-                            if ((time - _firstSeen) < _minGroupAge) then {
+                            private _firstSeen = _group getVariable ["Waldo_Headless_FirstSeenTime", -1];
+                            if (_firstSeen < 0) then {
+                                _group setVariable ["Waldo_Headless_FirstSeenTime", time];
                                 _reason = "too-new";
                             } else {
-                                if !(local _group) then {
-                                    _reason = "not-server-local";
+                                if ((time - _firstSeen) < _minGroupAge) then {
+                                    _reason = "too-new";
                                 } else {
-                                    private _managedIdx = _managed findIf {
-                                        (_x select 0) == _group
-                                        && {(_x select 1) isEqualType 0}
-                                        && {(_x select 1) in _clientOwnerIds}
+                                    if !(local _group) then {
+                                        _reason = "not-server-local";
+                                    } else {
+                                        private _managedIdx = _managed findIf {
+                                            (_x select 0) == _group
+                                            && {(_x select 1) isEqualType 0}
+                                            && {(_x select 1) in _clientOwnerIds}
+                                        };
+                                        if (_managedIdx >= 0) then {_reason = "already-managed";};
                                     };
-                                    if (_managedIdx >= 0) then {_reason = "already-managed";};
                                 };
                             };
                         };

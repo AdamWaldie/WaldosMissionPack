@@ -708,6 +708,17 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('allPlayers select {side group _x == side group _actor}', mhq)
         self.assertEqual(3, mhq.count('remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor]'))
 
+    def test_full_audit_enables_headless_support_and_debug(self):
+        audit_preinit = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "auditPreInit.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('["Waldo_Headless_Enable", true]', audit_preinit)
+        self.assertIn('["Waldo_Headless_Debug", true]', audit_preinit)
+
     def test_user_facing_source_uses_current_zeus_and_author_wording(self):
         roots = (
             ROOT / "MissionScripts",
@@ -1497,6 +1508,46 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_ACRE2_RackClientToken', hardware)
         self.assertFalse((rack_root / "acre2RackClientAction.sqf").exists())
         self.assertFalse((rack_root / "acre2RackClientActionResult.sqf").exists())
+
+    def test_headless_registration_ai_adoption_and_wmp_server_ownership_are_explicit(self):
+        headless = ROOT / "MissionScripts" / "Headless"
+        register = (headless / "headlessRegisterClient.sqf").read_text(encoding="utf-8")
+        migrate = (headless / "headlessMigrateGroup.sqf").read_text(encoding="utf-8")
+        adopt = (headless / "headlessAdoptGroupLocal.sqf").read_text(encoding="utf-8")
+        rebalance = (headless / "headlessRebalance.sqf").read_text(encoding="utf-8")
+        pin = (headless / "headlessPinCrew.sqf").read_text(encoding="utf-8")
+        dynamic_ao = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAO" / "dynamicAOCreate.sqf").read_text(encoding="utf-8")
+        dynamic_aa_fighters = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASpawnFighters.sqf").read_text(encoding="utf-8")
+        ai_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")
+        ai_ack = (ROOT / "MissionScripts" / "AiScripting" / "aiHeadlessAdoptionResultServer.sqf").read_text(encoding="utf-8")
+        ai_diagnostics = (ROOT / "MissionScripts" / "AiScripting" / "aiGetDiagnostics.sqf").read_text(encoding="utf-8")
+        transport = (ROOT / "MissionScripts" / "Logistics" / "TransportServices" / "transportRegister.sqf").read_text(encoding="utf-8")
+        paradrop = (ROOT / "MissionScripts" / "Paradrop" / "paradropCreateDropZone.sqf").read_text(encoding="utf-8")
+
+        self.assertIn('entities "HeadlessClient_F"', register)
+        self.assertNotIn('allPlayers findIf {owner _x == _owner}', register)
+        self.assertIn('Waldo_fnc_HeadlessAdoptGroupLocal", _finalOwner', migrate)
+        self.assertIn('waitUntil {', adopt)
+        self.assertIn('local _group', adopt)
+        self.assertIn('call Waldo_fnc_AIApplyProfile', adopt)
+        self.assertIn('Waldo_Headless_LastAdoption', adopt)
+        self.assertIn('Waldo_ServerOwnedFeature', rebalance)
+        self.assertIn('Waldo_ServerOwnedFeature', migrate)
+        self.assertIn('Waldo_ServerOwnedFeature', pin)
+        self.assertIn('[_groups + _aoVehicles, false, -1, 1] call ace_headless_fnc_blacklist', dynamic_ao)
+        self.assertIn('_x setVariable ["Waldo_ServerOwnedFeature", false, true]', dynamic_ao)
+        self.assertNotIn('[_vehicle] call Waldo_fnc_HeadlessPinCrew', dynamic_ao)
+        self.assertIn('[_fighter] call Waldo_fnc_HeadlessPinCrew', dynamic_aa_fighters)
+        self.assertIn('"ace_headless_groupTransferPost"', ai_init)
+        self.assertIn('Waldo_fnc_AIHeadlessAdoptionResultServer', ai_init)
+        self.assertIn('remoteExecutedOwner != _newOwner', ai_ack)
+        self.assertIn('groupOwner _group != _newOwner', ai_ack)
+        self.assertIn('Waldo_AI_HeadlessAdoptionResults', ai_ack)
+        self.assertIn('entities "HeadlessClient_F"', ai_diagnostics)
+        self.assertIn('Waldo_AI_LastHeadlessAdoption', ai_diagnostics)
+        self.assertIn('ai-headless-adoption', ai_diagnostics)
+        self.assertIn('call Waldo_fnc_HeadlessPinCrew', transport)
+        self.assertIn('Waldo_ServerOwnedFeature', paradrop)
 
     def test_acre_rack_profiles_are_beginner_facing_and_validated(self):
         config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")

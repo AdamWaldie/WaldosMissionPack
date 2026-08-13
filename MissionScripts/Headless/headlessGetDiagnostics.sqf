@@ -33,6 +33,13 @@ private _clientOwnerIds = _clients apply {_x select 0};
 private _assigned = _managed select {(_x select 1) isEqualType 0 && {(_x select 1) in _clientOwnerIds}};
 private _mismatched = _assigned select {isNull (_x select 0) || {groupOwner (_x select 0) != (_x select 1)}};
 private _orphaned = _managed select {(_x select 1) isEqualType 0 && {!((_x select 1) in _clientOwnerIds)}};
+private _serverOwned = _excluded select {(_x param [1, ""]) in ["wmp-server-owned", "gunship-crew"]};
+private _adoptionFailed = _assigned select {
+    private _group = _x select 0;
+    private _expected = _group getVariable ["Waldo_Headless_ExpectedAdoption", []];
+    private _result = _group getVariable ["Waldo_Headless_LastAdoption", []];
+    count _expected >= 2 && {count _result < 3 || {!(_result select 2)} || {(_result select 0) != (_expected select 0)}}
+};
 
 private _failedDetail = format ["failed=%1", count _failed];
 if (count _failed > 0) then {_failedDetail = [_failedDetail, "Check the RPT for [WMP HEADLESS] entries naming the failed group(s) and reason; a group can be pinned server-side with _group setVariable [""Waldo_Headless_ExcludeGroup"", true, true] if it should never migrate."] call Waldo_fnc_DiagnosticFoldHint;};
@@ -42,6 +49,8 @@ private _checks = [
     ["headless", "headless-clients", if (count _clients > 0) then {"ACTIVE"} else {"UNCONFIGURED"}, format ["connected=%1", count _clients]],
     ["headless", "headless-managed-groups", if (count _assigned > 0) then {"ACTIVE"} else {"LOADED"}, format ["assigned=%1", count _assigned]],
     ["headless", "headless-excluded-groups", "LOADED", format ["excluded=%1 (reasons in Waldo_Headless_ExcludedGroups / RPT)", count _excluded]],
+    ["headless", "headless-wmp-server-owned", "LOADED", format ["pinnedGroups=%1; WMP state-machine assets never migrate", count _serverOwned]],
+    ["headless", "headless-ai-adoption", if (count _adoptionFailed > 0) then {"ERROR"} else {"LOADED"}, format ["assigned=%1 missingOrFailed=%2; successful handoffs log '[WMP HEADLESS] Adoption complete' on the destination owner", count _assigned, count _adoptionFailed]],
     ["headless", "headless-failed-transfers", if (count _failed > 0) then {"ERROR"} else {"LOADED"}, _failedDetail],
     ["headless", "headless-ownership-consistency", if (count _mismatched > 0 || {count _orphaned > 0}) then {"ERROR"} else {"LOADED"}, _consistencyDetail],
     ["headless", "headless-migration-queue", if (count _queue > 0) then {"ACTIVE"} else {"LOADED"}, format ["queued=%1 workerActive=%2 startDelay=%3 minGroupAge=%4 pace=%5", count _queue, _workerActive, missionNamespace getVariable ["Waldo_Headless_StartDelaySeconds", 30], missionNamespace getVariable ["Waldo_Headless_MinGroupAgeSeconds", 10], missionNamespace getVariable ["Waldo_Headless_MigrationPaceSeconds", 3]]]

@@ -4,8 +4,8 @@
  *
  * Locality and authority:
  * Server-only creation. Crew is created directly on the configured operational side, avoiding a
- * transient config-side group during dedicated-server replication. The fighter group may later
- * migrate to a headless client; target-state calls are automatically sent to the current owner.
+ * transient config-side group during dedicated-server replication. Fighter responses remain
+ * server-owned because the Dynamic AA detector continuously controls their target/fire state.
  * Fighters are published through the Dynamic AA snapshot and added to all active curators.
  * Repeated waves follow the configured wave/cooldown state.
  *
@@ -48,6 +48,7 @@ for "_i" from 1 to _count do {
     private _height = (_config getOrDefault ["fighterSpawnAltitude", 1000]) + ((_i - 1) * 40);
     private _spawnPosition = [_spawn2D select 0, _spawn2D select 1, _height];
     private _fighter = createVehicle [_fighterClass, _spawnPosition, [], 0, "FLY"];
+    [_fighter] call Waldo_fnc_HeadlessPinCrew;
     _fighter setVariable ["Waldo_DynamicAA_SystemId", _id, true];
     _fighter setPosATL _spawnPosition;
     _fighter setDir (_spawn2D getDir _centre);
@@ -64,6 +65,7 @@ for "_i" from 1 to _count do {
         deleteVehicle _fighter;
     } else {
         _group addVehicle _fighter;
+        [_fighter] call Waldo_fnc_HeadlessPinCrew;
         private _waypoint = _group addWaypoint [_centre, 0];
         // MOVE keeps the route useful without SAD independently selecting low aircraft or ground units.
         _waypoint setWaypointType "MOVE";

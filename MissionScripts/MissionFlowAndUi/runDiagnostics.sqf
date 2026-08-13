@@ -103,6 +103,7 @@ private _consumeFeatureReport = {
     ["interactions", "equipment-diagnostics-api", "Waldo_fnc_MiniGameInteractionGetDiagnostics"],
     ["economy", "economy-diagnostics-api", "Waldo_fnc_EcoCore_getDiagnostics"],
     ["headless", "headless-diagnostics-api", "Waldo_fnc_HeadlessGetDiagnostics"],
+    ["ai", "ai-diagnostics-api", "Waldo_fnc_AIGetDiagnostics"],
     ["medical", "obituary-diagnostics-api", "Waldo_fnc_ObituaryGetDiagnostics"]
 ];
 
@@ -331,6 +332,7 @@ if (count (keys _dropZoneRegistry) == 0) then {
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_MiniGameInteractionGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_HeadlessGetDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_AIGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
 
 private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];

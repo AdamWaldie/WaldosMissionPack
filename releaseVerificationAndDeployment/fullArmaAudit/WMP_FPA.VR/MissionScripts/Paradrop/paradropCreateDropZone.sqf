@@ -136,6 +136,7 @@ _spawn set [2, _altitude];
 // lifecycle instead: create at the calculated position, freeze, place exactly, crew, then unfreeze
 // before the shared route builder applies flyInHeight and waypoints.
 private _aircraft = createVehicle [_class, _spawn, [], 0, "NONE"];
+[_aircraft] call Waldo_fnc_HeadlessPinCrew;
 _aircraft enableSimulationGlobal false;
 _aircraft setPosASL (AGLToASL _spawn);
 _aircraft setDir _direction;
@@ -148,6 +149,8 @@ _aircraft setVariable ["Waldo_Paradrop_ManuallyConfigured", true, true];
 // "Object not found" traffic on dedicated servers. Create exactly one pilot in an explicitly sided
 // group instead. Optional jumpers are handled separately below and default to zero.
 private _flightGroup = createGroup [_side, true];
+_flightGroup setVariable ["Waldo_ServerOwnedFeature", true, true];
+_flightGroup setVariable ["Waldo_Headless_ExcludeGroup", true, true];
 private _pilotClass = getText (configFile >> "CfgVehicles" >> _class >> "crew");
 if !(isClass (configFile >> "CfgVehicles" >> _pilotClass) && {_pilotClass isKindOf "CAManBase"}) then {
     _pilotClass = switch (_side) do {
@@ -157,6 +160,8 @@ if !(isClass (configFile >> "CfgVehicles" >> _pilotClass) && {_pilotClass isKind
     };
 };
 private _pilot = _flightGroup createUnit [_pilotClass, _spawn, [], 0, "NONE"];
+_pilot setVariable ["Waldo_ServerOwnedFeature", true, true];
+_pilot setVariable ["acex_headless_blacklist", true, true];
 _pilot moveInDriver _aircraft;
 if (isNull _pilot || {driver _aircraft != _pilot}) exitWith {
     if (!isNull _pilot) then {deleteVehicle _pilot};
@@ -278,10 +283,14 @@ if (_config getOrDefault ["createJumpers", true]) then {
         _jumperClass = switch (_side) do {case east: {"O_Soldier_F"}; case independent: {"I_Soldier_F"}; default {"B_Soldier_F"}};
     };
     _jumpGroup = createGroup _side;
+    _jumpGroup setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _jumpGroup setVariable ["Waldo_Headless_ExcludeGroup", true, true];
     private _capacity = _aircraft emptyPositions "cargo";
     private _count = ((round (_config getOrDefault ["jumperCount", 0])) max 0) min _capacity min 60;
     for "_index" from 1 to _count do {
         private _unit = _jumpGroup createUnit [_jumperClass, _spawn, [], 0, "NONE"];
+        _unit setVariable ["Waldo_ServerOwnedFeature", true, true];
+        _unit setVariable ["acex_headless_blacklist", true, true];
         _unit moveInCargo _aircraft;
         if (vehicle _unit == _aircraft) then {_jumpers pushBack _unit} else {deleteVehicle _unit};
     };

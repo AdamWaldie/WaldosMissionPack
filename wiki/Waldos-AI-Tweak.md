@@ -30,6 +30,13 @@ Change only the profile name to select a baseline. The wrapper `Waldo_fnc_AITwea
 
 Zeus can use **AI Rebalance - Control** to switch the mode or built-in profile and immediately reapply it across server, clients and headless clients. Custom scripted profiles remain available through the API. Every tuned tier is prefixed with `WMP` in ZEN so it is not mistaken for the server's Arma difficulty preset. The older `PUBLIC` and `STANDARD` script keys remain supported aliases for `MILITIA` and `LINE` values.
 
+When ACE Headless moves an ordinary AI group, WMP listens to ACE's supported post-transfer event on
+the destination HC, reapplies the selected profile there, and sends an authenticated result to the
+server. This works even when WMP's own optional HC distributor is disabled. Pack diagnostics report
+`ai-headless-adoption` as an error if an HC owns ordinary AI without a matching verified adoption.
+WMP-controlled Dynamic AA, Paradrop, Gunship, Transport and convoy groups remain server-owned;
+Dynamic AO is pinned only during creation and may move after its full setup completes.
+
 ## What the values control
 
 WMP sets the nine supported Arma 3 sub-skills. `aimingAccuracy` controls leading, range/drop estimation, dispersion and recoil compensation; `aimingShake` controls steadiness; `aimingSpeed` controls rotation and stabilisation. `spotDistance` affects spotting ability and information accuracy, while `spotTime` affects reaction time. `commanding` controls group target sharing, `general` influences decision making, `courage` affects morale and `reloadSpeed` controls weapon switching/reloading. Arma 3 disables the old `endurance` sub-skill, so WMP does not expose it.

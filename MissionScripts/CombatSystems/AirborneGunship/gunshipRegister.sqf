@@ -100,6 +100,7 @@ if (isNull _aircraft) then {
     if (count _spawnPosition >= 3 && {(_spawnPosition select 2) < 50}) then {_spawnPosition set [2, _spawnAltitude]};
     if !(isClass (configFile >> "CfgVehicles" >> _class) && {_class isKindOf "Air"} && {count _spawnPosition >= 2}) exitWith {false};
     _aircraft = createVehicle [_class, _spawnPosition, [], 0, "FLY"];
+    [_aircraft] call Waldo_fnc_HeadlessPinCrew;
     _aircraft setPosATL _spawnPosition;
     _aircraft setDir (_config getOrDefault ["spawnDirection", 0]);
     if (_config getOrDefault ["createCrew", true]) then {createVehicleCrew _aircraft};

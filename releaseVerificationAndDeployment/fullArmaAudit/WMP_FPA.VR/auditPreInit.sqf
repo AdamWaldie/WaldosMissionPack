@@ -6,6 +6,12 @@ missionNamespace setVariable ["Waldo_Economy_Enable", true];
 missionNamespace setVariable ["Waldo_Jamming_Enable", true];
 missionNamespace setVariable ["Waldo_QA_ManualAudit", !(missionNamespace getVariable ["Waldo_QA_RunAutomation", false])];
 
+// The full audit is also the supported HC testbed. Keep native HC handling and its detailed RPT
+// trace enabled here so dedicated runs exercise registration, migration, AI reapplication and
+// server-owned feature exclusions without changing the release defaults.
+missionNamespace setVariable ["Waldo_Headless_Enable", true];
+missionNamespace setVariable ["Waldo_Headless_Debug", true];
+
 // The feature range deliberately enables opt-in systems in this mission only.
 // Persistence remains disabled until its server-extension dependency is proven.
 missionNamespace setVariable ["Waldo_TreatmentFeedback_Enable", true];
