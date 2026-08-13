@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 917,
+  "registeredFunctionCount": 920,
   "runtimeFunctionCount": 385,
-  "functionCount": 1302,
+  "functionCount": 1305,
   "stations": [
     {
       "id": "control",
@@ -701,6 +701,24 @@
     {
       "name": "Waldo_fnc_ACRE2RackApply",
       "file": "MissionScripts/MissionInit/ACRE2/acre2RackApply.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2RackClientApply",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2RackClientApply.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2RackClientResultServer",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2RackClientResultServer.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2RackHardwareServer",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2RackHardwareServer.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

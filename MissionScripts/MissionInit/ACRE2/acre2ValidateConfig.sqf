@@ -244,7 +244,7 @@ private _rackProfileNames = [];
                             private _shortName = _definition getOrDefault ["shortName", "RADIO"];
                             private _mounted = toUpper (_definition getOrDefault ["mountedRadio", ""]);
                             if !(_count isEqualType 0 && {_count >= 1} && {_count == floor _count}) then {_errors pushBack format ["Vehicle rack profile %1/%2 count must be a whole number of 1 or greater.", _profileName, _rackClass]};
-                            if !(_shortName isEqualType "" && {count _shortName <= 5} && {_shortName != ""}) then {_errors pushBack format ["Vehicle rack profile %1/%2 shortName must contain 1-5 characters.", _profileName, _rackClass]};
+                            if !(_shortName isEqualType "" && {count _shortName <= 4} && {_shortName != ""}) then {_errors pushBack format ["Vehicle rack profile %1/%2 shortName must contain 1-4 characters.", _profileName, _rackClass]};
                             private _expectedRadio = _rackCompatibility getOrDefault [_upperRack, ""];
                             if (_mounted != "" && {_mounted != _expectedRadio}) then {_errors pushBack format ["Vehicle rack profile %1/%2 cannot mount %3; use %4.", _profileName, _rackClass, _mounted, _expectedRadio]};
                             if !((_definition getOrDefault ["removable", true]) isEqualType true) then {_errors pushBack format ["Vehicle rack profile %1/%2 removable must be true or false.", _profileName, _rackClass]};
@@ -259,17 +259,25 @@ private _rackProfileNames = [];
                         _errors pushBack format ["Vehicle rack profile %1 has malformed assignment %2.", _profileName, _x];
                     } else {
                         private _selector = _x select 0;
-                        private _selectorValid = _selector isEqualType 0 || {_selector isEqualType ""} || {
+                        private _selectorValid = (_selector isEqualType 0 && {_selector >= 1 && {_selector == floor _selector}}) || {(_selector isEqualType "" && {_selector != ""})} || {
                             _selector isEqualType [] && {count _selector == 2} && {(_selector select 0) isEqualType ""} && {(_selector select 1) isEqualType 0 && {(_selector select 1) >= 1}}
                         };
                         if (!_selectorValid) then {_errors pushBack format ["Vehicle rack profile %1 has invalid selector %2.", _profileName, _selector]};
-                        private _replacement = toUpper (_x param [2, ""]);
+                        private _target = _x select 1;
+                        if !((_target isEqualType "" && {_target != ""}) || {_target isEqualType 0 && {(_target == -1) || {_target >= 1}}}) then {
+                            _errors pushBack format ["Vehicle rack profile %1 selector %2 has invalid target %3; use a named net, channel 1 or greater, or -1.", _profileName, _selector, _target];
+                        };
+                        private _rawReplacement = _x param [2, ""];
+                        if !(_rawReplacement isEqualType "") then {_errors pushBack format ["Vehicle rack profile %1 selector %2 radio action must be text.", _profileName, _selector]};
+                        private _replacement = if (_rawReplacement isEqualType "") then {toUpper _rawReplacement} else {""};
+                        if (_selector isEqualType "" && {toUpper _selector == "ALL"} && {_replacement != ""}) then {
+                            _errors pushBack format ["Vehicle rack profile %1 cannot use selector ALL for radio/rack hardware action %2; select a rack class or occurrence.", _profileName, _replacement];
+                        };
                         private _selectorClass = if (_selector isEqualType "" && {toUpper _selector != "ALL"}) then {toUpper _selector} else {if (_selector isEqualType []) then {toUpper (_selector select 0)} else {""}};
                         if (_selectorClass != "" && {_replacement != ""} && {!(_replacement in ["REMOVE_RACK", "UNMOUNT_RADIO"])}) then {
                             private _expectedRadio = _rackCompatibility getOrDefault [_selectorClass, ""];
                             if (_expectedRadio == "" || {_expectedRadio != _replacement}) then {_errors pushBack format ["Vehicle rack profile %1 selector %2 cannot mount %3.", _profileName, _selector, _replacement]};
                         };
-                        private _target = _x select 1;
                         if (_target isEqualType "" && {_selectorClass != ""}) then {
                             private _radioClass = if (_replacement != "" && {!(_replacement in ["REMOVE_RACK", "UNMOUNT_RADIO"])}) then {_replacement} else {_rackCompatibility getOrDefault [_selectorClass, ""]};
                             private _radioProfile = [_radioClass] call _profileFor;

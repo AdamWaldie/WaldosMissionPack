@@ -20,7 +20,7 @@ class items
     {
         dataType="Comment";
 		class PositionInfo {position[]={0,0,-8};};
-        title="ACRE2 Vehicle Radio Rack (guided example): explicit per-rack control on the same Hunter as the Minimal composition. Rack 0 is the empty, removable AN/VRC-110 - mounts a PRC-152 on channel 5. Rack 1 is the pre-mounted, fixed PRC-117F - its channel is set to 8 without replacing it. Only removable racks accept a radio classname or REMOVE_RACK. WMP waits for an ACRE-ready player on dedicated servers and applies each change through ACRE's chosen initializer client. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Vehicle-Radio-Rack-Setup";
+        title="ACRE2 Vehicle Radio Rack (guided example): COMMAND_VEHICLE selects the AN/VRC-110 by class and occurrence 1, mounts its compatible PRC-152 when needed, and tunes it to WEST AIR-GND. The existing fixed PRC-117F is not replaced. Only removable racks accept a radio classname or REMOVE_RACK. WMP waits for an ACRE-ready player on dedicated servers. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE2-Vehicle-Radio-Rack-Setup";
         id=2;
     };
 };

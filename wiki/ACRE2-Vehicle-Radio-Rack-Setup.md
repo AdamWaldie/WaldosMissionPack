@@ -76,14 +76,16 @@ Each profile is:
 
 | Setting | What it means |
 |---|---|
-| `preset` | Existing ACRE preset name applied before rack initialisation. Use `""` for none. |
+| `preset` | Optional existing ACRE preset name applied before rack initialisation. `""` reuses the preset configured for `netSide`. |
 | `netSide` | Side whose named net table is used: `WEST`, `EAST`, `GUER`, `CIV`, or carefully chosen `AUTO`. |
 | `addRacks` | Physical racks WMP should ensure exist on the object. |
 | `assignments` | Named-net/channel changes or radio/rack changes after ACRE has synchronized the rack IDs. |
 
-The preset is not a WMP net name. It must already exist in ACRE's radio preset configuration. ACRE
-applies that named preset as each rack radio is created. This is the correct route for complete
-PRC-77/SEM70 frequency programming because those radios are not ordinary numbered-channel radios.
+The preset is not a WMP net name. It must already exist in ACRE's radio preset configuration. When
+this is `""`, WMP deterministically reuses the selected side's preset rather than depending on which
+player ACRE happens to select. Enter a different preset explicitly only when the rack needs a
+different complete programme. This is the correct route for PRC-77/SEM70 frequency programming
+because those radios are not ordinary numbered-channel radios.
 
 ## Adding a rack and its radio
 
@@ -112,7 +114,7 @@ not duplicate it.
 | Rack option | Beginner meaning |
 |---|---|
 | `displayName` | Name shown in the ACRE/ACE interaction menu. |
-| `shortName` | Short GUI label; keep it at five characters or fewer. |
+| `shortName` | Short GUI label; ACRE allows 1-4 characters. |
 | `removable` | Whether the mounted radio can later be removed/replaced. |
 | `access` | Who can access it. `['inside']` is the normal vehicle default; `['external']` suits a radio table. |
 | `disabled` | Vehicle positions denied access. `[]` denies none. |
@@ -146,8 +148,8 @@ An assignment row is:
 
 | Selector | Result |
 |---|---|
-| `"ALL"` | Every rack; empty racks are skipped when no replacement radio is supplied. |
-| `0` | First rack returned by ACRE. Numeric order is supported but less resilient. |
+| `"ALL"` | Tune every already-mounted compatible radio; empty racks are skipped. Do not use this for mounting/removing hardware. |
+| `1` | First rack returned by ACRE. Numeric order starts at 1 but is less resilient than a typed selector. |
 | `"ACRE_VRC110"` | Every VRC-110 on the object. |
 | `["ACRE_VRC110", 1]` | First VRC-110, regardless of unrelated rack order. Recommended. |
 
@@ -177,22 +179,29 @@ Rack setup begins on the server, as required by ACRE's public rack APIs:
 3. The preset is stored before initialisation.
 4. ACRE selects a human client to create the unique IDs, acknowledges them to the server, and
    distributes radio data to other ACRE machines and JIP clients.
-5. WMP waits for the server's synchronized radio-data copy. It does not ask every client to race.
-6. WMP adds missing desired racks, applies assignments and verifies numbered channels by read-back.
+5. The server adds or removes physical rack hardware through ACRE's server-only APIs.
+6. ACRE 2.14 keeps the mounted-radio data behind those IDs on its selected interface client. WMP
+   sends the already-validated tuning plan to that one client, which applies and reads back the
+   channel. It does not ask every client to race or give the client authority over the request.
+7. The selected client returns one token-bound result; the server records completion and diagnostics.
 
 Repeated identical Eden calls are suppressed both while running and after success. A genuinely new
 setup arriving mid-run replaces the queued request and runs after the current worker cleans up.
 
 ## Diagnostics
 
-WMP Diagnostics reports `acre-vehicle-racks`. The RPT lines beginning `[WMP ACRE RACK]` include the
-vehicle, rack, requested setting and exact result.
+WMP Diagnostics reports both an `acre-vehicle-racks` summary and one `acre-rack-<network ID>` row
+per configured object. Each object row shows its class, resolved profile, current owner, initial
+rack/radio inventory, every requested job, the final mounted radio/channel read-back, and problems.
+The audit mission's **ACRE2: SHOW VEHICLE RACK STATUS** action exposes the same snapshot. RPT lines
+beginning `[WMP ACRE RACK]` include the accepted request, inventory and every job result.
 
 | Diagnostic | Meaning and response |
 |---|---|
 | `WAITING_FOR_ACRE_PLAYER` | Normal dedicated lobby state. Join with an ACRE client; WMP retries automatically. |
 | `RACKS_NOT_INITIALISED` | ACRE did not finish within the bounded window. Check client/server ACRE errors. |
-| `RADIO_DATA_NOT_SYNCHRONIZED` | ACRE published the rack list but its corresponding radio data never became readable on the server. |
+| `CLIENT_DATA_NOT_READY` | ACRE published a rack ID but its mounted-radio data did not become readable on the selected ACRE client. |
+| `CLIENT_APPLY_TIMEOUT` | The selected ACRE client disconnected or did not return its token-bound result in time; WMP retains the request for retry. |
 | `UNKNOWN_RACK_CLASS` | The authored rack class does not exist in loaded ACRE configuration. |
 | `INCOMPATIBLE_RADIO` | Rack and radio do not form one of the supported physical pairs. |
 | `RADIO_NOT_REMOVABLE` | The assignment tried to replace a fixed radio. Tune it without a replacement classname. |
@@ -204,7 +213,7 @@ vehicle, rack, requested setting and exact result.
 
 ## Ready-made examples
 
-- **ACRE2 Vehicle Radio Rack Example (Minimal):** calls `EXISTING_RACKS_CHANNEL_5`.
+- **ACRE2 Vehicle Radio Rack Example (Minimal):** calls `EXISTING_RACKS_COY`.
 - **ACRE2 Vehicle Radio Rack Example (Full):** calls `COMMAND_VEHICLE`, which demonstrates preset,
   idempotent rack addition, compatible mounted radio and verified tuning.
 

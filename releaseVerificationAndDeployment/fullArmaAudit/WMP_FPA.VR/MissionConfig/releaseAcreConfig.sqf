@@ -167,15 +167,16 @@ createHashMapFromArray [
     // SETTING: rackProfiles (OPTIONAL VEHICLE/OBJECT RADIO RACK SETUP)
     // WHAT IT CHANGES: defines reusable named starting setups for ACRE racks. Nothing happens merely
     // because a profile exists here: place its call in the target vehicle/object's Eden Init field.
-    // SIMPLE CALL: [this, "EXISTING_RACKS_CHANNEL_5"] call Waldo_fnc_ACRE2RackSetup;
+    // SIMPLE CALL: [this, "EXISTING_RACKS_COY"] call Waldo_fnc_ACRE2RackSetup;
     // MIXED CALL: [this, "COMMAND_VEHICLE", [["assignments", [["ALL", "AIRGND"]]]]] call Waldo_fnc_ACRE2RackSetup;
     // The mixed call loads COMMAND_VEHICLE, then replaces that profile's assignments with the inline
     // row. This is explicit top-level replacement, not a hidden array merge.
     //
     // Each profile is ["UNIQUE_PROFILE_NAME", SETTINGS]. SETTINGS supports:
-    // - preset: existing ACRE preset name. Applied BEFORE rack initialisation. The same named preset
-    //   must exist for every mounted radio class that should use it. Use this for full programmed
-    //   channel/frequency data, especially PRC-77 and SEM70 racks.
+    // - preset: optional existing ACRE preset name, applied BEFORE rack initialisation. Leave this
+    //   as "" to reuse the preset already configured for netSide below (WEST uses default3, etc.).
+    //   Enter a preset explicitly only when this rack needs a deliberately different complete
+    //   channel/frequency programme, especially for PRC-77 and SEM70 racks.
     // - netSide: AUTO, WEST, EAST, GUER or CIV. AUTO uses the vehicle class side, then accepts a net
     //   key only when exactly one compatible side defines it. Set this explicitly on ambiguous props.
     // - addRacks: optional physical rack definitions. Each is [rack class, named rack settings].
@@ -186,7 +187,7 @@ createHashMapFromArray [
     // addRacks named settings:
     // - count: desired TOTAL racks of this class on the object, not "add this many". That makes a
     //   retry safe. count=1 adds one only when the object currently has no rack of that class.
-    // - displayName / shortName: ACE interaction names. Keep shortName at five characters or fewer.
+    // - displayName / shortName: ACE interaction names. ACRE permits 1-4 shortName characters.
     // - removable: whether users/scripts may remove the mounted radio later.
     // - access: ACRE access positions. ["inside"] is the safest beginner default; ["external"] is
     //   useful for a radio table or command post accessible while standing beside it.
@@ -196,7 +197,8 @@ createHashMapFromArray [
     // - intercoms: connected ACRE intercom IDs, e.g. ["intercom_1"], or [] for none.
     //
     // assignment row: [RACK SELECTOR, NET KEY OR CHANNEL, OPTIONAL RADIO ACTION]
-    // Selectors: "ALL"; 0-based rack number; "ACRE_VRC110" for every rack of that type; or
+    // Selectors: "ALL" for tune-only work on every already-mounted radio; rack number starting at
+    // 1; "ACRE_VRC110" for every rack of that type; or
     // ["ACRE_VRC110", 1] for the first rack of that type. Type selectors survive unrelated rack
     // order changes and are recommended. Use a central net key such as "AIRGND" whenever possible;
     // a number is a direct channel override. -1 leaves tuning unchanged. The optional third value is
@@ -204,9 +206,9 @@ createHashMapFromArray [
     // Compatible pairs are VRC64/PRC77, VRC103/PRC117F, VRC110/PRC152, VRC111/PRC148, SEM90/SEM70.
     ["rackProfiles", [
         [
-            "EXISTING_RACKS_CHANNEL_5",
+            "EXISTING_RACKS_COY",
             [
-                ["preset", ""],
+                ["preset", ""], // Blank safely reuses WEST's configured default3 preset.
                 ["netSide", "WEST"],
                 ["addRacks", []],
                 ["assignments", [["ALL", "COY"]]] // Reuse WEST COY (PRC_LR channel 5).
