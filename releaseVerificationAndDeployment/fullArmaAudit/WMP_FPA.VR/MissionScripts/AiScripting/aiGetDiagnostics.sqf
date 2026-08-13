@@ -34,8 +34,19 @@ private _missing = _hcGroups select {
     !((count _aceResult >= 1 && {(_aceResult select 0) == _owner})
         || {count _wmpResult >= 3 && {(_wmpResult select 1) == _owner} && {_wmpResult select 2}})
 };
+private _decelerationEnabled = missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable", false];
+private _decelerationAircraft = vehicles select {
+    _x getVariable ["Waldo_HelicopterDeceleration_LocalHandlerInstalled", false]
+};
+private _decelerationActive = _decelerationAircraft select {
+    _x getVariable ["Waldo_HelicopterDeceleration_Active", false]
+};
+private _decelerationLandingConflict = _decelerationActive select {
+    _x getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
+};
 private _checks = [
     ["ai", "ai-profile", if (_enabled) then {"ACTIVE"} else {"DISABLED"}, format ["profile=%1 mode=%2 serverActive=%3", missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"], missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"], missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]]],
-    ["ai", "ai-headless-adoption", if (!_enabled) then {"DISABLED"} else {if (count _missing > 0) then {"ERROR"} else {if (count _hcGroups > 0) then {"ACTIVE"} else {"UNCONFIGURED"}}}, format ["connectedHCs=%1 hcOwnedGroups=%2 missingVerifiedAdoption=%3", count _hcOwners, count _hcGroups, count _missing]]
+    ["ai", "ai-headless-adoption", if (!_enabled) then {"DISABLED"} else {if (count _missing > 0) then {"ERROR"} else {if (count _hcGroups > 0) then {"ACTIVE"} else {"UNCONFIGURED"}}}, format ["connectedHCs=%1 hcOwnedGroups=%2 missingVerifiedAdoption=%3", count _hcOwners, count _hcGroups, count _missing]],
+    ["ai", "helicopter-deceleration", if (!_decelerationEnabled) then {"DISABLED"} else {if (count _decelerationLandingConflict > 0) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 tracked=%2 activelyCorrecting=%3 landingConflicts=%4 includeVTOL=%5", _decelerationEnabled, count _decelerationAircraft, count _decelerationActive, count _decelerationLandingConflict, missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL", false]]]
 ];
 ["ai", _checks] call Waldo_fnc_DiagnosticFeatureReport

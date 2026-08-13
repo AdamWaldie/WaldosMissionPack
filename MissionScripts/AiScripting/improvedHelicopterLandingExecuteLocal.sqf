@@ -45,7 +45,10 @@ private _group = group _pilot;
 private _minimumDistance = ([_helicopter, "MinimumActivationDistance", 50] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 50;
 if (_helicopter distance2D _targetPosition <= _minimumDistance) exitWith {false};
 
+// Landing is the authoritative helicopter controller. Any optional cruise-deceleration correction
+// sees this state before its next impulse and releases without changing landing vectors or AI state.
 _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_Active", true, true];
+_helicopter setVariable ["Waldo_HelicopterDeceleration_Active", false, true];
 _helicopter disableAI "PATH";
 _helicopter disableAI "MOVE";
 _pilot disableAI "FSM";

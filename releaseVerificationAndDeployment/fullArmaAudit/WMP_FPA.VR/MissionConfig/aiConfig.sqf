@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Defines AI rebalance selection, filters, display names and improved helicopter-landing control
- * limits. AI application and locality migration remain in MissionScripts\AiScripting.
+ * limits, plus optional cruise-deceleration climb suppression. AI application and locality
+ * migration remain in MissionScripts\AiScripting.
  *
  * Schema: SHARED entries are [missionNamespace variable name, guarded default value].
  * Arguments: None.
@@ -71,10 +72,27 @@
  * - Waldo_ImprovedHelicopterLanding_FinalCommitDistance (ADVANCED): range at which flare/final landing begins.
  * - Waldo_ImprovedHelicopterLanding_ControlInterval (ADVANCED): controller update period; lowering it costs more CPU.
  * - Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds (ADVANCED): landed hold; 20 s prevents immediate takeoff.
+ *
+ * SETTING-BY-SETTING GUIDE - AI HELICOPTER DECELERATION:
+ * - Waldo_HelicopterDeceleration_Enable (MISSION MAKER): false by default until your airframes pass live testing.
+ * - Waldo_HelicopterDeceleration_IncludeVTOL (MISSION MAKER): false keeps VTOL flight modes out of the system.
+ * - Waldo_HelicopterDeceleration_MinimumSpeed (ADVANCED): minimum forward speed in km/h before detection can start.
+ * - Waldo_HelicopterDeceleration_MinimumAltitude (ADVANCED): minimum terrain-relative height in metres.
+ * - Waldo_HelicopterDeceleration_MinimumSpeedLoss (ADVANCED): required km/h lost during one sample.
+ * - Waldo_HelicopterDeceleration_MinimumAltitudeGain (ADVANCED): required metres climbed during one sample.
+ * - Waldo_HelicopterDeceleration_MinimumNoseUp (ADVANCED): minimum upward vectorDir component; 0 is level.
+ * - Waldo_HelicopterDeceleration_TerrainClearance (ADVANCED): required clearance above terrain ahead.
+ * - Waldo_HelicopterDeceleration_MaximumCorrectionAcceleration (ADVANCED): downward correction cap in m/s squared.
+ * - Waldo_HelicopterDeceleration_MaximumClimbRate (ADVANCED): correction ends below this upward m/s rate.
+ * - Waldo_HelicopterDeceleration_SampleInterval (ADVANCED): seconds between detection samples.
+ * - Waldo_HelicopterDeceleration_ControlInterval (ADVANCED): seconds between force corrections while active.
+ * - Waldo_HelicopterDeceleration_MaximumCorrectionSeconds (ADVANCED): hard duration cap for one correction.
+ * - Waldo_HelicopterDeceleration_Debug (TROUBLESHOOTING): logs acquire/release reasons and owner IDs.
+ * Per-aircraft opt-out example: this setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
  * - Waldo_AI_ProfileDisplayNames (INFRASTRUCTURE): labels for diagnostics/UI; keys must match implementation IDs.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings"]],
+    ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings", "AI Helicopter Deceleration"]],
     ["shared", [
         // MISSION MAKER: AI population, profile and filtering policy.
         ["Waldo_AIRebalance_Enable", true],          // BOOL: true applies WMP skill profiles to eligible AI.
@@ -109,6 +127,21 @@ createHashMapFromArray [
         ["Waldo_ImprovedHelicopterLanding_FinalCommitDistance", 75], // METRES: begin the final flare/landing phase.
         ["Waldo_ImprovedHelicopterLanding_ControlInterval", 0.05], // SECONDS: local control-loop interval; performance-sensitive.
         ["Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds", 20], // SECONDS: keep the AI landed before releasing controls; prevents immediate takeoff.
+        // MISSION MAKER switches followed by ADVANCED cruise-deceleration safety limits.
+        ["Waldo_HelicopterDeceleration_Enable", false], // BOOL: suppress AI zoom-climb while braking; test airframes before enabling.
+        ["Waldo_HelicopterDeceleration_IncludeVTOL", false], // BOOL: include VTOL_Base_F aircraft; false is the conservative default.
+        ["Waldo_HelicopterDeceleration_MinimumSpeed", 80], // KM/H: detection is ignored below this airspeed.
+        ["Waldo_HelicopterDeceleration_MinimumAltitude", 25], // METRES AGL: never correct close to terrain.
+        ["Waldo_HelicopterDeceleration_MinimumSpeedLoss", 4], // KM/H PER SAMPLE: braking threshold.
+        ["Waldo_HelicopterDeceleration_MinimumAltitudeGain", 0.5], // METRES PER SAMPLE: unwanted climb threshold.
+        ["Waldo_HelicopterDeceleration_MinimumNoseUp", 0.02], // VECTOR DIR Z: positive nose-up threshold.
+        ["Waldo_HelicopterDeceleration_TerrainClearance", 25], // METRES: required clearance over terrain 100/300/500 m ahead.
+        ["Waldo_HelicopterDeceleration_MaximumCorrectionAcceleration", 2.5], // M/S^2: downward world-force cap.
+        ["Waldo_HelicopterDeceleration_MaximumClimbRate", 0.5], // M/S: release once vertical climb falls to this value.
+        ["Waldo_HelicopterDeceleration_SampleInterval", 0.5], // SECONDS: local detection cadence.
+        ["Waldo_HelicopterDeceleration_ControlInterval", 0.02], // SECONDS: active correction cadence.
+        ["Waldo_HelicopterDeceleration_MaximumCorrectionSeconds", 4], // SECONDS: hard cap per correction event.
+        ["Waldo_HelicopterDeceleration_Debug", false], // BOOL: detailed RPT acquire/release logging.
         ["Waldo_AI_ProfileDisplayNames", createHashMapFromArray [ // ADVANCED: labels only; keys are implementation IDs.
             ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
             ["LINE", "WMP Line"], ["VETERAN", "WMP Veteran"], ["ELITE", "WMP Elite"]

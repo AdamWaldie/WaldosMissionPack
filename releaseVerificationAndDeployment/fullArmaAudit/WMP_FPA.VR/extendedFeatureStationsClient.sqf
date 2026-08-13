@@ -355,6 +355,10 @@ private _loadouts = "qa_sign_nested_loadouts" call _get;
 }] call _add;
 
 private _landing = "qa_sign_ai_helicopter_landing" call _get;
+[_landing, "Waldo_QA_HelicopterDeceleration", "START CRUISE DECELERATION TEST", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_startHelicopterDecelerationServer", 2];
+}] call _add;
 [_landing, "Waldo_QA_ImprovedLandingNormal", "START NORMAL AI LANDING", {
     params ["_target", "_actor"];
     [_actor, false] remoteExecCall ["Waldo_QA_fnc_startImprovedLandingServer", 2];

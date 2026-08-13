@@ -27,7 +27,7 @@ Required direction:
 
 ### AI helicopter deceleration without zoom-climbing
 
-**Status:** Planned; viable, but it must complement rather than duplicate improved landing
+**Status:** Implemented, disabled by default pending live airframe and HC acceptance testing
 
 Add an optional owner-local flight stabiliser for AI-piloted helicopters and VTOLs which are
 decelerating in normal flight. Its purpose is to suppress Arma's excessive upward climb while the AI
@@ -39,8 +39,9 @@ Required direction:
   and gaining height above a safe terrain-clearance floor;
 - apply only a bounded vertical correction and release immediately when the aircraft descends,
   levels out, finishes decelerating, loses locality or enters an unsafe terrain envelope;
-- never run while WMP Improved Helicopter Landing is active, during its go-around, touchdown or
-  ground-hold phases, or while a player/remote controller is flying;
+- yield for the complete lifetime of any supported landing order—not merely the active flare—so WMP
+  Improved Helicopter Landing has unconditional priority during approach, go-around, touchdown and
+  ground-hold phases, and never run while a player/remote controller is flying;
 - support helicopters by default and make VTOL support separately configurable;
 - install and remove owner-local handlers on locality changes, including server and HC ownership,
   without a global every-frame scan of all aircraft;

@@ -77,7 +77,7 @@ STATIONS = [
     ("rally", "SQUAD RALLY", (250, 0), "Leader deployment, group respawn, regroup, expiry and removal."),
     ("nested-loadouts", "NESTED LOADOUT SCRAPE", (275, 0), "Playable inventories inside nested Eden folders feeding crate and arsenal pools."),
     ("dynamic-paradrop", "DYNAMIC PARADROP", (300, 40), "Server-owned DZ route, timed jumpers, operational markers and teardown."),
-    ("ai-helicopter-landing", "AI HELICOPTER LANDING", (325, 40), "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."),
+    ("ai-helicopter-landing", "AI HELICOPTER FLIGHT", (325, 40), "Improved landing priority plus optional cruise-deceleration climb suppression."),
     ("ui-theme-qa", "UI THEME QA", (325, 0), "Live DEFAULT, WW2, VIETNAM and SCIFI visual-theme switching."),
     ("dynamic-ao", "DYNAMIC AO", (350, 0), "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."),
     ("compositions", "EDEN COMPOSITION CATALOGUE", (350, 40), "Every shipped composition classname, addon declaration, init call and wiki-linked editor guide."),
