@@ -42,14 +42,35 @@ private _pilotAwake = if (isNull _pilot) then {false} else {
 };
 if (isNull _pilot || {isPlayer _pilot} || {!isNull (remoteControlled _pilot)} || {!alive _pilot} || {!_pilotAwake}) exitWith {false};
 private _group = group _pilot;
+private _groupHelicopterCount = {
+    params ["_group"];
+    private _aircraft = [];
+    {
+        private _vehicle = vehicle _x;
+        if (_vehicle isKindOf "Helicopter") then {_aircraft pushBackUnique _vehicle;};
+    } forEach units _group;
+    count _aircraft
+};
+// Exact vector landing owns one aircraft and one touchdown point. A formation must remain entirely
+// under vanilla group flight control; acquiring any member would steer the shared group into one LZ.
+if ([_group] call _groupHelicopterCount != 1) exitWith {false};
 private _minimumDistance = ([_helicopter, "MinimumActivationDistance", 50] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 50;
 if (_helicopter distance2D _targetPosition <= _minimumDistance) exitWith {false};
 
 _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_Active", true, true];
+private _controlRevision = (_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", 0]) + 1;
+_helicopter setVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", _controlRevision, true];
 _helicopter disableAI "PATH";
 _helicopter disableAI "MOVE";
 _pilot disableAI "FSM";
 private _startPositionASL = getPosASL _helicopter;
+// Remember the aircraft's real pre-controller flight layer. The touchdown anchor later uses forced
+// height zero; if Zeus moves/deletes the landing waypoint afterwards, restore uses this non-forced
+// height instead of imposing the generic landing transit altitude on the new order.
+_helicopter setVariable [
+    "Waldo_ImprovedHelicopterLanding_ReleaseHeight",
+    (((getPosATL _helicopter) select 2) max 20) min 500
+];
 private _startTerrainASL = getTerrainHeightASL _startPositionASL;
 private _targetTerrainASL = getTerrainHeightASL _targetPosition;
 private _startDistance = (_helicopter distance2D _targetPosition) max 1;
@@ -81,6 +102,7 @@ private _goAround = false;
 private _goArounds = 0;
 private _goAroundHeading = _yaw;
 private _abort = false;
+private _groupedAbort = false;
 private _landed = false;
 private _lastPosition = getPosASL _helicopter;
 private _lastTick = diag_tickTime;
@@ -91,7 +113,12 @@ private _committedToTouchdown = false;
 private _closestDistance = _startDistance;
 _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_LastResult", ["ACTIVE", _targetPosition, diag_tickTime, _startDistance, (getPosATL _helicopter) select 2], true];
 
-while {!_abort && {!_landed}} do {
+while {
+    !_abort
+    && {!_landed}
+    && {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}
+    && {(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) == _controlRevision}
+} do {
     private _now = diag_tickTime;
     private _delta = (_now - _lastTick) max 0.01;
     _lastTick = _now;
@@ -123,6 +150,7 @@ while {!_abort && {!_landed}} do {
         };
         _abort = _abort
             || {!local _helicopter}
+            || {group _pilot != _group}
             || {!alive _helicopter}
             || {!(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true])}
             || {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Exclude", false]}
@@ -138,6 +166,10 @@ while {!_abort && {!_landed}} do {
             || {!_committedToTouchdown && {currentWaypoint _group != _expectedWaypoint}}
             || {_expectedWaypoint < 0}
             || {_expectedWaypoint >= count (waypoints _group)};
+        if (!_abort && {[_group] call _groupHelicopterCount != 1}) then {
+            _abort = true;
+            _groupedAbort = true;
+        };
         if (!_abort) then {
             private _liveWaypoint = [_group, _expectedWaypoint];
             private _liveType = toUpperANSI (waypointType _liveWaypoint);
@@ -278,8 +310,15 @@ while {!_abort && {!_landed}} do {
         private _slopeBlend = (1 - ((_distance max _atlAltitude) / 6)) max 0 min 1;
         _up = (_up vectorMultiply (1 - _slopeBlend)) vectorAdd (_targetSurfaceNormal vectorMultiply _slopeBlend);
     };
-    _helicopter setVectorDirAndUp [_direction, vectorNormalized _up];
-    _helicopter setVelocity _currentVelocity;
+    // Grouping can occur between the periodic validation above and this frame's write. Recheck at
+    // the actual mutation boundary so no further WMP vector reaches a newly formed flight.
+    if ([_group] call _groupHelicopterCount != 1) then {
+        _abort = true;
+        _groupedAbort = true;
+    } else {
+        _helicopter setVectorDirAndUp [_direction, vectorNormalized _up];
+        _helicopter setVelocity _currentVelocity;
+    };
     if (_distance < 100 && {_atlAltitude < 50} && {!(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_GearLocal", false])}) then {
         _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_GearLocal", true];
         _pilot action ["LandGear", _helicopter];
@@ -288,13 +327,19 @@ while {!_abort && {!_landed}} do {
     uiSleep (([_helicopter, "ControlInterval", 0.05] call Waldo_fnc_ImprovedHelicopterLandingSetting) max 0.02 min 0.2);
 };
 
-_helicopter setVariable [
-    "Waldo_ImprovedHelicopterLanding_LastResult",
-    [["ABORTED", "LANDED"] select _landed, _targetPosition, diag_tickTime, _helicopter distance2D _targetPosition, (getPosATL _helicopter) select 2],
-    true
-];
-if (_landed && {local _helicopter}) then {
-    [_helicopter, _group, _targetPosition, _waypointType, _expectedWaypoint, _expectedScript, count (waypoints _group)] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
+if ((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) == _controlRevision) then {
+    _helicopter setVariable [
+        "Waldo_ImprovedHelicopterLanding_LastResult",
+        [["ABORTED", "LANDED"] select _landed, _targetPosition, diag_tickTime, _helicopter distance2D _targetPosition, (getPosATL _helicopter) select 2],
+        true
+    ];
+};
+if (
+    _landed
+    && {local _helicopter}
+    && {(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) == _controlRevision}
+) then {
+    [_helicopter, _group, _targetPosition, _waypointType, _expectedWaypoint, _expectedScript, count (waypoints _group), _controlRevision] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
 } else {
     // Do not repeat the restore when something else already reclaimed and reconfigured the
     // aircraft while this approach was still catching up to its own abort - most commonly a fresh
@@ -307,8 +352,11 @@ if (_landed && {local _helicopter}) then {
     // target with no clean cancel - the concrete "moves like a snail and lands randomly enroute
     // after moving the LZ" symptom this closes. Mirrors the equivalent fix already applied to the
     // post-touchdown ground-anchor loop in Waldo_fnc_ImprovedHelicopterLandingAnchorLocal.
-    if (_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
-        [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    if (
+        _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
+        && {(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) == _controlRevision}
+    ) then {
+        [_helicopter, false, "", _groupedAbort] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
     };
 };
 _landed

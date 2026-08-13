@@ -339,7 +339,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
 
     missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 3];
     diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 48]];
-    if (missionNamespace getVariable ["Waldo_Headless_Debug", false] && {!isNull getAssignedCuratorLogic player}) then {
+    if (missionNamespace getVariable ["Waldo_Headless_Debug", false]) then {
         [true] call Waldo_fnc_HeadlessDebugDisplayLocal;
     };
 };

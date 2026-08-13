@@ -15,9 +15,17 @@ one permanent loop per marker.
 Place **WMP Mission Tools > Create Custom 3D Marker**. Drop it directly on an object when the marker
 should follow that object, or place it on empty ground for a fixed marker. The dialog provides named
 icons such as Objective, Warning, Infantry, Vehicle and Supply, plus readable colour, side audience,
-height, size and maximum-distance choices. You do not need to know a texture path or config
+placement, size and maximum-distance choices. An object marker defaults directly to the object's
+anchor. Enable **Place above object** to derive an offset from that particular object's model bounds;
+**Extra vertical offset** adds further height only when deliberately requested. You do not need to know a texture path or config
 classname. The script API below remains available when a mission needs a custom image or a stable ID
 that another script updates later.
+
+Both entry points use the same renderer. Object offsets are converted with Arma's visual-time AGL
+command, and fixed array anchors remain ATL/AGL because `drawIcon3D` expects PositionAGL. Do not
+pre-convert an array anchor to ASL: that would add the terrain's elevation to the displayed height.
+With **Place above object** off and **Extra vertical offset** at zero, the marker is locked to the
+object's model origin rather than a guessed bounding-box height.
 
 ## Create or update a marker
 
@@ -53,7 +61,7 @@ Add an options HashMap as the third argument to override any default:
 | `text` | `""` | Accessible label drawn with the icon. |
 | `icon` | Vanilla dot icon | Vanilla or mission-local PAA path. |
 | `colour` | WMP blue | RGBA icon/text tint; do not rely on colour alone. |
-| `offset` | `[0,0,0]` | Position offset from the anchor. |
+| `offset` | `[0,0,0]` | Exact `[sideways, forwards, vertical]` metre offset from the object origin or ATL position. The script never guesses an above-object height. |
 | `width`, `height` | `0.8` | Icon dimensions. |
 | `angle` | `0` | Icon rotation in degrees. |
 | `shadow` | `2` | Arma `drawIcon3D` shadow mode. |

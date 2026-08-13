@@ -6,9 +6,9 @@
  *
  * Locality and repeat/JIP behaviour:
  * Runs only on curator interface clients. One Draw3D handler is stored and removed repeat-safely.
- * The renderer reads current global group ownership and the server-broadcast HC registry every
- * frame, so migrations appear without rebuilding the overlay. The server replays enabled state to
- * JIP curators from ZEN registration.
+ * The renderer reads the server-published owner snapshot and HC registry every frame, so migrations
+ * appear without rebuilding the overlay. It may install before curator assignment: drawing begins
+ * automatically as soon as this player receives Zeus, avoiding the initial-assignment race.
  *
  * Arguments: 0 enabled <BOOL> (default current Waldo_Headless_Debug state).
  * Return Value: Boolean - resulting local overlay state.
@@ -16,7 +16,7 @@
  * Example: [true] call Waldo_fnc_HeadlessDebugDisplayLocal;
  */
 params [["_enabled", missionNamespace getVariable ["Waldo_Headless_Debug", false], [true]]];
-if (!hasInterface || {isNull getAssignedCuratorLogic player}) exitWith {false};
+if (!hasInterface) exitWith {false};
 private _old = missionNamespace getVariable ["Waldo_Headless_DebugDrawHandler", -1];
 if (_old >= 0) then {removeMissionEventHandler ["Draw3D", _old];};
 missionNamespace setVariable ["Waldo_Headless_DebugDrawHandler", -1];
@@ -25,20 +25,23 @@ if (!_enabled) exitWith {
     false
 };
 private _handler = addMissionEventHandler ["Draw3D", {
+    if (isNull getAssignedCuratorLogic player) exitWith {};
     private _clients = missionNamespace getVariable ["Waldo_Headless_Clients", []];
     private _managed = missionNamespace getVariable ["Waldo_Headless_ManagedGroups", []];
+    private _owners = missionNamespace getVariable ["Waldo_Headless_GroupOwnerSnapshot", []];
     {
         private _group = _x;
         private _leader = leader _group;
         if (!isNull _leader && {!isPlayer _leader} && {side _group != sideLogic}) then {
-            private _owner = groupOwner _group;
+            private _ownerIndex = _owners findIf {(_x param [0, grpNull]) isEqualTo _group};
+            private _owner = if (_ownerIndex >= 0) then {(_owners select _ownerIndex) param [1, -1]} else {-1};
             private _clientIndex = _clients findIf {(_x param [0, -1]) == _owner};
             private _managedIndex = _managed findIf {(_x param [0, grpNull]) isEqualTo _group};
             private _expected = if (_managedIndex >= 0) then {(_managed select _managedIndex) param [1, -1]} else {-1};
             private _mismatch = _expected > 0 && {_expected != _owner};
-            private _ownerLabel = if (_owner == 2) then {"SERVER"} else {
+            private _ownerLabel = if (_owner < 0) then {"OWNER PENDING"} else {if (_owner == 2) then {"SERVER"} else {
                 if (_clientIndex >= 0) then {(_clients select _clientIndex) param [1, format ["HC %1", _owner]]} else {format ["OWNER %1", _owner]}
-            };
+            }};
             private _stateLabel = if (_mismatch) then {format ["MISMATCH expected %1 / actual %2", _expected, _owner]} else {_ownerLabel};
             private _colour = if (_mismatch) then {[1, 0.12, 0.12, 0.95]} else {
                 if (_owner == 2) then {[1, 0.62, 0.14, 0.9]} else {if (_clientIndex >= 0) then {[0.2, 0.65, 1, 0.9]} else {[1, 0.9, 0.2, 0.9]}}

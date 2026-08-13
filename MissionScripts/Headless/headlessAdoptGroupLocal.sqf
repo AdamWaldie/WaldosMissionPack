@@ -10,7 +10,7 @@
  * rejects execution on any other machine. Work is scheduled and bounded to 15 seconds because
  * setGroupOwner can succeed on the server before the destination observes the new locality. The
  * revision prevents an older, delayed handoff from overwriting the result of a newer one. Safe to
- * repeat; applying an AI profile is idempotent apart from configured per-application skill variance.
+ * repeat; the AI profile and its optional per-unit variance are idempotent across migrations.
  * JIP does not replay this transient operation; the current result is stored publicly on the group.
  *
  * Arguments:

@@ -168,6 +168,8 @@ class CfgFunctions
             class HeadlessDebugLog {file = "MissionScripts\Headless\headlessDebugLog.sqf";};
             class HeadlessDebugToggle {file = "MissionScripts\Headless\headlessDebugToggle.sqf";};
             class HeadlessDebugDisplayLocal {file = "MissionScripts\Headless\headlessDebugDisplayLocal.sqf";};
+            class HeadlessPublishDebugSnapshot {file = "MissionScripts\Headless\headlessPublishDebugSnapshot.sqf";};
+            class HeadlessSetDebugSnapshot {file = "MissionScripts\Headless\headlessSetDebugSnapshot.sqf";};
             class HeadlessForceRebalance {file = "MissionScripts\Headless\headlessForceRebalance.sqf";};
             class HeadlessManualHandoff {file = "MissionScripts\Headless\headlessManualHandoff.sqf";};
         };

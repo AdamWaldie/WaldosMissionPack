@@ -154,6 +154,15 @@ Gunships, Dynamic AA, Transport Services and WMP AI convoys stay on server owner
 registries, waypoint controllers, cleanup and live transitions are server-authoritative, so
 splitting crew ownership would create races and broken behaviour.
 
+All other AI-crewed helicopters also remain server-owned while improved helicopter landing is
+installed. Live dedicated testing showed a separate engine/locality failure: ACE Headless transferred
+fresh airborne helicopter groups successfully, but the aircraft lost stable flight and struck the
+terrain within three to four seconds, before WMP's landing controller had activated. WMP therefore
+sets ACE's public `acex_headless_blacklist` on every non-UAV helicopter as it is created and rejects
+helicopter groups in its own automatic and manual migration paths. This does **not** disable WMP AI
+skill profiles for helicopter crew; it only keeps their flight simulation and AI ownership on the
+server. Infantry and ground vehicles remain eligible for HC offloading.
+
 Dynamic AO is the deliberate exception. Its groups are temporarily pinned while the server creates
 their units, vehicles and waypoints. Once the AO registry is complete, those temporary exclusions
 are removed and the finished groups may be distributed to HCs. The AO registry and cleanup remain
@@ -172,6 +181,7 @@ reason) in `Waldo_Headless_ExcludedGroups`, refreshed on every rebalance pass:
 | The group is empty | `empty` |
 | Any member (including the leader) is a human player | `player-led` |
 | WMP classifies the group or crewed vehicle as a server-owned feature | `wmp-server-owned` |
+| Any member is crewing a helicopter | `helicopter-flight-locality` |
 | The group variable `Waldo_Headless_ExcludeGroup` is `true` | `opted-out` |
 | The group's side is `sideLogic` (curator helpers/ZEN module logic) | `curator-logic` |
 | The group currently crews a registered Airborne Gunship aircraft (`Waldo_Gunship_Registry`) | `gunship-crew` |
@@ -230,10 +240,9 @@ rework deliberately reuses rather than duplicates:
   `groupOwner _group` and `remoteExecCall`s itself there. Used by Dynamic AA
   (`Waldo_fnc_DynamicAASetGroupState`), every "Local" function in `Logistics\TransportServices\`, and
   the AI convoy ZEN module.
-- **Adoption** - a per-unit engine `Local` event handler reapplies state whenever that unit's own
-  locality changes, for any reason including HC migration. Used by AI rebalance
-  (`Waldo_AI_LocalHandlerInstalled`) and improved helicopter landing
-  (`Waldo_ImprovedHelicopterLanding_TrackedLocal`).
+- **Adoption** - a per-unit engine `Local` event handler reapplies AI skill state whenever an
+  ordinary eligible unit's locality changes. Improved helicopter landing also retains its local
+  tracker guard, but automatic and manual HC distribution no longer migrate helicopters.
 
 The one system found *not* to redispatch correctly, Dynamic AO's patrol-waypoint setup
 (`Waldo_fnc_DynamicAOAddPatrolWaypoints`), was fixed to match the same redispatch pattern as part of
@@ -364,7 +373,12 @@ of the always-running automatic pass:
 [] call Waldo_fnc_HeadlessForceRebalance;
 [_group, "AUTO"] call Waldo_fnc_HeadlessManualHandoff;   // best-load connected client
 [_group, "SERVER"] call Waldo_fnc_HeadlessManualHandoff; // force back to the server
+[_group, "HC:4"] call Waldo_fnc_HeadlessManualHandoff;   // exact live HC owner shown by diagnostics
 ```
+
+The ZEN destination list is rebuilt from the server's live HC registry and shows each HC owner plus
+its current managed-group count. If that HC disconnects before confirmation, the request is rejected
+instead of silently moving the group to the server.
 
 **All three of these modules - Toggle Debug included - are registered only when
 `Waldo_Headless_Enable` is true.** Every other WMP ZEN module registers unconditionally because it's

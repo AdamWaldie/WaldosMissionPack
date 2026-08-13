@@ -36,9 +36,13 @@ if !(isServer) exitWith {[_state] remoteExecCall ["Waldo_fnc_HeadlessDebugToggle
 private _current = missionNamespace getVariable ["Waldo_Headless_Debug", false];
 private _new = if (_state isEqualType true) then {_state} else {!_current};
 missionNamespace setVariable ["Waldo_Headless_Debug", _new, true];
+if (_new) then {[] call Waldo_fnc_HeadlessPublishDebugSnapshot;} else {[[]] call Waldo_fnc_HeadlessSetDebugSnapshot;};
 
 private _curatorUnits = (allCurators apply {getAssignedCuratorUnit _x}) select {!isNull _x};
-[_new] remoteExecCall ["Waldo_fnc_HeadlessDebugDisplayLocal", _curatorUnits];
+// Send to every interface client. The display function remains dormant until that local player is
+// assigned a curator, which also covers assignment occurring after this state change.
+[_new] remoteExecCall ["Waldo_fnc_HeadlessDebugDisplayLocal", -2];
+if (hasInterface) then {[_new] call Waldo_fnc_HeadlessDebugDisplayLocal;};
 
 private _clients = missionNamespace getVariable ["Waldo_Headless_Clients", []];
 private _managed = missionNamespace getVariable ["Waldo_Headless_ManagedGroups", []];

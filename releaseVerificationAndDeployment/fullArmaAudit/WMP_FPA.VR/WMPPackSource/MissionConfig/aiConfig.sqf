@@ -43,7 +43,7 @@
  * - Waldo_AIRebalance_Mode (MISSION MAKER): DAY or NIGHT; NIGHT uses the deliberately lower low-light values.
  * - Waldo_AI_ApplyMode (MISSION MAKER): EXISTING, NEW or BOTH; choose which AI population receives the profile.
  * - Waldo_AI_RestoreOnStop (ADVANCED): true restores the skills WMP recorded when its handler is stopped.
- * - Waldo_AI_SkillVariance (ADVANCED): random offset added within safe bounds; 0 gives repeatable values.
+ * - Waldo_AI_SkillVariance (ADVANCED): stable random offset chosen once per AI; 0 disables variation.
  * - Waldo_AI_IncludedSides (MISSION MAKER): [] allows every side; example ["WEST", "GUER"] limits application.
  * - Waldo_AI_IncludedFactions (MISSION MAKER): [] allows all; otherwise list CfgFactionClasses names.
  * - Waldo_AI_ExcludedFactions (MISSION MAKER): listed factions are always skipped after the include checks.
@@ -82,7 +82,7 @@ createHashMapFromArray [
         ["Waldo_AIRebalance_Mode", "DAY"],          // STRING: DAY or NIGHT (low-light/NVG-aware skill variant).
         ["Waldo_AI_ApplyMode", "BOTH"],             // STRING: EXISTING, NEW or BOTH AI populations.
         ["Waldo_AI_RestoreOnStop", true],            // ADVANCED: restore captured vanilla/mission skills on stop.
-        ["Waldo_AI_SkillVariance", 0],               // ADVANCED: random skill offset; 0 is deterministic.
+        ["Waldo_AI_SkillVariance", 0],               // ADVANCED: one stable per-AI offset; 0 disables variation.
         ["Waldo_AI_IncludedSides", []],             // ARRAY of WEST/EAST/GUER/CIV strings; [] permits every side.
         ["Waldo_AI_IncludedFactions", []],          // ARRAY of CfgFactionClasses names; [] permits every faction.
         ["Waldo_AI_ExcludedFactions", []],          // ARRAY of faction names removed after the include filter.

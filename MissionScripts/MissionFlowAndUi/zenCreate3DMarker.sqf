@@ -2,7 +2,9 @@
  * Author: WaldoTheWarfighter
  * Opens a beginner-friendly ZEN dialog for creating one WMP 3D world marker. Curators choose a
  * named icon, colour and audience; no texture path or config classname is required. Dropping the
- * module on an object follows that object, while empty-ground placement creates a fixed marker.
+ * module on an object follows that object and defaults to its actual anchor point. An optional
+ * above-object mode derives a modest offset from that object's bounding box. Empty-ground placement
+ * creates a fixed marker and retains a direct numeric vertical offset.
  *
  * Locality and repeat/JIP behaviour:
  * Runs on the curator interface. The submitted marker is created by the server through
@@ -45,15 +47,16 @@ private _anchor = if (isNull _objectPos) then {+_modulePos} else {_objectPos};
         ["COMBO", ["Icon", "Choose a readable purpose; WMP supplies the correct image."], [_icons apply {_x select 1}, _icons apply {_x select 0}, 0]],
         ["COMBO", ["Colour", "Colour supplements the icon and text; it is never the only meaning."], [_colours apply {_x select 1}, _colours apply {_x select 0}, 0]],
         ["COMBO", ["Visible to", "Choose which player side can see this world marker."], [_sideValues, ["Everyone", "BLUFOR", "OPFOR", "Independent", "Civilian"], 0]],
-        ["SLIDER", ["Height above anchor", "Vertical offset in metres. Use 2-3 m for an object or person."], [0, 20, if (isNull _objectPos) then {0} else {2.5}, 1]],
+        ["CHECKBOX", ["Place above object", "Off (default) anchors the marker directly on the selected object. On places it just above that object's model."], false],
+        ["SLIDER", ["Extra vertical offset", "Additional metres above the selected placement. Usually leave this at zero."], [0, 20, 0, 1]],
         ["SLIDER", ["Maximum view distance", "Players farther away than this cannot see the marker."], [10, 2000, 150, 0]],
         ["SLIDER", ["Icon size", "Width and height of the 3D icon."], [0.2, 3, 0.8, 1]]
     ],
     {
         params ["_values", "_anchor"];
-        _values params ["_text", "_icon", "_colour", "_sides", "_height", "_distance", "_size"];
+        _values params ["_text", "_icon", "_colour", "_sides", "_aboveObject", "_extraHeight", "_distance", "_size"];
         private _id = format ["WMP3D_ZEUS_%1_%2", clientOwner, floor (diag_tickTime * 1000)];
-        ["CREATE_3D_MARKER", [_id, _anchor, _text, _icon, _colour, _sides, _height, _distance, _size]]
+        ["CREATE_3D_MARKER", [_id, _anchor, _text, _icon, _colour, _sides, _aboveObject, _extraHeight, _distance, _size]]
             call Waldo_fnc_FeatureRuntimeApply;
     },
     {},

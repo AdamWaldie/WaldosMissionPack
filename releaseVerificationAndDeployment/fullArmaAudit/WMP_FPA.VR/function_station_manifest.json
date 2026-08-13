@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 928,
+  "registeredFunctionCount": 930,
   "runtimeFunctionCount": 385,
-  "functionCount": 1313,
+  "functionCount": 1315,
   "stations": [
     {
       "id": "control",
@@ -875,6 +875,18 @@
     {
       "name": "Waldo_fnc_HeadlessDebugDisplayLocal",
       "file": "MissionScripts/Headless/headlessDebugDisplayLocal.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessPublishDebugSnapshot",
+      "file": "MissionScripts/Headless/headlessPublishDebugSnapshot.sqf",
+      "station": "headless",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HeadlessSetDebugSnapshot",
+      "file": "MissionScripts/Headless/headlessSetDebugSnapshot.sqf",
       "station": "headless",
       "activation": "manual"
     },

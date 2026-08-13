@@ -43,8 +43,14 @@ while {
             // If Zeus groups an aircraft while WMP still owns a previous landing controller, release
             // that controller immediately. Otherwise its zero-height/anchor state can survive into
             // the new formation route and pull the newly grouped aircraft towards the terrain.
-            if (count _groupHelicopters != 1 && {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}) then {
-                [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+            if (
+                count _groupHelicopters != 1
+                && {
+                    _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
+                    || {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_GroundAnchored", false]}
+                }
+            ) then {
+                [_helicopter, false, "", true] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
                 diag_log format ["[WMP AI LANDING] Released controller because helicopter joined a %1-aircraft group helicopter=%2.", count _groupHelicopters, netId _helicopter];
             };
             private _index = currentWaypoint _group;
