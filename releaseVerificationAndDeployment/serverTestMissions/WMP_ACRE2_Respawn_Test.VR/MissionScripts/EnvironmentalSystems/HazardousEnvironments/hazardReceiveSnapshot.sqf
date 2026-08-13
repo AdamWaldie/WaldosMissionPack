@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter, Val
  * Applies one server-authored hazardous-environment snapshot and reconciles the local evaluator.
+ * Locality and authority: Runs on clients/host interface from server remote execution. Network
+ * calls not owned by the server are rejected; the hosted server retains its unsanitised registry.
  *
  * Arguments:
  * 0: enabled <BOOLEAN>
@@ -8,6 +10,7 @@
  *
  * Return Value: BOOLEAN - true when the server snapshot was accepted.
  * Example: Internal JIP call from Waldo_fnc_HazardPublishState.
+ * Result: Replaces client-visible zone state and starts or stops the local evaluator to match it.
  * Current caller: Waldo_fnc_HazardPublishState through one replaceable remote-exec JIP key.
  */
 

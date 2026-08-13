@@ -4,13 +4,15 @@
  * Transient cards stack across channels and may spill into other screen regions.
  * Pending state is bounded, expires, and coalesces by channel to prevent notification after-play.
  * Persistent cards replace the current owner of their channel.
- * Duration 0 keeps the card visible until it is replaced or cleared.
+ * Duration 0 keeps the card visible until it is replaced or cleared. For timed cards, the supplied
+ * duration is the maximum: WMP shortens concise messages toward the configured readable minimum and
+ * progressively grants longer text more reading time, without ever extending a caller's old timing.
  *
  * Arguments:
  * 0: Title <STRING>
  * 1: Message <STRING or TEXT>
  * 2: State <STRING> INFO | SUCCESS | WARNING | ERROR (default INFO)
- * 3: Duration <NUMBER> seconds, 0 = persistent (default 8)
+ * 3: Maximum duration <NUMBER> seconds, 0 = persistent (default 8)
  * 4: Placement <STRING> TOP | TOP_RIGHT | CENTER | BOTTOM_LEFT | BOTTOM_CENTER | BOTTOM_RIGHT
  * 5: Channel <STRING> replacement/ownership key (default MISSION)
  * 6: Source label <STRING> (default WALDOS MISSION PACK)
@@ -40,6 +42,15 @@ params [
     ["_allowLocalOverride", false, [true]],
     ["_fromQueue", false, [true]]
 ];
+
+private _messageText = if ((typeName _message) isEqualTo "TEXT") then {str _message} else {_message};
+if (_duration > 0 && {!_fromQueue}) then {
+    private _maximumDuration = _duration max 1;
+    private _minimumDuration = ((missionNamespace getVariable ["Waldo_UiNotification_MinimumDuration", 3]) max 1) min _maximumDuration;
+    private _charactersPerSecond = ((missionNamespace getVariable ["Waldo_UiNotification_CharactersPerSecond", 18]) max 5) min 60;
+    private _characterCount = count toArray format ["%1 %2", _title, _messageText];
+    _duration = (_minimumDuration + (_characterCount / _charactersPerSecond)) min _maximumDuration;
+};
 
 private _display = findDisplay 46;
 if (isNull _display) exitWith {
@@ -80,6 +91,10 @@ _policy = toUpper _policy;
 if (_policy isEqualTo "AUTO") then {_policy = if (_duration <= 0) then {"REPLACE"} else {"FIFO"};};
 if !(_policy in ["FIFO", "REPLACE"]) then {_policy = "FIFO";};
 private _theme = [] call Waldo_fnc_UiTheme;
+// The only theme token that changes card footprint rather than colour/font/copy - opt-in per theme
+// (MINIMAL is the only shipped theme that sets it) so every other theme's sizing is untouched.
+private _compact = _theme getOrDefault ["compact", false];
+private _sizeScale = if (_compact) then {0.78} else {1};
 private _semantic = switch (_state) do {
     case "SUCCESS": {[_theme getOrDefault ["successHex", "#6CE5A8"], "[OK]", _theme getOrDefault ["success", [0.18, 0.66, 0.45, 1]]]};
     case "WARNING": {[_theme getOrDefault ["warningHex", "#FFD166"], "[!]", _theme getOrDefault ["warning", [0.88, 0.60, 0.12, 1]]]};
@@ -156,13 +171,12 @@ _accent ctrlSetBackgroundColor _accentColour;
 _trim ctrlSetBackgroundColor (_theme getOrDefault ["trim", _theme getOrDefault ["accent", [0.10, 0.38, 0.66, 1]]]);
 _content ctrlSetBackgroundColor [0, 0, 0, 0];
 
-private _messageText = if ((typeName _message) isEqualTo "TEXT") then {str _message} else {_message};
 private _styledSource = (_theme getOrDefault ["sourcePrefix", ""]) + toUpper _source + (_theme getOrDefault ["sourceSuffix", ""]);
 private _styledTitle = (_theme getOrDefault ["titlePrefix", ""]) + _title + (_theme getOrDefault ["titleSuffix", ""]);
 _content ctrlSetStructuredText parseText format [
-    "<t align='left' font='%6' color='%7' size='0.72'>%1 // %10</t><br/>" +
-    "<t align='left' font='%8' color='%2' size='1.12' shadow='1'>%3 %4</t><br/>" +
-    "<t align='left' font='%6' color='%9' size='0.88'>%5</t>",
+    "<t align='left' font='%6' color='%7' size='%11'>%1 // %10</t><br/>" +
+    "<t align='left' font='%8' color='%2' size='%12' shadow='1'>%3 %4</t><br/>" +
+    "<t align='left' font='%6' color='%9' size='%13'>%5</t>",
     _styledSource,
     _colour,
     _symbol,
@@ -172,25 +186,28 @@ _content ctrlSetStructuredText parseText format [
     _theme getOrDefault ["mutedHex", "#9FB3C8"],
     _theme getOrDefault ["fontBold", "RobotoCondensedBold"],
     _theme getOrDefault ["textHex", "#FFFFFF"],
-    _theme getOrDefault ["motif", "TACTICAL INTERFACE"]
+    _theme getOrDefault ["motif", "TACTICAL INTERFACE"],
+    0.72 * _sizeScale,
+    1.12 * _sizeScale,
+    0.88 * _sizeScale
 ];
 
 private _visibleW = safeZoneW;
 private _visibleH = safeZoneH;
-private _panelW = switch (_placement) do {
+private _panelW = (switch (_placement) do {
     case "BOTTOM_RIGHT": {_visibleW * 0.235};
     case "TOP_RIGHT": {_visibleW * 0.28};
     case "BOTTOM_LEFT": {_visibleW * 0.34};
     case "BOTTOM_CENTER": {_visibleW * 0.30};
     case "CENTER": {_visibleW * 0.44};
     default {_visibleW * 0.48};
-};
-private _padX = _visibleW * 0.010;
-private _padY = _visibleH * 0.008;
-private _maximumContentH = _visibleH * 0.22;
+}) * _sizeScale;
+private _padX = _visibleW * 0.010 * (if (_compact) then {0.7} else {1});
+private _padY = _visibleH * 0.008 * (if (_compact) then {0.7} else {1});
+private _maximumContentH = _visibleH * 0.22 * _sizeScale;
 _content ctrlSetPosition [0, 0, _panelW - (2 * _padX), _maximumContentH];
 _content ctrlCommit 0;
-private _contentH = (((ctrlTextHeight _content) + (_visibleH * 0.006)) max (_visibleH * 0.07)) min _maximumContentH;
+private _contentH = (((ctrlTextHeight _content) + (_visibleH * 0.006)) max (_visibleH * 0.07 * _sizeScale)) min _maximumContentH;
 private _panelH = _contentH + (2 * _padY);
 private _accentH = (_visibleH * 0.004) max 0.002;
 {_x ctrlShow !(uiNamespace getVariable ["Waldo_UI_PanelsSuppressed", false]);} forEach [_frame, _accent, _trim, _content];

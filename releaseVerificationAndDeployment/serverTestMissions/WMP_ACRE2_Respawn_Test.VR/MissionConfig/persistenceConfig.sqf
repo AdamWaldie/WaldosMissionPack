@@ -94,7 +94,7 @@ createHashMapFromArray [
             "Waldo_ObjectScale", "Waldo_ObjectScaleOriginal",
             "Waldo_Breaching_Processed", "Waldo_Breaching_AccumulatedStrength",
             "Waldo_FieldResupply_Hub", "Waldo_FieldResupply_Stock",
-            "Waldo_FieldResupply_Deployed", "Waldo_FieldResupply_Charges"
+            "Waldo_FieldResupply_Deployed"
         ]]
     ]]
 ]

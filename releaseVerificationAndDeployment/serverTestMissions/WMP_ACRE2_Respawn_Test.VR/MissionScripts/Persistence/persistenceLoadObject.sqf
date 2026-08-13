@@ -78,8 +78,10 @@ if (_loadPosition && {count _position >= 2}) then {
 };
 private _allowedCustom = _options param [5, missionNamespace getVariable ["Waldo_Persistence_DefaultCustomVariables", []]];
 {
-    _x params ["_name", "_value"];
-    if (_name in _allowedCustom) then {_object setVariable [_name, _value, true]};
+    if (count _x == 2) then {
+        _x params ["_name", "_value"];
+        if (_name in _allowedCustom) then {_object setVariable [_name, _value, true]};
+    };
 } forEach _custom;
 if ("Waldo_ObjectScale" in _allowedCustom) then {
     _object setObjectScale (_object getVariable ["Waldo_ObjectScale", 1]);

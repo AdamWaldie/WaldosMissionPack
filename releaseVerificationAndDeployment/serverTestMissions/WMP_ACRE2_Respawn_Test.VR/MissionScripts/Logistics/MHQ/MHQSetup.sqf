@@ -5,6 +5,8 @@
  * The setup is repeat-safe. The server owns deployment state, synchronized-part visibility,
  * respawn positions, markers and vehicle locking. ACE actions are installed locally on every
  * client (including JIP); vanilla actions are installed only when ACE Interact is unavailable.
+ * Locality and authority: Safe from an Eden object Init field on every machine. The server owns
+ * state/world mutation and publishes one object-keyed JIP action setup; interface clients install UI.
  *
  * Arguments:
  * 0: target <OBJECT>
@@ -13,8 +15,12 @@
  * 3: logistics direction <NUMBER> (default 180)
  * 4: logistics distance <NUMBER> (default 4)
  *
+ * Return Value: Boolean - true when a non-null target was accepted.
+ *
  * Example:
  * [this, true, true, 180, 4] call Waldo_fnc_MHQSetup;
+ * Result: Configures this object as a repeat-safe deployable MHQ with an optional quartermaster.
+ * Current callers: Eden object Init fields, compositions and mission scripts registering an MHQ.
  */
 
 params [
@@ -47,13 +53,25 @@ if (isServer && {!(_target getVariable ["Waldo_MHQ_ServerConfigured", false])}) 
     // beside the MHQ without synchronizing it directly to the vehicle.
     if (isNull _syncLogic) then {_syncLogic = nearestObject [_target, "Logic"];};
     private _deployParts = if (isNull _syncLogic) then {[]} else {synchronizedObjects _syncLogic};
-    _deployParts = _deployParts select {!isNull _x && {_x != _target}};
+    // A synchronization helper can also be linked to modules or other logic objects. Those are not
+    // deployable scenery and attaching them to the MHQ can drag unrelated state graphs into the
+    // vehicle hierarchy. Keep only unique physical objects and reject any object already above the
+    // MHQ in an attachment chain, which would create a recursive attachment cycle.
+    _deployParts = _deployParts select {!isNull _x && {_x != _target} && {!(_x isKindOf "Logic")}};
+    _deployParts = _deployParts arrayIntersect _deployParts;
+    _deployParts = _deployParts select {
+        private _candidate = _x;
+        private _cursor = _target;
+        private _cycle = false;
+        while {!isNull _cursor && {!_cycle}} do {
+            if (_cursor isEqualTo _candidate) then {_cycle = true} else {_cursor = attachedTo _cursor};
+        };
+        !_cycle
+    };
     _target setVariable ["Waldo_MHQ_DeployParts", _deployParts, true];
 
-    if (!isNull _syncLogic) then {
-        [_syncLogic, _target] call BIS_fnc_attachToRelative;
-    };
     {
+        detach _x;
         [_x, _target] call BIS_fnc_attachToRelative;
         hideObjectGlobal _x;
     } forEach _deployParts;

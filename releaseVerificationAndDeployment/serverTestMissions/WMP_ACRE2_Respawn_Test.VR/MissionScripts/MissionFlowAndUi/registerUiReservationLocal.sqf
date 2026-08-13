@@ -14,7 +14,8 @@
  * Return Value: BOOL - true when the reservation was stored.
  *
  * Example: ["EW_STATUS", [_frame, _content], ["BOTTOM_RIGHT"], true] call Waldo_fnc_RegisterUiReservationLocal;
- * Current callers: SafeStart and electronic-warfare specialist HUD renderers; available to plugins.
+ * Current callers: SafeStart, electronic-warfare and hazardous-environment specialist HUD renderers;
+ * available to plugins.
  */
 if (!hasInterface) exitWith {false};
 params [

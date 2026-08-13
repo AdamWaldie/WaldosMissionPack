@@ -2,25 +2,29 @@
  * Author: WaldoTheWarfighter
  * Validates and executes every Field Resupply operation on the server.
  *
- * The handler is the sole writer for hub stock, carrier stock, deployed-crate charges and logical
- * ammunition rows. Deployed crates deliberately keep empty physical inventory so Gear access
- * cannot bypass charge consumption. Remote callers may act only through the unit they own. Carrier operations
- * require a configured carrier and the same backpack/on-foot conditions shown by local actions.
- * Deployed crates derive logical supply rows from the carrier's actual magazine types, excluding
- * single-round ordnance by default. Capacity-based issue amounts preserve useful weapon-category
- * quantities and remain configurable. Empty placement, incompatible supply and salvage edge cases
- * fail safely.
+ * The handler is the sole writer for hub stock and carrier stock. A deployed crate is a normal
+ * populated supply crate (Waldo_fnc_SupplyCratePopulate, scoped to the servicing hub's side) with
+ * real physical cargo - taking supplies from it is ordinary ACE Cargo/Gear interaction against that
+ * cargo, not a server-brokered logical grant, so this handler has no TAKE case. Remote callers may
+ * act only through the unit they own. Carrier operations require a configured carrier and the same
+ * backpack/on-foot conditions shown by local actions. Empty placement and salvage edge cases fail
+ * safely.
+ *
+ * Locality and authority:
+ * Runs only on the server. It verifies that remote callers own the supplied player unit, publishes
+ * resulting stock state, and asks object owners/clients only for their local side effects.
  *
  * Arguments:
  * 0: unit <OBJECT> - requesting player unit.
- * 1: operation <STRING> - REFILL, DEPLOY, TAKE or SALVAGE.
- * 2: arguments <ARRAY> - REFILL expects hub at index 0; TAKE/SALVAGE expect crate at index 0.
+ * 1: operation <STRING> - REFILL, DEPLOY or SALVAGE.
+ * 2: arguments <ARRAY> - REFILL expects hub at index 0; SALVAGE expects crate at index 0.
  *
  * Return Value:
  * Boolean - true when the requested state change completed; otherwise false.
  *
  * Example:
  * [player, "DEPLOY", []] remoteExecCall ["Waldo_fnc_FieldResupplyServerHandle", 2];
+ * Result: one populated crate is safely deployed, or the request is rejected without consuming stock.
  *
  * Current callers: carrier self-actions, registered hub actions and deployed-crate actions.
  */
@@ -36,42 +40,26 @@ private _notify = {
 };
 private _isCarrier = {_unit getVariable ["Waldo_FieldResupply_MaxCrates", 0] > 0};
 private _hasPack = {backpack _unit != ""};
-private _getMagazineRows = {
-    params ["_sourceUnit"];
-    private _allowed = missionNamespace getVariable ["Waldo_FieldResupply_AllowedMagazines", []];
-    private _blocked = missionNamespace getVariable ["Waldo_FieldResupply_BlockedMagazines", []];
-    private _minimumRounds = (round (missionNamespace getVariable ["Waldo_FieldResupply_MinimumMagazineRounds", 2])) max 1;
-    private _classes = [];
-    {
-        private _class = _x param [0, "", [""]];
-        if (_class != "") then {_classes pushBackUnique _class};
-    } forEach (magazinesAmmoFull _sourceUnit);
-    _classes = _classes select {
-        !(_x in _blocked)
-        && {(count _allowed == 0 || {_x in _allowed})}
-        && {getNumber (configFile >> "CfgMagazines" >> _x >> "count") >= _minimumRounds}
+// Normalises one getXCargo-style [names[], counts[]] pair into a sorted, comparable string list -
+// used to snapshot a crate's real cargo at DEPLOY and detect "has anything been taken or added"
+// at SALVAGE without caring about the engine's internal cargo ordering.
+private _snapshotCargoPair = {
+    params ["_names", "_counts"];
+    private _pairs = [];
+    for "_i" from 0 to ((count _names) - 1) do {
+        _pairs pushBack format ["%1:%2", _names select _i, _counts select _i];
     };
-    private _useCapacity = missionNamespace getVariable ["Waldo_FieldResupply_UseCapacityBasedAmounts", true];
-    private _fixedAmount = (round (missionNamespace getVariable ["Waldo_FieldResupply_MagazinesPerType", 1])) max 1;
-    private _amounts = +(missionNamespace getVariable ["Waldo_FieldResupply_CapacityAmounts", [4, 3, 8, 3, 2]]);
-    _amounts resize 5;
-    {
-        if (isNil {_x} || {!(_x isEqualType 0)}) then {_amounts set [_forEachIndex, [4, 3, 8, 3, 2] select _forEachIndex]};
-        _amounts set [_forEachIndex, (round (_amounts select _forEachIndex)) max 1];
-    } forEach _amounts;
-    _classes apply {
-        private _capacity = getNumber (configFile >> "CfgMagazines" >> _x >> "count");
-        private _amount = if !(_useCapacity) then {_fixedAmount} else {
-            switch (true) do {
-                case (_capacity <= 4): {_amounts select 0};
-                case (_capacity <= 10): {_amounts select 1};
-                case (_capacity <= 40): {_amounts select 2};
-                case (_capacity <= 70): {_amounts select 3};
-                default {_amounts select 4};
-            }
-        };
-        [_x, _amount]
-    }
+    _pairs sort true;
+    _pairs
+};
+private _snapshotCrateCargo = {
+    params ["_crate"];
+    [
+        [(getWeaponCargo _crate) select 0, (getWeaponCargo _crate) select 1] call _snapshotCargoPair,
+        [(getMagazineCargo _crate) select 0, (getMagazineCargo _crate) select 1] call _snapshotCargoPair,
+        [(getItemCargo _crate) select 0, (getItemCargo _crate) select 1] call _snapshotCargoPair,
+        [(getBackpackCargo _crate) select 0, (getBackpackCargo _crate) select 1] call _snapshotCargoPair
+    ]
 };
 
 switch (toUpperANSI _operation) do {
@@ -98,6 +86,12 @@ switch (toUpperANSI _operation) do {
         if (_issued <= 0) exitWith {["This supply hub cannot issue another crate.", "WARNING"] call _notify; false};
         _unit setVariable ["Waldo_FieldResupply_Crates", _current + _issued, true];
         if (_stock >= 0) then {_hub setVariable ["Waldo_FieldResupply_Stock", _stock - _issued, true]};
+        // DEPLOY has no hub reference of its own - it can run anywhere the carrier is standing, long
+        // after leaving this hub - so stamp the servicing side here, at the one point a hub and
+        // carrier are actually both in hand. A hub serving "ALL" (sideUnknown) has no fixed side to
+        // populate from, so fall back to the carrier's own side rather than leaving DEPLOY ambiguous.
+        private _carrierSide = if (_hubSide == sideUnknown) then {side group _unit} else {_hubSide};
+        _unit setVariable ["Waldo_FieldResupply_CarrierSide", _carrierSide];
         [format ["Carrier refilled with %1 crate(s); now carrying %2 of %3.", _issued, _current + _issued, _maximum], "SUCCESS"] call _notify;
         true
     };
@@ -119,53 +113,44 @@ switch (toUpperANSI _operation) do {
             ["There is no clear space in front of you for the resupply crate.", "WARNING"] call _notify;
             false
         };
-        private _rows = [_unit] call _getMagazineRows;
-        if (count _rows == 0) exitWith {
-            ["You carry no compatible multi-round magazines to package.", "WARNING"] call _notify;
+        // DEPLOY populates from the servicing hub's own side (stamped on the carrier at REFILL, or
+        // the carrier's own side if never refilled from a hub), not the deploying player's personal
+        // inventory - a scanned loadout pool can genuinely be empty (e.g. a side with no playable
+        // units placed), which Waldo_fnc_SupplyCratePopulate cannot itself detect before spawning a
+        // crate. Check first so a mis-scoped hub fails with a clear reason instead of a silently
+        // empty crate.
+        private _carrierSide = _unit getVariable ["Waldo_FieldResupply_CarrierSide", side group _unit];
+        private _loadoutArray = [_carrierSide] call Waldo_fnc_GetSideLoadoutArray;
+        if (count _loadoutArray == 0) exitWith {
+            [format ["No scanned loadouts are available for %1 - place playable units on that side, or check the hub's serviced side.", str _carrierSide], "WARNING"] call _notify;
             false
         };
-        private _charges = (round (missionNamespace getVariable ["Waldo_FieldResupply_ChargesPerCrate", 5])) max 1;
         private _crate = createVehicle [_class, _position, [], 0, "NONE"];
         if (isNull _crate) exitWith {["The resupply crate could not be created.", "ERROR"] call _notify; false};
         _crate setDir (getDir _unit);
         _crate setPosATL _position;
         _crate allowDamage false;
-        clearWeaponCargoGlobal _crate;
-        clearMagazineCargoGlobal _crate;
-        clearItemCargoGlobal _crate;
-        clearBackpackCargoGlobal _crate;
+        private _sizeScalar = (missionNamespace getVariable ["Waldo_FieldResupply_CrateSizeScalar", 1]) max 0.1;
+        private _includeGear = missionNamespace getVariable ["Waldo_FieldResupply_IncludeWeaponsAttachments", false];
+        private _includeLaunchers = missionNamespace getVariable ["Waldo_FieldResupply_IncludeLaunchers", false];
+        [_crate, _sizeScalar, _carrierSide, _includeGear, _includeLaunchers] call Waldo_fnc_SupplyCratePopulate;
         _crate setVariable ["Waldo_FieldResupply_Deployed", true, true];
-        _crate setVariable ["Waldo_FieldResupply_Charges", _charges, true];
-        _crate setVariable ["Waldo_FieldResupply_InitialCharges", _charges, true];
-        _crate setVariable ["Waldo_FieldResupply_CargoRows", _rows, true];
+        // Server-only - only this same handler's own SALVAGE case ever reads it back, so it does not
+        // need to be broadcast.
+        _crate setVariable ["Waldo_FieldResupply_CargoSnapshot", [_crate] call _snapshotCrateCargo];
         _unit setVariable ["Waldo_FieldResupply_Crates", _carried - 1, true];
-        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, false, [0, 0, 0], 0] call ace_dragging_fnc_setDraggable};
+        // Kept exactly as-is: Waldo_fnc_SupplyCratePopulate's own Waldo_fnc_SetCargoAttributes call
+        // already made this crate draggable/carryable with default offsets, so these run after it to
+        // restore field-resupply's own tuned drag/carry anchor points.
+        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, true, [0, 0, 0], 0] call ace_dragging_fnc_setDraggable};
         if !(isNil "ace_dragging_fnc_setCarryable") then {[_crate, true, [0, 2, 1], 0] call ace_dragging_fnc_setCarryable};
-        [_crate] remoteExecCall ["Waldo_fnc_FieldResupplySetupCrateLocal", -2, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
-        [format ["Field resupply deployed with %1 uses; %2 portable crate(s) remain.", _charges, _carried - 1], "SUCCESS"] call _notify;
-        true
-    };
-
-    case "TAKE": {
-        private _crate = _arguments param [0, objNull, [objNull]];
-        if (isNull _crate || {!(_crate getVariable ["Waldo_FieldResupply_Deployed", false])} || {_unit distance _crate > 5}) exitWith {
-            ["No deployed Field Resupply crate is within reach.", "WARNING"] call _notify;
-            false
-        };
-        private _charges = _crate getVariable ["Waldo_FieldResupply_Charges", 0];
-        if (_charges <= 0) exitWith {["This Field Resupply crate is exhausted.", "WARNING"] call _notify; false};
-        private _compatibleClasses = ([_unit] call _getMagazineRows) apply {_x select 0};
-        private _storedRows = _crate getVariable ["Waldo_FieldResupply_CargoRows", []];
-        private _grantRows = _storedRows select {(_x param [0, "", [""]]) in _compatibleClasses};
-        if (count _grantRows == 0) exitWith {
-            ["No compatible ammunition remains in this crate.", "WARNING"] call _notify;
-            false
-        };
-        _crate setVariable ["Waldo_FieldResupply_Charges", _charges - 1, true];
-        [_grantRows] remoteExecCall ["Waldo_fnc_FieldResupplyReceiveAmmo", owner _unit];
-        if (_charges - 1 <= 0) then {
-            ["This Field Resupply crate is now exhausted.", "INFO"] call _notify;
-        };
+        // Target 0 (all machines), matching FieldResupplyRegisterHub's own equivalent call - not -2
+        // ("all clients", which excludes owner 2). On a listen server the host's own client shares
+        // owner 2 with the server, so -2 silently skipped installing the crate's local actions on
+        // exactly the machine most mission makers test from; FieldResupplySetupCrateLocal already
+        // guards with hasInterface, so target 0 stays a safe no-op on a pure dedicated server.
+        [_crate] remoteExecCall ["Waldo_fnc_FieldResupplySetupCrateLocal", 0, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
+        [format ["Field resupply deployed; %1 portable crate(s) remain. Open Gear or Cargo to draw supplies.", _carried - 1], "SUCCESS"] call _notify;
         true
     };
 
@@ -177,19 +162,26 @@ switch (toUpperANSI _operation) do {
         };
         if !(call _isCarrier) exitWith {["Only an assigned Field Resupply carrier can salvage this crate.", "WARNING"] call _notify; false};
         if !(call _hasPack) exitWith {["A backpack is required to salvage a field-resupply crate.", "WARNING"] call _notify; false};
-        private _charges = _crate getVariable ["Waldo_FieldResupply_Charges", 0];
-        private _initialCharges = _crate getVariable ["Waldo_FieldResupply_InitialCharges", missionNamespace getVariable ["Waldo_FieldResupply_ChargesPerCrate", 5]];
-        private _recoverable = _charges >= _initialCharges;
+        // Recoverable only if nobody has taken from or added to the crate since it was populated -
+        // there is no charge counter left to compare against, so this compares the crate's actual
+        // cargo against the snapshot captured right after DEPLOY populated it.
+        private _originalCargo = _crate getVariable ["Waldo_FieldResupply_CargoSnapshot", []];
+        private _currentCargo = [_crate] call _snapshotCrateCargo;
+        private _recoverable = _currentCargo isEqualTo _originalCargo;
         private _maximum = _unit getVariable ["Waldo_FieldResupply_MaxCrates", 0];
         private _carried = _unit getVariable ["Waldo_FieldResupply_Crates", 0];
         if (_recoverable && {_carried >= _maximum}) exitWith {["Carrier capacity is full.", "WARNING"] call _notify; false};
-        [] remoteExecCall ["", format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
+        // Cancel the crate's persistent JIP-replay entry before deleting it - the JIP id is the
+        // 3rd remoteExecCall argument, not the 2nd (target); passing it as target previously called
+        // a no-op function at a garbage destination and left the JIP entry (and its now-dangling
+        // crate object reference) stored for any future joining player.
+        [] remoteExecCall ["", 0, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
         deleteVehicle _crate;
         if (_recoverable) then {
             _unit setVariable ["Waldo_FieldResupply_Crates", _carried + 1, true];
             [format ["Unused crate salvaged; now carrying %1 of %2.", _carried + 1, _maximum], "SUCCESS"] call _notify;
         } else {
-            ["Partly used crate removed; no portable crate was recovered.", "INFO"] call _notify;
+            ["Opened crate removed; no portable crate was recovered.", "INFO"] call _notify;
         };
         true
     };

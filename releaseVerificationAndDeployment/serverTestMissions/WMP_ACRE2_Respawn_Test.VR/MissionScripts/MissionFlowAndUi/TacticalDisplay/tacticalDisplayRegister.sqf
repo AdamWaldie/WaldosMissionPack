@@ -4,38 +4,52 @@
  *
  * Configuration is stored publicly on the object and local `addAction` setup is published with an
  * object-keyed JIP call. The action opens a client-only map; this function does not create a texture
- * on the object. Remote registration requires an assigned curator, while direct server calls support
- * pre-planned mission setup. Re-registering updates configuration without duplicating local actions.
+ * on the object. Eden object init fields run everywhere, so non-server copies are ignored. ZEN
+ * sends live requests through the validated server runtime bridge. Re-registering does not duplicate actions.
+ *
+ * Locality and authority:
+ * The server validates/publishes display policy. Each interface owns its action and map UI; Eden
+ * client copies exit and the object-keyed replay restores the action for JIP clients.
  *
  * Arguments:
  * 0: display object <OBJECT> - whiteboard, map board or suitable terminal.
- * 1: represented side <SIDE> - sideUnknown follows the viewer's side (default sideUnknown).
+ * 1: represented side <SIDE or STRING> - use "VIEWER" to follow each viewer's side, or
+ *    west/east/independent/civilian for a fixed side (default "VIEWER"). `sideUnknown` remains
+ *    accepted internally for ZEN compatibility.
  * 2: map radius <NUMBER> - world radius shown/tracked, clamped to at least 100 m (default 2000).
  * 3: show known enemies <BOOLEAN> - permits contacts known to the viewer's group (default true).
  * 4: interaction options <ARRAY or HASHMAP> - optional `enabled`, `challengeId`, and `difficulty`.
  *      The semantic default is command authentication at standard difficulty.
  *
  * Return Value:
- * Boolean - true when forwarded or registered; otherwise false.
+ * Boolean - true when registered (or when a duplicate non-server Eden copy was ignored); otherwise false.
  *
  * Example:
- * if (isServer) then {[mapBoard, west, 2000, true] call Waldo_fnc_TacticalDisplayRegister;};
+ * [mapBoard, west, 2000, true] call Waldo_fnc_TacticalDisplayRegister;
+ * Result: the map board opens a 2000 m WEST tactical view for players in interaction range.
  *
  * Current callers: Tactical Display ZEN module, audit station and mission-maker setup.
  */
 
-params [["_object", objNull, [objNull]], ["_side", sideUnknown, [sideUnknown]], ["_radius", 2000, [0]], ["_knownEnemies", true, [false]], ["_interactionOptions", [], [[], createHashMap]]];
-if !(isServer) exitWith {
-    private _forward = _interactionOptions;
-    if (typeName _forward == "HASHMAP") then {private _pairs = []; {_pairs pushBack [_x, _forward get _x]} forEach keys _forward; _forward = _pairs};
-    [_object, _side, _radius, _knownEnemies, _forward] remoteExecCall ["Waldo_fnc_TacticalDisplayRegister", 2];
-    true
-};
+params [["_object", objNull, [objNull]], ["_side", "VIEWER", [sideUnknown, ""]], ["_radius", 2000, [0]], ["_knownEnemies", true, [false]], ["_interactionOptions", [], [[], createHashMap]]];
+if !(isServer) exitWith {true};
 if (isNull _object) exitWith {false};
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};
     private _caller = if (_index >= 0) then {allPlayers select _index} else {objNull};
     if (isNull _caller || {isNull (getAssignedCuratorLogic _caller)}) exitWith {false};
+};
+if (_side isEqualType "") then {
+    _side = switch (toUpperANSI _side) do {
+        case "WEST": {west};
+        case "BLUFOR": {west};
+        case "EAST": {east};
+        case "OPFOR": {east};
+        case "INDEPENDENT": {independent};
+        case "GUER": {independent};
+        case "CIVILIAN": {civilian};
+        default {sideUnknown};
+    };
 };
 _object setVariable ["Waldo_TacticalDisplay_Registered", true, true];
 _object setVariable ["Waldo_TacticalDisplay_Side", _side, true];
@@ -55,7 +69,9 @@ if (_interactionEnabled && {!isNil "Waldo_fnc_MiniGameInteractionReset"} && {!is
 if (!_interactionEnabled && {!isNil {_object getVariable "Waldo_MG_Int_Active"}}) then {
     _object setVariable ["Waldo_MG_Int_Active", false, true];
 };
-[_object] remoteExecCall ["Waldo_fnc_TacticalDisplaySetupLocal", -2, format ["Waldo_TacticalDisplay_%1", netId _object]];
+// Target every machine rather than "clients except server": a hosted server also owns an interface.
+// TacticalDisplaySetupLocal self-gates on hasInterface, so dedicated servers remain a harmless no-op.
+[_object] remoteExecCall ["Waldo_fnc_TacticalDisplaySetupLocal", 0, format ["Waldo_TacticalDisplay_%1", netId _object]];
 if (_interactionEnabled) then {
     [_object, [_challengeId, _difficulty]] remoteExecCall ["Waldo_fnc_TacticalDisplayInteractionSetup", 0, _object];
 };

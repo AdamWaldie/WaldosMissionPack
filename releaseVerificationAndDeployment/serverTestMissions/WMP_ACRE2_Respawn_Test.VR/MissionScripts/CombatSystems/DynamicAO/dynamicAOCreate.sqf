@@ -10,6 +10,10 @@
  * centre anchor and per-minefield anchors are curator-editable deletion handles. Reusing an id
  * replaces the old AO safely.
  *
+ * Locality and authority:
+ * Server-owned creation, AI/marker registry and cleanup. Curator client requests route to the server;
+ * AI commands run where their groups are local and compact published state supplies JIP clients.
+ *
  * Arguments:
  * 0: config <HASHMAP> - see Wiki/Dynamic-AO-Generation.md for every supported key
  * 1: requester <OBJECT> - optional curator player used for authorization and feedback
@@ -17,15 +21,22 @@
  * Return Value:
  * Boolean - true when the AO was accepted and registered
  *
- * Current callers: mission scripts, Waldo_fnc_DynamicAOZen and the full-pack audit station.
+ * Current callers: server mission scripts, Waldo_fnc_DynamicAOZen and the full-pack audit station.
+ * Eden init fields run on every machine: a non-server copy without an explicit curator requester
+ * exits quietly, while an intentional client request supplies that requester and routes to server.
  *
  * Example:
  * [createHashMapFromArray [["id","AO_NORTH"],["center",getMarkerPos "ao_north"],
  *  ["side",east],["faction","OPF_F"],["radius",600],["patrolGroups",3]]]
  *  call Waldo_fnc_DynamicAOCreate;
+ * Result: AO_NORTH is registered with its generated assets, or validation leaves no partial AO.
  */
 params [["_config", createHashMap, [createHashMap]], ["_requester", objNull, [objNull]]];
-if (!isServer) exitWith {[_config, _requester] remoteExecCall ["Waldo_fnc_DynamicAOCreate", 2]; true};
+if (!isServer) exitWith {
+    if (isNull _requester) exitWith {true};
+    [_config, _requester] remoteExecCall ["Waldo_fnc_DynamicAOCreate", 2];
+    true
+};
 
 if (remoteExecutedOwner > 0) then {
     if (isNull _requester || {owner _requester != remoteExecutedOwner} || {isNull getAssignedCuratorLogic _requester}) exitWith {false};
@@ -101,6 +112,13 @@ private _roads = (_center nearRoads _radius) call BIS_fnc_arrayShuffle;
 private _trackGroup = {
     params ["_group"];
     _groups pushBackUnique _group;
+    // Dynamic AO is pinned only while this server-side build is incomplete. The flags are removed
+    // after every unit, vehicle and waypoint has been registered, allowing the finished AI groups
+    // to move to a headless client safely.
+    _group setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _group setVariable ["Waldo_Headless_ExcludeGroup", true, true];
+    _group setVariable ["acex_headless_blacklist", true, true];
+    if (!isNil "ace_headless_fnc_blacklist") then {[_group, true, 2, 0] call ace_headless_fnc_blacklist};
     _group
 };
 private _spawnUnit = {
@@ -109,6 +127,8 @@ private _spawnUnit = {
     // server the overlapping collision geometries can prevent the leader and followers from
     // acquiring their first path even though the group's waypoint is valid.
     private _unit = _group createUnit [_class, _position, [], _placementRadius, "NONE"];
+    _unit setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _unit setVariable ["acex_headless_blacklist", true, true];
     _objects pushBack _unit;
     if (!isNil "Waldo_fnc_AIApplyProfile") then {[_unit] call Waldo_fnc_AIApplyProfile};
     _unit
@@ -139,6 +159,9 @@ private _weightedClass = {
 };
 private _crewVehicle = {
     params ["_vehicle"];
+    _vehicle setVariable ["Waldo_ServerOwnedFeature", true, true];
+    _vehicle setVariable ["acex_headless_blacklist", true, true];
+    if (!isNil "ace_headless_fnc_blacklist") then {[_vehicle, true, 2, 0] call ace_headless_fnc_blacklist};
     createVehicleCrew _vehicle;
     private _oldGroups = [];
     {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
@@ -337,16 +360,49 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAO_Registry", _registry];
+// Construction is complete. Dynamic AO authority and cleanup remain on the server, while the
+// finished AI groups may now be owned by a headless client. Clear both WMP and ACE temporary pins;
+// ACE's public API requests an ordinary (not forced) rebalance so existing unrelated groups stay put.
 {
-    private _curator = _x;
-    private _editableObjects = +_objects;
-    {{_editableObjects pushBackUnique _x} forEach units _x} forEach _groups;
-    _curator addCuratorEditableObjects [_editableObjects, true];
+    _x setVariable ["Waldo_ServerOwnedFeature", false, true];
+    _x setVariable ["Waldo_Headless_ExcludeGroup", false, true];
+    _x setVariable ["acex_headless_blacklist", false, true];
     {
-        private _fieldAnchor = _x getOrDefault ["anchor", objNull];
-        if (!isNull _fieldAnchor) then {_curator addCuratorEditableObjects [[_fieldAnchor], false]};
-    } forEach _minefields;
-} forEach allCurators;
+        _x setVariable ["Waldo_ServerOwnedFeature", false, true];
+        _x setVariable ["acex_headless_blacklist", false, true];
+    } forEach units _x;
+} forEach _groups;
+private _aoVehicles = [];
+{
+    {
+        private _vehicle = vehicle _x;
+        if (_vehicle != _x) then {_aoVehicles pushBackUnique _vehicle};
+    } forEach units _x;
+} forEach _groups;
+{
+    _x setVariable ["Waldo_ServerOwnedFeature", false, true];
+    _x setVariable ["acex_headless_blacklist", false, true];
+} forEach _aoVehicles;
+if (!isNil "ace_headless_fnc_blacklist" && {count _groups > 0}) then {
+    [_groups + _aoVehicles, false, -1, 1] call ace_headless_fnc_blacklist;
+};
+// Curator registration must happen after the engine has networked this frame's newly created units.
+// Every infantry unit/vehicle root is already present in _objects; includeCrew discovers vehicle
+// crews, so appending group units again only duplicates registration and caused dedicated-server
+// "Ref to nonnetwork object" floods during AO creation.
+[+_objects, +_minefields] spawn {
+    params ["_editableObjects", "_fields"];
+    sleep 0.1;
+    _editableObjects = _editableObjects select {!isNull _x};
+    {
+        private _curator = _x;
+        _curator addCuratorEditableObjects [_editableObjects, true];
+        {
+            private _fieldAnchor = _x getOrDefault ["anchor", objNull];
+            if (!isNull _fieldAnchor) then {_curator addCuratorEditableObjects [[_fieldAnchor], false]};
+        } forEach _fields;
+    } forEach allCurators;
+};
 [] call Waldo_fnc_DynamicAOPublishState;
 [format ["%1 created: %2 patrols, %3 garrisons, %4 vehicles and %5 air patrols.", _id, _patrolCount, _usableGarrisons, _vehicleCount, _airCount], "SUCCESS"] call _notify;
 diag_log format ["[WMP DYNAMIC AO] Created '%1' faction=%2 side=%3 radius=%4 objects=%5 groups=%6.", _id, _faction, _side, _radius, count _objects, count _groups];

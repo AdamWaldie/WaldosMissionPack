@@ -36,7 +36,7 @@ _settings params ["_challengeId", "_difficulty"];
             private _config = _this getVariable ["Waldo_Recovery_Config", ["MAIN", 0.55, true, false, "", true, 1]];
             _this getVariable ["Waldo_Recovery_Registered", false]
             && {_this getVariable ["Waldo_Recovery_InteractionEnabled", false]}
-            && {count crew _this == 0}
+            && {{alive _x} count crew _this == 0}
             && {abs speed _this < 1}
             && {(damage _this >= (_config select 1)) || {!alive _this}}
         }],

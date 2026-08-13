@@ -2,14 +2,25 @@
  * Author: WaldoTheWarfighter
  * Creates or replaces a named, server-authoritative Dynamic AA system from an extensible hash-map configuration.
  * The config file supplies candidate asset pools and safety bounds; it does not call this function.
- * Use initServer.sqf for pre-planned systems or ZEN for live creation. Non-server calls route to the
- * server and remote player requests require an assigned curator. Reusing an id replaces the system.
+ * Use initServer.sqf for pre-planned systems or ZEN for live creation. The same call may be placed in
+ * an Eden object init: only its server execution creates the system and client duplicates exit safely.
+ * ZEN requests are sent to the server and require an assigned curator. Reusing an id replaces it.
+ *
+ * Locality and authority:
+ * The server validates, creates and publishes the registry snapshot. ZEN requests require a curator;
+ * AI commands later follow each group's current owner. A call made by an Eden object init is queued
+ * until WMP mission initialization completes: creating crew during the dedicated server's mission-
+ * read phase produces non-network crew references and Zeus presents those otherwise-correct WEST/
+ * EAST groups as Empty. Vehicle crews are then created directly into the selected operational side,
+ * assigned to their final vehicle and exposed to curators only after network IDs exist. Repeated ids
+ * replace the existing system; repeated pre-init calls retain the newest config for that id.
  *
  * Arguments:
  * 0: config <HASHMAP> with:
  *    Required: id <STRING> safe unique key; centre <ARRAY> detection centre.
  *    Naming: displayName <STRING> is the human-readable marker/removal name (default: id).
- *    Detection: side <SIDE>, radius, minimumAltitude, maximumAltitude, engagementRadius <METRES>,
+ *    Detection: side <SIDE>; radius and engagementRadius are horizontal map distances <METRES>;
+ *      minimumAltitude/maximumAltitude are the independent flight floor/ceiling <METRES>,
  *      detectionDwell, clearDelay and detectionInterval <SECONDS>.
  *    Placement: radarPosition/radarPositions, staticPositions and mobilePositions <ARRAY> for
  *      authored layouts. Otherwise radarCount/staticCount/mobileCount produce a terrain-safe,
@@ -34,15 +45,16 @@
  *     ["radius", 2500], ["minimumAltitude", 80]
  * ];
  * [_config] call Waldo_fnc_DynamicAACreate;
+ * Result: one validated system is registered; a failed complete layout leaves no partial assets.
  *
- * Current callers: Dynamic AA ZEN creation, audit mission and mission-maker server scripts.
+ * Current callers: Dynamic AA ZEN creation, compositions, audit mission and mission-maker server
+ * scripts. ZEN submits to the server; ordinary non-server execution exits quietly so an Eden init
+ * does not submit one duplicate system per connected client. Server registry/snapshot publication
+ * supplies JIP state, while group-local AI work follows the group's current owner/headless client.
  */
 
 params [["_config", createHashMap, [createHashMap]]];
-if !(isServer) exitWith {
-    [_config] remoteExecCall ["Waldo_fnc_DynamicAACreate", 2];
-    true
-};
+if !(isServer) exitWith {true};
 
 private _remoteAuthorized = true;
 private _requestOwner = remoteExecutedOwner;
@@ -73,13 +85,48 @@ if (_safeId != _id) exitWith {
     false
 };
 
+// Eden object init fields execute while a dedicated server is still materialising mission entities.
+// createVehicleCrew at that point can return the correct side/group yet its units are still reported
+// as "Ref to nonnetwork object" and arrive in Zeus as Empty/Unknown. ZEN cannot be used until after
+// mission start, so only pre-planned calls take this path. Queue by ID (latest config wins) and drain
+// once the pack publishes its normal initialization sentinel.
+if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) exitWith {
+    private _pending = missionNamespace getVariable ["Waldo_DynamicAA_PendingCreation", createHashMap];
+    _pending set [_id, _config];
+    missionNamespace setVariable ["Waldo_DynamicAA_PendingCreation", _pending];
+    if !(missionNamespace getVariable ["Waldo_DynamicAA_PendingWorker", false]) then {
+        missionNamespace setVariable ["Waldo_DynamicAA_PendingWorker", true];
+        [] spawn {
+            private _deadline = serverTime + 180;
+            waitUntil {
+                sleep 0.25;
+                missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]
+                || {serverTime >= _deadline}
+            };
+            private _ready = missionNamespace getVariable ["WALDO_INIT_COMPLETE", false];
+            private _queued = missionNamespace getVariable ["Waldo_DynamicAA_PendingCreation", createHashMap];
+            missionNamespace setVariable ["Waldo_DynamicAA_PendingCreation", createHashMap];
+            missionNamespace setVariable ["Waldo_DynamicAA_PendingWorker", false];
+            if (!_ready) exitWith {
+                diag_log format ["[WMP DYNAMIC AA] Discarded %1 queued system(s): WALDO_INIT_COMPLETE was not reached within 180 seconds.", count (keys _queued)];
+            };
+            {
+                diag_log format ["[WMP DYNAMIC AA] Materialising queued pre-planned system '%1' after mission initialization.", _x];
+                [_queued get _x] call Waldo_fnc_DynamicAACreate;
+            } forEach keys _queued;
+        };
+    };
+    diag_log format ["[WMP DYNAMIC AA] Queued pre-planned system '%1' until dedicated mission initialization completes.", _id];
+    true
+};
+
 private _registry = missionNamespace getVariable ["Waldo_DynamicAA_Registry", createHashMap];
 if (_id in (keys _registry)) then {[_id, true] call Waldo_fnc_DynamicAADestroy};
 
 private _side = _config getOrDefault ["side", east];
 if !(_side in [west, east, independent]) then {_side = east};
 private _radius = ((_config getOrDefault ["radius", 2000]) max 100) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumRadius", 50000]);
-private _minimumAltitude = ((_config getOrDefault ["minimumAltitude", 50]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]);
+private _minimumAltitude = ((_config getOrDefault ["minimumAltitude", 60]) max 0) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]);
 private _maximumAltitude = ((_config getOrDefault ["maximumAltitude", missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]]) max _minimumAltitude) min (missionNamespace getVariable ["Waldo_DynamicAA_MaximumAltitude", 10000]);
 private _engagementRadius = ((_config getOrDefault ["engagementRadius", _radius]) max 100) min _radius;
 private _detectionDwell = (_config getOrDefault ["detectionDwell", 0]) max 0;
@@ -141,11 +188,18 @@ if (_invalidClass >= 0 || {_missingPool}) exitWith {
     false
 };
 
-// sizeOf is evaluated only after class validation. The resulting radius is deliberately generous:
-// generated ZEN layouts favour a clear, stable installation over a tightly packed composition.
+// sizeOf is evaluated only after class validation. It approximates an object's MAP ICON size (per
+// Bohemia's own command documentation), not its physical footprint - it is used here only because
+// it is the one size query that works on a classname alone, before anything is spawned to measure
+// with boundingBoxReal. For a large "detection installation" prop like Land_Radar_F that map-icon
+// size can run well past the ground space the object actually occupies; combined with the previous
+// 0.75 multiplier and a 100 m cap, that produced clearance requirements real, organically-dressed
+// terrain (rocky/forested hillsides, not manicured airfields) could fail to satisfy anywhere across
+// a large search, even on what looks like genuinely open ground. Scaled down and capped tighter -
+// still comfortably larger than the supplied per-role minimum for every shipped class.
 private _classClearance = {
     params ["_class", "_minimum"];
-    ((((sizeOf _class) * 0.75) max _minimum) min 100)
+    ((((sizeOf _class) * 0.5) max _minimum) min 40)
 };
 private _largestClearance = {
     params ["_candidateClasses", "_minimum"];
@@ -256,6 +310,13 @@ private _assetPlan = [];
 // Resolve every final component before creating the first vehicle. findEmptyPosition protects the
 // real selected class against existing world objects; the additional reservation list protects
 // planned assets that do not exist yet and therefore cannot be seen by the engine query.
+// findEmptyPosition does not itself reject steep terrain - a clutter-free patch of open hillside
+// passes every other check here just as readily as flat ground, which used to mean either a
+// visibly tilted radar/launcher on a slope or (on a hillside dense enough that every open patch
+// also happens to carry rocks/trees) the whole ring search failing outright with a misleading
+// "no complete collision-free footprint" reason. Reject candidates over Waldo_DynamicAA_MaxSlopeDegrees
+// explicitly so the search keeps walking outward toward an actually flat shelf instead.
+private _maxSlopeDegrees = missionNamespace getVariable ["Waldo_DynamicAA_MaxSlopeDegrees", 12];
 private _resolvedPlan = [];
 private _finalReservations = [];
 private _resolveFinalPosition = {
@@ -280,7 +341,13 @@ private _resolveFinalPosition = {
                     _x params ["_reservedPosition", "_reservedClearance"];
                     _exact distance2D _reservedPosition < (_clearance + _reservedClearance)
                 };
-                private _objectBlockers = nearestObjects [_exact, [], _clearance, true];
+                // Unfiltered nearestObjects catches anything sitting nearby regardless of relevance -
+                // most notably the curator's own body/camera at ring 0 when a ZEN module is dropped
+                // exactly where they are standing, and any other player/AI unit passing through later
+                // rings. Neither should ever block a physical AA installation.
+                private _objectBlockers = (nearestObjects [_exact, [], _clearance, true]) select {
+                    !(_x isKindOf "CAManBase") && {!(_x isKindOf "Logic")}
+                };
                 private _terrainBlockers = nearestTerrainObjects [
                     _exact,
                     ["TREE", "SMALL TREE", "BUSH", "ROCK", "ROCKS", "BUILDING", "HOUSE", "FENCE", "WALL"],
@@ -289,7 +356,10 @@ private _resolveFinalPosition = {
                     true
                 ];
                 private _waterCompatible = if (_class isKindOf "Ship") then {surfaceIsWater _exact} else {!surfaceIsWater _exact};
-                if (_plannedOverlap < 0 && {_objectBlockers isEqualTo []} && {_terrainBlockers isEqualTo []} && {_waterCompatible}) then {
+                // surfaceNormal is a unit vector; its Z component is the cosine of the angle between
+                // the ground and world-up, so acos of it is the slope in degrees directly (0 = flat).
+                private _slopeOk = _class isKindOf "Ship" || {(acos ((surfaceNormal _exact) select 2)) <= _maxSlopeDegrees};
+                if (_plannedOverlap < 0 && {_objectBlockers isEqualTo []} && {_terrainBlockers isEqualTo []} && {_waterCompatible} && {_slopeOk}) then {
                     _result = _exact;
                     _finalReservations pushBack [_result, _clearance];
                 };
@@ -317,16 +387,28 @@ diag_log format ["[WMP DYNAMIC AA] '%1' resolved placement plan: %2", _id, _reso
 
 private _assignCrew = {
     params ["_vehicle", "_defence"];
-    createVehicleCrew _vehicle;
-    if (count crew _vehicle == 0) exitWith {grpNull};
-    private _oldGroups = [];
-    {_oldGroups pushBackUnique (group _x)} forEach crew _vehicle;
-    private _group = createGroup _side;
-    (crew _vehicle) joinSilent _group;
-    {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+    // Create the crew directly on the selected operational side. Creating config-side crew first,
+    // then moving it into a second group, briefly published the wrong group and side on dedicated
+    // servers and generated stale network objects for Zeus. The side form of createVehicleCrew
+    // produces the final group in one operation.
+    private _group = _side createVehicleCrew _vehicle;
+    if (isNull _group || {count crew _vehicle == 0} || {side _group != _side}) exitWith {
+        diag_log format [
+            "[WMP DYNAMIC AA] Crew creation failed: vehicle=%1 requestedSide=%2 group=%3 actualSide=%4 crew=%5.",
+            typeOf _vehicle, _side, _group, side _group, count crew _vehicle
+        ];
+        grpNull
+    };
+    // createVehicleCrew intentionally does not assign the vehicle to the group. That omission is
+    // visible in Zeus as an Empty vehicle separated from its correctly sided crew, especially during
+    // dedicated mission startup. Establish the same group/vehicle relationship Eden creates.
+    _group addVehicle _vehicle;
     _groups pushBackUnique _group;
     if (_defence) then {
-        [_group, false] call Waldo_fnc_DynamicAASetGroupState;
+        // DynamicAACreate may still carry the curator's remoteExecutedOwner after a ZEN request.
+        // Hand the initial close to owner 2 so the group/fire-gate authority check sees the server,
+        // exactly as it does for a pre-planned Eden system.
+        [_group, false, []] remoteExecCall ["Waldo_fnc_DynamicAASetGroupState", 2];
         _defenceGroups pushBackUnique _group;
     } else {
         _group setCombatMode "RED";
@@ -341,18 +423,23 @@ private _spawnFailed = false;
     if (isNull _vehicle) then {
         _spawnFailed = true;
     } else {
+        // Blacklist the empty vehicle before crew creation. ACE Headless schedules from unit init;
+        // waiting until the full cluster exists leaves a race where the fresh crew can be moved.
+        [_vehicle] call Waldo_fnc_HeadlessPinCrew;
         _vehicle setPosATL _position;
         _vehicle setDir _direction;
+        _vehicle setVariable ["Waldo_DynamicAA_SystemId", _id, true];
         _objects pushBack _vehicle;
         if (_kind == "RADAR") then {
             _radars pushBack _vehicle;
             if (_vehicle isKindOf "AllVehicles") then {
-                [_vehicle, false] call _assignCrew;
-                _vehicle setVehicleRadar 1;
+                private _crewGroup = [_vehicle, false] call _assignCrew;
+                if (isNull _crewGroup) then {_spawnFailed = true} else {_vehicle setVehicleRadar 1};
             };
         } else {
             _vehicle setVehicleAmmo (((_config getOrDefault ["initialAmmoFraction", 1]) max 0) min 1);
-            [_vehicle, true] call _assignCrew;
+            private _crewGroup = [_vehicle, true] call _assignCrew;
+            if (isNull _crewGroup) then {_spawnFailed = true};
         };
     };
 } forEach _resolvedPlan;
@@ -363,6 +450,12 @@ if (_spawnFailed || {count _radars == 0}) exitWith {
     false
 };
 private _radar = _radars select 0;
+
+// Pin every spawned component server-side by default against automatic headless-client migration.
+// Detection/engagement is continuously driven server-side (Waldo_fnc_DynamicAASetGroupState) and an
+// external headless rebalance mid-setup - WMP's own, or ACE's separate, uncoordinated ace_headless
+// module - can race that setup. See headlessPinCrew.sqf for detail.
+{[_x] call Waldo_fnc_HeadlessPinCrew;} forEach _objects;
 
 private _markerPrefix = format ["Waldo_DynamicAA_%1", _id];
 private _markers = [];
@@ -398,20 +491,42 @@ private _state = createHashMapFromArray [
 ];
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
-private _editableObjects = +_objects;
-{{_editableObjects pushBackUnique _x} forEach units _x} forEach _groups;
-{_x addCuratorEditableObjects [_editableObjects, true]} forEach allCurators;
+// Newly created network objects are not guaranteed to be available to curator replication in the
+// same simulation frame. Adding vehicles and crew immediately produced Type_112/116 "Object not
+// found" traffic on dedicated servers and stale Zeus entries. Wait for every explicit vehicle and
+// crew network identity, then add that exact list once without asking curator replication to infer
+// the crew again.
+[+_objects, +_groups] spawn {
+    params ["_assets", "_groups"];
+    private _deadline = diag_tickTime + 10;
+    private _editable = [];
+    waitUntil {
+        sleep 0.1;
+        _assets = _assets select {!isNull _x};
+        _editable = +_assets;
+        {{_editable pushBackUnique _x} forEach units _x} forEach (_groups select {!isNull _x});
+        private _networkReady = (_editable findIf {netId _x in ["", "0:0"]}) < 0;
+        _networkReady || {diag_tickTime >= _deadline}
+    };
+    // Add the final vehicle roots and crew explicitly once. Asking includeCrew to discover units
+    // while their network identity is still settling caused the dedicated Object-not-found flood.
+    {_x addCuratorEditableObjects [_editable, false]} forEach allCurators;
+};
 if (_config getOrDefault ["shutdownInteraction", false]) then {
     private _interactionSettings = [_id, _config getOrDefault ["shutdownChallenge", "circuit"], _config getOrDefault ["shutdownDifficulty", "standard"]];
     _radar setVariable ["Waldo_DynamicAA_SystemId", _id, true];
     _radar setVariable ["Waldo_DynamicAA_InteractionAvailable", true, true];
     [_radar, _interactionSettings] remoteExecCall ["Waldo_fnc_DynamicAAInteractionSetup", 0, _radar];
 };
-private _handle = [_id] spawn Waldo_fnc_DynamicAADetectorLoop;
-_state set ["handle", _handle];
-_registry set [_id, _state];
-missionNamespace setVariable ["Waldo_DynamicAA_Registry", _registry];
+// Start through a server-self handoff. A detector spawned directly inside the curator's ZEN
+// remoteExec can inherit that curator owner ID and be rejected by every local fire-gate update.
+[_id] remoteExecCall ["Waldo_fnc_DynamicAAStartDetectorServer", 2];
 [] call Waldo_fnc_DynamicAAPublishState;
-diag_log format ["[WMP DYNAMIC AA] '%1' (%2) active: radius %3m, altitude floor %4m, asset pool %5.", _displayName, _id, _radius, _minimumAltitude, _config get "resolvedAssetPool"];
+diag_log format [
+    "[WMP DYNAMIC AA] '%1' (%2) active: side=%3 crewSides=%4 detection=%5m engagement=%6m altitude=%7-%8m %9 assetPool=%10.",
+    _displayName, _id, _side, _groups apply {side _x}, _radius, _engagementRadius,
+    _minimumAltitude, _maximumAltitude, _config getOrDefault ["altitudeMode", "AUTO"],
+    _config get "resolvedAssetPool"
+];
 [format ["%1 is active with %2 radar(s), %3 static position(s), %4 mobile position(s) and %5 fighter(s) per wave.", _displayName, count _radars, count (_config getOrDefault ["staticPositions", []]), count (_config getOrDefault ["mobilePositions", []]), _fighterCount], "SUCCESS"] call _reply;
 true

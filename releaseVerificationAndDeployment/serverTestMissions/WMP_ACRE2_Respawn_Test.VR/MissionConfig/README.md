@@ -30,6 +30,10 @@ not only the underlying data type.
 Every editable setting follows this documentation pattern in its own config file. The explanation
 is part of the setting: do not delete it when copying or changing the active value.
 
+Every `.sqf` config also includes a searchable **SETTING-BY-SETTING GUIDE**. The repository
+validator requires that guide and requires every named WMP/ACE/Logistics setting to appear in
+`wiki/Feature-Configuration-Files.md`. Adding a setting without updating both layers fails CI.
+
 ```sqf
 // SETTING: Waldo_AIRebalance_Mode (MISSION MAKER)
 // WHAT IT CHANGES: which lighting-condition skill variant AI use.
@@ -94,7 +98,7 @@ HashMaps have a local field-by-field legend plus a worked example where ambiguit
 | Theme / notification flow | `interfaceConfig.sqf` | Automatic | Select theme and optional channel routing |
 | Treatment feedback | `interfaceConfig.sqf` | Automatic | Enable and select recipients/content |
 | Emergency dismount | `interfaceConfig.sqf` | Automatic | Enable and select policy |
-| Accessibility PID | `interfaceConfig.sqf` | Automatic | Enable, set UID eligibility and presentation |
+| WMP HUD | `interfaceConfig.sqf` | Automatic | Configure equipment access, accessibility UIDs and presentation |
 | Tactical display | `interfaceConfig.sqf` | Register | Register a suitable display object or use ZEN |
 | Field resupply | `logisticsConfig.sqf` | Register | Register hubs and assign carriers, or use ZEN |
 | Vehicle recovery | `logisticsConfig.sqf` | Register | Register workshop, vehicles and optional carriers, or use ZEN |
@@ -103,7 +107,7 @@ HashMaps have a local field-by-field legend plus a worked example where ambiguit
 | Rally / minigames / corpse traps | `missionSystemsConfig.sqf` | Automatic | Enable and configure the feature |
 | Economy | `missionSystemsConfig.sqf` | Automatic runtime + content setup | Enable, then configure the dedicated economy preset/catalogue |
 | Economy authored catalogues/layout | `economyConfig.sqf` | Server call-driven | Enable economy, then edit the worked public setup calls in this file |
-| Diagnostics / safestart | `missionSystemsConfig.sqf` | Automatic | Review the shipped server policy |
+| Diagnostics / safestart | `missionSystemsConfig.sqf` | Automatic availability; Safestart starts inactive | Review policy; Zeus can enable it during play |
 | Persistence | `persistenceConfig.sqf` | Automatic + dependency gate | Enable; install INIDBI2 server-side; register world objects separately |
 
 ## Where custom calls belong

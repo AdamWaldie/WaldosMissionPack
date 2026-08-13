@@ -32,6 +32,18 @@ params [
     ["_objectPos", objNull, [objNull]]
 ];
 if !(hasInterface) exitWith {};
+private _resolveTarget = {
+    params ["_selected", "_position", ["_kinds", [], [[]]], ["_failureText", "Select a valid object.", [""]]];
+    private _target = _selected;
+    if (isNull _target) then {
+        private _nearby = nearestObjects [_position, _kinds, 20, true];
+        _target = _nearby param [0, objNull];
+    };
+    if (isNull _target) then {
+        ["WMP ZEN", _failureText, "ERROR", "ZEN_TARGET"] call Waldo_fnc_FeatureNotifyLocal;
+    };
+    _target
+};
 
 switch (toUpperANSI _feature) do {
     case "GUNSHIP_REGISTER": {
@@ -97,7 +109,7 @@ switch (toUpperANSI _feature) do {
                             _config set ["aircraftClass", _assetValue];
                             _config set ["spawnPosition", [_modulePos select 0, _modulePos select 1, _altitude]];
                         };
-                        [_config] call Waldo_fnc_GunshipRegister;
+                        [_config] remoteExecCall ["Waldo_fnc_GunshipRegister", 2];
                         if (_copy) then {
                             private _assetEntry = "";
                             if (_assetMode == "CLASS") then {
@@ -332,9 +344,12 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "RECOVERY_VEHICLE": {
-        private _nearVehicles = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) select {!(_x isKindOf "CAManBase")};
-        private _target = if (!isNull _objectPos && {_objectPos isKindOf "AllVehicles"} && {!(_objectPos isKindOf "CAManBase")}) then {_objectPos} else {_nearVehicles param [0, objNull]};
-        if (isNull _target) exitWith {systemChat "[WMP] No vehicle found within 25 metres."};
+        // Recovery registration changes a specific object's persistent state. Never guess a nearby
+        // vehicle: that can register an intact neighbour when the module was intended for a wreck.
+        private _target = _objectPos;
+        if (isNull _target || {!(_target isKindOf "AllVehicles")} || {_target isKindOf "CAManBase"}) exitWith {
+            ["VEHICLE RECOVERY", "Place Register Vehicle directly on the intended vehicle or wreck.", "ERROR", "RECOVERY_ZEN_TARGET"] call Waldo_fnc_FeatureNotifyLocal;
+        };
         private _workshops = (allMissionObjects "All") select {_x getVariable ["Waldo_Recovery_Workshop", false]};
         if (count _workshops == 0) exitWith {systemChat "[WMP] Create a vehicle recovery workshop before assigning recoverable vehicles."};
         private _workshopKeys = _workshops apply {_x getVariable ["Waldo_Recovery_WorkshopKey", "MAIN"]};
@@ -376,9 +391,10 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "RECOVERY_CARRIER": {
-        private _nearVehicles = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) select {!(_x isKindOf "CAManBase")};
-        private _target = if (!isNull _objectPos && {_objectPos isKindOf "AllVehicles"} && {!(_objectPos isKindOf "CAManBase")}) then {_objectPos} else {_nearVehicles param [0, objNull]};
-        if (isNull _target) exitWith {systemChat "[WMP] No carrier vehicle found within 25 metres."};
+        private _target = _objectPos;
+        if (isNull _target || {!(_target isKindOf "AllVehicles")} || {_target isKindOf "CAManBase"}) exitWith {
+            ["VEHICLE RECOVERY", "Place Register Carrier directly on the intended carrier vehicle.", "ERROR", "RECOVERY_ZEN_TARGET"] call Waldo_fnc_FeatureNotifyLocal;
+        };
         [
             "Register Recovery Carrier",
             [
@@ -392,6 +408,43 @@ switch (toUpperANSI _feature) do {
                 ["RECOVERY_CARRIER", [_target, _range, _mode, round _capacity]] call Waldo_fnc_FeatureRuntimeApply;
             }, {}, _target
         ] call zen_dialog_fnc_create;
+    };
+    case "TRANSPORT_REGISTER": {
+        private _target = [_objectPos, _modulePos, ["LandVehicle", "Helicopter", "Ship"], "Select an AI-crewed helicopter, ground vehicle or boat."] call _resolveTarget;
+        if (isNull _target) exitWith {};
+        private _defaultTypeIndex = switch (true) do {
+            case (_target isKindOf "Helicopter"): {0};
+            case (_target isKindOf "Ship"): {2};
+            default {1};
+        };
+        [
+            "Register Transport Service",
+            [
+                ["COMBO", ["Service type", "Helicopter, ground and boat transports use independent pools."], [["HELICOPTER", "GROUND", "BOAT"], ["Helicopter transport", "Ground transport", "Boat transport"], _defaultTypeIndex]],
+                ["EDIT", ["Display name", "Player-facing callsign. Leave blank to use the crew group callsign."], ""],
+                ["CHECKBOX", ["Squad leaders only", "Only group leaders may request this service."], false],
+                ["CHECKBOX", ["Show map marker", "Track the service vehicle on the map."], true],
+                ["SLIDER", ["Boarding window", "Seconds at pickup before an unused service returns to base."], [30, 900, missionNamespace getVariable ["Waldo_Transport_DefaultBoardingSeconds", 300], 0]],
+                ["SLIDER", ["Destination dwell", "Seconds allowed for disembarking before return to base."], [10, 300, missionNamespace getVariable ["Waldo_Transport_DefaultDestinationDwell", 45], 0]],
+                ["SLIDER", ["Helicopter transit height", "Metres above terrain; ignored by ground and boat transports."], [20, 300, missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 50], 0]],
+                ["CHECKBOX", ["Repair at base", "Fully repair the service after a completed return."], false],
+                ["CHECKBOX", ["Refuel at base", "Fully refuel the service after a completed return."], true],
+                ["CHECKBOX", ["Invulnerable service", "Protect the transport and its original AI service crew. Passenger players remain vulnerable."], false],
+                ["CHECKBOX", ["Force late passengers out", "Move remaining passengers out when destination dwell expires."], false],
+                ["CHECKBOX", ["Emergency position reset", "OFF by default. If physical RTB fails and no players are aboard, teleport the transport to base."], false]
+            ],
+            {
+                params ["_values", "_target"];
+                ["TRANSPORT_REGISTER", [_target] + _values] call Waldo_fnc_FeatureRuntimeApply;
+            },
+            {},
+            _target
+        ] call zen_dialog_fnc_create;
+    };
+    case "TRANSPORT_RTB": {
+        private _target = [_objectPos, _modulePos, ["LandVehicle", "Helicopter", "Ship"], "Select a registered transport-service vehicle."] call _resolveTarget;
+        if (isNull _target) exitWith {};
+        ["TRANSPORT_RTB", [_target]] call Waldo_fnc_FeatureRuntimeApply;
     };
     case "RALLY": {
         private _rallyClasses = ["Land_SatelliteAntenna_01_F", "Land_Radio_F", "Land_TentA_F", "Land_Sleeping_bag_blue_folded_F"];
@@ -459,24 +512,6 @@ switch (toUpperANSI _feature) do {
             }
         ] call zen_dialog_fnc_create;
     };
-    case "ACCESSIBILITY": {
-        [
-            "Friendly Identification Aid",
-            [
-                ["CHECKBOX", ["Enable", "Enable for eligible players."], missionNamespace getVariable ["Waldo_AccessibilityPID_Enable", false]],
-                ["SLIDER", ["Icon range", "Maximum friendly icon range."], [10, 1000, missionNamespace getVariable ["Waldo_AccessibilityPID_IconRange", 300], 0]],
-                ["SLIDER", ["Name range", "Maximum friendly name range."], [0, 300, missionNamespace getVariable ["Waldo_AccessibilityPID_NameRange", 50], 0]],
-                ["CHECKBOX", ["Require line of sight", "Hide identification through obstructing geometry."], missionNamespace getVariable ["Waldo_AccessibilityPID_RequireLOS", true]],
-                ["CHECKBOX", ["Include AI", "Include friendly AI as well as players."], missionNamespace getVariable ["Waldo_AccessibilityPID_IncludeAI", false]],
-                ["CHECKBOX", ["Player toggle", "Give players a local show/hide action."], missionNamespace getVariable ["Waldo_AccessibilityPID_AllowToggle", true]],
-                ["CHECKBOX", ["Visible by default", "Initial local visibility state."], missionNamespace getVariable ["Waldo_AccessibilityPID_DefaultVisible", true]]
-            ],
-            {
-                params ["_values"];
-                ["ACCESS_CONFIG", _values] call Waldo_fnc_FeatureRuntimeApply;
-            }
-        ] call zen_dialog_fnc_create;
-    };
     case "AI": {
         private _profileValues = ["LEGACY", "MILITIA", "LINE", "VETERAN", "ELITE"];
         private _configuredProfiles = missionNamespace getVariable ["Waldo_AI_Profiles", createHashMap];
@@ -507,7 +542,11 @@ switch (toUpperANSI _feature) do {
         if (count _presetKeys == 0) exitWith {systemChat "[WMP] No hazardous-environment presets are configured."};
         private _presetLabels = _presetKeys apply {
             private _profile = _presets get _x;
-            format ["%1 - %2", _x, _profile getOrDefault ["label", "Hazardous Area"]]
+            private _detectorGated =
+                !((_profile getOrDefault ["detectorItems", []]) isEqualTo [])
+                || !((_profile getOrDefault ["detectorObjects", []]) isEqualTo [])
+                || ("awarenessCondition" in _profile);
+            format ["%1 - %2%3", _x, _profile getOrDefault ["label", "Hazardous Area"], ["", " (detector-aware)"] select _detectorGated]
         };
         [
             "Hazardous Environment: Choose Type",
@@ -538,13 +577,15 @@ switch (toUpperANSI _feature) do {
                         ["CHECKBOX", ["Vehicles protect", "Being inside a vehicle provides the configured protection factor."], _preset getOrDefault ["protectInVehicles", false]],
                         ["CHECKBOX", ["Interiors protect", "Being inside a building provides the configured protection factor."], _preset getOrDefault ["protectIndoors", false]],
                         ["SLIDER", ["Protected exposure factor", "0 is complete protection; 1 is none."], [0, 1, _preset getOrDefault ["equipmentFactor", 0.05], 2]],
+                        ["CHECKBOX", ["Show continuous exposure panel", "Show one continuously updated lower-left panel. This does not create or queue repeated notification cards."], _preset getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]]],
                         ["CHECKBOX", ["Notify on entry and exit", "Show each affected player one WMP notification when crossing the zone boundary."], _preset getOrDefault ["notifyTransitions", missionNamespace getVariable ["Waldo_Hazard_NotifyTransitions", true]]],
+                        ["COMBO", ["Who can see hazard information", "Preset rules use any detector items, nearby detector objects or custom condition configured by the mission maker. Everyone ignores those information gates but does not change protection or damage."], [["PRESET", "EVERYONE"], ["Use preset detector rules", "Everyone"], 0]],
                         ["CHECKBOX", ["Copy setup script", "Copy an equivalent mission-maker call for permanent setup."], false]
                     ],
                     {
                         params ["_values", "_arguments"];
                         _arguments params ["_modulePos", "_presetKey", "_preset"];
-                        _values params ["_label", "_enterMessage", "_exitMessage", "_radius", "_intensityMode", "_rate", "_decay", "_maximumExposure", "_threshold", "_damage", "_fatalExposure", "_vehicles", "_indoors", "_factor", "_notifyTransitions", "_copy"];
+                        _values params ["_label", "_enterMessage", "_exitMessage", "_radius", "_intensityMode", "_rate", "_decay", "_maximumExposure", "_threshold", "_damage", "_fatalExposure", "_vehicles", "_indoors", "_factor", "_showStatus", "_notifyTransitions", "_informationVisibility", "_copy"];
                         private _profile = createHashMap;
                         {_profile set [_x, _preset get _x]} forEach keys _preset;
                         _profile set ["label", _label];
@@ -561,7 +602,12 @@ switch (toUpperANSI _feature) do {
                         _profile set ["protectIndoors", _indoors];
                         _profile set ["indoorFactor", _factor];
                         _profile set ["equipmentFactor", _factor];
+                        _profile set ["showStatus", _showStatus];
                         _profile set ["notifyTransitions", _notifyTransitions];
+                        if (_informationVisibility isEqualTo "EVERYONE") then {
+                            _profile set ["requireAwarenessForStatus", false];
+                            _profile set ["requireAwarenessForNotifications", false];
+                        };
                         private _key = ["hazard"] call Waldo_fnc_CreateRuntimeId;
                         ["HAZARD_SET", [_key, [_modulePos, _radius], _profile]] call Waldo_fnc_FeatureRuntimeApply;
                         if (_copy) then {
@@ -588,7 +634,11 @@ switch (toUpperANSI _feature) do {
             getPosWorld _area
         };
         {
-            if (((_x select 1) call _getCentre) distance2D _modulePos < (((_nearest select 1) call _getCentre) distance2D _modulePos)) then {_nearest = _x};
+            // _getCentre's _area can itself be an Array (e.g. [position, radius] from HAZARD_CREATE, or
+            // [centre, a, b, angle, rectangle]) - it must be passed wrapped in its own argument array so
+            // params unpacks it as one whole "_area" parameter, not as that array's own positional args
+            // (which silently handed back a bare coordinate Number instead of the position array).
+            if (([_x select 1] call _getCentre) distance2D _modulePos < (([_nearest select 1] call _getCentre) distance2D _modulePos)) then {_nearest = _x};
         } forEach _zones;
         private _key = _nearest select 0;
         [

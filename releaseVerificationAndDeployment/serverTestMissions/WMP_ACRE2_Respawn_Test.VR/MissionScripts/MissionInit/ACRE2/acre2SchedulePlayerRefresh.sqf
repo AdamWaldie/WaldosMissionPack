@@ -28,8 +28,12 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     params ["_token", "_reason"];
     // ACRE documents isInitialized as the point at which carried base radios have become unique
     // IDs. Large modsets and Eden-defined radio attributes can legitimately take longer than the
-    // rest of mission init, so this asynchronous waiter allows two minutes without blocking WMP.
-    private _deadline = diag_tickTime + 120;
+    // rest of mission init, so this asynchronous waiter allows a configurable window (default two
+    // minutes, MissionConfig\acreConfig.sqf readinessTimeoutSeconds) without blocking WMP. A mission
+    // that consistently needs longer than the default should raise this rather than repeatedly
+    // riding out the automatic INITIAL_LATE retry below.
+    private _readinessTimeout = (missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap]) getOrDefault ["readinessTimeoutSeconds", 120];
+    private _deadline = diag_tickTime + _readinessTimeout;
     waitUntil {
         uiSleep 0.1;
         private _plan = missionNamespace getVariable ["Waldo_ACRE2_Plan", []];
@@ -41,6 +45,11 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
                 !isNull player
                 && {!isNil "acre_api_fnc_isInitialized"}
                 && {[] call acre_api_fnc_isInitialized}
+                // ACRE's public carried-radio readiness check can become true before its JIP data
+                // sync and post-init event handlers are ready. Rack creation uses those handlers,
+                // so also require the synchronization sentinel used by ACRE's own source.
+                && {!isNil "ACRE_DATA_SYNCED"}
+                && {ACRE_DATA_SYNCED}
                 && {count _plan >= 4}
                 && {(_plan select 0) == 5}
                 && {_persistenceResolved}
@@ -61,7 +70,7 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
             (_profileClasses findIf {_item == _x || {_item find (_x + "_ID_") == 0}}) >= 0
         };
         private _detail = if (!_acreReady && {!(_inventoryRadios isEqualTo [])}) then {
-            format ["ACRE did not finish converting carried radios to unique IDs within 120 seconds. Carried radio classes: %1.", _inventoryRadios]
+            format ["ACRE did not finish converting carried radios to unique IDs within %1 seconds. Carried radio classes: %2.", _readinessTimeout, _inventoryRadios]
         } else {
             if (count _plan < 4) then {"The server ACRE plan did not arrive."} else {format ["ACRE reported ready but returned no usable carried radios: %1.", _currentRadios]}
         };
@@ -82,9 +91,16 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     if !(missionNamespace getVariable ["Waldo_ACRE2_PresetNamesReady", false]) then {[_config] call Waldo_fnc_ACRE2ApplyPresetNames};
     private _planApplied = true;
     if (_applyPlan) then {_planApplied = [true, _reason] call Waldo_fnc_ACRE2ApplyPlayerPlan};
+    // This is a server-visible ACRE lifecycle handshake, not a report that the player's authored
+    // carried-radio assignment succeeded. Rack setup remains usable in a mission with no carried
+    // radios or with an unrelated player-assignment mistake. Reaching here proves ACRE converted
+    // carried radios, completed its data sync and installed the rack callbacks used by its server
+    // APIs; the server may therefore allow ACRE to select this client for rack construction.
+    player setVariable ["Waldo_ACRE2_ClientReady", true, true];
     [] call Waldo_fnc_ACRE2ApplyBabel;
     [] call Waldo_fnc_ACRE2BuildCEOI;
-    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+        missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", _reason];
         [false] call Waldo_fnc_SaveLoadout;
     };
     if (

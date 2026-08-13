@@ -38,6 +38,12 @@ convoyGroup enableAttack true;
 
 */
 params ["_convoyGroup",["_convoySpeed",30],["_convoySeparation",15],["_pushThrough", true]];
+// This script's own while loop below continuously drives the convoy every 5s and depends on the
+// group staying local to wherever it's running - an external headless rebalance (WMP's own, or
+// ACE's separate, uncoordinated ace_headless module) moving it mid-convoy would desynchronise that
+// loop. Pin server-side by default; a no-op if called from a non-server machine, since headless
+// migration is inherently server-only anyway. See headlessPinCrew.sqf for detail.
+{[vehicle _x] call Waldo_fnc_HeadlessPinCrew;} forEach (units _convoyGroup);
 if (_pushThrough) then {
     _convoyGroup enableAttack !(_pushThrough);
     {(vehicle _x) setUnloadInCombat [false, false];} forEach (units _convoyGroup);

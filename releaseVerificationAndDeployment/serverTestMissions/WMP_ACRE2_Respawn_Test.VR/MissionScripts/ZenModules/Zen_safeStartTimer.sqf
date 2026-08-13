@@ -3,7 +3,8 @@
  * Zeus module handler: prompts the curator for a go-live countdown length in seconds and
  * starts the Safestart auto-lift timer on the server. The countdown shows on every
  * player's safestart banner and auto goes-live at zero; the curator can still overrule it
- * early with the "Safestart - Go Live (Lift)" module.
+ * early with the "SafeStart: Go Live Now" module. Because the timer activates SafeStart when it
+ * is currently inactive, it also works with the pack's default live starting state.
  *
  * Arguments:
  * None
@@ -12,6 +13,7 @@
  * [] call Waldo_fnc_ZenSafeStartTimer;
  *
  * Public: No
+ * Current caller: "SafeStart: Start Go-Live Timer" in Waldo_fnc_ZenInitModules.
  */
 
 if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};

@@ -37,6 +37,8 @@ private _customVariables = _state param [14, [], [[]]];
 private _footprint = (_state param [15, 3, [0]]) max (missionNamespace getVariable ["Waldo_Recovery_PlacementClearance", 3]);
 private _carrierMode = _state param [16, "AUTO", [""]];
 private _carrierCapacity = _state param [17, 1, [0]];
+private _carrierDeckOffset = _state param [18, [], [[]]];
+private _carrierDeckDirection = _state param [19, 0, [0]];
 
 private _position = [_workshop, _class, _footprint, [_package, _retained]] call Waldo_fnc_RecoveryResolveRestorePosition;
 if (_position isEqualTo []) exitWith {
@@ -60,7 +62,9 @@ if (_wasAlive && {!isNull _retained}) then {
         _vehicle setVehicleVarName _variableName;
         missionNamespace setVariable [_variableName, _vehicle, true];
     };
-    {_x params ["_name", "_value"]; _vehicle setVariable [_name, _value, true]} forEach _customVariables;
+    // Guard against a malformed (non-pair) entry rather than throwing "Undefined variable" mid-restore
+    // - see recoveryRequestServer.sqf's PACK branch for why an entry could otherwise be short.
+    {if (count _x == 2) then {_x params ["_name", "_value"]; _vehicle setVariable [_name, _value, true]}} forEach _customVariables;
 };
 
 deleteVehicle _package;
@@ -85,7 +89,12 @@ private _interactionOptions = createHashMapFromArray [
 ];
 [_vehicle, _config select 0, _config select 1, _config select 2, _config select 3, _config select 4, _config select 5, _config select 6, _interactionOptions]
     call Waldo_fnc_RecoveryRegisterVehicle;
-if (_wasCarrier) then {[_vehicle, _carrierRange, _carrierMode, _carrierCapacity] call Waldo_fnc_RecoveryRegisterCarrier};
+if (_wasCarrier) then {[_vehicle, _carrierRange, _carrierMode, _carrierCapacity, _carrierDeckOffset, _carrierDeckDirection] call Waldo_fnc_RecoveryRegisterCarrier};
+private _transportRegistration = _vehicle getVariable ["Waldo_TransportService_Registration", []];
+if (count _transportRegistration >= 4) then {
+    _transportRegistration params ["_transportType", "_transportId", "_transportName", "_transportOptions"];
+    [_vehicle, _transportType, _transportId, _transportName, _transportOptions] call Waldo_fnc_TransportRegister;
+};
 if !(_wasAlive) then {
     private _callback = if (_onRestored isEqualType "") then {missionNamespace getVariable [_onRestored, {}]} else {_onRestored};
     if (_callback isEqualType {}) then {[_vehicle, _retained, _workshop] call _callback};
@@ -98,7 +107,11 @@ private _recipients = allPlayers select {
     _x distance2D _workshop <= _notificationRadius
     && {_workshopSide == sideUnknown || {_workshopSide getFriend side group _x >= 0.6}}
 };
-if !(_recipients isEqualTo []) then {
-    ["A recovered vehicle is ready at the workshop.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _recipients];
-};
+// Target each eligible player's network owner explicitly. An object-array remote target is easy to
+// misread in hosted sessions (where server and Zeus share a machine) and previously allowed the
+// workshop message to appear on the host while the remote player performing the delivery missed it.
+private _recipientOwners = (_recipients apply {owner _x}) arrayIntersect (_recipients apply {owner _x});
+{
+    ["A recovered vehicle is ready at the workshop.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", _x];
+} forEach _recipientOwners;
 _vehicle

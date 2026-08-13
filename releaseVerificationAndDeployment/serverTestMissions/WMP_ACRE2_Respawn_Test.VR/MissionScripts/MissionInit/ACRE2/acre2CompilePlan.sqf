@@ -53,7 +53,11 @@ private _hashText = {
             };
         } forEach _shortRules;
         private _primaryIndex = _shortRules findIf {(_x select 1) isEqualType 0 && {(_x select 1) == 1}};
-        if (_primaryIndex < 0) then {_primaryIndex = _shortRules findIf {toUpper str (_x select 1) == "ALL"}};
+        if (_primaryIndex < 0) then {
+            _primaryIndex = _shortRules findIf {
+                (_x select 1) isEqualType "" && {toUpper (_x select 1) == "ALL"}
+            };
+        };
         if (_primaryIndex >= 0) then {
             private _target = (_shortRules select _primaryIndex) select 2;
             if (_target isEqualType [] && {count _target == 2}) then {

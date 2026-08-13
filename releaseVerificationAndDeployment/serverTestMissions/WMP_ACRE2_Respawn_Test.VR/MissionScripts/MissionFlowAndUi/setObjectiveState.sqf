@@ -34,9 +34,19 @@ if (!isServer) exitWith {
 private _ledger = +(missionNamespace getVariable ["Waldo_AAR_Tasks", []]);
 private _at = _ledger findIf {(_x select 0) isEqualTo _taskId};
 if (_at < 0) then {
-    _ledger pushBack [_taskId, _state];
+    // A state update can legitimately arrive for a task created outside Waldo_fnc_CreateObjective.
+    // Preserve a readable fallback title; the ENDEX renderer never exposes the raw ID as though it
+    // were mission prose.
+    _ledger pushBack [_taskId, "Mission objective", _state];
 } else {
-    (_ledger select _at) set [1, _state];
+    private _entry = _ledger select _at;
+    if (count _entry < 3) then {
+        // Migrate an old [taskId, state] row without breaking a mission already in progress.
+        _entry = [_taskId, "Mission objective", _state];
+    } else {
+        _entry set [2, _state];
+    };
+    _ledger set [_at, _entry];
 };
 missionNamespace setVariable ["Waldo_AAR_Tasks", _ledger, true];
 

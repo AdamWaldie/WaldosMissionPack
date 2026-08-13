@@ -106,6 +106,9 @@ if (_exists) exitWith {
 
 //Spawn box of class
 _box = _boxToSpawn createVehicle _knownSafePositionLogi;
+// Quartermaster stores are deliberately portable regardless of config mass. The public helper
+// publishes ACE drag/carry state consistently for crates, wheels and tracks.
+[_box, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
 clearItemCargoGlobal _box;
 clearBackpackCargoGlobal _box;
 clearMagazineCargoGlobal _box;

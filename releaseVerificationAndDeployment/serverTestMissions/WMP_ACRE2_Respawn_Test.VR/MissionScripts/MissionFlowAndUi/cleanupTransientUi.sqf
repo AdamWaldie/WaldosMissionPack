@@ -24,13 +24,17 @@ uiNamespace setVariable ["Waldo_MG_NoticeToken", ""];
 uiNamespace setVariable ["Waldo_UiPanelRegistry", []];
 uiNamespace setVariable ["Waldo_UiPanelQueue", []];
 uiNamespace setVariable ["Waldo_UiNotification_DisplayWaitQueue", []];
+// Specialist panels (SafeStart, EW and hazards) re-register from their live state services after
+// respawn. Clearing their reservations here prevents ACE close or another reflow from reviving a
+// stale pre-death panel.
+uiNamespace setVariable ["Waldo_UI_ReservationRegistry", []];
 
 private _mainDisplay = findDisplay 46;
 if (!isNull _mainDisplay) then {
     {
         private _control = _mainDisplay displayCtrl _x;
         if (!isNull _control) then {_control ctrlShow false;};
-    } forEach [5299, 5300, 5301, 5309, 5310, 5311, 5312, 5330, 5331, 5340, 5341];
+    } forEach [5299, 5300, 5301, 5309, 5310, 5311, 5312, 5330, 5331, 5340, 5341, 5349, 5350];
 };
 
 if !(isNil "Waldo_MG_fnc_closeTableGameDisplaysLocal") then {
