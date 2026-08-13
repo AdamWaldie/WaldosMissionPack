@@ -1479,6 +1479,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('isNil {_id = [_rackId, false] call acre_api_fnc_getMountedRackRadio}', client_apply)
         self.assertIn('private _id = [_rackId, false] call acre_api_fnc_getMountedRackRadio;', client_apply)
         self.assertIn('if (isNil "_id") exitWith {nil};', client_apply)
+        self.assertNotIn('if ([_candidate] call _condition)', client_apply)
+        self.assertIn('if (_candidate call _condition)', client_apply)
         self.assertIn('allPlayers - (entities "HeadlessClient_F")', apply)
         self.assertIn('"FAILED"', apply)
         self.assertIn('_selector >= 1', client_apply)

@@ -60,7 +60,10 @@ if (!hasInterface || {remoteExecutedOwner != 2} || {isNull _vehicle}) exitWith {
         waitUntil {
             uiSleep 0.25;
             private _candidate = [_rackId] call _readState;
-            if !(isNil "_candidate") then {if ([_candidate] call _condition) then {_state = _candidate}};
+            // `_candidate` already is `[radio ID, base class, removable]`. Pass that array as the
+            // condition's `_this`; wrapping it again makes `_this select 0` the whole array and
+            // causes type errors in ordinary string comparisons.
+            if !(isNil "_candidate") then {if (_candidate call _condition) then {_state = _candidate}};
             !(isNil "_state") || {diag_tickTime >= _deadline}
         };
         if (isNil "_state") then {nil} else {_state}
