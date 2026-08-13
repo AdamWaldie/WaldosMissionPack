@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 930,
+  "registeredFunctionCount": 933,
   "runtimeFunctionCount": 385,
-  "functionCount": 1315,
+  "functionCount": 1318,
   "stations": [
     {
       "id": "control",
@@ -406,13 +406,13 @@
     },
     {
       "id": "ai-helicopter-landing",
-      "title": "AI HELICOPTER LANDING",
+      "title": "AI HELICOPTER FLIGHT",
       "position": [
         325,
         40,
         0
       ],
-      "description": "AI-only event-driven exact landing, canopy clearance, flare and go-around behavior."
+      "description": "Improved landing priority plus optional cruise-deceleration climb suppression."
     },
     {
       "id": "ui-theme-qa",
@@ -803,6 +803,24 @@
     {
       "name": "Waldo_fnc_ImprovedHelicopterLandingConfigureServer",
       "file": "MissionScripts/AiScripting/improvedHelicopterLandingConfigureServer.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HelicopterDecelerationInit",
+      "file": "MissionScripts/AiScripting/helicopterDecelerationInit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HelicopterDecelerationTrackLocal",
+      "file": "MissionScripts/AiScripting/helicopterDecelerationTrackLocal.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_HelicopterDecelerationCorrectLocal",
+      "file": "MissionScripts/AiScripting/helicopterDecelerationCorrectLocal.sqf",
       "station": "ai",
       "activation": "manual"
     },

@@ -70,6 +70,7 @@ is replayed to JIP by the feature.
 | ACRE2 + Babel | acreConfig.sqf | Enable and author nets/groups/languages | None |
 | AI rebalance | aiConfig.sqf | Enable, profile, mode, filters | None |
 | Improved helicopter landing | aiConfig.sqf | Enable | Give AI a supported landing waypoint |
+| Helicopter deceleration | aiConfig.sqf | Enable after testing mission airframes | None; ordinary local AI cruise flight is detected automatically |
 | Gunship | airOperationsConfig.sqf | Enable, pools, service policy | Register/spawn by call or ZEN |
 | Paradrop | airOperationsConfig.sqf | Aircraft/chute/boarding pools and envelopes | Create drop zone by call or ZEN |
 | Dynamic AA | airOperationsConfig.sqf | Side/faction pools and safety maxima | Create named system by call or ZEN |
@@ -115,6 +116,8 @@ captured and unsupported radios remain untouched. WMP does not change alternate 
 
 **Normally leave:** variance/restoration and helicopter control geometry/rates/timers. No call is
 required. Improved landing still requires a LAND, UNLOAD, TRANSPORT UNLOAD or GET OUT waypoint.
+The separate cruise-deceleration helper is disabled by default. If enabled, it releases for the
+entire duration of a landing order so Improved Landing always has authority.
 
 ### airOperationsConfig.sqf
 

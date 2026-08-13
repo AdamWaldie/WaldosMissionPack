@@ -678,8 +678,37 @@ Waldo_QA_fnc_reportImprovedLandingServer = {
     private _index = if (isNull _group) then {-1} else {currentWaypoint _group};
     private _waypoints = if (isNull _group) then {[]} else {waypoints _group};
     private _type = if (_index >= 0 && {_index < count _waypoints}) then {waypointType [_group, _index]} else {"NONE"};
-    private _message = format ["AI pilot: %1 | owner: %2 | simulation: %3 | engine: %4 | current WP: %5/%6 | tracker: %7 | active controller: %8 | result: %9 | distance: %10 m | altitude ATL: %11 m | grounded: %12", !isNull _pilot && {!isPlayer _pilot} && {isNull (remoteControlled _pilot)}, owner _helicopter, simulationEnabled _helicopter, isEngineOn _helicopter, _index, _type, _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_TrackedLocal", false], _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false], _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []], round (_helicopter distance2D [325, 70, 0]), round ((getPosATL _helicopter) select 2), isTouchingGround _helicopter];
+    private _message = format ["AI pilot: %1 | owner: %2 | simulation: %3 | engine: %4 | current WP: %5/%6 | landing tracker/active/result: %7 / %8 / %9 | decel tracker/active/result: %10 / %11 / %12 | distance: %13 m | altitude ATL: %14 m | grounded: %15", !isNull _pilot && {!isPlayer _pilot} && {isNull (remoteControlled _pilot)}, owner _helicopter, simulationEnabled _helicopter, isEngineOn _helicopter, _index, _type, _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_TrackedLocal", false], _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false], _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []], _helicopter getVariable ["Waldo_HelicopterDeceleration_TrackedLocal", false], _helicopter getVariable ["Waldo_HelicopterDeceleration_Active", false], _helicopter getVariable ["Waldo_HelicopterDeceleration_LastResult", []], round (_helicopter distance2D [325, 70, 0]), round ((getPosATL _helicopter) select 2), isTouchingGround _helicopter];
     [_actor, "AI HELICOPTER LANDING", _message, "INFO", "AI_LANDING_QA"] call Waldo_QA_fnc_notifyActorServer;
+};
+Waldo_QA_fnc_startHelicopterDecelerationServer = {
+    params [["_actor", objNull, [objNull]]];
+    call Waldo_QA_fnc_removeImprovedLandingServer;
+    private _helicopter = createVehicle ["B_Heli_Light_01_F", [325, -550, 120], [], 0, "FLY"];
+    _helicopter setPosATL [325, -550, 120];
+    _helicopter setDir 0;
+    _helicopter enableSimulationGlobal true;
+    createVehicleCrew _helicopter;
+    {_x enableSimulationGlobal true} forEach crew _helicopter;
+    _helicopter setVelocityModelSpace [0, 38, 0];
+    private _pilot = currentPilot _helicopter;
+    private _group = if (isNull _pilot) then {grpNull} else {group _pilot};
+    if (!isNull _group) then {
+        _group setBehaviourStrong "CARELESS";
+        _group setCombatMode "BLUE";
+        _group setSpeedMode "FULL";
+        private _fast = _group addWaypoint [[325, -50, 120], 0];
+        _fast setWaypointType "MOVE";
+        _fast setWaypointSpeed "FULL";
+        private _slow = _group addWaypoint [[325, 450, 120], 0];
+        _slow setWaypointType "MOVE";
+        _slow setWaypointSpeed "LIMITED";
+        _group setCurrentWaypoint _fast;
+    };
+    _helicopter engineOn true;
+    missionNamespace setVariable ["Waldo_QA_ImprovedLandingHelicopter", _helicopter, true];
+    missionNamespace setVariable ["Waldo_QA_ImprovedLandingGroup", _group, true];
+    [_actor, "AI HELICOPTER DECELERATION", "Cruise/braking route started. Use REPORT to inspect owner-local correction. START NORMAL AI LANDING replaces this route and must release correction for landing priority.", "SUCCESS", "AI_DECEL_QA"] call Waldo_QA_fnc_notifyActorServer;
 };
 Waldo_QA_fnc_setUiThemeServer = {
     params [["_actor", objNull, [objNull]], ["_theme", "DEFAULT", [""]]];

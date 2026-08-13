@@ -1656,6 +1656,33 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal', source)
         self.assertIn('count _groupHelicopters == 1', source)
 
+    def test_helicopter_deceleration_yields_to_improved_landing(self):
+        root = ROOT / "MissionScripts" / "AiScripting"
+        init = (root / "helicopterDecelerationInit.sqf").read_text(encoding="utf-8")
+        tracker = (root / "helicopterDecelerationTrackLocal.sqf").read_text(encoding="utf-8")
+        correction = (root / "helicopterDecelerationCorrectLocal.sqf").read_text(encoding="utf-8")
+        landing = (root / "improvedHelicopterLandingExecuteLocal.sqf").read_text(encoding="utf-8")
+        config = (ROOT / "MissionConfig" / "aiConfig.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_HelicopterDeceleration_Enable", false]', config)
+        self.assertIn('class HelicopterDecelerationInit', functions)
+        self.assertIn('addEventHandler ["Local"', init)
+        self.assertIn('getNumber (configOf _aircraft >> "isUav") != 0', init)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_Active', tracker)
+        self.assertIn('[_aircraft] call _isLandingOrder', tracker)
+        self.assertIn('"LANDING_PRIORITY"', correction)
+        self.assertIn('_aircraft addForce [[0, 0, -(getMass _aircraft)', correction)
+        self.assertIn('Waldo_HelicopterDeceleration_Active", false, true', landing)
+        self.assertNotIn('setVelocity', correction)
+        self.assertNotIn('flyInHeight', correction)
+        self.assertNotIn('disableAI', correction)
+        audit_preinit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "auditPreInit.sqf").read_text(encoding="utf-8")
+        audit_server = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
+        audit_client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_HelicopterDeceleration_Enable", true', audit_preinit)
+        self.assertIn("Waldo_QA_fnc_startHelicopterDecelerationServer", audit_server)
+        self.assertIn("START CRUISE DECELERATION TEST", audit_client)
+
     def test_paradrop_live_marker_reconciler_does_not_depend_on_remote_call_order(self):
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
         setup = (ROOT / "MissionScripts" / "Paradrop" / "paradropSetupLocal.sqf").read_text(encoding="utf-8")

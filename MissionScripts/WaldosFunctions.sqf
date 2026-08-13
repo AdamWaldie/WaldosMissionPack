@@ -153,6 +153,9 @@ class CfgFunctions
             class ImprovedHelicopterLandingRestoreLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingRestoreLocal.sqf";};
             class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
             class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
+            class HelicopterDecelerationInit {file = "MissionScripts\AiScripting\helicopterDecelerationInit.sqf";};
+            class HelicopterDecelerationTrackLocal {file = "MissionScripts\AiScripting\helicopterDecelerationTrackLocal.sqf";};
+            class HelicopterDecelerationCorrectLocal {file = "MissionScripts\AiScripting\helicopterDecelerationCorrectLocal.sqf";};
         };
         class Headless
         {

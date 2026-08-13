@@ -21,6 +21,8 @@ The feature uses the same event-driven ownership model as WMP AI skill tuning:
 
 No server assumes permanent ownership, and no scan of every world object is required. Each locally owned AI helicopter has a small waypoint tracker because Arma provides no waypoint-changed event suitable for this controller; that tracker ends as soon as the aircraft dies or leaves the machine's locality.
 
+Improved Landing has unconditional priority over the optional [AI Helicopter Deceleration](AI-Helicopter-Deceleration) helper. A supported landing order reserves the aircraft before approach takeover, and an active landing controller forces any cruise correction to release before its next impulse.
+
 ## Configuration
 
 The feature is enabled by default. Set `Waldo_ImprovedHelicopterLanding_Enable = false` before its guarded default in `init.sqf` to disable it.

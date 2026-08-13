@@ -80,9 +80,20 @@ private _groupedLanding = _activeLanding select {
     } forEach (units (group _pilot));
     count _aircraftInGroup > 1
 };
+private _decelerationEnabled = missionNamespace getVariable ["Waldo_HelicopterDeceleration_Enable", false];
+private _decelerationAircraft = vehicles select {
+    _x getVariable ["Waldo_HelicopterDeceleration_LocalHandlerInstalled", false]
+};
+private _decelerationActive = _decelerationAircraft select {
+    _x getVariable ["Waldo_HelicopterDeceleration_Active", false]
+};
+private _decelerationLandingConflict = _decelerationActive select {
+    _x getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
+};
 private _checks = [
     ["ai", "ai-profile", if (_enabled) then {"ACTIVE"} else {"DISABLED"}, format ["profile=%1 mode=%2 serverActive=%3", missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"], missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"], missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]]],
     ["ai", "ai-headless-adoption", if (!_enabled) then {"DISABLED"} else {if (count _missing > 0) then {"ERROR"} else {if (count _hcGroups > 0) then {"ACTIVE"} else {"UNCONFIGURED"}}}, format ["connectedHCs=%1 hcOwnedGroups=%2 missingVerifiedAdoption=%3", count _hcOwners, count _hcGroups, count _missing]],
-    ["ai", "improved-helicopter-landing", if !(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]) then {"DISABLED"} else {if (count _staleLanding > 0 || {count _groupedLanding > 0}) then {"ERROR"} else {if (count _activeLanding > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["helicopters=%1 movementOwned=%2 activeControllers=%3 staleGroundAnchors=%4 groupedControllers=%5", count _helicopters, count _orphanedMovementControl, count _activeLanding, count _staleLanding, count _groupedLanding]]
+    ["ai", "improved-helicopter-landing", if !(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]) then {"DISABLED"} else {if (count _staleLanding > 0 || {count _groupedLanding > 0}) then {"ERROR"} else {if (count _activeLanding > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["helicopters=%1 movementOwned=%2 activeControllers=%3 staleGroundAnchors=%4 groupedControllers=%5", count _helicopters, count _orphanedMovementControl, count _activeLanding, count _staleLanding, count _groupedLanding]],
+    ["ai", "helicopter-deceleration", if (!_decelerationEnabled) then {"DISABLED"} else {if (count _decelerationLandingConflict > 0) then {"ERROR"} else {"ACTIVE"}}, format ["enabled=%1 tracked=%2 activelyCorrecting=%3 landingConflicts=%4 includeVTOL=%5", _decelerationEnabled, count _decelerationAircraft, count _decelerationActive, count _decelerationLandingConflict, missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL", false]]]
 ];
 ["ai", _checks] call Waldo_fnc_DiagnosticFeatureReport
