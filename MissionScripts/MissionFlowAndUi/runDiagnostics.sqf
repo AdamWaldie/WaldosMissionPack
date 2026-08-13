@@ -65,6 +65,9 @@ private _status = {
 };
 private _consumeFeatureReport = {
     params ["_featureReport"];
+    if !(_featureReport isEqualType createHashMap) exitWith {
+        ["diagnostics", "feature-report", "ERROR", format ["A diagnostics provider returned %1 instead of a HashMap report", typeName _featureReport], true, "The mission may contain an incomplete or stale MissionScripts copy. Re-extract the current pack before testing again."] call _status;
+    };
     {
         _x params ["_area", "_feature", "_state", ["_detail", ""]];
         [_area, _feature, _state, _detail, _state == "ERROR"] call _status;
@@ -332,7 +335,9 @@ if (count (keys _dropZoneRegistry) == 0) then {
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_MiniGameInteractionGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_HeadlessGetDiagnostics] call _consumeFeatureReport;
-[call Waldo_fnc_AIGetDiagnostics] call _consumeFeatureReport;
+if (!isNil "Waldo_fnc_AIGetDiagnostics") then {
+    [call Waldo_fnc_AIGetDiagnostics] call _consumeFeatureReport;
+};
 [call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
 
 private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];

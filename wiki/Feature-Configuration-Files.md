@@ -300,6 +300,20 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_ImprovedHelicopterLanding_FinalCommitDistance` | Distance inside which the final landing point is committed. |
 | `Waldo_ImprovedHelicopterLanding_ControlInterval` | Local control-loop interval in seconds. |
 | `Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds` | Seconds WMP holds the AI in its landed state before releasing control. Default `20` prevents the vanilla AI immediately taking off again. |
+| `Waldo_HelicopterDeceleration_Enable` | Enables optional AI cruise-braking climb correction. Default `false`; test required airframes first. |
+| `Waldo_HelicopterDeceleration_IncludeVTOL` | Also permits `VTOL_Base_F` aircraft. Default `false` because VTOL flight models vary substantially. |
+| `Waldo_HelicopterDeceleration_MinimumSpeed` | Minimum airspeed in km/h before a braking event can be detected. |
+| `Waldo_HelicopterDeceleration_MinimumAltitude` | Minimum AGL altitude for any correction. |
+| `Waldo_HelicopterDeceleration_MinimumSpeedLoss` | Minimum km/h lost during one sample. |
+| `Waldo_HelicopterDeceleration_MinimumAltitudeGain` | Minimum metres climbed during one sample. |
+| `Waldo_HelicopterDeceleration_MinimumNoseUp` | Minimum positive `vectorDir` Z component indicating nose-up attitude. |
+| `Waldo_HelicopterDeceleration_TerrainClearance` | Required clearance above terrain sampled 100, 300 and 500 metres ahead. |
+| `Waldo_HelicopterDeceleration_MaximumCorrectionAcceleration` | Hard cap on downward acceleration requested by the impulse controller. |
+| `Waldo_HelicopterDeceleration_MaximumClimbRate` | Correction releases when vertical speed falls to this many metres/second. |
+| `Waldo_HelicopterDeceleration_SampleInterval` | Seconds between inexpensive flight-trend samples. |
+| `Waldo_HelicopterDeceleration_ControlInterval` | Seconds between impulses while correction is active. |
+| `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Hard timeout for one correction event. |
+| `Waldo_HelicopterDeceleration_Debug` | Adds acquire/release details to RPT while troubleshooting. |
 
 ## `airOperationsConfig.sqf`
 

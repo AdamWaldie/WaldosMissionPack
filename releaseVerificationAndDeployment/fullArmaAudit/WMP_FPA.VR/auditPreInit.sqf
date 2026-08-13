@@ -10,6 +10,10 @@ missionNamespace setVariable ["Waldo_QA_ManualAudit", !(missionNamespace getVari
 // trace enabled here so dedicated runs exercise registration, migration, AI reapplication and
 // server-owned feature exclusions without changing the release defaults.
 missionNamespace setVariable ["Waldo_Headless_Enable", true];
+// QA-only opt-in: release missions keep cruise deceleration disabled by default. This station tests
+// ordinary braking and confirms that a subsequent landing order takes unconditional priority.
+missionNamespace setVariable ["Waldo_HelicopterDeceleration_Enable", true];
+missionNamespace setVariable ["Waldo_HelicopterDeceleration_Debug", true];
 missionNamespace setVariable ["Waldo_Headless_Debug", true];
 
 // The feature range deliberately enables opt-in systems in this mission only.

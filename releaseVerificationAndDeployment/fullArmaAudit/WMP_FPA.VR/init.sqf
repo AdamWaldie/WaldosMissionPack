@@ -114,7 +114,7 @@ if (Waldo_CorpseTraps_Enable) then {
 
 /*===========================================================================================================================*/
 
-/* AI REBALANCE AND HELICOPTER LANDING
+/* AI REBALANCE, HELICOPTER LANDING AND DECELERATION
  * Normal setup: MissionConfig\aiConfig.sqf.
  * Waldo_AIRebalance_Mode is "DAY" or "NIGHT"; the profile is MILITIA, LINE, VETERAN or ELITE.
  * Do not add another AITweak call here. This readiness-aware activation uses the settings received
@@ -133,6 +133,7 @@ if (Waldo_CorpseTraps_Enable) then {
         ] call Waldo_fnc_AITweak;
     };
     [] call Waldo_fnc_ImprovedHelicopterLandingInit;
+    [] call Waldo_fnc_HelicopterDecelerationInit;
 };
 /*===========================================================================================================================*/
 
