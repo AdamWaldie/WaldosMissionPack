@@ -2,6 +2,12 @@
  * Author: WaldoTheWarfighter
  * Disables and optionally removes one named Dynamic AA system without affecting other instances.
  *
+ * Locality and authority:
+ * The server owns registry, markers, asset deletion and final state. A client call is sent to the
+ * server and accepted only from an assigned curator, except the validated radar shutdown procedure.
+ * Retained assets are disarmed and their AI gate is closed; removed systems disappear from the next
+ * published snapshot. Repeating the call after removal returns false without creating side effects.
+ *
  * Arguments:
  * 0: id <STRING>
  * 1: deleteAssets <BOOLEAN> - delete spawned assets and markers (default: true)
@@ -11,8 +17,12 @@
  * Return Value:
  * Boolean - true when the system existed
  *
+ * Current callers:
+ * Dynamic AA ZEN removal, radar-loss detector handling, shared shutdown interaction and scripts.
+ *
  * Example:
  * ["north_sector", true] call Waldo_fnc_DynamicAADestroy;
+ * Result: the system is removed, or retained visibly disabled when deleteAssets is false.
  */
 
 params [
@@ -44,11 +54,11 @@ _state set ["active", false];
     if (!isNull _x) then {_x setVariable ["Waldo_DynamicAA_InteractionAvailable", false, true]};
 } forEach (_state getOrDefault ["radars", [_state getOrDefault ["radar", objNull]]]);
 {
-    if (!isNull _x) then {[_x, false] call Waldo_fnc_DynamicAASetGroupState};
+    if (!isNull _x) then {[_x, false, []] remoteExecCall ["Waldo_fnc_DynamicAASetGroupState", 2]};
 } forEach (_state getOrDefault ["defenceGroups", []]);
 {
     if (!isNull _x && {_x isKindOf "AllVehicles"}) then {
-        [_x, 0] call Waldo_fnc_DynamicAASetVehicleAmmo;
+        [_x, 0] remoteExecCall ["Waldo_fnc_DynamicAASetVehicleAmmo", 2];
     };
 } forEach (_state getOrDefault ["objects", []]);
 private _handle = _state getOrDefault ["handle", scriptNull];

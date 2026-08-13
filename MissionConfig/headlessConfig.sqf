@@ -41,6 +41,9 @@
  *   configuring it.
  * - Waldo_Headless_MigrationPaceSeconds (ADVANCED): pause between each queued group migration -
  *   moving many groups in the same frame is a known source of a server hitch.
+ * - AI helicopter groups are always kept on the server. This is a safety rule, not a setting:
+ *   dedicated testing showed airborne helicopters diving into terrain immediately after ACE
+ *   transferred their group to an HC. Infantry and ground-vehicle AI still use HCs normally.
  * - Waldo_Headless_Debug (ADVANCED/TROUBLESHOOTING): off by default. Extends the one-line-per-event
  *   RPT trail every registration/rebalance/migration/disconnect already writes unconditionally with
  *   the noisier, genuinely optional detail (per-client load tables, exclusion-reason tallies) a

@@ -63,7 +63,7 @@ if (isNull _requester || {owner _requester != _targetOwner}) exitWith {false};
 // Keep this list to values that Arma can reliably serialise. Mission callbacks and other Code
 // values remain mission-file configuration and are not transported in the runtime snapshot.
 private _names = [
-        "Waldo_UI_Theme",
+        "Waldo_UI_Theme", "Waldo_UI_ThemeRevision",
         "Waldo_Persistence_Enable", "Waldo_Persistence_Active",
         "Waldo_Persistence_PlayerSaveInterval", "Waldo_Persistence_ObjectSaveInterval",
         "Waldo_Persistence_SaveLoadout", "Waldo_Persistence_SaveMedical",
@@ -81,10 +81,6 @@ private _names = [
         "Waldo_EmergencyDismount_ProtectDuringExit", "Waldo_EmergencyDismount_ProtectionSeconds",
         "Waldo_EmergencyDismount_ClearPositionRadius", "Waldo_EmergencyDismount_RequireClearExit",
         "Waldo_EmergencyDismount_UseEject", "Waldo_EmergencyDismount_RecoverUnconscious",
-        "Waldo_AccessibilityPID_Enable", "Waldo_AccessibilityPID_IconRange",
-        "Waldo_AccessibilityPID_NameRange", "Waldo_AccessibilityPID_RequireLOS",
-        "Waldo_AccessibilityPID_IncludeAI", "Waldo_AccessibilityPID_AllowToggle",
-        "Waldo_AccessibilityPID_DefaultVisible",
         "Waldo_AIRebalance_Enable", "Waldo_AIRebalance_Mode", "Waldo_AIRebalance_Profile",
         "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds",
         "Waldo_ImprovedHelicopterLanding_TriggerDistance", "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor",

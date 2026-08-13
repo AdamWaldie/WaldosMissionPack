@@ -71,6 +71,7 @@ if (isNull _group || {count units _group == 0}) exitWith {
 // it. Such a group must never experience even a brief transfer to a headless client.
 private _serverOwned = _group getVariable ["Waldo_ServerOwnedFeature", false]
     || {_group getVariable ["Waldo_Headless_ExcludeGroup", false]}
+    || {(units _group) findIf {(vehicle _x) isKindOf "Helicopter"} >= 0}
     || {(units _group) findIf {
         private _vehicle = vehicle _x;
         _vehicle getVariable ["Waldo_ServerOwnedFeature", false]
@@ -78,8 +79,9 @@ private _serverOwned = _group getVariable ["Waldo_ServerOwnedFeature", false]
     } >= 0};
 if (_targetOwner != 2 && {_serverOwned}) exitWith {
     [] call _removeRegistryEntry;
-    diag_log format ["[WMP HEADLESS] Refused HC migration for server-owned WMP group=%1 target=%2.", _group, _targetOwner];
-    ["MIGRATE_BLOCKED", format ["group=%1 target=%2 reason=server-owned-feature", _group, _targetOwner]] call Waldo_fnc_HeadlessDebugLog;
+    private _reason = if ((units _group) findIf {(vehicle _x) isKindOf "Helicopter"} >= 0) then {"helicopter-flight-locality"} else {"server-owned-feature"};
+    diag_log format ["[WMP HEADLESS] Refused HC migration group=%1 target=%2 reason=%3.", _group, _targetOwner, _reason];
+    ["MIGRATE_BLOCKED", format ["group=%1 target=%2 reason=%3", _group, _targetOwner, _reason]] call Waldo_fnc_HeadlessDebugLog;
     false
 };
 

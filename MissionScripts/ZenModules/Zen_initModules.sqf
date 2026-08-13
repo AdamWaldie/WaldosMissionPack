@@ -89,10 +89,18 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Air Operations", "Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
     ["WMP Air Operations", "Gunship - Set Orbit", "GUNSHIP_ORBIT", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
-    ["WMP Environment", "Hazard - Create", "HAZARD_CREATE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
-    ["WMP Environment", "Hazard - Remove Nearest", "HAZARD_REMOVE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
     ["WMP AI & Combat", "AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
 ];
+
+["WMP Mission Tools", "Create Custom 3D Marker",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenCreate3DMarker;},
+    "\A3\ui_f\data\map\markers\military\dot_CA.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Tools", "Add WMP Field Equipment Interaction",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenFieldEquipment;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\interact_ca.paa"
+] call zen_custom_modules_fnc_register;
 
 ["WMP Air Operations", "Paradrop - Create Drop Zone",
     {params ["_modulePos"]; ["CREATE", _modulePos] call Waldo_fnc_ParadropDropZoneZen;},
@@ -273,6 +281,24 @@ missionNamespace setVariable ["Waldo_ZenModuleCount", 45];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
 diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 45], clientOwner];
 
+// Hazard controls are meaningful only when the mission enabled the underlying runtime. Shared
+// config can finish after ZEN registration, so add these two entries asynchronously once the
+// readiness sentinel is available instead of showing dead controls in every mission.
+[] spawn {
+    private _deadline = diag_tickTime + 30;
+    waitUntil {uiSleep 0.1; missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false] || {diag_tickTime >= _deadline}};
+    if !(missionNamespace getVariable ["Waldo_Hazard_Enable", false]) exitWith {
+        diag_log format ["[WMP ZEN] Hazard modules not registered on clientOwner=%1: Waldo_Hazard_Enable is false.", clientOwner];
+    };
+    {
+        _x params ["_name", "_feature"];
+        private _handler = compile format ["params ['_modulePos', ['_objectPos', objNull]]; ['%1', _modulePos, _objectPos] call Waldo_fnc_FeatureRuntimeZen;", _feature];
+        ["WMP Environment", _name, _handler, "\A3\ui_f\data\map\markers\military\warning_CA.paa"] call zen_custom_modules_fnc_register;
+    } forEach [["Hazard - Create", "HAZARD_CREATE"], ["Hazard - Remove Nearest", "HAZARD_REMOVE"]];
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 2];
+    diag_log format ["[WMP ZEN] Registered 2 enabled hazard modules on clientOwner=%1.", clientOwner];
+};
+
 // Headless-client control modules are registered separately, and only when Waldo_Headless_Enable is
 // actually true - unlike every module above, which is always useful regardless of mission config, a
 // Zeus menu offering to toggle headless debug output or hand groups to a headless client is pure
@@ -287,7 +313,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
         diag_log format ["[WMP ZEN] Headless client modules not registered on clientOwner=%1: Waldo_Headless_Enable is false.", clientOwner];
     };
 
-    ["WMP Mission Tools", "Headless Client - Toggle Debug",
+    ["WMP Headless Client", "Toggle Debug Overlay",
         {
             params ["_modulePos", "_objectPos"];
             [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessDebugToggle;
@@ -295,7 +321,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
         "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
     ] call zen_custom_modules_fnc_register;
 
-    ["WMP Mission Tools", "Headless Client - Force Rebalance Now",
+    ["WMP Headless Client", "Force Rebalance Now",
         {
             params ["_modulePos", "_objectPos"];
             [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessForceRebalance;
@@ -303,7 +329,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
         "\A3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"
     ] call zen_custom_modules_fnc_register;
 
-    ["WMP Mission Tools", "Headless Client - Manual Handoff",
+    ["WMP Headless Client", "Manual Group Handoff",
         {
             params ["_modulePos", "_objectPos"];
             [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessManualHandoff;
@@ -313,4 +339,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
 
     missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 3];
     diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 48]];
+    if (missionNamespace getVariable ["Waldo_Headless_Debug", false]) then {
+        [true] call Waldo_fnc_HeadlessDebugDisplayLocal;
+    };
 };

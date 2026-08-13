@@ -2,7 +2,12 @@
  * Author: WaldoTheWarfighter
  * Applies the active base, night-sensor, faction, and role skill layers to one local AI unit.
  * Locality and authority: call where the AI unit is local; the unit Local handler reapplies after
- * ownership migration. This function does not publish mission settings.
+ * ownership migration. Original skill values and the optional per-unit variance are captured once
+ * and published on the unit so a headless-client handoff cannot recapture WMP-modified skills or
+ * randomly change difficulty. This function does not publish mission settings and is not a public
+ * remote execution endpoint. Its object-locality and active-profile gates are authoritative; do not reject
+ * it using remoteExecutedOwner because ACE target events can legitimately retain a remote event
+ * context while invoking this local helper on the destination headless client.
  *
  * Arguments:
  * 0: unit <OBJECT>
@@ -18,7 +23,6 @@
  */
 
 params [["_unit", objNull, [objNull]]];
-if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (isNull _unit || {!local _unit} || {isPlayer _unit}) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]) exitWith {false};
 if (_unit getVariable ["Waldo_AI_Exclude", false]) exitWith {false};
@@ -39,7 +43,9 @@ private _skillNames = ["aimingSpeed", "aimingAccuracy", "aimingShake", "spotTime
 if (isNil {_unit getVariable "Waldo_AI_OriginalSkills"}) then {
     private _original = createHashMap;
     {_original set [_x, _unit skill _x]} forEach _skillNames;
-    _unit setVariable ["Waldo_AI_OriginalSkills", _original];
+    // This small one-shot snapshot must follow the unit to a later owner. Leaving it machine-local
+    // makes an HC capture the already modified WMP profile as the supposed mission-original state.
+    _unit setVariable ["Waldo_AI_OriginalSkills", _original, true];
 };
 if !(_unit getVariable ["Waldo_AI_LocalHandlerInstalled", false]) then {
     _unit setVariable ["Waldo_AI_LocalHandlerInstalled", true];
@@ -141,9 +147,16 @@ if (_mode == "NIGHT" && {(getLighting select 1) <= (missionNamespace getVariable
 };
 private _variance = ((missionNamespace getVariable ["Waldo_AI_SkillVariance", 0]) max 0) min 0.25;
 if (_variance > 0) then {
+    private _offsets = _unit getVariable ["Waldo_AI_SkillVarianceOffsets", []];
+    if (count _offsets != count _skillNames) then {
+        _offsets = _skillNames apply {random [-_variance, 0, _variance]};
+        // Variance describes this AI character, not the machine currently scheduling it. Publish
+        // once so repeated profile application and locality migration remain deterministic.
+        _unit setVariable ["Waldo_AI_SkillVarianceOffsets", _offsets, true];
+    };
     {
         private _current = _unit skill _x;
-        _unit setSkill [_x, ((_current + random [-_variance, 0, _variance]) max 0) min 1];
+        _unit setSkill [_x, ((_current + (_offsets select _forEachIndex)) max 0) min 1];
     } forEach _skillNames;
 };
 true

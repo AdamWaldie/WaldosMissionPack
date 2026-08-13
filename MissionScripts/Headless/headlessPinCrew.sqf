@@ -67,7 +67,12 @@ private _groups = [];
     _x setVariable ["Waldo_Headless_ExcludeGroup", true, true];
     _x setVariable ["acex_headless_blacklist", true, true];
     {_x setVariable ["acex_headless_blacklist", true, true]} forEach units _x;
-    if (groupOwner _x != 2) then {[_x, 2] call Waldo_fnc_HeadlessMigrateGroup};
+    private _currentOwner = groupOwner _x;
+    // Eden groups can briefly report owner 0 while the mission is still constructing network
+    // entities. That is not a remote owner and setGroupOwner 2 is rejected during this window.
+    // The exclusion flags above already prevent either HC distributor from adopting the group, so
+    // only reclaim it when another real network machine currently owns it.
+    if (_currentOwner > 2) then {[_x, 2] call Waldo_fnc_HeadlessMigrateGroup};
 } forEach _groups;
 if (!isNil "ace_headless_fnc_blacklist") then {
     // Use ACE's public API as well as its documented variable. Owner 2 makes the server-only intent

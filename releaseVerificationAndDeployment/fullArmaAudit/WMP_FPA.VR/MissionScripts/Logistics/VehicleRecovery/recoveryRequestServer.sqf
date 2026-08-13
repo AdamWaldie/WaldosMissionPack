@@ -47,7 +47,10 @@ if (_operation == "PACK") exitWith {
         _workshopSide == sideUnknown || {_workshopSide getFriend side group _actor >= 0.6}
     };
     if (_serviced < 0) exitWith {["Your side is not serviced by this vehicle's recovery workshop.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false};
-    if (count crew _target > 0 || {(alive _target && {damage _target < _minimumDamage})} || {!alive _target && {!_allowDestroyed}}) exitWith {
+    // A destroyed vehicle can retain dead crew objects in its crew array. Only a living occupant
+    // blocks packaging; otherwise a wreck registered after destruction through Zeus can never pass
+    // the same gate that a pre-registered editor vehicle passes.
+    if ({alive _x} count crew _target > 0 || {(alive _target && {damage _target < _minimumDamage})} || {!alive _target && {!_allowDestroyed}}) exitWith {
         ["The vehicle is occupied or does not meet its recovery threshold.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     if (_requireEngineer && {!(_actor getUnitTrait "engineer")}) exitWith {

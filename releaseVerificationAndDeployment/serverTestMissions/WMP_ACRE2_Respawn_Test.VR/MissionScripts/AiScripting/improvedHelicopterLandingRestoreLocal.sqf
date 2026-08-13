@@ -35,7 +35,7 @@ if (_landed) then {
 } else {
     _helicopter land "NONE";
     if (!isNull _pilot && {!isPlayer _pilot} && {isNull (remoteControlled _pilot)} && {isEngineOn _helicopter}) then {
-        _helicopter flyInHeight ((missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_TransitAltitude", 30]) max 15);
+        _helicopter flyInHeight [(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_TransitAltitude", 30]) max 15, true];
     };
 };
 true

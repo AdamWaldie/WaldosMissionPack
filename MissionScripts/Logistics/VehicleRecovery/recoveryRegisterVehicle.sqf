@@ -76,5 +76,5 @@ if (!_interactionEnabled && {!isNil {_vehicle getVariable "Waldo_MG_Int_Active"}
 };
 [_vehicle, if (_interactionEnabled) then {[_challengeId, _difficulty]} else {[]}]
     remoteExecCall ["Waldo_fnc_RecoverySetupVehicleLocal", 0, _vehicle];
-diag_log format ["[WMP RECOVERY] Vehicle registered object=%1 class=%2 workshop=%3 threshold=%4 package=%5 procedure=%6.", netId _vehicle, typeOf _vehicle, toUpperANSI _workshopKey, (_minimumDamage max 0) min 1, _packageClass, _interactionEnabled];
+diag_log format ["[WMP RECOVERY] Vehicle registered object=%1 class=%2 workshop=%3 threshold=%4 package=%5 procedure=%6 alive=%7 crewTotal=%8 crewLiving=%9 owner=%10.", netId _vehicle, typeOf _vehicle, toUpperANSI _workshopKey, (_minimumDamage max 0) min 1, _packageClass, _interactionEnabled, alive _vehicle, count crew _vehicle, {alive _x} count crew _vehicle, owner _vehicle];
 true

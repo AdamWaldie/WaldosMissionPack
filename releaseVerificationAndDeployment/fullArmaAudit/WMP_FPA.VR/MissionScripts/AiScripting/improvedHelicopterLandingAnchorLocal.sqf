@@ -14,10 +14,11 @@
  * 4: landing waypoint index <NUMBER>
  * 5: landing waypoint script <STRING> (default "")
  * 6: waypoint count at controller acquisition <NUMBER>
+ * 7: control revision <NUMBER> - identifies the exact approach that owns this anchor.
  *
  * Return Value: BOOL - true after the local ground-anchor lifecycle ends.
  *
- * Example: [_helicopter, _group, _position, "SCRIPTED", 1, _script, 2] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
+ * Example: [_helicopter, _group, _position, "SCRIPTED", 1, _script, 2, 4] spawn Waldo_fnc_ImprovedHelicopterLandingAnchorLocal;
  * Current caller: ImprovedHelicopterLandingExecuteLocal after a validated touchdown.
  */
 
@@ -28,9 +29,17 @@ params [
     ["_waypointType", "", [""]],
     ["_expectedWaypoint", -1, [0]],
     ["_expectedScript", "", [""]],
-    ["_expectedWaypointCount", 0, [0]]
+    ["_expectedWaypointCount", 0, [0]],
+    ["_controlRevision", -1, [0]]
 ];
-if (isNull _helicopter || {isNull _group} || {count _targetPosition < 2} || {!local _helicopter}) exitWith {false};
+if (
+    isNull _helicopter
+    || {isNull _group}
+    || {count _targetPosition < 2}
+    || {!local _helicopter}
+    || {_controlRevision < 0}
+    || {(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) != _controlRevision}
+) exitWith {false};
 
 private _normalisedType = toUpperANSI _waypointType;
 private _normalisedScript = toLowerANSI _expectedScript;
@@ -42,6 +51,7 @@ private _release = false;
 private _releaseReason = "UNKNOWN";
 
 _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_Active", true, true];
+_helicopter setVariable ["Waldo_ImprovedHelicopterLanding_GroundAnchored", true, true];
 _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_GearLocal", false];
 _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_LastResult", ["ANCHORED", _targetPosition, diag_tickTime, 0, (getPosATL _helicopter) select 2], true];
 _helicopter disableAI "MOVE";
@@ -67,6 +77,10 @@ while {!_release} do {
         _release = true;
         _releaseReason = "SUPERSEDED_EXTERNALLY";
     };
+    if ((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) != _controlRevision) exitWith {
+        _release = true;
+        _releaseReason = "SUPERSEDED_REVISION";
+    };
     if (_anchorPosition distance2D (getPosASL _helicopter) > 5) exitWith {
         _release = true;
         _releaseReason = "EXTERNAL_REPOSITION";
@@ -87,6 +101,7 @@ while {!_release} do {
             !(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true])
             || {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Exclude", false]}
             || {isNull _pilot}
+            || {group _pilot != _group}
             || {!alive _pilot}
             || {!_pilotAwake}
             || {isPlayer _pilot}
@@ -95,6 +110,17 @@ while {!_release} do {
             _release = true;
             _releaseReason = "CONTROL_OR_FEATURE_CHANGE";
         } else {
+            private _groupAircraft = [];
+            {
+                private _vehicle = vehicle _x;
+                if (_vehicle isKindOf "Helicopter") then {_groupAircraft pushBackUnique _vehicle;};
+            } forEach units _group;
+            if (count _groupAircraft != 1) then {
+                _release = true;
+                _releaseReason = "MULTI_HELICOPTER_GROUP";
+            };
+        };
+        if (!_release) then {
             private _waypoints = waypoints _group;
             private _waypointCount = count _waypoints;
             if (_waypointCount < _expectedWaypointCount || {_expectedWaypoint < 0} || {_expectedWaypoint >= _waypointCount}) then {
@@ -138,10 +164,15 @@ if (!isNull _helicopter && {local _helicopter}) then {
     // point means someone else is responsible for this aircraft's flight state now. Calling restore
     // again would stomp the fresh flyInHeight/orders that new dispatch just applied with a stale
     // global default.
-    if (_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
-        [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    if (
+        _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
+        && {(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) == _controlRevision}
+    ) then {
+        [_helicopter, false, "", _releaseReason == "MULTI_HELICOPTER_GROUP"] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
     };
-    _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_LastResult", ["RELEASED", _targetPosition, diag_tickTime, _releaseReason, (getPosATL _helicopter) select 2], true];
+    if ((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_ControlRevision", -1]) == _controlRevision) then {
+        _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_LastResult", ["RELEASED", _targetPosition, diag_tickTime, _releaseReason, (getPosATL _helicopter) select 2], true];
+    };
     diag_log format ["[WMP AI LANDING] Ground anchor released helicopter=%1 reason=%2", netId _helicopter, _releaseReason];
 };
 true

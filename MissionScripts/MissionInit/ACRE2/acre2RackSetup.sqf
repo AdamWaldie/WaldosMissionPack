@@ -315,7 +315,9 @@ _vehicle setVariable ["Waldo_ACRE2_RackSetupRunning", true, true];
 _vehicle setVariable ["Waldo_ACRE2_RackRunningSignature", _signature];
 _vehicle setVariable ["Waldo_ACRE2_RackSetupComplete", false, true];
 _vehicle setVariable ["Waldo_ACRE2_RackSetupState", "STARTING", true];
-_vehicle setVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, ["STARTING"]], true];
+// The state already describes progress. Keep the problem list empty until a terminal failure so
+// diagnostics cannot mistake normal startup for a rack fault while ACRE is still synchronising.
+_vehicle setVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, []], true];
 _vehicle setVariable ["Waldo_ACRE2_RackDiagnosticSnapshot", ["STARTING", _sourceLabel, owner _vehicle, [], [], []], true];
 diag_log format ["[WMP ACRE RACK] ACCEPT vehicle=%1 netId=%2 profile=%3 owner=%4 force=%5 settings=%6", _vehicle, netId _vehicle, _sourceLabel, owner _vehicle, _force, _pairs];
 [_vehicle, _settings, _signature] spawn Waldo_fnc_ACRE2RackApply;

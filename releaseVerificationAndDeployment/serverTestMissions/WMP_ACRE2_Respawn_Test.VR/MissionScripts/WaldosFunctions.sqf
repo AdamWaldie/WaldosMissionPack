@@ -33,6 +33,9 @@ class CfgFunctions
             class SetTeamColour {
                 file = "MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf";
             };
+            class AceSetNameRespawnBindingRepair {
+                file = "MissionScripts\MissionInit\aceSetNameRespawnBindingRepair.sqf";
+            };
         };
         class BriefDocs 
         {
@@ -114,6 +117,11 @@ class CfgFunctions
             class ACRE2CaptureRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2CaptureRadioState.sqf";};
             class ACRE2ApplyRadioState {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyRadioState.sqf";};
             class ACRE2SchedulePlayerRefresh {file = "MissionScripts\MissionInit\ACRE2\acre2SchedulePlayerRefresh.sqf";};
+            class ACRE2RackSetup {file = "MissionScripts\MissionInit\ACRE2\acre2RackSetup.sqf";};
+            class ACRE2RackApply {file = "MissionScripts\MissionInit\ACRE2\acre2RackApply.sqf";};
+            class ACRE2RackClientApply {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientApply.sqf";};
+            class ACRE2RackClientResultServer {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientResultServer.sqf";};
+            class ACRE2RackHardwareServer {file = "MissionScripts\MissionInit\ACRE2\acre2RackHardwareServer.sqf";};
         };
         class AI 
         {
@@ -125,6 +133,12 @@ class CfgFunctions
             };
             class AIRebalanceInit {
                 file = "MissionScripts\AiScripting\aiRebalanceInit.sqf";
+            };
+            class AIHeadlessAdoptionResultServer {
+                file = "MissionScripts\AiScripting\aiHeadlessAdoptionResultServer.sqf";
+            };
+            class AIGetDiagnostics {
+                file = "MissionScripts\AiScripting\aiGetDiagnostics.sqf";
             };
             class AIApplyProfile {
                 file = "MissionScripts\AiScripting\aiApplyProfile.sqf";
@@ -140,6 +154,23 @@ class CfgFunctions
             class ImprovedHelicopterLandingSetting {file = "MissionScripts\AiScripting\improvedHelicopterLandingSetting.sqf";};
             class ImprovedHelicopterLandingConfigureServer {file = "MissionScripts\AiScripting\improvedHelicopterLandingConfigureServer.sqf";};
         };
+        class Headless
+        {
+            class HeadlessDetectLocal {file = "MissionScripts\Headless\headlessDetectLocal.sqf";};
+            class HeadlessRegisterClient {file = "MissionScripts\Headless\headlessRegisterClient.sqf";};
+            class HeadlessRebalance {file = "MissionScripts\Headless\headlessRebalance.sqf";};
+            class HeadlessMigrationWorker {file = "MissionScripts\Headless\headlessMigrationWorker.sqf";};
+            class HeadlessMigrateGroup {file = "MissionScripts\Headless\headlessMigrateGroup.sqf";};
+            class HeadlessAdoptGroupLocal {file = "MissionScripts\Headless\headlessAdoptGroupLocal.sqf";};
+            class HeadlessReassignOnDisconnect {file = "MissionScripts\Headless\headlessReassignOnDisconnect.sqf";};
+            class HeadlessGetDiagnostics {file = "MissionScripts\Headless\headlessGetDiagnostics.sqf";};
+            class HeadlessPinCrew {file = "MissionScripts\Headless\headlessPinCrew.sqf";};
+            class HeadlessDebugLog {file = "MissionScripts\Headless\headlessDebugLog.sqf";};
+            class HeadlessDebugToggle {file = "MissionScripts\Headless\headlessDebugToggle.sqf";};
+            class HeadlessDebugDisplayLocal {file = "MissionScripts\Headless\headlessDebugDisplayLocal.sqf";};
+            class HeadlessForceRebalance {file = "MissionScripts\Headless\headlessForceRebalance.sqf";};
+            class HeadlessManualHandoff {file = "MissionScripts\Headless\headlessManualHandoff.sqf";};
+        };
         class teleport
         {
             class Teleport {
@@ -154,11 +185,11 @@ class CfgFunctions
             class ENDEXReset {
                 file = "MissionScripts\MissionFlowAndUi\ENDEXReset.sqf";
             };
+            class ENDEXBuildReportPages {
+                file = "MissionScripts\MissionFlowAndUi\endexBuildReportPages.sqf";
+            };
             class AARTrack {
                 file = "MissionScripts\MissionFlowAndUi\aarTrack.sqf";
-            };
-            class AARWound {
-                file = "MissionScripts\MissionFlowAndUi\aarWound.sqf";
             };
             class SafeStart {
                 file = "MissionScripts\MissionFlowAndUi\safeStart.sqf";
@@ -189,6 +220,9 @@ class CfgFunctions
             };
             class ProtectionReleaseSafety {
                 file = "MissionScripts\MissionFlowAndUi\protectionReleaseSafety.sqf";
+            };
+            class ProtectionRespawnLocal {
+                file = "MissionScripts\MissionFlowAndUi\protectionRespawnLocal.sqf";
             };
               class CleanupTransientUi {
                   file = "MissionScripts\MissionFlowAndUi\cleanupTransientUi.sqf";
@@ -268,6 +302,9 @@ class CfgFunctions
             class Init3DMarkers {
                 file = "MissionScripts\MissionFlowAndUi\init3DMarkers.sqf";
             };
+            class ZenCreate3DMarker {
+                file = "MissionScripts\MissionFlowAndUi\zenCreate3DMarker.sqf";
+            };
         };
         class Diagnostics
         {
@@ -276,6 +313,9 @@ class CfgFunctions
             };
             class DiagnosticFeatureReport {
                 file = "MissionScripts\MissionFlowAndUi\diagnosticFeatureReport.sqf";
+            };
+            class DiagnosticFoldHint {
+                file = "MissionScripts\MissionFlowAndUi\diagnosticFoldHint.sqf";
             };
             class RunDiagnostics {
                 file = "MissionScripts\MissionFlowAndUi\runDiagnostics.sqf";
@@ -395,6 +435,9 @@ class CfgFunctions
             };
             class SaveLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\saveRespawnLoadout.sqf";
+            };
+            class RespawnRestoreLoadout {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnRestoreLoadout.sqf";
             };
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
@@ -550,6 +593,15 @@ class CfgFunctions
             class ZenJammerRemove {
                 file = "MissionScripts\ZenModules\Zen_jammerRemoveModule.sqf";
             };
+            class ZenHeadlessDebugToggle {
+                file = "MissionScripts\ZenModules\Zen_headlessDebugToggleModule.sqf";
+            };
+            class ZenHeadlessForceRebalance {
+                file = "MissionScripts\ZenModules\Zen_headlessForceRebalanceModule.sqf";
+            };
+            class ZenHeadlessManualHandoff {
+                file = "MissionScripts\ZenModules\Zen_headlessManualHandoffModule.sqf";
+            };
             class ZenEMP {
                 file = "MissionScripts\ZenModules\Zen_empModule.sqf";
             };
@@ -704,12 +756,24 @@ class CfgFunctions
             class TreatmentFeedbackShowLocal {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackShowLocal.sqf";};
             class TreatmentFeedbackStop {file = "MissionScripts\MedicalSystems\TreatmentFeedback\treatmentFeedbackStop.sqf";};
         };
+        class Obituary
+        {
+            class ObituaryInit {file = "MissionScripts\MedicalSystems\Obituary\obituaryInit.sqf";};
+            class ObituaryIsQualifiedMedic {file = "MissionScripts\MedicalSystems\Obituary\obituaryIsQualifiedMedic.sqf";};
+            class ObituarySelfInteractionInit {file = "MissionScripts\MedicalSystems\Obituary\obituarySelfInteractionInit.sqf";};
+            class ObituaryChildrenLocal {file = "MissionScripts\MedicalSystems\Obituary\obituaryChildrenLocal.sqf";};
+            class ObituaryRecordDeath {file = "MissionScripts\MedicalSystems\Obituary\obituaryRecordDeath.sqf";};
+            class ObituaryClassifyCause {file = "MissionScripts\MedicalSystems\Obituary\obituaryClassifyCause.sqf";};
+            class ObituaryPronounce {file = "MissionScripts\MedicalSystems\Obituary\obituaryPronounce.sqf";};
+            class ObituaryDiaryRenderLocal {file = "MissionScripts\MedicalSystems\Obituary\obituaryDiaryRenderLocal.sqf";};
+            class ObituaryPad2 {file = "MissionScripts\MedicalSystems\Obituary\obituaryPad2.sqf";};
+            class ObituaryGetDiagnostics {file = "MissionScripts\MedicalSystems\Obituary\obituaryGetDiagnostics.sqf";};
+        };
         class FieldResupply
         {
             class FieldResupplyInit {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyInit.sqf";};
             class FieldResupplySetupHubLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplySetupHubLocal.sqf";};
             class FieldResupplySetupCrateLocal {file = "MissionScripts\Logistics\FieldResupply\fieldResupplySetupCrateLocal.sqf";};
-            class FieldResupplyReceiveAmmo {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyReceiveAmmo.sqf";};
             class FieldResupplyRegisterHub {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyRegisterHub.sqf";};
             class FieldResupplyAssignCarrier {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyAssignCarrier.sqf";};
             class FieldResupplyGrantCrates {file = "MissionScripts\Logistics\FieldResupply\fieldResupplyGrantCrates.sqf";};
@@ -2366,8 +2430,20 @@ class CfgFunctions
             class MiniGameEquipmentGallery {
                 file = "MissionScripts\InteractionsMinigames\Integration\equipmentGallery.sqf";
             };
+            class MiniGameEquipmentGallerySetup {
+                file = "MissionScripts\InteractionsMinigames\Integration\equipmentGallerySetup.sqf";
+            };
             class BombDefuseSetup {
                 file = "MissionScripts\InteractionsMinigames\Integration\bombDefuseSetup.sqf";
+            };
+            class ZenFieldEquipment {
+                file = "MissionScripts\InteractionsMinigames\Integration\zenFieldEquipment.sqf";
+            };
+            class FieldEquipmentZenSetupLocal {
+                file = "MissionScripts\InteractionsMinigames\Integration\fieldEquipmentZenSetupLocal.sqf";
+            };
+            class FieldEquipmentOutcomeServer {
+                file = "MissionScripts\InteractionsMinigames\Integration\fieldEquipmentOutcomeServer.sqf";
             };
             // Built-in interaction challenges.
             class MiniGameWireCut {

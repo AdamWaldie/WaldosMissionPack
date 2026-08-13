@@ -1,0 +1,250 @@
+/*
+ * Author: WaldoTheWarfighter, Val
+ * Registers one already AI-crewed helicopter, ground vehicle or boat with the authoritative typed
+ * transport service. An Eden vehicle init runs on every machine, but only the server mutates the
+ * registry; every non-server copy deliberately does nothing. ZEN registration reaches
+ * this function through the validated server runtime bridge.
+ * Registration is repeat-safe and stores enough public object state for JIP interactions while the
+ * full mutable registry remains server-only.
+ * Locality and authority: call from an Eden object init or server script; only the server copy
+ * mutates registration state. ZEN uses Waldo_fnc_FeatureRuntimeApply as its server bridge.
+ * The driver seat is locked (lockDriver true, intentional - direct boarding is not the supported
+ * path) and the captured AI service crew has fleeing/panic disabled
+ * (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily damaged to
+ * remain effective
+ * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written
+ * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
+ *
+ * Arguments:
+ * 0: vehicle <OBJECT>
+ * 1: service type <STRING> - HELICOPTER, GROUND or BOAT.
+ * 2: service ID <STRING> - unique readable key; blank generates one.
+ * 3: display name <STRING> - player-facing callsign/name; blank uses groupId.
+ * 4: options <HASHMAP|ARRAY> - optional keys: cruiseAltitude, stopRadius, boardingSeconds,
+ *    destinationDwell, allowedSides, allowedGroups, leadersOnly, showMarker, repairAtBase,
+ *    refuelAtBase, forceDisembark, failSafeReset, speedMode, behaviour, landingSearchRadius,
+ *    landingClearanceScale,
+ *    roadSearchRadius, minimumSeparation, groundSpeedLimit, pathRetrySeconds, pathRetryLimit,
+ *    avoidRoadObstacles (ground only; default true - once a route stalls with no progress for
+ *    pathRetrySeconds, drop forceFollowRoad for the rest of that dispatch so normal off-road
+ *    pathfinding/obstacle avoidance can route the AI driver around whatever it is stuck on; set
+ *    false to keep retrying the exact same road-locked path instead),
+ *    waterSearchRadius (boat only; furthest a safe water service point may move from the clicked
+ *    position), boatSpeedLimit (boat only),
+ *    invulnerable (vehicle and original AI service crew; default false), and
+ *    useImprovedLanding (helicopters only; default true). At destination, LAND may naturally idle
+ *    the engine down while boarding/disembarking and never orders passengers out;
+ *    destinationDwell triggers moveOut only when forceDisembark is true, and RTB cannot begin until
+ *    every passenger is physically outside. minimumSeparation spaces active
+ *    destinations/bulk service slots (default: helicopters 60, ground vehicles 18, boats 25);
+ *    prepared bases are checked only for physical overlap.
+ *
+ * Return Value: Boolean - true when registered (or when a duplicate non-server Eden copy was ignored).
+ *
+ * Example:
+ * [this, "HELICOPTER", "RAVEN_1", "Raven One", createHashMapFromArray [["cruiseAltitude", 80]]]
+ *     call Waldo_fnc_TransportRegister;
+ * Result: Raven One enters the helicopter pool at its current position.
+ * Current callers: mission-maker vehicle init fields, transport ZEN registration and audit tests.
+ */
+
+params [
+    ["_vehicle", objNull, [objNull]], ["_type", "GROUND", [""]], ["_id", "", [""]],
+    ["_displayName", "", [""]], ["_options", createHashMap, [createHashMap, []]]
+];
+_type = toUpperANSI _type;
+if (isNull _vehicle || {!(_type in ["HELICOPTER", "GROUND", "BOAT"])}) exitWith {false};
+if (!isServer) exitWith {true};
+
+private _reject = {
+    params ["_message"];
+    missionNamespace setVariable ["Waldo_Transport_LastRegistrationError", _message];
+    diag_log format ["[WMP TRANSPORT] Registration rejected: %1", _message];
+    false
+};
+missionNamespace setVariable ["Waldo_Transport_LastRegistrationError", ""];
+
+private _authorized = remoteExecutedOwner == 0;
+if (!_authorized) then {
+    private _callerIndex = allPlayers findIf {owner _x == remoteExecutedOwner};
+    private _caller = if (_callerIndex >= 0) then {allPlayers select _callerIndex} else {objNull};
+    _authorized = !isNull _caller && {!isNull getAssignedCuratorLogic _caller};
+};
+if (!_authorized) exitWith {["Only the server or an assigned curator may register a transport."] call _reject};
+if !(missionNamespace getVariable ["Waldo_FeatureConfig_SERVER_Ready", false]) exitWith {
+    [_vehicle, _type, _id, _displayName, _options] spawn {
+        params ["_vehicle", "_type", "_id", "_displayName", "_options"];
+        waitUntil {sleep 0.1; missionNamespace getVariable ["Waldo_FeatureConfig_SERVER_Ready", false]};
+        [_vehicle, _type, _id, _displayName, _options] call Waldo_fnc_TransportRegister;
+    };
+    true
+};
+if !(missionNamespace getVariable ["Waldo_TransportServices_Enable", false]) exitWith {["Transport Services is disabled in MissionConfig/logisticsConfig.sqf."] call _reject};
+if (_type == "HELICOPTER" && {!(_vehicle isKindOf "Helicopter")}) exitWith {["Helicopter service was selected, but the target is not a helicopter."] call _reject};
+if (_type == "GROUND" && {!(_vehicle isKindOf "LandVehicle") || {_vehicle isKindOf "StaticWeapon"}}) exitWith {["Ground service was selected, but the target is not a driveable ground vehicle."] call _reject};
+if (_type == "BOAT" && {!(_vehicle isKindOf "Ship")}) exitWith {["Boat service was selected, but the target is not a boat."] call _reject};
+
+private _optionMap = createHashMap;
+if (typeName _options == "HASHMAP") then {
+    {_optionMap set [_x, _options get _x]} forEach keys _options;
+} else {
+    {if (_x isEqualType [] && {count _x >= 2}) then {_optionMap set [_x select 0, _x select 1]}} forEach _options;
+};
+
+// Registration never manufactures crew. Eden compositions must contain their correctly sided AI
+// driver, and a Zeus registration must target an already crewed vehicle. A future module that
+// actually spawns a brand-new transport may create its crew as part of that separate spawn workflow.
+if (isNull driver _vehicle) exitWith {["The selected transport has no AI driver. Crew it in Eden (or before using the registration module), then register it again."] call _reject};
+if (!alive driver _vehicle) exitWith {["The selected vehicle's driver is dead."] call _reject};
+if (isPlayer driver _vehicle) exitWith {["The selected vehicle must have an AI driver."] call _reject};
+
+[] call Waldo_fnc_TransportInitServer;
+if (_id == "") then {_id = format ["%1_%2", _type, floor (random 1000000)]};
+_id = [_id, "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-"] call BIS_fnc_filterString;
+if (_id == "") exitWith {["The generated or supplied service ID contained no usable characters."] call _reject};
+if (_displayName == "") then {_displayName = groupId group driver _vehicle};
+
+private _config = createHashMapFromArray [
+    ["cruiseAltitude", _optionMap getOrDefault ["cruiseAltitude", missionNamespace getVariable ["Waldo_HeliTransport_DefaultAltitude", 50]]],
+    ["stopRadius", _optionMap getOrDefault ["stopRadius", if (_type == "HELICOPTER") then {35} else {12}]],
+    ["boardingSeconds", _optionMap getOrDefault ["boardingSeconds", missionNamespace getVariable ["Waldo_Transport_DefaultBoardingSeconds", 300]]],
+    ["destinationDwell", _optionMap getOrDefault ["destinationDwell", missionNamespace getVariable ["Waldo_Transport_DefaultDestinationDwell", 45]]],
+    ["allowedSides", _optionMap getOrDefault ["allowedSides", [side driver _vehicle]]],
+    ["allowedGroups", _optionMap getOrDefault ["allowedGroups", []]],
+    ["leadersOnly", _optionMap getOrDefault ["leadersOnly", false]],
+    ["showMarker", _optionMap getOrDefault ["showMarker", true]],
+    ["repairAtBase", _optionMap getOrDefault ["repairAtBase", false]],
+    ["refuelAtBase", _optionMap getOrDefault ["refuelAtBase", true]],
+    ["invulnerable", _optionMap getOrDefault ["invulnerable", false]],
+    ["forceDisembark", _optionMap getOrDefault ["forceDisembark", false]],
+    ["failSafeReset", _optionMap getOrDefault ["failSafeReset", false]],
+    ["speedMode", toUpperANSI (_optionMap getOrDefault ["speedMode", if (_type == "GROUND") then {"NORMAL"} else {"FULL"}])],
+    ["behaviour", toUpperANSI (_optionMap getOrDefault ["behaviour", "CARELESS"])],
+    ["landingSearchRadius", (_optionMap getOrDefault ["landingSearchRadius", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzSearchRadius", 500]]) max 10],
+    ["landingClearanceScale", (_optionMap getOrDefault ["landingClearanceScale", missionNamespace getVariable ["Waldo_HeliTransport_DefaultLzClearanceScale", 1.5]]) max 1],
+    ["roadSearchRadius", (_optionMap getOrDefault ["roadSearchRadius", missionNamespace getVariable ["Waldo_GroundTransport_DefaultRoadSearchRadius", 200]]) max 0],
+    ["waterSearchRadius", (_optionMap getOrDefault ["waterSearchRadius", missionNamespace getVariable ["Waldo_BoatTransport_DefaultWaterSearchRadius", 300]]) max 0],
+    ["minimumSeparation", (_optionMap getOrDefault ["minimumSeparation", switch (_type) do {
+        case "HELICOPTER": {missionNamespace getVariable ["Waldo_HeliTransport_DefaultSeparation", 60]};
+        case "BOAT": {missionNamespace getVariable ["Waldo_BoatTransport_DefaultSeparation", 25]};
+        default {missionNamespace getVariable ["Waldo_GroundTransport_DefaultSeparation", 18]};
+    }]) max 0],
+    ["groundSpeedLimit", (_optionMap getOrDefault ["groundSpeedLimit", missionNamespace getVariable ["Waldo_GroundTransport_DefaultSpeedLimit", 60]]) max 5],
+    ["boatSpeedLimit", (_optionMap getOrDefault ["boatSpeedLimit", missionNamespace getVariable ["Waldo_BoatTransport_DefaultSpeedLimit", 45]]) max 5],
+    ["pathRetrySeconds", (_optionMap getOrDefault ["pathRetrySeconds", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetrySeconds", 25]]) max 10],
+    ["pathRetryLimit", floor ((_optionMap getOrDefault ["pathRetryLimit", missionNamespace getVariable ["Waldo_Transport_DefaultPathRetryLimit", 3]]) max 0)],
+    ["avoidRoadObstacles", _optionMap getOrDefault ["avoidRoadObstacles", true]],
+    ["useImprovedLanding", _optionMap getOrDefault ["useImprovedLanding", true]]
+];
+private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
+// minimumSeparation protects active destinations and bulk landing slots. At a prepared base,
+// mission makers may park services closer together. Reject only physical overlap, using each
+// vehicle's real model footprint plus a small safety margin.
+private _footprintRadius = {
+    params ["_object"];
+    private _bounds = boundingBoxReal _object;
+    _bounds params ["_minimum", "_maximum"];
+    private _halfWidth = abs ((_maximum select 0) - (_minimum select 0)) * 0.5;
+    private _halfLength = abs ((_maximum select 1) - (_minimum select 1)) * 0.5;
+    (sqrt (_halfWidth * _halfWidth + _halfLength * _halfLength)) max 1
+};
+private _vehicleFootprint = [_vehicle] call _footprintRadius;
+private _baseConflict = (keys _services) findIf {
+    private _other = _services get _x;
+    private _otherVehicle = _other getOrDefault ["vehicle", objNull];
+    _other getOrDefault ["type", ""] == _type
+    && {!isNull _otherVehicle}
+    && {_otherVehicle != _vehicle}
+    && {getPosATL _vehicle distance2D (_other getOrDefault ["startPos", getPosATL _otherVehicle]) < (_vehicleFootprint + ([_otherVehicle] call _footprintRadius) + 2)}
+};
+if (_baseConflict >= 0) exitWith {
+    private _other = _services get ((keys _services) select _baseConflict);
+    [format ["%1 physically overlaps %2. Move the vehicles far enough apart that their model footprints do not touch.", _displayName, _other getOrDefault ["name", "another transport"]]] call _reject
+};
+private _existing = _services getOrDefault [_id, createHashMap];
+private _oldVehicle = _existing getOrDefault ["vehicle", objNull];
+if (!isNull _oldVehicle && {_oldVehicle != _vehicle}) exitWith {[format ["Service ID %1 is already used by another vehicle.", _id]] call _reject};
+private _entry = createHashMapFromArray [
+    ["id", _id], ["type", _type], ["name", _displayName], ["vehicle", _vehicle],
+    ["state", "AVAILABLE"], ["requestId", -1], ["requester", objNull], ["requesterUID", ""], ["config", _config],
+    ["startPos", getPosATL _vehicle], ["startDir", getDir _vehicle], ["baseCrew", +crew _vehicle],
+    ["phaseStarted", serverTime]
+];
+_services set [_id, _entry];
+missionNamespace setVariable ["Waldo_Transport_Services", _services];
+private _pools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []], ["BOAT", []]]];
+private _pool = _pools getOrDefault [_type, []];
+_pool pushBackUnique _id;
+_pools set [_type, _pool];
+missionNamespace setVariable ["Waldo_Transport_Pools", _pools];
+
+_vehicle setVariable ["Waldo_TransportService_Id", _id, true];
+_vehicle setVariable ["Waldo_TransportService_Type", _type, true];
+_vehicle setVariable ["Waldo_TransportService_Name", _displayName, true];
+_vehicle setVariable ["Waldo_TransportService_State", "AVAILABLE", true];
+_vehicle setVariable ["Waldo_TransportService_RequestId", -1, true];
+_vehicle setVariable ["Waldo_TransportService_RequesterUID", "", true];
+_vehicle setVariable ["Waldo_TransportService_Requester", objNull, true];
+_vehicle setVariable ["Waldo_TransportService_Registered", true, true];
+_vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];
+[_vehicle] call Waldo_fnc_HeadlessPinCrew;
+if (_config get "invulnerable") then {_vehicle setDamage 0};
+private _registrationOptions = [];
+{_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;
+_vehicle setVariable ["Waldo_TransportService_Registration", [_type, _id, _displayName, _registrationOptions], true];
+_vehicle lockDriver true;
+// The original AI service crew must stay put - an AI driver/gunner who panics and bails out under
+// fire strands the vehicle exactly like a vanished driver would, without the monitor's own
+// driver-death check ever catching it. allowFleeing 0 is the documented Arma command for
+// suppressing that panic/flee behaviour (there is no separate "prevent getting out" command); it
+// only touches crew captured at registration time - a player who later boards as cargo/passenger
+// is unaffected.
+{_x allowFleeing 0} forEach crew _vehicle;
+// The 2-element array form forces strict AGL terrain-following instead of leaving the AI free to
+// compute its own "safe" cruise profile - over long routes with real elevation change, plain
+// single-argument flyInHeight lets the AI climb far above the requested altitude and produces the
+// intermittent stop/start hunting this was tuned to fix. Waldo_fnc_ParadropBuildFlightRoute already
+// established this exact fix for the same class of AI flight behaviour.
+if (_type == "HELICOPTER") then {_vehicle flyInHeight [_config get "cruiseAltitude", true]};
+// Pickup retains the original TR UNLOAD route. Destination uses LAND so waypoint behaviour cannot
+// bypass voluntary disembarkation; both types remain eligible for improved vector landing and the
+// direct transport LAND command remains a fallback if the controller cannot acquire.
+if (_type == "HELICOPTER") then {
+    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_Exclude", !(_config get "useImprovedLanding"), true];
+    // Transport's original LAND fallback begins inside 300 m. The global acceleration gate must
+    // not delay controller acquisition past that fallback; the controller itself supplies the
+    // minimum entry speed needed to avoid the former slow Little Bird approach.
+    _vehicle setVariable ["Waldo_ImprovedHelicopterLanding_ImmediateAcquisition", _config get "useImprovedLanding", true];
+};
+missionNamespace setVariable [switch (_type) do {
+    case "HELICOPTER": {"Waldo_HeliTransport_Available"};
+    case "BOAT": {"Waldo_BoatTransport_Available"};
+    default {"Waldo_GroundTransport_Available"};
+}, true, true];
+[] remoteExecCall ["Waldo_fnc_TransportInteractionInitLocal", 0, "Waldo_Transport_Interactions"];
+[_vehicle] remoteExecCall ["Waldo_fnc_TransportSetupVehicleLocal", 0, _vehicle];
+_entry = [_entry] call Waldo_fnc_TransportRefreshProtectionServer;
+
+if (_config get "showMarker") then {
+    private _marker = format ["Waldo_Transport_%1", _id];
+    deleteMarker _marker;
+    createMarker [_marker, getPosATL _vehicle];
+    // "loc_boat" follows the exact naming pattern of the already-proven loc_heli/loc_car types above,
+    // chosen by analogy rather than confirmed against a live install - marker icon choice only, no
+    // functional effect if the engine falls back to a default icon.
+    _marker setMarkerType (switch (_type) do {case "HELICOPTER": {"loc_heli"}; case "BOAT": {"loc_boat"}; default {"loc_car"}});
+    // Matches the "name - state" format Waldo_fnc_TransportMonitorServer keeps updated afterward -
+    // a freshly registered service is always AVAILABLE, so this is the same text the monitor's own
+    // first tick would set a moment later.
+    private _initialMarkerText = format ["%1 - Available", _displayName];
+    _marker setMarkerText _initialMarkerText;
+    _marker setMarkerColor (switch (side driver _vehicle) do {case west: {"ColorWEST"}; case east: {"ColorEAST"}; case independent: {"ColorGUER"}; case civilian: {"ColorCIV"}; default {"ColorUNKNOWN"}});
+    _entry set ["marker", _marker];
+    _entry set ["markerText", _initialMarkerText];
+};
+_services set [_id, _entry];
+missionNamespace setVariable ["Waldo_Transport_Services", _services];
+private _serviceGroup = group driver _vehicle;
+if (!isNull _serviceGroup) then {[_serviceGroup, _displayName] call Waldo_fnc_TransportSetGroupNameLocal};
+diag_log format ["[WMP TRANSPORT] Registered service=%1 name=%2 type=%3 vehicle=%4 marker=%5", _id, _displayName, _type, typeOf _vehicle, _config get "showMarker"];
+true

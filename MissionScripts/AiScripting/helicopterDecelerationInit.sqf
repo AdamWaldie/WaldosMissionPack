@@ -58,4 +58,3 @@ if (missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL", fa
     || {(missionNamespace getVariable ["Waldo_HelicopterDeceleration_IncludeVTOL", false]) && {_x isKindOf "VTOL_Base_F"}}
 });
 true
-

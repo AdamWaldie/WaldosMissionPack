@@ -1,18 +1,30 @@
 /*
  * Author: WaldoTheWarfighter
- * Creates or updates a custom, broadcast 3D world marker rendered through one shared
- * Draw3D handler. The anchor may be an object or an ATL position. Colour is never
- * required for meaning because every marker can carry icon and text together.
+ * Creates or updates a custom, broadcast 3D world marker rendered through one shared Draw3D
+ * handler. The anchor may be an object or an ATL position. For an object, offset is relative to its
+ * model: `[sideways, forwards, up]`; for a fixed position it is `[east, north, up]` in metres.
+ * Colour is never required for meaning because every marker can carry icon and text together.
  *
- * Arguments: [id, anchor, options]
- * Options: text, icon, colour, offset, width, height, angle, shadow, textSize,
- * font, align, sideArrows, distance, sides, enabled.
+ * Locality and repeat/JIP behaviour:
+ * May be called anywhere. Non-server callers forward once to the server. The server owns the
+ * registry and broadcasts it, so current players and JIP render the same state. Reusing an ID
+ * updates its existing marker instead of duplicating it.
+ *
+ * Arguments:
+ * 0: stable marker ID <STRING> (default auto-generated)
+ * 1: object anchor or ATL position <OBJECT or ARRAY> (default [0,0,0])
+ * 2: named options <HASHMAP or ARRAY of [key,value]> (default [])
+ *    Common keys: text, icon, colour RGBA, offset, width, height, angle, shadow, textSize,
+ *    font, align, sideArrows, distance, sides and enabled.
+ *
+ * Return Value: String - marker ID, or an empty string when rejected.
+ * Current callers: scripts/compositions and the Create Custom 3D Marker ZEN server bridge.
  *
  * Example:
  * ["generator", generator_1, createHashMapFromArray [
  *     ["text", "GENERATOR ALPHA | OFFLINE"],
  *     ["icon", "\a3\ui_f\data\map\markers\military\warning_CA.paa"],
- *     ["colour", [1, 0.75, 0.2, 1]], ["offset", [0,0,2.5]], ["distance", 80]
+ *     ["colour", [1, 0.75, 0.2, 1]], ["offset", [0,0,0]], ["distance", 80]
  * ]] call Waldo_fnc_Create3DMarker;
  */
 params [

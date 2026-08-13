@@ -1,9 +1,15 @@
 /*
  * Author: WaldoTheWarfighter
  * Registers a vehicle for server-authoritative recovery and optionally hooks a shared preparation
- * procedure into the existing package action. Configuration and interaction settings are broadcast
+ * procedure into the existing package action. Eden object init fields execute everywhere, so
+ * non-server copies are ignored; ZEN sends live requests through the validated server runtime bridge.
+ * Configuration and interaction settings are broadcast
  * before object-keyed JIP setup, so current and joining clients receive a consistent action while
  * the server retains the completion callback.
+ *
+ * Locality and authority:
+ * The server owns recovery eligibility and package state. Eden client copies exit; the published
+ * object-keyed action is installed locally for every current/JIP interface client.
  *
  * Arguments:
  * 0: vehicle <OBJECT>
@@ -18,14 +24,15 @@
  *      semantic default is the repair procedure at standard difficulty
  *
  * Return Value:
- * Boolean - true when forwarded or registered
+ * Boolean - true when registered (or when a duplicate non-server Eden copy was ignored).
  *
- * Called by:
+ * Current callers:
  * Vehicle Recovery ZEN registration, audit fixtures and mission-maker scripts.
  *
  * Example:
  * [this, "MAIN", 0.55, true, true, "B_Slingload_01_Cargo_F", true, 1,
  *  createHashMapFromArray [["enabled", true]]] call Waldo_fnc_RecoveryRegisterVehicle;
+ * Result: this vehicle becomes recoverable at MAIN after the configured damage/procedure gates pass.
  */
 
 params [
@@ -36,13 +43,7 @@ params [
     ["_interactionOptions", [], [[], createHashMap]]
 ];
 if (isNull _vehicle || {!(_vehicle isKindOf "AllVehicles")} || {_vehicle isKindOf "CAManBase"}) exitWith {false};
-if (!isServer) exitWith {
-    private _forward = _interactionOptions;
-    if (typeName _forward == "HASHMAP") then {private _pairs = []; {_pairs pushBack [_x, _forward get _x]} forEach keys _forward; _forward = _pairs};
-    [_vehicle, _workshopKey, _minimumDamage, _allowDestroyed, _requireEngineer, _packageClass, _preserveCargo, _restoredFuel, _forward]
-        remoteExecCall ["Waldo_fnc_RecoveryRegisterVehicle", 2];
-    true
-};
+if (!isServer) exitWith {true};
 private _authorized = true;
 if (remoteExecutedOwner > 0) then {
     private _index = allPlayers findIf {owner _x == remoteExecutedOwner};
@@ -75,4 +76,5 @@ if (!_interactionEnabled && {!isNil {_vehicle getVariable "Waldo_MG_Int_Active"}
 };
 [_vehicle, if (_interactionEnabled) then {[_challengeId, _difficulty]} else {[]}]
     remoteExecCall ["Waldo_fnc_RecoverySetupVehicleLocal", 0, _vehicle];
+diag_log format ["[WMP RECOVERY] Vehicle registered object=%1 class=%2 workshop=%3 threshold=%4 package=%5 procedure=%6 alive=%7 crewTotal=%8 crewLiving=%9 owner=%10.", netId _vehicle, typeOf _vehicle, toUpperANSI _workshopKey, (_minimumDamage max 0) min 1, _packageClass, _interactionEnabled, alive _vehicle, count crew _vehicle, {alive _x} count crew _vehicle, owner _vehicle];
 true

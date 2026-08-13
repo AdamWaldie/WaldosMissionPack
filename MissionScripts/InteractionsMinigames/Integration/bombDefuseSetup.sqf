@@ -75,9 +75,11 @@ private _customFailure = ["onFailure", {}] call _opt;
 
 // Detonation parameters live on the object so the (asynchronous, server-side) callbacks can
 // read them without capturing this scope.
-_object setVariable ["Waldo_MG_Bomb_Detonate", _detonate, true];
-_object setVariable ["Waldo_MG_Bomb_Explosive", _explosive, true];
-_object setVariable ["Waldo_MG_Bomb_DefusedVar", _successVariable, true];
+// Eden calls execute on every machine. Only the server publishes these shared values; each client
+// still stores the same local callbacks below for its ACE action without broadcasting duplicates.
+_object setVariable ["Waldo_MG_Bomb_Detonate", _detonate, isServer];
+_object setVariable ["Waldo_MG_Bomb_Explosive", _explosive, isServer];
+_object setVariable ["Waldo_MG_Bomb_DefusedVar", _successVariable, isServer];
 _object setVariable ["Waldo_MG_Bomb_OnSuccess", _customSuccess];
 _object setVariable ["Waldo_MG_Bomb_OnFailure", _customFailure];
 
@@ -92,15 +94,18 @@ private _onSuccess = {
 
 private _onFailure = {
     params ["_obj", "_actor", "_success", ["_result", []]];
+    // Capture the EOD consequence before a custom failure callback can hide, destroy or delete
+    // the interaction object. This keeps ZEN's explicit failure outcome independent of detonation.
+    private _detonateAfterCallback = _obj getVariable ["Waldo_MG_Bomb_Detonate", true];
+    private _explosiveAfterCallback = _obj getVariable ["Waldo_MG_Bomb_Explosive", "IEDLandBig_Remote_Ammo"];
+    private _positionAfterCallback = getPosATL _obj;
     [format ["%1 failed the defusal procedure.", name _actor]] remoteExec ["systemChat", 0];
     [_obj, _actor, _success, _result] call (_obj getVariable ["Waldo_MG_Bomb_OnFailure", {}]);
-    if (_obj getVariable ["Waldo_MG_Bomb_Detonate", true]) then {
-        private _mag = _obj getVariable ["Waldo_MG_Bomb_Explosive", "IEDLandBig_Remote_Ammo"];
-        private _pos = getPosATL _obj;
-        diag_log format ["[WMP INTERACTION] detonating failed EOD device class=%1 position=%2 actor=%3", _mag, _pos, name _actor];
-        deleteVehicle _obj;
-        private _boom = createVehicle [_mag, _pos, [], 0, "CAN_COLLIDE"];
-        _boom setPosATL _pos;
+    if (_detonateAfterCallback) then {
+        diag_log format ["[WMP INTERACTION] detonating failed EOD device class=%1 position=%2 actor=%3", _explosiveAfterCallback, _positionAfterCallback, name _actor];
+        if (!isNull _obj) then {deleteVehicle _obj};
+        private _boom = createVehicle [_explosiveAfterCallback, _positionAfterCallback, [], 0, "CAN_COLLIDE"];
+        _boom setPosATL _positionAfterCallback;
         // Creating mine/IED ammo does not consistently detonate it immediately.
         // Damage the spawned charge explicitly so a failed live procedure always
         // produces the documented consequence on the authoritative server.

@@ -344,9 +344,12 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "RECOVERY_VEHICLE": {
-        private _nearVehicles = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) select {!(_x isKindOf "CAManBase")};
-        private _target = if (!isNull _objectPos && {_objectPos isKindOf "AllVehicles"} && {!(_objectPos isKindOf "CAManBase")}) then {_objectPos} else {_nearVehicles param [0, objNull]};
-        if (isNull _target) exitWith {systemChat "[WMP] No vehicle found within 25 metres."};
+        // Recovery registration changes a specific object's persistent state. Never guess a nearby
+        // vehicle: that can register an intact neighbour when the module was intended for a wreck.
+        private _target = _objectPos;
+        if (isNull _target || {!(_target isKindOf "AllVehicles")} || {_target isKindOf "CAManBase"}) exitWith {
+            ["VEHICLE RECOVERY", "Place Register Vehicle directly on the intended vehicle or wreck.", "ERROR", "RECOVERY_ZEN_TARGET"] call Waldo_fnc_FeatureNotifyLocal;
+        };
         private _workshops = (allMissionObjects "All") select {_x getVariable ["Waldo_Recovery_Workshop", false]};
         if (count _workshops == 0) exitWith {systemChat "[WMP] Create a vehicle recovery workshop before assigning recoverable vehicles."};
         private _workshopKeys = _workshops apply {_x getVariable ["Waldo_Recovery_WorkshopKey", "MAIN"]};
@@ -388,9 +391,10 @@ switch (toUpperANSI _feature) do {
         ] call zen_dialog_fnc_create;
     };
     case "RECOVERY_CARRIER": {
-        private _nearVehicles = (nearestObjects [_modulePos, ["AllVehicles"], 25, true]) select {!(_x isKindOf "CAManBase")};
-        private _target = if (!isNull _objectPos && {_objectPos isKindOf "AllVehicles"} && {!(_objectPos isKindOf "CAManBase")}) then {_objectPos} else {_nearVehicles param [0, objNull]};
-        if (isNull _target) exitWith {systemChat "[WMP] No carrier vehicle found within 25 metres."};
+        private _target = _objectPos;
+        if (isNull _target || {!(_target isKindOf "AllVehicles")} || {_target isKindOf "CAManBase"}) exitWith {
+            ["VEHICLE RECOVERY", "Place Register Carrier directly on the intended carrier vehicle.", "ERROR", "RECOVERY_ZEN_TARGET"] call Waldo_fnc_FeatureNotifyLocal;
+        };
         [
             "Register Recovery Carrier",
             [

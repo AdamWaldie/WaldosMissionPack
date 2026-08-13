@@ -1,18 +1,74 @@
 /*
  * Author: WaldoTheWarfighter
- * Installs the ACE Logistics Quartermaster actions locally on an object or NPC.
- * The MHQ server owns Waldo_LogisticsQM_CurrentStatus; this function never changes deployment
- * state. Supply creation is routed through server-authoritative Waldo_fnc_LogisticsSpawner.
+ * Installs Logistics Quartermaster actions on an object or NPC. A normal standalone
+ * quartermaster is made available immediately. An MHQ passes deploymentControlled=true so its
+ * server-owned deploy/tear-down state decides when the quartermaster actions become available.
+ * The call is safe in an Eden object init: the server publishes standalone availability and every
+ * interface installs its own ACE actions (or vanilla addActions when ACE is absent). JIP clients
+ * receive the object state and repeat-safe local actions. Crate requests are always validated and
+ * spawned by the server through Waldo_fnc_LogisticsSpawner.
  *
- * Arguments: [target, offset bearing (default 90), offset distance (default 2)]
+ * Arguments:
+ * 0: target <OBJECT> - object or NPC that players interact with.
+ * 1: spawn bearing <NUMBER> (default 90) - degrees relative to the target; 0 front, 90 right.
+ * 2: spawn distance <NUMBER> (default 2) - starting distance from the target in metres.
+ * 3: deployment controlled <BOOL> (default false) - false for a standalone quartermaster; true
+ *    only when another system such as the WMP MHQ owns its active/inactive state.
+ *
+ * Return Value: <BOOL> - true when server state or local actions were handled.
+ *
+ * Example:
+ * [this, 0, 4] call Waldo_fnc_SetupQuarterMaster; // always-available standalone point, 4 m ahead.
+ * Current callers: Eden composition/object init and Waldo_fnc_MHQSetupLocal.
  */
 params [
     ["_target", objNull, [objNull]],
     ["_offsetDegrees", 90, [0]],
-    ["_offsetDistance", 2, [0]]
+    ["_offsetDistance", 2, [0]],
+    ["_deploymentControlled", false, [false]]
 ];
 
-if (!hasInterface || {isNull _target}) exitWith {false};
+if (isNull _target) exitWith {false};
+
+// A standalone quartermaster has no deployable MHQ to switch this state on later. Establish that
+// server-owned state here so its visible actions and server-side crate validation agree. Calls
+// made from an Eden init execute on the server already; a client-only custom call forwards once.
+if (!_deploymentControlled) then {
+    if (isServer) then {
+        _target setVariable ["Waldo_QM_Standalone", true, true];
+        _target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true];
+    } else {
+        if !(_target getVariable ["Waldo_QM_StandaloneActivationRequested", false]) then {
+            _target setVariable ["Waldo_QM_StandaloneActivationRequested", true];
+            [_target, _offsetDegrees, _offsetDistance, false] remoteExecCall ["Waldo_fnc_SetupQuarterMaster", 2];
+        };
+    };
+};
+
+if (!hasInterface) exitWith {true};
+
+// Keep the point identifiable even in ACE missions, where functional retrieval lives in the ACE
+// interaction tree rather than Arma's action menu. Informational addActions use the shared WMP blue.
+if (isNil {_target getVariable "Waldo_QM_InfoActionId"}) then {
+    private _infoId = _target addAction [
+        "<t color='#79C7FF'>Logistics Quartermaster</t>",
+        {
+            params ["_target", "_player"];
+            private _ace = isClass (configFile >> "CfgPatches" >> "ace_interact_menu");
+            [
+                "LOGISTICS QUARTERMASTER",
+                ["Use the action menu to retrieve available stores.", "Use ACE Interact on this point to retrieve available stores."] select _ace,
+                "INFO",
+                format ["QUARTERMASTER_INFO_%1", netId _target],
+                6
+            ] call Waldo_fnc_FeatureNotifyLocal;
+        },
+        [], 1.5, true, false, "",
+        "alive _this && {_this distance _target < 6}",
+        6
+    ];
+    _target setVariable ["Waldo_QM_InfoActionId", _infoId];
+};
 if (_target getVariable ["Waldo_QM_LocalActionsInstalled", false]) exitWith {true};
 
 private _aceLoaded = isClass (configFile >> "CfgPatches" >> "ace_interact_menu");
@@ -23,12 +79,12 @@ private _aceReady = _aceLoaded
 if (_aceLoaded && {!_aceReady}) exitWith {
     if !(_target getVariable ["Waldo_QM_LocalSetupPending", false]) then {
         _target setVariable ["Waldo_QM_LocalSetupPending", true];
-        [_target, _offsetDegrees, _offsetDistance] spawn {
-            params ["_target", "_offsetDegrees", "_offsetDistance"];
+        [_target, _offsetDegrees, _offsetDistance, _deploymentControlled] spawn {
+            params ["_target", "_offsetDegrees", "_offsetDistance", "_deploymentControlled"];
             waitUntil {uiSleep 0.1; isNull _target || {!(isNil "ace_interact_menu_fnc_createAction")}};
             if (!isNull _target) then {
                 _target setVariable ["Waldo_QM_LocalSetupPending", false];
-                [_target, _offsetDegrees, _offsetDistance] call Waldo_fnc_SetupQuarterMaster;
+                [_target, _offsetDegrees, _offsetDistance, _deploymentControlled] call Waldo_fnc_SetupQuarterMaster;
             };
         };
     };
@@ -114,7 +170,9 @@ private _actions = [
 
 private _paths = [];
 _paths pushBack ([_target, 0, ["ACE_MainActions"], _category] call ace_interact_menu_fnc_addActionToObject);
-_paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _deployNotice] call ace_interact_menu_fnc_addActionToObject);
+if (_deploymentControlled) then {
+    _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _deployNotice] call ace_interact_menu_fnc_addActionToObject);
+};
 {
     _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _x] call ace_interact_menu_fnc_addActionToObject);
 } forEach _actions;

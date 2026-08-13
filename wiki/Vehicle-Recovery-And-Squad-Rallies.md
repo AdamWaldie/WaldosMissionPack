@@ -66,6 +66,13 @@ re-registration and JIP all reinstall the expected local controls repeat-safely.
 is genuinely optional: when it is off, **Package for Recovery** submits the normal server PACK
 request immediately.
 
+The vehicle module also supports registration after destruction. Arma wrecks can retain dead crew
+objects in `crew vehicle`; WMP deliberately counts only **living** occupants. That keeps an already-
+destroyed Zeus-selected wreck eligible while still refusing a wreck or damaged vehicle containing a
+living player or AI. The client RPT records `mode`, `eligibleNow`, `alive`, `crewTotal` and
+`crewLiving` when the action is installed, which distinguishes a missing ACE action from an action
+whose gameplay condition is currently false.
+
 For troubleshooting, run `[] call Waldo_fnc_RunDiagnostics`. The server report checks orphaned
 vehicles/packages and workshop keys; each client reports registered recovery objects missing their
 expected ACE or vanilla actions. Every registration and PACK/LOAD/UNLOAD request also writes one

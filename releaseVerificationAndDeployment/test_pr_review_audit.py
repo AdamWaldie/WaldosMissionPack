@@ -959,7 +959,7 @@ class PrReviewAuditTests(unittest.TestCase):
         generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
         server = (audit / "extendedFeatureStationsServer.sqf").read_text(encoding="utf-8")
         client = (audit / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
-        self.assertIn('("ai-helicopter-landing", "AI HELICOPTER LANDING"', generator)
+        self.assertIn('("ai-helicopter-landing", "AI HELICOPTER FLIGHT"', generator)
         self.assertIn('("ui-theme-qa", "UI THEME QA"', generator)
         self.assertIn('fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F"', generator)
         self.assertIn('createVehicleCrew _helicopter', server)

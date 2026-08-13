@@ -4,6 +4,8 @@
  * (auto-balance, back to the server, or a named connected headless client) right now, instead of
  * waiting for the next automatic Waldo_fnc_HeadlessRebalance pass. Builds its group/destination lists
  * fresh every time the dialog opens, same pattern as Waldo_fnc_ZenJammerPlace's emitter-class list.
+ * Helicopter groups are omitted: dedicated testing proved that moving an airborne helicopter across
+ * server/HC locality can make it dive into terrain, so the authoritative migration API rejects them.
  * The actual move is applied server-side by Waldo_fnc_HeadlessManualHandoff, which still refuses any
  * group with a human player leader/member and still routes through the single
  * Waldo_fnc_HeadlessMigrateGroup funnel.
@@ -43,6 +45,7 @@ private _eligibleGroups = allGroups select {
     count units _x > 0
     && {side _x != sideLogic}
     && {(units _x) findIf {isPlayer _x} < 0}
+    && {(units _x) findIf {(vehicle _x) isKindOf "Helicopter"} < 0}
 };
 _eligibleGroups = _eligibleGroups apply {[_x, _modulePos distance (leader _x)]};
 _eligibleGroups = [_eligibleGroups, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy;
@@ -59,11 +62,22 @@ private _groupLabels = _eligibleGroups apply {
 };
 
 private _clients = missionNamespace getVariable ["Waldo_Headless_Clients", []];
-private _destValues = ["AUTO", "SERVER"] + (_clients apply {_x select 0});
+private _ownerSnapshot = missionNamespace getVariable ["Waldo_Headless_GroupOwnerSnapshot", []];
+// Keep every LIST value the same type. ZEN safely returns strings across the dialog callback,
+// whereas mixing numeric owner IDs with AUTO/SERVER makes selection fragile during serialization.
+// The server resolves and revalidates the HC:<owner> token against its live registry.
+private _destValues = ["AUTO", "SERVER"] + (_clients apply {format ["HC:%1", _x select 0]});
 private _destLabels = [
     ["Auto (best load)", "Send to whichever connected headless client currently has the fewest managed groups."],
     ["Return to Server", "Move this group back to the server."]
-] + (_clients apply {_x params ["_owner", "_label"]; [format ["%1 (owner %2)", _label, _owner], "Send directly to this connected headless client."]});
+] + (_clients apply {
+    _x params ["_owner", "_label"];
+    private _load = {_x param [1, 2] == _owner} count _ownerSnapshot;
+    [
+        format ["%1 - HC owner %2 (%3 groups)", _label, _owner, _load],
+        format ["Send directly to %1. The server rechecks that owner %2 is still connected before moving the group.", _label, _owner]
+    ]
+});
 
 [
     "Headless Client - Manual Handoff",

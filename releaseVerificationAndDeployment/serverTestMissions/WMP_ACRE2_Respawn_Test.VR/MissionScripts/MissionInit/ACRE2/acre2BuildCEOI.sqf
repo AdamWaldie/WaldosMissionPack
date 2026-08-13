@@ -1,13 +1,21 @@
 /*
  * Author: WaldoTheWarfighter
  * Builds the local CEOI from the authoritative communications plan and the most recent verified
- * local application. It highlights only assignments matching a carried radio's current read-back.
+ * local application. It highlights the player's authored group assignments during the pre-mission
+ * briefing, then also recognises assignments matching a carried radio's current read-back.
  * Nets sharing one channel are shown once as a channel number instead of repeating every radio class.
+ * The squad-radio section is omitted when no group on the player's side has a valid PRC-343
+ * block/channel assignment, avoiding an empty list of "not assigned" placeholders.
+ *
+ * Locality and authority:
+ * Player-local diary/UI work only. It reads the server-compiled plan plus verified local ACRE
+ * read-back and replaces its own record, so repeated initialisation/respawn/JIP never duplicates it.
  *
  * Arguments: None.
  * Return Value: BOOL - true when the CEOI diary record was replaced.
  *
  * Example: [] call Waldo_fnc_ACRE2BuildCEOI;
+ * Result: the local map diary contains one current, compact CEOI record when ACRE setup is enabled.
  * Current callers: Waldo_fnc_ACRE2Init and player-object replacement handling.
  */
 if (!hasInterface || {isNull player}) exitWith {false};
@@ -29,6 +37,15 @@ private _nets = _sidePlan select 2;
 private _groups = _sidePlan select 3;
 private _groupKey = toUpperANSI ((((groupId group player) splitString ' -_.') joinString ''));
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
+private _assignedNetKeys = [];
+if (_groupIndex >= 0) then {
+    {
+        private _target = _x param [2, ""];
+        if (_target isEqualType "" && {_target != ""}) then {
+            _assignedNetKeys pushBackUnique (toUpperANSI _target);
+        };
+    } forEach ((_groups select _groupIndex) select 1);
+};
 private _radios = if (isNil 'acre_api_fnc_getCurrentRadioList') then {[]} else {[] call Waldo_fnc_ACRE2GetOrderedRadios};
 private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;
 private _current = createHashMap;
@@ -54,33 +71,47 @@ private _displaySetting = {
     str _setting
 };
 private _text = "<font size='16'>Communications Electronics Operating Instructions</font><br/><br/>";
-_text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
+private _squadAssignments = [];
 {
     private _rules = _x select 1;
     private _ruleIndex = _rules findIf {toUpper (_x select 0) == 'ACRE_PRC343' && {(_x select 1) isEqualType 0} && {(_x select 1) == 1}};
-    if (_ruleIndex < 0) then {_ruleIndex = _rules findIf {toUpper (_x select 0) == 'ACRE_PRC343' && {toUpper str (_x select 1) == 'ALL'}}};
+    if (_ruleIndex < 0) then {
+        _ruleIndex = _rules findIf {
+            toUpper (_x select 0) == 'ACRE_PRC343'
+                && {(_x select 1) isEqualType ''}
+                && {toUpper (_x select 1) == 'ALL'}
+        };
+    };
     private _assignment = if (_ruleIndex < 0) then {[]} else {(_rules select _ruleIndex) select 2};
-    private _line = if (_assignment isEqualType [] && {count _assignment >= 2}) then {
-        format ['%1 - Block %2, Channel %3', _x select 0, _assignment select 0, _assignment select 1]
-    } else {
-        format ["%1 - <font color='#ffb347'>no PRC-343 assignment</font>", _x select 0]
+    if (_assignment isEqualType [] && {count _assignment >= 2}) then {
+        _squadAssignments pushBack [_x select 0, _assignment];
     };
-    private _isOwnSquad = (_x select 0) == _groupKey;
-    if (_isOwnSquad) then {
-        // This section documents assignment, not live tuning. The player's squad is therefore
-        // always green; current channel state is shown independently in Radio Nets below.
-        _line = format ["<font color='#47ff47'>%1</font>", _line];
-    };
-    _text = _text + _line + '<br/>';
 } forEach _groups;
-_text = _text + "<br/><font size='14'>Radio Nets</font><br/>";
+if !(_squadAssignments isEqualTo []) then {
+    _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
+    {
+        _x params ['_assignmentGroup', '_assignment'];
+        private _line = format ['%1 - Block %2, Channel %3', _assignmentGroup, _assignment select 0, _assignment select 1];
+        if (_assignmentGroup == _groupKey) then {
+            // This section documents assignment, not live tuning. The player's squad is therefore
+            // always green; current channel state is shown independently in Radio Nets below.
+            _line = format ["<font color='#47ff47'>%1</font>", _line];
+        };
+        _text = _text + _line + '<br/>';
+    } forEach _squadAssignments;
+    _text = _text + '<br/>';
+};
+_text = _text + "<font size='14'>Radio Nets</font><br/>";
 {
     private _family = _x select 2;
     private _setting = _x select 3;
     private _detail = if (toUpper _family == 'LEGACY_VHF') then {([_setting] call _displaySetting) + ' MHz'} else {'Ch. ' + ([_setting] call _displaySetting)};
     private _line = format ['%1 - %2', _x select 1, _detail];
-    if ([_family, _setting] call _netIsCurrent) then {
-        _line = format ["<font color='#47ff47'>[CURRENT] %1</font>", _line];
+    if (toUpperANSI (_x select 0) in _assignedNetKeys || {[_family, _setting] call _netIsCurrent}) then {
+        // Green means this net is part of the player's authored group plan, or is confirmed by
+        // live radio read-back after mission start. Keeping the label unchanged makes the briefing
+        // compact while still making long-range assignments visible before unique radios exist.
+        _line = format ["<font color='#47ff47'>%1</font>", _line];
     };
     _text = _text + _line + '<br/>';
 } forEach _nets;

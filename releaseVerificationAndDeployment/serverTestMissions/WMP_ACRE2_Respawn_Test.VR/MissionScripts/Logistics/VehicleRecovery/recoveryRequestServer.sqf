@@ -25,6 +25,8 @@ params [["_actor", objNull, [objNull]], ["_operation", "", [""]], ["_target", ob
 if (!isServer) exitWith {_this remoteExecCall ["Waldo_fnc_RecoveryRequestServer", 2]; false};
 if (isNull _actor || {isNull _target} || {!alive _actor}) exitWith {false};
 if (isRemoteExecuted && {remoteExecutedOwner != owner _actor}) exitWith {false};
+missionNamespace setVariable ["Waldo_Recovery_LastRequest", [serverTime, netId _actor, owner _actor, toUpperANSI _operation, netId _target, typeOf _target], true];
+diag_log format ["[WMP RECOVERY] Request actor=%1 actorOwner=%2 operation=%3 target=%4 class=%5 registeredVehicle=%6 registeredCarrier=%7.", netId _actor, owner _actor, toUpperANSI _operation, netId _target, typeOf _target, _target getVariable ["Waldo_Recovery_Registered", false], _target getVariable ["Waldo_Recovery_Carrier", false]];
 private _interactionRange = if (_target getVariable ["Waldo_Recovery_Carrier", false]) then {
     (_target getVariable ["Waldo_Recovery_CarrierRange", 10]) max 3
 } else {
@@ -45,21 +47,34 @@ if (_operation == "PACK") exitWith {
         _workshopSide == sideUnknown || {_workshopSide getFriend side group _actor >= 0.6}
     };
     if (_serviced < 0) exitWith {["Your side is not serviced by this vehicle's recovery workshop.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false};
-    if (count crew _target > 0 || {(alive _target && {damage _target < _minimumDamage})} || {!alive _target && {!_allowDestroyed}}) exitWith {
+    // A destroyed vehicle can retain dead crew objects in its crew array. Only a living occupant
+    // blocks packaging; otherwise a wreck registered after destruction through Zeus can never pass
+    // the same gate that a pre-registered editor vehicle passes.
+    if ({alive _x} count crew _target > 0 || {(alive _target && {damage _target < _minimumDamage})} || {!alive _target && {!_allowDestroyed}}) exitWith {
         ["The vehicle is occupied or does not meet its recovery threshold.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     if (_requireEngineer && {!(_actor getUnitTrait "engineer")}) exitWith {
         ["An engineer is required to package this vehicle.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _loadedRecovery = (getVehicleCargo _target) select {_x getVariable ["Waldo_Recovery_Package", false]};
+    private _attachedRecovery = (_target getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x};
     private _virtualRecovery = (_target getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
-    if (_target getVariable ["Waldo_Recovery_Carrier", false] && {count _loadedRecovery + count _virtualRecovery > 0}) exitWith {
+    if (_target getVariable ["Waldo_Recovery_Carrier", false] && {count _loadedRecovery + count _attachedRecovery + count _virtualRecovery > 0}) exitWith {
         ["Unload all recovery packages before packaging this carrier.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _cargo = if (_preserveCargo) then {[getWeaponCargo _target, getMagazineCargo _target, getItemCargo _target, getBackpackCargo _target]} else {[]};
     private _customVariableNames = +(missionNamespace getVariable ["Waldo_Recovery_DefaultCustomVariables", []]);
     {_customVariableNames pushBackUnique _x} forEach (_target getVariable ["Waldo_Recovery_CustomVariables", []]);
-    private _customVariables = _customVariableNames apply {[_x, _target getVariable _x]};
+    // getVariable with no default returns nil for a variable name the target never had set (the
+    // normal case for most vehicles and the built-in "Waldo_TransportService_Registration" entry),
+    // and an SQF array literal silently drops a nil element - [_x, nil] becomes the 1-element
+    // array [_x], not a [name, value] pair. Build the list imperatively and skip unset names so
+    // recoveryRestoreServer.sqf's "_x params ["_name", "_value"]" always gets a real pair.
+    private _customVariables = [];
+    {
+        private _value = _target getVariable [_x, nil];
+        if !(isNil "_value") then {_customVariables pushBack [_x, _value]};
+    } forEach _customVariableNames;
     private _bounds = boundingBoxReal _target;
     private _minimum = _bounds param [0, [-1, -1, -1]];
     private _maximum = _bounds param [1, [1, 1, 1]];
@@ -71,7 +86,9 @@ if (_operation == "PACK") exitWith {
         simulationEnabled _target, isDamageAllowed _target,
         _target getVariable ["Waldo_Recovery_OnRestored", {}], _customVariables, _footprint,
         _target getVariable ["Waldo_Recovery_CarrierMode", "AUTO"],
-        _target getVariable ["Waldo_Recovery_CarrierCapacity", 1]
+        _target getVariable ["Waldo_Recovery_CarrierCapacity", 1],
+        _target getVariable ["Waldo_Recovery_CarrierDeckOffset", []],
+        _target getVariable ["Waldo_Recovery_CarrierDeckDirection", 0]
     ];
     private _position = getPosATL _target;
     private _direction = getDir _target;
@@ -102,9 +119,11 @@ if (_operation == "PACK") exitWith {
 if !(_target getVariable ["Waldo_Recovery_Carrier", false]) exitWith {false};
 if (_operation == "LOAD") exitWith {
     private _manifest = (_target getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
+    private _attached = (_target getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x};
     _target setVariable ["Waldo_Recovery_VirtualPackages", _manifest, true];
+    _target setVariable ["Waldo_Recovery_AttachedPackages", _attached, true];
     private _capacity = (_target getVariable ["Waldo_Recovery_CarrierCapacity", 1]) max 1;
-    if (count (getVehicleCargo _target) + count _manifest >= _capacity) exitWith {
+    if (count (getVehicleCargo _target) + count _attached + count _manifest >= _capacity) exitWith {
         ["This recovery carrier is at package capacity.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
     private _range = _target getVariable ["Waldo_Recovery_CarrierRange", 10];
@@ -123,6 +142,7 @@ if (_operation == "LOAD") exitWith {
         !isNull _x
         && {_x getVariable ["Waldo_Recovery_Package", false]}
         && {isNull isVehicleCargo _x}
+        && {!(_x getVariable ["Waldo_Recovery_IsAttachedLoaded", false])}
         && {!(_x getVariable ["Waldo_Recovery_IsVirtualLoaded", false])}
         && {!(_x getVariable ["Waldo_Recovery_Transition", false])}
     };
@@ -137,10 +157,27 @@ if (_operation == "LOAD") exitWith {
     private _package = _near select 0 select 1;
     private _mode = _target getVariable ["Waldo_Recovery_CarrierMode", "AUTO"];
     private _canPhysical = vehicleCargoEnabled _target && {(_target canVehicleCargo _package) param [0, false]};
-    if (_mode == "PHYSICAL" && {!_canPhysical}) exitWith {
+    private _deckOffset = _target getVariable ["Waldo_Recovery_CarrierDeckOffset", []];
+    private _canAttach = count _deckOffset == 3;
+    if (_mode == "PHYSICAL" && {!_canPhysical} && {!_canAttach}) exitWith {
         ["That package does not fit this vehicle's configured physical cargo bay.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor]; false
     };
-    private _usePhysical = _mode == "PHYSICAL" || {_mode == "AUTO" && {_canPhysical}};
+    private _usePhysical = _canPhysical && {_mode in ["PHYSICAL", "AUTO"]};
+    private _useAttached = !_usePhysical && {_canAttach} && {_mode in ["PHYSICAL", "AUTO"]};
+    if (_useAttached) exitWith {
+        _package setVariable ["Waldo_Recovery_Transition", true];
+        _package enableSimulationGlobal false;
+        _package allowDamage false;
+        _package attachTo [_target, _deckOffset];
+        _package setDir (_target getVariable ["Waldo_Recovery_CarrierDeckDirection", 0]);
+        _package setVariable ["Waldo_Recovery_IsAttachedLoaded", true, true];
+        _package setVariable ["Waldo_Recovery_AttachedCarrier", _target, true];
+        _attached pushBack _package;
+        _target setVariable ["Waldo_Recovery_AttachedPackages", _attached, true];
+        _package setVariable ["Waldo_Recovery_Transition", false];
+        ["Recovery package secured visibly on the carrier deck.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor];
+        true
+    };
     if !(_usePhysical) exitWith {
         _package setVariable ["Waldo_Recovery_Transition", true];
         _package setVariable ["Waldo_Recovery_VirtualCarrier", _target, true];
@@ -171,6 +208,28 @@ if (_operation == "LOAD") exitWith {
     true
 };
 if (_operation == "UNLOAD") exitWith {
+    private _attached = (_target getVariable ["Waldo_Recovery_AttachedPackages", []]) select {!isNull _x};
+    if !(_attached isEqualTo []) exitWith {
+        private _package = _attached deleteAt ((count _attached) - 1);
+        private _position = [_target, _package, [_target, _package]] call Waldo_fnc_RecoveryResolveUnloadPosition;
+        if (_position isEqualTo []) exitWith {
+            ["No clear package-sized unloading area was found beside the carrier.", "WARNING"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor];
+            false
+        };
+        _package setVariable ["Waldo_Recovery_Transition", true];
+        detach _package;
+        _target setVariable ["Waldo_Recovery_AttachedPackages", _attached, true];
+        _package setVariable ["Waldo_Recovery_IsAttachedLoaded", false, true];
+        _package setVariable ["Waldo_Recovery_AttachedCarrier", objNull, true];
+        _package setDir getDir _target;
+        _package setPosATL _position;
+        _package setVectorUp surfaceNormal _position;
+        _package allowDamage true;
+        _package enableSimulationGlobal true;
+        _package setVariable ["Waldo_Recovery_Transition", false];
+        ["Recovery package unloaded from the carrier deck.", "SUCCESS"] remoteExecCall ["Waldo_fnc_RecoveryNotifyLocal", owner _actor];
+        true
+    };
     private _manifest = (_target getVariable ["Waldo_Recovery_VirtualPackages", []]) select {!isNull _x};
     if !(_manifest isEqualTo []) exitWith {
         private _package = _manifest deleteAt ((count _manifest) - 1);

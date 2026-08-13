@@ -11,7 +11,9 @@ if (hasInterface) then {
     private _loop = missionNamespace getVariable ["Waldo_SafeStart_LoopRunning", false];
     private _protectionPresent = !isNil "Waldo_SafeStart_FiredEH" && {!(isDamageAllowed player)};
     private _clientOk = !_active || {_loop && {_protectionPresent}};
-    _checks pushBack ["mission-flow", "safestart-client-protection", if (!_clientOk) then {"ERROR"} else {if (_active) then {"ACTIVE"} else {"LOADED"}}, format ["loop=%1 firedHandler=%2 damageAllowed=%3", _loop, !isNil "Waldo_SafeStart_FiredEH", isDamageAllowed player]];
+    private _detail = format ["loop=%1 firedHandler=%2 damageAllowed=%3", _loop, !isNil "Waldo_SafeStart_FiredEH", isDamageAllowed player];
+    if !(_clientOk) then {_detail = [_detail, "SafeStart is active but this client's protection loop or Fired handler isn't installed - check the RPT for errors from Waldo_fnc_SafeStartApply, or rejoin."] call Waldo_fnc_DiagnosticFoldHint;};
+    _checks pushBack ["mission-flow", "safestart-client-protection", if (!_clientOk) then {"ERROR"} else {if (_active) then {"ACTIVE"} else {"LOADED"}}, _detail];
     _checks pushBack ["world-ui", "safestart-hud", if (!_active) then {"LOADED"} else {if (!isNull _hud && {ctrlShown _hud}) then {"ACTIVE"} else {"ERROR"}}, format ["display46=%1 control=%2 shown=%3", !isNull (findDisplay 46), !isNull _hud, !isNull _hud && {ctrlShown _hud}]];
 };
 

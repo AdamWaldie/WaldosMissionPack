@@ -1520,6 +1520,7 @@ class FullAuditTests(unittest.TestCase):
         dynamic_ao = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAO" / "dynamicAOCreate.sqf").read_text(encoding="utf-8")
         dynamic_aa_fighters = (ROOT / "MissionScripts" / "CombatSystems" / "DynamicAA" / "dynamicAASpawnFighters.sqf").read_text(encoding="utf-8")
         ai_init = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceInit.sqf").read_text(encoding="utf-8")
+        landing_init = (ROOT / "MissionScripts" / "AiScripting" / "improvedHelicopterLandingInit.sqf").read_text(encoding="utf-8")
         ai_ack = (ROOT / "MissionScripts" / "AiScripting" / "aiHeadlessAdoptionResultServer.sqf").read_text(encoding="utf-8")
         ai_diagnostics = (ROOT / "MissionScripts" / "AiScripting" / "aiGetDiagnostics.sqf").read_text(encoding="utf-8")
         transport = (ROOT / "MissionScripts" / "Logistics" / "TransportServices" / "transportRegister.sqf").read_text(encoding="utf-8")
@@ -1534,17 +1535,33 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_Headless_LastAdoption', adopt)
         self.assertIn('Waldo_ServerOwnedFeature', rebalance)
         self.assertIn('Waldo_ServerOwnedFeature', migrate)
+        self.assertIn('(vehicle _x) isKindOf "Helicopter"', rebalance)
+        self.assertIn('"helicopter-flight-locality"', rebalance)
+        self.assertIn('(vehicle _x) isKindOf "Helicopter"', migrate)
+        self.assertIn('["acex_headless_blacklist", true, true]', landing_init)
+        self.assertNotIn('"ace_headless_groupTransferPre"', landing_init)
+        self.assertNotIn('Waldo_ImprovedHelicopterLanding_TransferRestorePending', landing_init)
         self.assertIn('Waldo_ServerOwnedFeature', pin)
+        self.assertIn('private _currentOwner = groupOwner _x', pin)
+        self.assertIn('if (_currentOwner > 2)', pin)
+        self.assertNotIn('if (groupOwner _x != 2)', pin)
         self.assertIn('[_groups + _aoVehicles, false, -1, 1] call ace_headless_fnc_blacklist', dynamic_ao)
         self.assertIn('_x setVariable ["Waldo_ServerOwnedFeature", false, true]', dynamic_ao)
         self.assertNotIn('[_vehicle] call Waldo_fnc_HeadlessPinCrew', dynamic_ao)
         self.assertIn('[_fighter] call Waldo_fnc_HeadlessPinCrew', dynamic_aa_fighters)
         self.assertIn('"ace_headless_groupTransferPost"', ai_init)
         self.assertIn('Waldo_fnc_AIHeadlessAdoptionResultServer', ai_init)
+        self.assertNotIn('if (remoteExecutedOwner', (ROOT / "MissionScripts" / "AiScripting" / "aiApplyProfile.sqf").read_text(encoding="utf-8"))
         self.assertIn('_sender != _newOwner', ai_ack)
         self.assertIn('owner _headlessEntity != _newOwner', ai_ack)
         self.assertIn('groupOwner _group != _newOwner', ai_ack)
         self.assertIn('Waldo_AI_HeadlessAdoptionResults', ai_ack)
+        ai_apply = (ROOT / "MissionScripts" / "AiScripting" / "aiApplyProfile.sqf").read_text(encoding="utf-8")
+        ai_stop = (ROOT / "MissionScripts" / "AiScripting" / "aiRebalanceStop.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_AI_OriginalSkills", _original, true]', ai_apply)
+        self.assertIn('Waldo_AI_SkillVarianceOffsets', ai_apply)
+        self.assertNotIn('current + random', ai_apply)
+        self.assertIn('["Waldo_AI_SkillVarianceOffsets", nil, true]', ai_stop)
         self.assertIn('Waldo_Headless_ExternalScheduler', register)
         self.assertIn('CfgPatches" >> "ace_headless', register)
         detect = (headless / "headlessDetectLocal.sqf").read_text(encoding="utf-8")
@@ -1553,8 +1570,43 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('entities "HeadlessClient_F"', ai_diagnostics)
         self.assertIn('Waldo_AI_LastHeadlessAdoption', ai_diagnostics)
         self.assertIn('ai-headless-adoption', ai_diagnostics)
+        self.assertIn('(_aceResult select 1) >= _eligibleCount', ai_diagnostics)
+        self.assertIn('(_wmpResult select 3) >= _eligibleCount', ai_diagnostics)
+        self.assertIn('improved-helicopter-landing', ai_diagnostics)
+        self.assertIn('movementOwned=', ai_diagnostics)
+        self.assertIn('staleGroundAnchors=', ai_diagnostics)
+        self.assertIn('groupedControllers=', ai_diagnostics)
         self.assertIn('call Waldo_fnc_HeadlessPinCrew', transport)
         self.assertIn('Waldo_ServerOwnedFeature', paradrop)
+
+    def test_headless_debug_and_hazard_release_defaults_remain_disabled(self):
+        headless = (ROOT / "MissionConfig" / "headlessConfig.sqf").read_text(encoding="utf-8")
+        environment = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
+        staged_headless = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "MissionConfig"
+            / "headlessConfig.sqf"
+        ).read_text(encoding="utf-8")
+        staged_environment = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "WMP_FPA.VR"
+            / "MissionConfig"
+            / "environmentConfig.sqf"
+        ).read_text(encoding="utf-8")
+
+        for source in (headless, staged_headless):
+            self.assertIn('["Waldo_Headless_Enable", false]', source)
+            self.assertIn('["Waldo_Headless_Debug", false]', source)
+            self.assertNotIn('["Waldo_Headless_Enable", true]', source)
+            self.assertNotIn('["Waldo_Headless_Debug", true]', source)
+        for source in (environment, staged_environment):
+            self.assertIn('["Waldo_Hazard_Enable", false]', source)
+            self.assertNotIn('["Waldo_Hazard_Enable", true]', source)
 
     def test_acre_rack_profiles_are_beginner_facing_and_validated(self):
         config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
@@ -1600,6 +1652,7 @@ class FullAuditTests(unittest.TestCase):
     def test_grouped_helicopters_release_wmp_exact_landing_control(self):
         source = (ROOT / "MissionScripts" / "AiScripting" / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
         self.assertIn('count _groupHelicopters != 1', source)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_GroundAnchored', source)
         self.assertIn('call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal', source)
         self.assertIn('count _groupHelicopters == 1', source)
 
@@ -2139,6 +2192,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("reason=owner-mismatch", receiver)
         self.assertIn("reason=malformed", receiver)
         self.assertIn("Waldo_Diagnostics_Running", diagnostics)
+        self.assertIn('allPlayers - (entities "HeadlessClient_F")', diagnostics)
+        self.assertIn('remoteExecCall ["Waldo_fnc_RunDiagnosticsClient", _interfacePlayers]', diagnostics)
         for function_name in ("DiagnosticLog", "RunDiagnosticsClient", "DiagnosticsReceiveClient"):
             self.assertIn(f"class {function_name}", functions)
         for area in ("LOGISTICS", "ELECTRONIC-WARFARE", "INTERACTIONS"):
@@ -2828,6 +2883,9 @@ class FullAuditTests(unittest.TestCase):
         restore = (root / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
         monitor = (root / "recoveryMonitorServer.sqf").read_text(encoding="utf-8")
         unload_position = (root / "recoveryResolveUnloadPosition.sqf").read_text(encoding="utf-8")
+        local_setup = (root / "recoverySetupVehicleLocal.sqf").read_text(encoding="utf-8")
+        interaction = (root / "recoveryInteractionSetup.sqf").read_text(encoding="utf-8")
+        runtime_zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
         self.assertIn('remoteExecCall ["Waldo_fnc_RecoverySetupVehicleLocal", 0, _vehicle]', register_vehicle)
         self.assertIn("getAssignedCuratorLogic", register_vehicle + register_workshop)
         self.assertIn("remoteExecutedOwner != owner _actor", request)
@@ -2852,7 +2910,93 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_Recovery_IsVirtualLoaded", monitor)
         self.assertIn("Waldo_Recovery_ScanInterval", monitor)
         self.assertIn("Waldo_Recovery_PackageClasses", register_vehicle)
+        self.assertIn("{alive _x} count crew _target == 0", local_setup)
+        self.assertIn("{alive _x} count crew _target > 0", request)
+        self.assertIn("{alive _x} count crew _this == 0", interaction)
+        self.assertIn("Waldo_Recovery_LastLocalActionCheck", local_setup)
+        self.assertIn("crewLiving=", local_setup + register_vehicle)
+        recovery_zen = runtime_zen[runtime_zen.index('case "RECOVERY_VEHICLE"'):runtime_zen.index('case "TRANSPORT_REGISTER"')]
+        self.assertIn("Place Register Vehicle directly on the intended vehicle or wreck", recovery_zen)
+        self.assertIn("Place Register Carrier directly on the intended carrier vehicle", recovery_zen)
+        self.assertNotIn("nearestObjects", recovery_zen)
         self.assertNotRegex(monitor, r"setVariable\s*\[[^\]]+,\s*true,\s*true\s*\]")
+
+    def test_optional_zen_modules_and_hc_visual_triage_are_guarded(self):
+        zen = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        overlay = (ROOT / "MissionScripts" / "Headless" / "headlessDebugDisplayLocal.sqf").read_text(encoding="utf-8")
+        toggle = (ROOT / "MissionScripts" / "Headless" / "headlessDebugToggle.sqf").read_text(encoding="utf-8")
+        snapshot = (ROOT / "MissionScripts" / "Headless" / "headlessPublishDebugSnapshot.sqf").read_text(encoding="utf-8")
+        snapshot_setter = (ROOT / "MissionScripts" / "Headless" / "headlessSetDebugSnapshot.sqf").read_text(encoding="utf-8")
+        self.assertIn('getVariable ["Waldo_Hazard_Enable", false]', zen)
+        self.assertIn('getVariable ["Waldo_Headless_Enable", false]', zen)
+        self.assertIn('"WMP Headless Client"', zen)
+        self.assertIn('addMissionEventHandler ["Draw3D"', overlay)
+        self.assertNotIn('groupOwner _group', overlay)
+        self.assertIn('Waldo_Headless_GroupOwnerSnapshot', overlay)
+        self.assertIn('groupOwner _x', snapshot)
+        self.assertNotIn('setVariable ["Waldo_Headless_GroupOwnerSnapshot"', snapshot)
+        self.assertIn('Waldo_Headless_GroupOwnerSnapshot', snapshot_setter)
+        self.assertIn('isNull getAssignedCuratorLogic player', overlay)
+        self.assertIn('MISMATCH', overlay)
+        self.assertIn('ownership mismatches:', toggle)
+        diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnosticsClient.sqf").read_text(encoding="utf-8")
+        self.assertIn("[45, 47, 48, 50]", diagnostics)
+
+    def test_manual_headless_handoff_can_target_one_live_hc(self):
+        module = (ROOT / "MissionScripts" / "ZenModules" / "Zen_headlessManualHandoffModule.sqf").read_text(encoding="utf-8")
+        handler = (ROOT / "MissionScripts" / "Headless" / "headlessManualHandoff.sqf").read_text(encoding="utf-8")
+        self.assertIn('format ["HC:%1", _x select 0]', module)
+        self.assertIn('HC owner %2 (%3 groups)', module)
+        self.assertIn('_destinationUpper find "HC:" == 0', handler)
+        self.assertIn('_requestedOwner in _clientOwnerIds', handler)
+        self.assertIn('selected HC is no longer connected', handler)
+        self.assertNotIn('_targetOwner = if (_destination in _clientOwnerIds) then {_destination} else {2}', handler)
+
+    def test_friendly_zen_marker_and_field_equipment_use_server_bridge(self):
+        marker = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "zenCreate3DMarker.sqf").read_text(encoding="utf-8")
+        equipment = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "zenFieldEquipment.sqf").read_text(encoding="utf-8")
+        runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
+        self.assertIn('"CREATE_3D_MARKER"', marker + runtime)
+        self.assertIn('"FIELD_EQUIPMENT"', equipment + runtime)
+        self.assertIn('"EOD bomb defusal"', equipment)
+        self.assertIn('Place this module directly on the object', equipment)
+        self.assertIn('"On success code (optional)"', equipment)
+        self.assertIn('"On failure code (optional)"', equipment)
+        self.assertIn('"Waldo_FieldEquipment_SuccessCode"', runtime)
+        self.assertIn('"Waldo_FieldEquipment_FailureCode"', runtime)
+        self.assertIn('[_target, _actor, _success, _result] call _callback', (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "fieldEquipmentOutcomeServer.sqf").read_text(encoding="utf-8"))
+        self.assertIn('"Place above object"', marker)
+        self.assertIn('"Extra vertical offset"', marker)
+        self.assertIn('boundingBoxReal _anchor', runtime)
+        renderer = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "init3DMarkers.sqf").read_text(encoding="utf-8")
+        self.assertIn('modelToWorldVisual _offset', renderer)
+        self.assertNotIn('modelToWorldVisualWorld _offset', renderer)
+        self.assertNotIn('ATLToASL ((_anchor select [0, 3]) vectorAdd _offset)', renderer)
+        self.assertNotIn('["EDIT", ["Icon class', marker)
+
+    def test_improved_helicopter_landing_releases_new_orders_without_forced_low_flight(self):
+        root = ROOT / "MissionScripts" / "AiScripting"
+        tracker = (root / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
+        execute = (root / "improvedHelicopterLandingExecuteLocal.sqf").read_text(encoding="utf-8")
+        anchor = (root / "improvedHelicopterLandingAnchorLocal.sqf").read_text(encoding="utf-8")
+        restore = (root / "improvedHelicopterLandingRestoreLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('count _groupHelicopters == 1', tracker)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_ReleaseHeight', execute)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_GroundAnchored', anchor)
+        self.assertIn('if (\n        _wasGroundAnchored', restore)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_ControlRevision', execute)
+        self.assertIn('group _pilot != _group', execute)
+        self.assertIn('Waldo_ImprovedHelicopterLanding_ControlRevision', anchor)
+        self.assertIn('SUPERSEDED_REVISION', anchor)
+        self.assertNotIn('flyInHeight [(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_TransitAltitude"', restore)
+
+    def test_normal_move_waypoints_do_not_trigger_improved_landing(self):
+        tracker = (ROOT / "MissionScripts" / "AiScripting" / "improvedHelicopterLandingTrackLocal.sqf").read_text(encoding="utf-8")
+        dispatch = (ROOT / "MissionScripts" / "Logistics" / "TransportServices" / "transportDispatchLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_TransportService_LandingOrder', tracker)
+        self.assertIn('(_landingOrder select 1) == _index', tracker)
+        self.assertIn('(_landingOrder select 2) distance2D _position < 2', tracker)
+        self.assertIn('Waldo_TransportService_LandingOrder', dispatch)
 
     def test_rally_points_are_group_owned_and_do_not_leak_global_markers(self):
         root = ROOT / "MissionScripts" / "Respawn" / "RallyPoint"

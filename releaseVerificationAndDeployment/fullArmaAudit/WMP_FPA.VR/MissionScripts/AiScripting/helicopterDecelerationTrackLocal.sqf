@@ -86,4 +86,3 @@ if (!isNull _aircraft) then {
     _aircraft setVariable ["Waldo_HelicopterDeceleration_TrackedLocal", false];
     _aircraft setVariable ["Waldo_HelicopterDeceleration_Active", false, true];
 };
-

@@ -1,12 +1,16 @@
 /*
  * Author: WaldoTheWarfighter
- * This function load all custom ZEN modules. Requires Zen Mod to run propperly. The function will terminate if not.
+ * Registers WMP's Zeus Enhanced modules in task-oriented categories. Combat/AI generation,
+ * electronic warfare, environmental hazards, air operations, transport, logistics, mission flow,
+ * mission tools and interface/QA are separated so curators can find a control by purpose.
  *
- * Arguments:
- * None
+ * Locality and repeat/JIP behaviour:
+ * Player-interface only. Every curator client (including JIP) registers its own local palette after
+ * ZEN is available. A missionNamespace guard prevents duplicate registration on the same machine.
+ * Module effects retain their documented server/object-owner authority; this file only creates UI.
  *
- * Return Value:
- * Nothing
+ * Arguments: None.
+ * Return Value: Nothing.
  *
  * Example: [] call Waldo_fnc_ZenInitModules;
  * Current caller: initPlayerLocal.sqf after local player and ZEN readiness.
@@ -33,7 +37,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AA - Create",
+["WMP AI & Combat", "Dynamic AA - Create",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAAZen;
@@ -41,7 +45,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\vehicleicons\iconStaticAA_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AA - Remove Nearest",
+["WMP AI & Combat", "Dynamic AA - Remove Nearest",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAARemoveZen;
@@ -77,23 +81,33 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Logistics", "Vehicle Recovery - Register Workshop", "RECOVERY_WORKSHOP", "\A3\ui_f\data\igui\cfg\actions\repair_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Vehicle", "RECOVERY_VEHICLE", "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"],
     ["WMP Logistics", "Vehicle Recovery - Register Carrier", "RECOVERY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconTruck_ca.paa"],
+    ["WMP Transport", "Transport Service - Register", "TRANSPORT_REGISTER", "\A3\ui_f\data\map\vehicleicons\iconCar_ca.paa"],
+    ["WMP Transport", "Transport Service - Return to Base", "TRANSPORT_RTB", "\A3\ui_f\data\igui\cfg\simpletasks\types\meet_ca.paa"],
     ["WMP Mission Flow", "Respawn - Squad Rally Control", "RALLY", "\A3\ui_f\data\map\markers\military\start_CA.paa"],
     ["WMP Interface & QA", "Tactical Display - Register", "TACTICAL_DISPLAY", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Register or Spawn", "GUNSHIP_REGISTER", "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"],
     ["WMP Air Operations", "Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
     ["WMP Air Operations", "Gunship - Set Orbit", "GUNSHIP_ORBIT", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
-    ["WMP Combat Systems", "Hazard - Create", "HAZARD_CREATE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
-    ["WMP Combat Systems", "Hazard - Remove Nearest", "HAZARD_REMOVE", "\A3\ui_f\data\map\markers\military\warning_CA.paa"],
-    ["WMP Mission Tools", "AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
+    ["WMP AI & Combat", "AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
 ];
+
+["WMP Mission Tools", "Create Custom 3D Marker",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenCreate3DMarker;},
+    "\A3\ui_f\data\map\markers\military\dot_CA.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Tools", "Add WMP Field Equipment Interaction",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenFieldEquipment;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\interact_ca.paa"
+] call zen_custom_modules_fnc_register;
 
 ["WMP Air Operations", "Paradrop - Create Drop Zone",
     {params ["_modulePos"]; ["CREATE", _modulePos] call Waldo_fnc_ParadropDropZoneZen;},
     "\A3\ui_f\data\map\vehicleicons\iconPlane_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AO - Create",
+["WMP AI & Combat", "Dynamic AO - Create",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAOZen;
@@ -101,7 +115,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\markers\nato\o_inf.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Dynamic AO - Remove",
+["WMP AI & Combat", "Dynamic AO - Remove",
     {
         params ["_modulePos"];
         [_modulePos] call Waldo_fnc_DynamicAORemoveZen;
@@ -140,6 +154,14 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\Missions_F_Orange\Data\Img\Showcase_LawsOfWar\action_end_sim_CA.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Mission Flow", "Mission Flow: Send Notification",
+    {
+        params ["_modulePos", "_objectPos"];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenNotify;
+    },
+    "\A3\ui_f\data\igui\cfg\simpletasks\types\Radio_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Logistics", "Medical: Create Field Hospital Crate",
     {
         diag_log format ["[WMP ZEN] invoked module=Field Hospital Crate curator=%1 payload=%2", name player, _this];
@@ -159,7 +181,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\z\ACE\addons\fortify\ui\hammer_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "AI: Create Moving Convoy",
+["WMP AI & Combat", "Convoy - Create Moving Group",
     {
         diag_log format ["[WMP ZEN] invoked module=Spawn AI Convoy curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -201,7 +223,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Jammer: Place New Emitter",
+["WMP Electronic Warfare", "Jammer - Place Emitter",
     {
         diag_log format ["[WMP ZEN] invoked module=Radio Jammer Place curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -210,7 +232,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\interact_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Jammer: Toggle Nearest Emitter",
+["WMP Electronic Warfare", "Jammer - Toggle Nearest",
     {
         diag_log format ["[WMP ZEN] invoked module=Radio Jammer Toggle curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -219,7 +241,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\interact_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Jammer: Delete Nearest Emitter",
+["WMP Electronic Warfare", "Jammer - Delete Nearest",
     {
         diag_log format ["[WMP ZEN] invoked module=Radio Jammer Remove curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -228,7 +250,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\map\markers\military\destroy_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "EW: Detonate EMP at Cursor",
+["WMP Electronic Warfare", "EMP - Detonate at Cursor",
     {
         diag_log format ["[WMP ZEN] invoked module=EMP Detonation curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -237,7 +259,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\backpack_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Combat Systems", "Tracker: Attach to Selected Object",
+["WMP Electronic Warfare", "Tracker - Attach to Selected Object",
     {
         diag_log format ["[WMP ZEN] invoked module=Plant Signal Tracker curator=%1 payload=%2", name player, _this];
         params ["_modulePos", "_objectPos"];
@@ -246,6 +268,78 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 42];
+["WMP Interface & QA", "Diagnostics - Run Full Pack Audit",
+    {
+        diag_log format ["[WMP ZEN] invoked module=Full Pack Diagnostics curator=%1 payload=%2", name player, _this];
+        [] remoteExecCall ["Waldo_fnc_RunDiagnostics", 2];
+        ["DIAGNOSTICS", "Full pack audit requested. Results are written to the server and client RPTs.", "INFO", "DIAGNOSTICS", 6] call Waldo_fnc_FeatureNotifyLocal;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+missionNamespace setVariable ["Waldo_ZenModuleCount", 45];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
-diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 42], clientOwner];
+diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 45], clientOwner];
+
+// Hazard controls are meaningful only when the mission enabled the underlying runtime. Shared
+// config can finish after ZEN registration, so add these two entries asynchronously once the
+// readiness sentinel is available instead of showing dead controls in every mission.
+[] spawn {
+    private _deadline = diag_tickTime + 30;
+    waitUntil {uiSleep 0.1; missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false] || {diag_tickTime >= _deadline}};
+    if !(missionNamespace getVariable ["Waldo_Hazard_Enable", false]) exitWith {
+        diag_log format ["[WMP ZEN] Hazard modules not registered on clientOwner=%1: Waldo_Hazard_Enable is false.", clientOwner];
+    };
+    {
+        _x params ["_name", "_feature"];
+        private _handler = compile format ["params ['_modulePos', ['_objectPos', objNull]]; ['%1', _modulePos, _objectPos] call Waldo_fnc_FeatureRuntimeZen;", _feature];
+        ["WMP Environment", _name, _handler, "\A3\ui_f\data\map\markers\military\warning_CA.paa"] call zen_custom_modules_fnc_register;
+    } forEach [["Hazard - Create", "HAZARD_CREATE"], ["Hazard - Remove Nearest", "HAZARD_REMOVE"]];
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 2];
+    diag_log format ["[WMP ZEN] Registered 2 enabled hazard modules on clientOwner=%1.", clientOwner];
+};
+
+// Headless-client control modules are registered separately, and only when Waldo_Headless_Enable is
+// actually true - unlike every module above, which is always useful regardless of mission config, a
+// Zeus menu offering to toggle headless debug output or hand groups to a headless client is pure
+// clutter (and a misleading affordance) on the vast majority of missions that never turn HC support
+// on. Waldo_Headless_Enable is SHARED-scope config loaded by init.sqf, which is not guaranteed to
+// have finished before this file runs (initPlayerLocal.sqf races init.sqf), so this waits on the
+// same Waldo_SharedFeatureConfigReady sentinel initPlayerLocal.sqf itself waits on before reading it.
+[] spawn {
+    private _deadline = diag_tickTime + 30;
+    waitUntil {uiSleep 0.1; missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false] || {diag_tickTime >= _deadline}};
+    if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {
+        diag_log format ["[WMP ZEN] Headless client modules not registered on clientOwner=%1: Waldo_Headless_Enable is false.", clientOwner];
+    };
+
+    ["WMP Headless Client", "Toggle Debug Overlay",
+        {
+            params ["_modulePos", "_objectPos"];
+            [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessDebugToggle;
+        },
+        "\A3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
+    ] call zen_custom_modules_fnc_register;
+
+    ["WMP Headless Client", "Force Rebalance Now",
+        {
+            params ["_modulePos", "_objectPos"];
+            [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessForceRebalance;
+        },
+        "\A3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"
+    ] call zen_custom_modules_fnc_register;
+
+    ["WMP Headless Client", "Manual Group Handoff",
+        {
+            params ["_modulePos", "_objectPos"];
+            [_modulePos, _objectPos] call Waldo_fnc_ZenHeadlessManualHandoff;
+        },
+        "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"
+    ] call zen_custom_modules_fnc_register;
+
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 3];
+    diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 48]];
+    if (missionNamespace getVariable ["Waldo_Headless_Debug", false] && {!isNull getAssignedCuratorLogic player}) then {
+        [true] call Waldo_fnc_HeadlessDebugDisplayLocal;
+    };
+};

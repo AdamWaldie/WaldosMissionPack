@@ -36,14 +36,29 @@ if !(isServer) exitWith {[_state] remoteExecCall ["Waldo_fnc_HeadlessDebugToggle
 private _current = missionNamespace getVariable ["Waldo_Headless_Debug", false];
 private _new = if (_state isEqualType true) then {_state} else {!_current};
 missionNamespace setVariable ["Waldo_Headless_Debug", _new, true];
+if (_new) then {[] call Waldo_fnc_HeadlessPublishDebugSnapshot;} else {[[]] call Waldo_fnc_HeadlessSetDebugSnapshot;};
+
+private _curatorUnits = (allCurators apply {getAssignedCuratorUnit _x}) select {!isNull _x};
+// Send to every interface client. The display function remains dormant until that local player is
+// assigned a curator, which also covers assignment occurring after this state change.
+[_new] remoteExecCall ["Waldo_fnc_HeadlessDebugDisplayLocal", -2];
+if (hasInterface) then {[_new] call Waldo_fnc_HeadlessDebugDisplayLocal;};
+
+private _clients = missionNamespace getVariable ["Waldo_Headless_Clients", []];
+private _managed = missionNamespace getVariable ["Waldo_Headless_ManagedGroups", []];
+private _mismatches = _managed select {
+    private _group = _x param [0, grpNull];
+    private _expected = _x param [1, -1];
+    !isNull _group && {_expected > 0} && {groupOwner _group != _expected}
+};
 
 ["DEBUG_TOGGLE", format ["Waldo_Headless_Debug set to %1", _new]] call Waldo_fnc_DiagnosticLog;
 [createHashMapFromArray [
     ["title", "HEADLESS CLIENT DEBUG"],
-    ["message", format ["Extended headless-client diagnostics are now %1.", (["OFF", "ON"] select _new)]],
+    ["message", format ["Diagnostics %1. Connected HCs: %2 | managed groups: %3 | ownership mismatches: %4.", (["OFF", "ON"] select _new), count _clients, count _managed, count _mismatches]],
     ["state", "INFO"], ["duration", 8], ["placement", "TOP"], ["channel", "HEADLESS_DEBUG"],
     ["source", "ZEUS"], ["audience", "UNITS"],
-    ["units", (allCurators apply {getAssignedCuratorUnit _x}) select {!isNull _x}]
+    ["units", _curatorUnits]
 ]] call Waldo_fnc_NotificationBroadcast;
 
 _new

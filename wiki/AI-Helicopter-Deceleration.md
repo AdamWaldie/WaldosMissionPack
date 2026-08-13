@@ -53,4 +53,3 @@ fix for cruise braking behaviour, not a replacement autopilot.
 <!-- WMP-WIKI-NAV -->
 ---
 [Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
-

@@ -21,6 +21,9 @@
  *   intentionally independent of individual feature registries and also recognises ACE's vehicle
  *   blacklist, so WMP state-machine assets never enter the HC queue;
  * - sideLogic groups (curator helper/ZEN module logic);
+ * - AI-crewed helicopter groups. Live dedicated testing confirmed that transferring an airborne
+ *   helicopter between server/HC ownership makes Zeus movement and regrouping dive into terrain;
+ *   helicopters therefore remain server-local while infantry and ground AI use HCs normally;
  * - any group currently crewing a registered Airborne Gunship aircraft (Waldo_Gunship_Registry) -
  *   gunship crew is documented as staying server-owned and its control handoff is unrelated to
  *   group locality, so migrating its crew group is out of scope here;
@@ -103,6 +106,9 @@ private _eligible = [];
                 } >= 0}) then {
                 _reason = "wmp-server-owned";
             } else {
+                if ((units _group) findIf {(vehicle _x) isKindOf "Helicopter"} >= 0) then {
+                    _reason = "helicopter-flight-locality";
+                } else {
                 if (_group getVariable ["Waldo_Headless_ExcludeGroup", false]) then {
                     _reason = "opted-out";
                 } else {
@@ -134,6 +140,7 @@ private _eligible = [];
                             };
                         };
                     };
+                };
                 };
             };
         };

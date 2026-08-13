@@ -68,6 +68,52 @@ Helper reference (all server-authoritative):
   Land_Research_HQ_F       -> [this] call Waldo_fnc_EcoResearch_registerCenter;
   Land_Laptop_unfolded_F   -> [this] call Waldo_fnc_EcoBuy_registerTerminal;
   any vehicle              -> [this] call Waldo_fnc_EcoBuild_registerConstructionVehicle;
+
+SETTING-BY-SETTING GUIDE:
+  _useExample
+    false = the shipped demonstration creates nothing. true = install every worked row below.
+    Beginners should use true only in a disposable test mission, then return it to false and copy
+    the rows they actually want into YOUR ECONOMY.
+
+  Resource row: [name, colour, icon, storageCap]
+    0 name        - unique player-facing resource name, for example "Supplies".
+    1 colour      - HTML hex colour such as "#D4C15A".
+    2 icon        - image path; `_icon` uses WMP's safe default resource icon.
+    3 storageCap  - maximum stored amount; -1 means unlimited.
+    Result: ["Supplies", "#D4C15A", _icon, -1] creates unlimited Supplies.
+
+  Research row: [name, description, costs, requirements, timeSeconds]
+    0 name          - unique research name used by requirement lists.
+    1 description   - player-facing explanation.
+    2 costs         - [[resource name, amount], ...]; every resource must already exist.
+    3 requirements  - research/building names required first; [] means none.
+    4 timeSeconds   - positive research duration.
+    Result: ["Logistics I", "Basic supply handling.", [["Supplies",10]], [],60].
+
+  Building row: [name, description, costs, requirements, timeSeconds, condition, onBuilt,
+                 startBuilt, objectClass, producedResource, producedAmount, producedInterval]
+    0-4 match the research meanings above. 5/6 are advanced expression/callback fields; leave "".
+    7 startBuilt is true/false. 8 objectClass is a valid CfgVehicles building classname.
+    9-11 optionally make the building produce a named resource, amount and interval in seconds.
+    Omit trailing production fields for a building that produces nothing, as Supply Depot does.
+
+  Purchase row: [name, description, costs, requirements, objectClass, category, access]
+    0-3 match the catalogue meanings above. 4 is the spawned CfgVehicles classname.
+    5 category is "Ground", "Air" or "Naval" and must match a compatible drop point.
+    6 access uses the supported access ID; "EVERYONE" is the beginner-safe default.
+
+  Resource-zone call: [position, name, radius, deposits, side, intervalSeconds]
+    deposits rows are [resource name, amount per tick, total deposit cap]. Side is WEST, EAST,
+    GUER or NONE as a quoted string. Use getMarkerPos with a real Eden marker for position.
+
+  Resource-crate call: [position, contents]
+    contents rows are [resource name, amount]. It creates a physical transferable resource crate.
+
+  Research-centre call: [position]
+    creates/registers the player interaction point at the supplied world position.
+
+  Purchase-drop call: [position, category, direction, access]
+    category must match purchase rows; direction is degrees 0-359; "ANY" accepts applicable access.
 */
 
 if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};

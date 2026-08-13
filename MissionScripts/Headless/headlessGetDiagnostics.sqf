@@ -34,7 +34,7 @@ private _clientOwnerIds = _clients apply {_x select 0};
 private _assigned = _managed select {(_x select 1) isEqualType 0 && {(_x select 1) in _clientOwnerIds}};
 private _mismatched = _assigned select {isNull (_x select 0) || {groupOwner (_x select 0) != (_x select 1)}};
 private _orphaned = _managed select {(_x select 1) isEqualType 0 && {!((_x select 1) in _clientOwnerIds)}};
-private _serverOwned = _excluded select {(_x param [1, ""]) in ["wmp-server-owned", "gunship-crew"]};
+private _serverOwned = _excluded select {(_x param [1, ""]) in ["wmp-server-owned", "gunship-crew", "helicopter-flight-locality"]};
 private _adoptionFailed = _assigned select {
     private _group = _x select 0;
     private _expected = _group getVariable ["Waldo_Headless_ExpectedAdoption", []];
@@ -51,7 +51,7 @@ private _checks = [
     ["headless", "headless-distribution-owner", "LOADED", if (_externalScheduler) then {"ACE Headless is the sole automatic group distributor; WMP applies AI settings after ACE handoff"} else {"WMP is the automatic group distributor"}],
     ["headless", "headless-managed-groups", if (count _assigned > 0) then {"ACTIVE"} else {"LOADED"}, format ["assigned=%1", count _assigned]],
     ["headless", "headless-excluded-groups", "LOADED", format ["excluded=%1 (reasons in Waldo_Headless_ExcludedGroups / RPT)", count _excluded]],
-    ["headless", "headless-wmp-server-owned", "LOADED", format ["pinnedGroups=%1; WMP state-machine assets never migrate", count _serverOwned]],
+    ["headless", "headless-wmp-server-owned", "LOADED", format ["pinnedGroups=%1; WMP state-machine assets and helicopter flight groups never migrate", count _serverOwned]],
     ["headless", "headless-ai-adoption", if (count _adoptionFailed > 0) then {"ERROR"} else {"LOADED"}, format ["assigned=%1 missingOrFailed=%2; successful handoffs log '[WMP HEADLESS] Adoption complete' on the destination owner", count _assigned, count _adoptionFailed]],
     ["headless", "headless-failed-transfers", if (count _failed > 0) then {"ERROR"} else {"LOADED"}, _failedDetail],
     ["headless", "headless-ownership-consistency", if (count _mismatched > 0 || {count _orphaned > 0}) then {"ERROR"} else {"LOADED"}, _consistencyDetail],

@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Resolves the mission-wide WMP era theme and overlays the current player's colour-vision profile.
- * DEFAULT, WW2, VIETNAM and SCIFI have distinct typography, materials, rails, control chrome and
- * copy motifs while retaining identical feature behavior. Missions may extend Waldo_UI_CustomThemes
+ * DEFAULT, WW2, VIETNAM, SCIFI and PARCHMENT have distinct typography, materials, rails, control
+ * chrome and copy motifs while retaining identical feature behavior. Missions may extend Waldo_UI_CustomThemes
  * and Waldo_UI_ThemeOverrides; accessibility semantic overrides are applied last and locally.
  *
  * Arguments:
@@ -22,7 +22,15 @@ params [
     ["_visionRequested", missionNamespace getVariable ["Waldo_UI_ColourVisionProfileLocal", profileNamespace getVariable ["Waldo_UI_ColourVisionProfile", "STANDARD"]], [""]]
 ];
 private _id = toUpperANSI _requested;
-private _themes = createHashMapFromArray [
+// The five built-in theme entries below are static literals with no runtime dependency - rebuilding
+// all ~150 nested keys from scratch on every call (this function is invoked at least once per
+// notification card and once per tick by every specialist HUD - hazard, jamming, SafeStart - while
+// visible) was pure waste. Build the catalogue once per client session and reuse it; only the merge
+// below (custom themes, mission overrides, colour-vision profile) still runs fresh every call, so
+// live theme changes and accessibility selection remain immediate.
+private _themes = uiNamespace getVariable ["Waldo_UI_BaseThemeCatalogue", createHashMap];
+if (count _themes == 0) then {
+_themes = createHashMapFromArray [
     ["DEFAULT", createHashMapFromArray [
         ["id", "DEFAULT"], ["label", "Default / Modern"], ["font", "RobotoCondensed"], ["fontBold", "RobotoCondensedBold"],
         ["shade", [0, 0, 0, 0.72]], ["panel", [0.008, 0.018, 0.030, 0.95]], ["panelAlt", [0.035, 0.065, 0.095, 0.99]],
@@ -70,15 +78,46 @@ private _themes = createHashMapFromArray [
         ["sourcePrefix", "SYS::"], ["sourceSuffix", " // ONLINE"], ["titlePrefix", "[ "], ["titleSuffix", " ]"], ["motif", "TACTICAL NODE"],
         ["textHex", "#D1FAFF"], ["mutedHex", "#66B8D1"], ["accentHex", "#35DCF6"],
         ["successHex", "#35EDA5"], ["warningHex", "#FFB93A"], ["dangerHex", "#FF3B83"]
+    ]],
+    ["PARCHMENT", createHashMapFromArray [
+        ["id", "PARCHMENT"], ["label", "Parchment / Fantasy"], ["font", "PuristaLight"], ["fontBold", "PuristaBold"],
+        ["shade", [0.10, 0.07, 0.03, 0.75]], ["panel", [0.82, 0.72, 0.52, 0.97]], ["panelAlt", [0.74, 0.63, 0.42, 1]],
+        ["header", [0.42, 0.28, 0.14, 1]], ["button", [0.70, 0.60, 0.40, 1]], ["buttonActive", [0.60, 0.14, 0.12, 1]],
+        ["edit", [0.88, 0.80, 0.62, 1]], ["list", [0.80, 0.70, 0.50, 1]], ["casing", [0.28, 0.19, 0.10, 1]],
+        ["accent", [0.60, 0.14, 0.12, 1]], ["accentActive", [0.78, 0.22, 0.16, 1]], ["trim", [0.46, 0.34, 0.12, 0.9]],
+        ["text", [0.18, 0.11, 0.05, 1]], ["muted", [0.38, 0.30, 0.18, 1]], ["success", [0.24, 0.42, 0.16, 1]],
+        ["warning", [0.62, 0.42, 0.08, 1]], ["danger", [0.58, 0.12, 0.10, 1]], ["railMode", "DOUBLE"],
+        ["sourcePrefix", "ROYAL CHANCERY // "], ["sourceSuffix", " // SEALED"], ["titlePrefix", "PROCLAMATION: "], ["titleSuffix", ""], ["motif", "ILLUMINATED SCROLL"],
+        ["textHex", "#2E1C0D"], ["mutedHex", "#614D2E"], ["accentHex", "#99241F"],
+        ["successHex", "#3D6B29"], ["warningHex", "#9E6B14"], ["dangerHex", "#941F1A"]
+    ]],
+    ["MINIMAL", createHashMapFromArray [
+        ["id", "MINIMAL"], ["label", "Minimal / Low Profile"], ["font", "RobotoCondensed"], ["fontBold", "RobotoCondensedBold"],
+        ["shade", [0, 0, 0, 0.32]], ["panel", [0.03, 0.03, 0.035, 0.55]], ["panelAlt", [0.06, 0.06, 0.07, 0.6]],
+        ["header", [0.05, 0.05, 0.06, 0.5]], ["button", [0.08, 0.08, 0.09, 0.6]], ["buttonActive", [0.30, 0.55, 0.78, 0.85]],
+        ["edit", [0.04, 0.04, 0.05, 0.6]], ["list", [0.045, 0.045, 0.055, 0.55]], ["casing", [0.10, 0.10, 0.11, 0.5]],
+        ["accent", [0.45, 0.62, 0.78, 0.9]], ["accentActive", [0.60, 0.78, 0.92, 1]], ["trim", [0.45, 0.62, 0.78, 0.55]],
+        ["text", [0.95, 0.95, 0.96, 1]], ["muted", [0.68, 0.70, 0.73, 1]], ["success", [0.40, 0.72, 0.55, 0.9]],
+        ["warning", [0.85, 0.68, 0.30, 0.9]], ["danger", [0.80, 0.35, 0.35, 0.9]], ["railMode", "TOP"],
+        ["sourcePrefix", ""], ["sourceSuffix", ""], ["titlePrefix", ""], ["titleSuffix", ""], ["motif", "NOTICE"],
+        ["compact", true],
+        ["textHex", "#F2F3F5"], ["mutedHex", "#AEB4BA"], ["accentHex", "#73B3E0"],
+        ["successHex", "#6BC48C"], ["warningHex", "#D9AD4C"], ["dangerHex", "#CC5959"]
     ]]
 ];
-private _custom = missionNamespace getVariable ["Waldo_UI_CustomThemes", createHashMap];
-if (typeName _custom == "HASHMAP") then {
-    {private _value = _custom get _x; if (typeName _value == "HASHMAP") then {_themes set [toUpperANSI _x, _value];};} forEach keys _custom;
+uiNamespace setVariable ["Waldo_UI_BaseThemeCatalogue", _themes];
 };
-if (isNil {_themes get _id}) then {_id = "DEFAULT";};
+// A mission-defined custom theme can reuse a built-in id to override it. Looking that up here
+// (rather than merging every custom entry into the cached catalogue, as before) means the shared
+// cache above is never mutated by mission-supplied data - it stays a pure, reusable copy of the
+// five literal themes across the whole client session.
+private _custom = missionNamespace getVariable ["Waldo_UI_CustomThemes", createHashMap];
+private _base = if (typeName _custom == "HASHMAP") then {_custom get _id} else {nil};
+if (isNil "_base" || {typeName _base != "HASHMAP"}) then {
+    _base = _themes get _id;
+    if (isNil "_base") then {_id = "DEFAULT"; _base = _themes get _id;};
+};
 private _resolved = createHashMap;
-private _base = _themes get _id;
 {_resolved set [_x, _base get _x];} forEach keys _base;
 _resolved set ["id", _id];
 private _overrides = missionNamespace getVariable ["Waldo_UI_ThemeOverrides", createHashMap];

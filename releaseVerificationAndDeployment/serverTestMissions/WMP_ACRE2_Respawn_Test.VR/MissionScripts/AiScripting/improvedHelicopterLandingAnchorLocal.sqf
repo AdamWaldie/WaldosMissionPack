@@ -58,6 +58,15 @@ while {!_release} do {
         _release = true;
         _releaseReason = "LOCALITY_OR_DESTRUCTION";
     };
+    // Something else already reclaimed control and reset our own Active flag - most commonly
+    // Waldo_fnc_TransportDispatchLocal calling Waldo_fnc_ImprovedHelicopterLandingRestoreLocal
+    // directly to start the vehicle's next leg. Release immediately rather than continuing to fight
+    // it for up to another 0.25s (the addForce ground-pin below would otherwise keep firing against
+    // a helicopter that new dispatch code is already trying to fly away).
+    if !(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) exitWith {
+        _release = true;
+        _releaseReason = "SUPERSEDED_EXTERNALLY";
+    };
     if (_anchorPosition distance2D (getPosASL _helicopter) > 5) exitWith {
         _release = true;
         _releaseReason = "EXTERNAL_REPOSITION";
@@ -122,7 +131,16 @@ while {!_release} do {
 };
 
 if (!isNull _helicopter && {local _helicopter}) then {
-    [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    // Do not repeat the restore when something else already reclaimed and reconfigured the
+    // aircraft while we were still anchoring - whichever release condition caught it (the fast
+    // SUPERSEDED_EXTERNALLY check above, or the slower LANDING_WAYPOINT_DELETED path if a new
+    // dispatch's waypoint wipe was noticed first), our own Active flag being already false at this
+    // point means someone else is responsible for this aircraft's flight state now. Calling restore
+    // again would stomp the fresh flyInHeight/orders that new dispatch just applied with a stale
+    // global default.
+    if (_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]) then {
+        [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+    };
     _helicopter setVariable ["Waldo_ImprovedHelicopterLanding_LastResult", ["RELEASED", _targetPosition, diag_tickTime, _releaseReason, (getPosATL _helicopter) select 2], true];
     diag_log format ["[WMP AI LANDING] Ground anchor released helicopter=%1 reason=%2", netId _helicopter, _releaseReason];
 };

@@ -534,6 +534,11 @@ manual test matrix that should be run before enabling this on a live mission.
 | `Waldo_Headless_MigrationPaceSeconds` | Seconds between each queued group migration. |
 | `Waldo_Headless_Debug` | `false` (default). Extended per-event debug detail (load tables, exclusion tallies) to RPT/hosted-server chat. Toggle live with `Waldo_fnc_HeadlessDebugToggle` or the "Headless Client - Toggle Debug" ZEN module. |
 
+AI-crewed helicopters are always kept server-local and are not controlled by a setting. Dedicated
+testing showed airborne helicopters striking terrain immediately after an ACE Headless ownership
+transfer. WMP applies ACE's documented blacklist to every helicopter and also rejects them in its
+own automatic/manual migration funnel; infantry and ground-vehicle groups remain eligible.
+
 ## `economyConfig.sqf`
 
 This file is executable server-side mission-maker authoring rather than a pure setting HashMap.

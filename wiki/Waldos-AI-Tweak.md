@@ -34,6 +34,11 @@ When ACE Headless moves an ordinary AI group, WMP listens to ACE's supported pos
 the destination HC, reapplies the selected profile there, and sends an authenticated result to the
 server. This works even when WMP's own optional HC distributor is disabled. Pack diagnostics report
 `ai-headless-adoption` as an error if an HC owns ordinary AI without a matching verified adoption.
+
+The same diagnostics report includes `improved-helicopter-landing`. It shows active vector
+controllers and explicitly flags either a stale ground anchor or a controller that survived after
+separately spawned helicopters were grouped. Ordinary MOVE waypoints and multi-helicopter formation
+flight remain under Arma's own AI; WMP releases any previous landing controller before that flight.
 WMP-controlled Dynamic AA, Paradrop, Gunship, Transport and convoy groups remain server-owned;
 Dynamic AO is pinned only during creation and may move after its full setup completes.
 
@@ -73,10 +78,16 @@ Custom profile keys appear in the ZEN selector automatically. Add a friendly lab
 `Waldo_AI_ApplyMode`, which selects the AI population: `BOTH`, `EXISTING` or `NEW`.
 `Waldo_AI_IncludedSides`, `Waldo_AI_IncludedFactions`, `Waldo_AI_ExcludedFactions` and
 `Waldo_AI_ExcludedClasses` provide coarse filters; set `Waldo_AI_Exclude = true` on an individual
-unit for a precise opt-out. `Waldo_AI_SkillVariance` adds bounded per-unit variation after all
-overrides.
+unit for a precise opt-out. `Waldo_AI_SkillVariance` adds bounded variation after all overrides. The
+offset is chosen once for each AI and follows it across repeated application and headless-client
+ownership changes; migration therefore cannot silently reroll the AI's difficulty.
 
-The feature records the original named skills before its first application. With `Waldo_AI_RestoreOnStop` enabled, `Waldo_fnc_AIRebalanceStop` restores those values. A server-side stop is authoritative for current machines and JIP players; AI remains stopped until `Waldo_fnc_AIRebalanceInit` or the ZEN control explicitly enables it again. A locality handler reapplies the selected profile when ownership moves between server and headless clients.
+The feature records the original named skills before its first application and carries that snapshot
+with the unit if ownership changes. With `Waldo_AI_RestoreOnStop` enabled,
+`Waldo_fnc_AIRebalanceStop` restores those values. A server-side stop is authoritative for current
+machines and JIP players; AI remains stopped until `Waldo_fnc_AIRebalanceInit` or the ZEN control
+explicitly enables it again. A locality handler reapplies the selected profile when ownership moves
+between server and headless clients.
 
 ## See also
 

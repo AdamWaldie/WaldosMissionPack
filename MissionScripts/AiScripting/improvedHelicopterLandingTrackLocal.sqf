@@ -3,8 +3,8 @@
  * Tracks the active waypoint of one local AI helicopter and invokes the vector landing controller
  * for LAND, UNLOAD, TRANSPORT UNLOAD and GET OUT tasks. A scripted waypoint is accepted only when
  * its script identifies a landing task. A MOVE waypoint is accepted only for a registered WMP
- * transport whose server-broadcast state is TO_DESTINATION; this lets passenger services land
- * without Arma forcing cargo out or leaving a scripted LAND task alive after route replacement.
+ * transport whose explicit WMP destination-order token matches the current request, waypoint and
+ * position; this lets passenger services land without treating an ordinary Zeus MOVE as a landing.
  * The controller never activates at or inside the configured 50 metre minimum, avoiding take-off
  * waypoints that vanilla Arma completes immediately. A group containing more than one helicopter
  * keeps vanilla formation/waypoint flight: one group waypoint cannot safely provide a separate
@@ -43,8 +43,14 @@ while {
             // If Zeus groups an aircraft while WMP still owns a previous landing controller, release
             // that controller immediately. Otherwise its zero-height/anchor state can survive into
             // the new formation route and pull the newly grouped aircraft towards the terrain.
-            if (count _groupHelicopters != 1 && {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]}) then {
-                [_helicopter, false, ""] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
+            if (
+                count _groupHelicopters != 1
+                && {
+                    _helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
+                    || {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_GroundAnchored", false]}
+                }
+            ) then {
+                [_helicopter, false, "", true] call Waldo_fnc_ImprovedHelicopterLandingRestoreLocal;
                 diag_log format ["[WMP AI LANDING] Released controller because helicopter joined a %1-aircraft group helicopter=%2.", count _groupHelicopters, netId _helicopter];
             };
             private _index = currentWaypoint _group;
@@ -56,11 +62,15 @@ while {
                 private _script = toLowerANSI (waypointScript _waypoint);
                 private _landingType = _type in ["LAND", "UNLOAD", "TR UNLOAD", "GETOUT"];
                 if (_type == "SCRIPTED" && {_script find "land" >= 0}) then {_landingType = true;};
-                if (
-                    _type == "MOVE"
-                    && {_helicopter getVariable ["Waldo_TransportService_Registered", false]}
-                    && {_helicopter getVariable ["Waldo_TransportService_State", ""] == "TO_DESTINATION"}
-                ) then {_landingType = true;};
+                if (_type == "MOVE" && {_helicopter getVariable ["Waldo_TransportService_Registered", false]}) then {
+                    private _landingOrder = _helicopter getVariable ["Waldo_TransportService_LandingOrder", []];
+                    private _requestId = _helicopter getVariable ["Waldo_TransportService_RequestId", -1];
+                    _landingType = count _landingOrder >= 3
+                        && {_helicopter getVariable ["Waldo_TransportService_State", ""] == "TO_DESTINATION"}
+                        && {(_landingOrder select 0) == _requestId}
+                        && {(_landingOrder select 1) == _index}
+                        && {(_landingOrder select 2) distance2D _position < 2};
+                };
                 private _signature = [_index, _position, _type, _script];
                 if !(_signature isEqualTo _lastSignature) then {
                     _lastSignature = _signature;
