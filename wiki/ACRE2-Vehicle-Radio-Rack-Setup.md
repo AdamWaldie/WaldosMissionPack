@@ -1,228 +1,225 @@
 # ACRE2 Vehicle Radio Rack Setup
 
-> **Use this page when:** you have a vehicle (Hunter, helicopter, tank, boat, plane, APC...) and you
-> want its built-in ACRE2 rack radio tuned to a channel, or you want to swap what radio is mounted in
-> it. This is the complete reference for vehicle rack radios, from the smallest working call through
-> the underlying ACRE2 mechanics. Personal/carried squad radios are a separate surface, configured in
-> [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting).
+> **Use this page when:** a vehicle, drone, command post or radio table needs a known vehicle-radio
+> starting state. Player-carried radios use the separate ACRE communications configuration.
 
-Associated files: `MissionScripts\MissionInit\ACRE2\acre2RackSetup.sqf`,
-`MissionScripts\MissionInit\ACRE2\acre2RackApply.sqf`.
+WMP supports all four useful rack operations:
 
-## What this actually is
+- initialise racks already supplied by the vehicle;
+- apply an existing ACRE radio preset before initialisation;
+- add a physical rack and optionally start it with a compatible radio;
+- tune, empty, replace or remove a removable rack after initialisation.
 
-A **rack radio** is the radio built into a vehicle — the thing crew talk on through their headset
-without carrying a handheld. It is completely separate from the personal radios your squad carries
-(those are configured in `MissionConfig\acreConfig.sqf`, a different page). Rack radios are
-configured **per vehicle**, with **one line in that vehicle's Eden init field**.
+This follows ACRE2's public [Vehicle Racks framework](https://acre2.idi-systems.com/wiki/frameworks/vehicle-racks).
 
-You do not need to place, buy or spawn anything extra, and you do not need any mod besides ACRE2
-itself. Most vanilla Arma 3 vehicles already have one or two racks the moment ACRE2 loads.
+## Recommended: central profile plus one short vehicle call
 
-## Quickest working setup
-
-1. Place a vehicle in Eden Editor (a Hunter/Strider/Ifrit, a helicopter, a tank, an APC, an armed
-   boat — see the table below for the full list).
-2. Double-click it, open its **Init** field, and paste:
-   ```sqf
-   [this, ["assignments", [["ALL", 5]]]] call Waldo_fnc_ACRE2RackSetup;
-   ```
-3. Done. Save, preview the mission with a player connected (rack setup needs a real connected
-   player somewhere on the server — see "Why nothing happens on an empty test server" below), get in
-   the vehicle, and its rack radio(s) will be tuned to channel 5 automatically as ACRE2 finishes
-   mounting them.
-
-That's it — most mission makers never need anything beyond this one line. Everything past this
-point is for when you want more control.
-
-> **A note on ACRE2 "presets":** `Waldo_fnc_ACRE2RackSetup` also accepts a `["preset", "name"]`
-> config that hands a preset name straight to ACRE2's own `acre_api_fnc_setVehicleRacksPreset`. A
-> preset name is a name ACRE2 defines for an actual **radio model** (e.g. a PRC-152 or PRC-117F
-> preset) — a rack designation like AN/VRC-110 names the vehicle's **mounting hardware**, not a
-> radio, and is never itself a valid preset name. WMP does not ship or guarantee any preset name
-> works in your install; use `assignments` (explicit channel numbers, as above) unless you have
-> already confirmed a specific preset name in your own ACRE2 setup.
-
-## "Which vehicle can I even use this on?"
-
-No mods required for the common case — ACRE2 attaches racks by class inheritance, so most vanilla
-Arma 3 vehicle classes already have a rack the moment it loads — confirmed directly against ACRE2's
-own `addons/sys_rack/CfgVehicles.hpp`:
-
-| Vehicle base class | Racks | It already has... |
-|---|---|---|
-| `Helicopter_Base_F`, `Plane_Base_F`, `Tank_F`, `Wheeled_APC_F`, `Boat_Armed_01_base_F`, `VTOL_01_unarmed_base_F` | 1-2 | A PRC-117F, already mounted and **fixed** (cannot be swapped or removed — see below) |
-| `MRAP_01/02/03_base_F` (Hunter/Strider/Ifrit-family) | 2 | Rack 0: an **empty AN/VRC-110 you can freely re-equip**. Rack 1: a fixed PRC-117F |
-
-Anything not on that list (most cars, most static weapons) has no rack at all —
-`acre_api_fnc_getVehicleRacks` returns `[]` for it, and `Waldo_fnc_ACRE2RackSetup` silently does
-nothing there — it will not error. Use `acre_api_fnc_addRackToVehicle` (or a mod that already does)
-to give such a vehicle a rack first.
-
-If you only want to retune the channel of whatever is already mounted (the common case for
-helicopters, planes, tanks, APCs and boats), the one-line call above already does that — read no
-further.
-
-## Want more control? Explicit per-rack assignment
-
-Instead of a preset, hand it an `assignments` list — one row per rack you want to touch:
+Edit `MissionConfig\acreConfig.sqf` and find `rackProfiles`. WMP ships three explained examples.
+Then paste this in the vehicle or object's Eden **Init** field:
 
 ```sqf
-[this, ["assignments", [
-    [0, 5],                        // rack 0: just set channel 5
-    [1, 44, "ACRE_PRC117F"]        // rack 1: mount a PRC-117F, then set it to channel 44
-]]] call Waldo_fnc_ACRE2RackSetup;
+[this, "COMMAND_VEHICLE"] call Waldo_fnc_ACRE2RackSetup;
 ```
 
-Each row is `[rackIndex, channelOrFrequency, mountRadioClass (optional)]`:
+No `isServer` wrapper is required. The function forwards to the server itself.
 
-- **`rackIndex`** — `0` is the vehicle's first rack, `1` its second, and so on, or the word `"ALL"`
-  to apply the same row to every rack on the vehicle. Order matches whatever ACRE2 itself reports for
-  that vehicle — if you are not sure which index is which on a specific vehicle, start with `"ALL"`
-  or just experiment.
-- **`channelOrFrequency`** — a plain channel number for most radios (PRC-148/152/117F), `[block,
-  channel]` **only** for a PRC-343 (it has no plain channel number, only block+channel), or a decimal
-  MHz frequency for a PRC-77/SEM70-style radio. Do not use `[block, channel]` for a PRC-148/152/117F —
-  those radios only have a plain channel number, no block concept. Use `-1` (or leave the row as just
-  `[rackIndex]`) if you only want to mount/remove a radio and not touch its channel.
-- **`mountRadioClass`** (optional) — a radio classname like `"ACRE_PRC152"` to swap into that rack,
-  or the special word `"REMOVE_RACK"` to rip the rack out entirely. Leave it out to keep whatever is
-  already mounted.
+A profile sitting in `acreConfig.sqf` does nothing until an object calls it. Several vehicles may
+reuse the same profile.
 
-## Swapping or removing what's mounted
+## Reusing the same named radio nets
 
-This only works on a rack ACRE2 itself allows you to change. In practice, on stock Arma 3 vehicles,
-that means **only the Hunter/Strider/Ifrit's empty AN/VRC-110 rack** — every vanilla PRC-117F other
-vehicles come with is fixed hardware by ACRE2's own design, not a WMP limit. Trying to swap or remove
-one of those is safely refused (nothing breaks — check the RPT for a `[WMP ACRE RACK]` line if you
-want to confirm it was refused and why).
+Rack profiles use the same net definitions as player-carried radios. If WEST already defines
+`AIRGND` as PRC long-range channel 6, a vehicle assignment can request `"AIRGND"` instead of
+repeating channel 6. The optional `netSide` setting chooses `WEST`, `EAST`, `GUER` or `CIV`.
+
+`AUTO` first uses the vehicle class side, but neutral props do not express operational ownership;
+give those profiles an explicit side. WMP also checks the radio family. A `PRC_LR` net can configure
+a PRC-148, PRC-152 or PRC-117F rack radio, but cannot silently become a BF-888 or SEM52 channel.
+Changing a net once therefore updates carried-radio and rack starting states together.
+
+## Simplest inline call
+
+To leave the hardware alone and set compatible already-mounted radios to WEST's named `COY` net:
 
 ```sqf
-// On a Hunter-family vehicle: put a PRC-152 in the empty, swappable rack (index 0 on the vanilla config):
-[this, ["assignments", [[0, 12, "ACRE_PRC152"]]]] call Waldo_fnc_ACRE2RackSetup;
+[this, [["netSide", "WEST"], ["assignments", [["ALL", "COY"]]]]] call Waldo_fnc_ACRE2RackSetup;
 ```
 
-## Changing a vehicle's radios later in the mission
+Empty racks reached through `"ALL"` are skipped. Explicitly selecting an empty rack reports a
+problem unless the row also supplies a compatible radio to mount.
 
-Call `Waldo_fnc_ACRE2RackSetup` again at any time — from a trigger, a script, whatever — with a
-different config, and it re-applies. Calling it again with the **exact same** config it already has
-does nothing (this is intentional — it is what makes it safe for the one-liner above to sit in an
-init field that every connected player's machine technically runs).
+## Mix a central profile with a local exception
 
-## Why nothing happens on an empty test server
+```sqf
+[
+    this,
+    "COMMAND_VEHICLE",
+    [["assignments", [[["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"]]]]
+] call Waldo_fnc_ACRE2RackSetup;
+```
 
-ACRE2 needs an actual connected player **somewhere on the server** to finish setting a vehicle's
-racks up — this is an ACRE2 engine behaviour, not a WMP choice; ACRE2 delegates that work to a
-connected player's own machine (any connected player, not specifically one near or inside the
-vehicle). `Waldo_fnc_ACRE2RackSetup` triggers ACRE2's own rack initialisation itself as soon as a
-player exists (it does not wait around hoping ACRE2 gets to it on its own), so on a normal hosted
-mission setup completes within a few seconds of a player being connected, regardless of where that
-player currently is on the map.
+This loads `COMMAND_VEHICLE`, then replaces that profile's complete `assignments` setting for this
+one vehicle. WMP does not perform a hidden array merge.
 
-The one genuine gap this can't paper over: a **dedicated server that auto-starts its mission before
-anyone has joined** fires this vehicle's Eden init field with zero players connected — nothing ACRE2
-does can initialise a rack with nobody there to do the work. WMP handles this by waiting, separately
-and much more patiently (up to **5 minutes**), for a player to actually be connected before it even
-attempts anything with ACRE2; only once a player exists does the short 30-second ACRE2 wait start. If
-you still see `no-player-connected (nobody joined the server within 300s of this call)` in the RPT, no
-player joined that server within 5 minutes of the mission starting — call
-`Waldo_fnc_ACRE2RackSetup` again once someone has. If instead you see
-`racks-not-initialised (no connected player, or ACRE2 setup failed within 30s)`, a player was
-connected but ACRE2 itself failed to finish within 30 seconds — this is the case worth reporting if it
-recurs, since it means ACRE2's own initialisation did not complete even with the explicit trigger.
+## Understanding central rack profiles
 
-## How it works, and what is unverified
+Each profile is:
 
-Rack initialisation and radio-ID issuance are genuinely asynchronous in ACRE2 and require a
-connected player — ACRE2 delegates the actual mount/initialise work to a player's machine internally
-rather than completing it synchronously on the server. `Waldo_fnc_ACRE2RackSetup` self-forwards to
-the server like `Waldo_fnc_Jammer` (safe with no `isServer` wrapper in an Eden init field), which then
-runs two separate, differently-bounded waits rather than one shared timeout:
+```sqf
+["PROFILE_NAME", [
+    ["preset", "default3"],
+    ["netSide", "WEST"],
+    ["addRacks", []],
+    ["assignments", []]
+]]
+```
 
-1. **Up to 5 minutes** for any player to be connected to the server at all — a dedicated server can
-   fire this vehicle's Eden init field before its lobby has filled, which is a mission-hosting
-   condition outside WMP's or ACRE2's control.
-2. Once a player exists, it calls `acre_api_fnc_initVehicleRacks` on the vehicle itself — per ACRE2's
-   own source, that function must be executed explicitly and is not triggered automatically on
-   vehicle creation or by player proximity; it delegates the actual work to whichever connected
-   player ACRE2 selects, not necessarily one near the vehicle. Calling it directly, rather than
-   passively waiting for ACRE2 to trigger it on its own, is what makes the following **30-second**
-   wait for `acre_api_fnc_areVehicleRacksInitialized` to report true normally resolve within a few
-   seconds regardless of where players currently are on the map.
+| Setting | What it means |
+|---|---|
+| `preset` | Optional existing ACRE preset name applied before rack initialisation. `""` reuses the preset configured for `netSide`. |
+| `netSide` | Side whose named net table is used: `WEST`, `EAST`, `GUER`, `CIV`, or carefully chosen `AUTO`. |
+| `addRacks` | Physical racks WMP should ensure exist on the object. |
+| `assignments` | Named-net/channel changes or radio/rack changes after ACRE has synchronized the rack IDs. |
 
-Then **45 seconds** per rack for its mounted radio to receive a real unique ID rather than sit as a
-bare, un-initialised base classname (`acre_api_fnc_getMountedRackRadio` returns the base class until
-ACRE2 finishes issuing the ID). Mounting a radio (`acre_api_fnc_mountRackRadio`) is itself an
-asynchronous CBA event delegated to a player's machine, the same as `acre_api_fnc_initVehicleRacks` —
-on a mission with a lot of other systems competing for that same player's machine, that event can
-take longer than a short window to actually land and process, so this wait is deliberately generous.
+The preset is not a WMP net name. It must already exist in ACRE's radio preset configuration. When
+this is `""`, WMP deterministically reuses the selected side's preset rather than depending on which
+player ACRE happens to select. Enter a different preset explicitly only when the rack needs a
+different complete programme. This is the correct route for PRC-77/SEM70 frequency programming
+because those radios are not ordinary numbered-channel radios.
 
-### Why this needs every connected human player, not just the server
+## Adding a rack and its radio
 
-ACRE2's per-rack radio *state* (what's mounted, whether it's removable, its live channel) is tracked
-locally on whichever connected client ACRE2 delegated that rack's mount/init work to — it is **not**
-synced to the server. On a listen server (the common case when previewing/hosting from the editor)
-this is invisible: the host process is simultaneously the server and a client, so "local" state is
-already shared. On a genuine dedicated server it is not, and reading rack state directly from the
-server throws `[ACRE] (api) WARNING: Non existant rack ID provided` even with a player connected and
-racks correctly initialised. `Waldo_fnc_ACRE2RackApply` works around this by sending every rack state
-read/write to every connected **human player** and using whichever one actually answers — it does not
-need to know in advance which client ACRE2 picked. Headless clients are deliberately excluded from
-this: they can never hold ACRE2 rack/radio state (no interface, no real ACRE2 session), so including
-them would only add network/script overhead on a mission running several with zero chance of a useful
-answer. This is transparent to mission makers; the only visible effect is that setup now works
-correctly on a dedicated server as well as a listen server.
+```sqf
+[this, [["addRacks", [
+    ["ACRE_VRC110", [
+        ["count", 1],
+        ["displayName", "Command Radio"],
+        ["shortName", "CMD"],
+        ["removable", true],
+        ["access", ["inside"]],
+        ["disabled", []],
+        ["mountedRadio", "ACRE_PRC152"],
+        ["components", []],
+        ["intercoms", []]
+    ]]
+]], ["assignments", [
+    [["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"]
+]]]] call Waldo_fnc_ACRE2RackSetup;
+```
 
-CHANNEL-mode rack radios (PRC-148/152/117F) are applied and read back synchronously, exactly like
-carried radios of the same class — this is the tested, verified path. **FREQUENCY-mode rack radios
-(PRC-77/SEM70-family) are the one path that has not been proven against a live engine**: no public
-per-radio frequency-write API exists, so this reuses the same batched, ordinal
-`acre_api_fnc_setupRadios` call carried radios use, computing that specific radio's occurrence from
-its own already-known unique ID's position in the broad current-radio list. Treat FREQUENCY-mode rack
-radios as the priority item to verify manually before relying on them.
+`count` means the desired total number of that rack class on this object—not “add this many every
+time.” If the call is retried after adding the first rack, WMP sees that it already exists and does
+not duplicate it.
 
-**Why some racks refuse a swap or `"REMOVE_RACK"`:** both are gated by ACRE2's own
-`acre_api_fnc_isRackRadioRemovable` check, which is `false` unless `isRadioRemovable = 1` was set
-where that rack was configured. Checked directly against ACRE2's vanilla vehicle config, that is
-**only** the MRAP family's empty AN/VRC-110 rack — every PRC-117F ACRE2 pre-mounts elsewhere has no
-`isRadioRemovable` property set at all, so it is fixed hardware by ACRE2's own design, not a WMP
-restriction. A mission-added rack (`acre_api_fnc_addRackToVehicle`) can set that flag itself for full
-replace/remove behaviour anywhere. No public ACRE2 API to unmount only the radio and leave an empty
-rack in place was found — `"REMOVE_RACK"` always takes the physical rack with it.
+| Rack option | Beginner meaning |
+|---|---|
+| `displayName` | Name shown in the ACRE/ACE interaction menu. |
+| `shortName` | Short GUI label; ACRE allows 1-4 characters. |
+| `removable` | Whether the mounted radio can later be removed/replaced. |
+| `access` | Who can access it. `['inside']` is the normal vehicle default; `['external']` suits a radio table. |
+| `disabled` | Vehicle positions denied access. `[]` denies none. |
+| `mountedRadio` | Compatible base radio, or `""` for an empty rack. |
+| `components` | Advanced extra ACRE component classes. Beginners should use `[]`. |
+| `intercoms` | ACRE intercom IDs connected to the rack, or `[]`. |
 
-Diagnostics: `runDiagnostics.sqf`'s `acre-vehicle-racks` row reports how many vehicles have had rack
-setup requested, how many are still pending (mid-wait or timed out without producing an ID), and how
-many reported a problem — check `[WMP ACRE RACK]` RPT entries for detail on any specific vehicle.
+## Rack and radio compatibility
 
-## Try it yourself
+ACRE checks the physical connectors. WMP validates the five built-in pairs before requesting a
+mount, so an incompatible example fails clearly rather than timing out.
 
-Two ready-made compositions in `WMP_Compositions/` demonstrate this on a placed, crewed Hunter:
+| Physical rack | Radio it accepts |
+|---|---|
+| `ACRE_VRC64` | `ACRE_PRC77` |
+| `ACRE_VRC103` | `ACRE_PRC117F` |
+| `ACRE_VRC110` | `ACRE_PRC152` |
+| `ACRE_VRC111` | `ACRE_PRC148` |
+| `ACRE_SEM90` | `ACRE_SEM70` |
 
-- **`[WMP] ACRE2 Vehicle Radio Rack Example (Minimal)`** — the one-line `"ALL"` call above.
-- **`[WMP] ACRE2 Vehicle Radio Rack Example (Full)`** — explicit per-rack control: swaps the empty
-  rack to a PRC-152 on channel 5, and retunes the fixed PRC-117F.
+Third-party rack types are not guessed. They may still be initialized and tuned inline, but WMP will
+not claim a replacement radio is compatible without an explicit future profile extension.
 
-Drop either into Eden and read its in-editor comment for a walkthrough.
+## Selecting the intended rack
 
-## Something not working?
+An assignment row is:
 
-- **Nothing is tuned at all, and the RPT shows `no-player-connected`:** nobody joined the server
-  within 5 minutes of the call — see "Why nothing happens on an empty test server" above. Call
-  `Waldo_fnc_ACRE2RackSetup` again once a player is connected.
-- **Nothing is tuned at all, and the RPT shows `racks-not-initialised`:** a player was connected but
-  ACRE2 itself failed to finish initialising within 30 seconds — this is worth reporting if it
-  recurs, since it means ACRE2's own initialisation did not complete even with the explicit trigger.
-- **A swap or "REMOVE_RACK" is being ignored:** that rack is fixed hardware on this vehicle (true for
-  every vanilla PRC-117F rack) — see "Swapping or removing what's mounted" above.
-- **Still stuck:** check the RPT log for lines starting `[WMP ACRE RACK]` — they name the exact
-  vehicle and rack and explain what happened. Mission Diagnostics also reports a rack-setup summary
-  under its `acre-vehicle-racks` row — see [Mission Diagnostics](Mission-Diagnostics).
+```sqf
+[RACK_SELECTOR, NET_KEY_OR_CHANNEL, OPTIONAL_RADIO_ACTION]
+```
+
+| Selector | Result |
+|---|---|
+| `"ALL"` | Tune every already-mounted compatible radio; empty racks are skipped. Do not use this for mounting/removing hardware. |
+| `1` | First rack returned by ACRE. Numeric order starts at 1 but is less resilient than a typed selector. |
+| `"ACRE_VRC110"` | Every VRC-110 on the object. |
+| `["ACRE_VRC110", 1]` | First VRC-110, regardless of unrelated rack order. Recommended. |
+
+Examples:
+
+```sqf
+// Ensure the first VRC-110 has a PRC-152, then tune it to WEST AIRGND.
+[["ACRE_VRC110", 1], "AIRGND", "ACRE_PRC152"]
+
+// Empty the first removable VRC-110 but leave its physical rack installed.
+[["ACRE_VRC110", 1], -1, "UNMOUNT_RADIO"]
+
+// Remove the whole first removable VRC-110 rack.
+[["ACRE_VRC110", 1], -1, "REMOVE_RACK"]
+```
+
+Replacing an occupied radio is an ordered operation: WMP asks ACRE to unmount it, waits for a
+synchronized empty rack, mounts the compatible replacement, waits for its unique ID, then tunes and
+reads the channel back. Fixed racks are tunable but cannot be emptied, replaced or removed.
+
+## Dedicated-server lifecycle
+
+Rack setup begins on the server, as required by ACRE's public rack APIs:
+
+1. WMP stores the requested setup on the object.
+2. If no human ACRE player exists yet, state becomes `WAITING_FOR_PLAYER` and the request is retained.
+3. The preset is stored before initialisation.
+4. ACRE selects a human client to create the unique IDs, acknowledges them to the server, and
+   distributes radio data to other ACRE machines and JIP clients.
+5. The server adds or removes physical rack hardware through ACRE's server-only APIs.
+6. ACRE 2.14 keeps the mounted-radio data behind those IDs on its selected interface client. WMP
+   sends the already-validated tuning plan to that one client, which applies and reads back the
+   channel. It does not ask every client to race or give the client authority over the request.
+7. The selected client returns one token-bound result; the server records completion and diagnostics.
+
+Repeated identical Eden calls are suppressed both while running and after success. A genuinely new
+setup arriving mid-run replaces the queued request and runs after the current worker cleans up.
+
+## Diagnostics
+
+WMP Diagnostics reports both an `acre-vehicle-racks` summary and one `acre-rack-<network ID>` row
+per configured object. Each object row shows its class, resolved profile, current owner, initial
+rack/radio inventory, every requested job, the final mounted radio/channel read-back, and problems.
+The audit mission's **ACRE2: SHOW VEHICLE RACK STATUS** action exposes the same snapshot. RPT lines
+beginning `[WMP ACRE RACK]` include the accepted request, inventory and every job result.
+
+| Diagnostic | Meaning and response |
+|---|---|
+| `WAITING_FOR_ACRE_PLAYER` | Normal dedicated lobby state. Join with an ACRE client; WMP retries automatically. |
+| `RACKS_NOT_INITIALISED` | ACRE did not finish within the bounded window. Check client/server ACRE errors. |
+| `CLIENT_DATA_NOT_READY` | ACRE published a rack ID but its mounted-radio data did not become readable on the selected ACRE client. |
+| `CLIENT_APPLY_TIMEOUT` | The selected ACRE client disconnected or did not return its token-bound result in time; WMP retains the request for retry. |
+| `UNKNOWN_RACK_CLASS` | The authored rack class does not exist in loaded ACRE configuration. |
+| `INCOMPATIBLE_RADIO` | Rack and radio do not form one of the supported physical pairs. |
+| `RADIO_NOT_REMOVABLE` | The assignment tried to replace a fixed radio. Tune it without a replacement classname. |
+| `NET_*_NOT_UNIQUE_OR_INCOMPATIBLE` | The named net is absent, ambiguous across sides, or belongs to another radio family. Set `netSide` and use a compatible net. |
+| `NO_MOUNTED_RADIO` | An explicitly selected rack is empty. Supply its compatible radio classname. |
+| `CHANNEL_OUT_OF_RANGE` | The mounted radio cannot use the requested channel. |
+| `FREQUENCY_REQUIRES_PRESET` | A PRC-77/SEM70 rack received a decimal/direct tuning request. Use a tested preset before initialisation. |
+| `READBACK_*_EXPECTED_*` | ACRE accepted the call but the resulting channel did not match. Treat this as failure. |
+
+## Ready-made examples
+
+- **ACRE2 Vehicle Radio Rack Example (Minimal):** calls `EXISTING_RACKS_COY`.
+- **ACRE2 Vehicle Radio Rack Example (Full):** calls `COMMAND_VEHICLE`, which demonstrates preset,
+  idempotent rack addition, compatible mounted radio and verified tuning.
 
 ## See also
 
-- [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting) — personal/carried squad
-  radio setup (a separate surface from vehicle racks).
-- [AN/PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
+- [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting)
 - [Mission Diagnostics](Mission-Diagnostics)
 
 <!-- WMP-WIKI-NAV -->

@@ -30,6 +30,7 @@ if (!_applyLocal) exitWith {
 if (!hasInterface) exitWith {};
 
 ["ENDEX"] call Waldo_fnc_DismissUiNotification;
+missionNamespace setVariable ["Waldo_ENDEX_PageGeneration", (missionNamespace getVariable ["Waldo_ENDEX_PageGeneration", 0]) + 1];
 
 if !(isNil "Waldo_PreventWeaponsFireEventHandler") then {
     player removeEventHandler ["Fired", Waldo_PreventWeaponsFireEventHandler];

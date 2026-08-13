@@ -55,8 +55,8 @@ short init demonstrates every internal option.
 | Vehicle Recovery Workshop Example (Full) | Spaced workshop, recoverable vehicle and generic AUTO carrier with guided common options |
 | Helicopter, Ground and Boat Transport Services (Minimal) | Smallest working AI-crewed service registration for all three types - required args only |
 | Helicopter, Ground and Boat Transport Services (Full) | AI-crewed named air/ground/boat services with current LZ clearance, water-search radius and improved-landing defaults |
-| ACRE2 Vehicle Radio Rack Example (Minimal) | Smallest working call - a named preset applied to every rack on a Hunter |
-| ACRE2 Vehicle Radio Rack Example (Full) | Same Hunter with explicit per-rack channel/mount control, every option shown |
+| ACRE2 Vehicle Radio Rack Example (Minimal) | Smallest central-profile call - WEST's shared COY net is requested for compatible already-mounted rack radios |
+| ACRE2 Vehicle Radio Rack Example (Full) | Central COMMAND_VEHICLE profile: preset-before-init, ensure a VRC-110/PRC-152 exists, then apply the shared WEST AIRGND net |
 | Logistics Spawner Example (Minimal) | Smallest working standalone quartermaster access point |
 | Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with guided common options |
 | MHQ With Logistics Spawner (Minimal) | Single truck, smallest working deployable command post |

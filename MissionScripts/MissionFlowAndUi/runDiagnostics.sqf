@@ -232,21 +232,36 @@ if (_acreLoaded) then {
     private _babel = _acreConfig getOrDefault ["babel", createHashMap];
     ["radio", "acre-babel", if !(_babel getOrDefault ["enabled", false]) then {"DISABLED"} else {if (count (_babel getOrDefault ["languages", []]) > 0) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 languages=%2", _babel getOrDefault ["enabled", false], count (_babel getOrDefault ["languages", []])], (_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}, if !((_babel getOrDefault ["enabled", false]) && {count (_babel getOrDefault ["languages", []]) == 0}) then {""} else {"Babel is enabled in MissionConfig\acreConfig.sqf but defines no languages - add at least one entry to its babel languages array."}] call _status;
 
-    // Vehicle radio racks: a vehicle only appears here once Waldo_fnc_ACRE2RackSetup has actually
-    // been called on it (no rack scan runs otherwise). "pending" covers both an in-progress bounded
-    // wait and a rack that never produced its unique radio ID within that wait - the RPT trail from
-    // Waldo_fnc_ACRE2RackApply distinguishes those two cases in detail.
+    // Vehicle radio racks appear only after Waldo_fnc_ACRE2RackSetup has been called. The redesigned
+    // state field distinguishes a healthy dedicated-server lobby wait from an actual setup failure.
     private _rackVehicles = (allMissionObjects "All") select {(_x getVariable ["Waldo_ACRE2_RackSetupSignature", ""]) != ""};
     if (_rackVehicles isEqualTo []) then {
         ["radio", "acre-vehicle-racks", "UNCONFIGURED", "No vehicle has had Waldo_fnc_ACRE2RackSetup called on it", false] call _status;
     } else {
-        private _pending = _rackVehicles select {!(_x getVariable ["Waldo_ACRE2_RackSetupComplete", false])};
+        private _waiting = _rackVehicles select {(_x getVariable ["Waldo_ACRE2_RackSetupState", "STARTING"]) in ["WAITING_FOR_PLAYER", "WAITING_FOR_ACRE_CLIENT"]};
+        private _pending = _rackVehicles select {
+            private _rackState = _x getVariable ["Waldo_ACRE2_RackSetupState", "STARTING"];
+            _rackState in ["STARTING", "APPLYING"]
+        };
         private _problemVehicles = _rackVehicles select {
             private _result = _x getVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, []]];
-            !((_result param [2, []]) isEqualTo [])
+            private _problems = _result param [2, []];
+            !(_problems isEqualTo []) && {
+                (_problems findIf {_x == "WAITING_FOR_ACRE_PLAYER" || {_x find "NO_ACRE_READY_CLIENT_WITHIN_" == 0}}) < 0
+            }
         };
-        private _state = if (count _problemVehicles > 0) then {"ERROR"} else {if (count _pending > 0) then {"LOADED"} else {"ACTIVE"}};
-        ["radio", "acre-vehicle-racks", _state, format ["configured=%1 pending=%2 withProblems=%3", count _rackVehicles, count _pending, count _problemVehicles], count _problemVehicles > 0, if (_problemVehicles isEqualTo []) then {""} else {"Check [WMP ACRE RACK] RPT entries for the affected vehicle(s)."}] call _status;
+        private _state = if (count _problemVehicles > 0) then {"ERROR"} else {if (count _pending > 0 || {count _waiting > 0}) then {"LOADED"} else {"ACTIVE"}};
+        ["radio", "acre-vehicle-racks", _state, format ["configured=%1 waitingForPlayer=%2 applying=%3 withProblems=%4", count _rackVehicles, count _waiting, count _pending, count _problemVehicles], count _problemVehicles > 0, if (_problemVehicles isEqualTo []) then {""} else {"Check [WMP ACRE RACK] RPT entries for the affected vehicle(s); each failed rack now includes a specific reason."}] call _status;
+        {
+            private _rackState = _x getVariable ["Waldo_ACRE2_RackSetupState", "STARTING"];
+            private _profile = _x getVariable ["Waldo_ACRE2_RackProfile", "INLINE"];
+            private _result = _x getVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, []]];
+            private _snapshot = _x getVariable ["Waldo_ACRE2_RackDiagnosticSnapshot", []];
+            private _problems = _result param [2, []];
+            private _onlyWaiting = !(_problems isEqualTo []) && {(_problems findIf {_x == "WAITING_FOR_ACRE_PLAYER" || {_x find "NO_ACRE_READY_CLIENT_WITHIN_" == 0}}) < 0};
+            private _isBad = _rackState == "FAILED" || {!(_problems isEqualTo []) && {!_onlyWaiting}};
+            ["radio", format ["acre-rack-%1", netId _x], if (_isBad) then {"ERROR"} else {_rackState}, format ["object=%1 class=%2 profile=%3 owner=%4 result=%5 snapshot=%6", _x, typeOf _x, _profile, owner _x, _result, _snapshot], _isBad, if (_isBad) then {"Confirm the profile exists, the selected rack/radio pair is compatible, its named net exists for netSide, and an ACRE-ready player is connected. The snapshot lists the actual racks, each requested job and its read-back channel."} else {""}] call _status;
+        } forEach _rackVehicles;
     };
 } else {
     ["radio", "acre-runtime", "UNAVAILABLE", "ACRE2 is not loaded; WMP radio presetting is inactive", false] call _status;

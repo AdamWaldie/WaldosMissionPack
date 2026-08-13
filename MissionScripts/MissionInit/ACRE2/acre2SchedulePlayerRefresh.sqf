@@ -45,6 +45,11 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
                 !isNull player
                 && {!isNil "acre_api_fnc_isInitialized"}
                 && {[] call acre_api_fnc_isInitialized}
+                // ACRE's public carried-radio readiness check can become true before its JIP data
+                // sync and post-init event handlers are ready. Rack creation uses those handlers,
+                // so also require the synchronization sentinel used by ACRE's own source.
+                && {!isNil "ACRE_DATA_SYNCED"}
+                && {ACRE_DATA_SYNCED}
                 && {count _plan >= 4}
                 && {(_plan select 0) == 5}
                 && {_persistenceResolved}
@@ -86,9 +91,16 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     if !(missionNamespace getVariable ["Waldo_ACRE2_PresetNamesReady", false]) then {[_config] call Waldo_fnc_ACRE2ApplyPresetNames};
     private _planApplied = true;
     if (_applyPlan) then {_planApplied = [true, _reason] call Waldo_fnc_ACRE2ApplyPlayerPlan};
+    // This is a server-visible ACRE lifecycle handshake, not a report that the player's authored
+    // carried-radio assignment succeeded. Rack setup remains usable in a mission with no carried
+    // radios or with an unrelated player-assignment mistake. Reaching here proves ACRE converted
+    // carried radios, completed its data sync and installed the rack callbacks used by its server
+    // APIs; the server may therefore allow ACRE to select this client for rack construction.
+    player setVariable ["Waldo_ACRE2_ClientReady", true, true];
     [] call Waldo_fnc_ACRE2ApplyBabel;
     [] call Waldo_fnc_ACRE2BuildCEOI;
-    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+        missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", _reason];
         [false] call Waldo_fnc_SaveLoadout;
     };
     if (

@@ -105,7 +105,11 @@ if (_acreManaged && {missionNamespace getVariable ["Waldo_Persistence_SaveRadios
             missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
             ["PERSISTENCE_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         } else {
-            missionNamespace setVariable ["Waldo_Player_RadioState", _savedRadios];
+            // Capture one complete ordinary-respawn snapshot only after both the persisted loadout
+            // and its newly issued ACRE radio IDs have been restored. This prevents respawn from
+            // observing a persisted inventory paired with an older or empty radio-state array.
+            missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", "PERSISTENCE_RESTORED"];
+            [false] call Waldo_fnc_SaveLoadout;
             missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FOUND"];
             missionNamespace setVariable ["Waldo_Persistence_PlayerSaveReady", true];
             missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];

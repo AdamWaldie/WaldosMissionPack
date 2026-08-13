@@ -33,6 +33,9 @@ class CfgFunctions
             class SetTeamColour {
                 file = "MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf";
             };
+            class AceSetNameRespawnBindingRepair {
+                file = "MissionScripts\MissionInit\aceSetNameRespawnBindingRepair.sqf";
+            };
         };
         class BriefDocs 
         {
@@ -116,8 +119,9 @@ class CfgFunctions
             class ACRE2SchedulePlayerRefresh {file = "MissionScripts\MissionInit\ACRE2\acre2SchedulePlayerRefresh.sqf";};
             class ACRE2RackSetup {file = "MissionScripts\MissionInit\ACRE2\acre2RackSetup.sqf";};
             class ACRE2RackApply {file = "MissionScripts\MissionInit\ACRE2\acre2RackApply.sqf";};
-            class ACRE2RackClientAction {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientAction.sqf";};
-            class ACRE2RackClientActionResult {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientActionResult.sqf";};
+            class ACRE2RackClientApply {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientApply.sqf";};
+            class ACRE2RackClientResultServer {file = "MissionScripts\MissionInit\ACRE2\acre2RackClientResultServer.sqf";};
+            class ACRE2RackHardwareServer {file = "MissionScripts\MissionInit\ACRE2\acre2RackHardwareServer.sqf";};
         };
         class AI 
         {
@@ -173,11 +177,11 @@ class CfgFunctions
             class ENDEXReset {
                 file = "MissionScripts\MissionFlowAndUi\ENDEXReset.sqf";
             };
+            class ENDEXBuildReportPages {
+                file = "MissionScripts\MissionFlowAndUi\endexBuildReportPages.sqf";
+            };
             class AARTrack {
                 file = "MissionScripts\MissionFlowAndUi\aarTrack.sqf";
-            };
-            class AARWound {
-                file = "MissionScripts\MissionFlowAndUi\aarWound.sqf";
             };
             class SafeStart {
                 file = "MissionScripts\MissionFlowAndUi\safeStart.sqf";
@@ -208,6 +212,9 @@ class CfgFunctions
             };
             class ProtectionReleaseSafety {
                 file = "MissionScripts\MissionFlowAndUi\protectionReleaseSafety.sqf";
+            };
+            class ProtectionRespawnLocal {
+                file = "MissionScripts\MissionFlowAndUi\protectionRespawnLocal.sqf";
             };
               class CleanupTransientUi {
                   file = "MissionScripts\MissionFlowAndUi\cleanupTransientUi.sqf";
