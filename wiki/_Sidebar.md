@@ -59,7 +59,7 @@
 * [Logistics and Crates](Logistics-System,-Starter-Crates-And-Quartermaster)
 * [Loadout Saving](Loadout-Saving-and-Respawn)
 * [Vehicle Recovery and Squad Rallies](Vehicle-Recovery-And-Squad-Rallies)
-* [Helicopter and Ground Transport](Transport-Services)
+* [Helicopter, Ground and Boat Transport](Transport-Services)
 * [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 * [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
 * [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
@@ -71,6 +71,7 @@
 * [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers)
 * [ACRE2 Long-Range Radios](ACRE-2-Long-Range-Radio-Presetting)
 * [ACRE2 Squad Radios](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
+* [ACRE2 Vehicle Radio Racks](ACRE2-Vehicle-Radio-Rack-Setup)
 * [ACRE2 CEOI](ACRE2-Automated-CEOI-Document)
 * [ACRE2 Babel](ACRE2-Babel-Configuration)
 
@@ -78,6 +79,8 @@
 
 * [Waldo's AI Tuning](Waldos-AI-Tweak)
 * [Improved Helicopter Landings](Improved-AI-Helicopter-Landings)
+* [AI Helicopter Deceleration](AI-Helicopter-Deceleration)
+* [Headless Client Support](Headless-Client-Support)
 * [AI Convoy System](AI-Convoy-System)
 * [Map Location Tools](Map-Location-Tools)
 * [Mission-Maker Scripts](Mission-Maker-Resource-Scripts)
@@ -88,6 +91,7 @@
 
 * [Complete Feature Catalogue](Feature-Catalogue)
 * [Persistence](Persistence)
+* [Obituary and Confirmed Deaths](Obituary-and-Confirmed-Deaths)
 * [Optional Feature Systems](Optional-Feature-Systems)
 * [Optional Feature Extensions](Optional-Feature-Extensions)
 * [Dynamic Anti-Air](Dynamic-Anti-Air)

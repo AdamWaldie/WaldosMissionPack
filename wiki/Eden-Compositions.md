@@ -24,6 +24,20 @@ Every composition with real optional parameters ships as two folders:
 A composition without real optional parameters (a fixed prop, or a call that's already minimal by
 nature) ships as a single unsuffixed folder instead of a redundant pair.
 
+## Beginner workflow
+
+1. Install the WMP scripts from the same release as the composition archive.
+2. Place the **Minimal** composition on open ground first.
+3. Read its Eden comment before moving or deleting any helper object.
+4. Preview the mission and prove the default workflow once.
+5. Open the linked wiki page and change one clearly labelled option at a time.
+6. Move to the **Full** composition only when you need its additional options.
+
+Compositions are not magic modules. A placed vehicle may still require simulation, crew, open
+clearance, water, an ACRE dependency, or a server extension. The comment beside the example states
+those prerequisites. If the feature does not work, run Mission Diagnostics and check the RPT before
+adding extra locality wrappers or crew-creation code.
+
 ## Locality rule
 
 Composition init fields call the public feature API directly. Each API routes authority to the

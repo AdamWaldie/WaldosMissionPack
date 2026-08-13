@@ -1,19 +1,21 @@
 /*
-Author: WaldoTheWarfighter
-This is a hollow proceedure to call third party scripts and generally keep the init looking cleaner for the packs scripts.
-
-Arguments:
-N/A
-
-Returns:
-N/A
-
-Example:
-[] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
-
-Called from the Init.sqf if in use
-
-*/
+ * Author: WaldoTheWarfighter
+ * Provides one optional entry point for the legacy player-marker integration. Native WMP Headless
+ * Client support is configured separately in MissionConfig\headlessConfig.sqf; this file does not
+ * enable it. The shipped calls remain commented out until a mission maker deliberately enables them.
+ *
+ * Locality and repeat/JIP behaviour: execute from init.sqf only when the optional local marker
+ * overlay is required. The marker script manages its own local replacement/stop behaviour. No
+ * authoritative server state or JIP replay is created here.
+ *
+ * Arguments: None.
+ * Return Value: Nothing.
+ * Current callers: optional mission-maker call from init.sqf; disabled in the release template.
+ *
+ * Example:
+ * [] execVM "MissionScripts\ThirdPartyScripts\ThirdPartyScriptInit.sqf";
+ * Result: executes only the integrations uncommented below; the release default does nothing.
+ */
 
 /* 
 
@@ -38,9 +40,9 @@ SUPERSEDED - do not enable this block.
 Werthles' Headless Kit v2.3 is replaced by WMP's own native headless-client support
 (Waldo_fnc_HeadlessDetectLocal / Waldo_fnc_HeadlessRegisterClient / Waldo_fnc_HeadlessRebalance /
 Waldo_fnc_HeadlessMigrateGroup / Waldo_fnc_HeadlessReassignOnDisconnect / Waldo_fnc_HeadlessGetDiagnostics,
-registered under WaldosFunctions.sqf's "Headless" category). It requires no mission-maker setup at
-all: connect a headless client and it self-registers and receives eligible AI groups automatically.
-See FEATURE_LOG.md's "Headless-client compatibility rework" history and wiki/Headless-Client-Support.md.
+registered under WaldosFunctions.sqf's "Headless" category). Enable it explicitly through
+MissionConfig\headlessConfig.sqf, then connect a headless client; it self-registers and receives only
+eligible AI groups. See wiki/Headless-Client-Support.md.
 
 WerthlesHeadless.sqf itself is left in the repository, unmodified and still fully disabled below, for
 reference only - it has known deviations from WMP's own locality/exclusion model (a non-standard

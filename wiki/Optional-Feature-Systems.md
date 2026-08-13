@@ -91,6 +91,9 @@ Call `Waldo_fnc_TreatmentFeedbackInit` or `Waldo_fnc_TreatmentFeedbackStop` on i
 
 ## Obituary and confirmed-death reporting
 
+> For the beginner setup, complete settings table, multiplayer behaviour and troubleshooting, see
+> [Obituary and Confirmed Deaths](Obituary-and-Confirmed-Deaths).
+
 Requires ACE Medical and ACE interaction. Enabled by **default**, unlike most other optional
 features in this list. A **Pronounce Dead** ACE self-interaction lists every eligible corpse within
 range, individually, and replaces Arma's terse default death message with a formatted KIA report —

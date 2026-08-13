@@ -14,13 +14,11 @@
  *
  * ACTIVATION MODEL: OFF BY DEFAULT. Waldo_fnc_HeadlessDetectLocal (init.sqf, every machine) and
  * Waldo_fnc_HeadlessRegisterClient (server-side) both refuse to do anything while Enable is false -
- * connecting a headless client to a mission that has not turned this on has no effect at all. This
- * is deliberately conservative: the system has not yet been verified against a live Arma 3 engine or
- * a connected headless client (see FEATURE_LOG.md's "Headless-client compatibility rework" entry),
- * so it ships requiring an explicit opt-in rather than activating automatically the moment a
- * headless client connects.
+ * connecting a headless client to a mission that has not turned this on has no effect at all.
+ * Dedicated-server testing has verified the WMP lifecycle, but it remains opt-in because a mission's
+ * third-party AI mods and locality-sensitive scripts must be tested with ownership migration.
  *
- * EDIT FOR A NORMAL MISSION: Enable, once the live test matrix has been run for your mod set.
+ * EDIT FOR A NORMAL MISSION: Enable after testing the mission's actual AI mods and ground vehicles.
  * LEAVE ALONE UNLESS EXTENDING/TESTING: the three pacing/settle-time values below, and Debug.
  * CUSTOM CALLS: none for normal use - a group opts itself out at any time with
  * `_group setVariable ["Waldo_Headless_ExcludeGroup", true];` (see wiki/Headless-Client-Support.md).
@@ -63,7 +61,7 @@
 createHashMapFromArray [
     ["featureFamilies", ["Headless Client Support"]],
     ["shared", [
-        // MISSION MAKER: master switch. Off by default until the live HC test matrix has been run.
+        // MISSION MAKER: master switch. Off by default; enable after testing the mission's AI/mod set.
         ["Waldo_Headless_Enable", false],
         // ADVANCED TUNING: startup grace period, per-group settle time, and inter-migration pacing.
         ["Waldo_Headless_StartDelaySeconds", 30],   // SECONDS: no migration begins before this.

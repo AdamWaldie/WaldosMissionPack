@@ -112,7 +112,14 @@ short init demonstrates every internal option.
 
 ## Features intentionally without compositions
 
-- **WMP HUD** is configured player-locally through `MissionConfig\interfaceConfig.sqf`; it has no world-object placement requirement, so a composition would be misleading. Use the full audit mission for live HUD testing.
+- **WMP HUD and accessibility** are configured player-locally through
+  `MissionConfig\interfaceConfig.sqf`; they have no world-object placement requirement, so a
+  composition would be misleading. Use the full audit mission for live HUD testing.
+- **Obituary / confirmed deaths** installs on qualified medic player objects and reacts to bodies
+  produced during play. It needs no prop, ZEN module, or setup call.
+- **Safe Start and UI themes** are mission/interface state rather than placed equipment.
+- **Improved Helicopter Landing and AI Helicopter Deceleration** react to real AI flight and
+  waypoints. A decorative helicopter composition cannot prove either controller is operating.
 
 Generated drop zones (`Waldo_fnc_ParadropCreateDropZone`) spawn and own their own aircraft/crew, unlike
 the Gunship, Dynamic AA and Dynamic AO compositions above (which register/anchor around an object the

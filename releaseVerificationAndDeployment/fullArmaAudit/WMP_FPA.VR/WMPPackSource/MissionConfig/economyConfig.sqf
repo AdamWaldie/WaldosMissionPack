@@ -43,7 +43,7 @@ How it runs:
     rejoining players inherit the configured economy automatically. Do NOT add per-client code.
 
 Prerequisites:
-  - Enable the suite (init.sqf: Waldo_Economy_Enable = true;) or place a Waldos Economy
+  - Enable `Waldo_Economy_Enable` in MissionConfig\missionSystemsConfig.sqf, or place a WMP Economy
     Systems composition. If the suite is disabled, this file does nothing.
 
 Quick start:

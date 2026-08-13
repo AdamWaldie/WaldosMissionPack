@@ -15,6 +15,11 @@
  *
  * Return Value:
  * STRING - SQF intended for MissionConfig\economyConfig.sqf.
+ * Current caller: WMP Economy Systems ZEN Configuration - Build Mission Setup.
+ *
+ * Example:
+ * [true, true, true, true, true] call Waldo_fnc_EcoCore_buildMissionSetupScript;
+ * Result: returns a complete setup block for the four catalogues and current placed fixtures.
  */
 params [
     ["_includeResources", true, [false]],
@@ -28,7 +33,7 @@ private _newLine = toString [13, 10];
 private _lines = [
     "/* WMP ECONOMY SETUP BUILT IN ZEUS",
     " * Paste this block into MissionConfig\economyConfig.sqf.",
-    " * Set Waldo_Economy_Enable = true in init.sqf before using it.",
+    " * Set Waldo_Economy_Enable to true in MissionConfig\missionSystemsConfig.sqf before using it.",
     " * Export from a clean authoring session before normal play begins.",
     " */",
     "if !([] call Waldo_fnc_EcoCore_canRunAuthority) exitWith {};"

@@ -6,8 +6,12 @@ WMP Transport Services manages helicopters, ground vehicles and boats in separat
 
 ## Beginner setup
 
-Place a helicopter or land vehicle with simulation enabled, then place a correctly sided AI driver
-inside it in Eden. Put this in the vehicle's init field:
+The safest first setup is the **Helicopter, Ground and Boat Transport Services (Minimal)**
+composition. It contains one correctly crewed example of every type. Move its boat onto open water,
+preview the mission and request each service before editing the Full example.
+
+To build one yourself, place a helicopter, land vehicle, or boat with simulation enabled. Place a
+correctly sided AI driver in the vehicle in Eden. Put the matching call in the vehicle's Init field:
 
 ```sqf
 [this, "HELICOPTER", "RAVEN_1", "Raven One"] call Waldo_fnc_TransportRegister;
@@ -29,6 +33,13 @@ For a boat transport:
 all three types (helicopter, ground, boat) pre-placed and pre-crewed - the fastest way to see a
 working registration before writing your own. Move the boat object onto/adjacent to water yourself
 after placing the composition.
+
+### Four things beginners must not add
+
+- Do not place the vehicle from Eden's **Empty** side and then create its crew in script.
+- Do not add `createVehicleCrew this`; the vehicle must visibly contain its intended crew in Eden.
+- Do not add `if (isServer)` around the registration call.
+- Do not disable simulation. Transport and AI movement commands require a live simulated vehicle and crew.
 
 No `if (isServer)` wrapper and no `createVehicleCrew this` line are required. Eden runs an object init
 on every machine, but WMP deliberately lets only the authoritative server register the service.

@@ -12,6 +12,20 @@ WMP supports all four useful rack operations:
 
 This follows ACRE2's public [Vehicle Racks framework](https://acre2.idi-systems.com/wiki/frameworks/vehicle-racks).
 
+## Before you begin
+
+1. Enable the main ACRE communications setup in `MissionConfig\acreConfig.sqf`.
+2. Define and test the named nets used by player-carried radios first.
+3. Keep rack profiles below those net definitions in the same file. A rack assignment may refer to a
+   net key such as `COY`, but it does not create that net.
+4. Place a vehicle/object and call one rack profile from its Eden Init field.
+5. Test with a real ACRE-enabled player. Dedicated servers do not own an ACRE player interface, so
+   WMP coordinates the authoritative request with an eligible connected ACRE client and verifies the
+   returned rack state.
+
+If you are new to the feature, place **ACRE2 Vehicle Radio Rack Example (Minimal)** before writing a
+custom profile. It demonstrates the complete lifecycle with the least editable data.
+
 ## Recommended: central profile plus one short vehicle call
 
 Edit `MissionConfig\acreConfig.sqf` and find `rackProfiles`. WMP ships three ready-to-use profiles
@@ -248,6 +262,10 @@ beginning `[WMP ACRE RACK]` include the accepted request, inventory and every jo
 - **ACRE2 Vehicle Radio Rack Example (Minimal):** calls `EXISTING_RACKS_COY`.
 - **ACRE2 Vehicle Radio Rack Example (Full):** calls `COMMAND_VEHICLE`, which demonstrates preset,
   idempotent rack addition, compatible mounted radio and verified tuning.
+
+Both examples are lessons as well as ready-made objects. Their Eden comments explain what can be
+changed and link back to this page. Do not add `isServer`, `waitUntil`, or client `remoteExec` code to
+their Init fields; `Waldo_fnc_ACRE2RackSetup` owns that lifecycle.
 
 ## See also
 
