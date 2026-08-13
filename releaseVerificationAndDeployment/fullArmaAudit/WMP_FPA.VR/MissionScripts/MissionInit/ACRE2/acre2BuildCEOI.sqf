@@ -3,6 +3,8 @@
  * Builds the local CEOI from the authoritative communications plan and the most recent verified
  * local application. It highlights only assignments matching a carried radio's current read-back.
  * Nets sharing one channel are shown once as a channel number instead of repeating every radio class.
+ * The squad-radio section is omitted when no group on the player's side has a valid PRC-343
+ * block/channel assignment, avoiding an empty list of "not assigned" placeholders.
  *
  * Locality and authority:
  * Player-local diary/UI work only. It reads the server-compiled plan plus verified local ACRE
@@ -59,7 +61,7 @@ private _displaySetting = {
     str _setting
 };
 private _text = "<font size='16'>Communications Electronics Operating Instructions</font><br/><br/>";
-_text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
+private _squadAssignments = [];
 {
     private _rules = _x select 1;
     private _ruleIndex = _rules findIf {toUpper (_x select 0) == 'ACRE_PRC343' && {(_x select 1) isEqualType 0} && {(_x select 1) == 1}};
@@ -71,20 +73,25 @@ _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
         };
     };
     private _assignment = if (_ruleIndex < 0) then {[]} else {(_rules select _ruleIndex) select 2};
-    private _line = if (_assignment isEqualType [] && {count _assignment >= 2}) then {
-        format ['%1 - Block %2, Channel %3', _x select 0, _assignment select 0, _assignment select 1]
-    } else {
-        format ["%1 - <font color='#ffb347'>no PRC-343 assignment</font>", _x select 0]
+    if (_assignment isEqualType [] && {count _assignment >= 2}) then {
+        _squadAssignments pushBack [_x select 0, _assignment];
     };
-    private _isOwnSquad = (_x select 0) == _groupKey;
-    if (_isOwnSquad) then {
-        // This section documents assignment, not live tuning. The player's squad is therefore
-        // always green; current channel state is shown independently in Radio Nets below.
-        _line = format ["<font color='#47ff47'>%1</font>", _line];
-    };
-    _text = _text + _line + '<br/>';
 } forEach _groups;
-_text = _text + "<br/><font size='14'>Radio Nets</font><br/>";
+if !(_squadAssignments isEqualTo []) then {
+    _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
+    {
+        _x params ['_assignmentGroup', '_assignment'];
+        private _line = format ['%1 - Block %2, Channel %3', _assignmentGroup, _assignment select 0, _assignment select 1];
+        if (_assignmentGroup == _groupKey) then {
+            // This section documents assignment, not live tuning. The player's squad is therefore
+            // always green; current channel state is shown independently in Radio Nets below.
+            _line = format ["<font color='#47ff47'>%1</font>", _line];
+        };
+        _text = _text + _line + '<br/>';
+    } forEach _squadAssignments;
+    _text = _text + '<br/>';
+};
+_text = _text + "<font size='14'>Radio Nets</font><br/>";
 {
     private _family = _x select 2;
     private _setting = _x select 3;

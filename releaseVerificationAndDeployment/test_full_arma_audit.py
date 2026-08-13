@@ -942,7 +942,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["LIST", ["Spawned emitter object"', jammer)
         self.assertIn('_sourceValues param [_sourceIndex, "SPAWN"]', jammer)
 
-    def test_acre_ceoi_handles_explicit_and_missing_343_assignments(self):
+    def test_acre_ceoi_omits_squad_section_when_no_343_is_assigned(self):
         compile_plan = (
             ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2CompilePlan.sqf"
         ).read_text(encoding="utf-8")
@@ -954,7 +954,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('private _matches = _allocationSource regexFind ["[0-9]+"]', compile_plan)
         self.assertNotIn('private _matches = _groupKey regexFind ["[0-9]+"]', compile_plan)
         self.assertIn("count _assignment >= 2", ceoi)
-        self.assertIn("no PRC-343 assignment", ceoi)
+        self.assertIn("private _squadAssignments = [];", ceoi)
+        self.assertIn("if !(_squadAssignments isEqualTo []) then", ceoi)
+        self.assertNotIn("no PRC-343 assignment", ceoi)
         self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)
         self.assertIn("player removeDiaryRecord", ceoi)
         self.assertNotIn("Carried Radio Verification", ceoi)
@@ -1500,6 +1502,18 @@ class FullAuditTests(unittest.TestCase):
         config = (ROOT / "MissionConfig" / "acreConfig.sqf").read_text(encoding="utf-8")
         validate = (ROOT / "MissionScripts" / "MissionInit" / "ACRE2" / "acre2ValidateConfig.sqf").read_text(encoding="utf-8")
         self.assertIn('["rackProfiles", [', config)
+        for rack_class, radio_class in (
+            ("ACRE_VRC64", "ACRE_PRC77"),
+            ("ACRE_VRC103", "ACRE_PRC117F"),
+            ("ACRE_VRC110", "ACRE_PRC152"),
+            ("ACRE_VRC111", "ACRE_PRC148"),
+            ("ACRE_SEM90", "ACRE_SEM70"),
+        ):
+            self.assertIn(f'"{rack_class}"', config)
+            self.assertIn(f'"{radio_class}"', config)
+        self.assertIn('"UNMOUNT_RADIO"', config)
+        self.assertIn('"REMOVE_RACK"', config)
+        self.assertIn('["inside", "external"]', config)
         self.assertIn('"EXISTING_RACKS_COY"', config)
         self.assertIn('"COMMAND_VEHICLE"', config)
         self.assertIn('"EXTERNAL_RADIO_POINT"', config)
