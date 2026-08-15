@@ -28,7 +28,8 @@
  * Return Value:
  * Nothing.
  *
- * Current callers: Waldo_fnc_ParadropBuildFlightRoute.
+ * Current callers: the door-watcher spawned by Waldo_fnc_ParadropQuickFlightSetup and
+ * Waldo_fnc_ParadropCreateDropZone, both server-only (the aircraft is server-owned in both flows).
  *
  * Example:
  * [_aircraft, true] call Waldo_fnc_ParadropOperateDoor;
