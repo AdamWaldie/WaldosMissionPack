@@ -121,31 +121,39 @@ _textColour = switch (side player) do
     default {"'#ed9d18'"};
 };
 
-waitUntil { uiSleep 0.2; (!isNull player && time > 0) };
+// findDisplay 46 (above) and time > 0 are both mission/global-state signals - "the mission has
+// actually started" from the engine's synchronised standpoint - not a per-client "this machine has
+// finished streaming its own textures/models in" signal. Arma has no such signal exposed to SQF: a
+// client (especially a heavier mod/terrain setup, or one joining a session already running) can
+// legitimately have both of those true while it is still individually streaming assets in, which is
+// the real loading screen/pop-in a player can still see for a few seconds after this point - not our
+// own fauxLoad screen below, and not something any waitUntil condition here can detect completing.
+// time > 1 instead of the previous > 0 is a small, still-imperfect improvement: `time` can tick to a
+// negligible epsilon almost immediately even on a client that is still heavily loading, so a full
+// second is a more realistic floor than "any nonzero value" without pretending it's a real signal.
+waitUntil { uiSleep 0.2; (!isNull player && time > 1) };
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
-// Throw up our own fake loading screen purely as a cinematic transition into the intro below - the
-// real engine loading screen is already gone by this point (see the findDisplay 46 wait above, which
-// only exists once the player is genuinely in-game with the normal HUD up), so nothing here is
-// bridging or waiting out the real thing.
+// Throw up our own fake loading screen purely as a cinematic transition into the intro below.
 //
 // Timing below is deliberately tight: control returns to the player as soon as the content actually
 // needs (readable text + a chosen animation finishing cleanly), not on padded guesswork. Two
 // exceptions are kept intentionally generous rather than cut to the bone:
-//  - FAKE_LOAD_HOLD covers residual texture/model pop-in that can still be settling for a few seconds
-//    after the player already has the normal HUD (a heavier mod/terrain setup streams in more slowly
-//    than a light one), not the real loading screen itself - that's already confirmed gone by this
-//    point. There is no reliable SQF signal for "streaming has fully settled", so this is a guess,
-//    and the right guess depends entirely on this mission's own terrain/mod list. Set
+//  - FAKE_LOAD_HOLD is this script's only real mitigation for the per-client streaming gap explained
+//    above: extra time, after the best available "mission has started" signals, for a heavier client
+//    to actually catch up before the intro text starts drawing over it. It is a guess, not a
+//    guarantee - there is no reliable SQF signal for "this client's streaming has fully settled", so
+//    the right guess depends entirely on this mission's own terrain/mod list. Set
 //    Waldo_InfoText_FakeLoadHold in init.sqf to override the shipped default per mission instead of
-//    editing this file - the default here is a light/vanilla assumption, not a measurement of any
-//    specific mission's actual settle time.
+//    editing this file - the default here is a moderate assumption, not a measurement of any specific
+//    mission's actual settle time. Raise it first if the world still looks like it's loading when the
+//    title text appears.
 //  - The final wait below for WALDO_INIT_COMPLETE: init.sqf now spawns this script instead of
 //    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
 //    parallel with this intro, not after it), which means this intro can no longer be assumed to
 //    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast
 //    reader on a fast-loading mission still can't reach a crate/feature before it exists.
-private _fakeLoadHold = missionNamespace getVariable ["Waldo_InfoText_FakeLoadHold", 2.5]; // was 9 - pure padding; real streaming margin, tune per mission/modlist
+private _fakeLoadHold = missionNamespace getVariable ["Waldo_InfoText_FakeLoadHold", 5]; // was 9 originally, 2.5 in the previous pass - too short for a modded client's real streaming time
 private _blackoutFade = 1;       // was 5
 // Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
 // the blackout fade needs to have actually finished fading to black before that happens - otherwise
