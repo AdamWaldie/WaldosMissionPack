@@ -95,7 +95,9 @@ if (_acreEnabled) then {
         (_profileClasses findIf {_item == _x || {_item find (_x + "_ID_") == 0}}) >= 0
     };
     private _acreApiReady = !isNil "acre_api_fnc_isInitialized" && {[] call acre_api_fnc_isInitialized};
-    private _edenRadioSetup = player getVariable ["acre_sys_radio_setup", ""];
+    // ACRE stores this Eden attribute as serialized array text and passes it to parseSimpleArray.
+    // The only valid empty value is "[]"; an empty string is malformed and must remain diagnosable.
+    private _edenRadioSetup = player getVariable ["acre_sys_radio_setup", "[]"];
     private _last = missionNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
     private _lastOk = count _last > 0 && {_last select 0};
     private _expectsRadios = !(_inventoryRadios isEqualTo []);
@@ -125,10 +127,10 @@ if (_acreEnabled) then {
         }
     };
     ["radio", "acre-player-presetting", _state, format ["finding=%1 rawGroup='%2' normalized=%3 side=%4 planRevision=%5 sideMatch=%6 groupMatch=%7 inventoryRadios=%8 currentRadios=%9 unique=%10 acreReady=%11 edenRadioSetup=%12 loadoutGeneration=%13 restoredGeneration=%14 lastApplication=%15 readinessFailure=%16", _plainFinding, _rawGroup, _groupKey, _sideKey, if (_planValid) then {_plan select 1} else {-1}, _sideIndex >= 0, _groupIndex >= 0, _inventoryRadios, _radios, count _unique, _acreApiReady, _edenRadioSetup, missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", -1], missionNamespace getVariable ["Waldo_ACRE2_RestoredRadioGeneration", -1], _last, missionNamespace getVariable ["Waldo_ACRE2_LastReadinessFailure", []]], _presetHint] call _add;
-    if !(_edenRadioSetup isEqualTo "") then {
-        ["radio", "acre-eden-radio-attribute", "ERROR", format ["This unit still has an Eden ACRE Radio Setup attribute (%1) after Waldo_fnc_ACRE2Init already tries to clear acre_sys_radio_setup at client-init time - either ACRE2 re-populated/read it before that clear ran, or ACRE2Init did not run for this player. It can overwrite acreConfig.sqf during startup. Clear that unit's ACRE Radio Setup attribute in Eden directly so nothing has to race it. WMP's own overwrite still runs automatically once ACRE is ready (see [WMP ACRE] RPT entries for the retry, and Waldo_ACRE2_Config's readinessTimeoutSeconds in MissionConfig\\acreConfig.sqf to tune how long that takes on a heavy modset), but clearing the attribute at the source is the reliable fix.", _edenRadioSetup]] call _add;
+    if !(_edenRadioSetup isEqualType "" && {_edenRadioSetup isEqualTo "[]"}) then {
+        ["radio", "acre-eden-radio-attribute", "ERROR", format ["This unit has a conflicting or malformed Eden ACRE Radio Setup attribute (%1). ACRE requires serialized array text and uses '[]' for no setup; any authored rows can overwrite acreConfig.sqf during startup, while an empty string causes ACRE's parseSimpleArray to fail. Clear the unit's ACRE Radio Setup attribute in Eden. WMP also writes the valid '[]' sentinel during initial join and respawn before applying the mission plan or saved radio state.", _edenRadioSetup]] call _add;
     } else {
-        ["radio", "acre-eden-radio-attribute", "LOADED", "No conflicting Eden ACRE Radio Setup attribute is present."] call _add;
+        ["radio", "acre-eden-radio-attribute", "LOADED", "No conflicting Eden ACRE Radio Setup is present; acre_sys_radio_setup contains ACRE's valid serialized empty array []."] call _add;
     };
 } else {
     ["radio", "acre-player-presetting", if (_acreLoaded) then {"DISABLED"} else {"UNAVAILABLE"}, format ["loaded=%1 configEnabled=%2", _acreLoaded, _acreConfig getOrDefault ["enabled", false]]] call _add;

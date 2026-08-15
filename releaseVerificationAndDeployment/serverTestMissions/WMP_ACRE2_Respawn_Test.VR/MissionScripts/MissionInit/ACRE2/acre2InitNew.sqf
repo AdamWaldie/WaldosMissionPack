@@ -40,8 +40,10 @@ if (hasInterface && {isNil {missionNamespace getVariable "Waldo_ACRE2_ClientInit
     // it only stops the competing Eden-authored setup from ever being read. Waldo_fnc_SchedulePlayerRefresh's
     // readinessTimeoutSeconds wait/retry (MissionConfig\acreConfig.sqf) remains as the fallback for the
     // (unverified against a live ACRE install) case where ACRE reads this variable earlier than WMP can
-    // clear it, or re-derives it from mission.sqm on its own schedule.
-    if (!isNull player) then {player setVariable ["acre_sys_radio_setup", "", true]};
+    // clear it, or re-derives it from mission.sqm on its own schedule. ACRE passes this STRING to
+    // parseSimpleArray, so its empty value must be the serialized array "[]"; an empty string throws
+    // during ACRE's XEH_postInit and can prevent the carried-radio lifecycle from completing.
+    if (!isNull player) then {player setVariable ["acre_sys_radio_setup", "[]", true]};
     ["INITIAL", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
     private _babel = _config getOrDefault ["babel", createHashMap];
     if (_babel getOrDefault ["followPlayerUnit", true]) then {
