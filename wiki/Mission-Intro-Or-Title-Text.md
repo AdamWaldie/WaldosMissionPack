@@ -94,7 +94,7 @@ The first couple of seconds hide the mission's own real loading (models and text
 missionNamespace setVariable ["Waldo_InfoText_FakeLoadHold", 6]; // seconds; shipped default is 2.5
 ```
 
-Want the rest of the intro shorter or longer? The hold and fade durations sit as named constants near the top of `infoText.sqf` (`_textBlock1Hold` and so on), each with a comment explaining what it controls.
+Want the rest of the intro shorter or longer? The remaining fade durations sit as named constants near the top of `infoText.sqf` (`_blackoutFade`, `_postLoadBuffer`, and so on), each with a comment explaining what it controls. The text itself waits on its own actual reveal animation finishing, not a guessed duration, so there's no separate hold time to tune for it.
 
 ---
 
