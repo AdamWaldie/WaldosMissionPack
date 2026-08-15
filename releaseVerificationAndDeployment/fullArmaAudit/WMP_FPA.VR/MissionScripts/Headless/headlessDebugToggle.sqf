@@ -13,7 +13,10 @@
  *
  * Server-authoritative; self-forwards to the server when called from a client, matching
  * Waldo_fnc_Jammer and the other public registration-style APIs, so it is safe to call directly with
- * no isServer wrapper.
+ * no isServer wrapper. HC capability itself is fixed at mission start: this function refuses to
+ * enable debug when Waldo_Headless_Enable is false and clears any impossible stale debug state.
+ * Locality and authority: the server alone changes and broadcasts debug state. Interface callers
+ * forward their request to the server; clients only install/remove their own presentation overlay.
  *
  * Arguments:
  * 0: state <BOOLEAN> (optional) - true/false to set explicitly; omitted (or any non-boolean) flips
@@ -25,6 +28,8 @@
  * Example:
  * [] call Waldo_fnc_HeadlessDebugToggle;      // flip
  * [true] call Waldo_fnc_HeadlessDebugToggle;  // force on
+ * Result: debug starts only for a mission that enabled HC support at startup; otherwise it remains
+ * false and the requesting curator receives a warning.
  *
  * Current callers: Waldo_fnc_ZenHeadlessDebugToggle (the "Headless Client - Toggle Debug" ZEN
  * module), mission scripts.
@@ -33,10 +38,28 @@
 params [["_state", "__FLIP__", [false, "__FLIP__"]]];
 if !(isServer) exitWith {[_state] remoteExecCall ["Waldo_fnc_HeadlessDebugToggle", 2]; false};
 
+if !(missionNamespace getVariable ["Waldo_Headless_Enable", false]) exitWith {
+    missionNamespace setVariable ["Waldo_Headless_Debug", false, true];
+    [] call Waldo_fnc_HeadlessPublishDebugSnapshot;
+    [false] remoteExecCall ["Waldo_fnc_HeadlessDebugDisplayLocal", -2];
+    if (hasInterface) then {[false] call Waldo_fnc_HeadlessDebugDisplayLocal;};
+    private _disabledCurators = (allCurators apply {getAssignedCuratorUnit _x}) select {!isNull _x};
+    [createHashMapFromArray [
+        ["title", "HEADLESS CLIENT DEBUG"],
+        ["message", "Headless Client Support was disabled when this mission started. Debug cannot be enabled mid-mission."],
+        ["state", "WARNING"], ["duration", 8], ["placement", "TOP"],
+        ["channel", "HEADLESS_DEBUG"], ["source", "ZEUS"], ["audience", "UNITS"],
+        ["units", _disabledCurators]
+    ]] call Waldo_fnc_NotificationBroadcast;
+    ["DEBUG_TOGGLE", "Refused: Waldo_Headless_Enable was false at mission start."] call Waldo_fnc_DiagnosticLog;
+    false
+};
+
 private _current = missionNamespace getVariable ["Waldo_Headless_Debug", false];
 private _new = if (_state isEqualType true) then {_state} else {!_current};
 missionNamespace setVariable ["Waldo_Headless_Debug", _new, true];
-if (_new) then {[] call Waldo_fnc_HeadlessPublishDebugSnapshot;} else {[[]] call Waldo_fnc_HeadlessSetDebugSnapshot;};
+// The publisher starts only for ON and cancels/clears its generation immediately for OFF.
+[] call Waldo_fnc_HeadlessPublishDebugSnapshot;
 
 private _curatorUnits = (allCurators apply {getAssignedCuratorUnit _x}) select {!isNull _x};
 // Send to every interface client. The display function remains dormant until that local player is

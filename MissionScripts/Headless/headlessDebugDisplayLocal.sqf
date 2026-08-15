@@ -6,21 +6,29 @@
  *
  * Locality and repeat/JIP behaviour:
  * Runs only on curator interface clients. One Draw3D handler is stored and removed repeat-safely.
+ * A true request is ignored unless both HC support and the authoritative debug state are enabled;
+ * this prevents a stale JIP/module call from creating an overlay in an HC-disabled mission.
  * The renderer reads the server-published owner snapshot and HC registry every frame, so migrations
  * appear without rebuilding the overlay. It may install before curator assignment: drawing begins
  * automatically as soon as this player receives Zeus, avoiding the initial-assignment race.
+ * Locality and authority: interface-client presentation only. The server owns HC capability, debug
+ * state and ownership snapshots; this function only installs or removes the local curator display.
  *
  * Arguments: 0 enabled <BOOL> (default current Waldo_Headless_Debug state).
  * Return Value: Boolean - resulting local overlay state.
  * Current callers: Waldo_fnc_HeadlessDebugToggle and ZEN initialization for JIP curators.
  * Example: [true] call Waldo_fnc_HeadlessDebugDisplayLocal;
+ * Result: the local overlay is installed only when HC support and debug are both active.
  */
 params [["_enabled", missionNamespace getVariable ["Waldo_Headless_Debug", false], [true]]];
 if (!hasInterface) exitWith {false};
 private _old = missionNamespace getVariable ["Waldo_Headless_DebugDrawHandler", -1];
 if (_old >= 0) then {removeMissionEventHandler ["Draw3D", _old];};
 missionNamespace setVariable ["Waldo_Headless_DebugDrawHandler", -1];
-if (!_enabled) exitWith {
+private _allowed = _enabled
+    && {missionNamespace getVariable ["Waldo_Headless_Enable", false]}
+    && {missionNamespace getVariable ["Waldo_Headless_Debug", false]};
+if (!_allowed) exitWith {
     systemChat "[WMP HEADLESS] Ownership overlay disabled.";
     false
 };
