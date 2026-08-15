@@ -4,16 +4,16 @@
 
 _Associated Files: MissionScripts\MissionFlowAndUi\infoText.sqf_
 
-Displays an animated title sequence when a player loads into the mission. It fades the screen to black, types out the current in-game time and date, then reveals the mission title, location, player's grid reference, rank, name, and group — colour-coded by side.
+Displays an animated title sequence when a player loads into the mission. It fades the screen to black, types out the current in-game time and date, then reveals the mission title and location. It finishes with the player's grid reference, rank, name, and group, in a colour matching their side.
 
 The sequence runs automatically from `init.sqf` with no required setup. Mission makers can optionally customise the title text, location name, date format, and a player animation.
 
 **Displayed information:**
-1. Mission title — pulled from `description.ext` automatically, or overridden by the mission maker
-2. In-game time and date — automatic (short or long format)
-3. Map name — pulled from `worldName`, or overridden
-4. Player's grid reference at the time of the intro — automatic
-5. Player rank, name, and group ID — automatic, colour-coded by side
+1. Mission title: pulled from `description.ext` automatically, or overridden by the mission maker
+2. In-game time and date: automatic (short or long format)
+3. Map name: pulled from `worldName`, or overridden
+4. Player's grid reference at the time of the intro: automatic
+5. Player rank, name, and group ID: automatic, colour-coded by side
 
 ---
 
@@ -30,7 +30,7 @@ The sequence runs automatically from `init.sqf` with no required setup. Mission 
 
 ## Basic Usage
 
-Minimum call — title and location pulled automatically from `description.ext` and `worldName`:
+Minimum call: title and location pulled automatically from `description.ext` and `worldName`.
 
 ```sqf
 [] spawn Waldo_fnc_InfoText;
@@ -71,7 +71,7 @@ With an intro animation:
 
 ## Date Format Override
 
-To display a completely custom date string — useful for fictional settings (Star Wars, Warhammer 40k) — edit line 91 of `infoText.sqf` and set the `_date` variable directly:
+Want a completely custom date string, for a fictional setting like Star Wars or Warhammer 40k? Edit line 103 of `infoText.sqf` and set the `_date` variable directly:
 
 ```sqf
 _date = "Day 14 of the Third Month, 994.M41";
@@ -79,9 +79,22 @@ _date = "Day 14 of the Third Month, 994.M41";
 
 ---
 
+## Timing
+
+The intro is short by default: a quick fade in, the title text, then control returns. Two things decide when a player gets control back.
+
+- **No animation** (the default): control returns as soon as the fade-in finishes and the rest of the mission has started up. The title text keeps typing itself out in the background, so reading it doesn't hold up gameplay.
+- **An animation** (`WALK`, `SIT`, or `COFFIN`): control waits for that animation to finish, so the player never interrupts it mid-move. `WAKE` and `WAKESLOW` have no fixed length. Control returns for those once the rest of the sequence finishes.
+
+A player never gets control before the mission's own startup (crates, radios, and other features) has finished, even on a fast-loading mission.
+
+Want the intro shorter or longer? The hold and fade durations sit as named constants near the top of `infoText.sqf` (`_fakeLoadHold`, `_textBlock1Hold`, and so on), each with a comment explaining what it controls.
+
+---
+
 ## Related Functions
 
-For runtime text overlays during the mission (not just mission start), see [Mission UI Text Overlays](Mission-UI-Text-Overlays).
+For runtime text overlays elsewhere in the mission, see [Mission UI Text Overlays](Mission-UI-Text-Overlays).
 
 <!-- WMP-WIKI-NAV -->
 ---
