@@ -130,14 +130,18 @@ waitUntil { uiSleep 0.2; (!isNull player && time > 0) };
 // needs (readable text + a chosen animation finishing cleanly), not on padded guesswork. Two
 // exceptions are kept intentionally generous rather than cut to the bone:
 //  - FAKE_LOAD_HOLD masks real asset streaming (models/textures still loading in), not our own
-//    presentation - too short here risks revealing pop-in on a heavy mod list, so tune this one up
-//    per mission rather than trusting the shipped default blindly.
+//    presentation - there is no reliable SQF signal for "the real world has finished streaming in",
+//    so this is a guess, and the right guess depends entirely on this mission's own terrain/mod
+//    list. Too short reveals real pop-in (or a still-loading world visibly cutting into the text
+//    reveal below) on a heavy setup. Set Waldo_InfoText_FakeLoadHold in init.sqf to override the
+//    shipped default per mission instead of editing this file - the default here is a light/vanilla
+//    assumption, not a measurement of any specific mission's actual streaming time.
 //  - The final wait below for WALDO_INIT_COMPLETE: init.sqf now spawns this script instead of
 //    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
 //    parallel with this intro, not after it), which means this intro can no longer be assumed to
 //    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast
 //    reader on a fast-loading mission still can't reach a crate/feature before it exists.
-private _fakeLoadHold = 2.5;     // was 9 - pure padding; real streaming margin, tune per mission/modlist
+private _fakeLoadHold = missionNamespace getVariable ["Waldo_InfoText_FakeLoadHold", 2.5]; // was 9 - pure padding; real streaming margin, tune per mission/modlist
 private _blackoutFade = 1;       // was 5
 // Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
 // the blackout fade needs to have actually finished fading to black before that happens - otherwise

@@ -88,7 +88,13 @@ The intro is short by default: a quick fade in, the title text, then control ret
 
 A player never gets control before the mission's own startup (crates, radios, and other features) has finished, even on a fast-loading mission.
 
-Want the intro shorter or longer? The hold and fade durations sit as named constants near the top of `infoText.sqf` (`_fakeLoadHold`, `_textBlock1Hold`, and so on), each with a comment explaining what it controls.
+The first couple of seconds hide the mission's own real loading (models and textures still streaming in), not our title screen. A heavy mod list or large terrain can need more than the shipped default. If the intro cuts to the title text while the world still looks like it's loading, set this in `init.sqf`:
+
+```sqf
+missionNamespace setVariable ["Waldo_InfoText_FakeLoadHold", 6]; // seconds; shipped default is 2.5
+```
+
+Want the rest of the intro shorter or longer? The hold and fade durations sit as named constants near the top of `infoText.sqf` (`_textBlock1Hold` and so on), each with a comment explaining what it controls.
 
 ---
 
