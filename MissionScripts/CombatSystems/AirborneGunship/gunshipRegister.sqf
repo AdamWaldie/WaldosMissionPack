@@ -85,23 +85,30 @@ private _spawned = false;
 if (isNull _aircraft) then {
     private _requestedSide = _config getOrDefault ["side", west];
     private _sideKey = switch (_requestedSide) do {case east: {"EAST"}; case independent: {"INDEPENDENT"}; case civilian: {"CIVILIAN"}; default {"WEST"}};
-    private _sidePools = missionNamespace getVariable ["Waldo_Gunship_SideAircraftPools", createHashMap];
-    private _classes = +(_config getOrDefault ["aircraftClasses", _sidePools getOrDefault [_sideKey, []]]);
-    private _factionKey = _config getOrDefault ["faction", ""];
-    if (_factionKey != "") then {
-        private _factionPools = missionNamespace getVariable ["Waldo_Gunship_FactionAircraftPools", createHashMap];
-        _classes = +(_factionPools getOrDefault [_factionKey, _classes]);
-    };
-    _classes = _classes select {isClass (configFile >> "CfgVehicles" >> _x) && {_x isKindOf "Air"}};
-    // Waldo_Gunship_SideAircraftPools/FactionAircraftPools are opt-in mission-maker overrides; left
-    // unset (the default), fall back to a live mod scan instead of an empty pool - any public Air
-    // class on the requested side with an armed turret anywhere in its config, vanilla or
-    // third-party. configProperties walks the whole class tree recursively, so it also matches a
-    // sub-turret's weapons[] array, not just a top-level one.
-    if (count _classes == 0) then {
+    // An explicit per-call aircraftClasses stays exact - a script/ZEN caller that hand-picked its
+    // own candidates gets exactly those, nothing added or removed. Falling through to the mission's
+    // side/faction pool is the "pick something suitable" path instead, and always gets extended
+    // with every other armed Air class discovered live in the running modset (vanilla or
+    // third-party) on top of whatever is hand-listed in Waldo_Gunship_SideAircraftPools/
+    // FactionAircraftPools - those pools are a curated starting point, not a ceiling.
+    private _explicitClasses = +(_config getOrDefault ["aircraftClasses", []]);
+    private _classes = [];
+    if (count _explicitClasses > 0) then {
+        _classes = _explicitClasses;
+    } else {
+        private _sidePools = missionNamespace getVariable ["Waldo_Gunship_SideAircraftPools", createHashMap];
+        _classes = +(_sidePools getOrDefault [_sideKey, []]);
+        private _factionKey = _config getOrDefault ["faction", ""];
+        if (_factionKey != "") then {
+            private _factionPools = missionNamespace getVariable ["Waldo_Gunship_FactionAircraftPools", createHashMap];
+            _classes = +(_factionPools getOrDefault [_factionKey, _classes]);
+        };
+        // Any public Air class on the requested side with an armed turret anywhere in its config.
+        // configProperties walks the whole class tree recursively, so it also matches a sub-turret's
+        // weapons[] array, not just a top-level one.
         private _sideNumbers = createHashMapFromArray [["WEST", 1], ["EAST", 0], ["INDEPENDENT", 2], ["CIVILIAN", 3]];
         private _sideNumber = _sideNumbers getOrDefault [_sideKey, 1];
-        _classes = ([
+        private _discovered = ([
             format ["GUNSHIP_ARMED_AIR_%1", _sideKey],
             {
                 (getNumber (configFile >> "CfgVehicles" >> _this >> "side") == _sideNumber)
@@ -114,7 +121,9 @@ if (isNull _aircraft) then {
                 ]) > 0}
             }
         ] call Waldo_fnc_ResolveVehicleClassPool) apply {_x select 0};
+        {_classes pushBackUnique _x} forEach _discovered;
     };
+    _classes = _classes select {isClass (configFile >> "CfgVehicles" >> _x) && {_x isKindOf "Air"}};
     private _class = _config getOrDefault ["aircraftClass", if (count _classes > 0) then {selectRandom _classes} else {""}];
     private _spawnPosition = _config getOrDefault ["spawnPosition", _config getOrDefault ["home", []]];
     private _spawnAltitude = ((_config getOrDefault ["altitude", missionNamespace getVariable ["Waldo_Gunship_DefaultAltitude", 700]]) max 100) min (missionNamespace getVariable ["Waldo_Gunship_MaximumAltitude", 5000]);

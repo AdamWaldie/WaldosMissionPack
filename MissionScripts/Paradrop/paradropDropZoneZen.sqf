@@ -128,22 +128,21 @@ if (_mode == "EMBARK") exitWith {
     true
 };
 
-// Waldo_Paradrop_AircraftClasses is an opt-in allowlist for a mission maker who wants to restrict
-// the dialog to specific airframes. Left unset (the default), the dialog instead discovers every
-// jump-capable cargo aircraft actually present in the running modset - vanilla or third-party -
-// via the same live mod scan Dynamic AO uses for factions, instead of silently offering nothing.
+// Waldo_Paradrop_AircraftClasses is the mission-maker-curated starting list (a handful of vanilla
+// airframes by default). The dialog always extends it with every other jump-capable cargo aircraft
+// actually present in the running modset - vanilla or third-party - discovered live via the same
+// suitability test (public, Air, carries soldiers), via the same mod scan Dynamic AO uses for
+// factions, instead of limiting the mission to whatever is hand-listed in config.
 private _testAircraft = {
     isClass (configFile >> "CfgVehicles" >> _this)
     && {_this isKindOf "Air"}
     && {getNumber (configFile >> "CfgVehicles" >> _this >> "scope") >= 2}
     && {getNumber (configFile >> "CfgVehicles" >> _this >> "transportSoldier") > 0}
 };
-private _allowlist = +(missionNamespace getVariable ["Waldo_Paradrop_AircraftClasses", []]);
-private _classes = if (count _allowlist > 0) then {
-    (_allowlist select {_x call _testAircraft}) call BIS_fnc_sortAlphabetically
-} else {
-    (["PARADROP_AIRCRAFT", _testAircraft] call Waldo_fnc_ResolveVehicleClassPool) apply {_x select 0}
-};
+private _configured = +(missionNamespace getVariable ["Waldo_Paradrop_AircraftClasses", []]);
+private _classes = _configured select {_x call _testAircraft};
+{_classes pushBackUnique _x} forEach ((["PARADROP_AIRCRAFT", _testAircraft] call Waldo_fnc_ResolveVehicleClassPool) apply {_x select 0});
+_classes = _classes call BIS_fnc_sortAlphabetically;
 if (count _classes == 0) exitWith {
     ["PARADROP", "No configured transport airframes are available.", "ERROR", "PARADROP_ZEN", 7]
         call Waldo_fnc_FeatureNotifyLocal;
