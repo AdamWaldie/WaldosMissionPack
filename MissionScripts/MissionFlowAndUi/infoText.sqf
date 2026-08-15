@@ -121,47 +121,61 @@ _textColour = switch (side player) do
     default {"'#ed9d18'"};
 };
 
-waitUntil { uiSleep 1; (!isNull player && time > 0) };
+waitUntil { uiSleep 0.2; (!isNull player && time > 0) };
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
 // Throw up a fake loading screen to buffer over actual loading screen.
+//
+// Timing below is deliberately tight: control returns to the player as soon as the content actually
+// needs (readable text + a chosen animation finishing cleanly), not on padded guesswork. Two
+// exceptions are kept intentionally generous rather than cut to the bone:
+//  - FAKE_LOAD_HOLD masks real asset streaming (models/textures still loading in), not our own
+//    presentation - too short here risks revealing pop-in on a heavy mod list, so tune this one up
+//    per mission rather than trusting the shipped default blindly.
+//  - The final wait below for WALDO_INIT_COMPLETE: init.sqf now spawns this script instead of
+//    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
+//    parallel with this intro, not after it), which means this intro can no longer be assumed to
+//    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast
+//    reader on a fast-loading mission still can't reach a crate/feature before it exists.
+private _fakeLoadHold = 2.5;     // was 9 - pure padding; real streaming margin, tune per mission/modlist
+private _blackoutFade = 1;       // was 5
+// Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
+// the blackout fade needs to have actually finished fading to black before that happens - otherwise
+// (as originally reported) the still-transitioning fade is what's visible when the screen ends, and
+// the text reveal below (which starts right after) reads as starting before the load screen is done.
+// Derived from _blackoutFade rather than a second independent number so shortening the fade can never
+// silently reopen this gap again.
+private _postBlackoutBuffer = _blackoutFade + 0.1;
+private _postLoadBuffer = 0.75;  // was 5 - lets the now-black screen settle before text starts drawing
+// Each hold must stay >= the matching typeText block's own slowest per-line reveal stagger (set where
+// the blocks are spawned below) for the same reason _postBlackoutBuffer must stay >= _blackoutFade:
+// the block would otherwise still be revealing its last line when the next block/phase starts drawing
+// or reads control as returned, i.e. exactly the same "starts before the previous thing finished"
+// clash already found once above. Padded a little past that minimum for actual reading time.
+private _textBlock1Hold = 3.5;   // was 6 - time/date line, short text, quick to read
+private _textBlock2Hold = 3;     // was 3 - title/locale/group lines
+private _blackInFade = 1;        // was 3
+private _featureInitTimeout = 60; // bounded safety cap on the WALDO_INIT_COMPLETE wait below
 
 ["fauxLoad", ""] call BIS_fnc_startLoadingScreen;
-uiSleep 9;
-["wakeUpID", false, 5] call BIS_fnc_blackOut; // Fade screen out to black for intro sequence.
-uiSleep 1;
+uiSleep _fakeLoadHold;
+["wakeUpID", false, _blackoutFade] call BIS_fnc_blackOut; // Fade screen out to black for intro sequence.
+uiSleep _postBlackoutBuffer;
 "fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
 
-uiSleep 5;
-
-[
-    [
-        [_time, "<t align = 'center' shadow = '1' size = '1.0'>%1</t><br/>"],
-        [_date, "<t align = 'center' shadow = '1' size = '0.7' font='PuristaBold'>%1</t><br/>", 10]
-    ]
-] spawn BIS_fnc_typeText;
-uiSleep 6;
-
-_text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];  
-_text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";  
-_text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";  
-
-[  
-    [  
-        [_missionTitle, _text1],  
-        [_localePos, _text2],  
-        [_groupInfo, _text3, 5]  
-    ]  
-] spawn BIS_fnc_typeText;
-
-uiSleep 3;
+uiSleep _postLoadBuffer;
 
 // ----- ANIMATION SETTING -----
+// Triggered here, in parallel with the text reveal below, instead of only after it - so total wait
+// is however long the LONGER of "an animation finished cleanly" or "feature init is ready" takes,
+// not the sum of everything. Only WALK/SIT/COFFIN have a defined return-to-standing duration.
 _unit = player;
+_animationDurations = createHashMapFromArray [["WALK", 8.333], ["SIT", 8.666], ["COFFIN", 6.666]];
+_animationStart = diag_tickTime;
 // Determine animation to use from given Params
 _usedAnimation = switch (_animate) do {
     case "NONE": {};
-    
+
     case "WALK": {
         [_unit] spawn {
             params ["_unit"];
@@ -206,7 +220,70 @@ _usedAnimation = switch (_animate) do {
     default {};
 };
 
-["wakeUpID", true, 3] call BIS_fnc_blackIn;
+// Text reveal is purely cosmetic and reads fine whether or not the player already has control back
+// (a title card over live gameplay is a normal pattern), so it runs on its own detached timeline
+// instead of blocking control return - the only thing that still needs to block is protecting a
+// chosen movement animation and giving feature init a chance to finish (both below). scriptDone on
+// the returned handle is polled further down purely to keep Waldo_InfoText_Active/Complete accurate
+// (gunshipNotifyLocal.sqf/fieldResupplyNotifyGrantLocal.sqf defer their own notices on it so nothing
+// draws over this text) - it is never waited on before returning control.
+_text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];
+_text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";
+_text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
+
+_textRevealHandle = [_time, _date, _missionTitle, _localePos, _groupInfo, _text1, _text2, _text3, _textBlock1Hold, _textBlock2Hold] spawn {
+    params ["_time", "_date", "_missionTitle", "_localePos", "_groupInfo", "_text1", "_text2", "_text3", "_textBlock1Hold", "_textBlock2Hold"];
+    // The trailing numeric argument on the last line of each block is BIS_fnc_typeText's own reveal
+    // stagger for that line (seconds before it starts typing, on top of the earlier lines). It was
+    // 10 and 5 respectively before this pass - already longer than the 6s/3s holds that followed them
+    // in the original script, so the date/groupInfo lines could already be cut off mid-reveal even
+    // before this rework tightened anything. Cut here to comfortably clear the new, shorter holds
+    // above instead of carrying that pre-existing mismatch forward at a smaller scale.
+    [
+        [
+            [_time, "<t align = 'center' shadow = '1' size = '1.0'>%1</t><br/>"],
+            [_date, "<t align = 'center' shadow = '1' size = '0.7' font='PuristaBold'>%1</t><br/>", 2]
+        ]
+    ] spawn BIS_fnc_typeText;
+    uiSleep _textBlock1Hold;
+
+    [
+        [
+            [_missionTitle, _text1],
+            [_localePos, _text2],
+            [_groupInfo, _text3, 1.5]
+        ]
+    ] spawn BIS_fnc_typeText;
+    uiSleep _textBlock2Hold;
+};
+
+// Give WALK/SIT/COFFIN's own switchMove sequence its full duration - unlocking input mid-animation
+// would let the player interrupt/desync from it. NONE (and WAKE/WAKESLOW, which have no defined
+// return-to-standing duration to wait for) fall straight through with no added wait here.
+_animationDuration = _animationDurations getOrDefault [_animate, 0];
+_animationRemaining = _animationDuration - (diag_tickTime - _animationStart);
+if (_animationRemaining > 0) then {
+    uiSleep _animationRemaining;
+};
+
+// This intro no longer gates WALDO_INIT_COMPLETE (init.sqf spawns it), so it can finish before
+// server/feature startup does on a fast-loading mission. Hold the lock until that flag is up too,
+// bounded so a mission that never sets it (broken init.sqf) doesn't lock the player out forever.
+private _featureInitDeadline = diag_tickTime + _featureInitTimeout;
+waitUntil {
+    uiSleep 0.2;
+    missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {diag_tickTime >= _featureInitDeadline}
+};
+if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) then {
+    diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
+};
+
+["wakeUpID", true, _blackInFade] call BIS_fnc_blackIn;
 disableUserInput false;
+
+// Active/Complete track the on-screen text, not player control - wait for the detached reveal above
+// to actually finish before flipping them, so a notification deferred on Waldo_InfoText_Complete
+// still never draws over still-typing intro text even though control returned earlier.
+waitUntil { uiSleep 0.2; scriptDone _textRevealHandle };
 missionNamespace setVariable ["Waldo_InfoText_Active", false];
 missionNamespace setVariable ["Waldo_InfoText_Complete", true];

@@ -243,7 +243,13 @@ You can optionally define replacements for the title & location, as is demonstra
 */
 // Player presentation requires display 46. Running InfoText on a dedicated server
 // waits forever for a display that cannot exist and blocks WALDO_INIT_COMPLETE.
-if (hasInterface) then {["",""] call Waldo_fnc_InfoText};
+// spawn, not call: InfoText's own fake-loading/blackout/typeText sequence is ~24s of scripted
+// uiSleep with nothing else in this file depending on its result. WALDO_INIT_COMPLETE (and every
+// crate/jamming/safestart/Dynamic AA/paradrop system gated on it below) has no reason to sit behind
+// a player's intro screen finishing - running it in parallel gets those systems ready ~24s sooner
+// without changing what a player actually sees or when their input is unlocked (still governed
+// entirely by InfoText's own internal disableUserInput calls).
+if (hasInterface) then {["",""] spawn Waldo_fnc_InfoText};
 
 /*
 
