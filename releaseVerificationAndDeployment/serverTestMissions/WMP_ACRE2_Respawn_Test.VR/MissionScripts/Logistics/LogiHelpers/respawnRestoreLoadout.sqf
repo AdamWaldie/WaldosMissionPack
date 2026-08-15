@@ -54,7 +54,8 @@ private _savedLoadout = if (count _snapshot >= 4) then {_snapshot select 1} else
 private _restoredCount = 0;
 // Never let an Eden/CBA @ callsign radio-setup attribute copied to the new body race the saved
 // radio restore below. WMP owns the one initial assignment and explicit saved-state restoration.
-_unit setVariable ["acre_sys_radio_setup", "", true];
+// ACRE parses this variable as serialized array text, so "[]" is its valid empty representation.
+_unit setVariable ["acre_sys_radio_setup", "[]", true];
 if (_identityMatches && {count _savedLoadout > 0}) then {
     _unit setUnitLoadout _savedLoadout;
     _restoredCount = count _savedLoadout;
