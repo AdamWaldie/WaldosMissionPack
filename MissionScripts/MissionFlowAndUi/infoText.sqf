@@ -139,7 +139,13 @@ waitUntil { uiSleep 0.2; (!isNull player && time > 0) };
 //    reader on a fast-loading mission still can't reach a crate/feature before it exists.
 private _fakeLoadHold = 2;       // was 9 - pure padding; real streaming margin, tune per mission/modlist
 private _blackoutFade = 1;       // was 5
-private _postBlackoutBuffer = 0.2; // was 1
+// Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
+// the blackout fade needs to have actually finished fading to black before that happens - otherwise
+// (as originally reported) the still-transitioning fade is what's visible when the screen ends, and
+// the text reveal below (which starts right after) reads as starting before the load screen is done.
+// Derived from _blackoutFade rather than a second independent number so shortening the fade can never
+// silently reopen this gap again.
+private _postBlackoutBuffer = _blackoutFade + 0.1;
 private _postLoadBuffer = 0.5;   // was 5
 private _textBlock1Hold = 3;     // was 6 - time/date line, short text, quick to read
 private _textBlock2Hold = 2.5;   // was 3 - title/locale/group lines
