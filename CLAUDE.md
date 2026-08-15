@@ -135,7 +135,12 @@ Mission load
         │     ├─ call Waldo_fnc_AddDocs                (briefing documents)
         │     ├─ call Waldo_fnc_SetTeamColour          (squad colour by role)
         │     ├─ ["",""] spawn Waldo_fnc_InfoText       (intro title screen, runs in parallel -
-        │     │                                          WALDO_INIT_COMPLETE does not wait on it)
+        │     │                                          WALDO_INIT_COMPLETE does not wait on it.
+        │     │                                          disableUserInput lifts as soon as a chosen
+        │     │                                          animation finishes and WALDO_INIT_COMPLETE
+        │     │                                          is up - not once the on-screen text is done;
+        │     │                                          with no animation the intro text can still be
+        │     │                                          typing itself out after control returns)
         │     └─ Sets WALDO_INIT_COMPLETE flag
         │
         └─ initPlayerLocal.sqf  (per-player; the engine re-executes this whole file on every
