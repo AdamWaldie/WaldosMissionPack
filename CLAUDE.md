@@ -134,7 +134,8 @@ Mission load
         │     ├─ call Waldo_fnc_InitVehicles           (vehicle action setup)
         │     ├─ call Waldo_fnc_AddDocs                (briefing documents)
         │     ├─ call Waldo_fnc_SetTeamColour          (squad colour by role)
-        │     ├─ ["",""] call Waldo_fnc_InfoText        (intro title screen)
+        │     ├─ ["",""] spawn Waldo_fnc_InfoText       (intro title screen, runs in parallel -
+        │     │                                          WALDO_INIT_COMPLETE does not wait on it)
         │     └─ Sets WALDO_INIT_COMPLETE flag
         │
         └─ initPlayerLocal.sqf  (per-player; the engine re-executes this whole file on every
