@@ -909,6 +909,7 @@ class CfgFunctions
         class DynamicAA
         {
             class DynamicAAResolveAssetPool {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveAssetPool.sqf";};
+            class DynamicAAResolveEquipmentCatalog {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveEquipmentCatalog.sqf";};
             class DynamicAASetGroupState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetGroupState.sqf";};
             class DynamicAAFireGateLocal {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAFireGateLocal.sqf";};
             class DynamicAASetVehicleAmmo {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetVehicleAmmo.sqf";};

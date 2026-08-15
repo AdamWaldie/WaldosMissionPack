@@ -26,8 +26,17 @@ if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 
 params ["_modulePos", "_objectPos"];
 
-private _emitterClasses = ["Land_PowerGenerator_F", "Land_PortableGenerator_01_F", "Land_DataTerminal_01_F", "Land_TTowerSmall_1_F"];
-_emitterClasses = _emitterClasses select {isClass (configFile >> "CfgVehicles" >> _x)};
+// The curated seeds are the option list's familiar defaults; there is no reliable cross-mod "looks
+// like a jammer emitter prop" config flag, so the list is also extended with any other public class
+// that isKindOf one of them - a terrain/prop mod's own variant of a vanilla generator, data
+// terminal or small tower almost always inherits directly from the vanilla base class it reskins.
+private _emitterSeeds = ["Land_PowerGenerator_F", "Land_PortableGenerator_01_F", "Land_DataTerminal_01_F", "Land_TTowerSmall_1_F"];
+private _emitterClasses = _emitterSeeds select {isClass (configFile >> "CfgVehicles" >> _x)};
+{_emitterClasses pushBackUnique _x} forEach ((["JAMMER_EMITTER", {
+    isClass (configFile >> "CfgVehicles" >> _this)
+    && {getNumber (configFile >> "CfgVehicles" >> _this >> "scope") >= 2}
+    && {(_emitterSeeds findIf {_this isKindOf _x}) != -1}
+}] call Waldo_fnc_ResolveVehicleClassPool) apply {_x select 0});
 if (_emitterClasses isEqualTo []) exitWith {
     ["JAMMER NOT PLACED", "No supported jammer emitter objects are available in the current modset.", 8, "FAILURE"] call Waldo_fnc_JammingNotice;
 };

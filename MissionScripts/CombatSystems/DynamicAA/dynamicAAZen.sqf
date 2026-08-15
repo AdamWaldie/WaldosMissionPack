@@ -59,6 +59,15 @@ private _collectPool = {
 };
 {[_sidePools get _x] call _collectPool} forEach keys _sidePools;
 {[_factionPools get _x] call _collectPool} forEach keys _factionPools;
+// Extend the Exact-mode pickers with every other AA-suitable class discovered live in the running
+// modset (vanilla or third-party), on top of whatever is hand-listed in the pools above. The
+// discovered catalogue is flat per category (unlike a Waldo_DynamicAA_*AssetPools entry's nested
+// staticSitePools), so it is merged directly rather than through _collectPool.
+private _discoveredEquipment = [] call Waldo_fnc_DynamicAAResolveEquipmentCatalog;
+{
+    private _classKey = _x;
+    {(_catalogue get _classKey) pushBackUnique _x} forEach (_discoveredEquipment getOrDefault [_classKey, []]);
+} forEach ["radarClasses", "staticClasses", "mobileClasses", "fighterClasses"];
 {
     _x params ["_classKey", "_labelKey"];
     private _classes = _catalogue get _classKey;
