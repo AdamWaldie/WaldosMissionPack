@@ -137,7 +137,7 @@ waitUntil { uiSleep 0.2; (!isNull player && time > 0) };
 //    parallel with this intro, not after it), which means this intro can no longer be assumed to
 //    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast
 //    reader on a fast-loading mission still can't reach a crate/feature before it exists.
-private _fakeLoadHold = 2;       // was 9 - pure padding; real streaming margin, tune per mission/modlist
+private _fakeLoadHold = 2.5;     // was 9 - pure padding; real streaming margin, tune per mission/modlist
 private _blackoutFade = 1;       // was 5
 // Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
 // the blackout fade needs to have actually finished fading to black before that happens - otherwise
@@ -146,9 +146,14 @@ private _blackoutFade = 1;       // was 5
 // Derived from _blackoutFade rather than a second independent number so shortening the fade can never
 // silently reopen this gap again.
 private _postBlackoutBuffer = _blackoutFade + 0.1;
-private _postLoadBuffer = 0.5;   // was 5
-private _textBlock1Hold = 3;     // was 6 - time/date line, short text, quick to read
-private _textBlock2Hold = 2.5;   // was 3 - title/locale/group lines
+private _postLoadBuffer = 0.75;  // was 5 - lets the now-black screen settle before text starts drawing
+// Each hold must stay >= the matching typeText block's own slowest per-line reveal stagger (set where
+// the blocks are spawned below) for the same reason _postBlackoutBuffer must stay >= _blackoutFade:
+// the block would otherwise still be revealing its last line when the next block/phase starts drawing
+// or reads control as returned, i.e. exactly the same "starts before the previous thing finished"
+// clash already found once above. Padded a little past that minimum for actual reading time.
+private _textBlock1Hold = 3.5;   // was 6 - time/date line, short text, quick to read
+private _textBlock2Hold = 3;     // was 3 - title/locale/group lines
 private _blackInFade = 1;        // was 3
 private _featureInitTimeout = 60; // bounded safety cap on the WALDO_INIT_COMPLETE wait below
 
@@ -228,10 +233,16 @@ _text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
 
 _textRevealHandle = [_time, _date, _missionTitle, _localePos, _groupInfo, _text1, _text2, _text3, _textBlock1Hold, _textBlock2Hold] spawn {
     params ["_time", "_date", "_missionTitle", "_localePos", "_groupInfo", "_text1", "_text2", "_text3", "_textBlock1Hold", "_textBlock2Hold"];
+    // The trailing numeric argument on the last line of each block is BIS_fnc_typeText's own reveal
+    // stagger for that line (seconds before it starts typing, on top of the earlier lines). It was
+    // 10 and 5 respectively before this pass - already longer than the 6s/3s holds that followed them
+    // in the original script, so the date/groupInfo lines could already be cut off mid-reveal even
+    // before this rework tightened anything. Cut here to comfortably clear the new, shorter holds
+    // above instead of carrying that pre-existing mismatch forward at a smaller scale.
     [
         [
             [_time, "<t align = 'center' shadow = '1' size = '1.0'>%1</t><br/>"],
-            [_date, "<t align = 'center' shadow = '1' size = '0.7' font='PuristaBold'>%1</t><br/>", 10]
+            [_date, "<t align = 'center' shadow = '1' size = '0.7' font='PuristaBold'>%1</t><br/>", 2]
         ]
     ] spawn BIS_fnc_typeText;
     uiSleep _textBlock1Hold;
@@ -240,7 +251,7 @@ _textRevealHandle = [_time, _date, _missionTitle, _localePos, _groupInfo, _text1
         [
             [_missionTitle, _text1],
             [_localePos, _text2],
-            [_groupInfo, _text3, 5]
+            [_groupInfo, _text3, 1.5]
         ]
     ] spawn BIS_fnc_typeText;
     uiSleep _textBlock2Hold;
