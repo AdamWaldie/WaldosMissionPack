@@ -901,6 +901,11 @@ class CfgFunctions
             class ObjectTransformSpawn {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectTransformSpawn.sqf";};
             class ObjectScaleZen {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleZen.sqf";};
         };
+        class SharedAssetResolution
+        {
+            class ResolveFactionCatalog {file = "MissionScripts\CombatSystems\resolveFactionCatalog.sqf";};
+            class ResolveVehicleClassPool {file = "MissionScripts\CombatSystems\resolveVehicleClassPool.sqf";};
+        };
         class DynamicAA
         {
             class DynamicAAResolveAssetPool {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveAssetPool.sqf";};

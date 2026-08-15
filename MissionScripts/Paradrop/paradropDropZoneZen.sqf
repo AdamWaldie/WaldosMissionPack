@@ -128,14 +128,22 @@ if (_mode == "EMBARK") exitWith {
     true
 };
 
-private _classes = +(missionNamespace getVariable ["Waldo_Paradrop_AircraftClasses", []]);
-_classes = _classes select {
-    isClass (configFile >> "CfgVehicles" >> _x)
-    && {_x isKindOf "Air"}
-    && {getNumber (configFile >> "CfgVehicles" >> _x >> "scope") >= 2}
-    && {getNumber (configFile >> "CfgVehicles" >> _x >> "transportSoldier") > 0}
+// Waldo_Paradrop_AircraftClasses is an opt-in allowlist for a mission maker who wants to restrict
+// the dialog to specific airframes. Left unset (the default), the dialog instead discovers every
+// jump-capable cargo aircraft actually present in the running modset - vanilla or third-party -
+// via the same live mod scan Dynamic AO uses for factions, instead of silently offering nothing.
+private _testAircraft = {
+    isClass (configFile >> "CfgVehicles" >> _this)
+    && {_this isKindOf "Air"}
+    && {getNumber (configFile >> "CfgVehicles" >> _this >> "scope") >= 2}
+    && {getNumber (configFile >> "CfgVehicles" >> _this >> "transportSoldier") > 0}
 };
-_classes = _classes call BIS_fnc_sortAlphabetically;
+private _allowlist = +(missionNamespace getVariable ["Waldo_Paradrop_AircraftClasses", []]);
+private _classes = if (count _allowlist > 0) then {
+    (_allowlist select {_x call _testAircraft}) call BIS_fnc_sortAlphabetically
+} else {
+    (["PARADROP_AIRCRAFT", _testAircraft] call Waldo_fnc_ResolveVehicleClassPool) apply {_x select 0}
+};
 if (count _classes == 0) exitWith {
     ["PARADROP", "No configured transport airframes are available.", "ERROR", "PARADROP_ZEN", 7]
         call Waldo_fnc_FeatureNotifyLocal;

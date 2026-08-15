@@ -1,10 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Returns runtime faction choices that contain at least one usable public vehicle or soldier.
- *
- * Results are cached per machine because configuration data is immutable during a mission. Each
- * row keeps side, classname and a curator-friendly label together, preventing invalid side/faction
- * combinations. Called by the Dynamic AO script helpers and ZEN create dialog.
+ * Dynamic AO-specific alias of the shared faction-discovery primitive, kept for backward
+ * compatibility with the documented public API and existing mission scripts. The scan itself lives
+ * in Waldo_fnc_ResolveFactionCatalog (MissionScripts\CombatSystems\resolveFactionCatalog.sqf) so
+ * Dynamic AA and other faction/unit-selection features share the exact same live modset scan
+ * instead of each keeping their own copy.
  *
  * Arguments:
  * 0: allowed sides <ARRAY<SIDE>> (default [west,east,independent])
@@ -18,33 +18,4 @@
  * [[east, independent]] call Waldo_fnc_DynamicAOGetFactions;
  */
 params [["_allowedSides", [west, east, independent], [[]]]];
-
-private _cache = missionNamespace getVariable ["Waldo_DynamicAO_FactionCache", []];
-if (_cache isEqualTo []) then {
-    private _used = createHashMap;
-    {
-        if (getNumber (_x >> "scope") >= 2) then {
-            private _faction = getText (_x >> "faction");
-            private _sideNumber = getNumber (_x >> "side");
-            if (_faction != "" && {_sideNumber in [0, 1, 2, 3]}) then {
-                _used set [format ["%1|%2", _sideNumber, _faction], true];
-            };
-        };
-    } forEach ("true" configClasses (configFile >> "CfgVehicles"));
-
-    {
-        private _sideNumber = getNumber (_x >> "side");
-        private _faction = configName _x;
-        if (_sideNumber in [0, 1, 2, 3] && {_used getOrDefault [format ["%1|%2", _sideNumber, _faction], false]}) then {
-            private _side = [east, west, independent, civilian] select _sideNumber;
-            private _sideLabel = ["OPFOR", "BLUFOR", "Independent", "Civilian"] select _sideNumber;
-            private _name = getText (_x >> "displayName");
-            if (_name == "") then {_name = _faction};
-            _cache pushBack [_side, _faction, format ["[%1] %2", _sideLabel, _name]];
-        };
-    } forEach ("true" configClasses (configFile >> "CfgFactionClasses"));
-    _cache = [_cache, [], {_x select 2}, "ASCEND"] call BIS_fnc_sortBy;
-    missionNamespace setVariable ["Waldo_DynamicAO_FactionCache", _cache];
-};
-
-_cache select {(_x select 0) in _allowedSides}
+[_allowedSides] call Waldo_fnc_ResolveFactionCatalog

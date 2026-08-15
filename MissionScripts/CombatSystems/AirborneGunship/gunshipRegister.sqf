@@ -93,6 +93,28 @@ if (isNull _aircraft) then {
         _classes = +(_factionPools getOrDefault [_factionKey, _classes]);
     };
     _classes = _classes select {isClass (configFile >> "CfgVehicles" >> _x) && {_x isKindOf "Air"}};
+    // Waldo_Gunship_SideAircraftPools/FactionAircraftPools are opt-in mission-maker overrides; left
+    // unset (the default), fall back to a live mod scan instead of an empty pool - any public Air
+    // class on the requested side with an armed turret anywhere in its config, vanilla or
+    // third-party. configProperties walks the whole class tree recursively, so it also matches a
+    // sub-turret's weapons[] array, not just a top-level one.
+    if (count _classes == 0) then {
+        private _sideNumbers = createHashMapFromArray [["WEST", 1], ["EAST", 0], ["INDEPENDENT", 2], ["CIVILIAN", 3]];
+        private _sideNumber = _sideNumbers getOrDefault [_sideKey, 1];
+        _classes = ([
+            format ["GUNSHIP_ARMED_AIR_%1", _sideKey],
+            {
+                (getNumber (configFile >> "CfgVehicles" >> _this >> "side") == _sideNumber)
+                && {getNumber (configFile >> "CfgVehicles" >> _this >> "scope") >= 2}
+                && {_this isKindOf "Air"}
+                && {count (configProperties [
+                    configFile >> "CfgVehicles" >> _this,
+                    "isArray (_x >> 'weapons') && {count getArray (_x >> 'weapons') > 0}",
+                    true
+                ]) > 0}
+            }
+        ] call Waldo_fnc_ResolveVehicleClassPool) apply {_x select 0};
+    };
     private _class = _config getOrDefault ["aircraftClass", if (count _classes > 0) then {selectRandom _classes} else {""}];
     private _spawnPosition = _config getOrDefault ["spawnPosition", _config getOrDefault ["home", []]];
     private _spawnAltitude = ((_config getOrDefault ["altitude", missionNamespace getVariable ["Waldo_Gunship_DefaultAltitude", 700]]) max 100) min (missionNamespace getVariable ["Waldo_Gunship_MaximumAltitude", 5000]);
