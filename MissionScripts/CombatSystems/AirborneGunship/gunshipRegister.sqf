@@ -162,11 +162,21 @@ if (isNull _aircraft || {!(_aircraft isKindOf "Air")} || {isNull driver _aircraf
 private _side = _config getOrDefault ["side", side group driver _aircraft];
 if !(_side in [west, east, independent, civilian]) then {_side = side group driver _aircraft};
 if (_config getOrDefault ["forceCrewSide", true] && {side group driver _aircraft != _side}) then {
-    private _oldGroups = [];
-    {_oldGroups pushBackUnique group _x} forEach crew _aircraft;
-    private _newGroup = createGroup _side;
-    (crew _aircraft) joinSilent _newGroup;
-    {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+    // group setSide reassigns in place - no new group, no locality/HC churn - but the engine
+    // silently refuses it when the destination side is already friendly to the group's current side
+    // (e.g. WEST <-> INDEPENDENT under vanilla default relations, a real combination among WMP's own
+    // side options). Try it first since it covers the common case for free, and fall back to the
+    // createGroup+joinSilent recreation - which works unconditionally regardless of side relations -
+    // only when setSide didn't actually take effect.
+    private _crewGroup = group driver _aircraft;
+    _crewGroup setSide _side;
+    if (side _crewGroup != _side) then {
+        private _oldGroups = [];
+        {_oldGroups pushBackUnique group _x} forEach crew _aircraft;
+        private _newGroup = createGroup _side;
+        (crew _aircraft) joinSilent _newGroup;
+        {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+    };
 };
 [_aircraft, _config getOrDefault ["lockAircraft", true]] remoteExecCall ["lock", owner _aircraft];
 private _home = _config getOrDefault ["home", getPosATL _aircraft];
