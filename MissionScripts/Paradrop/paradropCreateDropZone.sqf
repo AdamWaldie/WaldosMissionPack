@@ -151,8 +151,21 @@ _aircraft setVariable ["Waldo_Paradrop_ManuallyConfigured", true, true];
 private _flightGroup = createGroup [_side, true];
 _flightGroup setVariable ["Waldo_ServerOwnedFeature", true, true];
 _flightGroup setVariable ["Waldo_Headless_ExcludeGroup", true, true];
+// Airframe selection is deliberately independent of operational side (see this script's header),
+// so the class's own native "crew" pilot can belong to a different faction/side entirely - most
+// visibly with a live-modset-discovered airframe (Waldo_fnc_ResolveVehicleClassPool), where the
+// native crew class is that mod's own faction. createUnit below still places the pilot on the
+// correct _side regardless (a unit's actual side always follows its group), but only reuse the
+// native crew class when it is already configured for the requested side - otherwise it is created
+// on _side wearing a different faction's uniform, reading as "the aircraft was created on its
+// original side" even though the pilot is functionally on the right team. Fall back to the vanilla
+// per-side pilot whenever the native class doesn't match.
+private _sideNumbers = createHashMapFromArray [[west, 1], [east, 0], [independent, 2], [civilian, 3]];
 private _pilotClass = getText (configFile >> "CfgVehicles" >> _class >> "crew");
-if !(isClass (configFile >> "CfgVehicles" >> _pilotClass) && {_pilotClass isKindOf "CAManBase"}) then {
+private _pilotIsCorrectSide = isClass (configFile >> "CfgVehicles" >> _pilotClass)
+    && {_pilotClass isKindOf "CAManBase"}
+    && {getNumber (configFile >> "CfgVehicles" >> _pilotClass >> "side") == (_sideNumbers getOrDefault [_side, 1])};
+if !(_pilotIsCorrectSide) then {
     _pilotClass = switch (_side) do {
         case east: {"O_Pilot_F"};
         case independent: {"I_Pilot_F"};
@@ -208,6 +221,20 @@ diag_log format [
 private _green = _route get "green";
 private _red = _route get "red";
 private _exit = _route get "exit";
+
+// See Waldo_fnc_ParadropQuickFlightSetup for why this is needed: the requireOpenDoor check above
+// only confirms the airframe HAS a recognised ramp/door animation, not that anything can actually
+// open it - a live-modset-discovered airframe (Waldo_fnc_ResolveVehicleClassPool) frequently has no
+// player-facing action wired to it, which otherwise leaves the jump action permanently unavailable.
+// Open it automatically as the aircraft nears the drop run; never closed again afterward, including
+// across a LOOP aircraft's repeat passes.
+if (_requireDoor) then {
+    [_aircraft, _green] spawn {
+        params ["_aircraft", "_green"];
+        waitUntil {sleep 1; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D _green < 900}};
+        if (!isNull _aircraft && {alive _aircraft}) then {[_aircraft, true] call Waldo_fnc_ParadropOperateDoor};
+    };
+};
 
 // Normalized against the route's own returned altitude/speed (not the pre-clamp local variables
 // above) so this and Waldo_fnc_ParadropQuickFlightSetup can never drift onto a different basis than

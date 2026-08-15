@@ -82,8 +82,16 @@ if (_id in keys _registry) then {[_id, false] call Waldo_fnc_GunshipDestroy};
 
 private _aircraft = _config getOrDefault ["aircraft", objNull];
 private _spawned = false;
+// Computed once, up front, with one consistent default (west) - both the pool/discovery selection
+// below and the crew-side enforcement further down must agree on the same requested side. Reading
+// it a second time later with a different default (whatever the crew turned out to be, rather than
+// west) let an explicit aircraftClass/aircraftClasses call that omitted "side" silently keep
+// whatever side the airframe's own native config defaulted to instead of the mission's intended
+// side - the exact "aircraft created on its original side" failure mode, since nothing would ever
+// detect a mismatch against a self-referential default.
+private _requestedSide = _config getOrDefault ["side", west];
+if !(_requestedSide in [west, east, independent, civilian]) then {_requestedSide = west};
 if (isNull _aircraft) then {
-    private _requestedSide = _config getOrDefault ["side", west];
     private _sideKey = switch (_requestedSide) do {case east: {"EAST"}; case independent: {"INDEPENDENT"}; case civilian: {"CIVILIAN"}; default {"WEST"}};
     // An explicit per-call aircraftClasses stays exact - a script/ZEN caller that hand-picked its
     // own candidates gets exactly those, nothing added or removed. Falling through to the mission's
@@ -134,7 +142,13 @@ if (isNull _aircraft) then {
     [_aircraft] call Waldo_fnc_HeadlessPinCrew;
     _aircraft setPosATL _spawnPosition;
     _aircraft setDir (_config getOrDefault ["spawnDirection", 0]);
-    if (_config getOrDefault ["createCrew", true]) then {createVehicleCrew _aircraft};
+    // The side-prefixed form creates crew directly into a group of _requestedSide, rather than the
+    // bare form's group of the airframe's own native config side - matches the pattern already used
+    // by Waldo_fnc_DynamicAACreate/DynamicAASpawnFighters for the same reason: an explicit
+    // aircraftClass/aircraftClasses pick (not filtered by side, unlike the pool/discovery path above)
+    // can be a different faction's airframe entirely, most commonly with a live-modset-discovered
+    // class. The forceCrewSide check below still runs as a second, redundant safety net.
+    if (_config getOrDefault ["createCrew", true]) then {_requestedSide createVehicleCrew _aircraft};
     _spawned = true;
 };
 // Existing Eden aircraft must be crewed in Eden. Do not create or fill any crew during registration:
