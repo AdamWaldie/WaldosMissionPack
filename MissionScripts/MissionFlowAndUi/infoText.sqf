@@ -124,18 +124,22 @@ _textColour = switch (side player) do
 waitUntil { uiSleep 0.2; (!isNull player && time > 0) };
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
-// Throw up a fake loading screen to buffer over actual loading screen.
+// Throw up our own fake loading screen purely as a cinematic transition into the intro below - the
+// real engine loading screen is already gone by this point (see the findDisplay 46 wait above, which
+// only exists once the player is genuinely in-game with the normal HUD up), so nothing here is
+// bridging or waiting out the real thing.
 //
 // Timing below is deliberately tight: control returns to the player as soon as the content actually
 // needs (readable text + a chosen animation finishing cleanly), not on padded guesswork. Two
 // exceptions are kept intentionally generous rather than cut to the bone:
-//  - FAKE_LOAD_HOLD masks real asset streaming (models/textures still loading in), not our own
-//    presentation - there is no reliable SQF signal for "the real world has finished streaming in",
-//    so this is a guess, and the right guess depends entirely on this mission's own terrain/mod
-//    list. Too short reveals real pop-in (or a still-loading world visibly cutting into the text
-//    reveal below) on a heavy setup. Set Waldo_InfoText_FakeLoadHold in init.sqf to override the
-//    shipped default per mission instead of editing this file - the default here is a light/vanilla
-//    assumption, not a measurement of any specific mission's actual streaming time.
+//  - FAKE_LOAD_HOLD covers residual texture/model pop-in that can still be settling for a few seconds
+//    after the player already has the normal HUD (a heavier mod/terrain setup streams in more slowly
+//    than a light one), not the real loading screen itself - that's already confirmed gone by this
+//    point. There is no reliable SQF signal for "streaming has fully settled", so this is a guess,
+//    and the right guess depends entirely on this mission's own terrain/mod list. Set
+//    Waldo_InfoText_FakeLoadHold in init.sqf to override the shipped default per mission instead of
+//    editing this file - the default here is a light/vanilla assumption, not a measurement of any
+//    specific mission's actual settle time.
 //  - The final wait below for WALDO_INIT_COMPLETE: init.sqf now spawns this script instead of
 //    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
 //    parallel with this intro, not after it), which means this intro can no longer be assumed to
