@@ -240,10 +240,35 @@ _usedAnimation = switch (_animate) do {
     default {};
 };
 
+// This intro no longer gates WALDO_INIT_COMPLETE (init.sqf spawns it), so it can finish before
+// server/feature startup does on a fast-loading mission. Wait for that flag before the text reveal
+// starts (not just before control returns, as an earlier pass had it) - bounded so a mission that
+// never sets it (broken init.sqf) doesn't hold the intro forever.
+//
+// This ordering fix closes a real bug, root-caused from an actual playtest RPT, not a guess: the
+// text reveal below used to be spawned immediately here and run fully detached from control-return,
+// on BIS_fnc_typeText's own few-second timeline - deliberately, so reading it never delayed getting
+// control back. But init.sqf's own mandatory `sleep 10` before it sets WALDO_INIT_COMPLETE (a
+// pre-existing, unrelated buffer, well outside this script) reliably takes far longer than that
+// timeline. The detached text thread would start, run to completion and vanish while still blocked
+// waiting on this same flag lower down - "the text has already finished by the time the player is
+// actually there", confirmed against an RPT showing WMP's own init.sqf systems (jamming, ACRE, ZEN,
+// loadout, etc.) all completing within about a second of CBA's postinit, and Dynamic AA's queued
+// system materialising (gated on WALDO_INIT_COMPLETE) only firing roughly ten seconds later - the
+// exact width of that sleep 10, not real engine asset streaming. Starting the text reveal only once
+// this wait clears means it can no longer finish before the player has any chance to see it.
+private _featureInitDeadline = diag_tickTime + _featureInitTimeout;
+waitUntil {
+    uiSleep 0.2;
+    missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {diag_tickTime >= _featureInitDeadline}
+};
+if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) then {
+    diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
+};
+
 // Text reveal is purely cosmetic and reads fine whether or not the player already has control back
-// (a title card over live gameplay is a normal pattern), so it runs on its own detached timeline
-// instead of blocking control return - the only thing that still needs to block is protecting a
-// chosen movement animation and giving feature init a chance to finish (both below). scriptDone on
+// (a title card over live gameplay is a normal pattern), so it still runs on its own detached
+// timeline rather than blocking control return below - only its START moved, not this. scriptDone on
 // the returned handle is polled further down purely to keep Waldo_InfoText_Active/Complete accurate
 // (gunshipNotifyLocal.sqf/fieldResupplyNotifyGrantLocal.sqf defer their own notices on it so nothing
 // draws over this text) - it is never waited on before returning control.
@@ -286,18 +311,6 @@ _animationDuration = _animationDurations getOrDefault [_animate, 0];
 _animationRemaining = _animationDuration - (diag_tickTime - _animationStart);
 if (_animationRemaining > 0) then {
     uiSleep _animationRemaining;
-};
-
-// This intro no longer gates WALDO_INIT_COMPLETE (init.sqf spawns it), so it can finish before
-// server/feature startup does on a fast-loading mission. Hold the lock until that flag is up too,
-// bounded so a mission that never sets it (broken init.sqf) doesn't lock the player out forever.
-private _featureInitDeadline = diag_tickTime + _featureInitTimeout;
-waitUntil {
-    uiSleep 0.2;
-    missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {diag_tickTime >= _featureInitDeadline}
-};
-if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) then {
-    diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
 };
 
 if !(_skipFakeLoad) then {

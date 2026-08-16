@@ -86,7 +86,7 @@ The intro is short by default: a quick fade in, the title text, then control ret
 - **No animation** (the default): control returns as soon as the fade-in finishes and the rest of the mission has started up. The title text keeps typing itself out in the background, so reading it doesn't hold up gameplay.
 - **An animation** (`WALK`, `SIT`, or `COFFIN`): control waits for that animation to finish, so the player never interrupts it mid-move. `WAKE` and `WAKESLOW` have no fixed length. Control returns for those once the rest of the sequence finishes.
 
-A player never gets control before the mission's own startup (crates, radios, and other features) has finished, even on a fast-loading mission.
+A player never gets control before the mission's own startup (crates, radios, and other features) has finished, even on a fast-loading mission. The title text doesn't start typing until that same point either. On a slower-starting mission, text that started earlier could finish and disappear before the player was ever able to see it.
 
 Arma has no way for a script to know when a specific player's own game has finished loading in. A heavy mod list or large terrain can leave a client streaming in models and textures for a few seconds after the mission has technically started. No script, including this one, can check for that finishing. The first couple of seconds before the title text appears cover that gap. If the world still looks like it's loading when the title text starts, raise it in `init.sqf`:
 
