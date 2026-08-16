@@ -96,6 +96,14 @@ missionNamespace setVariable ["Waldo_InfoText_FakeLoadHold", 8]; // seconds; shi
 
 Want the rest of the intro shorter or longer? The remaining fade durations sit as named constants near the top of `infoText.sqf` (`_blackoutFade`, `_postLoadBuffer`, and so on), each with a comment explaining what it controls. The text itself waits on its own actual reveal animation finishing, not a guessed duration, so there's no separate hold time to tune for it.
 
+Want no fake loading screen at all? Set this in `init.sqf` to skip it (and both fades) entirely, so the title text draws straight over whatever is already on screen:
+
+```sqf
+missionNamespace setVariable ["Waldo_InfoText_SkipFakeLoad", true];
+```
+
+Useful for telling apart two different causes if the title text seems to appear too early or too late: our own transition timing, or the world itself not being ready yet. With it set, anything still streaming in is visible directly, with nothing covering it. If the text still cuts into an unsettled-looking world with this set, that's real streaming, not our transition. It's also a legitimate permanent choice if you don't want any loading-screen presentation.
+
 ---
 
 ## Related Functions
