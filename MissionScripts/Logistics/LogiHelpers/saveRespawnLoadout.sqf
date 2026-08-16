@@ -20,6 +20,13 @@
  */
 params [["_showNotification", true, [true]]];
 private _loadout = [getUnitLoadout player] call Waldo_fnc_ACRE2FilterLoadout;
+// A small, ACRE-independent canary of the loadout's stable equipment commands, stored alongside the
+// full loadout below. respawnRestoreLoadout.sqf uses this - not a raw getUnitLoadout comparison - to
+// verify a restore actually took effect: getUnitLoadout's own top-level shape never changes with
+// content (so a count comparison can never detect a silently no-op'd setUnitLoadout), while a full
+// deep-equality comparison would false-positive as soon as ACRE re-assigns fresh unique radio item
+// IDs onto the just-restored gear (the exact thing Waldo_fnc_ACRE2FilterLoadout strips before save).
+private _canary = [primaryWeapon player, secondaryWeapon player, handgunWeapon player, uniform player, vest player, backpack player, headgear player];
 private _radioState = [];
 private _acrePresent = isClass (configFile >> "CfgPatches" >> "acre_main");
 private _acreReady = _acrePresent && {!isNil "acre_api_fnc_isInitialized"} && {[] call acre_api_fnc_isInitialized};
@@ -40,7 +47,7 @@ if (_acrePresent && {!_acreReady} && {count _existingSnapshot >= 4}) exitWith {
     };
     false
 };
-private _snapshot = [_identity, _loadout, _radioState, diag_tickTime];
+private _snapshot = [_identity, _loadout, _radioState, diag_tickTime, _canary];
 missionNamespace setVariable ["Waldo_Player_RespawnSnapshot", _snapshot];
 missionNamespace setVariable ["Waldo_Player_RespawnSnapshotSource", _source];
 // Compatibility mirrors for persistence and diagnostics. Restore code treats the snapshot above as

@@ -51,6 +51,9 @@ private _snapshot = missionNamespace getVariable ["Waldo_Player_RespawnSnapshot"
 private _savedIdentity = if (count _snapshot >= 4) then {_snapshot select 0} else {missionNamespace getVariable ["Waldo_Player_LoadoutIdentity", []]};
 private _identityMatches = _savedIdentity isEqualTo _currentIdentity;
 private _savedLoadout = if (count _snapshot >= 4) then {_snapshot select 1} else {missionNamespace getVariable ["Waldo_Player_Inventory", []]};
+// Only present on snapshots saved by the current saveRespawnLoadout.sqf; empty on anything older,
+// which simply skips the apply-verification step below rather than comparing against nothing.
+private _savedCanary = if (count _snapshot >= 5) then {_snapshot select 4} else {[]};
 private _restoredCount = 0;
 // Never let an Eden/CBA @ callsign radio-setup attribute copied to the new body race the saved
 // radio restore below. WMP owns the one initial assignment and explicit saved-state restoration.
@@ -62,25 +65,39 @@ if (_identityMatches && {count _savedLoadout > 0}) then {
     // setUnitLoadout can silently no-op if called before the respawned unit's inventory is fully
     // ready - the same transient window the locality retry above exists for. Loadout restore is
     // mission-critical, so verify the apply actually took instead of trusting one call, and retry
-    // briefly if it didn't.
-    [_unit, _savedLoadout] spawn {
-        params ["_unit", "_savedLoadout"];
-        private _expected = count _savedLoadout;
-        private _tries = 0;
-        while {
-            _tries < 5
-            && {alive _unit}
-            && {count (getUnitLoadout _unit) != _expected}
-        } do {
-            sleep 0.2;
-            if (alive _unit) then {_unit setUnitLoadout _savedLoadout;};
-            _tries = _tries + 1;
-        };
-        if (alive _unit && {count (getUnitLoadout _unit) != _expected}) then {
-            diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_FAILED] unit=%1 expectedEntries=%2 actualEntries=%3 after %4 retries.", _unit, _expected, count (getUnitLoadout _unit), _tries];
-        } else {
-            if (_tries > 0) then {
-                diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_RETRY_OK] unit=%1 succeeded after %2 retries.", _unit, _tries];
+    // briefly if it didn't. Verification compares a small set of stable, ACRE-independent equipment
+    // commands (the canary saved alongside the loadout) rather than getUnitLoadout itself: its
+    // top-level shape never changes with content, so a count comparison could never detect a no-op,
+    // while a full deep-equality comparison would false-positive the moment ACRE assigns fresh unique
+    // radio item IDs onto the just-restored gear.
+    if (count _savedCanary >= 7) then {
+        [_unit, _savedLoadout, _savedCanary] spawn {
+            params ["_unit", "_savedLoadout", "_savedCanary"];
+            private _canaryMatches = {
+                (primaryWeapon _unit) == (_savedCanary select 0)
+                && {(secondaryWeapon _unit) == (_savedCanary select 1)}
+                && {(handgunWeapon _unit) == (_savedCanary select 2)}
+                && {(uniform _unit) == (_savedCanary select 3)}
+                && {(vest _unit) == (_savedCanary select 4)}
+                && {(backpack _unit) == (_savedCanary select 5)}
+                && {(headgear _unit) == (_savedCanary select 6)}
+            };
+            private _tries = 0;
+            while {
+                _tries < 5
+                && {alive _unit}
+                && {!(call _canaryMatches)}
+            } do {
+                sleep 0.2;
+                if (alive _unit) then {_unit setUnitLoadout _savedLoadout;};
+                _tries = _tries + 1;
+            };
+            if (alive _unit && {!(call _canaryMatches)}) then {
+                diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_FAILED] unit=%1 expectedCanary=%2 after %3 retries.", _unit, _savedCanary, _tries];
+            } else {
+                if (_tries > 0) then {
+                    diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_RETRY_OK] unit=%1 succeeded after %2 retries.", _unit, _tries];
+                };
             };
         };
     };
