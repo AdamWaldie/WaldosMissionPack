@@ -166,13 +166,24 @@ private _postLoadBuffer = 0.75;  // was 5 - lets the now-black screen settle bef
 private _blackInFade = 1;        // was 3
 private _featureInitTimeout = 60; // bounded safety cap on the WALDO_INIT_COMPLETE wait below
 
-["fauxLoad", ""] call BIS_fnc_startLoadingScreen;
-uiSleep _fakeLoadHold;
-["wakeUpID", false, _blackoutFade] call BIS_fnc_blackOut; // Fade screen out to black for intro sequence.
-uiSleep _postBlackoutBuffer;
-"fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
-
-uiSleep _postLoadBuffer;
+// Waldo_InfoText_SkipFakeLoad (default false): skips the fake loading screen and both fades below
+// entirely, going straight from the readiness wait above into the text reveal drawn directly over
+// whatever is currently on screen. Primarily a diagnostic switch - it isolates whether streaming
+// pop-in is visible with none of WMP's own presentation covering it, useful for telling apart "our
+// transition is timed wrong" from "the world genuinely is not settled yet" - but also a legitimate
+// permanent choice for a mission maker who wants no loading-screen presentation at all. blackIn below
+// is skipped along with it, since it has no matching blackOut to reverse when this is set.
+private _skipFakeLoad = missionNamespace getVariable ["Waldo_InfoText_SkipFakeLoad", false];
+if (_skipFakeLoad) then {
+    diag_log "[WMP INFOTEXT] Waldo_InfoText_SkipFakeLoad is true - fake loading screen and fades skipped.";
+} else {
+    ["fauxLoad", ""] call BIS_fnc_startLoadingScreen;
+    uiSleep _fakeLoadHold;
+    ["wakeUpID", false, _blackoutFade] call BIS_fnc_blackOut; // Fade screen out to black for intro sequence.
+    uiSleep _postBlackoutBuffer;
+    "fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
+    uiSleep _postLoadBuffer;
+};
 
 // ----- ANIMATION SETTING -----
 // Triggered here, in parallel with the text reveal below, instead of only after it - so total wait
@@ -289,7 +300,9 @@ if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) then {
     diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
 };
 
-["wakeUpID", true, _blackInFade] call BIS_fnc_blackIn;
+if !(_skipFakeLoad) then {
+    ["wakeUpID", true, _blackInFade] call BIS_fnc_blackIn;
+};
 disableUserInput false;
 
 // Active/Complete track the on-screen text, not player control - wait for the detached reveal above
