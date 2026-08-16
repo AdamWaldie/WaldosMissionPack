@@ -155,16 +155,30 @@ if (hasInterface) then {
     };
 };
 
-// Capture a provisional mission-start baseline. When ACRE is enabled, its initial assignment later
-// replaces this with a complete inventory-plus-radio snapshot. Bohemia's documented local Respawn
-// handler is the sole restore trigger; one trigger avoids competing callbacks and inherited unit
-// variables silently suppressing later lives.
-[false] call Waldo_fnc_SaveLoadout;
-player addEventHandler ["Respawn", {
-    params ["_newUnit", ["_oldUnit", objNull]];
-    diag_log format ["[WMP LOADOUT] Local Respawn event received new=%1 old=%2 local=%3 playerMatches=%4.", _newUnit, _oldUnit, local _newUnit, _newUnit isEqualTo player];
-    [_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
-}];
+// Capture a provisional mission-start baseline once this client's player unit actually exists, and
+// install the persistent Respawn handler on it. `player` is not guaranteed to be non-null yet at this
+// point in the file - JIP and slower-loading clients can reach this line before their unit is created,
+// the same race already hedged around AddDocs and the ACE nametags Respawn-binding repair above.
+// Capturing the baseline against a still-null player silently saves an empty loadout (getUnitLoadout
+// objNull), and `player addEventHandler` against objNull attaches the handler to nothing - either one
+// leaves that client's later respawns falling back to whatever generic loadout the engine's own
+// respawn template assigns, instead of their Eden/ACE-Arsenal loadout. When ACRE is enabled, its
+// initial assignment later replaces this baseline with a complete inventory-plus-radio snapshot.
+// Bohemia's documented local Respawn handler is the sole restore trigger; one trigger avoids competing
+// callbacks and inherited unit variables silently suppressing later lives.
+[] spawn {
+    private _deadline = diag_tickTime + 30;
+    waitUntil {uiSleep 0.1; !isNull player || {diag_tickTime >= _deadline}};
+    if (isNull player) exitWith {
+        diag_log "[WMP LOADOUT] initPlayerLocal.sqf: player never became non-null within 30s; baseline capture and the Respawn handler were not installed. This should not happen for a normal client - report this RPT.";
+    };
+    [false] call Waldo_fnc_SaveLoadout;
+    player addEventHandler ["Respawn", {
+        params ["_newUnit", ["_oldUnit", objNull]];
+        diag_log format ["[WMP LOADOUT] Local Respawn event received new=%1 old=%2 local=%3 playerMatches=%4.", _newUnit, _oldUnit, local _newUnit, _newUnit isEqualTo player];
+        [_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
+    }];
+};
 
 // Apply safestart to this client if a freeze is already active when they join (JIP).
 if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
