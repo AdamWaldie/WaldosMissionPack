@@ -161,6 +161,20 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 
 ## `interfaceConfig.sqf` — player local
 
+### Introduction text
+
+See [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) for the full guide, animation
+options and timing controls.
+
+| Setting | Purpose / valid values |
+|---|---|
+| `Waldo_InfoText_Title` | Custom mission title; `""` uses `onLoadName` from `description.ext`. |
+| `Waldo_InfoText_Locale` | Custom location name; `""` uses the map's `worldName`. |
+| `Waldo_InfoText_LongDate` | `true` = long date format ("3rd November 2024"), `false` = short ("3/11/2024"). |
+| `Waldo_InfoText_Animation` | Intro player animation: `NONE`, `WALK`, `SIT`, `WAKE`, `WAKESLOW` or `COFFIN`. |
+| `Waldo_InfoText_FakeLoadHold` | Seconds held on the fake loading screen before the intro starts. |
+| `Waldo_InfoText_SkipFakeLoad` | `true` skips the fake loading screen and its fades entirely. |
+
 ### Notification flow
 
 | Setting | Purpose / units |
