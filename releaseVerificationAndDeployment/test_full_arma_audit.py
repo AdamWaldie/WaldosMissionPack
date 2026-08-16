@@ -1395,9 +1395,13 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_Player_RadioState', save_respawn)
         self.assertIn('Waldo_Player_RespawnSnapshot', save_respawn)
         self.assertIn('the previous complete respawn snapshot was preserved', save_respawn)
-        # The respawn-time restore body lives in the extracted shared function, called by one local
-        # Respawn event handler. Repeat protection must be client-owned; a unit variable can be
-        # inherited by a later respawn body and suppress every restore after the first.
+        # The respawn-time restore body lives in the extracted shared function, called by two
+        # independent client-local triggers (the local "Respawn" event handler, plus a
+        # CBA_fnc_addPlayerEventHandler "unit" watchdog gated behind Waldo_LoadoutBaselineCaptured so
+        # it can never fire before the first baseline exists). Repeat protection must be client-owned
+        # and object-identity-based, not a unit variable that could be inherited by a later respawn
+        # body and suppress every restore after the first - that is what makes firing both triggers
+        # for the same life safe.
         self.assertIn('Waldo_Player_RadioState', respawn_restore)
         self.assertIn('Waldo_Player_RespawnSnapshot', respawn_restore)
         self.assertIn('Waldo_RespawnRestoreHandledUnit', respawn_restore)
@@ -1412,7 +1416,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('[_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout', init_player)
         self.assertIn('player addEventHandler ["Respawn"', init_player)
         self.assertNotIn('["CAManBase", "Respawn", {', init_player)
-        self.assertNotIn('"unit",\n        {\n            params ["_newUnit", ["_oldUnit"', init_player)
+        self.assertIn('"unit",\n        {\n            params ["_newUnit", ["_oldUnit"', init_player)
+        self.assertIn('Waldo_LoadoutBaselineCaptured', init_player)
         self.assertNotIn('re-executes this whole file on every respawn', init_player)
         self.assertNotIn('["RESPAWN", true]', init_player)
         self.assertNotIn('["RESPAWN", true]', respawn_restore)

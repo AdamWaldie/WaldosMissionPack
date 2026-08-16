@@ -164,20 +164,61 @@ if (hasInterface) then {
 // leaves that client's later respawns falling back to whatever generic loadout the engine's own
 // respawn template assigns, instead of their Eden/ACE-Arsenal loadout. When ACRE is enabled, its
 // initial assignment later replaces this baseline with a complete inventory-plus-radio snapshot.
-// Bohemia's documented local Respawn handler is the sole restore trigger; one trigger avoids competing
-// callbacks and inherited unit variables silently suppressing later lives.
+// Loadout restore is mission-critical, so this waits indefinitely (not a single bounded attempt) and
+// installs two independent restore triggers below rather than trusting one signal.
 [] spawn {
-    private _deadline = diag_tickTime + 30;
-    waitUntil {uiSleep 0.1; !isNull player || {diag_tickTime >= _deadline}};
-    if (isNull player) exitWith {
-        diag_log "[WMP LOADOUT] initPlayerLocal.sqf: player never became non-null within 30s; baseline capture and the Respawn handler were not installed. This should not happen for a normal client - report this RPT.";
+    private _waitedSeconds = 0;
+    waitUntil {
+        uiSleep 0.1;
+        if (isNull player) then {
+            _waitedSeconds = _waitedSeconds + 0.1;
+            // Log roughly every 30s instead of once - a client that takes unusually long to spawn a
+            // player object should still show up in RPT as "still waiting", not go silent forever.
+            if ((round (_waitedSeconds * 10)) % 300 == 0) then {
+                diag_log format ["[WMP LOADOUT] initPlayerLocal.sqf: still waiting for player (%1s elapsed) before baseline capture and Respawn handler installation.", round _waitedSeconds];
+            };
+        };
+        !isNull player
     };
     [false] call Waldo_fnc_SaveLoadout;
+    // Gate for trigger 2 below: it must never fire before the baseline above actually exists once,
+    // otherwise it would treat this client's very first spawn as a "respawn" and race
+    // Waldo_fnc_ACRE2Init's own one-time radio-generation setup on initial join.
+    missionNamespace setVariable ["Waldo_LoadoutBaselineCaptured", true];
+
+    // Trigger 1: Bohemia's documented local "Respawn" handler - installed once here and carried by
+    // the engine onto every later respawned unit body without needing to be re-registered.
     player addEventHandler ["Respawn", {
         params ["_newUnit", ["_oldUnit", objNull]];
         diag_log format ["[WMP LOADOUT] Local Respawn event received new=%1 old=%2 local=%3 playerMatches=%4.", _newUnit, _oldUnit, local _newUnit, _newUnit isEqualTo player];
         [_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
     }];
+
+    // Trigger 2 (independent safety net): CBA's own "player object changed" event - the same
+    // mechanism Waldo_fnc_ACRE2Init already uses to refresh radios on respawn. Field evidence from an
+    // earlier revision of this system (see project history around the "Respawn: independent second
+    // restore trigger" and "Stabilize respawn radio state" changes) found trigger 1 alone can go a
+    // full session without firing in some environments, while this CBA hook reliably did. It was later
+    // dropped in favour of a single trigger specifically to avoid two failure modes that are now both
+    // closed: (a) firing on the very first spawn and racing ACRE's initial setup - closed by the
+    // Waldo_LoadoutBaselineCaptured gate above; (b) a duplicate-restore guard that lived on the unit
+    // object itself and could be inherited onto the next respawned body, silently suppressing a later
+    // life's restore - Waldo_fnc_RespawnRestoreLoadout's guard is now a single missionNamespace
+    // "last handled unit" reference compared by object identity, which a fresh respawned unit can
+    // never satisfy, so both triggers firing for the same life is simply a harmless no-op on whichever
+    // runs second.
+    [
+        "unit",
+        {
+            params ["_newUnit", ["_oldUnit", objNull]];
+            private _isRespawn = (missionNamespace getVariable ["Waldo_LoadoutBaselineCaptured", false]) && {isNull _oldUnit || {!alive _oldUnit}};
+            if (_isRespawn) then {
+                diag_log format ["[WMP LOADOUT][WATCHDOG] Player-unit-changed fallback trigger fired for %1 (old=%2).", _newUnit, _oldUnit];
+                [_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
+            };
+        },
+        false
+    ] call CBA_fnc_addPlayerEventHandler;
 };
 
 // Apply safestart to this client if a freeze is already active when they join (JIP).

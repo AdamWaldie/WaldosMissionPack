@@ -59,6 +59,31 @@ _unit setVariable ["acre_sys_radio_setup", "[]", true];
 if (_identityMatches && {count _savedLoadout > 0}) then {
     _unit setUnitLoadout _savedLoadout;
     _restoredCount = count _savedLoadout;
+    // setUnitLoadout can silently no-op if called before the respawned unit's inventory is fully
+    // ready - the same transient window the locality retry above exists for. Loadout restore is
+    // mission-critical, so verify the apply actually took instead of trusting one call, and retry
+    // briefly if it didn't.
+    [_unit, _savedLoadout] spawn {
+        params ["_unit", "_savedLoadout"];
+        private _expected = count _savedLoadout;
+        private _tries = 0;
+        while {
+            _tries < 5
+            && {alive _unit}
+            && {count (getUnitLoadout _unit) != _expected}
+        } do {
+            sleep 0.2;
+            if (alive _unit) then {_unit setUnitLoadout _savedLoadout;};
+            _tries = _tries + 1;
+        };
+        if (alive _unit && {count (getUnitLoadout _unit) != _expected}) then {
+            diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_FAILED] unit=%1 expectedEntries=%2 actualEntries=%3 after %4 retries.", _unit, _expected, count (getUnitLoadout _unit), _tries];
+        } else {
+            if (_tries > 0) then {
+                diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_RETRY_OK] unit=%1 succeeded after %2 retries.", _unit, _tries];
+            };
+        };
+    };
 };
 private _generation = (missionNamespace getVariable ["Waldo_ACRE2_LoadoutGeneration", 0]) + 1;
 missionNamespace setVariable ["Waldo_ACRE2_LoadoutGeneration", _generation];
