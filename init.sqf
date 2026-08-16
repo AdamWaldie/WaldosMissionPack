@@ -235,21 +235,14 @@ if (hasInterface) then {call Waldo_fnc_SetTeamColour};
 
 /*===========================================================================================================================*/
 
-/* 
+/*
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
 
-When left with no parameters, as below, the script autogenerates the location based on the terrain name, and the mission title from the description.ext 
-You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission.
+Player presentation; installed from initPlayerLocal.sqf, not here (this file also runs on the
+dedicated server, which has no display 46 to present anything on). Content and timing are mission
+settings in MissionConfig\interfaceConfig.sqf, not call-site parameters - see that file's
+Introduction Text setting-by-setting guide.
 */
-// Player presentation requires display 46. Running InfoText on a dedicated server
-// waits forever for a display that cannot exist and blocks WALDO_INIT_COMPLETE.
-// spawn, not call: InfoText's own fake-loading/blackout/typeText sequence is ~24s of scripted
-// uiSleep with nothing else in this file depending on its result. WALDO_INIT_COMPLETE (and every
-// crate/jamming/safestart/Dynamic AA/paradrop system gated on it below) has no reason to sit behind
-// a player's intro screen finishing - running it in parallel gets those systems ready ~24s sooner
-// without changing what a player actually sees or when their input is unlocked (still governed
-// entirely by InfoText's own internal disableUserInput calls).
-if (hasInterface) then {["",""] spawn Waldo_fnc_InfoText};
 
 /*
 

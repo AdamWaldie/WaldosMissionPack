@@ -2,22 +2,35 @@
  * Author: WaldoTheWarfighter
  * Introduction / title text overlay - shows a styled intro (mission name, location, date, time).
  * With no overrides it auto-derives the title from description.ext and the location from worldName.
- * Registered as Waldo_fnc_InfoText.
+ * Registered as Waldo_fnc_InfoText. Called automatically, once, from initPlayerLocal.sqf.
+ *
+ * Content and timing are mission-maker settings in MissionConfig\interfaceConfig.sqf
+ * (Waldo_InfoText_Title, Waldo_InfoText_Locale, Waldo_InfoText_LongDate, Waldo_InfoText_Animation,
+ * Waldo_InfoText_FakeLoadHold, Waldo_InfoText_SkipFakeLoad) - edit those instead of this file. The
+ * four positional arguments below still exist only for a one-off custom call (for example a trigger
+ * that wants a different title mid-mission without touching the mission-wide config); each falls
+ * back to its configured value when omitted.
  *
  * Arguments:
- * 0: _title <STRING> - mission title override (optional, default: "" = from description.ext)
- * 1: _locale <STRING> - location override (optional, default: "" = from worldName)
- * 2: _longDate <BOOL> - long date format ("1st November 2010") vs short ("01/11/2010") (optional, default: false)
- * 3: _anim <STRING> - text animation style (optional, default: "NONE")
+ * 0: _title <STRING> - mission title override (optional, default: Waldo_InfoText_Title)
+ * 1: _locale <STRING> - location override (optional, default: Waldo_InfoText_Locale)
+ * 2: _longDate <BOOL> - long date format ("1st November 2010") vs short ("01/11/2010") (optional, default: Waldo_InfoText_LongDate)
+ * 3: _anim <STRING> - text animation style (optional, default: Waldo_InfoText_Animation)
  *
  * Return Value:
  * Nothing
  *
  * Example:
- * ["", ""] spawn Waldo_fnc_InfoText;
+ * [] spawn Waldo_fnc_InfoText;
+ * ["Operation Iron Fist", "Altis"] spawn Waldo_fnc_InfoText; // one-off override, e.g. from a trigger
  */
 
-params[["_title",""],["_locale",""],["_longDate",false],["_anim","NONE"]];
+params[
+    ["_title", missionNamespace getVariable ["Waldo_InfoText_Title", ""]],
+    ["_locale", missionNamespace getVariable ["Waldo_InfoText_Locale", ""]],
+    ["_longDate", missionNamespace getVariable ["Waldo_InfoText_LongDate", false]],
+    ["_anim", missionNamespace getVariable ["Waldo_InfoText_Animation", "NONE"]]
+];
 
 missionNamespace setVariable ["Waldo_InfoText_Active", true];
 missionNamespace setVariable ["Waldo_InfoText_Complete", false];
@@ -154,11 +167,11 @@ private _tPlayerReady = diag_tickTime;
 //    to actually catch up before the intro text starts drawing over it. It is a guess, not a
 //    guarantee - there is no reliable SQF signal for "this client's streaming has fully settled", so
 //    the right guess depends entirely on this mission's own terrain/mod list. Set
-//    Waldo_InfoText_FakeLoadHold in init.sqf to override the shipped default per mission instead of
-//    editing this file - the default here is a moderate assumption, not a measurement of any specific
-//    mission's actual settle time. Raise it first if the world still looks like it's loading when the
-//    title text appears.
-//  - The final wait below for WALDO_INIT_COMPLETE: init.sqf now spawns this script instead of
+//    Waldo_InfoText_FakeLoadHold in MissionConfig\interfaceConfig.sqf to override the shipped default
+//    per mission instead of editing this file - the default here is a moderate assumption, not a
+//    measurement of any specific mission's actual settle time. Raise it first if the world still
+//    looks like it's loading when the title text appears.
+//  - The final wait below for WALDO_INIT_COMPLETE: initPlayerLocal.sqf now spawns this script instead of
 //    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
 //    parallel with this intro, not after it), which means this intro can no longer be assumed to
 //    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast

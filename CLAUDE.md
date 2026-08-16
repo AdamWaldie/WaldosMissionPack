@@ -134,13 +134,6 @@ Mission load
         │     ├─ call Waldo_fnc_InitVehicles           (vehicle action setup)
         │     ├─ call Waldo_fnc_AddDocs                (briefing documents)
         │     ├─ call Waldo_fnc_SetTeamColour          (squad colour by role)
-        │     ├─ ["",""] spawn Waldo_fnc_InfoText       (intro title screen, runs in parallel -
-        │     │                                          WALDO_INIT_COMPLETE does not wait on it.
-        │     │                                          disableUserInput lifts as soon as a chosen
-        │     │                                          animation finishes and WALDO_INIT_COMPLETE
-        │     │                                          is up, not once the on-screen text is done -
-        │     │                                          with no animation the intro text can still be
-        │     │                                          typing itself out after control returns)
         │     └─ Sets WALDO_INIT_COMPLETE flag
         │
         └─ initPlayerLocal.sqf  (per-player; the engine runs this file once per connection - a
@@ -149,9 +142,14 @@ Mission load
               │                  event handler installed once below, which the engine itself carries
               │                  over onto each new unit object across every later respawn)
               ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout
-              └─ Installs one `player addEventHandler ["Respawn", ...]` handler that calls
-                    Waldo_fnc_RespawnRestoreLoadout with the new/old unit on every future death - this
-                    single installation is what "survives" respawn, not a re-executed file
+              ├─ Installs one `player addEventHandler ["Respawn", ...]` handler that calls
+              │     Waldo_fnc_RespawnRestoreLoadout with the new/old unit on every future death - this
+              │     single installation is what "survives" respawn, not a re-executed file
+              └─ [] spawn Waldo_fnc_InfoText          (intro title screen, content/timing from
+                    MissionConfig\interfaceConfig.sqf, runs in parallel - WALDO_INIT_COMPLETE does
+                    not wait on it. disableUserInput lifts as soon as a chosen animation finishes
+                    and WALDO_INIT_COMPLETE is up, not once the on-screen text is done - with no
+                    animation the intro text can still be typing itself out after control returns)
 ```
 
 ### Key Global Variables (missionNamespace)

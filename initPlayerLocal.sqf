@@ -50,6 +50,15 @@ if (hasInterface) then {
     // Pure-data configuration is local and synchronous; activation and JIP waits remain below.
     ["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;
 
+    // Introduction Text - content and timing are MissionConfig\interfaceConfig.sqf settings, loaded
+    // just above, not call-site parameters. spawn, not call: InfoText's own fake-loading/blackout/
+    // typeText sequence is a scripted several-second sequence with nothing else in this file
+    // depending on its result, and every feature gated on WALDO_INIT_COMPLETE has no reason to sit
+    // behind a player's intro screen finishing - running it in parallel gets those systems ready
+    // sooner without changing what a player actually sees or when their input is unlocked (still
+    // governed entirely by InfoText's own internal disableUserInput calls).
+    [] spawn Waldo_fnc_InfoText;
+
     // ACE 3.21.1 forwards Arma's old-corpse object into a Boolean argument in its setName Respawn
     // callback. CBA may populate the per-unit callback list slightly after this event script starts,
     // so wait for that exact list before repairing only ACE's malformed entry.
