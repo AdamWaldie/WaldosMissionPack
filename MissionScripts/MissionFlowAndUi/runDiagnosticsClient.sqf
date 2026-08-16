@@ -204,6 +204,22 @@ if (_jumpAircraft isEqualTo []) then {
     ], if (_missingJumpCount == 0) then {""} else {"An aircraft finished local jump setup but is still missing an expected static-line/HALO hold-action on this client - check the RPT for [WMP PARADROP] entries, and confirm the jump envelope thresholds (WALDO_STATIC_MIN/MAXALTITUDE, WALDO_STATIC_MAXSPEED, WALDO_PARA_HALOALTITUDE) aren't excluding both jump types."}] call _add;
 };
 
+private _infoTextTimings = missionNamespace getVariable ["Waldo_InfoText_Timings", createHashMap];
+private _infoTextActive = missionNamespace getVariable ["Waldo_InfoText_Active", false];
+private _infoTextComplete = missionNamespace getVariable ["Waldo_InfoText_Complete", false];
+private _infoTextState = if (!_infoTextComplete && {!_infoTextActive}) then {"UNCONFIGURED"} else {
+    if (_infoTextActive) then {"ACTIVE"} else {
+        if (_infoTextTimings getOrDefault ["featureInitTimedOut", false]) then {"ERROR"} else {"LOADED"}
+    }
+};
+["mission-flow", "infotext-timing", _infoTextState, format [
+    "displayWaitSeconds=%1 playerReadyWaitSeconds=%2 fakeLoadWaitSeconds=%3 featureInitWaitSeconds=%4 featureInitTimedOut=%5 controlReturnedAtSeconds=%6 textRevealAfterControlSeconds=%7 totalToCompleteSeconds=%8",
+    _infoTextTimings getOrDefault ["displayWait", -1], _infoTextTimings getOrDefault ["playerReadyWait", -1],
+    _infoTextTimings getOrDefault ["fakeLoadWait", -1], _infoTextTimings getOrDefault ["featureInitWait", -1],
+    _infoTextTimings getOrDefault ["featureInitTimedOut", false], _infoTextTimings getOrDefault ["controlReturnedAt", -1],
+    _infoTextTimings getOrDefault ["textRevealAfterControl", -1], _infoTextTimings getOrDefault ["totalToComplete", -1]
+], if (_infoTextState != "ERROR") then {""} else {"featureInitWaitSeconds hit its 60s cap without WALDO_INIT_COMPLETE becoming true - check the RPT for [WMP INIT] entries and confirm Logi_MissionScanComplete is actually being set (Waldo_fnc_SideBaseLoadoutSetup)."}] call _add;
+
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 // 45 always-registered modules; +2 hazard modules when hazards are enabled; +3 headless-client
 // controls when HC support is enabled. Both conditional blocks wait for shared config and may finish

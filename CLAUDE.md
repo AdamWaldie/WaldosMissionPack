@@ -143,24 +143,15 @@ Mission load
         │     │                                          typing itself out after control returns)
         │     └─ Sets WALDO_INIT_COMPLETE flag
         │
-        └─ initPlayerLocal.sqf  (per-player; the engine re-executes this whole file on every
-              │                  join/JIP/respawn - most of it is designed to re-run each time so it
-              │                  rebinds to the fresh unit object, e.g. re-installing ACE self-actions,
-              │                  which are per-object. Only the loadout baseline capture + the two
-              │                  respawn triggers below are guarded by `Waldo_InitPlayerLocal_
-              │                  RespawnHandlerInstalled` to run once per client)
-              ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout (guarded, once)
-              ├─ Registers TWO independent respawn triggers (guarded, once each; both call the
-              │     same idempotent Waldo_fnc_RespawnRestoreLoadout, so either firing first is
-              │     enough - deliberately not relying on a single signal):
-              │       1. CBA "Respawn" extended EH, gated on `local _unit` (not `_unit == player`,
-              │          which is not guaranteed reassigned at the exact tick this fires)
-              │       2. CBA_fnc_addPlayerEventHandler "unit" (the same mechanism ACRE2Init already
-              │          uses for its own respawn radio refresh), gated on the previous player
-              │          object being dead/gone so a non-respawn reassignment (e.g. Zeus takeover)
-              │          never gets the respawn loadout stamped over it
-              └─ Waldo_fnc_RespawnRestoreLoadout restores the saved loadout/radio state once per
-                    life (Waldo_RespawnRestoreHandled guards the second trigger from double-firing)
+        └─ initPlayerLocal.sqf  (per-player; the engine runs this file once per connection - a
+              │                  fresh join or JIP - not on every respawn. Respawn-specific work is
+              │                  not handled by re-running the file; it is handled by the "Respawn"
+              │                  event handler installed once below, which the engine itself carries
+              │                  over onto each new unit object across every later respawn)
+              ├─ Saves a mission-start baseline loadout via Waldo_fnc_SaveLoadout
+              └─ Installs one `player addEventHandler ["Respawn", ...]` handler that calls
+                    Waldo_fnc_RespawnRestoreLoadout with the new/old unit on every future death - this
+                    single installation is what "survives" respawn, not a re-executed file
 ```
 
 ### Key Global Variables (missionNamespace)
@@ -601,6 +592,8 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Headless Client, Obituary, Zeus registration, the Feature Runtime Control snapshot handshake, Object Scaling bounds, UI Theme application, Accessibility self-interaction, Emergency Dismount, Corpse Traps, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
 
 Two respawn-focused client checks close the loop on the loadout-restore system: `respawn`/`loadout-restore` reads a `Waldo_Player_LastRespawnRestore` snapshot `[identityMatched, restoredEntries, tickTime]` set by `initPlayerLocal.sqf`'s `"Respawn"` handler on every actual respawn (`UNCONFIGURED` before this client's first respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved loadout); `dependencies`/`ace-nametags-respawn-compat` is informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
+
+`mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` itself into a client-local `Waldo_InfoText_Timings` hashmap: `displayWaitSeconds` (time to `findDisplay 46`), `playerReadyWaitSeconds` (the per-client streaming-settle wait), `fakeLoadWaitSeconds` (the fake loading screen and its fades, `0` when `Waldo_InfoText_SkipFakeLoad` is set), `featureInitWaitSeconds` (time spent waiting on `WALDO_INIT_COMPLETE` after the fake load), `controlReturnedAtSeconds` (total time until `disableUserInput false`), and `textRevealAfterControlSeconds` (how much longer the detached text reveal kept typing after control was already returned). `ERROR` only when `featureInitWaitSeconds` hit its 60s cap without `WALDO_INIT_COMPLETE` ever becoming true - every other combination is a real, not-broken timing measurement, not a pass/fail judgment on any specific duration. This turns "the intro feels slow/mistimed" from a guess into a stage-by-stage number a mission maker can read straight off the diagnostics report.
 
 Every new module's diagnostics rows go through the same two primitives so RPT output never
 fragments into per-feature formats: `Waldo_fnc_DiagnosticLog` (the `[WMP DIAG]` frame shown above)

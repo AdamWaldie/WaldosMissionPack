@@ -22,7 +22,16 @@ params[["_title",""],["_locale",""],["_longDate",false],["_anim","NONE"]];
 missionNamespace setVariable ["Waldo_InfoText_Active", true];
 missionNamespace setVariable ["Waldo_InfoText_Complete", false];
 
+// Client-local timing capture for Waldo_fnc_RunDiagnosticsClient's "mission-flow"/"infotext-timing"
+// check. Every stage is a real diag_tickTime delta, not a guess, so a mission maker reporting a slow
+// or mistimed intro can be pointed at the exact stage (display wait, fake-load hold, feature-init
+// wait, and so on) instead of the whole sequence being one opaque block. Not broadcast - this is a
+// per-client observation, and each player's own load-in timing is independent.
+private _tStart = diag_tickTime;
+missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [["startedAt", _tStart]]];
+
 waitUntil {!isNull findDisplay 46};
+private _tDisplay = diag_tickTime;
 //Grab Mission Name & Terrain Name automatically
 //If provided with a string in the correct parameter slot, accepts that inplace of the automatic generation
 _missionTitle = getText (missionConfigFile >> "onLoadName");; 
@@ -132,6 +141,7 @@ _textColour = switch (side player) do
 // negligible epsilon almost immediately even on a client that is still heavily loading, so a full
 // second is a more realistic floor than "any nonzero value" without pretending it's a real signal.
 waitUntil { uiSleep 0.2; (!isNull player && time > 1) };
+private _tPlayerReady = diag_tickTime;
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
 // Throw up our own fake loading screen purely as a cinematic transition into the intro below.
@@ -184,6 +194,7 @@ if (_skipFakeLoad) then {
     "fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
     uiSleep _postLoadBuffer;
 };
+private _tFakeLoadDone = diag_tickTime;
 
 // ----- ANIMATION SETTING -----
 // Triggered here, in parallel with the text reveal below, instead of only after it - so total wait
@@ -296,18 +307,38 @@ waitUntil {
     uiSleep 0.2;
     missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {diag_tickTime >= _featureInitDeadline}
 };
-if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) then {
+private _featureInitTimedOut = !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]);
+if (_featureInitTimedOut) then {
     diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
 };
+private _tFeatureInitDone = diag_tickTime;
 
 if !(_skipFakeLoad) then {
     ["wakeUpID", true, _blackInFade] call BIS_fnc_blackIn;
 };
 disableUserInput false;
+private _tControlReturned = diag_tickTime;
 
 // Active/Complete track the on-screen text, not player control - wait for the detached reveal above
 // to actually finish before flipping them, so a notification deferred on Waldo_InfoText_Complete
 // still never draws over still-typing intro text even though control returned earlier.
 waitUntil { uiSleep 0.2; scriptDone _textRevealHandle };
+private _tComplete = diag_tickTime;
 missionNamespace setVariable ["Waldo_InfoText_Active", false];
 missionNamespace setVariable ["Waldo_InfoText_Complete", true];
+
+// Final timing snapshot for diagnostics. Each *Wait key is that specific stage's own duration (not a
+// running total), so a mission maker can see exactly which stage is slow: display readiness, the
+// per-client streaming-settle wait, the fake loading screen/fades, feature startup, then how long the
+// text itself kept typing after control was already returned.
+missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [
+    ["startedAt", _tStart],
+    ["displayWait", _tDisplay - _tStart],
+    ["playerReadyWait", _tPlayerReady - _tDisplay],
+    ["fakeLoadWait", _tFakeLoadDone - _tPlayerReady],
+    ["featureInitWait", _tFeatureInitDone - _tFakeLoadDone],
+    ["featureInitTimedOut", _featureInitTimedOut],
+    ["controlReturnedAt", _tControlReturned - _tStart],
+    ["textRevealAfterControl", _tComplete - _tControlReturned],
+    ["totalToComplete", _tComplete - _tStart]
+]];

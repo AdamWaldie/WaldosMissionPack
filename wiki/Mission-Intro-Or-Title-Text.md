@@ -104,6 +104,8 @@ missionNamespace setVariable ["Waldo_InfoText_SkipFakeLoad", true];
 
 Useful for telling apart two different causes if the title text seems to appear too early or too late: our own transition timing, or the world itself not being ready yet. With it set, anything still streaming in is visible directly, with nothing covering it. If the text still cuts into an unsettled-looking world with this set, that's real streaming, not our transition. It's also a legitimate permanent choice if you don't want any loading-screen presentation.
 
+Every stage above is also measured, not guessed at. [Mission Diagnostics](Mission-Diagnostics)'s `mission-flow`/`infotext-timing` check reports the real seconds each client spent in the display wait, the streaming-settle wait, the fake load screen, and the `WALDO_INIT_COMPLETE` wait, so a report of "the intro is slow" can be traced to one specific stage instead of the whole sequence.
+
 ---
 
 ## Related Functions
