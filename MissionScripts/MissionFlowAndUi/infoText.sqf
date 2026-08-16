@@ -2,27 +2,49 @@
  * Author: WaldoTheWarfighter
  * Introduction / title text overlay - shows a styled intro (mission name, location, date, time).
  * With no overrides it auto-derives the title from description.ext and the location from worldName.
- * Registered as Waldo_fnc_InfoText.
+ * Registered as Waldo_fnc_InfoText. Called automatically, once, from initPlayerLocal.sqf.
+ *
+ * Content and timing are mission-maker settings in MissionConfig\interfaceConfig.sqf
+ * (Waldo_InfoText_Title, Waldo_InfoText_Locale, Waldo_InfoText_LongDate, Waldo_InfoText_Animation,
+ * Waldo_InfoText_FakeLoadHold, Waldo_InfoText_SkipFakeLoad) - edit those instead of this file. The
+ * four positional arguments below still exist only for a one-off custom call (for example a trigger
+ * that wants a different title mid-mission without touching the mission-wide config); each falls
+ * back to its configured value when omitted.
  *
  * Arguments:
- * 0: _title <STRING> - mission title override (optional, default: "" = from description.ext)
- * 1: _locale <STRING> - location override (optional, default: "" = from worldName)
- * 2: _longDate <BOOL> - long date format ("1st November 2010") vs short ("01/11/2010") (optional, default: false)
- * 3: _anim <STRING> - text animation style (optional, default: "NONE")
+ * 0: _title <STRING> - mission title override (optional, default: Waldo_InfoText_Title)
+ * 1: _locale <STRING> - location override (optional, default: Waldo_InfoText_Locale)
+ * 2: _longDate <BOOL> - long date format ("1st November 2010") vs short ("01/11/2010") (optional, default: Waldo_InfoText_LongDate)
+ * 3: _anim <STRING> - text animation style (optional, default: Waldo_InfoText_Animation)
  *
  * Return Value:
  * Nothing
  *
  * Example:
- * ["", ""] spawn Waldo_fnc_InfoText;
+ * [] spawn Waldo_fnc_InfoText;
+ * ["Operation Iron Fist", "Altis"] spawn Waldo_fnc_InfoText; // one-off override, e.g. from a trigger
  */
 
-params[["_title",""],["_locale",""],["_longDate",false],["_anim","NONE"]];
+params[
+    ["_title", missionNamespace getVariable ["Waldo_InfoText_Title", ""]],
+    ["_locale", missionNamespace getVariable ["Waldo_InfoText_Locale", ""]],
+    ["_longDate", missionNamespace getVariable ["Waldo_InfoText_LongDate", false]],
+    ["_anim", missionNamespace getVariable ["Waldo_InfoText_Animation", "NONE"]]
+];
 
 missionNamespace setVariable ["Waldo_InfoText_Active", true];
 missionNamespace setVariable ["Waldo_InfoText_Complete", false];
 
+// Client-local timing capture for Waldo_fnc_RunDiagnosticsClient's "mission-flow"/"infotext-timing"
+// check. Every stage is a real diag_tickTime delta, not a guess, so a mission maker reporting a slow
+// or mistimed intro can be pointed at the exact stage (display wait, fake-load hold, feature-init
+// wait, and so on) instead of the whole sequence being one opaque block. Not broadcast - this is a
+// per-client observation, and each player's own load-in timing is independent.
+private _tStart = diag_tickTime;
+missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [["startedAt", _tStart]]];
+
 waitUntil {!isNull findDisplay 46};
+private _tDisplay = diag_tickTime;
 //Grab Mission Name & Terrain Name automatically
 //If provided with a string in the correct parameter slot, accepts that inplace of the automatic generation
 _missionTitle = getText (missionConfigFile >> "onLoadName");; 
@@ -132,6 +154,7 @@ _textColour = switch (side player) do
 // negligible epsilon almost immediately even on a client that is still heavily loading, so a full
 // second is a more realistic floor than "any nonzero value" without pretending it's a real signal.
 waitUntil { uiSleep 0.2; (!isNull player && time > 1) };
+private _tPlayerReady = diag_tickTime;
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
 // Throw up our own fake loading screen purely as a cinematic transition into the intro below.
@@ -144,11 +167,11 @@ waitUntil { uiSleep 0.2; (!isNull player && time > 1) };
 //    to actually catch up before the intro text starts drawing over it. It is a guess, not a
 //    guarantee - there is no reliable SQF signal for "this client's streaming has fully settled", so
 //    the right guess depends entirely on this mission's own terrain/mod list. Set
-//    Waldo_InfoText_FakeLoadHold in init.sqf to override the shipped default per mission instead of
-//    editing this file - the default here is a moderate assumption, not a measurement of any specific
-//    mission's actual settle time. Raise it first if the world still looks like it's loading when the
-//    title text appears.
-//  - The final wait below for WALDO_INIT_COMPLETE: init.sqf now spawns this script instead of
+//    Waldo_InfoText_FakeLoadHold in MissionConfig\interfaceConfig.sqf to override the shipped default
+//    per mission instead of editing this file - the default here is a moderate assumption, not a
+//    measurement of any specific mission's actual settle time. Raise it first if the world still
+//    looks like it's loading when the title text appears.
+//  - The final wait below for WALDO_INIT_COMPLETE: initPlayerLocal.sqf now spawns this script instead of
 //    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
 //    parallel with this intro, not after it), which means this intro can no longer be assumed to
 //    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast
@@ -184,6 +207,7 @@ if (_skipFakeLoad) then {
     "fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
     uiSleep _postLoadBuffer;
 };
+private _tFakeLoadDone = diag_tickTime;
 
 // ----- ANIMATION SETTING -----
 // Triggered here, in parallel with the text reveal below, instead of only after it - so total wait
@@ -313,14 +337,46 @@ if (_animationRemaining > 0) then {
     uiSleep _animationRemaining;
 };
 
+// This intro no longer gates WALDO_INIT_COMPLETE (init.sqf spawns it), so it can finish before
+// server/feature startup does on a fast-loading mission. Hold the lock until that flag is up too,
+// bounded so a mission that never sets it (broken init.sqf) doesn't lock the player out forever.
+private _featureInitDeadline = diag_tickTime + _featureInitTimeout;
+waitUntil {
+    uiSleep 0.2;
+    missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {diag_tickTime >= _featureInitDeadline}
+};
+private _featureInitTimedOut = !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]);
+if (_featureInitTimedOut) then {
+    diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
+};
+private _tFeatureInitDone = diag_tickTime;
+
 if !(_skipFakeLoad) then {
     ["wakeUpID", true, _blackInFade] call BIS_fnc_blackIn;
 };
 disableUserInput false;
+private _tControlReturned = diag_tickTime;
 
 // Active/Complete track the on-screen text, not player control - wait for the detached reveal above
 // to actually finish before flipping them, so a notification deferred on Waldo_InfoText_Complete
 // still never draws over still-typing intro text even though control returned earlier.
 waitUntil { uiSleep 0.2; scriptDone _textRevealHandle };
+private _tComplete = diag_tickTime;
 missionNamespace setVariable ["Waldo_InfoText_Active", false];
 missionNamespace setVariable ["Waldo_InfoText_Complete", true];
+
+// Final timing snapshot for diagnostics. Each *Wait key is that specific stage's own duration (not a
+// running total), so a mission maker can see exactly which stage is slow: display readiness, the
+// per-client streaming-settle wait, the fake loading screen/fades, feature startup, then how long the
+// text itself kept typing after control was already returned.
+missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [
+    ["startedAt", _tStart],
+    ["displayWait", _tDisplay - _tStart],
+    ["playerReadyWait", _tPlayerReady - _tDisplay],
+    ["fakeLoadWait", _tFakeLoadDone - _tPlayerReady],
+    ["featureInitWait", _tFeatureInitDone - _tFakeLoadDone],
+    ["featureInitTimedOut", _featureInitTimedOut],
+    ["controlReturnedAt", _tControlReturned - _tStart],
+    ["textRevealAfterControl", _tComplete - _tControlReturned],
+    ["totalToComplete", _tComplete - _tStart]
+]];

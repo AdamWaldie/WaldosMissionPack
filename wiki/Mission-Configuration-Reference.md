@@ -347,14 +347,6 @@ On by default; does nothing until a jammer is placed. Drop a jammer from an obje
 
 The related **EMP burst** (`Waldo_fnc_EMP`) and **signal trackers** (`Waldo_fnc_Tracker`) are on-demand — no init configuration, just script/Zeus calls. See [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers).
 
-### Introduction Text
-
-```sqf
-["", ""] call Waldo_fnc_InfoText;
-// First param: custom title (blank = use onLoadName from description.ext)
-// Second param: custom location (blank = use worldName)
-```
-
 ### Briefing Documents
 
 ```sqf
@@ -372,6 +364,16 @@ call Waldo_fnc_SetTeamColour;  // remove to disable automatic ACE team colour as
 ## initPlayerLocal.sqf
 
 Runs **once locally when each player joins**. Respawn behavior is handled by the event handlers installed here.
+
+### Introduction Text
+
+```sqf
+// MissionConfig\interfaceConfig.sqf
+["Waldo_InfoText_Title", ""],       // "" uses onLoadName from description.ext
+["Waldo_InfoText_Locale", ""],      // "" uses the map's worldName
+```
+
+Called automatically, once, as `[] spawn Waldo_fnc_InfoText;`. See [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) for the full setting list, animation options and timing controls.
 
 ### Player-Local Optional Feature Settings
 
