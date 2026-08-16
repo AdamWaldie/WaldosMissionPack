@@ -8,16 +8,18 @@
  * Arguments:
  * 0: unit <OBJECT> - the newly (re)spawned unit; must already be local to the calling machine
  * 1: old unit <OBJECT> - corpse/replaced player object (default objNull)
+ * 2: trigger source <STRING> - "RESPAWN_EH" or "UNIT_WATCHDOG", diagnostic-only label identifying
+ *    which of initPlayerLocal.sqf's two independent triggers called this (default "UNKNOWN")
  *
  * Return Value:
  * Boolean - true when this call actually performed the restore, false when skipped or deferred
  *
  * Example:
- * [_unit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
+ * [_unit, _oldUnit, "RESPAWN_EH"] call Waldo_fnc_RespawnRestoreLoadout;
  *
- * Current callers: initPlayerLocal.sqf's local Respawn event handler.
+ * Current callers: initPlayerLocal.sqf's two independent respawn triggers (see its own comments).
  */
-params [["_unit", objNull, [objNull]], ["_oldUnit", objNull, [objNull]]];
+params [["_unit", objNull, [objNull]], ["_oldUnit", objNull, [objNull]], ["_triggerSource", "UNKNOWN", [""]]];
 if (isNull _unit) exitWith {diag_log "[WMP LOADOUT] RespawnRestoreLoadout skipped: called with a null unit."; false};
 if ((missionNamespace getVariable ["Waldo_RespawnRestoreHandledUnit", objNull]) isEqualTo _unit) exitWith {
     diag_log format ["[WMP LOADOUT][RESPAWN][DUPLICATE] unit=%1 owner=%2 already handled for this life.", _unit, owner _unit];
@@ -29,12 +31,12 @@ if !(local _unit) exitWith {
     // first check. `player` can be reassigned to this unit fractionally before the engine's own
     // locality bookkeeping catches up; this covers that gap without blocking the caller.
     diag_log format ["[WMP LOADOUT][RESPAWN][DEFER] unit=%1 owner=%2 local=%3 retryWindow=5s.", _unit, owner _unit, local _unit];
-    [_unit, _oldUnit] spawn {
-        params ["_unit", "_oldUnit"];
+    [_unit, _oldUnit, _triggerSource] spawn {
+        params ["_unit", "_oldUnit", "_triggerSource"];
         private _deadline = diag_tickTime + 5;
         waitUntil {sleep 0.05; local _unit || {diag_tickTime >= _deadline}};
         if (local _unit) then {
-            [_unit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
+            [_unit, _oldUnit, _triggerSource] call Waldo_fnc_RespawnRestoreLoadout;
         } else {
             diag_log format ["[WMP LOADOUT] RespawnRestoreLoadout: %1 never became local within 5s; giving up. This should not happen for a client's own respawned unit - report this RPT.", _unit];
         };
@@ -42,6 +44,10 @@ if !(local _unit) exitWith {
     false
 };
 missionNamespace setVariable ["Waldo_RespawnRestoreHandledUnit", _unit];
+// Diagnostic-only session counter - a genuinely new life reaches this point exactly once (the dedup
+// and locality guards above already filtered out duplicates and not-yet-local calls), so this is a
+// reliable per-client "how many respawns has this trace covered" figure for respawn/loadout-restore.
+missionNamespace setVariable ["Waldo_Player_RespawnCount", (missionNamespace getVariable ["Waldo_Player_RespawnCount", 0]) + 1];
 
 private _sideKey = switch (side _unit) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
 // UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so vehicleVarName
@@ -92,7 +98,13 @@ if (_identityMatches && {count _savedLoadout > 0}) then {
                 if (alive _unit) then {_unit setUnitLoadout _savedLoadout;};
                 _tries = _tries + 1;
             };
-            if (alive _unit && {!(call _canaryMatches)}) then {
+            private _finalMatch = call _canaryMatches;
+            // Diagnostic-only outcome, read by respawn/loadout-apply-verify. A unit that died again
+            // mid-retry (!alive) is not a verify failure - there is nothing left to verify - so it is
+            // recorded as a distinct outcome rather than folded into "failed".
+            private _verifyOutcome = if !(alive _unit) then {"UNIT_DIED"} else {if (_finalMatch) then {"OK"} else {"FAILED"}};
+            missionNamespace setVariable ["Waldo_Player_LoadoutVerifyOutcome", [_verifyOutcome, _tries, diag_tickTime]];
+            if (alive _unit && {!_finalMatch}) then {
                 diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_FAILED] unit=%1 expectedCanary=%2 after %3 retries.", _unit, _savedCanary, _tries];
             } else {
                 if (_tries > 0) then {
@@ -120,7 +132,9 @@ if (_identityMatches) then {
 } else {
     diag_log format ["[WMP LOADOUT] Saved snapshot identity %1 did not match respawn identity %2; baseline retained.", _savedIdentity, _currentIdentity];
 };
-missionNamespace setVariable ["Waldo_Player_LastRespawnRestore", [_identityMatches, _restoredCount, diag_tickTime]];
+// Element 0-2 are the original, load-bearing shape read elsewhere (e.g. runDiagnosticsClient.sqf's
+// "_lastRestore params [...]"); everything from index 3 on is additive diagnostic detail only.
+missionNamespace setVariable ["Waldo_Player_LastRespawnRestore", [_identityMatches, _restoredCount, diag_tickTime, _triggerSource, _source, _snapshotAge, _savedRadioCount, _generation]];
 if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
     diag_log format ["[WMP LOADOUT][RESPAWN][RADIO_RESTORE_START] generation=%1 expectedOccurrences=%2.", _generation, _savedRadioCount];
     missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", true];
@@ -130,14 +144,17 @@ if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
         missionNamespace setVariable ["Waldo_ACRE2_RadioRestoreInProgress", false];
         if (_restored) then {
             diag_log format ["[WMP LOADOUT][RESPAWN][RADIO_RESTORE_OK] generation=%1.", _loadoutGeneration];
+            missionNamespace setVariable ["Waldo_Player_LastRadioRestoreOutcome", ["RESTORED", _loadoutGeneration, diag_tickTime]];
             ["RESPAWN_RESTORED", false] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         } else {
             diag_log format ["[WMP LOADOUT][RESPAWN][RADIO_RESTORE_FAILED] generation=%1; applying current mission plan.", _loadoutGeneration];
+            missionNamespace setVariable ["Waldo_Player_LastRadioRestoreOutcome", ["FAILED", _loadoutGeneration, diag_tickTime]];
             ["RESPAWN_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         };
     };
 } else {
     diag_log format ["[WMP LOADOUT][RESPAWN][RADIO_BASELINE] generation=%1 reason=no complete saved radio snapshot.", _generation];
+    missionNamespace setVariable ["Waldo_Player_LastRadioRestoreOutcome", ["BASELINE", _generation, diag_tickTime]];
     ["RESPAWN_BASELINE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
 };
 // Respawn Text

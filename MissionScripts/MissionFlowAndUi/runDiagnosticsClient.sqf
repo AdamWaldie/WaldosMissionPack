@@ -345,17 +345,62 @@ if (_fieldHospitals isEqualTo []) then {
     ["logistics", "field-hospital-actions", if (_fieldHospitalsMissingAction isEqualTo []) then {"LOADED"} else {"ERROR"}, format ["crates=%1 missingAction=%2 expectedMode=%3", count _fieldHospitals, count _fieldHospitalsMissingAction, if (_aceInteractLoaded) then {"ACE+VANILLA"} else {"VANILLA"}], if (_fieldHospitalsMissingAction isEqualTo []) then {""} else {"A field hospital crate is missing its expected action on this client - check the RPT for errors from Waldo_fnc_MedicalCrateFacilityActionLocal."}] call _add;
 };
 
-private _lastRestore = missionNamespace getVariable ["Waldo_Player_LastRespawnRestore", []];
+// Six rows trace the full mission-critical loadout/respawn flow end to end, in the order that flow
+// actually runs, so a mission maker (or support) can read down this list and find exactly where a
+// bad respawn broke: did the baseline ever get captured, did either restore trigger ever fire, did
+// the saved snapshot exist, did the restore itself see a matching identity, did the applied loadout
+// actually verify, did radios come back. Each row is independently queryable client-local state, not
+// a summary - see wiki/Mission-Diagnostics.md for the full field reference.
+private _baselineCaptured = missionNamespace getVariable ["Waldo_LoadoutBaselineCaptured", false];
+private _baselineWaitSeconds = missionNamespace getVariable ["Waldo_LoadoutBaselineWaitSeconds", -1];
+["respawn", "baseline-capture", if (_baselineCaptured) then {"LOADED"} else {"ERROR"}, format ["captured=%1 waitedSeconds=%2 capturedAtTick=%3", _baselineCaptured, _baselineWaitSeconds, missionNamespace getVariable ["Waldo_LoadoutBaselineCapturedAt", -1]], if (_baselineCaptured) then {""} else {"This client is still waiting for its player unit to exist before the mission-start loadout baseline can be captured. Check the RPT for repeated '[WMP LOADOUT] initPlayerLocal.sqf: still waiting for player' lines, and confirm this client can actually spawn a unit (e.g. it isn't stuck as an unassigned spectator or out of playable slots)."}] call _add;
+
+private _trigger1Fires = missionNamespace getVariable ["Waldo_LoadoutTrigger1FireCount", -1];
+private _trigger2Fires = missionNamespace getVariable ["Waldo_LoadoutTrigger2FireCount", -1];
+private _respawnCount = missionNamespace getVariable ["Waldo_Player_RespawnCount", 0];
+// Trigger 1 (Bohemia's own local "Respawn" handler) is documented to fire on every respawn, but field
+// evidence during this system's development found it can go a full session without firing at all in
+// some environments while trigger 2 (the CBA "unit" watchdog) reliably does - restores still complete
+// correctly via trigger 2 alone, but a client stuck in that state is worth knowing about rather than
+// discovering silently.
+private _trigger1NeverFired = _respawnCount > 0 && {_trigger1Fires == 0} && {_trigger2Fires > 0};
+["respawn", "triggers", if !(_baselineCaptured) then {"UNCONFIGURED"} else {if (_trigger1NeverFired) then {"ERROR"} else {"LOADED"}}, format ["respawnsThisSession=%1 respawnEhFireCount=%2 unitWatchdogFireCount=%3", _respawnCount, _trigger1Fires, _trigger2Fires], if !(_trigger1NeverFired) then {""} else {"This client has respawned successfully, but only via the CBA 'unit' watchdog trigger - Bohemia's own local 'Respawn' event handler has not fired even once this session. Restores are still working (the watchdog is covering it), but this environment has the known engine quirk that justifies keeping two independent triggers; worth reporting if you can reproduce it."}] call _add;
+
 private _respawnSnapshot = missionNamespace getVariable ["Waldo_Player_RespawnSnapshot", []];
 private _respawnSnapshotSource = missionNamespace getVariable ["Waldo_Player_RespawnSnapshotSource", "NONE"];
 private _snapshotRadioCount = if (count _respawnSnapshot >= 3 && {count (_respawnSnapshot select 2) >= 2}) then {count ((_respawnSnapshot select 2) select 1)} else {0};
 private _snapshotAge = if (count _respawnSnapshot >= 4) then {round (diag_tickTime - (_respawnSnapshot select 3))} else {-1};
-["respawn", "snapshot", if (count _respawnSnapshot >= 4) then {"ACTIVE"} else {"ERROR"}, format ["source=%1 ageSeconds=%2 loadoutEntries=%3 radioOccurrences=%4", _respawnSnapshotSource, _snapshotAge, if (count _respawnSnapshot >= 2) then {count (_respawnSnapshot select 1)} else {0}, _snapshotRadioCount], if (count _respawnSnapshot >= 4) then {""} else {"No atomic respawn snapshot exists. The player will retain the freshly spawned unit loadout until the mission baseline, a save action, or persistence creates one."}] call _add;
+["respawn", "snapshot", if (count _respawnSnapshot >= 4) then {"ACTIVE"} else {"ERROR"}, format ["source=%1 ageSeconds=%2 loadoutEntries=%3 radioOccurrences=%4 hasVerifyCanary=%5", _respawnSnapshotSource, _snapshotAge, if (count _respawnSnapshot >= 2) then {count (_respawnSnapshot select 1)} else {0}, _snapshotRadioCount, count _respawnSnapshot >= 5], if (count _respawnSnapshot >= 4) then {""} else {"No atomic respawn snapshot exists. The player will retain the freshly spawned unit loadout until the mission baseline, a save action, or persistence creates one."}] call _add;
+
+private _lastRestore = missionNamespace getVariable ["Waldo_Player_LastRespawnRestore", []];
 if (count _lastRestore < 3) then {
     ["respawn", "loadout-restore", "UNCONFIGURED", "This client has not respawned yet this session; nothing to report."] call _add;
 } else {
-    _lastRestore params ["_restoreIdentityMatched", "_restoreCount", "_restoreTickTime"];
-    ["respawn", "loadout-restore", if (_restoreIdentityMatched) then {"ACTIVE"} else {"ERROR"}, format ["identityMatched=%1 restoredEntries=%2 secondsAgo=%3", _restoreIdentityMatched, _restoreCount, round (diag_tickTime - _restoreTickTime)], if (_restoreIdentityMatched) then {""} else {"The last respawn's saved-loadout identity (UID+side) did not match this player - the mission-start baseline was applied instead. Check the RPT for the matching [WMP LOADOUT] line, and confirm Waldo_Player_LoadoutIdentity/Waldo_Player_Inventory are being set by Waldo_fnc_SaveLoadout."}] call _add;
+    _lastRestore params ["_restoreIdentityMatched", "_restoreCount", "_restoreTickTime", ["_restoreTrigger", "UNKNOWN"], ["_restoreSource", "UNKNOWN"], ["_restoreSnapshotAge", -1], ["_restoreSavedRadioCount", 0], ["_restoreGeneration", -1]];
+    ["respawn", "loadout-restore", if (_restoreIdentityMatched) then {"ACTIVE"} else {"ERROR"}, format ["identityMatched=%1 restoredEntries=%2 secondsAgo=%3 trigger=%4 snapshotSource=%5 snapshotAgeAtRestore=%6 savedRadios=%7 generation=%8", _restoreIdentityMatched, _restoreCount, round (diag_tickTime - _restoreTickTime), _restoreTrigger, _restoreSource, round _restoreSnapshotAge, _restoreSavedRadioCount, _restoreGeneration], if (_restoreIdentityMatched) then {""} else {"The last respawn's saved-loadout identity (UID+side) did not match this player - the mission-start baseline was applied instead. Check the RPT for the matching [WMP LOADOUT] line, and confirm Waldo_Player_LoadoutIdentity/Waldo_Player_Inventory are being set by Waldo_fnc_SaveLoadout."}] call _add;
+};
+
+private _verifyOutcome = missionNamespace getVariable ["Waldo_Player_LoadoutVerifyOutcome", []];
+if (count _verifyOutcome < 3) then {
+    ["respawn", "loadout-apply-verify", "UNCONFIGURED", "No verified loadout apply has run yet this session (either no respawn yet, or the last restore had no saved canary to verify against)."] call _add;
+} else {
+    _verifyOutcome params ["_verifyResult", "_verifyTries", "_verifyTick"];
+    private _verifyState = if (_verifyResult == "FAILED") then {"ERROR"} else {if (_verifyResult == "UNIT_DIED") then {"UNCONFIGURED"} else {if (_verifyTries > 0) then {"ACTIVE"} else {"LOADED"}}};
+    ["respawn", "loadout-apply-verify", _verifyState, format ["result=%1 retries=%2 secondsAgo=%3", _verifyResult, _verifyTries, round (diag_tickTime - _verifyTick)], if (_verifyState != "ERROR") then {""} else {format ["setUnitLoadout did not take effect even after %1 retries - the respawned unit's inventory may be stuck in a state another mod's own respawn handling is fighting over. Check the RPT for [WMP LOADOUT][RESPAWN][VERIFY_FAILED].", _verifyTries]}] call _add;
+};
+
+private _radioOutcome = missionNamespace getVariable ["Waldo_Player_LastRadioRestoreOutcome", []];
+if (count _radioOutcome < 3) then {
+    ["respawn", "radio-restore", "UNCONFIGURED", "No radio restore attempt has run yet this session."] call _add;
+} else {
+    _radioOutcome params ["_radioResult", "_radioGeneration", "_radioTick"];
+    private _radioRestoreState = switch (_radioResult) do {
+        case "RESTORED": {"ACTIVE"};
+        case "BASELINE": {"LOADED"};
+        case "FAILED": {"ERROR"};
+        default: {"UNCONFIGURED"};
+    };
+    ["respawn", "radio-restore", _radioRestoreState, format ["result=%1 generation=%2 secondsAgo=%3", _radioResult, _radioGeneration, round (diag_tickTime - _radioTick)], if (_radioRestoreState != "ERROR") then {""} else {"The saved ACRE radio state failed to reapply after the last respawn; the current mission ACRE plan was applied as a fallback instead. Check the RPT for [WMP LOADOUT][RESPAWN][RADIO_RESTORE_FAILED] and any Waldo_fnc_ACRE2ApplyRadioState errors."}] call _add;
 };
 
 private _warnings = {_x select 2 == "ERROR"} count _checks;

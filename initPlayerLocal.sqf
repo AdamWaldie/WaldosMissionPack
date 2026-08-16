@@ -185,13 +185,21 @@ if (hasInterface) then {
     // otherwise it would treat this client's very first spawn as a "respawn" and race
     // Waldo_fnc_ACRE2Init's own one-time radio-generation setup on initial join.
     missionNamespace setVariable ["Waldo_LoadoutBaselineCaptured", true];
+    // Diagnostic breadcrumbs only - read by respawn/baseline-capture and respawn/triggers in
+    // runDiagnosticsClient.sqf so a mission maker can see exactly how long this client waited for
+    // `player`, and whether each trigger below has ever actually fired, without needing to grep RPT.
+    missionNamespace setVariable ["Waldo_LoadoutBaselineCapturedAt", diag_tickTime];
+    missionNamespace setVariable ["Waldo_LoadoutBaselineWaitSeconds", _waitedSeconds];
+    missionNamespace setVariable ["Waldo_LoadoutTrigger1FireCount", 0];
+    missionNamespace setVariable ["Waldo_LoadoutTrigger2FireCount", 0];
 
     // Trigger 1: Bohemia's documented local "Respawn" handler - installed once here and carried by
     // the engine onto every later respawned unit body without needing to be re-registered.
     player addEventHandler ["Respawn", {
         params ["_newUnit", ["_oldUnit", objNull]];
         diag_log format ["[WMP LOADOUT] Local Respawn event received new=%1 old=%2 local=%3 playerMatches=%4.", _newUnit, _oldUnit, local _newUnit, _newUnit isEqualTo player];
-        [_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
+        missionNamespace setVariable ["Waldo_LoadoutTrigger1FireCount", (missionNamespace getVariable ["Waldo_LoadoutTrigger1FireCount", 0]) + 1];
+        [_newUnit, _oldUnit, "RESPAWN_EH"] call Waldo_fnc_RespawnRestoreLoadout;
     }];
 
     // Trigger 2 (independent safety net): CBA's own "player object changed" event - the same
@@ -206,7 +214,9 @@ if (hasInterface) then {
     // life's restore - Waldo_fnc_RespawnRestoreLoadout's guard is now a single missionNamespace
     // "last handled unit" reference compared by object identity, which a fresh respawned unit can
     // never satisfy, so both triggers firing for the same life is simply a harmless no-op on whichever
-    // runs second.
+    // runs second. Waldo_LoadoutTrigger1FireCount staying at 0 across a session with real respawns is
+    // exactly the historical failure signature that justified keeping this second trigger - watch for
+    // it in respawn/triggers.
     [
         "unit",
         {
@@ -214,7 +224,8 @@ if (hasInterface) then {
             private _isRespawn = (missionNamespace getVariable ["Waldo_LoadoutBaselineCaptured", false]) && {isNull _oldUnit || {!alive _oldUnit}};
             if (_isRespawn) then {
                 diag_log format ["[WMP LOADOUT][WATCHDOG] Player-unit-changed fallback trigger fired for %1 (old=%2).", _newUnit, _oldUnit];
-                [_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout;
+                missionNamespace setVariable ["Waldo_LoadoutTrigger2FireCount", (missionNamespace getVariable ["Waldo_LoadoutTrigger2FireCount", 0]) + 1];
+                [_newUnit, _oldUnit, "UNIT_WATCHDOG"] call Waldo_fnc_RespawnRestoreLoadout;
             };
         },
         false

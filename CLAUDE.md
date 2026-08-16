@@ -590,7 +590,33 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Headless Client, Obituary, Zeus registration, the Feature Runtime Control snapshot handshake, Object Scaling bounds, UI Theme application, Accessibility self-interaction, Emergency Dismount, Corpse Traps, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
 
-Two respawn-focused client checks close the loop on the loadout-restore system: `respawn`/`loadout-restore` reads a `Waldo_Player_LastRespawnRestore` snapshot `[identityMatched, restoredEntries, tickTime]` set by `initPlayerLocal.sqf`'s `"Respawn"` handler on every actual respawn (`UNCONFIGURED` before this client's first respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved loadout); `dependencies`/`ace-nametags-respawn-compat` is informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
+Six respawn-focused client checks trace the mission-critical loadout/respawn flow end to end, in the
+order it actually runs, so a bad respawn can be pinpointed to the exact stage instead of just seeing
+"it didn't work": `respawn`/`baseline-capture` reports whether `initPlayerLocal.sqf` has finished
+waiting for `player` to exist and capture the mission-start snapshot (`ERROR` means this client is
+still waiting - it never gives up, so a stuck client shows here rather than silently missing a
+baseline forever); `respawn`/`triggers` reports each of the two independent restore triggers' fire
+counts this session (Bohemia's local `"Respawn"` handler and a `CBA_fnc_addPlayerEventHandler
+"unit"` watchdog) and flags `ERROR` specifically when the client has respawned successfully but only
+ever via the watchdog - restores still work, but it surfaces the known engine quirk where the native
+handler doesn't fire in some environments; `respawn`/`snapshot` reports the saved
+`Waldo_Player_RespawnSnapshot`'s age, source, and whether it carries the apply-verification canary;
+`respawn`/`loadout-restore` reads the extended `Waldo_Player_LastRespawnRestore`
+`[identityMatched, restoredEntries, tickTime, triggerSource, snapshotSource, snapshotAge,
+savedRadioCount, generation]` set on every actual respawn (`UNCONFIGURED` before this client's first
+respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved
+loadout); `respawn`/`loadout-apply-verify` reads `Waldo_Player_LoadoutVerifyOutcome` - whether
+`setUnitLoadout` was confirmed to actually take effect (via a small ACRE-independent equipment
+canary, not a raw `getUnitLoadout` comparison) and how many retries it needed, `ERROR` only when it
+never took even after retrying; `respawn`/`radio-restore` reads `Waldo_Player_LastRadioRestoreOutcome`
+for whether the saved ACRE radio state reapplied, fell back to the current mission plan, or there was
+no complete radio snapshot to restore. `dependencies`/`ace-nametags-respawn-compat` is
+informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is
+loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own
+`CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn
+params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the
+corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP
+causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
 
 `mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` into a client-local `Waldo_InfoText_Timings` hashmap: the initial local `PreloadFinished` wait, subsequent player/display readiness, the diagnostic client state at release, WMP's fake-cover duration, when normal control was available, and how much longer the detached title kept typing. The pre-mission briefing state, `BIS_fnc_init`, mission `time`, `WALDO_INIT_COMPLETE`, and unrelated features are not readiness gates. `ERROR` means the preload event or usable local player/display did not arrive within its bounded wait.
 
