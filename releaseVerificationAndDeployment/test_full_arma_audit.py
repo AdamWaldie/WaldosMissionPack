@@ -1395,6 +1395,17 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_Player_RadioState', save_respawn)
         self.assertIn('Waldo_Player_RespawnSnapshot', save_respawn)
         self.assertIn('the previous complete respawn snapshot was preserved', save_respawn)
+        # Snapshots are stored per (UID, side) key so a player who changes side mid-mission keeps each
+        # side's own last-saved loadout independently instead of one global slot only ever reflecting
+        # whichever side was saved most recently.
+        self.assertIn('Waldo_Player_RespawnSnapshots', save_respawn)
+        self.assertIn('format ["%1_%2", _identity select 0, _sideKey]', save_respawn)
+        self.assertIn('format ["%1_%2", _currentIdentity select 0, _sideKey]', respawn_restore)
+        # A civilian side-read immediately after respawn is suspicious - and worth a bounded settle
+        # retry - only for a player with real non-civilian history under this UID; this must never
+        # delay a genuinely new or genuinely civilian player.
+        self.assertIn('_suspiciousSide', respawn_restore)
+        self.assertIn('side _unit != civilian', respawn_restore)
         # The respawn-time restore body lives in the extracted shared function, called by two
         # independent client-local triggers (the local "Respawn" event handler, plus a
         # CBA_fnc_addPlayerEventHandler "unit" watchdog gated behind Waldo_LoadoutBaselineCaptured so
@@ -1402,7 +1413,7 @@ class FullAuditTests(unittest.TestCase):
         # and object-identity-based, not a unit variable that could be inherited by a later respawn
         # body and suppress every restore after the first - that is what makes firing both triggers
         # for the same life safe.
-        self.assertIn('Waldo_Player_RadioState', respawn_restore)
+        self.assertIn('Waldo_Player_RespawnSnapshots', respawn_restore)
         self.assertIn('Waldo_Player_RespawnSnapshot', respawn_restore)
         self.assertIn('Waldo_RespawnRestoreHandledUnit', respawn_restore)
         self.assertNotIn('_unit getVariable ["Waldo_RespawnRestoreHandled"', respawn_restore)

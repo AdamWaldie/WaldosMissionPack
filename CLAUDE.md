@@ -489,7 +489,18 @@ When `true`, a `"CAManBase"`/`"Killed"` handler in `initPlayerLocal.sqf` calls
 ACRE2 radio state as one snapshot (see `Waldo_fnc_SaveLoadout`'s own header), restored on respawn.
 Identity between the saved snapshot and the respawned unit is matched by player UID + side only — a
 scripted respawn always creates a fresh, unnamed unit object, so matching on `vehicleVarName` (as an
-earlier revision did) never matches and silently drops the restore.
+earlier revision did) never matches and silently drops the restore. Snapshots are stored per (UID,
+side) key in `Waldo_Player_RespawnSnapshots`, not as one global slot — a player who changes side
+mid-mission (Zeus/admin reassignment, a mission-specific faction-switch feature) keeps each side's
+own last-saved loadout independently; switching back to either side restores that side's own
+snapshot rather than only ever the one side saved most recently. A respawned unit has been observed
+to transiently read `side` as civilian for a moment before the engine's own post-creation group/side
+assignment settles; the restore waits briefly (bounded, one round) to re-check before concluding
+there is genuinely no snapshot for this identity, but only when this exact player has real
+non-civilian saved history — a genuinely new or genuinely civilian player is never delayed by this.
+The applied loadout is verified against a small ACRE-independent equipment canary rather than trusted
+outright, and retried on a fast-then-slow schedule bounded at roughly two minutes to cover ACRE's own
+documented "a few seconds to minutes on a heavy modset" readiness window.
 
 A second, alternative behaviour is commented out by default in `initPlayerLocal.sqf` — uncomment to
 enable instead (or in addition to the config toggle above; whichever snapshot was captured most

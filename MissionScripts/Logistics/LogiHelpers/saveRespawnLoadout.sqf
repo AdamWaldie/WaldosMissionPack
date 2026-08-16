@@ -17,6 +17,13 @@
  * Example: [false] call Waldo_fnc_SaveLoadout;
  * Result: inventory and supported radio settings are saved without displaying a notification.
  * Current callers: starter/loadout-save interactions and ACRE2 radio assignment finalisation.
+ *
+ * Snapshots are stored per (UID, side) key in Waldo_Player_RespawnSnapshots, not as one global slot -
+ * a player who changes side mid-mission (Zeus/admin reassignment, a mission-specific faction-switch
+ * feature) keeps each side's own last-saved loadout independently, and switching back to either side
+ * restores that side's own snapshot rather than only ever the one side that happened to be saved most
+ * recently. Waldo_Player_RespawnSnapshot/RespawnSnapshotSource remain as single-value mirrors of
+ * whichever identity was most recently touched, for diagnostics and any external reader.
  */
 params [["_showNotification", true, [true]]];
 private _loadout = [getUnitLoadout player] call Waldo_fnc_ACRE2FilterLoadout;
@@ -37,9 +44,11 @@ private _sideKey = switch (side player) do {case west: {"WEST"}; case east: {"EA
 // UID+side only - a scripted respawn always creates a fresh, unnamed unit object, so vehicleVarName
 // never matches between the unit a snapshot was captured against and the unit checking it on respawn.
 private _identity = [getPlayerUID player, _sideKey];
+private _key = format ["%1_%2", _identity select 0, _sideKey];
 private _source = missionNamespace getVariable ["Waldo_Player_NextRespawnSnapshotSource", if (_showNotification) then {"PLAYER_ACTION"} else {"AUTOMATIC"}];
 missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", nil];
-private _existingSnapshot = missionNamespace getVariable ["Waldo_Player_RespawnSnapshot", []];
+private _snapshots = missionNamespace getVariable ["Waldo_Player_RespawnSnapshots", createHashMap];
+private _existingSnapshot = _snapshots getOrDefault [_key, []];
 if (_acrePresent && {!_acreReady} && {count _existingSnapshot >= 4}) exitWith {
     diag_log "[WMP LOADOUT] Save deferred: ACRE is present but not ready; the previous complete respawn snapshot was preserved.";
     if (_showNotification) then {
@@ -47,7 +56,10 @@ if (_acrePresent && {!_acreReady} && {count _existingSnapshot >= 4}) exitWith {
     };
     false
 };
-private _snapshot = [_identity, _loadout, _radioState, diag_tickTime, _canary];
+private _snapshot = [_identity, _loadout, _radioState, diag_tickTime, _canary, _source];
+_snapshots set [_key, _snapshot];
+missionNamespace setVariable ["Waldo_Player_RespawnSnapshots", _snapshots];
+// Single-value mirrors of the most recently touched identity only - see header.
 missionNamespace setVariable ["Waldo_Player_RespawnSnapshot", _snapshot];
 missionNamespace setVariable ["Waldo_Player_RespawnSnapshotSource", _source];
 // Compatibility mirrors for persistence and diagnostics. Restore code treats the snapshot above as
