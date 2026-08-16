@@ -146,10 +146,11 @@ Mission load
               │     Waldo_fnc_RespawnRestoreLoadout with the new/old unit on every future death - this
               │     single installation is what "survives" respawn, not a re-executed file
               └─ [] spawn Waldo_fnc_InfoText          (intro title screen, content/timing from
-                    MissionConfig\interfaceConfig.sqf, runs in parallel - WALDO_INIT_COMPLETE does
-                    not wait on it. disableUserInput lifts as soon as a chosen animation finishes
-                    and WALDO_INIT_COMPLETE is up, not once the on-screen text is done - with no
-                    animation the intro text can still be typing itself out after control returns)
+                    MissionConfig\interfaceConfig.sqf, runs in parallel. It waits only for the local
+                    playable client (BIS_fnc_init, display 46, local player and a live mission tick),
+                    then closes its short setup cover before starting the title. WALDO_INIT_COMPLETE
+                    and unrelated feature setup do not gate it. The text and optional animation do
+                    not explicitly withhold player control.)
 ```
 
 ### Key Global Variables (missionNamespace)
@@ -591,7 +592,7 @@ Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`
 
 Two respawn-focused client checks close the loop on the loadout-restore system: `respawn`/`loadout-restore` reads a `Waldo_Player_LastRespawnRestore` snapshot `[identityMatched, restoredEntries, tickTime]` set by `initPlayerLocal.sqf`'s `"Respawn"` handler on every actual respawn (`UNCONFIGURED` before this client's first respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved loadout); `dependencies`/`ace-nametags-respawn-compat` is informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
 
-`mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` itself into a client-local `Waldo_InfoText_Timings` hashmap: `displayWaitSeconds` (time to `findDisplay 46`), `playerReadyWaitSeconds` (the per-client streaming-settle wait), `fakeLoadWaitSeconds` (the fake loading screen and its fades, `0` when `Waldo_InfoText_SkipFakeLoad` is set), `featureInitWaitSeconds` (time spent waiting on `WALDO_INIT_COMPLETE` after the fake load), `controlReturnedAtSeconds` (total time until `disableUserInput false`), and `textRevealAfterControlSeconds` (how much longer the detached text reveal kept typing after control was already returned). `ERROR` only when `featureInitWaitSeconds` hit its 60s cap without `WALDO_INIT_COMPLETE` ever becoming true - every other combination is a real, not-broken timing measurement, not a pass/fail judgment on any specific duration. This turns "the intro feels slow/mistimed" from a guess into a stage-by-stage number a mission maker can read straight off the diagnostics report.
+`mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` into a client-local `Waldo_InfoText_Timings` hashmap: the playable-client readiness wait, whether that bounded wait timed out, the diagnostic client state at release, WMP's fake-cover duration, when normal control was available, and how much longer the detached title kept typing. The pre-mission briefing state is not a gate. `WALDO_INIT_COMPLETE` and unrelated features are not part of this flow. `ERROR` only means the playable display/player/engine-ready conditions did not arrive within 60 seconds.
 
 Every new module's diagnostics rows go through the same two primitives so RPT output never
 fragments into per-feature formats: `Waldo_fnc_DiagnosticLog` (the `[WMP DIAG]` frame shown above)

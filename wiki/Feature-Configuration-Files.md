@@ -172,7 +172,7 @@ options and timing controls.
 | `Waldo_InfoText_Locale` | Custom location name; `""` uses the map's `worldName`. |
 | `Waldo_InfoText_LongDate` | `true` = long date format ("3rd November 2024"), `false` = short ("3/11/2024"). |
 | `Waldo_InfoText_Animation` | Intro player animation: `NONE`, `WALK`, `SIT`, `WAKE`, `WAKESLOW` or `COFFIN`. |
-| `Waldo_InfoText_FakeLoadHold` | Seconds held on the fake loading screen before the intro starts. |
+| `Waldo_InfoText_FakeLoadHold` | Optional extra seconds for WMP's setup cover after the playable client is ready. Default `0`; normally leave unchanged. |
 | `Waldo_InfoText_SkipFakeLoad` | `true` skips the fake loading screen and its fades entirely. |
 
 ### Notification flow

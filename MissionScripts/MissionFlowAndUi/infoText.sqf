@@ -4,6 +4,14 @@
  * With no overrides it auto-derives the title from description.ext and the location from worldName.
  * Registered as Waldo_fnc_InfoText. Called automatically, once, from initPlayerLocal.sqf.
  *
+ * Locality / lifecycle: interface client only. The automatic call is spawned after PLAYER_LOCAL
+ * configuration has loaded. It waits for BIS_fnc_init (the engine's completion signal after all
+ * event scripts, modules and pre/post-init functions), a local player object, display 46 and a live
+ * simulation tick before it opens WMP's short transition and starts any title text. It never changes
+ * authoritative state and does not rerun on respawn. The fake screen is paired by ID and the
+ * readiness wait is bounded so a broken client cannot be locked indefinitely.
+ * Player control is no longer held for cosmetic text, optional animations or unrelated feature init.
+ *
  * Content and timing are mission-maker settings in MissionConfig\interfaceConfig.sqf
  * (Waldo_InfoText_Title, Waldo_InfoText_Locale, Waldo_InfoText_LongDate, Waldo_InfoText_Animation,
  * Waldo_InfoText_FakeLoadHold, Waldo_InfoText_SkipFakeLoad) - edit those instead of this file. The
@@ -37,14 +45,57 @@ missionNamespace setVariable ["Waldo_InfoText_Complete", false];
 
 // Client-local timing capture for Waldo_fnc_RunDiagnosticsClient's "mission-flow"/"infotext-timing"
 // check. Every stage is a real diag_tickTime delta, not a guess, so a mission maker reporting a slow
-// or mistimed intro can be pointed at the exact stage (display wait, fake-load hold, feature-init
-// wait, and so on) instead of the whole sequence being one opaque block. Not broadcast - this is a
+// or mistimed intro can be pointed at the exact stage (engine readiness, fake cover and title reveal)
+// instead of the whole sequence being one opaque block. Not broadcast - this is a
 // per-client observation, and each player's own load-in timing is independent.
 private _tStart = diag_tickTime;
 missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [["startedAt", _tStart]]];
 
-waitUntil {!isNull findDisplay 46};
+// `time` is a per-machine mission clock, not loading progress. Likewise BRIEFING READ can be reached
+// while the visual loading layer is still completing, so neither is the decisive gate. The engine
+// sets BIS_fnc_init only after event scripts, modules, and pre/post-init functions have initialised;
+// use that completion signal together with the local mission display/player and one live simulation
+// tick. This wait happens before WMP adds its own loading cover: the real loading screen remains
+// responsible until the engine has completed its own startup lifecycle.
+private _clientReadyDeadline = diag_tickTime + 60;
+waitUntil {
+    uiSleep 0.05;
+    private _displayReady = !isNull findDisplay 46;
+    private _playerReady = !isNull player && {local player};
+    private _engineInitReady = missionNamespace getVariable ["BIS_fnc_init", false];
+    (_displayReady && {_playerReady} && {_engineInitReady} && {time > 0})
+    || {diag_tickTime >= _clientReadyDeadline}
+};
+// Give the engine one UI scheduler hand-off to remove its completed loading layer before WMP creates
+// its own cover. This is not a guessed seconds-long streaming delay.
+uiSleep 0.05;
 private _tDisplay = diag_tickTime;
+private _clientReady = !isNull findDisplay 46
+    && {!isNull player}
+    && {local player}
+    && {missionNamespace getVariable ["BIS_fnc_init", false]}
+    && {time > 0};
+private _clientStateAtRelease = getClientStateNumber;
+
+if (!_clientReady) exitWith {
+    diag_log format [
+        "[WMP INFOTEXT] Engine startup did not complete within 60 seconds; intro skipped without changing input. display46=%1 player=%2 local=%3 time=%4 BIS_fnc_init=%5 clientState=%6.",
+        !isNull findDisplay 46,
+        !isNull player,
+        !isNull player && {local player},
+        time,
+        missionNamespace getVariable ["BIS_fnc_init", false],
+        _clientStateAtRelease
+    ];
+    missionNamespace setVariable ["Waldo_InfoText_Active", false];
+    missionNamespace setVariable ["Waldo_InfoText_Complete", true];
+    missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [
+        ["startedAt", _tStart],
+        ["clientReadyWait", diag_tickTime - _tStart],
+        ["clientReadyTimedOut", true],
+        ["clientStateAtRelease", _clientStateAtRelease]
+    ]];
+};
 //Grab Mission Name & Terrain Name automatically
 //If provided with a string in the correct parameter slot, accepts that inplace of the automatic generation
 _missionTitle = getText (missionConfigFile >> "onLoadName");; 
@@ -59,9 +110,6 @@ _animate = "NONE";
 if (_anim != "NONE") then {
     _animate = _anim;
 };
-
-//No runnin' off..
-disableUserInput true;
 
 // ----- DATE SETTING -----
 _date = if (_longDate) then {
@@ -143,51 +191,23 @@ _textColour = switch (side player) do
     default {"'#ed9d18'"};
 };
 
-// findDisplay 46 (above) and time > 0 are both mission/global-state signals - "the mission has
-// actually started" from the engine's synchronised standpoint - not a per-client "this machine has
-// finished streaming its own textures/models in" signal. Arma has no such signal exposed to SQF: a
-// client (especially a heavier mod/terrain setup, or one joining a session already running) can
-// legitimately have both of those true while it is still individually streaming assets in, which is
-// the real loading screen/pop-in a player can still see for a few seconds after this point - not our
-// own fauxLoad screen below, and not something any waitUntil condition here can detect completing.
-// time > 1 instead of the previous > 0 is a small, still-imperfect improvement: `time` can tick to a
-// negligible epsilon almost immediately even on a client that is still heavily loading, so a full
-// second is a more realistic floor than "any nonzero value" without pretending it's a real signal.
-waitUntil { uiSleep 0.2; (!isNull player && time > 1) };
 private _tPlayerReady = diag_tickTime;
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
-// Throw up our own fake loading screen purely as a cinematic transition into the intro below.
-//
-// Timing below is deliberately tight: control returns to the player as soon as the content actually
-// needs (readable text + a chosen animation finishing cleanly), not on padded guesswork. Two
-// exceptions are kept intentionally generous rather than cut to the bone:
-//  - FAKE_LOAD_HOLD is this script's only real mitigation for the per-client streaming gap explained
-//    above: extra time, after the best available "mission has started" signals, for a heavier client
-//    to actually catch up before the intro text starts drawing over it. It is a guess, not a
-//    guarantee - there is no reliable SQF signal for "this client's streaming has fully settled", so
-//    the right guess depends entirely on this mission's own terrain/mod list. Set
-//    Waldo_InfoText_FakeLoadHold in MissionConfig\interfaceConfig.sqf to override the shipped default
-//    per mission instead of editing this file - the default here is a moderate assumption, not a
-//    measurement of any specific mission's actual settle time. Raise it first if the world still
-//    looks like it's loading when the title text appears.
-//  - The final wait below for WALDO_INIT_COMPLETE: initPlayerLocal.sqf now spawns this script instead of
-//    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
-//    parallel with this intro, not after it), which means this intro can no longer be assumed to
-//    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast
-//    reader on a fast-loading mission still can't reach a crate/feature before it exists.
-private _fakeLoadHold = missionNamespace getVariable ["Waldo_InfoText_FakeLoadHold", 5]; // was 9 originally, 2.5 in the previous pass - too short for a modded client's real streaming time
-private _blackoutFade = 1;       // was 5
+// WMP's fake screen begins only after the engine says this client is ready to play. It is now a short
+// visual bridge that hides blackout/animation setup, not a guessed substitute for engine readiness.
+// An explicit mission override may add a small hold, but the default adds no artificial delay.
+private _fakeLoadHold = 0 max (missionNamespace getVariable ["Waldo_InfoText_FakeLoadHold", 0]);
+private _blackoutFade = 0.2;     // short cover transition; setup should not delay play
 // Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
 // the blackout fade needs to have actually finished fading to black before that happens - otherwise
 // (as originally reported) the still-transitioning fade is what's visible when the screen ends, and
 // the text reveal below (which starts right after) reads as starting before the load screen is done.
 // Derived from _blackoutFade rather than a second independent number so shortening the fade can never
 // silently reopen this gap again.
-private _postBlackoutBuffer = _blackoutFade + 0.1;
-private _postLoadBuffer = 0.75;  // was 5 - lets the now-black screen settle before text starts drawing
-private _blackInFade = 1;        // was 3
-private _featureInitTimeout = 60; // bounded safety cap on the WALDO_INIT_COMPLETE wait below
+private _postBlackoutBuffer = _blackoutFade + 0.05;
+private _postLoadBuffer = 0.05;  // one UI hand-off after WMP's loading screen closes
+private _blackInFade = 0.75;     // visual only; input is already available
 
 // Waldo_InfoText_SkipFakeLoad (default false): skips the fake loading screen and both fades below
 // entirely, going straight from the readiness wait above into the text reveal drawn directly over
@@ -200,22 +220,17 @@ private _skipFakeLoad = missionNamespace getVariable ["Waldo_InfoText_SkipFakeLo
 if (_skipFakeLoad) then {
     diag_log "[WMP INFOTEXT] Waldo_InfoText_SkipFakeLoad is true - fake loading screen and fades skipped.";
 } else {
-    ["fauxLoad", ""] call BIS_fnc_startLoadingScreen;
-    uiSleep _fakeLoadHold;
+    ["WMP_InfoText_FauxLoad", ""] call BIS_fnc_startLoadingScreen;
+    if (_fakeLoadHold > 0) then {uiSleep _fakeLoadHold};
     ["wakeUpID", false, _blackoutFade] call BIS_fnc_blackOut; // Fade screen out to black for intro sequence.
     uiSleep _postBlackoutBuffer;
-    "fauxLoad" call BIS_fnc_endLoadingScreen; // End fake loading screen and begin displaying text.
-    uiSleep _postLoadBuffer;
 };
-private _tFakeLoadDone = diag_tickTime;
 
 // ----- ANIMATION SETTING -----
-// Triggered here, in parallel with the text reveal below, instead of only after it - so total wait
-// is however long the LONGER of "an animation finished cleanly" or "feature init is ready" takes,
-// not the sum of everything. Only WALK/SIT/COFFIN have a defined return-to-standing duration.
+// Set up the optional animation while WMP's cover is still present. It never extends the input lock:
+// the loading screen releases control immediately afterward and the player may interrupt a cosmetic
+// animation. This hides the switchMove setup without delaying gameplay for the animation duration.
 _unit = player;
-_animationDurations = createHashMapFromArray [["WALK", 8.333], ["SIT", 8.666], ["COFFIN", 6.666]];
-_animationStart = diag_tickTime;
 // Determine animation to use from given Params
 _usedAnimation = switch (_animate) do {
     case "NONE": {};
@@ -264,38 +279,19 @@ _usedAnimation = switch (_animate) do {
     default {};
 };
 
-// This intro no longer gates WALDO_INIT_COMPLETE (init.sqf spawns it), so it can finish before
-// server/feature startup does on a fast-loading mission. Wait for that flag before the text reveal
-// starts (not just before control returns, as an earlier pass had it) - bounded so a mission that
-// never sets it (broken init.sqf) doesn't hold the intro forever.
-//
-// This ordering fix closes a real bug, root-caused from an actual playtest RPT, not a guess: the
-// text reveal below used to be spawned immediately here and run fully detached from control-return,
-// on BIS_fnc_typeText's own few-second timeline - deliberately, so reading it never delayed getting
-// control back. But init.sqf's own mandatory `sleep 10` before it sets WALDO_INIT_COMPLETE (a
-// pre-existing, unrelated buffer, well outside this script) reliably takes far longer than that
-// timeline. The detached text thread would start, run to completion and vanish while still blocked
-// waiting on this same flag lower down - "the text has already finished by the time the player is
-// actually there", confirmed against an RPT showing WMP's own init.sqf systems (jamming, ACRE, ZEN,
-// loadout, etc.) all completing within about a second of CBA's postinit, and Dynamic AA's queued
-// system materialising (gated on WALDO_INIT_COMPLETE) only firing roughly ten seconds later - the
-// exact width of that sleep 10, not real engine asset streaming. Starting the text reveal only once
-// this wait clears means it can no longer finish before the player has any chance to see it.
-private _featureInitDeadline = diag_tickTime + _featureInitTimeout;
-waitUntil {
-    uiSleep 0.2;
-    missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {diag_tickTime >= _featureInitDeadline}
+// Close WMP's cover before starting either title block. endLoadingScreen restores normal scene/input;
+// blackIn is only a visual fade and does not justify holding player control. The short UI hand-off
+// prevents typeText being queued in the same instant as the loading display is destroyed.
+if !(_skipFakeLoad) then {
+    "WMP_InfoText_FauxLoad" call BIS_fnc_endLoadingScreen;
+    uiSleep _postLoadBuffer;
+    ["wakeUpID", true, _blackInFade] call BIS_fnc_blackIn;
 };
-if !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]) then {
-    diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
-};
+private _tFakeLoadDone = diag_tickTime;
+private _tControlReturned = diag_tickTime;
 
-// Text reveal is purely cosmetic and reads fine whether or not the player already has control back
-// (a title card over live gameplay is a normal pattern), so it still runs on its own detached
-// timeline rather than blocking control return below - only its START moved, not this. scriptDone on
-// the returned handle is polled further down purely to keep Waldo_InfoText_Active/Complete accurate
-// (gunshipNotifyLocal.sqf/fieldResupplyNotifyGrantLocal.sqf defer their own notices on it so nothing
-// draws over this text) - it is never waited on before returning control.
+// The text starts only after the client is actually ready and WMP's cover has closed. It is cosmetic
+// and runs while the player has control; unrelated feature readiness is deliberately not a gate.
 _text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='PuristaBold' color=", _textColour, ">%1</t><br/>"];
 _text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";
 _text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
@@ -328,35 +324,6 @@ _textRevealHandle = [_time, _date, _missionTitle, _localePos, _groupInfo, _text1
     waitUntil { uiSleep 0.2; scriptDone _block2Handle };
 };
 
-// Give WALK/SIT/COFFIN's own switchMove sequence its full duration - unlocking input mid-animation
-// would let the player interrupt/desync from it. NONE (and WAKE/WAKESLOW, which have no defined
-// return-to-standing duration to wait for) fall straight through with no added wait here.
-_animationDuration = _animationDurations getOrDefault [_animate, 0];
-_animationRemaining = _animationDuration - (diag_tickTime - _animationStart);
-if (_animationRemaining > 0) then {
-    uiSleep _animationRemaining;
-};
-
-// This intro no longer gates WALDO_INIT_COMPLETE (init.sqf spawns it), so it can finish before
-// server/feature startup does on a fast-loading mission. Hold the lock until that flag is up too,
-// bounded so a mission that never sets it (broken init.sqf) doesn't lock the player out forever.
-private _featureInitDeadline = diag_tickTime + _featureInitTimeout;
-waitUntil {
-    uiSleep 0.2;
-    missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] || {diag_tickTime >= _featureInitDeadline}
-};
-private _featureInitTimedOut = !(missionNamespace getVariable ["WALDO_INIT_COMPLETE", false]);
-if (_featureInitTimedOut) then {
-    diag_log "[WMP INFOTEXT] WALDO_INIT_COMPLETE never became true within the timeout; releasing player input anyway.";
-};
-private _tFeatureInitDone = diag_tickTime;
-
-if !(_skipFakeLoad) then {
-    ["wakeUpID", true, _blackInFade] call BIS_fnc_blackIn;
-};
-disableUserInput false;
-private _tControlReturned = diag_tickTime;
-
 // Active/Complete track the on-screen text, not player control - wait for the detached reveal above
 // to actually finish before flipping them, so a notification deferred on Waldo_InfoText_Complete
 // still never draws over still-typing intro text even though control returned earlier.
@@ -367,15 +334,16 @@ missionNamespace setVariable ["Waldo_InfoText_Complete", true];
 
 // Final timing snapshot for diagnostics. Each *Wait key is that specific stage's own duration (not a
 // running total), so a mission maker can see exactly which stage is slow: display readiness, the
-// per-client streaming-settle wait, the fake loading screen/fades, feature startup, then how long the
-// text itself kept typing after control was already returned.
+// ready-to-play wait, WMP fake loading/fades, then how long the text kept typing after control was
+// available. No value here is inferred from server time or unrelated feature initialization.
 missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [
     ["startedAt", _tStart],
     ["displayWait", _tDisplay - _tStart],
-    ["playerReadyWait", _tPlayerReady - _tDisplay],
+    ["playerReadyWait", _tPlayerReady - _tStart],
+    ["clientReadyWait", _tPlayerReady - _tStart],
+    ["clientReadyTimedOut", false],
+    ["clientStateAtRelease", _clientStateAtRelease],
     ["fakeLoadWait", _tFakeLoadDone - _tPlayerReady],
-    ["featureInitWait", _tFeatureInitDone - _tFakeLoadDone],
-    ["featureInitTimedOut", _featureInitTimedOut],
     ["controlReturnedAt", _tControlReturned - _tStart],
     ["textRevealAfterControl", _tComplete - _tControlReturned],
     ["totalToComplete", _tComplete - _tStart]

@@ -209,16 +209,19 @@ private _infoTextActive = missionNamespace getVariable ["Waldo_InfoText_Active",
 private _infoTextComplete = missionNamespace getVariable ["Waldo_InfoText_Complete", false];
 private _infoTextState = if (!_infoTextComplete && {!_infoTextActive}) then {"UNCONFIGURED"} else {
     if (_infoTextActive) then {"ACTIVE"} else {
-        if (_infoTextTimings getOrDefault ["featureInitTimedOut", false]) then {"ERROR"} else {"LOADED"}
+        if (_infoTextTimings getOrDefault ["clientReadyTimedOut", false]) then {"ERROR"} else {"LOADED"}
     }
 };
 ["mission-flow", "infotext-timing", _infoTextState, format [
-    "displayWaitSeconds=%1 playerReadyWaitSeconds=%2 fakeLoadWaitSeconds=%3 featureInitWaitSeconds=%4 featureInitTimedOut=%5 controlReturnedAtSeconds=%6 textRevealAfterControlSeconds=%7 totalToCompleteSeconds=%8",
-    _infoTextTimings getOrDefault ["displayWait", -1], _infoTextTimings getOrDefault ["playerReadyWait", -1],
-    _infoTextTimings getOrDefault ["fakeLoadWait", -1], _infoTextTimings getOrDefault ["featureInitWait", -1],
-    _infoTextTimings getOrDefault ["featureInitTimedOut", false], _infoTextTimings getOrDefault ["controlReturnedAt", -1],
-    _infoTextTimings getOrDefault ["textRevealAfterControl", -1], _infoTextTimings getOrDefault ["totalToComplete", -1]
-], if (_infoTextState != "ERROR") then {""} else {"featureInitWaitSeconds hit its 60s cap without WALDO_INIT_COMPLETE becoming true - check the RPT for [WMP INIT] entries and confirm Logi_MissionScanComplete is actually being set (Waldo_fnc_SideBaseLoadoutSetup)."}] call _add;
+    "clientReadyWaitSeconds=%1 clientReadyTimedOut=%2 clientStateAtRelease=%3 fakeCoverSeconds=%4 controlReturnedAtSeconds=%5 textRevealAfterControlSeconds=%6 totalToCompleteSeconds=%7",
+    _infoTextTimings getOrDefault ["clientReadyWait", -1],
+    _infoTextTimings getOrDefault ["clientReadyTimedOut", false],
+    _infoTextTimings getOrDefault ["clientStateAtRelease", -1],
+    _infoTextTimings getOrDefault ["fakeLoadWait", -1],
+    _infoTextTimings getOrDefault ["controlReturnedAt", -1],
+    _infoTextTimings getOrDefault ["textRevealAfterControl", -1],
+    _infoTextTimings getOrDefault ["totalToComplete", -1]
+], if (_infoTextState != "ERROR") then {""} else {"The playable client did not become ready within 60 seconds. Check the RPT for [WMP INFOTEXT] and verify BIS_fnc_init, display 46, the local player object and a live mission tick."}] call _add;
 
 private _zenLoaded = isClass (configFile >> "CfgPatches" >> "zen_main");
 // 45 always-registered modules; +2 hazard modules when hazards are enabled; +3 headless-client
