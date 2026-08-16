@@ -1168,14 +1168,19 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("!isNull player", init_player)
         self.assertIn("if (hasInterface) then {call Waldo_fnc_SetTeamColour};", init)
 
-    def test_intro_waits_for_playable_client_without_briefing_or_feature_gates(self):
+    def test_intro_waits_for_preload_finished_without_briefing_or_feature_gates(self):
         info_text = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "infoText.sqf").read_text(encoding="utf-8")
         interface_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
 
-        self.assertIn('missionNamespace getVariable ["BIS_fnc_init", false]', info_text)
+        self.assertIn('addMissionEventHandler ["PreloadFinished"', init_player)
+        self.assertIn('removeMissionEventHandler ["PreloadFinished", _thisEventHandler]', init_player)
+        self.assertIn('missionNamespace setVariable ["Waldo_InfoText_InitialPreloadFinished", true]', init_player)
+        self.assertIn('missionNamespace getVariable ["Waldo_InfoText_InitialPreloadFinished", false]', info_text)
         self.assertIn("!isNull findDisplay 46", info_text)
         self.assertIn("!isNull player && {local player}", info_text)
-        self.assertIn("{time > 0}", info_text)
+        self.assertNotIn('missionNamespace getVariable ["BIS_fnc_init", false]', info_text)
+        self.assertNotIn("{time > 0}", info_text)
         self.assertNotIn("getClientStateNumber ==", info_text)
         self.assertNotIn("WALDO_INIT_COMPLETE", info_text)
         self.assertNotIn("disableUserInput", info_text)
