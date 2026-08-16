@@ -75,13 +75,12 @@ _date = "Day 14 of the Third Month, 994.M41";
 
 ## Timing
 
-The engine's real loading screen owns startup. WMP does not use the pre-mission briefing state as a gate and does not guess that a fixed number of seconds means loading has finished. On each client, the automatic intro waits until:
+The engine's real loading screen owns startup. WMP does not use the pre-mission briefing state, `BIS_fnc_init`, mission `time`, or a guessed delay as proof that loading has finished. On each client, `initPlayerLocal.sqf` registers Arma's local [`PreloadFinished` mission event](https://community.bohemia.net/wiki/Arma_3:_Mission_Event_Handlers#PreloadFinished) before doing any other WMP player setup. The automatic intro waits until:
 
-1. Arma has completed its mission initialisation (`BIS_fnc_init` is true).
+1. Arma fires that first `PreloadFinished` event after the mission preload screen.
 2. The in-game display and that client's local player object exist.
-3. The playable mission has produced a live simulation tick.
 
-Only then does WMP open its own short cover, hide the optional animation setup, close that cover, and start the title. The title therefore cannot begin underneath the engine loading screen. The title and optional animation are cosmetic: WMP does not explicitly lock player input while they run and does not wait for crates, radios, logistics scans, or `WALDO_INIT_COMPLETE`.
+The handler removes itself after the first event because Arma also fires `PreloadFinished` when the player later closes the map. Only then does WMP open its own short cover, hide the optional animation setup, close that cover, and start the title. The title and optional animation are cosmetic: WMP does not explicitly lock player input while they run and does not wait for crates, radios, logistics scans, or `WALDO_INIT_COMPLETE`.
 
 `Waldo_InfoText_FakeLoadHold` is an optional extra hold inside WMP's cover. Its default is `0`, and most missions should leave it there. It is not a loading detector or a requirement:
 
@@ -99,7 +98,7 @@ Want no fake loading screen at all? Set this in `MissionConfig\interfaceConfig.s
 
 This is useful for separating WMP's presentation from the engine lifecycle during testing, and is also a legitimate permanent choice if a mission should have no fake-cover presentation.
 
-Every stage is measured per client. [Mission Diagnostics](Mission-Diagnostics)'s `mission-flow`/`infotext-timing` check reports the readiness wait, fake-cover duration, point at which control was available, and remaining title-reveal duration. `clientStateAtRelease` is recorded only as evidence; briefing/client state is not a readiness gate.
+Every stage is measured per client. [Mission Diagnostics](Mission-Diagnostics)'s `mission-flow`/`infotext-timing` check reports the `PreloadFinished` wait, subsequent player/display wait, fake-cover duration, point at which control was available, and remaining title-reveal duration. `clientStateAtRelease` is recorded only as evidence; briefing/client state is not a readiness gate.
 
 ---
 

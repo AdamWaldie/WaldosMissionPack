@@ -5,11 +5,11 @@
  * Registered as Waldo_fnc_InfoText. Called automatically, once, from initPlayerLocal.sqf.
  *
  * Locality / lifecycle: interface client only. The automatic call is spawned after PLAYER_LOCAL
- * configuration has loaded. It waits for BIS_fnc_init (the engine's completion signal after all
- * event scripts, modules and pre/post-init functions), a local player object, display 46 and a live
- * simulation tick before it opens WMP's short transition and starts any title text. It never changes
- * authoritative state and does not rerun on respawn. The fake screen is paired by ID and the
- * readiness wait is bounded so a broken client cannot be locked indefinitely.
+ * configuration has loaded. initPlayerLocal.sqf synchronously records the engine's first local
+ * PreloadFinished mission event; this worker waits for that event plus the local player/display
+ * before it opens WMP's short transition and starts any title text. It never changes authoritative
+ * state and does not rerun on respawn. The fake screen is paired by ID and every readiness wait is
+ * bounded so a broken client cannot be locked indefinitely.
  * Player control is no longer held for cosmetic text, optional animations or unrelated feature init.
  *
  * Content and timing are mission-maker settings in MissionConfig\interfaceConfig.sqf
@@ -51,48 +51,51 @@ missionNamespace setVariable ["Waldo_InfoText_Complete", false];
 private _tStart = diag_tickTime;
 missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [["startedAt", _tStart]]];
 
-// `time` is a per-machine mission clock, not loading progress. Likewise BRIEFING READ can be reached
-// while the visual loading layer is still completing, so neither is the decisive gate. The engine
-// sets BIS_fnc_init only after event scripts, modules, and pre/post-init functions have initialised;
-// use that completion signal together with the local mission display/player and one live simulation
-// tick. This wait happens before WMP adds its own loading cover: the real loading screen remains
-// responsible until the engine has completed its own startup lifecycle.
-private _clientReadyDeadline = diag_tickTime + 60;
+// The engine's first local PreloadFinished event is the authority for the mission preload screen
+// ending. BRIEFING READ, BIS_fnc_init and `time` all become available earlier and therefore cannot
+// prove that title text is visible. initPlayerLocal registers the event synchronously before doing
+// any other local setup and removes its handler after the first event, because PreloadFinished also
+// fires after a player closes the map later in the mission.
+private _preloadDeadline = diag_tickTime + 120;
 waitUntil {
     uiSleep 0.05;
-    private _displayReady = !isNull findDisplay 46;
-    private _playerReady = !isNull player && {local player};
-    private _engineInitReady = missionNamespace getVariable ["BIS_fnc_init", false];
-    (_displayReady && {_playerReady} && {_engineInitReady} && {time > 0})
+    missionNamespace getVariable ["Waldo_InfoText_InitialPreloadFinished", false]
+    || {diag_tickTime >= _preloadDeadline}
+};
+private _preloadObserved = missionNamespace getVariable ["Waldo_InfoText_InitialPreloadFinished", false];
+private _tPreloadFinished = diag_tickTime;
+
+// The event precedes this scheduled worker resuming. Give the UI one scheduler hand-off, then only
+// require the actual in-game display and local player object used by the title.
+uiSleep 0.05;
+private _clientReadyDeadline = diag_tickTime + 30;
+waitUntil {
+    uiSleep 0.05;
+    (!isNull findDisplay 46 && {!isNull player} && {local player})
     || {diag_tickTime >= _clientReadyDeadline}
 };
-// Give the engine one UI scheduler hand-off to remove its completed loading layer before WMP creates
-// its own cover. This is not a guessed seconds-long streaming delay.
-uiSleep 0.05;
-private _tDisplay = diag_tickTime;
 private _clientReady = !isNull findDisplay 46
     && {!isNull player}
-    && {local player}
-    && {missionNamespace getVariable ["BIS_fnc_init", false]}
-    && {time > 0};
+    && {local player};
 private _clientStateAtRelease = getClientStateNumber;
 
-if (!_clientReady) exitWith {
+if (!_preloadObserved || {!_clientReady}) exitWith {
     diag_log format [
-        "[WMP INFOTEXT] Engine startup did not complete within 60 seconds; intro skipped without changing input. display46=%1 player=%2 local=%3 time=%4 BIS_fnc_init=%5 clientState=%6.",
+        "[WMP INFOTEXT] Playable preload readiness failed; intro skipped without changing input. preloadFinished=%1 display46=%2 player=%3 local=%4 clientState=%5.",
+        _preloadObserved,
         !isNull findDisplay 46,
         !isNull player,
         !isNull player && {local player},
-        time,
-        missionNamespace getVariable ["BIS_fnc_init", false],
         _clientStateAtRelease
     ];
     missionNamespace setVariable ["Waldo_InfoText_Active", false];
     missionNamespace setVariable ["Waldo_InfoText_Complete", true];
     missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [
         ["startedAt", _tStart],
-        ["clientReadyWait", diag_tickTime - _tStart],
-        ["clientReadyTimedOut", true],
+        ["preloadWait", _tPreloadFinished - _tStart],
+        ["preloadTimedOut", !_preloadObserved],
+        ["clientReadyWait", diag_tickTime - _tPreloadFinished],
+        ["clientReadyTimedOut", !_clientReady],
         ["clientStateAtRelease", _clientStateAtRelease]
     ]];
 };
@@ -192,6 +195,12 @@ _textColour = switch (side player) do
 };
 
 private _tPlayerReady = diag_tickTime;
+diag_log format [
+    "[WMP INFOTEXT] Visible intro starting after PreloadFinished. preloadWait=%1 clientReadyWait=%2 clientState=%3.",
+    _tPreloadFinished - _tStart,
+    _tPlayerReady - _tPreloadFinished,
+    _clientStateAtRelease
+];
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
 // WMP's fake screen begins only after the engine says this client is ready to play. It is now a short
@@ -329,6 +338,12 @@ _textRevealHandle = [_time, _date, _missionTitle, _localePos, _groupInfo, _text1
 // still never draws over still-typing intro text even though control returned earlier.
 waitUntil { uiSleep 0.2; scriptDone _textRevealHandle };
 private _tComplete = diag_tickTime;
+diag_log format [
+    "[WMP INFOTEXT] Intro text complete. controlReturnedAt=%1 textRevealAfterControl=%2 total=%3.",
+    _tControlReturned - _tStart,
+    _tComplete - _tControlReturned,
+    _tComplete - _tStart
+];
 missionNamespace setVariable ["Waldo_InfoText_Active", false];
 missionNamespace setVariable ["Waldo_InfoText_Complete", true];
 
@@ -338,9 +353,10 @@ missionNamespace setVariable ["Waldo_InfoText_Complete", true];
 // available. No value here is inferred from server time or unrelated feature initialization.
 missionNamespace setVariable ["Waldo_InfoText_Timings", createHashMapFromArray [
     ["startedAt", _tStart],
-    ["displayWait", _tDisplay - _tStart],
-    ["playerReadyWait", _tPlayerReady - _tStart],
-    ["clientReadyWait", _tPlayerReady - _tStart],
+    ["preloadWait", _tPreloadFinished - _tStart],
+    ["preloadTimedOut", false],
+    ["playerReadyWait", _tPlayerReady - _tPreloadFinished],
+    ["clientReadyWait", _tPlayerReady - _tPreloadFinished],
     ["clientReadyTimedOut", false],
     ["clientStateAtRelease", _clientStateAtRelease],
     ["fakeLoadWait", _tFakeLoadDone - _tPlayerReady],

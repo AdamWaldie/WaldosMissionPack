@@ -22,6 +22,19 @@ not replace newer server values already received by a JIP player. Do not move se
 startup into this file: every player would create a competing copy.
 */
 if (hasInterface) then {
+    // Register before any other player-local startup work. PreloadFinished is the engine event for
+    // the mission preload screen actually ending; init/postInit completion and briefing state both
+    // happen too early to prove that the player can see the scene. The same event also fires after
+    // closing the map, so this handler removes itself after the first (initial-load) event.
+    missionNamespace setVariable ["Waldo_InfoText_InitialPreloadFinished", false];
+    private _infoTextPreloadHandler = addMissionEventHandler ["PreloadFinished", {
+        missionNamespace setVariable ["Waldo_InfoText_InitialPreloadFinished", true];
+        missionNamespace setVariable ["Waldo_InfoText_InitialPreloadFinishedAt", diag_tickTime];
+        diag_log format ["[WMP INFOTEXT] Initial PreloadFinished received at diag_tickTime=%1.", diag_tickTime];
+        removeMissionEventHandler ["PreloadFinished", _thisEventHandler];
+    }];
+    missionNamespace setVariable ["Waldo_InfoText_PreloadHandler", _infoTextPreloadHandler];
+
     // ACRE's initial assignment must not race a player-persistence read. Start closed, then let the
     // authoritative runtime snapshot resolve this to DISABLED, PENDING, FOUND, NONE or FAILED.
     // FAILED deliberately releases ACRE but never permits this client to overwrite an unread save.
@@ -51,12 +64,9 @@ if (hasInterface) then {
     ["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;
 
     // Introduction Text - content and timing are MissionConfig\interfaceConfig.sqf settings, loaded
-    // just above, not call-site parameters. spawn, not call: InfoText's own fake-loading/blackout/
-    // typeText sequence is a scripted several-second sequence with nothing else in this file
-    // depending on its result, and every feature gated on WALDO_INIT_COMPLETE has no reason to sit
-    // behind a player's intro screen finishing - running it in parallel gets those systems ready
-    // sooner without changing what a player actually sees or when their input is unlocked (still
-    // governed entirely by InfoText's own internal disableUserInput calls).
+    // just above, not call-site parameters. The worker waits for the initial PreloadFinished event
+    // registered at the top of this file, then performs only its short local presentation. It does
+    // not gate other startup work or explicitly lock player input.
     [] spawn Waldo_fnc_InfoText;
 
     // ACE 3.21.1 forwards Arma's old-corpse object into a Boolean argument in its setName Respawn

@@ -147,8 +147,8 @@ Mission load
               │     single installation is what "survives" respawn, not a re-executed file
               └─ [] spawn Waldo_fnc_InfoText          (intro title screen, content/timing from
                     MissionConfig\interfaceConfig.sqf, runs in parallel. It waits only for the local
-                    playable client (BIS_fnc_init, display 46, local player and a live mission tick),
-                    then closes its short setup cover before starting the title. WALDO_INIT_COMPLETE
+                    initial local PreloadFinished event and a usable display/local player, then
+                    closes its short setup cover before starting the title. WALDO_INIT_COMPLETE
                     and unrelated feature setup do not gate it. The text and optional animation do
                     not explicitly withhold player control.)
 ```
@@ -592,7 +592,7 @@ Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`
 
 Two respawn-focused client checks close the loop on the loadout-restore system: `respawn`/`loadout-restore` reads a `Waldo_Player_LastRespawnRestore` snapshot `[identityMatched, restoredEntries, tickTime]` set by `initPlayerLocal.sqf`'s `"Respawn"` handler on every actual respawn (`UNCONFIGURED` before this client's first respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved loadout); `dependencies`/`ace-nametags-respawn-compat` is informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
 
-`mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` into a client-local `Waldo_InfoText_Timings` hashmap: the playable-client readiness wait, whether that bounded wait timed out, the diagnostic client state at release, WMP's fake-cover duration, when normal control was available, and how much longer the detached title kept typing. The pre-mission briefing state is not a gate. `WALDO_INIT_COMPLETE` and unrelated features are not part of this flow. `ERROR` only means the playable display/player/engine-ready conditions did not arrive within 60 seconds.
+`mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` into a client-local `Waldo_InfoText_Timings` hashmap: the initial local `PreloadFinished` wait, subsequent player/display readiness, the diagnostic client state at release, WMP's fake-cover duration, when normal control was available, and how much longer the detached title kept typing. The pre-mission briefing state, `BIS_fnc_init`, mission `time`, `WALDO_INIT_COMPLETE`, and unrelated features are not readiness gates. `ERROR` means the preload event or usable local player/display did not arrive within its bounded wait.
 
 Every new module's diagnostics rows go through the same two primitives so RPT output never
 fragments into per-feature formats: `Waldo_fnc_DiagnosticLog` (the `[WMP DIAG]` frame shown above)
