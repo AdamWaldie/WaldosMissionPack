@@ -88,7 +88,13 @@ The intro is short by default: a quick fade in, the title text, then control ret
 
 A player never gets control before the mission's own startup (crates, radios, and other features) has finished, even on a fast-loading mission.
 
-Want the intro shorter or longer? The hold and fade durations sit as named constants near the top of `infoText.sqf` (`_fakeLoadHold`, `_textBlock1Hold`, and so on), each with a comment explaining what it controls.
+Arma has no way for a script to know when a specific player's own game has finished loading in. A heavy mod list or large terrain can leave a client streaming in models and textures for a few seconds after the mission has technically started. No script, including this one, can check for that finishing. The first couple of seconds before the title text appears cover that gap. If the world still looks like it's loading when the title text starts, raise it in `init.sqf`:
+
+```sqf
+missionNamespace setVariable ["Waldo_InfoText_FakeLoadHold", 8]; // seconds; shipped default is 5
+```
+
+Want the rest of the intro shorter or longer? The remaining fade durations sit as named constants near the top of `infoText.sqf` (`_blackoutFade`, `_postLoadBuffer`, and so on), each with a comment explaining what it controls. The text itself waits on its own actual reveal animation finishing, not a guessed duration, so there's no separate hold time to tune for it.
 
 ---
 

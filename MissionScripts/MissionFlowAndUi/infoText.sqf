@@ -121,23 +121,39 @@ _textColour = switch (side player) do
     default {"'#ed9d18'"};
 };
 
-waitUntil { uiSleep 0.2; (!isNull player && time > 0) };
+// findDisplay 46 (above) and time > 0 are both mission/global-state signals - "the mission has
+// actually started" from the engine's synchronised standpoint - not a per-client "this machine has
+// finished streaming its own textures/models in" signal. Arma has no such signal exposed to SQF: a
+// client (especially a heavier mod/terrain setup, or one joining a session already running) can
+// legitimately have both of those true while it is still individually streaming assets in, which is
+// the real loading screen/pop-in a player can still see for a few seconds after this point - not our
+// own fauxLoad screen below, and not something any waitUntil condition here can detect completing.
+// time > 1 instead of the previous > 0 is a small, still-imperfect improvement: `time` can tick to a
+// negligible epsilon almost immediately even on a client that is still heavily loading, so a full
+// second is a more realistic floor than "any nonzero value" without pretending it's a real signal.
+waitUntil { uiSleep 0.2; (!isNull player && time > 1) };
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
-// Throw up a fake loading screen to buffer over actual loading screen.
+// Throw up our own fake loading screen purely as a cinematic transition into the intro below.
 //
 // Timing below is deliberately tight: control returns to the player as soon as the content actually
 // needs (readable text + a chosen animation finishing cleanly), not on padded guesswork. Two
 // exceptions are kept intentionally generous rather than cut to the bone:
-//  - FAKE_LOAD_HOLD masks real asset streaming (models/textures still loading in), not our own
-//    presentation - too short here risks revealing pop-in on a heavy mod list, so tune this one up
-//    per mission rather than trusting the shipped default blindly.
+//  - FAKE_LOAD_HOLD is this script's only real mitigation for the per-client streaming gap explained
+//    above: extra time, after the best available "mission has started" signals, for a heavier client
+//    to actually catch up before the intro text starts drawing over it. It is a guess, not a
+//    guarantee - there is no reliable SQF signal for "this client's streaming has fully settled", so
+//    the right guess depends entirely on this mission's own terrain/mod list. Set
+//    Waldo_InfoText_FakeLoadHold in init.sqf to override the shipped default per mission instead of
+//    editing this file - the default here is a moderate assumption, not a measurement of any specific
+//    mission's actual settle time. Raise it first if the world still looks like it's loading when the
+//    title text appears.
 //  - The final wait below for WALDO_INIT_COMPLETE: init.sqf now spawns this script instead of
 //    calling it (so server/feature startup - crates, jamming, safestart, Dynamic AA, etc. - runs in
 //    parallel with this intro, not after it), which means this intro can no longer be assumed to
 //    outlast that startup. disableUserInput stays true until whichever finishes last, so a fast
 //    reader on a fast-loading mission still can't reach a crate/feature before it exists.
-private _fakeLoadHold = 2.5;     // was 9 - pure padding; real streaming margin, tune per mission/modlist
+private _fakeLoadHold = missionNamespace getVariable ["Waldo_InfoText_FakeLoadHold", 5]; // was 9 originally, 2.5 in the previous pass - too short for a modded client's real streaming time
 private _blackoutFade = 1;       // was 5
 // Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
 // the blackout fade needs to have actually finished fading to black before that happens - otherwise
@@ -147,13 +163,6 @@ private _blackoutFade = 1;       // was 5
 // silently reopen this gap again.
 private _postBlackoutBuffer = _blackoutFade + 0.1;
 private _postLoadBuffer = 0.75;  // was 5 - lets the now-black screen settle before text starts drawing
-// Each hold must stay >= the matching typeText block's own slowest per-line reveal stagger (set where
-// the blocks are spawned below) for the same reason _postBlackoutBuffer must stay >= _blackoutFade:
-// the block would otherwise still be revealing its last line when the next block/phase starts drawing
-// or reads control as returned, i.e. exactly the same "starts before the previous thing finished"
-// clash already found once above. Padded a little past that minimum for actual reading time.
-private _textBlock1Hold = 3.5;   // was 6 - time/date line, short text, quick to read
-private _textBlock2Hold = 3;     // was 3 - title/locale/group lines
 private _blackInFade = 1;        // was 3
 private _featureInitTimeout = 60; // bounded safety cap on the WALDO_INIT_COMPLETE wait below
 
@@ -231,30 +240,32 @@ _text1 = str composeText ["<t align = 'center' shadow = '1' size = '1.0' font='P
 _text2 = "<t align = 'center' shadow = '1' size = '0.8' color='#808080'>%1</t><br/>";
 _text3 = "<t align = 'center' shadow = '1' size = '0.7'>%1</t>";
 
-_textRevealHandle = [_time, _date, _missionTitle, _localePos, _groupInfo, _text1, _text2, _text3, _textBlock1Hold, _textBlock2Hold] spawn {
-    params ["_time", "_date", "_missionTitle", "_localePos", "_groupInfo", "_text1", "_text2", "_text3", "_textBlock1Hold", "_textBlock2Hold"];
-    // The trailing numeric argument on the last line of each block is BIS_fnc_typeText's own reveal
-    // stagger for that line (seconds before it starts typing, on top of the earlier lines). It was
-    // 10 and 5 respectively before this pass - already longer than the 6s/3s holds that followed them
-    // in the original script, so the date/groupInfo lines could already be cut off mid-reveal even
-    // before this rework tightened anything. Cut here to comfortably clear the new, shorter holds
-    // above instead of carrying that pre-existing mismatch forward at a smaller scale.
-    [
+_textRevealHandle = [_time, _date, _missionTitle, _localePos, _groupInfo, _text1, _text2, _text3] spawn {
+    params ["_time", "_date", "_missionTitle", "_localePos", "_groupInfo", "_text1", "_text2", "_text3"];
+    // BIS_fnc_typeText owns its own complete reveal-and-hold timeline once spawned - confirmed against
+    // respawnText.sqf, which spawns an equivalent block and the script simply ends right after with no
+    // wait at all, and the text still displays correctly. A guessed uiSleep here to "give it time to be
+    // read" was never actually controlling how long the text stays up; it only controlled how soon the
+    // NEXT block/phase started, and a guess shorter than the real animation cuts the current block off
+    // mid-reveal - exactly the "cuts halfway between the text being sequenced" bug reported after
+    // in-game testing. waitUntil {scriptDone} on the real handle instead of guessing removes this
+    // class of bug entirely, the same fix already applied to the blackout/buffer race above.
+    private _block1Handle = [
         [
             [_time, "<t align = 'center' shadow = '1' size = '1.0'>%1</t><br/>"],
             [_date, "<t align = 'center' shadow = '1' size = '0.7' font='PuristaBold'>%1</t><br/>", 2]
         ]
     ] spawn BIS_fnc_typeText;
-    uiSleep _textBlock1Hold;
+    waitUntil { uiSleep 0.2; scriptDone _block1Handle };
 
-    [
+    private _block2Handle = [
         [
             [_missionTitle, _text1],
             [_localePos, _text2],
             [_groupInfo, _text3, 1.5]
         ]
     ] spawn BIS_fnc_typeText;
-    uiSleep _textBlock2Hold;
+    waitUntil { uiSleep 0.2; scriptDone _block2Handle };
 };
 
 // Give WALK/SIT/COFFIN's own switchMove sequence its full duration - unlocking input mid-animation
