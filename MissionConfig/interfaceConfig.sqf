@@ -157,9 +157,8 @@
  * - Waldo_InfoText_Locale (MISSION MAKER): custom location name; "" uses the map's worldName.
  * - Waldo_InfoText_LongDate (MISSION MAKER): true = "3rd November 2024", false = "3/11/2024".
  * - Waldo_InfoText_Animation (MISSION MAKER): NONE, WALK, SIT, WAKE, WAKESLOW or COFFIN.
- * - Waldo_InfoText_FakeLoadHold (MISSION MAKER): seconds held on the fake loading screen before the
- *   intro starts, covering per-client streaming/pop-in the engine gives no script signal for. Raise
- *   it if the world still looks like it's loading when the title text appears.
+ * - Waldo_InfoText_FakeLoadHold (MISSION MAKER): optional extra seconds to keep WMP's short setup
+ *   cover visible after the playable client is ready. Leave at 0 normally; this is not load detection.
  * - Waldo_InfoText_SkipFakeLoad (MISSION MAKER): true skips the fake loading screen and its fades
  *   entirely; useful to isolate our own transition timing from real client streaming, and a
  *   legitimate permanent choice for a mission with no loading-screen presentation at all.
@@ -181,7 +180,7 @@ createHashMapFromArray [
         ["Waldo_InfoText_Locale", ""],      // STRING: "" uses the map's worldName.
         ["Waldo_InfoText_LongDate", false], // BOOL: true = "3rd November 2024", false = "3/11/2024".
         ["Waldo_InfoText_Animation", "NONE"], // NONE, WALK, SIT, WAKE, WAKESLOW or COFFIN.
-        ["Waldo_InfoText_FakeLoadHold", 5], // SECONDS: fake loading screen hold before the intro starts.
+        ["Waldo_InfoText_FakeLoadHold", 0], // SECONDS: optional extra setup-cover hold; normally leave 0.
         ["Waldo_InfoText_SkipFakeLoad", false], // BOOL: true skips the fake loading screen and its fades.
         // ADVANCED TUNING: global notification queue and animation behavior.
         ["Waldo_UiNotification_MaximumQueued", 12], // COUNT: oldest pending messages are discarded beyond this bound.
