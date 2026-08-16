@@ -1101,7 +1101,7 @@ class FullAuditTests(unittest.TestCase):
             generated_server = (destination / "initServer.sqf").read_text(encoding="utf-8")
             generated_player = (destination / "initPlayerLocal.sqf").read_text(encoding="utf-8")
             self.assertIn('["",""] spawn Waldo_fnc_InfoText', generated_init)
-            self.assertIn("sleep 10", generated_init)
+            self.assertIn('missionNamespace getVariable ["Logi_MissionScanComplete", false]', generated_init)
             self.assertTrue(generated_init.rstrip().endswith('call compile preprocessFileLineNumbers "auditInit.sqf";'))
             self.assertTrue(generated_server.rstrip().endswith('call compile preprocessFileLineNumbers "auditInitServer.sqf";'))
             self.assertTrue(generated_player.rstrip().endswith('call compile preprocessFileLineNumbers "auditInitPlayerLocal.sqf";'))
