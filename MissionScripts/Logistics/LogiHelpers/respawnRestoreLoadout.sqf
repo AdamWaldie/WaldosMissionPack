@@ -157,6 +157,10 @@ if (_identityMatches && {count _savedLoadout > 0}) then {
             missionNamespace setVariable ["Waldo_Player_LoadoutVerifyOutcome", [_verifyOutcome, _tries, diag_tickTime]];
             if (alive _unit && {!_finalMatch}) then {
                 diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_FAILED] unit=%1 expectedCanary=%2 after %3 retries.", _unit, _savedCanary, _tries];
+                // Previously RPT/Diagnostics-only - a player has no way to know their gear is wrong
+                // unless they happen to check either. This is the ~2-minute retry window giving up,
+                // not a one-off hiccup, so it is worth a visible warning rather than silence.
+                ["RESPAWN LOADOUT", "Your saved equipment did not fully restore. Check your gear, or open the arsenal/Loadout Save Point to reset it.", "WARNING", "RESPAWN_LOADOUT_VERIFY"] call Waldo_fnc_FeatureNotifyLocal;
             } else {
                 if (_tries > 0) then {
                     diag_log format ["[WMP LOADOUT][RESPAWN][VERIFY_RETRY_OK] unit=%1 succeeded after %2 retries.", _unit, _tries];
@@ -202,6 +206,12 @@ if (count _savedRadios >= 3 && {count (_savedRadios select 1) > 0}) then {
         } else {
             diag_log format ["[WMP LOADOUT][RESPAWN][RADIO_RESTORE_FAILED] generation=%1; applying current mission plan.", _loadoutGeneration];
             missionNamespace setVariable ["Waldo_Player_LastRadioRestoreOutcome", ["FAILED", _loadoutGeneration, diag_tickTime]];
+            // Previously RPT/Diagnostics-only. Gear still restores correctly here - only the exact
+            // saved radio channels did not - so this is gated by the same notifyAssignmentProblems
+            // flag as every other ACRE assignment-problem warning, not shown unconditionally.
+            if ((missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap]) getOrDefault ["notifyAssignmentProblems", true]) then {
+                ["RESPAWN RADIOS", "Your saved radio channels did not restore. Default mission channels were applied instead.", "WARNING", "RESPAWN_RADIO_RESTORE"] call Waldo_fnc_FeatureNotifyLocal;
+            };
             ["RESPAWN_RESTORE_FALLBACK", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         };
     };

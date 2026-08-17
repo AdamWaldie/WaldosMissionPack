@@ -742,9 +742,11 @@ respawn this session, `ERROR` on an identity mismatch - baseline retained instea
 loadout); `respawn`/`loadout-apply-verify` reads `Waldo_Player_LoadoutVerifyOutcome` - whether
 `setUnitLoadout` was confirmed to actually take effect (via a small ACRE-independent equipment
 canary, not a raw `getUnitLoadout` comparison) and how many retries it needed, `ERROR` only when it
-never took even after retrying; `respawn`/`radio-restore` reads `Waldo_Player_LastRadioRestoreOutcome`
-for whether the saved ACRE radio state reapplied, fell back to the current mission plan, or there was
-no complete radio snapshot to restore. `dependencies`/`ace-nametags-respawn-compat` is
+never took even after retrying, which also shows the affected player a WARNING notification instead
+of staying RPT/Diagnostics-only; `respawn`/`radio-restore` reads `Waldo_Player_LastRadioRestoreOutcome`
+for whether the saved ACRE radio state reapplied, fell back to the current mission plan (also
+notified to the player, gated by `notifyAssignmentProblems` like every other ACRE assignment-problem
+warning), or there was no complete radio snapshot to restore. `dependencies`/`ace-nametags-respawn-compat` is
 informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is
 loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own
 `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn
