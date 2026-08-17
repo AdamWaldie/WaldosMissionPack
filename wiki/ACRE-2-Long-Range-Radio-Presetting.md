@@ -176,8 +176,8 @@ bridging exists until you add a row.
 ```sqf
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
-    ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
-    // [netId (diagnostics-only), radio family, shared frequency, [[side, channel], ...]]
+    ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]], "COALITION"]
+    // [netId (diagnostics-only), radio family, shared frequency, [[side, channel], ...], label (optional)]
 ]],
 ```
 
@@ -188,6 +188,14 @@ real frequency underneath - and those two can now talk, while every other channe
 stays exactly as isolated from each other as before. The channel numbers don't need to match across
 sides because a channel number only means anything on that side's own radio preset; pick whichever
 free channel each side has available.
+
+The last item, `"COALITION"`, is optional and makes that shared channel actually show a name on the
+radio's own screen instead of just a plain channel number - handy for making it visually obvious to
+players that this specific channel is the shared one. It only works on PRC-148/152/117F radios (same
+limitation ordinary named channels already have), and it's the *only* way to label a joint net -
+don't try to also add a matching entry to that side's own channel list to name it the old way, that's
+rejected as a conflict (WMP assumes you've made a mistake if the same channel shows up twice with two
+different purposes).
 
 Only `PRC_LR`, `BF888` and `SEM52` radio families can be used this way - PRC-343 and PRC-77/SEM70
 work differently under the hood and aren't supported here yet. Using an unsupported family, an
