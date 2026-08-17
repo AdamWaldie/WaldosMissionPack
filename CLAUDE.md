@@ -279,7 +279,12 @@ preset value already *is* the raw frequency) are rejected at validation.
 `Waldo_fnc_ACRE2ValidateConfig` rejects an unknown family/side, a non-CHANNEL-mode family, an
 out-of-range channel, and — always, not `strict`-gated — a collision where a joint net's
 `[side, channel]` slot matches an ordinary named net already using that exact channel/family on that
-side.
+side. The shared frequency itself is checked only as a positive number: `acre_api_fnc_setPresetChannelField`
+performs no validation of its own on the value (confirmed against ACRE2's source — it checks the
+channel index is in range and the field name is recognised, then stores whatever is given
+unconditionally), and CHANNEL-mode radio profiles carry no documented frequency band in this file's
+own profile table, so there is no authoritative range anywhere in the pipeline to validate a joint
+net's frequency against beyond a plain sanity check.
 
 **Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
 the way an ordinary named net is — note the channel number and assign it directly in that side's own

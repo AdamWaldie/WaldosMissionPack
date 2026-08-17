@@ -206,6 +206,13 @@ unknown side, an out-of-range channel, or a channel that collides with a real ne
 assigned on that side is always rejected with a clear reason at mission start, rather than silently
 letting a real operational net get rerouted onto the bridge.
 
+The frequency itself is only sanity-checked as a positive number, not checked against any real radio
+hardware range - ACRE2 has no documented tunable range for PRC_LR/BF888/SEM52 to check against, and
+its own API accepts and stores whatever value it's given. A wrong-but-plausible-looking MHz figure
+will not be rejected; it will just get programmed as given. Test the mission and confirm both sides'
+radios actually hear each other on the channel you picked, rather than assuming a made-up frequency
+is correct just because it passed validation.
+
 **Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
 the way an ordinary named net is (`["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]`-style rows cannot yet say
 `"JOINT_CMD"`) - note the channel number you placed it at and assign that number directly in the

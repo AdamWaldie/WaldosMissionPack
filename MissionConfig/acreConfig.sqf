@@ -53,7 +53,11 @@
  *   v1 LIMITATION: a joint net is not yet referenceable by name from a group's assignment rows the way
  *   an ordinary named net is - a mission maker notes the channel number they placed it at (in the
  *   relevant side's own group assignments above) and assigns that number directly. There is also no
- *   in-mission Zeus toggle for a joint net yet; it is mission-start configuration only.
+ *   in-mission Zeus toggle for a joint net yet; it is mission-start configuration only. The shared
+ *   frequency itself is only checked for being a positive number - ACRE2 has no documented tunable
+ *   range for PRC_LR/BF888/SEM52 and its own API stores whatever value it is given, so a wrong but
+ *   plausible-looking MHz figure will not be caught. Confirm in-game that both sides actually hear
+ *   each other on the channel you picked.
  *
  * SETTING-BY-SETTING GUIDE - NORMAL MISSION SETTINGS
  * - enabled: master switch for WMP's replacement ACRE lifecycle.
