@@ -176,10 +176,13 @@ bridging exists until you add a row.
 ```sqf
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
-    ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]], "COALITION"]
-    // [netId (diagnostics-only), radio family, shared frequency, [[side, channel], ...], label (optional)]
+    ["JOINT_CMD", "COALITION", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
+    // [netId (diagnostics-only), label ("" for none), radio family, shared frequency, [[side, channel], ...]]
 ]],
 ```
+
+That shape deliberately matches an ordinary named net's `[key, label, family, value]` - the label
+sits right after the id, same spot, same meaning - with the per-side channel list tacked on after.
 
 Read that row as: **45.500 MHz** is the one shared frequency. On **WEST**'s own radios, **channel
 13** gets programmed to it. On **EAST**'s, **channel 6**. On **GUER**'s, also **channel 6**. So a
@@ -189,9 +192,9 @@ stays exactly as isolated from each other as before. The channel numbers don't n
 sides because a channel number only means anything on that side's own radio preset; pick whichever
 free channel each side has available.
 
-The last item, `"COALITION"`, is optional and makes that shared channel actually show a name on the
-radio's own screen instead of just a plain channel number - handy for making it visually obvious to
-players that this specific channel is the shared one. It only works on PRC-148/152/117F radios (same
+`"COALITION"` makes that shared channel actually show a name on the radio's own screen instead of
+just a plain channel number - handy for making it visually obvious to players that this specific
+channel is the shared one. Use `""` for no label. It only works on PRC-148/152/117F radios (same
 limitation ordinary named channels already have), and it's the *only* way to label a joint net -
 don't try to also add a matching entry to that side's own channel list to name it the old way, that's
 rejected as a conflict (WMP assumes you've made a mistake if the same channel shows up twice with two

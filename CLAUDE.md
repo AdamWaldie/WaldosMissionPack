@@ -255,24 +255,26 @@ ordinary per-side net isolation everywhere else. `[]` by default (no bridging).
 ```sqf
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
-    ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]], "COALITION"]
-    // [netId (diagnostics-only), radio family, shared TX/RX frequency, [[side, channel], ...], label (optional)]
+    ["JOINT_CMD", "COALITION", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
+    // [netId (diagnostics-only), label ("" for none), radio family, shared TX/RX frequency, [[side, channel], ...]]
 ]],
 ```
 
-Frequency is the thing actually shared across sides; channel *numbers* stay per-side, since a number
-only means something on that side's own preset — each side is free to place the bridge on whichever
-of its own channels is open. `Waldo_fnc_ACRE2ApplyJointNets` writes the shared frequency into each
-listed side's preset with the same verified-write pattern `Waldo_fnc_ACRE2ApplyPresetNames` already
-uses (per-client, per-side, immediate read-back verification), reusing
-`Waldo_fnc_ACRE2ResolveSidePresetMap` to resolve each side's own preset. The optional 5th element is a
-display label, written to the physical PRC-148/152/117F channel display with the same 12-character
-safe-charset truncation and verified write `Waldo_fnc_ACRE2ApplyPresetNames` uses for ordinary named
-nets (PRC_LR only — BF888/SEM52 have no on-screen display field, same limitation ordinary nets already
-have). This is the label's *only* path: a matching entry in that side's own `nets` array for the same
-channel/family is rejected as a collision (see below), so a joint net never needs — and cannot use —
-the ordinary-net-duplication workaround to get a label. Only CHANNEL-mode radio families are supported
-(PRC_LR, BF888, SEM52) — PRC-343 (BLOCK_CHANNEL) and PRC-77/SEM70 (FREQUENCY, no channel concept: their
+Row shape deliberately mirrors an ordinary named net's `[key, label, family, value]` — label right
+after the id, same position, same meaning — with the per-side channel list appended after. Frequency
+is the thing actually shared across sides; channel *numbers* stay per-side, since a number only means
+something on that side's own preset — each side is free to place the bridge on whichever of its own
+channels is open. `Waldo_fnc_ACRE2ApplyJointNets` writes the shared frequency into each listed side's
+preset with the same verified-write pattern `Waldo_fnc_ACRE2ApplyPresetNames` already uses (per-client,
+per-side, immediate read-back verification), reusing `Waldo_fnc_ACRE2ResolveSidePresetMap` to resolve
+each side's own preset. A non-empty label is written to the physical PRC-148/152/117F channel display
+with the same 12-character safe-charset truncation and verified write `Waldo_fnc_ACRE2ApplyPresetNames`
+uses for ordinary named nets (PRC_LR only — BF888/SEM52 have no on-screen display field, same
+limitation ordinary nets already have). This is the label's *only* path: a matching entry in that
+side's own `nets` array for the same channel/family is rejected as a collision (see below), so a joint
+net never needs — and cannot use — the ordinary-net-duplication workaround to get a label. Only
+CHANNEL-mode radio families are supported (PRC_LR, BF888, SEM52) — PRC-343 (BLOCK_CHANNEL) and
+PRC-77/SEM70 (FREQUENCY, no channel concept: their
 preset value already *is* the raw frequency) are rejected at validation.
 `Waldo_fnc_ACRE2ValidateConfig` rejects an unknown family/side, a non-CHANNEL-mode family, an
 out-of-range channel, and — always, not `strict`-gated — a collision where a joint net's

@@ -36,17 +36,17 @@
  *
  * SETTING-BY-SETTING GUIDE - JOINT RADIO NETS
  * - jointNets: [] by default (no cross-side bridging). Each row is
- *   ["netId", "radio family", shared frequency, [["side", channel], ...], "label" (optional)] - a
- *   stable id (diagnostics only), the radio family the net belongs to (e.g. PRC_LR), the one TX/RX
- *   frequency actually shared, one [side, channel] pair per side that should carry it, and an optional
- *   display label. Frequency is the thing genuinely shared across sides; channel NUMBERS stay
- *   per-side, since a channel number only means something on that side's own preset - each side can
- *   therefore use whichever of its own free channels it likes for the bridge. The optional label is
- *   written to the physical PRC-148/152/117F channel display (same 12-character safe-charset rule as
- *   an ordinary named net's label) so the shared channel visibly reads as e.g. "COALITION" instead of
- *   just a plain number - do NOT also add a matching entry in that side's own nets array to try to
- *   label it the old way; that is rejected as a channel collision, the label field replaces that need
- *   entirely. Only CHANNEL-mode radio families are supported (PRC_LR, BF888, SEM52) - PRC-343
+ *   ["netId", "label", "radio family", shared frequency, [["side", channel], ...]] - deliberately the
+ *   same [key, label, family, value] shape an ordinary named net uses (label right after the id), with
+ *   the per-side channel list appended after. "" for label means none. Frequency is the thing
+ *   genuinely shared across sides; channel NUMBERS stay per-side, since a channel number only means
+ *   something on that side's own preset - each side can therefore use whichever of its own free
+ *   channels it likes for the bridge. A non-empty label is written to the physical PRC-148/152/117F
+ *   channel display (same 12-character safe-charset rule as an ordinary named net's label) so the
+ *   shared channel visibly reads as e.g. "COALITION" instead of just a plain number - do NOT also add
+ *   a matching entry in that side's own nets array to try to label it the old way; that is rejected as
+ *   a channel collision, the label field replaces that need entirely. Only CHANNEL-mode radio families
+ *   are supported (PRC_LR, BF888, SEM52) - PRC-343
  *   (BLOCK_CHANNEL) and PRC-77/SEM70 (FREQUENCY, no channel concept - their preset value already IS
  *   the raw frequency) are rejected at validation with a clear reason; the label itself only applies
  *   to PRC_LR (BF888/SEM52 radios have no on-screen display field, same as ordinary named nets). KNOWN
@@ -197,7 +197,7 @@ createHashMapFromArray [
     // VALUES: [] for none (default), or one or more joint net rows.
     // EXAMPLE: a WEST/EAST/GUER joint command net on PRC_LR at 45.500 MHz, each side free to place it
     // on whichever of its own channels is open, labelled "COALITION" on the physical radio display:
-    // ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]], "COALITION"]
+    // ["JOINT_CMD", "COALITION", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
     // RESULT: [] means no cross-side bridging exists; WMP's normal per-side isolation is unchanged.
     ["jointNets", []],
 

@@ -182,18 +182,21 @@ private _validateAssignment = {
         _sideData set [_sideKey, [_netMap, _maxBlock]];
     };
 } forEach (_config getOrDefault ["sides", []]);
-// jointNets: ["netId", "family", frequency, [[sideKey, channel], ...], label (optional)]. Frequency is
-// what's actually shared across sides; channel numbers stay per-side since they only mean something on
-// that side's own preset. The optional 5th element is a display label, written to the physical radio
-// exactly like an ordinary named net's label (PRC_LR only, 12-char safe-charset truncation) - see
-// Waldo_fnc_ACRE2ApplyJointNets. A collision with an ordinary named net on the same side/channel is
-// always an error, not strict-gated, since that would silently misroute a real operational net onto
-// the bridge; a joint net that wants a label uses this field instead of that workaround.
+// jointNets: ["netId", "label", "family", frequency, [[sideKey, channel], ...]]. Row shape mirrors an
+// ordinary named net's [key, label, family, value] - label right after the id, same position, same
+// meaning - with the per-side channel list appended after. "" means no label. Frequency is what's
+// actually shared across sides; channel numbers stay per-side since they only mean something on that
+// side's own preset. The label is written to the physical radio exactly like an ordinary named net's
+// label (PRC_LR only, 12-char safe-charset truncation) - see Waldo_fnc_ACRE2ApplyJointNets. A collision
+// with an ordinary named net on the same side/channel is always an error, not strict-gated, since that
+// would silently misroute a real operational net onto the bridge; a joint net that wants a label uses
+// its own label field instead of that workaround.
 private _usedJointSlots = [];
 {
-    if (count _x < 4 || {count _x > 5}) then {_errors pushBack format ["Malformed joint net %1; expected [netId, radio family, shared frequency, [[side, channel], ...], optional label].", _x];} else {
-        _x params ["_netId", "_family", "_frequency", "_sideChannels", ["_label", "", [""]]];
+    if (count _x != 5) then {_errors pushBack format ["Malformed joint net %1; expected [netId, label, radio family, shared frequency, [[side, channel], ...]].", _x];} else {
+        _x params ["_netId", "_label", "_family", "_frequency", "_sideChannels"];
         if (_netId == "" || !(_netId isEqualType "")) then {_errors pushBack format ["Joint net %1 requires a non-empty string id.", _x]};
+        if !(_label isEqualType "") then {_errors pushBack format ["Joint net %1 label must be a string (\"\" for none).", _netId]};
         if (count _label > 12) then {_warnings pushBack format ["Joint net %1 label will be truncated to 12 characters.", _netId]};
         private _upperFamily = toUpper _family;
         if !(_upperFamily in _profileFamilies) then {_errors pushBack format ["Joint net %1 uses unknown radio family %2.", _netId, _family]};

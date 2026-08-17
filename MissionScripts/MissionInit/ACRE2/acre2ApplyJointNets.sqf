@@ -6,11 +6,14 @@
  * everywhere else. Channel numbers stay per-side - each side programs whichever of its own free
  * channels was assigned to the net - only the frequency actually shared is common across sides.
  * Follows the exact verified-write pattern Waldo_fnc_ACRE2ApplyPresetNames already uses (per-client,
- * every relevant side's preset, immediate read-back verification) rather than a new one. An optional
- * 5th row element is a display label, written to the physical PRC-148/152/117F channel display with
- * the exact same sanitisation/truncation and verification Waldo_fnc_ACRE2ApplyPresetNames already
- * uses for ordinary named nets - so a joint net can visibly read as "COALITION" (or similar) on the
- * radio itself, rather than only appearing as a plain channel number.
+ * every relevant side's preset, immediate read-back verification) rather than a new one. Row shape
+ * deliberately mirrors an ordinary named net's [key, label, family, value] - label sits right after
+ * the id, same position, same meaning - with the per-side channel list appended after, since a joint
+ * net needs to say where on EACH side's preset the shared frequency lands. "" means no label, written
+ * to the physical PRC-148/152/117F channel display with the exact same sanitisation/truncation and
+ * verification Waldo_fnc_ACRE2ApplyPresetNames already uses for ordinary named nets - so a joint net
+ * can visibly read as "COALITION" (or similar) on the radio itself, rather than only appearing as a
+ * plain channel number.
  *
  * Arguments:
  * 0: configuration <HASHMAP>
@@ -30,8 +33,8 @@ private _namedDisplays = _config getOrDefault ["namedDisplays", true];
 private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;
 private _ok = true;
 {
-    if (count _x < 4) then {diag_log format ["[WMP ACRE][JOINT_NETS] Skipping malformed joint net row %1.", _x];} else {
-        _x params ["_netId", "_family", "_frequency", "_sideChannels", ["_label", ""]];
+    if (count _x != 5) then {diag_log format ["[WMP ACRE][JOINT_NETS] Skipping malformed joint net row %1.", _x];} else {
+        _x params ["_netId", "_label", "_family", "_frequency", "_sideChannels"];
         private _upperFamily = toUpper _family;
         private _familyProfiles = _profiles select {toUpper (_x select 5) == _upperFamily};
         // Same sanitisation/12-char truncation Waldo_fnc_ACRE2ApplyPresetNames already uses for
