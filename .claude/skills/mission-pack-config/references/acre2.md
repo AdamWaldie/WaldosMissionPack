@@ -92,6 +92,54 @@ otherwise WMP uses deterministic collision-safe allocation. Ears (`LEFT`,
 PRC-343s. A radio present in a player's inventory with no matching row is
 left untouched; PTT, volume and speaker settings always remain player-owned.
 
+### Shared side channel sets (`"INHERIT:<SIDE>"`)
+
+For a co-op mission where two sides are full coalition partners who should talk on every channel,
+set one side's `nets` to the literal string `"INHERIT:<SIDE>"` instead of an array:
+
+```sqf
+["GUER", "default3", "INHERIT:WEST", [ // GUER gets WEST's exact channel list, same frequencies
+    ["ALLY-1-1", [["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]]]
+]],
+```
+
+Both sides must share the same ACRE preset (channel numbers only mean the same thing across sides
+when the underlying preset matches). Point straight at the side that actually defines the channels —
+chaining (`GUER` inheriting from a side that itself inherits), self-reference, an unknown side, or
+inheriting from a side on a different preset are all rejected at mission start. Groups stay per-side
+(different Eden groups); only the channel list itself is shared.
+
+### Joint radio nets (`jointNets`)
+
+Bridges one specific channel/frequency across chosen sides, without opening anything else between
+them — the opposite of the isolation above, applied surgically to a single net.
+
+**Ships with one active row by default**: `GAME_CONTROL`, channel 99, `PRC_LR`, bridging all four
+sides at 99.000 MHz — a guaranteed cross-faction admin/GM/Zeus channel, not preset onto any
+player's radio automatically. Set `jointNets` to `[]` to remove it if the mission doesn't want a
+shared channel. Only PRC-152/117F reach channel 99 (PRC-148's preset tops out at 32).
+
+```sqf
+["jointNets", [
+    ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
+    // [netId, label ("" for none), radio family, shared frequency, [[side, channel], ...]]
+]],
+```
+
+Only `PRC_LR`, `BF888`, `SEM52` families are supported (not PRC-343 or PRC-77/SEM70). The channel
+*number* is per-side (each side uses whichever of its own free channels is open); the frequency is
+what's actually shared. The label only works on PRC-148/152/117F and is the joint net's only way to
+get a name — don't also add a matching row to that side's own `nets` to label it, that's rejected as
+a collision. The frequency is sanity-checked as a positive number only, not against real radio
+hardware (ACRE2 has no documented tunable range for these families) — test in-game that both sides
+actually hear each other on the channel picked.
+
+**Referenceable by netId from group assignment rows**, exactly like an ordinary named net —
+`["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"]` resolves to whichever channel that group's side
+was given. A joint net's id must be unique across every `jointNets` row and can't reuse a name
+already used by that side's own ordinary nets. No in-mission Zeus toggle yet — mission-start
+configuration only.
+
 ### Overrides (per-player/role exceptions)
 
 ```sqf
