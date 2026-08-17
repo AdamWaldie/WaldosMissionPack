@@ -210,6 +210,14 @@ def check_sqf_syntax(filepath):
                 print("ERROR: Invalid runtime command {0} at {1} Line number: {2} ({3})".format(command, filepath, command_line, explanation))
                 bad_count_file += 1
 
+        # switch's default branch never takes a colon (unlike case) - "default: {...}" parses as
+        # valid balanced-bracket text so the bracket checks above never catch it, but it fails to
+        # compile in-game with a generic parse error at mission start.
+        for match in re.finditer(r"(?i)\bdefault\s*:", executable):
+            default_line = executable.count("\n", 0, match.start()) + 1
+            print("ERROR: 'default:' at {0} Line number: {1} (switch's default branch takes no colon; use 'default {{...}}')".format(filepath, default_line))
+            bad_count_file += 1
+
 
 
     return bad_count_file
