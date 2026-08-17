@@ -26,7 +26,14 @@ private _sideAliases = switch (toUpper _sideKey) do {
     default {["CIV", "CIVILIAN"]};
 };
 private _sideIndex = (_config getOrDefault ["sides", []]) findIf {toUpper (_x select 0) in _sideAliases};
-private _sidePreset = if (_sideIndex >= 0) then {((_config get "sides") select _sideIndex) select 1} else {"default"};
+// A side left out of "sides" entirely (not just present with empty nets/groups) still needs its own
+// correct official ACRE preset here - falling back to a single blanket "default" would silently bake
+// every EAST/GUER player's radios onto CIV's preset instead of their own side's. Matches
+// Waldo_fnc_ACRE2ValidateConfig's own per-side official preset mapping.
+private _defaultPreset = switch (toUpper _sideKey) do {
+    case "WEST": {"default3"}; case "EAST": {"default2"}; case "GUER": {"default4"}; default {"default"};
+};
+private _sidePreset = if (_sideIndex >= 0) then {((_config get "sides") select _sideIndex) select 1} else {_defaultPreset};
 private _shortPreset = if (toUpper (_config getOrDefault ["prc343PresetPolicy", "FULL_RANGE"]) == "FULL_RANGE") then {"default"} else {_sidePreset};
 private _map = [];
 {

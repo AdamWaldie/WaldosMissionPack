@@ -299,6 +299,12 @@ createHashMapFromArray [
     // WHAT IT CHANGES: defines each side's available radio nets and maps Eden groups onto them.
     // VALUES: one four-field side block for WEST, EAST, GUER and/or CIV.
     // EXAMPLE/RESULT: the WEST block below gives matching WEST groups the defined starting nets.
+    // A side you don't need can be left out of this array entirely (not just given empty [] nets/
+    // groups) - e.g. a WEST-only mission can delete the EAST/GUER/CIV blocks below completely. Players
+    // on an omitted side simply get no named-channel setup and keep whatever radios they carried, on
+    // that side's own correct official ACRE preset (WMP still resolves it correctly even with no row
+    // present). This is different from jointNets/INHERIT below, which need every side they reference
+    // to actually be defined here.
     // SIDE SETUP.
     // Each side block is: [SIDE NAME, OFFICIAL ACRE PRESET, NETS, GROUPS].
     // A net is a named radio channel/frequency, OR the string "INHERIT:<SIDE>" to reuse another side's
