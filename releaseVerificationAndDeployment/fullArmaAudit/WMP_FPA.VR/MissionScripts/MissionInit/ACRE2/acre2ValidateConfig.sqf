@@ -65,7 +65,7 @@ private _profileAcceptsValue = {
 private _profileClasses = [];
 private _profileFamilies = [];
 {
-    if (count _x != 6) then {_errors pushBack format ["Malformed radio profile %1; expected [class, mode, ears, maximum channel, frequency range, net family].", _x]} else {
+    if !(_x isEqualType [] && {count _x == 6}) then {_errors pushBack format ["Malformed radio profile %1; expected [class, mode, ears, maximum channel, frequency range, net family].", _x]} else {
         _x params ["_class", "_mode", "_ears", "_maxChannel", "_range", "_family"];
         private _upperClass = toUpper _class;
         if (_upperClass in _profileClasses) then {_errors pushBack format ["Duplicate radio profile %1.", _class]};
@@ -102,7 +102,7 @@ private _validateAssignment = {
     if (_mode == "FREQUENCY" && {!([_resolved, _profile select 4] call _frequencyValid)}) then {_errors pushBack format ["%1/%2 has invalid frequency %3.", _context, _class, _resolved]};
 };
 {
-    if (count _x != 4) then {_errors pushBack format ["Malformed side entry %1.", _x]} else {
+    if !(_x isEqualType [] && {count _x == 4}) then {_errors pushBack format ["Malformed side entry %1; expected [side, official preset, nets, groups] - if you only have one side, make sure it is still wrapped in its own array inside sides' outer array.", _x]} else {
         _x params ["_sourceSide", "_preset", "_nets", "_groups"];
         private _sideKey = [_sourceSide] call _normaliseSide;
         if !(_sideKey in ["WEST", "EAST", "GUER", "CIV"]) then {_errors pushBack format ["Invalid side %1.", _sourceSide]};
@@ -116,7 +116,7 @@ private _validateAssignment = {
         private _netMap = createHashMap;
         private _sideTuningTargets = [];
         {
-            if (count _x != 4) then {_errors pushBack format ["Malformed %1 net %2; expected [key, display name, radio family, one value].", _sideKey, _x]} else {
+            if !(_x isEqualType [] && {count _x == 4}) then {_errors pushBack format ["Malformed %1 net %2; expected [key, display name, radio family, one value] - if this side only has one net, make sure it is still wrapped in its own array inside nets' outer array.", _sideKey, _x]} else {
                 _x params ["_netKey", "_label", "_family", "_value"];
                 private _key = toUpper _netKey;
                 if !((_netMap getOrDefault [_key, []]) isEqualTo []) then {_errors pushBack format ["Duplicate %1 net %2.", _sideKey, _key]};
@@ -138,7 +138,7 @@ private _validateAssignment = {
         private _used343 = [];
         private _maxBlock = if (_policy == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
         {
-            if (count _x != 2) then {_errors pushBack format ["Malformed %1 group %2; expected [group ID, assignment rows].", _sideKey, _x]} else {
+            if !(_x isEqualType [] && {count _x == 2}) then {_errors pushBack format ["Malformed %1 group %2; expected [group ID, assignment rows] - if this side only has one group, make sure it is still wrapped in its own array inside groups' outer array.", _sideKey, _x]} else {
                 _x params ["_groupId", "_assignments"];
                 private _groupKey = toUpperANSI (((_groupId splitString " -_.") joinString ""));
                 if (_groupKey in _groupKeys) then {_errors pushBack format ["Duplicate %1 group %2.", _sideKey, _groupKey]};
@@ -193,7 +193,14 @@ private _validateAssignment = {
 // its own label field instead of that workaround.
 private _usedJointSlots = [];
 {
-    if (count _x != 5) then {_errors pushBack format ["Malformed joint net %1; expected [netId, label, radio family, shared frequency, [[side, channel], ...]].", _x];} else {
+    // Check the row's own type before touching `count _x`: a mission maker with only one joint
+    // net can easily paste that single row directly as jointNets' value, forgetting the outer
+    // array wrapping every other row-list setting in this file expects. That flattens the row
+    // into jointNets' top level, so _x here becomes each of the row's own fields in turn (a
+    // string, then eventually a frequency Number) rather than the row itself - and `count` on a
+    // Number is a hard Arma runtime error, not a caught validation failure. Guarding the type
+    // first turns that into an ordinary, readable error message instead of a mission-start crash.
+    if !(_x isEqualType [] && {count _x == 5}) then {_errors pushBack format ["Malformed joint net %1; expected [netId, label, radio family, shared frequency, [[side, channel], ...]] - if you only have one joint net, make sure it is still wrapped in its own array inside jointNets' outer array.", _x];} else {
         _x params ["_netId", "_label", "_family", "_frequency", "_sideChannels"];
         if (_netId == "" || !(_netId isEqualType "")) then {_errors pushBack format ["Joint net %1 requires a non-empty string id.", _x]};
         if !(_label isEqualType "") then {_errors pushBack format ['Joint net %1 label must be a string ("" for none).', _netId]};
@@ -218,7 +225,7 @@ private _usedJointSlots = [];
         };
         if !(_sideChannels isEqualType [] && {count _sideChannels > 0}) then {_errors pushBack format ["Joint net %1 requires at least one [side, channel] entry.", _netId];} else {
             {
-                if (count _x != 2) then {_errors pushBack format ["Joint net %1 has malformed side/channel entry %2.", _netId, _x];} else {
+                if !(_x isEqualType [] && {count _x == 2}) then {_errors pushBack format ["Joint net %1 has malformed side/channel entry %2; expected [side, channel].", _netId, _x];} else {
                     _x params ["_sourceSide", "_channel"];
                     private _sideKey = [_sourceSide] call _normaliseSide;
                     if !(_sideKey in _sideKeys) then {_errors pushBack format ["Joint net %1 references side %2, which is not defined in sides.", _netId, _sourceSide];} else {
@@ -245,7 +252,7 @@ private _usedJointSlots = [];
     };
 } forEach (_config getOrDefault ["jointNets", []]);
 {
-    if (count _x != 4 || {count (_x select 1) != 2}) then {_errors pushBack format ["Malformed radio override %1.", _x]} else {
+    if !(_x isEqualType [] && {count _x == 4} && {(_x select 1) isEqualType [] && {count (_x select 1) == 2}}) then {_errors pushBack format ["Malformed radio override %1; expected [side, selector, mode, assignment rows] - if you only have one override, make sure it is still wrapped in its own array inside radioOverrides' outer array.", _x]} else {
         _x params ["_sourceSide", "_selector", "_mode", "_assignments"];
         private _sideKey = [_sourceSide] call _normaliseSide;
         private _data = _sideData getOrDefault [_sideKey, []];
@@ -377,19 +384,19 @@ private _babel = _config getOrDefault ["babel", createHashMap];
 } forEach [["enabled", false], ["changeOnSideChange", false], ["followPlayerUnit", true]];
 private _languageIds = [];
 {
-    if (count _x != 2 || {(_x select 0) == ""} || {(_x select 1) == ""}) then {_errors pushBack format ["Malformed Babel language %1.", _x]} else {
+    if !(_x isEqualType [] && {count _x == 2} && {(_x select 0) != ""} && {(_x select 1) != ""}) then {_errors pushBack format ["Malformed Babel language %1; expected [id, display name] - if you only have one language, make sure it is still wrapped in its own array inside languages' outer array.", _x]} else {
         if ((_x select 0) in _languageIds) then {_errors pushBack format ["Duplicate Babel language %1.", _x select 0]};
         _languageIds pushBack (_x select 0);
     };
 } forEach (_babel getOrDefault ["languages", []]);
 {
-    if (count _x != 3) then {_errors pushBack format ["Malformed Babel side default %1.", _x]} else {
+    if !(_x isEqualType [] && {count _x == 3}) then {_errors pushBack format ["Malformed Babel side default %1; expected [side, spoken languages, understood language] - if you only have one side default, make sure it is still wrapped in its own array inside sideDefaults' outer array.", _x]} else {
         {if !(_x in _languageIds) then {_errors pushBack format ["Babel default references unknown language %1.", _x]}} forEach (_x select 1);
         if !((_x select 2) in (_x select 1)) then {_errors pushBack format ["Babel %1 speaking language must be understood.", _x select 0]};
     };
 } forEach (_babel getOrDefault ["sideDefaults", []]);
 {
-    if (count _x != 3 || {count (_x select 0) != 2}) then {_errors pushBack format ["Malformed Babel unit override %1.", _x]} else {
+    if !(_x isEqualType [] && {count _x == 3} && {(_x select 0) isEqualType [] && {count (_x select 0) == 2}}) then {_errors pushBack format ["Malformed Babel unit override %1; expected [selector, spoken languages, understood language] - if you only have one override, make sure it is still wrapped in its own array inside unitOverrides' outer array.", _x]} else {
         private _selectorType = toUpper ((_x select 0) select 0);
         if !(_selectorType in ["UID", "VARIABLE", "VARIABLENAME"]) then {
             _errors pushBack format ["Invalid Babel selector %1; use UID, VARIABLENAME or VARIABLE.", _selectorType]

@@ -33,7 +33,7 @@ private _namedDisplays = _config getOrDefault ["namedDisplays", true];
 private _profiles = [_config] call Waldo_fnc_ACRE2GetRadioProfiles;
 private _ok = true;
 {
-    if (count _x != 5) then {diag_log format ["[WMP ACRE][JOINT_NETS] Skipping malformed joint net row %1.", _x];} else {
+    if !(_x isEqualType [] && {count _x == 5}) then {diag_log format ["[WMP ACRE][JOINT_NETS] Skipping malformed joint net row %1.", _x];} else {
         _x params ["_netId", "_label", "_family", "_frequency", "_sideChannels"];
         private _upperFamily = toUpper _family;
         private _familyProfiles = _profiles select {toUpper (_x select 5) == _upperFamily};
