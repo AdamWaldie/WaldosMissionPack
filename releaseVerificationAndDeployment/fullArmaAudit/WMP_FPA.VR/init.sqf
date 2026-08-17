@@ -242,12 +242,11 @@ if (hasInterface) then {call Waldo_fnc_SetTeamColour};
 /*
 Introduction Text - Cool Introduction stuff like location, date, time and mission name and locale
 
-When left with no parameters, as below, the script autogenerates the location based on the terrain name, and the mission title from the description.ext
-You can optionally define replacements for the title & location, as is demonstrated in the trigger in the exemplar mission.
+Player presentation; installed from initPlayerLocal.sqf, not here (this file also runs on the
+dedicated server, which has no display 46 to present anything on). Content and timing are mission
+settings in MissionConfig\interfaceConfig.sqf, not call-site parameters - see that file's
+Introduction Text setting-by-setting guide.
 */
-// Player presentation requires display 46. Running InfoText on a dedicated server
-// waits forever for a display that cannot exist and blocks WALDO_INIT_COMPLETE.
-if (hasInterface) then {["",""] call Waldo_fnc_InfoText};
 
 /*
 
@@ -255,7 +254,25 @@ waldos Init Completion flag
 
 ======DO NOT TOUCH!=====
 */
-sleep 10; // Buffer cycles for other inits to be completed - should not be removed
+// Was an unconditional `sleep 10;` ("buffer cycles for other inits to be completed"), not gated on
+// any actual check. Audited every WALDO_INIT_COMPLETE consumer in the pack: none of them actually
+// depend on this specific duration for correctness - the ones with a real data-readiness dependency
+// (starter/supply crates, limited arsenals) already double-check the broadcast
+// Logi_MissionScanComplete flag independently; Dynamic AA already has its own bounded queue/retry
+// worker; the rest (jamming HUD, safestart HUD) only use this flag as a presentation courtesy ("don't
+// draw over the intro"), not a safety dependency. A blind sleep with no check was strictly worse than
+// waiting on the real signal: it could still fire before the loadout scan finished on a slow server,
+// and it unconditionally cost ~10s even when the mission was ready in ~1s (confirmed against a real
+// playtest RPT). Bounded so a mission that somehow never completes the scan doesn't hang forever -
+// same 60s ceiling used for the WALDO_INIT_COMPLETE wait inside infoText.sqf.
+private _initCompleteScanDeadline = diag_tickTime + 60;
+waitUntil {
+    sleep 0.2;
+    missionNamespace getVariable ["Logi_MissionScanComplete", false] || {diag_tickTime >= _initCompleteScanDeadline}
+};
+if !(missionNamespace getVariable ["Logi_MissionScanComplete", false]) then {
+    diag_log "[WMP INIT] Logi_MissionScanComplete never became true within the timeout; setting WALDO_INIT_COMPLETE anyway.";
+};
 // A dedicated server has no local player. Waiting for one here prevented the pack's
 // completion flag and any post-start consumers from ever running on that machine.
 waitUntil {isDedicated || {!isNull player && {player == player}}};

@@ -6,10 +6,11 @@
  *
  * Locality / lifecycle: interface client only. The automatic call is spawned after PLAYER_LOCAL
  * configuration has loaded. initPlayerLocal.sqf synchronously records the engine's first local
- * PreloadFinished mission event; this worker waits for that event plus the local player/display
- * before it opens WMP's short transition and starts any title text. It never changes authoritative
- * state and does not rerun on respawn. The fake screen is paired by ID and every readiness wait is
- * bounded so a broken client cannot be locked indefinitely.
+ * PreloadFinished mission event; this worker waits for that event, then immediately opens WMP's own
+ * cover (before waiting on the local player/display, so the real loading screen is never visibly
+ * followed by a gap before WMP's cover appears) and only starts the title text once the player/display
+ * are also ready. It never changes authoritative state and does not rerun on respawn. The fake screen
+ * is paired by ID and every readiness wait is bounded so a broken client cannot be locked indefinitely.
  * Player control is no longer held for cosmetic text, optional animations or unrelated feature init.
  *
  * Content and timing are mission-maker settings in MissionConfig\interfaceConfig.sqf
@@ -65,6 +66,23 @@ waitUntil {
 private _preloadObserved = missionNamespace getVariable ["Waldo_InfoText_InitialPreloadFinished", false];
 private _tPreloadFinished = diag_tickTime;
 
+// Waldo_InfoText_SkipFakeLoad (default false): skips the fake loading screen and both fades below
+// entirely, going straight from the readiness wait into the text reveal drawn directly over whatever
+// is currently on screen. Read here (rather than only later) so the cover can be started immediately
+// below, right as the engine's own preload phase ends.
+private _skipFakeLoad = missionNamespace getVariable ["Waldo_InfoText_SkipFakeLoad", false];
+
+// Start WMP's own cover the instant the engine's real preload screen is done, before waiting below
+// on display/player readiness. That readiness wait can itself take a visible moment (observed
+// live), and previously WMP's cover only started after it - so the real loading screen would fade
+// out, briefly reveal the world, and only then be visibly replaced by WMP's fake screen a moment
+// later. Starting the cover here closes that gap; it is closed again below if readiness never
+// completes, so a broken client is never left staring at a stuck black screen.
+private _fakeLoadStarted = _preloadObserved && {!_skipFakeLoad};
+if (_fakeLoadStarted) then {
+    ["WMP_InfoText_FauxLoad", ""] call BIS_fnc_startLoadingScreen;
+};
+
 // The event precedes this scheduled worker resuming. Give the UI one scheduler hand-off, then only
 // require the actual in-game display and local player object used by the title.
 uiSleep 0.05;
@@ -80,6 +98,13 @@ private _clientReady = !isNull findDisplay 46
 private _clientStateAtRelease = getClientStateNumber;
 
 if (!_preloadObserved || {!_clientReady}) exitWith {
+    // The cover above was started as soon as preload finished, before this readiness check could
+    // fail. Close it now so a broken/slow client is never left staring at a stuck black screen -
+    // "without changing input" above refers to not holding control for the intro, not to leaving
+    // WMP's own cover up.
+    if (_fakeLoadStarted) then {
+        "WMP_InfoText_FauxLoad" call BIS_fnc_endLoadingScreen;
+    };
     diag_log format [
         "[WMP INFOTEXT] Playable preload readiness failed; intro skipped without changing input. preloadFinished=%1 display46=%2 player=%3 local=%4 clientState=%5.",
         _preloadObserved,
@@ -203,9 +228,11 @@ diag_log format [
 ];
 
 // ----- COMPLILE INFO AND DISPLAY TO PLAYER -----
-// WMP's fake screen begins only after the engine says this client is ready to play. It is now a short
-// visual bridge that hides blackout/animation setup, not a guessed substitute for engine readiness.
-// An explicit mission override may add a small hold, but the default adds no artificial delay.
+// WMP's fake screen is already up by this point (started right as the engine's preload finished, so
+// the real loading screen is never visibly followed by a gap of exposed world before WMP's cover
+// appears). This block is a short visual bridge that hides blackout/animation setup underneath it,
+// not a guessed substitute for engine readiness. An explicit mission override may add a small hold,
+// but the default adds no artificial delay.
 private _fakeLoadHold = 0 max (missionNamespace getVariable ["Waldo_InfoText_FakeLoadHold", 0]);
 private _blackoutFade = 0.2;     // short cover transition; setup should not delay play
 // Must be >= _blackoutFade: endLoadingScreen below reveals whatever is behind the loading screen, so
@@ -225,11 +252,11 @@ private _blackInFade = 0.75;     // visual only; input is already available
 // transition is timed wrong" from "the world genuinely is not settled yet" - but also a legitimate
 // permanent choice for a mission maker who wants no loading-screen presentation at all. blackIn below
 // is skipped along with it, since it has no matching blackOut to reverse when this is set.
-private _skipFakeLoad = missionNamespace getVariable ["Waldo_InfoText_SkipFakeLoad", false];
+// The cover itself (BIS_fnc_startLoadingScreen) was already started right as preload finished, above -
+// _skipFakeLoad and _fakeLoadStarted were read/computed there too, so only the hold/fade remain here.
 if (_skipFakeLoad) then {
     diag_log "[WMP INFOTEXT] Waldo_InfoText_SkipFakeLoad is true - fake loading screen and fades skipped.";
 } else {
-    ["WMP_InfoText_FauxLoad", ""] call BIS_fnc_startLoadingScreen;
     if (_fakeLoadHold > 0) then {uiSleep _fakeLoadHold};
     ["wakeUpID", false, _blackoutFade] call BIS_fnc_blackOut; // Fade screen out to black for intro sequence.
     uiSleep _postBlackoutBuffer;

@@ -20,6 +20,15 @@ params [["_config", createHashMap, [createHashMap]], ["_revision", 1, [0]]];
 private _sidePlans = [];
 private _diagnostics = [];
 private _normaliseGroupKey = {toUpperANSI (((_this splitString " -_.") joinString ""))};
+// Mirrors Waldo_fnc_ACRE2ValidateConfig's own side normaliser - needed here to match each jointNets
+// [side, channel] entry's raw side string against this loop's already-normalised _sideKey below.
+private _normaliseJointSide = {
+    switch (toUpper _this) do {
+        case "BLUFOR"; case "WEST": {"WEST"}; case "OPFOR"; case "EAST": {"EAST"};
+        case "INDEPENDENT"; case "INDEP"; case "GUER": {"GUER"}; case "CIVILIAN"; case "CIV": {"CIV"};
+        default {toUpper _this};
+    }
+};
 private _hashText = {
     params ["_text", "_modulus"];
     private _hash = 5381;
@@ -37,6 +46,20 @@ private _hashText = {
     // A named net has one value and one compatibility family. Radio profiles, not the mission
     // maker, define which physical radios belong to that family.
     private _nets = _sourceNets apply {[toUpper (_x select 0), _x select 1, toUpper (_x select 2), _x select 3]};
+    // Merge each joint net's channel resolved for THIS side into the same _nets table, using the
+    // identical [key, label, family, value] shape (key/family uppercased, matching the line above) -
+    // so an assignment row can target a joint net by its own netId exactly like an ordinary named
+    // net. Waldo_fnc_ACRE2ValidateConfig performs the equivalent merge before this ever runs, and
+    // already guarantees (as a hard validation error otherwise) that a joint net's id can never
+    // collide with this side's own net keys and that this side/channel/family combination is unique -
+    // this loop can trust that and merge unconditionally rather than re-checking it.
+    {
+        _x params ["_netId", "_label", "_family", "_frequency", "_sideChannels"];
+        private _matchIndex = _sideChannels findIf {((_x select 0) call _normaliseJointSide) == _sideKey};
+        if (_matchIndex >= 0) then {
+            _nets pushBack [toUpper _netId, _label, toUpper _family, (_sideChannels select _matchIndex) select 1];
+        };
+    } forEach (_config getOrDefault ["jointNets", []]);
     private _maxBlock = if (toUpper (_config getOrDefault ["prc343PresetPolicy", "FULL_RANGE"]) == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
     private _capacity = _maxBlock * 16;
     private _used = [];

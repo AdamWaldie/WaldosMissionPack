@@ -16,7 +16,11 @@
  *
  * Example: ["RESPAWN", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
  * Result: one bounded local refresh applies Babel/CEOI and, when permitted, the radio baseline.
- * Current callers: ACRE initialisation, respawn, player-unit and group lifecycle handlers.
+ * Current callers: ACRE initialisation, respawn, player-unit and group lifecycle handlers, and
+ * Waldo_fnc_RespawnSeedSideBaseLoadout (reason "SIDE_SWITCH_NATIVE") after assembling a side-switched
+ * player's NATIVE starter kit. "INITIAL_LATE" and "SIDE_SWITCH_NATIVE_LATE" are internal-only reasons
+ * this function schedules itself when the readiness wait times out, so their owning mission-critical
+ * save is retried indefinitely rather than abandoned - never pass either in directly.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting
  */
 params [["_reason", "MANUAL", [""]], ["_applyPlan", true, [true]]];
@@ -84,11 +88,20 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
         if (_reason in ["INITIAL", "INITIAL_LATE"]) then {
             ["INITIAL_LATE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
         };
+        // A side-switch NATIVE seed owns that side's starter kit the same way INITIAL owns the
+        // mission-start baseline: the live gear was already handed to the player in
+        // Waldo_fnc_RespawnSeedSideBaseLoadout, so this refresh timing out here must not silently
+        // abandon the save that makes it durable. Retries under its own reason rather than folding
+        // into INITIAL_LATE, so RPT/Diagnostics still show what this retry is actually for.
+        if (_reason in ["SIDE_SWITCH_NATIVE", "SIDE_SWITCH_NATIVE_LATE"]) then {
+            ["SIDE_SWITCH_NATIVE_LATE", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
+        };
     };
     private _applyPlan = missionNamespace getVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
     missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
     private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
     if !(missionNamespace getVariable ["Waldo_ACRE2_PresetNamesReady", false]) then {[_config] call Waldo_fnc_ACRE2ApplyPresetNames};
+    if !(missionNamespace getVariable ["Waldo_ACRE2_JointNetsReady", false]) then {[_config] call Waldo_fnc_ACRE2ApplyJointNets};
     private _planApplied = true;
     if (_applyPlan) then {_planApplied = [true, _reason] call Waldo_fnc_ACRE2ApplyPlayerPlan};
     // This is a server-visible ACRE lifecycle handshake, not a report that the player's authored
@@ -99,7 +112,7 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     player setVariable ["Waldo_ACRE2_ClientReady", true, true];
     [] call Waldo_fnc_ACRE2ApplyBabel;
     [] call Waldo_fnc_ACRE2BuildCEOI;
-    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK", "SIDE_SWITCH_NATIVE", "SIDE_SWITCH_NATIVE_LATE"]}) then {
         missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", _reason];
         [false] call Waldo_fnc_SaveLoadout;
     };
@@ -115,6 +128,10 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     if (!_planApplied && {_reason in ["INITIAL", "INITIAL_LATE"]}) then {
         diag_log "[WMP ACRE] Initial radio plan failed; the respawn baseline was not saved.";
         ["ACRE2 SETUP", "The initial radio plan was not applied, so WMP did not save a channel-1 respawn baseline. Run WMP Diagnostics for the exact radio/net mismatch.", "WARNING", "ACRE2_INITIAL_FAILED"] call Waldo_fnc_FeatureNotifyLocal;
+    };
+    if (!_planApplied && {_reason in ["SIDE_SWITCH_NATIVE", "SIDE_SWITCH_NATIVE_LATE"]}) then {
+        diag_log "[WMP ACRE] Side-switch radio plan failed; the seeded starter kit was not saved.";
+        ["ACRE2 SETUP", "Your side-switch starter kit could not be fully set up, so it was not saved as your new respawn snapshot. Run WMP Diagnostics for the exact radio/net mismatch.", "WARNING", "ACRE2_SIDE_SWITCH_FAILED"] call Waldo_fnc_FeatureNotifyLocal;
     };
 };
 true

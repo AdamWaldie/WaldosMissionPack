@@ -2,61 +2,73 @@
 
 > **Use this page when:** you need to configure, deploy, tear down, or troubleshoot an MHQ with logistics.
 
-_Associated Files: MissionScripts\Logistics\MHQ\MHQSetup.sqf_
+_Associated Files: `MissionScripts\Logistics\MHQ\MHQSetup.sqf`, `Waldo_fnc_MHQSetup`_
 
-A script which allows for the creation of a command post, acting as a respawn position, you may choose to combine this with the logistics quartermaster script if so desired.
+A Mobile Headquarters (MHQ) turns a vehicle or static object into a deployable field respawn point,
+optionally paired with the [logistics quartermaster system](Logistics-System,-Starter-Crates-And-Quartermaster).
+Players deploy it on request wherever they are, and undeploy it again to pack up and move on.
 
-This can be both a stationary object, or a vehicle.
+## Setup in Eden
 
-This allows a number of objects, as selected via the syncing of a named gamelogic to be attached to a vehicle, and "deployed"/"undeployed" on request when in a desired location.
+1. Place the vehicle or object that should become the deployable respawn, and give it a variable
+   name. This is the MHQ.
+2. Place a **Game Logic** as close as possible to the MHQ (same editor category as Modules).
+3. Place any objects that should appear when the MHQ deploys - tents, crates, whatever the field
+   setup should look like. Leave roughly 3 m clear to the left of the primary object so players have
+   room to actually respawn there.
+4. If the MHQ is a vehicle and any deployable objects should end up resting on the ground, raise
+   them about a foot in Eden. This accounts for the vehicle's suspension settling once the mission
+   loads.
+5. Select every deployable object, right-click, and synchronize them all to the Game Logic.
+6. In the MHQ's **Initialization** field:
+   ```sqf
+   [this] call Waldo_fnc_MHQSetup;
+   ```
+7. (Optional) The script defines an array of random Command Post names. Add your own, trim it down,
+   or leave it as shipped - it's a plain array of strings passed to `selectRandom`.
 
-### Setting Up in Eden:
-* Place the vehicle or object that you want to have the respawn deployable from, and provide it a variable name. This will be known as the MHQ/CP in this tutorial.
-* Place a Game Logic down as close as possible to the MHQ/CP. This can be found near the same menu as Modules.
-* Place any objects you wish to appear when the respawn is deployed. Leave some room approx 3m to the left of the primary object to allow space for players to respawn.
-* If you are using a vehicle as your primary object and any of your deployable objects should be resting on the floor, then raise them about a foot, to allow for the drop of the vehicle's suspension once the game has initialised.
-* Select all the objects that will be deployable, right-click and synchronise them to the Game Logic.
-* In the init of the MHQ/CP, paste the following: [this] call Waldo_fnc_MHQSetup;
-* If you desire to utilise the modern construction audio, please use the example noting that below.
-* That's it.
-* (Optional) The file contains an array of all the potential names for the Command Posts, add some if you want or set it to just a smaller amount; just remember it's an array of strings within the selectRandom square brackets (If you don't know what any of that means, dont touch it!)
+## What it does
 
-### Features:
-* Allows any Vehicle or Object to be a deployable respawn. Vehicle will be attached to the vehicle during movement while object respawns are static.
-* Creates a randomised Command Post name and marker on the map.
-* Changes the respawn side depending on who deployed it.
-* Allows for the optional deployment of logistics supplies if enabled and the [logistics System](Logistics-System,-Starter-Crates-And-Quartermaster) is active.
+- Works with any vehicle or static object. A vehicle keeps its synced objects attached while it
+  moves; a static object's deployment stays put.
+- Generates a randomized Command Post name and map marker on deployment.
+- Sets the respawn side to whichever side deployed it.
+- Optionally deploys logistics supplies alongside the MHQ when the
+  [logistics system](Logistics-System,-Starter-Crates-And-Quartermaster) is enabled.
 
-Parameters:
-* _target - Vehicle or Object to use as the Mobile headquarters
-* _logistics - boolean as to whether to enable the logistics system on the MHQ
-* _constructionAudio - boolean (true/false) | Options: True = Modern construction Noises, False = Old Wooden Sounding Construction Noises.
-if _logistics is utilised:
-* _logisticsDirection - determines the bearing around the vehicle the spawner will be. Based on vehicle heading, not compass. E.g 0 = Front, 90 = Right, 180 = Rear, 270 = Left.
-* _logisticsDistance - determines how far away from the vehicle the logistics spawner will be.
+## Parameters
 
-Example:
+| # | Name | Type | Meaning |
+|---|---|---|---|
+| 0 | `_target` | OBJECT | The vehicle or object to use as the MHQ. |
+| 1 | `_constructionAudio` | BOOL (default `false`) | `true` plays modern construction sounds on deploy/undeploy; `false` plays the older wooden-construction sounds. |
+| 2 | `_logistics` | BOOL (default `false`) | `true` enables the logistics quartermaster spawner alongside this MHQ. |
+| 3 | `_logisticsDirection` | NUMBER (default `180`) | Bearing of the logistics spawner relative to the vehicle's own heading, not compass north - `0` front, `90` right, `180` rear, `270` left. Only matters when `_logistics` is `true`. |
+| 4 | `_logisticsDistance` | NUMBER (default `4`) | Distance in metres from the vehicle to the logistics spawner. Only matters when `_logistics` is `true`. |
 
-Default:
-`[this] call Waldo_fnc_MHQSetup; `
+```sqf
+// Default - no modern audio, no logistics:
+[this] call Waldo_fnc_MHQSetup;
 
-Modern construction audio:
-`[this,true] call Waldo_fnc_MHQSetup;`
+// Modern construction audio:
+[this, true] call Waldo_fnc_MHQSetup;
 
-Logistics system with spawner 4m to the rear of the vehicle:
-`[this,true,true,180,4] call Waldo_fnc_MHQSetup;`
+// Logistics enabled, spawner 4 m behind the vehicle:
+[this, true, true, 180, 4] call Waldo_fnc_MHQSetup;
+```
 
-Below is an example of a properly setup MHQ, the Halftrack is the interaction object:
+Below is a properly set-up MHQ using a Halftrack as the interaction object:
+
 ![MHQ example](https://i.imgur.com/Rz9KwXL.png)
 
-### Changing the Boxes The Quartermaster Spawns
+## Changing the crates the quartermaster spawns
 
-**You can edit class of crate spawned for both medical and supply boxes in the initServer.sqf:**
-![Picture displaying the appropriate place in Initserver.sqf to change the boxes](https://i.imgur.com/0CdEY8U.png)
+Set the classnames in `initServer.sqf`:
 
-**Logi_SupplyBoxClass** is the class of box which will spawn when ammo or resupply boxes are spawned.
+![Picture displaying the appropriate place in initServer.sqf to change the boxes](https://i.imgur.com/0CdEY8U.png)
 
-**Logi_MedicalBoxClass** is the class of box which will spawn when a medical box is spawned.
+- **`Logi_SupplyBoxClass`** - the crate spawned for ammo/resupply.
+- **`Logi_MedicalBoxClass`** - the crate spawned for medical supplies.
 
 <!-- WMP-WIKI-NAV -->
 ---

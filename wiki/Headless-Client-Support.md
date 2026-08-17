@@ -55,7 +55,11 @@ reference only; WMP's detection doesn't care what a slot is called.
 Actually connecting the headless-client process to your hosted/dedicated server - allow-listing its
 IP in `server.cfg`'s `headlessClients[]`, and launching the HC process itself with
 `-client -connect=<serverIP> -password=<password>` - is ordinary Arma 3 server hosting, outside WMP's
-scope; consult your server host or Bohemia's own headless-client documentation for that step.
+scope. The **Headless Client Kit** is a separate download (its own release artifact, `WMP_HC-<version>.zip`,
+not part of the main pack) with annotated examples for exactly this step - a `server.cfg` snippet,
+a launch script for connecting one HC to a server you already have running, and a script that stands
+up a throwaway local server plus HC(s) so you can rehearse the whole flow before touching a real
+host. Otherwise, consult your server host or Bohemia's own headless-client documentation.
 
 **Headless clients count toward `description.ext`'s `maxPlayers`.** A connecting HC with an
 allow-listed IP is meant to auto-fill the first free Headless Client slot with no manual role

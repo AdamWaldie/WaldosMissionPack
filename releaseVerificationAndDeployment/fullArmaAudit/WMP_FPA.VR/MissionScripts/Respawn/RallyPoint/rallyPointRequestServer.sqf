@@ -64,7 +64,23 @@ private _side = side _group;
 private _enemyNear = allUnits findIf {alive _x && {_side getFriend side group _x < 0.6} && {_x distance2D _actor < _enemyRadius}};
 if (_enemyNear >= 0) exitWith {[format ["Hostile forces are within %1 metres.", round _enemyRadius], "WARNING"] remoteExecCall ["Waldo_fnc_RallyPointNotifyLocal", owner _actor]; false};
 private _deployDistance = missionNamespace getVariable ["Waldo_Rally_PlacementDistance", 2];
-private _objectClass = missionNamespace getVariable ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"];
+private _rallySeed = "Land_SatelliteAntenna_01_F";
+private _objectClass = missionNamespace getVariable ["Waldo_Rally_ObjectClass", _rallySeed];
+// Waldo_Rally_ObjectClass is a single fixed classname, not a dropdown - there is nothing to "extend"
+// the way Dynamic AA/Gunship/Paradrop's class lists are extended. What still matters here is not
+// silently trying to spawn a class that does not exist (a mod removed/renamed, or a typo) - fall
+// back to another public class inheriting from the vanilla seed, discovered live in the running
+// modset, before giving up on the seed itself.
+if !(isClass (configFile >> "CfgVehicles" >> _objectClass)) then {
+    private _fallbackPool = ["RALLY_OBJECT", {
+        isClass (configFile >> "CfgVehicles" >> _this)
+        && {getNumber (configFile >> "CfgVehicles" >> _this >> "scope") >= 2}
+        && {_this isKindOf _rallySeed}
+    }] call Waldo_fnc_ResolveVehicleClassPool;
+    private _resolved = if (count _fallbackPool > 0) then {(_fallbackPool select 0) select 0} else {_rallySeed};
+    diag_log format ["[WMP RALLY] Configured Waldo_Rally_ObjectClass='%1' does not exist; falling back to '%2'.", _objectClass, _resolved];
+    _objectClass = _resolved;
+};
 private _position = [];
 private _origin = getPosATL _actor;
 private _maximumSlope = missionNamespace getVariable ["Waldo_Rally_MaximumSlope", 20];

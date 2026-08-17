@@ -1395,10 +1395,25 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Waldo_Player_RadioState', save_respawn)
         self.assertIn('Waldo_Player_RespawnSnapshot', save_respawn)
         self.assertIn('the previous complete respawn snapshot was preserved', save_respawn)
-        # The respawn-time restore body lives in the extracted shared function, called by one local
-        # Respawn event handler. Repeat protection must be client-owned; a unit variable can be
-        # inherited by a later respawn body and suppress every restore after the first.
-        self.assertIn('Waldo_Player_RadioState', respawn_restore)
+        # Snapshots are stored per (UID, side) key so a player who changes side mid-mission keeps each
+        # side's own last-saved loadout independently instead of one global slot only ever reflecting
+        # whichever side was saved most recently.
+        self.assertIn('Waldo_Player_RespawnSnapshots', save_respawn)
+        self.assertIn('format ["%1_%2", _identity select 0, _sideKey]', save_respawn)
+        self.assertIn('format ["%1_%2", _currentIdentity select 0, _sideKey]', respawn_restore)
+        # A civilian side-read immediately after respawn is suspicious - and worth a bounded settle
+        # retry - only for a player with real non-civilian history under this UID; this must never
+        # delay a genuinely new or genuinely civilian player.
+        self.assertIn('_suspiciousSide', respawn_restore)
+        self.assertIn('side _unit != civilian', respawn_restore)
+        # The respawn-time restore body lives in the extracted shared function, called by two
+        # independent client-local triggers (the local "Respawn" event handler, plus a
+        # CBA_fnc_addPlayerEventHandler "unit" watchdog gated behind Waldo_LoadoutBaselineCaptured so
+        # it can never fire before the first baseline exists). Repeat protection must be client-owned
+        # and object-identity-based, not a unit variable that could be inherited by a later respawn
+        # body and suppress every restore after the first - that is what makes firing both triggers
+        # for the same life safe.
+        self.assertIn('Waldo_Player_RespawnSnapshots', respawn_restore)
         self.assertIn('Waldo_Player_RespawnSnapshot', respawn_restore)
         self.assertIn('Waldo_RespawnRestoreHandledUnit', respawn_restore)
         self.assertNotIn('_unit getVariable ["Waldo_RespawnRestoreHandled"', respawn_restore)
@@ -1409,10 +1424,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('setVariable ["acre_sys_radio_setup", "", true]', respawn_restore)
         self.assertNotIn('setVariable ["acre_sys_radio_setup", "", true]', acre_init)
         self.assertIn('Waldo_fnc_RespawnRestoreLoadout', init_player)
-        self.assertIn('[_newUnit, _oldUnit] call Waldo_fnc_RespawnRestoreLoadout', init_player)
+        self.assertIn('[_newUnit, _oldUnit, "RESPAWN_EH"] call Waldo_fnc_RespawnRestoreLoadout', init_player)
+        self.assertIn('[_newUnit, _oldUnit, "UNIT_WATCHDOG"] call Waldo_fnc_RespawnRestoreLoadout', init_player)
         self.assertIn('player addEventHandler ["Respawn"', init_player)
         self.assertNotIn('["CAManBase", "Respawn", {', init_player)
-        self.assertNotIn('"unit",\n        {\n            params ["_newUnit", ["_oldUnit"', init_player)
+        self.assertIn('"unit",\n        {\n            params ["_newUnit", ["_oldUnit"', init_player)
+        self.assertIn('Waldo_LoadoutBaselineCaptured', init_player)
         self.assertNotIn('re-executes this whole file on every respawn', init_player)
         self.assertNotIn('["RESPAWN", true]', init_player)
         self.assertNotIn('["RESPAWN", true]', respawn_restore)

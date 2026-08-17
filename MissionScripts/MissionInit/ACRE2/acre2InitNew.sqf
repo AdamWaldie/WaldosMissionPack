@@ -15,8 +15,21 @@
  * Current callers: initServer.sqf and initPlayerLocal.sqf.
  */
 if !(isClass (configFile >> "CfgPatches" >> "acre_main")) exitWith {missionNamespace setVariable ["Waldo_ACRE2_Available", false]; false};
+// Waldo_ACRE2_Config is already resolved (INHERIT sentinels expanded) when Waldo_fnc_ACRE2PreInit has
+// run first, the normal case. The fallback recompile below (a config that somehow reached this point
+// without going through PreInit first) has NOT been resolved yet, so it is run through the same
+// resolver here before validation, exactly like PreInit does.
+private _configIsFallback = isNil {missionNamespace getVariable "Waldo_ACRE2_Config"};
 private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", call compile preprocessFileLineNumbers "MissionConfig\acreConfig.sqf"];
+private _resolveErrors = [];
+if (_configIsFallback) then {
+    private _resolution = [_config] call Waldo_fnc_ACRE2ResolveSides;
+    _config = _resolution select 0;
+    _resolveErrors = _resolution select 1;
+};
 private _validation = [_config] call Waldo_fnc_ACRE2ValidateConfig;
+_validation set [0, (_validation select 0) && {count _resolveErrors == 0}];
+_validation set [1, _resolveErrors + (_validation select 1)];
 {diag_log format ["[WMP ACRE] CONFIG WARNING: %1", _x]} forEach (_validation param [2, []]);
 if !(_validation select 0) exitWith {{diag_log format ["[WMP ACRE] CONFIG ERROR: %1", _x]} forEach (_validation select 1); false};
 if !(_config getOrDefault ["enabled", true]) exitWith {missionNamespace setVariable ["Waldo_ACRE2_Available", false]; true};

@@ -257,7 +257,7 @@ composition name that isn't documented there.
 | Vehicle recovery + squad rally points | `references/vehicle-recovery-rallies.md` | Two related but independent systems |
 | UI visual themes + colour-vision accessibility | `references/ui-themes.md` | Theme is mission-wide; colour-vision is per player, never set it globally |
 | ACE Corpse Traps | `references/corpse-traps.md` | |
-| Headless client + player markers | `references/headless-client.md` | Still plain `execVM`, no `MissionConfig` file |
+| Headless client (native, `MissionConfig\headlessConfig.sqf`) + player markers | `references/headless-client.md` | Native HC system is the recommended path; legacy `WerthlesHeadless.sqf` is covered but disabled/deprecated |
 | Custom 3D world markers | `references/3d-markers.md` | No `MissionConfig` file — pure call API |
 | Misc mission-maker tools (AI convoy, map locations, vehicle camo, teleport, weapon mounting, construction objects, ACE Fortify, radio reports, team colour) | `references/misc-mission-maker-tools.md` | Compact catch-all — one short subsection each |
 

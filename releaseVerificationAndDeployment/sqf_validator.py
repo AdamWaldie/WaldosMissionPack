@@ -15,6 +15,60 @@ INVALID_RUNTIME_COMMANDS = {
 }
 
 
+def find_backslash_escaped_quotes(content):
+    """Find `\\"` inside actual SQF string literals (not comments).
+
+    SQF has no backslash-escape convention - a quote is only escaped by doubling it
+    (""). A backslash before a quote is just a literal backslash character, so it does
+    not protect the quote from closing the string. Writing \\" to "escape" a nested
+    quote (a mistake carried over from C-like languages) silently truncates the string
+    one character early and leaves the remainder of the line as bare, malformed code -
+    a real, recurring mistake in this codebase (see acre2ResolveSides.sqf,
+    acre2ValidateConfig.sqf). This walks the same comment/string state machine as
+    strip_comments_and_strings, but flags the pattern instead of blanking it, and skips
+    comments so an unrelated backslash inside a comment can never trigger it.
+
+    Returns a list of 1-based line numbers where the pattern was found.
+    """
+    hits = []
+    index = 0
+    state = "code"
+    quote = ""
+    line_number = 1
+    while index < len(content):
+        char = content[index]
+        nxt = content[index + 1] if index + 1 < len(content) else ""
+        if char == "\n":
+            line_number += 1
+        if state == "code":
+            if char in ('"', "'"):
+                state = "string"
+                quote = char
+            elif char == "/" and nxt == "/":
+                state = "line_comment"
+                index += 1
+            elif char == "/" and nxt == "*":
+                state = "block_comment"
+                index += 1
+        elif state == "string":
+            if char == "\\" and nxt == quote:
+                # Matches the engine's real behaviour: the backslash is just a literal
+                # character, so the very next character (the quote) still closes the
+                # string on the following iteration - it is not consumed here.
+                hits.append(line_number)
+            elif char == quote:
+                state = "code"
+        elif state == "line_comment":
+            if char == "\n":
+                state = "code"
+        else:  # block_comment
+            if char == "*" and nxt == "/":
+                index += 1
+                state = "code"
+        index += 1
+    return hits
+
+
 def strip_comments_and_strings(content):
     """Blank comments/strings while preserving line numbers for token checks."""
     result = []
@@ -210,7 +264,23 @@ def check_sqf_syntax(filepath):
                 print("ERROR: Invalid runtime command {0} at {1} Line number: {2} ({3})".format(command, filepath, command_line, explanation))
                 bad_count_file += 1
 
+        # switch's default branch never takes a colon (unlike case) - "default: {...}" parses as
+        # valid balanced-bracket text so the bracket checks above never catch it, but it fails to
+        # compile in-game with a generic parse error at mission start.
+        for match in re.finditer(r"(?i)\bdefault\s*:", executable):
+            default_line = executable.count("\n", 0, match.start()) + 1
+            print("ERROR: 'default:' at {0} Line number: {1} (switch's default branch takes no colon; use 'default {{...}}')".format(filepath, default_line))
+            bad_count_file += 1
 
+        # Recurring mistake: SQF has no backslash-escape convention, so \" inside a
+        # string does not protect the nested quote - it just truncates the string one
+        # character early and leaves the rest of the line as malformed code. This has
+        # already shipped twice (acre2ResolveSides.sqf, acre2ValidateConfig.sqf), both
+        # only caught live in-game via the RPT, since the truncation still leaves
+        # balanced brackets overall. Double the quote ("") to escape it instead.
+        for escaped_line in find_backslash_escaped_quotes(content):
+            print("ERROR: Backslash-escaped quote \\\" at {0} Line number: {1} (SQF strings escape a quote by doubling it (\"\"), not with a backslash; \\\" silently truncates the string)".format(filepath, escaped_line))
+            bad_count_file += 1
 
     return bad_count_file
 

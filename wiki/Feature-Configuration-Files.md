@@ -403,6 +403,7 @@ parachute have been tested at the replacement altitude and speed.
 | Setting | Purpose / units |
 |---|---|
 | `Waldo_Respawn_SaveOnDeath` | Off by default. `false` = respawn uses the mission-start baseline plus the last manual Loadout Save Point action; `true` = capture loadout and radio on every death and restore it on respawn instead. |
+| `Waldo_Respawn_SideSwitchMode` | Always applies the first time a live side change (Zeus/admin reassignment) lands a player on a side with none saved yet - no on/off toggle. `CARRY_OVER` (default) seeds from current live gear/radio, tagged BRIDGED; `SIDE_BASE_LOADOUT` assembles a weapon-aware kit from the new side's own mission.sqm pool with its proper ACRE2 preset, tagged NATIVE, falling back to CARRY_OVER if that side's pool is unusable. |
 | `Waldo_FieldResupply_Enable` | Master field-resupply opt-in. |
 | `Waldo_FieldResupply_CrateClass` | Deployed resupply crate class. |
 | `Waldo_FieldResupply_DefaultCarrierCapacity` | Default virtual crates carried. |

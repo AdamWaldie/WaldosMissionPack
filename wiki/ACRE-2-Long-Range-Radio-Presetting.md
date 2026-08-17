@@ -139,6 +139,94 @@ WMP changes only `label` on PRC-148, `description` on PRC-152 and `name` on PRC-
 
 ACRE has [open issue history around copied or locally divergent presets](https://github.com/IDI-Systems/acre2/issues/1056). These safeguards avoid the known high-risk paths, but physical display verification remains part of multiplayer acceptance because a static test cannot prove ACRE/TeamSpeak runtime state.
 
+## Shared side channel sets (cooperative missions)
+
+**What this is for:** joint nets above bridges one specific channel across chosen sides. Sometimes
+that's not enough - a co-op mission where WEST and GUER are both player-controlled coalition partners
+who should just fully talk to each other, on every channel, all the time. Give one of them the same
+preset as the other and point its `nets` at the other's by name:
+
+```sqf
+// MissionConfig\acreConfig.sqf
+["GUER", "default3", "INHERIT:WEST", [ // GUER uses WEST's preset AND WEST's exact channel list
+    ["ALLY-1-1", [["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]]] // GUER's own groups, same as normal
+]],
+```
+
+Now every channel WEST has - PLT1, COY, AIRGND, whichever nets you've defined - GUER has too, the
+same real frequency and the same channel label, automatically. Add a channel to WEST later and GUER
+gets it too without touching GUER's row again. Groups (which squad uses which channel) stay separate
+per side, since your WEST and GUER units are still different Eden groups - only the channel list
+itself is shared.
+
+Point directly at whichever side holds the real channel list. Don't chain sides (GUER inheriting from
+EAST who inherits from WEST) - inherit straight from the side that actually defines the channels;
+chaining, self-reference, an unknown side, or inheriting from a side using a different preset are all
+rejected with a clear reason at mission start.
+
+## Joint radio nets
+
+**What this is for:** every side normally has its own separate channels - a WEST platoon net and an
+EAST platoon net are different frequencies, so the two sides can never accidentally hear each other.
+Sometimes you *want* that on purpose for one specific channel - a combined command net, a WEST JTAC
+talking straight to an EAST liaison, allied WEST+GUER forces coordinating an attack - without opening
+up anything else between them. `jointNets` punches exactly one such hole.
+
+**Shipped by default:** a `GAME CONTROL` net at channel 99, bridging every side. It exists so an
+admin, GM or Zeus curator has one guaranteed cross-faction channel to reach any player who manually
+switches to it, regardless of side - it isn't preset onto anyone's radio automatically. Delete the
+row (or set `jointNets` back to `[]`) if you don't want a shared admin channel. Only PRC-152 and
+PRC-117F reach channel 99 - PRC-148's preset only goes up to channel 32, so it can't select 99 at all.
+
+```sqf
+// MissionConfig\acreConfig.sqf
+["jointNets", [
+    ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
+    // [netId, label ("" for none), radio family, shared frequency, [[side, channel], ...]]
+]],
+```
+
+That shape deliberately matches an ordinary named net's `[key, label, family, value]` - the label
+sits right after the id, same spot, same meaning - with the per-side channel list tacked on after.
+
+Read that row as: **99.000 MHz** is the one shared frequency, and every side gets it on **channel
+99** in this example - though the channel number doesn't have to match across sides. A different
+mission might bridge WEST channel 13 to EAST channel 6 to GUER channel 6 on one shared frequency,
+each side using whichever of its own free channels is open; different numbers, same real frequency
+underneath, so those players can now talk while every other channel on their radios stays exactly as
+isolated from each other as before. The channel number only means anything on that side's own radio
+preset, so there's no requirement to reuse the same one everywhere.
+
+`"GAME CONTROL"` makes that shared channel actually show a name on the radio's own screen instead of
+just a plain channel number - handy for making it visually obvious to players that this specific
+channel is the shared one. Use `""` for no label. It only works on PRC-148/152/117F radios (same
+limitation ordinary named channels already have), and it's the *only* way to label a joint net -
+don't try to also add a matching entry to that side's own channel list to name it the old way, that's
+rejected as a conflict (WMP assumes you've made a mistake if the same channel shows up twice with two
+different purposes).
+
+Only `PRC_LR`, `BF888` and `SEM52` radio families can be used this way - PRC-343 and PRC-77/SEM70
+work differently under the hood and aren't supported here yet. Using an unsupported family, an
+unknown side, an out-of-range channel, or a channel that collides with a real net you've already
+assigned on that side is always rejected with a clear reason at mission start, rather than silently
+letting a real operational net get rerouted onto the bridge.
+
+The frequency itself is only sanity-checked as a positive number, not checked against any real radio
+hardware range - ACRE2 has no documented tunable range for PRC_LR/BF888/SEM52 to check against, and
+its own API accepts and stores whatever value it's given. A wrong-but-plausible-looking MHz figure
+will not be rejected; it will just get programmed as given. Test the mission and confirm both sides'
+radios actually hear each other on the channel you picked, rather than assuming a made-up frequency
+is correct just because it passed validation.
+
+A joint net is referenceable by name from a group's assignment rows exactly like an ordinary named
+net - `["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"]` presets that radio straight onto the joint
+net's channel, resolved for whichever side that group belongs to. No need to look up and hardcode the
+channel number yourself. A joint net's id has to be unique across every `jointNets` row (it's a real
+lookup key now, not just a label for your own reference) and can't reuse a name already used by that
+side's own ordinary nets - both cases are rejected with a clear reason at mission start rather than
+silently picking one or the other. There is no in-mission Zeus toggle for a joint net yet; it is
+mission-start configuration only.
+
 ## Join, respawn and persistence
 
 On initial join, WMP waits for ACRE and applies the mission's starting setup once. That starting

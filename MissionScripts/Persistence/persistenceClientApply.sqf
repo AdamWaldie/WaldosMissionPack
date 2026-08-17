@@ -108,6 +108,10 @@ if (_acreManaged && {missionNamespace getVariable ["Waldo_Persistence_SaveRadios
             // Capture one complete ordinary-respawn snapshot only after both the persisted loadout
             // and its newly issued ACRE radio IDs have been restored. This prevents respawn from
             // observing a persisted inventory paired with an older or empty radio-state array.
+            // Bounded settle-wait first: this follows a scripted setUnitLoadout earlier in this file
+            // (see the persisted-loadout apply above), the same class of "object exists but inventory
+            // hasn't finished settling" race the mission-start baseline capture guards against.
+            [player] call Waldo_fnc_LoadoutWaitStable;
             missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", "PERSISTENCE_RESTORED"];
             [false] call Waldo_fnc_SaveLoadout;
             missionNamespace setVariable ["Waldo_Persistence_PlayerLoadState", "FOUND"];

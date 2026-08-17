@@ -23,6 +23,11 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_unitInsignias.json --deploy
 #python3 releaseVerificationAndDeployment/build.py --build config_claudeSkill.json --deploy
 
+# Headless Client Kit - server-hosting scripts/examples for actually connecting a headless client,
+# deliberately excluded from the main WMP pack's own include list (config.json). Produced on every
+# release as its own artifact so a server admin can grab it without the rest of the pack.
+python3 releaseVerificationAndDeployment/build.py --build config_headlessClientKit.json --deploy
+
 # Only the claude.ai-upload-ready shape ships now (skill folder at the zip root — what claude.ai's
 # "Upload skill" dialog and the Skills API require, and also what a mission-project drop-in should
 # use, moving the extracted folder under .claude/skills/ by hand). The prefixed

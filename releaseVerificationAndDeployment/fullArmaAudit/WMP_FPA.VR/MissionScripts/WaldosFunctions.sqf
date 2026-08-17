@@ -103,9 +103,12 @@ class CfgFunctions
                 file = "MissionScripts\MissionInit\ACRE2\acre2InitNew.sqf";
             };
             class ACRE2ValidateConfig {file = "MissionScripts\MissionInit\ACRE2\acre2ValidateConfig.sqf";};
+            class ACRE2ResolveSides {file = "MissionScripts\MissionInit\ACRE2\acre2ResolveSides.sqf";};
             class ACRE2GetRadioProfiles {file = "MissionScripts\MissionInit\ACRE2\acre2GetRadioProfiles.sqf";};
+            class ACRE2ResolveSidePresetMap {file = "MissionScripts\MissionInit\ACRE2\acre2ResolveSidePresetMap.sqf";};
             class ACRE2GetOrderedRadios {file = "MissionScripts\MissionInit\ACRE2\acre2GetOrderedRadios.sqf";};
             class ACRE2ApplyPresetNames {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPresetNames.sqf";};
+            class ACRE2ApplyJointNets {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyJointNets.sqf";};
             class ACRE2CompilePlan {file = "MissionScripts\MissionInit\ACRE2\acre2CompilePlan.sqf";};
             class ACRE2ApplyPlayerPlan {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPlayerPlan.sqf";};
             class ACRE2BuildCEOI {file = "MissionScripts\MissionInit\ACRE2\acre2BuildCEOI.sqf";};
@@ -441,8 +444,26 @@ class CfgFunctions
             class SaveLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\saveRespawnLoadout.sqf";
             };
+            class LoadoutCanary {
+                file = "MissionScripts\Logistics\LogiHelpers\loadoutCanary.sqf";
+            };
+            class LoadoutWaitStable {
+                file = "MissionScripts\Logistics\LogiHelpers\loadoutWaitStable.sqf";
+            };
             class RespawnRestoreLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\respawnRestoreLoadout.sqf";
+            };
+            class RespawnSeedSideSwitch {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnSeedSideSwitch.sqf";
+            };
+            class RespawnSeedCarryOver {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnSeedCarryOver.sqf";
+            };
+            class RespawnSeedSideBaseLoadout {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnSeedSideBaseLoadout.sqf";
+            };
+            class BuildAssembledSideLoadout {
+                file = "MissionScripts\Logistics\LogiHelpers\buildAssembledSideLoadout.sqf";
             };
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";
@@ -901,9 +922,15 @@ class CfgFunctions
             class ObjectTransformSpawn {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectTransformSpawn.sqf";};
             class ObjectScaleZen {file = "MissionScripts\MissionMakerResourceScripts\ObjectTransforms\objectScaleZen.sqf";};
         };
+        class SharedAssetResolution
+        {
+            class ResolveFactionCatalog {file = "MissionScripts\CombatSystems\resolveFactionCatalog.sqf";};
+            class ResolveVehicleClassPool {file = "MissionScripts\CombatSystems\resolveVehicleClassPool.sqf";};
+        };
         class DynamicAA
         {
             class DynamicAAResolveAssetPool {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveAssetPool.sqf";};
+            class DynamicAAResolveEquipmentCatalog {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAResolveEquipmentCatalog.sqf";};
             class DynamicAASetGroupState {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetGroupState.sqf";};
             class DynamicAAFireGateLocal {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAAFireGateLocal.sqf";};
             class DynamicAASetVehicleAmmo {file = "MissionScripts\CombatSystems\DynamicAA\dynamicAASetVehicleAmmo.sqf";};

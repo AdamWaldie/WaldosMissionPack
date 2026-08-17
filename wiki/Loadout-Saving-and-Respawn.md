@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need starting, manual or persistent player equipment across respawn, including ACRE2 radios.
 
-Basic respawn loadout saving is automatic: the mission-start baseline is captured once, and the local respawn handler restores the last snapshot `Waldo_fnc_SaveLoadout` wrote - by default that means the manual **Loadout Save Point** ACE/vanilla action, since automatic capture on death (`Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf`) is off by default. Set it to `true` for players to instead respawn with whatever they were carrying at the moment of death. `respawnOnStart = -1` remains required.
+Basic respawn loadout saving is automatic: the mission-start baseline is captured once, and the local respawn handler restores the last snapshot `Waldo_fnc_SaveLoadout` wrote - by default that means the manual **Loadout Save Point** ACE/vanilla action, since automatic capture on death (`Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf`) is off by default. Set it to `true` for players to instead respawn with whatever they were carrying at the moment of death. `respawnOnStart = -1` remains required. That first automatic capture waits a moment for a slower-loading client's gear to actually finish appearing before saving it as the baseline - a client that took a bit longer to load in still gets a correct starting kit, not an incomplete one.
 
 ## ACRE2-safe storage
 
@@ -64,6 +64,39 @@ Starter crates and loadout-save points call:
 Pass `[false]` for automatic startup work that must not display a notification over the loading presentation. Explicit player saves use the WMP notification UI and replace their prior message instead of growing the queue.
 
 ACE Respawn can conflict with this mission-owned restore path and should remain disabled in ACE addon settings.
+
+## Side-switch respawn seeding
+
+**What this is for:** if Zeus (or a script) moves a player to a different side mid-mission, WMP has
+never seen them on that side before, so without this WMP would just respawn them with a bare
+class-default kit there instead of anything real. WMP fixes that automatically, the first time it
+happens for each player - there's no toggle to turn it off, since a mission maker never actually
+wants a mid-mission side-switched player left on bare class gear until they think to manually save.
+
+```sqf
+// MissionConfig\logisticsConfig.sqf
+["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // CARRY_OVER (default) or SIDE_BASE_LOADOUT
+```
+
+Pick a mode:
+
+- **`CARRY_OVER`** (default, simplest): the player keeps exactly what they had, gear and radios
+  included. Their radio stays tuned to their *old* side's channels - which is usually what you want,
+  since it means they can still talk to their old squad after the switch.
+- **`SIDE_BASE_LOADOUT`**: the player instead gets a random matching kit assembled from whatever
+  loadouts you've placed on the new side in Eden (a real weapon with ammunition that actually fits
+  it, not a random grab-bag), with their radio properly retuned to the new side's own channels. If
+  nothing usable is placed on that side yet, it automatically falls back to `CARRY_OVER` instead of
+  leaving the player with nothing.
+
+This only ever applies the *first* time a player lands on a side with nothing saved for them there.
+Once WMP has a saved kit for a player on a given side, switching to and from that side always
+restores their own saved kit from then on, exactly like ordinary respawn.
+
+Check current state under **WMP Diagnostics**: `respawn/snapshot-origin` shows which mode the
+player's current side came from, and `respawn/side-switch-seed` shows whether/when a seed ran and
+whether `SIDE_BASE_LOADOUT` had to fall back, with a fix hint if so. See
+[Mission Diagnostics](Mission-Diagnostics).
 
 ## ACE 3.21.1 name warning
 

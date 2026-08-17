@@ -2,57 +2,49 @@
 
 > **Use this page when:** you want synchronized editor objects converted into an ACE Fortify budget and build catalogue.
 
-## AutoFortifySetup Function
+_Associated Files: `MissionScripts\Logistics\Fortify\AutoFortify.sqf`, `Waldo_fnc_AutoFortifySetup`_
 
-## Description
+ACE3's **Fortify** module lets players spend a budget to build defensive structures with a fortify
+tool, but it needs a build catalogue and a starting budget before anyone can use it. This function
+builds that catalogue for you: sync any objects and static weapons to a Game Logic in Eden, call
+one function, and every synced object becomes buildable in that side's Fortify menu, priced
+automatically from its size and weight.
 
-This script is designed to dynamically grab all objects synchronized to a game logic in Arma 3, add them to a side's fortify menu, and price them dynamically based on their volume & mass. The log scalars help keep the extremes (mostly) in step with everything else.
+## Setup
 
-## Usage
-
-To use this script in your Arma 3 mission:
-
-1. Make sure your player(s) have a fortify tool in their inventory.
-2. Place a game logic down and paste into its init the function call as noted below - alter it to fit your requirements.
-3. Synchronize to the game logic any objects or static weapons that you wish to be constructible in fortify. (Note: Vehicles other than static weapons are not supported due to concerning behavior.)
-4. If you require more than one side to use fortify, repeat the above steps in entirety and ensure the function call has the correct side in each.
-5. Run the game.
-
-## Parameters
-
-The function takes the following parameters:
-
-- `_target`: The object variable name you want this to apply to (The game logic)
-- `_side`: The side that the crate will populate the fortify list to. Each setup is single use as the objects and logic are destroyed afterward. Options: West, East, Independent, Civilian
-- `_budget`: User defined starting budget for the side, this can then be added to later on using the ACE_Fortify budget script.
-
-### Example
+1. Give the intended players a fortify tool.
+2. Place a **Game Logic** in Eden (same category as Modules).
+3. Sync every object or static weapon that should be buildable to that Game Logic. Vehicles other
+   than static weapons are not supported - syncing one produces unreliable results.
+4. In the Game Logic's **Initialization** field, call the function (see below).
+5. Repeat steps 2-4 for each additional side that should have its own fortify catalogue.
 
 ```sqf
 [this, west, 6000] call Waldo_fnc_AutoFortifySetup;
 ```
 
+Each setup is single-use: the synced objects and the Game Logic are consumed (deleted) once the
+catalogue is built, so re-running the same Game Logic's init does nothing on a second pass.
 
-## Budget updates
+## Parameters
 
-ACE Fortify Budget Function can be used to update the given sides budget.
+| # | Name | Type | Meaning |
+|---|---|---|---|
+| 0 | `_target` | OBJECT | The Game Logic carrying the synced objects. |
+| 1 | `_side` | SIDE | Which side's Fortify menu receives the catalogue: `west`, `east`, `independent`, or `civilian`. |
+| 2 | `_budget` | NUMBER | That side's starting Fortify budget. |
 
- Arguments:
-  0: Side <SIDE>
-  1: Change <NUMBER> (default: 0)
-  2: Display hint <BOOL> (default: true)
+## Changing a side's budget later
 
- Return Value:
-  None
+Add or remove budget mid-mission with ACE's own function directly - WMP does not wrap this one:
 
- Example:
 ```sqf
-  [west, -250, false] call ace_fortify_fnc_updateBudget
+[west, -250, false] call ace_fortify_fnc_updateBudget;
+// [side, change, display hint]
 ```
 
-## Zeus Budget Module
-
-I have also created a ZEN module which allows you to do this via Zeus during the mission if desired. You can find out how it works on the [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) page.
+A curator can do the same thing from Zeus without scripting - see the **Fortify Budget Manager**
+module on the [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules) page.
 
 <!-- WMP-WIKI-NAV -->
 ---

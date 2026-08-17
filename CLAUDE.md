@@ -60,7 +60,7 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json
 ```
 
-Build config: `releaseVerificationAndDeployment/config.json` defines an explicit `include` allowlist and the output name/version. New repository folders do not ship unless deliberately added. The builder rejects QA/tooling folders and runtime logs before and after archive creation; patch releases use the same allowlist. Output zips land in `release/`. The deploy workflow uploads the main WMP pack, patch, Compositions, Unit Insignias, and the Claude Mission Config Skill. The dormant Exemplar build remains available manually but is not currently produced by `deploy.sh`.
+Build config: `releaseVerificationAndDeployment/config.json` defines an explicit `include` allowlist and the output name/version. New repository folders do not ship unless deliberately added. The builder rejects QA/tooling folders and runtime logs before and after archive creation; patch releases use the same allowlist. Output zips land in `release/`. The deploy workflow uploads the main WMP pack, patch, Compositions, Unit Insignias, the Claude Mission Config Skill, and the Headless Client Kit. The dormant Exemplar build remains available manually but is not currently produced by `deploy.sh`.
 
 ### Claude Mission Config Skill (separate release item)
 
@@ -69,6 +69,22 @@ Build config: `releaseVerificationAndDeployment/config.json` defines an explicit
 A second archive shape used to ship alongside it — `Claude_Mission_Config_Skill-<version>.zip`, built from `releaseVerificationAndDeployment/config_claudeSkill.json` (`include: [".claude", "LICENSE"]`), which kept the `.claude/skills/mission-pack-config/` path prefix intact for a direct unzip-to-project-root drop-in. That config file still exists and still builds correctly, but is no longer produced by `deploy.sh` or uploaded by `deploy.yml` — same "available manually, not currently produced" status as the dormant Exemplar build — to avoid shipping two release zips of the same skill content that only differ in an internal path prefix.
 
 Every push validates `SKILL.md`'s frontmatter against claude.ai's own upload constraints via `releaseVerificationAndDeployment/claude_skill_validator.py` (name ≤64 chars kebab-case, description ≤1024 chars, no angle brackets, only the allowed frontmatter keys, exactly one `SKILL.md`) — run it locally (`pip install pyyaml` first) after editing `SKILL.md`'s frontmatter, since an over-length or malformed description fails silently at upload time otherwise. See the wiki's **Claude Mission Config Skill** page for usage with both Claude and ChatGPT, and `.claude/skills/mission-pack-config/SKILL.md` for the skill's own routing logic and per-feature reference files.
+
+### Headless Client Kit (separate release item)
+
+`HeadlessClientKit/` — server-hosting scripts and examples for actually connecting a headless-client
+(HC) process to a dedicated server (`server.cfg` allow-listing, `-client` launch parameters, a local
+throwaway server+HC rehearsal script, and example `headlessConfig.sqf` pacing presets). This is
+server administration, not mission scripting, so it is deliberately kept out of both the mission
+pack itself and its documentation flow: `config.json` does not list `HeadlessClientKit` in its
+`include` allowlist (the same allowlist mechanism that already excludes any undeclared folder, no
+special-case exclusion code needed), and none of it is `#include`-d, registered in
+`WaldosFunctions.sqf`, or referenced from `description.ext`. It ships as its own release artifact,
+`WMP_HC-<version>.zip`, built by `releaseVerificationAndDeployment/build.py --build
+config_headlessClientKit.json` (`include: ["HeadlessClientKit", "LICENSE"]`), produced and uploaded
+on every release the same way Unit Insignias is. The in-mission half of headless-client support
+(`Waldo_Headless_Enable`, `MissionScripts\Headless\`, Eden HC slots) remains part of the main pack
+and its own wiki page; `HeadlessClientKit/README.md` links to that page rather than duplicating it.
 
 ### Full development audit mission
 
@@ -227,6 +243,84 @@ Carried-radio channel/frequency assignment is pure-data configuration, not a scr
 ```
 
 Group IDs must match the Eden editor group ID exactly (an `@Callsign` leader-role suffix is reconciled first). AN/PRC-343 short-range radios auto-allocate deterministically from the callsign. CEOI auto-populates in the map screen. See `wiki/ACRE-2-Long-Range-Radio-Presetting.md` for the full assignment/net/override contract.
+
+#### Shared side channel sets (`acreConfig.sqf`'s `sides` — `"INHERIT:<SIDE>"`)
+
+For a cooperative/multi-faction mission where two or more sides should just fully talk to each other
+(not one bridge channel at a time like joint nets below), a side's `nets` field may be the string
+`"INHERIT:<SIDE>"` instead of a literal array, meaning "use exactly `<SIDE>`'s own nets word-for-word."
+Both sides must then use the same preset (sharing channel numbers only bridges anything real when the
+underlying preset is the same). `Waldo_fnc_ACRE2ResolveSides` resolves this sentinel into a literal
+array before anything else — including `Waldo_fnc_ACRE2ValidateConfig` — ever reads the config, so
+every other ACRE2 consumer (compile, apply, rack setup) sees an ordinary, already-flat `sides` array
+and needs no changes to support this. Deliberately non-transitive: the referenced side's own `nets`
+must already be a literal array, not another `"INHERIT:..."` string — this one check rejects
+self-reference, cycles and inheritance chains at once, with no graph-walk. Groups stay independent
+per side (Eden group IDs still differ per side's own placed units); only the channel list is shared.
+
+This was chosen over the simpler alternative — relaxing preset-per-side validation and letting a
+mission maker copy-paste an identical `nets` array into each sharing side's own row — deliberately for
+mission-maker ergonomics: a beginner writes one self-documenting line instead of a duplicated array
+they must remember to keep in sync forever, at the cost of a small amount of extra implementation.
+
+#### Joint radio nets (`acreConfig.sqf`'s `jointNets` key)
+
+Deliberately bridges specific channels across chosen sides for an operation, without touching WMP's
+ordinary per-side net isolation everywhere else. `[]` disables it entirely.
+
+Shipped by default with one row: `GAME_CONTROL`, channel 99, PRC_LR, bridging WEST/EAST/GUER/CIV — a
+guaranteed cross-faction channel for admins/GMs/Zeus curators, reachable by any player who manually
+switches to it. Not preset onto any player's radio automatically. PRC-148 cannot select channel 99 at
+all (its preset only goes to 32); only PRC-152/117F (max 100) reach it.
+
+```sqf
+// MissionConfig\acreConfig.sqf
+["jointNets", [
+    ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
+    // [netId, label ("" for none), radio family, shared TX/RX frequency, [[side, channel], ...]]
+]],
+```
+
+Row shape deliberately mirrors an ordinary named net's `[key, label, family, value]` — label right
+after the id, same position, same meaning — with the per-side channel list appended after. Frequency
+is the thing actually shared across sides; channel *numbers* stay per-side, since a number only means
+something on that side's own preset — each side is free to place the bridge on whichever of its own
+channels is open. `Waldo_fnc_ACRE2ApplyJointNets` writes the shared frequency into each listed side's
+preset with the same verified-write pattern `Waldo_fnc_ACRE2ApplyPresetNames` already uses (per-client,
+per-side, immediate read-back verification), reusing `Waldo_fnc_ACRE2ResolveSidePresetMap` to resolve
+each side's own preset. A non-empty label is written to the physical PRC-148/152/117F channel display
+with the same 12-character safe-charset truncation and verified write `Waldo_fnc_ACRE2ApplyPresetNames`
+uses for ordinary named nets (PRC_LR only — BF888/SEM52 have no on-screen display field, same
+limitation ordinary nets already have). This is the label's *only* path: a matching entry in that
+side's own `nets` array for the same channel/family is rejected as a collision (see below), so a joint
+net never needs — and cannot use — the ordinary-net-duplication workaround to get a label. Only
+CHANNEL-mode radio families are supported (PRC_LR, BF888, SEM52) — PRC-343 (BLOCK_CHANNEL) and
+PRC-77/SEM70 (FREQUENCY, no channel concept: their
+preset value already *is* the raw frequency) are rejected at validation.
+`Waldo_fnc_ACRE2ValidateConfig` rejects an unknown family/side, a non-CHANNEL-mode family, an
+out-of-range channel, and — always, not `strict`-gated — a collision where a joint net's
+`[side, channel]` slot matches an ordinary named net already using that exact channel/family on that
+side. The shared frequency itself is checked only as a positive number: `acre_api_fnc_setPresetChannelField`
+performs no validation of its own on the value (confirmed against ACRE2's source — it checks the
+channel index is in range and the field name is recognised, then stores whatever is given
+unconditionally), and CHANNEL-mode radio profiles carry no documented frequency band in this file's
+own profile table, so there is no authoritative range anywhere in the pipeline to validate a joint
+net's frequency against beyond a plain sanity check.
+
+A joint net is referenceable by its own netId from a group's assignment rows exactly like an ordinary
+named net — `["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"]` resolves to whichever channel that
+side's own `[side, channel]` entry gave it. `Waldo_fnc_ACRE2ValidateConfig` validates side/net data in
+one pass, merges each accepted joint net entry into that side's own net lookup, then validates
+groups/assignments in a second pass so this resolution is checked at config-load time; iterating
+`keys _sideData` for that second pass (rather than the raw `sides` array) means a mission maker who
+accidentally defines the same side twice — already an error — gets that side's groups validated
+exactly once, against whichever duplicate `_sideData` actually kept, instead of the discarded
+duplicate's groups silently going unchecked. `Waldo_fnc_ACRE2CompilePlan` performs the equivalent
+merge into each side's own net table so the same key resolves for real at apply time, not just at
+validation. A joint net's netId must be unique across every jointNets row (it is a real lookup key,
+not just a diagnostics label) and cannot reuse a key already used by that side's own ordinary nets;
+both are rejected at validation with a clear reason, same as the channel/family collision check.
+There is no in-mission Zeus toggle for a joint net yet; it is mission-start configuration only.
 
 #### Vehicle radio racks (`Waldo_fnc_ACRE2RackSetup`)
 
@@ -498,7 +592,18 @@ When `true`, a `"CAManBase"`/`"Killed"` handler in `initPlayerLocal.sqf` calls
 ACRE2 radio state as one snapshot (see `Waldo_fnc_SaveLoadout`'s own header), restored on respawn.
 Identity between the saved snapshot and the respawned unit is matched by player UID + side only — a
 scripted respawn always creates a fresh, unnamed unit object, so matching on `vehicleVarName` (as an
-earlier revision did) never matches and silently drops the restore.
+earlier revision did) never matches and silently drops the restore. Snapshots are stored per (UID,
+side) key in `Waldo_Player_RespawnSnapshots`, not as one global slot — a player who changes side
+mid-mission (Zeus/admin reassignment, a mission-specific faction-switch feature) keeps each side's
+own last-saved loadout independently; switching back to either side restores that side's own
+snapshot rather than only ever the one side saved most recently. A respawned unit has been observed
+to transiently read `side` as civilian for a moment before the engine's own post-creation group/side
+assignment settles; the restore waits briefly (bounded, one round) to re-check before concluding
+there is genuinely no snapshot for this identity, but only when this exact player has real
+non-civilian saved history — a genuinely new or genuinely civilian player is never delayed by this.
+The applied loadout is verified against a small ACRE-independent equipment canary rather than trusted
+outright, and retried on a fast-then-slow schedule bounded at roughly two minutes to cover ACRE's own
+documented "a few seconds to minutes on a heavy modset" readiness window.
 
 A second, alternative behaviour is commented out by default in `initPlayerLocal.sqf` — uncomment to
 enable instead (or in addition to the config toggle above; whichever snapshot was captured most
@@ -511,6 +616,51 @@ recently wins, since both write the same `Waldo_Player_Inventory`/`Waldo_Player_
     [false] call Waldo_fnc_SaveLoadout;
 }] call CBA_fnc_addEventHandler;
 ```
+
+#### Side-switch respawn seeding (`MissionConfig\logisticsConfig.sqf`)
+
+Always on, no mission-maker toggle. A player who is live-side-switched mid-mission (Zeus/admin
+reassignment, a mission-specific faction-switch feature) onto a side with no saved snapshot yet
+always gets one seeded automatically the first time this happens, instead of falling through to that
+side's class default — the same per-(UID, side) snapshot map described above already keeps every
+side's own history independent, this only decides what happens the *first* time a side has none.
+Leaving a side-switched player on bare class gear until they think to manually save is never a
+desirable outcome, so there is nothing to gate. `Waldo_fnc_ACRE2ResolveSidePresetMap` centralises the
+side→preset lookup used by both this feature and mission start, since ACRE2 verifiably never re-syncs
+a switched player's preset on its own (its preset table is baked into a radio item at creation time,
+client-local and non-networked — confirmed against ACRE2's own upstream source).
+
+```sqf
+// MissionConfig\logisticsConfig.sqf
+["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // CARRY_OVER (default) or SIDE_BASE_LOADOUT
+```
+
+Detection is event-based (`initPlayerLocal.sqf` installs a second, independent
+`CBA_fnc_addPlayerEventHandler ["group", ...]` handler — side is always derived from group membership
+in Arma, so this is the same mechanism ACRE2's own respawn refresh already uses), not a poll, so it
+has zero standing cost. An already-established side is only ever touched by the normal
+respawn-restore path — this only ever seeds a genuinely missing snapshot
+(`Waldo_fnc_RespawnSeedSideSwitch`).
+
+- **CARRY_OVER** (`Waldo_fnc_RespawnSeedCarryOver`): saves the player's current live gear and radios
+  exactly as-is, tagged `BRIDGED`. This is a deliberate live bridge back to their old side's kit and
+  radio presets — since ACRE2 never re-syncs the preset, the carried-over radios keep working exactly
+  as they did before the switch.
+- **SIDE_BASE_LOADOUT** (`Waldo_fnc_RespawnSeedSideBaseLoadout`): reasserts the new side's own proper
+  ACRE2 preset, then assembles a weapon-aware starter kit from that side's scanned mission.sqm pool
+  (`Waldo_fnc_BuildAssembledSideLoadout`) — a coherent weapon plus compatible magazines, picked from
+  the same flattened `Logi_MissionSQMArray_*` pool the supply-crate/arsenal systems already draw from
+  (per-unit pairing is not preserved by that scan, so a weapon slot with no compatible magazine
+  anywhere in the pool is skipped rather than left unloadable). Tagged `NATIVE`. Falls back to
+  CARRY_OVER automatically if that side has no usable pool.
+
+A snapshot's tag also controls restore behaviour: `Waldo_fnc_RespawnRestoreLoadout` reasserts that
+side's official preset for every radio class before applying a `NATIVE` snapshot's saved loadout
+(radio items are baked with whatever preset is active at creation time, so this must happen before
+`setUnitLoadout`, not after); a `BRIDGED` snapshot is deliberately left alone so the cross-side bridge
+is never "corrected". `respawn/snapshot-origin` and `respawn/side-switch-seed` in WMP Diagnostics
+surface the current side's tag and whether/when a seed ran, including an `ERROR` row with a fix hint
+if SIDE_BASE_LOADOUT had to fall back due to an empty side pool.
 
 ### ENDEX / Mission End
 
@@ -599,7 +749,35 @@ missionNamespace setVariable ["Waldo_RunDiagnostics", true, true];
 
 Checks distinguish `LOADED`, `ACTIVE`, `DISABLED`, `UNCONFIGURED`, `UNAVAILABLE`, and `ERROR`. Coverage includes representative public APIs, mod dependencies, loadouts, configured classes, mission flow, MHQ, VVD, electronic warfare, party games, interaction equipment, Economy, Headless Client, Obituary, Zeus registration, the Feature Runtime Control snapshot handshake, Object Scaling bounds, UI Theme application, Accessibility self-interaction, Emergency Dismount, Corpse Traps, local HUD state, 3D markers, and ACE versus vanilla actions. The latest report is broadcast in `Waldo_Diagnostics_LastReport` as `[warningCount, finishedAt, serverChecks, clientReports, runId]`. See `wiki/Mission-Diagnostics.md` for row contracts and filtering examples.
 
-Two respawn-focused client checks close the loop on the loadout-restore system: `respawn`/`loadout-restore` reads a `Waldo_Player_LastRespawnRestore` snapshot `[identityMatched, restoredEntries, tickTime]` set by `initPlayerLocal.sqf`'s `"Respawn"` handler on every actual respawn (`UNCONFIGURED` before this client's first respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved loadout); `dependencies`/`ace-nametags-respawn-compat` is informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
+Six respawn-focused client checks trace the mission-critical loadout/respawn flow end to end, in the
+order it actually runs, so a bad respawn can be pinpointed to the exact stage instead of just seeing
+"it didn't work": `respawn`/`baseline-capture` reports whether `initPlayerLocal.sqf` has finished
+waiting for `player` to exist and capture the mission-start snapshot (`ERROR` means this client is
+still waiting - it never gives up, so a stuck client shows here rather than silently missing a
+baseline forever); `respawn`/`triggers` reports each of the two independent restore triggers' fire
+counts this session (Bohemia's local `"Respawn"` handler and a `CBA_fnc_addPlayerEventHandler
+"unit"` watchdog) and flags `ERROR` specifically when the client has respawned successfully but only
+ever via the watchdog - restores still work, but it surfaces the known engine quirk where the native
+handler doesn't fire in some environments; `respawn`/`snapshot` reports the saved
+`Waldo_Player_RespawnSnapshot`'s age, source, and whether it carries the apply-verification canary;
+`respawn`/`loadout-restore` reads the extended `Waldo_Player_LastRespawnRestore`
+`[identityMatched, restoredEntries, tickTime, triggerSource, snapshotSource, snapshotAge,
+savedRadioCount, generation]` set on every actual respawn (`UNCONFIGURED` before this client's first
+respawn this session, `ERROR` on an identity mismatch - baseline retained instead of the saved
+loadout); `respawn`/`loadout-apply-verify` reads `Waldo_Player_LoadoutVerifyOutcome` - whether
+`setUnitLoadout` was confirmed to actually take effect (via a small ACRE-independent equipment
+canary, not a raw `getUnitLoadout` comparison) and how many retries it needed, `ERROR` only when it
+never took even after retrying, which also shows the affected player a WARNING notification instead
+of staying RPT/Diagnostics-only; `respawn`/`radio-restore` reads `Waldo_Player_LastRadioRestoreOutcome`
+for whether the saved ACRE radio state reapplied, fell back to the current mission plan (also
+notified to the player, gated by `notifyAssignmentProblems` like every other ACRE assignment-problem
+warning), or there was no complete radio snapshot to restore. `dependencies`/`ace-nametags-respawn-compat` is
+informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is
+loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own
+`CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn
+params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the
+corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP
+causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
 
 `mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` into a client-local `Waldo_InfoText_Timings` hashmap: the initial local `PreloadFinished` wait, subsequent player/display readiness, the diagnostic client state at release, WMP's fake-cover duration, when normal control was available, and how much longer the detached title kept typing. The pre-mission briefing state, `BIS_fnc_init`, mission `time`, `WALDO_INIT_COMPLETE`, and unrelated features are not readiness gates. `ERROR` means the preload event or usable local player/display did not arrive within its bounded wait.
 
@@ -662,7 +840,7 @@ own naming convention requirements); it identifies a headless client purely by
 `!isDedicated && !hasInterface` at runtime. Connect the headless-client process itself with the Arma
 launch parameters `-client -connect=<serverIP> -password=<password>` against the hosting server
 (`server.cfg` must allow-list it in `headlessClients[]`); that part is ordinary Arma 3 server hosting,
-outside WMP's scope.
+outside WMP's scope - see the separately-released `HeadlessClientKit/` (below) for examples.
 
 **Detection and eligibility.** A headless client is identified by the standard, version-stable test
 `!isDedicated && !hasInterface` (not the legacy script's `serverCommandAvailable "#kick"`

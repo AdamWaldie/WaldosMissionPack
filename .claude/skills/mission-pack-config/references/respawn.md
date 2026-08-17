@@ -49,6 +49,33 @@ enabling both by default. These two snippets are genuinely still `initPlayerLoca
 `MissionConfig` data — they're event-handler registrations, not pure settings, so they weren't
 migrated.
 
+## Side-switch respawn seeding
+
+Always on, no mission-maker toggle — there was one (`Waldo_Respawn_SeedOnSideSwitch`) but it was
+removed because leaving a side-switched player on bare class gear until they think to manually save
+is never a desirable outcome, so gating it was just an extra way for a beginner to misconfigure the
+mission. If you see a mission still referencing that variable, it's stale — delete the line, the
+behaviour is unconditional now.
+
+When a player is live-side-switched mid-mission (Zeus/admin reassignment, a mission-specific
+faction-switch feature) onto a side with no saved respawn snapshot yet, one is seeded automatically
+the first time this happens. `Waldo_Respawn_SideSwitchMode` in `MissionConfig\logisticsConfig.sqf`
+is the one setting that remains — it picks *how* that seed is built, not whether it happens:
+
+```sqf
+["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // CARRY_OVER (default) or SIDE_BASE_LOADOUT
+```
+
+- **`CARRY_OVER`**: saves the player's current live gear and radios exactly as-is (tagged
+  `BRIDGED`) — a deliberate bridge back to their old side's kit/radio presets.
+- **`SIDE_BASE_LOADOUT`**: reasserts the new side's own ACRE2 preset, then assembles a starter kit
+  from that side's scanned `mission.sqm` loadout pool (tagged `NATIVE`). Falls back to `CARRY_OVER`
+  automatically if the new side has no usable loadout pool.
+
+An already-established side is never touched by this — it only ever seeds a genuinely missing
+snapshot. `respawn/side-switch-seed` in WMP Diagnostics shows the current side's tag and whether a
+seed ran.
+
 ## Related: Squad Rally Points (temporary respawn positions)
 
 A separate, newer system — group-owned *temporary* respawn points a squad

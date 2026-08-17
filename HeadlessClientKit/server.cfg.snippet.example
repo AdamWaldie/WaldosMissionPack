@@ -1,0 +1,29 @@
+// WMP Headless Client Kit - server.cfg snippet
+//
+// This is NOT a complete server.cfg - it is the two keys a headless client actually needs, to
+// merge into the server.cfg you already have. Do not overwrite your existing server.cfg with this
+// file; every other key in your real config (hostname, password, mission list, difficulty, etc.)
+// stays exactly as it already is.
+//
+// headlessClients[] - the IP address(es) allowed to connect with the -client launch parameter and
+// be accepted as a headless client rather than a normal player. An IP not listed here that connects
+// with -client is refused the headless role (it either fails to connect, or connects as an ordinary
+// player slot, depending on server settings) - WMP's own detection never even runs for it.
+//
+// Replace "127.0.0.1" below with the real IP of the machine that will run the headless-client
+// process. If the headless client runs on the SAME machine as the dedicated server (the common,
+// simplest setup - see launch_local_dedicated_with_headless.ps1), 127.0.0.1 is correct as-is.
+// If it runs on a different machine, use that machine's real IP as seen by the server.
+headlessClients[] = {"127.0.0.1"};
+
+// localClient[] - IPs treated as "local" for bandwidth/latency accounting. A headless client
+// running on the same physical machine as the dedicated server should also be listed here so the
+// server does not budget network bandwidth for a connection that never leaves the machine. This is
+// an Arma 3 server-hosting convention, not anything WMP reads or depends on.
+localClient[] = {"127.0.0.1"};
+
+// Not shown here because it already exists in your real server.cfg: the `password` key (the
+// ordinary server join password) is what the headless-client process authenticates with via its
+// own `-password=` launch parameter - there is no separate "headless client password" key. Use
+// whatever password your server.cfg already sets, and pass the same value to
+// launch_headless_client.ps1's -Password parameter.
