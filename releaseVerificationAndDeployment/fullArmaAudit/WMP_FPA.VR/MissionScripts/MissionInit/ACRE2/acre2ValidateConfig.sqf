@@ -220,8 +220,19 @@ private _usedJointSlots = [];
         if (count _familyProfiles > 0 && {!_familyIsChannelMode}) then {
             _errors pushBack format ["Joint net %1 uses radio family %2, which is not CHANNEL-mode; jointNets v1 only supports CHANNEL-mode families such as PRC_LR, BF888 or SEM52.", _netId, _family];
         };
-        if (_familyIsChannelMode && {_familyProfiles findIf {[_frequency, _x, 16] call _profileAcceptsValue} < 0}) then {
-            _errors pushBack format ["Joint net %1 frequency %2 is unsupported by every radio in family %3.", _netId, _frequency, _family];
+        // _frequency is a raw MHz value written directly to the chosen channel's frequencyTX/RX
+        // fields (see Waldo_fnc_ACRE2ApplyJointNets), not a channel index - it must never be run
+        // through _profileAcceptsValue's CHANNEL case, which validates a whole-number channel index
+        // against that radio's channel COUNT (1-32/100/etc). Doing so here was a real bug: no real
+        // MHz value can ever equal a small integer channel index, so this made every CHANNEL-mode
+        // joint net (PRC_LR, BF888, SEM52) unconditionally fail validation regardless of frequency.
+        // CHANNEL-mode radio profiles carry no documented frequency band ([] in this file's own
+        // profile table - only FREQUENCY-mode profiles like LEGACY_VHF define one), so there is no
+        // authoritative range to check here; ACRE2 itself is the real backstop and already rejects
+        // an out-of-hardware-range write, which Waldo_fnc_ACRE2ApplyJointNets already detects and
+        // logs via its own write/read-back verification. This only catches an obvious typo.
+        if (_familyIsChannelMode && {!(_frequency isEqualType 0 && {_frequency > 0})}) then {
+            _errors pushBack format ["Joint net %1 frequency %2 must be a positive number in MHz.", _netId, _frequency];
         };
         if !(_sideChannels isEqualType [] && {count _sideChannels > 0}) then {_errors pushBack format ["Joint net %1 requires at least one [side, channel] entry.", _netId];} else {
             {
