@@ -250,12 +250,17 @@ they must remember to keep in sync forever, at the cost of a small amount of ext
 #### Joint radio nets (`acreConfig.sqf`'s `jointNets` key)
 
 Deliberately bridges specific channels across chosen sides for an operation, without touching WMP's
-ordinary per-side net isolation everywhere else. `[]` by default (no bridging).
+ordinary per-side net isolation everywhere else. `[]` disables it entirely.
+
+Shipped by default with one row: `GAME_CONTROL`, channel 99, PRC_LR, bridging WEST/EAST/GUER/CIV — a
+guaranteed cross-faction channel for admins/GMs/Zeus curators, reachable by any player who manually
+switches to it. Not preset onto any player's radio automatically. PRC-148 cannot select channel 99 at
+all (its preset only goes to 32); only PRC-152/117F (max 100) reach it.
 
 ```sqf
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
-    ["JOINT_CMD", "COALITION", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
+    ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
     // [netId (diagnostics-only), label ("" for none), radio family, shared TX/RX frequency, [[side, channel], ...]]
 ]],
 ```

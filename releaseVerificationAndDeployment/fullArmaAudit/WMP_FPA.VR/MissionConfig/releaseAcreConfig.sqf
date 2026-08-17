@@ -198,12 +198,21 @@ createHashMapFromArray [
     // SETTING: jointNets
     // WHAT IT CHANGES: deliberately bridges specific radio channels across chosen sides for an
     // operation, without touching WMP's ordinary per-side net isolation everywhere else.
-    // VALUES: [] for none (default), or one or more joint net rows.
-    // EXAMPLE: a WEST/EAST/GUER joint command net on PRC_LR at 45.500 MHz, each side free to place it
-    // on whichever of its own channels is open, labelled "COALITION" on the physical radio display:
+    // VALUES: [] for none, or one or more joint net rows.
+    // DEFAULT: a GAME CONTROL net at channel 99 on every side, for admin/GM/out-of-character use -
+    // any player who manually switches a PRC-152 or PRC-117F to channel 99 reaches it, on any side.
+    // Nothing assigns it to anyone's radio automatically; per the v1 limitation above, add a group
+    // assignment row using the raw channel number 99 (not a net key) if you want it preset for
+    // specific players, e.g. ["ACRE_PRC152", "ALL", 99, "RIGHT"]. PRC-148 cannot reach channel 99 at
+    // all (its preset only has 32 channels); PRC-152/117F support up to 100. Delete this row (or
+    // replace it with []) if you don't want a shared admin channel.
+    // OTHER EXAMPLE: a WEST/EAST/GUER joint command net on PRC_LR at 45.500 MHz, each side free to
+    // place it on whichever of its own channels is open, labelled "COALITION" on the physical display:
     // ["JOINT_CMD", "COALITION", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
     // RESULT: [] means no cross-side bridging exists; WMP's normal per-side isolation is unchanged.
-    ["jointNets", []],
+    ["jointNets", [
+        ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
+    ]],
 
     // SETTING: additionalRadioProfiles (ADVANCED)
     // WHAT IT CHANGES: teaches WMP how to configure a tested third-party carried radio.

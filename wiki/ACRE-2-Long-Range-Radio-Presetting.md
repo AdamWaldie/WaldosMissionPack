@@ -170,13 +170,18 @@ rejected with a clear reason at mission start.
 EAST platoon net are different frequencies, so the two sides can never accidentally hear each other.
 Sometimes you *want* that on purpose for one specific channel - a combined command net, a WEST JTAC
 talking straight to an EAST liaison, allied WEST+GUER forces coordinating an attack - without opening
-up anything else between them. `jointNets` punches exactly one such hole. `[]` by default, meaning no
-bridging exists until you add a row.
+up anything else between them. `jointNets` punches exactly one such hole.
+
+**Shipped by default:** a `GAME CONTROL` net at channel 99, bridging every side. It exists so an
+admin, GM or Zeus curator has one guaranteed cross-faction channel to reach any player who manually
+switches to it, regardless of side - it isn't preset onto anyone's radio automatically. Delete the
+row (or set `jointNets` back to `[]`) if you don't want a shared admin channel. Only PRC-152 and
+PRC-117F reach channel 99 - PRC-148's preset only goes up to channel 32, so it can't select 99 at all.
 
 ```sqf
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
-    ["JOINT_CMD", "COALITION", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
+    ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
     // [netId (diagnostics-only), label ("" for none), radio family, shared frequency, [[side, channel], ...]]
 ]],
 ```
