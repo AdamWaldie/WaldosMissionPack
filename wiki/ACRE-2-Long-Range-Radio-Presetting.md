@@ -163,11 +163,17 @@ displays above already use, resolving each side's own preset through
 `Waldo_fnc_ACRE2ResolveSidePresetMap` - the same helper mission-start setup and side-switch respawn
 seeding both use, so there is one source of truth for "which preset belongs to this side".
 
-Validation (`Waldo_fnc_ACRE2ValidateConfig`) rejects an unknown radio family or side, a channel
-outside that family's supported range, and - always, regardless of `strict` - a collision where a
-joint net's `[side, channel]` slot matches an ordinary named net already using that exact
-channel/family on that side. A real operational net silently getting rerouted onto a bridge is never
-acceptable, so this check is not optional.
+Only **CHANNEL-mode** radio families are supported - `PRC_LR`, `BF888`, `SEM52`. PRC-343
+(`BLOCK_CHANNEL`) needs a `[block, channel]` pair rather than a bare channel number, and PRC-77/SEM70
+(`FREQUENCY`, family `LEGACY_VHF`) have no channel concept at all - their preset "value" already *is*
+the raw frequency, the same way `VHF_COMMON` above works. Both are rejected at validation with a clear
+reason rather than silently mis-programming (or failing to program) a preset.
+
+Validation (`Waldo_fnc_ACRE2ValidateConfig`) rejects an unknown radio family or side, a non-CHANNEL-mode
+family, a channel outside that family's supported range, and - always, regardless of `strict` - a
+collision where a joint net's `[side, channel]` slot matches an ordinary named net already using that
+exact channel/family on that side. A real operational net silently getting rerouted onto a bridge is
+never acceptable, so this check is not optional.
 
 **Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
 the way an ordinary named net is (`["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]`-style rows cannot yet say

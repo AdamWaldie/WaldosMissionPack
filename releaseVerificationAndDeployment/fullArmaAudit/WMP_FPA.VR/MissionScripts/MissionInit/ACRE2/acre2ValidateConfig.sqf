@@ -190,7 +190,19 @@ private _usedJointSlots = [];
         private _upperFamily = toUpper _family;
         if !(_upperFamily in _profileFamilies) then {_errors pushBack format ["Joint net %1 uses unknown radio family %2.", _netId, _family]};
         private _familyProfiles = _profiles select {toUpper (_x select 5) == _upperFamily};
-        if (count _familyProfiles > 0 && {_familyProfiles findIf {[_frequency, _x, 16] call _profileAcceptsValue} < 0}) then {
+        // jointNets' [side, channel] model only makes sense for CHANNEL-mode families (PRC_LR, BF888,
+        // SEM52): a channel there is the same per-side preset slot index the ordinary nets system
+        // already uses. BLOCK_CHANNEL (PRC343) needs a [block, channel] pair, not a bare number, and
+        // FREQUENCY-mode families (LEGACY_VHF/PRC-77/SEM70) have no channel concept at all - their
+        // preset "value" IS the raw frequency (see VHF_COMMON above) - so a plain channel number here
+        // would either be rejected as an out-of-range frequency or, worse, silently fail to write
+        // anything if it happened to parse as a valid frequency (their maximum channel is 0). Reject
+        // both explicitly with a clear reason instead of a confusing generic range error.
+        private _familyIsChannelMode = count _familyProfiles > 0 && {(_familyProfiles select 0) select 1 == "CHANNEL"};
+        if (count _familyProfiles > 0 && {!_familyIsChannelMode}) then {
+            _errors pushBack format ["Joint net %1 uses radio family %2, which is not CHANNEL-mode; jointNets v1 only supports CHANNEL-mode families such as PRC_LR, BF888 or SEM52.", _netId, _family];
+        };
+        if (_familyIsChannelMode && {_familyProfiles findIf {[_frequency, _x, 16] call _profileAcceptsValue} < 0}) then {
             _errors pushBack format ["Joint net %1 frequency %2 is unsupported by every radio in family %3.", _netId, _frequency, _family];
         };
         if !(_sideChannels isEqualType [] && {count _sideChannels > 0}) then {_errors pushBack format ["Joint net %1 requires at least one [side, channel] entry.", _netId];} else {
@@ -201,7 +213,7 @@ private _usedJointSlots = [];
                     if !(_sideKey in _sideKeys) then {_errors pushBack format ["Joint net %1 references side %2, which is not defined in sides.", _netId, _sourceSide];} else {
                         private _sideEntry = _sideData getOrDefault [_sideKey, []];
                         private _sideMaxBlock = if (count _sideEntry >= 2) then {_sideEntry select 1} else {16};
-                        if (count _familyProfiles > 0 && {_familyProfiles findIf {[_channel, _x, _sideMaxBlock] call _profileAcceptsValue} < 0}) then {
+                        if (_familyIsChannelMode && {_familyProfiles findIf {[_channel, _x, _sideMaxBlock] call _profileAcceptsValue} < 0}) then {
                             _errors pushBack format ["Joint net %1/%2 channel %3 is out of range for radio family %4.", _netId, _sideKey, _channel, _family];
                         };
                         private _slotIdentity = format ["%1#%2#%3", _sideKey, _upperFamily, _channel];

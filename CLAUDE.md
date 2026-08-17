@@ -246,10 +246,13 @@ only means something on that side's own preset — each side is free to place th
 of its own channels is open. `Waldo_fnc_ACRE2ApplyJointNets` writes the shared frequency into each
 listed side's preset with the same verified-write pattern `Waldo_fnc_ACRE2ApplyPresetNames` already
 uses (per-client, per-side, immediate read-back verification), reusing
-`Waldo_fnc_ACRE2ResolveSidePresetMap` to resolve each side's own preset. `Waldo_fnc_ACRE2ValidateConfig`
-rejects an unknown family/side, an out-of-range channel, and — always, not `strict`-gated — a
-collision where a joint net's `[side, channel]` slot matches an ordinary named net already using that
-exact channel/family on that side.
+`Waldo_fnc_ACRE2ResolveSidePresetMap` to resolve each side's own preset. Only CHANNEL-mode radio
+families are supported (PRC_LR, BF888, SEM52) — PRC-343 (BLOCK_CHANNEL) and PRC-77/SEM70 (FREQUENCY,
+no channel concept: their preset value already *is* the raw frequency) are rejected at validation.
+`Waldo_fnc_ACRE2ValidateConfig` rejects an unknown family/side, a non-CHANNEL-mode family, an
+out-of-range channel, and — always, not `strict`-gated — a collision where a joint net's
+`[side, channel]` slot matches an ordinary named net already using that exact channel/family on that
+side.
 
 **Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
 the way an ordinary named net is — note the channel number and assign it directly in that side's own

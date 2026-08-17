@@ -29,6 +29,14 @@ private _ok = true;
         _x params ["_netId", "_family", "_frequency", "_sideChannels"];
         private _upperFamily = toUpper _family;
         private _familyProfiles = _profiles select {toUpper (_x select 5) == _upperFamily};
+        // Only CHANNEL-mode families (PRC_LR, BF888, SEM52) use a per-side channel-index slot; skip
+        // anything else defensively (Waldo_fnc_ACRE2ValidateConfig already rejects it at config load,
+        // so this should never actually trigger, but a plain channel number silently mis-programming a
+        // FREQUENCY-mode preset - or writing nothing at all, since those profiles report a maximum
+        // channel of 0 - is exactly the failure mode worth guarding against here too).
+        if (count _familyProfiles > 0 && {(_familyProfiles select 0) select 1 != "CHANNEL"}) then {
+            diag_log format ["[WMP ACRE][JOINT_NETS] Skipping joint net %1: radio family %2 is not CHANNEL-mode.", _netId, _family];
+        } else {
         {
             _x params ["_sideKey", "_channel"];
             private _presetMap = [_config, _sideKey] call Waldo_fnc_ACRE2ResolveSidePresetMap;
@@ -48,6 +56,7 @@ private _ok = true;
                 };
             } forEach _presetMap;
         } forEach _sideChannels;
+        };
     };
 } forEach _jointNets;
 missionNamespace setVariable ["Waldo_ACRE2_JointNetsReady", _ok];

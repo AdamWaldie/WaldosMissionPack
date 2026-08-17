@@ -27,11 +27,13 @@
  *   actually shared, and one [side, channel] pair per side that should carry it. Frequency is the
  *   thing genuinely shared across sides; channel NUMBERS stay per-side, since a channel number only
  *   means something on that side's own preset - each side can therefore use whichever of its own free
- *   channels it likes for the bridge. KNOWN v1 LIMITATION: a joint net is not yet referenceable by
- *   name from a group's assignment rows the way an ordinary named net is - a mission maker notes the
- *   channel number they placed it at (in the relevant side's own group assignments above) and assigns
- *   that number directly. There is also no in-mission Zeus toggle for a joint net yet; it is
- *   mission-start configuration only.
+ *   channels it likes for the bridge. Only CHANNEL-mode radio families are supported (PRC_LR, BF888,
+ *   SEM52) - PRC-343 (BLOCK_CHANNEL) and PRC-77/SEM70 (FREQUENCY, no channel concept - their preset
+ *   value already IS the raw frequency) are rejected at validation with a clear reason. KNOWN v1
+ *   LIMITATION: a joint net is not yet referenceable by name from a group's assignment rows the way an
+ *   ordinary named net is - a mission maker notes the channel number they placed it at (in the
+ *   relevant side's own group assignments above) and assigns that number directly. There is also no
+ *   in-mission Zeus toggle for a joint net yet; it is mission-start configuration only.
  *
  * SETTING-BY-SETTING GUIDE - NORMAL MISSION SETTINGS
  * - enabled: master switch for WMP's replacement ACRE lifecycle.
