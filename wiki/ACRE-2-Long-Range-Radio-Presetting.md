@@ -141,39 +141,34 @@ ACRE has [open issue history around copied or locally divergent presets](https:/
 
 ## Joint radio nets
 
-Per-side isolation is the default everywhere in this config, but a mission sometimes needs a specific
-channel to deliberately bridge chosen sides for an operation - a combined command net, a joint
-CAS/CFF frequency, a liaison channel. `jointNets` does exactly that, without touching ordinary
-per-side isolation anywhere else. `[]` by default (no bridging).
+**What this is for:** every side normally has its own separate channels - a WEST platoon net and an
+EAST platoon net are different frequencies, so the two sides can never accidentally hear each other.
+Sometimes you *want* that on purpose for one specific channel - a combined command net, a WEST JTAC
+talking straight to an EAST liaison, allied WEST+GUER forces coordinating an attack - without opening
+up anything else between them. `jointNets` punches exactly one such hole. `[]` by default, meaning no
+bridging exists until you add a row.
 
 ```sqf
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
     ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
-    // [netId (diagnostics-only), radio family, shared TX/RX frequency, [[side, channel], ...]]
+    // [netId (diagnostics-only), radio family, shared frequency, [[side, channel], ...]]
 ]],
 ```
 
-The **frequency** is the thing genuinely shared across sides. **Channel numbers stay per-side** -
-a channel number only means something on that side's own preset, so each side is free to place the
-bridge on whichever of its own free channels it likes; they do not need to match across sides.
-`Waldo_fnc_ACRE2ApplyJointNets` writes that frequency into every listed side's preset using the same
-verified-write pattern (`acre_api_fnc_setPresetChannelField` plus an immediate read-back) that named
-displays above already use, resolving each side's own preset through
-`Waldo_fnc_ACRE2ResolveSidePresetMap` - the same helper mission-start setup and side-switch respawn
-seeding both use, so there is one source of truth for "which preset belongs to this side".
+Read that row as: **45.500 MHz** is the one shared frequency. On **WEST**'s own radios, **channel
+13** gets programmed to it. On **EAST**'s, **channel 6**. On **GUER**'s, also **channel 6**. So a
+WEST player switches to channel 13, an EAST player switches to channel 6 - different numbers, same
+real frequency underneath - and those two can now talk, while every other channel on their radios
+stays exactly as isolated from each other as before. The channel numbers don't need to match across
+sides because a channel number only means anything on that side's own radio preset; pick whichever
+free channel each side has available.
 
-Only **CHANNEL-mode** radio families are supported - `PRC_LR`, `BF888`, `SEM52`. PRC-343
-(`BLOCK_CHANNEL`) needs a `[block, channel]` pair rather than a bare channel number, and PRC-77/SEM70
-(`FREQUENCY`, family `LEGACY_VHF`) have no channel concept at all - their preset "value" already *is*
-the raw frequency, the same way `VHF_COMMON` above works. Both are rejected at validation with a clear
-reason rather than silently mis-programming (or failing to program) a preset.
-
-Validation (`Waldo_fnc_ACRE2ValidateConfig`) rejects an unknown radio family or side, a non-CHANNEL-mode
-family, a channel outside that family's supported range, and - always, regardless of `strict` - a
-collision where a joint net's `[side, channel]` slot matches an ordinary named net already using that
-exact channel/family on that side. A real operational net silently getting rerouted onto a bridge is
-never acceptable, so this check is not optional.
+Only `PRC_LR`, `BF888` and `SEM52` radio families can be used this way - PRC-343 and PRC-77/SEM70
+work differently under the hood and aren't supported here yet. Using an unsupported family, an
+unknown side, an out-of-range channel, or a channel that collides with a real net you've already
+assigned on that side is always rejected with a clear reason at mission start, rather than silently
+letting a real operational net get rerouted onto the bridge.
 
 **Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
 the way an ordinary named net is (`["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]`-style rows cannot yet say
