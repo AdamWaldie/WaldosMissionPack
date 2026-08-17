@@ -231,9 +231,13 @@ private _usedJointSlots = [];
         // no relation to whether that frequency is actually valid radio hardware. CHANNEL-mode radio
         // profiles carry no documented frequency band ([] in this file's own
         // profile table - only FREQUENCY-mode profiles like LEGACY_VHF define one), so there is no
-        // authoritative range to check here; ACRE2 itself is the real backstop and already rejects
-        // an out-of-hardware-range write, which Waldo_fnc_ACRE2ApplyJointNets already detects and
-        // logs via its own write/read-back verification. This only catches an obvious typo.
+        // authoritative range to check here. ACRE2's own acre_api_fnc_setPresetChannelField performs
+        // no validation of its own on this value either (confirmed against its source: it checks the
+        // channel number is in range and the field name is recognised, then stores whatever is given
+        // unconditionally) - so this positive-number check is the only guard against a bad frequency
+        // anywhere in the pipeline, not a backstop-plus-typo-catch. It only catches an obviously wrong
+        // value (non-numeric, zero, negative); a plausible-looking but wrong MHz figure is accepted
+        // and written exactly as given, same as every other numeric setting in this file.
         if (_familyIsChannelMode && {!(_frequency isEqualType 0 && {_frequency > 0})}) then {
             _errors pushBack format ["Joint net %1 frequency %2 must be a positive number in MHz.", _netId, _frequency];
         };
