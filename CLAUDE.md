@@ -594,20 +594,19 @@ recently wins, since both write the same `Waldo_Player_Inventory`/`Waldo_Player_
 
 #### Side-switch respawn seeding (`MissionConfig\logisticsConfig.sqf`)
 
-On by default. A player who is live-side-switched mid-mission (Zeus/admin reassignment, a
-mission-specific faction-switch feature) onto a side with no saved snapshot yet gets one seeded
-automatically the first time this happens, instead of falling through to that side's class default —
-the same per-(UID, side) snapshot map described above already keeps every side's own history
-independent, this only decides what happens the *first* time a side has none. Setting it `false`
-restores the older behavior: a switched player with nothing saved for the new side respawns on the
-class default until they manually save one. `Waldo_fnc_ACRE2ResolveSidePresetMap` centralises the
+Always on, no mission-maker toggle. A player who is live-side-switched mid-mission (Zeus/admin
+reassignment, a mission-specific faction-switch feature) onto a side with no saved snapshot yet
+always gets one seeded automatically the first time this happens, instead of falling through to that
+side's class default — the same per-(UID, side) snapshot map described above already keeps every
+side's own history independent, this only decides what happens the *first* time a side has none.
+Leaving a side-switched player on bare class gear until they think to manually save is never a
+desirable outcome, so there is nothing to gate. `Waldo_fnc_ACRE2ResolveSidePresetMap` centralises the
 side→preset lookup used by both this feature and mission start, since ACRE2 verifiably never re-syncs
 a switched player's preset on its own (its preset table is baked into a radio item at creation time,
 client-local and non-networked — confirmed against ACRE2's own upstream source).
 
 ```sqf
 // MissionConfig\logisticsConfig.sqf
-["Waldo_Respawn_SeedOnSideSwitch", true], // false = restore the older behavior (class default until manually saved)
 ["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // CARRY_OVER (default) or SIDE_BASE_LOADOUT
 ```
 

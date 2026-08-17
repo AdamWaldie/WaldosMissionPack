@@ -243,19 +243,19 @@ if (hasInterface) then {
         false
     ] call CBA_fnc_addPlayerEventHandler;
 
-    // Live side-change detection (Waldo_Respawn_SeedOnSideSwitch): side is always derived from group
+    // Live side-change detection for respawn snapshot seeding: side is always derived from group
     // membership in Arma, so a "group" player-event fires exactly when a Zeus/admin/mission-scripted
     // side reassignment actually takes effect - the same mechanism acre2InitNew.sqf already uses for
     // its own independent radio refresh. This handler is deliberately separate from that one: it only
     // ever seeds a missing per-side snapshot (Waldo_fnc_RespawnSeedSideSwitch), never touches ACRE's
-    // plan directly. No settle window is needed here - unlike the two respawn triggers above, this
-    // always fires against an already-fully-initialized live unit, never a freshly-created respawn
-    // body, so the transient side-misread race the respawn path guards against does not apply.
+    // plan directly. Always active, no mission-maker toggle - see logisticsConfig.sqf. No settle
+    // window is needed here - unlike the two respawn triggers above, this always fires against an
+    // already-fully-initialized live unit, never a freshly-created respawn body, so the transient
+    // side-misread race the respawn path guards against does not apply.
     missionNamespace setVariable ["Waldo_Player_LastKnownSideKey", switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}}];
     [
         "group",
         {
-            if !(missionNamespace getVariable ["Waldo_Respawn_SeedOnSideSwitch", false]) exitWith {};
             if (isNull player) exitWith {};
             private _newSideKey = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
             private _lastSideKey = missionNamespace getVariable ["Waldo_Player_LastKnownSideKey", _newSideKey];

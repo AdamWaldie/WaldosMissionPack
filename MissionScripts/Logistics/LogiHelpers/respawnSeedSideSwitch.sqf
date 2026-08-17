@@ -9,8 +9,8 @@
  * 0: new side key <STRING> - "WEST", "EAST", "GUER" or "CIV"
  *
  * Return Value:
- * Boolean - true when a seed actually ran (either mode), false when skipped (toggle off, already has
- * a snapshot for this side, or called with a null player).
+ * Boolean - true when a seed actually ran (either mode), false when skipped (already has a snapshot
+ * for this side, or called with a null player).
  *
  * Example:
  * ["EAST"] call Waldo_fnc_RespawnSeedSideSwitch;
@@ -19,7 +19,6 @@
  */
 params [["_newSideKey", "", [""]]];
 if !(hasInterface) exitWith {false};
-if !(missionNamespace getVariable ["Waldo_Respawn_SeedOnSideSwitch", false]) exitWith {false};
 if (isNull player) exitWith {false};
 if (_newSideKey == "") exitWith {false};
 

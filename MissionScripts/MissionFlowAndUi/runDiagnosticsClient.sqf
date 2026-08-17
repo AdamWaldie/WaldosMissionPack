@@ -405,8 +405,8 @@ if (count _radioOutcome < 3) then {
     ["respawn", "radio-restore", _radioRestoreState, format ["result=%1 generation=%2 secondsAgo=%3", _radioResult, _radioGeneration, round (diag_tickTime - _radioTick)], if (_radioRestoreState != "ERROR") then {""} else {"The saved ACRE radio state failed to reapply after the last respawn; the current mission ACRE plan was applied as a fallback instead. Check the RPT for [WMP LOADOUT][RESPAWN][RADIO_RESTORE_FAILED] and any Waldo_fnc_ACRE2ApplyRadioState errors."}] call _add;
 };
 
-// Side-switch loadout/radio fallback (Waldo_Respawn_SeedOnSideSwitch) - see
-// wiki/Loadout-Saving-and-Respawn.md. Reads the current side's own snapshot tag directly rather than
+// Side-switch loadout/radio fallback (always on - see wiki/Loadout-Saving-and-Respawn.md). Reads the
+// current side's own snapshot tag directly rather than
 // the single most-recently-touched mirror, since a player who has switched sides could have touched a
 // different side's snapshot more recently.
 private _sideKeyNow = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
@@ -417,7 +417,7 @@ private _currentSnapshotTag = if (count _currentSideSnapshot >= 7) then {_curren
 
 private _seedOutcome = missionNamespace getVariable ["Waldo_Player_LastSideSwitchSeed", []];
 if (count _seedOutcome < 4) then {
-    ["respawn", "side-switch-seed", "UNCONFIGURED", "No live side-switch seed has run this session (either Waldo_Respawn_SeedOnSideSwitch is off, or this client has not been side-switched onto a side with no existing snapshot)."] call _add;
+    ["respawn", "side-switch-seed", "UNCONFIGURED", "No live side-switch seed has run this session - this client has not been side-switched onto a side with no existing snapshot yet."] call _add;
 } else {
     _seedOutcome params ["_seedMode", "_seedFellBack", "_seedTick", "_seedSideKey"];
     private _sqmSuffix = switch (_seedSideKey) do {case "WEST": {"West"}; case "EAST": {"East"}; case "GUER": {"Ind"}; default {"Civ"}};
