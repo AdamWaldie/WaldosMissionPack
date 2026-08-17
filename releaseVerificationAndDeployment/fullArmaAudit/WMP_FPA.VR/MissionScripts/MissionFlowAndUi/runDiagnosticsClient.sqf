@@ -400,7 +400,7 @@ if (count _radioOutcome < 3) then {
         case "RESTORED": {"ACTIVE"};
         case "BASELINE": {"LOADED"};
         case "FAILED": {"ERROR"};
-        default: {"UNCONFIGURED"};
+        default {"UNCONFIGURED"};
     };
     ["respawn", "radio-restore", _radioRestoreState, format ["result=%1 generation=%2 secondsAgo=%3", _radioResult, _radioGeneration, round (diag_tickTime - _radioTick)], if (_radioRestoreState != "ERROR") then {""} else {"The saved ACRE radio state failed to reapply after the last respawn; the current mission ACRE plan was applied as a fallback instead. Check the RPT for [WMP LOADOUT][RESPAWN][RADIO_RESTORE_FAILED] and any Waldo_fnc_ACRE2ApplyRadioState errors."}] call _add;
 };
