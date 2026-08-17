@@ -60,7 +60,7 @@ python3 releaseVerificationAndDeployment/build.py --deploy
 python3 releaseVerificationAndDeployment/build.py --build config_ExemplarMission.json
 ```
 
-Build config: `releaseVerificationAndDeployment/config.json` defines an explicit `include` allowlist and the output name/version. New repository folders do not ship unless deliberately added. The builder rejects QA/tooling folders and runtime logs before and after archive creation; patch releases use the same allowlist. Output zips land in `release/`. The deploy workflow uploads the main WMP pack, patch, Compositions, Unit Insignias, and the Claude Mission Config Skill. The dormant Exemplar build remains available manually but is not currently produced by `deploy.sh`.
+Build config: `releaseVerificationAndDeployment/config.json` defines an explicit `include` allowlist and the output name/version. New repository folders do not ship unless deliberately added. The builder rejects QA/tooling folders and runtime logs before and after archive creation; patch releases use the same allowlist. Output zips land in `release/`. The deploy workflow uploads the main WMP pack, patch, Compositions, Unit Insignias, the Claude Mission Config Skill, and the Headless Client Kit. The dormant Exemplar build remains available manually but is not currently produced by `deploy.sh`.
 
 ### Claude Mission Config Skill (separate release item)
 
@@ -69,6 +69,22 @@ Build config: `releaseVerificationAndDeployment/config.json` defines an explicit
 A second archive shape used to ship alongside it — `Claude_Mission_Config_Skill-<version>.zip`, built from `releaseVerificationAndDeployment/config_claudeSkill.json` (`include: [".claude", "LICENSE"]`), which kept the `.claude/skills/mission-pack-config/` path prefix intact for a direct unzip-to-project-root drop-in. That config file still exists and still builds correctly, but is no longer produced by `deploy.sh` or uploaded by `deploy.yml` — same "available manually, not currently produced" status as the dormant Exemplar build — to avoid shipping two release zips of the same skill content that only differ in an internal path prefix.
 
 Every push validates `SKILL.md`'s frontmatter against claude.ai's own upload constraints via `releaseVerificationAndDeployment/claude_skill_validator.py` (name ≤64 chars kebab-case, description ≤1024 chars, no angle brackets, only the allowed frontmatter keys, exactly one `SKILL.md`) — run it locally (`pip install pyyaml` first) after editing `SKILL.md`'s frontmatter, since an over-length or malformed description fails silently at upload time otherwise. See the wiki's **Claude Mission Config Skill** page for usage with both Claude and ChatGPT, and `.claude/skills/mission-pack-config/SKILL.md` for the skill's own routing logic and per-feature reference files.
+
+### Headless Client Kit (separate release item)
+
+`HeadlessClientKit/` — server-hosting scripts and examples for actually connecting a headless-client
+(HC) process to a dedicated server (`server.cfg` allow-listing, `-client` launch parameters, a local
+throwaway server+HC rehearsal script, and example `headlessConfig.sqf` pacing presets). This is
+server administration, not mission scripting, so it is deliberately kept out of both the mission
+pack itself and its documentation flow: `config.json` does not list `HeadlessClientKit` in its
+`include` allowlist (the same allowlist mechanism that already excludes any undeclared folder, no
+special-case exclusion code needed), and none of it is `#include`-d, registered in
+`WaldosFunctions.sqf`, or referenced from `description.ext`. It ships as its own release artifact,
+`WMP_HC-<version>.zip`, built by `releaseVerificationAndDeployment/build.py --build
+config_headlessClientKit.json` (`include: ["HeadlessClientKit", "LICENSE"]`), produced and uploaded
+on every release the same way Unit Insignias is. The in-mission half of headless-client support
+(`Waldo_Headless_Enable`, `MissionScripts\Headless\`, Eden HC slots) remains part of the main pack
+and its own wiki page; `HeadlessClientKit/README.md` links to that page rather than duplicating it.
 
 ### Full development audit mission
 
@@ -815,7 +831,7 @@ own naming convention requirements); it identifies a headless client purely by
 `!isDedicated && !hasInterface` at runtime. Connect the headless-client process itself with the Arma
 launch parameters `-client -connect=<serverIP> -password=<password>` against the hosting server
 (`server.cfg` must allow-list it in `headlessClients[]`); that part is ordinary Arma 3 server hosting,
-outside WMP's scope.
+outside WMP's scope - see the separately-released `HeadlessClientKit/` (below) for examples.
 
 **Detection and eligibility.** A headless client is identified by the standard, version-stable test
 `!isDedicated && !hasInterface` (not the legacy script's `serverCommandAvailable "#kick"`
