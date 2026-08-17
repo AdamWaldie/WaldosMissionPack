@@ -68,17 +68,17 @@ ACE Respawn can conflict with this mission-owned restore path and should remain 
 ## Side-switch respawn seeding
 
 **What this is for:** if Zeus (or a script) moves a player to a different side mid-mission, WMP has
-never seen them on that side before, so by default they just respawn with a bare class-default kit
-there instead of anything real. This setting fixes that automatically, the first time it happens for
-each player. Off by default - nothing changes unless you turn it on.
+never seen them on that side before, so without this setting they'd just respawn with a bare
+class-default kit there instead of anything real. This fixes that automatically, the first time it
+happens for each player. On by default.
 
 ```sqf
 // MissionConfig\logisticsConfig.sqf
-["Waldo_Respawn_SeedOnSideSwitch", false], // true = give a switched player a starting kit automatically
+["Waldo_Respawn_SeedOnSideSwitch", true], // false = go back to a bare class-default kit on first switch
 ["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // CARRY_OVER (default) or SIDE_BASE_LOADOUT
 ```
 
-Turn it on and pick a mode:
+Pick a mode:
 
 - **`CARRY_OVER`** (default, simplest): the player keeps exactly what they had, gear and radios
   included. Their radio stays tuned to their *old* side's channels - which is usually what you want,
