@@ -6,7 +6,7 @@ _Associated Files: `.claude/skills/mission-pack-config/SKILL.md`, `.claude/skill
 
 The Claude Mission Config Skill teaches an AI assistant how WMP's features are configured — variable names, function signatures, defaults, and known gotchas — so it can help you set up loadouts, ACRE2, jamming, the Economy suite, and everything else in this pack without guessing. It's built from the same source of truth as the rest of this documentation, split into one short reference file per feature so the assistant only has to read the parts relevant to what you're asking about.
 
-It ships as its **own separate download**, not inside the main WMP pack zip: `mission-pack-config-<version>.zip` on the [releases page](https://github.com/AdamWaldie/WaldosMissionPack/releases), alongside the main pack, patch, Compositions, and Unit Insignias zips.
+It ships as its **own separate download**, not inside the main WMP pack zip: `mission-pack-config-<version>.zip` on the [releases page](https://github.com/AdamWaldie/WaldosMissionPack/releases), alongside the main pack, patch, Compositions, Unit Insignias, and Headless Client Kit zips.
 
 That zip has the skill folder itself at the zip root (`mission-pack-config/SKILL.md`, no extra path prefix) — the shape claude.ai's/Claude Desktop's **Upload skill** dialog and the Skills API require. It's also the zip to use for a Claude Code mission-project drop-in; see **Setup with Claude** below for the one extra manual step that needs (moving the extracted folder under `.claude/skills/`).
 
