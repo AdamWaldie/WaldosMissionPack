@@ -2,7 +2,7 @@
 
 > **Use this page when:** you need starting, manual or persistent player equipment across respawn, including ACRE2 radios.
 
-Basic respawn loadout saving is automatic: the mission-start baseline is captured once, and the local respawn handler restores the last snapshot `Waldo_fnc_SaveLoadout` wrote - by default that means the manual **Loadout Save Point** ACE/vanilla action, since automatic capture on death (`Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf`) is off by default. Set it to `true` for players to instead respawn with whatever they were carrying at the moment of death. `respawnOnStart = -1` remains required.
+Basic respawn loadout saving is automatic: the mission-start baseline is captured once, and the local respawn handler restores the last snapshot `Waldo_fnc_SaveLoadout` wrote - by default that means the manual **Loadout Save Point** ACE/vanilla action, since automatic capture on death (`Waldo_Respawn_SaveOnDeath` in `MissionConfig\logisticsConfig.sqf`) is off by default. Set it to `true` for players to instead respawn with whatever they were carrying at the moment of death. `respawnOnStart = -1` remains required. That first automatic capture waits a moment for a slower-loading client's gear to actually finish appearing before saving it as the baseline - a client that took a bit longer to load in still gets a correct starting kit, not an incomplete one.
 
 ## ACRE2-safe storage
 
