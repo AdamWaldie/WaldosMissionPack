@@ -41,6 +41,11 @@
       "key": "recurring_world_scan|MissionScripts/ThirdPartyScripts/player_markers.sqf|<file>|recurring_allunits_scan",
       "max_count": 1,
       "reason": "Attributed third-party player-marker code is disabled by default and intentionally left unmodified; review separately before enabling."
+    },
+    {
+      "key": "recurring_broadcast|MissionScripts/Logistics/TransportServices/transportMonitorServer.sqf|<file>|broadcast_setvariable_in_recurring_loop",
+      "max_count": 3,
+      "reason": "The two-second server monitor now change-gates all three typed availability booleans (helicopter/ground/boat) against their last broadcast value and only publishes one that actually flipped; the scanner still matches the setVariable[...,true] call sites textually inside the recurring loop even though each is behind an isNil-or-changed guard. Transport Services is enabled by default, so before this gating these three booleans were being re-broadcast to every connected client unconditionally every 2 seconds for the whole mission regardless of whether availability ever changed - the highest-volume unconditional broadcast found in the pack's own review for large player counts."
     }
   ]
 }
