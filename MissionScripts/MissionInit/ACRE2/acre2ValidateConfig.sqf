@@ -223,10 +223,13 @@ private _usedJointSlots = [];
         // _frequency is a raw MHz value written directly to the chosen channel's frequencyTX/RX
         // fields (see Waldo_fnc_ACRE2ApplyJointNets), not a channel index - it must never be run
         // through _profileAcceptsValue's CHANNEL case, which validates a whole-number channel index
-        // against that radio's channel COUNT (1-32/100/etc). Doing so here was a real bug: no real
-        // MHz value can ever equal a small integer channel index, so this made every CHANNEL-mode
-        // joint net (PRC_LR, BF888, SEM52) unconditionally fail validation regardless of frequency.
-        // CHANNEL-mode radio profiles carry no documented frequency band ([] in this file's own
+        // against that radio's channel COUNT (1-32/100/etc). Doing so here was a real bug: any
+        // frequency with a fractional/kHz component - the normal case for ACRE2 tuning, and true of
+        // the shipped 45.500 MHz example - failed the whole-number check outright; only a frequency
+        // that happened to be a whole number within a family member's channel count (e.g. exactly
+        // 50 MHz, since PRC-152/117F support up to 100) could pass by pure numeric coincidence, with
+        // no relation to whether that frequency is actually valid radio hardware. CHANNEL-mode radio
+        // profiles carry no documented frequency band ([] in this file's own
         // profile table - only FREQUENCY-mode profiles like LEGACY_VHF define one), so there is no
         // authoritative range to check here; ACRE2 itself is the real backstop and already rejects
         // an out-of-hardware-range write, which Waldo_fnc_ACRE2ApplyJointNets already detects and
