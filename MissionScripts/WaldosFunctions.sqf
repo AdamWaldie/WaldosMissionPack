@@ -660,6 +660,9 @@ class CfgFunctions
             class ParadropBuildFlightRoute {
                 file = "MissionScripts\Paradrop\paradropBuildFlightRoute.sqf";
             };
+            class ParadropOperateDoor {
+                file = "MissionScripts\Paradrop\paradropOperateDoor.sqf";
+            };
             class ParadropNormalizeJumpEnvelope {
                 file = "MissionScripts\Paradrop\paradropNormalizeJumpEnvelope.sqf";
             };
