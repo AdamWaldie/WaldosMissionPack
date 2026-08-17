@@ -101,14 +101,30 @@ if (_acreEnabled) then {
     private _last = missionNamespace getVariable ["Waldo_ACRE2_LastApplication", []];
     private _lastOk = count _last > 0 && {_last select 0};
     private _expectsRadios = !(_inventoryRadios isEqualTo []);
-    private _state = if (!(_configValidation select 0) || {!_planValid} || {_sideIndex < 0} || {_groupIndex < 0} || {_expectsRadios && {(_radios isEqualTo [] || {!_lastOk})}}) then {"ERROR"} else {if (_expectsRadios) then {"ACTIVE"} else {"UNCONFIGURED"}};
+    // ACRE's own conversion of carried base radios into unique IDs, and WMP's own asynchronous plan
+    // application that follows it, are both genuinely asynchronous - Waldo_fnc_ACRE2SchedulePlayerRefresh
+    // documents a bounded (default 120s, MissionConfig\acreConfig.sqf readinessTimeoutSeconds) window
+    // before that pipeline is even allowed to be considered stuck. Diagnostics is a synchronous
+    // point-in-time snapshot, so sampling mid-conversion - at mission start, or moments after a
+    // respawn/side-switch/group-change refresh - is expected and self-resolving, not a fault: observed
+    // live, this exact race reported ERROR here and then logged a successful "[WMP ACRE] ... radio plan
+    // applied" line one second later, twice, in the same session. Only escalate to ERROR once ACRE
+    // itself reports ready (so a genuinely failed/empty apply is still caught) or WMP's own bounded wait
+    // already gave up once (Waldo_ACRE2_LastReadinessFailure is populated); still-converging with no
+    // recorded failure reports LOADED, the same "structurally fine, not finished arriving yet"
+    // convention used above for the runtime-control snapshot and UI theme checks.
+    private _readinessFailure = missionNamespace getVariable ["Waldo_ACRE2_LastReadinessFailure", []];
+    private _stillConverging = _expectsRadios && {!_acreApiReady} && {count _readinessFailure == 0};
+    private _state = if (!(_configValidation select 0) || {!_planValid} || {_sideIndex < 0} || {_groupIndex < 0} || {_expectsRadios && {!_stillConverging} && {(_radios isEqualTo [] || {!_lastOk})}}) then {"ERROR"} else {if (_stillConverging) then {"LOADED"} else {if (_expectsRadios) then {"ACTIVE"} else {"UNCONFIGURED"}}};
     private _plainFinding = if !(_configValidation select 0) then {format ["ACRE configuration errors: %1", _configValidation select 1]} else {if (!_planValid) then {"The server did not publish a valid ACRE plan."} else {
         if (_sideIndex < 0) then {format ["No ACRE side block matches %1.", _sideKey]} else {
             if (_groupIndex < 0) then {format ["Group '%1' is not listed in acreConfig.sqf.", _rawGroup]} else {
-                if (_expectsRadios && {!_acreApiReady}) then {"ACRE has not finished converting the player's carried radios to unique IDs."} else {
-                    if (_expectsRadios && {_radios isEqualTo []}) then {"Supported radio items exist in the inventory, but ACRE returned no current radios."} else {
-                        if (_expectsRadios && {!_lastOk}) then {format ["The radio plan was not applied successfully: %1", _last param [5, []]]} else {
-                            if (_expectsRadios) then {"Carried radios and the configured group plan were applied."} else {"This player carries no supported ACRE radio; no assignment is required."}
+                if (_stillConverging) then {"ACRE has not finished converting the player's carried radios to unique IDs yet; this is expected during the bounded readiness window and should resolve on its own."} else {
+                    if (_expectsRadios && {!_acreApiReady}) then {"ACRE did not finish converting the player's carried radios to unique IDs within the readiness window."} else {
+                        if (_expectsRadios && {_radios isEqualTo []}) then {"Supported radio items exist in the inventory, but ACRE returned no current radios."} else {
+                            if (_expectsRadios && {!_lastOk}) then {format ["The radio plan was not applied successfully: %1", _last param [5, []]]} else {
+                                if (_expectsRadios) then {"Carried radios and the configured group plan were applied."} else {"This player carries no supported ACRE radio; no assignment is required."}
+                            }
                         }
                     }
                 }
