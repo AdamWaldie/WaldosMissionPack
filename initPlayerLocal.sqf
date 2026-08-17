@@ -180,6 +180,13 @@ if (hasInterface) then {
         };
         !isNull player
     };
+    // `player` existing does not guarantee the engine has finished populating its
+    // Eden/mission.sqm-configured inventory at that exact tick - the same class of transient-state
+    // race the restore side already guards against (canary-verify-and-retry), never previously
+    // guarded against here. Bounded settle-wait so the captured baseline reflects the unit's actually
+    // fully-populated loadout, not whatever is present the instant the object reference appears.
+    private _settleResult = [player] call Waldo_fnc_LoadoutWaitStable;
+    _settleResult params ["_settleStable", "_settleElapsed"];
     [false] call Waldo_fnc_SaveLoadout;
     // Gate for trigger 2 below: it must never fire before the baseline above actually exists once,
     // otherwise it would treat this client's very first spawn as a "respawn" and race
@@ -190,6 +197,7 @@ if (hasInterface) then {
     // `player`, and whether each trigger below has ever actually fired, without needing to grep RPT.
     missionNamespace setVariable ["Waldo_LoadoutBaselineCapturedAt", diag_tickTime];
     missionNamespace setVariable ["Waldo_LoadoutBaselineWaitSeconds", _waitedSeconds];
+    missionNamespace setVariable ["Waldo_LoadoutBaselineSettle", [_settleStable, _settleElapsed]];
     missionNamespace setVariable ["Waldo_LoadoutTrigger1FireCount", 0];
     missionNamespace setVariable ["Waldo_LoadoutTrigger2FireCount", 0];
 

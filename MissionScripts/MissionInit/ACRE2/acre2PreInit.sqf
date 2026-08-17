@@ -10,7 +10,15 @@
  * Current caller: CfgFunctions preInit registration in WaldosFunctions.sqf.
  */
 private _config = call compile preprocessFileLineNumbers 'MissionConfig\acreConfig.sqf';
+// Resolve any "INHERIT:<SIDE>" nets sentinel into a literal array BEFORE validation, so the validator
+// always sees a normal, already-flat sides array and never needs to know the sentinel exists. Its own
+// errors are folded in ahead of the validator's, using the same [errors, warnings] reporting path.
+private _resolution = [_config] call Waldo_fnc_ACRE2ResolveSides;
+_config = _resolution select 0;
+private _resolveErrors = _resolution select 1;
 private _validation = [_config] call Waldo_fnc_ACRE2ValidateConfig;
+_validation set [0, (_validation select 0) && {count _resolveErrors == 0}];
+_validation set [1, _resolveErrors + (_validation select 1)];
 missionNamespace setVariable ['Waldo_ACRE2_Config', _config];
 missionNamespace setVariable ['Waldo_ACRE2_ConfigValid', _validation select 0];
 missionNamespace setVariable ['Waldo_ACRE2_ConfigValidation', _validation];

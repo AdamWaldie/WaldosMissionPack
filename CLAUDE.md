@@ -228,6 +228,25 @@ Carried-radio channel/frequency assignment is pure-data configuration, not a scr
 
 Group IDs must match the Eden editor group ID exactly (an `@Callsign` leader-role suffix is reconciled first). AN/PRC-343 short-range radios auto-allocate deterministically from the callsign. CEOI auto-populates in the map screen. See `wiki/ACRE-2-Long-Range-Radio-Presetting.md` for the full assignment/net/override contract.
 
+#### Shared side channel sets (`acreConfig.sqf`'s `sides` — `"INHERIT:<SIDE>"`)
+
+For a cooperative/multi-faction mission where two or more sides should just fully talk to each other
+(not one bridge channel at a time like joint nets below), a side's `nets` field may be the string
+`"INHERIT:<SIDE>"` instead of a literal array, meaning "use exactly `<SIDE>`'s own nets word-for-word."
+Both sides must then use the same preset (sharing channel numbers only bridges anything real when the
+underlying preset is the same). `Waldo_fnc_ACRE2ResolveSides` resolves this sentinel into a literal
+array before anything else — including `Waldo_fnc_ACRE2ValidateConfig` — ever reads the config, so
+every other ACRE2 consumer (compile, apply, rack setup) sees an ordinary, already-flat `sides` array
+and needs no changes to support this. Deliberately non-transitive: the referenced side's own `nets`
+must already be a literal array, not another `"INHERIT:..."` string — this one check rejects
+self-reference, cycles and inheritance chains at once, with no graph-walk. Groups stay independent
+per side (Eden group IDs still differ per side's own placed units); only the channel list is shared.
+
+This was chosen over the simpler alternative — relaxing preset-per-side validation and letting a
+mission maker copy-paste an identical `nets` array into each sharing side's own row — deliberately for
+mission-maker ergonomics: a beginner writes one self-documenting line instead of a duplicated array
+they must remember to keep in sync forever, at the cost of a small amount of extra implementation.
+
 #### Joint radio nets (`acreConfig.sqf`'s `jointNets` key)
 
 Deliberately bridges specific channels across chosen sides for an operation, without touching WMP's

@@ -20,6 +20,20 @@
  * MISSION MAKER: begin with the shipped net/group examples and replace editor group IDs.
  * ADVANCED: add third-party radio profiles only after confirming their ACRE API behaviour.
  *
+ * SETTING-BY-SETTING GUIDE - SHARED SIDE CHANNEL SETS (COOPERATIVE / MULTI-FACTION MISSIONS)
+ * - Want two or more sides to just fully talk to each other - a co-op mission where WEST and GUER are
+ *   both player-controlled coalition partners, not one bridge channel at a time like jointNets below?
+ *   Give the sides you want joined the SAME preset, and set one of them (any side but the one holding
+ *   the real channel list) to `"INHERIT:<SIDE>"` instead of writing its own nets array:
+ *   `["GUER", "default3", "INHERIT:WEST", [...GUER's own groups...]]`
+ *   Now every channel WEST has - PLT1, COY, AIRGND, whichever nets you've defined - GUER has too, same
+ *   real frequency, same channel label, automatically; add a channel to WEST later and GUER gets it too
+ *   with no further edits. Groups still stay separate per side (your WEST and GUER units are still
+ *   different Eden groups), only the channel list itself is shared. Inherit directly from the side
+ *   that defines the real channel list - chaining (a side inheriting from a side that itself inherits)
+ *   is not supported and is rejected at validation, same as a side inheriting from itself or from an
+ *   unknown side.
+ *
  * SETTING-BY-SETTING GUIDE - JOINT RADIO NETS
  * - jointNets: [] by default (no cross-side bridging). Each row is
  *   ["netId", "radio family", shared frequency, [["side", channel], ...]] - a stable id (diagnostics
@@ -287,7 +301,13 @@ createHashMapFromArray [
     // EXAMPLE/RESULT: the WEST block below gives matching WEST groups the defined starting nets.
     // SIDE SETUP.
     // Each side block is: [SIDE NAME, OFFICIAL ACRE PRESET, NETS, GROUPS].
-    // A net is a named radio channel/frequency. A group chooses which nets its carried radios use.
+    // A net is a named radio channel/frequency, OR the string "INHERIT:<SIDE>" to reuse another side's
+    // nets array word-for-word (see the SHARED SIDE CHANNEL SETS guide above) - both sides must then
+    // use the same preset. A group chooses which nets its carried radios use.
+    // COOPERATIVE-MISSION EXAMPLE (illustrative - edit GUER's own block below to use this, do not
+    // paste this line in as-is): make GUER fully share WEST's channels instead of having its own, so
+    // WEST and GUER players can always talk to each other.
+    // ["GUER", "default3", "INHERIT:WEST", [ ["ALLY-1-1", [["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]]] ]],
     ["sides", [
         [
             "WEST",      // 0: applies to BLUFOR players.

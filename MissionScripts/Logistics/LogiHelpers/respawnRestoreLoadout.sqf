@@ -136,15 +136,7 @@ if (_identityMatches && {count _savedLoadout > 0}) then {
     if (count _savedCanary >= 7) then {
         [_unit, _savedLoadout, _savedCanary] spawn {
             params ["_unit", "_savedLoadout", "_savedCanary"];
-            private _canaryMatches = {
-                (primaryWeapon _unit) == (_savedCanary select 0)
-                && {(secondaryWeapon _unit) == (_savedCanary select 1)}
-                && {(handgunWeapon _unit) == (_savedCanary select 2)}
-                && {(uniform _unit) == (_savedCanary select 3)}
-                && {(vest _unit) == (_savedCanary select 4)}
-                && {(backpack _unit) == (_savedCanary select 5)}
-                && {(headgear _unit) == (_savedCanary select 6)}
-            };
+            private _canaryMatches = {([_unit] call Waldo_fnc_LoadoutCanary) isEqualTo _savedCanary};
             private _fastTries = 5;    // 0.2s apart - catches near-instant settling (~1s)
             private _slowTries = 55;   // 2s apart afterward - covers up to ~110 more seconds
             private _tries = 0;

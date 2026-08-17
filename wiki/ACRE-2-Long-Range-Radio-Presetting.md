@@ -139,6 +139,31 @@ WMP changes only `label` on PRC-148, `description` on PRC-152 and `name` on PRC-
 
 ACRE has [open issue history around copied or locally divergent presets](https://github.com/IDI-Systems/acre2/issues/1056). These safeguards avoid the known high-risk paths, but physical display verification remains part of multiplayer acceptance because a static test cannot prove ACRE/TeamSpeak runtime state.
 
+## Shared side channel sets (cooperative missions)
+
+**What this is for:** joint nets above bridges one specific channel across chosen sides. Sometimes
+that's not enough - a co-op mission where WEST and GUER are both player-controlled coalition partners
+who should just fully talk to each other, on every channel, all the time. Give one of them the same
+preset as the other and point its `nets` at the other's by name:
+
+```sqf
+// MissionConfig\acreConfig.sqf
+["GUER", "default3", "INHERIT:WEST", [ // GUER uses WEST's preset AND WEST's exact channel list
+    ["ALLY-1-1", [["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]]] // GUER's own groups, same as normal
+]],
+```
+
+Now every channel WEST has - PLT1, COY, AIRGND, whichever nets you've defined - GUER has too, the
+same real frequency and the same channel label, automatically. Add a channel to WEST later and GUER
+gets it too without touching GUER's row again. Groups (which squad uses which channel) stay separate
+per side, since your WEST and GUER units are still different Eden groups - only the channel list
+itself is shared.
+
+Point directly at whichever side holds the real channel list. Don't chain sides (GUER inheriting from
+EAST who inherits from WEST) - inherit straight from the side that actually defines the channels;
+chaining, self-reference, an unknown side, or inheriting from a side using a different preset are all
+rejected with a clear reason at mission start.
+
 ## Joint radio nets
 
 **What this is for:** every side normally has its own separate channels - a WEST platoon net and an

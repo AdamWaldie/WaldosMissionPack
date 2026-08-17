@@ -12,7 +12,9 @@
  * 0: show notification <BOOL> (default true)
  *
  * Return Value: BOOL - true after one complete snapshot is saved. If ACRE is installed but not ready,
- * an existing complete snapshot is preserved rather than being partly overwritten.
+ * an existing complete snapshot is preserved rather than being partly overwritten. False, with no
+ * snapshot written, when called while player is null - defensive; every current caller already
+ * guards this itself, but a save must never capture an empty getUnitLoadout objNull as a "snapshot".
  *
  * Example: [false] call Waldo_fnc_SaveLoadout;
  * Result: inventory and supported radio settings are saved without displaying a notification.
@@ -32,6 +34,10 @@
  * (read-then-cleared, same convention as Waldo_Player_NextRespawnSnapshotSource) before calling this.
  */
 params [["_showNotification", true, [true]]];
+if (isNull player) exitWith {
+    diag_log "[WMP LOADOUT] SaveLoadout skipped: player is null.";
+    false
+};
 private _loadout = [getUnitLoadout player] call Waldo_fnc_ACRE2FilterLoadout;
 // A small, ACRE-independent canary of the loadout's stable equipment commands, stored alongside the
 // full loadout below. respawnRestoreLoadout.sqf uses this - not a raw getUnitLoadout comparison - to
@@ -39,7 +45,7 @@ private _loadout = [getUnitLoadout player] call Waldo_fnc_ACRE2FilterLoadout;
 // content (so a count comparison can never detect a silently no-op'd setUnitLoadout), while a full
 // deep-equality comparison would false-positive as soon as ACRE re-assigns fresh unique radio item
 // IDs onto the just-restored gear (the exact thing Waldo_fnc_ACRE2FilterLoadout strips before save).
-private _canary = [primaryWeapon player, secondaryWeapon player, handgunWeapon player, uniform player, vest player, backpack player, headgear player];
+private _canary = [player] call Waldo_fnc_LoadoutCanary;
 private _radioState = [];
 private _acrePresent = isClass (configFile >> "CfgPatches" >> "acre_main");
 private _acreReady = _acrePresent && {!isNil "acre_api_fnc_isInitialized"} && {[] call acre_api_fnc_isInitialized};

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 942,
+  "registeredFunctionCount": 945,
   "runtimeFunctionCount": 385,
-  "functionCount": 1327,
+  "functionCount": 1330,
   "stations": [
     {
       "id": "control",
@@ -605,6 +605,12 @@
     {
       "name": "Waldo_fnc_ACRE2ValidateConfig",
       "file": "MissionScripts/MissionInit/ACRE2/acre2ValidateConfig.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ResolveSides",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ResolveSides.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
@@ -1451,6 +1457,18 @@
     {
       "name": "Waldo_fnc_SaveLoadout",
       "file": "MissionScripts/Logistics/LogiHelpers/saveRespawnLoadout.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_LoadoutCanary",
+      "file": "MissionScripts/Logistics/LogiHelpers/loadoutCanary.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_LoadoutWaitStable",
+      "file": "MissionScripts/Logistics/LogiHelpers/loadoutWaitStable.sqf",
       "station": "loadouts",
       "activation": "manual"
     },

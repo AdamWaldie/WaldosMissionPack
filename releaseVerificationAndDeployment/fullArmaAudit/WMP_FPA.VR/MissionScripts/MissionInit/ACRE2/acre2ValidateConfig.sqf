@@ -108,7 +108,11 @@ private _validateAssignment = {
         if !(_sideKey in ["WEST", "EAST", "GUER", "CIV"]) then {_errors pushBack format ["Invalid side %1.", _sourceSide]};
         if (_sideKey in _sideKeys) then {_errors pushBack format ["Duplicate side %1.", _sideKey]};
         _sideKeys pushBack _sideKey;
-        if (_preset != (_expectedPresets getOrDefault [_sideKey, ""])) then {_errors pushBack format ["%1 must use official ACRE preset %2.", _sideKey, _expectedPresets getOrDefault [_sideKey, ""]]};
+        // A side's preset must be one of the four known official ACRE presets, but not necessarily
+        // its OWN official one - two or more sides deliberately sharing a preset (and, via "sides"'
+        // nets field, the same channel list) is how a mission maker folds them onto one identical
+        // channel set for full cross-side comms. See MissionConfig\acreConfig.sqf's own guide.
+        if !(_preset in (values _expectedPresets)) then {_errors pushBack format ["%1 must use one of the known official ACRE presets: %2.", _sideKey, values _expectedPresets]};
         private _netMap = createHashMap;
         private _sideTuningTargets = [];
         {

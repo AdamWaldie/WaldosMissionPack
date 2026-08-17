@@ -353,7 +353,9 @@ if (_fieldHospitals isEqualTo []) then {
 // a summary - see wiki/Mission-Diagnostics.md for the full field reference.
 private _baselineCaptured = missionNamespace getVariable ["Waldo_LoadoutBaselineCaptured", false];
 private _baselineWaitSeconds = missionNamespace getVariable ["Waldo_LoadoutBaselineWaitSeconds", -1];
-["respawn", "baseline-capture", if (_baselineCaptured) then {"LOADED"} else {"ERROR"}, format ["captured=%1 waitedSeconds=%2 capturedAtTick=%3", _baselineCaptured, _baselineWaitSeconds, missionNamespace getVariable ["Waldo_LoadoutBaselineCapturedAt", -1]], if (_baselineCaptured) then {""} else {"This client is still waiting for its player unit to exist before the mission-start loadout baseline can be captured. Check the RPT for repeated '[WMP LOADOUT] initPlayerLocal.sqf: still waiting for player' lines, and confirm this client can actually spawn a unit (e.g. it isn't stuck as an unassigned spectator or out of playable slots)."}] call _add;
+private _baselineSettle = missionNamespace getVariable ["Waldo_LoadoutBaselineSettle", [false, -1]];
+_baselineSettle params [["_baselineSettled", false], ["_baselineSettleSeconds", -1]];
+["respawn", "baseline-capture", if (_baselineCaptured) then {"LOADED"} else {"ERROR"}, format ["captured=%1 waitedSeconds=%2 capturedAtTick=%3 equipmentSettled=%4 settleSeconds=%5", _baselineCaptured, _baselineWaitSeconds, missionNamespace getVariable ["Waldo_LoadoutBaselineCapturedAt", -1], _baselineSettled, _baselineSettleSeconds], if (_baselineCaptured) then {""} else {"This client is still waiting for its player unit to exist before the mission-start loadout baseline can be captured. Check the RPT for repeated '[WMP LOADOUT] initPlayerLocal.sqf: still waiting for player' lines, and confirm this client can actually spawn a unit (e.g. it isn't stuck as an unassigned spectator or out of playable slots)."}] call _add;
 
 private _trigger1Fires = missionNamespace getVariable ["Waldo_LoadoutTrigger1FireCount", -1];
 private _trigger2Fires = missionNamespace getVariable ["Waldo_LoadoutTrigger2FireCount", -1];

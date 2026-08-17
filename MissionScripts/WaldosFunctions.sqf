@@ -103,6 +103,7 @@ class CfgFunctions
                 file = "MissionScripts\MissionInit\ACRE2\acre2InitNew.sqf";
             };
             class ACRE2ValidateConfig {file = "MissionScripts\MissionInit\ACRE2\acre2ValidateConfig.sqf";};
+            class ACRE2ResolveSides {file = "MissionScripts\MissionInit\ACRE2\acre2ResolveSides.sqf";};
             class ACRE2GetRadioProfiles {file = "MissionScripts\MissionInit\ACRE2\acre2GetRadioProfiles.sqf";};
             class ACRE2ResolveSidePresetMap {file = "MissionScripts\MissionInit\ACRE2\acre2ResolveSidePresetMap.sqf";};
             class ACRE2GetOrderedRadios {file = "MissionScripts\MissionInit\ACRE2\acre2GetOrderedRadios.sqf";};
@@ -442,6 +443,12 @@ class CfgFunctions
             };
             class SaveLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\saveRespawnLoadout.sqf";
+            };
+            class LoadoutCanary {
+                file = "MissionScripts\Logistics\LogiHelpers\loadoutCanary.sqf";
+            };
+            class LoadoutWaitStable {
+                file = "MissionScripts\Logistics\LogiHelpers\loadoutWaitStable.sqf";
             };
             class RespawnRestoreLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\respawnRestoreLoadout.sqf";
