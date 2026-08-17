@@ -24,7 +24,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | Feature | Use it for |
 |---|---|
 | [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster) | Mission-derived supplies and limited arsenals |
-| [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal, and manual loadout persistence |
+| [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal, and manual loadout persistence, plus side-switch respawn seeding |
 | [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies) | Recoverable vehicle logistics and temporary group respawns |
 | [Helicopter, Ground and Boat Transport](Transport-Services) | Reusable AI-crewed transport services for land, air, and open water |
 | [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) | Deployable MHQ and logistics |
@@ -64,7 +64,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 |---|---|
 | [Radio Jamming](Radio-Jamming) | ACRE2/TFAR radio and UAV interference |
 | [EMP and Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) | One-shot EMP and side-private tracking |
-| [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting) | Mission-defined ACRE2 channels |
+| [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting) | Mission-defined ACRE2 channels and cross-side joint radio nets |
 | [Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup) | Tuning/swapping vehicle rack radios, quickstart through full reference |
 | [AN/PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup) | Squad-level radio assignment |
 | [Automated CEOI](ACRE2-Automated-CEOI-Document) | Player-readable radio plan |
