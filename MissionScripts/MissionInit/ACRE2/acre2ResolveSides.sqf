@@ -48,7 +48,7 @@ private _resolvedSides = [];
         if (_nets isEqualType "") then {
             private _sentinelValid = (count _nets > 8) && {(toUpper (_nets select [0, 8])) == "INHERIT:"};
             if !(_sentinelValid) then {
-                _errors pushBack format ["%1 has an invalid nets value %2 - expected an array of net rows, or \"INHERIT:<SIDE>\".", _sideKey, _nets];
+                _errors pushBack format ['%1 has an invalid nets value %2 - expected an array of net rows, or "INHERIT:<SIDE>".', _sideKey, _nets];
                 _nets = [];
             } else {
                 private _targetKey = [(_nets select [8, (count _nets) - 8])] call _normaliseSide;

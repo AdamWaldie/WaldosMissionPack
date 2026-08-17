@@ -196,7 +196,7 @@ private _usedJointSlots = [];
     if (count _x != 5) then {_errors pushBack format ["Malformed joint net %1; expected [netId, label, radio family, shared frequency, [[side, channel], ...]].", _x];} else {
         _x params ["_netId", "_label", "_family", "_frequency", "_sideChannels"];
         if (_netId == "" || !(_netId isEqualType "")) then {_errors pushBack format ["Joint net %1 requires a non-empty string id.", _x]};
-        if !(_label isEqualType "") then {_errors pushBack format ["Joint net %1 label must be a string (\"\" for none).", _netId]};
+        if !(_label isEqualType "") then {_errors pushBack format ['Joint net %1 label must be a string ("" for none).', _netId]};
         if (count _label > 12) then {_warnings pushBack format ["Joint net %1 label will be truncated to 12 characters.", _netId]};
         private _upperFamily = toUpper _family;
         if !(_upperFamily in _profileFamilies) then {_errors pushBack format ["Joint net %1 uses unknown radio family %2.", _netId, _family]};
