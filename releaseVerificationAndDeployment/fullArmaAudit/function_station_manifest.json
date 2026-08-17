@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 933,
+  "registeredFunctionCount": 942,
   "runtimeFunctionCount": 385,
-  "functionCount": 1318,
+  "functionCount": 1327,
   "stations": [
     {
       "id": "control",
@@ -615,6 +615,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ACRE2ResolveSidePresetMap",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ResolveSidePresetMap.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ACRE2GetOrderedRadios",
       "file": "MissionScripts/MissionInit/ACRE2/acre2GetOrderedRadios.sqf",
       "station": "mission-init",
@@ -623,6 +629,12 @@
     {
       "name": "Waldo_fnc_ACRE2ApplyPresetNames",
       "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyPresetNames.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ACRE2ApplyJointNets",
+      "file": "MissionScripts/MissionInit/ACRE2/acre2ApplyJointNets.sqf",
       "station": "mission-init",
       "activation": "manual"
     },
@@ -1445,6 +1457,30 @@
     {
       "name": "Waldo_fnc_RespawnRestoreLoadout",
       "file": "MissionScripts/Logistics/LogiHelpers/respawnRestoreLoadout.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RespawnSeedSideSwitch",
+      "file": "MissionScripts/Logistics/LogiHelpers/respawnSeedSideSwitch.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RespawnSeedCarryOver",
+      "file": "MissionScripts/Logistics/LogiHelpers/respawnSeedCarryOver.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_RespawnSeedSideBaseLoadout",
+      "file": "MissionScripts/Logistics/LogiHelpers/respawnSeedSideBaseLoadout.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BuildAssembledSideLoadout",
+      "file": "MissionScripts/Logistics/LogiHelpers/buildAssembledSideLoadout.sqf",
       "station": "loadouts",
       "activation": "manual"
     },
@@ -2817,8 +2853,26 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ResolveFactionCatalog",
+      "file": "MissionScripts/CombatSystems/resolveFactionCatalog.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ResolveVehicleClassPool",
+      "file": "MissionScripts/CombatSystems/resolveVehicleClassPool.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_DynamicAAResolveAssetPool",
       "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAResolveAssetPool.sqf",
+      "station": "dynamic-aa",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DynamicAAResolveEquipmentCatalog",
+      "file": "MissionScripts/CombatSystems/DynamicAA/dynamicAAResolveEquipmentCatalog.sqf",
       "station": "dynamic-aa",
       "activation": "manual"
     },

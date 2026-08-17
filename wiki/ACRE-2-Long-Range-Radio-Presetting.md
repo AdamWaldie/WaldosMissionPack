@@ -139,6 +139,42 @@ WMP changes only `label` on PRC-148, `description` on PRC-152 and `name` on PRC-
 
 ACRE has [open issue history around copied or locally divergent presets](https://github.com/IDI-Systems/acre2/issues/1056). These safeguards avoid the known high-risk paths, but physical display verification remains part of multiplayer acceptance because a static test cannot prove ACRE/TeamSpeak runtime state.
 
+## Joint radio nets
+
+Per-side isolation is the default everywhere in this config, but a mission sometimes needs a specific
+channel to deliberately bridge chosen sides for an operation - a combined command net, a joint
+CAS/CFF frequency, a liaison channel. `jointNets` does exactly that, without touching ordinary
+per-side isolation anywhere else. `[]` by default (no bridging).
+
+```sqf
+// MissionConfig\acreConfig.sqf
+["jointNets", [
+    ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
+    // [netId (diagnostics-only), radio family, shared TX/RX frequency, [[side, channel], ...]]
+]],
+```
+
+The **frequency** is the thing genuinely shared across sides. **Channel numbers stay per-side** -
+a channel number only means something on that side's own preset, so each side is free to place the
+bridge on whichever of its own free channels it likes; they do not need to match across sides.
+`Waldo_fnc_ACRE2ApplyJointNets` writes that frequency into every listed side's preset using the same
+verified-write pattern (`acre_api_fnc_setPresetChannelField` plus an immediate read-back) that named
+displays above already use, resolving each side's own preset through
+`Waldo_fnc_ACRE2ResolveSidePresetMap` - the same helper mission-start setup and side-switch respawn
+seeding both use, so there is one source of truth for "which preset belongs to this side".
+
+Validation (`Waldo_fnc_ACRE2ValidateConfig`) rejects an unknown radio family or side, a channel
+outside that family's supported range, and - always, regardless of `strict` - a collision where a
+joint net's `[side, channel]` slot matches an ordinary named net already using that exact
+channel/family on that side. A real operational net silently getting rerouted onto a bridge is never
+acceptable, so this check is not optional.
+
+**Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
+the way an ordinary named net is (`["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]`-style rows cannot yet say
+`"JOINT_CMD"`) - note the channel number you placed it at and assign that number directly in the
+relevant side's own group rows. There is also no in-mission Zeus toggle for a joint net yet; it is
+mission-start configuration only. Both are clean, separately-scoped future work.
+
 ## Join, respawn and persistence
 
 On initial join, WMP waits for ACRE and applies the mission's starting setup once. That starting

@@ -18,7 +18,8 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
 - All functions follow the follwing Syntax "Waldo_fnc_FunctionName", you may find a full list of these in WaldosFunctions.sqf.
 
 # Pack Features
-- Loadout saving and respawn system
+- Loadout saving and respawn system, with an opt-in fallback for players who get live-side-switched mid-mission (Zeus/admin reassignment) onto a side with no saved loadout yet - carry over their current kit and radios as a deliberate bridge back to their old side, or assemble a proper starter kit for the new side instead
+- Joint radio nets (ACRE2) - deliberately bridge specific channels across chosen sides for an operation via `MissionConfig\acreConfig.sqf`, without touching WMP's ordinary per-side net isolation everywhere else
 - Lifecycle-safe ACRE2 radio, duplicate-radio/ear assignment, named-channel, CEOI, Babel and respawn/persistence handling configured from `MissionConfig\acreConfig.sqf`; a separate one-line object-init call (`Waldo_fnc_ACRE2RackSetup`) configures vehicle-mounted radio racks (AN/VRC-64/103/110/111, SEM90), including replacing or ripping out a rack's radio later in the mission.
 - Locality-separated feature defaults in `MissionConfig` while init files retain authority, activation and JIP lifecycle
 - Localised Radio Jamming for ACRE2 & TFAR - drop a jammer object (or place one live from Zeus) to deny comms in an area. Terrain line-of-sight, radio-power burn-through, directional cones, pulsing, per-side and (ACRE2) per-band control; optional UAV/drone jamming (freeze autonomous drones, cut controlling players' datalinks); destructible jammers for "blow the tower" objectives, ACE toggle/disable actions and a handheld RDF scanner for EW teams, plus a deliberately loud on-screen jamming HUD so it's never mistaken for a game bug.

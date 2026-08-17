@@ -104,8 +104,10 @@ class CfgFunctions
             };
             class ACRE2ValidateConfig {file = "MissionScripts\MissionInit\ACRE2\acre2ValidateConfig.sqf";};
             class ACRE2GetRadioProfiles {file = "MissionScripts\MissionInit\ACRE2\acre2GetRadioProfiles.sqf";};
+            class ACRE2ResolveSidePresetMap {file = "MissionScripts\MissionInit\ACRE2\acre2ResolveSidePresetMap.sqf";};
             class ACRE2GetOrderedRadios {file = "MissionScripts\MissionInit\ACRE2\acre2GetOrderedRadios.sqf";};
             class ACRE2ApplyPresetNames {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPresetNames.sqf";};
+            class ACRE2ApplyJointNets {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyJointNets.sqf";};
             class ACRE2CompilePlan {file = "MissionScripts\MissionInit\ACRE2\acre2CompilePlan.sqf";};
             class ACRE2ApplyPlayerPlan {file = "MissionScripts\MissionInit\ACRE2\acre2ApplyPlayerPlan.sqf";};
             class ACRE2BuildCEOI {file = "MissionScripts\MissionInit\ACRE2\acre2BuildCEOI.sqf";};
@@ -443,6 +445,18 @@ class CfgFunctions
             };
             class RespawnRestoreLoadout {
                 file = "MissionScripts\Logistics\LogiHelpers\respawnRestoreLoadout.sqf";
+            };
+            class RespawnSeedSideSwitch {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnSeedSideSwitch.sqf";
+            };
+            class RespawnSeedCarryOver {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnSeedCarryOver.sqf";
+            };
+            class RespawnSeedSideBaseLoadout {
+                file = "MissionScripts\Logistics\LogiHelpers\respawnSeedSideBaseLoadout.sqf";
+            };
+            class BuildAssembledSideLoadout {
+                file = "MissionScripts\Logistics\LogiHelpers\buildAssembledSideLoadout.sqf";
             };
             class SetupQuarterMaster {
                 file = "MissionScripts\Logistics\Crates\initQuartermaster.sqf";

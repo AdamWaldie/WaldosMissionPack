@@ -16,7 +16,9 @@
  *
  * Example: ["RESPAWN", true] call Waldo_fnc_ACRE2SchedulePlayerRefresh;
  * Result: one bounded local refresh applies Babel/CEOI and, when permitted, the radio baseline.
- * Current callers: ACRE initialisation, respawn, player-unit and group lifecycle handlers.
+ * Current callers: ACRE initialisation, respawn, player-unit and group lifecycle handlers, and
+ * Waldo_fnc_RespawnSeedSideBaseLoadout (reason "SIDE_SWITCH_NATIVE") after assembling a side-switched
+ * player's NATIVE starter kit.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/ACRE-2-Long-Range-Radio-Presetting
  */
 params [["_reason", "MANUAL", [""]], ["_applyPlan", true, [true]]];
@@ -89,6 +91,7 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", false];
     private _config = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
     if !(missionNamespace getVariable ["Waldo_ACRE2_PresetNamesReady", false]) then {[_config] call Waldo_fnc_ACRE2ApplyPresetNames};
+    if !(missionNamespace getVariable ["Waldo_ACRE2_JointNetsReady", false]) then {[_config] call Waldo_fnc_ACRE2ApplyJointNets};
     private _planApplied = true;
     if (_applyPlan) then {_planApplied = [true, _reason] call Waldo_fnc_ACRE2ApplyPlayerPlan};
     // This is a server-visible ACRE lifecycle handshake, not a report that the player's authored
@@ -99,7 +102,7 @@ missionNamespace setVariable ["Waldo_ACRE2_RefreshApplyPlan", (missionNamespace 
     player setVariable ["Waldo_ACRE2_ClientReady", true, true];
     [] call Waldo_fnc_ACRE2ApplyBabel;
     [] call Waldo_fnc_ACRE2BuildCEOI;
-    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK"]}) then {
+    if (_planApplied && {_reason in ["INITIAL", "INITIAL_LATE", "PERSISTENCE_DISABLED", "PERSISTENCE_BASELINE", "PERSISTENCE_RESTORE_FALLBACK", "SIDE_SWITCH_NATIVE"]}) then {
         missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", _reason];
         [false] call Waldo_fnc_SaveLoadout;
     };

@@ -20,6 +20,19 @@
  * MISSION MAKER: begin with the shipped net/group examples and replace editor group IDs.
  * ADVANCED: add third-party radio profiles only after confirming their ACRE API behaviour.
  *
+ * SETTING-BY-SETTING GUIDE - JOINT RADIO NETS
+ * - jointNets: [] by default (no cross-side bridging). Each row is
+ *   ["netId", "radio family", shared frequency, [["side", channel], ...]] - a stable id (diagnostics
+ *   only in this version), the radio family the net belongs to (e.g. PRC_LR), the one TX/RX frequency
+ *   actually shared, and one [side, channel] pair per side that should carry it. Frequency is the
+ *   thing genuinely shared across sides; channel NUMBERS stay per-side, since a channel number only
+ *   means something on that side's own preset - each side can therefore use whichever of its own free
+ *   channels it likes for the bridge. KNOWN v1 LIMITATION: a joint net is not yet referenceable by
+ *   name from a group's assignment rows the way an ordinary named net is - a mission maker notes the
+ *   channel number they placed it at (in the relevant side's own group assignments above) and assigns
+ *   that number directly. There is also no in-mission Zeus toggle for a joint net yet; it is
+ *   mission-start configuration only.
+ *
  * SETTING-BY-SETTING GUIDE - NORMAL MISSION SETTINGS
  * - enabled: master switch for WMP's replacement ACRE lifecycle.
  * - prc343PresetPolicy: FULL_RANGE keeps all 16 blocks; SIDE_ISOLATED uses ACRE side presets and
@@ -155,6 +168,16 @@ createHashMapFromArray [
     // "ACRE did not finish converting carried radios to unique IDs within N seconds" on this mission.
     // EXAMPLE/RESULT: 180 gives a heavy-modset mission an extra minute before WMP retries.
     ["readinessTimeoutSeconds", 120],
+
+    // SETTING: jointNets
+    // WHAT IT CHANGES: deliberately bridges specific radio channels across chosen sides for an
+    // operation, without touching WMP's ordinary per-side net isolation everywhere else.
+    // VALUES: [] for none (default), or one or more joint net rows.
+    // EXAMPLE: a WEST/EAST/GUER joint command net on PRC_LR at 45.500 MHz, each side free to place it
+    // on whichever of its own channels is open:
+    // ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
+    // RESULT: [] means no cross-side bridging exists; WMP's normal per-side isolation is unchanged.
+    ["jointNets", []],
 
     // SETTING: additionalRadioProfiles (ADVANCED)
     // WHAT IT CHANGES: teaches WMP how to configure a tested third-party carried radio.

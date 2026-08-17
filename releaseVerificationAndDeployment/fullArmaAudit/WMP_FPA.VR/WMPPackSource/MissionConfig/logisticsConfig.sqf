@@ -49,6 +49,21 @@
  *   baseline plus the last manual Loadout Save Point action; true = a "CAManBase"/"Killed" handler in
  *   initPlayerLocal.sqf captures loadout+radio on every death and restores it on respawn instead.
  *
+ * SETTING-BY-SETTING GUIDE - SIDE-SWITCH RESPAWN SEEDING:
+ * - Waldo_Respawn_SeedOnSideSwitch (MISSION MAKER): off by default. false = today's behavior exactly -
+ *   a player moved (Zeus/admin reassignment, a mission-specific faction-switch feature) to a side with
+ *   no saved snapshot simply respawns on the class default (RESPAWN_BASELINE) until they manually save
+ *   one. true = the first time a live side change lands a player on a side with no snapshot saved yet,
+ *   one is seeded automatically per Waldo_Respawn_SideSwitchMode. A side that already has its own saved
+ *   snapshot is never touched by this - only the normal respawn-restore path ever applies it.
+ * - Waldo_Respawn_SideSwitchMode (MISSION MAKER): "CARRY_OVER" (default) seeds from the player's
+ *   current live gear and radios exactly as-is, tagged BRIDGED - a deliberate live bridge back to
+ *   their old side's kit and radio presets, since ACRE2 never re-syncs a switched player's preset on
+ *   its own. "SIDE_BASE_LOADOUT" instead assembles a weapon-aware starter kit from the new side's own
+ *   scanned mission.sqm pool with that side's proper ACRE2 preset, tagged NATIVE; if that side has no
+ *   usable pool it automatically falls back to CARRY_OVER. Any value other than exactly
+ *   "SIDE_BASE_LOADOUT" behaves as CARRY_OVER (an unrecognized string is logged to RPT, not rejected).
+ *
  * SETTING-BY-SETTING GUIDE - FIELD RESUPPLY:
  * - Waldo_FieldResupply_Enable (MISSION MAKER): permits hubs/actions; register a hub and assign carriers separately.
  * - Waldo_FieldResupply_CrateClass (MISSION MAKER): valid CfgVehicles crate spawned and populated for each deployment.
@@ -114,6 +129,11 @@ createHashMapFromArray [
         // maker opts into automatic death capture here. Consumed by the "CAManBase"/"Killed" handler
         // in initPlayerLocal.sqf, which registers only when this is true.
         ["Waldo_Respawn_SaveOnDeath", false], // BOOL: capture loadout+radio on every death; respawn restores it instead of the last manual/mission-start save.
+        // MISSION MAKER: side-switch respawn seeding. Off by default - see the SETTING-BY-SETTING
+        // GUIDE above. Consumed by initPlayerLocal.sqf's live "group" side-change watcher and
+        // Waldo_fnc_RespawnSeedSideSwitch, which only ever seeds a side with no existing snapshot.
+        ["Waldo_Respawn_SeedOnSideSwitch", false], // BOOL: seed a snapshot the first time a live side change lands on a side with none saved yet.
+        ["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // STRING: CARRY_OVER (default, tagged BRIDGED) or SIDE_BASE_LOADOUT (tagged NATIVE, falls back to CARRY_OVER if the side's pool is unusable).
         // MISSION MAKER: field-resupply content and balance. A deployed crate is populated exactly
         // like a standard supply crate (Waldo_fnc_SupplyCratePopulate) scoped to the servicing hub's
         // side, so these mirror that function's own parameters rather than a separate charge model.

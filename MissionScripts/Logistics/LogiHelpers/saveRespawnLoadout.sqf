@@ -24,6 +24,12 @@
  * restores that side's own snapshot rather than only ever the one side that happened to be saved most
  * recently. Waldo_Player_RespawnSnapshot/RespawnSnapshotSource remain as single-value mirrors of
  * whichever identity was most recently touched, for diagnostics and any external reader.
+ *
+ * Each snapshot also carries a tag (element 6): "NATIVE" (default) means this side's radios were set
+ * up with that side's own proper ACRE2 preset; "BRIDGED" means the radios were deliberately carried
+ * over from a different side's live gear/preset (side-switch CARRY_OVER seeding) and must never be
+ * "corrected" back onto this side's own preset on restore. Set via Waldo_Player_NextRespawnSnapshotTag
+ * (read-then-cleared, same convention as Waldo_Player_NextRespawnSnapshotSource) before calling this.
  */
 params [["_showNotification", true, [true]]];
 private _loadout = [getUnitLoadout player] call Waldo_fnc_ACRE2FilterLoadout;
@@ -47,6 +53,8 @@ private _identity = [getPlayerUID player, _sideKey];
 private _key = format ["%1_%2", _identity select 0, _sideKey];
 private _source = missionNamespace getVariable ["Waldo_Player_NextRespawnSnapshotSource", if (_showNotification) then {"PLAYER_ACTION"} else {"AUTOMATIC"}];
 missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotSource", nil];
+private _tag = missionNamespace getVariable ["Waldo_Player_NextRespawnSnapshotTag", "NATIVE"];
+missionNamespace setVariable ["Waldo_Player_NextRespawnSnapshotTag", nil];
 private _snapshots = missionNamespace getVariable ["Waldo_Player_RespawnSnapshots", createHashMap];
 private _existingSnapshot = _snapshots getOrDefault [_key, []];
 if (_acrePresent && {!_acreReady} && {count _existingSnapshot >= 4}) exitWith {
@@ -56,7 +64,7 @@ if (_acrePresent && {!_acreReady} && {count _existingSnapshot >= 4}) exitWith {
     };
     false
 };
-private _snapshot = [_identity, _loadout, _radioState, diag_tickTime, _canary, _source];
+private _snapshot = [_identity, _loadout, _radioState, diag_tickTime, _canary, _source, _tag];
 _snapshots set [_key, _snapshot];
 missionNamespace setVariable ["Waldo_Player_RespawnSnapshots", _snapshots];
 // Single-value mirrors of the most recently touched identity only - see header.
@@ -67,7 +75,7 @@ missionNamespace setVariable ["Waldo_Player_RespawnSnapshotSource", _source];
 missionNamespace setVariable ["Waldo_Player_Inventory", _loadout];
 missionNamespace setVariable ["Waldo_Player_RadioState", _radioState];
 missionNamespace setVariable ["Waldo_Player_LoadoutIdentity", _identity];
-diag_log format ["[WMP LOADOUT][SAVE][OK] source=%1 loadoutEntries=%2 radios=%3 identity=%4 acrePresent=%5 acreReady=%6.", _source, count _loadout, if (count _radioState >= 2) then {count (_radioState select 1)} else {0}, _identity, _acrePresent, _acreReady];
+diag_log format ["[WMP LOADOUT][SAVE][OK] source=%1 tag=%2 loadoutEntries=%3 radios=%4 identity=%5 acrePresent=%6 acreReady=%7.", _source, _tag, count _loadout, if (count _radioState >= 2) then {count (_radioState select 1)} else {0}, _identity, _acrePresent, _acreReady];
 if (_showNotification) then {
     [
         "RESPAWN LOADOUT SAVED",

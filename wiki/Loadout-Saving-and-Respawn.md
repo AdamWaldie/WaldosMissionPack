@@ -65,6 +65,45 @@ Pass `[false]` for automatic startup work that must not display a notification o
 
 ACE Respawn can conflict with this mission-owned restore path and should remain disabled in ACE addon settings.
 
+## Side-switch respawn seeding
+
+Off by default (`Waldo_Respawn_SeedOnSideSwitch` in `MissionConfig\logisticsConfig.sqf`). Snapshots
+are already kept per (Steam UID, side) — see above — so a player who is live-side-switched
+mid-mission (Zeus/admin reassignment, a mission-specific faction-switch feature) keeps each side's own
+history independently. This setting only decides what happens the *first* time a live side switch
+lands a player on a side with **no** snapshot saved yet; a side that already has one is always
+restored normally through the ordinary respawn path above, never touched by this feature.
+
+```sqf
+// MissionConfig\logisticsConfig.sqf
+["Waldo_Respawn_SeedOnSideSwitch", false], // true = seed a snapshot the first time this happens
+["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // CARRY_OVER (default) or SIDE_BASE_LOADOUT
+```
+
+Detection is event-based — Arma always derives side from group membership, so a live switch is
+detected the moment the engine's own group-change event fires, with no polling loop and no standing
+cost.
+
+| Mode | What happens | Tag | Radios |
+|---|---|---|---|
+| `CARRY_OVER` (default) | Saves the player's current live gear and radios exactly as-is. | `BRIDGED` | Deliberately left tuned to the old side's preset/channels - a genuine live bridge back to whoever they could talk to before the switch. ACRE2 never re-syncs a switched player's preset on its own, so this is what keeps that comms link real rather than accidental. |
+| `SIDE_BASE_LOADOUT` | Reasserts the new side's own official ACRE2 preset, then assembles a weapon-aware starter kit from that side's own scanned `mission.sqm` pool (a coherent weapon plus a magazine actually compatible with it, not just any pool item). | `NATIVE` | Reset to the new side's own proper preset and channels. |
+
+`SIDE_BASE_LOADOUT` automatically falls back to `CARRY_OVER` if the target side has no usable
+mission.sqm pool (e.g. no playable units were ever placed on that side, or none have an
+ACE-Arsenal-edited loadout to scan) — place at least one playable unit with real gear on every side
+you expect to switch players onto.
+
+A snapshot's tag also governs what happens on an ordinary respawn: a `NATIVE` snapshot has that
+side's official preset reasserted for every radio class before its saved loadout is applied (radio
+items are baked with whichever preset is active at creation time, so this must happen first); a
+`BRIDGED` snapshot is deliberately left alone so the cross-side bridge it represents is never
+"corrected" back onto the new side's own preset.
+
+Check current state under **WMP Diagnostics**: `respawn/snapshot-origin` shows the current side's tag,
+and `respawn/side-switch-seed` shows whether/when a seed ran, which mode, and (with a fix hint) if
+`SIDE_BASE_LOADOUT` had to fall back due to an empty side pool. See [Mission Diagnostics](Mission-Diagnostics).
+
 ## ACE 3.21.1 name warning
 
 ACE 3.21.1 changed `ace_common_fnc_setName` from one argument to two: the unit object and an optional

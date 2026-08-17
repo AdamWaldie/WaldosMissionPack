@@ -34,14 +34,10 @@ if !(isClass (configFile >> 'CfgPatches' >> 'acre_main')) exitWith {true};
 }, {
     params ['_config'];
     private _sideKey = switch (side acre_player) do {case west: {'WEST'}; case east: {'EAST'}; case independent: {'GUER'}; default {'CIV'}};
-    private _sideAliases = switch (_sideKey) do {case 'WEST': {['WEST', 'BLUFOR']}; case 'EAST': {['EAST', 'OPFOR']}; case 'GUER': {['GUER', 'INDEP', 'INDEPENDENT']}; default {['CIV', 'CIVILIAN']}};
-    private _sideIndex = (_config getOrDefault ['sides', []]) findIf {toUpper (_x select 0) in _sideAliases};
-    private _sidePreset = if (_sideIndex >= 0) then {((_config get 'sides') select _sideIndex) select 1} else {'default'};
-    private _shortPreset = if (toUpper (_config getOrDefault ['prc343PresetPolicy', 'FULL_RANGE']) == 'FULL_RANGE') then {'default'} else {_sidePreset};
     {
-        private _base = _x select 0;
-        [_base, if (toUpper _base == 'ACRE_PRC343') then {_shortPreset} else {_sidePreset}] call acre_api_fnc_setPreset;
-    } forEach ([_config] call Waldo_fnc_ACRE2GetRadioProfiles);
+        _x params ['_base', '_preset'];
+        [_base, _preset] call acre_api_fnc_setPreset;
+    } forEach ([_config, _sideKey] call Waldo_fnc_ACRE2ResolveSidePresetMap);
 }, [_config]] call CBA_fnc_waitUntilAndExecute;
 private _babel = _config getOrDefault ['babel', createHashMap];
 if (_babel getOrDefault ['enabled', false]) then {
@@ -56,4 +52,5 @@ if (_babel getOrDefault ['enabled', false]) then {
         };
     } forEach (_babel getOrDefault ['languages', []]);
 };
-[_config] call Waldo_fnc_ACRE2ApplyPresetNames
+[_config] call Waldo_fnc_ACRE2ApplyPresetNames;
+[_config] call Waldo_fnc_ACRE2ApplyJointNets

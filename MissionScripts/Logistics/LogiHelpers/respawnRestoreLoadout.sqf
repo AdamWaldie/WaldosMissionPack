@@ -13,6 +13,12 @@
  * 3: side already retried <BOOL> - internal; caps the side-settle retry below to one round
  *    (default false)
  *
+ * A restoring snapshot's tag (element 6, defaults "NATIVE" on older/short snapshots) controls whether
+ * that side's official ACRE2 preset is reasserted for every radio class before the saved loadout is
+ * applied: "NATIVE" reasserts (the radio items about to be created must be baked with THIS side's own
+ * preset, not whatever preset another side last left active client-side); "BRIDGED" deliberately skips
+ * this - it is a live carry-over bridge back to another side and must not be "corrected".
+ *
  * Return Value:
  * Boolean - true when this call actually performed the restore, false when skipped or deferred
  *
@@ -94,6 +100,23 @@ missionNamespace setVariable ["Waldo_Player_LoadoutIdentity", _currentIdentity];
 // radio restore below. WMP owns the one initial assignment and explicit saved-state restoration.
 // ACRE parses this variable as serialized array text, so "[]" is its valid empty representation.
 _unit setVariable ["acre_sys_radio_setup", "[]", true];
+// Only present on snapshots saved by the current saveRespawnLoadout.sqf; empty/older snapshots
+// (index < 7) default to "NATIVE" - today's single-side behavior, safe since there was never a
+// cross-side bridge to protect before this tag existed.
+private _snapshotTag = if (count _snapshot >= 7) then {_snapshot select 6} else {"NATIVE"};
+missionNamespace setVariable ["Waldo_Player_RespawnSnapshotTag", _snapshotTag];
+// Radio items are baked with whatever ACRE2 preset is active for their base class at the moment
+// they're created, not at the moment they're tuned - so a NATIVE snapshot's side preset must be
+// reasserted here, before setUnitLoadout below creates any radio item, not after. A BRIDGED
+// snapshot is a deliberate live carry-over of another side's gear/preset and must never be
+// "corrected" back onto this side's own preset.
+if (_identityMatches && {_snapshotTag == "NATIVE"} && {isClass (configFile >> "CfgPatches" >> "acre_main")} && {!isNil "acre_api_fnc_isInitialized"} && {[] call acre_api_fnc_isInitialized}) then {
+    {
+        _x params ["_base", "_preset"];
+        [_base, _preset] call acre_api_fnc_setPreset;
+    } forEach ([missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap], _sideKey] call Waldo_fnc_ACRE2ResolveSidePresetMap);
+    diag_log format ["[WMP LOADOUT][RESPAWN][PRESET_REASSERT] identity=%1 sideKey=%2.", _currentIdentity, _sideKey];
+};
 if (_identityMatches && {count _savedLoadout > 0}) then {
     _unit setUnitLoadout _savedLoadout;
     _restoredCount = count _savedLoadout;

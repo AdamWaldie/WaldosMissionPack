@@ -403,6 +403,25 @@ if (count _radioOutcome < 3) then {
     ["respawn", "radio-restore", _radioRestoreState, format ["result=%1 generation=%2 secondsAgo=%3", _radioResult, _radioGeneration, round (diag_tickTime - _radioTick)], if (_radioRestoreState != "ERROR") then {""} else {"The saved ACRE radio state failed to reapply after the last respawn; the current mission ACRE plan was applied as a fallback instead. Check the RPT for [WMP LOADOUT][RESPAWN][RADIO_RESTORE_FAILED] and any Waldo_fnc_ACRE2ApplyRadioState errors."}] call _add;
 };
 
+// Side-switch loadout/radio fallback (Waldo_Respawn_SeedOnSideSwitch) - see
+// wiki/Loadout-Saving-and-Respawn.md. Reads the current side's own snapshot tag directly rather than
+// the single most-recently-touched mirror, since a player who has switched sides could have touched a
+// different side's snapshot more recently.
+private _sideKeyNow = switch (side player) do {case west: {"WEST"}; case east: {"EAST"}; case independent: {"GUER"}; default {"CIV"}};
+private _snapshotsAll = missionNamespace getVariable ["Waldo_Player_RespawnSnapshots", createHashMap];
+private _currentSideSnapshot = _snapshotsAll getOrDefault [format ["%1_%2", getPlayerUID player, _sideKeyNow], []];
+private _currentSnapshotTag = if (count _currentSideSnapshot >= 7) then {_currentSideSnapshot select 6} else {if (count _currentSideSnapshot >= 4) then {"NATIVE"} else {"NONE"}};
+["respawn", "snapshot-origin", if (_currentSnapshotTag == "NONE") then {"UNCONFIGURED"} else {"LOADED"}, format ["side=%1 tag=%2", _sideKeyNow, _currentSnapshotTag]] call _add;
+
+private _seedOutcome = missionNamespace getVariable ["Waldo_Player_LastSideSwitchSeed", []];
+if (count _seedOutcome < 4) then {
+    ["respawn", "side-switch-seed", "UNCONFIGURED", "No live side-switch seed has run this session (either Waldo_Respawn_SeedOnSideSwitch is off, or this client has not been side-switched onto a side with no existing snapshot)."] call _add;
+} else {
+    _seedOutcome params ["_seedMode", "_seedFellBack", "_seedTick", "_seedSideKey"];
+    private _sqmSuffix = switch (_seedSideKey) do {case "WEST": {"West"}; case "EAST": {"East"}; case "GUER": {"Ind"}; default {"Civ"}};
+    ["respawn", "side-switch-seed", if (_seedFellBack) then {"ERROR"} else {"ACTIVE"}, format ["mode=%1 side=%2 fellBackToCarryOver=%3 secondsAgo=%4", _seedMode, _seedSideKey, _seedFellBack, round (diag_tickTime - _seedTick)], if !(_seedFellBack) then {""} else {format ["SIDE_BASE_LOADOUT could not assemble a starter kit for side %1 - its scanned mission.sqm pool (Logi_MissionSQMArray_%2) is empty or has no weapon with a compatible magazine. CARRY_OVER was used instead. Place playable units on that side with an ACE-Arsenal-edited loadout so it has something to scan.", _seedSideKey, _sqmSuffix]}] call _add;
+};
+
 private _warnings = {_x select 2 == "ERROR"} count _checks;
 ["core", "diagnostics", "INFO", "END", format ["checks=%1 errors=%2", count _checks, _warnings], _runId, format ["CLIENT:%1", clientOwner]] call Waldo_fnc_DiagnosticLog;
 [_runId, clientOwner, name player, getPlayerUID player, _checks] remoteExecCall ["Waldo_fnc_DiagnosticsReceiveClient", 2];

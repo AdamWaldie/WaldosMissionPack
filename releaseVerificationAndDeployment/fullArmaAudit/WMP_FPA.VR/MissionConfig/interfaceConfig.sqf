@@ -12,6 +12,11 @@
  * Result: that player receives the WMP HUD in every campaign; everyone else needs configured gear.
  * Current callers: init.sqf (SHARED) and initPlayerLocal.sqf (PLAYER_LOCAL) through the loader.
  *
+ * Introduction Text (Waldo_fnc_InfoText, called automatically once from initPlayerLocal.sqf) also
+ * reads its content and timing here rather than taking call-site arguments for its normal mission-
+ * start run - Waldo_InfoText_Title, Waldo_InfoText_Locale, Waldo_InfoText_LongDate,
+ * Waldo_InfoText_Animation, Waldo_InfoText_FakeLoadHold, Waldo_InfoText_SkipFakeLoad.
+ *
  * ACTIVATION MODEL: AUTOMATIC LOCAL UI, EXCEPT TACTICAL DISPLAY REGISTRATION.
  * Theme/notification policy is consumed automatically. Treatment feedback, emergency dismount and
  * accessibility install on each interface client when enabled. Tactical display values only tune a
@@ -147,18 +152,36 @@
  * - Waldo_WmpHud_OutlineScale: contrast-outline size relative to the name.
  * - Waldo_WmpHud_OutlineColour: outline RGBA colour; defaults to near-black for clarity.
  *
+ * SETTING-BY-SETTING GUIDE - INTRODUCTION TEXT:
+ * - Waldo_InfoText_Title (MISSION MAKER): custom mission title; "" uses onLoadName from description.ext.
+ * - Waldo_InfoText_Locale (MISSION MAKER): custom location name; "" uses the map's worldName.
+ * - Waldo_InfoText_LongDate (MISSION MAKER): true = "3rd November 2024", false = "3/11/2024".
+ * - Waldo_InfoText_Animation (MISSION MAKER): NONE, WALK, SIT, WAKE, WAKESLOW or COFFIN.
+ * - Waldo_InfoText_FakeLoadHold (MISSION MAKER): optional extra seconds to keep WMP's short setup
+ *   cover visible after the playable client is ready. Leave at 0 normally; this is not load detection.
+ * - Waldo_InfoText_SkipFakeLoad (MISSION MAKER): true skips the fake loading screen and its fades
+ *   entirely; useful to isolate our own transition timing from real client streaming, and a
+ *   legitimate permanent choice for a mission with no loading-screen presentation at all.
+ *
  * PANEL EXAMPLE: `["RALLY_POINT", "BOTTOM_RIGHT", true]` routes rally cards to the bottom-right
  * stack. Keep continuous hazard and jammer overlays out of this list: their dedicated layouts are
  * deliberately deconflicted by the UI manager rather than queued as notification cards.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["UI Themes", "Notification UI", "Treatment Feedback", "Obituary", "Tactical Display", "Emergency Dismount", "WMP HUD", "Accessibility"]],
+    ["featureFamilies", ["UI Themes", "Notification UI", "Introduction Text", "Treatment Feedback", "Obituary", "Tactical Display", "Emergency Dismount", "WMP HUD", "Accessibility"]],
     ["shared", [
         ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL.
         ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: complete named custom-theme definitions.
         ["Waldo_UI_ThemeOverrides", createHashMap]   // ADVANCED: partial overrides keyed by theme ID.
     ]],
     ["playerLocal", [
+        // MISSION MAKER: Introduction Text content and timing (Waldo_fnc_InfoText).
+        ["Waldo_InfoText_Title", ""],       // STRING: "" uses onLoadName from description.ext.
+        ["Waldo_InfoText_Locale", ""],      // STRING: "" uses the map's worldName.
+        ["Waldo_InfoText_LongDate", false], // BOOL: true = "3rd November 2024", false = "3/11/2024".
+        ["Waldo_InfoText_Animation", "NONE"], // NONE, WALK, SIT, WAKE, WAKESLOW or COFFIN.
+        ["Waldo_InfoText_FakeLoadHold", 0], // SECONDS: optional extra setup-cover hold; normally leave 0.
+        ["Waldo_InfoText_SkipFakeLoad", false], // BOOL: true skips the fake loading screen and its fades.
         // ADVANCED TUNING: global notification queue and animation behavior.
         ["Waldo_UiNotification_MaximumQueued", 12], // COUNT: oldest pending messages are discarded beyond this bound.
         ["Waldo_UiNotification_QueueLifetime", 15], // SECONDS: pending message expires instead of playing much later.

@@ -7,6 +7,12 @@
  * original four readable asset lists; each confirmed batch records one class and quantity per
  * category. Optional additional batches allow mixed classes without repetitive per-unit dialogs.
  *
+ * The faction profile list always includes every mission-maker-authored Waldo_DynamicAA_
+ * FactionAssetPools entry (exact AA hardware), plus every other faction Waldo_fnc_
+ * ResolveFactionCatalog finds live in the running modset - auto-detected entries have no specific
+ * AA hardware of their own, so Waldo_fnc_DynamicAAResolveAssetPool falls back to the chosen side's
+ * default AA pool for them while still using the faction's own identity/label.
+ *
  * Arguments:
  * 0: modulePosition <ARRAY> - detection centre selected by module placement
  *
@@ -31,6 +37,19 @@ private _catalogue = createHashMapFromArray [
     (_catalogue get "profileValues") pushBack _key;
     (_catalogue get "profileLabels") pushBack format ["%1  [%2]", _name, _key];
 } forEach ((keys _factionPools) call BIS_fnc_sortAlphabetically);
+// Every other faction actually present in the running modset (vanilla or third-party), so a
+// mission maker never has to hand-author Waldo_DynamicAA_FactionAssetPools just to see it in the
+// list. It gets the side's default AA hardware unless/until they add their own pool entry for it.
+private _seenFactions = createHashMap;
+{_seenFactions set [_x, true]} forEach keys _factionPools;
+{
+    _x params ["_discoveredSide", "_discoveredFaction", "_discoveredLabel"];
+    if !(_seenFactions getOrDefault [_discoveredFaction, false]) then {
+        _seenFactions set [_discoveredFaction, true];
+        (_catalogue get "profileValues") pushBack _discoveredFaction;
+        (_catalogue get "profileLabels") pushBack format ["%1 (auto-detected - side-default AA hardware unless configured)", _discoveredLabel];
+    };
+} forEach ([[west, east, independent]] call Waldo_fnc_ResolveFactionCatalog);
 private _collectPool = {
     params ["_pool"];
     {(_catalogue get "radarClasses") pushBackUnique _x} forEach (_pool getOrDefault ["radarClasses", []]);
@@ -40,6 +59,15 @@ private _collectPool = {
 };
 {[_sidePools get _x] call _collectPool} forEach keys _sidePools;
 {[_factionPools get _x] call _collectPool} forEach keys _factionPools;
+// Extend the Exact-mode pickers with every other AA-suitable class discovered live in the running
+// modset (vanilla or third-party), on top of whatever is hand-listed in the pools above. The
+// discovered catalogue is flat per category (unlike a Waldo_DynamicAA_*AssetPools entry's nested
+// staticSitePools), so it is merged directly rather than through _collectPool.
+private _discoveredEquipment = [] call Waldo_fnc_DynamicAAResolveEquipmentCatalog;
+{
+    private _classKey = _x;
+    {(_catalogue get _classKey) pushBackUnique _x} forEach (_discoveredEquipment getOrDefault [_classKey, []]);
+} forEach ["radarClasses", "staticClasses", "mobileClasses", "fighterClasses"];
 {
     _x params ["_classKey", "_labelKey"];
     private _classes = _catalogue get _classKey;

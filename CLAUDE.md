@@ -228,6 +228,34 @@ Carried-radio channel/frequency assignment is pure-data configuration, not a scr
 
 Group IDs must match the Eden editor group ID exactly (an `@Callsign` leader-role suffix is reconciled first). AN/PRC-343 short-range radios auto-allocate deterministically from the callsign. CEOI auto-populates in the map screen. See `wiki/ACRE-2-Long-Range-Radio-Presetting.md` for the full assignment/net/override contract.
 
+#### Joint radio nets (`acreConfig.sqf`'s `jointNets` key)
+
+Deliberately bridges specific channels across chosen sides for an operation, without touching WMP's
+ordinary per-side net isolation everywhere else. `[]` by default (no bridging).
+
+```sqf
+// MissionConfig\acreConfig.sqf
+["jointNets", [
+    ["JOINT_CMD", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]
+    // [netId (diagnostics-only), radio family, shared TX/RX frequency, [[side, channel], ...]]
+]],
+```
+
+Frequency is the thing actually shared across sides; channel *numbers* stay per-side, since a number
+only means something on that side's own preset — each side is free to place the bridge on whichever
+of its own channels is open. `Waldo_fnc_ACRE2ApplyJointNets` writes the shared frequency into each
+listed side's preset with the same verified-write pattern `Waldo_fnc_ACRE2ApplyPresetNames` already
+uses (per-client, per-side, immediate read-back verification), reusing
+`Waldo_fnc_ACRE2ResolveSidePresetMap` to resolve each side's own preset. `Waldo_fnc_ACRE2ValidateConfig`
+rejects an unknown family/side, an out-of-range channel, and — always, not `strict`-gated — a
+collision where a joint net's `[side, channel]` slot matches an ordinary named net already using that
+exact channel/family on that side.
+
+**Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
+the way an ordinary named net is — note the channel number and assign it directly in that side's own
+group rows. There is also no in-mission Zeus toggle for a joint net yet; it is mission-start
+configuration only.
+
 #### Vehicle radio racks (`Waldo_fnc_ACRE2RackSetup`)
 
 Vehicle-mounted rack radios (AN/VRC-64, VRC-103, VRC-110, VRC-111, SEM90, or a mission-added rack)
@@ -513,6 +541,50 @@ recently wins, since both write the same `Waldo_Player_Inventory`/`Waldo_Player_
     [false] call Waldo_fnc_SaveLoadout;
 }] call CBA_fnc_addEventHandler;
 ```
+
+#### Side-switch respawn seeding (`MissionConfig\logisticsConfig.sqf`)
+
+Off by default. A player who is live-side-switched mid-mission (Zeus/admin reassignment, a
+mission-specific faction-switch feature) onto a side with no saved snapshot yet normally just
+respawns on that side's class default until they manually save one — the same per-(UID, side)
+snapshot map described above already keeps every side's own history independent, this only decides
+what happens the *first* time a side has none. `Waldo_fnc_ACRE2ResolveSidePresetMap` centralises the
+side→preset lookup used by both this feature and mission start, since ACRE2 verifiably never re-syncs
+a switched player's preset on its own (its preset table is baked into a radio item at creation time,
+client-local and non-networked — confirmed against ACRE2's own upstream source).
+
+```sqf
+// MissionConfig\logisticsConfig.sqf
+["Waldo_Respawn_SeedOnSideSwitch", false], // true = seed a snapshot the first time this happens
+["Waldo_Respawn_SideSwitchMode", "CARRY_OVER"], // CARRY_OVER (default) or SIDE_BASE_LOADOUT
+```
+
+Detection is event-based (`initPlayerLocal.sqf` installs a second, independent
+`CBA_fnc_addPlayerEventHandler ["group", ...]` handler — side is always derived from group membership
+in Arma, so this is the same mechanism ACRE2's own respawn refresh already uses), not a poll, so it
+has zero standing cost. An already-established side is only ever touched by the normal
+respawn-restore path — this only ever seeds a genuinely missing snapshot
+(`Waldo_fnc_RespawnSeedSideSwitch`).
+
+- **CARRY_OVER** (`Waldo_fnc_RespawnSeedCarryOver`): saves the player's current live gear and radios
+  exactly as-is, tagged `BRIDGED`. This is a deliberate live bridge back to their old side's kit and
+  radio presets — since ACRE2 never re-syncs the preset, the carried-over radios keep working exactly
+  as they did before the switch.
+- **SIDE_BASE_LOADOUT** (`Waldo_fnc_RespawnSeedSideBaseLoadout`): reasserts the new side's own proper
+  ACRE2 preset, then assembles a weapon-aware starter kit from that side's scanned mission.sqm pool
+  (`Waldo_fnc_BuildAssembledSideLoadout`) — a coherent weapon plus compatible magazines, picked from
+  the same flattened `Logi_MissionSQMArray_*` pool the supply-crate/arsenal systems already draw from
+  (per-unit pairing is not preserved by that scan, so a weapon slot with no compatible magazine
+  anywhere in the pool is skipped rather than left unloadable). Tagged `NATIVE`. Falls back to
+  CARRY_OVER automatically if that side has no usable pool.
+
+A snapshot's tag also controls restore behaviour: `Waldo_fnc_RespawnRestoreLoadout` reasserts that
+side's official preset for every radio class before applying a `NATIVE` snapshot's saved loadout
+(radio items are baked with whatever preset is active at creation time, so this must happen before
+`setUnitLoadout`, not after); a `BRIDGED` snapshot is deliberately left alone so the cross-side bridge
+is never "corrected". `respawn/snapshot-origin` and `respawn/side-switch-seed` in WMP Diagnostics
+surface the current side's tag and whether/when a seed ran, including an `ERROR` row with a fix hint
+if SIDE_BASE_LOADOUT had to fall back due to an empty side pool.
 
 ### ENDEX / Mission End
 

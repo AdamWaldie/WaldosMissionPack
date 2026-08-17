@@ -178,6 +178,49 @@ private _validateAssignment = {
         _sideData set [_sideKey, [_netMap, _maxBlock]];
     };
 } forEach (_config getOrDefault ["sides", []]);
+// jointNets: ["netId", "family", frequency, [[sideKey, channel], ...]]. Frequency is what's actually
+// shared across sides; channel numbers stay per-side since they only mean something on that side's
+// own preset. A collision with an ordinary named net on the same side/channel is always an error,
+// not strict-gated, since that would silently misroute a real operational net onto the bridge.
+private _usedJointSlots = [];
+{
+    if (count _x != 4) then {_errors pushBack format ["Malformed joint net %1; expected [netId, radio family, shared frequency, [[side, channel], ...]].", _x];} else {
+        _x params ["_netId", "_family", "_frequency", "_sideChannels"];
+        if (_netId == "" || !(_netId isEqualType "")) then {_errors pushBack format ["Joint net %1 requires a non-empty string id.", _x]};
+        private _upperFamily = toUpper _family;
+        if !(_upperFamily in _profileFamilies) then {_errors pushBack format ["Joint net %1 uses unknown radio family %2.", _netId, _family]};
+        private _familyProfiles = _profiles select {toUpper (_x select 5) == _upperFamily};
+        if (count _familyProfiles > 0 && {_familyProfiles findIf {[_frequency, _x, 16] call _profileAcceptsValue} < 0}) then {
+            _errors pushBack format ["Joint net %1 frequency %2 is unsupported by every radio in family %3.", _netId, _frequency, _family];
+        };
+        if !(_sideChannels isEqualType [] && {count _sideChannels > 0}) then {_errors pushBack format ["Joint net %1 requires at least one [side, channel] entry.", _netId];} else {
+            {
+                if (count _x != 2) then {_errors pushBack format ["Joint net %1 has malformed side/channel entry %2.", _netId, _x];} else {
+                    _x params ["_sourceSide", "_channel"];
+                    private _sideKey = [_sourceSide] call _normaliseSide;
+                    if !(_sideKey in _sideKeys) then {_errors pushBack format ["Joint net %1 references side %2, which is not defined in sides.", _netId, _sourceSide];} else {
+                        private _sideEntry = _sideData getOrDefault [_sideKey, []];
+                        private _sideMaxBlock = if (count _sideEntry >= 2) then {_sideEntry select 1} else {16};
+                        if (count _familyProfiles > 0 && {_familyProfiles findIf {[_channel, _x, _sideMaxBlock] call _profileAcceptsValue} < 0}) then {
+                            _errors pushBack format ["Joint net %1/%2 channel %3 is out of range for radio family %4.", _netId, _sideKey, _channel, _family];
+                        };
+                        private _slotIdentity = format ["%1#%2#%3", _sideKey, _upperFamily, _channel];
+                        if (_slotIdentity in _usedJointSlots) then {_errors pushBack format ["Joint net %1 reuses %2/%3 channel %4, already claimed by another joint net.", _netId, _sideKey, _family, _channel];};
+                        _usedJointSlots pushBack _slotIdentity;
+                        private _sideEntryNets = if (count _sideEntry >= 1) then {_sideEntry select 0} else {createHashMap};
+                        private _collision = (keys _sideEntryNets) findIf {
+                            private _net = _sideEntryNets get _x;
+                            toUpper (_net select 2) == _upperFamily && {(_net select 3) isEqualTo _channel}
+                        };
+                        if (_collision >= 0) then {
+                            _errors pushBack format ["Joint net %1/%2 channel %3 collides with the ordinary named net %4 already using that channel/family.", _netId, _sideKey, _channel, (_sideEntryNets get ((keys _sideEntryNets) select _collision)) select 0];
+                        };
+                    };
+                };
+            } forEach _sideChannels;
+        };
+    };
+} forEach (_config getOrDefault ["jointNets", []]);
 {
     if (count _x != 4 || {count (_x select 1) != 2}) then {_errors pushBack format ["Malformed radio override %1.", _x]} else {
         _x params ["_sourceSide", "_selector", "_mode", "_assignments"];
