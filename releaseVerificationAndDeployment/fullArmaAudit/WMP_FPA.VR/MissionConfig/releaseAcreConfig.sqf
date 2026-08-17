@@ -49,15 +49,17 @@
  *   are supported (PRC_LR, BF888, SEM52) - PRC-343
  *   (BLOCK_CHANNEL) and PRC-77/SEM70 (FREQUENCY, no channel concept - their preset value already IS
  *   the raw frequency) are rejected at validation with a clear reason; the label itself only applies
- *   to PRC_LR (BF888/SEM52 radios have no on-screen display field, same as ordinary named nets). KNOWN
- *   v1 LIMITATION: a joint net is not yet referenceable by name from a group's assignment rows the way
- *   an ordinary named net is - a mission maker notes the channel number they placed it at (in the
- *   relevant side's own group assignments above) and assigns that number directly. There is also no
- *   in-mission Zeus toggle for a joint net yet; it is mission-start configuration only. The shared
- *   frequency itself is only checked for being a positive number - ACRE2 has no documented tunable
- *   range for PRC_LR/BF888/SEM52 and its own API stores whatever value it is given, so a wrong but
- *   plausible-looking MHz figure will not be caught. Confirm in-game that both sides actually hear
- *   each other on the channel you picked.
+ *   to PRC_LR (BF888/SEM52 radios have no on-screen display field, same as ordinary named nets). A
+ *   joint net is referenceable by its own netId from a group's assignment rows exactly like an
+ *   ordinary named net - ["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"] resolves to whichever channel
+ *   that side's own [side, channel] entry gave it. A joint net's id must be unique across every
+ *   jointNets row (it is now a real lookup key, not just a diagnostics label) and cannot reuse a key
+ *   already used by that side's own ordinary nets; both are rejected at validation with a clear
+ *   reason. There is no in-mission Zeus toggle for a joint net yet; it is mission-start configuration
+ *   only. The shared frequency itself is only checked for being a positive number - ACRE2 has no
+ *   documented tunable range for PRC_LR/BF888/SEM52 and its own API stores whatever value it is given,
+ *   so a wrong but plausible-looking MHz figure will not be caught. Confirm in-game that both sides
+ *   actually hear each other on the channel you picked.
  *
  * SETTING-BY-SETTING GUIDE - NORMAL MISSION SETTINGS
  * - enabled: master switch for WMP's replacement ACRE lifecycle.
@@ -201,11 +203,11 @@ createHashMapFromArray [
     // VALUES: [] for none, or one or more joint net rows.
     // DEFAULT: a GAME CONTROL net at channel 99 on every side, for admin/GM/out-of-character use -
     // any player who manually switches a PRC-152 or PRC-117F to channel 99 reaches it, on any side.
-    // Nothing assigns it to anyone's radio automatically; per the v1 limitation above, add a group
-    // assignment row using the raw channel number 99 (not a net key) if you want it preset for
-    // specific players, e.g. ["ACRE_PRC152", "ALL", 99, "RIGHT"]. PRC-148 cannot reach channel 99 at
-    // all (its preset only has 32 channels); PRC-152/117F support up to 100. Delete this row (or
-    // replace it with []) if you don't want a shared admin channel.
+    // Nothing assigns it to anyone's radio automatically; add a group assignment row referencing its
+    // netId, exactly like an ordinary named net, if you want it preset for specific players:
+    // ["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"]. PRC-148 cannot reach channel 99 at all (its
+    // preset only has 32 channels); PRC-152/117F support up to 100. Delete this row (or replace it
+    // with []) if you don't want a shared admin channel.
     // OTHER EXAMPLE: a WEST/EAST/GUER joint command net on PRC_LR at 45.500 MHz, each side free to
     // place it on whichever of its own channels is open, labelled "COALITION" on the physical display:
     // ["JOINT_CMD", "COALITION", "PRC_LR", 45.500, [["WEST", 13], ["EAST", 6], ["GUER", 6]]]

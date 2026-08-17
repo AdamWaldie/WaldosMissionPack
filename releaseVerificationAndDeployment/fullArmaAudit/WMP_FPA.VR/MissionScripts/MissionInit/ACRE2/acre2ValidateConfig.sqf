@@ -101,6 +101,11 @@ private _validateAssignment = {
     if (_mode == "CHANNEL" && {!(_resolved isEqualType 0 && {_resolved >= 1} && {_resolved <= (_profile select 3)} && {_resolved == floor _resolved})}) then {_errors pushBack format ["%1/%2 channel %3 is outside this radio's supported range 1-%4.", _context, _class, _resolved, _profile select 3]};
     if (_mode == "FREQUENCY" && {!([_resolved, _profile select 4] call _frequencyValid)}) then {_errors pushBack format ["%1/%2 has invalid frequency %3.", _context, _class, _resolved]};
 };
+// PASS 1: side identity + named nets only. Groups/assignments are deliberately validated in a later
+// pass (below jointNets) instead of inline here, so a group's assignment row can target a joint net
+// by its own netId exactly like an ordinary named net - jointNets' per-side channel gets merged into
+// this same _netMap before any assignment row is ever checked against it. _groups is stashed
+// unvalidated in _sideData for that later pass to pick up.
 {
     if !(_x isEqualType [] && {count _x == 4}) then {_errors pushBack format ["Malformed side entry %1; expected [side, official preset, nets, groups] - if you only have one side, make sure it is still wrapped in its own array inside sides' outer array.", _x]} else {
         _x params ["_sourceSide", "_preset", "_nets", "_groups"];
@@ -134,52 +139,8 @@ private _validateAssignment = {
                 };
             };
         } forEach _nets;
-        private _groupKeys = [];
-        private _used343 = [];
         private _maxBlock = if (_policy == "FULL_RANGE" || {_preset == "default"}) then {16} else {5};
-        {
-            if !(_x isEqualType [] && {count _x == 2}) then {_errors pushBack format ["Malformed %1 group %2; expected [group ID, assignment rows] - if this side only has one group, make sure it is still wrapped in its own array inside groups' outer array.", _sideKey, _x]} else {
-                _x params ["_groupId", "_assignments"];
-                private _groupKey = toUpperANSI (((_groupId splitString " -_.") joinString ""));
-                if (_groupKey in _groupKeys) then {_errors pushBack format ["Duplicate %1 group %2.", _sideKey, _groupKey]};
-                _groupKeys pushBack _groupKey;
-                private _identities = [];
-                private _group343Slots = [];
-                private _allClasses = [];
-                private _numberedClasses = [];
-                {
-                    private _scope = _x param [1, 0];
-                    if (_scope isEqualType "") then {_scope = toUpper _scope};
-                    private _class = toUpper (_x param [0, ""]);
-                    if (_scope isEqualType "" && {_scope == "ALL"}) then {
-                        if (_class in _numberedClasses) then {_errors pushBack format ["%1/%2 mixes ALL and numbered rows for %3; use ALL alone or number every occurrence.", _sideKey, _groupKey, _class]};
-                        _allClasses pushBackUnique _class;
-                    } else {
-                        if (_class in _allClasses) then {_errors pushBack format ["%1/%2 mixes ALL and numbered rows for %3; use ALL alone or number every occurrence.", _sideKey, _groupKey, _class]};
-                        _numberedClasses pushBackUnique _class;
-                    };
-                    private _identity = format ["%1#%2", _class, _scope];
-                    if (_identity in _identities) then {_errors pushBack format ["%1/%2 duplicates %3.", _sideKey, _groupKey, _identity]};
-                    _identities pushBack _identity;
-                    [_x, format ["%1/%2/%3", _sideKey, _groupKey, _identity], _netMap, _maxBlock, true] call _validateAssignment;
-                    if (toUpper (_x param [0, ""]) == "ACRE_PRC343" && {(_x param [2, []]) isEqualType []} && {count (_x param [2, []]) == 2}) then {
-                        private _target = _x select 2;
-                        private _flat = ((_target select 0) - 1) * 16 + (_target select 1);
-                        _group343Slots pushBackUnique _flat;
-                    };
-                } forEach _assignments;
-                {
-                    if (_x in _used343) then {
-                        private _block = floor ((_x - 1) / 16) + 1;
-                        private _channel = ((_x - 1) mod 16) + 1;
-                        private _message = format ["%1 explicit PRC-343 collision at Block %2, Channel %3.", _sideKey, _block, _channel];
-                        if (_strict) then {_errors pushBack _message} else {_warnings pushBack _message};
-                    };
-                    _used343 pushBackUnique _x;
-                } forEach _group343Slots;
-            };
-        } forEach _groups;
-        _sideData set [_sideKey, [_netMap, _maxBlock]];
+        _sideData set [_sideKey, [_netMap, _maxBlock, _groups]];
     };
 } forEach (_config getOrDefault ["sides", []]);
 // jointNets: ["netId", "label", "family", frequency, [[sideKey, channel], ...]]. Row shape mirrors an
@@ -190,8 +151,14 @@ private _validateAssignment = {
 // label (PRC_LR only, 12-char safe-charset truncation) - see Waldo_fnc_ACRE2ApplyJointNets. A collision
 // with an ordinary named net on the same side/channel is always an error, not strict-gated, since that
 // would silently misroute a real operational net onto the bridge; a joint net that wants a label uses
-// its own label field instead of that workaround.
+// its own label field instead of that workaround. netId is also a real lookup key now, not just a
+// diagnostics label: each accepted [side, channel] entry below merges an entry keyed on netId into
+// that side's own _netMap (built in PASS 1 above), so a group's assignment rows can target a joint net
+// by name - ["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"] - exactly like an ordinary named net,
+// instead of only the raw channel number. Waldo_fnc_ACRE2CompilePlan performs the equivalent merge at
+// apply time so the same lookup resolves for real, not just at validation.
 private _usedJointSlots = [];
+private _usedJointNetIds = [];
 {
     // Check the row's own type before touching `count _x`: a mission maker with only one joint
     // net can easily paste that single row directly as jointNets' value, forgetting the outer
@@ -203,6 +170,8 @@ private _usedJointSlots = [];
     if !(_x isEqualType [] && {count _x == 5}) then {_errors pushBack format ["Malformed joint net %1; expected [netId, label, radio family, shared frequency, [[side, channel], ...]] - if you only have one joint net, make sure it is still wrapped in its own array inside jointNets' outer array.", _x];} else {
         _x params ["_netId", "_label", "_family", "_frequency", "_sideChannels"];
         if (_netId == "" || !(_netId isEqualType "")) then {_errors pushBack format ["Joint net %1 requires a non-empty string id.", _x]};
+        if (toUpper _netId in _usedJointNetIds) then {_errors pushBack format ["Duplicate joint net id %1 - each jointNets row needs its own unique netId, now that it also doubles as a lookup key for assignment rows.", _netId]};
+        _usedJointNetIds pushBack (toUpper _netId);
         if !(_label isEqualType "") then {_errors pushBack format ['Joint net %1 label must be a string ("" for none).', _netId]};
         if (count _label > 12) then {_warnings pushBack format ["Joint net %1 label will be truncated to 12 characters.", _netId]};
         private _upperFamily = toUpper _family;
@@ -253,15 +222,36 @@ private _usedJointSlots = [];
                             _errors pushBack format ["Joint net %1/%2 channel %3 is out of range for radio family %4.", _netId, _sideKey, _channel, _family];
                         };
                         private _slotIdentity = format ["%1#%2#%3", _sideKey, _upperFamily, _channel];
-                        if (_slotIdentity in _usedJointSlots) then {_errors pushBack format ["Joint net %1 reuses %2/%3 channel %4, already claimed by another joint net.", _netId, _sideKey, _family, _channel];};
+                        // A slot already claimed by an earlier joint net is reported once, right here,
+                        // with its own specific message - the generic ordinary-net collision check just
+                        // below is skipped for it. _sideEntryNets now also carries every joint net
+                        // merged in by an earlier iteration of this same loop (see the merge at the
+                        // bottom), so without this guard the same reused slot would additionally trip
+                        // that check and misreport a joint net as an "ordinary named net".
+                        private _slotAlreadyJoint = _slotIdentity in _usedJointSlots;
+                        if (_slotAlreadyJoint) then {_errors pushBack format ["Joint net %1 reuses %2/%3 channel %4, already claimed by another joint net.", _netId, _sideKey, _family, _channel];};
                         _usedJointSlots pushBack _slotIdentity;
                         private _sideEntryNets = if (count _sideEntry >= 1) then {_sideEntry select 0} else {createHashMap};
-                        private _collision = (keys _sideEntryNets) findIf {
-                            private _net = _sideEntryNets get _x;
-                            toUpper (_net select 2) == _upperFamily && {(_net select 3) isEqualTo _channel}
+                        if !(_slotAlreadyJoint) then {
+                            private _collision = (keys _sideEntryNets) findIf {
+                                private _net = _sideEntryNets get _x;
+                                toUpper (_net select 2) == _upperFamily && {(_net select 3) isEqualTo _channel}
+                            };
+                            if (_collision >= 0) then {
+                                _errors pushBack format ["Joint net %1/%2 channel %3 collides with the ordinary named net %4 already using that channel/family.", _netId, _sideKey, _channel, (_sideEntryNets get ((keys _sideEntryNets) select _collision)) select 0];
+                            };
                         };
-                        if (_collision >= 0) then {
-                            _errors pushBack format ["Joint net %1/%2 channel %3 collides with the ordinary named net %4 already using that channel/family.", _netId, _sideKey, _channel, (_sideEntryNets get ((keys _sideEntryNets) select _collision)) select 0];
+                        // Merge this side's resolved channel into its own _netMap under the joint
+                        // net's id, so PASS 2 below (groups/assignments) can resolve it by name. A
+                        // joint net's id landing on an already-used ordinary net key would otherwise
+                        // silently shadow one or the other depending on lookup order - reject it
+                        // explicitly instead. This can only ever match a genuine ordinary net, never
+                        // another joint net's merged entry, since netId is already checked unique
+                        // across every jointNets row before this per-side loop even runs.
+                        if (count (_sideEntryNets getOrDefault [toUpper _netId, []]) > 0) then {
+                            _errors pushBack format ["Joint net %1's id is already used as an ordinary net key on side %2 - rename one of them.", _netId, _sideKey];
+                        } else {
+                            _sideEntryNets set [toUpper _netId, [_netId, _label, _upperFamily, _channel]];
                         };
                     };
                 };
@@ -269,6 +259,62 @@ private _usedJointSlots = [];
         };
     };
 } forEach (_config getOrDefault ["jointNets", []]);
+// PASS 2: groups/assignments, now that jointNets have merged their per-side channel into each side's
+// _netMap above. An assignment row can therefore target a joint net by its own netId exactly like an
+// ordinary named net - Waldo_fnc_ACRE2CompilePlan performs the equivalent merge so this also resolves
+// for real at apply time, not just here. Iterates (keys _sideData) rather than _sideKeys so a
+// mission-maker mistake that defines the same side twice (already reported above as "Duplicate side")
+// validates that side's groups exactly once, against the one entry _sideData actually kept, instead
+// of processing it twice while never validating the discarded duplicate's own groups at all.
+{
+    private _sideKey = _x;
+    private _sideEntry = _sideData get _sideKey;
+    _sideEntry params ["_netMap", "_maxBlock", "_groups"];
+    private _groupKeys = [];
+    private _used343 = [];
+    {
+        if !(_x isEqualType [] && {count _x == 2}) then {_errors pushBack format ["Malformed %1 group %2; expected [group ID, assignment rows] - if this side only has one group, make sure it is still wrapped in its own array inside groups' outer array.", _sideKey, _x]} else {
+            _x params ["_groupId", "_assignments"];
+            private _groupKey = toUpperANSI (((_groupId splitString " -_.") joinString ""));
+            if (_groupKey in _groupKeys) then {_errors pushBack format ["Duplicate %1 group %2.", _sideKey, _groupKey]};
+            _groupKeys pushBack _groupKey;
+            private _identities = [];
+            private _group343Slots = [];
+            private _allClasses = [];
+            private _numberedClasses = [];
+            {
+                private _scope = _x param [1, 0];
+                if (_scope isEqualType "") then {_scope = toUpper _scope};
+                private _class = toUpper (_x param [0, ""]);
+                if (_scope isEqualType "" && {_scope == "ALL"}) then {
+                    if (_class in _numberedClasses) then {_errors pushBack format ["%1/%2 mixes ALL and numbered rows for %3; use ALL alone or number every occurrence.", _sideKey, _groupKey, _class]};
+                    _allClasses pushBackUnique _class;
+                } else {
+                    if (_class in _allClasses) then {_errors pushBack format ["%1/%2 mixes ALL and numbered rows for %3; use ALL alone or number every occurrence.", _sideKey, _groupKey, _class]};
+                    _numberedClasses pushBackUnique _class;
+                };
+                private _identity = format ["%1#%2", _class, _scope];
+                if (_identity in _identities) then {_errors pushBack format ["%1/%2 duplicates %3.", _sideKey, _groupKey, _identity]};
+                _identities pushBack _identity;
+                [_x, format ["%1/%2/%3", _sideKey, _groupKey, _identity], _netMap, _maxBlock, true] call _validateAssignment;
+                if (toUpper (_x param [0, ""]) == "ACRE_PRC343" && {(_x param [2, []]) isEqualType []} && {count (_x param [2, []]) == 2}) then {
+                    private _target = _x select 2;
+                    private _flat = ((_target select 0) - 1) * 16 + (_target select 1);
+                    _group343Slots pushBackUnique _flat;
+                };
+            } forEach _assignments;
+            {
+                if (_x in _used343) then {
+                    private _block = floor ((_x - 1) / 16) + 1;
+                    private _channel = ((_x - 1) mod 16) + 1;
+                    private _message = format ["%1 explicit PRC-343 collision at Block %2, Channel %3.", _sideKey, _block, _channel];
+                    if (_strict) then {_errors pushBack _message} else {_warnings pushBack _message};
+                };
+                _used343 pushBackUnique _x;
+            } forEach _group343Slots;
+        };
+    } forEach _groups;
+} forEach (keys _sideData);
 {
     if !(_x isEqualType [] && {count _x == 4} && {(_x select 1) isEqualType [] && {count (_x select 1) == 2}}) then {_errors pushBack format ["Malformed radio override %1; expected [side, selector, mode, assignment rows] - if you only have one override, make sure it is still wrapped in its own array inside radioOverrides' outer array.", _x]} else {
         _x params ["_sourceSide", "_selector", "_mode", "_assignments"];

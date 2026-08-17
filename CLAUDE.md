@@ -261,7 +261,7 @@ all (its preset only goes to 32); only PRC-152/117F (max 100) reach it.
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
     ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
-    // [netId (diagnostics-only), label ("" for none), radio family, shared TX/RX frequency, [[side, channel], ...]]
+    // [netId, label ("" for none), radio family, shared TX/RX frequency, [[side, channel], ...]]
 ]],
 ```
 
@@ -291,10 +291,20 @@ unconditionally), and CHANNEL-mode radio profiles carry no documented frequency 
 own profile table, so there is no authoritative range anywhere in the pipeline to validate a joint
 net's frequency against beyond a plain sanity check.
 
-**Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
-the way an ordinary named net is — note the channel number and assign it directly in that side's own
-group rows. There is also no in-mission Zeus toggle for a joint net yet; it is mission-start
-configuration only.
+A joint net is referenceable by its own netId from a group's assignment rows exactly like an ordinary
+named net — `["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"]` resolves to whichever channel that
+side's own `[side, channel]` entry gave it. `Waldo_fnc_ACRE2ValidateConfig` validates side/net data in
+one pass, merges each accepted joint net entry into that side's own net lookup, then validates
+groups/assignments in a second pass so this resolution is checked at config-load time; iterating
+`keys _sideData` for that second pass (rather than the raw `sides` array) means a mission maker who
+accidentally defines the same side twice — already an error — gets that side's groups validated
+exactly once, against whichever duplicate `_sideData` actually kept, instead of the discarded
+duplicate's groups silently going unchecked. `Waldo_fnc_ACRE2CompilePlan` performs the equivalent
+merge into each side's own net table so the same key resolves for real at apply time, not just at
+validation. A joint net's netId must be unique across every jointNets row (it is a real lookup key,
+not just a diagnostics label) and cannot reuse a key already used by that side's own ordinary nets;
+both are rejected at validation with a clear reason, same as the channel/family collision check.
+There is no in-mission Zeus toggle for a joint net yet; it is mission-start configuration only.
 
 #### Vehicle radio racks (`Waldo_fnc_ACRE2RackSetup`)
 

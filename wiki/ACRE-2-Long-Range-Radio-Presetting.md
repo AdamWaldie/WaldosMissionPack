@@ -182,22 +182,22 @@ PRC-117F reach channel 99 - PRC-148's preset only goes up to channel 32, so it c
 // MissionConfig\acreConfig.sqf
 ["jointNets", [
     ["GAME_CONTROL", "GAME CONTROL", "PRC_LR", 99.000, [["WEST", 99], ["EAST", 99], ["GUER", 99], ["CIV", 99]]]
-    // [netId (diagnostics-only), label ("" for none), radio family, shared frequency, [[side, channel], ...]]
+    // [netId, label ("" for none), radio family, shared frequency, [[side, channel], ...]]
 ]],
 ```
 
 That shape deliberately matches an ordinary named net's `[key, label, family, value]` - the label
 sits right after the id, same spot, same meaning - with the per-side channel list tacked on after.
 
-Read that row as: **45.500 MHz** is the one shared frequency. On **WEST**'s own radios, **channel
-13** gets programmed to it. On **EAST**'s, **channel 6**. On **GUER**'s, also **channel 6**. So a
-WEST player switches to channel 13, an EAST player switches to channel 6 - different numbers, same
-real frequency underneath - and those two can now talk, while every other channel on their radios
-stays exactly as isolated from each other as before. The channel numbers don't need to match across
-sides because a channel number only means anything on that side's own radio preset; pick whichever
-free channel each side has available.
+Read that row as: **99.000 MHz** is the one shared frequency, and every side gets it on **channel
+99** in this example - though the channel number doesn't have to match across sides. A different
+mission might bridge WEST channel 13 to EAST channel 6 to GUER channel 6 on one shared frequency,
+each side using whichever of its own free channels is open; different numbers, same real frequency
+underneath, so those players can now talk while every other channel on their radios stays exactly as
+isolated from each other as before. The channel number only means anything on that side's own radio
+preset, so there's no requirement to reuse the same one everywhere.
 
-`"COALITION"` makes that shared channel actually show a name on the radio's own screen instead of
+`"GAME CONTROL"` makes that shared channel actually show a name on the radio's own screen instead of
 just a plain channel number - handy for making it visually obvious to players that this specific
 channel is the shared one. Use `""` for no label. It only works on PRC-148/152/117F radios (same
 limitation ordinary named channels already have), and it's the *only* way to label a joint net -
@@ -218,11 +218,14 @@ will not be rejected; it will just get programmed as given. Test the mission and
 radios actually hear each other on the channel you picked, rather than assuming a made-up frequency
 is correct just because it passed validation.
 
-**Known v1 limitation:** a joint net is not yet referenceable by name from a group's assignment rows
-the way an ordinary named net is (`["ACRE_PRC152", "ALL", "PLT1", "RIGHT"]`-style rows cannot yet say
-`"JOINT_CMD"`) - note the channel number you placed it at and assign that number directly in the
-relevant side's own group rows. There is also no in-mission Zeus toggle for a joint net yet; it is
-mission-start configuration only. Both are clean, separately-scoped future work.
+A joint net is referenceable by name from a group's assignment rows exactly like an ordinary named
+net - `["ACRE_PRC152", "ALL", "GAME_CONTROL", "RIGHT"]` presets that radio straight onto the joint
+net's channel, resolved for whichever side that group belongs to. No need to look up and hardcode the
+channel number yourself. A joint net's id has to be unique across every `jointNets` row (it's a real
+lookup key now, not just a label for your own reference) and can't reuse a name already used by that
+side's own ordinary nets - both cases are rejected with a clear reason at mission start rather than
+silently picking one or the other. There is no in-mission Zeus toggle for a joint net yet; it is
+mission-start configuration only.
 
 ## Join, respawn and persistence
 
