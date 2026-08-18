@@ -27,12 +27,21 @@ if !(isClass (configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 
 params ["_modulePos", "_objectPos"];
 
-if (isNull _objectPos || {!(_objectPos isKindOf "AllVehicles")}) exitWith {
+// Man (soldiers/AI) also inherits from AllVehicles in Arma 3's own CfgVehicles tree, so it must be
+// explicitly excluded here too - otherwise placing this directly on a person would pass the gate and
+// open a dialog for turret/pylon options that make no sense for a unit.
+if (isNull _objectPos || {!(_objectPos isKindOf "AllVehicles")} || {_objectPos isKindOf "Man"}) exitWith {
     ["VEHICLE WEAPON LOADOUT", "Place this module directly on the vehicle you want to edit.", "WARNING", "VEHWPN_ZEN", 8]
         call Waldo_fnc_FeatureNotifyLocal;
 };
 
+// LIST values are kept as STRINGs (str-encoded, decoded back with parseSimpleArray in the callback)
+// rather than raw turret-path ARRAYs - every other LIST control in this codebase uses STRING or
+// OBJECT values (Zen_jammerPlaceModule.sqf, Zen_headlessManualHandoffModule.sqf), so there is no
+// precedent confirming ZEN's own LIST widget round-trips an ARRAY value correctly, while
+// parseSimpleArray/str round-tripping a turret path is a documented, reliable engine mechanism.
 private _turretPaths = [[-1]] + (allTurrets [_objectPos, true]);
+private _turretPathKeys = _turretPaths apply {str _x};
 private _turretLabels = _turretPaths apply {
     private _current = _objectPos weaponsTurret _x;
     private _currentText = if (count _current > 0) then {
@@ -41,8 +50,10 @@ private _turretLabels = _turretPaths apply {
     format ["Turret %1 - %2", _x, _currentText]
 };
 
+// Pylon LIST values are also kept as STRINGs (the pylon's 1-based index, printed) for the same
+// reason as the turret keys above - no confirmed precedent for a NUMBER-valued LIST either.
 private _pylonCount = count (getPylonMagazines _objectPos);
-private _pylonValues = [-1];
+private _pylonValues = ["-1"];
 private _pylonLabels = ["No pylons on this vehicle"];
 if (_pylonCount > 0) then {
     private _pylonClasses = (configProperties [
@@ -58,7 +69,7 @@ if (_pylonCount > 0) then {
         } else {""};
         if (_pylonName == "") then {_pylonName = format ["Pylon %1", _i + 1]};
         private _current = _currentPylonMags param [_i, ""];
-        _pylonValues pushBack (_i + 1);
+        _pylonValues pushBack (str (_i + 1));
         _pylonLabels pushBack format ["%1 - %2", _pylonName, if (_current == "") then {"empty"} else {_current}];
     };
 };
@@ -72,7 +83,7 @@ if (_pylonCount > 0) then {
     "Vehicle Weapon Loadout",
     [
         ["TOOLBOX:WIDE", ["Loadout Target", "Whether this change applies to a turret weapon or an aircraft pylon."], [0, 1, count _targetOptions, _targetOptions]],
-        ["LIST", ["Turret", "Which turret to change (used when target is Turret weapon)."], [_turretPaths, _turretLabels, 0, 6]],
+        ["LIST", ["Turret", "Which turret to change (used when target is Turret weapon)."], [_turretPathKeys, _turretLabels, 0, 6]],
         ["TOOLBOX:WIDE", ["Turret Action", "What to do to the selected turret."], [0, 1, 4, ["Add Weapon", "Replace Turret", "Remove Weapon", "Clear Turret"]]],
         ["EDIT", ["Weapon Classname", "Exact CfgWeapons class to add/replace/remove, e.g. arifle_MX_F. Ignored for Clear and for pylons."], ""],
         ["EDIT", ["Magazine Classname", "Exact CfgMagazines class. For a pylon this is the ordnance/magazine itself."], ""],
@@ -82,7 +93,7 @@ if (_pylonCount > 0) then {
     ],
     {
         params ["_args", "_pos"];
-        _args params ["_targetIndex", "_turretPath", "_turretActionIndex", "_weaponClass", "_magazineClass", "_magazineCount", "_pylonIndex", "_pylonActionIndex"];
+        _args params ["_targetIndex", "_turretPathKey", "_turretActionIndex", "_weaponClass", "_magazineClass", "_magazineCount", "_pylonIndexKey", "_pylonActionIndex"];
         _pos params ["_vehicle"];
         if (isNull _vehicle) exitWith {
             ["VEHICLE WEAPON LOADOUT", "That vehicle no longer exists.", "WARNING", "VEHWPN_ZEN", 8] call Waldo_fnc_FeatureNotifyLocal;
@@ -90,9 +101,12 @@ if (_pylonCount > 0) then {
         private _row = [];
         if (_targetIndex == 0) then {
             private _action = ["ADD", "REPLACE", "REMOVE", "CLEAR"] param [_turretActionIndex, "ADD"];
+            private _turretPath = parseSimpleArray _turretPathKey;
+            if !(_turretPath isEqualType []) then { _turretPath = [-1]; };
             _row = ["TURRET", _turretPath, -1, _action, _weaponClass, _magazineClass, round _magazineCount];
         } else {
             private _action = ["SET", "CLEAR"] param [_pylonActionIndex, "SET"];
+            private _pylonIndex = parseNumber _pylonIndexKey;
             _row = ["PYLON", [-1], _pylonIndex, _action, "", _magazineClass, 0];
         };
         diag_log format ["[WMP ZEN] invoked module=Vehicle Weapon Loadout curator=%1 vehicle=%2 row=%3", name player, typeOf _vehicle, _row];

@@ -10,7 +10,9 @@
  *
  * Arguments:
  * 0: Vehicle <OBJECT> - the vehicle to change. Any AllVehicles-derived object with turrets and/or
- *      pylons (cars, tanks, boats, static weapons, aircraft, ...).
+ *      pylons (cars, tanks, boats, static weapons, aircraft, ...) - excluding Man, which technically
+ *      inherits from AllVehicles too but is out of scope for this feature (use ACE Arsenal or the
+ *      loadout/logistics system for a unit's own weapons instead).
  * 1: Rows <ARRAY> - one entry per change, each:
  *      [targetType <STRING>, turretPath <ARRAY>, pylonIndex <NUMBER>, action <STRING>,
  *       weaponClass <STRING>, magazineClass <STRING>, magazineCount <NUMBER>]
@@ -30,7 +32,9 @@
  *      magazineClass: CfgMagazines class - the turret magazine to load (TURRET ADD/REPLACE, optional)
  *        or the pylon's ordnance/magazine (PYLON SET, required).
  *      magazineCount: rounds loaded for a TURRET magazine (optional, default: 1). Ignored for PYLON
- *        rows - setPylonLoadOut always loads a pylon to its full config-defined ammo.
+ *        rows - a pylon is always explicitly loaded to its full CfgMagazines-defined ammo count via
+ *        setAmmoOnPylon (setPylonLoadOut's own third argument is "forced" compatibility override,
+ *        not an ammo-load flag, and never loads ammo by itself).
  *
  * Return Value:
  * Array of [ok <BOOL>, detail <STRING>] - one per input row, same order; empty array when forwarded
@@ -52,7 +56,11 @@
 
 params [["_vehicle", objNull, [objNull]], ["_rows", [], [[]]]];
 
-if (isNull _vehicle || {!(_vehicle isKindOf "AllVehicles")}) exitWith {
+// "AllVehicles" alone is not vehicle-specific - Man (soldiers/AI) also inherits from it in Arma 3's
+// own CfgVehicles tree (All -> AllVehicles -> Land -> Man, per the official CfgVehicles Config
+// Reference), so it must be explicitly excluded or this would silently accept a placed-on-a-person
+// request and try to run turret/pylon commands against a unit, which is meaningless for this feature.
+if (isNull _vehicle || {!(_vehicle isKindOf "AllVehicles")} || {_vehicle isKindOf "Man"}) exitWith {
     diag_log "[WMP VEHWPN] Waldo_fnc_VehicleWeaponLoadoutApply called with an invalid vehicle - ignored.";
     []
 };
@@ -67,6 +75,16 @@ if !(isServer) exitWith {
 private _validTurrets = [[-1]] + (allTurrets [_vehicle, true]);
 private _pylonCount = count (getPylonMagazines _vehicle);
 private _results = [];
+
+// removeWeaponTurret only removes the weapon itself - confirmed against the official command page,
+// it does not also drop that weapon's magazines - so a full strip needs a paired
+// removeMagazinesTurret pass over whatever magazinesTurret still reports afterward, or CLEAR/REPLACE
+// would leave stale magazine entries behind for a turret path that no longer has a weapon to use them.
+private _stripTurret = {
+    params ["_veh", "_path"];
+    { _veh removeWeaponTurret [_x, _path] } forEach (_veh weaponsTurret _path);
+    { _veh removeMagazinesTurret [_x, _path] } forEach (_veh magazinesTurret _path);
+};
 
 {
     _x params [
@@ -89,7 +107,7 @@ private _results = [];
         } else {
             switch (_action) do {
                 case "CLEAR": {
-                    { _vehicle removeWeaponTurret [_x, _turretPath] } forEach (_vehicle weaponsTurret _turretPath);
+                    [_vehicle, _turretPath] call _stripTurret;
                     _rowOk = true;
                     _detail = format ["Turret %1 cleared.", _turretPath];
                 };
@@ -108,7 +126,7 @@ private _results = [];
                         _detail = format ["Unknown weapon class: %1", _weaponClass];
                     } else {
                         if (_action == "REPLACE") then {
-                            { _vehicle removeWeaponTurret [_x, _turretPath] } forEach (_vehicle weaponsTurret _turretPath);
+                            [_vehicle, _turretPath] call _stripTurret;
                         };
                         _vehicle addWeaponTurret [_weaponClass, _turretPath];
                         _detail = format ["%1 %2 on turret %3.", ["Added", "Replaced with"] select (_action == "REPLACE"), _weaponClass, _turretPath];
@@ -148,10 +166,14 @@ private _results = [];
                         if !(isClass (configFile >> "CfgMagazines" >> _magazineClass)) then {
                             _detail = format ["Unknown pylon magazine/ordnance class: %1", _magazineClass];
                         } else {
-                            // The third argument (true) loads the pylon to its full config-defined
-                            // ammo count - the same call shape VVD's own purge/restore code already
-                            // uses (VVDOpen.sqf), so this is a proven, not assumed, pattern.
+                            // setPylonLoadOut's third argument is "forced" (bypass the pylon's own
+                            // compatibility check), NOT an ammo-load flag - confirmed against the
+                            // official command page, not assumed. It never loads ammo by itself, so
+                            // a fresh assignment needs an explicit setAmmoOnPylon call to actually
+                            // arm the pylon - the exact pairing VVD's own restore code already uses
+                            // (VVDOpen.sqf lines 987-988/1316-1317), which this now matches.
                             _vehicle setPylonLoadOut [_pylonIndex, _magazineClass, true];
+                            _vehicle setAmmoOnPylon [_pylonIndex, getNumber (configFile >> "CfgMagazines" >> _magazineClass >> "count")];
                             _rowOk = true;
                             _detail = format ["Pylon %1 set to %2.", _pylonIndex, _magazineClass];
                         };

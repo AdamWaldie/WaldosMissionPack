@@ -36,7 +36,9 @@ callable from an object's own Eden init field with no `isServer` wrapper (same c
 - `weaponClass` / `magazineClass`: exact `CfgWeapons` / `CfgMagazines` classnames. For a pylon row,
   `magazineClass` is the ordnance/pod itself (pylons carry no separate weapon classname).
 - `magazineCount`: rounds loaded for a TURRET magazine (optional, default 1). Ignored for pylons —
-  `setPylonLoadOut`'s own ammo flag always loads a pylon to its full config-defined count.
+  a pylon is always explicitly loaded to its full `CfgMagazines`-defined ammo count via
+  `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an
+  ammo-load flag, and never loads ammo by itself).
 
 Multiple rows in one call apply independently — a bad row (unknown classname, non-existent turret
 path/pylon index) is reported per-row and never blocks the others. Return value is
@@ -64,7 +66,9 @@ before calling the same public function mission scripts use directly.
 ## Notes
 
 - `"AllVehicles"` gate: works on any turreted or pylon-equipped vehicle — cars, tanks, boats, static
-  weapons, aircraft.
+  weapons, aircraft. `Man` (soldiers/AI) is explicitly excluded even though it technically inherits
+  from `AllVehicles` too in Arma 3's own config tree — point a mission maker at ACE Arsenal or the
+  loadout/logistics system for a unit's own weapons instead.
 - Safe to call again later on the same vehicle for further changes; each call is independent, nothing
   is cached from a prior call.
 - This is a one-shot apply, not a persistent profile system — for saving/restoring a full vehicle

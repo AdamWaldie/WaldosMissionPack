@@ -40,7 +40,7 @@ Each row is `[targetType, turretPath, pylonIndex, action, weaponClass, magazineC
 | `action` | STRING | TURRET: `ADD`, `REPLACE` (strips the turret first), `REMOVE` (one named weapon/magazine), `CLEAR` (whole turret). PYLON: `SET` (aliases `ADD`/`REPLACE` accepted), `CLEAR`. |
 | `weaponClass` | STRING | `CfgWeapons` class - TURRET rows only. |
 | `magazineClass` | STRING | `CfgMagazines` class - the turret magazine to load (TURRET, optional) or the pylon's ordnance itself (PYLON, required for `SET`). |
-| `magazineCount` | NUMBER | Rounds loaded for a TURRET magazine (default 1). Ignored for PYLON rows - `setPylonLoadOut`'s own ammo flag always loads a pylon to its full config-defined count. |
+| `magazineCount` | NUMBER | Rounds loaded for a TURRET magazine (default 1). Ignored for PYLON rows - a pylon is always explicitly loaded to its full `CfgMagazines`-defined ammo count via `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an ammo-load flag, and never loads ammo by itself). |
 
 Multiple rows apply independently in one call - a bad row (unknown classname, non-existent turret
 path/pylon index) is reported for that row only and never blocks the rest. The return value is
@@ -111,7 +111,9 @@ outcome back to the curator as a WMP notification card.
 ## Notes and limitations
 
 - Works on any `AllVehicles`-derived object with turrets and/or pylons - cars, tanks, boats, static
-  weapons, aircraft.
+  weapons, aircraft. `Man` (soldiers/AI) is explicitly excluded even though it technically inherits
+  from `AllVehicles` too in Arma 3's own config tree - use ACE Arsenal or the loadout/logistics system
+  for a unit's own weapons instead.
 - Safe to call again later on the same vehicle for further changes; each call is independent and
   nothing from a prior call is cached or assumed.
 - This is a one-shot apply, not a saved/restorable profile - to persist a vehicle's full state across
