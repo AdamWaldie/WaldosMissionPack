@@ -97,4 +97,5 @@
 * [Dynamic Anti-Air](Dynamic-Anti-Air)
 * [Dynamic AO Generation](Dynamic-AO-Generation)
 * [Airborne Gunship Support](Airborne-Gunship-Support)
+* [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout)
 * [Performance and Optimisation](Performance-And-Optimisation-Audit)

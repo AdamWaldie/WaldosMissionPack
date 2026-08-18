@@ -640,6 +640,12 @@ class CfgFunctions
             class ZenTrackerServer {
                 file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
             };
+            class ZenVehicleWeaponLoadout {
+                file = "MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf";
+            };
+            class ZenVehicleWeaponLoadoutServer {
+                file = "MissionScripts\ZenModules\zenVehicleWeaponLoadoutServer.sqf";
+            };
             class ZenNotify {
                 file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
             };
@@ -848,6 +854,10 @@ class CfgFunctions
             class GunshipReleaseControlLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipReleaseControlLocal.sqf";};
             class GunshipSetupLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSetupLocal.sqf";};
             class GunshipUpdateMarkersLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipUpdateMarkersLocal.sqf";};
+        };
+        class VehicleWeaponLoadout
+        {
+            class VehicleWeaponLoadoutApply {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf";};
         };
         class Persistence
         {

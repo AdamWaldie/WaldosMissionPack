@@ -518,6 +518,24 @@ Plant a tracker on a unit or vehicle and a chosen side follows it live on the ma
 ```
 Players get an ACE **Plant Signal Tracker** action on units and vehicles; Zeus gets a **Plant Signal Tracker** module (attaches to the nearest unit, tracked by a chosen side). Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
 
+### Vehicle Weapon Loadout (`Waldo_fnc_VehicleWeaponLoadoutApply`)
+
+Adds, replaces, removes, or clears a vehicle's turret weapons/magazines, and separately sets or clears aircraft pylon ordnance — custom weapon/ammo change-out for a specific vehicle without hand-writing `removeWeaponTurret`/`addWeaponTurret`/`setPylonLoadOut` calls. No `MissionConfig` file; this is a call/ZEN-only feature. Server-authoritative — callable from an object's own Eden init field with no `isServer` wrapper, same convention as `Waldo_fnc_Jammer`.
+
+```sqf
+// [vehicle, rows]; each row: [targetType, turretPath, pylonIndex, action, weaponClass, magazineClass, magazineCount]
+[this, [
+    ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 6]
+]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+[this, [
+    ["TURRET", [0], -1, "REMOVE", "LMG_Coax", "", 0],
+    ["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 0]
+]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+```
+`targetType` is `"TURRET"` or `"PYLON"`. TURRET `action` is `ADD`/`REPLACE`/`REMOVE`/`CLEAR`; PYLON `action` is `SET` (aliases `ADD`/`REPLACE` accepted) or `CLEAR`. `turretPath` (required for TURRET rows) is discoverable with `[[-1]] + (allTurrets [vehicle, true])` — `allTurrets` never includes the `[-1]` main/driver weapon slot itself. `pylonIndex` (required for PYLON rows, 1-based) is discoverable with `count (getPylonMagazines vehicle)`. Multiple rows apply independently in one call; a bad row (unknown classname, non-existent turret path/pylon index) is reported per-row without blocking the others. Magazine/weapon compatibility is checked via `compatibleMagazines` only as a logged warning, never a hard rejection, since that command is muzzle-specific and this call doesn't ask which muzzle is meant.
+
+Zeus ("WMP AI & Combat"): **Vehicle Weapon Loadout - Configure** — must be placed **directly on the vehicle** being edited (same convention as **Plant Signal Tracker**); placement anywhere else is rejected with a notice. The dialog's turret and pylon option lists are discovered live from that exact vehicle (`allTurrets`, `getPylonMagazines`, `TransportPylonsComponent`), never hand-typed, so only choices that vehicle genuinely supports are ever offered. Routed through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the same public function. Implemented in `MissionScripts/CombatSystems/VehicleWeaponLoadout/`.
+
 ### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
 
 Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
@@ -1300,7 +1318,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
-- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
+- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, vehicle weapon/pylon loadout change-out, plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
 - `EnvironmentalSystems/` — hazardous environments and tree felling
 - `MedicalSystems/` — patient treatment feedback, confirmed-death Obituary reporting
 - `Persistence/` — optional INIDBI2-backed persistence
@@ -1519,11 +1537,12 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
+- Vehicle Weapon Loadout - Configure → calls `Waldo_fnc_ZenVehicleWeaponLoadout` (must be placed directly on the vehicle being edited; dialog: turret or pylon target, add/replace/remove/clear action, weapon/magazine classnames; turret and pylon option lists are discovered live from that vehicle; routes through `Waldo_fnc_ZenVehicleWeaponLoadoutServer` to `Waldo_fnc_VehicleWeaponLoadoutApply`)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
 true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
 mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
-is 45 without them, 48 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
+is 46 without them, 49 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 - Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
 - Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)

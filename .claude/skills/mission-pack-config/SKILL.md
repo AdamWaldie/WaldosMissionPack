@@ -247,6 +247,7 @@ composition name that isn't documented there.
 | Dynamic Anti-Air | `references/dynamic-aa.md` | |
 | Dynamic AO Generation | `references/dynamic-ao.md` | No `MissionConfig` file — call/ZEN only |
 | Airborne Gunship Support | `references/gunship.md` | |
+| Vehicle Weapon Loadout (turret/pylon add/replace/remove) | `references/vehicle-weapon-loadout.md` | No `MissionConfig` file — call/ZEN only |
 | INIDBI2 persistence | `references/persistence.md` | Requires server-side INIDBI2 extension |
 | Object scaling / transforms | `references/object-scaling.md` | |
 | Emergency dismount | `references/emergency-dismount.md` | Intentionally no ZEN module |
