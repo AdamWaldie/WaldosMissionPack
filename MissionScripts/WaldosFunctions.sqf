@@ -646,6 +646,9 @@ class CfgFunctions
             class ZenVehicleWeaponLoadoutServer {
                 file = "MissionScripts\ZenModules\zenVehicleWeaponLoadoutServer.sqf";
             };
+            class ZenVehicleWeaponLoadoutInspect {
+                file = "MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutInspectModule.sqf";
+            };
             class ZenNotify {
                 file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
             };
@@ -858,6 +861,7 @@ class CfgFunctions
         class VehicleWeaponLoadout
         {
             class VehicleWeaponLoadoutApply {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf";};
+            class VehicleWeaponLoadoutInspect {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutInspect.sqf";};
         };
         class Persistence
         {

@@ -1,9 +1,11 @@
 # Vehicle Weapon Loadout (custom turret/pylon add, replace, remove)
 
 Associated files: `MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf`
-(`Waldo_fnc_VehicleWeaponLoadoutApply`), `MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf`
-(`Waldo_fnc_ZenVehicleWeaponLoadout`), `MissionScripts\ZenModules\zenVehicleWeaponLoadoutServer.sqf`
-(`Waldo_fnc_ZenVehicleWeaponLoadoutServer`). No `MissionConfig` file — this is a call/ZEN-only
+(`Waldo_fnc_VehicleWeaponLoadoutApply`), `vehicleWeaponLoadoutInspect.sqf`
+(`Waldo_fnc_VehicleWeaponLoadoutInspect`), `MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf`
+(`Waldo_fnc_ZenVehicleWeaponLoadout`), `zenVehicleWeaponLoadoutServer.sqf`
+(`Waldo_fnc_ZenVehicleWeaponLoadoutServer`), `Zen_vehicleWeaponLoadoutInspectModule.sqf`
+(`Waldo_fnc_ZenVehicleWeaponLoadoutInspect`). No `MissionConfig` file — this is a call/ZEN-only
 feature, not a global setting to tune.
 
 ## What it does
@@ -50,7 +52,31 @@ than one muzzle, e.g. a rifle plus an underslung grenade launcher) and this call
 muzzle is meant, so a mismatch against the primary muzzle can still be a real, valid combination
 against a secondary one.
 
-## Zeus module
+## Finding exact classnames (beginner question — always route here first)
+
+There is no engine query for "what weapons/magazines fit this turret", so a mission maker always has
+to type a real classname in. Point them at these, in order:
+
+1. **`Waldo_fnc_VehicleWeaponLoadoutInspect`** / Zeus **"Vehicle Weapon Loadout - Inspect"** — placed
+   directly on ANY vehicle (a stock/vanilla one is fine), it prints every turret's and pylon's exact
+   current weapon/magazine classnames as a full-screen `hint`, each followed by a ready-to-paste
+   `Waldo_fnc_VehicleWeaponLoadoutApply` row. This is the answer to "how do I find the classname" —
+   inspect an existing vehicle with the loadout they like, copy the row, paste it onto a different
+   vehicle. Read-only, no server round-trip, no curator-auth bridge (nothing it reports isn't already
+   visible by looking at the vehicle in Eden). Also logs the same report to that client's RPT under
+   `[WMP VEHWPN INSPECT]`.
+2. **Eden Editor's built-in Debug Console** (`Tools > Debug Console`, ships with the base game) — e.g.
+   `hint str (vehicle weaponsTurret [-1]);`.
+3. **Official Bohemia references**: [Arma 3 Assets](https://community.bistudio.com/wiki/Arma_3_Assets)
+   (canonical classname index) and
+   [Arma 3: CfgWeapons Vehicle Weapons](https://community.bistudio.com/wiki/Arma_3:_CfgWeapons_Vehicle_Weapons)
+   (vehicle-mounted turret weapons by faction).
+
+Never hand a mission maker a guessed classname presented as fact — a wrong one fails silently at apply
+time (a rejected row, not a crash). Point them at Inspect or the biki instead of recalling one from
+memory.
+
+## Zeus modules
 
 **"Vehicle Weapon Loadout - Configure"** (category **WMP AI & Combat**) — must be placed **directly
 on the vehicle** to edit, same convention as **Plant Signal Tracker**; placing it on open ground or
@@ -58,10 +84,25 @@ any other object is rejected with an on-screen notice. The dialog's turret list,
 current-loadout labels are all discovered live from that exact vehicle (`allTurrets`,
 `getPylonMagazines`, and the `TransportPylonsComponent` config for pylon display names) — never a
 hand-typed list — so only choices that vehicle actually supports are ever shown. Weapon and magazine
-classnames are still typed in (there's no general "what weapons fit this turret" engine query), so
-get exact classnames from the vehicle's/weapon's config or a reference like the biki before typing
-them in. Routes through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge
-before calling the same public function mission scripts use directly.
+classnames are still typed in — see "Finding exact classnames" above before typing one in. Routes
+through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the
+same public function mission scripts use directly.
+
+**"Vehicle Weapon Loadout - Inspect"** (same category, same placed-directly-on-the-vehicle
+convention) — the read-only companion described above. No dialog; acts immediately and shows the
+report via `hint` on the curator's own client.
+
+## Out of scope: vehicle appearance
+
+Recoloring a vehicle ("a pink tank") or hiding part of its physical model (e.g. a turret cupola) is a
+different, unrelated Arma system — cosmetic model state, not weapon/ammo content — and is **not**
+covered by this feature or any current WMP script. Recoloring uses
+[`setObjectTextureGlobal [selection, texturePath]`](https://community.bistudio.com/wiki/setObjectTextureGlobal)
+against the vehicle's own config-declared `hiddenSelections[]`; hiding a named model part uses
+[`hideSelection ["name", true]`](https://community.bistudio.com/wiki/hideSelection). Both only work
+for selections the vehicle's own model/config actually exposes — there's no universal "recolor any
+vehicle" slot. WMP's closest existing feature is `Waldo_fnc_VehicleCamoSetup` (`misc-mission-maker-tools.md`
+→ Vehicle Ambush & Camo), which works via physical deployable camo objects, not texture-swapping.
 
 ## Notes
 

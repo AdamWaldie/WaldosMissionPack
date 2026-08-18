@@ -44,14 +44,17 @@
  * // Replace the main turret's cannon and load 6 rounds, from a vehicle's init field:
  * [this, [["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 6]]]
  *     call Waldo_fnc_VehicleWeaponLoadoutApply;
- * // Remove a coax MG from turret [0] and set a jet's pylon 1 to a GBU-12 pod:
+ * // Remove a coax MG from turret [0] (exact coax classname varies per vehicle family - confirm it
+ * // with Waldo_fnc_VehicleWeaponLoadoutInspect rather than assuming "LMG_Coax" is universal) and set
+ * // a jet's pylon 1 to a GBU-12 pod:
  * [this, [
  *     ["TURRET", [0], -1, "REMOVE", "LMG_Coax", "", 0],
  *     ["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 0]
  * ]] call Waldo_fnc_VehicleWeaponLoadoutApply;
  *
  * Current callers: mission-maker vehicle init fields, the ZEN "Vehicle Weapon Loadout - Configure"
- * module (via Waldo_fnc_ZenVehicleWeaponLoadoutServer).
+ * module (via Waldo_fnc_ZenVehicleWeaponLoadoutServer). See Waldo_fnc_VehicleWeaponLoadoutInspect for
+ * the beginner-friendly way to discover exact classnames from an existing vehicle.
  */
 
 params [["_vehicle", objNull, [objNull]], ["_rows", [], [[]]]];
