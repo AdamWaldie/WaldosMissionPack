@@ -126,3 +126,7 @@ outcome back to the curator as a WMP notification card.
 - [Persistence](Persistence) - saving/restoring a vehicle's state (including ammo) across a mission.
 - [Zeus and Script API Parity](Zeus-And-Script-API-Parity) - how WMP keeps every Zeus module and its
   underlying script API in sync.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
