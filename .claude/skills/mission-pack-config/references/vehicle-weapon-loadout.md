@@ -2,10 +2,13 @@
 
 Associated files: `MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf`
 (`Waldo_fnc_VehicleWeaponLoadoutApply`), `vehicleWeaponLoadoutInspect.sqf`
-(`Waldo_fnc_VehicleWeaponLoadoutInspect`), `MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf`
+(`Waldo_fnc_VehicleWeaponLoadoutInspect`), `vehicleWeaponLoadoutCopy.sqf`
+(`Waldo_fnc_VehicleWeaponLoadoutCopy`), `MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf`
 (`Waldo_fnc_ZenVehicleWeaponLoadout`), `zenVehicleWeaponLoadoutServer.sqf`
 (`Waldo_fnc_ZenVehicleWeaponLoadoutServer`), `Zen_vehicleWeaponLoadoutInspectModule.sqf`
-(`Waldo_fnc_ZenVehicleWeaponLoadoutInspect`). No `MissionConfig` file — this is a call/ZEN-only
+(`Waldo_fnc_ZenVehicleWeaponLoadoutInspect`), `Zen_vehicleWeaponLoadoutCopyModule.sqf` +
+`zenVehicleWeaponLoadoutCopyServer.sqf` (`Waldo_fnc_ZenVehicleWeaponLoadoutCopy` /
+`Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer`). No `MissionConfig` file — this is a call/ZEN-only
 feature, not a global setting to tune.
 
 ## What it does
@@ -37,10 +40,11 @@ callable from an object's own Eden init field with no `isServer` wrapper (same c
 - `action` for PYLON: `"SET"` (aliases `"ADD"`/`"REPLACE"` accepted) or `"CLEAR"`.
 - `weaponClass` / `magazineClass`: exact `CfgWeapons` / `CfgMagazines` classnames. For a pylon row,
   `magazineClass` is the ordnance/pod itself (pylons carry no separate weapon classname).
-- `magazineCount`: rounds loaded for a TURRET magazine (optional, default 1). Ignored for pylons —
-  a pylon is always explicitly loaded to its full `CfgMagazines`-defined ammo count via
+- `magazineCount`: rounds loaded for a TURRET magazine (optional, default 1). For a PYLON row it's the
+  *exact* ammo override instead: `0`/omitted loads the pylon's full `CfgMagazines`-defined count via
   `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an
-  ammo-load flag, and never loads ammo by itself).
+  ammo-load flag, and never loads ammo by itself); a positive value loads exactly that many rounds,
+  clamped to the magazine's own full count.
 
 Multiple rows in one call apply independently — a bad row (unknown classname, non-existent turret
 path/pylon index) is reported per-row and never blocks the others. Return value is
@@ -55,26 +59,32 @@ against a secondary one.
 ## Finding exact classnames (beginner question — always route here first)
 
 There is no engine query for "what weapons/magazines fit this turret", so a mission maker always has
-to type a real classname in. Point them at these, in order:
+to get a real classname from somewhere. Point them at these, in order — the first fully avoids typing
+one at all:
 
-1. **`Waldo_fnc_VehicleWeaponLoadoutInspect`** / Zeus **"Vehicle Weapon Loadout - Inspect"** — placed
+1. **`Waldo_fnc_VehicleWeaponLoadoutCopy`** / Zeus **"Vehicle Weapon Loadout - Copy From Nearby
+   Vehicle"** — placed on the *target* vehicle, picks a nearby *source* vehicle (discovered live
+   within 100m) and copies its real turret/pylon loadout directly, including the source's exact
+   remaining pylon ammo via `ammoOnPylon`. No classname is ever seen or typed by anyone. This is the
+   right default whenever "make this vehicle armed like that one" is the actual goal, not "I want to
+   see/tweak the classname."
+2. **`Waldo_fnc_VehicleWeaponLoadoutInspect`** / Zeus **"Vehicle Weapon Loadout - Inspect"** — placed
    directly on ANY vehicle (a stock/vanilla one is fine), it prints every turret's and pylon's exact
    current weapon/magazine classnames as a full-screen `hint`, each followed by a ready-to-paste
-   `Waldo_fnc_VehicleWeaponLoadoutApply` row. This is the answer to "how do I find the classname" —
-   inspect an existing vehicle with the loadout they like, copy the row, paste it onto a different
-   vehicle. Read-only, no server round-trip, no curator-auth bridge (nothing it reports isn't already
-   visible by looking at the vehicle in Eden). Also logs the same report to that client's RPT under
-   `[WMP VEHWPN INSPECT]`.
-2. **Eden Editor's built-in Debug Console** (`Tools > Debug Console`, ships with the base game) — e.g.
+   `Waldo_fnc_VehicleWeaponLoadoutApply` row. Use this over Copy when the mission maker wants to see
+   or edit the classname before applying it. Read-only, no server round-trip, no curator-auth bridge
+   (nothing it reports isn't already visible by looking at the vehicle in Eden). Also logs the same
+   report to that client's RPT under `[WMP VEHWPN INSPECT]`.
+3. **Eden Editor's built-in Debug Console** (`Tools > Debug Console`, ships with the base game) — e.g.
    `hint str (vehicle weaponsTurret [-1]);`.
-3. **Official Bohemia references**: [Arma 3 Assets](https://community.bistudio.com/wiki/Arma_3_Assets)
+4. **Official Bohemia references**: [Arma 3 Assets](https://community.bistudio.com/wiki/Arma_3_Assets)
    (canonical classname index) and
    [Arma 3: CfgWeapons Vehicle Weapons](https://community.bistudio.com/wiki/Arma_3:_CfgWeapons_Vehicle_Weapons)
    (vehicle-mounted turret weapons by faction).
 
 Never hand a mission maker a guessed classname presented as fact — a wrong one fails silently at apply
-time (a rejected row, not a crash). Point them at Inspect or the biki instead of recalling one from
-memory.
+time (a rejected row, not a crash). Point them at Copy/Inspect or the biki instead of recalling one
+from memory.
 
 ## Zeus modules
 
@@ -91,6 +101,12 @@ same public function mission scripts use directly.
 **"Vehicle Weapon Loadout - Inspect"** (same category, same placed-directly-on-the-vehicle
 convention) — the read-only companion described above. No dialog; acts immediately and shows the
 report via `hint` on the curator's own client.
+
+**"Vehicle Weapon Loadout - Copy From Nearby Vehicle"** — placed on the vehicle that should *receive*
+the loadout; the dialog picks the nearby vehicle to copy *from* plus copy-turrets/copy-pylons
+checkboxes (both default on). Routes through the curator-authenticated
+`Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutCopy`, which
+reads the source and calls `Waldo_fnc_VehicleWeaponLoadoutApply` itself.
 
 ## Out of scope: vehicle appearance
 

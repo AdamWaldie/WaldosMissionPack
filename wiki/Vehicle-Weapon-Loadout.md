@@ -2,7 +2,7 @@
 
 > **Use this page when:** you want to arm, rearm, disarm, or swap the weapons/ammo on a specific vehicle - a turret weapon, its magazines, or an aircraft pylon's ordnance - through a script call or Zeus, instead of hand-writing `removeWeaponTurret`/`addWeaponTurret`/`setPylonLoadOut`.
 
-_Associated Files: `MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf`, `vehicleWeaponLoadoutInspect.sqf`, `MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf`, `zenVehicleWeaponLoadoutServer.sqf`, `Zen_vehicleWeaponLoadoutInspectModule.sqf`, `Waldo_fnc_VehicleWeaponLoadoutApply`, `Waldo_fnc_VehicleWeaponLoadoutInspect`, `Waldo_fnc_ZenVehicleWeaponLoadout`, `Waldo_fnc_ZenVehicleWeaponLoadoutServer`, `Waldo_fnc_ZenVehicleWeaponLoadoutInspect`_
+_Associated Files: `MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf`, `vehicleWeaponLoadoutInspect.sqf`, `vehicleWeaponLoadoutCopy.sqf`, `MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf`, `zenVehicleWeaponLoadoutServer.sqf`, `Zen_vehicleWeaponLoadoutInspectModule.sqf`, `Zen_vehicleWeaponLoadoutCopyModule.sqf`, `zenVehicleWeaponLoadoutCopyServer.sqf`, `Waldo_fnc_VehicleWeaponLoadoutApply`, `Waldo_fnc_VehicleWeaponLoadoutInspect`, `Waldo_fnc_VehicleWeaponLoadoutCopy`, `Waldo_fnc_ZenVehicleWeaponLoadout`, `Waldo_fnc_ZenVehicleWeaponLoadoutServer`, `Waldo_fnc_ZenVehicleWeaponLoadoutInspect`, `Waldo_fnc_ZenVehicleWeaponLoadoutCopy`, `Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer`_
 
 There is no `MissionConfig` file for this feature - it's a call/ZEN-only tool, not a global setting.
 
@@ -40,7 +40,7 @@ Each row is `[targetType, turretPath, pylonIndex, action, weaponClass, magazineC
 | `action` | STRING | TURRET: `ADD`, `REPLACE` (strips the turret first), `REMOVE` (one named weapon/magazine), `CLEAR` (whole turret). PYLON: `SET` (aliases `ADD`/`REPLACE` accepted), `CLEAR`. |
 | `weaponClass` | STRING | `CfgWeapons` class - TURRET rows only. |
 | `magazineClass` | STRING | `CfgMagazines` class - the turret magazine to load (TURRET, optional) or the pylon's ordnance itself (PYLON, required for `SET`). |
-| `magazineCount` | NUMBER | Rounds loaded for a TURRET magazine (default 1). Ignored for PYLON rows - a pylon is always explicitly loaded to its full `CfgMagazines`-defined ammo count via `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an ammo-load flag, and never loads ammo by itself). |
+| `magazineCount` | NUMBER | Rounds loaded for a TURRET magazine (default 1). For a PYLON row it's the *exact* ammo count instead: `0` (or omitted) loads the pylon's full `CfgMagazines`-defined count via `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an ammo-load flag, and never loads ammo by itself); a positive value loads exactly that many rounds, clamped to the magazine's own full count. |
 
 Multiple rows apply independently in one call - a bad row (unknown classname, non-existent turret
 path/pylon index) is reported for that row only and never blocks the rest. The return value is
@@ -49,14 +49,28 @@ path/pylon index) is reported for that row only and never blocks the rest. The r
 ```sqf
 // Strip a coax MG off turret [0] (exact coax classname varies per vehicle family - confirm
 // it with Inspect below rather than assuming "LMG_Coax" is universal), and load pylon 1 with a
-// GBU-12 pod:
+// GBU-12 pod at its full ammo count (0 = full):
 [this, [
     ["TURRET", [0], -1, "REMOVE", "LMG_Coax", "", 0],
     ["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 0]
 ]] call Waldo_fnc_VehicleWeaponLoadoutApply;
 
+// Load the same pod but with only 2 of its rounds instead of a full load:
+[this, [["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 2]]]
+    call Waldo_fnc_VehicleWeaponLoadoutApply;
+
 // Clear a turret completely:
 [this, [["TURRET", [-1], -1, "CLEAR", "", "", 0]]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+```
+
+### Copying a whole loadout from another vehicle
+
+```sqf
+// Give myJeep the exact turret/pylon loadout of referenceVehicle - no classname typed:
+[referenceVehicle, myJeep] call Waldo_fnc_VehicleWeaponLoadoutCopy;
+// [copiedTurretPaths, copiedPylonIndices, applyResults] - only turret paths present on BOTH
+// vehicles are copied, and pylons are copied by index (1st to 1st, 2nd to 2nd, ...) including the
+// source's exact remaining ammo via ammoOnPylon.
 ```
 
 ### Discovering real turret paths and pylon counts
@@ -71,16 +85,25 @@ private _pylonCount = count (getPylonMagazines vehicle);     // 0 = no pylons on
 There is no engine query for "what weapons/magazines fit this turret" - a turret's weapon slot
 genuinely accepts almost any vehicle-mounted weapon class regardless of the vehicle's own original
 armament (that's the whole point of `addWeaponTurret`), so there is nothing for the game to filter a
-list against. This means classnames are always typed in, never picked from a guaranteed-compatible
-list - which is exactly the beginner pain point this section (and the **Inspect** module below) exist
-to solve.
+list against. This means classnames are always typed in somewhere, never picked from a
+guaranteed-compatible list - which is exactly the beginner pain point this section, and the two
+helper modules below, exist to solve. In order of how completely each one avoids typing a classname:
 
-**Fastest option - copy from a vehicle you already like:** place **Vehicle Weapon Loadout - Inspect**
-directly on any vehicle (a stock/vanilla one works great - you don't need to own or have configured
-it) and it prints every turret's and pylon's exact current classnames as a full-screen `hint`, each
-followed by a ready-to-paste row, in this format (illustrative - the exact classnames always come from
-whatever vehicle you actually inspect, not from this page; the pairing shown here, a tank cannon plus
-its HE round, is the one Bohemia's own `addWeaponTurret` documentation example uses):
+**Never type a classname at all - copy the loadout directly.** Place **Vehicle Weapon Loadout - Copy
+From Nearby Vehicle** directly on the vehicle you want to *receive* a loadout, pick another vehicle
+within 100m to copy *from* (a stock/vanilla one works great - you don't need to own or have configured
+it), and confirm. Every classname is read straight off the source vehicle and applied to the target -
+nobody ever sees or types one. It only touches turret paths that exist on both vehicles (so copying a
+tank's cannon onto a car copies nothing for that turret, reported not silently skipped) and copies
+pylons by index including the source's *exact* remaining ammo, not just a fresh reload. This is the
+right choice whenever "make this vehicle armed like that one" is really the goal.
+
+**Want to see the classnames, or tweak just one thing?** Place **Vehicle Weapon Loadout - Inspect**
+directly on any vehicle and it prints every turret's and pylon's exact current classnames as a
+full-screen `hint`, each followed by a ready-to-paste row, in this format (illustrative - the exact
+classnames always come from whatever vehicle you actually inspect, not from this page; the pairing
+shown here, a tank cannon plus its HE round, is the one Bohemia's own `addWeaponTurret` documentation
+example uses):
 
 ```
 --- <vehicle display name> (<vehicle class>) ---
@@ -94,8 +117,8 @@ written to that client's own RPT under `[WMP VEHWPN INSPECT]` if you want a perm
 purely read-only - it never changes the inspected vehicle - and needs no curator authentication since
 it tells you nothing you couldn't already see by looking at the vehicle in Eden.
 
-**Other official ways to find a classname**, in order of how likely a beginner is to already have
-them available:
+**Other official ways to find a classname**, for the rare case neither helper covers, in order of how
+likely a beginner is to already have them available:
 - **Eden Editor's built-in Debug Console** (`Tools > Debug Console` in the 3D Editor) - run
   `hint str (vehicle weaponsTurret [-1]);` or `hint str (getPylonMagazines vehicle);` against a
   selected vehicle. Confirmed shipped with the base game, not a mod.
@@ -154,6 +177,20 @@ is the read-only companion module described above under [Finding the exact
 classnames](#finding-the-exact-classnames-beginner-friendly) - no dialog, acts immediately, and shows
 the report as a full-screen `hint` on the curator's own client. Unlike **Configure** it needs no
 curator-authentication bridge and never touches the server, because it never changes anything.
+
+**Vehicle Weapon Loadout - Copy From Nearby Vehicle** must be placed directly on the vehicle that
+should *receive* the copied loadout. Its dialog picks the *source* vehicle to copy from:
+
+| Control | Meaning |
+|---|---|
+| Copy loadout from | Nearby vehicle to copy from, discovered live within 100m of the target, nearest first |
+| Copy Turret Weapons | Copy every turret path that exists on both vehicles (default on) |
+| Copy Pylon Ordnance | Copy every pylon by index, including exact remaining ammo (default on) |
+
+Routes through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer` bridge to
+`Waldo_fnc_VehicleWeaponLoadoutCopy`, which reads the source vehicle's real state and builds the
+equivalent `Waldo_fnc_VehicleWeaponLoadoutApply` rows itself - the same public apply/validation path
+every other entry point uses, just with the rows assembled from a live vehicle instead of typed in.
 
 ## Notes and limitations
 

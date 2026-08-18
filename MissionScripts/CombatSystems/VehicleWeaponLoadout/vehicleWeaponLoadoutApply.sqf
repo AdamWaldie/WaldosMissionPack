@@ -175,10 +175,17 @@ private _stripTurret = {
                             // a fresh assignment needs an explicit setAmmoOnPylon call to actually
                             // arm the pylon - the exact pairing VVD's own restore code already uses
                             // (VVDOpen.sqf lines 987-988/1316-1317), which this now matches.
+                            // magazineCount doubles as the exact pylon ammo count here: 0 (or
+                            // omitted) means "full", matching the previous always-full behaviour for
+                            // any existing caller that never set it; a positive value loads exactly
+                            // that many rounds, clamped so a mission maker can't ask for more than the
+                            // ordnance's own CfgMagazines "count" actually holds.
+                            private _fullAmmo = getNumber (configFile >> "CfgMagazines" >> _magazineClass >> "count");
+                            private _ammoToLoad = if (_magazineCount > 0) then {_magazineCount min _fullAmmo} else {_fullAmmo};
                             _vehicle setPylonLoadOut [_pylonIndex, _magazineClass, true];
-                            _vehicle setAmmoOnPylon [_pylonIndex, getNumber (configFile >> "CfgMagazines" >> _magazineClass >> "count")];
+                            _vehicle setAmmoOnPylon [_pylonIndex, _ammoToLoad];
                             _rowOk = true;
-                            _detail = format ["Pylon %1 set to %2.", _pylonIndex, _magazineClass];
+                            _detail = format ["Pylon %1 set to %2 (%3/%4 ammo).", _pylonIndex, _magazineClass, _ammoToLoad, _fullAmmo];
                         };
                     };
                     default { _detail = format ["Unknown pylon action: %1", _action]; };

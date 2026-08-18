@@ -2992,7 +2992,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('MISMATCH', overlay)
         self.assertIn('ownership mismatches:', toggle)
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnosticsClient.sqf").read_text(encoding="utf-8")
-        self.assertIn("[47, 49, 50, 52]", diagnostics)
+        self.assertIn("[48, 50, 51, 53]", diagnostics)
 
     def test_manual_headless_handoff_can_target_one_live_hc(self):
         module = (ROOT / "MissionScripts" / "ZenModules" / "Zen_headlessManualHandoffModule.sqf").read_text(encoding="utf-8")

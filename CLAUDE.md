@@ -534,22 +534,33 @@ Adds, replaces, removes, or clears a vehicle's turret weapons/magazines, and sep
     ["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 0]
 ]] call Waldo_fnc_VehicleWeaponLoadoutApply;
 ```
-`targetType` is `"TURRET"` or `"PYLON"`. TURRET `action` is `ADD`/`REPLACE`/`REMOVE`/`CLEAR`; PYLON `action` is `SET` (aliases `ADD`/`REPLACE` accepted) or `CLEAR`. `turretPath` (required for TURRET rows) is discoverable with `[[-1]] + (allTurrets [vehicle, true])` — `allTurrets` never includes the `[-1]` main/driver weapon slot itself. `pylonIndex` (required for PYLON rows, 1-based) is discoverable with `count (getPylonMagazines vehicle)`. Multiple rows apply independently in one call; a bad row (unknown classname, non-existent turret path/pylon index) is reported per-row without blocking the others. Magazine/weapon compatibility is checked via `compatibleMagazines` only as a logged warning, never a hard rejection, since that command is muzzle-specific and this call doesn't ask which muzzle is meant.
+`targetType` is `"TURRET"` or `"PYLON"`. TURRET `action` is `ADD`/`REPLACE`/`REMOVE`/`CLEAR`; PYLON `action` is `SET` (aliases `ADD`/`REPLACE` accepted) or `CLEAR`. `turretPath` (required for TURRET rows) is discoverable with `[[-1]] + (allTurrets [vehicle, true])` — `allTurrets` never includes the `[-1]` main/driver weapon slot itself. `pylonIndex` (required for PYLON rows, 1-based) is discoverable with `count (getPylonMagazines vehicle)`. Multiple rows apply independently in one call; a bad row (unknown classname, non-existent turret path/pylon index) is reported per-row without blocking the others. Magazine/weapon compatibility is checked via `compatibleMagazines` only as a logged warning, never a hard rejection, since that command is muzzle-specific and this call doesn't ask which muzzle is meant. `magazineCount` doubles as the exact PYLON ammo override: `0` (or omitted) loads the pylon's full `CfgMagazines`-defined count via `setAmmoOnPylon` (the previous, still-default behaviour); a positive value loads exactly that many rounds, clamped to the magazine's own full count so a mission maker can't request more than the ordnance actually holds.
 
 Zeus ("WMP AI & Combat"): **Vehicle Weapon Loadout - Configure** — must be placed **directly on the vehicle** being edited (same convention as **Plant Signal Tracker**); placement anywhere else is rejected with a notice. The dialog's turret and pylon option lists are discovered live from that exact vehicle (`allTurrets`, `getPylonMagazines`, `TransportPylonsComponent`), never hand-typed, so only choices that vehicle genuinely supports are ever offered. Routed through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the same public function. Implemented in `MissionScripts/CombatSystems/VehicleWeaponLoadout/`.
 
 There is no engine query for "what weapons/magazines fit this turret", so classnames are still typed
-in rather than picked from a filtered list. `Waldo_fnc_VehicleWeaponLoadoutInspect` (Zeus: **Vehicle
-Weapon Loadout - Inspect**, same placed-directly-on-the-vehicle convention) is the beginner-friendly
-answer: point it at any vehicle — including a stock/vanilla one whose loadout you like — and it
-reports every turret's exact weapon/magazine classnames and every pylon's exact ordnance classname as
-a full-screen `hint`, each followed by a ready-to-paste `Waldo_fnc_VehicleWeaponLoadoutApply` row you
-can copy onto a different vehicle. Purely read-only (never mutates anything), so it runs entirely on
-the curator's own client with no server round-trip and no curator-authentication bridge, and also logs
-the same report to that client's own RPT under `[WMP VEHWPN INSPECT]`. See
-`wiki/Vehicle-Weapon-Loadout.md` for the full beginner workflow and a cheat-sheet of common vanilla
-classnames plus links to Bohemia's own official class-name references (`Arma 3: Assets`,
-`Arma_3:_CfgWeapons_Vehicle_Weapons`) and the built-in Eden Editor Debug Console.
+in rather than picked from a filtered list. Two beginner-friendly helpers exist so a mission maker
+never has to guess or hand-type one from memory, in order of how completely they avoid it:
+
+- **`Waldo_fnc_VehicleWeaponLoadoutCopy`** (Zeus: **Vehicle Weapon Loadout - Copy From Nearby
+  Vehicle**, placed on the target vehicle) — the strongest option: copies another nearby vehicle's
+  real turret/pylon loadout directly, so no classname is ever typed at all. Matches turret paths that
+  exist on both vehicles exactly (no cross-vehicle guessing) and pylons by index, including the
+  source's exact remaining pylon ammo via `ammoOnPylon`. Built entirely on top of
+  `Waldo_fnc_VehicleWeaponLoadoutApply` — it only reads the source and assembles rows.
+- **`Waldo_fnc_VehicleWeaponLoadoutInspect`** (Zeus: **Vehicle Weapon Loadout - Inspect**) — point it
+  at any vehicle, including a stock/vanilla one whose loadout you like, and it reports every turret's
+  exact weapon/magazine classnames and every pylon's exact ordnance classname as a full-screen `hint`,
+  each followed by a ready-to-paste `Waldo_fnc_VehicleWeaponLoadoutApply` row you can copy onto a
+  different vehicle — for when you want to edit the classname before applying it (Copy always applies
+  the exact match).
+
+Both are purely read-only (never mutate anything), run entirely on the curator's own client with no
+server round-trip or curator-authentication bridge for the read, and Inspect also logs its report to
+that client's own RPT under `[WMP VEHWPN INSPECT]`. See `wiki/Vehicle-Weapon-Loadout.md` for the full
+beginner workflow, including links to Bohemia's own official class-name references (`Arma 3: Assets`,
+`Arma_3:_CfgWeapons_Vehicle_Weapons`) and the built-in Eden Editor Debug Console for the rare case
+neither helper covers.
 
 Vehicle appearance (recoloring via `setObjectTextureGlobal`/`hiddenSelectionsTextures`, or hiding a
 turret's physical model via `hideSelection`) is a distinct, unrelated Arma system — cosmetic model
@@ -1560,11 +1571,12 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 - Vehicle Weapon Loadout - Configure → calls `Waldo_fnc_ZenVehicleWeaponLoadout` (must be placed directly on the vehicle being edited; dialog: turret or pylon target, add/replace/remove/clear action, weapon/magazine classnames; turret and pylon option lists are discovered live from that vehicle; routes through `Waldo_fnc_ZenVehicleWeaponLoadoutServer` to `Waldo_fnc_VehicleWeaponLoadoutApply`)
 - Vehicle Weapon Loadout - Inspect → calls `Waldo_fnc_ZenVehicleWeaponLoadoutInspect` (must be placed directly on the vehicle to inspect; no dialog, reports its exact turret/pylon classnames plus ready-to-paste rows via a local `hint`; read-only, runs entirely on the curator's client via `Waldo_fnc_VehicleWeaponLoadoutInspect`, no server round-trip)
+- Vehicle Weapon Loadout - Copy From Nearby Vehicle → calls `Waldo_fnc_ZenVehicleWeaponLoadoutCopy` (must be placed directly on the target vehicle; dialog: pick a nearby source vehicle, discovered live within 100m, plus copy-turrets/copy-pylons checkboxes; no classname is ever typed - routes through `Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer` to `Waldo_fnc_VehicleWeaponLoadoutCopy`, which reads the source vehicle's real turret/pylon state, including exact remaining pylon ammo via `ammoOnPylon`, and applies it through `Waldo_fnc_VehicleWeaponLoadoutApply`)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
 true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
 mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
-is 47 without them, 50 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
+is 48 without them, 51 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 - Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
 - Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)

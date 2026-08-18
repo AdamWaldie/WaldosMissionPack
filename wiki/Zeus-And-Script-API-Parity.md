@@ -8,7 +8,7 @@ WMP's Zeus Enhanced modules are authoring surfaces over the same mission functio
 2. Its handler and declared script API are present in `CfgFunctions` and the source pack.
 3. Its current implementation has been exercised in Arma on the required client/server path.
 
-The checked-in manifest is `releaseVerificationAndDeployment/zeus_script_parity.json`. Its validation tool rejects missing registrations, missing handlers, invented API names, broken declared bridges and missing required controls. The audit currently covers all 47 categorized core modules and all 19 Economy modules.
+The checked-in manifest is `releaseVerificationAndDeployment/zeus_script_parity.json`. Its validation tool rejects missing registrations, missing handlers, invented API names, broken declared bridges and missing required controls. The audit currently covers all 48 categorized core modules and all 19 Economy modules.
 
 ## Direct modules and adapters
 
