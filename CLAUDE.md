@@ -821,13 +821,23 @@ never took even after retrying, which also shows the affected player a WARNING n
 of staying RPT/Diagnostics-only; `respawn`/`radio-restore` reads `Waldo_Player_LastRadioRestoreOutcome`
 for whether the saved ACRE radio state reapplied, fell back to the current mission plan (also
 notified to the player, gated by `notifyAssignmentProblems` like every other ACRE assignment-problem
-warning), or there was no complete radio snapshot to restore. `dependencies`/`ace-nametags-respawn-compat` is
-informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is
-loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own
-`CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn
-params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the
-corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP
-causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
+warning), or there was no complete radio snapshot to restore.
+
+**ACE `setName` respawn bug (`Waldo_fnc_AceSetNameRespawnBindingRepair`):** ACE 3.21.1's own
+`ace_common` respawn hook forwarded the engine's `[unit, corpse]` respawn payload wholesale into
+`ace_common_fnc_setName`, whose untyped `_forceSet` parameter then received the corpse object and
+threw `Type Object, expected Bool` on every scripted respawn - not something WMP causes, but visible
+whenever `ace_nametags`/`ace_dogtags` (or any other ACE feature depending on `ace_common_fnc_setName`
+firing cleanly on respawn) is loaded. Rather than only diagnosing this, `initPlayerLocal.sqf` calls
+`[player] call Waldo_fnc_AceSetNameRespawnBindingRepair;` after CBA/ACE initialise: it inspects the
+local player's compiled `cba_xeh_respawn` callback array and, if it still contains the broken
+wholesale-forward pattern, replaces just that callback with an argument-safe
+`{[_this select 0] call ace_common_fnc_setName}` - interface-client-local, repeat-safe, no public or
+JIP state. ACE fixed the same bug upstream directly in `community/ACE3#11470` (closes ACE issue
+#11468, targeted for release 3.21.2); the repair function recognises ACE's own fixed callback text as
+already safe too, so it becomes a genuine no-op rather than a redundant re-patch once a mission's ACE
+build already has the upstream fix. Kept rather than removed even after 3.21.2 ships broadly, since a
+mission's exact ACE version is never guaranteed.
 
 `mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` into a client-local `Waldo_InfoText_Timings` hashmap: the initial local `PreloadFinished` wait, subsequent player/display readiness, the diagnostic client state at release, WMP's fake-cover duration, when normal control was available, and how much longer the detached title kept typing. The pre-mission briefing state, `BIS_fnc_init`, mission `time`, `WALDO_INIT_COMPLETE`, and unrelated features are not readiness gates. `ERROR` means the preload event or usable local player/display did not arrive within its bounded wait.
 
