@@ -10,13 +10,19 @@
  * than rebuilt on every dialog open.
  *
  * Discovery technique:
- *  - Turret weapons: for every CfgVehicles class, configProperties recursively finds every config
- *    entry anywhere in that class's tree carrying its own non-empty weapons[] array - the exact
- *    existence test Waldo_fnc_GunshipRegister already uses to find armed aircraft, extended here to
- *    also read the array values. Each entry's sibling magazines[] array (the same turret's declared
- *    magazine list) is stored as that weapon's representative default - a starting point to edit, not
- *    a compatibility guarantee, the same honesty standard Waldo_fnc_VehicleWeaponLoadoutApply already
- *    documents for compatibleMagazines.
+ *  - Turret weapons: for every CfgVehicles class, a manual, explicit walk of only its own "Turrets"
+ *    class chain (recursing into nested Turrets for sub-turrets/optics, the same structure allTurrets
+ *    itself walks at runtime) reads each turret entry's weapons[]/magazines[] arrays directly. This is
+ *    deliberately NOT the blanket configProperties [.., true] full-tree recursion
+ *    Waldo_fnc_GunshipRegister uses to test for "does an armed turret exist anywhere" on one candidate
+ *    class - applied per-class across the entire CfgVehicles tree that same blanket recursion walks
+ *    into every unrelated subtree too (Sounds, HitPoints, Reflectors, animations, ...), which is both
+ *    needlessly expensive at this scale and floods the RPT with spurious engine "'weapons/' is not a
+ *    class" warnings wherever an unrelated property happens to share that name - confirmed against a
+ *    submitted RPT during this feature's own testing. Each turret entry's sibling magazines[] array
+ *    (the same turret's declared magazine list) is stored as that weapon's representative default - a
+ *    starting point to edit, not a compatibility guarantee, the same honesty standard
+ *    Waldo_fnc_VehicleWeaponLoadoutApply already documents for compatibleMagazines.
  *  - Pylon ordnance: every CfgMagazines entry carrying a non-empty pylonWeapon property (the
  *    documented, standard marker for pylon-usable ordnance) is catalogued directly - a single
  *    top-level CfgMagazines pass, no per-vehicle recursion needed.
@@ -56,22 +62,35 @@ private _startTick = diag_tickTime;
 // --- Turret weapon catalog ---
 private _turretRows = [];
 private _seenWeapons = createHashMap;
+// Walks only a class's own "Turrets" chain (never Sounds/HitPoints/animations/etc.) - the same
+// structure allTurrets itself walks at runtime - recursing into nested Turrets for sub-turrets.
+private _walkTurrets = {
+    params ["_parentEntry"];
+    private _turretsClass = _parentEntry >> "Turrets";
+    if (isClass _turretsClass) then {
+        {
+            if (isClass _x) then {
+                private _weapons = if (isArray (_x >> "weapons")) then {getArray (_x >> "weapons")} else {[]};
+                if (count _weapons > 0) then {
+                    private _magazines = if (isArray (_x >> "magazines")) then {getArray (_x >> "magazines")} else {[]};
+                    {
+                        private _weaponClass = _x;
+                        if (isClass (configFile >> "CfgWeapons" >> _weaponClass) && {!(_seenWeapons getOrDefault [_weaponClass, false])}) then {
+                            _seenWeapons set [_weaponClass, true];
+                            private _displayName = getText (configFile >> "CfgWeapons" >> _weaponClass >> "displayName");
+                            if (_displayName == "") then {_displayName = _weaponClass};
+                            _turretRows pushBack [_weaponClass, _displayName, _magazines];
+                        };
+                    } forEach _weapons;
+                };
+                [_x] call _walkTurrets;
+            };
+        } forEach ("true" configClasses _turretsClass);
+    };
+};
 {
     if (getNumber (_x >> "scope") >= 1) then {
-        private _turretEntries = configProperties [_x, "isArray (_x >> 'weapons') && {count getArray (_x >> 'weapons') > 0}", true];
-        {
-            private _weapons = getArray (_x >> "weapons");
-            private _magazines = getArray (_x >> "magazines");
-            {
-                private _weaponClass = _x;
-                if (isClass (configFile >> "CfgWeapons" >> _weaponClass) && {!(_seenWeapons getOrDefault [_weaponClass, false])}) then {
-                    _seenWeapons set [_weaponClass, true];
-                    private _displayName = getText (configFile >> "CfgWeapons" >> _weaponClass >> "displayName");
-                    if (_displayName == "") then {_displayName = _weaponClass};
-                    _turretRows pushBack [_weaponClass, _displayName, _magazines];
-                };
-            } forEach _weapons;
-        } forEach _turretEntries;
+        [_x] call _walkTurrets;
     };
 } forEach ("true" configClasses (configFile >> "CfgVehicles"));
 _turretRows = [_turretRows, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy;

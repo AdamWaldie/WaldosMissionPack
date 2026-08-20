@@ -50,7 +50,7 @@ params [
 private _isValidVehicle = {
     !(isNull _this) && {_this isKindOf "AllVehicles"} && {!(_this isKindOf "Man")}
 };
-if !([_source] call _isValidVehicle && {[_target] call _isValidVehicle}) exitWith {
+if !(_source call _isValidVehicle && {_target call _isValidVehicle}) exitWith {
     diag_log "[WMP VEHWPN COPY] Waldo_fnc_VehicleWeaponLoadoutCopy called with an invalid source or target vehicle - ignored.";
     [[], [], []]
 };

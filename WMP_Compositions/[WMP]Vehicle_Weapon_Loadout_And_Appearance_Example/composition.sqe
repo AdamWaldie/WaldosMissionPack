@@ -26,13 +26,13 @@ class items
 			init="[WMP_VehWpnDonor, this] call Waldo_fnc_VehicleWeaponLoadoutCopy; [this, [[""TEXTURE"", 0, ""SET"", [1,0,1,1]]]] call Waldo_fnc_VehicleAppearanceApply;";
 		};
 		id=2;
-		type="B_MRAP_01_F";
+		type="B_MRAP_01_hmg_F";
 	};
 	class Item2
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={4,0,-8};};
-		title="Vehicle Weapon Loadout And Appearance example: the armed Hunter (HMG) donates its real turret loadout to the unarmed Hunter beside it via Waldo_fnc_VehicleWeaponLoadoutCopy - no weapon or magazine classname is ever typed, since Copy reads the donor turret state live at mission start. The receiving Hunter is also painted solid pink via Waldo_fnc_VehicleAppearanceApply, using the built-in procedural texture syntax that needs no texture asset. Zeus offers the same workflow at runtime. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Weapon-Loadout";
+		title="Vehicle Weapon Loadout And Appearance example: both Hunters share the same armed HMG variant so their turret[0] paths genuinely match - Copy only ever moves a turret path that exists on both vehicles, and an unarmed Hunter has none to receive one. No weapon or magazine classname is typed here; Waldo_fnc_VehicleWeaponLoadoutCopy reads the donor's live turret state and applies it to the target. The receiver is also painted solid pink via Waldo_fnc_VehicleAppearanceApply's procedural texture syntax (no asset needed), so the two stay visually distinguishable. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Weapon-Loadout";
 		id=3;
 	};
 };
