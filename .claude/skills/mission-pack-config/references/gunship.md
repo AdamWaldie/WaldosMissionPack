@@ -86,11 +86,11 @@ Raw runtime calls (used by the ZEN modules, or for reassigning later):
 The assigned controller also has a **Configure Orbit** self-interaction (ACE + vanilla fallback,
 gated like Designate Orbit) that opens a small dialog (`Waldo_fnc_GunshipPromptOrbitConfig`)
 pre-filled with the live radius/altitude and submits `SET_ORBIT_PARAMS` above — the only way to
-change a *registered* gunship's radius/altitude without destroying and re-registering it. A
-persistent off-station status panel (hidden while `ON_STATION`/`CONTROLLED`) explains why the
-aircraft is currently away: resupply countdown, resupply-in-progress, or "retasked to a new orbit".
-The aircraft marker uses the vanilla `"mil_warning"` icon; a border-only ellipse at the orbit centre
-shows the current loiter radius.
+change a *registered* gunship's radius/altitude without destroying and re-registering it. A **View
+Off-Station Status** self-interaction (visible only while not `ON_STATION`/`CONTROLLED`) reveals a
+panel for 10s explaining why the aircraft is currently away: resupply countdown, resupply-in-progress,
+or "retasked to a new orbit" — it is never shown automatically. The aircraft marker uses the vanilla
+`"mil_warning"` icon; a border-only ellipse at the orbit centre shows the current loiter radius.
 
 ## Zeus
 

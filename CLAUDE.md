@@ -223,7 +223,21 @@ Airborne Gunship Support uses the same named-instance principle but a separate f
 
 Each gunship's aircraft marker uses the vanilla `"mil_warning"` exclamation-triangle icon (the same type already used for radio jammer markers), side-coloured, with a live `"<callsign> - <status>"` text; a companion border-only `"ELLIPSE"` marker at the orbit centre, sized to the aircraft's current loiter radius, shows the orbit's real footprint. Both are reconciled by `Waldo_fnc_GunshipSetupLocal` and kept in sync every second by `Waldo_fnc_GunshipUpdateMarkersLocal`, and deleted at the same two call sites the aircraft marker already is. The assigned controller gets a **Configure Orbit** action (ACE self-interaction, with vanilla fallback), gated the same as Designate Orbit/Return for Service (available from `TRANSIT` onward). It opens `Waldo_fnc_GunshipPromptOrbitConfig`, a small dialog built on the shared `Waldo_fnc_EcoCore_createZeusPromptDisplay` chrome, pre-filled with the gunship's live radius/altitude; submitting sends `["id", "SET_ORBIT_PARAMS", [radius, altitude], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]`, the same direct-remoteExecCall convention every other controller action already uses. The server clamps both values to `(value max 300)` capped by the existing `Waldo_Gunship_MaximumRadius`/`Waldo_Gunship_MaximumAltitude` ceilings — this 300m floor applies only to this live-adjust path; `Waldo_fnc_GunshipRegister`'s own registration-time floors (200m radius / 100m altitude) are unchanged. The change re-applies live via `Waldo_fnc_GunshipApplyOrbitLocal` while `TRANSIT`/`ON_STATION`/`CONTROLLED`, and republishes state so both markers and the FAC's own next dialog open reflect the new values.
 
-A persistent off-station status panel (`Waldo_fnc_GunshipStatusHud`, shown to the assigned controller only, hidden once back `ON_STATION`/`CONTROLLED`) explains *why* the aircraft is currently unavailable: a live "back on station in ~Ns" countdown while `SERVICING` (reusing the same ETA math the Status action already computes), a distinct "retasked to a new orbit" line, or a "returning for resupply" line for a service run in progress. This is driven by a new state field, `offStationReason` (`"REQUEST"`|`"AUTO"`|`"RETASK"`), published alongside existing gunship state: set to `"REQUEST"`/`"AUTO"` by `Waldo_fnc_GunshipServerHandle`'s `SERVICE` case depending on whether a real player or the automatic fuel/damage/ammo monitor triggered it, set to `"RETASK"` by `Waldo_fnc_GunshipSetOrbit` when a `TRANSIT` issue's position genuinely differs from the gunship's own currently stored orbit (so the monitor's own post-service resume-to-the-same-orbit call, and the `RETURN` operation, are never mistaken for a real retask), and cleared once the aircraft is `ON_STATION`/`CONTROLLED` again.
+An on-demand off-station status panel (`Waldo_fnc_GunshipStatusHud`) explains *why* the aircraft is
+currently unavailable: a live "back on station in ~Ns" countdown while `SERVICING` (reusing the same
+ETA math the Status action already computes), a distinct "retasked to a new orbit" line, or a
+"returning for resupply" line for a service run in progress. It is never shown automatically — the
+assigned controller gets a **View Off-Station Status** action (ACE self-interaction, with vanilla
+fallback), visible only while the gunship is not `ON_STATION`/`CONTROLLED`, that calls
+`Waldo_fnc_GunshipRevealStatusHud` to open it for a fixed duration (10s), auto-hiding either once that
+duration elapses or as soon as the aircraft returns `ON_STATION`/`CONTROLLED`, whichever comes first.
+This is driven by a new state field, `offStationReason` (`"REQUEST"`|`"AUTO"`|`"RETASK"`), published
+alongside existing gunship state: set to `"REQUEST"`/`"AUTO"` by `Waldo_fnc_GunshipServerHandle`'s
+`SERVICE` case depending on whether a real player or the automatic fuel/damage/ammo monitor triggered
+it, set to `"RETASK"` by `Waldo_fnc_GunshipSetOrbit` when a `TRANSIT` issue's position genuinely
+differs from the gunship's own currently stored orbit (so the monitor's own post-service
+resume-to-the-same-orbit call, and the `RETURN` operation, are never mistaken for a real retask), and
+cleared once the aircraft is `ON_STATION`/`CONTROLLED` again.
 
 Dynamic AO (`Waldo_fnc_DynamicAOCreate`, the **Dynamic AO - Create** ZEN module) builds a complete
 randomized area of operations — infantry patrols, building garrisons, static weapons, weighted

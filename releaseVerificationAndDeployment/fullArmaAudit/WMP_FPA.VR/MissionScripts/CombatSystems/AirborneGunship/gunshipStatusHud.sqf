@@ -1,10 +1,11 @@
 /*
  * Author: WaldoTheWarfighter
- * Draws a persistent off-station status panel for a gunship's assigned controller. The map
- * marker's status text updates silently once a second and easily scrolls off attention; this keeps
- * "why is my gunship not available right now" visible without spamming toast notifications.
- * Visible only while the aircraft is not ON_STATION/CONTROLLED; hidden otherwise. Passing
- * enabled=false hides it.
+ * Draws the off-station status panel for a gunship's assigned controller - the low-level display
+ * setter/hider only. It never decides WHEN to show or hide itself and is never driven by a per-frame
+ * loop; the panel is revealed on demand for a fixed duration by the "View Off-Station Status"
+ * self-interaction (Waldo_fnc_GunshipRevealStatusHud), which calls this with enabled=true then again
+ * with enabled=false once its duration elapses or the gunship returns to ON_STATION/CONTROLLED,
+ * whichever comes first.
  *
  * Locality and authority: runs only on the receiving interface client and mutates only local main
  * display controls. It never mutates gunship or any other server state.
@@ -20,7 +21,7 @@
  * Return Value:
  * Boolean - true when the panel was updated or hidden; false without a player interface.
  *
- * Current callers: Waldo_fnc_GunshipUpdateMarkersLocal.
+ * Current callers: Waldo_fnc_GunshipRevealStatusHud.
  *
  * Example:
  * [true, "SPECTRE 1", "SERVICING", "REQUEST", serverTime + 120] call Waldo_fnc_GunshipStatusHud;

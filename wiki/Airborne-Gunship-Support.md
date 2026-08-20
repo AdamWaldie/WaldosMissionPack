@@ -153,14 +153,16 @@ re-registering it.
 
 ## Off-station status panel
 
-While the assigned controller's gunship is not `ON_STATION`/`CONTROLLED`, a persistent panel names
+While the assigned controller's gunship is not `ON_STATION`/`CONTROLLED`, a **View Off-Station
+Status** action (ACE self-interaction, with vanilla fallback) is available and opens a panel naming
 *why*: a live "back on station in ~Ns" countdown while `SERVICING`, "returning for resupply - not
 yet on station" while `RTB`/`TRANSIT` toward a service run (whether the controller requested it or
 the automatic fuel/damage/ammo monitor triggered it), or "off station - retasked to a new orbit"
 when a genuine Designate Orbit/`SET_ORBIT` redirect - not the monitor's own post-service resume - is
-the reason. It disappears entirely once the aircraft is back `ON_STATION`/`CONTROLLED`. This
-complements the map marker's status text and the one-shot toast notifications, which are both easy
-to miss or scroll past.
+the reason. The panel is never shown automatically - interacting reveals it for 10 seconds, and it
+auto-hides sooner if the aircraft returns `ON_STATION`/`CONTROLLED` in the meantime. This complements
+the map marker's status text and the one-shot toast notifications, which are both easy to miss or
+scroll past, without adding a panel that appears/disappears on its own.
 
 ## Runtime operations
 

@@ -141,6 +141,7 @@ private _newVanillaActions = [];
         // genuinely requires the aircraft to be physically on station.
         private _canOrbitOrService = _isControllerSelf && {_status in ["TRANSIT", "ON_STATION", "CONTROLLED"]};
         private _canTakeControl = _isControllerSelf && {_status in ["ON_STATION", "CONTROLLED"]};
+        private _isOffStation = _isControllerSelf && {!(_status in ["ON_STATION", "CONTROLLED"])};
         private _controllerLabel = if (isNull _controller) then {"no controller assigned - ask your curator to run Gunship: Assign Controller"} else {if (_isControllerSelf) then {"you"} else {name _controller}};
         if !(isNil "ace_interact_menu_fnc_createAction") then {
             private _categoryId = format ["Waldo_Gunship_%1", _id];
@@ -170,6 +171,11 @@ private _newVanillaActions = [];
                 private _orbitConfigAction = [format ["%1_OrbitConfig", _categoryId], "Configure Orbit", "\A3\ui_f\data\igui\cfg\simpletasks\types\move_ca.paa", {private _args = _this select 2; [(_args select 0)] call Waldo_fnc_GunshipPromptOrbitConfig}, {(_this select 2) select 1}, {}, [_id, _canOrbitOrService]] call ace_interact_menu_fnc_createAction;
                 [player, 1, ["ACE_SelfActions", _categoryId], _orbitConfigAction] call ace_interact_menu_fnc_addActionToObject;
                 _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_OrbitConfig", _categoryId]]];
+                // On-demand only - see gunshipUpdateMarkersLocal.sqf's header for why the off-station
+                // panel is never shown automatically.
+                private _statusHudAction = [format ["%1_StatusHud", _categoryId], "View Off-Station Status", "\A3\ui_f\data\igui\cfg\simpletasks\types\destroy_ca.paa", {private _args = _this select 2; [(_args select 0)] call Waldo_fnc_GunshipRevealStatusHud}, {(_this select 2) select 1}, {}, [_id, _isOffStation]] call ace_interact_menu_fnc_createAction;
+                [player, 1, ["ACE_SelfActions", _categoryId], _statusHudAction] call ace_interact_menu_fnc_addActionToObject;
+                _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_StatusHud", _categoryId]]];
                 {
                     _x params ["_label", "_path"];
                     private _actionId = format ["%1_Turret_%2", _categoryId, _forEachIndex];
@@ -194,6 +200,7 @@ private _newVanillaActions = [];
                 _actions pushBack (player addAction [format ["%1: Designate Orbit", _callsign], {[(_this select 3)] call Waldo_fnc_GunshipSelectOrbitLocal}, _id, 1.5, false, true, "", str _canOrbitOrService]);
                 _actions pushBack (player addAction [format ["%1: Return for Service", _callsign], {[_this select 3, "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, _id, 1.5, false, true, "", str _canOrbitOrService]);
                 _actions pushBack (player addAction [format ["%1: Configure Orbit", _callsign], {[(_this select 3)] call Waldo_fnc_GunshipPromptOrbitConfig}, _id, 1.5, false, true, "", str _canOrbitOrService]);
+                _actions pushBack (player addAction [format ["%1: View Off-Station Status", _callsign], {[(_this select 3)] call Waldo_fnc_GunshipRevealStatusHud}, _id, 1.5, false, true, "", str _isOffStation]);
                 {
                     _x params ["_label", "_path"];
                     _actions pushBack (player addAction [format ["%1: Control %2", _callsign, _label], {private _args = _this select 3; [_args select 0, "TAKE_CONTROL", [_args select 1], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, [_id, _path], 1.5, false, true, "", str _canTakeControl]);

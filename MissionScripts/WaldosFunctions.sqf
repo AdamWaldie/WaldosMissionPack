@@ -859,6 +859,7 @@ class CfgFunctions
             class GunshipUpdateMarkersLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipUpdateMarkersLocal.sqf";};
             class GunshipPromptOrbitConfig {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipPromptOrbitConfig.sqf";};
             class GunshipStatusHud {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipStatusHud.sqf";};
+            class GunshipRevealStatusHud {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipRevealStatusHud.sqf";};
         };
         class VehicleAppearance
         {

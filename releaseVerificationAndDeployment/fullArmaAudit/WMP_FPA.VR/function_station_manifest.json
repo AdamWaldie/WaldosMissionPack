@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 974,
+  "registeredFunctionCount": 975,
   "runtimeFunctionCount": 385,
-  "functionCount": 1359,
+  "functionCount": 1360,
   "stations": [
     {
       "id": "control",
@@ -2573,6 +2573,12 @@
     {
       "name": "Waldo_fnc_GunshipStatusHud",
       "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipStatusHud.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipRevealStatusHud",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipRevealStatusHud.sqf",
       "station": "gunship",
       "activation": "manual"
     },
