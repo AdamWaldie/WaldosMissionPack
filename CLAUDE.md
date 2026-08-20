@@ -538,7 +538,31 @@ Adds, replaces, removes, or clears a vehicle's turret weapons/magazines, and sep
 ```
 `targetType` is `"TURRET"` or `"PYLON"`. TURRET `action` is `ADD`/`REPLACE`/`REMOVE`/`CLEAR`; PYLON `action` is `SET` (aliases `ADD`/`REPLACE` accepted) or `CLEAR`. `turretPath` (required for TURRET rows) is discoverable with `[[-1]] + (allTurrets [vehicle, true])` — `allTurrets` never includes the `[-1]` main/driver weapon slot itself. `pylonIndex` (required for PYLON rows, 1-based) is discoverable with `count (getPylonMagazines vehicle)`. Multiple rows apply independently in one call; a bad row (unknown classname, non-existent turret path/pylon index) is reported per-row without blocking the others. Magazine/weapon compatibility is checked via `compatibleMagazines` only as a logged warning, never a hard rejection, since that command is muzzle-specific and this call doesn't ask which muzzle is meant. `magazineCount` is rounds loaded into **each** magazine instance (clamped to that magazine class's own full `CfgMagazines` count, same clamp `addMagazine` itself performs); `magazineQuantity` (TURRET ADD/REPLACE only, default `1`) is how many **separate** magazine instances to add — `addMagazineTurret` only ever adds one instance per call, so this loops it. For PYLON rows, `magazineCount` doubles as the exact ammo override instead: `0` (or omitted) loads the pylon's full `CfgMagazines`-defined count via `setAmmoOnPylon` (the previous, still-default behaviour); a positive value loads exactly that many rounds, clamped to the magazine's own full count so a mission maker can't request more than the ordnance actually holds.
 
-Zeus ("WMP AI & Combat"): **Vehicle Weapon Loadout - Configure** — must be placed **directly on the vehicle** being edited (same convention as **Plant Signal Tracker**); placement anywhere else is rejected with a notice. The dialog's turret and pylon option lists are discovered live from that exact vehicle (`allTurrets`, `getPylonMagazines`, `TransportPylonsComponent`), never hand-typed, so only choices that vehicle genuinely supports are ever offered. **Copy Weapon From** / **Copy Ordnance From** pickers list every distinct weapon+magazine pairing (or pylon ordnance) already mounted somewhere on this exact vehicle (dynamic, read live off the object, excludes the horn), extended with a **pack-wide catalog** discovered across every vehicle class in the currently loaded modset via `Waldo_fnc_VehicleWeaponLoadoutCatalogBuild` — not just this one vehicle. That scan is real work on a large modset, so `Waldo_fnc_ZenInitModules` kicks it off in the background at mission start (cached for the rest of the mission, config data being immutable during one) rather than blocking the dialog; each picker caps its pack-wide section and truncates long labels so a LIST with thousands of entries never visibly overruns its control. Both pickers default to "Type manually", leaving the classname/magazine/count fields as the only source. A **Session Action** picker turns single-shot editing into a small builder: **Apply Now** (the original one-shot behaviour), **Queue This Action** (stash the row in a client-local, per-vehicle queue and reopen the dialog for another action on the same vehicle), **Apply All Queued** (submit the whole queue plus the current row in one call — `Waldo_fnc_VehicleWeaponLoadoutApply` already accepts multiple rows per call), **Export Queue To Clipboard** (copy a ready-to-paste multi-row `[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` block for a unit's Eden init field without applying anything or clearing the queue), and **Clear Queue**. Apply actions route through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the same public function; Queue/Export are interface-client-local only, nothing is sent to the server until Apply is actually chosen. Implemented in `MissionScripts/CombatSystems/VehicleWeaponLoadout/`.
+Zeus ("WMP Vehicle Customisation"): **Vehicle Customisation - Editor** — a single persistent, multi-tab
+dialog (Turret / Pylon / Appearance / Component) that replaces the old one-shot Configure, Copy From
+Nearby Vehicle, Register Component, and Remove/Restore Component modules. Must be placed **directly on
+the vehicle** being edited (same convention as **Plant Signal Tracker**); placement anywhere else is
+rejected with a notice. The Turret and Pylon tabs' option lists are discovered live from that exact
+vehicle (`allTurrets`, `getPylonMagazines`, `TransportPylonsComponent`), never hand-typed, and their
+**Copy Weapon From** / **Copy Ordnance From** pickers list every distinct weapon+magazine pairing (or
+pylon ordnance) already mounted somewhere on this exact vehicle, extended with a **pack-wide catalog**
+discovered across every vehicle class in the currently loaded modset via
+`Waldo_fnc_VehicleWeaponLoadoutCatalogBuild` (kicked off in the background at mission start by
+`Waldo_fnc_ZenInitModules`, cached for the rest of the mission). A curator queues any number of turret,
+pylon, appearance, and component changes across the four tabs into one permanent **Pending Changes**
+list — each tab's Add button is gated by its own validation-gated collector, so a blank or incomplete
+row can never reach Pending — then either **Apply All Pending** (one curator-authenticated request
+through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge, which dispatches
+turret/pylon rows to `Waldo_fnc_VehicleWeaponLoadoutApply`, appearance rows to
+`Waldo_fnc_VehicleAppearanceApply`, and component rows to `Waldo_fnc_VehicleComponentRemove`) or
+**Export All Pending To Clipboard** (purely client-side — builds one ready-to-paste multi-statement
+Eden-init-field snippet covering whichever row types are actually pending, applies nothing, and keeps
+the pending list intact). **Copy From Nearby Vehicle...** (Turret tab) opens an in-dialog picker of
+vehicles within 100m and, on pick, pushes that source's real turret/pylon rows straight into Pending via
+the read-only `Waldo_fnc_VehicleWeaponLoadoutCopyPreview` — no classname typed, no server call until
+Apply. **Remove Selected Pending Row** and **Clear All Pending** manage the queue without applying
+anything. Implemented in `MissionScripts/CombatSystems/VehicleCustomization/` and
+`MissionScripts/CombatSystems/VehicleWeaponLoadout/`.
 
 **The horn is excluded from every mutating operation.** A vehicle's horn is an ordinary `CfgWeapons` entry to the engine (identified here by `CfgWeapons` `displayName` — there is no other reliable "not a combat weapon" flag), but never a weapon a mission maker or curator means. `Waldo_fnc_VehicleWeaponLoadoutApply` itself refuses every mutating TURRET action (`ADD`/`REPLACE`/`REMOVE`/`CLEAR`) against a horn-only turret with `[false, "..."]` — this is the single authoritative check, enforced regardless of caller (a raw script call or an object's own Eden init field is refused exactly like a ZEN-driven one). The Configure module additionally labels a horn-only turret `(horn - not editable here)` in its turret list, never defaults to it, and shows an on-screen notice if one is picked anyway — a client-side convenience that avoids a wasted round-trip to the server, not the enforcement itself. `Waldo_fnc_VehicleWeaponLoadoutCopy` skips copying a horn-only source turret entirely, so a source vehicle's horn can never overwrite a matching target turret path that holds a real weapon. `Waldo_fnc_VehicleWeaponLoadoutInspect` still reports a horn turret (informational — nothing here mutates anything) but never generates a paste-ready row for it.
 
@@ -632,31 +656,38 @@ vehicle's turret" genuinely means both gone-looking and gone-functioning:
 Restoring (`hide` `false`) only re-shows the selection — it does not re-arm whatever weapon the turret
 held, since that was never recorded; re-arm it separately with `Waldo_fnc_VehicleWeaponLoadoutApply`.
 
-`Waldo_fnc_VehicleComponentCatalogRegister` remembers a discovered selection name/turret path pairing
-for a vehicle **class** (not one instance) under a short label, so the discovery only has to happen
-once per class, not once per placed vehicle:
+`Waldo_fnc_VehicleComponentHeuristicScan` scans a placed vehicle live, every time the Zeus Editor
+dialog's Component tab opens, for model selections whose name suggests a removable part (a fixed,
+adjustable substring list — `"turret"`, `"gun"`, `"weapon"`, `"mount"`, `"hatch"`, `"rws"`, `"cannon"`,
+`"hmg"`, `"gmg"`) and best-effort-correlates each one against the vehicle's real turret paths. There is
+still no engine flag marking a selection as "this is a removable component" — every candidate's label
+carries an explicit "best-effort, verify visually" caveat, never presented as fact — but this replaces
+the old per-class registration catalog entirely: no setup step, always accurate to the live vehicle,
+callable directly:
 
 ```sqf
-[["B_MRAP_01_F", "B_MRAP_01_gmg_F"], "Remote Weapon Station", "rws_base", [0]]
-    call Waldo_fnc_VehicleComponentCatalogRegister;
+private _candidates = [cursorObject] call Waldo_fnc_VehicleComponentHeuristicScan;
+// Array of [selectionName, likelyTurretPath, label] - label already carries the caveat text.
 ```
 
-WMP ships **no pre-seeded catalog entries** — a wrong selection name presented as fact is worse than
-none at all, so every entry has to be discovered and registered by a mission maker or curator first.
-
-Zeus ("WMP Vehicle Appearance"): **Vehicle Appearance - Set Texture** — must be placed **directly on
-the vehicle**; the texture-slot list is discovered live from that vehicle's own `hiddenSelections[]`,
-with Solid Color (four sliders) or Custom Texture Path modes. **Vehicle Appearance - Inspect** — same
-placement convention, read-only, reports texture slots and every named model selection via `hint`,
-copies the model selection names to the clipboard (never the full prose report — an inline `//`
-comment surviving a paste into an Eden init field without real line breaks is a confirmed real-world
-failure mode, "Invalid number in expression", so nothing comment-bearing is ever put on the
-clipboard). **Vehicle Appearance - Register Component** — records a component (label, selection name,
-optional linked turret path) for the placed vehicle's exact class. **Vehicle Appearance - Remove/Restore
-Component** — offers any component already registered for that vehicle's class as a picker (the
-"dynamic pickup" path — no typing needed once registered), or a typed selection-name/turret-path
-fallback. All four route through curator-authenticated server bridges before calling the same public
-functions mission scripts use directly. Implemented in `MissionScripts/CombatSystems/VehicleAppearance/`.
+Zeus ("WMP Vehicle Customisation"): the Appearance and Component tabs of the same
+**Vehicle Customisation - Editor** dialog documented under **Vehicle Weapon Loadout** above handle
+texture recoloring and component removal/restoral — see that section for the full tour. The
+Appearance tab's texture-slot list is discovered live from the placed vehicle's own
+`hiddenSelections[]`, with Solid Color (four fields) or Custom Texture Path modes; the Component tab
+offers `Waldo_fnc_VehicleComponentHeuristicScan`'s live candidates as a picker (auto-filling Selection
+Name and Linked Turret Path), or a typed selection-name/turret-path fallback — confirm a real name
+first with **Vehicle Customisation - Inspect** (below) if unsure. Both tabs' rows queue into the same
+Pending Changes list as Turret/Pylon rows and apply through the same consolidated
+`Waldo_fnc_ZenVehicleCustomizationServer` bridge. **Vehicle Customisation - Inspect** — placed
+directly on the vehicle, read-only, merges what used to be two separate Inspect modules via
+`Waldo_fnc_VehicleCustomizationInspect`: reports texture slots and every named model selection via
+`hint` alongside the weapon/pylon report, and copies the model selection names to the clipboard (never
+the full prose report — an inline `//` comment surviving a paste into an Eden init field without real
+line breaks is a confirmed real-world failure mode, "Invalid number in expression", so nothing
+comment-bearing is ever put on the clipboard). Implemented in
+`MissionScripts/CombatSystems/VehicleAppearance/` and
+`MissionScripts/CombatSystems/VehicleCustomization/`.
 
 ### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
 
@@ -1450,7 +1481,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
-- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, vehicle weapon/pylon loadout change-out, vehicle appearance (texture recoloring, model selection show/hide, and a reusable component catalog), plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
+- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, vehicle weapon/pylon loadout change-out, vehicle appearance (texture recoloring and model selection show/hide, with live per-vehicle heuristic component discovery replacing the old registration catalog), the `VehicleCustomization/` ZEN Editor/Inspect dialog code that ties Weapon Loadout and Appearance together into one curator session, plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
 - `EnvironmentalSystems/` — hazardous environments and tree felling
 - `MedicalSystems/` — patient treatment feedback, confirmed-death Obituary reporting
 - `Persistence/` — optional INIDBI2-backed persistence
@@ -1669,18 +1700,13 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
-- Vehicle Weapon Loadout - Configure → calls `Waldo_fnc_ZenVehicleWeaponLoadout` (must be placed directly on the vehicle being edited; dialog: turret or pylon target, add/replace/remove/clear action, weapon/magazine classnames or a Copy Weapon/Ordnance From pick backed by this vehicle plus a cached pack-wide catalog, a Session Action builder (Apply Now/Queue/Apply All Queued/Export Queue/Clear Queue); turret and pylon option lists are discovered live from that vehicle; Apply routes through `Waldo_fnc_ZenVehicleWeaponLoadoutServer` to `Waldo_fnc_VehicleWeaponLoadoutApply`)
-- Vehicle Weapon Loadout - Inspect → calls `Waldo_fnc_ZenVehicleWeaponLoadoutInspect` (must be placed directly on the vehicle to inspect; no dialog, reports its exact turret/pylon classnames plus ready-to-paste rows via a local `hint`; read-only, runs entirely on the curator's client via `Waldo_fnc_VehicleWeaponLoadoutInspect`, no server round-trip)
-- Vehicle Weapon Loadout - Copy From Nearby Vehicle → calls `Waldo_fnc_ZenVehicleWeaponLoadoutCopy` (must be placed directly on the target vehicle; dialog: pick a nearby source vehicle, discovered live within 100m, plus copy-turrets/copy-pylons checkboxes; no classname is ever typed - routes through `Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer` to `Waldo_fnc_VehicleWeaponLoadoutCopy`, which reads the source vehicle's real turret/pylon state, including exact remaining pylon ammo via `ammoOnPylon`, and applies it through `Waldo_fnc_VehicleWeaponLoadoutApply`)
-- Vehicle Appearance - Set Texture → calls `Waldo_fnc_ZenVehicleAppearanceTexture` (must be placed directly on the vehicle; dialog: texture slot discovered live from that vehicle's own `hiddenSelections[]`, Solid Color (four 0..1 sliders via `BIS_fnc_colorRGBAtoTexture`, no texture asset needed) or Custom Texture Path, or Restore Default - routes through `Waldo_fnc_ZenVehicleAppearanceTextureServer` to `Waldo_fnc_VehicleAppearanceApply`)
-- Vehicle Appearance - Inspect → calls `Waldo_fnc_ZenVehicleAppearanceInspect` (read-only, same placed-directly-on-the-vehicle convention; reports texture slot indices/current textures and every named model selection via a local `hint`, copies the model selection names to the clipboard, no server round-trip)
-- Vehicle Appearance - Register Component → calls `Waldo_fnc_ZenVehicleComponentRegister` (must be placed directly on the vehicle; dialog: component label, selection name, optional linked turret path - routes through `Waldo_fnc_ZenVehicleComponentRegisterServer` to `Waldo_fnc_VehicleComponentCatalogRegister`, registering the component for that vehicle's exact class)
-- Vehicle Appearance - Remove/Restore Component → calls `Waldo_fnc_ZenVehicleComponentRemove` (must be placed directly on the vehicle; dialog offers any component already registered for that vehicle's class as a picker, or typed selection name/turret path fallback - routes through `Waldo_fnc_ZenVehicleComponentRemoveServer` to `Waldo_fnc_VehicleComponentRemove`, which hides/shows the model selection and, when removing, also clears the linked turret's weapon if one was given)
+- Vehicle Customisation - Editor → calls `Waldo_fnc_ZenVehicleCustomizationEditor`, which opens `Waldo_fnc_VehCust_promptEditor` (must be placed directly on the vehicle being edited; a persistent multi-tab dialog — Turret / Pylon / Appearance / Component — replacing the old Configure, Copy From Nearby Vehicle, Register Component, and Remove/Restore Component modules; each tab's Add button routes through its own validation-gated collector before a row reaches the shared Pending Changes list, so a blank/incomplete row can never be queued; turret/pylon option lists are discovered live from that vehicle plus a cached pack-wide catalog, the Component tab uses live `Waldo_fnc_VehicleComponentHeuristicScan` candidates; Apply All Pending routes through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutApply`/`Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` by row type; Export All Pending To Clipboard is client-only, no server call)
+- Vehicle Customisation - Inspect → calls `Waldo_fnc_ZenVehicleCustomizationInspect` (must be placed directly on the vehicle to inspect; no dialog, merges the weapon/pylon and appearance/selection reports via `Waldo_fnc_VehicleCustomizationInspect` into one `hint` and one clipboard copy; read-only, runs entirely on the curator's client, no server round-trip)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
 true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
 mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
-is 52 without them, 55 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
+is 47 without them, 50 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 - Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
 - Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)

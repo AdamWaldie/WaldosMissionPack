@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 966,
+  "registeredFunctionCount": 971,
   "runtimeFunctionCount": 385,
-  "functionCount": 1351,
+  "functionCount": 1356,
   "stations": [
     {
       "id": "control",
@@ -1953,74 +1953,20 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_ZenVehicleWeaponLoadout",
-      "file": "MissionScripts/ZenModules/Zen_vehicleWeaponLoadoutModule.sqf",
+      "name": "Waldo_fnc_ZenVehicleCustomizationEditor",
+      "file": "MissionScripts/ZenModules/Zen_vehicleCustomizationEditorModule.sqf",
       "station": "zen",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_ZenVehicleWeaponLoadoutServer",
-      "file": "MissionScripts/ZenModules/zenVehicleWeaponLoadoutServer.sqf",
+      "name": "Waldo_fnc_ZenVehicleCustomizationInspect",
+      "file": "MissionScripts/ZenModules/Zen_vehicleCustomizationInspectModule.sqf",
       "station": "zen",
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_ZenVehicleWeaponLoadoutInspect",
-      "file": "MissionScripts/ZenModules/Zen_vehicleWeaponLoadoutInspectModule.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleWeaponLoadoutCopy",
-      "file": "MissionScripts/ZenModules/Zen_vehicleWeaponLoadoutCopyModule.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer",
-      "file": "MissionScripts/ZenModules/zenVehicleWeaponLoadoutCopyServer.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleAppearanceTexture",
-      "file": "MissionScripts/ZenModules/Zen_vehicleAppearanceTextureModule.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleAppearanceTextureServer",
-      "file": "MissionScripts/ZenModules/zenVehicleAppearanceTextureServer.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleAppearanceInspect",
-      "file": "MissionScripts/ZenModules/Zen_vehicleAppearanceInspectModule.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleComponentRegister",
-      "file": "MissionScripts/ZenModules/Zen_vehicleComponentRegisterModule.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleComponentRegisterServer",
-      "file": "MissionScripts/ZenModules/zenVehicleComponentRegisterServer.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleComponentRemove",
-      "file": "MissionScripts/ZenModules/Zen_vehicleComponentRemoveModule.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
-      "name": "Waldo_fnc_ZenVehicleComponentRemoveServer",
-      "file": "MissionScripts/ZenModules/zenVehicleComponentRemoveServer.sqf",
+      "name": "Waldo_fnc_ZenVehicleCustomizationServer",
+      "file": "MissionScripts/ZenModules/zenVehicleCustomizationServer.sqf",
       "station": "zen",
       "activation": "manual"
     },
@@ -2631,8 +2577,8 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_VehicleComponentCatalogRegister",
-      "file": "MissionScripts/CombatSystems/VehicleAppearance/vehicleComponentCatalogRegister.sqf",
+      "name": "Waldo_fnc_VehicleComponentHeuristicScan",
+      "file": "MissionScripts/CombatSystems/VehicleAppearance/vehicleComponentHeuristicScan.sqf",
       "station": "control",
       "activation": "manual"
     },
@@ -2661,8 +2607,92 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutCopyBuildRows",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCopyBuildRows.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutCopyPreview",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCopyPreview.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_VehicleWeaponLoadoutCatalogBuild",
       "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCatalogBuild.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_promptEditor",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_setTab",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationSetTab.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_cleanupEditorPrompt",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCleanupEditorPrompt.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectTurretRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectTurretRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectPylonRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectPylonRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectAppearanceRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectAppearanceRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectComponentRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectComponentRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_pushPendingRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPushPendingRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_removePendingRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationRemovePendingRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_refreshPendingList",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationRefreshPendingList.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_exportClipboard",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationExportClipboard.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleCustomizationInspect",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationInspect.sqf",
       "station": "control",
       "activation": "manual"
     },
