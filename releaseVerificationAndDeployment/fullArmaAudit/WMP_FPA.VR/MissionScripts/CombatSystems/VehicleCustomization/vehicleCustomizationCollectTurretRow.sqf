@@ -43,8 +43,13 @@ if (isNull _turretCombo || {isNull _actionCombo} || {isNull _weaponEdit} || {isN
 
 private _turretIndex = lbCurSel _turretCombo;
 if (_turretIndex < 0) exitWith {[]};
-private _turretPath = parseSimpleArray (_turretCombo lbData _turretIndex);
-if !(_turretPath isEqualType []) exitWith {[]};
+private _turretRaw = _turretCombo lbData _turretIndex;
+// "-1" is the sentinel the Turret combo falls back to when this vehicle has no editable turret
+// positions at all (every path mount-less or horn-only) - never a real turret path, reject it here
+// the same way vehicleCustomizationCollectPylonRow.sqf already rejects its own "-1" sentinel.
+if (_turretRaw == "-1") exitWith {[]};
+private _turretPath = parseSimpleArray _turretRaw;
+if !(_turretPath isEqualType [] && {count _turretPath > 0}) exitWith {[]};
 
 private _actionIndex = lbCurSel _actionCombo;
 if (_actionIndex < 0) exitWith {[]};

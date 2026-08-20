@@ -873,6 +873,7 @@ class CfgFunctions
             class VehicleWeaponLoadoutCopyBuildRows {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopyBuildRows.sqf";};
             class VehicleWeaponLoadoutCopyPreview {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopyPreview.sqf";};
             class VehicleWeaponLoadoutCatalogBuild {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCatalogBuild.sqf";};
+            class VehicleWeaponLoadoutMagazinesForWeapon {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutMagazinesForWeapon.sqf";};
         };
         class VehicleCustomization
         {

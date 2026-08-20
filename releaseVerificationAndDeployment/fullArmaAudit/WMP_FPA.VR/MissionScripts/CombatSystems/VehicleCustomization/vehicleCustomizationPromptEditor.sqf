@@ -17,11 +17,25 @@
  * Pending - the direct fix for the confirmed root-cause bug in the retired Configure module's
  * Session Action queue (see those files' headers for the full story).
  *
- * Turret/Pylon "Copy Weapon/Ordnance From" pickers and their labels/horn-only/no-mount handling are
- * ported from the retired Zen_vehicleWeaponLoadoutModule.sqf; the Appearance tab's texture-slot
- * discovery is ported from the retired Zen_vehicleAppearanceTextureModule.sqf. The Component tab uses
- * the new Waldo_fnc_VehicleComponentHeuristicScan (live, best-effort auto-discovery) instead of the
- * retired persistent registration catalog.
+ * Turret/Pylon "Weapon"/"Ordnance" pickers and their pack-wide-catalog population are ported from the
+ * retired Zen_vehicleWeaponLoadoutModule.sqf; the Appearance tab's texture-slot discovery is ported
+ * from the retired Zen_vehicleAppearanceTextureModule.sqf. The Component tab uses the new
+ * Waldo_fnc_VehicleComponentHeuristicScan (live, best-effort auto-discovery) instead of the retired
+ * persistent registration catalog.
+ *
+ * A turret path with no real weapon mount ([-1] on a vehicle whose own CfgVehicles declares no
+ * weapons[]) or that is horn-only is excluded from every turret picker entirely (Turret combo, Weapon
+ * combo, Component tab's Linked Turret Path combo) - not just labeled - since WMP cannot create a
+ * physical mount that doesn't exist and a horn is never a combat weapon. Picking a Weapon repopulates
+ * the Magazine combo live from Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon (that weapon's own
+ * CfgWeapons >> "magazines" list), so magazine choices are always filtered to what the selected
+ * weapon can actually load; every "Type manually" classname edit field underneath these combos stays
+ * user-editable for the exotic modded case the catalog hasn't discovered yet.
+ *
+ * A short, deferred re-assert of the current tab's button highlight (see the final lines of this
+ * file) exists solely to survive Waldo_fnc_EcoCore_fitPromptDisplay's own later, unrelated one-time
+ * recoloring pass over every button-type control in the display - see
+ * MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationSetTab.sqf's header for detail.
  *
  * Arguments:
  * 0: Vehicle <OBJECT> - the vehicle this Editor session edits (the module's placement target).
@@ -38,7 +52,7 @@
 params [["_vehicle", objNull, [objNull]]];
 if (!hasInterface || {isNull _vehicle}) exitWith {displayNull};
 
-private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+private _disp = ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION"] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
 if (isNull _disp) exitWith {displayNull};
 
 _disp setVariable ["WaldoVehCust_Vehicle", _vehicle];
@@ -106,7 +120,7 @@ _turretActionCombo ctrlCommit 0;
 
 private _copyWeaponLabel = _disp ctrlCreate ["RscText", -1];
 _copyWeaponLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
-_copyWeaponLabel ctrlSetText "Copy Weapon From (overrides fields below)";
+_copyWeaponLabel ctrlSetText "Weapon (pick from this vehicle's own weapons or the pack-wide catalog)";
 _copyWeaponLabel ctrlCommit 0;
 
 private _copyWeaponCombo = _disp ctrlCreate ["RscCombo", -1];
@@ -115,44 +129,53 @@ _copyWeaponCombo ctrlCommit 0;
 
 private _turretWeaponLabel = _disp ctrlCreate ["RscText", -1];
 _turretWeaponLabel ctrlSetPosition [0.10, 0.40, 0.36, 0.025];
-_turretWeaponLabel ctrlSetText "Weapon Classname";
+_turretWeaponLabel ctrlSetText "Weapon Classname (advanced - auto-filled by Weapon above)";
 _turretWeaponLabel ctrlCommit 0;
 
 private _turretWeaponEdit = _disp ctrlCreate ["RscEdit", -1];
 _turretWeaponEdit ctrlSetPosition [0.10, 0.43, 0.46, 0.035];
 _turretWeaponEdit ctrlCommit 0;
 
+private _copyMagazineLabel = _disp ctrlCreate ["RscText", -1];
+_copyMagazineLabel ctrlSetPosition [0.10, 0.48, 0.46, 0.025];
+_copyMagazineLabel ctrlSetText "Magazine (filtered to the Weapon selected above)";
+_copyMagazineLabel ctrlCommit 0;
+
+private _copyMagazineCombo = _disp ctrlCreate ["RscCombo", -1];
+_copyMagazineCombo ctrlSetPosition [0.10, 0.51, 0.46, 0.035];
+_copyMagazineCombo ctrlCommit 0;
+
 private _turretMagLabel = _disp ctrlCreate ["RscText", -1];
-_turretMagLabel ctrlSetPosition [0.10, 0.48, 0.36, 0.025];
-_turretMagLabel ctrlSetText "Magazine Classname";
+_turretMagLabel ctrlSetPosition [0.10, 0.56, 0.36, 0.025];
+_turretMagLabel ctrlSetText "Magazine Classname (advanced - auto-filled by Magazine above)";
 _turretMagLabel ctrlCommit 0;
 
 private _turretMagEdit = _disp ctrlCreate ["RscEdit", -1];
-_turretMagEdit ctrlSetPosition [0.10, 0.51, 0.46, 0.035];
+_turretMagEdit ctrlSetPosition [0.10, 0.59, 0.46, 0.035];
 _turretMagEdit ctrlCommit 0;
 
 private _turretCountLabel = _disp ctrlCreate ["RscText", -1];
-_turretCountLabel ctrlSetPosition [0.10, 0.56, 0.22, 0.025];
+_turretCountLabel ctrlSetPosition [0.10, 0.64, 0.22, 0.025];
 _turretCountLabel ctrlSetText "Rounds/Magazine";
 _turretCountLabel ctrlCommit 0;
 
 private _turretCountEdit = _disp ctrlCreate ["RscEdit", -1];
-_turretCountEdit ctrlSetPosition [0.10, 0.59, 0.20, 0.035];
+_turretCountEdit ctrlSetPosition [0.10, 0.67, 0.20, 0.035];
 _turretCountEdit ctrlSetText "30";
 _turretCountEdit ctrlCommit 0;
 
 private _turretQtyLabel = _disp ctrlCreate ["RscText", -1];
-_turretQtyLabel ctrlSetPosition [0.32, 0.56, 0.22, 0.025];
+_turretQtyLabel ctrlSetPosition [0.32, 0.64, 0.22, 0.025];
 _turretQtyLabel ctrlSetText "Magazine Count";
 _turretQtyLabel ctrlCommit 0;
 
 private _turretQtyEdit = _disp ctrlCreate ["RscEdit", -1];
-_turretQtyEdit ctrlSetPosition [0.32, 0.59, 0.20, 0.035];
+_turretQtyEdit ctrlSetPosition [0.32, 0.67, 0.20, 0.035];
 _turretQtyEdit ctrlSetText "1";
 _turretQtyEdit ctrlCommit 0;
 
 private _addTurretBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_addTurretBtn ctrlSetPosition [0.10, 0.65, 0.20, 0.04];
+_addTurretBtn ctrlSetPosition [0.10, 0.73, 0.20, 0.04];
 _addTurretBtn ctrlSetText "Add Turret Row";
 _addTurretBtn ctrlCommit 0;
 
@@ -177,7 +200,7 @@ _pylonActionCombo ctrlCommit 0;
 
 private _copyOrdnanceLabel = _disp ctrlCreate ["RscText", -1];
 _copyOrdnanceLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
-_copyOrdnanceLabel ctrlSetText "Copy Ordnance From (overrides field below)";
+_copyOrdnanceLabel ctrlSetText "Ordnance (pick from this vehicle's own pylons or the pack-wide catalog)";
 _copyOrdnanceLabel ctrlCommit 0;
 
 private _copyOrdnanceCombo = _disp ctrlCreate ["RscCombo", -1];
@@ -285,22 +308,31 @@ private _componentSelEdit = _disp ctrlCreate ["RscEdit", -1];
 _componentSelEdit ctrlSetPosition [0.10, 0.27, 0.46, 0.035];
 _componentSelEdit ctrlCommit 0;
 
+private _componentTurretPickLabel = _disp ctrlCreate ["RscText", -1];
+_componentTurretPickLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
+_componentTurretPickLabel ctrlSetText "Linked Turret Path (optional - pick, or type manually below)";
+_componentTurretPickLabel ctrlCommit 0;
+
+private _componentTurretPickCombo = _disp ctrlCreate ["RscCombo", -1];
+_componentTurretPickCombo ctrlSetPosition [0.10, 0.35, 0.46, 0.035];
+_componentTurretPickCombo ctrlCommit 0;
+
 private _componentTurretLabel = _disp ctrlCreate ["RscText", -1];
-_componentTurretLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
-_componentTurretLabel ctrlSetText "Linked Turret Path (optional, e.g. [0] or [-1])";
+_componentTurretLabel ctrlSetPosition [0.10, 0.40, 0.46, 0.025];
+_componentTurretLabel ctrlSetText "Linked Turret Path Classname (advanced, e.g. [0] or [-1])";
 _componentTurretLabel ctrlCommit 0;
 
 private _componentTurretEdit = _disp ctrlCreate ["RscEdit", -1];
-_componentTurretEdit ctrlSetPosition [0.10, 0.35, 0.46, 0.035];
+_componentTurretEdit ctrlSetPosition [0.10, 0.43, 0.46, 0.035];
 _componentTurretEdit ctrlCommit 0;
 
 private _componentActionLabel = _disp ctrlCreate ["RscText", -1];
-_componentActionLabel ctrlSetPosition [0.10, 0.40, 0.36, 0.025];
+_componentActionLabel ctrlSetPosition [0.10, 0.48, 0.36, 0.025];
 _componentActionLabel ctrlSetText "Action";
 _componentActionLabel ctrlCommit 0;
 
 private _componentActionCombo = _disp ctrlCreate ["RscCombo", -1];
-_componentActionCombo ctrlSetPosition [0.10, 0.43, 0.30, 0.035];
+_componentActionCombo ctrlSetPosition [0.10, 0.51, 0.30, 0.035];
 _componentActionCombo ctrlCommit 0;
 
 private _addComponentBtn = _disp ctrlCreate ["RscButtonMenu", -1];
@@ -383,6 +415,7 @@ _disp setVariable ["WaldoVehCust_TurretCombo", _turretCombo];
 _disp setVariable ["WaldoVehCust_TurretActionCombo", _turretActionCombo];
 _disp setVariable ["WaldoVehCust_CopyWeaponCombo", _copyWeaponCombo];
 _disp setVariable ["WaldoVehCust_TurretWeaponEdit", _turretWeaponEdit];
+_disp setVariable ["WaldoVehCust_CopyMagazineCombo", _copyMagazineCombo];
 _disp setVariable ["WaldoVehCust_TurretMagazineEdit", _turretMagEdit];
 _disp setVariable ["WaldoVehCust_TurretCountEdit", _turretCountEdit];
 _disp setVariable ["WaldoVehCust_TurretQuantityEdit", _turretQtyEdit];
@@ -403,6 +436,7 @@ _disp setVariable ["WaldoVehCust_TexturePathEdit", _pathEdit];
 
 _disp setVariable ["WaldoVehCust_ComponentPickCombo", _componentPickCombo];
 _disp setVariable ["WaldoVehCust_ComponentSelectionEdit", _componentSelEdit];
+_disp setVariable ["WaldoVehCust_ComponentTurretPickCombo", _componentTurretPickCombo];
 _disp setVariable ["WaldoVehCust_ComponentTurretEdit", _componentTurretEdit];
 _disp setVariable ["WaldoVehCust_ComponentActionCombo", _componentActionCombo];
 
@@ -421,7 +455,8 @@ _disp setVariable ["WaldoVehCust_CopyOverlayCancelBtn", _copyOverlayCancelBtn];
 _disp setVariable ["WaldoVehCust_TurretTabControls", [
     _turretLabel, _turretCombo, _turretActionLabel, _turretActionCombo,
     _copyWeaponLabel, _copyWeaponCombo, _turretWeaponLabel, _turretWeaponEdit,
-    _turretMagLabel, _turretMagEdit, _turretCountLabel, _turretCountEdit,
+    _copyMagazineLabel, _copyMagazineCombo, _turretMagLabel, _turretMagEdit,
+    _turretCountLabel, _turretCountEdit,
     _turretQtyLabel, _turretQtyEdit, _addTurretBtn
 ]];
 _disp setVariable ["WaldoVehCust_PylonTabControls", [
@@ -435,6 +470,7 @@ _disp setVariable ["WaldoVehCust_AppearanceTabControls", [
 ]];
 _disp setVariable ["WaldoVehCust_ComponentTabControls", [
     _componentPickLabel, _componentPickCombo, _componentSelLabel, _componentSelEdit,
+    _componentTurretPickLabel, _componentTurretPickCombo,
     _componentTurretLabel, _componentTurretEdit, _componentActionLabel, _componentActionCombo,
     _addComponentBtn
 ]];
@@ -445,7 +481,8 @@ _disp setVariable ["WaldoVehCust_ComponentTabControls", [
     _tabTurretBtn, _tabPylonBtn, _tabAppearanceBtn, _tabComponentBtn,
     _addTurretBtn, _addPylonBtn, _addAppearanceBtn, _addComponentBtn,
     _removeSelectedBtn, _copyFromBtn, _applyAllBtn, _exportBtn, _clearAllBtn, _okBtn,
-    _copyWeaponCombo, _copyOrdnanceCombo, _componentPickCombo,
+    _copyWeaponCombo, _copyMagazineCombo, _copyOrdnanceCombo,
+    _componentPickCombo, _componentTurretPickCombo,
     _copyOverlayPickBtn, _copyOverlayCancelBtn
 ];
 
@@ -455,23 +492,35 @@ _tabAppearanceBtn setVariable ["WaldoVehCust_TabName", "appearance"];
 _tabComponentBtn setVariable ["WaldoVehCust_TabName", "component"];
 
 // ---- Populate Turret tab live data ----
-private _turretPaths = [[-1]] + (allTurrets [_vehicle, true]);
+// Mount-less ([-1] with no real weapons[] entry on this vehicle's own root config) and horn-only
+// turret paths are excluded from selection entirely, not just labeled - WMP cannot create a physical
+// weapon mount that doesn't exist, and a horn is never a combat weapon a curator means to touch.
+// Matches the exact exclusion Waldo_fnc_VehicleComponentHeuristicScan already performs.
+private _allTurretPaths = [[-1]] + (allTurrets [_vehicle, true]);
 private _mainSlotHasMount = count (getArray (configFile >> "CfgVehicles" >> (typeOf _vehicle) >> "weapons")) > 0;
-{
+private _turretPaths = _allTurretPaths select {
     private _path = _x;
     private _current = _vehicle weaponsTurret _path;
     private _isHornOnly = count _current > 0 && {(_current select {!(_x call _isHornWeapon)}) isEqualTo []};
     private _isMountless = _path isEqualTo [-1] && {!_mainSlotHasMount};
-    private _currentText = if (count _current > 0) then {
-        (_current apply {getText (configFile >> "CfgWeapons" >> _x >> "displayName")}) joinString ", "
-    } else {"empty"};
-    private _suffix = if (_isHornOnly) then {" (horn - not editable here)"} else {
-        if (_isMountless) then {" (no weapon mount on this vehicle)"} else {""}
-    };
-    private _label = [format ["Turret %1 - %2%3", _path, _currentText, _suffix]] call _truncateLabel;
-    private _index = _turretCombo lbAdd _label;
-    _turretCombo lbSetData [_index, str _path];
-} forEach _turretPaths;
+    !_isHornOnly && {!_isMountless}
+};
+_disp setVariable ["WaldoVehCust_EditableTurretPaths", _turretPaths];
+if (count _turretPaths > 0) then {
+    {
+        private _path = _x;
+        private _current = _vehicle weaponsTurret _path;
+        private _currentText = if (count _current > 0) then {
+            (_current apply {getText (configFile >> "CfgWeapons" >> _x >> "displayName")}) joinString ", "
+        } else {"empty"};
+        private _label = [format ["Turret %1 - %2", _path, _currentText]] call _truncateLabel;
+        private _index = _turretCombo lbAdd _label;
+        _turretCombo lbSetData [_index, str _path];
+    } forEach _turretPaths;
+} else {
+    private _index = _turretCombo lbAdd "No editable turret positions on this vehicle";
+    _turretCombo lbSetData [_index, "-1"];
+};
 _turretCombo lbSetCurSel 0;
 
 {
@@ -485,25 +534,21 @@ private _pickupKeys = ["MANUAL"];
 private _pickupLabels = ["Type manually (use the fields below)"];
 {
     private _path = _x;
-    private _current = _vehicle weaponsTurret _path;
-    private _isHornOnly = count _current > 0 && {(_current select {!(_x call _isHornWeapon)}) isEqualTo []};
-    if !(_isHornOnly) then {
-        private _weapons = _vehicle weaponsTurret _path;
-        private _rawMagazines = _vehicle magazinesTurret _path;
-        private _magazines = _rawMagazines arrayIntersect _rawMagazines;
-        {
-            private _weaponClass = _x;
-            private _compatible = _magazines select {_x in (compatibleMagazines _weaponClass)};
-            private _magForPickup = if (count _compatible > 0) then {_compatible select 0} else {_magazines param [0, ""]};
-            private _magCount = if (_magForPickup == "") then {1} else {getNumber (configFile >> "CfgMagazines" >> _magForPickup >> "count")};
-            private _magQuantity = ({_x == _magForPickup} count _rawMagazines) max 1;
-            private _key = str [_weaponClass, _magForPickup, _magCount, _magQuantity];
-            if !(_key in _pickupKeys) then {
-                _pickupKeys pushBack _key;
-                _pickupLabels pushBack ([format ["%1 + %2x %3 (from Turret %4)", _weaponClass, _magQuantity, if (_magForPickup == "") then {"no magazine"} else {_magForPickup}, _path]] call _truncateLabel);
-            };
-        } forEach _weapons;
-    };
+    private _weapons = _vehicle weaponsTurret _path;
+    private _rawMagazines = _vehicle magazinesTurret _path;
+    private _magazines = _rawMagazines arrayIntersect _rawMagazines;
+    {
+        private _weaponClass = _x;
+        private _compatible = _magazines select {_x in (compatibleMagazines _weaponClass)};
+        private _magForPickup = if (count _compatible > 0) then {_compatible select 0} else {_magazines param [0, ""]};
+        private _magCount = if (_magForPickup == "") then {1} else {getNumber (configFile >> "CfgMagazines" >> _magForPickup >> "count")};
+        private _magQuantity = ({_x == _magForPickup} count _rawMagazines) max 1;
+        private _key = str [_weaponClass, _magForPickup, _magCount, _magQuantity];
+        if !(_key in _pickupKeys) then {
+            _pickupKeys pushBack _key;
+            _pickupLabels pushBack ([format ["%1 + %2x %3 (from Turret %4)", _weaponClass, _magQuantity, if (_magForPickup == "") then {"no magazine"} else {_magForPickup}, _path]] call _truncateLabel);
+        };
+    } forEach _weapons;
 } forEach _turretPaths;
 {
     _x params ["_weaponClass", "_displayName", "_catalogMagazines"];
@@ -523,6 +568,14 @@ if (count _turretCatalog == 0) then {
     _copyWeaponCombo lbSetData [_index, _x];
 } forEach _pickupKeys;
 _copyWeaponCombo lbSetCurSel 0;
+
+// Magazine combo starts with only "Type manually" - it is (re)populated live from the currently
+// selected Weapon via Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon (a pure CfgWeapons >>
+// "magazines" config read, so it works even for a weapon typed by hand, as long as that weapon
+// class is real). See the Weapon combo's LBSelChanged handler below.
+_copyMagazineCombo lbAdd "Type manually (use the field below)";
+_copyMagazineCombo lbSetData [0, "MANUAL"];
+_copyMagazineCombo lbSetCurSel 0;
 
 // ---- Populate Pylon tab live data ----
 private _pylonCount = count (getPylonMagazines _vehicle);
@@ -619,6 +672,16 @@ _componentPickCombo lbSetCurSel 0;
 } forEach ["Remove", "Restore"];
 _componentActionCombo lbSetCurSel 0;
 
+// Linked Turret Path picker - reuses the same mount-less/horn-excluded turret path list the Turret
+// tab already computed, so a curator never has to hand-type an array here either.
+_componentTurretPickCombo lbAdd "None / type manually below";
+_componentTurretPickCombo lbSetData [0, "-1"];
+{
+    private _index = _componentTurretPickCombo lbAdd (format ["Turret %1", _x]);
+    _componentTurretPickCombo lbSetData [_index, str _x];
+} forEach _turretPaths;
+_componentTurretPickCombo lbSetCurSel 0;
+
 // ---- Event handlers: tabs ----
 {
     _x ctrlAddEventHandler ["ButtonClick", {
@@ -629,20 +692,56 @@ _componentActionCombo lbSetCurSel 0;
     }];
 } forEach [_tabTurretBtn, _tabPylonBtn, _tabAppearanceBtn, _tabComponentBtn];
 
-// ---- Event handlers: "Copy Weapon From" / "Copy Ordnance From" auto-fill fields ----
+// ---- Event handlers: "Weapon" auto-fill fields + live-filtered "Magazine" repopulation ----
 _copyWeaponCombo ctrlAddEventHandler ["LBSelChanged", {
     params ["_ctrl", "_index"];
     private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
     if (isNull _disp) exitWith {};
+    private _magazineCombo = _disp getVariable ["WaldoVehCust_CopyMagazineCombo", controlNull];
+    private _pickupWeapon = "";
+    if (_index > 0) then {
+        private _key = _ctrl lbData _index;
+        private _pickup = parseSimpleArray _key;
+        if (_pickup isEqualType [] && {count _pickup == 4}) then {
+            _pickup params ["_wpn", "_pickupMag", "_pickupCount", "_pickupQuantity"];
+            _pickupWeapon = _wpn;
+            (_disp getVariable ["WaldoVehCust_TurretWeaponEdit", controlNull]) ctrlSetText _pickupWeapon;
+            (_disp getVariable ["WaldoVehCust_TurretMagazineEdit", controlNull]) ctrlSetText _pickupMag;
+            (_disp getVariable ["WaldoVehCust_TurretCountEdit", controlNull]) ctrlSetText (str _pickupCount);
+            (_disp getVariable ["WaldoVehCust_TurretQuantityEdit", controlNull]) ctrlSetText (str _pickupQuantity);
+        };
+    };
+    // Repopulate the Magazine combo filtered to whichever weapon was just picked, straight from
+    // CfgWeapons >> "magazines" (Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon) - a pure config
+    // read, so it works even for a weapon this dialog only just typed manually. "Type manually"
+    // stays index 0 when no weapon is known yet (there is nothing to filter by).
+    if (!isNull _magazineCombo) then {
+        lbClear _magazineCombo;
+        _magazineCombo lbAdd "Type manually (use the field below)";
+        _magazineCombo lbSetData [0, "MANUAL"];
+        if (_pickupWeapon != "") then {
+            {
+                _x params ["_magClass", "_magDisplayName"];
+                private _idx = _magazineCombo lbAdd _magDisplayName;
+                _magazineCombo lbSetData [_idx, _magClass];
+            } forEach ([_pickupWeapon] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon);
+        };
+        _magazineCombo lbSetCurSel 0;
+    };
+}];
+
+_copyMagazineCombo ctrlAddEventHandler ["LBSelChanged", {
+    params ["_ctrl", "_index"];
+    private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
+    if (isNull _disp) exitWith {};
     if (_index <= 0) exitWith {};
-    private _key = _ctrl lbData _index;
-    private _pickup = parseSimpleArray _key;
-    if !(_pickup isEqualType [] && {count _pickup == 4}) exitWith {};
-    _pickup params ["_pickupWeapon", "_pickupMag", "_pickupCount", "_pickupQuantity"];
-    (_disp getVariable ["WaldoVehCust_TurretWeaponEdit", controlNull]) ctrlSetText _pickupWeapon;
-    (_disp getVariable ["WaldoVehCust_TurretMagazineEdit", controlNull]) ctrlSetText _pickupMag;
-    (_disp getVariable ["WaldoVehCust_TurretCountEdit", controlNull]) ctrlSetText (str _pickupCount);
-    (_disp getVariable ["WaldoVehCust_TurretQuantityEdit", controlNull]) ctrlSetText (str _pickupQuantity);
+    private _magClass = _ctrl lbData _index;
+    if (_magClass == "" || {_magClass == "MANUAL"}) exitWith {};
+    (_disp getVariable ["WaldoVehCust_TurretMagazineEdit", controlNull]) ctrlSetText _magClass;
+    private _count = getNumber (configFile >> "CfgMagazines" >> _magClass >> "count");
+    if (_count > 0) then {
+        (_disp getVariable ["WaldoVehCust_TurretCountEdit", controlNull]) ctrlSetText (str _count);
+    };
 }];
 
 _copyOrdnanceCombo ctrlAddEventHandler ["LBSelChanged", {
@@ -668,6 +767,17 @@ _componentPickCombo ctrlAddEventHandler ["LBSelChanged", {
     _entry params ["_selectionName", "_linkedPath", "_label"];
     (_disp getVariable ["WaldoVehCust_ComponentSelectionEdit", controlNull]) ctrlSetText _selectionName;
     (_disp getVariable ["WaldoVehCust_ComponentTurretEdit", controlNull]) ctrlSetText (str _linkedPath);
+}];
+
+// ---- Event handler: Component Linked Turret Path picker ----
+_componentTurretPickCombo ctrlAddEventHandler ["LBSelChanged", {
+    params ["_ctrl", "_index"];
+    private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
+    if (isNull _disp) exitWith {};
+    if (_index <= 0) exitWith {};
+    private _key = _ctrl lbData _index;
+    if (_key == "" || {_key == "-1"}) exitWith {};
+    (_disp getVariable ["WaldoVehCust_ComponentTurretEdit", controlNull]) ctrlSetText _key;
 }];
 
 // ---- Event handlers: Add buttons (each routes through its own validation-gated collector) ----
@@ -849,5 +959,19 @@ _copyOverlayPickBtn ctrlAddEventHandler ["ButtonClick", {
 
 [_disp, "turret"] call Waldo_fnc_VehCust_setTab;
 [_disp] call Waldo_fnc_VehCust_refreshPendingList;
+
+// Waldo_fnc_EcoCore_fitPromptDisplay (kicked off inside Waldo_fnc_EcoCore_createZeusPromptDisplay
+// above) runs a one-time, spawned, ~0.03-0.36s-delayed post-layout pass that uniformly recolors
+// every button-type control (including these 4 tab buttons) with one flat theme color, silently
+// erasing the active-tab highlight this file just painted via setTab. Re-assert whichever tab is
+// actually current once that pass has had time to finish, so the highlight matches the visible
+// content again. This is local to this dialog only - Waldo_fnc_EcoCore_fitPromptDisplay itself and
+// every Economy prompt built on it are untouched.
+[_disp] spawn {
+    params ["_disp"];
+    uiSleep 0.6;
+    if (isNull _disp) exitWith {};
+    [_disp, _disp getVariable ["WaldoVehCust_CurrentTab", "turret"]] call Waldo_fnc_VehCust_setTab;
+};
 
 _disp

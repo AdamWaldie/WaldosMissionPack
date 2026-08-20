@@ -173,16 +173,28 @@ The **Turret** and **Pylon** tabs' option lists are built fresh every time the d
 live from that exact vehicle (`allTurrets`, `getPylonMagazines`, and the vehicle's own
 `TransportPylonsComponent` config for pylon display names) - never a hand-typed list, so only choices
 that vehicle genuinely supports are ever shown, and each option's label shows what's currently mounted
-there. A turret whose only weapon is the horn is labelled `(horn - not editable here)` and is never the
-default selection; a mount-less `[-1]` is labelled `(no weapon mount on this vehicle)`.
+there. A turret whose only weapon is the horn, or a mount-less `[-1]` (no real weapon mount on this
+vehicle), is excluded from the Turret combo entirely rather than merely labelled - see [`[-1]` is not
+guaranteed to have a real weapon mount](#notes-and-limitations) below. A fully unarmed vehicle's
+Turret combo falls back to a single non-selectable "No editable turret positions on this vehicle" entry.
+
+Selection is dropdown-driven by default: pick a **Weapon**, and the **Magazine** dropdown right below
+it repopulates live, filtered to only the magazines that weapon can actually load (read straight from
+that weapon's own `CfgWeapons >> "magazines"` config array via
+`Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon` - no live vehicle instance needed, so it works even
+for a weapon typed in by hand). Picking a Magazine fills in the Rounds/Magazine field from that
+magazine's own real capacity. The classname edit fields underneath both dropdowns stay directly
+editable at all times - the advanced/modded-weapon fallback for a weapon or magazine the pack-wide
+catalog hasn't discovered yet.
 
 | Turret tab control | Meaning |
 |---|---|
-| Turret | Which turret path to change |
+| Turret | Which turret path to change (mount-less/horn-only paths never appear here) |
 | Action | Add Weapon / Replace Turret / Remove Weapon / Clear Turret |
-| Copy Weapon From | Pick a weapon+magazine pairing already mounted somewhere on this exact vehicle, or from the pack-wide catalog (see below), instead of typing one below (excludes the horn); "Type manually" leaves the fields below in charge |
-| Weapon Classname | `CfgWeapons` class to add/replace/remove - ignored for Clear |
-| Magazine Classname | `CfgMagazines` class - ignored for Remove/Clear |
+| Weapon | Pick a weapon+magazine pairing already mounted somewhere on this exact vehicle, or from the pack-wide catalog (see below), instead of typing one below (excludes the horn); "Type manually" leaves the fields below in charge |
+| Weapon Classname | `CfgWeapons` class to add/replace/remove - ignored for Clear (advanced - auto-filled by Weapon above) |
+| Magazine | Filtered live to magazines the selected Weapon actually accepts; "Type manually" leaves the field below in charge |
+| Magazine Classname | `CfgMagazines` class - ignored for Remove/Clear (advanced - auto-filled by Magazine above) |
 | Rounds Per Magazine | Rounds loaded into EACH magazine instance, clamped to that magazine's own full capacity - Add/Replace only |
 | Magazine Count | How many separate magazine instances to add - the turret's real reserve ammo pool, not just one oversized magazine - Add/Replace only |
 
@@ -190,7 +202,7 @@ default selection; a mount-less `[-1]` is labelled `(no weapon mount on this veh
 |---|---|
 | Pylon | Which hardpoint to change |
 | Action | Set Ordnance / Clear Pylon |
-| Copy Ordnance From | Pick ordnance already mounted on this vehicle, or from the pack-wide catalog, instead of typing the field below |
+| Ordnance | Pick ordnance already mounted on this vehicle, or from the pack-wide catalog, instead of typing the field below |
 | Ordnance/Magazine Classname | `CfgMagazines` class for the pylon's ordnance |
 | Ammo Override | `0` (default) loads the ordnance's full count; a positive value loads exactly that many rounds, clamped to the magazine's own full count |
 
@@ -240,8 +252,8 @@ Every row added from any tab - Turret, Pylon, Appearance, or Component - lands i
 - **Ok / Close** - closes the dialog. Anything still in Pending and not yet applied or exported is
   discarded.
 
-Weapon and magazine classnames can be typed in directly, picked from **Copy Weapon From**/**Copy
-Ordnance From**, or found with the **Inspect** module below - see [Finding the exact
+Weapon and magazine classnames can be typed in directly, picked from **Weapon**/**Magazine**/
+**Ordnance**, or found with the **Inspect** module below - see [Finding the exact
 classnames](#finding-the-exact-classnames-beginner-friendly) above before typing one in from memory.
 Whichever way a turret's weapon is chosen, **every mutating turret action is refused with a notice if
 that turret's current weapon is only the vehicle's horn** - pick a different turret instead; the horn
@@ -278,9 +290,9 @@ turret whose only weapon is the horn is still reported (informational) but never
   row's outcome; per-row failures name exactly which classname or turret/pylon reference was invalid.
 - **The horn is never treated as a weapon.** A vehicle's horn is an ordinary `CfgWeapons` entry to the
   engine (identified here by `CfgWeapons` `displayName`, since there is no other reliable "not a
-  combat weapon" flag), but the Editor's Turret tab refuses every mutating action against a horn-only
-  turret, Copy From Nearby Vehicle skips copying one, and Inspect reports one without a paste-ready
-  row - across every entry point, not just the ZEN dialog. `Waldo_fnc_VehicleWeaponLoadoutApply`
+  combat weapon" flag), but the Editor's Turret and Weapon combos exclude a horn-only turret from
+  selection entirely, Copy From Nearby Vehicle skips copying one, and Inspect reports one without a
+  paste-ready row - across every entry point, not just the ZEN dialog. `Waldo_fnc_VehicleWeaponLoadoutApply`
   itself is unaffected: a mission-authored row can still target a horn-only turret directly (e.g. to
   genuinely remove a vehicle's horn), since that call has no beginner-facing dialog to guard.
 - **`[-1]` is not guaranteed to have a real weapon mount.** `allTurrets` never returns `[-1]` itself -
@@ -290,9 +302,11 @@ turret whose only weapon is the horn is still reported (informational) but never
   instance), meaning `[-1]` has no physical mount whatsoever on that vehicle. WMP cannot create a new
   weapon mount on a vehicle that never had one - that needs model/config authoring work, not a script
   - so `ADD`/`REPLACE` against `[-1]` is refused outright on such a vehicle (a clear per-row failure,
-  never a silent no-op that only looks like it worked). The Editor labels a mount-less `[-1]`
-  `(no weapon mount on this vehicle)` and never defaults to it. A real turret path from `allTurrets`
-  never has this problem, since `allTurrets` only ever reports turrets that genuinely exist.
+  never a silent no-op that only looks like it worked). The Editor excludes a mount-less `[-1]` from
+  every turret picker entirely (Turret, Weapon, and the Component tab's Linked Turret Path combo)
+  rather than merely labelling it - WMP cannot create a physical mount that doesn't exist. A real
+  turret path from `allTurrets` never has this problem, since `allTurrets` only ever reports turrets
+  that genuinely exist.
 - **Not covered here: vehicle appearance.** Recoloring a vehicle (a "pink tank") or hiding part of its
   physical model (e.g. a turret cupola) is a completely different, unrelated Arma system - cosmetic
   model state, not weapon/ammo content. See [Vehicle Appearance](Vehicle-Appearance) for that feature.

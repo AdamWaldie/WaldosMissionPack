@@ -2,20 +2,28 @@
  * Author: WaldoTheWarfighter
  * Create zeus prompt display.
  *
- * Part of the Waldos Economy Systems suite (shared core system).
+ * Shared, generic modal-child-display builder - originally written for the Waldos Economy Systems
+ * suite, but reused verbatim by any other ZEN authoring dialog that needs the same protected
+ * safe-zone card/header chrome (e.g. the Vehicle Customisation - Editor dialog). Nothing in this
+ * file is Economy-specific.
  *
  * Arguments:
- * None
+ * 0: Header text <STRING> - the text shown in the card's title bar (optional, default: the
+ *    original Economy Systems header, so every existing Economy call site is unaffected by
+ *    omitting this argument).
  *
  * Return Value:
- * Nothing
+ * DISPLAY - the created modal child display, or displayNull if it could not be created.
  *
  * Example:
- * [] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+ * [] call Waldo_fnc_EcoCore_createZeusPromptDisplay;                                  // Economy (default header)
+ * ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION"] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
  *
- * Current callers: Economy Zeus authoring modules before their controls are populated.
+ * Current callers: Economy Zeus authoring modules before their controls are populated;
+ * MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf.
  */
 
+    params [["_headerText", "  WALDOS MISSION PACK  |  ECONOMY AUTHORING", [""]]];
     if (!hasInterface) exitWith {displayNull};
 
     private _existing = uiNamespace getVariable ["WaldoEcoCore_ActiveZeusPromptDisplay", displayNull];
@@ -69,7 +77,7 @@
     _header ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.025, 0.20, 0.36, 0.99]]);
     _header ctrlSetTextColor (_theme getOrDefault ["text", [0.90, 0.96, 1, 1]]);
     _header ctrlSetFont (_theme getOrDefault ["fontBold", "RobotoCondensedBold"]);
-    _header ctrlSetText "  WALDOS MISSION PACK  |  ECONOMY AUTHORING";
+    _header ctrlSetText _headerText;
     _header ctrlSetFontHeight ((safeZoneH * 0.027) min 0.034);
     _header ctrlCommit 0;
     private _chrome = [_dimmer, _card, _header];

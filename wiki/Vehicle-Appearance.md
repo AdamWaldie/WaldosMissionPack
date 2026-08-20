@@ -99,7 +99,10 @@ re-scans the live placed vehicle every time the ZEN Editor's Component tab opens
 `"weapon"`, `"mount"`, `"hatch"`, `"rws"`, `"cannon"`, `"hmg"`, `"gmg"`), then best-effort-correlates
 each candidate against the vehicle's real turret paths. Picking a candidate in the Editor auto-fills
 the Selection Name and Linked Turret Path fields - never presented as fact, always labelled
-best-effort, and always worth a visual check against the real vehicle before removing.
+best-effort, and always worth a visual check against the real vehicle before removing. The Linked
+Turret Path field also has its own small picker listing every editable turret path on this vehicle
+(the same mount-less/horn-excluded list the Turret tab uses), so a curator rarely has to type a path
+array by hand at all.
 
 ### Discovering real texture slots and selection names
 

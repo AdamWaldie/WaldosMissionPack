@@ -16,7 +16,9 @@
  * [_disp, "pylon"] call Waldo_fnc_VehCust_setTab;
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
- * (the 4 tab buttons' ButtonClick handlers, and initial dialog setup).
+ * (the 4 tab buttons' ButtonClick handlers; initial dialog setup; and a one-time ~0.6s-delayed
+ * re-assert that survives Waldo_fnc_EcoCore_fitPromptDisplay's own later, unrelated recoloring pass
+ * over every button-type control in the display).
  */
 
 params [["_disp", displayNull], ["_tab", "turret"]];
@@ -31,7 +33,7 @@ if !(_safeTab in ["turret", "pylon", "appearance", "component"]) then {_safeTab 
     _x params ["_tabName", "_varName"];
     private _controls = _disp getVariable [_varName, []];
     private _show = _safeTab isEqualTo _tabName;
-    {if (!isNull _x) then {_x ctrlShow _show};} forEach _controls;
+    {if (!isNull _x) then {_x ctrlShow _show; _x ctrlCommit 0;};} forEach _controls;
 } forEach [
     ["turret", "WaldoVehCust_TurretTabControls"],
     ["pylon", "WaldoVehCust_PylonTabControls"],

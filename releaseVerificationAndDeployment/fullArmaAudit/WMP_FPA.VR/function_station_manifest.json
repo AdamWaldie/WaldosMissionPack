@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 971,
+  "registeredFunctionCount": 972,
   "runtimeFunctionCount": 385,
-  "functionCount": 1356,
+  "functionCount": 1357,
   "stations": [
     {
       "id": "control",
@@ -2621,6 +2621,12 @@
     {
       "name": "Waldo_fnc_VehicleWeaponLoadoutCatalogBuild",
       "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCatalogBuild.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutMagazinesForWeapon.sqf",
       "station": "control",
       "activation": "manual"
     },
