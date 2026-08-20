@@ -109,7 +109,7 @@ private _pickupLabels = ["Type manually (use the fields below)"];
             // Raw (non-deduplicated) occurrence count of this exact magazine class on this turret -
             // the real number of separate magazine instances currently mounted, matching what
             // addMagazineTurret would need to be called that many times to reproduce.
-            private _magQuantity = {_x == _magForPickup} count _rawMagazines max 1;
+            private _magQuantity = ({_x == _magForPickup} count _rawMagazines) max 1;
             private _key = str [_weaponClass, _magForPickup, _magCount, _magQuantity];
             if !(_key in _pickupKeys) then {
                 _pickupKeys pushBack _key;

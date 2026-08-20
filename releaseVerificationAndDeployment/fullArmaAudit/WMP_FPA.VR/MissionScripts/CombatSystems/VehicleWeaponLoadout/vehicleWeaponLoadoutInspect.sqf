@@ -83,7 +83,7 @@ private _turretReport = [];
                 private _magForRow = if (count _suggestedMag > 0) then {_suggestedMag select 0} else {_magazines param [0, ""]};
                 // Real quantity: how many separate instances of the suggested magazine class this
                 // turret actually carries right now (raw occurrence count, not deduplicated).
-                private _magQuantity = if (_magForRow == "") then {1} else {{_x == _magForRow} count _rawMagazines max 1};
+                private _magQuantity = if (_magForRow == "") then {1} else {({_x == _magForRow} count _rawMagazines) max 1};
                 _lines pushBack format [
                     "Turret %1: weapon=%2 magazines=%3",
                     _path, _weaponClass, _magazines

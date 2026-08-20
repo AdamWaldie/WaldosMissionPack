@@ -45,6 +45,12 @@
  *        this loops it that many times to build up a real reserve ammo pool (e.g. 4 separate
  *        magazines of 30 rounds each, not one 30-round magazine). Ignored everywhere else.
  *
+ * A turret whose only mounted weapon(s) are this vehicle's horn (identified by CfgWeapons
+ * displayName, case-insensitive - there is no other reliable "not a combat weapon" flag) refuses
+ * every TURRET action - ADD/REPLACE/REMOVE/CLEAR alike - with [false, "..."] rather than allowing it;
+ * this is the single authoritative enforcement point, checked here regardless of caller, not just in
+ * the ZEN "Vehicle Weapon Loadout - Configure" module's own dialog-level guard.
+ *
  * Return Value:
  * Array of [ok <BOOL>, detail <STRING>] - one per input row, same order; empty array when forwarded
  * from a client or when the vehicle/rows argument was invalid.
@@ -98,6 +104,21 @@ private _stripTurret = {
     { _veh removeMagazinesTurret [_x, _path] } forEach (_veh magazinesTurret _path);
 };
 
+// The horn is excluded from every mutating turret operation - it is an ordinary CfgWeapons entry to
+// the engine (there is no other reliable "not a combat weapon" flag), but never a weapon a mission
+// maker or curator means. This is the single authoritative enforcement point: the ZEN Configure
+// module's own client-side check (Zen_vehicleWeaponLoadoutModule.sqf) exists only to avoid a wasted
+// round-trip to the server for something that would be refused here anyway - a direct script call or
+// an object's own Eden init field must be refused independently of that dialog.
+private _isHornWeapon = {
+    toLower (getText (configFile >> "CfgWeapons" >> _this >> "displayName")) == "horn"
+};
+private _isTurretHornOnly = {
+    params ["_veh", "_path"];
+    private _current = _veh weaponsTurret _path;
+    count _current > 0 && {(_current select {!(_x call _isHornWeapon)}) isEqualTo []}
+};
+
 {
     _x params [
         ["_targetType", "TURRET", [""]],
@@ -118,63 +139,67 @@ private _stripTurret = {
         if !(_turretPath in _validTurrets) then {
             _detail = format ["Turret path %1 does not exist on %2.", _turretPath, typeOf _vehicle];
         } else {
-            switch (_action) do {
-                case "CLEAR": {
-                    [_vehicle, _turretPath] call _stripTurret;
-                    _rowOk = true;
-                    _detail = format ["Turret %1 cleared.", _turretPath];
-                };
-                case "REMOVE": {
-                    if (_weaponClass != "" && {_weaponClass in (_vehicle weaponsTurret _turretPath)}) then {
-                        _vehicle removeWeaponTurret [_weaponClass, _turretPath];
-                        if (_magazineClass != "") then { _vehicle removeMagazinesTurret [_magazineClass, _turretPath]; };
+            if ([_vehicle, _turretPath] call _isTurretHornOnly) then {
+                _detail = format ["Turret %1 only carries this vehicle's horn - not a combat weapon, refused.", _turretPath];
+            } else {
+                switch (_action) do {
+                    case "CLEAR": {
+                        [_vehicle, _turretPath] call _stripTurret;
                         _rowOk = true;
-                        _detail = format ["Removed %1 from turret %2.", _weaponClass, _turretPath];
-                    } else {
-                        _detail = format ["%1 is not currently mounted on turret %2.", _weaponClass, _turretPath];
+                        _detail = format ["Turret %1 cleared.", _turretPath];
                     };
-                };
-                case "ADD"; case "REPLACE": {
-                    if !(isClass (configFile >> "CfgWeapons" >> _weaponClass)) then {
-                        _detail = format ["Unknown weapon class: %1", _weaponClass];
-                    } else {
-                        if (_action == "REPLACE") then {
-                            [_vehicle, _turretPath] call _stripTurret;
+                    case "REMOVE": {
+                        if (_weaponClass != "" && {_weaponClass in (_vehicle weaponsTurret _turretPath)}) then {
+                            _vehicle removeWeaponTurret [_weaponClass, _turretPath];
+                            if (_magazineClass != "") then { _vehicle removeMagazinesTurret [_magazineClass, _turretPath]; };
+                            _rowOk = true;
+                            _detail = format ["Removed %1 from turret %2.", _weaponClass, _turretPath];
+                        } else {
+                            _detail = format ["%1 is not currently mounted on turret %2.", _weaponClass, _turretPath];
                         };
-                        _vehicle addWeaponTurret [_weaponClass, _turretPath];
-                        _detail = format ["%1 %2 on turret %3.", ["Added", "Replaced with"] select (_action == "REPLACE"), _weaponClass, _turretPath];
-                        if (_magazineClass != "") then {
-                            if !(isClass (configFile >> "CfgMagazines" >> _magazineClass)) then {
-                                _detail = _detail + format [" Magazine class %1 is unknown - no ammo loaded.", _magazineClass];
-                            } else {
-                                // compatibleMagazines is muzzle-aware (a weapon can have more than one
-                                // muzzle, e.g. a rifle plus an underslung GL) and this row doesn't ask
-                                // the mission maker which muzzle they mean, so a mismatch here is only
-                                // ever logged as a heads-up, never a hard rejection.
-                                if !(_magazineClass in (compatibleMagazines _weaponClass)) then {
-                                    diag_log format ["[WMP VEHWPN] note: %1 is not a documented compatible magazine for %2's primary muzzle on %3 (a secondary muzzle can still be valid) - loading it anyway.", _magazineClass, _weaponClass, typeOf _vehicle];
-                                };
-                                // A magazine instance cannot hold more rounds than its own CfgMagazines
-                                // "count" - the engine itself clamps addMagazineTurret's ammoCount to
-                                // that maximum (same behaviour as addMagazine), same as this row's own
-                                // PYLON ammo handling already does explicitly. Clamped here too, rather
-                                // than silently relying on the undocumented engine clamp, so the
-                                // reported detail always names the rounds actually loaded.
-                                private _magFullCount = getNumber (configFile >> "CfgMagazines" >> _magazineClass >> "count");
-                                private _roundsPerMag = if (_magFullCount > 0) then {(_magazineCount max 1) min _magFullCount} else {_magazineCount max 1};
-                                // addMagazineTurret adds exactly ONE magazine instance per call, loaded
-                                // to _roundsPerMag rounds - calling it _magazineQuantity times builds a
-                                // real multi-magazine reserve rather than one oversized magazine.
-                                for "_m" from 1 to (_magazineQuantity max 1) do {
-                                    _vehicle addMagazineTurret [_magazineClass, _turretPath, _roundsPerMag];
-                                };
-                                _detail = _detail + format [" Loaded %1x magazine(s) of %2 (%3/%4 rounds each).", _magazineQuantity max 1, _magazineClass, _roundsPerMag, _magFullCount];
+                    };
+                    case "ADD"; case "REPLACE": {
+                        if !(isClass (configFile >> "CfgWeapons" >> _weaponClass)) then {
+                            _detail = format ["Unknown weapon class: %1", _weaponClass];
+                        } else {
+                            if (_action == "REPLACE") then {
+                                [_vehicle, _turretPath] call _stripTurret;
                             };
+                            _vehicle addWeaponTurret [_weaponClass, _turretPath];
+                            _detail = format ["%1 %2 on turret %3.", ["Added", "Replaced with"] select (_action == "REPLACE"), _weaponClass, _turretPath];
+                            if (_magazineClass != "") then {
+                                if !(isClass (configFile >> "CfgMagazines" >> _magazineClass)) then {
+                                    _detail = _detail + format [" Magazine class %1 is unknown - no ammo loaded.", _magazineClass];
+                                } else {
+                                    // compatibleMagazines is muzzle-aware (a weapon can have more than one
+                                    // muzzle, e.g. a rifle plus an underslung GL) and this row doesn't ask
+                                    // the mission maker which muzzle they mean, so a mismatch here is only
+                                    // ever logged as a heads-up, never a hard rejection.
+                                    if !(_magazineClass in (compatibleMagazines _weaponClass)) then {
+                                        diag_log format ["[WMP VEHWPN] note: %1 is not a documented compatible magazine for %2's primary muzzle on %3 (a secondary muzzle can still be valid) - loading it anyway.", _magazineClass, _weaponClass, typeOf _vehicle];
+                                    };
+                                    // A magazine instance cannot hold more rounds than its own CfgMagazines
+                                    // "count" - the engine itself clamps addMagazineTurret's ammoCount to
+                                    // that maximum (same behaviour as addMagazine), same as this row's own
+                                    // PYLON ammo handling already does explicitly. Clamped here too, rather
+                                    // than silently relying on the undocumented engine clamp, so the
+                                    // reported detail always names the rounds actually loaded.
+                                    private _magFullCount = getNumber (configFile >> "CfgMagazines" >> _magazineClass >> "count");
+                                    private _roundsPerMag = if (_magFullCount > 0) then {(_magazineCount max 1) min _magFullCount} else {_magazineCount max 1};
+                                    // addMagazineTurret adds exactly ONE magazine instance per call, loaded
+                                    // to _roundsPerMag rounds - calling it _magazineQuantity times builds a
+                                    // real multi-magazine reserve rather than one oversized magazine.
+                                    for "_m" from 1 to (_magazineQuantity max 1) do {
+                                        _vehicle addMagazineTurret [_magazineClass, _turretPath, _roundsPerMag];
+                                    };
+                                    _detail = _detail + format [" Loaded %1x magazine(s) of %2 (%3/%4 rounds each).", _magazineQuantity max 1, _magazineClass, _roundsPerMag, _magFullCount];
+                                };
+                            };
+                            _rowOk = true;
                         };
-                        _rowOk = true;
                     };
+                    default { _detail = format ["Unknown turret action: %1", _action]; };
                 };
-                default { _detail = format ["Unknown turret action: %1", _action]; };
             };
         };
     } else {

@@ -106,7 +106,7 @@ if (_copyTurrets) then {
                     };
                     // Raw occurrence count of this exact magazine class on the source turret - the
                     // real number of separate magazine instances mounted, not just one full magazine.
-                    private _magQuantity = if (_magForRow == "") then {1} else {{_x == _magForRow} count _rawMagazines max 1};
+                    private _magQuantity = if (_magForRow == "") then {1} else {({_x == _magForRow} count _rawMagazines) max 1};
                     _rows pushBack [
                         "TURRET", _path, -1,
                         if (_forEachIndex == 0) then {"REPLACE"} else {"ADD"},
