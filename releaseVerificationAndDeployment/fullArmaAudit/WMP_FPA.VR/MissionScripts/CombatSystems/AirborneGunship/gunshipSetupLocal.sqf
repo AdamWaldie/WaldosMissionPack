@@ -5,10 +5,12 @@
  * This repeat-safe client function consumes Waldo_Gunship_PublicSystems. It removes only actions
  * created by this feature and restores FAC/JTAC controller controls after respawn/JIP. No gunship
  * ACE or vanilla interaction is exposed to an unassigned player. A status readout is available to
- * the assigned controller; Designate Orbit and Return for Service also stay
+ * the assigned controller; Designate Orbit, Return for Service and Configure Orbit also stay
  * available while the aircraft is still in transit to its orbit (matching what the server actually
  * permits), while per-turret weapon control only appears once the aircraft is on station or already
- * controlled. It is called by initPlayerLocal, public-state publication and the audit refresh control.
+ * controlled. It also (re)creates each gunship's aircraft marker (a "mil_warning" exclamation icon)
+ * and a companion border-only ellipse sized to the aircraft's current loiter radius at its orbit
+ * centre. It is called by initPlayerLocal, public-state publication and the audit refresh control.
  *
  * Locality and authority:
  * Runs only on an interface client and mutates local markers/actions. It consumes the server's
@@ -58,6 +60,7 @@ private _knownIds = missionNamespace getVariable ["Waldo_Gunship_LocalIds", []];
     if !(_id in _systemIds) then {
         deleteMarkerLocal format ["Waldo_Gunship_%1_Aircraft", _id];
         deleteMarkerLocal format ["Waldo_Gunship_%1_Orbit", _id];
+        deleteMarkerLocal format ["Waldo_Gunship_%1_OrbitRadius", _id];
     };
 } forEach _knownIds;
 missionNamespace setVariable ["Waldo_Gunship_LocalIds", _systemIds];
@@ -74,14 +77,18 @@ private _newAceActions = [];
 private _newVanillaActions = [];
 
 {
-    _x params ["_id", "_aircraft", "_controller", "_status", "_orbit", "_home", "_side", "_callsign", "_turretProfiles", "_showMarkers", ["_serviceCompleteAt", -1], ["_serviceDuration", 0]];
+    _x params ["_id", "_aircraft", "_controller", "_status", "_orbit", "_home", "_side", "_callsign", "_turretProfiles", "_showMarkers", ["_serviceCompleteAt", -1], ["_serviceDuration", 0], ["_radius", 1500], ["_altitude", 700], ["_offStationReason", ""]];
     if (_showMarkers && {!isNull _aircraft} && {(side group player) getFriend _side >= 0.6}) then {
         private _aircraftMarkerName = format ["Waldo_Gunship_%1_Aircraft", _id];
         private _orbitMarkerName = format ["Waldo_Gunship_%1_Orbit", _id];
+        private _radiusMarkerName = format ["Waldo_Gunship_%1_OrbitRadius", _id];
         private _markerColour = switch (_side) do {case east: {"ColorOPFOR"}; case independent: {"ColorIndependent"}; case civilian: {"ColorCivilian"}; default {"ColorBLUFOR"}};
         if (markerShape _aircraftMarkerName == "") then {
             createMarkerLocal [_aircraftMarkerName, getPosWorld _aircraft];
-            _aircraftMarkerName setMarkerTypeLocal "b_plane";
+            // "mil_warning" is the same vanilla exclamation-in-a-triangle marker type already used
+            // by MissionScripts\MissionInit\Jamming\jammerCreate.sqf, confirming it is a real,
+            // loaded CfgMarkers class rather than a guess.
+            _aircraftMarkerName setMarkerTypeLocal "mil_warning";
             _aircraftMarkerName setMarkerColorLocal _markerColour;
         };
         _aircraftMarkerName setMarkerPosLocal getPosWorld _aircraft;
@@ -99,10 +106,27 @@ private _newVanillaActions = [];
             _orbitMarkerName setMarkerTextLocal format ["%1 Orbit", _callsign];
             _orbitMarkerName setMarkerAlphaLocal 1;
             _orbitMarkerName setMarkerPosLocal _orbit;
+            // Companion border-only ellipse sized to the actual configured loiter radius so the
+            // orbit's real footprint is visible, not just its centre point. Radius/altitude can now
+            // change live via Waldo_fnc_GunshipPromptOrbitConfig's SET_ORBIT_PARAMS operation, so
+            // size/position are reapplied unconditionally on every reconciliation, not only at
+            // creation.
+            if (markerShape _radiusMarkerName == "") then {
+                createMarkerLocal [_radiusMarkerName, _orbit];
+                _radiusMarkerName setMarkerShapeLocal "ELLIPSE";
+                _radiusMarkerName setMarkerBrushLocal "Border";
+            };
+            _radiusMarkerName setMarkerColorLocal _markerColour;
+            _radiusMarkerName setMarkerSizeLocal [_radius, _radius];
+            _radiusMarkerName setMarkerPosLocal _orbit;
+            _radiusMarkerName setMarkerAlphaLocal 1;
+        } else {
+            deleteMarkerLocal _radiusMarkerName;
         };
     } else {
         deleteMarkerLocal format ["Waldo_Gunship_%1_Aircraft", _id];
         deleteMarkerLocal format ["Waldo_Gunship_%1_Orbit", _id];
+        deleteMarkerLocal format ["Waldo_Gunship_%1_OrbitRadius", _id];
     };
 
     // The gunship interaction surface is FAC/JTAC equipment. Assignment is explicit server state;
@@ -143,6 +167,9 @@ private _newVanillaActions = [];
                 private _serviceAction = [format ["%1_Service", _categoryId], "Return for Service", "\A3\ui_f\data\igui\cfg\simpletasks\types\repair_ca.paa", {private _args = _this select 2; [(_args select 0), "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, {(_this select 2) select 1}, {}, [_id, _canOrbitOrService]] call ace_interact_menu_fnc_createAction;
                 [player, 1, ["ACE_SelfActions", _categoryId], _serviceAction] call ace_interact_menu_fnc_addActionToObject;
                 _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_Service", _categoryId]]];
+                private _orbitConfigAction = [format ["%1_OrbitConfig", _categoryId], "Configure Orbit", "\A3\ui_f\data\igui\cfg\simpletasks\types\move_ca.paa", {private _args = _this select 2; [(_args select 0)] call Waldo_fnc_GunshipPromptOrbitConfig}, {(_this select 2) select 1}, {}, [_id, _canOrbitOrService]] call ace_interact_menu_fnc_createAction;
+                [player, 1, ["ACE_SelfActions", _categoryId], _orbitConfigAction] call ace_interact_menu_fnc_addActionToObject;
+                _paths pushBack [player, 1, ["ACE_SelfActions", _categoryId, format ["%1_OrbitConfig", _categoryId]]];
                 {
                     _x params ["_label", "_path"];
                     private _actionId = format ["%1_Turret_%2", _categoryId, _forEachIndex];
@@ -166,6 +193,7 @@ private _newVanillaActions = [];
             if (_isControllerSelf) then {
                 _actions pushBack (player addAction [format ["%1: Designate Orbit", _callsign], {[(_this select 3)] call Waldo_fnc_GunshipSelectOrbitLocal}, _id, 1.5, false, true, "", str _canOrbitOrService]);
                 _actions pushBack (player addAction [format ["%1: Return for Service", _callsign], {[_this select 3, "SERVICE", [], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, _id, 1.5, false, true, "", str _canOrbitOrService]);
+                _actions pushBack (player addAction [format ["%1: Configure Orbit", _callsign], {[(_this select 3)] call Waldo_fnc_GunshipPromptOrbitConfig}, _id, 1.5, false, true, "", str _canOrbitOrService]);
                 {
                     _x params ["_label", "_path"];
                     _actions pushBack (player addAction [format ["%1: Control %2", _callsign, _label], {private _args = _this select 3; [_args select 0, "TAKE_CONTROL", [_args select 1], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]}, [_id, _path], 1.5, false, true, "", str _canTakeControl]);

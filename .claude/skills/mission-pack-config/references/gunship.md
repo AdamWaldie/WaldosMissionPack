@@ -76,11 +76,21 @@ Raw runtime calls (used by the ZEN modules, or for reassigning later):
 ```sqf
 ["spectre_1", "ASSIGN", [newController], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", "SET_ORBIT", [getMarkerPos "target_area"], objNull] call Waldo_fnc_GunshipServerHandle;
+["spectre_1", "SET_ORBIT_PARAMS", [2000, 900], objNull] call Waldo_fnc_GunshipServerHandle;  // live radius/altitude, floored at 300m
 ["spectre_1", "SERVICE", [], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", "RETURN", [], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", false] call Waldo_fnc_GunshipDestroy;   // final bool: delete only if WMP originally spawned it
 [false] call Waldo_fnc_GunshipStop;                   // stop every system, preserving aircraft
 ```
+
+The assigned controller also has a **Configure Orbit** self-interaction (ACE + vanilla fallback,
+gated like Designate Orbit) that opens a small dialog (`Waldo_fnc_GunshipPromptOrbitConfig`)
+pre-filled with the live radius/altitude and submits `SET_ORBIT_PARAMS` above — the only way to
+change a *registered* gunship's radius/altitude without destroying and re-registering it. A
+persistent off-station status panel (hidden while `ON_STATION`/`CONTROLLED`) explains why the
+aircraft is currently away: resupply countdown, resupply-in-progress, or "retasked to a new orbit".
+The aircraft marker uses the vanilla `"mil_warning"` icon; a border-only ellipse at the orbit centre
+shows the current loiter radius.
 
 ## Zeus
 

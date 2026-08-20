@@ -124,6 +124,44 @@ When it reaches the configured orbit, the assigned controller receives actions t
 
 Set `maximumServiceCycles` to a non-negative number for finite support. A negative value is unlimited. The controller can be retained across respawn by UID. Server checks ensure remote requests come from the assigned player or an active curator.
 
+## Markers
+
+Every gunship gets two friendly-side-visible markers, kept in sync by `Waldo_fnc_GunshipSetupLocal`
+(on publish/JIP) and `Waldo_fnc_GunshipUpdateMarkersLocal` (every ~1s while active):
+
+- **Aircraft marker** - the vanilla `"mil_warning"` exclamation-triangle icon type (the same one
+  already used for radio jammer markers), side-coloured, showing `"<callsign> - <status>"`.
+- **Orbit radius marker** - a border-only `"ELLIPSE"` centred on the orbit position, sized to the
+  gunship's actual current loiter radius, so the orbit's real footprint is visible on the map, not
+  just its centre point. It resizes/repositions live if the radius or orbit centre changes (see
+  Configure Orbit below).
+
+Both markers are deleted together at the same two cleanup sites the aircraft marker already used.
+
+## Configure Orbit (FAC live radius/altitude adjustment)
+
+The assigned controller gets a **Configure Orbit** action (ACE self-interaction under the same
+"Gunship: `<callsign>`" category as the other controller actions, with a vanilla `addAction`
+fallback), gated exactly like Designate Orbit and Return for Service - available from `TRANSIT`
+onward, not only once fully `ON_STATION`. It opens a small dialog
+(`Waldo_fnc_GunshipPromptOrbitConfig`) pre-filled with the gunship's current live loiter radius and
+altitude. Submitting sends the new values to the server the same way every other controller action
+in this feature already does - a direct `remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]` - which
+validates, clamps and applies them (see `SET_ORBIT_PARAMS` under Runtime operations below). This is
+the only way to change a *registered* gunship's radius/altitude without destroying and
+re-registering it.
+
+## Off-station status panel
+
+While the assigned controller's gunship is not `ON_STATION`/`CONTROLLED`, a persistent panel names
+*why*: a live "back on station in ~Ns" countdown while `SERVICING`, "returning for resupply - not
+yet on station" while `RTB`/`TRANSIT` toward a service run (whether the controller requested it or
+the automatic fuel/damage/ammo monitor triggered it), or "off station - retasked to a new orbit"
+when a genuine Designate Orbit/`SET_ORBIT` redirect - not the monitor's own post-service resume - is
+the reason. It disappears entirely once the aircraft is back `ON_STATION`/`CONTROLLED`. This
+complements the map marker's status text and the one-shot toast notifications, which are both easy
+to miss or scroll past.
+
 ## Runtime operations
 
 Trusted server scripts can call:
@@ -131,6 +169,7 @@ Trusted server scripts can call:
 ```sqf
 ["spectre_1", "ASSIGN", [newController], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", "SET_ORBIT", [getMarkerPos "target_area"], objNull] call Waldo_fnc_GunshipServerHandle;
+["spectre_1", "SET_ORBIT_PARAMS", [2000, 900], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", "SERVICE", [], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", "RETURN", [], objNull] call Waldo_fnc_GunshipServerHandle;
 ["spectre_1", false] call Waldo_fnc_GunshipDestroy;
@@ -139,6 +178,8 @@ Trusted server scripts can call:
 ```
 
 The final destroy argument deletes the aircraft only when the feature originally spawned it. Registered editor aircraft are preserved.
+
+`SET_ORBIT_PARAMS` (`[radius, altitude]`) live-adjusts a *registered* gunship's loiter radius/altitude without destroying and re-registering it - only `Waldo_fnc_GunshipRegister` itself can set the initial values. Both are clamped to `(value max 300)` capped by `Waldo_Gunship_MaximumRadius`/`Waldo_Gunship_MaximumAltitude`; this 300m floor is specific to this live-adjust path and does not change `Waldo_fnc_GunshipRegister`'s own 200m/100m registration-time floors. It only takes visible effect (re-flies the current loiter waypoint) while the aircraft is `TRANSIT`/`ON_STATION`/`CONTROLLED`; during `RTB`/`SERVICING` the new values are stored and apply the next time it resumes its combat orbit.
 
 ## Focused Zeus modules
 

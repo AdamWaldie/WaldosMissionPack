@@ -1,8 +1,17 @@
 /*
  * Author: WaldoTheWarfighter
  * Validates controller and curator requests for a registered airborne gunship.
- * Arguments: 0: id <STRING>; 1: operation <STRING>; 2: arguments <ARRAY>; 3: requester <OBJECT>
+ *
+ * Locality and authority: forwards to the server when called on a client; only server execution
+ * mutates the registry. A remote request must come from the assigned controller (most operations)
+ * or an active curator; SET_ORBIT_PARAMS is available to the controller only while
+ * TRANSIT/ON_STATION/CONTROLLED, matching SET_ORBIT/SERVICE's own gating.
+ *
+ * Arguments: 0: id <STRING>; 1: operation <STRING> - ASSIGN|SET_ORBIT|SET_ORBIT_PARAMS|TAKE_CONTROL|
+ * RELEASE_CONTROL|SERVICE|RETURN|REMOVE; 2: arguments <ARRAY> (SET_ORBIT_PARAMS: [radius, altitude]);
+ * 3: requester <OBJECT>
  * Return Value: Boolean
+ * Example: ["spectre_1", "SET_ORBIT_PARAMS", [2000, 900], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2];
  */
 
 params ["_id", "_operation", ["_arguments", [], [[]]], ["_requester", objNull, [objNull]]];
@@ -74,6 +83,12 @@ switch (toUpperANSI _operation) do {
         if !(_isController || {_isCurator}) exitWith {false};
         if !((_state getOrDefault ["status", ""]) in ["TRANSIT", "ON_STATION", "CONTROLLED"]) exitWith {false};
         if (!isNull _controller) then {[_id] remoteExecCall ["Waldo_fnc_GunshipReleaseControlLocal", owner _controller]};
+        // A null requester only ever arrives from Waldo_fnc_GunshipMonitor's own automatic
+        // fuel/damage/ammo trigger; every player-facing "Return for Service" action always passes
+        // a real requester object. This is the one place both paths are distinguishable.
+        _state set ["offStationReason", if (isNull _requester) then {"AUTO"} else {"REQUEST"}];
+        _registry set [_id, _state];
+        missionNamespace setVariable ["Waldo_Gunship_Registry", _registry];
         [_id, _config getOrDefault ["home", []], "RTB"] call Waldo_fnc_GunshipSetOrbit
     };
     case "RETURN": {
@@ -84,6 +99,38 @@ switch (toUpperANSI _operation) do {
     case "REMOVE": {
         if !(_isCurator) exitWith {false};
         [_id, _arguments param [0, false]] call Waldo_fnc_GunshipDestroy
+    };
+    case "SET_ORBIT_PARAMS": {
+        // Live loiter radius/altitude change from the FAC/JTAC "Configure Orbit" dialog
+        // (Waldo_fnc_GunshipPromptOrbitConfig). Unlike Waldo_fnc_GunshipRegister's own 200m/100m
+        // registration-time floors (gunshipRegister.sqf), this interactive path enforces a
+        // deliberately higher 300m floor on both values - the popup, not mission-maker-authored
+        // registration config, is what the 300m requirement targets.
+        if !(_isController || {_isCurator}) exitWith {false};
+        if (_isController && {!_isCurator} && {!((_state getOrDefault ["status", ""]) in ["TRANSIT", "ON_STATION", "CONTROLLED"])}) exitWith {false};
+        private _aircraft = _state getOrDefault ["aircraft", objNull];
+        private _maximumRadius = missionNamespace getVariable ["Waldo_Gunship_MaximumRadius", 10000];
+        private _maximumAltitude = missionNamespace getVariable ["Waldo_Gunship_MaximumAltitude", 5000];
+        private _radius = ((_arguments param [0, _config getOrDefault ["radius", 1500]]) max 300) min _maximumRadius;
+        private _altitude = ((_arguments param [1, _config getOrDefault ["altitude", 700]]) max 300) min _maximumAltitude;
+        _config set ["radius", _radius];
+        _config set ["altitude", _altitude];
+        _registry set [_id, _state];
+        missionNamespace setVariable ["Waldo_Gunship_Registry", _registry];
+        // Only meaningful while the aircraft is actually flying a loiter route - re-applying it
+        // during RTB/SERVICING/DESTROYED/UNAVAILABLE would fight the route those states already own.
+        if (!isNull _aircraft && {(_state getOrDefault ["status", ""]) in ["TRANSIT", "ON_STATION", "CONTROLLED"]}) then {
+            [
+                _aircraft, _state getOrDefault ["orbit", _config getOrDefault ["orbit", []]],
+                _altitude, _radius, _config getOrDefault ["direction", "CIRCLE_L"],
+                _config getOrDefault ["pilotBehaviour", "CARELESS"], _config getOrDefault ["pilotCombatMode", "BLUE"]
+            ] remoteExecCall ["Waldo_fnc_GunshipApplyOrbitLocal", owner _aircraft];
+        };
+        [] call Waldo_fnc_GunshipPublishState;
+        if (!isNull _requester) then {
+            [format ["%1 orbit updated: radius %2m, altitude %3m.", _config getOrDefault ["callsign", _id], round _radius, round _altitude]] remoteExecCall ["Waldo_fnc_GunshipNotifyLocal", owner _requester];
+        };
+        true
     };
     default {false};
 }

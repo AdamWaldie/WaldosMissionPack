@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 972,
+  "registeredFunctionCount": 974,
   "runtimeFunctionCount": 385,
-  "functionCount": 1357,
+  "functionCount": 1359,
   "stations": [
     {
       "id": "control",
@@ -2561,6 +2561,18 @@
     {
       "name": "Waldo_fnc_GunshipUpdateMarkersLocal",
       "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipUpdateMarkersLocal.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipPromptOrbitConfig",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipPromptOrbitConfig.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipStatusHud",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipStatusHud.sqf",
       "station": "gunship",
       "activation": "manual"
     },
