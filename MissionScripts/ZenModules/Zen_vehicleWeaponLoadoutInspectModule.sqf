@@ -13,7 +13,9 @@
  * 1: objectPos <OBJECT> - the vehicle the module was dropped on.
  *
  * Return Value:
- * Nothing - shows a full-screen hint with the report and copy-paste-ready rows.
+ * Nothing - copies the report to the curator's clipboard, logs it to RPT, and shows a full-screen
+ * hint with the report and copy-paste-ready rows plus a fast confirmation that the clipboard copy
+ * happened.
  *
  * Example:
  * [_modulePos, _objectPos] call Waldo_fnc_ZenVehicleWeaponLoadoutInspect;
@@ -34,7 +36,9 @@ if (isNull _objectPos || {!(_objectPos isKindOf "AllVehicles")} || {_objectPos i
 private _report = [_objectPos] call Waldo_fnc_VehicleWeaponLoadoutInspect;
 private _reportText = _report select 2;
 diag_log format ["[WMP VEHWPN INSPECT] curator=%1 vehicle=%2%3%4", name player, typeOf _objectPos, endl, _reportText];
+copyToClipboard _reportText;
+["VEHICLE WEAPON LOADOUT", "Report copied to clipboard and logged to RPT.", "SUCCESS", "VEHWPN_ZEN", 5] call Waldo_fnc_FeatureNotifyLocal;
 hint format [
-    "%1\n\nRows above are ready to paste into Waldo_fnc_VehicleWeaponLoadoutApply or a Vehicle Weapon Loadout - Configure dialog on a different vehicle.\n\nAlso logged to this client's RPT under [WMP VEHWPN INSPECT].",
+    "%1\n\nRows above are ready to paste into Waldo_fnc_VehicleWeaponLoadoutApply or a Vehicle Weapon Loadout - Configure dialog on a different vehicle.\n\nAlso copied to this client's clipboard and logged to RPT under [WMP VEHWPN INSPECT].",
     _reportText
 ];

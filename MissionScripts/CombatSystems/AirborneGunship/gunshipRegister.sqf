@@ -142,6 +142,10 @@ if (isNull _aircraft) then {
     [_aircraft] call Waldo_fnc_HeadlessPinCrew;
     _aircraft setPosATL _spawnPosition;
     _aircraft setDir (_config getOrDefault ["spawnDirection", 0]);
+    // Explicit engineOn, same as Waldo_fnc_DynamicAOCreate's own air-patrol spawn: createVehicle's
+    // "FLY" special is not a reliable substitute for it, particularly for rotorLib-simulated
+    // helicopters, whose rotor RPM otherwise starts at 0 and the airframe drops before it spins up.
+    _aircraft engineOn true;
     // The side-prefixed form creates crew directly into a group of _requestedSide, rather than the
     // bare form's group of the airframe's own native config side - matches the pattern already used
     // by Waldo_fnc_DynamicAACreate/DynamicAASpawnFighters for the same reason: an explicit

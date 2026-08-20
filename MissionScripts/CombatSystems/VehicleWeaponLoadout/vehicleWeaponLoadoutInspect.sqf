@@ -19,7 +19,10 @@
  *     engine).
  *   pylonReport: Array of [pylonIndex, pylonName, currentMagazine] - currentMagazine is "" when empty.
  *   reportText: STRING - the same data as one multi-line, hint-ready report, each turret/pylon
- *     followed by a copy-paste-ready row literal.
+ *     followed by a copy-paste-ready row literal. A turret weapon identified as the vehicle's horn
+ *     (by CfgWeapons displayName - the engine has no other reliable "this is not a combat weapon"
+ *     flag) is reported but never gets a paste-ready row, since it is never the weapon a mission maker
+ *     means by "this vehicle's weapon".
  *
  * Example:
  * [cursorObject] call Waldo_fnc_VehicleWeaponLoadoutInspect;
@@ -39,6 +42,14 @@ if (isNull _vehicle || {!(_vehicle isKindOf "AllVehicles")} || {_vehicle isKindO
 private _displayName = getText (configFile >> "CfgVehicles" >> (typeOf _vehicle) >> "displayName");
 private _lines = [format ["--- %1 (%2) ---", _displayName, typeOf _vehicle]];
 
+// The engine's own CfgWeapons tree carries a vehicle's horn as an ordinary weapon entry (it has to,
+// to be selectable/switchable like one), but it is never a combat weapon a mission maker means when
+// they ask for "this vehicle's weapon" - flagged here by display name so Inspect's ready-to-paste
+// rows never suggest REPLACE-ing a real weapon with a horn, or a horn with a real weapon by mistake.
+private _isHornWeapon = {
+    toLower (getText (configFile >> "CfgWeapons" >> _this >> "displayName")) == "horn"
+};
+
 private _turretPaths = [[-1]] + (allTurrets [_vehicle, true]);
 private _turretReport = [];
 {
@@ -51,25 +62,29 @@ private _turretReport = [];
     } else {
         {
             private _weaponClass = _x;
-            // Best-effort suggested magazine: whichever currently-loaded magazine is documented
-            // compatible with this weapon's primary muzzle, falling back to the first loaded
-            // magazine, falling back to none - a turret with more than one weapon has no per-weapon
-            // magazine association exposed by the engine, so this is a starting point to edit, not a
-            // guaranteed-exact pairing.
-            private _compatible = compatibleMagazines _weaponClass;
-            private _suggestedMag = _magazines select {_x in _compatible};
-            private _magForRow = if (count _suggestedMag > 0) then {_suggestedMag select 0} else {_magazines param [0, ""]};
-            _lines pushBack format [
-                "Turret %1: weapon=%2 magazines=%3",
-                _path, _weaponClass, _magazines
-            ];
-            // magazineCount is left at 1 as a starting point regardless of whether a magazine was
-            // found - Waldo_fnc_VehicleWeaponLoadoutApply ignores it entirely when magazineClass is
-            // "", so this never produces a misleading row.
-            _lines pushBack format [
-                '["TURRET", %1, -1, "REPLACE", "%2", "%3", 1],',
-                _path, _weaponClass, _magForRow
-            ];
+            if (_weaponClass call _isHornWeapon) then {
+                _lines pushBack format ["Turret %1: weapon=%2 (horn - not a combat weapon, no paste row generated)", _path, _weaponClass];
+            } else {
+                // Best-effort suggested magazine: whichever currently-loaded magazine is documented
+                // compatible with this weapon's primary muzzle, falling back to the first loaded
+                // magazine, falling back to none - a turret with more than one weapon has no per-weapon
+                // magazine association exposed by the engine, so this is a starting point to edit, not a
+                // guaranteed-exact pairing.
+                private _compatible = compatibleMagazines _weaponClass;
+                private _suggestedMag = _magazines select {_x in _compatible};
+                private _magForRow = if (count _suggestedMag > 0) then {_suggestedMag select 0} else {_magazines param [0, ""]};
+                _lines pushBack format [
+                    "Turret %1: weapon=%2 magazines=%3",
+                    _path, _weaponClass, _magazines
+                ];
+                // magazineCount is left at 1 as a starting point regardless of whether a magazine was
+                // found - Waldo_fnc_VehicleWeaponLoadoutApply ignores it entirely when magazineClass is
+                // "", so this never produces a misleading row.
+                _lines pushBack format [
+                    '["TURRET", %1, -1, "REPLACE", "%2", "%3", 1],',
+                    _path, _weaponClass, _magForRow
+                ];
+            };
         } forEach _weapons;
     };
 } forEach _turretPaths;

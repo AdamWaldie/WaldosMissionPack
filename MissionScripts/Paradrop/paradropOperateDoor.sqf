@@ -19,7 +19,8 @@
  *    jumpdoor_1, jumpdoor_2, back_ramp_switch, back_ramp_half_switch).
  *  - animateSource covers the one source read back via animationSourcePhase (ramp_anim).
  *  - animateDoor covers the two Doors-class components read back via doorPhase (RearDoors,
- *    Door_1_source).
+ *    Door_1_source). animateDoor's phase argument is a NUMBER (0..1), the same as animate/
+ *    animateSource - it does not accept the "OPEN"/"CLOSE" strings some standalone door scripts use.
  *
  * Arguments:
  * 0: aircraft <OBJECT>
@@ -44,5 +45,5 @@ private _phase = if (_open) then {1} else {0};
 } forEach ["ramp_bottom", "door_2_1", "door_2_2", "jumpdoor_1", "jumpdoor_2", "back_ramp_switch", "back_ramp_half_switch"];
 _aircraft animateSource ["ramp_anim", _phase];
 {
-    _aircraft animateDoor [_x, if (_open) then {"OPEN"} else {"CLOSE"}];
+    _aircraft animateDoor [_x, _phase];
 } forEach ["RearDoors", "Door_1_source"];

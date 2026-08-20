@@ -93,20 +93,28 @@ on the vehicle** to edit, same convention as **Plant Signal Tracker**; placing i
 any other object is rejected with an on-screen notice. The dialog's turret list, pylon list, and
 current-loadout labels are all discovered live from that exact vehicle (`allTurrets`,
 `getPylonMagazines`, and the `TransportPylonsComponent` config for pylon display names) — never a
-hand-typed list — so only choices that vehicle actually supports are ever shown. Weapon and magazine
-classnames are still typed in — see "Finding exact classnames" above before typing one in. Routes
-through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the
-same public function mission scripts use directly.
+hand-typed list — so only choices that vehicle actually supports are ever shown. A **"Copy Weapon
+From"** picker additionally lists every distinct weapon+magazine pairing already mounted somewhere on
+this exact vehicle (dynamic, excludes the horn) so a curator can pick one instead of typing — default
+"Type manually" leaves the Weapon/Magazine/Count fields in charge; see "Finding exact classnames"
+above for the rest. An **"Export To Clipboard Instead Of Applying"** checkbox copies a ready-to-paste
+`[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` line for a unit's Eden init field instead of
+applying anything to the placed vehicle. When not exporting, routes through the curator-authenticated
+`Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the same public function mission
+scripts use directly. Every mutating turret action is refused with a notice if the selected turret's
+only weapon is the vehicle's horn — pick a different turret.
 
 **"Vehicle Weapon Loadout - Inspect"** (same category, same placed-directly-on-the-vehicle
-convention) — the read-only companion described above. No dialog; acts immediately and shows the
-report via `hint` on the curator's own client.
+convention) — the read-only companion described above. No dialog; acts immediately, copies the report
+to the curator's clipboard, logs it to RPT, confirms both with a fast notification card, and shows the
+full report via `hint`. A horn-only turret is reported but never gets a paste-ready row.
 
 **"Vehicle Weapon Loadout - Copy From Nearby Vehicle"** — placed on the vehicle that should *receive*
 the loadout; the dialog picks the nearby vehicle to copy *from* plus copy-turrets/copy-pylons
 checkboxes (both default on). Routes through the curator-authenticated
 `Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutCopy`, which
-reads the source and calls `Waldo_fnc_VehicleWeaponLoadoutApply` itself.
+reads the source and calls `Waldo_fnc_VehicleWeaponLoadoutApply` itself. A source turret whose only
+weapon is the horn is skipped entirely, never copied.
 
 ## Out of scope: vehicle appearance
 
@@ -130,3 +138,6 @@ vehicle" slot. WMP's closest existing feature is `Waldo_fnc_VehicleCamoSetup` (`
   is cached from a prior call.
 - This is a one-shot apply, not a persistent profile system — for saving/restoring a full vehicle
   state across sessions, see `persistence.md` instead.
+- The horn is never treated as a weapon by the ZEN modules (Configure refuses to mutate a horn-only
+  turret, Copy skips copying one, Inspect skips its paste row) — but `Waldo_fnc_VehicleWeaponLoadoutApply`
+  itself has no such guard, so a mission-authored row can still target a horn-only turret directly.

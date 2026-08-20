@@ -15,6 +15,11 @@
  * have. A source turret/pylon with nothing mounted clears the corresponding target turret/pylon,
  * so copying is a real replace, not a merge - a stale target loadout never survives a copy.
  *
+ * A source turret whose only weapon(s) are its horn (identified by CfgWeapons displayName) is skipped
+ * entirely and never copied - the horn is never a combat weapon a mission maker means to copy, and the
+ * matching target path could otherwise be a real weapon that would silently get overwritten with
+ * nothing useful, most commonly turret [-1] on vehicles from different families.
+ *
  * Arguments:
  * 0: Source <OBJECT> - the vehicle to copy the loadout from. Never modified.
  * 1: Target <OBJECT> - the vehicle to copy the loadout onto.
@@ -64,6 +69,14 @@ private _optGet = {
 private _copyTurrets = ["copyTurrets", true] call _optGet;
 private _copyPylons = ["copyPylons", true] call _optGet;
 
+// A vehicle's horn is an ordinary CfgWeapons entry to the engine, but never a combat weapon a mission
+// maker means to copy - skipping any turret whose current weapon(s) are entirely horn(s) prevents the
+// most common cross-vehicle mistake this guards against: copying a source's non-combat horn turret
+// onto a target path that may hold a real weapon, silently replacing it with nothing useful.
+private _isHornWeapon = {
+    toLower (getText (configFile >> "CfgWeapons" >> _this >> "displayName")) == "horn"
+};
+
 private _rows = [];
 private _copiedTurretPaths = [];
 private _copiedPylonIndices = [];
@@ -73,9 +86,10 @@ if (_copyTurrets) then {
     private _targetTurrets = [[-1]] + (allTurrets [_target, true]);
     {
         private _path = _x;
-        if (_path in _targetTurrets) then {
+        private _weapons = _source weaponsTurret _path;
+        private _isHornOnly = count _weapons > 0 && {(_weapons select {!(_x call _isHornWeapon)}) isEqualTo []};
+        if (_path in _targetTurrets && {!_isHornOnly}) then {
             _copiedTurretPaths pushBack _path;
-            private _weapons = _source weaponsTurret _path;
             private _magazines = (_source magazinesTurret _path) arrayIntersect (_source magazinesTurret _path);
             if (count _weapons == 0) then {
                 _rows pushBack ["TURRET", _path, -1, "CLEAR", "", "", 0];

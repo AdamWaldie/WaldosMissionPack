@@ -155,28 +155,35 @@ mounted there.
 | Control | Meaning |
 |---|---|
 | Loadout Target | Turret weapon, or Aircraft pylon (only offered when the vehicle actually has pylons) |
-| Turret | Which turret path to change (used when target is Turret weapon) |
+| Turret | Which turret path to change (used when target is Turret weapon). A turret whose only weapon is the horn is labelled `(horn - not editable here)` and is never the default selection. |
 | Turret Action | Add Weapon / Replace Turret / Remove Weapon / Clear Turret |
-| Weapon Classname | `CfgWeapons` class to add/replace/remove - ignored for Clear and for pylons |
-| Magazine Classname | `CfgMagazines` class - a turret's magazine, or a pylon's ordnance |
-| Magazine Count | Rounds loaded into a turret magazine - ignored for pylons and for Remove/Clear |
+| Copy Weapon From | Pick a weapon+magazine pairing already mounted somewhere on this exact vehicle instead of typing one below (discovered live, excludes the horn); default "Type manually" leaves the two fields below in charge |
+| Weapon Classname | `CfgWeapons` class to add/replace/remove - ignored for Clear, for pylons, and when Copy Weapon From picked something |
+| Magazine Classname | `CfgMagazines` class - a turret's magazine, or a pylon's ordnance - ignored when Copy Weapon From picked something |
+| Magazine Count | Rounds loaded into a turret magazine - ignored for pylons, for Remove/Clear, and when Copy Weapon From picked something |
 | Pylon | Which hardpoint to change (used when target is Aircraft pylon) |
 | Pylon Action | Set Ordnance / Clear Pylon |
+| Export To Clipboard Instead Of Applying | When checked, copies a ready-to-paste `[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` line to the clipboard for a unit's Eden init field, and applies nothing to the placed vehicle |
 
-Weapon and magazine classnames are still typed in rather than picked from a filtered list - see
-[Finding the exact classnames](#finding-the-exact-classnames-beginner-friendly) above, especially the
-**Inspect** module below, before typing one in from memory.
+Weapon and magazine classnames can be typed in directly, picked from **Copy Weapon From**, or found
+with the **Inspect** module below - see [Finding the exact
+classnames](#finding-the-exact-classnames-beginner-friendly) above before typing one in from memory.
+Whichever way a turret's weapon is chosen, **every mutating turret action is refused with a notice if
+that turret's current weapon is only the vehicle's horn** - pick a different turret instead; the horn
+is never treated as a combat weapon by this feature.
 
-Submitting the dialog routes through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer`
-bridge (same pattern as **Plant Signal Tracker**'s `Waldo_fnc_ZenTrackerServer`) before calling the
-same public `Waldo_fnc_VehicleWeaponLoadoutApply` API mission scripts use directly, and reports the
-outcome back to the curator as a WMP notification card.
+Submitting the dialog (when not exporting) routes through the curator-authenticated
+`Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge (same pattern as **Plant Signal Tracker**'s
+`Waldo_fnc_ZenTrackerServer`) before calling the same public `Waldo_fnc_VehicleWeaponLoadoutApply` API
+mission scripts use directly, and reports the outcome back to the curator as a WMP notification card.
 
 **Vehicle Weapon Loadout - Inspect** (same category, same placed-directly-on-the-vehicle convention)
 is the read-only companion module described above under [Finding the exact
-classnames](#finding-the-exact-classnames-beginner-friendly) - no dialog, acts immediately, and shows
-the report as a full-screen `hint` on the curator's own client. Unlike **Configure** it needs no
-curator-authentication bridge and never touches the server, because it never changes anything.
+classnames](#finding-the-exact-classnames-beginner-friendly) - no dialog, acts immediately, copies the
+report to the curator's clipboard, logs it to RPT, confirms both with a fast notification card, and
+shows the full report as a full-screen `hint`. Unlike **Configure** it needs no curator-authentication
+bridge and never touches the server, because it never changes anything. A turret whose only weapon is
+the horn is still reported (informational) but never gets a ready-to-paste row.
 
 **Vehicle Weapon Loadout - Copy From Nearby Vehicle** must be placed directly on the vehicle that
 should *receive* the copied loadout. Its dialog picks the *source* vehicle to copy from:
@@ -191,6 +198,9 @@ Routes through the curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutCopyS
 `Waldo_fnc_VehicleWeaponLoadoutCopy`, which reads the source vehicle's real state and builds the
 equivalent `Waldo_fnc_VehicleWeaponLoadoutApply` rows itself - the same public apply/validation path
 every other entry point uses, just with the rows assembled from a live vehicle instead of typed in.
+A source turret whose only weapon is the horn is skipped entirely and never copied - it is never a
+combat weapon a mission maker means to copy, and the matching target path could be a real weapon that
+would otherwise get silently overwritten with nothing useful.
 
 ## Notes and limitations
 
@@ -204,6 +214,13 @@ every other entry point uses, just with the rows assembled from a live vehicle i
   a mission (including weapon/ammo state) see [Persistence](Persistence) instead.
 - Diagnostics/troubleshooting: every apply logs one `[WMP VEHWPN]` RPT line per call summarising every
   row's outcome; per-row failures name exactly which classname or turret/pylon reference was invalid.
+- **The horn is never treated as a weapon.** A vehicle's horn is an ordinary `CfgWeapons` entry to the
+  engine (identified here by `CfgWeapons` `displayName`, since there is no other reliable "not a
+  combat weapon" flag), but Configure refuses every mutating action against a horn-only turret, Copy
+  skips copying one, and Inspect reports one without a paste-ready row - across every entry point, not
+  just the ZEN dialog. `Waldo_fnc_VehicleWeaponLoadoutApply` itself is unaffected: a mission-authored
+  row can still target a horn-only turret directly (e.g. to genuinely remove a vehicle's horn), since
+  that call has no beginner-facing dialog to guard.
 - **Out of scope: vehicle appearance.** Recoloring a vehicle (a "pink tank") or hiding part of its
   physical model (e.g. a turret cupola) is a completely different, unrelated Arma system - cosmetic
   model state, not weapon/ammo content - and neither this feature nor any current WMP script covers
