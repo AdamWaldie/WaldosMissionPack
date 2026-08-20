@@ -35,7 +35,9 @@ if (count _hiddenSelections == 0) exitWith {
     ["VEHICLE APPEARANCE", "This vehicle has no texture slots (hiddenSelections[]) to recolor.", "WARNING", "VEHAPP_ZEN", 8]
         call Waldo_fnc_FeatureNotifyLocal;
 };
-private _currentTextures = hiddenSelectionsTextures _objectPos;
+// getObjectTextures (not "hiddenSelectionsTextures", which does not exist), queried by explicit
+// numeric index - see Waldo_fnc_VehicleAppearanceInspect for the same pattern.
+private _currentTextures = _objectPos getObjectTextures (_hiddenSelections apply {_forEachIndex});
 private _slotValues = [];
 private _slotLabels = [];
 for "_i" from 0 to ((count _hiddenSelections) - 1) do {

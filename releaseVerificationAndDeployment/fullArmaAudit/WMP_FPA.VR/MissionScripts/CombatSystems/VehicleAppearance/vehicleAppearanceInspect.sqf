@@ -44,7 +44,11 @@ private _displayName = getText (configFile >> "CfgVehicles" >> (typeOf _vehicle)
 private _lines = [format ["--- %1 (%2) ---", _displayName, typeOf _vehicle]];
 
 private _hiddenSelections = getArray (configFile >> "CfgVehicles" >> (typeOf _vehicle) >> "hiddenSelections");
-private _currentTextures = hiddenSelectionsTextures _vehicle;
+// getObjectTextures (not "hiddenSelectionsTextures", which does not exist) queried by explicit
+// numeric index - the same indices hiddenSelections[]/Waldo_fnc_VehicleAppearanceApply's TEXTURE
+// rows use - so this reads back exactly the slots this feature can set, regardless of engine version
+// (the command's older unary form, current-object-only, predates 2.20's indexed selections form).
+private _currentTextures = if (count _hiddenSelections > 0) then {_vehicle getObjectTextures (_hiddenSelections apply {_forEachIndex})} else {[]};
 private _textureSlots = [];
 if (count _hiddenSelections == 0) then {
     _lines pushBack "Texture slots: none (this vehicle has no hiddenSelections[] entries).";

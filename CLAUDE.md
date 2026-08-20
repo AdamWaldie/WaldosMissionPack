@@ -565,7 +565,7 @@ beginner workflow, including links to Bohemia's own official class-name referenc
 `Arma_3:_CfgWeapons_Vehicle_Weapons`) and the built-in Eden Editor Debug Console for the rare case
 neither helper covers.
 
-Vehicle appearance (recoloring via `setObjectTextureGlobal`/`hiddenSelectionsTextures`, or hiding a
+Vehicle appearance (recoloring via `setObjectTextureGlobal`/`getObjectTextures`, or hiding a
 turret's physical model via `hideSelection`) is a distinct, unrelated Arma system — cosmetic model
 state, not weapon/ammo content — and is covered by the separate **Vehicle Appearance** feature below,
 not this one. `Waldo_fnc_VehicleCamoSetup` (Vehicle Ambush & Camo, see Misc Mission-Maker Tools) is a
