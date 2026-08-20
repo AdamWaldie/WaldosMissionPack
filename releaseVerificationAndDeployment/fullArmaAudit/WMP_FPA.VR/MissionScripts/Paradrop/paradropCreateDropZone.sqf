@@ -201,12 +201,37 @@ if (_route isEqualTo createHashMap) exitWith {
 _aircraft setDir _direction;
 _aircraft setPosATL (_route get "spawn");
 _aircraft engineOn true;
-_aircraft setVelocityModelSpace [0, (_route get "maxSpeed") / 3.6, 0];
-_aircraft limitSpeed (_route get "maxSpeed");
-_aircraft forceSpeed ((_route get "maxSpeed") / 3.6);
-// Match ZEN's working Fly Height operation exactly. This vehicle is server-created and remains
-// server-local here, so the locality-targeted operation is executed directly on its owner.
-_aircraft flyInHeight (_route get "altitude");
+private _applyCruiseOrders = {
+    params ["_aircraft", "_route"];
+    if (isNull _aircraft) exitWith {};
+    _aircraft setVelocityModelSpace [0, (_route get "maxSpeed") / 3.6, 0];
+    _aircraft limitSpeed (_route get "maxSpeed");
+    _aircraft forceSpeed ((_route get "maxSpeed") / 3.6);
+    // Match ZEN's working Fly Height operation exactly. This vehicle is server-created and remains
+    // server-local here, so the locality-targeted operation is executed directly on its owner.
+    _aircraft flyInHeight (_route get "altitude");
+};
+if (_aircraft isKindOf "Helicopter") then {
+    // A helicopter's rotor has zero lift the instant engineOn fires - RotorLib needs real simulated
+    // time to spool up. Forcing full cruise velocity/forceSpeed/flyInHeight in the same instant as
+    // engineOn (as a plane correctly does, in the immediate "else" branch below) fights that spool-up
+    // and nose-dives the aircraft before it can hold altitude. The forced speed/velocity commands
+    // themselves are NOT the problem and must stay for every aircraft type - they're what gives
+    // correct speed-through-the-drop-area for jump timing, not just a smooth launch - only the
+    // TIMING relative to engineOn needs to change for a helicopter specifically. Defer a few seconds
+    // so the rotor has real lift established before cruise orders are issued.
+    [_aircraft, _route, _applyCruiseOrders] spawn {
+        params ["_aircraft", "_route", "_applyCruiseOrders"];
+        sleep 4;
+        if (isNull _aircraft || {!alive _aircraft}) exitWith {};
+        [_aircraft, _route] call _applyCruiseOrders;
+    };
+} else {
+    [_aircraft, _route] call _applyCruiseOrders;
+};
+// For a helicopter, cruise orders (and therefore altitude/speed convergence toward "requested") are
+// deliberately deferred a few seconds above - "actual"/"speed" here reflect the moment of spawn, not
+// the final cruise state.
 diag_log format [
     "[WMP PARADROP] Dynamic aircraft activated: id=%1 requested=%2m AGL actual=%3m AGL speed=%4km/h currentWaypoint=%5.",
     _id,

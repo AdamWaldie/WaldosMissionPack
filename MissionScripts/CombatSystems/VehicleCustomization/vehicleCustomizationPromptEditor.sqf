@@ -52,7 +52,14 @@
 params [["_vehicle", objNull, [objNull]]];
 if (!hasInterface || {isNull _vehicle}) exitWith {displayNull};
 
-private _disp = ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION"] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+// deferFit=true: this dialog creates far more controls, interleaved with much heavier per-control
+// work (catalog scans, a full heuristic component scan), than any Economy prompt Waldo_fnc_EcoCore_
+// fitPromptDisplay was tuned against - letting it auto-fit here raced this script's own control
+// creation and could snapshot/reposition only a partial control set, silently leaving whichever tab's
+// controls were created after that snapshot at their original, un-fitted coordinates (confirmed root
+// cause of the tabs appearing to do nothing on click). Fit explicitly, once, at the very end of this
+// file instead, after every control this dialog creates genuinely exists.
+private _disp = ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
 if (isNull _disp) exitWith {displayNull};
 
 _disp setVariable ["WaldoVehCust_Vehicle", _vehicle];
@@ -960,13 +967,20 @@ _copyOverlayPickBtn ctrlAddEventHandler ["ButtonClick", {
 [_disp, "turret"] call Waldo_fnc_VehCust_setTab;
 [_disp] call Waldo_fnc_VehCust_refreshPendingList;
 
-// Waldo_fnc_EcoCore_fitPromptDisplay (kicked off inside Waldo_fnc_EcoCore_createZeusPromptDisplay
-// above) runs a one-time, spawned, ~0.03-0.36s-delayed post-layout pass that uniformly recolors
-// every button-type control (including these 4 tab buttons) with one flat theme color, silently
-// erasing the active-tab highlight this file just painted via setTab. Re-assert whichever tab is
-// actually current once that pass has had time to finish, so the highlight matches the visible
-// content again. This is local to this dialog only - Waldo_fnc_EcoCore_fitPromptDisplay itself and
-// every Economy prompt built on it are untouched.
+// Fit explicitly now that every control this dialog creates genuinely exists (deferFit=true was
+// passed to Waldo_fnc_EcoCore_createZeusPromptDisplay above specifically so this call is the first
+// time fitPromptDisplay's own control-count "stability" check ever runs for this dialog - see that
+// call's comment for the race this closes).
+[_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
+
+// Waldo_fnc_EcoCore_fitPromptDisplay still runs its own repositioning pass in a separately spawned
+// thread (bounded ~0.03-0.36s after the call above) that uniformly recolors every button-type control
+// (including these 4 tab buttons) with one flat theme color, silently erasing the active-tab highlight
+// this file just painted via setTab - this part is unrelated to the positional race the explicit call
+// above closes, and still needs its own re-assert. Re-paint whichever tab is actually current once
+// that pass has had time to finish, so the highlight matches the visible content again. This is local
+// to this dialog only - Waldo_fnc_EcoCore_fitPromptDisplay itself and every Economy prompt built on it
+// are untouched.
 [_disp] spawn {
     params ["_disp"];
     uiSleep 0.6;

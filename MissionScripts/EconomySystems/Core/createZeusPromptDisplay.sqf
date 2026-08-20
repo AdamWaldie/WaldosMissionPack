@@ -11,19 +11,32 @@
  * 0: Header text <STRING> - the text shown in the card's title bar (optional, default: the
  *    original Economy Systems header, so every existing Economy call site is unaffected by
  *    omitting this argument).
+ * 1: Defer fit <BOOL> - when true, skip the automatic Waldo_fnc_EcoCore_fitPromptDisplay call this
+ *    function normally makes before returning (optional, default: false, so every existing call site
+ *    is unaffected by omitting this argument). Pass true when the caller's own control-creation script
+ *    is heavy enough (many controls, expensive per-control work) that it could still be running when
+ *    fitPromptDisplay's own control-count "stability" heuristic decides the layout is finished -
+ *    fitPromptDisplay only ever runs once per dialog and only repositions whatever controls exist at
+ *    that moment, so a caller that races it can end up with some controls never migrated into the
+ *    fitted card layout (confirmed root cause of the Vehicle Customisation Editor's tabs appearing to
+ *    do nothing - see vehicleCustomizationPromptEditor.sqf). A caller passing true MUST call
+ *    `[_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;` itself, exactly once, as the very last thing
+ *    it does after every one of its own controls has been created.
  *
  * Return Value:
  * DISPLAY - the created modal child display, or displayNull if it could not be created.
  *
  * Example:
- * [] call Waldo_fnc_EcoCore_createZeusPromptDisplay;                                  // Economy (default header)
- * ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION"] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+ * [] call Waldo_fnc_EcoCore_createZeusPromptDisplay;                                  // Economy (default header, auto-fit)
+ * ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+ * // ... build every control ...
+ * [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;                                    // caller fits once everything exists
  *
  * Current callers: Economy Zeus authoring modules before their controls are populated;
  * MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf.
  */
 
-    params [["_headerText", "  WALDOS MISSION PACK  |  ECONOMY AUTHORING", [""]]];
+    params [["_headerText", "  WALDOS MISSION PACK  |  ECONOMY AUTHORING", [""]], ["_deferFit", false, [false]]];
     if (!hasInterface) exitWith {displayNull};
 
     private _existing = uiNamespace getVariable ["WaldoEcoCore_ActiveZeusPromptDisplay", displayNull];
@@ -89,6 +102,8 @@
     _disp setVariable ["WaldoEcoCore_PromptOwnedControls", +_chrome];
     _disp setVariable ["WaldoEcoCore_PromptToken", format ["%1_%2", diag_tickTime, random 1e9]];
     uiNamespace setVariable ["WaldoEcoCore_ActiveZeusPromptDisplay", _disp];
-    [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
-    diag_log format ["[WMP ECO UI] prompt controls attached display=%1 clientOwner=%2", _disp, clientOwner];
+    if !(_deferFit) then {
+        [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
+    };
+    diag_log format ["[WMP ECO UI] prompt controls attached display=%1 clientOwner=%2 deferFit=%3", _disp, clientOwner, _deferFit];
     _disp
