@@ -94,19 +94,38 @@ private _turretIsHornOnly = _turretPaths apply {
     private _current = _objectPos weaponsTurret _x;
     count _current > 0 && {(_current select {!(_x call _isHornWeapon)}) isEqualTo []}
 };
+// [-1] is always offered here since allTurrets never returns it itself, but unlike every other path
+// in this list it was never confirmed to actually correspond to a real weapon mount - some vehicles'
+// own root CfgVehicles class declares no "weapons[]" array at all (an ordinary unarmed car, for
+// instance), meaning [-1] has no physical mount whatsoever. Waldo_fnc_VehicleWeaponLoadoutApply
+// refuses ADD/REPLACE against it in that case (WMP cannot create a mount point that needs model/
+// config authoring work, not a script) - this label makes that visible before a curator even submits.
+private _mainSlotHasMount = count (getArray (configFile >> "CfgVehicles" >> (typeOf _objectPos) >> "weapons")) > 0;
+private _turretHasNoMount = _turretPaths apply {_x isEqualTo [-1] && {!_mainSlotHasMount}};
 private _turretLabels = [];
 {
     private _current = _objectPos weaponsTurret _x;
     private _currentText = if (count _current > 0) then {
         (_current apply {getText (configFile >> "CfgWeapons" >> _x >> "displayName")}) joinString ", "
     } else {"empty"};
-    private _hornSuffix = if (_turretIsHornOnly select _forEachIndex) then {" (horn - not editable here)"} else {""};
-    _turretLabels pushBack ([format ["Turret %1 - %2%3", _x, _currentText, _hornSuffix]] call _truncateLabel);
+    private _suffix = if (_turretIsHornOnly select _forEachIndex) then {
+        " (horn - not editable here)"
+    } else {
+        if (_turretHasNoMount select _forEachIndex) then {" (no weapon mount on this vehicle)"} else {""}
+    };
+    _turretLabels pushBack ([format ["Turret %1 - %2%3", _x, _currentText, _suffix]] call _truncateLabel);
 } forEach _turretPaths;
-// Default to the first non-horn turret when one exists, rather than always index 0 - turret [-1] is
-// a pure horn slot on plenty of vehicles, and opening straight onto it is the single most common way
-// a beginner ends up confused about why "the weapon" won't change.
-private _defaultTurretIndex = _turretIsHornOnly find false;
+// Default to the first turret that is neither horn-only nor mount-less, rather than always index 0 -
+// turret [-1] is a pure horn slot or has no mount at all on plenty of vehicles, and opening straight
+// onto it is the single most common way a beginner ends up confused about why nothing changes.
+// Built as a plain boolean array first (rather than using _forEachIndex inside findIf's own
+// condition, whose per-command support for that magic variable isn't confirmed) so the final lookup
+// is a simple, unambiguous "find true".
+private _turretIsUsable = [];
+for "_i" from 0 to ((count _turretPaths) - 1) do {
+    _turretIsUsable pushBack (!(_turretIsHornOnly select _i) && {!(_turretHasNoMount select _i)});
+};
+private _defaultTurretIndex = _turretIsUsable find true;
 if (_defaultTurretIndex == -1) then {_defaultTurretIndex = 0;};
 
 // Pack-wide catalog, if the background scan (kicked off at mission start by Waldo_fnc_ZenInitModules)

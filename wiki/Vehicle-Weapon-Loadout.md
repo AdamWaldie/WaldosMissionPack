@@ -270,6 +270,16 @@ would otherwise get silently overwritten with nothing useful.
   just the ZEN dialog. `Waldo_fnc_VehicleWeaponLoadoutApply` itself is unaffected: a mission-authored
   row can still target a horn-only turret directly (e.g. to genuinely remove a vehicle's horn), since
   that call has no beginner-facing dialog to guard.
+- **`[-1]` is not guaranteed to have a real weapon mount.** `allTurrets` never returns `[-1]` itself -
+  it is always prepended by hand as "the main/driver weapon slot" - so unlike every other discovered
+  turret path it was never actually confirmed to correspond to a real, model-backed mount. Some
+  vehicles' own class declares no root `weapons[]` array at all (an ordinary unarmed car, for
+  instance), meaning `[-1]` has no physical mount whatsoever on that vehicle. WMP cannot create a new
+  weapon mount on a vehicle that never had one - that needs model/config authoring work, not a script
+  - so `ADD`/`REPLACE` against `[-1]` is refused outright on such a vehicle (a clear per-row failure,
+  never a silent no-op that only looks like it worked). Configure labels a mount-less `[-1]`
+  `(no weapon mount on this vehicle)` and never defaults to it. A real turret path from `allTurrets`
+  never has this problem, since `allTurrets` only ever reports turrets that genuinely exist.
 - **Not covered here: vehicle appearance.** Recoloring a vehicle (a "pink tank") or hiding part of its
   physical model (e.g. a turret cupola) is a completely different, unrelated Arma system - cosmetic
   model state, not weapon/ammo content. See [Vehicle Appearance](Vehicle-Appearance) for that feature.
@@ -279,10 +289,12 @@ would otherwise get silently overwritten with nothing useful.
 
 ## See also
 
-- The **Vehicle Weapon Loadout And Appearance Example** composition (`WMP_Compositions/`) places an
-  armed and an unarmed Hunter side by side; the unarmed one copies the armed one's real turret
-  loadout via `Waldo_fnc_VehicleWeaponLoadoutCopy` (no classname typed) and is recolored via
-  `Waldo_fnc_VehicleAppearanceApply` - a working editor-time starting point for both features at once.
+- The **Vehicle Weapon Loadout And Appearance Example** composition (`WMP_Compositions/`) places two
+  identically-armed Hunters side by side (deliberately the same variant, so their `turret[0]` paths
+  genuinely match - Copy only ever moves a path that exists on both vehicles); one copies the other's
+  real turret loadout via `Waldo_fnc_VehicleWeaponLoadoutCopy` (no classname typed) and is recolored
+  via `Waldo_fnc_VehicleAppearanceApply` - a working editor-time starting point for both features at
+  once.
 - [Vehicle Appearance](Vehicle-Appearance) - recoloring and physical-component show/hide, a separate
   feature for a genuinely different Arma system (cosmetic model state, not weapon/ammo content).
 - [Airborne Gunship Support](Airborne-Gunship-Support) - turret *profiles* for crew assignment on a

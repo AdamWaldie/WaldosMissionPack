@@ -542,6 +542,19 @@ Zeus ("WMP AI & Combat"): **Vehicle Weapon Loadout - Configure** — must be pla
 
 **The horn is excluded from every mutating operation.** A vehicle's horn is an ordinary `CfgWeapons` entry to the engine (identified here by `CfgWeapons` `displayName` — there is no other reliable "not a combat weapon" flag), but never a weapon a mission maker or curator means. `Waldo_fnc_VehicleWeaponLoadoutApply` itself refuses every mutating TURRET action (`ADD`/`REPLACE`/`REMOVE`/`CLEAR`) against a horn-only turret with `[false, "..."]` — this is the single authoritative check, enforced regardless of caller (a raw script call or an object's own Eden init field is refused exactly like a ZEN-driven one). The Configure module additionally labels a horn-only turret `(horn - not editable here)` in its turret list, never defaults to it, and shows an on-screen notice if one is picked anyway — a client-side convenience that avoids a wasted round-trip to the server, not the enforcement itself. `Waldo_fnc_VehicleWeaponLoadoutCopy` skips copying a horn-only source turret entirely, so a source vehicle's horn can never overwrite a matching target turret path that holds a real weapon. `Waldo_fnc_VehicleWeaponLoadoutInspect` still reports a horn turret (informational — nothing here mutates anything) but never generates a paste-ready row for it.
 
+**`[-1]` is not guaranteed to have a real weapon mount.** `allTurrets` never returns `[-1]` itself (it is
+always prepended by hand as "the main/driver weapon slot"), so unlike every other path in the discovered
+list it was never confirmed to correspond to a real, model-backed mount — some vehicles' own root
+`CfgVehicles` class declares no `weapons[]` array at all (an ordinary unarmed car, for instance), meaning
+`[-1]` has no physical mount whatsoever on that vehicle. `addWeaponTurret` against a mount that doesn't
+exist silently does nothing useful — no weapon appears or functions — while still looking like an
+ordinary successful call, which is worse than an outright error for a beginner. `Waldo_fnc_VehicleWeaponLoadoutApply`
+therefore refuses ADD/REPLACE against `[-1]` outright when that vehicle's own config declares no root
+`weapons[]` array, rather than reporting a false success: **WMP cannot create a new physical weapon mount
+on a vehicle that never had one — that needs model/config authoring work, not a script.** The Configure
+module labels such a turret `(no weapon mount on this vehicle)` and never defaults to it, the same
+client-side convenience the horn label already gets.
+
 There is no engine query for "what weapons/magazines fit this turret", so classnames are still typed
 in rather than picked from a filtered list. Two beginner-friendly helpers exist so a mission maker
 never has to guess or hand-type one from memory, in order of how completely they avoid it:

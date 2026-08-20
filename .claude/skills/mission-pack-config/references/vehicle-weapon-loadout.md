@@ -152,6 +152,13 @@ physical deployable camo objects, not texture-swapping.
   is cached from a prior call.
 - This is a one-shot apply, not a persistent profile system — for saving/restoring a full vehicle
   state across sessions, see `persistence.md` instead.
-- The horn is never treated as a weapon by the ZEN modules (Configure refuses to mutate a horn-only
-  turret, Copy skips copying one, Inspect skips its paste row) — but `Waldo_fnc_VehicleWeaponLoadoutApply`
-  itself has no such guard, so a mission-authored row can still target a horn-only turret directly.
+- The horn is never treated as a weapon. `Waldo_fnc_VehicleWeaponLoadoutApply` itself refuses every
+  mutating TURRET action against a horn-only turret — the single authoritative check, enforced
+  regardless of caller (script call, Eden init field, or ZEN). Configure/Copy/Inspect add their own
+  client-side labeling/skipping on top purely to avoid a wasted round-trip, not as the real guard.
+- `[-1]` (the main/driver weapon slot) is always offered as a turret path since `allTurrets` never
+  returns it itself, but it isn't guaranteed to have a real weapon mount — some vehicles' own class
+  declares no root `weapons[]` array at all. `Waldo_fnc_VehicleWeaponLoadoutApply` refuses ADD/REPLACE
+  against a mount-less `[-1]` rather than silently doing nothing (WMP cannot create a physical mount
+  point that needs model/config authoring work). Configure labels it `(no weapon mount on this
+  vehicle)` and never defaults to it. A real path from `allTurrets` never has this problem.
