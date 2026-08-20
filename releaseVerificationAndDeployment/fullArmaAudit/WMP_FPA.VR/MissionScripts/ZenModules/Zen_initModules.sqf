@@ -337,6 +337,12 @@ missionNamespace setVariable ["Waldo_ZenModuleCount", 52];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
 diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 52], clientOwner];
 
+// Warm the Vehicle Weapon Loadout pack-wide catalog in the background now, well before a curator is
+// likely to actually open "Vehicle Weapon Loadout - Configure" - scanning every CfgVehicles class is
+// real work on a large modset, so this trades a background cost paid once at mission start for an
+// instant dialog open later instead of blocking the dialog itself on the scan.
+[] spawn {[] call Waldo_fnc_VehicleWeaponLoadoutCatalogBuild;};
+
 // Hazard controls are meaningful only when the mission enabled the underlying runtime. Shared
 // config can finish after ZEN registration, so add these two entries asynchronously once the
 // readiness sentinel is available instead of showing dead controls in every mission.

@@ -71,6 +71,7 @@ short init demonstrates every internal option.
 | Gunship Support Example (Full) | Crewed VTOL registered with `Waldo_fnc_GunshipRegister`, orbiting a movable marker with automatic service |
 | Radio Jammer Example (Minimal) | Smallest working jammer fixture |
 | Radio Jammer Example (Full) | Server-owned, movable jammer fixture with guided disable/reactivation options |
+| Vehicle Weapon Loadout And Appearance Example | An armed Hunter donates its real turret loadout to an unarmed one via `Waldo_fnc_VehicleWeaponLoadoutCopy` (no classname typed), which is also recolored via `Waldo_fnc_VehicleAppearanceApply` |
 | Hazardous Zone Example (Minimal) | Smallest working fixed-area hazard registration |
 | Hazardous Zone Example (Full) | Reliable fixed-area hazard with visible transition feedback and real danger |
 | Radiation Hazard With Audio (Minimal) | Smallest working call - no profile overrides |

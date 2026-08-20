@@ -100,16 +100,26 @@ on the vehicle** to edit, same convention as **Plant Signal Tracker**; placing i
 any other object is rejected with an on-screen notice. The dialog's turret list, pylon list, and
 current-loadout labels are all discovered live from that exact vehicle (`allTurrets`,
 `getPylonMagazines`, and the `TransportPylonsComponent` config for pylon display names) — never a
-hand-typed list — so only choices that vehicle actually supports are ever shown. A **"Copy Weapon
-From"** picker additionally lists every distinct weapon+magazine pairing already mounted somewhere on
-this exact vehicle (dynamic, excludes the horn) so a curator can pick one instead of typing — default
-"Type manually" leaves the Weapon/Magazine/Count fields in charge; see "Finding exact classnames"
-above for the rest. An **"Export To Clipboard Instead Of Applying"** checkbox copies a ready-to-paste
-`[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` line for a unit's Eden init field instead of
-applying anything to the placed vehicle. When not exporting, routes through the curator-authenticated
-`Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the same public function mission
-scripts use directly. Every mutating turret action is refused with a notice if the selected turret's
-only weapon is the vehicle's horn — pick a different turret.
+hand-typed list — so only choices that vehicle actually supports are ever shown. **"Copy Weapon
+From"** / **"Copy Ordnance From"** pickers additionally list every distinct weapon+magazine pairing
+(or pylon ordnance) already mounted somewhere on this exact vehicle (excludes the horn), extended with
+a pack-wide catalog discovered across every vehicle class in the currently loaded modset via
+`Waldo_fnc_VehicleWeaponLoadoutCatalogBuild` — not just this one vehicle. That scan is real work on a
+large modset, so `Waldo_fnc_ZenInitModules` runs it in the background at mission start and caches the
+result (config data is immutable during a mission); if a curator opens the dialog before that finishes,
+"Type manually" says so and reopening shortly after picks it up. Each picker caps its pack-wide
+section and truncates long labels so the LIST control itself never overruns. Default "Type manually"
+leaves the Weapon/Magazine/Count fields in charge; see "Finding exact classnames" above for the rest.
+A **"Session Action"** picker turns single-shot editing into a small builder: **Apply Now** (default,
+original behaviour), **Queue This Action** (stash the row in a client-local, per-vehicle queue and
+reopen the dialog for another action), **Apply All Queued** (submit the whole queue plus this row in
+one call), **Export Queue To Clipboard** (a ready-to-paste multi-row
+`[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` block for a unit's Eden init field, applying
+nothing and keeping the queue), and **Clear Queue**. Apply actions route through the
+curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the same public
+function mission scripts use directly; Queue/Export never touch the server. Every mutating turret
+action is refused with a notice if the selected turret's only weapon is the vehicle's horn — pick a
+different turret.
 
 **"Vehicle Weapon Loadout - Inspect"** (same category, same placed-directly-on-the-vehicle
 convention) — the read-only companion described above. No dialog; acts immediately, copies the report

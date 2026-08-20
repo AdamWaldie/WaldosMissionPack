@@ -897,6 +897,7 @@ class CfgFunctions
             class VehicleWeaponLoadoutApply {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf";};
             class VehicleWeaponLoadoutInspect {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutInspect.sqf";};
             class VehicleWeaponLoadoutCopy {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopy.sqf";};
+            class VehicleWeaponLoadoutCatalogBuild {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCatalogBuild.sqf";};
         };
         class Persistence
         {

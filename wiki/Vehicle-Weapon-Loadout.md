@@ -162,17 +162,55 @@ mounted there.
 | Loadout Target | Turret weapon, or Aircraft pylon (only offered when the vehicle actually has pylons) |
 | Turret | Which turret path to change (used when target is Turret weapon). A turret whose only weapon is the horn is labelled `(horn - not editable here)` and is never the default selection. |
 | Turret Action | Add Weapon / Replace Turret / Remove Weapon / Clear Turret |
-| Copy Weapon From | Pick a weapon+magazine pairing already mounted somewhere on this exact vehicle instead of typing one below (discovered live, excludes the horn); default "Type manually" leaves the two fields below in charge |
+| Copy Weapon From | Pick a weapon+magazine pairing already mounted somewhere on this exact vehicle, or from the pack-wide catalog (see below), instead of typing one below (excludes the horn); default "Type manually" leaves the two fields below in charge |
 | Weapon Classname | `CfgWeapons` class to add/replace/remove - ignored for Clear, for pylons, and when Copy Weapon From picked something |
-| Magazine Classname | `CfgMagazines` class - a turret's magazine, or a pylon's ordnance - ignored when Copy Weapon From picked something |
+| Magazine Classname | `CfgMagazines` class - a turret's magazine, or a pylon's ordnance - ignored when Copy Weapon From/Copy Ordnance From picked something |
 | Rounds Per Magazine | Rounds loaded into EACH magazine instance, clamped to that magazine's own full capacity - ignored for pylons, for Remove/Clear, and when Copy Weapon From picked something |
 | Number Of Magazines | How many separate magazine instances to add - the turret's real reserve ammo pool, not just one oversized magazine - ignored for pylons, for Remove/Clear, and when Copy Weapon From picked something |
 | Pylon | Which hardpoint to change (used when target is Aircraft pylon) |
+| Copy Ordnance From | Pick ordnance already mounted on this vehicle, or from the pack-wide catalog, instead of typing the Magazine Classname field above - pylons only |
 | Pylon Action | Set Ordnance / Clear Pylon |
-| Export To Clipboard Instead Of Applying | When checked, copies a ready-to-paste `[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` line to the clipboard for a unit's Eden init field, and applies nothing to the placed vehicle |
+| Session Action | Apply Now (default, the original one-shot behaviour), Queue This Action, Apply All Queued, Export Queue To Clipboard, or Clear Queue - see "Queuing multiple actions" below |
 
-Weapon and magazine classnames can be typed in directly, picked from **Copy Weapon From**, or found
-with the **Inspect** module below - see [Finding the exact
+### Pack-wide catalog
+
+Both Copy pickers extend beyond "what's already on this one vehicle" with a catalog discovered live
+across **every vehicle class in the currently loaded modset** - `Waldo_fnc_VehicleWeaponLoadoutCatalogBuild`
+recursively scans every `CfgVehicles` turret entry for its `weapons[]`/`magazines[]` arrays, and every
+`CfgMagazines` entry carrying a `pylonWeapon` property, for the turret and pylon catalogs
+respectively. That scan is real work on a large modset, so it never runs synchronously inside this
+dialog: `Waldo_fnc_ZenInitModules` kicks it off in the background at mission start and caches the
+result for the rest of the mission (config data is immutable during one, the same justification
+`Waldo_fnc_ResolveVehicleClassPool` already uses for its own cache). If a curator opens the dialog
+before that background scan finishes, the pack-wide section is simply absent that one time - "Type
+manually" says so directly, and reopening the module shortly after picks it up once ready. Each
+picker also caps how many pack-wide entries it renders and truncates long labels, so a modset with
+thousands of distinct turret weapons never turns the list itself into an unusably slow, overrunning
+control - the underlying cached catalog is not capped, only what one dialog open renders from it.
+
+### Queuing multiple actions
+
+**Session Action** turns single-shot editing into a small builder for when several changes belong to
+the same vehicle-configuration pass:
+
+- **Apply Now** - the original behaviour: apply this one row immediately.
+- **Queue This Action** - stash this row in a client-local queue kept per vehicle, and leave the
+  dialog free to be reopened for another action on the same vehicle. Nothing is applied yet.
+- **Apply All Queued** - submit every queued row plus this dialog's own current row in one call
+  (`Waldo_fnc_VehicleWeaponLoadoutApply` already accepts multiple rows per call), then clear the
+  queue.
+- **Export Queue To Clipboard** - build one ready-to-paste multi-row
+  `[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` block from the queue plus this row, copy
+  it to the clipboard for a unit's Eden init field, and apply nothing - the queue is kept afterward.
+- **Clear Queue** - drop any rows queued for this vehicle. This dialog's own current row is not
+  applied either.
+
+The queue is interface-client-local only (keyed by the vehicle's `netId`) - nothing is queued or
+applied server-side until Apply/Export is actually chosen, and it is never synchronised between
+curators.
+
+Weapon and magazine classnames can be typed in directly, picked from **Copy Weapon From**/**Copy
+Ordnance From**, or found with the **Inspect** module below - see [Finding the exact
 classnames](#finding-the-exact-classnames-beginner-friendly) above before typing one in from memory.
 Whichever way a turret's weapon is chosen, **every mutating turret action is refused with a notice if
 that turret's current weapon is only the vehicle's horn** - pick a different turret instead; the horn
@@ -241,6 +279,10 @@ would otherwise get silently overwritten with nothing useful.
 
 ## See also
 
+- The **Vehicle Weapon Loadout And Appearance Example** composition (`WMP_Compositions/`) places an
+  armed and an unarmed Hunter side by side; the unarmed one copies the armed one's real turret
+  loadout via `Waldo_fnc_VehicleWeaponLoadoutCopy` (no classname typed) and is recolored via
+  `Waldo_fnc_VehicleAppearanceApply` - a working editor-time starting point for both features at once.
 - [Vehicle Appearance](Vehicle-Appearance) - recoloring and physical-component show/hide, a separate
   feature for a genuinely different Arma system (cosmetic model state, not weapon/ammo content).
 - [Airborne Gunship Support](Airborne-Gunship-Support) - turret *profiles* for crew assignment on a
