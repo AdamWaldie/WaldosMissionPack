@@ -655,6 +655,27 @@ class CfgFunctions
             class ZenVehicleWeaponLoadoutCopyServer {
                 file = "MissionScripts\ZenModules\zenVehicleWeaponLoadoutCopyServer.sqf";
             };
+            class ZenVehicleAppearanceTexture {
+                file = "MissionScripts\ZenModules\Zen_vehicleAppearanceTextureModule.sqf";
+            };
+            class ZenVehicleAppearanceTextureServer {
+                file = "MissionScripts\ZenModules\zenVehicleAppearanceTextureServer.sqf";
+            };
+            class ZenVehicleAppearanceInspect {
+                file = "MissionScripts\ZenModules\Zen_vehicleAppearanceInspectModule.sqf";
+            };
+            class ZenVehicleComponentRegister {
+                file = "MissionScripts\ZenModules\Zen_vehicleComponentRegisterModule.sqf";
+            };
+            class ZenVehicleComponentRegisterServer {
+                file = "MissionScripts\ZenModules\zenVehicleComponentRegisterServer.sqf";
+            };
+            class ZenVehicleComponentRemove {
+                file = "MissionScripts\ZenModules\Zen_vehicleComponentRemoveModule.sqf";
+            };
+            class ZenVehicleComponentRemoveServer {
+                file = "MissionScripts\ZenModules\zenVehicleComponentRemoveServer.sqf";
+            };
             class ZenNotify {
                 file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
             };
@@ -863,6 +884,13 @@ class CfgFunctions
             class GunshipReleaseControlLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipReleaseControlLocal.sqf";};
             class GunshipSetupLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSetupLocal.sqf";};
             class GunshipUpdateMarkersLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipUpdateMarkersLocal.sqf";};
+        };
+        class VehicleAppearance
+        {
+            class VehicleAppearanceApply {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceApply.sqf";};
+            class VehicleAppearanceInspect {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceInspect.sqf";};
+            class VehicleComponentCatalogRegister {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleComponentCatalogRegister.sqf";};
+            class VehicleComponentRemove {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleComponentRemove.sqf";};
         };
         class VehicleWeaponLoadout
         {

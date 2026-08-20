@@ -26,11 +26,11 @@ really just an ordnance/magazine classname with no separate weapon class of its 
 ```sqf
 // [vehicle, rows]
 [this, [
-    ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 6]
+    ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 30, 4]
 ]] call Waldo_fnc_VehicleWeaponLoadoutApply;
 ```
 
-Each row is `[targetType, turretPath, pylonIndex, action, weaponClass, magazineClass, magazineCount]`:
+Each row is `[targetType, turretPath, pylonIndex, action, weaponClass, magazineClass, magazineCount, magazineQuantity]`:
 
 | Field | Type | Meaning |
 |---|---|---|
@@ -40,7 +40,8 @@ Each row is `[targetType, turretPath, pylonIndex, action, weaponClass, magazineC
 | `action` | STRING | TURRET: `ADD`, `REPLACE` (strips the turret first), `REMOVE` (one named weapon/magazine), `CLEAR` (whole turret). PYLON: `SET` (aliases `ADD`/`REPLACE` accepted), `CLEAR`. |
 | `weaponClass` | STRING | `CfgWeapons` class - TURRET rows only. |
 | `magazineClass` | STRING | `CfgMagazines` class - the turret magazine to load (TURRET, optional) or the pylon's ordnance itself (PYLON, required for `SET`). |
-| `magazineCount` | NUMBER | Rounds loaded for a TURRET magazine (default 1). For a PYLON row it's the *exact* ammo count instead: `0` (or omitted) loads the pylon's full `CfgMagazines`-defined count via `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an ammo-load flag, and never loads ammo by itself); a positive value loads exactly that many rounds, clamped to the magazine's own full count. |
+| `magazineCount` | NUMBER | Rounds loaded **into each magazine instance** (default 1, TURRET only) - can be less than the magazine's full capacity for a genuinely partial magazine, or omitted/left low for a full one; clamped **down** if it exceeds the magazine's own `CfgMagazines` `count` (a magazine can't hold more rounds than its own config allows - the engine itself enforces this, same as `addMagazine`), never forced up. For a PYLON row this field means something different - it's the pylon's *exact* ammo count instead: `0` (or omitted) loads the pylon's full `CfgMagazines`-defined count via `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an ammo-load flag, and never loads ammo by itself); a positive value loads exactly that many rounds, clamped to the magazine's own full count. |
+| `magazineQuantity` | NUMBER | How many separate magazine instances to add (default 1, TURRET ADD/REPLACE only, ignored elsewhere). `addMagazineTurret` adds exactly one magazine instance per call, so this loops it that many times to build a real reserve ammo pool - e.g. `magazineCount=30, magazineQuantity=4` means four separate 30-round magazines, not one 120-round magazine. |
 
 Multiple rows apply independently in one call - a bad row (unknown classname, non-existent turret
 path/pylon index) is reported for that row only and never blocks the rest. The return value is
@@ -61,6 +62,10 @@ path/pylon index) is reported for that row only and never blocks the rest. The r
 
 // Clear a turret completely:
 [this, [["TURRET", [-1], -1, "CLEAR", "", "", 0]]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+
+// Four separate 12-round tank cannon magazines (a real 48-round reserve), not one 12-round magazine:
+[this, [["TURRET", [0], -1, "REPLACE", "cannon_125mm", "12Rnd_125mm_HE_T_Red", 12, 4]]]
+    call Waldo_fnc_VehicleWeaponLoadoutApply;
 ```
 
 ### Copying a whole loadout from another vehicle
@@ -160,7 +165,8 @@ mounted there.
 | Copy Weapon From | Pick a weapon+magazine pairing already mounted somewhere on this exact vehicle instead of typing one below (discovered live, excludes the horn); default "Type manually" leaves the two fields below in charge |
 | Weapon Classname | `CfgWeapons` class to add/replace/remove - ignored for Clear, for pylons, and when Copy Weapon From picked something |
 | Magazine Classname | `CfgMagazines` class - a turret's magazine, or a pylon's ordnance - ignored when Copy Weapon From picked something |
-| Magazine Count | Rounds loaded into a turret magazine - ignored for pylons, for Remove/Clear, and when Copy Weapon From picked something |
+| Rounds Per Magazine | Rounds loaded into EACH magazine instance, clamped to that magazine's own full capacity - ignored for pylons, for Remove/Clear, and when Copy Weapon From picked something |
+| Number Of Magazines | How many separate magazine instances to add - the turret's real reserve ammo pool, not just one oversized magazine - ignored for pylons, for Remove/Clear, and when Copy Weapon From picked something |
 | Pylon | Which hardpoint to change (used when target is Aircraft pylon) |
 | Pylon Action | Set Ordnance / Clear Pylon |
 | Export To Clipboard Instead Of Applying | When checked, copies a ready-to-paste `[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` line to the clipboard for a unit's Eden init field, and applies nothing to the placed vehicle |
@@ -179,11 +185,16 @@ mission scripts use directly, and reports the outcome back to the curator as a W
 
 **Vehicle Weapon Loadout - Inspect** (same category, same placed-directly-on-the-vehicle convention)
 is the read-only companion module described above under [Finding the exact
-classnames](#finding-the-exact-classnames-beginner-friendly) - no dialog, acts immediately, copies the
-report to the curator's clipboard, logs it to RPT, confirms both with a fast notification card, and
-shows the full report as a full-screen `hint`. Unlike **Configure** it needs no curator-authentication
-bridge and never touches the server, because it never changes anything. A turret whose only weapon is
-the horn is still reported (informational) but never gets a ready-to-paste row.
+classnames](#finding-the-exact-classnames-beginner-friendly) - no dialog, acts immediately, logs the
+full report to RPT, and shows it as a full-screen `hint`. The **clipboard** gets something different
+and deliberately narrower: every row combined into one single, comment-free, ready-to-paste
+`[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` statement - safe to paste directly into a
+unit's Eden init field as-is. The full prose report is never what lands on the clipboard; pasting a
+human-readable report (or any block with an inline `// comment`) straight into an init field is a
+confirmed real-world failure mode (`Invalid number in expression`) if the paste doesn't keep real line
+breaks, since the comment can swallow the rest of the statement. Unlike **Configure** it needs no
+curator-authentication bridge and never touches the server, because it never changes anything. A
+turret whose only weapon is the horn is still reported (informational) but never gets a row.
 
 **Vehicle Weapon Loadout - Copy From Nearby Vehicle** must be placed directly on the vehicle that
 should *receive* the copied loadout. Its dialog picks the *source* vehicle to copy from:
@@ -221,26 +232,17 @@ would otherwise get silently overwritten with nothing useful.
   just the ZEN dialog. `Waldo_fnc_VehicleWeaponLoadoutApply` itself is unaffected: a mission-authored
   row can still target a horn-only turret directly (e.g. to genuinely remove a vehicle's horn), since
   that call has no beginner-facing dialog to guard.
-- **Out of scope: vehicle appearance.** Recoloring a vehicle (a "pink tank") or hiding part of its
+- **Not covered here: vehicle appearance.** Recoloring a vehicle (a "pink tank") or hiding part of its
   physical model (e.g. a turret cupola) is a completely different, unrelated Arma system - cosmetic
-  model state, not weapon/ammo content - and neither this feature nor any current WMP script covers
-  it. Recoloring is done with
-  [`setObjectTextureGlobal [selection, texturePath]`](https://community.bistudio.com/wiki/setObjectTextureGlobal),
-  where `selection` is an index/name from the vehicle's own config-declared
-  [`hiddenSelections[]`](https://community.bistudio.com/wiki/CfgVehicles_Config_Reference) array (a
-  vehicle can only be recolored on selections its own model/config actually exposes - there's no
-  universal "paint any vehicle pink" texture slot). Hiding a named model part uses
-  [`hideSelection ["name", true]`](https://community.bistudio.com/wiki/hideSelection), which likewise
-  only works for a selection name the model's original author actually gave that part - discover
-  either with [`selectionNames vehicle`](https://community.bistudio.com/wiki/selectionNames). WMP's
-  closest existing feature is `Waldo_fnc_VehicleCamoSetup`, see [Vehicle Ambush Script And Vehicle
-  Camo](Vehicle-Ambush-Script-And-Vehicle-Camo) - and it works by attaching physical deployable camo
-  objects, not by texture-swapping the vehicle itself. If your mission wants scripted vehicle
-  recoloring/part-hiding as a WMP feature rather than hand-rolled script, that would be a new,
-  separate feature request.
+  model state, not weapon/ammo content. See [Vehicle Appearance](Vehicle-Appearance) for that feature.
+  WMP's other closest existing feature is `Waldo_fnc_VehicleCamoSetup`, see [Vehicle Ambush Script And
+  Vehicle Camo](Vehicle-Ambush-Script-And-Vehicle-Camo), which works by attaching physical deployable
+  camo objects rather than texture-swapping the vehicle itself.
 
 ## See also
 
+- [Vehicle Appearance](Vehicle-Appearance) - recoloring and physical-component show/hide, a separate
+  feature for a genuinely different Arma system (cosmetic model state, not weapon/ammo content).
 - [Airborne Gunship Support](Airborne-Gunship-Support) - turret *profiles* for crew assignment on a
   managed gunship, a different concern from editing what's actually mounted.
 - [Persistence](Persistence) - saving/restoring a vehicle's state (including ammo) across a mission.

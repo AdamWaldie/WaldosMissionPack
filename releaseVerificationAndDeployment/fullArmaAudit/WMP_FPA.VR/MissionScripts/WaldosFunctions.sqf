@@ -640,6 +640,42 @@ class CfgFunctions
             class ZenTrackerServer {
                 file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
             };
+            class ZenVehicleWeaponLoadout {
+                file = "MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf";
+            };
+            class ZenVehicleWeaponLoadoutServer {
+                file = "MissionScripts\ZenModules\zenVehicleWeaponLoadoutServer.sqf";
+            };
+            class ZenVehicleWeaponLoadoutInspect {
+                file = "MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutInspectModule.sqf";
+            };
+            class ZenVehicleWeaponLoadoutCopy {
+                file = "MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutCopyModule.sqf";
+            };
+            class ZenVehicleWeaponLoadoutCopyServer {
+                file = "MissionScripts\ZenModules\zenVehicleWeaponLoadoutCopyServer.sqf";
+            };
+            class ZenVehicleAppearanceTexture {
+                file = "MissionScripts\ZenModules\Zen_vehicleAppearanceTextureModule.sqf";
+            };
+            class ZenVehicleAppearanceTextureServer {
+                file = "MissionScripts\ZenModules\zenVehicleAppearanceTextureServer.sqf";
+            };
+            class ZenVehicleAppearanceInspect {
+                file = "MissionScripts\ZenModules\Zen_vehicleAppearanceInspectModule.sqf";
+            };
+            class ZenVehicleComponentRegister {
+                file = "MissionScripts\ZenModules\Zen_vehicleComponentRegisterModule.sqf";
+            };
+            class ZenVehicleComponentRegisterServer {
+                file = "MissionScripts\ZenModules\zenVehicleComponentRegisterServer.sqf";
+            };
+            class ZenVehicleComponentRemove {
+                file = "MissionScripts\ZenModules\Zen_vehicleComponentRemoveModule.sqf";
+            };
+            class ZenVehicleComponentRemoveServer {
+                file = "MissionScripts\ZenModules\zenVehicleComponentRemoveServer.sqf";
+            };
             class ZenNotify {
                 file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
             };
@@ -680,6 +716,9 @@ class CfgFunctions
             };
             class ParadropBuildFlightRoute {
                 file = "MissionScripts\Paradrop\paradropBuildFlightRoute.sqf";
+            };
+            class ParadropOperateDoor {
+                file = "MissionScripts\Paradrop\paradropOperateDoor.sqf";
             };
             class ParadropNormalizeJumpEnvelope {
                 file = "MissionScripts\Paradrop\paradropNormalizeJumpEnvelope.sqf";
@@ -845,6 +884,19 @@ class CfgFunctions
             class GunshipReleaseControlLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipReleaseControlLocal.sqf";};
             class GunshipSetupLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSetupLocal.sqf";};
             class GunshipUpdateMarkersLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipUpdateMarkersLocal.sqf";};
+        };
+        class VehicleAppearance
+        {
+            class VehicleAppearanceApply {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceApply.sqf";};
+            class VehicleAppearanceInspect {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceInspect.sqf";};
+            class VehicleComponentCatalogRegister {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleComponentCatalogRegister.sqf";};
+            class VehicleComponentRemove {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleComponentRemove.sqf";};
+        };
+        class VehicleWeaponLoadout
+        {
+            class VehicleWeaponLoadoutApply {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf";};
+            class VehicleWeaponLoadoutInspect {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutInspect.sqf";};
+            class VehicleWeaponLoadoutCopy {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopy.sqf";};
         };
         class Persistence
         {

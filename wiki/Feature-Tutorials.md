@@ -98,6 +98,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Dynamic AO Generation](Dynamic-AO-Generation) | Runtime faction-driven patrols, garrisons, vehicles, air, civilians, mines and roadblocks |
 | [Airborne Gunship Support](Airborne-Gunship-Support) | Controller-operated gunships, orbits, service cycles, and asset pools |
 | [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout) | Custom turret weapon/ammo and aircraft pylon add/replace/remove/clear |
+| [Vehicle Appearance](Vehicle-Appearance) | Recolor a vehicle's texture slots; show/hide named model parts |
 | [Performance and Optimisation Audit](Performance-And-Optimisation-Audit) | Static regression guardrails and runtime verification guidance |
 
 ## Authoring and troubleshooting

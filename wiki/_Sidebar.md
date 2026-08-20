@@ -98,4 +98,5 @@
 * [Dynamic AO Generation](Dynamic-AO-Generation)
 * [Airborne Gunship Support](Airborne-Gunship-Support)
 * [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout)
+* [Vehicle Appearance](Vehicle-Appearance)
 * [Performance and Optimisation](Performance-And-Optimisation-Audit)

@@ -567,9 +567,76 @@ neither helper covers.
 
 Vehicle appearance (recoloring via `setObjectTextureGlobal`/`hiddenSelectionsTextures`, or hiding a
 turret's physical model via `hideSelection`) is a distinct, unrelated Arma system — cosmetic model
-state, not weapon/ammo content — and is **not** covered by this feature or any current WMP script.
-`Waldo_fnc_VehicleCamoSetup` (Vehicle Ambush & Camo, see Misc Mission-Maker Tools) is the closest
-existing WMP feature, and it works via physical deployable camo objects, not texture swapping.
+state, not weapon/ammo content — and is covered by the separate **Vehicle Appearance** feature below,
+not this one. `Waldo_fnc_VehicleCamoSetup` (Vehicle Ambush & Camo, see Misc Mission-Maker Tools) is a
+related but different existing WMP feature that works via physical deployable camo objects, not
+texture swapping.
+
+### Vehicle Appearance (`Waldo_fnc_VehicleAppearanceApply`)
+
+Recolors a vehicle's texture slots and/or shows/hides a named model selection — a genuinely separate
+Arma system from weapon/ammo content (`Waldo_fnc_VehicleWeaponLoadoutApply`): this is cosmetic model
+state only, never touches turrets, magazines or pylons. No `MissionConfig` file; this is a
+call/ZEN-only feature. Server-authoritative — callable from an object's own Eden init field with no
+`isServer` wrapper, same convention as `Waldo_fnc_Jammer`.
+
+```sqf
+// [vehicle, rows]; each row: [targetType, selector, action, value]
+[this, [
+    ["TEXTURE", 0, "SET", [1, 0, 1, 1]]   // paint texture slot 0 pink - no texture asset needed
+]] call Waldo_fnc_VehicleAppearanceApply;
+[this, [
+    ["SELECTION", "rws_base", "HIDE", ""]  // hide a named model selection - confirm the real name
+]] call Waldo_fnc_VehicleAppearanceApply;  // with Vehicle Appearance - Inspect, never guessed
+```
+
+`targetType` is `"TEXTURE"` or `"SELECTION"`. TEXTURE `selector` is a 0-based index into the vehicle's
+own `hiddenSelections[]` config array (discover with `getArray (configFile >> "CfgVehicles" >> typeOf
+vehicle >> "hiddenSelections")`); `action` is `"SET"` (`value` is a texture path/procedural string, or
+an `[R,G,B,A]` array auto-converted via `BIS_fnc_colorRGBAtoTexture` — the built-in solid-colour
+procedural syntax `"#(rgb,8,8,3)color(R,G,B,A)"` needs no texture asset at all) or `"CLEAR"` (reverts
+to the vehicle's own default). SELECTION `selector` is a model selection name, validated against the
+live `selectionNames vehicle`; `action` is `"HIDE"` or `"SHOW"`. Multiple rows apply independently in
+one call; a bad row is reported per-row without blocking the others.
+
+**There is no engine query for "this model selection is a removable physical component"** — unlike
+weapons (enumerable via `allTurrets`/`weaponsTurret`), a selection is just a named model piece some
+vehicle authors happen to expose, with no config flag marking it as removable. `Waldo_fnc_VehicleComponentRemove`
+combines hiding a selection with clearing a linked turret's weapon in one call, so "remove this
+vehicle's turret" genuinely means both gone-looking and gone-functioning:
+
+```sqf
+[this, "rws_base", [0], true] call Waldo_fnc_VehicleComponentRemove;  // [vehicle, selectionName, turretPath, hide]
+```
+
+Restoring (`hide` `false`) only re-shows the selection — it does not re-arm whatever weapon the turret
+held, since that was never recorded; re-arm it separately with `Waldo_fnc_VehicleWeaponLoadoutApply`.
+
+`Waldo_fnc_VehicleComponentCatalogRegister` remembers a discovered selection name/turret path pairing
+for a vehicle **class** (not one instance) under a short label, so the discovery only has to happen
+once per class, not once per placed vehicle:
+
+```sqf
+[["B_MRAP_01_F", "B_MRAP_01_gmg_F"], "Remote Weapon Station", "rws_base", [0]]
+    call Waldo_fnc_VehicleComponentCatalogRegister;
+```
+
+WMP ships **no pre-seeded catalog entries** — a wrong selection name presented as fact is worse than
+none at all, so every entry has to be discovered and registered by a mission maker or curator first.
+
+Zeus ("WMP Vehicle Appearance"): **Vehicle Appearance - Set Texture** — must be placed **directly on
+the vehicle**; the texture-slot list is discovered live from that vehicle's own `hiddenSelections[]`,
+with Solid Color (four sliders) or Custom Texture Path modes. **Vehicle Appearance - Inspect** — same
+placement convention, read-only, reports texture slots and every named model selection via `hint`,
+copies the model selection names to the clipboard (never the full prose report — an inline `//`
+comment surviving a paste into an Eden init field without real line breaks is a confirmed real-world
+failure mode, "Invalid number in expression", so nothing comment-bearing is ever put on the
+clipboard). **Vehicle Appearance - Register Component** — records a component (label, selection name,
+optional linked turret path) for the placed vehicle's exact class. **Vehicle Appearance - Remove/Restore
+Component** — offers any component already registered for that vehicle's class as a picker (the
+"dynamic pickup" path — no typing needed once registered), or a typed selection-name/turret-path
+fallback. All four route through curator-authenticated server bridges before calling the same public
+functions mission scripts use directly. Implemented in `MissionScripts/CombatSystems/VehicleAppearance/`.
 
 ### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
 
@@ -1363,7 +1430,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
-- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, vehicle weapon/pylon loadout change-out, plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
+- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, vehicle weapon/pylon loadout change-out, vehicle appearance (texture recoloring, model selection show/hide, and a reusable component catalog), plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
 - `EnvironmentalSystems/` — hazardous environments and tree felling
 - `MedicalSystems/` — patient treatment feedback, confirmed-death Obituary reporting
 - `Persistence/` — optional INIDBI2-backed persistence
@@ -1585,11 +1652,15 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Vehicle Weapon Loadout - Configure → calls `Waldo_fnc_ZenVehicleWeaponLoadout` (must be placed directly on the vehicle being edited; dialog: turret or pylon target, add/replace/remove/clear action, weapon/magazine classnames; turret and pylon option lists are discovered live from that vehicle; routes through `Waldo_fnc_ZenVehicleWeaponLoadoutServer` to `Waldo_fnc_VehicleWeaponLoadoutApply`)
 - Vehicle Weapon Loadout - Inspect → calls `Waldo_fnc_ZenVehicleWeaponLoadoutInspect` (must be placed directly on the vehicle to inspect; no dialog, reports its exact turret/pylon classnames plus ready-to-paste rows via a local `hint`; read-only, runs entirely on the curator's client via `Waldo_fnc_VehicleWeaponLoadoutInspect`, no server round-trip)
 - Vehicle Weapon Loadout - Copy From Nearby Vehicle → calls `Waldo_fnc_ZenVehicleWeaponLoadoutCopy` (must be placed directly on the target vehicle; dialog: pick a nearby source vehicle, discovered live within 100m, plus copy-turrets/copy-pylons checkboxes; no classname is ever typed - routes through `Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer` to `Waldo_fnc_VehicleWeaponLoadoutCopy`, which reads the source vehicle's real turret/pylon state, including exact remaining pylon ammo via `ammoOnPylon`, and applies it through `Waldo_fnc_VehicleWeaponLoadoutApply`)
+- Vehicle Appearance - Set Texture → calls `Waldo_fnc_ZenVehicleAppearanceTexture` (must be placed directly on the vehicle; dialog: texture slot discovered live from that vehicle's own `hiddenSelections[]`, Solid Color (four 0..1 sliders via `BIS_fnc_colorRGBAtoTexture`, no texture asset needed) or Custom Texture Path, or Restore Default - routes through `Waldo_fnc_ZenVehicleAppearanceTextureServer` to `Waldo_fnc_VehicleAppearanceApply`)
+- Vehicle Appearance - Inspect → calls `Waldo_fnc_ZenVehicleAppearanceInspect` (read-only, same placed-directly-on-the-vehicle convention; reports texture slot indices/current textures and every named model selection via a local `hint`, copies the model selection names to the clipboard, no server round-trip)
+- Vehicle Appearance - Register Component → calls `Waldo_fnc_ZenVehicleComponentRegister` (must be placed directly on the vehicle; dialog: component label, selection name, optional linked turret path - routes through `Waldo_fnc_ZenVehicleComponentRegisterServer` to `Waldo_fnc_VehicleComponentCatalogRegister`, registering the component for that vehicle's exact class)
+- Vehicle Appearance - Remove/Restore Component → calls `Waldo_fnc_ZenVehicleComponentRemove` (must be placed directly on the vehicle; dialog offers any component already registered for that vehicle's class as a picker, or typed selection name/turret path fallback - routes through `Waldo_fnc_ZenVehicleComponentRemoveServer` to `Waldo_fnc_VehicleComponentRemove`, which hides/shows the model selection and, when removing, also clears the linked turret's weapon if one was given)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
 true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
 mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
-is 48 without them, 51 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
+is 52 without them, 55 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 - Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
 - Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)

@@ -23,11 +23,11 @@ callable from an object's own Eden init field with no `isServer` wrapper (same c
 
 ```sqf
 [this, [
-    ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 6]
+    ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 30, 4]
 ]] call Waldo_fnc_VehicleWeaponLoadoutApply;
 ```
 `Waldo_fnc_VehicleWeaponLoadoutApply` takes `[vehicle, rows]`. Each row:
-`[targetType, turretPath, pylonIndex, action, weaponClass, magazineClass, magazineCount]`.
+`[targetType, turretPath, pylonIndex, action, weaponClass, magazineClass, magazineCount, magazineQuantity]`.
 
 - `targetType`: `"TURRET"` or `"PYLON"`.
 - `turretPath`: e.g. `[-1]` (main/driver weapon), `[0]`, `[0,0]` — required for TURRET rows.
@@ -40,11 +40,18 @@ callable from an object's own Eden init field with no `isServer` wrapper (same c
 - `action` for PYLON: `"SET"` (aliases `"ADD"`/`"REPLACE"` accepted) or `"CLEAR"`.
 - `weaponClass` / `magazineClass`: exact `CfgWeapons` / `CfgMagazines` classnames. For a pylon row,
   `magazineClass` is the ordnance/pod itself (pylons carry no separate weapon classname).
-- `magazineCount`: rounds loaded for a TURRET magazine (optional, default 1). For a PYLON row it's the
-  *exact* ammo override instead: `0`/omitted loads the pylon's full `CfgMagazines`-defined count via
-  `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an
-  ammo-load flag, and never loads ammo by itself); a positive value loads exactly that many rounds,
-  clamped to the magazine's own full count.
+- `magazineCount`: rounds loaded into EACH magazine instance (optional, default 1, TURRET only) —
+  clamped **down** to that magazine class's own `CfgMagazines` `count` if it exceeds it (a magazine
+  can't hold more rounds than its own config allows — the engine itself enforces this), never forced
+  up, so a value below the max produces a genuinely partial magazine. For a PYLON row this field means
+  something different — it's the pylon's *exact* ammo override: `0`/omitted loads the pylon's full
+  `CfgMagazines`-defined count via `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a
+  `forced`-compatibility flag, not an ammo-load flag, and never loads ammo by itself); a positive value
+  loads exactly that many rounds, clamped to the magazine's own full count.
+- `magazineQuantity`: how many separate magazine instances to add (optional, default 1, TURRET
+  ADD/REPLACE only). `addMagazineTurret` adds exactly one magazine instance per call, so this loops it
+  that many times — e.g. `magazineCount=30, magazineQuantity=4` means four separate 30-round
+  magazines (a real 120-round reserve), not one oversized magazine.
 
 Multiple rows in one call apply independently — a bad row (unknown classname, non-existent turret
 path/pylon index) is reported per-row and never blocks the others. Return value is
@@ -116,17 +123,14 @@ checkboxes (both default on). Routes through the curator-authenticated
 reads the source and calls `Waldo_fnc_VehicleWeaponLoadoutApply` itself. A source turret whose only
 weapon is the horn is skipped entirely, never copied.
 
-## Out of scope: vehicle appearance
+## Not covered here: vehicle appearance
 
 Recoloring a vehicle ("a pink tank") or hiding part of its physical model (e.g. a turret cupola) is a
-different, unrelated Arma system — cosmetic model state, not weapon/ammo content — and is **not**
-covered by this feature or any current WMP script. Recoloring uses
-[`setObjectTextureGlobal [selection, texturePath]`](https://community.bistudio.com/wiki/setObjectTextureGlobal)
-against the vehicle's own config-declared `hiddenSelections[]`; hiding a named model part uses
-[`hideSelection ["name", true]`](https://community.bistudio.com/wiki/hideSelection). Both only work
-for selections the vehicle's own model/config actually exposes — there's no universal "recolor any
-vehicle" slot. WMP's closest existing feature is `Waldo_fnc_VehicleCamoSetup` (`misc-mission-maker-tools.md`
-→ Vehicle Ambush & Camo), which works via physical deployable camo objects, not texture-swapping.
+different, unrelated Arma system — cosmetic model state, not weapon/ammo content. See
+`vehicle-appearance.md` for that feature (`Waldo_fnc_VehicleAppearanceApply`,
+`Waldo_fnc_VehicleComponentRemove`). WMP's other closest existing feature is
+`Waldo_fnc_VehicleCamoSetup` (`misc-mission-maker-tools.md` → Vehicle Ambush & Camo), which works via
+physical deployable camo objects, not texture-swapping.
 
 ## Notes
 

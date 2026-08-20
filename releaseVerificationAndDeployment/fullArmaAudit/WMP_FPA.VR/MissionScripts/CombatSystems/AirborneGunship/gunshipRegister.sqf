@@ -82,8 +82,16 @@ if (_id in keys _registry) then {[_id, false] call Waldo_fnc_GunshipDestroy};
 
 private _aircraft = _config getOrDefault ["aircraft", objNull];
 private _spawned = false;
+// Computed once, up front, with one consistent default (west) - both the pool/discovery selection
+// below and the crew-side enforcement further down must agree on the same requested side. Reading
+// it a second time later with a different default (whatever the crew turned out to be, rather than
+// west) let an explicit aircraftClass/aircraftClasses call that omitted "side" silently keep
+// whatever side the airframe's own native config defaulted to instead of the mission's intended
+// side - the exact "aircraft created on its original side" failure mode, since nothing would ever
+// detect a mismatch against a self-referential default.
+private _requestedSide = _config getOrDefault ["side", west];
+if !(_requestedSide in [west, east, independent, civilian]) then {_requestedSide = west};
 if (isNull _aircraft) then {
-    private _requestedSide = _config getOrDefault ["side", west];
     private _sideKey = switch (_requestedSide) do {case east: {"EAST"}; case independent: {"INDEPENDENT"}; case civilian: {"CIVILIAN"}; default {"WEST"}};
     // An explicit per-call aircraftClasses stays exact - a script/ZEN caller that hand-picked its
     // own candidates gets exactly those, nothing added or removed. Falling through to the mission's
@@ -134,7 +142,17 @@ if (isNull _aircraft) then {
     [_aircraft] call Waldo_fnc_HeadlessPinCrew;
     _aircraft setPosATL _spawnPosition;
     _aircraft setDir (_config getOrDefault ["spawnDirection", 0]);
-    if (_config getOrDefault ["createCrew", true]) then {createVehicleCrew _aircraft};
+    // Explicit engineOn, same as Waldo_fnc_DynamicAOCreate's own air-patrol spawn: createVehicle's
+    // "FLY" special is not a reliable substitute for it, particularly for rotorLib-simulated
+    // helicopters, whose rotor RPM otherwise starts at 0 and the airframe drops before it spins up.
+    _aircraft engineOn true;
+    // The side-prefixed form creates crew directly into a group of _requestedSide, rather than the
+    // bare form's group of the airframe's own native config side - matches the pattern already used
+    // by Waldo_fnc_DynamicAACreate/DynamicAASpawnFighters for the same reason: an explicit
+    // aircraftClass/aircraftClasses pick (not filtered by side, unlike the pool/discovery path above)
+    // can be a different faction's airframe entirely, most commonly with a live-modset-discovered
+    // class. The forceCrewSide check below still runs as a second, redundant safety net.
+    if (_config getOrDefault ["createCrew", true]) then {_requestedSide createVehicleCrew _aircraft};
     _spawned = true;
 };
 // Existing Eden aircraft must be crewed in Eden. Do not create or fill any crew during registration:
@@ -148,11 +166,21 @@ if (isNull _aircraft || {!(_aircraft isKindOf "Air")} || {isNull driver _aircraf
 private _side = _config getOrDefault ["side", side group driver _aircraft];
 if !(_side in [west, east, independent, civilian]) then {_side = side group driver _aircraft};
 if (_config getOrDefault ["forceCrewSide", true] && {side group driver _aircraft != _side}) then {
-    private _oldGroups = [];
-    {_oldGroups pushBackUnique group _x} forEach crew _aircraft;
-    private _newGroup = createGroup _side;
-    (crew _aircraft) joinSilent _newGroup;
-    {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+    // group setSide reassigns in place - no new group, no locality/HC churn - but the engine
+    // silently refuses it when the destination side is already friendly to the group's current side
+    // (e.g. WEST <-> INDEPENDENT under vanilla default relations, a real combination among WMP's own
+    // side options). Try it first since it covers the common case for free, and fall back to the
+    // createGroup+joinSilent recreation - which works unconditionally regardless of side relations -
+    // only when setSide didn't actually take effect.
+    private _crewGroup = group driver _aircraft;
+    _crewGroup setSide _side;
+    if (side _crewGroup != _side) then {
+        private _oldGroups = [];
+        {_oldGroups pushBackUnique group _x} forEach crew _aircraft;
+        private _newGroup = createGroup _side;
+        (crew _aircraft) joinSilent _newGroup;
+        {if (!isNull _x && {count units _x == 0}) then {deleteGroup _x}} forEach _oldGroups;
+    };
 };
 [_aircraft, _config getOrDefault ["lockAircraft", true]] remoteExecCall ["lock", owner _aircraft];
 private _home = _config getOrDefault ["home", getPosATL _aircraft];
