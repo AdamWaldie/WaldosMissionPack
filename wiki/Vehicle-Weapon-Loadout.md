@@ -289,12 +289,15 @@ would otherwise get silently overwritten with nothing useful.
 
 ## See also
 
-- The **Vehicle Weapon Loadout And Appearance Example** composition (`WMP_Compositions/`) places two
-  identically-armed Hunters side by side (deliberately the same variant, so their `turret[0]` paths
-  genuinely match - Copy only ever moves a path that exists on both vehicles); one copies the other's
-  real turret loadout via `Waldo_fnc_VehicleWeaponLoadoutCopy` (no classname typed) and is recolored
-  via `Waldo_fnc_VehicleAppearanceApply` - a working editor-time starting point for both features at
-  once.
+- The **Vehicle Weapon Loadout And Appearance Example** composition (`WMP_Compositions/`, Minimal/Full)
+  is a working editor-time starting point for both features together. **Minimal** places one armed
+  Hunter and demonstrates the smallest working call for each function directly: clearing its real
+  `turret[0]` (no classname needed) and recoloring it solid pink. **Full** places a GMG-armed Hunter
+  and an HMG-armed Hunter side by side - deliberately different variants of the same family, so their
+  `turret[0]` paths genuinely match (Copy only ever moves a path that exists on both vehicles) while
+  still producing a real, visible weapon swap rather than a same-to-same copy - and copies the GMG
+  Hunter's real turret loadout onto the HMG one via `Waldo_fnc_VehicleWeaponLoadoutCopy` (no classname
+  typed anywhere) before recoloring the target via `Waldo_fnc_VehicleAppearanceApply`.
 - [Vehicle Appearance](Vehicle-Appearance) - recoloring and physical-component show/hide, a separate
   feature for a genuinely different Arma system (cosmetic model state, not weapon/ammo content).
 - [Airborne Gunship Support](Airborne-Gunship-Support) - turret *profiles* for crew assignment on a

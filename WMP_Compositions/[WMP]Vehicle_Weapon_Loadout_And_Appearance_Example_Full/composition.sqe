@@ -13,7 +13,7 @@ class items
 			name="WMP_VehWpnDonor";
 		};
 		id=1;
-		type="B_MRAP_01_hmg_F";
+		type="B_MRAP_01_gmg_F";
 	};
 	class Item1
 	{
@@ -32,7 +32,7 @@ class items
 	{
 		dataType="Comment";
 		class PositionInfo {position[]={4,0,-8};};
-		title="Vehicle Weapon Loadout And Appearance example: both Hunters share the same armed HMG variant so their turret[0] paths genuinely match - Copy only ever moves a turret path that exists on both vehicles, and an unarmed Hunter has none to receive one. No weapon or magazine classname is typed here; Waldo_fnc_VehicleWeaponLoadoutCopy reads the donor's live turret state and applies it to the target. The receiver is also painted solid pink via Waldo_fnc_VehicleAppearanceApply's procedural texture syntax (no asset needed), so the two stay visually distinguishable. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Weapon-Loadout";
+		title="Vehicle Weapon Loadout And Appearance example: the donor is a GMG-armed Hunter, the target an HMG-armed Hunter - a real, visible loadout swap, not a same-to-same copy. Both share the Hunter family's turret[0] path, which is all Copy requires; the GMG/HMG classnames are never typed anywhere. Waldo_fnc_VehicleWeaponLoadoutCopy reads the donor's live turret state and replaces the target's HMG with it. The target is also painted solid pink via Waldo_fnc_VehicleAppearanceApply's procedural texture syntax (no asset needed) as a visible cue the call ran. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Weapon-Loadout";
 		id=3;
 	};
 };

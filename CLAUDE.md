@@ -578,9 +578,12 @@ that client's clipboard, logs it to RPT under `[WMP VEHWPN INSPECT]`, and confir
 with a fast notification card in addition to the full-screen `hint`. See `wiki/Vehicle-Weapon-Loadout.md` for the full
 beginner workflow, including links to Bohemia's own official class-name references (`Arma 3: Assets`,
 `Arma_3:_CfgWeapons_Vehicle_Weapons`) and the built-in Eden Editor Debug Console for the rare case
-neither helper covers. The **Vehicle Weapon Loadout And Appearance Example** composition places an
-armed and an unarmed Hunter side by side and demonstrates `Waldo_fnc_VehicleWeaponLoadoutCopy` end to
-end (no classname typed) alongside a `Waldo_fnc_VehicleAppearanceApply` recolor on the same target.
+neither helper covers. The **Vehicle Weapon Loadout And Appearance Example** composition (Minimal/Full)
+demonstrates both features together: Minimal clears one armed Hunter's turret and recolors it in the
+smallest working call for each function; Full copies a GMG-armed Hunter's real turret loadout onto an
+HMG-armed one via `Waldo_fnc_VehicleWeaponLoadoutCopy` end to end (no classname typed, and a real
+visible weapon swap since the two Hunters start differently armed) alongside a
+`Waldo_fnc_VehicleAppearanceApply` recolor on the target.
 
 Vehicle appearance (recoloring via `setObjectTextureGlobal`/`getObjectTextures`, or hiding a
 turret's physical model via `hideSelection`) is a distinct, unrelated Arma system — cosmetic model
