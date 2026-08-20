@@ -3,12 +3,15 @@
 Associated files: `MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf`
 (`Waldo_fnc_VehicleWeaponLoadoutApply`), `vehicleWeaponLoadoutInspect.sqf`
 (`Waldo_fnc_VehicleWeaponLoadoutInspect`), `vehicleWeaponLoadoutCopy.sqf`
-(`Waldo_fnc_VehicleWeaponLoadoutCopy`), `MissionScripts\ZenModules\Zen_vehicleWeaponLoadoutModule.sqf`
-(`Waldo_fnc_ZenVehicleWeaponLoadout`), `zenVehicleWeaponLoadoutServer.sqf`
-(`Waldo_fnc_ZenVehicleWeaponLoadoutServer`), `Zen_vehicleWeaponLoadoutInspectModule.sqf`
-(`Waldo_fnc_ZenVehicleWeaponLoadoutInspect`), `Zen_vehicleWeaponLoadoutCopyModule.sqf` +
-`zenVehicleWeaponLoadoutCopyServer.sqf` (`Waldo_fnc_ZenVehicleWeaponLoadoutCopy` /
-`Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer`). No `MissionConfig` file — this is a call/ZEN-only
+(`Waldo_fnc_VehicleWeaponLoadoutCopy`), `vehicleWeaponLoadoutCopyBuildRows.sqf`,
+`vehicleWeaponLoadoutCopyPreview.sqf` (`Waldo_fnc_VehicleWeaponLoadoutCopyPreview`),
+`MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationPromptEditor.sqf`
+(`Waldo_fnc_VehCust_promptEditor`, plus its collector/pending-list files),
+`vehicleCustomizationInspect.sqf` (`Waldo_fnc_VehicleCustomizationInspect`),
+`MissionScripts\ZenModules\Zen_vehicleCustomizationEditorModule.sqf`
+(`Waldo_fnc_ZenVehicleCustomizationEditor`), `Zen_vehicleCustomizationInspectModule.sqf`
+(`Waldo_fnc_ZenVehicleCustomizationInspect`), `zenVehicleCustomizationServer.sqf`
+(`Waldo_fnc_ZenVehicleCustomizationServer`). No `MissionConfig` file — this is a call/ZEN-only
 feature, not a global setting to tune.
 
 ## What it does
@@ -69,19 +72,21 @@ There is no engine query for "what weapons/magazines fit this turret", so a miss
 to get a real classname from somewhere. Point them at these, in order — the first fully avoids typing
 one at all:
 
-1. **`Waldo_fnc_VehicleWeaponLoadoutCopy`** / Zeus **"Vehicle Weapon Loadout - Copy From Nearby
-   Vehicle"** — placed on the *target* vehicle, picks a nearby *source* vehicle (discovered live
-   within 100m) and copies its real turret/pylon loadout directly, including the source's exact
-   remaining pylon ammo via `ammoOnPylon`. No classname is ever seen or typed by anyone. This is the
-   right default whenever "make this vehicle armed like that one" is the actual goal, not "I want to
-   see/tweak the classname."
-2. **`Waldo_fnc_VehicleWeaponLoadoutInspect`** / Zeus **"Vehicle Weapon Loadout - Inspect"** — placed
+1. **`Waldo_fnc_VehicleWeaponLoadoutCopy`** / Zeus **"Vehicle Customisation - Editor"**'s
+   **Copy From Nearby Vehicle...** button (Turret tab) — placed on the *target* vehicle, picks a
+   nearby *source* vehicle (discovered live within 100m) and pushes its real turret/pylon loadout
+   straight into the Pending Changes list, including the source's exact remaining pylon ammo via
+   `ammoOnPylon`. No classname is ever seen or typed by anyone. This is the right default whenever
+   "make this vehicle armed like that one" is the actual goal, not "I want to see/tweak the
+   classname."
+2. **`Waldo_fnc_VehicleWeaponLoadoutInspect`** / Zeus **"Vehicle Customisation - Inspect"** — placed
    directly on ANY vehicle (a stock/vanilla one is fine), it prints every turret's and pylon's exact
-   current weapon/magazine classnames as a full-screen `hint`, each followed by a ready-to-paste
-   `Waldo_fnc_VehicleWeaponLoadoutApply` row. Use this over Copy when the mission maker wants to see
-   or edit the classname before applying it. Read-only, no server round-trip, no curator-auth bridge
-   (nothing it reports isn't already visible by looking at the vehicle in Eden). Also logs the same
-   report to that client's RPT under `[WMP VEHWPN INSPECT]`.
+   current weapon/magazine classnames as part of a full-screen `hint` (merged with the appearance
+   report), each weapon row followed by a ready-to-paste `Waldo_fnc_VehicleWeaponLoadoutApply` row.
+   Use this over Copy when the mission maker wants to see or edit the classname before applying it.
+   Read-only, no server round-trip, no curator-auth bridge (nothing it reports isn't already visible
+   by looking at the vehicle in Eden). Also logs the same report to that client's RPT under
+   `[WMP VEHCUST INSPECT]`.
 3. **Eden Editor's built-in Debug Console** (`Tools > Debug Console`, ships with the base game) — e.g.
    `hint str (vehicle weaponsTurret [-1]);`.
 4. **Official Bohemia references**: [Arma 3 Assets](https://community.bistudio.com/wiki/Arma_3_Assets)
@@ -95,43 +100,36 @@ from memory.
 
 ## Zeus modules
 
-**"Vehicle Weapon Loadout - Configure"** (category **WMP AI & Combat**) — must be placed **directly
-on the vehicle** to edit, same convention as **Plant Signal Tracker**; placing it on open ground or
-any other object is rejected with an on-screen notice. The dialog's turret list, pylon list, and
-current-loadout labels are all discovered live from that exact vehicle (`allTurrets`,
-`getPylonMagazines`, and the `TransportPylonsComponent` config for pylon display names) — never a
-hand-typed list — so only choices that vehicle actually supports are ever shown. **"Copy Weapon
-From"** / **"Copy Ordnance From"** pickers additionally list every distinct weapon+magazine pairing
-(or pylon ordnance) already mounted somewhere on this exact vehicle (excludes the horn), extended with
-a pack-wide catalog discovered across every vehicle class in the currently loaded modset via
-`Waldo_fnc_VehicleWeaponLoadoutCatalogBuild` — not just this one vehicle. That scan is real work on a
-large modset, so `Waldo_fnc_ZenInitModules` runs it in the background at mission start and caches the
-result (config data is immutable during a mission); if a curator opens the dialog before that finishes,
-"Type manually" says so and reopening shortly after picks it up. Each picker caps its pack-wide
-section and truncates long labels so the LIST control itself never overruns. Default "Type manually"
-leaves the Weapon/Magazine/Count fields in charge; see "Finding exact classnames" above for the rest.
-A **"Session Action"** picker turns single-shot editing into a small builder: **Apply Now** (default,
-original behaviour), **Queue This Action** (stash the row in a client-local, per-vehicle queue and
-reopen the dialog for another action), **Apply All Queued** (submit the whole queue plus this row in
-one call), **Export Queue To Clipboard** (a ready-to-paste multi-row
-`[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` block for a unit's Eden init field, applying
-nothing and keeping the queue), and **Clear Queue**. Apply actions route through the
-curator-authenticated `Waldo_fnc_ZenVehicleWeaponLoadoutServer` bridge before calling the same public
-function mission scripts use directly; Queue/Export never touch the server. Every mutating turret
-action is refused with a notice if the selected turret's only weapon is the vehicle's horn — pick a
-different turret.
+**"Vehicle Customisation - Editor"** (category **WMP Vehicle Customisation**) — must be placed
+**directly on the vehicle** to edit, same convention as **Plant Signal Tracker**; placing it on open
+ground or any other object is rejected with an on-screen notice. Replaces the old one-shot
+"Configure" / "Copy From Nearby Vehicle" / "Register Component" / "Remove/Restore Component" modules
+with one persistent, four-tab dialog (Turret / Pylon / Appearance / Component) plus a permanent
+**Pending Changes** list visible on every tab. The Turret and Pylon tabs' option lists, current-loadout
+labels, and **"Copy Weapon From"** / **"Copy Ordnance From"** pickers (on-vehicle pairings plus a
+pack-wide catalog via `Waldo_fnc_VehicleWeaponLoadoutCatalogBuild`) work exactly as before — see
+"Finding exact classnames" above. Each tab's own **Add \<Tab\> Row** button routes through a
+dedicated, validation-gated collector before anything is queued, so a blank or incomplete row can
+never reach Pending (the direct fix for a confirmed bug in the old Configure module's own queue
+feature, which used to rebuild a row from blank form fields). **Apply All Pending** sends the whole
+list in one authenticated request to the consolidated `Waldo_fnc_ZenVehicleCustomizationServer`
+bridge, which dispatches turret/pylon rows to `Waldo_fnc_VehicleWeaponLoadoutApply`, appearance rows
+to `Waldo_fnc_VehicleAppearanceApply`, and component rows to `Waldo_fnc_VehicleComponentRemove` — one
+curator-authentication check total, not one per feature. **Export All Pending To Clipboard** is
+purely client-side: builds one ready-to-paste multi-statement Eden-init-field snippet from whatever is
+pending, applies nothing, keeps the list. **Copy From Nearby Vehicle...** (Turret tab) opens an
+in-dialog picker of vehicles within 100m and pushes the picked source's real turret/pylon rows
+straight into Pending via the read-only `Waldo_fnc_VehicleWeaponLoadoutCopyPreview` — no classname
+typed, no server call until Apply. Every mutating turret action is refused with a notice if the
+selected turret's only weapon is the vehicle's horn — pick a different turret.
 
-**"Vehicle Weapon Loadout - Inspect"** (same category, same placed-directly-on-the-vehicle
-convention) — the read-only companion described above. No dialog; acts immediately, copies the report
-to the curator's clipboard, logs it to RPT, confirms both with a fast notification card, and shows the
-full report via `hint`. A horn-only turret is reported but never gets a paste-ready row.
+**"Vehicle Customisation - Inspect"** (same category, same placed-directly-on-the-vehicle
+convention) — the read-only companion, merging what used to be two separate Inspect modules via
+`Waldo_fnc_VehicleCustomizationInspect`. No dialog; acts immediately, copies the combined report to
+the curator's clipboard, logs it to RPT under `[WMP VEHCUST INSPECT]`, confirms both with a fast
+notification card, and shows the full report via `hint`. A horn-only turret is reported but never
+gets a paste-ready row.
 
-**"Vehicle Weapon Loadout - Copy From Nearby Vehicle"** — placed on the vehicle that should *receive*
-the loadout; the dialog picks the nearby vehicle to copy *from* plus copy-turrets/copy-pylons
-checkboxes (both default on). Routes through the curator-authenticated
-`Waldo_fnc_ZenVehicleWeaponLoadoutCopyServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutCopy`, which
-reads the source and calls `Waldo_fnc_VehicleWeaponLoadoutApply` itself. A source turret whose only
-weapon is the horn is skipped entirely, never copied.
 
 ## Not covered here: vehicle appearance
 
@@ -154,11 +152,11 @@ physical deployable camo objects, not texture-swapping.
   state across sessions, see `persistence.md` instead.
 - The horn is never treated as a weapon. `Waldo_fnc_VehicleWeaponLoadoutApply` itself refuses every
   mutating TURRET action against a horn-only turret — the single authoritative check, enforced
-  regardless of caller (script call, Eden init field, or ZEN). Configure/Copy/Inspect add their own
+  regardless of caller (script call, Eden init field, or ZEN). The Editor/Copy/Inspect add their own
   client-side labeling/skipping on top purely to avoid a wasted round-trip, not as the real guard.
 - `[-1]` (the main/driver weapon slot) is always offered as a turret path since `allTurrets` never
   returns it itself, but it isn't guaranteed to have a real weapon mount — some vehicles' own class
   declares no root `weapons[]` array at all. `Waldo_fnc_VehicleWeaponLoadoutApply` refuses ADD/REPLACE
   against a mount-less `[-1]` rather than silently doing nothing (WMP cannot create a physical mount
-  point that needs model/config authoring work). Configure labels it `(no weapon mount on this
+  point that needs model/config authoring work). The Editor labels it `(no weapon mount on this
   vehicle)` and never defaults to it. A real path from `allTurrets` never has this problem.

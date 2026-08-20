@@ -41,8 +41,8 @@
  * Both are cached in missionNamespace and returned as-is on every call after the first.
  *
  * Current callers: Waldo_fnc_ZenInitModules (kicks off a background build early, via spawn, so the
- * cache is normally already warm by the time a curator opens Vehicle Weapon Loadout - Configure);
- * Zen_vehicleWeaponLoadoutModule.sqf reads the cache directly and does not call this synchronously.
+ * cache is normally already warm by the time a curator opens the Vehicle Customisation - Editor);
+ * vehicleCustomizationPromptEditor.sqf reads the cache directly and does not call this synchronously.
  *
  * Example:
  * [] spawn Waldo_fnc_VehicleWeaponLoadoutCatalogBuild; // warm the cache in the background

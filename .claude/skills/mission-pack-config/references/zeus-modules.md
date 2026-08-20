@@ -49,8 +49,7 @@ file, which names its exact module(s):
 | WMP Combat Systems | Dynamic AA - Create/Remove Nearest | `dynamic-aa.md` |
 | WMP Combat Systems | Dynamic AO - Create/Remove | `dynamic-ao.md` |
 | WMP Combat Systems | Gunship - Register/Assign/Set Orbit/Operational Control | `gunship.md` |
-| WMP AI & Combat | Vehicle Weapon Loadout - Configure | `vehicle-weapon-loadout.md` |
-| WMP Vehicle Appearance | Set Texture / Inspect / Register Component / Remove-Restore Component | `vehicle-appearance.md` |
+| WMP Vehicle Customisation | Vehicle Customisation - Editor / Inspect | `vehicle-weapon-loadout.md` |
 | WMP Combat Systems / Air Operations | Paradrop - Create Drop Zone/Embark Players/Remove Operation | `paradrop.md` |
 | WMP Logistics | Vehicle Recovery - Register Workshop/Vehicle/Carrier | `vehicle-recovery-rallies.md` |
 | WMP Logistics | Field Resupply hub/carrier modules | `field-resupply.md` |

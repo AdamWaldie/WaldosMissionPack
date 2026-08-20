@@ -564,7 +564,7 @@ Apply. **Remove Selected Pending Row** and **Clear All Pending** manage the queu
 anything. Implemented in `MissionScripts/CombatSystems/VehicleCustomization/` and
 `MissionScripts/CombatSystems/VehicleWeaponLoadout/`.
 
-**The horn is excluded from every mutating operation.** A vehicle's horn is an ordinary `CfgWeapons` entry to the engine (identified here by `CfgWeapons` `displayName` — there is no other reliable "not a combat weapon" flag), but never a weapon a mission maker or curator means. `Waldo_fnc_VehicleWeaponLoadoutApply` itself refuses every mutating TURRET action (`ADD`/`REPLACE`/`REMOVE`/`CLEAR`) against a horn-only turret with `[false, "..."]` — this is the single authoritative check, enforced regardless of caller (a raw script call or an object's own Eden init field is refused exactly like a ZEN-driven one). The Configure module additionally labels a horn-only turret `(horn - not editable here)` in its turret list, never defaults to it, and shows an on-screen notice if one is picked anyway — a client-side convenience that avoids a wasted round-trip to the server, not the enforcement itself. `Waldo_fnc_VehicleWeaponLoadoutCopy` skips copying a horn-only source turret entirely, so a source vehicle's horn can never overwrite a matching target turret path that holds a real weapon. `Waldo_fnc_VehicleWeaponLoadoutInspect` still reports a horn turret (informational — nothing here mutates anything) but never generates a paste-ready row for it.
+**The horn is excluded from every mutating operation.** A vehicle's horn is an ordinary `CfgWeapons` entry to the engine (identified here by `CfgWeapons` `displayName` — there is no other reliable "not a combat weapon" flag), but never a weapon a mission maker or curator means. `Waldo_fnc_VehicleWeaponLoadoutApply` itself refuses every mutating TURRET action (`ADD`/`REPLACE`/`REMOVE`/`CLEAR`) against a horn-only turret with `[false, "..."]` — this is the single authoritative check, enforced regardless of caller (a raw script call or an object's own Eden init field is refused exactly like a ZEN-driven one). The Editor's Turret tab additionally labels a horn-only turret `(horn - not editable here)` in its turret list, never defaults to it, and shows an on-screen notice if one is picked anyway — a client-side convenience that avoids a wasted round-trip to the server, not the enforcement itself. `Waldo_fnc_VehicleWeaponLoadoutCopy` skips copying a horn-only source turret entirely, so a source vehicle's horn can never overwrite a matching target turret path that holds a real weapon. `Waldo_fnc_VehicleWeaponLoadoutInspect` still reports a horn turret (informational — nothing here mutates anything) but never generates a paste-ready row for it.
 
 **`[-1]` is not guaranteed to have a real weapon mount.** `allTurrets` never returns `[-1]` itself (it is
 always prepended by hand as "the main/driver weapon slot"), so unlike every other path in the discovered
@@ -575,21 +575,20 @@ exist silently does nothing useful — no weapon appears or functions — while 
 ordinary successful call, which is worse than an outright error for a beginner. `Waldo_fnc_VehicleWeaponLoadoutApply`
 therefore refuses ADD/REPLACE against `[-1]` outright when that vehicle's own config declares no root
 `weapons[]` array, rather than reporting a false success: **WMP cannot create a new physical weapon mount
-on a vehicle that never had one — that needs model/config authoring work, not a script.** The Configure
-module labels such a turret `(no weapon mount on this vehicle)` and never defaults to it, the same
+on a vehicle that never had one — that needs model/config authoring work, not a script.** The Editor's Turret tab labels such a turret `(no weapon mount on this vehicle)` and never defaults to it, the same
 client-side convenience the horn label already gets.
 
 There is no engine query for "what weapons/magazines fit this turret", so classnames are still typed
 in rather than picked from a filtered list. Two beginner-friendly helpers exist so a mission maker
 never has to guess or hand-type one from memory, in order of how completely they avoid it:
 
-- **`Waldo_fnc_VehicleWeaponLoadoutCopy`** (Zeus: **Vehicle Weapon Loadout - Copy From Nearby
-  Vehicle**, placed on the target vehicle) — the strongest option: copies another nearby vehicle's
+- **`Waldo_fnc_VehicleWeaponLoadoutCopy`** (Zeus: **Vehicle Customisation - Editor**'s **Copy From
+  Nearby Vehicle...** button, placed on the target vehicle) — the strongest option: copies another nearby vehicle's
   real turret/pylon loadout directly, so no classname is ever typed at all. Matches turret paths that
   exist on both vehicles exactly (no cross-vehicle guessing) and pylons by index, including the
   source's exact remaining pylon ammo via `ammoOnPylon`. Built entirely on top of
   `Waldo_fnc_VehicleWeaponLoadoutApply` — it only reads the source and assembles rows.
-- **`Waldo_fnc_VehicleWeaponLoadoutInspect`** (Zeus: **Vehicle Weapon Loadout - Inspect**) — point it
+- **`Waldo_fnc_VehicleWeaponLoadoutInspect`** (Zeus: **Vehicle Customisation - Inspect**) — point it
   at any vehicle, including a stock/vanilla one whose loadout you like, and it reports every turret's
   exact weapon/magazine classnames and every pylon's exact ordnance classname as a full-screen `hint`,
   each followed by a ready-to-paste `Waldo_fnc_VehicleWeaponLoadoutApply` row you can copy onto a
@@ -631,7 +630,7 @@ call/ZEN-only feature. Server-authoritative — callable from an object's own Ed
 ]] call Waldo_fnc_VehicleAppearanceApply;
 [this, [
     ["SELECTION", "rws_base", "HIDE", ""]  // hide a named model selection - confirm the real name
-]] call Waldo_fnc_VehicleAppearanceApply;  // with Vehicle Appearance - Inspect, never guessed
+]] call Waldo_fnc_VehicleAppearanceApply;  // with Vehicle Customisation - Inspect, never guessed
 ```
 
 `targetType` is `"TEXTURE"` or `"SELECTION"`. TEXTURE `selector` is a 0-based index into the vehicle's

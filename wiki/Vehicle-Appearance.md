@@ -4,7 +4,7 @@
 > model part (e.g. visually remove a turret cupola), through a script call or Zeus - not weapons/ammo,
 > that's [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout).
 
-_Associated Files: `MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceApply.sqf`, `vehicleAppearanceInspect.sqf`, `vehicleComponentCatalogRegister.sqf`, `vehicleComponentRemove.sqf`, `MissionScripts\ZenModules\Zen_vehicleAppearanceTextureModule.sqf`, `zenVehicleAppearanceTextureServer.sqf`, `Zen_vehicleAppearanceInspectModule.sqf`, `Zen_vehicleComponentRegisterModule.sqf`, `zenVehicleComponentRegisterServer.sqf`, `Zen_vehicleComponentRemoveModule.sqf`, `zenVehicleComponentRemoveServer.sqf`, `Waldo_fnc_VehicleAppearanceApply`, `Waldo_fnc_VehicleAppearanceInspect`, `Waldo_fnc_VehicleComponentCatalogRegister`, `Waldo_fnc_VehicleComponentRemove`, `Waldo_fnc_ZenVehicleAppearanceTexture`, `Waldo_fnc_ZenVehicleAppearanceTextureServer`, `Waldo_fnc_ZenVehicleAppearanceInspect`, `Waldo_fnc_ZenVehicleComponentRegister`, `Waldo_fnc_ZenVehicleComponentRegisterServer`, `Waldo_fnc_ZenVehicleComponentRemove`, `Waldo_fnc_ZenVehicleComponentRemoveServer`_
+_Associated Files: `MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceApply.sqf`, `vehicleAppearanceInspect.sqf`, `vehicleComponentHeuristicScan.sqf`, `vehicleComponentRemove.sqf`, `MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationPromptEditor.sqf` (Appearance and Component tabs; and its collector/pending-list files), `MissionScripts\ZenModules\Zen_vehicleCustomizationEditorModule.sqf`, `Zen_vehicleCustomizationInspectModule.sqf`, `zenVehicleCustomizationServer.sqf`, `Waldo_fnc_VehicleAppearanceApply`, `Waldo_fnc_VehicleAppearanceInspect`, `Waldo_fnc_VehicleComponentHeuristicScan`, `Waldo_fnc_VehicleComponentRemove`, `Waldo_fnc_VehicleCustomizationInspect`, `Waldo_fnc_ZenVehicleCustomizationEditor`, `Waldo_fnc_ZenVehicleCustomizationInspect`, `Waldo_fnc_ZenVehicleCustomizationServer`_
 
 There is no `MissionConfig` file for this feature - it's a call/ZEN-only tool, not a global setting.
 
@@ -30,9 +30,11 @@ Server-authoritative, like the rest of WMP's object-anchored features (`Waldo_fn
 weapons (enumerable via `allTurrets`/`weaponsTurret`), a model selection is just a named piece the
 vehicle's original author gave it - valid for hiding, or not, with no config flag either way. WMP
 therefore ships **no pre-seeded catalog of known removable parts** for any vehicle, vanilla or
-otherwise - a wrong selection name presented as fact is worse than none at all. Discover a real
-selection name with **Vehicle Appearance - Inspect** first, then optionally save it for reuse with
-**Vehicle Appearance - Register Component**.
+otherwise - a wrong selection name presented as fact is worse than none at all.
+`Waldo_fnc_VehicleComponentHeuristicScan` re-scans the actual placed vehicle live every time the ZEN
+Editor's Component tab opens (name-filtered, best-effort turret correlation, every candidate labelled
+with an explicit "verify" caveat) instead of relying on a persistent per-class registration step. You
+can still confirm a real selection name yourself first with **Vehicle Customisation - Inspect**.
 
 ## Scripting
 
@@ -84,19 +86,20 @@ Leave `turretPath` as `[]` for a purely cosmetic component with no associated we
 re-shows the selection - re-arm the turret separately with
 [`Waldo_fnc_VehicleWeaponLoadoutApply`](Vehicle-Weapon-Loadout) if you want the weapon back.
 
-### Registering a component for reuse across a vehicle class
+### Discovering candidate components automatically
 
 ```sqf
-// Register once, after confirming the real selection name on the actual vehicle with Inspect:
-[["B_MRAP_01_F", "B_MRAP_01_gmg_F"], "Remote Weapon Station", "rws_base", [0]]
-    call Waldo_fnc_VehicleComponentCatalogRegister;
+private _candidates = [vehicle] call Waldo_fnc_VehicleComponentHeuristicScan;
+// Array of [selectionName, likelyTurretPath, label] - label already carries a "verify" caveat.
 ```
 
-Registers a reusable `[componentLabel, selectionName, turretPath]` entry for one or more vehicle
-**classes** (not one instance) under `Waldo_VehicleComponentCatalog`, a broadcast HashMap keyed by
-class. Every future **Vehicle Appearance - Remove/Restore Component** dialog opened on a vehicle of
-that class then offers it as a one-click picker option instead of a typed field - the discovery only
-has to happen once per class, not once per placed vehicle.
+Rather than a persistent per-class registration step, `Waldo_fnc_VehicleComponentHeuristicScan`
+re-scans the live placed vehicle every time the ZEN Editor's Component tab opens: it filters
+`selectionNames vehicle` to those whose name contains a plausible hint (`"turret"`, `"gun"`,
+`"weapon"`, `"mount"`, `"hatch"`, `"rws"`, `"cannon"`, `"hmg"`, `"gmg"`), then best-effort-correlates
+each candidate against the vehicle's real turret paths. Picking a candidate in the Editor auto-fills
+the Selection Name and Linked Turret Path fields - never presented as fact, always labelled
+best-effort, and always worth a visual check against the real vehicle before removing.
 
 ### Discovering real texture slots and selection names
 
@@ -116,53 +119,24 @@ the ZEN Inspect module copies to the clipboard, deliberately never the full `rep
 
 ## Zeus modules
 
-All four live under category **WMP Vehicle Appearance** and must be placed **directly on the
-vehicle** being edited or inspected - same convention as **Vehicle Weapon Loadout**'s modules.
-Placement anywhere else is rejected with an on-screen notice.
+Both vehicle appearance actions - recoloring a texture slot and hiding/showing a model selection
+(optionally clearing a linked turret's weapon at the same time) - live as tabs inside the unified
+**Vehicle Customisation - Editor** and **Vehicle Customisation - Inspect** ZEN modules (category
+**WMP Vehicle Customisation**), documented in full on [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout)
+alongside the Turret and Pylon tabs, rather than duplicated here. In short:
 
-**Vehicle Appearance - Set Texture** - the texture-slot list is discovered live from the placed
-vehicle's own `hiddenSelections[]` config, with each slot's label showing its current texture.
+- **Vehicle Customisation - Editor**'s **Appearance** tab recolors a texture slot (Solid Color, no
+  texture asset needed, or Custom Texture Path) or restores its default; the **Component** tab
+  hides/shows a model selection and, when removing, optionally clears a linked turret's weapon too -
+  offering `Waldo_fnc_VehicleComponentHeuristicScan`'s live, best-effort candidates for the placed
+  vehicle as a picker (see [Overview](#overview) above), or a typed selection-name/turret-path
+  fallback. Both tabs queue into the same Pending Changes list as Turret/Pylon rows and apply through
+  the same consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge.
+- **Vehicle Customisation - Inspect** reports every texture slot and every named model selection for
+  the placed vehicle, merged with the turret/pylon report, via one `hint` and one clipboard copy.
 
-| Control | Meaning |
-|---|---|
-| Texture Slot | Which `hiddenSelections[]` slot to change |
-| Mode | Solid Color (four 0..1 sliders, no texture asset needed), Custom Texture Path, or Restore Default |
-| Red / Green / Blue / Alpha | 0..1 sliders, used only in Solid Color mode |
-| Custom Texture Path | Exact bitmap path or a hand-written procedural texture string, used only in Custom Texture Path mode |
-
-Routes through the curator-authenticated `Waldo_fnc_ZenVehicleAppearanceTextureServer` bridge before
-calling the same public `Waldo_fnc_VehicleAppearanceApply` API mission scripts use directly.
-
-**Vehicle Appearance - Inspect** - read-only, no dialog, acts immediately. Reports every texture slot
-and every named model selection as a full-screen `hint`, logs the same to RPT, and copies the plain
-comma-joined selection-name list to the clipboard (never the full prose report - see the paste-safety
-note below). Needs no curator-authentication bridge and never touches the server.
-
-**Vehicle Appearance - Register Component** - records a component for the placed vehicle's exact
-class.
-
-| Control | Meaning |
-|---|---|
-| Component Label | Short curator-facing name, e.g. "Remote Weapon Station" |
-| Selection Name | Exact model selection to hide/show - confirm it with Inspect first |
-| Linked Turret Path (optional) | e.g. `[0]` or `[-1]` - that turret's weapon is also cleared on removal. Leave blank for a purely cosmetic part. |
-
-Routes through the curator-authenticated `Waldo_fnc_ZenVehicleComponentRegisterServer` bridge to
-`Waldo_fnc_VehicleComponentCatalogRegister`.
-
-**Vehicle Appearance - Remove/Restore Component** - offers every component previously registered for
-the placed vehicle's exact class as a picker (the "dynamic pickup" path - no typing needed once
-registered), or "Type manually" with typed selection-name/turret-path fields as a fallback.
-
-| Control | Meaning |
-|---|---|
-| Component | A registered component for this vehicle class, or "Type manually" |
-| Selection Name (manual) | Used only when Component is "Type manually" |
-| Linked Turret Path (manual, optional) | Used only when Component is "Type manually" |
-| Action | Remove (hides the part and clears its linked weapon, if any) or Restore (only re-shows the part) |
-
-Routes through the curator-authenticated `Waldo_fnc_ZenVehicleComponentRemoveServer` bridge to
-`Waldo_fnc_VehicleComponentRemove`.
+Both modules must be placed **directly on the vehicle** being edited or inspected - same convention as
+every module in this family. Placement anywhere else is rejected with an on-screen notice.
 
 ### A note on pasting into Eden init fields
 
@@ -173,6 +147,7 @@ breaks. Every clipboard payload this feature (and [Vehicle Weapon Loadout](Vehic
 produces is built to be paste-safe: single-statement, comment-free text only. The full human-readable
 `reportText` from Inspect is for reading in the `hint`, never for pasting whole into a script or init
 field.
+
 
 ## Notes and limitations
 
@@ -185,8 +160,7 @@ field.
   a mission see [Persistence](Persistence) instead.
 - Diagnostics/troubleshooting: every `Waldo_fnc_VehicleAppearanceApply` call logs one `[WMP VEHAPP]`
   RPT line summarising every row's outcome; `Waldo_fnc_VehicleComponentRemove` logs a matching
-  `[WMP VEHAPP COMPONENT]` line; `Waldo_fnc_VehicleComponentCatalogRegister` logs
-  `[WMP VEHAPP CATALOG]`.
+  `[WMP VEHAPP COMPONENT]` line; the merged ZEN Inspect module logs `[WMP VEHCUST INSPECT]`.
 - **Out of scope: weapons and ammo.** Adding, replacing, removing, or clearing a turret's weapon, or
   setting an aircraft pylon's ordnance, is a completely different, unrelated Arma system covered by
   [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout), not this feature.

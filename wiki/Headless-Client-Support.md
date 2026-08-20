@@ -392,7 +392,7 @@ groups to a headless client would be pure clutter (and a misleading affordance) 
 of missions that never turn this system on. Registration happens in a short bounded wait for the same
 `Waldo_SharedFeatureConfigReady` sentinel `initPlayerLocal.sqf` itself waits on, since `Waldo_Headless_Enable`
 is SHARED-scope config loaded by `init.sqf` and there is no guaranteed ordering between `init.sqf` and
-`initPlayerLocal.sqf`. `Waldo_ZenModuleCount` is 52 without these three, 55 with them -
+`initPlayerLocal.sqf`. `Waldo_ZenModuleCount` is 47 without these three, 50 with them -
 `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either value as `LOADED`, since a
 diagnostics run that lands inside that short registration window would otherwise report a false error
 on a perfectly healthy headless-enabled mission.

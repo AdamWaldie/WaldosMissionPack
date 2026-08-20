@@ -106,10 +106,10 @@ private _stripTurret = {
 
 // The horn is excluded from every mutating turret operation - it is an ordinary CfgWeapons entry to
 // the engine (there is no other reliable "not a combat weapon" flag), but never a weapon a mission
-// maker or curator means. This is the single authoritative enforcement point: the ZEN Configure
-// module's own client-side check (Zen_vehicleWeaponLoadoutModule.sqf) exists only to avoid a wasted
-// round-trip to the server for something that would be refused here anyway - a direct script call or
-// an object's own Eden init field must be refused independently of that dialog.
+// maker or curator means. This is the single authoritative enforcement point: the ZEN Vehicle
+// Customisation - Editor's own client-side check (vehicleCustomizationCollectTurretRow.sqf) exists
+// only to avoid a wasted round-trip to the server for something that would be refused here anyway - a
+// direct script call or an object's own Eden init field must be refused independently of that dialog.
 private _isHornWeapon = {
     toLower (getText (configFile >> "CfgWeapons" >> _this >> "displayName")) == "horn"
 };
