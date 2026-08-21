@@ -1,9 +1,18 @@
 /*
  * Author: WaldoTheWarfighter
  * Switches the ZEN "Vehicle Customisation - Editor" dialog's visible tab (Turret / Pylon / Appearance
- * / Component) by toggling ctrlShow on each tab's own control group, matching
- * MissionScripts/EconomySystems/Build/setBuildConfigTab.sqf's tab-toggle pattern. The permanent
- * Pending Changes panel and its buttons are not part of any tab group and are always shown.
+ * / Component). Each tab's controls live inside its own RscControlsGroupNoScrollbars container (all
+ * four sharing the exact same content rectangle), created once by
+ * vehicleCustomizationPromptEditor.sqf and stored on the display under WaldoVehCust_<Tab>Group -
+ * switching tabs is exactly four ctrlShow calls, one per group. This mirrors the group-container
+ * pattern already proven elsewhere in this codebase -
+ * MissionScripts/InteractionsMinigames/Core/challengeUi.sqf's own "content group" idiom.
+ *
+ * This replaces an earlier version that toggled ~10-15 individual field controls per tab directly via
+ * a flat forEach/ctrlShow loop; that mechanism survived static review twice but still failed live
+ * in-engine testing (a tab button's highlight changed on click, but the displayed content never did).
+ * Collapsing to one ctrlShow per tab removes that entire class of per-control state drift. The
+ * permanent Pending Changes panel and its buttons are not part of any tab group and are always shown.
  *
  * Arguments:
  * 0: Display <DISPLAY> - the open Vehicle Customisation - Editor display (optional, default: displayNull)
@@ -16,9 +25,7 @@
  * [_disp, "pylon"] call Waldo_fnc_VehCust_setTab;
  *
  * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
- * (the 4 tab buttons' ButtonClick handlers; initial dialog setup; and a one-time ~0.6s-delayed
- * re-assert that survives Waldo_fnc_EcoCore_fitPromptDisplay's own later, unrelated recoloring pass
- * over every button-type control in the display).
+ * (the 4 tab buttons' ButtonClick handlers, and the initial dialog setup).
  */
 
 params [["_disp", displayNull], ["_tab", "turret"]];
@@ -27,19 +34,20 @@ if (isNull _disp) exitWith {};
 private _safeTab = toLower (str _tab);
 if !(_safeTab in ["turret", "pylon", "appearance", "component"]) then {_safeTab = "turret";};
 
-// Each tab's own control group is tagged on the display under WaldoVehCust_<Tab>TabControls -
-// populated once by vehicleCustomizationPromptEditor.sqf when the controls are created.
+private _tabGroups = [
+    ["turret", "WaldoVehCust_TurretGroup"],
+    ["pylon", "WaldoVehCust_PylonGroup"],
+    ["appearance", "WaldoVehCust_AppearanceGroup"],
+    ["component", "WaldoVehCust_ComponentGroup"]
+];
 {
     _x params ["_tabName", "_varName"];
-    private _controls = _disp getVariable [_varName, []];
-    private _show = _safeTab isEqualTo _tabName;
-    {if (!isNull _x) then {_x ctrlShow _show; _x ctrlCommit 0;};} forEach _controls;
-} forEach [
-    ["turret", "WaldoVehCust_TurretTabControls"],
-    ["pylon", "WaldoVehCust_PylonTabControls"],
-    ["appearance", "WaldoVehCust_AppearanceTabControls"],
-    ["component", "WaldoVehCust_ComponentTabControls"]
-];
+    private _group = _disp getVariable [_varName, controlNull];
+    if (!isNull _group) then {
+        _group ctrlShow (_safeTab isEqualTo _tabName);
+        _group ctrlCommit 0;
+    };
+} forEach _tabGroups;
 
 private _tabButtons = [
     ["turret", "WaldoVehCust_TabTurretBtn"],

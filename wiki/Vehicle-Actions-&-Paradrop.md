@@ -217,7 +217,7 @@ header for the complete list and a HALO one-shot example.
 
 `createMarkers` also adds a **live-updating aircraft marker** — the same mechanism Airborne Gunship
 Support uses for its own aircraft — that tracks the plane's real position/heading every frame while
-it's flying, visible only to a friendly side. This is what actually "replaces" a pre-placed target
+it's flying, visible only to players on the aircraft's own side. This is what actually "replaces" a pre-placed target
 marker with a working drop zone once the aircraft takes off, rather than leaving only a fixed icon on
 the map with no sense of where the plane currently is. It's always removed once the aircraft is gone,
 regardless of `keepMarkersOnCleanup` (that option only ever affects the static

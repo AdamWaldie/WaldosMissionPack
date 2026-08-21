@@ -41,7 +41,9 @@ missionNamespace setVariable ["Waldo_Paradrop_LocalIds", _systemIds];
 {
     _x params ["_id", "_name", "_aircraft", "_side"];
     private _markerName = format ["Waldo_Paradrop_%1_Aircraft", _id];
-    if (!isNull _aircraft && {alive _aircraft} && {(side group player) getFriend _side >= 0.6}) then {
+    // Own-side only, not merely "friendly" - a player must not see another side's paradrop aircraft
+    // marker just because the two sides are friendly under vanilla default relations.
+    if (!isNull _aircraft && {alive _aircraft} && {side group player == _side}) then {
         if (markerShape _markerName == "") then {
             createMarkerLocal [_markerName, getPosWorld _aircraft];
             _markerName setMarkerTypeLocal "b_plane";

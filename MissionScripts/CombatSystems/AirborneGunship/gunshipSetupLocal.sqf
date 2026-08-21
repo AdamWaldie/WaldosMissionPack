@@ -8,9 +8,12 @@
  * the assigned controller; Designate Orbit, Return for Service and Configure Orbit also stay
  * available while the aircraft is still in transit to its orbit (matching what the server actually
  * permits), while per-turret weapon control only appears once the aircraft is on station or already
- * controlled. It also (re)creates each gunship's aircraft marker (a "mil_warning" exclamation icon)
- * and a companion border-only ellipse sized to the aircraft's current loiter radius at its orbit
- * centre. It is called by initPlayerLocal, public-state publication and the audit refresh control.
+ * controlled. It also (re)creates each gunship's aircraft marker (its original vanilla plane icon)
+ * and, at the orbit centre, a plain minimal dot marker plus a companion border-only ellipse sized to
+ * the aircraft's current loiter radius - deliberately minimally invasive visually, not an attention
+ * icon. All three markers are visible only to players on the exact same side as the aircraft (not
+ * merely a "friendly" side). It is called by initPlayerLocal, public-state publication and the audit
+ * refresh control.
  *
  * Locality and authority:
  * Runs only on an interface client and mutates local markers/actions. It consumes the server's
@@ -78,17 +81,18 @@ private _newVanillaActions = [];
 
 {
     _x params ["_id", "_aircraft", "_controller", "_status", "_orbit", "_home", "_side", "_callsign", "_turretProfiles", "_showMarkers", ["_serviceCompleteAt", -1], ["_serviceDuration", 0], ["_radius", 1500], ["_altitude", 700], ["_offStationReason", ""]];
-    if (_showMarkers && {!isNull _aircraft} && {(side group player) getFriend _side >= 0.6}) then {
+    // Own-side only, not merely "friendly" - a WEST player must not see an INDEPENDENT gunship's
+    // marker just because the two sides are friendly under vanilla default relations.
+    if (_showMarkers && {!isNull _aircraft} && {side group player == _side}) then {
         private _aircraftMarkerName = format ["Waldo_Gunship_%1_Aircraft", _id];
         private _orbitMarkerName = format ["Waldo_Gunship_%1_Orbit", _id];
         private _radiusMarkerName = format ["Waldo_Gunship_%1_OrbitRadius", _id];
         private _markerColour = switch (_side) do {case east: {"ColorOPFOR"}; case independent: {"ColorIndependent"}; case civilian: {"ColorCivilian"}; default {"ColorBLUFOR"}};
         if (markerShape _aircraftMarkerName == "") then {
             createMarkerLocal [_aircraftMarkerName, getPosWorld _aircraft];
-            // "mil_warning" is the same vanilla exclamation-in-a-triangle marker type already used
-            // by MissionScripts\MissionInit\Jamming\jammerCreate.sqf, confirming it is a real,
-            // loaded CfgMarkers class rather than a guess.
-            _aircraftMarkerName setMarkerTypeLocal "mil_warning";
+            // Original vanilla plane icon - the aircraft marker was briefly changed to an
+            // exclamation icon and has been reverted; it keeps its own natural identity.
+            _aircraftMarkerName setMarkerTypeLocal "b_plane";
             _aircraftMarkerName setMarkerColorLocal _markerColour;
         };
         _aircraftMarkerName setMarkerPosLocal getPosWorld _aircraft;

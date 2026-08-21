@@ -4,18 +4,43 @@
  * vehicle - the replacement for the retired one-shot "Configure" / "Copy From Nearby Vehicle" /
  * "Register Component" / "Remove/Restore Component" modules. A curator can queue any number of
  * turret, pylon, appearance, and component changes across four tabs (Turret / Pylon / Appearance /
- * Component, toggled via RscButtonMenu + ctrlShow, matching
- * MissionScripts/EconomySystems/Build/setBuildConfigTab.sqf's pattern) into one permanent Pending
- * Changes RscListbox, visible across every tab, then either apply everything at once or export one
- * ready-to-paste Eden-init-field snippet - the "author here, paste there" beginner workflow.
+ * Component) into one permanent Pending Changes RscListbox, visible across every tab, then either
+ * apply everything at once or export one ready-to-paste Eden-init-field snippet - the "author here,
+ * paste there" beginner workflow.
  *
- * Reuses Waldo_fnc_EcoCore_createZeusPromptDisplay verbatim for the modal child display (it is already
- * generic, no Economy-specific state) and copies control-creation idioms directly from
- * MissionScripts/EconomySystems/Build/promptBuildConfig.sqf. Every Add button routes through its own
- * validation-gated collector (Waldo_fnc_VehCust_collectTurretRow / ..._collectPylonRow /
- * ..._collectAppearanceRow / ..._collectComponentRow) and refuses to push a blank/incomplete row onto
- * Pending - the direct fix for the confirmed root-cause bug in the retired Configure module's
- * Session Action queue (see those files' headers for the full story).
+ * Tab switching (rewritten this pass - see below): each tab's own controls live inside one
+ * RscControlsGroupNoScrollbars container, all four covering the exact same content rectangle;
+ * switching tabs is exactly four ctrlShow calls (one per group), handled by
+ * Waldo_fnc_VehCust_setTab. This mirrors the group-container idiom already proven elsewhere in this
+ * codebase - MissionScripts/InteractionsMinigames/Core/challengeUi.sqf's own "content group" pattern
+ * (RscControlsGroupNoScrollbars + child controls created via
+ * `_display ctrlCreate [className, -1, _group]`, position relative to the group's own local origin,
+ * not the display's absolute safe-zone coordinates).
+ *
+ * A previous version of this dialog toggled ~10-15 individual field controls per tab directly on the
+ * display via a flat forEach/ctrlShow loop, laid out through the shared, Economy-tuned
+ * Waldo_fnc_EcoCore_fitPromptDisplay auto-scale/recolor pass (deferred to run once after every
+ * control existed, to close a snapshot-race that pass had with this dialog's much larger control
+ * count than any Economy prompt). Two rounds of fixes aimed at that mechanism (the deferred-fit race
+ * fix, then a deferred tab-highlight repaint to survive the pass's own unconditional button
+ * recoloring) still did not resolve live in-engine testing: clicking a tab button changed its
+ * highlight but never switched the visible content. Rather than continue debugging that mechanism
+ * blind (this environment cannot attach a debugger or capture RPT), this dialog now uses the
+ * container-group mechanism above and no longer calls Waldo_fnc_EcoCore_fitPromptDisplay at all - the
+ * `_deferFit=true` argument below only ever suppresses that shared display's own internal auto-fit
+ * call; this file simply never invokes it afterward either. This trades away that pass's automatic
+ * ultrawide/4:3/UI-scale safe-zone adaptation for this one dialog; the fixed layout below is sized
+ * conservatively instead, mirroring the same fixed-coordinate, no-fit-pass style
+ * MissionScripts/CombatSystems/AirborneGunship/gunshipPromptOrbitConfig.sqf already uses successfully
+ * for its own (smaller) dialog.
+ *
+ * Reuses Waldo_fnc_EcoCore_createZeusPromptDisplay verbatim for the modal child display's shared
+ * chrome/background (it is already generic, no Economy-specific state) and copies control-creation
+ * idioms directly from MissionScripts/EconomySystems/Build/promptBuildConfig.sqf. Every Add button
+ * routes through its own validation-gated collector (Waldo_fnc_VehCust_collectTurretRow /
+ * ..._collectPylonRow / ..._collectAppearanceRow / ..._collectComponentRow) and refuses to push a
+ * blank/incomplete row onto Pending - the direct fix for the confirmed root-cause bug in the retired
+ * Configure module's Session Action queue (see those files' headers for the full story).
  *
  * Turret/Pylon "Weapon"/"Ordnance" pickers and their pack-wide-catalog population are ported from the
  * retired Zen_vehicleWeaponLoadoutModule.sqf; the Appearance tab's texture-slot discovery is ported
@@ -32,11 +57,6 @@
  * weapon can actually load; every "Type manually" classname edit field underneath these combos stays
  * user-editable for the exotic modded case the catalog hasn't discovered yet.
  *
- * A short, deferred re-assert of the current tab's button highlight (see the final lines of this
- * file) exists solely to survive Waldo_fnc_EcoCore_fitPromptDisplay's own later, unrelated one-time
- * recoloring pass over every button-type control in the display - see
- * MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationSetTab.sqf's header for detail.
- *
  * Arguments:
  * 0: Vehicle <OBJECT> - the vehicle this Editor session edits (the module's placement target).
  *
@@ -52,13 +72,9 @@
 params [["_vehicle", objNull, [objNull]]];
 if (!hasInterface || {isNull _vehicle}) exitWith {displayNull};
 
-// deferFit=true: this dialog creates far more controls, interleaved with much heavier per-control
-// work (catalog scans, a full heuristic component scan), than any Economy prompt Waldo_fnc_EcoCore_
-// fitPromptDisplay was tuned against - letting it auto-fit here raced this script's own control
-// creation and could snapshot/reposition only a partial control set, silently leaving whichever tab's
-// controls were created after that snapshot at their original, un-fitted coordinates (confirmed root
-// cause of the tabs appearing to do nothing on click). Fit explicitly, once, at the very end of this
-// file instead, after every control this dialog creates genuinely exists.
+// _deferFit=true only suppresses Waldo_fnc_EcoCore_createZeusPromptDisplay's own internal auto-fit
+// call for its shared chrome/background - this dialog never calls Waldo_fnc_EcoCore_fitPromptDisplay
+// itself at all (see this file's header for why).
 private _disp = ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
 if (isNull _disp) exitWith {displayNull};
 
@@ -106,248 +122,277 @@ _tabComponentBtn ctrlSetPosition [0.465, 0.11, 0.13, 0.035];
 _tabComponentBtn ctrlSetText "Component";
 _tabComponentBtn ctrlCommit 0;
 
-// ==== Turret tab ====
-private _turretLabel = _disp ctrlCreate ["RscText", -1];
-_turretLabel ctrlSetPosition [0.10, 0.16, 0.36, 0.025];
+// ---- One content group per tab - all four share the exact same rectangle; ctrlShow toggling one of
+// these four controls IS tab switching (see Waldo_fnc_VehCust_setTab). Local coordinates below are
+// relative to each group's own [0, 0] origin, not the display's absolute safe-zone coordinates.
+private _tabContentX = 0.10;
+private _tabContentY = 0.16;
+private _tabContentW = 0.46;
+private _tabContentH = 0.62;
+
+private _turretGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
+_turretGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
+_turretGroup ctrlShow true;
+_turretGroup ctrlCommit 0;
+
+private _pylonGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
+_pylonGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
+_pylonGroup ctrlShow false;
+_pylonGroup ctrlCommit 0;
+
+private _appearanceGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
+_appearanceGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
+_appearanceGroup ctrlShow false;
+_appearanceGroup ctrlCommit 0;
+
+private _componentGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
+_componentGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
+_componentGroup ctrlShow false;
+_componentGroup ctrlCommit 0;
+
+// ==== Turret tab (children of _turretGroup - positions relative to the group's own [0,0]) ====
+private _turretLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_turretLabel ctrlSetPosition [0, 0, 0.36, 0.025];
 _turretLabel ctrlSetText "Turret";
 _turretLabel ctrlCommit 0;
 
-private _turretCombo = _disp ctrlCreate ["RscCombo", -1];
-_turretCombo ctrlSetPosition [0.10, 0.19, 0.46, 0.035];
+private _turretCombo = _disp ctrlCreate ["RscCombo", -1, _turretGroup];
+_turretCombo ctrlSetPosition [0, 0.03, 0.46, 0.035];
 _turretCombo ctrlCommit 0;
 
-private _turretActionLabel = _disp ctrlCreate ["RscText", -1];
-_turretActionLabel ctrlSetPosition [0.10, 0.24, 0.36, 0.025];
+private _turretActionLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_turretActionLabel ctrlSetPosition [0, 0.08, 0.36, 0.025];
 _turretActionLabel ctrlSetText "Action";
 _turretActionLabel ctrlCommit 0;
 
-private _turretActionCombo = _disp ctrlCreate ["RscCombo", -1];
-_turretActionCombo ctrlSetPosition [0.10, 0.27, 0.30, 0.035];
+private _turretActionCombo = _disp ctrlCreate ["RscCombo", -1, _turretGroup];
+_turretActionCombo ctrlSetPosition [0, 0.11, 0.30, 0.035];
 _turretActionCombo ctrlCommit 0;
 
-private _copyWeaponLabel = _disp ctrlCreate ["RscText", -1];
-_copyWeaponLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
+private _copyWeaponLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_copyWeaponLabel ctrlSetPosition [0, 0.16, 0.46, 0.025];
 _copyWeaponLabel ctrlSetText "Weapon (pick from this vehicle's own weapons or the pack-wide catalog)";
 _copyWeaponLabel ctrlCommit 0;
 
-private _copyWeaponCombo = _disp ctrlCreate ["RscCombo", -1];
-_copyWeaponCombo ctrlSetPosition [0.10, 0.35, 0.46, 0.035];
+private _copyWeaponCombo = _disp ctrlCreate ["RscCombo", -1, _turretGroup];
+_copyWeaponCombo ctrlSetPosition [0, 0.19, 0.46, 0.035];
 _copyWeaponCombo ctrlCommit 0;
 
-private _turretWeaponLabel = _disp ctrlCreate ["RscText", -1];
-_turretWeaponLabel ctrlSetPosition [0.10, 0.40, 0.36, 0.025];
+private _turretWeaponLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_turretWeaponLabel ctrlSetPosition [0, 0.24, 0.36, 0.025];
 _turretWeaponLabel ctrlSetText "Weapon Classname (advanced - auto-filled by Weapon above)";
 _turretWeaponLabel ctrlCommit 0;
 
-private _turretWeaponEdit = _disp ctrlCreate ["RscEdit", -1];
-_turretWeaponEdit ctrlSetPosition [0.10, 0.43, 0.46, 0.035];
+private _turretWeaponEdit = _disp ctrlCreate ["RscEdit", -1, _turretGroup];
+_turretWeaponEdit ctrlSetPosition [0, 0.27, 0.46, 0.035];
 _turretWeaponEdit ctrlCommit 0;
 
-private _copyMagazineLabel = _disp ctrlCreate ["RscText", -1];
-_copyMagazineLabel ctrlSetPosition [0.10, 0.48, 0.46, 0.025];
+private _copyMagazineLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_copyMagazineLabel ctrlSetPosition [0, 0.32, 0.46, 0.025];
 _copyMagazineLabel ctrlSetText "Magazine (filtered to the Weapon selected above)";
 _copyMagazineLabel ctrlCommit 0;
 
-private _copyMagazineCombo = _disp ctrlCreate ["RscCombo", -1];
-_copyMagazineCombo ctrlSetPosition [0.10, 0.51, 0.46, 0.035];
+private _copyMagazineCombo = _disp ctrlCreate ["RscCombo", -1, _turretGroup];
+_copyMagazineCombo ctrlSetPosition [0, 0.35, 0.46, 0.035];
 _copyMagazineCombo ctrlCommit 0;
 
-private _turretMagLabel = _disp ctrlCreate ["RscText", -1];
-_turretMagLabel ctrlSetPosition [0.10, 0.56, 0.36, 0.025];
+private _turretMagLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_turretMagLabel ctrlSetPosition [0, 0.40, 0.36, 0.025];
 _turretMagLabel ctrlSetText "Magazine Classname (advanced - auto-filled by Magazine above)";
 _turretMagLabel ctrlCommit 0;
 
-private _turretMagEdit = _disp ctrlCreate ["RscEdit", -1];
-_turretMagEdit ctrlSetPosition [0.10, 0.59, 0.46, 0.035];
+private _turretMagEdit = _disp ctrlCreate ["RscEdit", -1, _turretGroup];
+_turretMagEdit ctrlSetPosition [0, 0.43, 0.46, 0.035];
 _turretMagEdit ctrlCommit 0;
 
-private _turretCountLabel = _disp ctrlCreate ["RscText", -1];
-_turretCountLabel ctrlSetPosition [0.10, 0.64, 0.22, 0.025];
+private _turretCountLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_turretCountLabel ctrlSetPosition [0, 0.48, 0.22, 0.025];
 _turretCountLabel ctrlSetText "Rounds/Magazine";
 _turretCountLabel ctrlCommit 0;
 
-private _turretCountEdit = _disp ctrlCreate ["RscEdit", -1];
-_turretCountEdit ctrlSetPosition [0.10, 0.67, 0.20, 0.035];
+private _turretCountEdit = _disp ctrlCreate ["RscEdit", -1, _turretGroup];
+_turretCountEdit ctrlSetPosition [0, 0.51, 0.20, 0.035];
 _turretCountEdit ctrlSetText "30";
 _turretCountEdit ctrlCommit 0;
 
-private _turretQtyLabel = _disp ctrlCreate ["RscText", -1];
-_turretQtyLabel ctrlSetPosition [0.32, 0.64, 0.22, 0.025];
+private _turretQtyLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
+_turretQtyLabel ctrlSetPosition [0.22, 0.48, 0.22, 0.025];
 _turretQtyLabel ctrlSetText "Magazine Count";
 _turretQtyLabel ctrlCommit 0;
 
-private _turretQtyEdit = _disp ctrlCreate ["RscEdit", -1];
-_turretQtyEdit ctrlSetPosition [0.32, 0.67, 0.20, 0.035];
+private _turretQtyEdit = _disp ctrlCreate ["RscEdit", -1, _turretGroup];
+_turretQtyEdit ctrlSetPosition [0.22, 0.51, 0.20, 0.035];
 _turretQtyEdit ctrlSetText "1";
 _turretQtyEdit ctrlCommit 0;
 
-private _addTurretBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_addTurretBtn ctrlSetPosition [0.10, 0.73, 0.20, 0.04];
+private _addTurretBtn = _disp ctrlCreate ["RscButtonMenu", -1, _turretGroup];
+_addTurretBtn ctrlSetPosition [0, 0.57, 0.20, 0.04];
 _addTurretBtn ctrlSetText "Add Turret Row";
 _addTurretBtn ctrlCommit 0;
 
-// ==== Pylon tab ====
-private _pylonLabel = _disp ctrlCreate ["RscText", -1];
-_pylonLabel ctrlSetPosition [0.10, 0.16, 0.36, 0.025];
+// ==== Pylon tab (children of _pylonGroup) ====
+private _pylonLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
+_pylonLabel ctrlSetPosition [0, 0, 0.36, 0.025];
 _pylonLabel ctrlSetText "Pylon";
 _pylonLabel ctrlCommit 0;
 
-private _pylonCombo = _disp ctrlCreate ["RscCombo", -1];
-_pylonCombo ctrlSetPosition [0.10, 0.19, 0.46, 0.035];
+private _pylonCombo = _disp ctrlCreate ["RscCombo", -1, _pylonGroup];
+_pylonCombo ctrlSetPosition [0, 0.03, 0.46, 0.035];
 _pylonCombo ctrlCommit 0;
 
-private _pylonActionLabel = _disp ctrlCreate ["RscText", -1];
-_pylonActionLabel ctrlSetPosition [0.10, 0.24, 0.36, 0.025];
+private _pylonActionLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
+_pylonActionLabel ctrlSetPosition [0, 0.08, 0.36, 0.025];
 _pylonActionLabel ctrlSetText "Action";
 _pylonActionLabel ctrlCommit 0;
 
-private _pylonActionCombo = _disp ctrlCreate ["RscCombo", -1];
-_pylonActionCombo ctrlSetPosition [0.10, 0.27, 0.30, 0.035];
+private _pylonActionCombo = _disp ctrlCreate ["RscCombo", -1, _pylonGroup];
+_pylonActionCombo ctrlSetPosition [0, 0.11, 0.30, 0.035];
 _pylonActionCombo ctrlCommit 0;
 
-private _copyOrdnanceLabel = _disp ctrlCreate ["RscText", -1];
-_copyOrdnanceLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
+private _copyOrdnanceLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
+_copyOrdnanceLabel ctrlSetPosition [0, 0.16, 0.46, 0.025];
 _copyOrdnanceLabel ctrlSetText "Ordnance (pick from this vehicle's own pylons or the pack-wide catalog)";
 _copyOrdnanceLabel ctrlCommit 0;
 
-private _copyOrdnanceCombo = _disp ctrlCreate ["RscCombo", -1];
-_copyOrdnanceCombo ctrlSetPosition [0.10, 0.35, 0.46, 0.035];
+private _copyOrdnanceCombo = _disp ctrlCreate ["RscCombo", -1, _pylonGroup];
+_copyOrdnanceCombo ctrlSetPosition [0, 0.19, 0.46, 0.035];
 _copyOrdnanceCombo ctrlCommit 0;
 
-private _pylonMagLabel = _disp ctrlCreate ["RscText", -1];
-_pylonMagLabel ctrlSetPosition [0.10, 0.40, 0.36, 0.025];
+private _pylonMagLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
+_pylonMagLabel ctrlSetPosition [0, 0.24, 0.36, 0.025];
 _pylonMagLabel ctrlSetText "Ordnance/Magazine Classname";
 _pylonMagLabel ctrlCommit 0;
 
-private _pylonMagEdit = _disp ctrlCreate ["RscEdit", -1];
-_pylonMagEdit ctrlSetPosition [0.10, 0.43, 0.46, 0.035];
+private _pylonMagEdit = _disp ctrlCreate ["RscEdit", -1, _pylonGroup];
+_pylonMagEdit ctrlSetPosition [0, 0.27, 0.46, 0.035];
 _pylonMagEdit ctrlCommit 0;
 
-private _pylonAmmoLabel = _disp ctrlCreate ["RscText", -1];
-_pylonAmmoLabel ctrlSetPosition [0.10, 0.48, 0.36, 0.025];
+private _pylonAmmoLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
+_pylonAmmoLabel ctrlSetPosition [0, 0.32, 0.36, 0.025];
 _pylonAmmoLabel ctrlSetText "Ammo Override (0 = full magazine count)";
 _pylonAmmoLabel ctrlCommit 0;
 
-private _pylonAmmoEdit = _disp ctrlCreate ["RscEdit", -1];
-_pylonAmmoEdit ctrlSetPosition [0.10, 0.51, 0.20, 0.035];
+private _pylonAmmoEdit = _disp ctrlCreate ["RscEdit", -1, _pylonGroup];
+_pylonAmmoEdit ctrlSetPosition [0, 0.35, 0.20, 0.035];
 _pylonAmmoEdit ctrlSetText "0";
 _pylonAmmoEdit ctrlCommit 0;
 
-private _addPylonBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_addPylonBtn ctrlSetPosition [0.10, 0.65, 0.20, 0.04];
+private _addPylonBtn = _disp ctrlCreate ["RscButtonMenu", -1, _pylonGroup];
+_addPylonBtn ctrlSetPosition [0, 0.49, 0.20, 0.04];
 _addPylonBtn ctrlSetText "Add Pylon Row";
 _addPylonBtn ctrlCommit 0;
 
-// ==== Appearance tab ====
-private _slotLabel = _disp ctrlCreate ["RscText", -1];
-_slotLabel ctrlSetPosition [0.10, 0.16, 0.36, 0.025];
+// ==== Appearance tab (children of _appearanceGroup) ====
+private _slotLabel = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
+_slotLabel ctrlSetPosition [0, 0, 0.36, 0.025];
 _slotLabel ctrlSetText "Texture Slot";
 _slotLabel ctrlCommit 0;
 
-private _slotCombo = _disp ctrlCreate ["RscCombo", -1];
-_slotCombo ctrlSetPosition [0.10, 0.19, 0.46, 0.035];
+private _slotCombo = _disp ctrlCreate ["RscCombo", -1, _appearanceGroup];
+_slotCombo ctrlSetPosition [0, 0.03, 0.46, 0.035];
 _slotCombo ctrlCommit 0;
 
-private _modeLabel = _disp ctrlCreate ["RscText", -1];
-_modeLabel ctrlSetPosition [0.10, 0.24, 0.36, 0.025];
+private _modeLabel = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
+_modeLabel ctrlSetPosition [0, 0.08, 0.36, 0.025];
 _modeLabel ctrlSetText "Mode";
 _modeLabel ctrlCommit 0;
 
-private _modeCombo = _disp ctrlCreate ["RscCombo", -1];
-_modeCombo ctrlSetPosition [0.10, 0.27, 0.30, 0.035];
+private _modeCombo = _disp ctrlCreate ["RscCombo", -1, _appearanceGroup];
+_modeCombo ctrlSetPosition [0, 0.11, 0.30, 0.035];
 _modeCombo ctrlCommit 0;
 
-private _rgbaLabel = _disp ctrlCreate ["RscText", -1];
-_rgbaLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
+private _rgbaLabel = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
+_rgbaLabel ctrlSetPosition [0, 0.16, 0.46, 0.025];
 _rgbaLabel ctrlSetText "Solid Color R / G / B / A (0..1, used in Solid Color mode)";
 _rgbaLabel ctrlCommit 0;
 
-private _redEdit = _disp ctrlCreate ["RscEdit", -1];
-_redEdit ctrlSetPosition [0.10, 0.35, 0.10, 0.035];
+private _redEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
+_redEdit ctrlSetPosition [0, 0.19, 0.10, 0.035];
 _redEdit ctrlSetText "1";
 _redEdit ctrlCommit 0;
 
-private _greenEdit = _disp ctrlCreate ["RscEdit", -1];
-_greenEdit ctrlSetPosition [0.21, 0.35, 0.10, 0.035];
+private _greenEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
+_greenEdit ctrlSetPosition [0.11, 0.19, 0.10, 0.035];
 _greenEdit ctrlSetText "0";
 _greenEdit ctrlCommit 0;
 
-private _blueEdit = _disp ctrlCreate ["RscEdit", -1];
-_blueEdit ctrlSetPosition [0.32, 0.35, 0.10, 0.035];
+private _blueEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
+_blueEdit ctrlSetPosition [0.22, 0.19, 0.10, 0.035];
 _blueEdit ctrlSetText "1";
 _blueEdit ctrlCommit 0;
 
-private _alphaEdit = _disp ctrlCreate ["RscEdit", -1];
-_alphaEdit ctrlSetPosition [0.43, 0.35, 0.10, 0.035];
+private _alphaEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
+_alphaEdit ctrlSetPosition [0.33, 0.19, 0.10, 0.035];
 _alphaEdit ctrlSetText "1";
 _alphaEdit ctrlCommit 0;
 
-private _pathLabel = _disp ctrlCreate ["RscText", -1];
-_pathLabel ctrlSetPosition [0.10, 0.40, 0.46, 0.025];
+private _pathLabel = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
+_pathLabel ctrlSetPosition [0, 0.24, 0.46, 0.025];
 _pathLabel ctrlSetText "Custom Texture Path (used in Custom Texture Path mode)";
 _pathLabel ctrlCommit 0;
 
-private _pathEdit = _disp ctrlCreate ["RscEdit", -1];
-_pathEdit ctrlSetPosition [0.10, 0.43, 0.46, 0.035];
+private _pathEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
+_pathEdit ctrlSetPosition [0, 0.27, 0.46, 0.035];
 _pathEdit ctrlCommit 0;
 
-private _addAppearanceBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_addAppearanceBtn ctrlSetPosition [0.10, 0.65, 0.24, 0.04];
+private _addAppearanceBtn = _disp ctrlCreate ["RscButtonMenu", -1, _appearanceGroup];
+_addAppearanceBtn ctrlSetPosition [0, 0.49, 0.24, 0.04];
 _addAppearanceBtn ctrlSetText "Add Appearance Row";
 _addAppearanceBtn ctrlCommit 0;
 
-// ==== Component tab ====
-private _componentPickLabel = _disp ctrlCreate ["RscText", -1];
-_componentPickLabel ctrlSetPosition [0.10, 0.16, 0.46, 0.025];
+// ==== Component tab (children of _componentGroup) ====
+private _componentPickLabel = _disp ctrlCreate ["RscText", -1, _componentGroup];
+_componentPickLabel ctrlSetPosition [0, 0, 0.46, 0.025];
 _componentPickLabel ctrlSetText "Heuristic Candidate (best-effort - verify, or type manually below)";
 _componentPickLabel ctrlCommit 0;
 
-private _componentPickCombo = _disp ctrlCreate ["RscCombo", -1];
-_componentPickCombo ctrlSetPosition [0.10, 0.19, 0.46, 0.035];
+private _componentPickCombo = _disp ctrlCreate ["RscCombo", -1, _componentGroup];
+_componentPickCombo ctrlSetPosition [0, 0.03, 0.46, 0.035];
 _componentPickCombo ctrlCommit 0;
 
-private _componentSelLabel = _disp ctrlCreate ["RscText", -1];
-_componentSelLabel ctrlSetPosition [0.10, 0.24, 0.36, 0.025];
+private _componentSelLabel = _disp ctrlCreate ["RscText", -1, _componentGroup];
+_componentSelLabel ctrlSetPosition [0, 0.08, 0.36, 0.025];
 _componentSelLabel ctrlSetText "Selection Name";
 _componentSelLabel ctrlCommit 0;
 
-private _componentSelEdit = _disp ctrlCreate ["RscEdit", -1];
-_componentSelEdit ctrlSetPosition [0.10, 0.27, 0.46, 0.035];
+private _componentSelEdit = _disp ctrlCreate ["RscEdit", -1, _componentGroup];
+_componentSelEdit ctrlSetPosition [0, 0.11, 0.46, 0.035];
 _componentSelEdit ctrlCommit 0;
 
-private _componentTurretPickLabel = _disp ctrlCreate ["RscText", -1];
-_componentTurretPickLabel ctrlSetPosition [0.10, 0.32, 0.46, 0.025];
+private _componentTurretPickLabel = _disp ctrlCreate ["RscText", -1, _componentGroup];
+_componentTurretPickLabel ctrlSetPosition [0, 0.16, 0.46, 0.025];
 _componentTurretPickLabel ctrlSetText "Linked Turret Path (optional - pick, or type manually below)";
 _componentTurretPickLabel ctrlCommit 0;
 
-private _componentTurretPickCombo = _disp ctrlCreate ["RscCombo", -1];
-_componentTurretPickCombo ctrlSetPosition [0.10, 0.35, 0.46, 0.035];
+private _componentTurretPickCombo = _disp ctrlCreate ["RscCombo", -1, _componentGroup];
+_componentTurretPickCombo ctrlSetPosition [0, 0.19, 0.46, 0.035];
 _componentTurretPickCombo ctrlCommit 0;
 
-private _componentTurretLabel = _disp ctrlCreate ["RscText", -1];
-_componentTurretLabel ctrlSetPosition [0.10, 0.40, 0.46, 0.025];
+private _componentTurretLabel = _disp ctrlCreate ["RscText", -1, _componentGroup];
+_componentTurretLabel ctrlSetPosition [0, 0.24, 0.46, 0.025];
 _componentTurretLabel ctrlSetText "Linked Turret Path Classname (advanced, e.g. [0] or [-1])";
 _componentTurretLabel ctrlCommit 0;
 
-private _componentTurretEdit = _disp ctrlCreate ["RscEdit", -1];
-_componentTurretEdit ctrlSetPosition [0.10, 0.43, 0.46, 0.035];
+private _componentTurretEdit = _disp ctrlCreate ["RscEdit", -1, _componentGroup];
+_componentTurretEdit ctrlSetPosition [0, 0.27, 0.46, 0.035];
 _componentTurretEdit ctrlCommit 0;
 
-private _componentActionLabel = _disp ctrlCreate ["RscText", -1];
-_componentActionLabel ctrlSetPosition [0.10, 0.48, 0.36, 0.025];
+private _componentActionLabel = _disp ctrlCreate ["RscText", -1, _componentGroup];
+_componentActionLabel ctrlSetPosition [0, 0.32, 0.36, 0.025];
 _componentActionLabel ctrlSetText "Action";
 _componentActionLabel ctrlCommit 0;
 
-private _componentActionCombo = _disp ctrlCreate ["RscCombo", -1];
-_componentActionCombo ctrlSetPosition [0.10, 0.51, 0.30, 0.035];
+private _componentActionCombo = _disp ctrlCreate ["RscCombo", -1, _componentGroup];
+_componentActionCombo ctrlSetPosition [0, 0.35, 0.30, 0.035];
 _componentActionCombo ctrlCommit 0;
 
-private _addComponentBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_addComponentBtn ctrlSetPosition [0.10, 0.65, 0.24, 0.04];
+private _addComponentBtn = _disp ctrlCreate ["RscButtonMenu", -1, _componentGroup];
+_addComponentBtn ctrlSetPosition [0, 0.49, 0.24, 0.04];
 _addComponentBtn ctrlSetText "Add Component Row";
 _addComponentBtn ctrlCommit 0;
 
-// ==== Permanent Pending Changes panel (right side, all tabs) ====
+// ==== Permanent Pending Changes panel (right side, all tabs - stays top-level on _disp, outside
+// every tab group, since it must remain visible regardless of which tab is active) ====
 private _pendingLabel = _disp ctrlCreate ["RscText", -1];
 _pendingLabel ctrlSetPosition [0.60, 0.16, 0.30, 0.025];
 _pendingLabel ctrlSetText "Pending Changes";
@@ -453,34 +498,17 @@ _disp setVariable ["WaldoVehCust_TabPylonBtn", _tabPylonBtn];
 _disp setVariable ["WaldoVehCust_TabAppearanceBtn", _tabAppearanceBtn];
 _disp setVariable ["WaldoVehCust_TabComponentBtn", _tabComponentBtn];
 
+// Tab content groups - Waldo_fnc_VehCust_setTab toggles ctrlShow on exactly these four controls.
+_disp setVariable ["WaldoVehCust_TurretGroup", _turretGroup];
+_disp setVariable ["WaldoVehCust_PylonGroup", _pylonGroup];
+_disp setVariable ["WaldoVehCust_AppearanceGroup", _appearanceGroup];
+_disp setVariable ["WaldoVehCust_ComponentGroup", _componentGroup];
+
 _disp setVariable ["WaldoVehCust_CopyOverlayBg", _copyOverlayBg];
 _disp setVariable ["WaldoVehCust_CopyOverlayLabel", _copyOverlayLabel];
 _disp setVariable ["WaldoVehCust_CopyOverlayList", _copyOverlayList];
 _disp setVariable ["WaldoVehCust_CopyOverlayPickBtn", _copyOverlayPickBtn];
 _disp setVariable ["WaldoVehCust_CopyOverlayCancelBtn", _copyOverlayCancelBtn];
-
-_disp setVariable ["WaldoVehCust_TurretTabControls", [
-    _turretLabel, _turretCombo, _turretActionLabel, _turretActionCombo,
-    _copyWeaponLabel, _copyWeaponCombo, _turretWeaponLabel, _turretWeaponEdit,
-    _copyMagazineLabel, _copyMagazineCombo, _turretMagLabel, _turretMagEdit,
-    _turretCountLabel, _turretCountEdit,
-    _turretQtyLabel, _turretQtyEdit, _addTurretBtn
-]];
-_disp setVariable ["WaldoVehCust_PylonTabControls", [
-    _pylonLabel, _pylonCombo, _pylonActionLabel, _pylonActionCombo,
-    _copyOrdnanceLabel, _copyOrdnanceCombo, _pylonMagLabel, _pylonMagEdit,
-    _pylonAmmoLabel, _pylonAmmoEdit, _addPylonBtn
-]];
-_disp setVariable ["WaldoVehCust_AppearanceTabControls", [
-    _slotLabel, _slotCombo, _modeLabel, _modeCombo, _rgbaLabel,
-    _redEdit, _greenEdit, _blueEdit, _alphaEdit, _pathLabel, _pathEdit, _addAppearanceBtn
-]];
-_disp setVariable ["WaldoVehCust_ComponentTabControls", [
-    _componentPickLabel, _componentPickCombo, _componentSelLabel, _componentSelEdit,
-    _componentTurretPickLabel, _componentTurretPickCombo,
-    _componentTurretLabel, _componentTurretEdit, _componentActionLabel, _componentActionCombo,
-    _addComponentBtn
-]];
 
 {
     _x setVariable ["WaldoVehCust_Display", _disp];
@@ -966,26 +994,5 @@ _copyOverlayPickBtn ctrlAddEventHandler ["ButtonClick", {
 
 [_disp, "turret"] call Waldo_fnc_VehCust_setTab;
 [_disp] call Waldo_fnc_VehCust_refreshPendingList;
-
-// Fit explicitly now that every control this dialog creates genuinely exists (deferFit=true was
-// passed to Waldo_fnc_EcoCore_createZeusPromptDisplay above specifically so this call is the first
-// time fitPromptDisplay's own control-count "stability" check ever runs for this dialog - see that
-// call's comment for the race this closes).
-[_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
-
-// Waldo_fnc_EcoCore_fitPromptDisplay still runs its own repositioning pass in a separately spawned
-// thread (bounded ~0.03-0.36s after the call above) that uniformly recolors every button-type control
-// (including these 4 tab buttons) with one flat theme color, silently erasing the active-tab highlight
-// this file just painted via setTab - this part is unrelated to the positional race the explicit call
-// above closes, and still needs its own re-assert. Re-paint whichever tab is actually current once
-// that pass has had time to finish, so the highlight matches the visible content again. This is local
-// to this dialog only - Waldo_fnc_EcoCore_fitPromptDisplay itself and every Economy prompt built on it
-// are untouched.
-[_disp] spawn {
-    params ["_disp"];
-    uiSleep 0.6;
-    if (isNull _disp) exitWith {};
-    [_disp, _disp getVariable ["WaldoVehCust_CurrentTab", "turret"]] call Waldo_fnc_VehCust_setTab;
-};
 
 _disp

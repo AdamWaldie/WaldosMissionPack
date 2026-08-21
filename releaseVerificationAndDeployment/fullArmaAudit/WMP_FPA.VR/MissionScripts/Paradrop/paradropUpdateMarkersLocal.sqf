@@ -23,7 +23,8 @@
 if !(hasInterface) exitWith {};
 {
     _x params ["_id", "_name", "_aircraft", "_side"];
-    private _visible = !isNull _aircraft && {alive _aircraft} && {(side group player) getFriend _side >= 0.6};
+    // Own-side only, not merely "friendly" - matches Waldo_fnc_ParadropSetupLocal's own gate.
+    private _visible = !isNull _aircraft && {alive _aircraft} && {side group player == _side};
     if (_visible) then {
         private _markerName = format ["Waldo_Paradrop_%1_Aircraft", _id];
         if (markerShape _markerName == "") then {

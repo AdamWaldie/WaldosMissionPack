@@ -89,8 +89,10 @@ pre-filled with the live radius/altitude and submits `SET_ORBIT_PARAMS` above �
 change a *registered* gunship's radius/altitude without destroying and re-registering it. A **View
 Off-Station Status** self-interaction (visible only while not `ON_STATION`/`CONTROLLED`) reveals a
 panel for 10s explaining why the aircraft is currently away: resupply countdown, resupply-in-progress,
-or "retasked to a new orbit" — it is never shown automatically. The aircraft marker uses the vanilla
-`"mil_warning"` icon; a border-only ellipse at the orbit centre shows the current loiter radius.
+or "retasked to a new orbit" — it is never shown automatically. The aircraft marker uses its original
+vanilla `"b_plane"` icon; the orbit centre gets a plain `"mil_circle"` dot plus a border-only ellipse
+showing the current loiter radius. All gunship markers are visible only to players on the aircraft's
+own side.
 
 ## Zeus
 

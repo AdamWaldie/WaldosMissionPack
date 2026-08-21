@@ -126,17 +126,20 @@ Set `maximumServiceCycles` to a non-negative number for finite support. A negati
 
 ## Markers
 
-Every gunship gets two friendly-side-visible markers, kept in sync by `Waldo_fnc_GunshipSetupLocal`
-(on publish/JIP) and `Waldo_fnc_GunshipUpdateMarkersLocal` (every ~1s while active):
+Every gunship gets three markers, visible only to players on the exact same side as the aircraft
+(not merely a "friendly" side), kept in sync by `Waldo_fnc_GunshipSetupLocal` (on publish/JIP) and
+`Waldo_fnc_GunshipUpdateMarkersLocal` (every ~1s while active):
 
-- **Aircraft marker** - the vanilla `"mil_warning"` exclamation-triangle icon type (the same one
-  already used for radio jammer markers), side-coloured, showing `"<callsign> - <status>"`.
+- **Aircraft marker** - the aircraft's own original vanilla `"b_plane"` icon, side-coloured, showing
+  `"<callsign> - <status>"`.
+- **Orbit centre marker** - a plain, minimally-invasive `"mil_circle"` dot at the orbit position, not
+  an attention-grabbing icon.
 - **Orbit radius marker** - a border-only `"ELLIPSE"` centred on the orbit position, sized to the
   gunship's actual current loiter radius, so the orbit's real footprint is visible on the map, not
   just its centre point. It resizes/repositions live if the radius or orbit centre changes (see
   Configure Orbit below).
 
-Both markers are deleted together at the same two cleanup sites the aircraft marker already used.
+All three markers are deleted together at the same cleanup sites the aircraft marker already used.
 
 ## Configure Orbit (FAC live radius/altitude adjustment)
 

@@ -20,7 +20,8 @@
 if !(hasInterface) exitWith {};
 {
     _x params ["_id", "_aircraft", "_controller", "_status", "_orbit", "", "_side", "_callsign", "", "_showMarkers", ["_serviceCompleteAt", -1], ["_serviceDuration", 0], ["_radius", 1500], ["_altitude", 700], ["_offStationReason", ""]];
-    private _visible = _showMarkers && {!isNull _aircraft} && {(side group player) getFriend _side >= 0.6};
+    // Own-side only, not merely "friendly" - matches Waldo_fnc_GunshipSetupLocal's own gate.
+    private _visible = _showMarkers && {!isNull _aircraft} && {side group player == _side};
     private _aircraftMarkerName = format ["Waldo_Gunship_%1_Aircraft", _id];
     private _orbitMarkerName = format ["Waldo_Gunship_%1_Orbit", _id];
     private _radiusMarkerName = format ["Waldo_Gunship_%1_OrbitRadius", _id];
