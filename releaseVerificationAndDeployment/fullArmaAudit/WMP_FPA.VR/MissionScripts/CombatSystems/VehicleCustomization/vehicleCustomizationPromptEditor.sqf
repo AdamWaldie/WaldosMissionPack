@@ -136,6 +136,16 @@ _tabComponentBtn ctrlCommit 0;
 // ---- One content group per tab - all four share the exact same rectangle; ctrlShow toggling one of
 // these four controls IS tab switching (see Waldo_fnc_VehCust_setTab). Local coordinates below are
 // relative to each group's own [0, 0] origin, not the display's absolute safe-zone coordinates.
+//
+// IMPORTANT: every group is left ctrlShow TRUE here, before any of its children are created. A child
+// control created under an already-hidden parent group can be born permanently hidden regardless of
+// later ctrlShow calls on the parent - unlike an ordinary top-level control (which has no parent/child
+// inheritance step at all), a control group's children can latch their own effective visibility at
+// creation time. The dialog's final `[_disp, "turret"] call Waldo_fnc_VehCust_setTab;` call (after
+// every tab's children exist) is what performs the FIRST real hide of Pylon/Appearance/Component, so
+// their children are always created under a genuinely visible parent first. This closes a confirmed
+// live-tested bug where Turret (the only group ever shown before its own children existed) was the
+// only tab whose content ever displayed, no matter which tab button was clicked.
 private _tabContentX = 0.10;
 private _tabContentY = 0.16;
 private _tabContentW = 0.46;
@@ -148,17 +158,17 @@ _turretGroup ctrlCommit 0;
 
 private _pylonGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
 _pylonGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
-_pylonGroup ctrlShow false;
+_pylonGroup ctrlShow true;
 _pylonGroup ctrlCommit 0;
 
 private _appearanceGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
 _appearanceGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
-_appearanceGroup ctrlShow false;
+_appearanceGroup ctrlShow true;
 _appearanceGroup ctrlCommit 0;
 
 private _componentGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
 _componentGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
-_componentGroup ctrlShow false;
+_componentGroup ctrlShow true;
 _componentGroup ctrlCommit 0;
 
 // ==== Turret tab (children of _turretGroup - positions relative to the group's own [0,0]) ====
@@ -733,6 +743,9 @@ _componentTurretPickCombo lbSetCurSel 0;
     _x ctrlAddEventHandler ["ButtonClick", {
         params ["_ctrl"];
         private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
+        // TEMPORARY DIAGNOSTIC (Round 8 safety net) - remove once tab switching is confirmed working
+        // in-engine. Confirms whether the click reaches this handler at all and what tab it resolves.
+        diag_log format ["[WMP VEHCUST DIAG] tab ButtonClick fired ctrl=%1 dispFound=%2 tabName=%3", _ctrl, !isNull _disp, _ctrl getVariable ["WaldoVehCust_TabName", "<none>"]];
         if (isNull _disp) exitWith {};
         [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
     }];

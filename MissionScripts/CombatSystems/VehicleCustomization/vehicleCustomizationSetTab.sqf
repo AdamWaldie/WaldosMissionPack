@@ -43,8 +43,12 @@ private _tabGroups = [
 {
     _x params ["_tabName", "_varName"];
     private _group = _disp getVariable [_varName, controlNull];
+    private _show = _safeTab isEqualTo _tabName;
+    // TEMPORARY DIAGNOSTIC (Round 8 safety net) - remove once tab switching is confirmed working
+    // in-engine. Confirms the group control was actually found and what ctrlShow value was applied.
+    diag_log format ["[WMP VEHCUST DIAG] setTab tab=%1 group=%2 groupFound=%3 show=%4", _tabName, _varName, !isNull _group, _show];
     if (!isNull _group) then {
-        _group ctrlShow (_safeTab isEqualTo _tabName);
+        _group ctrlShow _show;
         _group ctrlCommit 0;
     };
 } forEach _tabGroups;
