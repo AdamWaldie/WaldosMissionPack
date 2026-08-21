@@ -4,11 +4,22 @@
  * the shared WMP operations-console treatment. This post-layout pass prevents legacy prompt
  * coordinates from placing controls off-screen at 4:3, ultrawide or large UI scale.
  *
+ * Only fits controls with no parent control (ctrlParent isNull) - a control created as the child of
+ * an RscControlsGroup (e.g. MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf's
+ * per-tab groups) is positioned relative to that group's own local origin, not this display's absolute
+ * safe-zone coordinates; allControls _display still returns those nested children alongside every
+ * top-level control, and treating a group child's small local coordinates as if they were absolute
+ * corrupts the computed bounding box and shifts/clips that content. The group control itself (which has
+ * no parent) is still fitted normally, and its children move/scale correctly along with it since their
+ * positions are relative. No existing Economy prompt creates any control group, so this exclusion is
+ * purely additive for them.
+ *
  * Arguments: 0: Economy prompt display <DISPLAY>.
  * Return Value: BOOL - true when fitting was scheduled, false for an invalid display.
  *
  * Example: [_display] call Waldo_fnc_EcoCore_fitPromptDisplay;
- * Current caller: Economy prompt construction after controls have been created.
+ * Current caller: Economy prompt construction after controls have been created;
+ * MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf.
  */
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display) exitWith {false};
@@ -33,7 +44,18 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
     private _chrome = _display getVariable ["WaldoEcoCore_PromptChromeControls", []];
     private _controls = (allControls _display) select {
         private _p = ctrlPosition _x;
-        !(_x in _baseline) && {!(_x in _chrome)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
+        // allControls _display recurses into every RscControlsGroup's own children too, not just this
+        // display's direct top-level controls. A group child's own ctrlPosition is expressed relative
+        // to its parent group's local origin (small numbers near [0,0]), not this display's absolute
+        // safe-zone coordinates - if one of those slipped into this pass, its tiny local X/Y would
+        // corrupt the computed min/max bounding box against every genuinely absolute-positioned
+        // control, and it would then be moved to a wrong, shifted absolute position built from that
+        // corrupted box (confirmed root cause of the Vehicle Customisation Editor's tab content
+        // rendering shifted/clipped after this pass ran). ctrlParent only ever returns a real control
+        // for an actual group child (controlNull for every ordinary top-level control), so this is a
+        // reliable, purely additive exclusion - no existing Economy prompt creates any control group at
+        // all, so this can only ever change behavior for a caller that does.
+        !(_x in _baseline) && {!(_x in _chrome)} && {isNull (ctrlParent _x)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
     };
     if (_controls isEqualTo []) exitWith {};
     private _minX = 1e6;
