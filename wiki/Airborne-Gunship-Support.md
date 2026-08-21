@@ -132,8 +132,8 @@ Every gunship gets three markers, visible only to players on the exact same side
 
 - **Aircraft marker** - the aircraft's own original vanilla `"b_plane"` icon, side-coloured, showing
   `"<callsign> - <status>"`.
-- **Orbit centre marker** - a plain, minimally-invasive `"mil_circle"` dot at the orbit position, not
-  an attention-grabbing icon.
+- **Orbit centre marker** - the vanilla `"mil_warning"` exclamation-triangle icon type (the same one
+  already used for radio jammer markers).
 - **Orbit radius marker** - a border-only `"ELLIPSE"` centred on the orbit position, sized to the
   gunship's actual current loiter radius, so the orbit's real footprint is visible on the map, not
   just its centre point. It resizes/repositions live if the radius or orbit centre changes (see

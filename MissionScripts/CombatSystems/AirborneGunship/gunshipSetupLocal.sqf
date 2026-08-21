@@ -9,11 +9,10 @@
  * available while the aircraft is still in transit to its orbit (matching what the server actually
  * permits), while per-turret weapon control only appears once the aircraft is on station or already
  * controlled. It also (re)creates each gunship's aircraft marker (its original vanilla plane icon)
- * and, at the orbit centre, a plain minimal dot marker plus a companion border-only ellipse sized to
- * the aircraft's current loiter radius - deliberately minimally invasive visually, not an attention
- * icon. All three markers are visible only to players on the exact same side as the aircraft (not
- * merely a "friendly" side). It is called by initPlayerLocal, public-state publication and the audit
- * refresh control.
+ * and, at the orbit centre, the vanilla "mil_warning" exclamation icon plus a companion border-only
+ * ellipse sized to the aircraft's current loiter radius. All three markers are visible only to players
+ * on the exact same side as the aircraft (not merely a "friendly" side). It is called by
+ * initPlayerLocal, public-state publication and the audit refresh control.
  *
  * Locality and authority:
  * Runs only on an interface client and mutates local markers/actions. It consumes the server's
@@ -105,7 +104,10 @@ private _newVanillaActions = [];
             // Orbit is operational information, not an invisible implementation marker. Apply
             // every presentation field during reconciliation so clients upgrading from the former
             // Empty/alpha-zero version are repaired without requiring a fresh mission.
-            _orbitMarkerName setMarkerTypeLocal "mil_circle";
+            // "mil_warning" is the same vanilla exclamation-in-a-triangle marker type already used
+            // by MissionScripts\MissionInit\Jamming\jammerCreate.sqf, confirming it is a real,
+            // loaded CfgMarkers class rather than a guess.
+            _orbitMarkerName setMarkerTypeLocal "mil_warning";
             _orbitMarkerName setMarkerColorLocal _markerColour;
             _orbitMarkerName setMarkerTextLocal format ["%1 Orbit", _callsign];
             _orbitMarkerName setMarkerAlphaLocal 1;

@@ -18,21 +18,29 @@
  * not the display's absolute safe-zone coordinates).
  *
  * A previous version of this dialog toggled ~10-15 individual field controls per tab directly on the
- * display via a flat forEach/ctrlShow loop, laid out through the shared, Economy-tuned
- * Waldo_fnc_EcoCore_fitPromptDisplay auto-scale/recolor pass (deferred to run once after every
- * control existed, to close a snapshot-race that pass had with this dialog's much larger control
- * count than any Economy prompt). Two rounds of fixes aimed at that mechanism (the deferred-fit race
- * fix, then a deferred tab-highlight repaint to survive the pass's own unconditional button
- * recoloring) still did not resolve live in-engine testing: clicking a tab button changed its
- * highlight but never switched the visible content. Rather than continue debugging that mechanism
- * blind (this environment cannot attach a debugger or capture RPT), this dialog now uses the
- * container-group mechanism above and no longer calls Waldo_fnc_EcoCore_fitPromptDisplay at all - the
- * `_deferFit=true` argument below only ever suppresses that shared display's own internal auto-fit
- * call; this file simply never invokes it afterward either. This trades away that pass's automatic
- * ultrawide/4:3/UI-scale safe-zone adaptation for this one dialog; the fixed layout below is sized
- * conservatively instead, mirroring the same fixed-coordinate, no-fit-pass style
- * MissionScripts/CombatSystems/AirborneGunship/gunshipPromptOrbitConfig.sqf already uses successfully
- * for its own (smaller) dialog.
+ * display via a flat forEach/ctrlShow loop. Two rounds of fixes aimed at that mechanism (a deferred-fit
+ * race fix, then a deferred tab-highlight repaint) still did not resolve live in-engine testing:
+ * clicking a tab button changed its highlight but never switched the visible content. This dialog now
+ * groups each tab's controls under one RscControlsGroupNoScrollbars container instead - a materially
+ * different mechanism from the flat per-control list that was the actual, still-unproven suspect.
+ *
+ * This dialog still calls Waldo_fnc_EcoCore_fitPromptDisplay, exactly like every earlier working
+ * version - a first attempt at this rework dropped that call entirely (reasoning that the group
+ * containers made it unnecessary), which turned out to be wrong: Waldo_fnc_EcoCore_createZeusPromptDisplay
+ * unconditionally creates its own background/header chrome at a small placeholder box that only
+ * Waldo_fnc_EcoCore_fitPromptDisplay ever moves into its real, correct position - skipping that call
+ * left the chrome stuck at its placeholder, visibly colliding with this dialog's own content, and also
+ * lost the button font auto-shrink that keeps the tab labels ("Appearance", "Component") from being
+ * clipped. Waldo_fnc_EcoCore_fitPromptDisplay walks allControls _disp, which returns only *direct*
+ * children of the display - the four tab-content groups qualify (each a direct child, all four at the
+ * identical [0.10, 0.16, 0.46, 0.62] rect) but the field controls nested inside them do not, so the fit
+ * pass treats each group as one atomic box alongside this dialog's other direct-child controls (chrome,
+ * tab buttons, Pending Changes panel), the same way it already fit the equivalent direct-child controls
+ * in every earlier working version of this dialog. Since all four groups share one identical rect they
+ * contribute one consistent bounding box, and the resulting scale for a box this shape is expected to
+ * be at or above 1:1 (the pass only ever shrinks when content doesn't fit the safe card, which this
+ * box is very unlikely to trigger) - safely at/above 1:1 means each group's nested children (unaffected
+ * by the group's own resize, per Arma's normal group-child semantics) stay inside rather than clipping.
  *
  * Reuses Waldo_fnc_EcoCore_createZeusPromptDisplay verbatim for the modal child display's shared
  * chrome/background (it is already generic, no Economy-specific state) and copies control-creation
@@ -72,9 +80,12 @@
 params [["_vehicle", objNull, [objNull]]];
 if (!hasInterface || {isNull _vehicle}) exitWith {displayNull};
 
-// _deferFit=true only suppresses Waldo_fnc_EcoCore_createZeusPromptDisplay's own internal auto-fit
-// call for its shared chrome/background - this dialog never calls Waldo_fnc_EcoCore_fitPromptDisplay
-// itself at all (see this file's header for why).
+// deferFit=true: this dialog creates far more controls, interleaved with much heavier per-control
+// work (catalog scans, a full heuristic component scan), than any Economy prompt Waldo_fnc_EcoCore_
+// fitPromptDisplay was tuned against - letting it auto-fit here raced this script's own control
+// creation and could snapshot/reposition only a partial control set. Fit explicitly, once, at the
+// very end of this file instead, after every control this dialog creates genuinely exists (see this
+// file's header for why the fit call itself is still required, not skipped).
 private _disp = ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
 if (isNull _disp) exitWith {displayNull};
 
@@ -994,5 +1005,28 @@ _copyOverlayPickBtn ctrlAddEventHandler ["ButtonClick", {
 
 [_disp, "turret"] call Waldo_fnc_VehCust_setTab;
 [_disp] call Waldo_fnc_VehCust_refreshPendingList;
+
+// Fit explicitly now that every control this dialog creates genuinely exists (deferFit=true was
+// passed to Waldo_fnc_EcoCore_createZeusPromptDisplay above specifically so this call is the first
+// time fitPromptDisplay's own control-count "stability" check ever runs for this dialog - see that
+// call's comment for the race this closes). This is also what moves the shared chrome's background
+// card/header out of their small placeholder box into their real, correct position - required, not
+// optional, see this file's header for the regression this closes.
+[_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
+
+// Waldo_fnc_EcoCore_fitPromptDisplay still runs its own repositioning pass in a separately spawned
+// thread (bounded ~0.03-0.36s after the call above) that uniformly recolors every button-type control
+// (including these 4 tab buttons) with one flat theme color, silently erasing the active-tab highlight
+// this file just painted via setTab - this part is unrelated to the positional race the explicit call
+// above closes, and still needs its own re-assert. Re-paint whichever tab is actually current once
+// that pass has had time to finish, so the highlight matches the visible content again. This is local
+// to this dialog only - Waldo_fnc_EcoCore_fitPromptDisplay itself and every Economy prompt built on it
+// are untouched.
+[_disp] spawn {
+    params ["_disp"];
+    uiSleep 0.6;
+    if (isNull _disp) exitWith {};
+    [_disp, _disp getVariable ["WaldoVehCust_CurrentTab", "turret"]] call Waldo_fnc_VehCust_setTab;
+};
 
 _disp
