@@ -81,6 +81,16 @@ private _exerciseProcedure = {
             [_display, 0] call (_display getVariable ["Waldo_MG_MS_Reveal", {}]);
             waitUntil {uiSleep 0.01; !(_display getVariable ["Waldo_MG_MS_Revealing", false])};
             private _mines = _display getVariable ["Waldo_MG_MS_Mines", []];
+            private _mineIndex = _mines param [0, -1];
+            if (_mineIndex >= 0) then {
+                [_display, _mineIndex, 1] call (_display getVariable ["Waldo_MG_MS_HandlePointer", {false}]);
+                private _rightClickSafe = _mineIndex in (_display getVariable ["Waldo_MG_MS_Flags", []])
+                    && {!(_mineIndex in (_display getVariable ["Waldo_MG_MS_Revealed", []]))}
+                    && {!(_display getVariable ["Waldo_MG_UI_Done", false])};
+                if (!_rightClickSafe) exitWith {
+                    [_display, false, "[X] QA RIGHT CLICK REVEALED A TRIGGER"] call (_display getVariable ["Waldo_MG_UI_Finish", {}]);
+                };
+            };
             private _cellCount = count (_display getVariable ["Waldo_MG_MS_Buttons", []]);
             for "_index" from 0 to (_cellCount - 1) do {
                 if !(_index in _mines) then {

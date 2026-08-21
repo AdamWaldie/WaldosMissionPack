@@ -1,6 +1,20 @@
 /*
- * Portable ordnance diagnostic-tablet matrix procedure.
- * Config: [size(4..8), mineCount, timeLimit, title]
+ * Author: WaldoTheWarfighter
+ * Purpose: Opens the local Minesweeper-style explosive-circuit challenge and routes complete
+ * pointer clicks so left click probes while right click only places or removes a marker.
+ * Locality/Authority: Interface-client only. The challenge resolver reports the final result to
+ * the calling interaction; this file does not perform authoritative world-state changes.
+ * Repeat/JIP Behaviour: A fresh display and private board state are created for every attempt.
+ * No state is persisted or replayed for JIP clients.
+ *
+ * Arguments:
+ * 0: Challenge config <ARRAY>, default []; [size 4..8, mine count, time limit, title].
+ * 1: Result resolver <CODE>, default {}; called once by the shared challenge UI.
+ *
+ * Return Value: Nothing <NIL>.
+ * Current Callers: Waldo_fnc_MiniGameChallenge and the interaction-equipment QA mission.
+ * Example: [[5, 5, 90, "TRIGGER ANALYSER"], {systemChat str _this}] call
+ *          Waldo_fnc_MiniGameMinesweeper;
  */
 disableSerialization;
 params [["_config", []], ["_resolve", {}]];
@@ -27,6 +41,19 @@ _display setVariable ["Waldo_MG_MS_Revealed", []];
 _display setVariable ["Waldo_MG_MS_Flags", []];
 _display setVariable ["Waldo_MG_MS_Generated", false];
 _display setVariable ["Waldo_MG_MS_Revealing", false];
+_display setVariable ["Waldo_MG_MS_HandlePointer", {
+    params ["_display", "_index", "_mouseButton"];
+    if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false] || {_display getVariable ["Waldo_MG_MS_Revealing", false]}}) exitWith {true};
+    if (_mouseButton == 0) exitWith {
+        [_display, _index] call (_display getVariable ["Waldo_MG_MS_Reveal", {}]);
+        true
+    };
+    if (_mouseButton == 1) exitWith {
+        [_display, _index] call (_display getVariable ["Waldo_MG_MS_ToggleFlag", {}]);
+        true
+    };
+    false
+}];
 
 private _tablet = [_display, "RscText", [1.5, 3, 37, 20.5], "portable ordnance diagnostic tablet"] call Waldo_fnc_MiniGameEquipmentCreateControl;
 _tablet ctrlSetBackgroundColor [0.10, 0.12, 0.115, 1];
@@ -64,14 +91,11 @@ for "_row" from 0 to (_size - 1) do {
         _button ctrlSetTextColor [0.84, 0.88, 0.82, 1];
         _button ctrlSetTooltip format ["Circuit node %1-%2. LMB probe, RMB mark.", _row + 1, _column + 1];
         _button setVariable ["Waldo_MG_MS_Index", _index];
-        _button ctrlAddEventHandler ["MouseButtonDown", {
-            params ["_control", "_button"];
+        _button ctrlAddEventHandler ["MouseButtonClick", {
+            params ["_control", "_mouseButton"];
             private _display = ctrlParent _control;
-            if (!(_display getVariable ["Waldo_IMG_Started", false]) || {_display getVariable ["Waldo_MG_UI_Done", false] || {_display getVariable ["Waldo_MG_MS_Revealing", false]}}) exitWith {true};
             private _index = _control getVariable ["Waldo_MG_MS_Index", -1];
-            if (_button == 0) exitWith {[_display, _index] call (_display getVariable ["Waldo_MG_MS_Reveal", {}]); true};
-            if (_button == 1) exitWith {[_display, _index] call (_display getVariable ["Waldo_MG_MS_ToggleFlag", {}]); true};
-            false
+            [_display, _index, _mouseButton] call (_display getVariable ["Waldo_MG_MS_HandlePointer", {false}])
         }];
         _buttons pushBack _button;
     };

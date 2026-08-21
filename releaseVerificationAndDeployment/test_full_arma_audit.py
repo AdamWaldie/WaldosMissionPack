@@ -2281,6 +2281,32 @@ class FullAuditTests(unittest.TestCase):
             source = (ROOT / "MissionScripts" / "InteractionsMinigames" / relative).read_text(encoding="utf-8")
             self.assertIn("MiniGameEquipmentFitStructuredText", source, relative)
 
+    def test_minesweeper_right_click_routes_only_to_marker_toggle(self):
+        challenge = (
+            ROOT
+            / "MissionScripts"
+            / "InteractionsMinigames"
+            / "Challenges"
+            / "challengeMinesweeper.sqf"
+        ).read_text(encoding="utf-8")
+        qa_client = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "interactionEquipmentQA"
+            / "InteractionEquipmentQA.VR"
+            / "initPlayerLocal.sqf"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('ctrlAddEventHandler ["MouseButtonClick"', challenge)
+        left_route = challenge.split('if (_mouseButton == 0) exitWith {', 1)[1].split("};", 1)[0]
+        right_route = challenge.split('if (_mouseButton == 1) exitWith {', 1)[1].split("};", 1)[0]
+        self.assertIn('getVariable ["Waldo_MG_MS_Reveal", {}]', left_route)
+        self.assertNotIn("Waldo_MG_MS_ToggleFlag", left_route)
+        self.assertIn('getVariable ["Waldo_MG_MS_ToggleFlag", {}]', right_route)
+        self.assertNotIn("Waldo_MG_MS_Reveal", right_route)
+        self.assertIn('[_display, _mineIndex, 1]', qa_client)
+        self.assertIn("QA RIGHT CLICK REVEALED A TRIGGER", qa_client)
+
     def test_zeus_economy_export_can_emit_paste_ready_world_setup(self):
         exporter = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "buildMissionSetupScript.sqf").read_text(encoding="utf-8")
         prompt = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "promptUnifiedSaveSystem.sqf").read_text(encoding="utf-8")
