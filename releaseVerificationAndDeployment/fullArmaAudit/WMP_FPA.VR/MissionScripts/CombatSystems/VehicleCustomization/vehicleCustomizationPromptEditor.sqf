@@ -743,9 +743,12 @@ _componentTurretPickCombo lbSetCurSel 0;
     _x ctrlAddEventHandler ["ButtonClick", {
         params ["_ctrl"];
         private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
-        // TEMPORARY DIAGNOSTIC (Round 8 safety net) - remove once tab switching is confirmed working
+        // TEMPORARY DIAGNOSTIC (Round 9 safety net) - remove once tab switching is confirmed working
         // in-engine. Confirms whether the click reaches this handler at all and what tab it resolves.
-        diag_log format ["[WMP VEHCUST DIAG] tab ButtonClick fired ctrl=%1 dispFound=%2 tabName=%3", _ctrl, !isNull _disp, _ctrl getVariable ["WaldoVehCust_TabName", "<none>"]];
+        // Also echoed to systemChat so this is visible on-screen without needing to open the RPT file.
+        private _diagTabName = _ctrl getVariable ["WaldoVehCust_TabName", "<none>"];
+        diag_log format ["[WMP VEHCUST DIAG] tab ButtonClick fired ctrl=%1 dispFound=%2 tabName=%3", _ctrl, !isNull _disp, _diagTabName];
+        systemChat format ["[VEHCUST DIAG] ButtonClick fired, dispFound=%1, tabName=%2", !isNull _disp, _diagTabName];
         if (isNull _disp) exitWith {};
         [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
     }];

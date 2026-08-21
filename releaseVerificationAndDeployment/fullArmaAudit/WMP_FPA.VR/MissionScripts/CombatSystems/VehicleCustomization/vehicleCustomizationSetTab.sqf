@@ -44,13 +44,18 @@ private _tabGroups = [
     _x params ["_tabName", "_varName"];
     private _group = _disp getVariable [_varName, controlNull];
     private _show = _safeTab isEqualTo _tabName;
-    // TEMPORARY DIAGNOSTIC (Round 8 safety net) - remove once tab switching is confirmed working
-    // in-engine. Confirms the group control was actually found and what ctrlShow value was applied.
-    diag_log format ["[WMP VEHCUST DIAG] setTab tab=%1 group=%2 groupFound=%3 show=%4", _tabName, _varName, !isNull _group, _show];
     if (!isNull _group) then {
         _group ctrlShow _show;
         _group ctrlCommit 0;
     };
+    // TEMPORARY DIAGNOSTIC (Round 9 safety net) - remove once tab switching is confirmed working
+    // in-engine. Confirms the group control was found, what ctrlShow value was requested, and - via
+    // ctrlShown, read back AFTER the call above - what the engine now actually reports as this
+    // control's real visibility state, so a silent no-op is distinguishable from a correct call.
+    // Also echoed to systemChat so this is visible on-screen without opening the RPT file.
+    private _actualShown = if (isNull _group) then {"<no control>"} else {str (ctrlShown _group)};
+    diag_log format ["[WMP VEHCUST DIAG] setTab tab=%1 group=%2 groupFound=%3 requestedShow=%4 actualShown=%5", _tabName, _varName, !isNull _group, _show, _actualShown];
+    systemChat format ["[VEHCUST DIAG] %1: found=%2 requested=%3 actual=%4", _tabName, !isNull _group, _show, _actualShown];
 } forEach _tabGroups;
 
 private _tabButtons = [
