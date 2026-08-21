@@ -38,6 +38,12 @@ missionNamespace setVariable ["Waldo_SharedFeatureConfigReady", true];
 if (isServer) then {
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", true];
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];
+    // A hosted server is both the authoritative server and an interface client. It does not pass
+    // through FeatureRuntimeReceiveState during initial startup, so apply the authoritative shared
+    // theme locally here. Dedicated servers skip this presentation-only work.
+    if (hasInterface) then {
+        [missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"], false] call Waldo_fnc_UiThemeApplyLocal;
+    };
 } else {
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotReceived", false];
     missionNamespace setVariable ["Waldo_FeatureRuntimeSnapshotFailed", false];

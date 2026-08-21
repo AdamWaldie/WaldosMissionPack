@@ -2,13 +2,13 @@
 
 > **Use this page when:** you need JIP-safe world-space labels or icons attached to objects or positions.
 
-_Associated Files: `MissionScripts\MissionFlowAndUi\create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf`, `Waldo_fnc_Create3DMarker`, `Waldo_fnc_Remove3DMarker`_
+_Associated Files: `MissionScripts\MissionFlowAndUi\create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf`, `3DMarkerApplyDeltaLocal.sqf`, `3DMarkerRequestStateServer.sqf`, `3DMarkerReceiveStateLocal.sqf`, `zenCreate3DMarker.sqf`, `zenRemove3DMarker.sqf`, `Waldo_fnc_Create3DMarker`, `Waldo_fnc_Remove3DMarker`_
 
 
 WMP can place custom icon-and-text markers directly over objects or world
-positions. Markers are server-owned, broadcast to every client and immediately
-available to JIP players. All markers share one local `Draw3D` handler, avoiding
-one permanent loop per marker.
+positions. Markers are server-owned and immediately available to JIP players. Current clients
+receive one-row create/update/remove deltas; a joining client requests one complete revisioned
+snapshot. All markers share one local `Draw3D` handler, avoiding one permanent loop per marker.
 
 ## Fastest setup in Zeus
 
@@ -38,6 +38,15 @@ Smallest working call — a stable ID and an anchor, everything else takes its d
 The anchor can be an object or an ATL position. Calling the function again with
 the same ID updates the existing marker in place. Calls made on clients are forwarded to
 the server automatically.
+
+## Network and JIP behaviour
+
+The server keeps the authoritative registry and a monotonically increasing revision. It sends only
+the changed marker row—or the removed marker IDs—to clients already in the mission. A client that
+joins later requests one `[revision, registry]` snapshot after installing its renderer. If a client
+ever observes a revision gap, it requests the same snapshot again instead of applying uncertain
+state. Consequently, creating 35 markers transmits 35 individual rows to current clients rather
+than successively retransmitting registries containing 1, 2, 3 through 35 rows.
 
 Add an options HashMap as the third argument to override any default:
 
@@ -84,8 +93,35 @@ portable choices.
 
 ## Remove a marker
 
+### Zeus Enhanced
+
+Place **WMP Mission Tools > Remove Custom 3D Marker** near the marker. The closest active marker is
+preselected, and the dialog lists every live marker by label, stable ID and distance. Placing the
+module directly on a marker's anchor object sorts that object's markers first. Removal affects only
+the selected WMP world marker; it never deletes the anchor object, an Eden map marker or a Zeus map
+marker.
+
+The server rechecks the marker ID after confirmation. If another curator or script already removed
+it, Zeus receives a clear warning instead of affecting another nearby marker.
+
+### Script
+
+Remove a marker by its stable ID:
+
 ```sqf
 ["generator_alpha"] call Waldo_fnc_Remove3DMarker;
+```
+
+Remove every WMP 3D marker attached to an object:
+
+```sqf
+[generator_1] call Waldo_fnc_Remove3DMarker;
+```
+
+Or remove the nearest WMP 3D marker within 50 metres of a position:
+
+```sqf
+[[1200, 800, 0], 50] call Waldo_fnc_Remove3DMarker;
 ```
 
 Use stable, mission-specific IDs. Always pair colour with meaningful text and

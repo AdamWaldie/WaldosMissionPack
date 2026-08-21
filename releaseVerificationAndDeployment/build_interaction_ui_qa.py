@@ -74,7 +74,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--destination", type=Path, required=True)
     parser.add_argument(
-        "--mode", choices=("interactive", "active", "automated"), default="interactive"
+        "--mode", choices=("interactive", "active", "automated", "dialogue"), default="interactive"
     )
     parser.add_argument(
         "--challenge",

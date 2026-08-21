@@ -103,6 +103,7 @@ private _consumeFeatureReport = {
     ["medical", "obituary-api", "Waldo_fnc_ObituaryPronounce"],
     ["mission-flow", "safestart-diagnostics-api", "Waldo_fnc_SafeStartGetDiagnostics"],
     ["mission-flow", "endex-diagnostics-api", "Waldo_fnc_ENDEXGetDiagnostics"],
+    ["mission-flow", "dialogue-diagnostics-api", "Waldo_fnc_DialogueGetDiagnostics"],
     ["interactions", "equipment-diagnostics-api", "Waldo_fnc_MiniGameInteractionGetDiagnostics"],
     ["economy", "economy-diagnostics-api", "Waldo_fnc_EcoCore_getDiagnostics"],
     ["headless", "headless-diagnostics-api", "Waldo_fnc_HeadlessGetDiagnostics"],
@@ -337,6 +338,7 @@ if (!isNil "Waldo_fnc_AIGetDiagnostics") then {
     [call Waldo_fnc_AIGetDiagnostics] call _consumeFeatureReport;
 };
 [call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_DialogueGetDiagnostics] call _consumeFeatureReport;
 
 private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];
 private _partyLoaded = missionNamespace getVariable ["Waldo_MG_SystemInitialized", false];

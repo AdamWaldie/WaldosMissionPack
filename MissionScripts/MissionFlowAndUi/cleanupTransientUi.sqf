@@ -29,6 +29,10 @@ uiNamespace setVariable ["Waldo_UiNotification_DisplayWaitQueue", []];
 // stale pre-death panel.
 uiNamespace setVariable ["Waldo_UI_ReservationRegistry", []];
 
+// Dialogue subtitle/choice controls are dynamically created on display 46 and own one key handler.
+[] call Waldo_fnc_ConversationHideChoicesLocal;
+[] call Waldo_fnc_DialogueHideLocal;
+
 private _mainDisplay = findDisplay 46;
 if (!isNull _mainDisplay) then {
     {

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 978,
+  "registeredFunctionCount": 1017,
   "runtimeFunctionCount": 385,
-  "functionCount": 1363,
+  "functionCount": 1402,
   "stations": [
     {
       "id": "control",
@@ -1221,6 +1221,24 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_Marker3DApplyDeltaLocal",
+      "file": "MissionScripts/MissionFlowAndUi/3DMarkerApplyDeltaLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_Marker3DRequestStateServer",
+      "file": "MissionScripts/MissionFlowAndUi/3DMarkerRequestStateServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_Marker3DReceiveStateLocal",
+      "file": "MissionScripts/MissionFlowAndUi/3DMarkerReceiveStateLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_Init3DMarkers",
       "file": "MissionScripts/MissionFlowAndUi/init3DMarkers.sqf",
       "station": "mission-flow",
@@ -1229,6 +1247,186 @@
     {
       "name": "Waldo_fnc_ZenCreate3DMarker",
       "file": "MissionScripts/MissionFlowAndUi/zenCreate3DMarker.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenRemove3DMarker",
+      "file": "MissionScripts/MissionFlowAndUi/zenRemove3DMarker.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueBootstrap",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueBootstrap.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SimpleDialogue",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/simpleDialogue.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SimpleDialogueClear",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/simpleDialogueClear.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueLoadPresetPack",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueLoadPresetPack.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueEstimateDuration",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueEstimateDuration.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueResolveTargets",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueResolveTargets.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialoguePublishState",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialoguePublishState.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueRequestStateServer",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueRequestStateServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueReceiveStateLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueReceiveStateLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueApplyActionLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueApplyActionLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueRemoveActionLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueRemoveActionLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueRequestStartServer",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueRequestStartServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueRunSimpleServer",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueRunSimpleServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueShowLineLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueShowLineLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueHideLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueHideLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueAnimateLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueAnimateLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_DialogueGetDiagnostics",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Simple/dialogueGetDiagnostics.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationCreate",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationCreate.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationRegister",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationRegister.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAssign",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationAssign.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationStart",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationStart.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationCancel",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationCancel.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationClear",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationClear.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationValidateDefinition",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationValidateDefinition.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationRunServer",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationRunServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationShowChoicesLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationShowChoicesLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationHideChoicesLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationHideChoicesLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationPlaySoundLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationPlaySoundLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationChooseServer",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationChooseServer.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -1979,6 +2177,42 @@
     {
       "name": "Waldo_fnc_ZenNotifyServer",
       "file": "MissionScripts/ZenModules/zenNotifyServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenDialogueSimple",
+      "file": "MissionScripts/ZenModules/Dialogue/zenDialogueSimple.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenDialogueSpecific",
+      "file": "MissionScripts/ZenModules/Dialogue/zenDialogueSpecific.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenDialogueClear",
+      "file": "MissionScripts/ZenModules/Dialogue/zenDialogueClear.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConversationAssign",
+      "file": "MissionScripts/ZenModules/Dialogue/zenConversationAssign.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConversationControl",
+      "file": "MissionScripts/ZenModules/Dialogue/zenConversationControl.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenDialogueServer",
+      "file": "MissionScripts/ZenModules/Dialogue/zenDialogueServer.sqf",
       "station": "zen",
       "activation": "manual"
     },

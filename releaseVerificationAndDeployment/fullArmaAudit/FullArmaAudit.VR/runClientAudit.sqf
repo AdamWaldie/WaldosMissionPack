@@ -61,7 +61,7 @@ if (_suite in ["all", "core"]) then {
     ["core/zen/all-module-families", {
         private _coreCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
         private _economyCount = missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0];
-        ["core/zen/all-module-families", _coreCount == 15 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
+        ["core/zen/all-module-families", _coreCount == 50 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
     ["core/zen/icons-present", {
@@ -81,6 +81,98 @@ if (_suite in ["all", "core"]) then {
         ];
         private _missing = _icons select {!(fileExists _x)};
         ["core/zen/icons-present", _missing isEqualTo [], _missing] call Waldo_QA_fnc_assert;
+    }] call Waldo_QA_fnc_case;
+
+    ["core/dialogue/live-presentation", {
+        private _speaker = (missionNamespace getVariable ["Waldo_QA_DialogueUnits", []]) param [4, objNull];
+        private _originalPosition = getPosATL player;
+        private _lipObserved = false;
+        private _lookAtObserved = false;
+        private _choicesShown = false;
+        private _compact = false;
+        private _layoutAdaptive = false;
+        private _cleaned = false;
+        private _failOpenCleanup = false;
+        private _session = "";
+        if (!isNull _speaker) then {
+            player setPosATL ((getPosATL _speaker) vectorAdd [0, -2, 0]);
+            player setVelocity [0, 0, 0];
+            uiSleep 0.75;
+            [_speaker, player] remoteExecCall ["Waldo_fnc_DialogueRequestStartServer", 2];
+            private _lipDeadline = diag_tickTime + 8;
+            waitUntil {
+                uiSleep 0.05;
+                _lipObserved = _speaker getVariable ["Waldo_Dialogue_RandomLipActiveLocal", false];
+                _lipObserved || {diag_tickTime >= _lipDeadline}
+            };
+            private _lookDeadline = diag_tickTime + 3;
+            waitUntil {
+                uiSleep 0.05;
+                _lookAtObserved = (missionNamespace getVariable ["Waldo_Dialogue_LastLookRequestLocal", []])
+                    isEqualTo [netId _speaker, netId player, true];
+                _lookAtObserved || {diag_tickTime >= _lookDeadline}
+            };
+            private _choiceDeadline = diag_tickTime + 12;
+            waitUntil {
+                uiSleep 0.05;
+                _session = uiNamespace getVariable ["Waldo_Conversation_ChoiceSession", ""];
+                _choicesShown = _session != ""
+                    && {count (uiNamespace getVariable ["Waldo_Conversation_ChoiceButtons", []]) == 3}
+                    && {!isNull (uiNamespace getVariable ["Waldo_Conversation_ChoiceDisplay", displayNull])}
+                    && {(uiNamespace getVariable ["Waldo_Conversation_ChoiceKeyHandler", -1]) < 0};
+                _choicesShown || {diag_tickTime >= _choiceDeadline}
+            };
+            if (_choicesShown) then {
+                private _controls = uiNamespace getVariable ["Waldo_Conversation_ChoiceControls", []];
+                private _buttons = uiNamespace getVariable ["Waldo_Conversation_ChoiceButtons", []];
+                private _panelWidth = if (count _controls > 0) then {(ctrlPosition (_controls select 0)) select 2} else {safeZoneW};
+                _compact = _panelWidth <= (safeZoneW * 0.34 + pixelW)
+                    && {_panelWidth < safeZoneW * 0.48}
+                    && {_buttons findIf {((ctrlPosition _x) select 2) > _panelWidth} < 0};
+            };
+            [_speaker, player, _session, "QA_AUDIT_COMPLETE"] remoteExecCall ["Waldo_fnc_ConversationCancel", 2];
+            private _cleanupDeadline = diag_tickTime + 5;
+            waitUntil {
+                uiSleep 0.05;
+                _cleaned = (uiNamespace getVariable ["Waldo_Conversation_ChoiceSession", ""]) == ""
+                    && {!(_speaker getVariable ["Waldo_Dialogue_RandomLipActiveLocal", false])};
+                _cleaned || {diag_tickTime >= _cleanupDeadline}
+            };
+            [_speaker, player] remoteExecCall ["Waldo_fnc_DialogueRequestStartServer", 2];
+            private _secondPanelDeadline = diag_tickTime + 12;
+            waitUntil {
+                uiSleep 0.05;
+                (uiNamespace getVariable ["Waldo_Conversation_ChoiceSession", ""]) != ""
+                    || {diag_tickTime >= _secondPanelDeadline}
+            };
+            player setPosATL ((getPosATL _speaker) vectorAdd [0, -10, 0]);
+            private _failOpenDeadline = diag_tickTime + 3;
+            waitUntil {
+                uiSleep 0.05;
+                _failOpenCleanup = (uiNamespace getVariable ["Waldo_Conversation_ChoiceSession", ""]) == ""
+                    && {isNull (uiNamespace getVariable ["Waldo_Conversation_ChoiceDisplay", displayNull])};
+                _failOpenCleanup || {diag_tickTime >= _failOpenDeadline}
+            };
+            player setPosATL _originalPosition;
+            private _layoutChoices = [];
+            for "_index" from 1 to 8 do {
+                _layoutChoices pushBack [format ["QA_LAYOUT_%1", _index], format ["Option %1 is deliberately long enough to wrap cleanly while preserving every word and making the response list scroll when the available screen height is exhausted.", _index], true];
+            };
+            [_speaker, "QA_LAYOUT_LOCAL", _layoutChoices] call Waldo_fnc_ConversationShowChoicesLocal;
+            private _layoutControls = uiNamespace getVariable ["Waldo_Conversation_ChoiceControls", []];
+            private _layoutButtons = uiNamespace getVariable ["Waldo_Conversation_ChoiceButtons", []];
+            if (count _layoutControls >= 3 && {count _layoutButtons == 8}) then {
+                private _layoutFrame = _layoutControls select 0;
+                private _layoutGroup = _layoutControls select 2;
+                private _lastPosition = ctrlPosition (_layoutButtons select 7);
+                _layoutAdaptive = ((ctrlPosition _layoutFrame) select 2) <= (safeZoneW * 0.34 + pixelW)
+                    && {((ctrlPosition _layoutFrame) select 3) <= (safeZoneH * 0.42 + safeZoneH * 0.02)}
+                    && {_layoutButtons findIf {ctrlTextHeight _x > ((ctrlPosition _x) select 3) + pixelH} < 0}
+                    && {(_lastPosition select 1) + (_lastPosition select 3) > ((ctrlPosition _layoutGroup) select 3)};
+            };
+            ["QA_LAYOUT_LOCAL"] call Waldo_fnc_ConversationHideChoicesLocal;
+        };
+        ["core/dialogue/live-presentation", !isNull _speaker && {_lipObserved} && {_lookAtObserved} && {_choicesShown} && {_compact} && {_layoutAdaptive} && {_cleaned} && {_failOpenCleanup}, [!isNull _speaker, _lipObserved, _lookAtObserved, _choicesShown, _compact, _layoutAdaptive, _cleaned, _failOpenCleanup, missionNamespace getVariable ["Waldo_Dialogue_LastLookRequestLocal", []]]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 };
 

@@ -632,5 +632,80 @@
     "script_api": "Waldo_fnc_EcoCore_executeUnifiedPurge",
     "parity": "adapter",
     "notes": "Zeus adds explicit confirmation and section selection before the curator-authenticated server bridge calls the public selective purge path; full-module removal remains available."
+  },
+  {
+    "category": "core",
+    "module": "Dialogue - Apply Simple Archetype",
+    "handler": "Waldo_fnc_ZenDialogueSimple",
+    "via": "Waldo_fnc_ZenDialogueServer",
+    "script_api": "Waldo_fnc_SimpleDialogue",
+    "parity": "full",
+    "notes": "Zeus selects a registered archetype, one NPC or its group, and reusable or one-shot behaviour before the authenticated bridge calls the same beginner public API.",
+    "required_tokens": [
+      "Archetype",
+      "Apply to entire group",
+      "Remove after first completed use"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Dialogue - Assign Simple Lines",
+    "handler": "Waldo_fnc_ZenDialogueSpecific",
+    "via": "Waldo_fnc_ZenDialogueServer",
+    "script_api": "Waldo_fnc_SimpleDialogue",
+    "parity": "adapter",
+    "notes": "Zeus accepts ordered pipe-separated lines and routes the validated line array through the same Simple Dialogue API.",
+    "required_tokens": [
+      "Dialogue",
+      "separate each line with the | character",
+      "Apply to entire group"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Dialogue - Clear",
+    "handler": "Waldo_fnc_ZenDialogueClear",
+    "via": "Waldo_fnc_ZenDialogueServer",
+    "script_api": "Waldo_fnc_SimpleDialogueClear",
+    "parity": "adapter",
+    "notes": "The authenticated bridge clears both simple and advanced assignments so the selected object has no stale local interaction."
+  },
+  {
+    "category": "core",
+    "module": "Conversation - Assign Named",
+    "handler": "Waldo_fnc_ZenConversationAssign",
+    "via": "Waldo_fnc_ZenDialogueServer",
+    "script_api": "Waldo_fnc_ConversationAssign",
+    "parity": "full",
+    "notes": "Zeus selects only a server-registered public conversation ID and never receives its conditions or callback code.",
+    "required_tokens": [
+      "Conversation",
+      "Apply to entire group",
+      "Remove after completion"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Conversation - Start or Cancel",
+    "handler": "Waldo_fnc_ZenConversationControl",
+    "via": "Waldo_fnc_ZenDialogueServer",
+    "script_api": "Waldo_fnc_ConversationStart",
+    "parity": "adapter",
+    "notes": "The curator can start the assigned conversation as participant or request cancellation through the normal authoritative session controls."
+  },
+  {
+    "category": "core",
+    "module": "Remove Custom 3D Marker",
+    "handler": "Waldo_fnc_ZenRemove3DMarker",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_Remove3DMarker",
+    "parity": "adapter",
+    "notes": "Zeus receives a friendly live-marker list ordered by the selected object or module position, then the curator-authenticated server bridge removes the exact current registry ID without deleting its anchor.",
+    "required_tokens": [
+      "Marker to remove",
+      "closest marker is selected first",
+      "anchor object or fixed position remains untouched",
+      "REMOVE_3D_MARKER"
+    ]
   }
 ]

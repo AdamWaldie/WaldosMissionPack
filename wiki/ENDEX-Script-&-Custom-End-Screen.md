@@ -43,7 +43,11 @@ ENDEX and SafeStart track their handlers, damage state, and ACE weapon-safety ow
 
 ## After-Action Report
 
-Tracking starts through `[] call Waldo_fnc_AARTrack`. It uses mission event handlers rather than a per-frame loop. If tracking did not run, ENDEX still works and simply omits unavailable report sections.
+Tracking starts through `[] call Waldo_fnc_AARTrack`. It uses mission event handlers rather than a
+per-frame loop. KIA, vehicle-loss, player-loss, friendly-fire and fragger counters remain
+server-local during play; the server sends their complete snapshot in the same ordered call that
+activates each client's ENDEX display. This avoids broadcasting a counter update for every kill. If
+tracking did not run, ENDEX still works and simply omits unavailable report sections.
 
 The report first packs all useful sections into one ENDEX card. It creates additional pages only
 when the content genuinely exceeds that space, then balances the rows between pages so it does not

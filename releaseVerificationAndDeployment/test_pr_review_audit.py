@@ -155,7 +155,53 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_direct_launcher_keeps_unfocused_qa_simulation_running(self):
         launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
         self.assertIn('"-noPause"', launcher)
+        self.assertEqual(launcher.count('"-netlog"'), 2)
         self.assertIn("if ($serverReady) { break }", launcher)
+
+    def test_server_runtime_waits_for_the_mod_loaded_audit_client(self):
+        audit = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
+            / "FullArmaAudit.VR" / "runServerAudit.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertEqual(audit.count("private _deadline = diag_tickTime + 120;"), 2)
+        self.assertIn("getAssignedCuratorUnit _curator", audit)
+        self.assertIn("count allPlayers > 0", audit)
+        self.assertIn('["LANDED", "ANCHORED", "ABORTED"]', audit)
+        self.assertIn('in ["LANDED", "ANCHORED"]', audit)
+
+    def test_client_runtime_exercises_dialogue_lips_choices_and_cleanup(self):
+        audit = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
+            / "FullArmaAudit.VR" / "runClientAudit.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn("core/dialogue/live-presentation", audit)
+        self.assertIn("Waldo_Dialogue_RandomLipActiveLocal", audit)
+        self.assertIn("_lookAtObserved", audit)
+        self.assertIn("Waldo_Dialogue_LastLookRequestLocal", audit)
+        self.assertIn("Waldo_Conversation_ChoiceButtons", audit)
+        self.assertIn("QA_LAYOUT_LOCAL", audit)
+        self.assertIn("ctrlTextHeight", audit)
+        self.assertIn("safeZoneW * 0.34", audit)
+        self.assertIn('remoteExecCall ["Waldo_fnc_ConversationCancel", 2]', audit)
+        choices = (
+            ROOT / "MissionScripts" / "MissionFlowAndUi" / "Dialogue"
+            / "Advanced" / "conversationShowChoicesLocal.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('createDisplay "RscDisplayEmpty"', choices)
+        self.assertNotIn('displayAddEventHandler ["KeyDown"', choices)
+
+    def test_diagnostics_wait_for_complete_client_fixture_installation(self):
+        server_audit = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
+            / "FullArmaAudit.VR" / "runServerAudit.sqf"
+        ).read_text(encoding="utf-8")
+        client_range = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
+            / "WMP_FPA.VR" / "featureRangeClient.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('player setVariable ["Waldo_QA_FeatureRangeClientReady", true, true]', client_range)
+        self.assertIn('getVariable ["Waldo_QA_FeatureRangeClientReady", false]', server_audit)
+        self.assertIn("private _clientReadyDeadline = diag_tickTime + 60", server_audit)
 
     def test_audit_artifacts_are_not_part_of_release_contract(self):
         entries = set(BUILDER.release_entries())
@@ -737,6 +783,9 @@ class PrReviewAuditTests(unittest.TestCase):
         static_jump = (root / "addStaticJump.sqf").read_text(encoding="utf-8")
         halo_jump = (root / "addHaloJump.sqf").read_text(encoding="utf-8")
         jump_status = (root / "checkForJumpSettings.sqf").read_text(encoding="utf-8")
+        operate_door = (root / "paradropOperateDoor.sqf").read_text(encoding="utf-8")
+        class_pool = (scripts / "CombatSystems" / "resolveVehicleClassPool.sqf").read_text(encoding="utf-8")
+        functions = (scripts / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         backpack = (root / "paraBackpack.sqf").read_text(encoding="utf-8")
         restore_backpack = (root / "paradropRestoreBackpackLocal.sqf").read_text(encoding="utf-8")
         registration = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
@@ -749,6 +798,9 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn("flyInHeight [_altitude, true]", route)
         self.assertIn("limitSpeed _maxSpeed", route)
         self.assertIn("forceSpeed (_maxSpeed / 3.6)", route)
+        self.assertIn('if (_aircraft isKindOf "Helicopter") then {"FULL"} else {"LIMITED"}', route)
+        self.assertIn('_flightGroup setSpeedMode _routeSpeedMode', route)
+        self.assertIn('_waypoint setWaypointSpeed _routeSpeedMode', route)
         self.assertIn("addWaypoint [AGLToASL _position, -1]", route)
         self.assertIn('[0, 60, 0, 0]', zen)
         self.assertIn('[0.5, 10, 2, 1]', zen)
@@ -774,7 +826,20 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('createGroup [_side, true]', create)
         self.assertIn('_pilot moveInDriver _aircraft', create)
         self.assertIn('createVehicle [_class, _spawn, [], 0, "FLY"]', create)
+        self.assertNotIn('_aircraft enableSimulationGlobal false', create)
         self.assertIn('_aircraft setPosATL _spawn', create)
+        self.assertIn('if (_aircraft isKindOf "Helicopter") then', create)
+        self.assertIn('sleep 4;', create)
+        self.assertIn('[_aircraft, _route, false] call _applyCruiseOrders;', create)
+        self.assertIn('if (_injectVelocity) then', create)
+        self.assertIn('Waldo_HelicopterDeceleration_Exclude', create + quick + remove)
+        self.assertIn('Waldo_Paradrop_HelicopterDecelerationExcludeBaseline', create + quick + remove)
+        self.assertIn('call Waldo_fnc_ParadropOperateDoor', create + quick)
+        self.assertIn('animateDoor [_x, _phase]', operate_door)
+        self.assertIn('class ParadropOperateDoor', functions)
+        self.assertIn('class ResolveVehicleClassPool', functions)
+        self.assertIn('["PARADROP_AIRCRAFT", _testAircraft] call Waldo_fnc_ResolveVehicleClassPool', zen)
+        self.assertIn('configClasses (configFile >> "CfgVehicles")', class_pool)
         self.assertIn('["_altitude", 300, [0]]', route)
         self.assertIn('Waldo_Paradrop_DefaultStaticRouteAltitude', create)
         self.assertIn('Waldo_Paradrop_DefaultStaticRouteAltitude', quick)
@@ -795,7 +860,8 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('[_id, "POLE", []', zen)
         self.assertNotIn('"Boarding method"', zen)
         self.assertIn('"FlagPole_F"', zen)
-        self.assertIn('remoteExec ["Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _actionJipKey]', create)
+        self.assertIn('"Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _aircraft', create)
+        self.assertNotIn("_actionJipKey", create)
         self.assertIn("objectFromNetId", configure_networked)
         self.assertIn("private _deadline = diag_tickTime + 15", configure_networked)
         self.assertIn("call Waldo_fnc_ParadropConfigureAircraftLocal", configure_networked)
@@ -868,7 +934,13 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('"Invincible drop aircraft"', paradrop_zen)
         self.assertIn('addEventHandler ["Local"', paradrop_invincibility)
         self.assertIn('_aircraft allowDamage !_invincible', paradrop_invincibility)
-        self.assertIn('Waldo_Paradrop_DamageJipKey', create + paradrop_quick + remove)
+        paradrop_networked = (scripts / "Paradrop" / "paradropConfigureAircraftNetworkedLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('0, _aircraft', create)
+        self.assertIn('0, _aircraft', paradrop_quick)
+        self.assertIn('[] remoteExecCall ["", _quickAircraft]', remove)
+        self.assertIn('[] remoteExecCall ["", _aircraft]', remove)
+        self.assertIn('Waldo_fnc_ParadropSetAircraftInvincibilityLocal', paradrop_networked)
+        self.assertNotIn('Waldo_Paradrop_DamageJipKey', create + paradrop_quick + remove)
 
         recovery = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRegisterWorkshop.sqf").read_text(encoding="utf-8")
         restore = (scripts / "Logistics" / "VehicleRecovery" / "recoveryRestoreServer.sqf").read_text(encoding="utf-8")
@@ -1074,15 +1146,18 @@ class PrReviewAuditTests(unittest.TestCase):
         create = (ao_dir / "dynamicAOCreate.sqf").read_text(encoding="utf-8")
         zen = (ao_dir / "dynamicAOZen.sqf").read_text(encoding="utf-8")
         all_ao = "\n".join(path.read_text(encoding="utf-8") for path in ao_dir.glob("*.sqf"))
+        faction_catalog = (ROOT / "MissionScripts" / "CombatSystems" / "resolveFactionCatalog.sqf").read_text(encoding="utf-8")
         modules = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
         for function in (
             "DynamicAOGetFactions", "DynamicAOResolvePools", "DynamicAOCreate",
             "DynamicAODestroyMinefield", "DynamicAODestroy", "DynamicAOZen", "DynamicAORemoveZen",
         ):
             self.assertIn(f"class {function}", functions)
+        self.assertIn('Waldo_fnc_ResolveFactionCatalog', all_ao)
+        self.assertIn('configClasses (configFile >> "CfgFactionClasses")', faction_catalog)
         for token in (
-            'configClasses (configFile >> "CfgFactionClasses")', 'configClasses (configFile >> "CfgVehicles")',
-            'Waldo_DynamicAO_Registry', 'Waldo_DynamicAO_PublicSystems', 'Waldo_fnc_AIApplyProfile',
+            'configClasses (configFile >> "CfgVehicles")', 'Waldo_DynamicAO_Registry',
+            'Waldo_DynamicAO_PublicSystems', 'Waldo_fnc_AIApplyProfile',
             'createMine', 'nearRoads', 'buildingPos -1', 'addCuratorEditableObjects',
         ):
             self.assertIn(token, all_ao)

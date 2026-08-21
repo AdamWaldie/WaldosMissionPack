@@ -138,6 +138,10 @@ _spawn set [2, _altitude];
 // its rotor lift only exists while simulation is live, so pausing simulation mid-setup and then
 // resuming it moments later left the rotor state uninitialised for that first stretch of live frames.
 private _aircraft = createVehicle [_class, _spawn, [], 0, "FLY"];
+// Paradrop owns this aircraft's cruise speed and altitude. The generic helicopter braking helper
+// must not countermand those orders; remember the prior opt-out so retained aircraft can restore it.
+_aircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", _aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false], true];
+_aircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 [_aircraft] call Waldo_fnc_HeadlessPinCrew;
 _aircraft setPosATL _spawn;
 _aircraft setDir _direction;
@@ -202,9 +206,11 @@ _aircraft setDir _direction;
 _aircraft setPosATL (_route get "spawn");
 _aircraft engineOn true;
 private _applyCruiseOrders = {
-    params ["_aircraft", "_route"];
+    params ["_aircraft", "_route", ["_injectVelocity", true]];
     if (isNull _aircraft) exitWith {};
-    _aircraft setVelocityModelSpace [0, (_route get "maxSpeed") / 3.6, 0];
+    if (_injectVelocity) then {
+        _aircraft setVelocityModelSpace [0, (_route get "maxSpeed") / 3.6, 0];
+    };
     _aircraft limitSpeed (_route get "maxSpeed");
     _aircraft forceSpeed ((_route get "maxSpeed") / 3.6);
     // Match ZEN's working Fly Height operation exactly. This vehicle is server-created and remains
@@ -212,19 +218,13 @@ private _applyCruiseOrders = {
     _aircraft flyInHeight (_route get "altitude");
 };
 if (_aircraft isKindOf "Helicopter") then {
-    // A helicopter's rotor has zero lift the instant engineOn fires - RotorLib needs real simulated
-    // time to spool up. Forcing full cruise velocity/forceSpeed/flyInHeight in the same instant as
-    // engineOn (as a plane correctly does, in the immediate "else" branch below) fights that spool-up
-    // and nose-dives the aircraft before it can hold altitude. The forced speed/velocity commands
-    // themselves are NOT the problem and must stay for every aircraft type - they're what gives
-    // correct speed-through-the-drop-area for jump timing, not just a smooth launch - only the
-    // TIMING relative to engineOn needs to change for a helicopter specifically. Defer a few seconds
-    // so the rotor has real lift established before cruise orders are issued.
+    // A helicopter's rotor has zero lift the instant engineOn fires. Defer cruise orders until
+    // RotorLib establishes lift, and do not inject a fixed-wing-style launch velocity afterward.
     [_aircraft, _route, _applyCruiseOrders] spawn {
         params ["_aircraft", "_route", "_applyCruiseOrders"];
         sleep 4;
         if (isNull _aircraft || {!alive _aircraft}) exitWith {};
-        [_aircraft, _route] call _applyCruiseOrders;
+        [_aircraft, _route, false] call _applyCruiseOrders;
     };
 } else {
     [_aircraft, _route] call _applyCruiseOrders;
@@ -283,7 +283,7 @@ _config set ["staticMaximumAltitude", _staticMaximum];
 _config set ["staticMaximumSpeed", _staticMaximumSpeed];
 _config set ["haloMinimumAltitude", _haloMinimum];
 
-// A named JIP replay sends only the net ID and serialisable settings. A newly created aircraft may
+// One aircraft-object-keyed JIP replay sends only the net ID and serialisable settings. A newly created aircraft may
 // not exist on a remote client yet; the local resolver waits for objectFromNetId before installing
 // the repeat-safe actions instead of silently receiving objNull.
 _aircraft setVariable [
@@ -305,16 +305,13 @@ private _jumpConfig = createHashMapFromArray [
 if !(isClass (configFile >> "CfgVehicles" >> (_jumpConfig get "staticChuteClass"))) then {
     _jumpConfig set ["staticChuteClass", "NonSteerable_Parachute_F"];
 };
-private _actionJipKey = format ["WMP_Paradrop_Actions_%1", _id];
-_aircraft setVariable ["Waldo_Paradrop_ActionJipKey", _actionJipKey, true];
 private _jumpConfigPairs = keys _jumpConfig apply {[_x, _jumpConfig get _x]};
-[netId _aircraft, _jumpConfigPairs] remoteExec ["Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _actionJipKey];
-if (_aircraftInvincible) then {
-    private _damageJipKey = format ["WMP_Paradrop_Damage_%1", _id];
-    _aircraft setVariable ["Waldo_Paradrop_DamageJipKey", _damageJipKey, true];
-    _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", true, true];
-    [netId _aircraft, true] remoteExec ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0, _damageJipKey];
-};
+_aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", _aircraftInvincible, true];
+// One object-bound replay configures both actions and damage. The engine owns its lifetime and
+// removes it from the JIP queue when the aircraft is deleted.
+[netId _aircraft, _jumpConfigPairs, _aircraftInvincible] remoteExec [
+    "Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _aircraft
+];
 // Mirrors Waldo_fnc_ParadropQuickFlightSetup's own envelope log line - without this, a ZEN-created
 // operation's actual normalized envelope was invisible in the RPT, making a reported "jump action
 // doesn't work" impossible to diagnose from logs alone.

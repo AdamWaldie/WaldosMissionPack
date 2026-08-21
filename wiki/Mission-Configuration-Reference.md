@@ -153,6 +153,21 @@ missionNamespace setVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false,
 
 For missions running RHS, replace `"NonSteerable_Parachute_F"` with `"rhs_d6_Parachute"` for a steerable static-line chute.
 
+### Dialogue timing, size and accessibility
+
+Edit the `shared` rows in `MissionConfig\dialogueConfig.sqf`. The file controls global reading pace,
+audience/interaction/cancellation distances, and safe-zone-relative subtitle/choice sizing. It does
+not create conversations or register NPCs.
+
+Short content remains compact; long subtitles and response labels wrap. Choice rows grow with their
+text and the list scrolls after reaching `Waldo_Dialogue_ChoiceMaximumHeight`. Dialogue resolves its
+fonts and colours through the same WMP UI theme as other pack displays, including each player's local
+colour-vision override. Theme selection itself remains in `MissionConfig\interfaceConfig.sqf`.
+
+See [Dialogue and Conversations](Dialogue-And-Conversations#editing-the-dialogue-config-safely) for
+the beginner editing procedure and examples, and [Feature Configuration Files](Feature-Configuration-Files#dialogueconfigsqf--shared)
+for every setting and unit.
+
 ### Safestart
 
 Edit the `Waldo_SafeStart_*` SERVER entries in `MissionConfig\missionSystemsConfig.sqf`. The

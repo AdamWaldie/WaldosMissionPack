@@ -8,6 +8,7 @@ This is the complete top-level index of mission systems currently supplied by Wa
 
 | Feature | What it provides | Primary setup and operation |
 |---|---|---|
+| [Simple Dialogue and Advanced Conversations](Dialogue-And-Conversations) | Beginner one-line NPC chatter plus a separate named, voiced and branching conversation component with authoritative completion hooks | NPC Eden init field, trigger/script, or five focused ZEN modules; optional pacing in `MissionConfig\dialogueConfig.sqf` |
 | [INIDBI2 Persistence](Persistence) | Optional player and registered-object persistence with a server-runtime dependency gate | `MissionConfig\persistenceConfig.sqf`; database authority in `initServer.sqf`; **Persistence - Control**, **Register Object**, and **Save Now** in ZEN |
 | [Patient Treatment Feedback](Optional-Feature-Systems#patient-treatment-feedback) | Local ACE treatment start, completion and failure notifications using the pack notification UI | `MissionConfig\interfaceConfig.sqf` and scripted start/stop calls |
 | [Obituary and Confirmed-Death Reporting](Obituary-and-Confirmed-Deaths) | "Pronounce Dead" ACE self-interaction for qualified medics, readable per-player reports, and ENDEX confirmed-death totals. Enabled by default | `MissionConfig\interfaceConfig.sqf`; automatic player-local setup; intentionally no composition or ZEN module |

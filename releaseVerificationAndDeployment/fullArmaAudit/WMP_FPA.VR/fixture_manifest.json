@@ -8,7 +8,7 @@
     },
     {
       "id": "core",
-      "features": ["Loadout Save Point", "mission loadout scrape", "AAR", "objectives/tasks", "SafeStart", "AI convoy"]
+      "features": ["Loadout Save Point", "mission loadout scrape", "AAR", "objectives/tasks", "SafeStart", "AI convoy", "Custom 3D marker create and ID/object/position removal", "Simple Dialogue medieval and modern archetypes", "specific dialogue callback", "Advanced Conversation linear and branching examples"]
     },
     {
       "id": "logistics",

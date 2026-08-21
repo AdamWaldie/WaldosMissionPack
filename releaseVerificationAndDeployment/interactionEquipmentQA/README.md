@@ -18,6 +18,14 @@ active state for capture. Use `-Mode Automated` to open all ten procedures,
 validate briefing and active states, drive each procedure through its real
 success mechanics, and finish with the RPT marker shown below.
 
+Use `-Mode Dialogue` for the dedicated Simple Dialogue subtitle and Advanced
+Conversation response-panel layout. This beginner-facing sample verifies both
+components together without requiring authored conversation data:
+
+```text
+WMP DIALOGUE UI QA COMPLETE: 0 finding(s) []
+```
+
 Pass `-Challenge repair` (or another built-in id) with `Interactive` or `Active`
 to inspect a specific equipment face.
 
