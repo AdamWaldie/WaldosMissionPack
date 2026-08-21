@@ -104,25 +104,65 @@ _title ctrlSetText format ["Vehicle Customisation - Editor: %1", getText (config
 _title ctrlCommit 0;
 
 // ---- Tab buttons ----
+// Each button is tagged and its ButtonClick handler attached IMMEDIATELY after creation, here, rather
+// than in one block at the end of this ~750-line script (as every other button in this dialog still
+// is). If anything later in this script throws (a bad config read against an unusual vehicle, for
+// instance), every handler that was still waiting to be attached at the end would simply never exist -
+// the buttons would still be visibly created and rendered (since they're created early), but would be
+// completely inert to every click, which matches exactly what live testing reported: tab buttons that
+// visibly exist but do nothing at all when clicked. Attaching tab switching's own handlers this early
+// makes it independent of every other line in this file succeeding.
 private _tabTurretBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _tabTurretBtn ctrlSetPosition [0.10, 0.11, 0.11, 0.035];
 _tabTurretBtn ctrlSetText "Turret";
 _tabTurretBtn ctrlCommit 0;
+_tabTurretBtn setVariable ["WaldoVehCust_Display", _disp];
+_tabTurretBtn setVariable ["WaldoVehCust_TabName", "turret"];
+_tabTurretBtn ctrlAddEventHandler ["ButtonClick", {
+    params ["_ctrl"];
+    private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
+    if (isNull _disp) exitWith {};
+    [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
+}];
 
 private _tabPylonBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _tabPylonBtn ctrlSetPosition [0.215, 0.11, 0.11, 0.035];
 _tabPylonBtn ctrlSetText "Pylon";
 _tabPylonBtn ctrlCommit 0;
+_tabPylonBtn setVariable ["WaldoVehCust_Display", _disp];
+_tabPylonBtn setVariable ["WaldoVehCust_TabName", "pylon"];
+_tabPylonBtn ctrlAddEventHandler ["ButtonClick", {
+    params ["_ctrl"];
+    private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
+    if (isNull _disp) exitWith {};
+    [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
+}];
 
 private _tabAppearanceBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _tabAppearanceBtn ctrlSetPosition [0.33, 0.11, 0.13, 0.035];
 _tabAppearanceBtn ctrlSetText "Appearance";
 _tabAppearanceBtn ctrlCommit 0;
+_tabAppearanceBtn setVariable ["WaldoVehCust_Display", _disp];
+_tabAppearanceBtn setVariable ["WaldoVehCust_TabName", "appearance"];
+_tabAppearanceBtn ctrlAddEventHandler ["ButtonClick", {
+    params ["_ctrl"];
+    private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
+    if (isNull _disp) exitWith {};
+    [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
+}];
 
 private _tabComponentBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _tabComponentBtn ctrlSetPosition [0.465, 0.11, 0.13, 0.035];
 _tabComponentBtn ctrlSetText "Component";
 _tabComponentBtn ctrlCommit 0;
+_tabComponentBtn setVariable ["WaldoVehCust_Display", _disp];
+_tabComponentBtn setVariable ["WaldoVehCust_TabName", "component"];
+_tabComponentBtn ctrlAddEventHandler ["ButtonClick", {
+    params ["_ctrl"];
+    private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
+    if (isNull _disp) exitWith {};
+    [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
+}];
 
 // ---- One content group per tab - all four share the exact same rectangle. Local coordinates below
 // are relative to each group's own [0, 0] origin, not the display's absolute safe-zone coordinates
@@ -527,21 +567,17 @@ _disp setVariable ["WaldoVehCust_CopyOverlayList", _copyOverlayList];
 _disp setVariable ["WaldoVehCust_CopyOverlayPickBtn", _copyOverlayPickBtn];
 _disp setVariable ["WaldoVehCust_CopyOverlayCancelBtn", _copyOverlayCancelBtn];
 
+// Tab buttons are already tagged and their ButtonClick handlers already attached at creation time
+// above - not included in this list.
 {
     _x setVariable ["WaldoVehCust_Display", _disp];
 } forEach [
-    _tabTurretBtn, _tabPylonBtn, _tabAppearanceBtn, _tabComponentBtn,
     _addTurretBtn, _addPylonBtn, _addAppearanceBtn, _addComponentBtn,
     _removeSelectedBtn, _copyFromBtn, _applyAllBtn, _exportBtn, _clearAllBtn, _okBtn,
     _copyWeaponCombo, _copyMagazineCombo, _copyOrdnanceCombo,
     _componentPickCombo, _componentTurretPickCombo,
     _copyOverlayPickBtn, _copyOverlayCancelBtn
 ];
-
-_tabTurretBtn setVariable ["WaldoVehCust_TabName", "turret"];
-_tabPylonBtn setVariable ["WaldoVehCust_TabName", "pylon"];
-_tabAppearanceBtn setVariable ["WaldoVehCust_TabName", "appearance"];
-_tabComponentBtn setVariable ["WaldoVehCust_TabName", "component"];
 
 // ---- Populate Turret tab live data ----
 // Mount-less ([-1] with no real weapons[] entry on this vehicle's own root config) and horn-only
@@ -733,16 +769,6 @@ _componentTurretPickCombo lbSetData [0, "-1"];
     _componentTurretPickCombo lbSetData [_index, str _x];
 } forEach _turretPaths;
 _componentTurretPickCombo lbSetCurSel 0;
-
-// ---- Event handlers: tabs ----
-{
-    _x ctrlAddEventHandler ["ButtonClick", {
-        params ["_ctrl"];
-        private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
-        if (isNull _disp) exitWith {};
-        [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
-    }];
-} forEach [_tabTurretBtn, _tabPylonBtn, _tabAppearanceBtn, _tabComponentBtn];
 
 // ---- Event handlers: "Weapon" auto-fill fields + live-filtered "Magazine" repopulation ----
 _copyWeaponCombo ctrlAddEventHandler ["LBSelChanged", {
