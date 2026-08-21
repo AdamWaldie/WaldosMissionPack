@@ -83,10 +83,20 @@ Each interface client reports:
   - `respawn`/`loadout-restore`: whether the saved identity (UID+side) matched, how many loadout entries were restored, which trigger performed it, the snapshot's source/age at restore time, and the ACRE loadout generation - `UNCONFIGURED` before this client's first respawn of the session, `ERROR` on an identity mismatch (baseline retained instead of the saved loadout).
   - `respawn`/`loadout-apply-verify`: whether `setUnitLoadout` was confirmed to actually take effect - checked against a small set of stable, ACRE-independent equipment commands (not a raw `getUnitLoadout` comparison, which can't detect a no-op) - and how many retries it needed. `ERROR` only when it never took even after retrying.
   - `respawn`/`radio-restore`: whether the saved ACRE radio state reapplied, fell back to the current mission plan, or there was no complete radio snapshot to restore.
-- whether `ace_nametags`/`ace_dogtags` is loaded (`dependencies`/`ace-nametags-respawn-compat`) - informational only. Their own `CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the corpse object and throws `Type Object, expected Bool`. This is a known upstream ACE3 issue, not a WMP defect - WMP never calls that function or sets `ace_setCustomName` - and there is no mission-side fix, so the check never carries a remediation hint;
 - this client's own intro-sequence timing (`mission-flow`/`infotext-timing`): real measured seconds waiting for Arma's initial local `PreloadFinished` event, the subsequent player/display readiness, WMP's short setup cover, when control was available, and how much longer the cosmetic title kept typing. The client state is recorded for diagnosis but is not used as a readiness gate. `ERROR` means the initial preload event or usable local player/display never arrived within its bounded wait. The intro does not wait for `WALDO_INIT_COMPLETE` or any unrelated feature. See [Mission Intro and Title Text](Mission-Intro-Or-Title-Text) for the sequence.
 
 The server rejects stale reports and reports whose claimed owner does not match the sending client. Missing client responses become warnings after four seconds.
+
+**Related, but not a diagnostic check:** `initPlayerLocal.sqf` also calls
+`Waldo_fnc_AceSetNameRespawnBindingRepair` after CBA/ACE initialise, patching a real ACE 3.21.1 bug
+rather than merely reporting it - ACE's own respawn hook forwarded the engine's `[unit, corpse]`
+respawn payload wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then
+received the corpse object and threw `Type Object, expected Bool` on every scripted respawn (a known
+upstream issue, fixed directly by ACE in `community/ACE3#11470`, targeted for release 3.21.2). The
+repair inspects the local player's compiled respawn callback and replaces it only if it still carries
+the broken pattern; it also recognises ACE's own upstream-fixed callback text as already safe, so it
+is a no-op once a mission's ACE build already has the fix. This is not surfaced as a diagnostics row -
+check the RPT for `[WMP ACE COMPAT]` lines directly if you need to confirm it ran.
 
 ## Assistive hints
 

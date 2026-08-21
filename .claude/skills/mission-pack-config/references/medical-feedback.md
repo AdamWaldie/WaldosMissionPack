@@ -36,6 +36,7 @@ Intentionally **no ZEN module**.
 
 - Treatment cards replace one another in a dedicated padded bottom-centre
   region — they never consume the general notification stacks.
-- The ACE event identifier `ace_treatmentSucceded` (note the engine's own
-  spelling) is intentionally retained exactly as ACE defines it — don't
-  "fix" the typo if extending this code.
+- Success is heard on **both** `ace_treatmentSucceded` (ACE's current typo'd
+  spelling) and `ace_treatmentSucceeded` (the corrected spelling), so the
+  feature keeps working unchanged whichever one a given mission's ACE build
+  actually fires — don't remove either registration.

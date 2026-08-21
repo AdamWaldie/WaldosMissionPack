@@ -27,6 +27,11 @@ _status = toUpperANSI _status;
 if (_status == _previous && {_message == ""}) exitWith {true};
 _state set ["status", _status];
 _state set ["statusChangedAt", diag_tickTime];
+// Once back on station there is nothing left to explain to Waldo_fnc_GunshipStatusHud - clear the
+// stale reason rather than leave a REQUEST/AUTO/RETASK tag from the previous cycle sitting unread.
+if (_status in ["ON_STATION", "CONTROLLED"]) then {
+    _state set ["offStationReason", ""];
+};
 _registry set [_id, _state];
 missionNamespace setVariable ["Waldo_Gunship_Registry", _registry];
 [] call Waldo_fnc_GunshipPublishState;

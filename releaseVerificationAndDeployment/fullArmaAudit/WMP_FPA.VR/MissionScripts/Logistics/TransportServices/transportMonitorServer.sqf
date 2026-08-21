@@ -22,6 +22,15 @@ private _stateLabels = createHashMapFromArray [
     ["AVAILABLE", "Available"], ["BOARDING", "Boarding"], ["DISEMBARKING", "Disembarking"],
     ["TO_PICKUP", "To Pickup"], ["TO_DESTINATION", "To Destination"], ["RTB", "RTB"], ["STUCK", "Stuck"]
 ];
+// Last-broadcast availability state. These start unset so the first pass always publishes once;
+// every pass after that only broadcasts a flag that actually flipped, matching this file's own
+// documented "publishes availability booleans only when pool state changes" contract - the three
+// setVariable calls below used to fire unconditionally every 2s for the whole mission (Transport
+// Services is enabled by default), which is a real, continuous, per-client broadcast cost with a
+// large connected player count even when no transport availability ever changed.
+private _lastHeliAvailable = nil;
+private _lastGroundAvailable = nil;
+private _lastBoatAvailable = nil;
 while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do {
     private _services = missionNamespace getVariable ["Waldo_Transport_Services", createHashMap];
     private _pools = missionNamespace getVariable ["Waldo_Transport_Pools", createHashMapFromArray [["HELICOPTER", []], ["GROUND", []], ["BOAT", []]]];
@@ -83,8 +92,20 @@ while {missionNamespace getVariable ["Waldo_Transport_ServerStarted", false]} do
     } forEach +(keys _services);
     missionNamespace setVariable ["Waldo_Transport_Services", _services];
     missionNamespace setVariable ["Waldo_Transport_Pools", _pools];
-    missionNamespace setVariable ["Waldo_HeliTransport_Available", (_pools getOrDefault ["HELICOPTER", []]) findIf {(_services get _x) getOrDefault ["state", ""] == "AVAILABLE"} >= 0, true];
-    missionNamespace setVariable ["Waldo_GroundTransport_Available", (_pools getOrDefault ["GROUND", []]) findIf {(_services get _x) getOrDefault ["state", ""] == "AVAILABLE"} >= 0, true];
-    missionNamespace setVariable ["Waldo_BoatTransport_Available", (_pools getOrDefault ["BOAT", []]) findIf {(_services get _x) getOrDefault ["state", ""] == "AVAILABLE"} >= 0, true];
+    private _heliAvailable = (_pools getOrDefault ["HELICOPTER", []]) findIf {(_services get _x) getOrDefault ["state", ""] == "AVAILABLE"} >= 0;
+    private _groundAvailable = (_pools getOrDefault ["GROUND", []]) findIf {(_services get _x) getOrDefault ["state", ""] == "AVAILABLE"} >= 0;
+    private _boatAvailable = (_pools getOrDefault ["BOAT", []]) findIf {(_services get _x) getOrDefault ["state", ""] == "AVAILABLE"} >= 0;
+    if (isNil "_lastHeliAvailable" || {_heliAvailable != _lastHeliAvailable}) then {
+        missionNamespace setVariable ["Waldo_HeliTransport_Available", _heliAvailable, true];
+        _lastHeliAvailable = _heliAvailable;
+    };
+    if (isNil "_lastGroundAvailable" || {_groundAvailable != _lastGroundAvailable}) then {
+        missionNamespace setVariable ["Waldo_GroundTransport_Available", _groundAvailable, true];
+        _lastGroundAvailable = _groundAvailable;
+    };
+    if (isNil "_lastBoatAvailable" || {_boatAvailable != _lastBoatAvailable}) then {
+        missionNamespace setVariable ["Waldo_BoatTransport_Available", _boatAvailable, true];
+        _lastBoatAvailable = _boatAvailable;
+    };
     sleep 2;
 };

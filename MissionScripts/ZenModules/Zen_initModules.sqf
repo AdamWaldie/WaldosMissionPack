@@ -53,6 +53,22 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\markers\nato\o_antiair.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Vehicle Customisation", "Vehicle Customisation - Editor",
+    {
+        params ["_modulePos", ["_objectPos", objNull]];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenVehicleCustomizationEditor;
+    },
+    "\A3\ui_f\data\igui\cfg\actions\reammo_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Vehicle Customisation", "Vehicle Customisation - Inspect",
+    {
+        params ["_modulePos", ["_objectPos", objNull]];
+        [_modulePos, _objectPos] call Waldo_fnc_ZenVehicleCustomizationInspect;
+    },
+    "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Mission Tools", "Scale Object",
     {
         params ["_modulePos", ["_objectPos", objNull]];
@@ -277,9 +293,15 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\a3\ui_f\data\igui\cfg\simpletasks\types\intel_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-missionNamespace setVariable ["Waldo_ZenModuleCount", 45];
+missionNamespace setVariable ["Waldo_ZenModuleCount", 47];
 missionNamespace setVariable ["Waldo_ZenModulesReady", true];
-diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 45], clientOwner];
+diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner=%2", missionNamespace getVariable ["Waldo_ZenModuleCount", 47], clientOwner];
+
+// Warm the Vehicle Weapon Loadout pack-wide catalog in the background now, well before a curator is
+// likely to actually open "Vehicle Weapon Loadout - Configure" - scanning every CfgVehicles class is
+// real work on a large modset, so this trades a background cost paid once at mission start for an
+// instant dialog open later instead of blocking the dialog itself on the scan.
+[] spawn {[] call Waldo_fnc_VehicleWeaponLoadoutCatalogBuild;};
 
 // Hazard controls are meaningful only when the mission enabled the underlying runtime. Shared
 // config can finish after ZEN registration, so add these two entries asynchronously once the
@@ -295,7 +317,7 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
         private _handler = compile format ["params ['_modulePos', ['_objectPos', objNull]]; ['%1', _modulePos, _objectPos] call Waldo_fnc_FeatureRuntimeZen;", _feature];
         ["WMP Environment", _name, _handler, "\A3\ui_f\data\map\markers\military\warning_CA.paa"] call zen_custom_modules_fnc_register;
     } forEach [["Hazard - Create", "HAZARD_CREATE"], ["Hazard - Remove Nearest", "HAZARD_REMOVE"]];
-    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 2];
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 47]) + 2];
     diag_log format ["[WMP ZEN] Registered 2 enabled hazard modules on clientOwner=%1.", clientOwner];
 };
 
@@ -337,8 +359,8 @@ diag_log format ["[WMP ZEN] Registered %1 categorized WMP modules on clientOwner
         "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"
     ] call zen_custom_modules_fnc_register;
 
-    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 45]) + 3];
-    diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 48]];
+    missionNamespace setVariable ["Waldo_ZenModuleCount", (missionNamespace getVariable ["Waldo_ZenModuleCount", 47]) + 3];
+    diag_log format ["[WMP ZEN] Registered 3 headless-client modules on clientOwner=%1 (total now %2).", clientOwner, missionNamespace getVariable ["Waldo_ZenModuleCount", 50]];
     if (missionNamespace getVariable ["Waldo_Headless_Debug", false]) then {
         [true] call Waldo_fnc_HeadlessDebugDisplayLocal;
     };

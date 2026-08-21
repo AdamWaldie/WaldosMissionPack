@@ -33,7 +33,7 @@ def audit(root: Path = ROOT) -> list[str]:
     functions_source = (root / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
     all_source = "\n".join(path.read_text(encoding="utf-8") for path in (root / "MissionScripts").rglob("*.sqf"))
     findings: list[str] = []
-    expected = {"core": 45, "economy": 19}
+    expected = {"core": 47, "economy": 19}
     for category, count in expected.items():
         actual = sum(record.get("category") == category for record in records)
         if actual != count:

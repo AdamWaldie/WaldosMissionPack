@@ -1,0 +1,26 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+	items=2;
+	class Item0
+	{
+		dataType="Object";
+		side="West";
+		class PositionInfo {position[]={0,0,0}; angles[]={0,0,0};};
+		class Attributes
+		{
+			name="WMP_VehWpnMinimal";
+			init="[this, [[""TURRET"", [0], -1, ""CLEAR"", """", """", 0]]] call Waldo_fnc_VehicleWeaponLoadoutApply; [this, [[""TEXTURE"", 0, ""SET"", [1,0,1,1]]]] call Waldo_fnc_VehicleAppearanceApply;";
+		};
+		id=1;
+		type="B_MRAP_01_hmg_F";
+	};
+	class Item1
+	{
+		dataType="Comment";
+		class PositionInfo {position[]={0,0,-8};};
+		title="Vehicle Weapon Loadout And Appearance (Minimal): the smallest working call for each feature, no classname ever needed. Waldo_fnc_VehicleWeaponLoadoutApply clears this armed Hunter's real turret[0] - CLEAR never needs a weapon or magazine classname. Waldo_fnc_VehicleAppearanceApply then paints texture slot 0 solid pink using the built-in procedural syntax, no texture asset required either. Use the Full example for Copy-based loadout transfer between two vehicles. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Vehicle-Weapon-Loadout";
+		id=2;
+	};
+};

@@ -1,67 +1,636 @@
 [
-  {"category":"core","module":"Supplies: Create Player Crate","handler":"Waldo_fnc_ZenSupplySpawner","via":"Waldo_fnc_ZenSpawnCrateServer","script_api":"Waldo_fnc_SupplyCratePopulate","parity":"adapter","notes":"Zeus gathers the crate choices, then the curator-validated server bridge creates the physical crate and invokes the shared population API."},
-  {"category":"core","module":"Mission Flow: End Mission + Show AAR","handler":"Waldo_fnc_ENDEX","script_api":"Waldo_fnc_ENDEX","parity":"full","notes":"Same server-authoritative ENDEX path."},
-  {"category":"core","module":"Mission Flow: End Mission (No AAR)","handler":"BIS_fnc_endMission","script_api":"BIS_fnc_endMission","parity":"full","notes":"Same Arma mission-end API."},
-  {"category":"core","module":"Medical: Create Field Hospital Crate","handler":"Waldo_fnc_ZenMedicalSpawner","via":"Waldo_fnc_ZenSpawnCrateServer","script_api":"Waldo_fnc_MedicalCratePopulate","parity":"adapter","notes":"Zeus gathers supply and hospital choices, then the curator-validated server bridge creates the physical crate and invokes the shared population API."},
-  {"category":"core","module":"Fortify: Set Side Budget","handler":"Waldo_fnc_FortifyBudgetModule","script_api":"ace_fortify_fnc_updateBudget","parity":"full","notes":"Side and signed budget delta are exposed and curator-authenticated on the server.","via":"Waldo_fnc_ZenFortifyBudgetServer"},
-  {"category":"core","module":"Convoy - Create Moving Group","handler":"Waldo_fnc_ZenConvoyModule","script_api":"Waldo_fnc_SimpleAiConvoy","parity":"full","notes":"Speed, separation and push-through match the script API."},
-  {"category":"core","module":"Respawn: Create Loadout Save Point","handler":"Waldo_fnc_ZenLoadoutSaveModule","script_api":"Waldo_fnc_ZenAddLoadoutSaveAction","parity":"adapter","notes":"Zeus may create a new empty station or configure the selected object; both use the same action installer."},
-  {"category":"core","module":"SafeStart: Enable Protection","handler":"Waldo_fnc_SafeStart","script_api":"Waldo_fnc_SafeStart","parity":"full","notes":"Calls the same server state transition."},
-  {"category":"core","module":"SafeStart: Go Live Now","handler":"Waldo_fnc_SafeStart","script_api":"Waldo_fnc_SafeStart","parity":"full","notes":"Calls the same server state transition."},
-  {"category":"core","module":"SafeStart: Start Go-Live Timer","handler":"Waldo_fnc_ZenSafeStartTimer","script_api":"Waldo_fnc_SafeStartTimer","parity":"full","notes":"Timer is configured in seconds in both surfaces."},
-  {"category":"core","module":"Jammer - Place Emitter","handler":"Waldo_fnc_ZenJammerPlace","script_api":"Waldo_fnc_Jammer","parity":"adapter","notes":"Radio behaviour, exact spawn-class selection, any existing object under the module and simplified reactivation and field-disable interaction selectors are exposed without raw class or code entry. Advanced interaction policy remains script-only.","required_tokens":["ACRE frequency coverage","Start Active","Pulse On (s)","Pulse Off (s)","Show Curator 3D Marker","Emitter source","Spawned emitter object","Allow Reactivation","Require Field Disable Procedure","Disable Procedure","Procedure Difficulty"]},
-  {"category":"core","module":"Jammer - Toggle Nearest","handler":"Waldo_fnc_ZenJammerToggle","script_api":"Waldo_fnc_JammerToggle","parity":"full","notes":"Uses the same authoritative toggle API."},
-  {"category":"core","module":"Jammer - Delete Nearest","handler":"Waldo_fnc_ZenJammerRemove","script_api":"Waldo_fnc_JammerRemove","parity":"full","notes":"Uses the same authoritative removal API and deletes the Zeus-created emitter."},
-  {"category":"core","module":"EMP - Detonate at Cursor","handler":"Waldo_fnc_ZenEMP","script_api":"Waldo_fnc_EMP","parity":"full","notes":"Radius and duration match the script API and execute through an authenticated server request.","via":"Waldo_fnc_ZenEMPServer"},
-  {"category":"core","module":"Tracker - Attach to Selected Object","handler":"Waldo_fnc_ZenTracker","script_api":"Waldo_fnc_Tracker","parity":"full","notes":"The module must be placed directly on an object or unit; tracking audience, custom label and active state are exposed through an authenticated server request.","required_tokens":["Place this module directly on the object or unit to track","Tracker Label","Start Active"],"via":"Waldo_fnc_ZenTrackerServer"},
-  {"category":"core","module":"Dynamic AA - Create","handler":"Waldo_fnc_DynamicAAZen","via":"Waldo_fnc_DynamicAAZenPlacement","script_api":"Waldo_fnc_DynamicAACreate","parity":"adapter","notes":"The guided placement workflow gathers the same configuration accepted by the scripted creation API, including optional central-radar shutdown interaction.","required_tokens":["Require Radar Shutdown Procedure","Shutdown Procedure","Procedure Difficulty"]},
-  {"category":"core","module":"Dynamic AA - Remove Nearest","handler":"Waldo_fnc_DynamicAARemoveZen","script_api":"Waldo_fnc_DynamicAADestroy","parity":"adapter","notes":"Zeus resolves the nearest registered system before invoking the authoritative destroy API."},
-  {"category":"core","module":"Dynamic AO - Create","handler":"Waldo_fnc_DynamicAOZen","script_api":"Waldo_fnc_DynamicAOCreate","parity":"adapter","notes":"One runtime faction selector binds allegiance to faction, exposes all bounded AO-generation settings and submits the same server-owned HashMap API used by scripts. Generated AI intentionally defer to WMP's active profile rather than exposing a competing skill slider.","required_tokens":["Enemy faction and side","Vehicle ratio - cars","Air ratio - helicopters","Civilian faction","Outer-ring minefields","Manned roadblocks"]},
-  {"category":"core","module":"Dynamic AO - Remove","handler":"Waldo_fnc_DynamicAORemoveZen","script_api":"Waldo_fnc_DynamicAODestroy","parity":"adapter","notes":"Zeus selects a friendly-name live AO, with the nearest system preselected, before invoking complete authoritative cleanup."},
-  {"category":"core","module":"Scale Object","handler":"Waldo_fnc_ObjectScaleZen","script_api":"Waldo_fnc_ObjectScale","parity":"adapter","notes":"Zeus resolves the nearest object and exposes the validated scale and simple-object choices."},
-  {"category":"core","module":"Persistence - Control","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_PersistenceInit","parity":"adapter","notes":"The runtime bridge publishes settings before starting or stopping persistence."},
-  {"category":"core","module":"Persistence - Register Object","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_PersistenceRegisterObject","parity":"full","notes":"Stable key and every supported persistence field are exposed."},
-  {"category":"core","module":"Persistence - Save Now","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_PersistenceSaveNow","parity":"full","notes":"Player and object save choices match the script API."},
-  {"category":"core","module":"Field Resupply - Register Hub","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_FieldResupplyRegisterHub","parity":"full","notes":"Serviced side and finite or unlimited stock are exposed."},
-  {"category":"core","module":"Field Resupply - Assign Carrier","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_FieldResupplyAssignCarrier","parity":"full","notes":"Current and maximum portable-crate capacity are exposed."},
-  {"category":"core","module":"Field Resupply - Grant Crates","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_FieldResupplyGrantCrates","parity":"full","notes":"Grants are clamped to carrier capacity unless explicit expansion is selected; only the receiving player is notified after the intro UI finishes."},
-  {"category":"core","module":"Vehicle Recovery - Register Workshop","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_RecoveryRegisterWorkshop","parity":"full","notes":"Workshop key, delivery radius and serviced side match the script API."},
-  {"category":"core","module":"Vehicle Recovery - Register Vehicle","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_RecoveryRegisterVehicle","parity":"full","notes":"Damage, destroyed, engineer, package, cargo, restored-fuel and optional preparation-procedure policy match the script API.","required_tokens":["Require Recovery Preparation","Preparation Procedure"]},
-  {"category":"core","module":"Vehicle Recovery - Register Carrier","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_RecoveryRegisterCarrier","parity":"full","notes":"Loading range, automatic/virtual/physical handling and package capacity match the script API."},
-  {"category":"core","module":"Respawn - Squad Rally Control","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_RallyPointInit","parity":"adapter","notes":"The dialog publishes all deployment rules before installing or removing player-local actions."},
-  {"category":"core","module":"Tactical Display - Register","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_TacticalDisplayRegister","parity":"full","notes":"Side, radius, known-enemy and optional authentication-procedure policy match the script API.","required_tokens":["Require Display Authentication","Authentication Procedure"]},
-  {"category":"core","module":"Gunship - Register or Spawn","handler":"Waldo_fnc_FeatureRuntimeZen","script_api":"Waldo_fnc_GunshipRegister","parity":"adapter","notes":"Zeus can register a nearby aircraft or build the equivalent validated spawn configuration."},
-  {"category":"core","module":"Gunship - Assign Controller","handler":"Waldo_fnc_FeatureRuntimeZen","script_api":"Waldo_fnc_GunshipServerHandle","parity":"adapter","notes":"Zeus resolves the nearby player before using the authoritative assignment operation."},
-  {"category":"core","module":"Gunship - Set Orbit","handler":"Waldo_fnc_FeatureRuntimeZen","script_api":"Waldo_fnc_GunshipServerHandle","parity":"adapter","notes":"Named system and orbit position are sent through the same authoritative operation router used by scripted control."},
-  {"category":"core","module":"Gunship - Operational Control","handler":"Waldo_fnc_FeatureRuntimeZen","script_api":"Waldo_fnc_GunshipServerHandle","parity":"adapter","notes":"The selected return, service, release or remove operation uses the authoritative gunship control path."},
-  {"category":"core","module":"Hazard - Create","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_HazardRegisterZone","parity":"adapter","notes":"The dialog exposes the common circular-zone profile; scripted callbacks and complex shapes remain supported by the API."},
-  {"category":"core","module":"Hazard - Remove Nearest","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_HazardUnregisterZone","parity":"adapter","notes":"Zeus resolves the nearest named zone before using the unregister API."},
-  {"category":"core","module":"AI Rebalance - Control","handler":"Waldo_fnc_FeatureRuntimeZen","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_AIRebalanceInit","parity":"adapter","notes":"Enable state, day or night mode and named profile are published before locality-aware application."},
-  {"category":"core","module":"UI QA - Set Visual Theme","handler":"Waldo_fnc_UiThemeZen","via":"Waldo_fnc_UiThemeSetServer","script_api":"Waldo_fnc_UiTheme","parity":"adapter","notes":"The QA selector changes one of four named visual-only global themes and can preview semantic cards without changing feature behavior.","required_tokens":["Default / Modern","Second World War","Vietnam / Cold War","Science Fiction"]},
-  {"category":"core","module":"Paradrop - Create Drop Zone","handler":"Waldo_fnc_ParadropDropZoneZen","script_api":"Waldo_fnc_ParadropCreateDropZone","parity":"adapter","notes":"The curator selects operational side and physical airframe independently, plus route, drop cadence, markers and cleanup, before invoking the authoritative operation API."},
-  {"category":"core","module":"Paradrop - Embark Players","handler":"Waldo_fnc_ParadropDropZoneZen","script_api":"Waldo_fnc_ParadropEmbark","parity":"adapter","notes":"The curator selects a named operation and either transfers selected player or group units into cargo, creates a reusable boarding point, or does both."},
-  {"category":"core","module":"Paradrop - Remove Operation","handler":"Waldo_fnc_ParadropDropZoneZen","script_api":"Waldo_fnc_ParadropRemoveDropZone","parity":"adapter","notes":"The curator selects a named public operation instead of entering an internal ID, then invokes authoritative cleanup."},
-  {"category":"core","module":"Mission Flow: Send Notification","handler":"Waldo_fnc_ZenNotify","via":"Waldo_fnc_ZenNotifyServer","script_api":"Waldo_fnc_NotificationBroadcast","parity":"adapter","notes":"The dialog gathers title/message/type/duration/placement and an audience (all players, by side, by group, or the curator's current Zeus selection) before the curator-authenticated server bridge invokes the same public broadcast API mission scripts can call directly."},
-  {"category":"core","module":"Create Custom 3D Marker","handler":"Waldo_fnc_ZenCreate3DMarker","script_api":"Waldo_fnc_Create3DMarker","parity":"adapter","notes":"Zeus chooses a named icon, accessible colour, side audience, placement, range and size without entering texture paths. Object placement defaults to its anchor, with an optional bounding-box-derived above-object offset; empty placement uses a fixed position.","required_tokens":["Marker label","Place above object","Extra vertical offset","Maximum view distance","Visible to"]},
-  {"category":"core","module":"Add WMP Field Equipment Interaction","handler":"Waldo_fnc_ZenFieldEquipment","via":"Waldo_fnc_FeatureRuntimeApply","script_api":"Waldo_fnc_FieldEquipmentZenSetupLocal","parity":"adapter","notes":"The authenticated server bridge publishes one repeat-safe local setup which selects the shared MiniGameInteractionSetup or BombDefuseSetup path. Zeus exposes named success/failure presets and optional server-side callback code using the selected interaction object.","required_tokens":["Interaction type","EOD bomb defusal","On success code (optional)","On failure code (optional)"]},
-
-  {"category":"economy","module":"Resource: Define Resource Types","handler":"Waldo_fnc_EcoResource_promptResourceConfig","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoResource_addResourceType","parity":"adapter","notes":"The authoring prompt builds resource records and sends each one through the curator-authenticated server bridge to the public resource-type API."},
-  {"category":"economy","module":"Resource: Place Collectible Crate","handler":"Waldo_fnc_EcoResource_promptResourceCrateValue","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoResource_spawnResourceCrate","parity":"adapter","notes":"The prompt gathers values then invokes the authoritative crate spawn path through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Resource: Place Production Zone","handler":"Waldo_fnc_EcoResource_promptResourceZone","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoResource_createResourceZone","parity":"adapter","notes":"The prompt exposes zone identity, owner, size, deposits and interval through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Resource: Set Side Balances","handler":"Waldo_fnc_EcoResource_promptResourceSettings","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoResource_setSideResourceAmount","parity":"adapter","notes":"The prompt writes each selected per-side balance through the curator-authenticated server bridge to the public amount API."},
-  {"category":"economy","module":"Resource: Toggle Map Visibility","handler":"Waldo_fnc_EcoCore_registerZenModules","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoResource_toggleResourceMarkerVisibility","parity":"adapter","notes":"The module requests the same marker-visibility API through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Research: Define Technology Tree","handler":"Waldo_fnc_EcoResearch_promptResearchConfig","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoResearch_setResearchCatalog","parity":"adapter","notes":"The authoring prompt previews locally and publishes the same research catalogue through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Research: Place Research Centre","handler":"Waldo_fnc_EcoCore_registerZenModules","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoResearch_spawnResearchCenter","parity":"full","notes":"The position-based spawn API is invoked through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Construction: Define Build Catalogue","handler":"Waldo_fnc_EcoBuild_promptBuildConfig","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoBuild_setBuildCatalog","parity":"adapter","notes":"The authoring prompt previews locally and publishes the complete catalogue through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Construction: Place Completed Building","handler":"Waldo_fnc_EcoBuild_promptSpawnBuilding","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoBuild_spawnConfiguredBuilding","parity":"adapter","notes":"Zeus selects a configured catalogue item before using the same authoritative spawn path through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Construction: Place Consumable Build Vehicle","handler":"Waldo_fnc_EcoCore_registerZenModules","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoBuild_spawnConstructionVehicle","parity":"adapter","notes":"Zeus supplies the standard HEMTT class through the curator-authenticated server bridge; script callers may pass another valid class."},
-  {"category":"economy","module":"Purchasing: Define Vehicle Catalogue","handler":"Waldo_fnc_EcoBuy_promptPurchaseConfig","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoBuy_setPurchaseCatalog","parity":"adapter","notes":"The authoring prompt previews locally and publishes the complete catalogue through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Purchasing: Place Delivery Point","handler":"Waldo_fnc_EcoBuy_promptDropPoint","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoBuy_createDropPoint","parity":"adapter","notes":"Zeus derives position and camera direction before invoking the same delivery-point setup through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Purchasing: Place Player Terminal","handler":"Waldo_fnc_EcoCore_registerZenModules","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoBuy_spawnPurchaseLaptop","parity":"full","notes":"The position and direction spawn API is invoked through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Authority: Assign Ground Command","handler":"Waldo_fnc_EcoCommand_promptGroundCommand","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoCommand_promoteGroundCommand","parity":"adapter","notes":"The prompt selects a connected player, then submits the public promote or remove authority API through the curator-authenticated server bridge."},
-  {"category":"economy","module":"Rules: Toggle Commitment Mode","handler":"Waldo_fnc_EcoCore_registerZenModules","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoCore_setCommitmentModeEnabled","parity":"adapter","notes":"Zeus toggles current state through the curator-authenticated server bridge; script callers may set an explicit Boolean."},
-  {"category":"economy","module":"Diagnostics: Toggle Test Notices","handler":"Waldo_fnc_EcoCore_registerZenModules","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoCore_setTestingNoticeEnabled","parity":"adapter","notes":"Zeus toggles current state through the curator-authenticated server bridge; script callers may set an explicit Boolean."},
-  {"category":"economy","module":"Configuration: Build Mission Setup","handler":"Waldo_fnc_EcoCore_promptUnifiedSaveSystem","script_api":"Waldo_fnc_EcoCore_buildMissionSetupScript","parity":"adapter","notes":"The Zeus-authored state is exported as replayable public setup calls."},
-  {"category":"economy","module":"Configuration: Apply Preset","handler":"Waldo_fnc_EcoCore_promptUnifiedPresetSystem","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoCore_applyPresetSelections","parity":"adapter","notes":"The dialog submits the same preset inputs through the curator-authenticated server bridge and receives an asynchronous result."},
-  {"category":"economy","module":"Danger: Purge Economy System","handler":"Waldo_fnc_EcoCore_promptUnifiedPurgeSystem","via":"Waldo_fnc_EcoCore_zenServerRequest","script_api":"Waldo_fnc_EcoCore_executeUnifiedPurge","parity":"adapter","notes":"Zeus adds explicit confirmation and section selection before the curator-authenticated server bridge calls the public selective purge path; full-module removal remains available."}
+  {
+    "category": "core",
+    "module": "Supplies: Create Player Crate",
+    "handler": "Waldo_fnc_ZenSupplySpawner",
+    "via": "Waldo_fnc_ZenSpawnCrateServer",
+    "script_api": "Waldo_fnc_SupplyCratePopulate",
+    "parity": "adapter",
+    "notes": "Zeus gathers the crate choices, then the curator-validated server bridge creates the physical crate and invokes the shared population API."
+  },
+  {
+    "category": "core",
+    "module": "Mission Flow: End Mission + Show AAR",
+    "handler": "Waldo_fnc_ENDEX",
+    "script_api": "Waldo_fnc_ENDEX",
+    "parity": "full",
+    "notes": "Same server-authoritative ENDEX path."
+  },
+  {
+    "category": "core",
+    "module": "Mission Flow: End Mission (No AAR)",
+    "handler": "BIS_fnc_endMission",
+    "script_api": "BIS_fnc_endMission",
+    "parity": "full",
+    "notes": "Same Arma mission-end API."
+  },
+  {
+    "category": "core",
+    "module": "Medical: Create Field Hospital Crate",
+    "handler": "Waldo_fnc_ZenMedicalSpawner",
+    "via": "Waldo_fnc_ZenSpawnCrateServer",
+    "script_api": "Waldo_fnc_MedicalCratePopulate",
+    "parity": "adapter",
+    "notes": "Zeus gathers supply and hospital choices, then the curator-validated server bridge creates the physical crate and invokes the shared population API."
+  },
+  {
+    "category": "core",
+    "module": "Fortify: Set Side Budget",
+    "handler": "Waldo_fnc_FortifyBudgetModule",
+    "script_api": "ace_fortify_fnc_updateBudget",
+    "parity": "full",
+    "notes": "Side and signed budget delta are exposed and curator-authenticated on the server.",
+    "via": "Waldo_fnc_ZenFortifyBudgetServer"
+  },
+  {
+    "category": "core",
+    "module": "Convoy - Create Moving Group",
+    "handler": "Waldo_fnc_ZenConvoyModule",
+    "script_api": "Waldo_fnc_SimpleAiConvoy",
+    "parity": "full",
+    "notes": "Speed, separation and push-through match the script API."
+  },
+  {
+    "category": "core",
+    "module": "Respawn: Create Loadout Save Point",
+    "handler": "Waldo_fnc_ZenLoadoutSaveModule",
+    "script_api": "Waldo_fnc_ZenAddLoadoutSaveAction",
+    "parity": "adapter",
+    "notes": "Zeus may create a new empty station or configure the selected object; both use the same action installer."
+  },
+  {
+    "category": "core",
+    "module": "SafeStart: Enable Protection",
+    "handler": "Waldo_fnc_SafeStart",
+    "script_api": "Waldo_fnc_SafeStart",
+    "parity": "full",
+    "notes": "Calls the same server state transition."
+  },
+  {
+    "category": "core",
+    "module": "SafeStart: Go Live Now",
+    "handler": "Waldo_fnc_SafeStart",
+    "script_api": "Waldo_fnc_SafeStart",
+    "parity": "full",
+    "notes": "Calls the same server state transition."
+  },
+  {
+    "category": "core",
+    "module": "SafeStart: Start Go-Live Timer",
+    "handler": "Waldo_fnc_ZenSafeStartTimer",
+    "script_api": "Waldo_fnc_SafeStartTimer",
+    "parity": "full",
+    "notes": "Timer is configured in seconds in both surfaces."
+  },
+  {
+    "category": "core",
+    "module": "Jammer - Place Emitter",
+    "handler": "Waldo_fnc_ZenJammerPlace",
+    "script_api": "Waldo_fnc_Jammer",
+    "parity": "adapter",
+    "notes": "Radio behaviour, exact spawn-class selection, any existing object under the module and simplified reactivation and field-disable interaction selectors are exposed without raw class or code entry. Advanced interaction policy remains script-only.",
+    "required_tokens": [
+      "ACRE frequency coverage",
+      "Start Active",
+      "Pulse On (s)",
+      "Pulse Off (s)",
+      "Show Curator 3D Marker",
+      "Emitter source",
+      "Spawned emitter object",
+      "Allow Reactivation",
+      "Require Field Disable Procedure",
+      "Disable Procedure",
+      "Procedure Difficulty"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Jammer - Toggle Nearest",
+    "handler": "Waldo_fnc_ZenJammerToggle",
+    "script_api": "Waldo_fnc_JammerToggle",
+    "parity": "full",
+    "notes": "Uses the same authoritative toggle API."
+  },
+  {
+    "category": "core",
+    "module": "Jammer - Delete Nearest",
+    "handler": "Waldo_fnc_ZenJammerRemove",
+    "script_api": "Waldo_fnc_JammerRemove",
+    "parity": "full",
+    "notes": "Uses the same authoritative removal API and deletes the Zeus-created emitter."
+  },
+  {
+    "category": "core",
+    "module": "EMP - Detonate at Cursor",
+    "handler": "Waldo_fnc_ZenEMP",
+    "script_api": "Waldo_fnc_EMP",
+    "parity": "full",
+    "notes": "Radius and duration match the script API and execute through an authenticated server request.",
+    "via": "Waldo_fnc_ZenEMPServer"
+  },
+  {
+    "category": "core",
+    "module": "Tracker - Attach to Selected Object",
+    "handler": "Waldo_fnc_ZenTracker",
+    "script_api": "Waldo_fnc_Tracker",
+    "parity": "full",
+    "notes": "The module must be placed directly on an object or unit; tracking audience, custom label and active state are exposed through an authenticated server request.",
+    "required_tokens": [
+      "Place this module directly on the object or unit to track",
+      "Tracker Label",
+      "Start Active"
+    ],
+    "via": "Waldo_fnc_ZenTrackerServer"
+  },
+  {
+    "category": "core",
+    "module": "Dynamic AA - Create",
+    "handler": "Waldo_fnc_DynamicAAZen",
+    "via": "Waldo_fnc_DynamicAAZenPlacement",
+    "script_api": "Waldo_fnc_DynamicAACreate",
+    "parity": "adapter",
+    "notes": "The guided placement workflow gathers the same configuration accepted by the scripted creation API, including optional central-radar shutdown interaction.",
+    "required_tokens": [
+      "Require Radar Shutdown Procedure",
+      "Shutdown Procedure",
+      "Procedure Difficulty"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Dynamic AA - Remove Nearest",
+    "handler": "Waldo_fnc_DynamicAARemoveZen",
+    "script_api": "Waldo_fnc_DynamicAADestroy",
+    "parity": "adapter",
+    "notes": "Zeus resolves the nearest registered system before invoking the authoritative destroy API."
+  },
+  {
+    "category": "core",
+    "module": "Vehicle Customisation - Editor",
+    "handler": "Waldo_fnc_VehCust_promptEditor",
+    "script_api": "Waldo_fnc_VehicleWeaponLoadoutApply",
+    "parity": "full",
+    "notes": "Persistent multi-tab dialog (Turret/Pylon/Appearance/Component) placed directly on a vehicle. Every tab's Add button is gated by its own validation-gated collector before a row reaches the client-local Pending Changes list; Apply All Pending and Copy From Nearby Vehicle apply/dispatch through the single consolidated curator-authenticated server bridge, which in turn calls Waldo_fnc_VehicleWeaponLoadoutApply, Waldo_fnc_VehicleAppearanceApply, and Waldo_fnc_VehicleComponentRemove by row type. Export All Pending To Clipboard is client-only, no server call.",
+    "required_tokens": [
+      "Place this module directly on the vehicle you want to edit"
+    ],
+    "via": "Waldo_fnc_ZenVehicleCustomizationServer"
+  },
+  {
+    "category": "core",
+    "module": "Vehicle Customisation - Inspect",
+    "handler": "Waldo_fnc_ZenVehicleCustomizationInspect",
+    "script_api": "Waldo_fnc_VehicleCustomizationInspect",
+    "parity": "full",
+    "notes": "Read-only beginner helper: the module must be placed directly on a vehicle and merges Waldo_fnc_VehicleWeaponLoadoutInspect's and Waldo_fnc_VehicleAppearanceInspect's reports into one hint and one clipboard copy - purely local, no server round-trip, since nothing here mutates state or is more sensitive than looking at the vehicle in Eden already would tell you.",
+    "required_tokens": [
+      "Place this module directly on the vehicle you want to inspect"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Dynamic AO - Create",
+    "handler": "Waldo_fnc_DynamicAOZen",
+    "script_api": "Waldo_fnc_DynamicAOCreate",
+    "parity": "adapter",
+    "notes": "One runtime faction selector binds allegiance to faction, exposes all bounded AO-generation settings and submits the same server-owned HashMap API used by scripts. Generated AI intentionally defer to WMP's active profile rather than exposing a competing skill slider.",
+    "required_tokens": [
+      "Enemy faction and side",
+      "Vehicle ratio - cars",
+      "Air ratio - helicopters",
+      "Civilian faction",
+      "Outer-ring minefields",
+      "Manned roadblocks"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Dynamic AO - Remove",
+    "handler": "Waldo_fnc_DynamicAORemoveZen",
+    "script_api": "Waldo_fnc_DynamicAODestroy",
+    "parity": "adapter",
+    "notes": "Zeus selects a friendly-name live AO, with the nearest system preselected, before invoking complete authoritative cleanup."
+  },
+  {
+    "category": "core",
+    "module": "Scale Object",
+    "handler": "Waldo_fnc_ObjectScaleZen",
+    "script_api": "Waldo_fnc_ObjectScale",
+    "parity": "adapter",
+    "notes": "Zeus resolves the nearest object and exposes the validated scale and simple-object choices."
+  },
+  {
+    "category": "core",
+    "module": "Persistence - Control",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_PersistenceInit",
+    "parity": "adapter",
+    "notes": "The runtime bridge publishes settings before starting or stopping persistence."
+  },
+  {
+    "category": "core",
+    "module": "Persistence - Register Object",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_PersistenceRegisterObject",
+    "parity": "full",
+    "notes": "Stable key and every supported persistence field are exposed."
+  },
+  {
+    "category": "core",
+    "module": "Persistence - Save Now",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_PersistenceSaveNow",
+    "parity": "full",
+    "notes": "Player and object save choices match the script API."
+  },
+  {
+    "category": "core",
+    "module": "Field Resupply - Register Hub",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_FieldResupplyRegisterHub",
+    "parity": "full",
+    "notes": "Serviced side and finite or unlimited stock are exposed."
+  },
+  {
+    "category": "core",
+    "module": "Field Resupply - Assign Carrier",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_FieldResupplyAssignCarrier",
+    "parity": "full",
+    "notes": "Current and maximum portable-crate capacity are exposed."
+  },
+  {
+    "category": "core",
+    "module": "Field Resupply - Grant Crates",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_FieldResupplyGrantCrates",
+    "parity": "full",
+    "notes": "Grants are clamped to carrier capacity unless explicit expansion is selected; only the receiving player is notified after the intro UI finishes."
+  },
+  {
+    "category": "core",
+    "module": "Vehicle Recovery - Register Workshop",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_RecoveryRegisterWorkshop",
+    "parity": "full",
+    "notes": "Workshop key, delivery radius and serviced side match the script API."
+  },
+  {
+    "category": "core",
+    "module": "Vehicle Recovery - Register Vehicle",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_RecoveryRegisterVehicle",
+    "parity": "full",
+    "notes": "Damage, destroyed, engineer, package, cargo, restored-fuel and optional preparation-procedure policy match the script API.",
+    "required_tokens": [
+      "Require Recovery Preparation",
+      "Preparation Procedure"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Vehicle Recovery - Register Carrier",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_RecoveryRegisterCarrier",
+    "parity": "full",
+    "notes": "Loading range, automatic/virtual/physical handling and package capacity match the script API."
+  },
+  {
+    "category": "core",
+    "module": "Respawn - Squad Rally Control",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_RallyPointInit",
+    "parity": "adapter",
+    "notes": "The dialog publishes all deployment rules before installing or removing player-local actions."
+  },
+  {
+    "category": "core",
+    "module": "Tactical Display - Register",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_TacticalDisplayRegister",
+    "parity": "full",
+    "notes": "Side, radius, known-enemy and optional authentication-procedure policy match the script API.",
+    "required_tokens": [
+      "Require Display Authentication",
+      "Authentication Procedure"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Gunship - Register or Spawn",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "script_api": "Waldo_fnc_GunshipRegister",
+    "parity": "adapter",
+    "notes": "Zeus can register a nearby aircraft or build the equivalent validated spawn configuration."
+  },
+  {
+    "category": "core",
+    "module": "Gunship - Assign Controller",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "script_api": "Waldo_fnc_GunshipServerHandle",
+    "parity": "adapter",
+    "notes": "Zeus resolves the nearby player before using the authoritative assignment operation."
+  },
+  {
+    "category": "core",
+    "module": "Gunship - Set Orbit",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "script_api": "Waldo_fnc_GunshipServerHandle",
+    "parity": "adapter",
+    "notes": "Named system and orbit position are sent through the same authoritative operation router used by scripted control."
+  },
+  {
+    "category": "core",
+    "module": "Gunship - Operational Control",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "script_api": "Waldo_fnc_GunshipServerHandle",
+    "parity": "adapter",
+    "notes": "The selected return, service, release or remove operation uses the authoritative gunship control path."
+  },
+  {
+    "category": "core",
+    "module": "Hazard - Create",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_HazardRegisterZone",
+    "parity": "adapter",
+    "notes": "The dialog exposes the common circular-zone profile; scripted callbacks and complex shapes remain supported by the API."
+  },
+  {
+    "category": "core",
+    "module": "Hazard - Remove Nearest",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_HazardUnregisterZone",
+    "parity": "adapter",
+    "notes": "Zeus resolves the nearest named zone before using the unregister API."
+  },
+  {
+    "category": "core",
+    "module": "AI Rebalance - Control",
+    "handler": "Waldo_fnc_FeatureRuntimeZen",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_AIRebalanceInit",
+    "parity": "adapter",
+    "notes": "Enable state, day or night mode and named profile are published before locality-aware application."
+  },
+  {
+    "category": "core",
+    "module": "UI QA - Set Visual Theme",
+    "handler": "Waldo_fnc_UiThemeZen",
+    "via": "Waldo_fnc_UiThemeSetServer",
+    "script_api": "Waldo_fnc_UiTheme",
+    "parity": "adapter",
+    "notes": "The QA selector changes one of four named visual-only global themes and can preview semantic cards without changing feature behavior.",
+    "required_tokens": [
+      "Default / Modern",
+      "Second World War",
+      "Vietnam / Cold War",
+      "Science Fiction"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Paradrop - Create Drop Zone",
+    "handler": "Waldo_fnc_ParadropDropZoneZen",
+    "script_api": "Waldo_fnc_ParadropCreateDropZone",
+    "parity": "adapter",
+    "notes": "The curator selects operational side and physical airframe independently, plus route, drop cadence, markers and cleanup, before invoking the authoritative operation API."
+  },
+  {
+    "category": "core",
+    "module": "Paradrop - Embark Players",
+    "handler": "Waldo_fnc_ParadropDropZoneZen",
+    "script_api": "Waldo_fnc_ParadropEmbark",
+    "parity": "adapter",
+    "notes": "The curator selects a named operation and either transfers selected player or group units into cargo, creates a reusable boarding point, or does both."
+  },
+  {
+    "category": "core",
+    "module": "Paradrop - Remove Operation",
+    "handler": "Waldo_fnc_ParadropDropZoneZen",
+    "script_api": "Waldo_fnc_ParadropRemoveDropZone",
+    "parity": "adapter",
+    "notes": "The curator selects a named public operation instead of entering an internal ID, then invokes authoritative cleanup."
+  },
+  {
+    "category": "core",
+    "module": "Mission Flow: Send Notification",
+    "handler": "Waldo_fnc_ZenNotify",
+    "via": "Waldo_fnc_ZenNotifyServer",
+    "script_api": "Waldo_fnc_NotificationBroadcast",
+    "parity": "adapter",
+    "notes": "The dialog gathers title/message/type/duration/placement and an audience (all players, by side, by group, or the curator's current Zeus selection) before the curator-authenticated server bridge invokes the same public broadcast API mission scripts can call directly."
+  },
+  {
+    "category": "core",
+    "module": "Create Custom 3D Marker",
+    "handler": "Waldo_fnc_ZenCreate3DMarker",
+    "script_api": "Waldo_fnc_Create3DMarker",
+    "parity": "adapter",
+    "notes": "Zeus chooses a named icon, accessible colour, side audience, placement, range and size without entering texture paths. Object placement defaults to its anchor, with an optional bounding-box-derived above-object offset; empty placement uses a fixed position.",
+    "required_tokens": [
+      "Marker label",
+      "Place above object",
+      "Extra vertical offset",
+      "Maximum view distance",
+      "Visible to"
+    ]
+  },
+  {
+    "category": "core",
+    "module": "Add WMP Field Equipment Interaction",
+    "handler": "Waldo_fnc_ZenFieldEquipment",
+    "via": "Waldo_fnc_FeatureRuntimeApply",
+    "script_api": "Waldo_fnc_FieldEquipmentZenSetupLocal",
+    "parity": "adapter",
+    "notes": "The authenticated server bridge publishes one repeat-safe local setup which selects the shared MiniGameInteractionSetup or BombDefuseSetup path. Zeus exposes named success/failure presets and optional server-side callback code using the selected interaction object.",
+    "required_tokens": [
+      "Interaction type",
+      "EOD bomb defusal",
+      "On success code (optional)",
+      "On failure code (optional)"
+    ]
+  },
+  {
+    "category": "economy",
+    "module": "Resource: Define Resource Types",
+    "handler": "Waldo_fnc_EcoResource_promptResourceConfig",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoResource_addResourceType",
+    "parity": "adapter",
+    "notes": "The authoring prompt builds resource records and sends each one through the curator-authenticated server bridge to the public resource-type API."
+  },
+  {
+    "category": "economy",
+    "module": "Resource: Place Collectible Crate",
+    "handler": "Waldo_fnc_EcoResource_promptResourceCrateValue",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoResource_spawnResourceCrate",
+    "parity": "adapter",
+    "notes": "The prompt gathers values then invokes the authoritative crate spawn path through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Resource: Place Production Zone",
+    "handler": "Waldo_fnc_EcoResource_promptResourceZone",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoResource_createResourceZone",
+    "parity": "adapter",
+    "notes": "The prompt exposes zone identity, owner, size, deposits and interval through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Resource: Set Side Balances",
+    "handler": "Waldo_fnc_EcoResource_promptResourceSettings",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoResource_setSideResourceAmount",
+    "parity": "adapter",
+    "notes": "The prompt writes each selected per-side balance through the curator-authenticated server bridge to the public amount API."
+  },
+  {
+    "category": "economy",
+    "module": "Resource: Toggle Map Visibility",
+    "handler": "Waldo_fnc_EcoCore_registerZenModules",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoResource_toggleResourceMarkerVisibility",
+    "parity": "adapter",
+    "notes": "The module requests the same marker-visibility API through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Research: Define Technology Tree",
+    "handler": "Waldo_fnc_EcoResearch_promptResearchConfig",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoResearch_setResearchCatalog",
+    "parity": "adapter",
+    "notes": "The authoring prompt previews locally and publishes the same research catalogue through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Research: Place Research Centre",
+    "handler": "Waldo_fnc_EcoCore_registerZenModules",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoResearch_spawnResearchCenter",
+    "parity": "full",
+    "notes": "The position-based spawn API is invoked through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Construction: Define Build Catalogue",
+    "handler": "Waldo_fnc_EcoBuild_promptBuildConfig",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoBuild_setBuildCatalog",
+    "parity": "adapter",
+    "notes": "The authoring prompt previews locally and publishes the complete catalogue through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Construction: Place Completed Building",
+    "handler": "Waldo_fnc_EcoBuild_promptSpawnBuilding",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoBuild_spawnConfiguredBuilding",
+    "parity": "adapter",
+    "notes": "Zeus selects a configured catalogue item before using the same authoritative spawn path through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Construction: Place Consumable Build Vehicle",
+    "handler": "Waldo_fnc_EcoCore_registerZenModules",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoBuild_spawnConstructionVehicle",
+    "parity": "adapter",
+    "notes": "Zeus supplies the standard HEMTT class through the curator-authenticated server bridge; script callers may pass another valid class."
+  },
+  {
+    "category": "economy",
+    "module": "Purchasing: Define Vehicle Catalogue",
+    "handler": "Waldo_fnc_EcoBuy_promptPurchaseConfig",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoBuy_setPurchaseCatalog",
+    "parity": "adapter",
+    "notes": "The authoring prompt previews locally and publishes the complete catalogue through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Purchasing: Place Delivery Point",
+    "handler": "Waldo_fnc_EcoBuy_promptDropPoint",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoBuy_createDropPoint",
+    "parity": "adapter",
+    "notes": "Zeus derives position and camera direction before invoking the same delivery-point setup through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Purchasing: Place Player Terminal",
+    "handler": "Waldo_fnc_EcoCore_registerZenModules",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoBuy_spawnPurchaseLaptop",
+    "parity": "full",
+    "notes": "The position and direction spawn API is invoked through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Authority: Assign Ground Command",
+    "handler": "Waldo_fnc_EcoCommand_promptGroundCommand",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoCommand_promoteGroundCommand",
+    "parity": "adapter",
+    "notes": "The prompt selects a connected player, then submits the public promote or remove authority API through the curator-authenticated server bridge."
+  },
+  {
+    "category": "economy",
+    "module": "Rules: Toggle Commitment Mode",
+    "handler": "Waldo_fnc_EcoCore_registerZenModules",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoCore_setCommitmentModeEnabled",
+    "parity": "adapter",
+    "notes": "Zeus toggles current state through the curator-authenticated server bridge; script callers may set an explicit Boolean."
+  },
+  {
+    "category": "economy",
+    "module": "Diagnostics: Toggle Test Notices",
+    "handler": "Waldo_fnc_EcoCore_registerZenModules",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoCore_setTestingNoticeEnabled",
+    "parity": "adapter",
+    "notes": "Zeus toggles current state through the curator-authenticated server bridge; script callers may set an explicit Boolean."
+  },
+  {
+    "category": "economy",
+    "module": "Configuration: Build Mission Setup",
+    "handler": "Waldo_fnc_EcoCore_promptUnifiedSaveSystem",
+    "script_api": "Waldo_fnc_EcoCore_buildMissionSetupScript",
+    "parity": "adapter",
+    "notes": "The Zeus-authored state is exported as replayable public setup calls."
+  },
+  {
+    "category": "economy",
+    "module": "Configuration: Apply Preset",
+    "handler": "Waldo_fnc_EcoCore_promptUnifiedPresetSystem",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoCore_applyPresetSelections",
+    "parity": "adapter",
+    "notes": "The dialog submits the same preset inputs through the curator-authenticated server bridge and receives an asynchronous result."
+  },
+  {
+    "category": "economy",
+    "module": "Danger: Purge Economy System",
+    "handler": "Waldo_fnc_EcoCore_promptUnifiedPurgeSystem",
+    "via": "Waldo_fnc_EcoCore_zenServerRequest",
+    "script_api": "Waldo_fnc_EcoCore_executeUnifiedPurge",
+    "parity": "adapter",
+    "notes": "Zeus adds explicit confirmation and section selection before the curator-authenticated server bridge calls the public selective purge path; full-module removal remains available."
+  }
 ]

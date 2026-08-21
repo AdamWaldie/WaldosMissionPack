@@ -130,15 +130,16 @@ private _standby = [_centre, _runLength * 0.65, _direction + 180] call BIS_fnc_r
 private _spawn = [_standby, _approach, _direction + 180] call BIS_fnc_relPos;
 _spawn set [2, _altitude];
 
-// Do not use createVehicle special "FLY" here. The engine applies its own roughly 100 m airborne
-// creation height after creation, which can overwrite an immediate 300 m setPosATL and leave every
-// otherwise-correct route waypoint below the Static-Line envelope. Reproduce the known-good Eden
-// lifecycle instead: create at the calculated position, freeze, place exactly, crew, then unfreeze
-// before the shared route builder applies flyInHeight and waypoints.
-private _aircraft = createVehicle [_class, _spawn, [], 0, "NONE"];
+// createVehicle special "FLY" plus crewing the aircraft immediately afterward (no
+// enableSimulationGlobal freeze/unfreeze pause in between) is the same pattern
+// Waldo_fnc_GunshipRegister and Waldo_fnc_DynamicAOCreate's own air-patrol spawn already use
+// successfully for both planes and helicopters - freezing the aircraft while crew is assigned, as
+// this used to do, is what was actually causing a helicopter to sink/crash once simulation resumed:
+// its rotor lift only exists while simulation is live, so pausing simulation mid-setup and then
+// resuming it moments later left the rotor state uninitialised for that first stretch of live frames.
+private _aircraft = createVehicle [_class, _spawn, [], 0, "FLY"];
 [_aircraft] call Waldo_fnc_HeadlessPinCrew;
-_aircraft enableSimulationGlobal false;
-_aircraft setPosASL (AGLToASL _spawn);
+_aircraft setPosATL _spawn;
 _aircraft setDir _direction;
 // Same guard as Waldo_fnc_ParadropQuickFlightSetup: mark this spawned aircraft as explicitly
 // configured before any client's Waldo_fnc_AddVehicleFunctions auto-detection (installed on the
@@ -185,9 +186,6 @@ if (isNull _pilot || {driver _aircraft != _pilot}) exitWith {
 };
 _aircraft setVehicleLock "UNLOCKED";
 
-// Build the complete route while the new aircraft is still frozen. If simulation is enabled before
-// the pilot has a real current waypoint and forced altitude, Arma immediately adopts its default
-// airborne state (roughly 100 m AGL); a later waypoint list alone does not reliably dislodge it.
 private _route = [
     _aircraft, _flightGroup, _centre, _direction, _altitude, _maximumSpeed,
     _approach, _runLength, _exitDistance, _lifecycle, _circuitDirection
@@ -197,19 +195,43 @@ if (_route isEqualTo createHashMap) exitWith {
     ["Creation failed: the flight route could not be built.", "ERROR"] call _notifyRequester;
     false
 };
-// Reassert the exact creation transform after crew and waypoint creation, then make the aircraft
-// live and issue the flight orders against the now-local, simulated AI vehicle. This ordering
-// mirrors the working Eden/pre-placed path while avoiding a one-frame default-flight window.
+// Reassert the exact creation transform after crew and waypoint creation, then issue the flight
+// orders. The aircraft has been live/simulated since creation (see the "FLY" comment above) - no
+// enableSimulationGlobal toggle here.
 _aircraft setDir _direction;
-_aircraft setPosASL (AGLToASL (_route get "spawn"));
-_aircraft enableSimulationGlobal true;
+_aircraft setPosATL (_route get "spawn");
 _aircraft engineOn true;
-_aircraft setVelocityModelSpace [0, (_route get "maxSpeed") / 3.6, 0];
-_aircraft limitSpeed (_route get "maxSpeed");
-_aircraft forceSpeed ((_route get "maxSpeed") / 3.6);
-// Match ZEN's working Fly Height operation exactly. This vehicle is server-created and remains
-// server-local here, so the locality-targeted operation is executed directly on its owner.
-_aircraft flyInHeight (_route get "altitude");
+private _applyCruiseOrders = {
+    params ["_aircraft", "_route"];
+    if (isNull _aircraft) exitWith {};
+    _aircraft setVelocityModelSpace [0, (_route get "maxSpeed") / 3.6, 0];
+    _aircraft limitSpeed (_route get "maxSpeed");
+    _aircraft forceSpeed ((_route get "maxSpeed") / 3.6);
+    // Match ZEN's working Fly Height operation exactly. This vehicle is server-created and remains
+    // server-local here, so the locality-targeted operation is executed directly on its owner.
+    _aircraft flyInHeight (_route get "altitude");
+};
+if (_aircraft isKindOf "Helicopter") then {
+    // A helicopter's rotor has zero lift the instant engineOn fires - RotorLib needs real simulated
+    // time to spool up. Forcing full cruise velocity/forceSpeed/flyInHeight in the same instant as
+    // engineOn (as a plane correctly does, in the immediate "else" branch below) fights that spool-up
+    // and nose-dives the aircraft before it can hold altitude. The forced speed/velocity commands
+    // themselves are NOT the problem and must stay for every aircraft type - they're what gives
+    // correct speed-through-the-drop-area for jump timing, not just a smooth launch - only the
+    // TIMING relative to engineOn needs to change for a helicopter specifically. Defer a few seconds
+    // so the rotor has real lift established before cruise orders are issued.
+    [_aircraft, _route, _applyCruiseOrders] spawn {
+        params ["_aircraft", "_route", "_applyCruiseOrders"];
+        sleep 4;
+        if (isNull _aircraft || {!alive _aircraft}) exitWith {};
+        [_aircraft, _route] call _applyCruiseOrders;
+    };
+} else {
+    [_aircraft, _route] call _applyCruiseOrders;
+};
+// For a helicopter, cruise orders (and therefore altitude/speed convergence toward "requested") are
+// deliberately deferred a few seconds above - "actual"/"speed" here reflect the moment of spawn, not
+// the final cruise state.
 diag_log format [
     "[WMP PARADROP] Dynamic aircraft activated: id=%1 requested=%2m AGL actual=%3m AGL speed=%4km/h currentWaypoint=%5.",
     _id,

@@ -38,14 +38,19 @@ Zeus registration, the Feature Runtime Control snapshot handshake, Object
 Scaling, UI Theme, Accessibility, Emergency Dismount, Corpse Traps, local
 HUD state, 3D markers, and ACE-vs-vanilla actions.
 
-Two respawn-focused client checks: `respawn`/`loadout-restore` reports the
-last respawn's identity-match outcome and restored item count (`UNCONFIGURED`
-before this client's first respawn, `ERROR` on an identity mismatch); and
-`dependencies`/`ace-nametags-respawn-compat` is an informational-only note
-(never `ERROR`, no fix hint) that fires when `ace_nametags`/`ace_dogtags` is
-loaded, explaining the known upstream ACE3 `fnc_setName` "Type Object,
-expected Bool" respawn error - ACE's own config-based `respawn` handler, not
-a WMP defect.
+A respawn-focused client check, `respawn`/`loadout-restore`, reports the last
+respawn's identity-match outcome and restored item count (`UNCONFIGURED`
+before this client's first respawn, `ERROR` on an identity mismatch).
+
+Separately, not a diagnostics row: `initPlayerLocal.sqf` also calls
+`Waldo_fnc_AceSetNameRespawnBindingRepair` after CBA/ACE initialise, which
+patches a real ACE 3.21.1 bug (its own respawn hook forwarding `[unit,
+corpse]` wholesale into `ace_common_fnc_setName`, throwing "Type Object,
+expected Bool" on every scripted respawn - fixed upstream in
+`community/ACE3#11470`, targeted for 3.21.2) rather than only reporting it.
+It recognises ACE's own fixed callback text as already safe, so it is a
+no-op once a mission's ACE build already has the fix. Check RPT for
+`[WMP ACE COMPAT]` lines to confirm it ran.
 
 The latest report broadcasts as `Waldo_Diagnostics_LastReport`:
 `[warningCount, finishedAt, serverChecks, clientReports, runId]` — useful if

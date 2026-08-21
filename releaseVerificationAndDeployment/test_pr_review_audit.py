@@ -340,7 +340,7 @@ class PrReviewAuditTests(unittest.TestCase):
             "Breaching - Configure Class",
         ):
             self.assertNotIn(removed, source)
-        self.assertIn('Waldo_ZenModuleCount", 45', source)
+        self.assertIn('Waldo_ZenModuleCount", 47', source)
 
     def test_field_resupply_zen_can_create_a_hub_crate_authoritatively(self):
         zen = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeZen.sqf").read_text(encoding="utf-8")
@@ -773,9 +773,8 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertNotIn('createVehicleCrew _aircraft', create)
         self.assertIn('createGroup [_side, true]', create)
         self.assertIn('_pilot moveInDriver _aircraft', create)
-        self.assertIn('createVehicle [_class, _spawn, [], 0, "NONE"]', create)
-        self.assertIn('_aircraft enableSimulationGlobal false', create)
-        self.assertIn('_aircraft setPosASL (AGLToASL _spawn)', create)
+        self.assertIn('createVehicle [_class, _spawn, [], 0, "FLY"]', create)
+        self.assertIn('_aircraft setPosATL _spawn', create)
         self.assertIn('["_altitude", 300, [0]]', route)
         self.assertIn('Waldo_Paradrop_DefaultStaticRouteAltitude', create)
         self.assertIn('Waldo_Paradrop_DefaultStaticRouteAltitude', quick)

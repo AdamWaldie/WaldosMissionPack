@@ -294,6 +294,21 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
         private _recognizedDoorSources = ["ramp_bottom", "door_2_1", "door_2_2", "jumpdoor_1", "jumpdoor_2", "back_ramp_switch", "back_ramp_half_switch", "RearDoors", "Door_1_source", "ramp_anim"];
         if (_recognizedDoorSources findIf {isClass (_animationSources >> _x)} < 0) then {_requireDoor = false};
     };
+    // The requirement above only confirms the airframe HAS a recognised ramp/door animation - it says
+    // nothing about whether anything can actually open it. The curated vanilla airframes this feature
+    // shipped with all had a player-facing action wired to their ramp/door, but a live-modset-
+    // discovered airframe (Waldo_fnc_ResolveVehicleClassPool) frequently does not, which otherwise
+    // leaves the jump action permanently unavailable - the exact "functionally impossible" failure
+    // mode this closes. Open it automatically as the aircraft nears the drop run instead of assuming
+    // the airframe provides its own way to do so; never closed again afterward; safe to leave open for
+    // the rest of a LOOP aircraft's repeat passes.
+    if (_requireDoor) then {
+        [_aircraft, _route get "green"] spawn {
+            params ["_aircraft", "_green"];
+            waitUntil {sleep 1; isNull _aircraft || {!alive _aircraft} || {_aircraft distance2D _green < 900}};
+            if (!isNull _aircraft && {alive _aircraft}) then {[_aircraft, true] call Waldo_fnc_ParadropOperateDoor};
+        };
+    };
     // Requesting a route altitude/speed and a jump envelope independently is exactly how a jump
     // action ends up permanently unavailable (the aircraft cruises outside its own configured
     // window). Normalize the envelope around the route this aircraft is actually flying, the same

@@ -53,6 +53,10 @@ for "_i" from 1 to _count do {
     _fighter setPosATL _spawnPosition;
     _fighter setDir (_spawn2D getDir _centre);
     _fighter flyInHeight _height;
+    // Explicit engineOn, same as Waldo_fnc_DynamicAOCreate's own air-patrol spawn: createVehicle's
+    // "FLY" special is not a reliable substitute for it, particularly for rotorLib-simulated
+    // helicopters, whose rotor RPM otherwise starts at 0 and the airframe drops before it spins up.
+    _fighter engineOn true;
     // Use the side-aware command directly. A config-side group followed by joinSilent briefly
     // exposed the wrong/unknown side and stale crew references on dedicated servers.
     private _group = _side createVehicleCrew _fighter;

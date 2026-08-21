@@ -138,8 +138,8 @@ field:
   stale). Full list in the script header.
 - `createMarkers` also adds a **live-updating aircraft marker** (same
   mechanism airborne gunships use) that tracks the plane's actual
-  position/heading every frame while it's flying, visible only to a
-  friendly side — this is what makes a pre-placed target marker feel
+  position/heading every frame while it's flying, visible only to players
+  on the aircraft's own side — this is what makes a pre-placed target marker feel
   "replaced" by a working drop zone once the aircraft actually takes off,
   instead of staying a fixed icon with no sense of where the plane
   currently is. It's always removed once the aircraft is gone, regardless

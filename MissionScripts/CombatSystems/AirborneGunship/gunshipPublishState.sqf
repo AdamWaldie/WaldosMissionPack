@@ -22,6 +22,8 @@ private _summaries = [];
 {
     private _state = _registry get _x;
     private _config = _state get "config";
+    // Tuple order is a shared contract read positionally by GunshipSetupLocal, GunshipUpdateMarkersLocal
+    // and GunshipPromptOrbitConfig - append new fields at the end only, never insert/reorder.
     _summaries pushBack [
         _x,
         _state getOrDefault ["aircraft", objNull],
@@ -34,7 +36,10 @@ private _summaries = [];
         _config getOrDefault ["turretProfiles", []],
         _config getOrDefault ["showMarkers", true],
         _state getOrDefault ["serviceCompleteAt", -1],
-        _config getOrDefault ["serviceDuration", 0]
+        _config getOrDefault ["serviceDuration", 0],
+        _config getOrDefault ["radius", 1500],
+        _config getOrDefault ["altitude", 700],
+        _state getOrDefault ["offStationReason", ""]
     ];
 } forEach keys _registry;
 missionNamespace setVariable ["Waldo_Gunship_PublicSystems", _summaries, true];

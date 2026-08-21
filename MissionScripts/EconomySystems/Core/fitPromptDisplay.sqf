@@ -4,11 +4,19 @@
  * the shared WMP operations-console treatment. This post-layout pass prevents legacy prompt
  * coordinates from placing controls off-screen at 4:3, ultrawide or large UI scale.
  *
+ * Only parent-less controls contribute to the absolute safe-zone bounds. A control inside an
+ * RscControlsGroup uses parent-local coordinates, so mixing those small values into the absolute bounds
+ * corrupts the card. Resizing a controls group does not scale its children, however: after the absolute
+ * layout scale is known, every nested child must also have its local position, size and text scaled by
+ * that same factor. This keeps grouped dialogs inside their card at every UI scale. Existing Economy
+ * prompts create no control groups, so nested scaling is additive for them.
+ *
  * Arguments: 0: Economy prompt display <DISPLAY>.
  * Return Value: BOOL - true when fitting was scheduled, false for an invalid display.
  *
  * Example: [_display] call Waldo_fnc_EcoCore_fitPromptDisplay;
- * Current caller: Economy prompt construction after controls have been created.
+ * Current caller: Economy prompt construction after controls have been created;
+ * MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf.
  */
 params [["_display", displayNull, [displayNull]]];
 if (isNull _display) exitWith {false};
@@ -33,7 +41,22 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
     private _chrome = _display getVariable ["WaldoEcoCore_PromptChromeControls", []];
     private _controls = (allControls _display) select {
         private _p = ctrlPosition _x;
-        !(_x in _baseline) && {!(_x in _chrome)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
+        // allControls _display recurses into every RscControlsGroup's own children too, not just this
+        // display's direct top-level controls. A group child's own ctrlPosition is expressed relative
+        // to its parent group's local origin (small numbers near [0,0]), not this display's absolute
+        // safe-zone coordinates - if one of those slipped into this pass, its tiny local X/Y would
+        // corrupt the computed min/max bounding box against every genuinely absolute-positioned
+        // control, and it would then be moved to a wrong, shifted absolute position built from that
+        // corrupted box (confirmed root cause of the Vehicle Customisation Editor's tab content
+        // rendering shifted/clipped after this pass ran). ctrlParent only ever returns a real control
+        // for an actual group child (controlNull for every ordinary top-level control), so this is a
+        // reliable, purely additive exclusion - no existing Economy prompt creates any control group at
+        // all, so this can only ever change behavior for a caller that does.
+        !(_x in _baseline) && {!(_x in _chrome)} && {isNull (ctrlParent _x)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
+    };
+    private _nestedControls = (allControls _display) select {
+        private _p = ctrlPosition _x;
+        !(_x in _baseline) && {!(_x in _chrome)} && {!isNull (ctrlParent _x)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
     };
     if (_controls isEqualTo []) exitWith {};
     private _minX = 1e6;
@@ -98,7 +121,7 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
             _newWidth,
             _newHeight
         ];
-        if ((ctrlType _x) in [0, 1, 2, 11, 16, 41] && {ctrlText _x != ""}) then {
+        if ((ctrlType _x) in [0, 1, 2, 4, 11, 16, 41] && {ctrlText _x != ""}) then {
             private _fontHeight = ctrlFontHeight _x;
             if (_fontHeight > 0) then {
                 _fontHeight = _fontHeight min (_newHeight * 0.72);
@@ -126,6 +149,43 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
         };
         _x ctrlCommit 0;
     } forEach _controls;
+
+    // Group children keep parent-local coordinates when the group is resized; the engine does not
+    // scale them automatically. Apply the same uniform scale without adding the card's absolute origin.
+    {
+        (ctrlPosition _x) params ["_xPos", "_yPos", "_width", "_height"];
+        private _newWidth = _width * _scale;
+        private _newHeight = _height * _scale;
+        _x ctrlSetPosition [_xPos * _scale, _yPos * _scale, _newWidth, _newHeight];
+        if ((ctrlType _x) in [0, 1, 2, 4, 11, 16, 41] && {ctrlText _x != ""}) then {
+            private _fontHeight = (ctrlFontHeight _x) * _scale;
+            if (_fontHeight > 0) then {
+                _fontHeight = _fontHeight min (_newHeight * 0.72);
+                private _minimumFont = (0.010 max (_newHeight * 0.30)) min _fontHeight;
+                _x ctrlSetFontHeight _fontHeight;
+                _x ctrlCommit 0;
+                while {
+                    _fontHeight > _minimumFont
+                    && {
+                        ctrlTextHeight _x > (_newHeight * 0.94)
+                        || {ctrlTextWidth _x > (_newWidth * 0.92)}
+                    }
+                } do {
+                    _fontHeight = (_fontHeight - 0.001) max _minimumFont;
+                    _x ctrlSetFontHeight _fontHeight;
+                    _x ctrlCommit 0;
+                };
+            };
+        };
+        if ((ctrlType _x) in [1, 16]) then {
+            _x ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.035, 0.16, 0.28, 0.98]]);
+            _x ctrlSetActiveColor (_theme getOrDefault ["accentActive", [0.08, 0.48, 0.78, 1]]);
+            _x ctrlSetTextColor (_theme getOrDefault ["text", [1, 1, 1, 1]]);
+            _x ctrlSetFont (_theme getOrDefault ["font", "RobotoCondensed"]);
+        };
+        _x ctrlCommit 0;
+    } forEach _nestedControls;
+
     private _findings = [];
     private _right = _targetX + _targetW;
     private _bottom = _targetY + _targetH;
@@ -158,6 +218,18 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
             _findings pushBack format ["IDC %1 NAVIGATION BUTTON WIDTH EXCESSIVE", ctrlIDC _x];
         };
     } forEach _controls;
+    {
+        (ctrlPosition _x) params ["_xPos", "_yPos", "_width", "_height"];
+        private _parentPosition = ctrlPosition (ctrlParent _x);
+        private _parentWidth = _parentPosition param [2, 0];
+        private _parentHeight = _parentPosition param [3, 0];
+        if (_xPos < -0.001 || {_yPos < -0.001} || {(_xPos + _width) > (_parentWidth + 0.001)} || {(_yPos + _height) > (_parentHeight + 0.001)}) then {
+            _findings pushBack format ["IDC %1 OUTSIDE PARENT GROUP", ctrlIDC _x];
+        };
+        if ((ctrlType _x) in [0, 1, 4, 11, 16] && {ctrlText _x != ""} && {(ctrlTextWidth _x) > (_width * 0.96)}) then {
+            _findings pushBack format ["IDC %1 GROUPED TEXT WIDTH CLIPPED text=%2", ctrlIDC _x, ctrlText _x];
+        };
+    } forEach _nestedControls;
     private _cardBounds = [_cardX, _cardY, _cardW, _cardH];
     if ((count _cardBounds) == 4) then {
         _cardBounds params ["_cardX", "_cardY", "_cardW", "_cardH"];
@@ -167,7 +239,7 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
             _findings pushBack "PROMPT CONTENT VIOLATES CARD PADDING";
         };
     };
-    _display setVariable ["WaldoEcoCore_PromptOwnedControls", _chrome + _controls];
+    _display setVariable ["WaldoEcoCore_PromptOwnedControls", _chrome + _controls + _nestedControls];
     _display setVariable ["WaldoEcoCore_FitComplete", true];
     _display setVariable ["WaldoEcoCore_FitBounds", [_targetX, _targetY, _targetW, _targetH]];
     _display setVariable ["WaldoEcoCore_FitFindings", _findings];

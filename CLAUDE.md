@@ -221,6 +221,24 @@ Dynamic AA is configured through `Waldo_fnc_DynamicAACreate` or the **Dynamic AA
 
 Airborne Gunship Support uses the same named-instance principle but a separate feature-specific state machine. `Waldo_fnc_GunshipRegister` accepts existing or pooled/spawned aircraft, explicit turret profiles and service policy. When spawning its own aircraft with no explicit `aircraftClass`/`aircraftClasses` argument, it selects from `Waldo_Gunship_SideAircraftPools`/`Waldo_Gunship_FactionAircraftPools` extended with every other public `Air` class on the requested side that has an armed turret anywhere in its config, discovered live via `Waldo_fnc_ResolveVehicleClassPool` (vanilla or third-party) - so the configured pools stay a curated starting point rather than a ceiling. An explicit per-call `aircraftClasses` argument is never extended this way; it is used exactly as given. Spawning uses the side-prefixed `_side createVehicleCrew _aircraft` (matching Dynamic AA's own pattern) so a spawned aircraft's crew is created directly on the requested side rather than the airframe's own native config side, with the `side`-key-aware pool/discovery selection resolved once up front so an explicit `aircraftClass`/`aircraftClasses` call that omits `side` can no longer silently keep the airframe's native side by falling through to a self-referential default. The existing `forceCrewSide` reassignment still runs afterward as a second safety net - it tries `group setSide` first (in place, no new group) and only falls back to recreating the group (`createGroup`/`joinSilent`) when that didn't take effect, since `setSide` is silently refused whenever the destination side is already friendly to the crew's current side (e.g. WEST/INDEPENDENT under vanilla default relations). Aircraft lifecycle and permissions remain server-owned; map selection, local markers, notifications and approved remote-control handoff run on clients. Do not assume turret paths are portable between aircraft mods. No controller (FAC/JTAC) is assigned by default; `[unit, id] call Waldo_fnc_GunshipAssignControllerOnStart;` from a placed unit's own init field is the beginner-friendly way to give it one from mission start — it waits (bounded) for that id to finish registering first, since object init fields have no guaranteed order against each other. The **Gunship Support Example** composition registers a placed, crewed VTOL for editor-time setup, orbiting a movable marker, and places a controller unit using that call.
 
+Each gunship's aircraft marker uses its original vanilla `"b_plane"` icon, side-coloured, with a live `"<callsign> - <status>"` text; the orbit centre gets the vanilla `"mil_warning"` exclamation-triangle icon (the same one already used for radio jammer markers) plus a companion border-only `"ELLIPSE"` marker sized to the aircraft's current loiter radius, showing the orbit's real footprint. All three markers are visible only to players on the exact same side as the aircraft (not merely a "friendly" side). They are reconciled by `Waldo_fnc_GunshipSetupLocal` and kept in sync every second by `Waldo_fnc_GunshipUpdateMarkersLocal`, and deleted at the same call sites the aircraft marker already is. The assigned controller gets a **Configure Orbit** action (ACE self-interaction, with vanilla fallback), gated the same as Designate Orbit/Return for Service (available from `TRANSIT` onward). It opens `Waldo_fnc_GunshipPromptOrbitConfig`, a small dialog built on the shared `Waldo_fnc_EcoCore_createZeusPromptDisplay` chrome, pre-filled with the gunship's live radius/altitude; submitting sends `["id", "SET_ORBIT_PARAMS", [radius, altitude], player] remoteExecCall ["Waldo_fnc_GunshipServerHandle", 2]`, the same direct-remoteExecCall convention every other controller action already uses. The server clamps both values to `(value max 300)` capped by the existing `Waldo_Gunship_MaximumRadius`/`Waldo_Gunship_MaximumAltitude` ceilings — this 300m floor applies only to this live-adjust path; `Waldo_fnc_GunshipRegister`'s own registration-time floors (200m radius / 100m altitude) are unchanged. The change re-applies live via `Waldo_fnc_GunshipApplyOrbitLocal` while `TRANSIT`/`ON_STATION`/`CONTROLLED`, and republishes state so both markers and the FAC's own next dialog open reflect the new values.
+
+An on-demand off-station status panel (`Waldo_fnc_GunshipStatusHud`) explains *why* the aircraft is
+currently unavailable: a live "back on station in ~Ns" countdown while `SERVICING` (reusing the same
+ETA math the Status action already computes), a distinct "retasked to a new orbit" line, or a
+"returning for resupply" line for a service run in progress. It is never shown automatically — the
+assigned controller gets a **View Off-Station Status** action (ACE self-interaction, with vanilla
+fallback), visible only while the gunship is not `ON_STATION`/`CONTROLLED`, that calls
+`Waldo_fnc_GunshipRevealStatusHud` to open it for a fixed duration (10s), auto-hiding either once that
+duration elapses or as soon as the aircraft returns `ON_STATION`/`CONTROLLED`, whichever comes first.
+This is driven by a new state field, `offStationReason` (`"REQUEST"`|`"AUTO"`|`"RETASK"`), published
+alongside existing gunship state: set to `"REQUEST"`/`"AUTO"` by `Waldo_fnc_GunshipServerHandle`'s
+`SERVICE` case depending on whether a real player or the automatic fuel/damage/ammo monitor triggered
+it, set to `"RETASK"` by `Waldo_fnc_GunshipSetOrbit` when a `TRANSIT` issue's position genuinely
+differs from the gunship's own currently stored orbit (so the monitor's own post-service
+resume-to-the-same-orbit call, and the `RETURN` operation, are never mistaken for a real retask), and
+cleared once the aircraft is `ON_STATION`/`CONTROLLED` again.
+
 Dynamic AO (`Waldo_fnc_DynamicAOCreate`, the **Dynamic AO - Create** ZEN module) builds a complete
 randomized area of operations — infantry patrols, building garrisons, static weapons, weighted
 vehicle/air patrols, civilians, parked cars, minefields and manned roadblocks, each independently
@@ -518,6 +536,184 @@ Plant a tracker on a unit or vehicle and a chosen side follows it live on the ma
 ```
 Players get an ACE **Plant Signal Tracker** action on units and vehicles; Zeus gets a **Plant Signal Tracker** module (attaches to the nearest unit, tracked by a chosen side). Implemented in `MissionScripts/MissionInit/ElectronicWarfare/`.
 
+### Vehicle Weapon Loadout (`Waldo_fnc_VehicleWeaponLoadoutApply`)
+
+Adds, replaces, removes, or clears a vehicle's turret weapons/magazines, and separately sets or clears aircraft pylon ordnance — custom weapon/ammo change-out for a specific vehicle without hand-writing `removeWeaponTurret`/`addWeaponTurret`/`setPylonLoadOut` calls. No `MissionConfig` file; this is a call/ZEN-only feature. Server-authoritative — callable from an object's own Eden init field with no `isServer` wrapper, same convention as `Waldo_fnc_Jammer`.
+
+```sqf
+// [vehicle, rows]; each row: [targetType, turretPath, pylonIndex, action, weaponClass, magazineClass,
+//                              magazineCount, magazineQuantity (optional, default 1, TURRET ADD/REPLACE only)]
+[this, [
+    // Load 4 separate 30-round magazines (a real reserve pool), not one oversized 30-round magazine:
+    ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 30, 4]
+]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+// Exact coax classname varies per vehicle family - confirm it with Vehicle Weapon Loadout -
+// Inspect rather than assuming "LMG_Coax" is universal.
+[this, [
+    ["TURRET", [0], -1, "REMOVE", "LMG_Coax", "", 0],
+    ["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 0]
+]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+```
+`targetType` is `"TURRET"` or `"PYLON"`. TURRET `action` is `ADD`/`REPLACE`/`REMOVE`/`CLEAR`; PYLON `action` is `SET` (aliases `ADD`/`REPLACE` accepted) or `CLEAR`. `turretPath` (required for TURRET rows) is discoverable with `[[-1]] + (allTurrets [vehicle, true])` — `allTurrets` never includes the `[-1]` main/driver weapon slot itself. `pylonIndex` (required for PYLON rows, 1-based) is discoverable with `count (getPylonMagazines vehicle)`. Multiple rows apply independently in one call; a bad row (unknown classname, non-existent turret path/pylon index) is reported per-row without blocking the others. Magazine/weapon compatibility is checked via `compatibleMagazines` only as a logged warning, never a hard rejection, since that command is muzzle-specific and this call doesn't ask which muzzle is meant. `magazineCount` is rounds loaded into **each** magazine instance (clamped to that magazine class's own full `CfgMagazines` count, same clamp `addMagazine` itself performs); `magazineQuantity` (TURRET ADD/REPLACE only, default `1`) is how many **separate** magazine instances to add — `addMagazineTurret` only ever adds one instance per call, so this loops it. For PYLON rows, `magazineCount` doubles as the exact ammo override instead: `0` (or omitted) loads the pylon's full `CfgMagazines`-defined count via `setAmmoOnPylon` (the previous, still-default behaviour); a positive value loads exactly that many rounds, clamped to the magazine's own full count so a mission maker can't request more than the ordnance actually holds.
+
+Zeus ("WMP Vehicle Customisation"): **Vehicle Customisation - Editor** — a single persistent, multi-tab
+dialog (Turret / Pylon / Appearance / Component) that replaces the old one-shot Configure, Copy From
+Nearby Vehicle, Register Component, and Remove/Restore Component modules. Must be placed **directly on
+the vehicle** being edited (same convention as **Plant Signal Tracker**); placement anywhere else is
+rejected with a notice. The Turret and Pylon tabs' option lists are discovered live from that exact
+vehicle (`allTurrets`, `getPylonMagazines`, `TransportPylonsComponent`), never hand-typed, and their
+**Weapon** / **Ordnance** dropdown pickers list every distinct weapon+magazine pairing (or pylon
+ordnance) already mounted somewhere on this exact vehicle, extended with a **pack-wide catalog**
+discovered across every vehicle class in the currently loaded modset via
+`Waldo_fnc_VehicleWeaponLoadoutCatalogBuild` (kicked off in the background at mission start by
+`Waldo_fnc_ZenInitModules`, cached for the rest of the mission). Picking a Weapon repopulates a
+**Magazine** dropdown live via `Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon` (that weapon's own
+`CfgWeapons >> "magazines"` config list), so magazine choices are always filtered to what the selected
+weapon can actually load — dropdown selection is the default path everywhere in this dialog; the
+underlying classname edit fields stay user-editable underneath as the advanced/modded-weapon fallback.
+A curator queues any number of turret, pylon, appearance, and component changes across the four tabs
+into one permanent **Pending Changes**
+list — each tab's Add button is gated by its own validation-gated collector, so a blank or incomplete
+row can never reach Pending — then either **Apply All Pending** (one curator-authenticated request
+through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge, which dispatches
+turret/pylon rows to `Waldo_fnc_VehicleWeaponLoadoutApply`, appearance rows to
+`Waldo_fnc_VehicleAppearanceApply`, and component rows to `Waldo_fnc_VehicleComponentRemove`) or
+**Export All Pending To Clipboard** (purely client-side — builds one ready-to-paste multi-statement
+Eden-init-field snippet covering whichever row types are actually pending, applies nothing, and keeps
+the pending list intact). **Copy From Nearby Vehicle...** (Turret tab) opens an in-dialog picker of
+vehicles within 100m and, on pick, pushes that source's real turret/pylon rows straight into Pending via
+the read-only `Waldo_fnc_VehicleWeaponLoadoutCopyPreview` — no classname typed, no server call until
+Apply. **Remove Selected Pending Row** and **Clear All Pending** manage the queue without applying
+anything. Implemented in `MissionScripts/CombatSystems/VehicleCustomization/` and
+`MissionScripts/CombatSystems/VehicleWeaponLoadout/`.
+
+**The horn is excluded from every mutating operation.** A vehicle's horn is an ordinary `CfgWeapons` entry to the engine (identified here by `CfgWeapons` `displayName` — there is no other reliable "not a combat weapon" flag), but never a weapon a mission maker or curator means. `Waldo_fnc_VehicleWeaponLoadoutApply` itself refuses every mutating TURRET action (`ADD`/`REPLACE`/`REMOVE`/`CLEAR`) against a horn-only turret with `[false, "..."]` — this is the single authoritative check, enforced regardless of caller (a raw script call or an object's own Eden init field is refused exactly like a ZEN-driven one). The Editor's Turret/Weapon combos exclude a horn-only turret from selection entirely rather than merely labeling it — a client-side convenience that avoids a wasted round-trip to the server, not the enforcement itself. `Waldo_fnc_VehicleWeaponLoadoutCopy` skips copying a horn-only source turret entirely, so a source vehicle's horn can never overwrite a matching target turret path that holds a real weapon. `Waldo_fnc_VehicleWeaponLoadoutInspect` still reports a horn turret (informational — nothing here mutates anything) but never generates a paste-ready row for it.
+
+**`[-1]` is not guaranteed to have a real weapon mount.** `allTurrets` never returns `[-1]` itself (it is
+always prepended by hand as "the main/driver weapon slot"), so unlike every other path in the discovered
+list it was never confirmed to correspond to a real, model-backed mount — some vehicles' own root
+`CfgVehicles` class declares no `weapons[]` array at all (an ordinary unarmed car, for instance), meaning
+`[-1]` has no physical mount whatsoever on that vehicle. `addWeaponTurret` against a mount that doesn't
+exist silently does nothing useful — no weapon appears or functions — while still looking like an
+ordinary successful call, which is worse than an outright error for a beginner. `Waldo_fnc_VehicleWeaponLoadoutApply`
+therefore refuses ADD/REPLACE against `[-1]` outright when that vehicle's own config declares no root
+`weapons[]` array, rather than reporting a false success: **WMP cannot create a new physical weapon mount
+on a vehicle that never had one — that needs model/config authoring work, not a script.** The Editor's
+Turret combo (and, by the same shared list, the Weapon combo and the Component tab's Linked Turret Path
+combo) excludes such a turret from selection entirely rather than merely labeling it, the same
+client-side convenience the horn exclusion already gets; a fully unarmed vehicle's Turret combo falls
+back to a single non-selectable "No editable turret positions on this vehicle" entry.
+
+There is no engine query for "what weapons/magazines fit this turret", so classnames are still typed
+in rather than picked from a filtered list. Two beginner-friendly helpers exist so a mission maker
+never has to guess or hand-type one from memory, in order of how completely they avoid it:
+
+- **`Waldo_fnc_VehicleWeaponLoadoutCopy`** (Zeus: **Vehicle Customisation - Editor**'s **Copy From
+  Nearby Vehicle...** button, placed on the target vehicle) — the strongest option: copies another nearby vehicle's
+  real turret/pylon loadout directly, so no classname is ever typed at all. Matches turret paths that
+  exist on both vehicles exactly (no cross-vehicle guessing) and pylons by index, including the
+  source's exact remaining pylon ammo via `ammoOnPylon`. Built entirely on top of
+  `Waldo_fnc_VehicleWeaponLoadoutApply` — it only reads the source and assembles rows.
+- **`Waldo_fnc_VehicleWeaponLoadoutInspect`** (Zeus: **Vehicle Customisation - Inspect**) — point it
+  at any vehicle, including a stock/vanilla one whose loadout you like, and it reports every turret's
+  exact weapon/magazine classnames and every pylon's exact ordnance classname as a full-screen `hint`,
+  each followed by a ready-to-paste `Waldo_fnc_VehicleWeaponLoadoutApply` row you can copy onto a
+  different vehicle — for when you want to edit the classname before applying it (Copy always applies
+  the exact match).
+
+Both are purely read-only (never mutate anything), run entirely on the curator's own client with no
+server round-trip or curator-authentication bridge for the read. Inspect also copies its report to
+that client's clipboard, logs it to RPT under `[WMP VEHWPN INSPECT]`, and confirms the clipboard copy
+with a fast notification card in addition to the full-screen `hint`. See `wiki/Vehicle-Weapon-Loadout.md` for the full
+beginner workflow, including links to Bohemia's own official class-name references (`Arma 3: Assets`,
+`Arma_3:_CfgWeapons_Vehicle_Weapons`) and the built-in Eden Editor Debug Console for the rare case
+neither helper covers. The **Vehicle Weapon Loadout And Appearance Example** composition (Minimal/Full)
+demonstrates both features together: Minimal clears one armed Hunter's turret and recolors it in the
+smallest working call for each function; Full copies a GMG-armed Hunter's real turret loadout onto an
+HMG-armed one via `Waldo_fnc_VehicleWeaponLoadoutCopy` end to end (no classname typed, and a real
+visible weapon swap since the two Hunters start differently armed) alongside a
+`Waldo_fnc_VehicleAppearanceApply` recolor on the target.
+
+Vehicle appearance (recoloring via `setObjectTextureGlobal`/`getObjectTextures`, or hiding a
+turret's physical model via `hideSelection`) is a distinct, unrelated Arma system — cosmetic model
+state, not weapon/ammo content — and is covered by the separate **Vehicle Appearance** feature below,
+not this one. `Waldo_fnc_VehicleCamoSetup` (Vehicle Ambush & Camo, see Misc Mission-Maker Tools) is a
+related but different existing WMP feature that works via physical deployable camo objects, not
+texture swapping.
+
+### Vehicle Appearance (`Waldo_fnc_VehicleAppearanceApply`)
+
+Recolors a vehicle's texture slots and/or shows/hides a named model selection — a genuinely separate
+Arma system from weapon/ammo content (`Waldo_fnc_VehicleWeaponLoadoutApply`): this is cosmetic model
+state only, never touches turrets, magazines or pylons. No `MissionConfig` file; this is a
+call/ZEN-only feature. Server-authoritative — callable from an object's own Eden init field with no
+`isServer` wrapper, same convention as `Waldo_fnc_Jammer`.
+
+```sqf
+// [vehicle, rows]; each row: [targetType, selector, action, value]
+[this, [
+    ["TEXTURE", 0, "SET", [1, 0, 1, 1]]   // paint texture slot 0 pink - no texture asset needed
+]] call Waldo_fnc_VehicleAppearanceApply;
+[this, [
+    ["SELECTION", "rws_base", "HIDE", ""]  // hide a named model selection - confirm the real name
+]] call Waldo_fnc_VehicleAppearanceApply;  // with Vehicle Customisation - Inspect, never guessed
+```
+
+`targetType` is `"TEXTURE"` or `"SELECTION"`. TEXTURE `selector` is a 0-based index into the vehicle's
+own `hiddenSelections[]` config array (discover with `getArray (configFile >> "CfgVehicles" >> typeOf
+vehicle >> "hiddenSelections")`); `action` is `"SET"` (`value` is a texture path/procedural string, or
+an `[R,G,B,A]` array auto-converted via `BIS_fnc_colorRGBAtoTexture` — the built-in solid-colour
+procedural syntax `"#(rgb,8,8,3)color(R,G,B,A)"` needs no texture asset at all) or `"CLEAR"` (reverts
+to the vehicle's own default). SELECTION `selector` is a model selection name, validated against the
+live `selectionNames vehicle`; `action` is `"HIDE"` or `"SHOW"`. Multiple rows apply independently in
+one call; a bad row is reported per-row without blocking the others.
+
+**There is no engine query for "this model selection is a removable physical component"** — unlike
+weapons (enumerable via `allTurrets`/`weaponsTurret`), a selection is just a named model piece some
+vehicle authors happen to expose, with no config flag marking it as removable. `Waldo_fnc_VehicleComponentRemove`
+combines hiding a selection with clearing a linked turret's weapon in one call, so "remove this
+vehicle's turret" genuinely means both gone-looking and gone-functioning:
+
+```sqf
+[this, "rws_base", [0], true] call Waldo_fnc_VehicleComponentRemove;  // [vehicle, selectionName, turretPath, hide]
+```
+
+Restoring (`hide` `false`) only re-shows the selection — it does not re-arm whatever weapon the turret
+held, since that was never recorded; re-arm it separately with `Waldo_fnc_VehicleWeaponLoadoutApply`.
+
+`Waldo_fnc_VehicleComponentHeuristicScan` scans a placed vehicle live, every time the Zeus Editor
+dialog's Component tab opens, for model selections whose name suggests a removable part (a fixed,
+adjustable substring list — `"turret"`, `"gun"`, `"weapon"`, `"mount"`, `"hatch"`, `"rws"`, `"cannon"`,
+`"hmg"`, `"gmg"`) and best-effort-correlates each one against the vehicle's real turret paths. There is
+still no engine flag marking a selection as "this is a removable component" — every candidate's label
+carries an explicit "best-effort, verify visually" caveat, never presented as fact — but this replaces
+the old per-class registration catalog entirely: no setup step, always accurate to the live vehicle,
+callable directly:
+
+```sqf
+private _candidates = [cursorObject] call Waldo_fnc_VehicleComponentHeuristicScan;
+// Array of [selectionName, likelyTurretPath, label] - label already carries the caveat text.
+```
+
+Zeus ("WMP Vehicle Customisation"): the Appearance and Component tabs of the same
+**Vehicle Customisation - Editor** dialog documented under **Vehicle Weapon Loadout** above handle
+texture recoloring and component removal/restoral — see that section for the full tour. The
+Appearance tab's texture-slot list is discovered live from the placed vehicle's own
+`hiddenSelections[]`, with Solid Color (four fields) or Custom Texture Path modes; the Component tab
+offers `Waldo_fnc_VehicleComponentHeuristicScan`'s live candidates as a picker (auto-filling Selection
+Name and Linked Turret Path), or a typed selection-name/turret-path fallback — confirm a real name
+first with **Vehicle Customisation - Inspect** (below) if unsure. Both tabs' rows queue into the same
+Pending Changes list as Turret/Pylon rows and apply through the same consolidated
+`Waldo_fnc_ZenVehicleCustomizationServer` bridge. **Vehicle Customisation - Inspect** — placed
+directly on the vehicle, read-only, merges what used to be two separate Inspect modules via
+`Waldo_fnc_VehicleCustomizationInspect`: reports texture slots and every named model selection via
+`hint` alongside the weapon/pylon report, and copies the model selection names to the clipboard (never
+the full prose report — an inline `//` comment surviving a paste into an Eden init field without real
+line breaks is a confirmed real-world failure mode, "Invalid number in expression", so nothing
+comment-bearing is ever put on the clipboard). Implemented in
+`MissionScripts/CombatSystems/VehicleAppearance/` and
+`MissionScripts/CombatSystems/VehicleCustomization/`.
+
 ### Hazardous Environments (`Waldo_fnc_HazardRegisterZone` / `Waldo_fnc_HazardRegisterPresetZone` / `Waldo_fnc_HazardRegisterEmitter`)
 
 Fixed-area or moving hazard zones (radiation is the shipped preset family) with real exposure/damage, protection (vehicle/indoor/equipment), a continuous per-player HUD, Geiger/cough audio, and entry/exit/damage-stage notifications. Profiles are hashmaps a mission can extend without changing the API:
@@ -771,13 +967,23 @@ never took even after retrying, which also shows the affected player a WARNING n
 of staying RPT/Diagnostics-only; `respawn`/`radio-restore` reads `Waldo_Player_LastRadioRestoreOutcome`
 for whether the saved ACRE radio state reapplied, fell back to the current mission plan (also
 notified to the player, gated by `notifyAssignmentProblems` like every other ACRE assignment-problem
-warning), or there was no complete radio snapshot to restore. `dependencies`/`ace-nametags-respawn-compat` is
-informational-only (never `ERROR`, no fix hint) and fires whenever `ace_nametags`/`ace_dogtags` is
-loaded, explaining a known upstream ACE3 bug: `ace_nametags`'/`ace_dogtags`' own
-`CfgEventHandlers.hpp` config-based `respawn` handler forwards the engine's `[unit, corpse]` respawn
-params wholesale into `ace_common_fnc_setName`, whose untyped `_forceSet` parameter then receives the
-corpse object and throws `Type Object, expected Bool` on every scripted respawn - not something WMP
-causes (it never calls that function or sets `ace_setCustomName`) or can fix mission-side.
+warning), or there was no complete radio snapshot to restore.
+
+**ACE `setName` respawn bug (`Waldo_fnc_AceSetNameRespawnBindingRepair`):** ACE 3.21.1's own
+`ace_common` respawn hook forwarded the engine's `[unit, corpse]` respawn payload wholesale into
+`ace_common_fnc_setName`, whose untyped `_forceSet` parameter then received the corpse object and
+threw `Type Object, expected Bool` on every scripted respawn - not something WMP causes, but visible
+whenever `ace_nametags`/`ace_dogtags` (or any other ACE feature depending on `ace_common_fnc_setName`
+firing cleanly on respawn) is loaded. Rather than only diagnosing this, `initPlayerLocal.sqf` calls
+`[player] call Waldo_fnc_AceSetNameRespawnBindingRepair;` after CBA/ACE initialise: it inspects the
+local player's compiled `cba_xeh_respawn` callback array and, if it still contains the broken
+wholesale-forward pattern, replaces just that callback with an argument-safe
+`{[_this select 0] call ace_common_fnc_setName}` - interface-client-local, repeat-safe, no public or
+JIP state. ACE fixed the same bug upstream directly in `community/ACE3#11470` (closes ACE issue
+#11468, targeted for release 3.21.2); the repair function recognises ACE's own fixed callback text as
+already safe too, so it becomes a genuine no-op rather than a redundant re-patch once a mission's ACE
+build already has the upstream fix. Kept rather than removed even after 3.21.2 ships broadly, since a
+mission's exact ACE version is never guaranteed.
 
 `mission-flow`/`infotext-timing` reports the intro sequence's own real `diag_tickTime` deltas, captured by `infoText.sqf` into a client-local `Waldo_InfoText_Timings` hashmap: the initial local `PreloadFinished` wait, subsequent player/display readiness, the diagnostic client state at release, WMP's fake-cover duration, when normal control was available, and how much longer the detached title kept typing. The pre-mission briefing state, `BIS_fnc_init`, mission `time`, `WALDO_INIT_COMPLETE`, and unrelated features are not readiness gates. `ERROR` means the preload event or usable local player/display did not arrive within its bounded wait.
 
@@ -1300,7 +1506,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
 - `ZenModules/` — Zeus Enhanced custom modules for logistics and ENDEX
-- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
+- `CombatSystems/` — airborne gunship support, explosive breaching, Dynamic AA and Dynamic AO, vehicle weapon/pylon loadout change-out, vehicle appearance (texture recoloring and model selection show/hide, with live per-vehicle heuristic component discovery replacing the old registration catalog), the `VehicleCustomization/` ZEN Editor/Inspect dialog code that ties Weapon Loadout and Appearance together into one curator session, plus the shared cross-feature `resolveFactionCatalog.sqf`/`resolveVehicleClassPool.sqf` live-modset discovery helpers used by all three and by Paradrop
 - `EnvironmentalSystems/` — hazardous environments and tree felling
 - `MedicalSystems/` — patient treatment feedback, confirmed-death Obituary reporting
 - `Persistence/` — optional INIDBI2-backed persistence
@@ -1519,11 +1725,13 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - EMP Detonation → calls `Waldo_fnc_ZenEMP` (dialog: radius / duration; detonates an EMP via `Waldo_fnc_EMP`)
 - Plant Signal Tracker → calls `Waldo_fnc_ZenTracker` (tags the nearest unit/vehicle, tracked by a chosen side, via `Waldo_fnc_Tracker`)
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
+- Vehicle Customisation - Editor → calls `Waldo_fnc_ZenVehicleCustomizationEditor`, which opens `Waldo_fnc_VehCust_promptEditor` (must be placed directly on the vehicle being edited; a persistent multi-tab dialog — Turret / Pylon / Appearance / Component — replacing the old Configure, Copy From Nearby Vehicle, Register Component, and Remove/Restore Component modules; each tab's Add button routes through its own validation-gated collector before a row reaches the shared Pending Changes list, so a blank/incomplete row can never be queued; turret/pylon option lists are discovered live from that vehicle plus a cached pack-wide catalog, the Component tab uses live `Waldo_fnc_VehicleComponentHeuristicScan` candidates; Apply All Pending routes through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutApply`/`Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` by row type; Export All Pending To Clipboard is client-only, no server call)
+- Vehicle Customisation - Inspect → calls `Waldo_fnc_ZenVehicleCustomizationInspect` (must be placed directly on the vehicle to inspect; no dialog, merges the weapon/pylon and appearance/selection reports via `Waldo_fnc_VehicleCustomizationInspect` into one `hint` and one clipboard copy; read-only, runs entirely on the curator's client, no server round-trip)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is
 true (checked after the `Waldo_SharedFeatureConfigReady` config-load sentinel, bounded to 30s), so a
 mission that never turns headless-client support on gets no Zeus menu clutter for it. `Waldo_ZenModuleCount`
-is 45 without them, 48 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
+is 47 without them, 50 with them - `Waldo_fnc_RunDiagnosticsClient`'s `core-modules` check accepts either:
 - Headless Client - Toggle Debug → calls `Waldo_fnc_ZenHeadlessDebugToggle` (flips `Waldo_Headless_Debug` live via `Waldo_fnc_HeadlessDebugToggle`; no dialog, confirms the new state with a notification card to every assigned curator)
 - Headless Client - Force Rebalance Now → calls `Waldo_fnc_ZenHeadlessForceRebalance` (runs one `Waldo_fnc_HeadlessRebalance` pass immediately instead of waiting for the next automatic trigger; no dialog)
 - Headless Client - Manual Handoff → calls `Waldo_fnc_ZenHeadlessManualHandoff` (dialog: pick a nearby AI group with no human leader/member and a destination - auto-balance, back to the server, or a named connected headless client; applies via `Waldo_fnc_HeadlessManualHandoff`)

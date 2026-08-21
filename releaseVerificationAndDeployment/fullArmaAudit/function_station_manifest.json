@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 945,
+  "registeredFunctionCount": 978,
   "runtimeFunctionCount": 385,
-  "functionCount": 1330,
+  "functionCount": 1363,
   "stations": [
     {
       "id": "control",
@@ -1953,6 +1953,24 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ZenVehicleCustomizationEditor",
+      "file": "MissionScripts/ZenModules/Zen_vehicleCustomizationEditorModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenVehicleCustomizationInspect",
+      "file": "MissionScripts/ZenModules/Zen_vehicleCustomizationInspectModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenVehicleCustomizationServer",
+      "file": "MissionScripts/ZenModules/zenVehicleCustomizationServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ZenNotify",
       "file": "MissionScripts/ZenModules/Zen_notifyModule.sqf",
       "station": "zen",
@@ -2027,6 +2045,12 @@
     {
       "name": "Waldo_fnc_ParadropBuildFlightRoute",
       "file": "MissionScripts/Paradrop/paradropBuildFlightRoute.sqf",
+      "station": "paradrop",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ParadropOperateDoor",
+      "file": "MissionScripts/Paradrop/paradropOperateDoor.sqf",
       "station": "paradrop",
       "activation": "manual"
     },
@@ -2538,6 +2562,180 @@
       "name": "Waldo_fnc_GunshipUpdateMarkersLocal",
       "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipUpdateMarkersLocal.sqf",
       "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipPromptOrbitConfig",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipPromptOrbitConfig.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipStatusHud",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipStatusHud.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_GunshipRevealStatusHud",
+      "file": "MissionScripts/CombatSystems/AirborneGunship/gunshipRevealStatusHud.sqf",
+      "station": "gunship",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleAppearanceApply",
+      "file": "MissionScripts/CombatSystems/VehicleAppearance/vehicleAppearanceApply.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleAppearanceInspect",
+      "file": "MissionScripts/CombatSystems/VehicleAppearance/vehicleAppearanceInspect.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleComponentHeuristicScan",
+      "file": "MissionScripts/CombatSystems/VehicleAppearance/vehicleComponentHeuristicScan.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleComponentRemove",
+      "file": "MissionScripts/CombatSystems/VehicleAppearance/vehicleComponentRemove.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutApply",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutApply.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutInspect",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutInspect.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutCopy",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCopy.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutCopyBuildRows",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCopyBuildRows.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutCopyPreview",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCopyPreview.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutSelectLocal",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutSelectLocal.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutCatalogBuild",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCatalogBuild.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutMagazinesForWeapon.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_promptEditor",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_setTab",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationSetTab.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_cleanupEditorPrompt",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCleanupEditorPrompt.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectTurretRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectTurretRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectPylonRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectPylonRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectAppearanceRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectAppearanceRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_collectComponentRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationCollectComponentRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_pushPendingRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPushPendingRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_removePendingRow",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationRemovePendingRow.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_refreshPendingList",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationRefreshPendingList.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_refreshRelevantControls",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationRefreshRelevantControls.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_finalizeLayout",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationFinalizeLayout.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_exportClipboard",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationExportClipboard.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehicleCustomizationInspect",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationInspect.sqf",
+      "station": "control",
       "activation": "manual"
     },
     {

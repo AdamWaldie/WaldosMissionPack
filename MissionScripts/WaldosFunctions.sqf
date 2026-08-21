@@ -640,6 +640,15 @@ class CfgFunctions
             class ZenTrackerServer {
                 file = "MissionScripts\ZenModules\zenTrackerServer.sqf";
             };
+            class ZenVehicleCustomizationEditor {
+                file = "MissionScripts\ZenModules\Zen_vehicleCustomizationEditorModule.sqf";
+            };
+            class ZenVehicleCustomizationInspect {
+                file = "MissionScripts\ZenModules\Zen_vehicleCustomizationInspectModule.sqf";
+            };
+            class ZenVehicleCustomizationServer {
+                file = "MissionScripts\ZenModules\zenVehicleCustomizationServer.sqf";
+            };
             class ZenNotify {
                 file = "MissionScripts\ZenModules\Zen_notifyModule.sqf";
             };
@@ -848,6 +857,44 @@ class CfgFunctions
             class GunshipReleaseControlLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipReleaseControlLocal.sqf";};
             class GunshipSetupLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipSetupLocal.sqf";};
             class GunshipUpdateMarkersLocal {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipUpdateMarkersLocal.sqf";};
+            class GunshipPromptOrbitConfig {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipPromptOrbitConfig.sqf";};
+            class GunshipStatusHud {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipStatusHud.sqf";};
+            class GunshipRevealStatusHud {file = "MissionScripts\CombatSystems\AirborneGunship\gunshipRevealStatusHud.sqf";};
+        };
+        class VehicleAppearance
+        {
+            class VehicleAppearanceApply {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceApply.sqf";};
+            class VehicleAppearanceInspect {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleAppearanceInspect.sqf";};
+            class VehicleComponentHeuristicScan {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleComponentHeuristicScan.sqf";};
+            class VehicleComponentRemove {file = "MissionScripts\CombatSystems\VehicleAppearance\vehicleComponentRemove.sqf";};
+        };
+        class VehicleWeaponLoadout
+        {
+            class VehicleWeaponLoadoutApply {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf";};
+            class VehicleWeaponLoadoutInspect {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutInspect.sqf";};
+            class VehicleWeaponLoadoutCopy {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopy.sqf";};
+            class VehicleWeaponLoadoutCopyBuildRows {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopyBuildRows.sqf";};
+            class VehicleWeaponLoadoutCopyPreview {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopyPreview.sqf";};
+            class VehicleWeaponLoadoutSelectLocal {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutSelectLocal.sqf";};
+            class VehicleWeaponLoadoutCatalogBuild {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCatalogBuild.sqf";};
+            class VehicleWeaponLoadoutMagazinesForWeapon {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutMagazinesForWeapon.sqf";};
+        };
+        class VehicleCustomization
+        {
+            class VehCust_promptEditor {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationPromptEditor.sqf";};
+            class VehCust_setTab {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationSetTab.sqf";};
+            class VehCust_cleanupEditorPrompt {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationCleanupEditorPrompt.sqf";};
+            class VehCust_collectTurretRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationCollectTurretRow.sqf";};
+            class VehCust_collectPylonRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationCollectPylonRow.sqf";};
+            class VehCust_collectAppearanceRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationCollectAppearanceRow.sqf";};
+            class VehCust_collectComponentRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationCollectComponentRow.sqf";};
+            class VehCust_pushPendingRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationPushPendingRow.sqf";};
+            class VehCust_removePendingRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationRemovePendingRow.sqf";};
+            class VehCust_refreshPendingList {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationRefreshPendingList.sqf";};
+            class VehCust_refreshRelevantControls {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationRefreshRelevantControls.sqf";};
+            class VehCust_finalizeLayout {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationFinalizeLayout.sqf";};
+            class VehCust_exportClipboard {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationExportClipboard.sqf";};
+            class VehicleCustomizationInspect {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationInspect.sqf";};
         };
         class Persistence
         {

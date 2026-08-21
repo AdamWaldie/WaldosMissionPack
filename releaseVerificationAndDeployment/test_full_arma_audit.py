@@ -41,6 +41,114 @@ class FullAuditTests(unittest.TestCase):
         text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
         return re.sub(r"//[^\r\n]*", "", text)
 
+    def test_vehicle_customisation_editor_uses_valid_ui_and_object_data(self):
+        customisation_root = (
+            ROOT / "MissionScripts" / "CombatSystems" / "VehicleCustomization"
+        )
+        prompt = (customisation_root / "vehicleCustomizationPromptEditor.sqf").read_text(
+            encoding="utf-8"
+        )
+        set_tab = (customisation_root / "vehicleCustomizationSetTab.sqf").read_text(
+            encoding="utf-8"
+        )
+        relevant = (
+            customisation_root / "vehicleCustomizationRefreshRelevantControls.sqf"
+        ).read_text(encoding="utf-8")
+        appearance = (
+            customisation_root / "vehicleCustomizationCollectAppearanceRow.sqf"
+        ).read_text(encoding="utf-8")
+        turret = (
+            customisation_root / "vehicleCustomizationCollectTurretRow.sqf"
+        ).read_text(encoding="utf-8")
+        weapon_root = (
+            ROOT / "MissionScripts" / "CombatSystems" / "VehicleWeaponLoadout"
+        )
+        magazines = (
+            weapon_root / "vehicleWeaponLoadoutMagazinesForWeapon.sqf"
+        ).read_text(encoding="utf-8")
+        catalog = (weapon_root / "vehicleWeaponLoadoutCatalogBuild.sqf").read_text(
+            encoding="utf-8"
+        )
+        fitter = (
+            ROOT / "MissionScripts" / "EconomySystems" / "Core" / "fitPromptDisplay.sqf"
+        ).read_text(encoding="utf-8")
+        finalizer = (
+            customisation_root / "vehicleCustomizationFinalizeLayout.sqf"
+        ).read_text(encoding="utf-8")
+        copy_builder = (
+            weapon_root / "vehicleWeaponLoadoutCopyBuildRows.sqf"
+        ).read_text(encoding="utf-8")
+        weapon_apply = (
+            weapon_root / "vehicleWeaponLoadoutApply.sqf"
+        ).read_text(encoding="utf-8")
+
+        # Tab names arrive as strings already. Stringifying them adds quotes and makes every
+        # non-Turret request fail the allow-list. Visibility must not rewrite fitted positions.
+        self.assertIn("private _safeTab = toLowerANSI _tab;", set_tab)
+        self.assertNotIn("toLower (str _tab)", set_tab)
+        self.assertIn("_group ctrlShow (_safeTab isEqualTo _tabName);", set_tab)
+        self.assertNotIn("ctrlSetPosition", set_tab)
+
+        # netId already returns a string. Stringifying it stores literal quote characters and makes
+        # objectFromNetId unable to resolve the selected nearby vehicle.
+        self.assertIn("_overlayList lbSetData [_index, netId _veh];", prompt)
+        self.assertNotIn("str (netId _veh)", prompt)
+
+        # The shared fitted card is the only outer box. Interior panels may add hierarchy, but the
+        # editor must not draw a second full-form background/title over the shared chrome.
+        self.assertIn('"WaldoEcoCore_PromptTheme"', prompt)
+        self.assertIn("private _leftPanel", prompt)
+        self.assertIn("private _rightPanel", prompt)
+        self.assertNotIn("private _bg =", prompt)
+        self.assertNotIn("private _title =", prompt)
+        self.assertIn("WMP  //  VEHICLE CUSTOMISATION", prompt)
+
+        # Group children use parent-local coordinates and must be scaled separately from their fitted
+        # parent. Otherwise fields spill outside the shared card even though the group bounds pass.
+        self.assertIn("private _nestedControls", fitter)
+        self.assertIn("_xPos * _scale", fitter)
+        self.assertIn("_chrome + _controls + _nestedControls", fitter)
+        self.assertIn("ctrlSetFontHeight 0.026", prompt)
+        self.assertIn("Waldo_fnc_VehCust_finalizeLayout", prompt)
+        self.assertIn("_headerHeight + _layoutHeight", finalizer)
+        self.assertIn('"WaldoEcoCore_PromptCardControl"', finalizer)
+        self.assertIn('"WaldoEcoCore_PromptHeaderControl"', finalizer)
+        self.assertIn('"WaldoVehCust_LayoutFinalized"', finalizer)
+
+        # Combo wheel input is consumed locally so Zeus cannot also zoom its camera.
+        self.assertIn('ctrlAddEventHandler ["MouseZChanged"', prompt)
+        self.assertIn("_control lbSetCurSel", prompt)
+        self.assertIn("true\n    }];", prompt)
+
+        # Solid colour uses bounded sliders and the collector reads their values directly.
+        self.assertIn('ctrlCreate ["RscXSliderH"', prompt)
+        self.assertIn("sliderSetRange [0, 1]", prompt)
+        self.assertIn("sliderPosition _rSlider", appearance)
+        self.assertNotIn("WaldoVehCust_TextureRedEdit", prompt + appearance)
+
+        # Irrelevant controls are hidden whenever the selected action/mode changes.
+        self.assertIn("WaldoVehCust_TurretAmmoControls", relevant)
+        self.assertIn("WaldoVehCust_ColourControls", relevant)
+        self.assertIn("Waldo_fnc_VehCust_refreshRelevantControls", prompt)
+
+        # A turret's combined magazines[] array must never become every weapon's default. Resolve
+        # compatibility per weapon, including the missile/named-muzzle config fallbacks, and reject
+        # a stale incompatible manual magazine before it reaches Pending Changes.
+        self.assertIn("compatibleMagazines _weaponClass", magazines)
+        self.assertIn('getArray (_weaponConfig >> "muzzles")', magazines)
+        self.assertIn("Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon", catalog)
+        self.assertNotIn('private _magazines = if (isArray (_x >> "magazines"))', catalog)
+        self.assertIn("_magazineCompatible", turret)
+
+        # Copy reads exact live magazine identities/ammo from the engine, then assigns each magazine
+        # class only to a compatible weapon. Apply verifies loaded ammo instead of reporting success
+        # merely because addMagazineTurret was issued, and finalises REPLACE on the turret owner.
+        self.assertIn("magazinesAllTurrets [_source, true]", copy_builder)
+        self.assertIn("_claimedMagazineIds", copy_builder)
+        self.assertNotIn("count _rawMagazines", copy_builder)
+        self.assertIn("_liveReadBack", weapon_apply)
+        self.assertIn("Waldo_fnc_VehicleWeaponLoadoutSelectLocal", weapon_apply)
+
     def test_repository_and_release_use_mit_license(self):
         license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
         release_config = json.loads((ROOT / "releaseVerificationAndDeployment" / "config.json").read_text(encoding="utf-8"))
@@ -2992,7 +3100,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('MISMATCH', overlay)
         self.assertIn('ownership mismatches:', toggle)
         diagnostics = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "runDiagnosticsClient.sqf").read_text(encoding="utf-8")
-        self.assertIn("[45, 47, 48, 50]", diagnostics)
+        self.assertIn("[47, 49, 50, 52]", diagnostics)
 
     def test_manual_headless_handoff_can_target_one_live_hc(self):
         module = (ROOT / "MissionScripts" / "ZenModules" / "Zen_headlessManualHandoffModule.sqf").read_text(encoding="utf-8")

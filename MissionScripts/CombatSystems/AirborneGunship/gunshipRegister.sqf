@@ -112,8 +112,37 @@ if (isNull _aircraft) then {
             _classes = +(_factionPools getOrDefault [_factionKey, _classes]);
         };
         // Any public Air class on the requested side with an armed turret anywhere in its config.
-        // configProperties walks the whole class tree recursively, so it also matches a sub-turret's
-        // weapons[] array, not just a top-level one.
+        // Recurse only a candidate's own "Turrets" chain (never Sounds/HitPoints/animations/etc.) -
+        // the same structure allTurrets itself walks at runtime, and the same scoping
+        // Waldo_fnc_VehicleWeaponLoadoutCatalogBuild's own turret walker already uses. A blanket
+        // recursive configProperties walk across a vehicle's ENTIRE config subtree (the previous
+        // implementation here) produces thousands of "'X/' is not a class ('weapons' accessed)" RPT
+        // warnings per registration, since that recursion also visits plain non-class properties -
+        // confirmed directly in a live RPT log where one gunship registration through this discovery
+        // path produced ~12,700 such warnings.
+        private _hasArmedTurret = {
+            params ["_vehicleClass"];
+            private _found = false;
+            private _walk = {
+                params ["_parentEntry"];
+                if (_found) exitWith {};
+                private _turretsClass = _parentEntry >> "Turrets";
+                if (isClass _turretsClass) then {
+                    {
+                        if (_found) exitWith {};
+                        if (isClass _x) then {
+                            if (isArray (_x >> "weapons") && {count getArray (_x >> "weapons") > 0}) then {
+                                _found = true;
+                            } else {
+                                [_x] call _walk;
+                            };
+                        };
+                    } forEach ("true" configClasses _turretsClass);
+                };
+            };
+            [configFile >> "CfgVehicles" >> _vehicleClass] call _walk;
+            _found
+        };
         private _sideNumbers = createHashMapFromArray [["WEST", 1], ["EAST", 0], ["INDEPENDENT", 2], ["CIVILIAN", 3]];
         private _sideNumber = _sideNumbers getOrDefault [_sideKey, 1];
         private _discovered = ([
@@ -122,11 +151,7 @@ if (isNull _aircraft) then {
                 (getNumber (configFile >> "CfgVehicles" >> _this >> "side") == _sideNumber)
                 && {getNumber (configFile >> "CfgVehicles" >> _this >> "scope") >= 2}
                 && {_this isKindOf "Air"}
-                && {count (configProperties [
-                    configFile >> "CfgVehicles" >> _this,
-                    "isArray (_x >> 'weapons') && {count getArray (_x >> 'weapons') > 0}",
-                    true
-                ]) > 0}
+                && {[_this] call _hasArmedTurret}
             }
         ] call Waldo_fnc_ResolveVehicleClassPool) apply {_x select 0};
         {_classes pushBackUnique _x} forEach _discovered;
@@ -142,6 +167,10 @@ if (isNull _aircraft) then {
     [_aircraft] call Waldo_fnc_HeadlessPinCrew;
     _aircraft setPosATL _spawnPosition;
     _aircraft setDir (_config getOrDefault ["spawnDirection", 0]);
+    // Explicit engineOn, same as Waldo_fnc_DynamicAOCreate's own air-patrol spawn: createVehicle's
+    // "FLY" special is not a reliable substitute for it, particularly for rotorLib-simulated
+    // helicopters, whose rotor RPM otherwise starts at 0 and the airframe drops before it spins up.
+    _aircraft engineOn true;
     // The side-prefixed form creates crew directly into a group of _requestedSide, rather than the
     // bare form's group of the airframe's own native config side - matches the pattern already used
     // by Waldo_fnc_DynamicAACreate/DynamicAASpawnFighters for the same reason: an explicit

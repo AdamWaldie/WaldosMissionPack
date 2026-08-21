@@ -105,6 +105,16 @@ while {
                     && {isEngineOn _helicopter}
                     && {!isTouchingGround _helicopter}
                     && {isNull (getSlingLoad _helicopter)}
+                    // Guard against re-attempting acquisition on every 0.5s tick while a controller is
+                    // already active for this helicopter. Waldo_fnc_ImprovedHelicopterLandingExecuteLocal
+                    // already no-ops in that case, but reaching this branch at all still reset
+                    // _lastSignature below, which forced the unchanged waypoint signature to read as
+                    // "changed" on the very next tick - re-broadcasting Waldo_ImprovedHelicopterLanding_
+                    // TrackerState (setVariable ..., true) and re-logging "Controller acquiring" every
+                    // tick for the whole multi-second descent instead of once per approach. With several
+                    // helicopters landing concurrently this produced continuous, redundant global
+                    // broadcast traffic for no behavioural benefit.
+                    && {!(_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_Active", false])}
                 ) then {
                     diag_log format ["[WMP AI LANDING] Controller acquiring helicopter=%1 waypoint=%2 type=%3 distance=%4 horizontalSpeed=%5 closeEnvelope=%6", netId _helicopter, _index, _type, round _distance, round (_horizontalSpeed * 3.6), round _closeApproachDistance];
                     [_helicopter, _position, _type, _index, _script] call Waldo_fnc_ImprovedHelicopterLandingExecuteLocal;

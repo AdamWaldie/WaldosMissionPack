@@ -1,0 +1,338 @@
+# Vehicle Weapon Loadout
+
+> **Use this page when:** you want to arm, rearm, disarm, or swap the weapons/ammo on a specific vehicle - a turret weapon, its magazines, or an aircraft pylon's ordnance - through a script call or Zeus, instead of hand-writing `removeWeaponTurret`/`addWeaponTurret`/`setPylonLoadOut`.
+
+_Associated Files: `MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutApply.sqf`, `vehicleWeaponLoadoutInspect.sqf`, `vehicleWeaponLoadoutCopy.sqf`, `vehicleWeaponLoadoutCopyBuildRows.sqf`, `vehicleWeaponLoadoutCopyPreview.sqf`, `vehicleWeaponLoadoutCatalogBuild.sqf`, `MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationPromptEditor.sqf` (and its collector/pending-list files), `MissionScripts\ZenModules\Zen_vehicleCustomizationEditorModule.sqf`, `Zen_vehicleCustomizationInspectModule.sqf`, `zenVehicleCustomizationServer.sqf`, `Waldo_fnc_VehicleWeaponLoadoutApply`, `Waldo_fnc_VehicleWeaponLoadoutInspect`, `Waldo_fnc_VehicleWeaponLoadoutCopy`, `Waldo_fnc_VehicleWeaponLoadoutCopyPreview`, `Waldo_fnc_VehicleCustomizationInspect`, `Waldo_fnc_ZenVehicleCustomizationEditor`, `Waldo_fnc_ZenVehicleCustomizationInspect`, `Waldo_fnc_ZenVehicleCustomizationServer`_
+
+There is no `MissionConfig` file for this feature - it's a call/ZEN-only tool, not a global setting.
+
+---
+
+## Overview
+
+Custom weapon/ammo change-out for a single vehicle: add a weapon to a turret, replace what's already
+mounted, remove one specific weapon, or strip a turret entirely - and, separately, set or clear an
+aircraft pylon's ordnance. Server-authoritative, like the rest of WMP's object-anchored features
+(`Waldo_fnc_Jammer`, `Waldo_fnc_Tracker`): safe to call from a vehicle's own Eden init field with no
+`isServer` wrapper, since the call forwards itself to the server automatically.
+
+Turret weapons and aircraft pylons are two genuinely separate Arma systems under the hood -
+`removeWeaponTurret`/`addWeaponTurret`/`addMagazineTurret` for turrets, `setPylonLoadOut` for pylons -
+and this feature keeps that same split rather than papering over it, since a "weapon" on a pylon is
+really just an ordnance/magazine classname with no separate weapon class of its own.
+
+## Scripting
+
+```sqf
+// [vehicle, rows]
+[this, [
+    ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 30, 4]
+]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+```
+
+Each row is `[targetType, turretPath, pylonIndex, action, weaponClass, magazineClass, magazineCount, magazineQuantity]`:
+
+| Field | Type | Meaning |
+|---|---|---|
+| `targetType` | STRING | `"TURRET"` or `"PYLON"` |
+| `turretPath` | ARRAY | Required for TURRET rows, e.g. `[-1]` (main/driver weapon), `[0]`, `[0,0]`. Ignored for PYLON rows. |
+| `pylonIndex` | NUMBER | Required for PYLON rows, 1-based hardpoint index. Ignored for TURRET rows. |
+| `action` | STRING | TURRET: `ADD`, `REPLACE` (strips the turret first), `REMOVE` (one named weapon/magazine), `CLEAR` (whole turret). PYLON: `SET` (aliases `ADD`/`REPLACE` accepted), `CLEAR`. |
+| `weaponClass` | STRING | `CfgWeapons` class - TURRET rows only. |
+| `magazineClass` | STRING | `CfgMagazines` class - the turret magazine to load (TURRET, optional) or the pylon's ordnance itself (PYLON, required for `SET`). |
+| `magazineCount` | NUMBER | Rounds loaded **into each magazine instance** (default 1, TURRET only) - can be less than the magazine's full capacity for a genuinely partial magazine, or omitted/left low for a full one; clamped **down** if it exceeds the magazine's own `CfgMagazines` `count` (a magazine can't hold more rounds than its own config allows - the engine itself enforces this, same as `addMagazine`), never forced up. For a PYLON row this field means something different - it's the pylon's *exact* ammo count instead: `0` (or omitted) loads the pylon's full `CfgMagazines`-defined count via `setAmmoOnPylon` (`setPylonLoadOut`'s own third argument is a `forced`-compatibility flag, not an ammo-load flag, and never loads ammo by itself); a positive value loads exactly that many rounds, clamped to the magazine's own full count. |
+| `magazineQuantity` | NUMBER | How many separate magazine instances to add (default 1, TURRET ADD/REPLACE only, ignored elsewhere). `addMagazineTurret` adds exactly one magazine instance per call, so this loops it that many times to build a real reserve ammo pool - e.g. `magazineCount=30, magazineQuantity=4` means four separate 30-round magazines, not one 120-round magazine. |
+
+Multiple rows apply independently in one call - a bad row (unknown classname, non-existent turret
+path/pylon index) is reported for that row only and never blocks the rest. The return value is
+`[[ok, detail], ...]`, one entry per row, in the same order.
+
+```sqf
+// Strip a coax MG off turret [0] (exact coax classname varies per vehicle family - confirm
+// it with Inspect below rather than assuming "LMG_Coax" is universal), and load pylon 1 with a
+// GBU-12 pod at its full ammo count (0 = full):
+[this, [
+    ["TURRET", [0], -1, "REMOVE", "LMG_Coax", "", 0],
+    ["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 0]
+]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+
+// Load the same pod but with only 2 of its rounds instead of a full load:
+[this, [["PYLON", [-1], 1, "SET", "", "6Rnd_GBU12_x_AGM_65E2_Pylon", 2]]]
+    call Waldo_fnc_VehicleWeaponLoadoutApply;
+
+// Clear a turret completely:
+[this, [["TURRET", [-1], -1, "CLEAR", "", "", 0]]] call Waldo_fnc_VehicleWeaponLoadoutApply;
+
+// Four separate 12-round tank cannon magazines (a real 48-round reserve), not one 12-round magazine:
+[this, [["TURRET", [0], -1, "REPLACE", "cannon_125mm", "12Rnd_125mm_HE_T_Red", 12, 4]]]
+    call Waldo_fnc_VehicleWeaponLoadoutApply;
+```
+
+### Copying a whole loadout from another vehicle
+
+```sqf
+// Give myJeep the exact turret/pylon loadout of referenceVehicle - no classname typed:
+[referenceVehicle, myJeep] call Waldo_fnc_VehicleWeaponLoadoutCopy;
+// [copiedTurretPaths, copiedPylonIndices, applyResults] - only turret paths present on BOTH
+// vehicles are copied, and pylons are copied by index (1st to 1st, 2nd to 2nd, ...) including the
+// source's exact remaining ammo via ammoOnPylon.
+```
+
+### Discovering real turret paths and pylon counts
+
+```sqf
+private _turrets = [[-1]] + (allTurrets [vehicle, true]);   // allTurrets never includes [-1] itself
+private _pylonCount = count (getPylonMagazines vehicle);     // 0 = no pylons on this vehicle
+```
+
+## Finding the exact classnames (beginner-friendly)
+
+There is no engine query for "what weapons/magazines fit this turret" - a turret's weapon slot
+genuinely accepts almost any vehicle-mounted weapon class regardless of the vehicle's own original
+armament (that's the whole point of `addWeaponTurret`), so there is nothing for the game to filter a
+list against. This means classnames are always typed in somewhere, never picked from a
+guaranteed-compatible list - which is exactly the beginner pain point this section, and the two
+helper modules below, exist to solve. In order of how completely each one avoids typing a classname:
+
+**Never type a classname at all - copy the loadout directly.** Place **Vehicle Customisation -
+Editor** directly on the vehicle you want to *receive* a loadout, open its **Copy From Nearby
+Vehicle...** button, pick another vehicle within 100m to copy *from* (a stock/vanilla one works great
+- you don't need to own or have configured it), and confirm. Every classname is read straight off the
+source vehicle and applied to the target -
+nobody ever sees or types one. It only touches turret paths that exist on both vehicles (so copying a
+tank's cannon onto a car copies nothing for that turret, reported not silently skipped) and copies
+pylons by index including the source's *exact* remaining ammo, not just a fresh reload. This is the
+right choice whenever "make this vehicle armed like that one" is really the goal.
+
+**Want to see the classnames, or tweak just one thing?** Place **Vehicle Customisation - Inspect**
+directly on any vehicle and it prints every turret's and pylon's exact current classnames as a
+full-screen `hint`, each followed by a ready-to-paste row, in this format (illustrative - the exact
+classnames always come from whatever vehicle you actually inspect, not from this page; the pairing
+shown here, a tank cannon plus its HE round, is the one Bohemia's own `addWeaponTurret` documentation
+example uses):
+
+```
+--- <vehicle display name> (<vehicle class>) ---
+Turret [0]: weapon=cannon_125mm magazines=["12Rnd_125mm_HE_T_Red"]
+["TURRET", [0], -1, "REPLACE", "cannon_125mm", "12Rnd_125mm_HE_T_Red", 1],
+```
+
+Copy the row, adjust the magazine count, and paste it straight into `Waldo_fnc_VehicleWeaponLoadoutApply`
+or read the classnames off into the **Configure** dialog's Weapon/Magazine fields. The report is also
+written to that client's own RPT under `[WMP VEHWPN INSPECT]` if you want a permanent copy. This is
+purely read-only - it never changes the inspected vehicle - and needs no curator authentication since
+it tells you nothing you couldn't already see by looking at the vehicle in Eden.
+
+**Other official ways to find a classname**, for the rare case neither helper covers, in order of how
+likely a beginner is to already have them available:
+- **Eden Editor's built-in Debug Console** (`Tools > Debug Console` in the 3D Editor) - run
+  `hint str (vehicle weaponsTurret [-1]);` or `hint str (getPylonMagazines vehicle);` against a
+  selected vehicle. Confirmed shipped with the base game, not a mod.
+- **[Arma 3 Assets](https://community.bistudio.com/wiki/Arma_3_Assets)** - Bohemia's own canonical,
+  kept-current classname index for the whole game.
+- **[Arma 3: CfgWeapons Vehicle Weapons](https://community.bistudio.com/wiki/Arma_3:_CfgWeapons_Vehicle_Weapons)**
+  - specifically vehicle-mounted turret weapons, organised by faction (BLUFOR/OPFOR/Independent/Civilian).
+
+### Magazine/weapon compatibility
+
+A magazine's fit against the requested weapon is checked with `compatibleMagazines` and logged if it
+looks wrong - but this is **only a warning**, never a hard rejection. `compatibleMagazines` is
+muzzle-specific (a weapon can carry more than one muzzle, e.g. a rifle plus an underslung grenade
+launcher) and a loadout row doesn't ask which muzzle is meant, so a combination that looks wrong
+against the primary muzzle can still be exactly right against a secondary one. If a row is rejected
+outright, it's always because the weapon or magazine classname itself doesn't exist in the loaded
+modset - check the RPT (`[WMP VEHWPN]`) for the exact per-row reason. The **Inspect** module above is
+also the fastest way to confirm a magazine is genuinely compatible: if it's currently loaded on a real
+vehicle, it's compatible.
+
+## Zeus modules
+
+**Vehicle Customisation - Editor** (category **WMP Vehicle Customisation**) must be placed **directly
+on the vehicle** you want to edit - the same convention as **Plant Signal Tracker**. Dropping it
+anywhere else (open ground, a different object) is rejected with an on-screen notice instead of
+silently doing nothing. Unlike the older one-shot modules it replaces, this is a **persistent
+dialog**: it stays open across a whole authoring session so a curator can queue up any number of
+turret, pylon, appearance, and component changes before applying anything.
+
+The dialog has four tabs, plus a permanent **Pending Changes** list visible on every tab:
+
+| Tab | What it edits |
+|---|---|
+| Turret | Add/replace/remove/clear a turret's weapon and magazines |
+| Pylon | Set or clear an aircraft pylon's ordnance |
+| Appearance | Recolor a texture slot, or restore its default (see [Vehicle Appearance](Vehicle-Appearance)) |
+| Component | Hide/show a model selection, optionally clearing a linked turret's weapon at the same time (see [Vehicle Appearance](Vehicle-Appearance)) |
+
+Each tab's own **Add \<Tab\> Row** button routes through a dedicated, validation-gated collector before
+anything is queued - a blank or incomplete row (an empty weapon classname, an unrecognised magazine,
+...) is refused outright with an on-screen warning and never reaches Pending. This is a deliberate fix
+for a confirmed bug in the retired Configure module's own queue feature, which used to rebuild a row
+from whatever was in the form fields even when they were blank.
+
+The **Turret** and **Pylon** tabs' option lists are built fresh every time the dialog opens, discovered
+live from that exact vehicle (`allTurrets`, `getPylonMagazines`, and the vehicle's own
+`TransportPylonsComponent` config for pylon display names) - never a hand-typed list, so only choices
+that vehicle genuinely supports are ever shown, and each option's label shows what's currently mounted
+there. A turret whose only weapon is the horn, or a mount-less `[-1]` (no real weapon mount on this
+vehicle), is excluded from the Turret combo entirely rather than merely labelled - see [`[-1]` is not
+guaranteed to have a real weapon mount](#notes-and-limitations) below. A fully unarmed vehicle's
+Turret combo falls back to a single non-selectable "No editable turret positions on this vehicle" entry.
+
+Selection is dropdown-driven by default: pick a **Weapon**, and the **Magazine** dropdown right below
+it repopulates live, filtered to only the magazines that weapon can actually load (read straight from
+that weapon's own `CfgWeapons >> "magazines"` config array via
+`Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon` - no live vehicle instance needed, so it works even
+for a weapon typed in by hand). Picking a Magazine fills in the Rounds/Magazine field from that
+magazine's own real capacity. The classname edit fields underneath both dropdowns stay directly
+editable at all times - the advanced/modded-weapon fallback for a weapon or magazine the pack-wide
+catalog hasn't discovered yet.
+
+| Turret tab control | Meaning |
+|---|---|
+| Turret | Which turret path to change (mount-less/horn-only paths never appear here) |
+| Action | Add Weapon / Replace Turret / Remove Weapon / Clear Turret |
+| Weapon | Pick a weapon+magazine pairing already mounted somewhere on this exact vehicle, or from the pack-wide catalog (see below), instead of typing one below (excludes the horn); "Type manually" leaves the fields below in charge |
+| Weapon Classname | `CfgWeapons` class to add/replace/remove - ignored for Clear (advanced - auto-filled by Weapon above) |
+| Magazine | Filtered live to magazines the selected Weapon actually accepts; "Type manually" leaves the field below in charge |
+| Magazine Classname | `CfgMagazines` class - ignored for Remove/Clear (advanced - auto-filled by Magazine above) |
+| Rounds Per Magazine | Rounds loaded into EACH magazine instance, clamped to that magazine's own full capacity - Add/Replace only |
+| Magazine Count | How many separate magazine instances to add - the turret's real reserve ammo pool, not just one oversized magazine - Add/Replace only |
+
+| Pylon tab control | Meaning |
+|---|---|
+| Pylon | Which hardpoint to change |
+| Action | Set Ordnance / Clear Pylon |
+| Ordnance | Pick ordnance already mounted on this vehicle, or from the pack-wide catalog, instead of typing the field below |
+| Ordnance/Magazine Classname | `CfgMagazines` class for the pylon's ordnance |
+| Ammo Override | `0` (default) loads the ordnance's full count; a positive value loads exactly that many rounds, clamped to the magazine's own full count |
+
+### Pack-wide catalog
+
+Both Copy pickers extend beyond "what's already on this one vehicle" with a catalog discovered live
+across **every vehicle class in the currently loaded modset** - `Waldo_fnc_VehicleWeaponLoadoutCatalogBuild`
+recursively scans every `CfgVehicles` turret entry for its `weapons[]`/`magazines[]` arrays, and every
+`CfgMagazines` entry carrying a `pylonWeapon` property, for the turret and pylon catalogs
+respectively. That scan is real work on a large modset, so it never runs synchronously inside this
+dialog: `Waldo_fnc_ZenInitModules` kicks it off in the background at mission start and caches the
+result for the rest of the mission (config data is immutable during one, the same justification
+`Waldo_fnc_ResolveVehicleClassPool` already uses for its own cache). If a curator opens the dialog
+before that background scan finishes, the pack-wide section is simply absent that one time - "Type
+manually" says so directly, and reopening the dialog shortly after picks it up once ready. Each
+picker also caps how many pack-wide entries it renders and truncates long labels, so a modset with
+thousands of distinct turret weapons never turns the list itself into an unusably slow, overrunning
+control - the underlying cached catalog is not capped, only what one dialog open renders from it.
+
+### Copy From Nearby Vehicle
+
+The **Copy From Nearby Vehicle...** button (Turret tab, but it copies both turret and pylon rows)
+opens an in-dialog overlay listing every other vehicle within 100m, nearest first. Picking one calls
+the read-only `Waldo_fnc_VehicleWeaponLoadoutCopyPreview` - the same read/build logic
+`Waldo_fnc_VehicleWeaponLoadoutCopy` uses to apply immediately, extracted into a shared helper - and
+pushes every matched turret/pylon row straight into Pending, fully populated, with no classname ever
+typed. A source turret whose only weapon is the horn is skipped entirely and never copied. Review or
+remove any copied row before applying, exactly like a manually-added one.
+
+### Pending Changes and applying
+
+Every row added from any tab - Turret, Pylon, Appearance, or Component - lands in the same permanent
+**Pending Changes** list, visible no matter which tab is active. From there:
+
+- **Remove Selected Pending Row** - drops one row out of Pending.
+- **Apply All Pending** - sends the whole list in one authenticated request to
+  `Waldo_fnc_ZenVehicleCustomizationServer`, which dispatches turret/pylon rows to
+  `Waldo_fnc_VehicleWeaponLoadoutApply`, appearance rows to `Waldo_fnc_VehicleAppearanceApply`, and
+  component rows to `Waldo_fnc_VehicleComponentRemove` - one curator-authentication check total, not
+  one per feature - then clears Pending and reports the combined outcome as a WMP notification card.
+- **Export All Pending To Clipboard** - purely client-side, no server call: builds one ready-to-paste
+  Eden-init-field snippet (only the statements needed for whichever row types are actually pending),
+  copies it to the clipboard, and leaves Pending untouched. This is the "author here, paste there"
+  workflow for a mission maker who wants the exact calls for a unit's own init field rather than an
+  immediate in-session change.
+- **Clear All Pending** - drops every pending row without applying anything.
+- **Ok / Close** - closes the dialog. Anything still in Pending and not yet applied or exported is
+  discarded.
+
+Weapon and magazine classnames can be typed in directly, picked from **Weapon**/**Magazine**/
+**Ordnance**, or found with the **Inspect** module below - see [Finding the exact
+classnames](#finding-the-exact-classnames-beginner-friendly) above before typing one in from memory.
+Whichever way a turret's weapon is chosen, **every mutating turret action is refused with a notice if
+that turret's current weapon is only the vehicle's horn** - pick a different turret instead; the horn
+is never treated as a combat weapon by this feature.
+
+**Vehicle Customisation - Inspect** (same category, same placed-directly-on-the-vehicle convention) is
+the read-only companion module - no dialog, acts immediately, logs the full combined report to RPT,
+and shows it as a full-screen `hint`. It merges what used to be two separate Inspect modules via
+`Waldo_fnc_VehicleCustomizationInspect`: the weapon/pylon report described above under [Finding the
+exact classnames](#finding-the-exact-classnames-beginner-friendly), plus the texture-slot and model
+selection report covered on [Vehicle Appearance](Vehicle-Appearance). The **clipboard** gets something
+different and deliberately narrower than the hint: the weapon/pylon rows combined into one
+comment-free, ready-to-paste `[this, [...]] call Waldo_fnc_VehicleWeaponLoadoutApply;` statement, plus
+the comma-joined model selection names - safe to paste directly into a unit's Eden init field or a
+picker field as-is. The full prose report is never what lands on the clipboard; pasting a
+human-readable report (or any block with an inline `// comment`) straight into an init field is a
+confirmed real-world failure mode (`Invalid number in expression`) if the paste doesn't keep real line
+breaks, since the comment can swallow the rest of the statement. Unlike **Editor** it needs no
+curator-authentication bridge and never touches the server, because it never changes anything. A
+turret whose only weapon is the horn is still reported (informational) but never gets a row.
+
+
+## Notes and limitations
+
+- Works on any `AllVehicles`-derived object with turrets and/or pylons - cars, tanks, boats, static
+  weapons, aircraft. `Man` (soldiers/AI) is explicitly excluded even though it technically inherits
+  from `AllVehicles` too in Arma 3's own config tree - use ACE Arsenal or the loadout/logistics system
+  for a unit's own weapons instead.
+- Safe to call again later on the same vehicle for further changes; each call is independent and
+  nothing from a prior call is cached or assumed.
+- This is a one-shot apply, not a saved/restorable profile - to persist a vehicle's full state across
+  a mission (including weapon/ammo state) see [Persistence](Persistence) instead.
+- Diagnostics/troubleshooting: every apply logs one `[WMP VEHWPN]` RPT line per call summarising every
+  row's outcome; per-row failures name exactly which classname or turret/pylon reference was invalid.
+- **The horn is never treated as a weapon.** A vehicle's horn is an ordinary `CfgWeapons` entry to the
+  engine (identified here by `CfgWeapons` `displayName`, since there is no other reliable "not a
+  combat weapon" flag), but the Editor's Turret and Weapon combos exclude a horn-only turret from
+  selection entirely, Copy From Nearby Vehicle skips copying one, and Inspect reports one without a
+  paste-ready row - across every entry point, not just the ZEN dialog. `Waldo_fnc_VehicleWeaponLoadoutApply`
+  itself is unaffected: a mission-authored row can still target a horn-only turret directly (e.g. to
+  genuinely remove a vehicle's horn), since that call has no beginner-facing dialog to guard.
+- **`[-1]` is not guaranteed to have a real weapon mount.** `allTurrets` never returns `[-1]` itself -
+  it is always prepended by hand as "the main/driver weapon slot" - so unlike every other discovered
+  turret path it was never actually confirmed to correspond to a real, model-backed mount. Some
+  vehicles' own class declares no root `weapons[]` array at all (an ordinary unarmed car, for
+  instance), meaning `[-1]` has no physical mount whatsoever on that vehicle. WMP cannot create a new
+  weapon mount on a vehicle that never had one - that needs model/config authoring work, not a script
+  - so `ADD`/`REPLACE` against `[-1]` is refused outright on such a vehicle (a clear per-row failure,
+  never a silent no-op that only looks like it worked). The Editor excludes a mount-less `[-1]` from
+  every turret picker entirely (Turret, Weapon, and the Component tab's Linked Turret Path combo)
+  rather than merely labelling it - WMP cannot create a physical mount that doesn't exist. A real
+  turret path from `allTurrets` never has this problem, since `allTurrets` only ever reports turrets
+  that genuinely exist.
+- **Not covered here: vehicle appearance.** Recoloring a vehicle (a "pink tank") or hiding part of its
+  physical model (e.g. a turret cupola) is a completely different, unrelated Arma system - cosmetic
+  model state, not weapon/ammo content. See [Vehicle Appearance](Vehicle-Appearance) for that feature.
+  WMP's other closest existing feature is `Waldo_fnc_VehicleCamoSetup`, see [Vehicle Ambush Script And
+  Vehicle Camo](Vehicle-Ambush-Script-And-Vehicle-Camo), which works by attaching physical deployable
+  camo objects rather than texture-swapping the vehicle itself.
+
+## See also
+
+- The **Vehicle Weapon Loadout And Appearance Example** composition (`WMP_Compositions/`, Minimal/Full)
+  is a working editor-time starting point for both features together. **Minimal** places one armed
+  Hunter and demonstrates the smallest working call for each function directly: clearing its real
+  `turret[0]` (no classname needed) and recoloring it solid pink. **Full** places a GMG-armed Hunter
+  and an HMG-armed Hunter side by side - deliberately different variants of the same family, so their
+  `turret[0]` paths genuinely match (Copy only ever moves a path that exists on both vehicles) while
+  still producing a real, visible weapon swap rather than a same-to-same copy - and copies the GMG
+  Hunter's real turret loadout onto the HMG one via `Waldo_fnc_VehicleWeaponLoadoutCopy` (no classname
+  typed anywhere) before recoloring the target via `Waldo_fnc_VehicleAppearanceApply`.
+- [Vehicle Appearance](Vehicle-Appearance) - recoloring and physical-component show/hide, a separate
+  feature for a genuinely different Arma system (cosmetic model state, not weapon/ammo content).
+- [Airborne Gunship Support](Airborne-Gunship-Support) - turret *profiles* for crew assignment on a
+  managed gunship, a different concern from editing what's actually mounted.
+- [Persistence](Persistence) - saving/restoring a vehicle's state (including ammo) across a mission.
+- [Zeus and Script API Parity](Zeus-And-Script-API-Parity) - how WMP keeps every Zeus module and its
+  underlying script API in sync.
+
+<!-- WMP-WIKI-NAV -->
+---
+[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)
