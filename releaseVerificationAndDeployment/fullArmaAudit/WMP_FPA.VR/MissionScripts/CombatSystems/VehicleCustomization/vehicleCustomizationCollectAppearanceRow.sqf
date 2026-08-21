@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
  * Validation-gated reader for the ZEN "Vehicle Customisation - Editor" dialog's Appearance tab. Reads
- * the currently selected texture slot/mode/color/path controls and returns a ready-to-queue
+ * the currently selected texture slot/mode/colour-slider/path controls and returns a ready-to-queue
  * Waldo_fnc_VehicleAppearanceApply TEXTURE row, or an empty array on ANY invalid or incomplete input -
  * same "never let a blank/garbage row reach the pending list" contract as
  * Waldo_fnc_VehCust_collectTurretRow.
@@ -28,12 +28,12 @@ if (isNull _disp) exitWith {[]};
 
 private _slotCombo = _disp getVariable ["WaldoVehCust_TextureSlotCombo", controlNull];
 private _modeCombo = _disp getVariable ["WaldoVehCust_TextureModeCombo", controlNull];
-private _rEdit = _disp getVariable ["WaldoVehCust_TextureRedEdit", controlNull];
-private _gEdit = _disp getVariable ["WaldoVehCust_TextureGreenEdit", controlNull];
-private _bEdit = _disp getVariable ["WaldoVehCust_TextureBlueEdit", controlNull];
-private _aEdit = _disp getVariable ["WaldoVehCust_TextureAlphaEdit", controlNull];
+private _rSlider = _disp getVariable ["WaldoVehCust_TextureRedSlider", controlNull];
+private _gSlider = _disp getVariable ["WaldoVehCust_TextureGreenSlider", controlNull];
+private _bSlider = _disp getVariable ["WaldoVehCust_TextureBlueSlider", controlNull];
+private _aSlider = _disp getVariable ["WaldoVehCust_TextureAlphaSlider", controlNull];
 private _pathEdit = _disp getVariable ["WaldoVehCust_TexturePathEdit", controlNull];
-if (isNull _slotCombo || {isNull _modeCombo} || {isNull _rEdit} || {isNull _gEdit} || {isNull _bEdit} || {isNull _aEdit} || {isNull _pathEdit}) exitWith {[]};
+if (isNull _slotCombo || {isNull _modeCombo} || {isNull _rSlider} || {isNull _gSlider} || {isNull _bSlider} || {isNull _aSlider} || {isNull _pathEdit}) exitWith {[]};
 
 private _slotIndexSel = lbCurSel _slotCombo;
 if (_slotIndexSel < 0) exitWith {[]};
@@ -51,10 +51,10 @@ if (_modeIndex == 2) exitWith {
 // Mode 0 = Solid Color - no texture asset needed, built via a plain [R,G,B,A] array that
 // Waldo_fnc_VehicleAppearanceApply auto-converts with BIS_fnc_colorRGBAtoTexture.
 if (_modeIndex == 0) exitWith {
-    private _r = parseNumber (ctrlText _rEdit);
-    private _g = parseNumber (ctrlText _gEdit);
-    private _b = parseNumber (ctrlText _bEdit);
-    private _a = parseNumber (ctrlText _aEdit);
+    private _r = ((sliderPosition _rSlider) max 0) min 1;
+    private _g = ((sliderPosition _gSlider) max 0) min 1;
+    private _b = ((sliderPosition _bSlider) max 0) min 1;
+    private _a = ((sliderPosition _aSlider) max 0) min 1;
     ["TEXTURE", _slotIndex, "SET", [_r, _g, _b, _a]]
 };
 

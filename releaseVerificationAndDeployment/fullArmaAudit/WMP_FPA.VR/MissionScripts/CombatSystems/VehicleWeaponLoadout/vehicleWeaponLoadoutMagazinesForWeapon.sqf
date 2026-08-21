@@ -1,16 +1,14 @@
 /*
  * Author: WaldoTheWarfighter
- * Enumerates the magazines a given weapon class is actually configured to accept, straight from that
- * weapon's own CfgWeapons >> "magazines" config array - the canonical, always-available source (no
- * live vehicle instance needed, so this works even for a weapon a curator just typed by hand and
- * hasn't mounted anywhere yet). Built for the ZEN "Vehicle Customisation - Editor" dialog's Magazine
- * combo, which repopulates from this every time the Weapon combo's selection changes, so magazine
- * choices are always filtered to what the currently-selected weapon can actually load.
+ * Enumerates the magazines a weapon is configured to accept across every muzzle. It combines Arma's
+ * compatibleMagazines result with the weapon's inherited top-level magazines[] and each named muzzle's
+ * magazines[] array. The config fallback matters for missile launchers because the engine command is
+ * documented to return no result for missiles; it also prevents a vehicle turret's unrelated magazine
+ * list being assigned to every weapon mounted on that turret.
  *
- * Deliberately not the same thing as Waldo_fnc_VehicleWeaponLoadoutApply's own compatibleMagazines
- * warning check: that command needs a live muzzle context and is only ever used there as an
- * informational log, never a filter. This function instead reads the weapon class's own declared
- * magazine list directly, which is exactly what a dropdown of "what can I put in this weapon" needs.
+ * No live vehicle is needed, so this also works for a weapon selected from the pack-wide catalogue or
+ * typed manually before it is mounted. Unknown/non-magazine entries are discarded and results are
+ * de-duplicated before being shown to the curator.
  *
  * Arguments:
  * 0: Weapon Classname <STRING> - a real CfgWeapons class. An empty string or unknown class returns [].
@@ -23,14 +21,22 @@
  * Example:
  * private _magazines = ["arifle_MX_F"] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon;
  *
- * Current callers: MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf
- * (the Turret tab's Weapon combo's LBSelChanged handler, to repopulate the Magazine combo).
+ * Current callers: vehicleWeaponLoadoutCatalogBuild.sqf (per-weapon catalog defaults),
+ * vehicleCustomizationPromptEditor.sqf (live Magazine combo), and
+ * vehicleCustomizationCollectTurretRow.sqf (final compatibility validation before queueing).
  */
 
 params [["_weaponClass", "", [""]]];
 if (_weaponClass == "" || {!(isClass (configFile >> "CfgWeapons" >> _weaponClass))}) exitWith {[]};
 
-private _rawMagazines = getArray (configFile >> "CfgWeapons" >> _weaponClass >> "magazines");
+private _weaponConfig = configFile >> "CfgWeapons" >> _weaponClass;
+private _rawMagazines = compatibleMagazines _weaponClass;
+_rawMagazines append (getArray (_weaponConfig >> "magazines"));
+{
+    if (_x != "this") then {
+        _rawMagazines append (getArray (_weaponConfig >> _x >> "magazines"));
+    };
+} forEach (getArray (_weaponConfig >> "muzzles"));
 private _seen = [];
 private _rows = [];
 {

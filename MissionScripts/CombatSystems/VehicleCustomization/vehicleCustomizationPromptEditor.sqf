@@ -9,24 +9,18 @@
  * paste there" beginner workflow.
  *
  * Tab switching: each tab's own controls live inside one RscControlsGroupNoScrollbars container, all
- * four covering the exact same content rectangle. Waldo_fnc_VehCust_setTab switches tabs by MOVING the
- * non-active groups off-screen entirely (ctrlSetPosition to a tiny rect well outside the safe zone),
- * not by ctrlShow-hiding them. Two earlier mechanisms both survived static review but failed identically
- * in live in-engine testing - a flat per-control ctrlShow list, then ctrlShow on these same four groups
- * (the groups also went through one intermediate fix, making sure none of them were ctrlShow false'd
- * before their own children existed, in case a child born under an already-hidden parent latched a
- * permanently-hidden state) - in every case the clicked tab button's own highlight changed correctly,
- * but the displayed content never did. Moving a group off the safe zone doesn't depend on ctrlShow
- * cascading correctly through anything, so it removes that entire class of suspect regardless of which
- * exact mechanism was actually at fault. Every group is still left ctrlShow true at creation (before its
- * children exist) and Waldo_fnc_VehCust_setTab still applies ctrlShow alongside the position move, but
- * neither is relied on alone - only the position move is trusted to determine real visibility.
+ * four covering the exact same content rectangle. Waldo_fnc_VehCust_setTab changes group visibility
+ * after every child exists and deliberately leaves the groups' fitted positions alone. Earlier
+ * off-screen positioning polluted the fitter's bounds and later restored an obsolete pre-fit rectangle;
+ * the apparent visibility failure was instead caused by stringifying the requested tab name before
+ * validating it, which silently forced every request back to Turret.
  *
  * This dialog calls Waldo_fnc_EcoCore_fitPromptDisplay, exactly like every earlier working version -
  * skipping it (tried once) left Waldo_fnc_EcoCore_createZeusPromptDisplay's own background/header chrome
  * stuck at its small unfitted placeholder box, visibly colliding with this dialog's own content, and
- * lost the button font auto-shrink that keeps the tab labels ("Appearance", "Component") from being
- * clipped. allControls _disp recurses into every control group's own children, not just this display's
+ * lost the button font auto-shrink that keeps longer controls readable. The tab widths and visible
+ * labels are deliberately sized for the actual text rather than relying on that shrink alone.
+ * allControls _disp recurses into every control group's own children, not just this display's
  * direct top-level controls - a group child's ctrlPosition is relative to its own parent group's local
  * origin, not this display's absolute safe-zone coordinates, and treating those small local numbers as
  * absolute corrupted the fit pass's computed bounding box and visibly shifted/clipped this dialog's
@@ -51,10 +45,14 @@
  * weapons[]) or that is horn-only is excluded from every turret picker entirely (Turret combo, Weapon
  * combo, Component tab's Linked Turret Path combo) - not just labeled - since WMP cannot create a
  * physical mount that doesn't exist and a horn is never a combat weapon. Picking a Weapon repopulates
- * the Magazine combo live from Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon (that weapon's own
- * CfgWeapons >> "magazines" list), so magazine choices are always filtered to what the selected
- * weapon can actually load; every "Type manually" classname edit field underneath these combos stays
- * user-editable for the exotic modded case the catalog hasn't discovered yet.
+ * the Magazine combo live from Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon (engine compatibility,
+ * top-level magazines and named-muzzle magazines), so magazine choices are filtered to what the
+ * selected weapon can actually load. The editor only shows controls relevant to the selected action,
+ * and solid colour editing uses bounded 0..1 sliders rather than ambiguous free-text values. Every
+ * "Type manually" classname edit remains available for exotic modded cases the catalog misses.
+ * The shared prompt card is the only outer background; two inset panels and a theme-coloured divider
+ * provide hierarchy without drawing a second, mismatched black box over the shared card. Combo-box
+ * wheel input is handled and consumed by the combo itself so Zeus cannot also zoom its camera.
  *
  * Arguments:
  * 0: Vehicle <OBJECT> - the vehicle this Editor session edits (the module's placement target).
@@ -77,7 +75,9 @@ if (!hasInterface || {isNull _vehicle}) exitWith {displayNull};
 // creation and could snapshot/reposition only a partial control set. Fit explicitly, once, at the
 // very end of this file instead, after every control this dialog creates genuinely exists (see this
 // file's header for why the fit call itself is still required, not skipped).
-private _disp = ["  WALDOS MISSION PACK  |  VEHICLE CUSTOMISATION", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+private _vehicleDisplayName = getText (configFile >> "CfgVehicles" >> (typeOf _vehicle) >> "displayName");
+if (_vehicleDisplayName == "") then {_vehicleDisplayName = typeOf _vehicle};
+private _disp = [format ["  WMP  //  VEHICLE CUSTOMISATION  //  %1", toUpperANSI _vehicleDisplayName], true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
 if (isNull _disp) exitWith {displayNull};
 
 _disp setVariable ["WaldoVehCust_Vehicle", _vehicle];
@@ -92,16 +92,25 @@ private _truncateLabel = {
     if (count _text > _maxLabelChars) then {(_text select [0, _maxLabelChars]) + "…"} else {_text};
 };
 
-// ---- Chrome ----
-private _bg = _disp ctrlCreate ["RscText", -1];
-_bg ctrlSetPosition [0.08, 0.05, 0.84, 0.90];
-_bg ctrlSetBackgroundColor [0, 0, 0, 0.86];
-_bg ctrlCommit 0;
+// ---- Interior hierarchy ----
+// The shared card/header created above is the sole outer chrome. These inset panels are created before
+// every interactive control so they remain behind the editor content instead of becoming a second
+// competing outer box.
+private _theme = _disp getVariable ["WaldoEcoCore_PromptTheme", [] call Waldo_fnc_UiTheme];
+private _leftPanel = _disp ctrlCreate ["RscText", -1];
+_leftPanel ctrlSetPosition [0.09, 0.15, 0.49, 0.66];
+_leftPanel ctrlSetBackgroundColor (_theme getOrDefault ["panelAlt", [0.035, 0.065, 0.095, 0.99]]);
+_leftPanel ctrlCommit 0;
 
-private _title = _disp ctrlCreate ["RscText", -1];
-_title ctrlSetPosition [0.10, 0.07, 0.50, 0.03];
-_title ctrlSetText format ["Vehicle Customisation - Editor: %1", getText (configFile >> "CfgVehicles" >> (typeOf _vehicle) >> "displayName")];
-_title ctrlCommit 0;
+private _rightPanel = _disp ctrlCreate ["RscText", -1];
+_rightPanel ctrlSetPosition [0.59, 0.15, 0.32, 0.66];
+_rightPanel ctrlSetBackgroundColor (_theme getOrDefault ["panelAlt", [0.035, 0.065, 0.095, 0.99]]);
+_rightPanel ctrlCommit 0;
+
+private _sectionDivider = _disp ctrlCreate ["RscText", -1];
+_sectionDivider ctrlSetPosition [0.09, 0.145, 0.82, 0.004];
+_sectionDivider ctrlSetBackgroundColor (_theme getOrDefault ["accent", [0.10, 0.46, 0.76, 1]]);
+_sectionDivider ctrlCommit 0;
 
 // ---- Tab buttons ----
 // Each button is tagged and its ButtonClick handler attached IMMEDIATELY after creation, here, rather
@@ -113,8 +122,9 @@ _title ctrlCommit 0;
 // visibly exist but do nothing at all when clicked. Attaching tab switching's own handlers this early
 // makes it independent of every other line in this file succeeding.
 private _tabTurretBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_tabTurretBtn ctrlSetPosition [0.10, 0.11, 0.11, 0.035];
+_tabTurretBtn ctrlSetPosition [0.10, 0.11, 0.105, 0.035];
 _tabTurretBtn ctrlSetText "Turret";
+_tabTurretBtn ctrlSetFontHeight 0.026;
 _tabTurretBtn ctrlCommit 0;
 _tabTurretBtn setVariable ["WaldoVehCust_Display", _disp];
 _tabTurretBtn setVariable ["WaldoVehCust_TabName", "turret"];
@@ -126,8 +136,9 @@ _tabTurretBtn ctrlAddEventHandler ["ButtonClick", {
 }];
 
 private _tabPylonBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_tabPylonBtn ctrlSetPosition [0.215, 0.11, 0.11, 0.035];
+_tabPylonBtn ctrlSetPosition [0.21, 0.11, 0.10, 0.035];
 _tabPylonBtn ctrlSetText "Pylon";
+_tabPylonBtn ctrlSetFontHeight 0.026;
 _tabPylonBtn ctrlCommit 0;
 _tabPylonBtn setVariable ["WaldoVehCust_Display", _disp];
 _tabPylonBtn setVariable ["WaldoVehCust_TabName", "pylon"];
@@ -139,8 +150,9 @@ _tabPylonBtn ctrlAddEventHandler ["ButtonClick", {
 }];
 
 private _tabAppearanceBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_tabAppearanceBtn ctrlSetPosition [0.33, 0.11, 0.13, 0.035];
+_tabAppearanceBtn ctrlSetPosition [0.32, 0.11, 0.125, 0.035];
 _tabAppearanceBtn ctrlSetText "Appearance";
+_tabAppearanceBtn ctrlSetFontHeight 0.026;
 _tabAppearanceBtn ctrlCommit 0;
 _tabAppearanceBtn setVariable ["WaldoVehCust_Display", _disp];
 _tabAppearanceBtn setVariable ["WaldoVehCust_TabName", "appearance"];
@@ -152,8 +164,9 @@ _tabAppearanceBtn ctrlAddEventHandler ["ButtonClick", {
 }];
 
 private _tabComponentBtn = _disp ctrlCreate ["RscButtonMenu", -1];
-_tabComponentBtn ctrlSetPosition [0.465, 0.11, 0.13, 0.035];
+_tabComponentBtn ctrlSetPosition [0.45, 0.11, 0.13, 0.035];
 _tabComponentBtn ctrlSetText "Component";
+_tabComponentBtn ctrlSetFontHeight 0.026;
 _tabComponentBtn ctrlCommit 0;
 _tabComponentBtn setVariable ["WaldoVehCust_Display", _disp];
 _tabComponentBtn setVariable ["WaldoVehCust_TabName", "component"];
@@ -170,23 +183,12 @@ _tabComponentBtn ctrlAddEventHandler ["ButtonClick", {
 // see that file - fixed a real corrupted-position bug, which only makes sense if children really do
 // render relative to their parent group's current position).
 //
-// Tab switching (Waldo_fnc_VehCust_setTab) moves the non-active groups off-screen entirely rather than
-// ctrlShow-hiding them - two earlier mechanisms (a flat per-control ctrlShow list, then ctrlShow on
-// these same four groups) both survived static review but failed live in-engine testing identically:
-// the clicked tab button's own highlight changed, but the displayed content never did. Moving a group
-// off the safe zone doesn't depend on ctrlShow cascading correctly through anything.
-//
-// Every group is still left ctrlShow TRUE here, before any of its children are created (a child
-// created under an already-hidden parent group can be born permanently hidden regardless of later
-// ctrlShow calls on the parent), and Waldo_fnc_VehCust_setTab also still applies ctrlShow alongside the
-// position move - neither is relied on alone, only the position move is trusted to actually determine
-// visibility.
+// Every group remains visible while its children are created. Once construction is complete,
+// Waldo_fnc_VehCust_setTab hides the inactive groups without changing their fitted positions.
 private _tabContentX = 0.10;
 private _tabContentY = 0.16;
 private _tabContentW = 0.46;
 private _tabContentH = 0.62;
-_disp setVariable ["WaldoVehCust_TabContentRect", [_tabContentX, _tabContentY, _tabContentW, _tabContentH]];
-
 private _turretGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
 _turretGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
 _turretGroup ctrlShow true;
@@ -228,7 +230,8 @@ _turretActionCombo ctrlCommit 0;
 
 private _copyWeaponLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
 _copyWeaponLabel ctrlSetPosition [0, 0.16, 0.46, 0.025];
-_copyWeaponLabel ctrlSetText "Weapon (pick from this vehicle's own weapons or the pack-wide catalog)";
+_copyWeaponLabel ctrlSetText "Weapon";
+_copyWeaponLabel ctrlSetTooltip "Pick a weapon already on this vehicle or from the loaded pack-wide catalog.";
 _copyWeaponLabel ctrlCommit 0;
 
 private _copyWeaponCombo = _disp ctrlCreate ["RscCombo", -1, _turretGroup];
@@ -236,8 +239,9 @@ _copyWeaponCombo ctrlSetPosition [0, 0.19, 0.46, 0.035];
 _copyWeaponCombo ctrlCommit 0;
 
 private _turretWeaponLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
-_turretWeaponLabel ctrlSetPosition [0, 0.24, 0.36, 0.025];
-_turretWeaponLabel ctrlSetText "Weapon Classname (advanced - auto-filled by Weapon above)";
+_turretWeaponLabel ctrlSetPosition [0, 0.24, 0.46, 0.025];
+_turretWeaponLabel ctrlSetText "Weapon Classname (manual / advanced)";
+_turretWeaponLabel ctrlSetTooltip "Used only when Type manually is selected above.";
 _turretWeaponLabel ctrlCommit 0;
 
 private _turretWeaponEdit = _disp ctrlCreate ["RscEdit", -1, _turretGroup];
@@ -246,7 +250,8 @@ _turretWeaponEdit ctrlCommit 0;
 
 private _copyMagazineLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
 _copyMagazineLabel ctrlSetPosition [0, 0.32, 0.46, 0.025];
-_copyMagazineLabel ctrlSetText "Magazine (filtered to the Weapon selected above)";
+_copyMagazineLabel ctrlSetText "Magazine (compatible with selected weapon)";
+_copyMagazineLabel ctrlSetTooltip "Only magazines resolved for the selected weapon are listed.";
 _copyMagazineLabel ctrlCommit 0;
 
 private _copyMagazineCombo = _disp ctrlCreate ["RscCombo", -1, _turretGroup];
@@ -254,8 +259,9 @@ _copyMagazineCombo ctrlSetPosition [0, 0.35, 0.46, 0.035];
 _copyMagazineCombo ctrlCommit 0;
 
 private _turretMagLabel = _disp ctrlCreate ["RscText", -1, _turretGroup];
-_turretMagLabel ctrlSetPosition [0, 0.40, 0.36, 0.025];
-_turretMagLabel ctrlSetText "Magazine Classname (advanced - auto-filled by Magazine above)";
+_turretMagLabel ctrlSetPosition [0, 0.40, 0.46, 0.025];
+_turretMagLabel ctrlSetText "Magazine Classname (manual / advanced)";
+_turretMagLabel ctrlSetTooltip "Used only when Type manually is selected above.";
 _turretMagLabel ctrlCommit 0;
 
 private _turretMagEdit = _disp ctrlCreate ["RscEdit", -1, _turretGroup];
@@ -284,7 +290,7 @@ _turretQtyEdit ctrlCommit 0;
 
 private _addTurretBtn = _disp ctrlCreate ["RscButtonMenu", -1, _turretGroup];
 _addTurretBtn ctrlSetPosition [0, 0.57, 0.20, 0.04];
-_addTurretBtn ctrlSetText "Add Turret Row";
+_addTurretBtn ctrlSetText "Queue Weapon Change";
 _addTurretBtn ctrlCommit 0;
 
 // ==== Pylon tab (children of _pylonGroup) ====
@@ -308,7 +314,8 @@ _pylonActionCombo ctrlCommit 0;
 
 private _copyOrdnanceLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
 _copyOrdnanceLabel ctrlSetPosition [0, 0.16, 0.46, 0.025];
-_copyOrdnanceLabel ctrlSetText "Ordnance (pick from this vehicle's own pylons or the pack-wide catalog)";
+_copyOrdnanceLabel ctrlSetText "Ordnance";
+_copyOrdnanceLabel ctrlSetTooltip "Pick ordnance already fitted to this vehicle or from the loaded pack-wide catalog.";
 _copyOrdnanceLabel ctrlCommit 0;
 
 private _copyOrdnanceCombo = _disp ctrlCreate ["RscCombo", -1, _pylonGroup];
@@ -316,8 +323,8 @@ _copyOrdnanceCombo ctrlSetPosition [0, 0.19, 0.46, 0.035];
 _copyOrdnanceCombo ctrlCommit 0;
 
 private _pylonMagLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
-_pylonMagLabel ctrlSetPosition [0, 0.24, 0.36, 0.025];
-_pylonMagLabel ctrlSetText "Ordnance/Magazine Classname";
+_pylonMagLabel ctrlSetPosition [0, 0.24, 0.46, 0.025];
+_pylonMagLabel ctrlSetText "Ordnance Classname (manual / advanced)";
 _pylonMagLabel ctrlCommit 0;
 
 private _pylonMagEdit = _disp ctrlCreate ["RscEdit", -1, _pylonGroup];
@@ -325,7 +332,7 @@ _pylonMagEdit ctrlSetPosition [0, 0.27, 0.46, 0.035];
 _pylonMagEdit ctrlCommit 0;
 
 private _pylonAmmoLabel = _disp ctrlCreate ["RscText", -1, _pylonGroup];
-_pylonAmmoLabel ctrlSetPosition [0, 0.32, 0.36, 0.025];
+_pylonAmmoLabel ctrlSetPosition [0, 0.32, 0.46, 0.025];
 _pylonAmmoLabel ctrlSetText "Ammo Override (0 = full magazine count)";
 _pylonAmmoLabel ctrlCommit 0;
 
@@ -360,36 +367,53 @@ _modeCombo ctrlCommit 0;
 
 private _rgbaLabel = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
 _rgbaLabel ctrlSetPosition [0, 0.16, 0.46, 0.025];
-_rgbaLabel ctrlSetText "Solid Color R / G / B / A (0..1, used in Solid Color mode)";
+_rgbaLabel ctrlSetText "Solid Colour (each channel ranges from 0 to 1)";
 _rgbaLabel ctrlCommit 0;
 
-private _redEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
-_redEdit ctrlSetPosition [0, 0.19, 0.10, 0.035];
-_redEdit ctrlSetText "1";
-_redEdit ctrlCommit 0;
+private _makeColourSlider = {
+    params ["_labelText", "_y", "_initialValue"];
+    private _label = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
+    _label ctrlSetPosition [0, _y, 0.03, 0.035];
+    _label ctrlSetText _labelText;
+    _label ctrlCommit 0;
 
-private _greenEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
-_greenEdit ctrlSetPosition [0.11, 0.19, 0.10, 0.035];
-_greenEdit ctrlSetText "0";
-_greenEdit ctrlCommit 0;
+    private _slider = _disp ctrlCreate ["RscXSliderH", -1, _appearanceGroup];
+    _slider ctrlSetPosition [0.035, _y, 0.34, 0.035];
+    _slider sliderSetRange [0, 1];
+    _slider sliderSetSpeed [0.01, 0.1];
+    _slider sliderSetPosition _initialValue;
+    _slider ctrlCommit 0;
 
-private _blueEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
-_blueEdit ctrlSetPosition [0.22, 0.19, 0.10, 0.035];
-_blueEdit ctrlSetText "1";
-_blueEdit ctrlCommit 0;
-
-private _alphaEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
-_alphaEdit ctrlSetPosition [0.33, 0.19, 0.10, 0.035];
-_alphaEdit ctrlSetText "1";
-_alphaEdit ctrlCommit 0;
+    private _value = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
+    _value ctrlSetPosition [0.385, _y, 0.07, 0.035];
+    _value ctrlSetText (_initialValue toFixed 2);
+    _value ctrlSetTextColor [0.85, 0.9, 0.95, 1];
+    _value ctrlCommit 0;
+    _slider setVariable ["WaldoVehCust_ValueControl", _value];
+    _slider ctrlAddEventHandler ["SliderPosChanged", {
+        params ["_control", "_sliderValue"];
+        private _valueControl = _control getVariable ["WaldoVehCust_ValueControl", controlNull];
+        if (!isNull _valueControl) then {_valueControl ctrlSetText (_sliderValue toFixed 2)};
+    }];
+    [_label, _slider, _value]
+};
+private _redControls = ["R", 0.19, 1] call _makeColourSlider;
+private _greenControls = ["G", 0.24, 0] call _makeColourSlider;
+private _blueControls = ["B", 0.29, 1] call _makeColourSlider;
+private _alphaControls = ["A", 0.34, 1] call _makeColourSlider;
+private _redSlider = _redControls select 1;
+private _greenSlider = _greenControls select 1;
+private _blueSlider = _blueControls select 1;
+private _alphaSlider = _alphaControls select 1;
 
 private _pathLabel = _disp ctrlCreate ["RscText", -1, _appearanceGroup];
-_pathLabel ctrlSetPosition [0, 0.24, 0.46, 0.025];
-_pathLabel ctrlSetText "Custom Texture Path (used in Custom Texture Path mode)";
+_pathLabel ctrlSetPosition [0, 0.39, 0.46, 0.025];
+_pathLabel ctrlSetText "Custom Texture Path";
+_pathLabel ctrlSetTooltip "Mission-relative path, mod path, or procedural texture string.";
 _pathLabel ctrlCommit 0;
 
 private _pathEdit = _disp ctrlCreate ["RscEdit", -1, _appearanceGroup];
-_pathEdit ctrlSetPosition [0, 0.27, 0.46, 0.035];
+_pathEdit ctrlSetPosition [0, 0.42, 0.46, 0.035];
 _pathEdit ctrlCommit 0;
 
 private _addAppearanceBtn = _disp ctrlCreate ["RscButtonMenu", -1, _appearanceGroup];
@@ -461,27 +485,29 @@ _pendingList ctrlCommit 0;
 
 private _removeSelectedBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _removeSelectedBtn ctrlSetPosition [0.60, 0.62, 0.30, 0.035];
-_removeSelectedBtn ctrlSetText "Remove Selected Pending Row";
+_removeSelectedBtn ctrlSetText "Remove Selected";
+_removeSelectedBtn ctrlSetTooltip "Remove the selected row from Pending Changes without applying it.";
 _removeSelectedBtn ctrlCommit 0;
 
 private _copyFromBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _copyFromBtn ctrlSetPosition [0.60, 0.66, 0.30, 0.035];
-_copyFromBtn ctrlSetText "Copy From Nearby Vehicle...";
+_copyFromBtn ctrlSetText "Copy From Nearby";
 _copyFromBtn ctrlCommit 0;
 
 private _applyAllBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _applyAllBtn ctrlSetPosition [0.60, 0.70, 0.30, 0.035];
-_applyAllBtn ctrlSetText "Apply All Pending";
+_applyAllBtn ctrlSetText "Apply Pending Changes";
 _applyAllBtn ctrlCommit 0;
 
 private _exportBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _exportBtn ctrlSetPosition [0.60, 0.74, 0.30, 0.035];
-_exportBtn ctrlSetText "Export All Pending To Clipboard";
+_exportBtn ctrlSetText "Export Setup";
+_exportBtn ctrlSetTooltip "Copy every pending row as a ready-to-paste Eden init call.";
 _exportBtn ctrlCommit 0;
 
 private _clearAllBtn = _disp ctrlCreate ["RscButtonMenu", -1];
 _clearAllBtn ctrlSetPosition [0.60, 0.78, 0.30, 0.035];
-_clearAllBtn ctrlSetText "Clear All Pending";
+_clearAllBtn ctrlSetText "Clear Pending Changes";
 _clearAllBtn ctrlCommit 0;
 
 private _okBtn = _disp ctrlCreate ["RscButtonMenu", -1];
@@ -537,11 +563,25 @@ _disp setVariable ["WaldoVehCust_PylonAmmoEdit", _pylonAmmoEdit];
 
 _disp setVariable ["WaldoVehCust_TextureSlotCombo", _slotCombo];
 _disp setVariable ["WaldoVehCust_TextureModeCombo", _modeCombo];
-_disp setVariable ["WaldoVehCust_TextureRedEdit", _redEdit];
-_disp setVariable ["WaldoVehCust_TextureGreenEdit", _greenEdit];
-_disp setVariable ["WaldoVehCust_TextureBlueEdit", _blueEdit];
-_disp setVariable ["WaldoVehCust_TextureAlphaEdit", _alphaEdit];
+_disp setVariable ["WaldoVehCust_TextureRedSlider", _redSlider];
+_disp setVariable ["WaldoVehCust_TextureGreenSlider", _greenSlider];
+_disp setVariable ["WaldoVehCust_TextureBlueSlider", _blueSlider];
+_disp setVariable ["WaldoVehCust_TextureAlphaSlider", _alphaSlider];
 _disp setVariable ["WaldoVehCust_TexturePathEdit", _pathEdit];
+
+// Control families used by Waldo_fnc_VehCust_refreshRelevantControls. Keeping these groups here,
+// next to their actual controls, makes mode/action visibility explicit and repeat-safe.
+_disp setVariable ["WaldoVehCust_TurretWeaponPickerControls", [_copyWeaponLabel, _copyWeaponCombo]];
+_disp setVariable ["WaldoVehCust_TurretManualWeaponControls", [_turretWeaponLabel, _turretWeaponEdit]];
+_disp setVariable ["WaldoVehCust_TurretMagazinePickerControls", [_copyMagazineLabel, _copyMagazineCombo]];
+_disp setVariable ["WaldoVehCust_TurretManualMagazineControls", [_turretMagLabel, _turretMagEdit]];
+_disp setVariable ["WaldoVehCust_TurretAmmoControls", [_turretCountLabel, _turretCountEdit, _turretQtyLabel, _turretQtyEdit]];
+_disp setVariable ["WaldoVehCust_PylonPickerControls", [_copyOrdnanceLabel, _copyOrdnanceCombo]];
+_disp setVariable ["WaldoVehCust_PylonManualControls", [_pylonMagLabel, _pylonMagEdit]];
+_disp setVariable ["WaldoVehCust_PylonAmmoControls", [_pylonAmmoLabel, _pylonAmmoEdit]];
+_disp setVariable ["WaldoVehCust_ColourControls", [_rgbaLabel] + _redControls + _greenControls + _blueControls + _alphaControls];
+_disp setVariable ["WaldoVehCust_TexturePathControls", [_pathLabel, _pathEdit]];
+_disp setVariable ["WaldoVehCust_ComponentTurretControls", [_componentTurretPickLabel, _componentTurretPickCombo, _componentTurretLabel, _componentTurretEdit]];
 
 _disp setVariable ["WaldoVehCust_ComponentPickCombo", _componentPickCombo];
 _disp setVariable ["WaldoVehCust_ComponentSelectionEdit", _componentSelEdit];
@@ -555,7 +595,7 @@ _disp setVariable ["WaldoVehCust_TabPylonBtn", _tabPylonBtn];
 _disp setVariable ["WaldoVehCust_TabAppearanceBtn", _tabAppearanceBtn];
 _disp setVariable ["WaldoVehCust_TabComponentBtn", _tabComponentBtn];
 
-// Tab content groups - Waldo_fnc_VehCust_setTab toggles ctrlShow on exactly these four controls.
+// Tab content groups - Waldo_fnc_VehCust_setTab toggles visibility on exactly these four controls.
 _disp setVariable ["WaldoVehCust_TurretGroup", _turretGroup];
 _disp setVariable ["WaldoVehCust_PylonGroup", _pylonGroup];
 _disp setVariable ["WaldoVehCust_AppearanceGroup", _appearanceGroup];
@@ -574,6 +614,7 @@ _disp setVariable ["WaldoVehCust_CopyOverlayCancelBtn", _copyOverlayCancelBtn];
 } forEach [
     _addTurretBtn, _addPylonBtn, _addAppearanceBtn, _addComponentBtn,
     _removeSelectedBtn, _copyFromBtn, _applyAllBtn, _exportBtn, _clearAllBtn, _okBtn,
+    _turretActionCombo, _pylonActionCombo, _modeCombo, _componentActionCombo,
     _copyWeaponCombo, _copyMagazineCombo, _copyOrdnanceCombo,
     _componentPickCombo, _componentTurretPickCombo,
     _copyOverlayPickBtn, _copyOverlayCancelBtn
@@ -619,7 +660,8 @@ _turretActionCombo lbSetCurSel 0;
 private _turretCatalog = missionNamespace getVariable ["Waldo_VehicleWeaponLoadout_TurretCatalog", []];
 private _catalogDisplayCap = 150;
 private _pickupKeys = ["MANUAL"];
-private _pickupLabels = ["Type manually (use the fields below)"];
+private _pickupLabels = ["Manual / advanced entry"];
+private _pickupTooltips = ["Enter weapon and magazine classnames yourself."];
 {
     private _path = _x;
     private _weapons = _vehicle weaponsTurret _path;
@@ -627,33 +669,42 @@ private _pickupLabels = ["Type manually (use the fields below)"];
     private _magazines = _rawMagazines arrayIntersect _rawMagazines;
     {
         private _weaponClass = _x;
-        private _compatible = _magazines select {_x in (compatibleMagazines _weaponClass)};
-        private _magForPickup = if (count _compatible > 0) then {_compatible select 0} else {_magazines param [0, ""]};
+        private _allowedMagazines = ([_weaponClass] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon) apply {_x select 0};
+        private _compatible = _magazines select {_x in _allowedMagazines};
+        private _magForPickup = _compatible param [0, _allowedMagazines param [0, ""]];
         private _magCount = if (_magForPickup == "") then {1} else {getNumber (configFile >> "CfgMagazines" >> _magForPickup >> "count")};
         private _magQuantity = ({_x == _magForPickup} count _rawMagazines) max 1;
         private _key = str [_weaponClass, _magForPickup, _magCount, _magQuantity];
         if !(_key in _pickupKeys) then {
+            private _weaponName = getText (configFile >> "CfgWeapons" >> _weaponClass >> "displayName");
+            if (_weaponName == "") then {_weaponName = _weaponClass};
+            private _magazineName = if (_magForPickup == "") then {"No magazine"} else {getText (configFile >> "CfgMagazines" >> _magForPickup >> "displayName")};
+            if (_magazineName == "") then {_magazineName = _magForPickup};
             _pickupKeys pushBack _key;
-            _pickupLabels pushBack ([format ["%1 + %2x %3 (from Turret %4)", _weaponClass, _magQuantity, if (_magForPickup == "") then {"no magazine"} else {_magForPickup}, _path]] call _truncateLabel);
+            _pickupLabels pushBack ([format ["%1  |  %2x %3", _weaponName, _magQuantity, _magazineName]] call _truncateLabel);
+            _pickupTooltips pushBack format ["Weapon: %1 | Magazine: %2 | Turret: %3", _weaponClass, if (_magForPickup == "") then {"none"} else {_magForPickup}, _path];
         };
     } forEach _weapons;
 } forEach _turretPaths;
 {
-    _x params ["_weaponClass", "_displayName", "_catalogMagazines"];
-    private _magForPickup = _catalogMagazines param [0, ""];
+    _x params ["_weaponClass", "_displayName"];
+    private _resolvedMagazines = ([_weaponClass] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon) apply {_x select 0};
+    private _magForPickup = _resolvedMagazines param [0, ""];
     private _magCount = if (_magForPickup == "") then {1} else {getNumber (configFile >> "CfgMagazines" >> _magForPickup >> "count")};
     private _key = str [_weaponClass, _magForPickup, _magCount, 1];
     if !(_key in _pickupKeys) then {
         _pickupKeys pushBack _key;
-        _pickupLabels pushBack ([format ["%1 (%2) [pack-wide]", _displayName, _weaponClass]] call _truncateLabel);
+        _pickupLabels pushBack ([format ["%1  |  Pack-wide", _displayName]] call _truncateLabel);
+        _pickupTooltips pushBack format ["Weapon: %1 | Default compatible magazine: %2", _weaponClass, if (_magForPickup == "") then {"none"} else {_magForPickup}];
     };
 } forEach (_turretCatalog select [0, _catalogDisplayCap min (count _turretCatalog)]);
 if (count _turretCatalog == 0) then {
-    _pickupLabels set [0, "Type manually (catalog still building - reopen shortly)"];
+    _pickupLabels set [0, "Manual / advanced (catalog building)"];
 };
 {
     private _index = _copyWeaponCombo lbAdd (_pickupLabels select _forEachIndex);
     _copyWeaponCombo lbSetData [_index, _x];
+    _copyWeaponCombo lbSetTooltip [_index, _pickupTooltips param [_forEachIndex, _x]];
 } forEach _pickupKeys;
 _copyWeaponCombo lbSetCurSel 0;
 
@@ -661,7 +712,7 @@ _copyWeaponCombo lbSetCurSel 0;
 // selected Weapon via Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon (a pure CfgWeapons >>
 // "magazines" config read, so it works even for a weapon typed by hand, as long as that weapon
 // class is real). See the Weapon combo's LBSelChanged handler below.
-_copyMagazineCombo lbAdd "Type manually (use the field below)";
+_copyMagazineCombo lbAdd "Manual / advanced entry";
 _copyMagazineCombo lbSetData [0, "MANUAL"];
 _copyMagazineCombo lbSetCurSel 0;
 
@@ -697,7 +748,7 @@ _pylonActionCombo lbSetCurSel 0;
 
 private _pylonCatalog = missionNamespace getVariable ["Waldo_VehicleWeaponLoadout_PylonCatalog", []];
 private _ordnanceKeys = ["MANUAL"];
-private _ordnanceLabels = ["Type manually (use the field above)"];
+private _ordnanceLabels = ["Manual / advanced entry"];
 {
     if (_x != "" && {!(_x in _ordnanceKeys)}) then {
         _ordnanceKeys pushBack _x;
@@ -723,6 +774,7 @@ _copyOrdnanceCombo lbSetCurSel 0;
 // ---- Populate Appearance tab live data ----
 private _hiddenSelections = getArray (configFile >> "CfgVehicles" >> (typeOf _vehicle) >> "hiddenSelections");
 if (count _hiddenSelections > 0) then {
+    // Arma 3 2.20+ accepts an index array here and returns the requested texture slots in that order.
     private _currentTextures = _vehicle getObjectTextures (_hiddenSelections apply {_forEachIndex});
     for "_i" from 0 to ((count _hiddenSelections) - 1) do {
         private _current = _currentTextures param [_i, ""];
@@ -744,9 +796,9 @@ _modeCombo lbSetCurSel 0;
 private _componentCandidates = [_vehicle] call Waldo_fnc_VehicleComponentHeuristicScan;
 _disp setVariable ["WaldoVehCust_ComponentCandidates", _componentCandidates];
 private _pickIndex0 = _componentPickCombo lbAdd (if (count _componentCandidates > 0) then {
-    "Type manually (ignore heuristic candidates below)"
+    "Manual / advanced entry"
 } else {
-    "Type manually (no candidates found on this vehicle)"
+    "Manual / advanced (no candidates found)"
 });
 _componentPickCombo lbSetData [_pickIndex0, "-1"];
 {
@@ -770,6 +822,31 @@ _componentTurretPickCombo lbSetData [0, "-1"];
 } forEach _turretPaths;
 _componentTurretPickCombo lbSetCurSel 0;
 
+// Zeus still listens for mouse-wheel input behind a child prompt. Give every combo deterministic
+// one-row wheel navigation and return true from MouseZChanged so the same wheel step cannot also zoom
+// the curator camera. This applies to both collapsed and expanded dropdowns.
+private _installComboWheelGuard = {
+    params ["_combo"];
+    _combo ctrlAddEventHandler ["MouseZChanged", {
+        params ["_control", "_wheelDelta"];
+        private _rowCount = lbSize _control;
+        if (_rowCount <= 0 || {_wheelDelta == 0}) exitWith {true};
+        private _current = lbCurSel _control;
+        if (_current < 0) then {_current = 0};
+        private _step = if (_wheelDelta > 0) then {-1} else {1};
+        _control lbSetCurSel (((_current + _step) max 0) min (_rowCount - 1));
+        true
+    }];
+};
+{
+    [_x] call _installComboWheelGuard;
+} forEach [
+    _turretCombo, _turretActionCombo, _copyWeaponCombo, _copyMagazineCombo,
+    _pylonCombo, _pylonActionCombo, _copyOrdnanceCombo,
+    _slotCombo, _modeCombo,
+    _componentPickCombo, _componentTurretPickCombo, _componentActionCombo
+];
+
 // ---- Event handlers: "Weapon" auto-fill fields + live-filtered "Magazine" repopulation ----
 _copyWeaponCombo ctrlAddEventHandler ["LBSelChanged", {
     params ["_ctrl", "_index"];
@@ -777,60 +854,94 @@ _copyWeaponCombo ctrlAddEventHandler ["LBSelChanged", {
     if (isNull _disp) exitWith {};
     private _magazineCombo = _disp getVariable ["WaldoVehCust_CopyMagazineCombo", controlNull];
     private _pickupWeapon = "";
+    private _requestedMagazine = "";
+    private _requestedMagazineCount = 1;
+    private _requestedMagazineQuantity = 1;
     if (_index > 0) then {
         private _key = _ctrl lbData _index;
         private _pickup = parseSimpleArray _key;
         if (_pickup isEqualType [] && {count _pickup == 4}) then {
             _pickup params ["_wpn", "_pickupMag", "_pickupCount", "_pickupQuantity"];
             _pickupWeapon = _wpn;
+            _requestedMagazine = _pickupMag;
+            _requestedMagazineCount = _pickupCount;
+            _requestedMagazineQuantity = _pickupQuantity;
             (_disp getVariable ["WaldoVehCust_TurretWeaponEdit", controlNull]) ctrlSetText _pickupWeapon;
-            (_disp getVariable ["WaldoVehCust_TurretMagazineEdit", controlNull]) ctrlSetText _pickupMag;
-            (_disp getVariable ["WaldoVehCust_TurretCountEdit", controlNull]) ctrlSetText (str _pickupCount);
-            (_disp getVariable ["WaldoVehCust_TurretQuantityEdit", controlNull]) ctrlSetText (str _pickupQuantity);
         };
     };
-    // Repopulate the Magazine combo filtered to whichever weapon was just picked, straight from
-    // CfgWeapons >> "magazines" (Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon) - a pure config
-    // read, so it works even for a weapon this dialog only just typed manually. "Type manually"
-    // stays index 0 when no weapon is known yet (there is nothing to filter by).
+    // Rebuild from the selected weapon's own resolved list. A requested catalog/live-vehicle default
+    // is retained only when it is genuinely present in that list; otherwise the first compatible
+    // magazine is selected. Never fall back to another weapon's magazine from the same turret.
     if (!isNull _magazineCombo) then {
         lbClear _magazineCombo;
-        _magazineCombo lbAdd "Type manually (use the field below)";
+        _magazineCombo lbAdd "Manual / advanced entry";
         _magazineCombo lbSetData [0, "MANUAL"];
+        private _magazineRows = [];
         if (_pickupWeapon != "") then {
+            _magazineRows = [_pickupWeapon] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon;
             {
                 _x params ["_magClass", "_magDisplayName"];
                 private _idx = _magazineCombo lbAdd _magDisplayName;
                 _magazineCombo lbSetData [_idx, _magClass];
-            } forEach ([_pickupWeapon] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon);
+            } forEach _magazineRows;
         };
-        _magazineCombo lbSetCurSel 0;
+        private _magazineClasses = _magazineRows apply {_x select 0};
+        private _requestedIndex = _magazineClasses find _requestedMagazine;
+        private _selection = if (_requestedIndex >= 0) then {_requestedIndex + 1} else {if (count _magazineRows > 0) then {1} else {0}};
+        _magazineCombo lbSetCurSel _selection;
+
+        if (_selection <= 0) then {
+            (_disp getVariable ["WaldoVehCust_TurretMagazineEdit", controlNull]) ctrlSetText "";
+            (_disp getVariable ["WaldoVehCust_TurretCountEdit", controlNull]) ctrlSetText "1";
+        } else {
+            private _selectedMagazine = _magazineCombo lbData _selection;
+            (_disp getVariable ["WaldoVehCust_TurretMagazineEdit", controlNull]) ctrlSetText _selectedMagazine;
+            private _selectedCount = getNumber (configFile >> "CfgMagazines" >> _selectedMagazine >> "count");
+            if (_selectedMagazine == _requestedMagazine && {_requestedMagazineCount > 0}) then {
+                _selectedCount = _requestedMagazineCount;
+            };
+            (_disp getVariable ["WaldoVehCust_TurretCountEdit", controlNull]) ctrlSetText (str (_selectedCount max 1));
+        };
+        (_disp getVariable ["WaldoVehCust_TurretQuantityEdit", controlNull]) ctrlSetText (str (if (_requestedIndex >= 0) then {_requestedMagazineQuantity max 1} else {1}));
     };
+    [_disp] call Waldo_fnc_VehCust_refreshRelevantControls;
 }];
 
 _copyMagazineCombo ctrlAddEventHandler ["LBSelChanged", {
     params ["_ctrl", "_index"];
     private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
     if (isNull _disp) exitWith {};
-    if (_index <= 0) exitWith {};
+    if (_index <= 0) exitWith {[_disp] call Waldo_fnc_VehCust_refreshRelevantControls};
     private _magClass = _ctrl lbData _index;
-    if (_magClass == "" || {_magClass == "MANUAL"}) exitWith {};
+    if (_magClass == "" || {_magClass == "MANUAL"}) exitWith {[_disp] call Waldo_fnc_VehCust_refreshRelevantControls};
     (_disp getVariable ["WaldoVehCust_TurretMagazineEdit", controlNull]) ctrlSetText _magClass;
     private _count = getNumber (configFile >> "CfgMagazines" >> _magClass >> "count");
     if (_count > 0) then {
         (_disp getVariable ["WaldoVehCust_TurretCountEdit", controlNull]) ctrlSetText (str _count);
     };
+    [_disp] call Waldo_fnc_VehCust_refreshRelevantControls;
 }];
 
 _copyOrdnanceCombo ctrlAddEventHandler ["LBSelChanged", {
     params ["_ctrl", "_index"];
     private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
     if (isNull _disp) exitWith {};
-    if (_index <= 0) exitWith {};
+    if (_index <= 0) exitWith {[_disp] call Waldo_fnc_VehCust_refreshRelevantControls};
     private _key = _ctrl lbData _index;
-    if (_key == "" || {_key == "MANUAL"}) exitWith {};
+    if (_key == "" || {_key == "MANUAL"}) exitWith {[_disp] call Waldo_fnc_VehCust_refreshRelevantControls};
     (_disp getVariable ["WaldoVehCust_PylonMagazineEdit", controlNull]) ctrlSetText _key;
+    [_disp] call Waldo_fnc_VehCust_refreshRelevantControls;
 }];
+
+// These selections change which fields have meaning; refresh immediately instead of leaving stale,
+// misleading controls visible until another action is taken.
+{
+    _x ctrlAddEventHandler ["LBSelChanged", {
+        params ["_control"];
+        private _disp = _control getVariable ["WaldoVehCust_Display", displayNull];
+        if (!isNull _disp) then {[_disp] call Waldo_fnc_VehCust_refreshRelevantControls};
+    }];
+} forEach [_turretActionCombo, _pylonActionCombo, _modeCombo, _componentActionCombo];
 
 // ---- Event handler: Component heuristic pick auto-fill ----
 _componentPickCombo ctrlAddEventHandler ["LBSelChanged", {
@@ -992,7 +1103,9 @@ _copyFromBtn ctrlAddEventHandler ["ButtonClick", {
         _x params ["_veh", "_dist"];
         private _label = format ["%1 (%2) - %3m", getText (configFile >> "CfgVehicles" >> (typeOf _veh) >> "displayName"), typeOf _veh, round _dist];
         private _index = _overlayList lbAdd _label;
-        _overlayList lbSetData [_index, str (netId _veh)];
+        // lbData already stores STRING data. Stringifying netId adds literal quote characters and
+        // makes objectFromNetId unable to resolve the selected source vehicle.
+        _overlayList lbSetData [_index, netId _veh];
     } forEach _nearby;
     {
         private _overlayCtrl = _disp getVariable [_x, controlNull];
@@ -1035,7 +1148,15 @@ _copyOverlayPickBtn ctrlAddEventHandler ["ButtonClick", {
     ["VEHICLE CUSTOMISATION", format ["%1 row(s) copied into Pending Changes - review and Apply All Pending, or remove any you don't want first.", count _rows], "SUCCESS", "VEHCUST_ZEN", 8] call Waldo_fnc_FeatureNotifyLocal;
 }];
 
+// Prefer the first real, validated choice when one exists. Manual/advanced remains entry zero, but
+// making it the initial screen forced every advanced classname field open and obscured the normal
+// beginner workflow. These selections happen after handlers are attached so their dependent fields
+// and magazine filters are populated normally.
+if ((lbSize _copyWeaponCombo) > 1) then {_copyWeaponCombo lbSetCurSel 1};
+if ((lbSize _copyOrdnanceCombo) > 1) then {_copyOrdnanceCombo lbSetCurSel 1};
+
 [_disp, "turret"] call Waldo_fnc_VehCust_setTab;
+[_disp] call Waldo_fnc_VehCust_refreshRelevantControls;
 [_disp] call Waldo_fnc_VehCust_refreshPendingList;
 
 // Fit explicitly now that every control this dialog creates genuinely exists (deferFit=true was
@@ -1058,6 +1179,7 @@ _copyOverlayPickBtn ctrlAddEventHandler ["ButtonClick", {
     params ["_disp"];
     uiSleep 0.6;
     if (isNull _disp) exitWith {};
+    [_disp] call Waldo_fnc_VehCust_finalizeLayout;
     [_disp, _disp getVariable ["WaldoVehCust_CurrentTab", "turret"]] call Waldo_fnc_VehCust_setTab;
 };
 

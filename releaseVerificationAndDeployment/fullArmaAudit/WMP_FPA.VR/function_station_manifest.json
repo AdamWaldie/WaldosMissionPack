@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 975,
+  "registeredFunctionCount": 978,
   "runtimeFunctionCount": 385,
-  "functionCount": 1360,
+  "functionCount": 1363,
   "stations": [
     {
       "id": "control",
@@ -2637,6 +2637,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_VehicleWeaponLoadoutSelectLocal",
+      "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutSelectLocal.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_VehicleWeaponLoadoutCatalogBuild",
       "file": "MissionScripts/CombatSystems/VehicleWeaponLoadout/vehicleWeaponLoadoutCatalogBuild.sqf",
       "station": "control",
@@ -2705,6 +2711,18 @@
     {
       "name": "Waldo_fnc_VehCust_refreshPendingList",
       "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationRefreshPendingList.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_refreshRelevantControls",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationRefreshRelevantControls.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_VehCust_finalizeLayout",
+      "file": "MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationFinalizeLayout.sqf",
       "station": "control",
       "activation": "manual"
     },

@@ -181,7 +181,12 @@ private _mainSlotHasMount = count (getArray (configFile >> "CfgVehicles" >> (typ
                                 if (_action == "REPLACE") then {
                                     [_vehicle, _turretPath] call _stripTurret;
                                 };
-                                _vehicle addWeaponTurret [_weaponClass, _turretPath];
+                                // Copy can legitimately emit more than one magazine-class row for the
+                                // same multi-ammunition weapon. Do not add a duplicate weapon entry when
+                                // a later row is only loading another compatible magazine class.
+                                if !(_weaponClass in (_vehicle weaponsTurret _turretPath)) then {
+                                    _vehicle addWeaponTurret [_weaponClass, _turretPath];
+                                };
                                 _detail = format ["%1 %2 on turret %3.", ["Added", "Replaced with"] select (_action == "REPLACE"), _weaponClass, _turretPath];
                                 if (_magazineClass != "") then {
                                     if !(isClass (configFile >> "CfgMagazines" >> _magazineClass)) then {
@@ -208,10 +213,47 @@ private _mainSlotHasMount = count (getArray (configFile >> "CfgVehicles" >> (typ
                                         for "_m" from 1 to (_magazineQuantity max 1) do {
                                             _vehicle addMagazineTurret [_magazineClass, _turretPath, _roundsPerMag];
                                         };
-                                        _detail = _detail + format [" Loaded %1x magazine(s) of %2 (%3/%4 rounds each).", _magazineQuantity max 1, _magazineClass, _roundsPerMag, _magFullCount];
+                                        // Read back the authoritative engine state instead of declaring
+                                        // success because the commands were issued. magazinesAllTurrets
+                                        // exposes the exact turret path, class, remaining rounds and unique
+                                        // magazine ID, so it catches both a missing magazine and the observed
+                                        // zero-ammo replacement regression.
+                                        private _readBack = (magazinesAllTurrets [_vehicle, true]) select {
+                                            (_x param [0, ""]) == _magazineClass
+                                            && {(_x param [1, []]) isEqualTo _turretPath}
+                                        };
+                                        private _liveReadBack = _readBack select {(_x param [2, 0]) > 0};
+                                        if !(_weaponClass in (_vehicle weaponsTurret _turretPath)) then {
+                                            _detail = _detail + " Engine read-back did not find the requested weapon.";
+                                        } else {
+                                            if (_liveReadBack isEqualTo []) then {
+                                                _detail = _detail + format [" Engine read-back found no loaded %1 ammunition; the row failed rather than reporting a false success.", _magazineClass];
+                                            } else {
+                                                private _actualRounds = 0;
+                                                {_actualRounds = _actualRounds + (_x param [2, 0]);} forEach _liveReadBack;
+                                                _detail = _detail + format [" Loaded %1x magazine(s) of %2 (%3/%4 requested; %5 live round(s) read back).", _magazineQuantity max 1, _magazineClass, _roundsPerMag, _magFullCount, _actualRounds];
+                                            };
+                                        };
                                     };
                                 };
-                                _rowOk = true;
+                                private _weaponApplied = _weaponClass in (_vehicle weaponsTurret _turretPath);
+                                private _ammoApplied = _magazineClass == "" || {
+                                    count ((magazinesAllTurrets [_vehicle, true]) select {
+                                        (_x param [0, ""]) == _magazineClass
+                                        && {(_x param [1, []]) isEqualTo _turretPath}
+                                        && {(_x param [2, 0]) > 0}
+                                    }) > 0
+                                };
+                                _rowOk = _weaponApplied && _ammoApplied;
+                                if (_rowOk && {_action == "REPLACE"}) then {
+                                    private _turretOwner = _vehicle turretOwner _turretPath;
+                                    if (_turretOwner <= 0) then {_turretOwner = owner _vehicle;};
+                                    if (_turretOwner <= 0) then {_turretOwner = 2;};
+                                    [_vehicle, _turretPath, _weaponClass, _magazineClass] remoteExecCall [
+                                        "Waldo_fnc_VehicleWeaponLoadoutSelectLocal",
+                                        _turretOwner
+                                    ];
+                                };
                             };
                         };
                     };

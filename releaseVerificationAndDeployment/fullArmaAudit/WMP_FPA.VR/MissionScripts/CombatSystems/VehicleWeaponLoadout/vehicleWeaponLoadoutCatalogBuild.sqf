@@ -19,10 +19,10 @@
  *    into every unrelated subtree too (Sounds, HitPoints, Reflectors, animations, ...), which is both
  *    needlessly expensive at this scale and floods the RPT with spurious engine "'weapons/' is not a
  *    class" warnings wherever an unrelated property happens to share that name - confirmed against a
- *    submitted RPT during this feature's own testing. Each turret entry's sibling magazines[] array
- *    (the same turret's declared magazine list) is stored as that weapon's representative default - a
- *    starting point to edit, not a compatibility guarantee, the same honesty standard
- *    Waldo_fnc_VehicleWeaponLoadoutApply already documents for compatibleMagazines.
+ *    submitted RPT during this feature's own testing. Each weapon's own compatible magazine list is
+ *    resolved through Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon. The turret's combined
+ *    magazines[] array is deliberately not assigned to every weapon: doing that can pair missiles,
+ *    cannons and countermeasure launchers with unrelated ordnance from the same turret.
  *  - Pylon ordnance: every CfgMagazines entry carrying a non-empty pylonWeapon property (the
  *    documented, standard marker for pylon-usable ordnance) is catalogued directly - a single
  *    top-level CfgMagazines pass, no per-vehicle recursion needed.
@@ -72,13 +72,13 @@ private _walkTurrets = {
             if (isClass _x) then {
                 private _weapons = if (isArray (_x >> "weapons")) then {getArray (_x >> "weapons")} else {[]};
                 if (count _weapons > 0) then {
-                    private _magazines = if (isArray (_x >> "magazines")) then {getArray (_x >> "magazines")} else {[]};
                     {
                         private _weaponClass = _x;
                         if (isClass (configFile >> "CfgWeapons" >> _weaponClass) && {!(_seenWeapons getOrDefault [_weaponClass, false])}) then {
                             _seenWeapons set [_weaponClass, true];
                             private _displayName = getText (configFile >> "CfgWeapons" >> _weaponClass >> "displayName");
                             if (_displayName == "") then {_displayName = _weaponClass};
+                            private _magazines = ([_weaponClass] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon) apply {_x select 0};
                             _turretRows pushBack [_weaponClass, _displayName, _magazines];
                         };
                     } forEach _weapons;

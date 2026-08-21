@@ -18,8 +18,7 @@
  *    fitPromptDisplay's own control-count "stability" heuristic decides the layout is finished -
  *    fitPromptDisplay only ever runs once per dialog and only repositions whatever controls exist at
  *    that moment, so a caller that races it can end up with some controls never migrated into the
- *    fitted card layout (confirmed root cause of the Vehicle Customisation Editor's tabs appearing to
- *    do nothing - see vehicleCustomizationPromptEditor.sqf). A caller passing true MUST call
+ *    fitted card layout. A caller passing true MUST call
  *    `[_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;` itself, exactly once, as the very last thing
  *    it does after every one of its own controls has been created.
  *

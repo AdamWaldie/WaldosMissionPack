@@ -4,6 +4,10 @@
  * currently selected turret/action/classname controls and returns a ready-to-queue
  * Waldo_fnc_VehicleWeaponLoadoutApply row, or an empty array on ANY invalid or incomplete input.
  *
+ * A selected magazine is also checked against the selected weapon's resolved magazine list. This
+ * prevents a stale or turret-wide magazine selection from pairing missile weapons with unrelated
+ * ordnance. Weapons whose configs expose no compatibility data still retain the advanced manual path.
+ *
  * This is the direct fix for the confirmed root-cause bug in the retired "Vehicle Weapon Loadout -
  * Configure" module's Session Action queue, which always rebuilt a row from whatever was currently in
  * the form fields, even when blank - silently smuggling a garbage
@@ -73,6 +77,12 @@ if (_weaponClass == "" || {!(isClass (configFile >> "CfgWeapons" >> _weaponClass
 
 private _magazineClass = trim (ctrlText _magEdit);
 if (_magazineClass != "" && {!(isClass (configFile >> "CfgMagazines" >> _magazineClass))}) exitWith {[]};
+private _magazineCompatible = true;
+if (_magazineClass != "") then {
+    private _allowedMagazines = ([_weaponClass] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon) apply {_x select 0};
+    _magazineCompatible = count _allowedMagazines == 0 || {_magazineClass in _allowedMagazines};
+};
+if (!_magazineCompatible) exitWith {[]};
 
 private _count = parseNumber (ctrlText _countEdit);
 if (_count <= 0) then {_count = 1;};

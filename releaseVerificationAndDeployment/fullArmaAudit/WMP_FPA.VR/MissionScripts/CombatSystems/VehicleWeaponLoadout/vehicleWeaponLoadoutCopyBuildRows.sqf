@@ -6,7 +6,10 @@
  * applies) and Waldo_fnc_VehicleWeaponLoadoutCopyPreview (reads only, for the Vehicle Customisation
  * Editor's "Copy From Nearby Vehicle" pending-row picker). Extracted into its own file so both
  * callers share one implementation instead of two copies of the same matching/quantity logic
- * drifting apart over time.
+ * drifting apart over time. Turret magazines are read with magazinesAllTurrets, whose rows contain
+ * the magazine classname, exact turret path, remaining ammunition and unique magazine ID. This avoids
+ * treating an implementation-specific magazinesTurret string occurrence as authoritative ammo state.
+ * Each live magazine is assigned only to a weapon that explicitly accepts that class.
  *
  * Never mutates anything - purely reads _source/_target and returns rows. Safe to call on any
  * machine/locality; the caller decides whether to actually apply the result.
@@ -61,32 +64,61 @@ private _copiedPylonIndices = [];
 if (_copyTurrets) then {
     private _sourceTurrets = [[-1]] + (allTurrets [_source, true]);
     private _targetTurrets = [[-1]] + (allTurrets [_target, true]);
+    private _allLiveMagazines = magazinesAllTurrets [_source, true];
     {
         private _path = _x;
         private _weapons = _source weaponsTurret _path;
         private _isHornOnly = count _weapons > 0 && {(_weapons select {!(_x call _isHornWeapon)}) isEqualTo []};
         if (_path in _targetTurrets && {!_isHornOnly}) then {
             _copiedTurretPaths pushBack _path;
-            private _rawMagazines = _source magazinesTurret _path;
-            private _magazines = _rawMagazines arrayIntersect _rawMagazines;
+            private _pathMagazines = _allLiveMagazines select {
+                (_x param [1, []]) isEqualTo _path
+            };
             if (count _weapons == 0) then {
                 _rows pushBack ["TURRET", _path, -1, "CLEAR", "", "", 0, 1];
             } else {
+                private _firstOutputRow = true;
+                private _claimedMagazineIds = [];
                 {
                     private _weaponClass = _x;
-                    private _matchingMag = _magazines select {_x in (compatibleMagazines _weaponClass)};
-                    private _magForRow = if (count _matchingMag > 0) then {_matchingMag select 0} else {_magazines param [0, ""]};
-                    private _magCount = if (_magForRow == "") then {0} else {
-                        getNumber (configFile >> "CfgMagazines" >> _magForRow >> "count")
+                    private _compatibleClasses = ([_weaponClass] call Waldo_fnc_VehicleWeaponLoadoutMagazinesForWeapon) apply {_x select 0};
+                    private _matchingEntries = _pathMagazines select {
+                        private _magClass = _x param [0, ""];
+                        private _magId = _x param [3, -1];
+                        _magClass in _compatibleClasses && {!(_magId in _claimedMagazineIds)}
                     };
-                    // Raw occurrence count of this exact magazine class on the source turret - the
-                    // real number of separate magazine instances mounted, not just one full magazine.
-                    private _magQuantity = if (_magForRow == "") then {1} else {({_x == _magForRow} count _rawMagazines) max 1};
-                    _rows pushBack [
-                        "TURRET", _path, -1,
-                        if (_forEachIndex == 0) then {"REPLACE"} else {"ADD"},
-                        _weaponClass, _magForRow, _magCount, _magQuantity
-                    ];
+                    private _matchingClasses = (_matchingEntries apply {_x select 0}) arrayIntersect (_matchingEntries apply {_x select 0});
+
+                    if (_matchingClasses isEqualTo []) then {
+                        _rows pushBack [
+                            "TURRET", _path, -1,
+                            ["ADD", "REPLACE"] select _firstOutputRow,
+                            _weaponClass, "", 0, 1
+                        ];
+                        _firstOutputRow = false;
+                    } else {
+                        {
+                            private _magClass = _x;
+                            private _instances = _matchingEntries select {(_x param [0, ""]) == _magClass};
+                            private _fullCount = getNumber (configFile >> "CfgMagazines" >> _magClass >> "count");
+                            private _highestLiveCount = 0;
+                            {
+                                _highestLiveCount = _highestLiveCount max (_x param [2, 0]);
+                                _claimedMagazineIds pushBackUnique (_x param [3, -1]);
+                            } forEach _instances;
+                            // A copied loadout should remain usable even when the donor's currently loaded
+                            // magazine is empty. Preserve its exact compatible class and number of physical
+                            // magazine instances, but refill each instance to the greatest live count seen;
+                            // if every instance is empty, use that class's normal full capacity.
+                            private _roundsPerMagazine = if (_highestLiveCount > 0) then {_highestLiveCount} else {_fullCount max 1};
+                            _rows pushBack [
+                                "TURRET", _path, -1,
+                                ["ADD", "REPLACE"] select _firstOutputRow,
+                                _weaponClass, _magClass, _roundsPerMagazine, (count _instances) max 1
+                            ];
+                            _firstOutputRow = false;
+                        } forEach _matchingClasses;
+                    };
                 } forEach _weapons;
             };
         };

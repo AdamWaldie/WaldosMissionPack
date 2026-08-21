@@ -875,6 +875,7 @@ class CfgFunctions
             class VehicleWeaponLoadoutCopy {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopy.sqf";};
             class VehicleWeaponLoadoutCopyBuildRows {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopyBuildRows.sqf";};
             class VehicleWeaponLoadoutCopyPreview {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCopyPreview.sqf";};
+            class VehicleWeaponLoadoutSelectLocal {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutSelectLocal.sqf";};
             class VehicleWeaponLoadoutCatalogBuild {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutCatalogBuild.sqf";};
             class VehicleWeaponLoadoutMagazinesForWeapon {file = "MissionScripts\CombatSystems\VehicleWeaponLoadout\vehicleWeaponLoadoutMagazinesForWeapon.sqf";};
         };
@@ -890,6 +891,8 @@ class CfgFunctions
             class VehCust_pushPendingRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationPushPendingRow.sqf";};
             class VehCust_removePendingRow {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationRemovePendingRow.sqf";};
             class VehCust_refreshPendingList {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationRefreshPendingList.sqf";};
+            class VehCust_refreshRelevantControls {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationRefreshRelevantControls.sqf";};
+            class VehCust_finalizeLayout {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationFinalizeLayout.sqf";};
             class VehCust_exportClipboard {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationExportClipboard.sqf";};
             class VehicleCustomizationInspect {file = "MissionScripts\CombatSystems\VehicleCustomization\vehicleCustomizationInspect.sqf";};
         };
