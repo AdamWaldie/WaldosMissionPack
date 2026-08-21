@@ -85,10 +85,17 @@ _cancel ctrlCommit 0;
 _disp setVariable ["Waldo_Gunship_OrbitConfigId", _id];
 _disp setVariable ["Waldo_Gunship_OrbitConfigRadiusEdit", _radiusEdit];
 _disp setVariable ["Waldo_Gunship_OrbitConfigAltitudeEdit", _altitudeEdit];
+// ctrlParent only resolves a control's parent CONTROL (relevant inside an RscControlsGroup) - these
+// buttons are top-level on the dialog display with no parent control, so ctrlParent would silently
+// resolve to controlNull. Tag each button with the display itself at creation time instead, matching
+// the exact pattern MissionScripts/EconomySystems/Build/promptBuildConfig.sqf's own Add/Remove/Save/Ok
+// buttons already use (setVariable on the control, read back via ctrl getVariable in the handler).
+{_x setVariable ["Waldo_Gunship_OrbitConfigDisplay", _disp];} forEach [_submit, _cancel];
 
 _submit ctrlAddEventHandler ["ButtonClick", {
     params ["_ctrl"];
-    private _disp = ctrlParent _ctrl;
+    private _disp = _ctrl getVariable ["Waldo_Gunship_OrbitConfigDisplay", displayNull];
+    if (isNull _disp) exitWith {};
     private _submitId = _disp getVariable ["Waldo_Gunship_OrbitConfigId", ""];
     private _radiusEdit = _disp getVariable ["Waldo_Gunship_OrbitConfigRadiusEdit", controlNull];
     private _altitudeEdit = _disp getVariable ["Waldo_Gunship_OrbitConfigAltitudeEdit", controlNull];
@@ -102,7 +109,9 @@ _submit ctrlAddEventHandler ["ButtonClick", {
 
 _cancel ctrlAddEventHandler ["ButtonClick", {
     params ["_ctrl"];
-    [ctrlParent _ctrl] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;
+    private _disp = _ctrl getVariable ["Waldo_Gunship_OrbitConfigDisplay", displayNull];
+    if (isNull _disp) exitWith {};
+    [_disp] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;
 }];
 
 true
