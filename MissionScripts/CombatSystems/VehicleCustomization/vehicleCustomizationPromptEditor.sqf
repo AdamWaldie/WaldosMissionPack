@@ -8,39 +8,30 @@
  * apply everything at once or export one ready-to-paste Eden-init-field snippet - the "author here,
  * paste there" beginner workflow.
  *
- * Tab switching (rewritten this pass - see below): each tab's own controls live inside one
- * RscControlsGroupNoScrollbars container, all four covering the exact same content rectangle;
- * switching tabs is exactly four ctrlShow calls (one per group), handled by
- * Waldo_fnc_VehCust_setTab. This mirrors the group-container idiom already proven elsewhere in this
- * codebase - MissionScripts/InteractionsMinigames/Core/challengeUi.sqf's own "content group" pattern
- * (RscControlsGroupNoScrollbars + child controls created via
- * `_display ctrlCreate [className, -1, _group]`, position relative to the group's own local origin,
- * not the display's absolute safe-zone coordinates).
+ * Tab switching: each tab's own controls live inside one RscControlsGroupNoScrollbars container, all
+ * four covering the exact same content rectangle. Waldo_fnc_VehCust_setTab switches tabs by MOVING the
+ * non-active groups off-screen entirely (ctrlSetPosition to a tiny rect well outside the safe zone),
+ * not by ctrlShow-hiding them. Two earlier mechanisms both survived static review but failed identically
+ * in live in-engine testing - a flat per-control ctrlShow list, then ctrlShow on these same four groups
+ * (the groups also went through one intermediate fix, making sure none of them were ctrlShow false'd
+ * before their own children existed, in case a child born under an already-hidden parent latched a
+ * permanently-hidden state) - in every case the clicked tab button's own highlight changed correctly,
+ * but the displayed content never did. Moving a group off the safe zone doesn't depend on ctrlShow
+ * cascading correctly through anything, so it removes that entire class of suspect regardless of which
+ * exact mechanism was actually at fault. Every group is still left ctrlShow true at creation (before its
+ * children exist) and Waldo_fnc_VehCust_setTab still applies ctrlShow alongside the position move, but
+ * neither is relied on alone - only the position move is trusted to determine real visibility.
  *
- * A previous version of this dialog toggled ~10-15 individual field controls per tab directly on the
- * display via a flat forEach/ctrlShow loop. Two rounds of fixes aimed at that mechanism (a deferred-fit
- * race fix, then a deferred tab-highlight repaint) still did not resolve live in-engine testing:
- * clicking a tab button changed its highlight but never switched the visible content. This dialog now
- * groups each tab's controls under one RscControlsGroupNoScrollbars container instead - a materially
- * different mechanism from the flat per-control list that was the actual, still-unproven suspect.
- *
- * This dialog still calls Waldo_fnc_EcoCore_fitPromptDisplay, exactly like every earlier working
- * version - a first attempt at this rework dropped that call entirely (reasoning that the group
- * containers made it unnecessary), which turned out to be wrong: Waldo_fnc_EcoCore_createZeusPromptDisplay
- * unconditionally creates its own background/header chrome at a small placeholder box that only
- * Waldo_fnc_EcoCore_fitPromptDisplay ever moves into its real, correct position - skipping that call
- * left the chrome stuck at its placeholder, visibly colliding with this dialog's own content, and also
+ * This dialog calls Waldo_fnc_EcoCore_fitPromptDisplay, exactly like every earlier working version -
+ * skipping it (tried once) left Waldo_fnc_EcoCore_createZeusPromptDisplay's own background/header chrome
+ * stuck at its small unfitted placeholder box, visibly colliding with this dialog's own content, and
  * lost the button font auto-shrink that keeps the tab labels ("Appearance", "Component") from being
- * clipped. Waldo_fnc_EcoCore_fitPromptDisplay walks allControls _disp, which returns only *direct*
- * children of the display - the four tab-content groups qualify (each a direct child, all four at the
- * identical [0.10, 0.16, 0.46, 0.62] rect) but the field controls nested inside them do not, so the fit
- * pass treats each group as one atomic box alongside this dialog's other direct-child controls (chrome,
- * tab buttons, Pending Changes panel), the same way it already fit the equivalent direct-child controls
- * in every earlier working version of this dialog. Since all four groups share one identical rect they
- * contribute one consistent bounding box, and the resulting scale for a box this shape is expected to
- * be at or above 1:1 (the pass only ever shrinks when content doesn't fit the safe card, which this
- * box is very unlikely to trigger) - safely at/above 1:1 means each group's nested children (unaffected
- * by the group's own resize, per Arma's normal group-child semantics) stay inside rather than clipping.
+ * clipped. allControls _disp recurses into every control group's own children, not just this display's
+ * direct top-level controls - a group child's ctrlPosition is relative to its own parent group's local
+ * origin, not this display's absolute safe-zone coordinates, and treating those small local numbers as
+ * absolute corrupted the fit pass's computed bounding box and visibly shifted/clipped this dialog's
+ * content (confirmed and fixed - see Waldo_fnc_EcoCore_fitPromptDisplay's own header for detail: it now
+ * excludes any control with a non-null ctrlParent from its scan).
  *
  * Reuses Waldo_fnc_EcoCore_createZeusPromptDisplay verbatim for the modal child display's shared
  * chrome/background (it is already generic, no Economy-specific state) and copies control-creation
@@ -133,23 +124,28 @@ _tabComponentBtn ctrlSetPosition [0.465, 0.11, 0.13, 0.035];
 _tabComponentBtn ctrlSetText "Component";
 _tabComponentBtn ctrlCommit 0;
 
-// ---- One content group per tab - all four share the exact same rectangle; ctrlShow toggling one of
-// these four controls IS tab switching (see Waldo_fnc_VehCust_setTab). Local coordinates below are
-// relative to each group's own [0, 0] origin, not the display's absolute safe-zone coordinates.
+// ---- One content group per tab - all four share the exact same rectangle. Local coordinates below
+// are relative to each group's own [0, 0] origin, not the display's absolute safe-zone coordinates
+// (confirmed correct: excluding these children from Waldo_fnc_EcoCore_fitPromptDisplay's own scan -
+// see that file - fixed a real corrupted-position bug, which only makes sense if children really do
+// render relative to their parent group's current position).
 //
-// IMPORTANT: every group is left ctrlShow TRUE here, before any of its children are created. A child
-// control created under an already-hidden parent group can be born permanently hidden regardless of
-// later ctrlShow calls on the parent - unlike an ordinary top-level control (which has no parent/child
-// inheritance step at all), a control group's children can latch their own effective visibility at
-// creation time. The dialog's final `[_disp, "turret"] call Waldo_fnc_VehCust_setTab;` call (after
-// every tab's children exist) is what performs the FIRST real hide of Pylon/Appearance/Component, so
-// their children are always created under a genuinely visible parent first. This closes a confirmed
-// live-tested bug where Turret (the only group ever shown before its own children existed) was the
-// only tab whose content ever displayed, no matter which tab button was clicked.
+// Tab switching (Waldo_fnc_VehCust_setTab) moves the non-active groups off-screen entirely rather than
+// ctrlShow-hiding them - two earlier mechanisms (a flat per-control ctrlShow list, then ctrlShow on
+// these same four groups) both survived static review but failed live in-engine testing identically:
+// the clicked tab button's own highlight changed, but the displayed content never did. Moving a group
+// off the safe zone doesn't depend on ctrlShow cascading correctly through anything.
+//
+// Every group is still left ctrlShow TRUE here, before any of its children are created (a child
+// created under an already-hidden parent group can be born permanently hidden regardless of later
+// ctrlShow calls on the parent), and Waldo_fnc_VehCust_setTab also still applies ctrlShow alongside the
+// position move - neither is relied on alone, only the position move is trusted to actually determine
+// visibility.
 private _tabContentX = 0.10;
 private _tabContentY = 0.16;
 private _tabContentW = 0.46;
 private _tabContentH = 0.62;
+_disp setVariable ["WaldoVehCust_TabContentRect", [_tabContentX, _tabContentY, _tabContentW, _tabContentH]];
 
 private _turretGroup = _disp ctrlCreate ["RscControlsGroupNoScrollbars", -1];
 _turretGroup ctrlSetPosition [_tabContentX, _tabContentY, _tabContentW, _tabContentH];
@@ -743,12 +739,6 @@ _componentTurretPickCombo lbSetCurSel 0;
     _x ctrlAddEventHandler ["ButtonClick", {
         params ["_ctrl"];
         private _disp = _ctrl getVariable ["WaldoVehCust_Display", displayNull];
-        // TEMPORARY DIAGNOSTIC (Round 9 safety net) - remove once tab switching is confirmed working
-        // in-engine. Confirms whether the click reaches this handler at all and what tab it resolves.
-        // Also echoed to systemChat so this is visible on-screen without needing to open the RPT file.
-        private _diagTabName = _ctrl getVariable ["WaldoVehCust_TabName", "<none>"];
-        diag_log format ["[WMP VEHCUST DIAG] tab ButtonClick fired ctrl=%1 dispFound=%2 tabName=%3", _ctrl, !isNull _disp, _diagTabName];
-        systemChat format ["[VEHCUST DIAG] ButtonClick fired, dispFound=%1, tabName=%2", !isNull _disp, _diagTabName];
         if (isNull _disp) exitWith {};
         [_disp, _ctrl getVariable ["WaldoVehCust_TabName", "turret"]] call Waldo_fnc_VehCust_setTab;
     }];

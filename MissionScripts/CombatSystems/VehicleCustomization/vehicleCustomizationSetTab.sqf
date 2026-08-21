@@ -3,16 +3,17 @@
  * Switches the ZEN "Vehicle Customisation - Editor" dialog's visible tab (Turret / Pylon / Appearance
  * / Component). Each tab's controls live inside its own RscControlsGroupNoScrollbars container (all
  * four sharing the exact same content rectangle), created once by
- * vehicleCustomizationPromptEditor.sqf and stored on the display under WaldoVehCust_<Tab>Group -
- * switching tabs is exactly four ctrlShow calls, one per group. This mirrors the group-container
- * pattern already proven elsewhere in this codebase -
- * MissionScripts/InteractionsMinigames/Core/challengeUi.sqf's own "content group" idiom.
+ * vehicleCustomizationPromptEditor.sqf and stored on the display under WaldoVehCust_<Tab>Group.
  *
- * This replaces an earlier version that toggled ~10-15 individual field controls per tab directly via
- * a flat forEach/ctrlShow loop; that mechanism survived static review twice but still failed live
- * in-engine testing (a tab button's highlight changed on click, but the displayed content never did).
- * Collapsing to one ctrlShow per tab removes that entire class of per-control state drift. The
- * permanent Pending Changes panel and its buttons are not part of any tab group and are always shown.
+ * Switching tabs MOVES each non-active group off-screen (ctrlSetPosition to a tiny rect well outside
+ * the safe zone) rather than relying on ctrlShow. Two earlier versions of this function - one toggling
+ * ~10-15 individual field controls per tab directly, then one toggling ctrlShow on these same four
+ * groups - both survived static review but failed live in-engine testing: the clicked tab button's
+ * highlight changed, but the displayed content never did, for either mechanism. Repositioning off-screen
+ * doesn't depend on ctrlShow cascading correctly through anything - a control that isn't within the
+ * safe zone simply isn't rendered, which is a much harder property to get subtly wrong than a visibility
+ * flag. The active tab's group is always moved back to its real, on-screen rect. The permanent Pending
+ * Changes panel and its buttons are not part of any tab group and are always shown.
  *
  * Arguments:
  * 0: Display <DISPLAY> - the open Vehicle Customisation - Editor display (optional, default: displayNull)
@@ -34,6 +35,13 @@ if (isNull _disp) exitWith {};
 private _safeTab = toLower (str _tab);
 if !(_safeTab in ["turret", "pylon", "appearance", "component"]) then {_safeTab = "turret";};
 
+// The real, on-screen rect every group was created at (vehicleCustomizationPromptEditor.sqf) - stored
+// on the display so this function doesn't have to hardcode a second copy of those numbers.
+private _onScreenRect = _disp getVariable ["WaldoVehCust_TabContentRect", [0.10, 0.16, 0.46, 0.62]];
+// Comfortably outside the safe zone in every direction, tiny, so even if something ever rendered it
+// anyway it would be imperceptible - the actual invisibility guarantee is being outside the safe zone.
+private _offScreenRect = [-2, -2, 0.01, 0.01];
+
 private _tabGroups = [
     ["turret", "WaldoVehCust_TurretGroup"],
     ["pylon", "WaldoVehCust_PylonGroup"],
@@ -43,19 +51,13 @@ private _tabGroups = [
 {
     _x params ["_tabName", "_varName"];
     private _group = _disp getVariable [_varName, controlNull];
-    private _show = _safeTab isEqualTo _tabName;
     if (!isNull _group) then {
-        _group ctrlShow _show;
+        _group ctrlSetPosition (if (_safeTab isEqualTo _tabName) then {_onScreenRect} else {_offScreenRect});
         _group ctrlCommit 0;
+        // ctrlShow is kept as a harmless second signal alongside the position move - never relied on
+        // alone here, since it's the exact mechanism that already failed twice.
+        _group ctrlShow (_safeTab isEqualTo _tabName);
     };
-    // TEMPORARY DIAGNOSTIC (Round 9 safety net) - remove once tab switching is confirmed working
-    // in-engine. Confirms the group control was found, what ctrlShow value was requested, and - via
-    // ctrlShown, read back AFTER the call above - what the engine now actually reports as this
-    // control's real visibility state, so a silent no-op is distinguishable from a correct call.
-    // Also echoed to systemChat so this is visible on-screen without opening the RPT file.
-    private _actualShown = if (isNull _group) then {"<no control>"} else {str (ctrlShown _group)};
-    diag_log format ["[WMP VEHCUST DIAG] setTab tab=%1 group=%2 groupFound=%3 requestedShow=%4 actualShown=%5", _tabName, _varName, !isNull _group, _show, _actualShown];
-    systemChat format ["[VEHCUST DIAG] %1: found=%2 requested=%3 actual=%4", _tabName, !isNull _group, _show, _actualShown];
 } forEach _tabGroups;
 
 private _tabButtons = [
