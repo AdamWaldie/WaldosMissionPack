@@ -1034,6 +1034,14 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('"Waldo_UI_Theme"', snapshot)
         self.assertIn('"Waldo_UI_ThemeRevision"', snapshot)
         self.assertIn("call Waldo_fnc_UiThemeApplyLocal", receive)
+        server_branch_start = root_init.index("if (isServer) then")
+        client_branch_start = root_init.index("} else {", server_branch_start)
+        server_branch = root_init[server_branch_start:client_branch_start]
+        self.assertIn("if (hasInterface) then", server_branch)
+        self.assertIn(
+            '[missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"], false] call Waldo_fnc_UiThemeApplyLocal;',
+            server_branch,
+        )
 
     def test_recovery_notifications_use_actor_or_explicit_nearby_player_owners(self):
         root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"
