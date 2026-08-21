@@ -513,6 +513,51 @@ missionNamespace setVariable ["Waldo_QA_ACRERackVehicle", _acreRackVehicle, true
 } forEach [["qa_convoy_1", [28, 54, 0]], ["qa_convoy_2", [28, 70, 0]]];
 ["core", "MISSION FLOW / CONVOY", [0, 39, 0], "Loadout save, diagnostics, objectives, AAR, SafeStart and a manually started AI convoy."] call Waldo_QA_fnc_registerFeatureStationServer;
 
+// Dialogue gallery: immediately usable archetypes plus deliberately separate specific and advanced examples.
+private _dialogueGroup = createGroup [civilian, true];
+private _dialogueUnits = [];
+{
+    _x params ["_class", "_position", "_name"];
+    private _unit = _dialogueGroup createUnit [_class, _position, [], 0, "NONE"];
+    _unit setName _name;
+    _unit disableAI "PATH";
+    _unit setDir 180;
+    [_unit] call Waldo_QA_fnc_trackFeatureObjectServer;
+    _dialogueUnits pushBack _unit;
+} forEach [
+    ["C_Man_1", [-12, 34, 0], "Dornow Civilian"],
+    ["C_man_polo_1_F", [-6, 34, 0], "Modern Civilian"],
+    ["C_man_polo_2_F", [0, 34, 0], "Specific Speaker"],
+    ["C_man_polo_3_F", [6, 34, 0], "Linear Conversation"],
+    ["C_man_polo_4_F", [12, 34, 0], "Branching Conversation"]
+];
+["MEDIEVAL_DORNOW"] call Waldo_fnc_DialogueLoadPresetPack;
+["MODERN_CIVILIANS"] call Waldo_fnc_DialogueLoadPresetPack;
+[_dialogueUnits select 0, "DORNOW_CIVILIAN"] call Waldo_fnc_SimpleDialogue;
+[_dialogueUnits select 1, "MODERN_CIVILIAN"] call Waldo_fnc_SimpleDialogue;
+[_dialogueUnits select 2, ["The route is clear to the clinic.", "I will mark the damaged bridge for you."], {
+    missionNamespace setVariable ["Waldo_QA_SpecificDialogueCompleted", [_this, diag_tickTime]];
+}] call Waldo_fnc_SimpleDialogue;
+["QA_LINEAR", [
+    ["START", [
+        [objNull, "This is the separate Advanced Conversation example.", "QA_MISSING_OPTIONAL_VOICE", 3.5],
+        "If recorded audio is unavailable, the subtitle timing continues safely."
+    ]]
+]] call Waldo_fnc_ConversationCreate;
+["QA_BRANCH", [
+    ["START", ["I can answer one question."], [
+        ["Where is the clinic?", "CLINIC"],
+        ["Is the market safe?", "MARKET"],
+        ["That is all, thank you.", ""]
+    ]],
+    ["CLINIC", ["Follow the blue doors beyond the square."]],
+    ["MARKET", ["The market is crowded but calm this morning."]]
+]] call Waldo_fnc_ConversationCreate;
+[_dialogueUnits select 3, "QA_LINEAR"] call Waldo_fnc_ConversationAssign;
+[_dialogueUnits select 4, "QA_BRANCH"] call Waldo_fnc_ConversationAssign;
+missionNamespace setVariable ["Waldo_QA_DialogueUnits", _dialogueUnits, true];
+["dialogue", "DIALOGUE GALLERY", [0, 34, 0], "Beginner Simple Dialogue NPCs plus separate linear, audio-fallback and branching Advanced Conversation examples."] call Waldo_QA_fnc_registerFeatureStationServer;
+
 // Electronic Warfare: live jammer, tracker target, immune vehicle and manual EMP control.
 missionNamespace setVariable ["Waldo_Jamming_Enable", true, true];
 [] call Waldo_fnc_JammingInit;

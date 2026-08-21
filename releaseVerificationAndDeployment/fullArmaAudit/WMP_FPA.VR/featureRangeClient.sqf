@@ -3,7 +3,8 @@
  * Installs local controls, labels and player-facing fixtures for the ongoing full-pack audit.
  * The client explicitly requests its dedicated curator assignment after server readiness so a
  * playable slot transferred from server AI to a human does not retain the server-owned assignment.
- * Repeat guards prevent duplicate actions during JIP or local script restarts.
+ * Repeat guards prevent duplicate actions during JIP or local script restarts. Completion is also
+ * published on the player object so the server audit cannot diagnose half-installed client fixtures.
  *
  * Arguments: none (executed from auditInitPlayerLocal.sqf).
  * Return Value: nothing.
@@ -547,4 +548,5 @@ missionNamespace setVariable ["Waldo_QA_Draw3DHandler", _drawHandler];
 
 player setPosATL [0, -2, 0];
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientReady", true];
+player setVariable ["Waldo_QA_FeatureRangeClientReady", true, true];
 systemChat "WMP full-pack PR feature range ready. Use the AUDIT CONTROL laptop for navigation and resets.";

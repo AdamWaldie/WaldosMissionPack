@@ -5,9 +5,9 @@
  * Fixed-position offsets remain world east/north/up. DrawIcon3D requires PositionAGL, so this
  * renderer deliberately uses modelToWorldVisual for objects and keeps fixed ATL anchors in AGL.
  * Do not replace either path with an ASL/world conversion: terrain elevation would then be added
- * to the displayed height and an on-object marker would appear far above its target. The public
- * server registry replays naturally to JIP clients; this repeat-safe installer creates only one
- * event handler per interface machine.
+ * to the displayed height and an on-object marker would appear far above its target. Each client
+ * requests one revisioned server snapshot after installing; later changes arrive as compact
+ * deltas. This repeat-safe installer creates only one event handler per interface machine.
  *
  * Arguments: None.
  * Return Value: Boolean - true when installed/already installed; false without an interface.
@@ -16,6 +16,10 @@
  */
 if (!hasInterface) exitWith {false};
 if ((missionNamespace getVariable ["Waldo_3DMarker_DrawHandler", -1]) >= 0) exitWith {true};
+if (!isServer) then {
+    missionNamespace setVariable ["Waldo_3DMarker_Registry", []];
+    missionNamespace setVariable ["Waldo_3DMarker_Revision", -1];
+};
 private _handler = addMissionEventHandler ["Draw3D", {
     private _playerSide = toUpper str side group player;
     {
@@ -39,4 +43,5 @@ private _handler = addMissionEventHandler ["Draw3D", {
     } forEach (missionNamespace getVariable ["Waldo_3DMarker_Registry", []]);
 }];
 missionNamespace setVariable ["Waldo_3DMarker_DrawHandler", _handler];
+if (!isServer) then {[] call Waldo_fnc_Marker3DRequestStateServer};
 true

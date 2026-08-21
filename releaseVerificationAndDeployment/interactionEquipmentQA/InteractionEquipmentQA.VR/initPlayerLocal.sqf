@@ -17,6 +17,43 @@ private _qaDifficulty = toLower (missionNamespace getVariable ["Waldo_MG_QA_Diff
 private _allDifficulties = missionNamespace getVariable ["Waldo_MG_QA_AllDifficulties", false];
 private _difficultyNames = ["easy", "standard", "hard", "expert"];
 private _challengeIds = ["wirecut", "minesweeper", "keypad", "lockpick", "circuit", "repair", "radiotune", "pressure", "sequence", "commandinput"];
+
+if (_mode == "DIALOGUE") exitWith {
+    private _findings = [];
+    ["Civilian Liaison", "The clinic is open, but the road beside the market is blocked.", 3600, "DIALOGUE_QA"] call Waldo_fnc_DialogueShowLineLocal;
+    [player, "DIALOGUE_QA", [
+        ["ASK_CLINIC", "Can you show me the safest route to the clinic?"],
+        ["ASK_MARKET", "What happened near the market?"],
+        ["THANKS", "Thank you. We will take it from here."]
+    ]] call Waldo_fnc_ConversationShowChoicesLocal;
+    uiSleep 0.2;
+
+    private _controls = [
+        uiNamespace getVariable ["Waldo_Dialogue_SubtitleFrame", controlNull],
+        uiNamespace getVariable ["Waldo_Dialogue_SubtitleText", controlNull]
+    ];
+    _controls append (uiNamespace getVariable ["Waldo_Conversation_ChoiceControls", []]);
+    private _bounds = [];
+    {
+        if (isNull _x) then {
+            _findings pushBack format ["control %1 was not created", _forEachIndex];
+        } else {
+            private _position = ctrlPosition _x;
+            _bounds pushBack _position;
+            _position params ["_xPos", "_yPos", "_width", "_height"];
+            if (_width <= 0 || {_height <= 0}) then {
+                _findings pushBack format ["control %1 has non-positive size %2", _forEachIndex, _position];
+            };
+            if (_xPos < safeZoneX || {_yPos < safeZoneY} || {_xPos + _width > safeZoneX + safeZoneW} || {_yPos + _height > safeZoneY + safeZoneH}) then {
+                _findings pushBack format ["control %1 exceeds the safe zone: %2", _forEachIndex, _position];
+            };
+        };
+    } forEach _controls;
+
+    diag_log format ["WMP DIALOGUE UI QA GEOMETRY: safe=%1 bounds=%2", [safeZoneX, safeZoneY, safeZoneW, safeZoneH], _bounds];
+    diag_log format ["WMP DIALOGUE UI QA COMPLETE: %1 finding(s) %2", count _findings, _findings];
+};
+
 if !(_qaDifficulty in _difficultyNames) then {_qaDifficulty = "standard";};
 private _entries = [];
 {

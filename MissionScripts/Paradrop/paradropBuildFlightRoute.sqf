@@ -103,7 +103,12 @@ private _hold = [_exit, 1800, _direction] call BIS_fnc_relPos;
 {deleteWaypoint _x} forEach (reverse (waypoints _flightGroup));
 _flightGroup setBehaviourStrong "CARELESS";
 _flightGroup setCombatMode "BLUE";
-_flightGroup setSpeedMode "LIMITED";
+// Helicopter AI under LIMITED ignores the requested cruise orders and settles near 66 km/h in the
+// Huron and Mohawk. FULL lets those pilots pursue forceSpeed while limitSpeed remains the hard
+// ceiling. Fixed-wing aircraft retain the established LIMITED route behaviour: their injected
+// launch velocity and cruise orders already work correctly and do not need the helicopter workaround.
+private _routeSpeedMode = if (_aircraft isKindOf "Helicopter") then {"FULL"} else {"LIMITED"};
+_flightGroup setSpeedMode _routeSpeedMode;
 _aircraft limitSpeed _maxSpeed;
 // limitSpeed is km/h, while forceSpeed is metres/second. Applying one raw value to both causes
 // extreme overspeed and an apparent lateral break at the drop zone.
@@ -118,7 +123,9 @@ private _addRouteWaypoint = {
     _waypoint setWaypointType _type;
     _waypoint setWaypointBehaviour "CARELESS";
     _waypoint setWaypointCombatMode "BLUE";
-    _waypoint setWaypointSpeed "LIMITED";
+    // Keep each waypoint consistent with the airframe-specific group policy; a current waypoint's
+    // speed setting otherwise overrides the group again.
+    _waypoint setWaypointSpeed _routeSpeedMode;
     _waypoint setWaypointCompletionRadius _radius;
     _waypoint
 };

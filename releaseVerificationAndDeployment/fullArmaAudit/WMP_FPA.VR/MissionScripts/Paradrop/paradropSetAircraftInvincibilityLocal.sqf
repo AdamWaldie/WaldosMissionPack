@@ -4,8 +4,8 @@
  * aircraft, and reapplies it whenever the aircraft changes locality.
  *
  * Locality and repeat/JIP behaviour:
- * The server publishes the requested state and invokes this function on every machine with a named
- * JIP key. Each machine installs at most one local Local event handler. Only the current aircraft
+ * The server publishes the requested state as part of the aircraft-object-keyed combined setup
+ * replay. Each machine installs at most one local Local event handler. Only the current aircraft
  * owner executes allowDamage; when ownership moves to a server, headless client or player client,
  * the new owner immediately reapplies the stored state. Passing false removes WMP's handler and
  * restores ordinary engine damage on the owner. This protects against normal engine damage only;
@@ -23,8 +23,7 @@
  * Waldo_fnc_ParadropRemoveDropZone.
  *
  * Example:
- * [netId _aircraft, true] remoteExec ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0,
- *     "WMP_Paradrop_Damage_DZ_ALPHA"];
+ * [netId _aircraft, true] call Waldo_fnc_ParadropSetAircraftInvincibilityLocal;
  */
 params [["_netId", "", [""]], ["_invincible", false, [false]]];
 if (_netId == "") exitWith {false};

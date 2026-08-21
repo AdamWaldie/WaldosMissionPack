@@ -7,8 +7,9 @@
  *
  * Locality and repeat/JIP behaviour:
  * May be called anywhere. Non-server callers forward once to the server. The server owns the
- * registry and broadcasts it, so current players and JIP render the same state. Reusing an ID
- * updates its existing marker instead of duplicating it.
+ * registry, sends one-row revisioned deltas to current clients, and answers an explicit full-state
+ * request from each joining client. Reusing an ID updates its existing marker instead of
+ * duplicating it; missed or out-of-order deltas trigger a fresh snapshot request.
  *
  * Arguments:
  * 0: stable marker ID <STRING> (default auto-generated)
@@ -73,5 +74,8 @@ private _row = [
 private _registry = +(missionNamespace getVariable ["Waldo_3DMarker_Registry", []]);
 private _index = _registry findIf {(_x param [0, ""]) isEqualTo _id};
 if (_index < 0) then {_registry pushBack _row;} else {_registry set [_index, _row];};
-missionNamespace setVariable ["Waldo_3DMarker_Registry", _registry, true];
+missionNamespace setVariable ["Waldo_3DMarker_Registry", _registry];
+private _revision = (missionNamespace getVariable ["Waldo_3DMarker_Revision", 0]) + 1;
+missionNamespace setVariable ["Waldo_3DMarker_Revision", _revision];
+[_revision, "UPSERT", _row] remoteExecCall ["Waldo_fnc_Marker3DApplyDeltaLocal", -2];
 _id

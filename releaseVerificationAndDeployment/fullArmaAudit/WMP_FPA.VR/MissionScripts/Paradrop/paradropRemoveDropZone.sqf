@@ -54,18 +54,20 @@ if !(_id in keys _registry) exitWith {
         };
     };
     if (!isNull _quickAircraft) then {
-        private _actionJipKey = _quickAircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];
-        if (_actionJipKey != "") then {[] remoteExecCall ["", _actionJipKey]};
-        private _damageJipKey = _quickAircraft getVariable ["Waldo_Paradrop_DamageJipKey", ""];
-        if (_damageJipKey != "") then {[] remoteExecCall ["", _damageJipKey]};
+        // Explicit removal can retain the aircraft, so remove its object-bound JIP replay now.
+        // Deletion would also make the engine remove this entry automatically.
+        [] remoteExecCall ["", _quickAircraft];
         if (!_deleteAircraft && {_quickAircraft getVariable ["Waldo_Paradrop_AircraftInvincible", false]}) then {
             [netId _quickAircraft, false] remoteExecCall ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0];
         };
         _quickAircraft setVariable ["Waldo_Paradrop_AircraftInvincible", false, true];
-        _quickAircraft setVariable ["Waldo_Paradrop_DamageJipKey", "", true];
         [_quickAircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0];
         _quickAircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
         _quickAircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
+        if (!_deleteAircraft) then {
+            _quickAircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", _quickAircraft getVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", false], true];
+            _quickAircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", nil, true];
+        };
     };
     if (_deleteAircraft && {!isNull _quickAircraft}) then {deleteVehicleCrew _quickAircraft; deleteVehicle _quickAircraft};
     private _quickFlightGroup = _quickState getOrDefault ["flightGroup", grpNull];
@@ -95,24 +97,18 @@ if (_deleteAircraft && {!isNull _aircraft} && {(crew _aircraft) findIf {isPlayer
     };
 };
 if (!isNull _aircraft) then {
-    private _damageJipKey = _aircraft getVariable ["Waldo_Paradrop_DamageJipKey", ""];
-    if (_damageJipKey != "") then {[] remoteExecCall ["", _damageJipKey]};
+    [] remoteExecCall ["", _aircraft];
     if (!_deleteAircraft && {_aircraft getVariable ["Waldo_Paradrop_AircraftInvincible", false]}) then {
         [netId _aircraft, false] remoteExecCall ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0];
     };
     _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", false, true];
-    _aircraft setVariable ["Waldo_Paradrop_DamageJipKey", "", true];
 };
 if (!_deleteAircraft && {!isNull _aircraft}) then {
-    private _actionJipKey = _aircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];
-    if (_actionJipKey != "") then {[] remoteExecCall ["", _actionJipKey]};
     [_aircraft] remoteExecCall ["Waldo_fnc_ParadropRemoveAircraftActionsLocal", 0];
     _aircraft setVariable ["Waldo_Paradrop_LocalSetupComplete", false, true];
     _aircraft setVariable ["Waldo_Paradrop_ConfiguredJumpTypes", [], true];
-};
-if (_deleteAircraft && {!isNull _aircraft}) then {
-    private _actionJipKey = _aircraft getVariable ["Waldo_Paradrop_ActionJipKey", ""];
-    if (_actionJipKey != "") then {[] remoteExecCall ["", _actionJipKey]};
+    _aircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", _aircraft getVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", false], true];
+    _aircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", nil, true];
 };
 if (_deleteAircraft && {!isNull _aircraft}) then {deleteVehicleCrew _aircraft; deleteVehicle _aircraft};
 if (_deleteAircraft) then {

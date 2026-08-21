@@ -30,8 +30,40 @@ if (_suite in ["all", "core"]) then {
         ["core/functions/registered", _missing isEqualTo [], _missing] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
+    ["core/dialogue/simple-archetypes", {
+        private _archetypes = missionNamespace getVariable ["Waldo_Dialogue_Archetypes", createHashMap];
+        private _required = ["DORNOW_CIVILIAN", "DORNOW_GUARD", "MODERN_CIVILIAN", "MODERN_CIVILIAN_FRIENDLY", "MODERN_CIVILIAN_WARY", "MODERN_CIVILIAN_DISPLACED", "MODERN_SHOPKEEPER", "MODERN_RURAL_RESIDENT", "MODERN_AID_WORKER", "MODERN_LOCAL_OFFICIAL"];
+        private _missing = _required select {!(_x in _archetypes)};
+        ["core/dialogue/simple-archetypes", _missing isEqualTo [], _missing] call Waldo_QA_fnc_assert;
+    }] call Waldo_QA_fnc_case;
+
+    ["core/dialogue/specific-callback", {
+        private _units = missionNamespace getVariable ["Waldo_QA_DialogueUnits", []];
+        private _speaker = _units param [2, objNull];
+        private _registry = missionNamespace getVariable ["Waldo_Dialogue_Registry", createHashMap];
+        private _entry = _registry getOrDefault [netId _speaker, createHashMap];
+        private _lines = _entry getOrDefault ["lines", []];
+        private _callback = _entry getOrDefault ["onComplete", nil];
+        ["core/dialogue/specific-callback", !isNull _speaker && {count _lines == 2} && {!isNil "_callback"} && {_callback isEqualType {}}, [!isNull _speaker, count _lines, isNil "_callback"]] call Waldo_QA_fnc_assert;
+    }] call Waldo_QA_fnc_case;
+
+    ["core/dialogue/advanced-linear-branching", {
+        private _definitions = missionNamespace getVariable ["Waldo_Conversation_Definitions", createHashMap];
+        private _linear = _definitions getOrDefault ["QA_LINEAR", createHashMap];
+        private _branch = _definitions getOrDefault ["QA_BRANCH", createHashMap];
+        private _branchNodes = _branch getOrDefault ["nodes", createHashMap];
+        private _choices = (_branchNodes getOrDefault ["START", createHashMap]) getOrDefault ["choices", []];
+        ["core/dialogue/advanced-linear-branching", count _linear > 0 && {count _branchNodes == 3} && {count _choices == 3}, [count _linear, count _branchNodes, count _choices]] call Waldo_QA_fnc_assert;
+    }] call Waldo_QA_fnc_case;
+
     ["core/fixtures/zeus-mhq", {
         private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
+        private _deadline = diag_tickTime + 120;
+        waitUntil {
+            uiSleep 0.1;
+            (!isNull _curator && {!isNull (getAssignedCuratorUnit _curator)})
+            || {diag_tickTime >= _deadline}
+        };
         private _mhq = missionNamespace getVariable ["Waldo_QA_MHQ", objNull];
         private _logic = if (isNull _mhq) then {objNull} else {nearestObject [_mhq, "Logic"]};
         private _parts = if (isNull _logic) then {[]} else {synchronizedObjects _logic};
@@ -53,12 +85,12 @@ if (_suite in ["all", "core"]) then {
         waitUntil {
             uiSleep 0.1;
             isNull _helicopter
-            || {((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]) param [0, ""]) in ["LANDED", "ABORTED"]}
+            || {((_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]) param [0, ""]) in ["LANDED", "ANCHORED", "ABORTED"]}
             || {diag_tickTime >= _deadline}
         };
         private _result = if (isNull _helicopter) then {[]} else {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_LastResult", []]};
         private _tracker = if (isNull _helicopter) then {[]} else {_helicopter getVariable ["Waldo_ImprovedHelicopterLanding_TrackerState", []]};
-        private _landed = (_result param [0, ""]) == "LANDED";
+        private _landed = (_result param [0, ""]) in ["LANDED", "ANCHORED"];
         private _trackerType = _tracker param [1, ""];
         private _trackerScript = _tracker param [3, ""];
         private _landTypeObserved = _trackerType == "SCRIPTED" && {_trackerScript find "fn_wpland.sqf" >= 0};
@@ -154,6 +186,12 @@ if (_suite in ["all", "core"]) then {
     }] call Waldo_QA_fnc_case;
 
     ["core/diagnostics/clean", {
+        private _clientReadyDeadline = diag_tickTime + 60;
+        waitUntil {
+            uiSleep 0.1;
+            (count allPlayers > 0 && {allPlayers findIf {!(_x getVariable ["Waldo_QA_FeatureRangeClientReady", false])} < 0})
+            || {diag_tickTime >= _clientReadyDeadline}
+        };
         private _previousDeadline = diag_tickTime + 15;
         waitUntil {
             uiSleep 0.1;
@@ -194,6 +232,8 @@ if (_suite in ["all", "core"]) then {
     }] call Waldo_QA_fnc_case;
 
     ["core/logistics/vvd-lock-token", {
+        private _deadline = diag_tickTime + 120;
+        waitUntil {uiSleep 0.1; count allPlayers > 0 || {diag_tickTime >= _deadline}};
         private _actor = allPlayers param [0, objNull];
         private _pad = createVehicle ["Land_JumpTarget_F", [8, 125, 0], [], 0, "CAN_COLLIDE"];
         private _token = format ["QA_VVD_%1", diag_tickTime];
@@ -210,10 +250,19 @@ if (_suite in ["all", "core"]) then {
     }] call Waldo_QA_fnc_case;
 
     ["core/markers/custom-3d", {
-        private _id = ["qa_runtime_marker", [0, 0, 0], createHashMapFromArray [["text", "QA MARKER"]]] call Waldo_fnc_Create3DMarker;
-        private _created = (missionNamespace getVariable ["Waldo_3DMarker_Registry", []]) findIf {(_x select 0) isEqualTo _id} >= 0;
-        private _removed = [_id] call Waldo_fnc_Remove3DMarker;
-        ["core/markers/custom-3d", _created && _removed, [_created, _removed]] call Waldo_QA_fnc_assert;
+        private _anchor = createVehicle ["Land_CampingTable_F", [40, 120, 0], [], 0, "CAN_COLLIDE"];
+        private _exactId = ["qa_runtime_marker_exact", [38, 120, 0], createHashMapFromArray [["text", "QA EXACT"]]] call Waldo_fnc_Create3DMarker;
+        private _anchorId = ["qa_runtime_marker_anchor", _anchor, createHashMapFromArray [["text", "QA ANCHOR"]]] call Waldo_fnc_Create3DMarker;
+        private _positionId = ["qa_runtime_marker_position", [42, 120, 0], createHashMapFromArray [["text", "QA POSITION"]]] call Waldo_fnc_Create3DMarker;
+        private _registry = missionNamespace getVariable ["Waldo_3DMarker_Registry", []];
+        private _created = {_x in (_registry apply {_x select 0})} count [_exactId, _anchorId, _positionId] == 3;
+        private _removedExact = [_exactId] call Waldo_fnc_Remove3DMarker;
+        private _removedAnchor = [_anchor] call Waldo_fnc_Remove3DMarker;
+        private _removedPosition = [[42, 120, 0], 5] call Waldo_fnc_Remove3DMarker;
+        private _remainingIds = (missionNamespace getVariable ["Waldo_3DMarker_Registry", []]) apply {_x select 0};
+        private _clean = {_x in _remainingIds} count [_exactId, _anchorId, _positionId] == 0;
+        ["core/markers/custom-3d", _created && {_removedExact} && {_removedAnchor} && {_removedPosition} && {_clean}, [_created, _removedExact, _removedAnchor, _removedPosition, _clean]] call Waldo_QA_fnc_assert;
+        deleteVehicle _anchor;
     }] call Waldo_QA_fnc_case;
 
     ["core/loadout/unique-array", {
@@ -223,9 +272,9 @@ if (_suite in ["all", "core"]) then {
 
     ["core/objective/create-update", {
         ["qa_objective", west, "QA Objective", "Audit", [10, 10, 0], "ASSIGNED", true] call Waldo_fnc_CreateObjective;
-        private _created = (missionNamespace getVariable ["Waldo_AAR_Tasks", []]) findIf {(_x select 0) == "qa_objective" && {(_x select 1) == "ASSIGNED"}} >= 0;
+        private _created = (missionNamespace getVariable ["Waldo_AAR_Tasks", []]) findIf {(_x select 0) == "qa_objective" && {(_x select 2) == "ASSIGNED"}} >= 0;
         ["qa_objective", "SUCCEEDED"] call Waldo_fnc_SetObjectiveState;
-        private _updated = (missionNamespace getVariable ["Waldo_AAR_Tasks", []]) findIf {(_x select 0) == "qa_objective" && {(_x select 1) == "SUCCEEDED"}} >= 0;
+        private _updated = (missionNamespace getVariable ["Waldo_AAR_Tasks", []]) findIf {(_x select 0) == "qa_objective" && {(_x select 2) == "SUCCEEDED"}} >= 0;
         ["core/objective/create-update", _created && _updated && {markerType "Waldo_obj_qa_objective" == ""}, [_created, _updated]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
@@ -252,6 +301,44 @@ if (_suite in ["all", "core"]) then {
         missionNamespace setVariable ["WALDO_STATIC_MAXSPEED", 310];
         private _valid = (missionNamespace getVariable "WALDO_STATIC_MINALTITUDE") < (missionNamespace getVariable "WALDO_STATIC_MAXALTITUDE");
         ["core/paradrop/settings", _valid, "Static-line thresholds ordered"] call Waldo_QA_fnc_assert;
+    }] call Waldo_QA_fnc_case;
+
+    ["core/paradrop/helicopter-flight-stability", {
+        private _testRows = [
+            ["QA_PARADROP_HURON", "B_Heli_Transport_03_unarmed_F", [1800, 1800, 0]],
+            ["QA_PARADROP_MOHAWK", "I_Heli_Transport_02_F", [5600, 1800, 0]]
+        ];
+        private _aircraft = [];
+        private _created = true;
+        {
+            _x params ["_id", "_class", "_centre"];
+            private _config = createHashMapFromArray [
+                ["id", _id], ["name", _id], ["centre", _centre], ["direction", 0],
+                ["side", west], ["aircraftClass", _class], ["altitude", 300],
+                ["maximumSpeed", 300], ["lifecycle", "RETAIN"], ["createJumpers", false],
+                ["createMarkers", false], ["notifyRequester", false], ["staticJumpEnabled", true]
+            ];
+            private _ok = [_config] call Waldo_fnc_ParadropCreateDropZone;
+            private _registry = missionNamespace getVariable ["Waldo_Paradrop_DropZones", createHashMap];
+            private _state = _registry getOrDefault [_id, createHashMap];
+            private _helicopter = _state getOrDefault ["aircraft", objNull];
+            _created = _created && {_ok} && {!isNull _helicopter};
+            _aircraft pushBack [_id, _helicopter];
+        } forEach _testRows;
+        // Allow the helicopter-only FULL route policy to accelerate naturally. Helicopters do not
+        // receive the fixed-wing path's instantaneous velocity injection because that produces the
+        // nose-up altitude excursion this case is intended to catch.
+        uiSleep 45;
+        private _samples = _aircraft apply {
+            _x params ["_id", "_helicopter"];
+            [_id, !isNull _helicopter, alive _helicopter, if (isNull _helicopter) then {-1} else {(getPosATL _helicopter) select 2}, if (isNull _helicopter) then {0} else {speed _helicopter}]
+        };
+        private _stable = _samples findIf {
+            !(_x select 1) || {!(_x select 2)} || {(_x select 3) < 180} || {(_x select 3) > 420}
+            || {(_x select 4) < 250} || {(_x select 4) > 330}
+        } < 0;
+        ["core/paradrop/helicopter-flight-stability", _created && {_stable}, [_created, _samples]] call Waldo_QA_fnc_assert;
+        {[_x select 0, true, objNull, false] call Waldo_fnc_ParadropRemoveDropZone;} forEach _aircraft;
     }] call Waldo_QA_fnc_case;
 };
 

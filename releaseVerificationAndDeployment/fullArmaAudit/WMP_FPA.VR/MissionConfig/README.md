@@ -96,6 +96,7 @@ HashMaps have a local field-by-field legend plus a worked example where ambiguit
 | Tree felling | `environmentConfig.sqf` | Automatic | Enable and configure valid tool/content classes |
 | Explosive breaching | `environmentConfig.sqf` | Automatic + profiles | Enable and provide matching breach profiles/explosives |
 | Theme / notification flow | `interfaceConfig.sqf` | Automatic | Select theme and optional channel routing |
+| Simple Dialogue / Advanced Conversations | `dialogueConfig.sqf` | Object call or ZEN | Put the documented one-line call in an NPC's Eden init field; no mission init-file call |
 | Treatment feedback | `interfaceConfig.sqf` | Automatic | Enable and select recipients/content |
 | Emergency dismount | `interfaceConfig.sqf` | Automatic | Enable and select policy |
 | WMP HUD | `interfaceConfig.sqf` | Automatic | Configure equipment access, accessibility UIDs and presentation |

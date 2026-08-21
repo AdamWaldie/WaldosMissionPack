@@ -76,6 +76,8 @@ Each interface client reports:
 - the Accessibility self-interaction menu's install mode (ACE/vanilla) and this player's resolved colour-vision profile;
 - the Emergency Dismount monitor loop and, when Corpse Traps is enabled, whether this client actually installed the "Rig Corpse" interaction;
 - Obituary's "Pronounce Dead" action install state (vanilla Medic trait or ACE Medic/Doctor role) and its local diary render loop;
+- Dialogue's authoritative registry/definition/snapshot integrity and, per client, ordered snapshot,
+  local action installation, response-panel cleanup and rejected malformed notification payloads;
 - this client's full mission-critical loadout/respawn trace, six rows in the order the flow actually runs so a bad respawn can be pinpointed to the exact stage:
   - `respawn`/`baseline-capture`: whether `initPlayerLocal.sqf` has finished waiting for `player` to exist and captured the mission-start snapshot, plus how long it waited. This wait never gives up, so a stuck client shows `ERROR` here indefinitely rather than silently missing a baseline forever.
   - `respawn`/`triggers`: fire counts this session for each of the two independent restore triggers - Bohemia's local `"Respawn"` handler and a `CBA_fnc_addPlayerEventHandler "unit"` watchdog. `ERROR` specifically means this client has respawned successfully but only ever via the watchdog - restores still work, but it surfaces the known engine quirk where the native handler doesn't fire in some environments.
@@ -173,6 +175,7 @@ private _economy = [] call Waldo_fnc_EcoCore_getDiagnostics;
 private _equipment = [] call Waldo_fnc_MiniGameInteractionGetDiagnostics;
 private _headless = [] call Waldo_fnc_HeadlessGetDiagnostics;
 private _obituary = [] call Waldo_fnc_ObituaryGetDiagnostics;
+private _dialogue = [] call Waldo_fnc_DialogueGetDiagnostics;
 ```
 
 Each returns `[featureName, checks]`; every check is `[area, feature, state, detail]`. The interaction helper optionally accepts an array of configured equipment objects. `RunDiagnostics` consumes these same helpers, preventing its interpretation from drifting away from the feature's own health report.

@@ -12,7 +12,8 @@
  * ResolutionWidth/ResolutionHeight: connected client dimensions (default 3840x2160).
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
- * Runtime evidence: .qa/pr-review-audit/runtime-<timestamp>/{server,client}.
+ * Runtime evidence: .qa/pr-review-audit/runtime-<timestamp>/{server,client}. Both processes always
+ * enable Arma's network log so every dedicated audit captures traffic alongside its RPT.
  *
  * Example:
  * powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_pr_review_audit.ps1 -Suite all -Mode Manual
@@ -96,7 +97,7 @@ class Missions
 "@ | Set-Content -LiteralPath $serverConfig -Encoding ASCII
 
 $serverArguments = @(
-    "-noBattlEye", "-noSound", "-noPause", "-autoInit", "-port=$Port",
+    "-noBattlEye", "-netlog", "-noSound", "-noPause", "-autoInit", "-port=$Port",
     "-config=$serverConfig", "-profiles=$serverProfile", "-name=WMPAuditServer", $serverModArgument
 )
 $server = Start-Process -FilePath $serverExe -ArgumentList $serverArguments -WorkingDirectory $armaRoot -PassThru -WindowStyle Hidden
@@ -122,7 +123,7 @@ if (-not $serverReady) {
 }
 
 $clientArguments = @(
-    "-noBattlEye", "-noSplash", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
+    "-noBattlEye", "-netlog", "-noSplash", "-showScriptErrors", "-window", "-noPause", "-skipIntro", "-world=empty",
     "-connect=localhost", "-port=$Port", "-x=$ResolutionWidth", "-y=$ResolutionHeight",
     "-password=wmpqa", "-profiles=$clientProfile", "-name=WMPAuditClient", $clientModArgument
 )

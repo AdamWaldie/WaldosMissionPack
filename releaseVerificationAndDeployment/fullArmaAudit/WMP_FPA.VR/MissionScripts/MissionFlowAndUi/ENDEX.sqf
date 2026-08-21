@@ -7,10 +7,13 @@
  * top fraggers; temporary WIA is intentionally omitted. Also available via the Zeus "Waldos
  * Mission Modules - Call Endex" module.
  * Locality and authority: server publishes the authoritative Waldo_ENDEX_Active transition once,
- * then every interface client applies the local freeze/report itself; safe to call on any machine.
+ * sends the complete server-local AAR counters in the same ordered call, then every interface
+ * client applies the local freeze/report itself; safe to call on any machine.
  *
  * Arguments:
- * None
+ * 0: apply locally <BOOL> (internal, default false)
+ * 1: AAR snapshot <ARRAY> (internal, default []) - version, start time, KIA/vehicle counters,
+ *    player losses, friendly fire and frag leaderboard.
  *
  * Return Value:
  * Nothing
@@ -21,7 +24,7 @@
  * Current callers: mission-maker scripting/triggers and the Zeus "Call Endex" module.
  */
 
-params [["_applyLocal", false, [false]]];
+params [["_applyLocal", false, [false]], ["_aarSnapshot", [], [[]]]];
 
 // One server-owned transition publishes the state before clients apply the
 // freeze. This makes ENDEX idempotent and lets SafeStart report which system
@@ -31,14 +34,31 @@ if (!_applyLocal) exitWith {
         [] remoteExecCall ["Waldo_fnc_ENDEX", 2];
     } else {
         if !(missionNamespace getVariable ["Waldo_ENDEX_Active", false]) then {
+            private _snapshot = [
+                1,
+                missionNamespace getVariable ["Waldo_AAR_StartTime", time],
+                +(missionNamespace getVariable ["Waldo_AAR_KIA", [0,0,0,0]]),
+                +(missionNamespace getVariable ["Waldo_AAR_VehKIA", [0,0,0,0]]),
+                missionNamespace getVariable ["Waldo_AAR_PlayerKIA", 0],
+                missionNamespace getVariable ["Waldo_AAR_FF", 0],
+                +(missionNamespace getVariable ["Waldo_AAR_Frags", []])
+            ];
             missionNamespace setVariable ["Waldo_ENDEX_Active", true, true];
-            [true] remoteExecCall ["Waldo_fnc_ENDEX", -2];
-            if (hasInterface) then {[true] call Waldo_fnc_ENDEX;};
+            [true, _snapshot] remoteExecCall ["Waldo_fnc_ENDEX", -2];
+            if (hasInterface) then {[true, _snapshot] call Waldo_fnc_ENDEX;};
             diag_log "[WMP ENDEX] state=ACTIVE weapons=LOCKED damage=DISABLED";
         };
     };
 };
 if (!hasInterface) exitWith {};
+if (count _aarSnapshot >= 7 && {_aarSnapshot param [0, 0, [0]] == 1}) then {
+    missionNamespace setVariable ["Waldo_AAR_StartTime", _aarSnapshot select 1];
+    missionNamespace setVariable ["Waldo_AAR_KIA", +(_aarSnapshot select 2)];
+    missionNamespace setVariable ["Waldo_AAR_VehKIA", +(_aarSnapshot select 3)];
+    missionNamespace setVariable ["Waldo_AAR_PlayerKIA", _aarSnapshot select 4];
+    missionNamespace setVariable ["Waldo_AAR_FF", _aarSnapshot select 5];
+    missionNamespace setVariable ["Waldo_AAR_Frags", +(_aarSnapshot select 6)];
+};
 if (isNil {player getVariable "Waldo_WMPProtection_DamageBaseline"}) then {
     player setVariable ["Waldo_WMPProtection_DamageBaseline", isDamageAllowed player];
 };

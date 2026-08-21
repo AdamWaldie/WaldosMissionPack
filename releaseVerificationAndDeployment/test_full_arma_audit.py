@@ -1584,6 +1584,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('Additional Personnel', obituary)
         self.assertIn('_entries pushBack [_markerId, _victimName', pronounce)
         self.assertIn('Waldo_fnc_ENDEXBuildReportPages', endex)
+        self.assertIn('[true, _snapshot] remoteExecCall ["Waldo_fnc_ENDEX", -2]', endex)
+        self.assertIn('missionNamespace setVariable ["Waldo_AAR_KIA", +(_aarSnapshot select 2)]', endex)
         self.assertIn('"ENDEX", "WMP OPERATIONS", "REPLACE"', endex)
         self.assertIn('Waldo_ENDEX_PageGeneration', endex)
         self.assertIn('CONFIRMED DEATHS', pages)
@@ -2849,8 +2851,39 @@ class FullAuditTests(unittest.TestCase):
 
     def test_custom_3d_marker_api_is_registered(self):
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
-        for function_name in ("Create3DMarker", "Remove3DMarker", "Init3DMarkers"):
+        for function_name in (
+            "Create3DMarker",
+            "Remove3DMarker",
+            "Init3DMarkers",
+            "Marker3DApplyDeltaLocal",
+            "Marker3DRequestStateServer",
+            "Marker3DReceiveStateLocal",
+        ):
             self.assertIn(f"class {function_name}", functions)
+        flow = ROOT / "MissionScripts" / "MissionFlowAndUi"
+        create = (flow / "create3DMarker.sqf").read_text(encoding="utf-8")
+        remove = (flow / "remove3DMarker.sqf").read_text(encoding="utf-8")
+        request = (flow / "3DMarkerRequestStateServer.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('setVariable ["Waldo_3DMarker_Registry", _registry, true]', create + remove)
+        self.assertIn('"UPSERT", _row', create)
+        self.assertIn('"REMOVE", _removedIds', remove)
+        self.assertIn('remoteExecCall ["Waldo_fnc_Marker3DReceiveStateLocal", _requestOwner]', request)
+
+    def test_aar_runtime_counters_are_server_local_until_endex(self):
+        flow = ROOT / "MissionScripts" / "MissionFlowAndUi"
+        tracker = (flow / "aarTrack.sqf").read_text(encoding="utf-8")
+        endex = (flow / "ENDEX.sqf").read_text(encoding="utf-8")
+        for variable in (
+            "Waldo_AAR_KIA",
+            "Waldo_AAR_VehKIA",
+            "Waldo_AAR_PlayerKIA",
+            "Waldo_AAR_FF",
+            "Waldo_AAR_Frags",
+        ):
+            matching_lines = [line for line in tracker.splitlines() if f'setVariable ["{variable}"' in line]
+            self.assertTrue(matching_lines, variable)
+            self.assertTrue(all(", true" not in line for line in matching_lines), variable)
+        self.assertIn('[true, _snapshot] remoteExecCall ["Waldo_fnc_ENDEX", -2]', endex)
 
     def test_jamming_indicator_uses_non_ground_los_endpoint(self):
         factor = (ROOT / "MissionScripts" / "MissionInit" / "Jamming" / "jammingFactor.sqf").read_text(encoding="utf-8")
@@ -2943,7 +2976,13 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('"Invincible drop aircraft"', paradrop_zen)
         self.assertIn('addEventHandler ["Local"', paradrop_invincibility)
         self.assertIn('_aircraft allowDamage !_invincible', paradrop_invincibility)
-        self.assertIn('Waldo_Paradrop_DamageJipKey', paradrop_create + paradrop_quick + paradrop_remove)
+        paradrop_networked = (ROOT / "MissionScripts" / "Paradrop" / "paradropConfigureAircraftNetworkedLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('0, _aircraft', paradrop_create)
+        self.assertIn('0, _aircraft', paradrop_quick)
+        self.assertIn('[] remoteExecCall ["", _quickAircraft]', paradrop_remove)
+        self.assertIn('[] remoteExecCall ["", _aircraft]', paradrop_remove)
+        self.assertIn('Waldo_fnc_ParadropSetAircraftInvincibilityLocal', paradrop_networked)
+        self.assertNotIn('Waldo_Paradrop_DamageJipKey', paradrop_create + paradrop_quick + paradrop_remove)
         self.assertIn("class ParadropRemoveAircraftActionsLocal", functions)
         self.assertIn("_pendingJumpCount", diagnostics_client)
         self.assertIn("private _pendingJumpCount = 0;", diagnostics_client)
@@ -3140,9 +3179,17 @@ class FullAuditTests(unittest.TestCase):
 
     def test_friendly_zen_marker_and_field_equipment_use_server_bridge(self):
         marker = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "zenCreate3DMarker.sqf").read_text(encoding="utf-8")
+        marker_remove = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "zenRemove3DMarker.sqf").read_text(encoding="utf-8")
+        marker_remove_api = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "remove3DMarker.sqf").read_text(encoding="utf-8")
         equipment = (ROOT / "MissionScripts" / "InteractionsMinigames" / "Integration" / "zenFieldEquipment.sqf").read_text(encoding="utf-8")
         runtime = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeApply.sqf").read_text(encoding="utf-8")
         self.assertIn('"CREATE_3D_MARKER"', marker + runtime)
+        self.assertIn('"REMOVE_3D_MARKER"', marker_remove + runtime)
+        self.assertIn('"Marker to remove"', marker_remove)
+        self.assertIn("_rows sort true", marker_remove)
+        self.assertIn("getAssignedCuratorLogic _caller", runtime)
+        self.assertIn("_indices sort false", marker_remove_api)
+        self.assertIn("distance2D _position", marker_remove_api)
         self.assertIn('"FIELD_EQUIPMENT"', equipment + runtime)
         self.assertIn('"EOD bomb defusal"', equipment)
         self.assertIn('Place this module directly on the object', equipment)
@@ -3466,7 +3513,7 @@ class FullAuditTests(unittest.TestCase):
         expected = {
             "aiConfig.sqf", "airOperationsConfig.sqf", "electronicWarfareConfig.sqf",
             "environmentConfig.sqf", "interfaceConfig.sqf", "logisticsConfig.sqf",
-            "missionSystemsConfig.sqf", "persistenceConfig.sqf",
+            "missionSystemsConfig.sqf", "persistenceConfig.sqf", "dialogueConfig.sqf",
         }
         manifest = (config_root / "featureConfigManifest.sqf").read_text(encoding="utf-8")
         loader = (

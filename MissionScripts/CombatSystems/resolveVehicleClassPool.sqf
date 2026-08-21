@@ -46,5 +46,4 @@ if (_cache isEqualTo []) then {
     _cache = [_cache, [], {_x select 1}, "ASCEND"] call BIS_fnc_sortBy;
     missionNamespace setVariable [_varName, _cache];
 };
-
 _cache

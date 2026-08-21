@@ -23,6 +23,16 @@
       "reason": "The local display-loss watchdog emits exactly one abandonment result after its resolved flag check, then exits and clears its token state."
     },
     {
+      "key": "recurring_remote_exec|MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationRunServer.sqf|<file>|remoteexec_in_recurring_loop",
+      "max_count": 6,
+      "reason": "The loop is author-bounded to 256 node transitions and 16 lines per node; execution is event-paced by line duration or player choice, and sends presentation only to the current speaker owner or nearby audience."
+    },
+    {
+      "key": "recurring_world_scan|MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationRunServer.sqf|<file>|recurring_allplayers_scan",
+      "max_count": 1,
+      "reason": "Dynamic audience and disconnect checks are required at each authored line or choice boundary; the loop is session-local, duration-paced and hard-capped at 256 node transitions."
+    },
+    {
       "key": "recurring_broadcast|MissionScripts/MissionInit/ElectronicWarfare/tracker.sqf|<file>|broadcast_setvariable_in_recurring_loop",
       "max_count": 1,
       "reason": "The five-second server prune loop broadcasts the tracker registry only when one or more tracked targets have become invalid, so idle passes do not publish state."

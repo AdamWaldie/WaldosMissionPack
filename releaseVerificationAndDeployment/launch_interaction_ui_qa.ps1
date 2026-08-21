@@ -1,5 +1,5 @@
 param(
-    [ValidateSet("Interactive", "Active", "Automated")]
+    [ValidateSet("Interactive", "Active", "Automated", "Dialogue")]
     [string]$Mode = "Interactive",
     [ValidateSet("wirecut", "minesweeper", "keypad", "lockpick", "circuit", "repair", "radiotune", "pressure", "sequence", "commandinput")]
     [string]$Challenge = "wirecut",
@@ -9,8 +9,8 @@ param(
     [switch]$CaptureScreenshot,
     [string]$ScreenshotPath = ".\.qa\interaction-ui.png",
     [switch]$CloseAfterCapture,
-    [int]$ResolutionWidth = 2560,
-    [int]$ResolutionHeight = 1440
+    [int]$ResolutionWidth = 3840,
+    [int]$ResolutionHeight = 2160
 )
 
 $ErrorActionPreference = "Stop"
@@ -89,7 +89,7 @@ if ($CaptureScreenshot) {
             Select-Object -First 1
         if ($null -ne $rpt) {
             $tail = Get-Content -LiteralPath $rpt.FullName -Tail 80 -ErrorAction SilentlyContinue
-            if ($tail -match "WMP INTERACTION UI QA GEOMETRY:") {
+            if ($tail -match "WMP INTERACTION UI QA GEOMETRY:|WMP DIALOGUE UI QA GEOMETRY:") {
                 $ready = $true
                 break
             }

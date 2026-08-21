@@ -14,6 +14,32 @@ _Associated Files:_
 
 This system provides three categories of vehicle-specific actions that are applied automatically at mission start: **paradrop/HALO jumping**, **side-door exit selection**, and **ACE cargo attributes**. Auto-detection covers the most common RHS, CUP and Vanilla assets — no setup required for those vehicles.
 
+## Beginner setup: choose one path
+
+| If you want... | Start with... | Coding required |
+|---|---|---|
+| A ready-made working example | Eden composition **[WMP] Halo And Static Line Blackfish Drop Examples** | None; move/rotate its `dz1` and `dz2` markers. |
+| Your own placed and crewed aircraft | `Waldo_fnc_ParadropQuickFlightSetup` | One line in the aircraft Init field. |
+| Zeus to create and manage the whole operation in play | **Paradrop - Create Drop Zone** | None. |
+| Generated AI jumpers, lifecycle and scripted control | `Waldo_fnc_ParadropCreateDropZone` | Advanced SQF/HashMap setup. |
+
+For the shortest custom setup:
+
+1. Place and crew a transport aircraft in Eden.
+2. Place an Eden marker at the drop zone, name it `dz1`, and rotate it to the desired approach
+   direction.
+3. Put this in the aircraft's Init field:
+
+```sqf
+[this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
+```
+
+4. Preview the mission. The aircraft waits for its pilot and WMP startup, consumes the setup marker,
+   creates the route/operation markers, and installs player jump interactions.
+
+Start with the shipped 300 m / 300 km/h Static-Line or 1,200 m / 250 km/h HALO defaults. Change one
+thing at a time only after the default route works with your chosen airframe.
+
 ---
 
 ## Auto-Detected Vehicles
@@ -229,6 +255,23 @@ altitude/speed handling, so both paths fly identically once airborne. Use the Dy
 system instead when you want a managed, repeatable operation with generated AI jumpers, a Zeus
 create/remove workflow, or map symbology by default.
 
+### Helicopters and planes use different AI speed modes
+
+This distinction is internal and deliberate:
+
+- Helicopter route waypoints use Arma AI's `FULL` speed mode so Huron/Mohawk-class pilots actually
+  pursue the requested cruise speed. The explicit `limitSpeed` value remains the hard ceiling.
+- Fixed-wing and VTOL plane routes retain `LIMITED`, where the established launch velocity and
+  cruise orders already behave correctly.
+- A newly spawned helicopter receives time to establish rotor lift before cruise orders are applied;
+  it is not injected immediately into full forward velocity while the rotor is still spooling up.
+
+Mission makers set the numeric route ceiling, not `FULL`/`LIMITED` themselves. Applying the
+helicopter workaround to planes, removing the helicopter lift delay, or confusing `limitSpeed`
+(km/h) with `forceSpeed` (m/s) can produce overspeed, slow flight, or an apparent dive. The current
+dedicated audit tests two helicopter classes at roughly 300 m and verifies they remain alive,
+airborne, moving and inside the expected speed band.
+
 ---
 
 ## Dynamic Drop-Zone Operations
@@ -306,6 +349,11 @@ dynamic or pre-placed aircraft when enabled and no players are aboard. Automatic
 on a despawn pass or aircraft loss removes generated markers too unless
 `keepMarkersOnCleanup` was enabled at creation.
 
+Jump actions and optional aircraft damage protection use one JIP replay attached directly to the
+aircraft object. Arma removes that replay automatically when the aircraft is deleted. Explicitly
+removing an operation also removes the replay before retaining or deleting the aircraft, so later
+JIP clients never retry setup for an obsolete aircraft netId.
+
 Mission makers can extend the friendly-name dropdowns before startup:
 
 ```sqf
@@ -340,22 +388,28 @@ Use `Waldo_fnc_ParadropEmbark` to transfer players or create a boarding point, a
 
 Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to **all** aircraft — both auto-detected and manually set up:
 
-```sqf
-// Static Line
-missionNamespace setVariable ["WALDO_STATIC_MINALTITUDE", 180, true];  // metres AGL
-missionNamespace setVariable ["WALDO_STATIC_MAXALTITUDE", 350, true];  // metres AGL
-missionNamespace setVariable ["WALDO_STATIC_MAXSPEED",    310, true];  // km/h
-missionNamespace setVariable ["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true]; // chute class (vanilla default)
-missionNamespace setVariable ["Waldo_Paradrop_DefaultStaticRouteAltitude", 300, true]; // metres AGL
-missionNamespace setVariable ["Waldo_Paradrop_DefaultStaticRouteSpeed", 300, true];    // km/h
+Edit the existing rows in that file; do not copy runtime `missionNamespace setVariable` commands
+into `init.sqf` or `initServer.sqf`:
 
-// HALO
-missionNamespace setVariable ["WALDO_PARA_HALOALTITUDE", 1000, true];  // metres AGL minimum
-missionNamespace setVariable ["WALDO_PARA_HALOCHUTE",    "B_Parachute", true];        // chute class
-missionNamespace setVariable ["Waldo_Paradrop_DefaultHaloRouteAltitude", 1200, true];  // metres AGL
-missionNamespace setVariable ["Waldo_Paradrop_DefaultHaloRouteSpeed", 250, true];      // km/h
-missionNamespace setVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false, true]; // normal damage protection default
+```sqf
+// Inside the existing "server" array
+["WALDO_STATIC_MINALTITUDE", 180, true],
+["WALDO_STATIC_MAXALTITUDE", 350, true],
+["WALDO_STATIC_MAXSPEED", 310, true],
+["WALDO_STATIC_STATICCHUTE", "NonSteerable_Parachute_F", true],
+["Waldo_Paradrop_DefaultStaticRouteAltitude", 300, true],
+["Waldo_Paradrop_DefaultStaticRouteSpeed", 300, true],
+["WALDO_PARA_HALOALTITUDE", 1000, true],
+["WALDO_PARA_HALOCHUTE", "B_Parachute", true],
+["Waldo_Paradrop_DefaultHaloRouteAltitude", 1200, true],
+["Waldo_Paradrop_DefaultHaloRouteSpeed", 250, true]
 ```
+
+`Waldo_Paradrop_DefaultAircraftInvincible` is in the file's `shared` array and defaults to `false`.
+The final Boolean on each server row is the config loader's publish flag; beginners should retain it.
+Keep the Static-Line route speed at or below its maximum release speed, and keep the HALO route
+altitude at or above its minimum. WMP validates/normalizes requests, but compatible values are easier
+for players and AI to understand.
 
 For a steerable static chute with RHS, use `"rhs_d6_Parachute"` instead.
 
@@ -380,6 +434,20 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 ```
 
 `Waldo_fnc_VehicleJumpSetup` is a convenience wrapper that applies both jump types using whichever parameters are set in `MissionConfig\airOperationsConfig.sqf`.
+
+## Beginner troubleshooting
+
+| Symptom | Check first |
+|---|---|
+| Aircraft never starts its route | The target marker exists, its name exactly matches the Init-field string, and the aircraft has a living pilot. WMP waits up to 180 seconds for startup/pilot readiness and then logs the exact failure. |
+| Jump action never appears | You are in a cargo seat, the required door/ramp is open for Eden/script setups, and live altitude/speed are inside the configured envelope. Use **ACE Self-Actions → Para Interactions → Check Jump Settings**. |
+| Helicopter falls or dives just after spawning | Confirm the current WMP route builder is being used and no mission/mod script injects velocity or `forceSpeed` during rotor startup. WMP deliberately delays helicopter cruise orders. |
+| Helicopter cruises far too slowly | Do not override generated waypoints to `LIMITED`; WMP uses `FULL` for helicopters while retaining `limitSpeed` as the ceiling. |
+| Plane behaves differently after copying helicopter settings | Restore the generated fixed-wing `LIMITED` waypoints. The helicopter speed-mode workaround is not intended for planes. |
+| Aircraft overspeeds | Speeds exposed to mission makers are km/h. Do not pass the same raw number to an extra `forceSpeed` call, which expects m/s. |
+| Aircraft loops or circles near a gate | Remove competing Eden waypoints and test the default route geometry before shortening approach/run distances. Quick setup clears its aircraft group's existing waypoints intentionally. |
+| JIP player has no jump action | Confirm the aircraft still exists and the operation was not removed. Current operations replay setup by aircraft net ID; stale replay is removed with the aircraft/operation. |
+| Old map markers remain | Use **Paradrop - Remove Operation**. Automatic cleanup retains static markers only when `keepMarkersOnCleanup` was explicitly enabled. |
 
 ---
 

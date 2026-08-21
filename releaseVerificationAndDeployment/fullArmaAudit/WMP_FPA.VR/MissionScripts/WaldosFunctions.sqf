@@ -307,12 +307,59 @@ class CfgFunctions
             class Remove3DMarker {
                 file = "MissionScripts\MissionFlowAndUi\remove3DMarker.sqf";
             };
+            class Marker3DApplyDeltaLocal {
+                file = "MissionScripts\MissionFlowAndUi\3DMarkerApplyDeltaLocal.sqf";
+            };
+            class Marker3DRequestStateServer {
+                file = "MissionScripts\MissionFlowAndUi\3DMarkerRequestStateServer.sqf";
+            };
+            class Marker3DReceiveStateLocal {
+                file = "MissionScripts\MissionFlowAndUi\3DMarkerReceiveStateLocal.sqf";
+            };
             class Init3DMarkers {
                 file = "MissionScripts\MissionFlowAndUi\init3DMarkers.sqf";
             };
             class ZenCreate3DMarker {
                 file = "MissionScripts\MissionFlowAndUi\zenCreate3DMarker.sqf";
             };
+            class ZenRemove3DMarker {
+                file = "MissionScripts\MissionFlowAndUi\zenRemove3DMarker.sqf";
+            };
+        };
+        class SimpleDialogue
+        {
+            class DialogueBootstrap {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueBootstrap.sqf"; postInit = 1;};
+            class SimpleDialogue {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\simpleDialogue.sqf";};
+            class SimpleDialogueClear {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\simpleDialogueClear.sqf";};
+            class DialogueLoadPresetPack {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueLoadPresetPack.sqf";};
+            class DialogueEstimateDuration {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueEstimateDuration.sqf";};
+            class DialogueResolveTargets {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueResolveTargets.sqf";};
+            class DialoguePublishState {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialoguePublishState.sqf";};
+            class DialogueRequestStateServer {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueRequestStateServer.sqf";};
+            class DialogueReceiveStateLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueReceiveStateLocal.sqf";};
+            class DialogueApplyActionLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueApplyActionLocal.sqf";};
+            class DialogueRemoveActionLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueRemoveActionLocal.sqf";};
+            class DialogueRequestStartServer {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueRequestStartServer.sqf";};
+            class DialogueRunSimpleServer {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueRunSimpleServer.sqf";};
+            class DialogueShowLineLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueShowLineLocal.sqf";};
+            class DialogueHideLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueHideLocal.sqf";};
+            class DialogueAnimateLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueAnimateLocal.sqf";};
+            class DialogueGetDiagnostics {file = "MissionScripts\MissionFlowAndUi\Dialogue\Simple\dialogueGetDiagnostics.sqf";};
+        };
+        class AdvancedConversations
+        {
+            class ConversationCreate {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationCreate.sqf";};
+            class ConversationRegister {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationRegister.sqf";};
+            class ConversationAssign {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationAssign.sqf";};
+            class ConversationStart {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationStart.sqf";};
+            class ConversationCancel {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationCancel.sqf";};
+            class ConversationClear {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationClear.sqf";};
+            class ConversationValidateDefinition {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationValidateDefinition.sqf";};
+            class ConversationRunServer {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationRunServer.sqf";};
+            class ConversationShowChoicesLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationShowChoicesLocal.sqf";};
+            class ConversationHideChoicesLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationHideChoicesLocal.sqf";};
+            class ConversationPlaySoundLocal {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationPlaySoundLocal.sqf";};
+            class ConversationChooseServer {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationChooseServer.sqf";};
         };
         class Diagnostics
         {
@@ -655,6 +702,12 @@ class CfgFunctions
             class ZenNotifyServer {
                 file = "MissionScripts\ZenModules\zenNotifyServer.sqf";
             };
+            class ZenDialogueSimple {file = "MissionScripts\ZenModules\Dialogue\zenDialogueSimple.sqf";};
+            class ZenDialogueSpecific {file = "MissionScripts\ZenModules\Dialogue\zenDialogueSpecific.sqf";};
+            class ZenDialogueClear {file = "MissionScripts\ZenModules\Dialogue\zenDialogueClear.sqf";};
+            class ZenConversationAssign {file = "MissionScripts\ZenModules\Dialogue\zenConversationAssign.sqf";};
+            class ZenConversationControl {file = "MissionScripts\ZenModules\Dialogue\zenConversationControl.sqf";};
+            class ZenDialogueServer {file = "MissionScripts\ZenModules\Dialogue\zenDialogueServer.sqf";};
         };
         class Paradrop {
             class AddHaloJump {

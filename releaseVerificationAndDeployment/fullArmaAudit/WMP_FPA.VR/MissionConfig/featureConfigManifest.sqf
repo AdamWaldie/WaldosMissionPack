@@ -30,6 +30,7 @@
 [
     "MissionConfig\persistenceConfig.sqf",
     "MissionConfig\interfaceConfig.sqf",
+    "MissionConfig\dialogueConfig.sqf",
     "MissionConfig\aiConfig.sqf",
     "MissionConfig\airOperationsConfig.sqf",
     "MissionConfig\logisticsConfig.sqf",

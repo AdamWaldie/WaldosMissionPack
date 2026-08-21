@@ -208,6 +208,19 @@ switch (toUpperANSI _action) do {
         ["3D MARKER", if (_result == "") then {"The marker request was rejected."} else {"The custom world marker is active."}, if (_result == "") then {"ERROR"} else {"SUCCESS"}, "ZEN_3D_MARKER"] call _reply;
         _result != ""
     };
+    case "REMOVE_3D_MARKER": {
+        _settings params [["_id", "", [""]]];
+        private _registry = missionNamespace getVariable ["Waldo_3DMarker_Registry", []];
+        private _exists = _id != "" && {_registry findIf {(_x param [0, ""]) isEqualTo _id} >= 0};
+        private _ok = _exists && {[_id] call Waldo_fnc_Remove3DMarker};
+        [
+            "3D MARKER",
+            if (_ok) then {"The selected custom world marker was removed."} else {"That marker no longer exists."},
+            if (_ok) then {"SUCCESS"} else {"WARNING"},
+            "ZEN_3D_MARKER_REMOVE"
+        ] call _reply;
+        _ok
+    };
     case "FIELD_EQUIPMENT": {
         _settings params ["_object", "_mode", "_procedure", "_title", "_difficulty", "_successPreset", "_successCode", "_failurePreset", "_failureCode", "_repeat", "_retry", "_direct", "_detonate"];
         private _validProcedures = ["wirecut", "minesweeper", "keypad", "lockpick", "circuit", "repair", "radiotune", "pressure", "sequence", "commandinput"];

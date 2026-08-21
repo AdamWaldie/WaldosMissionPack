@@ -73,6 +73,7 @@ Recommended review by file:
 | `acreConfig.sqf` | Enablement, named displays, nets, per-occurrence group/player/role assignments, ear placement and Babel languages | Strict validation and shipped capability profiles |
 | `persistenceConfig.sqf` | Enablement, saved data categories and database/campaign name | Save cadence and custom-variable serialization list |
 | `interfaceConfig.sqf` | Theme, treatment recipients/content, emergency-dismount policy and PID eligibility/content | Queue/reflow limits, tactical knowledge threshold, placement geometry and Draw3D scale/offset internals |
+| `dialogueConfig.sqf` | Optional reading pace, interaction/audience distances, responsive panel caps and text scale | Punctuation timing and tested safety bounds |
 | `aiConfig.sqf` | AI profile/mode, application population and inclusion/exclusion filters | Skill variance and helicopter landing controller values |
 | `airOperationsConfig.sqf` | Feature enablement, aircraft/chute/boarding pools, AA assets and jump envelopes | Monitor cadence, service thresholds and server maximum bounds |
 | `logisticsConfig.sqf` | Resupply content/balance, recovery packages/markers, scale range and crate classes | Scan cadence, safe-placement geometry, client scaling authority and dependency fallback |
@@ -94,6 +95,33 @@ Recommended review by file:
 - Jammer disable result: `DISABLE` for the repairable/reactivatable disabled state or `DEACTIVATE` for an ordinary off state.
 - Interaction difficulty: `easy`, `standard`, `hard`, `expert`.
 - Distances/altitudes are metres and durations are seconds unless a row states otherwise. Damage, fuel and ammunition fractions are `0` through `1`.
+
+## `dialogueConfig.sqf` — shared
+
+| Setting | Purpose / units |
+|---|---|
+| `Waldo_Dialogue_SecondsPerWord` | Primary reading-time multiplier in seconds per counted word; default 0.5. |
+| `Waldo_Dialogue_MinimumLineSeconds` | Shortest subtitle duration; default 1.5 seconds. |
+| `Waldo_Dialogue_MaximumLineSeconds` | Longest automatically timed subtitle; default 15 seconds. |
+| `Waldo_Dialogue_CommaPause` | Extra seconds for comma, semicolon and colon pauses. |
+| `Waldo_Dialogue_TerminalPause` | Extra seconds for sentence-ending punctuation. |
+| `Waldo_Dialogue_AudienceRadius` | Radius in metres re-evaluated before every spoken line; default 10. |
+| `Waldo_Dialogue_InteractionDistance` | Distance in metres at which Talk is available; default 3. |
+| `Waldo_Dialogue_CancelDistance` | Distance in metres that cancels an abandoned session; default 6. |
+| `Waldo_Dialogue_SubtitleMinimumWidth` | Minimum responsive subtitle width as a safe-zone fraction; default 0.22. |
+| `Waldo_Dialogue_SubtitleMaximumWidth` | Maximum responsive subtitle width as a safe-zone fraction; default 0.46. |
+| `Waldo_Dialogue_SubtitleMaximumHeight` | Wrapped subtitle height cap as a safe-zone fraction; default 0.20. |
+| `Waldo_Dialogue_SubtitleTextScale` | Subtitle structured-text scale; default 0.90. |
+| `Waldo_Dialogue_ChoiceMinimumWidth` | Minimum responsive response-panel width as a safe-zone fraction; default 0.20. |
+| `Waldo_Dialogue_ChoiceMaximumWidth` | Maximum responsive response-panel width as a safe-zone fraction; default 0.34. |
+| `Waldo_Dialogue_ChoiceMaximumHeight` | Response-panel height cap; longer/more numerous choices scroll inside it; default 0.42. |
+| `Waldo_Dialogue_ChoiceMinimumRowHeight` | Minimum wrapped response-row height as a safe-zone fraction; default 0.038. |
+| `Waldo_Dialogue_ChoiceTextScale` | Response and cancel-button structured-text scale; default 0.90. |
+
+These settings tune both components but activate neither. Width and height values are proportions,
+not pixels, so they follow safe-zone and aspect-ratio changes. All dialogue controls resolve the
+active WMP theme and the player's local colour-vision profile. Configure individual NPCs in Eden or
+use the WMP Mission Flow ZEN modules; see [Dialogue and Conversations](Dialogue-And-Conversations).
 
 ## `acreConfig.sqf`
 

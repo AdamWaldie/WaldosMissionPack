@@ -113,6 +113,11 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\map\markers\military\dot_CA.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Mission Tools", "Remove Custom 3D Marker",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenRemove3DMarker;},
+    "\A3\ui_f\data\map\markers\military\warning_CA.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Mission Tools", "Add WMP Field Equipment Interaction",
     {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenFieldEquipment;},
     "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\interact_ca.paa"
@@ -176,6 +181,31 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
         [_modulePos, _objectPos] call Waldo_fnc_ZenNotify;
     },
     "\A3\ui_f\data\igui\cfg\simpletasks\types\Radio_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Dialogue - Apply Simple Archetype",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenDialogueSimple;},
+    "\A3\ui_f\data\IGUI\Cfg\holdactions\holdAction_connect_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Dialogue - Assign Simple Lines",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenDialogueSpecific;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\talk_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Dialogue - Clear",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenDialogueClear;},
+    "\A3\ui_f\data\IGUI\Cfg\Actions\ico_off_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Conversation - Assign Named",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationAssign;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\talk_ca.paa"
+] call zen_custom_modules_fnc_register;
+
+["WMP Mission Flow", "Conversation - Start or Cancel",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationControl;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\interact_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
 ["WMP Logistics", "Medical: Create Field Hospital Crate",

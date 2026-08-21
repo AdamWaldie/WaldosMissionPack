@@ -5,7 +5,9 @@
  * handler (fires on every machine for every entity, so a single server-side
  * registration captures all kills regardless of unit locality): infantry KIA per side,
  * player losses, vehicles destroyed per side, friendly-fire kills, and a per-player
- * kill leaderboard. A vehicle's operational side is cached while it is alive, so ACE temporarily
+ * kill leaderboard. Counters remain server-local during play and are sent once in the ordered
+ * ENDEX payload, avoiding a public-variable update for every kill. A vehicle's operational side is
+ * cached server-locally while it is alive, so ACE temporarily
  * changing an unconscious crew member to Civilian cannot misattribute the later vehicle loss.
  * Temporary unconscious/WIA events are deliberately not tracked because they
  * are not mission outcomes and duplicate the more useful KIA record. No per-frame loops.
@@ -25,12 +27,12 @@ if (missionNamespace getVariable ["Waldo_AAR_Initialised", false]) exitWith {};
 missionNamespace setVariable ["Waldo_AAR_Initialised", true];
 
 // [west, east, independent, civilian] tallies, plus scalar/leaderboard extras.
-missionNamespace setVariable ["Waldo_AAR_KIA", [0,0,0,0], true];      // infantry KIA per side
-missionNamespace setVariable ["Waldo_AAR_VehKIA", [0,0,0,0], true];   // vehicles destroyed per side
-missionNamespace setVariable ["Waldo_AAR_PlayerKIA", 0, true];        // human player deaths
-missionNamespace setVariable ["Waldo_AAR_FF", 0, true];              // friendly-fire kills
-missionNamespace setVariable ["Waldo_AAR_Frags", [], true];          // [[name, kills], ...] enemy kills by players
-missionNamespace setVariable ["Waldo_AAR_StartTime", time, true];
+missionNamespace setVariable ["Waldo_AAR_KIA", [0,0,0,0]];      // infantry KIA per side
+missionNamespace setVariable ["Waldo_AAR_VehKIA", [0,0,0,0]];   // vehicles destroyed per side
+missionNamespace setVariable ["Waldo_AAR_PlayerKIA", 0];        // human player deaths
+missionNamespace setVariable ["Waldo_AAR_FF", 0];               // friendly-fire kills
+missionNamespace setVariable ["Waldo_AAR_Frags", []];           // [[name, kills], ...] enemy kills by players
+missionNamespace setVariable ["Waldo_AAR_StartTime", time];
 diag_log format ["[WMP AAR] tracking initialized at missionTime=%1 serverTime=%2", time, serverTime];
 
 private _cacheVehicleSide = {
@@ -44,7 +46,7 @@ private _cacheVehicleSide = {
     if !(_stableSide in [west, east, independent]) then {
         _stableSide = [east, west, independent, civilian] param [getNumber (configOf _vehicle >> "side"), sideUnknown];
     };
-    if (_stableSide != sideUnknown) then {_vehicle setVariable ["Waldo_AAR_OperationalSide", _stableSide, true]};
+    if (_stableSide != sideUnknown) then {_vehicle setVariable ["Waldo_AAR_OperationalSide", _stableSide]};
 };
 missionNamespace setVariable ["Waldo_AAR_CacheVehicleSide", _cacheVehicleSide];
 {
@@ -55,12 +57,12 @@ if !(isNil "CBA_fnc_addClassEventHandler") then {
         params ["_vehicle"];
         if (_vehicle isKindOf "CAManBase") exitWith {};
         private _classSide = [east, west, independent, civilian] param [getNumber (configOf _vehicle >> "side"), sideUnknown];
-        if (_classSide != sideUnknown) then {_vehicle setVariable ["Waldo_AAR_OperationalSide", _classSide, true]};
+        if (_classSide != sideUnknown) then {_vehicle setVariable ["Waldo_AAR_OperationalSide", _classSide]};
         _vehicle addEventHandler ["GetIn", {
             params ["_vehicle", "", "_unit"];
             private _operationalSide = side group _unit;
             if (_operationalSide in [west, east, independent]) then {
-                _vehicle setVariable ["Waldo_AAR_OperationalSide", _operationalSide, true];
+                _vehicle setVariable ["Waldo_AAR_OperationalSide", _operationalSide];
             };
         }];
     }, true, [], true] call CBA_fnc_addClassEventHandler;
@@ -81,13 +83,13 @@ addMissionEventHandler ["EntityKilled", {
         if (_idx >= 0) then {
             private _kia = +(missionNamespace getVariable ["Waldo_AAR_KIA", [0,0,0,0]]);
             _kia set [_idx, (_kia select _idx) + 1];
-            missionNamespace setVariable ["Waldo_AAR_KIA", _kia, true];
+            missionNamespace setVariable ["Waldo_AAR_KIA", _kia];
             diag_log format ["[WMP AAR] infantry KIA unit=%1 sideIndex=%2 instigator=%3 totals=%4", typeOf _killed, _idx, if (isNull _instigator) then {"NONE"} else {name _instigator}, _kia];
         };
 
         if (isPlayer _killed) then {
             missionNamespace setVariable ["Waldo_AAR_PlayerKIA",
-                (missionNamespace getVariable ["Waldo_AAR_PlayerKIA", 0]) + 1, true];
+                (missionNamespace getVariable ["Waldo_AAR_PlayerKIA", 0]) + 1];
         };
 
         // Killer attribution (needs a valid instigator that is not the victim itself).
@@ -97,7 +99,7 @@ addMissionEventHandler ["EntityKilled", {
                 if (_killerIdx == _idx) then {
                     // Same side -> friendly fire.
                     missionNamespace setVariable ["Waldo_AAR_FF",
-                        (missionNamespace getVariable ["Waldo_AAR_FF", 0]) + 1, true];
+                        (missionNamespace getVariable ["Waldo_AAR_FF", 0]) + 1];
                 } else {
                     // Enemy kill by a human player -> leaderboard.
                     if (isPlayer _instigator) then {
@@ -109,7 +111,7 @@ addMissionEventHandler ["EntityKilled", {
                         } else {
                             (_frags select _at) set [1, ((_frags select _at) select 1) + 1];
                         };
-                        missionNamespace setVariable ["Waldo_AAR_Frags", _frags, true];
+                        missionNamespace setVariable ["Waldo_AAR_Frags", _frags];
                     };
                 };
             };
@@ -126,7 +128,7 @@ addMissionEventHandler ["EntityKilled", {
             if (_vIdx >= 0) then {
                 private _veh = +(missionNamespace getVariable ["Waldo_AAR_VehKIA", [0,0,0,0]]);
                 _veh set [_vIdx, (_veh select _vIdx) + 1];
-                missionNamespace setVariable ["Waldo_AAR_VehKIA", _veh, true];
+                missionNamespace setVariable ["Waldo_AAR_VehKIA", _veh];
                 diag_log format ["[WMP AAR] vehicle loss class=%1 stableSide=%2 sideIndex=%3 totals=%4", typeOf _killed, _lossSide, _vIdx, _veh];
             };
         };

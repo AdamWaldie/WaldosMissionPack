@@ -137,6 +137,10 @@ if !(isServer) exitWith {
 // wherever its waypoint list happened to be cut off. Only the first arrival for this aircraft
 // actually builds the route.
 if (_aircraft getVariable ["Waldo_Paradrop_QuickSetupStarted", false]) exitWith {false};
+if (isNil {_aircraft getVariable "Waldo_Paradrop_HelicopterDecelerationExcludeBaseline"}) then {
+    _aircraft setVariable ["Waldo_Paradrop_HelicopterDecelerationExcludeBaseline", _aircraft getVariable ["Waldo_HelicopterDeceleration_Exclude", false], true];
+};
+_aircraft setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
 // Resolve the authored target before the scheduled mission-init/pilot waits below. Eden object init
 // runs early enough for global markers created here to reach clients while their briefing map is
 // still open; doing this after WALDO_INIT_COMPLETE made pre-planned paradrop markers appear only
@@ -343,21 +347,18 @@ _aircraft setVariable ["Waldo_Paradrop_QuickSetupFailure", "", true];
         [_jumpConfig get "staticJumpEnabled", _jumpConfig get "haloJumpEnabled"],
         true
     ];
-    private _safeNetId = [netId _aircraft, "0123456789"] call BIS_fnc_filterString;
-    private _actionJipKey = format ["WMP_Paradrop_Actions_QUICK_%1", _safeNetId];
-    _aircraft setVariable ["Waldo_Paradrop_ActionJipKey", _actionJipKey, true];
     private _jumpConfigPairs = keys _jumpConfig apply {[_x, _jumpConfig get _x]};
-    [netId _aircraft, _jumpConfigPairs] remoteExec ["Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _actionJipKey];
     private _aircraftInvincible = _options getOrDefault [
         "aircraftInvincible",
         missionNamespace getVariable ["Waldo_Paradrop_DefaultAircraftInvincible", false]
     ];
-    if (_aircraftInvincible) then {
-        private _damageJipKey = format ["WMP_Paradrop_Damage_%1", _safeNetId];
-        _aircraft setVariable ["Waldo_Paradrop_DamageJipKey", _damageJipKey, true];
-        _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", true, true];
-        [netId _aircraft, true] remoteExec ["Waldo_fnc_ParadropSetAircraftInvincibilityLocal", 0, _damageJipKey];
-    };
+    _aircraft setVariable ["Waldo_Paradrop_AircraftInvincible", _aircraftInvincible, true];
+    // Attach the one combined local-setup replay to the aircraft itself. Arma removes an
+    // object-keyed JIP entry automatically when that aircraft is deleted, so a stale custom key
+    // cannot survive and make later clients poll an obsolete netId.
+    [netId _aircraft, _jumpConfigPairs, _aircraftInvincible] remoteExec [
+        "Waldo_fnc_ParadropConfigureAircraftNetworkedLocal", 0, _aircraft
+    ];
     diag_log format [
         "[WMP PARADROP] Quick flight setup jump envelope: aircraft=%1 static=%2 static-alt=%3-%4m static-speed<=%5 halo=%6 halo-alt>=%7.",
         typeOf _aircraft, _jumpConfig get "staticJumpEnabled", round (_envelope get "staticMinimumAltitude"), round (_envelope get "staticMaximumAltitude"),

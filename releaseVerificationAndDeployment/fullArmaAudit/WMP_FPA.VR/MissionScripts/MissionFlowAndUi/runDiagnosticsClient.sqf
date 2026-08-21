@@ -72,6 +72,10 @@ private _themeState = if (_themeAppliedId == "") then {if (_runtimeSnapshotRecei
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_EcoCore_getDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_DialogueGetDiagnostics] call _consumeFeatureReport;
+
+private _invalidNotificationPayloads = missionNamespace getVariable ["Waldo_FeatureNotify_InvalidPayloadCount", 0];
+["interface", "feature-notification-payloads", if (_invalidNotificationPayloads > 0) then {"ERROR"} else {"LOADED"}, format ["rejectedMalformedPayloads=%1", _invalidNotificationPayloads], if (_invalidNotificationPayloads > 0) then {"Search this client RPT for '[WMP UI] FeatureNotifyLocal rejected malformed payload' to identify the caller and supplied values."} else {""}] call _add;
 
 private _acreLoaded = isClass (configFile >> "CfgPatches" >> "acre_main");
 private _acreConfig = missionNamespace getVariable ["Waldo_ACRE2_Config", createHashMap];
