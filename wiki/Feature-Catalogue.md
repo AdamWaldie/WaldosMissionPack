@@ -55,6 +55,7 @@ Runtime configuration is server-authoritative. Current settings are published fo
 - [Mission UI Text Overlays](Mission-UI-Text-Overlays)
 - [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen)
 - [Safestart](Safestart)
+- [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore)
 - [Tasks and Objectives](Tasks-And-Objectives)
 - [Team Colour Setup](Team-Colour-Setup)
 - [Radio Reports, Checklists and Support Calls](Radio-Reports,-Checklists,-Support-Calls-And-Documentation)

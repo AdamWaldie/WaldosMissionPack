@@ -28,6 +28,7 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 
 - [Safestart](Safestart) — preparation protection, countdown, go-live, and reset behavior.
 - [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) — combat protection, AAR, and mission-end presentation.
+- [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — restores the vanilla Zeus instant-kill shortcut an Arma engine update broke.
 - [Custom UI Notifications](Custom-UI-Notifications) — safe-zone-aware semantic notification cards.
 - [Tasks and Objectives](Tasks-And-Objectives) — server-authoritative, JIP-safe mission objectives.
 - [Custom 3D World Markers](Custom-3D-World-Markers) — JIP-safe labels and icons over objects or positions.
