@@ -107,7 +107,7 @@ missionNamespace setVariable ["Waldo_SafeStart_AutoStart", true, true];
 * [ENDEX Script & Custom End Screen](ENDEX-Script-&-Custom-End-Screen) — the matching mission-end freeze
 * [Mission Configuration Reference](Mission-Configuration-Reference) — all `initServer.sqf` fields
 * [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
-* [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — SafeStart's own damage-immunity is one of the states this restores END-key kills through
+* [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — additive selected-object fallback for the normal Zeus END action
 
 <!-- WMP-WIKI-NAV -->
 ---

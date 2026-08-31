@@ -247,9 +247,6 @@ class CfgFunctions
             class ProtectionRespawnLocal {
                 file = "MissionScripts\MissionFlowAndUi\protectionRespawnLocal.sqf";
             };
-            class KillUnit {
-                file = "MissionScripts\MissionFlowAndUi\killUnit.sqf";
-            };
             class KillHotkeyInit {
                 file = "MissionScripts\MissionFlowAndUi\killHotkeyInit.sqf";
             };

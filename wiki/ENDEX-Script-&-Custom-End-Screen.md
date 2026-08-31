@@ -103,7 +103,7 @@ Configure the ending title, subtitle, description, and image in `description.ext
 - [Custom WMP UI Notifications](Custom-UI-Notifications)
 - [Mission Diagnostics](Mission-Diagnostics)
 - [Waldos Mission Pack Zeus Modules](Waldos-Mission-Pack-Zeus-Modules)
-- [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — ENDEX's own damage-immunity is one of the states this restores END-key kills through
+- [Zeus END-Key Kill Restore](Zeus-End-Key-Kill-Restore) — additive selected-object fallback for the normal Zeus END action
 
 <!-- WMP-WIKI-NAV -->
 ---

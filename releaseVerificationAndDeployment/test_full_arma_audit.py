@@ -41,6 +41,33 @@ class FullAuditTests(unittest.TestCase):
         text = re.sub(r"/\*.*?\*/", "", text, flags=re.DOTALL)
         return re.sub(r"//[^\r\n]*", "", text)
 
+    def test_zeus_end_key_fallback_is_additive_and_selection_only(self):
+        hotkey_path = (
+            ROOT / "MissionScripts" / "MissionFlowAndUi" / "killHotkeyInit.sqf"
+        )
+        hotkey = self.sqf_without_comments(hotkey_path)
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(
+            encoding="utf-8"
+        )
+
+        self.assertIn('displayAddEventHandler ["KeyDown"', hotkey)
+        self.assertNotIn('addMissionEventHandler ["KeyDown"', hotkey)
+        self.assertIn("_keyCode != 207", hotkey)
+        self.assertIn("_shift || {_ctrl || {_alt}}", hotkey)
+        self.assertIn("curatorSelected select 0", hotkey)
+        self.assertNotIn("curatorMouseOver", hotkey)
+        self.assertIn("uiSleep 0;", hotkey)
+        self.assertIn("_x setDamage 1;", hotkey)
+        self.assertLess(hotkey.index("uiSleep 0;"), hotkey.index("_x setDamage 1;"))
+        self.assertRegex(hotkey, r"false\s*\}\];")
+        for forbidden in ("remoteExec", "allowDamage true", "ace_medical_status_fnc_setDead"):
+            self.assertNotIn(forbidden, hotkey)
+
+        self.assertIn("[] call Waldo_fnc_KillHotkeyInit;", init_player)
+        self.assertIn("class KillHotkeyInit", functions)
+        self.assertNotIn("class KillUnit", functions)
+
     def test_vehicle_customisation_editor_uses_valid_ui_and_object_data(self):
         customisation_root = (
             ROOT / "MissionScripts" / "CombatSystems" / "VehicleCustomization"

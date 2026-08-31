@@ -1,52 +1,42 @@
 # Zeus END-Key Kill Restore
 
-> **Use this page when:** pressing END in Zeus no longer instantly kills a unit or object.
+> **Use this page when:** a selected object remains alive after pressing END in Zeus.
 
-_Associated files: `MissionScripts\MissionFlowAndUi\killUnit.sqf`, `killHotkeyInit.sqf`, `Waldo_fnc_KillUnit`, `Waldo_fnc_KillHotkeyInit`_
+_Associated files: `MissionScripts\MissionFlowAndUi\killHotkeyInit.sqf`, `Waldo_fnc_KillHotkeyInit`_
 
-## Why this exists
+## Purpose
 
-A later Arma 3 engine update changed the vanilla Zeus "press END to instantly kill whatever's under
-the cursor" shortcut to respect `allowDamage`. Any unit or object that has had damage disabled -
-including WMP's own SafeStart and ENDEX freezes, or any mission-specific `allowDamage false` - simply
-stops dying to END, with no error or feedback at all. This is a widely reported Arma engine change,
-not a WMP bug, and it affects every mission, modded or not.
+Vanilla Zeus binds **Destroy entity** to END. Modded units and objects do not always respond to that
+action consistently. WMP adds a small selected-object damage fallback while preserving the native
+action and any ZEN behaviour attached to the same key.
 
-WMP restores the original one-key behaviour itself instead of relying on a third-party fix.
+## Behaviour
 
-## What it does
+- `initPlayerLocal.sqf` starts one local watcher through `Waldo_fnc_KillHotkeyInit` for every player,
+  including JIP players.
+- The watcher waits for display 312 and installs one tracked `KeyDown` handler each time the curator
+  interface opens. Closing and reopening Zeus receives a fresh handler without accumulating copies.
+- Only plain END is observed. Shift, Ctrl or Alt combinations are left entirely to Arma and loaded
+  addons.
+- The handler snapshots the object array from `curatorSelected`. It does not add the object under the
+  cursor, groups, waypoints or markers.
+- The handler always returns `false`, allowing the original key press to continue through normal
+  vanilla and ZEN processing.
+- On the next scheduled frame, WMP applies `setDamage 1` only to captured objects that are still
+  alive. Objects already handled by the native action are left alone.
 
-- Installed unconditionally from `initPlayerLocal.sqf` via `Waldo_fnc_KillHotkeyInit` - no
-  configuration, no toggle. It does not depend on Zeus Enhanced at all: every command it uses
-  (`curatorSelected`, `curatorMouseOver`, `getAssignedCuratorLogic`) is vanilla Arma, so it works
-  under plain Zeus too. ZEN's own source was checked directly (its editor key-handling, damage,
-  context-action and context-menu code, plus its release notes) and it implements no force-kill or
-  force-destroy bypass of its own - there is no ZEN system for this to route through.
-- Only acts while this client's own Zeus interface is open; END is never intercepted anywhere else
-  (menus, chat, in-game player controls).
-- Pressing END kills everything at once, not one or the other: any entities you have box-selected in
-  Zeus (`curatorSelected`) **and** whatever is directly under the Zeus cursor (`curatorMouseOver`) are
-  combined into one deduplicated target list every press.
-- Every kill goes through `Waldo_fnc_KillUnit`, which forces `allowDamage true` on the target first,
-  so it works even on something that had damage disabled. A living ACE-medical person is killed
-  through `ace_medical_status_fnc_setDead` - an internal ACE function (its own header marks it
-  `Public: No`, so ACE gives no compatibility guarantee on it across versions), but the standard
-  community technique for a medical-aware forced kill, since ACE ships no public equivalent and a bare
-  `setDamage`/`setHit` routinely fails to actually kill a unit under ACE Advanced Medical (it
-  critically wounds instead). Going through it means unconscious/bleedout state, revive eligibility,
-  and Obituary/AAR kill hooks all resolve exactly as a real death would. Everything else (a vehicle, a
-  non-ACE AI unit, no ACE medical loaded) falls back to a plain `setDamage 1`. This ACE-aware branch is
-  the only part of the behaviour that changes by mod load - never by mission configuration.
+The fallback is client-triggered because the curator selection and display exist only on that
+client. Arma's `setDamage` command accepts remote objects and publishes its effect globally, so this
+does not require a public server remote-execution function.
 
-## Scripting it directly
+## Scope and limitations
 
-```sqf
-[cursorTarget] call Waldo_fnc_KillUnit;
-```
-
-Server-authoritative and self-forwarding (like `Waldo_fnc_Jammer`), so it is safe to call from a
-script, trigger, or an object's own Eden init field with no `isServer` wrapper. Returns `true` once
-the target is confirmed dead.
+- Multiple selected objects are handled together, matching Zeus multi-selection workflows.
+- A hovered but unselected object is never targeted by WMP.
+- Damage-disabled units or objects with no destruction behaviour may still ignore or show no visible
+  response to scripted damage, depending on their engine and mod configuration.
+- This feature damages an object; it does not delete it.
+- There is no separate scripting API. The feature exists only as an additive Zeus input fallback.
 
 ## See also
 

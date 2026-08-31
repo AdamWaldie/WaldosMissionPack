@@ -936,35 +936,17 @@ go-live notices explain which protections were removed and remain visible for
 
 ### Zeus END-key kill restore
 
-A later Arma 3 engine update changed the vanilla Zeus "press END to instantly kill whatever's under
-the cursor" shortcut to respect `allowDamage` - any unit or object a mission had made damage-immune
-(including WMP's own SafeStart/ENDEX freeze, or any mission-specific `allowDamage false`) silently
-stopped dying to it, with no error or feedback. WMP restores the original one-key behaviour itself
-rather than relying on a third-party fix.
+`Waldo_fnc_KillHotkeyInit` is installed from `initPlayerLocal.sqf` and watches for each local curator
+display. It adds one tracked display `KeyDown` handler whenever Zeus opens, including after a close
+and reopen. On plain END with no modifiers, the handler snapshots `curatorSelected select 0`, returns
+`false` so Arma and ZEN continue their normal END processing, then applies `setDamage 1` on the next
+scheduled frame only to selected objects that remain alive. It never adds the hovered object, never
+handles modified END combinations, and exposes no remote-execution endpoint.
 
-`Waldo_fnc_KillUnit` (server-authoritative, self-forwarding like `Waldo_fnc_Jammer`) force-kills a
-unit or destroys a vehicle: it sets `allowDamage true` on the target first, then kills a living
-ACE-medical person through `ace_medical_status_fnc_setDead` - confirmed against ACE's own source,
-this is an internal function (marked `Public: No`, so ACE gives no cross-version compatibility
-guarantee on it) but is the standard community technique for a medical-aware forced kill, since ACE
-ships no public equivalent and a bare `setDamage`/`setHit` routinely fails to actually kill a unit
-under ACE Advanced Medical (it critically wounds instead); unconscious/bleedout state and the
-Obituary/AAR kill hooks resolve normally as a result - or falls back to `setDamage 1` for anything
-else.
-
-```sqf
-[cursorTarget] call Waldo_fnc_KillUnit;
-```
-
-`Waldo_fnc_KillHotkeyInit` (installed unconditionally from `initPlayerLocal.sqf`, no ZEN dependency -
-checked directly against ZEN's own source: it implements no force-kill/force-destroy bypass of its
-own to route through) adds a mission-wide `KeyDown` handler that only acts while this client's Zeus
-curator interface (`findDisplay 312`) is actually open, so it never intercepts END anywhere else.
-Box-selected entities (`curatorSelected`) and whatever is directly under the Zeus cursor
-(`curatorMouseOver`) are combined into one deduplicated target list every press - not an either/or
-fallback - so END always kills everything selected AND whatever is being hovered. Repeat/JIP-safe via
-`Waldo_KillHotkey_Installed`. Implemented in `MissionScripts/MissionFlowAndUi/killUnit.sqf` and
-`killHotkeyInit.sqf`.
+The worker is player-local and JIP-safe through `Waldo_KillHotkey_WatcherStarted`; the event-handler
+ID is stored on the curator display as `Waldo_KillHotkey_KeyDownHandler` so repeat installation on the
+same display removes the stale handler first. Implemented in
+`MissionScripts/MissionFlowAndUi/killHotkeyInit.sqf`.
 
 ### Mission Diagnostics (optional)
 

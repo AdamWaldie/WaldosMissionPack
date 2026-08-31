@@ -60,8 +60,8 @@ if (hasInterface) then {
     // ZEN module registration is presentation-local; dedicated servers and headless clients do not need it.
     [] call Waldo_fnc_ZenInitModules;
 
-    // Restores the vanilla Zeus END-key instant-kill shortcut a later Arma engine update broke; does
-    // not require ZEN, only a Zeus curator interface, so it is installed unconditionally here.
+    // Adds a selected-object setDamage fallback after normal Zeus END-key processing. The display
+    // handler never consumes END and does not require ZEN.
     [] call Waldo_fnc_KillHotkeyInit;
 
     // Pure-data configuration is local and synchronous; activation and JIP waits remain below.
