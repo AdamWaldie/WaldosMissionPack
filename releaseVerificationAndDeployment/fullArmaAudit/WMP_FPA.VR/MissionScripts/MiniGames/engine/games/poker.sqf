@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Poker (No-Limit Hold'em)
  * All Waldo_MG_fnc_* functions implementing the Poker (No-Limit Hold'em) mini game (server logic + local UI).
  *
@@ -7,8 +8,16 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_pokerCardRank = {
@@ -995,7 +1004,6 @@ Waldo_MG_fnc_processPokerActionRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_PokerActionRequest", [], true];
     if ((count _request) < 7) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -1325,9 +1333,7 @@ Waldo_MG_fnc_submitPokerActionRequestLocal = {
     private _snapshot = _table getVariable ["Waldo_MG_PokerSnapshot", []];
     private _token = ["POKER_ACTION"] call Waldo_MG_fnc_makeToken;
     missionNamespace setVariable ["Waldo_MG_PokerPendingRequestLocal", [_token, diag_tickTime]];
-    player setVariable [
-        "Waldo_MG_PokerActionRequest",
-        [
+    private _request = [
             _token,
             netId _table,
             _table getVariable ["Waldo_MG_PokerGameId", ""],
@@ -1335,9 +1341,8 @@ Waldo_MG_fnc_submitPokerActionRequestLocal = {
             _table getVariable ["Waldo_MG_PokerRevision", -1],
             _action,
             floor _amount
-        ],
-        true
     ];
+    ["POKER", _table, _token, _request param [3, -1], _request] call Waldo_MG_fnc_submitRequestLocal;
 };
 
 Waldo_MG_fnc_getPokerPlayerRoleLocal = {

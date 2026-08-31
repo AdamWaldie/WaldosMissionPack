@@ -8,11 +8,8 @@ WMP includes an optional player-marker script, kept separate from the pack's nor
 **disabled by default**. It is loaded through a single entry point so the main `init.sqf` stays
 clean.
 
-**Headless-client distribution has moved.** WMP now ships its own native, always-available headless-
-client support that needs no `init.sqf` uncommenting and no setup at all - see
-[Headless Client Support](Headless-Client-Support). The legacy third-party "Werthles' Headless Kit"
-(`WerthlesHeadless.sqf`) that used to be documented on this page is superseded, kept in the
-repository disabled and unmodified for reference only, and should not be enabled.
+Headless-client distribution is provided by WMP's native headless-client system. It needs no
+third-party script or `init.sqf` entry. See [Headless Client Support](Headless-Client-Support).
 
 ## Enabling player markers
 

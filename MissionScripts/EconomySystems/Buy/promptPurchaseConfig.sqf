@@ -22,7 +22,7 @@
 
         [_zeusDisp] call Waldo_fnc_EcoBuy_cleanupPurchaseConfigPrompt;
 
-        private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+        private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
         if (isNull _disp) exitWith {};
 
                 private _bg = _disp ctrlCreate ["RscText", -1];
@@ -354,4 +354,5 @@
         [_disp] call Waldo_fnc_EcoBuy_refreshPurchaseConfigIcon;
         [_disp] call Waldo_fnc_EcoBuy_populatePurchaseConfigList;
         [_disp, -1] call Waldo_fnc_EcoBuy_loadPurchaseIntoPrompt;
+        [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 

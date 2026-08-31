@@ -39,7 +39,7 @@ private _callsign = _entry param [7, _id];
 private _currentRadius = _entry param [12, 1500];
 private _currentAltitude = _entry param [13, 700];
 
-private _disp = ["  WALDOS MISSION PACK  |  GUNSHIP ORBIT CONFIG"] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+private _disp = ["  WALDOS MISSION PACK  |  GUNSHIP ORBIT CONFIG", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
 if (isNull _disp) exitWith {false};
 
 private _bg = _disp ctrlCreate ["RscText", -1];
@@ -85,9 +85,8 @@ _cancel ctrlCommit 0;
 _disp setVariable ["Waldo_Gunship_OrbitConfigId", _id];
 _disp setVariable ["Waldo_Gunship_OrbitConfigRadiusEdit", _radiusEdit];
 _disp setVariable ["Waldo_Gunship_OrbitConfigAltitudeEdit", _altitudeEdit];
-// ctrlParent only resolves a control's parent CONTROL (relevant inside an RscControlsGroup) - these
-// buttons are top-level on the dialog display with no parent control, so ctrlParent would silently
-// resolve to controlNull. Tag each button with the display itself at creation time instead, matching
+// ctrlParent resolves the owning display, not a controls group. Tag each button with the display
+// itself at creation time so the handlers have an explicit, stable reference, matching
 // the exact pattern MissionScripts/EconomySystems/Build/promptBuildConfig.sqf's own Add/Remove/Save/Ok
 // buttons already use (setVariable on the control, read back via ctrl getVariable in the handler).
 {_x setVariable ["Waldo_Gunship_OrbitConfigDisplay", _disp];} forEach [_submit, _cancel];
@@ -114,4 +113,5 @@ _cancel ctrlAddEventHandler ["ButtonClick", {
     [_disp] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;
 }];
 
+[_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 true

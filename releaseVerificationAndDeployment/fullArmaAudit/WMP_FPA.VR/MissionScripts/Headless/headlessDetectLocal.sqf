@@ -5,8 +5,7 @@
  *
  * A headless client is identified by the standard, version-stable Bohemia-documented test
  * (!isDedicated && !hasInterface) - it has no rendered interface and is not the dedicated server
- * itself. This replaces the legacy MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf's
- * serverCommandAvailable "#kick" heuristic, which can also true on a listen-server host or any
+ * itself. This avoids admin-permission heuristics that can also match a listen-server host or another
  * admin-capable connection. Self-forwards to the server exactly like Waldo_fnc_Jammer, so it is
  * safe to call unconditionally on every machine (server and every player are simply ignored).
  * A headless client retries its authenticated registration for up to 30 seconds. This closes the

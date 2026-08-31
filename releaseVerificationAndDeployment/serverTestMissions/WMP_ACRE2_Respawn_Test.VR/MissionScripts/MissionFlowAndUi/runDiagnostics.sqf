@@ -30,9 +30,8 @@ missionNamespace setVariable ["Waldo_Diagnostics_ClientReports", []];
 // calling machine has an interface (a listen-server host sees it directly), and to every currently
 // assigned curator's client (allCurators/getAssignedCuratorUnit) otherwise - a genuine dedicated
 // server has no console of its own to show systemChat on, so without this an admin running one had
-// no in-game visibility into diagnostics at all short of tailing RPT by hand. Mirrors the legacy
-// WerthlesHeadless.sqf's own approach of remote-executing its debug hint onto a specific connected
-// player rather than only ever running a local-only call gated on the executing machine's interface.
+// no in-game visibility into diagnostics at all short of tailing RPT by hand. Route the result to
+// connected administrators instead of relying on a local-only interface call.
 private _notifyAdmins = {
     params ["_text"];
     if (hasInterface) then {systemChat _text;};
@@ -65,6 +64,9 @@ private _status = {
 };
 private _consumeFeatureReport = {
     params ["_featureReport"];
+    if !(_featureReport isEqualType createHashMap) exitWith {
+        ["diagnostics", "feature-report", "ERROR", format ["A diagnostics provider returned %1 instead of a HashMap report", typeName _featureReport], true, "The mission may contain an incomplete or stale MissionScripts copy. Re-extract the current pack before testing again."] call _status;
+    };
     {
         _x params ["_area", "_feature", "_state", ["_detail", ""]];
         [_area, _feature, _state, _detail, _state == "ERROR"] call _status;
@@ -94,12 +96,13 @@ private _consumeFeatureReport = {
     ["electronic-warfare", "jammer-api", "Waldo_fnc_Jammer"],
     ["electronic-warfare", "emp-api", "Waldo_fnc_EMP"],
     ["electronic-warfare", "tracker-api", "Waldo_fnc_Tracker"],
-    ["party-games", "party-table-api", "Waldo_fnc_MiniGamesInit"],
+    ["party-games", "party-table-api", "Waldo_fnc_MiniGamesRegisterTable"],
     ["interactions", "equipment-api", "Waldo_fnc_MiniGameInteractionSetup"],
     ["economy", "economy-api", "Waldo_fnc_EcoInit"],
     ["medical", "obituary-api", "Waldo_fnc_ObituaryPronounce"],
     ["mission-flow", "safestart-diagnostics-api", "Waldo_fnc_SafeStartGetDiagnostics"],
     ["mission-flow", "endex-diagnostics-api", "Waldo_fnc_ENDEXGetDiagnostics"],
+    ["mission-flow", "dialogue-diagnostics-api", "Waldo_fnc_DialogueGetDiagnostics"],
     ["interactions", "equipment-diagnostics-api", "Waldo_fnc_MiniGameInteractionGetDiagnostics"],
     ["economy", "economy-diagnostics-api", "Waldo_fnc_EcoCore_getDiagnostics"],
     ["headless", "headless-diagnostics-api", "Waldo_fnc_HeadlessGetDiagnostics"],
@@ -244,12 +247,11 @@ if (_acreLoaded) then {
             private _rackState = _x getVariable ["Waldo_ACRE2_RackSetupState", "STARTING"];
             _rackState in ["STARTING", "APPLYING"]
         };
+        // STARTING/APPLYING/WAITING states are lifecycle progress, not failures. In particular,
+        // dedicated servers can start diagnostics before the first human client's ACRE data is
+        // ready, then complete the same rack request successfully once that client reports ready.
         private _problemVehicles = _rackVehicles select {
-            private _result = _x getVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, []]];
-            private _problems = _result param [2, []];
-            !(_problems isEqualTo []) && {
-                (_problems findIf {_x == "WAITING_FOR_ACRE_PLAYER" || {_x find "NO_ACRE_READY_CLIENT_WITHIN_" == 0}}) < 0
-            }
+            (_x getVariable ["Waldo_ACRE2_RackSetupState", "STARTING"]) == "FAILED"
         };
         private _state = if (count _problemVehicles > 0) then {"ERROR"} else {if (count _pending > 0 || {count _waiting > 0}) then {"LOADED"} else {"ACTIVE"}};
         ["radio", "acre-vehicle-racks", _state, format ["configured=%1 waitingForPlayer=%2 applying=%3 withProblems=%4", count _rackVehicles, count _waiting, count _pending, count _problemVehicles], count _problemVehicles > 0, if (_problemVehicles isEqualTo []) then {""} else {"Check [WMP ACRE RACK] RPT entries for the affected vehicle(s); each failed rack now includes a specific reason."}] call _status;
@@ -259,8 +261,7 @@ if (_acreLoaded) then {
             private _result = _x getVariable ["Waldo_ACRE2_RackSetupResult", [0, 0, []]];
             private _snapshot = _x getVariable ["Waldo_ACRE2_RackDiagnosticSnapshot", []];
             private _problems = _result param [2, []];
-            private _onlyWaiting = !(_problems isEqualTo []) && {(_problems findIf {_x == "WAITING_FOR_ACRE_PLAYER" || {_x find "NO_ACRE_READY_CLIENT_WITHIN_" == 0}}) < 0};
-            private _isBad = _rackState == "FAILED" || {!(_problems isEqualTo []) && {!_onlyWaiting}};
+            private _isBad = _rackState == "FAILED";
             ["radio", format ["acre-rack-%1", netId _x], if (_isBad) then {"ERROR"} else {_rackState}, format ["object=%1 class=%2 profile=%3 owner=%4 result=%5 snapshot=%6", _x, typeOf _x, _profile, owner _x, _result, _snapshot], _isBad, if (_isBad) then {"Confirm the profile exists, the selected rack/radio pair is compatible, its named net exists for netSide, and an ACRE-ready player is connected. The snapshot lists the actual racks, each requested job and its read-back channel."} else {""}] call _status;
         } forEach _rackVehicles;
     };
@@ -332,12 +333,15 @@ if (count (keys _dropZoneRegistry) == 0) then {
 [call Waldo_fnc_ENDEXGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_MiniGameInteractionGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_HeadlessGetDiagnostics] call _consumeFeatureReport;
-[call Waldo_fnc_AIGetDiagnostics] call _consumeFeatureReport;
+if (!isNil "Waldo_fnc_AIGetDiagnostics") then {
+    [call Waldo_fnc_AIGetDiagnostics] call _consumeFeatureReport;
+};
 [call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
+[call Waldo_fnc_DialogueGetDiagnostics] call _consumeFeatureReport;
 
-private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];
-private _partyLoaded = missionNamespace getVariable ["Waldo_MG_SystemInitialized", false];
-["system", "party-games", if (_partyLoaded) then {"ACTIVE"} else {if (_partyEnabled) then {"ERROR"} else {"DISABLED"}}, format ["configured=%1 catalogue=%2", _partyEnabled, count (missionNamespace getVariable ["Waldo_MG_Games", []])], _partyEnabled && {!_partyLoaded}, if (!_partyEnabled || {_partyLoaded}) then {""} else {"Waldo_MiniGames_Enable is true but Waldo_fnc_MiniGamesInit never completed - confirm init.sqf actually calls it, and check the RPT for errors from the party-games engine install."}] call _status;
+private _partyTables = missionNamespace getVariable ["Waldo_MG_Tables", []];
+private _partyCount = count (_partyTables select {!isNull _x});
+["system", "party-games", if (_partyCount > 0) then {"ACTIVE"} else {"UNCONFIGURED"}, format ["registeredTables=%1 explicitRegistration=true", _partyCount], false, if (_partyCount > 0) then {""} else {"No seated table is registered. Add [this] call Waldo_fnc_MiniGamesRegisterTable to each intended table object's init."}] call _status;
 
 private _jammingEnabled = missionNamespace getVariable ["Waldo_Jamming_Enable", false];
 private _tfarLoaded = isClass (configFile >> "CfgPatches" >> "task_force_radio") || {isClass (configFile >> "CfgPatches" >> "tfar_core")};
@@ -593,9 +597,10 @@ private _corpseTrapRigged = _missionObjects select {(_x getVariable ["Waldo_Corp
 // Ask every interface client for local UI, mod and action state. The server retains authority over
 // the final report and accepts a response only from its claimed network owner.
 ["clients", "Per-client runtime state"] call _section;
+private _interfacePlayers = allPlayers - (entities "HeadlessClient_F");
 private _expectedOwners = [];
-{_expectedOwners pushBackUnique (owner _x);} forEach allPlayers;
-[_runId] remoteExecCall ["Waldo_fnc_RunDiagnosticsClient", 0];
+{_expectedOwners pushBackUnique (owner _x);} forEach _interfacePlayers;
+[_runId] remoteExecCall ["Waldo_fnc_RunDiagnosticsClient", _interfacePlayers];
 private _clientDeadline = diag_tickTime + 4;
 waitUntil {
     uiSleep 0.1;

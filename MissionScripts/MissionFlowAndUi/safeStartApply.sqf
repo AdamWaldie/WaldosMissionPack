@@ -9,6 +9,8 @@
  *
  * Arguments:
  * 0: Enable <BOOL> (Optional, default: true) - true = apply freeze, false = remove it
+ * 1: Reason <STRING> (Optional, default: MANUAL)
+ * 2: Authority revision <NUMBER> (Optional, default: -1 for trusted local replay)
  *
  * Return Value:
  * Nothing
@@ -21,7 +23,17 @@
 
 if !(hasInterface) exitWith {};
 
-params [["_enable", true], ["_reason", "MANUAL"]];
+params [["_enable", true], ["_reason", "MANUAL"], ["_revision", -1, [0]]];
+private _appliedRevision = missionNamespace getVariable ["Waldo_SafeStart_AppliedRevision", -1];
+if (_revision >= 0 && {_revision < _appliedRevision}) exitWith {
+    diag_log format ["[WMP SAFESTART] ignored stale local apply revision=%1 appliedRevision=%2 state=%3", _revision, _appliedRevision, _enable];
+};
+if (_revision >= 0) then {
+    missionNamespace setVariable ["Waldo_SafeStart_AppliedRevision", _revision];
+};
+// Keep applied client state separate from the server's replicated source variable. Cross-channel
+// public-variable and remote-execution arrival order is not a safe lifecycle signal during JIP.
+missionNamespace setVariable ["Waldo_SafeStart_LocalActive", _enable];
 
 // Shared "Hold Fire!" feedback used by every frozen weapon source.
 private _holdFireCode = {
@@ -70,7 +82,7 @@ if (_enable) then {
     if !(missionNamespace getVariable ["Waldo_SafeStart_LoopRunning", false]) then {
         missionNamespace setVariable ["Waldo_SafeStart_LoopRunning", true];
         [] spawn {
-            while {missionNamespace getVariable ["Waldo_SafeStart_Active", false]} do {
+            while {missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false]} do {
                 // Banner + optional countdown clock.
                 private _theme = [] call Waldo_fnc_UiTheme;
                 private _banner = format ["<t font='%1' color='%2' size='1.2' shadow='1' align='center'>SAFESTART ACTIVE</t><br /><t font='%3' color='%4' size='0.9' align='center'>WEAPONS LOCKED | DAMAGE DISABLED</t><br /><t font='%3' color='%4' size='0.8' align='center'>Remain inside the safe area. Zeus controls go-live.</t><br />", _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["accentHex", "#4FA9E8"], _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"]];
@@ -162,6 +174,10 @@ if (_enable) then {
             _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"], _reasonText
         ]
     };
-    [_go, _duration] call Waldo_fnc_SafeStartNotice;
-    // The service loop terminates itself on its next tick (reads Waldo_SafeStart_Active).
+    if ((toUpper _reason) == "STATE_SYNC") then {
+        [false] call Waldo_fnc_SafeStartHud;
+    } else {
+        [_go, _duration] call Waldo_fnc_SafeStartNotice;
+    };
+    // The service loop terminates itself on its next tick (reads ordered local applied state).
 };

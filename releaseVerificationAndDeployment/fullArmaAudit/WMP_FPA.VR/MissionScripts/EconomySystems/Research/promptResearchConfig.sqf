@@ -22,7 +22,7 @@
 
         [_zeusDisp] call Waldo_fnc_EcoResearch_cleanupResearchConfigPrompt;
 
-        private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+        private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
         if (isNull _disp) exitWith {};
 
                 private _bg = _disp ctrlCreate ["RscText", -1];
@@ -302,4 +302,5 @@
         [_disp, [_nameEdit, _descEdit, _costsEdit, _reqsEdit, _exclusiveEdit, _timeEdit, _colorEdit], _nameEdit] call Waldo_fnc_EcoResearch_setPromptInputTargets;
         [_disp] call Waldo_fnc_EcoResearch_populateResearchConfigList;
         [_disp, -1] call Waldo_fnc_EcoResearch_loadResearchIntoPrompt;
+        [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 

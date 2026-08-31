@@ -21,7 +21,7 @@
 
     [_zeusDisp] call Waldo_fnc_EcoCore_cleanupUnifiedSaveContext;
 
-    private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+    private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
     if (isNull _disp) exitWith {};
 
         private _bg = _disp ctrlCreate ["RscText", -1];
@@ -212,3 +212,4 @@
     }];
 
     [_disp, [_text], _text, "WaldoEcoCore_SaveInputTargets", [14, 28, 156, 211]] call Waldo_fnc_EcoCore_setPromptInputTargets;
+    [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;

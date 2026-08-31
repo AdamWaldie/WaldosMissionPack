@@ -108,6 +108,7 @@ short init demonstrates every internal option.
 | Custom 3D Marker Example (Full) | Object-anchored, side-aware world marker with readable options, every option shown |
 | Notification Trigger | Movable Eden anchor that creates a safe server-owned 25 m notification area at runtime |
 | Economy Systems and Low/Medium/High | Runtime enablement and optional preset |
+| Party Table Example | Explicitly registered table, four safely spaced chairs and all twelve seated games |
 | Persistence Object Example (Minimal) | Smallest working call - key and object only, every field saved by default |
 | Persistence Object Example (Full) | Crate registered with `Waldo_fnc_PersistenceRegisterObject`, no `isServer` wrapper needed, options shown |
 | Teleport Script Example | Paired local addActions |

@@ -2,8 +2,7 @@
  * Author: WaldoTheWarfighter
  * The single funnel for every setGroupOwner call this rework performs. No other WMP script may call
  * setGroupOwner directly - every migration routes through here so Waldo_Headless_ManagedGroups stays
- * authoritative and diagnostics never drifts from the truth, unlike the legacy
- * MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf's self-contained bolt-on arrays.
+ * authoritative and diagnostics never drifts from the truth.
  *
  * Waldo_Headless_ManagedGroups only ever holds groups CURRENTLY assigned to a connected headless
  * client - a group returning to the server (or found dead/empty) is removed from the registry
@@ -16,9 +15,8 @@
  * event handlers: those handlers are useful, but are not a reliable migration acknowledgement.
  * A third-party AI mod (VCOM AI, LAMBS, ASR AI3, ...)
  * that installs its own per-unit behaviour on a one-shot unit/group init event rather than
- * continuously re-checking locality has no such adoption path of its own - the legacy
- * WerthlesHeadless.sqf's best-known failure mode was exactly this class of mod going silently
- * unresponsive after a migration it never found out about. This function cannot fix a third-party
+ * continuously re-checking locality has no such adoption path of its own. This class of mod can go
+ * silently unresponsive after a migration it never found out about. This function cannot fix a third-party
  * mod's own locality handling, so it broadcasts Waldo_Headless_GroupMigrated (a CBA global event,
  * params [group, previousOwner, newOwner]) after every successful move specifically so a mission's
  * own compatibility layer can listen and re-trigger that mod's setup function on whichever machine
@@ -71,6 +69,7 @@ if (isNull _group || {count units _group == 0}) exitWith {
 // it. Such a group must never experience even a brief transfer to a headless client.
 private _serverOwned = _group getVariable ["Waldo_ServerOwnedFeature", false]
     || {_group getVariable ["Waldo_Headless_ExcludeGroup", false]}
+    || {(units _group) findIf {(vehicle _x) isKindOf "Helicopter"} >= 0}
     || {(units _group) findIf {
         private _vehicle = vehicle _x;
         _vehicle getVariable ["Waldo_ServerOwnedFeature", false]
@@ -78,8 +77,9 @@ private _serverOwned = _group getVariable ["Waldo_ServerOwnedFeature", false]
     } >= 0};
 if (_targetOwner != 2 && {_serverOwned}) exitWith {
     [] call _removeRegistryEntry;
-    diag_log format ["[WMP HEADLESS] Refused HC migration for server-owned WMP group=%1 target=%2.", _group, _targetOwner];
-    ["MIGRATE_BLOCKED", format ["group=%1 target=%2 reason=server-owned-feature", _group, _targetOwner]] call Waldo_fnc_HeadlessDebugLog;
+    private _reason = if ((units _group) findIf {(vehicle _x) isKindOf "Helicopter"} >= 0) then {"helicopter-flight-locality"} else {"server-owned-feature"};
+    diag_log format ["[WMP HEADLESS] Refused HC migration group=%1 target=%2 reason=%3.", _group, _targetOwner, _reason];
+    ["MIGRATE_BLOCKED", format ["group=%1 target=%2 reason=%3", _group, _targetOwner, _reason]] call Waldo_fnc_HeadlessDebugLog;
     false
 };
 

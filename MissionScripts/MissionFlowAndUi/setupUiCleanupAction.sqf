@@ -44,7 +44,7 @@ if (_aceAvailable) then {
         "Acknowledge SafeStart",
         "",
         {[] call Waldo_fnc_SafeStartAcknowledgeLocal},
-        {missionNamespace getVariable ["Waldo_SafeStart_Active", false]}
+        {missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false]}
     ] call ace_interact_menu_fnc_createAction;
     [player, 1, ["ACE_SelfActions", "Waldo_UI_SelfRoot"], _acknowledge] call ace_interact_menu_fnc_addActionToObject;
     player setVariable ["Waldo_UI_CleanupInteractionMode", "ACE"];
@@ -68,7 +68,7 @@ if (_aceAvailable) then {
         false,
         true,
         "",
-        "alive _target && {_this isEqualTo _target} && {missionNamespace getVariable ['Waldo_SafeStart_Active', false]}"
+        "alive _target && {_this isEqualTo _target} && {missionNamespace getVariable ['Waldo_SafeStart_LocalActive', false]}"
     ];
     player setVariable ["Waldo_UI_AcknowledgeSafeStartVanillaAction", _acknowledgeId];
     player setVariable ["Waldo_UI_CleanupInteractionMode", "VANILLA"];

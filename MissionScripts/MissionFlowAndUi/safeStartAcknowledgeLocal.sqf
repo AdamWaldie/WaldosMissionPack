@@ -12,7 +12,7 @@
  * Current caller: WMP Interface > Acknowledge SafeStart self-interaction.
  * Example: [] call Waldo_fnc_SafeStartAcknowledgeLocal;
  */
-if (!hasInterface || {!(missionNamespace getVariable ["Waldo_SafeStart_Active", false])}) exitWith {false};
+if (!hasInterface || {!(missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false])}) exitWith {false};
 
 private _phase = if ((missionNamespace getVariable ["Waldo_SafeStart_EndTime", 0]) > 0) then {"COUNTDOWN"} else {"WAITING"};
 uiNamespace setVariable ["Waldo_SafeStart_AcknowledgedPhase", _phase];

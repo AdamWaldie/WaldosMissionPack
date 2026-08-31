@@ -2,37 +2,43 @@
 
 > **Use this page when:** you need to configure or play the twelve seated multiplayer table games.
 
-_Associated Files: `init.sqf`, `MissionScripts\MiniGames\miniGamesInit.sqf`, `MissionScripts\MiniGames\engine\config.sqf`, `MissionScripts\MiniGames\engine\core.sqf`, `MissionScripts\MiniGames\engine\games\`, `Waldo_fnc_MiniGamesInit`_
+_Associated Files: `MissionScripts\MiniGames\miniGamesRegisterTable.sqf`, `MissionScripts\MiniGames\miniGamesUnregisterTable.sqf`, `MissionScripts\MiniGames\miniGamesEnsureRuntime.sqf`, `MissionScripts\MiniGames\engine\`, `Waldo_fnc_MiniGamesRegisterTable`_
 
 ## Waldos Mini Games — Table Games
 
-Table games are the **multiplayer**, sit-down party games. Drop a supported table in the editor, and players standing near it get actions to take a seat, vote for a game and play together. Everything runs with the server as the authority and each player's screen as a thin client, and it is **JIP-safe** — players who join late get the system installed and can walk up and sit down.
+Table games are the **multiplayer**, sit-down party games. A table becomes active only when its Eden init explicitly registers it. Everything runs with the server as authority and each player's screen as a thin client. Missions with no registered tables do not compile or run the seated-game engine.
 
 This is the [Waldos Mini Games](Waldos-Mini-Games) sub-page for the seated games. For solo challenges that gate an interaction, see [Interaction Challenges](Waldos-Mini-Games-Interaction-Challenges).
 
 ## Setup
 
-1. Make sure the engine is enabled in `init.sqf` (it is by default):
+1. Place the **`[WMP] Party Table Example`** composition, or put this in a table object's init:
 
    ```sqf
-   Waldo_MiniGames_Enable = true;
-   if (Waldo_MiniGames_Enable) then {
-       [] call Waldo_fnc_MiniGamesInit;
-   };
+   [this] call Waldo_fnc_MiniGamesRegisterTable;
    ```
 
-2. Place a **supported table object** in Eden. Tables are detected automatically by class — no init-field code needed. Supported classes out of the box:
+2. Any valid object can be the table; object class is not used for discovery. The default setup enables all twelve games and uses four seats. To customise it:
 
-   | Class | Description |
-   |---|---|
-   | `Land_CampingTable_F` | Camping table (default) |
-   | `Land_CampingTable_small_F` | Small camping table |
-   | `Land_CampingTable_small_white_F` | Small white camping table |
-   | `Land_TablePlastic_01_F` | Plastic table |
-   | `Land_WoodenTable_large_F` | Large wooden table |
-   | `Land_WoodenTable_small_F` | Small wooden table |
+   ```sqf
+   [
+       this,
+       createHashMapFromArray [
+           ["displayName", "Recreation Table"],
+           ["games", ["chess", "checkers", "uno"]],
+           ["seatOffsets", [[0,-1.05,0],[0,1.05,0],[-1.35,0,0],[1.35,0,0]]],
+           ["seatExitOffsets", [[0,-1.85,0],[0,1.85,0],[-2.05,0,0],[2.05,0,0]]],
+           ["seatDirections", [0,180,90,270]],
+           ["actionRange", 4.5]
+       ]
+   ] call Waldo_fnc_MiniGamesRegisterTable;
+   ```
 
-3. That's it. Walk a player up to the table and use either the scroll-menu or the nested ACE **Party Table** interaction to **Sit at Table**. Both routes submit the same server-validated request.
+   An empty `games` array means all twelve games. Unknown keys or games, malformed geometry, invalid objects, and seat arrays other than exactly four entries are rejected with an RPT diagnostic. Equivalent registration is repeat-safe.
+
+3. Keep the four seat and exit lanes clear. Walk a player up to the table and use either the scroll-menu or nested ACE **Party Table** interaction to **Sit at Table**.
+
+To remove a live table, use `[this] call Waldo_fnc_MiniGamesUnregisterTable;`. Object deletion performs the same cleanup automatically.
 
 Up to **four** players can sit at a table. Once seated, players **vote** for a game from the lobby; when enough seated players are ready, the chosen game starts.
 
@@ -99,7 +105,7 @@ Hold'em rules and betting behaviour are unchanged. Its revised screen groups dea
 
 All action requests carry a unique token plus the table game ID and current hand/round epoch. The server rejects duplicates, stale epochs, malformed values and out-of-turn actions before changing state. Shared table variables contain only public snapshots. Draw Poker hands, Hold'em hands and Liar's Dice rolls are stored server-side and copied only to an owner-targeted player variable. Spectators never receive those private payloads.
 
-Late joiners install the same runtime through the JIP entry and may spectate the current public snapshot. Seating remains locked to the table roster during a game. If a player departs one of the three new fixed-roster games, the server safely clears that match and returns the remaining seats to the lobby so no stale roster can block play. Table deletion and reset clear private payloads and game state.
+Late joiners receive registered-table metadata and request the current permitted snapshot when they interact or resume a seat. No executable script is sent through JIP. Seating remains locked to the table roster during a game. If a player departs one of the fixed-roster games, the server safely clears that match and returns the remaining seats to the lobby. Table deletion and reset clear private payloads and game state.
 
 ## New-game tuning constants
 
@@ -121,12 +127,13 @@ Screenshots are intentionally not embedded until the final in-engine capture pas
 
 ## Tuning
 
-Engine tuning constants live at the top of `MissionScripts\MiniGames\engine\config.sqf` as `Waldo_MG_CFG_*` values — seat offsets and count, action ranges, loop tick rates, and per-game settings (starting chips, blinds, shell counts, grid sizes, etc.). The supported table classes are `Waldo_MG_CFG_TABLE_CLASSES`; add a classname there to let players use a different object as a table. Most missions never need to touch these.
+Per-game rules constants live in `MissionScripts\MiniGames\engine\config.sqf` as `Waldo_MG_CFG_*` values. Table display name, available games, seat/exit geometry, directions and action range belong in the table registration options. There is no supported-class list or automatic world discovery.
 
 ## Multiplayer / authority model
 
-* `Waldo_fnc_MiniGamesInit` installs the engine on every machine and re-broadcasts it for JIP; a per-machine version guard makes repeat calls a no-op.
-* The **server** is the single authority for all shared state (seats, votes, game state) and runs the background loops once for the mission; each **client** runs its own UI/discovery loop.
+* `Waldo_fnc_MiniGamesRegisterTable` is the sole activation path. The first registration lazily loads server rules, interface UI, or the small headless-client locality role as appropriate.
+* The **server** validates direct, tokenised requests and drains a per-table queue only while work exists. Idle tables have no authority poller or recurring discovery.
+* Movement, animation, invulnerability, camera and presentation execute on the player owner. Table-local commands execute where the table is local, including after headless-client or curator locality changes.
 * No `description.ext` changes are required — every screen is built at runtime from vanilla controls.
 
 ## See also

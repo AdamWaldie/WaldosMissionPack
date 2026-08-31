@@ -2,13 +2,17 @@
  * Author: WaldoTheWarfighter
  * Implements the WMP table-minigame core: seating, lobby/menu state, server-authoritative rounds,
  * client presentation loops, spectating, result dispatch and shared display lifecycle hooks.
+ * Locality/authority: Authority and rules run on the server; player and table-local effects route to
+ * their current owners; UI exists only on interface clients.
+ * Repeat/JIP: Compiled once by the versioned role runtime. Metadata and named snapshot requests replay
+ * permitted state for JIP without executable payloads.
  *
  * Arguments: None. This included fragment declares Waldo_MG_fnc_* runtime functions.
  *
  * Return Value: Nothing directly; declared functions provide their own documented results.
  *
  * Example: #include "engine\core.sqf"
- * Current caller: MiniGamesInit includes this fragment during minigame bootstrap.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime includes this fragment lazily for a registered table.
  */
 
 Waldo_MG_fnc_getGame = {
@@ -26,6 +30,14 @@ Waldo_MG_fnc_getGameName = {
     params [["_gameId", ""]];
     private _game = [_gameId] call Waldo_MG_fnc_getGame;
     _game param [1, "No vote"]
+};
+
+Waldo_MG_fnc_getGamesForTable = {
+    params [["_table", objNull]];
+    if (isNull _table) exitWith {+Waldo_MG_Games};
+    private _allowed = _table getVariable ["Waldo_MG_TableGames", []];
+    if ((count _allowed) == 0) exitWith {+Waldo_MG_Games};
+    Waldo_MG_Games select {(_x param [0, ""]) in _allowed}
 };
 
 Waldo_MG_fnc_getPlayerRequirementText = {
@@ -146,6 +158,7 @@ Waldo_MG_fnc_isGameEligibleAtTable = {
         ["_gameId", ""]
     ];
     if (isNull _table) exitWith {false};
+    if !(_gameId in (_table getVariable ["Waldo_MG_TableGames", []])) exitWith {false};
     private _game = [_gameId] call Waldo_MG_fnc_getGame;
     if ((count _game) < 5) exitWith {false};
     private _players = [_table] call Waldo_MG_fnc_getTableOccupantCount;
@@ -186,33 +199,13 @@ Waldo_MG_fnc_makeToken = {
     ]
 };
 
-Waldo_MG_fnc_collectTaggedClassObjects = {
-    params [
-        ["_classes", []],
-        ["_tag", ""]
-    ];
-    private _found = [];
-    {
-        if (isClass (configFile >> "CfgVehicles" >> _x)) then {
-            {
-                if (!isNull _x && {_x getVariable [_tag, false]}) then {
-                    _found pushBackUnique _x;
-                };
-            } forEach (allMissionObjects _x);
-        };
-    } forEach _classes;
-    _found
-};
-
 Waldo_MG_fnc_enforceInvulnerableLocal = {
     params [["_object", objNull]];
     if (isNull _object) exitWith {};
     if (local _object) then {
         _object allowDamage false;
     };
-}; 
- 
-
+};
 Waldo_MG_fnc_resultServer = {
     params [
         ["_unit", objNull],
@@ -220,7 +213,9 @@ Waldo_MG_fnc_resultServer = {
         ["_message", ""]
     ];
     if (!isServer || {isNull _unit} || {_token == ""}) exitWith {};
-    _unit setVariable ["Waldo_MG_RequestResult", [_token, _message], true];
+    private _table = _unit getVariable ["Waldo_MG_SeatedTable", objNull];
+    private _revision = if (isNull _table) then {-1} else {_table getVariable ["Waldo_MG_TableRevision", -1]};
+    [_token, true, _message, _revision] remoteExecCall ["Waldo_fnc_MiniGamesRequestResultLocal", owner _unit];
 };
 
 Waldo_MG_fnc_rememberHandledTokenServer = {
@@ -321,7 +316,7 @@ Waldo_MG_fnc_refreshTableConsensusServer = {
                 _bestGameId = _gameId;
             };
         };
-    } forEach Waldo_MG_Games;
+    } forEach ([_table] call Waldo_MG_fnc_getGamesForTable);
 
     private _requiredVotes = if (_occupied > 0) then {
         floor (_occupied / 2) + 1
@@ -560,31 +555,6 @@ Waldo_MG_fnc_initializePlayerServer = {
     if (isNil {_unit getVariable "Waldo_MG_SeatToken"}) then {
         _unit setVariable ["Waldo_MG_SeatToken", "", true];
     };
-    {
-        if (isNil {_unit getVariable _x}) then {
-            _unit setVariable [_x, [], true];
-        };
-    } forEach [
-        "Waldo_MG_JoinRequest",
-        "Waldo_MG_LeaveRequest",
-        "Waldo_MG_VoteRequest",
-        "Waldo_MG_ReadyRequest",
-        "Waldo_MG_BattleshipActionRequest",
-        "Waldo_MG_WhosWhoActionRequest",
-        "Waldo_MG_ShotgunActionRequest",
-        "Waldo_MG_CheckersMoveRequest",
-        "Waldo_MG_CheckersResetRequest",
-        "Waldo_MG_RPSActionRequest",
-        "Waldo_MG_BlackjackActionRequest",
-        "Waldo_MG_ChessMoveRequest",
-        "Waldo_MG_ChessActionRequest",
-        "Waldo_MG_PokerActionRequest",
-        "Waldo_MG_DrawPokerActionRequest",
-        "Waldo_MG_LiarsDiceActionRequest",
-        "Waldo_MG_ConnectFourActionRequest",
-        "Waldo_MG_UNOActionRequest",
-        "Waldo_MG_RequestResult"
-    ];
     _unit setVariable ["Waldo_MG_ServerInitialized", true];
 };
 
@@ -677,65 +647,53 @@ Waldo_MG_fnc_reconcileOneTableServer = {
     };
 };
 
-Waldo_MG_fnc_reconcileRegisteredTablesServer = {
-    if (!isServer) exitWith {};
-    private _published = +(missionNamespace getVariable ["Waldo_MG_Tables", []]);
-    private _clean = [];
-    {
-        if (!isNull _x && {_x getVariable ["Waldo_MG_IsPartyTable", false]}) then {
-            _clean pushBackUnique _x;
-            [_x] call Waldo_MG_fnc_reconcileOneTableServer;
-        };
-    } forEach _published;
-    if ((count _clean) != (count _published)) then {
-        missionNamespace setVariable ["Waldo_MG_Tables", _clean, true];
-    };
-
-    {
-        private _unit = _x;
-        private _table = _unit getVariable ["Waldo_MG_SeatedTable", objNull];
-        private _seatIndex = _unit getVariable ["Waldo_MG_SeatIndex", -1];
-        private _valid = false;
-        if (!isNull _table && {_table getVariable ["Waldo_MG_IsPartyTable", false]}) then {
-            private _seats = [(_table getVariable ["Waldo_MG_TableSeats", []])] call Waldo_MG_fnc_normalizeSeats;
-            _valid = _seatIndex >= 0
-                && {_seatIndex < Waldo_MG_CFG_SEAT_COUNT}
-                && {(_seats param [_seatIndex, objNull]) == _unit}
-                && {alive _unit}
-                && {(vehicle _unit) == _unit};
-        };
-        if (!_valid && {(!isNull _table) || {_seatIndex >= 0}}) then {
-            [_unit] call Waldo_MG_fnc_clearUnitSeatVariablesServer;
-        };
-    } forEach allPlayers;
+Waldo_MG_fnc_publishTableChangeServer = {
+    params [["_table", objNull]];
+    if (!isServer || {isNull _table}) exitWith {};
+    private _revision = (_table getVariable ["Waldo_MG_EventRevisionServer", 0]) + 1;
+    _table setVariable ["Waldo_MG_EventRevisionServer", _revision];
+    private _recipients = [];
+    {if (!isNull _x) then {_recipients pushBackUnique (owner _x);};} forEach (_table getVariable ["Waldo_MG_TableSeats", []]);
+    {[_table, _revision] remoteExecCall ["Waldo_fnc_MiniGamesStateChangedLocal", _x];} forEach _recipients;
 };
 
-Waldo_MG_fnc_reconcileRegistriesServer = {
-    if (!isServer) exitWith {};
-    private _tables = +(missionNamespace getVariable ["Waldo_MG_Tables", []]);
-    private _seeded = [Waldo_MG_CFG_TABLE_CLASSES, "Waldo_MG_CompositionSeed"] call Waldo_MG_fnc_collectTaggedClassObjects;
-    private _tagged = [Waldo_MG_CFG_TABLE_CLASSES, "Waldo_MG_IsPartyTable"] call Waldo_MG_fnc_collectTaggedClassObjects;
-    {
-        if (!isNull _x) then {
-            if (!(_x getVariable ["Waldo_MG_IsPartyTable", false])) then {
-                [_x, "Composition", "COMPOSITION"] call Waldo_MG_fnc_markTableServer;
-            };
-            _tables pushBackUnique _x;
+Waldo_MG_fnc_scheduleTimedProgressServer = {
+    params [["_table", objNull]];
+    if (!isServer || {isNull _table}) exitWith {};
+    private _timerEpoch = (_table getVariable ["Waldo_MG_TimerEpochServer", 0]) + 1;
+    _table setVariable ["Waldo_MG_TimerEpochServer", _timerEpoch];
+    private _dueAt = -1;
+    switch ([_table] call Waldo_MG_fnc_getTableActiveGameId) do {
+        case "rps": {
+            private _phase = _table getVariable ["Waldo_MG_RPSPhase", ""];
+            if (_phase == "COUNTDOWN") then {_dueAt = _table getVariable ["Waldo_MG_RPSCountdownEnd", -1];};
+            if (_phase == "REVEAL") then {_dueAt = _table getVariable ["Waldo_MG_RPSRevealEnd", -1];};
         };
-    } forEach (_seeded + _tagged);
-    private _clean = [];
-    {
-        if (!isNull _x && {_x getVariable ["Waldo_MG_IsPartyTable", false]}) then {
-            _clean pushBackUnique _x;
+        case "shotgun": {
+            private _state = _table getVariable ["Waldo_MG_ShotgunSnapshotServer", []];
+            if ((_state param [0, ""]) in ["LOADING", "REVEAL"]) then {_dueAt = _state param [19, -1];};
         };
-    } forEach _tables;
-    missionNamespace setVariable ["Waldo_MG_Tables", _clean, true];
-    call Waldo_MG_fnc_reconcileRegisteredTablesServer;
-    {
-        [_x] call Waldo_MG_fnc_registerCuratorEditableServer;
-    } forEach _clean;
-}; 
- 
+        case "blackjack": {
+            private _state = _table getVariable ["Waldo_MG_BlackjackSnapshotServer", []];
+            if ((_state param [0, ""]) == "DEALER_TURN") then {_dueAt = _table getVariable ["Waldo_MG_BlackjackDealerNextAt", -1];};
+        };
+        case "liarsdice": {
+            if ((_table getVariable ["Waldo_MG_LiarsDicePhase", ""]) == "REVEAL") then {_dueAt = _table getVariable ["Waldo_MG_LiarsDiceRevealUntil", -1];};
+        };
+    };
+    if (_dueAt < 0) exitWith {};
+    [
+        {
+            params ["_timedTable", "_expectedEpoch"];
+            if (isNull _timedTable || {(_timedTable getVariable ["Waldo_MG_TimerEpochServer", -1]) != _expectedEpoch}) exitWith {};
+            [_timedTable] call Waldo_MG_fnc_reconcileOneTableServer;
+            [_timedTable] call Waldo_MG_fnc_publishTableChangeServer;
+            [_timedTable] call Waldo_MG_fnc_scheduleTimedProgressServer;
+        },
+        [_table, _timerEpoch],
+        ((_dueAt - serverTime) max 0.01)
+    ] call CBA_fnc_waitAndExecute;
+};
 
 Waldo_MG_fnc_processJoinRequestServer = {
     params [
@@ -743,7 +701,6 @@ Waldo_MG_fnc_processJoinRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_JoinRequest", [], true];
     if ((count _request) < 3) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -821,7 +778,6 @@ Waldo_MG_fnc_processLeaveRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_LeaveRequest", [], true];
     if ((count _request) < 1) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -840,7 +796,6 @@ Waldo_MG_fnc_processVoteRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_VoteRequest", [], true];
     if ((count _request) < 3) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -898,7 +853,6 @@ Waldo_MG_fnc_processReadyRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_ReadyRequest", [], true];
     if ((count _request) < 3) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -1051,170 +1005,6 @@ Waldo_MG_fnc_processReadyRequestServer = {
     [_unit, _token, _message] call Waldo_MG_fnc_resultServer;
 };
 
-Waldo_MG_fnc_processPlayerRequestsServer = {
-    params [["_unit", objNull]];
-    if (!isServer || {isNull _unit}) exitWith {};
-    private _join = _unit getVariable ["Waldo_MG_JoinRequest", []];
-    if ((typeName _join) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_JoinRequest", [], true];
-        _join = [];
-    } else {
-        _join = +_join;
-    };
-    if ((count _join) > 0) then {
-        [_unit, _join] call Waldo_MG_fnc_processJoinRequestServer;
-    };
-    private _leave = _unit getVariable ["Waldo_MG_LeaveRequest", []];
-    if ((typeName _leave) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_LeaveRequest", [], true];
-        _leave = [];
-    } else {
-        _leave = +_leave;
-    };
-    if ((count _leave) > 0) then {
-        [_unit, _leave] call Waldo_MG_fnc_processLeaveRequestServer;
-    };
-    private _vote = _unit getVariable ["Waldo_MG_VoteRequest", []];
-    if ((typeName _vote) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_VoteRequest", [], true];
-        _vote = [];
-    } else {
-        _vote = +_vote;
-    };
-    if ((count _vote) > 0) then {
-        [_unit, _vote] call Waldo_MG_fnc_processVoteRequestServer;
-    };
-    private _ready = _unit getVariable ["Waldo_MG_ReadyRequest", []];
-    if ((typeName _ready) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_ReadyRequest", [], true];
-        _ready = [];
-    } else {
-        _ready = +_ready;
-    };
-    if ((count _ready) > 0) then {
-        [_unit, _ready] call Waldo_MG_fnc_processReadyRequestServer;
-    };
-    private _battleshipAction = _unit getVariable ["Waldo_MG_BattleshipActionRequest", []];
-    if ((typeName _battleshipAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_BattleshipActionRequest", [], true];
-        _battleshipAction = [];
-    } else {
-        _battleshipAction = +_battleshipAction;
-    };
-    if ((count _battleshipAction) > 0) then {
-        [_unit, _battleshipAction] call Waldo_MG_fnc_processBattleshipActionRequestServer;
-    };
-    private _whosWhoAction = _unit getVariable ["Waldo_MG_WhosWhoActionRequest", []];
-    if ((typeName _whosWhoAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_WhosWhoActionRequest", [], true];
-        _whosWhoAction = [];
-    } else {
-        _whosWhoAction = +_whosWhoAction;
-    };
-    if ((count _whosWhoAction) > 0) then {
-        [_unit, _whosWhoAction] call Waldo_MG_fnc_processWhosWhoActionRequestServer;
-    };
-    private _shotgunAction = _unit getVariable ["Waldo_MG_ShotgunActionRequest", []];
-    if ((typeName _shotgunAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_ShotgunActionRequest", [], true];
-        _shotgunAction = [];
-    } else {
-        _shotgunAction = +_shotgunAction;
-    };
-    if ((count _shotgunAction) > 0) then {
-        [_unit, _shotgunAction] call Waldo_MG_fnc_processShotgunActionRequestServer;
-    };
-    private _rpsAction = _unit getVariable ["Waldo_MG_RPSActionRequest", []];
-    if ((typeName _rpsAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_RPSActionRequest", [], true];
-        _rpsAction = [];
-    } else {
-        _rpsAction = +_rpsAction;
-    };
-    if ((count _rpsAction) > 0) then {
-        [_unit, _rpsAction] call Waldo_MG_fnc_processRPSActionRequestServer;
-    };
-    private _blackjackAction = _unit getVariable ["Waldo_MG_BlackjackActionRequest", []];
-    if ((typeName _blackjackAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_BlackjackActionRequest", [], true];
-        _blackjackAction = [];
-    } else {
-        _blackjackAction = +_blackjackAction;
-    };
-    if ((count _blackjackAction) > 0) then {
-        [_unit, _blackjackAction] call Waldo_MG_fnc_processBlackjackActionRequestServer;
-    };
-    private _checkersMove = _unit getVariable ["Waldo_MG_CheckersMoveRequest", []];
-    if ((typeName _checkersMove) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_CheckersMoveRequest", [], true];
-        _checkersMove = [];
-    } else {
-        _checkersMove = +_checkersMove;
-    };
-    if ((count _checkersMove) > 0) then {
-        [_unit, _checkersMove] call Waldo_MG_fnc_processCheckersMoveRequestServer;
-    };
-    private _checkersReset = _unit getVariable ["Waldo_MG_CheckersResetRequest", []];
-    if ((typeName _checkersReset) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_CheckersResetRequest", [], true];
-        _checkersReset = [];
-    } else {
-        _checkersReset = +_checkersReset;
-    };
-    if ((count _checkersReset) > 0) then {
-        [_unit, _checkersReset] call Waldo_MG_fnc_processCheckersResetRequestServer;
-    };
-    private _chessMove = _unit getVariable ["Waldo_MG_ChessMoveRequest", []];
-    if ((typeName _chessMove) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_ChessMoveRequest", [], true];
-        _chessMove = [];
-    } else {
-        _chessMove = +_chessMove;
-    };
-    if ((count _chessMove) > 0) then {
-        [_unit, _chessMove] call Waldo_MG_fnc_processChessMoveRequestServer;
-    };
-    private _chessAction = _unit getVariable ["Waldo_MG_ChessActionRequest", []];
-    if ((typeName _chessAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_ChessActionRequest", [], true];
-        _chessAction = [];
-    } else {
-        _chessAction = +_chessAction;
-    };
-    if ((count _chessAction) > 0) then {
-        [_unit, _chessAction] call Waldo_MG_fnc_processChessActionRequestServer;
-    };
-    private _pokerAction = _unit getVariable ["Waldo_MG_PokerActionRequest", []];
-    if ((typeName _pokerAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_PokerActionRequest", [], true];
-        _pokerAction = [];
-    } else {
-        _pokerAction = +_pokerAction;
-    };
-    if ((count _pokerAction) > 0) then {
-        [_unit, _pokerAction] call Waldo_MG_fnc_processPokerActionRequestServer;
-    };
-    private _drawPokerAction = _unit getVariable ["Waldo_MG_DrawPokerActionRequest", []];
-    if ((typeName _drawPokerAction) != "ARRAY") then {_unit setVariable ["Waldo_MG_DrawPokerActionRequest", [], true]; _drawPokerAction = [];} else {_drawPokerAction = +_drawPokerAction;};
-    if ((count _drawPokerAction) > 0) then {[_unit, _drawPokerAction] call Waldo_MG_fnc_processDrawPokerActionRequestServer;};
-    private _liarsDiceAction = _unit getVariable ["Waldo_MG_LiarsDiceActionRequest", []];
-    if ((typeName _liarsDiceAction) != "ARRAY") then {_unit setVariable ["Waldo_MG_LiarsDiceActionRequest", [], true]; _liarsDiceAction = [];} else {_liarsDiceAction = +_liarsDiceAction;};
-    if ((count _liarsDiceAction) > 0) then {[_unit, _liarsDiceAction] call Waldo_MG_fnc_processLiarsDiceActionRequestServer;};
-    private _connectFourAction = _unit getVariable ["Waldo_MG_ConnectFourActionRequest", []];
-    if ((typeName _connectFourAction) != "ARRAY") then {_unit setVariable ["Waldo_MG_ConnectFourActionRequest", [], true]; _connectFourAction = [];} else {_connectFourAction = +_connectFourAction;};
-    if ((count _connectFourAction) > 0) then {[_unit, _connectFourAction] call Waldo_MG_fnc_processConnectFourActionRequestServer;};
-    private _unoAction = _unit getVariable ["Waldo_MG_UNOActionRequest", []];
-    if ((typeName _unoAction) != "ARRAY") then {
-        _unit setVariable ["Waldo_MG_UNOActionRequest", [], true];
-        _unoAction = [];
-    } else {
-        _unoAction = +_unoAction;
-    };
-    if ((count _unoAction) > 0) then {
-        [_unit, _unoAction] call Waldo_MG_fnc_processUNOActionRequestServer;
-    };
-};
-
 Waldo_MG_fnc_initializeServerState = {
     if (!isServer) exitWith {};
     if (isNil {missionNamespace getVariable "Waldo_MG_Tables"}) then {
@@ -1224,33 +1014,6 @@ Waldo_MG_fnc_initializeServerState = {
         missionNamespace setVariable ["Waldo_MG_HandledTokensServer", []];
     };
 };
-
-Waldo_MG_fnc_startAuthorityLoop = {
-    if (!isServer) exitWith {};
-    if (missionNamespace getVariable ["Waldo_MG_AuthorityLoopStarted", false]) exitWith {};
-    missionNamespace setVariable ["Waldo_MG_AuthorityLoopStarted", true];
-    [] spawn {
-        private _nextMaintenance = 0;
-        while {true} do {
-            private _authorityPlayers = +allPlayers;
-            {
-                if (!(_x getVariable ["Waldo_MG_ServerInitialized", false])) then {
-                    [_x] call Waldo_MG_fnc_initializePlayerServer;
-                };
-            } forEach _authorityPlayers;
-            call Waldo_MG_fnc_reconcileRegisteredTablesServer;
-            [_authorityPlayers] call Waldo_MG_fnc_processPriorityUNORequestsServer;
-            {
-                [_x] call Waldo_MG_fnc_processPlayerRequestsServer;
-            } forEach _authorityPlayers;
-            if (serverTime >= _nextMaintenance) then {
-                call Waldo_MG_fnc_reconcileRegistriesServer;
-                _nextMaintenance = serverTime + Waldo_MG_CFG_MAINTENANCE_TICK;
-            };
-            sleep Waldo_MG_CFG_AUTHORITY_TICK;
-        };
-    };
-}; 
 
 Waldo_MG_fnc_notifyLocal = {
     disableSerialization;
@@ -1335,7 +1098,18 @@ Waldo_MG_fnc_notifyLocal = {
     };
     true
 };
- 
+Waldo_MG_fnc_submitRequestLocal = {
+    params [
+        ["_operation", ""],
+        ["_table", objNull],
+        ["_token", ""],
+        ["_phaseEpoch", -1],
+        ["_legacyPayload", []]
+    ];
+    if (!hasInterface || {isNull player} || {isNull _table} || {_operation == ""} || {_token == ""}) exitWith {false};
+    [1, _table, _token, _phaseEpoch, _operation, _legacyPayload, player] remoteExecCall ["Waldo_fnc_MiniGamesRequestServer", 2];
+    true
+};
 
 Waldo_MG_fnc_submitJoinRequestLocal = {
     params [["_table", objNull]];
@@ -1347,11 +1121,7 @@ Waldo_MG_fnc_submitJoinRequestLocal = {
         ["You must be alive to sit at the table."] call Waldo_MG_fnc_notifyLocal;
     };
     private _token = ["JOIN"] call Waldo_MG_fnc_makeToken;
-    player setVariable [
-        "Waldo_MG_JoinRequest",
-        [_token, netId _table, getPosATL player],
-        true
-    ];
+    ["JOIN", _table, _token, _table getVariable ["Waldo_MG_TableRevision", -1], [_token, netId _table, getPosATL player]] call Waldo_MG_fnc_submitRequestLocal;
     ["Requesting a seat from the table host..."] call Waldo_MG_fnc_notifyLocal;
 };
 
@@ -1359,11 +1129,7 @@ Waldo_MG_fnc_submitLeaveRequestLocal = {
     if (!hasInterface || {isNull player}) exitWith {};
     private _table = player getVariable ["Waldo_MG_SeatedTable", objNull];
     private _token = ["LEAVE"] call Waldo_MG_fnc_makeToken;
-    player setVariable [
-        "Waldo_MG_LeaveRequest",
-        [_token, if (isNull _table) then {""} else {netId _table}],
-        true
-    ];
+    ["LEAVE", _table, _token, _table getVariable ["Waldo_MG_TableRevision", -1], [_token, netId _table]] call Waldo_MG_fnc_submitRequestLocal;
     missionNamespace setVariable ["Waldo_MG_LeavePendingLocal", [_token, diag_tickTime]];
     call Waldo_MG_fnc_closeTableGameDisplaysLocal;
     ["Leaving the party table..."] call Waldo_MG_fnc_notifyLocal;
@@ -1379,11 +1145,7 @@ Waldo_MG_fnc_submitVoteRequestLocal = {
         ["Select an available game before voting."] call Waldo_MG_fnc_notifyLocal;
     };
     private _token = ["VOTE"] call Waldo_MG_fnc_makeToken;
-    player setVariable [
-        "Waldo_MG_VoteRequest",
-        [_token, netId _table, _gameId],
-        true
-    ];
+    ["VOTE", _table, _token, _table getVariable ["Waldo_MG_TableRevision", -1], [_token, netId _table, _gameId]] call Waldo_MG_fnc_submitRequestLocal;
     ["Submitting your table vote..."] call Waldo_MG_fnc_notifyLocal;
 };
 
@@ -1394,11 +1156,7 @@ Waldo_MG_fnc_submitReadyRequestLocal = {
     ];
     if (!hasInterface || {isNull player} || {isNull _table}) exitWith {};
     private _token = ["READY"] call Waldo_MG_fnc_makeToken;
-    player setVariable [
-        "Waldo_MG_ReadyRequest",
-        [_token, netId _table, _desired],
-        true
-    ];
+    ["READY", _table, _token, _table getVariable ["Waldo_MG_TableRevision", -1], [_token, netId _table, _desired]] call Waldo_MG_fnc_submitRequestLocal;
     ["Updating your ready state..."] call Waldo_MG_fnc_notifyLocal;
 };
 
@@ -1448,16 +1206,6 @@ Waldo_MG_fnc_showRequestResultLocal = {
     };
 };
 
-Waldo_MG_fnc_discoverTaggedTablesLocal = {
-    if (!hasInterface) exitWith {};
-    private _tables = [Waldo_MG_CFG_TABLE_CLASSES, "Waldo_MG_IsPartyTable"] call Waldo_MG_fnc_collectTaggedClassObjects;
-    private _host = missionNamespace getVariable ["Waldo_MG_CompositionHostObject", objNull];
-    if (!isNull _host && {_host getVariable ["Waldo_MG_IsPartyTable", false]}) then {
-        _tables pushBackUnique _host;
-    };
-    missionNamespace setVariable ["Waldo_MG_DiscoveredTablesLocal", _tables];
-};
-
 Waldo_MG_fnc_getKnownTablesLocal = {
     private _known = [];
     {
@@ -1480,7 +1228,7 @@ Waldo_MG_fnc_canSitAtTableAction = {
     ];
     if (isNull _table || {isNull _caller} || {!alive _caller} || {(lifeState _caller) == "INCAPACITATED"}) exitWith {false};
     if (!(_table getVariable ["Waldo_MG_IsPartyTable", false])) exitWith {false};
-    if ((_caller distance _table) > Waldo_MG_CFG_ACTION_RANGE) exitWith {false};
+    if ((_caller distance _table) > (_table getVariable ["Waldo_MG_TableActionRange", Waldo_MG_CFG_ACTION_RANGE])) exitWith {false};
     if ((vehicle _caller) != _caller) exitWith {false};
     if (!isNull (_caller getVariable ["Waldo_MG_SeatedTable", objNull])) exitWith {false};
     if (!isNull (missionNamespace getVariable ["Waldo_MG_SpectatedTableLocal", objNull])) exitWith {false};
@@ -1494,7 +1242,7 @@ Waldo_MG_fnc_canOpenTableAction = {
         ["_caller", objNull]
     ];
     if (isNull _table || {isNull _caller} || {!alive _caller} || {(lifeState _caller) == "INCAPACITATED"}) exitWith {false};
-    if ((_caller distance _table) > Waldo_MG_CFG_ACTION_RANGE) exitWith {false};
+    if ((_caller distance _table) > (_table getVariable ["Waldo_MG_TableActionRange", Waldo_MG_CFG_ACTION_RANGE])) exitWith {false};
     (_caller getVariable ["Waldo_MG_SeatedTable", objNull]) == _table
 };
 
@@ -1505,7 +1253,7 @@ Waldo_MG_fnc_canSpectateTableAction = {
     ];
     if (isNull _table || {isNull _caller} || {!alive _caller} || {(lifeState _caller) == "INCAPACITATED"}) exitWith {false};
     if (!(_table getVariable ["Waldo_MG_IsPartyTable", false])) exitWith {false};
-    if ((_caller distance _table) > Waldo_MG_CFG_ACTION_RANGE) exitWith {false};
+    if ((_caller distance _table) > (_table getVariable ["Waldo_MG_TableActionRange", Waldo_MG_CFG_ACTION_RANGE])) exitWith {false};
     if ((vehicle _caller) != _caller) exitWith {false};
     if (!isNull (_caller getVariable ["Waldo_MG_SeatedTable", objNull])) exitWith {false};
     if (!isNull (missionNamespace getVariable ["Waldo_MG_SpectatedTableLocal", objNull])) exitWith {false};
@@ -1582,7 +1330,7 @@ Waldo_MG_fnc_ensureTableActionsLocal = {
                     true,
                     "",
                     "[_target, _this] call Waldo_MG_fnc_canSitAtTableAction",
-                    Waldo_MG_CFG_ACTION_RANGE
+                    _table getVariable ["Waldo_MG_TableActionRange", Waldo_MG_CFG_ACTION_RANGE]
                 ];
                 private _openAction = _table addAction [
                     "Reopen Mini Games",
@@ -1597,7 +1345,7 @@ Waldo_MG_fnc_ensureTableActionsLocal = {
                     true,
                     "",
                     "[_target, _this] call Waldo_MG_fnc_canOpenTableAction",
-                    Waldo_MG_CFG_ACTION_RANGE
+                    _table getVariable ["Waldo_MG_TableActionRange", Waldo_MG_CFG_ACTION_RANGE]
                 ];
                 private _spectateAction = _table addAction [
                     "Spectate Game",
@@ -1612,7 +1360,7 @@ Waldo_MG_fnc_ensureTableActionsLocal = {
                     true,
                     "",
                     "[_target, _this] call Waldo_MG_fnc_canSpectateTableAction",
-                    Waldo_MG_CFG_ACTION_RANGE
+                    _table getVariable ["Waldo_MG_TableActionRange", Waldo_MG_CFG_ACTION_RANGE]
                 ];
                 _table setVariable ["Waldo_MG_TableActionIdsLocal", [_sitAction, _openAction, _spectateAction]];
             };
@@ -1932,12 +1680,17 @@ Waldo_MG_fnc_fitTableDisplaySafeLocal = {
                 _width * _scaleX,
                 _newHeight
             ];
-            if ((ctrlType _x) in [0, 1, 2, 11, 16, 41] && {ctrlText _x != ""}) then {
+            if ((ctrlType _x) in [0, 1, 2, 11, 13, 16, 41] && {ctrlText _x != ""}) then {
                 private _fontHeight = ctrlFontHeight _x;
                 if (_fontHeight > 0) then {
-                    _fontHeight = (_fontHeight * (_scaleY max 1)) min (_newHeight * 0.72);
+                    // Several game screens intentionally start with dense 0.015-0.019 labels. At
+                    // 4K those values remain technically in bounds but are needlessly tiny. Keep a
+                    // safe-zone-relative readability floor, including structured text, while still
+                    // respecting the control's fitted height and the clipping loop below.
+                    private _readableFloor = (if ((ctrlType _x) in [1, 16]) then {0.020} else {0.019}) * (safeZoneH min 1.2);
+                    _fontHeight = ((_fontHeight * (_scaleY max 1)) max _readableFloor) min (_newHeight * 0.72);
                     private _newWidth = _width * _scaleX;
-                    private _minimumFont = (0.016 max (_newHeight * 0.30)) min _fontHeight;
+                    private _minimumFont = (_readableFloor max (_newHeight * 0.30)) min _fontHeight;
                     _x ctrlSetFontHeight _fontHeight;
                     _x ctrlCommit 0;
                     while {
@@ -2052,10 +1805,12 @@ Waldo_MG_fnc_releaseSeatPoseLocal = {
     private _exitWorld = [];
     private _outwardDirection = getDir _unit;
     if (!isNull _table && {_seatIndex >= 0} && {_seatIndex < Waldo_MG_CFG_SEAT_COUNT}) then {
-        _exitWorld = _table modelToWorldWorld (Waldo_MG_CFG_SEAT_EXIT_OFFSETS param [_seatIndex, [0, -1.8, 0]]);
+        private _exitOffsets = _table getVariable ["Waldo_MG_TableSeatExitOffsets", Waldo_MG_CFG_SEAT_EXIT_OFFSETS];
+        private _seatDirections = _table getVariable ["Waldo_MG_TableSeatDirections", Waldo_MG_CFG_SEAT_DIRECTIONS];
+        _exitWorld = _table modelToWorldWorld (_exitOffsets param [_seatIndex, [0, -1.8, 0]]);
         _outwardDirection = (
             getDir _table
-            + (Waldo_MG_CFG_SEAT_DIRECTIONS param [_seatIndex, 0])
+            + (_seatDirections param [_seatIndex, 0])
             + 180
         ) mod 360;
     };
@@ -2081,8 +1836,8 @@ Waldo_MG_fnc_applySeatPoseLocal = {
     if (isNull _table || {_seatIndex < 0} || {_seatIndex >= Waldo_MG_CFG_SEAT_COUNT}) exitWith {};
     private _needsPosition = (attachedTo _unit) != _table;
     if (_needsPosition) then {
-        private _offset = Waldo_MG_CFG_SEAT_OFFSETS param [_seatIndex, [0, -1.05, 0]];
-        private _relativeDirection = Waldo_MG_CFG_SEAT_DIRECTIONS param [_seatIndex, 0];
+        private _offset = (_table getVariable ["Waldo_MG_TableSeatOffsets", Waldo_MG_CFG_SEAT_OFFSETS]) param [_seatIndex, [0, -1.05, 0]];
+        private _relativeDirection = (_table getVariable ["Waldo_MG_TableSeatDirections", Waldo_MG_CFG_SEAT_DIRECTIONS]) param [_seatIndex, 0];
         _unit attachTo [_table, _offset];
         _unit setDir _relativeDirection;
         _unit setPosWorld (getPosWorld _unit);
@@ -2373,7 +2128,7 @@ Waldo_MG_fnc_refreshLobbyLocal = {
                 if (_gameId == _selectedGameId) then {
                     _selectionIndex = _row;
                 };
-            } forEach Waldo_MG_Games;
+            } forEach ([_table] call Waldo_MG_fnc_getGamesForTable);
             if (_selectionIndex < 0 && {(lbSize _gameList) > 0}) then {
                 _selectionIndex = 0;
             };
@@ -2809,9 +2564,7 @@ Waldo_MG_fnc_openLobbyLocal = {
             uiSleep 0.25;
         };
     };
-}; 
- 
-
+};
 Waldo_MG_fnc_openCurrentTableScreenLocal = {
     params [["_table", objNull]];
     if (isNull _table) exitWith {};
@@ -2930,48 +2683,3 @@ Waldo_MG_fnc_maintainGameTransitionLocal = {
         };
     };
 };
-
-Waldo_MG_fnc_startClientLoop = {
-    if (!hasInterface) exitWith {};
-    if (missionNamespace getVariable ["Waldo_MG_ClientLoopStarted", false]) exitWith {};
-    missionNamespace setVariable ["Waldo_MG_ClientLoopStarted", true];
-    [] spawn {
-        private _nextDiscovery = 0;
-        while {true} do {
-            if (diag_tickTime >= _nextDiscovery) then {
-                call Waldo_MG_fnc_discoverTaggedTablesLocal;
-                _nextDiscovery = diag_tickTime + Waldo_MG_CFG_DISCOVERY_TICK;
-            };
-            call Waldo_MG_fnc_ensureTableActionsLocal;
-            call Waldo_MG_fnc_ensurePlayerActionsLocal;
-            call Waldo_MG_fnc_maintainSeatStateLocal;
-            call Waldo_MG_fnc_maintainGameTransitionLocal;
-            call Waldo_MG_fnc_maintainSpectatorStateLocal;
-            call Waldo_MG_fnc_maintainSeatedScreenLocal;
-            call Waldo_MG_fnc_showRequestResultLocal;
-            uiSleep Waldo_MG_CFG_CLIENT_TICK;
-        };
-    };
-}; 
- 
-
-Waldo_MG_fnc_bootstrap = {
-    if (isServer) then {
-        call Waldo_MG_fnc_initializeServerState;
-        private _host = missionNamespace getVariable ["Waldo_MG_CompositionHostObject", objNull];
-        if (!isNull _host) then {
-            [_host, "Composition", "COMPOSITION"] call Waldo_MG_fnc_markTableServer;
-        };
-        {
-            [_x] call Waldo_MG_fnc_initializePlayerServer;
-        } forEach allPlayers;
-        call Waldo_MG_fnc_reconcileRegistriesServer;
-        call Waldo_MG_fnc_startAuthorityLoop;
-    };
-    if (hasInterface) then {
-        call Waldo_MG_fnc_discoverTaggedTablesLocal;
-        call Waldo_MG_fnc_startClientLoop;
-    };
-    missionNamespace setVariable ["Waldo_MG_SystemInitialized", true];
-};
-

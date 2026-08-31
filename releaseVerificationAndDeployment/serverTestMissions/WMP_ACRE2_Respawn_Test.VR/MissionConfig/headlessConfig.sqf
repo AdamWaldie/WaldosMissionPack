@@ -46,10 +46,8 @@
  *   the noisier, genuinely optional detail (per-client load tables, exclusion-reason tallies) a
  *   mission maker only wants while actively diagnosing HC behaviour - see Waldo_fnc_HeadlessDebugLog.
  *   Toggle live in-mission with Waldo_fnc_HeadlessDebugToggle or the "Headless Client - Toggle Debug"
- *   ZEN module, no mission restart required - the same in-mission toggle intent as the legacy
- *   MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf's own "Toggle WHK Debug" action, carried
- *   into WMP's own [WMP DIAG] RPT framing and notification-card conventions and made
- *   curator-triggerable from Zeus rather than a single hard-coded admin's addAction. Costs nothing
+ *   ZEN module, no mission restart required. WMP routes output through its [WMP DIAG] RPT framing
+ *   and notification-card conventions and makes the control available to assigned curators. Costs nothing
  *   when off (a single getVariable check at each of the four event sites).
  *
  * BEGINNER TEST: after running the manual HC matrix once, set Enable to true, connect one headless

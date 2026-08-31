@@ -30,11 +30,13 @@ if (!isServer) exitWith {
 missionNamespace setVariable ["Waldo_SafeStart_Active", _enable, true];
 missionNamespace setVariable ["Waldo_SafeStart_LastReason", toUpper _reason, true];
 missionNamespace setVariable ["Waldo_SafeStart_LastChange", serverTime, true];
+private _revision = (missionNamespace getVariable ["Waldo_SafeStart_Revision", 0]) + 1;
+missionNamespace setVariable ["Waldo_SafeStart_Revision", _revision, true];
 
 // Going live cancels any pending auto-lift countdown.
 if (!_enable) then {
     missionNamespace setVariable ["Waldo_SafeStart_EndTime", 0, true];
 };
 
-[_enable, toUpper _reason] remoteExec ["Waldo_fnc_SafeStartApply", 0];
-diag_log format ["[WMP SAFESTART] state=%1 reason=%2 changedAt=%3 timerEnd=%4", if (_enable) then {"ACTIVE"} else {"LIVE"}, toUpper _reason, serverTime, missionNamespace getVariable ["Waldo_SafeStart_EndTime", 0]];
+[_enable, toUpper _reason, _revision] remoteExecCall ["Waldo_fnc_SafeStartApply", 0];
+diag_log format ["[WMP SAFESTART] state=%1 reason=%2 revision=%3 changedAt=%4 timerEnd=%5", if (_enable) then {"ACTIVE"} else {"LIVE"}, toUpper _reason, _revision, serverTime, missionNamespace getVariable ["Waldo_SafeStart_EndTime", 0]];
