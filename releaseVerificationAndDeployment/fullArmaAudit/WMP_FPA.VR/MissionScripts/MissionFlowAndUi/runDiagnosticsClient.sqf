@@ -274,7 +274,11 @@ private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", fa
 private _hazardZones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
 private _hazardClient = missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false];
 private _hazardEvaluation = missionNamespace getVariable ["Waldo_Hazard_LastEvaluation", []];
-private _hazardFresh = count _hazardEvaluation >= 3 && {(diag_tickTime - (_hazardEvaluation select 0)) <= ((missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25) * 3};
+// Mission-start compilation, mod initialisation and the diagnostics run itself can delay scheduled
+// scripts for several seconds while diag_tickTime continues advancing. Keep the proof bounded, but
+// do not report an active evaluator as dead merely because startup scheduling exceeded three ticks.
+private _hazardFreshWindow = ((((missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25) * 5) max 15);
+private _hazardFresh = count _hazardEvaluation >= 3 && {(diag_tickTime - (_hazardEvaluation select 0)) <= _hazardFreshWindow};
 ["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 freshEvaluation=%5 lastEvaluation=%6", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardFresh, _hazardEvaluation], if (!_hazardEnabled || {_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}}) then {""} else {"Waldo_Hazard_Enable is true but this client's evaluator loop isn't producing fresh evaluations - check the RPT for hazard-related errors, and confirm the server actually published a zone snapshot."}] call _add;
 private _dismountEnabled = missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false];
 private _dismountStarted = missionNamespace getVariable ["Waldo_EmergencyDismount_ClientStarted", false];

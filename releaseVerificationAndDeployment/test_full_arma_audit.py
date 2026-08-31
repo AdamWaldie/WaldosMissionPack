@@ -81,6 +81,9 @@ class FullAuditTests(unittest.TestCase):
         weapon_apply = (
             weapon_root / "vehicleWeaponLoadoutApply.sqf"
         ).read_text(encoding="utf-8")
+        zen_server = (
+            ROOT / "MissionScripts" / "ZenModules" / "zenVehicleCustomizationServer.sqf"
+        ).read_text(encoding="utf-8")
 
         # Tab names arrive as strings already. Stringifying them adds quotes and makes every
         # non-Turret request fail the allow-list. Visibility must not rewrite fitted positions.
@@ -148,6 +151,14 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn("count _rawMagazines", copy_builder)
         self.assertIn("_liveReadBack", weapon_apply)
         self.assertIn("Waldo_fnc_VehicleWeaponLoadoutSelectLocal", weapon_apply)
+
+        # Server authority must not be confused with object locality. Five-HC TestMission testing
+        # demonstrated that accepted ZEN rows silently failed when the vehicle was not server-local.
+        self.assertIn("if (!_ownerExecution && {!local _vehicle})", weapon_apply)
+        self.assertIn("owner _vehicle", weapon_apply)
+        self.assertIn('remoteExecCall ["Waldo_fnc_VehicleWeaponLoadoutApply", _vehicleOwner]', weapon_apply)
+        self.assertIn("if (local _vehicle) then", zen_server)
+        self.assertIn("_weaponResultPending", zen_server)
 
     def test_repository_and_release_use_mit_license(self):
         license_text = (ROOT / "LICENSE").read_text(encoding="utf-8")
