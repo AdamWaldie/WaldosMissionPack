@@ -1,17 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
- * Validates a local axe swing and forwards the requested tree hit to the server.
- *
- * Arguments:
- * 0: unit <OBJECT> - swinging player
- * 1: weapon <STRING> - active weapon classname
- * 2: target <OBJECT> - tree under the cursor
- *
- * Return Value:
- * Boolean - true when a request was sent
- *
- * Example:
- * [player, currentWeapon player, cursorObject] call Waldo_fnc_TreeFellingSwing;
+ * Validates a local axe swing and forwards one requested tree hit to the server.
+ * Locality/authority: interface-local prefilter only; the server repeats all authoritative checks.
+ * Repeat/JIP behaviour: stateless and inert while disabled. Non-target IMS swings return before tool
+ * checks, notifications or network traffic.
+ * Arguments: unit OBJECT, weapon STRING, target OBJECT.
+ * Return Value: BOOL - true when one request was sent.
+ * Current callers: TreeFellingInit action and optional IMS swing callback.
+ * Example: [player, currentWeapon player, cursorObject] call Waldo_fnc_TreeFellingSwing;
  */
 
 params [
@@ -21,7 +17,7 @@ params [
 ];
 if !(hasInterface && {local _unit}) exitWith {false};
 if (remoteExecutedOwner > 0) exitWith {false};
-if (!isNull _target && {_unit distance _target > (missionNamespace getVariable ["Waldo_TreeFelling_Range", 3])}) exitWith {false};
+if !([_target, _unit] call Waldo_fnc_TreeFellingCanTargetLocal) exitWith {false};
 
 private _patterns = missionNamespace getVariable ["Waldo_TreeFelling_WeaponPatterns", ["axe", "hatchet"]];
 private _weaponLower = toLowerANSI _weapon;

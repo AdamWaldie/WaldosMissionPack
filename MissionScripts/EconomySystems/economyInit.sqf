@@ -74,20 +74,7 @@ WaldoEcoCore_ZeusHeaderRootText = "WMP Economy Systems";
 WaldoEcoCore_ZeusHeaderRootTooltip = "WMP Economy Systems";
 WaldoEcoCore_ZeusHeaderRootColor = [0.25, 0.85, 1, 1];
 
-if (hasInterface && {isNil "WaldoEcoCommand_LocalIdentityLoopStarted"}) then {
-    WaldoEcoCommand_LocalIdentityLoopStarted = true;
-
-    call Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity;
-
-    [] spawn {
-        while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-            call Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity;
-            uiSleep 2;
-        };
-
-        WaldoEcoCommand_LocalIdentityLoopStarted = nil;
-    };
-};
+[] call Waldo_fnc_EcoCommand_startLocalGroundCommandIdentityService;
 
 [] call Waldo_fnc_EcoResource_startZoneCaptureRequestLoop;
 [] call Waldo_fnc_EcoResource_startZeusZoneActionBridge;
@@ -232,33 +219,4 @@ if ([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority) then {
     [] call Waldo_fnc_EcoCore_startTestingNoticePlayerBridge;
 };
 
-if (hasInterface && {isNil "WaldoEcoCore_LocalWorldActionLoopStarted"}) then {
-    WaldoEcoCore_LocalWorldActionLoopStarted = true;
-
-    [] spawn {
-        private _lastRevision = -1;
-        private _nextRepair = 0;
-        while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-            private _revision = missionNamespace getVariable ["WaldoEcoCore_RuntimeRegistryRevision", 0];
-            if (_revision != _lastRevision || {diag_tickTime >= _nextRepair}) then {
-                _lastRevision = _revision;
-                _nextRepair = diag_tickTime + 10;
-                if (!isNil "Waldo_fnc_EcoResource_ensureCrateActionLocal") then {
-                    {[_x] call Waldo_fnc_EcoResource_ensureCrateActionLocal;} forEach (["CRATES"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-                if (!isNil "Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal") then {
-                    {[_x] call Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal;} forEach (["RESEARCH_CENTERS"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-                if (!isNil "Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal") then {
-                    {[_x] call Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal;} forEach (["CONSTRUCTION_VEHICLES"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-                if (!isNil "Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal") then {
-                    {[_x] call Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal;} forEach (["PURCHASE_TERMINALS"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-            };
-            uiSleep 0.5;
-        };
-
-        WaldoEcoCore_LocalWorldActionLoopStarted = nil;
-    };
-};
+[] call Waldo_fnc_EcoCore_startLocalWorldActionService;

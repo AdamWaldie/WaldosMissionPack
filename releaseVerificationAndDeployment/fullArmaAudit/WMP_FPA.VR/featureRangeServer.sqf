@@ -470,9 +470,31 @@ private _dropAircraft = ["qa_drop_aircraft", "B_Heli_Transport_01_F", [-30, 55, 
 _dropAircraft allowDamage false;
 _dropAircraft enableSimulationGlobal false;
 _dropAircraft flyInHeight 55;
+if (crew _dropAircraft isEqualTo []) then {createVehicleCrew _dropAircraft};
+{_x allowDamage false} forEach crew _dropAircraft;
+deleteMarker "qa_drop_zone";
+private _dropZoneMarker = createMarker ["qa_drop_zone", [-30, 450, 0]];
+_dropZoneMarker setMarkerType "mil_end";
+_dropZoneMarker setMarkerText "QA Static-Line Drop Zone";
+_dropZoneMarker setMarkerDir 180;
+[
+    _dropAircraft,
+    "qa_drop_zone",
+    -1,
+    300,
+    300,
+    createHashMapFromArray [
+        ["staticJumpEnabled", true],
+        ["haloJumpEnabled", false],
+        ["createMarkers", true],
+        ["keepMarkersOnCleanup", false],
+        ["name", "QA Static-Line Drop Zone"],
+        ["aircraftInvincible", true]
+    ]
+] call Waldo_fnc_ParadropQuickFlightSetup;
 private _dropFlag = ["qa_drop_flag", "FlagPole_F", [-35, 38, 0], 0, false] call Waldo_QA_fnc_getFeatureObjectServer;
 missionNamespace setVariable ["Waldo_QA_Paradrop", [_dropFlag, _dropAircraft], true];
-["logistics", "LOGISTICS / PARADROP", [-73, 45, 0], "MHQ deployment, standalone info-stand quartermaster and airborne jump transport."] call Waldo_QA_fnc_registerFeatureStationServer;
+["logistics", "LOGISTICS / PARADROP", [-73, 45, 0], "MHQ deployment, standalone info-stand quartermaster and the full marker-driven static-line flight composition."] call Waldo_QA_fnc_registerFeatureStationServer;
 
 Waldo_QA_fnc_activateDropAircraftServer = {
     if (!isServer) exitWith {};
@@ -550,7 +572,12 @@ private _dialogueUnits = [];
         ["Is the market safe?", "MARKET"],
         ["That is all, thank you.", ""]
     ]],
-    ["CLINIC", ["Follow the blue doors beyond the square."]],
+    ["CLINIC", ["The clinic is operating today. What else do you need to know?"], [
+        ["Which route should I take?", "CLINIC_ROUTE"],
+        ["What services are available?", "CLINIC_SERVICES"]
+    ]],
+    ["CLINIC_ROUTE", ["Follow the blue doors beyond the square."]],
+    ["CLINIC_SERVICES", ["The staff can provide urgent treatment and basic supplies."]],
     ["MARKET", ["The market is crowded but calm this morning."]]
 ]] call Waldo_fnc_ConversationCreate;
 [_dialogueUnits select 3, "QA_LINEAR"] call Waldo_fnc_ConversationAssign;

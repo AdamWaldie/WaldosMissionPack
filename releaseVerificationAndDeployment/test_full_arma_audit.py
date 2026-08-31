@@ -1246,6 +1246,10 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('[_variableName, "B_MRAP_01_F", _position, 0, false]', server)
         self.assertIn("START / RESET CONVOY TEST", client)
         self.assertIn('["qa_drop_aircraft", "B_Heli_Transport_01_F", [-30, 55, 55], 180, false]', server)
+        self.assertIn('createMarker ["qa_drop_zone", [-30, 450, 0]]', server)
+        self.assertIn('call Waldo_fnc_ParadropQuickFlightSetup', server)
+        self.assertIn('["createMarkers", true]', server)
+        self.assertNotIn('[_dropAircraft] call Waldo_fnc_VehicleJumpSetup', client)
         self.assertIn("ACTIVATE PARADROP AIRCRAFT", client)
 
     def test_pack_init_cannot_deadlock_on_dedicated_server(self):
@@ -1841,9 +1845,153 @@ class FullAuditTests(unittest.TestCase):
         setup = (ROOT / "MissionScripts" / "Paradrop" / "paradropSetupLocal.sqf").read_text(encoding="utf-8")
         update = (ROOT / "MissionScripts" / "Paradrop" / "paradropUpdateMarkersLocal.sqf").read_text(encoding="utf-8")
         self.assertIn('[] call Waldo_fnc_ParadropSetupLocal', init_player)
+        self.assertIn('"Waldo_Paradrop_PublicAircraft" addPublicVariableEventHandler', setup)
         self.assertIn('Waldo_Paradrop_MarkerPFH', setup)
+        self.assertIn('CBA_fnc_removePerFrameHandler', setup)
+        self.assertLess(
+            setup.index('"Waldo_Paradrop_PublicAircraft" addPublicVariableEventHandler'),
+            setup.index('missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []]'),
+        )
         self.assertIn('Waldo_Paradrop_PublicAircraft', update)
         self.assertIn('createMarkerLocal', update)
+
+    def test_gunship_live_marker_reconciler_sleeps_when_registry_is_empty(self):
+        setup = (ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipSetupLocal.sqf").read_text(encoding="utf-8")
+        publish = (ROOT / "MissionScripts" / "CombatSystems" / "AirborneGunship" / "gunshipPublishState.sqf").read_text(encoding="utf-8")
+        self.assertIn('"Waldo_Gunship_PublicSystems" addPublicVariableEventHandler', setup)
+        self.assertIn('CBA_fnc_addPerFrameHandler', setup)
+        self.assertIn('CBA_fnc_removePerFrameHandler', setup)
+        self.assertIn('if (_systems isEqualTo []) then', setup)
+        self.assertIn('if (_summaries isEqualTo []) then', publish)
+        self.assertIn('remoteExecCall ["", "Waldo_Gunship_LocalSetup"]', publish)
+
+    def test_breaching_stop_clears_obsolete_runtime_jip_activation(self):
+        source = (ROOT / "MissionScripts" / "CombatSystems" / "Breaching" / "breachingStop.sqf").read_text(encoding="utf-8")
+        self.assertIn('[[["Waldo_Breaching_Enable", false]], false]', source)
+        self.assertIn('remoteExecCall ["", "Waldo_Breaching_RuntimeInit"]', source)
+
+    def test_named_object_jip_entries_are_removed_with_their_objects(self):
+        binder = (ROOT / "MissionScripts" / "Networking" / "jipBindToObjectServer.sqf").read_text(encoding="utf-8")
+        remover = (ROOT / "MissionScripts" / "Networking" / "jipRemoveBoundServer.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        self.assertIn('addEventHandler ["Deleted"', binder)
+        self.assertIn('remoteExec ["", _x]', binder)
+        self.assertIn('remoteExec ["", _jipId]', remover)
+        self.assertIn('class JipBindToObjectServer', functions)
+        self.assertIn('class JipRemoveBoundServer', functions)
+        for relative_path in (
+            "MissionScripts/Logistics/Crates/doStarterCrate.sqf",
+            "MissionScripts/Logistics/FieldResupply/fieldResupplyRegisterHub.sqf",
+            "MissionScripts/Logistics/FieldResupply/fieldResupplyServerHandle.sqf",
+            "MissionScripts/MissionFlowAndUi/TacticalDisplay/tacticalDisplayRegister.sqf",
+        ):
+            source = (ROOT / relative_path).read_text(encoding="utf-8")
+            self.assertIn("call Waldo_fnc_JipBindToObjectServer", source, relative_path)
+
+        hub = (ROOT / "MissionScripts" / "Logistics" / "FieldResupply" / "fieldResupplyRegisterHub.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_FieldResupply_DeletedEH', hub)
+        self.assertIn('missionNamespace setVariable ["Waldo_FieldResupply_Hubs", _registeredHubs, true]', hub)
+
+    def test_economy_named_action_replay_follows_object_lifetime(self):
+        core = ROOT / "MissionScripts" / "EconomySystems" / "Core"
+        publish = (core / "publishZeusObjectAction.sqf").read_text(encoding="utf-8")
+        clear = (core / "clearZeusObjectAction.sqf").read_text(encoding="utf-8")
+        self.assertIn('call Waldo_fnc_JipBindToObjectServer', publish)
+        self.assertIn('call Waldo_fnc_JipRemoveBoundServer', clear)
+
+    def test_economy_testing_notice_uses_player_lifecycle_events(self):
+        core = ROOT / "MissionScripts" / "EconomySystems" / "Core"
+        start = (core / "startTestingNoticePlayerBridge.sqf").read_text(encoding="utf-8")
+        install = (core / "installTestingNoticeActionServer.sqf").read_text(encoding="utf-8")
+        stop = (core / "stopTestingNoticePlayerBridge.sqf").read_text(encoding="utf-8")
+        purge = (core / "purgeEconomySystems.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+
+        self.assertNotIn("uiSleep 1", start)
+        self.assertIn('addMissionEventHandler ["PlayerConnected"', start)
+        self.assertIn('addMissionEventHandler ["EntityRespawned"', start)
+        self.assertIn("forEach allPlayers", start)
+        self.assertIn("WaldoEcoCore_TestingNoticeActionAddedLocalV2", install)
+        self.assertIn("Waldo_fnc_EcoCore_getTestingNoticeActionArgs", install)
+        self.assertIn('isKindOf "HeadlessClient_F"', install)
+        self.assertIn('if (_ownerId <= 0) exitWith {false}', install)
+        self.assertIn('remoteExecCall ["Waldo_fnc_EcoCore_ensureLocalObjectAction", _ownerId]', install)
+        self.assertNotIn("Waldo_fnc_EcoCore_publishZeusObjectAction", install)
+        self.assertNotIn("Waldo_fnc_JipBindToObjectServer", install)
+        self.assertIn('removeMissionEventHandler ["PlayerConnected"', stop)
+        self.assertIn('removeMissionEventHandler ["EntityRespawned"', stop)
+        self.assertIn("Waldo_fnc_EcoCore_stopTestingNoticePlayerBridge", purge)
+        self.assertIn("class EcoCore_installTestingNoticeActionServer", functions)
+        self.assertIn("class EcoCore_stopTestingNoticePlayerBridge", functions)
+
+    def test_economy_local_world_actions_are_change_driven_with_repair_fallback(self):
+        root = ROOT / "MissionScripts" / "EconomySystems"
+        core = root / "Core"
+        init = (root / "economyInit.sqf").read_text(encoding="utf-8")
+        start = (core / "startLocalWorldActionService.sqf").read_text(encoding="utf-8")
+        request = (core / "requestLocalWorldActionRefresh.sqf").read_text(encoding="utf-8")
+        repair = (core / "scheduleLocalWorldActionRepair.sqf").read_text(encoding="utf-8")
+        stop = (core / "stopLocalWorldActionService.sqf").read_text(encoding="utf-8")
+        cleanup = (core / "cleanupUnifiedClientLocal.sqf").read_text(encoding="utf-8")
+        register = (core / "registerRuntimeObject.sqf").read_text(encoding="utf-8")
+        unregister = (core / "unregisterRuntimeObject.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+
+        self.assertNotIn("WaldoEcoCore_LocalWorldActionLoopStarted", init)
+        self.assertNotIn("uiSleep 0.5", init)
+        self.assertIn("Waldo_fnc_EcoCore_startLocalWorldActionService", init)
+        self.assertIn('"WaldoEcoCore_RuntimeRegistryRevision" addPublicVariableEventHandler', start)
+        self.assertIn("LocalWorldActionRegistryPVEHInstalled", start)
+        self.assertIn("LocalWorldActionServiceStarted", start)
+        self.assertIn("CBA_fnc_execNextFrame", request)
+        self.assertIn("CBA_fnc_waitAndExecute", repair)
+        self.assertRegex(repair, r"(?s)\[_epoch\],\s*10\s*\]\s*call CBA_fnc_waitAndExecute")
+        self.assertIn("LocalWorldActionServiceEpoch", repair + stop)
+        self.assertNotIn("removePublicVariableEventHandler", start + stop)
+        self.assertIn("Waldo_fnc_EcoCore_stopLocalWorldActionService", cleanup)
+        self.assertIn("Waldo_fnc_EcoCore_requestLocalWorldActionRefresh", register)
+        self.assertIn("Waldo_fnc_EcoCore_requestLocalWorldActionRefresh", unregister)
+        for function_name in (
+            "EcoCore_refreshLocalWorldActions",
+            "EcoCore_requestLocalWorldActionRefresh",
+            "EcoCore_scheduleLocalWorldActionRepair",
+            "EcoCore_startLocalWorldActionService",
+            "EcoCore_stopLocalWorldActionService",
+        ):
+            self.assertIn(f"class {function_name}", functions)
+
+    def test_economy_ground_command_identity_is_event_driven_and_bounded(self):
+        root = ROOT / "MissionScripts" / "EconomySystems"
+        command = root / "Command"
+        init = (root / "economyInit.sqf").read_text(encoding="utf-8")
+        publish = (command / "publishLocalGroundCommandIdentity.sqf").read_text(encoding="utf-8")
+        request = (command / "requestLocalGroundCommandIdentityRefresh.sqf").read_text(encoding="utf-8")
+        retry = (command / "scheduleLocalGroundCommandIdentityRetry.sqf").read_text(encoding="utf-8")
+        start = (command / "startLocalGroundCommandIdentityService.sqf").read_text(encoding="utf-8")
+        stop = (command / "stopLocalGroundCommandIdentityService.sqf").read_text(encoding="utf-8")
+        cleanup = (root / "Core" / "cleanupUnifiedClientLocal.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+
+        self.assertNotIn("WaldoEcoCommand_LocalIdentityLoopStarted", init)
+        self.assertNotIn("uiSleep 2", init)
+        self.assertIn("Waldo_fnc_EcoCommand_startLocalGroundCommandIdentityService", init)
+        self.assertIn('"unit"', start)
+        self.assertIn("CBA_fnc_addPlayerEventHandler", start)
+        self.assertIn("CBA_fnc_removePlayerEventHandler", stop)
+        self.assertIn("diag_tickTime + 60", request)
+        self.assertIn("CBA_fnc_waitAndExecute", retry)
+        self.assertIn("LocalIdentityServiceEpoch", retry + stop)
+        self.assertIn("LocalIdentityGeneration", request + retry + stop)
+        self.assertIn("Waldo_fnc_EcoCommand_stopLocalGroundCommandIdentityService", cleanup)
+        self.assertIn('isNotEqualTo _ownerId', publish)
+        self.assertIn('isNotEqualTo _key', publish)
+        for function_name in (
+            "EcoCommand_requestLocalGroundCommandIdentityRefresh",
+            "EcoCommand_scheduleLocalGroundCommandIdentityRetry",
+            "EcoCommand_startLocalGroundCommandIdentityService",
+            "EcoCommand_stopLocalGroundCommandIdentityService",
+        ):
+            self.assertIn(f"class {function_name}", functions)
 
     def test_persistence_load_handshake_prevents_acre_and_save_races(self):
         init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
@@ -2534,18 +2682,19 @@ class FullAuditTests(unittest.TestCase):
             r"(?s)Waldo_MG_fnc_scheduleTimedProgressServer\s*=\s*\{.*?\[\s*\{.*?\},\s*\[_table,\s*_timerEpoch\],\s*\(\(_dueAt - serverTime\)",
         )
 
-    def test_party_registration_initializes_only_enabled_games(self):
+    def test_party_registration_does_not_create_idle_game_instances(self):
         core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")
         mark_start = core.index("Waldo_MG_fnc_markTableServer")
         mark_end = core.index("Waldo_MG_fnc_clearUnitSeatVariablesServer", mark_start)
         mark_body = core[mark_start:mark_end]
-        self.assertIn('forEach (_table getVariable ["Waldo_MG_TableGames", []])', mark_body)
-        for game_id in (
-            "battleship", "whoswho", "shotgun", "checkers", "rps", "blackjack",
-            "chess", "poker", "drawpoker", "liarsdice", "connectfour", "uno",
+        for clear_name in (
+            "battleshipClearServer", "whosWhoClearServer", "shotgunClearServer",
+            "checkersClearServer", "rpsClearServer", "blackjackClearServer",
+            "chessClearServer", "pokerClearServer", "drawPokerClearServer",
+            "liarsDiceClearServer", "connectFourClearServer", "unoClearServer",
         ):
-            self.assertIn(f'case "{game_id}"', mark_body)
-        self.assertNotIn("[_table] call Waldo_MG_fnc_unoClearServer;\n        [_table] call", mark_body)
+            self.assertNotIn(clear_name, mark_body)
+        self.assertIn("Every game start function", mark_body)
 
     def test_party_registration_is_explicit_queued_and_non_executable_for_jip(self):
         root = ROOT / "MissionScripts" / "MiniGames"
@@ -2762,6 +2911,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Container remains because storage is full", collect)
         self.assertIn("deleteVehicle _crate", collect)
         self.assertIn("economy/resource/full-crate-consumed", server_audit)
+        economy_case = server_audit.split('["economy/resource/full-crate-consumed", {', 1)[1].split("] call Waldo_QA_fnc_case;", 1)[0]
+        self.assertIn('createUnit ["B_Soldier_F"', economy_case)
+        self.assertNotIn("allPlayers param", economy_case)
         self.assertIn("call Waldo_fnc_EcoResource_getResourceTypes", fixture)
         self.assertIn("private _rows = [[_primaryType, 100]]", fixture)
         self.assertIn("_rows pushBack [_secondaryType, 5]", fixture)

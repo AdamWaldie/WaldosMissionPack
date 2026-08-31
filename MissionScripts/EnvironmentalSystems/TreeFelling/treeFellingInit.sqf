@@ -1,15 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
  * Installs repeat-safe vanilla and optional IMS hooks for configurable tree felling and brush clearing.
- *
- * Arguments:
- * None
- *
- * Return Value:
- * Boolean - true when installed
- *
- * Example:
- * [] call Waldo_fnc_TreeFellingInit;
+ * Locality/authority: interface-local installation only; authoritative strikes remain server-side.
+ * Repeat/JIP behaviour: waits asynchronously for the ordered runtime snapshot, installs once for
+ * each player object and remains completely inert unless Waldo_TreeFelling_Enable is explicitly true.
+ * Arguments: None.
+ * Return Value: BOOL - true when installed or waiting for runtime state, otherwise false.
+ * Current callers: initPlayerLocal and FeatureRuntimeApply.
+ * Example: [] call Waldo_fnc_TreeFellingInit;
  */
 
 if !(hasInterface) exitWith {false};
@@ -27,6 +25,7 @@ if !(missionNamespace getVariable ["Waldo_TreeFelling_Enable", false]) exitWith 
 if (missionNamespace getVariable ["Waldo_TreeFelling_ClientStarted", false]) exitWith {true};
 
 missionNamespace setVariable ["Waldo_TreeFelling_ClientStarted", true];
+uiNamespace setVariable ["Waldo_TreeFelling_TargetCache", []];
 private _actionId = player addAction [
     "Fell Tree / Clear Brush",
     {
@@ -37,7 +36,7 @@ private _actionId = player addAction [
     false,
     true,
     "",
-    "_this == player && {vehicle player == player} && {player distance cursorObject <= (missionNamespace getVariable ['Waldo_TreeFelling_Range', 3])} && {toLowerANSI ((getModelInfo cursorObject) select 1) find 'tree' >= 0 || {typeOf cursorObject in (missionNamespace getVariable ['Waldo_TreeFelling_AllowedClasses', []])} || {(missionNamespace getVariable ['Waldo_TreeFelling_ClearBushes', false]) && {toLowerANSI ((getModelInfo cursorObject) select 1) find 'bush' >= 0}}}",
+    "[cursorObject, _this] call Waldo_fnc_TreeFellingCanTargetLocal",
     4
 ];
 player setVariable ["Waldo_TreeFelling_ActionId", _actionId];

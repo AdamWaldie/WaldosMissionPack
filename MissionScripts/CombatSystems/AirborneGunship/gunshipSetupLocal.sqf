@@ -27,7 +27,11 @@
  * Example:
  * [] call Waldo_fnc_GunshipSetupLocal;
  * Result: this client has exactly the current markers and permitted controller actions.
- * Current callers: initPlayerLocal, gunship public-state replay and audit refresh controls.
+ * Repeat/JIP behaviour: repeat-safe. One event-driven listener reconciles arrival of the custom
+ * public registry without polling. The marker handler exists only while the registry contains a
+ * system and keeps its existing one-second update cadence while active. Empty-state reconciliation
+ * removes the handler and all former local markers/actions.
+ * Current callers: gunship public-state replay and audit refresh controls.
  */
 
 if !(hasInterface) exitWith {false};
@@ -41,11 +45,28 @@ if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", isSer
     };
     true
 };
-if (isNil {missionNamespace getVariable "Waldo_Gunship_MarkerPFH"}) then {
-    private _handler = [{[] call Waldo_fnc_GunshipUpdateMarkersLocal}, 1] call CBA_fnc_addPerFrameHandler;
-    missionNamespace setVariable ["Waldo_Gunship_MarkerPFH", _handler];
+// Object/public-variable replication cannot install local markers or ACE actions for us. The
+// registry and explicit setup call can arrive in either order during JIP, so react to the named
+// custom registry change rather than leaving an empty marker updater running as an order fallback.
+if !(missionNamespace getVariable ["Waldo_Gunship_PublicSystemsEHInstalled", false]) then {
+    "Waldo_Gunship_PublicSystems" addPublicVariableEventHandler {
+        [] call Waldo_fnc_GunshipSetupLocal;
+    };
+    missionNamespace setVariable ["Waldo_Gunship_PublicSystemsEHInstalled", true];
 };
 private _systems = missionNamespace getVariable ["Waldo_Gunship_PublicSystems", []];
+private _markerHandler = missionNamespace getVariable ["Waldo_Gunship_MarkerPFH", -1];
+if (_systems isEqualTo []) then {
+    if (_markerHandler >= 0) then {
+        [_markerHandler] call CBA_fnc_removePerFrameHandler;
+        missionNamespace setVariable ["Waldo_Gunship_MarkerPFH", nil];
+    };
+} else {
+    if (_markerHandler < 0) then {
+        _markerHandler = [{[] call Waldo_fnc_GunshipUpdateMarkersLocal}, 1] call CBA_fnc_addPerFrameHandler;
+        missionNamespace setVariable ["Waldo_Gunship_MarkerPFH", _markerHandler];
+    };
+};
 // Publication can legitimately arrive through the public variable, ordered runtime snapshot and
 // explicit reconcile call in the same frame. Do not tear down and recreate the same ACE tree three
 // times; that action churn was visible in RPTs and needlessly stressed the ACE interaction menu.

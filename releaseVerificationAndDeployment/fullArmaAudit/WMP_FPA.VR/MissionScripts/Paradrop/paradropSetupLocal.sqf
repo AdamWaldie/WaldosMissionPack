@@ -19,18 +19,40 @@
  *
  * Example:
  * [] call Waldo_fnc_ParadropSetupLocal;
- * Current callers: initPlayerLocal.sqf unconditionally, plus Waldo_fnc_ParadropCreateDropZone,
+ * Repeat/JIP behaviour: repeat-safe. One event-driven listener reconciles arrival of the custom
+ * public registry without polling. The live-marker handler exists only while at least one published
+ * aircraft exists; state-change calls start it for the first aircraft and remove it after the last.
+ * Active aircraft keep the existing one-second live marker cadence.
+ * Current callers: initPlayerLocal.sqf, plus Waldo_fnc_ParadropCreateDropZone,
  * Waldo_fnc_ParadropRemoveDropZone and Waldo_fnc_ParadropQuickFlightSetup when state changes.
  */
 
 if !(hasInterface) exitWith {false};
-if (isNil {missionNamespace getVariable "Waldo_Paradrop_MarkerPFH"}) then {
-    private _handler = [{[] call Waldo_fnc_ParadropUpdateMarkersLocal}, 1] call CBA_fnc_addPerFrameHandler;
-    missionNamespace setVariable ["Waldo_Paradrop_MarkerPFH", _handler];
-    diag_log format ["[WMP PARADROP] Live aircraft marker reconciler started clientOwner=%1.", clientOwner];
+// Arma transports the custom registry, but applying its marker side effects remains client-local.
+// The registry may arrive before or after the explicit setup call during JIP, so cover both orders
+// without retaining an empty per-frame handler for the entire mission.
+if !(missionNamespace getVariable ["Waldo_Paradrop_PublicAircraftEHInstalled", false]) then {
+    "Waldo_Paradrop_PublicAircraft" addPublicVariableEventHandler {
+        [] call Waldo_fnc_ParadropSetupLocal;
+    };
+    missionNamespace setVariable ["Waldo_Paradrop_PublicAircraftEHInstalled", true];
+};
+private _systems = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
+private _markerHandler = missionNamespace getVariable ["Waldo_Paradrop_MarkerPFH", -1];
+if (_systems isEqualTo []) then {
+    if (_markerHandler >= 0) then {
+        [_markerHandler] call CBA_fnc_removePerFrameHandler;
+        missionNamespace setVariable ["Waldo_Paradrop_MarkerPFH", nil];
+        diag_log format ["[WMP PARADROP] Live aircraft marker reconciler stopped clientOwner=%1; no aircraft remain.", clientOwner];
+    };
+} else {
+    if (_markerHandler < 0) then {
+        _markerHandler = [{[] call Waldo_fnc_ParadropUpdateMarkersLocal}, 1] call CBA_fnc_addPerFrameHandler;
+        missionNamespace setVariable ["Waldo_Paradrop_MarkerPFH", _markerHandler];
+        diag_log format ["[WMP PARADROP] Live aircraft marker reconciler started clientOwner=%1.", clientOwner];
+    };
 };
 
-private _systems = missionNamespace getVariable ["Waldo_Paradrop_PublicAircraft", []];
 private _systemIds = _systems apply {_x select 0};
 private _knownIds = missionNamespace getVariable ["Waldo_Paradrop_LocalIds", []];
 {

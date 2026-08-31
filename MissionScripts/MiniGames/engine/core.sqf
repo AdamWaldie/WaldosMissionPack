@@ -465,26 +465,10 @@ Waldo_MG_fnc_markTableServer = {
         _table setVariable ["Waldo_MG_TableRequiredVotes", 1, true];
         _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
         _table setVariable ["Waldo_MG_TableRevision", 0, true];
-        // Arma replicates the custom table variables written by each clear function, but it cannot
-        // infer which game catalogue this WMP table enables. Initialise only enabled games so a
-        // chess-only table does not publish eleven unrelated empty game states. The default
-        // registration expands to all twelve ids and therefore retains the full existing path.
-        {
-            switch (_x) do {
-                case "battleship": {[_table] call Waldo_MG_fnc_battleshipClearServer;};
-                case "whoswho": {[_table] call Waldo_MG_fnc_whosWhoClearServer;};
-                case "shotgun": {[_table] call Waldo_MG_fnc_shotgunClearServer;};
-                case "checkers": {[_table] call Waldo_MG_fnc_checkersClearServer;};
-                case "rps": {[_table] call Waldo_MG_fnc_rpsClearServer;};
-                case "blackjack": {[_table] call Waldo_MG_fnc_blackjackClearServer;};
-                case "chess": {[_table] call Waldo_MG_fnc_chessClearServer;};
-                case "poker": {[_table] call Waldo_MG_fnc_pokerClearServer;};
-                case "drawpoker": {[_table] call Waldo_MG_fnc_drawPokerClearServer;};
-                case "liarsdice": {[_table] call Waldo_MG_fnc_liarsDiceClearServer;};
-                case "connectfour": {[_table] call Waldo_MG_fnc_connectFourClearServer;};
-                case "uno": {[_table] call Waldo_MG_fnc_unoClearServer;};
-            };
-        } forEach (_table getVariable ["Waldo_MG_TableGames", []]);
+        // Registration creates only the lightweight lobby instance. Every game start function
+        // constructs its complete authoritative state before marking that game active, so creating
+        // and globally publishing empty state for the catalogue here is redundant. Active-game
+        // mutation, publication, timed transitions and spectator viewing are deliberately unchanged.
         [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
     };
 

@@ -311,6 +311,7 @@ switch (toUpperANSI _action) do {
             ["Waldo_TreeFelling_HitCooldown", _cooldown max 0.1], ["Waldo_TreeFelling_ClearBushes", _clearBushes],
             ["Waldo_TreeFelling_BushRadius", _bushRadius max 0]
         ] call _publishAll;
+        missionNamespace setVariable ["Waldo_TreeFelling_ConfigEpoch", (missionNamespace getVariable ["Waldo_TreeFelling_ConfigEpoch", 0]) + 1, true];
         // See the listen-host note above TREATMENT_CONFIG's equivalent calls.
         if (_enable) then {
             [] remoteExecCall ["Waldo_fnc_TreeFellingInit", -2, "Waldo_TreeFelling_RuntimeInit"];

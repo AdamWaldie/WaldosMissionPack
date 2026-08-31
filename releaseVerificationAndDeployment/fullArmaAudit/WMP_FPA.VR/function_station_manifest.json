@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1028,
+  "registeredFunctionCount": 1043,
   "runtimeFunctionCount": 380,
-  "functionCount": 1408,
+  "functionCount": 1423,
   "stations": [
     {
       "id": "control",
@@ -480,6 +480,18 @@
       "name": "Waldo_fnc_AceSetNameRespawnBindingRepair",
       "file": "MissionScripts/MissionInit/aceSetNameRespawnBindingRepair.sqf",
       "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_JipBindToObjectServer",
+      "file": "MissionScripts/Networking/jipBindToObjectServer.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_JipRemoveBoundServer",
+      "file": "MissionScripts/Networking/jipRemoveBoundServer.sqf",
+      "station": "control",
       "activation": "manual"
     },
     {
@@ -3153,6 +3165,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_TreeFellingCanTargetLocal",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingCanTargetLocal.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_TreeFellingInit",
       "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingInit.sqf",
       "station": "tree-felling",
@@ -3167,6 +3185,12 @@
     {
       "name": "Waldo_fnc_TreeFellingProcess",
       "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingProcess.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreeFellingSetupFallenLocal",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingSetupFallenLocal.sqf",
       "station": "tree-felling",
       "activation": "manual"
     },
@@ -3609,8 +3633,20 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_EcoCore_installTestingNoticeActionServer",
+      "file": "MissionScripts/EconomySystems/Core/installTestingNoticeActionServer.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_EcoCore_startTestingNoticePlayerBridge",
       "file": "MissionScripts/EconomySystems/Core/startTestingNoticePlayerBridge.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_stopTestingNoticePlayerBridge",
+      "file": "MissionScripts/EconomySystems/Core/stopTestingNoticePlayerBridge.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
@@ -3641,6 +3677,36 @@
     {
       "name": "Waldo_fnc_EcoCore_getRuntimeObjects",
       "file": "MissionScripts/EconomySystems/Core/getRuntimeObjects.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_refreshLocalWorldActions",
+      "file": "MissionScripts/EconomySystems/Core/refreshLocalWorldActions.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_requestLocalWorldActionRefresh",
+      "file": "MissionScripts/EconomySystems/Core/requestLocalWorldActionRefresh.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_scheduleLocalWorldActionRepair",
+      "file": "MissionScripts/EconomySystems/Core/scheduleLocalWorldActionRepair.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_startLocalWorldActionService",
+      "file": "MissionScripts/EconomySystems/Core/startLocalWorldActionService.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_stopLocalWorldActionService",
+      "file": "MissionScripts/EconomySystems/Core/stopLocalWorldActionService.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
@@ -6101,6 +6167,30 @@
     {
       "name": "Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity",
       "file": "MissionScripts/EconomySystems/Command/publishLocalGroundCommandIdentity.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCommand_requestLocalGroundCommandIdentityRefresh",
+      "file": "MissionScripts/EconomySystems/Command/requestLocalGroundCommandIdentityRefresh.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCommand_scheduleLocalGroundCommandIdentityRetry",
+      "file": "MissionScripts/EconomySystems/Command/scheduleLocalGroundCommandIdentityRetry.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCommand_startLocalGroundCommandIdentityService",
+      "file": "MissionScripts/EconomySystems/Command/startLocalGroundCommandIdentityService.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCommand_stopLocalGroundCommandIdentityService",
+      "file": "MissionScripts/EconomySystems/Command/stopLocalGroundCommandIdentityService.sqf",
       "station": "economy-command",
       "activation": "manual"
     },
