@@ -61,7 +61,7 @@ if (_suite in ["all", "core"]) then {
     ["core/zen/all-module-families", {
         private _coreCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
         private _economyCount = missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0];
-        ["core/zen/all-module-families", _coreCount == 50 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
+        ["core/zen/all-module-families", _coreCount == 52 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
     ["core/zen/icons-present", {
@@ -156,9 +156,15 @@ if (_suite in ["all", "core"]) then {
             player setPosATL _originalPosition;
             private _layoutChoices = [];
             for "_index" from 1 to 8 do {
-                _layoutChoices pushBack [format ["QA_LAYOUT_%1", _index], format ["Option %1 is deliberately long enough to wrap cleanly while preserving every word and making the response list scroll when the available screen height is exhausted.", _index], true];
+                _layoutChoices pushBack [format ["QA_LAYOUT_%1", _index], format ["Option %1 is deliberately long enough to wrap cleanly while preserving every word and making the response list scroll when the available screen height is exhausted.", _index], true, _index == 1];
             };
             [_speaker, "QA_LAYOUT_LOCAL", _layoutChoices] call Waldo_fnc_ConversationShowChoicesLocal;
+            private _layoutDeadline = diag_tickTime + 4;
+            waitUntil {
+                uiSleep 0.05;
+                count (uiNamespace getVariable ["Waldo_Conversation_ChoiceButtons", []]) == 8
+                    || {diag_tickTime >= _layoutDeadline}
+            };
             private _layoutControls = uiNamespace getVariable ["Waldo_Conversation_ChoiceControls", []];
             private _layoutButtons = uiNamespace getVariable ["Waldo_Conversation_ChoiceButtons", []];
             if (count _layoutControls >= 3 && {count _layoutButtons == 8}) then {

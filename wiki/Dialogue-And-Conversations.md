@@ -156,6 +156,14 @@ Nearby players see each spoken line but cannot choose for the initiator. Closing
 The client also closes the panel itself if the speaker/caller is killed, deleted, incapacitated,
 respawned, moved beyond cancellation range, loses the active session, or the display is otherwise
 lost. This fail-open path does not wait for a server cleanup message before returning player control.
+The panel waits briefly for the originating ACE/vanilla interaction UI to finish closing and retries
+transient display creation for up to three seconds. Looking away immediately after selecting Talk
+therefore cannot leave a live conversation waiting without drawing its response controls.
+
+A green response with a triangular marker leads to a node that contains another response selection.
+Ordinary-colour responses continue to a spoken-only or terminal node. The marker accompanies the
+colour so the distinction remains available with colour-vision profiles and monochrome themes; it is
+advisory presentation only and does not execute or pre-evaluate the destination node.
 
 ### Response-panel sizing
 
@@ -199,12 +207,12 @@ The **WMP Mission Flow** category contains:
 - **Dialogue - Apply Simple Archetype**
 - **Dialogue - Assign Simple Lines** (separate lines with `|`)
 - **Dialogue - Clear**
-- **Conversation - Assign Named**
-- **Conversation - Start or Cancel**
+- **Conversation: Assign**
 
-Place these modules directly on the NPC. Each assignment dialog can optionally apply to the NPC's
-entire group. Named Advanced Conversations must already have been registered by mission script;
-Zeus receives only their public IDs, never their conditions or executable hooks.
+Place assignment modules directly on the NPC; they can optionally apply to the NPC's entire group.
+Advanced conversations are authored in mission scripts with `Waldo_fnc_ConversationCreate` or
+`Waldo_fnc_ConversationRegister`, then assigned in Zeus by selecting their public conversation ID.
+Private conditions and hooks remain server-side and are never replicated to curators.
 
 ## Timing, multiplayer and limits
 

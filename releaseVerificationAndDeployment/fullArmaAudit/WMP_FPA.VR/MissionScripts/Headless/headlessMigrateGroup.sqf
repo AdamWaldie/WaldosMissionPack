@@ -2,8 +2,7 @@
  * Author: WaldoTheWarfighter
  * The single funnel for every setGroupOwner call this rework performs. No other WMP script may call
  * setGroupOwner directly - every migration routes through here so Waldo_Headless_ManagedGroups stays
- * authoritative and diagnostics never drifts from the truth, unlike the legacy
- * MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf's self-contained bolt-on arrays.
+ * authoritative and diagnostics never drifts from the truth.
  *
  * Waldo_Headless_ManagedGroups only ever holds groups CURRENTLY assigned to a connected headless
  * client - a group returning to the server (or found dead/empty) is removed from the registry
@@ -16,9 +15,8 @@
  * event handlers: those handlers are useful, but are not a reliable migration acknowledgement.
  * A third-party AI mod (VCOM AI, LAMBS, ASR AI3, ...)
  * that installs its own per-unit behaviour on a one-shot unit/group init event rather than
- * continuously re-checking locality has no such adoption path of its own - the legacy
- * WerthlesHeadless.sqf's best-known failure mode was exactly this class of mod going silently
- * unresponsive after a migration it never found out about. This function cannot fix a third-party
+ * continuously re-checking locality has no such adoption path of its own. This class of mod can go
+ * silently unresponsive after a migration it never found out about. This function cannot fix a third-party
  * mod's own locality handling, so it broadcasts Waldo_Headless_GroupMigrated (a CBA global event,
  * params [group, previousOwner, newOwner]) after every successful move specifically so a mission's
  * own compatibility layer can listen and re-trigger that mod's setup function on whichever machine

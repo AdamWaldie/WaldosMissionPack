@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - UNO
  * All Waldo_MG_fnc_* functions implementing the UNO mini game (server logic + local UI).
  *
@@ -7,8 +8,16 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_unoIsCard = {
@@ -201,16 +210,8 @@ Waldo_MG_fnc_unoCreateEmptySnapshot = {
 Waldo_MG_fnc_unoPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable [
-        "Waldo_MG_UNORevision",
-        (_table getVariable ["Waldo_MG_UNORevision", 0]) + 1,
-        true
-    ];
-    _table setVariable [
-        "Waldo_MG_TableRevision",
-        (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1,
-        true
-    ];
+    [_table, "Waldo_MG_UNORevision", (_table getVariable ["Waldo_MG_UNORevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_unoRefreshSnapshotCountsServer = {
@@ -239,7 +240,7 @@ Waldo_MG_fnc_unoSetSnapshotServer = {
     if (!isServer || {isNull _table}) exitWith {};
     private _state = [_table, _snapshot] call Waldo_MG_fnc_unoRefreshSnapshotCountsServer;
     _table setVariable ["Waldo_MG_UNOSnapshotServer", _state];
-    _table setVariable ["Waldo_MG_UNOSnapshot", _state, true];
+    [_table, "Waldo_MG_UNOSnapshot", _state] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_unoPublishRevisionServer;
 };
 
@@ -341,12 +342,12 @@ Waldo_MG_fnc_unoClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_unoClearPrivateHandsServer;
-    _table setVariable ["Waldo_MG_UNOActive", false, true];
-    _table setVariable ["Waldo_MG_UNOFinished", false, true];
-    _table setVariable ["Waldo_MG_UNOGameId", "", true];
-    _table setVariable ["Waldo_MG_UNOPlayers", [], true];
-    _table setVariable ["Waldo_MG_UNOPlayerNames", [], true];
-    _table setVariable ["Waldo_MG_UNOSeatIndices", [], true];
+    [_table, "Waldo_MG_UNOActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOPlayers", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOPlayerNames", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOSeatIndices", []] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_UNOHandsServer", []];
     _table setVariable ["Waldo_MG_UNODeckServer", []];
     _table setVariable ["Waldo_MG_UNODiscardServer", []];
@@ -354,7 +355,7 @@ Waldo_MG_fnc_unoClearServer = {
     _table setVariable ["Waldo_MG_UNOJustDrawnIdsServer", []];
     private _snapshot = call Waldo_MG_fnc_unoCreateEmptySnapshot;
     _table setVariable ["Waldo_MG_UNOSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_UNOSnapshot", _snapshot, true];
+    [_table, "Waldo_MG_UNOSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_unoPublishRevisionServer;
 };
 
@@ -446,16 +447,12 @@ Waldo_MG_fnc_unoStartServer = {
         _status = format ["Opening +2 targets %1. Stack another +2 or draw two.", _names param [_turn, "Player"]];
     };
 
-    _table setVariable ["Waldo_MG_UNOActive", true, true];
-    _table setVariable ["Waldo_MG_UNOFinished", false, true];
-    _table setVariable [
-        "Waldo_MG_UNOGameId",
-        format ["Waldo_MG_UNO_%1_%2", floor (serverTime * 10), floor (random 1000000)],
-        true
-    ];
-    _table setVariable ["Waldo_MG_UNOPlayers", _players, true];
-    _table setVariable ["Waldo_MG_UNOPlayerNames", _names, true];
-    _table setVariable ["Waldo_MG_UNOSeatIndices", _seatIndices, true];
+    [_table, "Waldo_MG_UNOActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOGameId", format ["Waldo_MG_UNO_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOPlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOPlayerNames", _names] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_UNOSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_UNOHandsServer", _hands];
     _table setVariable ["Waldo_MG_UNODeckServer", _deck];
     _table setVariable ["Waldo_MG_UNODiscardServer", [_topCard]];
@@ -468,9 +465,9 @@ Waldo_MG_fnc_unoStartServer = {
     ];
     _snapshot = [_table, _snapshot] call Waldo_MG_fnc_unoRefreshSnapshotCountsServer;
     _table setVariable ["Waldo_MG_UNOSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_UNOSnapshot", _snapshot, true];
-    _table setVariable ["Waldo_MG_TableSelectedGame", "uno", true];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    [_table, "Waldo_MG_UNOSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableSelectedGame", "uno"] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table] call Waldo_MG_fnc_unoPublishRevisionServer;
     [_table, [0, 1, 2, 3]] call Waldo_MG_fnc_unoSendPrivateHandsServer;
     true
@@ -499,8 +496,8 @@ Waldo_MG_fnc_unoFinishServer = {
     _state set [13, -1];
     _state set [14, _winnerRole];
     _state set [15, _status];
-    _table setVariable ["Waldo_MG_UNOFinished", true, true];
-    _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+    [_table, "Waldo_MG_UNOFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     [_table, _state] call Waldo_MG_fnc_unoSetSnapshotServer;
     [_table, _changedRoles] call Waldo_MG_fnc_unoSendPrivateHandsServer;
 };
@@ -567,8 +564,8 @@ Waldo_MG_fnc_unoHandleDepartureServer = {
     private _remaining = [_activeFlags] call Waldo_MG_fnc_unoCountActiveRoles;
     if (_remaining <= 0) exitWith {
         [_table] call Waldo_MG_fnc_unoClearServer;
-        _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-        _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+        [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
     };
     if (_remaining == 1 && {!_matchWasFinished}) exitWith {
         private _winner = _activeFlags find true;
@@ -605,7 +602,7 @@ Waldo_MG_fnc_unoResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_unoClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 };
 
@@ -615,7 +612,6 @@ Waldo_MG_fnc_processUNOActionRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_UNOActionRequest", [], true];
     if ((count _request) < 6) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -1050,42 +1046,6 @@ Waldo_MG_fnc_processUNOActionRequestServer = {
     [_unit, _token, "UNO play accepted."] call Waldo_MG_fnc_resultServer;
 };
 
-Waldo_MG_fnc_processPriorityUNORequestsServer = {
-    params [["_players", []]];
-    if (!isServer) exitWith {}; 
- 
-    {
-        private _unit = _x;
-        private _request = _unit getVariable ["Waldo_MG_UNOActionRequest", []];
-        if ((typeName _request) == "ARRAY" && {(count _request) >= 6} && {(_request param [4, ""]) == "UNO"}) then {
-            private _tableNetId = _request param [1, ""];
-            if ((typeName _tableNetId) == "STRING") then {
-                private _table = objectFromNetId _tableNetId;
-                if (!isNull _table && {_table getVariable ["Waldo_MG_UNOActive", false]}) then {
-                    private _role = (_table getVariable ["Waldo_MG_UNOPlayers", []]) find _unit;
-                    private _state = _table getVariable ["Waldo_MG_UNOSnapshotServer", []];
-                    private _hands = _table getVariable ["Waldo_MG_UNOHandsServer", []];
-                    if (
-                        _role >= 0
-                        && {(_state param [13, -1]) == _role}
-                        && {(count (_hands param [_role, []])) == 1}
-                    ) then {
-                        [_unit, +_request] call Waldo_MG_fnc_processUNOActionRequestServer;
-                    };
-                };
-            };
-        };
-    } forEach _players;
-
-    {
-        private _unit = _x;
-        private _request = _unit getVariable ["Waldo_MG_UNOActionRequest", []];
-        if ((typeName _request) == "ARRAY" && {(count _request) >= 6} && {(_request param [4, ""]) == "CALLOUT"}) then {
-            [_unit, +_request] call Waldo_MG_fnc_processUNOActionRequestServer;
-        };
-    } forEach _players;
-};
-
 Waldo_MG_fnc_submitUNOActionRequestLocal = {
     params [
         ["_table", objNull],
@@ -1100,18 +1060,15 @@ Waldo_MG_fnc_submitUNOActionRequestLocal = {
     };
     private _token = ["UNO_ACTION"] call Waldo_MG_fnc_makeToken;
     missionNamespace setVariable ["Waldo_MG_UNOPendingRequestLocal", [_token, diag_tickTime]];
-    player setVariable [
-        "Waldo_MG_UNOActionRequest",
-        [
+    private _request = [
             _token,
             netId _table,
             _table getVariable ["Waldo_MG_UNOGameId", ""],
             _table getVariable ["Waldo_MG_UNORevision", -1],
             _action,
             _payload
-        ],
-        true
     ];
+    ["UNO", _table, _token, _request param [3, -1], _request] call Waldo_MG_fnc_submitRequestLocal;
     true
 };
 

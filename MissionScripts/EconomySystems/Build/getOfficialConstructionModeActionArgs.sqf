@@ -3,6 +3,10 @@
  * Get official construction mode action args.
  *
  * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: The placement UI and action execute on the interface client; the completed
+ * placement request is sent once to server authority through the shared Economy endpoint.
+ * Repeat / JIP Behaviour: Local UI cleanup is repeat-safe; JIP players receive this action through the
+ * existing construction-vehicle registry reconciliation and create requests only after interaction.
  *
  * Arguments:
  * 0: _target <ANY> - target
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Any - see function body
+ *
+ * Current Callers: Economy construction-vehicle action reconciliation.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoBuild_getOfficialConstructionModeActionArgs;
@@ -29,9 +35,8 @@
                 private _existing = uiNamespace getVariable ["WaldoEcoBuild_PubConstructionDisplay", displayNull];
                 if (!isNull _existing) then {[_existing] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;};
 
-                private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+                private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
                 if (isNull _disp) exitWith {};
-                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
                 uiNamespace setVariable ["WaldoEcoBuild_PubConstructionDisplay", _disp];
 
                 _disp setVariable ["WaldoEcoBuild_ConstructionSource", _target];
@@ -633,11 +638,11 @@
                             if (_buildName != "" && {!isNull _source}) then {
                                 private _uid = getPlayerUID player;
                                 private _requestId = format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)];
-                                _source setVariable [
-                                    "WaldoEcoBuild_StartConstructionRequest",
-                                    [_buildName, netId _source, netId _caller, _pos, _dir, _requestId],
-                                    true
-                                ];
+                                [
+                                    "START_CONSTRUCTION",
+                                    _source,
+                                    [_buildName, netId _source, netId _caller, _pos, _dir, _requestId]
+                                ] call Waldo_fnc_EcoCore_submitRequestServer;
                                 ["Construction request sent.", 6] call Waldo_fnc_EcoCore_notifyActorLocal;
                             };
                             [_target] call (_target getVariable ["WaldoEcoBuild_PubConstructionCleanupCode", {}]);
@@ -797,6 +802,7 @@
                 }];
 
                 [_disp, true] call _refresh;
+                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 
                 [_disp] spawn {
                     params ["_display"];

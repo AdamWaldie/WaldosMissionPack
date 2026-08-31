@@ -31,7 +31,7 @@ private _topControls = (allControls _display) select {
     private _position = ctrlPosition _x;
     !(_x in _baseline)
     && {!(_x in _chrome)}
-    && {isNull (ctrlParent _x)}
+    && {isNull (ctrlParentControlsGroup _x)}
     && {(count _position) >= 4}
     && {(_position select 2) > 0}
     && {(_position select 3) > 0}
@@ -42,7 +42,7 @@ private _nestedControls = (allControls _display) select {
     private _position = ctrlPosition _x;
     !(_x in _baseline)
     && {!(_x in _chrome)}
-    && {!isNull (ctrlParent _x)}
+    && {!isNull (ctrlParentControlsGroup _x)}
     && {(count _position) >= 4}
     && {(_position select 2) > 0}
     && {(_position select 3) > 0}

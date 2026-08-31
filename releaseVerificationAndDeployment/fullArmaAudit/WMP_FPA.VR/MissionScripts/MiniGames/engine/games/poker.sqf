@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Poker (No-Limit Hold'em)
  * All Waldo_MG_fnc_* functions implementing the Poker (No-Limit Hold'em) mini game (server logic + local UI).
  *
@@ -7,8 +8,16 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_pokerCardRank = {
@@ -357,16 +366,8 @@ Waldo_MG_fnc_pokerCreateEmptySnapshot = {
 Waldo_MG_fnc_pokerPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable [
-        "Waldo_MG_PokerRevision",
-        (_table getVariable ["Waldo_MG_PokerRevision", 0]) + 1,
-        true
-    ];
-    _table setVariable [
-        "Waldo_MG_TableRevision",
-        (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1,
-        true
-    ];
+    [_table, "Waldo_MG_PokerRevision", (_table getVariable ["Waldo_MG_PokerRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_pokerSetSnapshotServer = {
@@ -376,7 +377,7 @@ Waldo_MG_fnc_pokerSetSnapshotServer = {
     ];
     if (!isServer || {isNull _table} || {(typeName _snapshot) != "ARRAY"}) exitWith {};
     _table setVariable ["Waldo_MG_PokerSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_PokerSnapshot", _snapshot, true];
+    [_table, "Waldo_MG_PokerSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_pokerPublishRevisionServer;
 };
 
@@ -417,15 +418,15 @@ Waldo_MG_fnc_pokerClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_pokerClearPrivateHandsServer;
-    _table setVariable ["Waldo_MG_PokerActive", false, true];
-    _table setVariable ["Waldo_MG_PokerFinished", false, true];
-    _table setVariable ["Waldo_MG_PokerGameId", "", true];
-    _table setVariable ["Waldo_MG_PokerPlayers", [], true];
-    _table setVariable ["Waldo_MG_PokerPlayerNames", [], true];
-    _table setVariable ["Waldo_MG_PokerSeatIndices", [], true];
+    [_table, "Waldo_MG_PokerActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerPlayers", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerPlayerNames", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerSeatIndices", []] call Waldo_MG_fnc_setPublicTableStateServer;
     private _snapshot = [0, []] call Waldo_MG_fnc_pokerCreateEmptySnapshot;
     _table setVariable ["Waldo_MG_PokerSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_PokerSnapshot", _snapshot, true];
+    [_table, "Waldo_MG_PokerSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_pokerPublishRevisionServer;
 };
 
@@ -475,8 +476,8 @@ Waldo_MG_fnc_pokerCompleteHandServer = {
     _state set [5, -1];
     private _finished = ([_state] call Waldo_MG_fnc_pokerCountSurvivorsServer) <= 1;
     _state set [0, if (_finished) then {"MATCH_END"} else {"HAND_END"}];
-    _table setVariable ["Waldo_MG_PokerFinished", _finished, true];
-    _table setVariable ["Waldo_MG_TablePhase", if (_finished) then {"FINISHED"} else {"PLAYING"}, true];
+    [_table, "Waldo_MG_PokerFinished", _finished] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", if (_finished) then {"FINISHED"} else {"PLAYING"},true];
     if (_finished) then {
         private _survivor = -1;
         for "_role" from 0 to (_count - 1) do {
@@ -876,18 +877,14 @@ Waldo_MG_fnc_pokerStartServer = {
     for "_role" from 0 to (_count - 1) do {_chips pushBack Waldo_MG_CFG_POKER_STARTING_CHIPS;};
     private _snapshot = [_count, _chips] call Waldo_MG_fnc_pokerCreateEmptySnapshot;
     _snapshot set [0, "DEALING"];
-    _table setVariable ["Waldo_MG_PokerActive", true, true];
-    _table setVariable ["Waldo_MG_PokerFinished", false, true];
-    _table setVariable [
-        "Waldo_MG_PokerGameId",
-        format ["Waldo_MG_POKER_%1_%2", floor (serverTime * 10), floor (random 1000000)],
-        true
-    ];
-    _table setVariable ["Waldo_MG_PokerPlayers", _players, true];
-    _table setVariable ["Waldo_MG_PokerPlayerNames", _names, true];
-    _table setVariable ["Waldo_MG_PokerSeatIndices", _seatIndices, true];
+    [_table, "Waldo_MG_PokerActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerGameId", format ["Waldo_MG_POKER_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerPlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerPlayerNames", _names] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_PokerSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_PokerSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table] call Waldo_MG_fnc_pokerStartHandServer
 };
 
@@ -927,8 +924,8 @@ Waldo_MG_fnc_pokerHandleDepartureServer = {
     {if (_x != "LEFT") then {_present = _present + 1;};} forEach _statuses;
     if (_present <= 0) exitWith {
         [_table] call Waldo_MG_fnc_pokerClearServer;
-        _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-        _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+        [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
     };
     if ((_state param [0, "HAND_END"]) in ["PREFLOP", "FLOP", "TURN", "RIVER"]) then {
         [_table, _state] call Waldo_MG_fnc_pokerProgressServer;
@@ -984,7 +981,7 @@ Waldo_MG_fnc_pokerResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_pokerClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 }; 
  
@@ -995,7 +992,6 @@ Waldo_MG_fnc_processPokerActionRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_PokerActionRequest", [], true];
     if ((count _request) < 7) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -1325,9 +1321,7 @@ Waldo_MG_fnc_submitPokerActionRequestLocal = {
     private _snapshot = _table getVariable ["Waldo_MG_PokerSnapshot", []];
     private _token = ["POKER_ACTION"] call Waldo_MG_fnc_makeToken;
     missionNamespace setVariable ["Waldo_MG_PokerPendingRequestLocal", [_token, diag_tickTime]];
-    player setVariable [
-        "Waldo_MG_PokerActionRequest",
-        [
+    private _request = [
             _token,
             netId _table,
             _table getVariable ["Waldo_MG_PokerGameId", ""],
@@ -1335,9 +1329,8 @@ Waldo_MG_fnc_submitPokerActionRequestLocal = {
             _table getVariable ["Waldo_MG_PokerRevision", -1],
             _action,
             floor _amount
-        ],
-        true
     ];
+    ["POKER", _table, _token, _request param [3, -1], _request] call Waldo_MG_fnc_submitRequestLocal;
 };
 
 Waldo_MG_fnc_getPokerPlayerRoleLocal = {

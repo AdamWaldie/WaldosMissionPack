@@ -28,7 +28,7 @@
     [_zeusDisp] call Waldo_fnc_EcoCommand_cleanupGroundCommandPrompt;
     [_zeusDisp] call Waldo_fnc_EcoResource_stopResourceCratePlacement;
 
-    private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+    private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
     if (isNull _disp) exitWith {};
 
     _disp setVariable ["WaldoEcoResource_ZoneTargetPos", _pos];
@@ -184,3 +184,4 @@
 
     [_disp, [_nameEdit, _sizeEdit, _resourcesEdit, _intervalEdit], _nameEdit] call Waldo_fnc_EcoResource_setPromptInputTargets;
     [_disp] call Waldo_fnc_EcoResource_refreshResourceZonePrompt;
+    [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;

@@ -3,6 +3,10 @@
  * Get official purchase action args.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
+ * Locality / Authority: The catalogue UI runs on the interface client; purchase requests route once
+ * to the server and retain the existing authoritative validation and transaction path.
+ * Repeat / JIP Behaviour: Safe to regenerate during terminal action repair/JIP reconciliation; each
+ * purchase interaction creates its existing unique request token.
  *
  * Arguments:
  * 0: _target <ANY> - target
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Any - see function body
+ *
+ * Current Callers: Economy purchase-terminal action reconciliation.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoBuy_getOfficialPurchaseActionArgs;
@@ -29,9 +35,8 @@
                 private _existing = uiNamespace getVariable ["WaldoEcoBuy_PubPurchaseDisplay", displayNull];
                 if (!isNull _existing) then {[_existing] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;};
 
-                private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+                private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
                 if (isNull _disp) exitWith {};
-                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
                 uiNamespace setVariable ["WaldoEcoBuy_PubPurchaseDisplay", _disp];
 
                 _disp setVariable ["WaldoEcoBuy_PurchaseTerminal", _target];
@@ -527,11 +532,11 @@
                     if (_uid == "") then {_uid = name _actor;};
                     private _requestId = format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)];
 
-                    _terminal setVariable [
-                        "WaldoEcoBuy_PurchaseRequest",
-                        [_sideKey, _purchaseName, getPosATL _actor, netId _actor, _requestId],
-                        true
-                    ];
+                    [
+                        "PURCHASE",
+                        _terminal,
+                        [_sideKey, _purchaseName, getPosATL _actor, netId _actor, _requestId]
+                    ] call Waldo_fnc_EcoCore_submitRequestServer;
 
                     ["Purchase request sent.", 5] call Waldo_fnc_EcoCore_notifyActorLocal;
                     [_display] spawn {
@@ -549,6 +554,7 @@
                 }];
 
                 [_disp, true] call _refresh;
+                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 
                 [_disp] spawn {
                     params ["_display"];

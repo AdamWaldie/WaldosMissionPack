@@ -21,7 +21,7 @@
     private _zeusDisp = call Waldo_fnc_EcoCore_getZeusDisplay;
     if (isNull _zeusDisp) exitWith {};
 
-    private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+    private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
     if (isNull _disp) exitWith {};
 
     _disp setVariable ["WaldoEcoResource_TargetPos", _pos];
@@ -100,3 +100,4 @@ _disp setVariable ["WaldoEcoResource_ValuePromptCancel", _cancel];
     ];
 
     [_disp, [_resourcesEdit], _resourcesEdit] call Waldo_fnc_EcoResource_setPromptInputTargets;
+    [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;

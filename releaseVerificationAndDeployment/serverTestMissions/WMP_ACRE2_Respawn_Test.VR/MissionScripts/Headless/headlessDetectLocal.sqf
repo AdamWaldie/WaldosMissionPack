@@ -5,8 +5,7 @@
  *
  * A headless client is identified by the standard, version-stable Bohemia-documented test
  * (!isDedicated && !hasInterface) - it has no rendered interface and is not the dedicated server
- * itself. This replaces the legacy MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf's
- * serverCommandAvailable "#kick" heuristic, which can also true on a listen-server host or any
+ * itself. This avoids admin-permission heuristics that can also match a listen-server host or another
  * admin-capable connection. Self-forwards to the server exactly like Waldo_fnc_Jammer, so it is
  * safe to call unconditionally on every machine (server and every player are simply ignored).
  * A headless client retries its authenticated registration for up to 30 seconds. This closes the
@@ -31,11 +30,11 @@
  * Current caller: init.sqf, gated behind the ordered feature-runtime snapshot handshake so a
  * joining headless client never registers before it has a consistent runtime picture.
  *
- * Master switch: Waldo_Headless_Enable (MissionConfig\headlessConfig.sqf) defaults false. This
- * system has not yet been verified against a live Arma 3 engine or a connected headless client, so
- * it ships off - connecting a headless client to a mission that has not turned this on has no effect
- * at all. Detection itself still runs either way (harmless, and useful for diagnostics), only the
- * actual registration request is gated.
+ * Master switch: Waldo_Headless_Enable (MissionConfig\headlessConfig.sqf) defaults false. The
+ * dedicated lifecycle is verified, but migration remains opt-in because each mission's AI mods and
+ * locality-sensitive scripts require their own test. Connecting a headless client to a mission that
+ * has not turned this on has no effect. Detection itself still runs either way (harmless, and useful
+ * for diagnostics); only the actual registration request is gated.
  */
 
 if (missionNamespace getVariable ["Waldo_Headless_DetectRan", false]) exitWith {

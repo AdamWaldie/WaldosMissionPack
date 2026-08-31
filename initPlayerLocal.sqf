@@ -67,6 +67,10 @@ if (hasInterface) then {
     // Pure-data configuration is local and synchronous; activation and JIP waits remain below.
     ["PLAYER_LOCAL"] call Waldo_fnc_LoadFeatureConfigs;
 
+    // Seated tables are opt-in object registrations. This is a metadata replay only; when a mission
+    // has no registered table it performs no MiniGames runtime compilation or background work.
+    [] call Waldo_fnc_MiniGamesInitPlayerLocal;
+
     // Introduction Text - content and timing are MissionConfig\interfaceConfig.sqf settings, loaded
     // just above, not call-site parameters. The worker waits for the initial PreloadFinished event
     // registered at the top of this file, then performs only its short local presentation. It does
@@ -267,10 +271,9 @@ if (hasInterface) then {
     ] call CBA_fnc_addPlayerEventHandler;
 };
 
-// Apply safestart to this client if a freeze is already active when they join (JIP).
-if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
-    [true] call Waldo_fnc_SafeStartApply;
-};
+// Request one ordered server snapshot instead of trusting public-variable arrival order during JIP.
+// The response applies either active or live state, so a stale local true can never strand a joiner.
+[player] remoteExecCall ["Waldo_fnc_SafeStartRequestStateServer", 2];
 
 // Shared, JIP-safe renderer for mission-maker custom 3D world markers.
 [] call Waldo_fnc_Init3DMarkers;

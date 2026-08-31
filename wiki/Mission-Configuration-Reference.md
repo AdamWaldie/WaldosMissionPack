@@ -228,17 +228,13 @@ for the optional marker settings inside the legacy file.
 
 ### Mini Games (table games)
 
-Edit `Waldo_MiniGames_Enable` in `MissionConfig\missionSystemsConfig.sqf`. The lifecycle block
-shown below is already part of WMP and is explanatory only; do not duplicate it in your init.sqf.
+Register each intended seated table from that object's Eden init:
 
 ```sqf
-Waldo_MiniGames_Enable = true;     // false = don't install the seated table-games engine
-if (Waldo_MiniGames_Enable) then {
-    [] call Waldo_fnc_MiniGamesInit;
-};
+[this] call Waldo_fnc_MiniGamesRegisterTable;
 ```
 
-Installs the seated multiplayer party-games engine. The single-player [interaction challenges](Waldos-Mini-Games-Interaction-Challenges) (bomb defusal, hacking, lockpicking, etc.) register themselves on first use and are **not** affected by this flag. See [Waldos Mini Games](Waldos-Mini-Games).
+There is no automatic table-class discovery or global seated-game startup. The single-player [interaction challenges](Waldos-Mini-Games-Interaction-Challenges) (bomb defusal, hacking, lockpicking, etc.) register themselves on first use; their existing `Waldo_MiniGames_Enable` setting remains independent. See [Waldos Mini Games](Waldos-Mini-Games).
 
 ### ACE Corpse Traps (disabled by default)
 

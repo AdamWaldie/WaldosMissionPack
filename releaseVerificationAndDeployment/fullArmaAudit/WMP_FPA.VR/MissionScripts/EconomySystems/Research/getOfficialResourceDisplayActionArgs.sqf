@@ -3,6 +3,10 @@
  * Get official resource display action args.
  *
  * Part of the Waldos Economy Systems suite (Research system).
+ * Locality / Authority: Builds interface-client action arguments; any selected research request is
+ * submitted directly to the existing authoritative server processor.
+ * Repeat / JIP Behaviour: Safe to recreate during local action repair and JIP registry reconciliation;
+ * request tokens preserve duplicate handling.
  *
  * Arguments:
  * 0: _target <ANY> - target
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Any - see function body
+ *
+ * Current Callers: Economy research-centre action reconciliation.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoResearch_getOfficialResourceDisplayActionArgs;
@@ -29,9 +35,8 @@
                 private _existing = uiNamespace getVariable ["WaldoEcoResearch_PubResourceDisplay", displayNull];
                 if (!isNull _existing) then {[_existing] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;};
 
-                private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+                private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
                 if (isNull _disp) exitWith {};
-                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
                 uiNamespace setVariable ["WaldoEcoResearch_PubResourceDisplay", _disp];
                 _disp setVariable ["WaldoEcoResearch_RequestActorObject", _actor];
                 _disp setVariable ["WaldoEcoResearch_SelectedResourceIndex", 0];
@@ -587,7 +592,11 @@
                     private _uid = getPlayerUID player;
                     if (_uid == "") then {_uid = name _actor;};
                     private _requestId = format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)];
-                    _building setVariable ["WaldoEcoBuild_BuildingManageRequest", [_operation, netId _actor, _requestId], true];
+                    [
+                        "MANAGE_BUILDING",
+                        _building,
+                        [_operation, netId _actor, _requestId]
+                    ] call Waldo_fnc_EcoCore_submitRequestServer;
                     [format ["%1 request sent.", _operation], 5] call Waldo_fnc_EcoCore_notifyActorLocal;
 
                     [_display] spawn {
@@ -605,6 +614,7 @@
                 }];
 
                 [_disp, true] call _refresh;
+                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 
                 [_disp] spawn {
                     params ["_display"];

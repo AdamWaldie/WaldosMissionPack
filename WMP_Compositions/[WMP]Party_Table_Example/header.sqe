@@ -1,0 +1,8 @@
+version=54;
+name="[WMP] Party Table Example";
+author="WaldoTheWarfighter";
+category="Waldos Mission Pack Compositions - Mission Systems";
+requiredAddons[]=
+{
+	"A3_Structures_F_Civ_Camping"
+};

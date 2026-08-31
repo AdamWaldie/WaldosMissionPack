@@ -172,6 +172,7 @@ class DialogueSystemTests(unittest.TestCase):
         self.assertIn("isClass (missionConfigFile >> \"CfgSounds\" >> _sound)", worker)
         self.assertIn("calculated text timing used", worker)
         self.assertIn("_choiceDescriptors pushBack", worker)
+        self.assertIn("_branchesToChoices", worker)
         choices = (ADVANCED / "conversationShowChoicesLocal.sqf").read_text(encoding="utf-8")
         self.assertIn("ctrlEnable _enabled", choices)
         self.assertIn('setVariable ["Waldo_Conversation_ChoiceId"', choices)
@@ -190,6 +191,11 @@ class DialogueSystemTests(unittest.TestCase):
         self.assertIn("ctrlTextHeight _x", choices)
         self.assertNotIn("safeZoneW * 0.48", choices)
         self.assertIn('createDisplay "RscDisplayEmpty"', choices)
+        self.assertIn("Waldo_Conversation_ChoicePendingSession", choices)
+        self.assertIn("CBA_fnc_waitAndExecute", choices)
+        self.assertIn("DISPLAY_UNAVAILABLE", choices)
+        self.assertIn("successHex", choices)
+        self.assertIn("continues to another response selection", choices)
         self.assertIn("Cancel conversation</t>", choices)
         self.assertNotIn('displayAddEventHandler ["KeyDown"', choices)
         self.assertNotIn('format ["%1. %2"', choices)
@@ -224,15 +230,30 @@ class DialogueSystemTests(unittest.TestCase):
         for archetype in ("DORNOW_CIVILIAN", "DORNOW_GUARD", "DORNOW_SHOPKEEPER", "DORNOW_FARMER"):
             self.assertIn(f'["{archetype}"', medieval)
 
-    def test_zen_manifest_contains_all_five_beginner_controls(self):
+    def test_zen_manifest_contains_authoring_and_assignment_controls(self):
         records = json.loads((ROOT / "releaseVerificationAndDeployment" / "zeus_script_parity.json").read_text(encoding="utf-8"))
         names = {record["module"] for record in records}
         expected = {
             "Dialogue - Apply Simple Archetype", "Dialogue - Assign Simple Lines",
-            "Dialogue - Clear", "Conversation - Assign Named",
-            "Conversation - Start or Cancel",
+            "Dialogue - Clear", "Conversation: Assign",
         }
         self.assertTrue(expected <= names)
+        self.assertNotIn("Conversation: Author", names)
+        self.assertNotIn("Conversation - Start or Cancel", names)
+
+    def test_broken_zen_conversation_author_is_fully_removed(self):
+        server = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "zenDialogueServer.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        modules = (ROOT / "MissionScripts" / "ZenModules" / "Zen_initModules.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('ZenConversationAuthor', functions)
+        self.assertNotIn('"Conversation: Author"', modules)
+        self.assertNotIn('"Conversation - Start or Cancel"', modules)
+        self.assertIn('["WMP Persistence", "Persistence - Control"', modules)
+        self.assertIn('["WMP Persistence", "Persistence - Register Object"', modules)
+        self.assertIn('["WMP Persistence", "Persistence - Save Now"', modules)
+        self.assertNotIn('ADVANCED_AUTHOR', server)
+        for path in (ROOT / "MissionScripts" / "ZenModules" / "Dialogue").glob("zenConversationAuthor*.sqf"):
+            self.fail(f"Removed author helper still exists: {path.name}")
 
     def test_documentation_starts_with_eden_examples(self):
         guide = (ROOT / "wiki" / "Dialogue-And-Conversations.md").read_text(encoding="utf-8")
@@ -240,6 +261,8 @@ class DialogueSystemTests(unittest.TestCase):
         self.assertIn("Do not add anything to `init.sqf` or", guide)
         self.assertIn('[this, "MODERN_CIVILIAN"]', guide)
         self.assertIn("loads that example pack on demand", guide)
+        self.assertNotIn("Conversation: Author", guide)
+        self.assertIn("authored in mission scripts", guide)
 
 
 if __name__ == "__main__":

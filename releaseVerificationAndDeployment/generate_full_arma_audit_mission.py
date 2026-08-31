@@ -546,20 +546,35 @@ def _sync_tree_in_place(source: Path, target: Path) -> None:
                     raise
         else:
             path.unlink()
-    # OneDrive/Defender can briefly memory-map an SQF between enumeration and overwrite, producing
-    # WinError 1224. Retry the idempotent mirror rather than making a transient desktop lock fail CI.
-    last_error: shutil.Error | None = None
-    for attempt in range(6):
-        try:
-            shutil.copytree(source, target, dirs_exist_ok=True)
-            return
-        except shutil.Error as error:
-            last_error = error
-            if not all("WinError 1224" in str(detail) for detail in error.args[0]):
-                raise
-            time.sleep(0.15 * (attempt + 1))
-    if last_error is not None:
-        raise last_error
+    # Do not reopen identical OneDrive placeholders. In particular, unchanged audio and image files
+    # can be readable yet reject an overwrite while the sync provider owns their reparse point.
+    for source_path in sorted(source.rglob("*")):
+        relative = source_path.relative_to(source)
+        target_path = target / relative
+        if source_path.is_dir():
+            target_path.mkdir(parents=True, exist_ok=True)
+            continue
+        target_path.parent.mkdir(parents=True, exist_ok=True)
+        if target_path.is_file():
+            try:
+                if source_path.stat().st_size == target_path.stat().st_size and source_path.read_bytes() == target_path.read_bytes():
+                    continue
+            except OSError:
+                # A changed or briefly unavailable target is handled by the bounded copy retry below.
+                pass
+        last_error: OSError | None = None
+        for attempt in range(6):
+            try:
+                shutil.copy2(source_path, target_path)
+                last_error = None
+                break
+            except OSError as error:
+                last_error = error
+                if "WinError 1224" not in str(error):
+                    raise
+                time.sleep(0.15 * (attempt + 1))
+        if last_error is not None:
+            raise last_error
 
 
 def refresh_release_sources() -> None:

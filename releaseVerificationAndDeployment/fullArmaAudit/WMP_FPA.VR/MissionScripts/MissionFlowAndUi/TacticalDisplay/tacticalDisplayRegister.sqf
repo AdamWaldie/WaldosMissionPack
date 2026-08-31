@@ -2,14 +2,14 @@
  * Author: WaldoTheWarfighter
  * Registers an object as a server-owned Tactical Display access point.
  *
- * Configuration is stored publicly on the object and local `addAction` setup is published with an
- * object-keyed JIP call. The action opens a client-only map; this function does not create a texture
+ * Configuration is stored publicly on the object and local `addAction` setup is published with a
+ * named JIP call bound to the object's lifetime. The action opens a client-only map; this function does not create a texture
  * on the object. Eden object init fields run everywhere, so non-server copies are ignored. ZEN
  * sends live requests through the validated server runtime bridge. Re-registering does not duplicate actions.
  *
  * Locality and authority:
  * The server validates/publishes display policy. Each interface owns its action and map UI; Eden
- * client copies exit and the object-keyed replay restores the action for JIP clients.
+ * client copies exit and lifetime-bound replay restores the action for JIP clients.
  *
  * Arguments:
  * 0: display object <OBJECT> - whiteboard, map board or suitable terminal.
@@ -71,7 +71,9 @@ if (!_interactionEnabled && {!isNil {_object getVariable "Waldo_MG_Int_Active"}}
 };
 // Target every machine rather than "clients except server": a hosted server also owns an interface.
 // TacticalDisplaySetupLocal self-gates on hasInterface, so dedicated servers remain a harmless no-op.
-[_object] remoteExecCall ["Waldo_fnc_TacticalDisplaySetupLocal", 0, format ["Waldo_TacticalDisplay_%1", netId _object]];
+private _displayJipId = format ["Waldo_TacticalDisplay_%1", netId _object];
+[_object] remoteExecCall ["Waldo_fnc_TacticalDisplaySetupLocal", 0, _displayJipId];
+[_object, _displayJipId] call Waldo_fnc_JipBindToObjectServer;
 if (_interactionEnabled) then {
     [_object, [_challengeId, _difficulty]] remoteExecCall ["Waldo_fnc_TacticalDisplayInteractionSetup", 0, _object];
 };

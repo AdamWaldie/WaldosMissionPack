@@ -1,14 +1,18 @@
 /*
  * Author: WaldoTheWarfighter
- * Purge economy systems.
+ * Stops and purges every active Economy subsystem and its client presentation state.
  *
- * Part of the Waldos Economy Systems suite (shared core system).
+ * Locality/authority: server authority; unscheduled callers are moved into scheduled execution.
+ * Repeat/JIP behaviour: authoritative active/purge state is published for current and joining
+ * clients, lifecycle handlers are removed, and subsystem start guards are reset for a later enable.
  *
  * Arguments:
  * None
  *
  * Return Value:
- * Any - see function body
+ * BOOL - true after purge completes or is scheduled; false outside Economy authority.
+ *
+ * Current callers: Economy purge module and administrative Economy workflows.
  *
  * Example:
  * [] call Waldo_fnc_EcoCore_purgeEconomySystems;
@@ -29,6 +33,8 @@
     missionNamespace setVariable ["WaldoEcoCore_CommitmentModeEnabled", false, true];
     missionNamespace setVariable ["WaldoEcoCore_TestingNoticeEnabled", false, true];
     missionNamespace setVariable ["WaldoEcoCore_TestingNoticeToken", 0, true];
+
+    [] call Waldo_fnc_EcoCore_stopTestingNoticePlayerBridge;
 
     [] call Waldo_fnc_EcoCore_broadcastUnifiedClientCleanup;
 

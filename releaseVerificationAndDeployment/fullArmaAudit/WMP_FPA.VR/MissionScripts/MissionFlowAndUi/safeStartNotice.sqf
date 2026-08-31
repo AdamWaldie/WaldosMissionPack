@@ -2,6 +2,9 @@
  * Author: WaldoTheWarfighter
  * Shows a transient SafeStart transition notice without using Arma's shared
  * hint channel. A token prevents an older timer from hiding a newer notice.
+ * Locality/authority: interface-client presentation only; it never changes authoritative state.
+ * Repeat/JIP behaviour: replacement-token safe and non-persistent. It waits for local UI readiness
+ * and tests the ordered local SafeStart state before hiding the current notice.
  *
  * Arguments: 0: structured content <STRING>; 1: duration seconds <NUMBER>.
  * Return Value: BOOL - true when the notice was shown or queued for startup completion.
@@ -80,7 +83,7 @@ _control ctrlCommit 0;
     uiSleep _duration;
     if ((uiNamespace getVariable ["Waldo_SafeStart_NoticeToken", ""]) isEqualTo _token) then {
         uiNamespace setVariable ["Waldo_SafeStart_NoticeToken", nil];
-        if (!isNull _control && {!(missionNamespace getVariable ["Waldo_SafeStart_Active", false])}) then {
+        if (!isNull _control && {!(missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false])}) then {
             _control ctrlShow false;
             if (!isNull _frame) then {_frame ctrlShow false;};
             ["SAFESTART_STATUS", [_frame, _control], ["TOP", "TOP_RIGHT"], false] call Waldo_fnc_RegisterUiReservationLocal;

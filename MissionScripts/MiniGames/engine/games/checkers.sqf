@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Checkers
  * All Waldo_MG_fnc_* functions implementing the Checkers mini game (server logic + local UI).
  *
@@ -7,8 +8,16 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_checkersNormalizeBoard = {
@@ -221,33 +230,25 @@ Waldo_MG_fnc_checkersCountSidePieces = {
 Waldo_MG_fnc_checkersPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable [
-        "Waldo_MG_CheckersRevision",
-        (_table getVariable ["Waldo_MG_CheckersRevision", 0]) + 1,
-        true
-    ];
-    _table setVariable [
-        "Waldo_MG_TableRevision",
-        (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1,
-        true
-    ];
+    [_table, "Waldo_MG_CheckersRevision", (_table getVariable ["Waldo_MG_CheckersRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_checkersClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_CheckersActive", false, true];
-    _table setVariable ["Waldo_MG_CheckersGameId", "", true];
-    _table setVariable ["Waldo_MG_CheckersPlayers", [objNull, objNull], true];
-    _table setVariable ["Waldo_MG_CheckersPlayerNames", ["NATO Blue", "OPFOR Red"], true];
-    _table setVariable ["Waldo_MG_CheckersSeatIndices", [-1, -1], true];
-    _table setVariable ["Waldo_MG_CheckersBoard", [], true];
-    _table setVariable ["Waldo_MG_CheckersTurn", 1, true];
-    _table setVariable ["Waldo_MG_CheckersForcedFrom", -1, true];
-    _table setVariable ["Waldo_MG_CheckersWinner", 0, true];
-    _table setVariable ["Waldo_MG_CheckersMoveNumber", 0, true];
-    _table setVariable ["Waldo_MG_CheckersLastMove", [], true];
-    _table setVariable ["Waldo_MG_CheckersStatus", "Waiting for a Checkers match.", true];
+    [_table, "Waldo_MG_CheckersActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersPlayers", [objNull, objNull]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersPlayerNames", ["NATO Blue", "OPFOR Red"]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersSeatIndices", [-1, -1]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersBoard", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersTurn", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersForcedFrom", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersWinner", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersMoveNumber", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersLastMove", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersStatus", "Waiting for a Checkers match."] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_checkersPublishRevisionServer;
 };
 
@@ -271,23 +272,19 @@ Waldo_MG_fnc_checkersStartServer = {
     private _blue = _players param [0, objNull];
     private _red = _players param [1, objNull];
     if (isNull _blue || {isNull _red}) exitWith {false};
-    _table setVariable ["Waldo_MG_CheckersActive", true, true];
-    _table setVariable [
-        "Waldo_MG_CheckersGameId",
-        format ["Waldo_MG_CHECKERS_%1_%2", floor (serverTime * 10), floor (random 1000000)],
-        true
-    ];
-    _table setVariable ["Waldo_MG_CheckersPlayers", [_blue, _red], true];
-    _table setVariable ["Waldo_MG_CheckersPlayerNames", [name _blue, name _red], true];
-    _table setVariable ["Waldo_MG_CheckersSeatIndices", _seatIndices, true];
-    _table setVariable ["Waldo_MG_CheckersBoard", call Waldo_MG_fnc_checkersCreateBoard, true];
-    _table setVariable ["Waldo_MG_CheckersTurn", 1, true];
-    _table setVariable ["Waldo_MG_CheckersForcedFrom", -1, true];
-    _table setVariable ["Waldo_MG_CheckersWinner", 0, true];
-    _table setVariable ["Waldo_MG_CheckersMoveNumber", 0, true];
-    _table setVariable ["Waldo_MG_CheckersLastMove", [], true];
-    _table setVariable ["Waldo_MG_CheckersStatus", format ["%1 has the first move as NATO Blue.", name _blue], true];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    [_table, "Waldo_MG_CheckersActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersGameId", format ["Waldo_MG_CHECKERS_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersPlayers", [_blue, _red]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersPlayerNames", [name _blue, name _red]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersBoard", call Waldo_MG_fnc_checkersCreateBoard] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersTurn", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersForcedFrom", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersWinner", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersMoveNumber", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersLastMove", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersStatus", format ["%1 has the first move as NATO Blue.", name _blue]] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table] call Waldo_MG_fnc_checkersPublishRevisionServer;
     true
 };
@@ -316,10 +313,10 @@ Waldo_MG_fnc_checkersFinishForfeitServer = {
     private _winner = -_losingSide;
     private _winnerName = _names param [if (_winner > 0) then {0} else {1}, "Opponent"];
     private _loserName = _names param [_roleIndex, "Opponent"];
-    _table setVariable ["Waldo_MG_CheckersWinner", _winner, true];
-    _table setVariable ["Waldo_MG_CheckersForcedFrom", -1, true];
-    _table setVariable ["Waldo_MG_CheckersStatus", format ["%1 wins by forfeit after %2 left the table.", _winnerName, _loserName], true];
-    _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+    [_table, "Waldo_MG_CheckersWinner", _winner] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersForcedFrom", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersStatus", format ["%1 wins by forfeit after %2 left the table.", _winnerName, _loserName]] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     [_table] call Waldo_MG_fnc_checkersPublishRevisionServer;
 };
 
@@ -346,8 +343,8 @@ Waldo_MG_fnc_checkersReconcilePlayersServer = {
     if ((_table getVariable ["Waldo_MG_CheckersWinner", 0]) == 0) then {
         if (!(_valid param [0, false]) && {!(_valid param [1, false])}) then {
             [_table] call Waldo_MG_fnc_checkersClearServer;
-            _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-            _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+            [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+            _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
         } else {
             if (!(_valid param [0, false])) then {
                 [_table, objNull, _seatIndices param [0, -1]] call Waldo_MG_fnc_checkersFinishForfeitServer;
@@ -360,8 +357,8 @@ Waldo_MG_fnc_checkersReconcilePlayersServer = {
     } else {
         if (!(_valid param [0, false]) && {!(_valid param [1, false])}) then {
             [_table] call Waldo_MG_fnc_checkersClearServer;
-            _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-            _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+            [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+            _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
         };
     };
 };
@@ -370,7 +367,7 @@ Waldo_MG_fnc_checkersResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_checkersClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 };
 
@@ -380,7 +377,6 @@ Waldo_MG_fnc_processCheckersMoveRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_CheckersMoveRequest", [], true];
     if ((count _request) < 5) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -488,15 +484,15 @@ Waldo_MG_fnc_processCheckersMoveRequestServer = {
         };
     };
 
-    _table setVariable ["Waldo_MG_CheckersBoard", _board, true];
-    _table setVariable ["Waldo_MG_CheckersTurn", _turn, true];
-    _table setVariable ["Waldo_MG_CheckersForcedFrom", _forcedFrom, true];
-    _table setVariable ["Waldo_MG_CheckersWinner", _winner, true];
-    _table setVariable ["Waldo_MG_CheckersMoveNumber", (_table getVariable ["Waldo_MG_CheckersMoveNumber", 0]) + 1, true];
-    _table setVariable ["Waldo_MG_CheckersLastMove", [_from, _to, _capturedIndex, _promoted], true];
-    _table setVariable ["Waldo_MG_CheckersStatus", _status, true];
+    [_table, "Waldo_MG_CheckersBoard", _board] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersTurn", _turn] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersForcedFrom", _forcedFrom] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersWinner", _winner] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersMoveNumber", (_table getVariable ["Waldo_MG_CheckersMoveNumber", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersLastMove", [_from, _to, _capturedIndex, _promoted]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_CheckersStatus", _status] call Waldo_MG_fnc_setPublicTableStateServer;
     if (_winner != 0) then {
-        _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+        _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     };
     [_table] call Waldo_MG_fnc_checkersPublishRevisionServer;
     [_unit, _token, if (_continueCapture) then {
@@ -512,7 +508,6 @@ Waldo_MG_fnc_processCheckersResetRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_CheckersResetRequest", [], true];
     if ((count _request) < 2) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -540,22 +535,14 @@ Waldo_MG_fnc_submitCheckersMoveRequestLocal = {
     ];
     if (!hasInterface || {isNull player} || {isNull _table}) exitWith {};
     private _token = ["CHECKERS_MOVE"] call Waldo_MG_fnc_makeToken;
-    player setVariable [
-        "Waldo_MG_CheckersMoveRequest",
-        [_token, netId _table, _from, _to, _revision],
-        true
-    ];
+    ["CHECKERS_MOVE", _table, _token, _revision, [_token, netId _table, _from, _to, _revision]] call Waldo_MG_fnc_submitRequestLocal;
 };
 
 Waldo_MG_fnc_submitCheckersResetRequestLocal = {
     params [["_table", objNull]];
     if (!hasInterface || {isNull player} || {isNull _table}) exitWith {};
     private _token = ["CHECKERS_RESET"] call Waldo_MG_fnc_makeToken;
-    player setVariable [
-        "Waldo_MG_CheckersResetRequest",
-        [_token, netId _table],
-        true
-    ];
+    ["CHECKERS_RESET", _table, _token, _table getVariable ["Waldo_MG_CheckersRevision", -1], [_token, netId _table]] call Waldo_MG_fnc_submitRequestLocal;
     ["Returning the finished Checkers match to the lobby..."] call Waldo_MG_fnc_notifyLocal;
 };
 

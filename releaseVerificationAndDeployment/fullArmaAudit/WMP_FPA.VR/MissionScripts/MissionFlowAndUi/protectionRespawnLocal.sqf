@@ -59,8 +59,8 @@ _newUnit setVariable ["Waldo_WMPProtection_OwnedSafety", []];
 _newUnit setVariable ["Waldo_WMPProtection_DamageBaseline", nil];
 _newUnit setVariable ["Waldo_PreventVehicleFire", nil];
 
-if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
-    [true, "RESPAWN"] call Waldo_fnc_SafeStartApply;
+if (missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false]) then {
+    [true, "RESPAWN", missionNamespace getVariable ["Waldo_SafeStart_AppliedRevision", -1]] call Waldo_fnc_SafeStartApply;
 };
 if (missionNamespace getVariable ["Waldo_ENDEX_Active", false]) then {
     [true] call Waldo_fnc_ENDEX;

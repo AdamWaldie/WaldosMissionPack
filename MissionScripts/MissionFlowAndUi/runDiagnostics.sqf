@@ -2,8 +2,9 @@
  * Author: WaldoTheWarfighter
  * Server-side pack diagnostics. Reports dependency and subsystem state as
  * LOADED, ACTIVE, DISABLED, UNCONFIGURED, UNAVAILABLE or ERROR. The structured
- * report is broadcast in Waldo_Diagnostics_LastReport for audit tools/JIP.
- * Existing callers still receive the number of warnings.
+ * report is broadcast in Waldo_Diagnostics_LastReport for audit tools/JIP. The operator summary
+ * distinguishes server checks from per-client observations instead of presenting the server count
+ * as though it were the whole run. Existing callers still receive the number of warnings.
  * Locality and authority: Server-only and scheduled. Unschedulable calls spawn one server run;
  * concurrent runs are rejected. Clients supply bounded local reports, but the server owns output.
  *
@@ -30,9 +31,8 @@ missionNamespace setVariable ["Waldo_Diagnostics_ClientReports", []];
 // calling machine has an interface (a listen-server host sees it directly), and to every currently
 // assigned curator's client (allCurators/getAssignedCuratorUnit) otherwise - a genuine dedicated
 // server has no console of its own to show systemChat on, so without this an admin running one had
-// no in-game visibility into diagnostics at all short of tailing RPT by hand. Mirrors the legacy
-// WerthlesHeadless.sqf's own approach of remote-executing its debug hint onto a specific connected
-// player rather than only ever running a local-only call gated on the executing machine's interface.
+// no in-game visibility into diagnostics at all short of tailing RPT by hand. Route the result to
+// connected administrators instead of relying on a local-only interface call.
 private _notifyAdmins = {
     params ["_text"];
     if (hasInterface) then {systemChat _text;};
@@ -97,7 +97,7 @@ private _consumeFeatureReport = {
     ["electronic-warfare", "jammer-api", "Waldo_fnc_Jammer"],
     ["electronic-warfare", "emp-api", "Waldo_fnc_EMP"],
     ["electronic-warfare", "tracker-api", "Waldo_fnc_Tracker"],
-    ["party-games", "party-table-api", "Waldo_fnc_MiniGamesInit"],
+    ["party-games", "party-table-api", "Waldo_fnc_MiniGamesRegisterTable"],
     ["interactions", "equipment-api", "Waldo_fnc_MiniGameInteractionSetup"],
     ["economy", "economy-api", "Waldo_fnc_EcoInit"],
     ["medical", "obituary-api", "Waldo_fnc_ObituaryPronounce"],
@@ -340,9 +340,9 @@ if (!isNil "Waldo_fnc_AIGetDiagnostics") then {
 [call Waldo_fnc_ObituaryGetDiagnostics] call _consumeFeatureReport;
 [call Waldo_fnc_DialogueGetDiagnostics] call _consumeFeatureReport;
 
-private _partyEnabled = missionNamespace getVariable ["Waldo_MiniGames_Enable", false];
-private _partyLoaded = missionNamespace getVariable ["Waldo_MG_SystemInitialized", false];
-["system", "party-games", if (_partyLoaded) then {"ACTIVE"} else {if (_partyEnabled) then {"ERROR"} else {"DISABLED"}}, format ["configured=%1 catalogue=%2", _partyEnabled, count (missionNamespace getVariable ["Waldo_MG_Games", []])], _partyEnabled && {!_partyLoaded}, if (!_partyEnabled || {_partyLoaded}) then {""} else {"Waldo_MiniGames_Enable is true but Waldo_fnc_MiniGamesInit never completed - confirm init.sqf actually calls it, and check the RPT for errors from the party-games engine install."}] call _status;
+private _partyTables = missionNamespace getVariable ["Waldo_MG_Tables", []];
+private _partyCount = count (_partyTables select {!isNull _x});
+["system", "party-games", if (_partyCount > 0) then {"ACTIVE"} else {"UNCONFIGURED"}, format ["registeredTables=%1 explicitRegistration=true", _partyCount], false, if (_partyCount > 0) then {""} else {"No seated table is registered. Add [this] call Waldo_fnc_MiniGamesRegisterTable to each intended table object's init."}] call _status;
 
 private _jammingEnabled = missionNamespace getVariable ["Waldo_Jamming_Enable", false];
 private _tfarLoaded = isClass (configFile >> "CfgPatches" >> "task_force_radio") || {isClass (configFile >> "CfgPatches" >> "tfar_core")};
@@ -611,12 +611,14 @@ waitUntil {
 private _clientReports = missionNamespace getVariable ["Waldo_Diagnostics_ClientReports", []];
 private _receivedOwners = _clientReports apply {_x select 0};
 private _missingOwners = _expectedOwners select {!(_x in _receivedOwners)};
+private _clientCheckCount = 0;
 if !(_missingOwners isEqualTo []) then {
     _warnings = _warnings + count _missingOwners;
     ["WARN", "clients", "response", "TIMEOUT", format ["No diagnostic response from network owner(s): %1", _missingOwners]] call _log;
 };
 {
     _x params ["_ownerId", "_playerName", "_uid", "_checks"];
+    _clientCheckCount = _clientCheckCount + count _checks;
     private _clientErrors = {_x select 2 == "ERROR"} count _checks;
     _warnings = _warnings + _clientErrors;
     [if (_clientErrors > 0) then {"WARN"} else {"INFO"}, "clients", "report", "SUMMARY", format ["owner=%1 player=%2 checks=%3 errors=%4", _ownerId, _playerName, count _checks, _clientErrors]] call _log;
@@ -624,12 +626,12 @@ if !(_missingOwners isEqualTo []) then {
 
 missionNamespace setVariable ["Waldo_Diagnostics_LastReport", [_warnings, serverTime, _report, _clientReports, _runId], true];
 private _summary = if (_warnings == 0) then {
-    format ["Diagnostics complete: %1 checks, no warnings. Disabled/unconfigured optional systems are listed separately.", count _report]
+    format ["Diagnostics complete: %1 server checks + %2 client checks across %3 client report(s), no warnings. Disabled/unconfigured optional systems are listed separately.", count _report, _clientCheckCount, count _clientReports]
 } else {
-    format ["Diagnostics complete: %1 checks, %2 warning(s). See [WMP DIAG] RPT entries.", count _report, _warnings]
+    format ["Diagnostics complete: %1 server checks + %2 client checks across %3 client report(s), %4 warning(s). See [WMP DIAG] RPT entries.", count _report, _clientCheckCount, count _clientReports, _warnings]
 };
 [if (_warnings > 0) then {"WARN"} else {"INFO"}, "core", "diagnostics", "SUMMARY", _summary] call _log;
-["INFO", "core", "diagnostics", "END", format ["serverChecks=%1 clientReports=%2 warnings=%3", count _report, count _clientReports, _warnings]] call _log;
+["INFO", "core", "diagnostics", "END", format ["serverChecks=%1 clientChecks=%2 clientReports=%3 warnings=%4", count _report, _clientCheckCount, count _clientReports, _warnings]] call _log;
 [format ["[WMP DIAG] %1", _summary]] call _notifyAdmins;
 missionNamespace setVariable ["Waldo_Diagnostics_Running", false];
 _warnings

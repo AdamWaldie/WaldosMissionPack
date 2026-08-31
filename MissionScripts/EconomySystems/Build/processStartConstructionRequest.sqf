@@ -3,6 +3,10 @@
  * Process start construction request.
  *
  * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Server authority only; retains the existing placement, access, requirement and
+ * resource validation before starting authoritative construction state.
+ * Repeat / JIP Behaviour: Bounded request-token history rejects duplicates. Requests are transient and
+ * never replayed to JIP; a legacy mailbox is cleared only when populated.
  *
  * Arguments:
  * 0: _holder <OBJECT> - holder (optional, default: objNull)
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Waldo_fnc_EcoCore_submitRequestServer and the documented legacy processor API.
  *
  * Example:
  * [_holder, _request] call Waldo_fnc_EcoBuild_processStartConstructionRequest;
@@ -27,16 +33,20 @@
         private _handled = missionNamespace getVariable ["WaldoEcoBuild_StartConstructionRequestsHandled", []];
         if !(_handled isEqualType []) then {_handled = [];};
         if (_requestId in _handled) exitWith {
-            _holder setVariable ["WaldoEcoBuild_StartConstructionRequest", [], true];
+            if !((_holder getVariable ["WaldoEcoBuild_StartConstructionRequest", []]) isEqualTo []) then {
+                _holder setVariable ["WaldoEcoBuild_StartConstructionRequest", [], true];
+            };
         };
 
         _handled pushBack _requestId;
         while {(count _handled) > 64} do {
             _handled deleteAt 0;
         };
-        missionNamespace setVariable ["WaldoEcoBuild_StartConstructionRequestsHandled", _handled, true];
+        missionNamespace setVariable ["WaldoEcoBuild_StartConstructionRequestsHandled", _handled];
 
-        _holder setVariable ["WaldoEcoBuild_StartConstructionRequest", [], true];
+        if !((_holder getVariable ["WaldoEcoBuild_StartConstructionRequest", []]) isEqualTo []) then {
+            _holder setVariable ["WaldoEcoBuild_StartConstructionRequest", [], true];
+        };
 
         private _buildName = _request param [0, ""];
         private _source = objectFromNetId (_request param [1, ""]);

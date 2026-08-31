@@ -9,6 +9,8 @@
  * Waldo_fnc_VehicleWeaponLoadoutApply, Waldo_fnc_VehicleAppearanceApply, and
  * Waldo_fnc_VehicleComponentRemove; this bridge only checks the requester is an assigned curator, then
  * dispatches the Vehicle Customisation - Editor's whole Pending Changes list by row type in one call.
+ * Turret/pylon rows are routed onward to the vehicle's current locality (server, player or headless
+ * client); when that is asynchronous, the locality owner sends the result directly to the curator.
  *
  * Arguments:
  * 0: Vehicle <OBJECT>
@@ -19,9 +21,10 @@
  * 2: Requester <OBJECT>
  *
  * Return Value:
- * Array of [ok, detail] - one entry per row actually dispatched, in TURRET/PYLON, then APPEARANCE,
- * then COMPONENT order (not necessarily the caller's original row order); empty when the request was
- * rejected or no rows were given.
+ * Array of [ok, detail] - one entry per synchronously dispatched row, in TURRET/PYLON, then
+ * APPEARANCE, then COMPONENT order (not necessarily the caller's original row order). Turret/pylon
+ * rows executed on a remote locality report asynchronously and are absent from this return value.
+ * Empty also means the request was rejected or no rows were given.
  *
  * Example:
  * [truck1, [["TURRET", ["TURRET", [-1], -1, "REPLACE", "arifle_MX_F", "30Rnd_65x39_caseless_mag", 30, 4]]], player]
@@ -43,8 +46,16 @@ private _appearanceRows = (_rows select {(_x select 0) == "APPEARANCE"}) apply {
 private _componentRows = (_rows select {(_x select 0) == "COMPONENT"}) apply {_x select 1};
 
 private _results = [];
+private _weaponResultPending = false;
 if (count _turretPylonRows > 0) then {
-    _results append ([_vehicle, _turretPylonRows] call Waldo_fnc_VehicleWeaponLoadoutApply);
+    if (local _vehicle) then {
+        _results append ([_vehicle, _turretPylonRows] call Waldo_fnc_VehicleWeaponLoadoutApply);
+    } else {
+        // The engine requires turret/pylon mutations on the vehicle locality. The public apply
+        // function resolves the current owner and returns its result directly to this curator.
+        [_vehicle, _turretPylonRows, false, _owner] call Waldo_fnc_VehicleWeaponLoadoutApply;
+        _weaponResultPending = true;
+    };
 };
 if (count _appearanceRows > 0) then {
     _results append ([_vehicle, _appearanceRows] call Waldo_fnc_VehicleAppearanceApply);
@@ -56,7 +67,7 @@ if (count _appearanceRows > 0) then {
 
 private _okCount = {_x select 0} count _results;
 
-if (_owner > 2) then {
+if (_owner > 2 && {!(_results isEqualTo []) || {!_weaponResultPending}}) then {
     private _state = "ERROR";
     private _message = "No changes were applied.";
     if (count _results > 0) then {

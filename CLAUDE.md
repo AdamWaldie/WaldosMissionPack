@@ -1048,10 +1048,8 @@ private _hint = if (_valid) then {""} else {"Set Waldo_Example_Class to a real C
 
 ### Headless Client Support (optional)
 
-Native, server-authoritative distribution of AI groups across connected headless clients. This
-replaces the legacy, disabled-by-default `MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf`
-("Werthles' Headless Kit") third-party script, which remains in the repository unmodified for
-reference only and must not be re-enabled alongside this system.
+Native, server-authoritative distribution of AI groups across connected headless clients. This is
+the only headless-client distribution system bundled with WMP.
 
 **Off by default** (`MissionConfig\headlessConfig.sqf`, `Waldo_Headless_Enable`). The system has not
 yet been verified against a live Arma 3 engine or a connected headless client, so connecting one to a
@@ -1150,10 +1148,8 @@ unconditionally. Routed through `Waldo_fnc_HeadlessDebugLog` (the shared `[WMP D
 own visibility convention), so it costs nothing when off and never introduces a separate notification
 channel. Toggle it live in-mission - no restart required - with `[] call Waldo_fnc_HeadlessDebugToggle;`
 or the **Headless Client - Toggle Debug** ZEN module, which confirms the new state with a WMP
-notification card to every assigned curator. This is the direct successor to the legacy
-`WerthlesHeadless.sqf`'s own in-mission "Toggle WHK Debug" action (`WHKDEBUGHC`) - same "flip debug
-on the fly, get instant confirmation" intent, carried into WMP's own diagnostics/notification
-conventions and made curator-triggerable from Zeus rather than a single hard-coded admin's `addAction`.
+notification card to every assigned curator. The control uses WMP's diagnostics and notification
+conventions and is available directly from Zeus.
 
 **Trigger/waypoint synchronisation is not preserved across a migration** - this is an Arma engine
 limitation, not something WMP (or the legacy script, which attempted and still needed a workaround
@@ -1415,20 +1411,17 @@ https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games
 **1. Table games (multiplayer).** A seated party-games engine — twelve games (Battleship, Who's Who:
 Vehicles, Shotgun Roulette, Blackjack, Texas Hold'em, Five-Card Draw, Liar's Dice, Chess, Checkers,
 Connect Four, Rock Paper Scissors, UNO). Players
-walk up to a supported table object, take a seat (up to four), vote for a game and play. Server is
-the authority; each client runs a UI/discovery loop; JIP-safe. Enable in `init.sqf`:
+walk up to an explicitly registered table object, take a seat (up to four), vote for a game and play.
+The server is authoritative; role code is loaded lazily and idle tables have no polling or discovery.
+Register each intended table from its Eden init:
 
 ```sqf
-Waldo_MiniGames_Enable = true;             // installs the table engine
-if (Waldo_MiniGames_Enable) then {
-    [] call Waldo_fnc_MiniGamesInit;
-};
+[this] call Waldo_fnc_MiniGamesRegisterTable;
 ```
 
-Tables are detected by class (`Land_CampingTable_F`, `Land_CampingTable_small_F`,
-`Land_CampingTable_small_white_F`, `Land_TablePlastic_01_F`, `Land_WoodenTable_large_F`,
-`Land_WoodenTable_small_F`). Tuning constants (`Waldo_MG_CFG_*`,
-including `Waldo_MG_CFG_TABLE_CLASSES`) live at the top of `MissionScripts/MiniGames/engine/config.sqf`.
+Any valid object can be registered. The optional HashMap controls display name, game IDs, exactly four
+seat offsets, exit offsets, directions and action range. `Waldo_MiniGames_Enable` remains independent
+field-equipment configuration and never activates seated tables.
 
 **2. Field equipment procedures (single-player, generic hook).** Ten pass/fail procedures gate any
 object interaction: `wirecut`, `minesweeper`, `keypad`, `lockpick`, `circuit`, `repair`, `radiotune`,
@@ -1496,13 +1489,13 @@ accessible Arma controls.
   Waldo_fnc_MiniGameEquipmentGallerySetup;`. Same ACE-first/vanilla-fallback dual-surface policy as
   the loadout save point. The **Field Equipment Gallery Example** composition places this on a laptop.
 
-**Architecture.** The table engine is ported from the community composition "Party Games Scripted" by
-|LorÐ|™[Habilidade]Ðeus Ex, rebranded to the internal `Waldo_MG_` namespace. Twelve isolated games
-and the shared server/client engine live across `engine/config.sqf`, `engine/core.sqf` and
-`engine/games/*.sqf`; all are `#include`-d and installed
-by `Waldo_fnc_MiniGamesInit`). Only the public entry points are `CfgFunctions` entries under
-`class MiniGames`; the engine's `Waldo_MG_fnc_*` functions are defined at runtime by the installer, not
-registered individually. The field-equipment framework is original WMP and lives separately under
+**Architecture.** Twelve isolated games and the shared server/client engine live across
+`engine/config.sqf`, `engine/core.sqf` and `engine/games/*.sqf`. The first
+`Waldo_fnc_MiniGamesRegisterTable` call lazily compiles only the current machine's server, interface or
+headless-client role. Requests use the named server endpoint and a per-table drain-on-demand queue;
+JIP uses metadata and named snapshot requests, never executable payloads. Public entry points are
+`CfgFunctions` under `class MiniGames`; runtime rule helpers remain internal `Waldo_MG_fnc_*` values.
+The field-equipment framework lives separately under
 `MissionScripts/InteractionsMinigames/` (`Core`, `Equipment`, `Challenges`, `Integration`, `Themes`).
 When editing: keep table internals under `Waldo_MG_`/`Waldo_MG_fnc_`; keep authoritative interaction
 callbacks server-side; preserve public `Waldo_fnc_MiniGame*` names; openers must resolve exactly once.
@@ -1547,7 +1540,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MiniGames/` — seated party-game installer and multiplayer engine only.
 - `InteractionsMinigames/` — field-equipment procedures, equipment themes, accessibility core, object/table integration, and all ten challenge implementations.
 - `Headless/` — Native headless-client AI group distribution (`Waldo_fnc_HeadlessDetectLocal`, `Waldo_fnc_HeadlessRegisterClient`, `Waldo_fnc_HeadlessRebalance`, `Waldo_fnc_HeadlessMigrateGroup`, `Waldo_fnc_HeadlessReassignOnDisconnect`, `Waldo_fnc_HeadlessGetDiagnostics`)
-- `ThirdPartyScripts/` — Player marker integration (disabled by default via commented-out line in `init.sqf`), plus the legacy, superseded, disabled-by-default Werthles' Headless Kit kept for reference only (see `Headless/` above for the native replacement)
+- `ThirdPartyScripts/` — Player marker integration, disabled by default via a commented-out line in `init.sqf`
 
 ---
 

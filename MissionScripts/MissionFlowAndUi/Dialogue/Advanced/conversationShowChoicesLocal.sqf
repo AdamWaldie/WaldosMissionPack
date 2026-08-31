@@ -1,22 +1,44 @@
 /*
  * Author: WaldoTheWarfighter
- * Shows the initiating player a themed response panel on an engine-owned modal display. Gameplay
- * bindings cannot fire through this display; choices and cancellation use visible buttons.
+ * Shows the initiating player a themed response panel on an engine-owned modal display. The first
+ * render is deferred until the originating interaction UI has closed; transient display loss is
+ * retried for three seconds so a quick look-away cannot strand a live session without controls.
  * Locality/authority: interface local and accepts server remote execution only; sends choice IDs only.
- * Repeat/JIP behaviour: replaces any previous panel and records the display for cleanup. A local
- * watchdog independently returns control if the entities/session/range cease to be valid.
- * Arguments: speaker OBJECT, session ID STRING, choices ARRAY<[id,label,enabled]>. Return Value: BOOL.
+ * Repeat/JIP behaviour: replaces any previous/pending panel, retries only the current session and
+ * records the display for cleanup. A local watchdog independently returns control if invalidated.
+ * Arguments: speaker OBJECT, session ID STRING, choices ARRAY<[id,label,enabled,branches]>, internal
+ * render attempt NUMBER (default -1). Return Value: BOOL.
  * Current caller: ConversationRunServer. Example: server remote execution to the initiating player.
  */
-params [["_speaker", objNull, [objNull]], ["_sessionId", "", [""]], ["_choices", [], [[]]]];
+params [["_speaker", objNull, [objNull]], ["_sessionId", "", [""]], ["_choices", [], [[]]], ["_attempt", -1, [0]]];
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2}) exitWith {false};
 if (!hasInterface || {isNull _speaker} || {count _choices == 0}) exitWith {false};
-[_sessionId] call Waldo_fnc_ConversationHideChoicesLocal;
+if (_attempt < 0) exitWith {
+    [] call Waldo_fnc_ConversationHideChoicesLocal;
+    uiNamespace setVariable ["Waldo_Conversation_ChoicePendingSession", _sessionId];
+    [{_this call Waldo_fnc_ConversationShowChoicesLocal}, [_speaker, _sessionId, _choices, 0], 0.12] call CBA_fnc_waitAndExecute;
+    true
+};
+if ((uiNamespace getVariable ["Waldo_Conversation_ChoicePendingSession", ""]) != _sessionId) exitWith {false};
+private _retryOrCancel = {
+    params ["_reason"];
+    if (_attempt < 30) exitWith {
+        [{_this call Waldo_fnc_ConversationShowChoicesLocal}, [_speaker, _sessionId, _choices, _attempt + 1], 0.1] call CBA_fnc_waitAndExecute;
+        true
+    };
+    uiNamespace setVariable ["Waldo_Conversation_ChoicePendingSession", ""];
+    [_speaker, player, _sessionId, "DISPLAY_UNAVAILABLE"] remoteExecCall ["Waldo_fnc_ConversationCancel", 2];
+    diag_log format ["[WMP CONVERSATION] Response panel render abandoned session=%1 reason=%2 attempts=%3.", _sessionId, _reason, _attempt + 1];
+    false
+};
 private _gameDisplay = findDisplay 46;
-if (isNull _gameDisplay) exitWith {false};
+if (isNull _gameDisplay) exitWith {["GAME_DISPLAY_UNAVAILABLE"] call _retryOrCancel};
 private _display = _gameDisplay createDisplay "RscDisplayEmpty";
-if (isNull _display) exitWith {false};
+if (isNull _display) exitWith {["MODAL_DISPLAY_UNAVAILABLE"] call _retryOrCancel};
+uiNamespace setVariable ["Waldo_Conversation_ChoicePendingSession", ""];
 uiNamespace setVariable ["Waldo_Conversation_ChoiceDisplay", _display];
+uiNamespace setVariable ["Waldo_Conversation_ChoiceSpeaker", _speaker];
+uiNamespace setVariable ["Waldo_Conversation_ChoiceSession", _sessionId];
 private _theme = [] call Waldo_fnc_UiTheme;
 private _controls = [];
 private _maximumWidth = safeZoneW * ((missionNamespace getVariable ["Waldo_Dialogue_ChoiceMaximumWidth", 0.34]) max 0.25 min 0.80);
@@ -44,11 +66,14 @@ private _buttons = [];
 private _rows = [];
 private _contentWidth = ctrlTextWidth _title;
 {
-    _x params ["_choiceId", "_label", ["_enabled", true, [true]]];
+    _x params ["_choiceId", "_label", ["_enabled", true, [true]], ["_branches", false, [true]]];
     private _button = _display ctrlCreate ["RscStructuredText", -1, _group];
-    _button ctrlSetStructuredText parseText format ["<t align='left' valign='middle' font='%1' color='%2' size='%3'>%4</t>", _theme getOrDefault ["font", "RobotoCondensed"], if (_enabled) then {_theme getOrDefault ["textHex", "#FFFFFF"]} else {_theme getOrDefault ["mutedHex", "#9FB8D1"]}, _textScale, _label];
+    private _choiceColour = if (!_enabled) then {_theme getOrDefault ["mutedHex", "#9FB8D1"]} else {if (_branches) then {_theme getOrDefault ["successHex", "#6CE5A8"]} else {_theme getOrDefault ["textHex", "#FFFFFF"]}};
+    private _choicePrefix = if (_branches) then {"&#9654; "} else {""};
+    _button ctrlSetStructuredText parseText format ["<t align='left' valign='middle' font='%1' color='%2' size='%3'>%4%5</t>", _theme getOrDefault ["font", "RobotoCondensed"], _choiceColour, _textScale, _choicePrefix, _label];
     _button ctrlSetBackgroundColor (_theme getOrDefault ["button", [0.035,0.14,0.23,1]]);
-    _button ctrlSetTooltip _label;
+    private _tooltip = if (_branches) then {format ["%1 - continues to another response selection", _label]} else {_label};
+    _button ctrlSetTooltip _tooltip;
     _button setVariable ["Waldo_Conversation_ChoiceId", _choiceId];
     _button setVariable ["Waldo_Conversation_ChoiceEnabled", _enabled];
     _button setVariable ["Waldo_Conversation_BaseColour", _theme getOrDefault ["button", [0.035,0.14,0.23,1]]];
@@ -107,8 +132,6 @@ private _height = _headerHeight + _groupHeight + safeZoneH * 0.012;
 _frame ctrlSetPosition [_panelX, _panelY, _width, _height]; _frame ctrlCommit 0;
 _title ctrlSetPosition [_panelX + (_horizontalPadding / 2), _panelY + safeZoneH * 0.008, _innerWidth, safeZoneH * 0.032]; _title ctrlCommit 0;
 _group ctrlSetPosition [_panelX + (_horizontalPadding / 2), _panelY + safeZoneH * 0.046, _innerWidth, _groupHeight]; _group ctrlCommit 0;
-uiNamespace setVariable ["Waldo_Conversation_ChoiceSpeaker", _speaker];
-uiNamespace setVariable ["Waldo_Conversation_ChoiceSession", _sessionId];
 uiNamespace setVariable ["Waldo_Conversation_ChoiceControls", _controls];
 uiNamespace setVariable ["Waldo_Conversation_ChoiceButtons", _buttons];
 uiNamespace setVariable ["Waldo_Conversation_ChoiceKeyHandler", -1];

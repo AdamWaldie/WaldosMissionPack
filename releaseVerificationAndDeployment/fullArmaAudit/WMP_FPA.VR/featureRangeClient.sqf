@@ -176,7 +176,6 @@ if (!isNull _vvdLaptop && {!isNull _vvdPad}) then {
 };
 
 (missionNamespace getVariable ["Waldo_QA_Paradrop", []]) params [["_dropFlag", objNull], ["_dropAircraft", objNull]];
-if (!isNull _dropAircraft) then {[_dropAircraft] call Waldo_fnc_VehicleJumpSetup;};
 if (!isNull _dropFlag && {!isNull _dropAircraft}) then {
     [_dropFlag, _dropAircraft, "QA DROP AIRCRAFT"] call Waldo_fnc_MoveInCargoPlane;
 };

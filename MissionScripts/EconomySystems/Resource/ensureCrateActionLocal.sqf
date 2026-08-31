@@ -3,12 +3,18 @@
  * Ensure crate action local.
  *
  * Part of the Waldos Economy Systems suite (Resource system).
+ * Locality / Authority: Installs the collection action on interface clients; collection requests are
+ * sent directly to the authoritative server processor.
+ * Repeat / JIP Behaviour: Versioned action installation is repeat-safe and reconstructed from the
+ * crate registry for JIP players; no request is retained for JIP.
  *
  * Arguments:
  * 0: _crate <OBJECT> - crate (optional, default: objNull)
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Economy local world-action reconciliation.
  *
  * Example:
  * [_crate] call Waldo_fnc_EcoResource_ensureCrateActionLocal;
@@ -42,7 +48,11 @@
                     floor (diag_tickTime * 1000),
                     floor (random 1000000)
                 ];
-                _target setVariable ["WaldoEcoResource_CollectRequest", [netId _caller, getPlayerUID _caller, name _caller, _requestId], true];
+                [
+                    "CRATE_COLLECT",
+                    _target,
+                    [netId _caller, getPlayerUID _caller, name _caller, _requestId]
+                ] call Waldo_fnc_EcoCore_submitRequestServer;
                 ["Collection request sent."] call Waldo_fnc_EcoCore_notifyActorLocal;
             },
             nil,

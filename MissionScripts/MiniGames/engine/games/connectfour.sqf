@@ -1,14 +1,21 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Connect Four
  * Server-authoritative best-of-three board with mouse/keyboard controls and spectators.
- * This original WMP game is included by miniGamesInit.sqf and is not a standalone CfgFunctions entry.
+ * This original WMP game is included lazily and is not a standalone CfgFunctions entry.
+ * Locality/authority: Server rules are authoritative; controls and presentation are interface-local.
+ * Repeat/JIP: Compiled once per role; public state and named requests restore permitted JIP state.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_connectFourPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_ConnectFourRevision", (_table getVariable ["Waldo_MG_ConnectFourRevision", 0]) + 1, true];
-    _table setVariable ["Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1, true];
+    [_table, "Waldo_MG_ConnectFourRevision", (_table getVariable ["Waldo_MG_ConnectFourRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_connectFourEmptyBoard = {
@@ -47,21 +54,21 @@ Waldo_MG_fnc_connectFourStartBoardServer = {
     params [["_table", objNull], ["_resetMatch", false]];
     if (!isServer || {isNull _table}) exitWith {false};
     if (_resetMatch) then {
-        _table setVariable ["Waldo_MG_ConnectFourScores", [0,0], true];
-        _table setVariable ["Waldo_MG_ConnectFourRound", 1, true];
+        [_table, "Waldo_MG_ConnectFourScores", [0,0]] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_ConnectFourRound", 1] call Waldo_MG_fnc_setPublicTableStateServer;
     };
     private _round = _table getVariable ["Waldo_MG_ConnectFourRound", 1];
-    _table setVariable ["Waldo_MG_ConnectFourBoard", call Waldo_MG_fnc_connectFourEmptyBoard, true];
-    _table setVariable ["Waldo_MG_ConnectFourTurn", (_round - 1) mod 2, true];
-    _table setVariable ["Waldo_MG_ConnectFourPhase", "PLAYING", true];
-    _table setVariable ["Waldo_MG_ConnectFourWinner", -2, true];
-    _table setVariable ["Waldo_MG_ConnectFourReady", [false,false], true];
-    _table setVariable ["Waldo_MG_ConnectFourEpoch", (_table getVariable ["Waldo_MG_ConnectFourEpoch", 0]) + 1, true];
-    _table setVariable ["Waldo_MG_ConnectFourLastColumn", -1, true];
+    [_table, "Waldo_MG_ConnectFourBoard", call Waldo_MG_fnc_connectFourEmptyBoard] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourTurn", (_round - 1) mod 2] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourPhase", "PLAYING"] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourWinner", -2] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourReady", [false,false]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourEpoch", (_table getVariable ["Waldo_MG_ConnectFourEpoch", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourLastColumn", -1] call Waldo_MG_fnc_setPublicTableStateServer;
     private _names = _table getVariable ["Waldo_MG_ConnectFourPlayerNames", ["Blue O", "Amber X"]];
     private _starter = _table getVariable ["Waldo_MG_ConnectFourTurn", 0];
-    _table setVariable ["Waldo_MG_ConnectFourStatus", format ["Board %1: %2 opens. Select a column.", _round, _names param [_starter, "Player"]], true];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    [_table, "Waldo_MG_ConnectFourStatus", format ["Board %1: %2 opens. Select a column.", _round, _names param [_starter, "Player"]]] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table] call Waldo_MG_fnc_connectFourPublishRevisionServer;
     true
 };
@@ -69,22 +76,22 @@ Waldo_MG_fnc_connectFourStartBoardServer = {
 Waldo_MG_fnc_connectFourClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_ConnectFourActive", false, true];
-    _table setVariable ["Waldo_MG_ConnectFourFinished", false, true];
-    _table setVariable ["Waldo_MG_ConnectFourGameId", "", true];
-    _table setVariable ["Waldo_MG_ConnectFourPlayers", [objNull,objNull], true];
-    _table setVariable ["Waldo_MG_ConnectFourPlayerNames", ["Blue O", "Amber X"], true];
-    _table setVariable ["Waldo_MG_ConnectFourSeatIndices", [-1,-1], true];
-    _table setVariable ["Waldo_MG_ConnectFourScores", [0,0], true];
-    _table setVariable ["Waldo_MG_ConnectFourRound", 1, true];
-    _table setVariable ["Waldo_MG_ConnectFourEpoch", 0, true];
-    _table setVariable ["Waldo_MG_ConnectFourBoard", call Waldo_MG_fnc_connectFourEmptyBoard, true];
-    _table setVariable ["Waldo_MG_ConnectFourTurn", 0, true];
-    _table setVariable ["Waldo_MG_ConnectFourPhase", "PLAYING", true];
-    _table setVariable ["Waldo_MG_ConnectFourWinner", -2, true];
-    _table setVariable ["Waldo_MG_ConnectFourReady", [false,false], true];
-    _table setVariable ["Waldo_MG_ConnectFourLastColumn", -1, true];
-    _table setVariable ["Waldo_MG_ConnectFourStatus", "Waiting for a Connect Four match.", true];
+    [_table, "Waldo_MG_ConnectFourActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourPlayers", [objNull,objNull]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourPlayerNames", ["Blue O", "Amber X"]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourSeatIndices", [-1,-1]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourScores", [0,0]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourRound", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourEpoch", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourBoard", call Waldo_MG_fnc_connectFourEmptyBoard] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourTurn", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourPhase", "PLAYING"] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourWinner", -2] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourReady", [false,false]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourLastColumn", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourStatus", "Waiting for a Connect Four match."] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_connectFourPublishRevisionServer;
 };
 
@@ -102,15 +109,15 @@ Waldo_MG_fnc_connectFourStartServer = {
         if (!isNull _unit) then {_players pushBack _unit; _seatIndices pushBack _i;};
     };
     if ((count _players) != 2) exitWith {false};
-    _table setVariable ["Waldo_MG_ConnectFourActive", true, true];
-    _table setVariable ["Waldo_MG_ConnectFourFinished", false, true];
-    _table setVariable ["Waldo_MG_ConnectFourGameId", format ["Waldo_MG_C4_%1_%2", floor (serverTime * 10), floor (random 1000000)], true];
-    _table setVariable ["Waldo_MG_ConnectFourPlayers", _players, true];
-    _table setVariable ["Waldo_MG_ConnectFourPlayerNames", [name (_players select 0), name (_players select 1)], true];
-    _table setVariable ["Waldo_MG_ConnectFourSeatIndices", _seatIndices, true];
-    _table setVariable ["Waldo_MG_ConnectFourScores", [0,0], true];
-    _table setVariable ["Waldo_MG_ConnectFourRound", 1, true];
-    _table setVariable ["Waldo_MG_ConnectFourEpoch", 0, true];
+    [_table, "Waldo_MG_ConnectFourActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourGameId", format ["Waldo_MG_C4_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourPlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourPlayerNames", [name (_players select 0), name (_players select 1)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourScores", [0,0]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourRound", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourEpoch", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table, true] call Waldo_MG_fnc_connectFourStartBoardServer
 };
 
@@ -143,7 +150,6 @@ Waldo_MG_fnc_connectFourReconcilePlayersServer = {
 Waldo_MG_fnc_processConnectFourActionRequestServer = {
     params [["_unit", objNull], ["_request", []]];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_ConnectFourActionRequest", [], true];
     if ((count _request) < 6) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -165,14 +171,14 @@ Waldo_MG_fnc_processConnectFourActionRequestServer = {
         if !(_phase in ["ROUND_OVER", "FINISHED"]) exitWith {[_unit, _token, "Finish the current board first."] call Waldo_MG_fnc_resultServer;};
         private _ready = +(_table getVariable ["Waldo_MG_ConnectFourReady", [false,false]]);
         _ready set [_role, true];
-        _table setVariable ["Waldo_MG_ConnectFourReady", _ready, true];
+        [_table, "Waldo_MG_ConnectFourReady", _ready] call Waldo_MG_fnc_setPublicTableStateServer;
         if ((_ready param [0,false]) && {_ready param [1,false]}) then {
             private _reset = _phase == "FINISHED";
-            if (!_reset) then {_table setVariable ["Waldo_MG_ConnectFourRound", (_table getVariable ["Waldo_MG_ConnectFourRound", 1]) + 1, true];};
-            _table setVariable ["Waldo_MG_ConnectFourFinished", false, true];
+            if (!_reset) then {[_table, "Waldo_MG_ConnectFourRound", (_table getVariable ["Waldo_MG_ConnectFourRound", 1]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;};
+            [_table, "Waldo_MG_ConnectFourFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
             [_table, _reset] call Waldo_MG_fnc_connectFourStartBoardServer;
         } else {
-            _table setVariable ["Waldo_MG_ConnectFourStatus", format ["%1 is ready. Waiting for the opponent.", name _unit], true];
+            [_table, "Waldo_MG_ConnectFourStatus", format ["%1 is ready. Waiting for the opponent.", name _unit]] call Waldo_MG_fnc_setPublicTableStateServer;
             [_table] call Waldo_MG_fnc_connectFourPublishRevisionServer;
         };
         [_unit, _token, "Ready state recorded."] call Waldo_MG_fnc_resultServer;
@@ -190,39 +196,39 @@ Waldo_MG_fnc_processConnectFourActionRequestServer = {
     };
     if (_placed < 0) exitWith {[_unit, _token, "That column is full."] call Waldo_MG_fnc_resultServer;};
     _board set [_placed, _role + 1];
-    _table setVariable ["Waldo_MG_ConnectFourBoard", _board, true];
-    _table setVariable ["Waldo_MG_ConnectFourLastColumn", _column, true];
+    [_table, "Waldo_MG_ConnectFourBoard", _board] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ConnectFourLastColumn", _column] call Waldo_MG_fnc_setPublicTableStateServer;
     private _winner = [_board] call Waldo_MG_fnc_connectFourWinningRole;
     private _full = ({_x == 0} count _board) == 0;
     private _names = _table getVariable ["Waldo_MG_ConnectFourPlayerNames", ["Blue O", "Amber X"]];
     if (_winner >= 0) then {
         private _scores = +(_table getVariable ["Waldo_MG_ConnectFourScores", [0,0]]);
         _scores set [_winner, (_scores param [_winner, 0]) + 1];
-        _table setVariable ["Waldo_MG_ConnectFourScores", _scores, true];
-        _table setVariable ["Waldo_MG_ConnectFourWinner", _winner, true];
-        _table setVariable ["Waldo_MG_ConnectFourReady", [false,false], true];
+        [_table, "Waldo_MG_ConnectFourScores", _scores] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_ConnectFourWinner", _winner] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_ConnectFourReady", [false,false]] call Waldo_MG_fnc_setPublicTableStateServer;
         if ((_scores param [_winner, 0]) >= Waldo_MG_CFG_CONNECTFOUR_WINS_REQUIRED) then {
-            _table setVariable ["Waldo_MG_ConnectFourFinished", true, true];
-            _table setVariable ["Waldo_MG_ConnectFourPhase", "FINISHED", true];
-            _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
-            _table setVariable ["Waldo_MG_ConnectFourStatus", format ["%1 wins the match %2-%3. Ready for a rematch.", _names param [_winner,"Player"], _scores param [_winner,0], _scores param [1-_winner,0]], true];
+            [_table, "Waldo_MG_ConnectFourFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_ConnectFourPhase", "FINISHED"] call Waldo_MG_fnc_setPublicTableStateServer;
+            _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
+            [_table, "Waldo_MG_ConnectFourStatus", format ["%1 wins the match %2-%3. Ready for a rematch.", _names param [_winner,"Player"], _scores param [_winner,0], _scores param [1-_winner,0]]] call Waldo_MG_fnc_setPublicTableStateServer;
         } else {
-            _table setVariable ["Waldo_MG_ConnectFourPhase", "ROUND_OVER", true];
-            _table setVariable ["Waldo_MG_ConnectFourStatus", format ["%1 connects four and wins this board. Both players must ready the next board.", _names param [_winner,"Player"]], true];
+            [_table, "Waldo_MG_ConnectFourPhase", "ROUND_OVER"] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_ConnectFourStatus", format ["%1 connects four and wins this board. Both players must ready the next board.", _names param [_winner,"Player"]]] call Waldo_MG_fnc_setPublicTableStateServer;
         };
     } else {
         if (_full) then {
-            _table setVariable ["Waldo_MG_ConnectFourWinner", -1, true];
-            _table setVariable ["Waldo_MG_ConnectFourPhase", "ROUND_OVER", true];
-            _table setVariable ["Waldo_MG_ConnectFourReady", [false,false], true];
-            _table setVariable ["Waldo_MG_ConnectFourStatus", "The board is full: draw. Ready the replay.", true];
+            [_table, "Waldo_MG_ConnectFourWinner", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_ConnectFourPhase", "ROUND_OVER"] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_ConnectFourReady", [false,false]] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_ConnectFourStatus", "The board is full: draw. Ready the replay."] call Waldo_MG_fnc_setPublicTableStateServer;
         } else {
             private _next = 1 - _role;
-            _table setVariable ["Waldo_MG_ConnectFourTurn", _next, true];
-            _table setVariable ["Waldo_MG_ConnectFourStatus", format ["%1 played column %2. %3 to move.", name _unit, _column + 1, _names param [_next,"Player"]], true];
+            [_table, "Waldo_MG_ConnectFourTurn", _next] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_ConnectFourStatus", format ["%1 played column %2. %3 to move.", name _unit, _column + 1, _names param [_next,"Player"]]] call Waldo_MG_fnc_setPublicTableStateServer;
         };
     };
-    _table setVariable ["Waldo_MG_ConnectFourEpoch", _epoch + 1, true];
+    [_table, "Waldo_MG_ConnectFourEpoch", _epoch + 1] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_connectFourPublishRevisionServer;
     [_unit, _token, format ["Disc placed in column %1.", _column + 1]] call Waldo_MG_fnc_resultServer;
 };
@@ -231,7 +237,8 @@ Waldo_MG_fnc_submitConnectFourActionLocal = {
     params [["_table", objNull], ["_action", "MOVE"], ["_value", -1]];
     if (!hasInterface || {isNull player} || {isNull _table}) exitWith {};
     private _token = ["CONNECTFOUR"] call Waldo_MG_fnc_makeToken;
-    player setVariable ["Waldo_MG_ConnectFourActionRequest", [_token, netId _table, _table getVariable ["Waldo_MG_ConnectFourGameId",""], _table getVariable ["Waldo_MG_ConnectFourEpoch",-1], _action, _value], true];
+    private _request = [_token, netId _table, _table getVariable ["Waldo_MG_ConnectFourGameId",""], _table getVariable ["Waldo_MG_ConnectFourEpoch",-1], _action, _value];
+    ["CONNECTFOUR", _table, _token, _request param [3,-1], _request] call Waldo_MG_fnc_submitRequestLocal;
 };
 
 Waldo_MG_fnc_getConnectFourRoleLocal = {

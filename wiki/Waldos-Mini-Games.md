@@ -2,7 +2,7 @@
 
 > **Use this page when:** you are choosing between seated party games and field-equipment interaction procedures.
 
-_Associated Files: `init.sqf`, `MissionScripts\MiniGames\miniGamesInit.sqf`, `MissionScripts\MiniGames\engine\`, `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGamesInit`_
+_Associated Files: `MissionScripts\MiniGames\miniGamesRegisterTable.sqf`, `MissionScripts\MiniGames\engine\`, `MissionScripts\InteractionsMinigames\`, `Waldo_fnc_MiniGamesRegisterTable`_
 
 
 Waldos Mini Games is two complementary systems under one feature:
@@ -23,17 +23,13 @@ The fast path for mission makers is one Eden init line: `[this, "repair"] call W
 
 ## Enabling it
 
-The table-games engine is installed from `init.sqf`:
+Seated tables activate individually from the table object's Eden init:
 
 ```sqf
-Waldo_MiniGames_Enable = true;
-if (Waldo_MiniGames_Enable) then {
-    [] call Waldo_fnc_MiniGamesInit;
-};
+[this] call Waldo_fnc_MiniGamesRegisterTable;
 ```
 
-* Leave it `true` (the default) to use the seated table games.
-* Field equipment procedures register on first use, so they work even when this flag is `false`; the flag only controls seated table games.
+There is no automatic table discovery and no seated-game startup in `init.sqf`. `Waldo_MiniGames_Enable` remains the field-equipment challenge setting; changing it does not register seated tables. Field procedures still register on first use.
 
 ## Requirements
 

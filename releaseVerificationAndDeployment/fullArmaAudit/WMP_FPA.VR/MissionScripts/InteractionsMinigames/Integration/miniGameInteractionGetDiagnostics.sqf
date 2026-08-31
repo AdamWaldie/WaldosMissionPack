@@ -1,7 +1,24 @@
 /*
  * Author: WaldoTheWarfighter
- * Returns normalized diagnostics for all ten procedure APIs and configured
- * interaction objects. Optional argument: objects to inspect.
+ * Reports interface-local availability and object setup for all ten field-equipment procedures.
+ * This is read-only: it never opens a procedure or populates the lazy challenge UI registry merely
+ * to make diagnostics look active. A procedure is LOADED when its function exists and either a
+ * configured local object uses it or its opener has already been registered by normal use.
+ *
+ * Locality/authority and repeat/JIP behaviour: Runs on an interface client as part of the bounded
+ * server diagnostic request. It inspects that client's local actions/registry and can be repeated;
+ * it publishes no state and has no JIP side effects.
+ *
+ * Arguments:
+ * 0: Objects to inspect <ARRAY<OBJECT>> (default []) - empty discovers locally configured objects.
+ *
+ * Return Value:
+ * HashMap diagnostic feature report containing stable check identities and current local states.
+ *
+ * Current caller: Waldo_fnc_RunDiagnosticsClient.
+ *
+ * Example:
+ * [] call Waldo_fnc_MiniGameInteractionGetDiagnostics;
  */
 params [["_objects", [], [[]]]];
 private _procedures = [
@@ -16,20 +33,23 @@ private _procedures = [
     ["sequence", "Waldo_fnc_MiniGameSequence"],
     ["commandinput", "Waldo_fnc_MiniGameCommandInput"]
 ];
+if (_objects isEqualTo [] && {hasInterface}) then {
+    _objects = allMissionObjects "All" select {(_x getVariable ["Waldo_MG_Int_ChallengeId", ""]) != ""};
+};
 private _registry = missionNamespace getVariable ["Waldo_MG_ChallengeRegistry", []];
+private _configuredIds = _objects apply {_x getVariable ["Waldo_MG_Int_ChallengeId", ""]};
 private _checks = [];
 {
     _x params ["_id", "_function"];
     private _api = !(isNil _function);
     private _registered = (_registry findIf {(_x param [0, ""]) == _id}) >= 0;
-    private _procDetail = format ["function=%1 available=%2 locallyRegistered=%3", _function, _api, _registered];
+    private _configuredCount = {_x == _id} count _configuredIds;
+    private _availableForMission = _registered || {_configuredCount > 0};
+    private _procDetail = format ["function=%1 available=%2 locallyRegistered=%3 configuredObjects=%4", _function, _api, _registered, _configuredCount];
     if !(_api) then {_procDetail = [_procDetail, format ["%1 is missing from this mission's copy of WMP - re-extract WaldosMissionPack\MissionScripts over this mission (or confirm WaldosFunctions.sqf wasn't edited) so it registers again.", _function]] call Waldo_fnc_DiagnosticFoldHint;};
-    _checks pushBack ["interactions", format ["procedure-%1", _id], if (!_api) then {"ERROR"} else {if (_registered) then {"LOADED"} else {"UNCONFIGURED"}}, _procDetail];
+    _checks pushBack ["interactions", format ["procedure-%1", _id], if (!_api) then {"ERROR"} else {if (_availableForMission) then {"LOADED"} else {"UNCONFIGURED"}}, _procDetail];
 } forEach _procedures;
 
-if (_objects isEqualTo [] && {hasInterface}) then {
-    _objects = allMissionObjects "All" select {(_x getVariable ["Waldo_MG_Int_ChallengeId", ""]) != ""};
-};
 private _aceLoaded = isClass (configFile >> "CfgPatches" >> "ace_interact_menu");
 private _invalidObjects = _objects select {
     private _challenge = _x getVariable ["Waldo_MG_Int_ChallengeId", ""];

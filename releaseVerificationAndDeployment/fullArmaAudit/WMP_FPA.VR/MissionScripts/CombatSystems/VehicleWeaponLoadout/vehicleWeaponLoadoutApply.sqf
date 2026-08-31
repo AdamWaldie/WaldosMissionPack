@@ -2,11 +2,12 @@
  * Author: WaldoTheWarfighter
  * Adds, replaces, removes, or clears turret weapons/magazines and aircraft pylon ordnance on a
  * single vehicle. This is the main entry point for custom vehicle weapon/ammo change-out: give it a
- * vehicle and a list of change rows and it applies every row in order. Server-authoritative - calling
- * it from a client (or from an object's own Eden init field, which runs on every machine) forwards to
- * the server, which owns the actual removeWeaponTurret/addWeaponTurret/addMagazineTurret/
- * setPylonLoadOut calls. Safe to call again later on the same vehicle to make further changes; each
- * row is independent and a bad row never rolls back or blocks the rows around it.
+ * vehicle and a list of change rows and it applies every row in order. Requests are accepted by the
+ * server, then the locality-sensitive removeWeaponTurret/addWeaponTurret/addMagazineTurret/
+ * setPylonLoadOut/setAmmoOnPylon commands execute where the vehicle is currently local. This is
+ * required by Arma's locality model and remains valid when a server, player or headless client owns
+ * the vehicle. Safe to call again later on the same vehicle to make further changes; each row is
+ * independent and a bad row never rolls back or blocks the rows around it.
  *
  * Arguments:
  * 0: Vehicle <OBJECT> - the vehicle to change. Any AllVehicles-derived object with turrets and/or
@@ -51,9 +52,13 @@
  * this is the single authoritative enforcement point, checked here regardless of caller, not just in
  * the ZEN "Vehicle Weapon Loadout - Configure" module's own dialog-level guard.
  *
+ * 2: Internal owner execution <BOOLEAN> - WMP locality-routing flag (default false).
+ * 3: Result recipient owner ID <NUMBER> - optional curator owner for an asynchronous result notice
+ *      (default -1). Mission makers should omit arguments 2 and 3.
+ *
  * Return Value:
- * Array of [ok <BOOL>, detail <STRING>] - one per input row, same order; empty array when forwarded
- * from a client or when the vehicle/rows argument was invalid.
+ * Array of [ok <BOOL>, detail <STRING>] - one per input row, same order when the vehicle is local to
+ * the caller; empty when forwarded to the server/current vehicle owner or when arguments are invalid.
  *
  * Example:
  * // Replace the main turret's cannon and load 6 rounds, from a vehicle's init field:
@@ -72,7 +77,12 @@
  * the beginner-friendly way to discover exact classnames from an existing vehicle.
  */
 
-params [["_vehicle", objNull, [objNull]], ["_rows", [], [[]]]];
+params [
+    ["_vehicle", objNull, [objNull]],
+    ["_rows", [], [[]]],
+    ["_ownerExecution", false, [false]],
+    ["_resultOwner", -1, [0]]
+];
 
 // "AllVehicles" alone is not vehicle-specific - Man (soldiers/AI) also inherits from it in Arma 3's
 // own CfgVehicles tree (All -> AllVehicles -> Land -> Man, per the official CfgVehicles Config
@@ -83,10 +93,29 @@ if (isNull _vehicle || {!(_vehicle isKindOf "AllVehicles")} || {_vehicle isKindO
     []
 };
 
-// Weapon/ammo state lives on the server so JIP and every client stay in sync; an object's Eden init
-// field runs everywhere, so non-server copies forward the same call, matching Waldo_fnc_Jammer.
-if !(isServer) exitWith {
-    [_vehicle, _rows] remoteExec ["Waldo_fnc_VehicleWeaponLoadoutApply", 2];
+// The server accepts the public request, but the engine commands below have local arguments. Route
+// them to the vehicle's current owner instead of assuming server authority also means server
+// locality. A locality migration between dispatch and execution is bounced back through the server
+// once so the latest owner is resolved rather than applying on a stale machine.
+if (!_ownerExecution && {!isServer}) exitWith {
+    [_vehicle, _rows, false, _resultOwner] remoteExecCall ["Waldo_fnc_VehicleWeaponLoadoutApply", 2];
+    []
+};
+if (!_ownerExecution && {!local _vehicle}) exitWith {
+    private _vehicleOwner = owner _vehicle;
+    if (_vehicleOwner <= 0) then {_vehicleOwner = 2;};
+    [_vehicle, _rows, true, _resultOwner] remoteExecCall ["Waldo_fnc_VehicleWeaponLoadoutApply", _vehicleOwner];
+    []
+};
+if (_ownerExecution && {!local _vehicle}) exitWith {
+    if (isNull _vehicle) then {
+        if (_resultOwner > 2) then {
+            ["VEHICLE CUSTOMISATION", "The target vehicle no longer exists.", "ERROR", "VEHCUST_ZEN", 8]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _resultOwner];
+        };
+    } else {
+        [_vehicle, _rows, false, _resultOwner] remoteExecCall ["Waldo_fnc_VehicleWeaponLoadoutApply", 2];
+    };
     []
 };
 
@@ -307,4 +336,17 @@ private _mainSlotHasMount = count (getArray (configFile >> "CfgVehicles" >> (typ
 } forEach _rows;
 
 diag_log format ["[WMP VEHWPN] applied %1 row(s) to %2 (%3 ok): %4", count _rows, typeOf _vehicle, {_x select 0} count _results, _results];
+if (_resultOwner > 2) then {
+    private _okCount = {_x select 0} count _results;
+    private _state = if (_okCount == count _results && {count _results > 0}) then {"SUCCESS"} else {if (_okCount > 0) then {"WARNING"} else {"ERROR"}};
+    private _message = if (_results isEqualTo []) then {
+        "No weapon or pylon changes were applied."
+    } else {
+        format ["%1/%2 weapon or pylon change(s) applied to %3.", _okCount, count _results, typeOf _vehicle]
+    };
+    private _failed = _results select {!(_x select 0)};
+    if !(_failed isEqualTo []) then {_message = _message + format [" %1", (_failed select 0) select 1];};
+    ["VEHICLE CUSTOMISATION", _message, _state, "VEHCUST_ZEN", 8]
+        remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _resultOwner];
+};
 _results

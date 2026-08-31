@@ -4,7 +4,7 @@
  * Locality/authority: curator client; server retains definition conditions and callbacks.
  * Repeat/JIP behaviour: assignment replaces the selected speaker/group snapshot entry.
  * Arguments: module position ARRAY, selected object OBJECT. Return Value: Nothing.
- * Current caller: ZEN "Conversation - Assign Named". Example: place directly on an NPC.
+ * Current caller: ZEN "Conversation: Assign". Example: place directly on an NPC.
  */
 params ["_modulePos", ["_target", objNull, [objNull]]];
 if (isNull _target) exitWith {["CONVERSATION", "Place this module directly on an NPC.", "WARNING", "CONVERSATION_ZEN", 6] call Waldo_fnc_FeatureNotifyLocal};

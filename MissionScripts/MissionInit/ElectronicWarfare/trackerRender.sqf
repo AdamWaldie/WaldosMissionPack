@@ -5,6 +5,10 @@
  * player's side - so a tracker is visible to the side that planted it and stays hidden from the
  * target's side. Markers are local (createMarkerLocal), so nothing leaks over the network. Creates,
  * moves and deletes markers as trackers are planted, move and are removed. One instance per client.
+ * Locality/authority: interface-client presentation only; markers are local and authority remains in
+ * the server registry.
+ * Repeat/JIP behaviour: installs one guarded registry listener, starts immediately when a JIP snapshot
+ * is already present, sleeps completely while empty, and restarts on a later registry publication.
  *
  * Arguments:
  * None
@@ -12,18 +16,28 @@
  * Return Value:
  * Nothing
  *
+ * Current Callers: Jamming client bootstrap, tracker registry change listener and listen-server
+ * tracker create/remove publication paths.
+ *
  * Example:
  * [] call Waldo_fnc_TrackerRender;   // started from Waldo_fnc_JammingInit
  */
 
 if !(hasInterface) exitWith {};
+if !(missionNamespace getVariable ["Waldo_Tracker_RenderPvehInstalled", false]) then {
+    missionNamespace setVariable ["Waldo_Tracker_RenderPvehInstalled", true];
+    "Waldo_Tracker_Registry" addPublicVariableEventHandler {
+        [] call Waldo_fnc_TrackerRender;
+    };
+};
 if (missionNamespace getVariable ["Waldo_Tracker_RenderRunning", false]) exitWith {};
+if ((missionNamespace getVariable ["Waldo_Tracker_Registry", []]) isEqualTo []) exitWith {};
 missionNamespace setVariable ["Waldo_Tracker_RenderRunning", true];
 
 [] spawn {
     private _live = [];   // ids currently drawn locally
 
-    while {true} do {
+    while {missionNamespace getVariable ["Waldo_Tracker_RenderRunning", false]} do {
         private _registry = missionNamespace getVariable ["Waldo_Tracker_Registry", []];
         private _wanted = [];
 
@@ -53,6 +67,14 @@ missionNamespace setVariable ["Waldo_Tracker_RenderRunning", true];
         } forEach _live;
 
         _live = _wanted;
+        if (_registry isEqualTo []) exitWith {};
         sleep 2;
+    };
+
+    missionNamespace setVariable ["Waldo_Tracker_RenderRunning", false];
+    // A registry publication can arrive during the worker's final scheduled slice. Recheck once
+    // after dropping the guard so that event cannot strand a newly created tracker without a worker.
+    if !((missionNamespace getVariable ["Waldo_Tracker_Registry", []]) isEqualTo []) then {
+        [] call Waldo_fnc_TrackerRender;
     };
 };

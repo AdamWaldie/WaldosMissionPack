@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Rock Paper Scissors
  * All Waldo_MG_fnc_* functions implementing the Rock Paper Scissors mini game (server logic + local UI).
  *
@@ -7,45 +8,45 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_rpsPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable [
-        "Waldo_MG_RPSRevision",
-        (_table getVariable ["Waldo_MG_RPSRevision", 0]) + 1,
-        true
-    ];
-    _table setVariable [
-        "Waldo_MG_TableRevision",
-        (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1,
-        true
-    ];
+    [_table, "Waldo_MG_RPSRevision", (_table getVariable ["Waldo_MG_RPSRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_rpsClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_RPSActive", false, true];
-    _table setVariable ["Waldo_MG_RPSFinished", false, true];
-    _table setVariable ["Waldo_MG_RPSGameId", "", true];
-    _table setVariable ["Waldo_MG_RPSPlayers", [objNull, objNull], true];
-    _table setVariable ["Waldo_MG_RPSPlayerNames", ["Player One", "Player Two"], true];
-    _table setVariable ["Waldo_MG_RPSSeatIndices", [-1, -1], true];
-    _table setVariable ["Waldo_MG_RPSRound", 1, true];
-    _table setVariable ["Waldo_MG_RPSEpoch", 0, true];
-    _table setVariable ["Waldo_MG_RPSScores", [0, 0], true];
-    _table setVariable ["Waldo_MG_RPSLocked", [false, false], true];
-    _table setVariable ["Waldo_MG_RPSPhase", "CHOOSING", true];
-    _table setVariable ["Waldo_MG_RPSCountdownEnd", 0, true];
-    _table setVariable ["Waldo_MG_RPSRevealEnd", 0, true];
-    _table setVariable ["Waldo_MG_RPSRevealedChoices", ["", ""], true];
-    _table setVariable ["Waldo_MG_RPSRoundWinner", -2, true];
-    _table setVariable ["Waldo_MG_RPSWinner", -1, true];
-    _table setVariable ["Waldo_MG_RPSStatus", "Waiting for a Rock Paper Scissors match.", true];
+    [_table, "Waldo_MG_RPSActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSPlayers", [objNull, objNull]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSPlayerNames", ["Player One", "Player Two"]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSSeatIndices", [-1, -1]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRound", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSEpoch", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSScores", [0, 0]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSLocked", [false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSPhase", "CHOOSING"] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSCountdownEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRevealEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRevealedChoices", ["", ""]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRoundWinner", -2] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSWinner", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSStatus", "Waiting for a Rock Paper Scissors match."] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_RPSChoicesServer", ["", ""]];
     [_table] call Waldo_MG_fnc_rpsPublishRevisionServer;
 };
@@ -70,29 +71,25 @@ Waldo_MG_fnc_rpsStartServer = {
     private _first = _players param [0, objNull];
     private _second = _players param [1, objNull];
     if (isNull _first || {isNull _second}) exitWith {false};
-    _table setVariable ["Waldo_MG_RPSActive", true, true];
-    _table setVariable ["Waldo_MG_RPSFinished", false, true];
-    _table setVariable [
-        "Waldo_MG_RPSGameId",
-        format ["Waldo_MG_RPS_%1_%2", floor (serverTime * 10), floor (random 1000000)],
-        true
-    ];
-    _table setVariable ["Waldo_MG_RPSPlayers", [_first, _second], true];
-    _table setVariable ["Waldo_MG_RPSPlayerNames", [name _first, name _second], true];
-    _table setVariable ["Waldo_MG_RPSSeatIndices", _seatIndices, true];
-    _table setVariable ["Waldo_MG_RPSRound", 1, true];
-    _table setVariable ["Waldo_MG_RPSEpoch", 1, true];
-    _table setVariable ["Waldo_MG_RPSScores", [0, 0], true];
-    _table setVariable ["Waldo_MG_RPSLocked", [false, false], true];
-    _table setVariable ["Waldo_MG_RPSPhase", "CHOOSING", true];
-    _table setVariable ["Waldo_MG_RPSCountdownEnd", 0, true];
-    _table setVariable ["Waldo_MG_RPSRevealEnd", 0, true];
-    _table setVariable ["Waldo_MG_RPSRevealedChoices", ["", ""], true];
-    _table setVariable ["Waldo_MG_RPSRoundWinner", -2, true];
-    _table setVariable ["Waldo_MG_RPSWinner", -1, true];
-    _table setVariable ["Waldo_MG_RPSStatus", "Round 1: both players must lock a choice.", true];
+    [_table, "Waldo_MG_RPSActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSGameId", format ["Waldo_MG_RPS_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSPlayers", [_first, _second]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSPlayerNames", [name _first, name _second]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRound", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSEpoch", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSScores", [0, 0]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSLocked", [false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSPhase", "CHOOSING"] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSCountdownEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRevealEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRevealedChoices", ["", ""]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRoundWinner", -2] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSWinner", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSStatus", "Round 1: both players must lock a choice."] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_RPSChoicesServer", ["", ""]];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table] call Waldo_MG_fnc_rpsPublishRevisionServer;
     true
 };
@@ -120,13 +117,13 @@ Waldo_MG_fnc_rpsFinishForfeitServer = {
     private _winnerRole = 1 - _roleIndex;
     private _winnerName = _names param [_winnerRole, "Opponent"];
     private _loserName = _names param [_roleIndex, "Opponent"];
-    _table setVariable ["Waldo_MG_RPSFinished", true, true];
-    _table setVariable ["Waldo_MG_RPSPhase", "FINISHED", true];
-    _table setVariable ["Waldo_MG_RPSWinner", _winnerRole, true];
-    _table setVariable ["Waldo_MG_RPSCountdownEnd", 0, true];
-    _table setVariable ["Waldo_MG_RPSRevealEnd", 0, true];
-    _table setVariable ["Waldo_MG_RPSStatus", format ["%1 wins the match by forfeit after %2 left.", _winnerName, _loserName], true];
-    _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+    [_table, "Waldo_MG_RPSFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSPhase", "FINISHED"] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSWinner", _winnerRole] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSCountdownEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSRevealEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_RPSStatus", format ["%1 wins the match by forfeit after %2 left.", _winnerName, _loserName]] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     [_table] call Waldo_MG_fnc_rpsPublishRevisionServer;
 };
 
@@ -143,11 +140,11 @@ Waldo_MG_fnc_rpsProgressServer = {
         private _secondChoice = _choices param [1, ""];
         if (!(_firstChoice in ["ROCK", "PAPER", "SCISSORS"]) || {!(_secondChoice in ["ROCK", "PAPER", "SCISSORS"])}) exitWith {
             _table setVariable ["Waldo_MG_RPSChoicesServer", ["", ""]];
-            _table setVariable ["Waldo_MG_RPSEpoch", (_table getVariable ["Waldo_MG_RPSEpoch", 0]) + 1, true];
-            _table setVariable ["Waldo_MG_RPSLocked", [false, false], true];
-            _table setVariable ["Waldo_MG_RPSPhase", "CHOOSING", true];
-            _table setVariable ["Waldo_MG_RPSCountdownEnd", 0, true];
-            _table setVariable ["Waldo_MG_RPSStatus", "The choices could not be verified. Both players must choose again.", true];
+            [_table, "Waldo_MG_RPSEpoch", (_table getVariable ["Waldo_MG_RPSEpoch", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSLocked", [false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSPhase", "CHOOSING"] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSCountdownEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSStatus", "The choices could not be verified. Both players must choose again."] call Waldo_MG_fnc_setPublicTableStateServer;
             [_table] call Waldo_MG_fnc_rpsPublishRevisionServer;
         };
         private _roundWinner = -1;
@@ -166,21 +163,21 @@ Waldo_MG_fnc_rpsProgressServer = {
             _scores set [_roundWinner, (_scores param [_roundWinner, 0]) + 1];
             _status = format ["%1 wins round %2: %3 beats %4.", _names param [_roundWinner, "Player"], _round, _choices param [_roundWinner, ""], _choices param [1 - _roundWinner, ""]];
         };
-        _table setVariable ["Waldo_MG_RPSScores", _scores, true];
-        _table setVariable ["Waldo_MG_RPSRevealedChoices", _choices, true];
-        _table setVariable ["Waldo_MG_RPSRoundWinner", _roundWinner, true];
-        _table setVariable ["Waldo_MG_RPSCountdownEnd", 0, true];
+        [_table, "Waldo_MG_RPSScores", _scores] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSRevealedChoices", _choices] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSRoundWinner", _roundWinner] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSCountdownEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
         if (_roundWinner >= 0 && {(_scores param [_roundWinner, 0]) >= 2}) then {
-            _table setVariable ["Waldo_MG_RPSFinished", true, true];
-            _table setVariable ["Waldo_MG_RPSPhase", "FINISHED", true];
-            _table setVariable ["Waldo_MG_RPSWinner", _roundWinner, true];
-            _table setVariable ["Waldo_MG_RPSRevealEnd", 0, true];
-            _table setVariable ["Waldo_MG_RPSStatus", format ["%1 wins the best-of-three match, %2 to %3.", _names param [_roundWinner, "Player"], _scores param [_roundWinner, 0], _scores param [1 - _roundWinner, 0]], true];
-            _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+            [_table, "Waldo_MG_RPSFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSPhase", "FINISHED"] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSWinner", _roundWinner] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSRevealEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSStatus", format ["%1 wins the best-of-three match, %2 to %3.", _names param [_roundWinner, "Player"], _scores param [_roundWinner, 0], _scores param [1 - _roundWinner, 0]]] call Waldo_MG_fnc_setPublicTableStateServer;
+            _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
         } else {
-            _table setVariable ["Waldo_MG_RPSPhase", "REVEAL", true];
-            _table setVariable ["Waldo_MG_RPSRevealEnd", serverTime + Waldo_MG_CFG_RPS_REVEAL_SECONDS, true];
-            _table setVariable ["Waldo_MG_RPSStatus", _status, true];
+            [_table, "Waldo_MG_RPSPhase", "REVEAL"] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSRevealEnd", serverTime + Waldo_MG_CFG_RPS_REVEAL_SECONDS] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_RPSStatus", _status] call Waldo_MG_fnc_setPublicTableStateServer;
         };
         [_table] call Waldo_MG_fnc_rpsPublishRevisionServer;
     };
@@ -190,15 +187,15 @@ Waldo_MG_fnc_rpsProgressServer = {
         if ((_table getVariable ["Waldo_MG_RPSRoundWinner", -2]) >= 0) then {
             _round = _round + 1;
         };
-        _table setVariable ["Waldo_MG_RPSRound", _round, true];
-        _table setVariable ["Waldo_MG_RPSEpoch", (_table getVariable ["Waldo_MG_RPSEpoch", 0]) + 1, true];
-        _table setVariable ["Waldo_MG_RPSLocked", [false, false], true];
-        _table setVariable ["Waldo_MG_RPSPhase", "CHOOSING", true];
-        _table setVariable ["Waldo_MG_RPSRevealEnd", 0, true];
-        _table setVariable ["Waldo_MG_RPSRevealedChoices", ["", ""], true];
-        _table setVariable ["Waldo_MG_RPSRoundWinner", -2, true];
+        [_table, "Waldo_MG_RPSRound", _round] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSEpoch", (_table getVariable ["Waldo_MG_RPSEpoch", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSLocked", [false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSPhase", "CHOOSING"] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSRevealEnd", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSRevealedChoices", ["", ""]] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSRoundWinner", -2] call Waldo_MG_fnc_setPublicTableStateServer;
         _table setVariable ["Waldo_MG_RPSChoicesServer", ["", ""]];
-        _table setVariable ["Waldo_MG_RPSStatus", format ["Round %1: both players must lock a choice.", _round], true];
+        [_table, "Waldo_MG_RPSStatus", format ["Round %1: both players must lock a choice.", _round]] call Waldo_MG_fnc_setPublicTableStateServer;
         [_table] call Waldo_MG_fnc_rpsPublishRevisionServer;
     };
 };
@@ -226,8 +223,8 @@ Waldo_MG_fnc_rpsReconcilePlayersServer = {
     };
     if (!(_valid param [0, false]) && {!(_valid param [1, false])}) exitWith {
         [_table] call Waldo_MG_fnc_rpsClearServer;
-        _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-        _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+        [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
     };
     if (!(_table getVariable ["Waldo_MG_RPSFinished", false])) then {
         if (!(_valid param [0, false])) then {
@@ -244,7 +241,7 @@ Waldo_MG_fnc_rpsResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_rpsClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 };
 
@@ -254,7 +251,6 @@ Waldo_MG_fnc_processRPSActionRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_RPSActionRequest", [], true];
     if ((count _request) < 6) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -318,15 +314,15 @@ Waldo_MG_fnc_processRPSActionRequestServer = {
     _choices set [_roleIndex, _payload];
     _locked set [_roleIndex, true];
     _table setVariable ["Waldo_MG_RPSChoicesServer", _choices];
-    _table setVariable ["Waldo_MG_RPSLocked", _locked, true];
+    [_table, "Waldo_MG_RPSLocked", _locked] call Waldo_MG_fnc_setPublicTableStateServer;
     private _names = _table getVariable ["Waldo_MG_RPSPlayerNames", ["Player One", "Player Two"]];
     private _bothLocked = (_locked param [0, false]) && {(_locked param [1, false])};
     if (_bothLocked) then {
-        _table setVariable ["Waldo_MG_RPSPhase", "COUNTDOWN", true];
-        _table setVariable ["Waldo_MG_RPSCountdownEnd", serverTime + Waldo_MG_CFG_RPS_COUNTDOWN_SECONDS, true];
-        _table setVariable ["Waldo_MG_RPSStatus", "Both choices are locked. Reveal incoming.", true];
+        [_table, "Waldo_MG_RPSPhase", "COUNTDOWN"] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSCountdownEnd", serverTime + Waldo_MG_CFG_RPS_COUNTDOWN_SECONDS] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_RPSStatus", "Both choices are locked. Reveal incoming."] call Waldo_MG_fnc_setPublicTableStateServer;
     } else {
-        _table setVariable ["Waldo_MG_RPSStatus", format ["%1 has locked a choice. Waiting for %2.", _names param [_roleIndex, "Player"], _names param [1 - _roleIndex, "Opponent"]], true];
+        [_table, "Waldo_MG_RPSStatus", format ["%1 has locked a choice. Waiting for %2.", _names param [_roleIndex, "Player"], _names param [1 - _roleIndex, "Opponent"]]] call Waldo_MG_fnc_setPublicTableStateServer;
     };
     [_table] call Waldo_MG_fnc_rpsPublishRevisionServer;
     [_unit, _token, if (_bothLocked) then {
@@ -350,18 +346,15 @@ Waldo_MG_fnc_submitRPSActionRequestLocal = {
     };
     private _token = ["RPS_ACTION"] call Waldo_MG_fnc_makeToken;
     missionNamespace setVariable ["Waldo_MG_RPSPendingRequestLocal", [_token, diag_tickTime]];
-    player setVariable [
-        "Waldo_MG_RPSActionRequest",
-        [
+    private _request = [
             _token,
             netId _table,
             _table getVariable ["Waldo_MG_RPSGameId", ""],
             _table getVariable ["Waldo_MG_RPSEpoch", -1],
             _action,
             _payload
-        ],
-        2
     ];
+    ["RPS", _table, _token, _request param [3, -1], _request] call Waldo_MG_fnc_submitRequestLocal;
     true
 };
 

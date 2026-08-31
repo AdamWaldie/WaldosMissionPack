@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1017,
-  "runtimeFunctionCount": 385,
-  "functionCount": 1402,
+  "registeredFunctionCount": 1046,
+  "runtimeFunctionCount": 383,
+  "functionCount": 1429,
   "stations": [
     {
       "id": "control",
@@ -480,6 +480,18 @@
       "name": "Waldo_fnc_AceSetNameRespawnBindingRepair",
       "file": "MissionScripts/MissionInit/aceSetNameRespawnBindingRepair.sqf",
       "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_JipBindToObjectServer",
+      "file": "MissionScripts/Networking/jipBindToObjectServer.sqf",
+      "station": "control",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_JipRemoveBoundServer",
+      "file": "MissionScripts/Networking/jipRemoveBoundServer.sqf",
+      "station": "control",
       "activation": "manual"
     },
     {
@@ -977,6 +989,18 @@
     {
       "name": "Waldo_fnc_SafeStartApply",
       "file": "MissionScripts/MissionFlowAndUi/safeStartApply.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SafeStartRequestStateServer",
+      "file": "MissionScripts/MissionFlowAndUi/safeStartRequestStateServer.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SafeStartReceiveStateLocal",
+      "file": "MissionScripts/MissionFlowAndUi/safeStartReceiveStateLocal.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
@@ -2205,12 +2229,6 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_ZenConversationControl",
-      "file": "MissionScripts/ZenModules/Dialogue/zenConversationControl.sqf",
-      "station": "zen",
-      "activation": "manual"
-    },
-    {
       "name": "Waldo_fnc_ZenDialogueServer",
       "file": "MissionScripts/ZenModules/Dialogue/zenDialogueServer.sqf",
       "station": "zen",
@@ -3147,6 +3165,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_TreeFellingCanTargetLocal",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingCanTargetLocal.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_TreeFellingInit",
       "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingInit.sqf",
       "station": "tree-felling",
@@ -3161,6 +3185,12 @@
     {
       "name": "Waldo_fnc_TreeFellingProcess",
       "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingProcess.sqf",
+      "station": "tree-felling",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_TreeFellingSetupFallenLocal",
+      "file": "MissionScripts/EnvironmentalSystems/TreeFelling/treeFellingSetupFallenLocal.sqf",
       "station": "tree-felling",
       "activation": "manual"
     },
@@ -3603,8 +3633,20 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_EcoCore_installTestingNoticeActionServer",
+      "file": "MissionScripts/EconomySystems/Core/installTestingNoticeActionServer.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_EcoCore_startTestingNoticePlayerBridge",
       "file": "MissionScripts/EconomySystems/Core/startTestingNoticePlayerBridge.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_stopTestingNoticePlayerBridge",
+      "file": "MissionScripts/EconomySystems/Core/stopTestingNoticePlayerBridge.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
@@ -3639,6 +3681,36 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_EcoCore_refreshLocalWorldActions",
+      "file": "MissionScripts/EconomySystems/Core/refreshLocalWorldActions.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_requestLocalWorldActionRefresh",
+      "file": "MissionScripts/EconomySystems/Core/requestLocalWorldActionRefresh.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_scheduleLocalWorldActionRepair",
+      "file": "MissionScripts/EconomySystems/Core/scheduleLocalWorldActionRepair.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_startLocalWorldActionService",
+      "file": "MissionScripts/EconomySystems/Core/startLocalWorldActionService.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_stopLocalWorldActionService",
+      "file": "MissionScripts/EconomySystems/Core/stopLocalWorldActionService.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_EcoCore_refreshRuntimeRegistries",
       "file": "MissionScripts/EconomySystems/Core/refreshRuntimeRegistries.sqf",
       "station": "economy-core",
@@ -3647,6 +3719,12 @@
     {
       "name": "Waldo_fnc_EcoCore_startRequestScheduler",
       "file": "MissionScripts/EconomySystems/Core/startRequestScheduler.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCore_submitRequestServer",
+      "file": "MissionScripts/EconomySystems/Core/submitRequestServer.sqf",
       "station": "economy-core",
       "activation": "manual"
     },
@@ -6099,6 +6177,30 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_EcoCommand_requestLocalGroundCommandIdentityRefresh",
+      "file": "MissionScripts/EconomySystems/Command/requestLocalGroundCommandIdentityRefresh.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCommand_scheduleLocalGroundCommandIdentityRetry",
+      "file": "MissionScripts/EconomySystems/Command/scheduleLocalGroundCommandIdentityRetry.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCommand_startLocalGroundCommandIdentityService",
+      "file": "MissionScripts/EconomySystems/Command/startLocalGroundCommandIdentityService.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_EcoCommand_stopLocalGroundCommandIdentityService",
+      "file": "MissionScripts/EconomySystems/Command/stopLocalGroundCommandIdentityService.sqf",
+      "station": "economy-command",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_EcoCommand_getGroundCommandUIDs",
       "file": "MissionScripts/EconomySystems/Command/getGroundCommandUIDs.sqf",
       "station": "economy-command",
@@ -6177,8 +6279,80 @@
       "activation": "manual"
     },
     {
-      "name": "Waldo_fnc_MiniGamesInit",
-      "file": "MissionScripts/MiniGames/miniGamesInit.sqf",
+      "name": "Waldo_fnc_MiniGamesEnsureRuntime",
+      "file": "MissionScripts/MiniGames/miniGamesEnsureRuntime.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesRegisterTable",
+      "file": "MissionScripts/MiniGames/miniGamesRegisterTable.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesRegisterTableLocal",
+      "file": "MissionScripts/MiniGames/miniGamesRegisterTableLocal.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesUnregisterTable",
+      "file": "MissionScripts/MiniGames/miniGamesUnregisterTable.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesUnregisterTableLocal",
+      "file": "MissionScripts/MiniGames/miniGamesUnregisterTableLocal.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesInitPlayerLocal",
+      "file": "MissionScripts/MiniGames/miniGamesInitPlayerLocal.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesRequestMetadataServer",
+      "file": "MissionScripts/MiniGames/miniGamesRequestMetadataServer.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesApplyMetadataLocal",
+      "file": "MissionScripts/MiniGames/miniGamesApplyMetadataLocal.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesRequestServer",
+      "file": "MissionScripts/MiniGames/miniGamesRequestServer.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesRequestResultLocal",
+      "file": "MissionScripts/MiniGames/miniGamesRequestResultLocal.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesStateChangedLocal",
+      "file": "MissionScripts/MiniGames/miniGamesStateChangedLocal.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesSetSpectatorServer",
+      "file": "MissionScripts/MiniGames/miniGamesSetSpectatorServer.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesApplyStateSnapshotLocal",
+      "file": "MissionScripts/MiniGames/miniGamesApplyStateSnapshotLocal.sqf",
       "station": "party",
       "activation": "manual"
     },
@@ -6563,6 +6737,12 @@
       "activation": "internal"
     },
     {
+      "name": "Waldo_MG_fnc_getGamesForTable",
+      "file": "MissionScripts/MiniGames/engine/core.sqf",
+      "station": "party",
+      "activation": "internal"
+    },
+    {
       "name": "Waldo_MG_fnc_getPlayerRequirementText",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
@@ -6629,12 +6809,6 @@
       "activation": "internal"
     },
     {
-      "name": "Waldo_MG_fnc_collectTaggedClassObjects",
-      "file": "MissionScripts/MiniGames/engine/core.sqf",
-      "station": "party",
-      "activation": "internal"
-    },
-    {
       "name": "Waldo_MG_fnc_enforceInvulnerableLocal",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
@@ -6660,6 +6834,24 @@
     },
     {
       "name": "Waldo_MG_fnc_registerCuratorEditableServer",
+      "file": "MissionScripts/MiniGames/engine/core.sqf",
+      "station": "party",
+      "activation": "internal"
+    },
+    {
+      "name": "Waldo_MG_fnc_tableStateTargetsServer",
+      "file": "MissionScripts/MiniGames/engine/core.sqf",
+      "station": "party",
+      "activation": "internal"
+    },
+    {
+      "name": "Waldo_MG_fnc_setPublicTableStateServer",
+      "file": "MissionScripts/MiniGames/engine/core.sqf",
+      "station": "party",
+      "activation": "internal"
+    },
+    {
+      "name": "Waldo_MG_fnc_sendPublicTableSnapshotServer",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
@@ -6713,13 +6905,13 @@
       "activation": "internal"
     },
     {
-      "name": "Waldo_MG_fnc_reconcileRegisteredTablesServer",
+      "name": "Waldo_MG_fnc_publishTableChangeServer",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
     },
     {
-      "name": "Waldo_MG_fnc_reconcileRegistriesServer",
+      "name": "Waldo_MG_fnc_scheduleTimedProgressServer",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
@@ -6749,25 +6941,19 @@
       "activation": "internal"
     },
     {
-      "name": "Waldo_MG_fnc_processPlayerRequestsServer",
-      "file": "MissionScripts/MiniGames/engine/core.sqf",
-      "station": "party",
-      "activation": "internal"
-    },
-    {
       "name": "Waldo_MG_fnc_initializeServerState",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
     },
     {
-      "name": "Waldo_MG_fnc_startAuthorityLoop",
+      "name": "Waldo_MG_fnc_notifyLocal",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
     },
     {
-      "name": "Waldo_MG_fnc_notifyLocal",
+      "name": "Waldo_MG_fnc_submitRequestLocal",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
@@ -6798,12 +6984,6 @@
     },
     {
       "name": "Waldo_MG_fnc_showRequestResultLocal",
-      "file": "MissionScripts/MiniGames/engine/core.sqf",
-      "station": "party",
-      "activation": "internal"
-    },
-    {
-      "name": "Waldo_MG_fnc_discoverTaggedTablesLocal",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
@@ -6948,18 +7128,6 @@
     },
     {
       "name": "Waldo_MG_fnc_maintainGameTransitionLocal",
-      "file": "MissionScripts/MiniGames/engine/core.sqf",
-      "station": "party",
-      "activation": "internal"
-    },
-    {
-      "name": "Waldo_MG_fnc_startClientLoop",
-      "file": "MissionScripts/MiniGames/engine/core.sqf",
-      "station": "party",
-      "activation": "internal"
-    },
-    {
-      "name": "Waldo_MG_fnc_bootstrap",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"
@@ -8586,12 +8754,6 @@
     },
     {
       "name": "Waldo_MG_fnc_processUNOActionRequestServer",
-      "file": "MissionScripts/MiniGames/engine/games/uno.sqf",
-      "station": "party",
-      "activation": "internal"
-    },
-    {
-      "name": "Waldo_MG_fnc_processPriorityUNORequestsServer",
       "file": "MissionScripts/MiniGames/engine/games/uno.sqf",
       "station": "party",
       "activation": "internal"

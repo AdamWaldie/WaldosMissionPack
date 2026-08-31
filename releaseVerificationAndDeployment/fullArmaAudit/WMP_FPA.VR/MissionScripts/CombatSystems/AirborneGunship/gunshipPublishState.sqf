@@ -54,5 +54,12 @@ missionNamespace setVariable ["Waldo_Gunship_PublicSystems", _summaries, true];
 // owner 2 with the embedded server, so -2 silently never reconciled controller actions/markers on
 // the hosting player's own client. Waldo_fnc_GunshipSetupLocal already guards on hasInterface, so
 // target 0 stays a safe no-op on a pure dedicated server.
-[] remoteExecCall ["Waldo_fnc_GunshipSetupLocal", 0, "Waldo_Gunship_LocalSetup"];
+if (_summaries isEqualTo []) then {
+    // Current clients must reconcile removal immediately, but a future joiner has no marker/action
+    // side effect to reconstruct. Remove the obsolete JIP call after dispatching empty-state cleanup.
+    [] remoteExecCall ["Waldo_fnc_GunshipSetupLocal", 0];
+    [] remoteExecCall ["", "Waldo_Gunship_LocalSetup"];
+} else {
+    [] remoteExecCall ["Waldo_fnc_GunshipSetupLocal", 0, "Waldo_Gunship_LocalSetup"];
+};
 _summaries

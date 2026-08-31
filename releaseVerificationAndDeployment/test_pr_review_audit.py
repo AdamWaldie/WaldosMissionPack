@@ -163,11 +163,18 @@ class PrReviewAuditTests(unittest.TestCase):
             ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
             / "FullArmaAudit.VR" / "runServerAudit.sqf"
         ).read_text(encoding="utf-8")
+        server_init = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
+            / "WMP_FPA.VR" / "auditInitServer.sqf"
+        ).read_text(encoding="utf-8")
         self.assertEqual(audit.count("private _deadline = diag_tickTime + 120;"), 2)
         self.assertIn("getAssignedCuratorUnit _curator", audit)
         self.assertIn("count allPlayers > 0", audit)
         self.assertIn('["LANDED", "ANCHORED", "ABORTED"]', audit)
         self.assertIn('in ["LANDED", "ANCHORED"]', audit)
+        self.assertIn("private _clientReadyDeadline = diag_tickTime + 300", server_init)
+        self.assertIn('getVariable ["Waldo_QA_FeatureRangeClientReady", false]', server_init)
+        self.assertLess(server_init.index("_clientReadyDeadline"), server_init.index("Waldo_fnc_RunDiagnostics"))
 
     def test_client_runtime_exercises_dialogue_lips_choices_and_cleanup(self):
         audit = (
@@ -189,6 +196,16 @@ class PrReviewAuditTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn('createDisplay "RscDisplayEmpty"', choices)
         self.assertNotIn('displayAddEventHandler ["KeyDown"', choices)
+
+    def test_party_leave_audit_actors_are_server_owned(self):
+        audit = (
+            ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
+            / "FullArmaAudit.VR" / "runServerAudit.sqf"
+        ).read_text(encoding="utf-8")
+        leave_case = audit.split('["party/authority/leave-active-new-games", {', 1)[1]
+        self.assertIn("_group setGroupOwner 2", leave_case)
+        self.assertIn("owner _unit == 2", leave_case)
+        self.assertLess(leave_case.index("_group setGroupOwner 2"), leave_case.index('private _unit = _group createUnit'))
 
     def test_diagnostics_wait_for_complete_client_fixture_installation(self):
         server_audit = (
@@ -683,6 +700,19 @@ class PrReviewAuditTests(unittest.TestCase):
     def test_tree_felling_default_replacement_exists_in_base_game(self):
         root_init = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
         process = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingProcess.sqf").read_text(encoding="utf-8")
+        init = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingInit.sqf").read_text(encoding="utf-8")
+        swing = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingSwing.sqf").read_text(encoding="utf-8")
+        predicate = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingCanTargetLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('["Waldo_TreeFelling_Enable", false]', root_init)
+        self.assertIn('getVariable ["Waldo_TreeFelling_Enable", false]', init)
+        self.assertIn('getVariable ["Waldo_TreeFelling_Enable", false]', process)
+        self.assertIn("Waldo_fnc_TreeFellingCanTargetLocal", init)
+        self.assertIn("Waldo_fnc_TreeFellingCanTargetLocal", swing)
+        self.assertIn("Waldo_TreeFelling_TargetCache", predicate)
+        self.assertIn("Waldo_TreeFelling_ConfigEpoch", predicate)
+        self.assertIn("CBA_fnc_waitAndExecute", process)
+        self.assertNotIn("sleep _delay", process)
+        self.assertNotIn('setVariable ["Waldo_TreeFelling_Hits", _hits, true]', process)
         self.assertIn('["Land_WoodenLog_F"]', root_init)
         self.assertIn('["Land_WoodenLog_F"]', process)
         self.assertNotIn("Land_TreeTrunk_01_F", root_init)
@@ -692,7 +722,13 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("toLowerANSI _x == _weaponLower", process)
         self.assertIn("if !(_toolProfiles isEqualType createHashMap)", process)
         self.assertIn("if !(_efficiency isEqualType 0)", process)
-
+        setup = (ROOT / "MissionScripts" / "EnvironmentalSystems" / "TreeFelling" / "treeFellingSetupFallenLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExecCall ["Waldo_fnc_TreeFellingSetupFallenLocal", 0, _fallen]', process)
+        self.assertIn("ace_dragging_fnc_setDraggable", setup)
+        self.assertIn("ace_dragging_fnc_setCarryable", setup)
+        self.assertEqual(1, process.count('remoteExecCall ["Waldo_fnc_TreeFellingSetupFallenLocal", 0, _fallen]'))
+        self.assertNotIn('remoteExecCall ["ace_dragging_fnc_setDraggable", 0, true]', process)
+        self.assertNotIn('remoteExecCall ["ace_dragging_fnc_setCarryable", 0, true]', process)
     def test_val_author_credit_is_preserved_for_contributed_features(self):
         hazard_dir = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
         hazard_scripts = sorted(hazard_dir.glob("*.sqf"))

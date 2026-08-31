@@ -24,8 +24,8 @@
  * direct top-level controls - a group child's ctrlPosition is relative to its own parent group's local
  * origin, not this display's absolute safe-zone coordinates, and treating those small local numbers as
  * absolute corrupted the fit pass's computed bounding box and visibly shifted/clipped this dialog's
- * content (confirmed and fixed - see Waldo_fnc_EcoCore_fitPromptDisplay's own header for detail: it now
- * excludes any control with a non-null ctrlParent from its scan).
+ * content. The fitter distinguishes those children with ctrlParentControlsGroup; ctrlParent itself
+ * returns the display for ordinary controls and therefore cannot identify nested controls.
  *
  * Reuses Waldo_fnc_EcoCore_createZeusPromptDisplay verbatim for the modal child display's shared
  * chrome/background (it is already generic, no Economy-specific state) and copies control-creation
@@ -1161,26 +1161,15 @@ if ((lbSize _copyOrdnanceCombo) > 1) then {_copyOrdnanceCombo lbSetCurSel 1};
 
 // Fit explicitly now that every control this dialog creates genuinely exists (deferFit=true was
 // passed to Waldo_fnc_EcoCore_createZeusPromptDisplay above specifically so this call is the first
-// time fitPromptDisplay's own control-count "stability" check ever runs for this dialog - see that
-// call's comment for the race this closes). This is also what moves the shared chrome's background
+// time fitPromptDisplay runs for this dialog. The fit is synchronous, so the completed geometry is
+// applied before this function returns. This is also what moves the shared chrome's background
 // card/header out of their small placeholder box into their real, correct position - required, not
 // optional, see this file's header for the regression this closes.
 [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 
-// Waldo_fnc_EcoCore_fitPromptDisplay still runs its own repositioning pass in a separately spawned
-// thread (bounded ~0.03-0.36s after the call above) that uniformly recolors every button-type control
-// (including these 4 tab buttons) with one flat theme color, silently erasing the active-tab highlight
-// this file just painted via setTab - this part is unrelated to the positional race the explicit call
-// above closes, and still needs its own re-assert. Re-paint whichever tab is actually current once
-// that pass has had time to finish, so the highlight matches the visible content again. This is local
-// to this dialog only - Waldo_fnc_EcoCore_fitPromptDisplay itself and every Economy prompt built on it
-// are untouched.
-[_disp] spawn {
-    params ["_disp"];
-    uiSleep 0.6;
-    if (isNull _disp) exitWith {};
-    [_disp] call Waldo_fnc_VehCust_finalizeLayout;
-    [_disp, _disp getVariable ["WaldoVehCust_CurrentTab", "turret"]] call Waldo_fnc_VehCust_setTab;
-};
+// The editor-specific group pass and tab repaint are synchronous as well, avoiding a second visible
+// resize or theme jump after the shared card has appeared.
+[_disp] call Waldo_fnc_VehCust_finalizeLayout;
+[_disp, _disp getVariable ["WaldoVehCust_CurrentTab", "turret"]] call Waldo_fnc_VehCust_setTab;
 
 _disp

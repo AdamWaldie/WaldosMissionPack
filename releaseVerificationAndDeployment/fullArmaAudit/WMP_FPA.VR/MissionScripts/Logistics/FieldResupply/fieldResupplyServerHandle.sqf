@@ -149,7 +149,9 @@ switch (toUpperANSI _operation) do {
         // owner 2 with the server, so -2 silently skipped installing the crate's local actions on
         // exactly the machine most mission makers test from; FieldResupplySetupCrateLocal already
         // guards with hasInterface, so target 0 stays a safe no-op on a pure dedicated server.
-        [_crate] remoteExecCall ["Waldo_fnc_FieldResupplySetupCrateLocal", 0, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
+        private _crateJipId = format ["Waldo_FieldResupply_Crate_%1", netId _crate];
+        [_crate] remoteExecCall ["Waldo_fnc_FieldResupplySetupCrateLocal", 0, _crateJipId];
+        [_crate, _crateJipId] call Waldo_fnc_JipBindToObjectServer;
         [format ["Field resupply deployed; %1 portable crate(s) remain. Open Gear or Cargo to draw supplies.", _carried - 1], "SUCCESS"] call _notify;
         true
     };
@@ -171,11 +173,7 @@ switch (toUpperANSI _operation) do {
         private _maximum = _unit getVariable ["Waldo_FieldResupply_MaxCrates", 0];
         private _carried = _unit getVariable ["Waldo_FieldResupply_Crates", 0];
         if (_recoverable && {_carried >= _maximum}) exitWith {["Carrier capacity is full.", "WARNING"] call _notify; false};
-        // Cancel the crate's persistent JIP-replay entry before deleting it - the JIP id is the
-        // 3rd remoteExecCall argument, not the 2nd (target); passing it as target previously called
-        // a no-op function at a garbage destination and left the JIP entry (and its now-dangling
-        // crate object reference) stored for any future joining player.
-        [] remoteExecCall ["", 0, format ["Waldo_FieldResupply_Crate_%1", netId _crate]];
+        // Deletion invokes the server-bound JIP cleanup handler before the object lifetime ends.
         deleteVehicle _crate;
         if (_recoverable) then {
             _unit setVariable ["Waldo_FieldResupply_Crates", _carried + 1, true];

@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Battleship
  * All Waldo_MG_fnc_* functions implementing the Battleship mini game (server logic + local UI).
  *
@@ -7,8 +8,16 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_battleshipShipName = {
@@ -108,15 +117,15 @@ Waldo_MG_fnc_battleshipCreateEmptySnapshot = {
 Waldo_MG_fnc_battleshipPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_BattleshipRevision", (_table getVariable ["Waldo_MG_BattleshipRevision", 0]) + 1, true];
-    _table setVariable ["Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1, true];
+    [_table, "Waldo_MG_BattleshipRevision", (_table getVariable ["Waldo_MG_BattleshipRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_battleshipSetSnapshotServer = {
     params [["_table", objNull], ["_snapshot", []]];
     if (!isServer || {isNull _table}) exitWith {};
     _table setVariable ["Waldo_MG_BattleshipSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_BattleshipSnapshot", _snapshot, true];
+    [_table, "Waldo_MG_BattleshipSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_battleshipPublishRevisionServer;
 };
 
@@ -143,17 +152,17 @@ Waldo_MG_fnc_battleshipClearServer = {
     {
         if (!isNull _x) then {_x setVariable ["Waldo_MG_BattleshipPrivateFleet", [], owner _x];};
     } forEach (_table getVariable ["Waldo_MG_BattleshipPlayers", []]);
-    _table setVariable ["Waldo_MG_BattleshipActive", false, true];
-    _table setVariable ["Waldo_MG_BattleshipFinished", false, true];
-    _table setVariable ["Waldo_MG_BattleshipGameId", "", true];
-    _table setVariable ["Waldo_MG_BattleshipPlayers", [], true];
-    _table setVariable ["Waldo_MG_BattleshipPlayerNames", [], true];
-    _table setVariable ["Waldo_MG_BattleshipSeatIndices", [], true];
+    [_table, "Waldo_MG_BattleshipActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipPlayers", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipPlayerNames", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipSeatIndices", []] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_BattleshipFleetsServer", []];
-    _table setVariable ["Waldo_MG_BattleshipRevision", 0, true];
+    [_table, "Waldo_MG_BattleshipRevision", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     private _empty = call Waldo_MG_fnc_battleshipCreateEmptySnapshot;
     _table setVariable ["Waldo_MG_BattleshipSnapshotServer", _empty];
-    _table setVariable ["Waldo_MG_BattleshipSnapshot", _empty, true];
+    [_table, "Waldo_MG_BattleshipSnapshot", _empty] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_battleshipPublishRevisionServer;
 };
 
@@ -181,15 +190,15 @@ Waldo_MG_fnc_battleshipStartServer = {
         "Both commanders are deploying five private ships.", [-1, -1, -1, "", -1],
         ["Deploying fleet", "Deploying fleet"], 0, [0, 0], [[], []]
     ];
-    _table setVariable ["Waldo_MG_BattleshipActive", true, true];
-    _table setVariable ["Waldo_MG_BattleshipFinished", false, true];
-    _table setVariable ["Waldo_MG_BattleshipGameId", format ["Waldo_MG_BATTLESHIP_%1_%2", floor (serverTime * 10), floor (random 1000000)], true];
-    _table setVariable ["Waldo_MG_BattleshipPlayers", _players, true];
-    _table setVariable ["Waldo_MG_BattleshipPlayerNames", _names, true];
-    _table setVariable ["Waldo_MG_BattleshipSeatIndices", _seatIndices, true];
+    [_table, "Waldo_MG_BattleshipActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipGameId", format ["Waldo_MG_BATTLESHIP_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipPlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipPlayerNames", _names] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BattleshipSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_BattleshipFleetsServer", [call Waldo_MG_fnc_battleshipCreateEmptyFleet, call Waldo_MG_fnc_battleshipCreateEmptyFleet]];
-    _table setVariable ["Waldo_MG_BattleshipRevision", 0, true];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    [_table, "Waldo_MG_BattleshipRevision", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table, _snapshot] call Waldo_MG_fnc_battleshipSetSnapshotServer;
     [_table, 0] call Waldo_MG_fnc_battleshipSendPrivateFleetServer;
     [_table, 1] call Waldo_MG_fnc_battleshipSendPrivateFleetServer;
@@ -210,8 +219,8 @@ Waldo_MG_fnc_battleshipFinishServer = {
     _state set [6, _winner];
     _state set [7, _message];
     _state set [12, [(_table getVariable ["Waldo_MG_BattleshipFleetsServer", []])] call Waldo_MG_fnc_battleshipCopyFleets];
-    _table setVariable ["Waldo_MG_BattleshipFinished", true, true];
-    _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+    [_table, "Waldo_MG_BattleshipFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     [_table, _state] call Waldo_MG_fnc_battleshipSetSnapshotServer;
 };
 
@@ -219,7 +228,7 @@ Waldo_MG_fnc_battleshipResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_battleshipClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 };
 
@@ -245,8 +254,8 @@ Waldo_MG_fnc_battleshipHandleDepartureServer = {
         && {(lifeState _otherUnit) != "INCAPACITATED"};
     if (!_otherValid) exitWith {
         [_table] call Waldo_MG_fnc_battleshipClearServer;
-        _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-        _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+        [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
         [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
     };
     if ((_state param [0, ""]) == "FINISHED") exitWith {};
@@ -281,7 +290,6 @@ Waldo_MG_fnc_battleshipReconcilePlayersServer = {
 Waldo_MG_fnc_processBattleshipActionRequestServer = {
     params [["_unit", objNull], ["_request", []]];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_BattleshipActionRequest", [], true];
     if ((count _request) < 6) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -542,18 +550,15 @@ Waldo_MG_fnc_submitBattleshipActionRequestLocal = {
     };
     private _token = ["BATTLESHIP_ACTION"] call Waldo_MG_fnc_makeToken;
     missionNamespace setVariable ["Waldo_MG_BattleshipPendingRequestLocal", [_token, diag_tickTime]];
-    player setVariable [
-        "Waldo_MG_BattleshipActionRequest",
-        [
+    private _request = [
             _token,
             netId _table,
             _table getVariable ["Waldo_MG_BattleshipGameId", ""],
             _table getVariable ["Waldo_MG_BattleshipRevision", -1],
             _action,
             _payload
-        ],
-        true
     ];
+    ["BATTLESHIP", _table, _token, _request param [3, -1], _request] call Waldo_MG_fnc_submitRequestLocal;
     true
 };
 

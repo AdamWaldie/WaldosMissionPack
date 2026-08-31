@@ -5,6 +5,9 @@
  * broadcast tracker registry (so JIP players inherit it) and starts a light server prune loop that
  * drops trackers whose target has died or been deleted. The actual map markers are drawn locally on
  * each tracking client (Waldo_fnc_TrackerRender) so they stay hidden from the tracked side.
+ * Repeat/JIP behaviour: registry publication remains JIP-persistent. One guarded prune worker runs
+ * only while at least one tracker exists, stops after publishing the final removal, and is lazily
+ * restarted by the next Tracker call.
  *
  * Arguments:
  * 0: Target <OBJECT> - the unit or vehicle to track
@@ -15,6 +18,8 @@
  *
  * Return Value:
  * Number <NUMBER> - the tracker id (server side); -1 when forwarded from a client
+ *
+ * Current Callers: Public script API, tracker ZEN placement and mission-maker integrations.
  *
  * Example:
  * [enemyTruck, west, "Convoy Lead"] call Waldo_fnc_Tracker;
@@ -51,19 +56,24 @@ if (_label == "") then { _label = format ["TRK-%1", _id]; };
 private _registry = missionNamespace getVariable ["Waldo_Tracker_Registry", []];
 _registry pushBack [_id, _target, _sideN, _label, _active];
 missionNamespace setVariable ["Waldo_Tracker_Registry", _registry, true];
+if (hasInterface) then {[] call Waldo_fnc_TrackerRender;};
 
 // Lazy server prune loop: removes trackers whose target is gone.
 if !(missionNamespace getVariable ["Waldo_Tracker_PruneRunning", false]) then {
     missionNamespace setVariable ["Waldo_Tracker_PruneRunning", true];
     [] spawn {
-        while {true} do {
+        while {missionNamespace getVariable ["Waldo_Tracker_PruneRunning", false]} do {
             private _reg = missionNamespace getVariable ["Waldo_Tracker_Registry", []];
+            if (_reg isEqualTo []) exitWith {};
             private _kept = _reg select { !isNull (_x select 1) && {alive (_x select 1)} };
             if (count _kept != count _reg) then {
                 missionNamespace setVariable ["Waldo_Tracker_Registry", _kept, true];
+                if (hasInterface) then {[] call Waldo_fnc_TrackerRender;};
             };
+            if (_kept isEqualTo []) exitWith {};
             sleep 5;
         };
+        missionNamespace setVariable ["Waldo_Tracker_PruneRunning", false];
     };
 };
 

@@ -3,14 +3,14 @@
  * Registers an object as a server-authoritative Field Resupply refill hub.
  *
  * Hub identity, serviced side and remaining portable-crate stock are public state. The server keeps
- * a registry for diagnostics and publishes object-keyed local action setup so every current client
+ * a registry for diagnostics and publishes lifetime-bound local action setup so every current client
  * and JIP client receives exactly one ACE interaction or vanilla fallback. Eden object init fields
  * run everywhere, so non-server copies are ignored. ZEN sends its request through the validated
  * server runtime bridge; registration also enables the feature and replays that state to clients.
  *
  * Locality and authority:
  * The server owns stock and registry state. Eden client copies exit; each interface installs its
- * local action from the object-keyed JIP replay and requests all stock mutations from the server.
+ * local action from named JIP replay bound to the hub's deletion and requests stock mutations from the server.
  *
  * Arguments:
  * 0: hub <OBJECT> - world object used as the refill point.
@@ -54,8 +54,22 @@ _hub setVariable ["Waldo_FieldResupply_Stock", round _stock, true];
 private _hubs = missionNamespace getVariable ["Waldo_FieldResupply_Hubs", []];
 _hubs pushBackUnique _hub;
 missionNamespace setVariable ["Waldo_FieldResupply_Hubs", _hubs, true];
+if (isNil {_hub getVariable "Waldo_FieldResupply_DeletedEH"}) then {
+    private _deletedHandler = _hub addEventHandler ["Deleted", {
+        params ["_deletedHub"];
+        private _registeredHubs = missionNamespace getVariable ["Waldo_FieldResupply_Hubs", []];
+        private _index = _registeredHubs find _deletedHub;
+        if (_index >= 0) then {
+            _registeredHubs deleteAt _index;
+            missionNamespace setVariable ["Waldo_FieldResupply_Hubs", _registeredHubs, true];
+        };
+    }];
+    _hub setVariable ["Waldo_FieldResupply_DeletedEH", _deletedHandler];
+};
 missionNamespace setVariable ["Waldo_FieldResupply_Enable", true, true];
 [[["Waldo_FieldResupply_Enable", true]], false] remoteExecCall ["Waldo_fnc_FeatureRuntimeReceiveState", -2];
-[_hub] remoteExecCall ["Waldo_fnc_FieldResupplySetupHubLocal", 0, format ["Waldo_FieldResupply_Hub_%1", netId _hub]];
+private _hubJipId = format ["Waldo_FieldResupply_Hub_%1", netId _hub];
+[_hub] remoteExecCall ["Waldo_fnc_FieldResupplySetupHubLocal", 0, _hubJipId];
+[_hub, _hubJipId] call Waldo_fnc_JipBindToObjectServer;
 [] remoteExecCall ["Waldo_fnc_FieldResupplyInit", 0, "Waldo_FieldResupply_Init"];
 true
