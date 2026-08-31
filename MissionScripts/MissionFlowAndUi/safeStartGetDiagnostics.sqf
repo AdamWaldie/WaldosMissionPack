@@ -1,9 +1,20 @@
-/* Author: WaldoTheWarfighter. Returns normalized SafeStart diagnostics. */
-private _active = missionNamespace getVariable ["Waldo_SafeStart_Active", false];
+/*
+ * Author: WaldoTheWarfighter
+ * Reports SafeStart authority, ordered client state, protection-loop and HUD diagnostics.
+ * Locality/authority: callable on every machine; server reports authority and interface clients
+ * additionally report their locally applied ordered snapshot.
+ * Repeat/JIP behaviour: read-only and repeat-safe; it creates no handlers or network traffic.
+ * Arguments: None.
+ * Return Value: ARRAY from Waldo_fnc_DiagnosticFeatureReport.
+ * Current caller: WMP diagnostics collection.
+ * Example: [] call Waldo_fnc_SafeStartGetDiagnostics;
+ */
+private _authorityActive = missionNamespace getVariable ["Waldo_SafeStart_Active", false];
+private _active = if (hasInterface) then {missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false]} else {_authorityActive};
 private _endTime = missionNamespace getVariable ["Waldo_SafeStart_EndTime", 0];
 private _remaining = if (_active && {_endTime > 0}) then {(_endTime - serverTime) max 0} else {-1};
 private _checks = [
-    ["mission-flow", "safestart-authority", if (_active) then {"ACTIVE"} else {"LOADED"}, format ["active=%1 endTime=%2 remaining=%3 confine=%4 radius=%5", _active, _endTime, _remaining, missionNamespace getVariable ["Waldo_SafeStart_Confine", true], missionNamespace getVariable ["Waldo_SafeStart_Radius", 75]]]
+    ["mission-flow", "safestart-authority", if (_authorityActive) then {"ACTIVE"} else {"LOADED"}, format ["authorityActive=%1 localApplied=%2 revision=%3 endTime=%4 remaining=%5 confine=%6 radius=%7", _authorityActive, _active, missionNamespace getVariable ["Waldo_SafeStart_AppliedRevision", -1], _endTime, _remaining, missionNamespace getVariable ["Waldo_SafeStart_Confine", true], missionNamespace getVariable ["Waldo_SafeStart_Radius", 75]]]
 ];
 
 if (hasInterface) then {

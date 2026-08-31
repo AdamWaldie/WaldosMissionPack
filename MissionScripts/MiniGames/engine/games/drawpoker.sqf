@@ -1,7 +1,14 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Five-Card Draw
  * Server-authoritative ante, two no-limit betting rounds, one draw and side pots.
  * Hands remain server-only and are delivered solely to their owning clients.
+ * Locality/authority: Server rules and hands are authoritative; controls are interface-local.
+ * Repeat/JIP: Compiled once per role; named snapshots restore only audience-permitted state.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_drawPokerPublishServer = {
@@ -123,7 +130,7 @@ Waldo_MG_fnc_drawPokerAdvanceServer = {
 };
 
 Waldo_MG_fnc_processDrawPokerActionRequestServer = {
-    params [["_unit",objNull],["_request",[]]]; if (!isServer || {isNull _unit}) exitWith {}; _unit setVariable ["Waldo_MG_DrawPokerActionRequest",[],true]; if ((count _request)<6) exitWith {};
+    params [["_unit",objNull],["_request",[]]]; if (!isServer || {isNull _unit}) exitWith {}; if ((count _request)<6) exitWith {};
     private _token=_request param [0,""];if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};private _table=objectFromNetId(_request param [1,""]);private _gameId=_request param [2,""];private _epoch=_request param [3,-1];private _action=toUpper(_request param [4,""]);private _value=_request param [5,0];
     if (isNull _table || {_table!=(_unit getVariable ["Waldo_MG_SeatedTable",objNull])} || {!(_table getVariable ["Waldo_MG_DrawPokerActive",false])}) exitWith {[_unit,_token,"Draw Poker request rejected: stale table."] call Waldo_MG_fnc_resultServer;}; if (_gameId!=(_table getVariable ["Waldo_MG_DrawPokerGameId",""]) || {_epoch!=(_table getVariable ["Waldo_MG_DrawPokerEpoch",-2])}) exitWith {[_unit,_token,"The hand changed; review the table."] call Waldo_MG_fnc_resultServer;};
     private _role=(_table getVariable ["Waldo_MG_DrawPokerPlayers",[]]) find _unit;if (_role<0) exitWith {[_unit,_token,"Spectators cannot act."] call Waldo_MG_fnc_resultServer;};private _phase=_table getVariable ["Waldo_MG_DrawPokerPhase",""];
@@ -136,7 +143,7 @@ Waldo_MG_fnc_processDrawPokerActionRequestServer = {
     if (_pay<0) exitWith {[_unit,_token,"Illegal betting action or raise amount."] call Waldo_MG_fnc_resultServer;};if (_pay>0) then {_chips set [_role,(_chips param [_role,0])-_pay];_round set [_role,(_round param [_role,0])+_pay];_total set [_role,(_total param [_role,0])+_pay];if ((_round param [_role,0])>_bet) then {_bet=_round param [_role,0];};if ((_chips param [_role,0])<=0) then {_statuses set [_role,"ALLIN"];};};_acted set [_role,true];_table setVariable ["Waldo_MG_DrawPokerStatuses",_statuses,true];_table setVariable ["Waldo_MG_DrawPokerChips",_chips,true];_table setVariable ["Waldo_MG_DrawPokerRoundContrib",_round,true];_table setVariable ["Waldo_MG_DrawPokerTotalContrib",_total,true];_table setVariable ["Waldo_MG_DrawPokerActed",_acted,true];_table setVariable ["Waldo_MG_DrawPokerCurrentBet",_bet,true];_table setVariable ["Waldo_MG_DrawPokerEpoch",_epoch+1,true];_table setVariable ["Waldo_MG_DrawPokerStatus",format ["%1: %2.",name _unit,_action],true];[_table,_role] call Waldo_MG_fnc_drawPokerAdvanceServer;[_unit,_token,"Action accepted."] call Waldo_MG_fnc_resultServer;
 };
 
-Waldo_MG_fnc_submitDrawPokerActionLocal = {params [["_table",objNull],["_action","CHECK"],["_value",0]];if (!hasInterface||{isNull _table}) exitWith {};private _token=["DRAWPOKER"] call Waldo_MG_fnc_makeToken;player setVariable ["Waldo_MG_DrawPokerActionRequest",[_token,netId _table,_table getVariable ["Waldo_MG_DrawPokerGameId",""],_table getVariable ["Waldo_MG_DrawPokerEpoch",-1],_action,_value],true];};
+Waldo_MG_fnc_submitDrawPokerActionLocal = {params [["_table",objNull],["_action","CHECK"],["_value",0]];if (!hasInterface||{isNull _table}) exitWith {};private _token=["DRAWPOKER"] call Waldo_MG_fnc_makeToken;private _request=[_token,netId _table,_table getVariable ["Waldo_MG_DrawPokerGameId",""],_table getVariable ["Waldo_MG_DrawPokerEpoch",-1],_action,_value];["DRAWPOKER",_table,_token,_request param [3,-1],_request] call Waldo_MG_fnc_submitRequestLocal;};
 
 Waldo_MG_fnc_refreshDrawPokerLocal = {
     disableSerialization;params [["_display",displayNull]];if (isNull _display) exitWith {};private _table=_display getVariable ["Waldo_MG_DrawPokerTable",objNull];if (isNull _table) exitWith {_display closeDisplay 1;};private _revision=_table getVariable ["Waldo_MG_DrawPokerRevision",0];_display setVariable ["Waldo_MG_DrawPokerLastRevision",_revision];

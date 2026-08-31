@@ -29,9 +29,8 @@
                 private _existing = uiNamespace getVariable ["WaldoEcoBuild_PubConstructionDisplay", displayNull];
                 if (!isNull _existing) then {[_existing] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;};
 
-                private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+                private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
                 if (isNull _disp) exitWith {};
-                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
                 uiNamespace setVariable ["WaldoEcoBuild_PubConstructionDisplay", _disp];
 
                 _disp setVariable ["WaldoEcoBuild_ConstructionSource", _target];
@@ -797,6 +796,7 @@
                 }];
 
                 [_disp, true] call _refresh;
+                [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 
                 [_disp] spawn {
                     params ["_display"];

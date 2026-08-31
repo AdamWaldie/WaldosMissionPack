@@ -1,7 +1,14 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Liar's Dice
  * Server-authoritative elimination game. Private dice are owner-targeted and never
  * stored in the public table snapshot outside the timed challenge reveal.
+ * Locality/authority: Server rules and dice are authoritative; controls are interface-local.
+ * Repeat/JIP: Compiled once per role; named snapshots restore only audience-permitted state.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_liarsDicePublishServer = {
@@ -146,7 +153,6 @@ Waldo_MG_fnc_liarsDiceProgressServer = {
 Waldo_MG_fnc_processLiarsDiceActionRequestServer = {
     params [["_unit", objNull], ["_request", []]];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_LiarsDiceActionRequest", [], true];
     if ((count _request) < 7) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -203,7 +209,8 @@ Waldo_MG_fnc_submitLiarsDiceActionLocal = {
     params [["_table",objNull],["_action","BID"],["_quantity",0],["_face",0]];
     if (!hasInterface || {isNull _table}) exitWith {};
     private _token = ["LIARSDICE"] call Waldo_MG_fnc_makeToken;
-    player setVariable ["Waldo_MG_LiarsDiceActionRequest", [_token,netId _table,_table getVariable ["Waldo_MG_LiarsDiceGameId",""],_table getVariable ["Waldo_MG_LiarsDiceEpoch",-1],_action,_quantity,_face], true];
+    private _request = [_token,netId _table,_table getVariable ["Waldo_MG_LiarsDiceGameId",""],_table getVariable ["Waldo_MG_LiarsDiceEpoch",-1],_action,_quantity,_face];
+    ["LIARSDICE", _table, _token, _request param [3,-1], _request] call Waldo_MG_fnc_submitRequestLocal;
 };
 
 Waldo_MG_fnc_liarsDiceText = {

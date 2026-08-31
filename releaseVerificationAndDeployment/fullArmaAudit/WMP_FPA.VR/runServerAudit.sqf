@@ -348,7 +348,8 @@ if (_suite in ["all", "party"]) then {
         ["party/fixture/registered-table", !isNull _table && {_table getVariable ["Waldo_MG_IsPartyTable", false]} && {_table in (missionNamespace getVariable ["Waldo_MG_Tables", []])}, if (isNull _table) then {"NULL"} else {netId _table}] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
     ["party/catalogue/twelve-games", {
-        [] call Waldo_fnc_MiniGamesInit;
+        private _fixture = missionNamespace getVariable ["Waldo_QA_PartyTable", objNull];
+        if (!isNull _fixture) then {[_fixture] call Waldo_fnc_MiniGamesRegisterTable;};
         private _ids = Waldo_MG_Games apply {_x select 0};
         private _expected = ["battleship", "whoswho", "shotgun", "blackjack", "poker", "drawpoker", "liarsdice", "chess", "checkers", "connectfour", "rps", "uno"];
         ["party/catalogue/twelve-games", count _ids == 12 && {{_x in _ids} count _expected == 12}, _ids] call Waldo_QA_fnc_assert;
@@ -361,7 +362,7 @@ if (_suite in ["all", "party"]) then {
             private _group = createGroup [west, true];
             private _unit = _group createUnit ["B_Soldier_F", [0, 115 + (_forEachIndex * 4), 0], [], 0, "NONE"];
             private _table = createVehicle ["Land_CampingTable_F", [4, 115 + (_forEachIndex * 4), 0], [], 0, "CAN_COLLIDE"];
-            [_table, "QA leave route", "QA_LEAVE"] call Waldo_MG_fnc_markTableServer;
+            [_table, createHashMapFromArray [["displayName", "QA leave route"], ["games", [_gameId]]]] call Waldo_fnc_MiniGamesRegisterTable;
             _table setVariable ["Waldo_MG_TableSeats", [_unit, objNull, objNull, objNull], true];
             _unit setVariable ["Waldo_MG_SeatedTable", _table, true];
             _unit setVariable ["Waldo_MG_SeatIndex", 0, true];

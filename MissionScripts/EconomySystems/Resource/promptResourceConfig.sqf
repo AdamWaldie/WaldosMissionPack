@@ -27,7 +27,7 @@
     [_zeusDisp] call Waldo_fnc_EcoCommand_cleanupGroundCommandPrompt;
     [_zeusDisp] call Waldo_fnc_EcoResource_stopResourceCratePlacement;
 
-    private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+    private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
     if (isNull _disp) exitWith {};
 
         private _bg = _disp ctrlCreate ["RscText", -1];
@@ -251,3 +251,4 @@
     [_disp, [_nameEdit, _colorEdit, _baseStorageEdit], _nameEdit] call Waldo_fnc_EcoResource_setPromptInputTargets;
     [_disp] call Waldo_fnc_EcoResource_populateResourceConfigList;
     [_disp, lbCurSel _list] call Waldo_fnc_EcoResource_loadResourceIntoPrompt;
+    [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;

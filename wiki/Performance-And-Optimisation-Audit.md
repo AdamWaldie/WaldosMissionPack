@@ -6,6 +6,8 @@ _Associated Files: `releaseVerificationAndDeployment/performance_audit.py`, `per
 
 This audit protects WaldosMissionPack from accidental scheduler, world-scan, UI-redraw and network regressions. It is based on static SQF evidence: it counts opportunities for expensive work, but it does **not** claim measured FPS, bandwidth or dedicated-server timing improvements. Those measurements require an in-engine multiplayer test.
 
+> **Current network verdict:** the seated MiniGames transport does not yet pass its network acceptance gate. The request endpoint and change notifications are targeted, but authoritative game state is still published through global, persistent object variables. Do not describe the MiniGames replacement as network-complete until that state transport is replaced and measured under representative multiplayer load.
+
 ## What changed
 
 | Area | Pre-audit baseline | Audited implementation | Static effect |
@@ -23,11 +25,17 @@ The scanner total includes intentional animated interfaces and optional bundled 
 
 ## Party games
 
-The server still validates seats every authority tick and still processes the existing tokenized request variables. Game-specific departure reconciliation and timed progression now dispatch through the active game ID. A lobby table therefore performs no game reconciliation, while a running table invokes only the selected ruleset.
+Seated MiniGames now activate only through `Waldo_fnc_MiniGamesRegisterTable`; there is no automatic class discovery or mission-wide startup. With no registered table, the seated engine performs no runtime compilation, background work or state traffic.
 
-Table consensus variables remain JIP-safe public object variables. The server now publishes an individual value only when it changed and advances `Waldo_MG_TableRevision` once if any consensus value changed. Five-Card Draw and Liar's Dice also use public revision plus private-hand/dice render keys to avoid repainting unchanged controls without suppressing private-state resynchronization.
+Each player action uses one named server request. The authority authenticates the actor owner and validates the table, range, seat, phase, epoch, turn, payload and duplicate token before adding it to that table's drain-on-demand queue. Registered idle tables have no request poller or recurring reconciliation. Timed rules use epoch-guarded one-shot callbacks, and client UI refresh exists only while the corresponding display is open.
 
-No seating, voting, readiness, spectator, game-rule, request-token or hidden-state contract changed.
+JIP table discovery and action requests use named functions rather than executable payloads. Private hand variables that use a player-owner target are correctly targeted. However, the 31 August 2026 static review found 532 three-argument `setVariable [..., true]` publication sites in the game files, including complete Battleship, Blackjack, Poker, Shotgun Roulette, Who's Who and UNO snapshots. Chess, Checkers, Connect Four, Liar's Dice and Rock Paper Scissors publish multiple individual fields globally during state changes. These values are persistent and therefore also enlarge JIP state.
+
+This is WMP-created traffic, not engine object simulation that can safely be omitted. Arma automatically synchronises supported world-object properties; it cannot infer custom board rules, cards, turns or hidden information. WMP therefore needs custom transport, but that transport must be one server-private authoritative state plus compact, revisioned snapshots targeted only to seated players and subscribed spectators.
+
+Registration currently adds an avoidable burst: marking a table clears and globally publishes empty state for all twelve games before a game is selected. The server also sends registration metadata directly while the public table-registry event can cause connected clients to request the same metadata again. Locality, deletion and display handlers do not themselves generate network traffic and must not be removed merely because they are handlers.
+
+No seating, voting, readiness, spectator, game-rule or hidden-state intent changed. Runtime acceptance still requires dedicated-server, JIP, disconnect and headless-client locality tests under representative table load.
 
 ## Economy systems
 
@@ -63,7 +71,7 @@ These loops are intentionally retained because lowering them without frame-time 
 | Party games | Active-game dispatch, change-gated consensus and safe hidden-state redraw gating applied. |
 | Interaction equipment | Temporary display and ownership watchdogs have explicit terminal conditions; physical update rates retained. |
 | Economy | High-frequency object searches replaced by registries and six request pollers consolidated. |
-| Network/locality/JIP | Public state remains server-authored and broadcast only where required; private cards/dice and attempt ownership remain owner-targeted. |
+| Network/locality/JIP | Request authentication and owner-targeted private variables are present, but MiniGames public state is still broadcast more widely than required. Network acceptance failed pending targeted snapshots and multiplayer measurement. |
 | Optional bundled scripts | Findings recorded separately; behavior remains untouched and the systems remain off by default. |
 
 ## Automated guardrail
@@ -82,6 +90,8 @@ The scanner removes comments and string contents before analysing `while` bodies
 ## Remaining findings and follow-ups
 
 - The consolidated economy scheduler still inspects `allPlayers` every 0.25 seconds because the backward-compatible public contract stores requests on player objects. Replacing that contract with server events is a higher-risk follow-up.
+- MiniGames has 579 static three-argument global-publication sites across registration, core and game code; 532 are in game files. A source site may execute zero, one or many times, so this is not a packet count. It is direct evidence that the current design can fan state changes out to every client and persist them for JIP.
+- An end-user report described average traffic of "6-9 MB" with "40-50 MB" peaks. Those values require the monitoring interval, direction and whether the unit means MB or Mb before they can be converted to throughput. They cannot represent individual network packet sizes. Existing audit `mpStatistics` logs contain aggregate engine message counts but no per-feature byte attribution, so the report is credible evidence of a serious symptom but not proof that MiniGames caused all of it.
 - The interaction lock watchdog contains terminal remote calls inside a recurring block. They are exactly-once exit branches, not unconditional per-tick traffic.
 - The optional player-marker and headless-client packages retain their existing polling behavior. They are reported but were not modified.
 - VVD and several equipment displays intentionally refresh during an active, visible operation. In-engine profiling is required before changing their cadence.

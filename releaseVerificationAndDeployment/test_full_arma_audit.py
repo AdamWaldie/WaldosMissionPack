@@ -1563,7 +1563,7 @@ class FullAuditTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertIn('Waldo_SafeStart_FiredEH = nil', protection_respawn)
         self.assertIn('Waldo_PreventWeaponsFireEventHandler = nil', protection_respawn)
-        self.assertIn('[true, "RESPAWN"] call Waldo_fnc_SafeStartApply', protection_respawn)
+        self.assertIn('[true, "RESPAWN", missionNamespace getVariable ["Waldo_SafeStart_AppliedRevision", -1]] call Waldo_fnc_SafeStartApply', protection_respawn)
         self.assertIn('[true] call Waldo_fnc_ENDEX', protection_respawn)
         self.assertIn('Waldo_fnc_ProtectionRespawnLocal', respawn_restore)
 
@@ -2058,8 +2058,15 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('WaldoEcoCore_PromptParentDisplay', creator)
         self.assertIn('WaldoEcoCore_PromptOpenedFromZeus', creator)
         self.assertNotIn('else {_parent}', creator)
+        self.assertIn('if (_this isEqualType []) then {', creator)
         self.assertIn("WaldoEcoCore_PromptBaselineControls", creator)
         self.assertIn("!(_x in _baseline)", fitter)
+        self.assertIn("ctrlParentControlsGroup _x", fitter)
+        self.assertNotIn("ctrlParent _x", fitter)
+        self.assertIn("WaldoEcoCore_DynamicWrapRunning", fitter)
+        self.assertIn("dynamic card wrapped", fitter)
+        self.assertIn("[_display, _promptToken] call {", fitter)
+        self.assertNotIn('for "_attempt" from 0 to 12', fitter)
         self.assertIn("min 1.35", fitter)
         self.assertNotIn("private _scaleX", fitter)
         self.assertNotIn("private _scaleY", fitter)
@@ -2071,6 +2078,21 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("_cardControl ctrlSetPosition", fitter)
         self.assertIn("WaldoEcoCore_PromptOwnedControls", closer)
         economy_root = ROOT / "MissionScripts" / "EconomySystems"
+        economy_prompt_callers = []
+        for path in economy_root.rglob("*.sqf"):
+            source = path.read_text(encoding="utf-8")
+            if "Waldo_fnc_EcoCore_createZeusPromptDisplay" not in source or path == core / "createZeusPromptDisplay.sqf":
+                continue
+            economy_prompt_callers.append(path)
+            self.assertNotIn("= call Waldo_fnc_EcoCore_createZeusPromptDisplay", source, path)
+            create_index = source.index("Waldo_fnc_EcoCore_createZeusPromptDisplay")
+            fit_index = source.rfind("Waldo_fnc_EcoCore_fitPromptDisplay")
+            self.assertGreater(fit_index, create_index, path)
+            create_line = next(
+                line for line in source.splitlines() if "Waldo_fnc_EcoCore_createZeusPromptDisplay" in line
+            )
+            self.assertIn("true] call", create_line, path)
+        self.assertEqual(18, len(economy_prompt_callers))
         editable_prompts = []
         for path in economy_root.rglob("*.sqf"):
             source = path.read_text(encoding="utf-8")
@@ -2111,6 +2133,9 @@ class FullAuditTests(unittest.TestCase):
         core = (engine / "core.sqf").read_text(encoding="utf-8")
         self.assertIn("Waldo_MG_fnc_notifyLocal", core)
         self.assertIn("Waldo_MG_TableGameDisplay", core)
+        self.assertIn("private _readableFloor", core)
+        self.assertIn("[0, 1, 2, 11, 13, 16, 41]", core)
+        self.assertIn("max _readableFloor", core)
 
     def test_runtime_sensitive_assertions_reproduce_real_interaction_context(self):
         client_audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "runClientAudit.sqf").read_text(encoding="utf-8")
@@ -2488,8 +2513,9 @@ class FullAuditTests(unittest.TestCase):
 
     def test_party_recurring_work_and_publication_are_change_driven(self):
         core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")
+        endpoint = (ROOT / "MissionScripts" / "MiniGames" / "miniGamesRequestServer.sqf").read_text(encoding="utf-8")
         reconcile_start = core.index("Waldo_MG_fnc_reconcileOneTableServer")
-        reconcile_end = core.index("Waldo_MG_fnc_reconcileRegisteredTablesServer", reconcile_start)
+        reconcile_end = core.index("Waldo_MG_fnc_publishTableChangeServer", reconcile_start)
         reconcile_body = core[reconcile_start:reconcile_end]
         consensus_start = core.index("Waldo_MG_fnc_refreshTableConsensusServer")
         consensus_end = core.index("Waldo_MG_fnc_markTableServer", consensus_start)
@@ -2500,6 +2526,43 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('case "connectfour"', reconcile_body)
         self.assertIn("if (_changed) then", consensus_body)
         self.assertIn('"Waldo_MG_TableRevision"', consensus_body)
+        self.assertIn('getOrDefault ["queue", []]', endpoint)
+        self.assertIn('getOrDefault ["draining", false]', endpoint)
+        self.assertNotIn("reconcileRegisteredTablesServer", core)
+        self.assertRegex(
+            core,
+            r"(?s)Waldo_MG_fnc_scheduleTimedProgressServer\s*=\s*\{.*?\[\s*\{.*?\},\s*\[_table,\s*_timerEpoch\],\s*\(\(_dueAt - serverTime\)",
+        )
+
+    def test_party_registration_is_explicit_queued_and_non_executable_for_jip(self):
+        root = ROOT / "MissionScripts" / "MiniGames"
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        shared_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        register = (root / "miniGamesRegisterTable.sqf").read_text(encoding="utf-8")
+        endpoint = (root / "miniGamesRequestServer.sqf").read_text(encoding="utf-8")
+        metadata = (root / "miniGamesRequestMetadataServer.sqf").read_text(encoding="utf-8")
+        self.assertFalse((root / "miniGamesInit.sqf").exists())
+        self.assertNotIn("class MiniGamesInit {", functions)
+        self.assertNotIn("Waldo_fnc_MiniGamesInit;", shared_init)
+        self.assertIn('private _allowedKeys = ["displayName", "games", "seatOffsets", "seatExitOffsets", "seatDirections", "actionRange"]', register)
+        self.assertIn('if ((count _games) == 0) then {_games = +_catalogue};', register)
+        self.assertIn('createHashMapFromArray [["table", _table], ["options", _canonical], ["queue", []]', register)
+        self.assertIn("remoteExecutedOwner", endpoint)
+        self.assertIn('getOrDefault ["queue", []]', endpoint)
+        self.assertIn('getOrDefault ["draining", false]', endpoint)
+        self.assertIn("MiniGamesRequestMetadataServer", functions)
+        self.assertNotIn("compile", metadata.lower())
+        self.assertNotIn("allMissionObjects", register + endpoint + metadata)
+
+    def test_full_audit_expects_all_enabled_core_module_families(self):
+        client_audit = (
+            ROOT
+            / "releaseVerificationAndDeployment"
+            / "fullArmaAudit"
+            / "FullArmaAudit.VR"
+            / "runClientAudit.sqf"
+        ).read_text(encoding="utf-8")
+        self.assertIn('_coreCount == 52 && {_economyCount == 19}', client_audit)
 
     def test_party_actions_are_ace_first_with_vanilla_fallback(self):
         core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")
@@ -2693,6 +2756,27 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("countdown stopped before completion", timer)
         self.assertIn("core/safestart/countdown-auto-lift", server_audit)
 
+    def test_safestart_jip_uses_ordered_server_snapshot_and_reconciles_live_state(self):
+        flow = ROOT / "MissionScripts" / "MissionFlowAndUi"
+        request = (flow / "safeStartRequestStateServer.sqf").read_text(encoding="utf-8")
+        receive = (flow / "safeStartReceiveStateLocal.sqf").read_text(encoding="utf-8")
+        apply = (flow / "safeStartApply.sqf").read_text(encoding="utf-8")
+        toggle = (flow / "safeStart.sqf").read_text(encoding="utf-8")
+        init_player = (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        self.assertIn('Waldo_fnc_SafeStartRequestStateServer', init_player)
+        self.assertNotIn('if (missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {\n    [true] call Waldo_fnc_SafeStartApply;', init_player)
+        self.assertIn('owner _requester != remoteExecutedOwner', request)
+        self.assertIn('Waldo_SafeStart_Revision', request + receive + apply + toggle)
+        self.assertIn('remoteExecutedOwner != 2', receive)
+        self.assertIn('[_active, "STATE_SYNC", _revision] call Waldo_fnc_SafeStartApply', receive)
+        self.assertIn('missionNamespace setVariable ["Waldo_SafeStart_LocalActive", _enable]', apply)
+        self.assertNotIn('missionNamespace setVariable ["Waldo_SafeStart_Active", _enable]', apply)
+        self.assertIn('Waldo_SafeStart_LocalActive', receive + apply)
+        self.assertIn('Waldo_SafeStart_AppliedRevision', apply + receive)
+        self.assertIn('class SafeStartRequestStateServer', functions)
+        self.assertIn('class SafeStartReceiveStateLocal', functions)
+
     def test_safestart_timer_is_configured_in_seconds_and_displayed_as_mmss(self):
         module = (ROOT / "MissionScripts" / "ZenModules" / "Zen_safeStartTimer.sqf").read_text(encoding="utf-8")
         apply = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "safeStartApply.sqf").read_text(encoding="utf-8")
@@ -2795,7 +2879,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("class ProtectionAcquireSafety", functions)
         self.assertIn("class ProtectionReleaseSafety", functions)
         self.assertIn('missionNamespace getVariable ["Waldo_ENDEX_Active", false]', safestart)
-        self.assertIn('missionNamespace getVariable ["Waldo_SafeStart_Active", false]', reset)
+        self.assertIn('missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false]', reset)
         for source in (safestart, endex, reset):
             self.assertIn("Waldo_WMPProtection_DamageBaseline", source)
         self.assertIn('["SAFESTART"] call Waldo_fnc_ProtectionAcquireSafety', safestart)
@@ -2917,7 +3001,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('then {"COUNTDOWN"} else {"WAITING"}', hud)
         self.assertIn('then {"COUNTDOWN"} else {"WAITING"}', acknowledge)
         self.assertIn("Acknowledge SafeStart", setup)
-        self.assertIn('missionNamespace getVariable ["Waldo_SafeStart_Active", false]', setup)
+        self.assertIn('missionNamespace getVariable ["Waldo_SafeStart_LocalActive", false]', setup)
         self.assertIn("class SafeStartAcknowledgeLocal", functions)
         self.assertNotIn("remoteExec", acknowledge)
 

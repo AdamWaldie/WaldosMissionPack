@@ -88,9 +88,9 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
         _icon
     ] call zen_custom_modules_fnc_register;
 } forEach [
-    ["WMP Mission Tools", "Persistence - Control", "PERSISTENCE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
-    ["WMP Mission Tools", "Persistence - Register Object", "PERSISTENCE_OBJECT", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
-    ["WMP Mission Tools", "Persistence - Save Now", "PERSISTENCE_SAVE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
+    ["WMP Persistence", "Persistence - Control", "PERSISTENCE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
+    ["WMP Persistence", "Persistence - Register Object", "PERSISTENCE_OBJECT", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
+    ["WMP Persistence", "Persistence - Save Now", "PERSISTENCE_SAVE", "\A3\ui_f\data\igui\cfg\simpletasks\types\download_ca.paa"],
     ["WMP Logistics", "Field Resupply - Register Hub", "FIELD_RESUPPLY_HUB", "\A3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
     ["WMP Logistics", "Field Resupply - Assign Carrier", "FIELD_RESUPPLY_CARRIER", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"],
     ["WMP Logistics", "Field Resupply - Grant Crates", "FIELD_RESUPPLY_GRANT", "\A3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"],
@@ -198,14 +198,9 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\IGUI\Cfg\Actions\ico_off_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
-["WMP Mission Flow", "Conversation - Assign Named",
+["WMP Mission Flow", "Conversation: Assign",
     {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationAssign;},
     "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\talk_ca.paa"
-] call zen_custom_modules_fnc_register;
-
-["WMP Mission Flow", "Conversation - Start or Cancel",
-    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationControl;},
-    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\interact_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
 ["WMP Logistics", "Medical: Create Field Hospital Crate",

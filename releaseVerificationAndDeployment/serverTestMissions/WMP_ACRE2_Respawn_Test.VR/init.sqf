@@ -80,9 +80,6 @@ Two complementary systems under one feature:
 Set the flag to false if your mission uses no table games (the interaction challenges are
 unaffected). Full guide: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Waldos-Mini-Games
 */
-if (Waldo_MiniGames_Enable) then {
-    [] call Waldo_fnc_MiniGamesInit;
-};
 
 /*
 ACE Corpse Traps

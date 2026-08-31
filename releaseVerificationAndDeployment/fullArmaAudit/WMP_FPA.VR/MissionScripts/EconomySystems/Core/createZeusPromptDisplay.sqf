@@ -14,11 +14,9 @@
  * 1: Defer fit <BOOL> - when true, skip the automatic Waldo_fnc_EcoCore_fitPromptDisplay call this
  *    function normally makes before returning (optional, default: false, so every existing call site
  *    is unaffected by omitting this argument). Pass true when the caller's own control-creation script
- *    is heavy enough (many controls, expensive per-control work) that it could still be running when
- *    fitPromptDisplay's own control-count "stability" heuristic decides the layout is finished -
- *    fitPromptDisplay only ever runs once per dialog and only repositions whatever controls exist at
- *    that moment, so a caller that races it can end up with some controls never migrated into the
- *    fitted card layout. A caller passing true MUST call
+ *    builds controls after this function returns. The caller then controls the exact finalization
+ *    point and avoids displaying a placeholder-size card before the complete form exists. A caller
+ *    passing true MUST call
  *    `[_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;` itself, exactly once, as the very last thing
  *    it does after every one of its own controls has been created.
  *
@@ -31,11 +29,23 @@
  * // ... build every control ...
  * [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;                                    // caller fits once everything exists
  *
- * Current callers: Economy Zeus authoring modules before their controls are populated;
- * MissionScripts/CombatSystems/VehicleCustomization/vehicleCustomizationPromptEditor.sqf.
+ * Locality/authority: interface-local presentation only. It never mutates authoritative Economy
+ * state. Each call closes the previous owned prompt, so repeat calls are safe; prompts are not JIP
+ * state and must be opened by the local user.
+ *
+ * Current callers: Economy Zeus/player authoring prompts and shared WMP editors that opt into this
+ * chrome. Economy callers defer fitting and finalize only after their own controls exist.
  */
-
-    params [["_headerText", "  WALDOS MISSION PACK  |  ECONOMY AUTHORING", [""]], ["_deferFit", false, [false]]];
+    private _headerText = "  WALDOS MISSION PACK  |  ECONOMY AUTHORING";
+    private _deferFit = false;
+    if (_this isEqualType []) then {
+        if ((count _this) > 0 && {(_this select 0) isEqualType ""}) then {
+            _headerText = _this select 0;
+        };
+        if ((count _this) > 1 && {(_this select 1) isEqualType false}) then {
+            _deferFit = _this select 1;
+        };
+    };
     if (!hasInterface) exitWith {displayNull};
 
     private _existing = uiNamespace getVariable ["WaldoEcoCore_ActiveZeusPromptDisplay", displayNull];

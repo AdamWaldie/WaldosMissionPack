@@ -3,11 +3,8 @@
  * Runtime on/off switch for the headless-client system's extended debug output
  * (Waldo_Headless_Debug / Waldo_fnc_HeadlessDebugLog), so a mission maker or curator can turn HC
  * diagnostics on to investigate a live connection/migration problem without restarting the mission
- * to edit MissionConfig\headlessConfig.sqf. Directly descended from the legacy
- * MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf's own in-mission "Toggle WHK Debug" action
- * (WHKDEBUGHC) - this is the same "flip debug live, get instant confirmation" intent, carried into
- * WMP's own broadcast-variable/notification-card conventions instead of that script's dedicated
- * WHKDEBUGGER/hint plumbing, and extended to be curator-triggerable from the Zeus menu (see
+ * to edit MissionConfig\headlessConfig.sqf. It uses WMP's broadcast-variable and notification-card
+ * conventions and can be triggered by an assigned curator from the Zeus menu (see
  * Waldo_fnc_ZenHeadlessDebugToggle / the "Headless Client - Toggle Debug" module) rather than the
  * legacy single-admin `serverCommandAvailable "#kick"` addAction on the player object.
  *

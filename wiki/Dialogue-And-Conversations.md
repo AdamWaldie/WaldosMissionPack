@@ -199,12 +199,12 @@ The **WMP Mission Flow** category contains:
 - **Dialogue - Apply Simple Archetype**
 - **Dialogue - Assign Simple Lines** (separate lines with `|`)
 - **Dialogue - Clear**
-- **Conversation - Assign Named**
-- **Conversation - Start or Cancel**
+- **Conversation: Assign**
 
-Place these modules directly on the NPC. Each assignment dialog can optionally apply to the NPC's
-entire group. Named Advanced Conversations must already have been registered by mission script;
-Zeus receives only their public IDs, never their conditions or executable hooks.
+Place assignment modules directly on the NPC; they can optionally apply to the NPC's entire group.
+Advanced conversations are authored in mission scripts with `Waldo_fnc_ConversationCreate` or
+`Waldo_fnc_ConversationRegister`, then assigned in Zeus by selecting their public conversation ID.
+Private conditions and hooks remain server-side and are never replicated to curators.
 
 ## Timing, multiplayer and limits
 

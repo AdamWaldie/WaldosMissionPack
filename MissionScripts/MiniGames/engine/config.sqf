@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - engine configuration
  * Game catalog (Waldo_MG_Games) and all tuning constants (Waldo_MG_CFG_*).
  *
@@ -7,8 +8,16 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_Games = [
@@ -182,14 +191,6 @@ Waldo_MG_Games = [
     ]
 ];
 
-Waldo_MG_CFG_TABLE_CLASSES = [
-    "Land_CampingTable_F",
-    "Land_CampingTable_small_F",
-    "Land_CampingTable_small_white_F",
-    "Land_TablePlastic_01_F",
-    "Land_WoodenTable_large_F",
-    "Land_WoodenTable_small_F"
-];
 Waldo_MG_CFG_SEAT_COUNT = 4;
 Waldo_MG_CFG_SEAT_OFFSETS = [
     [0, -1.05, 0],

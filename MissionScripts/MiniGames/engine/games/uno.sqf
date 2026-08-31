@@ -1,4 +1,5 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - UNO
  * All Waldo_MG_fnc_* functions implementing the UNO mini game (server logic + local UI).
  *
@@ -7,8 +8,16 @@
  * logic is maintained as part of the WMP party-game framework.
  *
  * This file is an engine fragment: it defines a group of Waldo_MG_fnc_* runtime
- * functions and is #included by Waldo_fnc_MiniGamesInit (miniGamesInit.sqf).
+ * functions and is #included lazily by Waldo_fnc_MiniGamesEnsureRuntime.
  * It is not a standalone CfgFunctions entry and is not called directly.
+ * Locality/authority: Server rule helpers and interface presentation helpers execute only in their
+ * matching lazily compiled role; headless clients do not compile this fragment.
+ * Repeat/JIP: The versioned role runtime compiles it once per machine. Named state requests provide
+ * JIP replay without transmitting executable code.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime values/functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime during first explicit table registration.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_unoIsCard = {
@@ -615,7 +624,6 @@ Waldo_MG_fnc_processUNOActionRequestServer = {
         ["_request", []]
     ];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_UNOActionRequest", [], true];
     if ((count _request) < 6) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -1050,42 +1058,6 @@ Waldo_MG_fnc_processUNOActionRequestServer = {
     [_unit, _token, "UNO play accepted."] call Waldo_MG_fnc_resultServer;
 };
 
-Waldo_MG_fnc_processPriorityUNORequestsServer = {
-    params [["_players", []]];
-    if (!isServer) exitWith {}; 
- 
-    {
-        private _unit = _x;
-        private _request = _unit getVariable ["Waldo_MG_UNOActionRequest", []];
-        if ((typeName _request) == "ARRAY" && {(count _request) >= 6} && {(_request param [4, ""]) == "UNO"}) then {
-            private _tableNetId = _request param [1, ""];
-            if ((typeName _tableNetId) == "STRING") then {
-                private _table = objectFromNetId _tableNetId;
-                if (!isNull _table && {_table getVariable ["Waldo_MG_UNOActive", false]}) then {
-                    private _role = (_table getVariable ["Waldo_MG_UNOPlayers", []]) find _unit;
-                    private _state = _table getVariable ["Waldo_MG_UNOSnapshotServer", []];
-                    private _hands = _table getVariable ["Waldo_MG_UNOHandsServer", []];
-                    if (
-                        _role >= 0
-                        && {(_state param [13, -1]) == _role}
-                        && {(count (_hands param [_role, []])) == 1}
-                    ) then {
-                        [_unit, +_request] call Waldo_MG_fnc_processUNOActionRequestServer;
-                    };
-                };
-            };
-        };
-    } forEach _players;
-
-    {
-        private _unit = _x;
-        private _request = _unit getVariable ["Waldo_MG_UNOActionRequest", []];
-        if ((typeName _request) == "ARRAY" && {(count _request) >= 6} && {(_request param [4, ""]) == "CALLOUT"}) then {
-            [_unit, +_request] call Waldo_MG_fnc_processUNOActionRequestServer;
-        };
-    } forEach _players;
-};
-
 Waldo_MG_fnc_submitUNOActionRequestLocal = {
     params [
         ["_table", objNull],
@@ -1100,18 +1072,15 @@ Waldo_MG_fnc_submitUNOActionRequestLocal = {
     };
     private _token = ["UNO_ACTION"] call Waldo_MG_fnc_makeToken;
     missionNamespace setVariable ["Waldo_MG_UNOPendingRequestLocal", [_token, diag_tickTime]];
-    player setVariable [
-        "Waldo_MG_UNOActionRequest",
-        [
+    private _request = [
             _token,
             netId _table,
             _table getVariable ["Waldo_MG_UNOGameId", ""],
             _table getVariable ["Waldo_MG_UNORevision", -1],
             _action,
             _payload
-        ],
-        true
     ];
+    ["UNO", _table, _token, _request param [3, -1], _request] call Waldo_MG_fnc_submitRequestLocal;
     true
 };
 

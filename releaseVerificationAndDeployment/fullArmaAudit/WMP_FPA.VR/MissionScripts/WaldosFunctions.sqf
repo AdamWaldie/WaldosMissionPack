@@ -205,6 +205,12 @@ class CfgFunctions
             class SafeStartApply {
                 file = "MissionScripts\MissionFlowAndUi\safeStartApply.sqf";
             };
+            class SafeStartRequestStateServer {
+                file = "MissionScripts\MissionFlowAndUi\safeStartRequestStateServer.sqf";
+            };
+            class SafeStartReceiveStateLocal {
+                file = "MissionScripts\MissionFlowAndUi\safeStartReceiveStateLocal.sqf";
+            };
             class SafeStartHud {
                 file = "MissionScripts\MissionFlowAndUi\safeStartHud.sqf";
             };
@@ -706,7 +712,6 @@ class CfgFunctions
             class ZenDialogueSpecific {file = "MissionScripts\ZenModules\Dialogue\zenDialogueSpecific.sqf";};
             class ZenDialogueClear {file = "MissionScripts\ZenModules\Dialogue\zenDialogueClear.sqf";};
             class ZenConversationAssign {file = "MissionScripts\ZenModules\Dialogue\zenConversationAssign.sqf";};
-            class ZenConversationControl {file = "MissionScripts\ZenModules\Dialogue\zenConversationControl.sqf";};
             class ZenDialogueServer {file = "MissionScripts\ZenModules\Dialogue\zenDialogueServer.sqf";};
         };
         class Paradrop {
@@ -2437,11 +2442,40 @@ class CfgFunctions
         };
         class MiniGames
         {
-            // Table games engine (multiplayer, seated party games). The engine defines its
-            // internal Waldo_MG_fnc_* runtime functions itself; only this installer is a
-            // CfgFunctions entry.
-            class MiniGamesInit {
-                file = "MissionScripts\MiniGames\miniGamesInit.sqf";
+            // Explicit, lazy seated-table engine. No class discovery, startup poller, or executable
+            // JIP payload is used. Field-equipment challenges remain in InteractionMiniGames below.
+            class MiniGamesEnsureRuntime {
+                file = "MissionScripts\MiniGames\miniGamesEnsureRuntime.sqf";
+            };
+            class MiniGamesRegisterTable {
+                file = "MissionScripts\MiniGames\miniGamesRegisterTable.sqf";
+            };
+            class MiniGamesRegisterTableLocal {
+                file = "MissionScripts\MiniGames\miniGamesRegisterTableLocal.sqf";
+            };
+            class MiniGamesUnregisterTable {
+                file = "MissionScripts\MiniGames\miniGamesUnregisterTable.sqf";
+            };
+            class MiniGamesUnregisterTableLocal {
+                file = "MissionScripts\MiniGames\miniGamesUnregisterTableLocal.sqf";
+            };
+            class MiniGamesInitPlayerLocal {
+                file = "MissionScripts\MiniGames\miniGamesInitPlayerLocal.sqf";
+            };
+            class MiniGamesRequestMetadataServer {
+                file = "MissionScripts\MiniGames\miniGamesRequestMetadataServer.sqf";
+            };
+            class MiniGamesApplyMetadataLocal {
+                file = "MissionScripts\MiniGames\miniGamesApplyMetadataLocal.sqf";
+            };
+            class MiniGamesRequestServer {
+                file = "MissionScripts\MiniGames\miniGamesRequestServer.sqf";
+            };
+            class MiniGamesRequestResultLocal {
+                file = "MissionScripts\MiniGames\miniGamesRequestResultLocal.sqf";
+            };
+            class MiniGamesStateChangedLocal {
+                file = "MissionScripts\MiniGames\miniGamesStateChangedLocal.sqf";
             };
         };
         class InteractionMiniGames

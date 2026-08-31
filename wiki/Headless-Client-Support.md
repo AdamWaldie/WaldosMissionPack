@@ -10,11 +10,8 @@ WMP ships native, server-authoritative headless-client (HC) support: connect a h
 hosted mission with the feature turned on and it self-registers with the server, which then
 distributes eligible AI groups to it automatically.
 
-This replaces the legacy, third-party `MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf`
-("Werthles' Headless Kit" v2.3), which is kept in the repository, unmodified and disabled by default,
-for reference only. It has known deviations from WMP's own model (a non-standard HC detection test,
-a name-string exclusion list unaware of WMP-owned control groups, and no integration with WMP's
-diagnostics or JIP snapshot handshake) and should not be re-enabled.
+This native implementation is the only headless-client distribution system bundled with WMP. It
+uses WMP's locality and exclusion model, diagnostics, and JIP snapshot handshake.
 
 ## Off by default
 
@@ -296,8 +293,8 @@ needs to stay server-side anyway, call `[_object] call Waldo_fnc_HeadlessPinCrew
 
 ## Third-party AI mod compatibility (VCOM AI, LAMBS, ASR AI3, ...)
 
-The legacy `WerthlesHeadless.sqf`'s best-known failure mode was AI going unresponsive after a
-migration - most often because a third-party AI-behaviour mod installs its own per-unit logic once,
+An important migration failure mode is AI going unresponsive after a locality change. This most
+often happens because a third-party AI-behaviour mod installs its own per-unit logic once,
 from a one-shot unit/group init event, and assumes it keeps running on that same machine forever
 rather than continuously re-checking `local`. WMP cannot fix a mod's own locality handling from the
 outside, but every successful migration broadcasts a CBA global event so a mission's own
@@ -342,11 +339,8 @@ plus a hosted-server `systemChat` line (matching `Waldo_fnc_RunDiagnostics`'s ow
 convention - a genuine dedicated server has no console to show it to and relies on RPT). Costs nothing
 when off: a single `getVariable` check at each of the four call sites.
 
-This is the direct successor to the legacy `WerthlesHeadless.sqf`'s own in-mission "Toggle WHK Debug"
-action (`WHKDEBUGHC`) - the same "flip debug on the fly, get instant confirmation" intent, carried
-into WMP's own `[WMP DIAG]`/notification-card conventions instead of that script's dedicated
-`WHKDEBUGGER`/hint plumbing, and extended to be curator-triggerable from Zeus rather than a single
-hard-coded admin's `addAction`:
+The live toggle provides immediate confirmation through WMP's `[WMP DIAG]` and notification-card
+conventions. Assigned curators can trigger it from Zeus without restarting the mission:
 
 ```sqf
 [] call Waldo_fnc_HeadlessDebugToggle;      // flip the current state
@@ -433,7 +427,7 @@ do not try to solve it by transferring WMP's aircraft state machines.
 ## See also
 
 - [Mission Diagnostics](Mission-Diagnostics) - the general diagnostics report this feature feeds into.
-- [Optional Third-Party Scripts (Player Markers)](Third-Party-Scripts-Headless-Client-And-Player-Markers) - the legacy, superseded WerthlesHeadless.sqf entry point.
+- [Optional Third-Party Scripts (Player Markers)](Third-Party-Scripts-Headless-Client-And-Player-Markers) - the remaining optional third-party marker integration.
 - `releaseVerificationAndDeployment/fullArmaAudit/PROCESS.md` - the repeatable full-pack test process.
 
 <!-- WMP-WIKI-NAV -->

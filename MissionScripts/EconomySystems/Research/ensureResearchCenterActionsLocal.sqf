@@ -40,9 +40,8 @@
                     private _existing = uiNamespace getVariable ["WaldoEcoResearch_PlayerResearchDisplay", displayNull];
                     if (!isNull _existing) then {[_existing] call Waldo_fnc_EcoCore_closePromptDisplayIfDedicated;};
 
-                    private _disp = call Waldo_fnc_EcoCore_createZeusPromptDisplay;
+                    private _disp = ["  WALDOS MISSION PACK  |  ECONOMY AUTHORING", true] call Waldo_fnc_EcoCore_createZeusPromptDisplay;
                     if (isNull _disp) exitWith {};
-                    [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
                     uiNamespace setVariable ["WaldoEcoResearch_PlayerResearchDisplay", _disp];
                     _disp setVariable ["WaldoEcoResearch_ResearchCenterObject", _target];
                     _disp setVariable ["WaldoEcoResearch_RequestActorObject", _caller];
@@ -566,6 +565,7 @@
                     }];
 
                     [_disp, true] call _refresh;
+                    [_disp] call Waldo_fnc_EcoCore_fitPromptDisplay;
 
                     [_disp] spawn {
                         params ["_display"];

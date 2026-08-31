@@ -4,15 +4,23 @@
  * the shared WMP operations-console treatment. This post-layout pass prevents legacy prompt
  * coordinates from placing controls off-screen at 4:3, ultrawide or large UI scale.
  *
- * Only parent-less controls contribute to the absolute safe-zone bounds. A control inside an
- * RscControlsGroup uses parent-local coordinates, so mixing those small values into the absolute bounds
- * corrupts the card. Resizing a controls group does not scale its children, however: after the absolute
- * layout scale is known, every nested child must also have its local position, size and text scaled by
- * that same factor. This keeps grouped dialogs inside their card at every UI scale. Existing Economy
- * prompts create no control groups, so nested scaling is additive for them.
+ * Only controls without a parent controls group contribute to the absolute safe-zone bounds.
+ * ctrlParent returns the owning DISPLAY for ordinary controls and must not be used for that test;
+ * ctrlParentControlsGroup returns controlNull unless the control is genuinely nested. The old test
+ * rejected every Economy control, leaving the placeholder card behind the real dialog.
+ *
+ * The initial scale pass is synchronous and is called only after the prompt has created its controls,
+ * preventing a visible authored-size-to-fitted-size jump. After that pass, a display-local
+ * change-driven wrapper watches the live top-level
+ * bounds while the prompt remains open. It only moves the card/header when the control geometry or
+ * safe zone changes, so every Economy module gets its own measured outer box without a permanent
+ * mission worker or repeated network work. Nested children retain parent-local geometry.
  *
  * Arguments: 0: Economy prompt display <DISPLAY>.
- * Return Value: BOOL - true when fitting was scheduled, false for an invalid display.
+ * Locality/authority and repeat/JIP: interface-local presentation only. One fitter and one wrapper
+ * may run per display; repeated calls are safe. Closing the display ends both workers. No state is
+ * public or replayed to JIP clients.
+ * Return Value: BOOL - true when fitting completed or is already active, false for an invalid display.
  *
  * Example: [_display] call Waldo_fnc_EcoCore_fitPromptDisplay;
  * Current caller: Economy prompt construction after controls have been created;
@@ -23,42 +31,23 @@ if (isNull _display) exitWith {false};
 if (_display getVariable ["WaldoEcoCore_FitScheduled", false]) exitWith {true};
 _display setVariable ["WaldoEcoCore_FitScheduled", true];
 private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
-[_display, _promptToken] spawn {
+[_display, _promptToken] call {
     params ["_display", "_promptToken"];
-    private _lastCount = -1;
-    private _stableFrames = 0;
-    for "_attempt" from 0 to 12 do {
-        if (isNull _display || {(_display getVariable ["WaldoEcoCore_PromptToken", ""]) != _promptToken}) exitWith {};
-        uiSleep 0.03;
-        private _count = count allControls _display;
-        if (_count == _lastCount && {_count > 0}) then {_stableFrames = _stableFrames + 1;} else {_stableFrames = 0;};
-        _lastCount = _count;
-        if (_stableFrames >= 2) exitWith {};
-    };
     if (isNull _display || {(_display getVariable ["WaldoEcoCore_PromptToken", ""]) != _promptToken}) exitWith {};
     private _baseline = _display getVariable ["WaldoEcoCore_PromptBaselineControls", []];
     private _theme = _display getVariable ["WaldoEcoCore_PromptTheme", [] call Waldo_fnc_UiTheme];
     private _chrome = _display getVariable ["WaldoEcoCore_PromptChromeControls", []];
     private _controls = (allControls _display) select {
         private _p = ctrlPosition _x;
-        // allControls _display recurses into every RscControlsGroup's own children too, not just this
-        // display's direct top-level controls. A group child's own ctrlPosition is expressed relative
-        // to its parent group's local origin (small numbers near [0,0]), not this display's absolute
-        // safe-zone coordinates - if one of those slipped into this pass, its tiny local X/Y would
-        // corrupt the computed min/max bounding box against every genuinely absolute-positioned
-        // control, and it would then be moved to a wrong, shifted absolute position built from that
-        // corrupted box (confirmed root cause of the Vehicle Customisation Editor's tab content
-        // rendering shifted/clipped after this pass ran). ctrlParent only ever returns a real control
-        // for an actual group child (controlNull for every ordinary top-level control), so this is a
-        // reliable, purely additive exclusion - no existing Economy prompt creates any control group at
-        // all, so this can only ever change behavior for a caller that does.
-        !(_x in _baseline) && {!(_x in _chrome)} && {isNull (ctrlParent _x)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
+        !(_x in _baseline) && {!(_x in _chrome)} && {isNull (ctrlParentControlsGroup _x)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
     };
     private _nestedControls = (allControls _display) select {
         private _p = ctrlPosition _x;
-        !(_x in _baseline) && {!(_x in _chrome)} && {!isNull (ctrlParent _x)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
+        !(_x in _baseline) && {!(_x in _chrome)} && {!isNull (ctrlParentControlsGroup _x)} && {(count _p) >= 4} && {(_p select 2) > 0} && {(_p select 3) > 0}
     };
-    if (_controls isEqualTo []) exitWith {};
+    if (_controls isEqualTo []) exitWith {
+        _display setVariable ["WaldoEcoCore_FitScheduled", false];
+    };
     private _minX = 1e6;
     private _minY = 1e6;
     private _maxX = -1e6;
@@ -220,7 +209,7 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
     } forEach _controls;
     {
         (ctrlPosition _x) params ["_xPos", "_yPos", "_width", "_height"];
-        private _parentPosition = ctrlPosition (ctrlParent _x);
+        private _parentPosition = ctrlPosition (ctrlParentControlsGroup _x);
         private _parentWidth = _parentPosition param [2, 0];
         private _parentHeight = _parentPosition param [3, 0];
         if (_xPos < -0.001 || {_yPos < -0.001} || {(_xPos + _width) > (_parentWidth + 0.001)} || {(_yPos + _height) > (_parentHeight + 0.001)}) then {
@@ -245,5 +234,70 @@ private _promptToken = _display getVariable ["WaldoEcoCore_PromptToken", ""];
     _display setVariable ["WaldoEcoCore_FitFindings", _findings];
     _display setVariable ["WaldoEcoCore_FitScheduled", false];
     diag_log format ["[WMP ECONOMY UI] safe-card validation complete: %1 finding(s) %2", count _findings, _findings];
+
+    if !(_display getVariable ["WaldoEcoCore_DynamicWrapRunning", false]) then {
+        _display setVariable ["WaldoEcoCore_DynamicWrapRunning", true];
+        [_display, _promptToken] spawn {
+            params ["_display", "_promptToken"];
+            private _lastSignature = "";
+            while {
+                !isNull _display
+                && {(_display getVariable ["WaldoEcoCore_PromptToken", ""]) isEqualTo _promptToken}
+            } do {
+                private _baseline = _display getVariable ["WaldoEcoCore_PromptBaselineControls", []];
+                private _chrome = _display getVariable ["WaldoEcoCore_PromptChromeControls", []];
+                private _controls = (allControls _display) select {
+                    private _position = ctrlPosition _x;
+                    !(_x in _baseline)
+                    && {!(_x in _chrome)}
+                    && {isNull (ctrlParentControlsGroup _x)}
+                    && {(count _position) >= 4}
+                    && {(_position select 2) > 0}
+                    && {(_position select 3) > 0}
+                };
+                if !(_controls isEqualTo []) then {
+                    private _minX = 1e6;
+                    private _minY = 1e6;
+                    private _maxX = -1e6;
+                    private _maxY = -1e6;
+                    {
+                        (ctrlPosition _x) params ["_xPos", "_yPos", "_width", "_height"];
+                        _minX = _minX min _xPos;
+                        _minY = _minY min _yPos;
+                        _maxX = _maxX max (_xPos + _width);
+                        _maxY = _maxY max (_yPos + _height);
+                    } forEach _controls;
+                    private _signature = str [count _controls, _minX, _minY, _maxX, _maxY, safeZoneX, safeZoneY, safeZoneW, safeZoneH];
+                    if !(_signature isEqualTo _lastSignature) then {
+                        _lastSignature = _signature;
+                        (_display getVariable ["WaldoEcoCore_PromptMaxCardBounds", [safeZoneX, safeZoneY, safeZoneW, safeZoneH]]) params ["_safeX", "_safeY", "_safeW", "_safeH"];
+                        private _headerH = (safeZoneH * 0.055) max 0.045;
+                        private _padX = safeZoneW * 0.022;
+                        private _padY = safeZoneH * 0.022;
+                        private _cardX = (_minX - _padX) max _safeX;
+                        private _cardY = (_minY - _padY - _headerH) max _safeY;
+                        private _cardRight = (_maxX + _padX) min (_safeX + _safeW);
+                        private _cardBottom = (_maxY + _padY) min (_safeY + _safeH);
+                        private _cardW = 0.01 max (_cardRight - _cardX);
+                        private _cardH = 0.01 max (_cardBottom - _cardY);
+                        private _card = _display getVariable ["WaldoEcoCore_PromptCardControl", controlNull];
+                        private _header = _display getVariable ["WaldoEcoCore_PromptHeaderControl", controlNull];
+                        if (!isNull _card) then {
+                            _card ctrlSetPosition [_cardX, _cardY, _cardW, _cardH];
+                            _card ctrlCommit 0;
+                        };
+                        if (!isNull _header) then {
+                            _header ctrlSetPosition [_cardX, _cardY, _cardW, _headerH];
+                            _header ctrlCommit 0;
+                        };
+                        _display setVariable ["WaldoEcoCore_PromptCardBounds", [_cardX, _cardY, _cardW, _cardH]];
+                        _display setVariable ["WaldoEcoCore_PromptContentBounds", [_minX, _minY, _maxX - _minX, _maxY - _minY]];
+                        diag_log format ["[WMP ECONOMY UI] dynamic card wrapped %1 control(s) bounds=%2", count _controls, [_cardX, _cardY, _cardW, _cardH]];
+                    };
+                };
+                uiSleep 0.2;
+            };
+        };
+    };
 };
 true

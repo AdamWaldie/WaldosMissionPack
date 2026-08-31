@@ -1,9 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
- * Shared gate for the headless-client system's extended debug output. The legacy
- * MissionScripts\ThirdPartyScripts\WerthlesHeadless.sqf ("Werthles' Headless Kit") shipped an
- * always-visible hint-based debug display of HC connect/migrate/disconnect flow; this rework keeps
- * that same admin-visible intent but through WMP's own [WMP DIAG] framing (Waldo_fnc_DiagnosticLog,
+ * Shared gate for the headless-client system's extended debug output. It provides an admin-visible
+ * record of HC connect, migrate and disconnect flow through WMP's [WMP DIAG] framing (Waldo_fnc_DiagnosticLog,
  * consistent with every other feature's diagnostics rather than a one-off hint channel) and extends
  * it with per-pass load/eligibility detail the legacy script never reported. Off by default
  * (Waldo_Headless_Debug in MissionConfig\headlessConfig.sqf) - the four call sites in this rework
@@ -21,9 +19,7 @@
  * genuine dedicated server that machine has no console to show it on - so this also remoteExecs the
  * same line to every currently assigned curator's client (allCurators/getAssignedCuratorUnit), the
  * same admin-audience mechanism Waldo_fnc_HeadlessDebugToggle already uses for its own confirmation
- * notification. This mirrors what the legacy WerthlesHeadless.sqf actually did - BIS_fnc_MP-ing its
- * debug hint to the specific connected player (WHKDEBUGGER) who toggled it, not a local-only call
- * gated on the executing machine's own interface - rather than the RPT-only fallback this rework
+ * notification. This gives connected curators live visibility rather than relying only on the RPT
  * originally shipped with, which left dedicated-server admins with no in-game visibility at all
  * unless they tailed the server's own RPT file by hand.
  *

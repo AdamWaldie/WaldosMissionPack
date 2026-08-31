@@ -672,7 +672,7 @@
   },
   {
     "category": "core",
-    "module": "Conversation - Assign Named",
+    "module": "Conversation: Assign",
     "handler": "Waldo_fnc_ZenConversationAssign",
     "via": "Waldo_fnc_ZenDialogueServer",
     "script_api": "Waldo_fnc_ConversationAssign",
@@ -683,15 +683,6 @@
       "Apply to entire group",
       "Remove after completion"
     ]
-  },
-  {
-    "category": "core",
-    "module": "Conversation - Start or Cancel",
-    "handler": "Waldo_fnc_ZenConversationControl",
-    "via": "Waldo_fnc_ZenDialogueServer",
-    "script_api": "Waldo_fnc_ConversationStart",
-    "parity": "adapter",
-    "notes": "The curator can start the assigned conversation as participant or request cancellation through the normal authoritative session controls."
   },
   {
     "category": "core",

@@ -1,7 +1,14 @@
 /*
+ * Author: WaldoTheWarfighter
  * Waldos Mini Games - Connect Four
  * Server-authoritative best-of-three board with mouse/keyboard controls and spectators.
- * This original WMP game is included by miniGamesInit.sqf and is not a standalone CfgFunctions entry.
+ * This original WMP game is included lazily and is not a standalone CfgFunctions entry.
+ * Locality/authority: Server rules are authoritative; controls and presentation are interface-local.
+ * Repeat/JIP: Compiled once per role; public state and named requests restore permitted JIP state.
+ * Arguments: None; include fragment.
+ * Return Value: Nothing; defines runtime functions.
+ * Current callers: Waldo_fnc_MiniGamesEnsureRuntime.
+ * Example: [this] call Waldo_fnc_MiniGamesRegisterTable;
  */
 
 Waldo_MG_fnc_connectFourPublishRevisionServer = {
@@ -143,7 +150,6 @@ Waldo_MG_fnc_connectFourReconcilePlayersServer = {
 Waldo_MG_fnc_processConnectFourActionRequestServer = {
     params [["_unit", objNull], ["_request", []]];
     if (!isServer || {isNull _unit}) exitWith {};
-    _unit setVariable ["Waldo_MG_ConnectFourActionRequest", [], true];
     if ((count _request) < 6) exitWith {};
     private _token = _request param [0, ""];
     if (!([_token] call Waldo_MG_fnc_rememberHandledTokenServer)) exitWith {};
@@ -231,7 +237,8 @@ Waldo_MG_fnc_submitConnectFourActionLocal = {
     params [["_table", objNull], ["_action", "MOVE"], ["_value", -1]];
     if (!hasInterface || {isNull player} || {isNull _table}) exitWith {};
     private _token = ["CONNECTFOUR"] call Waldo_MG_fnc_makeToken;
-    player setVariable ["Waldo_MG_ConnectFourActionRequest", [_token, netId _table, _table getVariable ["Waldo_MG_ConnectFourGameId",""], _table getVariable ["Waldo_MG_ConnectFourEpoch",-1], _action, _value], true];
+    private _request = [_token, netId _table, _table getVariable ["Waldo_MG_ConnectFourGameId",""], _table getVariable ["Waldo_MG_ConnectFourEpoch",-1], _action, _value];
+    ["CONNECTFOUR", _table, _token, _request param [3,-1], _request] call Waldo_MG_fnc_submitRequestLocal;
 };
 
 Waldo_MG_fnc_getConnectFourRoleLocal = {

@@ -14,7 +14,7 @@
 if (!isServer) exitWith {};
 waitUntil {
     uiSleep 0.1;
-    !isNil "Waldo_fnc_MiniGamesInit" &&
+    !isNil "Waldo_fnc_MiniGamesRegisterTable" &&
     {!isNil "Waldo_fnc_MiniGameInteractionSetup"} &&
     {!isNil "Waldo_fnc_EcoInit"}
 };
@@ -360,11 +360,11 @@ missionNamespace setVariable ["Waldo_QA_ControlConsole", _console, true];
 private _partyOne = missionNamespace getVariable ["Waldo_QA_PartyTable", objNull];
 if (isNull _partyOne) then {
     _partyOne = ["qa_party_table_1", "Land_CampingTable_small_F", [-7, 28, 0], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
-    [_partyOne, "Feature Range A", "QA-PARTY-A"] call Waldo_MG_fnc_markTableServer;
+    [_partyOne, createHashMapFromArray [["displayName", "Feature Range A"]]] call Waldo_fnc_MiniGamesRegisterTable;
     missionNamespace setVariable ["Waldo_QA_PartyTable", _partyOne, true];
 };
 private _partyTwo = ["qa_party_table_2", "Land_CampingTable_small_F", [7, 28, 0], 180, false] call Waldo_QA_fnc_getFeatureObjectServer;
-[_partyTwo, "Feature Range B", "QA-PARTY-B"] call Waldo_MG_fnc_markTableServer;
+[_partyTwo, createHashMapFromArray [["displayName", "Feature Range B"]]] call Waldo_fnc_MiniGamesRegisterTable;
 missionNamespace setVariable ["Waldo_QA_PartyTables", [_partyOne, _partyTwo], true];
 ["party", "PARTY TABLES", [0, 28, 0], "All twelve games, seating, voting, ready, spectators, leaving and rematches."] call Waldo_QA_fnc_registerFeatureStationServer;
 

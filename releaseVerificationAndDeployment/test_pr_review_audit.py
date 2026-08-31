@@ -692,7 +692,6 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("toLowerANSI _x == _weaponLower", process)
         self.assertIn("if !(_toolProfiles isEqualType createHashMap)", process)
         self.assertIn("if !(_efficiency isEqualType 0)", process)
-
     def test_val_author_credit_is_preserved_for_contributed_features(self):
         hazard_dir = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
         hazard_scripts = sorted(hazard_dir.glob("*.sqf"))

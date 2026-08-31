@@ -61,7 +61,7 @@ if (_suite in ["all", "core"]) then {
     ["core/zen/all-module-families", {
         private _coreCount = missionNamespace getVariable ["Waldo_ZenModuleCount", 0];
         private _economyCount = missionNamespace getVariable ["WaldoEcoCore_ZenModuleCount", 0];
-        ["core/zen/all-module-families", _coreCount == 50 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
+        ["core/zen/all-module-families", _coreCount == 52 && {_economyCount == 19}, [_coreCount, _economyCount]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
     ["core/zen/icons-present", {

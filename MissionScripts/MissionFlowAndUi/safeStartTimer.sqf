@@ -38,7 +38,7 @@ if !(missionNamespace getVariable ["Waldo_SafeStart_Active", false]) then {
 } else {
     // Re-assert the local service loop/HUD for clients when a timer is added to an already-active
     // SafeStart. The local function is repeat-safe and will not duplicate handlers.
-    [true, "TIMER"] remoteExecCall ["Waldo_fnc_SafeStartApply", 0];
+    [true, "TIMER", missionNamespace getVariable ["Waldo_SafeStart_Revision", 0]] remoteExecCall ["Waldo_fnc_SafeStartApply", 0];
 };
 // Do not create a second transient timer panel. The persistent SafeStart HUD
 // reads this replicated deadline once per second and updates in place.
