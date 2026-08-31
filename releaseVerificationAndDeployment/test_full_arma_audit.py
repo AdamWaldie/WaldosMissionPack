@@ -2015,6 +2015,55 @@ class FullAuditTests(unittest.TestCase):
                 source = (root / relative_path).read_text(encoding="utf-8")
                 self.assertNotIn(request_variable, source, relative_path)
 
+    def test_economy_zone_bridge_does_not_rescan_players_for_legacy_cleanup(self):
+        bridge = (
+            ROOT
+            / "MissionScripts"
+            / "EconomySystems"
+            / "Resource"
+            / "startZeusZoneActionBridge.sqf"
+        ).read_text(encoding="utf-8")
+        loop_start = bridge.index("while {[] call Waldo_fnc_EcoCore_isModuleActive}")
+        loop_body = bridge[loop_start:]
+
+        self.assertIn("forEach allPlayers", bridge[:loop_start])
+        self.assertIn("WaldoEcoResource_LegacyZoneActionsCleaned", bridge[:loop_start])
+        self.assertNotIn("allPlayers", loop_body)
+        self.assertIn("Waldo_fnc_EcoResource_getResourceZones", loop_body)
+        self.assertIn("Waldo_fnc_EcoResource_createZoneAnchor", loop_body)
+        self.assertIn("Waldo_fnc_EcoCore_publishZeusObjectAction", loop_body)
+        self.assertIn("uiSleep 2", loop_body)
+
+    def test_signal_tracker_prune_worker_stops_when_registry_is_empty(self):
+        tracker = (
+            ROOT
+            / "MissionScripts"
+            / "MissionInit"
+            / "ElectronicWarfare"
+            / "tracker.sqf"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn('Waldo_Tracker_PruneRunning", false', tracker)
+        self.assertNotIn("while {true}", tracker)
+        self.assertIn("if (_reg isEqualTo []) exitWith", tracker)
+        self.assertIn("if (_kept isEqualTo []) exitWith", tracker)
+        self.assertIn('missionNamespace setVariable ["Waldo_Tracker_PruneRunning", false]', tracker)
+        self.assertIn('missionNamespace setVariable ["Waldo_Tracker_Registry", _kept, true]', tracker)
+
+    def test_signal_tracker_renderer_is_idle_without_registered_trackers(self):
+        root = ROOT / "MissionScripts" / "MissionInit" / "ElectronicWarfare"
+        renderer = (root / "trackerRender.sqf").read_text(encoding="utf-8")
+        tracker = (root / "tracker.sqf").read_text(encoding="utf-8")
+        remove = (root / "trackerRemove.sqf").read_text(encoding="utf-8")
+
+        self.assertIn('"Waldo_Tracker_Registry" addPublicVariableEventHandler', renderer)
+        self.assertIn("Waldo_Tracker_RenderPvehInstalled", renderer)
+        self.assertIn('getVariable ["Waldo_Tracker_Registry", []]) isEqualTo []) exitWith', renderer)
+        self.assertNotIn("while {true}", renderer)
+        self.assertIn('missionNamespace setVariable ["Waldo_Tracker_RenderRunning", false]', renderer)
+        self.assertIn("[] call Waldo_fnc_TrackerRender", tracker)
+        self.assertIn("[] call Waldo_fnc_TrackerRender", remove)
+
     def test_economy_ground_command_identity_is_event_driven_and_bounded(self):
         root = ROOT / "MissionScripts" / "EconomySystems"
         command = root / "Command"
