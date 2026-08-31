@@ -37,6 +37,15 @@ class CfgFunctions
                 file = "MissionScripts\MissionInit\aceSetNameRespawnBindingRepair.sqf";
             };
         };
+        class NetworkLifecycle
+        {
+            class JipBindToObjectServer {
+                file = "MissionScripts\Networking\jipBindToObjectServer.sqf";
+            };
+            class JipRemoveBoundServer {
+                file = "MissionScripts\Networking\jipRemoveBoundServer.sqf";
+            };
+        };
         class BriefDocs 
         {
             class AddDocs {
@@ -991,9 +1000,11 @@ class CfgFunctions
         };
         class TreeFelling
         {
+            class TreeFellingCanTargetLocal {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingCanTargetLocal.sqf";};
             class TreeFellingInit {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingInit.sqf";};
             class TreeFellingSwing {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingSwing.sqf";};
             class TreeFellingProcess {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingProcess.sqf";};
+            class TreeFellingSetupFallenLocal {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingSetupFallenLocal.sqf";};
             class TreeFellingStop {file = "MissionScripts\EnvironmentalSystems\TreeFelling\treeFellingStop.sqf";};
         };
         class EmergencyDismount
@@ -1137,8 +1148,14 @@ class CfgFunctions
             class EcoCore_getTestingNoticeActionArgs {
                 file = "MissionScripts\EconomySystems\Core\getTestingNoticeActionArgs.sqf";
             };
+            class EcoCore_installTestingNoticeActionServer {
+                file = "MissionScripts\EconomySystems\Core\installTestingNoticeActionServer.sqf";
+            };
             class EcoCore_startTestingNoticePlayerBridge {
                 file = "MissionScripts\EconomySystems\Core\startTestingNoticePlayerBridge.sqf";
+            };
+            class EcoCore_stopTestingNoticePlayerBridge {
+                file = "MissionScripts\EconomySystems\Core\stopTestingNoticePlayerBridge.sqf";
             };
             class EcoCore_trimString {
                 file = "MissionScripts\EconomySystems\Core\trimString.sqf";
@@ -1155,11 +1172,29 @@ class CfgFunctions
             class EcoCore_getRuntimeObjects {
                 file = "MissionScripts\EconomySystems\Core\getRuntimeObjects.sqf";
             };
+            class EcoCore_refreshLocalWorldActions {
+                file = "MissionScripts\EconomySystems\Core\refreshLocalWorldActions.sqf";
+            };
+            class EcoCore_requestLocalWorldActionRefresh {
+                file = "MissionScripts\EconomySystems\Core\requestLocalWorldActionRefresh.sqf";
+            };
+            class EcoCore_scheduleLocalWorldActionRepair {
+                file = "MissionScripts\EconomySystems\Core\scheduleLocalWorldActionRepair.sqf";
+            };
+            class EcoCore_startLocalWorldActionService {
+                file = "MissionScripts\EconomySystems\Core\startLocalWorldActionService.sqf";
+            };
+            class EcoCore_stopLocalWorldActionService {
+                file = "MissionScripts\EconomySystems\Core\stopLocalWorldActionService.sqf";
+            };
             class EcoCore_refreshRuntimeRegistries {
                 file = "MissionScripts\EconomySystems\Core\refreshRuntimeRegistries.sqf";
             };
             class EcoCore_startRequestScheduler {
                 file = "MissionScripts\EconomySystems\Core\startRequestScheduler.sqf";
+            };
+            class EcoCore_submitRequestServer {
+                file = "MissionScripts\EconomySystems\Core\submitRequestServer.sqf";
             };
             class EcoCore_ensureLocalObjectAction {
                 file = "MissionScripts\EconomySystems\Core\ensureLocalObjectAction.sqf";
@@ -2400,6 +2435,18 @@ class CfgFunctions
             class EcoCommand_publishLocalGroundCommandIdentity {
                 file = "MissionScripts\EconomySystems\Command\publishLocalGroundCommandIdentity.sqf";
             };
+            class EcoCommand_requestLocalGroundCommandIdentityRefresh {
+                file = "MissionScripts\EconomySystems\Command\requestLocalGroundCommandIdentityRefresh.sqf";
+            };
+            class EcoCommand_scheduleLocalGroundCommandIdentityRetry {
+                file = "MissionScripts\EconomySystems\Command\scheduleLocalGroundCommandIdentityRetry.sqf";
+            };
+            class EcoCommand_startLocalGroundCommandIdentityService {
+                file = "MissionScripts\EconomySystems\Command\startLocalGroundCommandIdentityService.sqf";
+            };
+            class EcoCommand_stopLocalGroundCommandIdentityService {
+                file = "MissionScripts\EconomySystems\Command\stopLocalGroundCommandIdentityService.sqf";
+            };
             class EcoCommand_getGroundCommandUIDs {
                 file = "MissionScripts\EconomySystems\Command\getGroundCommandUIDs.sqf";
             };
@@ -2476,6 +2523,12 @@ class CfgFunctions
             };
             class MiniGamesStateChangedLocal {
                 file = "MissionScripts\MiniGames\miniGamesStateChangedLocal.sqf";
+            };
+            class MiniGamesSetSpectatorServer {
+                file = "MissionScripts\MiniGames\miniGamesSetSpectatorServer.sqf";
+            };
+            class MiniGamesApplyStateSnapshotLocal {
+                file = "MissionScripts\MiniGames\miniGamesApplyStateSnapshotLocal.sqf";
             };
         };
         class InteractionMiniGames

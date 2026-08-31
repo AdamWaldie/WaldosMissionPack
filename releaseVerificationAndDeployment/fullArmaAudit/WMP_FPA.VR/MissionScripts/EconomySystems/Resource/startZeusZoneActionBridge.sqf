@@ -3,6 +3,11 @@
  * Start Zeus zone action bridge.
  *
  * Part of the Waldos Economy Systems suite (Resource system).
+ * Locality / Authority: Server-only zone-anchor and action-publication bridge. Client interactions
+ * submit zone-capture requests to the existing authoritative server processor.
+ * Repeat / JIP Behaviour: Existing bridge guards prevent duplicate installation. Obsolete pre-V4
+ * player flags are cleared once at startup; new/JIP player objects cannot inherit those local flags.
+ * Zone actions retain their object-bound named JIP replay and the live zone loop remains unchanged.
  *
  * Arguments:
  * 0: _target <ANY> - target
@@ -10,6 +15,8 @@
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Economy Resource client bootstrap.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoResource_startZeusZoneActionBridge;
@@ -19,28 +26,30 @@
     if (missionNamespace getVariable ["WaldoEcoResource_ZeusZoneActionBridgeStarted", false]) exitWith {};
     missionNamespace setVariable ["WaldoEcoResource_ZeusZoneActionBridgeStarted", true];
 
+    // Compatibility cleanup applies only to player objects that existed under an older bridge
+    // version in this running mission. A newly created JIP player cannot carry these obsolete flags,
+    // so walking every player on every two-second zone pass only repeated an already-complete check.
+    {
+        private _unit = _x;
+        if (!isNull _unit && {!(_unit getVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", false])}) then {
+            {
+                [_unit, _x] call Waldo_fnc_EcoCore_clearZeusObjectAction;
+            } forEach [
+                "WaldoEcoResource_ZeusZoneCaptureActionAddedLocal",
+                "WaldoEcoResource_ZeusZoneInfoActionAddedLocal",
+                "WaldoEcoResource_ZeusZoneCaptureActionAddedLocalV2",
+                "WaldoEcoResource_ZeusZoneInfoActionAddedLocalV2"
+            ];
+            _unit setVariable ["WaldoEcoResource_ZeusCanCaptureZone", false, true];
+            _unit setVariable ["WaldoEcoResource_ZeusInResourceZone", false, true];
+            _unit setVariable ["WaldoEcoResource_ZeusCurrentZoneId", "", true];
+            _unit setVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", true];
+        };
+    } forEach allPlayers;
+
     [] spawn {
         while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
             {
-                private _unit = _x;
-                if (isNull _unit) then {continue;};
-                if (!(_unit getVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", false])) then {
-                    {
-                        [_unit, _x] call Waldo_fnc_EcoCore_clearZeusObjectAction;
-                    } forEach [
-                        "WaldoEcoResource_ZeusZoneCaptureActionAddedLocal",
-                        "WaldoEcoResource_ZeusZoneInfoActionAddedLocal",
-                        "WaldoEcoResource_ZeusZoneCaptureActionAddedLocalV2",
-                        "WaldoEcoResource_ZeusZoneInfoActionAddedLocalV2"
-                    ];
-                    _unit setVariable ["WaldoEcoResource_ZeusCanCaptureZone", false, true];
-                    _unit setVariable ["WaldoEcoResource_ZeusInResourceZone", false, true];
-                    _unit setVariable ["WaldoEcoResource_ZeusCurrentZoneId", "", true];
-                    _unit setVariable ["WaldoEcoResource_LegacyZoneActionsCleaned", true, false];
-                };
-            } forEach allPlayers;
-
-                {
                     private _zone = _x;
                     private _zoneId = _zone param [0, ""];
                     if (_zoneId isEqualTo "") then {continue;};
@@ -138,14 +147,7 @@
                                     _requestId
                                 ];
 
-                                _caller setVariable [
-                                    "WaldoEcoResource_ZoneCaptureRequest",
-                                    _request,
-                                    true
-                                ];
-                                if (_target != _caller) then {
-                                    _target setVariable ["WaldoEcoResource_ZoneCaptureRequest", _request, true];
-                                };
+                                ["ZONE_CAPTURE", _target, _request] call Waldo_fnc_EcoCore_submitRequestServer;
                                 ["Capture request sent."] call Waldo_fnc_EcoCore_notifyActorLocal;
                             },
                             nil,
@@ -236,7 +238,7 @@
                             _actionRadius
                         ]
                     ] call Waldo_fnc_EcoCore_publishZeusObjectAction;
-                } forEach (call Waldo_fnc_EcoResource_getResourceZones);
+            } forEach (call Waldo_fnc_EcoResource_getResourceZones);
 
             uiSleep 2;
         };

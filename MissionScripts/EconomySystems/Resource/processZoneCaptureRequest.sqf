@@ -3,6 +3,10 @@
  * Process zone capture request.
  *
  * Part of the Waldos Economy Systems suite (Resource system).
+ * Locality / Authority: Server authority only; preserves existing actor, side, range and registered-zone
+ * validation before changing capture state.
+ * Repeat / JIP Behaviour: Existing bounded request-token history rejects duplicate captures. Requests
+ * are transient and not part of JIP state.
  *
  * Arguments:
  * 0: _unit <OBJECT> - unit (optional, default: objNull)
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Waldo_fnc_EcoCore_submitRequestServer and the documented legacy processor API.
  *
  * Example:
  * [_unit, _request] call Waldo_fnc_EcoResource_processZoneCaptureRequest;
@@ -34,7 +40,9 @@
     };
     missionNamespace setVariable ["WaldoEcoResource_ZoneCaptureRequestsHandled", _handled];
 
-    _unit setVariable ["WaldoEcoResource_ZoneCaptureRequest", [], true];
+    if !((_unit getVariable ["WaldoEcoResource_ZoneCaptureRequest", []]) isEqualTo []) then {
+        _unit setVariable ["WaldoEcoResource_ZoneCaptureRequest", [], true];
+    };
 
     private _zoneId = _request param [0, ""];
     private _sideKey = _request param [1, "NONE"];

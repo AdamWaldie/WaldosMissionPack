@@ -6,7 +6,9 @@
  * authority loops versus the client Zeus-menu and local action loops. Server activation occurs
  * from initServer.sqf after mission-maker preset/config values have been assigned. Player clients
  * activate from initPlayerLocal.sqf after the authoritative runtime snapshot is available.
- * Opt-in: gated by Waldo_Economy_Enable. Repeat-safe per machine.
+ * Opt-in: gated by Waldo_Economy_Enable. Repeat-safe per machine. The server-published purge state
+ * is read before local bootstrap and is never defaulted or broadcast by a joining client; Arma's
+ * JIP variable replay remains authoritative across initPlayerLocal.
  *
  * Arguments:
  * None.
@@ -20,8 +22,6 @@
  * Current callers:
  * initServer.sqf, initPlayerLocal.sqf and explicit Economy composition/runtime activation paths.
  */
-
-missionNamespace setVariable ["WaldoEcoCore_ModulePurgedForJIP", false, true];
 
 if (missionNamespace getVariable ["WaldoEcoCore_ModulePurgedForJIP", false]) exitWith {};
 if (missionNamespace getVariable ["WaldoEcoResource_BootstrapInitialized", false]) exitWith {};
@@ -74,20 +74,7 @@ WaldoEcoCore_ZeusHeaderRootText = "WMP Economy Systems";
 WaldoEcoCore_ZeusHeaderRootTooltip = "WMP Economy Systems";
 WaldoEcoCore_ZeusHeaderRootColor = [0.25, 0.85, 1, 1];
 
-if (hasInterface && {isNil "WaldoEcoCommand_LocalIdentityLoopStarted"}) then {
-    WaldoEcoCommand_LocalIdentityLoopStarted = true;
-
-    call Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity;
-
-    [] spawn {
-        while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-            call Waldo_fnc_EcoCommand_publishLocalGroundCommandIdentity;
-            uiSleep 2;
-        };
-
-        WaldoEcoCommand_LocalIdentityLoopStarted = nil;
-    };
-};
+[] call Waldo_fnc_EcoCommand_startLocalGroundCommandIdentityService;
 
 [] call Waldo_fnc_EcoResource_startZoneCaptureRequestLoop;
 [] call Waldo_fnc_EcoResource_startZeusZoneActionBridge;
@@ -232,33 +219,4 @@ if ([] call Waldo_fnc_EcoCore_canRunBackgroundAuthority) then {
     [] call Waldo_fnc_EcoCore_startTestingNoticePlayerBridge;
 };
 
-if (hasInterface && {isNil "WaldoEcoCore_LocalWorldActionLoopStarted"}) then {
-    WaldoEcoCore_LocalWorldActionLoopStarted = true;
-
-    [] spawn {
-        private _lastRevision = -1;
-        private _nextRepair = 0;
-        while {[] call Waldo_fnc_EcoCore_isModuleActive} do {
-            private _revision = missionNamespace getVariable ["WaldoEcoCore_RuntimeRegistryRevision", 0];
-            if (_revision != _lastRevision || {diag_tickTime >= _nextRepair}) then {
-                _lastRevision = _revision;
-                _nextRepair = diag_tickTime + 10;
-                if (!isNil "Waldo_fnc_EcoResource_ensureCrateActionLocal") then {
-                    {[_x] call Waldo_fnc_EcoResource_ensureCrateActionLocal;} forEach (["CRATES"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-                if (!isNil "Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal") then {
-                    {[_x] call Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal;} forEach (["RESEARCH_CENTERS"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-                if (!isNil "Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal") then {
-                    {[_x] call Waldo_fnc_EcoBuild_ensureConstructionVehicleActionLocal;} forEach (["CONSTRUCTION_VEHICLES"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-                if (!isNil "Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal") then {
-                    {[_x] call Waldo_fnc_EcoBuy_ensurePurchaseTerminalActionLocal;} forEach (["PURCHASE_TERMINALS"] call Waldo_fnc_EcoCore_getRuntimeObjects);
-                };
-            };
-            uiSleep 0.5;
-        };
-
-        WaldoEcoCore_LocalWorldActionLoopStarted = nil;
-    };
-};
+[] call Waldo_fnc_EcoCore_startLocalWorldActionService;

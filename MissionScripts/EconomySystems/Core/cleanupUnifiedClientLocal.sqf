@@ -1,8 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
- * Cleanup unified client local.
+ * Closes Economy client UI, removes local actions/hooks and stops local lifecycle services.
  *
- * Part of the Waldos Economy Systems suite (shared core system).
+ * Locality/authority: interface client only; does not mutate server Economy state. Repeat/JIP
+ * behaviour: repeat-safe and invalidates scheduled local action repair before a later re-enable.
  *
  * Arguments:
  * None
@@ -10,11 +11,16 @@
  * Return Value:
  * Nothing
  *
+ * Current callers: server-broadcast unified cleanup during purge/re-enable workflows.
+ *
  * Example:
  * [] call Waldo_fnc_EcoCore_cleanupUnifiedClientLocal;
  */
 
     if (!hasInterface) exitWith {};
+
+    [] call Waldo_fnc_EcoCore_stopLocalWorldActionService;
+    [] call Waldo_fnc_EcoCommand_stopLocalGroundCommandIdentityService;
 
     [] call Waldo_fnc_EcoCore_removeUnifiedPlayerActionsLocal;
 
@@ -46,5 +52,3 @@
     WaldoEcoBuild_ZeusHookStarted = nil;
     WaldoEcoBuy_ZeusHookStarted = nil;
     WaldoEcoCore_SaveZeusHookStarted = nil;
-    WaldoEcoCore_LocalWorldActionLoopStarted = nil;
-    WaldoEcoCommand_LocalIdentityLoopStarted = nil;

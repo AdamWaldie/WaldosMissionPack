@@ -3,6 +3,11 @@
  * Server-authoritatively accumulates tree hits and creates a reusable fallen-tree object.
  * Locality and authority: Server-only target mutation. Player clients request it through the
  * registered remote call; owner, range, cooldown, tool and target checks are repeated on the server.
+ * ACE dragging/carrying remains interface-local and is replayed for JIP with the fallen object as
+ * the JIP key. Arma therefore removes that replay automatically when the object is deleted; WMP
+ * does not maintain a parallel lifetime registry or transmit executable source code.
+ * Repeat/JIP behaviour: strikes are cooldown-gated and the drag/carry setup is repeat-safe in ACE.
+ * Each fallen object's JIP side effect exists only for that object's engine-managed lifetime.
  *
  * Arguments:
  * 0: unit <OBJECT> - requesting player
@@ -20,6 +25,7 @@
 
 params ["_unit", "_weapon", "_target"];
 if !(isServer) exitWith {false};
+if !(missionNamespace getVariable ["Waldo_TreeFelling_Enable", false]) exitWith {false};
 if (isNull _unit || {!alive _unit}) exitWith {false};
 if (remoteExecutedOwner > 0 && {owner _unit != remoteExecutedOwner}) exitWith {false};
 if (!isNull _target && {_unit distance _target > (missionNamespace getVariable ["Waldo_TreeFelling_Range", 3]) + 1}) exitWith {false};
@@ -72,7 +78,9 @@ if !(_efficiency isEqualType 0) then {_efficiency = 1};
 _efficiency = _efficiency max 0.05;
 private _required = ceil (((missionNamespace getVariable ["Waldo_TreeFelling_BaseHits", 4]) + (_height * (missionNamespace getVariable ["Waldo_TreeFelling_HeightFactor", 0.35]))) / _efficiency);
 private _hits = (_target getVariable ["Waldo_TreeFelling_Hits", 0]) + 1;
-_target setVariable ["Waldo_TreeFelling_Hits", _hits, true];
+// Hit progress is server-authoritative and only its percentage is sent to the requesting player.
+// Publishing the raw counter on every swing added global traffic without a gameplay consumer.
+_target setVariable ["Waldo_TreeFelling_Hits", _hits];
 
 private _progress = round ((_hits / (_required max 1)) * 100) min 100;
 ["TREE FELLING", format ["Cutting progress: %1%%", _progress], "INFO", "TREE_FELLING", 3] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _unit];
@@ -112,10 +120,9 @@ if (count _validClasses > 0) then {
     _fallen setDir _fallenDirection;
     _fallen setVariable ["Waldo_TreeFelling_SourceModel", _model, true];
     if (isClass (configFile >> "CfgPatches" >> "ace_dragging")) then {
-        [_fallen, true, [0, 2, 0], 90] remoteExecCall ["ace_dragging_fnc_setDraggable", 0, true];
-        if (_height < 8) then {
-            [_fallen, true, [0, 1, 0], 0] remoteExecCall ["ace_dragging_fnc_setCarryable", 0, true];
-        };
+        // One object-keyed replay must apply both properties: Arma treats the object as one
+        // replaceable JIP key, so separate drag/carry calls would overwrite each other for joiners.
+        [_fallen, _height < 8] remoteExecCall ["Waldo_fnc_TreeFellingSetupFallenLocal", 0, _fallen];
     };
 };
 
@@ -131,16 +138,15 @@ private _yieldObjects = [];
 
 private _regrowSeconds = missionNamespace getVariable ["Waldo_TreeFelling_RegrowSeconds", -1];
 if (_regrowSeconds > 0) then {
-    [_target, _fallenObject, _yieldObjects, _regrowSeconds] spawn {
-        params ["_tree", "_fallen", "_yields", "_delay"];
-        sleep _delay;
+    [{
+        params ["_tree", "_fallen", "_yields"];
         if (!isNull _fallen) then {deleteVehicle _fallen};
         {if (!isNull _x) then {deleteVehicle _x}} forEach _yields;
         if (!isNull _tree) then {
             _tree hideObjectGlobal false;
             _tree setDamage 0;
-            _tree setVariable ["Waldo_TreeFelling_Hits", 0, true];
+            _tree setVariable ["Waldo_TreeFelling_Hits", 0];
         };
-    };
+    }, [_target, _fallenObject, _yieldObjects], _regrowSeconds] call CBA_fnc_waitAndExecute;
 };
 true

@@ -251,6 +251,83 @@ Waldo_MG_fnc_registerCuratorEditableServer = {
     } forEach (call Waldo_MG_fnc_getKnownCuratorsServer);
 };
 
+Waldo_MG_fnc_tableStateTargetsServer = {
+    params [["_table", objNull]];
+    if (!isServer || {isNull _table}) exitWith {[]};
+
+    private _recipients = [];
+    {
+        if (!isNull _x) then {
+            private _ownerId = owner _x;
+            if (_ownerId >= 2) then {_recipients pushBackUnique _ownerId;};
+        };
+    } forEach (_table getVariable ["Waldo_MG_TableSeats", []]);
+
+    private _registry = missionNamespace getVariable ["Waldo_MG_ServerRegistry", createHashMap];
+    private _tableId = _table getVariable ["Waldo_MG_TableId", netId _table];
+    if (_tableId in _registry) then {
+        private _entry = _registry get _tableId;
+        private _spectators = +(_entry getOrDefault ["spectators", []]);
+        _spectators = _spectators select {!isNull _x && {isPlayer _x}};
+        {
+            private _ownerId = owner _x;
+            if (_ownerId >= 2) then {_recipients pushBackUnique _ownerId;};
+        } forEach _spectators;
+        _entry set ["spectators", _spectators];
+        _registry set [_tableId, _entry];
+        missionNamespace setVariable ["Waldo_MG_ServerRegistry", _registry];
+    };
+
+    _recipients
+};
+
+Waldo_MG_fnc_setPublicTableStateServer = {
+    params [
+        ["_table", objNull],
+        ["_variableName", ""],
+        ["_value", nil]
+    ];
+    if (!isServer || {isNull _table} || {_variableName == ""}) exitWith {};
+
+    private _publishedNames = _table getVariable ["Waldo_MG_PublicStateNamesServer", createHashMap];
+    if ((typeName _publishedNames) != "HASHMAP") then {_publishedNames = createHashMap;};
+    if !(_variableName in _publishedNames) then {
+        _publishedNames set [_variableName, true];
+        _table setVariable ["Waldo_MG_PublicStateNamesServer", _publishedNames];
+    };
+
+    // Server authority is always updated synchronously before any targeted network delivery.
+    _table setVariable [_variableName, _value];
+    private _recipients = [_table] call Waldo_MG_fnc_tableStateTargetsServer;
+    if !(_recipients isEqualTo []) then {
+        _table setVariable [_variableName, _value, _recipients];
+    };
+};
+
+Waldo_MG_fnc_sendPublicTableSnapshotServer = {
+    params [
+        ["_table", objNull],
+        ["_recipient", objNull],
+        ["_openSpectator", false]
+    ];
+    if (!isServer || {isNull _table} || {isNull _recipient}) exitWith {false};
+
+    private _publishedNames = _table getVariable ["Waldo_MG_PublicStateNamesServer", createHashMap];
+    if ((typeName _publishedNames) != "HASHMAP") then {_publishedNames = createHashMap;};
+    private _rows = [];
+    {
+        _rows pushBack [_x, _table getVariable _x];
+    } forEach (keys _publishedNames);
+
+    [
+        _table,
+        _rows,
+        _table getVariable ["Waldo_MG_TableRevision", -1],
+        _openSpectator
+    ] remoteExecCall ["Waldo_fnc_MiniGamesApplyStateSnapshotLocal", owner _recipient];
+    true
+};
+
 Waldo_MG_fnc_getTableActiveGameId = {
     params [["_table", objNull]];
     if (isNull _table) exitWith {""};
@@ -465,18 +542,10 @@ Waldo_MG_fnc_markTableServer = {
         _table setVariable ["Waldo_MG_TableRequiredVotes", 1, true];
         _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
         _table setVariable ["Waldo_MG_TableRevision", 0, true];
-        [_table] call Waldo_MG_fnc_battleshipClearServer;
-        [_table] call Waldo_MG_fnc_whosWhoClearServer;
-        [_table] call Waldo_MG_fnc_shotgunClearServer;
-        [_table] call Waldo_MG_fnc_checkersClearServer;
-        [_table] call Waldo_MG_fnc_rpsClearServer;
-        [_table] call Waldo_MG_fnc_blackjackClearServer;
-        [_table] call Waldo_MG_fnc_chessClearServer;
-        [_table] call Waldo_MG_fnc_pokerClearServer;
-        [_table] call Waldo_MG_fnc_drawPokerClearServer;
-        [_table] call Waldo_MG_fnc_liarsDiceClearServer;
-        [_table] call Waldo_MG_fnc_connectFourClearServer;
-        [_table] call Waldo_MG_fnc_unoClearServer;
+        // Registration creates only the lightweight lobby instance. Every game start function
+        // constructs its complete authoritative state before marking that game active, so creating
+        // and globally publishing empty state for the catalogue here is redundant. Active-game
+        // mutation, publication, timed transitions and spectator viewing are deliberately unchanged.
         [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
     };
 
@@ -652,8 +721,7 @@ Waldo_MG_fnc_publishTableChangeServer = {
     if (!isServer || {isNull _table}) exitWith {};
     private _revision = (_table getVariable ["Waldo_MG_EventRevisionServer", 0]) + 1;
     _table setVariable ["Waldo_MG_EventRevisionServer", _revision];
-    private _recipients = [];
-    {if (!isNull _x) then {_recipients pushBackUnique (owner _x);};} forEach (_table getVariable ["Waldo_MG_TableSeats", []]);
+    private _recipients = [_table] call Waldo_MG_fnc_tableStateTargetsServer;
     {[_table, _revision] remoteExecCall ["Waldo_fnc_MiniGamesStateChangedLocal", _x];} forEach _recipients;
 };
 
@@ -1471,6 +1539,9 @@ Waldo_MG_fnc_exitSpectatorLocal = {
     params [["_silent", false]];
     private _table = missionNamespace getVariable ["Waldo_MG_SpectatedTableLocal", objNull];
     missionNamespace setVariable ["Waldo_MG_SpectatedTableLocal", objNull];
+    if (!isNull _table && {!isNull player}) then {
+        [_table, player, false] remoteExecCall ["Waldo_fnc_MiniGamesSetSpectatorServer", 2];
+    };
     {
         if (!isNull _x && {_x getVariable ["Waldo_MG_SpectatorMode", false]}) then {
             _x closeDisplay 1;
@@ -1495,7 +1566,10 @@ Waldo_MG_fnc_exitSpectatorLocal = {
 };
 
 Waldo_MG_fnc_openSpectatorLocal = {
-    params [["_table", objNull]];
+    params [
+        ["_table", objNull],
+        ["_stateReady", false]
+    ];
     if (!hasInterface || {isNull player} || {isNull _table}) exitWith {};
     if (!alive player || {(lifeState player) == "INCAPACITATED"} || {(vehicle player) != player}) exitWith {
         ["You must be alive and on foot to spectate a table game."] call Waldo_MG_fnc_notifyLocal;
@@ -1505,6 +1579,9 @@ Waldo_MG_fnc_openSpectatorLocal = {
     };
     if (!([_table] call Waldo_MG_fnc_isTableGameActive)) exitWith {
         ["That table does not currently have a game to spectate."] call Waldo_MG_fnc_notifyLocal;
+    };
+    if (!_stateReady) exitWith {
+        [_table, player, true] remoteExecCall ["Waldo_fnc_MiniGamesSetSpectatorServer", 2];
     };
     [true] call Waldo_MG_fnc_exitSpectatorLocal;
     missionNamespace setVariable ["Waldo_MG_SpectatedTableLocal", _table];

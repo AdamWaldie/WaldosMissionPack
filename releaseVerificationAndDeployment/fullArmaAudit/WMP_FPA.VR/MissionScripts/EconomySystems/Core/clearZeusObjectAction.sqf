@@ -1,15 +1,15 @@
 /*
  * Author: WaldoTheWarfighter
- * Clear Zeus object action.
- *
- * Part of the Waldos Economy Systems suite (shared core system).
+ * Clears one published Economy object-action replay and permits a later repeat-safe publication.
+ * Locality/authority: server-owned JIP cleanup; object-local action removal is handled by Economy's
+ * existing client cleanup/reconciliation path.
+ * Repeat/JIP behaviour: repeat-safe. The named id is also detached from deletion cleanup.
  *
  * Arguments:
  * 0: _object <OBJECT> - object (optional, default: objNull)
  * 1: _flagVar <STRING> - flag var (optional, default: "")
  *
- * Return Value:
- * Nothing
+ * Return Value: Nothing.
  *
  * Example:
  * [_object, _flagVar] call Waldo_fnc_EcoCore_clearZeusObjectAction;
@@ -26,7 +26,7 @@
     private _jipVar = format ["%1_JIP", _flagVar];
     private _jipId = _object getVariable [_jipVar, ""];
     if !(_jipId isEqualTo "") then {
-        remoteExec ["", _jipId];
+        [_object, _jipId] call Waldo_fnc_JipRemoveBoundServer;
         _object setVariable [_jipVar, nil, true];
     };
 

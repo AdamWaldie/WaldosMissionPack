@@ -503,41 +503,33 @@ Waldo_MG_fnc_chessIsInsufficientMaterial = {
 Waldo_MG_fnc_chessPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable [
-        "Waldo_MG_ChessRevision",
-        (_table getVariable ["Waldo_MG_ChessRevision", 0]) + 1,
-        true
-    ];
-    _table setVariable [
-        "Waldo_MG_TableRevision",
-        (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1,
-        true
-    ];
+    [_table, "Waldo_MG_ChessRevision", (_table getVariable ["Waldo_MG_ChessRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_chessClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_ChessActive", false, true];
-    _table setVariable ["Waldo_MG_ChessFinished", false, true];
-    _table setVariable ["Waldo_MG_ChessGameId", "", true];
-    _table setVariable ["Waldo_MG_ChessPlayers", [objNull, objNull], true];
-    _table setVariable ["Waldo_MG_ChessPlayerNames", ["NATO White", "CSAT Black"], true];
-    _table setVariable ["Waldo_MG_ChessSeatIndices", [-1, -1], true];
-    _table setVariable ["Waldo_MG_ChessBoard", [], true];
-    _table setVariable ["Waldo_MG_ChessTurn", 1, true];
-    _table setVariable ["Waldo_MG_ChessCastlingRights", [false, false, false, false], true];
-    _table setVariable ["Waldo_MG_ChessEnPassant", -1, true];
-    _table setVariable ["Waldo_MG_ChessHalfmoveClock", 0, true];
-    _table setVariable ["Waldo_MG_ChessFullmoveNumber", 1, true];
-    _table setVariable ["Waldo_MG_ChessWinner", 0, true];
-    _table setVariable ["Waldo_MG_ChessResult", "", true];
-    _table setVariable ["Waldo_MG_ChessMoveNumber", 0, true];
-    _table setVariable ["Waldo_MG_ChessLastMove", [], true];
-    _table setVariable ["Waldo_MG_ChessStatus", "Waiting for a Chess match.", true];
-    _table setVariable ["Waldo_MG_ChessDrawOfferSide", 0, true];
-    _table setVariable ["Waldo_MG_ChessCanClaimThreefold", false, true];
-    _table setVariable ["Waldo_MG_ChessCanClaimFifty", false, true];
+    [_table, "Waldo_MG_ChessActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessPlayers", [objNull, objNull]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessPlayerNames", ["NATO White", "CSAT Black"]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessSeatIndices", [-1, -1]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessBoard", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessTurn", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCastlingRights", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessEnPassant", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessHalfmoveClock", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessFullmoveNumber", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessWinner", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessResult", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessMoveNumber", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessLastMove", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessStatus", "Waiting for a Chess match."] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessDrawOfferSide", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCanClaimThreefold", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCanClaimFifty", false] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_ChessPositionHistoryServer", []];
     [_table] call Waldo_MG_fnc_chessPublishRevisionServer;
 };
@@ -564,35 +556,31 @@ Waldo_MG_fnc_chessStartServer = {
     if (isNull _white || {isNull _black}) exitWith {false};
     private _board = call Waldo_MG_fnc_chessCreateBoard;
     private _rights = [true, true, true, true];
-    _table setVariable ["Waldo_MG_ChessActive", true, true];
-    _table setVariable ["Waldo_MG_ChessFinished", false, true];
-    _table setVariable [
-        "Waldo_MG_ChessGameId",
-        format ["Waldo_MG_CHESS_%1_%2", floor (serverTime * 10), floor (random 1000000)],
-        true
-    ];
-    _table setVariable ["Waldo_MG_ChessPlayers", [_white, _black], true];
-    _table setVariable ["Waldo_MG_ChessPlayerNames", [name _white, name _black], true];
-    _table setVariable ["Waldo_MG_ChessSeatIndices", _seatIndices, true];
-    _table setVariable ["Waldo_MG_ChessBoard", _board, true];
-    _table setVariable ["Waldo_MG_ChessTurn", 1, true];
-    _table setVariable ["Waldo_MG_ChessCastlingRights", _rights, true];
-    _table setVariable ["Waldo_MG_ChessEnPassant", -1, true];
-    _table setVariable ["Waldo_MG_ChessHalfmoveClock", 0, true];
-    _table setVariable ["Waldo_MG_ChessFullmoveNumber", 1, true];
-    _table setVariable ["Waldo_MG_ChessWinner", 0, true];
-    _table setVariable ["Waldo_MG_ChessResult", "", true];
-    _table setVariable ["Waldo_MG_ChessMoveNumber", 0, true];
-    _table setVariable ["Waldo_MG_ChessLastMove", [], true];
-    _table setVariable ["Waldo_MG_ChessStatus", format ["%1 has the first move as NATO White.", name _white], true];
-    _table setVariable ["Waldo_MG_ChessDrawOfferSide", 0, true];
-    _table setVariable ["Waldo_MG_ChessCanClaimThreefold", false, true];
-    _table setVariable ["Waldo_MG_ChessCanClaimFifty", false, true];
+    [_table, "Waldo_MG_ChessActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessGameId", format ["Waldo_MG_CHESS_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessPlayers", [_white, _black]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessPlayerNames", [name _white, name _black]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessBoard", _board] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessTurn", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCastlingRights", _rights] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessEnPassant", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessHalfmoveClock", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessFullmoveNumber", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessWinner", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessResult", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessMoveNumber", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessLastMove", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessStatus", format ["%1 has the first move as NATO White.", name _white]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessDrawOfferSide", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCanClaimThreefold", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCanClaimFifty", false] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable [
         "Waldo_MG_ChessPositionHistoryServer",
         [[_board, 1, _rights, -1] call Waldo_MG_fnc_chessPositionKey]
     ];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table] call Waldo_MG_fnc_chessPublishRevisionServer;
     true
 };
@@ -606,14 +594,14 @@ Waldo_MG_fnc_chessFinishServer = {
     ];
     if (!isServer || {isNull _table}) exitWith {};
     if (!(_table getVariable ["Waldo_MG_ChessActive", false])) exitWith {};
-    _table setVariable ["Waldo_MG_ChessFinished", true, true];
-    _table setVariable ["Waldo_MG_ChessWinner", _winner, true];
-    _table setVariable ["Waldo_MG_ChessResult", _result, true];
-    _table setVariable ["Waldo_MG_ChessStatus", _status, true];
-    _table setVariable ["Waldo_MG_ChessDrawOfferSide", 0, true];
-    _table setVariable ["Waldo_MG_ChessCanClaimThreefold", false, true];
-    _table setVariable ["Waldo_MG_ChessCanClaimFifty", false, true];
-    _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+    [_table, "Waldo_MG_ChessFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessWinner", _winner] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessResult", _result] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessStatus", _status] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessDrawOfferSide", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCanClaimThreefold", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCanClaimFifty", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     [_table] call Waldo_MG_fnc_chessPublishRevisionServer;
 };
 
@@ -667,8 +655,8 @@ Waldo_MG_fnc_chessReconcilePlayersServer = {
     if (!(_table getVariable ["Waldo_MG_ChessFinished", false])) then {
         if (!(_valid param [0, false]) && {!(_valid param [1, false])}) then {
             [_table] call Waldo_MG_fnc_chessClearServer;
-            _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-            _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+            [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+            _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
         } else {
             if (!(_valid param [0, false])) then {
                 [_table, objNull, _seatIndices param [0, -1]] call Waldo_MG_fnc_chessFinishForfeitServer;
@@ -681,8 +669,8 @@ Waldo_MG_fnc_chessReconcilePlayersServer = {
     } else {
         if (!(_valid param [0, false]) && {!(_valid param [1, false])}) then {
             [_table] call Waldo_MG_fnc_chessClearServer;
-            _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-            _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+            [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+            _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
         };
     };
 };
@@ -691,7 +679,7 @@ Waldo_MG_fnc_chessResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_chessClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 }; 
  
@@ -877,23 +865,23 @@ Waldo_MG_fnc_processChessMoveRequestServer = {
         };
     };
 
-    _table setVariable ["Waldo_MG_ChessBoard", _newBoard, true];
-    _table setVariable ["Waldo_MG_ChessTurn", _turn, true];
-    _table setVariable ["Waldo_MG_ChessCastlingRights", _rights, true];
-    _table setVariable ["Waldo_MG_ChessEnPassant", _newEnPassant, true];
-    _table setVariable ["Waldo_MG_ChessHalfmoveClock", _halfmoveClock, true];
-    _table setVariable ["Waldo_MG_ChessFullmoveNumber", _fullmoveNumber, true];
-    _table setVariable ["Waldo_MG_ChessMoveNumber", (_table getVariable ["Waldo_MG_ChessMoveNumber", 0]) + 1, true];
-    _table setVariable ["Waldo_MG_ChessLastMove", [_from, _to, _special, _promotionType, _capturedPiece], true];
-    _table setVariable ["Waldo_MG_ChessDrawOfferSide", 0, true];
+    [_table, "Waldo_MG_ChessBoard", _newBoard] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessTurn", _turn] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessCastlingRights", _rights] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessEnPassant", _newEnPassant] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessHalfmoveClock", _halfmoveClock] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessFullmoveNumber", _fullmoveNumber] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessMoveNumber", (_table getVariable ["Waldo_MG_ChessMoveNumber", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessLastMove", [_from, _to, _special, _promotionType, _capturedPiece]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ChessDrawOfferSide", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_ChessPositionHistoryServer", _history];
     if (_result != "") then {
         [_table, _winner, _result, _status] call Waldo_MG_fnc_chessFinishServer;
     } else {
-        _table setVariable ["Waldo_MG_ChessCanClaimThreefold", _canClaimThreefold, true];
-        _table setVariable ["Waldo_MG_ChessCanClaimFifty", _canClaimFifty, true];
-        _table setVariable ["Waldo_MG_ChessStatus", _status, true];
-        _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+        [_table, "Waldo_MG_ChessCanClaimThreefold", _canClaimThreefold] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_ChessCanClaimFifty", _canClaimFifty] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_ChessStatus", _status] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
         [_table] call Waldo_MG_fnc_chessPublishRevisionServer;
     };
     [_unit, _token, if (_result == "CHECKMATE") then {
@@ -972,14 +960,14 @@ Waldo_MG_fnc_processChessActionRequestServer = {
     if (_action == "DRAW_OFFER") exitWith {
         private _offerSide = _table getVariable ["Waldo_MG_ChessDrawOfferSide", 0];
         if (_offerSide == 0) then {
-            _table setVariable ["Waldo_MG_ChessDrawOfferSide", _side, true];
-            _table setVariable ["Waldo_MG_ChessStatus", format ["%1 offered a draw. The opponent may accept.", name _unit], true];
+            [_table, "Waldo_MG_ChessDrawOfferSide", _side] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_ChessStatus", format ["%1 offered a draw. The opponent may accept.", name _unit]] call Waldo_MG_fnc_setPublicTableStateServer;
             [_table] call Waldo_MG_fnc_chessPublishRevisionServer;
             [_unit, _token, "Draw offered. Making a move withdraws it automatically."] call Waldo_MG_fnc_resultServer;
         } else {
             if (_offerSide == _side) then {
-                _table setVariable ["Waldo_MG_ChessDrawOfferSide", 0, true];
-                _table setVariable ["Waldo_MG_ChessStatus", format ["%1 withdrew the draw offer.", name _unit], true];
+                [_table, "Waldo_MG_ChessDrawOfferSide", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+                [_table, "Waldo_MG_ChessStatus", format ["%1 withdrew the draw offer.", name _unit]] call Waldo_MG_fnc_setPublicTableStateServer;
                 [_table] call Waldo_MG_fnc_chessPublishRevisionServer;
                 [_unit, _token, "Draw offer withdrawn."] call Waldo_MG_fnc_resultServer;
             } else {

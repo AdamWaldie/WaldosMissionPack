@@ -3,6 +3,10 @@
  * Process purchase request.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
+ * Locality / Authority: Server authority only; retains existing catalogue, side, range, cost, delivery
+ * and transaction behaviour.
+ * Repeat / JIP Behaviour: Existing bounded request-token history rejects duplicate purchases. Requests
+ * are transient and not JIP state; legacy mailbox cleanup runs only if a value exists.
  *
  * Arguments:
  * 0: _holder <OBJECT> - holder (optional, default: objNull)
@@ -11,6 +15,8 @@
  * Return Value:
  * Nothing
  *
+ * Current Callers: Waldo_fnc_EcoCore_submitRequestServer and the documented legacy processor API.
+ *
  * Example:
  * [_holder, _request] call Waldo_fnc_EcoBuy_processPurchaseRequest;
  */
@@ -18,31 +24,36 @@
         params [["_holder", objNull], ["_request", []]];
 
         if (isNull _holder) exitWith {};
+        private _clearLegacyRequest = {
+            if !((_holder getVariable ["WaldoEcoBuy_PurchaseRequest", []]) isEqualTo []) then {
+                _holder setVariable ["WaldoEcoBuy_PurchaseRequest", [], true];
+            };
+        };
         if !(_request isEqualType []) exitWith {
-            _holder setVariable ["WaldoEcoBuy_PurchaseRequest", [], true];
+            call _clearLegacyRequest;
         };
         if ((count _request) < 5) exitWith {
-            _holder setVariable ["WaldoEcoBuy_PurchaseRequest", [], true];
+            call _clearLegacyRequest;
         };
 
         private _requestId = _request param [4, ""];
         if (_requestId isEqualTo "") exitWith {
-            _holder setVariable ["WaldoEcoBuy_PurchaseRequest", [], true];
+            call _clearLegacyRequest;
         };
 
         private _handled = missionNamespace getVariable ["WaldoEcoBuy_PurchaseRequestsHandled", []];
         if !(_handled isEqualType []) then {_handled = [];};
         if (_requestId in _handled) exitWith {
-            _holder setVariable ["WaldoEcoBuy_PurchaseRequest", [], true];
+            call _clearLegacyRequest;
         };
 
         _handled pushBack _requestId;
         while {(count _handled) > 64} do {
             _handled deleteAt 0;
         };
-        missionNamespace setVariable ["WaldoEcoBuy_PurchaseRequestsHandled", _handled, true];
+        missionNamespace setVariable ["WaldoEcoBuy_PurchaseRequestsHandled", _handled];
 
-        _holder setVariable ["WaldoEcoBuy_PurchaseRequest", [], true];
+        call _clearLegacyRequest;
 
         private _sideKey = _request param [0, "NONE"];
         private _purchaseName = _request param [1, ""];

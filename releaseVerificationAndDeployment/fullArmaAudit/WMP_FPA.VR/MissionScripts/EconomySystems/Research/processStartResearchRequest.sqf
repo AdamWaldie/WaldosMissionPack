@@ -3,6 +3,10 @@
  * Process start research request.
  *
  * Part of the Waldos Economy Systems suite (Research system).
+ * Locality / Authority: Server authority only; preserves current side, catalogue, prerequisite, cost
+ * and active-job validation before mutating research state.
+ * Repeat / JIP Behaviour: Existing bounded request-token history rejects duplicates. Direct requests
+ * are transient and legacy mailbox cleanup occurs only when a value is present.
  *
  * Arguments:
  * 0: _holder <OBJECT> - holder (optional, default: objNull)
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Waldo_fnc_EcoCore_submitRequestServer and the documented legacy processor API.
  *
  * Example:
  * [_holder, _request] call Waldo_fnc_EcoResearch_processStartResearchRequest;
@@ -27,7 +33,9 @@
         private _handled = missionNamespace getVariable ["WaldoEcoResearch_StartResearchRequestsHandled", []];
         if !(_handled isEqualType []) then {_handled = [];};
         if (_requestId in _handled) exitWith {
-            _holder setVariable ["WaldoEcoResearch_StartResearchRequest", [], true];
+            if !((_holder getVariable ["WaldoEcoResearch_StartResearchRequest", []]) isEqualTo []) then {
+                _holder setVariable ["WaldoEcoResearch_StartResearchRequest", [], true];
+            };
         };
 
         _handled pushBack _requestId;
@@ -36,7 +44,9 @@
         };
         missionNamespace setVariable ["WaldoEcoResearch_StartResearchRequestsHandled", _handled];
 
-        _holder setVariable ["WaldoEcoResearch_StartResearchRequest", [], true];
+        if !((_holder getVariable ["WaldoEcoResearch_StartResearchRequest", []]) isEqualTo []) then {
+            _holder setVariable ["WaldoEcoResearch_StartResearchRequest", [], true];
+        };
 
         private _sideKey = _request param [0, "NONE"];
         private _researchName = _request param [1, ""];

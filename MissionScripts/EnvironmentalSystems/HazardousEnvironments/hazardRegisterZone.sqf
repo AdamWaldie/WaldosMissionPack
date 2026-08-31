@@ -3,11 +3,12 @@
  * Registers or replaces a named hazardous-environment zone.
  * Profiles are hash maps so mission makers can extend them without changing the API.
  *
- * The server/runtime path broadcasts definitions and replays them to JIP clients; pre-planned calls
- * may also run consistently on each client. Unauthorized client remote execution is rejected. This
- * is currently called by preset/emitter adapters, ZEN runtime creation and mission scripts.
- * Locality and authority: Server-authoritative. Direct client execution is rejected; approved ZEN
- * requests route through the server wrapper. Accepted changes are published for current/JIP clients.
+ * The server/runtime path broadcasts definitions and replays them to JIP clients. Eden init fields
+ * execute on every machine, so their expected non-server copies return false without logging; only
+ * the server copy registers the zone. Unauthorized client remote execution is rejected. This is
+ * currently called by preset/emitter adapters, ZEN runtime creation and mission scripts.
+ * Locality and authority: Server-authoritative. Approved ZEN requests route through the server
+ * wrapper. Accepted changes are published for current/JIP clients.
  *
  * Arguments:
  * 0: key <STRING> - stable unique zone name
@@ -37,10 +38,10 @@ params [
     ["_profile", createHashMap, [createHashMap]],
     ["_authorisedRuntime", false, [false]]
 ];
-if !(isServer) exitWith {
-    diag_log format ["[WMP HAZARD] Zone '%1' rejected locally: shared zones must be registered by initServer.sqf or the ZEN module.", _key];
-    false
-};
+// Eden object init fields execute on every machine. The server copy performs the authoritative
+// registration; expected client copies are silent no-ops rather than one misleading rejection per
+// zone and joining client.
+if !(isServer) exitWith {false};
 if (remoteExecutedOwner > 0 && {remoteExecutedOwner != 2} && {!_authorisedRuntime}) exitWith {false};
 if (_key == "") exitWith {false};
 if (_area isEqualType objNull && {isNull _area}) exitWith {false};

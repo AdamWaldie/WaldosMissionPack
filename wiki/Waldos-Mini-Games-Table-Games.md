@@ -103,9 +103,9 @@ Hold'em rules and betting behaviour are unchanged. Its revised screen groups dea
 
 ## State privacy, spectators and departures
 
-All action requests carry a unique token plus the table game ID and current hand/round epoch. The server rejects duplicates, stale epochs, malformed values and out-of-turn actions before changing state. Shared table variables contain only public snapshots. Draw Poker hands, Hold'em hands and Liar's Dice rolls are stored server-side and copied only to an owner-targeted player variable. Spectators never receive those private payloads.
+All action requests carry a unique token plus the table game ID and current hand/round epoch. The server rejects duplicates, stale epochs, malformed values and out-of-turn actions before changing state. Shared table variables contain only public game state. Each existing action, timer and transition is delivered immediately through Arma's native owner-targeted variable transport to seated players and spectators currently viewing that table; it is not broadcast to unrelated clients or retained as complete game state for JIP. Draw Poker hands, Hold'em hands and Liar's Dice rolls are stored server-side and copied only to an owner-targeted player variable. Spectators never receive those private payloads.
 
-Late joiners receive registered-table metadata and request the current permitted snapshot when they interact or resume a seat. No executable script is sent through JIP. Seating remains locked to the table roster during a game. If a player departs one of the fixed-roster games, the server safely clears that match and returns the remaining seats to the lobby. Table deletion and reset clear private payloads and game state.
+Late joiners receive compact registered-table metadata and phase summary. Choosing **Spectate Game** subscribes that player, applies one targeted current public-state snapshot, opens the display only after the snapshot is present, and then keeps every live transition flowing at the existing cadence. Closing the spectator view unsubscribes it. No executable script or complete game state is sent through JIP. Seating remains locked to the table roster during a game. If a player departs one of the fixed-roster games, the server safely clears that match and returns the remaining seats to the lobby. Table deletion and reset clear private payloads and game state.
 
 ## New-game tuning constants
 
@@ -133,6 +133,7 @@ Per-game rules constants live in `MissionScripts\MiniGames\engine\config.sqf` as
 
 * `Waldo_fnc_MiniGamesRegisterTable` is the sole activation path. The first registration lazily loads server rules, interface UI, or the small headless-client locality role as appropriate.
 * The **server** validates direct, tokenised requests and drains a per-table queue only while work exists. Idle tables have no authority poller or recurring discovery.
+* Public game-state changes use Arma's native recipient arrays for seated owners and explicitly subscribed spectator owners. The globally persistent state is limited to table discovery, lobby and phase summary values.
 * Movement, animation, invulnerability, camera and presentation execute on the player owner. Table-local commands execute where the table is local, including after headless-client or curator locality changes.
 * No `description.ext` changes are required — every screen is built at runtime from vanilla controls.
 

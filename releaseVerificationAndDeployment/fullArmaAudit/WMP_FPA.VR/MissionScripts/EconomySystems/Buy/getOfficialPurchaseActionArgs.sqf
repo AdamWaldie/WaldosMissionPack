@@ -3,6 +3,10 @@
  * Get official purchase action args.
  *
  * Part of the Waldos Economy Systems suite (Buy system).
+ * Locality / Authority: The catalogue UI runs on the interface client; purchase requests route once
+ * to the server and retain the existing authoritative validation and transaction path.
+ * Repeat / JIP Behaviour: Safe to regenerate during terminal action repair/JIP reconciliation; each
+ * purchase interaction creates its existing unique request token.
  *
  * Arguments:
  * 0: _target <ANY> - target
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Any - see function body
+ *
+ * Current Callers: Economy purchase-terminal action reconciliation.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoBuy_getOfficialPurchaseActionArgs;
@@ -526,11 +532,11 @@
                     if (_uid == "") then {_uid = name _actor;};
                     private _requestId = format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)];
 
-                    _terminal setVariable [
-                        "WaldoEcoBuy_PurchaseRequest",
-                        [_sideKey, _purchaseName, getPosATL _actor, netId _actor, _requestId],
-                        true
-                    ];
+                    [
+                        "PURCHASE",
+                        _terminal,
+                        [_sideKey, _purchaseName, getPosATL _actor, netId _actor, _requestId]
+                    ] call Waldo_fnc_EcoCore_submitRequestServer;
 
                     ["Purchase request sent.", 5] call Waldo_fnc_EcoCore_notifyActorLocal;
                     [_display] spawn {

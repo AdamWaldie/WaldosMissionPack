@@ -5,7 +5,7 @@
  * ACE clients receive a Field Resupply category containing the refill interaction; non-ACE
  * clients receive a scroll-wheel fallback.
  * Both are visible only to assigned carriers wearing a backpack; the server independently validates
- * range, side, stock and carrier capacity. Object-keyed JIP publication calls this function for
+ * range, side, stock and carrier capacity. Lifetime-bound JIP publication calls this function for
  * late joiners without duplicating actions already installed on that client.
  *
  * Arguments:
@@ -17,7 +17,7 @@
  * Example:
  * [_hub] remoteExecCall ["Waldo_fnc_FieldResupplySetupHubLocal", -2, "FieldHub_Main"];
  *
- * Current caller: FieldResupplyRegisterHub through an object-keyed JIP remote call.
+ * Current caller: FieldResupplyRegisterHub through a hub-lifetime-bound JIP remote call.
  * Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Optional-Feature-Extensions#field-resupply
  */
 

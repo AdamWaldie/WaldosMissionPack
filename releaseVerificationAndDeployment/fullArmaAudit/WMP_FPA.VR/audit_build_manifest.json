@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "suite": "all",
-  "mode": "manual",
+  "mode": "automated",
   "packVersion": "4.8.4",
   "releaseEntries": [
     "MissionScripts",

@@ -227,7 +227,8 @@ _profile set ["markerEnabled", true];
 ## Tree felling
 
 Arma 3 does not include a vanilla hand-held axe. You need an axe or hatchet weapon from a mod or
-your own mission content. The quickest working setup is:
+your own mission content. Tree Felling always ships disabled: no action, IMS processing, target work
+or strike traffic is installed until a mission explicitly enables it. The quickest working setup is:
 
 1. Open `MissionConfig/environmentConfig.sqf`.
 2. Change `Waldo_TreeFelling_Enable` from `false` to `true`.
@@ -250,7 +251,11 @@ as `[["Land_WoodenLog_F", 2]]`. A positive `RegrowSeconds` restores the original
 current mission; `-1` or `0` disables regrowth.
 
 Start and stop the automatic client action with `Waldo_fnc_TreeFellingInit` and
-`Waldo_fnc_TreeFellingStop`. Tree felling intentionally has no ZEN module.
+`Waldo_fnc_TreeFellingStop`. The contextual action caches the model classification for the current
+cursor target, non-target IMS swings return before notifications or network calls, and hit counters
+remain server-private. Optional regrowth uses a one-shot CBA callback rather than one sleeping script
+per felled tree. Runtime disable also gates the server endpoint and clears each client's target cache.
+Tree felling intentionally has no dedicated ZEN module.
 
 ## Emergency dismount
 

@@ -89,16 +89,8 @@ Waldo_MG_fnc_blackjackCreateEmptySnapshot = {
 Waldo_MG_fnc_blackjackPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable [
-        "Waldo_MG_BlackjackRevision",
-        (_table getVariable ["Waldo_MG_BlackjackRevision", 0]) + 1,
-        true
-    ];
-    _table setVariable [
-        "Waldo_MG_TableRevision",
-        (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1,
-        true
-    ];
+    [_table, "Waldo_MG_BlackjackRevision", (_table getVariable ["Waldo_MG_BlackjackRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_blackjackSetSnapshotServer = {
@@ -108,25 +100,25 @@ Waldo_MG_fnc_blackjackSetSnapshotServer = {
     ];
     if (!isServer || {isNull _table} || {(typeName _snapshot) != "ARRAY"}) exitWith {};
     _table setVariable ["Waldo_MG_BlackjackSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_BlackjackSnapshot", _snapshot, true];
+    [_table, "Waldo_MG_BlackjackSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_blackjackPublishRevisionServer;
 };
 
 Waldo_MG_fnc_blackjackClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_BlackjackActive", false, true];
-    _table setVariable ["Waldo_MG_BlackjackFinished", false, true];
-    _table setVariable ["Waldo_MG_BlackjackGameId", "", true];
-    _table setVariable ["Waldo_MG_BlackjackPlayers", [], true];
-    _table setVariable ["Waldo_MG_BlackjackPlayerNames", [], true];
-    _table setVariable ["Waldo_MG_BlackjackSeatIndices", [], true];
-    _table setVariable ["Waldo_MG_BlackjackEpoch", 0, true];
-    _table setVariable ["Waldo_MG_BlackjackDealerNextAt", 0, true];
+    [_table, "Waldo_MG_BlackjackActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackPlayers", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackPlayerNames", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackSeatIndices", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackEpoch", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackDealerNextAt", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_BlackjackShoeServer", []];
     _table setVariable ["Waldo_MG_BlackjackDealerHandServer", []];
     _table setVariable ["Waldo_MG_BlackjackSnapshotServer", [] call Waldo_MG_fnc_blackjackCreateEmptySnapshot];
-    _table setVariable ["Waldo_MG_BlackjackSnapshot", [] call Waldo_MG_fnc_blackjackCreateEmptySnapshot, true];
+    [_table, "Waldo_MG_BlackjackSnapshot", [] call Waldo_MG_fnc_blackjackCreateEmptySnapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_blackjackPublishRevisionServer;
 };
 
@@ -224,8 +216,8 @@ Waldo_MG_fnc_blackjackPrepareBettingServer = {
         _state set [8, _actions];
         _state set [13, "No seated player has enough chips for the minimum bet. The dealer wins the session."];
         _state set [15, _nextReady];
-        _table setVariable ["Waldo_MG_BlackjackFinished", true, true];
-        _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+        [_table, "Waldo_MG_BlackjackFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
         [_table, _state] call Waldo_MG_fnc_blackjackSetSnapshotServer;
         false
     };
@@ -248,8 +240,8 @@ Waldo_MG_fnc_blackjackPrepareBettingServer = {
     _state set [15, _nextReady];
     _state set [16, count (_table getVariable ["Waldo_MG_BlackjackShoeServer", []])];
     _table setVariable ["Waldo_MG_BlackjackDealerHandServer", []];
-    _table setVariable ["Waldo_MG_BlackjackDealerNextAt", 0, true];
-    _table setVariable ["Waldo_MG_BlackjackEpoch", (_table getVariable ["Waldo_MG_BlackjackEpoch", 0]) + 1, true];
+    [_table, "Waldo_MG_BlackjackDealerNextAt", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackEpoch", (_table getVariable ["Waldo_MG_BlackjackEpoch", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table, _state] call Waldo_MG_fnc_blackjackSetSnapshotServer;
     true
 };
@@ -284,22 +276,18 @@ Waldo_MG_fnc_blackjackStartServer = {
     _state set [13, "Round 1: every active player must place an even bet."];
     private _shoe = call Waldo_MG_fnc_blackjackCreateShoeServer;
     _state set [16, count _shoe];
-    _table setVariable ["Waldo_MG_BlackjackActive", true, true];
-    _table setVariable ["Waldo_MG_BlackjackFinished", false, true];
-    _table setVariable [
-        "Waldo_MG_BlackjackGameId",
-        format ["Waldo_MG_BLACKJACK_%1_%2", floor (serverTime * 10), floor (random 1000000)],
-        true
-    ];
-    _table setVariable ["Waldo_MG_BlackjackPlayers", _players, true];
-    _table setVariable ["Waldo_MG_BlackjackPlayerNames", _names, true];
-    _table setVariable ["Waldo_MG_BlackjackSeatIndices", _seatIndices, true];
-    _table setVariable ["Waldo_MG_BlackjackEpoch", 1, true];
-    _table setVariable ["Waldo_MG_BlackjackDealerNextAt", 0, true];
+    [_table, "Waldo_MG_BlackjackActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackGameId", format ["Waldo_MG_BLACKJACK_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackPlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackPlayerNames", _names] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackEpoch", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_BlackjackDealerNextAt", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_BlackjackShoeServer", _shoe];
     _table setVariable ["Waldo_MG_BlackjackDealerHandServer", []];
     _table setVariable ["Waldo_MG_BlackjackSnapshotServer", _state];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table, _state] call Waldo_MG_fnc_blackjackSetSnapshotServer;
     true
 };
@@ -393,8 +381,8 @@ Waldo_MG_fnc_blackjackSettleRoundServer = {
     if (_playableRemaining <= 0) then {
         _phase = "SESSION_END";
         _statusText = format ["%1 No seated player can cover the minimum bet; the session is over.", _dealerDescription];
-        _table setVariable ["Waldo_MG_BlackjackFinished", true, true];
-        _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+        [_table, "Waldo_MG_BlackjackFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     };
     _state set [0, _phase];
     _state set [2, -1];
@@ -409,7 +397,7 @@ Waldo_MG_fnc_blackjackSettleRoundServer = {
     _state set [14, _results];
     _state set [15, _nextReady];
     _state set [16, count (_table getVariable ["Waldo_MG_BlackjackShoeServer", []])];
-    _table setVariable ["Waldo_MG_BlackjackDealerNextAt", 0, true];
+    [_table, "Waldo_MG_BlackjackDealerNextAt", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table, _state] call Waldo_MG_fnc_blackjackSetSnapshotServer;
 };
 
@@ -437,7 +425,7 @@ Waldo_MG_fnc_blackjackBeginDealerServer = {
     _state set [11, _dealerValue param [1, false]];
     _state set [12, false];
     _state set [13, format ["Dealer reveals %1 and will draw to 17.", _dealerValue param [0, 0]]];
-    _table setVariable ["Waldo_MG_BlackjackDealerNextAt", serverTime + Waldo_MG_CFG_BLACKJACK_DEALER_STEP_SECONDS, true];
+    [_table, "Waldo_MG_BlackjackDealerNextAt", serverTime + Waldo_MG_CFG_BLACKJACK_DEALER_STEP_SECONDS] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table, _state] call Waldo_MG_fnc_blackjackSetSnapshotServer;
 };
 
@@ -573,7 +561,7 @@ Waldo_MG_fnc_blackjackProgressServer = {
     _state set [12, false];
     _state set [13, format ["Dealer draws %1 and now has %2.", [_card] call Waldo_MG_fnc_pokerCardName, _dealerTotal]];
     _state set [16, count _shoe];
-    _table setVariable ["Waldo_MG_BlackjackDealerNextAt", serverTime + Waldo_MG_CFG_BLACKJACK_DEALER_STEP_SECONDS, true];
+    [_table, "Waldo_MG_BlackjackDealerNextAt", serverTime + Waldo_MG_CFG_BLACKJACK_DEALER_STEP_SECONDS] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table, _state] call Waldo_MG_fnc_blackjackSetSnapshotServer;
 };
 
@@ -581,7 +569,7 @@ Waldo_MG_fnc_blackjackResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_blackjackClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 };
 
@@ -615,8 +603,8 @@ Waldo_MG_fnc_blackjackHandleDepartureServer = {
     private _remaining = {_x != "LEFT"} count _statuses;
     if (_remaining <= 0) exitWith {
         [_table] call Waldo_MG_fnc_blackjackClearServer;
-        _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-        _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+        [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
     };
     if (_phase == "PLAYER_TURNS" && {_actor == _role}) exitWith {
         [_table, _state, _role] call Waldo_MG_fnc_blackjackAdvanceAfterActionServer;

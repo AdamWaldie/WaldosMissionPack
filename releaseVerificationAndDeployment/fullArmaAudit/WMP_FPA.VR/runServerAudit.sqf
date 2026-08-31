@@ -53,7 +53,7 @@ if (_suite in ["all", "core"]) then {
         private _branch = _definitions getOrDefault ["QA_BRANCH", createHashMap];
         private _branchNodes = _branch getOrDefault ["nodes", createHashMap];
         private _choices = (_branchNodes getOrDefault ["START", createHashMap]) getOrDefault ["choices", []];
-        ["core/dialogue/advanced-linear-branching", count _linear > 0 && {count _branchNodes == 3} && {count _choices == 3}, [count _linear, count _branchNodes, count _choices]] call Waldo_QA_fnc_assert;
+        ["core/dialogue/advanced-linear-branching", count _linear > 0 && {count _branchNodes == 5} && {count _choices == 3}, [count _linear, count _branchNodes, count _choices]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
     ["core/fixtures/zeus-mhq", {
@@ -360,6 +360,9 @@ if (_suite in ["all", "party"]) then {
         {
             private _gameId = _x;
             private _group = createGroup [west, true];
+            // Keep the synthetic leave actor on server owner 2 even when an HC or locality mod is
+            // present. Its acknowledgement is test evidence and must never reach the playable client.
+            _group setGroupOwner 2;
             private _unit = _group createUnit ["B_Soldier_F", [0, 115 + (_forEachIndex * 4), 0], [], 0, "NONE"];
             private _table = createVehicle ["Land_CampingTable_F", [4, 115 + (_forEachIndex * 4), 0], [], 0, "CAN_COLLIDE"];
             [_table, createHashMapFromArray [["displayName", "QA leave route"], ["games", [_gameId]]]] call Waldo_fnc_MiniGamesRegisterTable;
@@ -390,12 +393,12 @@ if (_suite in ["all", "party"]) then {
             private _seatCleared = isNull (_unit getVariable ["Waldo_MG_SeatedTable", objNull]);
             private _rosterCleared = isNull (((_table getVariable ["Waldo_MG_TableSeats", []]) param [0, objNull]));
             private _gameCleared = !([_table] call Waldo_MG_fnc_isTableGameActive);
-            _outcomes pushBack [_gameId, _seatCleared, _rosterCleared, _gameCleared];
+            _outcomes pushBack [_gameId, _seatCleared, _rosterCleared, _gameCleared, owner _unit == 2];
             deleteVehicle _unit;
             deleteVehicle _table;
             deleteGroup _group;
         } forEach ["drawpoker", "liarsdice", "connectfour"];
-        private _failed = _outcomes select {!((_x select 1) && {(_x select 2)} && {(_x select 3)})};
+        private _failed = _outcomes select {!((_x select 1) && {(_x select 2)} && {(_x select 3)} && {(_x select 4)})};
         ["party/authority/leave-active-new-games", _failed isEqualTo [], _outcomes] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 };
@@ -424,7 +427,10 @@ if (_suite in ["all", "interactions"]) then {
 
 if (_suite in ["all", "economy"]) then {
     ["economy/resource/full-crate-consumed", {
-        private _actor = allPlayers param [0, objNull];
+        // Use a server-owned QA actor so the production notification endpoint is still exercised
+        // without presenting an automated transaction to the player as a mission-start event.
+        private _actorGroup = createGroup [west, true];
+        private _actor = _actorGroup createUnit ["B_Soldier_F", [0, 92, 0], [], 0, "NONE"];
         private _before = ["WEST", "Money"] call Waldo_fnc_EcoResource_getSideResourceAmount;
         private _crate = createVehicle ["Land_PlasticCase_01_medium_F", [0, 90, 0], [], 0, "CAN_COLLIDE"];
         _crate setVariable ["WaldoEcoResource_IsResourceCrate", true, true];
@@ -437,6 +443,8 @@ if (_suite in ["all", "economy"]) then {
         ["WEST", "Money", _before, "QA RESTORE"] call Waldo_fnc_EcoResource_setSideResourceAmount;
         ["economy/resource/full-crate-consumed", !isNull _actor && {_deleted}, [!isNull _actor, _deleted]] call Waldo_QA_fnc_assert;
         if (!isNull _crate) then {deleteVehicle _crate;};
+        deleteVehicle _actor;
+        deleteGroup _actorGroup;
     }] call Waldo_QA_fnc_case;
 };
 

@@ -1,8 +1,19 @@
 /*
- * Register a live economy object in a typed, JIP-safe runtime registry.
- * Arguments: [object, key]
- * Keys used by the built-in systems are CRATES, RESEARCH_CENTERS,
- * CONSTRUCTION_VEHICLES, PURCHASE_TERMINALS and BUILDINGS.
+ * Author: WaldoTheWarfighter
+ * Registers a live Economy object in a typed, JIP-safe runtime registry.
+ *
+ * Locality/authority: server only. Registry membership/revision are public authoritative state;
+ * a listen server requests its local action refresh directly because publication does not replay to
+ * the publishing machine. Repeat/JIP behaviour: repeat-safe; deletion unregisters every bound key.
+ *
+ * Arguments:
+ * 0: _object <OBJECT> - Economy runtime object (default: objNull)
+ * 1: _key <STRING> - CRATES, RESEARCH_CENTERS, CONSTRUCTION_VEHICLES,
+ *                    PURCHASE_TERMINALS or BUILDINGS (default: "")
+ *
+ * Return Value: BOOL - true only when the object was newly added.
+ * Current callers: Economy creation/registration functions and recovery discovery.
+ * Example: [_crate, "CRATES"] call Waldo_fnc_EcoCore_registerRuntimeObject;
  */
 params [["_object", objNull], ["_key", ""]];
 if (!isServer || {isNull _object} || {_key == ""}) exitWith {false};
@@ -19,6 +30,9 @@ if (_added || {(count _clean) != (count _objects)}) then {
         (missionNamespace getVariable ["WaldoEcoCore_RuntimeRegistryRevision", 0]) + 1,
         true
     ];
+    if (hasInterface) then {
+        [] call Waldo_fnc_EcoCore_requestLocalWorldActionRefresh;
+    };
 };
 
 private _registeredKeys = +(_object getVariable ["WaldoEcoCore_RuntimeRegistryKeys", []]);

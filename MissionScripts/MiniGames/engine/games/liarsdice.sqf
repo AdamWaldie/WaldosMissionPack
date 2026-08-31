@@ -14,8 +14,8 @@
 Waldo_MG_fnc_liarsDicePublishServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_LiarsDiceRevision", (_table getVariable ["Waldo_MG_LiarsDiceRevision", 0]) + 1, true];
-    _table setVariable ["Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1, true];
+    [_table, "Waldo_MG_LiarsDiceRevision", (_table getVariable ["Waldo_MG_LiarsDiceRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_liarsDiceSendPrivateServer = {
@@ -48,15 +48,15 @@ Waldo_MG_fnc_liarsDiceRollRoundServer = {
         if ((_counts param [_candidate, 0]) > 0) exitWith {_next = _candidate;};
     };
     _table setVariable ["Waldo_MG_LiarsDiceDiceServer", _dice, false];
-    _table setVariable ["Waldo_MG_LiarsDicePublicReveal", [], true];
-    _table setVariable ["Waldo_MG_LiarsDiceBid", [0, 0], true];
-    _table setVariable ["Waldo_MG_LiarsDiceBidder", -1, true];
-    _table setVariable ["Waldo_MG_LiarsDiceTurn", _next, true];
-    _table setVariable ["Waldo_MG_LiarsDicePhase", "BIDDING", true];
-    _table setVariable ["Waldo_MG_LiarsDiceRevealUntil", -1, true];
-    _table setVariable ["Waldo_MG_LiarsDiceEpoch", (_table getVariable ["Waldo_MG_LiarsDiceEpoch", 0]) + 1, true];
+    [_table, "Waldo_MG_LiarsDicePublicReveal", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceBid", [0, 0]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceBidder", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceTurn", _next] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDicePhase", "BIDDING"] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceRevealUntil", -1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceEpoch", (_table getVariable ["Waldo_MG_LiarsDiceEpoch", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
     private _names = _table getVariable ["Waldo_MG_LiarsDicePlayerNames", []];
-    _table setVariable ["Waldo_MG_LiarsDiceStatus", format ["%1 opens the round. Set a legal quantity and face, then BID.", _names param [_next, "Player"]], true];
+    [_table, "Waldo_MG_LiarsDiceStatus", format ["%1 opens the round. Set a legal quantity and face, then BID.", _names param [_next, "Player"]]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_liarsDiceSendPrivateServer;
     [_table] call Waldo_MG_fnc_liarsDicePublishServer;
 };
@@ -67,17 +67,17 @@ Waldo_MG_fnc_liarsDiceClearServer = {
     {
         if (!isNull _x) then {_x setVariable ["Waldo_MG_LiarsDicePrivateDice", [], owner _x];};
     } forEach (_table getVariable ["Waldo_MG_LiarsDicePlayers", []]);
-    _table setVariable ["Waldo_MG_LiarsDiceActive", false, true];
-    _table setVariable ["Waldo_MG_LiarsDiceFinished", false, true];
-    _table setVariable ["Waldo_MG_LiarsDiceGameId", "", true];
-    _table setVariable ["Waldo_MG_LiarsDicePlayers", [], true];
-    _table setVariable ["Waldo_MG_LiarsDicePlayerNames", [], true];
-    _table setVariable ["Waldo_MG_LiarsDiceSeatIndices", [], true];
-    _table setVariable ["Waldo_MG_LiarsDiceCounts", [], true];
+    [_table, "Waldo_MG_LiarsDiceActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDicePlayers", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDicePlayerNames", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceSeatIndices", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceCounts", []] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_LiarsDiceDiceServer", [], false];
-    _table setVariable ["Waldo_MG_LiarsDicePublicReveal", [], true];
-    _table setVariable ["Waldo_MG_LiarsDiceBid", [0,0], true];
-    _table setVariable ["Waldo_MG_LiarsDiceReady", [], true];
+    [_table, "Waldo_MG_LiarsDicePublicReveal", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceBid", [0,0]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceReady", []] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_liarsDicePublishServer;
 };
 
@@ -92,17 +92,17 @@ Waldo_MG_fnc_liarsDiceStartServer = {
     if ((count _players) < 2 || {(count _players) > 4}) exitWith {false};
     private _counts = []; private _ready = [];
     {_counts pushBack Waldo_MG_CFG_LIARSDICE_STARTING_DICE; _ready pushBack false;} forEach _players;
-    _table setVariable ["Waldo_MG_LiarsDiceActive", true, true];
-    _table setVariable ["Waldo_MG_LiarsDiceFinished", false, true];
-    _table setVariable ["Waldo_MG_LiarsDiceGameId", format ["Waldo_MG_LD_%1_%2", floor (serverTime * 10), floor random 1000000], true];
-    _table setVariable ["Waldo_MG_LiarsDicePlayers", _players, true];
-    _table setVariable ["Waldo_MG_LiarsDicePlayerNames", _players apply {name _x}, true];
-    _table setVariable ["Waldo_MG_LiarsDiceSeatIndices", _indices, true];
-    _table setVariable ["Waldo_MG_LiarsDiceCounts", _counts, true];
-    _table setVariable ["Waldo_MG_LiarsDiceReady", _ready, true];
-    _table setVariable ["Waldo_MG_LiarsDiceRound", 1, true];
-    _table setVariable ["Waldo_MG_LiarsDiceEpoch", 0, true];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    [_table, "Waldo_MG_LiarsDiceActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceGameId", format ["Waldo_MG_LD_%1_%2", floor (serverTime * 10), floor random 1000000]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDicePlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDicePlayerNames", _players apply {name _x}] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceSeatIndices", _indices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceCounts", _counts] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceReady", _ready] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceRound", 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceEpoch", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table, 0] call Waldo_MG_fnc_liarsDiceRollRoundServer;
     true
 };
@@ -139,13 +139,13 @@ Waldo_MG_fnc_liarsDiceProgressServer = {
     private _alive = []; {if (_x > 0) then {_alive pushBack _forEachIndex;};} forEach _counts;
     if ((count _alive) <= 1) then {
         private _winner = _alive param [0, -1];
-        _table setVariable ["Waldo_MG_LiarsDiceFinished", true, true];
-        _table setVariable ["Waldo_MG_LiarsDicePhase", "FINISHED", true];
-        _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
-        _table setVariable ["Waldo_MG_LiarsDiceStatus", format ["%1 is the last player with dice and wins the match.", (_table getVariable ["Waldo_MG_LiarsDicePlayerNames", []]) param [_winner, "Player"]], true];
+        [_table, "Waldo_MG_LiarsDiceFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_LiarsDicePhase", "FINISHED"] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
+        [_table, "Waldo_MG_LiarsDiceStatus", format ["%1 is the last player with dice and wins the match.", (_table getVariable ["Waldo_MG_LiarsDicePlayerNames", []]) param [_winner, "Player"]]] call Waldo_MG_fnc_setPublicTableStateServer;
         [_table] call Waldo_MG_fnc_liarsDicePublishServer;
     } else {
-        _table setVariable ["Waldo_MG_LiarsDiceRound", (_table getVariable ["Waldo_MG_LiarsDiceRound", 1]) + 1, true];
+        [_table, "Waldo_MG_LiarsDiceRound", (_table getVariable ["Waldo_MG_LiarsDiceRound", 1]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
         [_table, _loser] call Waldo_MG_fnc_liarsDiceRollRoundServer;
     };
 };
@@ -171,12 +171,12 @@ Waldo_MG_fnc_processLiarsDiceActionRequestServer = {
     if (_action == "READY") exitWith {
         if (_phase != "FINISHED") exitWith {[_unit,_token,"The match is still active."] call Waldo_MG_fnc_resultServer;};
         private _ready = +(_table getVariable ["Waldo_MG_LiarsDiceReady", []]); _ready set [_role, true];
-        _table setVariable ["Waldo_MG_LiarsDiceReady", _ready, true];
+        [_table, "Waldo_MG_LiarsDiceReady", _ready] call Waldo_MG_fnc_setPublicTableStateServer;
         private _all = true; {if (!(_ready param [_forEachIndex,false])) then {_all = false;};} forEach (_table getVariable ["Waldo_MG_LiarsDicePlayers", []]);
         if (_all) then {
             private _counts = []; {_counts pushBack Waldo_MG_CFG_LIARSDICE_STARTING_DICE;} forEach _ready;
-            _table setVariable ["Waldo_MG_LiarsDiceCounts", _counts, true]; _table setVariable ["Waldo_MG_LiarsDiceReady", _ready apply {false}, true];
-            _table setVariable ["Waldo_MG_LiarsDiceFinished", false, true]; _table setVariable ["Waldo_MG_LiarsDiceRound", 1, true]; _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+            [_table, "Waldo_MG_LiarsDiceCounts", _counts] call Waldo_MG_fnc_setPublicTableStateServer; [_table, "Waldo_MG_LiarsDiceReady", _ready apply {false}] call Waldo_MG_fnc_setPublicTableStateServer;
+            [_table, "Waldo_MG_LiarsDiceFinished", false] call Waldo_MG_fnc_setPublicTableStateServer; [_table, "Waldo_MG_LiarsDiceRound", 1] call Waldo_MG_fnc_setPublicTableStateServer; _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
             [_table, 0] call Waldo_MG_fnc_liarsDiceRollRoundServer;
         } else {[_table] call Waldo_MG_fnc_liarsDicePublishServer;};
         [_unit,_token,"Ready state recorded."] call Waldo_MG_fnc_resultServer;
@@ -190,19 +190,19 @@ Waldo_MG_fnc_processLiarsDiceActionRequestServer = {
         if (!_legal) exitWith {[_unit,_token,"Illegal bid: increase quantity, or keep quantity and increase face (2-6)."] call Waldo_MG_fnc_resultServer;};
         private _counts = _table getVariable ["Waldo_MG_LiarsDiceCounts", []]; private _next = _role;
         for "_scan" from 1 to (count _counts) do {private _candidate = (_role + _scan) mod (count _counts); if ((_counts param [_candidate,0]) > 0 && {_next == _role}) then {_next = _candidate;};};
-        _table setVariable ["Waldo_MG_LiarsDiceBid", [_quantity,_face], true]; _table setVariable ["Waldo_MG_LiarsDiceBidder", _role, true]; _table setVariable ["Waldo_MG_LiarsDiceTurn", _next, true];
-        _table setVariable ["Waldo_MG_LiarsDiceStatus", format ["%1 bids %2 x face %3. %4 must raise or challenge.", name _unit, _quantity, _face, (_table getVariable ["Waldo_MG_LiarsDicePlayerNames", []]) param [_next,"Player"]], true];
-        _table setVariable ["Waldo_MG_LiarsDiceEpoch", _epoch + 1, true]; [_table] call Waldo_MG_fnc_liarsDicePublishServer; [_unit,_token,"Bid accepted."] call Waldo_MG_fnc_resultServer;
+        [_table, "Waldo_MG_LiarsDiceBid", [_quantity,_face]] call Waldo_MG_fnc_setPublicTableStateServer; [_table, "Waldo_MG_LiarsDiceBidder", _role] call Waldo_MG_fnc_setPublicTableStateServer; [_table, "Waldo_MG_LiarsDiceTurn", _next] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_LiarsDiceStatus", format ["%1 bids %2 x face %3. %4 must raise or challenge.", name _unit, _quantity, _face, (_table getVariable ["Waldo_MG_LiarsDicePlayerNames", []]) param [_next,"Player"]]] call Waldo_MG_fnc_setPublicTableStateServer;
+        [_table, "Waldo_MG_LiarsDiceEpoch", _epoch + 1] call Waldo_MG_fnc_setPublicTableStateServer; [_table] call Waldo_MG_fnc_liarsDicePublishServer; [_unit,_token,"Bid accepted."] call Waldo_MG_fnc_resultServer;
     };
     if (_action != "CHALLENGE" || {(_bid param [0,0]) <= 0}) exitWith {[_unit,_token,"There is no valid bid to challenge."] call Waldo_MG_fnc_resultServer;};
     private _dice = _table getVariable ["Waldo_MG_LiarsDiceDiceServer", []]; private _matches = 0;
     {{if (_x == 1 || {_x == (_bid param [1,0])}) then {_matches = _matches + 1;};} forEach _x;} forEach _dice;
     private _bidder = _table getVariable ["Waldo_MG_LiarsDiceBidder", -1]; private _loser = if (_matches >= (_bid param [0,0])) then {_role} else {_bidder};
     private _counts = +(_table getVariable ["Waldo_MG_LiarsDiceCounts", []]); _counts set [_loser, ((_counts param [_loser,1]) - 1) max 0];
-    _table setVariable ["Waldo_MG_LiarsDiceCounts", _counts, true]; _table setVariable ["Waldo_MG_LiarsDicePublicReveal", _dice, true]; _table setVariable ["Waldo_MG_LiarsDiceRoundLoser", _loser, true];
-    _table setVariable ["Waldo_MG_LiarsDicePhase", "REVEAL", true]; _table setVariable ["Waldo_MG_LiarsDiceRevealUntil", serverTime + Waldo_MG_CFG_LIARSDICE_REVEAL_SECONDS, true];
-    private _names = _table getVariable ["Waldo_MG_LiarsDicePlayerNames", []]; _table setVariable ["Waldo_MG_LiarsDiceStatus", format ["CHALLENGE: %1 matching dice (ones wild). %2 loses one die.", _matches, _names param [_loser,"Player"]], true];
-    _table setVariable ["Waldo_MG_LiarsDiceEpoch", _epoch + 1, true]; [_table] call Waldo_MG_fnc_liarsDicePublishServer; [_unit,_token,"Challenge resolved; dice revealed."] call Waldo_MG_fnc_resultServer;
+    [_table, "Waldo_MG_LiarsDiceCounts", _counts] call Waldo_MG_fnc_setPublicTableStateServer; [_table, "Waldo_MG_LiarsDicePublicReveal", _dice] call Waldo_MG_fnc_setPublicTableStateServer; [_table, "Waldo_MG_LiarsDiceRoundLoser", _loser] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDicePhase", "REVEAL"] call Waldo_MG_fnc_setPublicTableStateServer; [_table, "Waldo_MG_LiarsDiceRevealUntil", serverTime + Waldo_MG_CFG_LIARSDICE_REVEAL_SECONDS] call Waldo_MG_fnc_setPublicTableStateServer;
+    private _names = _table getVariable ["Waldo_MG_LiarsDicePlayerNames", []]; [_table, "Waldo_MG_LiarsDiceStatus", format ["CHALLENGE: %1 matching dice (ones wild). %2 loses one die.", _matches, _names param [_loser,"Player"]]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_LiarsDiceEpoch", _epoch + 1] call Waldo_MG_fnc_setPublicTableStateServer; [_table] call Waldo_MG_fnc_liarsDicePublishServer; [_unit,_token,"Challenge resolved; dice revealed."] call Waldo_MG_fnc_resultServer;
 };
 
 Waldo_MG_fnc_submitLiarsDiceActionLocal = {

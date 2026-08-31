@@ -78,7 +78,10 @@ while {_completed && {_nodeId != ""} && {_transition < 256}} do {
         private _condition = _x getOrDefault ["condition", {true}];
         private _enabled = [_rootSpeaker, _caller, _context] call _condition;
         if (_enabled) then {_availableChoices pushBack _x};
-        _choiceDescriptors pushBack [_x getOrDefault ["id", ""], _x getOrDefault ["label", "Response"], _enabled];
+        private _destinationId = toUpperANSI (_x getOrDefault ["next", ""]);
+        private _destination = _nodes getOrDefault [_destinationId, createHashMap];
+        private _branchesToChoices = _destinationId != "" && {count (_destination getOrDefault ["choices", []]) > 0};
+        _choiceDescriptors pushBack [_x getOrDefault ["id", ""], _x getOrDefault ["label", "Response"], _enabled, _branchesToChoices];
     } forEach _nodeChoices;
     if (count _availableChoices == 0) then {
         _nodeId = toUpperANSI (_node getOrDefault ["next", ""]);
