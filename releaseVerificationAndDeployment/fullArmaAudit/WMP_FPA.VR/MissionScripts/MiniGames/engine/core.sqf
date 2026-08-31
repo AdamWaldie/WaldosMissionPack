@@ -465,18 +465,26 @@ Waldo_MG_fnc_markTableServer = {
         _table setVariable ["Waldo_MG_TableRequiredVotes", 1, true];
         _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
         _table setVariable ["Waldo_MG_TableRevision", 0, true];
-        [_table] call Waldo_MG_fnc_battleshipClearServer;
-        [_table] call Waldo_MG_fnc_whosWhoClearServer;
-        [_table] call Waldo_MG_fnc_shotgunClearServer;
-        [_table] call Waldo_MG_fnc_checkersClearServer;
-        [_table] call Waldo_MG_fnc_rpsClearServer;
-        [_table] call Waldo_MG_fnc_blackjackClearServer;
-        [_table] call Waldo_MG_fnc_chessClearServer;
-        [_table] call Waldo_MG_fnc_pokerClearServer;
-        [_table] call Waldo_MG_fnc_drawPokerClearServer;
-        [_table] call Waldo_MG_fnc_liarsDiceClearServer;
-        [_table] call Waldo_MG_fnc_connectFourClearServer;
-        [_table] call Waldo_MG_fnc_unoClearServer;
+        // Arma replicates the custom table variables written by each clear function, but it cannot
+        // infer which game catalogue this WMP table enables. Initialise only enabled games so a
+        // chess-only table does not publish eleven unrelated empty game states. The default
+        // registration expands to all twelve ids and therefore retains the full existing path.
+        {
+            switch (_x) do {
+                case "battleship": {[_table] call Waldo_MG_fnc_battleshipClearServer;};
+                case "whoswho": {[_table] call Waldo_MG_fnc_whosWhoClearServer;};
+                case "shotgun": {[_table] call Waldo_MG_fnc_shotgunClearServer;};
+                case "checkers": {[_table] call Waldo_MG_fnc_checkersClearServer;};
+                case "rps": {[_table] call Waldo_MG_fnc_rpsClearServer;};
+                case "blackjack": {[_table] call Waldo_MG_fnc_blackjackClearServer;};
+                case "chess": {[_table] call Waldo_MG_fnc_chessClearServer;};
+                case "poker": {[_table] call Waldo_MG_fnc_pokerClearServer;};
+                case "drawpoker": {[_table] call Waldo_MG_fnc_drawPokerClearServer;};
+                case "liarsdice": {[_table] call Waldo_MG_fnc_liarsDiceClearServer;};
+                case "connectfour": {[_table] call Waldo_MG_fnc_connectFourClearServer;};
+                case "uno": {[_table] call Waldo_MG_fnc_unoClearServer;};
+            };
+        } forEach (_table getVariable ["Waldo_MG_TableGames", []]);
         [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
     };
 

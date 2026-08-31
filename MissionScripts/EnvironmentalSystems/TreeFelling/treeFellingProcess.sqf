@@ -3,6 +3,11 @@
  * Server-authoritatively accumulates tree hits and creates a reusable fallen-tree object.
  * Locality and authority: Server-only target mutation. Player clients request it through the
  * registered remote call; owner, range, cooldown, tool and target checks are repeated on the server.
+ * ACE dragging/carrying remains interface-local and is replayed for JIP with the fallen object as
+ * the JIP key. Arma therefore removes that replay automatically when the object is deleted; WMP
+ * does not maintain a parallel lifetime registry or transmit executable source code.
+ * Repeat/JIP behaviour: strikes are cooldown-gated and the drag/carry setup is repeat-safe in ACE.
+ * Each fallen object's JIP side effect exists only for that object's engine-managed lifetime.
  *
  * Arguments:
  * 0: unit <OBJECT> - requesting player
@@ -112,9 +117,9 @@ if (count _validClasses > 0) then {
     _fallen setDir _fallenDirection;
     _fallen setVariable ["Waldo_TreeFelling_SourceModel", _model, true];
     if (isClass (configFile >> "CfgPatches" >> "ace_dragging")) then {
-        [_fallen, true, [0, 2, 0], 90] remoteExecCall ["ace_dragging_fnc_setDraggable", 0, true];
+        [_fallen, true, [0, 2, 0], 90] remoteExecCall ["ace_dragging_fnc_setDraggable", 0, _fallen];
         if (_height < 8) then {
-            [_fallen, true, [0, 1, 0], 0] remoteExecCall ["ace_dragging_fnc_setCarryable", 0, true];
+            [_fallen, true, [0, 1, 0], 0] remoteExecCall ["ace_dragging_fnc_setCarryable", 0, _fallen];
         };
     };
 };

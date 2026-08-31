@@ -6,6 +6,21 @@ _Associated Files: `releaseVerificationAndDeployment/performance_audit.py`, `per
 
 This audit protects WaldosMissionPack from accidental scheduler, world-scan, UI-redraw and network regressions. It is based on static SQF evidence: it counts opportunities for expensive work, but it does **not** claim measured FPS, bandwidth or dedicated-server timing improvements. Those measurements require an in-engine multiplayer test.
 
+## Engine and WMP boundary
+
+Every optimisation must first identify which side owns the behaviour. Arma owns world-object replication, object/group locality, object-bound JIP lifetime and ordinary simulation transfer. WMP owns feature rules, server transactions, private game information, UI and the installation of client-local ACE actions. Boundary operations are executed once on the machine where the affected object, group or UI is local.
+
+An optimisation may remove a WMP path only when an isolated test proves that the engine supplies the same state, audience, timing, JIP replay and cleanup. WMP must not continuously reproduce engine state, while engine replication must not be mistaken for client-local side effects such as adding an ACE action. Security, BattlEye and remote-execution policy are outside this performance audit.
+
+## Documented implementation changes
+
+| Date | Change | Engine intersection | Preserved behaviour | Evidence required |
+|---|---|---|---|---|
+| 31 August 2026 | Tree-felling ACE drag/carry JIP entries now use the fallen object as their JIP key instead of creating an independent permanent entry. | Arma owns the object's JIP lifetime and removes object-keyed replay when the object is deleted; WMP still requests ACE's local action setup. | Current and joining players can drag/carry the same eligible logs with the same offsets and size rule. Tree hits, yields and regrowth are unchanged. | Static regression assertion plus dedicated current-client/JIP drag, carry, deletion and regrowth checks. |
+| 31 August 2026 | Removed the MiniGames public table-registry event listener that could request metadata already delivered by live registration. | Arma replays public table membership/object variables before JIP event scripts. WMP performs one canonical metadata request from `initPlayerLocal`; tables registered later still use the existing direct local-registration call. | Initial, JIP, hosted and runtime-created table actions use the same metadata and remain repeat-safe. Game state, rules and seating are unchanged. | Static single-request assertion plus dedicated initial/JIP/runtime-registration action checks. |
+| 31 August 2026 | MiniGames registration now clears/publishes initial state only for games enabled on that table. | Arma replicates the custom variables WMP writes but does not choose the table's game catalogue. WMP uses the already validated `Waldo_MG_TableGames` list to decide which initial states exist. | Empty `games` still expands to all twelve games and follows the original full initialization path. A subset table exposes and initializes exactly that subset; rules and later transitions are unchanged. | Static all-game dispatch assertion plus dedicated all-games and subset-table registration/JIP checks. |
+| 31 August 2026 | Economy bootstrap no longer publishes a default `ModulePurgedForJIP=false` value from every machine. | Arma replays the server's public purge value before JIP event scripts; WMP reads that value before local bootstrap instead of replacing it. A missing value still uses the existing fresh-mission default of false. | Fresh enabled missions initialize normally. Purged missions remain purged for current and joining clients. Economy calculations, UI and operator controls are unchanged. | Static no-client-write assertion plus dedicated fresh-start, purge, JIP-after-purge and re-enable checks. |
+
 > **Current network verdict:** the seated MiniGames transport does not yet pass its network acceptance gate. The request endpoint and change notifications are targeted, but authoritative game state is still published through global, persistent object variables. Do not describe the MiniGames replacement as network-complete until that state transport is replaced and measured under representative multiplayer load.
 
 ## What changed

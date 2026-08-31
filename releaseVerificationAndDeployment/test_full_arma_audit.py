@@ -2534,11 +2534,25 @@ class FullAuditTests(unittest.TestCase):
             r"(?s)Waldo_MG_fnc_scheduleTimedProgressServer\s*=\s*\{.*?\[\s*\{.*?\},\s*\[_table,\s*_timerEpoch\],\s*\(\(_dueAt - serverTime\)",
         )
 
+    def test_party_registration_initializes_only_enabled_games(self):
+        core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")
+        mark_start = core.index("Waldo_MG_fnc_markTableServer")
+        mark_end = core.index("Waldo_MG_fnc_clearUnitSeatVariablesServer", mark_start)
+        mark_body = core[mark_start:mark_end]
+        self.assertIn('forEach (_table getVariable ["Waldo_MG_TableGames", []])', mark_body)
+        for game_id in (
+            "battleship", "whoswho", "shotgun", "checkers", "rps", "blackjack",
+            "chess", "poker", "drawpoker", "liarsdice", "connectfour", "uno",
+        ):
+            self.assertIn(f'case "{game_id}"', mark_body)
+        self.assertNotIn("[_table] call Waldo_MG_fnc_unoClearServer;\n        [_table] call", mark_body)
+
     def test_party_registration_is_explicit_queued_and_non_executable_for_jip(self):
         root = ROOT / "MissionScripts" / "MiniGames"
         functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
         shared_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
         register = (root / "miniGamesRegisterTable.sqf").read_text(encoding="utf-8")
+        player_init = (root / "miniGamesInitPlayerLocal.sqf").read_text(encoding="utf-8")
         endpoint = (root / "miniGamesRequestServer.sqf").read_text(encoding="utf-8")
         metadata = (root / "miniGamesRequestMetadataServer.sqf").read_text(encoding="utf-8")
         self.assertFalse((root / "miniGamesInit.sqf").exists())
@@ -2551,6 +2565,9 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('getOrDefault ["queue", []]', endpoint)
         self.assertIn('getOrDefault ["draining", false]', endpoint)
         self.assertIn("MiniGamesRequestMetadataServer", functions)
+        self.assertNotIn("addPublicVariableEventHandler", player_init)
+        self.assertEqual(1, player_init.count('remoteExecCall ["Waldo_fnc_MiniGamesRequestMetadataServer", 2]'))
+        self.assertIn('remoteExecCall ["Waldo_fnc_MiniGamesRegisterTableLocal", -2]', register)
         self.assertNotIn("compile", metadata.lower())
         self.assertNotIn("allMissionObjects", register + endpoint + metadata)
 
@@ -2919,6 +2936,13 @@ class FullAuditTests(unittest.TestCase):
         diagnostics = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "getDiagnostics.sqf").read_text(encoding="utf-8")
         self.assertIn('"economy-build-classes"', diagnostics)
         self.assertIn('isClass (configFile >> "CfgVehicles" >> _className)', diagnostics)
+
+    def test_economy_init_never_overwrites_server_purge_state(self):
+        economy = (ROOT / "MissionScripts" / "EconomySystems" / "economyInit.sqf").read_text(encoding="utf-8")
+        purge = (ROOT / "MissionScripts" / "EconomySystems" / "Core" / "purgeEconomySystems.sqf").read_text(encoding="utf-8")
+        self.assertNotIn('setVariable ["WaldoEcoCore_ModulePurgedForJIP", false', economy)
+        self.assertIn('getVariable ["WaldoEcoCore_ModulePurgedForJIP", false]', economy)
+        self.assertIn('setVariable ["WaldoEcoCore_ModulePurgedForJIP", true, true]', purge)
 
     def test_emp_feedback_and_loadout_save_inventory_policy(self):
         emp_module = (ROOT / "MissionScripts" / "ZenModules" / "Zen_empModule.sqf").read_text(encoding="utf-8")

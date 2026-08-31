@@ -6,7 +6,9 @@
  * authority loops versus the client Zeus-menu and local action loops. Server activation occurs
  * from initServer.sqf after mission-maker preset/config values have been assigned. Player clients
  * activate from initPlayerLocal.sqf after the authoritative runtime snapshot is available.
- * Opt-in: gated by Waldo_Economy_Enable. Repeat-safe per machine.
+ * Opt-in: gated by Waldo_Economy_Enable. Repeat-safe per machine. The server-published purge state
+ * is read before local bootstrap and is never defaulted or broadcast by a joining client; Arma's
+ * JIP variable replay remains authoritative across initPlayerLocal.
  *
  * Arguments:
  * None.
@@ -20,8 +22,6 @@
  * Current callers:
  * initServer.sqf, initPlayerLocal.sqf and explicit Economy composition/runtime activation paths.
  */
-
-missionNamespace setVariable ["WaldoEcoCore_ModulePurgedForJIP", false, true];
 
 if (missionNamespace getVariable ["WaldoEcoCore_ModulePurgedForJIP", false]) exitWith {};
 if (missionNamespace getVariable ["WaldoEcoResource_BootstrapInitialized", false]) exitWith {};

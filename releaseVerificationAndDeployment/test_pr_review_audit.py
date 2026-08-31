@@ -692,6 +692,10 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("toLowerANSI _x == _weaponLower", process)
         self.assertIn("if !(_toolProfiles isEqualType createHashMap)", process)
         self.assertIn("if !(_efficiency isEqualType 0)", process)
+        self.assertIn('remoteExecCall ["ace_dragging_fnc_setDraggable", 0, _fallen]', process)
+        self.assertIn('remoteExecCall ["ace_dragging_fnc_setCarryable", 0, _fallen]', process)
+        self.assertNotIn('remoteExecCall ["ace_dragging_fnc_setDraggable", 0, true]', process)
+        self.assertNotIn('remoteExecCall ["ace_dragging_fnc_setCarryable", 0, true]', process)
     def test_val_author_credit_is_preserved_for_contributed_features(self):
         hazard_dir = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
         hazard_scripts = sorted(hazard_dir.glob("*.sqf"))
