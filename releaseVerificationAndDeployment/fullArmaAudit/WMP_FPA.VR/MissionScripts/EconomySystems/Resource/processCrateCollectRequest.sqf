@@ -3,6 +3,10 @@
  * Process crate collect request.
  *
  * Part of the Waldos Economy Systems suite (Resource system).
+ * Locality / Authority: Server authority only; preserves existing actor, range, crate-resource and
+ * storage-cap validation before the authoritative collection mutation.
+ * Repeat / JIP Behaviour: Existing bounded request-token history rejects duplicates. Collection
+ * requests are transient and no request is replayed to JIP clients.
  *
  * Arguments:
  * 0: _crate <OBJECT> - crate (optional, default: objNull)
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Waldo_fnc_EcoCore_submitRequestServer and the documented legacy processor API.
  *
  * Example:
  * [_crate, _request] call Waldo_fnc_EcoResource_processCrateCollectRequest;
@@ -34,7 +40,9 @@
     };
     missionNamespace setVariable ["WaldoEcoResource_CollectRequestsHandled", _handled];
 
-    _crate setVariable ["WaldoEcoResource_CollectRequest", [], true];
+    if !((_crate getVariable ["WaldoEcoResource_CollectRequest", []]) isEqualTo []) then {
+        _crate setVariable ["WaldoEcoResource_CollectRequest", [], true];
+    };
 
     private _caller = objectFromNetId (_request param [0, ""]);
     if (isNull _caller) exitWith {};

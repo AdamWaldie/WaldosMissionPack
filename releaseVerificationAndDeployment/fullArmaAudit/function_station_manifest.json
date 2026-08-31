@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1043,
-  "runtimeFunctionCount": 380,
-  "functionCount": 1423,
+  "registeredFunctionCount": 1046,
+  "runtimeFunctionCount": 383,
+  "functionCount": 1429,
   "stations": [
     {
       "id": "control",
@@ -3723,6 +3723,12 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_EcoCore_submitRequestServer",
+      "file": "MissionScripts/EconomySystems/Core/submitRequestServer.sqf",
+      "station": "economy-core",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_EcoCore_ensureLocalObjectAction",
       "file": "MissionScripts/EconomySystems/Core/ensureLocalObjectAction.sqf",
       "station": "economy-core",
@@ -6339,6 +6345,18 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_MiniGamesSetSpectatorServer",
+      "file": "MissionScripts/MiniGames/miniGamesSetSpectatorServer.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_MiniGamesApplyStateSnapshotLocal",
+      "file": "MissionScripts/MiniGames/miniGamesApplyStateSnapshotLocal.sqf",
+      "station": "party",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_MiniGameRegisterChallenge",
       "file": "MissionScripts/InteractionsMinigames/Core/registerChallenge.sqf",
       "station": "interaction-core",
@@ -6816,6 +6834,24 @@
     },
     {
       "name": "Waldo_MG_fnc_registerCuratorEditableServer",
+      "file": "MissionScripts/MiniGames/engine/core.sqf",
+      "station": "party",
+      "activation": "internal"
+    },
+    {
+      "name": "Waldo_MG_fnc_tableStateTargetsServer",
+      "file": "MissionScripts/MiniGames/engine/core.sqf",
+      "station": "party",
+      "activation": "internal"
+    },
+    {
+      "name": "Waldo_MG_fnc_setPublicTableStateServer",
+      "file": "MissionScripts/MiniGames/engine/core.sqf",
+      "station": "party",
+      "activation": "internal"
+    },
+    {
+      "name": "Waldo_MG_fnc_sendPublicTableSnapshotServer",
       "file": "MissionScripts/MiniGames/engine/core.sqf",
       "station": "party",
       "activation": "internal"

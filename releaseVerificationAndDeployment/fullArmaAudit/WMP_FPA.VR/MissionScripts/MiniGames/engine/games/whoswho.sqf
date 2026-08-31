@@ -146,15 +146,15 @@ Waldo_MG_fnc_whosWhoCreateEmptySnapshot = {
 Waldo_MG_fnc_whosWhoPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable ["Waldo_MG_WhosWhoRevision", (_table getVariable ["Waldo_MG_WhosWhoRevision", 0]) + 1, true];
-    _table setVariable ["Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1, true];
+    [_table, "Waldo_MG_WhosWhoRevision", (_table getVariable ["Waldo_MG_WhosWhoRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_whosWhoSetSnapshotServer = {
     params [["_table", objNull], ["_snapshot", []]];
     if (!isServer || {isNull _table}) exitWith {};
     _table setVariable ["Waldo_MG_WhosWhoSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_WhosWhoSnapshot", _snapshot, true];
+    [_table, "Waldo_MG_WhosWhoSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_whosWhoPublishRevisionServer;
 };
 
@@ -179,18 +179,18 @@ Waldo_MG_fnc_whosWhoClearServer = {
     {
         if (!isNull _x) then {_x setVariable ["Waldo_MG_WhosWhoPrivateTarget", [], owner _x];};
     } forEach (_table getVariable ["Waldo_MG_WhosWhoPlayers", []]);
-    _table setVariable ["Waldo_MG_WhosWhoActive", false, true];
-    _table setVariable ["Waldo_MG_WhosWhoFinished", false, true];
-    _table setVariable ["Waldo_MG_WhosWhoGameId", "", true];
-    _table setVariable ["Waldo_MG_WhosWhoPlayers", [], true];
-    _table setVariable ["Waldo_MG_WhosWhoPlayerNames", [], true];
-    _table setVariable ["Waldo_MG_WhosWhoSeatIndices", [], true];
-    _table setVariable ["Waldo_MG_WhosWhoBoard", [], true];
+    [_table, "Waldo_MG_WhosWhoActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoPlayers", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoPlayerNames", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoSeatIndices", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoBoard", []] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_WhosWhoTargetsServer", []];
-    _table setVariable ["Waldo_MG_WhosWhoRevision", 0, true];
+    [_table, "Waldo_MG_WhosWhoRevision", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     private _empty = call Waldo_MG_fnc_whosWhoCreateEmptySnapshot;
     _table setVariable ["Waldo_MG_WhosWhoSnapshotServer", _empty];
-    _table setVariable ["Waldo_MG_WhosWhoSnapshot", _empty, true];
+    [_table, "Waldo_MG_WhosWhoSnapshot", _empty] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_whosWhoPublishRevisionServer;
 };
 
@@ -225,16 +225,16 @@ Waldo_MG_fnc_whosWhoStartServer = {
         format ["%1 asks the first yes-or-no question.", _names param [_actor, "Player"]],
         -1, -1, false, [], 0
     ];
-    _table setVariable ["Waldo_MG_WhosWhoActive", true, true];
-    _table setVariable ["Waldo_MG_WhosWhoFinished", false, true];
-    _table setVariable ["Waldo_MG_WhosWhoGameId", format ["Waldo_MG_WHOSWHO_%1_%2", floor (serverTime * 10), floor (random 1000000)], true];
-    _table setVariable ["Waldo_MG_WhosWhoPlayers", _players, true];
-    _table setVariable ["Waldo_MG_WhosWhoPlayerNames", _names, true];
-    _table setVariable ["Waldo_MG_WhosWhoSeatIndices", _seatIndices, true];
-    _table setVariable ["Waldo_MG_WhosWhoBoard", _board, true];
+    [_table, "Waldo_MG_WhosWhoActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoGameId", format ["Waldo_MG_WHOSWHO_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoPlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoPlayerNames", _names] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_WhosWhoBoard", _board] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_WhosWhoTargetsServer", [_firstTarget, _secondTarget]];
-    _table setVariable ["Waldo_MG_WhosWhoRevision", 0, true];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    [_table, "Waldo_MG_WhosWhoRevision", 0] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table, _snapshot] call Waldo_MG_fnc_whosWhoSetSnapshotServer;
     [_table, 0] call Waldo_MG_fnc_whosWhoSendPrivateTargetServer;
     [_table, 1] call Waldo_MG_fnc_whosWhoSendPrivateTargetServer;
@@ -250,8 +250,8 @@ Waldo_MG_fnc_whosWhoFinishServer = {
     _state set [3, _winner];
     _state set [4, _message];
     _state set [8, +(_table getVariable ["Waldo_MG_WhosWhoTargetsServer", []])];
-    _table setVariable ["Waldo_MG_WhosWhoFinished", true, true];
-    _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+    [_table, "Waldo_MG_WhosWhoFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     [_table, _state] call Waldo_MG_fnc_whosWhoSetSnapshotServer;
 };
 
@@ -259,7 +259,7 @@ Waldo_MG_fnc_whosWhoResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_whosWhoClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 };
 
@@ -285,8 +285,8 @@ Waldo_MG_fnc_whosWhoHandleDepartureServer = {
         && {(lifeState _otherUnit) != "INCAPACITATED"};
     if (!_otherValid) exitWith {
         [_table] call Waldo_MG_fnc_whosWhoClearServer;
-        _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-        _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+        [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
         [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
     };
     if ((_state param [0, ""]) == "FINISHED") exitWith {};

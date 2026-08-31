@@ -1960,6 +1960,61 @@ class FullAuditTests(unittest.TestCase):
         ):
             self.assertIn(f"class {function_name}", functions)
 
+    def test_economy_requests_are_direct_and_do_not_poll_or_broadcast_mailboxes(self):
+        root = ROOT / "MissionScripts" / "EconomySystems"
+        core = root / "Core"
+        endpoint = (core / "submitRequestServer.sqf").read_text(encoding="utf-8")
+        scheduler = (core / "startRequestScheduler.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+
+        self.assertIn('remoteExecCall ["Waldo_fnc_EcoCore_submitRequestServer", 2]', endpoint)
+        self.assertNotIn("remoteExecCall [\"Waldo_fnc_EcoCore_submitRequestServer\", 2,", endpoint)
+        for operation, processor in (
+            ("ZONE_CAPTURE", "Waldo_fnc_EcoResource_processZoneCaptureRequest"),
+            ("CRATE_COLLECT", "Waldo_fnc_EcoResource_processCrateCollectRequest"),
+            ("START_RESEARCH", "Waldo_fnc_EcoResearch_processStartResearchRequest"),
+            ("START_CONSTRUCTION", "Waldo_fnc_EcoBuild_processStartConstructionRequest"),
+            ("MANAGE_BUILDING", "Waldo_fnc_EcoBuild_processBuildingManageRequest"),
+            ("PURCHASE", "Waldo_fnc_EcoBuy_processPurchaseRequest"),
+        ):
+            self.assertIn(f'case "{operation}"', endpoint)
+            self.assertIn(processor, endpoint)
+
+        self.assertIn("class EcoCore_submitRequestServer", functions)
+        self.assertNotIn("uiSleep 0.25", scheduler)
+        self.assertNotIn("allPlayers", scheduler)
+        self.assertNotIn("Request\"", scheduler)
+        self.assertIn("uiSleep 10", scheduler)
+        self.assertIn("Waldo_fnc_EcoCore_refreshRuntimeRegistries", scheduler)
+
+        producers = {
+            "Resource/ensureCrateActionLocal.sqf": "CRATE_COLLECT",
+            "Resource/startZeusZoneActionBridge.sqf": "ZONE_CAPTURE",
+            "Research/ensureResearchCenterActionsLocal.sqf": "START_RESEARCH",
+            "Research/getOfficialResourceDisplayActionArgs.sqf": "MANAGE_BUILDING",
+            "Build/getOfficialBuildingClaimActionArgs.sqf": "MANAGE_BUILDING",
+            "Build/getOfficialBuildingManageActionArgs.sqf": "MANAGE_BUILDING",
+            "Build/getOfficialBuildingUpgradeActionArgs.sqf": "MANAGE_BUILDING",
+            "Build/getOfficialConstructionModeActionArgs.sqf": "START_CONSTRUCTION",
+            "Buy/getOfficialPurchaseActionArgs.sqf": "PURCHASE",
+        }
+        for relative_path, operation in producers.items():
+            source = (root / relative_path).read_text(encoding="utf-8")
+            self.assertIn("Waldo_fnc_EcoCore_submitRequestServer", source, relative_path)
+            self.assertIn(f'"{operation}"', source, relative_path)
+
+        for request_variable in (
+            "WaldoEcoResource_ZoneCaptureRequest",
+            "WaldoEcoResource_CollectRequest",
+            "WaldoEcoResearch_StartResearchRequest",
+            "WaldoEcoBuild_StartConstructionRequest",
+            "WaldoEcoBuild_BuildingManageRequest",
+            "WaldoEcoBuy_PurchaseRequest",
+        ):
+            for relative_path in producers:
+                source = (root / relative_path).read_text(encoding="utf-8")
+                self.assertNotIn(request_variable, source, relative_path)
+
     def test_economy_ground_command_identity_is_event_driven_and_bounded(self):
         root = ROOT / "MissionScripts" / "EconomySystems"
         command = root / "Command"
@@ -2384,7 +2439,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('[_object, "wirecut", _setup] call Waldo_fnc_MiniGameInteractionSetup', bomb)
         self.assertIn('["oneShot", _oneShot]', setup)
         self.assertIn("Waldo_fnc_EcoCore_canRunAuthority", resource)
-        self.assertIn("WaldoEcoResource_CollectRequest", resource)
+        self.assertIn("Waldo_fnc_EcoCore_submitRequestServer", resource)
+        self.assertNotIn("WaldoEcoResource_CollectRequest", resource)
         self.assertIn("Deploy + Consume", build)
         self.assertIn("WaldoEcoBuild_ConsumesConstructionSource", build)
         self.assertIn("ctrlShow _consumesSource", build)
@@ -2681,6 +2737,56 @@ class FullAuditTests(unittest.TestCase):
             core,
             r"(?s)Waldo_MG_fnc_scheduleTimedProgressServer\s*=\s*\{.*?\[\s*\{.*?\},\s*\[_table,\s*_timerEpoch\],\s*\(\(_dueAt - serverTime\)",
         )
+
+    def test_party_game_state_targets_seats_and_subscribed_spectators(self):
+        root = ROOT / "MissionScripts" / "MiniGames"
+        core = (root / "engine" / "core.sqf").read_text(encoding="utf-8")
+        spectator = (root / "miniGamesSetSpectatorServer.sqf").read_text(encoding="utf-8")
+        snapshot = (root / "miniGamesApplyStateSnapshotLocal.sqf").read_text(encoding="utf-8")
+        register = (root / "miniGamesRegisterTable.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+
+        game_sources = {
+            path.name: path.read_text(encoding="utf-8")
+            for path in (root / "engine" / "games").glob("*.sqf")
+        }
+        self.assertEqual(12, len(game_sources))
+        self.assertEqual(
+            491,
+            sum(source.count("call Waldo_MG_fnc_setPublicTableStateServer") for source in game_sources.values()),
+        )
+        table_phase_publications = 0
+        targeted_names = []
+        for name, source in game_sources.items():
+            self.assertIn("Waldo_MG_fnc_setPublicTableStateServer", source, name)
+            table_phase_publications += len(
+                re.findall(r'_table\s+setVariable\s*\["Waldo_MG_TablePhase".*?,\s*true\s*\]', source)
+            )
+            targeted_names.extend(
+                re.findall(r'\[_table,\s*"(Waldo_MG_[^"]+)"\s*,.*?\]\s+call\s+Waldo_MG_fnc_setPublicTableStateServer', source)
+            )
+        self.assertEqual(41, table_phase_publications)
+        self.assertTrue(targeted_names)
+        self.assertEqual([], [name for name in targeted_names if name.endswith("Server")])
+
+        self.assertIn("Waldo_MG_fnc_tableStateTargetsServer", core)
+        self.assertIn("Waldo_MG_fnc_setPublicTableStateServer", core)
+        self.assertIn("Waldo_MG_PublicStateNamesServer", core)
+        self.assertIn("_table setVariable [_variableName, _value]", core)
+        self.assertIn("_table setVariable [_variableName, _value, _recipients]", core)
+        self.assertIn('getOrDefault ["spectators", []]', core)
+        self.assertIn("Waldo_fnc_MiniGamesSetSpectatorServer", core)
+        self.assertIn("Waldo_fnc_MiniGamesApplyStateSnapshotLocal", core)
+        publish = core[core.index("Waldo_MG_fnc_publishTableChangeServer"):core.index("Waldo_MG_fnc_scheduleTimedProgressServer")]
+        self.assertIn("[_table] call Waldo_MG_fnc_tableStateTargetsServer", publish)
+        self.assertIn('["spectators", []]', register)
+        self.assertIn("pushBackUnique _actor", spectator)
+        self.assertIn("_spectators - [_actor]", spectator)
+        self.assertIn("Waldo_MG_fnc_sendPublicTableSnapshotServer", spectator)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_MiniGamesSetSpectatorServer", 2,', spectator)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_MiniGamesApplyStateSnapshotLocal", owner _recipient,', core)
+        self.assertIn("class MiniGamesSetSpectatorServer", functions)
+        self.assertIn("class MiniGamesApplyStateSnapshotLocal", functions)
 
     def test_party_registration_does_not_create_idle_game_instances(self):
         core = (ROOT / "MissionScripts" / "MiniGames" / "engine" / "core.sqf").read_text(encoding="utf-8")

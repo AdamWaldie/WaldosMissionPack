@@ -88,7 +88,7 @@ if (isServer) then {
     private _registry = missionNamespace getVariable ["Waldo_MG_ServerRegistry", createHashMap];
     private _tableId = _table getVariable ["Waldo_MG_TableId", netId _table];
     if !(_tableId in _registry) then {
-        _registry set [_tableId, createHashMapFromArray [["table", _table], ["options", _canonical], ["queue", []], ["draining", false], ["tokens", []]]];
+        _registry set [_tableId, createHashMapFromArray [["table", _table], ["options", _canonical], ["queue", []], ["draining", false], ["tokens", []], ["spectators", []]]];
         missionNamespace setVariable ["Waldo_MG_ServerRegistry", _registry];
         _table addEventHandler ["Deleted", {params ["_deletedTable"]; [_deletedTable] call Waldo_fnc_MiniGamesUnregisterTable;}];
     };

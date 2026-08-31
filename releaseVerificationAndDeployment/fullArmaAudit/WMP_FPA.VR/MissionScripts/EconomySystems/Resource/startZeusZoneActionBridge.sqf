@@ -3,6 +3,10 @@
  * Start Zeus zone action bridge.
  *
  * Part of the Waldos Economy Systems suite (Resource system).
+ * Locality / Authority: Interface-client interaction bridge. It submits zone-capture requests to the
+ * server; the existing server processor remains authoritative for capture state.
+ * Repeat / JIP Behaviour: Existing bridge guards prevent duplicate installation. JIP clients install
+ * their local bridge normally and no action request is replayed.
  *
  * Arguments:
  * 0: _target <ANY> - target
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Economy Resource client bootstrap.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoResource_startZeusZoneActionBridge;
@@ -138,14 +144,7 @@
                                     _requestId
                                 ];
 
-                                _caller setVariable [
-                                    "WaldoEcoResource_ZoneCaptureRequest",
-                                    _request,
-                                    true
-                                ];
-                                if (_target != _caller) then {
-                                    _target setVariable ["WaldoEcoResource_ZoneCaptureRequest", _request, true];
-                                };
+                                ["ZONE_CAPTURE", _target, _request] call Waldo_fnc_EcoCore_submitRequestServer;
                                 ["Capture request sent."] call Waldo_fnc_EcoCore_notifyActorLocal;
                             },
                             nil,

@@ -61,16 +61,8 @@ Waldo_MG_fnc_shotgunCreateEmptySnapshot = {
 Waldo_MG_fnc_shotgunPublishRevisionServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
-    _table setVariable [
-        "Waldo_MG_ShotgunRevision",
-        (_table getVariable ["Waldo_MG_ShotgunRevision", 0]) + 1,
-        true
-    ];
-    _table setVariable [
-        "Waldo_MG_TableRevision",
-        (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1,
-        true
-    ];
+    [_table, "Waldo_MG_ShotgunRevision", (_table getVariable ["Waldo_MG_ShotgunRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_TableRevision", (_table getVariable ["Waldo_MG_TableRevision", 0]) + 1] call Waldo_MG_fnc_setPublicTableStateServer;
 };
 
 Waldo_MG_fnc_shotgunSetSnapshotServer = {
@@ -80,7 +72,7 @@ Waldo_MG_fnc_shotgunSetSnapshotServer = {
     ];
     if (!isServer || {isNull _table} || {(typeName _snapshot) != "ARRAY"}) exitWith {};
     _table setVariable ["Waldo_MG_ShotgunSnapshotServer", _snapshot];
-    _table setVariable ["Waldo_MG_ShotgunSnapshot", _snapshot, true];
+    [_table, "Waldo_MG_ShotgunSnapshot", _snapshot] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_shotgunPublishRevisionServer;
 };
 
@@ -98,19 +90,19 @@ Waldo_MG_fnc_shotgunClearServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_shotgunClearPrivatePeeksServer;
-    _table setVariable ["Waldo_MG_ShotgunActive", false, true];
-    _table setVariable ["Waldo_MG_ShotgunFinished", false, true];
-    _table setVariable ["Waldo_MG_ShotgunGameId", "", true];
-    _table setVariable ["Waldo_MG_ShotgunPlayers", [], true];
-    _table setVariable ["Waldo_MG_ShotgunPlayerNames", [], true];
-    _table setVariable ["Waldo_MG_ShotgunSeatIndices", [], true];
-    _table setVariable ["Waldo_MG_ShotgunRevision", 0, true];
+    [_table, "Waldo_MG_ShotgunActive", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunGameId", ""] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunPlayers", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunPlayerNames", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunSeatIndices", []] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunRevision", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_ShotgunChamberServer", []];
     _table setVariable ["Waldo_MG_ShotgunPendingActorServer", -1];
     _table setVariable ["Waldo_MG_ShotgunPendingReloadServer", false];
     private _empty = [] call Waldo_MG_fnc_shotgunCreateEmptySnapshot;
     _table setVariable ["Waldo_MG_ShotgunSnapshotServer", _empty];
-    _table setVariable ["Waldo_MG_ShotgunSnapshot", _empty, true];
+    [_table, "Waldo_MG_ShotgunSnapshot", _empty] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_shotgunPublishRevisionServer;
 };
 
@@ -257,19 +249,15 @@ Waldo_MG_fnc_shotgunStartServer = {
     if (_count < 2 || {_count > 4}) exitWith {false};
     private _state = [_count] call Waldo_MG_fnc_shotgunCreateEmptySnapshot;
     private _firstActor = floor (random _count);
-    _table setVariable ["Waldo_MG_ShotgunActive", true, true];
-    _table setVariable ["Waldo_MG_ShotgunFinished", false, true];
-    _table setVariable [
-        "Waldo_MG_ShotgunGameId",
-        format ["Waldo_MG_SHOTGUN_%1_%2", floor (serverTime * 10), floor (random 1000000)],
-        true
-    ];
-    _table setVariable ["Waldo_MG_ShotgunPlayers", _players, true];
-    _table setVariable ["Waldo_MG_ShotgunPlayerNames", _names, true];
-    _table setVariable ["Waldo_MG_ShotgunSeatIndices", _seatIndices, true];
-    _table setVariable ["Waldo_MG_ShotgunRevision", 0, true];
+    [_table, "Waldo_MG_ShotgunActive", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunFinished", false] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunGameId", format ["Waldo_MG_SHOTGUN_%1_%2", floor (serverTime * 10), floor (random 1000000)]] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunPlayers", _players] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunPlayerNames", _names] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunSeatIndices", _seatIndices] call Waldo_MG_fnc_setPublicTableStateServer;
+    [_table, "Waldo_MG_ShotgunRevision", 0] call Waldo_MG_fnc_setPublicTableStateServer;
     _table setVariable ["Waldo_MG_ShotgunSnapshotServer", _state];
-    _table setVariable ["Waldo_MG_TablePhase", "PLAYING", true];
+    _table setVariable ["Waldo_MG_TablePhase", "PLAYING",true];
     [_table, _state, _firstActor] call Waldo_MG_fnc_shotgunCreateLoadServer
 };
 
@@ -287,8 +275,8 @@ Waldo_MG_fnc_shotgunFinishServer = {
     _state set [16, _winner];
     _state set [17, _message];
     _state set [19, 0];
-    _table setVariable ["Waldo_MG_ShotgunFinished", true, true];
-    _table setVariable ["Waldo_MG_TablePhase", "FINISHED", true];
+    [_table, "Waldo_MG_ShotgunFinished", true] call Waldo_MG_fnc_setPublicTableStateServer;
+    _table setVariable ["Waldo_MG_TablePhase", "FINISHED",true];
     _table setVariable ["Waldo_MG_ShotgunPendingActorServer", -1];
     _table setVariable ["Waldo_MG_ShotgunPendingReloadServer", false];
     [_table, _state] call Waldo_MG_fnc_shotgunSetSnapshotServer;
@@ -355,7 +343,7 @@ Waldo_MG_fnc_shotgunResetServer = {
     params [["_table", objNull]];
     if (!isServer || {isNull _table}) exitWith {};
     [_table] call Waldo_MG_fnc_shotgunClearServer;
-    _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
+    [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
     [_table] call Waldo_MG_fnc_refreshTableConsensusServer;
 };
 
@@ -386,8 +374,8 @@ Waldo_MG_fnc_shotgunHandleDepartureServer = {
     private _living = {_x} count _alive;
     if (_living <= 0) exitWith {
         [_table] call Waldo_MG_fnc_shotgunClearServer;
-        _table setVariable ["Waldo_MG_TableReady", [false, false, false, false], true];
-        _table setVariable ["Waldo_MG_TablePhase", "LOBBY", true];
+        [_table, "Waldo_MG_TableReady", [false, false, false, false]] call Waldo_MG_fnc_setPublicTableStateServer;
+        _table setVariable ["Waldo_MG_TablePhase", "LOBBY",true];
     };
     if (_living == 1) exitWith {
         private _winner = [-1, _alive] call Waldo_MG_fnc_shotgunGetNextAliveRole;

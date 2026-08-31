@@ -3,12 +3,18 @@
  * Get official building upgrade action args.
  *
  * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Built and invoked on each interface client; upgrade requests route unchanged
+ * to server authority through Waldo_fnc_EcoCore_submitRequestServer.
+ * Repeat / JIP Behaviour: Safe to regenerate during repeat/JIP action reconciliation; request-token
+ * handling remains in the existing server processor.
  *
  * Arguments:
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
  * Any - see function body
+ *
+ * Current Callers: Economy building action reconciliation.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingUpgradeActionArgs;
@@ -384,7 +390,11 @@
                     private _uid = getPlayerUID player;
                     if (_uid == "") then {_uid = name _actor;};
                     private _requestId = format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)];
-                    _building setVariable ["WaldoEcoBuild_BuildingManageRequest", ["UPGRADE", netId _actor, _requestId], true];
+                    [
+                        "MANAGE_BUILDING",
+                        _building,
+                        ["UPGRADE", netId _actor, _requestId]
+                    ] call Waldo_fnc_EcoCore_submitRequestServer;
                     ["Upgrade request sent.", 5] call Waldo_fnc_EcoCore_notifyActorLocal;
 
                     [_display] spawn {

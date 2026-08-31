@@ -3,6 +3,10 @@
  * Get official construction mode action args.
  *
  * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: The placement UI and action execute on the interface client; the completed
+ * placement request is sent once to server authority through the shared Economy endpoint.
+ * Repeat / JIP Behaviour: Local UI cleanup is repeat-safe; JIP players receive this action through the
+ * existing construction-vehicle registry reconciliation and create requests only after interaction.
  *
  * Arguments:
  * 0: _target <ANY> - target
@@ -10,6 +14,8 @@
  *
  * Return Value:
  * Any - see function body
+ *
+ * Current Callers: Economy construction-vehicle action reconciliation.
  *
  * Example:
  * [_target, _caller] call Waldo_fnc_EcoBuild_getOfficialConstructionModeActionArgs;
@@ -632,11 +638,11 @@
                             if (_buildName != "" && {!isNull _source}) then {
                                 private _uid = getPlayerUID player;
                                 private _requestId = format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)];
-                                _source setVariable [
-                                    "WaldoEcoBuild_StartConstructionRequest",
-                                    [_buildName, netId _source, netId _caller, _pos, _dir, _requestId],
-                                    true
-                                ];
+                                [
+                                    "START_CONSTRUCTION",
+                                    _source,
+                                    [_buildName, netId _source, netId _caller, _pos, _dir, _requestId]
+                                ] call Waldo_fnc_EcoCore_submitRequestServer;
                                 ["Construction request sent.", 6] call Waldo_fnc_EcoCore_notifyActorLocal;
                             };
                             [_target] call (_target getVariable ["WaldoEcoBuild_PubConstructionCleanupCode", {}]);

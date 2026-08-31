@@ -3,12 +3,18 @@
  * Get official building claim action args.
  *
  * Part of the Waldos Economy Systems suite (Build system).
+ * Locality / Authority: Built and invoked on each interface client; the action submits its unchanged
+ * request payload to Waldo_fnc_EcoCore_submitRequestServer for authoritative server processing.
+ * Repeat / JIP Behaviour: Returns stable action arguments whenever local registry reconciliation runs;
+ * the existing action installer owns repeat-safe replacement and JIP installation.
  *
  * Arguments:
  * 0: _entry <ARRAY> - entry (optional, default: [])
  *
  * Return Value:
  * Any - see function body
+ *
+ * Current Callers: Economy building action reconciliation.
  *
  * Example:
  * [_entry] call Waldo_fnc_EcoBuild_getOfficialBuildingClaimActionArgs;
@@ -28,7 +34,11 @@
                 if (_uid == "") then {_uid = name _actor;};
                 private _requestId = format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)];
 
-                _target setVariable ["WaldoEcoBuild_BuildingManageRequest", ["CLAIM", netId _actor, _requestId], true];
+                [
+                    "MANAGE_BUILDING",
+                    _target,
+                    ["CLAIM", netId _actor, _requestId]
+                ] call Waldo_fnc_EcoCore_submitRequestServer;
                 ["Claim request sent."] call Waldo_fnc_EcoCore_notifyActorLocal;
             },
             nil,

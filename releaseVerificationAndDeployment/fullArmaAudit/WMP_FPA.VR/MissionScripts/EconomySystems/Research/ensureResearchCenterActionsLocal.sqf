@@ -3,12 +3,18 @@
  * Ensure research center actions local.
  *
  * Part of the Waldos Economy Systems suite (Research system).
+ * Locality / Authority: Interface-client action installation only. Research and construction requests
+ * are delivered to server authority through Waldo_fnc_EcoCore_submitRequestServer.
+ * Repeat / JIP Behaviour: Versioned local actions are repeat-safe and are reconstructed by the existing
+ * registry snapshot/revision path for JIP players.
  *
  * Arguments:
  * 0: _researchCenter <OBJECT> - research center (optional, default: objNull)
  *
  * Return Value:
  * Nothing
+ *
+ * Current Callers: Economy local world-action reconciliation.
  *
  * Example:
  * [_researchCenter] call Waldo_fnc_EcoResearch_ensureResearchCenterActionsLocal;
@@ -540,14 +546,7 @@
                             format ["%1_%2_%3", _uid, floor (diag_tickTime * 1000), floor (random 1000000)],
                             netId _actor
                         ];
-                        player setVariable [
-                            "WaldoEcoResearch_StartResearchRequest",
-                            _request,
-                            true
-                        ];
-                        if (!isNull _center) then {
-                            _center setVariable ["WaldoEcoResearch_StartResearchRequest", _request, true];
-                        };
+                        ["START_RESEARCH", _center, _request] call Waldo_fnc_EcoCore_submitRequestServer;
 
                         ["Research request sent.", 5] call Waldo_fnc_EcoCore_notifyActorLocal;
                         [_display] spawn {

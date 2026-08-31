@@ -1193,6 +1193,9 @@ class CfgFunctions
             class EcoCore_startRequestScheduler {
                 file = "MissionScripts\EconomySystems\Core\startRequestScheduler.sqf";
             };
+            class EcoCore_submitRequestServer {
+                file = "MissionScripts\EconomySystems\Core\submitRequestServer.sqf";
+            };
             class EcoCore_ensureLocalObjectAction {
                 file = "MissionScripts\EconomySystems\Core\ensureLocalObjectAction.sqf";
             };
@@ -2520,6 +2523,12 @@ class CfgFunctions
             };
             class MiniGamesStateChangedLocal {
                 file = "MissionScripts\MiniGames\miniGamesStateChangedLocal.sqf";
+            };
+            class MiniGamesSetSpectatorServer {
+                file = "MissionScripts\MiniGames\miniGamesSetSpectatorServer.sqf";
+            };
+            class MiniGamesApplyStateSnapshotLocal {
+                file = "MissionScripts\MiniGames\miniGamesApplyStateSnapshotLocal.sqf";
             };
         };
         class InteractionMiniGames
