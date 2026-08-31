@@ -2,8 +2,9 @@
  * Author: WaldoTheWarfighter
  * Server-side pack diagnostics. Reports dependency and subsystem state as
  * LOADED, ACTIVE, DISABLED, UNCONFIGURED, UNAVAILABLE or ERROR. The structured
- * report is broadcast in Waldo_Diagnostics_LastReport for audit tools/JIP.
- * Existing callers still receive the number of warnings.
+ * report is broadcast in Waldo_Diagnostics_LastReport for audit tools/JIP. The operator summary
+ * distinguishes server checks from per-client observations instead of presenting the server count
+ * as though it were the whole run. Existing callers still receive the number of warnings.
  * Locality and authority: Server-only and scheduled. Unschedulable calls spawn one server run;
  * concurrent runs are rejected. Clients supply bounded local reports, but the server owns output.
  *
@@ -610,12 +611,14 @@ waitUntil {
 private _clientReports = missionNamespace getVariable ["Waldo_Diagnostics_ClientReports", []];
 private _receivedOwners = _clientReports apply {_x select 0};
 private _missingOwners = _expectedOwners select {!(_x in _receivedOwners)};
+private _clientCheckCount = 0;
 if !(_missingOwners isEqualTo []) then {
     _warnings = _warnings + count _missingOwners;
     ["WARN", "clients", "response", "TIMEOUT", format ["No diagnostic response from network owner(s): %1", _missingOwners]] call _log;
 };
 {
     _x params ["_ownerId", "_playerName", "_uid", "_checks"];
+    _clientCheckCount = _clientCheckCount + count _checks;
     private _clientErrors = {_x select 2 == "ERROR"} count _checks;
     _warnings = _warnings + _clientErrors;
     [if (_clientErrors > 0) then {"WARN"} else {"INFO"}, "clients", "report", "SUMMARY", format ["owner=%1 player=%2 checks=%3 errors=%4", _ownerId, _playerName, count _checks, _clientErrors]] call _log;
@@ -623,12 +626,12 @@ if !(_missingOwners isEqualTo []) then {
 
 missionNamespace setVariable ["Waldo_Diagnostics_LastReport", [_warnings, serverTime, _report, _clientReports, _runId], true];
 private _summary = if (_warnings == 0) then {
-    format ["Diagnostics complete: %1 checks, no warnings. Disabled/unconfigured optional systems are listed separately.", count _report]
+    format ["Diagnostics complete: %1 server checks + %2 client checks across %3 client report(s), no warnings. Disabled/unconfigured optional systems are listed separately.", count _report, _clientCheckCount, count _clientReports]
 } else {
-    format ["Diagnostics complete: %1 checks, %2 warning(s). See [WMP DIAG] RPT entries.", count _report, _warnings]
+    format ["Diagnostics complete: %1 server checks + %2 client checks across %3 client report(s), %4 warning(s). See [WMP DIAG] RPT entries.", count _report, _clientCheckCount, count _clientReports, _warnings]
 };
 [if (_warnings > 0) then {"WARN"} else {"INFO"}, "core", "diagnostics", "SUMMARY", _summary] call _log;
-["INFO", "core", "diagnostics", "END", format ["serverChecks=%1 clientReports=%2 warnings=%3", count _report, count _clientReports, _warnings]] call _log;
+["INFO", "core", "diagnostics", "END", format ["serverChecks=%1 clientChecks=%2 clientReports=%3 warnings=%4", count _report, _clientCheckCount, count _clientReports, _warnings]] call _log;
 [format ["[WMP DIAG] %1", _summary]] call _notifyAdmins;
 missionNamespace setVariable ["Waldo_Diagnostics_Running", false];
 _warnings

@@ -3513,8 +3513,14 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("Waldo_fnc_MiniGameInteractionGetDiagnostics", server)
         self.assertIn("Waldo_fnc_MiniGameInteractionGetDiagnostics", client)
         self.assertIn("locallyRegistered=%3", helper)
+        self.assertIn("configuredObjects=%4", helper)
+        self.assertIn("private _configuredIds", helper)
+        self.assertIn("_registered || {_configuredCount > 0}", helper)
         self.assertIn('"UNCONFIGURED"', helper)
         self.assertNotIn("registered procedure(s); expected at least 10", server)
+        self.assertIn("private _clientCheckCount = 0;", server)
+        self.assertIn("server checks + %2 client checks", server)
+        self.assertIn("serverChecks=%1 clientChecks=%2", server)
 
     def test_vehicle_recovery_is_server_owned_jip_safe_and_configurable(self):
         root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"
