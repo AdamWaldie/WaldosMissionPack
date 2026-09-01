@@ -934,6 +934,20 @@ The active banner always states whether a timer is running. Manual and timed
 go-live notices explain which protections were removed and remain visible for
 `Waldo_SafeStart_GoLiveHintDuration` seconds (default 12).
 
+### Zeus END-key kill restore
+
+`Waldo_fnc_KillHotkeyInit` is installed from `initPlayerLocal.sqf` and watches for each local curator
+display. It adds one tracked display `KeyDown` handler whenever Zeus opens, including after a close
+and reopen. On plain END with no modifiers, the handler snapshots `curatorSelected select 0`, returns
+`false` so Arma and ZEN continue their normal END processing, then applies `setDamage 1` on the next
+scheduled frame only to selected objects that remain alive. It never adds the hovered object, never
+handles modified END combinations, and exposes no remote-execution endpoint.
+
+The worker is player-local and JIP-safe through `Waldo_KillHotkey_WatcherStarted`; the event-handler
+ID is stored on the curator display as `Waldo_KillHotkey_KeyDownHandler` so repeat installation on the
+same display removes the stale handler first. Implemented in
+`MissionScripts/MissionFlowAndUi/killHotkeyInit.sqf`.
+
 ### Mission Diagnostics (optional)
 
 Runs a read-only server and client health check at mission start after the loadout scan. Every RPT entry uses the same searchable frame: `[WMP DIAG][run=...][node=SERVER|CLIENT:<owner>][area=...][feature=...][level=...][event=...]`. A hosted (listen-server) host also sees warnings and the completion summary through `systemChat` directly; on a genuine dedicated server (no local console of its own) the same lines are remote-executed to every currently assigned curator's client instead, so an admin watching through Zeus still gets in-game visibility rather than only RPT.

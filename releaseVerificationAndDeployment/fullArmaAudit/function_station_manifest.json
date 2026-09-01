@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1046,
+  "registeredFunctionCount": 1047,
   "runtimeFunctionCount": 383,
-  "functionCount": 1429,
+  "functionCount": 1430,
   "stations": [
     {
       "id": "control",
@@ -1055,6 +1055,12 @@
     {
       "name": "Waldo_fnc_ProtectionRespawnLocal",
       "file": "MissionScripts/MissionFlowAndUi/protectionRespawnLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_KillHotkeyInit",
+      "file": "MissionScripts/MissionFlowAndUi/killHotkeyInit.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },
