@@ -9,6 +9,9 @@ waitUntil {
 private _range = [] execVM "featureRangeClient.sqf";
 waitUntil {scriptDone _range};
 [] execVM "extendedFeatureStationsClient.sqf";
+if ((missionNamespace getVariable ["Waldo_QA_Mode", "MANUAL"]) isEqualTo "THEME-GALLERY") then {
+    [] execVM "runUiThemeGalleryCaptureClient.sqf";
+} else {
 if (missionNamespace getVariable ["Waldo_QA_RunAutomation", false]) then {
     private _diagnosticDeadline = diag_tickTime + 45;
     waitUntil {
@@ -19,4 +22,5 @@ if (missionNamespace getVariable ["Waldo_QA_RunAutomation", false]) then {
     [] execVM "runClientAudit.sqf";
 } else {
     diag_log "WMP FULL AUDIT MANUAL READY: automated client cases are disabled";
+};
 };

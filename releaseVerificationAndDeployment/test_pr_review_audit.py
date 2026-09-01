@@ -1,4 +1,5 @@
 import importlib.util
+import colorsys
 import json
 import math
 import os
@@ -151,6 +152,34 @@ class PrReviewAuditTests(unittest.TestCase):
                 'missionNamespace getVariable ["Waldo_QA_RunAutomation", false]',
                 (destination / "auditInitPlayerLocal.sqf").read_text(encoding="utf-8"),
             )
+
+    def test_theme_gallery_mode_stages_all_documented_live_frames(self):
+        with tempfile.TemporaryDirectory() as temp:
+            destination = Path(temp) / "WMP_PR_Review_Audit.VR"
+            BUILDER.build(destination, "core", "theme-gallery")
+            bootstrap = (destination / "auditBootstrap.sqf").read_text(encoding="utf-8")
+            self.assertIn("Waldo_QA_RunAutomation = false;", bootstrap)
+            self.assertIn('Waldo_QA_Mode = "THEME-GALLERY";', bootstrap)
+            client_init = (destination / "auditInitPlayerLocal.sqf").read_text(encoding="utf-8")
+            self.assertIn('[] execVM "runUiThemeGalleryCaptureClient.sqf";', client_init)
+            gallery = (destination / "runUiThemeGalleryCaptureClient.sqf").read_text(encoding="utf-8")
+            themes = (
+                "DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT", "MINIMAL",
+                "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE", "EMERGENCY",
+            )
+            for theme in themes:
+                self.assertIn(f'"{theme}"', gallery)
+            self.assertIn("WMP UI THEME GALLERY FRAME READY", gallery)
+            self.assertIn("WMP UI THEME NO RED PROBE", gallery)
+            self.assertIn('["accentHex", "#FF0000"]', gallery)
+            self.assertIn("WMP UI THEME GALLERY COMPLETE: count=%1 restored=%2", gallery)
+
+            capture = (
+                ROOT / "releaseVerificationAndDeployment" / "capture_ui_theme_gallery.ps1"
+            ).read_text(encoding="utf-8")
+            self.assertIn("-Mode ThemeGallery", capture)
+            self.assertIn("capture_interaction_ui.ps1", capture)
+            self.assertIn("WMP UI THEME GALLERY FRAME READY", capture)
 
     def test_direct_launcher_keeps_unfocused_qa_simulation_running(self):
         launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
@@ -1094,7 +1123,20 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('fn_wpland.sqf', staged_server_audit)
         self.assertIn("START NORMAL AI LANDING", client)
         self.assertIn("START HIGH APPROACH / GO-AROUND", client)
-        for theme in ('["DEFAULT", "DEFAULT"]', '["WW2", "WW2"]', '["VIETNAM", "VIETNAM"]', '["SCIFI", "SCI-FI"]'):
+        for theme in (
+            '["DEFAULT", "DEFAULT"]',
+            '["WW2", "WW2"]',
+            '["VIETNAM", "VIETNAM"]',
+            '["SCIFI", "SCI-FI"]',
+            '["PARCHMENT", "PARCHMENT"]',
+            '["MINIMAL", "MINIMAL"]',
+            '["NAVAL", "NAVAL"]',
+            '["DESERT_STORM", "DESERT STORM"]',
+            '["INDUSTRIAL", "INDUSTRIAL"]',
+            '["EASTERN_BLOC", "EASTERN BLOC"]',
+            '["INTELLIGENCE", "INTELLIGENCE"]',
+            '["EMERGENCY", "EMERGENCY"]',
+        ):
             self.assertIn(theme, client)
 
     def test_recovery_restore_requires_a_complete_clear_footprint(self):
@@ -1121,8 +1163,85 @@ class PrReviewAuditTests(unittest.TestCase):
         shared_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
         receive = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeReceiveState.sqf").read_text(encoding="utf-8")
-        for theme in ("DEFAULT", "WW2", "VIETNAM", "SCIFI"):
+        built_in_themes = (
+            "DEFAULT",
+            "WW2",
+            "VIETNAM",
+            "SCIFI",
+            "PARCHMENT",
+            "MINIMAL",
+            "NAVAL",
+            "DESERT_STORM",
+            "INDUSTRIAL",
+            "EASTERN_BLOC",
+            "INTELLIGENCE",
+            "EMERGENCY",
+        )
+        for theme in built_in_themes:
             self.assertIn(f'["{theme}"', resolver)
+            self.assertIn(f'"{theme}"', (root / "uiThemeZen.sqf").read_text(encoding="utf-8"))
+        required_tokens = (
+            "id",
+            "label",
+            "font",
+            "fontBold",
+            "shade",
+            "panel",
+            "panelAlt",
+            "header",
+            "button",
+            "buttonActive",
+            "edit",
+            "list",
+            "casing",
+            "accent",
+            "accentActive",
+            "trim",
+            "text",
+            "muted",
+            "success",
+            "warning",
+            "danger",
+            "railMode",
+            "sourcePrefix",
+            "sourceSuffix",
+            "titlePrefix",
+            "titleSuffix",
+            "motif",
+            "textHex",
+            "mutedHex",
+            "accentHex",
+            "successHex",
+            "warningHex",
+            "dangerHex",
+        )
+        for theme in built_in_themes:
+            block = re.search(
+                rf'\["{theme}", createHashMapFromArray \[(.*?)\n    \]\]',
+                resolver,
+                re.DOTALL,
+            )
+            self.assertIsNotNone(block, theme)
+            for token in required_tokens:
+                self.assertIn(f'["{token}"', block.group(1), f"{theme}:{token}")
+            colour_tokens = {
+                "shade", "panel", "panelAlt", "header", "button", "buttonActive", "edit", "list",
+                "casing", "accent", "accentActive", "trim", "text", "muted", "success", "warning", "danger",
+            }
+            for token, values in re.findall(r'\["([^"]+)", \[([0-9., ]+)\]\]', block.group(1)):
+                if token not in colour_tokens:
+                    continue
+                red, green, blue = (float(value.strip()) for value in values.split(",")[:3])
+                hue, saturation, _value = colorsys.rgb_to_hsv(red, green, blue)
+                degrees = hue * 360
+                self.assertFalse(
+                    saturation > 0.08 and (degrees < 20 or degrees > 340),
+                    f"{theme}:{token} uses reserved red hue {degrees:.1f}",
+                )
+        self.assertIn("private _isRedThemeColour", resolver)
+        self.assertIn("Red theme colour normalised", resolver)
+        self.assertIn('["text", "textHex"]', resolver)
+        self.assertIn('["danger", "dangerHex"]', resolver)
         self.assertIn('missionNamespace setVariable ["Waldo_UI_Theme", _themeId, true]', setter)
         self.assertIn("getAssignedCuratorLogic", setter)
         self.assertIn('missionNamespace setVariable ["Waldo_UI_ThemeRevision", _revision, true]', setter)

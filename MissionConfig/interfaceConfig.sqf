@@ -29,7 +29,8 @@
  * manually from init.sqf or duplicate their initPlayerLocal lifecycle.
  *
  * CUSTOMISATION GUIDE:
- * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL), treatment-feedback policy,
+ * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT, MINIMAL, NAVAL,
+ * DESERT_STORM, INDUSTRIAL, EASTERN_BLOC, INTELLIGENCE or EMERGENCY), treatment-feedback policy,
  * emergency-dismount policy and accessibility eligibility/presentation are intended choices.
  * Panel placement names are TOP_RIGHT, CENTER, BOTTOM_LEFT, BOTTOM_CENTER and BOTTOM_RIGHT; TOP is
  * reserved for mission-flow banners. Panel entries are [channel, placement, allow stacking].
@@ -59,9 +60,10 @@
  * `PreserveVelocity`, `RequireClearExit`, `MinimumOverturnSeconds` and `UpThreshold`.
  *
  * SETTING-BY-SETTING GUIDE - THEME AND NOTIFICATIONS:
- * - Waldo_UI_Theme (MISSION MAKER): DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL; affects WMP UI, not Arma/ACE menus.
- * - Waldo_UI_CustomThemes (ADVANCED): complete new theme definitions; leave empty unless all tokens are tested.
- * - Waldo_UI_ThemeOverrides (ADVANCED): partial token overrides for an existing theme ID.
+ * - Waldo_UI_Theme (MISSION MAKER): use any documented built-in theme ID or a registered custom ID;
+ *   affects WMP UI, not Arma/ACE menus.
+ * - Waldo_UI_CustomThemes (ADVANCED): complete new theme definitions; red hues are always normalised.
+ * - Waldo_UI_ThemeOverrides (ADVANCED): partial token overrides; red hues cannot enter WMP presentation.
  * - Waldo_UiNotification_MaximumQueued (ADVANCED): maximum pending cards; oldest excess entries are discarded.
  * - Waldo_UiNotification_QueueLifetime (ADVANCED): seconds a pending card may wait before expiring.
  * - Waldo_UiNotification_MinimumDuration (MISSION MAKER): shortest readable timed-card lifetime.
@@ -170,9 +172,9 @@
 createHashMapFromArray [
     ["featureFamilies", ["UI Themes", "Notification UI", "Introduction Text", "Treatment Feedback", "Obituary", "Tactical Display", "Emergency Dismount", "WMP HUD", "Accessibility"]],
     ["shared", [
-        ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT or MINIMAL.
-        ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: complete named custom-theme definitions.
-        ["Waldo_UI_ThemeOverrides", createHashMap]   // ADVANCED: partial overrides keyed by theme ID.
+        ["Waldo_UI_Theme", "DEFAULT"],              // MISSION MAKER: select any built-in/documented theme ID or registered custom ID.
+        ["Waldo_UI_CustomThemes", createHashMap],    // ADVANCED: complete named definitions; red hues are normalised.
+        ["Waldo_UI_ThemeOverrides", createHashMap]   // ADVANCED: partial overrides; WMP presentation never resolves red.
     ]],
     ["playerLocal", [
         // MISSION MAKER: Introduction Text content and timing (Waldo_fnc_InfoText).

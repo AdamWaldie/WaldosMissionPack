@@ -392,12 +392,20 @@
     "via": "Waldo_fnc_UiThemeSetServer",
     "script_api": "Waldo_fnc_UiTheme",
     "parity": "adapter",
-    "notes": "The QA selector changes one of four named visual-only global themes and can preview semantic cards without changing feature behavior.",
+    "notes": "The QA selector changes one of twelve named visual-only global themes and can preview semantic cards without changing feature behavior.",
     "required_tokens": [
       "Default / Modern",
       "Second World War",
       "Vietnam / Cold War",
-      "Science Fiction"
+      "Science Fiction",
+      "Parchment / Fantasy",
+      "Minimal / Low Profile",
+      "Naval / Combat Information Centre",
+      "Desert Storm / CENTCOM",
+      "Industrial / Operations Control",
+      "Eastern Bloc / Sector Control",
+      "Intelligence / Restricted",
+      "Emergency / Incident Command"
     ]
   },
   {

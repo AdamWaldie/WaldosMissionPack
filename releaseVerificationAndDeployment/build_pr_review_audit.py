@@ -42,6 +42,7 @@ RANGE_FILES = (
     "compositionCatalogueQA.sqf",
     "extendedFeatureStationsServer.sqf",
     "extendedFeatureStationsClient.sqf",
+    "runUiThemeGalleryCaptureClient.sqf",
     "functionStations.sqf",
     "partyFixtureServer.sqf",
 )
@@ -322,8 +323,8 @@ def wrap_entry_point(path: Path, pre_hook: str, post_hook: str) -> None:
 
 
 def build(destination: Path, suite: str, mode: str = "manual") -> Path:
-    if mode not in {"manual", "automated"}:
-        raise ValueError("Mode must be manual or automated")
+    if mode not in {"manual", "automated", "theme-gallery"}:
+        raise ValueError("Mode must be manual, automated or theme-gallery")
     template_content = {
         name: (TEMPLATE / name).read_text(encoding="utf-8") for name in AUDIT_FILES
     }
@@ -397,7 +398,9 @@ def main() -> int:
     parser.add_argument(
         "--suite", choices=("all", "core", "economy", "ew", "party", "interactions"), default="all"
     )
-    parser.add_argument("--mode", choices=("manual", "automated"), default="manual")
+    parser.add_argument(
+        "--mode", choices=("manual", "automated", "theme-gallery"), default="manual"
+    )
     args = parser.parse_args()
     print(build(args.destination.resolve(), args.suite, args.mode))
     return 0

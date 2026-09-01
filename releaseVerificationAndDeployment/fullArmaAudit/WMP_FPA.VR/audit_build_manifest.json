@@ -33,6 +33,7 @@
     "compositionCatalogueQA.sqf",
     "extendedFeatureStationsServer.sqf",
     "extendedFeatureStationsClient.sqf",
+    "runUiThemeGalleryCaptureClient.sqf",
     "functionStations.sqf",
     "partyFixtureServer.sqf"
   ]
