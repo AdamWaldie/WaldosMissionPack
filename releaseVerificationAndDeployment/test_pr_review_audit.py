@@ -1,4 +1,5 @@
 import importlib.util
+import colorsys
 import json
 import math
 import os
@@ -169,6 +170,8 @@ class PrReviewAuditTests(unittest.TestCase):
             for theme in themes:
                 self.assertIn(f'"{theme}"', gallery)
             self.assertIn("WMP UI THEME GALLERY FRAME READY", gallery)
+            self.assertIn("WMP UI THEME NO RED PROBE", gallery)
+            self.assertIn('["accentHex", "#FF0000"]', gallery)
             self.assertIn("WMP UI THEME GALLERY COMPLETE: count=%1 restored=%2", gallery)
 
             capture = (
@@ -1221,6 +1224,24 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIsNotNone(block, theme)
             for token in required_tokens:
                 self.assertIn(f'["{token}"', block.group(1), f"{theme}:{token}")
+            colour_tokens = {
+                "shade", "panel", "panelAlt", "header", "button", "buttonActive", "edit", "list",
+                "casing", "accent", "accentActive", "trim", "text", "muted", "success", "warning", "danger",
+            }
+            for token, values in re.findall(r'\["([^"]+)", \[([0-9., ]+)\]\]', block.group(1)):
+                if token not in colour_tokens:
+                    continue
+                red, green, blue = (float(value.strip()) for value in values.split(",")[:3])
+                hue, saturation, _value = colorsys.rgb_to_hsv(red, green, blue)
+                degrees = hue * 360
+                self.assertFalse(
+                    saturation > 0.08 and (degrees < 20 or degrees > 340),
+                    f"{theme}:{token} uses reserved red hue {degrees:.1f}",
+                )
+        self.assertIn("private _isRedThemeColour", resolver)
+        self.assertIn("Red theme colour normalised", resolver)
+        self.assertIn('["text", "textHex"]', resolver)
+        self.assertIn('["danger", "dangerHex"]', resolver)
         self.assertIn('missionNamespace setVariable ["Waldo_UI_Theme", _themeId, true]', setter)
         self.assertIn("getAssignedCuratorLogic", setter)
         self.assertIn('missionNamespace setVariable ["Waldo_UI_ThemeRevision", _revision, true]', setter)

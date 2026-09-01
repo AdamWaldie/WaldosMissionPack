@@ -25,6 +25,22 @@ waitUntil {
 };
 
 private _originalTheme = missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"];
+private _originalOverrides = missionNamespace getVariable ["Waldo_UI_ThemeOverrides", createHashMap];
+missionNamespace setVariable ["Waldo_UI_ThemeOverrides", createHashMapFromArray [
+    ["accent", [1, 0, 0, 1]], ["accentHex", "#FF0000"],
+    ["danger", [0.8, 0, 0, 1]], ["dangerHex", "#CC0000"]
+]];
+private _redProbe = ["DEFAULT", "STANDARD"] call Waldo_fnc_UiTheme;
+private _redProbePassed = !((_redProbe getOrDefault ["accent", []]) isEqualTo [1, 0, 0, 1])
+    && {!((_redProbe getOrDefault ["danger", []]) isEqualTo [0.8, 0, 0, 1])}
+    && {(_redProbe getOrDefault ["accentHex", ""]) != "#FF0000"}
+    && {(_redProbe getOrDefault ["dangerHex", ""]) != "#CC0000"};
+missionNamespace setVariable ["Waldo_UI_ThemeOverrides", _originalOverrides];
+diag_log format ["WMP UI THEME NO RED PROBE: pass=%1 accent=%2 danger=%3", _redProbePassed, _redProbe getOrDefault ["accentHex", ""], _redProbe getOrDefault ["dangerHex", ""]];
+if (!_redProbePassed) exitWith {
+    missionNamespace setVariable ["Waldo_QA_UiThemeGalleryCaptureRunning", false];
+    diag_log "WMP UI THEME GALLERY ABORTED: no-red resolver probe failed";
+};
 private _themes = [
     "DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT", "MINIMAL",
     "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE", "EMERGENCY"

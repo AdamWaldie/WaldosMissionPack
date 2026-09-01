@@ -185,8 +185,8 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | Setting | Purpose / valid values |
 |---|---|
 | `Waldo_UI_Theme` | Global visual theme: any of the twelve documented built-in IDs, or a registered custom ID. |
-| `Waldo_UI_CustomThemes` | Custom theme definitions keyed by theme ID. |
-| `Waldo_UI_ThemeOverrides` | Mission-wide component-level theme overrides. |
+| `Waldo_UI_CustomThemes` | Custom theme definitions keyed by theme ID. Red hues are reserved for hostile/enemy language and are normalised by the resolver. |
+| `Waldo_UI_ThemeOverrides` | Mission-wide component-level theme overrides. Red array or hexadecimal inputs cannot enter resolved WMP presentation. |
 
 ## `interfaceConfig.sqf` — player local
 

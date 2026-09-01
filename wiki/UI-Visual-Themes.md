@@ -4,6 +4,11 @@
 
 WMP has one visual theme setting shared by its notification cards, SafeStart, electronic-warfare display, hazardous-environment status, tactical display, interaction equipment, Economy authoring prompts and table-game interface chrome. Themes change fonts, materials, rails, control chrome, copy motifs, colours and accents only. Control positions, input handling, feature state, authority and gameplay rules do not change. `MINIMAL` is the one exception to card *size*: it opts into a smaller notification-card footprint (reduced padding, text scale and maximum height) via a dedicated `compact` token that every other shipped theme leaves off - screen placement and stacking behaviour are unaffected.
 
+WMP theme presentation never uses red. Arma reserves red as hostile/enemy language, so built-in
+themes use violet for danger and non-red accent/trim colours. The resolver applies the same rule
+after custom themes, mission overrides and personal colour-vision overlays; a red input is replaced
+with the token's safe blue, green, amber or violet fallback before any WMP control is drawn.
+
 Set the mission style near the top of `init.sqf`, before the guarded WMP default:
 
 ```sqf
@@ -18,14 +23,14 @@ Built-in values are:
 | `WW2` | Olive field equipment, khaki paper/brass tones, bottom rule and War Department field-order copy |
 | `VIETNAM` | Green phosphor/field-radio shell, amber controls, double scan rails and field-net copy |
 | `SCIFI` | Deep navy node display, cyan/magenta split rails, bracketed titles and system-status copy |
-| `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, handwritten "Royal Chancery" proclamation copy for fantasy/olden-times missions |
+| `PARCHMENT` | Aged parchment and wax-seal violet, gilt double rails, handwritten "Royal Chancery" proclamation copy for fantasy/olden-times missions |
 | `MINIMAL` | Neutral dark glass at reduced opacity, thin top rail, no source/title copy dressing, smaller notification-card footprint |
 | `NAVAL` | Dark naval-blue Combat Information Centre panels, sea-green tracks, pale-blue trim and CIC contact-report copy |
 | `DESERT_STORM` | Charcoal and faded sand command equipment, amber CRT emphasis and CENTCOM tasking/SITREP copy |
 | `INDUSTRIAL` | Graphite machinery panels, safety-yellow controls, steel trim and operations-control work-order copy |
-| `EASTERN_BLOC` | Gunmetal field apparatus, faded cream text, oxide-red controls and sector-command directive copy |
-| `INTELLIGENCE` | Restricted charcoal document panels, muted teal analysis controls, classification-red trim and intelligence-assessment copy |
-| `EMERGENCY` | Dark incident-command panels, rescue-orange controls, cool-blue trim and active emergency-operations copy |
+| `EASTERN_BLOC` | Gunmetal field apparatus, faded cream text, steel-blue controls and sector-command directive copy |
+| `INTELLIGENCE` | Restricted charcoal document panels, muted teal analysis controls, classification-violet trim and intelligence-assessment copy |
+| `EMERGENCY` | Dark incident-command panels, rescue-amber controls, cool-blue trim and active emergency-operations copy |
 
 ## Visual chooser
 
@@ -84,7 +89,7 @@ The module is a visual QA and mission-authoring tool. Ordinary missions normally
 
 ## Mission extensions
 
-`Waldo_UI_CustomThemes` may provide additional named theme HashMaps and `Waldo_UI_ThemeOverrides` may replace known tokens in the selected theme. Override values must retain the built-in token's type. This prevents a malformed palette from changing UI behavior or breaking the shared resolver.
+`Waldo_UI_CustomThemes` may provide additional named theme HashMaps and `Waldo_UI_ThemeOverrides` may replace known tokens in the selected theme. Override values must retain the built-in token's type. Red hues are reserved and are normalised to safe token-specific fallbacks; hexadecimal text colours are rebuilt from the accepted array colours. This prevents a malformed or hostile-looking palette from changing UI behavior or bypassing the no-red rule.
 
 ```sqf
 Waldo_UI_Theme = "WW2";
