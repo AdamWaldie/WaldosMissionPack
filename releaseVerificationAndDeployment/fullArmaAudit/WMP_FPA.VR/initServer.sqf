@@ -26,6 +26,7 @@ call compile preprocessFileLineNumbers "auditPreInitServer.sqf";
 call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
 [] call Waldo_fnc_ACRE2Init;
 ["SERVER"] call Waldo_fnc_LoadFeatureConfigs;
+[] call Waldo_fnc_ConversationLoadConfigured;
 private _headlessEnabledAtMissionStart = missionNamespace getVariable ["Waldo_Headless_Enable", false];
 if (!_headlessEnabledAtMissionStart) then {
     // HC capability is fixed at mission start. Debug may change later only for a mission that

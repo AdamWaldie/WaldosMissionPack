@@ -73,7 +73,7 @@ Recommended review by file:
 | `acreConfig.sqf` | Enablement, named displays, nets, per-occurrence group/player/role assignments, ear placement and Babel languages | Strict validation and shipped capability profiles |
 | `persistenceConfig.sqf` | Enablement, saved data categories and database/campaign name | Save cadence and custom-variable serialization list |
 | `interfaceConfig.sqf` | Theme, treatment recipients/content, emergency-dismount policy and PID eligibility/content | Queue/reflow limits, tactical knowledge threshold, placement geometry and Draw3D scale/offset internals |
-| `dialogueConfig.sqf` | Optional reading pace, interaction/audience distances, responsive panel caps and text scale | Punctuation timing and tested safety bounds |
+| `dialogueConfig.sqf` | Optional reading pace, interaction/audience distances, responsive panel caps, text scale and safe exported conversation definitions | Punctuation timing and tested safety bounds |
 | `aiConfig.sqf` | AI profile/mode, application population and inclusion/exclusion filters | Skill variance and helicopter landing controller values |
 | `airOperationsConfig.sqf` | Feature enablement, aircraft/chute/boarding pools, AA assets and jump envelopes | Monitor cadence, service thresholds and server maximum bounds |
 | `logisticsConfig.sqf` | Resupply content/balance, recovery packages/markers, scale range and crate classes | Scan cadence, safe-placement geometry, client scaling authority and dependency fallback |
@@ -119,10 +119,17 @@ Recommended review by file:
 | `Waldo_Dialogue_ChoiceMinimumRowHeight` | Minimum wrapped response-row height as a safe-zone fraction; default 0.038. |
 | `Waldo_Dialogue_ChoiceTextScale` | Response and cancel-button structured-text scale; default 0.90. |
 
-These settings tune both components but activate neither. Width and height values are proportions,
-not pixels, so they follow safe-zone and aspect-ratio changes. All dialogue controls resolve the
-active WMP theme and the player's local colour-vision profile. Configure individual NPCs in Eden or
-use the WMP Mission Flow ZEN modules; see [Dialogue and Conversations](Dialogue-And-Conversations).
+## `dialogueConfig.sqf` — server
+
+| Setting | Purpose / units |
+|---|---|
+| `Waldo_Conversation_ConfigDefinitions` | Code-free branching definitions exported by **Conversation: Author**. Each row is `[id, nodes, startNode]` and registers on the server without assigning an NPC. |
+
+The shared settings tune both components but activate neither. Width and height values are
+proportions, not pixels, so they follow safe-zone and aspect-ratio changes. The server definition
+array registers reusable IDs but still assigns no NPC. All dialogue controls resolve the active WMP
+theme and the player's local colour-vision profile. Configure individual NPCs in Eden or use the WMP
+Mission Flow ZEN modules; see [Dialogue and Conversations](Dialogue-And-Conversations).
 
 ## `acreConfig.sqf`
 

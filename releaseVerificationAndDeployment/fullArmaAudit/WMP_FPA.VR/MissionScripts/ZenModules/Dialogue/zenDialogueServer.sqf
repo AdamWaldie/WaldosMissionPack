@@ -32,8 +32,14 @@ switch (_operationKey) do {
         _ok = _a || _b;
     };
     case "ADVANCED_ASSIGN": {
-        _values params [["_id", "", [""]], ["_group", false, [true]], ["_once", false, [true]]];
-        _ok = [if (_group) then {group _target} else {_target}, _id, _once] call Waldo_fnc_ConversationAssign;
+        if (_values findIf {!(_x isEqualType [] && {count _x == 2} && {(_x select 0) isEqualType ""})} >= 0) exitWith {};
+        private _payload = createHashMapFromArray _values;
+        private _id = _payload getOrDefault ["conversationId", ""];
+        private _group = _payload getOrDefault ["applyToGroup", false];
+        private _once = _payload getOrDefault ["removeAfterUse", false];
+        if (_id isEqualType "" && {_group isEqualType true} && {_once isEqualType true}) then {
+            _ok = [if (_group) then {group _target} else {_target}, _id, _once] call Waldo_fnc_ConversationAssign;
+        };
     };
 };
 private _message = if (_ok) then {"Dialogue operation completed."} else {"Dialogue operation was rejected; check the target and registered IDs."};

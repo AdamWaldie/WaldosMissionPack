@@ -56,6 +56,15 @@ if (_suite in ["all", "core"]) then {
         ["core/dialogue/advanced-linear-branching", count _linear > 0 && {count _branchNodes == 5} && {count _choices == 3}, [count _linear, count _branchNodes, count _choices]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
+    ["core/dialogue/config-safe-round-trip", {
+        private _definitions = missionNamespace getVariable ["Waldo_Conversation_Definitions", createHashMap];
+        private _configured = _definitions getOrDefault ["QA_CONFIG_SAFE", createHashMap];
+        private _nodes = _configured getOrDefault ["nodes", createHashMap];
+        private _startChoices = (_nodes getOrDefault ["START", createHashMap]) getOrDefault ["choices", []];
+        private _ids = keys _definitions;
+        ["core/dialogue/config-safe-round-trip", count _nodes == 2 && {count _startChoices == 1} && {"QA_CONFIG_SAFE" in _ids}, [count _nodes, count _startChoices, _ids]] call Waldo_QA_fnc_assert;
+    }] call Waldo_QA_fnc_case;
+
     ["core/fixtures/zeus-mhq", {
         private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
         private _deadline = diag_tickTime + 120;

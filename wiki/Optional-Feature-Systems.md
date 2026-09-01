@@ -286,7 +286,7 @@ The presentation remains friendly-only, line-of-sight aware and local. It does n
 | `Waldo_WmpHud_OutlineScale` | `1.12` | Size of the dark outline pass relative to the foreground. |
 | `Waldo_WmpHud_OutlineColour` | `[0.03, 0.03, 0.03, 1]` | Outline colour; alpha follows distance fade. |
 
-The label foreground still comes from the current WMP theme and the player's personal colour-vision profile. Both anchors follow the model's animated `head` selection through `modelToWorldVisual`, with a safe origin-based fallback for unusual unit models. The two text passes use no engine shadow, avoiding the offset double-exposure effect produced by combining a manual outline with `drawIcon3D` shadow mode.
+The label foreground still comes from the current WMP theme and the player's personal colour-vision profile. Both anchors follow the animated centre of the face through `eyePos`, with a safe origin-based fallback for unusual unit models. This avoids the sideways drift caused by character models whose broad `head` selection is not centred. The two text passes use no engine shadow, avoiding the offset double-exposure effect produced by combining a manual outline with `drawIcon3D` shadow mode.
 
 Eligible players can show or hide it through **ACE Self Interact > WMP Interface > Toggle WMP HUD**, with a blue vanilla addAction fallback. The Accessibility category beneath WMP Interface continues to own Colour Vision Settings. Configure WMP HUD eligibility and presentation player-locally; it intentionally has no ZEN module. See the [complete WMP HUD guide](WMP-HUD).
 

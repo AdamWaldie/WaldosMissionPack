@@ -353,6 +353,20 @@ def build(destination: Path, suite: str, mode: str = "manual") -> Path:
         (destination / name).write_text(content, encoding="utf-8")
     for name, content in range_content.items():
         (destination / name).write_text(content, encoding="utf-8")
+    # Exercise the same pure-data configuration row produced by Conversation: Author before the
+    # release initServer SERVER pass. The staged mission receives this fixture; release source and
+    # the canonical empty default remain untouched.
+    pre_server = destination / "auditPreInitServer.sqf"
+    pre_server.write_text(
+        pre_server.read_text(encoding="utf-8").rstrip()
+        + '\nmissionNamespace setVariable ["Waldo_Conversation_ConfigDefinitions", [['
+        + '"QA_CONFIG_SAFE", [['
+        + '"START", [["Configured safe conversation loaded.", "", -1, -1, ""]], '
+        + '[["Continue", "END", "CONTINUE"]], ""], '
+        + '["END", [["Configuration round trip complete.", "", -1, -1, ""]], [], ""]], '
+        + '"START"]], true];\n',
+        encoding="utf-8",
+    )
     acre_config.write_text(
         range_content["auditAcreConfig.sqf"], encoding="utf-8"
     )

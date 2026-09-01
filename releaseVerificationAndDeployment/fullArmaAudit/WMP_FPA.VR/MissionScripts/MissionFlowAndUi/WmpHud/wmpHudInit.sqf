@@ -81,13 +81,15 @@ private _eventId = addMissionEventHandler ["Draw3D", {
             private _visible = true;
             if (_requiresLOS) then {_visible = [player, "VIEW"] checkVisibility [eyePos player, eyePos _unit] > 0.25};
             if (_visible) then {
-                private _headModelPosition = _unit selectionPosition "head";
-                if (_headModelPosition isEqualTo [0, 0, 0]) then {_headModelPosition = _unit selectionPosition "head_hit"};
-                private _headPosition = if (_headModelPosition isEqualTo [0, 0, 0]) then {
+                // eyePos follows the animated centre of the face. The broad visual "head"
+                // selection is not guaranteed to have its origin in the model's horizontal
+                // centre and visibly pulled some nameplates to one side when units turned.
+                private _headPosition = ASLToAGL eyePos _unit;
+                if (_headPosition isEqualTo [0, 0, 0]) then {
                     private _fallback = getPosATLVisual _unit;
                     _fallback set [2, (_fallback select 2) + 1.7];
-                    _fallback
-                } else {_unit modelToWorldVisual _headModelPosition};
+                    _headPosition = _fallback;
+                };
                 private _iconPosition = +_headPosition;
                 _iconPosition set [2, (_iconPosition select 2) + _iconHeadOffset];
                 private _drawColour = +_colour;

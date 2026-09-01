@@ -155,9 +155,13 @@ For missions running RHS, replace `"NonSteerable_Parachute_F"` with `"rhs_d6_Par
 
 ### Dialogue timing, size and accessibility
 
-Edit the `shared` rows in `MissionConfig\dialogueConfig.sqf`. The file controls global reading pace,
-audience/interaction/cancellation distances, and safe-zone-relative subtitle/choice sizing. It does
-not create conversations or register NPCs.
+Edit the `shared` rows in `MissionConfig\dialogueConfig.sqf` for global reading pace,
+audience/interaction/cancellation distances, and safe-zone-relative subtitle/choice sizing. The
+server row `Waldo_Conversation_ConfigDefinitions` additionally accepts code-free branching rows
+exported by **Conversation: Author**. These definitions register automatically after the SERVER
+configuration pass but do not assign themselves to NPCs; use an Eden/script assignment call or the
+ZEN **Conversation: Assign** module. Script-authored definitions remain available for conditions,
+callbacks and multiple runtime speaker objects.
 
 Short content remains compact; long subtitles and response labels wrap. Choice rows grow with their
 text and the list scrolls after reaching `Waldo_Dialogue_ChoiceMaximumHeight`. Dialogue resolves its
