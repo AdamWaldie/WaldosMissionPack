@@ -414,7 +414,8 @@ See [Optional Feature Systems](Optional-Feature-Systems) for the complete settin
 ### Global UI Visual Style
 
 Set `Waldo_UI_Theme` in `MissionConfig\interfaceConfig.sqf` to `DEFAULT`, `WW2`, `VIETNAM`,
-`SCIFI`, `PARCHMENT` or `MINIMAL`. Do not redeclare it in init.sqf. The setting changes presentation only and is consumed
+`SCIFI`, `PARCHMENT`, `MINIMAL`, `NAVAL`, `DESERT_STORM`, `INDUSTRIAL`, `EASTERN_BLOC`,
+`INTELLIGENCE` or `EMERGENCY`. Do not redeclare it in init.sqf. The setting changes presentation only and is consumed
 by WMP displays. Curator QA can change it live and the server publishes that durable selection for
 JIP. See [UI Visual Themes](UI-Visual-Themes).
 

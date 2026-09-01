@@ -7,7 +7,8 @@
  *
  * Parameters:
  * Suite: feature subset to stage (default all).
- * Mode: manual stations or automated audit execution (default Manual).
+ * Mode: manual stations, automated audit execution, or the documentation theme gallery
+ * capture sequence (default Manual).
  * Port: dedicated-server port (default 24132).
  * ResolutionWidth/ResolutionHeight: connected client dimensions (default 3840x2160).
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
@@ -22,7 +23,7 @@
 param(
     [ValidateSet("all", "core", "economy", "ew", "party", "interactions")]
     [string]$Suite = "all",
-    [ValidateSet("Manual", "Automated")]
+    [ValidateSet("Manual", "Automated", "ThemeGallery")]
     [string]$Mode = "Manual",
     [int]$Port = 24132,
     [int]$ResolutionWidth = 3840,
@@ -51,7 +52,8 @@ if ([string]::IsNullOrWhiteSpace($PythonExecutable)) {
 }
 if (-not (Test-Path -LiteralPath $PythonExecutable)) { throw "Python was not found." }
 
-& $PythonExecutable (Join-Path $PSScriptRoot "build_pr_review_audit.py") --destination $missionRoot --suite $Suite --mode $Mode.ToLowerInvariant()
+$buildMode = if ($Mode -eq "ThemeGallery") { "theme-gallery" } else { $Mode.ToLowerInvariant() }
+& $PythonExecutable (Join-Path $PSScriptRoot "build_pr_review_audit.py") --destination $missionRoot --suite $Suite --mode $buildMode
 if ($LASTEXITCODE -ne 0) { throw "Full-pack PR audit staging failed." }
 
 $modNames = @("@CBA_A3", "@ace", "@Zeus Enhanced", "@ACRE2")

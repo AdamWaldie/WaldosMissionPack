@@ -1,6 +1,6 @@
 # UI Visual Themes
 
-> **Use this page when:** you want WMP interfaces to match a modern, Second World War, Vietnam/Cold War, science-fiction, fantasy/olden-times or minimal/low-profile mission without changing how any feature works.
+> **Use this page when:** you want WMP interfaces to match a modern, historical, command-centre, industrial, intelligence, emergency, fantasy or minimal mission without changing how any feature works.
 
 WMP has one visual theme setting shared by its notification cards, SafeStart, electronic-warfare display, hazardous-environment status, tactical display, interaction equipment, Economy authoring prompts and table-game interface chrome. Themes change fonts, materials, rails, control chrome, copy motifs, colours and accents only. Control positions, input handling, feature state, authority and gameplay rules do not change. `MINIMAL` is the one exception to card *size*: it opts into a smaller notification-card footprint (reduced padding, text scale and maximum height) via a dedicated `compact` token that every other shipped theme leaves off - screen placement and stacking behaviour are unaffected.
 
@@ -20,6 +20,33 @@ Built-in values are:
 | `SCIFI` | Deep navy node display, cyan/magenta split rails, bracketed titles and system-status copy |
 | `PARCHMENT` | Aged parchment and wax-seal red, gilt double rails, handwritten "Royal Chancery" proclamation copy for fantasy/olden-times missions |
 | `MINIMAL` | Neutral dark glass at reduced opacity, thin top rail, no source/title copy dressing, smaller notification-card footprint |
+| `NAVAL` | Dark naval-blue Combat Information Centre panels, sea-green tracks, pale-blue trim and CIC contact-report copy |
+| `DESERT_STORM` | Charcoal and faded sand command equipment, amber CRT emphasis and CENTCOM tasking/SITREP copy |
+| `INDUSTRIAL` | Graphite machinery panels, safety-yellow controls, steel trim and operations-control work-order copy |
+| `EASTERN_BLOC` | Gunmetal field apparatus, faded cream text, oxide-red controls and sector-command directive copy |
+| `INTELLIGENCE` | Restricted charcoal document panels, muted teal analysis controls, classification-red trim and intelligence-assessment copy |
+| `EMERGENCY` | Dark incident-command panels, rescue-orange controls, cool-blue trim and active emergency-operations copy |
+
+## Visual chooser
+
+These previews are captured from the real 3840x2160 full-pack audit client. Each image uses the
+production resolver and three-card notification preview, so the font, panel material, rail position,
+semantic colours and copy treatment are the same ones players receive in a mission.
+
+| | |
+|---|---|
+| **Default / Modern**<br>![Default theme](assets/ui-themes/default.png) | **Second World War**<br>![WW2 theme](assets/ui-themes/ww2.png) |
+| **Vietnam / Cold War**<br>![Vietnam theme](assets/ui-themes/vietnam.png) | **Science Fiction**<br>![Science Fiction theme](assets/ui-themes/scifi.png) |
+| **Parchment / Fantasy**<br>![Parchment theme](assets/ui-themes/parchment.png) | **Minimal / Low Profile**<br>![Minimal theme](assets/ui-themes/minimal.png) |
+| **Naval / Combat Information Centre**<br>![Naval theme](assets/ui-themes/naval.png) | **Desert Storm / CENTCOM**<br>![Desert Storm theme](assets/ui-themes/desert-storm.png) |
+| **Industrial / Operations Control**<br>![Industrial theme](assets/ui-themes/industrial.png) | **Eastern Bloc / Sector Control**<br>![Eastern Bloc theme](assets/ui-themes/eastern-bloc.png) |
+| **Intelligence / Restricted**<br>![Intelligence theme](assets/ui-themes/intelligence.png) | **Emergency / Incident Command**<br>![Emergency theme](assets/ui-themes/emergency.png) |
+
+Refresh the complete gallery with:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\capture_ui_theme_gallery.ps1
+```
 
 Semantic success, warning and error colours remain distinct in every style. Every state also carries a written state and symbol, and interaction procedures use labels, shapes or patterns rather than requiring colour recognition.
 
@@ -41,7 +68,7 @@ The shared resolver applies the personal profile after mission theme overrides. 
 
 ## Live QA switch
 
-**UI QA - Set Visual Theme** provides a named dropdown for all six styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
+**UI QA - Set Visual Theme** provides a named dropdown for all twelve styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
 
 Live selections are included in WMP's ordered runtime snapshot as well as the public mission value, so a joining player resolves the server's current style before optional feature interfaces activate.
 

@@ -382,7 +382,20 @@ private _themes = "qa_sign_ui_theme_qa" call _get;
         params ["_target", "_actor", "_theme"];
         [_actor, _theme] remoteExecCall ["Waldo_QA_fnc_setUiThemeServer", 2];
     }, _theme] call _add;
-} forEach [["DEFAULT", "DEFAULT"], ["WW2", "WW2"], ["VIETNAM", "VIETNAM"], ["SCIFI", "SCI-FI"]];
+} forEach [
+    ["DEFAULT", "DEFAULT"],
+    ["WW2", "WW2"],
+    ["VIETNAM", "VIETNAM"],
+    ["SCIFI", "SCI-FI"],
+    ["PARCHMENT", "PARCHMENT"],
+    ["MINIMAL", "MINIMAL"],
+    ["NAVAL", "NAVAL"],
+    ["DESERT_STORM", "DESERT STORM"],
+    ["INDUSTRIAL", "INDUSTRIAL"],
+    ["EASTERN_BLOC", "EASTERN BLOC"],
+    ["INTELLIGENCE", "INTELLIGENCE"],
+    ["EMERGENCY", "EMERGENCY"]
+];
 [_themes, "Waldo_QA_UiThemePreview", "PREVIEW CURRENT THEME STACK", {
     [missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"], true] call Waldo_fnc_UiThemeApplyLocal;
 }] call _add;
