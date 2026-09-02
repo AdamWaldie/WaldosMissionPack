@@ -144,7 +144,31 @@ Repeat-safe local recovery of all WMP-owned overlays/displays — use this if
 a player's screen has a stuck WMP panel rather than trying to hunt down
 which specific feature left it there.
 
-Players get **WMP Interface > Clear Stuck WMP UI** as an ACE self-action
-already; vanilla `addAction` installs automatically only when ACE
-interaction is unavailable. No setup needed — it runs on JIP and respawn
-with no authority scheduler or public state to configure.
+Players get **WMP Options > Clear Stuck WMP UI** as an ACE self-action
+already (this launcher root was renamed from "WMP Interface"); vanilla
+`addAction` installs automatically only when ACE interaction is
+unavailable. No setup needed — it runs on JIP and respawn with no
+authority scheduler or public state to configure.
+
+## Player-local presentation (separate from mission config)
+
+Players can personalise how cards look for themselves — without any
+mission-maker config change — under **ACE Self Interact > WMP Options >
+Notification UI Settings**: a notification-only theme override (`Follow
+Mission` default, or any built-in/mission-custom theme), **Small/Medium/
+Large** card size, and **Normal/Reduced/Off** entry motion. Mission theme
+overrides and each player's colour-vision profile still apply on top —
+this never bypasses either. Purely local, never broadcast. See
+`ui-themes.md` for the full contract.
+
+## Lane/stacking behaviour (all six placements)
+
+Each placement holds up to three active cards. `TOP`/`CENTER` lanes keep
+the oldest card at the top and slide new ones in at the bottom; `BOTTOM_*`
+lanes keep the oldest at the bottom and slide new ones in at the top —
+either way, survivors close the gap toward the placement's anchor when a
+card expires. FIFO is per-channel: repeated updates on one channel queue
+and play in order rather than each claiming a lane; three different
+channels routed to the same placement is what actually forms a 3-card
+stack. `REPLACE` updates its channel's current card in place instead of
+adding a new one.
