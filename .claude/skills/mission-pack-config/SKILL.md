@@ -259,6 +259,7 @@ composition name that isn't documented there.
 | Vehicle recovery + squad rally points | `references/vehicle-recovery-rallies.md` | Two related but independent systems |
 | UI visual themes + colour-vision accessibility | `references/ui-themes.md` | Theme is mission-wide; colour-vision is per player, never set it globally |
 | NPC dialogue (Simple Dialogue) + branching conversations (Advanced Conversations) | `references/dialogue-conversations.md` | Two separate components; ZEN "Conversation: Author" is the beginner branching builder |
+| Zeus END-key kill restore | `references/zeus-end-key-kill.md` | Always-on additive fallback — no config, no API, nothing to set up |
 | ACE Corpse Traps | `references/corpse-traps.md` | |
 | Headless client (native, `MissionConfig\headlessConfig.sqf`) + player markers | `references/headless-client.md` | Native HC system is the recommended path; legacy `WerthlesHeadless.sqf` is covered but disabled/deprecated |
 | Custom 3D world markers | `references/3d-markers.md` | No `MissionConfig` file — pure call API |
