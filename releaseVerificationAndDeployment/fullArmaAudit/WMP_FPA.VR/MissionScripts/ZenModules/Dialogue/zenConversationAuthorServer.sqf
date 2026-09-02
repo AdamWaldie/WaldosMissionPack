@@ -4,8 +4,8 @@
  * on the server, the complete definition and target are revalidated, and no submitted string is
  * compiled or executed.
  * Locality/authority: server-only remote endpoint for an assigned curator-owned player.
- * Repeat/JIP behaviour: explicit replacement is required for an existing ID; registration updates
- * the catalogue revision and normal assignment publishes the complete action snapshot.
+ * Repeat/JIP behaviour: authenticated author saves explicitly permit replacement of an existing ID;
+ * registration updates the catalogue revision and normal assignment publishes the action snapshot.
  * Arguments: named value rows ARRAY, requester OBJECT. Return Value: BOOL.
  * Current caller: ZEN Conversation Author editor.
  * Example: ZEN authenticated remote execution only.
@@ -39,7 +39,7 @@ if !(_validation select 0) then {
     private _id = _definition param [0, ""];
     private _definitions = missionNamespace getVariable ["Waldo_Conversation_Definitions", createHashMap];
     if (_id in keys _definitions && {!_replace}) then {
-        _message = format ["Conversation %1 already exists. Enable Replace existing to update it.", _id];
+        _message = format ["Conversation %1 already exists and this request did not permit an update.", _id];
     } else {
         private _targetValid = _mode == "NONE" || {!isNull _target && {_target isKindOf "CAManBase"} && {alive _target}};
         if !(_mode in ["NONE", "TARGET", "GROUP"] && {_targetValid}) then {
@@ -51,7 +51,11 @@ if !(_validation select 0) then {
                 _ok = [_targets, _id, _removeAfterUse] call Waldo_fnc_ConversationAssign;
             };
             _message = if (_ok) then {
-                if (_mode == "NONE") then {format ["Conversation %1 registered for assignment.", _id]} else {format ["Conversation %1 registered and assigned.", _id]}
+                switch (_mode) do {
+                    case "TARGET": {format ["Conversation %1 saved and applied to this NPC.", _id]};
+                    case "GROUP": {format ["Conversation %1 saved and applied to this NPC's group.", _id]};
+                    default {format ["Conversation %1 saved for later assignment.", _id]};
+                }
             } else {"Conversation registration or assignment failed server validation."};
         };
     };

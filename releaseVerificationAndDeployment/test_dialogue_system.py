@@ -268,18 +268,27 @@ class DialogueSystemTests(unittest.TestCase):
         for token in (
             "BUILD A CONVERSATION IN FOUR STEPS",
             "CONVERSATION PARTS",
-            "WHAT THE NPC SAYS",
+            "WHAT THIS NPC SAYS",
             "WHAT THE PLAYER CAN SAY",
-            "COPY FOR MISSION CONFIG",
-            "COPY FOR SERVER SCRIPT",
+            "SAVE FOR LATER",
+            "APPLY TO THIS NPC",
+            "APPLY TO THIS GROUP",
+            "EXPORT CONFIG (CODE ONLY)",
+            "EXPORT SCRIPT (CODE ONLY)",
         ):
             self.assertIn(token, author_ui)
         self.assertIn("WaldoConvAuthor_NodeButtons", author_ui)
         self.assertIn('ctrlCreate ["RscButton", _nextButtonIdc]', author_ui)
         self.assertIn("WaldoConvAuthor_OperationMap", author_ui)
+        self.assertIn("WaldoConvAuthor_ActionButtons", author_ui)
+        submit = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "conversationAuthorSubmitLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('["replaceExisting", true]', submit)
+        self.assertNotIn("WaldoConvAuthor_Replace", author_ui)
         self.assertNotIn('_nodeButtons apply', author_ui)
         self.assertIn("EDIT CONVERSATION NAME", author_ui)
-        self.assertIn("EDIT PART NAME", author_ui)
+        self.assertIn("SELECTED PART NAME", author_ui)
+        for label in ("COPY CONVERSATION", "COPY PART", "COPY LINE", "COPY ANSWER", "MOVE EARLIER", "MOVE LATER"):
+            self.assertIn(label, author_ui)
         self.assertIn('["KillFocus"', author_ui)
         for operation in (
             "NODE_ADD", "NODE_DUPLICATE", "NODE_DELETE", "NODE_UP", "NODE_DOWN",
@@ -292,9 +301,55 @@ class DialogueSystemTests(unittest.TestCase):
         self.assertIn("ctrlEnable (_choiceIndex > 0)", refresh)
         self.assertIn("[BEGINS]", refresh)
         self.assertIn("ROUTE:", refresh)
+        self.assertIn("LINE %1 — %2", refresh)
+        self.assertNotIn('"NPC %1:', refresh)
         self.assertIn("Tell me about this place.", author_ui)
+        save = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "conversationAuthorSaveLocal.sqf").read_text(encoding="utf-8")
+        refresh = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "conversationAuthorRefreshLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('in ["", "AUTO", "-1"]', save)
+        self.assertIn("another part already uses that name", save)
+        self.assertIn('then {"AUTO"}', refresh)
         self.assertIn("copyToClipboard", export)
+        self.assertIn("Waldo_Conversation_AuthorLastExport", export)
+        self.assertIn("CODE EXPORTED ONLY", export)
+        self.assertIn("No live NPC was saved or updated", export)
         self.assertIn("Waldo_fnc_ConversationCreate", export)
+        mutate = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "conversationAuthorMutateLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("NPC line copied. The new line is selected below.", mutate)
+        preview = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "conversationAuthorShowExportLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("COPY TO CLIPBOARD", preview)
+        self.assertIn("BACK TO EDITOR", preview)
+        self.assertIn("Ctrl+A", preview)
+        self.assertIn("WaldoConvAuthor_ExportPreviewControls", preview)
+        self.assertIn("this does not save or update any NPC", preview)
+        result_ui = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "zenConversationAuthorResultLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn("UNAPPLIED CHANGES", (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "conversationAuthorValidateLocal.sqf").read_text(encoding="utf-8"))
+        self.assertIn("LIVE NOW", result_ui)
+        self.assertIn("WaldoConvAuthor_LastWorkflowState", result_ui)
+
+    def test_conversation_author_has_real_client_server_interaction_audit(self):
+        audit_root = ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
+        client = (audit_root / "FullArmaAudit.VR" / "runClientAudit.sqf").read_text(encoding="utf-8")
+        server = (audit_root / "FullArmaAudit.VR" / "runServerAudit.sqf").read_text(encoding="utf-8")
+        self.assertEqual(client, (audit_root / "WMP_FPA.VR" / "runClientAudit.sqf").read_text(encoding="utf-8"))
+        self.assertEqual(server, (audit_root / "WMP_FPA.VR" / "runServerAudit.sqf").read_text(encoding="utf-8"))
+        self.assertIn("core/dialogue/conversation-author-interactions", client)
+        self.assertIn("one-button-one-action", client)
+        self.assertIn("ctrlActivate true", client)
+        self.assertIn("part-rename-updates-routes", client)
+        self.assertIn("both-export-actions", client)
+        self.assertIn("config-export-visible-fallback", client)
+        self.assertIn("script-export-visible-fallback", client)
+        self.assertIn("automatic-existing-update", client)
+        self.assertIn("existing-edit-marked-unapplied", client)
+        self.assertIn("apply-target-one-use", client)
+        self.assertIn("apply-group", client)
+        self.assertIn("unapplied-change-state", client)
+        self.assertIn("late-registration-catalogue", client)
+        self.assertIn("core/dialogue/conversation-author-authority", server)
+        self.assertNotIn('"C_man_polo_7_F"', server)
+        self.assertIn("[[_solo, _groupA, _groupB]] call Waldo_fnc_ConversationClear", server)
+        self.assertIn('getOrDefault ["removeAfterUse", false]', server)
 
     def test_assignment_catalogue_is_explicit_authenticated_and_tokened(self):
         assign = (ROOT / "MissionScripts" / "ZenModules" / "Dialogue" / "zenConversationAssign.sqf").read_text(encoding="utf-8")

@@ -735,6 +735,7 @@ class CfgFunctions
             class ConversationAuthorValidateLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorValidateLocal.sqf";};
             class ConversationAuthorSubmitLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorSubmitLocal.sqf";};
             class ConversationAuthorExportLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorExportLocal.sqf";};
+            class ConversationAuthorShowExportLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorShowExportLocal.sqf";};
             class ZenConversationCatalogServer {file = "MissionScripts\ZenModules\Dialogue\zenConversationCatalogServer.sqf";};
             class ZenConversationCatalogReceiveLocal {file = "MissionScripts\ZenModules\Dialogue\zenConversationCatalogReceiveLocal.sqf";};
             class ZenConversationAuthorServer {file = "MissionScripts\ZenModules\Dialogue\zenConversationAuthorServer.sqf";};

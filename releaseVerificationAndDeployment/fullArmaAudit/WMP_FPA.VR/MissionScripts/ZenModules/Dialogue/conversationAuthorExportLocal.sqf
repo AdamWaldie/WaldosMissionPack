@@ -1,9 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
  * Exports the selected valid Conversation Author draft either as one dialogueConfig definition row
- * or as a standalone Waldo_fnc_ConversationCreate call. Generated text is copied exactly and no
- * user-authored string is compiled.
- * Locality/authority: interface-local clipboard operation only.
+ * or as a standalone Waldo_fnc_ConversationCreate call. Generated text is shown in a selectable
+ * preview and sent to the clipboard when available; no user-authored string is compiled.
+ * Locality/authority: interface-local preview and clipboard operations only.
  * Repeat/JIP behaviour: deterministic and does not mutate the draft or server.
  * Arguments: editor DISPLAY, format STRING CONFIG or SCRIPT. Return Value: BOOL.
  * Current callers: Conversation Author export buttons.
@@ -33,8 +33,17 @@ if (toUpperANSI _format == "SCRIPT") then {
     };
     _text = format ["[%1, [%2], %3] call Waldo_fnc_ConversationCreate;", str _id, _nodeTexts joinString ("," + endl + "    "), str _start];
 };
+missionNamespace setVariable ["Waldo_Conversation_AuthorLastExport", [toUpperANSI _format, _text]];
 copyToClipboard _text;
+[_display, _format, _text] call Waldo_fnc_ConversationAuthorShowExportLocal;
+private _status = _display getVariable ["WaldoConvAuthor_Status", controlNull];
+private _theme = _display getVariable ["WaldoEcoCore_PromptTheme", [] call Waldo_fnc_UiTheme];
+if (!isNull _status) then {
+    _status ctrlSetStructuredText parseText format ["<t color='%1'>CODE EXPORTED ONLY</t>  No live NPC was saved or updated. Use Apply to make this draft live.", _theme getOrDefault ["warningHex", "#FFD166"]];
+    _status ctrlCommit 0;
+};
+_display setVariable ["WaldoConvAuthor_LastWorkflowState", "CODE_ONLY"];
 diag_log format ["[WMP CONVERSATION EXPORT] format=%1 code=%2", toUpperANSI _format, _text];
-["CONVERSATION", if (toUpperANSI _format == "SCRIPT") then {"Standalone ConversationCreate call copied to the clipboard."} else {"dialogueConfig definition row copied to the clipboard."}, "SUCCESS", "CONVERSATION_AUTHOR_EXPORT", 7]
+["CONVERSATION", "Code ready only; live NPCs were not updated. If paste is empty, copy it manually from the code box.", "SUCCESS", "CONVERSATION_AUTHOR_EXPORT", 7]
     call Waldo_fnc_FeatureNotifyLocal;
 true

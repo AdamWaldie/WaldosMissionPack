@@ -248,7 +248,9 @@ Buttons that cannot work for the current selection are visibly disabled. For exa
 disabled on the first item, and **Remove** is disabled when it would remove the only conversation
 part. Hover over a field or button for a short explanation. The editor keeps named conversations
 while the current mission remains loaded and warns, without blocking save, when a part cannot be
-reached. **Replace Same Name** is required to overwrite a server conversation with the same name.
+reached. Saving or applying a conversation whose name is already registered updates that saved
+definition automatically. A conversation session already in progress keeps the definition snapshot
+it started with; the next session uses the update.
 **One Use Only** removes a direct assignment after it completes once.
 
 Rename a conversation or part in **Edit Conversation Name** or **Edit Part Name**, then click

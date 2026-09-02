@@ -15,6 +15,12 @@ private _draftIndex = _display getVariable ["WaldoConvAuthor_DraftIndex", 0];
 if (_draftIndex < 0 || {_draftIndex >= count _drafts}) exitWith {false};
 private _definition = _drafts select _draftIndex;
 _definition params ["_id", "_nodes", "_startNode"];
+private _nameIssue = "";
+private _parseTiming = {
+    private _text = toUpperANSI ctrlText _this;
+    if (_text in ["", "AUTO", "-1"]) exitWith {-1};
+    parseNumber _text
+};
 private _nodeIndex = (_display getVariable ["WaldoConvAuthor_NodeIndex", 0]) min ((count _nodes - 1) max 0);
 if (count _nodes > 0) then {
     private _node = _nodes select _nodeIndex;
@@ -26,8 +32,8 @@ if (count _nodes > 0) then {
         _lines set [_lineIndex, [
             ctrlText (_display getVariable ["WaldoConvAuthor_LineText", controlNull]),
             if (lbCurSel _soundCombo >= 0) then {_soundCombo lbData lbCurSel _soundCombo} else {""},
-            parseNumber ctrlText (_display getVariable ["WaldoConvAuthor_SoundDuration", controlNull]),
-            parseNumber ctrlText (_display getVariable ["WaldoConvAuthor_TextDuration", controlNull]),
+            (_display getVariable ["WaldoConvAuthor_SoundDuration", controlNull]) call _parseTiming,
+            (_display getVariable ["WaldoConvAuthor_TextDuration", controlNull]) call _parseTiming,
             if (lbCurSel _gestureCombo >= 0) then {_gestureCombo lbData lbCurSel _gestureCombo} else {""}
         ]];
     };
@@ -45,7 +51,20 @@ if (count _nodes > 0) then {
     private _newNodeId = toUpperANSI ctrlText (_display getVariable ["WaldoConvAuthor_NodeId", controlNull]);
     private _otherIds = (_nodes select {_x isNotEqualTo _node}) apply {_x param [0, ""]};
     private _filtered = [_newNodeId, "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_"] call BIS_fnc_filterString;
-    if (_newNodeId == "" || {_filtered != _newNodeId} || {count _newNodeId > 64} || {_newNodeId in _otherIds}) then {_newNodeId = _oldNodeId};
+    if (_newNodeId == "") then {
+        _nameIssue = "Part name was not changed: enter at least one letter, number, or underscore.";
+        _newNodeId = _oldNodeId;
+    } else {
+        if (_filtered != _newNodeId || {count _newNodeId > 64}) then {
+            _nameIssue = "Part name was not changed: use no more than 64 capital letters, numbers, or underscores.";
+            _newNodeId = _oldNodeId;
+        } else {
+            if (_newNodeId in _otherIds) then {
+                _nameIssue = "Part name was not changed because another part already uses that name.";
+                _newNodeId = _oldNodeId;
+            };
+        };
+    };
     if (_newNodeId != _oldNodeId) then {
         if (_startNode == _oldNodeId) then {_startNode = _newNodeId};
         {
@@ -66,5 +85,10 @@ if (lbCurSel _startCombo >= 0) then {
 _definition = [_id, _nodes, _startNode];
 _drafts set [_draftIndex, _definition];
 _display setVariable ["WaldoConvAuthor_Drafts", _drafts];
+_display setVariable ["WaldoConvAuthor_NameIssue", _nameIssue];
+private _liveFingerprint = (missionNamespace getVariable ["Waldo_Conversation_AuthorLiveFingerprints", createHashMap]) getOrDefault [_id, ""];
+private _dirty = _liveFingerprint != "" && {_liveFingerprint != str _definition};
+_display setVariable ["WaldoConvAuthor_Dirty", _dirty];
+if (_dirty) then {_display setVariable ["WaldoConvAuthor_LastWorkflowState", "DIRTY"]};
 missionNamespace setVariable ["Waldo_Conversation_AuthorDrafts", _drafts];
 true

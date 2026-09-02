@@ -77,4 +77,35 @@ _display setVariable ["WaldoConvAuthor_ChoiceIndex", _choiceIndex];
 missionNamespace setVariable ["Waldo_Conversation_AuthorDrafts", _drafts];
 diag_log format ["[WMP CONVERSATION AUTHOR] operation=%1 draft=%2 part=%3 line=%4 answer=%5", toUpperANSI _operation, _draftIndex, _nodeIndex, _lineIndex, _choiceIndex];
 [_display] call Waldo_fnc_ConversationAuthorRefreshLocal;
+private _feedback = createHashMapFromArray [
+    ["DRAFT_NEW", "New conversation created and selected."],
+    ["DRAFT_DUPLICATE", "Conversation copied. The new conversation is selected."],
+    ["DRAFT_DELETE", "Conversation deleted. The nearest remaining conversation is selected."],
+    ["NODE_ADD", "New conversation part added and selected."],
+    ["NODE_DUPLICATE", "Conversation part copied. The new part is selected."],
+    ["NODE_DELETE", "Conversation part deleted. Routes to it were cleared."],
+    ["NODE_UP", "Selected conversation part moved earlier."],
+    ["NODE_DOWN", "Selected conversation part moved later."],
+    ["LINE_ADD", "New line added for this NPC and selected."],
+    ["LINE_DUPLICATE", "NPC line copied. The new line is selected below."],
+    ["LINE_DELETE", "Highlighted NPC line deleted."],
+    ["LINE_UP", "Highlighted NPC line moved earlier."],
+    ["LINE_DOWN", "Highlighted NPC line moved later."],
+    ["CHOICE_ADD", "New player answer added and selected."],
+    ["CHOICE_DUPLICATE", "Player answer copied. The new answer is selected below."],
+    ["CHOICE_DELETE", "Highlighted player answer deleted."],
+    ["CHOICE_UP", "Highlighted player answer moved earlier."],
+    ["CHOICE_DOWN", "Highlighted player answer moved later."]
+] getOrDefault [toUpperANSI _operation, ""];
+if (_feedback != "") then {
+    _display setVariable ["WaldoConvAuthor_LastActionFeedback", _feedback];
+    private _status = _display getVariable ["WaldoConvAuthor_Status", controlNull];
+    private _theme = _display getVariable ["WaldoEcoCore_PromptTheme", [] call Waldo_fnc_UiTheme];
+    if (!isNull _status) then {
+        _status ctrlSetStructuredText parseText format ["<t color='%1'>DONE</t>  %2", _theme getOrDefault ["successHex", "#6CE5A8"], _feedback];
+        _status ctrlCommit 0;
+    };
+    ["CONVERSATION", _feedback, "SUCCESS", format ["CONVERSATION_AUTHOR_%1", toUpperANSI _operation], 5]
+        call Waldo_fnc_FeatureNotifyLocal;
+};
 true

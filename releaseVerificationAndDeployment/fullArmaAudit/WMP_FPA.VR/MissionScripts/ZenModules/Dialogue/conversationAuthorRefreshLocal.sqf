@@ -83,7 +83,7 @@ if (count _nodes > 0) then {
     _display setVariable ["WaldoConvAuthor_LineIndex", _lineIndex];
     private _lineList = _display getVariable ["WaldoConvAuthor_LineList", controlNull];
     lbClear _lineList;
-    {_lineList lbAdd format ["NPC %1: %2", _forEachIndex + 1, (_x param [0, ""]) select [0, 46]]} forEach _lines;
+    {_lineList lbAdd format ["LINE %1 — %2", _forEachIndex + 1, (_x param [0, ""]) select [0, 46]]} forEach _lines;
     private _lineButtons = _display getVariable ["WaldoConvAuthor_LineButtons", []];
     if (count _lineButtons == 5) then {
         (_lineButtons select 0) ctrlEnable (count _lines < 16);
@@ -96,8 +96,8 @@ if (count _nodes > 0) then {
         _lineList lbSetCurSel _lineIndex;
         private _line = _lines select _lineIndex;
         (_display getVariable ["WaldoConvAuthor_LineText", controlNull]) ctrlSetText (_line param [0, ""]);
-        (_display getVariable ["WaldoConvAuthor_SoundDuration", controlNull]) ctrlSetText str (_line param [2, -1]);
-        (_display getVariable ["WaldoConvAuthor_TextDuration", controlNull]) ctrlSetText str (_line param [3, -1]);
+        (_display getVariable ["WaldoConvAuthor_SoundDuration", controlNull]) ctrlSetText (if ((_line param [2, -1]) == -1) then {"AUTO"} else {str (_line param [2, -1])});
+        (_display getVariable ["WaldoConvAuthor_TextDuration", controlNull]) ctrlSetText (if ((_line param [3, -1]) == -1) then {"AUTO"} else {str (_line param [3, -1])});
         {
             _x params ["_control", "_value"];
             private _selection = 0;

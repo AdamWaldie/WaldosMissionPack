@@ -3,7 +3,8 @@
  * Submits one validated, code-free Conversation Author draft to the authenticated server endpoint
  * for register-only, direct-target, or direct-group assignment.
  * Locality/authority: curator interface request; server owns validation, registry and assignment.
- * Repeat/JIP behaviour: request IDs identify acknowledgements; replacement requires its checkbox.
+ * Repeat/JIP behaviour: request IDs identify acknowledgements. Saving an existing ID updates it
+ * automatically for future sessions; a session already running retains its current definition.
  * Arguments: editor DISPLAY, assignment mode STRING NONE/TARGET/GROUP. Return Value: BOOL.
  * Current callers: Conversation Author action buttons.
  * Example: [_display,"NONE"] call Waldo_fnc_ConversationAuthorSubmitLocal;
@@ -24,8 +25,9 @@ private _rows = [
     ["assignmentMode", toUpperANSI _assignmentMode],
     ["target", _display getVariable ["WaldoConvAuthor_Target", objNull]],
     ["removeAfterUse", cbChecked (_display getVariable ["WaldoConvAuthor_RemoveAfter", controlNull])],
-    ["replaceExisting", cbChecked (_display getVariable ["WaldoConvAuthor_Replace", controlNull])]
+    ["replaceExisting", true]
 ];
 missionNamespace setVariable ["Waldo_Conversation_AuthorLastRequest", _requestId];
+missionNamespace setVariable ["Waldo_Conversation_AuthorPendingRequest", [_requestId, _display, toUpperANSI _assignmentMode, +_definition]];
 [_rows, player] remoteExecCall ["Waldo_fnc_ZenConversationAuthorServer", 2];
 true

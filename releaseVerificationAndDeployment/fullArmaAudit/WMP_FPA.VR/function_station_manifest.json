@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1062,
+  "registeredFunctionCount": 1063,
   "runtimeFunctionCount": 383,
-  "functionCount": 1445,
+  "functionCount": 1446,
   "stations": [
     {
       "id": "control",
@@ -2297,6 +2297,12 @@
     {
       "name": "Waldo_fnc_ConversationAuthorExportLocal",
       "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorExportLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorShowExportLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorShowExportLocal.sqf",
       "station": "zen",
       "activation": "manual"
     },
