@@ -17,6 +17,12 @@ if (isServer) then {
     if (isNil {missionNamespace getVariable "Waldo_Dialogue_StateVersion"}) then {
         missionNamespace setVariable ["Waldo_Dialogue_StateVersion", 0];
     };
+    if (isNil {missionNamespace getVariable "Waldo_Conversation_CatalogRevision"}) then {
+        missionNamespace setVariable ["Waldo_Conversation_CatalogRevision", 0];
+    };
+    if (isNil {missionNamespace getVariable "Waldo_Conversation_SafeDefinitions"}) then {
+        missionNamespace setVariable ["Waldo_Conversation_SafeDefinitions", createHashMap];
+    };
     if (isNil {missionNamespace getVariable "Waldo_Dialogue_Archetypes"}) then {
         private _defaults = createHashMapFromArray [
             ["CIVILIAN", ["Hello.", "Can I help you?", "Stay safe out there.", "I have not seen anything unusual."]],

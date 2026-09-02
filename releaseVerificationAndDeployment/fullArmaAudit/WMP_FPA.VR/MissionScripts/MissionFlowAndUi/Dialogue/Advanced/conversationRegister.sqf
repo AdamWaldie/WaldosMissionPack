@@ -16,6 +16,12 @@ _definition set ["id", _id];
 _definition set ["startNode", toUpperANSI (_definition get "startNode")];
 _definitions set [_id, _definition];
 missionNamespace setVariable ["Waldo_Conversation_Definitions", _definitions];
-missionNamespace setVariable ["Waldo_Conversation_PublicIds", keys _definitions, true];
+private _publicIds = keys _definitions;
+_publicIds sort true;
+private _revision = (missionNamespace getVariable ["Waldo_Conversation_CatalogRevision", 0]) + 1;
+missionNamespace setVariable ["Waldo_Conversation_CatalogRevision", _revision];
+// Retained for script compatibility and diagnostics. ZEN assignment requests a fresh authoritative
+// catalogue instead of relying on this asynchronously replicated convenience variable.
+missionNamespace setVariable ["Waldo_Conversation_PublicIds", _publicIds, true];
 diag_log format ["[WMP CONVERSATION] Registered id=%1 nodes=%2.", _id, count keys (_definition get "nodes")];
 true

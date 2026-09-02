@@ -367,6 +367,9 @@ class CfgFunctions
         class AdvancedConversations
         {
             class ConversationCreate {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationCreate.sqf";};
+            class ConversationValidateData {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationValidateData.sqf";};
+            class ConversationCreateData {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationCreateData.sqf";};
+            class ConversationLoadConfigured {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationLoadConfigured.sqf";};
             class ConversationRegister {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationRegister.sqf";};
             class ConversationAssign {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationAssign.sqf";};
             class ConversationStart {file = "MissionScripts\MissionFlowAndUi\Dialogue\Advanced\conversationStart.sqf";};
@@ -724,6 +727,19 @@ class CfgFunctions
             class ZenDialogueSpecific {file = "MissionScripts\ZenModules\Dialogue\zenDialogueSpecific.sqf";};
             class ZenDialogueClear {file = "MissionScripts\ZenModules\Dialogue\zenDialogueClear.sqf";};
             class ZenConversationAssign {file = "MissionScripts\ZenModules\Dialogue\zenConversationAssign.sqf";};
+            class ZenConversationAuthor {file = "MissionScripts\ZenModules\Dialogue\zenConversationAuthor.sqf";};
+            class ConversationAuthorOpenLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorOpenLocal.sqf";};
+            class ConversationAuthorSaveLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorSaveLocal.sqf";};
+            class ConversationAuthorRefreshLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorRefreshLocal.sqf";};
+            class ConversationAuthorMutateLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorMutateLocal.sqf";};
+            class ConversationAuthorValidateLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorValidateLocal.sqf";};
+            class ConversationAuthorSubmitLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorSubmitLocal.sqf";};
+            class ConversationAuthorExportLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorExportLocal.sqf";};
+            class ConversationAuthorShowExportLocal {file = "MissionScripts\ZenModules\Dialogue\conversationAuthorShowExportLocal.sqf";};
+            class ZenConversationCatalogServer {file = "MissionScripts\ZenModules\Dialogue\zenConversationCatalogServer.sqf";};
+            class ZenConversationCatalogReceiveLocal {file = "MissionScripts\ZenModules\Dialogue\zenConversationCatalogReceiveLocal.sqf";};
+            class ZenConversationAuthorServer {file = "MissionScripts\ZenModules\Dialogue\zenConversationAuthorServer.sqf";};
+            class ZenConversationAuthorResultLocal {file = "MissionScripts\ZenModules\Dialogue\zenConversationAuthorResultLocal.sqf";};
             class ZenDialogueServer {file = "MissionScripts\ZenModules\Dialogue\zenDialogueServer.sqf";};
         };
         class Paradrop {

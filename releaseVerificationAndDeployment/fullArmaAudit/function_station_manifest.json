@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1047,
+  "registeredFunctionCount": 1063,
   "runtimeFunctionCount": 383,
-  "functionCount": 1430,
+  "functionCount": 1446,
   "stations": [
     {
       "id": "control",
@@ -1395,6 +1395,24 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_ConversationValidateData",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationValidateData.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationCreateData",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationCreateData.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationLoadConfigured",
+      "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationLoadConfigured.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ConversationRegister",
       "file": "MissionScripts/MissionFlowAndUi/Dialogue/Advanced/conversationRegister.sqf",
       "station": "mission-flow",
@@ -2231,6 +2249,84 @@
     {
       "name": "Waldo_fnc_ZenConversationAssign",
       "file": "MissionScripts/ZenModules/Dialogue/zenConversationAssign.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConversationAuthor",
+      "file": "MissionScripts/ZenModules/Dialogue/zenConversationAuthor.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorOpenLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorOpenLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorSaveLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorSaveLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorRefreshLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorRefreshLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorMutateLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorMutateLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorValidateLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorValidateLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorSubmitLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorSubmitLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorExportLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorExportLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ConversationAuthorShowExportLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/conversationAuthorShowExportLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConversationCatalogServer",
+      "file": "MissionScripts/ZenModules/Dialogue/zenConversationCatalogServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConversationCatalogReceiveLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/zenConversationCatalogReceiveLocal.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConversationAuthorServer",
+      "file": "MissionScripts/ZenModules/Dialogue/zenConversationAuthorServer.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenConversationAuthorResultLocal",
+      "file": "MissionScripts/ZenModules/Dialogue/zenConversationAuthorResultLocal.sqf",
       "station": "zen",
       "activation": "manual"
     },

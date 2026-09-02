@@ -27,6 +27,7 @@
         "core/dialogue/simple-archetypes",
         "core/dialogue/specific-callback",
         "core/dialogue/advanced-linear-branching",
+        "core/dialogue/config-safe-round-trip",
         "core/dialogue/live-presentation"
       ]
     },

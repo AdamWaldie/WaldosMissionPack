@@ -203,6 +203,11 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\talk_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
+["WMP Mission Flow", "Conversation: Author",
+    {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationAuthor;},
+    "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\documents_ca.paa"
+] call zen_custom_modules_fnc_register;
+
 ["WMP Logistics", "Medical: Create Field Hospital Crate",
     {
         diag_log format ["[WMP ZEN] invoked module=Field Hospital Crate curator=%1 payload=%2", name player, _this];

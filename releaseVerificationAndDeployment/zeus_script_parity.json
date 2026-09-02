@@ -694,6 +694,22 @@
   },
   {
     "category": "core",
+    "module": "Conversation: Author",
+    "handler": "Waldo_fnc_ZenConversationAuthor",
+    "via": "Waldo_fnc_ZenConversationAuthorServer",
+    "script_api": "Waldo_fnc_ConversationCreateData",
+    "parity": "adapter",
+    "notes": "A persistent code-free node editor validates serialisable definitions, registers them for later assignment, optionally assigns them directly, and exports dialogueConfig or standalone script forms without compiling curator text.",
+    "required_tokens": [
+      "CONVERSATION AUTHOR",
+      "ORDERED SPEAKER LINES",
+      "ORDERED PLAYER RESPONSES",
+      "EXPORT CONFIG",
+      "EXPORT SCRIPT"
+    ]
+  },
+  {
+    "category": "core",
     "module": "Remove Custom 3D Marker",
     "handler": "Waldo_fnc_ZenRemove3DMarker",
     "via": "Waldo_fnc_FeatureRuntimeApply",

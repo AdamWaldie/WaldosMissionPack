@@ -56,6 +56,52 @@ if (_suite in ["all", "core"]) then {
         ["core/dialogue/advanced-linear-branching", count _linear > 0 && {count _branchNodes == 5} && {count _choices == 3}, [count _linear, count _branchNodes, count _choices]] call Waldo_QA_fnc_assert;
     }] call Waldo_QA_fnc_case;
 
+    ["core/dialogue/config-safe-round-trip", {
+        private _definitions = missionNamespace getVariable ["Waldo_Conversation_Definitions", createHashMap];
+        private _configured = _definitions getOrDefault ["QA_CONFIG_SAFE", createHashMap];
+        private _nodes = _configured getOrDefault ["nodes", createHashMap];
+        private _startChoices = (_nodes getOrDefault ["START", createHashMap]) getOrDefault ["choices", []];
+        private _ids = keys _definitions;
+        ["core/dialogue/config-safe-round-trip", count _nodes == 2 && {count _startChoices == 1} && {"QA_CONFIG_SAFE" in _ids}, [count _nodes, count _startChoices, _ids]] call Waldo_QA_fnc_assert;
+    }] call Waldo_QA_fnc_case;
+
+    ["core/dialogue/conversation-author-authority", {
+        private _soloGroup = createGroup [civilian, true];
+        private _solo = _soloGroup createUnit ["C_man_polo_5_F", [18, 34, 0], [], 0, "NONE"];
+        private _conversationGroup = createGroup [civilian, true];
+        private _groupA = _conversationGroup createUnit ["C_man_polo_6_F", [22, 34, 0], [], 0, "NONE"];
+        private _groupB = _conversationGroup createUnit ["C_man_polo_6_F", [24, 34, 0], [], 0, "NONE"];
+        {_x disableAI "PATH"; _x allowDamage false} forEach [_solo, _groupA, _groupB];
+        missionNamespace setVariable ["Waldo_QA_ConversationAuthorTargets", [_solo, _groupA, _groupB], true];
+        private _deadline = diag_tickTime + 150;
+        waitUntil {
+            uiSleep 0.1;
+            allPlayers findIf {_x getVariable ["Waldo_QA_ConversationAuthorClientComplete", false]} >= 0
+            || {diag_tickTime >= _deadline}
+        };
+        private _clientComplete = allPlayers findIf {_x getVariable ["Waldo_QA_ConversationAuthorClientComplete", false]} >= 0;
+        private _definitions = missionNamespace getVariable ["Waldo_Conversation_Definitions", createHashMap];
+        private _registry = missionNamespace getVariable ["Waldo_Dialogue_Registry", createHashMap];
+        private _soloEntry = _registry getOrDefault [netId _solo, createHashMap];
+        private _groupEntries = [_groupA, _groupB] apply {_registry getOrDefault [netId _x, createHashMap]};
+        private _registered = ["QA_AUTHOR_REGISTER", "QA_AUTHOR_TARGET", "QA_AUTHOR_GROUP"] findIf {!(_x in keys _definitions)} < 0;
+        private _soloCorrect = (_soloEntry getOrDefault ["conversationId", ""]) == "QA_AUTHOR_TARGET"
+            && {_soloEntry getOrDefault ["removeAfterUse", false]};
+        private _groupCorrect = _groupEntries findIf {
+            (_x getOrDefault ["conversationId", ""]) != "QA_AUTHOR_GROUP"
+            || {_x getOrDefault ["removeAfterUse", true]}
+        } < 0;
+        [
+            "core/dialogue/conversation-author-authority",
+            _clientComplete && {_registered} && {_soloCorrect} && {_groupCorrect},
+            [_clientComplete, _registered, _soloCorrect, _groupCorrect, keys _definitions]
+        ] call Waldo_QA_fnc_assert;
+        [[_solo, _groupA, _groupB]] call Waldo_fnc_ConversationClear;
+        {deleteVehicle _x} forEach [_solo, _groupA, _groupB];
+        deleteGroup _soloGroup;
+        deleteGroup _conversationGroup;
+    }] call Waldo_QA_fnc_case;
+
     ["core/fixtures/zeus-mhq", {
         private _curator = missionNamespace getVariable ["Waldo_QA_Curator", objNull];
         private _deadline = diag_tickTime + 120;

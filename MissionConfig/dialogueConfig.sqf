@@ -33,8 +33,15 @@
  * Waldo_Dialogue_ChoiceMinimumRowHeight preserves a usable click target; and
  * Waldo_Dialogue_ChoiceTextScale sizes response and cancel text. All geometry values are fractions
  * of the current safe zone, with text wrapping and scrolling at the configured caps.
+ * Waldo_Conversation_ConfigDefinitions contains code-free branching definitions exported by the
+ * ZEN Conversation Author. A definition is [id, nodes, startNode]; a node is
+ * [nodeId, lines, choices, automaticNextNode]; a line is
+ * [text, CfgSounds id, sound duration, text duration override, gesture]; and a choice is
+ * [label, destination node, choice id]. IDs use uppercase A-Z, 0-9 and underscore. Empty destination
+ * text ends the conversation. This safe config schema deliberately contains no CODE or object refs.
  *
- * Example: set Waldo_Dialogue_SecondsPerWord to 0.4 for faster subtitle pacing.
+ * Example: set Waldo_Dialogue_SecondsPerWord to 0.4 for faster subtitle pacing, or paste a validated
+ * Conversation Author row inside the Waldo_Conversation_ConfigDefinitions array below.
  */
 createHashMapFromArray [
     ["shared", [
@@ -56,7 +63,11 @@ createHashMapFromArray [
         ["Waldo_Dialogue_ChoiceMinimumRowHeight", 0.038],
         ["Waldo_Dialogue_ChoiceTextScale", 0.90]
     ]],
-    ["server", []],
+    ["server", [
+        // Safe branching definitions authored by ZEN export use [id, nodes, startNode]. Each node is
+        // [nodeId, lines, choices, automaticNextNode]. Leave empty when conversations are script-authored.
+        ["Waldo_Conversation_ConfigDefinitions", []]
+    ]],
     ["playerLocal", []],
     ["aliases", []],
     ["fallbacks", []],

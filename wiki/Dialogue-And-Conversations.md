@@ -200,6 +200,21 @@ the builder, then use `Waldo_fnc_ConversationAssign`, `Waldo_fnc_ConversationSta
 `Waldo_fnc_ConversationCancel` and `Waldo_fnc_ConversationClear` directly. Conditions and hooks
 receive `[_speaker, _caller, _context]` and remain on the server.
 
+### Code-free data definitions
+
+`Waldo_fnc_ConversationCreateData` is the safe, serialisable form used by ZEN and mission config. Its
+definition is `[id, nodes, startNode]`. Nodes contain `[nodeId, lines, choices, automaticNextNode]`;
+lines contain `[text, CfgSounds id, sound duration, text duration override, gesture]`; choices contain
+`[label, destination node, choice id]`. Empty destinations end the conversation. IDs use uppercase
+letters, numbers and underscores.
+
+Paste **Export Config** output inside the `Waldo_Conversation_ConfigDefinitions` array in
+`MissionConfig\dialogueConfig.sqf`. The server registers those definitions automatically after its
+configuration pass. Paste **Export Script** output into `initServer.sqf` or another server-side
+mission script when you need a standalone `Waldo_fnc_ConversationCreate` call. Exported script calls
+use always-enabled choices and empty hooks; script authors can then add conditions, on-select,
+on-enter, completion and cancellation code by following the full schema above.
+
 ## Zeus Enhanced
 
 The **WMP Mission Flow** category contains:
@@ -208,11 +223,43 @@ The **WMP Mission Flow** category contains:
 - **Dialogue - Assign Simple Lines** (separate lines with `|`)
 - **Dialogue - Clear**
 - **Conversation: Assign**
+- **Conversation: Author**
 
 Place assignment modules directly on the NPC; they can optionally apply to the NPC's entire group.
 Advanced conversations are authored in mission scripts with `Waldo_fnc_ConversationCreate` or
 `Waldo_fnc_ConversationRegister`, then assigned in Zeus by selecting their public conversation ID.
 Private conditions and hooks remain server-side and are never replicated to curators.
+
+**Conversation: Assign** requests the current ID catalogue from the server each time it opens, so a
+JIP curator and conversations registered later in the mission do not depend on public-variable
+arrival order.
+
+Place **Conversation: Author** in empty space to build and save a conversation for later, or place it
+directly on a living NPC to also enable the two **Save + Give** buttons. A new conversation opens with
+a working two-part example. Follow the numbered columns from left to right:
+
+1. Add **Conversation Parts**. A part is one moment in the conversation.
+2. Write **What the NPC Says** in each part.
+3. Add **What the Player Can Say**, then choose which part each answer opens. Choose **End** to finish.
+4. Select **Check**, fix anything shown as **Needs Fixing**, then use **Save for Zeus** or a
+   **Save + Give** button.
+
+Buttons that cannot work for the current selection are visibly disabled. For example, **Up** is
+disabled on the first item, and **Remove** is disabled when it would remove the only conversation
+part. Hover over a field or button for a short explanation. The editor keeps named conversations
+while the current mission remains loaded and warns, without blocking save, when a part cannot be
+reached. Saving or applying a conversation whose name is already registered updates that saved
+definition automatically. A conversation session already in progress keeps the definition snapshot
+it started with; the next session uses the update.
+**One Use Only** removes a direct assignment after it completes once.
+
+Rename a conversation or part in **Edit Conversation Name** or **Edit Part Name**, then click
+elsewhere. The visible route list updates immediately. Renaming a part also updates every player
+answer and automatic route that pointed to its old name.
+
+The live/config authoring schema intentionally does not accept typed SQF, conditions, callbacks or
+arbitrary speaker-object references. The server compiles nothing from curator input. Use the
+standalone script export as the starting point when those power-user features are required.
 
 ## Timing, multiplayer and limits
 
