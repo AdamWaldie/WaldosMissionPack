@@ -7,7 +7,8 @@ Zeus modules, the Economy Systems suite, minigames, UI notifications, WMP
 HUD, transport services, hazardous environments, tree felling, breaching,
 Dynamic AA/AO, gunship support, persistence, object scaling, emergency
 dismount, tactical display, field resupply, vehicle recovery/rally points,
-UI themes, corpse traps, 3D markers, description.ext, and the
+UI themes, corpse traps, 3D markers, NPC dialogue and branching
+conversations, description.ext, and the
 misc-mission-maker-tools catch-all) plus `mod-detection.md`, three vanilla
 SQF/Arma engine reference files (`sqf-language-reference.md`,
 `arma-scripting-architecture.md`, `sqf-debugging.md`), and a `mods/`
