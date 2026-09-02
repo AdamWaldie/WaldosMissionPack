@@ -18,7 +18,7 @@ knowledge, or network state — pure client-local presentation.
 ["Waldo_WmpHud_NVGs", [ /* NVG/HMD classnames */ ]],
 ["Waldo_WmpHud_DefaultVisible", true],
 ["Waldo_WmpHud_AccessibilityDefaultVisible", true],
-["Waldo_WmpHud_AllowToggle", true],            // shows the WMP Interface self-action
+["Waldo_WmpHud_AllowToggle", true],            // shows the rapid Enable/Disable WMP HUD self-actions
 ["Waldo_WmpHud_Icon", "\a3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
 ["Waldo_WmpHud_Colour", []],                   // [] follows colour-vision-aware theme; else RGBA 0-1
 ["Waldo_WmpHud_IconRange", 300], ["Waldo_WmpHud_NameRange", 50],
@@ -43,10 +43,25 @@ knowledge, or network state — pure client-local presentation.
 
 ## Player access
 
-Eligible users show/hide it via **ACE Self Interact > WMP Interface >
-Toggle WMP HUD** (blue vanilla `addAction` fallback without ACE). Colour-vision
-controls live separately under **WMP Interface > Accessibility** — see
-`ui-themes.md`.
+Eligible users get **ACE Self Interact > WMP Options > WMP HUD**: rapid,
+conditionally-shown **Enable WMP HUD** / **Disable WMP HUD** actions plus a
+**WMP HUD Settings** custom screen (blue vanilla `addAction` fallback
+without ACE). Colour-vision and reduced-motion controls live separately
+under **WMP Options > Accessibility Settings** — see `ui-themes.md`.
+
+### WMP HUD Settings (player-local, restriction-only)
+
+The settings screen can:
+- hide otherwise-permitted icons and/or names
+- choose **Small / Medium / Large** icon+text scale
+- choose **Low / Medium / High** opacity
+
+It can only ever make the HUD show **less** than mission configuration
+permits — it cannot expand `IconRange`/`NameRange`, reveal units the
+mission excludes, bypass LOS/equipment/UID gates, or override
+`AllowToggle`. It also explains in-place when the feature is mission-
+disabled or this player's eligibility isn't met. The choice survives
+respawn (`Waldo_fnc_WmpHudPreferences` / `Waldo_fnc_WmpHudSettingsApplyLocal`).
 
 ## Script API (local, no ZEN module)
 
@@ -55,6 +70,7 @@ controls live separately under **WMP Interface > Accessibility** — see
 [] call Waldo_fnc_WmpHudToggle;
 [] call Waldo_fnc_WmpHudStop;
 [unit] call Waldo_fnc_WmpHudEligible;
+[] call Waldo_fnc_WmpHudPreferences;            // reads this player's stored HUD content/scale/opacity prefs
 ```
 
 WMP HUD intentionally has **no ZEN module** — eligibility/presentation is
