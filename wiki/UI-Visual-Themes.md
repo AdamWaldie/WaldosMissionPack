@@ -1,8 +1,16 @@
 # UI Visual Themes
 
-> **Use this page when:** you want WMP interfaces to match a modern, historical, command-centre, industrial, intelligence, emergency, fantasy or minimal mission without changing how any feature works.
+> **Use this page when:** you want WMP interfaces to match a modern, historical, retro-futurist, post-apocalyptic, gothic, command-centre, industrial, intelligence, emergency, fantasy or minimal mission without changing how any feature works.
 
-WMP has one visual theme setting shared by its notification cards, SafeStart, electronic-warfare display, hazardous-environment status, tactical display, interaction equipment, Economy authoring prompts and table-game interface chrome. Themes change fonts, materials, rails, control chrome, copy motifs, colours and accents only. Control positions, input handling, feature state, authority and gameplay rules do not change. `MINIMAL` is the one exception to card *size*: it opts into a smaller notification-card footprint (reduced padding, text scale and maximum height) via a dedicated `compact` token that every other shipped theme leaves off - screen placement and stacking behaviour are unaffected.
+WMP has one visual theme setting shared by its notification cards, SafeStart, electronic-warfare display, hazardous-environment status, tactical display, interaction equipment, Economy authoring prompts and table-game interface chrome. Themes change fonts, materials, rails, control chrome, copy motifs, colours and accents only. Control positions, input handling, feature state, authority and gameplay rules do not change. At the same personal size, every notification theme uses the same footprint and typography scale; `MINIMAL` earns its low-profile identity through reduced visual chrome and transparency rather than smaller text or cards.
+
+Distinct notification materials and silhouettes are assembled programmatically from native Arma
+controls. Gothic frames, inset CRT screens, corporate glass, scrap plates, contract tabs and
+broadcast banners do not use bundled PNG/PAA textures, imported fonts or theme-specific scripts.
+The renderer owns a small fixed set of reusable chrome modes, so these styles add negligible pack
+size and continue to share the same stacking, suppression and accessibility behaviour.
+The renderer caps the layout canvas against the current safe-zone aspect ratio and screen height,
+so lane anchors remain usable on 4:3, 16:10, 16:9 and ultrawide displays.
 
 WMP theme presentation never uses red. Arma reserves red as hostile/enemy language, so built-in
 themes use violet for danger and non-red accent/trim colours. The resolver applies the same rule
@@ -24,12 +32,20 @@ Built-in values are:
 | `VIETNAM` | Green phosphor/field-radio shell, amber controls, double scan rails and field-net copy |
 | `SCIFI` | Deep navy node display, cyan/magenta split rails, bracketed titles and system-status copy |
 | `PARCHMENT` | Aged parchment and wax-seal violet, gilt double rails, handwritten "Royal Chancery" proclamation copy for fantasy/olden-times missions |
-| `MINIMAL` | Neutral dark glass at reduced opacity, thin top rail, no source/title copy dressing, smaller notification-card footprint |
+| `MINIMAL` | Neutral dark glass at reduced opacity, thin top rail and no source/title copy dressing |
 | `NAVAL` | Dark naval-blue Combat Information Centre panels, sea-green tracks, pale-blue trim and CIC contact-report copy |
 | `DESERT_STORM` | Charcoal and faded sand command equipment, amber CRT emphasis and CENTCOM tasking/SITREP copy |
-| `INDUSTRIAL` | Graphite machinery panels, safety-yellow controls, steel trim and operations-control work-order copy |
+| `INDUSTRIAL` | Slate field-operations board, safety-yellow index tab, steel status rules and work-order copy |
 | `EASTERN_BLOC` | Gunmetal field apparatus, faded cream text, steel-blue controls and sector-command directive copy |
 | `INTELLIGENCE` | Restricted charcoal document panels, muted teal analysis controls, classification-violet trim and intelligence-assessment copy |
+| `GRIMDARK` | Vietnam-like olive phosphor field display with amber controls, gothic framing, VOXCASTER traffic labels and Imperial vox-net acknowledgements |
+| `ATOMIC_AGE` | Pristine mint-and-cream 1950s retro-futurism, teal controls, gilt trim and civil-defence bulletin copy |
+| `WASTELAND` | Battered retro electronics, oxidised teal panels, amber gauges, faded phosphor text and salvaged-relay copy |
+| `PMC` | Light silver corporate equipment, cool-blue controls, restrained steel trim and verified-contract tasking copy |
+| `RETRO_COMMAND` | Green-phosphor CRT panels, amber keys, scan rails and terse 1970s-80s command-terminal messages |
+| `DIESELPUNK` | Symmetrical brass-and-black ministry engine plate, steel braces, warm instrument text and heavy-industry directives |
+| `MERCENARY` | Field-worn sand-and-olive contractor kit, muted brass controls and informal job/contract language |
+| `PROPAGANDA` | Monumental navy, cream and muted-gold broadcast panels with numbered state directives and oversized institutional copy |
 | `EMERGENCY` | Dark incident-command panels, rescue-amber controls, cool-blue trim and active emergency-operations copy |
 
 ## Visual chooser
@@ -46,6 +62,10 @@ semantic colours and copy treatment are the same ones players receive in a missi
 | **Naval / Combat Information Centre**<br>![Naval theme](assets/ui-themes/naval.png) | **Desert Storm / CENTCOM**<br>![Desert Storm theme](assets/ui-themes/desert-storm.png) |
 | **Industrial / Operations Control**<br>![Industrial theme](assets/ui-themes/industrial.png) | **Eastern Bloc / Sector Control**<br>![Eastern Bloc theme](assets/ui-themes/eastern-bloc.png) |
 | **Intelligence / Restricted**<br>![Intelligence theme](assets/ui-themes/intelligence.png) | **Emergency / Incident Command**<br>![Emergency theme](assets/ui-themes/emergency.png) |
+| **Grimdark / Gothic Warfront**<br>![Grimdark theme](assets/ui-themes/grimdark.png) | **Atomic Age / Civil Defence**<br>![Atomic Age theme](assets/ui-themes/atomic-age.png) |
+| **Wasteland / Retro Apocalypse**<br>![Wasteland theme](assets/ui-themes/wasteland.png) | **PMC / Corporate Operations**<br>![PMC theme](assets/ui-themes/pmc.png) |
+| **Retro Command / CRT**<br>![Retro Command theme](assets/ui-themes/retro-command.png) | **Dieselpunk / Heavy Industry**<br>![Dieselpunk theme](assets/ui-themes/dieselpunk.png) |
+| **Mercenary / Field Contract**<br>![Mercenary theme](assets/ui-themes/mercenary.png) | **Propaganda / Central Broadcast**<br>![Propaganda theme](assets/ui-themes/propaganda.png) |
 
 Refresh the complete gallery with:
 
@@ -53,11 +73,21 @@ Refresh the complete gallery with:
 powershell -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\capture_ui_theme_gallery.ps1
 ```
 
+The same run captures a three-card stack at each supported location, proving the full lane rather than one isolated card: `TOP`, `TOP_RIGHT`, `CENTER`, `BOTTOM_LEFT`, `BOTTOM_CENTER` and `BOTTOM_RIGHT`.
+
+| | |
+|---|---|
+| **Top**<br>![Three-card top stack](assets/ui-themes/notification-position-top.png) | **Top right**<br>![Three-card top-right stack](assets/ui-themes/notification-position-top-right.png) |
+| **Centre**<br>![Three-card centre stack](assets/ui-themes/notification-position-center.png) | **Bottom left**<br>![Three-card bottom-left stack](assets/ui-themes/notification-position-bottom-left.png) |
+| **Bottom centre**<br>![Three-card bottom-centre stack](assets/ui-themes/notification-position-bottom-center.png) | **Bottom right**<br>![Three-card bottom-right stack](assets/ui-themes/notification-position-bottom-right.png) |
+
+The audit also saturates the configured lanes, verifies that the next FIFO request returns `QUEUED`, frees one bottom-right slot and confirms that the waiting request drains into that slot. Non-standard themes do not own separate queue code: every material and silhouette uses this same bounded registry, overflow order and reflow path.
+
 Semantic success, warning and error colours remain distinct in every style. Every state also carries a written state and symbol, and interaction procedures use labels, shapes or patterns rather than requiring colour recognition.
 
 ## Personal colour-vision profiles
 
-Every player has a local colour-vision overlay independent of the mission-wide era theme. Open **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** and select:
+Every player has a local colour-vision overlay independent of the mission-wide era theme. Open **ACE Self Interact > WMP Options > Accessibility Settings** and select:
 
 | Profile | Purpose |
 |---|---|
@@ -71,9 +101,13 @@ Every profile follows the same rule: it overrides only the semantic/focus tokens
 
 The shared resolver applies the personal profile after mission theme overrides. Use `Waldo_fnc_UiColourVisionApplyLocal` only for local accessibility tooling; use `Waldo_fnc_UiThemeSetServer` for the mission-wide era.
 
+## Personal notification presentation
+
+Open **ACE Self Interact > WMP Options > Notification UI Settings**. The custom screen provides a notification-only theme, **Small / Medium / Large** size and **Normal / Reduced / Off** motion. **Follow Mission** inherits the mission era. A player-selected built-in or mission custom theme affects notifications only; it does not restyle the WMP HUD or other displays. Mission theme-token overrides and the colour-vision profile remain authoritative overlays. Applying a change immediately restyles and reflows visible stacks, persists in the local profile and is never broadcast to other players.
+
 ## Live QA switch
 
-**UI QA - Set Visual Theme** provides a named dropdown for all twelve styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
+**UI QA - Set Visual Theme** provides a named dropdown for all twenty styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
 
 Live selections are included in WMP's ordered runtime snapshot as well as the public mission value, so a joining player resolves the server's current style before optional feature interfaces activate.
 
@@ -89,7 +123,7 @@ The module is a visual QA and mission-authoring tool. Ordinary missions normally
 
 ## Mission extensions
 
-`Waldo_UI_CustomThemes` may provide additional named theme HashMaps and `Waldo_UI_ThemeOverrides` may replace known tokens in the selected theme. Override values must retain the built-in token's type. Red hues are reserved and are normalised to safe token-specific fallbacks; hexadecimal text colours are rebuilt from the accepted array colours. This prevents a malformed or hostile-looking palette from changing UI behavior or bypassing the no-red rule.
+`Waldo_UI_CustomThemes` may provide additional named theme HashMaps and `Waldo_UI_ThemeOverrides` may replace known tokens in the selected theme. Override values must retain the built-in token's type. Red hues are reserved and are normalised to safe token-specific fallbacks; hexadecimal text colours are rebuilt from the accepted array colours. This prevents a malformed or hostile-looking palette from changing UI behavior or bypassing the no-red rule. Optional `chromeMode` values select only renderer-owned procedural layouts; custom themes cannot inject scripts or external texture paths through the theme schema. Procedural chrome is limited to structural edges, headers, footers and reserved semantic zones. The renderer does not generate decorative fake gauges or data marks.
 
 ```sqf
 Waldo_UI_Theme = "WW2";

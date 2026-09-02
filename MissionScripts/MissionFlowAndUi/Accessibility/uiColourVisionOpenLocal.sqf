@@ -1,15 +1,16 @@
 /*
  * Author: WaldoTheWarfighter
- * Opens the local colour-vision accessibility selector. Named buttons explain each profile; a
- * selection is applied immediately, persisted to the player's profile and demonstrated through
- * the normal notification stack after the selector closes.
+ * Opens the local cross-interface Accessibility Settings screen. Named buttons explain each
+ * colour-vision profile and the reduced-motion control affects notification movement now and other
+ * WMP display animation as it is adopted. Selections apply immediately and persist locally; mission
+ * mechanics, information restrictions and authority are unchanged. Display creation is repeat/JIP safe.
  *
  * Arguments: None.
  * Return Value: DISPLAY - created selector, or displayNull when no gameplay display exists.
  *
  * Example:
  * [] call Waldo_fnc_UiColourVisionOpenLocal;
- * Current caller: Accessibility self-interaction category.
+ * Current caller: WMP Options > Accessibility Settings self-interaction.
  */
 
 disableSerialization;
@@ -29,7 +30,7 @@ _back ctrlSetBackgroundColor (_theme getOrDefault ["panel", [0.01, 0.02, 0.03, 0
 _back ctrlCommit 0;
 private _header = _display ctrlCreate ["RscStructuredText", -1];
 _header ctrlSetPosition [_panelX + (_panelW * 0.04), _panelY + (_panelH * 0.035), _panelW * 0.92, _panelH * 0.13];
-_header ctrlSetStructuredText parseText format ["<t font='%1' size='1.35' color='%2'>ACCESSIBILITY // COLOUR VISION</t><br/><t font='%3' size='0.86' color='%4'>Choose a personal semantic palette. Labels, symbols, patterns and state words remain active in every mode.</t>", _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["accentHex", "#79C7FF"], _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"]];
+_header ctrlSetStructuredText parseText format ["<t font='%1' size='1.35' color='%2'>ACCESSIBILITY SETTINGS</t><br/><t font='%3' size='0.86' color='%4'>Colour semantics apply across Notifications and the WMP HUD. Labels and symbols remain active in every mode.</t>", _theme getOrDefault ["fontBold", "RobotoCondensedBold"], _theme getOrDefault ["accentHex", "#79C7FF"], _theme getOrDefault ["font", "RobotoCondensed"], _theme getOrDefault ["textHex", "#FFFFFF"]];
 _header ctrlCommit 0;
 private _ids = ["STANDARD", "RED_GREEN", "PROTAN", "TRITAN", "HIGH_CONTRAST"];
 private _buttonY = _panelY + (_panelH * 0.19);
@@ -56,8 +57,21 @@ private _buttonY = _panelY + (_panelH * 0.19);
     _description ctrlCommit 0;
     _buttonY = _buttonY + (_panelH * 0.115);
 } forEach _ids;
+private _motion = _display ctrlCreate ["RscButton", -1];
+_motion ctrlSetPosition [_panelX + (_panelW * 0.055), _panelY + (_panelH * 0.785), _panelW * 0.45, _panelH * 0.065];
+_motion ctrlSetText format ["REDUCED MOTION: %1", ["OFF", "ON"] select (profileNamespace getVariable ["Waldo_UI_ReducedMotion", false])];
+_motion ctrlSetBackgroundColor (_theme getOrDefault ["button", [0.04, 0.14, 0.23, 1]]);
+_motion ctrlSetActiveColor (_theme getOrDefault ["buttonActive", [0.08, 0.45, 0.75, 1]]);
+_motion ctrlAddEventHandler ["ButtonClick", {
+    params ["_control"];
+    private _enabled = !(profileNamespace getVariable ["Waldo_UI_ReducedMotion", false]);
+    profileNamespace setVariable ["Waldo_UI_ReducedMotion", _enabled];
+    saveProfileNamespace;
+    _control ctrlSetText format ["REDUCED MOTION: %1", ["OFF", "ON"] select _enabled];
+}];
+_motion ctrlCommit 0;
 private _close = _display ctrlCreate ["RscButton", -1];
-_close ctrlSetPosition [_panelX + (_panelW * 0.35), _panelY + (_panelH * 0.88), _panelW * 0.30, _panelH * 0.075];
+_close ctrlSetPosition [_panelX + (_panelW * 0.65), _panelY + (_panelH * 0.785), _panelW * 0.30, _panelH * 0.065];
 _close ctrlSetText "CLOSE";
 _close ctrlSetBackgroundColor (_theme getOrDefault ["header", [0.04, 0.2, 0.34, 1]]);
 _close ctrlSetTextColor (_theme getOrDefault ["text", [1, 1, 1, 1]]);

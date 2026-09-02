@@ -1,9 +1,10 @@
 /*
- * Author: WaldoTheWarfighter, Val
+ * Author: WaldoTheWarfighter
  * Toggles the local WMP HUD without changing mission-wide configuration. Eligibility is checked
  * before enabling so removing campaign HUD equipment immediately prevents ordinary users from
  * bypassing its requirement; configured accessibility UIDs remain eligible without equipment.
- * Locality and authority: interface-client visibility only; remote callers are rejected.
+ * Locality and authority: interface-client visibility only; remote callers are rejected. The local
+ * desired state survives player-object respawn but is not broadcast and cannot override mission gates.
  *
  * Arguments:
  * 0: state <BOOLEAN> - optional explicit state; omitted toggles the current local state.
@@ -28,5 +29,6 @@ if (_state && {!([player] call Waldo_fnc_WmpHudEligible)}) exitWith {
     false
 };
 missionNamespace setVariable ["Waldo_WmpHud_Visible", _state];
+missionNamespace setVariable ["Waldo_WmpHud_PlayerVisibleLocal", _state];
 ["WMP HUD", format ["%1 %2.", missionNamespace getVariable ["Waldo_WmpHud_SystemName", "WMP HUD"], ["disabled", "enabled"] select _state], "INFO", "WMP_HUD"] call Waldo_fnc_FeatureNotifyLocal;
 _state

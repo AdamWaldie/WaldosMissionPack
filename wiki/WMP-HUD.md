@@ -24,9 +24,11 @@ Open `MissionConfig\interfaceConfig.sqf` and find the **WMP HUD** block.
 
 The first player always qualifies. Any other player qualifies while wearing the VR goggles or configured NVGs. The values are loaded player-locally by WMP; do not publish them from `init.sqf`.
 
-Eligible users can show or hide the overlay through **ACE Self Interact > WMP Interface > Toggle WMP HUD**. Without ACE, WMP installs a blue addAction. Colour-vision controls remain under **WMP Interface > Accessibility**. WMP HUD intentionally has no ZEN module because eligibility and presentation are mission/player configuration, not Zeus world state.
+Open **ACE Self Interact > WMP Options > WMP HUD**. Eligible users receive separate rapid **Enable WMP HUD** and **Disable WMP HUD** actions plus **WMP HUD Settings**. The custom settings screen can hide otherwise permitted icons or names and choose Small/Medium/Large scale and Low/Medium/High opacity. It also explains when the mission has disabled the feature or its eligibility requirement is not met. These controls cannot expand icon/name range, reveal disallowed units, bypass LOS, equipment gates or UID exclusions, or override `AllowToggle`. The local visibility choice survives player-object respawn. Without ACE, equivalent blue addActions are installed.
 
-Script APIs are local: `Waldo_fnc_WmpHudInit`, `Waldo_fnc_WmpHudToggle`, `Waldo_fnc_WmpHudStop`, and `Waldo_fnc_WmpHudEligible`.
+Cross-interface colour-vision and reduced-motion controls live at **ACE Self Interact > WMP Options > Accessibility Settings**. WMP HUD intentionally has no ZEN module because eligibility and information restrictions are mission authority, not player or Zeus presentation state.
+
+Script APIs are local: `Waldo_fnc_WmpHudInit`, `Waldo_fnc_WmpHudToggle`, `Waldo_fnc_WmpHudStop`, `Waldo_fnc_WmpHudEligible`, `Waldo_fnc_WmpHudPreferences` and `Waldo_fnc_WmpHudSettingsApplyLocal`.
 
 <!-- WMP-WIKI-NAV -->
 ---

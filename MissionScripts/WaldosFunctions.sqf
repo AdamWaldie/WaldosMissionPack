@@ -272,8 +272,14 @@ class CfgFunctions
                   file = "MissionScripts\MissionFlowAndUi\hideSetupMarkerLocal.sqf";
               };
               class UiTheme {file = "MissionScripts\MissionFlowAndUi\uiTheme.sqf";};
+              class UiNotificationTheme {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiNotificationTheme.sqf";};
+              class UiNotificationSettingsOpenLocal {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiNotificationSettingsOpenLocal.sqf";};
+              class UiNotificationSettingsApplyLocal {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiNotificationSettingsApplyLocal.sqf";};
+              class UiNotificationMotionDuration {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiNotificationMotionDuration.sqf";};
               class UiThemeApplyLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyLocal.sqf";};
               class RestyleUiNotificationsLocal {file = "MissionScripts\MissionFlowAndUi\restyleUiNotificationsLocal.sqf";};
+              class AnimateUiNotificationEntryLocal {file = "MissionScripts\MissionFlowAndUi\animateUiNotificationEntryLocal.sqf";};
+              class UiNotificationScaleApplyLocal {file = "MissionScripts\MissionFlowAndUi\Accessibility\uiNotificationScaleApplyLocal.sqf";};
               class UiThemeApplyDisplayLocal {file = "MissionScripts\MissionFlowAndUi\uiThemeApplyDisplayLocal.sqf";};
               class UiThemeSetServer {file = "MissionScripts\MissionFlowAndUi\uiThemeSetServer.sqf";};
               class UiThemeZen {file = "MissionScripts\MissionFlowAndUi\uiThemeZen.sqf";};
@@ -1036,6 +1042,9 @@ class CfgFunctions
         {
             class AccessibilitySelfInteractionInit {file = "MissionScripts\MissionFlowAndUi\Accessibility\accessibilitySelfInteractionInit.sqf";};
             class WmpHudEligible {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudEligible.sqf";};
+            class WmpHudPreferences {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudPreferences.sqf";};
+            class WmpHudSettingsOpenLocal {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudSettingsOpenLocal.sqf";};
+            class WmpHudSettingsApplyLocal {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudSettingsApplyLocal.sqf";};
             class WmpHudInit {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudInit.sqf";};
             class WmpHudToggle {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudToggle.sqf";};
             class WmpHudStop {file = "MissionScripts\MissionFlowAndUi\WmpHud\wmpHudStop.sqf";};

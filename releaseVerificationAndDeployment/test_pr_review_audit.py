@@ -165,7 +165,9 @@ class PrReviewAuditTests(unittest.TestCase):
             gallery = (destination / "runUiThemeGalleryCaptureClient.sqf").read_text(encoding="utf-8")
             themes = (
                 "DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT", "MINIMAL",
-                "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE", "EMERGENCY",
+                "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE",
+                "GRIMDARK", "ATOMIC_AGE", "WASTELAND", "PMC", "RETRO_COMMAND", "DIESELPUNK",
+                "MERCENARY", "PROPAGANDA", "EMERGENCY",
             )
             for theme in themes:
                 self.assertIn(f'"{theme}"', gallery)
@@ -173,6 +175,13 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn("WMP UI THEME NO RED PROBE", gallery)
             self.assertIn('["accentHex", "#FF0000"]', gallery)
             self.assertIn("WMP UI THEME GALLERY COMPLETE: count=%1 restored=%2", gallery)
+            self.assertIn("WMP UI NOTIFICATION POSITION FRAME READY", gallery)
+            self.assertIn("WMP UI NOTIFICATION QUEUE PROBE", gallery)
+            self.assertIn('isEqualTo "QUEUED"', gallery)
+            self.assertIn('"QA_QUEUE_DRAIN_TARGET"', gallery)
+            self.assertIn('"BOTTOM_RIGHT"', gallery)
+            for placement in ("TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"):
+                self.assertIn(f'"{placement}"', gallery)
 
             capture = (
                 ROOT / "releaseVerificationAndDeployment" / "capture_ui_theme_gallery.ps1"
@@ -180,6 +189,8 @@ class PrReviewAuditTests(unittest.TestCase):
             self.assertIn("-Mode ThemeGallery", capture)
             self.assertIn("capture_interaction_ui.ps1", capture)
             self.assertIn("WMP UI THEME GALLERY FRAME READY", capture)
+            self.assertIn("notification-position-$stem.png", capture)
+            self.assertIn("WMP UI NOTIFICATION POSITION FRAME READY", capture)
 
     def test_direct_launcher_keeps_unfocused_qa_simulation_running(self):
         launcher = (ROOT / "releaseVerificationAndDeployment" / "launch_pr_review_audit.ps1").read_text(encoding="utf-8")
@@ -479,23 +490,67 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("private _updates = _this;", source)
         self.assertNotIn('private _publishAll = {\n    params ["_updates"]', source)
 
-    def test_accessibility_toggle_is_an_ace_self_interaction(self):
+    def test_wmp_options_separates_notification_hud_and_accessibility_interfaces(self):
         accessibility = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "accessibilitySelfInteractionInit.sqf").read_text(encoding="utf-8")
         hud = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "WmpHud" / "wmpHudInit.sqf").read_text(encoding="utf-8")
-        self.assertIn('"Waldo_Accessibility_Root"', accessibility)
         self.assertIn('[] call Waldo_fnc_SetupUiCleanupAction;', accessibility)
         self.assertIn('["ACE_SelfActions", "Waldo_UI_SelfRoot"]', accessibility)
-        self.assertIn(
-            '["ACE_SelfActions", "Waldo_UI_SelfRoot", "Waldo_Accessibility_Root"]',
-            accessibility,
-        )
-        self.assertIn('"Waldo_Accessibility_ColourVision"', accessibility)
-        self.assertIn('"Waldo_WmpHud_Toggle"', accessibility)
+        self.assertIn('"Waldo_UI_NotificationSettings"', accessibility)
+        self.assertIn("Waldo_fnc_UiNotificationSettingsOpenLocal", accessibility)
+        self.assertIn('"Waldo_WmpHud_Root"', accessibility)
+        self.assertIn('"Waldo_WmpHud_EnableLocal"', accessibility)
+        self.assertIn('"Waldo_WmpHud_DisableLocal"', accessibility)
+        self.assertIn('"Waldo_WmpHud_Settings"', accessibility)
+        self.assertIn("Waldo_fnc_WmpHudSettingsOpenLocal", accessibility)
+        self.assertIn('"Waldo_Accessibility_Settings"', accessibility)
         self.assertIn("Waldo_fnc_UiColourVisionOpenLocal", accessibility)
-        self.assertIn("Accessibility: Colour Vision", accessibility)
-        self.assertNotIn("Accessibility: Toggle Friendly Identification", accessibility)
+        self.assertIn('"WMP Options"', (ROOT / "MissionScripts" / "MissionFlowAndUi" / "setupUiCleanupAction.sqf").read_text(encoding="utf-8"))
+        self.assertNotIn('"Waldo_UI_OptionsRoot"', accessibility)
+        self.assertNotIn('"Waldo_UI_NotificationSizeRoot"', accessibility)
+        self.assertNotIn('"Waldo_WmpHud_Toggle"', accessibility)
         self.assertIn("Waldo_fnc_AccessibilitySelfInteractionInit", hud)
         self.assertNotIn("ace_interact_menu_fnc_createAction", hud)
+
+    def test_player_ui_preferences_cannot_expand_mission_hud_or_bypass_theme_overrides(self):
+        notification_theme = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiNotificationTheme.sqf").read_text(encoding="utf-8")
+        notification_apply = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiNotificationSettingsApplyLocal.sqf").read_text(encoding="utf-8")
+        hud = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "WmpHud" / "wmpHudInit.sqf").read_text(encoding="utf-8")
+        hud_settings = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "WmpHud" / "wmpHudSettingsOpenLocal.sqf").read_text(encoding="utf-8")
+        self.assertIn('missionNamespace getVariable ["Waldo_UI_Theme"', notification_theme)
+        self.assertIn("call Waldo_fnc_UiTheme", notification_theme)
+        self.assertNotIn("publicVariable", notification_apply)
+        self.assertNotIn("remoteExec", notification_apply)
+        self.assertIn('missionNamespace getVariable ["Waldo_WmpHud_ShowIcons"', hud)
+        self.assertIn('&& {_playerPreferences getOrDefault ["showIcons", true]}', hud)
+        self.assertIn('missionNamespace getVariable ["Waldo_WmpHud_ShowNames"', hud)
+        self.assertIn('&& {_playerPreferences getOrDefault ["showNames", true]}', hud)
+        for forbidden in ("IconRange", "NameRange", "RequireLOS", "IncludeAI", "GroupOnly", "ShowVehicleCrew"):
+            self.assertNotIn(f'Waldo_WmpHud_{forbidden}', hud_settings)
+
+    def test_notification_scale_is_personal_persistent_and_live(self):
+        apply = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiNotificationScaleApplyLocal.sqf").read_text(encoding="utf-8")
+        show = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "showUiNotification.sqf").read_text(encoding="utf-8")
+        restyle = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "restyleUiNotificationsLocal.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        self.assertIn('profileNamespace setVariable ["Waldo_UI_NotificationScale"', apply)
+        self.assertIn("saveProfileNamespace", apply)
+        self.assertIn("Waldo_fnc_RestyleUiNotificationsLocal", apply)
+        self.assertNotIn("publicVariable", apply)
+        self.assertNotIn("remoteExec", apply)
+        self.assertIn('profileNamespace getVariable ["Waldo_UI_NotificationScale", "MEDIUM"]', show)
+        self.assertIn('profileNamespace getVariable ["Waldo_UI_NotificationScale", "MEDIUM"]', restyle)
+        self.assertIn("class UiNotificationScaleApplyLocal", functions)
+
+    def test_notification_entry_animation_follows_stack_direction(self):
+        animate = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "animateUiNotificationEntryLocal.sqf").read_text(encoding="utf-8")
+        show = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "showUiNotification.sqf").read_text(encoding="utf-8")
+        functions = (ROOT / "MissionScripts" / "WaldosFunctions.sqf").read_text(encoding="utf-8")
+        for placement in ("BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT"):
+            self.assertIn(f'"{placement}"', animate)
+        self.assertIn('([-1, 1] select _bottomLane)', animate)
+        self.assertIn("ctrlCommit _duration", animate)
+        self.assertIn("Waldo_fnc_AnimateUiNotificationEntryLocal", show)
+        self.assertIn("class AnimateUiNotificationEntryLocal", functions)
 
     def test_colour_vision_profiles_are_personal_and_theme_aware(self):
         profile = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "Accessibility" / "uiColourVisionProfile.sqf").read_text(encoding="utf-8")
@@ -1135,6 +1190,14 @@ class PrReviewAuditTests(unittest.TestCase):
             '["INDUSTRIAL", "INDUSTRIAL"]',
             '["EASTERN_BLOC", "EASTERN BLOC"]',
             '["INTELLIGENCE", "INTELLIGENCE"]',
+            '["GRIMDARK", "GRIMDARK"]',
+            '["ATOMIC_AGE", "ATOMIC AGE"]',
+            '["WASTELAND", "WASTELAND"]',
+            '["PMC", "PMC"]',
+            '["RETRO_COMMAND", "RETRO COMMAND"]',
+            '["DIESELPUNK", "DIESELPUNK"]',
+            '["MERCENARY", "MERCENARY"]',
+            '["PROPAGANDA", "PROPAGANDA"]',
             '["EMERGENCY", "EMERGENCY"]',
         ):
             self.assertIn(theme, client)
@@ -1159,6 +1222,7 @@ class PrReviewAuditTests(unittest.TestCase):
         apply_local = (root / "uiThemeApplyLocal.sqf").read_text(encoding="utf-8")
         restyle_notifications = (root / "restyleUiNotificationsLocal.sqf").read_text(encoding="utf-8")
         notification = (root / "showUiNotification.sqf").read_text(encoding="utf-8")
+        reflow_notifications = (root / "reflowUiPanels.sqf").read_text(encoding="utf-8")
         root_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
         shared_config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
         snapshot = (ROOT / "MissionScripts" / "ZenModules" / "RuntimeControl" / "featureRuntimeRequestState.sqf").read_text(encoding="utf-8")
@@ -1175,6 +1239,14 @@ class PrReviewAuditTests(unittest.TestCase):
             "INDUSTRIAL",
             "EASTERN_BLOC",
             "INTELLIGENCE",
+            "GRIMDARK",
+            "ATOMIC_AGE",
+            "WASTELAND",
+            "PMC",
+            "RETRO_COMMAND",
+            "DIESELPUNK",
+            "MERCENARY",
+            "PROPAGANDA",
             "EMERGENCY",
         )
         for theme in built_in_themes:
@@ -1227,6 +1299,7 @@ class PrReviewAuditTests(unittest.TestCase):
             colour_tokens = {
                 "shade", "panel", "panelAlt", "header", "button", "buttonActive", "edit", "list",
                 "casing", "accent", "accentActive", "trim", "text", "muted", "success", "warning", "danger",
+                "chromePrimary", "chromeSecondary", "chromeTertiary", "source",
             }
             for token, values in re.findall(r'\["([^"]+)", \[([0-9., ]+)\]\]', block.group(1)):
                 if token not in colour_tokens:
@@ -1238,6 +1311,45 @@ class PrReviewAuditTests(unittest.TestCase):
                     saturation > 0.08 and (degrees < 20 or degrees > 340),
                     f"{theme}:{token} uses reserved red hue {degrees:.1f}",
                 )
+        programmatic_themes = {
+            "GRIMDARK": "GOTHIC",
+            "ATOMIC_AGE": "ATOMIC",
+            "WASTELAND": "SCRAP",
+            "PMC": "CORPORATE",
+            "RETRO_COMMAND": "CRT",
+            "DIESELPUNK": "DIESEL",
+            "MERCENARY": "CONTRACT",
+            "PROPAGANDA": "BROADCAST",
+        }
+        for theme, chrome_mode in programmatic_themes.items():
+            block = re.search(
+                rf'\["{theme}", createHashMapFromArray \[(.*?)\n    \]\]',
+                resolver,
+                re.DOTALL,
+            ).group(1)
+            self.assertIn(f'["chromeMode", "{chrome_mode}"]', block)
+            for token in ("chromePrimary", "chromeSecondary", "chromeTertiary", "source", "sourceHex"):
+                self.assertIn(f'["{token}"', block, f"{theme}:{token}")
+        legacy_programmatic_themes = {
+            "WW2": "DOCUMENT",
+            "VIETNAM": "FIELD",
+            "SCIFI": "HUD",
+            "PARCHMENT": "SCROLL",
+            "NAVAL": "CIC",
+            "DESERT_STORM": "SITREP",
+            "INDUSTRIAL": "GRID",
+            "EASTERN_BLOC": "SECTOR",
+            "INTELLIGENCE": "CLASSIFIED",
+            "EMERGENCY": "INCIDENT",
+        }
+        for theme, chrome_mode in legacy_programmatic_themes.items():
+            block = re.search(
+                rf'\["{theme}", createHashMapFromArray \[(.*?)\n    \]\]',
+                resolver,
+                re.DOTALL,
+            ).group(1)
+            self.assertIn(f'["chromeMode", "{chrome_mode}"]', block)
+            self.assertIn(f'case "{chrome_mode}"', reflow_notifications)
         self.assertIn("private _isRedThemeColour", resolver)
         self.assertIn("Red theme colour normalised", resolver)
         self.assertIn('["text", "textHex"]', resolver)
@@ -1256,6 +1368,25 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn('setVariable ["WaldoEcoCore_PromptTheme"', apply_local)
         self.assertIn("ctrlSetStructuredText", restyle_notifications)
         self.assertIn("ctrlTextHeight", restyle_notifications)
+        self.assertIn('getOrDefault ["chromeMode", "STANDARD"]', notification)
+        self.assertIn('getOrDefault ["chromeMode", "STANDARD"]', restyle_notifications)
+        self.assertIn('case "GOTHIC"', reflow_notifications)
+        self.assertIn('case "ATOMIC"', reflow_notifications)
+        self.assertIn('case "SCRAP"', reflow_notifications)
+        self.assertIn('case "CORPORATE"', reflow_notifications)
+        self.assertIn('case "CRT"', reflow_notifications)
+        self.assertIn('case "DIESEL"', reflow_notifications)
+        self.assertIn('case "CONTRACT"', reflow_notifications)
+        self.assertIn('case "BROADCAST"', reflow_notifications)
+        self.assertIn("_textGutter", notification)
+        self.assertIn("_textGutter", reflow_notifications)
+        self.assertIn("getResolution", notification)
+        self.assertIn("linearConversion [720, 1080", notification)
+        self.assertIn("safeZoneW min (safeZoneH * 1.333333)", reflow_notifications)
+        self.assertIn("_horizontalMargin", reflow_notifications)
+        self.assertNotIn('["compact", true]', resolver)
+        self.assertIn('_display ctrlCreate ["RscText", -1]', notification)
+        self.assertNotIn(".paa", notification + reflow_notifications)
         self.assertIn("[_title, _messageText, _state, _source]", notification)
         self.assertIn('"Waldo_UI_Theme"', snapshot)
         self.assertIn('"Waldo_UI_ThemeRevision"', snapshot)

@@ -1,10 +1,12 @@
 /*
- * Author: WaldoTheWarfighter, Val
+ * Author: WaldoTheWarfighter
  * Installs the dual-purpose WMP HUD on one interface client. During high-technology campaigns the
- * HUD is available while configured equipment is worn. Configured accessibility UIDs bypass that
+ * HUD is available while configured equipment is worn. Player preferences may only suppress or
+ * resize mission-permitted presentation. Configured accessibility UIDs bypass that
  * equipment requirement so the same clear friendly icon/name presentation remains available in
  * every campaign. Drawing, visibility, colour-vision response and toggle state remain local; no
- * tactical information is published to other machines. Installation and respawn are repeat-safe.
+ * tactical information is published to other machines. Mission range, LOS, unit-scope and explicit
+ * exclusions remain authoritative. Installation and respawn are repeat-safe.
  * Locality and authority: interface-client only; all drawing and visibility state remains local.
  *
  * Arguments: None.
@@ -34,10 +36,9 @@ missionNamespace setVariable ["Waldo_WmpHud_ClientStarted", true];
 private _accessibilityUser = (getPlayerUID player) in (missionNamespace getVariable ["Waldo_WmpHud_AccessibilityUIDs", []]);
 missionNamespace setVariable [
     "Waldo_WmpHud_Visible",
-    missionNamespace getVariable [
-        if (_accessibilityUser) then {"Waldo_WmpHud_AccessibilityDefaultVisible"} else {"Waldo_WmpHud_DefaultVisible"},
-        true
-    ]
+    missionNamespace getVariable ["Waldo_WmpHud_PlayerVisibleLocal", missionNamespace getVariable [
+        if (_accessibilityUser) then {"Waldo_WmpHud_AccessibilityDefaultVisible"} else {"Waldo_WmpHud_DefaultVisible"}, true
+    ]]
 ];
 
 private _eventId = addMissionEventHandler ["Draw3D", {
@@ -48,21 +49,24 @@ private _eventId = addMissionEventHandler ["Draw3D", {
     private _requiresLOS = missionNamespace getVariable ["Waldo_WmpHud_RequireLOS", true];
     private _includeAI = missionNamespace getVariable ["Waldo_WmpHud_IncludeAI", false];
     private _units = if (_includeAI) then {allUnits} else {allPlayers};
+    private _playerPreferences = [] call Waldo_fnc_WmpHudPreferences;
     private _themeColour = +(([] call Waldo_fnc_UiTheme) getOrDefault ["accentActive", [0.25, 0.85, 1, 1]]);
     _themeColour set [3, 0.9];
     private _configuredColour = missionNamespace getVariable ["Waldo_WmpHud_Colour", []];
     private _colour = if (_configuredColour isEqualType [] && {count _configuredColour == 4}) then {+_configuredColour} else {_themeColour};
-    private _iconScale = missionNamespace getVariable ["Waldo_WmpHud_IconScale", 0.8];
-    private _textScale = missionNamespace getVariable ["Waldo_WmpHud_TextScale", 0.035];
+    _colour set [3, (_colour param [3, 1]) * (_playerPreferences getOrDefault ["opacity", 0.82])];
+    private _playerScale = _playerPreferences getOrDefault ["scale", 1];
+    private _iconScale = (missionNamespace getVariable ["Waldo_WmpHud_IconScale", 0.8]) * _playerScale;
+    private _textScale = (missionNamespace getVariable ["Waldo_WmpHud_TextScale", 0.035]) * _playerScale;
     private _distanceFade = missionNamespace getVariable ["Waldo_WmpHud_DistanceFade", true];
     private _groupOnly = missionNamespace getVariable ["Waldo_WmpHud_GroupOnly", false];
     private _showIncapacitated = missionNamespace getVariable ["Waldo_WmpHud_ShowIncapacitated", true];
-    private _showIcons = missionNamespace getVariable ["Waldo_WmpHud_ShowIcons", true];
-    private _showNames = missionNamespace getVariable ["Waldo_WmpHud_ShowNames", true];
+    private _showIcons = (missionNamespace getVariable ["Waldo_WmpHud_ShowIcons", true]) && {_playerPreferences getOrDefault ["showIcons", true]};
+    private _showNames = (missionNamespace getVariable ["Waldo_WmpHud_ShowNames", true]) && {_playerPreferences getOrDefault ["showNames", true]};
     private _showVehicleCrew = missionNamespace getVariable ["Waldo_WmpHud_ShowVehicleCrew", false];
     private _font = missionNamespace getVariable ["Waldo_WmpHud_Font", "PuristaBold"];
-    private _textGrowth = missionNamespace getVariable ["Waldo_WmpHud_TextDistanceGrowth", 0.00025];
-    private _textMaximum = missionNamespace getVariable ["Waldo_WmpHud_TextMaximumScale", 0.05];
+    private _textGrowth = (missionNamespace getVariable ["Waldo_WmpHud_TextDistanceGrowth", 0.00025]) * _playerScale;
+    private _textMaximum = (missionNamespace getVariable ["Waldo_WmpHud_TextMaximumScale", 0.05]) * _playerScale;
     private _textHeadOffset = missionNamespace getVariable ["Waldo_WmpHud_TextHeadOffset", 0.30];
     private _iconHeadOffset = missionNamespace getVariable ["Waldo_WmpHud_IconHeadOffset", 0.75];
     private _outlineScale = missionNamespace getVariable ["Waldo_WmpHud_OutlineScale", 1.12];

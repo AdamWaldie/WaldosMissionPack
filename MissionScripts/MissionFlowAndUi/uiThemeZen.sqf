@@ -14,7 +14,7 @@
  */
 
 if !(hasInterface && {isClass (configFile >> "CfgPatches" >> "zen_dialog")}) exitWith {};
-private _ids = ["DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT", "MINIMAL", "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE", "EMERGENCY"];
+private _ids = ["DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT", "MINIMAL", "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE", "GRIMDARK", "ATOMIC_AGE", "WASTELAND", "PMC", "RETRO_COMMAND", "DIESELPUNK", "MERCENARY", "PROPAGANDA", "EMERGENCY"];
 private _labels = ["Default / Modern", "Second World War", "Vietnam / Cold War", "Science Fiction", "Parchment / Fantasy", "Minimal / Low Profile", "Naval / Combat Information Centre", "Desert Storm / CENTCOM", "Industrial / Operations Control", "Eastern Bloc / Sector Control", "Intelligence / Restricted", "Emergency / Incident Command"];
 private _current = toUpperANSI (missionNamespace getVariable ["Waldo_UI_Theme", "DEFAULT"]);
 private _defaultIndex = _ids find _current;

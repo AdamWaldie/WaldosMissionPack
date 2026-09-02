@@ -3,10 +3,12 @@
  * Launches the canonical dedicated full-pack audit in its ThemeGallery mode, enters the first
  * playable slot, and captures the real Arma window when each RPT frame-ready marker appears.
  * The resulting cropped PNGs show the production WMP notification stack and are suitable for the
- * wiki theme chooser. The script owns and closes only the client/server processes from this run.
+ * wiki theme chooser. Six full-screen PNGs prove a real three-card stack in every supported
+ * placement, and three runtime-evidence PNGs capture the player settings screens. The script owns
+ * and closes only the client/server processes from this run.
  *
  * Parameters:
- * OutputDirectory: destination for the twelve PNG files (default wiki/assets/ui-themes).
+ * OutputDirectory: destination for the twenty theme and six placement PNG files.
  * ResolutionWidth/ResolutionHeight: connected audit client dimensions (default 3840x2160).
  * KeepRunning: leave the audit client and server open after capture for manual inspection.
  *
@@ -33,8 +35,10 @@ $absoluteOutput = if ([System.IO.Path]::IsPathRooted($OutputDirectory)) {
 [System.IO.Directory]::CreateDirectory($absoluteOutput) | Out-Null
 
 $themes = @(
-    "DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT", "MINIMAL",
-    "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE", "EMERGENCY"
+    "GRIMDARK", "ATOMIC_AGE", "WASTELAND", "PMC", "RETRO_COMMAND", "DIESELPUNK",
+    "MERCENARY", "PROPAGANDA", "DEFAULT", "WW2", "VIETNAM", "SCIFI", "PARCHMENT",
+    "MINIMAL", "NAVAL", "DESERT_STORM", "INDUSTRIAL", "EASTERN_BLOC", "INTELLIGENCE",
+    "EMERGENCY"
 )
 
 if (-not ("WmpThemeGalleryInput" -as [type])) {
@@ -142,7 +146,7 @@ try {
 
     foreach ($theme in $themes) {
         $framePattern = "WMP UI THEME GALLERY FRAME READY: theme=$theme "
-        $frameDeadline = (Get-Date).AddSeconds(20)
+        $frameDeadline = (Get-Date).AddSeconds(30)
         while (-not (Select-String -LiteralPath $rpt.FullName -SimpleMatch $framePattern -Quiet)) {
             if ((Get-Date) -ge $frameDeadline -or $client.HasExited) {
                 throw "Timed out waiting for the $theme theme frame."
@@ -153,16 +157,57 @@ try {
         $stem = $theme.ToLowerInvariant().Replace("_", "-")
         $fullPath = Join-Path $runtime.FullName "$stem-full.png"
         $outputPath = Join-Path $absoluteOutput "$stem.png"
+        $client.Refresh()
+        if ($client.MainWindowHandle -eq 0) { throw "The Arma window disappeared before the $theme capture." }
+        [WmpThemeGalleryInput]::SetForegroundWindow($client.MainWindowHandle) | Out-Null
+        Start-Sleep -Milliseconds 200
         & $capture -OutputPath $fullPath | Out-Null
         Save-ThemeCrop -Source $fullPath -Destination $outputPath
         Remove-Item -LiteralPath $fullPath
         Write-Output "Captured $theme -> $outputPath"
     }
 
-    if (-not (Select-String -LiteralPath $rpt.FullName -Pattern "WMP UI THEME GALLERY COMPLETE: count=12" -Quiet)) {
+    $placements = @("TOP", "TOP_RIGHT", "CENTER", "BOTTOM_LEFT", "BOTTOM_CENTER", "BOTTOM_RIGHT")
+    foreach ($placement in $placements) {
+        $framePattern = "WMP UI NOTIFICATION POSITION FRAME READY: placement=$placement count=3"
+        $frameDeadline = (Get-Date).AddSeconds(30)
+        while (-not (Select-String -LiteralPath $rpt.FullName -SimpleMatch $framePattern -Quiet)) {
+            if ((Get-Date) -ge $frameDeadline -or $client.HasExited) {
+                throw "Timed out waiting for the $placement three-card position frame."
+            }
+            Start-Sleep -Milliseconds 150
+        }
+        $stem = $placement.ToLowerInvariant().Replace("_", "-")
+        $positionPath = Join-Path $absoluteOutput "notification-position-$stem.png"
+        $client.Refresh()
+        if ($client.MainWindowHandle -eq 0) { throw "The Arma window disappeared before the $placement position capture." }
+        [WmpThemeGalleryInput]::SetForegroundWindow($client.MainWindowHandle) | Out-Null
+        Start-Sleep -Milliseconds 200
+        & $capture -OutputPath $positionPath | Out-Null
+        Write-Output "Captured three-card $placement stack -> $positionPath"
+    }
+
+    foreach ($screen in @("NOTIFICATION", "HUD", "ACCESSIBILITY")) {
+        $framePattern = "WMP UI SETTINGS FRAME READY: screen=$screen"
+        $frameDeadline = (Get-Date).AddSeconds(30)
+        while (-not (Select-String -LiteralPath $rpt.FullName -SimpleMatch $framePattern -Quiet)) {
+            if ((Get-Date) -ge $frameDeadline -or $client.HasExited) {
+                throw "Timed out waiting for the $screen settings frame."
+            }
+            Start-Sleep -Milliseconds 150
+        }
+        $settingsPath = Join-Path $runtime.FullName ("ui-settings-" + $screen.ToLowerInvariant() + ".png")
+        $client.Refresh()
+        [WmpThemeGalleryInput]::SetForegroundWindow($client.MainWindowHandle) | Out-Null
+        Start-Sleep -Milliseconds 200
+        & $capture -OutputPath $settingsPath | Out-Null
+        Write-Output "Captured $screen settings -> $settingsPath"
+    }
+
+    if (-not (Select-String -LiteralPath $rpt.FullName -Pattern "WMP UI THEME GALLERY COMPLETE: count=20" -Quiet)) {
         Start-Sleep -Seconds 5
     }
-    Write-Output "Captured all twelve live Arma theme previews in $absoluteOutput"
+    Write-Output "Captured all twenty themes, six notification positions and three settings screens."
 }
 finally {
     if (-not $KeepRunning) {

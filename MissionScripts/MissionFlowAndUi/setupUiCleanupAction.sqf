@@ -23,7 +23,7 @@ private _aceAvailable =
 if (_aceAvailable) then {
     private _root = [
         "Waldo_UI_SelfRoot",
-        "WMP Interface",
+        "WMP Options",
         "",
         {},
         {true}
