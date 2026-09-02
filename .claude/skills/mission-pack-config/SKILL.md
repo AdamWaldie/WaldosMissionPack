@@ -1,6 +1,6 @@
 ---
 name: mission-pack-config
-description: Configures WaldosMissionPack (WMP), this repo's Arma 3 mission scripting framework, for a mission, and answers "how do I"/"how does X work" questions about it. Covers WMP systems — loadout/logistics, AI rebalance, ACRE2 radios, paradrop, jamming/EMP/trackers, MHQ, respawn, ENDEX/AAR, safestart, diagnostics, tasks, VVD, Zeus Enhanced modules, Waldos Economy Systems, minigames, UI notifications, WMP HUD, transport services, hazards, tree felling, breaching, Dynamic AA/AO, gunships, persistence, object scaling, emergency dismount, tactical display, field resupply, vehicle recovery/rallies, UI themes, corpse traps, 3D markers, and description.ext. Use whenever the user wants to configure, enable, tune, or debug any WMP feature, wants "a mission configured with X", asks what a WMP variable/function does, or edits MissionConfig/*.sqf, init.sqf/initServer.sqf/initPlayerLocal.sqf/description.ext — even naming only one feature, since features interact. Always check this skill before writing WMP config from memory.
+description: Configures WaldosMissionPack (WMP), this repo's Arma 3 mission scripting framework, for a mission, and answers "how do I"/"how does X work" questions about it. Covers WMP systems — loadout/logistics, AI rebalance, ACRE2, paradrop, jamming/EMP/trackers, MHQ, respawn, ENDEX/AAR, safestart, diagnostics, tasks, VVD, Zeus modules, Economy Systems, minigames, UI notifications, WMP HUD, transport services, hazards, tree felling, breaching, Dynamic AA/AO, gunships, persistence, object scaling, emergency dismount, tactical display, field resupply, vehicle recovery/rallies, UI themes, corpse traps, 3D markers, NPC dialogue/conversations, description.ext. Use whenever the user wants to configure, enable, tune, or debug any WMP feature, wants "a mission configured with X", asks what a WMP variable/function does, or edits MissionConfig/*.sqf, init.sqf/initServer.sqf/initPlayerLocal.sqf/description.ext — even naming only one feature, since features interact. Always check this skill before writing WMP config from memory.
 ---
 
 # WMP Mission Pack Configuration
@@ -258,6 +258,8 @@ composition name that isn't documented there.
 | Obituary / confirmed-death reporting | `references/obituary.md` | Requires ACE medical + ACE interaction; defaults ON |
 | Vehicle recovery + squad rally points | `references/vehicle-recovery-rallies.md` | Two related but independent systems |
 | UI visual themes + colour-vision accessibility | `references/ui-themes.md` | Theme is mission-wide; colour-vision is per player, never set it globally |
+| NPC dialogue (Simple Dialogue) + branching conversations (Advanced Conversations) | `references/dialogue-conversations.md` | Two separate components; ZEN "Conversation: Author" is the beginner branching builder |
+| Zeus END-key kill restore | `references/zeus-end-key-kill.md` | Always-on additive fallback — no config, no API, nothing to set up |
 | ACE Corpse Traps | `references/corpse-traps.md` | |
 | Headless client (native, `MissionConfig\headlessConfig.sqf`) + player markers | `references/headless-client.md` | Native HC system is the recommended path; legacy `WerthlesHeadless.sqf` is covered but disabled/deprecated |
 | Custom 3D world markers | `references/3d-markers.md` | No `MissionConfig` file — pure call API |
