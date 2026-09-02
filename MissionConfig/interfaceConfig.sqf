@@ -19,8 +19,10 @@
  *
  * ACTIVATION MODEL: AUTOMATIC LOCAL UI, EXCEPT TACTICAL DISPLAY REGISTRATION.
  * Theme/notification policy is consumed automatically. Treatment feedback, emergency dismount and
- * accessibility install on each interface client when enabled. Tactical display values only tune a
- * display object; register a suitable whiteboard/map board separately by script or ZEN.
+ * accessibility install on each interface client when enabled. Players can choose Small, Medium or
+ * Large notification cards under WMP Options > Notification Size; Medium is the profile-persistent
+ * default. Tactical display values only tune a display object; register a suitable whiteboard/map
+ * board separately by script or ZEN.
  *
  * EDIT FOR A NORMAL MISSION: theme, panel channel routing, treatment recipients/content, dismount
  * policy and accessibility eligibility/presentation. LEAVE ALONE UNLESS EXTENDING/TESTING: queue
@@ -30,10 +32,11 @@
  *
  * CUSTOMISATION GUIDE:
  * MISSION MAKER - UI_Theme (DEFAULT, WW2, VIETNAM, SCIFI, PARCHMENT, MINIMAL, NAVAL,
- * DESERT_STORM, INDUSTRIAL, EASTERN_BLOC, INTELLIGENCE or EMERGENCY), treatment-feedback policy,
+ * DESERT_STORM, INDUSTRIAL, EASTERN_BLOC, INTELLIGENCE, GRIMDARK, ATOMIC_AGE, WASTELAND, PMC,
+ * RETRO_COMMAND, DIESELPUNK, MERCENARY, PROPAGANDA or EMERGENCY), treatment-feedback policy,
  * emergency-dismount policy and accessibility eligibility/presentation are intended choices.
  * Panel placement names are TOP_RIGHT, CENTER, BOTTOM_LEFT, BOTTOM_CENTER and BOTTOM_RIGHT; TOP is
- * reserved for mission-flow banners. Panel entries are [channel, placement, allow stacking].
+ * reserved for mission-flow banners. Panel entries are [channel, placement, allow local override].
  * ADVANCED TUNING - notification queue/reflow limits, tactical knowledge threshold, dismount safety
  * geometry and PID font/scale/offset/outline values are tested UI or engine bounds. Keep shipped
  * values unless a specific resolution, vehicle family or accessibility test demonstrates a need.
@@ -42,9 +45,9 @@
  * HOW TO READ THE DATA BELOW:
  * `shared` rows are `[variable, guarded default]` on every machine. `playerLocal` rows use the same
  * shape but exist only on clients with an interface. Do not publish player-local accessibility or
- * queue state. Panel rows are `[notification channel ID, screen placement, allow stacking]`.
- * `allow stacking` lets simultaneous messages from that channel share/reflow within the placement;
- * it does not bypass the global queue/coalescing limits.
+ * queue state. Panel rows are `[notification channel ID, screen placement, allow local override]`.
+ * The third value permits that player to save a different location for the channel; stacking is
+ * always managed globally by the per-placement capacity and queue/coalescing limits.
  *
  * A custom theme is a HashMap keyed by a new theme ID and must provide the complete token set used
  * by Waldo_fnc_UiTheme. ThemeOverrides is a partial HashMap of existing token -> replacement value;
@@ -54,7 +57,14 @@
  * (`shade`, `panel`, `panelAlt`, `header`, `button`, `buttonActive`, `edit`, `list`, `casing`), RGBA
  * semantics (`accent`, `accentActive`, `trim`, `text`, `muted`, `success`, `warning`, `danger`),
  * matching HTML hex colours (`textHex` through `dangerHex`), `railMode`, prefix/suffix strings and
- * `motif`. A complete custom theme must provide all of them.
+ * `motif`. A complete custom theme must provide all of them. Optional semantic label tokens are
+ * `infoSymbol`, `successSymbol`, `warningSymbol` and `dangerSymbol`. Optional procedural-material tokens
+ * are `chromeMode`, `chromePrimary`, `chromeSecondary`, `chromeTertiary`, `source` and `sourceHex`.
+ * `chromeMode` selects a renderer-owned layout (`STANDARD`, `GOTHIC`, `ATOMIC`, `SCRAP`,
+ * `CORPORATE`, `CRT`, `DIESEL`, `CONTRACT`, `BROADCAST`, `FIELD`, `HUD`, `SCROLL`, `CIC`,
+ * `CLASSIFIED`, `INCIDENT`, `DOCUMENT`, `SITREP`, `GRID` or `SECTOR`); it cannot load custom code
+ * or textures. Chrome may define a structural edge, header, footer or reserved semantic zone; it
+ * must not add decorative fake instrumentation.
  * VehicleProfiles is keyed by exact vehicle classname. Its HashMap may override the unprefixed
  * setting names read by the dismount controller, for example `OnOverturn`, `OnDestroyed`,
  * `PreserveVelocity`, `RequireClearExit`, `MinimumOverturnSeconds` and `UpThreshold`.

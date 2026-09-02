@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1063,
+  "registeredFunctionCount": 1072,
   "runtimeFunctionCount": 383,
-  "functionCount": 1446,
+  "functionCount": 1455,
   "stations": [
     {
       "id": "control",
@@ -422,7 +422,7 @@
         0,
         0
       ],
-      "description": "Live switching across all twelve built-in WMP visual themes."
+      "description": "Live switching across all twenty built-in WMP visual themes."
     },
     {
       "id": "dynamic-ao",
@@ -1113,6 +1113,30 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_UiNotificationTheme",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiNotificationTheme.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiNotificationSettingsOpenLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiNotificationSettingsOpenLocal.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiNotificationSettingsApplyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiNotificationSettingsApplyLocal.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiNotificationMotionDuration",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiNotificationMotionDuration.sqf",
+      "station": "accessibility",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_UiThemeApplyLocal",
       "file": "MissionScripts/MissionFlowAndUi/uiThemeApplyLocal.sqf",
       "station": "mission-flow",
@@ -1122,6 +1146,18 @@
       "name": "Waldo_fnc_RestyleUiNotificationsLocal",
       "file": "MissionScripts/MissionFlowAndUi/restyleUiNotificationsLocal.sqf",
       "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AnimateUiNotificationEntryLocal",
+      "file": "MissionScripts/MissionFlowAndUi/animateUiNotificationEntryLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_UiNotificationScaleApplyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/Accessibility/uiNotificationScaleApplyLocal.sqf",
+      "station": "accessibility",
       "activation": "manual"
     },
     {
@@ -3329,6 +3365,24 @@
     {
       "name": "Waldo_fnc_WmpHudEligible",
       "file": "MissionScripts/MissionFlowAndUi/WmpHud/wmpHudEligible.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_WmpHudPreferences",
+      "file": "MissionScripts/MissionFlowAndUi/WmpHud/wmpHudPreferences.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_WmpHudSettingsOpenLocal",
+      "file": "MissionScripts/MissionFlowAndUi/WmpHud/wmpHudSettingsOpenLocal.sqf",
+      "station": "mission-flow",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_WmpHudSettingsApplyLocal",
+      "file": "MissionScripts/MissionFlowAndUi/WmpHud/wmpHudSettingsApplyLocal.sqf",
       "station": "mission-flow",
       "activation": "manual"
     },

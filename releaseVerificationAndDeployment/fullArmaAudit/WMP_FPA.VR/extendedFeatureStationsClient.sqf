@@ -394,6 +394,14 @@ private _themes = "qa_sign_ui_theme_qa" call _get;
     ["INDUSTRIAL", "INDUSTRIAL"],
     ["EASTERN_BLOC", "EASTERN BLOC"],
     ["INTELLIGENCE", "INTELLIGENCE"],
+    ["GRIMDARK", "GRIMDARK"],
+    ["ATOMIC_AGE", "ATOMIC AGE"],
+    ["WASTELAND", "WASTELAND"],
+    ["PMC", "PMC"],
+    ["RETRO_COMMAND", "RETRO COMMAND"],
+    ["DIESELPUNK", "DIESELPUNK"],
+    ["MERCENARY", "MERCENARY"],
+    ["PROPAGANDA", "PROPAGANDA"],
     ["EMERGENCY", "EMERGENCY"]
 ];
 [_themes, "Waldo_QA_UiThemePreview", "PREVIEW CURRENT THEME STACK", {

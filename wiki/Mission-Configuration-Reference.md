@@ -407,11 +407,13 @@ Waldo_WmpHud_Facewear = ["G_Goggles_VR"];
 Waldo_WmpHud_Font = "PuristaBold";
 ```
 
-Colour-vision presentation is selected personally through **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** and stored in `profileNamespace` as `Waldo_UI_ColourVisionProfile`. Do not publish it from `initServer.sqf` or overwrite it in `init.sqf`; it is intentionally different for each player. Scripted local selection is available when building another accessibility UI:
+Colour-vision presentation is selected personally through **ACE Self Interact > WMP Options > Accessibility Settings** and stored in `profileNamespace` as `Waldo_UI_ColourVisionProfile`. The same screen owns the cross-interface reduced-motion preference. Do not publish either from `initServer.sqf` or overwrite it in `init.sqf`; it is intentionally different for each player. Scripted local colour selection is available when building another accessibility UI:
 
 ```sqf
 ["RED_GREEN", true] call Waldo_fnc_UiColourVisionApplyLocal;
 ```
+
+Notification theme, size and entry motion are personal settings in **ACE Self Interact > WMP Options > Notification UI Settings**. The notification theme defaults to `FOLLOW_MISSION`, may select a built-in or mission custom theme, and still receives mission `Waldo_UI_ThemeOverrides` plus accessibility overlays. The settings persist as `Waldo_UI_NotificationTheme`, `Waldo_UI_NotificationScale` and `Waldo_UI_NotificationMotion`; they immediately restyle live cards and are intentionally never published by the mission.
 
 See [Optional Feature Systems](Optional-Feature-Systems) for the complete setting groups.
 
@@ -419,7 +421,8 @@ See [Optional Feature Systems](Optional-Feature-Systems) for the complete settin
 
 Set `Waldo_UI_Theme` in `MissionConfig\interfaceConfig.sqf` to `DEFAULT`, `WW2`, `VIETNAM`,
 `SCIFI`, `PARCHMENT`, `MINIMAL`, `NAVAL`, `DESERT_STORM`, `INDUSTRIAL`, `EASTERN_BLOC`,
-`INTELLIGENCE` or `EMERGENCY`. Do not redeclare it in init.sqf. The setting changes presentation only and is consumed
+`INTELLIGENCE`, `GRIMDARK`, `ATOMIC_AGE`, `WASTELAND`, `PMC`, `RETRO_COMMAND`, `DIESELPUNK`,
+`MERCENARY`, `PROPAGANDA` or `EMERGENCY`. Do not redeclare it in init.sqf. The setting changes presentation only and is consumed
 by WMP displays. Curator QA can change it live and the server publishes that durable selection for
 JIP. See [UI Visual Themes](UI-Visual-Themes).
 

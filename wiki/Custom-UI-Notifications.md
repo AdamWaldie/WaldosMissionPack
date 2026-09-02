@@ -6,13 +6,15 @@ WMP includes a reusable notification-card system for mission updates, warnings a
 
 The system is local to each player's interface. Mission code decides who receives a notification by choosing the remote-execution target.
 
-Notification footprints, placement and behavior are identical under every global visual style; typography, materials, copy syntax and decorative rail geometry differ by style. See [UI Visual Themes](UI-Visual-Themes) for all twelve built-in IDs, mission-specific palettes and the live QA ZEN selector.
+Notification footprints, placement and behavior are identical under every global visual style at a given personal size; typography, materials, copy syntax and decorative rail geometry differ by style. See [UI Visual Themes](UI-Visual-Themes) for all twenty built-in IDs, mission-specific palettes and the live QA ZEN selector.
 
 ## What players see
 
 Every state uses colour, a written label and a symbol. Information remains understandable when colour cannot be distinguished.
 
-The active player's colour-vision profile remaps semantic colours after the mission-wide visual theme is resolved. Use **ACE Self Interact > WMP Interface > Accessibility > Colour Vision Settings** to choose Standard, red-green-aware, protan-aware, blue-yellow-aware or high-contrast monochrome presentation. The selection is local and profile-persistent; notification routing, priority, stacking and content are unchanged.
+The active player's colour-vision profile remaps semantic colours after the visual theme is resolved. Use **ACE Self Interact > WMP Options > Accessibility Settings** to choose Standard, red-green-aware, protan-aware, blue-yellow-aware or high-contrast monochrome presentation, and to enable reduced motion. These choices apply across WMP Notifications and the WMP HUD, are local and profile-persistent, and never change routing, information access or content.
+
+Open **ACE Self Interact > WMP Options > Notification UI Settings** for the notification-only theme, **Small / Medium / Large** card size and **Normal / Reduced / Off** entry motion. **Follow Mission** is the theme default. A personal theme can use any built-in or mission custom theme, but mission token overrides and colour-vision accessibility are still applied last. Apply restyles visible cards; Cancel changes nothing; Restore Defaults resets only the pending form. None of these choices changes mission-wide UI, routing, placement or queue limits.
 
 ![Information, success, warning and error notification states](images/ui-notifications/semantic-states.png)
 
@@ -67,6 +69,10 @@ The shipped minimum is **3 seconds**. There is deliberately no second global max
 ## Channels, stacking and replacement
 
 A channel identifies one stream of related notifications. Different channels can share a screen region without drawing over one another. WMP measures and stacks up to three active cards in that region. As an earlier card expires, every surviving card smoothly closes the gap until the stack is gone. When that region is full, independent channels can use the configured overflow regions at the same time before any request waits in the queue.
+
+All six placements use the same three-card capacity. Top and centre lanes keep the oldest card at the top and slide new cards upward into the bottom of the stack; when an old card clears, survivors close upward. Bottom lanes keep the oldest card at the bottom and slide new cards downward into the top of the stack; when the oldest clears, survivors close downward. A fourth independent channel tries the configured overflow placements in order. If every permitted placement is full, FIFO work waits in the bounded player-local queue; replacement traffic updates its existing channel instead of creating another card.
+
+FIFO is intentionally per channel. Repeated updates on one channel wait and play in order rather than occupying all three visible lanes. Three different active channels assigned to the same placement are what form a three-card stack. `REPLACE` updates the current owner of its channel in place; it does not add another lane.
 
 ![Three independent channels stacked at bottom right](images/ui-notifications/channel-stacking.png)
 
@@ -317,7 +323,7 @@ Remove all local WMP-owned panels and transient displays:
 
 Cleanup is repeat-safe and does not delete Arma, ACE, ACRE2, TFAR or mission-authored controls. Closing an active field-equipment procedure may abandon that attempt, so full cleanup is an emergency recovery action rather than normal navigation.
 
-Players receive **WMP Interface > Clear Stuck WMP UI** under ACE self-interaction. When ACE interaction is unavailable, WMP installs a low-priority vanilla action instead. The action is restored after respawn and requires no public scheduler.
+Players receive **WMP Options > Clear Stuck WMP UI** under ACE self-interaction. When ACE interaction is unavailable, WMP installs a low-priority vanilla action instead. The action is restored after respawn and requires no public scheduler.
 
 ## Tested presentation
 
