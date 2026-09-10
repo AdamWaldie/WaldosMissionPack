@@ -1,7 +1,6 @@
 {
     "build" : {
         "scriptName": "WMP HC",
-        "version": "DevBuild",
         "include": [
             "HeadlessClientKit",
             "LICENSE"
