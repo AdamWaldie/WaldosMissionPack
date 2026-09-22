@@ -101,10 +101,11 @@
  * - Waldo_QM_VehicleRearm_Supply (COMPATIBILITY): finite units for legacy vehicle rearm, default 1200.
  * - Waldo_QM_StaticRearm_Supply (COMPATIBILITY): finite units for legacy static rearm, default 250.
  * - Waldo_QM_FuelBarrel_Litres and Waldo_QM_FuelJerrycan_Litres (MISSION MAKER): source fuel quantities.
- * - Waldo_SupplyTransfers_Enable (MISSION MAKER): enables registered crate and two-way vehicle
- *   ACE actions. WMP-issued crates auto-register except starter crates. For an Eden truck, give it a
- *   variable name and call `[supplyTruck] call Waldo_fnc_SupplyTransfersRegister;` in initServer.sqf,
- *   or place ZEN Supply Transfers - Register or Inspect directly on the vehicle. It needs maxLoad > 0.
+ * - Waldo_SupplyTransfers_Enable (MISSION MAKER): off by default. Set true for crate and two-way
+ *   vehicle transfer/merge actions. WMP-issued crates register automatically except starter crates.
+ *   For an Eden crate or truck with inventory space, put
+ *   `[this] call Waldo_fnc_SupplyTransfersRegister;` in its Init field. The Supply Transfers and
+ *   Physical Cargo Example composition already has these calls. ZEN can register a placed object too.
  * - Waldo_SupplyTransfers_Range (MISSION MAKER): maximum source/destination separation; 2–50 metres.
  *   A registered vehicle has transfer-from, select-as-source and whole-merge ACE options.
  *   Registered boxes have the matching source-side transfer window and direct merge.

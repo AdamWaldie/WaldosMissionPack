@@ -2,13 +2,9 @@
 
 > **Use this page when:** you need to translate a Zeus-authored setup into mission script or compare supported options.
 
-WMP's Zeus Enhanced modules are authoring surfaces over the same mission functions available to scripted missions. A module being visible in Zeus is not, by itself, proof that its operation is valid. The repository therefore tracks three separate facts:
-
-1. The module is registered with Zeus Enhanced.
-2. Its handler and declared script API are present in `CfgFunctions` and the source pack.
-3. Its current implementation has been exercised in Arma on the required client/server path.
-
-The checked-in manifest is `releaseVerificationAndDeployment/zeus_script_parity.json`. Its validation tool rejects missing registrations, missing handlers, invented API names, broken declared bridges and missing required controls. The audit currently covers all 47 categorized core modules and all 19 Economy modules.
+WMP's Zeus Enhanced modules are authoring surfaces over the same mission functions available to
+scripted missions. A module being visible in Zeus does not mean it has configured the selected
+object. Check its completion notification and the resulting object or setting.
 
 ## Direct modules and adapters
 
@@ -37,14 +33,6 @@ jammers, Fortify, EMP, trackers, Dynamic AA/AO, gunships and paradrop. Every Eco
 placement mutation now uses its shared curator-authenticated server request. Building a setup text
 for the clipboard is deliberately interface-local because it does not change the mission.
 
-Do not treat “module registered” as “module worked”. Registration proves only that the curator can
-see the entry. A dedicated acceptance run must also see the server receipt/result log, the expected
-world or state change, the requesting curator's completion notification, and JIP replay where that
-feature owns persistent runtime state.
-
-## Runtime status
-
-Static parity means the module is wired to a real function and its declared controls exist. It does not prove the dialog renders correctly, the selected object is valid, or the dedicated-server locality path succeeds. Runtime acceptance remains part of the full Arma audit mission and must be recorded separately after an in-engine run.
 
 ## Jammer example
 
@@ -69,15 +57,6 @@ The script API exposes radius, sides, frequency bands, falloff, strength, initia
 
 The **Jammer: Place New Emitter** Zeus dialog exposes the same choices plus the physical emitter classname. The classname is an adapter concern: Zeus must create an object before it can call `Waldo_fnc_Jammer`, while a scripted mission normally supplies an existing object.
 
-## Validation
-
-Run:
-
-```text
-python releaseVerificationAndDeployment/zeus_script_parity_checker.py
-```
-
-A passing result establishes static registration, declared bridge and API parity only. Use the full audit mission for actual Zeus placement, prompts, server mutation, JIP and cleanup checks. The current server/client log audit specifically guards the long-uptime ID failure that formerly rejected gunship, Dynamic AA/AO, hazard and paradrop IDs, and the client-only Economy/Fortify mutation pattern that formerly worked hosted but not dedicated.
 
 <!-- WMP-WIKI-NAV -->
 ---

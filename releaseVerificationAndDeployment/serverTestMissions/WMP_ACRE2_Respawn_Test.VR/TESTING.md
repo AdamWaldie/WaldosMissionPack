@@ -1,9 +1,15 @@
 # WMP ACRE2 respawn server test
 
-Upload the complete `WMP_ACRE2_Respawn_Test.VR` folder to the server's `MPMissions` directory, or
-upload the supplied ZIP/PBO through the server's normal mission deployment process.
+Build the supplied ZIP from the current pack source before uploading it. The template folder holds
+the scenario and test hooks; the builder adds the current release scripts and configuration.
 
-Required mods: CBA_A3, ACE3 and ACRE2. The mission contains the current WMP source directly.
+```powershell
+python .\releaseVerificationAndDeployment\build_service_logistics_test_mission.py --destination .qa\WMP_ACRE2_Respawn_Test.VR --zip releaseVerificationAndDeployment\serverTestMissions\WMP_ACRE2_Respawn_Test.VR.zip
+```
+
+Upload the ZIP or extract its `WMP_ACRE2_Respawn_Test.VR` folder into the server's `MPMissions`.
+
+Required mods: CBA_A3, ACE3, ZEN and ACRE2. The built package contains the current WMP source.
 
 For a local dedicated/client test, close Arma and run:
 
@@ -11,7 +17,7 @@ For a local dedicated/client test, close Arma and run:
 .\releaseVerificationAndDeployment\launch_acre2_respawn_test.ps1
 ```
 
-The launcher uses 3840×2160 and `-noBattlEye`, does not open Eden, and refuses to launch if the
+The launcher stages a fresh build, uses 3840×2160 and `-noBattlEye`, does not open Eden, and refuses to launch if the
 test-specific `ALPHA_NET`/`BRAVO_NET` configuration has been replaced by the generic pack example.
 The server creates one full-addons curator and assigns it to the first connected tester, then
 reassigns it after player-object replacement so Zeus remains available after respawn.
@@ -39,6 +45,30 @@ the radio's default channel/frequency.
    initial settings being forced again.
 8. Reconnect/JIP and confirm the authored baseline is applied to a player with no local saved
    respawn snapshot.
+
+## Service and logistics area
+
+Walk east from the player start. The strip has two named base-service stands, a quartermaster,
+two transfer crates, and a NATO Prowler/DAGOR with a small physical-cargo crate.
+
+1. Open both base-service stands. Check the labels, save, heal and spectator actions, then travel in both directions.
+2. Issue a crate at the quartermaster. Check its displayed name, issue progress and ACE handling.
+3. At the stocked transfer crate, select it as source. On the empty crate, merge the whole source
+   through ACE, then repeat after restocking with several selected item rows in the transfer window.
+4. Select the stocked crate as source and transfer into the Prowler. Then select the Prowler as source
+   and transfer back into a crate. Check both inventories after each operation.
+5. Carry the small crate to the Prowler, click to mount it on one passenger seat, and try that seat
+   and a visibly clear seat. Only the covered seat should be unavailable. Unmount through ACE carry
+   and verify the original seat becomes available again.
+
+The Prowler uses class `B_LSV_01_unarmed_F`. It remains simulated, collidable and drivable. Static
+weapons are intentionally absent because working-weapon mounting was removed from this feature.
+The builder adds an authored WEST inventory record for WMP's mission-derived supply scanner; the
+four legacy ACRE slots remain the only playable people. The record covers their shared NATO rifle,
+sidearm and radio kit, plus grenade, explosive and medical issue examples. Check the server RPT for
+`PLAYABLE-SLOTS state=READY` before testing quartermaster issues.
+The server measures the Prowler's empty seats with a temporary hidden occupant at startup. Check
+`[WMP TEST SEATS]` in the server RPT for the number of verified seats before testing locks.
 
 Babel is enabled for this ACRE test. WEST defaults understand Common and English and initially
 speak English. `acre_bravo_1` uses the documented `VARIABLENAME` override, additionally understands

@@ -85,7 +85,7 @@ trait. Ordinary riflemen do not receive the action.
 
 This feature belongs to each medic's player object and the bodies already created by gameplay. A
 placed prop would not configure or demonstrate anything necessary, and a Zeus module would duplicate
-the medic workflow. Use the full audit mission when you need a controlled live test.
+the medic workflow. Check the ACE interaction with a playable medic and a dead player in your mission.
 
 ## Troubleshooting
 

@@ -23,7 +23,7 @@ record is rebuilt from authoritative plan and live read-back. Join, group change
 replacement all replace the previous record instead of duplicating it. Group changes update this
 reference only and never retune radios.
 
-Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`; `Waldo_fnc_ACRE2Init` handles generation. The full audit mission includes a core-console action to force a rebuild while checking physical radios.
+Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`; `Waldo_fnc_ACRE2Init` handles generation.
 
 <!-- WMP-WIKI-NAV -->
 ---

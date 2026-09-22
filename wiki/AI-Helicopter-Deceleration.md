@@ -59,8 +59,7 @@ their shipped values unless a repeatable test with one aircraft demonstrates a s
   does not invent a replacement waypoint.
 
 There is intentionally no composition: the feature reacts to ordinary AI helicopter flight and has
-no object or station to place. Test it with the full audit mission or a normal crewed AI helicopter
-and route.
+no object or station to place. Check it with a crewed AI helicopter on a representative route.
 
 ## Safety model
 

@@ -50,7 +50,7 @@ Built-in values are:
 
 ## Visual chooser
 
-These previews are captured from the real 3840x2160 full-pack audit client. Each image uses the
+These previews show the theme in Arma at 3840x2160. Each image uses the
 production resolver and three-card notification preview, so the font, panel material, rail position,
 semantic colours and copy treatment are the same ones players receive in a mission.
 
@@ -107,7 +107,7 @@ Open **ACE Self Interact > WMP Options > Notification UI Settings**. The custom 
 
 ## Live QA switch
 
-**UI QA - Set Visual Theme** provides a named dropdown for all twenty styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking. The full-pack audit theme station can also open the player-facing colour-vision selector and exercise every built-in profile.
+**UI QA - Set Visual Theme** provides a named dropdown for all twenty styles. The server publishes the chosen style globally; connected clients apply it immediately and JIP clients receive the durable current value. Open WMP notification cards are re-rendered in place without replaying or extending them, including font-dependent height and rail orientation. Tagged interaction-equipment plugins, party-game chrome and Economy prompts update their cached presentation tokens and existing controls. SafeStart, electronic-warfare and hazardous-environment HUDs resolve the new style on their next service refresh. The optional preview sends only the requesting curator notification cards to verify styling and top-right stacking.
 
 Live selections are included in WMP's ordered runtime snapshot as well as the public mission value, so a joining player resolves the server's current style before optional feature interfaces activate.
 

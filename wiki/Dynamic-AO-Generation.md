@@ -107,7 +107,6 @@ Every generated object is added to current curator editable objects. Whole-AO cl
 
 Open terrain legitimately produces fewer garrisons, parked cars and roadblocks because those features require suitable buildings, open positions or roads. The generator caps them rather than fabricating unsuitable locations. `BIS_fnc_findSafePos` reduces overlap risk but cannot guarantee a perfect placement in extremely dense custom terrain; use cleanup and regenerate at a clearer centre if required.
 
-The audit mission includes a dedicated **Dynamic AO** station. Its VR test deliberately requests building and road features on a map with neither, proving the cap/cleanup behavior while still generating patrols, faction assets, civilians, a minefield and markers. The station requires every generated patrol route to be active and reports how many routed groups physically moved during a 15-second observation window.
 
 ## Related pages
 

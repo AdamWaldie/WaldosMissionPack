@@ -1,6 +1,6 @@
-# Performance And Optimisation Audit
+# Performance and optimisation audit
 
-> **Use this page when:** you need to understand the static performance guardrails, reviewed findings, or required in-engine verification.
+This is a developer verification record, not a mission-maker setup guide. It documents static performance guardrails, reviewed findings and in-engine checks still required.
 
 _Associated Files: `releaseVerificationAndDeployment/performance_audit.py`, `performance_baseline.json`, `MissionScripts/MiniGames/engine/core.sqf`, `MissionScripts/EconomySystems/Core/startRequestScheduler.sqf`_
 
@@ -248,14 +248,8 @@ requires two and four seated clients plus a fifth JIP spectator. The final `all`
 after the RPT proves the VR audit mission started, both Zeus-ready markers appear, every expected
 case completes and no first-party SQF error is present.
 
-## See also
+## Related verification documents
 
-- [Mission Diagnostics](Mission-Diagnostics)
-- [Waldos Economy Systems](Waldos-Economy-Systems)
-- [Waldos Mini Games](Waldos-Mini-Games)
-- [Third-Party Scripts](Third-Party-Scripts-Headless-Client-And-Player-Markers)
+- [Full-pack audit mission](fullArmaAudit/README.md)
+- [Interaction-equipment QA](interactionEquipmentQA/README.md)
 - [Bohemia Interactive: remoteExec](https://community.bohemia.net/wiki/remoteExec)
-
-<!-- WMP-WIKI-NAV -->
----
-[Wiki home](Home) · [Quickstart](Quickstart-Guide) · [Feature index](Feature-Tutorials)

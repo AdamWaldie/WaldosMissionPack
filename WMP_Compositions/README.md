@@ -1,15 +1,15 @@
 # WMP Eden composition catalogue
 
-These compositions are beginner-facing Eden examples for features that benefit from reusable,
-pre-placed objects. They require the matching version of WaldosMissionPack inside the mission.
-Composition init fields deliberately call the public WMP functions; they do not contain private
-copies of feature logic.
+Install the matching WaldosMissionPack release in your mission before placing these Eden
+compositions. Each example contains objects and setup calls. The feature scripts come from the pack.
 
-Treat a composition as both a quick start and a worked lesson. **Minimal** examples show the shortest
-supported call. **Full/Guided** examples show a useful configured scenario, but the matching wiki is
-the complete parameter reference. A composition comment must say what the objects do, what a beginner
-may edit, what must remain connected/clear, and where the full guide lives. It must not claim that a
-short init demonstrates every internal option.
+Start with a **Minimal** example if one is available. It uses the pack's defaults. The matching
+**Full** example shows options you can change. Read the comment placed beside the objects for its
+feature flag and wiki link.
+
+Quartermaster ammo and supply contents come from playable units' authored loadouts. Seat blocking
+needs measured positions for each vehicle model. The Prowler composition contains positions for its
+own vehicle.
 
 ## Categories
 
@@ -32,9 +32,8 @@ short init demonstrates every internal option.
    Every shipped comment links directly to the matching WMP wiki article; keep that URL when you
    copy or adapt the example.
 3. Change only the clearly named side, range, stock, key, class or toggle arguments.
-4. Call WMP's documented public setup function directly. Its implementation owns server authority,
-   client-local setup and JIP replay; mission makers should not add an `isServer` wrapper unless the
-   specific function documentation explicitly requires one.
+4. Keep the provided public setup call. Do not add an `isServer` wrapper unless the linked feature
+   page specifically asks for one. WMP sends actions to players who join later.
 5. Do not move player-local action setup into `initServer.sqf`; WMP registration functions publish
    the correct client/JIP setup themselves.
 6. Copy the full matching version of `MissionScripts`, `MissionConfig`, `description.ext` and init
@@ -59,6 +58,8 @@ short init demonstrates every internal option.
 | ACRE2 Vehicle Radio Rack Example (Full) | Central COMMAND_VEHICLE profile: preset-before-init, ensure a VRC-110/PRC-152 exists, then apply the shared WEST AIRGND net |
 | Logistics Spawner Example (Minimal) | Smallest working standalone quartermaster access point |
 | Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with guided common options |
+| Base Services Example | Two object-init service nodes in one named network, with save, heal, spectator and two-way travel |
+| Supply Transfers and Physical Cargo Example | Two registered crates and a NATO Prowler/DAGOR for two-way transfers, merging, ACE carry mounting and model-specific seat locks |
 | MHQ With Logistics Spawner (Minimal) | Single truck, smallest working deployable command post |
 | MHQ With Logistics Spawner (Full) | Deployable command post with synchronized parts and guided common options |
 | Virtual Vehicle Depot Spawner Example (Minimal) | Smallest working terminal and spawn point registration |

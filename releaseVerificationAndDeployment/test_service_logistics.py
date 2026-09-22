@@ -4,7 +4,10 @@ These checks do not replace ACE or Arma multiplayer interaction tests.
 """
 
 from pathlib import Path
+import importlib.util
+import tempfile
 import unittest
+import zipfile
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -15,6 +18,53 @@ def source(path: str) -> str:
 
 
 class ServiceLogisticsSourceTests(unittest.TestCase):
+    def test_packaged_acre_test_uses_current_pack_and_nato_buggy(self):
+        builder_path = ROOT / "releaseVerificationAndDeployment/build_service_logistics_test_mission.py"
+        spec = importlib.util.spec_from_file_location("wmp_service_logistics_builder", builder_path)
+        assert spec and spec.loader
+        builder = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(builder)
+        with tempfile.TemporaryDirectory() as temporary:
+            destination = Path(temporary) / "WMP_ACRE2_Respawn_Test.VR"
+            archive = Path(temporary) / "mission.zip"
+            builder.build(destination)
+            builder.package(destination, archive)
+            mission = (destination / "mission.sqm").read_text(encoding="utf-8")
+            self.assertIn('vehicle="B_LSV_01_unarmed_F"', mission)
+            self.assertIn('text="test_transfer_source"', mission)
+            self.assertIn('text="test_cargo_crate"', mission)
+            self.assertIn('name="acre_test_logistics_loadout"', mission)
+            self.assertIn('isPlayable=1;', mission)
+            self.assertIn('name="HandGrenade"', mission)
+            self.assertIn('name="DemoCharge_Remote_Mag"', mission)
+            self.assertIn('name="ACRE_PRC77"', mission)
+            self.assertIn('"ALPHA_NET"', (destination / "MissionConfig/acreConfig.sqf").read_text(encoding="utf-8"))
+            self.assertEqual(
+                (ROOT / "MissionScripts/WaldosFunctions.sqf").read_bytes(),
+                (destination / "MissionScripts/WaldosFunctions.sqf").read_bytes(),
+            )
+            self.assertIn('serviceLogisticsTestPreInit.sqf', (destination / "init.sqf").read_text(encoding="utf-8"))
+            self.assertIn('serviceLogisticsTestServer.sqf', (destination / "initServer.sqf").read_text(encoding="utf-8"))
+            seat_setup = (destination / "serviceLogisticsTestServer.sqf").read_text(encoding="utf-8")
+            self.assertIn('Waldo_PhysicalCargo_SeatPoints', seat_setup)
+            self.assertIn('moveInTurret [test_cargo_vehicle, _path]', seat_setup)
+            self.assertIn('[test_quartermaster, 90, 5] remoteExec ["Waldo_fnc_SetupQuarterMaster", 0, test_quartermaster]', seat_setup)
+            self.assertIn('["SAVE", "HEAL", "SPECTATE", "TELEPORT"]', seat_setup)
+            with zipfile.ZipFile(archive) as package:
+                self.assertIn(
+                    "WMP_ACRE2_Respawn_Test.VR/serviceLogisticsTestServer.sqf",
+                    package.namelist(),
+                )
+
+    def test_eden_examples_include_current_services_and_verified_prowler_seats(self):
+        base = source("WMP_Compositions/[WMP]Base_Services_Example/composition.sqe")
+        cargo = source("WMP_Compositions/[WMP]Supply_Transfers_And_Cargo_Example/composition.sqe")
+        self.assertEqual(base.count('""SPECTATE""'), 2)
+        self.assertIn('type="B_LSV_01_unarmed_F"', cargo)
+        self.assertIn('""Waldo_PhysicalCargo_SeatPoints""', cargo)
+        for index in range(6):
+            self.assertIn(f'[""TURRET"", [{index}],', cargo)
+
     def test_audit_has_live_station_for_each_new_workflow(self):
         import importlib.util
 
@@ -53,7 +103,8 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('"CAPTURE MY OCCUPIED CARGO SEAT"', client)
         self.assertIn('[player, 1, ["ACE_SelfActions"], _captureSeat]', client)
         self.assertIn('[WMP QA SEAT CAPTURE]', server)
-        self.assertIn('"rhsusf_mrzr4_d"', server)
+        self.assertEqual(live["qa_seat_vehicle"]["class"], "B_LSV_01_unarmed_F")
+        self.assertNotIn('"rhsusf_mrzr4_d"', server)
         self.assertEqual(live["qa_seat_crate"]["class"], "Box_NATO_Ammo_F")
         self.assertIn('"Measured post-exit velocity', client)
         self.assertIn('TEST CRATE + VEHICLE TRANSFERS', client)

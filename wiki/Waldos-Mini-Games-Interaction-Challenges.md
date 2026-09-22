@@ -631,32 +631,8 @@ loadout save point, so the vanilla entry stays available as a discoverability cu
 Both routes open the gallery locally for whoever used the action; the result never affects gameplay,
 party-table state, or anything else in the mission.
 
-Drop the **Field Equipment Gallery Example** composition (`WMP_Compositions/`) into the editor for a
-ready-made laptop that does this - the same "try every procedure from one object" station used in
-WMP's own PR review audit mission. It requires no other setup and can be placed anywhere, including a
-QA-only corner of a mission that never ships to players.
-
-### Disposable Arma QA mission
-
-Repository contributors and coding agents can assemble the current scripts into an isolated VR mission:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File .\releaseVerificationAndDeployment\launch_interaction_ui_qa.ps1 -Mode Interactive
-```
-
-`Active` opens the deterministic Wire Cut sample after its procedure card. `Automated` opens all ten
-procedures and validates both briefing and genuine active states. A successful automated RPT ends with
-`WMP INTERACTION UI QA COMPLETE: 0 finding(s) []` and contains no SQF runtime errors.
-
-Use `-Difficulty easy|standard|hard|expert` with `Active` for a focused profile.
-Use `-Mode Automated -AllDifficulties` for the complete 40-case matrix. Each RPT
-case is labelled `procedure/difficulty`, and the harness must operate the real
-selection, adjustment, drag, timing, and submission functions rather than
-injecting solved values.
-
-This generated local mission always launches with BattlEye disabled. It uses file patching and must not
-be treated as a multiplayer or anti-cheat test. Arma's scripted screenshot command excludes GUI controls,
-so use `capture_interaction_ui.ps1` for a DPI-aware capture of the real game window.
+Drop the **Field Equipment Gallery Example** composition (`WMP_Compositions/`) into Eden for a
+ready-made laptop. Players can try every procedure from one object. It requires no other setup.
 
 All equipment geometry scales from the complete Arma safe zone. `safeZoneX/Y/W/H` may extend outside
 `0..1` depending on aspect ratio and UI scale; treating `0..1` as the visible screen makes interfaces and

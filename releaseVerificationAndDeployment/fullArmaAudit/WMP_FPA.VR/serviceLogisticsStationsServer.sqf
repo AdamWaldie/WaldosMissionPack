@@ -9,21 +9,12 @@
  */
 if (!isServer) exitWith {};
 
-// Keep the canonical mission playable with its vanilla fixture. A focused launch
-// with RHSUSAF replaces only the seat station with the actual Polaris MRZR 4.
+// The editor fixture is the vanilla NATO Prowler (DAGOR). Keep its original
+// object identity so seat calibration and local test actions refer to one vehicle.
 private _seatFixture = missionNamespace getVariable ["qa_seat_vehicle", objNull];
-if (!isNull _seatFixture && {isClass (configFile >> "CfgVehicles" >> "rhsusf_mrzr4_d")}) then {
-    private _position = getPosATL _seatFixture;
-    private _direction = getDir _seatFixture;
-    deleteVehicle _seatFixture;
-    private _polaris = createVehicle ["rhsusf_mrzr4_d", _position, [], 0, "NONE"];
-    _polaris setDir _direction;
-    _polaris setPosATL _position;
-    _polaris enableSimulationGlobal true;
-    _polaris setPhysicsCollisionFlag true;
-    missionNamespace setVariable ["qa_seat_vehicle", _polaris, true];
-    diag_log format ["[WMP QA SEAT VEHICLE] Polaris=%1 cargoOrFfvSeats=%2",
-        typeOf _polaris, (fullCrew [_polaris, "", true]) select {
+if (!isNull _seatFixture) then {
+    diag_log format ["[WMP QA SEAT VEHICLE] class=%1 cargoOrFfvSeats=%2",
+        typeOf _seatFixture, (fullCrew [_seatFixture, "", true]) select {
             toLowerANSI (_x select 1) isEqualTo "cargo" || {_x select 4}
         }];
 };

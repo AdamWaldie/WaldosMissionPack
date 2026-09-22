@@ -8,7 +8,7 @@
  * Return Value: <BOOL> reconfigured or intentionally skipped on headless clients.
  * Current caller: Waldo_fnc_ZenServiceLogisticsServer.
  * Example: [qmLaptop, 90, 3, false, ["Medical", "Ammo"]]
- *     remoteExecCall ["Waldo_fnc_QuartermasterReconfigureLocal", -2, qmLaptop];
+ *     remoteExecCall ["Waldo_fnc_QuartermasterReconfigureLocal", 0, qmLaptop];
  */
 params [["_target", objNull, [objNull]], ["_bearing", 90, [0]], ["_distance", 2, [0]],
     ["_deploymentControlled", false, [false]], ["_allowedKinds", [], [[]]]];

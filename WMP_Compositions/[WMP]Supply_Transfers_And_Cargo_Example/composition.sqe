@@ -1,0 +1,52 @@
+version=54;
+center[]={0,0,0};
+class items
+{
+    items=4;
+    class Item0
+    {
+        dataType="Object";
+        side="Empty";
+        class PositionInfo {position[]={-6,0,0};};
+        class Attributes
+        {
+            name="wmp_supply_source";
+            init="[this] call Waldo_fnc_SupplyTransfersRegister; [this] call Waldo_fnc_PhysicalCargoRegister;";
+        };
+        id=1;
+        type="Box_NATO_Ammo_F";
+    };
+    class Item1
+    {
+        dataType="Object";
+        side="Empty";
+        class PositionInfo {position[]={-2,0,0};};
+        class Attributes
+        {
+            name="wmp_supply_target";
+            init="[this] call Waldo_fnc_SupplyTransfersRegister; [this] call Waldo_fnc_PhysicalCargoRegister;";
+        };
+        id=2;
+        type="Box_NATO_Ammo_F";
+    };
+    class Item2
+    {
+        dataType="Object";
+        side="Empty";
+        class PositionInfo {position[]={6,0,0};};
+        class Attributes
+        {
+            name="wmp_supply_buggy";
+            init="if (isServer) then {this setVariable [""Waldo_PhysicalCargo_SeatPoints"", [[""TURRET"", [0], [-0.57409, -0.76453, -1.10891]], [""TURRET"", [1], [0.64737, -0.75992, -1.10891]], [""TURRET"", [2], [0.64737, 0.21741, -1.10891]], [""TURRET"", [3], [0.63091, -1.59534, -0.89094]], [""TURRET"", [4], [-0.71477, -1.63306, -0.89094]], [""TURRET"", [5], [0.03284, -0.09595, -1.14049]]], true];}; [this] call Waldo_fnc_SupplyTransfersRegister;";
+        };
+        id=3;
+        type="B_LSV_01_unarmed_F";
+    };
+    class Item3
+    {
+        dataType="Comment";
+        class PositionInfo {position[]={0,0,-5};};
+        title="Enable Waldo_SupplyTransfers_Enable and Waldo_PhysicalCargo_Enable in MissionConfig/logisticsConfig.sqf. The two crates and NATO Prowler/DAGOR share one transfer/merge system. The buggy Init also contains measured seat points for this exact vanilla class; do not copy those coordinates to another vehicle. Carry a crate with ACE to try visible mounting. Keep vehicle simulation and collision on. Wikis: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Supply-Transfers and https://github.com/AdamWaldie/WaldosMissionPack/wiki/Physical-Cargo";
+        id=4;
+    };
+};

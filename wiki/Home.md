@@ -76,7 +76,6 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 - [Airborne Gunship Support](Airborne-Gunship-Support) — controller-operated gunships with configurable orbits and service cycles.
 - [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout) — custom turret weapon/ammo and aircraft pylon add/replace/remove, script or Zeus.
 - [Vehicle Appearance](Vehicle-Appearance) — recolor a vehicle's texture slots and show/hide named model parts, script or Zeus.
-- [Performance and Optimisation Audit](Performance-And-Optimisation-Audit) — CI guardrails and runtime verification guidance.
 
 ### AI and mission-maker tools
 

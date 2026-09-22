@@ -58,6 +58,29 @@ The existing Electronic Warfare station also covers radio-jammer field disableme
 shared circuit procedure, with the audit fixture's engineer restriction disabled so any selected
 test slot can exercise it.
 
+## Service and logistics checks
+
+The service and logistics range contains two base-service stands, a quartermaster, transfer crates,
+vehicle inventory and physical-cargo fixtures. Test the base stands' different service sets,
+teleport transition, healing feedback and spectator entry. At the quartermaster, issue each enabled
+type and check its ACE action, progress label, spawned object name and usable contents. Transfer
+several item rows between crates and the vehicle, then select a source through ACE and merge its
+whole inventory into another container. Check that an over-capacity transfer leaves both inventories
+unchanged.
+
+Use separate crates for the whole-box merge and the multi-row transfer so each check starts with
+known contents. Inspect both inventories after each operation.
+
+The seat fixture is the vanilla NATO Prowler/DAGOR and a small crate. Its server measures empty
+passenger and FFV positions and publishes only verified points. Use **REPORT VERIFIED SEATS + OWNED
+LOCKS** at the seat station to inspect the map. Carry the crate over one seat, confirm that seat is
+blocked, and confirm a clear seat remains usable. Remove the crate with ACE Carry and check that the
+owned lock is released. **CAPTURE MY OCCUPIED CARGO SEAT** is a diagnostic action for a seated
+player. It replaces one measurement when the automatic map needs investigation. Check bad aim,
+ground drop, remount, ACE Cargo loading and object deletion separately. Do not use the static weapon
+as a working mount: the fixture only checks inert cargo and the production feature rejects working
+static-weapon mounts.
+
 The five playable BLUFOR slots also form a paired ACRE2 radio test squad. No radio profile is
 tested by only one player:
 

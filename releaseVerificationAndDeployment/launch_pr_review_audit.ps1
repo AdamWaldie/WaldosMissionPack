@@ -12,7 +12,8 @@
  * Port: dedicated-server port (default 24132).
  * ResolutionWidth/ResolutionHeight: connected client dimensions (default 3840x2160).
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
- * IncludeRhsPolaris: load installed RHSUSAF for the optional MRZR seat/cargo station.
+ * IncludeRhsPolaris: legacy compatibility switch to load RHSUSAF. The seat station remains the
+ *   vanilla NATO Prowler/DAGOR regardless of this switch.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
  * Runtime evidence: .qa/pr-review-audit/runtime-<timestamp>/{server,client}. Both processes always
  * enable Arma's network log so every dedicated audit captures traffic alongside its RPT.
@@ -71,7 +72,7 @@ if ($IncludeRhsPolaris) {
     if (-not (Test-Path -LiteralPath $rhsPath)) { throw "RHSUSAF is required for -IncludeRhsPolaris but is not installed." }
     $clientMods += $rhsPath
     $serverMods += $rhsPath
-    Write-Output "Including optional RHSUSAF Polaris MRZR station."
+    Write-Output "Including optional RHSUSAF; seat station remains the NATO Prowler/DAGOR."
 }
 $persistenceMod = Get-ChildItem -LiteralPath $workshopRoot -Directory -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -like "@INIDBI2*" } |

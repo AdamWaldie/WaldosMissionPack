@@ -17,10 +17,21 @@ $armaRoot = (Get-ItemProperty "HKLM:\SOFTWARE\WOW6432Node\bohemia interactive\ar
 if ((Get-Process arma3_x64 -ErrorAction SilentlyContinue) -or (Get-Process arma3server_x64 -ErrorAction SilentlyContinue)) {
     throw "Close all Arma clients and servers before launching the ACRE2 respawn test."
 }
-$source = Join-Path $PSScriptRoot "serverTestMissions\WMP_ACRE2_Respawn_Test.VR"
 $missionRoot = Join-Path $armaRoot "MPMissions\WMP_ACRE2_Respawn_Test.VR"
-if (Test-Path -LiteralPath $missionRoot) {Remove-Item -LiteralPath $missionRoot -Recurse -Force}
-Copy-Item -LiteralPath $source -Destination $missionRoot -Recurse -Force
+$resolvedArmaRoot = (Resolve-Path -LiteralPath $armaRoot).Path
+$expectedMissionRoot = [System.IO.Path]::GetFullPath((Join-Path $resolvedArmaRoot "MPMissions\WMP_ACRE2_Respawn_Test.VR"))
+$resolvedMissionRoot = [System.IO.Path]::GetFullPath($missionRoot)
+if ($resolvedMissionRoot -ne $expectedMissionRoot) { throw "Refusing to replace an unexpected mission path." }
+if (Test-Path -LiteralPath $missionRoot) {
+    if ((Get-Item -LiteralPath $missionRoot).LinkType) { throw "Refusing to remove a linked mission directory." }
+    $existingMissionRoot = (Resolve-Path -LiteralPath $missionRoot).Path
+    if ($existingMissionRoot -ne $expectedMissionRoot) { throw "Refusing to remove an unexpected mission directory." }
+    Remove-Item -LiteralPath $existingMissionRoot -Recurse -Force
+}
+$pythonExe = Join-Path $env:USERPROFILE ".cache\codex-runtimes\codex-primary-runtime\dependencies\python\python.exe"
+if (-not (Test-Path -LiteralPath $pythonExe)) { throw "The WMP test-mission builder requires Python." }
+& $pythonExe (Join-Path $PSScriptRoot "build_service_logistics_test_mission.py") --destination $missionRoot
+if ($LASTEXITCODE -ne 0) { throw "WMP test-mission staging failed." }
 $stagedConfig = Get-Content (Join-Path $missionRoot "MissionConfig\acreConfig.sqf") -Raw
 if ($stagedConfig -notmatch '"ALPHA_NET"' -or $stagedConfig -notmatch '"BRAVO_NET"') {
     throw "Preflight failed: the staged ACRE test config does not contain ALPHA_NET and BRAVO_NET."

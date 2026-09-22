@@ -1,11 +1,23 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Registers a crate or cargo-capable vehicle as a supply source and destination.
- * Locality / Authority: Server-only registration and published registry.
- * Repeat / JIP: Duplicate registration is ignored; the ordered registry snapshot installs client actions.
- * Arguments: container or vehicle <OBJECT>. Return Value: <BOOL> registered.
- * Current callers: WMP crate issuers, object init, and ZEN supply registration.
- * Example: [supplyCrate] call Waldo_fnc_SupplyTransfersRegister;
+ * Give a crate or cargo-capable vehicle the supply-transfer and merge actions.
+ * Enable Waldo_SupplyTransfers_Enable first. WMP-issued crates register automatically;
+ * use this call for an object placed in Eden or created by your own script.
+ *
+ * Locality and authority: The server registers the object. An Eden Init runs on every
+ * machine; client copies of this call do nothing. The server sends the registered
+ * objects to each player so ACE actions appear for players who join later.
+ * Repeat and JIP: Calling this twice for the same object does not duplicate actions.
+ * If shared settings are still loading, the server finishes registration afterward.
+ *
+ * Arguments:
+ * 0: container <OBJECT> - a crate or cargo-capable vehicle with inventory space.
+ * Return Value: <BOOL> - true if registered, already registered or queued until
+ * settings are ready; false if called off-server, disabled or the object cannot carry items.
+ * Example: In that object's Eden Init field:
+ * [this] call Waldo_fnc_SupplyTransfersRegister;
+ * Result: Players can use ACE Interact to transfer supplies into or out of this object.
+ * Current callers: WMP crate issuers, Eden object Init and ZEN supply registration.
  */
 params [["_container", objNull, [objNull]]];
 if (!isServer || {isRemoteExecuted} || {isNull _container}) exitWith {false};
