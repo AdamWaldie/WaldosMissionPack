@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
- * Creates and populates a ZEN logistics crate on the server.
- * The ZEN dialog remains local to the curator; all world and cargo mutation is
- * performed here so dedicated clients cannot create divergent crate state.
+ * Purpose: Creates and populates a ZEN logistics crate and opts it into enabled crate handling.
+ * Locality / Authority: Server owns spawn, cargo and crate registration; curator request is authenticated.
+ * Repeat / JIP: Each call creates a new crate. Cargo and transfer registration replicate to JIP clients.
  *
  * Arguments:
  * 0: kind <STRING> - "SUPPLY" or "MEDICAL"
@@ -99,6 +99,7 @@ switch (_kind) do {
 };
 
 if (!isNull _crate) then {
+    [_crate, _kind] spawn Waldo_fnc_LogisticsRegisterSpawned;
     [_crate, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
     diag_log format ["[WMP ZEN] crate created kind=%1 crate=%2 actor=%3 owner=%4", _kind, netId _crate, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner];
 };

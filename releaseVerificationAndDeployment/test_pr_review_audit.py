@@ -750,6 +750,27 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertIn("_vehicle addAction", setup)
         self.assertIn('remoteExecCall ["Waldo_fnc_VehicleUpright", 2]', setup)
 
+    def test_emergency_dismount_throws_with_flip_direction_and_velocity(self):
+        feature = ROOT / "MissionScripts" / "MissionInit" / "VehicleActionsSetup" / "EmergencyDismount"
+        monitor = (feature / "emergencyDismountInit.sqf").read_text(encoding="utf-8")
+        execute = (feature / "emergencyDismountExecute.sqf").read_text(encoding="utf-8")
+        config = (ROOT / "MissionConfig" / "interfaceConfig.sqf").read_text(encoding="utf-8")
+
+        self.assertIn("vectorUp _vehicle", monitor)
+        self.assertIn("angularVelocity _vehicle", monitor)
+        self.assertIn("_flipDirection, _flipAngularSpeed", monitor)
+        self.assertIn("vectorCrossProduct _seatOffset", execute)
+        self.assertIn("_throwDirection vectorMultiply _throwSpeed", execute)
+        self.assertIn("_exitVelocity vectorAdd _throwImpulse", execute)
+        self.assertNotIn("random 360", execute)
+        for setting in (
+            "Waldo_EmergencyDismount_ThrowBaseVelocity",
+            "Waldo_EmergencyDismount_ThrowAngularFactor",
+            "Waldo_EmergencyDismount_ThrowMaximumVelocity",
+            "Waldo_EmergencyDismount_UpwardVelocity",
+        ):
+            self.assertIn(setting, config)
+
     def test_tactical_display_fixture_is_a_map_board(self):
         generator = (ROOT / "releaseVerificationAndDeployment" / "generate_full_arma_audit_mission.py").read_text(encoding="utf-8")
         client = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR" / "extendedFeatureStationsClient.sqf").read_text(encoding="utf-8")
@@ -826,7 +847,8 @@ class PrReviewAuditTests(unittest.TestCase):
             ROOT / "MissionScripts" / "Logistics" / "VehicleCamoScript" / "vehicleCamo.sqf"
         ).read_text(encoding="utf-8")
         self.assertIn("Author: WaldoTheWarfighter, Val", mhq)
-        self.assertIn("Authors: Val & WaldoTheWarfighter", vehicle_camo)
+        self.assertIn("Author: WaldoTheWarfighter", vehicle_camo)
+        self.assertIn("Concept credit: Val", vehicle_camo)
 
     def test_breaching_config_ships_a_disabled_working_beginner_example(self):
         config = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")

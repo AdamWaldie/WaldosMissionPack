@@ -12,6 +12,7 @@
  * Port: dedicated-server port (default 24132).
  * ResolutionWidth/ResolutionHeight: connected client dimensions (default 3840x2160).
  * ExcludePersistenceMod: omit any installed INIDBI2 runtime to test its dependency gate.
+ * IncludeRhsPolaris: load installed RHSUSAF for the optional MRZR seat/cargo station.
  * PythonExecutable: optional explicit interpreter used to assemble the mission.
  * Runtime evidence: .qa/pr-review-audit/runtime-<timestamp>/{server,client}. Both processes always
  * enable Arma's network log so every dedicated audit captures traffic alongside its RPT.
@@ -29,6 +30,7 @@ param(
     [int]$ResolutionWidth = 3840,
     [int]$ResolutionHeight = 2160,
     [switch]$ExcludePersistenceMod,
+    [switch]$IncludeRhsPolaris,
     [string]$PythonExecutable = ""
 )
 
@@ -64,6 +66,13 @@ $clientMods = foreach ($name in $modNames) {
 }
 $serverMods = @($clientMods)
 $workshopRoot = Join-Path $armaRoot "!Workshop"
+if ($IncludeRhsPolaris) {
+    $rhsPath = Join-Path $workshopRoot "@RHSUSAF"
+    if (-not (Test-Path -LiteralPath $rhsPath)) { throw "RHSUSAF is required for -IncludeRhsPolaris but is not installed." }
+    $clientMods += $rhsPath
+    $serverMods += $rhsPath
+    Write-Output "Including optional RHSUSAF Polaris MRZR station."
+}
 $persistenceMod = Get-ChildItem -LiteralPath $workshopRoot -Directory -ErrorAction SilentlyContinue |
     Where-Object { $_.Name -like "@INIDBI2*" } |
     Select-Object -First 1

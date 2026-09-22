@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Defines field-resupply, vehicle-recovery, transport-service, object-scaling and logistics-crate defaults. World
+ * Defines field-resupply, physical-cargo, vehicle-recovery, transport-service, object-scaling and logistics-crate defaults. World
  * mutation remains server-authoritative and object interactions remain client-local/JIP-safe.
  *
  * Schema: SHARED entries are [name, default]; SERVER entries are [name, default, publish BOOL].
@@ -74,6 +74,45 @@
  * - Waldo_FieldResupply_IncludeWeaponsAttachments (MISSION MAKER): also populate weapons, attachments and clothing.
  * - Waldo_FieldResupply_IncludeLaunchers (MISSION MAKER): also populate launchers and launcher ammunition.
  * - Waldo_FieldResupply_RetainOnRespawn (MISSION MAKER): preserves that player's carrier allowance after respawn.
+ * - Waldo_PhysicalCargo_Enable (MISSION MAKER): replaces ACE's carried-crate default click; aim at a
+ *   nearby stopped vehicle to mount visibly, or aim elsewhere to drop. Other ACE Cargo actions remain.
+ * - Waldo_PhysicalCargo_BlockSeats (MISSION MAKER): only verified per-vehicle seat points may lock seats.
+ * - Waldo_Quartermaster_Enable (MISSION MAKER): gates the established quartermaster action set.
+ * - Waldo_QM_Medical_Enable (MISSION MAKER): offer the ACE-aware medical crate; on by default.
+ * - Waldo_QM_Ammo_Enable (MISSION MAKER): offer the mission-derived ammunition crate; on by default.
+ * - Waldo_QM_Supply_Enable (MISSION MAKER): offer the heavy mission-derived supply crate; on by default.
+ * - Waldo_QM_Track_Enable (MISSION MAKER): offer an ACE spare track; on by default.
+ * - Waldo_QM_Wheel_Enable (MISSION MAKER): offer an ACE spare wheel; on by default.
+ * - Waldo_QM_Grenades_Enable and Waldo_QM_Explosives_Enable (MISSION MAKER): add dynamic issues.
+ * - Waldo_QM_Rearm_Enable (MISSION MAKER): one ACE source for vehicles and static weapons.
+ * - Waldo_QM_VehicleRearm_Enable (COMPATIBILITY): older vehicle rearm flag; aliases the one Rearm Box.
+ * - Waldo_QM_StaticRearm_Enable (COMPATIBILITY): older static rearm flag; aliases the one Rearm Box.
+ * - Waldo_QM_FuelBarrel_Enable and Waldo_QM_FuelJerrycan_Enable (MISSION MAKER): add ACE fuel sources.
+ * - Waldo_QM_Ammo_CrateClass (MISSION MAKER): CfgVehicles class for the ammo issue; default NATO supply crate.
+ * - Waldo_QM_Supply_CrateClass (MISSION MAKER): CfgVehicles class for the heavy supply issue.
+ * - Waldo_QM_Medical_CrateClass (MISSION MAKER): empty string uses the ACE-aware medical default.
+ * - Waldo_QM_Grenades_CrateClass (MISSION MAKER): small NATO ammo box by default.
+ * - Waldo_QM_Explosives_CrateClass (MISSION MAKER): NATO ordnance box by default.
+ * - Waldo_QM_Rearm_CrateClass (MISSION MAKER): empty ACE rearm source shell; NATO vehicle-ammo box by default.
+ * - Waldo_QM_VehicleRearm_CrateClass (COMPATIBILITY): shell class for direct legacy vehicle rearm calls.
+ * - Waldo_QM_StaticRearm_CrateClass (COMPATIBILITY): shell class for direct legacy static rearm calls.
+ * - Waldo_QM_Grenades_CountPerType and Waldo_QM_Explosives_CountPerType (MISSION MAKER): each pooled type's issue quantity.
+ * - Waldo_QM_Rearm_Supply (MISSION MAKER): finite ACE ammunition source units.
+ * - Waldo_QM_VehicleRearm_Supply (COMPATIBILITY): finite units for legacy vehicle rearm, default 1200.
+ * - Waldo_QM_StaticRearm_Supply (COMPATIBILITY): finite units for legacy static rearm, default 250.
+ * - Waldo_QM_FuelBarrel_Litres and Waldo_QM_FuelJerrycan_Litres (MISSION MAKER): source fuel quantities.
+ * - Waldo_SupplyTransfers_Enable (MISSION MAKER): enables registered crate and two-way vehicle
+ *   ACE actions. WMP-issued crates auto-register except starter crates. For an Eden truck, give it a
+ *   variable name and call `[supplyTruck] call Waldo_fnc_SupplyTransfersRegister;` in initServer.sqf,
+ *   or place ZEN Supply Transfers - Register or Inspect directly on the vehicle. It needs maxLoad > 0.
+ * - Waldo_SupplyTransfers_Range (MISSION MAKER): maximum source/destination separation; 2–50 metres.
+ *   A registered vehicle has transfer-from, select-as-source and whole-merge ACE options.
+ *   Registered boxes have the matching source-side transfer window and direct merge.
+ * - Quartermaster issue flags are global ceilings; the ZEN Quartermaster module selects which of
+ *   those enabled issue types a particular point offers. Its bearing (0–359 degrees), distance
+ *   (2–12 metres) and deployment-controlled option map to SetupQuarterMaster arguments. Keep the
+ *   latter off for a standalone point; MHQ controls it separately. Configured class rows below
+ *   choose the spawned crate for each type; the medical empty string follows the ACE-aware default.
  *
  * SETTING-BY-SETTING GUIDE - VEHICLE RECOVERY:
  * - Waldo_Recovery_ScanInterval (ADVANCED): seconds between carrier/package state checks; lower costs more server time.
@@ -123,7 +162,7 @@
  *   when they are serialisable; code, UI controls and local object references are not safe save data.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Boat Transport", "Object Scaling", "Logistics Crates", "Respawn Loadout"]],
+    ["featureFamilies", ["Field Resupply", "Vehicle Recovery", "Helicopter Transport", "Ground Transport", "Boat Transport", "Object Scaling", "Logistics Crates", "Quartermaster", "Supply Transfers", "Physical Cargo", "Respawn Loadout"]],
     ["shared", [
         // MISSION MAKER: respawn loadout capture policy. Default is OFF - the mission-start baseline
         // (initPlayerLocal.sqf) plus the manual "Loadout Save Point" ACE/vanilla action
@@ -140,6 +179,38 @@ createHashMapFromArray [
         // like a standard supply crate (Waldo_fnc_SupplyCratePopulate) scoped to the servicing hub's
         // side, so these mirror that function's own parameters rather than a separate charge model.
         ["Waldo_FieldResupply_Enable", true],       // BOOL: enables service/actions; hubs/carriers still need registration.
+        ["Waldo_PhysicalCargo_Enable", true], // BOOL: ACE carried crates default-clicked onto a nearby vehicle mount visibly; other ACE Cargo actions remain available.
+        ["Waldo_PhysicalCargo_BlockSeats", true], // BOOL: lock only cargo seats with verified positions.
+        ["Waldo_Quartermaster_Enable", true], // BOOL: preserve existing quartermaster availability.
+        ["Waldo_QM_Medical_Enable", true],
+        ["Waldo_QM_Ammo_Enable", true],
+        ["Waldo_QM_Supply_Enable", true],
+        ["Waldo_QM_Track_Enable", true],
+        ["Waldo_QM_Wheel_Enable", true],
+        ["Waldo_QM_Grenades_Enable", false],
+        ["Waldo_QM_Explosives_Enable", false],
+        ["Waldo_QM_Rearm_Enable", false],
+        ["Waldo_QM_VehicleRearm_Enable", false],
+        ["Waldo_QM_StaticRearm_Enable", false],
+        ["Waldo_QM_FuelBarrel_Enable", false],
+        ["Waldo_QM_FuelJerrycan_Enable", false],
+        ["Waldo_QM_Ammo_CrateClass", "B_supplyCrate_F"],
+        ["Waldo_QM_Supply_CrateClass", "B_supplyCrate_F"],
+        ["Waldo_QM_Medical_CrateClass", ""], // Empty follows Logi_MedicalBoxClass (ACE-aware default).
+        ["Waldo_QM_Grenades_CrateClass", "Box_NATO_Ammo_F"],
+        ["Waldo_QM_Explosives_CrateClass", "Box_NATO_AmmoOrd_F"],
+        ["Waldo_QM_Rearm_CrateClass", "Box_NATO_AmmoVeh_F"],
+        ["Waldo_QM_VehicleRearm_CrateClass", "Box_NATO_AmmoVeh_F"],
+        ["Waldo_QM_StaticRearm_CrateClass", "Box_NATO_AmmoVeh_F"],
+        ["Waldo_QM_Grenades_CountPerType", 20],
+        ["Waldo_QM_Explosives_CountPerType", 8],
+        ["Waldo_QM_Rearm_Supply", 1200],
+        ["Waldo_QM_VehicleRearm_Supply", 1200], // Finite ACE rearm supply units.
+        ["Waldo_QM_StaticRearm_Supply", 250],
+        ["Waldo_QM_FuelBarrel_Litres", 200],
+        ["Waldo_QM_FuelJerrycan_Litres", 20],
+        ["Waldo_SupplyTransfers_Enable", false], // BOOL: registered box and two-way vehicle logistics ACE actions.
+        ["Waldo_SupplyTransfers_Range", 20], // METRES: maximum crate-source to box/vehicle destination separation (clamped 2-50).
         ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"], // CfgVehicles class for the deployed physical crate.
         ["Waldo_FieldResupply_DefaultCarrierCapacity", 2], // CRATES: default assigned player carrying capacity.
         ["Waldo_FieldResupply_CrateSizeScalar", 1], // SCALAR: multiplies populated magazine/item/weapon quantities.

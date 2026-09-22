@@ -1,12 +1,13 @@
 /*
  * Author: WaldoTheWarfighter
- * Zeus module to add a "Save Respawn Loadout" action to a target object.
- * If no object is selected a default supply box is spawned at the module position.
- * JIP compatible — action is re-applied automatically to players who join late.
+ * Purpose: Adds Save Respawn Loadout to a target, or spawns a fallback crate with the action.
+ * Locality / Authority: Server validates curator request, spawns and registers fallback crate.
+ * Repeat / JIP: Each call updates the target action; JIP replay follows the object's lifetime.
  *
  * Arguments:
  * 0: modulePos <POSITION>
  * 1: objectPos <OBJECT>
+ * 2: actor <OBJECT> (objNull for server calls)
  *
  * Return Value:
  * Nothing
@@ -47,6 +48,7 @@ if (!isNull _objectPos) then {
     clearItemCargoGlobal _target;
     clearBackpackCargoGlobal _target;
     [_target, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
+    [_target, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
 
     [_target, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
 };

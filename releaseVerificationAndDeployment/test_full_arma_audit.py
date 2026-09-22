@@ -1206,7 +1206,12 @@ class FullAuditTests(unittest.TestCase):
         self.assertFalse(any(mission.glob("*.pbo")))
         self.assertNotIn("Land_Radio_F", sqm)
         self.assertIn('type="Land_PortableServer_01_sand_F"', sqm)
-        self.assertEqual(sqm.count('side="Empty"'), sqm.count("this enableSimulationGlobal false;"))
+        self.assertEqual(
+            sqm.count('side="Empty"'),
+            sqm.count("this enableSimulationGlobal false;")
+            + sqm.count("this enableSimulationGlobal true;"),
+        )
+        self.assertIn('this setPhysicsCollisionFlag true;', sqm)
         for release_root in ("description.ext", "init.sqf", "initPlayerLocal.sqf", "initServer.sqf", "LICENSE", "README.md"):
             self.assertTrue((mission / "WMPPackSource" / release_root).is_file())
         self.assertTrue((mission / "WMPPackSource" / "MissionConfig" / "acreConfig.sqf").is_file())
@@ -2165,8 +2170,8 @@ class FullAuditTests(unittest.TestCase):
 
     def test_logistics_compatibility_notifications_do_not_use_centre_screen(self):
         dynamic_text = (ROOT / "MissionScripts" / "MissionFlowAndUi" / "dynamicText.sqf").read_text(encoding="utf-8")
-        self.assertIn('"TOP_RIGHT", "LEGACY_DYNAMIC_TEXT", "LOGISTICS"', dynamic_text)
-        self.assertNotIn('"CENTER", "LEGACY_DYNAMIC_TEXT"', dynamic_text)
+        self.assertIn('"TOP_RIGHT", format ["DYNAMIC_TEXT_%1", _title], "LOGISTICS"', dynamic_text)
+        self.assertNotIn('"CENTER", format ["DYNAMIC_TEXT_%1", _title]', dynamic_text)
 
     def test_recovery_spill_transition_is_one_shot_and_repeat_safe(self):
         root = ROOT / "MissionScripts" / "Logistics" / "VehicleRecovery"
@@ -3147,13 +3152,13 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn("floor (_rem / 60)", apply)
         self.assertIn("_rem % 60", apply)
 
-    def test_briefing_structured_text_escapes_ampersands(self):
+    def test_briefing_structured_text_avoids_character_entities(self):
         briefing = ROOT / "MissionScripts" / "MissionInit" / "BriefingDocuments"
-        raw_entity = re.compile(r"&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9A-Fa-f]+;)")
+        character_entity = re.compile(r"&(?:[A-Za-z][A-Za-z0-9]+|#\d+|#x[0-9A-Fa-f]+);")
         findings = []
         for path in briefing.glob("*.sqf"):
             for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-                if any(tag in line for tag in ("<br", "<t", "<font")) and raw_entity.search(line):
+                if character_entity.search(line):
                     findings.append(f"{path.name}:{line_number}")
         self.assertEqual([], findings)
 

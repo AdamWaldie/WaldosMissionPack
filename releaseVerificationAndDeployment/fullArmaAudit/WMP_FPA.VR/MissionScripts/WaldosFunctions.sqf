@@ -343,6 +343,14 @@ class CfgFunctions
             class Init3DMarkers {
                 file = "MissionScripts\MissionFlowAndUi\init3DMarkers.sqf";
             };
+            class BaseServicesRegister {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesRegister.sqf";};
+            class BaseServicesRegisterNode {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesRegisterNode.sqf";};
+            class BaseServicesSetupLocal {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesSetupLocal.sqf";};
+            class BaseServicesTeleportServer {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesTeleportServer.sqf";};
+            class BaseServicesTeleportLocal {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesTeleportLocal.sqf";};
+            class BaseServicesRequestStateServer {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesRequestStateServer.sqf";};
+            class BaseServicesUseServer {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesUseServer.sqf";};
+            class BaseServicesUseLocal {file = "MissionScripts\MissionFlowAndUi\BaseServices\baseServicesUseLocal.sqf";};
             class ZenCreate3DMarker {
                 file = "MissionScripts\MissionFlowAndUi\zenCreate3DMarker.sqf";
             };
@@ -545,6 +553,24 @@ class CfgFunctions
             class LogisticsSpawner {
                 file = "MissionScripts\Logistics\Crates\LogiBoxes.sqf";
             };
+            class QuartermasterExtendedSpawn {file = "MissionScripts\Logistics\Crates\quartermasterExtendedSpawn.sqf";};
+            class QuartermasterRearmLabelLocal {file = "MissionScripts\Logistics\Crates\quartermasterRearmLabelLocal.sqf";};
+            class QuartermasterReconfigureLocal {file = "MissionScripts\Logistics\Crates\quartermasterReconfigureLocal.sqf";};
+            class LogisticsRegisterSpawned {file = "MissionScripts\Logistics\Crates\logisticsRegisterSpawned.sqf";};
+            class QuartermasterMakeJerrycanLocal {file = "MissionScripts\Logistics\Crates\quartermasterMakeJerrycanLocal.sqf";};
+            class SupplyTransfersRegister {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersRegister.sqf";};
+            class SupplyTransfersSnapshot {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersSnapshot.sqf";};
+            class SupplyTransfersApplySnapshot {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersApplySnapshot.sqf";};
+            class SupplyTransfersRequestServer {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersRequestServer.sqf";};
+            class SupplyTransfersSetupLocal {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersSetupLocal.sqf";};
+            class SupplyTransfersRequestStateServer {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersRequestStateServer.sqf";};
+            class SupplyTransfersSetAceLoadServer {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersSetAceLoadServer.sqf";};
+            class SupplyTransfersOpenLocal {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersOpenLocal.sqf";};
+            class SupplyTransfersDestinationsLocal {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersDestinationsLocal.sqf";};
+            class SupplyTransfersRefreshLocal {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersRefreshLocal.sqf";};
+            class SupplyTransfersSubmitLocal {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersSubmitLocal.sqf";};
+            class SupplyTransfersRequestWithFeedbackServer {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersRequestWithFeedbackServer.sqf";};
+            class SupplyTransfersResultLocal {file = "MissionScripts\Logistics\SupplyTransfers\supplyTransfersResultLocal.sqf";};
             class MissionSQMLookup {
                 file = "MissionScripts\Logistics\LogiHelpers\missionFileLookup.sqf";
             };
@@ -572,6 +598,19 @@ class CfgFunctions
             class UniqueLoadoutArray {
                 file = "MissionScripts\Logistics\LogiHelpers\uniqueLoadoutArray.sqf";
             };
+            class PhysicalCargoInitLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoInitLocal.sqf";};
+            class PhysicalCargoReleaseLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoReleaseLocal.sqf";};
+            class PhysicalCargoInitServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoInitServer.sqf";};
+            class PhysicalCargoAttachServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoAttachServer.sqf";};
+            class PhysicalCargoApplyLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoApplyLocal.sqf";};
+            class PhysicalCargoClearServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoClearServer.sqf";};
+            class PhysicalCargoRegister {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRegister.sqf";};
+            class PhysicalCargoSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatsServer.sqf";};
+            class PhysicalCargoRestoreLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRestoreLocal.sqf";};
+            class PhysicalCargoRestoreAckServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRestoreAckServer.sqf";};
+            class PhysicalCargoUnmountServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoUnmountServer.sqf";};
+            class PhysicalCargoRequestStateServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRequestStateServer.sqf";};
+            class PhysicalCargoReceiveStateLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoReceiveStateLocal.sqf";};
         };
         class MapStuff {
             class ReplaceMapLocationName {
@@ -651,6 +690,8 @@ class CfgFunctions
             class ZenInitModules {
                 file = "MissionScripts\ZenModules\Zen_initModules.sqf";
             };
+            class ZenServiceLogisticsModule {file = "MissionScripts\ZenModules\zenServiceLogisticsModule.sqf";};
+            class ZenServiceLogisticsServer {file = "MissionScripts\ZenModules\zenServiceLogisticsServer.sqf";};
             class ZenMedicalSpawner {
                 file = "MissionScripts\ZenModules\Zen_medicalCrateModule.sqf";
             };

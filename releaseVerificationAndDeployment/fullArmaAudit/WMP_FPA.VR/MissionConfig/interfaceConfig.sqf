@@ -128,6 +128,11 @@
  * - Waldo_EmergencyDismount_RecoverUnconscious: permits relocation of unconscious occupants.
  * - Waldo_EmergencyDismount_MinimumOverturnSeconds: continuous overturn time required before use.
  * - Waldo_EmergencyDismount_DamageOnExit: damage fraction 0-1 applied after extraction.
+ * - Waldo_EmergencyDismount_ThrowBaseVelocity: minimum horizontal throw speed in metres per second.
+ * - Waldo_EmergencyDismount_ThrowAngularFactor: converts flip/tangential speed into extra throw speed.
+ * - Waldo_EmergencyDismount_ThrowMaximumVelocity: caps the horizontal throw contribution.
+ * - Waldo_EmergencyDismount_UpwardVelocity: minimum upward throw speed in metres per second.
+ * - Waldo_EmergencyDismount_Cooldown: seconds before another automatic extraction can run.
  * - Waldo_EmergencyDismount_AllowedKinds: isKindOf roots accepted by the feature.
  * - Waldo_EmergencyDismount_VehicleProfiles: exact vehicle class -> per-class override HashMap.
  *
@@ -260,6 +265,11 @@ createHashMapFromArray [
         ["Waldo_EmergencyDismount_RecoverUnconscious", false], // BOOL: permit script to move unconscious occupants.
         ["Waldo_EmergencyDismount_MinimumOverturnSeconds", 1], // SECONDS: overturn must persist before action enables.
         ["Waldo_EmergencyDismount_DamageOnExit", 0], // Damage fraction 0-1.
+        ["Waldo_EmergencyDismount_ThrowBaseVelocity", 4.5], // M/S: minimum horizontal throw away from the rolling vehicle.
+        ["Waldo_EmergencyDismount_ThrowAngularFactor", 1.25], // MULTIPLIER: adds force from live/captured flip speed.
+        ["Waldo_EmergencyDismount_ThrowMaximumVelocity", 14], // M/S: cap for the horizontal throw contribution.
+        ["Waldo_EmergencyDismount_UpwardVelocity", 3], // M/S: minimum lift added to the throw.
+        ["Waldo_EmergencyDismount_Cooldown", 8], // SECONDS: prevents duplicate extraction attempts.
         ["Waldo_EmergencyDismount_AllowedKinds", ["LandVehicle", "Ship"]], // isKindOf roots.
         ["Waldo_EmergencyDismount_VehicleProfiles", createHashMap], // ADVANCED per-class safety overrides.
         // MISSION MAKER: dual campaign-equipment and accessibility WMP HUD eligibility.

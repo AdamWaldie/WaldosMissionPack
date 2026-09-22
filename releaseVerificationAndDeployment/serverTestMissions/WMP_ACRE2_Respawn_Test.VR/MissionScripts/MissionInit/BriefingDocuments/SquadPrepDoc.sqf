@@ -1,12 +1,18 @@
 /*
  * Author: WaldoTheWarfighter
- * Adds the squad preparation checklist to the player's map diary.
+ * Purpose: Adds the squad preparation checklist to the player's map diary.
+ * Locality / Authority: Client-local UI. Run only where `player` is local; no server authority is used.
+ * Repeat / JIP: AddDocs.sqf calls this once per local player and guards repeat installation. JIP players
+ * receive the record when their local briefing documents are installed.
  *
  * Arguments:
- * None
+ * None.
  *
  * Return Value:
- * Nothing
+ * Nothing.
+ *
+ * Current Callers:
+ * MissionScripts/MissionInit/BriefingDocuments/AddDocs.sqf via Waldo_fnc_SQUADPREDOC.
  *
  * Example:
  * call Waldo_fnc_SQUADPREDOC;
@@ -46,7 +52,7 @@ player createDiaryRecord["Preperation",
     - Walkthrough of known course of action for the squad.<br/>
     - Notification of nearby friendly units.<br/>
     - Establish Succession of command (Squad Leader, ASL, FTL, Surviving Team 2ICs).<br/>
-    - Establish reaction-to-contact &amp; break-contact procedures.<br/>
+    - Establish reaction-to-contact and break-contact procedures.<br/>
     - Note the CEOI, Babel and any Challenges/Passwords or Night Recognition Signals.<br/>
     - Ensure that FTLs know about the pre-mission prep and get them to do it.<br/>
     - Designate a 'Ready Position' Rally Point (RP) where FTLs can organise their teams.<br/><br/>

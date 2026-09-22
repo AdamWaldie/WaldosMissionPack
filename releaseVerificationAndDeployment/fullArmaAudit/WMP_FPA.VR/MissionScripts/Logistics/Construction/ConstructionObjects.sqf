@@ -1,4 +1,12 @@
 /*
+ * Author: WaldoTheWarfighter
+ * Purpose: Sets up ACE deploy/tear-down interactions for a synced defence construction group.
+ * Locality / Authority: Called from object init; server owns shared state and object visibility,
+ * while interface clients install interactions. ACE progress runs on the requesting client.
+ * Repeat / JIP: Server publishes deployed state; synced objects and actions are re-evaluated on join.
+ * Arguments: target <OBJECT>, modern construction audio <BOOL> (false).
+ * Return Value: Nothing. Current caller: mission-maker Eden object init.
+ * Example: [this, true] call Waldo_fnc_ConstructionObjects;
 
 Defence Construction Script
 
@@ -59,7 +67,7 @@ Waldo_Construction_Deploy = {
     {[_x, false] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
     _target setVariable ['Waldo_Construction_Status', true, true];
     playSound3d [getMissionPath _ConstructionAudioPath, _target, false, getPosASL _target, 4, 1];
-    ["Construction Completed", _player] call Waldo_fnc_DynamicText;
+    ["Construction Completed", _player, "CONSTRUCTION"] call Waldo_fnc_DynamicText;
 };
 
 Waldo_Construction_TearDown = {
@@ -69,7 +77,7 @@ Waldo_Construction_TearDown = {
     {[_x, true] remoteExec ["hideObjectGlobal", 2];} forEach _constructionParts;
     _target setVariable ['Waldo_Construction_Status', false, true]; 
     playSound3d [getMissionPath _ConstructionAudioPath, _target, false, getPosASL _target, 4, 1];
-    ["Construction Torn Down", _player] call Waldo_fnc_DynamicText;
+    ["Construction Torn Down", _player, "CONSTRUCTION"] call Waldo_fnc_DynamicText;
 };
 
 
@@ -82,7 +90,7 @@ Waldo_Construction_InitDeploy = [
         // Runs on Action Called
         [10, [_target, _player,_ConstructionAudioPath], {
             _args call Waldo_Construction_Deploy;
-        }, {["Construction Not Built", _player] call Waldo_fnc_DynamicText;}, "Constructing..."] call ace_common_fnc_progressBar;
+        }, {["Construction Not Built", _player, "CONSTRUCTION"] call Waldo_fnc_DynamicText;}, "Constructing..."] call ace_common_fnc_progressBar;
     },
     {
         //[_target, _player, _actionParams] Condition
@@ -104,7 +112,7 @@ Waldo_Construction_InitTeardown = [
         // Runs on Action Called
         [10, [_target, _player,_ConstructionAudioPath], {
             _args call Waldo_Construction_TearDown;
-        }, {["Construction Still Standing", _player] call Waldo_fnc_DynamicText;}, "Tearing Down...."] call ace_common_fnc_progressBar;
+        }, {["Construction Still Standing", _player, "CONSTRUCTION"] call Waldo_fnc_DynamicText;}, "Tearing Down...."] call ace_common_fnc_progressBar;
     },
     {
         //[_target, _player, _actionParams] Condition

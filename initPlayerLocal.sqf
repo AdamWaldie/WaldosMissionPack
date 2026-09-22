@@ -151,6 +151,15 @@ if (hasInterface) then {
         if (missionNamespace getVariable ["Waldo_FieldResupply_Enable", false]) then {
             [] call Waldo_fnc_FieldResupplyInit;
         };
+        if (missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) then {
+            [] call Waldo_fnc_PhysicalCargoInitLocal;
+        };
+        if (missionNamespace getVariable ["Waldo_BaseServices_Enable", false]) then {
+            [] call Waldo_fnc_BaseServicesSetupLocal;
+        };
+        if (missionNamespace getVariable ["Waldo_SupplyTransfers_Enable", false]) then {
+            [] call Waldo_fnc_SupplyTransfersSetupLocal;
+        };
         if (missionNamespace getVariable ["Waldo_Hazard_Enable", false]) then {
             [] call Waldo_fnc_HazardInit;
         };

@@ -1,0 +1,34 @@
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: Restores a released mount's local physics flag and detaches it on its owner.
+ * Locality / Authority: Server-dispatched to all machines; only the object owner detaches.
+ * Repeat / JIP: Repeated restore is harmless; a later mount's public state blocks stale restores.
+ * Arguments: cargo <OBJECT>, former vehicle <OBJECT>, prior collision flag <BOOL>,
+ *            clear AGL point <ARRAY> ([]), restore token <NUMBER> (-1),
+ *            physics-only acknowledgement <BOOL> (false).
+ * Return Value: <BOOL> handled. Current caller: Waldo_fnc_PhysicalCargoClearServer.
+ * Example: [crate, truck, true] remoteExecCall ["Waldo_fnc_PhysicalCargoRestoreLocal", 0];
+ */
+params [["_cargo", objNull, [objNull]], ["_vehicle", objNull, [objNull]],
+    ["_prior", true, [true]], ["_dropPosition", [], [[]]],
+    ["_restoreToken", -1, [0]], ["_physicsOnly", false, [true]]];
+if (isNull _cargo) exitWith {false};
+if (!isServer && {(!isRemoteExecuted || {remoteExecutedOwner isNotEqualTo 2})}) exitWith {false};
+if (_physicsOnly) exitWith {_cargo setPhysicsCollisionFlag _prior; true};
+if (!isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])) exitWith {false};
+if (_restoreToken < 0) then {_cargo setPhysicsCollisionFlag _prior};
+if (local _cargo) then {
+    private _aceLoaded = !isNull _vehicle && {_cargo in (_vehicle getVariable ["ace_cargo_loaded", []])};
+    if (!_aceLoaded && {isNull _vehicle || {attachedTo _cargo isEqualTo _vehicle}}) then {detach _cargo};
+    if (count _dropPosition == 3) then {
+        _cargo setPosATL _dropPosition;
+        if (_restoreToken >= 0) then {
+            if (isServer) then {
+                [_cargo, _restoreToken] call Waldo_fnc_PhysicalCargoRestoreAckServer;
+            } else {
+                [_cargo, _restoreToken] remoteExecCall ["Waldo_fnc_PhysicalCargoRestoreAckServer", 2];
+            };
+        };
+    };
+};
+true

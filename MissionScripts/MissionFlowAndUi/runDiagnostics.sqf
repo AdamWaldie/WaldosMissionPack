@@ -513,6 +513,20 @@ private _treatmentDependency = isClass (configFile >> "CfgPatches" >> "ace_medic
 ["optional-feature", "treatment-feedback", if (!_treatmentEnabled) then {"DISABLED"} else {if (_treatmentDependency) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 aceMedical=%2", _treatmentEnabled, _treatmentDependency], _treatmentEnabled && {!_treatmentDependency}, if (!_treatmentEnabled || {_treatmentDependency}) then {""} else {"Waldo_TreatmentFeedback_Enable is true but ace_medical is not loaded - load ACE medical, or set Waldo_TreatmentFeedback_Enable to false."}] call _status;
 
 private _resupplyEnabled = missionNamespace getVariable ["Waldo_FieldResupply_Enable", false];
+private _baseEnabled = missionNamespace getVariable ["Waldo_BaseServices_Enable", false];
+private _baseGroups = missionNamespace getVariable ["Waldo_BaseServices_Registry", []];
+["optional-feature", "base-services", if (!_baseEnabled) then {"DISABLED"} else {if (_baseGroups isEqualTo []) then {"UNCONFIGURED"} else {"ACTIVE"}},
+    format ["enabled=%1 groups=%2", _baseEnabled, count _baseGroups], false,
+    if (_baseEnabled && {_baseGroups isEqualTo []}) then {"Register a named service-object group with Waldo_fnc_BaseServicesRegister from initServer.sqf."} else {""}] call _status;
+private _transferEnabled = missionNamespace getVariable ["Waldo_SupplyTransfers_Enable", false];
+private _transferObjects = (missionNamespace getVariable ["Waldo_SupplyTransfers_Registry", []]) select {!isNull _x};
+["optional-feature", "supply-transfers", if (!_transferEnabled) then {"DISABLED"} else {if (_transferObjects isEqualTo []) then {"UNCONFIGURED"} else {"ACTIVE"}},
+    format ["enabled=%1 registeredContainers=%2", _transferEnabled, count _transferObjects], false,
+    if (_transferEnabled && {_transferObjects isEqualTo []}) then {"Issue WMP supply crates or register placed containers with Waldo_fnc_SupplyTransfersRegister."} else {""}] call _status;
+private _physicalEnabled = missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false];
+private _mounts = (missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]) select {!isNull (_x select 0)};
+["optional-feature", "physical-cargo", if (!_physicalEnabled) then {"DISABLED"} else {if (_mounts isEqualTo []) then {"LOADED"} else {"ACTIVE"}},
+    format ["enabled=%1 activeMounts=%2", _physicalEnabled, count _mounts], false, ""] call _status;
 private _resupplyClass = missionNamespace getVariable ["Waldo_FieldResupply_CrateClass", "Box_NATO_Ammo_F"];
 private _resupplyValid = isClass (configFile >> "CfgVehicles" >> _resupplyClass);
 ["optional-feature", "field-resupply", if (!_resupplyEnabled) then {"DISABLED"} else {if (_resupplyValid) then {"LOADED"} else {"ERROR"}}, format ["enabled=%1 crateClass=%2", _resupplyEnabled, _resupplyClass], _resupplyEnabled && {!_resupplyValid}, if (!_resupplyEnabled || {_resupplyValid}) then {""} else {"Waldo_FieldResupply_CrateClass does not resolve to a real CfgVehicles class - fix it in MissionConfig\logisticsConfig.sqf, or leave it unset to use the default Box_NATO_Ammo_F."}] call _status;

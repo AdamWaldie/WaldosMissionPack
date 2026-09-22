@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "suite": "all",
-  "mode": "automated",
-  "packVersion": "4.8.4",
+  "mode": "manual",
+  "packVersion": "4.9.1",
   "releaseEntries": [
     "MissionScripts",
     "MissionConfig",
@@ -19,7 +19,7 @@
   "physicalRange": true,
   "physicalRangePreStaged": true,
   "nestedPlayableLoadoutFixture": true,
-  "staticFixtureCount": 136,
+  "staticFixtureCount": 158,
   "rangeScripts": [
     "auditPreInit.sqf",
     "auditPreInitServer.sqf",
@@ -33,6 +33,7 @@
     "compositionCatalogueQA.sqf",
     "extendedFeatureStationsServer.sqf",
     "extendedFeatureStationsClient.sqf",
+    "serviceLogisticsStationsServer.sqf",
     "runUiThemeGalleryCaptureClient.sqf",
     "functionStations.sqf",
     "partyFixtureServer.sqf"

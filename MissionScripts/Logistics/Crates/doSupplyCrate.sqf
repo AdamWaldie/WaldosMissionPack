@@ -1,24 +1,13 @@
 /*
-This function populates an supply crate, with basic medical supplied (quickclot & splints) based on players magazines & weaponry in the mission.sqm
-
-Params:
-_crate - object to populate (Passed from module where thee classname of the box is defined)
-_size - scalar value to multiply medical supplycompliment
-_crateSupplyside - (STRING) the side that the crate will populate equipment from. Options: west,east,independent,civilian
-_weaponsAttachmentsUniforms - boolean (true/false) variable to dennote whether weapons, weapon attachments, equipment and clothing should be added.
-_includeLaunchersAndLauncherAmmo - boolean (true/false) variable to dennote whether launchers and their ammo should be added.
-
-Where the call is as follows:
-
-[_crate, _size, _crateSupplyside, _weaponsAttachmentsUniforms, _includeLaunchersAndLauncherAmmo] spawn Waldo_fnc_SupplyCratePopulate;
-
-e.g.
-
-[this, 1, west, false, false] spawn Waldo_fnc_SupplyCratePopulate;
-
-Called via Zen Module as defined in Zen_medicalCrateModule.sqf
-
-*/
+ * Author: WaldoTheWarfighter
+ * Purpose: Populates a container with mission-loadout-derived ammunition, equipment and basic medical supplies.
+ * Locality / Authority: Server mutates global cargo; caller owns the decision to register crate-handling actions.
+ * Repeat / JIP: Clears and repopulates on repeat; global inventory changes replicate to JIP.
+ * Arguments: crate <OBJECT>, scale <NUMBER> (1), side <SIDE> (west),
+ *   include equipment <BOOL> (false), include launchers <BOOL> (false).
+ * Return Value: See function body. Current callers: starter crates, quartermaster, ZEN crate and field resupply.
+ * Example: [myCrate, 1, west, false, false] call Waldo_fnc_SupplyCratePopulate;
+ */
 
 params ["_crate", ["_scalar",1],["_crateSupplySide",west],["_weaponsAttachmentsUniforms",false],["_includeLaunchersAndLauncherAmmo",false]];
 if (!isServer) exitWith {};
@@ -108,3 +97,6 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 };
 
 [_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+if !(_crate getVariable ["Waldo_Logistics_StarterCrate", false]) then {
+    [_crate, "SUPPLY"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+};

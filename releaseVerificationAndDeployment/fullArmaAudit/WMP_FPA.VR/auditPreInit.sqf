@@ -1,6 +1,12 @@
 /*
- * Audit pre-configuration shared by server and clients.
- * This runs before the real init.sqf so feature installers see the intended state once.
+ * Author: WaldoTheWarfighter
+ * Purpose: Enables opt-in features for the disposable full-pack audit only.
+ * Locality / Authority: Runs on server and clients before the real init.sqf; the server later
+ * publishes the authoritative ordered settings snapshot.
+ * Repeat / JIP: Re-execution writes the same QA defaults; JIP receives the server snapshot.
+ * Arguments: None. Return Value: Nothing.
+ * Current caller: generated audit init.sqf pre-hook.
+ * Example: call compile preprocessFileLineNumbers "auditPreInit.sqf";
  */
 missionNamespace setVariable ["Waldo_Economy_Enable", true];
 missionNamespace setVariable ["Waldo_Jamming_Enable", true];
@@ -42,3 +48,9 @@ missionNamespace setVariable ["Waldo_EmergencyDismount_Enable", true];
 missionNamespace setVariable ["Waldo_EmergencyDismount_MinimumOverturnSeconds", 0.75];
 missionNamespace setVariable ["Waldo_WmpHud_Enable", true];
 missionNamespace setVariable ["Waldo_WmpHud_IncludeAI", true];
+missionNamespace setVariable ["Waldo_BaseServices_Enable", true];
+missionNamespace setVariable ["Waldo_SupplyTransfers_Enable", true];
+missionNamespace setVariable ["Waldo_PhysicalCargo_Enable", true];
+missionNamespace setVariable ["Waldo_PhysicalCargo_BlockSeats", true];
+{missionNamespace setVariable [format ["Waldo_QM_%1_Enable", _x], true]} forEach
+    ["Grenades", "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"];

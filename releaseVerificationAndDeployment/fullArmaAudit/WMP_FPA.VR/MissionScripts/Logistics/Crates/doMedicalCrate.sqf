@@ -1,25 +1,12 @@
 /*
-This function populates an advanced medical crate, with the option to enable the box as a field hospital if desired.
-When enabled with ACE medical present, a simple "Field Hospital Info" interaction (ACE Interact plus a linked
-vanilla addAction) is installed on the crate so players can see which crate grants the locational treatment
-boost without opening its inventory or reading the mission briefing - no persistent 3D marker in the world.
-
-Params:
-_crate - object to populate (Passed from module where thee classname of the box is defined)
-_isFacility - tickbox option to enable locational boost to medical skill
-_scale - scalar value to multiply medical supplycompliment
-
-Where the call is as follows:
-
-[_crate, _fieldHopsital, _size] call Waldo_fnc_MedicalCratePopulate;
-
-e.g.
-
-[this, true, 1] call Waldo_fnc_MedicalCratePopulate;
-
-Called via Zen Module as defined in Zen_medicalCrateModule.sqf
-
-*/
+ * Author: WaldoTheWarfighter
+ * Purpose: Populates a medical crate and optionally marks it as an ACE field hospital.
+ * Locality / Authority: Server mutates global cargo; caller owns crate-handling registration.
+ * Repeat / JIP: Rebuilds inventory on repeat; global contents and facility state replicate to JIP.
+ * Arguments: crate <OBJECT>, field-hospital mode <BOOL> (true), scale <NUMBER> (1).
+ * Return Value: See function body. Current callers: starter crates, quartermaster and ZEN medical crate.
+ * Example: [myCrate, true, 1] call Waldo_fnc_MedicalCratePopulate;
+ */
 
 params [
     ["_crate", objNull, [objNull]],
@@ -95,3 +82,6 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
 
 // Change ace logistics size of crate
 [_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+if !(_crate getVariable ["Waldo_Logistics_StarterCrate", false]) then {
+    [_crate, "MEDICAL"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+};

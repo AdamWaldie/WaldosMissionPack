@@ -4,6 +4,9 @@
  * correct ACE ammo, medical items and tracks/tyres) beside the quartermaster vehicle. Called from
  * the ACE actions added by initQuartermaster.sqf; not intended to be called directly. Registered as
  * Waldo_fnc_LogisticsSpawner and invoked with addAction-style arguments.
+ * Locality / Authority: Runs on the server; client requests are forwarded and validated there.
+ * Repeat / JIP: Each accepted request spawns one globally visible crate; no client setup here.
+ * Current caller: Waldo_fnc_SetupQuarterMaster ACE/vanilla request actions.
  *
  * Arguments:
  * 0: _target <OBJECT> - the quartermaster the actions are attached to
@@ -16,7 +19,7 @@
  * Nothing
  *
  * Example:
- * // added automatically by Waldo_fnc_SetupQuarterMaster
+ * [quartermaster, player, "Ammo", 90, 3] call Waldo_fnc_LogisticsSpawner;
  */
 
 params [
@@ -31,11 +34,18 @@ if (!isServer) exitWith {
     _this remoteExecCall ["Waldo_fnc_LogisticsSpawner", 2];
     false
 };
+if !(missionNamespace getVariable ["Waldo_Quartermaster_Enable", true]) exitWith {false};
+if (_boxType in ["Grenades", "Explosives", "Rearm", "VehicleRearm", "StaticRearm", "FuelBarrel", "FuelJerrycan"]) exitWith {
+    _this call Waldo_fnc_QuartermasterExtendedSpawn
+};
 
 private _requestOwner = if (isRemoteExecuted) then {remoteExecutedOwner} else {owner _player};
 if (isNull _target || {isNull _player} || {!alive _player}) exitWith {false};
 if (isRemoteExecuted && {_requestOwner != owner _player}) exitWith {false};
 if !(_boxType in ["Medical", "Ammo", "Supply", "Track", "Wheel"]) exitWith {false};
+if !(missionNamespace getVariable [format ["Waldo_QM_%1_Enable", _boxType], true]) exitWith {false};
+if !(_boxType in (_target getVariable ["Waldo_QM_AllowedKinds",
+    ["Medical", "Ammo", "Supply", "Track", "Wheel", "Grenades", "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"]])) exitWith {false};
 if !(_target getVariable ["Waldo_LogisticsQM_CurrentStatus", false]) exitWith {false};
 if (_player distance _target >= 6 || {abs speed _target >= 1}) exitWith {false};
 
@@ -76,8 +86,8 @@ if (isNil "_supplyBoxClass" && isNil "_medicalBoxClass") then
     if (_boxType == "Medical") then {
         _boxToSpawn = Logi_MedicalBoxClass;
     };
-    if (_boxType == "Supply" || _boxType == "Ammo") then {
-        _boxToSpawn = _supplyBoxClass;       
+if (_boxType == "Supply" || _boxType == "Ammo") then {
+        _boxToSpawn = missionNamespace getVariable [format ["Waldo_QM_%1_CrateClass", _boxType], _supplyBoxClass];
     };
 };
 // Get Track & Wheel
@@ -86,6 +96,15 @@ if (_boxType == "Wheel") then {
 };
 if (_boxType == "Track") then {
     _boxToSpawn = "ACE_Track";
+};
+if (_boxType == "Medical") then {
+    private _override = missionNamespace getVariable ["Waldo_QM_Medical_CrateClass", ""];
+    if (_override isNotEqualTo "") then {_boxToSpawn = _override};
+};
+if !(isClass (configFile >> "CfgVehicles" >> _boxToSpawn)) exitWith {
+    [format ["Configured %1 class is unavailable: %2", _boxType, _boxToSpawn], _player, "QUARTERMASTER"]
+        call Waldo_fnc_DynamicText;
+    false
 };
 
 
@@ -100,12 +119,22 @@ if (_exists) exitWith {
         "QM: You joking? Use that one first.",
         "QM: They're not free you know!"
         ];
-    [_quote, _player] call Waldo_fnc_DynamicText;
+    [_quote, _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
     false
 };
 
 //Spawn box of class
 _box = _boxToSpawn createVehicle _knownSafePositionLogi;
+private _issueName = switch (_boxType) do {
+    case "Medical": {"Medical Box"};
+    case "Ammo": {"Ammo Box"};
+    case "Supply": {"Heavy Supply Box"};
+    case "Track": {"Spare Track"};
+    case "Wheel": {"Spare Wheel"};
+};
+_box setVariable ["ace_cargo_customName", _issueName, true];
+_box setVariable ["Waldo_QM_IssueName", _issueName, true];
+[_box, _boxType] spawn Waldo_fnc_LogisticsRegisterSpawned;
 // Quartermaster stores are deliberately portable regardless of config mass. The public helper
 // publishes ACE drag/carry state consistently for crates, wheels and tracks.
 [_box, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
@@ -136,7 +165,7 @@ if (_boxType == "Medical") then {
         "QM: You got your crate licence there mate?",
         "QM: Come back if you need more, they haven't set up the limits yet!"
     ];
-    [_quote, _player] call Waldo_fnc_DynamicText;
+    [_quote, _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
 };
 
 
@@ -147,17 +176,17 @@ if (_boxType == "Supply") then {
     [_box, 1, _logiSide, false, true] call Waldo_fnc_SupplyCratePopulate;
     [_box, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
     _quote = selectRandom [
-        "QM: One canister, ready to go.",
+        "QM: Heavy Supply Box, ready to go.",
         "QM: ...48...49...50. Yep, it's all there.",
         "QM: God, you're going through a lot of these, aren't you?",
         "QM: Erm.. yeah. We have that in stock. Here.",
-        "QM: One Ammo Crate, check.",
+        "QM: One Heavy Supply Box, check.",
         "QM: That one's on the house.",
         "QM: You got your crate licence there mate?",
         "QM: Come back if you need more, they haven't set up the limits yet!",
         "QM: Don't spend them all in one place!"
     ];
-    [_quote, _player] call Waldo_fnc_DynamicText;
+    [_quote, _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
 };
 
 // Ammo Only Box
@@ -167,7 +196,7 @@ if (_boxType == "Ammo") then {
     [_box, 0.75, _logiSide, false, false] call Waldo_fnc_SupplyCratePopulate;
     [_box, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
     _quote = selectRandom [
-        "QM: One canister, ready to go.",
+        "QM: Ammo Box, ready to go.",
         "QM: ...48...49...50. Yep, it's all there.",
         "QM: God, you're going through a lot of these, aren't you?",
         "QM: Erm.. yeah. We have that in stock. Here.",
@@ -177,7 +206,7 @@ if (_boxType == "Ammo") then {
         "QM: Come back if you need more, they haven't set up the limits yet!",
         "QM: Don't spend them all in one place!"
     ];
-    [_quote, _player] call Waldo_fnc_DynamicText;
+    [_quote, _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
 };
 
 // ACE logistics stuff
@@ -194,7 +223,7 @@ if (_boxToSpawn == "ACE_Wheel" || _boxToSpawn == "ACE_Track") then {
         "QM: Be more damn careful next time.",
         "QM: Get the lads moving again out there."
     ];
-    [_quote, _player] call Waldo_fnc_DynamicText;
+    [_quote, _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
 };
 
 diag_log format ["[WMP MHQ] Quartermaster spawned type=%1 class=%2 target=%3 actor=%4 requestOwner=%5", _boxType, _boxToSpawn, netId _target, name _player, _requestOwner];

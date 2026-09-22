@@ -29,6 +29,30 @@ params [
 ];
 
 if (isNull _target) exitWith {false};
+if !(missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]) exitWith {
+    [_target, _offsetDegrees, _offsetDistance, _deploymentControlled] spawn {
+        params ["_target", "_offsetDegrees", "_offsetDistance", "_deploymentControlled"];
+        waitUntil {sleep 0.1; missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false] || {isNull _target}};
+        if (!isNull _target) then {
+            [_target, _offsetDegrees, _offsetDistance, _deploymentControlled] call Waldo_fnc_SetupQuarterMaster;
+        };
+    };
+    true
+};
+if !(missionNamespace getVariable ["Waldo_Quartermaster_Enable", true]) exitWith {false};
+// Keep script/composition-created points inspectable by ZEN with their actual placement and
+// controller mode. This is state, not a second setup pass on joining clients.
+if (isServer) then {
+    _target setVariable ["Waldo_QM_SetupSettings", [_offsetDegrees, _offsetDistance, _deploymentControlled], true];
+};
+
+private _allowedKinds = _target getVariable ["Waldo_QM_AllowedKinds",
+    ["Medical", "Ammo", "Supply", "Track", "Wheel", "Grenades", "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"]];
+if (_deploymentControlled && {isServer} && {_target getVariable ["Waldo_QM_Standalone", false]}) then {
+    _target setVariable ["Waldo_QM_Standalone", false, true];
+    _target setVariable ["Waldo_LogisticsQM_CurrentStatus", false, true];
+    ["WMP_QM_" + netId _target] call Waldo_fnc_Remove3DMarker;
+};
 
 // A standalone quartermaster has no deployable MHQ to switch this state on later. Establish that
 // server-owned state here so its visible actions and server-side crate validation agree. Calls
@@ -37,6 +61,11 @@ if (!_deploymentControlled) then {
     if (isServer) then {
         _target setVariable ["Waldo_QM_Standalone", true, true];
         _target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true];
+        ["WMP_QM_" + netId _target, _target, createHashMapFromArray [
+            ["text", "Quartermaster"],
+            ["icon", "\a3\ui_f\data\igui\cfg\simpletasks\types\Box_ca.paa"],
+            ["offset", [0, 0, 1.5]], ["distance", 25]
+        ]] call Waldo_fnc_Create3DMarker;
     } else {
         if !(_target getVariable ["Waldo_QM_StandaloneActivationRequested", false]) then {
             _target setVariable ["Waldo_QM_StandaloneActivationRequested", true];
@@ -98,6 +127,23 @@ if (!_aceReady) exitWith {
         ["Retrieve Heavy Supply Box", "Supply"],
         ["Retrieve Spare Track", "Track"],
         ["Retrieve Spare Wheel", "Wheel"]
+    ] select {missionNamespace getVariable [format ["Waldo_QM_%1_Enable", _x select 1], true]
+        && {(_x select 1) in _allowedKinds}};
+    if ("Rearm" in _allowedKinds && {missionNamespace getVariable ["Waldo_QM_Rearm_Enable", false]
+        || {missionNamespace getVariable ["Waldo_QM_VehicleRearm_Enable", false]}
+        || {missionNamespace getVariable ["Waldo_QM_StaticRearm_Enable", false]}}) then {
+        _vanillaActions pushBack ["Retrieve Rearm Box", "Rearm"];
+    };
+    {
+        _x params ["_flag", "_label", "_kind"];
+        if (_kind in _allowedKinds && {missionNamespace getVariable [_flag, false]}) then {
+            _vanillaActions pushBack [_label, _kind]
+        };
+    } forEach [
+        ["Waldo_QM_Grenades_Enable", "Retrieve Grenades Box", "Grenades"],
+        ["Waldo_QM_Explosives_Enable", "Retrieve Explosives Box", "Explosives"],
+        ["Waldo_QM_FuelBarrel_Enable", "Retrieve Fuel Barrel", "FuelBarrel"],
+        ["Waldo_QM_FuelJerrycan_Enable", "Retrieve Fuel Jerrycan", "FuelJerrycan"]
     ];
     private _ids = _vanillaActions apply {
         _x params ["_title", "_boxType"];
@@ -123,8 +169,33 @@ if (!_aceReady) exitWith {
 
 private _icon = "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa";
 private _condition = {
-    params ["_target", "_player"];
+    params ["_target", "_player", "_args"];
+    private _kind = _args param [0, ""];
+    private _available = true;
+    if (_kind in ["Grenades", "Explosives"]) then {
+        _available = false;
+        private _pool = [side _player] call Waldo_fnc_GetSideLoadoutArray;
+        if (count _pool >= 6) then {
+            {
+                if (isClass (configFile >> "CfgMagazines" >> _x)) then {
+                    private _itemType = _x call BIS_fnc_itemType;
+                    if (if (_kind == "Grenades") then {_x call BIS_fnc_isThrowable}
+                        else {(_itemType param [0, ""]) isEqualTo "Mine"}) exitWith {
+                        _available = true;
+                    };
+                };
+            } forEach ((_pool select 1) + (_pool select 5));
+        };
+    };
+    if !(_kind in (_target getVariable ["Waldo_QM_AllowedKinds",
+        ["Medical", "Ammo", "Supply", "Track", "Wheel", "Grenades", "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"]])) then {
+        _available = false
+    };
+    if (_kind == "Rearm" && {isNil "ace_rearm_fnc_makeSource"}) then {_available = false};
+    if (_kind == "FuelBarrel" && {isNil "ace_refuel_fnc_makeSource"}) then {_available = false};
+    if (_kind == "FuelJerrycan" && {isNil "ace_refuel_fnc_makeJerryCan"}) then {_available = false};
     (_target getVariable ["Waldo_LogisticsQM_CurrentStatus", false])
+    && {_available}
     && {alive _player}
     && {_player distance _target < 6}
     && {abs speed _target < 1}
@@ -132,20 +203,13 @@ private _condition = {
 };
 private _statement = {
     params ["_target", "_player", "_args"];
-    _args params ["_boxType", "_offsetDegrees", "_offsetDistance"];
-    private _label = switch (_boxType) do {
-        case "Medical": {"Retrieving Medical Box"};
-        case "Ammo": {"Retrieving Ammo Box"};
-        case "Supply": {"Retrieving Heavy Supply Box"};
-        case "Track": {"Retrieving Spare Track"};
-        default {"Retrieving Spare Wheel"};
-    };
+    _args params ["_boxType", "_offsetDegrees", "_offsetDistance", "_title"];
     [10, [_target, _player, _boxType, _offsetDegrees, _offsetDistance], {
         _args remoteExecCall ["Waldo_fnc_LogisticsSpawner", 2];
     }, {
         _args params ["_target", "_player", "_boxType"];
-        [format ["%1 request cancelled.", _boxType], _player] call Waldo_fnc_DynamicText;
-    }, _label] call ace_common_fnc_progressBar;
+        [format ["%1 request cancelled.", _boxType], _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
+    }, _title] call ace_common_fnc_progressBar;
 };
 
 private _category = [
@@ -156,25 +220,63 @@ private _deployNotice = [
     {!(_target getVariable ["Waldo_LogisticsQM_CurrentStatus", false])}
 ] call ace_interact_menu_fnc_createAction;
 
-private _actions = [
+private _actionSpecs = [
     ["Waldo_QM_InitMedBox", "Retrieve Medical Box", "Medical"],
     ["Waldo_QM_InitAmmoBox", "Retrieve Ammo Box", "Ammo"],
     ["Waldo_QM_InitFullBox", "Retrieve Heavy Supply Box", "Supply"],
     ["Waldo_QM_InitTrack", "Retrieve Spare Track", "Track"],
     ["Waldo_QM_InitWheel", "Retrieve Spare Wheel", "Wheel"]
-] apply {
+] select {missionNamespace getVariable [format ["Waldo_QM_%1_Enable", _x select 2], true]
+    && {(_x select 2) in _allowedKinds}};
+if ("Rearm" in _allowedKinds && {missionNamespace getVariable ["Waldo_QM_Rearm_Enable", false]
+    || {missionNamespace getVariable ["Waldo_QM_VehicleRearm_Enable", false]}
+    || {missionNamespace getVariable ["Waldo_QM_StaticRearm_Enable", false]}}) then {
+    _actionSpecs pushBack ["Waldo_QM_Rearm", "Retrieve Rearm Box", "Rearm"];
+};
+{
+    _x params ["_flag", "_id", "_label", "_kind"];
+    if (_kind in _allowedKinds && {missionNamespace getVariable [_flag, false]}) then {
+        _actionSpecs pushBack [_id, _label, _kind]
+    };
+} forEach [
+    ["Waldo_QM_Grenades_Enable", "Waldo_QM_Grenades", "Retrieve Grenades Box", "Grenades"],
+    ["Waldo_QM_Explosives_Enable", "Waldo_QM_Explosives", "Retrieve Explosives Box", "Explosives"],
+    ["Waldo_QM_FuelBarrel_Enable", "Waldo_QM_FuelBarrel", "Retrieve Fuel Barrel", "FuelBarrel"],
+    ["Waldo_QM_FuelJerrycan_Enable", "Waldo_QM_FuelJerrycan", "Retrieve Fuel Jerrycan", "FuelJerrycan"]
+];
+private _actions = _actionSpecs apply {
     _x params ["_id", "_title", "_boxType"];
-    [_id, _title, _icon, _statement, _condition, {}, [_boxType, _offsetDegrees, _offsetDistance], [0, 0, 0], 6]
-        call ace_interact_menu_fnc_createAction
+    [[_id, _title, _icon, _statement, _condition, {},
+        [_boxType, _offsetDegrees, _offsetDistance, _title], [0, 0, 0], 6]
+        call ace_interact_menu_fnc_createAction, _boxType]
 };
 
 private _paths = [];
 _paths pushBack ([_target, 0, ["ACE_MainActions"], _category] call ace_interact_menu_fnc_addActionToObject);
+private _infantry = ["Waldo_QM_Infantry", "Infantry Supplies", _icon, {}, {true}]
+    call ace_interact_menu_fnc_createAction;
+private _vehicle = ["Waldo_QM_Vehicle", "Vehicle Support", "\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa", {}, {true}]
+    call ace_interact_menu_fnc_createAction;
+_paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _infantry] call ace_interact_menu_fnc_addActionToObject);
+_paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _vehicle] call ace_interact_menu_fnc_addActionToObject);
+private _hasFuel = missionNamespace getVariable ["Waldo_QM_FuelBarrel_Enable", false]
+    && {"FuelBarrel" in _allowedKinds}
+    || {missionNamespace getVariable ["Waldo_QM_FuelJerrycan_Enable", false] && {"FuelJerrycan" in _allowedKinds}};
+if (_hasFuel) then {
+    private _fuel = ["Waldo_QM_Fuel", "Fuel", "\a3\ui_f\data\map\mapcontrol\Fuelstation_CA.paa", {}, {true}]
+        call ace_interact_menu_fnc_createAction;
+    _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _fuel] call ace_interact_menu_fnc_addActionToObject);
+};
 if (_deploymentControlled) then {
     _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _deployNotice] call ace_interact_menu_fnc_addActionToObject);
 };
 {
-    _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _x] call ace_interact_menu_fnc_addActionToObject);
+    _x params ["_action", "_boxType"];
+    private _branch = if (_boxType in ["Medical", "Ammo", "Supply", "Grenades", "Explosives"]) then {
+        "Waldo_QM_Infantry"
+    } else {if (_boxType in ["FuelBarrel", "FuelJerrycan"]) then {"Waldo_QM_Fuel"} else {"Waldo_QM_Vehicle"}};
+    _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category", _branch], _action]
+        call ace_interact_menu_fnc_addActionToObject);
 } forEach _actions;
 
 _target setVariable ["Waldo_QM_ACEActionPaths", _paths];

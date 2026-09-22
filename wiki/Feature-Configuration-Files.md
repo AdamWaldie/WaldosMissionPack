@@ -281,6 +281,11 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_EmergencyDismount_RecoverUnconscious` | Allows configured recovery of an unconscious occupant. |
 | `Waldo_EmergencyDismount_MinimumOverturnSeconds` | Continuous overturned time required. |
 | `Waldo_EmergencyDismount_DamageOnExit` | Additional damage applied on successful exit. |
+| `Waldo_EmergencyDismount_ThrowBaseVelocity` | Minimum horizontal speed used to throw the occupant away from the flip. |
+| `Waldo_EmergencyDismount_ThrowAngularFactor` | Scales live and captured flip speed into additional throw velocity. |
+| `Waldo_EmergencyDismount_ThrowMaximumVelocity` | Caps the horizontal throw contribution. |
+| `Waldo_EmergencyDismount_UpwardVelocity` | Minimum upward speed added to the throw. |
+| `Waldo_EmergencyDismount_Cooldown` | Delay before another automatic extraction can run for the player. |
 | `Waldo_EmergencyDismount_AllowedKinds` | Vehicle inheritance classes eligible for monitoring. |
 | `Waldo_EmergencyDismount_VehicleProfiles` | Per-vehicle-class setting overrides. |
 
@@ -442,6 +447,28 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_Respawn_SaveOnDeath` | Off by default. `false` = respawn uses the mission-start baseline plus the last manual Loadout Save Point action; `true` = capture loadout and radio on every death and restore it on respawn instead. |
 | `Waldo_Respawn_SideSwitchMode` | Always applies the first time a live side change (Zeus/admin reassignment) lands a player on a side with none saved yet - no on/off toggle. `CARRY_OVER` (default) seeds from current live gear/radio, tagged BRIDGED; `SIDE_BASE_LOADOUT` assembles a weapon-aware kit from the new side's own mission.sqm pool with its proper ACRE2 preset, tagged NATIVE, falling back to CARRY_OVER if that side's pool is unusable. |
 | `Waldo_FieldResupply_Enable` | Master field-resupply opt-in. |
+| `Waldo_PhysicalCargo_Enable` | Retained physical ACE carry-release path; enabled by default. |
+| `Waldo_PhysicalCargo_BlockSeats` | Lock only cargo seats with verified vehicle-model points; on when physical cargo is enabled. |
+| `Waldo_Quartermaster_Enable` | Gates the existing quartermaster; on by default. |
+| `Waldo_QM_Medical_Enable`, `Waldo_QM_Ammo_Enable`, `Waldo_QM_Supply_Enable`, `Waldo_QM_Wheel_Enable`, `Waldo_QM_Track_Enable` | Global availability of the five established issues; each defaults on. ZEN may narrow the issues offered at one point but cannot override a disabled global flag. |
+| `Waldo_QM_Grenades_Enable` | Adds mission-derived grenade issues; off by default. |
+| `Waldo_QM_Explosives_Enable` | Adds mission-derived explosive issues; off by default. |
+| `Waldo_QM_Rearm_Enable` | Adds one finite ACE Rearm Box for vehicles and static weapons; off by default. |
+| `Waldo_QM_VehicleRearm_Enable` | Legacy alias for the single Rearm Box action; off by default. |
+| `Waldo_QM_StaticRearm_Enable` | Legacy alias for the single Rearm Box action; off by default. |
+| `Waldo_QM_FuelBarrel_Enable` | Adds ACE fuel-barrel issues; off by default. |
+| `Waldo_QM_FuelJerrycan_Enable` | Adds ACE jerrycan issues; off by default. |
+| `Waldo_QM_Grenades_CountPerType` | Number of each eligible grenade type in one issue. |
+| `Waldo_QM_Explosives_CountPerType` | Number of each eligible explosive type in one issue. |
+| `Waldo_QM_Rearm_Supply` | Finite ACE supply units in a Rearm Box. |
+| `Waldo_QM_VehicleRearm_Supply` | Legacy supply value used when the new rearm flag is off. |
+| `Waldo_QM_StaticRearm_Supply` | Legacy supply value used when the new rearm flag is off. |
+| `Waldo_QM_FuelBarrel_Litres` | Fuel in each issued barrel, in litres. |
+| `Waldo_QM_FuelJerrycan_Litres` | Fuel in each issued jerrycan, in litres. |
+| `Waldo_QM_Medical_CrateClass`, `Waldo_QM_Ammo_CrateClass`, `Waldo_QM_Supply_CrateClass`, `Waldo_QM_Grenades_CrateClass`, `Waldo_QM_Explosives_CrateClass`, `Waldo_QM_Rearm_CrateClass` | Spawned box class by issue. Medical `""` uses the ACE-aware medical default; the others default to the matching NATO supply/ammo/ordnance/vehicle-ammo boxes. Classes must exist in loaded `CfgVehicles`. |
+| `Waldo_QM_VehicleRearm_CrateClass`, `Waldo_QM_StaticRearm_CrateClass` | Compatibility class settings for scripted legacy rearm issues. The player-facing quartermaster has one Rearm Box. |
+| `Waldo_SupplyTransfers_Enable` | Adds crate transfer/merge/loading controls and registered vehicles' two-way transfer/merge actions; off by default. WMP-issued crates auto-register except starter crates. |
+| `Waldo_SupplyTransfers_Range` | Maximum separation between a box source and box/vehicle destination in metres; default 20, clamped to 2–50. |
 | `Waldo_FieldResupply_CrateClass` | Deployed resupply crate class. |
 | `Waldo_FieldResupply_DefaultCarrierCapacity` | Default virtual crates carried. |
 | `Waldo_FieldResupply_CrateSizeScalar` | Multiplies the deployed crate's populated quantities. |
@@ -553,6 +580,7 @@ annotated profile and advanced replacement-row format.
 | Setting | Purpose / units |
 |---|---|
 | `Waldo_Rally_Enable` | Master squad-rally opt-in. |
+| `Waldo_BaseServices_Enable` | Allows registered base-service object groups; off by default. |
 | `Waldo_Rally_ObjectClass` | Deployed rally object class. |
 | `Waldo_Rally_Duration` | Rally lifetime in seconds. |
 | `Waldo_Rally_DeploymentTime` | Placement progress duration. |

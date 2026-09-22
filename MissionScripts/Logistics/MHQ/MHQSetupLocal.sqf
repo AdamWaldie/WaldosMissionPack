@@ -1,4 +1,12 @@
-/* Installs the MHQ interaction surface on one interface client. Called globally/JIP by MHQSetup. */
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: Installs the MHQ interaction surface on one interface client.
+ * Locality / Authority: Interface-local actions; server validates deploy and tear-down requests.
+ * Repeat / JIP: Reuses installed actions and reconciles the optional quartermaster on repeat/JIP.
+ * Arguments: target <OBJECT>, logistics bearing <NUMBER> (180), distance <NUMBER> (4).
+ * Return Value: <BOOL> setup handled. Current caller: Waldo_fnc_MHQSetup.
+ * Example: [myMHQ, 180, 4] call Waldo_fnc_MHQSetupLocal;
+ */
 params [
     ["_target", objNull, [objNull]],
     ["_logisticsDirection", 180, [0]],
@@ -68,7 +76,7 @@ if (_aceReady) then {
             [_target, _actor, _operation] remoteExecCall ["Waldo_fnc_MHQRequestServer", 2];
         }, {
             _args params ["_target", "_actor"];
-            ["Command post operation cancelled.", _actor] call Waldo_fnc_DynamicText;
+            ["Command post operation cancelled.", _actor, "MOBILE COMMAND POST"] call Waldo_fnc_DynamicText;
         }, if (_operation == "DEPLOY") then {"Establishing Command Post"} else {"Tearing Down Command Post"}]
             call ace_common_fnc_progressBar;
     }];

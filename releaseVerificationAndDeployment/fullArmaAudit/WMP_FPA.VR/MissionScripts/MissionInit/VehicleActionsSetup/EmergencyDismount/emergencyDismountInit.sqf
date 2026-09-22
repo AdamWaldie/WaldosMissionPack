@@ -1,12 +1,19 @@
 /*
  * Author: WaldoTheWarfighter
- * Starts a repeat-safe local monitor for destroyed or overturned vehicle emergency exits.
+ * Purpose: Starts a repeat-safe local monitor for destroyed or overturned vehicle emergency exits.
+ * Locality / Authority: Client-local. It observes the local player and their current vehicle; the
+ * extraction itself runs only where that player unit is local.
+ * Repeat / JIP: Repeat calls reuse the existing monitor. Each JIP client starts its own monitor after
+ * the authoritative runtime-settings snapshot is ready.
  *
  * Arguments:
- * None
+ * None.
  *
  * Return Value:
- * Boolean - true when active or already running
+ * Boolean - true when active or already running; false when unavailable or disabled.
+ *
+ * Current Callers:
+ * initPlayerLocal.sqf and the server-authoritative feature-runtime settings replay.
  *
  * Example:
  * [] call Waldo_fnc_EmergencyDismountInit;
@@ -44,14 +51,26 @@ private _handle = [] spawn {
             if (["RequireClearExit", false] call _setting) then {
                 _clearExit = [objNull, "VIEW"] checkVisibility [eyePos player, AGLToASL (player modelToWorld [0, 0, 2.2])] > 0;
             };
-            private _overturnState = player getVariable ["Waldo_EmergencyDismount_OverturnState", [objNull, -1]];
-            if (_overturned) then {
-                if ((_overturnState select 0) != _vehicle) then {
-                    _overturnState = [_vehicle, diag_tickTime];
-                    player setVariable ["Waldo_EmergencyDismount_OverturnState", _overturnState];
-                };
+            private _roofDirection = vectorUp _vehicle;
+            _roofDirection set [2, 0];
+            if (vectorMagnitude _roofDirection > 0.05) then {
+                _roofDirection = vectorNormalized _roofDirection;
             } else {
-                player setVariable ["Waldo_EmergencyDismount_OverturnState", [objNull, -1]];
+                _roofDirection = [0, 0, 0];
+            };
+            private _angularSpeed = vectorMagnitude (angularVelocity _vehicle);
+            private _overturnState = player getVariable ["Waldo_EmergencyDismount_OverturnState", [objNull, -1, [0, 0, 0], 0]];
+            if (_overturned) then {
+                if (count _overturnState < 4 || {(_overturnState select 0) != _vehicle}) then {
+                    _overturnState = [_vehicle, diag_tickTime, _roofDirection, _angularSpeed];
+                } else {
+                    if (vectorMagnitude _roofDirection > 0.05) then {_overturnState set [2, _roofDirection]};
+                    _overturnState set [3, (_overturnState select 3) max _angularSpeed];
+                };
+                player setVariable ["Waldo_EmergencyDismount_OverturnState", _overturnState];
+            } else {
+                _overturnState = [objNull, -1, [0, 0, 0], 0];
+                player setVariable ["Waldo_EmergencyDismount_OverturnState", _overturnState];
             };
             private _overturnDelayMet = _overturned && {diag_tickTime - (_overturnState select 1) >= (["MinimumOverturnSeconds", 1] call _setting)};
             private _shouldExit =
@@ -59,7 +78,13 @@ private _handle = [] spawn {
                 || {_destroyed && {["OnDestroyed", true] call _setting}};
             if (_shouldExit && {diag_tickTime >= (player getVariable ["Waldo_EmergencyDismount_Next", 0])}) then {
                 player setVariable ["Waldo_EmergencyDismount_ActiveProfile", _profile];
-                [player, _vehicle, _destroyed] spawn Waldo_fnc_EmergencyDismountExecute;
+                private _flipDirection = [0, 0, 0];
+                private _flipAngularSpeed = _angularSpeed;
+                if (count _overturnState >= 4 && {(_overturnState select 0) == _vehicle}) then {
+                    _flipDirection = _overturnState select 2;
+                    _flipAngularSpeed = (_overturnState select 3) max _angularSpeed;
+                };
+                [player, _vehicle, _destroyed, _flipDirection, _flipAngularSpeed] spawn Waldo_fnc_EmergencyDismountExecute;
             };
         };
         sleep ((missionNamespace getVariable ["Waldo_EmergencyDismount_Interval", 0.5]) max 0.1);
