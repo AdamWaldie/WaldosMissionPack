@@ -78,12 +78,28 @@
  *   nearby stopped vehicle to mount visibly, or aim elsewhere to drop. Other ACE Cargo actions remain.
  * - Waldo_PhysicalCargo_BlockSeats (MISSION MAKER): only verified per-vehicle seat points may lock seats.
  * - Waldo_Quartermaster_Enable (MISSION MAKER): gates the established quartermaster action set.
+ * - Waldo_QM_Medical_Enable (MISSION MAKER): offer the ACE-aware medical crate; on by default.
+ * - Waldo_QM_Ammo_Enable (MISSION MAKER): offer the mission-derived ammunition crate; on by default.
+ * - Waldo_QM_Supply_Enable (MISSION MAKER): offer the heavy mission-derived supply crate; on by default.
+ * - Waldo_QM_Track_Enable (MISSION MAKER): offer an ACE spare track; on by default.
+ * - Waldo_QM_Wheel_Enable (MISSION MAKER): offer an ACE spare wheel; on by default.
  * - Waldo_QM_Grenades_Enable and Waldo_QM_Explosives_Enable (MISSION MAKER): add dynamic issues.
  * - Waldo_QM_Rearm_Enable (MISSION MAKER): one ACE source for vehicles and static weapons.
- *   The older VehicleRearm/StaticRearm flags remain aliases for existing missions.
+ * - Waldo_QM_VehicleRearm_Enable (COMPATIBILITY): older vehicle rearm flag; aliases the one Rearm Box.
+ * - Waldo_QM_StaticRearm_Enable (COMPATIBILITY): older static rearm flag; aliases the one Rearm Box.
  * - Waldo_QM_FuelBarrel_Enable and Waldo_QM_FuelJerrycan_Enable (MISSION MAKER): add ACE fuel sources.
+ * - Waldo_QM_Ammo_CrateClass (MISSION MAKER): CfgVehicles class for the ammo issue; default NATO supply crate.
+ * - Waldo_QM_Supply_CrateClass (MISSION MAKER): CfgVehicles class for the heavy supply issue.
+ * - Waldo_QM_Medical_CrateClass (MISSION MAKER): empty string uses the ACE-aware medical default.
+ * - Waldo_QM_Grenades_CrateClass (MISSION MAKER): small NATO ammo box by default.
+ * - Waldo_QM_Explosives_CrateClass (MISSION MAKER): NATO ordnance box by default.
+ * - Waldo_QM_Rearm_CrateClass (MISSION MAKER): empty ACE rearm source shell; NATO vehicle-ammo box by default.
+ * - Waldo_QM_VehicleRearm_CrateClass (COMPATIBILITY): shell class for direct legacy vehicle rearm calls.
+ * - Waldo_QM_StaticRearm_CrateClass (COMPATIBILITY): shell class for direct legacy static rearm calls.
  * - Waldo_QM_Grenades_CountPerType and Waldo_QM_Explosives_CountPerType (MISSION MAKER): each pooled type's issue quantity.
  * - Waldo_QM_Rearm_Supply (MISSION MAKER): finite ACE ammunition source units.
+ * - Waldo_QM_VehicleRearm_Supply (COMPATIBILITY): finite units for legacy vehicle rearm, default 1200.
+ * - Waldo_QM_StaticRearm_Supply (COMPATIBILITY): finite units for legacy static rearm, default 250.
  * - Waldo_QM_FuelBarrel_Litres and Waldo_QM_FuelJerrycan_Litres (MISSION MAKER): source fuel quantities.
  * - Waldo_SupplyTransfers_Enable (MISSION MAKER): enables registered crate and two-way vehicle
  *   ACE actions. WMP-issued crates auto-register except starter crates. For an Eden truck, give it a
