@@ -3,94 +3,56 @@
 > **Use this page when:** you want a pre-placed, editable example instead of building a supported
 > WMP setup from individual Eden objects.
 
-WMP compositions are shipped as a separate archive. They accelerate mission authoring but do not
-include the feature scripts themselves. Install the matching WMP release in the mission first.
+Install the matching WMP release in your mission before placing a composition. The composition
+archive contains Eden objects and their setup calls. It does not contain the pack's scripts.
 
-The catalogue is split into Foundation, Logistics, Air Operations, Combat Systems, Interface,
-Mission Systems and Mission Tools so Eden does not present one undifferentiated list. The full,
-current, per-composition list lives in `WMP_Compositions/README.md` inside the pack (its "Current
-catalogue" table) — this page explains how to *read* a composition, not a duplicate inventory that
-would otherwise go stale as compositions are added.
+Eden groups the examples under Foundation, Logistics, Air Operations, Combat Systems, Interface,
+Mission Systems and Mission Tools. The pack's `WMP_Compositions/README.md` lists every composition.
 
-## Minimal and Full pairs
+## Place and test an example
 
-Every composition with real optional parameters ships as two folders:
+1. Place the composition on open ground. If its name ends in **Minimal**, start with that version.
+2. Read the Eden comment next to the objects. Set any named feature flag in `MissionConfig`.
+3. Keep the objects spaced as placed. Vehicles may need room, simulation or a crew.
+4. Preview the mission. Check the player action or effect described in the comment.
+5. Change one Init-field option at a time, using the wiki link in the comment to check its values.
 
-- **`..._Minimal`** — the smallest call that actually works: only the function's truly required
-  arguments, relying entirely on its own documented defaults for everything else. Start here.
-- **`..._Full`** — the same object(s) with every option set explicitly, so a mission maker can see
-  and edit each one once the basics make sense.
+If no action appears, check the feature flag first. Then run [Mission Diagnostics](Mission-Diagnostics)
+and read the server RPT. Copying a composition does not turn on a disabled feature.
 
-A composition without real optional parameters (a fixed prop, or a call that's already minimal by
-nature) ships as a single unsuffixed folder instead of a redundant pair.
+## Minimal and Full examples
 
-## Beginner workflow
-
-1. Install the WMP scripts from the same release as the composition archive.
-2. Place the **Minimal** composition on open ground first.
-3. Read its Eden comment before moving or deleting any helper object.
-4. Preview the mission and prove the default workflow once.
-5. Open the linked wiki page and change one clearly labelled option at a time.
-6. Move to the **Full** composition only when you need its additional options.
-
-## Shortest setup for the new logistics examples
-
-| What you want | Set once in MissionConfig | Place in Eden | Further setup |
-|---|---|---|---|
-| Quartermaster | `Waldo_Quartermaster_Enable` is already on | **Logistics Spawner Example (Minimal)** | Author at least one playable unit's kit in ACE Arsenal and turn off **Binarize the Scenario File** if you want mission-derived ammo or heavy supplies. |
-| Base services | Set `Waldo_BaseServices_Enable = true` in `missionSystemsConfig.sqf` | **Base Services Example** | Rename each stand or change its service list in its Init field. Keep the same network ID on stands that should teleport between one another. |
-| Crate and vehicle transfers | Set `Waldo_SupplyTransfers_Enable = true` in `logisticsConfig.sqf` | **Supply Transfers and Physical Cargo Example** | No extra call for WMP-issued crates. For other placed crates or cargo-capable vehicles, use `[this] call Waldo_fnc_SupplyTransfersRegister;` in each object's Init field. |
-| Visible cargo | `Waldo_PhysicalCargo_Enable` is already on | Use the same crate/buggy example | ACE Carry a crate and release it while aiming at the vehicle. Other carryable props need `[this] call Waldo_fnc_PhysicalCargoRegister;` in their Init field. |
-| Seat blocking | `Waldo_PhysicalCargo_BlockSeats` is already on | The example Prowler has its six measured points | Other vehicle models need their own verified seat points. WMP will leave unknown seats alone; do not copy Prowler coordinates onto a modded vehicle. |
-
-Place the composition after installing the matching WMP pack; the composition does not turn on a
-disabled feature flag. The two crate and vehicle examples show the registration calls in their Init
-fields, so a mission maker can copy an object and change its name without writing an `initServer.sqf`
-list. The full parameters and optional ZEN controls live in the linked feature pages.
-
-Compositions are not magic modules. A placed vehicle may still require simulation, crew, open
-clearance, water, an ACRE dependency, or a server extension. The comment beside the example states
-those prerequisites. If the feature does not work, run Mission Diagnostics and check the RPT before
-adding extra locality wrappers or crew-creation code.
+**Minimal** uses the required arguments and the pack's defaults. **Full** shows the optional
+arguments on the same objects. Use the Full version when you need to change those options. Features
+with no useful optional arguments have one unsuffixed example.
 
 ## Locality rule
 
-Composition init fields call the public feature API directly. Some functions forward a client call
-to the server; others accept only the server's copy of the Eden Init and ignore client copies. Both
-patterns avoid duplicate registration. Published state installs local/JIP actions where required.
-Do not add a locality guard unless that function's wiki article explicitly requires one; the Prowler
-example guards only its server-owned seat-point publication. Local-only Eden actions, such as
-teleport boarding points, run on each interface through their repeat-safe setup path.
+Leave the supplied Init calls in place. WMP registers the objects and gives joining players their
+actions. Some calls forward to the server. Others run on the server's copy of the Eden object. Add
+an `isServer` wrapper only when the linked feature page asks for one. The Prowler example guards its
+seat-point setting because that value belongs to the server.
 
-Every WMP Eden comment includes the direct URL of the matching wiki article. Keep that link when
-copying or adapting the example so the next mission maker can recover the parameter and locality
-guidance from inside Eden.
+Keep the wiki URL in an Eden comment so you can check the object's options after moving it.
 
-The **Notification Trigger** is the pre-planned equivalent of the Zeus **Send Notification** module.
-It is a 25 m, any-player, one-use trigger and therefore does not announce anything merely because the
-mission loaded. Edit its **On Activation** field to change the title, message, notification type or
-recipients. Keep **Server Only** enabled in multiplayer; otherwise every client can execute the same
-activation and create duplicate cards. See [Custom WMP UI Notifications](Custom-UI-Notifications).
+## Notification Trigger
 
-## Why some features have no composition
+The **Notification Trigger** fires once when any player enters its 25 m area. Edit **On Activation**
+to change its title, message, type or recipients. Keep **Server Only** enabled in multiplayer so
+players receive one notification. See [Custom WMP UI Notifications](Custom-UI-Notifications).
 
-Dynamic AA, Dynamic AO Generation and Airborne Gunship Support all ship compositions — their
-registration functions (`Waldo_fnc_DynamicAACreate`, `Waldo_fnc_DynamicAOCreate`,
-`Waldo_fnc_GunshipRegister`) self-forward a non-server call to the server exactly like
-`Waldo_fnc_Jammer` or `Waldo_fnc_HazardRegisterZone`, which already shipped as compositions, so an
-Eden init running on every machine is safe for them too. Only **generated drop zones**
-(`Waldo_fnc_ParadropCreateDropZone`) remain excluded for a genuinely different reason: that function
-spawns and owns its own aircraft/crew, and an Eden object cannot represent "spawn this on demand" the
-way it represents "here is a real placed thing" — use `initServer.sqf` or the "Dynamic Paradrop" ZEN
-module instead. The [Halo and Static-Line Paradrop Examples](Vehicle-Actions-&-Paradrop) composition
-covers the placed-and-crewed-aircraft case instead.
+## Features without a placed example
 
-Player accessibility, treatment feedback, persistence enablement itself (though registering one
-specific persistent object is exactly as composable as the systems above — see the Persistence
-Object Example composition), UI themes, rally state, terrain-tree felling and automatic AI handlers
-likewise do not become clearer or safer when represented by a decorative Eden object. Use their
-`MissionConfig` settings, documented public setup call, full audit station or focused Zeus module
-instead.
+Dynamic AA, Dynamic AO Generation and Airborne Gunship Support have Eden compositions. Their setup
+functions send client-side Eden calls to the server. Generated paradrop zones work differently:
+`Waldo_fnc_ParadropCreateDropZone` creates its own aircraft and crew when called. Use `initServer.sqf`
+or the **Dynamic Paradrop** ZEN module for that. For an aircraft already placed with its crew, use
+[Halo and Static-Line Paradrop Examples](Vehicle-Actions-&-Paradrop).
+
+Player accessibility, treatment feedback, persistence enablement, UI themes, rally state, tree
+felling and automatic AI handlers use configuration or scripted setup instead of a placed object.
+The **Persistence Object Example** registers one particular object for persistence. Use the linked
+feature page or a focused ZEN module for other changes.
 
 <!-- WMP-WIKI-NAV -->
 ---

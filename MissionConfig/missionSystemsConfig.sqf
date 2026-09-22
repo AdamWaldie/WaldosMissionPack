@@ -40,7 +40,6 @@
  *
  * SETTING-BY-SETTING GUIDE - SQUAD RALLY:
  * - Waldo_Rally_Enable (MISSION MAKER): installs the eligible squad-leader self-action when true.
- * - Waldo_BaseServices_Enable (MISSION MAKER): permits explicitly registered base-service networks.
  * - Waldo_Rally_ObjectClass (MISSION MAKER): valid CfgVehicles object used as the deployed rally.
  * - Waldo_Rally_Duration (MISSION MAKER): active lifetime in seconds; use a positive value.
  * - Waldo_Rally_DeploymentTime (MISSION MAKER): uninterrupted placement action duration in seconds.
@@ -52,6 +51,13 @@
  * - Waldo_Rally_RespawnClearance (ADVANCED): empty radius required around a chosen respawn position.
  * - Waldo_Rally_RespawnSearchDistance (ADVANCED): maximum radius searched for an open respawn position.
  * - Waldo_Rally_AllowRegroup (MISSION MAKER): permits the runtime's optional regroup/redeploy behaviour.
+ *
+ * SETTING-BY-SETTING GUIDE - BASE SERVICES:
+ * - Waldo_BaseServices_Enable (MISSION MAKER): off by default. Set true, then place the Base
+ *   Services Example composition or add this to each service object's Eden Init field:
+ *   [this, "MainBase", "Headquarters", ["SAVE", "HEAL", "SPECTATE", "TELEPORT"]]
+ *       call Waldo_fnc_BaseServicesRegisterNode;
+ *   Give another object the same network ID and its own label to allow travel between them.
  *
  * SETTING-BY-SETTING GUIDE - OPTIONAL SYSTEMS AND ACE POLICY:
  * - Waldo_Economy_Enable (MISSION MAKER): starts economy runtime; resources/catalogues still need setup.
@@ -78,6 +84,7 @@ createHashMapFromArray [
     ["shared", [
         // MISSION MAKER: squad-rally availability, object, timing and placement rules.
         ["Waldo_Rally_Enable", false],              // BOOL: install eligible squad-leader self interaction.
+        // MISSION MAKER: separate base-service network; place and register its objects in Eden.
         ["Waldo_BaseServices_Enable", false], // BOOL: explicitly registered ACE service-object networks.
         ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"], // CfgVehicles deployed rally object.
         ["Waldo_Rally_Duration", 180],              // SECONDS: positive rally lifetime; 0 expires immediately and is invalid setup.

@@ -258,7 +258,7 @@ unknown families, incompatible group assignments, channel-capacity failures, inv
 ranges/steps, missing radio occurrences, ACRE readiness and conflicting Eden radio attributes.
 Frequency entries remain request-based rather than falsely described as read-back verified.
 
-The full audit mission distributes every supported carried radio among playable squad members, with at least one same-class partner. Its ACRE station tests duplicate radios, independent ears, named non-channel-1 assignments, PRC-77/SEM70 requests, filtered loadout respawn, Babel and preserved extra radios. The obsolete argument-based ACRE setup functions have been removed; `acreConfig.sqf` is the only supported setup path.
+`acreConfig.sqf` is the supported setup path. Older argument-based ACRE setup functions have been removed.
 
 ## Group callsign fallback
 

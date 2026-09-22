@@ -2,25 +2,42 @@
 
 > **Use this page when:** placing ACE-carried crates and props visibly on vehicles.
 
-`Waldo_PhysicalCargo_Enable` in `MissionConfig/logisticsConfig.sqf` retains the pack's existing default of `true`. ACE and CBA are required. Carry an eligible object with ACE and aim the normal release click at a nearby vehicle surface. WMP traces the vehicle, then keeps the object's visible carried position and orientation when attaching it. It does not shift the object according to its bounding box. Aim elsewhere for an ordinary ground drop. The ACE interaction menu remains the route into internal ACE Cargo. The [supply crate options](Supply-Transfers) can turn ACE loading on or off for an individual registered crate.
+ACE and CBA are required. `Waldo_PhysicalCargo_Enable` is already `true` in
+`MissionConfig/logisticsConfig.sqf`. WMP supply crates qualify without another setup call. Carry a
+crate with ACE, then release it while aiming at a nearby vehicle. The crate stays where you held it.
+Release it away from the vehicle to drop it on the ground. ACE's menu still loads the crate inside
+ACE Cargo. The [crate options](Supply-Transfers) can enable or disable that loading choice per crate.
 
-WMP replaces ACE's carry-release callback only when it finds the expected callback and action ID. Otherwise native ACE release stays in place. The adapter uses a non-public ACE function, so check it after ACE updates. It does not infer player intent from ACE's stopped-carry event.
-
-`ReammoBox_F` descendants are eligible by default. To register another non-weapon carryable object, call from `initServer.sqf`:
+For another non-weapon prop, put this in the prop's Eden **Init** field:
 
 ```sqf
-[myObject] call Waldo_fnc_PhysicalCargoRegister;
+[this] call Waldo_fnc_PhysicalCargoRegister;
 ```
 
-Registration also asks ACE to make the object carryable unless WMP has already set it. The server keeps the mount record. Picking up the object or loading it into ACE Cargo restores its previous simulation and physics-collision state. WMP excludes static weapons from physical mounts after an HMG flipped a truck in testing. ACE Carry, ground drop and ACE Cargo remain available for them. WMP offers no working-weapon mount or gun-entry action.
+The same call works in `initServer.sqf` with a named object in place of `this`. WMP also asks ACE to
+make that prop carryable. WMP rejects visible mounts for static weapons after an HMG flipped a test vehicle.
+Players can still use ACE Carry, ground drop and ACE Cargo for static weapons. WMP has no working
+weapon mount or gun-entry action.
 
-Place ZEN **Physical Cargo - Eligibility** directly on a carryable prop or crate. It can allow or disallow future physical mounts, or report the object's current state. It rejects static weapons, vehicles, aircraft and boats. It cannot change eligibility while an object has a physical mount. Normal ACE Carry and Cargo remain available.
+Place ZEN **Physical Cargo - Eligibility** directly on a carryable prop or crate to allow future
+mounts, disallow them or inspect the current state. The module rejects static weapons, vehicles,
+aircraft and boats. It cannot change eligibility while the object has a mount. ACE Carry and Cargo
+remain available.
 
-WMP-issued supply and medical crates, including crate compositions, follow the global flag. Starter crates receive no WMP logistics registration. They can still qualify through the ordinary `ReammoBox_F` class fallback while physical cargo is on.
+WMP-issued supply and medical crates, including crate compositions, follow the global flag. Starter
+crates do not receive logistics registration, but still qualify if their class inherits from
+`ReammoBox_F`.
 
-WMP accepts a valid contact hit on land, air or sea vehicles. Test each intended cargo and vehicle combination in Arma before release.
+WMP accepts a valid contact hit on land, air or sea vehicles. Test each crate and vehicle combination
+in Arma before using it in a mission.
 
-`Waldo_PhysicalCargo_BlockSeats` defaults to `true`, but WMP will not guess seat indices or turret paths. A mission maker may provide verified model-space points for ordinary cargo seats and fire-from-vehicle (FFV) person-turret seats on a particular vehicle:
+## Seats covered by cargo
+
+`Waldo_PhysicalCargo_BlockSeats` defaults to `true`. The **Supply Transfers and Physical Cargo
+Example** has six measured seat positions for its vanilla NATO Prowler/DAGOR. With another vehicle,
+measure the seat positions on that exact model. WMP leaves unmapped seats available.
+
+For ordinary cargo seats or fire-from-vehicle (FFV) seats, set model-space points on the vehicle:
 
 ```sqf
 myTruck setVariable ["Waldo_PhysicalCargo_SeatPoints", [
@@ -29,15 +46,31 @@ myTruck setVariable ["Waldo_PhysicalCargo_SeatPoints", [
 ], true];
 ```
 
-Those coordinates and turret path are examples. Measure them on the exact vehicle model. WMP locks a free cargo seat with `lockCargo` or a verified FFV person-turret with `lockTurret` when the seat point lies inside the mounted object's oriented footprint. Edge contact alone does not lock a seat. WMP tracks overlapping locks and releases only its own. Without verified points, seating stays unchanged. The legacy `[cargoIndex, point]` row remains valid for cargo seats.
+The coordinates and turret path above only show the data shape. WMP locks a free cargo seat with
+`lockCargo`, or a verified FFV person-turret with `lockTurret`, when its point lies inside the
+mounted object's oriented footprint. Edge contact does not lock a seat. WMP tracks multiple crates
+covering one seat and releases only its own locks. The older `[cargoIndex, point]` form still works
+for cargo seats.
 
-The audit seat station uses a small crate and the NATO Prowler/DAGOR. It measures empty seat positions with a temporary hidden occupant at startup. It publishes positions confirmed by Arma. Use **REPORT VERIFIED SEATS** to check calibration. Mount the crate over a seat, then try that seat and a clear one. **CAPTURE MY OCCUPIED CARGO SEAT** can replace one measurement for diagnosis.
+Seat points depend on the vehicle model. Do not copy the example coordinates onto another vehicle
+without measuring it: an incorrect point can lock the wrong seat or leave an occupied seat open.
 
-The first HEMMT and Polaris tests had empty seat maps and locked nothing. Later Polaris and NATO Prowler tests blocked the covered seat and left a clear seat usable. The **Supply Transfers and Physical Cargo Example** composition includes the six measured points for its exact vanilla Prowler class; those coordinates must not be copied to a different vehicle model. Other models and locality changes still need testing.
+## Carrying cargo away
 
-The carrier must stand near the object and contact point. The vehicle must be almost stationary. A bad or missing hit gives an ordinary ground drop. A rejected mount must leave the object recoverable. Use ACE **Carry** to take mounted cargo off, then drop it on clear ground or mount it elsewhere. Direct detachment could clip the object into the vehicle, so there is no **Unload physical cargo** action. Scripts can call `Waldo_fnc_PhysicalCargoUnmountServer` for controlled removal.
+Stand near the crate and the intended contact point. Stop the vehicle before mounting. If the click
+misses the vehicle or the mount fails, the crate drops and remains available. Use ACE **Carry** to
+remove mounted cargo, then put it on clear ground or another vehicle. A direct unload could leave the
+crate inside the vehicle model, so there is no player **Unload physical cargo** action. Server scripts
+can call `Waldo_fnc_PhysicalCargoUnmountServer` when they need a checked ground position.
 
-Dedicated-server, JIP, ownership migration, moving-vehicle, deletion and representative modded-vehicle checks remain outstanding. The first ACE-menu opening on a physical-cargo crate has sometimes hitched. The changes to duplicate ACE carry setup and WMP menu actions still need an in-game retest.
+WMP attaches the object at its carried position and restores its previous simulation and collision
+state after pickup or ACE Cargo loading. It uses ACE's carry-release callback only when the expected
+function and action ID exist. That callback is not public ACE API. If ACE changes it, native ACE
+release stays available until WMP supports the new callback.
+
+Check the behaviour on every crate and vehicle class your mission uses. A first ACE-menu opening
+may briefly hitch. The cause has not been confirmed. Do not assume a static-weapon
+mount is safe: WMP deliberately does not offer one.
 
 ## See also
 

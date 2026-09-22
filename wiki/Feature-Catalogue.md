@@ -47,7 +47,6 @@ Runtime configuration is server-authoritative. Current settings are published fo
 | Loadout scraping | `Waldo_fnc_MissionSQMLookup` recursively walks every Eden `Entities` collection and includes both `isPlayer` and `isPlayable` objects | Playable characters inside organiser folders and arbitrarily nested folders contribute to arsenals, starter crates and supply crates |
 | Economy request handling | Authority requests share one scheduler and runtime objects use explicit registries | Correctness and cleanup improve without changing economy balance |
 | UI and lifecycle cleanup | SafeStart, ENDEX, mini-games and optional systems remove only controls, protections and handlers they own | Repeated activation, reset, death and debriefing do not leave stale feature state |
-| Verification | The checked-in full-pack audit mirrors release scripts and includes twenty repeatable physical stations for the recently integrated systems, including nested-folder playable loadout scraping and Dynamic AO generation; CI also checks SQF, configuration, drawn UI, ZEN parity, wiki assets, performance guardrails and regression contracts | New systems can be exercised in one hosted or dedicated test session and remain part of the release gate |
 
 ## Mission flow and player experience
 

@@ -337,8 +337,7 @@ then the curator selection:
 The default object is a flagpole carrying a blue flag. The standard selector also offers info stands, a map board, laptop, camping table and portable light. Created points have simulation disabled, remain editable/movable in Zeus and retain their boarding action after repositioning. Extend `Waldo_Paradrop_BoardingPointClasses` in `init.sqf` for mission-specific objects.
 
 Only players are transferred, pilot/turret seats are never claimed, and full or stale aircraft are
-reported through WMP notifications. The ongoing audit station also exposes **BOARD ME INTO QA
-PARADROP** and **CREATE QA BOARDING POINT** controls.
+reported through WMP notifications.
 
 The **Create map markers** option is on by default and visibly draws the overall rectangular drop
 zone, small amber standby line, green jump line, red stop line and a named point marker, matching

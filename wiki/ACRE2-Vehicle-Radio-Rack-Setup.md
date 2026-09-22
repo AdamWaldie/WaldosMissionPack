@@ -239,8 +239,7 @@ setup arriving mid-run replaces the queued request and runs after the current wo
 WMP Diagnostics reports both an `acre-vehicle-racks` summary and one `acre-rack-<network ID>` row
 per configured object. Each object row shows its class, resolved profile, current owner, initial
 rack/radio inventory, every requested job, the final mounted radio/channel read-back, and problems.
-The audit mission's **ACRE2: SHOW VEHICLE RACK STATUS** action exposes the same snapshot. RPT lines
-beginning `[WMP ACRE RACK]` include the accepted request, inventory and every job result.
+RPT lines beginning `[WMP ACRE RACK]` include the accepted request, inventory and every job result.
 
 | Diagnostic | Meaning and response |
 |---|---|

@@ -1,11 +1,24 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Makes a non-weapon object eligible for physical ACE carry mounting.
- * Locality / Authority: Server registration; ACE publishes carryability globally.
- * Repeat / JIP: Idempotent object flag; no placement state is created until a player mounts it.
- * Arguments: object <OBJECT>. Return Value: <BOOL> eligible.
- * Current callers: mission-maker initServer/object init; WMP quartermaster may register issued gear.
- * Example: [this] call Waldo_fnc_PhysicalCargoRegister;
+ * Let players ACE Carry a placed prop and attach it visibly to a vehicle. WMP crates
+ * already qualify; use this call for another prop that players should be able to mount.
+ * Enable Waldo_PhysicalCargo_Enable in MissionConfig/logisticsConfig.sqf first.
+ *
+ * Locality and authority: The server marks the object and publishes ACE carryability.
+ * An Eden Init also runs on clients, but their copies of this call do nothing.
+ * Repeat and JIP: Repeating the call does not create another mount. The eligibility
+ * flag is public, so joining clients receive it.
+ *
+ * Arguments:
+ * 0: object <OBJECT> - an existing non-weapon prop or crate. Static weapons,
+ * vehicles, aircraft and boats cannot be registered as carried cargo.
+ * Return Value: <BOOL> - true when eligible or queued until settings are ready;
+ * false when disabled, off-server or given an unsupported object.
+ * Example: In that object's Eden Init field:
+ * [this] call Waldo_fnc_PhysicalCargoRegister;
+ * Result: ACE Carry can pick up the object; a normal release onto a nearby vehicle
+ * attempts a visible mount. ACE Cargo remains available through its menu.
+ * Current callers: Eden object Init, WMP quartermaster and ZEN eligibility module.
  */
 params [["_object", objNull, [objNull]]];
 if (!isServer || {isRemoteExecuted} || {isNull _object}) exitWith {false};
