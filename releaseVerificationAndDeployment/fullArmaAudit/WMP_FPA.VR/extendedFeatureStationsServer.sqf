@@ -716,5 +716,6 @@ Waldo_QA_fnc_setUiThemeServer = {
     [_actor, "UI THEME QA", format ["%1 theme %2 globally. Open notifications, interaction challenges and service panels to compare the same controls with the new visual treatment.", _theme, ["was rejected", "is active"] select _ok], ["ERROR", "SUCCESS"] select _ok, "UI_THEME_QA"] call Waldo_QA_fnc_notifyActorServer;
 };
 
+call compile preprocessFileLineNumbers "serviceLogisticsStationsServer.sqf";
 missionNamespace setVariable ["Waldo_QA_ExtendedFeatureStationsReady", true, true];
 diag_log "WMP EXTENDED FEATURE STATIONS READY: 18 station workflows configured.";

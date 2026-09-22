@@ -1,6 +1,42 @@
 [
   {
     "category": "core",
+    "module": "Base Services - Configure Node",
+    "handler": "Waldo_fnc_ZenServiceLogisticsModule",
+    "via": "Waldo_fnc_ZenServiceLogisticsServer",
+    "script_api": "Waldo_fnc_BaseServicesRegisterNode",
+    "parity": "adapter",
+    "notes": "Curator-selected object and node options are validated on the server before additive registration."
+  },
+  {
+    "category": "core",
+    "module": "Quartermaster - Set Up Object",
+    "handler": "Waldo_fnc_ZenServiceLogisticsModule",
+    "via": "Waldo_fnc_ZenServiceLogisticsServer",
+    "script_api": "Waldo_fnc_QuartermasterReconfigureLocal",
+    "parity": "adapter",
+    "notes": "Server authenticates the curator and republishes repeat-safe actions to all clients and JIP."
+  },
+  {
+    "category": "core",
+    "module": "Supply Transfers - Register or Inspect",
+    "handler": "Waldo_fnc_ZenServiceLogisticsModule",
+    "via": "Waldo_fnc_ZenServiceLogisticsServer",
+    "script_api": "Waldo_fnc_SupplyTransfersRegister",
+    "parity": "adapter",
+    "notes": "Server enrols only a cargo-capable selected object; transfer gameplay remains in ACE."
+  },
+  {
+    "category": "core",
+    "module": "Physical Cargo - Eligibility",
+    "handler": "Waldo_fnc_ZenServiceLogisticsModule",
+    "via": "Waldo_fnc_ZenServiceLogisticsServer",
+    "script_api": "Waldo_fnc_PhysicalCargoRegister",
+    "parity": "adapter",
+    "notes": "Server controls non-weapon mounting eligibility; it does not enable working weapons."
+  },
+  {
+    "category": "core",
     "module": "Supplies: Create Player Crate",
     "handler": "Waldo_fnc_ZenSupplySpawner",
     "via": "Waldo_fnc_ZenSpawnCrateServer",

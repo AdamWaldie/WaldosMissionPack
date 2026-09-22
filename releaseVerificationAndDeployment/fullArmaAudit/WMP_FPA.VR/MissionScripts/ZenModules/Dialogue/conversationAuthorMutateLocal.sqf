@@ -105,7 +105,7 @@ if (_feedback != "") then {
         _status ctrlSetStructuredText parseText format ["<t color='%1'>DONE</t>  %2", _theme getOrDefault ["successHex", "#6CE5A8"], _feedback];
         _status ctrlCommit 0;
     };
-    ["CONVERSATION", _feedback, "SUCCESS", format ["CONVERSATION_AUTHOR_%1", toUpperANSI _operation], 5]
-        call Waldo_fnc_FeatureNotifyLocal;
+    // Routine editor mutations already report in the editor status line. A separate transient
+    // card per operation floods the global notification lanes during rapid authoring.
 };
 true

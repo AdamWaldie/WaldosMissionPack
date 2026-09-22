@@ -138,17 +138,29 @@ activates the Quartermaster.
 | ACE Interaction | Contents | Notes |
 |---|---|---|
 | **Medical Box** | ACE medical supplies (if ACE Medical loaded), or vanilla medical supplies | Marked as ACE field hospital; draggable/carryable |
-| **Supply Box** | All weapons, ammo, attachments, equipment from mission loadouts (full side complement) | |
+| **Heavy Supply Box** | All weapons, ammo, attachments, equipment from mission loadouts (full side complement) | |
 | **Ammo Box** | Ammo only (0.75× scale supply, no weapons or equipment) | |
 | **ACE Wheel** | `ACE_Wheel` - spare vehicle wheel | |
 | **ACE Track** | `ACE_Track` - spare vehicle track | |
+| **Grenades Box** | Eligible throwable magazines from this side's playable loadouts | Opt in with `Waldo_QM_Grenades_Enable` |
+| **Explosives Box** | Eligible mines and charges from this side's playable loadouts | Opt in with `Waldo_QM_Explosives_Enable` |
+| **Rearm Box** | Finite ACE rearm source for vehicles and static weapons | Opt in with `Waldo_QM_Rearm_Enable` |
+| **Fuel Barrel** | ACE fuel source with a configured litre limit | Opt in with `Waldo_QM_FuelBarrel_Enable` |
+| **Fuel Jerrycan** | ACE jerrycan with a configured litre limit | Opt in with `Waldo_QM_FuelJerrycan_Enable` |
 
-The Quartermaster prevents duplicates: if a box of the same type already exists within 5 m of the
-spawn point, a new one is not spawned, and the QM says so.
+The five additional issues are off by default. `Waldo_Quartermaster_Enable` remains on for the established issues. Set the flags and quantities in `MissionConfig/logisticsConfig.sqf`. Rearm and refuel use ACE's own source functions and capacity rules. Older `Waldo_QM_VehicleRearm_Enable` and `Waldo_QM_StaticRearm_Enable` settings are accepted as aliases for the one Rearm Box action; they no longer create duplicate options. ACE interaction groups infantry supplies, vehicle support and fuel separately. Progress text uses the selected issue name, and spawned objects receive an ACE cargo name suffix identifying the issue. Grenades use the side's small ammo box, explosives an ordnance box and rearm a vehicle-ammo box; each receives an ACE size suited to the issue.
+
+Each established issue now also has its own availability flag: `Waldo_QM_Medical_Enable`, `Waldo_QM_Ammo_Enable`, `Waldo_QM_Supply_Enable`, `Waldo_QM_Track_Enable` and `Waldo_QM_Wheel_Enable` all default to `true`. New issue flags default to `false`. The rearm box's four ordinary inventory categories are cleared after spawning; its finite ammo is supplied by ACE, not loose magazines inside the crate. A blue **ACE Rearm Source** object action identifies the otherwise empty box and explains its use. Its source capacity depends on the enabled rearm setting (default 1200 for general/vehicle rearm, 250 for static-only legacy configuration).
+
+For crate merging, selective transfers, empty removal and per-crate ACE loading control, enable [Supply Transfers](Supply-Transfers). Physical mounting remains a [separate feature](Physical-Cargo).
+
+For the five established issues, the Quartermaster prevents duplicates within 5 m of its spawn point. The new opt-in issues currently rely on clear-space placement and do not use that legacy duplicate check.
 
 ## Changing the boxes the Quartermaster spawns
 
-Set the classnames in `initServer.sqf`:
+Set crate classes in `MissionConfig/logisticsConfig.sqf`. The current defaults are `B_supplyCrate_F` for ammo and heavy supply, `Box_NATO_Ammo_F` for grenades, `Box_NATO_AmmoOrd_F` for explosives, and `Box_NATO_AmmoVeh_F` for rearm. Configure them independently with `Waldo_QM_Ammo_CrateClass`, `Waldo_QM_Supply_CrateClass`, `Waldo_QM_Grenades_CrateClass`, `Waldo_QM_Explosives_CrateClass` and `Waldo_QM_Rearm_CrateClass`. The legacy vehicle/static rearm class keys are also present for direct scripted issue calls; the player-facing quartermaster presents one Rearm Box action. `Waldo_QM_Medical_CrateClass` defaults to an empty string, meaning the ACE-aware `Logi_MedicalBoxClass` default is retained. Unavailable configured classes are rejected rather than silently spawning a different object.
+
+The older mission-level class controls remain available for general spawners:
 
 ![Picture displaying the appropriate place in initServer.sqf to change the boxes](https://i.imgur.com/0CdEY8U.png)
 
@@ -159,6 +171,10 @@ Set the classnames in `initServer.sqf`:
 missionNamespace setVariable ["Logi_SupplyBoxClass", "B_supplyCrate_F", true];
 missionNamespace setVariable ["Logi_MedicalBoxClass", "ACE_medicalSupplyCrate_advanced", true];
 ```
+
+ZEN **Quartermaster - Set Up Object** configures the object directly under the module. Its labelled controls set spawn bearing (0–359° relative to the object), spawn distance (2–12 m), whether another system controls deployment, and which of the ten issue types this particular point offers. An ordinary laptop should leave **Deployment controlled** unchecked; otherwise its retrieval actions wait for an MHQ-style controller. The issue checkboxes are per-point filters: a globally disabled issue cannot be enabled in ZEN. Existing ZEN settings are prefilled on repeat use, and the server applies the validated settings before refreshing client actions. Place no module on empty ground. For a mission-wide class, quantity or availability change, edit `MissionConfig/logisticsConfig.sqf` instead. For example, enable `Waldo_QM_Rearm_Enable` globally and select **ACE rearm box** in ZEN to offer it on one point; `Waldo_QM_Rearm_CrateClass` and `Waldo_QM_Rearm_Supply` set its class and finite ACE capacity.
+
+When `Waldo_SupplyTransfers_Enable` is on, WMP-issued quartermaster crates receive the [crate logistics actions](Supply-Transfers) automatically. Starter crates are excluded. ZEN **Supply Transfers - Register or Inspect** can add a mission-placed box or cargo-capable vehicle independently; on a vehicle it adds a receive-supplies menu, not a second quartermaster.
 
 <!-- WMP-WIKI-NAV -->
 ---

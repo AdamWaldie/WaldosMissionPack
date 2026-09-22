@@ -16,6 +16,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [ENDEX and After-Action Report](ENDEX-Script-&-Custom-End-Screen) | End-of-operation protection, AAR, and mission end |
 | [Tasks and Objectives](Tasks-And-Objectives) | JIP-safe objective creation and resolution |
 | [Custom 3D World Markers](Custom-3D-World-Markers) | World-space labels and icons |
+| [Base Services](Base-Services) | Named object groups with selected services and teleport destinations |
 | [Radio Reports and Checklists](Radio-Reports,-Checklists,-Support-Calls-And-Documentation) | Optional briefing reference documents |
 | [Team Colour Setup](Team-Colour-Setup) | Role-driven fireteam colour assignment |
 
@@ -24,6 +25,8 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | Feature | Use it for |
 |---|---|
 | [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster) | Mission-derived supplies and limited arsenals |
+| [Supply Transfers](Supply-Transfers) | Selective moves, crate consolidation and per-crate ACE loading choice |
+| [Physical Cargo](Physical-Cargo) | Visible non-weapon vehicle cargo; static weapons use native ACE cargo only |
 | [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal, and manual loadout persistence, plus side-switch respawn seeding |
 | [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies) | Recoverable vehicle logistics and temporary group respawns |
 | [Helicopter, Ground and Boat Transport](Transport-Services) | Reusable AI-crewed transport services for land, air, and open water |

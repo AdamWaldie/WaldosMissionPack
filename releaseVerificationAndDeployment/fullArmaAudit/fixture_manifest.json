@@ -29,6 +29,38 @@
     {
       "id": "interactions",
       "features": ["ten procedures", "easy", "standard", "hard", "expert", "ACE actions", "vanilla fallback", "authoritative state", "reset", "live explosive outcome"]
+    },
+    {
+      "id": "base-services",
+      "features": ["registered HQ/FOB service group", "3D object labels", "save", "heal", "teleport", "spectator", "re-registration and JIP"]
+    },
+    {
+      "id": "quartermaster-issues",
+      "features": ["dynamic grenade and explosive issues", "ACE vehicle and static rearm sources", "ACE fuel barrel and jerrycan", "finite depletion"]
+    },
+    {
+      "id": "supply-transfers",
+      "features": ["selective transfer", "whole-container consolidation", "ACE loading toggle", "partial magazines", "fitted weapons", "nested cargo", "empty removal"]
+    },
+    {
+      "id": "physical-cargo",
+      "features": ["ACE carry ground drop", "click-to-physical mount", "ACE Cargo loading", "bad aim", "moving vehicle", "unmount and remount", "JIP"]
+    },
+    {
+      "id": "static-cargo",
+      "features": ["native ACE carry", "native ACE Cargo", "WMP mount rejection", "ground-drop recovery", "vehicle remains stable"]
+    },
+    {
+      "id": "cargo-seats",
+      "features": ["small crate", "optional RHSUSAF Polaris MRZR", "measured cargo or FFV seat", "specific lock", "pickup restoration"]
+    },
+    {
+      "id": "briefing-docs",
+      "features": ["real squad-preparation diary", "rendered reaction-to-contact line", "encoding check"]
+    },
+    {
+      "id": "dialogue-author",
+      "features": ["rapid dialogue edits", "inline status", "no notification lane flooding", "validation and export feedback"]
     }
   ]
 }

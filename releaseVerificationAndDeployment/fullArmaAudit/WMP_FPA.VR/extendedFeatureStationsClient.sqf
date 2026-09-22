@@ -130,11 +130,141 @@ private _dismount = missionNamespace getVariable ["Waldo_QA_DismountVehicle", ob
 }] call _add;
 [_dismount, "Waldo_QA_OverturnDismount", "OVERTURN VEHICLE", {
     params ["_target", "_actor"];
+    [_actor] spawn {
+        params ["_tester"];
+        private _deadline = diag_tickTime + 8;
+        waitUntil {uiSleep 0.02; vehicle _tester isEqualTo _tester || {diag_tickTime >= _deadline}};
+        if (vehicle _tester isEqualTo _tester) then {
+            uiSleep 0.18;
+            private _measured = velocity _tester;
+            ["DISMOUNT THROW QA", format ["Measured post-exit velocity at +0.18 s: %1 m/s. Repeat at different rollover speeds and directions.", _measured], "INFO", "DISMOUNT_MEASURE_QA", 10] call Waldo_fnc_FeatureNotifyLocal;
+        };
+    };
     [_actor] remoteExecCall ["Waldo_QA_fnc_overturnDismountServer", 2];
 }] call _add;
 [_dismount, "Waldo_QA_ResetDismount", "RESET VEHICLE UPRIGHT", {
     params ["_target", "_actor"];
     [_actor] remoteExecCall ["Waldo_QA_fnc_resetDismountServer", 2];
+}] call _add;
+
+private _base = "qa_sign_base_services" call _get;
+[_base, "Waldo_QA_BaseGuide", "TEST SERVICE OBJECTS + 3D LABELS", {
+    ["BASE SERVICES QA", "Both laptops expose the same save, heal, spectator and teleport services. Check the object-following 3D labels, travel between points, and exit spectator through ACE.", "INFO", "BASE_SERVICE_QA", 12] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_base, "Waldo_QA_BaseReregister", "RE-REGISTER SERVICE GROUP", {
+    params ["_target", "_actor"];
+    [_actor] remoteExecCall ["Waldo_QA_fnc_resetBaseServicesServer", 2];
+}] call _add;
+
+private _qm = "qa_sign_quartermaster_issues" call _get;
+private _qmPoint = "qa_qm_point" call _get;
+if (!isNull _qmPoint) then {
+    [_qmPoint, 0, 5] call Waldo_fnc_SetupQuarterMaster;
+    [_qmPoint] spawn {
+        params ["_point"];
+        uiSleep 2;
+        diag_log format ["[WMP QA QM CLIENT] localActions=%1 enabled=%2 status=%3",
+            _point getVariable ["Waldo_QM_LocalActionsInstalled", false],
+            missionNamespace getVariable ["Waldo_Quartermaster_Enable", false],
+            _point getVariable ["Waldo_LogisticsQM_CurrentStatus", false]];
+    };
+};
+[_qm, "Waldo_QA_QmGuide", "TEST EACH QUARTERMASTER ISSUE", {
+    ["QUARTERMASTER QA", "Use ACE on the nearby laptop. Request grenades, explosives, the shared rearm box, fuel barrel and jerrycan. Confirm dynamic contents and finite ACE source depletion on a vehicle and static weapon.", "INFO", "QUARTERMASTER_QA", 14] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+
+private _transfer = "qa_sign_supply_transfers" call _get;
+[_transfer, "Waldo_QA_TransferGuide", "TEST CRATE + VEHICLE TRANSFERS", {
+    ["SUPPLY TRANSFER QA", "Compare first ACE-menu opening on both transfer boxes with the unregistered control. On the truck, test Vehicle logistics: transfer out, select vehicle as source, transfer into it, and merge a selected crate into it. Also test crate-to-crate merge, ACE load on/off and empty-only deletion.", "INFO", "SUPPLY_TRANSFER_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_transfer, "Waldo_QA_TransferReport", "REPORT CRATE + TRUCK INVENTORIES", {
+    private _source = missionNamespace getVariable ["qa_transfer_source", objNull];
+    private _target = missionNamespace getVariable ["qa_transfer_target", objNull];
+    private _truck = missionNamespace getVariable ["qa_transfer_vehicle", objNull];
+    private _description = if (isNull _source || {isNull _target} || {isNull _truck}) then {"A transfer fixture is absent."} else {
+        format ["Source: %1 mags, %2 fitted weapons, %3 backpacks. Box: %4 mags, %5 fitted weapons, %6 backpacks. Truck: %7 mags, %8 fitted weapons, %9 backpacks; load %10/%11.",
+            count magazinesAmmoCargo _source, count weaponsItemsCargo _source, count everyBackpack _source,
+            count magazinesAmmoCargo _target, count weaponsItemsCargo _target, count everyBackpack _target,
+            count magazinesAmmoCargo _truck, count weaponsItemsCargo _truck, count everyBackpack _truck,
+            round loadAbs _truck, round maxLoad _truck]
+    };
+    ["SUPPLY INVENTORY QA", _description, "INFO", "SUPPLY_TRANSFER_REPORT", 10] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+
+private _cargo = "qa_sign_physical_cargo" call _get;
+[_cargo, "Waldo_QA_CargoGuide", "TEST CARRY / PHYSICAL / ACE CARGO", {
+    ["PHYSICAL CARGO QA", "First compare ACE-menu opening on the mountable crate and the identical control crate nearby (same ACE carry/load setup, no WMP mount eligibility). Then ACE-carry the mountable crate: click clear ground, aim and click the truck bed, and test ACE Cargo, bad aim and pickup/remount.", "INFO", "PHYSICAL_CARGO_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_cargo, "Waldo_QA_CargoReport", "REPORT MOUNT STATE", {
+    private _crate = missionNamespace getVariable ["qa_cargo_crate", objNull];
+    private _vehicle = missionNamespace getVariable ["qa_cargo_vehicle", objNull];
+    ["PHYSICAL CARGO QA", format ["ACE carryable: %1. Mounted on truck: %2. ACE-loaded: %3. Crate simulation: %4.",
+        !isNull _crate && {_crate getVariable ["ace_dragging_canCarry", false]},
+        !isNull _crate && {(_crate getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle},
+        !isNull _crate && {_crate in (_vehicle getVariable ["ace_cargo_loaded", []])},
+        !isNull _crate && {simulationEnabled _crate}], "INFO", "PHYSICAL_CARGO_REPORT"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+private _qaCargo = "qa_cargo_crate" call _get;
+private _qaGun = "qa_weapon_static" call _get;
+[_qaCargo, _qaGun] spawn {
+    params ["_crate", "_gun"];
+    uiSleep 3;
+    diag_log format ["[WMP QA ACE CLIENT] crateCarry=%1 crateDrag=%2 gunCarry=%3 gunDrag=%4 physicalEnabled=%5",
+        _crate getVariable ["ace_dragging_canCarry", false],
+        _crate getVariable ["ace_dragging_canDrag", false],
+        _gun getVariable ["ace_dragging_canCarry", false],
+        _gun getVariable ["ace_dragging_canDrag", false],
+        missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]];
+};
+
+private _weapon = "qa_sign_static_cargo" call _get;
+[_weapon, "Waldo_QA_WeaponGuide", "TEST STATIC WEAPON SAFETY", {
+    ["STATIC CARGO QA", "The HMG is deliberately excluded from WMP physical mounting after it flipped a truck. ACE Carry should ground-drop it on clear ground; ACE Cargo may load it through ACE's own menu. Do not click-drop it into the truck.", "INFO", "STATIC_CARGO_QA", 15] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+[_weapon, "Waldo_QA_WeaponReport", "REPORT STATIC CARGO STATE", {
+    private _gun = missionNamespace getVariable ["qa_weapon_static", objNull];
+    private _host = if (isNull _gun) then {objNull} else {_gun getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]};
+    ["STATIC CARGO QA", format ["Mode: %1. Mounted: %2. Simulation: %3. Crew: %4.",
+        if (isNull _gun) then {"MISSING"} else {_gun getVariable ["Waldo_PhysicalCargo_Mode", "NONE"]},
+        !isNull _host, !isNull _gun && {simulationEnabled _gun}, if (isNull _gun) then {0} else {count crew _gun}],
+        "INFO", "STATIC_CARGO_REPORT"] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+
+private _seat = "qa_sign_cargo_seats" call _get;
+[_seat, "Waldo_QA_SeatGuide", "TEST VERIFIED SEAT LOCKING", {
+    ["CARGO SEAT QA", "This station uses a small crate and an RHS Polaris MRZR when loaded (vanilla Prowler otherwise). Wait for REPORT VERIFIED SEATS to show measured positions, then carry the crate onto a passenger or FFV seat and try to enter that exact seat. The station measures empty seats automatically; no capture action is required.", "INFO", "CARGO_SEAT_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+if (!isNil "ace_interact_menu_fnc_createAction") then {
+    private _captureSeat = ["Waldo_QA_SeatCapture", "CAPTURE MY OCCUPIED CARGO SEAT", "",
+        {[_player] remoteExecCall ["Waldo_QA_fnc_captureCargoSeatServer", 2]},
+        {vehicle _player isEqualTo (missionNamespace getVariable ["qa_seat_vehicle", objNull])
+            && {(fullCrew [vehicle _player, "", true]) findIf {(_x select 0) isEqualTo _player
+                && {toLowerANSI (_x select 1) isEqualTo "cargo" || {_x select 4}}} >= 0}}]
+        call ace_interact_menu_fnc_createAction;
+    [player, 1, ["ACE_SelfActions"], _captureSeat] call ace_interact_menu_fnc_addActionToObject;
+};
+[_seat, "Waldo_QA_SeatReport", "REPORT VERIFIED SEATS + OWNED LOCKS", {
+    private _vehicle = missionNamespace getVariable ["qa_seat_vehicle", objNull];
+    ["CARGO SEAT QA", if (isNull _vehicle) then {"Seat truck missing."} else {
+        format ["Vehicle: %1. Measured seat points: %2. WMP cargo locks: %3. WMP FFV locks: %4.", typeOf _vehicle,
+            _vehicle getVariable ["Waldo_PhysicalCargo_SeatPoints", []],
+            _vehicle getVariable ["Waldo_PhysicalCargo_SeatLocks", []],
+            _vehicle getVariable ["Waldo_PhysicalCargo_TurretLocks", []]]
+    }, "INFO", "CARGO_SEAT_REPORT", 12] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+
+private _briefing = "qa_sign_briefing_docs" call _get;
+[_briefing, "Waldo_QA_BriefingOpen", "OPEN REAL SQUAD BRIEFING", {
+    openMap true;
+    ["BRIEFING TEXT QA", "Map > Briefing > Preperation > Squad Preperation: inspect the final reaction-to-contact line for replacement glyphs or malformed entities.", "INFO", "BRIEFING_TEXT_QA", 12] call Waldo_fnc_FeatureNotifyLocal;
+}] call _add;
+
+private _dialogue = "qa_sign_dialogue_author" call _get;
+[_dialogue, "Waldo_QA_DialogueAuthorOpen", "OPEN DIALOGUE AUTHOR", {
+    [objNull] call Waldo_fnc_ConversationAuthorOpenLocal;
+}] call _add;
+[_dialogue, "Waldo_QA_DialogueAuthorGuide", "TEST RAPID EDITS WITHOUT CARD FLOOD", {
+    ["DIALOGUE AUTHOR QA", "In the editor, rapidly add, duplicate, reorder and delete lines and parts. Each edit should update only its inline DONE status; no cards should spread across screen lanes. Validation, export and server results may still notify.", "INFO", "DIALOGUE_AUTHOR_QA", 15] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 
 private _access = "qa_sign_accessibility" call _get;

@@ -134,6 +134,7 @@ switch (toUpperANSI _operation) do {
         private _includeGear = missionNamespace getVariable ["Waldo_FieldResupply_IncludeWeaponsAttachments", false];
         private _includeLaunchers = missionNamespace getVariable ["Waldo_FieldResupply_IncludeLaunchers", false];
         [_crate, _sizeScalar, _carrierSide, _includeGear, _includeLaunchers] call Waldo_fnc_SupplyCratePopulate;
+        [_crate, "SUPPLY"] spawn Waldo_fnc_LogisticsRegisterSpawned;
         _crate setVariable ["Waldo_FieldResupply_Deployed", true, true];
         // Server-only - only this same handler's own SALVAGE case ever reads it back, so it does not
         // need to be broadcast.
@@ -142,8 +143,8 @@ switch (toUpperANSI _operation) do {
         // Kept exactly as-is: Waldo_fnc_SupplyCratePopulate's own Waldo_fnc_SetCargoAttributes call
         // already made this crate draggable/carryable with default offsets, so these run after it to
         // restore field-resupply's own tuned drag/carry anchor points.
-        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, true, [0, 0, 0], 0] call ace_dragging_fnc_setDraggable};
-        if !(isNil "ace_dragging_fnc_setCarryable") then {[_crate, true, [0, 2, 1], 0] call ace_dragging_fnc_setCarryable};
+        if !(isNil "ace_dragging_fnc_setDraggable") then {[_crate, true, [0, 0, 0], 0, false, true] call ace_dragging_fnc_setDraggable};
+        if !(isNil "ace_dragging_fnc_setCarryable") then {[_crate, true, [0, 2, 1], 0, false, true] call ace_dragging_fnc_setCarryable};
         // Target 0 (all machines), matching FieldResupplyRegisterHub's own equivalent call - not -2
         // ("all clients", which excludes owner 2). On a listen server the host's own client shares
         // owner 2 with the server, so -2 silently skipped installing the crate's local actions on

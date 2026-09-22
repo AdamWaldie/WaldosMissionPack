@@ -23,3 +23,5 @@ missionNamespace setVariable [
     [["WEST", "NATO"], ["EAST", "CSAT"], ["GUER", "AAF"]],
     true
 ];
+missionNamespace setVariable ["Waldo_Conversation_ConfigDefinitions", [["QA_CONFIG_SAFE", [["START", [["Configured safe conversation loaded.", "", -1, -1, ""]], [["Continue", "END", "CONTINUE"]], ""], ["END", [["Configuration round trip complete.", "", -1, -1, ""]], [], ""]], "START"]], true];
+missionNamespace setVariable ["Waldo_Conversation_ConfigDefinitions", [["QA_CONFIG_SAFE", [["START", [["Configured safe conversation loaded.", "", -1, -1, ""]], [["Continue", "END", "CONTINUE"]], ""], ["END", [["Configuration round trip complete.", "", -1, -1, ""]], [], ""]], "START"]], true];

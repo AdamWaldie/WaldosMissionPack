@@ -203,6 +203,20 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\talk_ca.paa"
 ] call zen_custom_modules_fnc_register;
 
+{
+    _x params ["_category", "_label", "_feature", "_icon"];
+    private _handler = compile format [
+        "params ['_modulePos', ['_objectPos', objNull]]; ['%1', _modulePos, _objectPos] call Waldo_fnc_ZenServiceLogisticsModule;",
+        _feature
+    ];
+    [_category, _label, _handler, _icon] call zen_custom_modules_fnc_register;
+} forEach [
+    ["WMP Mission Flow", "Base Services - Configure Node", "BASE", "\a3\ui_f\data\igui\cfg\simpletasks\types\use_ca.paa"],
+    ["WMP Logistics", "Quartermaster - Set Up Object", "QUARTERMASTER", "\a3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
+    ["WMP Logistics", "Supply Transfers - Register or Inspect", "SUPPLY", "\a3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"],
+    ["WMP Logistics", "Physical Cargo - Eligibility", "PHYSICAL", "\a3\ui_f\data\igui\cfg\simpletasks\types\box_ca.paa"]
+];
+
 ["WMP Mission Flow", "Conversation: Author",
     {params ["_modulePos", ["_objectPos", objNull]]; [_modulePos, _objectPos] call Waldo_fnc_ZenConversationAuthor;},
     "\A3\ui_f\data\IGUI\Cfg\simpleTasks\types\documents_ca.paa"

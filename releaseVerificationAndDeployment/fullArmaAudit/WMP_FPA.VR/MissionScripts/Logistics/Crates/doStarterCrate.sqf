@@ -34,6 +34,7 @@ private _starterJipId = format ["Waldo_StarterCrate_%1", netId _target];
 
 
 //Add full compliment of supplies (MEDICAL NOTWITHSTANDING)
+_target setVariable ["Waldo_Logistics_StarterCrate", true, true];
 [_target, 1,_crateSide, false, false] call Waldo_fnc_SupplyCratePopulate;
 
 if (_arsenal == true) then {

@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1072,
+  "registeredFunctionCount": 1113,
   "runtimeFunctionCount": 383,
-  "functionCount": 1455,
+  "functionCount": 1496,
   "stations": [
     {
       "id": "control",
@@ -443,6 +443,86 @@
         0
       ],
       "description": "Every shipped composition classname, addon declaration, init call and wiki-linked editor guide."
+    },
+    {
+      "id": "base-services",
+      "title": "BASE SERVICES",
+      "position": [
+        375,
+        80,
+        0
+      ],
+      "description": "Named service group, 3D labels, teleport, save, heal, spectator and re-registration."
+    },
+    {
+      "id": "quartermaster-issues",
+      "title": "QUARTERMASTER ISSUES",
+      "position": [
+        400,
+        80,
+        0
+      ],
+      "description": "Dynamic grenade/explosive, one rearm source and ACE fuel issues."
+    },
+    {
+      "id": "supply-transfers",
+      "title": "SUPPLY TRANSFERS",
+      "position": [
+        425,
+        80,
+        0
+      ],
+      "description": "Transfer and merge from a crate into another crate or the nearby truck."
+    },
+    {
+      "id": "physical-cargo",
+      "title": "PHYSICAL CARGO",
+      "position": [
+        375,
+        40,
+        0
+      ],
+      "description": "ACE carry ground drop, click-mount, ACE loading, bad aim and recovery."
+    },
+    {
+      "id": "static-cargo",
+      "title": "STATIC WEAPON SAFETY",
+      "position": [
+        400,
+        40,
+        0
+      ],
+      "description": "Static weapons remain native ACE carry/cargo; WMP physical mounting must reject them."
+    },
+    {
+      "id": "cargo-seats",
+      "title": "CARGO SEAT EFFECTS",
+      "position": [
+        425,
+        40,
+        0
+      ],
+      "description": "Small crate on a Polaris MRZR when RHSUSAF is loaded; measured cargo/FFV seat locking."
+    },
+    {
+      "id": "briefing-docs",
+      "title": "BRIEFING TEXT",
+      "position": [
+        375,
+        0,
+        0
+      ],
+      "description": "Open the real squad-preparation diary and inspect the corrected last line."
+    },
+    {
+      "id": "dialogue-author",
+      "title": "DIALOGUE AUTHOR",
+      "position": [
+        400,
+        0,
+        0
+      ],
+      "description": "Rapid editor mutations stay in the editor status line without notification overflow."
     }
   ],
   "functions": [
@@ -497,109 +577,109 @@
     {
       "name": "Waldo_fnc_AddDocs",
       "file": "MissionScripts/MissionInit/BriefingDocuments/AddDocs.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_SPOTREP",
       "file": "MissionScripts/MissionInit/BriefingDocuments/SPOTREPDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_SITREP",
       "file": "MissionScripts/MissionInit/BriefingDocuments/SITREPDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_ACEREP",
       "file": "MissionScripts/MissionInit/BriefingDocuments/LACEACEDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_CALLFORFIRE",
       "file": "MissionScripts/MissionInit/BriefingDocuments/CALLFORFIREDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_ROTARYPICKUPREQUEST",
       "file": "MissionScripts/MissionInit/BriefingDocuments/ROTARYPICKUPREQdoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_LZSPECS",
       "file": "MissionScripts/MissionInit/BriefingDocuments/LZSPECSDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_LZINSERT",
       "file": "MissionScripts/MissionInit/BriefingDocuments/LZINSERTDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_LZEXTRACT",
       "file": "MissionScripts/MissionInit/BriefingDocuments/LZEXTRACTDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_JUMPMASTER",
       "file": "MissionScripts/MissionInit/BriefingDocuments/JUMPMASTERDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_GENINFO",
       "file": "MissionScripts/MissionInit/BriefingDocuments/GeneralInfo.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_FIVELINEGUNSHIP",
       "file": "MissionScripts/MissionInit/BriefingDocuments/5LINEGUNSHIPDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_LZBRIEF",
       "file": "MissionScripts/MissionInit/BriefingDocuments/LZBRIEFDOC.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_CASCHECKIN",
       "file": "MissionScripts/MissionInit/BriefingDocuments/CASCHECKINDOC.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_NINELINE",
       "file": "MissionScripts/MissionInit/BriefingDocuments/NINELINEDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_FIRECOMMANDS",
       "file": "MissionScripts/MissionInit/BriefingDocuments/FireCommandsDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_FIRETEAMPREPDOC",
       "file": "MissionScripts/MissionInit/BriefingDocuments/FireteamPrepDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
       "name": "Waldo_fnc_SQUADPREDOC",
       "file": "MissionScripts/MissionInit/BriefingDocuments/SquadPrepDoc.sqf",
-      "station": "mission-init",
+      "station": "briefing-docs",
       "activation": "manual"
     },
     {
@@ -1311,6 +1391,54 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_BaseServicesRegister",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesRegister.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BaseServicesRegisterNode",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesRegisterNode.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BaseServicesSetupLocal",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesSetupLocal.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BaseServicesTeleportServer",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesTeleportServer.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BaseServicesTeleportLocal",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesTeleportLocal.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BaseServicesRequestStateServer",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesRequestStateServer.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BaseServicesUseServer",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesUseServer.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_BaseServicesUseLocal",
+      "file": "MissionScripts/MissionFlowAndUi/BaseServices/baseServicesUseLocal.sqf",
+      "station": "base-services",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_ZenCreate3DMarker",
       "file": "MissionScripts/MissionFlowAndUi/zenCreate3DMarker.sqf",
       "station": "mission-flow",
@@ -1797,6 +1925,114 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_QuartermasterExtendedSpawn",
+      "file": "MissionScripts/Logistics/Crates/quartermasterExtendedSpawn.sqf",
+      "station": "quartermaster-issues",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_QuartermasterRearmLabelLocal",
+      "file": "MissionScripts/Logistics/Crates/quartermasterRearmLabelLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_QuartermasterReconfigureLocal",
+      "file": "MissionScripts/Logistics/Crates/quartermasterReconfigureLocal.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_LogisticsRegisterSpawned",
+      "file": "MissionScripts/Logistics/Crates/logisticsRegisterSpawned.sqf",
+      "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_QuartermasterMakeJerrycanLocal",
+      "file": "MissionScripts/Logistics/Crates/quartermasterMakeJerrycanLocal.sqf",
+      "station": "quartermaster-issues",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersRegister",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersRegister.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersSnapshot",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersSnapshot.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersApplySnapshot",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersApplySnapshot.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersRequestServer",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersRequestServer.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersSetupLocal",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersRequestStateServer",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersRequestStateServer.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersSetAceLoadServer",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetAceLoadServer.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersOpenLocal",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersOpenLocal.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersDestinationsLocal",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersDestinationsLocal.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersRefreshLocal",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersRefreshLocal.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersSubmitLocal",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersSubmitLocal.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersRequestWithFeedbackServer",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersRequestWithFeedbackServer.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_SupplyTransfersResultLocal",
+      "file": "MissionScripts/Logistics/SupplyTransfers/supplyTransfersResultLocal.sqf",
+      "station": "supply-transfers",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_MissionSQMLookup",
       "file": "MissionScripts/Logistics/LogiHelpers/missionFileLookup.sqf",
       "station": "nested-loadouts",
@@ -1848,6 +2084,84 @@
       "name": "Waldo_fnc_UniqueLoadoutArray",
       "file": "MissionScripts/Logistics/LogiHelpers/uniqueLoadoutArray.sqf",
       "station": "loadouts",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoInitLocal",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoInitLocal.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoReleaseLocal",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoReleaseLocal.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoInitServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoInitServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoAttachServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoAttachServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoApplyLocal",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoApplyLocal.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoClearServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoClearServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoRegister",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoRegister.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoSeatsServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoSeatsServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoRestoreLocal",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoRestoreLocal.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoRestoreAckServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoRestoreAckServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoUnmountServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoUnmountServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoRequestStateServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoRequestStateServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoReceiveStateLocal",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoReceiveStateLocal.sqf",
+      "station": "physical-cargo",
       "activation": "manual"
     },
     {
@@ -2105,6 +2419,18 @@
     {
       "name": "Waldo_fnc_ZenInitModules",
       "file": "MissionScripts/ZenModules/Zen_initModules.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenServiceLogisticsModule",
+      "file": "MissionScripts/ZenModules/zenServiceLogisticsModule.sqf",
+      "station": "zen",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_ZenServiceLogisticsServer",
+      "file": "MissionScripts/ZenModules/zenServiceLogisticsServer.sqf",
       "station": "zen",
       "activation": "manual"
     },

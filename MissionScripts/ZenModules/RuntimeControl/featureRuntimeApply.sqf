@@ -123,6 +123,7 @@ switch (toUpperANSI _action) do {
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
             [_hub, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
+            [_hub, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
             [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };
         if (isNull _hub) exitWith {false};

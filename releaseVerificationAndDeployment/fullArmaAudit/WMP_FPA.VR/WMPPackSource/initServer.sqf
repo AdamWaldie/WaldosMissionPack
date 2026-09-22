@@ -22,6 +22,14 @@
 call Waldo_fnc_ACRE2ReconcileGroupCallsigns;
 [] call Waldo_fnc_ACRE2Init;
 ["SERVER"] call Waldo_fnc_LoadFeatureConfigs;
+// SHARED config is loaded by init.sqf, whose execution order relative to this event script is
+// not guaranteed. Wait for its sentinel rather than interpreting an early nil as disabled.
+[] spawn {
+    waitUntil {missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]};
+    if (missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) then {
+        [] call Waldo_fnc_PhysicalCargoInitServer;
+    };
+};
 [] call Waldo_fnc_ConversationLoadConfigured;
 private _headlessEnabledAtMissionStart = missionNamespace getVariable ["Waldo_Headless_Enable", false];
 if (!_headlessEnabledAtMissionStart) then {

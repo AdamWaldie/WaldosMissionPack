@@ -81,6 +81,14 @@ STATIONS = [
     ("ui-theme-qa", "UI THEME QA", (325, 0), "Live switching across all twenty built-in WMP visual themes."),
     ("dynamic-ao", "DYNAMIC AO", (350, 0), "Runtime faction scan, randomized AO creation, tracked anchors and complete cleanup."),
     ("compositions", "EDEN COMPOSITION CATALOGUE", (350, 40), "Every shipped composition classname, addon declaration, init call and wiki-linked editor guide."),
+    ("base-services", "BASE SERVICES", (375, 80), "Named service group, 3D labels, teleport, save, heal, spectator and re-registration."),
+    ("quartermaster-issues", "QUARTERMASTER ISSUES", (400, 80), "Dynamic grenade/explosive, one rearm source and ACE fuel issues."),
+    ("supply-transfers", "SUPPLY TRANSFERS", (425, 80), "Transfer and merge from a crate into another crate or the nearby truck."),
+    ("physical-cargo", "PHYSICAL CARGO", (375, 40), "ACE carry ground drop, click-mount, ACE loading, bad aim and recovery."),
+    ("static-cargo", "STATIC WEAPON SAFETY", (400, 40), "Static weapons remain native ACE carry/cargo; WMP physical mounting must reject them."),
+    ("cargo-seats", "CARGO SEAT EFFECTS", (425, 40), "Small crate on a Polaris MRZR when RHSUSAF is loaded; measured cargo/FFV seat locking."),
+    ("briefing-docs", "BRIEFING TEXT", (375, 0), "Open the real squad-preparation diary and inspect the corrected last line."),
+    ("dialogue-author", "DIALOGUE AUTHOR", (400, 0), "Rapid editor mutations stay in the editor status line without notification overflow."),
 ]
 
 
@@ -139,6 +147,20 @@ FIXTURES = [
     fixture("qa_recovery_carrier", "B_MRAP_01_F", 225, -28),
     fixture("qa_loadout_arsenal", "B_supplyCrate_F", 275, 7),
     fixture("qa_ai_helicopter_landing_pad", "Land_HelipadCircle_F", 325, 70),
+    fixture("qa_base_hq", "Land_Laptop_unfolded_F", 375, 89),
+    fixture("qa_base_fob", "Land_Laptop_unfolded_F", 375, 119),
+    fixture("qa_qm_point", "Land_Laptop_unfolded_F", 400, 89),
+    fixture("qa_transfer_source", "B_supplyCrate_F", 421, 89, simulation=True),
+    fixture("qa_transfer_target", "B_supplyCrate_F", 429, 89, simulation=True),
+    fixture("qa_transfer_control", "B_supplyCrate_F", 437, 89, simulation=True),
+    fixture("qa_transfer_vehicle", "B_Truck_01_transport_F", 421, 104, direction=90, simulation=True),
+    fixture("qa_cargo_vehicle", "B_Truck_01_transport_F", 375, 52, direction=90, simulation=True),
+    fixture("qa_cargo_crate", "B_supplyCrate_F", 375, 46, simulation=True),
+    fixture("qa_cargo_control", "B_supplyCrate_F", 381, 44, simulation=True),
+    fixture("qa_weapon_vehicle", "B_Truck_01_transport_F", 400, 52, direction=90, simulation=True),
+    fixture("qa_weapon_static", "B_HMG_01_F", 400, 46, simulation=True),
+    fixture("qa_seat_vehicle", "B_LSV_01_unarmed_F", 425, 52, direction=90, simulation=True),
+    fixture("qa_seat_crate", "Box_NATO_Ammo_F", 425, 46, simulation=True),
 ]
 
 CHALLENGES = [
@@ -330,9 +352,12 @@ def unit_block(index: int, loadout: dict) -> str:
 def object_block(item_index: int, object_id: int, item: dict) -> str:
     x, y, z = item["pos"]
     angle = math.radians(item["dir"])
-    # Every pre-staged fixture begins inert. featureRangeServer.sqf deliberately
-    # enables only the systems selected for a live test after pack startup.
-    init = "this allowDamage false; this enableSimulationGlobal false;"
+    # Functional cargo/vehicle fixtures must not inherit the inert display-prop state.
+    # Server setup still refreshes their transform and physics flags before play.
+    init = "this allowDamage false;"
+    init += " if (isServer) then {this enableSimulationGlobal " + ("true" if item["simulation"] else "false") + ";};"
+    if item["simulation"]:
+        init += " this setPhysicsCollisionFlag true;"
     return f"""        class Item{item_index}
         {{
             dataType="Object";
@@ -406,6 +431,12 @@ def station_for(path: str) -> str:
         ("environmentalsystems/hazardousenvironments", "hazards"),
         ("environmentalsystems/treefelling", "tree-felling"),
         ("missioninit/vehicleactionssetup/emergencydismount", "emergency-dismount"),
+        ("missionflowandui/baseservices", "base-services"),
+        ("logistics/supplytransfers", "supply-transfers"),
+        ("logistics/physicalcargo", "physical-cargo"),
+        ("logistics/crates/quartermasterextended", "quartermaster-issues"),
+        ("logistics/crates/quartermastermakejerrycan", "quartermaster-issues"),
+        ("missioninit/briefingdocuments", "briefing-docs"),
         ("missionflowandui/accessibility", "accessibility"),
         ("combatsystems/breaching", "breaching"),
         ("missionmakerresourcescripts/objecttransforms", "object-transforms"),

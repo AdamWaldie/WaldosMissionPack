@@ -42,6 +42,7 @@ RANGE_FILES = (
     "compositionCatalogueQA.sqf",
     "extendedFeatureStationsServer.sqf",
     "extendedFeatureStationsClient.sqf",
+    "serviceLogisticsStationsServer.sqf",
     "runUiThemeGalleryCaptureClient.sqf",
     "functionStations.sqf",
     "partyFixtureServer.sqf",

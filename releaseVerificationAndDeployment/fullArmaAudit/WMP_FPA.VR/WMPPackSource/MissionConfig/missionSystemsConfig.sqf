@@ -40,6 +40,7 @@
  *
  * SETTING-BY-SETTING GUIDE - SQUAD RALLY:
  * - Waldo_Rally_Enable (MISSION MAKER): installs the eligible squad-leader self-action when true.
+ * - Waldo_BaseServices_Enable (MISSION MAKER): permits explicitly registered base-service networks.
  * - Waldo_Rally_ObjectClass (MISSION MAKER): valid CfgVehicles object used as the deployed rally.
  * - Waldo_Rally_Duration (MISSION MAKER): active lifetime in seconds; use a positive value.
  * - Waldo_Rally_DeploymentTime (MISSION MAKER): uninterrupted placement action duration in seconds.
@@ -73,10 +74,11 @@
  * reappear, not where the visible rally object is initially requested.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["Squad Rally", "Economy", "Mini Games", "Corpse Traps", "ACE Logistics", "Diagnostics", "Safestart"]],
+    ["featureFamilies", ["Squad Rally", "Base Services", "Economy", "Mini Games", "Corpse Traps", "ACE Logistics", "Diagnostics", "Safestart"]],
     ["shared", [
         // MISSION MAKER: squad-rally availability, object, timing and placement rules.
         ["Waldo_Rally_Enable", false],              // BOOL: install eligible squad-leader self interaction.
+        ["Waldo_BaseServices_Enable", false], // BOOL: explicitly registered ACE service-object networks.
         ["Waldo_Rally_ObjectClass", "Land_SatelliteAntenna_01_F"], // CfgVehicles deployed rally object.
         ["Waldo_Rally_Duration", 180],              // SECONDS: positive rally lifetime; 0 expires immediately and is invalid setup.
         ["Waldo_Rally_DeploymentTime", 15],         // SECONDS: uninterrupted placement progress.
