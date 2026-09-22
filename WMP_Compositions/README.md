@@ -11,6 +11,8 @@ the complete parameter reference. A composition comment must say what the object
 may edit, what must remain connected/clear, and where the full guide lives. It must not claim that a
 short init demonstrates every internal option.
 
+For base services and logistics, start with the [Eden composition setup table](https://github.com/AdamWaldie/WaldosMissionPack/wiki/Eden-Compositions#shortest-setup-for-the-new-logistics-examples). It lists the one-time flags, the object to place and the remaining setup. In particular, quartermaster ammo and supply contents need authored playable loadouts; seat blocking on a vehicle other than the example Prowler needs measured positions.
+
 ## Categories
 
 | Eden category | What belongs there |

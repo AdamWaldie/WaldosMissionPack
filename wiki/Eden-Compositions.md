@@ -33,6 +33,21 @@ nature) ships as a single unsuffixed folder instead of a redundant pair.
 5. Open the linked wiki page and change one clearly labelled option at a time.
 6. Move to the **Full** composition only when you need its additional options.
 
+## Shortest setup for the new logistics examples
+
+| What you want | Set once in MissionConfig | Place in Eden | Further setup |
+|---|---|---|---|
+| Quartermaster | `Waldo_Quartermaster_Enable` is already on | **Logistics Spawner Example (Minimal)** | Author at least one playable unit's kit in ACE Arsenal and turn off **Binarize the Scenario File** if you want mission-derived ammo or heavy supplies. |
+| Base services | Set `Waldo_BaseServices_Enable = true` in `missionSystemsConfig.sqf` | **Base Services Example** | Rename each stand or change its service list in its Init field. Keep the same network ID on stands that should teleport between one another. |
+| Crate and vehicle transfers | Set `Waldo_SupplyTransfers_Enable = true` in `logisticsConfig.sqf` | **Supply Transfers and Physical Cargo Example** | No extra call for WMP-issued crates. For other placed crates or cargo-capable vehicles, use `[this] call Waldo_fnc_SupplyTransfersRegister;` in each object's Init field. |
+| Visible cargo | `Waldo_PhysicalCargo_Enable` is already on | Use the same crate/buggy example | ACE Carry a crate and release it while aiming at the vehicle. Other carryable props need `[this] call Waldo_fnc_PhysicalCargoRegister;` in their Init field. |
+| Seat blocking | `Waldo_PhysicalCargo_BlockSeats` is already on | The example Prowler has its six measured points | Other vehicle models need their own verified seat points. WMP will leave unknown seats alone; do not copy Prowler coordinates onto a modded vehicle. |
+
+Place the composition after installing the matching WMP pack; the composition does not turn on a
+disabled feature flag. The two crate and vehicle examples show the registration calls in their Init
+fields, so a mission maker can copy an object and change its name without writing an `initServer.sqf`
+list. The full parameters and optional ZEN controls live in the linked feature pages.
+
 Compositions are not magic modules. A placed vehicle may still require simulation, crew, open
 clearance, water, an ACRE dependency, or a server extension. The comment beside the example states
 those prerequisites. If the feature does not work, run Mission Diagnostics and check the RPT before
