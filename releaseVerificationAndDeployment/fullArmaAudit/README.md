@@ -72,7 +72,7 @@ Use separate crates for the whole-box merge and the multi-row transfer so each c
 known contents. Inspect both inventories after each operation.
 
 The seat fixture is the vanilla NATO Prowler/DAGOR and a small crate. The first mount reads its
-model proxies and seat config, then publishes only matched points. Use **REPORT VERIFIED SEATS + OWNED
+model proxies and seat config, then stores only matched points on the server. Use **REPORT VERIFIED SEATS + OWNED
 LOCKS** at the seat station to inspect the map. Carry the crate over one seat, confirm that seat is
 blocked, and confirm a clear seat remains usable. Remove the crate with ACE Carry and check that the
 owned lock is released. **CAPTURE MY OCCUPIED CARGO SEAT** is a diagnostic action for a seated

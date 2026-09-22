@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Purpose: Resolve cargo and FFV seat centres from model proxies and vehicle config without placing units.
  * Locality / Authority: Server-only, read-only lookup on the first physical mount for a vehicle class.
- * Repeat / JIP: Class results are cached on the server. The resulting object points publish once for JIP.
+ * Repeat / JIP: Class results are cached on the server. Object points stay server-local;
+ *   replicated seat locks are the client-visible result.
  *   Unknown or ambiguous proxies produce no lock; an explicit SeatPoints array overrides discovery.
  * Arguments: 0: carrier vehicle <OBJECT>.
  * Return Value: <ARRAY> verified [kind, seat key, model-space point] rows, or [] if unsupported.
@@ -18,7 +19,7 @@ private _class = typeOf _vehicle;
 private _cache = missionNamespace getVariable ["Waldo_PhysicalCargo_SeatProxyCache", createHashMap];
 private _cached = _cache getOrDefault [_class, objNull];
 if (_cached isEqualType []) exitWith {
-    _vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", +_cached, true];
+    _vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", +_cached];
     +_cached
 };
 
@@ -115,7 +116,7 @@ private _cargoProxyIndexes = getArray (_cfg >> "cargoProxyIndexes");
 
 _cache set [_class, _points];
 missionNamespace setVariable ["Waldo_PhysicalCargo_SeatProxyCache", _cache];
-_vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", +_points, true];
+_vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", +_points];
 diag_log format ["[WMP PHYSICAL CARGO SEATS] %1: %2 of %3 cargo/FFV seats resolved from model proxies.",
     _class, count _points, {(_x select 1) isEqualTo "cargo" || {_x select 4}} count _rows];
 _points

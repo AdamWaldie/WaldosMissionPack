@@ -67,6 +67,8 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('selectionNames _lod', resolver)
         self.assertIn('selectionPosition [_x, _lod]', resolver)
         self.assertIn('proxyIndex', resolver)
+        self.assertIn('setVariable ["Waldo_PhysicalCargo_SeatPoints", +_points];', resolver)
+        self.assertNotIn('setVariable ["Waldo_PhysicalCargo_SeatPoints", +_points, true]', resolver)
         self.assertNotIn('createUnit', resolver)
         self.assertNotIn('moveInCargo', resolver)
         self.assertNotIn('moveInTurret', resolver)
