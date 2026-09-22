@@ -63,11 +63,14 @@ if (_aperture < 0.1 || {_aperture > 100}) then {_aperture = -1};
 
 private _priorForced = missionNamespace getVariable ["Waldo_BaseServices_PriorAperture", []];
 if (_priorForced isNotEqualTo []) then {
-    setAperture (if (_priorForced param [1, false]) then {_priorForced param [0, -1]} else {-1});
+    _priorForced params [["_value", -1, [0]], ["_wasForced", false, [false]]];
+    setAperture (if (_wasForced) then {_value} else {-1});
     missionNamespace setVariable ["Waldo_BaseServices_PriorAperture", []];
 };
 private _token = (missionNamespace getVariable ["Waldo_BaseServices_TeleportToken", 0]) + 1;
 missionNamespace setVariable ["Waldo_BaseServices_TeleportToken", _token];
+// A zero-fade arrival must remove a curtain left by the transition it superseded.
+if (_out <= 0) then {"WMP_BASE_SERVICE_TELEPORT" cutText ["", "PLAIN"]};
 [_unit, _destination, _clear, _values, _colour, _text, _aperture, _token] spawn {
     params ["_unit", "_destination", "_clear", "_values", "_colour", "_text", "_aperture", "_token"];
     _values params ["_out", "_hold", "_in"];
@@ -81,7 +84,10 @@ missionNamespace setVariable ["Waldo_BaseServices_TeleportToken", _token];
     _unit setPosATL _clear;
     _unit setDir getDir _destination;
     if (_aperture > 0) then {
-        missionNamespace setVariable ["Waldo_BaseServices_PriorAperture", apertureParams];
+        private _current = apertureParams;
+        missionNamespace setVariable ["Waldo_BaseServices_PriorAperture", [
+            _current param [0, -1, [0]], _current param [1, false, [false]]
+        ]];
         setAperture _aperture;
     };
     if (_hold > 0) then {uiSleep _hold};
@@ -92,7 +98,8 @@ missionNamespace setVariable ["Waldo_BaseServices_TeleportToken", _token];
     };
     if (_aperture > 0 && {(missionNamespace getVariable ["Waldo_BaseServices_TeleportToken", 0]) isEqualTo _token}) then {
         private _prior = missionNamespace getVariable ["Waldo_BaseServices_PriorAperture", []];
-        setAperture (if (_prior param [1, false]) then {_prior param [0, -1]} else {-1});
+        _prior params [["_value", -1, [0]], ["_wasForced", false, [false]]];
+        setAperture (if (_wasForced) then {_value} else {-1});
         missionNamespace setVariable ["Waldo_BaseServices_PriorAperture", []];
     };
 };

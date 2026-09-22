@@ -20,12 +20,12 @@ switch (toUpperANSI _operation) do {
         private _group = _settings getOrDefault ["group", ""];
         private _label = _settings getOrDefault ["label", ""];
         private _services = _settings getOrDefault ["services", []];
-        private _transition = _settings getOrDefault ["transition", "STANDARD"];
+        private _transition = _settings getOrDefault ["transition", ""];
         if (missionNamespace getVariable ["Waldo_BaseServices_Enable", false]
             && {_group isEqualType ""} && {count _group > 0} && {count _group <= 32}
             && {_label isEqualType ""} && {_label isNotEqualTo ""} && {count _label <= 48}
             && {_services isEqualType []} && {(_services findIf {!(_x in ["SAVE", "HEAL", "SPECTATE", "TELEPORT"])}) < 0}
-            && {_transition in ["STANDARD", "QUICK", "TRAVEL", "NIGHT", "DAYLIGHT", "NONE"]}) then {
+            && {_transition in ["", "STANDARD", "QUICK", "TRAVEL", "NIGHT", "DAYLIGHT", "NONE"]}) then {
             [_target, _group, _label, _services, _transition, _replyOwner] spawn {
                 params ["_target", "_group", "_label", "_services", "_transition", "_replyOwner"];
                 private _applied = [_target, _group, _label, _services, "", _transition]
@@ -91,7 +91,7 @@ switch (toUpperANSI _operation) do {
             _target setVariable ["Waldo_QM_ZenSettings", [_bearing, _distance, _deploymentControlled, _allowed], true];
             [_target, _bearing, _distance, _deploymentControlled] call Waldo_fnc_SetupQuarterMaster;
             [_target, _bearing, _distance, _deploymentControlled, _allowed]
-                remoteExecCall ["Waldo_fnc_QuartermasterReconfigureLocal", -2, _target];
+                remoteExecCall ["Waldo_fnc_QuartermasterReconfigureLocal", 0, _target];
             _ok = true;
             _message = format ["Quartermaster configured: %1 issue types. %2", count _allowed,
                 if (_deploymentControlled) then {"Waiting for its deployment controller."} else {"Ready now."}];

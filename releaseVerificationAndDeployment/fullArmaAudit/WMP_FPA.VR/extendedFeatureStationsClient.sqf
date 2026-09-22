@@ -232,7 +232,7 @@ private _weapon = "qa_sign_static_cargo" call _get;
 
 private _seat = "qa_sign_cargo_seats" call _get;
 [_seat, "Waldo_QA_SeatGuide", "TEST VERIFIED SEAT LOCKING", {
-    ["CARGO SEAT QA", "This station uses a small crate and an RHS Polaris MRZR when loaded (vanilla Prowler otherwise). Wait for REPORT VERIFIED SEATS to show measured positions, then carry the crate onto a passenger or FFV seat and try to enter that exact seat. The station measures empty seats automatically; no capture action is required.", "INFO", "CARGO_SEAT_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
+    ["CARGO SEAT QA", "This station uses a small crate and the NATO Prowler/DAGOR. Wait for REPORT VERIFIED SEATS to show measured positions, then carry the crate onto a passenger or FFV seat and try to enter that exact seat. The station measures empty seats automatically; no capture action is required.", "INFO", "CARGO_SEAT_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 if (!isNil "ace_interact_menu_fnc_createAction") then {
     private _captureSeat = ["Waldo_QA_SeatCapture", "CAPTURE MY OCCUPIED CARGO SEAT", "",

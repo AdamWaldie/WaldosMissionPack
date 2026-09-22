@@ -8,6 +8,8 @@ Set `Waldo_SupplyTransfers_Enable` to `true` in `MissionConfig/logisticsConfig.s
 [mySupplyCrate] call Waldo_fnc_SupplyTransfersRegister;
 ```
 
+The Eden **Supply Transfers and Physical Cargo Example** has two registered crates and a NATO Prowler/DAGOR. Use it to try a crate merge and transfers in both directions between a crate and the buggy.
+
 For an Eden object, give it a variable name and call the function in `initServer.sqf`. You can also put `[this] call Waldo_fnc_SupplyTransfersRegister;` in the object's Init field. Only the server registers it after shared config is ready. Clients, including JIP, receive the current registry.
 
 Registration needs nonzero Arma inventory capacity. The same call registers a cargo-capable vehicle for two-way transfer and merge. ACE carry and physical cargo remain separate:

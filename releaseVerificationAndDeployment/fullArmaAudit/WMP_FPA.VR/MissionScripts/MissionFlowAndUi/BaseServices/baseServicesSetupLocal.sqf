@@ -49,7 +49,10 @@ private _registry = if (isRemoteExecuted) then {_snapshot} else {
                     {alive _player && {_player distance _target < 6}}] call ace_interact_menu_fnc_createAction;
                 _paths pushBack ([_object, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject);
             };
-            if ("TELEPORT" in _services) then {
+            private _destinations = _rows select {
+                (_x select 0) isNotEqualTo _object && {"TELEPORT" in (_x select 2)}
+            };
+            if ("TELEPORT" in _services && {_destinations isNotEqualTo []}) then {
                 private _category = ["WMP_BASE_DEST", "Move to...", _icon, {}, {true}] call ace_interact_menu_fnc_createAction;
                 _paths pushBack ([_object, 0, ["ACE_MainActions"], _category] call ace_interact_menu_fnc_addActionToObject);
                 private _origin = _object;
@@ -65,7 +68,7 @@ private _registry = if (isRemoteExecuted) then {_snapshot} else {
                             call ace_interact_menu_fnc_createAction;
                         _paths pushBack ([_object, 0, ["ACE_MainActions", "WMP_BASE_DEST"], _action] call ace_interact_menu_fnc_addActionToObject);
                     };
-                } forEach _rows;
+                } forEach _destinations;
             };
             _installed pushBack [_object, _paths];
         };

@@ -7,7 +7,7 @@ class Mission
     class Intel
     {
         briefingName="WMP ACRE2 Respawn Test";
-        overviewText="Four-player paired-radio test for initial setup, loadout saving and respawn restoration.";
+        overviewText="Four-player radio test with a separate WMP service and logistics test area.";
         year=2035;
         month=8;
         day=3;
@@ -92,7 +92,7 @@ class Mission
     };
     class Vehicles
     {
-        items=4;
+        items=11;
         class Item0
         {
             position[]={0,8,0};
@@ -106,5 +106,12 @@ class Mission
         class Item1 {position[]={0,12,0}; id=5; side="EMPTY"; vehicle="Land_CampingTable_F"; skill=0.6; init="this allowDamage false; this enableSimulationGlobal false;";};
         class Item2 {position[]={-8,4,0}; id=6; side="EMPTY"; vehicle="Land_InfoStand_V2_F"; skill=0.6; init="this allowDamage false; this enableSimulationGlobal false;";};
         class Item3 {position[]={8,4,0}; id=7; side="EMPTY"; vehicle="Land_InfoStand_V2_F"; skill=0.6; init="this allowDamage false; this enableSimulationGlobal false;";};
+        class Item4 {position[]={35,8,0}; id=8; side="EMPTY"; vehicle="Land_InfoStand_V2_F"; skill=0.6; text="test_base_hq"; init="this allowDamage false;";};
+        class Item5 {position[]={80,8,0}; id=9; side="EMPTY"; vehicle="Land_InfoStand_V2_F"; skill=0.6; text="test_base_fob"; init="this allowDamage false;";};
+        class Item6 {position[]={42,8,0}; id=10; side="EMPTY"; vehicle="Land_InfoStand_V2_F"; skill=0.6; text="test_quartermaster"; init="this allowDamage false;";};
+        class Item7 {position[]={51,8,0}; id=11; side="EMPTY"; vehicle="Box_NATO_Ammo_F"; skill=0.6; text="test_transfer_source";};
+        class Item8 {position[]={55,8,0}; id=12; side="EMPTY"; vehicle="Box_NATO_Ammo_F"; skill=0.6; text="test_transfer_target";};
+        class Item9 {position[]={69,13,0}; id=13; side="EMPTY"; vehicle="B_LSV_01_unarmed_F"; skill=0.6; text="test_cargo_vehicle";};
+        class Item10 {position[]={65,8,0}; id=14; side="EMPTY"; vehicle="Box_NATO_Ammo_F"; skill=0.6; text="test_cargo_crate";};
     };
 };

@@ -253,15 +253,27 @@ private _actions = _actionSpecs apply {
 
 private _paths = [];
 _paths pushBack ([_target, 0, ["ACE_MainActions"], _category] call ace_interact_menu_fnc_addActionToObject);
-private _infantry = ["Waldo_QM_Infantry", "Infantry Supplies", _icon, {}, {true}]
-    call ace_interact_menu_fnc_createAction;
-private _vehicle = ["Waldo_QM_Vehicle", "Vehicle Support", "\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa", {}, {true}]
-    call ace_interact_menu_fnc_createAction;
-_paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _infantry] call ace_interact_menu_fnc_addActionToObject);
-_paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _vehicle] call ace_interact_menu_fnc_addActionToObject);
-private _hasFuel = missionNamespace getVariable ["Waldo_QM_FuelBarrel_Enable", false]
-    && {"FuelBarrel" in _allowedKinds}
-    || {missionNamespace getVariable ["Waldo_QM_FuelJerrycan_Enable", false] && {"FuelJerrycan" in _allowedKinds}};
+private _hasInfantry = (_actionSpecs findIf {
+    (_x select 2) in ["Medical", "Ammo", "Supply", "Grenades", "Explosives"]
+}) >= 0;
+private _hasVehicle = (_actionSpecs findIf {
+    (_x select 2) in ["Wheel", "Track", "Rearm"]
+}) >= 0;
+private _hasFuel = (_actionSpecs findIf {
+    (_x select 2) in ["FuelBarrel", "FuelJerrycan"]
+}) >= 0;
+if (_hasInfantry) then {
+    private _infantry = ["Waldo_QM_Infantry", "Infantry Supplies", _icon, {}, {true}]
+        call ace_interact_menu_fnc_createAction;
+    _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _infantry]
+        call ace_interact_menu_fnc_addActionToObject);
+};
+if (_hasVehicle) then {
+    private _vehicle = ["Waldo_QM_Vehicle", "Vehicle Support", "\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa", {}, {true}]
+        call ace_interact_menu_fnc_createAction;
+    _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _vehicle]
+        call ace_interact_menu_fnc_addActionToObject);
+};
 if (_hasFuel) then {
     private _fuel = ["Waldo_QM_Fuel", "Fuel", "\a3\ui_f\data\map\mapcontrol\Fuelstation_CA.paa", {}, {true}]
         call ace_interact_menu_fnc_createAction;

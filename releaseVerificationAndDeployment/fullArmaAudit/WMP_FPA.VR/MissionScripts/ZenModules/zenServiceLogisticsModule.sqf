@@ -27,8 +27,8 @@ switch (toUpperANSI _feature) do {
             if (_found >= 0) exitWith {_network = _x; _existing = (_x select 1) select _found};
         } forEach (missionNamespace getVariable ["Waldo_BaseServices_Registry", []]);
         private _existingServices = _existing param [2, []];
-        private _existingTransition = _existing param [4, "STANDARD"];
-        private _transitions = ["STANDARD", "QUICK", "TRAVEL", "NIGHT", "DAYLIGHT", "NONE"];
+        private _existingTransition = _existing param [4, ""];
+        private _transitions = ["", "STANDARD", "QUICK", "TRAVEL", "NIGHT", "DAYLIGHT", "NONE"];
         private _transitionIndex = _transitions find _existingTransition;
         ["Configure Base Service Node", [
             ["EDIT", ["Base network", "Nodes sharing this name can teleport to each other. Example: MainBase."], [_network param [0, "MainBase"]]],
@@ -39,8 +39,8 @@ switch (toUpperANSI _feature) do {
             ["CHECKBOX", ["Spectator", "Give this object a spectator-entry action."], "SPECTATE" in _existingServices],
             ["CHECKBOX", ["Teleport", "Make this object a source and destination in its named network."],
                 _existing isEqualTo [] || {"TELEPORT" in _existingServices}],
-            ["COMBO", ["Transition", "Visual transition at this node; STANDARD retains the network default."],
-                [_transitions, ["Standard", "Quick", "Travel", "Night", "Daylight", "None"], _transitionIndex max 0]],
+            ["COMBO", ["Transition", "Use Network default to inherit the network transition; Standard is a short black fade."],
+                [_transitions, ["Network default", "Standard", "Quick", "Travel", "Night", "Daylight", "None"], _transitionIndex max 0]],
             ["CHECKBOX", ["Remove this node", "Remove this object from the named base instead of updating it."], false]
         ], {
             params ["_values", "_args"];

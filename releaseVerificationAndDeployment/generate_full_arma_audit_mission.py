@@ -86,7 +86,7 @@ STATIONS = [
     ("supply-transfers", "SUPPLY TRANSFERS", (425, 80), "Transfer and merge from a crate into another crate or the nearby truck."),
     ("physical-cargo", "PHYSICAL CARGO", (375, 40), "ACE carry ground drop, click-mount, ACE loading, bad aim and recovery."),
     ("static-cargo", "STATIC WEAPON SAFETY", (400, 40), "Static weapons remain native ACE carry/cargo; WMP physical mounting must reject them."),
-    ("cargo-seats", "CARGO SEAT EFFECTS", (425, 40), "Small crate on a Polaris MRZR when RHSUSAF is loaded; measured cargo/FFV seat locking."),
+    ("cargo-seats", "CARGO SEAT EFFECTS", (425, 40), "Small crate on the NATO Prowler/DAGOR; measured cargo/FFV seat locking."),
     ("briefing-docs", "BRIEFING TEXT", (375, 0), "Open the real squad-preparation diary and inspect the corrected last line."),
     ("dialogue-author", "DIALOGUE AUTHOR", (400, 0), "Rapid editor mutations stay in the editor status line without notification overflow."),
 ]
