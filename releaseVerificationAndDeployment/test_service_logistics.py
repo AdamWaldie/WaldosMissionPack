@@ -56,14 +56,22 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
                     package.namelist(),
                 )
 
-    def test_eden_examples_include_current_services_and_verified_prowler_seats(self):
+    def test_eden_examples_do_not_bake_in_vehicle_seat_coordinates(self):
         base = source("WMP_Compositions/[WMP]Base_Services_Example/composition.sqe")
         cargo = source("WMP_Compositions/[WMP]Supply_Transfers_And_Cargo_Example/composition.sqe")
         self.assertEqual(base.count('""SPECTATE""'), 2)
         self.assertIn('type="B_LSV_01_unarmed_F"', cargo)
-        self.assertIn('""Waldo_PhysicalCargo_SeatPoints""', cargo)
-        for index in range(6):
-            self.assertIn(f'[""TURRET"", [{index}],', cargo)
+        self.assertNotIn('""Waldo_PhysicalCargo_SeatPoints""', cargo)
+        self.assertIn('init="[this] call Waldo_fnc_SupplyTransfersRegister;"', cargo)
+        resolver = source("MissionScripts/Logistics/PhysicalCargo/physicalCargoDiscoverSeatsServer.sqf")
+        self.assertIn('selectionNames _lod', resolver)
+        self.assertIn('selectionPosition [_x, _lod]', resolver)
+        self.assertIn('proxyIndex', resolver)
+        self.assertNotIn('createUnit', resolver)
+        self.assertNotIn('moveInCargo', resolver)
+        self.assertNotIn('moveInTurret', resolver)
+        self.assertIn('call Waldo_fnc_PhysicalCargoDiscoverSeatsServer',
+                      source("MissionScripts/Logistics/PhysicalCargo/physicalCargoSeatsServer.sqf"))
 
     def test_audit_has_live_station_for_each_new_workflow(self):
         import importlib.util
@@ -103,6 +111,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('"CAPTURE MY OCCUPIED CARGO SEAT"', client)
         self.assertIn('[player, 1, ["ACE_SelfActions"], _captureSeat]', client)
         self.assertIn('[WMP QA SEAT CAPTURE]', server)
+        self.assertNotIn('Waldo_QA_fnc_calibrateCargoSeatsServer', server)
         self.assertEqual(live["qa_seat_vehicle"]["class"], "B_LSV_01_unarmed_F")
         self.assertNotIn('"rhsusf_mrzr4_d"', server)
         self.assertEqual(live["qa_seat_crate"]["class"], "Box_NATO_Ammo_F")

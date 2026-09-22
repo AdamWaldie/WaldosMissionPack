@@ -76,7 +76,9 @@
  * - Waldo_FieldResupply_RetainOnRespawn (MISSION MAKER): preserves that player's carrier allowance after respawn.
  * - Waldo_PhysicalCargo_Enable (MISSION MAKER): replaces ACE's carried-crate default click; aim at a
  *   nearby stopped vehicle to mount visibly, or aim elsewhere to drop. Other ACE Cargo actions remain.
- * - Waldo_PhysicalCargo_BlockSeats (MISSION MAKER): only verified per-vehicle seat points may lock seats.
+ * - Waldo_PhysicalCargo_BlockSeats (MISSION MAKER): match model cargo proxies to seat config on
+ *   first mount, then lock only seats covered by the crate. No vehicle Init call or coordinate list
+ *   is needed. Unknown proxy layouts leave seats unchanged; a measured SeatPoints array can override.
  * - Waldo_Quartermaster_Enable (MISSION MAKER): gates the established quartermaster action set.
  * - Waldo_QM_Medical_Enable (MISSION MAKER): offer the ACE-aware medical crate; on by default.
  * - Waldo_QM_Ammo_Enable (MISSION MAKER): offer the mission-derived ammunition crate; on by default.

@@ -71,12 +71,12 @@ unchanged.
 Use separate crates for the whole-box merge and the multi-row transfer so each check starts with
 known contents. Inspect both inventories after each operation.
 
-The seat fixture is the vanilla NATO Prowler/DAGOR and a small crate. Its server measures empty
-passenger and FFV positions and publishes only verified points. Use **REPORT VERIFIED SEATS + OWNED
+The seat fixture is the vanilla NATO Prowler/DAGOR and a small crate. The first mount reads its
+model proxies and seat config, then publishes only matched points. Use **REPORT VERIFIED SEATS + OWNED
 LOCKS** at the seat station to inspect the map. Carry the crate over one seat, confirm that seat is
 blocked, and confirm a clear seat remains usable. Remove the crate with ACE Carry and check that the
 owned lock is released. **CAPTURE MY OCCUPIED CARGO SEAT** is a diagnostic action for a seated
-player. It replaces one measurement when the automatic map needs investigation. Check bad aim,
+player. It adds a measured override when the passive map needs investigation. Check bad aim,
 ground drop, remount, ACE Cargo loading and object deletion separately. Do not use the static weapon
 as a working mount: the fixture only checks inert cargo and the production feature rejects working
 static-weapon mounts.

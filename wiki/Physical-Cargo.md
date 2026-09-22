@@ -33,11 +33,14 @@ in Arma before using it in a mission.
 
 ## Seats covered by cargo
 
-`Waldo_PhysicalCargo_BlockSeats` defaults to `true`. The **Supply Transfers and Physical Cargo
-Example** has six measured seat positions for its vanilla NATO Prowler/DAGOR. With another vehicle,
-measure the seat positions on that exact model. WMP leaves unmapped seats available.
+`Waldo_PhysicalCargo_BlockSeats` defaults to `true`. No seat coordinates or extra Init call are
+needed for a vehicle. On its first physical mount, the server reads the vehicle's model cargo
+proxies and seat config once, then caches the result for that class. It does not spawn a unit,
+move anyone between seats or keep a seat-scanning loop running. It locks only a free seat whose
+proxy and seat identifier both match. If a mod does not expose enough information, WMP leaves that
+seat available and logs the unsupported mapping.
 
-For ordinary cargo seats or fire-from-vehicle (FFV) seats, set model-space points on the vehicle:
+An experienced mission maker can supply a measured override for an unusual model:
 
 ```sqf
 myTruck setVariable ["Waldo_PhysicalCargo_SeatPoints", [
@@ -47,13 +50,14 @@ myTruck setVariable ["Waldo_PhysicalCargo_SeatPoints", [
 ```
 
 The coordinates and turret path above only show the data shape. WMP locks a free cargo seat with
-`lockCargo`, or a verified FFV person-turret with `lockTurret`, when its point lies inside the
+`lockCargo`, or a matched FFV person-turret with `lockTurret`, when its point lies inside the
 mounted object's oriented footprint. Edge contact does not lock a seat. WMP tracks multiple crates
 covering one seat and releases only its own locks. The older `[cargoIndex, point]` form still works
 for cargo seats.
 
-Seat points depend on the vehicle model. Do not copy the example coordinates onto another vehicle
-without measuring it: an incorrect point can lock the wrong seat or leave an occupied seat open.
+Only use an override after checking the exact model. An incorrect point can lock the wrong seat
+or leave a covered seat open. The **Supply Transfers and Physical Cargo Example** uses the normal
+automatic lookup; its Prowler Init field contains only supply-transfer registration.
 
 ## Carrying cargo away
 

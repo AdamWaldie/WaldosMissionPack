@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Locks/unlocks verified cargo or FFV person-turret seats covered by physical cargo.
+ * Purpose: Resolves seat proxy positions on first mount and locks only matching cargo or FFV seats.
  * Locality / Authority: Server; seat locks have global effect. Existing mission-maker locks remain.
  * Repeat / JIP: Reference-counts WMP mount objects per index/path; removal is idempotent.
+ *   A read-only model/config lookup runs once per vehicle class. An explicit seat-point array
+ *   remains an advanced override; unsupported proxy layouts leave seats unchanged.
  * Arguments: cargo <OBJECT>, vehicle <OBJECT>, add <BOOL> (true), offset <ARRAY> ([]),
  *   cargo forward/up vectors in vehicle model space <ARRAY> ([] each).
  * Return Value: <BOOL> handled. Current callers: physical attach/clear.
@@ -19,6 +21,9 @@ if (_add) then {
     if !(_offset isEqualTypeArray [0, 0, 0]
         && {_relativeDir isEqualTypeArray [0, 0, 0]}
         && {_relativeUp isEqualTypeArray [0, 0, 0]}) exitWith {false};
+    if (isNil {_vehicle getVariable "Waldo_PhysicalCargo_SeatPoints"}) then {
+        [_vehicle] call Waldo_fnc_PhysicalCargoDiscoverSeatsServer;
+    };
     private _seatPoints = _vehicle getVariable ["Waldo_PhysicalCargo_SeatPoints", []];
     private _validSeats = fullCrew [_vehicle, "", true];
     private _bounds = boundingBoxReal _cargo;
@@ -26,8 +31,6 @@ if (_add) then {
     private _forward = vectorNormalized _relativeDir;
     private _up = vectorNormalized _relativeUp;
     private _right = vectorNormalized (_forward vectorCrossProduct _up);
-    diag_log format ["[WMP PHYSICAL CARGO SEATS] vehicle=%1 mapped=%2 cargoOffset=%3 bounds=%4 crew=%5",
-        typeOf _vehicle, _seatPoints, _offset, _bounds, _validSeats];
     {
         private _kind = "CARGO";
         private _key = -1;

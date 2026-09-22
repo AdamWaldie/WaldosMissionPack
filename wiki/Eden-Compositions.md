@@ -30,8 +30,8 @@ with no useful optional arguments have one unsuffixed example.
 
 Leave the supplied Init calls in place. WMP registers the objects and gives joining players their
 actions. Some calls forward to the server. Others run on the server's copy of the Eden object. Add
-an `isServer` wrapper only when the linked feature page asks for one. The Prowler example guards its
-seat-point setting because that value belongs to the server.
+an `isServer` wrapper only when the linked feature page asks for one. The Prowler needs no
+seat coordinates in its Init field.
 
 Keep the wiki URL in an Eden comment so you can check the object's options after moving it.
 

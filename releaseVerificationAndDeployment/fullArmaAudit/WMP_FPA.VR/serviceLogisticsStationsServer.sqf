@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Purpose: Configures live service/logistics fixtures and repeatable audit controls.
  * Locality / Authority: Dedicated/hosted server only. Requests verify the player's network owner.
- * Repeat / JIP: Setup runs once per audit mission; measured seat points publish for JIP.
+ * Repeat / JIP: Setup runs once per audit mission; production seat discovery publishes matched points for JIP.
  * Arguments: None. Return Value: Nothing; sets Waldo_QA_ServiceLogisticsReady publicly.
  * Current caller: extendedFeatureStationsServer.sqf after the feature range is ready.
  * Example: call compile preprocessFileLineNumbers "serviceLogisticsStationsServer.sqf";
@@ -10,7 +10,7 @@
 if (!isServer) exitWith {};
 
 // The editor fixture is the vanilla NATO Prowler (DAGOR). Keep its original
-// object identity so seat calibration and local test actions refer to one vehicle.
+// object identity so production proxy discovery and local test actions refer to one vehicle.
 private _seatFixture = missionNamespace getVariable ["qa_seat_vehicle", objNull];
 if (!isNull _seatFixture) then {
     diag_log format ["[WMP QA SEAT VEHICLE] class=%1 cargoOrFfvSeats=%2",
@@ -111,64 +111,6 @@ if (!isNull _controlCrate) then {
     };
 } forEach ["qa_transfer_source", "qa_transfer_target", "qa_transfer_control", "qa_transfer_vehicle", "qa_cargo_vehicle", "qa_cargo_crate", "qa_cargo_control",
     "qa_weapon_vehicle", "qa_weapon_static", "qa_seat_vehicle", "qa_seat_crate"];
-
-// The audit must not require a player to discover an extra capture action before
-// testing seat blocking. Measure each free seat with an actual server-local
-// occupant, and publish only positions the engine confirms that occupant used.
-// This is confined to disposable QA vehicles; production never inserts probe
-// units into a mission-maker's vehicles without an explicit call.
-Waldo_QA_fnc_calibrateCargoSeatsServer = {
-    params [["_vehicle", objNull, [objNull]]];
-    if (!isServer || {isNull _vehicle} || {crew _vehicle isNotEqualTo []}) exitWith {false};
-    private _group = createGroup [west, true];
-    private _probe = _group createUnit ["B_Soldier_F", getPosATL _vehicle, [], 0, "CAN_COLLIDE"];
-    if (isNull _probe) exitWith {deleteGroup _group; false};
-    _probe allowDamage false;
-    _probe hideObjectGlobal true;
-    _probe disableAI "ALL";
-    private _points = [];
-    private _seats = (fullCrew [_vehicle, "", true]) select {
-        (toLowerANSI (_x select 1) isEqualTo "cargo" && {(_x select 2) >= 0})
-            || {(_x select 4) && {(_x select 3) isNotEqualTo []}}
-    };
-    {
-        private _seat = _x;
-        private _index = _seat select 2;
-        private _path = _seat select 3;
-        private _kind = if (toLowerANSI (_seat select 1) isEqualTo "cargo") then {"CARGO"} else {"TURRET"};
-        if (_kind isEqualTo "CARGO") then {
-            _probe moveInCargo [_vehicle, _index];
-        } else {
-            _probe moveInTurret [_vehicle, _path];
-        };
-        uiSleep 0.08;
-        private _occupied = (fullCrew [_vehicle, "", true]) findIf {
-            (_x select 0) isEqualTo _probe
-                && {if (_kind isEqualTo "CARGO") then {(_x select 2) isEqualTo _index}
-                    else {(_x select 3) isEqualTo _path}}
-        };
-        if (_occupied >= 0) then {
-            private _point = _vehicle worldToModel (ASLToAGL getPosWorld _probe);
-            _points pushBack [_kind, if (_kind isEqualTo "CARGO") then {_index} else {_path}, _point];
-        };
-        moveOut _probe;
-        uiSleep 0.03;
-    } forEach _seats;
-    deleteVehicle _probe;
-    deleteGroup _group;
-    _vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", _points, true];
-    diag_log format ["[WMP QA SEAT CALIBRATION] vehicle=%1 measured=%2 available=%3 points=%4",
-        typeOf _vehicle, count _points, count _seats, _points];
-    count _points > 0
-};
-
-[] spawn {
-    private _vehicles = [missionNamespace getVariable ["qa_seat_vehicle", objNull],
-        missionNamespace getVariable ["qa_cargo_vehicle", objNull]];
-    {
-        if (!isNull _x) then {[_x] call Waldo_QA_fnc_calibrateCargoSeatsServer};
-    } forEach _vehicles;
-};
 
 Waldo_QA_fnc_captureCargoSeatServer = {
     params [["_actor", objNull, [objNull]]];

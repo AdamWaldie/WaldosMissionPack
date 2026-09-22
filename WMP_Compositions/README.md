@@ -7,9 +7,9 @@ Start with a **Minimal** example if one is available. It uses the pack's default
 **Full** example shows options you can change. Read the comment placed beside the objects for its
 feature flag and wiki link.
 
-Quartermaster ammo and supply contents come from playable units' authored loadouts. Seat blocking
-needs measured positions for each vehicle model. The Prowler composition contains positions for its
-own vehicle.
+Quartermaster ammo and supply contents come from playable units' authored loadouts. Physical cargo
+reads a vehicle's model seat proxies on the first mount. It leaves seats alone when the model cannot
+be matched safely; no vehicle-specific seat script is part of the composition.
 
 ## Categories
 
