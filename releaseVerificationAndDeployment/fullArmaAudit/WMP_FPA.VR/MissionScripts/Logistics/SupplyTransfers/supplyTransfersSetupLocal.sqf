@@ -118,7 +118,12 @@ private _installed = [];
                 };
                 [_player, _source, _target, "ALL", [], 1]
                     remoteExecCall ["Waldo_fnc_SupplyTransfersRequestWithFeedbackServer", 2];
-            }, {_player distance _target <= 6}] call ace_interact_menu_fnc_createAction;
+            }, {
+                private _selected = missionNamespace getVariable ["Waldo_SupplyTransfers_SelectedSource", objNull];
+                !isNull _selected && {_selected isNotEqualTo _target}
+                    && {_player distance _target <= 6}
+                    && {_selected distance _target <= ((missionNamespace getVariable ["Waldo_SupplyTransfers_Range", 20]) max 2 min 50)}
+            }] call ace_interact_menu_fnc_createAction;
         _paths pushBack ([_object, 0, _supplyPath, _merge] call ace_interact_menu_fnc_addActionToObject);
         _installed pushBack [_object, _paths];
         };

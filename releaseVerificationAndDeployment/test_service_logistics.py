@@ -195,6 +195,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('"Merge selected source into this vehicle"', source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf"))
         self.assertIn('private _source = ["WMP_SUPPLY_SOURCE", _selectLabel', source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf"))
         self.assertIn('private _merge = ["WMP_SUPPLY_MERGE", _mergeLabel', source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf"))
+        self.assertIn('!isNull _selected && {_selected isNotEqualTo _target}', source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf"))
         self.assertIn('"SUPPLY_REGISTER"', source("MissionScripts/ZenModules/zenServiceLogisticsServer.sqf"))
         self.assertIn('call Waldo_fnc_SupplyTransfersRegister', source("MissionScripts/ZenModules/zenServiceLogisticsServer.sqf"))
         station = source("releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR/serviceLogisticsStationsServer.sqf")

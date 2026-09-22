@@ -106,7 +106,7 @@
  *   variable name and call `[supplyTruck] call Waldo_fnc_SupplyTransfersRegister;` in initServer.sqf,
  *   or place ZEN Supply Transfers - Register or Inspect directly on the vehicle. It needs maxLoad > 0.
  * - Waldo_SupplyTransfers_Range (MISSION MAKER): maximum source/destination separation; 2–50 metres.
- *   A registered vehicle has transfer-in/out, select-as-source and whole-merge ACE options.
+ *   A registered vehicle has transfer-from, select-as-source and whole-merge ACE options.
  *   Registered boxes have the matching source-side transfer window and direct merge.
  * - Quartermaster issue flags are global ceilings; the ZEN Quartermaster module selects which of
  *   those enabled issue types a particular point offers. Its bearing (0–359 degrees), distance
