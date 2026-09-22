@@ -81,6 +81,12 @@ ground drop, remount, ACE Cargo loading and object deletion separately. Do not u
 as a working mount: the fixture only checks inert cargo and the production feature rejects working
 static-weapon mounts.
 
+For a first-open ACE hitch comparison, there is a second `Box_NATO_Ammo_F` beside the Prowler
+station. It has the same ACE carry/cargo attributes but is not WMP physical-mount eligible. On a
+fresh client, open this control first and note any hitch; in a second fresh client session, open the
+mountable crate first. Compare the first opening of each, then reopen it. This isolates a one-time
+ACE/class or texture load from work specific to WMP mounting. Do not infer the cause from one order.
+
 The five playable BLUFOR slots also form a paired ACRE2 radio test squad. No radio profile is
 tested by only one player:
 

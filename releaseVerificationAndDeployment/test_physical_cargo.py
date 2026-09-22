@@ -21,6 +21,8 @@ class PhysicalCargoSourceTests(unittest.TestCase):
         self.assertIn('"ace_dragging_releaseActionID"', source)
         self.assertLess(source.index('if (_wmpID < 0)'), source.index('[_unit, "DefaultAction", _aceID]'))
         self.assertNotIn('"ace_dragging_stoppedCarry"', source)
+        self.assertIn('ACE pickup requests mount clear', source)
+        self.assertIn('"Waldo_PhysicalCargo_Mounts"', source)
 
     def test_carry_permissions_reach_clients_and_jip(self):
         helper = (ROOT / "MissionScripts" / "MissionInit" / "VehicleActionsSetup"
@@ -96,8 +98,15 @@ class PhysicalCargoSourceTests(unittest.TestCase):
         self.assertIn('fullCrew [_vehicle, "", true]', seats)
         self.assertIn('"TURRET"', seats)
         self.assertIn('Waldo_PhysicalCargo_TurretLocks', seats)
-        self.assertIn('_vehicle lockTurret [_key, true]', seats)
-        self.assertIn('_vehicle lockTurret [_path, false]', seats)
+        owner = self.read("physicalCargoSeatLockLocal.sqf")
+        self.assertIn('remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle]', seats)
+        self.assertIn('remoteExecutedOwner isNotEqualTo 2', owner)
+        self.assertIn('!local _vehicle', owner)
+        self.assertIn('_vehicle lockTurret [_key, _lock]', owner)
+        monitor = self.read("physicalCargoInitServer.sqf")
+        self.assertIn('Waldo_PhysicalCargo_SeatAttempts', monitor)
+        self.assertIn('if (_tries < 3)', monitor)
+        self.assertIn('remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle]', monitor)
         self.assertIn('_delta vectorDotProduct _right', seats)
         self.assertIn('_delta vectorDotProduct _forward', seats)
         self.assertIn('_delta vectorDotProduct _up', seats)
@@ -108,11 +117,41 @@ class PhysicalCargoSourceTests(unittest.TestCase):
     def test_audit_station_measures_real_cargo_and_ffv_seats(self):
         station = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit"
                    / "WMP_FPA.VR" / "serviceLogisticsStationsServer.sqf").read_text(encoding="utf-8")
-        self.assertIn('Waldo_QA_fnc_calibrateCargoSeatsServer', station)
-        self.assertIn('_probe moveInCargo [_vehicle, _index]', station)
-        self.assertIn('_probe moveInTurret [_vehicle, _path]', station)
-        self.assertIn('(_x select 0) isEqualTo _probe', station)
-        self.assertIn('"Waldo_PhysicalCargo_SeatPoints", _points, true', station)
+        self.assertIn('Waldo_QA_fnc_reportCargoSeatsServer', station)
+        self.assertIn('Waldo_QA_fnc_captureCargoSeatServer', station)
+        self.assertNotIn('_probe moveInCargo', station)
+        self.assertNotIn('_probe moveInTurret', station)
+        self.assertIn('"Waldo_PhysicalCargo_SeatPoints", _points]', station)
+
+    def test_mount_deltas_replace_public_whole_registry(self):
+        attach = self.read("physicalCargoAttachServer.sqf")
+        clear = self.read("physicalCargoClearServer.sqf")
+        snapshot = self.read("physicalCargoReceiveStateLocal.sqf")
+        apply = self.read("physicalCargoApplyLocal.sqf")
+        restore = self.read("physicalCargoRestoreLocal.sqf")
+        for source in (attach, clear):
+            self.assertNotIn('"Waldo_PhysicalCargo_Mounts", _mounts, true', source)
+            self.assertIn('"Waldo_PhysicalCargo_MountRevision"', source)
+        self.assertIn('"Waldo_PhysicalCargo_LocalRevision"', snapshot)
+        self.assertIn('"Waldo_PhysicalCargo_LocalMountRevision"', apply)
+        self.assertIn('"Waldo_PhysicalCargo_LocalMountRevision"', restore)
+        self.assertIn('"Waldo_PhysicalCargo_Mounts", _mounts', apply)
+        self.assertIn('"Waldo_PhysicalCargo_Mounts",', restore)
+        request = self.read("physicalCargoRequestStateServer.sqf")
+        shared_init = (ROOT / "init.sqf").read_text(encoding="utf-8")
+        self.assertIn('remoteExecutedOwner isNotEqualTo _target', request)
+        self.assertIn('[clientOwner] remoteExecCall ["Waldo_fnc_PhysicalCargoRequestStateServer", 2]', shared_init)
+
+    def test_server_only_bookkeeping_is_not_broadcast(self):
+        seats = self.read("physicalCargoSeatsServer.sqf")
+        attach = self.read("physicalCargoAttachServer.sqf")
+        clear = self.read("physicalCargoClearServer.sqf")
+        self.assertIn('"Waldo_PhysicalCargo_SeatLocks", _locks]', seats)
+        self.assertIn('"Waldo_PhysicalCargo_TurretLocks", _turretLocks]', seats)
+        self.assertNotIn('"Waldo_PhysicalCargo_SeatLocks", _locks, true', seats)
+        self.assertNotIn('"Waldo_PhysicalCargo_TurretLocks", _turretLocks, true', seats)
+        self.assertNotIn('"Waldo_PhysicalCargo_PreviousSimulation", simulationEnabled _cargo, true', attach)
+        self.assertNotIn('"Waldo_PhysicalCargo_RestoreSerial", _restoreToken, true', clear)
 
     def test_init_and_config_routes_are_present(self):
         self.assertIn('Waldo_fnc_PhysicalCargoInitLocal', (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8"))

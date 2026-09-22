@@ -1,8 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Purpose: Installs one ACE Cargo listener and monitor to release obsolete physical mounts.
- * Locality / Authority: Server only; it owns mount cleanup and publishes the revised registry.
- * Repeat / JIP: Idempotent installation; public mount state and explicit requests support JIP.
+ * Locality / Authority: Server only; it owns the mount registry and cleanup.
+ * Repeat / JIP: Idempotent installation; ordered snapshots answer explicit JIP requests.
  *
  * Arguments: None.
  * Return Value: BOOLEAN - true when installed or already present.
@@ -30,10 +30,60 @@ private _monitor = [{
             [_cargo] call Waldo_fnc_PhysicalCargoClearServer;
         }};
     } forEach _mounts;
+    // A lock command can race a vehicle locality transfer. Check only active
+    // mounts at this existing 3 s cadence, with at most three retries per owner.
+    private _attempts = +(missionNamespace getVariable ["Waldo_PhysicalCargo_SeatAttempts", []]);
+    private _vehicles = (_mounts apply {_x select 1});
+    _vehicles = _vehicles arrayIntersect _vehicles;
+    {
+        private _vehicle = _x;
+        if (!isNull _vehicle && {alive _vehicle}) then {
+            private _vehicleOwner = owner _vehicle;
+            {
+                _x params ["_kind", "_locks"];
+                {
+                    private _key = _x select 0;
+                    private _engineLocked = if (_kind isEqualTo "CARGO") then {
+                        _vehicle lockedCargo _key
+                    } else {
+                        _vehicle lockedTurret _key
+                    };
+                    private _index = _attempts findIf {
+                        (_x select 0) isEqualTo _vehicle && {(_x select 1) isEqualTo _kind}
+                            && {(_x select 2) isEqualTo _key}
+                    };
+                    if (_engineLocked) then {
+                        if (_index >= 0) then {_attempts deleteAt _index};
+                    } else {
+                        private _tries = 0;
+                        if (_index >= 0) then {
+                            private _prior = _attempts select _index;
+                            if ((_prior select 3) isEqualTo _vehicleOwner) then {_tries = _prior select 4};
+                        };
+                        if (_tries < 3) then {
+                            [_vehicle, _kind, _key, true]
+                                remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
+                            private _row = [_vehicle, _kind, _key, _vehicleOwner, _tries + 1];
+                            if (_index < 0) then {_attempts pushBack _row} else {_attempts set [_index, _row]};
+                            diag_log format ["[WMP PHYSICAL CARGO SEATS] retry %1/3 %2 %3 owner=%4",
+                                _tries + 1, _kind, _key, _vehicleOwner];
+                        };
+                    };
+                } forEach _locks;
+            } forEach [["CARGO", _vehicle getVariable ["Waldo_PhysicalCargo_SeatLocks", []]],
+                ["TURRET", _vehicle getVariable ["Waldo_PhysicalCargo_TurretLocks", []]]];
+        };
+    } forEach _vehicles;
+    missionNamespace setVariable ["Waldo_PhysicalCargo_SeatAttempts", _attempts];
     private _current = +(missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]);
     private _clean = _current select {!isNull (_x select 0)};
     if (count _clean isNotEqualTo count _current) then {
-        missionNamespace setVariable ["Waldo_PhysicalCargo_Mounts", _clean, true];
+        missionNamespace setVariable ["Waldo_PhysicalCargo_Mounts", _clean];
+        private _revision = (missionNamespace getVariable ["Waldo_PhysicalCargo_MountRevision", 0]) + 1;
+        missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
+        // A deleted object has no reliable delta identity. This rare cleanup sends
+        // one replacement snapshot instead of broadcasting the list on every mount.
+        [_clean, _revision] remoteExecCall ["Waldo_fnc_PhysicalCargoReceiveStateLocal", 0];
     };
 }, 3] call CBA_fnc_addPerFrameHandler;
 missionNamespace setVariable ["Waldo_PhysicalCargo_MonitorPFH", _monitor];

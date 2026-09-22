@@ -232,7 +232,7 @@ private _weapon = "qa_sign_static_cargo" call _get;
 
 private _seat = "qa_sign_cargo_seats" call _get;
 [_seat, "Waldo_QA_SeatGuide", "TEST VERIFIED SEAT LOCKING", {
-    ["CARGO SEAT QA", "Carry the small crate onto a Prowler passenger or FFV seat. The first mount reads model proxies and vehicle config without spawning a probe or changing the vehicle's Init. REPORT VERIFIED SEATS shows matched points and locks. Test the covered seat and one clear seat; use CAPTURE only to investigate an unsupported layout.", "INFO", "CARGO_SEAT_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
+    ["CARGO SEAT QA", "For first-open hitch testing, compare the small mountable crate with the same-class control crate nearby, reversing which you open first on a fresh client. Carry the mountable crate onto a Prowler seat. REPORT VERIFIED SEATS shows matched points and locks. Test the covered seat and one clear seat, then ACE Carry it away and retry the covered seat. Use CAPTURE only for an unsupported layout.", "INFO", "CARGO_SEAT_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 if (!isNil "ace_interact_menu_fnc_createAction") then {
     private _captureSeat = ["Waldo_QA_SeatCapture", "CAPTURE MY OCCUPIED CARGO SEAT", "",
@@ -244,13 +244,7 @@ if (!isNil "ace_interact_menu_fnc_createAction") then {
     [player, 1, ["ACE_SelfActions"], _captureSeat] call ace_interact_menu_fnc_addActionToObject;
 };
 [_seat, "Waldo_QA_SeatReport", "REPORT VERIFIED SEATS + OWNED LOCKS", {
-    private _vehicle = missionNamespace getVariable ["qa_seat_vehicle", objNull];
-    ["CARGO SEAT QA", if (isNull _vehicle) then {"Seat truck missing."} else {
-        format ["Vehicle: %1. Measured seat points: %2. WMP cargo locks: %3. WMP FFV locks: %4.", typeOf _vehicle,
-            _vehicle getVariable ["Waldo_PhysicalCargo_SeatPoints", []],
-            _vehicle getVariable ["Waldo_PhysicalCargo_SeatLocks", []],
-            _vehicle getVariable ["Waldo_PhysicalCargo_TurretLocks", []]]
-    }, "INFO", "CARGO_SEAT_REPORT", 12] call Waldo_fnc_FeatureNotifyLocal;
+    [player] remoteExecCall ["Waldo_QA_fnc_reportCargoSeatsServer", 2];
 }] call _add;
 
 private _briefing = "qa_sign_briefing_docs" call _get;

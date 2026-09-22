@@ -1,8 +1,9 @@
 /*
  * Author: WaldoTheWarfighter
  * Purpose: Resolves seat proxy positions on first mount and locks only matching cargo or FFV seats.
- * Locality / Authority: Server; seat locks have global effect. Existing mission-maker locks remain.
+ * Locality / Authority: Server owns lock records; vehicle owner executes engine lock commands.
  * Repeat / JIP: Reference-counts WMP mount objects per index/path; removal is idempotent.
+ *   Lock bookkeeping stays on the server; the engine synchronizes actual seat locks.
  *   A read-only model/config lookup runs once per vehicle class. An explicit seat-point array
  *   remains an advanced override; unsupported proxy layouts leave seats unchanged.
  * Arguments: cargo <OBJECT>, vehicle <OBJECT>, add <BOOL> (true), offset <ARRAY> ([]),
@@ -71,7 +72,7 @@ if (_add) then {
                 private _entry = _locks findIf {(_x select 0) isEqualTo _key};
                 if (_entry >= 0 || {!(_vehicle lockedCargo _key)}) then {
                     if (_entry < 0) then {
-                        _vehicle lockCargo [_key, true];
+                        [_vehicle, "CARGO", _key, true] remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
                         _locks pushBack [_key, [_cargo]];
                         diag_log format ["[WMP PHYSICAL CARGO SEATS] locked cargoIndex=%1 for %2", _key, typeOf _cargo];
                     } else {
@@ -87,7 +88,7 @@ if (_add) then {
                 private _entry = _turretLocks findIf {(_x select 0) isEqualTo _key};
                 if (_entry >= 0 || {!(_vehicle lockedTurret _key)}) then {
                     if (_entry < 0) then {
-                        _vehicle lockTurret [_key, true];
+                        [_vehicle, "TURRET", _key, true] remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
                         _turretLocks pushBack [_key, [_cargo]];
                         diag_log format ["[WMP PHYSICAL CARGO SEATS] locked FFV turretPath=%1 for %2", _key, typeOf _cargo];
                     } else {
@@ -104,7 +105,18 @@ if (_add) then {
         _x params ["_index", "_holders"];
         _holders = _holders - [_cargo];
         if (_holders isEqualTo []) then {
-            _vehicle lockCargo [_index, false];
+            [_vehicle, "CARGO", _index, false] remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
+            [_vehicle, "CARGO", _index] spawn {
+                params ["_vehicle", "_kind", "_key"];
+                sleep 1;
+                if (!isNull _vehicle && {_vehicle lockedCargo _key}
+                    && {((_vehicle getVariable ["Waldo_PhysicalCargo_SeatLocks", []])
+                        findIf {(_x select 0) isEqualTo _key}) < 0}) then {
+                    [_vehicle, _kind, _key, false]
+                        remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
+                };
+            };
+            diag_log format ["[WMP PHYSICAL CARGO SEATS] unlocked cargoIndex=%1 on %2", _index, typeOf _vehicle];
             _locks set [_forEachIndex, []];
         } else {
             _locks set [_forEachIndex, [_index, _holders]];
@@ -115,7 +127,18 @@ if (_add) then {
         _x params ["_path", "_holders"];
         _holders = _holders - [_cargo];
         if (_holders isEqualTo []) then {
-            _vehicle lockTurret [_path, false];
+            [_vehicle, "TURRET", _path, false] remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
+            [_vehicle, "TURRET", _path] spawn {
+                params ["_vehicle", "_kind", "_key"];
+                sleep 1;
+                if (!isNull _vehicle && {_vehicle lockedTurret _key}
+                    && {((_vehicle getVariable ["Waldo_PhysicalCargo_TurretLocks", []])
+                        findIf {(_x select 0) isEqualTo _key}) < 0}) then {
+                    [_vehicle, _kind, _key, false]
+                        remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
+                };
+            };
+            diag_log format ["[WMP PHYSICAL CARGO SEATS] unlocked FFV turretPath=%1 on %2", _path, typeOf _vehicle];
             _turretLocks set [_forEachIndex, []];
         } else {
             _turretLocks set [_forEachIndex, [_path, _holders]];
@@ -123,6 +146,10 @@ if (_add) then {
     } forEach +_turretLocks;
     _turretLocks = _turretLocks select {_x isNotEqualTo []};
 };
-_vehicle setVariable ["Waldo_PhysicalCargo_SeatLocks", _locks, true];
-_vehicle setVariable ["Waldo_PhysicalCargo_TurretLocks", _turretLocks, true];
+_vehicle setVariable ["Waldo_PhysicalCargo_SeatLocks", _locks];
+_vehicle setVariable ["Waldo_PhysicalCargo_TurretLocks", _turretLocks];
+// A new mount or removal starts a new lock lifecycle for this vehicle.
+private _attempts = +(missionNamespace getVariable ["Waldo_PhysicalCargo_SeatAttempts", []]);
+_attempts = _attempts select {(_x select 0) isNotEqualTo _vehicle};
+missionNamespace setVariable ["Waldo_PhysicalCargo_SeatAttempts", _attempts];
 true

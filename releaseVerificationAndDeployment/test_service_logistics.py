@@ -91,12 +91,12 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             self.assertIn("qa_sign_" + name.replace("-", "_"), fixture_ids)
         for name in ("qa_base_hq", "qa_base_fob", "qa_qm_point", "qa_transfer_source",
                      "qa_transfer_target", "qa_transfer_vehicle", "qa_cargo_vehicle", "qa_cargo_crate", "qa_weapon_vehicle",
-                     "qa_weapon_static", "qa_seat_vehicle", "qa_seat_crate"):
+                     "qa_weapon_static", "qa_seat_vehicle", "qa_seat_crate", "qa_seat_control"):
             self.assertIn(name, fixture_ids)
         live = {row["name"]: row for row in generator.FIXTURES}
         for name in ("qa_transfer_source", "qa_transfer_target", "qa_transfer_vehicle", "qa_cargo_vehicle",
                      "qa_cargo_crate", "qa_weapon_vehicle", "qa_weapon_static",
-                     "qa_seat_vehicle", "qa_seat_crate"):
+                     "qa_seat_vehicle", "qa_seat_crate", "qa_seat_control"):
             self.assertTrue(live[name]["simulation"], name)
         server = source("releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR/serviceLogisticsStationsServer.sqf")
         client = source("releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR/extendedFeatureStationsClient.sqf")
@@ -117,6 +117,8 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertEqual(live["qa_seat_vehicle"]["class"], "B_LSV_01_unarmed_F")
         self.assertNotIn('"rhsusf_mrzr4_d"', server)
         self.assertEqual(live["qa_seat_crate"]["class"], "Box_NATO_Ammo_F")
+        self.assertEqual(live["qa_seat_control"]["class"], "Box_NATO_Ammo_F")
+        self.assertIn('"qa_seat_control" call _get', server)
         self.assertIn('"Measured post-exit velocity', client)
         self.assertIn('TEST CRATE + VEHICLE TRANSFERS', client)
 

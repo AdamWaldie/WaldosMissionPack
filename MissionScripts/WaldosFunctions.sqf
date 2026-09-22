@@ -606,6 +606,7 @@ class CfgFunctions
             class PhysicalCargoClearServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoClearServer.sqf";};
             class PhysicalCargoRegister {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRegister.sqf";};
             class PhysicalCargoSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatsServer.sqf";};
+            class PhysicalCargoSeatLockLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatLockLocal.sqf";};
             class PhysicalCargoDiscoverSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoDiscoverSeatsServer.sqf";};
             class PhysicalCargoRestoreLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRestoreLocal.sqf";};
             class PhysicalCargoRestoreAckServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRestoreAckServer.sqf";};

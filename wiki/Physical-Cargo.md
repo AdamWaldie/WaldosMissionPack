@@ -59,6 +59,21 @@ Only use an override after checking the exact model. An incorrect point can lock
 or leave a covered seat open. The **Supply Transfers and Physical Cargo Example** uses the normal
 automatic lookup; its Prowler Init field contains only supply-transfer registration.
 
+## Server and network cost
+
+The seat-proxy lookup runs on the server on the first mount of each vehicle class. WMP caches the
+result. Each later mount checks the crate against that vehicle's stored seat points; opening the ACE
+menu does not run this lookup. A three-second server monitor checks active mounts for deleted cargo
+or vehicles and checks their owned seat locks. A missing lock gets at most three retries per vehicle
+owner; successful locks generate no repeat traffic. The work grows with active mounts, not players.
+
+Mount and unmount events go to current clients. WMP keeps the full mount list on the server and
+sends it once to a joining player on request; it does not rebroadcast the growing list for every
+crate. Seat-point, seat-lock and restore bookkeeping stays on the server. The server sends a lock or
+unlock command to the vehicle owner, where Arma applies it. Object attachment state and actual seat
+locks still synchronize through Arma. These are design limits, not measured byte or
+frame-time figures; test a heavily loaded mission on its intended server before relying on them.
+
 ## Carrying cargo away
 
 Stand near the crate and the intended contact point. Stop the vehicle before mounting. If the click
