@@ -17,9 +17,10 @@ clearBackpackCargoGlobal acre_loadout_crate;
 acre_loadout_crate setVariable ["Waldo_ACRE_TestCrate", true, true];
 [acre_loadout_crate] remoteExec ["Waldo_fnc_ZenAddLoadoutSaveAction", 0, acre_loadout_crate];
 
-[test_base_hq, "TEST_BASE", "Main Base", ["SAVE", "HEAL", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
-[test_base_fob, "TEST_BASE", "Forward Base", ["SAVE", "HEAL", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
+[test_base_hq, "TEST_BASE", "Main Base", ["SAVE", "HEAL", "SPECTATE", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
+[test_base_fob, "TEST_BASE", "Forward Base", ["SAVE", "HEAL", "SPECTATE", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
 [test_quartermaster, 90, 5] call Waldo_fnc_SetupQuarterMaster;
+[test_quartermaster, 90, 5] remoteExec ["Waldo_fnc_SetupQuarterMaster", 0, test_quartermaster];
 
 {
     _x setPhysicsCollisionFlag true;

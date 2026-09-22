@@ -59,8 +59,8 @@ short init demonstrates every internal option.
 | ACRE2 Vehicle Radio Rack Example (Full) | Central COMMAND_VEHICLE profile: preset-before-init, ensure a VRC-110/PRC-152 exists, then apply the shared WEST AIRGND net |
 | Logistics Spawner Example (Minimal) | Smallest working standalone quartermaster access point |
 | Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with guided common options |
-| Base Services Example | Two object-init service nodes in one named network, with save, heal and two-way travel |
-| Supply Transfers and Physical Cargo Example | Two registered crates and a NATO Prowler/DAGOR for two-way transfers, merging and ACE carry mounting |
+| Base Services Example | Two object-init service nodes in one named network, with save, heal, spectator and two-way travel |
+| Supply Transfers and Physical Cargo Example | Two registered crates and a NATO Prowler/DAGOR for two-way transfers, merging, ACE carry mounting and model-specific seat locks |
 | MHQ With Logistics Spawner (Minimal) | Single truck, smallest working deployable command post |
 | MHQ With Logistics Spawner (Full) | Deployable command post with synchronized parts and guided common options |
 | Virtual Vehicle Depot Spawner Example (Minimal) | Smallest working terminal and spawn point registration |

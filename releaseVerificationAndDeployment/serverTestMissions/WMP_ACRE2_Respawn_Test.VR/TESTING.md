@@ -51,7 +51,7 @@ the radio's default channel/frequency.
 Walk east from the player start. The strip has two named base-service stands, a quartermaster,
 two transfer crates, and a NATO Prowler/DAGOR with a small physical-cargo crate.
 
-1. Open both base-service stands. Check the labels, save/heal actions and travel in both directions.
+1. Open both base-service stands. Check the labels, save, heal and spectator actions, then travel in both directions.
 2. Issue a crate at the quartermaster. Check its displayed name, issue progress and ACE handling.
 3. At the stocked transfer crate, select it as source. On the empty crate, merge the whole source
    through ACE, then repeat after restocking with several selected item rows in the transfer window.
@@ -63,6 +63,10 @@ two transfer crates, and a NATO Prowler/DAGOR with a small physical-cargo crate.
 
 The Prowler uses class `B_LSV_01_unarmed_F`. It remains simulated, collidable and drivable. Static
 weapons are intentionally absent because working-weapon mounting was removed from this feature.
+The builder adds an authored WEST inventory record for WMP's mission-derived supply scanner; the
+four legacy ACRE slots remain the only playable people. The record covers their shared NATO rifle,
+sidearm and radio kit, plus grenade, explosive and medical issue examples. Check the server RPT for
+`PLAYABLE-SLOTS state=READY` before testing quartermaster issues.
 The server measures the Prowler's empty seats with a temporary hidden occupant at startup. Check
 `[WMP TEST SEATS]` in the server RPT for the number of verified seats before testing locks.
 

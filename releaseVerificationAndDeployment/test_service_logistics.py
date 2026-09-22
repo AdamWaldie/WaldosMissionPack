@@ -33,6 +33,11 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             self.assertIn('vehicle="B_LSV_01_unarmed_F"', mission)
             self.assertIn('text="test_transfer_source"', mission)
             self.assertIn('text="test_cargo_crate"', mission)
+            self.assertIn('name="acre_test_logistics_loadout"', mission)
+            self.assertIn('isPlayable=1;', mission)
+            self.assertIn('name="HandGrenade"', mission)
+            self.assertIn('name="DemoCharge_Remote_Mag"', mission)
+            self.assertIn('name="ACRE_PRC77"', mission)
             self.assertIn('"ALPHA_NET"', (destination / "MissionConfig/acreConfig.sqf").read_text(encoding="utf-8"))
             self.assertEqual(
                 (ROOT / "MissionScripts/WaldosFunctions.sqf").read_bytes(),
@@ -43,11 +48,22 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             seat_setup = (destination / "serviceLogisticsTestServer.sqf").read_text(encoding="utf-8")
             self.assertIn('Waldo_PhysicalCargo_SeatPoints', seat_setup)
             self.assertIn('moveInTurret [test_cargo_vehicle, _path]', seat_setup)
+            self.assertIn('[test_quartermaster, 90, 5] remoteExec ["Waldo_fnc_SetupQuarterMaster", 0, test_quartermaster]', seat_setup)
+            self.assertIn('["SAVE", "HEAL", "SPECTATE", "TELEPORT"]', seat_setup)
             with zipfile.ZipFile(archive) as package:
                 self.assertIn(
                     "WMP_ACRE2_Respawn_Test.VR/serviceLogisticsTestServer.sqf",
                     package.namelist(),
                 )
+
+    def test_eden_examples_include_current_services_and_verified_prowler_seats(self):
+        base = source("WMP_Compositions/[WMP]Base_Services_Example/composition.sqe")
+        cargo = source("WMP_Compositions/[WMP]Supply_Transfers_And_Cargo_Example/composition.sqe")
+        self.assertEqual(base.count('""SPECTATE""'), 2)
+        self.assertIn('type="B_LSV_01_unarmed_F"', cargo)
+        self.assertIn('""Waldo_PhysicalCargo_SeatPoints""', cargo)
+        for index in range(6):
+            self.assertIn(f'[""TURRET"", [{index}],', cargo)
 
     def test_audit_has_live_station_for_each_new_workflow(self):
         import importlib.util

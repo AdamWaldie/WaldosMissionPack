@@ -5,10 +5,10 @@
 Base services are off by default. Set `Waldo_BaseServices_Enable` to `true` in `MissionConfig/missionSystemsConfig.sqf`. Put this call in each Eden object's Init field. Objects with the same network ID form one teleport network:
 
 ```sqf
-[this, "MainBase", "Headquarters", ["SAVE", "HEAL", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
+[this, "MainBase", "Headquarters", ["SAVE", "HEAL", "SPECTATE", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
 ```
 
-The Eden **Base Services Example** composition places two stands in a `MainBase` network. Its Init fields use this registration call.
+The Eden **Base Services Example** composition places two stands in a `MainBase` network. Both show save, heal, spectator and teleport by default. Remove services from an individual stand when it should offer less.
 
 Use the same `MainBase` ID on the next object, with its own label and services. The call updates only that object, regardless of Eden Init order. WMP ignores non-server calls, waits for shared settings and sends the complete network to clients, including JIP. Optional fifth through seventh arguments set the icon, arrival transition and model-space marker offset. Call the function again on the server to edit a node. Remove one through ZEN **Base Services - Configure Node**, or replace the whole network with the call below.
 

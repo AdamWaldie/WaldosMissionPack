@@ -15,6 +15,81 @@ TEMPLATE = ROOT / "releaseVerificationAndDeployment/serverTestMissions/WMP_ACRE2
 CONFIG = ROOT / "releaseVerificationAndDeployment/config.json"
 
 
+def authored_logistics_loadout() -> str:
+    """Expose the four legacy radio-test slots' shared NATO kit to WMP's SQM scraper.
+
+    The version-12 Groups below remain the only engine-spawned playable slots. This
+    Eden inventory record gives the mission-derived quartermaster a real authored
+    pool, as in the full-pack audit's legacy-shell fixture.
+    """
+    return '''    class Entities
+    {
+        items=1;
+        class Item0
+        {
+            dataType="Group";
+            side="West";
+            class Entities
+            {
+                items=1;
+                class Item0
+                {
+                    dataType="Object";
+                    side="West";
+                    class Attributes
+                    {
+                        name="acre_test_logistics_loadout";
+                        isPlayable=1;
+                        class Inventory
+                        {
+                            class primaryWeapon {name="arifle_MX_F"; class primaryMuzzleMag {name="30Rnd_65x39_caseless_mag"; ammoLeft=30;};};
+                            class handgun {name="hgun_P07_F"; class primaryMuzzleMag {name="16Rnd_9x21_Mag"; ammoLeft=16;};};
+                            class binocular {name="Binocular";};
+                            class uniform
+                            {
+                                typeName="U_B_CombatUniform_mcam";
+                                isBackpack=0;
+                                class MagazineCargo
+                                {
+                                    items=4;
+                                    class Item0 {name="30Rnd_65x39_caseless_mag"; count=1; ammoLeft=30;};
+                                    class Item1 {name="16Rnd_9x21_Mag"; count=1; ammoLeft=16;};
+                                    class Item2 {name="HandGrenade"; count=1; ammoLeft=1;};
+                                    class Item3 {name="DemoCharge_Remote_Mag"; count=1; ammoLeft=1;};
+                                };
+                                class ItemCargo {items=1; class Item0 {name="ACE_fieldDressing"; count=1;};};
+                            };
+                            class vest {typeName="V_PlateCarrier1_rgr"; isBackpack=0;};
+                            class backpack
+                            {
+                                typeName="B_AssaultPack_mcamo";
+                                isBackpack=1;
+                                class ItemCargo
+                                {
+                                    items=3;
+                                    class Item0 {name="ACRE_PRC343"; count=1;};
+                                    class Item1 {name="ACRE_PRC152"; count=1;};
+                                    class Item2 {name="ACRE_PRC77"; count=1;};
+                                };
+                            };
+                            map="ItemMap";
+                            compass="ItemCompass";
+                            watch="ItemWatch";
+                            gps="ItemGPS";
+                            headgear="H_HelmetB";
+                        };
+                    };
+                    id=100;
+                    type="B_Soldier_F";
+                };
+            };
+            class Attributes {};
+            id=101;
+        };
+    };
+'''
+
+
 def build(destination: Path) -> None:
     destination.mkdir(parents=True, exist_ok=True)
     entries = json.loads(CONFIG.read_text(encoding="utf-8"))["build"]["include"]
@@ -33,6 +108,14 @@ def build(destination: Path) -> None:
         target = destination / relative
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(TEMPLATE / relative, target)
+
+    mission = destination / "mission.sqm"
+    source = mission.read_text(encoding="utf-8")
+    end_of_mission = source.rfind("\n};")
+    if end_of_mission < 0 or "class Entities" in source:
+        raise ValueError("Expected the unmodified legacy test mission without Eden Entities")
+    mission.write_text(source[:end_of_mission] + "\n" + authored_logistics_loadout()
+                       + source[end_of_mission:], encoding="utf-8")
 
     description = destination / "description.ext"
     source = description.read_text(encoding="utf-8")

@@ -40,11 +40,12 @@ adding extra locality wrappers or crew-creation code.
 
 ## Locality rule
 
-Composition init fields call the public feature API directly. Each API routes authority to the
-server and publishes local/JIP setup where required; beginners should not need to add repetitive
-`isServer` wrappers. Local-only Eden actions, such as teleport boarding points, run on each
-interface through their repeat-safe setup path. Do not add a locality guard unless that function's
-wiki article explicitly requires one.
+Composition init fields call the public feature API directly. Some functions forward a client call
+to the server; others accept only the server's copy of the Eden Init and ignore client copies. Both
+patterns avoid duplicate registration. Published state installs local/JIP actions where required.
+Do not add a locality guard unless that function's wiki article explicitly requires one; the Prowler
+example guards only its server-owned seat-point publication. Local-only Eden actions, such as
+teleport boarding points, run on each interface through their repeat-safe setup path.
 
 Every WMP Eden comment includes the direct URL of the matching wiki article. Keep that link when
 copying or adapting the example so the next mission maker can recover the parameter and locality

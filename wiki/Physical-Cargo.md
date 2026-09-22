@@ -33,7 +33,7 @@ Those coordinates and turret path are examples. Measure them on the exact vehicl
 
 The audit seat station uses a small crate and the NATO Prowler/DAGOR. It measures empty seat positions with a temporary hidden occupant at startup. It publishes positions confirmed by Arma. Use **REPORT VERIFIED SEATS** to check calibration. Mount the crate over a seat, then try that seat and a clear one. **CAPTURE MY OCCUPIED CARGO SEAT** can replace one measurement for diagnosis.
 
-The first HEMMT and Polaris tests had empty seat maps and locked nothing. A later Polaris test blocked the covered seat and left a clear seat usable. The Prowler station now needs the same live check. Other models and locality changes still need testing.
+The first HEMMT and Polaris tests had empty seat maps and locked nothing. Later Polaris and NATO Prowler tests blocked the covered seat and left a clear seat usable. The **Supply Transfers and Physical Cargo Example** composition includes the six measured points for its exact vanilla Prowler class; those coordinates must not be copied to a different vehicle model. Other models and locality changes still need testing.
 
 The carrier must stand near the object and contact point. The vehicle must be almost stationary. A bad or missing hit gives an ordinary ground drop. A rejected mount must leave the object recoverable. Use ACE **Carry** to take mounted cargo off, then drop it on clear ground or mount it elsewhere. Direct detachment could clip the object into the vehicle, so there is no **Unload physical cargo** action. Scripts can call `Waldo_fnc_PhysicalCargoUnmountServer` for controlled removal.
 
