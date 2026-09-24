@@ -267,7 +267,7 @@ Automatically extracts a player from an overturned or destroyed land vehicle/boa
 
 No further setup is required for ordinary land vehicles/boats — aircraft are excluded by default (see below). Use the `Waldo_EmergencyDismount_*` settings to select overturn/destruction triggers, normal exit versus eject, clear-exit geometry checks, momentum preservation, safe-position radius, bounded damage protection and unconscious recovery. Start and stop it with `Waldo_fnc_EmergencyDismountInit` and `Waldo_fnc_EmergencyDismountStop`; it intentionally has no ZEN module.
 
-Land vehicles also receive a local **Set Vehicle Upright** action on the vehicle itself when tipped and nearly stationary. The server validates proximity, forwards the operation to the vehicle's owning machine and places it above the terrain using its real model bounds and the local surface normal. Vehicle simulation must remain enabled for both the emergency extraction and upright mechanics.
+WMP also provides a separate [Set Vehicle Upright](Vehicle-Uprighting) action for tipped land vehicles. Keep simulation enabled for both features.
 
 ## WMP HUD
 
@@ -370,7 +370,8 @@ Arma officially supports runtime scaling for Simple Objects and attached objects
 
 ## See also
 
-- [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies)
+- [Vehicle Recovery](Vehicle-Recovery)
+- [Squad Rally Points](Squad-Rally-Points)
 - [Airborne Gunship Support](Airborne-Gunship-Support)
 - [Optional Feature Extensions](Optional-Feature-Extensions)
 - [Dynamic Anti-Air](Dynamic-Anti-Air)

@@ -22,6 +22,13 @@
 * [Custom 3D Markers](Custom-3D-World-Markers)
 * [WMP HUD](WMP-HUD)
 
+**Base and Player Services**
+
+* [Base Services](Base-Services)
+* [Loadout Saving](Loadout-Saving-and-Respawn)
+* [Teleport Action](Teleport-Actions)
+* [Squad Rally Points](Squad-Rally-Points)
+
 **Field Equipment**
 
 * [Interaction Procedures](Waldos-Mini-Games-Interaction-Challenges)
@@ -57,13 +64,18 @@
 **Logistics and Vehicles**
 
 * [Logistics and Crates](Logistics-System,-Starter-Crates-And-Quartermaster)
-* [Loadout Saving](Loadout-Saving-and-Respawn)
-* [Vehicle Recovery and Squad Rallies](Vehicle-Recovery-And-Squad-Rallies)
+* [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
+* [Supply Transfers](Supply-Transfers)
+* [Physical Cargo](Physical-Cargo)
+* [Vehicle Recovery](Vehicle-Recovery)
 * [Helicopter, Ground and Boat Transport](Transport-Services)
 * [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 * [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
-* [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
-* [Teleport and Cargo Actions](Teleportation-&-Move-Into-Cargo-Interactions)
+* [Vehicle Exit Actions](Vehicle-Exit-Actions)
+* [Set Vehicle Upright](Vehicle-Uprighting)
+* [Medical Vehicle Flags](Medical-Vehicle-Flags)
+* [Paradrop](Paradrop)
+* [Aircraft Boarding Action](Aircraft-Boarding-Actions)
 
 **Electronic Warfare and Radio**
 

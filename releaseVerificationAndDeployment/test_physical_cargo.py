@@ -49,6 +49,10 @@ class PhysicalCargoSourceTests(unittest.TestCase):
         self.assertIn('addMissionEventHandler ["EntityDeleted"', init_server)
         self.assertIn('[_cargo, _vehicle, false] call Waldo_fnc_PhysicalCargoSeatsServer', init_server)
         self.assertIn('}, 3] call CBA_fnc_addPerFrameHandler', init_server)
+        load_handler = init_server.split('private _id = ["ace_cargoLoaded", {', 1)[1].split('missionNamespace setVariable ["Waldo_PhysicalCargo_CargoLoadedEH"', 1)[0]
+        self.assertIn('CBA_fnc_execNextFrame', load_handler)
+        self.assertIn('[_cargo] call Waldo_fnc_PhysicalCargoClearServer', load_handler)
+        self.assertIn('"Waldo_PhysicalCargo_AttachedVehicle"', load_handler)
         audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
                  / "serviceLogisticsStationsServer.sqf").read_text(encoding="utf-8")
         self.assertIn('_seatControl setVariable ["Waldo_PhysicalCargo_Eligible", false, true]', audit)

@@ -21,6 +21,10 @@ if (!isServer) exitWith {};
 // Mark this before waiting for the inventory scan. Physical-cargo startup may
 // otherwise register the crate during the wait and add unwanted ACE handling.
 _target setVariable ["Waldo_Logistics_StarterCrate", true, true];
+// Starter stores are fixed mission infrastructure, not portable ACE cargo.
+// Set this before either wait so the object cannot briefly inherit class
+// Drag/Carry/Load actions while mission initialization finishes.
+[_target, nil, -1, false, false] call Waldo_fnc_SetCargoAttributes;
 
 //Wait Until Init is completed & players ingame (Postinit hack)
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };

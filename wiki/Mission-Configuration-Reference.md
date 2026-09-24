@@ -470,7 +470,7 @@ See [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) for full details.
 Temporary squad-owned respawn points are configured with the shared `Waldo_Rally_*` settings in
 `MissionConfig\missionSystemsConfig.sqf`. Vehicle-recovery settings live in
 `MissionConfig\logisticsConfig.sqf`; workshop/vehicle/carrier objects are registered separately.
-Object registration and runtime options are documented in [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+Object registration and runtime options are documented in [Vehicle Recovery](Vehicle-Recovery). See [Squad Rally Points](Squad-Rally-Points) for the separate rally settings.
 
 <!-- WMP-WIKI-NAV -->
 ---

@@ -1,18 +1,10 @@
-# Vehicle Actions and Paradrop
+# Paradrop
 
-> **Use this page when:** you need vehicle interactions, static-line or HALO jumps, and their equipment simulation settings.
+> **Use this page when:** you want static-line or HALO jumps, a flight route, or a Zeus-managed drop zone.
 
-The shipped Minimal and Full Eden paradrop compositions use passenger Blackfish aircraft with their
-normal four-person editor crew: pilot, copilot and two crew chiefs. WMP does not create replacement
-crew for an aircraft that already exists in Eden. This preserves the side and group chosen by the
-mission maker and avoids duplicate or empty-side AI in multiplayer. Runtime crew creation is
-reserved for an aircraft genuinely spawned by the Zeus module or script API.
+WMP adds static-line and HALO actions to supported aircraft. Use a placed aircraft, a shipped Eden composition, or a drop zone created in Zeus. The Minimal and Full compositions include Blackfish aircraft with their normal editor crews. WMP keeps the side and group you chose in Eden and creates crew only for aircraft spawned by a module or script.
 
-_Associated Files:_
-- _MissionScripts\VehicleActionsSetup_
-- _MissionScripts\Paradrop_
-
-This system provides three categories of vehicle-specific actions that are applied automatically at mission start: **paradrop/HALO jumping**, **side-door exit selection**, and **ACE cargo attributes**. Auto-detection covers the most common RHS, CUP and Vanilla assets — no setup required for those vehicles.
+This guide covers jumps and drop routes. See [Vehicle Exit Actions](Vehicle-Exit-Actions) for left/right dismount controls, [Medical Vehicle Flags](Medical-Vehicle-Flags) for ACE medical tagging, and [Aircraft Boarding Action](Aircraft-Boarding-Actions) for a separate boarding-object interaction.
 
 ## Beginner setup: choose one path
 
@@ -23,7 +15,7 @@ This system provides three categories of vehicle-specific actions that are appli
 | Zeus to create and manage the whole operation in play | **Paradrop - Create Drop Zone** | None. |
 | Generated AI jumpers, lifecycle and scripted control | `Waldo_fnc_ParadropCreateDropZone` | Advanced SQF/HashMap setup. |
 
-For the shortest custom setup:
+For a custom Eden setup:
 
 1. Place and crew a transport aircraft in Eden.
 2. Place an Eden marker at the drop zone, name it `dz1`, and rotate it to the desired approach
@@ -42,17 +34,9 @@ thing at a time only after the default route works with your chosen airframe.
 
 ---
 
-## Auto-Detected Vehicles
+## Auto-detected jump aircraft
 
-The following vehicles receive actions automatically when the mission loads (and when Zeus spawns them during the mission):
-
-### Exit Side Selection (Left / Right dismount)
-| Base Class | Vehicles |
-|---|---|
-| `Heli_Transport_01_base_F` | Vanilla CH-47 Chinook family |
-| `rhs_uh1h_base` | RHS UH-1H |
-| `RHS_UH1_Base` | RHS UH-1Y/N |
-| `RHS_Mi24_base` | RHS Mi-24 family |
+These aircraft receive jump actions when the mission loads or Zeus spawns them:
 
 ### Static Line Jump
 | Base Class | Notes |
@@ -61,7 +45,7 @@ The following vehicles receive actions automatically when the mission loads (and
 | `RHS_Mi8_base` | RHS Mi-8 family |
 | `Heli_Transport_02_base_F` | Vanilla Merlin/Puma family |
 | `RHS_C130J_Base` | Also gets HALO (see below) |
-| `B_T_VTOL_01_infantry_F` | Vanilla V-44 VTOL — also gets HALO |
+| `B_T_VTOL_01_infantry_F` | Vanilla V-44 VTOL: also gets HALO |
 
 ### HALO Jump
 | Base Class |
@@ -69,35 +53,25 @@ The following vehicles receive actions automatically when the mission loads (and
 | `RHS_C130J_Base` |
 | `B_T_VTOL_01_infantry_F` |
 
-### Automatic Medical Vehicle Flag (ACE3)
-| Base Class / Variant | Effect |
-|---|---|
-| RHS UH-60 MEV variants | `ace_medical_isMedicalVehicle = true` |
-| RHS M1230a1 variants | `ace_medical_isMedicalVehicle = true` |
-| RHS Stryker MEV | `ace_medical_isMedicalVehicle = true` |
-
-### ACE Cargo Attributes
-| Base Class | Cargo Space | Notes |
-|---|---|---|
-| `MRAP_01_base_F` | 4 items | Vanilla Hunter/Strider/Ifrit family |
-
-For any vehicle not in the above list, apply actions manually — see **Manual Setup** below.
+For jump actions on an unlisted aircraft, use **Manual Vehicle Setup** below.
 
 ---
 
 ## Jump Availability Conditions
 
-Jump actions only appear (and can only be triggered) when **all** conditions are met:
+For placed aircraft, jump actions appear only when these conditions are met:
 
 | Condition | Static Line | HALO |
 |---|---|---|
 | Player is in cargo (not driver/gunner) | ✓ | ✓ |
 | Aircraft door or ramp is open | ✓ | ✓ |
 | Altitude ≥ minimum | ✓ | ✓ |
-| Altitude ≤ maximum | ✓ | — |
-| Speed ≤ maximum | ✓ | — |
+| Altitude ≤ maximum | ✓ | N/A |
+| Speed ≤ maximum | ✓ | N/A |
 
 Supported door/ramp animations: `ramp_bottom`, `door_2_1/2`, `jumpdoor_1/2`, `back_ramp_switch`, `back_ramp_half_switch`, `RearDoors`, `Door_1_source`, `ramp_anim`.
+
+Zeus-created drop-zone aircraft do not require an open door. Their AI does not provide passengers with a dependable door control.
 
 ---
 
@@ -107,12 +81,12 @@ Supported door/ramp animations: `ramp_bottom`, `door_2_1/2`, `jumpdoor_1/2`, `ba
 1. Player triggers the hold action → ejected from the aircraft at the door
 2. A parachute vehicle (the configured `WALDO_STATIC_STATICCHUTE` class) is spawned and the player is placed in it immediately
 3. Equipment simulation runs (see below)
-4. Player descends under a fixed-wing chute — not steerable in vanilla, steerable with RHS `rhs_d6_Parachute`
+4. Player descends under a fixed-wing chute: not steerable in vanilla, steerable with RHS `rhs_d6_Parachute`
 
 ### HALO Jump
 1. Player triggers the hold action → ejected from the aircraft
 2. **Equipment simulation** runs first
-3. **Parachute backpack system** activates — the player's exact backpack loadout is saved and the backpack is replaced with a parachute (`WALDO_PARA_HALOCHUTE`)
+3. **Parachute backpack system** activates: the player's exact backpack loadout is saved and the backpack is replaced with a parachute (`WALDO_PARA_HALOCHUTE`)
 4. Player freefalls; a hold action "Ditch Chute And Put On Backpack" appears near the ground
 5. Landing automatically restores the original backpack, including exact magazine ammunition, weapons, nested containers and item counts. The hold action remains as a manual fallback. Repeated jump setup cannot overwrite an unrestored original backpack.
 
@@ -122,7 +96,7 @@ Supported door/ramp animations: `ramp_bottom`, `door_2_1/2`, `jumpdoor_1/2`, `ba
 
 _Associated File: MissionScripts\Paradrop\paraEquipmentSim.sqf_
 
-Simulates realistic item loss during a jump. Runs automatically on every jump. Two modes exist — **basic** (default) and **advanced**.
+Simulates realistic item loss during a jump. Runs automatically on every jump. Two modes exist: **basic** (default) and **advanced**.
 
 ### What Can Be Lost
 
@@ -132,9 +106,9 @@ Simulates realistic item loss during a jump. Runs automatically on every jump. T
 | Soft headgear (bandanas, berets, boonie hats, caps, etc.) | ~60% (random > 3) | Unassigned | Deleted |
 | Non-tactical glasses (aviators, spectacles, sport glasses) | ~70% (random > 2) | Unassigned | Deleted |
 
-**Basic mode** (default): Items are unequipped and fall to the inventory — the player is notified "You almost lost [item] during your jump, it is in your inventory."
+**Basic mode** (default): Items are unequipped and fall to the inventory: the player is notified "You almost lost [item] during your jump, it is in your inventory."
 
-**Advanced mode**: Items are permanently deleted — the player is notified "You lost [item] during your jump."
+**Advanced mode**: Items are permanently deleted: the player is notified "You lost [item] during your jump."
 
 Helmets and ballistic goggles are **not** in the loss lists and are always safe.
 
@@ -161,32 +135,28 @@ This is added automatically alongside jump actions. No setup required.
 
 ---
 
-## Reliable Quick Flight Setup
+## Eden quick flight: route options
 
 _Associated Files: `MissionScripts\Paradrop\paradropQuickFlightSetup.sqf`,
 `MissionScripts\Paradrop\paradropBuildFlightRoute.sqf`_
 
-For a plane you've already placed and crewed yourself in Eden, two steps give it a reliable
-AI-flown paradrop route — no ZEN, no registry, no generated jumpers:
+For an Eden-placed plane with its own crew, this call creates an AI-flown paradrop route. It uses no
+ZEN registration or generated jumpers.
 
-1. Place a marker anywhere on the map and name it (Eden Editor toolbar → Markers) — this is the
-   drop zone the plane will fly toward. Any name works; `"dz1"` is just the example below.
-2. In the aircraft's init field:
+1. Place a marker at the drop zone and name it in Eden. This example uses `"dz1"`.
+2. Put this in the aircraft's Init field:
 
 ```sqf
 [this, "dz1"] call Waldo_fnc_ParadropQuickFlightSetup;
 ```
 
-That's it — no marker math, no waypoints to place by hand. Arguments:
-`[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a marker name (the
-beginner-friendly option — reference whatever you named the marker in step 1), a raw position, or
-an object; `direction` (`-1` by default), when `target` is a marker, uses **that marker's own Eden
-"Direction" rotation** — rotate the marker in Eden to set the approach heading, no coordinate math
-needed. For a raw position or object target it falls back to computing a heading from the aircraft's
-position toward the target. It waits (up to 180 seconds - a heavy multi-feature mission can
-legitimately still be finishing init.sqf, and this is a one-time setup cost) for a pilot to exist
-before doing anything, so it's safe to place alongside a separate `Waldo_fnc_MoveInCargoPlane` call
-on another object in the same composition — both init fields can run in any order.
+The arguments are `[aircraft, target, direction, altitude, maxSpeed, options]`. `target` accepts a
+marker name, position or object. Use the marker name from step 1 for the simplest setup. With a
+marker target, the default `direction` value of `-1` uses that marker's Eden **Direction**. Rotate
+the marker to change the approach heading. With a position or object target, WMP calculates the
+heading from the aircraft. The call waits up to 180 seconds for a pilot while mission startup
+finishes. You may put a separate `Waldo_fnc_MoveInCargoPlane` call on another composition object;
+the two Init fields can run in either order.
 
 When `target` is a marker, the script immediately reads its position and Eden **Direction**, creates
 the WMP-owned point/corridor markers, then deletes the original setup marker. Dedicated clients can
@@ -195,71 +165,55 @@ client-local hide watcher for the consumed marker. The drop-zone area and standb
 therefore visible in the pre-mission briefing map without the red Eden setup marker overlaid. Route
 setup later reuses that exact geometry rather than creating another overlaid set.
 
-**If the plane never takes off toward its target**, the most common cause is step 1 — the marker
-was never placed, or its name doesn't exactly match the `target` string. This case reports itself
-in-game via `systemChat` ("`<aircraft> has no flight target: place a map marker named <name>...`"), not
-just the RPT log, specifically so this beginner mistake is easy to spot and fix.
+If the plane never flies toward its target, check that the marker exists and its name matches the
+`target` string exactly. WMP reports a missing marker through `systemChat` and the RPT.
 
-The **"[WMP] Halo And Static Line Blackfish Drop Examples"** composition (Eden Editor →
-Compositions → Waldos Mission Pack Compositions - Air Operations) demonstrates this end to end: it
-already includes both aircraft wired up as above *and* their `"dz1"`/`"dz2"` target markers, so
-dropping it into a mission and hitting play works immediately with no extra setup — drag the two
-markers to wherever you actually want each drop zone to be.
+The **[WMP] Halo And Static Line Blackfish Drop Examples** composition includes both configured
+aircraft and their `"dz1"` and `"dz2"` target markers. Find it under Eden **Compositions >
+Waldos Mission Pack Compositions - Air Operations**. Move the markers to the drop zones you want.
 
 The aircraft's own existing waypoints are cleared before the generated route is added. This matters:
 a leftover Eden waypoint competing with a scripted route for the AI's attention is the most common
 reason a hand-set-up paradrop plane behaves unpredictably (wandering off the jump run, ignoring
 altitude/speed, or never turning back for another pass). If you want to keep your own waypoints,
-don't call this function — set the aircraft up manually instead (see below). If the pilot's Eden
+don't call this function: set the aircraft up manually instead (see below). If the pilot's Eden
 group has other units besides this aircraft's crew (a squad leader who's also the pilot, a
 multi-crew group with members elsewhere), the crew is automatically moved into a dedicated fresh
 group first, so those other units keep their own waypoints untouched.
 
-Whatever static-line/HALO envelope you request (or the mission's configured defaults) is passed
-through `Waldo_fnc_ParadropNormalizeJumpEnvelope` before the jump action is installed, using the same
-clamped altitude/speed the route was actually built with — not your raw input — so it stays
-reachable no matter what altitude/speed you pass in. This is the fix for a jump action that never
-becomes available at all: the hold-action's live condition checks the aircraft's altitude and speed
-against that envelope every frame, and a route altitude/speed set independently of the envelope is
-exactly how the two end up unable to ever agree. `Waldo_fnc_ParadropCreateDropZone` normalizes off
-the same route-returned basis, so both entry points behave identically here.
+WMP passes the requested static-line and HALO limits through
+`Waldo_fnc_ParadropNormalizeJumpEnvelope` before installing the jump action. It uses the route's
+clamped altitude and speed, which keeps the action's live checks within the aircraft's flight
+profile. `Waldo_fnc_ParadropCreateDropZone` uses the same route values.
 
-`options` is a HashMap for anything beyond the defaults — jump envelope overrides (falls back to the
-mission's `MissionConfig\airOperationsConfig.sqf` values, then normalized as above), `lifecycle`
-(`LOOP` default / `RETAIN` / `DESPAWN` — this function never deletes the aircraft under any
-lifecycle; `DESPAWN` only changes which waypoints get added and is one of the two automatic
-marker-cleanup triggers below), `circuitDirection` (`LEFT` default / `RIGHT`),
-`approachDistance`/`runLength`/`exitDistance`, `name` (marker label, default `"Drop Zone"`),
-`aircraftInvincible` (**off by default** — protects the aircraft from normal engine damage for the
-life of the operation and reapplies protection if ownership moves between the server, a headless
-client or a player client; scripted `setDamage`/`setHit` calls can still damage it),
-`createMarkers` (**on by default** — AREA/STANDBY/GREEN/RED/POINT markers in the same layout as
-`Waldo_fnc_ParadropCreateDropZone`, so you get a visible working drop zone immediately; pass `false`
-for a map-clutter-free operation), and `keepMarkersOnCleanup` (**off by default** — the static markers
-are removed automatically once the aircraft is destroyed/deleted, or once a `DESPAWN` run reaches its
-exit point, since a marker for a drop zone that's no longer active is just stale; set `true` to leave
-them on the map instead — this never affects the aircraft or crew either way). See the script's own
-header for the complete list and a HALO one-shot example.
+The optional `options` HashMap accepts these keys:
 
-`createMarkers` also adds a **live-updating aircraft marker** — the same mechanism Airborne Gunship
-Support uses for its own aircraft — that tracks the plane's real position/heading every frame while
-it's flying, visible only to players on the aircraft's own side. This is what actually "replaces" a pre-placed target
-marker with a working drop zone once the aircraft takes off, rather than leaving only a fixed icon on
-the map with no sense of where the plane currently is. It's always removed once the aircraft is gone,
-regardless of `keepMarkersOnCleanup` (that option only ever affects the static
-AREA/STANDBY/GREEN/RED/POINT markers).
+| Key | What it changes |
+|---|---|
+| `staticJumpEnabled`, `haloJumpEnabled`, `staticMinimumAltitude`, `staticMaximumAltitude`, `staticMaximumSpeed`, `staticChuteClass`, `haloMinimumAltitude`, `haloBackpackClass` | Sets which jumps are offered and their limits. Omitted values come from `MissionConfig\airOperationsConfig.sqf`; WMP then normalizes them to the route. |
+| `lifecycle` | `LOOP` (default), `RETAIN` or `DESPAWN`. This quick-flight call never deletes the aircraft. `DESPAWN` changes the route waypoints and can trigger marker cleanup. |
+| `circuitDirection` | `LEFT` (default) or `RIGHT`. |
+| `approachDistance`, `runLength`, `exitDistance` | Sets the route geometry. |
+| `name` | Sets the marker label; default `"Drop Zone"`. |
+| `aircraftInvincible` | Off by default. Protects against normal engine damage and reapplies after locality changes. Scripted `setDamage` and `setHit` can still damage the aircraft. |
+| `createMarkers` | On by default. Creates hidden AREA, STANDBY, GREEN and RED route markers, plus a visible POINT marker for a named Eden target. Set `false` to omit them. |
+| `keepMarkersOnCleanup` | Off by default. Set `true` to keep static markers after aircraft loss or a `DESPAWN` run reaches its exit. It does not change the aircraft or crew. |
 
-This shares its actual flight-route logic (`Waldo_fnc_ParadropBuildFlightRoute`) with the fuller
-Dynamic Drop-Zone system below — the same proven standby/green/red/exit route and the same
-altitude/speed handling, so both paths fly identically once airborne. Use the Dynamic Drop-Zone
-system instead when you want a managed, repeatable operation with generated AI jumpers, a Zeus
-create/remove workflow, or map symbology by default.
+See the function header for the full option list and a one-shot HALO example.
+
+`createMarkers` also adds an aircraft marker that tracks the plane's position and heading while it
+flies. Only players on the aircraft's side can see it. WMP removes this live marker when the
+aircraft is gone, even if `keepMarkersOnCleanup` keeps the static route markers.
+
+This quick setup and the Dynamic Drop-Zone system below both use
+`Waldo_fnc_ParadropBuildFlightRoute`. Use Dynamic Drop-Zone when you need generated AI jumpers,
+Zeus create/remove controls or default map markers.
 
 ### Helicopters and planes use different AI speed modes
 
 This distinction is internal and deliberate:
 
-- Helicopter route waypoints use Arma AI's `FULL` speed mode so Huron/Mohawk-class pilots actually
+- Helicopter route waypoints use Arma AI's `FULL` speed mode so Huron/Mohawk-class pilots
   pursue the requested cruise speed. The explicit `limitSpeed` value remains the hard ceiling.
 - Fixed-wing and VTOL plane routes retain `LIMITED`, where the established launch velocity and
   cruise orders already behave correctly.
@@ -268,9 +222,7 @@ This distinction is internal and deliberate:
 
 Mission makers set the numeric route ceiling, not `FULL`/`LIMITED` themselves. Applying the
 helicopter workaround to planes, removing the helicopter lift delay, or confusing `limitSpeed`
-(km/h) with `forceSpeed` (m/s) can produce overspeed, slow flight, or an apparent dive. The current
-dedicated audit tests two helicopter classes at roughly 300 m and verifies they remain alive,
-airborne, moving and inside the expected speed band.
+(km/h) with `forceSpeed` (m/s) can produce overspeed, slow flight, or an apparent dive.
 
 ---
 
@@ -292,7 +244,7 @@ a point behind the original spawn before beginning the next aligned run; **Singl
 loiters beyond the exit; **Single pass - despawn** deletes the aircraft, its crew and the operation
 (a lost aircraft is cleaned up the same way). The map markers created for the operation are **removed
 automatically** along with this cleanup, since a marker for a drop zone that's no longer active is
-just stale — check **Keep markers when the operation ends automatically** in the create dialog
+just stale: check **Keep markers when the operation ends automatically** in the create dialog
 (`keepMarkersOnCleanup`, off by default) to leave them on the map instead. Explicitly using
 **Paradrop - Remove Operation** always removes the markers regardless of that setting. As with the
 quick-setup flight above, the operation also carries a live-updating aircraft marker that tracks the
@@ -385,7 +337,7 @@ Use `Waldo_fnc_ParadropEmbark` to transfer players or create a boarding point, a
 
 ## Configuring Jump Parameters
 
-Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to **all** aircraft — both auto-detected and manually set up:
+Jump thresholds are set in `MissionConfig\airOperationsConfig.sqf` and apply to **all** aircraft: both auto-detected and manually set up:
 
 Edit the existing rows in that file; do not copy runtime `missionNamespace setVariable` commands
 into `init.sqf` or `initServer.sqf`:
@@ -428,11 +380,9 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 // Apply only static line
 [this, 180, 350, 310, "rhs_d6_Parachute"] call Waldo_fnc_AddStaticJump;
 
-// Apply exit side selection
-[this] call Waldo_fnc_AddExitActions;
 ```
 
-`Waldo_fnc_VehicleJumpSetup` is a convenience wrapper that applies both jump types using whichever parameters are set in `MissionConfig\airOperationsConfig.sqf`.
+`Waldo_fnc_VehicleJumpSetup` applies both jump types using the parameters in `MissionConfig\airOperationsConfig.sqf`. To add left/right exit selection instead, see [Vehicle Exit Actions](Vehicle-Exit-Actions).
 
 ## Beginner troubleshooting
 
@@ -449,30 +399,6 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 | Old map markers remain | Use **Paradrop - Remove Operation**. Automatic cleanup retains static markers only when `keepMarkersOnCleanup` was explicitly enabled. |
 
 ---
-
-## Set Cargo Attributes
-
-_Associated File: MissionScripts\VehicleActionsSetup\SetCargoAttributes.sqf_
-
-Manually configure the ACE cargo space, cargo size, drag and carry settings for any object.
-
-### Parameters
-
-| # | Type | Default | Description |
-|---|---|---|---|
-| 0 | OBJECT | — | Vehicle or object |
-| 1 | NUMBER | — | Cargo space (use `nil` to leave unchanged) |
-| 2 | NUMBER | — | Cargo size (use `nil` to leave unchanged) |
-| 3 | BOOL | true | Draggable |
-| 4 | BOOL | true | Carryable |
-
-### Examples
-
-```sqf
-[myTruck, 30, -1] call Waldo_fnc_SetCargoAttributes;         // 30 cargo space
-[myCrate, -1, 2, true, false] call Waldo_fnc_SetCargoAttributes; // size 2, draggable only
-[myCrate, nil, nil, true, false] call Waldo_fnc_SetCargoAttributes; // only set drag/carry
-```
 
 <!-- WMP-WIKI-NAV -->
 ---

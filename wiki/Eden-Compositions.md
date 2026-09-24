@@ -47,7 +47,7 @@ Dynamic AA, Dynamic AO Generation and Airborne Gunship Support have Eden composi
 functions send client-side Eden calls to the server. Generated paradrop zones work differently:
 `Waldo_fnc_ParadropCreateDropZone` creates its own aircraft and crew when called. Use `initServer.sqf`
 or the **Dynamic Paradrop** ZEN module for that. For an aircraft already placed with its crew, use
-[Halo and Static-Line Paradrop Examples](Vehicle-Actions-&-Paradrop).
+[Halo and Static-Line Paradrop Examples](Paradrop).
 
 Player accessibility, treatment feedback, persistence enablement, UI themes, rally state, tree
 felling and automatic AI handlers use configuration or scripted setup instead of a placed object.

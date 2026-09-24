@@ -213,7 +213,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertLess(helper.index('call Waldo_fnc_CargoAttributesPrepareObject'),
                         helper.index('if (missionNamespace getVariable ["Waldo_PhysicalCargo_Enable"'))
         zen_crate = source('MissionScripts/ZenModules/ZenSpawnCrateServer.sqf')
-        self.assertIn('[_crate, "SUPPLY"] call Waldo_fnc_CargoAttributesPrepareObject', zen_crate)
+        self.assertNotIn('call Waldo_fnc_CargoAttributesPrepareObject', zen_crate)
         self.assertNotIn('[_crate, true] call ace_dragging_fnc_setCarryable', zen_crate)
         transfer = source('MissionScripts/Logistics/SupplyTransfers/supplyTransfersRegister.sqf')
         self.assertIn('[_container] call Waldo_fnc_CargoAttributesPrepareObject', transfer)
@@ -246,13 +246,53 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('Rearm supply: unlimited', label)
         self.assertIn('Waldo_QM_RearmInfoActionLocal', label)
 
-    def test_zen_cargo_apply_leaves_remote_execution_context(self):
+    def test_zen_cargo_apply_uses_server_local_next_frame(self):
         server = source('MissionScripts/ZenModules/zenServiceLogisticsServer.sqf')
         block = server.split('case "ACE_CARGO_SET": {', 1)[1].split('\n    };', 1)[0]
-        self.assertIn('[_target, _setSpace, _space, _setSize, _size, _drag, _carry,', block)
-        self.assertIn('] spawn {', block)
+        self.assertIn('CBA_fnc_execNextFrame', block)
+        self.assertNotIn('] spawn {', block)
         self.assertIn('private _applied = !isNull _target && {_args call Waldo_fnc_SetCargoAttributes}', block)
         self.assertIn('"[WMP ZEN ACE CARGO] applied=%1', block)
+
+    def test_zen_cargo_dialog_reads_live_ace_state_and_skips_unchanged_apply(self):
+        dialog = source('MissionScripts/ZenModules/zenServiceLogisticsModule.sqf')
+        block = dialog.split('case "ACE_CARGO": {', 1)[1]
+        for key in ('ace_dragging_canDrag', 'ace_dragging_canCarry',
+                    'ace_dragging_ignoreWeightDrag', 'ace_dragging_ignoreWeightCarry',
+                    'ace_cargo_size', 'ace_cargo_space'):
+            self.assertIn(key, block)
+        self.assertNotIn('getVariable ["Waldo_CargoAttributes_Choice"', block)
+        self.assertNotIn('"Change ACE cargo size"', block)
+        self.assertNotIn('"Change ACE cargo space"', block)
+        self.assertIn('private _setSize = _size isNotEqualTo (round _originalSize)', block)
+        self.assertIn('private _setSpace = _space isNotEqualTo (round _originalSpace)', block)
+        self.assertIn('if (!_setHandling && {!_setSize} && {!_setSpace}) exitWith {}', block)
+        self.assertIn('["setHandling", _setHandling]', block)
+        self.assertIn('_size = round _size', block)
+        self.assertIn('_space = round _space', block)
+        self.assertIn('[_target, _send, _choice, _size, _space]', block)
+        self.assertEqual(block.count(', true]'), 6)
+        server = source('MissionScripts/ZenModules/zenServiceLogisticsServer.sqf')
+        self.assertIn('if (!_setHandling && {!isNull _target}) then', server)
+        self.assertIn('if (_size isEqualType 0 && {_setSize isEqualType true} && {_setSize}) then {_size = round _size}', server)
+        self.assertIn('if (_space isEqualType 0 && {_setSpace isEqualType true} && {_setSpace}) then {_space = round _space}', server)
+
+    def test_spawned_crate_defaults_and_starter_exception(self):
+        for path, object_name in (
+            ('MissionScripts/Logistics/Crates/LogiBoxes.sqf', '_box'),
+            ('MissionScripts/Logistics/Crates/quartermasterExtendedSpawn.sqf', '_object'),
+            ('MissionScripts/ZenModules/ZenSpawnCrateServer.sqf', '_crate'),
+            ('MissionScripts/ZenModules/Zen_loadoutSaveModule.sqf', '_target'),
+            ('MissionScripts/ZenModules/RuntimeControl/featureRuntimeApply.sqf', '_hub'),
+        ):
+            self.assertIn(f'[{object_name}, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes'
+                          if path.endswith(('ZenSpawnCrateServer.sqf',
+                                            'Zen_loadoutSaveModule.sqf', 'featureRuntimeApply.sqf'))
+                          else f'[{object_name}, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes',
+                          source(path), path)
+        starter = source('MissionScripts/Logistics/Crates/doStarterCrate.sqf')
+        self.assertLess(starter.index('[_target, nil, -1, false, false] call Waldo_fnc_SetCargoAttributes'),
+                        starter.index('waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE"'))
 
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")

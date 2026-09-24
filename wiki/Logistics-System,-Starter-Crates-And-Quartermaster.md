@@ -40,6 +40,7 @@ if enabled, use a limited or unrestricted arsenal.
 Sets up: a linked ACE/vanilla action for saving the respawn loadout, a limited ACE Arsenal
 (restricted to `mission.sqm`'s gear), and full supplies (medical and standard, also
 `mission.sqm`-bound).
+Starter crates stay in place: WMP disables ACE Drag, Carry and loading into ACE Cargo on them.
 
 ## Supply crate
 
@@ -156,6 +157,10 @@ actions under infantry supplies, vehicle support and fuel.
 The progress bar lasts five seconds and names the requested issue. The spawned object's ACE cargo
 name carries the same label. Grenades use a small ammo box, explosives an ordnance box, and rearm a
 vehicle-ammo box.
+
+Players can drag or carry Quartermaster issues regardless of ACE's weight limit. Each takes one
+ACE cargo slot when loaded into a vehicle. [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
+explains how to inspect or change those values on a particular object.
 
 Each issue has an availability flag. WMP clears ordinary inventory from the Rearm Box. The box
 has a status action outside ACE. In ACE's Limited

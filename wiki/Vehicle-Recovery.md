@@ -1,14 +1,19 @@
-# Vehicle Recovery and Squad Rally Points
+# Vehicle Recovery
 
-> **Use this page when:** you want recoverable vehicle logistics or temporary squad-owned respawn positions.
+> **Use this page when:** you want to package damaged vehicles and restore them at a workshop.
 
-Both systems keep authoritative registries and world mutation on the server and presentation on player machines. Only client-consumed object/group state is broadcast. Their actions are replayed safely for joining players, requests are checked against the requesting player's network owner, and normal feedback uses the WMP notification cards.
+The server owns recovery state and vehicle changes. Each player, including a joining player, receives the local controls.
 
-## Vehicle recovery
+Vehicle recovery is opt-in per object. Register a workshop, a vehicle to recover, and optionally a carrier. Players can package a damaged, empty, stationary vehicle. Deliver its package to a workshop with the same key to restore it at a clear position.
 
-Vehicle recovery is opt-in per object. Register one or more workshops, recoverable vehicles and optional carrier vehicles. A damaged, empty and stationary registered vehicle can be packaged into a transportable cargo object. When an unloaded, grounded package enters a workshop with the matching key, the server restores the vehicle at a clear position.
+## Set up a working example in Eden
 
-Quickest working setup — every call below only needs its first argument (the object), so a mission maker can drop three objects and go, then tighten the details later:
+1. Place a workshop object, a vehicle to recover, and a carrier such as a truck.
+2. Put the matching line below in each object's own **Init** field. Each field gets one line, not the whole block.
+3. Preview the mission. Damage the recovery vehicle, empty it, stop it, and use **Package for Recovery**.
+4. Load the package on the carrier or move it to the workshop. The workshop restores a matching, grounded package.
+
+The calls below use the default workshop key, radius, side, and carrier mode:
 
 ```sqf
 [this] call Waldo_fnc_RecoveryRegisterWorkshop;   // in a repair depot's init field - key/radius/side all default
@@ -16,7 +21,7 @@ Quickest working setup — every call below only needs its first argument (the o
 [this] call Waldo_fnc_RecoveryRegisterCarrier;    // in a truck's init field - mode defaults to AUTO
 ```
 
-The `[WMP]Vehicle_Recovery_Workshop_Example_Minimal` composition (see [Eden Compositions](Eden-Compositions)) places all three pre-wired this way. For explicit control over every option:
+The `[WMP]Vehicle_Recovery_Workshop_Example_Minimal` composition places all three objects with these calls. See [Eden Compositions](Eden-Compositions). Set an explicit workshop key and options when you need several independent recovery sites:
 
 ```sqf
 [repairDepot, "FOB_ALPHA", 50, west] call Waldo_fnc_RecoveryRegisterWorkshop;
@@ -63,11 +68,11 @@ With ACE Interact loaded, a registered recoverable vehicle receives **Package fo
 vehicle and a carrier receives **Vehicle Recovery > Load Recovery Package / Unload Recovery
 Package**. Without ACE Interact, the same controls appear as vanilla actions. Runtime registration,
 re-registration and JIP all reinstall the expected local controls repeat-safely. The procedure option
-is genuinely optional: when it is off, **Package for Recovery** submits the normal server PACK
+is optional: when it is off, **Package for Recovery** submits the normal server PACK
 request immediately.
 
 The vehicle module also supports registration after destruction. Arma wrecks can retain dead crew
-objects in `crew vehicle`; WMP deliberately counts only **living** occupants. That keeps an already-
+objects in `crew vehicle`. WMP counts only **living** occupants. That keeps an already-
 destroyed Zeus-selected wreck eligible while still refusing a wreck or damaged vehicle containing a
 living player or AI. The client RPT records `mode`, `eligibleNow`, `alive`, `crewTotal` and
 `crewLiving` when the action is installed, which distinguishes a missing ACE action from an action
@@ -79,31 +84,6 @@ expected ACE or vanilla actions. Every registration and PACK/LOAD/UNLOAD request
 `[WMP RECOVERY]` RPT line naming the object, operation, owner and active mode.
 
 Living vehicles are retained hidden while packaged and restored as the same object, preserving object identity, event handlers, actions, applied scripts and external references. A destroyed vehicle cannot be resurrected reliably, so that path creates a replacement, restores its Eden variable name, copies the configured custom-variable allowlist and invokes `Waldo_Recovery_OnRestored` for mission-specific rebinding. Crew and attached objects are not recreated. Use persistence separately for long-term mission saves.
-
-## Squad rally points
-
-Set `Waldo_Rally_Enable = true`, or enable the feature with **Respawn - Squad Rally Control**. The current leader of a qualifying group receives controls to deploy or pack the group's temporary rally. Respawn ownership and cooldown live on the group, so leader death or reassignment does not orphan the state.
-
-The server checks that the leader is alive, on foot, over dry and sufficiently level ground, outside the configured hostile exclusion radius, and commands the minimum number of living group members. It chooses a clear position and adds a group-scoped respawn position. The rally marker is created locally only for current group members and is replayed safely for JIP without revealing it to opposing players. All state is removed when the object is destroyed, packed, expires, or the feature is disabled.
-
-Primary settings in `init.sqf` are:
-
-| Setting | Default | Purpose |
-|---|---:|---|
-| `Waldo_Rally_Enable` | `false` | Enables player-local squad rally controls |
-| `Waldo_Rally_ObjectClass` | `Land_SatelliteAntenna_01_F` | Rally world object |
-| `Waldo_Rally_Duration` | `180` | Active seconds |
-| `Waldo_Rally_DeploymentTime` | `15` | Uninterrupted leader deployment time |
-| `Waldo_Rally_Cooldown` | `300` | Group cooldown from deployment |
-| `Waldo_Rally_EnemyExclusionRadius` | `100` | Hostile exclusion radius in metres |
-| `Waldo_Rally_MinimumGroupMembers` | `2` | Living group members required |
-| `Waldo_Rally_PlacementDistance` | `2` | Placement distance ahead of the leader |
-| `Waldo_Rally_MaximumSlope` | `20` | Maximum surface angle in degrees |
-| `Waldo_Rally_AllowRegroup` | `false` | Allows direct movement to the rally |
-
-Direct regroup is disabled by default because it bypasses the normal respawn flow. When deliberately enabled, only a living member of the owning group can request it and the server selects a clear destination beside the active rally.
-
-Runtime ZEN changes are published as an ordered setting bundle before client actions start. JIP clients request the latest server snapshot; disabling the system removes local actions, clears its keyed initializer and removes active rallies.
 
 ## See also
 

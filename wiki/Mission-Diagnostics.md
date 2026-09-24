@@ -214,7 +214,7 @@ A client report is:
 
 - [Logistics System, Starter Crates And Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
 - [Mission Configuration Reference](Mission-Configuration-Reference)
-- [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop)
+- [Paradrop](Paradrop)
 
 <!-- WMP-WIKI-NAV -->
 ---

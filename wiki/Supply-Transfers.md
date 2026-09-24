@@ -29,10 +29,9 @@ Quartermaster crates and WMP supply or medical crates register automatically whe
 on. This includes crates issued through WMP's Zeus modules, loadout-save fallback, field resupply
 and crate compositions. Starter crates keep their existing setup.
 
-WMP-issued inventory crates get ACE Drag and Carry when they spawn, even if Supply Transfers or
-Physical Cargo is off.
-
 Registering an Eden crate also gives it Drag and Carry.
+For the Drag, Carry and ACE loading values on other objects, use
+[ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling).
 
 The same call works from `initServer.sqf` with a named object:
 
@@ -97,6 +96,7 @@ backpack contents. If the server rejects a transfer, both inventories should sta
 
 ## See also
 
+- [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 - [Physical Cargo](Physical-Cargo)
 - [Logistics, Starter Crates, and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
 

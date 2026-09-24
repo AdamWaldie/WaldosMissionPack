@@ -132,34 +132,55 @@ switch (toUpperANSI _feature) do {
         // No ACE setters run while placing this module. Keep the read and dialog
         // times separate so a first-open hitch can be assigned to the UI path.
         private _startedAt = diag_tickTime;
-        private _choice = _target getVariable ["Waldo_CargoAttributes_Choice", [
-            _target getVariable ["ace_dragging_canDrag",
-                getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_dragging_canDrag") > 0],
-            _target getVariable ["ace_dragging_canCarry",
-                getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_dragging_canCarry") > 0], false, false
-        ]];
-        private _size = _target getVariable ["ace_cargo_size",
-            getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_cargo_size")];
-        private _space = _target getVariable ["Waldo_CargoAttributes_TotalSpace",
-            getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_cargo_space")];
+        private _config = configFile >> "CfgVehicles" >> typeOf _target;
+        // Read ACE's effective object state. WMP's saved choice may be stale
+        // after another module or mission script changes the same object.
+        private _choice = [
+            _target getVariable ["ace_dragging_canDrag", getNumber (_config >> "ace_dragging_canDrag") > 0],
+            _target getVariable ["ace_dragging_canCarry", getNumber (_config >> "ace_dragging_canCarry") > 0],
+            _target getVariable ["ace_dragging_ignoreWeightDrag", getNumber (_config >> "ace_dragging_ignoreWeightDrag") > 0],
+            _target getVariable ["ace_dragging_ignoreWeightCarry", getNumber (_config >> "ace_dragging_ignoreWeightCarry") > 0]
+        ];
+        private _configSize = if (isNumber (_config >> "ace_cargo_size")) then {
+            getNumber (_config >> "ace_cargo_size")
+        } else {-1};
+        private _size = _target getVariable ["ace_cargo_size", _configSize];
+        private _space = _target getVariable ["ace_cargo_space",
+            getNumber (_config >> "ace_cargo_space")];
+        if !((_target getVariable ["ace_cargo_loaded", []]) isEqualTo []) then {
+            // ACE exposes remaining space once cargo is loaded. WMP's own
+            // tracked total is preferable when it is available.
+            _space = _target getVariable ["Waldo_CargoAttributes_TotalSpace", _space];
+        };
+        private _sizeRangeMax = 50 max (ceil _size);
+        private _spaceRangeMax = 100 max (ceil _space);
         private _readMs = round ((diag_tickTime - _startedAt) * 1000);
+        // ZEN otherwise reuses values saved from the last object edited. Force
+        // each row to its live object value so Cancel/reopen resets the form.
         ["Set ACE Cargo and Object Handling", [
-            ["CHECKBOX", ["Can drag", "Show ACE Drag and allow this object to be dragged."], _choice param [0, false]],
-            ["CHECKBOX", ["Can carry", "Show ACE Carry and allow this object to be carried."], _choice param [1, false]],
-            ["CHECKBOX", ["Ignore drag weight limit", "Only use when the intended object exceeds ACE's normal drag weight limit."], _choice param [2, false]],
-            ["CHECKBOX", ["Ignore carry weight limit", "Only use when the intended object exceeds ACE's normal carry weight limit."], _choice param [3, false]],
-            ["CHECKBOX", ["Change ACE cargo size", "Size controls whether this object can be loaded into another ACE Cargo vehicle. Leave off to keep its current size."], false],
-            ["SLIDER", ["ACE cargo size", "-1 disables ACE loading; 0 or more enables it. Does not control physical mounting."], [-1, 50, (_size max -1) min 50, 0]],
-            ["CHECKBOX", ["Change ACE cargo space", "Space controls how much ACE Cargo this object can hold. Leave off to keep its current capacity."], false],
-            ["SLIDER", ["ACE cargo space", "0 means it cannot hold ACE Cargo; larger values give more capacity."], [0, 100, (_space max 0) min 100, 0]]
+            ["CHECKBOX", ["Can drag", "Show ACE Drag and allow this object to be dragged."], _choice param [0, false], true],
+            ["CHECKBOX", ["Can carry", "Show ACE Carry and allow this object to be carried."], _choice param [1, false], true],
+            ["CHECKBOX", ["Ignore drag weight limit", "Only use when the intended object exceeds ACE's normal drag weight limit."], _choice param [2, false], true],
+            ["CHECKBOX", ["Ignore carry weight limit", "Only use when the intended object exceeds ACE's normal carry weight limit."], _choice param [3, false], true],
+            ["SLIDER", ["ACE cargo size", "Whole-number size: -1 disables ACE loading; 0 or more enables it. Does not control physical mounting."], [-1, _sizeRangeMax, (round _size) max -1, 0], true],
+            ["SLIDER", ["ACE cargo space", "Whole-number capacity: 0 means it cannot hold ACE Cargo. For loaded objects, ACE may expose remaining rather than total space."], [0, _spaceRangeMax, (round _space) max 0, 0], true]
         ], {
             params ["_values", "_args"];
-            _args params ["_target", "_send"];
-            _values params ["_drag", "_carry", "_ignoreDrag", "_ignoreCarry", "_setSize", "_size", "_setSpace", "_space"];
+            _args params ["_target", "_send", "_originalChoice", "_originalSize", "_originalSpace"];
+            _values params ["_drag", "_carry", "_ignoreDrag", "_ignoreCarry", "_size", "_space"];
+            // ZEN sliders may return fractions even with zero display decimals.
+            // ACE accepts those fractions, so normalise the submitted values.
+            _size = round _size;
+            _space = round _space;
+            private _setSize = _size isNotEqualTo (round _originalSize);
+            private _setSpace = _space isNotEqualTo (round _originalSpace);
+            private _setHandling = !([_drag, _carry, _ignoreDrag, _ignoreCarry] isEqualTo _originalChoice);
+            if (!_setHandling && {!_setSize} && {!_setSpace}) exitWith {};
             ["ACE_CARGO_SET", _target, [["drag", _drag], ["carry", _carry],
                 ["ignoreDragWeight", _ignoreDrag], ["ignoreCarryWeight", _ignoreCarry],
-                ["setSize", _setSize], ["size", _size], ["setSpace", _setSpace], ["space", _space]]] call _send;
-        }, {}, [_target, _send]] call zen_dialog_fnc_create;
+                ["setHandling", _setHandling], ["setSize", _setSize], ["size", _size],
+                ["setSpace", _setSpace], ["space", _space]]] call _send;
+        }, {}, [_target, _send, _choice, _size, _space]] call zen_dialog_fnc_create;
         diag_log format ["[WMP ZEN ACE CARGO] placement target=%1 readMs=%2 dialogMs=%3",
             typeOf _target, _readMs, round ((diag_tickTime - _startedAt) * 1000) - _readMs];
     };
