@@ -34,10 +34,12 @@ This is the complete top-level index of mission systems currently supplied by Wa
 | [Airborne Gunship Support](Airborne-Gunship-Support) | Named gunship lifecycles, controller assignment, turret control, orbits and service cycles | `MissionConfig\airOperationsConfig.sqf`; server registration or focused ZEN operations |
 | [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout) | Add/replace/remove/clear turret weapons and magazines; set/clear aircraft pylon ordnance | No `MissionConfig` file; `Waldo_fnc_VehicleWeaponLoadoutApply` or **Vehicle Customisation - Editor** placed directly on the vehicle |
 | [Vehicle Appearance](Vehicle-Appearance) | Recolor a vehicle's texture slots; show/hide named model selections, optionally clearing a linked turret's weapon | No `MissionConfig` file; `Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` or the same **Vehicle Customisation - Editor** placed directly on the vehicle |
-| [Dynamic Paradrop Operations](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations) | Player-focused server-owned drop routes with boarding, static-line/HALO actions, aligned repeat circuits, optional AI jumpers, markers and teardown | Pools and thresholds in `MissionConfig\airOperationsConfig.sqf`; scripted APIs or ZEN modules |
-| [Vehicle Recovery](Vehicle-Recovery-And-Squad-Rallies#vehicle-recovery) | Damage-gated packaging, recovery carriers and keyed workshops that restore vehicle configuration | Scripted object registration or three focused ZEN registration modules |
+| [Vehicle Exit Actions](Vehicle-Exit-Actions) | Left/right helicopter passenger exits | Automatic on supported classes; `Waldo_fnc_AddExitActions` for other vehicles |
+| [Medical Vehicle Flags](Medical-Vehicle-Flags) | ACE medical tagging for specified medical variants | Automatic on listed classes; set `ace_medical_isMedicalVehicle` in Eden for others |
+| [Dynamic Paradrop Operations](Paradrop#dynamic-drop-zone-operations) | Player-focused server-owned drop routes with boarding, static-line/HALO actions, aligned repeat circuits, optional AI jumpers, markers and teardown | Pools and thresholds in `MissionConfig\airOperationsConfig.sqf`; scripted APIs or ZEN modules |
+| [Vehicle Recovery](Vehicle-Recovery) | Damage-gated packaging, recovery carriers and keyed workshops that restore vehicle configuration | Scripted object registration or three focused ZEN registration modules |
 | [Helicopter, Ground and Boat Transport](Transport-Services) | Reusable server-reserved AI transport pools with named management, physical pickup, destination, disembark and RTB lifecycles | Register AI-crewed vehicles by composition, script, or the focused **WMP Transport** ZEN modules |
-| [Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies#squad-rally-points) | Temporary group-owned respawn positions with hostile, terrain, membership, expiry and cooldown rules | `MissionConfig\missionSystemsConfig.sqf`; squad-leader actions or runtime ZEN control |
+| [Squad Rally Points](Squad-Rally-Points) | Temporary group-owned respawn positions with hostile, terrain, membership, expiry and cooldown rules | `MissionConfig\missionSystemsConfig.sqf`; squad-leader actions or runtime ZEN control |
 
 Runtime configuration is server-authoritative. Current settings are published for connected and JIP players, while keyed JIP initialisers install or remove the required local behavior. AI and breaching remain all-machine systems because their engine locality can move between server, player clients and headless clients.
 
@@ -70,7 +72,9 @@ Runtime configuration is server-authoritative. Current settings are published fo
 - [Supply Transfers](Supply-Transfers)
 - [Physical Cargo](Physical-Cargo)
 - [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
-- [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
+- [Vehicle Exit Actions](Vehicle-Exit-Actions)
+- [Medical Vehicle Flags](Medical-Vehicle-Flags)
+- [Paradrop](Paradrop)
 - [Vehicle Ambush and Camo](Vehicle-Ambush-Script-And-Vehicle-Camo)
 - [Aircraft Boarding Action](Aircraft-Boarding-Actions)
 - [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
@@ -81,6 +85,7 @@ Runtime configuration is server-authoritative. Current settings are published fo
 - [Base Services](Base-Services)
 - [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
 - [Teleport Action](Teleport-Actions)
+- [Squad Rally Points](Squad-Rally-Points)
 
 ## Economy, construction and games
 

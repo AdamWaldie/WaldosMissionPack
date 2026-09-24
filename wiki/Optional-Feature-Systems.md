@@ -370,7 +370,8 @@ Arma officially supports runtime scaling for Simple Objects and attached objects
 
 ## See also
 
-- [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies)
+- [Vehicle Recovery](Vehicle-Recovery)
+- [Squad Rally Points](Squad-Rally-Points)
 - [Airborne Gunship Support](Airborne-Gunship-Support)
 - [Optional Feature Extensions](Optional-Feature-Extensions)
 - [Dynamic Anti-Air](Dynamic-Anti-Air)

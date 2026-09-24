@@ -18,7 +18,7 @@ These modules allow users to:
 * End the mission utilising the [Custom End](ENDEX-Script-&-Custom-End-Screen)
 * Create and remove named [Dynamic Anti-Air](Dynamic-Anti-Air) systems
 * Generate and clean up complete randomized [Dynamic AOs](Dynamic-AO-Generation)
-* Create and remove routed [Dynamic Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations) operations
+* Create and remove routed [Dynamic Paradrop](Paradrop#dynamic-drop-zone-operations) operations
 * Scale the nearest object through a validated server request
 * Configure persistence, hazardous environments and AI rebalance while the mission is running
 * Register field-resupply hubs/carriers and tactical-display terminals
@@ -181,11 +181,11 @@ These modules appear only when `Waldo_Hazard_Enable` is `true` in `MissionConfig
 
 ## Dynamic Paradrop
 
-**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. The server normalizes each enabled jump altitude/speed envelope around the route, so custom values cannot suppress every action. **Paradrop - Embark Players** detects a player directly under the module or in the curator selection and offers that player/group; with no player target it creates a reusable, curator-movable blue-action boarding object. **Paradrop - Remove Operation** lists both WMP-spawned dynamic operations and pre-placed Eden/quick-flight operations, applying the same marker cleanup, optional aircraft deletion and player-aboard safety rule to both. See [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations).
+**Paradrop - Create Drop Zone** independently selects operational side and a validated transport airframe, then configures the named exact route, forced altitude/speed, approach/drop/exit lengths, repeating or single-pass lifecycle, circuit direction, static-line and HALO player actions, parachute classes, optional automatic drop, optional AI cargo (zero by default), cadence and map symbology. The server normalizes each enabled jump altitude/speed envelope around the route, so custom values cannot suppress every action. **Paradrop - Embark Players** detects a player directly under the module or in the curator selection and offers that player/group; with no player target it creates a reusable, curator-movable blue-action boarding object. **Paradrop - Remove Operation** lists both WMP-spawned dynamic operations and pre-placed Eden/quick-flight operations, applying the same marker cleanup, optional aircraft deletion and player-aboard safety rule to both. See [Paradrop](Paradrop#dynamic-drop-zone-operations).
 
 ## Vehicle Recovery
 
-**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, recovery-object class, cargo preservation and restored fuel. It may be placed directly on an already-destroyed wreck: dead crew proxies retained by Arma do not count as occupants, while any living occupant still blocks packaging. Its friendly recovery-object dropdown is built from the mission-extensible `Waldo_Recovery_PackageClasses` pool. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** supports any nearby vehicle. Automatic handling uses its real configured vehicle cargo bay when a package fits and virtualizes otherwise; Virtual Manifest removes that engine dependency entirely, while Physical Cargo Bay deliberately enforces it. Loading range and a combined 1–10 package capacity are configurable. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+**Vehicle Recovery - Register Workshop** assigns a key, delivery radius, nearby completion-notification radius, serviced side and optional delivery-area/exact-position map markers to the nearest object. Its exported call includes the same choices. **Register Vehicle** sets the matching key, damage and destroyed-vehicle policy, engineer restriction, recovery-object class, cargo preservation and restored fuel. It may be placed directly on an already-destroyed wreck: dead crew proxies retained by Arma do not count as occupants, while any living occupant still blocks packaging. Its friendly recovery-object dropdown is built from the mission-extensible `Waldo_Recovery_PackageClasses` pool. It can optionally replace immediate packaging with a simplified preparation procedure configured by enable, procedure and difficulty; repair is preselected. **Register Carrier** supports any nearby vehicle. Automatic handling uses its real configured vehicle cargo bay when a package fits and virtualizes otherwise; Virtual Manifest removes that engine dependency entirely, while Physical Cargo Bay deliberately enforces it. Loading range and a combined 1–10 package capacity are configurable. See [Vehicle Recovery](Vehicle-Recovery).
 
 ## Custom 3D Marker and Field Equipment
 
@@ -213,7 +213,7 @@ When `Waldo_Headless_Enable` is true, the separate **WMP Headless Client** categ
 
 ## Squad Rally Points
 
-**Respawn - Squad Rally Control** enables or disables squad-leader rally actions and adjusts object class, duration, cooldown, enemy exclusion, group size, placement, slope and the optional direct-regroup ability. Disabling it also removes active rallies. See [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies).
+**Respawn - Squad Rally Control** enables or disables squad-leader rally actions and adjusts object class, duration, cooldown, enemy exclusion, group size, placement, slope and the optional direct-regroup ability. Disabling it also removes active rallies. See [Squad Rally Points](Squad-Rally-Points).
 
 <!-- WMP-WIKI-NAV -->
 ---

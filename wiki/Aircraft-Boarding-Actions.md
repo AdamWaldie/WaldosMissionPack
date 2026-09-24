@@ -12,11 +12,11 @@ The arguments are `[boarding object, aircraft, action name]`. The name is option
 
 The player goes into a cargo seat, including when the aircraft is already airborne. WMP checks the result and sends a notification. It does not place the player in a pilot, commander or turret seat. The action follows aircraft availability and replaces its previous version if setup runs again on the same object.
 
-The call installs the action on each player's interface. Eden object Init fields run on clients. If you create the boarding object later by script, run this call for each interface client, including players who join later. WMP's [dynamic paradrop boarding point](Vehicle-Actions-&-Paradrop#dynamic-drop-zone-operations) handles that replay for its own objects.
+The call installs the action on each player's interface. Eden object Init fields run on clients. If you create the boarding object later by script, run this call for each interface client, including players who join later. WMP's [dynamic paradrop boarding point](Paradrop#dynamic-drop-zone-operations) handles that replay for its own objects.
 
 ## See also
 
-- [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
+- [Paradrop](Paradrop)
 - [Teleport Action](Teleport-Actions)
 
 <!-- WMP-WIKI-NAV -->

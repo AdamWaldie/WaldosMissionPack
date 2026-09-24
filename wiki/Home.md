@@ -41,15 +41,18 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 - [Physical Cargo](Physical-Cargo): attach carried objects visibly to vehicles.
 - [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 - [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
-- [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
+- [Vehicle Exit Actions](Vehicle-Exit-Actions)
+- [Medical Vehicle Flags](Medical-Vehicle-Flags)
+- [Paradrop](Paradrop)
 - [Aircraft Boarding Action](Aircraft-Boarding-Actions)
 - [Transport Services](Transport-Services): reusable AI helicopter/ground pickup and delivery
-- [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies)
+- [Vehicle Recovery](Vehicle-Recovery)
 
 ### Base and player services
 
 - [Base Services](Base-Services): set up save, heal, spectator and travel points.
 - [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
+- [Squad Rally Points](Squad-Rally-Points): temporary group-owned respawn positions.
 - [Teleport Action](Teleport-Actions)
 
 ### Economy and base building

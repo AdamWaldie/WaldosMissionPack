@@ -1,18 +1,10 @@
-# Vehicle Actions and Paradrop
+# Paradrop
 
-> **Use this page when:** you need vehicle interactions, static-line or HALO jumps, and their equipment simulation settings.
+> **Use this page when:** you want static-line or HALO jumps, a flight route, or a Zeus-managed drop zone.
 
-The shipped Minimal and Full Eden paradrop compositions use passenger Blackfish aircraft with their
-normal four-person editor crew: pilot, copilot and two crew chiefs. WMP does not create replacement
-crew for an aircraft that already exists in Eden. This preserves the side and group chosen by the
-mission maker and avoids duplicate or empty-side AI in multiplayer. Runtime crew creation is
-reserved for an aircraft genuinely spawned by the Zeus module or script API.
+WMP adds static-line and HALO actions to supported aircraft. Use a placed aircraft, a shipped Eden composition, or a drop zone created in Zeus. The Minimal and Full compositions include Blackfish aircraft with their normal editor crews. WMP keeps the side and group you chose in Eden and creates crew only for aircraft spawned by a module or script.
 
-_Associated Files:_
-- _MissionScripts\VehicleActionsSetup_
-- _MissionScripts\Paradrop_
-
-WMP adds jump and side-door exit actions to supported vehicle classes at mission start. The automatic list covers the RHS, CUP and vanilla classes below. See [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) for ACE storage and handling settings.
+This guide covers jumps and drop routes. See [Vehicle Exit Actions](Vehicle-Exit-Actions) for left/right dismount controls, [Medical Vehicle Flags](Medical-Vehicle-Flags) for ACE medical tagging, and [Aircraft Boarding Action](Aircraft-Boarding-Actions) for a separate boarding-object interaction.
 
 ## Beginner setup: choose one path
 
@@ -23,7 +15,7 @@ WMP adds jump and side-door exit actions to supported vehicle classes at mission
 | Zeus to create and manage the whole operation in play | **Paradrop - Create Drop Zone** | None. |
 | Generated AI jumpers, lifecycle and scripted control | `Waldo_fnc_ParadropCreateDropZone` | Advanced SQF/HashMap setup. |
 
-For the shortest custom setup:
+For a custom Eden setup:
 
 1. Place and crew a transport aircraft in Eden.
 2. Place an Eden marker at the drop zone, name it `dz1`, and rotate it to the desired approach
@@ -42,17 +34,9 @@ thing at a time only after the default route works with your chosen airframe.
 
 ---
 
-## Auto-Detected Vehicles
+## Auto-detected jump aircraft
 
-The following vehicles receive actions automatically when the mission loads (and when Zeus spawns them during the mission):
-
-### Exit Side Selection (Left / Right dismount)
-| Base Class | Vehicles |
-|---|---|
-| `Heli_Transport_01_base_F` | Vanilla CH-47 Chinook family |
-| `rhs_uh1h_base` | RHS UH-1H |
-| `RHS_UH1_Base` | RHS UH-1Y/N |
-| `RHS_Mi24_base` | RHS Mi-24 family |
+These aircraft receive jump actions when the mission loads or Zeus spawns them:
 
 ### Static Line Jump
 | Base Class | Notes |
@@ -69,20 +53,13 @@ The following vehicles receive actions automatically when the mission loads (and
 | `RHS_C130J_Base` |
 | `B_T_VTOL_01_infantry_F` |
 
-### Automatic Medical Vehicle Flag (ACE3)
-| Base Class / Variant | Effect |
-|---|---|
-| RHS UH-60 MEV variants | `ace_medical_isMedicalVehicle = true` |
-| RHS M1230a1 variants | `ace_medical_isMedicalVehicle = true` |
-| RHS Stryker MEV | `ace_medical_isMedicalVehicle = true` |
-
-For jump or exit actions on an unlisted vehicle, use **Manual Vehicle Setup** below.
+For jump actions on an unlisted aircraft, use **Manual Vehicle Setup** below.
 
 ---
 
 ## Jump Availability Conditions
 
-Jump actions only appear (and can only be triggered) when **all** conditions are met:
+For placed aircraft, jump actions appear only when these conditions are met:
 
 | Condition | Static Line | HALO |
 |---|---|---|
@@ -93,6 +70,8 @@ Jump actions only appear (and can only be triggered) when **all** conditions are
 | Speed ≤ maximum | ✓ | N/A |
 
 Supported door/ramp animations: `ramp_bottom`, `door_2_1/2`, `jumpdoor_1/2`, `back_ramp_switch`, `back_ramp_half_switch`, `RearDoors`, `Door_1_source`, `ramp_anim`.
+
+Zeus-created drop-zone aircraft do not require an open door. Their AI does not provide passengers with a dependable door control.
 
 ---
 
@@ -156,7 +135,7 @@ This is added automatically alongside jump actions. No setup required.
 
 ---
 
-## Reliable Quick Flight Setup
+## Eden quick flight: route options
 
 _Associated Files: `MissionScripts\Paradrop\paradropQuickFlightSetup.sqf`,
 `MissionScripts\Paradrop\paradropBuildFlightRoute.sqf`_
@@ -234,7 +213,7 @@ Zeus create/remove controls or default map markers.
 
 This distinction is internal and deliberate:
 
-- Helicopter route waypoints use Arma AI's `FULL` speed mode so Huron/Mohawk-class pilots actually
+- Helicopter route waypoints use Arma AI's `FULL` speed mode so Huron/Mohawk-class pilots
   pursue the requested cruise speed. The explicit `limitSpeed` value remains the hard ceiling.
 - Fixed-wing and VTOL plane routes retain `LIMITED`, where the established launch velocity and
   cruise orders already behave correctly.
@@ -243,9 +222,7 @@ This distinction is internal and deliberate:
 
 Mission makers set the numeric route ceiling, not `FULL`/`LIMITED` themselves. Applying the
 helicopter workaround to planes, removing the helicopter lift delay, or confusing `limitSpeed`
-(km/h) with `forceSpeed` (m/s) can produce overspeed, slow flight, or an apparent dive. The current
-dedicated audit tests two helicopter classes at roughly 300 m and verifies they remain alive,
-airborne, moving and inside the expected speed band.
+(km/h) with `forceSpeed` (m/s) can produce overspeed, slow flight, or an apparent dive.
 
 ---
 
@@ -403,11 +380,9 @@ For any vehicle not auto-detected, paste one of the following into its **init fi
 // Apply only static line
 [this, 180, 350, 310, "rhs_d6_Parachute"] call Waldo_fnc_AddStaticJump;
 
-// Apply exit side selection
-[this] call Waldo_fnc_AddExitActions;
 ```
 
-`Waldo_fnc_VehicleJumpSetup` is a convenience wrapper that applies both jump types using whichever parameters are set in `MissionConfig\airOperationsConfig.sqf`.
+`Waldo_fnc_VehicleJumpSetup` applies both jump types using the parameters in `MissionConfig\airOperationsConfig.sqf`. To add left/right exit selection instead, see [Vehicle Exit Actions](Vehicle-Exit-Actions).
 
 ## Beginner troubleshooting
 

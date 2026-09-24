@@ -118,7 +118,7 @@ mount is safe: WMP deliberately does not offer one.
 - [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 - [Supply Transfers](Supply-Transfers)
 - [Logistics System, Starter Crates and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
-- [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies)
+- [Vehicle Recovery](Vehicle-Recovery)
 - [Mission Configuration Reference](Mission-Configuration-Reference)
 
 <!-- WMP-WIKI-NAV -->

@@ -27,6 +27,7 @@
 * [Base Services](Base-Services)
 * [Loadout Saving](Loadout-Saving-and-Respawn)
 * [Teleport Action](Teleport-Actions)
+* [Squad Rally Points](Squad-Rally-Points)
 
 **Field Equipment**
 
@@ -66,11 +67,13 @@
 * [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 * [Supply Transfers](Supply-Transfers)
 * [Physical Cargo](Physical-Cargo)
-* [Vehicle Recovery and Squad Rallies](Vehicle-Recovery-And-Squad-Rallies)
+* [Vehicle Recovery](Vehicle-Recovery)
 * [Helicopter, Ground and Boat Transport](Transport-Services)
 * [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 * [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
-* [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
+* [Vehicle Exit Actions](Vehicle-Exit-Actions)
+* [Medical Vehicle Flags](Medical-Vehicle-Flags)
+* [Paradrop](Paradrop)
 * [Aircraft Boarding Action](Aircraft-Boarding-Actions)
 
 **Electronic Warfare and Radio**

@@ -48,7 +48,7 @@ Players see **"Get In DShK"** on both the gun and the truck, and **"Return To Ma
 ## See also
 
 * [Simple Mass Attach Items](Simple-Mass-Attach-Items) — attach decorative/cargo objects to a vehicle
-* [Vehicle Actions & Paradrop](Vehicle-Actions-&-Paradrop)
+* [Paradrop](Paradrop)
 
 <!-- WMP-WIKI-NAV -->
 ---

@@ -67,7 +67,8 @@ is replayed to JIP by the feature.
 
 | Feature | Settings file | Config action | Instance/setup action |
 |---|---|---|---|
-| ACRE2 + Babel | acreConfig.sqf | Enable and author nets/groups/languages | None |
+| ACRE2 radio setup | acreConfig.sqf | Enable and author radio nets and groups | None |
+| ACRE2 Babel | acreConfig.sqf | Set languages and speech rules | None |
 | AI rebalance | aiConfig.sqf | Enable, profile, mode, filters | None |
 | Improved helicopter landing | aiConfig.sqf | Enable | Give AI a supported landing waypoint |
 | Helicopter deceleration | aiConfig.sqf | Enable after testing mission airframes | None; ordinary local AI cruise flight is detected automatically |
@@ -75,12 +76,16 @@ is replayed to JIP by the feature.
 | Paradrop | airOperationsConfig.sqf | Aircraft/chute/boarding pools and envelopes | Create drop zone by call or ZEN |
 | Dynamic AA | airOperationsConfig.sqf | Side/faction pools and safety maxima | Create named system by call or ZEN |
 | Jammer | electronicWarfareConfig.sqf | Enable and gameplay policy | Register/create jammer or use ZEN |
-| EMP / tracker | electronicWarfareConfig.sqf | Shared EW policy where applicable | Invoke on demand |
+| EMP | electronicWarfareConfig.sqf | Review EMP policy | Invoke on demand |
+| Signal tracker | electronicWarfareConfig.sqf | Review tracker policy | Invoke on demand |
 | Hazard | environmentConfig.sqf | Enable and define presets | Register zone/emitter or use ZEN |
 | Tree felling | environmentConfig.sqf | Enable, tools/classes/protection | None |
 | Breaching | environmentConfig.sqf | Enable and define profiles/strengths | None; only matching objects react |
-| UI theme/notifications | interfaceConfig.sqf | Theme and routing | None |
-| Treatment / dismount / PID | interfaceConfig.sqf | Enable and policy | None |
+| UI theme | interfaceConfig.sqf | Choose a visual theme | None |
+| Notifications | interfaceConfig.sqf | Set lanes and limits | None |
+| Treatment feedback | interfaceConfig.sqf | Enable and policy | None |
+| Emergency dismount | interfaceConfig.sqf | Enable and policy | None |
+| PID display | interfaceConfig.sqf | Enable and policy | None |
 | Tactical display | interfaceConfig.sqf | Access/knowledge defaults | Register compatible object or use ZEN |
 | Field resupply | logisticsConfig.sqf | Content and balance | Register hub and assign carriers |
 | Quartermaster | logisticsConfig.sqf | Keep the existing issues or enable extra issue types | Place a point and call `Waldo_fnc_SetupQuarterMaster`, or use ZEN |
@@ -89,10 +94,13 @@ is replayed to JIP by the feature.
 | Physical cargo | logisticsConfig.sqf | Review `Waldo_PhysicalCargo_Enable` and seat blocking | Carry eligible crates with ACE; register other props if needed |
 | Vehicle recovery | logisticsConfig.sqf | Packages/markers/safety | Register workshop, vehicles, carriers |
 | Object scaling | logisticsConfig.sqf | Min/max/authority bounds | Scale by call or ZEN |
-| Rally / minigames / corpse traps | missionSystemsConfig.sqf | Enable and policy | None |
+| [Squad rally](Squad-Rally-Points) | missionSystemsConfig.sqf | Enable and set placement rules | Squad leaders deploy from their interaction menu; ZEN can change settings during play |
+| Mini-games | missionSystemsConfig.sqf | Enable and policy | Follow the chosen [mini-game](Waldos-Mini-Games) or interaction-procedure guide |
+| Corpse traps | missionSystemsConfig.sqf | Enable and policy | Follow [ACE Corpse Traps](ACE-Corpse-Traps) |
 | Base services | missionSystemsConfig.sqf | Set `Waldo_BaseServices_Enable` to `true` | Register each placed service object in its Eden Init field or use ZEN |
 | Economy | missionSystemsConfig.sqf plus economy config | Enable runtime | Configure economy preset/catalogues |
-| Diagnostics / safestart | missionSystemsConfig.sqf | Safestart starts inactive; review server policy | Use WMP Mission Flow Zeus controls when needed |
+| Diagnostics | missionSystemsConfig.sqf | Review server policy | Run diagnostics when needed |
+| Safestart | missionSystemsConfig.sqf | Starts inactive; review timing and protection | Use WMP Mission Flow Zeus controls when needed |
 | Persistence | persistenceConfig.sqf | Enable/save policy/database | Install INIDBI2; register world objects |
 
 ## Config-by-config recipes

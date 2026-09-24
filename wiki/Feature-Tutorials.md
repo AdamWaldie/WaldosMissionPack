@@ -26,6 +26,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Base Services](Base-Services) | Named base objects with chosen save, heal, spectator and travel actions |
 | [Loadout Saving and Respawn](Loadout-Saving-and-Respawn) | Starting, death, arsenal and manual loadouts, plus side-switch respawn seeding |
 | [Teleport Action](Teleport-Actions) | One scroll-wheel action to move a player to a named destination |
+| [Squad Rally Points](Squad-Rally-Points) | Temporary group-owned respawn positions |
 
 ## Logistics and deployment
 
@@ -35,11 +36,13 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) | Set an object's Drag, Carry, ACE loading size and storage space by ZEN or script |
 | [Supply Transfers](Supply-Transfers) | Selective moves, crate consolidation and per-crate ACE loading choice |
 | [Physical Cargo](Physical-Cargo) | Visible non-weapon vehicle cargo; static weapons use native ACE cargo only |
-| [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies) | Recoverable vehicle logistics and temporary group respawns |
+| [Vehicle Recovery](Vehicle-Recovery) | Package damaged vehicles and restore them at a workshop |
 | [Helicopter, Ground and Boat Transport](Transport-Services) | Reusable AI-crewed transport services for land, air, and open water |
 | [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) | Deployable MHQ and logistics |
 | [Virtual Vehicle Depot](Virtual-Vehicle-Depot) | Virtual garage and vehicle deployment |
-| [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop) | Vehicle interactions, static line, and HALO |
+| [Vehicle Exit Actions](Vehicle-Exit-Actions) | Choose which side to leave a helicopter |
+| [Medical Vehicle Flags](Medical-Vehicle-Flags) | ACE medical tagging for supported vehicle variants |
+| [Paradrop](Paradrop) | Static-line and HALO jumps, flight routes, and drop zones |
 | [Aircraft Boarding Action](Aircraft-Boarding-Actions) | Put a player into a live aircraft's cargo seat from a boarding object |
 | [Vehicle Ambush and Camo](Vehicle-Ambush-Script-And-Vehicle-Camo) | Concealed vehicle ambush behavior |
 | [Weapon Mounting](Weapon-Mounting-With-Custom-Name) | Named mounted-weapon interactions |
