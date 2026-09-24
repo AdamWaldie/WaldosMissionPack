@@ -42,6 +42,7 @@ Waldos Mission Pack is an Arma 3 mission scripting framework for mission makers 
 - [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 - [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
 - [Vehicle Exit Actions](Vehicle-Exit-Actions)
+- [Set Vehicle Upright](Vehicle-Uprighting)
 - [Medical Vehicle Flags](Medical-Vehicle-Flags)
 - [Paradrop](Paradrop)
 - [Aircraft Boarding Action](Aircraft-Boarding-Actions)

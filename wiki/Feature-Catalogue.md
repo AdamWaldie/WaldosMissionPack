@@ -35,6 +35,7 @@ This is the complete top-level index of mission systems currently supplied by Wa
 | [Vehicle Weapon Loadout](Vehicle-Weapon-Loadout) | Add/replace/remove/clear turret weapons and magazines; set/clear aircraft pylon ordnance | No `MissionConfig` file; `Waldo_fnc_VehicleWeaponLoadoutApply` or **Vehicle Customisation - Editor** placed directly on the vehicle |
 | [Vehicle Appearance](Vehicle-Appearance) | Recolor a vehicle's texture slots; show/hide named model selections, optionally clearing a linked turret's weapon | No `MissionConfig` file; `Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` or the same **Vehicle Customisation - Editor** placed directly on the vehicle |
 | [Vehicle Exit Actions](Vehicle-Exit-Actions) | Left/right helicopter passenger exits | Automatic on supported classes; `Waldo_fnc_AddExitActions` for other vehicles |
+| [Set Vehicle Upright](Vehicle-Uprighting) | An on-foot action to right a tipped land vehicle | Automatic on land vehicles; no feature flag |
 | [Medical Vehicle Flags](Medical-Vehicle-Flags) | ACE medical tagging for specified medical variants | Automatic on listed classes; set `ace_medical_isMedicalVehicle` in Eden for others |
 | [Dynamic Paradrop Operations](Paradrop#dynamic-drop-zone-operations) | Player-focused server-owned drop routes with boarding, static-line/HALO actions, aligned repeat circuits, optional AI jumpers, markers and teardown | Pools and thresholds in `MissionConfig\airOperationsConfig.sqf`; scripted APIs or ZEN modules |
 | [Vehicle Recovery](Vehicle-Recovery) | Damage-gated packaging, recovery carriers and keyed workshops that restore vehicle configuration | Scripted object registration or three focused ZEN registration modules |
@@ -73,6 +74,7 @@ Runtime configuration is server-authoritative. Current settings are published fo
 - [Physical Cargo](Physical-Cargo)
 - [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 - [Vehicle Exit Actions](Vehicle-Exit-Actions)
+- [Set Vehicle Upright](Vehicle-Uprighting)
 - [Medical Vehicle Flags](Medical-Vehicle-Flags)
 - [Paradrop](Paradrop)
 - [Vehicle Ambush and Camo](Vehicle-Ambush-Script-And-Vehicle-Camo)

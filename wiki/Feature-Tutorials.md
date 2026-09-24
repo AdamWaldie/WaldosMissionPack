@@ -41,6 +41,7 @@ Start with the [Quickstart Guide](Quickstart-Guide) for a new mission. Use the [
 | [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System) | Deployable MHQ and logistics |
 | [Virtual Vehicle Depot](Virtual-Vehicle-Depot) | Virtual garage and vehicle deployment |
 | [Vehicle Exit Actions](Vehicle-Exit-Actions) | Choose which side to leave a helicopter |
+| [Set Vehicle Upright](Vehicle-Uprighting) | Right a tipped land vehicle from its action menu |
 | [Medical Vehicle Flags](Medical-Vehicle-Flags) | ACE medical tagging for supported vehicle variants |
 | [Paradrop](Paradrop) | Static-line and HALO jumps, flight routes, and drop zones |
 | [Aircraft Boarding Action](Aircraft-Boarding-Actions) | Put a player into a live aircraft's cargo seat from a boarding object |
