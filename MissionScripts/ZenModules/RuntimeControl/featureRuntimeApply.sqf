@@ -1,6 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Validates curator requests and applies runtime feature configuration from ZEN.
+ * Purpose: Validates curator requests and applies runtime feature configuration from ZEN.
+ * Locality / Authority: Server owns the settings and spawned objects; remote
+ *   curator requests are checked before any state change.
+ * Repeat / JIP: Runtime settings are published for joining clients. A hub
+ *   spawn creates one new object per accepted request and registers its actions.
  *
  * Arguments:
  * 0: action <STRING>
@@ -122,7 +126,7 @@ switch (toUpperANSI _action) do {
             clearMagazineCargoGlobal _hub;
             clearItemCargoGlobal _hub;
             clearBackpackCargoGlobal _hub;
-            [_hub, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
+            [_hub, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
             [_hub, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
             [_hub, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
         };

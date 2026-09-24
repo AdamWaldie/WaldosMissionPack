@@ -5,7 +5,9 @@
  * Locality / Authority: Server only; it owns the mount registry and cleanup.
  * Repeat / JIP: Scans placed crates once; ACE replays their actions to JIP.
  * Idempotent installation; ordered mount snapshots answer explicit JIP requests.
- * EntityDeleted handles normal crate deletion immediately. The monitor catches
+ * ACE Cargo loads clear mounts on the next server frame, after ACE has updated
+ * its loaded list and outside the remote-event context. EntityDeleted handles
+ * normal crate deletion immediately. The monitor catches
  * deletion paths for which the engine does not emit that mission event.
  *
  * Arguments: None.
@@ -30,9 +32,18 @@ if (isNil "CBA_fnc_addEventHandler") exitWith {false};
     } forEach (entities "ReammoBox_F");
 };
 private _id = ["ace_cargoLoaded", {
-    params ["_cargo"];
+    params ["_cargo", ["_holder", objNull]];
     if (_cargo isEqualType objNull && {!isNull _cargo}) then {
-        [_cargo] call Waldo_fnc_PhysicalCargoClearServer;
+        [{
+            params ["_cargo", "_holder"];
+            if (isNull _cargo) exitWith {};
+            // Do not touch ordinary ACE loads. Only WMP's mounted objects own
+            // seat locks and physical-cargo state to release.
+            if (isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])) exitWith {};
+            private _cleared = [_cargo] call Waldo_fnc_PhysicalCargoClearServer;
+            diag_log format ["[WMP PHYSICAL CARGO] ACE load cleanup cargo=%1 holder=%2 cleared=%3 remote=%4",
+                netId _cargo, netId _holder, _cleared, isRemoteExecuted];
+        }, [_cargo, _holder]] call CBA_fnc_execNextFrame;
     };
 }] call CBA_fnc_addEventHandler;
 missionNamespace setVariable ["Waldo_PhysicalCargo_CargoLoadedEH", _id];

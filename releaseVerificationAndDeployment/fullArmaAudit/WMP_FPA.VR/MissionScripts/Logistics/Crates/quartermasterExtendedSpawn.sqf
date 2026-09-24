@@ -94,13 +94,8 @@ private _issueName = switch (_kind) do {
 // Keep the quartermaster issue identity visible after the object is spawned.
 _object setVariable ["ace_cargo_customName", _issueName, true];
 _object setVariable ["Waldo_QM_IssueName", _issueName, true];
-private _aceSize = switch (_kind) do {
-    case "Grenades": {1};
-    case "Explosives": {2};
-    case "FuelJerrycan": {1};
-    default {4};
-};
-[_object, -1, _aceSize, true, true] call Waldo_fnc_SetCargoAttributes;
+// QM issues are one ACE cargo slot each; fuel and rearm behaviour is separate.
+[_object, -1, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
 if (_kind in ["Grenades", "Explosives"] || {_isRearm}) then {
     clearWeaponCargoGlobal _object;
     clearMagazineCargoGlobal _object;

@@ -49,6 +49,9 @@ shows whether the call belongs in an object Init field or on the server. See
 An `Enable` value may start an automatic feature or allow a placed object to register. The
 `ACTIVATION MODEL` block at the top of each config file states which one applies.
 
+If you add a new setting to the pack, add it to that file's **SETTING-BY-SETTING GUIDE** and to
+`wiki/Feature-Configuration-Files.md`. The repository validator checks both.
+
 ## Start here for each feature
 
 1. Find the feature in the activation table below.

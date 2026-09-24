@@ -3,6 +3,8 @@
  * Purpose: Authenticates and applies ZEN base, quartermaster and cargo setup to selected objects.
  * Locality / Authority: Server only; owner-bound active curator is required for remote calls.
  * Repeat / JIP: Uses repeat-safe registries; quartermaster setup is JIP-replayed by object key.
+ *   ACE Cargo edits run on the server's next frame outside the authenticated remote-call context;
+ *   ACE's global setters replay the object state to joining clients.
  * Arguments: operation <STRING>; selected object <OBJECT>; named pairs <ARRAY>; requester <OBJECT>.
  * Return Value: <BOOL> request accepted. Current caller: Waldo_fnc_ZenServiceLogisticsModule.
  * Example: ["SUPPLY_REGISTER", crate1, [], player] remoteExecCall ["Waldo_fnc_ZenServiceLogisticsServer", 2];
@@ -172,28 +174,42 @@ switch (toUpperANSI _operation) do {
         private _carry = _settings getOrDefault ["carry", false];
         private _ignoreDrag = _settings getOrDefault ["ignoreDragWeight", false];
         private _ignoreCarry = _settings getOrDefault ["ignoreCarryWeight", false];
+        private _setHandling = _settings getOrDefault ["setHandling", true];
         private _setSize = _settings getOrDefault ["setSize", false];
         private _size = _settings getOrDefault ["size", 0];
         private _setSpace = _settings getOrDefault ["setSpace", false];
         private _space = _settings getOrDefault ["space", 0];
+        // Enforce WMP's whole-number cargo units even for direct/older callers.
+        if (_size isEqualType 0 && {_setSize isEqualType true} && {_setSize}) then {_size = round _size};
+        if (_space isEqualType 0 && {_setSpace isEqualType true} && {_setSpace}) then {_space = round _space};
         if (!(_target isKindOf "CAManBase") && {_drag isEqualType true}
             && {_carry isEqualType true} && {_ignoreDrag isEqualType true}
-            && {_ignoreCarry isEqualType true} && {_setSize isEqualType true}
+            && {_ignoreCarry isEqualType true} && {_setHandling isEqualType true}
+            && {_setSize isEqualType true}
             && {_setSpace isEqualType true} && {_size isEqualType 0}
-            && {_space isEqualType 0} && {_size >= -1} && {_size <= 50}
-            && {_space >= 0} && {_space <= 100}) then {
-            // The public setter rejects direct remote execution. Finish this
-            // already authenticated request in a fresh server-owned context.
-            [_target, _setSpace, _space, _setSize, _size, _drag, _carry,
-                _ignoreDrag, _ignoreCarry, _replyOwner] spawn {
-                params ["_target", "_setSpace", "_space", "_setSize", "_size", "_drag",
-                    "_carry", "_ignoreDrag", "_ignoreCarry", "_replyOwner"];
+            && {_space isEqualType 0} && {!_setSize || {_size >= -1 && {_size <= 10000}}}
+            && {!_setSpace || {_space >= 0 && {_space <= 10000}}}) then {
+            // The public setter rejects remote-executed contexts. A spawned child
+            // can retain that context, so finish the authenticated request from
+            // CBA's server-local next-frame handler instead.
+            [{
+                params ["_target", "_setSpace", "_space", "_setSize", "_size", "_setHandling",
+                    "_drag", "_carry", "_ignoreDrag", "_ignoreCarry", "_replyOwner"];
+                if (!_setHandling && {!isNull _target}) then {
+                    // Size-only edits must not overwrite handling changed by
+                    // ACE or another curator while the dialog was open.
+                    private _config = configFile >> "CfgVehicles" >> typeOf _target;
+                    _drag = _target getVariable ["ace_dragging_canDrag", getNumber (_config >> "ace_dragging_canDrag") > 0];
+                    _carry = _target getVariable ["ace_dragging_canCarry", getNumber (_config >> "ace_dragging_canCarry") > 0];
+                    _ignoreDrag = _target getVariable ["ace_dragging_ignoreWeightDrag", getNumber (_config >> "ace_dragging_ignoreWeightDrag") > 0];
+                    _ignoreCarry = _target getVariable ["ace_dragging_ignoreWeightCarry", getNumber (_config >> "ace_dragging_ignoreWeightCarry") > 0];
+                };
                 private _args = [_target, nil, nil, _drag, _carry, _ignoreDrag, _ignoreCarry];
                 if (_setSpace) then {_args set [1, _space]};
                 if (_setSize) then {_args set [2, _size]};
                 private _applied = !isNull _target && {_args call Waldo_fnc_SetCargoAttributes};
-                diag_log format ["[WMP ZEN ACE CARGO] applied=%1 target=%2 class=%3 size=%4 space=%5 drag=%6 carry=%7",
-                    _applied, netId _target, typeOf _target,
+                diag_log format ["[WMP ZEN ACE CARGO] applied=%1 remote=%2 target=%3 class=%4 size=%5 space=%6 drag=%7 carry=%8",
+                    _applied, isRemoteExecuted, netId _target, typeOf _target,
                     if (_setSize) then {_size} else {"unchanged"},
                     if (_setSpace) then {_space} else {"unchanged"}, _drag, _carry];
                 if (_replyOwner > 2) then {
@@ -202,7 +218,8 @@ switch (toUpperANSI _operation) do {
                         if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_SERVICE_LOGISTICS", 7]
                         remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
                 };
-            };
+            }, [_target, _setSpace, _space, _setSize, _size, _setHandling, _drag, _carry,
+                _ignoreDrag, _ignoreCarry, _replyOwner]] call CBA_fnc_execNextFrame;
             _deferred = true;
             _ok = true;
         } else {

@@ -47,7 +47,7 @@ if (!isNull _objectPos) then {
     clearMagazineCargoGlobal _target;
     clearItemCargoGlobal _target;
     clearBackpackCargoGlobal _target;
-    [_target, nil, nil, true, true] call Waldo_fnc_SetCargoAttributes;
+    [_target, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
     [_target, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
 
     [_target, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;

@@ -81,7 +81,6 @@ switch (_kind) do {
         if !(isClass (configFile >> "CfgVehicles" >> _crateClass)) then {_crateClass = "B_CargoNet_01_ammo_F";};
         _crate = [_crateClass] call _placeCrate;
         [_crate, _size, _side, _includeEquipment, _includeLaunchers] call Waldo_fnc_SupplyCratePopulate;
-        [_crate, "SUPPLY"] call Waldo_fnc_CargoAttributesPrepareObject;
     };
     case "MEDICAL": {
         _settings params [
@@ -92,11 +91,13 @@ switch (_kind) do {
         if !(isClass (configFile >> "CfgVehicles" >> _crateClass)) then {_crateClass = "C_IDAP_supplyCrate_F";};
         _crate = [_crateClass] call _placeCrate;
         [_crate, _fieldHospital, _size] call Waldo_fnc_MedicalCratePopulate;
-        [_crate, "MEDICAL"] call Waldo_fnc_CargoAttributesPrepareObject;
     };
 };
 
 if (!isNull _crate) then {
+    // A crate spawned by WMP is always portable and occupies one ACE cargo
+    // slot, regardless of its vehicle-class config default.
+    [_crate, nil, 1, true, true, true, true] call Waldo_fnc_SetCargoAttributes;
     [_crate, _kind] spawn Waldo_fnc_LogisticsRegisterSpawned;
     [_crate, _requestOwner, false, false] call Waldo_fnc_ZenAssignObjectOwnerServer;
     diag_log format ["[WMP ZEN] crate created kind=%1 crate=%2 actor=%3 owner=%4", _kind, netId _crate, if (isNull _actor) then {"<server>"} else {name _actor}, _requestOwner];
