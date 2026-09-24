@@ -1,6 +1,6 @@
 ---
 name: mission-pack-config
-description: Configures WaldosMissionPack (WMP), this repo's Arma 3 mission scripting framework, for a mission, and answers "how do I"/"how does X work" questions about it. Covers WMP systems — loadout/logistics, AI rebalance, ACRE2, paradrop, jamming/EMP/trackers, MHQ, respawn, ENDEX/AAR, safestart, diagnostics, tasks, VVD, Zeus modules, Economy Systems, minigames, UI notifications, WMP HUD, transport services, hazards, tree felling, breaching, Dynamic AA/AO, gunships, persistence, object scaling, emergency dismount, tactical display, field resupply, vehicle recovery/rallies, UI themes, corpse traps, 3D markers, NPC dialogue/conversations, description.ext. Use whenever the user wants to configure, enable, tune, or debug any WMP feature, wants "a mission configured with X", asks what a WMP variable/function does, or edits MissionConfig/*.sqf, init.sqf/initServer.sqf/initPlayerLocal.sqf/description.ext — even naming only one feature, since features interact. Always check this skill before writing WMP config from memory.
+description: Configures WaldosMissionPack (WMP), an Arma 3 mission framework, for a mission, and answers "how do I"/"how does X work" questions about it. Covers WMP systems — loadouts, quartermaster, supply transfers, physical cargo, base services, AI rebalance, ACRE2, paradrop, jamming/EMP/trackers, MHQ, respawn, ENDEX/AAR, safestart, diagnostics, tasks, VVD, Zeus modules, Economy, minigames, UI notifications/themes, WMP HUD, transport, hazards, tree felling, breaching, Dynamic AA/AO, gunships, persistence, object scaling, emergency dismount, tactical display, field resupply, recovery/rallies, corpse traps, 3D markers, NPC dialogue, description.ext. Use whenever the user wants to configure, enable, tune, or debug any WMP feature, wants "a mission configured with X", asks what a WMP variable/function does, or edits MissionConfig/*.sqf, init.sqf/initServer.sqf/initPlayerLocal.sqf/description.ext — even naming only one feature, since features interact. Always check this skill before writing WMP config from memory.
 ---
 
 # WMP Mission Pack Configuration
@@ -220,7 +220,10 @@ composition name that isn't documented there.
 
 | Feature | Reference | Notes |
 |---|---|---|
-| Loadout & logistics (supply/medical crates, mission.sqm scraping) | `references/loadout-logistics.md` | Everything else depends on this |
+| Loadout & logistics (supply/medical crates, mission.sqm scraping, Quartermaster issue types) | `references/loadout-logistics.md` | Everything else depends on this; all ten Quartermaster issues default ON |
+| Supply transfers (crate/vehicle merge, selective transfer, ACE-loading toggle) | `references/supply-transfers.md` | Off by default; WMP-issued crates auto-register, starter crates never do |
+| Physical cargo (ACE-carry crates visibly onto vehicles, seat blocking) | `references/physical-cargo.md` | On by default; no vehicle Init or seat coordinates needed; static weapons rejected |
+| Base services (save/heal/spectate/teleport networks) | `references/base-services.md` | Off by default; `missionSystemsConfig.sqf` + per-object Init registration |
 | AI rebalance (profiles + improved AI helicopter landing) | `references/ai-rebalance.md` | |
 | ACRE2 radio setup (nets/groups/Babel) | `references/acre2.md` | Requires mod; full net/group model, not the old array |
 | Paradrop / Dynamic Drop Zone Operations | `references/paradrop.md` | Automatic per-vehicle actions + server-owned drop-zone system |

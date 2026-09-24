@@ -53,6 +53,10 @@ file, which names its exact module(s):
 | WMP Combat Systems / Air Operations | Paradrop - Create Drop Zone/Embark Players/Remove Operation | `paradrop.md` |
 | WMP Logistics | Vehicle Recovery - Register Workshop/Vehicle/Carrier | `vehicle-recovery-rallies.md` |
 | WMP Logistics | Field Resupply hub/carrier modules | `field-resupply.md` |
+| WMP Logistics | Quartermaster - Set Up Object | `loadout-logistics.md` |
+| WMP Logistics | Supply Transfers - Register or Inspect | `supply-transfers.md` |
+| WMP Logistics | Physical Cargo - Eligibility / ACE Cargo - Set Object Handling | `physical-cargo.md` |
+| WMP Mission Flow | Base Services - Configure Node | `base-services.md` |
 | WMP Transport | Transport Service - Register / Return to Base | `transport-services.md` |
 | WMP Mission Flow / Respawn | Squad Rally Control | `vehicle-recovery-rallies.md` |
 | — | Persistence - Control/Register Object/Save Now | `persistence.md` |
