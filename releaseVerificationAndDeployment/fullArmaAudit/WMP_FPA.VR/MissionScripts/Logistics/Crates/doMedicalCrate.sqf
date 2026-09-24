@@ -80,8 +80,6 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["Medikit",(_Scale * 5)];
 };
 
-// Change ace logistics size of crate
-[_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
 if !(_crate getVariable ["Waldo_Logistics_StarterCrate", false]) then {
     [_crate, "MEDICAL"] spawn Waldo_fnc_LogisticsRegisterSpawned;
 };

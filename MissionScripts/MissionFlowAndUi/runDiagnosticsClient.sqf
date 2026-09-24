@@ -1,8 +1,10 @@
 /*
  * Author: WaldoTheWarfighter
- * Collects one interface client's dependency, module, UI and feature diagnostic state and returns
+ * Purpose: Collects one interface client's dependency, module, UI and feature diagnostic state and returns
  * it to the server-owned diagnostic run. The function is read-only and safe for current or JIP
  * clients; every result carries the run id and client owner for correlation.
+ * Locality / Authority: Interface client reads local state and sends a report to the server.
+ * Repeat / JIP: Safe on repeat, including late joiners; creates no persistent UI or handlers.
  *
  * Arguments:
  * 0: diagnostic run id <STRING>
@@ -10,8 +12,7 @@
  * Return Value:
  * Boolean - false when no interface/run id is available, otherwise the report is sent to server
  *
- * Called by:
- * Waldo_fnc_RunDiagnostics during its per-client collection phase.
+ * Current caller: Waldo_fnc_RunDiagnostics during its per-client collection phase.
  *
  * Example:
  * ["diag_01"] call Waldo_fnc_RunDiagnosticsClient;
@@ -273,13 +274,14 @@ private _missingTacticalActions = _tacticalDisplays select {(_x getVariable ["Wa
 private _hazardEnabled = missionNamespace getVariable ["Waldo_Hazard_Enable", false];
 private _hazardZones = missionNamespace getVariable ["Waldo_Hazard_Zones", []];
 private _hazardClient = missionNamespace getVariable ["Waldo_Hazard_ClientStarted", false];
+private _hazardHandle = missionNamespace getVariable ["Waldo_Hazard_ClientLoop", scriptNull];
+private _hazardRunning = _hazardClient && {!(scriptDone _hazardHandle)};
 private _hazardEvaluation = missionNamespace getVariable ["Waldo_Hazard_LastEvaluation", []];
-// Mission-start compilation, mod initialisation and the diagnostics run itself can delay scheduled
-// scripts for several seconds while diag_tickTime continues advancing. Keep the proof bounded, but
-// do not report an active evaluator as dead merely because startup scheduling exceeded three ticks.
+// Mission time pauses during briefing while diag_tickTime advances. Compare mission time to
+// mission time so time spent choosing a role cannot look like a stalled evaluator.
 private _hazardFreshWindow = ((((missionNamespace getVariable ["Waldo_Hazard_Interval", 1]) max 0.25) * 5) max 15);
-private _hazardFresh = count _hazardEvaluation >= 3 && {(diag_tickTime - (_hazardEvaluation select 0)) <= _hazardFreshWindow};
-["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 freshEvaluation=%5 lastEvaluation=%6", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardFresh, _hazardEvaluation], if (!_hazardEnabled || {_hazardClient && {!(_hazardZones isEqualTo [])} && {_hazardFresh}}) then {""} else {"Waldo_Hazard_Enable is true but this client's evaluator loop isn't producing fresh evaluations - check the RPT for hazard-related errors, and confirm the server actually published a zone snapshot."}] call _add;
+private _hazardFresh = count _hazardEvaluation >= 3 && {(time - (_hazardEvaluation select 0)) <= _hazardFreshWindow};
+["environment", "hazard-client", if (!_hazardEnabled) then {"DISABLED"} else {if (_hazardRunning && {!(_hazardZones isEqualTo [])} && {_hazardFresh}) then {"ACTIVE"} else {"ERROR"}}, format ["enabled=%1 zones=%2 snapshot=%3 evaluator=%4 running=%5 freshEvaluation=%6 lastEvaluation=%7", _hazardEnabled, count _hazardZones, missionNamespace getVariable ["Waldo_Hazard_SnapshotReceived", false], _hazardClient, _hazardRunning, _hazardFresh, _hazardEvaluation], if (!_hazardEnabled || {_hazardRunning && {!(_hazardZones isEqualTo [])} && {_hazardFresh}}) then {""} else {"Waldo_Hazard_Enable is true but this client's evaluator loop isn't producing fresh evaluations - check the RPT for hazard-related errors, and confirm the server actually published a zone snapshot."}] call _add;
 private _dismountEnabled = missionNamespace getVariable ["Waldo_EmergencyDismount_Enable", false];
 private _dismountStarted = missionNamespace getVariable ["Waldo_EmergencyDismount_ClientStarted", false];
 private _dismountHandle = missionNamespace getVariable ["Waldo_EmergencyDismount_ClientLoop", scriptNull];

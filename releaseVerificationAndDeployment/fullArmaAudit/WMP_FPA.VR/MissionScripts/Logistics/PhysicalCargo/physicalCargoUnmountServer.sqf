@@ -1,11 +1,22 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Releases a visible physical mount to a checked nearby ground position.
- * Locality / Authority: Server validates the requesting player's owner and proximity.
- * Repeat / JIP: No-op when already unmounted; clears server registry and client physics state.
- * Arguments: player <OBJECT>, mounted object <OBJECT>. Return Value: <BOOL> released.
- * Current caller: mounted-object ACE Unmount action; public script call from server.
- * Example: [player, crate] remoteExecCall ["Waldo_fnc_PhysicalCargoUnmountServer", 2];
+ * Remove a mounted object through a server script when it needs a checked ground
+ * position behind the vehicle. Players normally use ACE Carry to take cargo off.
+ *
+ * Locality and authority: Call on the server. A remote request is accepted only
+ * from the named player's machine while that player is near the cargo.
+ * Repeat and JIP: An unmounted object returns false. A successful removal clears
+ * the public mount, restores physics on the object owner and releases WMP seat locks.
+ *
+ * Arguments:
+ * 0: player <OBJECT> - requesting player; objNull for a server script.
+ * 1: cargo <OBJECT> - object currently mounted on a vehicle.
+ * Return Value: <BOOL> - true when a clear position was found and removal started.
+ * Example: In a server script:
+ * [objNull, myCrate] call Waldo_fnc_PhysicalCargoUnmountServer;
+ * Result: WMP moves myCrate to a clear position behind its carrier. If no safe
+ * position exists, it stays mounted.
+ * Current callers: public server-script API; ordinary players use ACE Carry.
  */
 params [["_player", objNull, [objNull]], ["_cargo", objNull, [objNull]]];
 if (!isServer || {isNull _cargo}) exitWith {false};

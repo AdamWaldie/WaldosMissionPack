@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Authenticates and applies ZEN base, quartermaster and crate setup to selected objects.
+ * Purpose: Authenticates and applies ZEN base, quartermaster and cargo setup to selected objects.
  * Locality / Authority: Server only; owner-bound active curator is required for remote calls.
  * Repeat / JIP: Uses repeat-safe registries; quartermaster setup is JIP-replayed by object key.
  * Arguments: operation <STRING>; selected object <OBJECT>; named pairs <ARRAY>; requester <OBJECT>.
@@ -101,26 +101,24 @@ switch (toUpperANSI _operation) do {
         if !(missionNamespace getVariable ["Waldo_SupplyTransfers_Enable", false]) then {
             _message = "Supply transfers are disabled in MissionConfig/logisticsConfig.sqf.";
         } else {
-        if (maxLoad _target <= 0) then {
-            _message = "Selected object has no Arma inventory capacity; it cannot send or receive supplies.";
-        } else {
             [_target, _replyOwner] spawn {
                 params ["_target", "_replyOwner"];
                 private _applied = [_target] call Waldo_fnc_SupplyTransfersRegister;
-                diag_log format ["[WMP ZEN] SUPPLY_REGISTER applied=%1 target=%2", _applied, netId _target];
+                diag_log format ["[WMP ZEN] SUPPLY_REGISTER applied=%1 target=%2 class=%3 maxLoad=%4",
+                    _applied, netId _target, typeOf _target, maxLoad _target];
                 if (_replyOwner > 2) then {
                     ["SUPPLY TRANSFERS", if (_applied) then {
                         if (_target isKindOf "LandVehicle" || {_target isKindOf "Air"} || {_target isKindOf "Ship"}) then {
                             "Vehicle logistics registered: transfer in or out, select it as source, and merge through ACE."
                         } else {"Container registered; its ACE logistics actions are available."}
-                    } else {"Registration failed; check feature status and inventory capacity."},
+                    } else {format ["Cannot register %1 (inventory capacity %2). Use an inventory box or cargo-capable vehicle.",
+                        typeOf _target, round maxLoad _target]},
                         if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_SUPPLY_REGISTER", 7]
                         remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
                 };
             };
             _deferred = true;
             _ok = true;
-        };
         };
     };
     case "SUPPLY_INSPECT": {
@@ -169,12 +167,56 @@ switch (toUpperANSI _operation) do {
             _target getVariable ["Waldo_PhysicalCargo_Eligible", _target isKindOf "ReammoBox_F"],
             !isNull (_target getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])];
     };
+    case "ACE_CARGO_SET": {
+        private _drag = _settings getOrDefault ["drag", false];
+        private _carry = _settings getOrDefault ["carry", false];
+        private _ignoreDrag = _settings getOrDefault ["ignoreDragWeight", false];
+        private _ignoreCarry = _settings getOrDefault ["ignoreCarryWeight", false];
+        private _setSize = _settings getOrDefault ["setSize", false];
+        private _size = _settings getOrDefault ["size", 0];
+        private _setSpace = _settings getOrDefault ["setSpace", false];
+        private _space = _settings getOrDefault ["space", 0];
+        if (!(_target isKindOf "CAManBase") && {_drag isEqualType true}
+            && {_carry isEqualType true} && {_ignoreDrag isEqualType true}
+            && {_ignoreCarry isEqualType true} && {_setSize isEqualType true}
+            && {_setSpace isEqualType true} && {_size isEqualType 0}
+            && {_space isEqualType 0} && {_size >= -1} && {_size <= 50}
+            && {_space >= 0} && {_space <= 100}) then {
+            // The public setter rejects direct remote execution. Finish this
+            // already authenticated request in a fresh server-owned context.
+            [_target, _setSpace, _space, _setSize, _size, _drag, _carry,
+                _ignoreDrag, _ignoreCarry, _replyOwner] spawn {
+                params ["_target", "_setSpace", "_space", "_setSize", "_size", "_drag",
+                    "_carry", "_ignoreDrag", "_ignoreCarry", "_replyOwner"];
+                private _args = [_target, nil, nil, _drag, _carry, _ignoreDrag, _ignoreCarry];
+                if (_setSpace) then {_args set [1, _space]};
+                if (_setSize) then {_args set [2, _size]};
+                private _applied = !isNull _target && {_args call Waldo_fnc_SetCargoAttributes};
+                diag_log format ["[WMP ZEN ACE CARGO] applied=%1 target=%2 class=%3 size=%4 space=%5 drag=%6 carry=%7",
+                    _applied, netId _target, typeOf _target,
+                    if (_setSize) then {_size} else {"unchanged"},
+                    if (_setSpace) then {_space} else {"unchanged"}, _drag, _carry];
+                if (_replyOwner > 2) then {
+                    ["ACE CARGO", if (_applied) then {"ACE cargo and drag/carry settings applied to this object."}
+                        else {"ACE cargo settings could not be applied. Check that ACE Cargo is loaded and the object still exists."},
+                        if (_applied) then {"SUCCESS"} else {"ERROR"}, "ZEN_SERVICE_LOGISTICS", 7]
+                        remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];
+                };
+            };
+            _deferred = true;
+            _ok = true;
+        } else {
+            _message = "Select a non-person object and use valid size, space and handling values.";
+        };
+    };
 };
 diag_log format ["[WMP ZEN] service/logistics operation=%1 target=%2 owner=%3 ok=%4", _operation, netId _target, _replyOwner, _ok];
 if (_replyOwner > 2 && {!_deferred}) then {
     [if (_operation find "BASE" == 0) then {"BASE SERVICES"} else {
         if (_operation find "QUARTERMASTER" == 0) then {"QUARTERMASTER"} else {
-            if (_operation find "SUPPLY" == 0) then {"SUPPLY TRANSFERS"} else {"PHYSICAL CARGO"}
+            if (_operation find "SUPPLY" == 0) then {"SUPPLY TRANSFERS"} else {
+                if (_operation find "ACE_CARGO" == 0) then {"ACE CARGO"} else {"PHYSICAL CARGO"}
+            }
         }
     }, _message, if (_ok) then {"SUCCESS"} else {"ERROR"}, "ZEN_SERVICE_LOGISTICS", 7]
         remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _replyOwner];

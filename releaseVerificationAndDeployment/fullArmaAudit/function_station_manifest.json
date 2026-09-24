@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1113,
+  "registeredFunctionCount": 1116,
   "runtimeFunctionCount": 383,
-  "functionCount": 1496,
+  "functionCount": 1499,
   "stations": [
     {
       "id": "control",
@@ -502,7 +502,7 @@
         40,
         0
       ],
-      "description": "Small crate on a Polaris MRZR when RHSUSAF is loaded; measured cargo/FFV seat locking."
+      "description": "Small crate on the NATO Prowler/DAGOR; measured cargo/FFV seat locking."
     },
     {
       "id": "briefing-docs",
@@ -2135,6 +2135,18 @@
       "activation": "manual"
     },
     {
+      "name": "Waldo_fnc_PhysicalCargoSeatLockLocal",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoSeatLockLocal.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_PhysicalCargoDiscoverSeatsServer",
+      "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoDiscoverSeatsServer.sqf",
+      "station": "physical-cargo",
+      "activation": "manual"
+    },
+    {
       "name": "Waldo_fnc_PhysicalCargoRestoreLocal",
       "file": "MissionScripts/Logistics/PhysicalCargo/physicalCargoRestoreLocal.sqf",
       "station": "physical-cargo",
@@ -2881,6 +2893,12 @@
     {
       "name": "Waldo_fnc_SetCargoAttributes",
       "file": "MissionScripts/MissionInit/VehicleActionsSetup/SetCargoAttributes.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CargoAttributesPrepareObject",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/cargoAttributesPrepareObject.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

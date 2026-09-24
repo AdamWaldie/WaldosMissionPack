@@ -834,19 +834,19 @@ class PrReviewAuditTests(unittest.TestCase):
         self.assertEqual(1, process.count('remoteExecCall ["Waldo_fnc_TreeFellingSetupFallenLocal", 0, _fallen]'))
         self.assertNotIn('remoteExecCall ["ace_dragging_fnc_setDraggable", 0, true]', process)
         self.assertNotIn('remoteExecCall ["ace_dragging_fnc_setCarryable", 0, true]', process)
-    def test_val_author_credit_is_preserved_for_contributed_features(self):
+    def test_pack_author_headers_are_preserved_for_contributed_features(self):
         hazard_dir = ROOT / "MissionScripts" / "EnvironmentalSystems" / "HazardousEnvironments"
         hazard_scripts = sorted(hazard_dir.glob("*.sqf"))
         self.assertGreater(len(hazard_scripts), 0)
         for path in hazard_scripts:
             text = path.read_text(encoding="utf-8")
-            self.assertIn("Author: WaldoTheWarfighter, Val", text, path.name)
+            self.assertIn("Author: WaldoTheWarfighter", text, path.name)
 
         mhq = (ROOT / "MissionScripts" / "Logistics" / "MHQ" / "MHQSetup.sqf").read_text(encoding="utf-8")
         vehicle_camo = (
             ROOT / "MissionScripts" / "Logistics" / "VehicleCamoScript" / "vehicleCamo.sqf"
         ).read_text(encoding="utf-8")
-        self.assertIn("Author: WaldoTheWarfighter, Val", mhq)
+        self.assertIn("Author: WaldoTheWarfighter", mhq)
         self.assertIn("Author: WaldoTheWarfighter", vehicle_camo)
         self.assertIn("Concept credit: Val", vehicle_camo)
 

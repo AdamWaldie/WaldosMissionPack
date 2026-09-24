@@ -1,20 +1,24 @@
 /*
  * Author: WaldoTheWarfighter
- * Execute purchase.
- *
- * Part of the Waldos Economy Systems suite (Buy system).
+ * Purpose: Debits a validated economy purchase and creates it at its selected
+ * drop point. A purchased supply/ammunition crate joins WMP crate logistics.
+ * Locality / Authority: Runs on the economy authority; the created object and
+ * cargo permissions are published from the server.
+ * Repeat / JIP: Each accepted call is a new purchase. ACE drag/carry and
+ * optional logistics registration replay to joining clients.
  *
  * Arguments:
- * 0: _sideKey <STRING> - side key (optional, default: "NONE")
- * 1: _purchaseName <STRING> - purchase name (optional, default: "")
- * 2: _origin <ARRAY> - origin (optional, default: [0, 0, 0])
- * 3: _caller <OBJECT> - caller (optional, default: objNull)
+ * 0: side key <STRING> (default "NONE")
+ * 1: purchase name <STRING> (default "")
+ * 2: origin <ARRAY> (default [0, 0, 0])
+ * 3: requesting player <OBJECT> (default objNull)
  *
  * Return Value:
- * Nothing
+ * Nothing; the buyer receives WMP feedback on success or rejection.
  *
  * Example:
- * [_sideKey, _purchaseName, _origin, _caller] call Waldo_fnc_EcoBuy_executePurchase;
+ * ["WEST", "Supply Crate", getPosATL player, player] call Waldo_fnc_EcoBuy_executePurchase;
+ * Current callers: Economy Buy request handling.
  */
 
         params [["_sideKey", "NONE"], ["_purchaseName", ""], ["_origin", [0, 0, 0]], ["_caller", objNull]];
@@ -53,6 +57,9 @@
         private _spawned = createVehicle [_className, _pos, [], 0, "CAN_COLLIDE"];
         _spawned setDir _dir;
         _spawned setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
+        if (_spawned isKindOf "ReammoBox_F") then {
+            [_spawned, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned;
+        };
 
         [[_spawned], true] call Waldo_fnc_EcoCore_registerCuratorEditableObjects;
 

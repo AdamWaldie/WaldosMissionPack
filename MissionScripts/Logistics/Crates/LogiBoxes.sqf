@@ -154,7 +154,7 @@ if (_boxType == "Medical") then {
         //Ace Medical is DISABLED so populate with vanilla gear & NO Field Hospital
         [_box, false, 1] call Waldo_fnc_MedicalCratePopulate;
     };
-    [_box, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+    [_box, -1, 2, true, true] call Waldo_fnc_SetCargoAttributes;
     _quote = selectRandom [
         "QM: Medical Box? Check. Here it is.",
         "QM: Med Supplies, eh? Keep our boys alive out there!",
@@ -174,7 +174,7 @@ if (_boxType == "Supply") then {
     _box setPos _ammoPos;
     //Call supplybox population script with box and random scalar between 1 & 2
     [_box, 1, _logiSide, false, true] call Waldo_fnc_SupplyCratePopulate;
-    [_box, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+    [_box, -1, 4, true, true] call Waldo_fnc_SetCargoAttributes;
     _quote = selectRandom [
         "QM: Heavy Supply Box, ready to go.",
         "QM: ...48...49...50. Yep, it's all there.",

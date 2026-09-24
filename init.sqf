@@ -52,6 +52,11 @@ if (isServer) then {
         || {missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotFailed", false]}
     };
     if !(missionNamespace getVariable ["Waldo_FeatureRuntimeSnapshotReceived", false]) exitWith {};
+    // A joining headless client can later own mounted cargo. It needs the same
+    // ordered mount snapshot, but no ACE carry action or interface setup.
+    if (!isServer && {!hasInterface} && {missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]}) then {
+        [clientOwner] remoteExecCall ["Waldo_fnc_PhysicalCargoRequestStateServer", 2];
+    };
     if (missionNamespace getVariable ["Waldo_Breaching_Enable", false]) then {
         [] call Waldo_fnc_BreachingInit;
     };

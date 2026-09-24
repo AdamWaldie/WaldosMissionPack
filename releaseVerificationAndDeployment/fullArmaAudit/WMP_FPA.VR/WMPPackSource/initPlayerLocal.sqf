@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Runs once when this player joins the mission, including JIP. It starts local UI/actions, applies
+ * Purpose: Runs once when this player joins the mission, including JIP. It starts local UI/actions, applies
  * the server-published ACRE plan, owns that player's respawn snapshot, and installs the local
  * Respawn event handler that survives later player-unit replacement. Per-respawn work belongs in
  * that handler; the engine does not rerun initPlayerLocal.sqf for every death. Mission makers
@@ -8,11 +8,14 @@
  * only when its function header says player-local, hasInterface, local UI, local interaction, or
  * local player state.
  *
- * Arguments:
- * None (engine entry point; runs locally for each player)
- *
- * Return Value:
- * Nothing
+ * Locality / Authority: Interface client only. ACE replays server-selected
+ * drag/carry states independently through its global object-setting API.
+ * Repeat / JIP: Engine calls this for each join, not each respawn; installed handlers are
+ * guarded by their owning features and ACE replays live object actions.
+ * Arguments: Engine entry point, no script arguments.
+ * Return Value: Nothing.
+ * Current caller: Arma initPlayerLocal event script.
+ * Example: Leave this file in the mission root; Arma calls it for each joining player.
  */
 
 /*
@@ -154,6 +157,7 @@ if (hasInterface) then {
         if (missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) then {
             [] call Waldo_fnc_PhysicalCargoInitLocal;
         };
+        // ACE's global drag/carry setters replay WMP's object choices to JIP clients.
         if (missionNamespace getVariable ["Waldo_BaseServices_Enable", false]) then {
             [] call Waldo_fnc_BaseServicesSetupLocal;
         };

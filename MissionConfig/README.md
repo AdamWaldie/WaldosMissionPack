@@ -1,8 +1,8 @@
 # WMP feature configuration
 
-This directory is the mission maker's settings layer. The files return data only: they do not
-spawn assets, register world objects, add event handlers, or transfer authority. WMP's existing
-init lifecycle reads that data at the correct stage.
+Change mission settings here. WMP reads them when the mission starts. A setting can enable a
+feature, but it will not place a Quartermaster, service stand or other world object for you. Use
+the [feature activation table](#feature-activation-table) to see what else to place.
 
 ## If you are new to Arma mission scripting
 
@@ -27,12 +27,8 @@ Longer entries are written vertically and number their fields as `0`, `1`, `2`, 
 comments beside those fields from top to bottom. The comments describe what players will experience,
 not only the underlying data type.
 
-Every editable setting follows this documentation pattern in its own config file. The explanation
-is part of the setting: do not delete it when copying or changing the active value.
-
-Every `.sqf` config also includes a searchable **SETTING-BY-SETTING GUIDE**. The repository
-validator requires that guide and requires every named WMP/ACE/Logistics setting to appear in
-`wiki/Feature-Configuration-Files.md`. Adding a setting without updating both layers fails CI.
+Each config file has a **SETTING-BY-SETTING GUIDE**. Keep the explanation beside a setting when
+you change its value.
 
 ```sqf
 // SETTING: Waldo_AIRebalance_Mode (MISSION MAKER)
@@ -46,20 +42,15 @@ The value on the final line is the active mission value. The example may deliber
 different value to demonstrate a common alternative; copy only the final setting line unless the
 comment tells you to copy a complete block.
 
-The same two-layer standard applies to callable scripts. A plain-English introduction comes first,
-but it never replaces the technical contract. Script headers retain the exact numbered calling
-arguments, types, defaults, return value, locality/authority, copyable example, expected result and
-current callers. See [Coding and Documentation Standards](../wiki/Coding-Standards.md) for the
-canonical templates.
+For a setup call, read its script header before copying it. The header gives the arguments and
+shows whether the call belongs in an object Init field or on the server. See
+[Coding and Documentation Standards](../wiki/Coding-Standards.md) for the script format.
 
-The most important rule is: **a setting and a feature instance are not the same thing**. Setting an
-`Enable` value can start an automatic handler, permit a registered-object system, or merely make a
-later script call available. Read the `ACTIVATION MODEL` block at the top of the relevant file.
+An `Enable` value may start an automatic feature or allow a placed object to register. The
+`ACTIVATION MODEL` block at the top of each config file states which one applies.
 
-Every config is intended to be understandable without opening an implementation script. Its header
-defines the row shapes, valid IDs, units, activation and caller. Inline comments beside each setting
-identify whether it is a normal mission choice or advanced tuning. Positional arrays and nested
-HashMaps have a local field-by-field legend plus a worked example where ambiguity is likely.
+If you add a new setting to the pack, add it to that file's **SETTING-BY-SETTING GUIDE** and to
+`wiki/Feature-Configuration-Files.md`. The repository validator checks both.
 
 ## Start here for each feature
 
@@ -102,6 +93,10 @@ HashMaps have a local field-by-field legend plus a worked example where ambiguit
 | WMP HUD | `interfaceConfig.sqf` | Automatic | Configure equipment access, accessibility UIDs and presentation |
 | Tactical display | `interfaceConfig.sqf` | Register | Register a suitable display object or use ZEN |
 | Field resupply | `logisticsConfig.sqf` | Register | Register hubs and assign carriers, or use ZEN |
+| Quartermaster | `logisticsConfig.sqf` | Enable + place | All ten normal issues start on; place an object and call `Waldo_fnc_SetupQuarterMaster` in its Init field, or use ZEN |
+| Supply transfers | `logisticsConfig.sqf` | Enable + register | WMP-issued crates register automatically; register placed boxes and cargo-capable vehicles |
+| Physical cargo | `logisticsConfig.sqf` | Enabled by default | ACE Carry works on eligible crates; register other non-weapon props if needed |
+| ACE cargo handling | Object setting | ZEN or script | Set drag, carry, loading size and storage space on a selected object with ZEN **ACE Cargo - Set Object Handling** or `Waldo_fnc_SetCargoAttributes` |
 | Vehicle recovery | `logisticsConfig.sqf` | Register | Register workshop, vehicles and optional carriers, or use ZEN |
 | Object scaling | `logisticsConfig.sqf` | Call-driven | Call `Waldo_fnc_ObjectScale` or use ZEN |
 | Logistics crate classes | `logisticsConfig.sqf` | Consumed defaults | Existing spawners use them; they spawn nothing alone |
@@ -109,6 +104,7 @@ HashMaps have a local field-by-field legend plus a worked example where ambiguit
 | Economy | `missionSystemsConfig.sqf` | Automatic runtime + content setup | Enable, then configure the dedicated economy preset/catalogue |
 | Economy authored catalogues/layout | `economyConfig.sqf` | Server call-driven | Enable economy, then edit the worked public setup calls in this file |
 | Diagnostics / safestart | `missionSystemsConfig.sqf` | Automatic availability; Safestart starts inactive | Review policy; Zeus can enable it during play |
+| Base services | `missionSystemsConfig.sqf` | Enable + register | Add a `Waldo_fnc_BaseServicesRegisterNode` call to each placed service object, or use ZEN |
 | Persistence | `persistenceConfig.sqf` | Automatic + dependency gate | Enable; install INIDBI2 server-side; register world objects separately |
 
 ## Where custom calls belong

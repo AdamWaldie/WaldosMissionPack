@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Purpose: Installs the guarded ACE carry-release adapter without extra crate-menu actions.
  * Locality / Authority: Interface client only; mount requests are validated on the server.
- * Repeat / JIP: Idempotent installation; CBA listener survives respawn and mounts are replayed.
+ * Repeat / JIP: Idempotent installation; CBA listener survives respawn and an
+ *   ordered server snapshot replays current mounts to every joining client.
  *
  * Arguments: None.
  * Return Value: BOOLEAN - true when the listener is installed or already present.
@@ -21,7 +22,14 @@ private _id = ["ace_dragging_startedCarry", {
     params ["_unit", "_cargo"];
     if !(missionNamespace getVariable ["Waldo_PhysicalCargo_Enable", false]) exitWith {};
     if (_unit isNotEqualTo player || {!local _unit} || {isNull _cargo}) exitWith {};
-    if (!isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])) then {
+    private _mounted = !isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]);
+    if (!_mounted) then {
+        _mounted = ((missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []])
+            findIf {(_x select 0) isEqualTo _cargo}) >= 0;
+    };
+    if (_mounted) then {
+        diag_log format ["[WMP PHYSICAL CARGO] ACE pickup requests mount clear: cargo=%1 owner=%2 vehicle=%3.",
+            netId _cargo, owner _unit, netId (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])];
         [_cargo, _unit] remoteExecCall ["Waldo_fnc_PhysicalCargoClearServer", 2];
     };
     if (_cargo isKindOf "StaticWeapon") exitWith {};
@@ -51,8 +59,11 @@ private _id = ["ace_dragging_startedCarry", {
 
 missionNamespace setVariable ["Waldo_PhysicalCargo_CarryEH", _id];
 missionNamespace setVariable ["Waldo_PhysicalCargo_LocalInstalled", true];
-if (!isServer) then {[player] remoteExecCall ["Waldo_fnc_PhysicalCargoRequestStateServer", 2]};
-{
-    _x call Waldo_fnc_PhysicalCargoApplyLocal;
-} forEach (missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]);
+if (isServer) then {
+    [missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []],
+        missionNamespace getVariable ["Waldo_PhysicalCargo_MountRevision", 0]]
+        call Waldo_fnc_PhysicalCargoReceiveStateLocal;
+} else {
+    [player] remoteExecCall ["Waldo_fnc_PhysicalCargoRequestStateServer", 2];
+};
 true

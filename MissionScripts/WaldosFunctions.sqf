@@ -606,6 +606,8 @@ class CfgFunctions
             class PhysicalCargoClearServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoClearServer.sqf";};
             class PhysicalCargoRegister {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRegister.sqf";};
             class PhysicalCargoSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatsServer.sqf";};
+            class PhysicalCargoSeatLockLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoSeatLockLocal.sqf";};
+            class PhysicalCargoDiscoverSeatsServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoDiscoverSeatsServer.sqf";};
             class PhysicalCargoRestoreLocal {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRestoreLocal.sqf";};
             class PhysicalCargoRestoreAckServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoRestoreAckServer.sqf";};
             class PhysicalCargoUnmountServer {file = "MissionScripts\Logistics\PhysicalCargo\physicalCargoUnmountServer.sqf";};
@@ -884,6 +886,9 @@ class CfgFunctions
             };
             class SetCargoAttributes {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\SetCargoAttributes.sqf";
+            };
+            class CargoAttributesPrepareObject {
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\cargoAttributesPrepareObject.sqf";
             };
             class InitVehicles {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\VehicleInit.sqf";

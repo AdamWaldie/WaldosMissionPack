@@ -1,17 +1,17 @@
 # Feature Setup and Activation
 
-> **Use this page when:** you know which WMP feature you want, but need to know whether editing its
-> config is enough, which values are ordinary mission choices, and where any setup call belongs.
+> **Use this page when:** deciding which setting and setup call a WMP feature needs.
 
-WMP separates **settings**, **lifecycle**, and **feature instances**:
+To set up a WMP feature, find it in the [setup matrix](#setup-matrix). Edit the listed file under
+`MissionConfig`. Then perform the instance/setup action in the last column, if one is listed. An
+Enable switch permits the feature to run; it does not place an object for you.
 
-1. A file under MissionConfig supplies guarded defaults.
-2. WMP's init files load those defaults on the machines that need them.
-3. Automatic features start themselves.
-4. Object, zone, and spawned-system features still need an instance registered or created.
+For example, enable Base Services in `missionSystemsConfig.sqf`, then place two objects and put a
+`Waldo_fnc_BaseServicesRegisterNode` call in each Init field. The [Base services](Base-Services)
+page gives the calls and shows the result in-game.
 
-Do not assume that an Enable switch spawns an object. It may only permit a feature or start its
-evaluator.
+WMP's init files load settings and start automatic features. For placed objects and zones, a
+documented setup call tells WMP which objects belong to the feature.
 
 ## The four setup patterns
 
@@ -24,7 +24,7 @@ evaluator.
 
 ## Where custom calls belong
 
-### initServer.sqf - normal place for pre-planned world setup
+### initServer.sqf - pre-planned world setup
 
 Use this for named registries, zones, spawned systems and authoritative objects:
 
@@ -35,9 +35,9 @@ initServer.sqf runs once on the server. Public functions publish state/actions f
 and JIP where required. An additional `if (isServer)` wrapper inside initServer.sqf is redundant and
 makes a beginner's setup harder to read. Do not copy the same block into init.sqf.
 
-### Editor object init - only where the API explicitly supports it
+### Eden object Init - when the feature page says to use it
 
-Object init is convenient for a function designed to receive this and route/reject duplicate work:
+An object's Init field passes that object as `this`. Use it only for calls that document this setup:
 
     [this] call Waldo_fnc_Jammer;
     [this, 10, "AUTO", 2] call Waldo_fnc_RecoveryRegisterCarrier;
@@ -83,9 +83,13 @@ is replayed to JIP by the feature.
 | Treatment / dismount / PID | interfaceConfig.sqf | Enable and policy | None |
 | Tactical display | interfaceConfig.sqf | Access/knowledge defaults | Register compatible object or use ZEN |
 | Field resupply | logisticsConfig.sqf | Content and balance | Register hub and assign carriers |
+| Quartermaster | logisticsConfig.sqf | Keep the existing issues or enable extra issue types | Place a point and call `Waldo_fnc_SetupQuarterMaster`, or use ZEN |
+| Supply transfers | logisticsConfig.sqf | Set `Waldo_SupplyTransfers_Enable` to `true`; choose the range | WMP-issued crates register themselves; register placed crates and cargo-capable vehicles |
+| Physical cargo | logisticsConfig.sqf | Review `Waldo_PhysicalCargo_Enable` and seat blocking | Carry eligible crates with ACE; register other props if needed |
 | Vehicle recovery | logisticsConfig.sqf | Packages/markers/safety | Register workshop, vehicles, carriers |
 | Object scaling | logisticsConfig.sqf | Min/max/authority bounds | Scale by call or ZEN |
 | Rally / minigames / corpse traps | missionSystemsConfig.sqf | Enable and policy | None |
+| Base services | missionSystemsConfig.sqf | Set `Waldo_BaseServices_Enable` to `true` | Register each placed service object in its Eden Init field or use ZEN |
 | Economy | missionSystemsConfig.sqf plus economy config | Enable runtime | Configure economy preset/catalogues |
 | Diagnostics / safestart | missionSystemsConfig.sqf | Safestart starts inactive; review server policy | Use WMP Mission Flow Zeus controls when needed |
 | Persistence | persistenceConfig.sqf | Enable/save policy/database | Install INIDBI2; register world objects |
@@ -212,9 +216,41 @@ fallbacks. Example setup:
     [recoveryTruck, 10, "AUTO", 2] call Waldo_fnc_RecoveryRegisterCarrier;
     [statue, 1.75, true] call Waldo_fnc_ObjectScale;
 
+For a standalone quartermaster, place an object and put this in its Eden **Init** field:
+
+```sqf
+[this] call Waldo_fnc_SetupQuarterMaster;
+```
+
+All ten Quartermaster issue types are on by default. Disable a `Waldo_QM_*_Enable` row if your
+mission does not use that issue. Issue classes and quantities are
+separate settings. [Quartermaster setup](Logistics-System,-Starter-Crates-And-Quartermaster#logistics-quartermaster)
+explains the spawn direction, distance and ZEN choices.
+
+For transfers between placed boxes or vehicles, set `Waldo_SupplyTransfers_Enable` to `true`.
+Put `[this] call Waldo_fnc_SupplyTransfersRegister;` in each placed object's Eden **Init** field.
+WMP-issued crates register automatically; starter crates do not. Vehicles need inventory capacity.
+See [Supply transfers](Supply-Transfers) for the ACE merge and transfer actions.
+
+Physical cargo is enabled by default. An eligible crate can be carried with ACE and released onto
+a vehicle. A crate does not need a vehicle Init script or a seat-coordinate list. To make another
+non-weapon prop eligible, put `[this] call Waldo_fnc_PhysicalCargoRegister;` in its Init field.
+Read [Physical cargo](Physical-Cargo) before using a modded vehicle or prop.
+
 ### missionSystemsConfig.sqf
 
 **Normally edit:** rally rules, optional system switches, diagnostics and safestart.
+
+For base services, set `Waldo_BaseServices_Enable` to `true`. Place two objects and put a call
+like this in each object's Eden **Init** field, changing the label on the second one:
+
+```sqf
+[this, "MainBase", "Headquarters", ["SAVE", "HEAL", "SPECTATE", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
+```
+
+The shared `MainBase` ID joins the objects into one travel network. The service list belongs to
+that object; remove any action it should not offer. See [Base services](Base-Services) for
+transitions, markers and the whole-network registration call.
 
 **Normally leave:** rally safe-position search and global ACE handling values. These start through
 the existing lifecycle. Economy enablement starts runtime support, but resources/catalogues still

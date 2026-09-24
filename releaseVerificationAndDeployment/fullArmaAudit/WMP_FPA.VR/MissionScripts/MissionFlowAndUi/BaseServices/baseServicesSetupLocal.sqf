@@ -31,20 +31,20 @@ private _registry = if (isRemoteExecuted) then {_snapshot} else {
         if (!isNull _object) then {
             private _paths = [];
             if ("SAVE" in _services) then {
-                private _action = [format ["WMP_BASE_SAVE_%1", _forEachIndex], "Save respawn loadout", _icon,
+                private _action = [format ["WMP_BASE_SAVE_%1", _forEachIndex], "Save respawn loadout", "\a3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa",
                     {[_player, _target, "SAVE"] remoteExecCall ["Waldo_fnc_BaseServicesUseServer", 2]},
                     {alive _player && {_player distance _target < 6}}]
                     call ace_interact_menu_fnc_createAction;
                 _paths pushBack ([_object, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject);
             };
             if ("HEAL" in _services && {!isNil "ace_medical_treatment_fnc_fullHeal"}) then {
-                private _action = [format ["WMP_BASE_HEAL_%1", _forEachIndex], "Full heal", _icon,
+                private _action = [format ["WMP_BASE_HEAL_%1", _forEachIndex], "Full heal", "\a3\ui_f\data\igui\cfg\simpletasks\types\Heal_ca.paa",
                     {[_player, _target, "HEAL"] remoteExecCall ["Waldo_fnc_BaseServicesUseServer", 2]},
                     {alive _player && {_player distance _target < 6}}] call ace_interact_menu_fnc_createAction;
                 _paths pushBack ([_object, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject);
             };
             if ("SPECTATE" in _services && {!isNil "ace_spectator_fnc_setSpectator"}) then {
-                private _action = [format ["WMP_BASE_SPECTATE_%1", _forEachIndex], "Enter spectator", _icon,
+                private _action = [format ["WMP_BASE_SPECTATE_%1", _forEachIndex], "Enter spectator", "\a3\ui_f\data\igui\cfg\simpletasks\types\meet_ca.paa",
                     {[_player, _target, "SPECTATE"] remoteExecCall ["Waldo_fnc_BaseServicesUseServer", 2]},
                     {alive _player && {_player distance _target < 6}}] call ace_interact_menu_fnc_createAction;
                 _paths pushBack ([_object, 0, ["ACE_MainActions"], _action] call ace_interact_menu_fnc_addActionToObject);
@@ -53,7 +53,7 @@ private _registry = if (isRemoteExecuted) then {_snapshot} else {
                 (_x select 0) isNotEqualTo _object && {"TELEPORT" in (_x select 2)}
             };
             if ("TELEPORT" in _services && {_destinations isNotEqualTo []}) then {
-                private _category = ["WMP_BASE_DEST", "Move to...", _icon, {}, {true}] call ace_interact_menu_fnc_createAction;
+                private _category = ["WMP_BASE_DEST", "Move to...", "\a3\missions_f_oldman\data\img\holdactions\holdAction_follow_start_ca.paa", {}, {true}] call ace_interact_menu_fnc_createAction;
                 _paths pushBack ([_object, 0, ["ACE_MainActions"], _category] call ace_interact_menu_fnc_addActionToObject);
                 private _origin = _object;
                 {

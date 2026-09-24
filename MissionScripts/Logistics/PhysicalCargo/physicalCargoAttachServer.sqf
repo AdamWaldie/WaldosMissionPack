@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Purpose: Validates the released object, then records an inert physical-cargo mount.
  * Locality / Authority: Server validates remote carrier ownership, geometry and proximity.
- * Repeat / JIP: Repeat requests are ignored; public mount state and request/replay support JIP.
+ * Repeat / JIP: Repeat requests are ignored; object state and an ordered snapshot support JIP.
  *
  * Arguments: 0: carrier <OBJECT>; 1: crate <OBJECT>; 2: vehicle <OBJECT>;
  *            3: vehicle-model offset <ARRAY of 3 NUMBERS>;
@@ -47,34 +47,53 @@ for "_axis" from 0 to 2 do {
 };
 if (!_withinVehicle) exitWith {false};
 if (vectorMagnitude _relativeDir < 0.5 || {vectorMagnitude _relativeUp < 0.5}) exitWith {false};
-_cargo setVariable ["Waldo_PhysicalCargo_PreviousSimulation", simulationEnabled _cargo, true];
+_cargo setVariable ["Waldo_PhysicalCargo_PreviousSimulation", simulationEnabled _cargo];
 // Arma returns [BOOL] here, while setPhysicsCollisionFlag consumes BOOL.
 _cargo setVariable ["Waldo_PhysicalCargo_PreviousCollision",
-    (getPhysicsCollisionFlag _cargo) param [0, true], true];
+    (getPhysicsCollisionFlag _cargo) param [0, true]];
 _cargo enableSimulationGlobal false;
 _cargo setVariable ["Waldo_PhysicalCargo_Mode", "CARGO", true];
 _cargo setVariable ["Waldo_PhysicalCargo_AttachedVehicle", _vehicle, true];
 [_cargo, _vehicle, true, _offset, _relativeDir, _relativeUp] call Waldo_fnc_PhysicalCargoSeatsServer;
 private _mounts = +(missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]);
 _mounts pushBack [_cargo, _vehicle, _offset, _relativeDir, _relativeUp];
-missionNamespace setVariable ["Waldo_PhysicalCargo_Mounts", _mounts, true];
-[_cargo, _vehicle, _offset, _relativeDir, _relativeUp]
+missionNamespace setVariable ["Waldo_PhysicalCargo_Mounts", _mounts];
+private _revision = (missionNamespace getVariable ["Waldo_PhysicalCargo_MountRevision", 0]) + 1;
+missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
+[_cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision]
     remoteExec ["Waldo_fnc_PhysicalCargoApplyLocal", 0];
-[_cargo, _vehicle, _offset, _relativeDir, _relativeUp] spawn {
-    params ["_cargo", "_vehicle", "_offset", "_relativeDir", "_relativeUp"];
+[_carrier, _cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision] spawn {
+    params ["_carrier", "_cargo", "_vehicle", "_offset", "_relativeDir", "_relativeUp", "_revision"];
+    private _notifyMounted = {
+        if (!isNull _carrier && {alive _carrier}) then {
+            ["PHYSICAL CARGO", "Cargo mounted. Use ACE Carry to move it again.",
+                "SUCCESS", "PHYSICAL_CARGO_MOUNT", 5]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _carrier];
+        };
+    };
     sleep 1.5;
+    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}) exitWith {
+        call _notifyMounted;
+    };
     if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}
         && {attachedTo _cargo isNotEqualTo _vehicle}) then {
         // If object ownership migrated between the initial dispatch and execution, try its
         // current owner once more. The owner function is idempotent for this exact mount.
-        [_cargo, _vehicle, _offset, _relativeDir, _relativeUp]
+        [_cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision]
             remoteExec ["Waldo_fnc_PhysicalCargoApplyLocal", 0];
     };
     sleep 4;
-    if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}
-        && {attachedTo _cargo isNotEqualTo _vehicle}) then {
+    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}) exitWith {
+        call _notifyMounted;
+    };
+    if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}) then {
         [_cargo] call Waldo_fnc_PhysicalCargoClearServer;
         diag_log format ["[WMP PHYSICAL CARGO] Mount acknowledgement failed for %1; crate simulation restored.", typeOf _cargo];
+        if (!isNull _carrier && {alive _carrier}) then {
+            ["PHYSICAL CARGO", "Cargo could not be secured; it has been released.",
+                "WARNING", "PHYSICAL_CARGO_MOUNT", 6]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _carrier];
+        };
     };
 };
 diag_log format ["[WMP PHYSICAL CARGO] Mounted %1 on %2 at %3.", typeOf _cargo,

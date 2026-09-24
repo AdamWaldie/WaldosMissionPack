@@ -161,6 +161,7 @@ FIXTURES = [
     fixture("qa_weapon_static", "B_HMG_01_F", 400, 46, simulation=True),
     fixture("qa_seat_vehicle", "B_LSV_01_unarmed_F", 425, 52, direction=90, simulation=True),
     fixture("qa_seat_crate", "Box_NATO_Ammo_F", 425, 46, simulation=True),
+    fixture("qa_seat_control", "Box_NATO_Ammo_F", 425, 58, simulation=True),
 ]
 
 CHALLENGES = [

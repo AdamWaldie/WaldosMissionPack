@@ -151,9 +151,11 @@ if (_category == "ALL") then {
     };
 };
 if (!_selectionValid) exitWith {["selection/quantity stale"] call _reject};
-// A conservative capacity gate before either inventory is touched. Global cargo-add commands may
-// ignore the engine capacity, so the post-write exact snapshot check below is also mandatory.
-if (maxLoad _destination > 0 && {loadAbs _destination + loadAbs _source > maxLoad _destination}
+// The mission maker may deliberately allow overloaded inventories. Even then,
+// the exact snapshot rebuild below must succeed or the transaction rolls back.
+private _ignoreCapacity = missionNamespace getVariable ["Waldo_SupplyTransfers_IgnoreCapacity", false];
+if (!_ignoreCapacity && {maxLoad _destination > 0}
+    && {loadAbs _destination + loadAbs _source > maxLoad _destination}
     && {_category == "ALL"}) exitWith {
     [format ["preflight capacity; sourceLoad=%1 destLoad=%2 max=%3", loadAbs _source,
         loadAbs _destination, maxLoad _destination]] call _reject
@@ -162,7 +164,7 @@ if !([_destination, _newDst] call Waldo_fnc_SupplyTransfersApplySnapshot) exitWi
     [_destination, _dst] call Waldo_fnc_SupplyTransfersApplySnapshot;
     ["destination snapshot rebuild mismatch"] call _reject
 };
-if (maxLoad _destination > 0 && {loadAbs _destination > maxLoad _destination}) exitWith {
+if (!_ignoreCapacity && {maxLoad _destination > 0} && {loadAbs _destination > maxLoad _destination}) exitWith {
     [_destination, _dst] call Waldo_fnc_SupplyTransfersApplySnapshot;
     [format ["postwrite capacity; max=%1", maxLoad _destination]] call _reject
 };

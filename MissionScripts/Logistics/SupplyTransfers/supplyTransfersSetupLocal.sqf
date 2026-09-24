@@ -3,6 +3,7 @@
  * Purpose: Installs crate logistics and registered vehicles' two-way transfer/merge ACE actions.
  * Locality / Authority: Interface-local; requests are validated and committed on the server.
  * Repeat / JIP: Reconciles current registry, removing obsolete local ACE paths before replacement.
+ *   A player's chosen merge source is local and expires without a polling loop.
  * Arguments: registry snapshot <ARRAY> (empty; supplied by server on replay).
  * Return Value: <BOOL> setup attempted.
  * Current callers: initPlayerLocal.sqf and Waldo_fnc_SupplyTransfersRegister broadcast.
@@ -96,21 +97,50 @@ private _installed = [];
         private _source = ["WMP_SUPPLY_SOURCE", _selectLabel, _icon,
             {
                 missionNamespace setVariable ["Waldo_SupplyTransfers_SelectedSource", _target];
+                private _timeout = (missionNamespace getVariable ["Waldo_SupplyTransfers_SourceTimeout", 120]) max 15 min 600;
+                private _expiresAt = diag_tickTime + _timeout;
+                missionNamespace setVariable ["Waldo_SupplyTransfers_SourceExpiresAt", _expiresAt];
+                [_target, _expiresAt, _timeout] spawn {
+                    params ["_source", "_expiresAt", "_timeout"];
+                    uiSleep _timeout;
+                    if ((missionNamespace getVariable ["Waldo_SupplyTransfers_SelectedSource", objNull]) isEqualTo _source
+                        && {(missionNamespace getVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1]) isEqualTo _expiresAt}) then {
+                        missionNamespace setVariable ["Waldo_SupplyTransfers_SelectedSource", objNull];
+                        missionNamespace setVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1];
+                    };
+                };
                 private _name = _target getVariable ["Waldo_QM_IssueName", ""];
                 if (_name isEqualTo "") then {
                     _name = getText (configFile >> "CfgVehicles" >> typeOf _target >> "displayName");
                 };
                 if (_name isEqualTo "") then {_name = typeOf _target};
                 ["MERGE SOURCE SELECTED",
-                    format ["%1 selected. Transfer from here, or use Merge on a destination box or vehicle.", _name],
+                    format ["%1 selected for merge. Choose Merge on a destination within %2 seconds, or deselect it here.", _name, round _timeout],
                     "SUCCESS", 8, "BOTTOM_RIGHT", "SUPPLY_MERGE_SOURCE"] call Waldo_fnc_ShowUiNotification;
-            }, {_player distance _target <= 6}] call ace_interact_menu_fnc_createAction;
+            }, {
+                _player distance _target <= 6
+                    && {!((missionNamespace getVariable ["Waldo_SupplyTransfers_SelectedSource", objNull]) isEqualTo _target
+                        && {diag_tickTime < (missionNamespace getVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1])})}
+            }] call ace_interact_menu_fnc_createAction;
         _paths pushBack ([_object, 0, _supplyPath, _source] call ace_interact_menu_fnc_addActionToObject);
+        private _deselect = ["WMP_SUPPLY_DESELECT", "Deselect this merge source", _icon,
+            {
+                missionNamespace setVariable ["Waldo_SupplyTransfers_SelectedSource", objNull];
+                missionNamespace setVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1];
+                ["SUPPLY MERGE", "Merge source cleared.", "INFO", "SUPPLY_MERGE_SOURCE", 5]
+                    call Waldo_fnc_FeatureNotifyLocal;
+            }, {
+                _player distance _target <= 6
+                    && {(missionNamespace getVariable ["Waldo_SupplyTransfers_SelectedSource", objNull]) isEqualTo _target}
+                    && {diag_tickTime < (missionNamespace getVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1])}
+            }] call ace_interact_menu_fnc_createAction;
+        _paths pushBack ([_object, 0, _supplyPath, _deselect] call ace_interact_menu_fnc_addActionToObject);
         private _merge = ["WMP_SUPPLY_MERGE", _mergeLabel, _icon,
             {
                 private _source = missionNamespace getVariable ["Waldo_SupplyTransfers_SelectedSource", objNull];
                 private _range = (missionNamespace getVariable ["Waldo_SupplyTransfers_Range", 20]) max 2 min 50;
-                if (isNull _source || {_source isEqualTo _target}
+                if (isNull _source || {diag_tickTime >= (missionNamespace getVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1])}
+                    || {_source isEqualTo _target}
                     || {!(_source in (missionNamespace getVariable ["Waldo_SupplyTransfers_Registry", []]))}
                     || {_source distance _target > _range}) exitWith {
                     ["SUPPLY MERGE", "Select a different registered source within transfer range first.",
@@ -121,6 +151,7 @@ private _installed = [];
             }, {
                 private _selected = missionNamespace getVariable ["Waldo_SupplyTransfers_SelectedSource", objNull];
                 !isNull _selected && {_selected isNotEqualTo _target}
+                    && {diag_tickTime < (missionNamespace getVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1])}
                     && {_player distance _target <= 6}
                     && {_selected distance _target <= ((missionNamespace getVariable ["Waldo_SupplyTransfers_Range", 20]) max 2 min 50)}
             }] call ace_interact_menu_fnc_createAction;

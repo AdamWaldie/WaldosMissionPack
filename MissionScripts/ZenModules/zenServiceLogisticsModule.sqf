@@ -1,6 +1,6 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Presents target-first ZEN dialogs for base nodes, quartermasters and cargo eligibility.
+ * Purpose: Presents target-first ZEN dialogs for base nodes, quartermasters and cargo handling.
  * Locality / Authority: Curator interface only; edits go to an authenticated server handler.
  * Repeat / JIP: Dialogs are transient; server registries and object state replay to joining clients.
  * Arguments: feature <STRING>; module position <ARRAY>; selected object <OBJECT>.
@@ -106,7 +106,7 @@ switch (toUpperANSI _feature) do {
         [if (_vehicle) then {"Configure Vehicle Supply Logistics"} else {"Configure Supply Container"}, [
             ["COMBO", ["Operation", if (_vehicle) then {
                 "Register this vehicle for two-way ACE transfers and whole-inventory merge. It needs Arma inventory capacity."
-            } else {"Register this box as a supply source, or inspect its current state."}],
+            } else {"Register an inventory box for ACE transfers and merges, or inspect it. Empty ammo boxes receive WMP inventory capacity; decorative props do not."}],
                 [["REGISTER", "INSPECT"], ["Register for transfers", "Inspect registration"], if (_registered) then {1} else {0}]]
         ], {
             params ["_values", "_args"];
@@ -127,6 +127,41 @@ switch (toUpperANSI _feature) do {
             _values params ["_mode"];
             ["PHYSICAL_" + _mode, _target, []] call _send;
         }, {}, [_target, _send]] call zen_dialog_fnc_create;
+    };
+    case "ACE_CARGO": {
+        // No ACE setters run while placing this module. Keep the read and dialog
+        // times separate so a first-open hitch can be assigned to the UI path.
+        private _startedAt = diag_tickTime;
+        private _choice = _target getVariable ["Waldo_CargoAttributes_Choice", [
+            _target getVariable ["ace_dragging_canDrag",
+                getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_dragging_canDrag") > 0],
+            _target getVariable ["ace_dragging_canCarry",
+                getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_dragging_canCarry") > 0], false, false
+        ]];
+        private _size = _target getVariable ["ace_cargo_size",
+            getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_cargo_size")];
+        private _space = _target getVariable ["Waldo_CargoAttributes_TotalSpace",
+            getNumber (configFile >> "CfgVehicles" >> typeOf _target >> "ace_cargo_space")];
+        private _readMs = round ((diag_tickTime - _startedAt) * 1000);
+        ["Set ACE Cargo and Object Handling", [
+            ["CHECKBOX", ["Can drag", "Show ACE Drag and allow this object to be dragged."], _choice param [0, false]],
+            ["CHECKBOX", ["Can carry", "Show ACE Carry and allow this object to be carried."], _choice param [1, false]],
+            ["CHECKBOX", ["Ignore drag weight limit", "Only use when the intended object exceeds ACE's normal drag weight limit."], _choice param [2, false]],
+            ["CHECKBOX", ["Ignore carry weight limit", "Only use when the intended object exceeds ACE's normal carry weight limit."], _choice param [3, false]],
+            ["CHECKBOX", ["Change ACE cargo size", "Size controls whether this object can be loaded into another ACE Cargo vehicle. Leave off to keep its current size."], false],
+            ["SLIDER", ["ACE cargo size", "-1 disables ACE loading; 0 or more enables it. Does not control physical mounting."], [-1, 50, (_size max -1) min 50, 0]],
+            ["CHECKBOX", ["Change ACE cargo space", "Space controls how much ACE Cargo this object can hold. Leave off to keep its current capacity."], false],
+            ["SLIDER", ["ACE cargo space", "0 means it cannot hold ACE Cargo; larger values give more capacity."], [0, 100, (_space max 0) min 100, 0]]
+        ], {
+            params ["_values", "_args"];
+            _args params ["_target", "_send"];
+            _values params ["_drag", "_carry", "_ignoreDrag", "_ignoreCarry", "_setSize", "_size", "_setSpace", "_space"];
+            ["ACE_CARGO_SET", _target, [["drag", _drag], ["carry", _carry],
+                ["ignoreDragWeight", _ignoreDrag], ["ignoreCarryWeight", _ignoreCarry],
+                ["setSize", _setSize], ["size", _size], ["setSpace", _setSpace], ["space", _space]]] call _send;
+        }, {}, [_target, _send]] call zen_dialog_fnc_create;
+        diag_log format ["[WMP ZEN ACE CARGO] placement target=%1 readMs=%2 dialogMs=%3",
+            typeOf _target, _readMs, round ((diag_tickTime - _startedAt) * 1000) - _readMs];
     };
 };
 true

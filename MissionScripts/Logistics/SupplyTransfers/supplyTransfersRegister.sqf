@@ -1,6 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Give a crate or cargo-capable vehicle the supply-transfer and merge actions.
+ * Registered ammunition/supply crates also receive ACE Drag and Carry; vehicles
+ * keep their own movement and cargo settings.
  * Enable Waldo_SupplyTransfers_Enable first. WMP-issued crates register automatically;
  * use this call for an object placed in Eden or created by your own script.
  *
@@ -9,6 +11,8 @@
  * objects to each player so ACE actions appear for players who join later.
  * Repeat and JIP: Calling this twice for the same object does not duplicate actions.
  * If shared settings are still loading, the server finishes registration afterward.
+ * A zero-capacity supply box receives the mission-configured inventory capacity once;
+ * decorative props and zero-capacity vehicles are still rejected.
  *
  * Arguments:
  * 0: container <OBJECT> - a crate or cargo-capable vehicle with inventory space.
@@ -30,7 +34,13 @@ if !(missionNamespace getVariable ["Waldo_SharedFeatureConfigReady", false]) exi
     true
 };
 if !(missionNamespace getVariable ["Waldo_SupplyTransfers_Enable", false]) exitWith {false};
+if (_container getVariable ["Waldo_Logistics_StarterCrate", false]) exitWith {false};
+if (maxLoad _container <= 0 && {(_container isKindOf "ReammoBox_F")
+    || {_container isKindOf "WeaponHolderSimulated"}}) then {
+    _container setMaxLoad ((missionNamespace getVariable ["Waldo_SupplyTransfers_EmptyCrateCapacity", 400]) max 50 min 10000);
+};
 if (maxLoad _container <= 0) exitWith {false};
+[_container] call Waldo_fnc_CargoAttributesPrepareObject;
 private _registry = +(missionNamespace getVariable ["Waldo_SupplyTransfers_Registry", []]);
 if (_container in _registry) exitWith {true};
 _registry pushBack _container;

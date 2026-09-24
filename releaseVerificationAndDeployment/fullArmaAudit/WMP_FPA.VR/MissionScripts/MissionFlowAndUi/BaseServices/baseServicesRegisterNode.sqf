@@ -1,15 +1,29 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Adds or updates one Eden/object-init service node in a named base network.
- * Locality / Authority: Only the server mutates the registry; object Init runs on every machine.
- * Repeat / JIP: Duplicate object Init calls are ignored off-server; server upserts by object.
- *   Registration waits in scheduled code for the shared settings before publishing a full snapshot.
- * Arguments: object <OBJECT>; group ID <STRING>; label <STRING>; services <ARRAY>;
- *   icon <STRING> (default WMP service icon); transition <STRING|ARRAY> (default group preset);
- *   marker offset <ARRAY> (default object surface).
- * Return Value: <BOOL> request accepted on the server.
- * Current callers: Eden object Init, service compositions and ZEN service configuration.
- * Example: [this, "MainBase", "Medical", ["HEAL", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
+ * Add one placed object to a named base-service network. Objects with the same
+ * network ID can offer travel between them. Give each object only the services
+ * players should find there. Enable Waldo_BaseServices_Enable first.
+ *
+ * Locality and authority: The server owns the network. Eden also runs the Init
+ * field on clients, but those calls do nothing. The server waits for settings,
+ * then sends the complete network and its markers to every client, including JIP.
+ * Repeat and JIP: Calling again updates this object without duplicating actions.
+ *
+ * Arguments:
+ * 0: object <OBJECT> - the placed stand, laptop or other interaction object.
+ * 1: network ID <STRING> - same ID joins the same travel network.
+ * 2: label <STRING> - name shown to players and in travel destinations.
+ * 3: services <ARRAY of STRING> - choose SAVE, HEAL, SPECTATE and/or TELEPORT.
+ * 4: icon <STRING> - optional .paa path; default WMP service icon.
+ * 5: transition <STRING or ARRAY> - optional travel preset or custom settings;
+ *    empty string (default) uses the network's preset.
+ * 6: marker offset <ARRAY [x,y,z]> - optional model-space point; empty array
+ *    (default) puts the 3D marker on the object's upper surface.
+ * Return Value: <BOOL> - true when the server accepts or queues the setup.
+ * Example: In the object's Eden Init field:
+ * [this, "MainBase", "Medical", ["HEAL", "TELEPORT"]] call Waldo_fnc_BaseServicesRegisterNode;
+ * Result: This object offers full heal and travel to other TELEPORT nodes in MainBase.
+ * Current callers: Eden object Init, base-service compositions and ZEN node setup.
  */
 params [
     ["_object", objNull, [objNull]], ["_groupId", "", [""]], ["_label", "", [""]],

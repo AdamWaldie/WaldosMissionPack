@@ -2,7 +2,7 @@
  * Author: WaldoTheWarfighter
  * Purpose: Configures live service/logistics fixtures and repeatable audit controls.
  * Locality / Authority: Dedicated/hosted server only. Requests verify the player's network owner.
- * Repeat / JIP: Setup runs once per audit mission; measured seat points publish for JIP.
+ * Repeat / JIP: Setup runs once per audit mission; production seat discovery publishes matched points for JIP.
  * Arguments: None. Return Value: Nothing; sets Waldo_QA_ServiceLogisticsReady publicly.
  * Current caller: extendedFeatureStationsServer.sqf after the feature range is ready.
  * Example: call compile preprocessFileLineNumbers "serviceLogisticsStationsServer.sqf";
@@ -10,7 +10,7 @@
 if (!isServer) exitWith {};
 
 // The editor fixture is the vanilla NATO Prowler (DAGOR). Keep its original
-// object identity so seat calibration and local test actions refer to one vehicle.
+// object identity so production proxy discovery and local test actions refer to one vehicle.
 private _seatFixture = missionNamespace getVariable ["qa_seat_vehicle", objNull];
 if (!isNull _seatFixture) then {
     diag_log format ["[WMP QA SEAT VEHICLE] class=%1 cargoOrFfvSeats=%2",
@@ -97,8 +97,18 @@ if (!isNull _controlCrate) then {
     _controlCrate setPhysicsCollisionFlag true;
     _controlCrate enableSimulationGlobal true;
     [_controlCrate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+    _controlCrate setVariable ["Waldo_PhysicalCargo_Eligible", false, true];
     diag_log format ["[WMP QA CARGO CONTROL] class=%1 physicalEligible=%2",
         typeOf _controlCrate, _controlCrate getVariable ["Waldo_PhysicalCargo_Eligible", false]];
+};
+private _seatControl = "qa_seat_control" call _get;
+if (!isNull _seatControl) then {
+    _seatControl setPhysicsCollisionFlag true;
+    _seatControl enableSimulationGlobal true;
+    [_seatControl, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+    _seatControl setVariable ["Waldo_PhysicalCargo_Eligible", false, true];
+    diag_log format ["[WMP QA SEAT CONTROL] class=%1 physicalEligible=%2",
+        typeOf _seatControl, _seatControl getVariable ["Waldo_PhysicalCargo_Eligible", false]];
 };
 {
     private _object = missionNamespace getVariable [_x, objNull];
@@ -110,65 +120,7 @@ if (!isNull _controlCrate) then {
             _object getVariable ["ace_cargo_space", -999], owner _object];
     };
 } forEach ["qa_transfer_source", "qa_transfer_target", "qa_transfer_control", "qa_transfer_vehicle", "qa_cargo_vehicle", "qa_cargo_crate", "qa_cargo_control",
-    "qa_weapon_vehicle", "qa_weapon_static", "qa_seat_vehicle", "qa_seat_crate"];
-
-// The audit must not require a player to discover an extra capture action before
-// testing seat blocking. Measure each free seat with an actual server-local
-// occupant, and publish only positions the engine confirms that occupant used.
-// This is confined to disposable QA vehicles; production never inserts probe
-// units into a mission-maker's vehicles without an explicit call.
-Waldo_QA_fnc_calibrateCargoSeatsServer = {
-    params [["_vehicle", objNull, [objNull]]];
-    if (!isServer || {isNull _vehicle} || {crew _vehicle isNotEqualTo []}) exitWith {false};
-    private _group = createGroup [west, true];
-    private _probe = _group createUnit ["B_Soldier_F", getPosATL _vehicle, [], 0, "CAN_COLLIDE"];
-    if (isNull _probe) exitWith {deleteGroup _group; false};
-    _probe allowDamage false;
-    _probe hideObjectGlobal true;
-    _probe disableAI "ALL";
-    private _points = [];
-    private _seats = (fullCrew [_vehicle, "", true]) select {
-        (toLowerANSI (_x select 1) isEqualTo "cargo" && {(_x select 2) >= 0})
-            || {(_x select 4) && {(_x select 3) isNotEqualTo []}}
-    };
-    {
-        private _seat = _x;
-        private _index = _seat select 2;
-        private _path = _seat select 3;
-        private _kind = if (toLowerANSI (_seat select 1) isEqualTo "cargo") then {"CARGO"} else {"TURRET"};
-        if (_kind isEqualTo "CARGO") then {
-            _probe moveInCargo [_vehicle, _index];
-        } else {
-            _probe moveInTurret [_vehicle, _path];
-        };
-        uiSleep 0.08;
-        private _occupied = (fullCrew [_vehicle, "", true]) findIf {
-            (_x select 0) isEqualTo _probe
-                && {if (_kind isEqualTo "CARGO") then {(_x select 2) isEqualTo _index}
-                    else {(_x select 3) isEqualTo _path}}
-        };
-        if (_occupied >= 0) then {
-            private _point = _vehicle worldToModel (ASLToAGL getPosWorld _probe);
-            _points pushBack [_kind, if (_kind isEqualTo "CARGO") then {_index} else {_path}, _point];
-        };
-        moveOut _probe;
-        uiSleep 0.03;
-    } forEach _seats;
-    deleteVehicle _probe;
-    deleteGroup _group;
-    _vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", _points, true];
-    diag_log format ["[WMP QA SEAT CALIBRATION] vehicle=%1 measured=%2 available=%3 points=%4",
-        typeOf _vehicle, count _points, count _seats, _points];
-    count _points > 0
-};
-
-[] spawn {
-    private _vehicles = [missionNamespace getVariable ["qa_seat_vehicle", objNull],
-        missionNamespace getVariable ["qa_cargo_vehicle", objNull]];
-    {
-        if (!isNull _x) then {[_x] call Waldo_QA_fnc_calibrateCargoSeatsServer};
-    } forEach _vehicles;
-};
+    "qa_weapon_vehicle", "qa_weapon_static", "qa_seat_vehicle", "qa_seat_crate", "qa_seat_control"];
 
 Waldo_QA_fnc_captureCargoSeatServer = {
     params [["_actor", objNull, [objNull]]];
@@ -195,10 +147,37 @@ Waldo_QA_fnc_captureCargoSeatServer = {
     };
     if (_old >= 0) then {_points deleteAt _old};
     _points pushBack [_key select 0, _key select 1, _point];
-    _vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", _points, true];
+    _vehicle setVariable ["Waldo_PhysicalCargo_SeatPoints", _points];
     diag_log format ["[WMP QA SEAT CAPTURE] actor=%1 vehicle=%2 kind=%3 key=%4 modelPoint=%5 fullCrew=%6",
         name _actor, typeOf _vehicle, _key select 0, _key select 1, _point, _crew];
     [_actor, "CARGO SEAT QA", format ["Measured %1 seat %2 at model offset %3. Dismount and place the small crate over this exact seat.", _key select 0, _key select 1, _point], "SUCCESS", "CARGO_SEAT_QA"] call Waldo_QA_fnc_notifyActorServer;
+    true
+};
+
+Waldo_QA_fnc_reportCargoSeatsServer = {
+    params [["_actor", objNull, [objNull]]];
+    if (!isServer || {isNull _actor} || {remoteExecutedOwner != owner _actor}) exitWith {false};
+    private _vehicle = missionNamespace getVariable ["qa_seat_vehicle", objNull];
+    if (isNull _vehicle || {_actor distance _vehicle > 30}) exitWith {
+        diag_log format ["[WMP QA SEAT REPORT] Rejected: actor=%1 distance=%2 vehicle=%3",
+            name _actor, _actor distance _vehicle, _vehicle];
+        false
+    };
+    private _points = _vehicle getVariable ["Waldo_PhysicalCargo_SeatPoints", []];
+    private _cargoLocks = _vehicle getVariable ["Waldo_PhysicalCargo_SeatLocks", []];
+    private _turretLocks = _vehicle getVariable ["Waldo_PhysicalCargo_TurretLocks", []];
+    private _crate = missionNamespace getVariable ["qa_seat_crate", objNull];
+    private _engineTurrets = _turretLocks apply {
+        private _path = _x select 0;
+        [_path, _vehicle lockedTurret _path]
+    };
+    diag_log format ["[WMP QA SEAT REPORT] actor=%1 crateMounted=%2 points=%3 cargoLocks=%4 turretLocks=%5 engineTurrets=%6 vehicleOwner=%7 vehicleLocal=%8",
+        name _actor, !isNull _crate && {!isNull (_crate getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])},
+        _points, _cargoLocks, _turretLocks, _engineTurrets, owner _vehicle, local _vehicle];
+    ["CARGO SEAT QA", format ["Matched seats: %1. WMP cargo locks: %2. WMP FFV locks: %3. Crate mounted: %4. See server RPT for seat paths.",
+        count _points, count _cargoLocks, count _turretLocks,
+        !isNull _crate && {!isNull (_crate getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])}],
+        "INFO", "CARGO_SEAT_REPORT", 12] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _actor];
     true
 };
 

@@ -6,6 +6,8 @@
  * Nets sharing one channel are shown once as a channel number instead of repeating every radio class.
  * The squad-radio section is omitted when no group on the player's side has a valid PRC-343
  * block/channel assignment, avoiding an empty list of "not assigned" placeholders.
+ * The plan's separator-free group keys are for matching only; the diary uses each
+ * group's authored callsign from acreConfig.sqf for display.
  *
  * Locality and authority:
  * Player-local diary/UI work only. It reads the server-compiled plan plus verified local ACRE
@@ -35,6 +37,26 @@ if (_sideIndex < 0) exitWith {false};
 private _sidePlan = (_plan select 2) select _sideIndex;
 private _nets = _sidePlan select 2;
 private _groups = _sidePlan select 3;
+private _groupNames = createHashMap;
+private _configuredSides = _config getOrDefault ['sides', []];
+private _configuredSide = _configuredSides findIf {
+    private _candidate = toUpperANSI (_x param [0, '']);
+    switch (_candidate) do {
+        case 'BLUFOR': {_candidate = 'WEST'};
+        case 'OPFOR': {_candidate = 'EAST'};
+        case 'INDEPENDENT'; case 'INDEP': {_candidate = 'GUER'};
+        case 'CIVILIAN': {_candidate = 'CIV'};
+    };
+    _candidate == _sideKey
+};
+if (_configuredSide >= 0) then {
+    {
+        private _authored = _x param [0, ''];
+        if (_authored isEqualType '' && {_authored != ''}) then {
+            _groupNames set [toUpperANSI ((_authored splitString ' -_.') joinString ''), _authored];
+        };
+    } forEach ((_configuredSides select _configuredSide) param [3, []]);
+};
 private _groupKey = toUpperANSI ((((groupId group player) splitString ' -_.') joinString ''));
 private _groupIndex = _groups findIf {(_x select 0) == _groupKey};
 private _assignedNetKeys = [];
@@ -91,7 +113,8 @@ if !(_squadAssignments isEqualTo []) then {
     _text = _text + "<font size='14'>Squad Radio Assignments</font><br/>";
     {
         _x params ['_assignmentGroup', '_assignment'];
-        private _line = format ['%1 - Block %2, Channel %3', _assignmentGroup, _assignment select 0, _assignment select 1];
+        private _name = _groupNames getOrDefault [_assignmentGroup, _assignmentGroup];
+        private _line = format ['%1 - Block %2, Channel %3', _name, _assignment select 0, _assignment select 1];
         if (_assignmentGroup == _groupKey) then {
             // This section documents assignment, not live tuning. The player's squad is therefore
             // always green; current channel state is shown independently in Radio Nets below.

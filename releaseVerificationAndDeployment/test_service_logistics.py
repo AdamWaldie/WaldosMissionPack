@@ -18,6 +18,23 @@ def source(path: str) -> str:
 
 
 class ServiceLogisticsSourceTests(unittest.TestCase):
+    def test_ace_cargo_zen_uses_server_validated_shared_setter(self):
+        modules = source("MissionScripts/ZenModules/Zen_initModules.sqf")
+        dialog = source("MissionScripts/ZenModules/zenServiceLogisticsModule.sqf")
+        server = source("MissionScripts/ZenModules/zenServiceLogisticsServer.sqf")
+        self.assertIn('"ACE Cargo - Set Object Handling", "ACE_CARGO"', modules)
+        self.assertIn('case "ACE_CARGO":', dialog)
+        self.assertIn('"ignoreCarryWeight"', dialog)
+        self.assertIn('case "ACE_CARGO_SET":', server)
+        self.assertIn('call Waldo_fnc_SetCargoAttributes', server)
+        self.assertIn('remoteExecutedOwner', server)
+
+    def test_quartermaster_defaults_include_every_normal_issue(self):
+        config = source("MissionConfig/logisticsConfig.sqf")
+        for kind in ("Medical", "Ammo", "Supply", "Wheel", "Track", "Grenades",
+                     "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"):
+            self.assertIn(f'["Waldo_QM_{kind}_Enable", true]', config)
+
     def test_packaged_acre_test_uses_current_pack_and_nato_buggy(self):
         builder_path = ROOT / "releaseVerificationAndDeployment/build_service_logistics_test_mission.py"
         spec = importlib.util.spec_from_file_location("wmp_service_logistics_builder", builder_path)
@@ -56,14 +73,24 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
                     package.namelist(),
                 )
 
-    def test_eden_examples_include_current_services_and_verified_prowler_seats(self):
+    def test_eden_examples_do_not_bake_in_vehicle_seat_coordinates(self):
         base = source("WMP_Compositions/[WMP]Base_Services_Example/composition.sqe")
         cargo = source("WMP_Compositions/[WMP]Supply_Transfers_And_Cargo_Example/composition.sqe")
         self.assertEqual(base.count('""SPECTATE""'), 2)
         self.assertIn('type="B_LSV_01_unarmed_F"', cargo)
-        self.assertIn('""Waldo_PhysicalCargo_SeatPoints""', cargo)
-        for index in range(6):
-            self.assertIn(f'[""TURRET"", [{index}],', cargo)
+        self.assertNotIn('""Waldo_PhysicalCargo_SeatPoints""', cargo)
+        self.assertIn('init="[this] call Waldo_fnc_SupplyTransfersRegister;"', cargo)
+        resolver = source("MissionScripts/Logistics/PhysicalCargo/physicalCargoDiscoverSeatsServer.sqf")
+        self.assertIn('selectionNames _lod', resolver)
+        self.assertIn('selectionPosition [_x, _lod]', resolver)
+        self.assertIn('proxyIndex', resolver)
+        self.assertIn('setVariable ["Waldo_PhysicalCargo_SeatPoints", +_points];', resolver)
+        self.assertNotIn('setVariable ["Waldo_PhysicalCargo_SeatPoints", +_points, true]', resolver)
+        self.assertNotIn('createUnit', resolver)
+        self.assertNotIn('moveInCargo', resolver)
+        self.assertNotIn('moveInTurret', resolver)
+        self.assertIn('call Waldo_fnc_PhysicalCargoDiscoverSeatsServer',
+                      source("MissionScripts/Logistics/PhysicalCargo/physicalCargoSeatsServer.sqf"))
 
     def test_audit_has_live_station_for_each_new_workflow(self):
         import importlib.util
@@ -81,12 +108,12 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             self.assertIn("qa_sign_" + name.replace("-", "_"), fixture_ids)
         for name in ("qa_base_hq", "qa_base_fob", "qa_qm_point", "qa_transfer_source",
                      "qa_transfer_target", "qa_transfer_vehicle", "qa_cargo_vehicle", "qa_cargo_crate", "qa_weapon_vehicle",
-                     "qa_weapon_static", "qa_seat_vehicle", "qa_seat_crate"):
+                     "qa_weapon_static", "qa_seat_vehicle", "qa_seat_crate", "qa_seat_control"):
             self.assertIn(name, fixture_ids)
         live = {row["name"]: row for row in generator.FIXTURES}
         for name in ("qa_transfer_source", "qa_transfer_target", "qa_transfer_vehicle", "qa_cargo_vehicle",
                      "qa_cargo_crate", "qa_weapon_vehicle", "qa_weapon_static",
-                     "qa_seat_vehicle", "qa_seat_crate"):
+                     "qa_seat_vehicle", "qa_seat_crate", "qa_seat_control"):
             self.assertTrue(live[name]["simulation"], name)
         server = source("releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR/serviceLogisticsStationsServer.sqf")
         client = source("releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR/extendedFeatureStationsClient.sqf")
@@ -103,9 +130,12 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('"CAPTURE MY OCCUPIED CARGO SEAT"', client)
         self.assertIn('[player, 1, ["ACE_SelfActions"], _captureSeat]', client)
         self.assertIn('[WMP QA SEAT CAPTURE]', server)
+        self.assertNotIn('Waldo_QA_fnc_calibrateCargoSeatsServer', server)
         self.assertEqual(live["qa_seat_vehicle"]["class"], "B_LSV_01_unarmed_F")
         self.assertNotIn('"rhsusf_mrzr4_d"', server)
         self.assertEqual(live["qa_seat_crate"]["class"], "Box_NATO_Ammo_F")
+        self.assertEqual(live["qa_seat_control"]["class"], "Box_NATO_Ammo_F")
+        self.assertIn('"qa_seat_control" call _get', server)
         self.assertIn('"Measured post-exit velocity', client)
         self.assertIn('TEST CRATE + VEHICLE TRANSFERS', client)
 
@@ -114,13 +144,15 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('ctrlSetStructuredText', mutator)
         self.assertNotIn('Waldo_fnc_FeatureNotifyLocal', mutator)
 
-    def test_new_features_start_opted_out(self):
+    def test_base_and_transfers_start_opted_out_but_quartermaster_is_full(self):
         logistics = source("MissionConfig/logisticsConfig.sqf")
         systems = source("MissionConfig/missionSystemsConfig.sqf")
         self.assertIn('["Waldo_BaseServices_Enable", false]', systems)
         self.assertIn('["Waldo_SupplyTransfers_Enable", false]', logistics)
         self.assertNotIn('Waldo_PhysicalCargo_WeaponMount_Enable', logistics)
-        for name in ("Grenades", "Explosives", "Rearm", "VehicleRearm", "StaticRearm", "FuelBarrel", "FuelJerrycan"):
+        for name in ("Grenades", "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"):
+            self.assertIn(f'["Waldo_QM_{name}_Enable", true]', logistics)
+        for name in ("VehicleRearm", "StaticRearm"):
             self.assertIn(f'["Waldo_QM_{name}_Enable", false]', logistics)
 
     def test_base_services_authority_and_jip(self):
@@ -152,6 +184,8 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('ace_cargo_customName', extended)
         self.assertIn('ace_cargo_customName', legacy)
         self.assertIn('Box_%1_%2', extended)
+        self.assertIn('Waldo_QM_Marker_Enable', actions)
+        self.assertIn('boundingBoxReal _target', actions)
 
     def test_module_crates_and_compositions_follow_role_registration(self):
         for path in (
@@ -170,7 +204,23 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         helper = source('MissionScripts/Logistics/Crates/logisticsRegisterSpawned.sqf')
         self.assertIn('Waldo_SupplyTransfers_Enable', helper)
         self.assertIn('Waldo_PhysicalCargo_Enable', helper)
-        self.assertIn('if (_role == "STARTER") exitWith', helper)
+        self.assertIn('if (_role == "STARTER" || {_object getVariable ["Waldo_Logistics_StarterCrate", false]}) exitWith', helper)
+        self.assertIn('[_object, _role] call Waldo_fnc_CargoAttributesPrepareObject', helper)
+        prepare = source('MissionScripts/MissionInit/VehicleActionsSetup/cargoAttributesPrepareObject.sqf')
+        self.assertIn('_object isKindOf "LandVehicle"', prepare)
+        self.assertNotIn('private _size = nil;', prepare)
+        self.assertIn('if (_size == -999) then {[_object, nil, nil] + _choice}', prepare)
+        self.assertLess(helper.index('call Waldo_fnc_CargoAttributesPrepareObject'),
+                        helper.index('if (missionNamespace getVariable ["Waldo_PhysicalCargo_Enable"'))
+        zen_crate = source('MissionScripts/ZenModules/ZenSpawnCrateServer.sqf')
+        self.assertIn('[_crate, "SUPPLY"] call Waldo_fnc_CargoAttributesPrepareObject', zen_crate)
+        self.assertNotIn('[_crate, true] call ace_dragging_fnc_setCarryable', zen_crate)
+        transfer = source('MissionScripts/Logistics/SupplyTransfers/supplyTransfersRegister.sqf')
+        self.assertIn('[_container] call Waldo_fnc_CargoAttributesPrepareObject', transfer)
+        purchase = source('MissionScripts/EconomySystems/Buy/executePurchase.sqf')
+        self.assertIn('[_spawned, "CARGO"] spawn Waldo_fnc_LogisticsRegisterSpawned', purchase)
+        resource = source('MissionScripts/EconomySystems/Resource/spawnResourceCrate.sqf')
+        self.assertIn('[_crate] call Waldo_fnc_CargoAttributesPrepareObject', resource)
 
     def test_node_registration_is_additive_and_zen_is_curator_gated(self):
         node = source('MissionScripts/MissionFlowAndUi/BaseServices/baseServicesRegisterNode.sqf')
@@ -184,10 +234,25 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
 
     def test_rearm_box_is_empty_and_identified(self):
         extended = source('MissionScripts/Logistics/Crates/quartermasterExtendedSpawn.sqf')
+        label = source('MissionScripts/Logistics/Crates/quartermasterRearmLabelLocal.sqf')
         for cargo_type in ('Weapon', 'Magazine', 'Item', 'Backpack'):
             self.assertIn(f'clear{cargo_type}CargoGlobal _object', extended)
         self.assertIn('ace_rearm_fnc_makeSource', extended)
         self.assertIn('Waldo_fnc_QuartermasterRearmLabelLocal', extended)
+        self.assertIn('missionNamespace getVariable ["ace_rearm_supply", 0]', extended)
+        self.assertIn('if (_limited) then {(_configuredSupply max 1) min 100000} else {0}', extended)
+        self.assertIn('ace_rearm_currentSupply', label)
+        self.assertIn('Rearm supply exhausted', label)
+        self.assertIn('Rearm supply: unlimited', label)
+        self.assertIn('Waldo_QM_RearmInfoActionLocal', label)
+
+    def test_zen_cargo_apply_leaves_remote_execution_context(self):
+        server = source('MissionScripts/ZenModules/zenServiceLogisticsServer.sqf')
+        block = server.split('case "ACE_CARGO_SET": {', 1)[1].split('\n    };', 1)[0]
+        self.assertIn('[_target, _setSpace, _space, _setSize, _size, _drag, _carry,', block)
+        self.assertIn('] spawn {', block)
+        self.assertIn('private _applied = !isNull _target && {_args call Waldo_fnc_SetCargoAttributes}', block)
+        self.assertIn('"[WMP ZEN ACE CARGO] applied=%1', block)
 
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")
@@ -249,6 +314,7 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         self.assertIn('!isNull _selected && {_selected isNotEqualTo _target}', source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf"))
         self.assertIn('"SUPPLY_REGISTER"', source("MissionScripts/ZenModules/zenServiceLogisticsServer.sqf"))
         self.assertIn('call Waldo_fnc_SupplyTransfersRegister', source("MissionScripts/ZenModules/zenServiceLogisticsServer.sqf"))
+        self.assertIn('class=%3 maxLoad=%4', source("MissionScripts/ZenModules/zenServiceLogisticsServer.sqf"))
         station = source("releaseVerificationAndDeployment/fullArmaAudit/WMP_FPA.VR/serviceLogisticsStationsServer.sqf")
         self.assertIn('"qa_transfer_vehicle" call _get', station)
         self.assertIn('_transferVehicle enableSimulationGlobal true', station)
@@ -270,10 +336,34 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
         actions = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")
         self.assertIn('"ALL", [], 1', actions)
 
-    def test_quartermaster_fuel_icon_is_not_missing_asset(self):
+    def test_quartermaster_categories_use_distinct_icons(self):
         actions = source("MissionScripts/Logistics/Crates/initQuartermaster.sqf")
-        self.assertNotIn('simpletasks\\types\\fuel_ca.paa', actions)
-        self.assertIn('mapcontrol\\Fuelstation_CA.paa', actions)
+        self.assertIn('simpletasks\\types\\refuel_ca.paa', actions)
+        self.assertIn('simpletasks\\types\\repair_ca.paa', actions)
+        self.assertIn('military\\dot_CA.paa', actions)
+        self.assertIn('"Waldo_QM_Category", "Quartermaster"', actions)
+        self.assertIn('[5, [_target, _player, _boxType', actions)
+
+    def test_merge_source_can_be_deselected_or_expire(self):
+        actions = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")
+        result = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersResultLocal.sqf")
+        config = source("MissionConfig/logisticsConfig.sqf")
+        self.assertIn('WMP_SUPPLY_DESELECT', actions)
+        self.assertIn('Waldo_SupplyTransfers_SourceExpiresAt', actions)
+        self.assertIn('uiSleep _timeout', actions)
+        self.assertIn('Waldo_SupplyTransfers_SourceExpiresAt', result)
+        self.assertIn('["Waldo_SupplyTransfers_SourceTimeout", 120]', config)
+
+    def test_zero_capacity_inventory_boxes_and_capacity_override(self):
+        register = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersRegister.sqf")
+        request = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersRequestServer.sqf")
+        config = source("MissionConfig/logisticsConfig.sqf")
+        self.assertIn('_container isKindOf "ReammoBox_F"', register)
+        self.assertIn('_container setMaxLoad', register)
+        self.assertIn('if (maxLoad _container <= 0) exitWith {false}', register)
+        self.assertIn('Waldo_SupplyTransfers_IgnoreCapacity', request)
+        self.assertIn('destination snapshot rebuild mismatch', request)
+        self.assertIn('["Waldo_SupplyTransfers_EmptyCrateCapacity", 400]', config)
 
     def test_zen_quartermaster_prefills_script_created_point_and_sends_all_controls(self):
         setup = source("MissionScripts/Logistics/Crates/initQuartermaster.sqf")

@@ -1,17 +1,14 @@
 # Feature Configuration Files
 
-> **Use this page when:** you need to find, understand, or safely change a WMP feature setting.
+> **Use this page when:** finding a WMP setting and checking its type, default or allowed values.
 
-All mission-maker feature settings live under `MissionConfig`. Each file returns pure data in the
-same manner as `acreConfig.sqf`; lifecycle code applies only the correct `SHARED`, `SERVER`, or
-`PLAYER_LOCAL` section. Existing values win. A server entry marked for publication is broadcast
-once by `initServer.sqf` and remains available to JIP clients. The loader never promotes a local
-setting into authoritative state.
+Mission-maker settings live in `MissionConfig`. Use the tables below to find the right file and
+setting. For a first setup, follow [Feature Setup and Activation](Feature-Setup-and-Activation):
+some features also need an object, zone or setup call in Eden.
 
-This page is the variable reference. If you are asking **whether the setting starts the feature**,
-**what else must be placed/registered**, or **which init file receives a custom call**, begin with
-[Feature Setup and Activation](Feature-Setup-and-Activation). A config file never spawns or
-registers world content by itself.
+WMP loads each setting in the right place: server, player interface or every machine. If a mission
+already defines a value, that value wins. The server publishes shared world settings to joining
+players. Keep calls that place or register objects out of config files.
 
 ## Reading a setting when you do not know SQF
 
@@ -24,19 +21,15 @@ Complex settings are expanded vertically in the config file. Their fields are nu
 and explained beside the exact value being edited. Start with the supplied example, duplicate the
 whole block where instructed, and change one clearly labelled field at a time.
 
-The in-code baseline is deliberately repetitive: `SETTING`, `WHAT IT CHANGES`, `VALUES`, then a
-copyable `EXAMPLE/RESULT`. This is preferable to expecting a new mission maker to decode a compact
-schema reference.
+Config comments give `SETTING`, `WHAT IT CHANGES`, `VALUES` and a copyable `EXAMPLE/RESULT` beside
+each choice.
 
-Each `SETTING` also identifies its customisation level. `VALUES` includes the data type, units,
-allowed range or IDs and shipped default. `EXAMPLE/RESULT` explains an alternative value in terms of
-what the mission maker or players will observe. For positional arrays, each zero-based field is
-explained beside the row. The compact wiki tables are navigation aids; they do not replace these
-setting-level explanations in the file.
+Each `SETTING` gives its customisation level. `VALUES` includes type, units, range and shipped
+default. `EXAMPLE/RESULT` shows what changes in play. Numbered comments explain each field in a
+positional array.
 
-Callable scripts use the same beginner-first, detail-preserving rule. Their in-file headers retain
-all numbered arguments and nested shapes, plus return value, locality/authority, current callers,
-copyable call and expected result. See [Coding and Documentation Standards](Coding-Standards).
+Script headers list arguments, return values, where the call runs and a working example. See
+[Coding and Documentation Standards](Coding-Standards).
 
 ## Before changing a value
 
@@ -98,7 +91,7 @@ Recommended review by file:
 - Interaction difficulty: `easy`, `standard`, `hard`, `expert`.
 - Distances/altitudes are metres and durations are seconds unless a row states otherwise. Damage, fuel and ammunition fractions are `0` through `1`.
 
-## `dialogueConfig.sqf` — shared
+## `dialogueConfig.sqf`: shared
 
 | Setting | Purpose / units |
 |---|---|
@@ -120,7 +113,7 @@ Recommended review by file:
 | `Waldo_Dialogue_ChoiceMinimumRowHeight` | Minimum wrapped response-row height as a safe-zone fraction; default 0.038. |
 | `Waldo_Dialogue_ChoiceTextScale` | Response and cancel-button structured-text scale; default 0.90. |
 
-## `dialogueConfig.sqf` — server
+## `dialogueConfig.sqf`: server
 
 | Setting | Purpose / units |
 |---|---|
@@ -160,7 +153,7 @@ See [ACRE2 Babel Configuration](ACRE2-Babel-Configuration),
 [PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup), and
 [Long-Range Radio Presetting](ACRE-2-Long-Range-Radio-Presetting).
 
-## `persistenceConfig.sqf` — shared
+## `persistenceConfig.sqf`: shared
 
 See [Persistence](Persistence) for setup steps, registering world objects, and the Zeus modules.
 
@@ -188,7 +181,7 @@ Normal standalone mission example:
 The server also binds each record to the requesting Steam UID and rejects stored identity that does
 not match. Use `CAMPAIGN` only when cross-mission player progression is intentional.
 
-## `interfaceConfig.sqf` — shared
+## `interfaceConfig.sqf`: shared
 
 | Setting | Purpose / valid values |
 |---|---|
@@ -196,7 +189,7 @@ not match. Use `CAMPAIGN` only when cross-mission player progression is intentio
 | `Waldo_UI_CustomThemes` | Custom theme definitions keyed by theme ID. Red hues are reserved for hostile/enemy language and are normalised by the resolver. |
 | `Waldo_UI_ThemeOverrides` | Mission-wide component-level theme overrides. Red array or hexadecimal inputs cannot enter resolved WMP presentation. |
 
-## `interfaceConfig.sqf` — player local
+## `interfaceConfig.sqf`: player local
 
 ### Introduction text
 
@@ -323,7 +316,7 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_WmpHud_OutlineScale` | Contrast outline scale relative to the name. |
 | `Waldo_WmpHud_OutlineColour` | RGBA contrast-outline colour. |
 
-## `aiConfig.sqf` — shared
+## `aiConfig.sqf`: shared
 
 | Setting | Purpose / units |
 |---|---|
@@ -450,17 +443,18 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_PhysicalCargo_Enable` | Retained physical ACE carry-release path; enabled by default. |
 | `Waldo_PhysicalCargo_BlockSeats` | Lock only cargo seats with verified vehicle-model points; on when physical cargo is enabled. |
 | `Waldo_Quartermaster_Enable` | Gates the existing quartermaster; on by default. |
+| `Waldo_QM_Marker_Enable` | Shows the standalone quartermaster's object-following 3D label at its upper surface; on by default. Set `false` to hide the label without removing ACE actions. |
 | `Waldo_QM_Medical_Enable`, `Waldo_QM_Ammo_Enable`, `Waldo_QM_Supply_Enable`, `Waldo_QM_Wheel_Enable`, `Waldo_QM_Track_Enable` | Global availability of the five established issues; each defaults on. ZEN may narrow the issues offered at one point but cannot override a disabled global flag. |
-| `Waldo_QM_Grenades_Enable` | Adds mission-derived grenade issues; off by default. |
-| `Waldo_QM_Explosives_Enable` | Adds mission-derived explosive issues; off by default. |
-| `Waldo_QM_Rearm_Enable` | Adds one finite ACE Rearm Box for vehicles and static weapons; off by default. |
+| `Waldo_QM_Grenades_Enable` | Adds mission-derived grenade issues; on by default. |
+| `Waldo_QM_Explosives_Enable` | Adds mission-derived explosive issues; on by default. |
+| `Waldo_QM_Rearm_Enable` | Adds one empty ACE Rearm Box for vehicles and static weapons; on by default. ACE's mission-wide supply mode controls whether it is limited or unlimited. |
 | `Waldo_QM_VehicleRearm_Enable` | Legacy alias for the single Rearm Box action; off by default. |
 | `Waldo_QM_StaticRearm_Enable` | Legacy alias for the single Rearm Box action; off by default. |
 | `Waldo_QM_FuelBarrel_Enable` | Adds ACE fuel-barrel issues; off by default. |
 | `Waldo_QM_FuelJerrycan_Enable` | Adds ACE jerrycan issues; off by default. |
 | `Waldo_QM_Grenades_CountPerType` | Number of each eligible grenade type in one issue. |
 | `Waldo_QM_Explosives_CountPerType` | Number of each eligible explosive type in one issue. |
-| `Waldo_QM_Rearm_Supply` | Finite ACE supply units in a Rearm Box. |
+| `Waldo_QM_Rearm_Supply` | ACE supply points per box in Limited Supply mode; default 1200. Unlimited mode ignores the value. Specific Magazines mode does not offer the empty issue. |
 | `Waldo_QM_VehicleRearm_Supply` | Legacy supply value used when the new rearm flag is off. |
 | `Waldo_QM_StaticRearm_Supply` | Legacy supply value used when the new rearm flag is off. |
 | `Waldo_QM_FuelBarrel_Litres` | Fuel in each issued barrel, in litres. |
@@ -469,6 +463,9 @@ parachute have been tested at the replacement altitude and speed.
 | `Waldo_QM_VehicleRearm_CrateClass`, `Waldo_QM_StaticRearm_CrateClass` | Compatibility class settings for scripted legacy rearm issues. The player-facing quartermaster has one Rearm Box. |
 | `Waldo_SupplyTransfers_Enable` | Adds crate transfer/merge/loading controls and registered vehicles' two-way transfer/merge actions; off by default. WMP-issued crates auto-register except starter crates. |
 | `Waldo_SupplyTransfers_Range` | Maximum separation between a box source and box/vehicle destination in metres; default 20, clamped to 2–50. |
+| `Waldo_SupplyTransfers_SourceTimeout` | Seconds before a selected merge source clears; default 120, clamped to 15–600. Players can deselect it sooner. |
+| `Waldo_SupplyTransfers_IgnoreCapacity` | Allows transfers that exceed Arma inventory capacity when `true`; off by default. Exact snapshot checks still apply. |
+| `Waldo_SupplyTransfers_EmptyCrateCapacity` | Inventory capacity assigned when an explicitly registered standard box reports zero capacity; default 400. Decorative props and zero-capacity vehicles remain ineligible. |
 | `Waldo_FieldResupply_CrateClass` | Deployed resupply crate class. |
 | `Waldo_FieldResupply_DefaultCarrierCapacity` | Default virtual crates carried. |
 | `Waldo_FieldResupply_CrateSizeScalar` | Multiplies the deployed crate's populated quantities. |
@@ -507,7 +504,7 @@ parachute have been tested at the replacement altitude and speed.
 | `Logi_SupplyBoxClass` | JIP-published logistics supply crate class. |
 | `Logi_MedicalBoxClass` | JIP-published medical crate class; ACE crate when ACE Medical exists. |
 
-## `environmentConfig.sqf` — shared
+## `environmentConfig.sqf`: shared
 
 | Setting | Purpose / units |
 |---|---|
@@ -553,7 +550,7 @@ detonate an ACE demo charge within 5 m. Copy the complete target/profile block o
 works. See [Explosive wall breaching](Optional-Feature-Systems#explosive-wall-breaching) for the
 annotated profile and advanced replacement-row format.
 
-## `electronicWarfareConfig.sqf` — server, JIP-published
+## `electronicWarfareConfig.sqf`: server, JIP-published
 
 | Setting | Purpose / units |
 |---|---|
@@ -595,8 +592,8 @@ annotated profile and advanced replacement-row format.
 | `Waldo_Economy_Enable` | Enables the optional WMP economy. |
 | `Waldo_MiniGames_Enable` | Enables interaction-equipment challenges. |
 | `Waldo_CorpseTraps_Enable` | Enables configured corpse-trap handling. |
-| `ACE_maxWeightDrag` | Maximum ACE draggable mass; the shipped value preserves permissive WMP logistics. |
-| `ACE_maxWeightCarry` | Maximum ACE carryable mass; the shipped value preserves permissive WMP logistics. |
+| `ACE_maxWeightDrag` | Direct ACE maximum draggable mass; shipped value `10000`. Edit it here for your mission. This is not a WMP feature flag. |
+| `ACE_maxWeightCarry` | Direct ACE maximum carryable mass; shipped value `6000`. Edit it here for your mission. This is not a WMP feature flag. |
 | `ace_hearing_disableVolumeUpdate` | Disables ACE's automatic hearing-volume adjustment. |
 | `Waldo_RunDiagnostics` | Runs the server startup diagnostics report. |
 | `Waldo_SafeStart_Confine` | Restricts players to the safestart area. |
@@ -604,7 +601,7 @@ annotated profile and advanced replacement-row format.
 | `Waldo_SafeStart_ZoneMarker` | Optional marker defining the safestart area. |
 | `Waldo_SafeStart_AutoStart` | `false` starts live while retaining Zeus controls; `true` begins the mission under Safestart protection. |
 
-## `headlessConfig.sqf` — shared
+## `headlessConfig.sqf`: shared
 
 See [Headless Client Support](Headless-Client-Support) for Eden setup, eligibility rules and the
 mission/mod test checklist that should be run before enabling this on a live mission.

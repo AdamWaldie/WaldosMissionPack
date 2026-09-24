@@ -231,8 +231,55 @@ private _weapon = "qa_sign_static_cargo" call _get;
 }] call _add;
 
 private _seat = "qa_sign_cargo_seats" call _get;
+// Audit-only frame trace. Record a slow frame near the two identical crates and
+// the ACE-open frame; no inventory scans or menu actions are added to either crate.
+private _seatVehicle = "qa_seat_vehicle" call _get;
+{
+    private _crate = _x call _get;
+    if (!isNull _crate) then {
+        private _objectActions = _crate getVariable ["ace_interact_menu_actions", []];
+        private _actionNames = _objectActions apply {(_x select 0) select 0};
+        diag_log format ["[WMP QA ACE CRATE STATE] fixture=%1 netId=%2 eligible=%3 carry=%4 drag=%5 ignoreWeight=%6 aceSize=%7 objectActions=%8 vars=%9",
+            _x, netId _crate,
+            _crate getVariable ["Waldo_PhysicalCargo_Eligible", "UNSET"],
+            _crate getVariable ["ace_dragging_canCarry", "UNSET"],
+            _crate getVariable ["ace_dragging_canDrag", "UNSET"],
+            _crate getVariable ["ace_dragging_ignoreWeightCarry", "UNSET"],
+            _crate getVariable ["ace_cargo_size", "UNSET"],
+            _actionNames,
+            (allVariables _crate) select {(_x find "ace_") isEqualTo 0 || {(_x find "Waldo_") isEqualTo 0}}];
+    };
+} forEach ["qa_seat_crate", "qa_seat_control"];
+if (!isNull _seatVehicle && {isNil {missionNamespace getVariable "Waldo_QA_AceFrameTracePFH"}}) then {
+    private _state = [diag_tickTime, _seatVehicle, 0];
+    private _pfh = [{
+        params ["_state"];
+        _state params ["_last", "_vehicle", "_logged"];
+        private _now = diag_tickTime;
+        _state set [0, _now];
+        if (_now - _last >= 0.08 && {_logged < 12} && {player distance _vehicle < 25}) then {
+            private _target = cursorObject;
+            _state set [2, _logged + 1];
+            diag_log format ["[WMP QA ACE FRAME] gapMs=%1 frame=%2 target=%3 eligible=%4 menuOpen=%5",
+                round ((_now - _last) * 1000), diag_frameNo,
+                if (isNull _target) then {"<none>"} else {typeOf _target},
+                if (isNull _target) then {"<none>"} else {_target getVariable ["Waldo_PhysicalCargo_Eligible", "UNSET"]},
+                uiNamespace getVariable ["Waldo_UI_AceInteractionOpen", false]];
+        };
+    }, 0, _state] call CBA_fnc_addPerFrameHandler;
+    missionNamespace setVariable ["Waldo_QA_AceFrameTracePFH", _pfh];
+    ["ace_interactMenuOpened", {
+        private _vehicle = missionNamespace getVariable ["qa_seat_vehicle", objNull];
+        if (!isNull _vehicle && {player distance _vehicle < 25}) then {
+            private _target = cursorObject;
+            diag_log format ["[WMP QA ACE OPEN] frame=%1 target=%2 eligible=%3",
+                diag_frameNo, if (isNull _target) then {"<none>"} else {typeOf _target},
+                if (isNull _target) then {"<none>"} else {_target getVariable ["Waldo_PhysicalCargo_Eligible", "UNSET"]}];
+        };
+    }] call CBA_fnc_addEventHandler;
+};
 [_seat, "Waldo_QA_SeatGuide", "TEST VERIFIED SEAT LOCKING", {
-    ["CARGO SEAT QA", "This station uses a small crate and the NATO Prowler/DAGOR. Wait for REPORT VERIFIED SEATS to show measured positions, then carry the crate onto a passenger or FFV seat and try to enter that exact seat. The station measures empty seats automatically; no capture action is required.", "INFO", "CARGO_SEAT_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
+    ["CARGO SEAT QA", "For first-open hitch testing, compare the small mountable crate with the same-class control crate nearby, reversing which you open first on a fresh client. Carry the mountable crate onto a Prowler seat. REPORT VERIFIED SEATS shows matched points and locks. Test the covered seat and one clear seat, then ACE Carry it away and retry the covered seat. Use CAPTURE only for an unsupported layout.", "INFO", "CARGO_SEAT_QA", 18] call Waldo_fnc_FeatureNotifyLocal;
 }] call _add;
 if (!isNil "ace_interact_menu_fnc_createAction") then {
     private _captureSeat = ["Waldo_QA_SeatCapture", "CAPTURE MY OCCUPIED CARGO SEAT", "",
@@ -244,13 +291,7 @@ if (!isNil "ace_interact_menu_fnc_createAction") then {
     [player, 1, ["ACE_SelfActions"], _captureSeat] call ace_interact_menu_fnc_addActionToObject;
 };
 [_seat, "Waldo_QA_SeatReport", "REPORT VERIFIED SEATS + OWNED LOCKS", {
-    private _vehicle = missionNamespace getVariable ["qa_seat_vehicle", objNull];
-    ["CARGO SEAT QA", if (isNull _vehicle) then {"Seat truck missing."} else {
-        format ["Vehicle: %1. Measured seat points: %2. WMP cargo locks: %3. WMP FFV locks: %4.", typeOf _vehicle,
-            _vehicle getVariable ["Waldo_PhysicalCargo_SeatPoints", []],
-            _vehicle getVariable ["Waldo_PhysicalCargo_SeatLocks", []],
-            _vehicle getVariable ["Waldo_PhysicalCargo_TurretLocks", []]]
-    }, "INFO", "CARGO_SEAT_REPORT", 12] call Waldo_fnc_FeatureNotifyLocal;
+    [player] remoteExecCall ["Waldo_QA_fnc_reportCargoSeatsServer", 2];
 }] call _add;
 
 private _briefing = "qa_sign_briefing_docs" call _get;

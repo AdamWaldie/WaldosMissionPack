@@ -17,9 +17,9 @@ _pending params ["_savedToken", "_vehicle", "_priorSimulation", "_priorCollision
 if (!isNull (_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull])) exitWith {false};
 if (!isNull attachedTo _cargo) exitWith {false};
 if (!isNull _vehicle && {_cargo distance _vehicle < 2}) exitWith {false};
-_cargo setVariable ["Waldo_PhysicalCargo_RestorePending", [], true];
-_cargo setVariable ["Waldo_PhysicalCargo_PreviousSimulation", nil, true];
-_cargo setVariable ["Waldo_PhysicalCargo_PreviousCollision", nil, true];
+_cargo setVariable ["Waldo_PhysicalCargo_RestorePending", []];
+_cargo setVariable ["Waldo_PhysicalCargo_PreviousSimulation", nil];
+_cargo setVariable ["Waldo_PhysicalCargo_PreviousCollision", nil];
 [_cargo, _vehicle, _priorCollision, [], _token, true]
     remoteExecCall ["Waldo_fnc_PhysicalCargoRestoreLocal", 0];
 _cargo enableSimulationGlobal _priorSimulation;
