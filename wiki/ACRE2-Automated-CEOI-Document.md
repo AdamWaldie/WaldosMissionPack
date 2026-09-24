@@ -8,7 +8,9 @@ block/channel and named long-range nets, and reports any setup problem instead o
 
 Only the player's side is shown. **Squad Radio Assignments** appears only when at least one group on
 that side has a valid PRC-343 assignment; groups without one are omitted instead of producing empty
-placeholder rows. If nobody is assigned a PRC-343, the complete section is omitted. The current
+placeholder rows. The list uses the group names as written in `MissionConfig/acreConfig.sqf`—for
+example, `VIKING 2-3`—rather than the separator-free keys WMP uses to match editor group IDs.
+If nobody is assigned a PRC-343, the complete section is omitted. The current
 group's short-range assignment and authored long-range net assignments are highlighted green before
 the mission starts. After ACRE is ready, matching live radio read-back is also green. Carried-radio lines
 identify base class, same-type occurrence, resolved request, ear, applicable failures and the count

@@ -18,6 +18,9 @@ params["_target","_arsenal",["_crateSide",west],["_unrestrictedArsenal",false]];
 // Public editor call: every machine may execute an object's init field, but the server owns all
 // global inventory mutations and publishes the client-local actions for hosted, dedicated and JIP.
 if (!isServer) exitWith {};
+// Mark this before waiting for the inventory scan. Physical-cargo startup may
+// otherwise register the crate during the wait and add unwanted ACE handling.
+_target setVariable ["Waldo_Logistics_StarterCrate", true, true];
 
 //Wait Until Init is completed & players ingame (Postinit hack)
 waitUntil { missionNamespace getVariable ["WALDO_INIT_COMPLETE", false] };
@@ -34,7 +37,6 @@ private _starterJipId = format ["Waldo_StarterCrate_%1", netId _target];
 
 
 //Add full compliment of supplies (MEDICAL NOTWITHSTANDING)
-_target setVariable ["Waldo_Logistics_StarterCrate", true, true];
 [_target, 1,_crateSide, false, false] call Waldo_fnc_SupplyCratePopulate;
 
 if (_arsenal == true) then {

@@ -36,6 +36,9 @@ if (!_issueEnabled) exitWith {false};
 if !(_kind in (_target getVariable ["Waldo_QM_AllowedKinds",
     ["Medical", "Ammo", "Supply", "Track", "Wheel", "Grenades", "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"]])) exitWith {false};
 if (_isRearm && {isNil "ace_rearm_fnc_makeSource"}) exitWith {false};
+// ACE's specific-magazine mode needs separately stocked magazine classes. An
+// intentionally empty QM shell only supports ACE's limited and unlimited modes.
+if (_isRearm && {!((missionNamespace getVariable ["ace_rearm_supply", 0]) in [0, 1])}) exitWith {false};
 if (_kind == "FuelBarrel" && {isNil "ace_refuel_fnc_makeSource"}) exitWith {false};
 if (_kind == "FuelJerrycan" && {isNil "ace_refuel_fnc_makeJerryCan"}) exitWith {false};
 private _dynamicMagazines = [];
@@ -97,7 +100,7 @@ private _aceSize = switch (_kind) do {
     case "FuelJerrycan": {1};
     default {4};
 };
-[_object, -1, _aceSize, true, _kind != "FuelBarrel"] call Waldo_fnc_SetCargoAttributes;
+[_object, -1, _aceSize, true, true] call Waldo_fnc_SetCargoAttributes;
 if (_kind in ["Grenades", "Explosives"] || {_isRearm}) then {
     clearWeaponCargoGlobal _object;
     clearMagazineCargoGlobal _object;
@@ -111,7 +114,7 @@ if (_kind in ["Grenades", "Explosives"]) then {
     } forEach _dynamicMagazines;
 };
 if (_isRearm && {!isNil "ace_rearm_fnc_makeSource"}) then {
-    private _supply = switch (_kind) do {
+    private _configuredSupply = switch (_kind) do {
         case "VehicleRearm": {missionNamespace getVariable ["Waldo_QM_VehicleRearm_Supply", 1200]};
         case "StaticRearm": {missionNamespace getVariable ["Waldo_QM_StaticRearm_Supply", 250]};
         default {
@@ -124,8 +127,12 @@ if (_isRearm && {!isNil "ace_rearm_fnc_makeSource"}) then {
             }
         };
     };
-    [_object, (_supply max 1) min 100000] call ace_rearm_fnc_makeSource;
-    [_object, _supply] remoteExecCall ["Waldo_fnc_QuartermasterRearmLabelLocal", 0, _object];
+    // ACE's supply setting is mission-wide. In limited mode it consumes these
+    // points; in unlimited mode a numeric count would mislead players.
+    private _limited = (missionNamespace getVariable ["ace_rearm_supply", 0]) == 1;
+    private _supply = if (_limited) then {(_configuredSupply max 1) min 100000} else {0};
+    [_object, _supply] call ace_rearm_fnc_makeSource;
+    [_object] remoteExecCall ["Waldo_fnc_QuartermasterRearmLabelLocal", 0, _object];
 };
 if (_kind == "FuelBarrel" && {!isNil "ace_refuel_fnc_makeSource"}) then {
     [_object, (missionNamespace getVariable ["Waldo_QM_FuelBarrel_Litres", 200]) max 1] call ace_refuel_fnc_makeSource;

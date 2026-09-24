@@ -1,12 +1,14 @@
 /*
  * Author: WaldoTheWarfighter
- * Installs Logistics Quartermaster actions on an object or NPC. A normal standalone
+ * Installs Quartermaster actions on an object or NPC. A normal standalone
  * quartermaster is made available immediately. An MHQ passes deploymentControlled=true so its
  * server-owned deploy/tear-down state decides when the quartermaster actions become available.
  * The call is safe in an Eden object init: the server publishes standalone availability and every
  * interface installs its own ACE actions (or vanilla addActions when ACE is absent). JIP clients
  * receive the object state and repeat-safe local actions. Crate requests are always validated and
  * spawned by the server through Waldo_fnc_LogisticsSpawner.
+ * Standalone points show an object-following 3D marker when Waldo_QM_Marker_Enable is true.
+ * Its default position is measured from the target's model bounds, not a fixed world height.
  *
  * Arguments:
  * 0: target <OBJECT> - object or NPC that players interact with.
@@ -61,11 +63,18 @@ if (!_deploymentControlled) then {
     if (isServer) then {
         _target setVariable ["Waldo_QM_Standalone", true, true];
         _target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true];
-        ["WMP_QM_" + netId _target, _target, createHashMapFromArray [
-            ["text", "Quartermaster"],
-            ["icon", "\a3\ui_f\data\igui\cfg\simpletasks\types\Box_ca.paa"],
-            ["offset", [0, 0, 1.5]], ["distance", 25]
-        ]] call Waldo_fnc_Create3DMarker;
+        private _markerId = "WMP_QM_" + netId _target;
+        if (missionNamespace getVariable ["Waldo_QM_Marker_Enable", true]) then {
+            private _bounds = boundingBoxReal _target;
+            private _top = ((_bounds select 1) select 2) - 0.02;
+            [_markerId, _target, createHashMapFromArray [
+                ["text", "Quartermaster"],
+                ["icon", "\a3\ui_f\data\igui\cfg\simpletasks\types\Box_ca.paa"],
+                ["offset", [0, 0, _top]], ["distance", 25]
+            ]] call Waldo_fnc_Create3DMarker;
+        } else {
+            [_markerId] call Waldo_fnc_Remove3DMarker;
+        };
     } else {
         if !(_target getVariable ["Waldo_QM_StandaloneActivationRequested", false]) then {
             _target setVariable ["Waldo_QM_StandaloneActivationRequested", true];
@@ -80,7 +89,7 @@ if (!hasInterface) exitWith {true};
 // interaction tree rather than Arma's action menu. Informational addActions use the shared WMP blue.
 if (isNil {_target getVariable "Waldo_QM_InfoActionId"}) then {
     private _infoId = _target addAction [
-        "<t color='#79C7FF'>Logistics Quartermaster</t>",
+        "<t color='#79C7FF'>Quartermaster</t>",
         {
             params ["_target", "_player"];
             private _ace = isClass (configFile >> "CfgPatches" >> "ace_interact_menu");
@@ -129,7 +138,9 @@ if (!_aceReady) exitWith {
         ["Retrieve Spare Wheel", "Wheel"]
     ] select {missionNamespace getVariable [format ["Waldo_QM_%1_Enable", _x select 1], true]
         && {(_x select 1) in _allowedKinds}};
-    if ("Rearm" in _allowedKinds && {missionNamespace getVariable ["Waldo_QM_Rearm_Enable", false]
+    if ("Rearm" in _allowedKinds && {!isNil "ace_rearm_fnc_makeSource"}
+        && {(missionNamespace getVariable ["ace_rearm_supply", 0]) in [0, 1]}
+        && {missionNamespace getVariable ["Waldo_QM_Rearm_Enable", false]
         || {missionNamespace getVariable ["Waldo_QM_VehicleRearm_Enable", false]}
         || {missionNamespace getVariable ["Waldo_QM_StaticRearm_Enable", false]}}) then {
         _vanillaActions pushBack ["Retrieve Rearm Box", "Rearm"];
@@ -167,7 +178,7 @@ if (!_aceReady) exitWith {
     true
 };
 
-private _icon = "\a3\missions_f_oldman\data\img\holdactions\holdAction_box_ca.paa";
+private _icon = "\A3\ui_f\data\map\markers\military\dot_CA.paa";
 private _condition = {
     params ["_target", "_player", "_args"];
     private _kind = _args param [0, ""];
@@ -191,7 +202,8 @@ private _condition = {
         ["Medical", "Ammo", "Supply", "Track", "Wheel", "Grenades", "Explosives", "Rearm", "FuelBarrel", "FuelJerrycan"]])) then {
         _available = false
     };
-    if (_kind == "Rearm" && {isNil "ace_rearm_fnc_makeSource"}) then {_available = false};
+    if (_kind == "Rearm" && {isNil "ace_rearm_fnc_makeSource"
+        || {!((missionNamespace getVariable ["ace_rearm_supply", 0]) in [0, 1])}}) then {_available = false};
     if (_kind == "FuelBarrel" && {isNil "ace_refuel_fnc_makeSource"}) then {_available = false};
     if (_kind == "FuelJerrycan" && {isNil "ace_refuel_fnc_makeJerryCan"}) then {_available = false};
     (_target getVariable ["Waldo_LogisticsQM_CurrentStatus", false])
@@ -204,7 +216,7 @@ private _condition = {
 private _statement = {
     params ["_target", "_player", "_args"];
     _args params ["_boxType", "_offsetDegrees", "_offsetDistance", "_title"];
-    [10, [_target, _player, _boxType, _offsetDegrees, _offsetDistance], {
+    [5, [_target, _player, _boxType, _offsetDegrees, _offsetDistance], {
         _args remoteExecCall ["Waldo_fnc_LogisticsSpawner", 2];
     }, {
         _args params ["_target", "_player", "_boxType"];
@@ -213,7 +225,7 @@ private _statement = {
 };
 
 private _category = [
-    "Waldo_QM_Category", "Logistics Quartermaster", _icon, {}, {true}
+    "Waldo_QM_Category", "Quartermaster", _icon, {}, {true}
 ] call ace_interact_menu_fnc_createAction;
 private _deployNotice = [
     "Waldo_QM_DeployPlease", "Set Up Command Post To Access", _icon, {},
@@ -228,7 +240,9 @@ private _actionSpecs = [
     ["Waldo_QM_InitWheel", "Retrieve Spare Wheel", "Wheel"]
 ] select {missionNamespace getVariable [format ["Waldo_QM_%1_Enable", _x select 2], true]
     && {(_x select 2) in _allowedKinds}};
-if ("Rearm" in _allowedKinds && {missionNamespace getVariable ["Waldo_QM_Rearm_Enable", false]
+if ("Rearm" in _allowedKinds && {!isNil "ace_rearm_fnc_makeSource"}
+    && {(missionNamespace getVariable ["ace_rearm_supply", 0]) in [0, 1]}
+    && {missionNamespace getVariable ["Waldo_QM_Rearm_Enable", false]
     || {missionNamespace getVariable ["Waldo_QM_VehicleRearm_Enable", false]}
     || {missionNamespace getVariable ["Waldo_QM_StaticRearm_Enable", false]}}) then {
     _actionSpecs pushBack ["Waldo_QM_Rearm", "Retrieve Rearm Box", "Rearm"];
@@ -269,13 +283,13 @@ if (_hasInfantry) then {
         call ace_interact_menu_fnc_addActionToObject);
 };
 if (_hasVehicle) then {
-    private _vehicle = ["Waldo_QM_Vehicle", "Vehicle Support", "\a3\ui_f\data\map\vehicleicons\iconCar_ca.paa", {}, {true}]
+    private _vehicle = ["Waldo_QM_Vehicle", "Vehicle Support", "\a3\ui_f\data\igui\cfg\simpletasks\types\repair_ca.paa", {}, {true}]
         call ace_interact_menu_fnc_createAction;
     _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _vehicle]
         call ace_interact_menu_fnc_addActionToObject);
 };
 if (_hasFuel) then {
-    private _fuel = ["Waldo_QM_Fuel", "Fuel", "\a3\ui_f\data\map\mapcontrol\Fuelstation_CA.paa", {}, {true}]
+    private _fuel = ["Waldo_QM_Fuel", "Fuel", "\a3\ui_f\data\igui\cfg\simpletasks\types\refuel_ca.paa", {}, {true}]
         call ace_interact_menu_fnc_createAction;
     _paths pushBack ([_target, 0, ["ACE_MainActions", "Waldo_QM_Category"], _fuel] call ace_interact_menu_fnc_addActionToObject);
 };

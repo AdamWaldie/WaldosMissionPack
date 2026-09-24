@@ -96,7 +96,6 @@ if (isClass(configFile >> "CfgPatches" >> "ace_medical")) then {
     _crate addItemCargoGlobal ["ACE_suture",(50)];
 };
 
-[_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
 if !(_crate getVariable ["Waldo_Logistics_StarterCrate", false]) then {
     [_crate, "SUPPLY"] spawn Waldo_fnc_LogisticsRegisterSpawned;
 };

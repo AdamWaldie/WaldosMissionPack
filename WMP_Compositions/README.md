@@ -56,8 +56,8 @@ be matched safely; no vehicle-specific seat script is part of the composition.
 | Helicopter, Ground and Boat Transport Services (Full) | AI-crewed named air/ground/boat services with current LZ clearance, water-search radius and improved-landing defaults |
 | ACRE2 Vehicle Radio Rack Example (Minimal) | Smallest central-profile call - WEST's shared COY net is requested for compatible already-mounted rack radios |
 | ACRE2 Vehicle Radio Rack Example (Full) | Central COMMAND_VEHICLE profile: preset-before-init, ensure a VRC-110/PRC-152 exists, then apply the shared WEST AIRGND net |
-| Logistics Spawner Example (Minimal) | Smallest working standalone quartermaster access point |
-| Logistics Spawner Example (Full) | Immediately active standalone quartermaster access point with guided common options |
+| Quartermaster (Minimal) | Standalone point using default spawn direction and distance; set the mission-wide issue flags separately |
+| Quartermaster (Full) | Standalone point showing spawn direction, distance and deployment control in its Init field |
 | Base Services Example | Two object-init service nodes in one named network, with save, heal, spectator and two-way travel |
 | Supply Transfers and Physical Cargo Example | Two registered crates and a NATO Prowler/DAGOR for two-way transfers, merging, ACE carry mounting and model-specific seat locks |
 | MHQ With Logistics Spawner (Minimal) | Single truck, smallest working deployable command post |

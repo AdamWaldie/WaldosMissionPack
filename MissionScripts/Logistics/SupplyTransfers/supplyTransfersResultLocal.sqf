@@ -13,6 +13,7 @@ if (!hasInterface || {remoteExecutedOwner isNotEqualTo 2}) exitWith {};
 if (_ok && {_category == "ALL"}
     && {(missionNamespace getVariable ["Waldo_SupplyTransfers_SelectedSource", objNull]) isEqualTo _source}) then {
     missionNamespace setVariable ["Waldo_SupplyTransfers_SelectedSource", objNull];
+    missionNamespace setVariable ["Waldo_SupplyTransfers_SourceExpiresAt", -1];
 };
 private _message = if (_ok) then {
     if (_category == "DELETE") then {"Empty container removed."} else {

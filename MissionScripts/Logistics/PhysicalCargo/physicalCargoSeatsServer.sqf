@@ -103,7 +103,9 @@ if (_add) then {
 } else {
     {
         _x params ["_index", "_holders"];
-        _holders = _holders - [_cargo];
+        // A deleted object may already compare as objNull. Prune null holders
+        // explicitly so a lost crate cannot keep an owned seat locked.
+        _holders = _holders select {!isNull _x && {_x isNotEqualTo _cargo}};
         if (_holders isEqualTo []) then {
             [_vehicle, "CARGO", _index, false] remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
             [_vehicle, "CARGO", _index] spawn {
@@ -125,7 +127,7 @@ if (_add) then {
     _locks = _locks select {_x isNotEqualTo []};
     {
         _x params ["_path", "_holders"];
-        _holders = _holders - [_cargo];
+        _holders = _holders select {!isNull _x && {_x isNotEqualTo _cargo}};
         if (_holders isEqualTo []) then {
             [_vehicle, "TURRET", _path, false] remoteExecCall ["Waldo_fnc_PhysicalCargoSeatLockLocal", _vehicle];
             [_vehicle, "TURRET", _path] spawn {

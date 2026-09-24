@@ -1,4 +1,13 @@
-/* Audit player pre-hook. Manual tests remain opt-in after the normal pack startup. */
+/*
+ * Author: WaldoTheWarfighter
+ * Purpose: Prepare local full-pack audit controls before the normal client startup.
+ * Locality / Authority: Interface client only; changes no server-owned settings.
+ * Repeat / JIP: Runs once per joining client and is safe to repeat.
+ * Arguments: None.
+ * Return Value: Nothing.
+ * Current caller: Generated full-pack audit initPlayerLocal.sqf.
+ * Example: call compile preprocessFileLineNumbers "auditPreInitPlayerLocal.sqf";
+ */
 if (!hasInterface) exitWith {};
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientReady", false];
 missionNamespace setVariable ["Waldo_QA_FeatureRangeClientStarting", false];

@@ -1153,7 +1153,7 @@ class Mission
         class Item68
         {
             dataType="Object";
-            class PositionInfo {position[]={433,5.32,46}; angles[]={0,0,0};};
+            class PositionInfo {position[]={425,5.32,58}; angles[]={0,0,0};};
             side="Empty";
             flags=5;
             class Attributes {name="qa_seat_control"; init="this allowDamage false; if (isServer) then {this enableSimulationGlobal true;}; this setPhysicsCollisionFlag true;";};

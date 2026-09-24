@@ -1113,6 +1113,8 @@ class FullAuditTests(unittest.TestCase):
         self.assertNotIn('private _matches = _groupKey regexFind ["[0-9]+"]', compile_plan)
         self.assertIn("count _assignment >= 2", ceoi)
         self.assertIn("private _squadAssignments = [];", ceoi)
+        self.assertIn("_groupNames getOrDefault [_assignmentGroup, _assignmentGroup]", ceoi)
+        self.assertIn("_groupNames set [toUpperANSI ((_authored splitString ' -_.') joinString ''), _authored]", ceoi)
         self.assertIn("if !(_squadAssignments isEqualTo []) then", ceoi)
         self.assertNotIn("no PRC-343 assignment", ceoi)
         self.assertIn("Waldo_ACRE2_CEOIRecords", ceoi)
@@ -1132,11 +1134,14 @@ class FullAuditTests(unittest.TestCase):
         ).read_text(encoding="utf-8")
         self.assertNotIn("if (remoteExecutedOwner > 0) exitWith", tick)
         self.assertIn('missionNamespace setVariable ["Waldo_Hazard_LastEvaluation"', tick)
+        self.assertIn('[time, getPosATL player, _zoneDiagnostics]', tick)
         self.assertIn('_profile getOrDefault ["showStatus", missionNamespace getVariable ["Waldo_Hazard_ShowStatus", true]]', tick)
         environment = (ROOT / "MissionConfig" / "environmentConfig.sqf").read_text(encoding="utf-8")
         self.assertIn('["Waldo_Hazard_ShowStatus", true]', environment)
         self.assertIn('missionNamespace getVariable ["Waldo_Hazard_LastEvaluation"', client_diagnostics)
-        self.assertIn("freshEvaluation=%5", client_diagnostics)
+        self.assertIn("freshEvaluation=%6", client_diagnostics)
+        self.assertIn('scriptDone _hazardHandle', client_diagnostics)
+        self.assertIn('(time - (_hazardEvaluation select 0))', client_diagnostics)
 
     def test_patch_filter_uses_standard_release_allowlist(self):
         allowed = {"MissionScripts", "Pictures", "description.ext"}
@@ -2293,7 +2298,7 @@ class FullAuditTests(unittest.TestCase):
         self.assertIn('["_deploymentControlled", false, [false]]', setup)
         self.assertIn('_target setVariable ["Waldo_LogisticsQM_CurrentStatus", true, true]', setup)
         self.assertIn('remoteExecCall ["Waldo_fnc_SetupQuarterMaster", 2]', setup)
-        self.assertIn("<t color='#79C7FF'>Logistics Quartermaster</t>", setup)
+        self.assertIn("<t color='#79C7FF'>Quartermaster</t>", setup)
         self.assertIn('"Waldo_QM_InfoActionId"', setup)
         self.assertGreaterEqual(
             mhq.count('[_target, _logisticsDirection, _logisticsDistance, true] call Waldo_fnc_SetupQuarterMaster'),

@@ -65,6 +65,8 @@
  * - Waldo_CorpseTraps_Enable (MISSION MAKER): permits corpse-trap handling where traps are configured.
  * - ACE_maxWeightDrag (GLOBAL ACE POLICY): maximum draggable mass; 10000 preserves permissive pack behaviour.
  * - ACE_maxWeightCarry (GLOBAL ACE POLICY): maximum carryable mass; 6000 preserves pack behaviour.
+ *   These are ACE variables set directly below, not WMP feature settings. Change
+ *   them here if your mission needs different limits.
  * - ace_hearing_disableVolumeUpdate (GLOBAL ACE POLICY): retain true unless deliberately changing ACE hearing globally.
  *
  * SETTING-BY-SETTING GUIDE - DIAGNOSTICS AND SAFESTART:
@@ -79,6 +81,9 @@
  * Rally self-action on terrain below 20 degrees. The safe-position settings affect where players
  * reappear, not where the visible rally object is initially requested.
  */
+ACE_maxWeightDrag = 10000;
+ACE_maxWeightCarry = 6000;
+
 createHashMapFromArray [
     ["featureFamilies", ["Squad Rally", "Base Services", "Economy", "Mini Games", "Corpse Traps", "ACE Logistics", "Diagnostics", "Safestart"]],
     ["shared", [
@@ -101,9 +106,7 @@ createHashMapFromArray [
         ["Waldo_Economy_Enable", false],            // BOOL: runtime only; catalogue/resources require economy setup.
         ["Waldo_MiniGames_Enable", true],           // BOOL: allow registered interaction-equipment challenges.
         ["Waldo_CorpseTraps_Enable", false],        // BOOL: enable corpse-trap handling where configured.
-        // ADVANCED global ACE behavior; normally retain pack defaults.
-        ["ACE_maxWeightDrag", 10000],               // ACE mass limit; pack-established permissive drag policy.
-        ["ACE_maxWeightCarry", 6000],               // ACE mass limit; pack-established permissive carry policy.
+        // ADVANCED global ACE hearing behavior; normally retain pack default.
         ["ace_hearing_disableVolumeUpdate", true]   // BOOL: preserve established ACE hearing volume behavior. DO NOT TOUCH THIS.
     ]],
     ["server", [

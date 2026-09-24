@@ -214,7 +214,8 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Mission Flow", "Base Services - Configure Node", "BASE", "\a3\ui_f\data\igui\cfg\simpletasks\types\use_ca.paa"],
     ["WMP Logistics", "Quartermaster - Set Up Object", "QUARTERMASTER", "\a3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"],
     ["WMP Logistics", "Supply Transfers - Register or Inspect", "SUPPLY", "\a3\ui_f\data\igui\cfg\simpletasks\types\rearm_ca.paa"],
-    ["WMP Logistics", "Physical Cargo - Eligibility", "PHYSICAL", "\a3\ui_f\data\igui\cfg\simpletasks\types\box_ca.paa"]
+    ["WMP Logistics", "Physical Cargo - Eligibility", "PHYSICAL", "\a3\ui_f\data\igui\cfg\simpletasks\types\box_ca.paa"],
+    ["WMP Logistics", "ACE Cargo - Set Object Handling", "ACE_CARGO", "\a3\ui_f\data\map\vehicleicons\iconCrate_ca.paa"]
 ];
 
 ["WMP Mission Flow", "Conversation: Author",

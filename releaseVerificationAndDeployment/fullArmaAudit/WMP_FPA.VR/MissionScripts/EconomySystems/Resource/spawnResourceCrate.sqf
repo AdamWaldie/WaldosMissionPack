@@ -1,19 +1,24 @@
 /*
  * Author: WaldoTheWarfighter
- * Spawn resource crate.
- *
- * Part of the Waldos Economy Systems suite (Resource system).
+ * Purpose: Spawn a collectible economy resource case with its resource rows,
+ * marker and ACE Drag/Carry. This case is not an inventory crate and does not
+ * join Supply Transfers or Physical Cargo automatically.
+ * Locality / Authority: Economy authority creates and tags the case. ACE
+ * portability is published globally from the server.
+ * Repeat / JIP: Each call creates one new case. Resource and ACE state replay
+ * to joining clients through their existing global setup paths.
  *
  * Arguments:
- * 0: _pos <ANY> - pos
- * 1: _resourceRows <ARRAY> - resource rows (optional, default: [])
- * 2: _legacyValue <SCALAR> - legacy value (optional, default: 1)
+ * 0: position <ARRAY>
+ * 1: resource rows <ARRAY> (default [])
+ * 2: legacy value <NUMBER> (default 1)
  *
  * Return Value:
- * Nothing
+ * <OBJECT> - created resource case.
  *
  * Example:
- * [_pos, _resourceRows, _legacyValue] call Waldo_fnc_EcoResource_spawnResourceCrate;
+ * [getPosATL player, [["Money", 5]]] call Waldo_fnc_EcoResource_spawnResourceCrate;
+ * Current callers: economy resource-zone and scripted resource spawns.
  */
 
     params ["_pos", ["_resourceRows", []], ["_legacyValue", 1]];
@@ -36,6 +41,7 @@
 
     private _crate = createVehicle ["Land_PlasticCase_01_medium_F", _pos, [], 0, "CAN_COLLIDE"];
     _crate setVehiclePosition [_pos, [], 0, "CAN_COLLIDE"];
+    [_crate] call Waldo_fnc_CargoAttributesPrepareObject;
 
     [_crate, true] call Waldo_fnc_EcoResource_registerCuratorEditableObject;
 

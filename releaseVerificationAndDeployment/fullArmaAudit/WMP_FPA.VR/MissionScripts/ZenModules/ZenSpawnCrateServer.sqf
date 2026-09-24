@@ -81,7 +81,7 @@ switch (_kind) do {
         if !(isClass (configFile >> "CfgVehicles" >> _crateClass)) then {_crateClass = "B_CargoNet_01_ammo_F";};
         _crate = [_crateClass] call _placeCrate;
         [_crate, _size, _side, _includeEquipment, _includeLaunchers] call Waldo_fnc_SupplyCratePopulate;
-        [_crate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+        [_crate, "SUPPLY"] call Waldo_fnc_CargoAttributesPrepareObject;
     };
     case "MEDICAL": {
         _settings params [
@@ -92,9 +92,7 @@ switch (_kind) do {
         if !(isClass (configFile >> "CfgVehicles" >> _crateClass)) then {_crateClass = "C_IDAP_supplyCrate_F";};
         _crate = [_crateClass] call _placeCrate;
         [_crate, _fieldHospital, _size] call Waldo_fnc_MedicalCratePopulate;
-        [_crate, 1] call ace_cargo_fnc_setSize;
-        [_crate, true] call ace_dragging_fnc_setDraggable;
-        [_crate, true] call ace_dragging_fnc_setCarryable;
+        [_crate, "MEDICAL"] call Waldo_fnc_CargoAttributesPrepareObject;
     };
 };
 

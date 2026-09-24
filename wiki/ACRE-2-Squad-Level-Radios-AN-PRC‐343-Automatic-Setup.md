@@ -45,6 +45,9 @@ Both values must be between 1 and 16. Invalid assignments are rejected. With str
 
 The client converts the pair to ACRE's flat channel only when it applies a unique PRC-343 radio ID. The default `prc343PresetPolicy = "FULL_RANGE"` deliberately assigns the PRC-343 `default` preset on every side, exposing B1–B16 while leaving long-range radios on their normal side presets. Set the policy to `SIDE_ISOLATED` only when side-separated PRC-343 frequencies are required; WEST `default3`, EAST `default2`, and Independent `default4` then expose B1–B5. The CEOI continues to show the clearer block/channel form, and WMP rejects out-of-range blocks before ACRE can silently clamp them.
 
+The CEOI shows each configured group name as written (for example, `VIKING 2-3`). WMP ignores
+spaces and punctuation only when matching it to an editor group, not when printing it.
+
 ## See also
 
 - [ACRE2 Communications Configuration](ACRE-2-Long-Range-Radio-Presetting)

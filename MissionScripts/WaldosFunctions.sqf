@@ -887,6 +887,9 @@ class CfgFunctions
             class SetCargoAttributes {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\SetCargoAttributes.sqf";
             };
+            class CargoAttributesPrepareObject {
+                file = "MissionScripts\MissionInit\VehicleActionsSetup\cargoAttributesPrepareObject.sqf";
+            };
             class InitVehicles {
                 file = "MissionScripts\MissionInit\VehicleActionsSetup\VehicleInit.sqf";
             };           

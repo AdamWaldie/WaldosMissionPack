@@ -1,5 +1,5 @@
 /*
- * Author: WaldoTheWarfighter, Val
+ * Author: WaldoTheWarfighter
  * Evaluates all registered hazard zones for the local player and applies profile effects.
  *
  * This function runs only on each player's client from Waldo_fnc_HazardInit. Exposure and zone
@@ -248,9 +248,9 @@ private _prunedTypeLastInside = createHashMap;
 } forEach (+(keys _typeLastInside));
 _typeLastInside = _prunedTypeLastInside;
 
-// Diagnostics must prove that spatial evaluation is actually advancing. Merely having a loop
-// handle and a zone registry previously allowed a permanently inert evaluator to report ACTIVE.
-missionNamespace setVariable ["Waldo_Hazard_LastEvaluation", [diag_tickTime, getPosATL player, _zoneDiagnostics]];
+// Diagnostics compare mission time, which pauses during briefing, instead of wall-clock time.
+// A player lingering at the role/briefing screen must not make a healthy loop look stalled.
+missionNamespace setVariable ["Waldo_Hazard_LastEvaluation", [time, getPosATL player, _zoneDiagnostics]];
 
 missionNamespace setVariable ["Waldo_Hazard_LocalExposure", _exposures];
 missionNamespace setVariable ["Waldo_Hazard_LocalInside", _previousInside];

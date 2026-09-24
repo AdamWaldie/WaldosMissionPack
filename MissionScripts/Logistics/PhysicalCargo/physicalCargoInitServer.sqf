@@ -1,8 +1,12 @@
 /*
  * Author: WaldoTheWarfighter
- * Purpose: Installs one ACE Cargo listener and monitor to release obsolete physical mounts.
+ * Purpose: Registers placed crates for ACE Drag/Carry, then installs ACE Cargo
+ * and deletion listeners plus a fallback monitor to release obsolete mounts.
  * Locality / Authority: Server only; it owns the mount registry and cleanup.
- * Repeat / JIP: Idempotent installation; ordered snapshots answer explicit JIP requests.
+ * Repeat / JIP: Scans placed crates once; ACE replays their actions to JIP.
+ * Idempotent installation; ordered mount snapshots answer explicit JIP requests.
+ * EntityDeleted handles normal crate deletion immediately. The monitor catches
+ * deletion paths for which the engine does not emit that mission event.
  *
  * Arguments: None.
  * Return Value: BOOLEAN - true when installed or already present.
@@ -12,6 +16,19 @@
 if (!isServer) exitWith {false};
 if (missionNamespace getVariable ["Waldo_PhysicalCargo_ServerInstalled", false]) exitWith {true};
 if (isNil "CBA_fnc_addEventHandler") exitWith {false};
+// Eden objects exist before initServer. Later WMP-issued crates use the same
+// register function at spawn, so this startup scan has no polling cost. An
+// explicit false eligibility flag on a placed crate remains an opt-out.
+[] spawn {
+    // Eden starter-crate setup may still be running during pre-play init.
+    waitUntil {sleep 0.1; time > 0};
+    {
+        if (_x getVariable ["Waldo_PhysicalCargo_Eligible", true]
+            && {!(_x getVariable ["Waldo_Logistics_StarterCrate", false])}) then {
+            [_x] call Waldo_fnc_PhysicalCargoRegister;
+        };
+    } forEach (entities "ReammoBox_F");
+};
 private _id = ["ace_cargoLoaded", {
     params ["_cargo"];
     if (_cargo isEqualType objNull && {!isNull _cargo}) then {
@@ -19,6 +36,28 @@ private _id = ["ace_cargoLoaded", {
     };
 }] call CBA_fnc_addEventHandler;
 missionNamespace setVariable ["Waldo_PhysicalCargo_CargoLoadedEH", _id];
+private _deletedId = addMissionEventHandler ["EntityDeleted", {
+    params ["_entity"];
+    private _mounts = +(missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]);
+    private _removed = _mounts select {
+        (_x select 0) isEqualTo _entity || {isNull (_x select 0)}
+    };
+    if (_removed isEqualTo []) exitWith {};
+    {
+        _x params ["_cargo", "_vehicle"];
+        [_cargo, _vehicle, false] call Waldo_fnc_PhysicalCargoSeatsServer;
+    } forEach _removed;
+    _mounts = _mounts select {
+        !((_x select 0) isEqualTo _entity) && {!isNull (_x select 0)}
+    };
+    missionNamespace setVariable ["Waldo_PhysicalCargo_Mounts", _mounts];
+    private _revision = (missionNamespace getVariable ["Waldo_PhysicalCargo_MountRevision", 0]) + 1;
+    missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
+    [_mounts, _revision] remoteExecCall ["Waldo_fnc_PhysicalCargoReceiveStateLocal", 0];
+    diag_log format ["[WMP PHYSICAL CARGO] Deleted cargo cleanup: %1 mount(s), revision %2.",
+        count _removed, _revision];
+}];
+missionNamespace setVariable ["Waldo_PhysicalCargo_DeletedEH", _deletedId];
 missionNamespace setVariable ["Waldo_PhysicalCargo_ServerInstalled", true];
 private _monitor = [{
     private _mounts = +(missionNamespace getVariable ["Waldo_PhysicalCargo_Mounts", []]);

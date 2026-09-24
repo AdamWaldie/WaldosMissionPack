@@ -283,6 +283,7 @@ createHashMapFromArray [
                 ["VHF_COMMON", "VHF COMMON", "LEGACY_VHF", 51.000] // PRC-77/SEM70 shared 51 MHz net.
             ],
             [ // 3: GROUPS. Each row is [editor groupId, assignment rows].
+              // CEOI displays this groupId as written; WMP removes separators only for matching.
                 [
                     "VIKING 2-3", // TestMission squad; matches common separator/capitalisation variants.
                     [ // [radio class, "ALL" or occurrence number, net/direct value, LEFT/RIGHT/BOTH].

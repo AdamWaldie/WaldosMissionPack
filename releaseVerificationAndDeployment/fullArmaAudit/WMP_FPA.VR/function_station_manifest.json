@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1115,
+  "registeredFunctionCount": 1116,
   "runtimeFunctionCount": 383,
-  "functionCount": 1498,
+  "functionCount": 1499,
   "stations": [
     {
       "id": "control",
@@ -2893,6 +2893,12 @@
     {
       "name": "Waldo_fnc_SetCargoAttributes",
       "file": "MissionScripts/MissionInit/VehicleActionsSetup/SetCargoAttributes.sqf",
+      "station": "mission-init",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_CargoAttributesPrepareObject",
+      "file": "MissionScripts/MissionInit/VehicleActionsSetup/cargoAttributesPrepareObject.sqf",
       "station": "mission-init",
       "activation": "manual"
     },

@@ -97,6 +97,7 @@ if (!isNull _controlCrate) then {
     _controlCrate setPhysicsCollisionFlag true;
     _controlCrate enableSimulationGlobal true;
     [_controlCrate, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+    _controlCrate setVariable ["Waldo_PhysicalCargo_Eligible", false, true];
     diag_log format ["[WMP QA CARGO CONTROL] class=%1 physicalEligible=%2",
         typeOf _controlCrate, _controlCrate getVariable ["Waldo_PhysicalCargo_Eligible", false]];
 };
@@ -105,6 +106,7 @@ if (!isNull _seatControl) then {
     _seatControl setPhysicsCollisionFlag true;
     _seatControl enableSimulationGlobal true;
     [_seatControl, -1, 1, true, true] call Waldo_fnc_SetCargoAttributes;
+    _seatControl setVariable ["Waldo_PhysicalCargo_Eligible", false, true];
     diag_log format ["[WMP QA SEAT CONTROL] class=%1 physicalEligible=%2",
         typeOf _seatControl, _seatControl getVariable ["Waldo_PhysicalCargo_Eligible", false]];
 };

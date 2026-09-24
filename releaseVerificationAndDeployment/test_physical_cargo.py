@@ -28,13 +28,30 @@ class PhysicalCargoSourceTests(unittest.TestCase):
         helper = (ROOT / "MissionScripts" / "MissionInit" / "VehicleActionsSetup"
                   / "SetCargoAttributes.sqf").read_text(encoding="utf-8")
         register = self.read("physicalCargoRegister.sqf")
-        self.assertIn('"ace_dragging_dragPosition", [0, 1.5, 0]', helper)
-        self.assertIn('"ace_dragging_carryPosition", [0, 1, 1]', helper)
-        self.assertIn('false, true]', helper)
-        self.assertIn('"ace_dragging_carryPosition", [0, 1, 1]', register)
-        self.assertIn('false, true]', register)
-        self.assertIn('"Waldo_CargoAttributes_CarryablePublished", _carryable', helper)
-        self.assertIn('if (!(_object getVariable ["Waldo_CargoAttributes_CarryablePublished", false])', register)
+        self.assertIn('"Waldo_CargoAttributes_Choice", _choice, true', helper)
+        self.assertIn('call ace_dragging_fnc_setDraggable', helper)
+        self.assertIn('call ace_dragging_fnc_setCarryable', helper)
+        self.assertIn('_ignoreDrag, true]', helper)
+        self.assertIn('_ignoreCarry, true]', helper)
+        self.assertIn('time > 0', helper)
+        self.assertIn('if (count _this <= 3) then {_draggable = _portable}', helper)
+        self.assertIn('if (count _this <= 4) then {_carryable = _portable}', helper)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_CargoAttributesApplyLocal", 0]', helper)
+        self.assertNotIn('remoteExecCall ["Waldo_fnc_CargoAttributesRequestServer", 2]',
+                         (ROOT / "initPlayerLocal.sqf").read_text(encoding="utf-8"))
+        self.assertIn('[_object] call Waldo_fnc_CargoAttributesPrepareObject', register)
+        self.assertLess(register.index('call Waldo_fnc_CargoAttributesPrepareObject'),
+                        register.index('"Waldo_PhysicalCargo_Eligible", true, true'))
+        init_server = self.read("physicalCargoInitServer.sqf")
+        self.assertIn('entities "ReammoBox_F"', init_server)
+        self.assertIn('_x getVariable ["Waldo_PhysicalCargo_Eligible", true]', init_server)
+        self.assertIn('[_x] call Waldo_fnc_PhysicalCargoRegister', init_server)
+        self.assertIn('addMissionEventHandler ["EntityDeleted"', init_server)
+        self.assertIn('[_cargo, _vehicle, false] call Waldo_fnc_PhysicalCargoSeatsServer', init_server)
+        self.assertIn('}, 3] call CBA_fnc_addPerFrameHandler', init_server)
+        audit = (ROOT / "releaseVerificationAndDeployment" / "fullArmaAudit" / "WMP_FPA.VR"
+                 / "serviceLogisticsStationsServer.sqf").read_text(encoding="utf-8")
+        self.assertIn('_seatControl setVariable ["Waldo_PhysicalCargo_Eligible", false, true]', audit)
 
     def test_release_drops_through_ace_without_native_cargo_attempt(self):
         source = self.read("physicalCargoReleaseLocal.sqf")
@@ -54,6 +71,14 @@ class PhysicalCargoSourceTests(unittest.TestCase):
         self.assertIn('_carrier distance (_vehicle modelToWorld _offset)', source)
         self.assertNotIn('_carrier distance _vehicle > 6', source)
         self.assertNotIn('_cargo distance _vehicle > 7', source)
+        self.assertIn('Cargo mounted. Use ACE Carry', source)
+
+    def test_quartermaster_spares_enter_physical_carry_path(self):
+        register = (ROOT / "MissionScripts" / "Logistics" / "Crates"
+                    / "logisticsRegisterSpawned.sqf").read_text(encoding="utf-8")
+        self.assertIn('"TRACK", "WHEEL", "SPARE"', register)
+        self.assertIn('"FUEL", "TRACK", "WHEEL", "SPARE", "STARTER"', register)
+        self.assertIn('[_object] call Waldo_fnc_PhysicalCargoRegister', register)
 
     def test_unload_restores_physics_after_owner_placement(self):
         clear = self.read("physicalCargoClearServer.sqf")

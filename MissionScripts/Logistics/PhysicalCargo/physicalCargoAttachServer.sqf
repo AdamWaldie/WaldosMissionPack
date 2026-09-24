@@ -62,9 +62,19 @@ private _revision = (missionNamespace getVariable ["Waldo_PhysicalCargo_MountRev
 missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
 [_cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision]
     remoteExec ["Waldo_fnc_PhysicalCargoApplyLocal", 0];
-[_cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision] spawn {
-    params ["_cargo", "_vehicle", "_offset", "_relativeDir", "_relativeUp", "_revision"];
+[_carrier, _cargo, _vehicle, _offset, _relativeDir, _relativeUp, _revision] spawn {
+    params ["_carrier", "_cargo", "_vehicle", "_offset", "_relativeDir", "_relativeUp", "_revision"];
+    private _notifyMounted = {
+        if (!isNull _carrier && {alive _carrier}) then {
+            ["PHYSICAL CARGO", "Cargo mounted. Use ACE Carry to move it again.",
+                "SUCCESS", "PHYSICAL_CARGO_MOUNT", 5]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _carrier];
+        };
+    };
     sleep 1.5;
+    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}) exitWith {
+        call _notifyMounted;
+    };
     if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}
         && {attachedTo _cargo isNotEqualTo _vehicle}) then {
         // If object ownership migrated between the initial dispatch and execution, try its
@@ -73,10 +83,17 @@ missionNamespace setVariable ["Waldo_PhysicalCargo_MountRevision", _revision];
             remoteExec ["Waldo_fnc_PhysicalCargoApplyLocal", 0];
     };
     sleep 4;
-    if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}
-        && {attachedTo _cargo isNotEqualTo _vehicle}) then {
+    if (!isNull _cargo && {attachedTo _cargo isEqualTo _vehicle}) exitWith {
+        call _notifyMounted;
+    };
+    if (!isNull _cargo && {(_cargo getVariable ["Waldo_PhysicalCargo_AttachedVehicle", objNull]) isEqualTo _vehicle}) then {
         [_cargo] call Waldo_fnc_PhysicalCargoClearServer;
         diag_log format ["[WMP PHYSICAL CARGO] Mount acknowledgement failed for %1; crate simulation restored.", typeOf _cargo];
+        if (!isNull _carrier && {alive _carrier}) then {
+            ["PHYSICAL CARGO", "Cargo could not be secured; it has been released.",
+                "WARNING", "PHYSICAL_CARGO_MOUNT", 6]
+                remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", owner _carrier];
+        };
     };
 };
 diag_log format ["[WMP PHYSICAL CARGO] Mounted %1 on %2 at %3.", typeOf _cargo,

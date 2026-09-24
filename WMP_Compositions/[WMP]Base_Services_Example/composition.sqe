@@ -33,7 +33,7 @@ class items
     {
         dataType="Comment";
         class PositionInfo {position[]={0,0,-4};};
-        title="Enable Waldo_BaseServices_Enable in MissionConfig/missionSystemsConfig.sqf. Both stands join MainBase with save, heal, spectator and teleport. Change each label or service list independently. Leave two TELEPORT nodes for two-way travel. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Base-Services";
+        title="Enable Waldo_BaseServices_Enable in MissionConfig/missionSystemsConfig.sqf. Each stand has its own Init call. MainBase links them for travel; the label is the destination name. SAVE, HEAL, SPECTATE and TELEPORT are the actions on that stand. Remove an action from one stand without changing the other. Keep TELEPORT on both for two-way travel. Wiki: https://github.com/AdamWaldie/WaldosMissionPack/wiki/Base-Services";
         id=3;
     };
 };
