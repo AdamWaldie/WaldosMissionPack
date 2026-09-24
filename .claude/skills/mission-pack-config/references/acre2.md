@@ -190,7 +190,7 @@ PTT keybind defaults are never changed by either path.
 
 - `wiki/ACRE-2-Long-Range-Radio-Presetting.md` — net/channel detail
 - `wiki/ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup.md` — PRC-343 block/channel policy
-- `wiki/ACRE2-Automated-CEOI-Document.md` — the auto-populated map CEOI entry (unchanged: still auto-builds from the current plan, no separate config)
+- `wiki/ACRE2-Automated-CEOI-Document.md` — the auto-populated map CEOI entry (still auto-builds from the current plan, no separate config). The CEOI and the squad-radio list print each group name **as written** in `acreConfig.sqf` (e.g. `VIKING 2-3`); spaces/punctuation are ignored only when *matching* it to an Eden group ID
 - `wiki/ACRE2-Babel-Configuration.md` — full Babel override rules
 
 ## Jamming interaction

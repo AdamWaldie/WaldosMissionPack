@@ -20,12 +20,23 @@ opt in explicitly with a tested profile.
 ["Waldo_EmergencyDismount_RecoverUnconscious", false],
 ["Waldo_EmergencyDismount_MinimumOverturnSeconds", 1],    // must persist before the action enables
 ["Waldo_EmergencyDismount_DamageOnExit", 0],              // fraction 0-1
+["Waldo_EmergencyDismount_ThrowBaseVelocity", 4.5],       // M/S: minimum horizontal throw away from the rolling vehicle
+["Waldo_EmergencyDismount_ThrowAngularFactor", 1.25],     // MULTIPLIER: extra throw speed from live/captured flip speed
+["Waldo_EmergencyDismount_ThrowMaximumVelocity", 14],     // M/S: cap on the horizontal throw contribution
+["Waldo_EmergencyDismount_UpwardVelocity", 3],            // M/S: minimum upward lift added to the throw
+["Waldo_EmergencyDismount_Cooldown", 8],                  // SECONDS: blocks duplicate automatic extractions
 ["Waldo_EmergencyDismount_AllowedKinds", ["LandVehicle", "Ship"]],  // isKindOf roots
 ["Waldo_EmergencyDismount_VehicleProfiles", createHashMap] // ADVANCED per-class overrides of all the above
 ```
 
 Start/stop locally with `Waldo_fnc_EmergencyDismountInit` /
 `Waldo_fnc_EmergencyDismountStop`. Intentionally **no ZEN module**.
+
+The monitor records the roof direction and peak angular speed while the
+vehicle is overturned, and the extraction throws the occupant clear in that
+direction — faster flips throw harder, bounded by the Throw* settings. Lower
+`ThrowBaseVelocity`/`ThrowAngularFactor` if players are thrown too far; raise
+`Cooldown` if extraction repeats on a vehicle that keeps rolling.
 
 ## Bonus: Set Vehicle Upright
 

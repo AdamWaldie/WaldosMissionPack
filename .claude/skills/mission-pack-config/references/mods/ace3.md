@@ -55,6 +55,10 @@ CBA Settings framework, see `cba.md`):
   value WMP exposes in `MissionConfig\missionSystemsConfig.sqf` (see
   `misc-mission-maker-tools.md`/the relevant logistics file), which only
   controls whether ACE's automatic hearing-volume adjustment runs at all.
+  The ACE drag/carry mass limits `ACE_maxWeightDrag = 10000;` /
+  `ACE_maxWeightCarry = 6000;` are set as **plain ACE variable assignments
+  at the top of `missionSystemsConfig.sqf`** (above the returned HashMap),
+  not as feature rows — edit those lines directly to change them.
 - Other modules present in a typical ACE3 install: **Weather** (wind/
   weapon-drift effects), **Advanced Ballistics**, **Fatigue** (stamina
   overhaul), **Night vision** presentation changes, **Overheating**

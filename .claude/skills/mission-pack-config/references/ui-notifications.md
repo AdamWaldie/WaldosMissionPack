@@ -172,3 +172,20 @@ and play in order rather than each claiming a lane; three different
 channels routed to the same placement is what actually forms a 3-card
 stack. `REPLACE` updates its channel's current card in place instead of
 adding a new one.
+
+## Legacy `Waldo_fnc_DynamicText` adapter
+
+Older mission calls to `Waldo_fnc_DynamicText` (formerly centre-screen
+text) now route through the same notification service as a top-right,
+4-second `INFO` card, so they stack with other WMP UI instead of covering
+the player's view. An optional third argument sets the card title
+(default `"MISSION UPDATE"`); pack features pass their own module name
+(e.g. `"QUARTERMASTER"`, `"MOBILE COMMAND POST"`, `"VEHICLE CAMOUFLAGE"`):
+
+```sqf
+["Supplies ready", _player, "QUARTERMASTER"] call Waldo_fnc_DynamicText;
+// [message, remoteExec target, title (optional)]
+```
+
+Cards with the same title replace each other. For new work prefer
+`Waldo_fnc_ShowUiNotification` / `Waldo_fnc_NotificationBroadcast`.

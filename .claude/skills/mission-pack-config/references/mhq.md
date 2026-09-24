@@ -32,3 +32,11 @@ Logic/tent/crate layout with every `Waldo_fnc_MHQSetup` option shown
 explicitly, for learning what each one does once the Minimal version is
 understood. Placing a composition is still an Eden Editor action —
 instruction mode, per SKILL.md Step 1.
+
+## MHQ as a Quartermaster
+
+When `enableLogistics` is on, the deployed MHQ runs the same Quartermaster
+(`Waldo_fnc_SetupQuarterMaster` with deployment control set, so retrieval
+only appears while deployed). The mission-wide `Waldo_QM_*_Enable` issue
+flags, crate classes and quantities in `logisticsConfig.sqf` apply to it
+too — see `loadout-logistics.md`.
