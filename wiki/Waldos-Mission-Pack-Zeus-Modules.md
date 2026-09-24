@@ -53,6 +53,17 @@ The interface lets Zeus select the resupply size, the side whose playable loadou
 
 The medical-crate interface selects the resupply size and whether the crate becomes an ACE field hospital for nearby medical personnel.
 
+## Base services and crate logistics
+
+**Base Services - Configure Node** is under **WMP Mission Flow**. Place it directly on an existing object to add, change or remove its named network, label, service choices and travel transition. Enable Base Services in the mission config first. See [Base Services](Base-Services).
+
+The following modules are under **WMP Logistics**:
+
+- **Quartermaster - Set Up Object** configures an existing quartermaster point, its spawn position and the issues it offers. Mission-wide issue flags still apply. See [Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster#logistics-quartermaster).
+- **Supply Transfers - Register or Inspect** registers an inventory crate or cargo-capable vehicle and reports why an object is rejected. The Supply Transfers flag must be on. See [Supply Transfers](Supply-Transfers).
+- **Physical Cargo - Eligibility** allows, blocks or inspects visible mounting for a carryable object. It does not change ACE Drag, Carry or cargo capacity. See [Physical Cargo](Physical-Cargo).
+- **ACE Cargo - Set Object Handling** sets ACE Drag, Carry, loading size and storage space on the selected object. It does not register the object for the other logistics features. See [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling).
+
 ## Fortify Budget Module
 
 This module requires the [Automatic Fortify Setup](Automatic-ACE-Fortify-Setup), or ACE Fortify being active. It allows for the alteration of the fortify budget in zeus, without the need for manual scripting.
@@ -103,9 +114,9 @@ Under **WMP Mission Flow**, sends a [WMP notification card](Custom-UI-Notificati
 
 Three modules drive the [Radio Jamming](Radio-Jamming) system live in-game (works with ACRE2 and TFAR):
 
-* **Radio Jammer - Place** — opens one scrollable dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing**, pulsing, markers, emitter source, optional reactivation, optional hostile field-disable procedure, public/engineer access, and whether success disables or destroys it. Fixed choices use always-visible buttons and the emitter uses an inline list, avoiding drop-downs being painted underneath later controls at some UI scales. Players always use **Disable Jammer** to turn an active field off; optional **Activate Jammer** restores an inactive/disabled field and resets its procedure. On empty ground it spawns the exact selected class, simulation-enables it and assigns it to the requesting curator. When placed directly on any existing mission or mod object, it can use that object without altering its simulation state. Its live field and interactions remain attached after movement.
-* **Radio Jammer - Toggle Nearest** — flips the nearest jammer on or off (no dialog).
-* **Radio Jammer - Remove Nearest** — removes the nearest jammer and deletes its emitter.
+* **Radio Jammer - Place**: opens one scrollable dialog to set the jamming **radius**, **falloff**, **strength**, the **side** it jams, a directional **cone arc + bearing**, pulsing, markers, emitter source, optional reactivation, optional hostile field-disable procedure, public/engineer access, and whether success disables or destroys it. Fixed choices use always-visible buttons and the emitter uses an inline list, avoiding drop-downs being painted underneath later controls at some UI scales. Players always use **Disable Jammer** to turn an active field off; optional **Activate Jammer** restores an inactive/disabled field and resets its procedure. On empty ground it spawns the exact selected class, simulation-enables it and assigns it to the requesting curator. When placed directly on any existing mission or mod object, it can use that object without altering its simulation state. Its live field and interactions remain attached after movement.
+* **Radio Jammer - Toggle Nearest**: flips the nearest jammer on or off (no dialog).
+* **Radio Jammer - Remove Nearest**: removes the nearest jammer and deletes its emitter.
 
 The Place dialog also offers a directional **cone**, **pulsing**, and an **also jam UAVs / drones** option (counter-UAS). See the [Radio Jamming](Radio-Jamming) page for the full scripting API and the ACRE2 signal-model requirement.
 
@@ -113,8 +124,8 @@ The Place dialog also offers a directional **cone**, **pulsing**, and an **also 
 
 Two more electronic-warfare modules (full detail on the [EW: EMP & Signal Trackers](Electronic-Warfare-EMP-And-Signal-Trackers) page):
 
-* **EMP Detonation** — a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
-* **Plant Signal Tracker** — must be placed directly on an object or unit, then tags that exact target so a chosen side follows it live on the map. Empty-ground placement is rejected; it never guesses from nearby entities.
+* **EMP Detonation**: a dialog for **radius** and **duration**, then detonates an electromagnetic pulse at the module position: infantry in range lose NVGs and TFAR radio use, vehicles have their engines cut, and players get a white-out flash and clear message. Units/vehicles marked with `Waldo_fnc_EMPImmune` are spared.
+* **Plant Signal Tracker**: must be placed directly on an object or unit, then tags that exact target so a chosen side follows it live on the map. Empty-ground placement is rejected; it never guesses from nearby entities.
 
 ## Dynamic Anti-Air Modules
 
@@ -190,7 +201,7 @@ When `Waldo_Headless_Enable` is true, the separate **WMP Headless Client** categ
 
 ## AI Helicopter Landing
 
-[Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) intentionally has no ZEN module — it is a per-aircraft profile applied through `MissionConfig\aiConfig.sqf` and event-driven locality handlers, not a placeable or runtime-toggled system.
+[Improved AI Helicopter Landings](Improved-AI-Helicopter-Landings) intentionally has no ZEN module: it is a per-aircraft profile applied through `MissionConfig\aiConfig.sqf` and event-driven locality handlers, not a placeable or runtime-toggled system.
 
 ## Transport Services
 

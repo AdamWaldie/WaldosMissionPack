@@ -8,6 +8,10 @@ This is the complete top-level index of mission systems currently supplied by Wa
 
 | Feature | What it provides | Primary setup and operation |
 |---|---|---|
+| [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling) | Per-object Drag, Carry, loading size and storage space | Place **ACE Cargo - Set Object Handling** on an object in ZEN, or call `Waldo_fnc_SetCargoAttributes`; no WMP feature flag |
+| [Supply Transfers](Supply-Transfers) | Inventory transfers and merges between crates and vehicles | Enable in `MissionConfig\logisticsConfig.sqf`; WMP-issued crates register automatically, while placed objects need registration |
+| [Physical Cargo](Physical-Cargo) | Visible attachment of ACE-carried objects to vehicles, with verified-seat blocking | Enabled by default in `MissionConfig\logisticsConfig.sqf`; carry an eligible crate to a vehicle |
+| [Base Services](Base-Services) | Named save, heal, spectator and travel points | Enable in `MissionConfig\missionSystemsConfig.sqf`; register each service object in Eden or use ZEN |
 | [Simple Dialogue and Advanced Conversations](Dialogue-And-Conversations) | Beginner one-line NPC chatter plus a separate named, voiced and branching conversation component with authoritative completion hooks | NPC Eden init field, trigger/script, or focused ZEN assignment and live authoring modules with Eden-ready code export; optional pacing in `MissionConfig\dialogueConfig.sqf` |
 | [INIDBI2 Persistence](Persistence) | Optional player and registered-object persistence with a server-runtime dependency gate | `MissionConfig\persistenceConfig.sqf`; database authority in `initServer.sqf`; **Persistence - Control**, **Register Object**, and **Save Now** in ZEN |
 | [Patient Treatment Feedback](Optional-Feature-Systems#patient-treatment-feedback) | Local ACE treatment start, completion and failure notifications using the pack notification UI | `MissionConfig\interfaceConfig.sqf` and scripted start/stop calls |
@@ -62,13 +66,21 @@ Runtime configuration is server-authoritative. Current settings are published fo
 ## Logistics, deployment and vehicles
 
 - [Logistics, Starter Crates and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
-- [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
+- [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
+- [Supply Transfers](Supply-Transfers)
+- [Physical Cargo](Physical-Cargo)
 - [Mobile Command Post](Mobile-Command-Post-With-Integrated-Logistics-System)
 - [Vehicle Actions and Paradrop](Vehicle-Actions-&-Paradrop)
 - [Vehicle Ambush and Camo](Vehicle-Ambush-Script-And-Vehicle-Camo)
-- [Teleportation and Move Into Cargo](Teleportation-&-Move-Into-Cargo-Interactions)
+- [Aircraft Boarding Action](Aircraft-Boarding-Actions)
 - [Virtual Vehicle Depot](Virtual-Vehicle-Depot)
 - [Weapon Mounting](Weapon-Mounting-With-Custom-Name)
+
+## Base and player services
+
+- [Base Services](Base-Services)
+- [Loadout Saving and Respawn](Loadout-Saving-and-Respawn)
+- [Teleport Action](Teleport-Actions)
 
 ## Economy, construction and games
 

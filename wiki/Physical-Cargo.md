@@ -19,9 +19,8 @@ inside ACE Cargo. [Crate options](Supply-Transfers) can change that loading choi
 crate. WMP reports a failed physical mount after it releases the object, leaving the crate available.
 
 WMP registers placed `ReammoBox_F` crates at startup and its own issued crates when they spawn.
-WMP-issued inventory crates remain draggable and carryable when you turn off physical mounting.
-The feature flag controls mounting and seat effects. WMP applies drag and carry choices through
-ACE's public setters for current and joining players.
+The feature flag controls mounting and seat effects. [ACE Cargo and object handling](ACE-Cargo-And-Object-Handling)
+controls Drag, Carry, loading size and storage space independently.
 
 For another non-weapon prop, put this in the prop's Eden **Init** field:
 
@@ -41,54 +40,7 @@ mounts, disallow them or inspect the current state. The module rejects static we
 aircraft and boats. It cannot change eligibility while the object has a mount. ACE Carry and Cargo
 remain available.
 
-ZEN **ACE Cargo - Set Object Handling** changes ACE handling on an existing crate or vehicle.
-Place it directly on the object. **Can drag** and **Can carry** control those ACE interactions.
-Leave the weight-limit overrides off unless you intend to carry an object ACE considers too heavy.
-
-![ZEN ACE Cargo and Object Handling dialog showing drag, carry, cargo size and cargo space](images/ace-cargo-object-handling.png)
-
-The dialog opens with the object's current ACE handling and cargo values. It does not reuse the
-values from the last object you edited. Pressing OK without changing anything leaves the object
-alone. To discard edits in the form, press Cancel and reopen the module on the object.
-
-**ACE cargo size** controls whether ACE can load the object into another cargo holder. Set `-1`
-to disable loading. **ACE cargo space** sets how much ACE Cargo the object can hold; `0` disables
-storage. The module applies a size or space value only if you change it from the starting value.
-It does not turn on WMP physical mounting or supply transfers. WMP rounds values selected in this
-ZEN module to whole ACE cargo units; opening the dialog alone does not round an existing value.
-
-If an object already holds ACE cargo, ACE may report its free space rather than its total capacity.
-Leave the space value untouched unless you want to set a new total.
-
-The equivalent server-side script call is:
-
-```sqf
-[myCrate, -1, 2, true, true] call Waldo_fnc_SetCargoAttributes;
-```
-
-The second argument is ACE storage space, the third is this object's ACE loading size, and the
-last two turn on dragging and carrying. Use `nil` for space or size to keep the current value.
-
-WMP-issued supply and medical crates, including crate compositions, follow the global flag. WMP
-also registers quartermaster wheels and tracks for the physical carry-release path.
-
-Registered, portable non-starter objects get a loading size when their class has none. WMP
-preserves a mission maker's explicit ACE size or handling choice.
-
-Quartermaster and WMP ZEN-spawned crates have ACE Drag and Carry enabled, ignore ACE's drag/carry
-weight limits, and take one ACE cargo slot. The starter-crate call disables Drag, Carry and ACE
-loading on that object, even if its class inherits those abilities. The ZEN ACE Cargo module can
-still change a chosen object's settings explicitly.
-
-WMP ZEN crate spawning leaves the crate class's ACE storage space unchanged. A crate with enough
-storage space can hold another ACE cargo object, including a vehicle. Set its space to `0` if the
-crate should only store ordinary inventory items.
-
-ACE calculates loading time from the object being loaded. If a specific object needs a shorter
-time, set `ace_cargo_delay` on that object in its Init field, for example
-`this setVariable ["ace_cargo_delay", 5, true];`. This changes ACE loading time for that object;
-WMP's crate size does not change a vehicle's own loading time. See the
-[ACE Cargo framework](https://ace3.acemod.org/wiki/framework/cargo-framework).
+WMP also registers Quartermaster wheels and tracks for the physical carry-release path.
 
 WMP accepts a valid contact hit on land, air or sea vehicles. Test each crate and vehicle combination
 in Arma before using it in a mission.
@@ -163,6 +115,7 @@ mount is safe: WMP deliberately does not offer one.
 
 ## See also
 
+- [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
 - [Supply Transfers](Supply-Transfers)
 - [Logistics System, Starter Crates and Quartermaster](Logistics-System,-Starter-Crates-And-Quartermaster)
 - [Vehicle Recovery and Squad Rally Points](Vehicle-Recovery-And-Squad-Rallies)

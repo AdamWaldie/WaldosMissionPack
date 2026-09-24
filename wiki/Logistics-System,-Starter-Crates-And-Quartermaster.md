@@ -159,7 +159,8 @@ name carries the same label. Grenades use a small ammo box, explosives an ordnan
 vehicle-ammo box.
 
 Players can drag or carry Quartermaster issues regardless of ACE's weight limit. Each takes one
-ACE cargo slot when loaded into a vehicle. WMP ZEN-spawned crates use the same handling defaults.
+ACE cargo slot when loaded into a vehicle. [ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling)
+explains how to inspect or change those values on a particular object.
 
 Each issue has an availability flag. WMP clears ordinary inventory from the Rearm Box. The box
 has a status action outside ACE. In ACE's Limited

@@ -84,6 +84,7 @@ is replayed to JIP by the feature.
 | Tactical display | interfaceConfig.sqf | Access/knowledge defaults | Register compatible object or use ZEN |
 | Field resupply | logisticsConfig.sqf | Content and balance | Register hub and assign carriers |
 | Quartermaster | logisticsConfig.sqf | Keep the existing issues or enable extra issue types | Place a point and call `Waldo_fnc_SetupQuarterMaster`, or use ZEN |
+| ACE cargo and object handling | None | No feature flag | Set one object's Drag, Carry, ACE loading size or storage space with ZEN or `Waldo_fnc_SetCargoAttributes` |
 | Supply transfers | logisticsConfig.sqf | Set `Waldo_SupplyTransfers_Enable` to `true`; choose the range | WMP-issued crates register themselves; register placed crates and cargo-capable vehicles |
 | Physical cargo | logisticsConfig.sqf | Review `Waldo_PhysicalCargo_Enable` and seat blocking | Carry eligible crates with ACE; register other props if needed |
 | Vehicle recovery | logisticsConfig.sqf | Packages/markers/safety | Register workshop, vehicles, carriers |
@@ -231,6 +232,10 @@ For transfers between placed boxes or vehicles, set `Waldo_SupplyTransfers_Enabl
 Put `[this] call Waldo_fnc_SupplyTransfersRegister;` in each placed object's Eden **Init** field.
 WMP-issued crates register automatically; starter crates do not. Vehicles need inventory capacity.
 See [Supply transfers](Supply-Transfers) for the ACE merge and transfer actions.
+
+To set ACE Drag, Carry, loading size or storage space on one object, use
+[ACE Cargo and Object Handling](ACE-Cargo-And-Object-Handling). This object setting has no
+`MissionConfig` enable switch.
 
 Physical cargo is enabled by default. An eligible crate can be carried with ACE and released onto
 a vehicle. A crate does not need a vehicle Init script or a seat-coordinate list. To make another
