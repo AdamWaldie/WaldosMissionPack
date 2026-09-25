@@ -338,6 +338,18 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
                         create.index('remoteExecCall ["Waldo_fnc_Marker3DApplyDeltaLocal", -2]'))
         self.assertIn('{_tombstones set [_x, true]} forEach _removedIds;', remove)
 
+    def test_transport_menus_hidden_without_registered_transports(self):
+        text = source('MissionScripts/Logistics/TransportServices/transportInteractionInitLocal.sqf')
+        for action in ('Waldo_Transport_Root', 'Waldo_Transport_HelicopterRoot', 'Waldo_Transport_GroundRoot',
+                       'Waldo_Transport_BoatRoot', 'Waldo_Transport_AllRoot', 'Waldo_Transport_AllHeliRtb',
+                       'Waldo_Transport_AllGroundRtb', 'Waldo_Transport_AllBoatRtb'):
+            line = next(l for l in text.splitlines() if f'["{action}",' in l)
+            self.assertNotIn('{true}]', line, action)
+            self.assertIn('Waldo_TransportService_Type', line, action)
+        for label in ('Return All Helicopters to Base', 'Return All Ground Vehicles to Base', 'Return All Boats to Base'):
+            line = next(l for l in text.splitlines() if 'player addAction' in l and label in l)
+            self.assertIn("Waldo_TransportService_Type", line, label)
+
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")
         load = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetAceLoadServer.sqf")
