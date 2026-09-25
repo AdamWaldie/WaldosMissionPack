@@ -27,6 +27,11 @@ into the civilian's **Init** field, and preview the mission:
 
 Walk up to the civilian and use **Talk**. That is the complete minimum setup.
 
+`Waldo_fnc_SimpleDialogue` runs on the server. An Eden Init field runs on every machine, but only
+its server copy registers the speaker; client copies return `false` and do not create duplicate
+actions. Repeating setup on the same NPC replaces its dialogue, and the server publishes the
+current speaker list to joining clients.
+
 ## Simple Dialogue: start here
 
 Put one of these directly in the NPC's Eden **Init** field. Do not add anything to `init.sqf` or
@@ -96,6 +101,18 @@ Remove Simple Dialogue later:
 [this] call Waldo_fnc_SimpleDialogueClear;
 ```
 
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `target` | Object, Group or Array of Objects | required | NPC(s) that receive Talk. Use `this` for one Eden-placed NPC. |
+| 1 `dialogue` | String or Array of Strings | required | Archetype ID, one spoken line, or ordered lines. A `"SPECIFIC"` string selects the older five-position form. |
+| 2 `onComplete` (compact form) | Code | `{}` | Server code after the final line. With `"SPECIFIC"`, position 2 is instead the String or Array of lines. |
+| 3 `removeAfterUse` (compact form) | Boolean | `false` | Remove Talk after a completed session. With `"SPECIFIC"` or an archetype ID, this position is the completion Code. |
+| 4 `removeAfterUse` (`"SPECIFIC"` or archetype form) | Boolean | `false` | Remove Talk after a completed session. |
+
+The result is a Boolean: `true` after server registration and `false` for invalid input or any
+non-server copy. `Waldo_fnc_SimpleDialogueClear` takes the same Object, Group or Object Array at
+position 0 and returns `true` only when it removed a server-side simple-dialogue assignment.
+
 ## Included archetypes and example packs
 
 The always-available neutral IDs are `CIVILIAN`, `CIVILIAN_FRIENDLY` and `CIVILIAN_WARY`.
@@ -149,6 +166,34 @@ text ends the conversation.
 [this, "CHECKPOINT"] call Waldo_fnc_ConversationAssign;
 ```
 
+| `Waldo_fnc_ConversationCreate` position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `id` | String | required | Stable conversation ID, such as `"CHECKPOINT"`. |
+| 1 `nodes` | Array of node rows | required | One or more `[id, lines, choices, onEnter, next]` rows. |
+| 2 `startNode` | String | First node ID | Node the player hears first. |
+| 3 `onComplete` | Code | `{}` | Server callback after a completed conversation. |
+| 4 `onCancel` | Code | `{}` | Server callback when a session is cancelled. |
+
+| Node or choice field | Type | Default | What it means |
+|---|---|---|---|
+| Node `id` | String | required | Unique node name in this conversation. |
+| Node `lines` | Array of Strings or enriched line Arrays | `[]` | Spoken lines in order; maximum 16 per node. |
+| Node `choices` | Array of choice rows | `[]` | Responses, up to eight per node. |
+| Node `onEnter` | Code | `{}` | Server code when the node starts. |
+| Node `next` | String | `""` | Automatic next node after the lines; empty ends that path. |
+| Choice `label` | String | required | Player-visible response, up to 160 characters. |
+| Choice `next` | String | `""` | Destination node; empty ends that path. |
+| Choice `condition` | Code returning Boolean | `{true}` | Server condition for offering this response. |
+| Choice `onSelect` | Code | `{}` | Server code when selected. |
+| Choice `id` | String | `"CHOICE_<index>"` | Stable response ID within the node. |
+
+Create the definition in `initServer.sqf` or another server script before assigning its ID to
+NPCs. `Waldo_fnc_ConversationAssign` takes an Object, Group or Object Array at position 0,
+conversation ID String at position 1, and optional remove-after-use Boolean at position 2
+(`false` by default). Both helpers return `true` for successful server registration and `false`
+for invalid or non-server calls. Re-registering an ID changes future sessions; an active session
+keeps its current copy. The assignment is published for JIP clients.
+
 The player who starts the conversation sees a modal response panel with clickable choices and a
 visible cancel button. While that panel is open, Arma routes input to the display rather than to
 gameplay, so number keys cannot change weapons and no custom gameplay binding is intercepted.
@@ -200,6 +245,28 @@ the builder, then use `Waldo_fnc_ConversationAssign`, `Waldo_fnc_ConversationSta
 `Waldo_fnc_ConversationCancel` and `Waldo_fnc_ConversationClear` directly. Conditions and hooks
 receive `[_speaker, _caller, _context]` and remain on the server.
 
+`Waldo_fnc_ConversationRegister` takes one definition HashMap at position 0. It requires `id`
+(String), `startNode` (String) and `nodes` (HashMap keyed by node ID). Optional `onComplete` and
+`onCancel` are Code, default `{}`. Each node is a HashMap with `lines` (Array of line HashMaps),
+`choices` (Array of choice HashMaps), `onEnter` (Code, default `{}`) and `next` (String, default
+`""`). A line requires `text` (String, 1–500 characters); optional keys are `speaker` (Object,
+default `objNull`), `sound` (String, default `""`), `soundDuration` and `duration` (Numbers, default
+`-1`), and `gesture` (String, default `""`). A choice requires `label` (String, 1–160 characters)
+and `id` (unique String); optional keys are `next` (String, default `""`), `condition` (Code,
+default `{true}`) and `onSelect` (Code, default `{}`). The registry accepts 1 to 128 nodes and no
+more than 16 lines or eight choices in one node. It returns a Boolean on the server and `false`
+on a client. Start and cancellation calls are server endpoints; use the builder unless you need
+to construct these HashMaps yourself.
+
+| Runtime call | Arguments by position and type | Default/result |
+|---|---|---|
+| `Waldo_fnc_ConversationStart` | 0 speaker Object; 1 caller player Object | Both required. Server returns Boolean after the normal NPC/session checks; client returns `false`. |
+| `Waldo_fnc_ConversationCancel` | 0 speaker Object; 1 caller player Object; 2 session ID String; 3 reason String | Session ID defaults to `""`, reason to `"CANCELLED"`. Server returns `true` only for an active matching session; remote callers must own the player. |
+| `Waldo_fnc_ConversationClear` | 0 Object, Group or Object Array | Required. Server returns `true` if it removed at least one advanced assignment; client returns `false`. |
+
+These calls change server session or assignment state. Use the NPC Talk action for normal player
+starts and the response panel for normal player cancellation.
+
 ### Code-free data definitions
 
 `Waldo_fnc_ConversationCreateData` is the safe, serialisable form used by ZEN and mission config. Its
@@ -207,6 +274,22 @@ definition is `[id, nodes, startNode]`. Nodes contain `[nodeId, lines, choices, 
 lines contain `[text, CfgSounds id, sound duration, text duration override, gesture]`; choices contain
 `[label, destination node, choice id]`. Empty destinations end the conversation. IDs use uppercase
 letters, numbers and underscores.
+
+| Field | Type | What to supply |
+|---|---|---|
+| Definition `id`, `startNode` | Strings | Stable ID and an existing first node ID. |
+| Definition `nodes` | Array of node Arrays | One or more nodes, each with four fields. |
+| Node `nodeId`, `automaticNextNode` | Strings | Node ID and optional next ID (`""` ends the path). |
+| Node `lines` | Array of line Arrays | Up to 16 lines. |
+| Node `choices` | Array of choice Arrays | Up to eight responses. |
+| Line `text` | String | Spoken subtitle, 1–500 characters. |
+| Line `CfgSounds id`, `gesture` | Strings | Use `""` for no sound or gesture. |
+| Line `sound duration`, `text duration override` | Numbers (seconds) | Use `-1` for automatic timing. |
+| Choice `label`, `destination node`, `choice id` | Strings | Visible response, next node (or `""`), and unique choice ID. |
+
+`Waldo_fnc_ConversationCreateData` takes this definition Array at position 0 and returns a
+Boolean after server validation. It returns `false` on a client. Replacing an ID affects future
+sessions; current conversations keep their existing definition.
 
 Paste **Export Config** output inside the `Waldo_Conversation_ConfigDefinitions` array in
 `MissionConfig\dialogueConfig.sqf`. The server registers those definitions automatically after its
