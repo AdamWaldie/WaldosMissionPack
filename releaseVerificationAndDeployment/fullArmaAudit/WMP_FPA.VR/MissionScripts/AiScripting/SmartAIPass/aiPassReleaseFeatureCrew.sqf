@@ -30,7 +30,7 @@
  * [_group] call Waldo_fnc_AIPassReleaseFeatureCrew;
  * Result: landed paratroopers become an ordinary AI squad the pass manages.
  *
- * Current callers: Waldo_fnc_AIPassDiscover and Waldo_fnc_AIPassAirborneWatch.
+ * Current caller: Waldo_fnc_AIPassDiscover.
  */
 
 params [["_group", grpNull, [grpNull]]];

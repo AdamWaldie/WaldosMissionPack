@@ -39,7 +39,7 @@ order on that squad. Use **AI Orders** to keep a squad for Zeus permanently, or 
 1. Open `MissionConfig\aiConfig.sqf`.
 2. Change `Waldo_AIPass_Enable` from `false` to `true`.
 3. Look at the behaviour switches (`Waldo_AIPass_<Behaviour>_Enable`). The combat behaviours are on
-   by default. Artillery, counter-battery, airborne reinforcement, surrender, grenade evasion and
+   by default. Artillery, counter-battery, airborne insertion, surrender, grenade evasion and
    aircraft flares are off until you turn them on.
 
 The server starts the pass and hands it to every headless client, including one that connects late.
@@ -90,7 +90,7 @@ touched.
 | Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | A squad with a good fix on the enemy calls a fire mission from friendly AI artillery, using plain high-explosive shells (never mines, cluster or illumination rounds). The target must be at least 200 m from friendlies and civilians, and mobile guns relocate after firing. Jamming blocks the call. |
 | Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad gets a smoke screen from friendly artillery that has smoke rounds. |
 | Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Friendly AI artillery answers enemy artillery, but only if its position is known (see below). |
-| Airborne reinforcement | `Waldo_AIPass_Airborne_Enable` (off) | Paradropped AI squads from triggers, scripts or Zeus. With `Waldo_AIPass_Airborne_Auto`, a squad in contact calls one when no ground squad can help. |
+| Airborne insertion | `Waldo_AIPass_Airborne_Enable` (off) | AI squads riding in AI-flown helicopters or planes climb to jump altitude as they near an enemy they know about, then parachute out one at a time about 700 m away. Each soldier keeps his backpack. Once down they fight as a normal squad. Helicopters on an unload waypoint still land, and player-flown aircraft never trigger it. |
 | Aircraft flares | `Waldo_AIPass_AircraftFlares_Enable` (off) | WMP gunships and Dynamic AA fighters fire flares when a missile is launched at them. |
 | Aircraft break-away | `Waldo_AIPass_AircraftBreak_Enable` (off) | The same aircraft jink sideways away from the launch, without changing their orbit or waypoints. |
 
@@ -173,18 +173,22 @@ when every room is checked or after four minutes.
 **Dynamic AO garrisons:** set `Waldo_AIPass_Garrison_DynamicAO` to `true` to give Dynamic AO's
 building garrisons the same handling (watching outward, ducking under fire, breaking at losses).
 
-**Airborne reinforcement:** use a trigger set to "OPFOR detected by BLUFOR" (server only) with this
-On Activation line:
+**Airborne insertion:** place an AI-crewed helicopter or plane with an AI squad in its cargo seats and
+give the aircraft waypoints towards the enemy (not an unload waypoint). With
+`Waldo_AIPass_Airborne_Enable` on, the aircraft climbs to `Waldo_AIPass_Airborne_Altitude` (250 m)
+once the squad knows about an enemy within `Waldo_AIPass_Airborne_ApproachDistance` (2 km). Within
+`Waldo_AIPass_Airborne_DeployDistance` (700 m) the squad jumps one soldier every
+`Waldo_AIPass_Airborne_JumpInterval` second, never below `Waldo_AIPass_Airborne_MinAltitude` (120 m)
+or over water. On the ground they carry on with their own waypoints, or search and destroy around
+the enemy position if they have none. To drop a squad at a moment you choose, for example from a
+trigger or the aircraft's waypoint On Activation:
 
 ```sqf
-[thisTrigger, east] call Waldo_fnc_AIPassAirborneRequest;
+[group this] call Waldo_fnc_AIPassAirborneDrop;   // "this" is one of the passengers
 ```
 
-An OPFOR transport from `Waldo_AIPass_Airborne_AircraftClasses` drops
-`Waldo_AIPass_Airborne_JumperCount` paratroopers of `Waldo_AIPass_Airborne_JumperClasses` over the
-trigger. Once landed, they search and destroy around it. Each side has
-`Waldo_AIPass_Airborne_MaxDrops` drops per mission, at least `Waldo_AIPass_Airborne_Cooldown`
-seconds apart. Set the aircraft and jumper classes to your factions' own units when you run mods.
+This is separate from the player [Paradrop](Paradrop) feature. AI jumpers from Paradrop itself are
+taken over once they land (see Exclusions).
 
 ## With LAMBS
 
@@ -258,8 +262,7 @@ Every setting is listed with its default in
   - defend a line here (width and facing);
   - release a garrison or defence;
   - clear the building here;
-  - airborne reinforcement here (side and number of jumpers). Zeus drops skip the cooldown but still
-    count against the budget;
+  - parachute out now, for a squad riding as cargo in an AI-flown aircraft at least 120 m over land;
   - keep the group for Zeus (exclude it from the pass);
   - return it to the pass.
 

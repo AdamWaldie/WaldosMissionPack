@@ -153,7 +153,7 @@ These modules appear only when `Waldo_Hazard_Enable` is `true` in `MissionConfig
 
 Zeus always has priority over the Smart AI Pass: selecting a group, giving it waypoints or a target, moving or remote-controlling its soldiers, or using ZEN AI actions pauses the pass for that group.
 
-**AI Orders** gives one nearby AI group an order: garrison the buildings around the module, defend a line (width and facing), release a garrison or defence, or clear the building at the module. It can also keep the group for Zeus by excluding it from the pass, or return it to the pass. It can also call an airborne reinforcement to the module position for a chosen side, with the number of paratroopers set in the dialog. A unit under the module puts its group first in the list. Orders need the Smart AI Pass enabled; airborne drops need **Airborne reinforcement** enabled and count against each side's budget.
+**AI Orders** gives one nearby AI group an order: garrison the buildings around the module, defend a line (width and facing), release a garrison or defence, or clear the building at the module. It can also keep the group for Zeus by excluding it from the pass, or return it to the pass. It can also make a squad riding as cargo in an AI-flown aircraft parachute out now (the aircraft must be at least 120 m over land). A unit under the module puts its group first in the list. Orders need the Smart AI Pass enabled.
 
 ## Field Resupply
 

@@ -14,9 +14,6 @@
  * neither do aircrews, static-gun crews or artillery crews, so no gun is abandoned. A responder
  * stands down when the requester returns to CALM, is wiped
  * out, or 300 s pass; if it makes contact itself it fights normally.
- * If no responder is available and Waldo_AIPass_Airborne_Auto is on, an airborne reinforcement is
- * requested from the server (Waldo_fnc_AIPassAirborneRequest), which applies its own budget and
- * cooldown.
  * Locality and authority: call where the requesting group is local.
  *
  * Arguments:
@@ -96,13 +93,5 @@ private _sent = 0;
 } forEach _candidates;
 if (_sent > 0) then {
     missionNamespace setVariable ["Waldo_AIPass_ReinforcementsSent", (missionNamespace getVariable ["Waldo_AIPass_ReinforcementsSent", 0]) + _sent];
-};
-if (_sent == 0 && {_already == 0} && {missionNamespace getVariable ["Waldo_AIPass_Airborne_Enable", false]}
-    && {missionNamespace getVariable ["Waldo_AIPass_Airborne_Auto", false]}) then {
-    if (isServer) then {
-        [_side, _enemyPos, createHashMapFromArray [["automatic", true]]] call Waldo_fnc_AIPassAirborneRequest;
-    } else {
-        [_side, _enemyPos, createHashMapFromArray [["automatic", true]]] remoteExecCall ["Waldo_fnc_AIPassAirborneRequest", 2];
-    };
 };
 _sent

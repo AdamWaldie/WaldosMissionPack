@@ -359,7 +359,7 @@ switch (toUpperANSI _action) do {
             "Waldo_AIPass_Morale_Enable", "Waldo_AIPass_Surrender_Enable", "Waldo_AIPass_GrenadeEvasion_Enable",
             "Waldo_AIPass_AntiArmour_Enable", "Waldo_AIPass_Vehicles_Enable", "Waldo_AIPass_ContactReports_Enable",
             "Waldo_AIPass_Reinforce_Enable", "Waldo_AIPass_Artillery_Enable", "Waldo_AIPass_CounterBattery_Enable",
-            "Waldo_AIPass_Airborne_Enable", "Waldo_AIPass_Airborne_Auto", "Waldo_AIPass_AircraftFlares_Enable",
+            "Waldo_AIPass_Airborne_Enable", "Waldo_AIPass_AircraftFlares_Enable",
             "Waldo_AIPass_Investigate_Enable", "Waldo_AIPass_Assault_Enable", "Waldo_AIPass_Advance_Enable", "Waldo_AIPass_CoordinatedAssault_Enable", "Waldo_AIPass_Stance_Enable", "Waldo_AIPass_AmmoShare_Enable", "Waldo_AIPass_VehicleGunnery_Enable", "Waldo_AIPass_ArtillerySmoke_Enable", "Waldo_AIPass_AircraftBreak_Enable"
         ];
         private _updates = [
@@ -391,11 +391,11 @@ switch (toUpperANSI _action) do {
     };
     case "AI_ORDER": {
         _settings params [["_order", "", [""]], ["_group", grpNull, [grpNull]], ["_position", [], [[]]], ["_radius", 50, [0]],
-            ["_side", east, [east]], ["_jumpers", 8, [0]], ["_building", objNull, [objNull]], ["_facing", 0, [0]]];
+            ["_building", objNull, [objNull]], ["_facing", 0, [0]]];
         // The curator was authenticated above. Run the order next frame, outside this remote-execution
         // context, because the order APIs refuse calls whose remote sender is not the server.
         [{
-            params ["_order", "_group", "_position", "_radius", "_side", "_jumpers", "_building", "_facing", "_requestOwner"];
+            params ["_order", "_group", "_position", "_radius", "_building", "_facing", "_requestOwner"];
             private _accepted = switch (_order) do {
                 case "GARRISON": {[_group, _position, (_radius max 15) min 150] call Waldo_fnc_AIPassGarrison};
                 case "DEFEND": {[_group, _position, _facing, (_radius max 15) min 150] call Waldo_fnc_AIPassDefend};
@@ -419,20 +419,17 @@ switch (toUpperANSI _action) do {
                     true
                 };
                 case "CLEAR": {[_group, [_building, _position] select isNull _building] call Waldo_fnc_AIPassClearBuilding};
-                case "AIRBORNE": {
-                    // Zeus drops are deliberate: skip the cooldown, never the per-side budget.
-                    [_side, _position, createHashMapFromArray [["jumperCount", (_jumpers max 2) min 16], ["force", true]]] call Waldo_fnc_AIPassAirborneRequest
-                };
+                case "AIRBORNE": {[_group] call Waldo_fnc_AIPassAirborneDrop};
                 default {false};
             };
             private _message = if (_accepted) then {format ["The %1 order was accepted.", toLowerANSI _order]} else {
-                format ["The %1 order was refused. Check that the Smart AI Pass (or Airborne reinforcement) is enabled, the group is valid and any airborne budget remains.", toLowerANSI _order]
+                format ["The %1 order was refused. Check that the Smart AI Pass is enabled and the group is valid; an airborne drop also needs the squad riding an AI-flown aircraft at least 120 m over land.", toLowerANSI _order]
             };
             diag_log format ["[WMP ZEN SERVER] action=AI_ORDER owner=%1 order=%2 accepted=%3", _requestOwner, _order, _accepted];
             if (_requestOwner > 2) then {
                 ["AI ORDERS", _message, ["ERROR", "SUCCESS"] select _accepted, "AI_ORDERS", 7] remoteExecCall ["Waldo_fnc_FeatureNotifyLocal", _requestOwner];
             };
-        }, [_order, _group, _position, _radius, _side, _jumpers, _building, _facing, _requestOwner]] call CBA_fnc_execNextFrame;
+        }, [_order, _group, _position, _radius, _building, _facing, _requestOwner]] call CBA_fnc_execNextFrame;
     };
     case "HAZARD_SET": {
         _settings params ["_key", "_area", "_profile"];

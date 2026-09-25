@@ -55,7 +55,7 @@ to utilise critical systems of arma 3. Now, it is in continued use by at least f
   - fire control, stance from cover, ammo sharing, morale, retreat and surrender;
   - anti-armour, vehicle drills and gunnery, and grenade evasion;
   - contact reports, reinforcement, coordinated assault, artillery with smoke, and counter-battery;
-  - airborne reinforcement, garrison, defence-line and clear-building orders, and survivor regroup.
+  - airborne insertion by AI passengers, garrison, defence-line and clear-building orders, and survivor regroup.
 
   Behaviour scales with the WMP AI profile (MILITIA to ELITE) without touching skill values. Zeus always has priority: any curator command pauses the pass for that squad. It runs only on the server and headless clients inside a fixed per-tick budget, with a switch per behaviour, LAMBS split-by-feature support, and automatic exclusion of player groups and other WMP features' AI. Controlled from `MissionConfig\aiConfig.sqf` and the **AI Control** and **AI Orders** Zeus modules.
 - Waldos Economy Systems - a Zeus Resource / Research / Build / Buy economy suite with Ground Command, run live from the Zeus Enhanced module menu (ZEN required for the in-Zeus menu). Its Zeus builder exports readable setup calls for `MissionConfig\economyConfig.sqf`, including placed economy fixtures; the existing portable catalogue string remains available for transfer and import.

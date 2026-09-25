@@ -48,13 +48,12 @@ The numbers are in `Waldo_AIPass_ProfileBehaviour` (ADVANCED).
 | `Reinforce` | true | idle squads move up behind a squad in contact (never garrisons, defence lines, aircrews, gun or artillery crews) |
 | `Artillery` | false | fire missions on well-located enemies only |
 | `CounterBattery` | false | `Waldo_AIPass_CounterBattery_Mode` "KNOWN" or "RADAR" |
-| `Airborne` | false | paradropped reinforcements; `Waldo_AIPass_Airborne_Auto` for automatic calls |
+| `Airborne` | false | AI passengers of AI-flown aircraft parachute out near known enemies (nothing spawned) |
 | `AircraftFlares` | false | WMP gunships and Dynamic AA fighters |
 
 Tuning rows (`_Flank_*`, `_Morale_*`, `_Artillery_*`, `_Airborne_*`, `_Tick*`, ranges) are ADVANCED;
-leave them unless the user asks. Airborne aircraft and jumper classes are per-side hashmaps
-(`Waldo_AIPass_Airborne_AircraftClasses`, `_JumperClasses`); set them to the mission's factions when
-mods are used.
+leave them unless the user asks. Airborne insertion needs the mission maker to place an AI-crewed
+aircraft with an AI squad in cargo and give it waypoints towards the enemy (not an unload waypoint).
 
 ## Orders (call where the group is local or on the server; need the pass running)
 
@@ -64,7 +63,7 @@ mods are used.
 [_group] call Waldo_fnc_AIPassDefendRelease;
 [_group] call Waldo_fnc_AIPassGarrisonRelease;
 [group this, nearestBuilding this] call Waldo_fnc_AIPassClearBuilding;   // clear one building
-[thisTrigger, east] call Waldo_fnc_AIPassAirborneRequest;                // trigger On Activation, server only
+[group this] call Waldo_fnc_AIPassAirborneDrop;                        // passenger squad parachutes out now
 [this, west] call Waldo_fnc_AIPassRegisterRadar;                         // counter-battery RADAR mode
 ```
 
@@ -82,7 +81,7 @@ on a unit or `group this`. `Waldo_AI_Exclude` excludes from every WMP AI change.
 ## Runtime and diagnostics
 
 Zeus: **WMP AI & Combat > AI Control** (every switch) and **AI Orders** (garrison, defend, release,
-clear, airborne at the module position, keep for Zeus, return to pass). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
+clear, parachute out now for a squad in an aircraft, keep for Zeus, return to pass). Diagnostics rows `ai/smart-ai-pass`, `-regroup`, `-groups`,
 `-drills`, `-zeus`, `-support`, `-lambs`. RPT tag `[WMP AI PASS]`; `Waldo_AIPass_Debug` adds detail.
 
 Wiki: `Smart-AI-Pass`.

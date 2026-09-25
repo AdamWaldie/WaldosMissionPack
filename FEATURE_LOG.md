@@ -17,7 +17,11 @@ with CBA, ACE, ZEN and ACRE2 (and once more with LAMBS Danger and Waypoints) and
 - inserted "WMP AI PASS" waypoints resume patrol waypoints afterwards;
 - `ProjectileCreated` is raised where AI are local before grenade evasion is recommended;
 - AI pilots' own flare use, before aircraft flares are recommended;
-- artillery, counter-battery, artillery smoke and airborne drops end to end;
+- artillery, counter-battery and artillery smoke end to end;
+- airborne insertion from an AI helicopter and an AI plane: climb, drop distance, one jumper at a
+  time clear of the airframe, parachute opens, backpack kept, SAD after landing; an unload waypoint
+  lands instead; the AI Orders "parachute out now" order;
+- landed Paradrop AI jumpers and the dismounted crew of a written-off transport are taken over;
 - final assault, bounding advance, investigation, defence line reserve and coordinated assault;
 - Zeus priority on a dedicated server: selection, waypoints, target designation, remote control and
   ZEN AI actions each release the squad, and AI Orders exclude/return work;

@@ -359,9 +359,15 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   SMOKE mode screens retreats.
 - **Counter-battery** (`Waldo_fnc_AIPassCounterBattery`, from `ArtilleryShellFired`): `KNOWN` or
   `RADAR` via `Waldo_fnc_AIPassRegisterRadar`.
-- **Airborne** (`Waldo_fnc_AIPassAirborneRequest` → `Waldo_fnc_ParadropCreateDropZone`, run next
-  frame so the paradrop curator check does not refuse it; `Waldo_fnc_AIPassAirborneWatch` releases
-  the landed jumpers).
+- **Airborne insertion** (`Waldo_fnc_AIPassAirborneCheck`, from the group tick;
+  `Waldo_fnc_AIPassAirborneDropStep`; `Waldo_fnc_AIPassParachuteJump`): PROTOCOL Airborne's idea,
+  rewritten. Nothing is spawned. An eligible AI squad riding as cargo in an AI-flown aircraft climbs
+  to `Waldo_AIPass_Airborne_Altitude` within `_ApproachDistance` of an enemy it knows about, then
+  jumps one soldier at a time within `_DeployDistance`, never below `_MinAltitude` or over water.
+  Each jumper gets his own parachute vehicle, so backpacks are kept. Skipped for player-flown
+  aircraft and helicopters on an unload/get-out waypoint. Landed squads with no waypoints of their
+  own get a SAD waypoint on the target. `Waldo_fnc_AIPassAirborneDrop` (and the AI Orders module)
+  drops a squad at once. Dynamic Paradrop is not used; it is the player feature.
 
 Radio-dependent calls (reports, reinforcement, artillery) go through `Waldo_fnc_AIPassCanTransmit`,
 so radio jamming (`Waldo_fnc_JammingFactor` ≥ 0.5) blocks them.
@@ -1953,7 +1959,7 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 - Mission Flow: Send Notification → calls `Waldo_fnc_ZenNotify` (dialog: title / message / type / duration / placement / audience; routes through `Waldo_fnc_ZenNotifyServer` to `Waldo_fnc_NotificationBroadcast`)
 - Vehicle Customisation - Editor → calls `Waldo_fnc_ZenVehicleCustomizationEditor`, which opens `Waldo_fnc_VehCust_promptEditor` (must be placed directly on the vehicle being edited; a persistent multi-tab dialog — Turret / Pylon / Appearance / Component — replacing the old Configure, Copy From Nearby Vehicle, Register Component, and Remove/Restore Component modules; each tab's Add button routes through its own validation-gated collector before a row reaches the shared Pending Changes list, so a blank/incomplete row can never be queued; turret/pylon option lists are discovered live from that vehicle plus a cached pack-wide catalog, the Component tab uses live `Waldo_fnc_VehicleComponentHeuristicScan` candidates; Apply All Pending routes through the consolidated `Waldo_fnc_ZenVehicleCustomizationServer` bridge to `Waldo_fnc_VehicleWeaponLoadoutApply`/`Waldo_fnc_VehicleAppearanceApply`/`Waldo_fnc_VehicleComponentRemove` by row type; Export All Pending To Clipboard is client-only, no server call)
 - AI Control → `AI` case of `Waldo_fnc_FeatureRuntimeZen` (AI Rebalance profile plus every Smart AI Pass switch; applied by `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case)
-- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, defend, release, clear building, airborne reinforcement, exclude or return for a nearby AI group; applied by the `AI_ORDER` case)
+- AI Orders → `AI_ORDERS` case of `Waldo_fnc_FeatureRuntimeZen` (garrison, defend, release, clear building, parachute out now for a squad riding an aircraft, exclude or return for a nearby AI group; applied by the `AI_ORDER` case)
 - Vehicle Customisation - Inspect → calls `Waldo_fnc_ZenVehicleCustomizationInspect` (must be placed directly on the vehicle to inspect; no dialog, merges the weapon/pylon and appearance/selection reports via `Waldo_fnc_VehicleCustomizationInspect` into one `hint` and one clipboard copy; read-only, runs entirely on the curator's client, no server round-trip)
 
 **Conditionally registered** — three additional modules register only when `Waldo_Headless_Enable` is

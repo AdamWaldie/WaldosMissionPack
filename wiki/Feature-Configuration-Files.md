@@ -430,13 +430,12 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_AIPass_CounterBattery_Mode` | KNOWN answers only spotted batteries; RADAR also uses radars registered with Waldo_fnc_AIPassRegisterRadar. Default `"KNOWN"`. |
 | `Waldo_AIPass_CounterBattery_RadarRange` | Detection range of a registered counter-battery radar. Default `8000`. |
 | `Waldo_AIPass_CounterBattery_Delay` | Seconds before counter-battery fire is returned. Default `20`. |
-| `Waldo_AIPass_Airborne_Enable` | Allows paradropped AI reinforcements from triggers, scripts and Zeus. Default `false`. |
-| `Waldo_AIPass_Airborne_Auto` | Calls a drop automatically when no ground squad can reinforce. Default `false`. |
-| `Waldo_AIPass_Airborne_MaxDrops` | Airborne drops each side may make in the whole mission. Default `2`. |
-| `Waldo_AIPass_Airborne_Cooldown` | Seconds between drops for one side. Default `600`. |
-| `Waldo_AIPass_Airborne_JumperCount` | Paratroopers per drop, limited by the aircraft's seats. Default `8`. |
-| `Waldo_AIPass_Airborne_AircraftClasses` | Transport aircraft class per side key (WEST, EAST, GUER); use mod aircraft if you run them. Defaults are vanilla classes. |
-| `Waldo_AIPass_Airborne_JumperClasses` | Paratrooper unit class per side key; use your faction's rifleman. Defaults are vanilla classes. |
+| `Waldo_AIPass_Airborne_Enable` | AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy. Helicopters on an unload or get-out waypoint still land. Default `false`. |
+| `Waldo_AIPass_Airborne_ApproachDistance` | Within this distance (m) of a known enemy the aircraft climbs to jump altitude. Default `2000`. |
+| `Waldo_AIPass_Airborne_DeployDistance` | The squad jumps once its aircraft is this close (m) to a known enemy. Default `700`. |
+| `Waldo_AIPass_Airborne_Altitude` | Height above ground (m) the aircraft climbs to for the drop. Default `250`. |
+| `Waldo_AIPass_Airborne_MinAltitude` | Never jump below this height above ground (m), or over water. Default `120`. |
+| `Waldo_AIPass_Airborne_JumpInterval` | Seconds between jumpers. Default `1`. |
 | `Waldo_AIPass_Garrison_DynamicAO` | Dynamic AO garrisons duck under fire, watch outward and break at losses. Default `false`. |
 | `Waldo_AIPass_Garrison_BreakFraction` | A garrison or defence line breaks when down to this share of its strength at the time of the order. Default `0.5`. |
 | `Waldo_AIPass_AircraftFlares_Enable` | WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first. Default `false`. |

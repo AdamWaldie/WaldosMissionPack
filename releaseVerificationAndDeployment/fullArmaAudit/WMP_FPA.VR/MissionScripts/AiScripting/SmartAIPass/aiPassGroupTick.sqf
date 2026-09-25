@@ -19,6 +19,8 @@
  * RETREAT (morale broken or a damaged vehicle withdrawing) -> REGROUP.
  * Any sighting during SECURITY, SEARCH or REGROUP returns the group to CONTACT.
  * CARELESS groups are left entirely to the mission maker.
+ * A squad riding as cargo in an AI-flown aircraft is handled by airborne insertion instead
+ * (Waldo_fnc_AIPassAirborneCheck) until it has parachuted and landed.
  *
  * Cadence (Digii's distance tiers, measured to the nearest player): Waldo_AIPass_TickContact in
  * contact near players; Waldo_AIPass_TickNear within Waldo_AIPass_NearRange; Waldo_AIPass_TickMid
@@ -77,6 +79,10 @@ if !([_group] call Waldo_fnc_AIPassIsEligible) exitWith {
 if (_group getVariable ["Waldo_AIPass_RegroupQueued", false]) exitWith {5};
 private _leader = leader _group;
 if (behaviour _leader == "CARELESS") exitWith {10};
+// Airborne insertion owns a squad while it rides an aircraft or is parachuting down.
+if (_group getVariable ["Waldo_AIPass_Dropping", false]) exitWith {3};
+private _airborneDelay = [_group, [_group] call Waldo_fnc_AIPassGroupState] call Waldo_fnc_AIPassAirborneCheck;
+if (_airborneDelay >= 0) exitWith {_airborneDelay};
 
 private _state = [_group] call Waldo_fnc_AIPassGroupState;
 private _now = time;

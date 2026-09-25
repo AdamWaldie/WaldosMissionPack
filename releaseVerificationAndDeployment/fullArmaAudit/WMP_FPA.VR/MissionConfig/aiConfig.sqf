@@ -163,13 +163,12 @@
  * - Waldo_AIPass_CounterBattery_Mode (MISSION MAKER): KNOWN answers only spotted batteries; RADAR also uses radars registered with Waldo_fnc_AIPassRegisterRadar.
  * - Waldo_AIPass_CounterBattery_RadarRange (ADVANCED): detection range of a registered counter-battery radar.
  * - Waldo_AIPass_CounterBattery_Delay (ADVANCED): seconds before counter-battery fire is returned.
- * - Waldo_AIPass_Airborne_Enable (MISSION MAKER): allows paradropped AI reinforcements from triggers, scripts and Zeus.
- * - Waldo_AIPass_Airborne_Auto (MISSION MAKER): calls a drop automatically when no ground squad can reinforce.
- * - Waldo_AIPass_Airborne_MaxDrops (ADVANCED): airborne drops each side may make in the whole mission.
- * - Waldo_AIPass_Airborne_Cooldown (ADVANCED): seconds between drops for one side.
- * - Waldo_AIPass_Airborne_JumperCount (ADVANCED): paratroopers per drop, limited by the aircraft's seats.
- * - Waldo_AIPass_Airborne_AircraftClasses (MISSION MAKER): transport aircraft class per side key (WEST, EAST, GUER); use mod aircraft if you run them.
- * - Waldo_AIPass_Airborne_JumperClasses (MISSION MAKER): paratrooper unit class per side key; use your faction's rifleman.
+ * - Waldo_AIPass_Airborne_Enable (MISSION MAKER): AI squads riding in AI-flown helicopters or planes parachute out when their aircraft nears a known enemy. Helicopters on an unload or get-out waypoint still land. [group this] call Waldo_fnc_AIPassAirborneDrop orders a drop at any time.
+ * - Waldo_AIPass_Airborne_ApproachDistance (ADVANCED): within this distance of a known enemy the aircraft climbs to jump altitude.
+ * - Waldo_AIPass_Airborne_DeployDistance (MISSION MAKER): the squad jumps once its aircraft is this close to a known enemy.
+ * - Waldo_AIPass_Airborne_Altitude (ADVANCED): height above ground the aircraft climbs to for the drop.
+ * - Waldo_AIPass_Airborne_MinAltitude (ADVANCED): never jump below this height above ground (or over water).
+ * - Waldo_AIPass_Airborne_JumpInterval (ADVANCED): seconds between jumpers.
  * - Waldo_AIPass_Garrison_DynamicAO (MISSION MAKER): Dynamic AO garrisons duck under fire, watch outward and break at losses.
  * - Waldo_AIPass_Garrison_BreakFraction (ADVANCED): a garrison or defence line breaks when down to this share of its strength at the time of the order.
  * - Waldo_AIPass_AircraftFlares_Enable (MISSION MAKER): WMP gunships and Dynamic AA fighters fire flares at incoming missiles; test your aircraft first.
@@ -312,13 +311,12 @@ createHashMapFromArray [
         ["Waldo_AIPass_CounterBattery_Mode", "KNOWN"], // STRING: KNOWN (spotted only) or RADAR (also registered radars).
         ["Waldo_AIPass_CounterBattery_RadarRange", 8000], // METRES: radar detection range.
         ["Waldo_AIPass_CounterBattery_Delay", 20], // SECONDS: before counter-battery fire.
-        ["Waldo_AIPass_Airborne_Enable", false], // BOOL: allow paradropped AI reinforcements.
-        ["Waldo_AIPass_Airborne_Auto", false], // BOOL: call a drop when no ground squad can reinforce.
-        ["Waldo_AIPass_Airborne_MaxDrops", 2], // COUNT: drops per side for the whole mission.
-        ["Waldo_AIPass_Airborne_Cooldown", 600], // SECONDS: between drops for one side.
-        ["Waldo_AIPass_Airborne_JumperCount", 8], // COUNT: paratroopers per drop (limited by seats).
-        ["Waldo_AIPass_Airborne_AircraftClasses", createHashMapFromArray [["WEST", "B_T_VTOL_01_infantry_F"], ["EAST", "O_T_VTOL_02_infantry_dynamicLoadout_F"], ["GUER", "I_Heli_Transport_02_F"]]], // MAP: side key to transport aircraft class.
-        ["Waldo_AIPass_Airborne_JumperClasses", createHashMapFromArray [["WEST", "B_Soldier_F"], ["EAST", "O_Soldier_F"], ["GUER", "I_Soldier_F"]]], // MAP: side key to paratrooper unit class.
+        ["Waldo_AIPass_Airborne_Enable", false], // BOOL: AI passengers parachute out near known enemies.
+        ["Waldo_AIPass_Airborne_ApproachDistance", 2000], // METRES: climb to jump altitude inside this range.
+        ["Waldo_AIPass_Airborne_DeployDistance", 700], // METRES: jump inside this range of a known enemy.
+        ["Waldo_AIPass_Airborne_Altitude", 250], // METRES: jump altitude above ground.
+        ["Waldo_AIPass_Airborne_MinAltitude", 120], // METRES: never jump lower than this.
+        ["Waldo_AIPass_Airborne_JumpInterval", 1], // SECONDS: between jumpers.
         ["Waldo_AIPass_Garrison_DynamicAO", false], // BOOL: WMP garrison handling for Dynamic AO garrisons.
         ["Waldo_AIPass_Garrison_BreakFraction", 0.5], // 0-1: a garrison breaks at this share of its strength.
         ["Waldo_AIPass_AircraftFlares_Enable", false], // BOOL: WMP gunships and Dynamic AA fighters flare at missiles.
