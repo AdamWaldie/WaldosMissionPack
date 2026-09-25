@@ -22,6 +22,14 @@ with CBA, ACE, ZEN and ACRE2 (and once more with LAMBS Danger and Waypoints) and
 - Zeus priority on a dedicated server: selection, waypoints, target designation, remote control and
   ZEN AI actions each release the squad, and AI Orders exclude/return work;
 - aircraft break-away on each airframe before recommending it;
+- grenades (flank smoke, retreat smoke, assault frag) leave towards the target after the thrower is
+  turned, and no chemlight or ACE flashbang is thrown as smoke;
+- `IncomingMissile` fires on the aircraft owner's machine and `ArtilleryShellFired` reaches the
+  machine that owns the answering battery (counter-battery across server and headless client);
+- AI with vanilla, TFAR and ACRE2 radios pass the radio check (contact reports, reinforcement,
+  artillery), and a radio-less soldier does not;
+- flanking elements engage on the final approach and assault, and cover spots face away from the
+  enemy rather than all being accepted;
 - zero SQF errors in server, client and headless-client RPTs.
 
 ### Paradrop deployment-direction preview

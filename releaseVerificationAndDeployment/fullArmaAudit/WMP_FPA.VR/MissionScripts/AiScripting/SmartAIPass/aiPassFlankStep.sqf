@@ -5,8 +5,9 @@
  *
  * Bounds: each member gets his own spot, spread 5 m apart across the direction of travel. Ordinary
  * bounds, the final position and the assault position are snapped to cover facing the enemy
- * (Waldo_fnc_AIPassFindCover); street crossings and the clearing rush are not. While moving, members
- * have TARGET and AUTOTARGET switched off so they do not stop to trade fire mid-bound. Only features
+ * (Waldo_fnc_AIPassFindCover); street crossings and the clearing rush are not. On ordinary bounds and
+ * street crossings, members have TARGET and AUTOTARGET switched off so they do not stop to trade fire
+ * mid-bound; the final approach, assault and clearing rush keep both on so they can engage. Only features
  * that were on are switched off, and they are switched back on at every halt, so mission-maker
  * disableAI settings survive (Smart Combat V2 re-enabled them unconditionally). A bound ends when
  * every member is within 7 m of his spot or after Waldo_AIPass_Flank_BoundTimeout. Halts last
@@ -82,12 +83,16 @@ private _issue = {
             _spot = ([_spot, _enemyPos, [10, 6] select (_kind == "ASSAULT"), _spots] call Waldo_fnc_AIPassFindCover) select 0;
         };
         _spots pushBack _spot;
-        {
-            if (_unit checkAIFeature _x) then {
-                _unit disableAI _x;
-                _disabled pushBack [_unit, _x];
-            };
-        } forEach ["TARGET", "AUTOTARGET"];
+        // Only movement bounds suppress target switching; the final approach, assault and clear
+        // must be able to engage the enemy they are closing on.
+        if (_kind in ["BOUND", "CROSS_NEAR", "CROSS_FAR"]) then {
+            {
+                if (_unit checkAIFeature _x) then {
+                    _unit disableAI _x;
+                    _disabled pushBack [_unit, _x];
+                };
+            } forEach ["TARGET", "AUTOTARGET"];
+        };
         _unit doMove _spot;
     } forEach _units;
     _drill set ["spots", _spots];

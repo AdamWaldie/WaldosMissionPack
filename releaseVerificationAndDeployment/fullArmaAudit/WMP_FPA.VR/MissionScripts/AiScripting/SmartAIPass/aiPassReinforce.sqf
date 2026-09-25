@@ -10,7 +10,9 @@
  * Waldo_AIPass_Reinforce_MaxResponders CALM, eligible, unordered squads of three or more on the same
  * side, owned by the same machine and within Waldo_AIPass_Reinforce_Radius move to a rally point 80 m
  * behind the squad in contact (away from the enemy) through an inserted waypoint, so their own
- * patrols resume afterwards. A responder stands down when the requester returns to CALM, is wiped
+ * patrols resume afterwards. Garrison, defence-line and clear-building squads never respond, and
+ * neither do aircrews, static-gun crews or artillery crews, so no gun is abandoned. A responder
+ * stands down when the requester returns to CALM, is wiped
  * out, or 300 s pass; if it makes contact itself it fights normally.
  * If no responder is available and Waldo_AIPass_Airborne_Auto is on, an airborne reinforcement is
  * requested from the server (Waldo_fnc_AIPassAirborneRequest), which applies its own budget and
@@ -60,7 +62,13 @@ private _candidates = [];
     if (_candidate != _group && {local _candidate} && {side _candidate == _side} && {alive _candidateLeader}
         && {_candidateLeader distance2D _leader <= _radius} && {({alive _x} count units _candidate) >= 3}
         && {(_candidate getVariable ["Waldo_AIPass_Garrison", []]) isEqualTo []}
+        && {(_candidate getVariable ["Waldo_AIPass_Defend", []]) isEqualTo []}
         && {!(_candidate getVariable ["Waldo_AIPass_ClearBuilding", false])}
+        // Aircrews, static-gun crews and artillery stay on their equipment.
+        && {(units _candidate) findIf {
+            private _vehicle = vehicle _x;
+            _vehicle != _x && {_vehicle isKindOf "Air" || {_vehicle isKindOf "StaticWeapon"} || {getNumber (configOf _vehicle >> "artilleryScanner") == 1}}
+        } < 0}
         && {!(_candidate getVariable ["Waldo_AIPass_RegroupQueued", false])}) then {
         private _candidateState = _candidate getVariable ["Waldo_AIPass_State", createHashMap];
         if ((_candidateState getOrDefault ["phase", "CALM"]) == "CALM" && {!(_candidateState getOrDefault ["responding", false])}

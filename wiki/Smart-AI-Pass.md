@@ -53,11 +53,11 @@ really changes, so it does not flicker between them.
 | State | What the squad does |
 |---|---|
 | CALM | Its own orders and waypoints. |
-| INVESTIGATE | The squad knows about an enemy it has not seen (reported to it, or heard firing) within 300 m. Two riflemen check the spot while the rest watch it, for up to 60 s. |
+| INVESTIGATE | The squad knows about an enemy it has not seen (reported to it, or heard firing) within 300 m. Within 150 m two riflemen check the spot while the rest watch it; a farther contact takes the whole squad. Up to 60 s. |
 | CONTACT | Entered when an enemy was seen in the last 10 s. The squad switches to combat, reports the contact, may call for help, and uses the combat behaviours below. |
 | SECURITY | Contact lost for 30 s: the squad holds and watches for 10 s. |
 | SEARCH | Two riflemen check the last known enemy position. |
-| REGROUP | The squad closes up, then returns to CALM with its previous behaviour, speed and waypoints. |
+| REGROUP | The squad closes up, then returns to CALM with its previous behaviour, speed and waypoints. A squad that was SAFE before a real firefight comes back AWARE. |
 | RETREAT | Morale broke, or a damaged vehicle is pulling back. The squad falls back under smoke, then regroups. |
 
 A new sighting at any point sends the squad back to CONTACT. Squads you set to CARELESS are never
@@ -71,7 +71,7 @@ touched.
 | Contact handling | `Waldo_AIPass_Contact_Enable` (on) | The state ladder above. Every combat behaviour needs it. |
 | Post-contact search | `Waldo_AIPass_PostContact_Enable` (on) | Security hold, two-man search, regroup. |
 | Investigation | `Waldo_AIPass_Investigate_Enable` (on) | The INVESTIGATE state above. |
-| Flanking | `Waldo_AIPass_Flank_Enable` (on) | Up to half the squad swings wide and closes on the enemy's flank in short covered bounds, pausing to overwatch between bounds. The leader, machine gunners and AT gunners stay as the base of fire. The flanking team then holds the ground it took until the squad catches up. |
+| Flanking | `Waldo_AIPass_Flank_Enable` (on) | Up to half the squad swings wide and closes on the enemy's flank in short covered bounds, pausing to overwatch between bounds. While bounding they do not stop to trade fire; on the final approach and assault they engage normally. The leader, machine gunners and AT gunners stay as the base of fire. The flanking team then holds the ground it took until the squad catches up. |
 | Final assault | `Waldo_AIPass_Assault_Enable` (on) | After a flank, if the enemy is within 80 m, one soldier throws a grenade (never near friendlies). The team then bounds to cover 12 m short of the enemy and rushes the position while the base of fire keeps suppressing. |
 | Bounding advance | `Waldo_AIPass_Advance_Enable` (on) | A squad that has been in a firefight for 30 s and still has a waypoint to reach pushes a fire team up to three covered bounds towards it, instead of stalling. |
 | Coordinated assault | `Waldo_AIPass_CoordinatedAssault_Enable` (on) | Once reinforcing squads reach their rally point, they assault the enemy from both sides while the squad in contact fires. |
@@ -83,11 +83,11 @@ touched.
 | Surrender | `Waldo_AIPass_Surrender_Enable` (off) | The last one or two survivors of a broken, isolated squad drop their weapons and surrender. With ACE Captives loaded, players can take them prisoner. |
 | Grenade evasion | `Waldo_AIPass_GrenadeEvasion_Enable` (off) | AI move away from a live grenade they can see. Test it in your setup first (see Limitations). |
 | Anti-armour | `Waldo_AIPass_AntiArmour_Enable` (on) | The best launcher gunner engages known armour. He moves first if something is blocking his backblast. |
-| Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Infantry riding in the squad's vehicle get out under fire and get back in afterwards. A badly damaged vehicle fires its smoke and, if the whole squad is mounted, withdraws. |
+| Vehicle drills | `Waldo_AIPass_Vehicles_Enable` (on) | Infantry riding in the squad's vehicle get out under fire and get back in afterwards. A badly damaged vehicle, or an armed one that has lost its weapons, fires its smoke and, if the whole squad is mounted, withdraws. Unarmed vehicles are never treated as having lost their weapons. |
 | Vehicle gunnery | `Waldo_AIPass_VehicleGunnery_Enable` (on) | Gunners engage anti-tank soldiers first, then armour, then everything else. Tanks and APCs back away from known AT teams to 250 m. |
 | Contact reports | `Waldo_AIPass_ContactReports_Enable` (on) | Squads pass sighted enemies to nearby friendly squads. The range is 500 m with a working radio, or 35 m by voice. Radio jamming blocks the radio report. |
-| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Squads with an AT gunner are preferred, and when armour appears one more squad with AT is called. Calling for help needs a radio. |
-| Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | A squad with a good fix on the enemy calls a fire mission from friendly AI artillery. The target must be at least 200 m from friendlies and civilians, and mobile guns relocate after firing. Jamming blocks the call. |
+| Reinforcement | `Waldo_AIPass_Reinforce_Enable` (on) | Up to two idle squads within 600 m move up behind a squad in contact. They then resume their own waypoints. Squads with an AT gunner are preferred, and when armour appears one more squad with AT is called. Garrisons, defence lines, aircrews, static-gun crews and artillery never leave their posts to respond. Calling for help needs a radio. |
+| Artillery support | `Waldo_AIPass_Artillery_Enable` (off) | A squad with a good fix on the enemy calls a fire mission from friendly AI artillery, using plain high-explosive shells (never mines, cluster or illumination rounds). The target must be at least 200 m from friendlies and civilians, and mobile guns relocate after firing. Jamming blocks the call. |
 | Artillery smoke | `Waldo_AIPass_ArtillerySmoke_Enable` (on, needs Artillery support) | A retreating squad gets a smoke screen from friendly artillery that has smoke rounds. |
 | Counter-battery | `Waldo_AIPass_CounterBattery_Enable` (off) | Friendly AI artillery answers enemy artillery, but only if its position is known (see below). |
 | Airborne reinforcement | `Waldo_AIPass_Airborne_Enable` (off) | Paradropped AI squads from triggers, scripts or Zeus. With `Waldo_AIPass_Airborne_Auto`, a squad in contact calls one when no ground squad can help. |

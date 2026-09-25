@@ -25,8 +25,12 @@
 params [["_unit", objNull, [objNull]]];
 if (isNull _unit || {!alive _unit}) exitWith {false};
 private _hasRadio = !(missionNamespace getVariable ["Waldo_AIPass_ContactReports_RequireRadio", true])
-    || {(assignedItems _unit) findIf {getNumber (configFile >> "CfgWeapons" >> _x >> "ItemInfo" >> "type") == 332} >= 0}
-    || {(items _unit) findIf {private _item = toLowerANSI _x; _item find "acre_prc" == 0 || {_item find "tf_" == 0} || {_item find "tfar_" == 0}} >= 0};
+    // The radio slot holds vanilla and TFAR radios (simulation ItemRadio); ACRE radios sit in the inventory.
+    || {((assignedItems _unit) + (items _unit)) findIf {
+        private _item = toLowerANSI _x;
+        getText (configFile >> "CfgWeapons" >> _x >> "simulation") == "ItemRadio"
+        || {_item find "acre_prc" == 0} || {_item find "tf_" == 0} || {_item find "tfar_" == 0}
+    } >= 0};
 if (!_hasRadio) exitWith {false};
 if !(missionNamespace getVariable ["Waldo_Jamming_Enable", true]) exitWith {true};
 ([getPosASL _unit, side group _unit] call Waldo_fnc_JammingFactor) < 0.5

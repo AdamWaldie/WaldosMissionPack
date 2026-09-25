@@ -42,6 +42,12 @@ private _lambsWmpMode = (missionNamespace getVariable ["Waldo_AIPass_LambsDanger
 private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_DynamicAO", false];
 {
     private _group = _x;
+    // "Applied" flags are machine-local. Clear them while another machine owns the group, so a group
+    // that comes back (for example server to headless client and back) has its order re-applied here.
+    if (!local _group) then {
+        _group setVariable ["Waldo_AIPass_GarrisonApplied", nil];
+        _group setVariable ["Waldo_AIPass_DefendApplied", nil];
+    };
     if (local _group && {(units _group) findIf {alive _x} >= 0}) then {
         if ((_group getVariable ["Waldo_AIPass_Garrison", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_GarrisonApplied", false])}) then {
             [_group] call Waldo_fnc_AIPassGarrisonApplyLocal;

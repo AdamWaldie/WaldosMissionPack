@@ -83,7 +83,8 @@ _group setBehaviour "COMBAT";
             private _current = _assigned select _member;
             if (_current isNotEqualTo []) then {
                 _current params ["_index", "_since"];
-                if (_unit distance (_positions select _index) <= 1.5 || {_now - _since > 25}) then {
+                // Building positions are AGL; compare in ASL so upper floors and slopes measure true.
+                if (((getPosASL _unit) vectorDistance (AGLToASL (_positions select _index))) <= 1.5 || {_now - _since > 25}) then {
                     _cleared pushBackUnique _index;
                     _assigned set [_member, []];
                     _current = [];
@@ -95,7 +96,7 @@ _group setBehaviour "COMBAT";
                 private _bestDistance = 1e6;
                 {
                     if !(_forEachIndex in _cleared || {_forEachIndex in _taken}) then {
-                        private _distance = _unit distance _x;
+                        private _distance = (getPosASL _unit) vectorDistance (AGLToASL _x);
                         if (_distance < _bestDistance) then {_best = _forEachIndex; _bestDistance = _distance};
                     };
                 } forEach _positions;

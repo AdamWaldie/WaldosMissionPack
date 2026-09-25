@@ -3,8 +3,8 @@
  * Fires one artillery mission from a local battery, with range-scaled dispersion, and optionally
  * moves the battery afterwards (shoot and scoot).
  *
- * HE mode uses the battery's most destructive non-smoke artillery ammunition (highest CfgAmmo hit),
- * so smoke is not used by accident; SMOKE mode uses a smoke magazine (smoke simulation, or "smoke" in
+ * HE mode uses the battery's most destructive plain shell (highest CfgAmmo hit), never smoke,
+ * illumination or submunition rounds such as scatterable mines and cluster; SMOKE mode uses a smoke magazine (smoke simulation, or "smoke" in
  * the ammo or magazine name) and fires two rounds, or does nothing if the battery has none. The aim point is displaced by the target's
  * position error plus 1% of the range (capped at 150 m), from Digii. A mission that the engine
  * reports as unreachable (getArtilleryETA below 0) is not fired. The battery is busy until its rounds
@@ -37,8 +37,12 @@ private _bestHit = -1;
     private _ammo = getText (configFile >> "CfgMagazines" >> _x >> "ammo");
     private _isSmoke = getText (configFile >> "CfgAmmo" >> _ammo >> "simulation") in ["shotSmoke", "shotSmokeX"]
         || {(toLowerANSI _ammo) find "smoke" >= 0} || {(toLowerANSI _x) find "smoke" >= 0};
-    private _hit = getNumber (configFile >> "CfgAmmo" >> _ammo >> "hit");
-    if (_isSmoke == _smoke && {_smoke || {_hit > _bestHit}}) then {_best = _x; _bestHit = _hit};
+    private _ammoConfig = configFile >> "CfgAmmo" >> _ammo;
+    private _hit = getNumber (_ammoConfig >> "hit");
+    // HE means a plain shell: rounds that scatter submunitions (mines, cluster) or illuminate are skipped.
+    private _special = getText (_ammoConfig >> "simulation") == "shotIlluminating"
+        || {getText (_ammoConfig >> "submunitionAmmo") != ""} || {isArray (_ammoConfig >> "submunitionAmmo")};
+    if (_isSmoke == _smoke && {_smoke || {!_special && {_hit > _bestHit}}}) then {_best = _x; _bestHit = _hit};
 } forEach (getArtilleryAmmo [_battery]);
 if (_best == "") exitWith {false};
 private _dispersion = _error + (((_battery distance2D _target) * 0.01) min 150);

@@ -306,9 +306,10 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   cleared by `Waldo_fnc_AIPassGroupMoveClear`), so the group's own waypoints resume. Group `move` is
   never used.
 - The leader never gets `doMove` from a drill.
-- Features a drill disables (`TARGET`/`AUTOTARGET` while bounding) are recorded only if they were on,
-  and re-enabled exactly.
-- Behaviour and speed are restored only if the pass changed them (`Waldo_fnc_AIPassRestoreCalm`).
+- Features a drill disables (`TARGET`/`AUTOTARGET` on movement bounds and street crossings only; the
+  final approach, assault and clear keep them on) are recorded only if they were on, and re-enabled exactly.
+- Behaviour and speed are restored only if the pass changed them (`Waldo_fnc_AIPassRestoreCalm`); a
+  squad that was SAFE before a real firefight comes back AWARE.
 - `disableAI "FSM"` and group `move` are not used.
 
 **Behaviours:**
@@ -351,7 +352,8 @@ Knowledge comes only from the engine (`Waldo_fnc_AIPassKnowledge`): `targets`, `
   distance.
 - **Reinforcement** (`Waldo_fnc_AIPassReinforce`): responder cap; responders move to a rally point
   behind the squad in contact. Squads with AT are preferred, and an extra AT-only request is made
-  against armour.
+  against armour. Garrison, defence-line and clear-building squads, aircrews, static-gun crews and
+  artillery never respond.
 - **Artillery** (`Waldo_fnc_AIPassArtilleryRequest`/`ArtilleryFire`): known positions only, a maximum
   error, a friendly and civilian standoff at impact, range-scaled dispersion, shoot and scoot. A
   SMOKE mode screens retreats.

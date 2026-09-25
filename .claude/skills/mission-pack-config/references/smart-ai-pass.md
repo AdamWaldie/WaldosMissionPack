@@ -27,7 +27,7 @@ The numbers are in `Waldo_AIPass_ProfileBehaviour` (ADVANCED).
 | `Regroup` | true | survivors of a destroyed squad join a nearby squad |
 | `Contact` | true | state ladder CALM/CONTACT/SECURITY/SEARCH/REGROUP/RETREAT; every combat behaviour needs it |
 | `PostContact` | true | hold, two-man search, regroup |
-| `Investigate` | true | two riflemen check known but unseen enemies |
+| `Investigate` | true | two riflemen (whole squad beyond 150 m) check known but unseen enemies |
 | `Assault` | true | flank ends with grenade and rush |
 | `Advance` | true | fire team bounds towards the squad's waypoint in long firefights |
 | `CoordinatedAssault` | true | reinforcing squads assault from both sides |
@@ -45,7 +45,7 @@ The numbers are in `Waldo_AIPass_ProfileBehaviour` (ADVANCED).
 | `AntiArmour` | true | best AT gunner, backblast check |
 | `Vehicles` | true | dismount under fire; damaged vehicles smoke and withdraw |
 | `ContactReports` | true | radio (jammable) or voice sharing |
-| `Reinforce` | true | idle squads move up behind a squad in contact |
+| `Reinforce` | true | idle squads move up behind a squad in contact (never garrisons, defence lines, aircrews, gun or artillery crews) |
 | `Artillery` | false | fire missions on well-located enemies only |
 | `CounterBattery` | false | `Waldo_AIPass_CounterBattery_Mode` "KNOWN" or "RADAR" |
 | `Airborne` | false | paradropped reinforcements; `Waldo_AIPass_Airborne_Auto` for automatic calls |

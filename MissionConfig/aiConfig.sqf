@@ -180,7 +180,7 @@
  *   active Waldo_AIRebalance_Profile, then LINE.
  * - Waldo_AIPass_FactionProfiles (MISSION MAKER): optional map of faction classname to behaviour profile name, overriding the AI Rebalance profile for that faction's squads.
  * - Waldo_AIPass_ZeusHoldSeconds (MISSION MAKER): seconds the pass leaves a group alone after Zeus selects, edits or orders it; Zeus waypoints hold it until they are finished.
- * - Waldo_AIPass_Investigate_Enable (MISSION MAKER): squads send two riflemen to check enemies they know about but have not seen (reported, or heard firing).
+ * - Waldo_AIPass_Investigate_Enable (MISSION MAKER): squads send two riflemen (the whole squad beyond 150 m) to check enemies they know about but have not seen (reported, or heard firing).
  * - Waldo_AIPass_Investigate_Range (ADVANCED): how far away a known but unseen enemy may be to be investigated.
  * - Waldo_AIPass_Investigate_Seconds (ADVANCED): time limit for an investigation.
  * - Waldo_AIPass_Assault_Enable (MISSION MAKER): a flank can finish with a grenade and a rush on the enemy position while the base of fire suppresses.

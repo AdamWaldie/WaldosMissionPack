@@ -3,7 +3,8 @@
  * Returns a group to CALM and undoes everything the pass changed for the engagement.
  *
  * Exact restore, fixing Smart Combat V2's unconditional re-enables: behaviour goes back to the value
- * recorded at first contact only if the pass changed it and the group is still in COMBAT; speed goes
+ * recorded at first contact only if the pass changed it and the group is still in COMBAT (a squad
+ * that was SAFE before an actual firefight comes back AWARE, not SAFE); speed goes
  * back only if the pass changed it. Pass waypoints are removed so the group resumes its own
  * waypoints, the search or investigation team and soldiers holding ground from a drill rejoin
  * formation, stances the pass set go back to AUTO, and infantry dismounted by the pass remount their
@@ -38,7 +39,10 @@ private _leader = leader _group;
     };
 } forEach units _group;
 if (_state getOrDefault ["behaviourChanged", false] && {behaviour _leader == "COMBAT"}) then {
-    _group setBehaviour (_state getOrDefault ["baseBehaviour", "AWARE"]);
+    private _base = _state getOrDefault ["baseBehaviour", "AWARE"];
+    // After a real firefight a squad stays alert rather than slinging weapons, as the engine does.
+    if (_base == "SAFE" && {_state getOrDefault ["hadContact", false]}) then {_base = "AWARE"};
+    _group setBehaviour _base;
 };
 if (_state getOrDefault ["speedChanged", false]) then {
     _group setSpeedMode (_state getOrDefault ["baseSpeed", "NORMAL"]);
@@ -53,7 +57,7 @@ if (_state getOrDefault ["speedChanged", false]) then {
 {_state deleteAt _x} forEach [
     "enemyPos", "behaviourChanged", "speedChanged", "searchTeam", "dismounted", "reinforceRequested",
     "withdrawn", "contactLeader", "lastSeen", "holders", "baseBehaviour", "baseSpeed", "armourSeen",
-    "armourRequested", "coordinated", "reserveCommitted", "arrivedAt", "assaulting"
+    "armourRequested", "coordinated", "reserveCommitted", "arrivedAt", "assaulting", "hadContact"
 ];
 _state set ["phase", "CALM"];
 _state set ["phaseStart", time];

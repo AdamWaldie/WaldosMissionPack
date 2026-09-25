@@ -6,7 +6,8 @@
  * Dismount: infantry riding as cargo in the squad's own ground vehicle get out once an enemy is
  * believed within 400 m, instead of dying inside a truck. They are recorded and ordered back in when
  * the squad returns to CALM (Waldo_fnc_AIPassRestoreCalm).
- * Withdraw: a vehicle that can still move but is at 50% damage or has lost its weapons, with an enemy
+ * Withdraw: a vehicle that can still move but is at 50% damage or (if it carries a real weapon, not
+ * just a horn or countermeasure launcher) has lost its weapons, with an enemy
  * within 800 m, fires its smoke launcher (Waldo_fnc_AIPassFireCountermeasure). If the whole squad is
  * mounted, it withdraws 300 m away from the enemy (RETREAT phase, through an inserted waypoint). Each
  * vehicle withdraws once per engagement.
@@ -53,15 +54,29 @@ private _withdrawn = _state getOrDefault ["withdrawn", []];
         if (_cargo isNotEqualTo []) then {
             private _dismounted = _state getOrDefault ["dismounted", []];
             {
-                unassignVehicle _x;
-                doGetOut _x;
-                _dismounted pushBack [_x, _vehicle];
+                private _unit = _x;
+                unassignVehicle _unit;
+                doGetOut _unit;
+                // Still aboard on a later tick: order him out again but record him once.
+                if (_dismounted findIf {(_x select 0) == _unit} < 0) then {_dismounted pushBack [_unit, _vehicle]};
             } forEach _cargo;
             _state set ["dismounted", _dismounted];
         };
     };
+    // Horns and countermeasure launchers are CfgWeapons entries too; only a real weapon makes a
+    // vehicle "armed", so an unarmed truck is never treated as having lost its guns. Read live (and
+    // only once canFire already says no), because Vehicle Weapon Loadout can change a vehicle's guns.
+    private _hasRealWeapon = {
+        ([[-1]] + allTurrets [_vehicle, false]) findIf {
+            (_vehicle weaponsTurret _x) findIf {
+                private _weaponConfig = configFile >> "CfgWeapons" >> _x;
+                toLowerANSI (getText (_weaponConfig >> "displayName")) != "horn"
+                && {getText (_weaponConfig >> "simulation") != "cmlauncher"}
+            } >= 0
+        } >= 0
+    };
     if (alive _vehicle && {canMove _vehicle} && {!(_vehicle in _withdrawn)} && {_distance < 800}
-        && {damage _vehicle >= 0.5 || {!canFire _vehicle && {count (weapons _vehicle + (_vehicle weaponsTurret [0])) > 0}}}) then {
+        && {damage _vehicle >= 0.5 || {!canFire _vehicle && {call _hasRealWeapon}}}) then {
         _withdrawn pushBack _vehicle;
         _state set ["withdrawn", _withdrawn];
         [_vehicle] call Waldo_fnc_AIPassFireCountermeasure;

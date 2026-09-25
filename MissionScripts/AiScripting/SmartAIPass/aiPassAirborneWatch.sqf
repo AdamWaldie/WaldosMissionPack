@@ -38,6 +38,8 @@ _group setVariable ["Waldo_Headless_ExcludeGroup", false, true];
 {
     _x setVariable ["Waldo_ServerOwnedFeature", false, true];
     _x setVariable ["acex_headless_blacklist", false, true];
+    // Still assigned to the paradrop aircraft after the jump would keep them feature-owned (ineligible).
+    if (local _x) then {unassignVehicle _x};
 } forEach _jumpers;
 private _waypoint = _group addWaypoint [_job get "target", 20];
 _waypoint setWaypointType "SAD";

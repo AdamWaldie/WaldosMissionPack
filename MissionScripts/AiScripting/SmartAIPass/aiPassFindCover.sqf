@@ -48,8 +48,12 @@ private _result = [];
         && {_reserved findIf {_x distance2D _candidate < 2} < 0}
         && {(lineIntersectsSurfaces [_candidateASL vectorAdd [0, 0, 0.5], _candidateASL vectorAdd [0, 0, 20], objNull, objNull, true, 1]) findIf {(_x select 2) == _object || {(_x select 3) == _object}} < 0};
     if (_free) then {
-        private _blocked = terrainIntersectASL [_threatASL, _candidateASL vectorAdd [0, 0, 1]]
-            || {(lineIntersectsSurfaces [_threatASL, _candidateASL vectorAdd [0, 0, 1], objNull, objNull, true, 1, "FIRE", "GEOM"]) isNotEqualTo []};
+        private _endASL = _candidateASL vectorAdd [0, 0, 1];
+        // Start the object ray 2 m out from the threat: starting at the believed enemy position
+        // would hit the enemy soldier (or his own cover) and make every spot look covered.
+        private _rayStart = _threatASL vectorAdd ((_threatASL vectorFromTo _endASL) vectorMultiply 2);
+        private _blocked = terrainIntersectASL [_threatASL, _endASL]
+            || {(lineIntersectsSurfaces [_rayStart, _endASL, objNull, objNull, true, 1, "FIRE", "GEOM"]) isNotEqualTo []};
         if (_blocked) then {_result = [_candidate, true]};
     };
     if (_result isNotEqualTo []) exitWith {};

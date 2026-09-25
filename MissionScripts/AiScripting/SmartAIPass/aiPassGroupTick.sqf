@@ -8,12 +8,14 @@
  * CALM -> INVESTIGATE (Digii's alert state) when the squad knows about an enemy within
  *   Waldo_AIPass_Investigate_Range that it has not seen, for example one revealed by a contact report
  *   or heard firing, and the behaviour profile's investigateChance roll succeeds (at most every
- *   120 s). Two riflemen check the believed position while the rest watch it; a small squad moves up
- *   together. It ends after Waldo_AIPass_Investigate_Seconds or on arrival, back in CALM.
+ *   120 s). Within 150 m, two riflemen check the believed position while the rest watch it; a small
+ *   squad, or any farther contact, has the whole squad move up together. It ends after
+ *   Waldo_AIPass_Investigate_Seconds or on arrival, back in CALM.
  * CONTACT -> SECURITY after Waldo_AIPass_PostContact_LostSeconds without a sighting (or straight back
  *   to CALM when post-contact is off).
  * SECURITY (hold) -> SEARCH (two riflemen check the last known enemy position) -> REGROUP (wait for
- *   the squad to close up) -> CALM, which restores the recorded behaviour and speed exactly.
+ *   the squad to close up) -> CALM, which restores the recorded behaviour and speed (a squad that
+ *   was SAFE before a real firefight returns AWARE).
  * RETREAT (morale broken or a damaged vehicle withdrawing) -> REGROUP.
  * Any sighting during SECURITY, SEARCH or REGROUP returns the group to CONTACT.
  * CARELESS groups are left entirely to the mission maker.
@@ -113,6 +115,7 @@ private _enterContact = {
     _state set ["phase", "CONTACT"];
     _state set ["phaseStart", _now];
     _state set ["lastSeen", _now];
+    _state set ["hadContact", true];
     _state set ["enemyPos", (_visible select 0) select 1];
     _state set ["contactLeader", _leader];
     // A responder keeps its assault waypoint; one still moving to the rally point fights where it is.
@@ -152,7 +155,10 @@ switch (_state get "phase") do {
     case "CALM": {
         if (_state getOrDefault ["responding", false]) then {
             private _requester = _state getOrDefault ["respondingTo", grpNull];
-            private _requesterPhase = if (isNull _requester) then {"CALM"} else {([_requester] call Waldo_fnc_AIPassGroupState) get "phase"};
+            // Read only: never create pass state on the requester's group from here.
+            private _requesterPhase = if (isNull _requester) then {"CALM"} else {
+                (_requester getVariable ["Waldo_AIPass_State", createHashMap]) getOrDefault ["phase", "CALM"]
+            };
             if (isNull _requester || {({alive _x} count units _requester) == 0} || {_requesterPhase == "CALM"}
                 || {_now > (_state getOrDefault ["respondUntil", 0])}) then {
                 [_group] call Waldo_fnc_AIPassGroupMoveClear;
@@ -182,7 +188,8 @@ switch (_state get "phase") do {
                 };
                 private _onFoot = _alive select {local _x && {vehicle _x == _x}};
                 private _team = [];
-                if (count _onFoot >= 4) then {
+                // A two-man team only checks out nearby contacts; a farther one takes the whole squad.
+                if (count _onFoot >= 4 && {(_leader distance2D _target) <= 150}) then {
                     _team = (_onFoot select {_x != _leader && {([_x] call Waldo_fnc_AIPassUnitRole) == "RIFLE"}}) select [0, 2];
                 };
                 if (_team isEqualTo []) then {
@@ -337,9 +344,8 @@ switch (_state get "phase") do {
     };
     case "RETREAT": {
         _delay = 3;
-        if (["Waldo_AIPass_Morale_Enable", true] call _get) then {
-            if (([_group, _state, _enemies] call Waldo_fnc_AIPassMorale) == "SURRENDER") exitWith {[_group] call Waldo_fnc_AIPassSurrender};
-        };
+        if ((["Waldo_AIPass_Morale_Enable", true] call _get)
+            && {([_group, _state, _enemies] call Waldo_fnc_AIPassMorale) == "SURRENDER"}) exitWith {[_group] call Waldo_fnc_AIPassSurrender};
         private _moving = (waypoints _group) findIf {waypointDescription _x == "WMP AI PASS"} >= 0;
         if (!_moving || {_now - (_state get "phaseStart") > 120}) then {
             [_group] call Waldo_fnc_AIPassGroupMoveClear;
