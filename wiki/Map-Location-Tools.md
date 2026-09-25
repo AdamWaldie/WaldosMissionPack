@@ -8,6 +8,12 @@ _Associated Files:_
 
 Two functions for modifying the named locations players see on the in-game map. Useful for renaming real-world map locations to fit mission lore, or adding new named points of interest such as FOBs and objectives.
 
+> **Current status:** Do not use these helpers in a live mission yet. The create helper
+> refers to an undefined `_editableLocation` when setting the new type. The shipped
+> functions also lack a server-only/repeat guard, although this page previously told
+> mission makers to call them from multiplayer `init.sqf`. The signatures below record
+> the intended inputs; they are not a verified working setup.
+
 Both functions require a **Game Logic** placed in the Eden Editor as a position reference.
 
 ---
@@ -19,7 +25,7 @@ Both functions require a **Game Logic** placed in the Eden Editor as a position 
 ### Setup in Eden
 
 1. Place a **Game Logic** (found in the Modules menu) where you want the location to appear on the map, and give it a variable name (e.g. `FobBartLogic`).
-2. Call the function from `init.sqf` or a trigger.
+2. After the helper is repaired, call it once from a server-owned setup script or trigger.
 
 ### Parameters
 
@@ -45,7 +51,7 @@ Both functions require a **Game Logic** placed in the Eden Editor as a position 
 ### Setup in Eden
 
 1. Place a **Game Logic** near the map location you want to rename and give it a variable name.
-2. Call the function from `init.sqf`.
+2. After the helper is repaired, call it once from a server-owned setup script.
 
 ### Parameters
 
@@ -85,6 +91,11 @@ Only types defined in `CfgLocationTypes` will display correctly. Commonly used t
 | `n_hq` | Independent HQ marker icon |
 
 > The full list of available location types is documented inside both `.sqf` files as a commented reference block.
+
+Both calls take three required arguments: a Game Logic Object, a display-name String
+and a location-type String. Neither currently provides a documented return value or
+safe JIP/repeated-call behaviour. A mission maker should wait for the implementation
+fix before depending on either example above.
 
 ## If a name does not change
 

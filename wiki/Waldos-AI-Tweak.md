@@ -8,12 +8,34 @@ _Associated Files: `MissionScripts/AiScripting/AISkillAdjustmentSystem.sqf`; `ai
 
 The AI rebalance applies named, bounded skill profiles to editor, scripted and Zeus-spawned AI. It runs where each AI unit is local, so dedicated servers and headless clients remain consistent. Players are never modified.
 
-The compatibility configuration in `init.sqf` keeps the historical behavior:
+## Set up AI tuning
+
+Edit `MissionConfig/aiConfig.sqf`. The shipped pack enables AI tuning with the `LINE`
+profile in `DAY` mode. WMP waits for the server's feature settings and starts the
+wrapper automatically on each machine that can own AI. Do not add a second call to
+multiplayer `init.sqf` for normal setup.
+
+| Setting in `aiConfig.sqf` | Type | Shipped default | What it controls |
+| --- | --- | --- | --- |
+| `Waldo_AIRebalance_Enable` | Boolean | `true` | Enables WMP skill profiles. |
+| `Waldo_AIRebalance_Profile` | String | `"LINE"` | Built-in or mission-defined profile key. |
+| `Waldo_AIRebalance_Mode` | String | `"DAY"` | `DAY` or illumination-aware `NIGHT`. |
+| `Waldo_AI_ApplyMode` | String | `"BOTH"` | Existing AI, newly created AI, or both: `EXISTING`, `NEW`, `BOTH`. |
+| `Waldo_AI_RestoreOnStop` | Boolean | `true` | Restore each unit's captured skills when this feature stops. |
+| `Waldo_AI_SkillVariance` | Number | `0` | Stable per-unit variance; zero disables it. |
+| `Waldo_AI_IncludedSides` | Array of side-ID Strings | `[]` | Empty allows every side. |
+| `Waldo_AI_IncludedFactions` | Array of `CfgFactionClasses` Strings | `[]` | Empty allows every faction. |
+| `Waldo_AI_ExcludedFactions` | Array of `CfgFactionClasses` Strings | `[]` | Skip these factions after include filtering. |
+| `Waldo_AI_ExcludedClasses` | Array of exact `CfgVehicles` Strings | `[]` | Never tune these unit classes. |
+| `Waldo_AI_ProfileDisplayNames` | HashMap from profile key String to label String | Labels for the built-in profiles | Names shown in ZEN and diagnostics. Add a label for a custom profile. |
+
+For a controlled change during play, the public call accepts two Strings and returns
+a Boolean: `true` if the profile was accepted. The default arguments are `"DAY"`
+and `"LINE"`. Call it where the affected AI are local; WMP's normal lifecycle
+handles the server, headless clients and joining machines.
 
 ```sqf
-Waldo_AIRebalance_Enable = true;
-Waldo_AIRebalance_Profile = "LINE";
-["DAY", Waldo_AIRebalance_Profile] call Waldo_fnc_AITweak;
+["DAY", "LINE"] call Waldo_fnc_AITweak;
 ```
 
 ## Built-in profiles

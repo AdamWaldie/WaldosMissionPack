@@ -4,6 +4,26 @@
 
 Babel is configured in the `babel` map inside `MissionConfig\acreConfig.sqf`. Language `[ID, display name]` pairs are registered once in the same declared order on every ACRE machine, including JIP clients. Do not add or reorder language definitions during play.
 
+## Configure languages
+
+Edit the `babel` block in `MissionConfig\acreConfig.sqf`. The shipped example contains five
+language definitions and one default row for each side, but Babel starts disabled. Change
+`enabled` to `true`, then adjust the rows your mission needs. WMP runs the setup for players,
+including late joiners. No unit Init call is required.
+
+| Setting or row | Type | Shipped default | What to supply |
+| --- | --- | --- | --- |
+| `enabled` | Boolean | `false` | Turn Babel on for this mission. |
+| `languages` | Array of `[ID String, display name String]` rows | Five example languages | Define every language ID used below. Keep this list and its order fixed during play. |
+| `sideDefaults` | Array of `[side ID String, understood IDs Array of Strings, speaking ID String]` rows | WEST, EAST, GUER and CIV examples | Give each side its starting knowledge and speaking language. |
+| `unitOverrides` | Array of override rows | `[]` | Each row is `[[selector type String, selector value String], understood IDs Array of Strings, speaking ID String]`. First matching row wins. |
+| `changeOnSideChange` | Boolean | `false` | `true` replaces a player's Babel assignment after a side change. |
+| `followPlayerUnit` | Boolean | `true` | Reapply the assignment after a respawn framework replaces the local player object. |
+
+The speaking ID must appear in that row's understood IDs. `Waldo_fnc_BabelActivation` is
+WMP's automatic player-local wrapper. The mission maker does not pass these rows to it
+or use its return value.
+
 ```sqf
 ["babel", createHashMapFromArray [
     ["enabled", true],

@@ -13,10 +13,8 @@ setup calls to multiplayer `init.sqf`.
 
 ## Smallest working example: one group, one net
 
-Before the full nets/families/overrides model below, here is the minimum that gets one squad
-talking to each other on their own channel — everything else on this page is depth for when a
-mission needs more than this. Inside the `"sides"` row for `WEST` in `MissionConfig\acreConfig.sqf`
-(keep the shipped official ACRE preset name):
+This example gives one squad a shared channel. In the `"sides"` row for `WEST` in
+`MissionConfig\acreConfig.sqf`, keep the shipped official ACRE preset name and use:
 
 ```sqf
 [
@@ -39,14 +37,30 @@ overrides and named displays.
 
 ## Settings to edit
 
-- `enabled`: master switch for the replacement lifecycle.
-- `prc343PresetPolicy`: `FULL_RANGE` keeps 16 blocks but gives no side isolation; `SIDE_ISOLATED` uses ACRE's combat-side presets and five blocks.
-- `namedDisplays`: labels supported PRC-148/152/117F channels without changing frequencies.
-- `sides`: official side preset, nets and editor-group rows.
-- `radioOverrides`: exceptional per-player assignment changes.
-- `babel`: language definitions and assignments; shipped examples remain disabled.
+All settings below are top-level keys in the HashMap returned by
+`MissionConfig/acreConfig.sqf`. WMP reads this file automatically. You do not call its
+radio setup function from an Eden object or multiplayer `init.sqf`.
+
+| Setting | Type | Shipped default | What it changes |
+| --- | --- | --- | --- |
+| `enabled` | Boolean | `true` | Runs WMP's ACRE starting-radio setup. |
+| `strict` | Boolean | `true` | Rejects authored collisions and other invalid assignments. Keep this on for a normal mission. |
+| `prc343PresetPolicy` | String | `"FULL_RANGE"` | `FULL_RANGE` keeps 16 blocks without side isolation; `SIDE_ISOLATED` uses side presets and five blocks. |
+| `namedDisplays` | Boolean | `true` | Labels supported PRC-148/152/117F channels without changing frequencies. |
+| `notifyAssignmentProblems` | Boolean | `true` | Warns an affected player when the authored setup cannot apply. |
+| `readinessTimeoutSeconds` | Number of seconds | `120` | ACRE radio-ID readiness window before WMP retries. Increase only if diagnostics show repeated timeouts. |
+| `jointNets` | Array of joint-net rows | One `GAME_CONTROL` example | Cross-side channel bridges; delete the shipped row for no bridge. See the joint-net section below. |
+| `additionalRadioProfiles` | Array of profile rows | `[]` | Advanced support for tested third-party carried radios. |
+| `radioOverrides` | Array of override rows | `[]` | Side-specific UID, Eden Variable Name or role exceptions. |
+| `sides` | Array of side rows | WEST example plus empty EAST, GUER and CIV rows | Official side preset, named nets and editor-group assignments. |
+| `rackProfiles` | Array of named profile rows | Shipped examples | Vehicle/object rack setup. A profile has no effect until an object calls it. |
+| `babel` | HashMap | Disabled, with example languages | Language definitions and assignments. See [Babel configuration](ACRE2-Babel-Configuration). |
 
 Leave `strict` and `additionalRadioProfiles` alone unless extending or diagnosing the framework. WMP deliberately leaves PTT, speaker mode and other unsaved controls under player control. It does not poll, periodically reapply, or retune radios on group changes.
+
+The only object-level call named later on this page is `Waldo_fnc_ACRE2RackSetup`.
+It returns a Boolean for request acceptance, not a finished radio state. Its arguments
+and ACRE-ready-client lifecycle are covered in [Vehicle Radio Rack Setup](ACRE2-Vehicle-Radio-Rack-Setup).
 
 ## What is a net?
 
@@ -283,7 +297,7 @@ role such as `Alpha Rifleman` for a radio callsign.
 
 ## See also
 
-- [ACRE2 Vehicle Radio Racks](ACRE2-Vehicle-Radio-Rack-Setup) — vehicle-mounted rack radios (a
+- [ACRE2 Vehicle Radio Racks](ACRE2-Vehicle-Radio-Rack-Setup): vehicle-mounted rack radios (a
   separate surface from the carried-radio plan on this page).
 - [AN/PRC-343 Automatic Setup](ACRE-2-Squad-Level-Radios-AN-PRC%E2%80%90343-Automatic-Setup)
 - [Automated CEOI](ACRE2-Automated-CEOI-Document)

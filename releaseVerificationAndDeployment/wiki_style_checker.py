@@ -55,6 +55,11 @@ TYPED_GUIDES = {
     "ACRE2-Automated-CEOI-Document", "ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup",
     "ENDEX-Script-&-Custom-End-Screen",
     "Waldos-Economy-Systems-Setup-And-Configuration",
+    "ACRE-2-Long-Range-Radio-Presetting", "ACRE2-Vehicle-Radio-Rack-Setup",
+    "ACRE2-Babel-Configuration",
+    "Waldos-AI-Tweak",
+    "Medical-Vehicle-Flags", "Unit-Insignias",
+    "Map-Location-Tools",
 }
 SETTING_CONTRACTS = {
     "Base-Services": ("missionSystemsConfig.sqf", ("Waldo_BaseServices_",)),
@@ -79,6 +84,7 @@ SETTING_CONTRACTS = {
     "ACE-Corpse-Traps": ("missionSystemsConfig.sqf", ("Waldo_CorpseTraps_",)),
     "Headless-Client-Support": ("headlessConfig.sqf", ("Waldo_Headless_",)),
     "Obituary-and-Confirmed-Deaths": ("interfaceConfig.sqf", ("Waldo_Obituary_",)),
+    "Waldos-AI-Tweak": ("aiConfig.sqf", ("Waldo_AIRebalance_", "Waldo_AI_")),
 }
 
 # These are player-facing feature guides with independent setup paths. Add a new
@@ -131,6 +137,7 @@ STALE_SETUP = {
     '`Waldo_SafeStart_Radius` defaults to 75 m': "SafeStart radius now defaults to 150 m",
     '`Waldo_SafeStart_Confine` | `true`': "SafeStart confinement is off by default",
     '`MissionConfig/missionSystemsConfig.sqf` if your mission requires a different allowed range': "object scaling limits belong in logisticsConfig.sqf",
+    '`MissionConfig\\missionSystemsConfig.sqf` defines object-scaling limits': "object scaling limits belong in logisticsConfig.sqf",
 }
 
 

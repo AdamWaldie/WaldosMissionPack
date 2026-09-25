@@ -110,7 +110,7 @@ Runs **on the server only**. Its server defaults are loaded synchronously from t
 
 ### Server-Owned Optional Feature Settings
 
-`MissionConfig\missionSystemsConfig.sqf` defines object-scaling limits, and `MissionConfig\airOperationsConfig.sqf` defines Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
+`MissionConfig\logisticsConfig.sqf` defines object-scaling limits, and `MissionConfig\airOperationsConfig.sqf` defines Dynamic AA side/faction asset pools. `initServer.sqf` owns the database branch of persistence and system activation. Dynamic AA publishes a read-only copy of its asset catalogues so curator clients can build filtered selectors; all resolution and world mutation remain server-validated.
 
 Dynamic AA pool entries select candidate radar, static-site, mobile-AA and fighter classes. Object scaling defaults to a validated range of `0.1`–`10`, with direct client requests disabled. See [Dynamic Anti-Air](Dynamic-Anti-Air) and [Optional Feature Systems](Optional-Feature-Systems).
 
