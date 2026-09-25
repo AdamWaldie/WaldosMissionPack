@@ -118,7 +118,7 @@ if (Waldo_CorpseTraps_Enable) then {
 
 /*===========================================================================================================================*/
 
-/* AI REBALANCE, HELICOPTER LANDING AND DECELERATION
+/* AI REBALANCE, HELICOPTER LANDING, DECELERATION AND SMART AI PASS
  * Normal setup: MissionConfig\aiConfig.sqf.
  * Waldo_AIRebalance_Mode is "DAY" or "NIGHT"; the profile is MILITIA, LINE, VETERAN or ELITE.
  * Do not add another AITweak call here. This readiness-aware activation uses the settings received
@@ -138,6 +138,10 @@ if (Waldo_CorpseTraps_Enable) then {
     };
     [] call Waldo_fnc_ImprovedHelicopterLandingInit;
     [] call Waldo_fnc_HelicopterDecelerationInit;
+    // Smart AI Pass: the server starts it and replays the start to headless clients (JIP-safe).
+    if (isServer && {missionNamespace getVariable ["Waldo_AIPass_Enable", false]}) then {
+        [] call Waldo_fnc_AIPassInit;
+    };
 };
 /*===========================================================================================================================*/
 

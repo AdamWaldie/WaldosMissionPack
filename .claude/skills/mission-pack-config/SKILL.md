@@ -225,6 +225,7 @@ composition name that isn't documented there.
 | Physical cargo (ACE-carry crates visibly onto vehicles, seat blocking) | `references/physical-cargo.md` | On by default; no vehicle Init or seat coordinates needed; static weapons rejected |
 | Base services (save/heal/spectate/teleport networks) | `references/base-services.md` | Off by default; `missionSystemsConfig.sqf` + per-object Init registration |
 | AI rebalance (profiles + improved AI helicopter landing) | `references/ai-rebalance.md` | |
+| Smart AI Pass (AI squad behaviour: survivor regroup, per-behaviour switches) | `references/smart-ai-pass.md` | Off by default; server/HC only; other WMP features' AI auto-excluded |
 | ACRE2 radio setup (nets/groups/Babel) | `references/acre2.md` | Requires mod; full net/group model, not the old array |
 | Paradrop / Dynamic Drop Zone Operations | `references/paradrop.md` | Automatic per-vehicle actions + server-owned drop-zone system |
 | Radio jamming (ACRE2 + TFAR) | `references/jamming.md` | Now includes RDF bands and the disable-challenge model |

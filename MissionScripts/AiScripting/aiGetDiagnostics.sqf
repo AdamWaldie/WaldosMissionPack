@@ -1,7 +1,8 @@
 /*
  * Author: WaldoTheWarfighter
  * Reports whether the WMP AI profile is active and whether ordinary AI groups currently owned by
- * headless clients have acknowledged profile adoption. This is independent of which scheduler moved
+ * headless clients have acknowledged profile adoption. Also reports the Smart AI Pass scheduler and
+ * survivor-regroup counters for the server (headless-client counters stay on those machines). This is independent of which scheduler moved
  * the groups: ACE Headless may be active while WMP's optional HC distributor is disabled.
  *
  * Locality and authority:
@@ -90,7 +91,15 @@ private _decelerationActive = _decelerationAircraft select {
 private _decelerationLandingConflict = _decelerationActive select {
     _x getVariable ["Waldo_ImprovedHelicopterLanding_Active", false]
 };
+private _passEnabled = missionNamespace getVariable ["Waldo_AIPass_Enable", false];
+private _passActive = missionNamespace getVariable ["Waldo_AIPass_Active", false];
+private _passJobs = count (missionNamespace getVariable ["Waldo_AIPass_Jobs", []]) + count (missionNamespace getVariable ["Waldo_AIPass_PendingJobs", []]);
+private _passState = if (!_passEnabled) then {"DISABLED"} else {if (_passActive && {!isNil {missionNamespace getVariable "Waldo_AIPass_SchedulerHandle"}}) then {"ACTIVE"} else {"ERROR"}};
+private _passHint = if (_passState == "ERROR") then {"Waldo_AIPass_Enable is true but the server scheduler is not running; check RPT for [WMP AI PASS] and that CBA is loaded."} else {""};
+private _regroupEnabled = missionNamespace getVariable ["Waldo_AIPass_Regroup_Enable", true];
 private _checks = [
+    ["ai", "smart-ai-pass", _passState, [format ["enabled=%1 serverActive=%2 serverJobs=%3 paused=%4 includedSides=%5", _passEnabled, _passActive, _passJobs, [] call Waldo_fnc_AIPassIsPaused, missionNamespace getVariable ["Waldo_AIPass_IncludedSides", []]], _passHint] call Waldo_fnc_DiagnosticFoldHint],
+    ["ai", "smart-ai-pass-regroup", if (_passEnabled && {_regroupEnabled}) then {"ACTIVE"} else {"DISABLED"}, format ["enabled=%1 serverRegroupsCompleted=%2 serverUnitsJoined=%3", _regroupEnabled, missionNamespace getVariable ["Waldo_AIPass_RegroupsCompleted", 0], missionNamespace getVariable ["Waldo_AIPass_RegroupJoined", 0]]],
     ["ai", "ai-profile", if (_enabled) then {"ACTIVE"} else {"DISABLED"}, format ["profile=%1 mode=%2 serverActive=%3", missionNamespace getVariable ["Waldo_AIRebalance_Profile", "LINE"], missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"], missionNamespace getVariable ["Waldo_AI_RebalanceActive", false]]],
     ["ai", "ai-headless-adoption", if (!_enabled) then {"DISABLED"} else {if (count _missing > 0) then {"ERROR"} else {if (count _hcGroups > 0) then {"ACTIVE"} else {"UNCONFIGURED"}}}, format ["connectedHCs=%1 hcOwnedGroups=%2 missingVerifiedAdoption=%3", count _hcOwners, count _hcGroups, count _missing]],
     ["ai", "improved-helicopter-landing", if !(missionNamespace getVariable ["Waldo_ImprovedHelicopterLanding_Enable", true]) then {"DISABLED"} else {if (count _staleLanding > 0 || {count _groupedLanding > 0}) then {"ERROR"} else {if (count _activeLanding > 0) then {"ACTIVE"} else {"LOADED"}}}, format ["helicopters=%1 movementOwned=%2 activeControllers=%3 staleGroundAnchors=%4 groupedControllers=%5", count _helicopters, count _orphanedMovementControl, count _activeLanding, count _staleLanding, count _groupedLanding]],

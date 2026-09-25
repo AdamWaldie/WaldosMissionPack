@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1116,
+  "registeredFunctionCount": 1124,
   "runtimeFunctionCount": 383,
-  "functionCount": 1499,
+  "functionCount": 1507,
   "stations": [
     {
       "id": "control",
@@ -872,6 +872,54 @@
       "name": "Waldo_fnc_AIRebalanceStop",
       "file": "MissionScripts/AiScripting/aiRebalanceStop.sqf",
       "station": "ai-rebalance",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassInit",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassInit.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassStop",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassStop.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassIsEligible",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassIsEligible.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassIsPaused",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassIsPaused.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassQueueJob",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassQueueJob.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassSchedulerTick",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassSchedulerTick.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassRegroupOnKill",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRegroupOnKill.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassRegroupStep",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassRegroupStep.sqf",
+      "station": "ai",
       "activation": "manual"
     },
     {

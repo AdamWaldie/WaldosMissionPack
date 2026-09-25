@@ -36,8 +36,8 @@ client and headless clients on its own once `Waldo_AIRebalance_Enable` is
 - All-machine initialiser by design: AI ownership and locality can move
   across server, client, and headless-client machines, so don't restructure
   this to run server-only.
-- Runtime changes are also available via **Waldos Mission Modules > AI
-  Rebalance - Control** in Zeus, which publishes the change through the same
+- Runtime changes are also available via **WMP AI & Combat > AI
+  Control** (formerly AI Rebalance - Control) in Zeus, which publishes the change through the same
   ordered runtime-setting bundle used at join — same effect as editing the
   config file, useful for adjusting mid-mission without a restart.
 

@@ -105,7 +105,7 @@ missionNamespace setVariable ["Waldo_ZenModulesRegistered", true];
     ["WMP Air Operations", "Gunship - Assign Controller", "GUNSHIP_ASSIGN", "\A3\ui_f\data\igui\cfg\actions\getincommander_ca.paa"],
     ["WMP Air Operations", "Gunship - Set Orbit", "GUNSHIP_ORBIT", "\A3\ui_f\data\igui\cfg\simpletasks\types\map_ca.paa"],
     ["WMP Air Operations", "Gunship - Operational Control", "GUNSHIP_CONTROL", "\A3\ui_f\data\igui\cfg\simpletasks\types\plane_ca.paa"],
-    ["WMP AI & Combat", "AI Rebalance - Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
+    ["WMP AI & Combat", "AI Control", "AI", "\A3\ui_f\data\map\vehicleicons\iconMan_ca.paa"]
 ];
 
 ["WMP Mission Tools", "Create Custom 3D Marker",

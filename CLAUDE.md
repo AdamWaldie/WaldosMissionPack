@@ -211,6 +211,73 @@ Waldo_AIRebalance_Profile = "LEGACY"; // LEGACY | PUBLIC | STANDARD | VETERAN
 
 The compatibility profile preserves established missions. New missions can select a lower-lethality or balanced profile and layer mission-defined faction and role hash-map overrides. NIGHT mode reduces unaided spotting more strongly than NVG-assisted spotting. Locality-aware CBA handlers cover editor, scripted and Zeus-spawned AI, including headless clients.
 
+### Smart AI Pass (`MissionConfig\aiConfig.sqf`)
+
+Optional behaviour improvements for non-player AI groups. It is written from scratch for WMP; the
+design comes from an audit of several community AI mods, keeping their ideas and fixing their
+locality, performance and network faults. Off by default (`Waldo_AIPass_Enable = false`). Every
+behaviour has its own `Waldo_AIPass_<Behaviour>_Enable` switch; survivor regroup
+(`Waldo_AIPass_Regroup_Enable`) is the first shipped behaviour.
+
+```sqf
+["Waldo_AIPass_Enable", true],                            // master switch
+["Waldo_AIPass_IncludedSides", ["WEST", "EAST", "GUER"]], // sides the pass may command
+["Waldo_AIPass_Regroup_Enable", true],                    // survivor regroup
+```
+
+**Where it runs:** the server and headless clients only. `init.sqf` calls `Waldo_fnc_AIPassInit`
+on the server, which publishes `Waldo_AIPass_Enable` and replays itself to headless clients under
+the JIP key `Waldo_AIPass_RuntimeInit`. Player clients return immediately. Remote calls from
+anything other than the server are refused. `Waldo_fnc_AIPassStop` reverses all of it and sends
+survivors still walking back to their own orders with `doFollow`.
+
+**Scheduler:** one CBA per-frame handler per machine (0.25 s) runs `Waldo_fnc_AIPassSchedulerTick`
+over a machine-local job queue (`Waldo_fnc_AIPassQueueJob`). A job is code that takes a state
+hashmap and returns its next delay or -1. At least one due job runs per tick; others run only while
+`Waldo_AIPass_TickBudgetMs` remains. Jobs that ran rotate to the back of the queue. Below
+`Waldo_AIPass_LowFpsThreshold`, delays double. While `Waldo_ENDEX_Active` or
+`Waldo_SafeStart_Active` is set (`Waldo_fnc_AIPassIsPaused`), jobs are postponed rather than run.
+Jobs never sleep, never broadcast, and command only units local to their machine. New behaviours
+must go through this scheduler, not their own loops.
+
+**Eligibility:** `Waldo_fnc_AIPassIsEligible [group]` is the single exclusion gate for every
+behaviour. It refuses:
+- groups containing a living player, or whose side is outside `Waldo_AIPass_IncludedSides`;
+- anything marked `Waldo_AI_Exclude` or `Waldo_AIPass_Exclude` (group or unit);
+- anything owned by another WMP feature, whether marked on the unit, the group, or the unit's
+  current or assigned vehicle: `Waldo_ServerOwnedFeature` (Headless pin), `Waldo_Gunship_Id`,
+  `Waldo_TransportService_Registered` (the assigned-vehicle check covers dismounted transport
+  crews), `Waldo_Paradrop_DropZoneId`, `Waldo_DynamicAA_SystemId`,
+  `Waldo_Headless_HelicopterPinned`, and dialogue speakers (`Waldo_Dialogue_Available`/`_Occupied`);
+- UAV/UGV AI;
+- anything failing the shared `Waldo_AI_IncludedFactions`/`ExcludedFactions`/`ExcludedClasses`
+  filters.
+
+Dynamic AO groups are deliberately eligible. `Waldo_Headless_ExcludeGroup` only pins locality and
+is not a behaviour exclusion. When a new WMP feature owns AI, mark it with one of these variables
+(or `Waldo_ServerOwnedFeature` via `Waldo_fnc_HeadlessPinCrew`) rather than adding checks to
+individual behaviours.
+
+**Survivor regroup:**
+- **Trigger.** Kill-driven only. One `EntityKilled` mission handler per AI-owning machine forwards
+  deaths in locally owned groups to `Waldo_fnc_AIPassRegroupOnKill`, which records peak group
+  strength locally and queues `Waldo_fnc_AIPassRegroupStep`. Nothing polls living units and no
+  `FiredNear` handlers are added.
+- **Remnant test.** A remnant has `Waldo_AIPass_Regroup_MaxRemnantSize` living members or fewer, all
+  on foot, and its group once reached `Waldo_AIPass_Regroup_MinimumPeakSize`. Deliberate small teams
+  are never merged.
+- **Host choice.** The host is the nearest eligible same-side infantry group owned by the same
+  machine, larger than a remnant and within the size cap. A merge therefore never changes locality.
+- **Merge.** Survivors `doMove` to the host leader and `joinSilent` within
+  `Waldo_AIPass_Regroup_JoinDistance`. If they stop making progress or time out, they join where
+  they stand. Unconscious ACE casualties are not moved.
+
+Zeus: **WMP AI & Combat > AI Control** (formerly *AI Rebalance - Control*) adds *Smart AI Pass* and
+*Survivor regroup* checkboxes. `Waldo_fnc_FeatureRuntimeApply`'s `AI_CONFIG` case publishes both
+switches, and they are in the joining-machine snapshot list. Diagnostics: `ai/smart-ai-pass` and
+`ai/smart-ai-pass-regroup` in `Waldo_fnc_AIGetDiagnostics`. RPT tag: `[WMP AI PASS]`. Planned
+behaviours are tracked in `FEATURE_LOG.md`. See `wiki/Smart-AI-Pass.md`.
+
 ### Optional Feature Systems (`init.sqf`, `initPlayerLocal.sqf`, `initServer.sqf`)
 
 Shared configuration belongs in `init.sqf`, player presentation/actions in `initPlayerLocal.sqf`, and server-only limits, asset pools and authority startup in `initServer.sqf`; configuration never belongs inside implementation scripts. Guard defaults with `isNil` so a JIP machine does not overwrite state published after a mid-mission ZEN change. Persistence requires a detected INIDBI2 runtime and keeps database access on the server. Object scaling is callable and server-validated without a background initializer. Dynamic AA resolves assets through its own server-side side/faction pools; do not replace these independent contracts with a shared profile framework. What *is* shared across features is live faction/vehicle-class discovery from the loaded modset - `Waldo_fnc_ResolveFactionCatalog` (`MissionScripts\CombatSystems\resolveFactionCatalog.sqf`) and `Waldo_fnc_ResolveVehicleClassPool` (`MissionScripts\CombatSystems\resolveVehicleClassPool.sqf`), each cached per cache key/call since config data is immutable during a mission. These only answer "what factions/classes actually exist right now" for populating a ZEN dropdown or extending an empty/curated fallback pool; they never decide what a feature's asset pool *contains* - Dynamic AA/Gunship/Paradrop's own per-feature pool/allowlist variables still take priority when a mission maker has set them. AI rebalance and breaching are all-machine initialisers because AI ownership and detonation-event locality can move across server, client and headless-client machines. Obituary death capture is likewise installed on every machine since `Killed` is a global-effect event handler; only the medic's confirmation step (`Waldo_fnc_ObituaryPronounce`) is server-authoritative.
@@ -1509,6 +1576,7 @@ Replace `Pictures\loading.jpg` with a custom loading screen image.
 - `MissionInit/ElectronicWarfare/` — EMP burst (`Waldo_fnc_EMP`) and signal trackers / C-Track (`Waldo_fnc_Tracker`)
 - `Logistics/` — The largest module: supply/medical crates, loadout saving, MHQ, teleport, fortification, vehicle camo, virtual vehicle depot, map location tools
 - `AiScripting/` — AI skill adjustment (`AITweak`) and convoy system (`SimpleAiConvoy`)
+- `AiScripting/SmartAIPass/` — Smart AI Pass: budgeted server/HC scheduler, central eligibility gate, survivor regroup
 - `MissionFlowAndUi/` — ENDEX, info text overlays, respawn messages, timed hints
 - `MissionFlowAndUi/create3DMarker.sqf`, `init3DMarkers.sqf`, `remove3DMarker.sqf` — server-owned, JIP-safe custom 3D icon/text markers using one shared renderer
 - `Paradrop/` — HALO and static-line jump system (8 scripts: setup, equipment simulation, vehicle jump config)
@@ -1715,7 +1783,8 @@ if !(isClass(configFile >> "CfgPatches" >> "zen_main")) exitWith {};
 [title, parametersArray] call zen_dialog_fnc_create;
 ```
 
-**Registered modules** (all under "Waldos Mission Modules"):
+**Registered modules** (all under "Waldos Mission Modules"; the runtime-control modules such as
+**AI Control** sit under "WMP AI & Combat"):
 - Player Supply Crate → calls `Waldo_fnc_ZenSupplySpawner`
 - Field Hospital Crate → calls `Waldo_fnc_ZenMedicalSpawner`
 - Call Endex → `remoteExec ["Waldo_fnc_ENDEX", 0, true]`

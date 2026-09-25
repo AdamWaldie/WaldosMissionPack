@@ -1,7 +1,7 @@
 /*
  * Author: WaldoTheWarfighter
  * Defines AI rebalance selection, filters, display names and improved helicopter-landing control
- * limits, plus optional cruise-deceleration climb suppression. AI application and locality
+ * limits, optional cruise-deceleration climb suppression and the optional Smart AI Pass. AI application and locality
  * migration remain in MissionScripts\AiScripting.
  *
  * Schema: SHARED entries are [missionNamespace variable name, guarded default value].
@@ -90,9 +90,31 @@
  * - Waldo_HelicopterDeceleration_Debug (TROUBLESHOOTING): logs acquire/release reasons and owner IDs.
  * Per-aircraft opt-out example: this setVariable ["Waldo_HelicopterDeceleration_Exclude", true, true];
  * - Waldo_AI_ProfileDisplayNames (INFRASTRUCTURE): labels for diagnostics/UI; keys must match implementation IDs.
+ *
+ * SETTING-BY-SETTING GUIDE - SMART AI PASS:
+ * Behaviour improvements for all non-player AI groups. It runs only on the server and headless
+ * clients, inside a fixed per-tick time budget, and adds no network traffic of its own. Player-led
+ * groups and units owned by other WMP features (Gunship, Transport Services, Paradrop, Dynamic AA,
+ * AI Convoy, dialogue speakers, drones) are always excluded. Dynamic AO groups are included.
+ * Per-unit or per-group opt-out: _group setVariable ["Waldo_AIPass_Exclude", true, true];
+ * - Waldo_AIPass_Enable (MISSION MAKER): master switch; false means no pass code runs anywhere.
+ * - Waldo_AIPass_IncludedSides (MISSION MAKER): sides the pass may command; CIV is left out by default.
+ *   The shared Waldo_AI_IncludedFactions/ExcludedFactions/ExcludedClasses filters above also apply.
+ * - Waldo_AIPass_TickBudgetMs (ADVANCED): milliseconds of work allowed per scheduler tick (0.25 s).
+ * - Waldo_AIPass_LowFpsThreshold (ADVANCED): below this machine FPS, behaviour steps run half as often.
+ * - Waldo_AIPass_Regroup_Enable (MISSION MAKER): survivors of a destroyed squad join a nearby friendly squad.
+ * - Waldo_AIPass_Regroup_MaxRemnantSize (ADVANCED): a group this small or smaller counts as a remnant.
+ * - Waldo_AIPass_Regroup_MinimumPeakSize (ADVANCED): groups that never reached this size (snipers,
+ *   sentries) are never merged.
+ * - Waldo_AIPass_Regroup_SearchRadius (ADVANCED): metres searched for a host squad.
+ * - Waldo_AIPass_Regroup_MaxGroupSize (ADVANCED): a host may not exceed this size after the merge.
+ * - Waldo_AIPass_Regroup_JoinDistance (ADVANCED): survivors join once this close to the host leader.
+ * - Waldo_AIPass_Regroup_StuckSeconds (ADVANCED): no progress for this long joins them where they stand.
+ * - Waldo_AIPass_Regroup_TimeoutSeconds (ADVANCED): limit for finding a host and for walking to it.
+ * - Waldo_AIPass_Regroup_SettleSeconds (ADVANCED): wait after a kill so simultaneous deaths settle.
  */
 createHashMapFromArray [
-    ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings", "AI Helicopter Deceleration"]],
+    ["featureFamilies", ["AI Rebalance", "Improved AI Helicopter Landings", "AI Helicopter Deceleration", "Smart AI Pass"]],
     ["shared", [
         // MISSION MAKER: AI population, profile and filtering policy.
         ["Waldo_AIRebalance_Enable", true],          // BOOL: true applies WMP skill profiles to eligible AI.
@@ -142,6 +164,20 @@ createHashMapFromArray [
         ["Waldo_HelicopterDeceleration_ControlInterval", 0.02], // SECONDS: active correction cadence.
         ["Waldo_HelicopterDeceleration_MaximumCorrectionSeconds", 4], // SECONDS: hard cap per correction event.
         ["Waldo_HelicopterDeceleration_Debug", false], // BOOL: detailed RPT acquire/release logging.
+        // MISSION MAKER switches followed by ADVANCED Smart AI Pass scheduling and behaviour tuning.
+        ["Waldo_AIPass_Enable", false], // BOOL: master switch for the Smart AI Pass (server and headless clients only).
+        ["Waldo_AIPass_IncludedSides", ["WEST", "EAST", "GUER"]], // ARRAY of WEST/EAST/GUER/CIV strings the pass may command.
+        ["Waldo_AIPass_TickBudgetMs", 1], // MILLISECONDS: work allowed per 0.25 s scheduler tick; at least one job always runs.
+        ["Waldo_AIPass_LowFpsThreshold", 25], // FPS: below this, behaviour steps are rescheduled half as often.
+        ["Waldo_AIPass_Regroup_Enable", true], // BOOL: survivors of a destroyed squad regroup with a nearby friendly squad.
+        ["Waldo_AIPass_Regroup_MaxRemnantSize", 2], // COUNT: living members at or below this make a remnant.
+        ["Waldo_AIPass_Regroup_MinimumPeakSize", 3], // COUNT: smaller deliberate teams are never merged.
+        ["Waldo_AIPass_Regroup_SearchRadius", 400], // METRES: host squad search radius.
+        ["Waldo_AIPass_Regroup_MaxGroupSize", 12], // COUNT: host size limit after the merge.
+        ["Waldo_AIPass_Regroup_JoinDistance", 30], // METRES: survivors join the host inside this distance.
+        ["Waldo_AIPass_Regroup_StuckSeconds", 20], // SECONDS: without progress, survivors join where they stand.
+        ["Waldo_AIPass_Regroup_TimeoutSeconds", 120], // SECONDS: limit for finding a host and for walking to it.
+        ["Waldo_AIPass_Regroup_SettleSeconds", 5], // SECONDS: delay after a kill before the remnant is assessed.
         ["Waldo_AI_ProfileDisplayNames", createHashMapFromArray [ // ADVANCED: labels only; keys are implementation IDs.
             ["LEGACY", "Existing Mission Balance"], ["MILITIA", "WMP Militia"],
             ["LINE", "WMP Line"], ["VETERAN", "WMP Veteran"], ["ELITE", "WMP Elite"]

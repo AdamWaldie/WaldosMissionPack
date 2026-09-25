@@ -414,12 +414,12 @@
   },
   {
     "category": "core",
-    "module": "AI Rebalance - Control",
+    "module": "AI Control",
     "handler": "Waldo_fnc_FeatureRuntimeZen",
     "via": "Waldo_fnc_FeatureRuntimeApply",
     "script_api": "Waldo_fnc_AIRebalanceInit",
     "parity": "adapter",
-    "notes": "Enable state, day or night mode and named profile are published before locality-aware application."
+    "notes": "Rebalance enable state, day or night mode and named profile, plus the Smart AI Pass and survivor-regroup switches, are published before locality-aware application. The pass itself starts through Waldo_fnc_AIPassInit and stops through Waldo_fnc_AIPassStop."
   },
   {
     "category": "core",

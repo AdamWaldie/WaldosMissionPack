@@ -147,9 +147,9 @@ These modules appear only when `Waldo_Hazard_Enable` is `true` in `MissionConfig
 
 **Hazard - Remove Nearest** removes the registered hazard whose centre is nearest to the placed module.
 
-## AI Rebalance
+## AI Control
 
-**AI Rebalance - Control** enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier.
+**AI Control** (formerly *AI Rebalance - Control*) enables or disables the supported AI profile at runtime, selects daylight or NVG-aware low-light conditions, and offers **Existing Mission Balance**, **WMP Militia**, **WMP Line**, **WMP Veteran** and **WMP Elite**. The WMP prefix distinguishes these encounter profiles from Arma's own difficulty presets; Existing Mission Balance remains the compatibility option rather than a fifth tuned tier. The same dialog switches the [Smart AI Pass](Smart-AI-Pass) and its **Survivor regroup** behaviour on or off across the server and headless clients.
 
 ## Field Resupply
 

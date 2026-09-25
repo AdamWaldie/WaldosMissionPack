@@ -28,7 +28,7 @@ Waldo_AIRebalance_Profile = "LINE";
 
 Change only the profile name to select a baseline. The wrapper `Waldo_fnc_AITweak` remains supported, while new code can call `Waldo_fnc_AIRebalanceInit` directly.
 
-Zeus can use **AI Rebalance - Control** to switch the mode or built-in profile and immediately reapply it across server, clients and headless clients. Custom scripted profiles remain available through the API. Every tuned tier is prefixed with `WMP` in ZEN so it is not mistaken for the server's Arma difficulty preset. The older `PUBLIC` and `STANDARD` script keys remain supported aliases for `MILITIA` and `LINE` values.
+Zeus can use **AI Control** (formerly *AI Rebalance - Control*) to switch the mode or built-in profile and immediately reapply it across server, clients and headless clients. Custom scripted profiles remain available through the API. Every tuned tier is prefixed with `WMP` in ZEN so it is not mistaken for the server's Arma difficulty preset. The older `PUBLIC` and `STANDARD` script keys remain supported aliases for `MILITIA` and `LINE` values.
 
 When ACE Headless moves an ordinary AI group, WMP listens to ACE's supported post-transfer event on
 the destination HC, reapplies the selected profile there, and sends an authenticated result to the

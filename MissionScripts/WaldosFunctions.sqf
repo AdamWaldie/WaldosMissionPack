@@ -158,6 +158,14 @@ class CfgFunctions
             class AIRebalanceStop {
                 file = "MissionScripts\AiScripting\aiRebalanceStop.sqf";
             };
+            class AIPassInit {file = "MissionScripts\AiScripting\SmartAIPass\aiPassInit.sqf";};
+            class AIPassStop {file = "MissionScripts\AiScripting\SmartAIPass\aiPassStop.sqf";};
+            class AIPassIsEligible {file = "MissionScripts\AiScripting\SmartAIPass\aiPassIsEligible.sqf";};
+            class AIPassIsPaused {file = "MissionScripts\AiScripting\SmartAIPass\aiPassIsPaused.sqf";};
+            class AIPassQueueJob {file = "MissionScripts\AiScripting\SmartAIPass\aiPassQueueJob.sqf";};
+            class AIPassSchedulerTick {file = "MissionScripts\AiScripting\SmartAIPass\aiPassSchedulerTick.sqf";};
+            class AIPassRegroupOnKill {file = "MissionScripts\AiScripting\SmartAIPass\aiPassRegroupOnKill.sqf";};
+            class AIPassRegroupStep {file = "MissionScripts\AiScripting\SmartAIPass\aiPassRegroupStep.sqf";};
             class ImprovedHelicopterLandingInit {file = "MissionScripts\AiScripting\improvedHelicopterLandingInit.sqf";};
             class ImprovedHelicopterLandingTrackLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingTrackLocal.sqf";};
             class ImprovedHelicopterLandingExecuteLocal {file = "MissionScripts\AiScripting\improvedHelicopterLandingExecuteLocal.sqf";};

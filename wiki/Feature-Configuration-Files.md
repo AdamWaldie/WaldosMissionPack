@@ -366,6 +366,19 @@ qualification rules, diary layout, multiplayer behaviour and troubleshooting.
 | `Waldo_HelicopterDeceleration_ControlInterval` | Seconds between impulses while correction is active. |
 | `Waldo_HelicopterDeceleration_MaximumCorrectionSeconds` | Hard timeout for one correction event. |
 | `Waldo_HelicopterDeceleration_Debug` | Adds acquire/release details to RPT while troubleshooting. |
+| `Waldo_AIPass_Enable` | Master switch for the [Smart AI Pass](Smart-AI-Pass). Default `false`. |
+| `Waldo_AIPass_IncludedSides` | Sides the pass may command. Default `["WEST", "EAST", "GUER"]`. |
+| `Waldo_AIPass_TickBudgetMs` | Milliseconds of pass work allowed per 0.25 s scheduler tick. |
+| `Waldo_AIPass_LowFpsThreshold` | Below this machine FPS, behaviour steps run half as often. |
+| `Waldo_AIPass_Regroup_Enable` | Survivors of a destroyed squad regroup with a nearby friendly squad. |
+| `Waldo_AIPass_Regroup_MaxRemnantSize` | Living members at or below this make a remnant. |
+| `Waldo_AIPass_Regroup_MinimumPeakSize` | Groups that never reached this size are never merged. |
+| `Waldo_AIPass_Regroup_SearchRadius` | Host squad search radius in metres. |
+| `Waldo_AIPass_Regroup_MaxGroupSize` | Host size limit after the merge. |
+| `Waldo_AIPass_Regroup_JoinDistance` | Metres from the host leader at which a survivor joins. |
+| `Waldo_AIPass_Regroup_StuckSeconds` | Seconds without progress before survivors join where they stand. |
+| `Waldo_AIPass_Regroup_TimeoutSeconds` | Limit in seconds for finding a host and for walking to it. |
+| `Waldo_AIPass_Regroup_SettleSeconds` | Delay after a kill before the remnant is assessed. |
 
 ## `airOperationsConfig.sqf`
 

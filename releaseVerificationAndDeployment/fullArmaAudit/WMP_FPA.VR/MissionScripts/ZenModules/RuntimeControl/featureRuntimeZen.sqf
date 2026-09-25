@@ -524,11 +524,13 @@ switch (toUpperANSI _feature) do {
         if (_activeProfile == "PUBLIC") then {_activeProfile = "MILITIA"};
         if (_activeProfile == "STANDARD") then {_activeProfile = "LINE"};
         [
-            "AI Rebalance Control",
+            "AI Control",
             [
                 ["CHECKBOX", ["Enable", "Apply the selected profile to local AI on every machine."], missionNamespace getVariable ["Waldo_AIRebalance_Enable", true]],
                 ["COMBO", ["Lighting conditions", "Low light reduces AI combat and sensing skills; assigned NVG/HMD equipment offsets the penalty."], [["DAY", "NIGHT"], ["Daylight", "Low light (NVG-aware)"], (["DAY", "NIGHT"] find (missionNamespace getVariable ["Waldo_AIRebalance_Mode", "DAY"])) max 0]],
-                ["COMBO", ["WMP opposition profile", "These are WMP encounter presets, not Arma difficulty levels. Mission-defined profiles are included by display name."], [_profileValues, _profileLabels, (_profileValues find _activeProfile) max 0]]
+                ["COMBO", ["WMP opposition profile", "These are WMP encounter presets, not Arma difficulty levels. Mission-defined profiles are included by display name."], [_profileValues, _profileLabels, (_profileValues find _activeProfile) max 0]],
+                ["CHECKBOX", ["Smart AI Pass", "Behaviour improvements for non-player AI, run on the server and headless clients. Other WMP features' AI are always excluded."], missionNamespace getVariable ["Waldo_AIPass_Enable", false]],
+                ["CHECKBOX", ["Survivor regroup", "Survivors of a destroyed squad walk to and join a nearby friendly squad. Requires Smart AI Pass."], missionNamespace getVariable ["Waldo_AIPass_Regroup_Enable", true]]
             ],
             {
                 params ["_values"];

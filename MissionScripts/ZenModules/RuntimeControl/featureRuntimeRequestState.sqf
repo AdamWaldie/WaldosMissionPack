@@ -82,6 +82,7 @@ private _names = [
         "Waldo_EmergencyDismount_ClearPositionRadius", "Waldo_EmergencyDismount_RequireClearExit",
         "Waldo_EmergencyDismount_UseEject", "Waldo_EmergencyDismount_RecoverUnconscious",
         "Waldo_AIRebalance_Enable", "Waldo_AIRebalance_Mode", "Waldo_AIRebalance_Profile",
+        "Waldo_AIPass_Enable", "Waldo_AIPass_Regroup_Enable",
         "Waldo_ImprovedHelicopterLanding_Enable", "Waldo_ImprovedHelicopterLanding_MinimumActivationDistance", "Waldo_ImprovedHelicopterLanding_TouchdownHoldSeconds",
         "Waldo_ImprovedHelicopterLanding_TriggerDistance", "Waldo_ImprovedHelicopterLanding_TriggerSpeedFactor",
         "Waldo_ImprovedHelicopterLanding_TransitAltitude", "Waldo_ImprovedHelicopterLanding_GlideSlopeRatio",

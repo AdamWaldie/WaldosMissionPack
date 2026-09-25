@@ -347,17 +347,30 @@ switch (toUpperANSI _action) do {
         };
     };
     case "AI_CONFIG": {
-        _settings params ["_enable", "_mode", "_profile"];
+        _settings params [
+            "_enable", "_mode", "_profile",
+            ["_passEnable", missionNamespace getVariable ["Waldo_AIPass_Enable", false], [false]],
+            ["_regroupEnable", missionNamespace getVariable ["Waldo_AIPass_Regroup_Enable", true], [false]]
+        ];
         [
             ["Waldo_AIRebalance_Enable", _enable],
             ["Waldo_AIRebalance_Mode", _mode],
-            ["Waldo_AIRebalance_Profile", _profile]
+            ["Waldo_AIRebalance_Profile", _profile],
+            ["Waldo_AIPass_Enable", _passEnable],
+            ["Waldo_AIPass_Regroup_Enable", _regroupEnable]
         ] call _publishAll;
         if (_enable) then {
             [_mode, _profile] remoteExecCall ["Waldo_fnc_AIRebalanceInit", 0, "Waldo_AIRebalance_RuntimeInit"];
         } else {
             [] remoteExecCall ["Waldo_fnc_AIRebalanceStop", 0];
             [] remoteExecCall ["", "Waldo_AIRebalance_RuntimeInit"];
+        };
+        // Behaviour switches are read live by each step, so only the master switch starts or stops it.
+        if (_passEnable) then {
+            [] remoteExecCall ["Waldo_fnc_AIPassInit", 0, "Waldo_AIPass_RuntimeInit"];
+        } else {
+            [] remoteExecCall ["Waldo_fnc_AIPassStop", 0];
+            [] remoteExecCall ["", "Waldo_AIPass_RuntimeInit"];
         };
     };
     case "HAZARD_SET": {
