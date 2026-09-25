@@ -48,6 +48,19 @@ The automatic mission-start intro reads its content and timing from `playerLocal
 ["Operation Iron Fist", "Altis", true, "WAKE"] spawn Waldo_fnc_InfoText;
 ```
 
+| Position | Type | Default | What to supply |
+|---:|---|---|---|
+| 0 `title` | String | `Waldo_InfoText_Title` (`""` shipped) | One-off mission title; empty uses the title from `description.ext`. |
+| 1 `locale` | String | `Waldo_InfoText_Locale` (`""` shipped) | One-off location label; empty uses `worldName`. |
+| 2 `longDate` | Boolean | `Waldo_InfoText_LongDate` (`false` shipped) | Long or short in-game date format. |
+| 3 `animation` | String enum | `Waldo_InfoText_Animation` (`"NONE"` shipped) | One of the supported animation names below. |
+
+The function runs on the local player interface, changes no server state and returns no useful
+value. Use `spawn` because it waits for the client display and animates the text. A call in
+`initServer.sqf` cannot display the sequence for every player; use `initPlayerLocal.sqf` for a
+mission-specific client call. The automatic startup sequence already runs there, so an additional
+call at startup would play it twice. The sequence is not replayed on respawn.
+
 ---
 
 ## Animation Options
