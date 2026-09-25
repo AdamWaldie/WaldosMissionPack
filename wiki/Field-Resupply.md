@@ -28,19 +28,47 @@ The public calls route authoritative changes to the server. WMP installs client 
 
 ## Calls and settings
 
-`Waldo_fnc_FieldResupplyRegisterHub` takes `[hub object, serviced side, stock]`. Stock `-1` is unlimited; a non-negative number is finite. `Waldo_fnc_FieldResupplyAssignCarrier` takes `[unit, starting crates, maximum crates]`. Use `[_carrier, _amount, _expandCapacity] call Waldo_fnc_FieldResupplyGrantCrates` to grant more. The final argument defaults to `false`, which keeps the carrier's current capacity limit; `true` expands it. The server validates requests and informs the affected player.
+`Waldo_fnc_FieldResupplyRegisterHub` registers or updates a refill point:
+
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Object | Required | Existing world object players will use as the hub. |
+| 1 | Side or string | `"ALL"` | A side such as `west`, or `"ALL"` for every side. |
+| 2 | Number | `-1` | Number of crates available. `-1` means unlimited; zero means empty. WMP rounds finite values to whole crates. |
+
+It returns `true` when the server accepts the registration. An Eden Init field also runs on clients; those duplicate calls do no work. The server publishes the hub state and client action for players who join later.
+
+`Waldo_fnc_FieldResupplyAssignCarrier` gives a unit an allowance:
+
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Object | Required | Infantry unit (`CAManBase`) that will deploy crates. |
+| 1 | Number | `1` | Starting crates, rounded to a whole number and capped by the maximum. |
+| 2 | Number | `2` | Maximum crates the unit may hold. |
+
+It returns `true` when the server accepts the assignment. If `Waldo_FieldResupply_RetainOnRespawn` is on, WMP transfers the allowance to the replacement unit and reinstalls its action.
+
+To grant more during play, call `[carrier, 2, false] call Waldo_fnc_FieldResupplyGrantCrates` from a server script:
+
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Object | Required | Living, assigned infantry carrier. |
+| 1 | Number | `1` | Number of crates to add, rounded to a whole number. |
+| 2 | Boolean | `false` | Set `true` to raise the carrier's capacity enough to fit the whole grant. |
+
+The server returns the number actually granted, which may be lower when capacity is full. A client call forwards the request and returns `-1` before the server processes it. The server validates each grant and informs the affected player.
 
 Edit these existing rows in `MissionConfig/logisticsConfig.sqf` before mission start:
 
-| Setting | Shipped value | What it changes |
-|---|---|---|
-| `Waldo_FieldResupply_Enable` | `true` | Allows hubs and carrier actions; set `false` to disable the feature. |
-| `Waldo_FieldResupply_CrateClass` | `Box_NATO_Ammo_F` | Class of deployed crate. Use a valid inventory container. |
-| `Waldo_FieldResupply_DefaultCarrierCapacity` | `2` | Maximum when assignment omits a capacity. |
-| `Waldo_FieldResupply_CrateSizeScalar` | `1` | Multiplier for generated contents. |
-| `Waldo_FieldResupply_IncludeWeaponsAttachments` | `false` | Add weapons, attachments and clothing as well as ammunition. |
-| `Waldo_FieldResupply_IncludeLaunchers` | `false` | Include launchers and their ammunition. |
-| `Waldo_FieldResupply_RetainOnRespawn` | `true` | Keep carrier status and allowance after respawn. |
+| Setting | Type | Shipped value | What it changes |
+|---|---|---|---|
+| `Waldo_FieldResupply_Enable` | Boolean | `true` | Allows hubs and carrier actions; set `false` to disable the feature. |
+| `Waldo_FieldResupply_CrateClass` | CfgVehicles classname string | `"Box_NATO_Ammo_F"` | Class of deployed crate. Use a valid inventory container. |
+| `Waldo_FieldResupply_DefaultCarrierCapacity` | Number, crates | `2` | Maximum when assignment omits a capacity. |
+| `Waldo_FieldResupply_CrateSizeScalar` | Number, multiplier | `1` | Multiplier for generated contents. |
+| `Waldo_FieldResupply_IncludeWeaponsAttachments` | Boolean | `false` | Add weapons, attachments and clothing as well as ammunition. |
+| `Waldo_FieldResupply_IncludeLaunchers` | Boolean | `false` | Include launchers and their ammunition. |
+| `Waldo_FieldResupply_RetainOnRespawn` | Boolean | `true` | Keep carrier status and allowance after respawn. |
 
 ## Salvage and troubleshooting
 

@@ -14,11 +14,22 @@ For a scripted mission, call:
 [enemyTruck, west, "Convoy Lead"] call Waldo_fnc_Tracker;
 ```
 
-Arguments are `[target object, tracking side, label]`. The function returns the tracker ID, which you can keep for removal. The side may be an Arma side such as `west`, a recognized side string such as `"BLUFOR"`, or `"ALL"`. `Waldo_fnc_TrackerAttach` attaches a tracker to the player's current cursor target for their side.
+`Waldo_fnc_Tracker` accepts these arguments:
+
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Object | Required | Existing unit or vehicle to follow. |
+| 1 | Side or string | `"ALL"` | `west`, `east`, `independent`, `civilian`, a recognized side name such as `"BLUFOR"`, or `"ALL"`. The server resolves an omitted side to `"ALL"`. |
+| 2 | String | `"TRK-<id>"` | Text shown with the marker. Leave empty for the generated label. |
+| 3 | Boolean | `true` | Whether the tracker begins active. |
+
+The server returns a numeric tracker ID. A call made on a client forwards the request but returns `-1`, not the new ID. Run the call on the server if a later script needs that ID. The server publishes the tracker registry to joining clients; each client draws only the markers its side may see.
+
+For a player-facing placement action, `[_target, _side, _label] call Waldo_fnc_TrackerAttach` uses the player's cursor target, side and an automatic label when arguments are omitted. Its arguments have the same object, side and string types as positions 0–2 above, and it returns no useful value.
 
 ## Remove or inspect it
 
-Use `[enemyTruck] call Waldo_fnc_TrackerRemove` to remove by object, or pass the returned tracker ID. WMP also removes a tracker when its target dies or someone deletes it. Markers update every few seconds and follow the target's position and facing. The server owns the tracker registry. Clients, including late joiners, draw only markers they may see.
+Use `[enemyTruck] call Waldo_fnc_TrackerRemove` to remove by object, or pass an ID returned by a server-side creation call. The one required argument is an `OBJECT` or numeric tracker ID. The server returns `true` if it removed an entry and `false` if none matched. A client call forwards the request and returns `false` before the server finishes. WMP also removes a tracker when its target dies or someone deletes it. Markers update every few seconds and follow the target's position and facing.
 
 ## If the marker is missing
 

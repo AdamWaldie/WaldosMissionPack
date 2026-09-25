@@ -11,8 +11,8 @@
  *
  * Arguments:
  * 0: Target <OBJECT> - the unit or vehicle to track
- * 1: Tracking side <SIDE or STRING> - who sees the marker: a side, or "ALL" (optional, default: the
- *      caller's side; on the server, "ALL")
+ * 1: Tracking side <SIDE or STRING> - who sees the marker: a side, or "ALL" (optional, default:
+ *      "ALL" after sideUnknown normalization). TrackerAttach supplies the calling player's side.
  * 2: Label <STRING> - marker label (optional, default: "TRK-<id>")
  * 3: Active <BOOL> - start active (optional, default: true)
  *
@@ -23,6 +23,7 @@
  *
  * Example:
  * [enemyTruck, west, "Convoy Lead"] call Waldo_fnc_Tracker;
+ * Result: WEST clients receive a marker for the truck; the server call returns its numeric ID.
  */
 
 params [["_target", objNull], ["_side", sideUnknown], ["_label", ""], ["_active", true]];

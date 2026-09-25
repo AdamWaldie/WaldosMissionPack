@@ -31,6 +31,13 @@ Pass `false` as the second argument if you want plain action labels instead of c
 [this, false] call Waldo_fnc_AddExitActions;
 ```
 
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Object | Required | Existing helicopter or other vehicle whose cargo passengers need an exit choice. |
+| 1 | Boolean | `true` | `true` colours the left/right labels; `false` uses plain text. |
+
+The function returns no useful value. It records setup on the object so a repeated call does not add duplicate actions. Put it in the vehicle's Eden Init field for placed vehicles. A vehicle created during play needs the same client-facing action setup for players who join later.
+
 The setup call does nothing if the actions are already present. Test the chosen class in play: the action only appears to a passenger in a cargo seat.
 
 ## If an exit choice is absent

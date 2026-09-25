@@ -33,6 +33,8 @@ The API is server-authoritative. Calls made on a client are forwarded to the ser
 
 The server publishes `Waldo_ENDEX_Active = true`, then applies the state once on every client.
 
+The public `Waldo_fnc_ENDEX` call takes **no arguments** and returns nothing. Its two internal arguments are used by WMP when it delivers the ordered state to clients; do not supply them in a mission trigger. Calling it again while active does not create a second ENDEX state. Mission-maker triggers and the **Mission Flow: End Mission + Show AAR** Zeus module are its current entry points. Players joining after activation receive the active state.
+
 For rehearsals and test missions, reset with:
 
 ```sqf
@@ -41,6 +43,8 @@ For rehearsals and test missions, reset with:
 
 ENDEX and SafeStart track their handlers, damage state, and ACE weapon-safety ownership separately. Resetting ENDEX does not lift active SafeStart protection. Ending SafeStart does not lift active ENDEX protection.
 
+`Waldo_fnc_ENDEXReset` also takes **no public arguments** and returns nothing. A client call is forwarded to the server; WMP removes only the ENDEX-owned client protections. It is repeat-safe when ENDEX is already inactive.
+
 ## After-Action Report
 
 Tracking starts through `[] call Waldo_fnc_AARTrack`. It uses mission event handlers rather than a
@@ -48,6 +52,8 @@ per-frame loop. KIA, vehicle-loss, player-loss, friendly-fire and fragger counte
 server-local during play; the server sends their complete snapshot in the same ordered call that
 activates each client's ENDEX display. This avoids broadcasting a counter update for every kill. If
 tracking did not run, ENDEX still works and simply omits unavailable report sections.
+
+`Waldo_fnc_AARTrack` takes no arguments and returns nothing. Start it once on the **server** before the exercise if you want the whole mission counted. Repeating it does not install another killed-event handler. It does not display a report by itself; ENDEX sends the collected snapshot at the end.
 
 The report first packs all useful sections into one ENDEX card. It creates additional pages only
 when the content genuinely exceeds that space, then balances the rows between pages so it does not
@@ -75,6 +81,8 @@ missionNamespace setVariable ["Waldo_ENDEX_ReportDuration", 60, true];
 [] call Waldo_fnc_ENDEX;
 ```
 
+`Waldo_ENDEX_ReportDuration` is a Number of seconds, with a shipped fallback of `45`. Set it on the server **before** ENDEX and publish it (`true` in `setVariable`) so clients use the same duration. This is a runtime setting, not an object, marker or mission-ending ID.
+
 ## Zeus usage
 
 Use **Mission Flow: End Mission + Show AAR** under **WMP Mission Flow**. It calls the same public, server-authoritative function as script setup. The reset function is intended for rehearsals and controlled testing rather than normal mission flow.
@@ -86,6 +94,8 @@ private _report = [] call Waldo_fnc_ENDEXGetDiagnostics;
 ```
 
 The helper reports whether ENDEX code is loaded, whether it is active, whether AAR tracking exists, and whether owned client protection/UI state is present. It is also included in `[] call Waldo_fnc_RunDiagnostics` under the mission-flow feature area.
+
+`Waldo_fnc_ENDEXGetDiagnostics` takes no arguments. It returns a diagnostics HashMap for the caller's machine; client protection checks only exist on an interface client. It does not start or reset ENDEX.
 
 ## Custom mission end screen
 

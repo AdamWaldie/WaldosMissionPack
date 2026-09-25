@@ -12,7 +12,15 @@ In Zeus, place **EMP - Detonate at Cursor** under **WMP Electronic Warfare**. Ch
 [getPosATL myObject, 200, 30] call Waldo_fnc_EMP;
 ```
 
-Arguments are `[position, radius in metres, duration in seconds]`. Radius defaults to `150` and duration to `30` if omitted. Place a marker or object at the intended centre before using the scripted call.
+`Waldo_fnc_EMP` takes a world position, not a marker name or an object. Resolve a marker with `getMarkerPos "markerName"`, or an object with `getPosATL objectName`.
+
+| Position | Type | Default | What to supply |
+|---|---|---|---|
+| 0 | Position array `[x, y, z]` | `[0, 0, 0]` | Centre of the burst. Supply it explicitly so the effect does not occur at the map origin. |
+| 1 | Number | `150` | Radius in metres. |
+| 2 | Number | `30` | Disruption duration in seconds. |
+
+The call runs on the server, forwards a client call there, and returns no useful value. It affects entities inside the radius once, then restores temporary effects after the duration. It creates no persistent zone for late joiners.
 
 ## Effects and immunity
 
@@ -27,6 +35,8 @@ To protect a specific vehicle or unit, put this in its Eden **Init** field:
 ```
 
 Occupants of an immune vehicle are protected. The flag reaches joining players. You can also pass `[object, true]` to set immunity explicitly.
+
+`Waldo_fnc_EMPImmune` takes `[unit or vehicle <OBJECT>, immune <BOOLEAN, default true>]`. Pass `false` as the second value to remove immunity. It returns no useful value. WMP publishes the flag so the server and joining clients see the same choice.
 
 ## If the effect differs from the plan
 

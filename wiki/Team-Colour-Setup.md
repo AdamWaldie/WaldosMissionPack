@@ -6,7 +6,7 @@ _Associated Files: MissionScripts\MissionInit\InitHelpers\SetTeamColour.sqf_
 
 Automatically assigns players to ACE3 team colours at mission start based on their role description set in the Eden Editor. No per-unit configuration is required — the function reads each player's **Role Description** field and matches it to a colour.
 
-Called automatically from `init.sqf`. Requires ACE3.
+Called automatically from `init.sqf`. Requires ACE3. No object Init call or module placement is needed.
 
 ## How It Works
 
@@ -81,6 +81,14 @@ private _roleName = call Waldo_fnc_GetPlayerRole;
 ```
 
 Both functions return an empty string (or `"Infantry"` for `GetPlayerRole`) in singleplayer.
+
+| Function | Arguments | Return | Where it runs |
+|---|---|---|---|
+| `Waldo_fnc_SetTeamColour` | None | No useful value | Current player's interface during mission startup. |
+| `Waldo_fnc_GetPlayerGroup` | `[unit <OBJECT>]`; defaults to `player` | Callsign string after `@`, or uppercase Eden group ID. Empty in singleplayer. | Where the unit and its leader's role description are available. |
+| `Waldo_fnc_GetPlayerRole` | None; always reads the local `player` | Role string before `@`, or the unit class display name. `"Infantry"` in singleplayer. | Player interface. |
+
+For example, `[player] call Waldo_fnc_GetPlayerGroup` returns a string you can show in a briefing. It does not alter the player's Arma group. The colour helper runs locally and does not set a mission-wide colour for AI.
 
 ## If a colour is wrong
 

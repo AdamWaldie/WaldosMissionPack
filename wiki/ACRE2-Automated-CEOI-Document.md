@@ -27,6 +27,8 @@ reference only and never retune radios.
 
 Mission makers do not call this for normal setup. Edit `MissionConfig\acreConfig.sqf`; `Waldo_fnc_ACRE2Init` handles generation.
 
+There is no CEOI object, map marker or per-player classname to register. The input is the radio plan in `acreConfig.sqf`: side, matching group name, PRC-343 block and channel, and any named long-range nets. Start with [Squad-level radio setup](ACRE-2-Squad-Level-Radios-AN-PRC‐343-Automatic-Setup) for the short-range row shape and [Long-range presetting](ACRE-2-Long-Range-Radio-Presetting) for named nets. The CEOI displays that plan before briefing ends, then adds live read-back after ACRE starts. It does not tune a radio when a player opens the diary.
+
 ## If a radio line is missing
 
 Check the group name and radio assignment in `MissionConfig/acreConfig.sqf`. The CEOI omits groups without a valid PRC-343 assignment instead of displaying blank rows. A planned line can appear before ACRE starts; read the later live status before assuming the radio was physically tuned.

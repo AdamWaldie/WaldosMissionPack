@@ -32,6 +32,61 @@ The `[WMP]Vehicle_Recovery_Workshop_Example_Minimal` composition places all thre
 
 Workshops accept a key, delivery radius and serviced side (`"ALL"` permits all sides; use `west`, `east`, `independent` or `civilian` to restrict it). `RecoveryRegisterVehicle` accepts the workshop key, living-vehicle damage threshold, whether destroyed vehicles are accepted, whether an engineer is required, package class, inventory-preservation policy and restored fuel fraction. The system also restores textures and pylon magazines. `RecoveryRegisterCarrier` accepts loading range, cargo mode and package capacity. A registered recovery carrier remains a carrier with the same mode and capacity after it is recovered.
 
+### Registration call reference
+
+All three calls belong in an Eden object's **Init** field for ordinary setup, or in a server script for runtime setup. Eden runs an object's Init on more than one machine; these functions deliberately accept the server copy and ignore the duplicate client copies. The server publishes the registration so players joining later receive the actions. Repeating a call updates that object's registration.
+
+`Waldo_fnc_RecoveryRegisterWorkshop` takes:
+
+| Position | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `0: workshop` | Object | Required | The existing depot object (`this` in its Init field). |
+| `1: key` | String | `"MAIN"` | Stable name linking vehicles to this workshop. Use the same key on each vehicle it serves. |
+| `2: radius` | Number, metres | `50` | Delivery/service radius; values below 5 become 5. |
+| `3: serviced side` | Side or string | `"ALL"` | `"ALL"` serves everyone; `west`, `east`, `independent` or `civilian` restricts service. |
+| `4: notification radius` | Number, metres | `-1` | `-1` uses `Waldo_Recovery_NotificationRadius`; otherwise controls who hears about a completed restoration. |
+| `5: create map markers` | Boolean | `Waldo_Recovery_CreateWorkshopMarkers` | `true` draws the workshop area and position on the map; `false` draws neither. |
+
+`Waldo_fnc_RecoveryRegisterVehicle` takes:
+
+| Position | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `0: vehicle` | Object | Required | The vehicle players may package. Do not pass a person or a deleted vehicle. |
+| `1: workshop key` | String | `"MAIN"` | Must match the destination workshop's key. |
+| `2: minimum damage` | Number, 0–1 | `0.55` | Damage threshold while the vehicle is alive. Zero permits an undamaged vehicle. |
+| `3: allow destroyed` | Boolean | `true` | Whether a destroyed/wrecked vehicle may be packaged. |
+| `4: require engineer` | Boolean | `false` | Whether packaging requires an engineer. |
+| `5: package class` | CfgVehicles classname string | First entry of `Waldo_Recovery_PackageClasses` | Visible object used for the packaged vehicle. Invalid classes fall back to a configured valid class. |
+| `6: preserve cargo` | Boolean | `true` | Keep vehicle inventory for restoration. |
+| `7: restored fuel` | Number, 0–1 | `1` | Fuel fraction of the restored vehicle; 1 means full. |
+| `8: preparation procedure` | HashMap or array of `[key, value]` pairs | `[]` | Optional `enabled` (Boolean, default `false`), `challengeId` (string, default `"repair"`) and `difficulty` (string, default `"standard"`). |
+
+`Waldo_fnc_RecoveryRegisterCarrier` takes:
+
+| Position | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `0: carrier` | Object | Required | The vehicle used to transport recovery packages. |
+| `1: loading range` | Number, metres | `10` | Maximum package loading reach; values below 3 become 3. |
+| `2: cargo mode` | String | `"AUTO"` | `"AUTO"`, `"VIRTUAL"` or `"PHYSICAL"`; see below. Invalid values become `"AUTO"`. |
+| `3: package capacity` | Number, packages | `1` | Maximum number of recovery packages. |
+| `4: deck offset` | Array `[x, y, z]`, model-space metres | `[]` | Optional attached-deck location. `[]` disables this placement. Use only after measuring the carrier model. |
+| `5: deck direction` | Number, degrees | `0` | Package direction relative to the carrier when using the deck offset. |
+
+Each call returns a Boolean: `false` for a rejected object or setup, `true` for accepted server registration (or an ignored duplicate Eden client call). Read a `true` result on the **server** to confirm the registration was applied; a client-side `true` only means its duplicate call did not run. ZEN's matching three modules use these server registration paths, while the examples above are ordinary mission-maker calls.
+
+### Mission-wide settings
+
+Edit these values in `MissionConfig/logisticsConfig.sqf`; the object registrations above still determine which vehicles and depots participate.
+
+| Setting | Type | Shipped default | Meaning |
+| --- | --- | --- | --- |
+| `Waldo_Recovery_ScanInterval` | Number, seconds | `3` | Time between server package checks; lower values increase scan work. |
+| `Waldo_Recovery_NotificationRadius` | Number, metres | `100` | Audience around a workshop for completed-restoration notices; an individual workshop can override it. |
+| `Waldo_Recovery_CreateWorkshopMarkers` | Boolean | `true` | Default for each workshop's map area and point markers. |
+| `Waldo_Recovery_PlacementClearance` | Number, metres | `3` | Extra empty space required around a restored vehicle. |
+| `Waldo_Recovery_DefaultCustomVariables` | Array of variable-name strings | `["Waldo_TransportService_Registration"]` | Serializable object variables copied when a destroyed vehicle has to be recreated. |
+| `Waldo_Recovery_PackageClasses` | Ordered array of CfgVehicles classname strings | `["B_Slingload_01_Cargo_F", "Land_Pallet_MilBoxes_F"]` | Package class choices for scripts and the ZEN selector. Keep only existing classes. |
+
 Carrier mode is `"AUTO"`, `"VIRTUAL"` or `"PHYSICAL"`. Automatic mode uses Arma's visible vehicle-in-vehicle cargo only when `vehicleCargoEnabled` and `canVehicleCargo` confirm that the selected package fits; otherwise it uses the virtual manifest. Virtual mode therefore works with ordinary trucks, MRAPs, boats and other registered vehicles that have no engine-configured cargo bay. Physical mode is intentionally strict and refuses packages that do not fit. Package discovery uses the authoritative server registry and measures loading range between the real bounding footprints of carrier and package, so a large container parked directly beside a smaller vehicle is not rejected because their model origins are farther apart. While virtually carried, the real server-owned package is hidden and simulation-disabled rather than deleted, preserving its recovery state. Unloading at the matching workshop queues restoration directly; unloading elsewhere searches for a complete clear package footprint beside the carrier. Carrier destruction spills virtual packages only when a clear position is available, and an obstructed package remains protected for a later retry.
 
 The recovery object is independently configurable per recoverable vehicle through argument 5 of `Waldo_fnc_RecoveryRegisterVehicle`. For Zeus, extend `Waldo_Recovery_PackageClasses` with valid `CfgVehicles` classes before runtime configuration; the module converts that pool into a display-name dropdown. The default pool is `B_Slingload_01_Cargo_F` and `Land_Pallet_MilBoxes_F`. The server validates the selected class and falls back to the first valid configured entry.

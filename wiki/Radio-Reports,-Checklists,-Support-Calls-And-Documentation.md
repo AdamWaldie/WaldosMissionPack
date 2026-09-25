@@ -55,6 +55,8 @@ Documents are loaded automatically. The call in `init.sqf` looks like this:
 call Waldo_fnc_AddDocs;
 ```
 
+You do not need to copy that call into another init file. `Waldo_fnc_AddDocs` takes no arguments and returns nothing. WMP runs it for each player, including someone who joins late, because Arma diary entries belong to that player's client. Calling it on the dedicated server will not put records in every player's map. The individual document functions listed above also take no arguments; `AddDocs.sqf` calls them locally to create their diary records.
+
 All documents are added to the player's **map screen briefing diary** (the `Diary` tab when opening the map). Each document is a separate entry.
 
 ---

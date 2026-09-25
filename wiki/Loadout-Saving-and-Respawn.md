@@ -63,6 +63,21 @@ Starter crates and loadout-save points call:
 
 Pass `[false]` for automatic startup work that must not display a notification over the loading presentation. Explicit player saves use the WMP notification UI and replace their prior message instead of growing the queue.
 
+Call `Waldo_fnc_SaveLoadout` on the **player's client**. A server-side call cannot save that player's local radio state. The loadout and supported ACRE radio settings are kept together as one snapshot for that player and side. A player who joins in progress gets their own startup capture; this call does not save another player's kit for them.
+
+| Argument | Type | Default | Meaning |
+| --- | --- | --- | --- |
+| `0: show notification` | Boolean | `true` | `true` shows the saved-loadout confirmation; `false` is for automatic saves during startup or radio assignment. |
+
+The call returns `true` after a complete snapshot is saved. It returns `false` if the local player does not exist yet, or if ACRE is present but not ready and an earlier complete snapshot must be preserved. Its current callers include the starter/loadout-save interactions and ACRE radio-assignment finalisation.
+
+The two mission settings live in `MissionConfig/logisticsConfig.sqf`:
+
+| Setting | Type | Shipped default | What to change |
+| --- | --- | --- | --- |
+| `Waldo_Respawn_SaveOnDeath` | Boolean | `false` | Use `true` to capture what the player carried at death. Leave `false` to restore the most recent deliberate save or startup baseline. |
+| `Waldo_Respawn_SideSwitchMode` | String: `"CARRY_OVER"` or `"SIDE_BASE_LOADOUT"` | `"CARRY_OVER"` | Chooses the first kit on a side for which the player has no saved snapshot; see below. |
+
 ACE Respawn can conflict with this mission-owned restore path and should remain disabled in ACE addon settings.
 
 ## Side-switch respawn seeding

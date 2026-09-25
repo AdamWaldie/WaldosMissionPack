@@ -8,15 +8,22 @@
  * feature keeps working unchanged whichever spelling a given mission's ACE build actually fires.
  * Registering for an event name ACE never fires is a harmless no-op in CBA's event system; only
  * one of the two is expected to actually fire on any given ACE version.
+ * Locality/authority: interface client only. ACE supplies treatment events; this function installs
+ * local presentation listeners and does not change patient medical state.
+ * Repeat/JIP: waits for the ordered runtime snapshot, installs once per interface and returns true
+ * on repeat calls. Each joining client starts its own listeners when the feature is enabled.
  *
  * Arguments:
  * None
  *
  * Return Value:
- * Boolean - true when active or already installed
+ * Boolean - true when active, already installed or waiting for settings; false without an
+ * interface, enabled feature or ACE Medical.
+ * Current callers: initPlayerLocal and the feature-runtime enable path.
  *
  * Example:
  * [] call Waldo_fnc_TreatmentFeedbackInit;
+ * Result: the current player can see configured ACE treatment cards.
  */
 
 if !(hasInterface) exitWith {false};

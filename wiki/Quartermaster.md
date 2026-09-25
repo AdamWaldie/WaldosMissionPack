@@ -33,7 +33,7 @@ That places issues about four metres behind the point. Check the position in mul
 
 ## Choose the issues
 
-All ten normal issue types are on by default. Disable an unwanted `Waldo_QM_*_Enable` row in `MissionConfig/logisticsConfig.sqf`. The ZEN **Quartermaster - Set Up Object** module can narrow the choices at one point. It cannot re-enable a type disabled for the mission.
+All ten normal issue types are on by default. Each `Waldo_QM_*_Enable` setting below is a Boolean with a shipped value of `true`. Change the existing row to `false` in `MissionConfig/logisticsConfig.sqf` to remove an issue mission-wide. `Waldo_Quartermaster_Enable` is the Boolean master switch and also starts `true`. `Waldo_QM_Marker_Enable` starts `true` and controls only the 3D label. The ZEN **Quartermaster - Set Up Object** module can narrow the choices at one point. It cannot re-enable a type disabled for the mission.
 
 | Issue | What players receive | Main setting |
 |---|---|---|
@@ -48,24 +48,50 @@ All ten normal issue types are on by default. Disable an unwanted `Waldo_QM_*_En
 | Fuel Barrel | ACE fuel source | `Waldo_QM_FuelBarrel_Enable` |
 | Fuel Jerrycan | ACE fuel source | `Waldo_QM_FuelJerrycan_Enable` |
 
-The two older vehicle/static rearm flags are compatibility settings. The player menu has one **Rearm Box** for both vehicles and static weapons. The issue takes five seconds and the progress bar names the requested object.
+The older `Waldo_QM_VehicleRearm_Enable` and `Waldo_QM_StaticRearm_Enable` Booleans start `false` for compatibility. The player menu has one **Rearm Box** for both vehicles and static weapons. The issue takes five seconds and the progress bar names the requested object.
+
+The full switch list below is the shipped configuration. All are Booleans in `MissionConfig/logisticsConfig.sqf`; setting one to `false` removes that choice for the whole mission, including ZEN-created points. The compatibility switches do not create a second rearm issue.
+
+| Setting | Type | Shipped value | Effect |
+| --- | --- | --- | --- |
+| `Waldo_Quartermaster_Enable` | Boolean | `true` | Master switch for quartermaster points. |
+| `Waldo_QM_Marker_Enable` | Boolean | `true` | Show each point's 3D label. |
+| `Waldo_QM_Medical_Enable` | Boolean | `true` | Medical Box issue. |
+| `Waldo_QM_Supply_Enable` | Boolean | `true` | Heavy Supply Box issue. |
+| `Waldo_QM_Ammo_Enable` | Boolean | `true` | Ammo Box issue. |
+| `Waldo_QM_Wheel_Enable` | Boolean | `true` | ACE Wheel issue. |
+| `Waldo_QM_Track_Enable` | Boolean | `true` | ACE Track issue. |
+| `Waldo_QM_Grenades_Enable` | Boolean | `true` | Grenades Box issue. |
+| `Waldo_QM_Explosives_Enable` | Boolean | `true` | Explosives Box issue. |
+| `Waldo_QM_Rearm_Enable` | Boolean | `true` | Shared Rearm Box issue. |
+| `Waldo_QM_FuelBarrel_Enable` | Boolean | `true` | ACE Fuel Barrel issue. |
+| `Waldo_QM_FuelJerrycan_Enable` | Boolean | `true` | ACE Fuel Jerrycan issue. |
+| `Waldo_QM_VehicleRearm_Enable` | Boolean | `false` | Legacy compatibility setting; does not add a separate menu issue. |
+| `Waldo_QM_StaticRearm_Enable` | Boolean | `false` | Legacy compatibility setting; does not add a separate menu issue. |
 
 ## Change crate models and quantities
 
 Edit the existing rows in `MissionConfig/logisticsConfig.sqf`. Do not copy them into `initServer.sqf`.
 
-| Setting | Default | Result |
-|---|---|---|
-| `Waldo_QM_Ammo_CrateClass` | `B_supplyCrate_F` | Model for the Ammo Box. |
-| `Waldo_QM_Supply_CrateClass` | `B_supplyCrate_F` | Model for the Heavy Supply Box. |
-| `Waldo_QM_Medical_CrateClass` | Empty | Uses WMP's ACE-aware medical crate choice. Set a valid class to override it. |
-| `Waldo_QM_Grenades_CrateClass` | `Box_NATO_Ammo_F` | Model for the Grenades Box. |
-| `Waldo_QM_Explosives_CrateClass` | `Box_NATO_AmmoOrd_F` | Model for the Explosives Box. |
-| `Waldo_QM_Rearm_CrateClass` | `Box_NATO_AmmoVeh_F` | Model for the Rearm Box. |
-| `Waldo_QM_Grenades_CountPerType` | `20` | Number of each eligible grenade magazine. |
-| `Waldo_QM_Explosives_CountPerType` | `8` | Number of each eligible mine or charge. |
-| `Waldo_QM_FuelBarrel_Litres` | `200` | Fuel in each barrel. |
-| `Waldo_QM_FuelJerrycan_Litres` | `20` | Fuel in each jerrycan. |
+| Setting | Type | Shipped value | Result |
+|---|---|---|---|
+| `Waldo_QM_Ammo_CrateClass` | CfgVehicles classname string | `"B_supplyCrate_F"` | Model for the Ammo Box. |
+| `Waldo_QM_Supply_CrateClass` | CfgVehicles classname string | `"B_supplyCrate_F"` | Model for the Heavy Supply Box. |
+| `Waldo_QM_Medical_CrateClass` | CfgVehicles classname string | `""` | Uses WMP's ACE-aware medical crate choice. Set a valid class to override it. |
+| `Waldo_QM_Grenades_CrateClass` | CfgVehicles classname string | `"Box_NATO_Ammo_F"` | Model for the Grenades Box. |
+| `Waldo_QM_Explosives_CrateClass` | CfgVehicles classname string | `"Box_NATO_AmmoOrd_F"` | Model for the Explosives Box. |
+| `Waldo_QM_Rearm_CrateClass` | CfgVehicles classname string | `"Box_NATO_AmmoVeh_F"` | Model for the Rearm Box. |
+| `Waldo_QM_Grenades_CountPerType` | Number | `20` | Number of each eligible grenade magazine. |
+| `Waldo_QM_Explosives_CountPerType` | Number | `8` | Number of each eligible mine or charge. |
+| `Waldo_QM_Rearm_Supply` | Number, ACE supply points | `1200` | Finite supply when ACE Rearm uses Limited Supply mode. |
+| `Waldo_QM_VehicleRearm_CrateClass` | CfgVehicles classname string | `"Box_NATO_AmmoVeh_F"` | Compatibility class for older vehicle-rearm calls; not a separate current menu issue. |
+| `Waldo_QM_StaticRearm_CrateClass` | CfgVehicles classname string | `"Box_NATO_AmmoVeh_F"` | Compatibility class for older static-rearm calls; not a separate current menu issue. |
+| `Waldo_QM_VehicleRearm_Supply` | Number, ACE supply points | `1200` | Compatibility finite-supply amount. |
+| `Waldo_QM_StaticRearm_Supply` | Number, ACE supply points | `250` | Compatibility finite-supply amount. |
+| `Waldo_QM_FuelBarrel_Litres` | Number, litres | `200` | Fuel in each barrel. |
+| `Waldo_QM_FuelJerrycan_Litres` | Number, litres | `20` | Fuel in each jerrycan. |
+
+The four compatibility rows above do not create separate choices in the current player menu.
 
 Choose a crate class that exists in the mission's loaded addons. The `Logi_SupplyBoxClass` server row in the same file controls the general supply spawner. Change an issue-specific `Waldo_QM_*_CrateClass` row when only that Quartermaster issue needs a different model. WMP chooses `Logi_MedicalBoxClass` automatically unless you set an explicit medical override.
 
