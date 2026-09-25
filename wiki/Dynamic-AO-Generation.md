@@ -95,7 +95,7 @@ Cleanup is repeat-safe:
 - drones: any supported air asset with `isUav = 1`;
 - jets: fixed-wing maximum speed at or above 600 km/h; slower assets are planes.
 
-The pool cache is local to each machine's immutable runtime configuration. Creation validates the faction and pools again on the server before mutating the world.
+As a runtime safety net, a generated combat soldier that still spawns without a primary weapon or launcher (for example a missing weapon dependency) is replaced with another class, that class is removed from the cached pool, and an `[WMP DYNAMIC AO]` RPT line names it. The pool cache is local to each machine's immutable runtime configuration. Creation validates the faction and pools again on the server before mutating the world.
 
 ## Authority, JIP and cleanup
 

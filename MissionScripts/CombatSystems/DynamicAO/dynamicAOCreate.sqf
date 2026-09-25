@@ -127,6 +127,25 @@ private _spawnUnit = {
     // server the overlapping collision geometries can prevent the leader and followers from
     // acquiring their first path even though the group's waypoint is valid.
     private _unit = _group createUnit [_class, _position, [], _placementRadius, "NONE"];
+    // Combat infantry must actually hold a weapon. The resolver already filters on config loadouts,
+    // but a class can still spawn bare (missing weapon dependency, scripted loadout removal), so an
+    // unarmed result is replaced with another class and that class is dropped from the cached pool.
+    // The last remaining class is never removed, so later selectRandom calls always have a choice.
+    if (side _group != civilian) then {
+        private _attempts = 0;
+        while {primaryWeapon _unit == "" && {secondaryWeapon _unit == ""} && {_attempts < 4} && {count _infantry > 1}} do {
+            _attempts = _attempts + 1;
+            diag_log format ["[WMP DYNAMIC AO] %1 spawned without a primary weapon or launcher; removed from the %2 infantry pool.", _class, _faction];
+            private _classIndex = _infantry find _class;
+            if (_classIndex >= 0) then {_infantry deleteAt _classIndex};
+            deleteVehicle _unit;
+            _class = selectRandom _infantry;
+            _unit = _group createUnit [_class, _position, [], _placementRadius, "NONE"];
+        };
+        if (primaryWeapon _unit == "" && {secondaryWeapon _unit == ""}) then {
+            diag_log format ["[WMP DYNAMIC AO] %1 spawned without a primary weapon or launcher and no armed replacement was found in faction %2.", _class, _faction];
+        };
+    };
     _unit setVariable ["Waldo_ServerOwnedFeature", true, true];
     _unit setVariable ["acex_headless_blacklist", true, true];
     _objects pushBack _unit;
