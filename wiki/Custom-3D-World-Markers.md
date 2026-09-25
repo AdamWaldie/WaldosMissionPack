@@ -40,10 +40,11 @@ the same ID updates the existing marker in place. Calls made on clients are forw
 the server automatically.
 
 The call is safe in an object's Eden Init field without an `isServer` wrapper. Arma runs that
-field again on every player who joins, and each joiner forwards the same call. The server ignores
-a forwarded call that would not change the marker, so joiners cause no extra network traffic. It
-also ignores a forwarded call for a marker that was removed with **Remove Custom 3D Marker** or
-`Waldo_fnc_Remove3DMarker`, so a deleted marker stays deleted when players join. To bring a removed
+field again on every player who joins, but a joining client does not forward it: the server
+already ran the same Init line, and a joiner receives the current markers from the server's
+snapshot instead. A marker removed with **Remove Custom 3D Marker** or `Waldo_fnc_Remove3DMarker`
+therefore stays removed when players join. As a second safeguard the server also ignores any
+forwarded call that would not change a marker, or that names a removed marker. To bring a removed
 marker back, call `Waldo_fnc_Create3DMarker` again on the server.
 
 ## Network and JIP behaviour

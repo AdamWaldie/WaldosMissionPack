@@ -40,6 +40,9 @@ if (_taskId isEqualTo "") exitWith {
 
 // Keep task creation server-authoritative for correct JIP behaviour.
 if (!isServer) exitWith {
+    // Init-field replay on a joining client: the server already ran this Init line, and forwarding
+    // it again would recreate state removed since. Later script/action calls still forward.
+    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {};
     _this remoteExec ["Waldo_fnc_CreateObjective", 2];
 };
 

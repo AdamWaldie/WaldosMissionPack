@@ -30,6 +30,9 @@ params [["_target", objNull], ["_side", sideUnknown], ["_label", ""], ["_active"
 if (isNull _target) exitWith { -1 };
 
 if (!isServer) exitWith {
+    // Init-field replay on a joining client: the server already ran this Init line, and forwarding
+    // it again would recreate state removed since. Later script/action calls still forward.
+    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {-1};
     _this remoteExec ["Waldo_fnc_Tracker", 2];
     -1
 };

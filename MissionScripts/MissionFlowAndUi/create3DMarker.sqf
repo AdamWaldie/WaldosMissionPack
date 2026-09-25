@@ -42,6 +42,9 @@ params [
 ];
 if (_id isEqualTo "") then {_id = format ["WMP3D_%1_%2", clientOwner, floor (diag_tickTime * 1000)];};
 if (!isServer) exitWith {
+    // Init-field replay on a joining client: the server already ran this Init line, and forwarding
+    // it again would recreate state removed since. Later script/action calls still forward.
+    if !(missionNamespace getVariable ["Waldo_ClientInitPhaseDone", false]) exitWith {_id};
     [_id, _anchor, _options, true] remoteExecCall ["Waldo_fnc_Create3DMarker", 2];
     _id
 };

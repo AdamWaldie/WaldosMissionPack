@@ -47,9 +47,14 @@ if (_markerName != "" && {getMarkerType _markerName != ""}) then { deleteMarker 
 _registry deleteAt _idx;
 missionNamespace setVariable ["Waldo_Jamming_Registry", _registry, true];
 
+// A kept (or destroyed but not deleted) emitter must stop offering jammer actions to current and
+// joining players: its interactions check this id, and its setup is queued for JIP by object.
+if (!isNull _obj) then {
+    _obj setVariable ["Waldo_Jamming_Id", nil, true];
+    remoteExec ["", _obj];
+};
 // Optionally remove the emitter object.
 if (_deleteObject && {!isNull _obj}) then {
-    _obj setVariable ["Waldo_Jamming_Id", nil, true];
     deleteVehicle _obj;
 };
 

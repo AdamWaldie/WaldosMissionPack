@@ -45,6 +45,10 @@ class CfgFunctions
             class JipRemoveBoundServer {
                 file = "MissionScripts\Networking\jipRemoveBoundServer.sqf";
             };
+            class ClientInitPhaseEnd {
+                file = "MissionScripts\Networking\clientInitPhaseEnd.sqf";
+                postInit = 1;
+            };
         };
         class BriefDocs 
         {

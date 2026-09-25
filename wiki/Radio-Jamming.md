@@ -142,6 +142,12 @@ Activation uses the same server-authoritative call as the Zeus/script control. I
 [myTower, true]  call Waldo_fnc_JammerRemove;    // remove the jammer AND delete the object
 ```
 
+A removed jammer stays removed for players who join later. A kept emitter object loses its jammer
+actions for everyone, and a jammer placed from an Eden Init field is not re-registered when a
+player joins: the server already ran that Init line, so joining clients do not forward it again.
+The same applies to trackers, objectives, notification triggers and 3D markers set up from Init
+fields.
+
 A destructible jammer can drive an EW objective without a separate trigger:
 
 ```sqf

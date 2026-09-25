@@ -386,6 +386,28 @@ class ServiceLogisticsSourceTests(unittest.TestCase):
             # Applied inside the deferred worker, never in the curator's remote context.
             self.assertLess(block.index('[{_this spawn {'), block.index('LogisticsApplyAceHandling'), case)
 
+    def test_jip_replays_never_recreate_removed_state(self):
+        import re
+        functions = source('MissionScripts/WaldosFunctions.sqf')
+        block = functions[functions.index('class ClientInitPhaseEnd'):]
+        block = block[:block.index('};')]
+        self.assertIn('clientInitPhaseEnd.sqf', block)
+        self.assertIn('postInit = 1;', block)
+        self.assertIn('missionNamespace setVariable ["Waldo_ClientInitPhaseDone", true];',
+                      source('MissionScripts/Networking/clientInitPhaseEnd.sqf'))
+        for path, fn in (('MissionScripts/MissionInit/Jamming/jammerCreate.sqf', 'Waldo_fnc_Jammer'),
+                         ('MissionScripts/MissionInit/ElectronicWarfare/tracker.sqf', 'Waldo_fnc_Tracker'),
+                         ('MissionScripts/MissionFlowAndUi/createObjective.sqf', 'Waldo_fnc_CreateObjective'),
+                         ('MissionScripts/MissionFlowAndUi/notificationTrigger.sqf', 'Waldo_fnc_NotificationTrigger'),
+                         ('MissionScripts/MissionFlowAndUi/create3DMarker.sqf', 'Waldo_fnc_Create3DMarker')):
+            text = source(path)
+            branch = text[text.index('if (!isServer) exitWith {'):]
+            self.assertLess(branch.index('Waldo_ClientInitPhaseDone'), branch.index(f'"{fn}", 2]'), path)
+        remove = source('MissionScripts/MissionInit/Jamming/jammerRemove.sqf')
+        kept = remove[remove.index('if (!isNull _obj) then {'):remove.index('if (_deleteObject')]
+        self.assertIn('_obj setVariable ["Waldo_Jamming_Id", nil, true];', kept)
+        self.assertIn('remoteExec ["", _obj];', kept)
+
     def test_crate_options_and_merge_are_separate(self):
         options = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetupLocal.sqf")
         load = source("MissionScripts/Logistics/SupplyTransfers/supplyTransfersSetAceLoadServer.sqf")
