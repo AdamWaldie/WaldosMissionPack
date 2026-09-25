@@ -73,8 +73,9 @@ LAMBS Waypoints loaded in SPLIT mode, garrison and clear orders are handed to LA
 
 ## Exclusions
 
-Automatic: groups with a living player; Gunship, Transport Services (including dismounted crews),
-Paradrop aircraft and jumpers until landed, Dynamic AA, AI Convoy, dialogue speakers, drones. Dynamic
+Automatic: groups with a living player; Gunship; Transport Services crews while their transport is in
+service (taken over once it is written off and they are on foot); Paradrop aircraft, and AI jumpers
+until landed (then taken over); Dynamic AA, AI Convoy, dialogue speakers, drones. Dynamic
 AO groups are included on purpose. Manual: `this setVariable ["Waldo_AIPass_Exclude", true, true];`
 on a unit or `group this`. `Waldo_AI_Exclude` excludes from every WMP AI change.
 

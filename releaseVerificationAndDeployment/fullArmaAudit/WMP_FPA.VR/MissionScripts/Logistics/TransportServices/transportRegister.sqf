@@ -13,7 +13,9 @@
  * (allowFleeing 0) so it will not bail out under fire; a vehicle that becomes too heavily damaged to
  * remain effective
  * (Waldo_Transport_MaxEffectiveDamage in MissionConfig\logisticsConfig.sqf, default 0.8) is written
- * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss.
+ * off the service pool by Waldo_fnc_TransportMonitorServer the same as an outright loss. Each crew
+ * group is tagged Waldo_TransportService_Vehicle so that, once the transport is out of service and the
+ * crew are on foot, the Smart AI Pass (when enabled) takes them over as an ordinary squad.
  *
  * Arguments:
  * 0: vehicle <OBJECT>
@@ -188,6 +190,8 @@ _vehicle setVariable ["Waldo_TransportService_Requester", objNull, true];
 _vehicle setVariable ["Waldo_TransportService_Registered", true, true];
 _vehicle setVariable ["Waldo_TransportService_BaseCrew", +crew _vehicle, true];
 [_vehicle] call Waldo_fnc_HeadlessPinCrew;
+// Lets the Smart AI Pass release this crew if they end up on foot beside a written-off transport.
+{(group _x) setVariable ["Waldo_TransportService_Vehicle", _vehicle, true]} forEach crew _vehicle;
 if (_config get "invulnerable") then {_vehicle setDamage 0};
 private _registrationOptions = [];
 {_registrationOptions pushBack [_x, _config get _x]} forEach keys _config;

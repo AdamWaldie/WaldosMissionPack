@@ -181,6 +181,10 @@ Registrations survive WMP vehicle-recovery reconstruction through the built-in `
 
 Registration locks the driver seat to players and disables fleeing/panic on the captured AI service crew (`allowFleeing 0`) — a driver who bails out under fire otherwise stranded the vehicle the same way a dead driver would, just without the monitor's driver-death check ever catching it. A passenger who boards later as cargo is unaffected. A registered vehicle that becomes too heavily damaged to remain effective — `Waldo_Transport_MaxEffectiveDamage` in `MissionConfig\logisticsConfig.sqf`, default `0.8` — is written off the service pool the same way an outright loss is, and (unlike a self-evident loss) every player on the service's `allowedSides` gets a warning card naming it, since a vehicle quietly vanishing from availability otherwise has no explanation.
 
+The AI service crew belongs to the transport while it is in service. When the transport is written off
+and its crew are on foot, the [Smart AI Pass](Smart-AI-Pass) (when enabled) takes them over as an
+ordinary squad instead of leaving them standing beside the wreck.
+
 RTB always targets the service's exact registered base position. The generic safe-position search is
 used for player-selected stops, not for returning a service to its own prepared parking point.
 

@@ -209,8 +209,12 @@ included, except:
 - any group containing a living player;
 - AI used by other WMP features:
   - Airborne Gunship;
-  - Transport Services, including a crew that has got out;
-  - Paradrop aircraft, and jumpers until they land (airborne reinforcements are released after landing);
+  - Transport Services crews while their transport is in service. Once the transport is written off
+    (destroyed, driver lost, immobile or too badly damaged) and the crew are on foot, the pass takes
+    them over as an ordinary squad;
+  - Paradrop aircraft, and AI jumpers until they land. Once every jumper in a group is on the ground,
+    the pass takes them over. This covers Dynamic Paradrop's generated jumpers and your own AI riding
+    a Quick Flight aircraft;
   - Dynamic AA and AI Convoy;
   - dialogue speakers;
   - drones;

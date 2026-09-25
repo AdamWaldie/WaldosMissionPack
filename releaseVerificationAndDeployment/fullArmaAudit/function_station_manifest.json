@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "registeredFunctionCount": 1174,
+  "registeredFunctionCount": 1175,
   "runtimeFunctionCount": 383,
-  "functionCount": 1557,
+  "functionCount": 1558,
   "stations": [
     {
       "id": "control",
@@ -931,6 +931,12 @@
     {
       "name": "Waldo_fnc_AIPassAirborneWatch",
       "file": "MissionScripts/AiScripting/SmartAIPass/aiPassAirborneWatch.sqf",
+      "station": "ai",
+      "activation": "manual"
+    },
+    {
+      "name": "Waldo_fnc_AIPassReleaseFeatureCrew",
+      "file": "MissionScripts/AiScripting/SmartAIPass/aiPassReleaseFeatureCrew.sqf",
       "station": "ai",
       "activation": "manual"
     },

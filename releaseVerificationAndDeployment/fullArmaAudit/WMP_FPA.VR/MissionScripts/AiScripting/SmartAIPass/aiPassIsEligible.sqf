@@ -9,8 +9,9 @@
  *   Waldo_AIPass_Exclude (this pass only);
  * - the group, a member, or a member's current or assigned vehicle belongs to another WMP feature:
  *   Waldo_ServerOwnedFeature (Headless pin: Gunship, AI Convoy, Dynamic AA, Paradrop aircraft and
- *   jumpers), Gunship, Transport Services (including a crew that has dismounted), Paradrop drop
- *   zones, Dynamic AA systems, pinned helicopters, or a dialogue speaker;
+ *   jumpers), Gunship, Transport Services, Paradrop drop zones, Dynamic AA systems, pinned
+ *   helicopters, or a dialogue speaker. Landed paratroopers and the dismounted crew of a written-off
+ *   transport are un-pinned by Waldo_fnc_AIPassReleaseFeatureCrew and then pass this check;
  * - a member uses a UAV or UGV (for example Virtual Vehicle Depot drone crews);
  * - Zeus has priority: the group is held after a curator selected, edited or gave it waypoints
  *   (Waldo_fnc_AIPassZeusHeld), a member is remote-controlled (vanilla and ZEN both set

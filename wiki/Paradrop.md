@@ -90,6 +90,12 @@ Zeus-created drop-zone aircraft do not require an open door. Their AI does not p
 4. Player freefalls; a hold action "Ditch Chute And Put On Backpack" appears near the ground
 5. Landing automatically restores the original backpack, including exact magazine ammunition, weapons, nested containers and item counts. The hold action remains as a manual fallback. Repeated jump setup cannot overwrite an unrestored original backpack.
 
+### AI jumpers after landing
+AI jumpers (Dynamic Paradrop's generated jumpers, or your own AI riding a Quick Flight aircraft) are
+held on the server while they fly. When the [Smart AI Pass](Smart-AI-Pass) is enabled, it takes a jump
+group over once every living member is on the ground, so they fight instead of standing where they
+landed. Without the pass they keep their own waypoints, if you gave them any.
+
 ---
 
 ## Equipment Simulation

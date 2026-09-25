@@ -385,12 +385,18 @@ behaviour. It refuses:
 - anything marked `Waldo_AI_Exclude` or `Waldo_AIPass_Exclude` (group or unit);
 - anything owned by another WMP feature, whether marked on the unit, the group, or the unit's
   current or assigned vehicle: `Waldo_ServerOwnedFeature` (Headless pin), `Waldo_Gunship_Id`,
-  `Waldo_TransportService_Registered` (the assigned-vehicle check covers dismounted transport
-  crews), `Waldo_Paradrop_DropZoneId`, `Waldo_DynamicAA_SystemId`,
+  `Waldo_TransportService_Registered`, `Waldo_Paradrop_DropZoneId`, `Waldo_DynamicAA_SystemId`,
   `Waldo_Headless_HelicopterPinned`, and dialogue speakers (`Waldo_Dialogue_Available`/`_Occupied`);
 - UAV/UGV AI;
 - anything failing the shared `Waldo_AI_IncludedFactions`/`ExcludedFactions`/`ExcludedClasses`
   filters.
+
+**Feature hand-over** (`Waldo_fnc_AIPassReleaseFeatureCrew`, run by discovery): Paradrop and Transport
+Services never release the AI they pin, so the pass does it. A group tagged `Waldo_Paradrop_Jumped`
+(set by the static-line and HALO jump functions for AI jumpers) is released once every living member
+has landed. A group tagged `Waldo_TransportService_Vehicle` (set by `Waldo_fnc_TransportRegister`) is
+released once its transport is out of service by the transport monitor's own test and every living
+member is on foot. Release clears the server pin and headless exclusions and unassigns the vehicle.
 
 Dynamic AO groups are deliberately eligible. `Waldo_Headless_ExcludeGroup` only pins locality and
 is not a behaviour exclusion. When a new WMP feature owns AI, mark it with one of these variables

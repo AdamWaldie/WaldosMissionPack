@@ -13,6 +13,8 @@
  * - in LAMBS "WMP" mode, turns LAMBS group AI off for managed groups (restored on release);
  * - caches locally owned, eligible artillery for fire support and counter-battery;
  * - re-applies defence-line orders after a locality change;
+ * - hands landed paratroopers and dismounted crews of a lost transport to the pass
+ *   (Waldo_fnc_AIPassReleaseFeatureCrew);
  * - installs the missile-warning handler (flares, and the optional break-away jink) on locally owned
  *   WMP gunships and Dynamic AA fighters.
  * Locality and authority: machine-local; nothing is broadcast except the documented LAMBS and
@@ -54,6 +56,11 @@ private _daoGarrison = missionNamespace getVariable ["Waldo_AIPass_Garrison_Dyna
         };
         if ((_group getVariable ["Waldo_AIPass_Defend", []]) isNotEqualTo [] && {!(_group getVariable ["Waldo_AIPass_DefendApplied", false])}) then {
             [_group] call Waldo_fnc_AIPassDefendApplyLocal;
+        };
+        // Landed paratroopers and dismounted crews of a lost transport are released by their feature.
+        if (_group getVariable ["Waldo_Paradrop_Jumped", false]
+            || {!isNil {_group getVariable "Waldo_TransportService_Vehicle"}}) then {
+            [_group] call Waldo_fnc_AIPassReleaseFeatureCrew;
         };
         if (!(_group getVariable ["Waldo_AIPass_Managed", false]) && {[_group] call Waldo_fnc_AIPassIsEligible}) then {
             _group setVariable ["Waldo_AIPass_Managed", true];

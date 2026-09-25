@@ -3,7 +3,8 @@
  * Safely exits a local unit from an aircraft for a HALO jump, preserves their original backpack
  * and contents through Waldo_fnc_ParaBackpack, equips the selected steerable parachute backpack,
  * applies the configured equipment simulation, and restores damage after the exit transition.
- * Must run where the jumping unit is local and in a scheduled environment.
+ * Must run where the jumping unit is local and in a scheduled environment. An AI jumper's group is
+ * tagged Waldo_Paradrop_Jumped so the Smart AI Pass can take it over once it has landed.
  *
  * Arguments:
  * 0: jumping unit <OBJECT>
@@ -34,6 +35,8 @@ private _direction = getDir _vehicle;
 private _exitPosition = [_vehicle, 14, _direction + 188] call BIS_fnc_relPos;
 _exitPosition set [2, (getPosATL _vehicle) select 2];
 moveOut _unit;
+// AI jumpers are pinned with their aircraft; the tag lets the Smart AI Pass release them once landed.
+if (!isPlayer _unit) then {(group _unit) setVariable ["Waldo_Paradrop_Jumped", true, true]};
 _unit setPosATL _exitPosition;
 _unit setDir (_direction + 170);
 sleep 1.5;

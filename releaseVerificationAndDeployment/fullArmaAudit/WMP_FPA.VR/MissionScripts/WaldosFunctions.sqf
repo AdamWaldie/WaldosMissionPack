@@ -168,6 +168,7 @@ class CfgFunctions
             class AIPassRegroupStep {file = "MissionScripts\AiScripting\SmartAIPass\aiPassRegroupStep.sqf";};
             class AIPassAirborneRequest {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAirborneRequest.sqf";};
             class AIPassAirborneWatch {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAirborneWatch.sqf";};
+            class AIPassReleaseFeatureCrew {file = "MissionScripts\AiScripting\SmartAIPass\aiPassReleaseFeatureCrew.sqf";};
             class AIPassAntiArmour {file = "MissionScripts\AiScripting\SmartAIPass\aiPassAntiArmour.sqf";};
             class AIPassArtilleryFire {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryFire.sqf";};
             class AIPassArtilleryRequest {file = "MissionScripts\AiScripting\SmartAIPass\aiPassArtilleryRequest.sqf";};

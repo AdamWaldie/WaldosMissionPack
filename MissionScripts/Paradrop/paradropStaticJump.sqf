@@ -2,7 +2,8 @@
  * Author: WaldoTheWarfighter
  * Safely exits a local unit from an aircraft and places them into the configured static-line
  * parachute vehicle while preserving exit velocity. Damage protection is temporary and always
- * restored. Must run where the unit is local and in a scheduled environment.
+ * restored. Must run where the unit is local and in a scheduled environment. An AI jumper's group is
+ * tagged Waldo_Paradrop_Jumped so the Smart AI Pass can take it over once it has landed.
  *
  * Arguments:
  * 0: jumping unit <OBJECT>
@@ -34,6 +35,8 @@ private _exitPosition = [_vehicle, 14, _direction + 188] call BIS_fnc_relPos;
 _exitPosition set [2, (getPosATL _vehicle) select 2];
 private _exitVelocity = velocity _vehicle;
 moveOut _unit;
+// AI jumpers are pinned with their aircraft; the tag lets the Smart AI Pass release them once landed.
+if (!isPlayer _unit) then {(group _unit) setVariable ["Waldo_Paradrop_Jumped", true, true]};
 _unit setPosATL _exitPosition;
 _unit setDir (_direction + 170);
 sleep 1.5;
